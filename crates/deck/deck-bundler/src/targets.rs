@@ -163,7 +163,7 @@ impl BundleLayout {
                 // @ship/sdk-client stayed in the ship repo (not carved out); the
                 // sui-sdk-client framework singleton is bundled from its source there.
                 entry: TargetEntry::Real(PathBuf::from(
-                    "/home/madvib/dev/ship-worktrees/sui-framework/packages/deck/sdk-client/src/index.ts",
+                    "/home/madvib/dev/ship-worktrees/carve-ship/packages/sdk-client/src/index.ts",
                 )),
                 externals: vec!["@ship/sui-runtime".into()],
                 out_file: "sui-sdk-client.js".into(),

@@ -356,7 +356,18 @@ fn build(project: PathBuf, out: Option<PathBuf>, bundle_framework: bool, minify:
         .map(|o| abs(&o))
         .unwrap_or_else(|| project.join(".deck"));
     let repo_root = find_repo_root(&project)?;
-    let framework_assets_dir = repo_root.join("crates/deck/deck-core/assets");
+    // Override the framework-asset staging path with an env var. Default:
+    // `<repo_root>/crates/deck/deck-core/assets`. After the carve, the
+    // host app (ship) needs the framework bundles to live in the
+    // external sui repo's `deck-core/assets/` — but its `find_repo_root`
+    // only walks the cwd's Cargo workspace, which in cross-repo
+    // invocations lands at ship (not sui). Allow the host to point at
+    // sui's tree directly. TEMP — re-evaluate after the layout
+    // reshuffle capstone (when the two repos share a parent again).
+    let framework_assets_dir = std::env::var("DECK_FRAMEWORK_ASSETS_DIR")
+        .ok()
+        .map(PathBuf::from)
+        .unwrap_or_else(|| repo_root.join("crates/deck/deck-core/assets"));
     // The framework surface (.deck/framework/<bundle>) is shared across
     // every project. Per-project outputs go under `<project>/.deck/`.
     let deck_out_dir = repo_root.join(".deck");
