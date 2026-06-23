@@ -7,6 +7,7 @@
 //! by the deck bundler; `deck dev` / `deck serve` are future commands.
 
 mod scaffold;
+mod typecheck;
 
 use std::path::{Path, PathBuf};
 
@@ -72,6 +73,11 @@ enum Command {
         /// Skip minification.
         #[arg(long)]
         no_minify: bool,
+        /// After the build, type-check the app's `.ts` sources (authored +
+        /// generated) with `tsc --noEmit` over an on-the-fly tsconfig.
+        /// Opt-in: off by default; fails the command on type errors.
+        #[arg(long)]
+        typecheck: bool,
     },
 
     /// Emit already-baked target bundles (plus their lazy-chunk closure) into
@@ -213,8 +219,8 @@ fn run() -> Result<()> {
         Command::Scaffold(Scaffold::Component { tag, controller }) => {
             scaffold::run_component(tag, controller)
         }
-        Command::Build { project, out, bundle_framework, no_minify } => {
-            build(project, out, bundle_framework, !no_minify)
+        Command::Build { project, out, bundle_framework, no_minify, typecheck } => {
+            build(project, out, bundle_framework, !no_minify, typecheck)
         }
         Command::Scaffold(Scaffold::Pack { name }) => {
             scaffold::run_pack(name)
@@ -345,7 +351,13 @@ fn find_repo_root(start: &Path) -> Result<PathBuf> {
     Ok(deck_bundler::paths::topmost_cargo_root(start).unwrap_or_else(|| start.to_path_buf()))
 }
 
-fn build(project: PathBuf, out: Option<PathBuf>, bundle_framework: bool, minify: bool) -> Result<()> {
+fn build(
+    project: PathBuf,
+    out: Option<PathBuf>,
+    bundle_framework: bool,
+    minify: bool,
+    typecheck: bool,
+) -> Result<()> {
     let cwd = std::env::current_dir().context("cwd")?;
     let abs = |p: &Path| if p.is_absolute() { p.to_path_buf() } else { cwd.join(p) };
 
@@ -403,6 +415,12 @@ fn build(project: PathBuf, out: Option<PathBuf>, bundle_framework: bool, minify:
         .map_err(|e| anyhow::anyhow!("{e:#}"))?;
     if b.framework_assets > 0 {
         println!("  _deck  {} files (self-contained)", b.framework_assets);
+    }
+    // Opt-in type-check pass (#1). Runs AFTER the bundle so the generated
+    // `routes.gen.ts` / `entry.gen.ts` exist and are covered. Default build
+    // (flag off) is byte-for-byte unchanged.
+    if typecheck {
+        typecheck::run(&project, &out_dir, &repo_root)?;
     }
     Ok(())
 }
