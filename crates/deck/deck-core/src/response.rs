@@ -319,4 +319,56 @@ mod tests {
         assert_eq!(r.cache_control, "no-cache");
         assert!(r.etag.is_none());
     }
+
+    // ── TS port drift guard ───────────────────────────────────────────────────
+
+    /// The hand-maintained TS port at `packages/deck/hono/src/response.ts`
+    /// must carry the SAME wire bytes this Rust module mints. We assert the
+    /// THREE contract surfaces the spec names — content-types, the
+    /// cache-control policy×mode matrix, and the HTML security headers —
+    /// deriving every expected string FROM Rust, so a change here (a new
+    /// max-age, a tightened CSP, a renamed header) forces the TS port to
+    /// follow or this test fails. Without it the two ports drift silently;
+    /// the Rust side is the source of truth, the TS side is the port.
+    #[test]
+    fn ts_port_pins_the_deck_response_contract() {
+        let ts = std::fs::read_to_string(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../../packages/deck/hono/src/response.ts"
+        ))
+        .expect("read packages/deck/hono/src/response.ts");
+
+        // 1. Content-types minted by the constructors in this file.
+        for ct in [
+            "application/javascript; charset=utf-8",
+            "text/css; charset=utf-8",
+            "text/html; charset=utf-8",
+            "application/json; charset=utf-8",
+            "text/plain; charset=utf-8",
+        ] {
+            assert!(ts.contains(ct), "TS port missing content-type `{ct}`");
+        }
+
+        // 2. Cache-control policy×mode matrix — every byte-string Rust mints
+        //    must appear in the TS `cacheControl` function.
+        for policy in [CachePolicy::Asset, CachePolicy::View, CachePolicy::None] {
+            for mode in [DaemonMode::Development, DaemonMode::Production] {
+                let bytes = policy.header(mode);
+                assert!(
+                    ts.contains(bytes),
+                    "TS port missing cache-control `{bytes}` for {policy:?}/{mode:?}"
+                );
+            }
+        }
+
+        // 3. HTML security headers — name AND value, exact bytes, for the
+        //    whole set (the CSP string in particular cannot drift).
+        for (name, value) in HTML_SECURITY_HEADERS {
+            assert!(ts.contains(name), "TS port missing security header name `{name}`");
+            assert!(
+                ts.contains(*value),
+                "TS port missing security header value for `{name}`"
+            );
+        }
+    }
 }
