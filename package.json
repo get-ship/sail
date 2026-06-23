@@ -1,0 +1,33 @@
+{
+  "name": "sui-framework",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "packages/sui/compiler-wasm",
+      "packages/sui/dom",
+      "packages/sui/runtime",
+      "packages/sui/tokens",
+      "packages/components/sui/*",
+      "packages/deck/*"
+    ]
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "overrides": {
+    "@ship/sdk": "file:/home/madvib/dev/ship-worktrees/sui-framework/packages/deck/sdk"
+  },
+  "trustedDependencies": [
+    "lightningcss"
+  ],
+  "scripts": {
+    "wasm": "wasm-pack build crates/sui/compiler --target web --out-dir ../../../packages/sui/compiler-wasm/pkg --out-name sui_compiler -- --features wasm",
+    "build:bundles": "cargo run -p deck-cli -- build-assets"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "playwright": "^1.59.1",
+    "typescript": "~5.8.3",
+    "vitest": "^4.1.5"
+  }
+}

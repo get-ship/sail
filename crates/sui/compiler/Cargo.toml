@@ -12,7 +12,9 @@ crate-type = ["lib", "cdylib"]
 path = "src/lib.rs"
 
 [build-dependencies]
-build-info = { path = "../../build-info" }
+# TEMP: absolute path, becomes ../ship/... after the layout reshuffle
+# build-info stayed in the ship repo (leaf crate, not carved out).
+build-info = { path = "/home/madvib/dev/ship-worktrees/sui-framework/crates/build-info" }
 
 [[bin]]
 name = "sui-compiler"
@@ -54,7 +56,9 @@ optional = true
 path = "../lint"
 
 [dependencies.build-info]
-path = "../../build-info"
+# TEMP: absolute path, becomes ../ship/... after the layout reshuffle
+# build-info stayed in the ship repo (leaf crate, not carved out).
+path = "/home/madvib/dev/ship-worktrees/sui-framework/crates/build-info"
 
 [dev-dependencies]
 tempfile = { workspace = true }

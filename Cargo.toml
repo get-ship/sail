@@ -1,0 +1,128 @@
+[workspace]
+# All carved Rust crates. deck-ssr is included so it is part of the workspace +
+# lockfile, but excluded from default-members below (it links V8 via ship-js and
+# is heavy; ship excludes ship-host for the same reason).
+members = [
+    "crates/sui/compiler",
+    "crates/sui/compiler-napi",
+    "crates/sui/lint",
+    "crates/sui/lsp",
+    "crates/sui/signals",
+    "crates/deck/deck-config",
+    "crates/deck/deck-host",
+    "crates/deck/deck-bundler",
+    "crates/deck/deck-cli",
+    "crates/deck/deck-core",
+    "crates/deck/deck-axum",
+    "crates/deck/deck",
+    "crates/deck/deck-conformance",
+    "crates/deck/deck-ssr",
+    "packages/sui/grammar",
+]
+# A bare `cargo build` (no -p) builds this subset, which EXCLUDES deck-ssr.
+# deck-ssr links V8 (via ship-js); `cargo test` of it fails to link as `-shared`
+# (a known V8/deno quirk). `cargo build -p deck-ssr` builds the lib fine; it just
+# must be opt-in. `members` above stays complete so the crate is still part of
+# the workspace (path deps, `cargo build -p deck-ssr`, lockfile).
+default-members = [
+    "crates/sui/compiler",
+    "crates/sui/compiler-napi",
+    "crates/sui/lint",
+    "crates/sui/lsp",
+    "crates/sui/signals",
+    "crates/deck/deck-config",
+    "crates/deck/deck-host",
+    "crates/deck/deck-bundler",
+    "crates/deck/deck-cli",
+    "crates/deck/deck-core",
+    "crates/deck/deck-axum",
+    "crates/deck/deck",
+    "crates/deck/deck-conformance",
+    "packages/sui/grammar",
+]
+# `crates/sui/compiler/fuzz` declares its own [workspace] (cargo-fuzz drives it
+# directly under nightly) and `.artifacts` holds build scratch — both excluded.
+exclude = [".artifacts", "crates/sui/compiler/fuzz"]
+resolver = "2"
+
+# Hoisted dependency versions. Member crates inherit via `{ workspace = true, features = [...] }`.
+# Ported from the ship monorepo root Cargo.toml — only the deps the carved
+# crates actually consume are kept here.
+[workspace.dependencies]
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0" }
+
+# Errors
+anyhow = "1.0"
+thiserror = "2"
+
+# Async runtime / utilities (members specify their needed feature subset; features are additive)
+tokio = "1"
+tokio-util = "0.7"
+async-trait = "0.1"
+futures-util = "0.3"
+
+# HTTP / RPC (members add features as needed)
+axum = { version = "0.8" }
+reqwest = { version = "0.12", default-features = false }
+
+# CLI
+clap = { version = "4.0", features = ["derive"] }
+
+# Tracing
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# Filesystem / paths
+tempfile = "3"
+notify = { version = "7", default-features = false, features = ["macos_fsevent"] }
+
+# Platform
+libc = "0.2"
+
+# Misc
+ulid = "1"
+regex = "1"
+
+# Type-bridging (RC pin shared by every consumer)
+specta = { version = "=2.0.0-rc.22", features = ["derive"] }
+
+# Workspace-wide lint posture. Member crates opt in via `[lints] workspace = true`.
+[workspace.lints.rust]
+unused_imports = "warn"
+unused_variables = "warn"
+dead_code = "warn"
+
+[workspace.lints.clippy]
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"
+todo = "warn"
+collapsible_if = "allow"
+collapsible_match = "allow"
+doc_overindented_list_items = "allow"
+doc_lazy_continuation = "allow"
+empty_line_after_doc_comments = "allow"
+needless_borrow = "allow"
+needless_borrows_for_generic_args = "allow"
+new_without_default = "allow"
+needless_pass_by_ref_mut = "allow"
+needless_range_loop = "allow"
+too_many_arguments = "allow"
+write_with_newline = "allow"
+type_complexity = "allow"
+result_large_err = "allow"
+search_is_some = "allow"
+
+# Cargo profile defaults (ported from ship).
+# `line-tables-only` keeps panic backtraces useful at a fraction of the binary size of full debug.
+[profile.dev]
+debug = "line-tables-only"
+incremental = true
+
+[profile.release]
+debug = "line-tables-only"
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"

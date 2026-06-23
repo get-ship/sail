@@ -1,0 +1,8 @@
+# Workspace cargo config.
+#
+# Every cargo invocation resolves `target-dir` to the workspace's own
+# `target/`. Per-user overrides go in `.cargo/config.local.toml` (gitignored);
+# cargo loads both and merges, with the local file winning on conflict.
+
+[build]
+target-dir = "target"

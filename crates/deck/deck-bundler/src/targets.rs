@@ -159,7 +159,12 @@ impl BundleLayout {
             },
             BundleTarget {
                 name: "sui-sdk-client".into(),
-                entry: TargetEntry::Real(r("packages/deck/sdk-client/src/index.ts")),
+                // TEMP: absolute path, becomes ../ship/... after the layout reshuffle.
+                // @ship/sdk-client stayed in the ship repo (not carved out); the
+                // sui-sdk-client framework singleton is bundled from its source there.
+                entry: TargetEntry::Real(PathBuf::from(
+                    "/home/madvib/dev/ship-worktrees/sui-framework/packages/deck/sdk-client/src/index.ts",
+                )),
                 externals: vec!["@ship/sui-runtime".into()],
                 out_file: "sui-sdk-client.js".into(),
                 lazy: false,

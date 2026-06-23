@@ -18,6 +18,7 @@
   ],
   "license": "MIT",
   "private": true,
+  "gypfile": false,
   "dependencies": {
     "node-addon-api": "^8.0.0"
   },
