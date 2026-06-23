@@ -174,8 +174,73 @@ pub fn discover_workspace_packages_scoped(
             });
         }
     }
+    // Component packages imported as DEPENDENCIES (file: link or node_modules) —
+    // the "import components from another place" path: an app consumes a
+    // component library it declares as a dependency, resolved like any package
+    // (file: now, marketplace/CDN+install later), not only from the local
+    // workspace. Additive: deduped by name against workspace members and
+    // scope-gated, so in-monorepo consumers are unaffected.
+    let ws_names: std::collections::HashSet<String> = out.iter().map(|p| p.name.clone()).collect();
+    for pkg in discover_dependency_packages(repo_root) {
+        if ws_names.contains(&pkg.name) {
+            continue;
+        }
+        if let Some(scope) = &scope {
+            if !scope.contains(pkg.name.as_str()) {
+                continue;
+            }
+        }
+        out.push(pkg);
+    }
     out.sort_by(|a, b| a.name.cmp(&b.name));
     Ok(out)
+}
+
+/// Resolve a dependency spec to its package dir: `file:<path>` (relative to
+/// `repo_root`) or `<repo_root>/node_modules/<name>`.
+fn resolve_dependency_dir(repo_root: &Path, name: &str, spec: &str) -> Option<PathBuf> {
+    let dir = match spec.strip_prefix("file:") {
+        Some(p) => repo_root.join(p),
+        None => repo_root.join("node_modules").join(name),
+    };
+    let dir = dir.canonicalize().ok()?;
+    dir.join("package.json").exists().then_some(dir)
+}
+
+/// Discover component packages declared as dependencies. Only deps carrying a
+/// `package.json#customElements` marker count — that marker is what makes a
+/// package a component library. The app declares the dependency; the bundler
+/// resolves it (file: link now; a registry/CDN install populates the same
+/// node_modules later).
+fn discover_dependency_packages(repo_root: &Path) -> Vec<WorkspacePackage> {
+    let Some(manifest) = read_json(&repo_root.join("package.json")) else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for field in ["dependencies", "devDependencies"] {
+        let Some(deps) = manifest.get(field).and_then(|d| d.as_object()) else {
+            continue;
+        };
+        for (name, spec) in deps {
+            let Some(spec) = spec.as_str() else { continue };
+            let Some(dir) = resolve_dependency_dir(repo_root, name, spec) else { continue };
+            let Some(pkg) = read_json(&dir.join("package.json")) else { continue };
+            let Some(ce) = pkg["customElements"].as_str() else { continue };
+            let bundles = pkg
+                .get("deck")
+                .and_then(|d| d.get("bundles"))
+                .and_then(|b| serde_json::from_value::<Vec<BundleDecl>>(b.clone()).ok())
+                .unwrap_or_default();
+            out.push(WorkspacePackage {
+                name: pkg["name"].as_str().unwrap_or(name).to_string(),
+                root: dir,
+                private: pkg["private"].as_bool() == Some(true),
+                custom_elements: Some(ce.to_string()),
+                bundles,
+            });
+        }
+    }
+    out
 }
 
 /// Every consumer-bundle self-declaration in the workspace, paired with its
