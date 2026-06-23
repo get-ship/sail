@@ -1,0 +1,60 @@
+<!--
+  <sui-diff> — SUI port of <ship-diff>.
+  Unified diff renderer. Accepts from/to (LCS diff computed) or
+  a raw unified-diff string via `value`.
+
+  Prop parity vs <ship-diff>
+  ─────────────────────────────────────────────────────────────────────────────
+  Lit                          SUI                      Notes
+  ─────────────────────────────────────────────────────────────────────────────
+  from (String, '')            from (string, reflect)   ✓ original text
+  to (String, '')              to (string, reflect)     ✓ revised text
+  value (String, '')           value (string, reflect)  ✓ raw unified-diff
+  ─────────────────────────────────────────────────────────────────────────────
+  (no events)                  (no events)              ✓
+  ─────────────────────────────────────────────────────────────────────────────
+  (no slots)                   (no slots)               ✓
+  ─────────────────────────────────────────────────────────────────────────────
+  parts: line                  line                     ✓
+  ─────────────────────────────────────────────────────────────────────────────
+  ARIA: host role=region +     controller sets on       ✓
+    aria-label="diff"            host if absent
+  ─────────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="from" type="string" default="" reflect />
+<prop name="to" type="string" default="" reflect />
+<prop name="value" type="string" default="" reflect />
+
+<style>
+  :host {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    background: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    /* Off-scale: 1px hairline — line padding rounds the gutter markers without */
+    /* adding real vertical space. */
+    --diff-line-pad-y: 1px;
+  }
+  :host([hidden]) { display: none; }
+
+  .line {
+    display: grid;
+    grid-template-columns: 16px 1fr;
+    padding: var(--diff-line-pad-y) var(--space-2);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .line.add { background: var(--tone-success-bg); color: var(--foreground); }
+  .line.del { background: var(--tone-destructive-bg); color: var(--foreground); }
+  .line.hunk { background: var(--tone-info-bg); color: var(--info); }
+  .sign { color: var(--muted-foreground); user-select: none; }
+  .line.add .sign { color: var(--success); }
+  .line.del .sign { color: var(--destructive); }
+</style>
+
+<div class="diff-root" bind:this={contentEl}></div>

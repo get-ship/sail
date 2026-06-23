@@ -1,0 +1,214 @@
+<!--
+  <sui-empty-state> — SUI port of <ship-empty-state>.
+  Centered placeholder for empty lists / missing content with icon tile,
+  typography, and action slot.
+
+  Prop / event / method parity vs <ship-empty-state>
+  ─────────────────────────────────────────────────────────────────────────────
+  Lit                          SUI                      Notes
+  ─────────────────────────────────────────────────────────────────────────────
+  variant ('default'|'inline'| variant (default|        ✓ SUI renames Lit's
+    'placeholder'|'connecting') inline|placeholder|       'default' dashed-card
+                                 connecting, 'default',   variant to 'default'
+                                 reflect)                 (matches SUI naming);
+                                                         'connecting' adds
+                                                         aria-live=polite +
+                                                         role=status
+  size ('sm'|'md'|'lg',        size (sm|md|lg,          ✓
+    'md')                        'md', reflect)
+  tone (Tone, undefined)       tone (union, 'muted',     ✓ tints icon tile;
+                                 reflect)                 muted default keeps
+                                                         neutrals for bare states
+  icon (String, '')            OMITTED                  Requires JS to look up
+                                                         lucide-icons registry
+                                                         and render fallback SVG;
+                                                         template-only divergence.
+                                                         Callers use slot="icon".
+  ─────────────────────────────────────────────────────────────────────────────
+  iconSlotFilled tracking →    reflect-empty=           ✓ SUI reflect-empty
+    hide .icon tile when empty  "data-no-icon"           hides tile automatically
+  ─────────────────────────────────────────────────────────────────────────────
+  role=note / role=status      role on .box inner div   ✓
+    + aria-live=polite           driven by variant prop
+    for connecting variant
+  ─────────────────────────────────────────────────────────────────────────────
+  slots: icon, title, default  slots: icon, title,      ✓
+    (desc), action               default (desc), action
+  ─────────────────────────────────────────────────────────────────────────────
+  parts: box, icon, title,     parts: box, icon,        ✓
+    desc, actions                title, desc, actions
+  ─────────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="variant" values="default|inline|placeholder|connecting" default="default" reflect />
+<prop name="size" values="sm|md|lg" default="md" reflect />
+<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
+
+<style>
+  :host {
+    display: block;
+    font-family: var(--font-body);
+    color: var(--muted-foreground);
+    --tone-fg: var(--muted-foreground);
+    --es-pad-y: 64px;
+    --es-pad-x: 16px;
+    --es-gap: var(--space-3);
+    --es-icon: 22px;
+    --es-tile: 48px;
+    --es-title-fs: var(--text-md);
+    --es-desc-fs: var(--text-sm);
+    --es-radius: var(--radius-lg);
+    --es-border: 1px solid var(--border);
+    --es-bg: var(--tone-muted-bg);
+    --es-shadow: var(--shadow-xs);
+  }
+  :host([hidden]) { display: none; }
+
+  :host([size='sm']) {
+    --es-pad-y: var(--space-7);
+    --es-pad-x: var(--space-4);
+    --es-gap: var(--space-2);
+    --es-icon: 16px; --es-tile: 36px;
+    --es-title-fs: var(--text-base);
+  }
+  :host([size='lg']) {
+    --es-pad-y: 96px;
+    --es-pad-x: var(--space-6);
+    --es-gap: var(--space-4);
+    --es-icon: 28px; --es-tile: 64px;
+    --es-title-fs: var(--text-lg);
+    --es-desc-fs: var(--text-base);
+  }
+
+  :host([variant='placeholder']),
+  :host([variant='connecting']) {
+    --es-border: 0;
+    --es-bg: transparent;
+    --es-radius: 0;
+    --es-shadow: none;
+    --es-pad-y: var(--space-6);
+  }
+  :host([variant='inline']) {
+    --es-border: 1px dashed var(--border);
+    --es-bg: var(--tone-muted-border);
+    --es-radius: var(--radius-md);
+    --es-pad-y: var(--space-3);
+    --es-pad-x: var(--space-4);
+    --es-gap: var(--space-3);
+  }
+
+  .box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--es-gap);
+    padding: var(--es-pad-y) var(--es-pad-x);
+    text-align: center;
+    background: var(--es-bg);
+    border: var(--es-border);
+    border-radius: var(--es-radius);
+    box-shadow: var(--es-shadow);
+  }
+  :host([variant='inline']) .box {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: start;
+  }
+
+  .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: var(--es-tile);
+    height: var(--es-tile);
+    border-radius: var(--radius-lg);
+    background: var(--tone-default-bg);
+    color: var(--tone-fg);
+    line-height: 1;
+    box-shadow: inset 0 0 0 1px var(--tone-default-ring);
+  }
+  :host(:not([tone])) .icon,
+  :host([tone='default']) .icon,
+  :host([tone='muted']) .icon {
+    background: var(--muted);
+    color: var(--muted-foreground);
+  }
+  :host([data-no-icon]) .icon { display: none; }
+  :host([variant='inline']) .icon {
+    width: var(--es-icon);
+    height: var(--es-icon);
+    background: transparent;
+    box-shadow: none;
+  }
+  ::slotted([slot='icon']) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: currentColor;
+  }
+  ::slotted(svg[slot='icon']) {
+    width: var(--es-icon);
+    height: var(--es-icon);
+  }
+
+  .copy {
+    min-width: 0;
+  }
+
+  .title {
+    font-family: var(--heading-font);
+    font-size: var(--es-title-fs);
+    font-weight: var(--heading-weight);
+    color: var(--foreground);
+    line-height: var(--leading-tight);
+  }
+  :host([variant='connecting']) .title,
+  :host([variant='placeholder']) .title {
+    font-weight: var(--font-weight-medium);
+    color: var(--muted-foreground);
+  }
+
+  .desc {
+    font-size: var(--es-desc-fs);
+    max-width: 38ch;
+    line-height: 1.55;
+    color: var(--muted-foreground);
+  }
+  :host([variant='inline']) .desc { max-width: 60ch; }
+
+  .actions {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: center;
+    margin-top: var(--space-1);
+    flex-wrap: wrap;
+  }
+  :host([variant='inline']) .actions {
+    margin-top: 0;
+    margin-inline-start: auto;
+    justify-content: flex-end;
+  }
+
+  @media (forced-colors: active) {
+    .box { border-color: CanvasText; }
+    .icon { background: Canvas; color: CanvasText; }
+  }
+</style>
+
+<div class="box" part="box"
+     role={variant() === 'connecting' ? 'status' : 'note'}
+     aria-live={variant() === 'connecting' ? 'polite' : 'off'}>
+  <div class="icon" part="icon" aria-hidden="true">
+    <slot name="icon" reflect-empty="data-no-icon"></slot>
+  </div>
+  <sui-stack class="copy" gap="1" align={variant() === 'inline' ? 'start' : 'center'}>
+    <div class="title" part="title"><slot name="title"></slot></div>
+    <div class="desc" part="desc"><slot></slot></div>
+  </sui-stack>
+  <div class="actions" part="actions">
+    <slot name="action"></slot>
+  </div>
+</div>

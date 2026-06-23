@@ -1,0 +1,12 @@
+// Route metadata for views/demos/. Index for the demo gallery.
+{
+  "name": "demos",
+  "path": "/demos",
+  "title": "Demos",
+  "layout": "default",
+  "auth": "public",
+  "rail": {
+    "label": "Demos",
+    "icon": "play"
+  }
+}

@@ -1,0 +1,47 @@
+<!--
+  <sui-toast-host> — SUI port of <ship-toast-host>.
+
+  Event-driven toast surface. Wraps a <sui-toast-container> and listens
+  for `ship:notify` (the contract emitted by `window.ship.notify()`).
+  Each event is forwarded to the container's programmatic `show()` API,
+  mapping the notify detail shape (`message` / `description` / `tone` /
+  `duration` / `actionHtml`) onto the toast-container show shape
+  (`title` / `description` / `tone` / `duration` / `actionHtml`).
+
+  Listener target: the closest `<sui-shell>` or `<ship-shell>` ancestor.
+  If none is present (test harnesses, standalone use), falls back to
+  `document.body` so dispatches that bubble to the document still land.
+
+  Prop / event / method parity vs <ship-toast-host>
+  ──────────────────────────────────────────────────────────────────────────────
+  Lit                              SUI                       Notes
+  ──────────────────────────────────────────────────────────────────────────────
+  position (string, 'bottom-right') position (union,         ✓ forwarded onto the
+                                     'bottom-right',           inner toast container
+                                     reflect)
+  ──────────────────────────────────────────────────────────────────────────────
+  ship:notify listener on closest   ship:notify listener on  ✓ also matches
+    ship-shell                        closest sui-shell |       sui-shell when a
+                                     ship-shell, else body     future port lands
+  ──────────────────────────────────────────────────────────────────────────────
+  Inner: <ship-toast-container>     Inner: <sui-toast-       ✓ swapped to sui port
+                                     container>
+  ──────────────────────────────────────────────────────────────────────────────
+  notify detail → show opts:
+    message     → title             ✓                         same mapping
+    description → description       ✓                         same mapping
+    tone        → tone              ✓                         info|success|
+                                                              warning|destructive
+    duration    → duration          ✓                         0 = sticky
+    actionHtml  → actionHtml        ✓                         same mapping
+  ──────────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="position" values="top-left|top-center|top-right|bottom-left|bottom-center|bottom-right" default="bottom-right" reflect />
+
+<style>
+  :host { display: contents; }
+  :host([hidden]) { display: none; }
+</style>
+
+<sui-toast-container position={position()} bind:this={containerEl}></sui-toast-container>

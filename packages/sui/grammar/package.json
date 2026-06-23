@@ -1,0 +1,27 @@
+{
+  "name": "tree-sitter-sui",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Tree-sitter grammar for the SUI .sui template language",
+  "main": "bindings/node",
+  "scripts": {
+    "build": "tree-sitter generate",
+    "test": "tree-sitter test"
+  },
+  "tree-sitter": [
+    {
+      "scope": "source.sui",
+      "file-types": ["sui"],
+      "highlights": "queries/highlights.scm",
+      "injections": "queries/injections.scm"
+    }
+  ],
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "node-addon-api": "^8.0.0"
+  },
+  "devDependencies": {
+    "tree-sitter-cli": "^0.26.0"
+  }
+}

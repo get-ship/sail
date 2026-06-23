@@ -1,0 +1,85 @@
+<!--
+  <sui-json-view> — SUI port of <ship-json-view>.
+  Collapsible JSON tree with toggle-per-level behavior.
+  Uses {@ html} to render the controller-generated tree markup.
+
+  Prop parity vs <ship-json-view>
+  ─────────────────────────────────────────────────────────────────────────────
+  Lit                          SUI                      Notes
+  ─────────────────────────────────────────────────────────────────────────────
+  data (String, '')            data (string, reflect)   ✓ JSON string to render
+  expanded (Boolean, false)    expanded (bool, reflect) ✓ force-expand all
+  depth (Number, 1)            depth (number, 1,        ✓ initial expand depth
+                                reflect)
+  ─────────────────────────────────────────────────────────────────────────────
+  (no events)                  (no events)              ✓
+  ─────────────────────────────────────────────────────────────────────────────
+  (no slots)                   (no slots)               ✓
+  ─────────────────────────────────────────────────────────────────────────────
+  parts: root, error           root, error              ✓
+  ─────────────────────────────────────────────────────────────────────────────
+  ARIA: host role=tree +       controller sets on       ✓
+    aria-label="JSON tree"       host if absent
+  ─────────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="data" type="string" default="" reflect />
+<prop name="expanded" type="bool" default="false" reflect />
+<prop name="depth" type="number" default="1" reflect />
+
+<style>
+  :host {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.65;
+    color: var(--foreground);
+  }
+  :host([hidden]) { display: none; }
+
+  .node { display: block; border-radius: var(--radius-sm); }
+  .branch {
+    margin-inline-start: var(--space-2);
+    border-left: 1px solid var(--border-subtle);
+    padding-inline-start: var(--space-3);
+  }
+  details > summary {
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0 var(--space-1);
+    border-radius: var(--radius-sm);
+  }
+  details > summary:hover { background: var(--hover-bg); }
+  details > summary::-webkit-details-marker { display: none; }
+  .leaf:hover { background: var(--hover-bg); }
+  .caret {
+    display: inline-flex;
+    width: 11px;
+    height: 11px;
+    color: var(--muted-foreground);
+    transition: transform var(--duration-fast) var(--ease-out);
+  }
+  .caret svg { width: 11px; height: 11px; display: block; }
+  details[open] > summary .caret { transform: rotate(90deg); }
+  .punc { color: var(--muted-foreground); }
+  .key { color: var(--foreground); font-weight: var(--font-weight-medium); }
+  .s { color: var(--success); }
+  .n { color: var(--info); }
+  .b { color: var(--accent); font-weight: var(--font-weight-medium); }
+  .null { color: var(--muted-foreground); font-style: italic; }
+  .meta {
+    color: var(--muted-foreground);
+    font-size: var(--text-xs);
+    background: var(--muted);
+    border-radius: var(--radius-full);
+    padding: 0 var(--space-1);
+    margin-left: var(--space-1);
+  }
+  .error { color: var(--destructive); }
+</style>
+
+<div class="json-root" bind:this={contentEl}></div>

@@ -1,0 +1,60 @@
+<!--
+  <sui-field> — SUI port of <ship-field>.
+  Vertical stack: label slot → control slot → hint/error. Wires
+  aria-describedby from the first slotted control to the hint/error
+  div, and sets invalid on the control to match the field's state.
+
+  Prop / event / method parity vs <ship-field>
+  ────────────────────────────────────────────────────────────────────────
+  Lit                            SUI                       Notes
+  ────────────────────────────────────────────────────────────────────────
+  invalid (Boolean, false)       invalid (bool, false,     ✓
+                                   reflect)
+  ────────────────────────────────────────────────────────────────────────
+  Slots: label, (default),       label, (default),         ✓ hint/error swap via
+    hint, error                    hint, error               CSS; both always in DOM
+  ────────────────────────────────────────────────────────────────────────
+  ARIA: aria-describedby wired   ✓ controller wires refs   ✓
+    from slotted control to        to slotted control
+    hint/error div id
+  ────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="invalid" type="bool" default="false" reflect />
+
+<style>
+  :host {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+  :host([hidden]) { display: none; }
+
+  .msg { margin-top: var(--space-1); }
+  .hint,
+  .error {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    line-height: 1.45;
+  }
+  .hint { color: var(--muted-foreground); }
+  .error {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-1);
+    color: var(--destructive);
+    font-weight: 500;
+  }
+  .error svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+  :host(:not([invalid])) .error { display: none; }
+  :host([invalid]) .hint { display: none; }
+</style>
+
+<slot name="label"></slot>
+<slot bind:this={controlSlot}></slot>
+<div class="hint msg" bind:this={hintEl}><slot name="hint"></slot></div>
+<div class="error msg" role="alert" aria-live="polite" bind:this={errorEl}>
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path><path d="M12 9v4M12 17h.01"></path></svg>
+  <span><slot name="error"></slot></span>
+</div>

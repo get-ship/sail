@@ -1,0 +1,5 @@
+{
+  "name": "deck-conformance-app",
+  "private": true,
+  "workspaces": ["components/*"]
+}

@@ -1,0 +1,114 @@
+<!--
+  <sui-line-chart> — multi-series line chart, SVG-rendered.
+
+  MIGRATED onto the createChartData engine + createChartViewport adapter:
+  geometry is a pure `derived` (present at first paint — no flush), the viewBox
+  tracks the measured host box (no `preserveAspectRatio="none"` stretch), and
+  loading / empty / error branch on the engine discriminators composing the
+  primitives pack. Series paths expose `part="series"`; grid lines `part="grid"`.
+
+  Props
+  ─────────────────────────────────────────────────────────────────────────────
+  series   string  reflect   JSON [{name,data,tone?}] SSR fallback; prop:series
+                             identity supersedes (normalizeSeries handles both).
+  labels   string            comma-separated x labels (feeds the aria table).
+  width    number  300       initial estimate — measured box drives the render.
+  height   number  200       same.
+  points   bool    reflect   render dots at data points.
+  grid     bool    reflect   render subtle y-grid lines.
+  label    string  "line chart"  aria-label kind (prefixes the data summary).
+  loading  bool    reflect   loading branch (engine isLoading) → sui-skeleton.
+  error    —       prop:error identity-only (unknown has no <prop>) → sui-error-state.
+  ─────────────────────────────────────────────────────────────────────────────
+  Slots: (default) legend · description (described-data override)
+  Parts: series · grid
+-->
+
+<prop name="series" type="string" default="" reflect />
+<prop name="labels" type="string" default="" />
+<prop name="width" type="number" default="300" />
+<prop name="height" type="number" default="200" />
+<prop name="points" type="bool" default="false" reflect />
+<prop name="grid" type="bool" default="false" reflect />
+<prop name="label" type="string" default="line chart" />
+<prop name="loading" type="bool" default="false" reflect />
+
+<style>
+  :host {
+    display: block;
+    width: 100%;
+    height: 200px;
+    transition: opacity var(--duration-fast) var(--ease-out);
+  }
+  :host([hidden]) { display: none; }
+  .wrap { display: flex; flex-direction: column; gap: 6px; width: 100%; height: 100%; }
+  svg { display: block; width: 100%; flex: 1; overflow: hidden; }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+    font-family: var(--font-body);
+  }
+  .legend:empty { display: none; }
+  .grid-line { stroke: var(--border); stroke-width: 1; stroke-dasharray: 2 3; }
+  .a11y-table {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :host { transition: none; }
+  }
+</style>
+
+<div class="wrap" part="wrap">
+  {#if loading()}
+    <sui-skeleton shape="block" size="lg" part="loading"></sui-skeleton>
+  {:else if chart.error()}
+    <sui-error-state part="error"></sui-error-state>
+  {:else if chart.isEmpty()}
+    <sui-empty-state part="empty"></sui-empty-state>
+  {:else}
+    <svg
+      viewBox={'0 0 ' + viewport.width() + ' ' + viewport.height()}
+      role="img"
+      aria-label={ariaLabel()}
+      aria-describedby="chart-data"
+      bind:this={svgEl}>
+      {#for g of gridLines() key={g.id}}
+        <line class="grid-line" part="grid" x1="0" x2={viewport.width()} y1={g.y} y2={g.y}></line>
+      {/for}
+      {#for s of seriesPaths() key={s.name}}
+        <path part="series" d={s.strokeD} fill="none" stroke={s.color} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+        {#if points()}
+          {#for p of s.pts key={p.id}}
+            <circle cx={p.cx} cy={p.cy} r="2.5" fill={s.color}></circle>
+          {/for}
+        {/if}
+      {/for}
+    </svg>
+    <div class="a11y-table" id="chart-data">
+      <slot name="description">
+        <table>
+          {#for row of chart.ariaTable() key={row[0].text}}
+            <tr>
+              {#for cell of row key={cell.text}}
+                <td>{cell.text}</td>
+              {/for}
+            </tr>
+          {/for}
+        </table>
+      </slot>
+    </div>
+  {/if}
+  <div class="legend"><slot></slot></div>
+</div>

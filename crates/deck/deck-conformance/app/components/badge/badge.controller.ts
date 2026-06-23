@@ -1,0 +1,16 @@
+// Authored controller for the `badge` component proof — a REAL
+// `controller({ scope })` DSL export. Confirms a COMPONENT (`.sui` +
+// controller) composes through the same `setup(ctx)` path as a view: the
+// synthetic controller runs `resolveController` and recovers the contributed
+// scope type from the `ControllerExport`. Component props remain a Phase-2
+// concern (the standalone synthetic controller can't model mount-time props
+// yet); this proves a state-only, controller-bearing component.
+import { controller, signal } from '@ship/sui-runtime'
+
+export default controller({
+  scope: () => {
+    const count = signal(0)
+    const bump = (): void => count.set(count() + 1)
+    return { count, bump }
+  },
+})

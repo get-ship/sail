@@ -1,0 +1,58 @@
+<!--
+  <sui-tab-panel> — SUI port of <ship-tab-panel>.
+
+  Companion panel element for <sui-tabs> / <sui-tab>. The parent
+  <sui-tabs> controller queries `:scope > sui-tab-panel` and toggles
+  the `active` attribute + `hidden` attribute based on the active
+  tab name. This component owns the visual display rule
+  (`:host([active]) { display: block }`) and the role/aria wiring.
+
+  Prop / event / method parity vs <ship-tab-panel>
+  ──────────────────────────────────────────────────────────────────────────────
+  Lit                              SUI                       Notes
+  ──────────────────────────────────────────────────────────────────────────────
+  name (String, '', reflect)       name (string, '',         ✓ keyed against
+                                     reflect)                  parent sui-tabs
+                                                              active prop
+  active (Boolean, false,          active (bool, false,      ✓ driven by parent
+    reflect)                         reflect)                  sui-tabs controller
+  ──────────────────────────────────────────────────────────────────────────────
+  role=tabpanel (connectedCallback) ✓ controller mount        ✓
+  tabindex=0 (connectedCallback)   ✓ controller mount        ✓
+  id=ship-tabpanel-{name}          id=sui-tabpanel-{name}    matches sui-tabs
+                                     (controller effect)       aria-controls
+  aria-labelledby=ship-tab-{name}  aria-labelledby=sui-tab   matches sui-tab id
+    -{name} (controller effect)
+  ──────────────────────────────────────────────────────────────────────────────
+  Slots: (default)                  (default)                 ✓
+  ──────────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="name" type="string" default="" reflect />
+<prop name="active" type="bool" default="false" reflect />
+
+<style>
+  :host { display: none; }
+  :host([active]) {
+    display: block;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :host([active]) {
+      animation: sui-tab-panel-fade var(--duration-medium) var(--ease-out);
+    }
+  }
+  @keyframes sui-tab-panel-fade {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  :host(:focus-visible) {
+    outline: none;
+    box-shadow:
+      0 0 0 var(--ring-offset) var(--background),
+      0 0 0 calc(var(--ring-offset) + var(--ring-width))
+        var(--ring);
+    border-radius: var(--radius-md);
+  }
+</style>
+
+<slot></slot>

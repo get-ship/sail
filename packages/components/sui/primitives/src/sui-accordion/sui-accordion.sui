@@ -1,0 +1,39 @@
+<!--
+  <sui-accordion> — SUI port of <ship-accordion>.
+  Declarative accordion with single or multiple open mode.
+
+  Prop parity vs <ship-accordion>
+  ─────────────────────────────────────────────────────────────────────────────
+  Lit                          SUI                      Notes
+  ─────────────────────────────────────────────────────────────────────────────
+  type ('single'|'multiple',   type (string, 'single',  ✓
+    'single')                    reflect)
+  value (string, '')           value (string, '',       ✓ comma-sep open vals
+                                 reflect)
+  ─────────────────────────────────────────────────────────────────────────────
+  ship-change → {value}        sui-change → {value}     event renamed
+  ─────────────────────────────────────────────────────────────────────────────
+  slots: (default) items       (default) items          ✓
+  ─────────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="type" type="string" default="single" reflect />
+<prop name="value" type="string" default="" reflect />
+
+<style>
+  /* Owned surface: a single rounded container that clips its rows, rather
+     than a loose stack of rules. Rows are divided by --border-subtle. */
+  :host {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--surface-1);
+  }
+  :host([hidden]) { display: none; }
+  ::slotted(sui-accordion-item:not(:first-child)) {
+    border-top: 1px solid var(--border-subtle);
+  }
+</style>
+
+<slot></slot>

@@ -1,0 +1,142 @@
+<!--
+  <sui-composer> — the message input + send control. Single-line by
+  default; `multiline` switches to a growing textarea. Enter submits;
+  Shift+Enter inserts a newline (multiline only). Composes <sui-button>
+  for the send action.
+
+  Attachments (files, canvases, code snippets) are owned by the
+  consumer: render their chips into the `attachments` slot and set the
+  `attachments` JS-property on the host. The composer echoes that array
+  back in the submit event — it never fabricates attachment data.
+
+  Props
+  ─────────────────────────────────────────────────────────────────────
+  placeholder  (string)  Input placeholder.
+  disabled     (bool)    Disables the input + send button.
+  multiline    (bool)    Use a textarea + Shift+Enter for newlines.
+  ─────────────────────────────────────────────────────────────────────
+  Slots
+    attachments  attachment chips (file / canvas / code)
+    trailing     extra actions beside Send
+  ─────────────────────────────────────────────────────────────────────
+  Events
+    sui-composer-submit  { detail: { text: string, attachments: unknown[] } }
+  ─────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="placeholder" type="string" default="" />
+<prop name="disabled" type="bool" default="false" reflect />
+<prop name="multiline" type="bool" default="false" reflect />
+
+<style>
+  :host {
+    display: block;
+    font-family: var(--font-body);
+    color: var(--foreground);
+  }
+  :host([hidden]) { display: none; }
+
+  .frame {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2, 8px);
+    padding: var(--space-2, 8px);
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg, 10px);
+    transition:
+      border-color var(--duration-fast, 120ms) var(--ease-out),
+      box-shadow var(--duration-fast, 120ms) var(--ease-out);
+  }
+  .frame:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 22%, transparent);
+  }
+  :host([disabled]) .frame {
+    background: var(--muted);
+    opacity: 0.7;
+  }
+
+  .attachments { display: contents; }
+  ::slotted([slot='attachments']) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1, 4px);
+  }
+
+  .row {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-2, 8px);
+  }
+
+  .field {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    resize: none;
+    font: inherit;
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--foreground);
+    padding: 4px 2px;
+  }
+  .field::placeholder { color: var(--muted-foreground); }
+  .field:disabled { cursor: not-allowed; }
+  textarea.field {
+    min-height: calc(1.5em + 8px);
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1, 4px);
+    flex: 0 0 auto;
+  }
+</style>
+
+<div class="frame" part="frame">
+  <div class="attachments">
+    <slot name="attachments"></slot>
+  </div>
+  <div class="row" part="row">
+    {#if multiline()}
+      <textarea
+        class="field"
+        part="field"
+        rows="1"
+        placeholder={placeholder()}
+        disabled={disabled()}
+        bind:value={text}
+        bind:this={fieldEl}
+      ></textarea>
+    {/if}
+    {#if !multiline()}
+      <input
+        class="field"
+        part="field"
+        type="text"
+        placeholder={placeholder()}
+        disabled={disabled()}
+        bind:value={text}
+        bind:this={fieldEl}
+      />
+    {/if}
+    <div class="actions">
+      <slot name="trailing"></slot>
+      <sui-button
+        bind:this={sendEl}
+        variant="solid"
+        tone="primary"
+        size="sm"
+        label="Send"
+        disabled={disabled() || text().trim().length === 0}
+      >Send</sui-button>
+    </div>
+  </div>
+</div>

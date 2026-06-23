@@ -1,0 +1,26 @@
+{
+  "name": "@ship/sui-lsp-browser",
+  "version": "0.1.0",
+  "description": "Browser-side analyser for .sui files. Pure parse + diagnostics + scope-aware completions for editors that can't shell out to the Node LSP (docs playground, shell source editor).",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/client.ts",
+  "exports": {
+    ".": "./src/client.ts",
+    "./worker": "./src/worker.ts",
+    "./completions": "./src/completions.ts",
+    "./diagnostics": "./src/diagnostics.ts",
+    "./hover": "./src/hover.ts"
+  },
+  "scripts": {
+    "test": "bun test test/",
+    "test:watch": "bun test --watch test/"
+  },
+  "dependencies": {
+    "@ship/sui-compiler-wasm": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.5"
+  }
+}

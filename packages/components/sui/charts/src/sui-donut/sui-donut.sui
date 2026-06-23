@@ -1,0 +1,118 @@
+<!--
+  <sui-donut> — distribution donut, segments drawn as stroked arcs.
+
+  MIGRATED onto the createChartData engine + createChartViewport adapter: the
+  `[{label,value,tone?}]` JSON decodes through `normalizeSeries` (one series of
+  points), segments are a pure `derived` over `arcGeometry` (present at first
+  paint), and empty / loading / error branch on the engine discriminators
+  composing the full-size primitives. A null-valued slice is skipped per the
+  gap contract. Segments expose `part="segment"`; the track ring `part="track"`.
+
+  Props
+  ─────────────────────────────────────────────────────────────────────────────
+  data       string  reflect   JSON [{label,value,tone?}] SSR fallback; prop:series
+                               identity supersedes (normalizeSeries handles both).
+  size       number  120       outer diameter (square viewBox).
+  thickness  number  16        ring stroke width.
+  label      string  "donut chart"  aria-label kind (prefixes the data summary).
+  loading    bool    reflect   loading branch (engine isLoading) → sui-skeleton.
+  error      —       prop:error identity-only → sui-error-state.
+  ─────────────────────────────────────────────────────────────────────────────
+  Slots: (default) center content · description (described-data override)
+  Parts: track · segment
+-->
+
+<prop name="data" type="string" default="" reflect />
+<prop name="size" type="number" default="120" />
+<prop name="thickness" type="number" default="16" />
+<prop name="label" type="string" default="donut chart" />
+<prop name="loading" type="bool" default="false" reflect />
+
+<style>
+  :host {
+    display: inline-block;
+    position: relative;
+    transition: opacity var(--duration-fast) var(--ease-out);
+  }
+  :host([hidden]) { display: none; }
+  svg { display: block; }
+  .track { stroke: var(--muted); }
+  .center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--heading-font);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--text-lg);
+    color: var(--foreground);
+    line-height: var(--leading-tight);
+    pointer-events: none;
+  }
+  .a11y-table {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :host { transition: none; }
+  }
+</style>
+
+{#if loading()}
+  <sui-skeleton shape="circle" size="lg" part="loading"></sui-skeleton>
+{:else if chart.error()}
+  <sui-error-state part="error"></sui-error-state>
+{:else if chart.isEmpty()}
+  <sui-empty-state part="empty"></sui-empty-state>
+{:else}
+  <svg
+    viewBox={'0 0 ' + size() + ' ' + size()}
+    role="img"
+    aria-label={ariaLabel()}
+    aria-describedby="chart-data"
+    style={'width:' + size() + 'px;height:' + size() + 'px'}>
+    <circle
+      class="track"
+      part="track"
+      cx={size() / 2}
+      cy={size() / 2}
+      r={(size() - thickness()) / 2}
+      fill="none"
+      stroke-width={thickness()}>
+    </circle>
+    {#for seg of segments() key={seg.id}}
+      <path
+        part="segment"
+        d={seg.d}
+        fill="none"
+        stroke={seg.color}
+        stroke-width={thickness()}
+        stroke-linecap="butt">
+        <title>{seg.title}</title>
+      </path>
+    {/for}
+  </svg>
+  <div class="center"><slot></slot></div>
+  <div class="a11y-table" id="chart-data">
+    <slot name="description">
+      <table>
+        {#for row of chart.ariaTable() key={row[0].text}}
+          <tr>
+            {#for cell of row key={cell.text}}
+              <td>{cell.text}</td>
+            {/for}
+          </tr>
+        {/for}
+      </table>
+    </slot>
+  </div>
+{/if}

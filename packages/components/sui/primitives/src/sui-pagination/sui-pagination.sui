@@ -1,0 +1,169 @@
+<!--
+  <sui-pagination> — the data-grid footer pager.
+
+  first / prev / numbered page buttons / next / last + an "N–M of T" range label,
+  and an optional page-size <sui-select>. Composes <sui-button> (edges + numbers)
+  and <sui-select> (page size) — no bespoke button/select chrome.
+
+  CONTROLLED + presentational: the component never owns the page. It reflects the
+  `page` / `page-size` / `total` props it is handed and EMITS the requested
+  transition; the consumer applies it and feeds new props back. One event:
+
+    sui-page-change { page: number, pageSize: number }   (bubbles + composed)
+
+  Edge rules: first/prev disabled on page 1; next/last disabled on the final
+  page; a single-page set disables all four. A page-size change always resets to
+  page 1 so the viewer is never stranded past the new last page.
+
+  Structured input (the page-size option list) follows the sui-combobox pattern:
+  a `page-size-options` string prop ("10,25,50,100") parsed in the controller —
+  consumers that hold a live array bind it as the host `pageSizeOptions` property
+  (prop:* identity), which the controller mirrors into the same parsed list.
+
+  Parts: nav, range, first, prev, pages, page, next, last, size.
+-->
+
+<prop name="page" type="number" default="1" reflect />
+<prop name="total" type="number" default="0" reflect />
+<prop name="page-size" type="number" default="10" reflect />
+<prop name="page-size-options" type="string" default="" />
+<prop name="label" type="string" default="Pagination" />
+<prop name="size-label" type="string" default="Rows per page" />
+
+<style>
+  :host {
+    display: block;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--foreground);
+  }
+  :host([hidden]) { display: none; }
+
+
+
+  .range {
+    color: var(--muted-foreground);
+    white-space: nowrap;
+    user-select: none;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .spacer { flex: 1 1 auto; }
+
+  .pages {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  .edges {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  .size {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--muted-foreground);
+    white-space: nowrap;
+  }
+
+  /* The active page button reads as "current" — a soft tonal fill via the
+     sui-button soft variant + primary tone, set from the controller. */
+  sui-button[aria-current='page'] { pointer-events: none; }
+
+  /* Ellipsis separator emitted by the controller between discontinuous page ranges */
+  .ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 30px;
+    color: var(--muted-foreground);
+    font-variant-numeric: tabular-nums;
+    user-select: none;
+  }
+
+  @media (forced-colors: active) {
+    .range { color: CanvasText; }
+  }
+</style>
+
+<sui-cluster class="nav" part="nav" gap="3" align="center" aria-label={label()} bind:this={navEl}>
+  <div class="edges">
+    <sui-button
+      part="first"
+      variant="ghost"
+      size="sm"
+      data-page-action="first"
+      label="First page"
+      prop:disabled={atStart()}
+    >
+      <sui-icon name="chevrons-left" size="sm" aria-hidden="true"></sui-icon>
+    </sui-button>
+    <sui-button
+      part="prev"
+      variant="ghost"
+      size="sm"
+      data-page-action="prev"
+      label="Previous page"
+      prop:disabled={atStart()}
+    >
+      <sui-icon name="chevron-left" size="sm" aria-hidden="true"></sui-icon>
+    </sui-button>
+  </div>
+
+  <div class="pages" part="pages">
+    {#for p of pageNumbers() key={p.page}}
+      <sui-button
+        part="page"
+        variant={p.current ? 'soft' : 'ghost'}
+        tone={p.current ? 'primary' : 'default'}
+        size="sm"
+        data-page={p.page}
+        aria-current={p.current ? 'page' : null}
+        aria-label={p.label}
+      >{p.page}</sui-button>
+    {/for}
+  </div>
+
+  <div class="edges">
+    <sui-button
+      part="next"
+      variant="ghost"
+      size="sm"
+      data-page-action="next"
+      label="Next page"
+      prop:disabled={atEnd()}
+    >
+      <sui-icon name="chevron-right" size="sm" aria-hidden="true"></sui-icon>
+    </sui-button>
+    <sui-button
+      part="last"
+      variant="ghost"
+      size="sm"
+      data-page-action="last"
+      label="Last page"
+      prop:disabled={atEnd()}
+    >
+      <sui-icon name="chevrons-right" size="sm" aria-hidden="true"></sui-icon>
+    </sui-button>
+  </div>
+
+  <span class="spacer"></span>
+
+  <span class="range" part="range" role="status" aria-live="polite">{rangeLabel()}</span>
+
+  {#if sizeOptions().length > 0}
+    <label class="size" part="size">
+      <span>{sizeLabel()}</span>
+      <sui-select size="sm" label={sizeLabel()} prop:value={pageSizeStr()} bind:this={sizeSelectEl}>
+        {#for opt of sizeOptions() key={opt}}
+          <option value={opt}>{opt}</option>
+        {/for}
+      </sui-select>
+    </label>
+  {/if}
+</sui-cluster>

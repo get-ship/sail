@@ -1,0 +1,4 @@
+<div class="greet-detail">
+  <h1>Hello, {route.params.id()}</h1>
+  <p><a href="/_deck/view/greet">back to greet</a></p>
+</div>

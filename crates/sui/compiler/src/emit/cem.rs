@@ -1,0 +1,194 @@
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+//! Custom-elements-manifest entry. Conforms to
+//! <https://github.com/webcomponents/custom-elements-manifest>.
+
+use crate::ir::*;
+use crate::CompileOpts;
+use serde_json::{json, Value};
+
+pub fn emit_cem(program: &Program, opts: &CompileOpts) -> Value {
+    let meta = opts.component_meta.as_ref().expect("component_meta required for CEM");
+    let tag = &meta.name;
+    let path = opts
+        .source_path
+        .as_ref()
+        .and_then(|p| p.file_name())
+        .map(|f| f.to_string_lossy().to_string())
+        .unwrap_or_else(|| format!("{tag}.sui"));
+
+    let attributes: Vec<Value> = program.props.iter().map(attr_entry).collect();
+    let members: Vec<Value> = program.props.iter().map(member_entry).collect();
+    let form_associated = program
+        .props
+        .iter()
+        .any(|p| p.form_value || p.form_disabled);
+
+    let mut declaration = json!({
+        "kind": "class",
+        "name": class_name_for(tag),
+        "tagName": tag,
+        "customElement": true,
+        "superclass": { "name": "HTMLElement", "package": "global" },
+        "attributes": attributes,
+        "members": members,
+    });
+    if form_associated {
+        let obj = declaration.as_object_mut().unwrap();
+        obj.insert("formAssociated".into(), Value::Bool(true));
+    }
+
+    let module = json!({
+        "kind": "javascript-module",
+        "path": path,
+        "declarations": [declaration],
+        "exports": [{
+            "kind": "custom-element-definition",
+            "name": tag,
+            "declaration": { "name": class_name_for(tag), "module": path },
+        }],
+    });
+
+    json!({
+        "schemaVersion": "1.0.0",
+        "readme": "",
+        "modules": [module],
+        "_compilerVersion": crate::compiler_version().to_json(),
+    })
+}
+
+fn attr_entry(p: &PropDecl) -> Value {
+    let mut e = json!({
+        "name": p.name,
+        "type": { "text": prop_type_text(&p.kind) },
+    });
+    if let Some(d) = p.default.as_ref() {
+        e.as_object_mut().unwrap().insert("default".into(), Value::String(d.clone()));
+    }
+    if let Some(desc) = p.description.as_ref() {
+        e.as_object_mut().unwrap().insert("description".into(), Value::String(desc.clone()));
+    }
+    if let PropKind::Union(values) = &p.kind {
+        e.as_object_mut().unwrap().insert("values".into(), json!(values));
+    }
+    if p.form_value {
+        e.as_object_mut().unwrap().insert("formValue".into(), Value::Bool(true));
+    }
+    if p.form_disabled {
+        e.as_object_mut().unwrap().insert("formDisabled".into(), Value::Bool(true));
+    }
+    e
+}
+
+fn member_entry(p: &PropDecl) -> Value {
+    let camel = camel_of(&p.name);
+    let mut m = json!({
+        "kind": "field",
+        "name": camel,
+        "type": { "text": prop_type_text(&p.kind) },
+        "attribute": p.name,
+    });
+    if let Some(d) = p.default.as_ref() {
+        m.as_object_mut().unwrap().insert("default".into(), Value::String(d.clone()));
+    }
+    if let Some(desc) = p.description.as_ref() {
+        m.as_object_mut().unwrap().insert("description".into(), Value::String(desc.clone()));
+    }
+    if p.reflect {
+        m.as_object_mut().unwrap().insert("reflects".into(), Value::Bool(true));
+    }
+    m
+}
+
+fn prop_type_text(k: &PropKind) -> String {
+    match k {
+        PropKind::String => "string".to_string(),
+        PropKind::Bool => "boolean".to_string(),
+        PropKind::Number => "number".to_string(),
+        PropKind::Union(values) => values
+            .iter()
+            .map(|v| format!("'{v}'"))
+            .collect::<Vec<_>>()
+            .join(" | "),
+    }
+}
+
+fn class_name_for(tag: &str) -> String {
+    let camel = camel_of(tag);
+    let mut chars = camel.chars();
+    match chars.next() {
+        Some(c) => format!("{}{}", c.to_ascii_uppercase(), chars.as_str()),
+        None => String::new(),
+    }
+}
+
+fn camel_of(attr: &str) -> String {
+    let mut out = String::with_capacity(attr.len());
+    let mut up_next = false;
+    for c in attr.chars() {
+        if c == '-' {
+            up_next = true;
+            continue;
+        }
+        if up_next {
+            out.push(c.to_ascii_uppercase());
+            up_next = false;
+        } else {
+            out.push(c);
+        }
+    }
+    out
+}
+
+/// Aggregate per-component CEM documents into one standard manifest.
+///
+/// Input: slice of per-component `{schemaVersion, modules:[...]}` values
+/// (as produced by `emit_cem`).
+/// Output: `{schemaVersion:"1.0.0", modules:[<all concatenated, sorted by "path">]}`.
+/// Pure, deterministic, no I/O. sui owns this format.
+pub fn merge_cem(components: &[Value]) -> Value {
+    let mut all_modules: Vec<Value> = components
+        .iter()
+        .filter_map(|v| v["modules"].as_array().cloned())
+        .flatten()
+        .collect();
+    all_modules.sort_by(|a, b| {
+        let a_path = a["path"].as_str().unwrap_or("");
+        let b_path = b["path"].as_str().unwrap_or("");
+        a_path.cmp(b_path)
+    });
+    json!({
+        "schemaVersion": "1.0.0",
+        "modules": all_modules,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn merge_two_cems_sorts_by_path() {
+        let cem_z = json!({
+            "schemaVersion": "1.0.0",
+            "modules": [{"path": "z.sui", "kind": "javascript-module"}]
+        });
+        let cem_a = json!({
+            "schemaVersion": "1.0.0",
+            "modules": [{"path": "a.sui", "kind": "javascript-module"}]
+        });
+        let merged = merge_cem(&[cem_z, cem_a]);
+        let modules = merged["modules"].as_array().unwrap();
+        assert_eq!(modules.len(), 2, "two modules in merged manifest");
+        assert_eq!(modules[0]["path"], "a.sui", "a.sui sorts before z.sui");
+        assert_eq!(modules[1]["path"], "z.sui", "z.sui sorts after a.sui");
+        assert_eq!(merged["schemaVersion"], "1.0.0");
+    }
+
+    #[test]
+    fn merge_empty_returns_empty_manifest() {
+        let merged = merge_cem(&[]);
+        assert_eq!(merged["schemaVersion"], "1.0.0");
+        let modules = merged["modules"].as_array().unwrap();
+        assert!(modules.is_empty(), "no modules for empty input");
+    }
+}

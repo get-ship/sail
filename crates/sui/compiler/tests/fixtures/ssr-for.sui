@@ -1,0 +1,6 @@
+<data name="items" source="ship.list()" />
+<ul>
+  {#for item of items key={item.id}}
+    <li>{item.label}</li>
+  {/for}
+</ul>

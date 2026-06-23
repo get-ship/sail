@@ -1,0 +1,268 @@
+<!--
+  <sui-checkbox> — SUI port of <ship-checkbox>.
+  Wraps a native <input type="checkbox"> for form participation and
+  keyboard access. Controller handles indeterminate sync, event dispatch.
+
+  Prop / event / method parity vs <ship-checkbox>
+  ────────────────────────────────────────────────────────────────────────
+  Lit                            SUI                       Notes
+  ────────────────────────────────────────────────────────────────────────
+  checked (Boolean, false)       checked (bool, false,     ✓ two-way via bind:checked
+                                   reflect)
+  indeterminate (Boolean, false) indeterminate (bool,      ✓ native prop synced in
+                                   false, reflect)           controller; CSS drives
+                                                             glyph visibility
+  disabled (Boolean, false)      disabled (bool, false,    ✓
+                                   reflect)
+  required (Boolean, false)      required (bool, false,    ✓
+                                   reflect)
+  invalid (Boolean, false)       invalid (bool, false,     ✓ destructive border override
+                                   reflect)
+  tone (Tone)                    tone (union, 'default',   ✓ tints fill and focus ring
+                                   reflect)
+  size (Size, 'md')              size (sm|md|lg, 'md',     ✓ 14/16/18px square
+                                   reflect)
+  name (String, '')              name (string)             ✓
+  value (String, 'on')           value (string, 'on')      ✓
+  label (String, '')             label (string)            ✓ → aria-label on input
+  ────────────────────────────────────────────────────────────────────────
+  Events: ship-change            sui-change                ✓ renamed; detail.checked
+    { detail: { checked } }        { detail: { checked,      + value added
+                                     value } }
+  ────────────────────────────────────────────────────────────────────────
+  Slots: (default)               (default)                 ✓ label content
+  Parts: input, box, label       input, box, label         ✓
+  ────────────────────────────────────────────────────────────────────────
+  formAssociated / internals     NATIVE                    `form-value` on checked,
+                                                           `form-disabled` on disabled
+                                                           wire ElementInternals.
+                                                           setFormValue emits the
+                                                           stringified bool ('true'/
+                                                           'false') — host scripts
+                                                           that need HTML-checkbox
+                                                           semantics (value-only
+                                                           when checked) should call
+                                                           internals.setFormValue
+                                                           themselves.
+  ────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="checked" type="bool" default="false" reflect form-value />
+<prop name="indeterminate" type="bool" default="false" reflect />
+<prop name="disabled" type="bool" default="false" reflect form-disabled />
+<prop name="required" type="bool" default="false" reflect />
+<prop name="invalid" type="bool" default="false" reflect />
+<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
+<prop name="size" values="sm|md|lg" default="md" reflect />
+<prop name="name" type="string" default="" />
+<prop name="value" type="string" default="on" />
+<prop name="label" type="string" default="" />
+
+<style>
+  :host {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    vertical-align: middle;
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--foreground);
+    -webkit-tap-highlight-color: transparent;
+
+    --tone: var(--primary);
+    --tone-on-fg: var(--primary-foreground);
+  }
+  :host([hidden]) { display: none; }
+
+  :host(:not([tone])),
+  :host([tone='default']) {
+    --tone: var(--primary);
+    --tone-on-fg: var(--primary-foreground);
+  }
+  :host([tone='info'])        { --tone: var(--info);        --tone-on-fg: var(--info-foreground); }
+  :host([tone='success'])     { --tone: var(--success);     --tone-on-fg: var(--success-foreground); }
+  :host([tone='warning'])     { --tone: var(--warning);     --tone-on-fg: var(--warning-foreground); }
+  :host([tone='destructive']) { --tone: var(--destructive); --tone-on-fg: var(--destructive-foreground); }
+  :host([tone='accent'])      { --tone: var(--accent);      --tone-on-fg: var(--accent-foreground); }
+  :host([tone='muted'])       { --tone: var(--muted-foreground); --tone-on-fg: var(--background); }
+  :host([tone='primary'])     { --tone: var(--primary);     --tone-on-fg: var(--primary-foreground); }
+
+  :host(:not([size])),
+  :host([size='md']) { --cb-size: 16px; --cb-radius: var(--radius-sm); --cb-stroke: 2px; }
+  :host([size='sm']) { --cb-size: 14px; --cb-radius: 3px;                   --cb-stroke: 1.75px; }
+  :host([size='lg']) { --cb-size: 18px; --cb-radius: var(--radius-sm); --cb-stroke: 2.25px; }
+
+  label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  :host([disabled]) label { cursor: not-allowed; }
+
+  .box {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: var(--cb-size);
+    height: var(--cb-size);
+    background: var(--surface-1);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--cb-radius);
+    box-sizing: border-box;
+    box-shadow: var(--shadow-xs);
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
+  }
+
+  :host(:not([disabled]):not([checked]):not([indeterminate])) label:hover .box {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-sm);
+  }
+
+  :host([invalid]) .box {
+    border-color: var(--destructive);
+  }
+  :host([invalid]:not([disabled])) label:hover .box {
+    border-color: var(--destructive);
+  }
+
+  :host([checked]) .box,
+  :host([indeterminate]) .box {
+    background: var(--tone);
+    border-color: var(--selected-border);
+    box-shadow: var(--shadow-xs);
+  }
+  :host([checked]:not([disabled])) label:hover .box,
+  :host([indeterminate]:not([disabled])) label:hover .box {
+    background: var(--tone);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Glyphs — CSS-drawn check and indeterminate indicator. */
+  .glyph {
+    position: absolute;
+    inset: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--tone-on-fg);
+    opacity: 0;
+    transform: scale(0.6);
+    transition:
+      opacity var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+    pointer-events: none;
+  }
+  :host([checked]:not([indeterminate])) .glyph.check,
+  :host([indeterminate]) .glyph.mixed {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* Check mark: rotated L-shape via borders */
+  .glyph.check::before {
+    content: '';
+    display: block;
+    width: 45%;
+    height: 28%;
+    border-left: var(--cb-stroke) solid currentColor;
+    border-bottom: var(--cb-stroke) solid currentColor;
+    transform: rotate(-45deg) translate(0, -15%);
+  }
+
+  /* Indeterminate bar */
+  .glyph.mixed::before {
+    content: '';
+    display: block;
+    width: 60%;
+    height: var(--cb-stroke);
+    background: currentColor;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Native input — visually hidden but preserved for a11y + form submission */
+  input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    cursor: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  :host(:not([disabled])) label:has(input:focus-visible) .box {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+  :host([invalid]:not([disabled])) label:has(input:focus-visible) .box {
+    --ring-color: var(--destructive);
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  @media (forced-colors: active) {
+    .box { border-color: CanvasText; }
+    :host([checked]) .box,
+    :host([indeterminate]) .box { background: Highlight; }
+    .glyph { color: HighlightText; }
+    :host(:not([disabled])) label:has(input:focus-visible) .box {
+      outline: 2px solid CanvasText;
+      outline-offset: 2px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  :host([disabled]) { color: var(--muted-foreground); }
+  :host([disabled]) .box {
+    background: var(--muted);
+    border-color: var(--border);
+    filter: saturate(0.6);
+    box-shadow: none;
+  }
+  :host([disabled][checked]) .box,
+  :host([disabled][indeterminate]) .box {
+    background: var(--muted);
+    border-color: var(--border);
+  }
+
+  ::slotted(*) {
+    font: inherit;
+    color: inherit;
+    line-height: var(--leading-tight);
+  }
+</style>
+
+<label part="label">
+  <span class="box" part="box">
+    <input
+      part="input"
+      type="checkbox"
+      bind:checked={checked}
+      disabled={disabled()}
+      required={required()}
+      name={name()}
+      value={value()}
+      aria-checked={indeterminate() ? 'mixed' : (checked() ? 'true' : 'false')}
+      aria-invalid={invalid() ? 'true' : 'false'}
+      aria-label={label() || name() || 'checkbox'}
+      bind:this={inputEl}
+    />
+    <span class="glyph check" aria-hidden="true"></span>
+    <span class="glyph mixed" aria-hidden="true"></span>
+  </span>
+  <slot></slot>
+</label>

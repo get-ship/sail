@@ -1,0 +1,9 @@
+<data name="overview" source="ship.overview()" live />
+
+<section>
+  {#async overview as v}
+    {:loading}<p data-test="loading">Loading…</p>
+    {:error err}<p data-test="error">Failed: {err.message}</p>
+    {:ok}<div data-test="ok">Hello, {v.name}</div>
+  {/async}
+</section>

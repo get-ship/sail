@@ -1,0 +1,101 @@
+==================
+if / elif / else
+==================
+
+{#if a > 0}<p>pos</p>{:else if a == 0}<p>zero</p>{:else}<p>neg</p>{/if}
+
+---
+
+(source_file
+  (if_block
+    cond: (identifier)
+    (element
+      tag: (tag_name)
+      (text)
+      close_tag: (tag_name))
+    (elif_clause
+      cond: (identifier)
+      (element
+        tag: (tag_name)
+        (text)
+        close_tag: (tag_name)))
+    (else_clause
+      (element
+        tag: (tag_name)
+        (text)
+        close_tag: (tag_name)))))
+
+==================
+for / key / else
+==================
+
+{#for item, idx of items() key={item.id}}<li>{item.name}</li>{:else}<em>empty</em>{/for}
+
+---
+
+(source_file
+  (for_block
+    item: (for_pattern
+      (identifier)
+      (identifier))
+    iter: (identifier)
+    key: (brace_expression
+      (identifier))
+    (element
+      tag: (tag_name)
+      (interpolation
+        (identifier))
+      close_tag: (tag_name))
+    (else_clause
+      (element
+        tag: (tag_name)
+        (text)
+        close_tag: (tag_name)))))
+
+==================
+match / case / default
+==================
+
+{#match status}{:case 'ok'}<p>ok</p>{:case 'err'}<p>err</p>{:default}<p>x</p>{/match}
+
+---
+
+(source_file
+  (match_block
+    value: (identifier)
+    (case_clause
+      (element
+        tag: (tag_name)
+        (text)
+        close_tag: (tag_name)))
+    (case_clause
+      (element
+        tag: (tag_name)
+        (text)
+        close_tag: (tag_name)))
+    (default_clause
+      (element
+        tag: (tag_name)
+        (text)
+        close_tag: (tag_name)))))
+
+==================
+nested for inside if
+==================
+
+{#if items}{#for x of items}<p>{x}</p>{/for}{/if}
+
+---
+
+(source_file
+  (if_block
+    cond: (identifier)
+    (for_block
+      item: (for_pattern
+        (identifier))
+      iter: (identifier)
+      (element
+        tag: (tag_name)
+        (interpolation
+          (identifier))
+        close_tag: (tag_name)))))

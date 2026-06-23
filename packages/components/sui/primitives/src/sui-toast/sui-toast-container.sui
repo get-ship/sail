@@ -1,0 +1,50 @@
+<!--
+  <sui-toast-container> — SUI port of <ship-toast-container>.
+  Fixed-position stacking host for <sui-toast> children.
+
+  Prop / event / method parity vs <ship-toast-container>
+  ────────────────────────────────────────────────────────────────────────────
+  Lit                             SUI                      Notes
+  ────────────────────────────────────────────────────────────────────────────
+  position (ToastPosition,        position (union,         ✓ reflects; six positions
+    'top-right')                    'bottom-right',          default changed to
+                                    reflect)                 bottom-right per spec
+  maxVisible (number, 5)          max-visible (number,     ✓ reflects; 0=unlimited
+                                    5, reflect)
+  ────────────────────────────────────────────────────────────────────────────
+  show(opts) → ShipToast          show(opts) → SuiToast    ✓ programmatic API
+  ────────────────────────────────────────────────────────────────────────────
+  Slots: (default) sui-toast      (default)                ✓
+  ────────────────────────────────────────────────────────────────────────────
+  ARIA: role=region,              controller sets on       ✓
+    aria-label=Notifications,       connect
+    aria-live=polite
+  ────────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="position" values="top-left|top-center|top-right|bottom-left|bottom-center|bottom-right" default="bottom-right" reflect />
+<prop name="max-visible" type="number" default="5" reflect />
+
+<style>
+  /* Host collapses — the visible stack lives in body via <sui-portal>
+     (see template). The host stays minimal so it can sit anywhere in
+     the document without taking layout space. */
+  :host { display: contents; }
+  :host([hidden]) { display: none; }
+</style>
+
+<!--
+  Why `<sui-portal target="body">`? Transform / overflow / contain
+  parents create new containing blocks for descendants — even
+  `position: fixed`. A toast stack rendered inside such a parent
+  visually clips at the wrong edge or, worse, sits inside the
+  transform's bounds. Teleporting the stack to `body` puts it in
+  the document's root containing block so it always anchors to the
+  viewport. The .stack has no slot inside the portal (slots break
+  projection when teleported); the controller moves slotted toasts
+  + show()-created toasts into .stackEl directly.
+-->
+<sui-portal target="body">
+  <div class="sui-toast-stack" data-sui-toast-stack bind:this={stackEl}></div>
+</sui-portal>
+<slot bind:this={defaultSlotEl}></slot>

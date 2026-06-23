@@ -1,0 +1,11 @@
+.demo .demo-log {
+  list-style: decimal inside;
+  padding: 0.5rem 0.75rem;
+  margin: 0;
+  background: var(--muted, #f6f8fa);
+  border-radius: 0.35rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+  min-height: 6rem;
+}
+.demo .demo-log li { padding: 0.15rem 0; }

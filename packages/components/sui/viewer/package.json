@@ -1,0 +1,27 @@
+{
+  "name": "@ship/sui-viewer",
+  "version": "0.1.0",
+  "description": "Ship Viewer pack — the shared component-viewing components (`sui-render`, `sui-prop-knobs`, `sui-prop-matrix`, `sui-source-panel`, `sui-component-viewer`) every surface composes for a live, reactive preview of a SUI component.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "customElements": "dist/custom-elements.json",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@ship/sui-compiler-wasm": "workspace:*",
+    "@ship/sui-dom": "workspace:*",
+    "@ship/sui-primitives": "workspace:*",
+    "@ship/sui-runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@ship/test-setup": "workspace:*",
+    "happy-dom": "^20.9.0",
+    "vitest": "^4.1.5"
+  }
+}

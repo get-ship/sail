@@ -1,0 +1,30 @@
+[package]
+name = "deck-host"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "SUI framework core — view resolution, compilation, SSR, asset manifests. No HTTP, no server runtime."
+
+[lib]
+name = "deck_host"
+path = "src/lib.rs"
+
+[features]
+default = []
+specta = ["dep:specta"]
+
+[dependencies]
+sui-compiler = { path = "../../sui/compiler" }
+sui-signals = { path = "../../sui/signals" }
+
+serde = { workspace = true }
+serde_json = { workspace = true }
+specta = { workspace = true, features = ["serde_json"], optional = true }
+tempfile = "3"
+
+[dev-dependencies]
+tempfile = "3"
+filetime = "0.2"
+
+[lints]
+workspace = true

@@ -1,0 +1,105 @@
+<!--
+  <sui-dropdown-menu> — SUI port of <ship-dropdown-menu>.
+  Trigger-anchored menu using the native popover API for top-layer rendering,
+  light-dismiss, and ESC. Adds ARIA role=menu/menuitem and roving tabindex.
+
+  Prop / event / method parity vs <ship-dropdown-menu>
+  ────────────────────────────────────────────────────────────────────────
+  Lit                          SUI                          Notes
+  ────────────────────────────────────────────────────────────────────────
+  open (bool, false)           open (bool, false, reflect)  ✓
+  ────────────────────────────────────────────────────────────────────────
+  Events: ship-select          sui-select { detail:{value}} ✓ renamed
+  Slots: trigger, (default)    trigger, (default)           ✓
+  Parts: (none)                panel                        ✓
+  ARIA: role=menu on panel,    controller sets role,        ✓
+    role=menuitem + tabindex     menuitem + roving tabindex
+  Keyboard: ↑↓ Home/End        ✓                           ✓
+    Enter/Space activate        ✓                           ✓
+    Typeahead (first char)      ✓                           ✓
+  ────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="open" type="bool" default="false" reflect />
+
+<style>
+  :host { display: inline-flex; }
+  :host([hidden]) { display: none; }
+
+  .panel {
+    inset: auto;
+    margin: 0;
+    min-width: 210px;
+    padding: var(--space-1);
+    background: var(--popover);
+    color: var(--popover-foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg), inset 0 1px 0 var(--tone-muted-bg);
+    display: flex; flex-direction: column;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+    transition:
+      opacity var(--duration-medium) var(--ease-out),
+      transform var(--duration-medium) var(--ease-out);
+  }
+
+  /* CSS Anchor Positioning. Controller sets `--sui-dd-anchor` to a
+     unique per-instance name on the slotted trigger so each dropdown
+     anchors to its own trigger without inline-style juggling. The
+     controller skips its `positionPanel` JS fallback when this path
+     is live so we don't double-position. */
+  @supports (anchor-name: --x) {
+    ::slotted([slot='trigger']) {
+      anchor-name: var(--sui-dd-anchor);
+    }
+    .panel {
+      position-anchor: var(--sui-dd-anchor);
+      top: calc(anchor(bottom) + 4px);
+      left: anchor(left);
+      position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+      position-try-order: most-block-size;
+    }
+  }
+  .panel:popover-open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  .panel::backdrop { background: transparent; }
+
+  ::slotted(button), ::slotted([role='menuitem']) {
+    display: flex; align-items: center; gap: var(--space-2);
+    text-align: start;
+    background: transparent; border: 0;
+    padding: var(--space-2) var(--space-2);
+    border-radius: var(--radius-sm);
+    color: inherit; font: inherit;
+    cursor: pointer; width: 100%;
+    transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+  }
+  ::slotted(button:hover), ::slotted([role='menuitem']:hover),
+  ::slotted(button:focus-visible), ::slotted([role='menuitem']:focus-visible) {
+    background: var(--muted);
+    outline: none;
+  }
+  ::slotted(button[data-tone='destructive']) { color: var(--destructive); }
+  ::slotted(button[data-tone='destructive']:hover) { background: var(--tone-destructive-bg); }
+  ::slotted(hr) { height: 1px; border: 0; background: var(--border-subtle); margin: var(--space-1) var(--space-1); }
+  ::slotted([data-section]) { font-size: var(--text-xs); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-foreground); padding: var(--space-2) var(--space-2) var(--space-1); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .panel { transition: none; transform: none !important; }
+  }
+  @media (forced-colors: active) {
+    .panel { border: 1px solid CanvasText; }
+  }
+</style>
+
+<span class="trigger-wrap" bind:this={triggerWrap}>
+  <slot name="trigger" bind:this={triggerSlot}></slot>
+</span>
+<div class="panel" part="panel" popover="auto" role="menu" bind:this={panelEl}>
+  <slot bind:this={itemSlot}></slot>
+</div>

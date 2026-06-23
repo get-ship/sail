@@ -1,0 +1,10 @@
+{
+  "data": [
+    {
+      "name": "agents",
+      "source": "ship.agents.summaries()",
+      "live": true
+    }
+  ],
+  "component": null
+}

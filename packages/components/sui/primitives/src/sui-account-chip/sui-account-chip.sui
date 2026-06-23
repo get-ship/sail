@@ -1,0 +1,83 @@
+<!--
+  <sui-account-chip> — signed-in identity display for the nav-top
+  chrome strip. Shows the account avatar (initials fallback) and
+  display name. No popover, no menu — the chip is the *display
+  surface*; actions (sign-in, sign-out, settings) live in
+  <sui-account-menu>, which slots the chip into its trigger
+  when a popover is wanted.
+
+  The account state is the same LiveState that <sui-account-menu>
+  uses: `ship.account.state()` is auto-generated as a reactive
+  signal by the SUI compiler from the `<data>` directive. The
+  controller reads the normalise helpers from `@ship/sdk-client`
+  (`readIdentity`, `displayName`, `initials`) and derives the
+  view-model.
+
+  Prop / event surface
+  ───────────────────────────────────────────────────────────────────
+  size  (enum, 'sm')   sm | md  — avatar diameter.
+  hide-name  (bool, false)  when true, only the avatar renders
+                              (useful in narrow chrome strips).
+  ───────────────────────────────────────────────────────────────────
+  Slots: (none)
+  Parts: root, avatar, initials, name
+  ───────────────────────────────────────────────────────────────────
+-->
+
+<prop name="size" values="sm|md" default="sm" reflect />
+<prop name="hide-name" type="bool" default="false" reflect />
+
+<data name="account" source="ship.account.state()" live />
+
+<style>
+  :host {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2, 8px);
+    font-family: var(--font-body, system-ui, sans-serif);
+    font-size: var(--text-sm, 13px);
+    color: var(--foreground);
+    user-select: none;
+    -webkit-user-select: none;
+    box-sizing: border-box;
+  }
+  :host([hidden]) { display: none; }
+
+  .avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--muted-foreground);
+    color: var(--background);
+    font-size: var(--text-xs, 10px);
+    font-weight: var(--font-weight-semibold, 600);
+    flex-shrink: 0;
+    overflow: hidden;
+    line-height: 1;
+  }
+  :host([size="md"]) .avatar { width: 28px; height: 28px; font-size: var(--text-xs, 11px); }
+  :host([size="md"]) { font-size: var(--text-base, 14px); }
+
+  .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .name {
+    color: var(--foreground);
+    font-weight: var(--font-weight-medium, 500);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+  }
+  :host([hide-name]) .name { display: none; }
+</style>
+
+<span class="avatar" part="avatar" aria-hidden="true">{initials()}</span>
+<span class="name" part="name">{name()}</span>

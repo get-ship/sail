@@ -1,0 +1,9 @@
+<data name="status" source="ship.status()" />
+
+<div>
+  {#if status().kind === 'ok'}
+    <span data-test="ok">Ready</span>
+  {:else}
+    <span data-test="loading">Loading</span>
+  {/if}
+</div>

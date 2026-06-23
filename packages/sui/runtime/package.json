@@ -1,0 +1,38 @@
+{
+  "name": "@ship/sui-runtime",
+  "version": "0.1.0",
+  "description": "SUI runtime \u2014 fine-grained signals, custom-element wrapper, patch protocol applicator. The reactive engine that templates and components share.",
+  "type": "module",
+  "license": "MIT",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./template-hooks": "./src/template-hooks/index.ts",
+    "./dev": "./src/dev.ts",
+    "./route": "./src/route/index.ts",
+    "./patch": "./src/patch.ts",
+    "./virtual": "./src/virtual.ts"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "bench": "vitest bench --run"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@ship/test-setup": "workspace:*",
+    "@tanstack/virtual-core": "^3.16.1",
+    "@vitest/browser": "^4.1.5",
+    "axe-core": "^4.11.4",
+    "jsdom": "^25.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^4.1.5"
+  }
+}

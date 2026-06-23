@@ -1,0 +1,13 @@
+<client name="api" />
+<data name="t" source="api.demo.clock()" live />
+
+<div class="feed">
+  <h1>Live Feed</h1>
+  {#while-loading of t}
+  <p>Loading…</p>
+  {/while-loading}
+  {#while-error err of t}
+  <p>Error: {err.message}</p>
+  {/while-error}
+  <p class="state">state: {t().kind}</p>
+</div>

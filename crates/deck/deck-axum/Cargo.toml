@@ -1,0 +1,35 @@
+[package]
+name = "deck-axum"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Axum adapter for deck-core — maps DeckResponse onto axum responses and registers deck's hosting surface as a mountable router."
+
+[lib]
+name = "deck_axum"
+path = "src/lib.rs"
+
+[features]
+default = []
+specta = ["dep:specta", "deck-core/specta"]
+
+[dependencies]
+deck-config = { path = "../deck-config" }
+deck-core = { path = "../deck-core" }
+deck-bundler = { path = "../deck-bundler" }
+
+axum = { workspace = true, features = ["http1", "tokio", "ws"] }
+futures-util = { workspace = true }
+tokio = { workspace = true, features = ["sync", "time", "rt", "macros"] }
+tokio-stream = { version = "0.1", features = ["sync"] }
+tokio-util = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+ulid = { workspace = true }
+async-stream = "0.3"
+specta = { workspace = true, features = ["serde_json"], optional = true }
+[dev-dependencies]
+tempfile = "3"
+tokio = { workspace = true, features = ["test-util", "macros", "rt-multi-thread", "time"] }
+reqwest = { workspace = true, features = ["json", "stream"] }
+futures-util = { workspace = true }

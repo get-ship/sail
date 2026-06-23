@@ -1,0 +1,8 @@
+{
+  "id": "two-button-toggle",
+  "difficulty": "easy",
+  "description": "Build a view that toggles between two text values using <state>.\n\nState: a single <state name=\"label\" value=\"'on'\" />.\n\nLayout:\n  - A <span data-test=\"label\"> showing the current value of label.\n  - A <ship-button data-test=\"set-on\"> labelled \"on\" that sets label to 'on'.\n  - A <ship-button data-test=\"set-off\"> labelled \"off\" that sets label to 'off'.",
+  "fixtures": { "template": "" },
+  "expectedBindings": ["label"],
+  "behavioralTests": "const label = container.querySelector('[data-test=\"label\"]');\nexpect(label, 'label present');\nexpect(label.textContent.trim() === 'on', 'starts at on, got: ' + label.textContent);\ncontainer.querySelector('[data-test=\"set-off\"]').click();\nawait tick();\nexpect(label.textContent.trim() === 'off', 'after click set-off, got: ' + label.textContent);\ncontainer.querySelector('[data-test=\"set-on\"]').click();\nawait tick();\nexpect(label.textContent.trim() === 'on', 'after click set-on, got: ' + label.textContent);"
+}

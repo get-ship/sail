@@ -1,0 +1,20 @@
+[package]
+name = "sui-lsp"
+version = "0.1.0"
+edition = "2024"
+description = "Language Server for SUI `.sui` templates — thin LSP shell over sui-compiler."
+
+[[bin]]
+name = "sui-lsp"
+path = "src/main.rs"
+
+[dependencies]
+sui-compiler = { path = "../compiler" }
+lsp-server = "0.7"
+lsp-types = "0.95"
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+
+[lints]
+workspace = true

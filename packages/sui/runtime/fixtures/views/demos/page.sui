@@ -1,0 +1,31 @@
+<div class="demos-index">
+  <h1>SUI demos</h1>
+  <p class="caption">
+    Small, single-feature views exercising one piece of the SUI surface each.
+    Each demo lives at <code>views/demos/&lt;name&gt;/</code> and is
+    50–100 lines of <code>page.sui</code> + <code>controller.ts</code>.
+  </p>
+
+  <ul class="demos-list">
+    <li>
+      <a href="/demos/signals-and-derived" data-test="link-signals">signals-and-derived</a>
+      <span> — counter, derived double, history list. <code>scope:</code> + <code>derived:</code>.</span>
+    </li>
+    <li>
+      <a href="/demos/conditional-render" data-test="link-conditional">conditional-render</a>
+      <span> — checkbox toggles a panel. Block <code>if/else</code>.</span>
+    </li>
+    <li>
+      <a href="/demos/iteration" data-test="link-iteration">iteration</a>
+      <span> — todo list. Block <code>for</code> with <code>key=</code>.</span>
+    </li>
+    <li>
+      <a href="/demos/match" data-test="link-match">match</a>
+      <span> — alert tone selector. Block <code>match</code>.</span>
+    </li>
+    <li>
+      <a href="/demos/lifecycle" data-test="link-lifecycle">lifecycle</a>
+      <span> — mount tick log. <code>mount:</code> returns cleanup.</span>
+    </li>
+  </ul>
+</div>

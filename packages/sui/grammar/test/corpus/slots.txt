@@ -1,0 +1,60 @@
+==================
+default slot
+==================
+
+<ship-card><slot></slot></ship-card>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (element
+      tag: (tag_name)
+      close_tag: (tag_name))
+    close_tag: (tag_name)))
+
+==================
+named slot in content
+==================
+
+<ship-button>
+  <ship-icon slot="leading" name="plus"></ship-icon>
+  Save
+</ship-button>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (element
+      tag: (tag_name)
+      (static_attr
+        name: (attr_name)
+        value: (string_literal))
+      (static_attr
+        name: (attr_name)
+        value: (string_literal))
+      close_tag: (tag_name))
+    (text)
+    close_tag: (tag_name)))
+
+==================
+slot element with name
+==================
+
+<div><slot name="leading"></slot></div>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (element
+      tag: (tag_name)
+      (static_attr
+        name: (attr_name)
+        value: (string_literal))
+      close_tag: (tag_name))
+    close_tag: (tag_name)))

@@ -1,0 +1,30 @@
+[package]
+name = "deck-ssr"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Server-render a SYNTHESIZED SUI view (synthetic controller+render) through ship-js — the L0 deno_core/V8 isolate — with route + data resolved over the host-dispatch wire. The production TS-SSR path, ADDITIVE beside the Rust render-eval (it never touches render/eval). Heavy (V8 + Rolldown), so members-only — excluded from default-members like apps/host."
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+# The synthetic emitter — used as a pure function (no CLI shell-out).
+sui-compiler = { path = "../../sui/compiler" }
+# The L0 JS engine: the deno_core/V8 isolate + the host-dispatch wire.
+ship-js = { path = "../../core/ship-substrate/crates/ship-js", features = ["deno"] }
+# Deck's request/data contracts (DataPort) the host Dispatch maps onto.
+deck-core = { path = "../deck-core" }
+# The project's own bundler (Rolldown), so the measured bundle matches the
+# real pipeline rather than a hand-rolled toy.
+rolldown = "1.0.3"
+rolldown_common = "1.0.3"
+
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "sync"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+
+[lints]
+workspace = true

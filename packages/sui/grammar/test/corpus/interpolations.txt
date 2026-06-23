@@ -1,0 +1,62 @@
+==================
+simple identifier interpolation
+==================
+
+<p>{name}</p>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (interpolation
+      (identifier))
+    close_tag: (tag_name)))
+
+==================
+member access call
+==================
+
+<p>{user.name()}</p>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (interpolation
+      (identifier))
+    close_tag: (tag_name)))
+
+==================
+ternary with strings
+==================
+
+<p>{count === 1 ? 'agent' : 'agents'}</p>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (interpolation
+      (identifier))
+    close_tag: (tag_name)))
+
+==================
+interpolation alongside text
+==================
+
+<p>{total()} agent{total() === 1 ? '' : 's'}</p>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (interpolation
+      (identifier))
+    (text)
+    (interpolation
+      (identifier))
+    close_tag: (tag_name)))

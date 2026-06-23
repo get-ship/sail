@@ -1,0 +1,17 @@
+<prop name="tone" values="default|primary" default="default" reflect />
+<prop name="disabled" type="bool" default="false" reflect />
+<prop name="loading" type="bool" default="false" reflect />
+<prop name="label" type="string" default="" />
+
+<button
+  part="button"
+  data-test="root"
+  disabled={disabled() || loading()}
+  aria-busy={loading() ? 'true' : 'false'}
+  aria-label={label()}
+>
+  <span class="content" data-test="label">{label()}</span>
+  {#if loading()}
+    <span class="spinner" data-test="spinner" aria-hidden="true"></span>
+  {/if}
+</button>

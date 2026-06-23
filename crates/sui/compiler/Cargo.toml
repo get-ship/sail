@@ -1,0 +1,63 @@
+[package]
+name = "sui-compiler"
+version = "0.1.0"
+edition = "2024"
+publish = false
+build = "build.rs"
+description = "Ahead-of-time compiler for `.sui` source files. Emits ESM JS that hydrates against `@ship/sui-runtime` without re-parsing at load time."
+
+[lib]
+name = "sui_compiler"
+crate-type = ["lib", "cdylib"]
+path = "src/lib.rs"
+
+[build-dependencies]
+build-info = { path = "../../build-info" }
+
+[[bin]]
+name = "sui-compiler"
+path = "src/bin/sui-compiler.rs"
+
+[features]
+default = []
+# Build a wasm-bindgen-shaped public surface so `compile()` is callable
+# from JS in a browser. Enabled implicitly by wasm-pack via --features.
+# Off for native builds so the host crate doesn't pull in the bindgen
+# generators when running tests / building the CLI.
+wasm = ["dep:wasm-bindgen", "dep:serde-wasm-bindgen"]
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true, features = ["preserve_order"] }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# CLI-only deps. Excluded from the wasm build so we don't drag in
+# argument parsing / native syscalls. The lib doesn't touch either.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+clap = { workspace = true }
+libc = { workspace = true }
+
+[dependencies.wasm-bindgen]
+version = "0.2"
+optional = true
+
+[dependencies.serde-wasm-bindgen]
+version = "0.6"
+optional = true
+
+# SUI lint substrate — controller-purity rule and (Phase 2+) other
+# authoring-discipline rules. Compile-time hard wall: any finding
+# becomes a CompileError. Same rule definition consumed by crates/lsp
+# at edit-time.
+[dependencies.sui-lint]
+path = "../lint"
+
+[dependencies.build-info]
+path = "../../build-info"
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints]
+workspace = true

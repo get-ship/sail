@@ -1,0 +1,73 @@
+<!--
+  <sui-media-av> — the video/audio renderer arm of the sui-media family
+  (Backbone #2 — ViewerRenderer).
+
+  Read-only, source-in-never-fetch. A resolved source arrives via `prop:src`
+  identity (a video/audio object-url, or resolved bytes the consumer fetched)
+  — NEVER an attribute, NEVER a fetch. The renderer auto-detects video-vs-audio
+  from the descriptor (overridable via `kind`) and plays it through the NATIVE
+  <video>/<audio controls> element, which carries built-in assistive-tech
+  semantics. An optional decorative <canvas part="waveform" aria-hidden> draws
+  decoded audio peaks beside the real <audio>, which stays the accessible
+  control.
+
+  Density is the platform axis (`<html data-density>`): this renderer is NOT
+  row-shaped and exposes NEITHER `density` NOR `dense`.
+
+  Props (build-spec §Props):
+    kind      video|audio|auto   reflect — element selection (auto = sniff)
+    autoplay  bool, false        reflect — begin playback on load
+    controls  bool, true         reflect — native transport controls
+    waveform  bool, false        reflect — audio waveform canvas
+
+  Events (ViewerRenderer contract, via emit):
+    sui-viewer-load              — native loadedmetadata
+    sui-viewer-error {message}   — failed source
+    sui-viewer-play/-pause/-ended — native transport
+
+  Parts: media · controls · waveform.
+-->
+
+<prop name="kind" values="video|audio|auto" default="auto" reflect />
+<prop name="autoplay" type="bool" default="false" reflect />
+<prop name="controls" type="bool" default="true" reflect />
+<prop name="waveform" type="bool" default="false" reflect />
+
+<style>
+  :host {
+    display: block;
+    width: 100%;
+    color: var(--foreground);
+    /* Waveform canvas height — a fixed decorative strip dimension. */
+    --sui-waveform-height: 3rem;
+  }
+  :host([hidden]) { display: none; }
+
+  video,
+  audio {
+    display: block;
+    width: 100%;
+    border-radius: var(--radius-md);
+    background: var(--surface-1);
+    /* Framed surface — a hairline border + soft lift so the player reads
+       as a contained media card rather than a bare native element. */
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-xs);
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: var(--sui-waveform-height);
+    margin-block-start: var(--space-2);
+  }
+</style>
+
+{#if isVideo()}
+  <video part="media" bind:this={mediaEl}></video>
+{:else}
+  <audio part="media" bind:this={mediaEl}></audio>
+  {#if showWaveform()}
+    <canvas part="waveform" aria-hidden="true" bind:this={waveEl}></canvas>
+  {/if}
+{/if}

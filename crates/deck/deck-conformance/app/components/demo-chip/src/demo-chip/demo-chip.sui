@@ -1,0 +1,7 @@
+<!--
+  <demo-chip> — trivial custom element for the deck-conformance shared-chunk dedup
+  showcase (GAP 4). Both views/widgets and views/gallery use this tag; the
+  multi-entry build must hoist it into ONE shared chunk.
+-->
+
+<span class="demo-chip-marker"><slot></slot></span>

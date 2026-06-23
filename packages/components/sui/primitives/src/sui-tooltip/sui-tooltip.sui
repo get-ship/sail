@@ -1,0 +1,146 @@
+<!--
+  <sui-tooltip> — SUI port of <ship-tooltip>.
+  CSS-positioned tooltip shown on hover/focus-within. Wraps the trigger
+  as light-DOM children; `content` slot provides the bubble body.
+
+  Prop parity vs <ship-tooltip>
+  ─────────────────────────────────────────────────────────────────────────────
+  Lit                          SUI                      Notes
+  ─────────────────────────────────────────────────────────────────────────────
+  placement                    placement (reflect)      ✓ top|bottom|left|right
+    'top'|'bottom'|'left'|
+    'right'
+  ─────────────────────────────────────────────────────────────────────────────
+  (no events)                  (no events)              ✓
+  ─────────────────────────────────────────────────────────────────────────────
+  slots: (default) trigger     (default) trigger        ✓
+         content  tooltip body  content  tooltip body   ✓
+  ─────────────────────────────────────────────────────────────────────────────
+  ARIA: aria-describedby set   controller sets same     ✓ on first slotted
+    on first slotted element     on first slotted el       element via
+                                                           slotchange
+  Esc key blurs host           Esc key blurs host       ✓
+  ─────────────────────────────────────────────────────────────────────────────
+  parts: (none)                part="bubble"            SUI adds bubble part
+  ─────────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="placement" values="top|bottom|left|right" default="top" reflect />
+
+<style>
+  :host {
+    display: inline-flex;
+    /* Per-instance anchor name set by the controller via
+       --sui-tooltip-anchor so multiple tooltips on a page each address
+       their own trigger; falls back to a shared default when the
+       controller hasn't mounted yet (e.g. SSR first paint). */
+    anchor-name: var(--sui-tooltip-anchor);
+  }
+  :host([hidden]) { display: none; }
+
+  .bubble {
+    /* Arrow shift = -3.5px (half the 7px arrow) and -3px (the visible
+     * tip overlap) are off the spacing scale; expose them as local
+     * tokens so component CSS stays scale-free. */
+    --tt-arrow-shift: -3.5px;
+    --tt-arrow-overlap: calc(-1 * var(--space-1));
+    /* `position: fixed` so the bubble escapes any ancestor overflow:hidden
+       and lives in the viewport coordinate space — same trick sui-popover
+       uses. CSS Anchor Positioning then walks back from the bubble to
+       the host's anchor name and resolves placement against the host's
+       rect. Older browsers without anchor positioning fall through to the
+       fallback block at the bottom. */
+    position: fixed;
+    position-anchor: var(--sui-tooltip-anchor);
+    z-index: var(--z-popover);
+    padding: var(--space-1) var(--space-2);
+    background: var(--foreground);
+    color: var(--background);
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
+    border-radius: var(--radius-md);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--duration-fast) var(--ease-out);
+    box-shadow: var(--shadow-md);
+    /* When the chosen placement would clip the bubble against the
+       viewport edge, the browser auto-flips. Same fallback set as
+       sui-popover. */
+    position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+    position-try-order: most-block-size;
+  }
+
+  :host(:hover) .bubble,
+  :host(:focus-within) .bubble {
+    opacity: 1;
+  }
+
+  /* Arrow caret pointing at the trigger */
+  .bubble::after {
+    content: '';
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    background: var(--foreground);
+    transform: rotate(45deg);
+  }
+
+  /* Anchor-positioned placements — Chromium / Safari / Firefox. */
+  @supports (anchor-name: --x) {
+    :host(:not([placement])) .bubble,
+    :host([placement='top']) .bubble {
+      bottom: calc(anchor(top) - var(--space-2));
+      justify-self: anchor-center;
+    }
+    :host(:not([placement])) .bubble::after,
+    :host([placement='top']) .bubble::after {
+      bottom: calc(-1 * var(--space-1)); left: 50%; margin-left: var(--tt-arrow-shift);
+    }
+    :host([placement='bottom']) .bubble {
+      top: calc(anchor(bottom) + var(--space-2));
+      justify-self: anchor-center;
+    }
+    :host([placement='bottom']) .bubble::after { top: calc(-1 * var(--space-1)); left: 50%; margin-left: var(--tt-arrow-shift); }
+    :host([placement='left']) .bubble {
+      right: calc(anchor(left) - var(--space-2));
+      align-self: anchor-center;
+    }
+    :host([placement='left']) .bubble::after { right: calc(-1 * var(--space-1)); top: 50%; margin-top: var(--tt-arrow-shift); }
+    :host([placement='right']) .bubble {
+      left: calc(anchor(right) + var(--space-2));
+      align-self: anchor-center;
+    }
+    :host([placement='right']) .bubble::after { left: calc(-1 * var(--space-1)); top: 50%; margin-top: var(--tt-arrow-shift); }
+  }
+
+  /* Fallback for browsers without anchor-positioning: revert to the old
+     absolute-in-host layout (clips inside overflow contexts, but at
+     least renders). */
+  @supports not (anchor-name: --x) {
+    :host { position: relative; }
+    .bubble { position: absolute; }
+    :host(:not([placement])) .bubble,
+    :host([placement='top']) .bubble {
+      bottom: calc(100% + var(--space-2)); left: 50%; transform: translateX(-50%);
+    }
+    :host(:not([placement])) .bubble::after,
+    :host([placement='top']) .bubble::after { bottom: calc(-1 * var(--space-1)); left: 50%; margin-left: var(--tt-arrow-shift); }
+    :host([placement='bottom']) .bubble {
+      top: calc(100% + var(--space-2)); left: 50%; transform: translateX(-50%);
+    }
+    :host([placement='bottom']) .bubble::after { top: calc(-1 * var(--space-1)); left: 50%; margin-left: var(--tt-arrow-shift); }
+    :host([placement='left']) .bubble {
+      right: calc(100% + var(--space-2)); top: 50%; transform: translateY(-50%);
+    }
+    :host([placement='left']) .bubble::after { right: calc(-1 * var(--space-1)); top: 50%; margin-top: var(--tt-arrow-shift); }
+    :host([placement='right']) .bubble {
+      left: calc(100% + var(--space-2)); top: 50%; transform: translateY(-50%);
+    }
+    :host([placement='right']) .bubble::after { left: calc(-1 * var(--space-1)); top: 50%; margin-top: var(--tt-arrow-shift); }
+  }
+</style>
+
+<slot bind:this={defaultSlot}></slot>
+<span class="bubble" role="tooltip" part="bubble" bind:this={bubbleEl}><slot name="content"></slot></span>

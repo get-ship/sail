@@ -1,0 +1,8 @@
+// Demo: signal + derived. Counter, derived double, history list.
+{
+  "name": "signals-and-derived",
+  "path": "/demos/signals-and-derived",
+  "title": "Demo · signals + derived",
+  "layout": "default",
+  "auth": "public"
+}

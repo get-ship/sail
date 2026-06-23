@@ -1,0 +1,198 @@
+// sui-table — light-DOM CSS for the slot/native variants.
+//
+// The slot/native variants project a consumer-authored `<table>` into the host
+// LIGHT DOM (shadow CSS can't reach it), so the table styling is adopted onto
+// the host document once per document (WeakSet-guarded). The data variant is
+// shadow-rendered and styled in `sui-table.sui`'s `<style>` instead.
+//
+// Tokens only: density via the platform `--density-*` channel, selection via
+// the prebuilt `--selected-bg`/`--tone-primary-bg` ramps, surfaces via
+// `--surface-2`, dividers via `--divider`, mono via `--mono-font`, motion via
+// the role-token easings — no `color-mix`/`oklch`/hex/`var(--x, fallback)`/
+// hardcoded-font literals (design-system anti-smells, review-enforced).
+
+const lightDomInstalled = new WeakSet<Document>()
+
+export function installLightDomStyles(doc: Document): void {
+  if (lightDomInstalled.has(doc)) return
+  lightDomInstalled.add(doc)
+  try {
+    if (typeof CSSStyleSheet !== 'undefined' && 'replaceSync' in CSSStyleSheet.prototype) {
+      const sheet = new CSSStyleSheet()
+      sheet.replaceSync(SUI_TABLE_LIGHT_DOM_CSS)
+      doc.adoptedStyleSheets = [...doc.adoptedStyleSheets, sheet]
+      return
+    }
+  } catch {
+    /* fall through to a <style> element */
+  }
+  const style = doc.createElement('style')
+  style.setAttribute('data-sui-table', '')
+  style.textContent = SUI_TABLE_LIGHT_DOM_CSS
+  doc.head.appendChild(style)
+}
+
+export const SUI_TABLE_LIGHT_DOM_CSS = `
+  sui-table[variant='native'] > table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: auto;
+    font-variant-numeric: tabular-nums;
+  }
+
+  sui-table th,
+  sui-table td {
+    text-align: start;
+    padding: var(--density-row-py) var(--density-row-px);
+    vertical-align: middle;
+    border-bottom: 1px solid var(--divider);
+    font-size: var(--density-text);
+    color: var(--foreground);
+    box-sizing: border-box;
+  }
+  sui-table th {
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted-foreground);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    user-select: none;
+    background: var(--surface-2);
+  }
+  sui-table thead {
+    background: var(--surface-2);
+  }
+  sui-table > tr:last-of-type > *,
+  sui-table tbody tr:last-child > * {
+    border-bottom: 0;
+  }
+
+  sui-table th[align='right'], sui-table td[align='right'] { text-align: right; }
+  sui-table th[align='center'], sui-table td[align='center'] { text-align: center; }
+
+  sui-table .mono {
+    font-family: var(--mono-font);
+    font-size: var(--text-sm);
+    letter-spacing: -0.01em;
+  }
+  sui-table .muted { color: var(--muted-foreground); }
+  sui-table .null { color: var(--muted-foreground); font-style: italic; }
+
+  sui-table > tr:not([slot='head']),
+  sui-table tbody tr {
+    transition: background-color var(--duration-fast) var(--ease-out);
+  }
+  sui-table:not([hoverable='false']) > tr:not([slot='head']):hover > *,
+  sui-table:not([hoverable='false']) tbody tr:hover > * {
+    background: var(--hover-bg);
+  }
+
+  sui-table[striped] > tr:not([slot='head']):nth-of-type(even) > *,
+  sui-table[striped] tbody tr:nth-child(even) > * {
+    background: var(--tone-muted-bg);
+  }
+  sui-table[striped]:not([hoverable='false']) > tr:not([slot='head']):hover > *,
+  sui-table[striped]:not([hoverable='false']) tbody tr:hover > * {
+    background: var(--hover-bg);
+  }
+
+  sui-table tr[data-selected] > *,
+  sui-table tr[aria-selected='true'] > * {
+    background: var(--selected-bg);
+  }
+  sui-table tr[data-selected] > *:first-child,
+  sui-table tr[aria-selected='true'] > *:first-child {
+    box-shadow: inset 3px 0 0 0 var(--primary);
+  }
+
+  sui-table[sticky-header] thead th,
+  sui-table[sticky-header] tr[slot='head'] > th {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+    background: var(--surface-2);
+    box-shadow: 0 1px 0 0 var(--border);
+  }
+
+  sui-table th[data-sort-key],
+  sui-table th.sortable {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+  sui-table th[data-sort-key]:hover,
+  sui-table th.sortable:hover {
+    color: var(--foreground);
+  }
+  sui-table th[aria-sort='ascending'],
+  sui-table th[aria-sort='descending'] {
+    color: var(--foreground);
+  }
+  sui-table th[data-sort-key]:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 var(--ring-width) var(--ring-color);
+  }
+
+  sui-table[data-empty] > table {
+    display: none;
+  }
+
+  sui-table[sticky-first-col] th:first-child,
+  sui-table[sticky-first-col] td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--card);
+    border-right: 1px solid var(--border);
+  }
+  sui-table[sticky-first-col] thead th:first-child {
+    z-index: 3;
+    background: var(--surface-2);
+  }
+  sui-table[sticky-first-col] tbody tr:hover td:first-child {
+    background: var(--hover-bg);
+  }
+
+  sui-table[gutter] th.sui-table-gutter-cell,
+  sui-table[gutter] td.sui-table-gutter-cell {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    padding: 0;
+    text-align: center;
+    color: var(--muted-foreground);
+    background: var(--surface-2);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    left: 0;
+    z-index: 2;
+  }
+  sui-table[gutter] thead th.sui-table-gutter-cell { z-index: 4; }
+
+  sui-table tr[data-row-id] > td:not(.sui-table-gutter-cell) {
+    cursor: pointer;
+  }
+
+  sui-table .st {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  sui-table .st .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: var(--radius-full);
+    background: var(--muted-foreground);
+  }
+  sui-table .st .lbl { color: var(--foreground); }
+  sui-table .st.ok .dot { background: var(--success); box-shadow: 0 0 0 3px var(--tone-success-bg); }
+  sui-table .st.warn .dot { background: var(--warning); box-shadow: 0 0 0 3px var(--tone-warning-bg); }
+  sui-table .st.err .dot { background: var(--destructive); box-shadow: 0 0 0 3px var(--tone-destructive-bg); }
+
+  @media (forced-colors: active) {
+    sui-table th, sui-table td { border-bottom-color: CanvasText; }
+  }
+`

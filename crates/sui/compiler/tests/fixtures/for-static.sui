@@ -1,0 +1,7 @@
+<data name="rows" source="ship.rows()" live />
+
+<ul>
+  {#for row of rows().value key={row.id}}
+    <li>static text only</li>
+  {/for}
+</ul>

@@ -1,0 +1,103 @@
+<!--
+  SUI scaffold base — the shared HTML skeleton every daemon-served SUI SPA
+  starts from.
+
+  Both apps/shell (the hub) and apps/spaces (the per-space frontend) ship
+  their own `index.html`, but the head boilerplate is the same:
+
+    * charset + viewport (every SUI SPA)
+    * favicon + ship-logo SVG (every SUI SPA)
+    * the <meta name="ship-mode"> tag (daemon rewrites in production)
+    * /api/assets/view-tokens.css (design tokens — daemon-served, root-absolute)
+    * /src/chrome/layout.css (the per-app chrome baseline)
+    * pre-paint theme script (FOUC guard — reads localStorage theme)
+    * the `/_deck/*` importmap (single source of truth, the existing
+      importmap-ssot test gates this)
+
+  What differs per scaffold:
+    * The HUB adds: Google Fonts (display/body/mono), six rail icon
+      prefetches, the body chrome (<sui-nav-top>, <sui-panel-dock>,
+      <sui-shell-bottom>, <sui-launcher>, <sui-toast-container>,
+      <sui-edit-overlay>), and an explicit <sui-command-bar> in the
+      top-nav slot.
+    * The SPACE scaffold adds: a `__suiRuntimeReady` IIFE that surfaces
+      the runtime on `window.__suiRuntime` for the confined view bundles
+      (same pattern the hub uses for its own first-paint bootstrap), and
+      the `<main id="space-content">` mount.
+
+  The pre-paint theme + importmap are gated by the importmap-ssot test
+  (apps/shell/test/importmap-ssot.test.ts) — when adding a new scaffold,
+  copy these blocks verbatim from the apps/spaces/index.html, then
+  extend the test with the new entry. The other pieces (fonts, prefetched
+  icons, body chrome) are app-specific and stay hand-authored per scaffold.
+
+  Out of scope (per the job spec):
+    * auto-merge / templating. The build reads each scaffold's own
+      `index.html` and rewrites `/src/main.ts` + `/src/chrome/layout.css`
+      to hashed asset URLs. A templated base would require the deck-cli
+      build to grow a `<!-- @@include -->` preprocessor — deferred until
+      a third scaffold needs it (the structural payoff isn't there yet).
+    * auto-bundled components. The HUB uses the per-tag resolver (no
+      `/_deck/components.js`); the SPACE scaffold loads the umbrella so
+      views can mount domain primitives without per-view setup. Different
+      app shapes, different head; not a dedup candidate.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ship-mode: daemon rewrites `development` → `production` when it serves
+       this HTML directly. main.ts reads it onto window.__shipMode; the
+       status bar shows the [mode] tag. Both apps/shell and apps/spaces
+       keep this tag. -->
+  <meta name="ship-mode" content="development" />
+
+  <!-- Design tokens + the per-app chrome baseline. Daemon-served, root-
+       absolute (`/api/...` for tokens, `/src/chrome/layout.css` for layout).
+       The layout.css href is REWRITTEN by `deck build` to the hashed
+       asset URL (`/assets/layout-<hash>.css`); tokens stay static. -->
+  <link rel="stylesheet" href="/api/assets/view-tokens.css" />
+  <link rel="stylesheet" href="/src/chrome/layout.css" />
+
+  <!-- Pre-paint theme (FOUC guard). Reads the persisted theme from
+       localStorage BEFORE the first paint so the document.documentElement
+       carries the matching `data-theme` attribute. The same script in
+       every scaffold — copy verbatim. -->
+  <script>
+    try {
+      var _t = localStorage.getItem('ship-site-theme')
+      if (_t) document.documentElement.setAttribute('data-theme', _t)
+    } catch (_e) {}
+  </script>
+
+  <!-- The /_deck/* URL scheme has ONE source of truth: the client
+       `DECK_PREFIX` constant exported from `@ship/sdk-client`. Every
+       scaffold's importmap must match it. The importmap-ssot test
+       (apps/shell/test/importmap-ssot.test.ts) gates this. -->
+  <script type="importmap">
+    {
+      "imports": {
+        "@ship/sui-runtime":                "/_deck/runtime.js",
+        "@ship/sui-runtime/route":          "/_deck/runtime.js",
+        "@ship/sui-runtime/template-hooks": "/_deck/runtime.js",
+        "@ship/sui-runtime/patch":          "/_deck/runtime.js",
+        "@ship/sui-dom":                    "/_deck/dom.js",
+        "@ship/sdk-client":                 "/_deck/sdk-client.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <!--
+    Each scaffold fills this body with its own chrome:
+      * apps/shell: <div id="ship-app"> + nav-top, content, panel-dock,
+        shell-bottom, launcher, toasts, edit-overlay
+      * apps/spaces: <main id="space-content"> + the confined main.ts
+
+    The body is the per-scaffold part of the SPA. The head is the
+    shared part this file documents.
+  -->
+</body>
+</html>

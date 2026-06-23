@@ -1,0 +1,214 @@
+<!--
+  <sui-switch> — SUI port of <ship-switch>.
+  Toggle switch backed by a native <input type="checkbox"> for form
+  participation and keyboard access (Space + Enter). Pill track with
+  sliding thumb; tone-aware fill when checked.
+
+  Prop / event / method parity vs <ship-switch>
+  ────────────────────────────────────────────────────────────────────────
+  Lit                            SUI                       Notes
+  ────────────────────────────────────────────────────────────────────────
+  checked (Boolean, false)       checked (bool, false,     ✓ two-way via bind:checked
+                                   reflect)
+  disabled (Boolean, false)      disabled (bool, false,    ✓
+                                   reflect)
+  tone (Tone)                    tone (union, 'default',   ✓ tints on-state fill and
+                                   reflect)                  focus ring
+  size (Size, 'md')              size (sm|md|lg, 'md',     ✓ sm 24×14, md 28×16,
+                                   reflect)                  lg 32×18
+  name (String, '')              name (string)             ✓
+  value (String, 'on')           value (string, 'on')      ✓
+  label (String, '')             label (string)            ✓ → aria-label on input
+  ────────────────────────────────────────────────────────────────────────
+  Events: ship-change            sui-change                ✓ renamed; detail.checked
+    { detail: { checked } }        { detail: { checked } }
+  ────────────────────────────────────────────────────────────────────────
+  Slots: (default)               (default)                 ✓ label content
+  Parts: track, thumb, input     track, thumb, input       ✓
+  ────────────────────────────────────────────────────────────────────────
+  formAssociated / internals     NATIVE                    `form-value` on checked
+                                                           and `form-disabled` on
+                                                           disabled wire
+                                                           ElementInternals.
+  ────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="checked" type="bool" default="false" reflect form-value />
+<prop name="disabled" type="bool" default="false" reflect form-disabled />
+<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
+<prop name="size" values="sm|md|lg" default="md" reflect />
+<prop name="name" type="string" default="" />
+<prop name="value" type="string" default="on" />
+<prop name="label" type="string" default="" />
+
+<style>
+  :host {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    vertical-align: middle;
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--foreground);
+    -webkit-tap-highlight-color: transparent;
+
+    --tone: var(--primary);
+    --tone-on-fg: var(--primary-foreground);
+  }
+  :host([hidden]) { display: none; }
+
+  :host(:not([tone])),
+  :host([tone='default']) {
+    --tone: var(--primary);
+    --tone-on-fg: var(--primary-foreground);
+  }
+  :host([tone='info'])        { --tone: var(--info);        --tone-on-fg: var(--info-foreground); }
+  :host([tone='success'])     { --tone: var(--success);     --tone-on-fg: var(--success-foreground); }
+  :host([tone='warning'])     { --tone: var(--warning);     --tone-on-fg: var(--warning-foreground); }
+  :host([tone='destructive']) { --tone: var(--destructive); --tone-on-fg: var(--destructive-foreground); }
+  :host([tone='accent'])      { --tone: var(--accent);      --tone-on-fg: var(--accent-foreground); }
+  :host([tone='muted'])       { --tone: var(--muted-foreground); --tone-on-fg: var(--background); }
+  :host([tone='primary'])     { --tone: var(--primary);     --tone-on-fg: var(--primary-foreground); }
+
+  :host(:not([size])),
+  :host([size='md']) { --sw-w: 28px; --sw-h: 16px; --sw-thumb: 12px; }
+  :host([size='sm']) { --sw-w: 24px; --sw-h: 14px; --sw-thumb: 10px; }
+  :host([size='lg']) { --sw-w: 32px; --sw-h: 18px; --sw-thumb: 14px; }
+
+  label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  :host([disabled]) label { cursor: not-allowed; }
+
+  .track {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    width: var(--sw-w);
+    height: var(--sw-h);
+    background: var(--muted);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-full);
+    box-sizing: border-box;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
+  }
+
+  :host(:not([disabled]):not([checked])) label:hover .track {
+    background: var(--hover-bg);
+    border-color: var(--border-strong);
+  }
+
+  :host([checked]) .track {
+    background: var(--tone);
+    border-color: var(--selected-border);
+    box-shadow: var(--shadow-xs);
+  }
+  :host([checked]:not([disabled])) label:hover .track {
+    background: var(--tone);
+    box-shadow:
+      var(--shadow-xs);
+  }
+
+  .thumb {
+    position: absolute;
+    top: 50%;
+    left: 1px;
+    width: var(--sw-thumb);
+    height: var(--sw-thumb);
+    background: var(--surface-1);
+    border-radius: 50%;
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-50%);
+    transition:
+      left var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
+    pointer-events: none;
+  }
+  :host([checked]) .thumb {
+    left: calc(100% - var(--sw-thumb) - 3px);
+    background: var(--tone-on-fg);
+  }
+
+  /* Native input — visually hidden but preserved for a11y + form submission */
+  input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    cursor: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  /* Canonical focus convention, tone-tinted via local --ring-color.
+     Replaces the design's box-shadow ring stack; the checked inset
+     highlight is preserved by the :host([checked]) .track rule above. */
+  :host(:not([disabled])) label:has(input:focus-visible) .track {
+    --ring-color: var(--tone);
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  @media (forced-colors: active) {
+    :host(:not([disabled])) label:has(input:focus-visible) .track {
+      outline: 2px solid CanvasText;
+      outline-offset: 2px;
+    }
+    .track { border-color: CanvasText; }
+    :host([checked]) .track { background: Highlight; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  :host([disabled]) { color: var(--muted-foreground); }
+  :host([disabled]) .track {
+    background: var(--muted);
+    border-color: var(--border);
+    filter: saturate(0.6);
+    box-shadow: none;
+  }
+  :host([disabled][checked]) .track {
+    background: var(--muted);
+    border-color: var(--border);
+  }
+  :host([disabled]) .thumb { box-shadow: var(--shadow-xs); }
+
+  ::slotted(*) {
+    font: inherit;
+    color: inherit;
+    line-height: var(--leading-tight);
+  }
+</style>
+
+<label>
+  <span class="track" part="track">
+    <input
+      part="input"
+      type="checkbox"
+      role="switch"
+      bind:checked={checked}
+      disabled={disabled()}
+      name={name()}
+      value={value()}
+      aria-checked={checked() ? 'true' : 'false'}
+      aria-label={label() || name() || 'toggle'}
+      bind:this={inputEl}
+    />
+    <span class="thumb" part="thumb"></span>
+  </span>
+  <slot></slot>
+</label>

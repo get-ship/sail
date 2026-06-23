@@ -1,0 +1,30 @@
+<div class="demo">
+  <p class="demo-back"><a href="/demos">← demos</a></p>
+  <h1>iteration</h1>
+  <p class="caption">
+    Block <code>for</code> with a stable <code>key=</code>. The key tells
+    the runtime which DOM nodes belong to which item across re-renders.
+  </p>
+
+  <form class="demo-add" on:submit={onSubmit}>
+    <input
+      type="text"
+      placeholder="What's next?"
+      data-test="todo-input"
+      bind:value={draft} />
+    <button type="submit" data-test="todo-add">add</button>
+  </form>
+
+  {#if items().length === 0}
+    <p class="muted" data-test="empty">List is empty.</p>
+  {:else}
+    <ul class="demo-todos" data-test="todos">
+      {#for t of items() key={t.id}}
+        <li>
+          <span>{t.text}</span>
+          <button class="demo-remove" data-test="remove" on:click={() => remove(t.id)}>×</button>
+        </li>
+      {/for}
+    </ul>
+  {/if}
+</div>

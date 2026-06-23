@@ -1,0 +1,142 @@
+# deck
+
+deck is Ship's **host / meta-framework** — the layer that mounts SUI views,
+does SSR + routing, serves every asset, and supplies views with a data-source
+client. It is to SUI what Next is to React.
+
+```
+SUI   :  Deck  :  Ship      ::      React  :  Next  :  your app
+```
+
+Dependencies point one way only: **deck → sui**, **ship → deck**. The SUI
+compiler depends on nothing downstream; deck names no Ship domain or daemon URL;
+Ship (the `shipd` daemon) is the app that mounts deck and implements the one
+data seam deck asks for. A boundary lint (`scripts/lint/*`,
+`deck-core/tests/boundary.rs`) enforces that deck's code names zero Ship
+concepts.
+
+## What deck owns
+
+**All frontend serving.** HTML scaffolds, framework bundles
+(runtime/dom/sdk-client), per-icon lucide, design tokens + theme CSS, per-view
+compiled JS + SSR payload, the view-host, space/shell scaffolds, the SPA
+navigation handler, and the dev HMR firehose. If a byte reaches the browser, a
+deck handler served it. `shipd` serves no frontend — it is RPC + daemon only.
+
+## Crate map
+
+| Crate | Role |
+|---|---|
+| `deck-core` | Transport-agnostic hosting logic. Produces a `DeckResponse` (status + bytes + headers); never speaks HTTP. Owns view resolution, SSR payload assembly, token/theme CSS, the setup flow, and the `DataPort` trait. |
+| `deck-axum` | The axum adapter. Thin `serve_*` shims map `DeckResponse` → `axum::Response`. `router()` registers deck's whole serving surface as one mountable unit; `multiplex_router()` is the live-data transport. |
+| `deck-host` | Pure host helpers shared across adapters: `render_helpers`, `resolver` (project-root + view resolution), `view_payload`. |
+| `deck-bundler` | The one bundler (#163). In-process Rolldown; a Rust plugin compiles `.sui` via the linked `sui-compiler`. Builds framework singletons, packs, views, and app scaffolds. |
+| `deck-config` | Parses `deck.jsonc` into `DeckConfig` — the host's single configuration surface (below). |
+| `deck-cli` | The `deck` binary: `build`, `build-assets`, `routes`, `scaffold {view,component,pack}`. The `next`/`vite` analog. |
+| `deck` | Thin re-export facade so a host writes `deck::*` for everything above. |
+
+## The data seam — `DataPort`
+
+deck mounts views but owns no data. The host implements one trait
+(`deck_core::DataPort`) and injects it:
+
+```rust
+pub trait DataPort {
+    /// Resolve a live-data subscription's current value. `None` → the host has
+    /// no resolver for `(domain, op)`; deck surfaces an explicit error, never a
+    /// silent null.
+    fn resolve(&self, domain: &str, op: &str, args: &Value) -> Option<Value>;
+
+    /// Whether the host is provisioned. deck's `/` and `/setup` handlers branch
+    /// on this instead of importing any Ship type. Defaults to `false`.
+    fn is_provisioned(&self) -> bool { false }
+}
+```
+
+`shipd`'s `ShipDataPort` is the only implementor today. This is the sole
+coupling point between deck and the app — deck stays host-generic; the app keeps
+its domains.
+
+## Configuration surface — `deck.jsonc` / `DeckConfig`
+
+Everything Ship-specific about the layout lives in `deck.jsonc`, not in deck's
+code. Key fields (`deck-config/src/lib.rs`):
+
+- `targets[]` — consumer bundle targets (`name`, `entry`, `externals`, `kind`).
+- `sourceRoots` / `componentSourceRoots` — where `.sui` and `@ship/<pack>`
+  components resolve from. The host declares its monorepo layout here; deck's
+  resolver names none of it.
+- `packs[]` — the per-tag component resolver's roots.
+- `viewDirs` / `viewLeaf` — where views live and the entry filename.
+- `watch[]` — dev-watch paths.
+
+The Ship app list (hub, spaces) lives in `apps.jsonc` at the workspace
+root, owned by shipd (L2). Deck knows nothing about which apps exist
+or how they are routed.
+A zero-config host gets sensible generic defaults (e.g. `sourceRoots: ["packages"]`).
+
+## Mounting deck in a host (what shipd does)
+
+```rust
+let root = Router::new()
+    .merge(public_routes)        // auth bootstrap, health
+    .merge(deck::router())       // ALL serving — no fallback of its own
+    .merge(authenticated_routes) // Connect-ops RPC (its fallback_service dispatches /ship.ops.v1.*)
+    .layer(Extension(daemon_mode))
+    .layer(Extension(data_port)) // the DataPort impl deck's setup/live handlers read
+    .layer(Extension(deck_cfg));
+```
+
+Two composition rules the host must honor:
+
+1. **deck's `router()` sets no `.fallback`.** It merges alongside the Connect
+   router, whose entire RPC dispatch *is* a `fallback_service`. Two merged
+   fallbacks panic axum, and a host `.fallback(spa)` would shadow the RPC
+   dispatch into a dead data plane. deck exports `spa_fallback`; the host
+   composes navigation-vs-RPC itself (shipd uses a pre-routing nav shim that
+   serves the shell for client-route GETs and lets everything else reach the
+   Connect fallback).
+2. **The host injects `DataPort`** as an `Extension` so deck's `/` `/setup` and
+   live-data handlers can read provisioning + resolve subscriptions without
+   importing the app.
+
+## CLI
+
+deck build --project apps/hub --bundle-framework
+deck build-assets          # bake framework + consumer bundles (in-process Rolldown)
+deck routes --root apps/shell --root apps/spaces
+# walks <root>/routes/ → emits <root>/routes.gen.ts (label = basename).
+# Repeatable; required at least once.
+deck scaffold view <name>  # new view (page.sui + controller.ts + style.css + manifest)
+deck scaffold component <tag>
+deck scaffold pack <name>
+deck emit --target <name> --out <dir>   # copy baked targets (+ chunk closure) out
+```
+
+### `deck emit`
+
+```sh
+deck emit --target sui-runtime --target sui-marketing --out dist/_assets
+```
+
+Copy already-baked target bundles into a directory for a consumer that loads
+them without the daemon (e.g. a static site build). Run it **after**
+`deck build-assets` — emit copies bake output, it does not bake.
+
+- `--target <name>` (repeatable, required) — a framework singleton
+  (`sui-runtime`, `sui-dom`, `sui-sdk-client`) or a consumer target declared in
+  `deck.jsonc` (`sui-marketing`, `sui-arcade`, `ship-code-editor`, …).
+- `--out <dir>` — destination directory, created if absent.
+
+deck resolves each target's output path via the same `BundleLayout` the bundler
+writes through, copies the target file, then follows its relative
+`import("./chunk.js")` graph and copies the whole content-hashed lazy-chunk
+**closure** — so the consumer never hardcodes deck's internal output layout
+(`crates/deck/deck-bundler/src/emit.rs`). The canonical consumer is
+`apps/site/scripts/copy-sui-assets.ts`, which names the six targets the static
+Astro build needs and shells out to `cargo run -p deck-cli -- emit`.
+
+## See also
+
+- `.claude/skills/ship-sui` — authoring `.sui` views + components.
+- `docs/ship-adrs/` — the architectural decisions deck implements.

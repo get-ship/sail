@@ -1,0 +1,353 @@
+<!--
+  <sui-toast> — SUI port of <ship-toast>.
+  Transient notification card with tone channel, auto-icon, hover-to-pause
+  auto-dismiss, optional progress bar, and exit animation.
+
+  Prop / event / method parity vs <ship-toast>
+  ────────────────────────────────────────────────────────────────────────────
+  Lit                             SUI                      Notes
+  ────────────────────────────────────────────────────────────────────────────
+  tone (Tone, undefined)          tone (union, 'default',  ✓ reflects; drives
+                                    reflect)                 --tone-* + auto-icon
+  size ('sm'|'md'|'lg', 'md')    size (union, 'md',       ✓ reflects
+                                    reflect)
+  duration (number, 5000)        duration (number, 5000)   ✓ property only; 0=persist
+  dismissible (bool, true)        dismissible (bool,       ✓ reflects; shows close btn
+                                    true, reflect)
+  show-progress (bool, false)     show-progress (bool,     ✓ reflects
+                                    false, reflect)
+  closing (bool, false)           closing (bool,           ✓ reflects; set by close()
+                                    false, reflect)          during exit animation
+  ────────────────────────────────────────────────────────────────────────────
+  Events: ship-dismiss            sui-dismiss              ✓ renamed; detail.reason
+    (bubbles, composed)                                      'manual'|'timeout'|
+                                                             'programmatic'
+  ────────────────────────────────────────────────────────────────────────────
+  dismiss(reason?)                dismiss(reason?)         ✓ sync remove + event
+  close(reason?)                  close(reason?)           ✓ animated, reduced-motion
+                                                             aware
+  ────────────────────────────────────────────────────────────────────────────
+  Slots: icon, title, (default),  icon, title, (default),  ✓ same
+    actions                         actions
+  Parts: toast, close             toast, close             ✓ same
+  ────────────────────────────────────────────────────────────────────────────
+  ARIA: inner div role=status/    same on inner div        ✓ destructive+warning →
+    alert, aria-live=polite/        (tone-driven)            role=alert, assertive
+    assertive
+  tabindex=0 on host              controller sets on host  ✓ if not already set
+  ────────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="tone" values="default|info|success|warning|destructive|accent|muted|primary" default="default" reflect />
+<prop name="size" values="sm|md|lg" default="md" reflect />
+<prop name="duration" type="number" default="5000" />
+<prop name="dismissible" type="bool" default="true" reflect />
+<prop name="show-progress" type="bool" default="false" reflect />
+<prop name="closing" type="bool" default="false" reflect />
+
+<style>
+  :host {
+    display: block;
+    --toast-px: 14px;
+    --toast-py: 12px;
+    --toast-fs: var(--text-base);
+    --toast-title-fs: var(--text-base);
+    --toast-gap: 10px;
+    --toast-row-gap: var(--space-1);
+    --toast-pad-end: 24px;
+    --toast-min-w: 280px;
+    --toast-max-w: 420px;
+    --toast-slide-x: 16px;
+    --toast-slide-y: 0;
+    --toast-content-gap: 2px;
+    --toast-actions-mt: 6px;
+    /* tone channel defaults */
+    --tone-bg: transparent;
+    --tone-border: var(--border);
+    pointer-events: auto;
+    will-change: transform, opacity;
+  }
+  :host([hidden]) { display: none; }
+
+  :host([size='sm']) {
+    --toast-px: 12px;
+    --toast-py: 10px;
+    --toast-fs: var(--text-sm);
+    --toast-title-fs: var(--text-sm);
+    --toast-gap: 8px;
+    --toast-min-w: 240px;
+    --toast-max-w: 360px;
+  }
+  :host([size='lg']) {
+    --toast-px: 16px;
+    --toast-py: 14px;
+    --toast-fs: var(--text-md);
+    --toast-title-fs: var(--text-md);
+    --toast-gap: 12px;
+    --toast-min-w: 320px;
+    --toast-max-w: 460px;
+  }
+
+  /* Tone channel — bg + border read straight off the pre-computed tone ramp */
+  :host([tone='info'])        { --tone-bg: var(--tone-info-bg);        --tone-border: var(--tone-info-border); }
+  :host([tone='success'])     { --tone-bg: var(--tone-success-bg);     --tone-border: var(--tone-success-border); }
+  :host([tone='warning'])     { --tone-bg: var(--tone-warning-bg);     --tone-border: var(--tone-warning-border); }
+  :host([tone='destructive']) { --tone-bg: var(--tone-destructive-bg); --tone-border: var(--tone-destructive-border); }
+  :host([tone='accent'])      { --tone-bg: var(--tone-accent-bg);      --tone-border: var(--tone-accent-border); }
+  :host([tone='primary'])     { --tone-bg: var(--tone-primary-bg);     --tone-border: var(--tone-primary-border); }
+  :host([tone='muted'])       { --tone-bg: var(--tone-muted-bg);       --tone-border: var(--tone-muted-border); }
+
+  :host([data-slide-from='right'])  { --toast-slide-x: 16px;  --toast-slide-y: 0; }
+  :host([data-slide-from='left'])   { --toast-slide-x: -16px; --toast-slide-y: 0; }
+  :host([data-slide-from='top'])    { --toast-slide-x: 0;     --toast-slide-y: -12px; }
+  :host([data-slide-from='bottom']) { --toast-slide-x: 0;     --toast-slide-y: 12px; }
+
+  .toast {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    column-gap: var(--toast-gap);
+    row-gap: var(--toast-row-gap);
+    align-items: start;
+    padding: var(--toast-py) var(--toast-px);
+    padding-right: calc(var(--toast-px) + var(--toast-pad-end));
+    min-width: var(--toast-min-w);
+    max-width: var(--toast-max-w);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--tone-border);
+    background: var(--surface-1);
+    color: var(--card-foreground);
+    box-shadow: var(--shadow-lg);
+    font-family: var(--font-body);
+    font-size: var(--toast-fs);
+    line-height: var(--leading-normal);
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  /* Enter/exit polish is driven by `in:slide` + `out:fade` on the
+     #if-mounted .toast (see template). */
+
+  :host(:not([tone])) .toast,
+  :host([tone='default']) .toast {
+    border-color: var(--border-strong);
+    background: var(--surface-1);
+  }
+
+  :host([tone='info']) .toast,
+  :host([tone='success']) .toast,
+  :host([tone='warning']) .toast,
+  :host([tone='destructive']) .toast,
+  :host([tone='accent']) .toast,
+  :host([tone='primary']) .toast,
+  :host([tone='muted']) .toast {
+    background: var(--tone-bg);
+    border-color: var(--tone-border);
+  }
+
+  .toast::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0; bottom: 0;
+    width: 3px;
+    background: var(--tone-fg);
+    opacity: 0;
+    transition: opacity var(--duration-fast) var(--ease-out);
+  }
+  :host([tone='info']) .toast::before,
+  :host([tone='success']) .toast::before,
+  :host([tone='warning']) .toast::before,
+  :host([tone='destructive']) .toast::before,
+  :host([tone='accent']) .toast::before,
+  :host([tone='primary']) .toast::before,
+  :host([tone='muted']) .toast::before { opacity: 1; }
+
+  .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    flex: 0 0 auto;
+    border-radius: var(--radius-md);
+    background: var(--tone-bg);
+    color: var(--tone-fg);
+  }
+  :host(:not([tone])) .icon,
+  :host([tone='default']) .icon { background: transparent; color: var(--muted-foreground); }
+  .icon svg { width: 15px; height: 15px; display: block; }
+  :host([size='sm']) .icon { width: 22px; height: 22px; }
+  :host([size='sm']) .icon svg { width: 13px; height: 13px; }
+  :host([size='lg']) .icon { width: 30px; height: 30px; }
+  :host([size='lg']) .icon svg { width: 17px; height: 17px; }
+
+  :host([data-no-icon]) .toast { grid-template-columns: 1fr auto; }
+  :host([data-no-icon]) .icon { display: none; }
+
+  .content {
+    min-width: 0;
+    color: var(--card-foreground);
+  }
+  .title {
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--toast-title-fs);
+    letter-spacing: -0.005em;
+    line-height: var(--leading-tight);
+    color: var(--foreground);
+  }
+  .body {
+    font-size: var(--toast-fs);
+    color: var(--muted-foreground);
+    line-height: var(--leading-normal);
+    word-break: break-word;
+  }
+  :host([data-no-title]) .body { color: var(--card-foreground); }
+  :host([data-no-title]) .title { display: none; }
+
+  .actions {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--toast-actions-mt);
+    grid-column: 2;
+  }
+  :host([data-no-actions]) .actions { display: none; margin-top: 0; }
+
+  .close {
+    position: absolute;
+    top: 8px;
+    inset-inline-end: 8px;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--muted-foreground);
+    cursor: pointer;
+    padding: 0;
+    font: inherit;
+    z-index: var(--z-elevated);
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      color var(--duration-fast) var(--ease-out);
+  }
+  .close:hover {
+    background: var(--tone-bg);
+    color: var(--tone-fg);
+  }
+  :host(:not([tone])) .close:hover,
+  :host([tone='default']) .close:hover {
+    background: var(--active-bg);
+    color: var(--foreground);
+  }
+  .close:active { transform: scale(0.94); }
+  .close:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--surface-1),
+      0 0 0 4px var(--border-strong);
+  }
+  .close svg { width: 12px; height: 12px; display: block; }
+
+  .progress {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 2px;
+    background: var(--tone-fg);
+    border-top-right-radius: var(--radius-full);
+    transform: scaleX(1);
+    transform-origin: left center;
+    animation: sui-toast-progress var(--toast-duration) linear forwards;
+  }
+  :host(:not([tone])) .progress,
+  :host([tone='default']) .progress { background: var(--muted-foreground); }
+  :host(:hover) .progress,
+  :host([data-paused]) .progress { animation-play-state: paused; }
+  @keyframes sui-toast-progress {
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .progress { animation: none; }
+  }
+
+  @media (forced-colors: active) {
+    .toast { border: 1px solid CanvasText; }
+    .close:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
+  }
+</style>
+
+<!--
+  `{#if visible()}` + asymmetric `in:slide` / `out:fade` drive the
+  enter/exit polish. Controller flips `visible` to false in `close()`
+  and the bindIf-driven out-transition keeps the toast in the DOM
+  until the fade finishes (after which the controller calls
+  `dismiss()` to remove the host).
+-->
+{#if visible()}
+<div class="toast"
+  in:slide={{ axis: 'y', duration: 200 }}
+  out:fade={{ duration: 180 }}
+  role={tone() === 'destructive' || tone() === 'warning' ? 'alert' : 'status'}
+  aria-live={tone() === 'destructive' || tone() === 'warning' ? 'assertive' : 'polite'}
+  aria-atomic="true"
+  part="toast">
+  <span class="icon">
+    <slot name="icon" bind:this={iconSlotEl}></slot>
+    {#if !hasSlottedIcon()}
+      {#match tone()}
+        {:case 'info'}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 8h.01"/>
+            <path d="M11 12h1v4h1"/>
+          </svg>
+        {:case 'success'}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="m8.5 12.5 2.5 2.5 4.5-5"/>
+          </svg>
+        {:case 'warning'}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
+            <line x1="12" x2="12" y1="9" y2="13"/>
+            <line x1="12" x2="12.01" y1="17" y2="17"/>
+          </svg>
+        {:case 'destructive'}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/>
+            <line x1="15" x2="9" y1="9" y2="15"/>
+            <line x1="9" x2="15" y1="9" y2="15"/>
+          </svg>
+        {:case 'accent'}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2 3 14h7l-1 8 10-12h-7l1-8Z"/>
+          </svg>
+      {/match}
+    {/if}
+  </span>
+  <sui-stack class="content" gap="0">
+    <div class="title">
+      <slot name="title" bind:this={titleSlotEl}></slot>
+    </div>
+    <div class="body"><slot></slot></div>
+    <div class="actions">
+      <slot name="actions" bind:this={actionsSlotEl}></slot>
+    </div>
+  </sui-stack>
+  {#if dismissible()}
+    <button class="close" part="close" type="button" aria-label="Dismiss notification" bind:this={closeBtn}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  {/if}
+  {#if showProgress() && duration() > 0}
+    <span class="progress" aria-hidden="true"></span>
+  {/if}
+</div>
+{/if}

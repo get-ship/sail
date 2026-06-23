@@ -1,0 +1,68 @@
+<!--
+  <sui-source-panel> — source + paste-able snippet (build-spec §The viewing
+  components #5).
+
+  Shows the raw `.sui` source AND a recomputed `<tag …>inner</tag>` snippet
+  built by default-diffing: only props differing from the CEM default are
+  emitted (booleans = bare-attribute presence; strings attr-escaped; inner =
+  composed slot content). A Copy button writes the snippet to the clipboard —
+  the ONE clipboard affordance in the pack — with transient "Copied" feedback.
+
+  Thin shell. The controller owns the snippet recompute + copy interaction +
+  the `bindHtml` rendering of source/snippet text. No object/json `<prop>`:
+  structured data (raw `source`, CEM `props`, current `value`, `slotContent`)
+  arrives via `prop:*` identity/snapshot. The two scalar control props are
+  declared here.
+-->
+
+<prop name="component-name" type="string" default="" reflect />
+<prop name="lang" type="string" default="html" reflect />
+
+<style>
+  :host {
+    display: block;
+    font-family: var(--font-body);
+    color: var(--foreground);
+  }
+  :host([hidden]) { display: none; }
+
+  .section-label {
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--muted-foreground);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+
+  .snippet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+  .copied {
+    font-size: var(--text-xs);
+    color: var(--success);
+    font-weight: var(--font-weight-medium);
+  }
+</style>
+
+<sui-stack gap="3" class="panel" part="panel">
+  <sui-stack gap="2" class="section" part="source-section">
+    <span class="section-label" part="source-label">Source</span>
+    <sui-code block lang={lang()} part="source-code"><span bind:this={sourceEl}></span></sui-code>
+  </sui-stack>
+
+  <sui-stack gap="2" class="section" part="snippet-section">
+    <div class="snippet-head" part="snippet-head">
+      <span class="section-label" part="snippet-label">Snippet</span>
+      <sui-stack direction="row" gap="2" align="center">
+        {#if copied()}
+          <span class="copied" part="copied" aria-live="polite">Copied</span>
+        {/if}
+        <sui-button size="xs" variant="soft" on:click={copy} part="copy-button">Copy</sui-button>
+      </sui-stack>
+    </div>
+    <sui-code block lang={lang()} part="snippet-code"><span bind:this={snippetEl}></span></sui-code>
+  </sui-stack>
+</sui-stack>

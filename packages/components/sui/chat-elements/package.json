@@ -1,0 +1,25 @@
+{
+  "name": "@ship/sui-chat-elements",
+  "version": "0.1.0",
+  "description": "SUI Chat Elements \u2014 unbound multi-modal chat-shape primitives (message \u00b7 message-list \u00b7 composer \u00b7 thinking-dots \u00b7 tool-call \u00b7 citation). Pure framework tier: no Ship runtime, no SDK reads. Consumers bind their own data.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "customElements": "dist/custom-elements.json",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@ship/sui-runtime": "workspace:*",
+    "@ship/sui-dom": "workspace:*",
+    "@ship/sui-primitives": "workspace:*"
+  },
+  "devDependencies": {
+    "@ship/test-setup": "workspace:*",
+    "vitest": "^4.1.5"
+  }
+}

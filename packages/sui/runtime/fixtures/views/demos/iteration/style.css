@@ -1,0 +1,26 @@
+.demo .demo-add { display: flex; gap: 0.5rem; margin: 0.5rem 0 1rem; }
+.demo .demo-add input {
+  flex: 1;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border, #d0d7de);
+  border-radius: 0.35rem;
+  font-size: 0.95rem;
+}
+.demo .demo-todos { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.35rem; }
+.demo .demo-todos li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border, #d0d7de);
+  border-radius: 0.35rem;
+  background: var(--surface-1, #fff);
+}
+.demo .demo-remove {
+  border: none;
+  background: transparent;
+  color: var(--muted-foreground, #57606a);
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+.demo .demo-remove:hover { color: var(--destructive, #cf222e); }

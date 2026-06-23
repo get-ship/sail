@@ -1,0 +1,260 @@
+<!--
+  <sui-input> — SUI port of <ship-input>.
+  Native <input> delegation with ARIA wiring, event bridging, and
+  imperative proxy API. Controller handles value sync, event dispatch,
+  and host method delegation.
+
+  Prop / event / method parity vs <ship-input>
+  ────────────────────────────────────────────────────────────���─────────────────
+  Lit                            SUI                       Notes
+  ──────────────────────────────────────────────────────────────────────────────
+  type (String, 'text')          type (union, 'text',      ✓ values enumerated
+                                   reflect)                for DX
+  value (String, '')             value (string, '')        ✓ two-way via bind:value
+  placeholder (String, '')       placeholder (string)      ✓
+  name (String, '')              name (string)             ✓
+  autocomplete (String, '')      autocomplete (string)     ✓
+  required (Boolean, false)      required (bool, reflect)  ✓ aria-required wired
+  disabled (Boolean, false)      disabled (bool, reflect)  ✓
+  readonly (Boolean, false)      readonly (bool, reflect)  ✓
+  invalid (Boolean, false)       invalid (bool, reflect)   ✓ aria-invalid wired;
+                                                           overrides tone to
+                                                           destructive ring
+  loading (Boolean, false)       loading (bool, reflect)   ✓ spinner replaces
+                                                           trailing slot
+  tone (Tone, undefined)         tone (union, 'default',   ✓ tints focus ring
+                                   reflect)
+  variant ('default'|'ghost',    variant (default|ghost,   ✓ ghost removes border
+    'default')                     'default', reflect)     until focus
+  size ('sm'|'md'|'lg', 'md')    size (sm|md|lg, 'md',    ✓
+                                   reflect)
+  label (String, '')             label (string)            ✓ → aria-label
+  describedBy (String, '')       described-by (string)     ✓ → describedBy in scope
+                                                           + aria-describedby wired
+                                                           by controller
+  errorMessage (String, '')      error-message (string)    ✓ → errorMessage in scope
+                                                           rendered when invalid
+  ──────────────────────────────────────────────────────────────────────────────
+  Events: ship-input             sui-input                 ✓ renamed; detail.value
+    (CustomEvent, composed)        (CustomEvent, composed)
+  Events: (native change)        sui-input-change          ✓ re-dispatched from
+                                   (CustomEvent, composed)   host (native change
+                                                             is not composed from
+                                                             shadow)
+  ──────────────────────────────────────────────────────────────────────────────
+  Methods: (none explicit)       host.focus()              ✓ proxies to inner input
+                                 host.blur()               ✓
+                                 host.clear()              ✓ resets value + signal
+                                 host.reportValidity()     ✓ proxies to inner input
+  ──────────────────────────────────────────────────────────────────────────────
+  formAssociated / internals     NATIVE                    `form-value` on the value
+                                                           prop and `form-disabled`
+                                                           on the disabled prop wire
+                                                           ElementInternals.setFormValue
+                                                           plus formResetCallback /
+                                                           formStateRestoreCallback /
+                                                           formDisabledCallback at
+                                                           the compiler level.
+  ──────────────────────────────────────────────────────────────────────────────
+  Slots: leading, trailing       leading, trailing         ✓
+  Parts: field, input            wrap, input               ✓ 'input' satisfies
+                                                           test table; 'wrap'
+                                                           mirrors outer container
+  ──────────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="type" values="text|search|email|url|tel|password|number" default="text" reflect />
+<prop name="value" type="string" default="" form-value />
+<prop name="placeholder" type="string" default="" />
+<prop name="name" type="string" default="" />
+<prop name="autocomplete" type="string" default="" />
+<prop name="required" type="bool" default="false" reflect />
+<prop name="disabled" type="bool" default="false" reflect form-disabled />
+<prop name="readonly" type="bool" default="false" reflect />
+<prop name="invalid" type="bool" default="false" reflect />
+<prop name="loading" type="bool" default="false" reflect />
+<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
+<prop name="variant" values="default|ghost" default="default" reflect />
+<prop name="size" values="sm|md|lg" default="md" reflect />
+<prop name="label" type="string" default="" />
+<prop name="described-by" type="string" default="" />
+<prop name="error-message" type="string" default="" />
+
+<style>
+  :host {
+    display: inline-flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    vertical-align: middle;
+    width: 100%;
+    --tone-border: var(--border);
+    --tone-ring: var(--primary);
+    --tone-ring-soft: var(--border-subtle);
+    --h: 34px;
+    --fs: 13px;
+    --px: 10px;
+    --icon: 15px;
+  }
+
+  :host([tone='primary'])     { --tone-border: var(--primary);     --tone-ring: var(--primary);     --tone-ring-soft: var(--tone-primary-border); }
+  :host([tone='info'])        { --tone-border: var(--info);         --tone-ring: var(--info);         --tone-ring-soft: var(--tone-info-border); }
+  :host([tone='success'])     { --tone-border: var(--success);      --tone-ring: var(--success);      --tone-ring-soft: var(--tone-success-border); }
+  :host([tone='warning'])     { --tone-border: var(--warning);      --tone-ring: var(--warning);      --tone-ring-soft: var(--tone-warning-border); }
+  :host([tone='destructive']),
+  :host([invalid])            { --tone-border: var(--destructive);  --tone-ring: var(--destructive);  --tone-ring-soft: var(--tone-destructive-border); }
+  :host([tone='accent'])      { --tone-border: var(--accent);       --tone-ring: var(--accent);       --tone-ring-soft: var(--tone-accent-border); }
+  :host([tone='muted'])       { --tone-border: var(--muted-foreground); --tone-ring: var(--muted-foreground); --tone-ring-soft: var(--border-subtle); }
+
+  :host([size='sm']) { --h: 28px; --fs: 12px; --px: 8px;  --icon: 13px; }
+  :host([size='md']) { --h: 34px; --fs: 13px; --px: 10px; --icon: 15px; }
+  :host([size='lg']) { --h: 40px; --fs: 14px; --px: 12px; --icon: 17px; }
+
+  .wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    min-height: var(--h);
+    padding: 0 var(--px);
+    background: var(--background);
+    border: 1px solid var(--tone-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xs);
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
+  }
+
+  /* Resting elevation + matched hover state — design bundle elevation
+   * (forms.after / rest-shadow, hover). The default variant gained a
+   * hover affordance to match sui-select / sui-combobox. */
+  :host(:not([variant='ghost']):not([disabled])) .wrap:hover:not(:focus-within) {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-sm);
+  }
+
+  :host([variant='ghost']) .wrap {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  /* Ghost gains a hover surface so it's discoverable before focus.
+   * `tone-muted-bg` is the canonical 60% muted-transparent mix in tokens.css. */
+  :host([variant='ghost']:not([disabled])) .wrap:hover:not(:focus-within) {
+    background: var(--tone-muted-bg);
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  /* Focus-within tints the border; the inner input's :focus-visible
+   * already draws the canonical --focus-ring outline. No box-shadow
+   * ring here — kept the focus affordance single-channel so themes
+   * that flatten the ring token don't show a phantom shadow. */
+  .wrap:focus-within {
+    border-color: var(--tone-ring);
+  }
+
+  /* Disabled — system pattern, not a blunt opacity. Matches the
+   * approach used by select / combobox (so disabled fields read as
+   * "off" not "ghosted"). saturate(.6) dims iconography; --border-subtle
+   * (60% border-transparent) is the canonical softened-border ramp;
+   * this is more conservative than the previous 80% mix but tokens.css
+   * owns the formula, not the component. */
+  :host([disabled]) .wrap {
+    background: var(--muted);
+    border-color: var(--border-subtle);
+    box-shadow: none;
+    cursor: not-allowed;
+    filter: saturate(0.6);
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    padding: 0;
+    font: inherit;
+    font-family: var(--font-body);
+    font-size: var(--fs);
+    color: var(--foreground);
+  }
+  input::placeholder { color: var(--muted-foreground); }
+  input:disabled { cursor: not-allowed; }
+
+  /* Keyboard-only focus ring — drawn on the inner input so it is
+   * visible even when the wrap container's :focus-within tint is
+   * suppressed by themes that flatten ring tokens. Consumes the
+   * canonical --focus-ring token; per-tone tinting is via the local
+   * --ring-color override (e.g. [invalid] sets --destructive). */
+  input:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+  @media (forced-colors: active) {
+    input:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
+  }
+
+  ::slotted([slot='leading']),
+  ::slotted([slot='trailing']) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: var(--icon);
+    height: var(--icon);
+    color: var(--muted-foreground);
+  }
+
+  .spinner {
+    display: inline-block;
+    flex: 0 0 auto;
+    width: var(--icon);
+    border: 2px solid var(--tone-ring-soft);
+    border-top-color: var(--tone-ring);
+    border-radius: 50%;
+    animation: sui-spin 0.6s linear infinite;
+  }
+
+  @keyframes sui-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .error {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--destructive);
+    line-height: 1.4;
+  }
+</style>
+
+<div class="wrap" part="wrap">
+  <slot name="leading" reflect-empty="data-no-leading"></slot>
+  <input
+    part="input"
+    type={type()}
+    placeholder={placeholder()}
+    name={name()}
+    autocomplete={autocomplete() || 'off'}
+    disabled={disabled()}
+    readonly={readonly()}
+    required={required()}
+    aria-label={label()}
+    aria-invalid={invalid() ? 'true' : 'false'}
+    aria-required={required() ? 'true' : 'false'}
+    aria-busy={loading() ? 'true' : 'false'}
+    bind:value={value}
+    bind:this={inputEl}
+  />
+  {#if loading()}
+    <span class="spinner" aria-hidden="true"></span>
+  {:else}
+    <slot name="trailing" reflect-empty="data-no-trailing"></slot>
+  {/if}
+</div>
+{#if invalid() && errorMessage()}
+  <span class="error" role="alert" bind:this={errorEl}>{errorMessage()}</span>
+{/if}

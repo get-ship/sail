@@ -1,0 +1,36 @@
+{
+  "bindings": [
+    {
+      "key": "b0",
+      "kind": "text",
+      "expr": "count()",
+      "deps": [
+        "count"
+      ]
+    },
+    {
+      "key": "b1",
+      "kind": "on:click",
+      "expr": "() => count.set(count() - 1)",
+      "deps": [
+        "count"
+      ]
+    },
+    {
+      "key": "b2",
+      "kind": "on:click",
+      "expr": "() => count.set(count() + 1)",
+      "deps": [
+        "count"
+      ]
+    },
+    {
+      "key": "b3",
+      "kind": "on:click",
+      "expr": "() => count.set(0)",
+      "deps": [
+        "count"
+      ]
+    }
+  ]
+}

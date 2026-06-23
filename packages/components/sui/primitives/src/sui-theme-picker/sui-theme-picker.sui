@@ -1,0 +1,430 @@
+<!--
+  <sui-theme-picker> — port of the shell theme picker (apps/shell/src/main.ts
+  mountThemePicker + apps/shell/src/chrome/ship-nav-top.ts:150-161).
+
+  Trigger button (palette dot + current theme label) toggles a panel
+  rendered via the native popover API. The panel hosts a grouped list of
+  mini-preview cards. Each card scopes that theme's tokens via
+  [data-theme-preview="<id>"] so the preview shows the actual surface,
+  font, primary/accent — not a static swatch. Selecting a card calls
+  applyTheme + persistTheme, dispatches `sui-theme-change`, closes the
+  panel.
+
+  Listens to `ship:theme:change` on document (the canonical event
+  applyTheme dispatches) so external theme changes (devtools, settings,
+  programmatic) repaint the trigger and the card selection.
+
+  Prop / event surface
+  ────────────────────────────────────────────────────────────────────────
+  Props:
+    placement (union, 'bottom-end', reflect)  panel placement
+    label-style (union, 'text'|'compact', 'compact', reflect)
+                                              compact (default) = palette
+                                              icon only, no label/caret —
+                                              the shell + marketing site
+                                              both use this
+    persist (bool, true, reflect)             write-through to localStorage
+                                              via the host theme transport
+  ────────────────────────────────────────────────────────────────────────
+  Events: sui-theme-change   { detail: { id, dark } }   bubbles, composed
+  Slots: (none — fully self-contained)
+  Parts: trigger, dot, label, panel, grid
+  ────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="placement" values="top|top-end|bottom|bottom-end|left|left-end|right|right-end" default="bottom-end" reflect />
+<prop name="label-style" values="text|compact" default="compact" reflect />
+<prop name="persist" type="bool" default="true" reflect />
+<!-- `app` (default) is the shell: trigger shows the active theme's accent
+     swatch and the footer routes to /theme-studio. `marketing` is the static
+     site: the trigger inherits surrounding text color (legible on the
+     translucent menubar) and the Customize footer is hidden because the static
+     site has no /theme-studio route. -->
+<prop name="surface" values="app|marketing" default="app" reflect />
+
+<style>
+  :host {
+    position: relative;
+    display: inline-flex;
+    --tp-trigger-gap: 6px;
+  }
+  :host([hidden]) { display: none; }
+
+  /* Trigger button — uses ghost-button visual: transparent until hover.
+     Mirrors the look of the shell's <ship-button variant=ghost size=sm>
+     because we don't (yet) want sui-theme-picker to depend on sui-button. */
+  .trigger {
+    appearance: none;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm, 4px);
+    padding: var(--space-1) var(--space-2);
+    font: inherit;
+    font-size: var(--text-base, 14px);
+    color: var(--foreground);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--tp-trigger-gap);
+    transition:
+      background-color var(--duration-fast, 100ms) var(--ease-out, ease-out),
+      border-color var(--duration-fast, 100ms) var(--ease-out, ease-out);
+  }
+  .trigger:hover {
+    background: var(--hover-bg, var(--muted, color-mix(in oklch, currentColor 6%, transparent)));
+  }
+  .trigger:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in oklch, var(--primary) 50%, transparent);
+  }
+
+  .dot {
+    width: 10px; height: 10px;
+    border-radius: 999px;
+    background: var(--primary);
+    box-shadow: 0 0 0 1px color-mix(in oklch, var(--foreground) 15%, transparent);
+    flex: 0 0 auto;
+  }
+
+  .label {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 14ch;
+  }
+  /* Compact is the default. Only the explicit `[label-style='text']`
+     opt-in shows the current-theme label + caret next to the icon.
+     We can't rely on `:host([label-style='compact'])` because the SUI
+     runtime's reflect=true only writes the attribute when the prop
+     actually changes — an unset prop sitting at its default leaves the
+     host attribute absent, and the selector wouldn't match. */
+  :host(:not([label-style='text'])) .label { display: none; }
+  :host(:not([label-style='text'])) .caret { display: none; }
+  /* Compact trigger collapses to just the palette icon — no inner gap. */
+  :host(:not([label-style='text'])) .trigger { --tp-trigger-gap: 0; padding: var(--space-1); }
+
+  .caret {
+    width: 10px; height: 6px;
+    flex: 0 0 auto;
+    color: var(--muted-foreground);
+  }
+
+  /* Native popover panel. Reset the UA's default centering and let
+     the controller place us via getBoundingClientRect on the trigger. */
+  .panel {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    border: 0;
+    padding: var(--space-1);
+    background: var(--popover, var(--card));
+    color: var(--popover-foreground, var(--card-foreground));
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md, 6px);
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+    transition:
+      opacity var(--duration-medium, 200ms) var(--ease-out, ease-out),
+      transform var(--duration-medium, 200ms) var(--ease-out, ease-out);
+  }
+  .panel:popover-open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  .panel::backdrop { background: transparent; }
+
+  .grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 332px;
+    max-height: min(80vh, 720px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  /* Customize footer — bottom-pinned link that routes to /theme-studio for
+     per-token editing. Visually separated from the theme cards by a divider. */
+  .customize {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin-top: var(--space-1);
+    padding: 10px var(--space-3);
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    font-size: 12.5px;
+    color: var(--foreground);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    border-radius: 0 0 var(--radius-md, 6px) var(--radius-md, 6px);
+    transition: background var(--duration-fast, 100ms) var(--ease-out, ease-out);
+  }
+  .customize:hover {
+    background: var(--hover-bg, color-mix(in oklch, currentColor 6%, transparent));
+  }
+  .customize:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px color-mix(in oklch, var(--primary) 50%, transparent);
+  }
+  .customize-meta {
+    flex: 1;
+    color: var(--muted-foreground);
+    font-size: 11px;
+  }
+  .customize-chev {
+    color: var(--muted-foreground);
+    flex: 0 0 auto;
+  }
+
+  .group { display: flex; flex-direction: column; gap: 2px; }
+  .group-h {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted-foreground);
+    padding: 0 var(--space-2) 2px;
+    opacity: 0.7;
+  }
+  .group-rows { display: flex; flex-direction: column; gap: var(--space-1); }
+
+  /* Card — full-width entry per theme. Aria-selected drives a tinted
+     background + radio fill. */
+  .card {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-lg);
+    padding: 6px;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    outline: none;
+    transition:
+      background var(--duration-fast, 100ms) var(--ease-out, ease-out);
+  }
+  .card:hover {
+    background: var(--hover-bg, var(--muted, color-mix(in oklch, currentColor 6%, transparent)));
+  }
+  .card:focus-visible {
+    background: var(--hover-bg, var(--muted, color-mix(in oklch, currentColor 6%, transparent)));
+    box-shadow: 0 0 0 2px color-mix(in oklch, var(--primary) 50%, transparent);
+  }
+  .card[aria-selected='true'] {
+    background: color-mix(in oklch, var(--primary) 10%, transparent);
+  }
+
+  .row {
+    display: flex; align-items: center; gap: var(--space-2);
+    padding: 0 var(--space-1);
+  }
+  .name {
+    flex: 1;
+    font-family: var(--font-body, system-ui);
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--foreground);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .radio {
+    width: 12px; height: 12px;
+    border-radius: 999px;
+    border: 1.5px solid color-mix(in oklch, var(--foreground) 40%, transparent);
+    background: transparent;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .card[aria-selected='true'] .radio { border-color: var(--primary); }
+  .card[aria-selected='true'] .radio::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border-radius: 999px;
+    background: var(--primary);
+  }
+
+  /* Mini card preview tile. Each .tc-bg carries data-theme-preview="<id>",
+     which the per-theme `[data-theme-preview]` rules in themes.css scope
+     for. The controller links view-tokens.css (which bundles themes.css)
+     into the shadow root so those rules reach these elements. */
+  .tc-bg {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 132px;
+    background: var(--background);
+    color: var(--foreground);
+    border-radius: 8px;
+    overflow: hidden;
+    isolation: isolate;
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, currentColor 14%, transparent);
+  }
+  .tc-overlay {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    background: var(--surface-overlay, none);
+    mix-blend-mode: var(--surface-overlay-blend, normal);
+    opacity: var(--surface-overlay-opacity, 1);
+    z-index: var(--z-elevated);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tc-overlay { display: none; }
+    .panel { transition: none; transform: none !important; }
+  }
+  .tc-card {
+    position: relative;
+    z-index: 2;
+    display: flex; flex-direction: column; gap: 7px;
+    width: calc(100% - 24px);
+    padding: 10px var(--space-3) 11px;
+    background: var(--card);
+    color: var(--card-foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md, 6px);
+    box-shadow: var(--shadow-card-rest, var(--shadow-sm));
+    backdrop-filter: var(--card-backdrop-filter, none);
+    -webkit-backdrop-filter: var(--card-backdrop-filter, none);
+  }
+  .tc-card-head { display: flex; flex-direction: column; gap: 2px; }
+  .tc-eyebrow {
+    font-family: var(--label-font, var(--font-mono));
+    font-weight: var(--label-weight, 600);
+    letter-spacing: var(--label-tracking, 0.08em);
+    font-size: 8px; line-height: 1;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .tc-heading {
+    font-family: var(--heading-font, var(--font-body));
+    font-weight: var(--heading-weight, 600);
+    font-size: var(--text-base); line-height: 1.05;
+    color: var(--card-foreground);
+  }
+  .tc-typo {
+    display: flex; align-items: baseline; gap: 6px;
+    font-family: var(--body-font, var(--font-body));
+    font-size: 9.5px; line-height: 1;
+    color: var(--muted-foreground);
+  }
+  .tc-body { color: var(--card-foreground); opacity: 0.85; }
+  .tc-mono {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    padding: 1px var(--space-1);
+    border-radius: 3px;
+    background: color-mix(in oklch, var(--foreground) 6%, transparent);
+    color: var(--muted-foreground);
+  }
+  .tc-controls { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .tc-cta {
+    display: inline-flex; align-items: center;
+    font-weight: 500; font-size: 9.5px; line-height: 1;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm, 4px);
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+  .tc-ghost {
+    display: inline-flex; align-items: center;
+    font-weight: 500; font-size: 9.5px; line-height: 1;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm, 4px);
+    background: transparent;
+    color: var(--muted-foreground);
+    border: 1px solid var(--border);
+  }
+  .tc-chip {
+    display: inline-flex; align-items: center;
+    font-weight: 600; font-size: 8.5px; line-height: 1;
+    padding: 3px 6px;
+    border-radius: 999px;
+  }
+  .tc-chip-accent {
+    background: color-mix(in oklch, var(--accent) 18%, transparent);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--accent) 30%, transparent);
+  }
+  .tc-chip-muted {
+    background: color-mix(in oklch, var(--foreground) 8%, transparent);
+    color: var(--muted-foreground);
+  }
+</style>
+
+<button class="trigger" part="trigger" type="button" bind:this={triggerBtn}
+  aria-label="Choose theme"
+  aria-haspopup="dialog"
+  aria-expanded={panelOpen() ? 'true' : 'false'}
+  on:click={() => togglePanel()}>
+  <sui-icon class="tp-icon" part="dot" name="palette" size="lg" style:color={triggerIconColor()} aria-hidden="true"></sui-icon>
+  <span class="label" part="label">{triggerLabel()}</span>
+  <svg class="caret" viewBox="0 0 10 6" aria-hidden="true">
+    <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+  </svg>
+</button>
+
+<div class="panel" part="panel" popover="auto" bind:this={panelEl}>
+  <div class="grid" part="grid" role="listbox" aria-label="Theme">
+    {#for g of groups() key={g.label}}
+      <section class="group" aria-label={g.label}>
+        <div class="group-h">{g.label}</div>
+        <div class="group-rows">
+          {#for t of g.themes key={t.id}}
+            <button class="card" role="option" type="button"
+              data-theme-card={t.id}
+              aria-label={t.label}
+              aria-selected={activeTheme() === t.id ? 'true' : 'false'}
+              tabindex={activeTheme() === t.id ? '0' : '-1'}
+              on:click={() => selectTheme(t.id)}>
+              <span class="tc-bg" data-theme-preview={t.id} aria-hidden="true">
+                <span class="tc-overlay"></span>
+                <span class="tc-card">
+                  <span class="tc-card-head">
+                    <span class="tc-eyebrow">THEME</span>
+                    <span class="tc-heading">{t.label}</span>
+                  </span>
+                  <span class="tc-typo">
+                    <span class="tc-body">The quick brown fox</span>
+                    <span class="tc-mono">{'{ build: ok }'}</span>
+                  </span>
+                  <span class="tc-controls">
+                    <span class="tc-cta">Action</span>
+                    <span class="tc-ghost">Cancel</span>
+                    <span class="tc-chip tc-chip-accent">New</span>
+                    <span class="tc-chip tc-chip-muted">Idle</span>
+                  </span>
+                </span>
+              </span>
+              <span class="row">
+                <span class="name">{t.label}</span>
+                <span class="radio" aria-hidden="true"></span>
+              </span>
+            </button>
+          {/for}
+        </div>
+      </section>
+    {/for}
+    {#if showCustomize()}
+      <button class="customize" type="button" data-theme-customize
+        on:click={openCustomize}>
+        <span>Customize…</span>
+        <span class="customize-meta">Per-token editor</span>
+        <svg class="customize-chev" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+          <path d="M3 1l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+    {/if}
+  </div>
+</div>

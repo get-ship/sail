@@ -1,0 +1,7 @@
+<data name="overview" source="ship.overview()" live />
+
+<section>
+  {#async overview as v}
+    {:ok}<div data-test="ok">Hello, {v.name}</div>
+  {/async}
+</section>

@@ -1,0 +1,40 @@
+{
+  "data": [],
+  "component": {
+    "tag": "ship-button-test",
+    "props": [
+      {
+        "name": "tone",
+        "default": "default",
+        "reflect": true,
+        "bindable": false,
+        "type": "union",
+        "values": [
+          "default",
+          "primary"
+        ]
+      },
+      {
+        "name": "disabled",
+        "default": "false",
+        "reflect": true,
+        "bindable": false,
+        "type": "bool"
+      },
+      {
+        "name": "loading",
+        "default": "false",
+        "reflect": true,
+        "bindable": false,
+        "type": "bool"
+      },
+      {
+        "name": "label",
+        "default": "",
+        "reflect": false,
+        "bindable": false,
+        "type": "string"
+      }
+    ]
+  }
+}

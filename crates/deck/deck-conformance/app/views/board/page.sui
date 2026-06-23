@@ -1,0 +1,16 @@
+<div class="board">
+  <h1>Board</h1>
+  {#if items().length > 0}
+  <ul>
+    {#for item of items() key={item.id}}
+    <li class:flagged={item.flagged}>
+      <demo-chip>{item.label}</demo-chip>
+      <button on:click={() => remove(item.id)}>remove</button>
+    </li>
+    {/for}
+  </ul>
+  {:else}
+  <p class="empty">Nothing on the board.</p>
+  {/if}
+  <button on:click={() => add()}>add</button>
+</div>

@@ -1,0 +1,166 @@
+<!--
+  <sui-tab> — SUI port of <ship-tab>.
+  Individual tab button. Renders its own interactive button; orchestrated
+  by the parent <sui-tabs> controller which sets the `active` attribute.
+
+  Architecture diverges from Lit:
+  In <ship-tabs>, the parent renders all tab buttons in its own shadow
+  DOM and <ship-tab> is a data-holder (display:none). In SUI, <sui-tab>
+  renders its own button, and <sui-tabs> coordinates via attribute-setting
+  and slotchange. This keeps the interactive surface inside sui-tab for
+  encapsulation while delegating keyboard/focus management to sui-tabs.
+
+  Prop / event / method parity vs <ship-tab>
+  ──────────────────────────────────────────────────────────────────────────────
+  Lit                              SUI                       Notes
+  ──────────────────────────────────────────────────────────────────────────────
+  name (String, '', reflect)       name (string, '',         ✓
+                                     reflect)
+  label (String, '', reflect)      label (string, '',        ✓ fallback text if
+                                     reflect)                  slot is empty; in
+                                                               SUI the slot is
+                                                               primary content
+  count (Number|null, null,        count (string, '',        ✓ empty string →
+    reflect)                         reflect)                  no badge (SUI string
+                                                               prop; '' hides badge)
+  disabled (Boolean, false,        disabled (bool, false,    ✓
+    reflect)                         reflect)
+  ──────────────────────────────────────────────────────────────────────────────
+  active (n/a — parent-rendered    active (bool, false,      SUI addition: set by
+    button, no host prop)            reflect)                  sui-tabs controller to
+                                                               drive aria-selected
+                                                               and tabIndex
+  ──────────────────────────────────────────────────────────────────────────────
+  Rendered by parent               button[part="button"]     test table expects
+    (no shadow button in Lit)        rendered by sui-tab      shadowPart: 'button'
+  ──────────────────────────────────────────────────────────────────────────────
+  role=tab / aria-selected         ✓ button has role=tab;    ✓
+    managed by parent                aria-selected driven by
+                                     `active` prop; tabIndex
+                                     managed by sui-tab.ts
+  ──────────────────────────────────────────────────────────────────────────────
+  Slots: (none — data holder)      (default) + leading       SUI slot for label
+                                                               content; leading for
+                                                               icon-before-label
+  ──────────────────────────────────────────────────────────────────────────────
+  Parts: (none)                    button                    ✓
+  ──────────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="name" type="string" default="" reflect />
+<prop name="label" type="string" default="" reflect />
+<prop name="count" type="string" default="" reflect />
+<prop name="disabled" type="bool" default="false" reflect />
+<prop name="active" type="bool" default="false" reflect />
+
+<style>
+  :host { display: inline-flex; }
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    font: inherit;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--muted-foreground);
+    background: transparent;
+    border: 0;
+    border-bottom: 2.5px solid transparent;
+    cursor: pointer;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    white-space: nowrap;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out);
+  }
+
+  button:hover:not(:disabled) {
+    color: var(--foreground);
+    background: var(--hover-bg);
+  }
+
+  :host([active]) button {
+    color: var(--foreground);
+    font-weight: var(--font-weight-semibold);
+    border-bottom-color: var(--tone);
+  }
+  :host([active]) button:hover:not(:disabled) { background: transparent; }
+
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .leading {
+    display: none;
+    align-items: center;
+    flex: 0 0 auto;
+    color: currentColor;
+  }
+  .leading:has(::slotted(*)) { display: inline-flex; }
+
+  .count {
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--muted-foreground);
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-full);
+    background: var(--muted);
+  }
+  :host([active]) .count {
+    color: var(--tone);
+    background: var(--tone-bg);
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--tone-ring);
+    outline-offset: -2px;
+  }
+
+  :host([variant='pill']) button {
+    border-bottom: 0;
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3);
+  }
+  :host([variant='pill'][active]) button {
+    background: var(--surface-1);
+    box-shadow: var(--shadow-xs), inset 0 0 0 1px var(--border-subtle);
+    color: var(--foreground);
+  }
+  :host([variant='pill'][active]) button:hover:not(:disabled) { background: var(--surface-1); }
+
+  :host([variant='enclosed']) button {
+    border-bottom: 0;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    border: 1px solid transparent;
+  }
+  :host([variant='enclosed'][active]) button {
+    background: var(--surface-1);
+    border-color: var(--border) var(--border) transparent;
+    color: var(--foreground);
+    position: relative;
+    bottom: -1px;
+  }
+  :host([variant='enclosed'][active]) button:hover:not(:disabled) { background: var(--surface-1); }
+</style>
+
+<button
+  part="button"
+  type="button"
+  role="tab"
+  data-name={name()}
+  aria-selected={active() ? 'true' : 'false'}
+  aria-disabled={disabled() ? 'true' : 'false'}
+  disabled={disabled()}
+  bind:this={btn}
+>
+  <span class="leading" part="leading"><slot name="leading"></slot></span>
+  <slot></slot>
+  {#if count() !== ''}
+    <span class="count" aria-hidden="true">{count()}</span>
+  {/if}
+</button>

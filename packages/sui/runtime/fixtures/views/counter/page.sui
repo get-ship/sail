@@ -1,0 +1,8 @@
+<div class="counter">
+  <h1>Counter</h1>
+  <p>Count: <span data-test="value">{count()}</span></p>
+  <button data-test="dec" on:click={() => count.set(count() - 1)}>-</button>
+  <button data-test="inc" on:click={() => count.set(count() + 1)}>+</button>
+  <button data-test="reset" on:click={() => count.set(0)}>reset</button>
+  <p class="caption">Tier 1: no controller, declarative state, the simplest possible Ship Set view.</p>
+</div>

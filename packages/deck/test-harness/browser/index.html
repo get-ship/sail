@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>SES smoke</title>
+  </head>
+  <body>
+    <div id="out">running…</div>
+    <script type="module" src="/lockdown-smoke.js"></script>
+    <script type="module">
+      // Reflect the result into the DOM too, for eyeball + playwright text read.
+      requestAnimationFrame(() => {
+        document.getElementById('out').textContent = JSON.stringify(window.__sesSmoke ?? { pending: true })
+      })
+    </script>
+  </body>
+</html>

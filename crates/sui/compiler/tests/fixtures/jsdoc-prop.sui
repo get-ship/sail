@@ -1,0 +1,5 @@
+<!-- /** Picks the active tone */ -->
+<prop name="tone" values="default|primary" default="default" reflect />
+<prop name="label" type="string" default="" />
+
+<button part="button">{label()}</button>

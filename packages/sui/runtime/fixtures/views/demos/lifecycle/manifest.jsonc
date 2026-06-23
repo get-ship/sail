@@ -1,0 +1,8 @@
+// Demo: mount/unmount lifecycle — interval logger.
+{
+  "name": "lifecycle",
+  "path": "/demos/lifecycle",
+  "title": "Demo · lifecycle",
+  "layout": "default",
+  "auth": "public"
+}

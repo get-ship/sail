@@ -1,0 +1,335 @@
+<div class="gallery-section">
+  <header class="section-header">
+    <h1>sui/charts</h1>
+    <p class="section-note">Pack <strong>sui/charts</strong> — SVG-rendered chart primitives. Each card shows one component with representative prop/variant combinations.</p>
+  </header>
+
+  <!-- ── sui-area-chart ─────────────────────────────────────────────────── -->
+  <section class="component-block">
+    <h2>sui-area-chart</h2>
+
+    <div class="card-row">
+      <div class="demo-card">
+        <h3>single series, no grid</h3>
+        <sui-area-chart
+          series='[{"name":"Revenue","data":[12,28,18,42,35,60,55]}]'
+          labels="Mon,Tue,Wed,Thu,Fri,Sat,Sun"
+          label="revenue area chart">
+        </sui-area-chart>
+      </div>
+
+      <div class="demo-card">
+        <h3>two series + grid + points</h3>
+        <sui-area-chart
+          series='[{"name":"Downloads","data":[5,14,9,22,18,30,27],"tone":"primary"},{"name":"Uploads","data":[2,6,4,10,8,14,12],"tone":"success"}]'
+          labels="Mon,Tue,Wed,Thu,Fri,Sat,Sun"
+          grid
+          points
+          label="downloads vs uploads area chart">
+          <span slot="legend-entry" style="color:var(--primary)">Downloads</span>
+          <span>Uploads</span>
+        </sui-area-chart>
+      </div>
+
+      <div class="demo-card">
+        <h3>loading state</h3>
+        <sui-area-chart loading label="loading area chart"></sui-area-chart>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── sui-line-chart ─────────────────────────────────────────────────── -->
+  <section class="component-block">
+    <h2>sui-line-chart</h2>
+
+    <div class="card-row">
+      <div class="demo-card">
+        <h3>single series</h3>
+        <sui-line-chart
+          series='[{"name":"Latency","data":[80,72,95,60,88,74,65]}]'
+          labels="Mon,Tue,Wed,Thu,Fri,Sat,Sun"
+          label="latency line chart">
+        </sui-line-chart>
+      </div>
+
+      <div class="demo-card">
+        <h3>two series + grid + points</h3>
+        <sui-line-chart
+          series='[{"name":"p50","data":[40,38,45,36,42,39,37],"tone":"primary"},{"name":"p99","data":[120,115,140,105,130,118,110],"tone":"destructive"}]'
+          labels="Mon,Tue,Wed,Thu,Fri,Sat,Sun"
+          grid
+          points
+          label="p50 vs p99 line chart">
+        </sui-line-chart>
+      </div>
+
+      <div class="demo-card">
+        <h3>loading state</h3>
+        <sui-line-chart loading label="loading line chart"></sui-line-chart>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── sui-bar-chart ──────────────────────────────────────────────────── -->
+  <section class="component-block">
+    <h2>sui-bar-chart</h2>
+
+    <div class="card-row">
+      <div class="demo-card">
+        <h3>vertical · tone=primary</h3>
+        <sui-bar-chart
+          data="12,28,18,42,35,60,55"
+          labels="Mon,Tue,Wed,Thu,Fri,Sat,Sun"
+          tone="primary"
+          orientation="vertical"
+          label="weekly bar chart">
+        </sui-bar-chart>
+      </div>
+
+      <div class="demo-card">
+        <h3>vertical · tone=success</h3>
+        <sui-bar-chart
+          data="5,14,9,22,18,30,27"
+          labels="Mon,Tue,Wed,Thu,Fri,Sat,Sun"
+          tone="success"
+          orientation="vertical"
+          label="success bar chart">
+        </sui-bar-chart>
+      </div>
+
+      <div class="demo-card">
+        <h3>horizontal · tone=warning</h3>
+        <sui-bar-chart
+          data="30,55,40,70,25"
+          labels="Alpha,Beta,Gamma,Delta,Epsilon"
+          tone="warning"
+          orientation="horizontal"
+          label="horizontal bar chart">
+        </sui-bar-chart>
+      </div>
+
+      <div class="demo-card">
+        <h3>horizontal · tone=destructive</h3>
+        <sui-bar-chart
+          data="8,16,12,20,5"
+          labels="Q1,Q2,Q3,Q4,Q5"
+          tone="destructive"
+          orientation="horizontal"
+          label="destructive bar chart">
+        </sui-bar-chart>
+      </div>
+
+      <div class="demo-card">
+        <h3>loading state</h3>
+        <sui-bar-chart loading label="loading bar chart"></sui-bar-chart>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── sui-donut ──────────────────────────────────────────────────────── -->
+  <section class="component-block">
+    <h2>sui-donut</h2>
+
+    <div class="card-row">
+      <div class="demo-card">
+        <h3>default size, center label</h3>
+        <sui-donut
+          data='[{"label":"TypeScript","value":58,"tone":"primary"},{"label":"Rust","value":30,"tone":"success"},{"label":"Other","value":12,"tone":"muted"}]'
+          label="language breakdown donut">
+          <span>58%</span>
+        </sui-donut>
+      </div>
+
+      <div class="demo-card">
+        <h3>larger size, thicker ring</h3>
+        <sui-donut
+          data='[{"label":"CPU","value":42,"tone":"destructive"},{"label":"Memory","value":35,"tone":"warning"},{"label":"Free","value":23,"tone":"muted"}]'
+          size="160"
+          thickness="24"
+          label="resource usage donut">
+          <span style="font-size:var(--text-sm)">Resources</span>
+        </sui-donut>
+      </div>
+
+      <div class="demo-card">
+        <h3>compact, thin ring</h3>
+        <sui-donut
+          data='[{"label":"Done","value":72,"tone":"success"},{"label":"Remaining","value":28,"tone":"muted"}]'
+          size="80"
+          thickness="8"
+          label="progress donut">
+          <span style="font-size:var(--text-xs)">72%</span>
+        </sui-donut>
+      </div>
+
+      <div class="demo-card">
+        <h3>loading state</h3>
+        <sui-donut loading label="loading donut"></sui-donut>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── sui-gauge ──────────────────────────────────────────────────────── -->
+  <section class="component-block">
+    <h2>sui-gauge</h2>
+
+    <div class="card-row">
+      <div class="demo-card">
+        <h3>tone=primary, 65%</h3>
+        <sui-gauge
+          value="65"
+          min="0"
+          max="100"
+          tone="primary"
+          label="cpu gauge">
+          <span>65%</span>
+        </sui-gauge>
+      </div>
+
+      <div class="demo-card">
+        <h3>tone=success, 85%</h3>
+        <sui-gauge
+          value="85"
+          min="0"
+          max="100"
+          tone="success"
+          label="health gauge">
+          <span>85%</span>
+        </sui-gauge>
+      </div>
+
+      <div class="demo-card">
+        <h3>tone=warning, 45%</h3>
+        <sui-gauge
+          value="45"
+          min="0"
+          max="100"
+          tone="warning"
+          label="memory gauge">
+          <span>45%</span>
+        </sui-gauge>
+      </div>
+
+      <div class="demo-card">
+        <h3>tone=destructive, 90%</h3>
+        <sui-gauge
+          value="90"
+          min="0"
+          max="100"
+          tone="destructive"
+          label="disk gauge">
+          <span>90%</span>
+        </sui-gauge>
+      </div>
+
+      <div class="demo-card">
+        <h3>threshold-driven color, high=70</h3>
+        <sui-gauge
+          value="55"
+          min="0"
+          max="100"
+          low-threshold="30"
+          high-threshold="70"
+          size="160"
+          thickness="16"
+          label="threshold gauge">
+          <span>55 / 100</span>
+        </sui-gauge>
+      </div>
+
+      <div class="demo-card">
+        <h3>loading state</h3>
+        <sui-gauge loading label="loading gauge"></sui-gauge>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── sui-heatmap ────────────────────────────────────────────────────── -->
+  <section class="component-block">
+    <h2>sui-heatmap</h2>
+
+    <div class="card-row">
+      <div class="demo-card">
+        <h3>tone=primary, 4×7 grid</h3>
+        <sui-heatmap
+          data="0,3,7,2,5,8,4,1,6,9,3,7,2,5,0,4,8,6,3,7,2,5,9,4,1,6,3,8"
+          rows="Mon,Tue,Wed,Thu"
+          cols="W1,W2,W3,W4,W5,W6,W7"
+          tone="primary"
+          cell-size="24"
+          label="activity heatmap">
+        </sui-heatmap>
+      </div>
+
+      <div class="demo-card">
+        <h3>tone=success, compact cells</h3>
+        <sui-heatmap
+          data="0,2,5,8,3,6,9,1,4,7,2,5,8,3,6,9,1,4,7,2,5,8,3,6,9,1,4,7"
+          rows="Mon,Tue,Wed,Thu"
+          cols="W1,W2,W3,W4,W5,W6,W7"
+          tone="success"
+          cell-size="16"
+          gap="2"
+          label="success heatmap">
+        </sui-heatmap>
+      </div>
+
+      <div class="demo-card">
+        <h3>tone=warning</h3>
+        <sui-heatmap
+          data="1,3,6,2,8,4,9,0,5,7,3,6,2,8,4,9,0,5,7,3,6,2,8,4,9,0,5,7"
+          rows="Mon,Tue,Wed,Thu"
+          cols="W1,W2,W3,W4,W5,W6,W7"
+          tone="warning"
+          cell-size="20"
+          label="warning heatmap">
+        </sui-heatmap>
+      </div>
+
+      <div class="demo-card">
+        <h3>loading state</h3>
+        <sui-heatmap loading label="loading heatmap"></sui-heatmap>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── sui-sparkline ──────────────────────────────────────────────────── -->
+  <section class="component-block">
+    <h2>sui-sparkline</h2>
+
+    <div class="card-row">
+      <div class="demo-card">
+        <h3>tone variants</h3>
+        <div class="sparkline-grid">
+          <span class="spark-label">primary</span>
+          <sui-sparkline data="4,7,3,9,5,11,8" tone="primary" width="120" height="32"></sui-sparkline>
+          <span class="spark-label">success</span>
+          <sui-sparkline data="2,5,8,6,9,7,10" tone="success" width="120" height="32"></sui-sparkline>
+          <span class="spark-label">warning</span>
+          <sui-sparkline data="9,6,8,4,7,5,6" tone="warning" width="120" height="32"></sui-sparkline>
+          <span class="spark-label">destructive</span>
+          <sui-sparkline data="3,8,5,10,6,9,4" tone="destructive" width="120" height="32"></sui-sparkline>
+          <span class="spark-label">accent</span>
+          <sui-sparkline data="6,4,9,3,8,5,7" tone="accent" width="120" height="32"></sui-sparkline>
+          <span class="spark-label">muted</span>
+          <sui-sparkline data="5,7,4,8,6,9,3" tone="muted" width="120" height="32"></sui-sparkline>
+        </div>
+      </div>
+
+      <div class="demo-card">
+        <h3>fill=true vs fill=false</h3>
+        <div class="sparkline-grid">
+          <span class="spark-label">no fill</span>
+          <sui-sparkline data="4,7,3,9,5,11,8" tone="primary" width="120" height="32"></sui-sparkline>
+          <span class="spark-label">fill</span>
+          <sui-sparkline data="4,7,3,9,5,11,8" tone="primary" fill width="120" height="32"></sui-sparkline>
+        </div>
+      </div>
+
+      <div class="demo-card">
+        <h3>loading state</h3>
+        <sui-sparkline loading tone="primary" width="120" height="32"></sui-sparkline>
+      </div>
+    </div>
+  </section>
+</div>

@@ -1,0 +1,29 @@
+{
+  "name": "@ship/deck/router",
+  "version": "0.1.0",
+  "description": "Deck route surface — URL state as reactive signals, navigate(), setRouterPort, mergeRoutes, and the edit-mode toggle. Owns the SHAPES/INSTANCES registries and the popstate listener; the SUI runtime imports it as a thin re-export for backwards compatibility, but the canonical home is here.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./server": "./src/server.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@ship/sui-runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3",
+    "vitest": "^4.1.5"
+  }
+}

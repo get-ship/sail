@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Daemon mode — rewritten by `inject_mode_meta` to reflect the running
+       daemon. Present so this page matches the served-shell convention. -->
+  <meta name="ship-mode" content="development" />
+  <title>View not found</title>
+
+  <!-- Design tokens served by the daemon — the same stylesheet the view
+       host links, so this page picks up the active theme's palette, radii,
+       typography, and spacing. Every rule below reads `var(--token)`; no
+       raw color/hex/px literals (sui-css-literals discipline). -->
+  <link rel="stylesheet" href="/api/assets/view-tokens.css" />
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: var(--background);
+      color: var(--foreground);
+      font-family: var(--body-font);
+    }
+    .nf-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-6);
+      box-sizing: border-box;
+    }
+    .nf-card {
+      width: 100%;
+      max-width: 34rem;
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: var(--space-7);
+      box-sizing: border-box;
+    }
+    .nf-code {
+      font-family: var(--mono-font);
+      font-size: var(--text-sm);
+      letter-spacing: var(--tracking-wide);
+      text-transform: uppercase;
+      color: var(--tone-destructive-fg);
+      margin: 0 0 var(--space-2) 0;
+    }
+    .nf-title {
+      font-family: var(--heading-font);
+      font-weight: var(--heading-weight);
+      font-size: var(--text-2xl);
+      margin: 0 0 var(--space-3) 0;
+      color: var(--foreground);
+    }
+    .nf-name {
+      font-family: var(--mono-font);
+      background: var(--tone-destructive-bg);
+      color: var(--tone-destructive-fg);
+      border-radius: var(--radius-sm);
+      padding: var(--space-1) var(--space-2);
+    }
+    .nf-message {
+      font-size: var(--text-base);
+      color: var(--muted-foreground);
+      line-height: var(--leading-normal);
+      margin: 0 0 var(--space-5) 0;
+    }
+    .nf-routes-label {
+      font-family: var(--label-font);
+      font-size: var(--text-xs);
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-wide);
+      color: var(--muted-foreground);
+      margin: 0 0 var(--space-2) 0;
+    }
+    .nf-routes {
+      list-style: none;
+      margin: 0 0 var(--space-6) 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+    .nf-routes a {
+      display: inline-block;
+      font-family: var(--mono-font);
+      font-size: var(--text-sm);
+      color: var(--primary);
+      text-decoration: none;
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-sm);
+    }
+    .nf-routes a:hover {
+      background: var(--hover-bg);
+      text-decoration: underline;
+    }
+    .nf-back {
+      display: inline-block;
+      font-family: var(--label-font);
+      font-size: var(--text-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--primary-foreground);
+      background: var(--primary);
+      border-radius: var(--radius-md);
+      padding: var(--space-2) var(--space-4);
+      text-decoration: none;
+    }
+    .nf-back:hover {
+      box-shadow: var(--shadow-accent);
+    }
+  </style>
+</head>
+<body>
+  <main class="nf-wrap">
+    <section class="nf-card" role="alert">
+      <p class="nf-code">404 — view not found</p>
+      <h1 class="nf-title">No view named <span class="nf-name"><!-- SUI_NF_NAME --></span></h1>
+      <p class="nf-message">
+        The daemon could not resolve a view for this route. Check the name, or
+        pick one of the views it can serve below.
+      </p>
+      <!-- SUI_NF_ROUTES -->
+      <a class="nf-back" href="/">&larr; back to Ship</a>
+    </section>
+  </main>
+</body>
+</html>

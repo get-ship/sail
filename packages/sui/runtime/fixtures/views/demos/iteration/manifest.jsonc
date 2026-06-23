@@ -1,0 +1,8 @@
+// Demo: {#for} with key= — todo list.
+{
+  "name": "iteration",
+  "path": "/demos/iteration",
+  "title": "Demo · iteration",
+  "layout": "default",
+  "auth": "public"
+}

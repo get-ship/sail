@@ -1,0 +1,68 @@
+/*
+ * Daemon-view base styles.
+ *
+ * Design tokens themselves come from the single canonical source
+ * `packages/sui/tokens/src/{tokens,themes}.css`, which
+ * `deck-core/src/view_tokens.rs` include_str!s and concatenates in front of
+ * this file at compile time. Only view-container-scoped resets + defaults here.
+ */
+
+/* Universal box-sizing — safe everywhere, including across shadow DOM
+   boundaries. Applies to every element so custom components built with
+   `box-sizing: border-box` internally stay in sync with their host. */
+.ship-view,
+.ship-view *,
+.ship-view *::before,
+.ship-view *::after {
+  box-sizing: border-box;
+}
+
+/* Browser-default margin/padding reset — scoped to elements that actually
+   have user-agent styles, NOT a `*` blast. A universal padding:0 reset
+   beats `:host { padding: … }` inside custom components (same specificity
+   rank, outer wins per cascade), which silently flattened every
+   ship-card, ship-button, ship-dialog etc. */
+.ship-view h1, .ship-view h2, .ship-view h3,
+.ship-view h4, .ship-view h5, .ship-view h6,
+.ship-view p, .ship-view blockquote,
+.ship-view ul, .ship-view ol, .ship-view dl,
+.ship-view dd, .ship-view figure, .ship-view pre {
+  margin: 0;
+  padding: 0;
+}
+
+.ship-view {
+  font-family: var(--font-body);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100%;
+}
+
+.ship-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--muted);
+  border-top-color: var(--foreground);
+  border-radius: 50%;
+  animation: ship-spin 0.6s linear infinite;
+}
+
+@keyframes ship-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Eyebrow label utility — group head, section eyebrow, stat-strip caption.
+   Reads role tokens so themes that demote display typography (paper) still
+   get a coherent label treatment via --label-font / --label-weight /
+   --label-tracking. */
+.ship-eyebrow {
+  font-family: var(--label-font, var(--font-mono));
+  font-weight: var(--label-weight, 500);
+  letter-spacing: var(--label-tracking, 0.12em);
+  text-transform: uppercase;
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+}

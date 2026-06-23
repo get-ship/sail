@@ -1,0 +1,244 @@
+<!--
+  <sui-select> — SUI port of <ship-select>.
+  Wraps a native <select>. Options are declared as light-DOM <option>
+  children and cloned into the shadow <select> via slot-driven sync.
+  Renders a polished chrome (custom chevron, hover surface, stacked
+  focus ring, tone/size channels) on top of the native control so the
+  OS popup still fires.
+
+  Prop / event / method parity vs <ship-select>
+  ──────────────────────────────────────────────────────────────────────
+  Lit                              SUI                        Notes
+  ──────────────────────────────────────────────────────────────────────
+  value (String, '')               value (string, '')         ✓
+  name (String, '')                name (string, '')          ✓
+  required (Boolean, reflect)      required (bool, reflect)   ✓
+  disabled (Boolean, reflect)      disabled (bool, reflect)   ✓
+  invalid (Boolean, reflect)       invalid (bool, reflect)    ✓
+  tone (Tone, reflect)             tone (union, reflect)      ✓ default|info|success
+                                                                |warning|destructive
+                                                                |accent|muted
+  size (Size, 'md', reflect)       size (sm|md|lg, reflect)   ✓
+  label (String, '')               label (string, '')         ✓ → aria-label
+  describedBy (String, '')         described-by (string)      ✓ → aria-describedby
+  ──────────────────────────────────────────────────────────────────────
+  Events: ship-change              sui-change                 ✓ { detail: { value } }
+  ──────────────────────────────────────────────────────────────────────
+  Slots: (default) option/optgroup (default) option/optgroup  ✓ light-DOM children
+                                                                cloned into shadow
+                                                                <select> on slotchange
+  Parts: field, select, chevron    field, select, chevron     ✓
+  ──────────────────────────────────────────────────────────────────────
+  Form association: NATIVE. `form-value` on value and `form-disabled`
+  on disabled wire ElementInternals.setFormValue plus
+  formResetCallback / formStateRestoreCallback / formDisabledCallback
+  at the compiler level — `static formAssociated = true` is set on
+  the wrapper class and the browser auto-dispatches the lifecycle
+  callbacks. The shadow <select>.value continues to mirror the prop
+  signal via the controller's effect so the native popup shows the
+  selected option.
+  ──────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="value" type="string" default="" form-value />
+<prop name="name" type="string" default="" />
+<prop name="required" type="bool" default="false" reflect />
+<prop name="disabled" type="bool" default="false" reflect form-disabled />
+<prop name="invalid" type="bool" default="false" reflect />
+<prop name="tone" values="default|info|success|warning|destructive|accent|muted" default="default" reflect />
+<prop name="size" values="sm|md|lg" default="md" reflect />
+<prop name="label" type="string" default="" />
+<prop name="described-by" type="string" default="" />
+
+<style>
+  :host {
+    display: inline-flex;
+    vertical-align: middle;
+    --tone: var(--foreground);
+    --tone-fg: var(--foreground);
+    --tone-border: var(--border);
+    --tone-border-strong: var(--border-strong);
+    --tone-bg-hover: var(--hover-bg);
+    --tone-ring: var(--ring);
+    --sel-pad-end-extra: 6px;
+  }
+  :host([hidden]) { display: none; }
+
+  :host([tone='info'])        { --tone: var(--info);             --tone-fg: var(--info);             --tone-border: var(--tone-info-border); --tone-border-strong: var(--tone-info-border); --tone-bg-hover: var(--tone-info-bg); --tone-ring: var(--tone-info-ring); }
+  :host([tone='success'])     { --tone: var(--success);          --tone-fg: var(--success);          --tone-border: var(--tone-success-border); --tone-border-strong: var(--tone-success-border); --tone-bg-hover: var(--tone-success-bg); --tone-ring: var(--tone-success-ring); }
+  :host([tone='warning'])     { --tone: var(--warning);          --tone-fg: var(--warning);          --tone-border: var(--tone-warning-border); --tone-border-strong: var(--tone-warning-border); --tone-bg-hover: var(--tone-warning-bg); --tone-ring: var(--tone-warning-ring); }
+  :host([tone='destructive']) { --tone: var(--destructive);      --tone-fg: var(--destructive);      --tone-border: var(--tone-destructive-border); --tone-border-strong: var(--tone-destructive-border); --tone-bg-hover: var(--tone-destructive-bg); --tone-ring: var(--tone-destructive-ring); }
+  :host([tone='accent'])      { --tone: var(--accent);           --tone-fg: var(--accent);           --tone-border: var(--tone-accent-border); --tone-border-strong: var(--tone-accent-border); --tone-bg-hover: var(--tone-accent-bg); --tone-ring: var(--tone-accent-ring); }
+  :host([tone='muted'])       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-border: var(--tone-muted-border); --tone-border-strong: var(--tone-muted-border); --tone-bg-hover: var(--tone-muted-bg); --tone-ring: var(--tone-muted-ring); }
+
+  :host(:not([size])),
+  :host([size='md']) { --sel-h: 34px; --sel-px: 12px; --sel-fs: 13px; --sel-gap: 8px; --sel-chev: 14px; }
+  :host([size='sm']) { --sel-h: 28px; --sel-px: 10px; --sel-fs: 12px; --sel-gap: 6px; --sel-chev: 12px; }
+  :host([size='lg']) { --sel-h: 40px; --sel-px: 16px; --sel-fs: 14px; --sel-gap: 8px; --sel-chev: 16px; }
+
+  .field {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sel-gap);
+    min-height: var(--sel-h);
+    padding-inline: var(--sel-px);
+    padding-inline-end: calc(var(--sel-px) + var(--sel-chev) + var(--sel-pad-end-extra));
+    background: var(--background);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xs);
+    font-family: var(--font-body);
+    font-size: var(--sel-fs);
+    font-weight: var(--font-weight-medium);
+    line-height: 1;
+    letter-spacing: -0.005em;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out),
+      color var(--duration-fast) var(--ease-out);
+  }
+
+  :host(:not([disabled])) .field:hover {
+    background: var(--hover-bg);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-sm);
+  }
+
+  :host([tone]:not([tone='default'])) .field {
+    border-color: var(--tone-border);
+  }
+  :host([tone]:not([tone='default']):not([disabled])) .field:hover {
+    background: var(--tone-bg-hover);
+    border-color: var(--tone-border-strong);
+  }
+
+  select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding-inline: var(--sel-px);
+    padding-inline-end: calc(var(--sel-px) + var(--sel-chev) + var(--sel-pad-end-extra));
+    font: inherit;
+    color: transparent;
+    background: transparent;
+    border: 0;
+    outline: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: inherit;
+    border-radius: var(--radius-md);
+  }
+  select option { color: var(--foreground); background: var(--background); }
+
+  /* Keyboard-only focus ring — drawn on the native <select> so it is
+   * visible to AT/keyboard users even when the host's :focus-within
+   * tint is suppressed. Consumes the canonical --focus-ring token. */
+  select:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+  :host([invalid]) select:focus-visible {
+    --ring-color: var(--destructive);
+  }
+
+  .value {
+    display: inline-block;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+  }
+  :host([data-placeholder]) .value { color: var(--muted-foreground); }
+
+  .chevron {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: var(--sel-px);
+    margin-block: auto;
+    width: var(--sel-chev);
+    height: var(--sel-chev);
+    color: var(--muted-foreground);
+    pointer-events: none;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      transform var(--duration-medium) var(--ease-out);
+  }
+  :host(:not([disabled])) .field:hover .chevron { color: var(--foreground); }
+  :host([tone]:not([tone='default'])) .chevron {
+    color: var(--tone-fg);
+  }
+
+  :host(:focus-within) .field {
+    outline: none;
+    border-color: var(--tone-border-strong);
+    box-shadow:
+      0 0 0 var(--ring-offset) var(--background),
+      0 0 0 calc(var(--ring-offset) + var(--ring-width))
+        var(--tone-ring);
+  }
+  :host(:not([tone]):focus-within) .field,
+  :host([tone='default']:focus-within) .field {
+    border-color: var(--ring-color);
+    box-shadow:
+      0 0 0 var(--ring-offset) var(--background),
+      var(--shadow-accent);
+  }
+
+  :host([invalid]) .field { border-color: var(--destructive); }
+  :host([invalid]:focus-within) .field {
+    border-color: var(--destructive);
+    box-shadow:
+      0 0 0 var(--ring-offset) var(--background),
+      var(--shadow-accent);
+  }
+
+  :host([disabled]) {
+    color: var(--muted-foreground);
+    filter: saturate(0.4);
+    cursor: not-allowed;
+  }
+  :host([disabled]) .field {
+    background: var(--muted);
+    border-color: var(--border-subtle);
+    box-shadow: none;
+    cursor: not-allowed;
+    filter: saturate(0.6);
+  }
+  :host([disabled]) select { cursor: not-allowed; }
+
+  @media (forced-colors: active) {
+    :host(:focus-within) .field { outline: 2px solid CanvasText; outline-offset: 2px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .field, .chevron { transition: none; }
+  }
+</style>
+
+<div class="field" part="field">
+  <span class="value" aria-hidden="true" bind:this={valueLabel}></span>
+  <svg class="chevron" part="chevron" viewBox="0 0 16 16"
+    aria-hidden="true" focusable="false" fill="none"
+    stroke="currentColor" stroke-width="1.75"
+    stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 6l4 4 4-4"></path>
+  </svg>
+  <select part="select"
+    name={name()}
+    disabled={disabled()}
+    required={required()}
+    aria-invalid={invalid() ? 'true' : 'false'}
+    aria-label={label()}
+    aria-describedby={describedBy()}
+    bind:this={selectEl}
+  ></select>
+</div>
+<span hidden><slot bind:this={optionsSlot}></slot></span>

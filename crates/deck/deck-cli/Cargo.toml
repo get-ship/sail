@@ -1,0 +1,23 @@
+[package]
+name = "deck-cli"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "The deck framework CLI — `deck build` (the next-build analog) over deck-bundler. deck is the framework; ship is an app built with it."
+
+[[bin]]
+name = "deck"
+path = "src/main.rs"
+
+[dependencies]
+deck-bundler = { path = "../deck-bundler" }
+clap = { workspace = true }
+anyhow = { workspace = true }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints]
+workspace = true

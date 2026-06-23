@@ -1,0 +1,25 @@
+[package]
+name = "deck"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Thin re-export facade over deck-core + deck-axum + deck-host + deck-bundler."
+
+[lib]
+name = "deck"
+path = "src/lib.rs"
+
+[features]
+default = []
+specta = ["dep:specta", "deck-axum/specta", "deck-core/specta"]
+
+[dependencies]
+deck-config = { path = "../deck-config" }
+deck-host = { path = "../deck-host" }
+deck-bundler = { path = "../deck-bundler" }
+deck-core = { path = "../deck-core" }
+deck-axum = { path = "../deck-axum" }
+specta = { workspace = true, features = ["serde_json"], optional = true }
+
+[lints]
+workspace = true

@@ -1,0 +1,101 @@
+<!--
+  <sui-separator> — SUI port of <ship-separator>.
+  Horizontal or vertical visual separator.
+
+  Prop parity vs <ship-separator>
+  ─────────────────────────────────────────────────────────────────────────────
+  Lit                          SUI                      Notes
+  ─────────────────────────────────────────────────────────────────────────────
+  orientation                  orientation (reflect)    ✓ horizontal|vertical
+    'horizontal'|'vertical'
+  variant                      variant (reflect)        ✓ solid|dashed
+    'solid'|'dashed'
+  ─────────────────────────────────────────────────────────────────────────────
+  (no events)                  (no events)              ✓
+  ─────────────────────────────────────────────────────────────────────────────
+  role="separator" set via JS  role="separator" on      ✓ static attr on inner
+    on host in render()          inner <hr>               <hr>; host is block
+  aria-orientation set on host aria-orientation on hr   ✓
+  (none)                       decorative (bool, false) Radix-parity addition —
+                                                        when true, role=none and
+                                                        aria-orientation dropped
+                                                        (purely visual divider,
+                                                        invisible to AT).
+  ─────────────────────────────────────────────────────────────────────────────
+  parts: (none)                part="sep"               SUI adds part for
+                                                        targeted styling
+  ─────────────────────────────────────────────────────────────────────────────
+  (none)                       tone (union, reflect)    SUI extension — tints
+                                                        border color with
+                                                        semantic tone; default
+                                                        is baseline border
+  ─────────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="orientation" values="horizontal|vertical" default="horizontal" reflect />
+<prop name="variant" values="solid|dashed" default="solid" reflect />
+<prop name="decorative" type="bool" default="false" reflect />
+<prop name="tone" values="default|muted|primary|info|success|warning|destructive|accent" default="default" reflect />
+
+<style>
+  :host {
+    display: block;
+    --tone-bg: var(--border-subtle);
+  }
+  :host([hidden]) { display: none; }
+  :host([tone='muted'])       { --tone-bg: var(--border-subtle); }
+  :host([tone='primary'])     { --tone-bg: var(--tone-primary-border); }
+  :host([tone='destructive']) { --tone-bg: var(--tone-destructive-border); }
+
+  .sep {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    flex: 0 0 auto;
+  }
+
+  /* Horizontal (default) */
+  :host(:not([orientation='vertical'])) .sep {
+    display: block;
+    width: 100%;
+    height: 1px;
+    margin: var(--space-2) 0;
+    background: var(--tone-bg);
+  }
+  :host(:not([orientation='vertical'])[variant='dashed']) .sep {
+    background: transparent;
+    border-top: 1px dashed var(--tone-bg);
+    height: 0;
+  }
+  /* inset: indent to align past a leading icon/avatar */
+  :host(:not([orientation='vertical'])[decorative='false']) .sep,
+  :host(:not([orientation='vertical'])) .sep {
+    /* width 100% already set above */
+  }
+
+  /* Vertical */
+  :host([orientation='vertical']) {
+    display: inline-flex;
+    align-self: stretch;
+    height: auto;
+    vertical-align: middle;
+  }
+  :host([orientation='vertical']) .sep {
+    display: inline-block;
+    width: 1px;
+    height: auto;
+    align-self: stretch;
+    min-height: 1em;
+    margin: 0 var(--space-2);
+    background: var(--border);
+  }
+  :host([orientation='vertical'][variant='dashed']) .sep {
+    background: transparent;
+    border-left: 1px dashed var(--border);
+    width: 0;
+  }
+</style>
+
+<hr class="sep" part="sep"
+    role={decorative() ? 'none' : 'separator'}
+    aria-orientation={decorative() ? null : orientation()} />

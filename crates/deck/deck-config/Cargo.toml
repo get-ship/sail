@@ -1,0 +1,21 @@
+[package]
+name = "deck-config"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "deck.jsonc — the single source of truth for Deck's consumer bundle manifest. Parsed at build-time and daemon-startup; never per-request."
+
+[lib]
+name = "deck_config"
+path = "src/lib.rs"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints]
+workspace = true

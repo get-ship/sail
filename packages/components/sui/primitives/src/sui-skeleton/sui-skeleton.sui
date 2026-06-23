@@ -1,0 +1,98 @@
+<!--
+  <sui-skeleton> — SUI port of <ship-skeleton>.
+  Shimmer placeholder for loading states.
+
+  Prop / event / method parity vs <ship-skeleton>
+  ─────────────────────────────────────────────────────────────────────────────
+  Lit                             SUI                     Notes
+  ─────────────────────────────────────────────────────────────────────────────
+  variant ('text'|'circle'|        shape ('text'|'line'|    renamed — 'shape'
+    'rect', 'text')                  'block'|'circle',      avoids collision
+                                     'text', reflect)       with Lit variant
+                                                           convention; 'line'
+                                                           and 'block' replace
+                                                           'text' and 'rect'
+                                                           with clearer names
+  width (String, '')              OMITTED                 SUI uses size instead
+                                                          of arbitrary CSS
+                                                          values — constrained
+                                                          dimensions match
+                                                          common use cases
+  height (String, '')             OMITTED                 same reason
+  lines (Number, 1)               OMITTED                 multi-line not
+                                                          supported; compose
+                                                          multiple skeletons
+  animated (Boolean, true)        OMITTED                 prefers-reduced-motion
+                                                          media query handles it;
+                                                          SUI favors CSS over prop
+  ─────────────────────────────────────────────────────────────────────────────
+  size                            size ('sm'|'md'|'lg',   SUI addition —
+    (not in Lit)                    reflect)               constrains height/
+                                                           diameter via channel
+  ─────────────────────────────────────────────────────────────────────────────
+  connectedCallback sets          role/aria attrs on       SUI shadow templates
+    role="status" aria-live        inner .sk element       cannot set host
+    aria-busy aria-label on host                           attributes without
+                                                           a controller; inner
+                                                           element is reachable
+  ─────────────────────────────────────────────────────────────────────────────
+  parts: bar                      part="sk"               renamed
+  ─────────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="shape" values="text|line|block|circle" default="text" reflect />
+<prop name="size" values="sm|md|lg" default="md" reflect />
+
+<style>
+  :host { display: inline-block; vertical-align: middle; }
+  :host([shape='block']) { display: block; }
+
+  .sk {
+    display: block;
+    background: linear-gradient(
+      90deg,
+      var(--muted) 0%,
+      var(--tone-muted-bg) 50%,
+      var(--muted) 100%
+    );
+    background-size: 200% 100%;
+    animation: sui-skeleton-shimmer 1.5s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+  }
+  :host([shape='circle']) .sk { border-radius: 50%; }
+
+  /* Text / line — narrow heights, full-width default. */
+  :host([shape='text']) .sk,
+  :host([shape='line']) .sk { width: 100%; }
+  :host([size='sm'][shape='text']) .sk,
+  :host([size='sm'][shape='line']) .sk { height: 8px; }
+  :host([size='md'][shape='text']) .sk,
+  :host([size='md'][shape='line']) .sk { height: 12px; }
+  :host([size='lg'][shape='text']) .sk,
+  :host([size='lg'][shape='line']) .sk { height: 16px; }
+
+  /* Block — fills parent width with a fixed min-height. */
+  :host([shape='block']) .sk { width: 100%; min-height: 80px; }
+
+  /* Circle — fixed diameters per size. */
+  :host([shape='circle'][size='sm']) .sk { width: 24px; height: 24px; }
+  :host([shape='circle'][size='md']) .sk { width: 32px; height: 32px; }
+  :host([shape='circle'][size='lg']) .sk { width: 48px; height: 48px; }
+
+  @keyframes sui-skeleton-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sk { animation: none; }
+  }
+</style>
+
+<span
+  class="sk"
+  part="sk"
+  role="status"
+  aria-label="Loading"
+  aria-live="polite"
+  aria-busy="true"
+></span>

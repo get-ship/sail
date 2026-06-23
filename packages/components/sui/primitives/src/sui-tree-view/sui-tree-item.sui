@@ -1,0 +1,109 @@
+<!--
+  <sui-tree-item> — SUI port of <ship-tree-node>. Co-located with <sui-tree-view>.
+  Expandable hierarchical list item with keyboard focus management.
+
+  Prop / event parity vs <ship-tree-node>
+  ─────────────────────────────────────────────────────────────────────────────
+  Lit                         SUI                         Notes
+  ─────────────────────────────────────────────────────────────────────────────
+  label (string, '')          label (string, '', reflect) ✓
+  expanded (bool, false)      expanded (bool, reflect)    ✓
+  selected (bool, false)      selected (bool, reflect)    ✓
+  leaf (bool, false)          leaf (bool, reflect)        ✓
+  ─────────────────────────────────────────────────────────────────────────────
+  ship-toggle → {expanded}    sui-toggle → {expanded}     event renamed
+  ship-select → {}            sui-select → {}             event renamed
+  ─────────────────────────────────────────────────────────────────────────────
+  role=treeitem set via       controller sets on host     ✓
+    connectedCallback
+  ─────────────────────────────────────────────────────────────────────────────
+  Keyboard: Enter/Space→select; ArrowRight→expand; ArrowLeft→collapse     ✓
+  ─────────────────────────────────────────────────────────────────────────────
+  Slots: (default) nested items, icon (leading), trailing
+  ─────────────────────────────────────────────────────────────────────────────
+  Parts: row, caret, label, children
+  ─────────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="label" type="string" default="" reflect />
+<prop name="expanded" type="bool" default="false" reflect />
+<prop name="selected" type="bool" default="false" reflect />
+<prop name="leaf" type="bool" default="false" reflect />
+
+<style>
+  :host { display: block; }
+  :host([hidden]) { display: none; }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    outline: none;
+    color: var(--foreground);
+    transition: background-color var(--duration-fast) var(--ease-out);
+  }
+  .row:hover { background: var(--hover-bg); }
+  :host([selected]) .row {
+    background: var(--selected-bg);
+    color: var(--foreground);
+    font-weight: var(--font-weight-medium);
+  }
+  .row:focus-visible {
+    box-shadow:
+      0 0 0 var(--ring-offset) var(--background),
+      0 0 0 calc(var(--ring-offset) + var(--ring-width))
+        var(--ring);
+  }
+  @media (forced-colors: active) {
+    .row:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
+  }
+
+  .caret {
+    display: inline-flex;
+    width: 12px;
+    height: 12px;
+    color: var(--muted-foreground);
+    transition: transform var(--duration-fast) var(--ease-out);
+  }
+  :host([expanded]) .caret { transform: rotate(90deg); }
+  :host([leaf]) .caret { visibility: hidden; }
+
+  .label {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .trailing { margin-inline-start: auto; color: var(--muted-foreground); font-size: var(--text-xs); }
+
+  .children {
+    margin-inline-start: var(--space-2);
+    border-left: 1px solid var(--border-subtle);
+    padding-inline-start: var(--space-3);
+  }
+  :host(:not([expanded])) .children { display: none; }
+</style>
+
+<div class="row" part="row" tabindex="0" bind:this={rowEl}>
+  <span class="caret" part="caret" aria-hidden="true">
+    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+      <polyline points="4 3 8 6 4 9"></polyline>
+    </svg>
+  </span>
+  <slot name="icon"></slot>
+  <span class="label" part="label">{nodeLabel()}</span>
+  <span class="trailing"><slot name="trailing"></slot></span>
+</div>
+<div class="children" part="children" role="group">
+  {#if nodeChildren().length > 0}
+    {#for c of nodeChildren() key={c.id}}
+      <sui-tree-item prop:node={c}></sui-tree-item>
+    {/for}
+  {:else}
+    <slot></slot>
+  {/if}
+</div>

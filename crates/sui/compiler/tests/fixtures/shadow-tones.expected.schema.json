@@ -1,0 +1,20 @@
+{
+  "data": [],
+  "component": {
+    "tag": "shadow-tones-test",
+    "props": [
+      {
+        "name": "tone",
+        "default": "default",
+        "reflect": true,
+        "bindable": false,
+        "type": "union",
+        "values": [
+          "default",
+          "primary",
+          "success"
+        ]
+      }
+    ]
+  }
+}

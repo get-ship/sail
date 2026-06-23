@@ -1,0 +1,8 @@
+{
+  "id": "static-info-card",
+  "difficulty": "easy",
+  "description": "Build a static info card listing the three Ship core values:\n  1. Boring infra, novel surface.\n  2. Server-rendered first.\n  3. Agent-writable by construction.\n\nThe card has an <h2> heading reading \"Ship core values\" with attribute data-test=\"heading\". Each value is rendered as an <li> with attribute data-test=\"value\". No state, no data, no events.",
+  "fixtures": { "template": "" },
+  "expectedBindings": [],
+  "behavioralTests": "expect(container.querySelector('[data-test=\"heading\"]'), 'heading present');\nexpect(container.querySelector('[data-test=\"heading\"]').textContent.trim() === 'Ship core values', 'heading text');\nconst values = container.querySelectorAll('[data-test=\"value\"]');\nexpect(values.length === 3, 'three values rendered, got ' + values.length);"
+}

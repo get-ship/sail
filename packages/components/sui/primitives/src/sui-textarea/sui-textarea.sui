@@ -1,0 +1,186 @@
+<!--
+  <sui-textarea> — SUI port of <ship-textarea>.
+  Wraps a native <textarea> with tone/size channels, variant=code for
+  monospace, and a controlled resize prop. Controller dispatches
+  sui-input on keystrokes and sui-change on blur if value changed.
+
+  Prop / event / method parity vs <ship-textarea>
+  ────────────────────────────────────────────────────────────────────────
+  Lit                            SUI                       Notes
+  ────────────────────────────────────────────────────────────────────────
+  value (String, '')             value (string, '')        ✓ two-way via bind:value
+  placeholder (String, '')       placeholder (string)      ✓
+  name (String, '')              name (string)             ✓
+  rows (Number, 4)               rows (number, 4)          ✓
+  required (Boolean, false)      required (bool, reflect)  ✓
+  disabled (Boolean, false)      disabled (bool, reflect)  ✓
+  readonly (Boolean, false)      readonly (bool, reflect)  ✓
+  tone (Tone)                    tone (union, 'default',   ✓
+                                   reflect)
+  variant ('default'|'code',     variant (default|code,    ✓
+    'default')                     'default', reflect)
+  size (Size, 'md')              size (sm|md, 'md',        ✓
+                                   reflect)
+  resize (string, 'vertical')    resize (none|vertical|    ✓
+                                   horizontal|both,
+                                   'vertical')
+  invalid (Boolean, false)       invalid (bool, reflect)   ✓
+  label (String, '')             label (string)            ✓ → aria-label
+  describedBy (String, '')       described-by (string)     ✓ → aria-describedby
+  ────────────────────────────────────────────────────────────────────────
+  Events: ship-input             sui-input                 ✓ renamed; detail.value
+    { detail: { value } }          { detail: { value } }
+  (no ship-change)               sui-change                ✓ on blur if value changed
+    (no Lit equivalent)            { detail: { value } }
+  ────────────────────────────────────────────────────────────────────────
+  Parts: textarea                textarea                  ✓
+  ────────────────────────────────────────────────────────────────────────
+  formAssociated / internals     NATIVE                    `form-value` on value,
+                                                           `form-disabled` on disabled
+                                                           wire ElementInternals.
+  ────────────────────────────────────────────────────────────────────────
+-->
+
+<prop name="value" type="string" default="" form-value />
+<prop name="placeholder" type="string" default="" />
+<prop name="name" type="string" default="" />
+<prop name="rows" type="number" default="4" />
+<prop name="required" type="bool" default="false" reflect />
+<prop name="disabled" type="bool" default="false" reflect form-disabled />
+<prop name="readonly" type="bool" default="false" reflect />
+<prop name="invalid" type="bool" default="false" reflect />
+<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
+<prop name="variant" values="default|code" default="default" reflect />
+<prop name="size" values="sm|md" default="md" reflect />
+<prop name="resize" values="none|vertical|horizontal|both" default="vertical" />
+<prop name="label" type="string" default="" />
+<prop name="described-by" type="string" default="" />
+
+<style>
+  :host {
+    display: block;
+    width: 100%;
+    --tone: var(--ring-color);
+    --tone-fg: var(--foreground);
+  }
+  :host([hidden]) { display: none; }
+
+  :host(:not([tone])),
+  :host([tone='default']) {
+    --tone: var(--ring-color);
+    --tone-fg: var(--foreground);
+  }
+  :host([tone='primary'])     { --tone: var(--primary);          --tone-fg: var(--primary); }
+  :host([tone='info'])        { --tone: var(--info);             --tone-fg: var(--info); }
+  :host([tone='success'])     { --tone: var(--success);          --tone-fg: var(--success); }
+  :host([tone='warning'])     { --tone: var(--warning);          --tone-fg: var(--warning); }
+  :host([tone='destructive']) { --tone: var(--destructive);      --tone-fg: var(--destructive); }
+  :host([tone='accent'])      { --tone: var(--accent);           --tone-fg: var(--accent); }
+  :host([tone='muted'])       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); }
+
+  :host(:not([size])),
+  :host([size='md']) {
+    --ta-px: 12px;
+    --ta-py: 10px;
+    --ta-fs: var(--text-base);
+    --ta-lh: 1.5;
+    --ta-radius: var(--radius-md);
+  }
+  :host([size='sm']) {
+    --ta-px: 10px;
+    --ta-py: 8px;
+    --ta-fs: var(--text-sm);
+    --ta-lh: 1.45;
+    --ta-radius: var(--radius-sm);
+  }
+
+  textarea {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--border);
+    border-radius: var(--ta-radius);
+    padding: var(--ta-py) var(--ta-px);
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-body);
+    font-size: var(--ta-fs);
+    line-height: var(--ta-lh);
+    letter-spacing: -0.005em;
+    box-shadow: var(--shadow-xs);
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
+  }
+
+  :host(:not([disabled])) textarea:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-sm);
+  }
+
+  textarea:focus-visible,
+  textarea:focus {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+    border-color: var(--tone-border);
+  }
+
+  :host([invalid]) textarea {
+    border-color: var(--tone-destructive-border);
+  }
+  :host([invalid]) textarea:hover {
+    border-color: var(--tone-destructive-border);
+  }
+  :host([invalid]) textarea:focus-visible,
+  :host([invalid]) textarea:focus {
+    border-color: var(--destructive);
+  }
+
+  textarea::placeholder {
+    color: var(--muted-foreground);
+    opacity: 1;
+  }
+  textarea:disabled {
+    cursor: not-allowed;
+    background: var(--muted);
+    border-color: var(--border-subtle);
+    color: var(--muted-foreground);
+    box-shadow: none;
+    opacity: 0.6;
+  }
+  textarea:read-only { cursor: default; }
+
+  :host([variant='code']) textarea {
+    font-family: var(--mono-font);
+    font-size: var(--text-base);
+    line-height: 1.55;
+    letter-spacing: 0;
+    tab-size: 2;
+  }
+
+  @media (forced-colors: active) {
+    textarea:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<textarea
+  part="textarea"
+  placeholder={placeholder()}
+  name={name()}
+  rows={rows()}
+  disabled={disabled()}
+  required={required()}
+  readonly={readonly()}
+  aria-invalid={invalid() ? 'true' : 'false'}
+  aria-required={required() ? 'true' : 'false'}
+  aria-label={label()}
+  aria-describedby={describedBy()}
+  style:resize={resize()}
+  bind:value={value}
+  bind:this={textareaEl}
+></textarea>

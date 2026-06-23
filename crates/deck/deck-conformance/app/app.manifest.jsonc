@@ -1,0 +1,21 @@
+// App manifest — a name → real-ESM-import map (the synthetic-view import map).
+//
+// SUI stays ignorant of what these names MEAN. `ship` and `api` are the
+// conformance app's custom data clients (declared here so the conformance
+// views can resolve `ship.demo.todos()` and `api.demo.clock()` against real
+// ESM imports, type-checked by tsgo); the view-host handles `route` and
+// `navigate` are NOT here — the synthetic emit resolves them by convention
+// (see `sui_compiler::emit::synthetic::convention_client`). This map is
+// what REPLACES the reserved-word `BUILTINS`/ambient-ctx mechanism:
+// composition by real import, type-checked by tsgo, the compiler unaware
+// that "ship", "api", or "route" exist.
+//
+// `construct: true` means the import is a factory (`makeShip()` →
+// `ShipClient`), so the synthetic controller emits
+// `const ship = makeShip()`.
+{
+  "clients": {
+    "ship": { "from": "@app/clients/demo", "import": "makeShip", "construct": true },
+    "api": { "from": "@app/clients/demo", "import": "makeApi", "construct": true }
+  }
+}

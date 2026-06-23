@@ -1,0 +1,29 @@
+[package]
+name = "deck-conformance"
+version = "0.0.0"
+edition = "2024"
+publish = false
+description = "deck's own conformance + reliability harness — mounts deck on axum with no daemon, no Ship app, no Ship component pack. Exercises each rendering mode (SSR/SPA/static) and dev concern (build output, assets, bundling, reload) with a test that doubles as documentation."
+
+[[bin]]
+name = "deck-conformance"
+path = "src/main.rs"
+
+[dependencies]
+deck = { path = "../deck" }
+deck-core = { path = "../deck-core" }
+sui-compiler = { path = "../../sui/compiler" }
+axum = { workspace = true, features = ["http1", "tokio"] }
+tokio = { workspace = true, features = ["full"] }
+tokio-util = { workspace = true, features = ["full"] }
+tokio-stream = { version = "0.1", features = ["sync"] }
+futures-util = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+form_urlencoded = "1"
+tracing = { workspace = true }
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }
+tempfile = "3"
+serde_json = { workspace = true }

@@ -1,0 +1,4 @@
+.demo .demo-checkbox { display: inline-flex; align-items: center; gap: 0.5rem; margin: 0.5rem 0 1rem; }
+.demo .demo-panel { padding: 1rem 1.25rem; border-radius: 0.5rem; border: 1px solid var(--border, #d0d7de); }
+.demo .demo-panel-on  { background: var(--success-soft, #dafbe1); }
+.demo .demo-panel-off { background: var(--muted, #f6f8fa); color: var(--muted-foreground, #57606a); }

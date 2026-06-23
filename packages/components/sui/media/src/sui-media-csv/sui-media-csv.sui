@@ -1,0 +1,55 @@
+<!--
+  <sui-media-csv> — the CSV/TSV renderer arm of the sui-media family.
+
+  Read-only. Parses resolved csv/tsv text (via `prop:src` identity OR the
+  `type="string"` SSR fallback prop) into `{ rows, columns }` and composes the
+  COMMITTED `sui-table` (variant="data") through `prop:table` identity — it does
+  NOT re-invent a grid. The engine arrives as a live JS reference; the table
+  windows it.
+
+  Density is the platform axis (`<html data-density>`): rows read the
+  `--density-*` channel through `sui-table`. This renderer sets NEITHER
+  `density` NOR `dense` on the composed table (the pre-existing sui-table
+  density-prop conflict is not propagated here).
+
+  Source-in, never fetch. No `fetch`/`EventSource`/`ship.*` — bytes/text arrive
+  already resolved.
+
+  Props (build-spec §Props):
+    delimiter  comma|tab|auto  reflect  — field delimiter
+    header     bool, true      reflect  — first row is the header
+    text       string                   — SSR/declarative fallback content
+
+  Events (ViewerRenderer contract, via emit):
+    sui-viewer-load           — first successful parse
+    sui-viewer-error {message} — malformed input
+
+  Parts: delegates to sui-table parts.
+-->
+
+<prop name="delimiter" values="comma|tab|auto" default="auto" reflect />
+<prop name="header" type="bool" default="true" reflect />
+<prop name="text" type="string" default="" />
+
+<style>
+  :host {
+    display: block;
+    width: 100%;
+    color: var(--foreground);
+  }
+  :host([hidden]) { display: none; }
+
+  .error {
+    display: block;
+    padding: var(--space-3) var(--space-4);
+    color: var(--destructive);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+</style>
+
+{#if errorMsg()}
+  <div class="error" part="error" role="alert">{errorMsg()}</div>
+{:else}
+  <sui-table variant="data" part="grid" hoverable prop:table={tableEngine()}></sui-table>
+{/if}

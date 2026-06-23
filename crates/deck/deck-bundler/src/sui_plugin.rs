@@ -1,0 +1,460 @@
+//! SUI resolve/load plugin for Rolldown. Handles:
+//!   - `resolve_id`: redirect `./X.compiled.js` siblings to a virtual id,
+//!     externalize the framework singletons, re-anchor `@ship/<pkg>` to
+//!     workspace `src/`, resolve `@sui-tag/<tag>` to the component source.
+//!   - `load`: compile `.sui` (and `.compiled.js`→sibling `.sui`) via
+//!     sui-compiler, returning JS.
+
+use std::borrow::Cow;
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex, OnceLock};
+
+use anyhow::{anyhow, Result};
+use rolldown::plugin::{
+    HookLoadArgs, HookLoadOutput, HookLoadReturn, HookResolveIdArgs, HookResolveIdOutput,
+    HookResolveIdReturn, HookUsage, Plugin, PluginContext, SharedLoadPluginContext,
+};
+use rolldown_common::{ModuleType, ResolvedExternal};
+
+
+use crate::compile::{compile_sui, CompileMode};
+
+// NOTE: `@ship/sdk-client` was here historically (deck-self-typed as a
+// framework singleton). The deck-jsonc-simplify cutover moves it to
+// provider-declared discovery: the package self-declares its serve
+// contract in `package.json#deckFramework`, the bundler discovers it
+// via the app's dep graph, and `AppPlugin` externalizes whatever the
+// importmap declares. Hardcoding the alias here would silently anchor
+// `@ship/sdk-client` to workspace source — the OPPOSITE of what the
+// importmap says — and break the host-declared singleton pattern.
+const SINGLETONS: [&str; 2] = ["@ship/sui-runtime", "@ship/sui-dom"];
+
+/// Virtual id for an unresolved `@sui-tag/<tag>` import — a shared empty module
+/// so the import is a harmless no-op. `\0` marks it virtual (Rollup/Rolldown
+/// convention: never read/written on disk).
+const SUI_TAG_NOOP: &str = "\0sui-tag-noop";
+
+/// Detect compile mode for a `.sui` file using the HTML custom-element tag-name
+/// rule: a valid custom element tag MUST contain a hyphen (HTML spec §4.13.3).
+/// Every component `.sui` file uses its stem as the tag name (`sui-button`,
+/// `sui-rail-item`) and therefore contains a hyphen. Every view uses `page.sui`
+/// or `index.sui` — no hyphen. So the rule is exact and path-structure-free:
+///
+///   stem contains `'-'` AND stem ∉ {"page", "index"} → Component
+///   otherwise → View
+///
+/// This replaces the old `stem == parent_dir` heuristic, which missed all
+/// GROUPED-DIRECTORY components (e.g. `sui-rail/sui-rail-item.sui`,
+/// `sui-command-bar/sui-command-chat.sui`) and required a special-case for
+/// `packages/components/ui-components/src`. That shortcut is now subsumed by
+/// this rule (every `.sui` in that tree has a hyphenated stem) and is removed.
+pub(crate) fn detect_mode(abs: &Path, _repo_root: &Path) -> (CompileMode, String) {
+    let stem = abs.file_stem().and_then(|s| s.to_str()).unwrap_or("").to_string();
+    let mode = if stem.contains('-') && stem != "page" && stem != "index" {
+        CompileMode::Component
+    } else {
+        CompileMode::View
+    };
+    (mode, stem)
+}
+
+pub(crate) fn normalize(p: &Path) -> PathBuf {
+    let mut out = PathBuf::new();
+    for c in p.components() {
+        match c {
+            std::path::Component::ParentDir => {
+                out.pop();
+            }
+            std::path::Component::CurDir => {}
+            o => out.push(o.as_os_str()),
+        }
+    }
+    out
+}
+
+/// SUI compile plugin — `resolve_id` redirects `*.compiled.js` siblings to a
+/// virtual id and re-anchors `@ship/<pkg>` to workspace `src/`; `load` compiles
+/// the sibling `.sui` via sui-compiler. Reused by the app build (`app.rs`) so
+/// the SPA graph compiles its own `.sui` in-process — one compile path, no
+/// on-disk `.compiled.js` pre-step.
+#[derive(Debug)]
+pub(crate) struct SuiPlugin {
+    pub(crate) repo_root: PathBuf,
+    /// View builds opt in: each `.sui` compiled in this build emits
+    /// `@sui-tag/<tag>` registration imports (the per-view resolver). Off for
+    /// framework/app builds.
+    pub(crate) emit_component_imports: bool,
+    /// `<tag>` → component source `.sui`, for resolving `@sui-tag/<tag>`.
+    /// Empty when `emit_component_imports` is false.
+    pub(crate) component_index: Arc<HashMap<String, PathBuf>>,
+    /// `<tag>` → providing-pack name, for every tag a declared-`packs` scope
+    /// EXCLUDES. Empty under global resolution. When a built view references one
+    /// of these tags, the resolver no-ops it AND warns the author (naming the
+    /// pack to declare).
+    pub(crate) shadowed_tags: Arc<HashMap<String, String>>,
+    /// npm package name → absolute package root, for resolving a `@ship/<name>`
+    /// import to its workspace source. DERIVED from the bun/npm workspace package
+    /// map (`component_package_roots`) — deck bakes no monorepo layout and keeps
+    /// no hand-maintained search order. A name absent from the map falls through
+    /// to Rolldown's native resolver (prod / node_modules resolution).
+    pub(crate) component_roots: Arc<HashMap<String, PathBuf>>,
+}
+
+/// The per-view resolver's lookup tables, built once per `(repo_root, packs)`.
+/// `index` resolves `@sui-tag/<tag>` to component source; `shadowed` explains a
+/// tag a declared scope excluded (empty under global resolution).
+#[derive(Clone)]
+pub(crate) struct ResolverIndex {
+    pub(crate) index: Arc<HashMap<String, PathBuf>>,
+    pub(crate) shadowed: Arc<HashMap<String, String>>,
+}
+
+impl ResolverIndex {
+    /// Empty resolver — for builds that emit no `@sui-tag` imports (framework/
+    /// app non-view targets).
+    pub(crate) fn empty() -> Self {
+        Self { index: Arc::new(HashMap::new()), shadowed: Arc::new(HashMap::new()) }
+    }
+}
+
+impl SuiPlugin {
+    /// Compile a `.sui` to JS via `sui_compiler::compile` IN-PROCESS (#255):
+    /// the compiler is the linked crate, not a spawned binary — no temp dir, no
+    /// file roundtrip, no version drift, no flag that a stale binary can reject.
+    fn compile(&self, sui: &Path) -> Result<String> {
+        let (mode, stem) = detect_mode(sui, &self.repo_root);
+        compile_sui(sui, mode, &stem, self.emit_component_imports)
+            .map_err(|e| anyhow!("compile {}: {e}", sui.display()))
+    }
+}
+
+impl Plugin for SuiPlugin {
+    fn name(&self) -> Cow<'static, str> {
+        "ship-sui".into()
+    }
+
+    async fn resolve_id(
+        &self,
+        _ctx: &PluginContext,
+        args: &HookResolveIdArgs<'_>,
+    ) -> HookResolveIdReturn {
+        let spec = args.specifier;
+        // Framework singletons stay external (one runtime instance).
+        if SINGLETONS.contains(&spec) {
+            return Ok(Some(HookResolveIdOutput {
+                id: spec.into(),
+                external: Some(ResolvedExternal::Bool(true)),
+                ..Default::default()
+            }));
+        }
+        // `@sui-tag/<tag>` — the per-view resolver. Map to the component's
+        // source `.sui` (so it compiles into the view bundle); an unknown tag
+        // (view-private, or no CEM yet) → virtual no-op. Emitted only under
+        // `--emit-component-imports`.
+        if let Some(tag) = spec.strip_prefix("@sui-tag/") {
+            return Ok(Some(match self.component_index.get(tag) {
+                Some(src) => HookResolveIdOutput::from_id(src.to_string_lossy().to_string()),
+                None => {
+                    // A scoped-out tag (exists in the workspace, but its pack is
+                    // not in this project's declared `packs`) gets an author
+                    // diagnostic — it would otherwise vanish silently. A tag the
+                    // workspace doesn't provide at all (view-private, HTML, typo)
+                    // is not shadowed and stays a quiet no-op.
+                    if let Some(pack) = self.shadowed_tags.get(tag) {
+                        let view = args
+                            .importer
+                            .map(|i| {
+                                Path::new(i)
+                                    .strip_prefix(&self.repo_root)
+                                    .unwrap_or(Path::new(i))
+                                    .display()
+                                    .to_string()
+                            })
+                            .unwrap_or_else(|| "<entry>".to_string());
+                        tracing::warn!(
+                            tag,
+                            pack,
+                            view,
+                            "deck: `{tag}` is provided by pack `{pack}`, not declared in \
+                             deck.jsonc `packs` — it will not render. Add `{pack}` to `packs`."
+                        );
+                    }
+                    // Resolve to a shared empty module — a harmless no-op. NOT
+                    // external, which would leave an unresolvable
+                    // `@sui-tag/<tag>` specifier in the served view.
+                    HookResolveIdOutput::from_id(SUI_TAG_NOOP.to_string())
+                }
+            }));
+        }
+        // `*.compiled.js` → virtual id; `load` compiles the sibling `.sui`. The
+        // `.compiled.js` is synthetic (never on disk), so we must redirect here
+        // rather than fall through to Rolldown's native resolver, which would
+        // fail to resolve a nonexistent file. Two shapes reach here: relative
+        // `./X.compiled.js` siblings (umbrella `index.ts` imports), and the
+        // ABSOLUTE paths the virtual-aggregate entry emits — both must become
+        // a virtual id.
+        if spec.ends_with(".compiled.js") {
+            if Path::new(spec).is_absolute() {
+                return Ok(Some(HookResolveIdOutput::from_id(
+                    normalize(Path::new(spec)).to_string_lossy().to_string(),
+                )));
+            }
+            if (spec.starts_with("./") || spec.starts_with("../"))
+                && let Some(importer) = args.importer
+            {
+                let dir = Path::new(importer).parent().unwrap_or(&self.repo_root);
+                let abs = normalize(&dir.join(spec));
+                return Ok(Some(HookResolveIdOutput::from_id(abs.to_string_lossy().to_string())));
+            }
+        }
+        // `@ship/<non-singleton>` → workspace package source (not prebuilt
+        // dist) so its components compile from source too. A bare specifier
+        // (`@ship/tokens`) resolves to `src/index.ts`; a subpath
+        // (`@ship/tokens/themes`) resolves to the matching file
+        // under `src/` — honoring the package's `exports` subpath map. Without
+        // this the subpath collapsed to `src/index.ts`, surfacing as a
+        // `MissingExport` for the named imports that live in the subpath file.
+        if let Some(rest) = spec.strip_prefix("@ship/") {
+            let name = rest.split('/').next().unwrap_or(rest);
+            let subpath = rest.strip_prefix(name).map(|s| s.trim_start_matches('/'));
+            // Resolve `@ship/<name>` via the DERIVED workspace package map
+            // (`component_roots`, keyed by package.json `name`) — the same map
+            // bun/npm resolve through. No hand-maintained search order, no
+            // `sui-` dir-name heuristic: the map IS the authoritative
+            // name→source binding. A name absent from the map (a prod build with
+            // no workspace, a true node_modules dep) falls through to Rolldown's
+            // native resolver below. (There is no umbrella bundle — chrome is
+            // per-tag tree-shaking only.)
+            if let Some(pkg) = self.component_roots.get(&format!("@ship/{name}")) {
+                if pkg.join("src/index.ts").exists() {
+                    let src = pkg.join("src");
+                    let target = match subpath {
+                        None | Some("") => src.join("index.ts"),
+                        Some(sub) => {
+                            // `tokens/themes` → tokens/themes.ts, or its index.ts.
+                            let direct = src.join(sub);
+                            if direct.extension().is_some() && direct.exists() {
+                                direct
+                            } else {
+                                let with_ext = src.join(format!("{sub}.ts"));
+                                if with_ext.exists() {
+                                    with_ext
+                                } else {
+                                    src.join(sub).join("index.ts")
+                                }
+                            }
+                        }
+                    };
+                    if target.exists() {
+                        return Ok(Some(HookResolveIdOutput::from_id(
+                            target.to_string_lossy().to_string(),
+                        )));
+                    }
+                }
+            }
+        }
+        // Everything else: let Rolldown's native resolver handle it (relative
+        // .ts/.js, node_modules, extension resolution).
+        Ok(None)
+    }
+
+    async fn load(&self, _ctx: SharedLoadPluginContext, args: &HookLoadArgs<'_>) -> HookLoadReturn {
+        let id = args.id;
+        if id == SUI_TAG_NOOP {
+            // Empty no-op for an unresolved component tag. Tree-shaken away
+            // if nothing keeps it.
+            return Ok(Some(HookLoadOutput {
+                code: String::new().into(),
+                module_type: Some(ModuleType::Js),
+                ..Default::default()
+            }));
+        }
+        let sui: Option<PathBuf> = if let Some(base) = id.strip_suffix(".compiled.js") {
+            Some(PathBuf::from(format!("{base}.sui")))
+        } else if id.ends_with(".sui") {
+            Some(PathBuf::from(id))
+        } else {
+            None
+        };
+        if let Some(sui) = sui {
+            let code = self
+                .compile(&sui)
+                .map_err(|e| anyhow!("compile {}: {e}", sui.display()))?;
+            return Ok(Some(HookLoadOutput {
+                code: code.into(),
+                module_type: Some(ModuleType::Js),
+                ..Default::default()
+            }));
+        }
+        // Real .ts/.js — Rolldown loads + transpiles natively.
+        Ok(None)
+    }
+
+    fn register_hook_usage(&self) -> HookUsage {
+        HookUsage::ResolveId | HookUsage::Load
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::compile::CompileMode;
+
+    fn fake_root() -> PathBuf {
+        PathBuf::from("/repo")
+    }
+
+    fn detect(path: &str) -> CompileMode {
+        detect_mode(Path::new(path), &fake_root()).0
+    }
+
+    /// GROUPED-DIRECTORY component: stem differs from parent dir but has a hyphen.
+    #[test]
+    fn grouped_dir_component_detected_as_component() {
+        assert_eq!(
+            detect("/repo/apps/shell/src/components/sui-rail/sui-rail-item.sui"),
+            CompileMode::Component,
+            "sui-rail-item.sui must be a Component (hyphenated stem)"
+        );
+    }
+
+    /// Views use page.sui (no hyphen in stem).
+    #[test]
+    fn page_sui_detected_as_view() {
+        assert_eq!(
+            detect("/repo/views/agents/page.sui"),
+            CompileMode::View,
+            "page.sui must be a View"
+        );
+    }
+
+    /// SAME-NAME component: the classic convention still works.
+    #[test]
+    fn same_name_component_detected_as_component() {
+        assert_eq!(
+            detect("/repo/packages/components/sui/primitives/src/sui-button/sui-button.sui"),
+            CompileMode::Component,
+            "sui-button/sui-button.sui must be a Component"
+        );
+    }
+
+    /// index.sui is a view even though it could theoretically have a hyphen
+    /// (no known case, but the exclusion is correct by spec).
+    #[test]
+    fn index_sui_detected_as_view() {
+        assert_eq!(
+            detect("/repo/.ship/views/component-viewer/index.sui"),
+            CompileMode::View,
+            "index.sui must be a View"
+        );
+    }
+
+    /// The stem is returned unchanged as the tag/name.
+    #[test]
+    fn detect_mode_returns_stem_as_tag() {
+        let (_, tag) = detect_mode(
+            Path::new("/repo/apps/shell/src/components/sui-command-bar/sui-command-chat.sui"),
+            &fake_root(),
+        );
+        assert_eq!(tag, "sui-command-chat");
+    }
+
+    fn write(path: &Path, body: &str) {
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(path, body).unwrap();
+    }
+
+    /// Two-pack fixture: a declared primitives pack + an undeclared agents pack.
+    fn two_pack_fixture() -> tempfile::TempDir {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        write(&root.join("package.json"), r#"{"workspaces":["packages/*"]}"#);
+        write(
+            &root.join("packages/primitives/package.json"),
+            r#"{"name":"@ship/sui-primitives"}"#,
+        );
+        write(
+            &root.join("packages/primitives/src/sui-button/sui-button.sui"),
+            "<button><slot></slot></button>\n",
+        );
+        write(&root.join("packages/agents/package.json"), r#"{"name":"@ship/agents"}"#);
+        write(
+            &root.join("packages/agents/src/ship-agent-card/ship-agent-card.sui"),
+            "<article><slot></slot></article>\n",
+        );
+        tmp
+    }
+
+    /// `component_index` assembles BOTH halves: a declared scope yields a scoped
+    /// index (declared tag in, undeclared tag out) and a shadowed map naming the
+    /// excluded tag's pack — the data the resolver's author diagnostic reads.
+    #[test]
+    fn component_index_scoped_carries_index_and_shadowed() {
+        let tmp = two_pack_fixture();
+        let root = tmp.path();
+        let declared: Vec<String> = vec!["@ship/sui-primitives".into()];
+
+        let scoped = component_index(root, &declared);
+        assert!(scoped.index.contains_key("sui-button"), "declared tag resolves");
+        assert!(
+            !scoped.index.contains_key("ship-agent-card"),
+            "undeclared tag is excluded from the index"
+        );
+        assert_eq!(
+            scoped.shadowed.get("ship-agent-card").map(String::as_str),
+            Some("@ship/agents"),
+            "excluded tag is shadowed with its providing pack (for the diagnostic)"
+        );
+    }
+
+    /// Global (empty `packs`): every tag resolves and nothing is shadowed, so
+    /// the diagnostic never fires — zero behavior change for existing projects.
+    #[test]
+    fn component_index_global_resolves_all_and_shadows_nothing() {
+        let tmp = two_pack_fixture();
+        let root = tmp.path();
+        let global = component_index(root, &[]);
+        assert!(global.index.contains_key("sui-button"));
+        assert!(global.index.contains_key("ship-agent-card"));
+        assert!(global.shadowed.is_empty(), "global scope shadows nothing");
+    }
+}
+
+/// Cached `<tag>` → source `.sui` index for a repo (the per-view resolver's
+/// lookup). The CEM walk is process-stable; build once per repo root and share.
+/// A component added mid-process isn't picked up until restart — until then its
+/// tag resolves to a virtual no-op.
+///
+/// `` comes from `deck.jsonc` and drives the shell-local CEM
+/// projection (which app root gets a special origin label). `None` in
+/// zero-config hosts — the projection simply doesn't apply.
+///
+/// `packs` is the project's declared component scope (`deck.jsonc packs`). When
+/// non-empty the index is restricted to those packs (per-project access
+/// control) and `shadowed` carries every excluded tag → its pack for author
+/// diagnostics; when empty the index is global and nothing is shadowed. The
+/// cache is keyed by `(repo_root, packs)` so two projects sharing a repo root
+/// but declaring different packs don't collide.
+pub(crate) fn component_index(
+    repo_root: &Path,
+    packs: &[String],
+) -> ResolverIndex {
+    type CacheKey = (PathBuf, Vec<String>);
+    static CACHE: OnceLock<Mutex<HashMap<CacheKey, ResolverIndex>>> = OnceLock::new();
+    let cache = CACHE.get_or_init(|| Mutex::new(HashMap::new()));
+    let key: CacheKey = (repo_root.to_path_buf(), packs.to_vec());
+    let mut guard = cache.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some(idx) = guard.get(&key) {
+        return idx.clone();
+    }
+    let resolver = ResolverIndex {
+        index: Arc::new(crate::catalog::tag_source_index_scoped(
+            repo_root,
+            Some(packs),
+        )),
+        shadowed: Arc::new(crate::catalog::shadowed_tags(repo_root, packs)),
+    };
+    guard.insert(key, resolver.clone());
+    resolver
+}
