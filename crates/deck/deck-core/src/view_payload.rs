@@ -3,7 +3,7 @@ use std::sync::{Mutex, OnceLock};
 use std::time::SystemTime;
 
 use serde::Serialize;
-use sui_compiler::{bindings, parse, render};
+use sui_compiler::render;
 pub use deck_host::view_payload::ViewPayload;
 use deck_host::resolver::read_view_artifact;
 
@@ -100,18 +100,16 @@ fn serve(name: &str, sub_path: Option<&str>, mode: DaemonMode) -> DeckResponse {
     let (split, clients) = if let Some(hit) = split_cache_get(&view_name, source_mtime) {
         hit
     } else {
-        let program = match parse::parse(&resolved.source) {
-            Ok(p) => p,
-            Err(err) => return compile_error_response(name, &resolved.source, err, mode),
-        };
-        let registry = bindings::build(&program);
+        // The parse → bindings → render_split chain lives behind the
+        // compiler's `render_view` seam now; deck-core no longer reaches into
+        // the internal sub-modules. The mtime-gated SPLIT_CACHE stays here —
+        // it is a serve concern, not the compiler's.
         let opts = render::RenderOpts { view_name: view_name.clone() };
-        let split = match render::render_split(&program, &registry, &opts) {
-            Ok(r) => r,
+        let rv = match sui_compiler::render_view(&resolved.source, &opts) {
+            Ok(rv) => rv,
             Err(err) => return compile_error_response(name, &resolved.source, err, mode),
         };
-        let clients: Vec<String> =
-            program.clients.iter().map(|c| c.name.clone()).collect();
+        let (split, clients) = (rv.split, rv.clients);
         if let Some(mt) = source_mtime {
             split_cache_put(&view_name, mt, &split, &clients);
         }

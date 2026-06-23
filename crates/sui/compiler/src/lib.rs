@@ -190,6 +190,43 @@ pub fn check_all(source: &str, source_path: Option<&std::path::Path>) -> Vec<Dia
     }
 }
 
+/// Output of [`render_view`]: the split body/scope plus the declared
+/// `<client>` names. Bundled together so a host (deck-core's view-payload
+/// serve path) gets everything one request needs from a single call instead
+/// of reaching into the compiler's `parse` / `bindings` / `render`
+/// sub-modules itself.
+#[derive(Debug, Clone)]
+pub struct RenderView {
+    /// Body HTML + initial scope, returned separately (see
+    /// [`render::RenderSplit`]). `__subscribe__` is NOT injected — the host
+    /// reads `split.has_live_data` and folds the served URL in with its own
+    /// route builders.
+    pub split: render::RenderSplit,
+    /// Declared `<client>` names, in source order.
+    pub clients: Vec<String>,
+}
+
+/// Render a `.sui` view source to a [`RenderView`] — the
+/// `parse::parse → bindings::build → render::render_split` chain packaged
+/// behind one public entry point.
+///
+/// This is the serve-path counterpart to [`compile`] (which emits the ESM
+/// module): it produces the first-paint split + the client list a host ships
+/// in its view payload. Hosts call this instead of touching the internal
+/// sub-modules. Serve concerns stay on the host side — `__subscribe__`
+/// injection (via [`render::RenderSplit::has_live_data`]) and any
+/// mtime-gated caching are the host's, not the compiler's.
+pub fn render_view(
+    source: &str,
+    opts: &render::RenderOpts,
+) -> Result<RenderView, CompileError> {
+    let program = parse::parse(source)?;
+    let registry = bindings::build(&program);
+    let split = render::render_split(&program, &registry, opts)?;
+    let clients = program.clients.iter().map(|c| c.name.clone()).collect();
+    Ok(RenderView { split, clients })
+}
+
 /// Compile a `.sui` source string.
 pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, CompileError> {
     let merged_owned;
