@@ -815,9 +815,23 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
             !css_on_disk.is_empty(),
             "expected a hashed .css asset under <out>/assets/, got none"
         );
+        // The app's OWN imported CSS must be content-hashed off its source stem
+        // (`styles.css` → `styles-<hash>.css`). The build ALSO emits the design
+        // tokens stylesheet (`tokens-<hash>.css`): `routes.gen.ts`/`entry.gen.ts`
+        // unconditionally import `@ship/tokens/tokens.css` (the entry contract),
+        // and `component_package_roots` now unions sui's own workspace so that
+        // import resolves to source and bundles — exactly the path proven by
+        // `bundle_app_bundles_design_tokens_via_entry`. So assert the app's stem
+        // is present, not that it's the ONLY asset.
         assert!(
-            css_on_disk.iter().all(|n| n.starts_with("styles-")),
-            "CSS asset should be content-hashed off the source stem (got {css_on_disk:?})"
+            css_on_disk.iter().any(|n| n.starts_with("styles-")),
+            "the app's imported CSS should be content-hashed off the source stem \
+             `styles-` (got {css_on_disk:?})"
+        );
+        assert!(
+            css_on_disk.iter().all(|n| n.starts_with("styles-") || n.starts_with("tokens-")),
+            "only the app CSS (`styles-`) and the entry-contract tokens CSS \
+             (`tokens-`) should be emitted (got {css_on_disk:?})"
         );
 
         // Gate 2: AppBuild exposes the absolute URLs the index.html link
@@ -825,7 +839,9 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
         assert_eq!(build.css_hrefs.len(), css_on_disk.len(), "css_hrefs matches disk");
         for href in &build.css_hrefs {
             assert!(
-                href.starts_with("/css-test-app/styles-") && href.ends_with(".css"),
+                (href.starts_with("/css-test-app/styles-")
+                    || href.starts_with("/css-test-app/tokens-"))
+                    && href.ends_with(".css"),
                 "css_href uses the same URL convention as the entry (/<ns>/<file>.css), got {href}"
             );
         }

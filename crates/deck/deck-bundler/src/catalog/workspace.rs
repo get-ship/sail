@@ -195,6 +195,43 @@ pub fn discover_bundle_declarations(repo_root: &Path) -> Vec<(PathBuf, BundleDec
         .collect()
 }
 
+/// Sui's own workspace root — three parents up from this crate's
+/// `CARGO_MANIFEST_DIR` (`<sui>/crates/deck/deck-bundler` → `<sui>`), validated
+/// once at first access. Sui carved the framework `@ship/*` packages out of the
+/// consuming project (`@ship/tokens`, `@ship/sui-*`, the `packages/components/
+/// sui/*` packs); a consuming project depends on them via `file:` deps, so they
+/// no longer live under the project's `repo_root` and a `repo_root`-only
+/// workspace walk misses them. Resolving sui's root from the build crate's own
+/// location lets the bundler union those packages into the `@ship/<name>` →
+/// source map regardless of which project it is building.
+///
+/// `None` when the derived path doesn't look like sui's workspace (e.g. the
+/// crate was relocated, or a prod build runs from an install layout) — callers
+/// fall back to project-only resolution and never panic.
+fn sui_workspace_root() -> Option<&'static Path> {
+    static ROOT: OnceLock<Option<PathBuf>> = OnceLock::new();
+    ROOT.get_or_init(|| {
+        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        for _ in 0..3 {
+            if !d.pop() {
+                return None;
+            }
+        }
+        // Confirm it's sui's workspace: a `package.json` + `packages/` dir,
+        // AND it actually declares the carved `@ship/tokens` package. The
+        // tokens check is the cheap, specific guard that this is sui (not some
+        // other ancestor workspace) without a full discovery walk.
+        if d.join("package.json").exists()
+            && d.join("packages/sui/tokens/package.json").exists()
+        {
+            Some(d)
+        } else {
+            None
+        }
+    })
+    .as_deref()
+}
+
 /// npm package name → absolute package root, for resolving `@ship/<name>`
 /// component imports to workspace source. This is the bun/npm workspace package
 /// map — `@ship/<name>` already resolves to its package dir via `workspaces` —
@@ -202,6 +239,21 @@ pub fn discover_bundle_declarations(repo_root: &Path) -> Vec<(PathBuf, BundleDec
 /// REPLACES the hand-maintained `componentSourceRoots` search order: in dev the
 /// map is the source of truth; in prod, standard package resolution
 /// (node_modules) applies and this map is simply empty.
+///
+/// The map UNIONS two workspaces:
+///   1. the consuming project's `repo_root` (its own `@ship/*` — `@ship/sdk`,
+///      `@ship/agents`, the `packages/components/ship/*` packs, etc.);
+///   2. sui's own workspace ([`sui_workspace_root`]) — the carved framework
+///      packages (`@ship/tokens`, `@ship/sui-*`, `packages/components/sui/*`).
+///
+/// PRECEDENCE on a name collision: **sui wins**. Sui owns the framework `@ship/*`
+/// names; after the carve they live only under sui's root, so a stale or absent
+/// entry under the project's root must never shadow the real sui source. Sui's
+/// entries are therefore overlaid AFTER the project's, overwriting on collision.
+/// (Today the two sets are disjoint — project owns `@ship/sdk`/`@ship/agents`/…,
+/// sui owns `@ship/tokens`/`@ship/sui-*` — so this rule only ever fires
+/// defensively.) If sui's root can't be derived the union degrades to
+/// project-only resolution.
 ///
 /// Cached per `repo_root` (shared `Arc`, mirroring `component_index`) so the
 /// per-build plugin construction is a cheap clone, not a fresh workspace walk.
@@ -215,13 +267,23 @@ pub fn component_package_roots(repo_root: &Path) -> Arc<HashMap<String, PathBuf>
             return map.clone();
         }
     }
-    let map: Arc<HashMap<String, PathBuf>> = Arc::new(
-        discover_workspace_packages(repo_root)
-            .unwrap_or_default()
-            .into_iter()
-            .map(|p| (p.name, p.root))
-            .collect(),
-    );
+    // Project workspace first.
+    let mut roots: HashMap<String, PathBuf> = discover_workspace_packages(repo_root)
+        .unwrap_or_default()
+        .into_iter()
+        .map(|p| (p.name, p.root))
+        .collect();
+    // Overlay sui's own workspace (sui wins on collision). Skip when sui IS the
+    // project root — its packages are already in `roots`, and re-walking would
+    // only be redundant work for an identical result.
+    if let Some(sui_root) = sui_workspace_root() {
+        if sui_root != repo_root {
+            for p in discover_workspace_packages(sui_root).unwrap_or_default() {
+                roots.insert(p.name, p.root);
+            }
+        }
+    }
+    let map = Arc::new(roots);
     cache
         .lock()
         .unwrap_or_else(|e| e.into_inner())
