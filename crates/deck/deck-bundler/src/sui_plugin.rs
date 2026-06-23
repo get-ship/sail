@@ -124,8 +124,14 @@ impl SuiPlugin {
     /// file roundtrip, no version drift, no flag that a stale binary can reject.
     fn compile(&self, sui: &Path) -> Result<String> {
         let (mode, stem) = detect_mode(sui, &self.repo_root);
-        compile_sui(sui, mode, &stem, self.emit_component_imports)
-            .map_err(|e| anyhow!("compile {}: {e}", sui.display()))
+        compile_sui(sui, mode, &stem, self.emit_component_imports).map_err(|e| {
+            // Surface the real compiler error: rolldown collapses a plugin error
+            // to a generic "plugin `ship-sui` threw an error", swallowing the
+            // message/line/col. Print it so a consumer can see WHY a view failed
+            // to compile (deck invariant: compile errors are surfaced, not swallowed).
+            eprintln!("deck ship-sui: compile {} failed:\n  {e}", sui.display());
+            anyhow!("compile {}: {e}", sui.display())
+        })
     }
 }
 
