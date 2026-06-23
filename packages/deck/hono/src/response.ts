@@ -150,7 +150,10 @@ export function intoResponse(resp: DeckResponse, mode: DaemonMode): Response {
     headers.set("ETag", strongEtag(bytes));
   }
   for (const [k, v] of resp.extraHeaders) headers.append(k, v);
-  // 303 carries no body.
-  const body = resp.status === 303 ? null : bytes;
+  // 303 carries no body. `bytes` is a Uint8Array — a valid Response body at
+  // runtime; the cast bridges a TS-lib friction: TS 5.7+ types Uint8Array as
+  // generic over ArrayBufferLike, which some consumer tsconfigs don't accept
+  // as BodyInit. The adaptor must typecheck under any host's lib, so we coerce.
+  const body: BodyInit | null = resp.status === 303 ? null : (bytes as unknown as BodyInit);
   return new Response(body, { status: resp.status, headers });
 }
