@@ -14,7 +14,7 @@ path = "src/lib.rs"
 [build-dependencies]
 # TEMP: absolute path, becomes ../ship/... after the layout reshuffle
 # build-info stayed in the ship repo (leaf crate, not carved out).
-build-info = { path = "/home/madvib/dev/ship-worktrees/carve-ship/crates/build-info" }
+build-info = { path = "/home/madvib/dev/Ship/crates/build-info" }
 
 [[bin]]
 name = "sui-compiler"
@@ -58,7 +58,7 @@ path = "../lint"
 [dependencies.build-info]
 # TEMP: absolute path, becomes ../ship/... after the layout reshuffle
 # build-info stayed in the ship repo (leaf crate, not carved out).
-path = "/home/madvib/dev/ship-worktrees/carve-ship/crates/build-info"
+path = "/home/madvib/dev/Ship/crates/build-info"
 
 [dev-dependencies]
 tempfile = { workspace = true }

@@ -14,7 +14,7 @@ sui-compiler = { path = "../../sui/compiler" }
 # The L0 JS engine: the deno_core/V8 isolate + the host-dispatch wire.
 # TEMP: absolute path, becomes ../ship/... after the layout reshuffle
 # ship-js stayed in the ship repo (not carved out).
-ship-js = { path = "/home/madvib/dev/ship-worktrees/carve-ship/crates/core/ship-substrate/crates/ship-js", features = ["deno"] }
+ship-js = { path = "/home/madvib/dev/Ship/crates/core/ship-substrate/crates/ship-js", features = ["deno"] }
 # Deck's request/data contracts (DataPort) the host Dispatch maps onto.
 deck-core = { path = "../deck-core" }
 # The project's own bundler (Rolldown), so the measured bundle matches the

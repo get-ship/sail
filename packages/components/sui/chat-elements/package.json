@@ -19,7 +19,7 @@
     "@ship/sui-primitives": "workspace:*"
   },
   "devDependencies": {
-    "@ship/test-setup": "file:/home/madvib/dev/ship-worktrees/carve-ship/packages/test-setup",
+    "@ship/test-setup": "file:/home/madvib/dev/Ship/packages/test-setup",
     "vitest": "^4.1.5"
   }
 }

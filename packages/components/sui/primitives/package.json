@@ -15,12 +15,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ship/sdk-client": "file:/home/madvib/dev/ship-worktrees/carve-ship/packages/sdk-client",
+    "@ship/sdk-client": "file:/home/madvib/dev/Ship/packages/sdk-client",
     "@ship/sui-dom": "workspace:*",
     "@ship/sui-runtime": "workspace:*"
   },
   "devDependencies": {
-    "@ship/test-setup": "file:/home/madvib/dev/ship-worktrees/carve-ship/packages/test-setup",
+    "@ship/test-setup": "file:/home/madvib/dev/Ship/packages/test-setup",
     "@types/node": "24.12.4",
     "fast-formula-parser": "1.0.19",
     "vitest": "^4.1.5"
