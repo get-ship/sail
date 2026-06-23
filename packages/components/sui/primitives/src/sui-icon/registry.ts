@@ -14,9 +14,11 @@
 // Tests prime the cache up-front from the committed JSON so the controller
 // reaches its render path synchronously — no jsdom fetch needed.
 
-import { DECK_PREFIX } from '@ship/sdk-client'
-
-const ICON_URL_PREFIX = `${DECK_PREFIX}/icons/`
+// The deck route prefix is a stable framework constant. A pure component must
+// NOT import the SDK (@ship/sdk-client) for it — sui-* components are ship-/
+// runtime-free. Inlined to keep <sui-icon> pure. SSOT: deck-core routes.rs
+// DECK_PREFIX (a pure TS mirror should own this; see inv-deck-route-ssot).
+const ICON_URL_PREFIX = `/_deck/icons/`
 
 // Per-name cache keyed on the URL-bound name (after alias resolution if the
 // caller did it; aliases are also handled by the daemon, so an aliased miss
