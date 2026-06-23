@@ -72,8 +72,40 @@ pub fn compile_sui(
         emit_component_imports,
     };
     match compile(&source, opts) {
-        Ok(out) => Ok(out.js),
+        Ok(out) => {
+            // deck build only BLOCKS on Error severity (`compile()` runs
+            // `check::gate` over the full Error stream). The Warning-level
+            // `sui-lint` findings (`check::collect`) are advisory — surface
+            // them to stderr during the build so authors see them, without
+            // failing. A compile that reached here already passed the Error
+            // gate, so only Warnings remain. Re-runs the collect() pass (a
+            // parse + lint over this one file); cheap next to bundling and
+            // only on the build path.
+            emit_build_warnings(sui_file, &source);
+            Ok(out.js)
+        }
         Err(e) => Err(CompileError::Compile(e.render(&source))),
+    }
+}
+
+/// Print Warning-severity diagnostics for `source` to stderr (the build
+/// surfacing seam for #2). Errors never appear — they fail `compile()` before
+/// this is reached. Mirrors the CLI/MCP rendering: `<path>:<line>:<col>
+/// [<rule>] <message>`.
+fn emit_build_warnings(sui_file: &Path, source: &str) {
+    for d in sui_compiler::check_all(source, Some(sui_file)) {
+        if d.severity != sui_compiler::DiagSeverity::Warning {
+            continue;
+        }
+        let rule = d.rule.as_deref().unwrap_or("sui-lint");
+        eprintln!(
+            "deck warn {}:{}:{} [{}] {}",
+            sui_file.display(),
+            d.line,
+            d.col,
+            rule,
+            d.message
+        );
     }
 }
 
