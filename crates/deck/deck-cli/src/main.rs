@@ -10,7 +10,7 @@ mod scaffold;
 
 use std::path::{Path, PathBuf};
 
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{Context, Result, bail};
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
@@ -330,14 +330,19 @@ fn build_assets() -> Result<()> {
     Ok(())
 }
 
-/// Resolve the Cargo workspace root from `start`. It's the cwd for module
-/// resolution and the source of the framework bundles. Walking the topmost
-/// `Cargo.toml` is the one canonical fact; any monorepo-specific marker
-/// surfaces later when bundle_app reads the framework assets dir.
+/// Resolve the workspace root for a build from `start` (the project dir).
+///
+/// In the ship monorepo the root is the topmost `Cargo.toml` (the Cargo and
+/// bun workspaces coincide there). But deck is a GENERAL framework: a consumer
+/// can be a pure-JS app with no Cargo workspace at all (e.g. ship-ops), and
+/// deck must build it too. So when there is no topmost `Cargo.toml` we fall
+/// back to the project dir itself as the root. The root is used for `@ship/*`
+/// workspace-source discovery and as the DEFAULT framework-assets origin; an
+/// external consumer overrides the latter with `DECK_FRAMEWORK_ASSETS_DIR` and
+/// resolves the framework specifiers as importmap externals (they never need
+/// source). A Cargo workspace is therefore NOT required.
 fn find_repo_root(start: &Path) -> Result<PathBuf> {
-    deck_bundler::paths::topmost_cargo_root(start).ok_or_else(|| {
-        anyhow!("deck build: no Cargo workspace root above {}", start.display())
-    })
+    Ok(deck_bundler::paths::topmost_cargo_root(start).unwrap_or_else(|| start.to_path_buf()))
 }
 
 fn build(project: PathBuf, out: Option<PathBuf>, bundle_framework: bool, minify: bool) -> Result<()> {
