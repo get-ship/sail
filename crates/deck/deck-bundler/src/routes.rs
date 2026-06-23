@@ -868,10 +868,50 @@ pub(crate) fn build_route_tree(routes_dir: &Path, label: &str) -> Result<RouteTr
     view_dirs(routes_dir, &mut dirs)
         .with_context(|| format!("walking routes tree for `{label}`"))?;
     let mut routes: Vec<Route> = dirs.iter().filter_map(|d| to_route(routes_dir, d)).collect();
-    routes.sort_by(|a, b| a.pattern.cmp(&b.pattern));
+    routes.sort_by(|a, b| cmp_route_patterns(&a.pattern, &b.pattern));
     let layouts = discover_layouts(routes_dir)
         .with_context(|| format!("walking layouts for `{label}`"))?;
     Ok(RouteTree { label: label.to_string(), routes, layouts })
+}
+
+/// Specificity rank of one path segment: static literal (0) before dynamic
+/// `:param` (1) before splat `*` (2). The runtime router is first-match-wins
+/// over the emitted order, so this ordering is what makes a more-specific
+/// route win.
+fn segment_rank(seg: &str) -> u8 {
+    if seg.starts_with('*') {
+        2
+    } else if seg.starts_with(':') {
+        1
+    } else {
+        0
+    }
+}
+
+/// Order route patterns so a STATIC segment always sorts before a DYNAMIC
+/// (`:param`) one at the same position (and dynamic before a splat). Within the
+/// same class, a byte comparison keeps the order deterministic. This makes the
+/// first-match-wins router prefer e.g. `/domains/new` over `/domains/:id`,
+/// instead of the old plain lexicographic sort where `:` (0x3A) sorted before
+/// letters and a dynamic route shadowed its static sibling.
+fn cmp_route_patterns(a: &str, b: &str) -> std::cmp::Ordering {
+    use std::cmp::Ordering;
+    let mut sa = a.split('/');
+    let mut sb = b.split('/');
+    loop {
+        match (sa.next(), sb.next()) {
+            (Some(x), Some(y)) => {
+                let r = segment_rank(x).cmp(&segment_rank(y)).then_with(|| x.cmp(y));
+                if r != Ordering::Equal {
+                    return r;
+                }
+            }
+            // A shorter path sorts before a longer one sharing its prefix.
+            (None, Some(_)) => return Ordering::Less,
+            (Some(_), None) => return Ordering::Greater,
+            (None, None) => return Ordering::Equal,
+        }
+    }
 }
 fn generate_routes_one(spec: &RouteGenSpec) -> Result<usize> {
     let tree = build_route_tree(&spec.dir, &spec.label)?;
@@ -958,6 +998,30 @@ fn write_view_artifacts(spec: &RouteGenSpec) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn static_route_sorts_before_dynamic_sibling() {
+        // The first-match-wins router must see `/domains/new` before
+        // `/domains/:id`, else the static create page is shadowed by the
+        // dynamic detail route (the old lexicographic sort put `:` first).
+        let mut pats = vec![
+            "/domains/:id".to_string(),
+            "/domains/new".to_string(),
+            "/domains".to_string(),
+            "/domains/:id/doc".to_string(),
+        ];
+        pats.sort_by(|a, b| cmp_route_patterns(a, b));
+        assert_eq!(
+            pats,
+            vec![
+                "/domains".to_string(),
+                "/domains/new".to_string(),
+                "/domains/:id".to_string(),
+                "/domains/:id/doc".to_string(),
+            ],
+            "static segments must sort before dynamic :param segments at each position"
+        );
+    }
 
     fn spec(root: &Path, label: &str) -> RouteGenSpec {
         RouteGenSpec {
