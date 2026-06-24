@@ -120,13 +120,12 @@ pub async fn serve_app_public(
 ///   - `GET /<app.name>/{file}` (per-app asset namespace)
 ///   - `GET /{file}` (per-app public-asset catch-all, primary only)
 ///   - The PRIMARY app's `GET /` (the index) is NOT mounted here —
-///     `serve_index` (host's first-run flow) owns `/`. Both layers
-///     converge: `serve_index` serves the same primary app's
-///     `index.html` once provisioned; before provisioning it
-///     redirects to `/setup`. The framework deliberately does not
-///     mount `<primary.route>` for the primary app to avoid the
-///     route conflict (and the bug where `/` would 404 the first-run
-///     flow).
+///     `serve_index` owns `/`. Both layers converge: `serve_index`
+///     serves the same primary app's `index.html`. The framework
+///     deliberately does not mount `<primary.route>` for the primary
+///     app to avoid the route conflict (and the bug where `/` would
+///     404). Deck owns no first-run / `/setup` convention; a fresh-
+///     install redirect is a host concern.
 /// - Each NON-PRIMARY app (e.g. spaces at `/space/{id}`) gets:
 ///   - `GET <app.route>` (e.g. `/space/{id}`)
 ///   - `GET /<app.name>/{file}` (per-app asset namespace)

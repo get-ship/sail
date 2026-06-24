@@ -1,10 +1,10 @@
 //! deck-owned root + shared-asset handlers: design tokens, theme CSS/list,
-//! first-run `/` + `/setup`, the single-segment public-asset dispatch, and
+//! the root `/` handler, the single-segment public-asset dispatch, and
 //! the SPA fallback. All thin axum shims over `deck-core`.
 //!
-//! The first-run flow + public-asset / SPA-fallback dispatch read the host's
-//! per-app serve config from `Extension<Arc<Vec<AppServeConfig>>>` (the
-//! the "primary" app is the one at route `/` in the host's list.
+//! The root + public-asset / SPA-fallback dispatch read the host's
+//! per-app serve config from `Extension<Arc<Vec<AppServeConfig>>>` — the
+//! "primary" app is the one at route `/` in the host's list.
 use std::sync::Arc;
 
 use axum::{
@@ -15,7 +15,7 @@ use axum::{
     routing::get,
 };
 use deck_config::AppServeConfig;
-use deck_core::{DaemonMode, DataPort};
+use deck_core::DaemonMode;
 
 use crate::{into_axum, mode_from_ext};
 
@@ -36,37 +36,26 @@ pub async fn serve_themes_list(mode: Option<Extension<DaemonMode>>) -> Response 
     into_axum(deck_core::serve_themes_list(mode_from_ext(mode)))
 }
 
-// ── First-run flow ────────────────────────────────────────────────────────────
+// ── Root handler ────────────────────────────────────────────────────────────
 
-/// Read the host's provisioning state through the `DataPort`. When no port
-/// is wired the deck default is "not provisioned" (the fresh-install posture).
-fn is_provisioned(port: &Option<Extension<Arc<dyn DataPort>>>) -> bool {
-    port.as_ref().map(|e| e.0.is_provisioned()).unwrap_or(false)
-}
-
-/// The "primary" app — the one at route `/`. The first-run flow serves its
-/// `index.html` once provisioning completes; the SPA fallback serves it
-/// for any non-backend GET. Returns `None` when no app is configured (the
-/// host didn't inject one — a 404 is the right answer).
+/// The "primary" app — the one at route `/`. `serve_index` and the SPA
+/// fallback serve its `index.html` for any non-backend GET. Returns `None`
+/// when no app is configured (the host didn't inject one — a 404 is the
+/// right answer).
 fn primary_app(apps: &Option<Extension<Arc<Vec<AppServeConfig>>>>) -> Option<Arc<AppServeConfig>> {
     let apps = apps.as_ref()?;
     apps.0.iter().find(|a| a.route == "/").map(|a| Arc::new(a.clone()))
 }
 
-/// `GET /` — serve the primary app's `index.html` once provisioned; on a
-/// fresh install redirect to `/setup`. `/setup` itself has no server route —
-/// it falls through to the SPA fallback, which serves the app shell so the
-/// app's own client-side `/setup` wizard renders. The first-run redirect here
-/// is the only server-side first-run signal deck keeps; the wizard lives in
-/// the app.
+/// `GET /` — serve the primary app's `index.html`. Deck owns no first-run
+/// convention: a fresh-install redirect (e.g. to a host `/setup` wizard) is
+/// the HOST's concern. `/setup` itself has no server route here — like any
+/// bare client-route segment it falls through to the SPA fallback, which
+/// serves the app shell so the app's own client-side routing renders it.
 pub async fn serve_index(
     mode: Option<Extension<DaemonMode>>,
     apps: Option<Extension<Arc<Vec<AppServeConfig>>>>,
-    port: Option<Extension<Arc<dyn DataPort>>>,
 ) -> Response {
-    if !is_provisioned(&port) {
-        return into_axum(deck_core::redirect("/setup", mode_from_ext(mode)));
-    }
     match primary_app(&apps) {
         Some(app) => into_axum(deck_core::serve_scaffold(
             mode_from_ext(mode),
@@ -148,11 +137,12 @@ pub async fn spa_fallback(
     }
     (StatusCode::NOT_FOUND, "not found").into_response()
 }
-/// Router helper for the host to mount the first-run flow. The L1
+/// Router helper for the host to mount the root `/` handler. The L1
 /// framework exports the handler, the host chooses how to mount it.
-/// shipd merges this into its root. There is no `/setup` route helper:
-/// `/setup` is an app client-route that falls through to the SPA fallback
-/// (which serves the app shell), so the app's own `/setup` wizard renders.
+/// shipd merges this into its root. Deck owns no first-run / `/setup`
+/// convention: `/setup` is an app client-route that falls through to the
+/// SPA fallback (which serves the app shell), so the app's own client-side
+/// routing renders it. A first-run redirect is a host concern.
 pub fn serve_index_route() -> Router {
     Router::new().route("/", get(serve_index))
 }

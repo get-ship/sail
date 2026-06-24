@@ -113,12 +113,13 @@ mod route_ssot {
 
 pub fn router() -> Router {
     use pages::{serve_theme_css, serve_themes_list, serve_view_tokens};
-    // First-run `/` and the `/{file}` SPA/public catch-all are HOST
-    // concerns. The host mounts `serve_index` (first-run check) at `/`
-    // and the per-app `serve_apps` for the app's routes + per-app
-    // `/{file}` catch-all. `/setup` has no server route — it falls through
-    // to the SPA fallback so the app's own `/setup` wizard renders. The
-    // framework only owns the framework surface (`/_deck/*` + `/api/*`).
+    // The root `/` and the `/{file}` SPA/public catch-all are HOST
+    // concerns. The host mounts `serve_index` at `/` and the per-app
+    // `serve_apps` for the app's routes + per-app `/{file}` catch-all.
+    // Deck owns no first-run / `/setup` convention: `/setup` has no
+    // server route — it falls through to the SPA fallback so the app's
+    // own client-side routing renders it. The framework only owns the
+    // framework surface (`/_deck/*` + `/api/*`).
     Router::new()
         // Shared CSS / theme assets (unauthenticated) — paths are the
         // canonical `Route` enum values (routes.rs is ground truth).
