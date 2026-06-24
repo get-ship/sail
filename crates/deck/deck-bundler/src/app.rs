@@ -349,6 +349,80 @@ fn walk_deck_frameworks(
     }
     Ok(())
 }
+/// Build deck's OWN framework singletons from node-resolved source and write
+/// each onto its served `_deck/<file>` path under `out_dir` — the self-contained
+/// `--bundle-framework` path. Entries are resolved by node resolution from
+/// `repo_root` (`BundleLayout::framework_singletons`): no prebuilt-asset dir,
+/// no `DECK_FRAMEWORK_ASSETS_DIR`. One source bundle may back several aliases
+/// (`@ship/sui-runtime` and `@ship/sui-runtime/route` share `runtime.js`), so
+/// the output is mapped onto every matching `FRAMEWORK_ASSETS` `dist_rel`.
+/// Bails when a singleton named in the importmap can't be resolved/built — a
+/// self-contained build must not ship an importmap pointing at a missing file.
+/// Returns the number of files written.
+async fn bundle_owned_framework(
+    repo_root: &Path,
+    out_dir: &Path,
+    minify: bool,
+) -> Result<usize> {
+    use crate::targets::BundleLayout;
+    let staging = out_dir.join(".fw-build");
+    let layout = BundleLayout::with_config(
+        repo_root.to_path_buf(),
+        None,
+        deck_config::DeckConfig::defaults(),
+    )
+    .with_out_root(staging.clone());
+    let work = staging.join("work");
+
+    let mut written: HashSet<String> = HashSet::new();
+    for target in layout.framework_singletons() {
+        // The FRAMEWORK_ASSETS `dist_rel`s this singleton's output backs. A
+        // singleton not surfaced in the importmap (sui-sdk-client — it is
+        // provider-declared, not deck-owned) maps to none → skip it.
+        let dists: Vec<&str> = FRAMEWORK_ASSETS
+            .iter()
+            .filter(|(_, src, _)| *src == target.out_file)
+            .map(|(_, _, dist_rel)| *dist_rel)
+            .collect();
+        if dists.is_empty() {
+            continue;
+        }
+        crate::rolldown_bundle::bundle_target(&layout, &target, &work, minify)
+            .await
+            .with_context(|| format!("bundle framework singleton `{}`", target.name))?;
+        let built = layout.assets_dir_for(&target.name).join(&target.out_file);
+        for dist_rel in dists {
+            if !written.insert(dist_rel.to_string()) {
+                continue;
+            }
+            let dst = out_dir.join(dist_rel);
+            if let Some(parent) = dst.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+            std::fs::copy(&built, &dst)
+                .with_context(|| format!("copy {} -> {}", built.display(), dst.display()))?;
+        }
+    }
+    std::fs::remove_dir_all(&staging).ok();
+
+    // Strictness: every distinct deck-owned `dist_rel` must have been produced.
+    // A miss means a framework singleton isn't installed in this project — fail
+    // loudly rather than ship a dangling importmap.
+    let mut required: Vec<&str> = FRAMEWORK_ASSETS.iter().map(|(_, _, d)| *d).collect();
+    required.sort_unstable();
+    required.dedup();
+    for dist_rel in required {
+        if !out_dir.join(dist_rel).exists() {
+            bail!(
+                "app build: bundle_framework: framework singleton for `/{dist_rel}` did not \
+                 resolve from {} — is it installed (node_modules)?",
+                repo_root.display()
+            );
+        }
+    }
+    Ok(written.len())
+}
+
 /// Build a SUI SPA project to `out_dir`. `repo_root` is the workspace root
 /// (cwd for module resolution); `project` is the dev's authored source
 /// (`package.json` + `routes/` + `public/`). The dev does NOT author
@@ -361,8 +435,6 @@ pub async fn bundle_app(
     out_dir: &Path,
     minify: bool,
     bundle_framework: bool,
-    framework_assets_dir: &Path,
-    _deck_out_dir: &Path,
 ) -> Result<AppBuild> {
     // 0. Load the host's per-app `deck.jsonc` (optional). The file is
     // OPTIONAL — an app without one is a valid conventional app: no
@@ -588,22 +660,14 @@ pub async fn bundle_app(
     if bundle_framework {
         let sui_dir = out_dir.join("_deck");
         std::fs::create_dir_all(&sui_dir)?;
-        // Deck-owned framework singletons. De-dup by source filename —
-        // multiple aliases (e.g. `@ship/sui-runtime`, `@ship/sui-runtime/route`)
-        // share one source file. Track by source path to skip repeats.
-        let mut copied_sources: std::collections::HashSet<String> = Default::default();
-        for (_alias, src, dist_rel) in FRAMEWORK_ASSETS {
-            let from = framework_assets_dir.join(src);
-            if !from.exists() {
-                bail!("app build: bundle_framework: missing framework asset {}", from.display());
-            }
-            let dst = out_dir.join(dist_rel);
-            if dst.exists() || !copied_sources.insert(src.to_string()) {
-                continue;
-            }
-            std::fs::copy(&from, dst)?;
-            framework_assets += 1;
-        }
+        // Deck-owned framework singletons. Built FROM SOURCE, resolved by node
+        // resolution from the project's node_modules (`framework_singletons`) —
+        // no prebuilt-asset dir, no `DECK_FRAMEWORK_ASSETS_DIR`. Each singleton's
+        // output is mapped onto its served `_deck/<file>` URL via FRAMEWORK_ASSETS
+        // (one source bundle may back several aliases, e.g. `@ship/sui-runtime`
+        // and `@ship/sui-runtime/route`).
+        framework_assets +=
+            bundle_owned_framework(repo_root, out_dir, minify).await?;
         // Discovered provider-declared singletons. Each `src_path` is
         // already absolute (the dep's workspace package root +
         // `package.json#deckFramework#entry`); the importmap binds the
@@ -637,7 +701,6 @@ pub async fn bundle_app(
     // (`crate::catalog::build_catalog`) stays available for hosts that
     // want to compute the catalog in-memory for their own devtools; it
     // just does not get written to disk by the framework.
-    let _ = repo_root;
 
     Ok(AppBuild {
         out_dir: out_dir.to_path_buf(),
@@ -682,7 +745,7 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
         write(&r.join("public/favicon.ico"), "ICO");
 
         let out = r.join("dist");
-        let build = bundle_app(r, &[], r, &out, false, false, r, r)
+        let build = bundle_app(r, &[], r, &out, false, false)
             .await
             .expect("bundle_app");
 
@@ -753,7 +816,7 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
         );
 
         let out = r.join("dist");
-        bundle_app(r, &[], r, &out, false, false, r, r)
+        bundle_app(r, &[], r, &out, false, false)
             .await
             .expect("bundle_app should compile the .sui entry in-process");
     }
@@ -798,7 +861,7 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
         );
 
         let out = r.join("dist");
-        let build = bundle_app(r, &[], r, &out, false, false, r, r)
+        let build = bundle_app(r, &[], r, &out, false, false)
             .await
             .expect("bundle_app");
 
@@ -942,7 +1005,7 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
             "<div class=\"token-probe\">tok</div>\n",
         );
         let out = r.join("dist");
-        let build = bundle_app(r, &[], r, &out, false, false, r, r)
+        let build = bundle_app(r, &[], r, &out, false, false)
             .await
             .expect("bundle_app");
         // Gate 1: a hashed `tokens-<hash>.css` asset is emitted under
@@ -1046,7 +1109,7 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
         write(&r.join("routes/page.sui"), "<div>x</div>\n");
 
         let out = r.join("dist");
-        bundle_app(r, &[], r, &out, false, false, r, r)
+        bundle_app(r, &[], r, &out, false, false)
             .await
             .expect("bundle_app");
 
@@ -1068,10 +1131,11 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
         );
     }
 
-    /// `--bundle-framework` ALSO copies the provider-declared singleton
-    /// asset (alongside the deck-owned framework singletons) and counts
-    /// it in `framework_assets`. This proves the provider-declared
-    /// discovery rides the same copy pipeline as `@ship/sui-runtime`.
+    /// `--bundle-framework` builds the deck-owned framework singletons FROM
+    /// node-resolved SOURCE into `<out>/_deck/*` AND copies the provider-declared
+    /// singleton (`@ship/sdk-client`) alongside. The deck-owned set resolves via
+    /// node resolution (`node_modules/@ship/<pkg>`), not a prebuilt-asset dir —
+    /// this is the `DECK_FRAMEWORK_ASSETS_DIR`-free path.
     #[tokio::test(flavor = "multi_thread")]
     async fn bundle_app_copies_provider_declared_singleton_when_bundling() {
         let root = tempfile::tempdir().unwrap();
@@ -1102,19 +1166,24 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
             "// stub\n",
         )
         .unwrap();
-        // Stage the deck-owned framework singletons too —
-        // `bundle_framework=true` copies every entry to `<out>/<dist>`;
-        // without the deck-owned ones staged, the build errors with
-        // "missing framework asset sui-runtime.js".
-        let framework_dir = r.join("framework");
-        std::fs::create_dir_all(&framework_dir).unwrap();
-        for name in ["sui-runtime.js", "sui-dom.js", "deck-route.js"] {
-            std::fs::write(framework_dir.join(name), "// stub\n").unwrap();
+        // Install the deck-owned framework singletons as node-resolvable
+        // packages — `--bundle-framework` now BUILDS them from source
+        // (resolved from `node_modules/@ship/<pkg>`), not a prebuilt dir.
+        for (pkg, file) in [
+            ("@ship/sui-runtime", "src/index.ts"),
+            ("@ship/sui-dom", "src/index.ts"),
+            ("@ship/deck-router", "src/index.ts"),
+        ] {
+            write(
+                &r.join(format!("node_modules/{pkg}/package.json")),
+                &format!(r#"{{ "name": "{pkg}", "exports": {{ ".": "./{file}" }} }}"#),
+            );
+            write(&r.join(format!("node_modules/{pkg}/{file}")), "export const ok = 1;\n");
         }
         write(&r.join("routes/page.sui"), "<div>x</div>\n");
 
         let out = r.join("dist");
-        let build = bundle_app(r, &[], r, &out, false, true, &framework_dir, r)
+        let build = bundle_app(r, &[], r, &out, false, true)
             .await
             .expect("bundle_app");
 
@@ -1124,7 +1193,12 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
             out.join("_deck/sdk-client.js").exists(),
             "`--bundle-framework` must copy the provider-declared singleton to <out>/<serve>",
         );
-        // Gate 2: framework_assets counter includes the discovered
+        // Gate 2: the deck-owned singletons were built from source into
+        // their served `_deck/*` paths.
+        for f in ["_deck/runtime.js", "_deck/dom.js", "_deck/route.js"] {
+            assert!(out.join(f).exists(), "deck-owned singleton {f} built from source");
+        }
+        // Gate 3: framework_assets counter includes the discovered
         // singleton (alongside the 3 deck-owned singletons).
         assert!(
             build.framework_assets >= 4,
@@ -1170,7 +1244,7 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
         write(&r.join("routes/page.sui"), "<div>x</div>\n");
 
         let out = r.join("dist");
-        bundle_app(r, &[], r, &out, false, false, r, r)
+        bundle_app(r, &[], r, &out, false, false)
             .await
             .expect("bundle_app with NO deck.jsonc");
 

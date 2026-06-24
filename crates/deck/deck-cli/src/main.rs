@@ -241,15 +241,6 @@ fn emit(targets: Vec<String>, out: PathBuf) -> Result<()> {
     Ok(())
 }
 
-/// The framework bundles deck-core/build.rs bakes via `include_str!`. Verified
-/// non-empty after the bake so a silently-failed target cannot ship empty bytes
-/// (the failure mode build.rs guards — top nav vanishing with no warning).
-const FRAMEWORK_BUNDLES: &[&str] = &[
-    "sui-runtime.js",
-    "sui-dom.js",
-    "sui-sdk-client.js",
-];
-
 fn build_assets() -> Result<()> {
     let cwd = std::env::current_dir().context("cwd")?;
     let repo_root = find_repo_root(&cwd)?;
@@ -283,19 +274,28 @@ fn build_assets() -> Result<()> {
         cfg,
     );
 
-    // Verify framework bundles are non-empty after the bake. build_all returns
-    // Err on per-target failure, but a swallowed empty-write wouldn't surface
-    // there — keep this as defense in depth so the daemon can never ship empty
-    // framework bytes. Use assets_dir_for("sui-runtime") so the verify path
-    // stays in sync with the bundler's output path (.deck/framework/).
-    let fw_dir = layout.assets_dir_for("sui-runtime");
-    for name in FRAMEWORK_BUNDLES {
-        let path = fw_dir.join(name);
+    // Verify every framework singleton that RESOLVED for this repo is non-empty.
+    // build_all returns Err on per-target failure, but a swallowed empty-write
+    // wouldn't surface there — keep this as defense in depth so the daemon can
+    // never ship empty framework bytes. The set is derived from the bundler's
+    // own target list (node-resolved): a singleton not installed in this repo is
+    // skipped by the bundler, so a hardcoded list would false-fail a consumer
+    // bake that doesn't depend on every singleton.
+    let fw_targets: Vec<_> = layout
+        .all_targets()
+        .into_iter()
+        .filter(|t| deck_bundler::targets::is_framework_singleton(&t.name))
+        .collect();
+    for t in &fw_targets {
+        let path = layout.assets_dir_for(&t.name).join(&t.out_file);
         let len = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
         if len == 0 {
             bail!("framework bundle missing or empty after bake: {}", path.display());
         }
-        println!("  {name}: {len} bytes");
+        println!("  {}: {len} bytes", t.out_file);
+    }
+    if fw_targets.is_empty() {
+        println!("  (no framework singletons resolved from this repo — none baked here)");
     }
 
     // Consumer guard: the discovered consumer bundles (per-package
@@ -373,21 +373,13 @@ fn build(
         .map(|o| abs(&o))
         .unwrap_or_else(|| project.join(".deck"));
     let repo_root = find_repo_root(&project)?;
-    // Override the framework-asset staging path with an env var. Default:
-    // `<repo_root>/crates/deck/deck-core/assets`. After the carve, the
-    // host app (ship) needs the framework bundles to live in the
-    // external sui repo's `deck-core/assets/` — but its `find_repo_root`
-    // only walks the cwd's Cargo workspace, which in cross-repo
-    // invocations lands at ship (not sui). Allow the host to point at
-    // sui's tree directly. TEMP — re-evaluate after the layout
-    // reshuffle capstone (when the two repos share a parent again).
-    let framework_assets_dir = std::env::var("DECK_FRAMEWORK_ASSETS_DIR")
-        .ok()
-        .map(PathBuf::from)
-        .unwrap_or_else(|| repo_root.join("crates/deck/deck-core/assets"));
-    // The framework surface (.deck/framework/<bundle>) is shared across
-    // every project. Per-project outputs go under `<project>/.deck/`.
-    let deck_out_dir = repo_root.join(".deck");
+    // The framework singletons are resolved by NODE RESOLUTION from the
+    // project's `node_modules` (the bundler's `framework_singletons` /
+    // `bundle_owned_framework`) — `--bundle-framework` builds them from source.
+    // There is no prebuilt-asset staging dir and no `DECK_FRAMEWORK_ASSETS_DIR`
+    // crutch: the framework comes from wherever it was installed (the registry,
+    // a workspace symlink), so a build runs identically inside or outside the
+    // sui monorepo.
 
     // Load the host's view-discovery config (packs scope). Consumer bundles
     // are discovered from per-package `deck.bundles`, not read here. L1 (deck)
@@ -409,8 +401,6 @@ fn build(
             &out_dir,
             minify,
             bundle_framework,
-            &framework_assets_dir,
-            &deck_out_dir,
         ))
         .map_err(|e| anyhow::anyhow!("{e:#}"))?;
     if b.framework_assets > 0 {

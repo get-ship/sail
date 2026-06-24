@@ -135,6 +135,19 @@ pub fn tag_source_index_scoped(
 ) -> std::collections::HashMap<String, PathBuf> {
     let mut out = std::collections::HashMap::new();
 
+    // ── the project's OWN components ──────────────────────────────────────
+    // An app (the hub) is built with `repo_root` set to its own dir, which is
+    // NOT always one of its `workspaces` entries — so the workspace scan below
+    // misses the app's local components. Scan the project root's own `src/`
+    // unconditionally (never scope-gated: the app always owns its own tags).
+    // This is what makes the `workspaces: ["."]` self-listing hack unnecessary.
+    // For a monorepo root (sui, ship-apps) there is no `<root>/src` → no-op.
+    for (tag, abs_path) in source_tags_for_package(repo_root) {
+        if abs_path.is_file() {
+            out.entry(tag).or_insert(abs_path);
+        }
+    }
+
     // ── primary: source scan of every (declared) workspace package ────────
     if let Ok(packages) = discover_workspace_packages_scoped(repo_root, packs) {
         for pkg in &packages {
@@ -497,6 +510,25 @@ mod tests {
         assert!(src.ends_with("packages/charts/src/sui-bar/sui-bar.sui"));
         // Invariant: an unknown tag is absent → the resolver falls back to external.
         assert!(!idx.contains_key("sui-nonexistent"));
+    }
+
+    /// Self-discovery: when the project root is built as its own app (the hub)
+    /// and does NOT list itself in `workspaces`, its OWN `src/` components must
+    /// still resolve. This is the fix that removes the `workspaces: ["."]` hack:
+    /// the project root's `src/` is scanned unconditionally.
+    #[test]
+    fn tag_source_index_includes_project_own_components_without_workspace_self_listing() {
+        let tmp = tempdir().unwrap();
+        let root = tmp.path();
+        // The app does NOT list "." in workspaces (the hack is gone).
+        write(&root.join("package.json"), r#"{"name":"@ship/hub","workspaces":["packages/*"]}"#);
+        // A local component in the app's OWN src.
+        write(&root.join("src/hub-widget/hub-widget.sui"), "<div>widget</div>\n");
+
+        let idx = tag_source_index(root);
+        let src = idx.get("hub-widget").expect("app's own local component is discovered");
+        assert!(src.is_file());
+        assert!(src.ends_with("src/hub-widget/hub-widget.sui"));
     }
 
     /// SOURCE-MODE gate: a workspace package that has a `<X>/<X>.sui` component

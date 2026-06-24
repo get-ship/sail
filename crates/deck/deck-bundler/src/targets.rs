@@ -10,13 +10,53 @@ use std::path::{Path, PathBuf};
 
 use deck_config::DeckConfig;
 
-/// Deck's OWN runtime bundles — baked into the deck-core crate (like Next
-/// shipping its own runtime). Everything else under `sui-`/`views/` is app/user
-/// content and goes to `.deck/`. Chrome components are NOT here — the
-/// per-tag tree-shaking resolver (the `sui-components/<name>` prefix in
-/// `assets_dir_for` + the `@sui-tag/<tag>` virtual import in `sui_plugin.rs`)
-/// is the canonical way chrome loads. There is no umbrella.
-const DECK_OWN_BUNDLES: [&str; 4] = ["sui-runtime", "sui-dom", "sui-sdk-client", "deck-route"];
+/// Deck's OWN framework singleton — the runtime primitives deck ships with
+/// itself (like Next shipping its own runtime). `spec` is the npm specifier the
+/// bundler resolves by NODE RESOLUTION (`node_resolve::resolve_entry`) to find
+/// the entry; `name` is the logical target/output stem; `externals` are the
+/// other singletons it must NOT inline. SSOT for the singleton set: the build
+/// target list, the `assets_dir_for` routing, and `is_framework_singleton` all
+/// read it. Chrome components are NOT here — the per-tag tree-shaking resolver
+/// (`sui-components/<name>` in `assets_dir_for` + the `@sui-tag/<tag>` virtual
+/// import in `sui_plugin.rs`) is the canonical way chrome loads.
+pub(crate) struct FrameworkSingleton {
+    pub name: &'static str,
+    pub spec: &'static str,
+    pub out_file: &'static str,
+    pub externals: &'static [&'static str],
+}
+
+/// The framework singletons, resolved from `node_modules`/workspace by `spec`.
+pub(crate) const FRAMEWORK_SINGLETONS: &[FrameworkSingleton] = &[
+    FrameworkSingleton {
+        name: "sui-runtime",
+        spec: "@ship/sui-runtime",
+        out_file: "sui-runtime.js",
+        externals: &[],
+    },
+    FrameworkSingleton {
+        name: "sui-dom",
+        spec: "@ship/sui-dom",
+        out_file: "sui-dom.js",
+        externals: &["@ship/sui-runtime"],
+    },
+    FrameworkSingleton {
+        name: "sui-sdk-client",
+        spec: "@ship/sdk-client",
+        out_file: "sui-sdk-client.js",
+        externals: &["@ship/sui-runtime"],
+    },
+    // `@ship/deck-router` — the unified router singleton (defineRoutes / route /
+    // navigate / mountRouter / mergeRoutes). Every per-app `routes.gen.ts`
+    // imports `mountRouter` from it (ADR unified-deck-router), and the daemon
+    // serves it via `include_str!` (assets.rs `DECK_ROUTE_JS`).
+    FrameworkSingleton {
+        name: "deck-route",
+        spec: "@ship/deck-router",
+        out_file: "deck-route.js",
+        externals: &["@ship/sui-runtime"],
+    },
+];
 
 /// True for deck's own framework singletons — libraries consumed by name via the
 /// host importmap (`@ship/sdk-client` → `/_deck/sdk-client.js`, …). Their full
@@ -26,7 +66,7 @@ const DECK_OWN_BUNDLES: [&str; 4] = ["sui-runtime", "sui-dom", "sui-sdk-client",
 /// a re-exported const with no in-bundle consumer, breaking the client at runtime
 /// with "does not provide an export named …". App/view targets keep the default.
 pub fn is_framework_singleton(name: &str) -> bool {
-    DECK_OWN_BUNDLES.contains(&name)
+    FRAMEWORK_SINGLETONS.iter().any(|s| s.name == name)
 }
 
 /// A target's entry: a real on-disk module, or a synthetic aggregate that
@@ -123,7 +163,7 @@ impl BundleLayout {
     /// and discovered consumer packs (`sui-marketing`, `sui-arcade`,
     /// `sui-pdf`, `ship-code-editor`, …) — goes directly under `.deck/`.
     pub fn assets_dir_for(&self, name: &str) -> PathBuf {
-        if DECK_OWN_BUNDLES.contains(&name) {
+        if is_framework_singleton(name) {
             return self.framework_dir();
         }
         self.deck_out()
@@ -137,58 +177,33 @@ impl BundleLayout {
         out
     }
 
-    /// Deck's OWN framework singletons — always built, hardcoded, never in
-    /// deck.jsonc. These are the 4 runtime primitives deck ships with itself
-    /// (like Next.js shipping its own runtime).
-    fn framework_singletons(&self) -> Vec<BundleTarget> {
-        let r = |rel: &str| self.repo_root.join(rel);
-        vec![
-            BundleTarget {
-                name: "sui-runtime".into(),
-                entry: TargetEntry::Real(r("packages/sui/runtime/src/index.ts")),
-                externals: vec![],
-                out_file: "sui-runtime.js".into(),
-                lazy: false,
-            },
-            BundleTarget {
-                name: "sui-dom".into(),
-                entry: TargetEntry::Real(r("packages/sui/dom/src/index.ts")),
-                externals: vec!["@ship/sui-runtime".into()],
-                out_file: "sui-dom.js".into(),
-                lazy: false,
-            },
-            BundleTarget {
-                name: "sui-sdk-client".into(),
-                // TEMP: absolute path, becomes ../ship/... after the layout reshuffle.
-                // @ship/sdk-client stayed in the ship repo (not carved out); the
-                // sui-sdk-client framework singleton is bundled from its source there.
-                entry: TargetEntry::Real(PathBuf::from(
-                    "/home/madvib/dev/Ship/packages/sdk-client/src/index.ts",
-                )),
-                externals: vec!["@ship/sui-runtime".into()],
-                out_file: "sui-sdk-client.js".into(),
-                lazy: false,
-            },
-            // `@ship/deck/router` — the unified router singleton (defineRoutes /
-            // route / navigate / mountRouter / mergeRoutes). Every per-app
-            // `routes.gen.ts` imports `mountRouter` from it (ADR
-            // unified-deck-router), the daemon serves it via `include_str!`
-            // (assets.rs `DECK_ROUTE_JS`), and build.rs stages it from
-            // `.deck/framework/`. It was dropped from the build target list in
-            // 643543394 (deck.jsonc → discovery) but its source kept gaining
-            // exports (mountRouter), so the served bundle went stale and lacked
-            // them — breaking client hydration. Restored here as the 4th
-            // singleton so the bake regenerates it. `is_framework_singleton`
-            // (via DECK_OWN_BUNDLES) gives it `preserve_entry_signatures: Strict`
-            // so re-exported handles can't be tree-shaken away.
-            BundleTarget {
-                name: "deck-route".into(),
-                entry: TargetEntry::Real(r("packages/deck/router/src/index.ts")),
-                externals: vec!["@ship/sui-runtime".into()],
-                out_file: "deck-route.js".into(),
-                lazy: false,
-            },
-        ]
+    /// Deck's OWN framework singletons — always built, never in deck.jsonc.
+    /// These are the runtime primitives deck ships with itself (like Next.js
+    /// shipping its own runtime).
+    ///
+    /// Each entry is resolved by NODE RESOLUTION from the project being built
+    /// (`node_resolve::resolve_entry` against `repo_root`) — NOT a hardcoded
+    /// monorepo path. The framework comes from wherever npm/bun installed it:
+    /// a workspace member in the sui monorepo, or a registry install in a
+    /// consumer repo (ship-apps, ship-site). A singleton that doesn't resolve
+    /// from this repo (it isn't installed here) is simply skipped — the bake
+    /// builds what's present and never hard-fails on a missing framework path.
+    /// This is what lets `build-assets` / per-app `build` run outside the sui
+    /// monorepo without the `DECK_FRAMEWORK_ASSETS_DIR` crutch.
+    pub(crate) fn framework_singletons(&self) -> Vec<BundleTarget> {
+        FRAMEWORK_SINGLETONS
+            .iter()
+            .filter_map(|s| {
+                let entry = crate::node_resolve::resolve_entry(&self.repo_root, s.spec)?;
+                Some(BundleTarget {
+                    name: s.name.into(),
+                    entry: TargetEntry::Real(entry),
+                    externals: s.externals.iter().map(|e| (*e).to_string()).collect(),
+                    out_file: s.out_file.into(),
+                    lazy: false,
+                })
+            })
+            .collect()
     }
 
     /// Consumer bundle targets, DISCOVERED from per-package self-declaration
@@ -336,13 +351,37 @@ mod tests {
         let root = tmp.path().to_path_buf();
         // A view.
         write(&root.join("views/git/page.sui"), "<div>git</div>\n");
+        // The framework singleton must be node-resolvable from the repo root for
+        // its target to appear — install a stub `@ship/sui-runtime`.
+        write(
+            &root.join("node_modules/@ship/sui-runtime/package.json"),
+            r#"{ "name": "@ship/sui-runtime", "exports": { ".": "./src/index.ts" } }"#,
+        );
+        write(&root.join("node_modules/@ship/sui-runtime/src/index.ts"), "export const x=1;\n");
 
         let l = BundleLayout::with_config(root, None, DeckConfig::defaults());
         let targets = l.all_targets();
         let names: Vec<&str> = targets.iter().map(|t| t.name.as_str()).collect();
 
-        assert!(names.contains(&"sui-runtime"), "static framework target present");
+        assert!(names.contains(&"sui-runtime"), "node-resolved framework target present");
         assert!(names.contains(&"views/git/view"), "discovered view");
+    }
+
+    /// A framework singleton that doesn't resolve from this repo (not installed)
+    /// is skipped, not hard-errored — the bake builds what's present. This is
+    /// the consumer-repo posture for a singleton it doesn't depend on.
+    #[test]
+    fn unresolvable_framework_singleton_is_skipped() {
+        let tmp = tempdir().unwrap();
+        let root = tmp.path().to_path_buf();
+        write(&root.join("package.json"), r#"{ "name": "consumer" }"#);
+        let l = BundleLayout::with_config(root, None, DeckConfig::defaults());
+        let names: Vec<String> =
+            l.all_targets().into_iter().map(|t| t.name).collect();
+        assert!(
+            !names.iter().any(|n| n == "sui-runtime"),
+            "no framework target when the package isn't installed"
+        );
     }
 
     /// `view_bucket_dirs()` is the single definition of "where views live" —

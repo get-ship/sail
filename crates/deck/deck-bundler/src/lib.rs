@@ -16,6 +16,7 @@ pub mod app;
 pub mod catalog;
 pub mod cem;
 pub mod emit;
+pub mod node_resolve;
 pub mod routes;
 pub mod compile;
 pub mod proto;
