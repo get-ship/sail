@@ -124,6 +124,17 @@ pub(super) fn emit_setup_body(
     } else {
         let mut mount_w = Writer::new();
         mount_w.line("const __cleanups = [];");
+        // Install the view's lifted top-level `<style>` CSS at the top of
+        // `container` BEFORE the template body builds — first-class inline
+        // `<style>` for route views, the same runtime install components and
+        // the synthetic render path already use. Without this the bundler
+        // silently DROPS a route `page.sui`'s inline `<style>` (the author
+        // gets no styling and no error). A blank `program.styles` emits nothing.
+        let styles_install =
+            crate::emit::styles::styles_install_js(&program.styles, false);
+        if !styles_install.is_empty() {
+            mount_w.push_str(&styles_install);
+        }
         emitter.emit_top_level(
             &mut mount_w,
             &program.template,

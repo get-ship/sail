@@ -90,56 +90,11 @@ fn walk(program: &Program, is_view: bool) -> Walked {
 }
 
 /// Idempotent install of the program's lifted `<style>` CSS at the top of
-/// `container`. Returns the JS statements to inline at the start of
-/// `mount` / `__mount`, or an empty string when `program.styles` is empty.
-/// The `data-sui-style` key is a FNV-1a 32-bit hash of the content — a
-/// re-mount of the same view finds the existing `<style>` and skips
-/// re-inserting. `<style>` lives inside `container` so it serializes into
-/// the SSR HTML first-paint and applies on the client (the browser treats
-/// any in-document `<style>` as an active stylesheet, regardless of
-/// location). No marker-attribute, no `querySelector` — the server DOM
-/// does not implement `querySelector`, so a hand-rolled firstChild walk
-/// is the only isomorphic option. The walk is also cheap: the dedupe is
-/// only meaningful for re-mounts of the same view, which hit it O(1).
+/// `container`. Delegates to the shared [`crate::emit::styles::styles_install_js`]
+/// helper (the typed/TS flavor) so the synthetic emit and the production view
+/// emit share one source of truth for the runtime `<style>` install.
 fn styles_install_block(program: &Program) -> String {
-    let css = program.styles.trim();
-    if css.is_empty() {
-        return String::new();
-    }
-    let key = fnv1a32_hex(css.as_bytes());
-    let mut b = String::new();
-    b.push_str(&format!("const __suiStylesKey = \"{key}\";\n"));
-    b.push_str(&format!("const __suiStyles = {};\n", js_string(css)));
-    b.push_str("{\n");
-    b.push_str("  let __existing: Element | null = null;\n");
-    b.push_str("  let __n: Node | null = container.firstChild;\n");
-    b.push_str("  while (__n) {\n");
-    b.push_str("    if (__n.nodeType === 1 && (__n as Element).tagName === 'STYLE' &&\n");
-    b.push_str("        (__n as Element).getAttribute(\"data-sui-style\") === __suiStylesKey) {\n");
-    b.push_str("      __existing = __n as Element;\n");
-    b.push_str("      break;\n");
-    b.push_str("    }\n");
-    b.push_str("    __n = __n.nextSibling;\n");
-    b.push_str("  }\n");
-    b.push_str("  if (!__existing) {\n");
-    b.push_str("    const __el = document.createElement(\"style\");\n");
-    b.push_str("    __el.setAttribute(\"data-sui-style\", __suiStylesKey);\n");
-    b.push_str("    __el.textContent = __suiStyles;\n");
-    b.push_str("    container.insertBefore(__el, container.firstChild);\n");
-    b.push_str("  }\n");
-    b.push_str("}\n");
-    b
-}
-
-/// FNV-1a 32-bit hash, hex string. Inline duplicate (a tiny dep-free
-/// helper avoids adding a crate import just to key a dedupe attribute).
-fn fnv1a32_hex(bytes: &[u8]) -> String {
-    let mut h: u32 = 0x811c_9dc5;
-    for &b in bytes {
-        h ^= b as u32;
-        h = h.wrapping_mul(0x0100_0193);
-    }
-    format!("{h:08x}")
+    crate::emit::styles::styles_install_js(&program.styles, true)
 }
 
 /// Emit the SSR render module (mount-only). `controller_specifier` is the

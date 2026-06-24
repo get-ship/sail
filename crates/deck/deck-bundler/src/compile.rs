@@ -200,6 +200,28 @@ mod tests {
     }
 
     #[test]
+    fn view_inline_style_is_bundled_not_dropped() {
+        // The bundler must BUNDLE a route `page.sui`'s inline `<style>` as the
+        // route's stylesheet (installed at mount), not silently drop it.
+        let src = tempdir().unwrap();
+        let sui = src.path().join("page.sui");
+        std::fs::write(
+            &sui,
+            "<style>.hero { color: var(--foreground); }</style>\n<div class=\"hero\">hi</div>\n",
+        )
+        .unwrap();
+        let js = compile_sui(&sui, CompileMode::View, "page", false).expect("view compiles");
+        assert!(
+            js.contains(".hero { color: var(--foreground); }"),
+            "inline <style> must be bundled into the view JS, not dropped:\n{js}"
+        );
+        assert!(
+            js.contains("data-sui-style"),
+            "the runtime style install must be present:\n{js}"
+        );
+    }
+
+    #[test]
     fn surfaces_compile_errors_with_rendered_diagnostic() {
         let src = tempdir().unwrap();
         let sui = src.path().join("broken.sui");

@@ -115,6 +115,75 @@ fn styles_opt_merges_with_existing_inline_style_block() {
 }
 
 #[test]
+fn view_inline_style_is_installed_at_mount_not_dropped() {
+    // A route `page.sui` (View mode) with an inline `<style>` must NOT be
+    // dropped. Before this, only component mode emitted `program.styles`; the
+    // view emit ignored them, so a route's inline `<style>` produced no styling
+    // and no error. The view emit now installs the lifted CSS as a `<style>`
+    // into the view's `container` at mount — first-class inline style for
+    // views, the same runtime install components and the synthetic path use.
+    let src = r#"<style>
+  .hero { color: var(--foreground); }
+</style>
+<div class="hero">hi</div>"#;
+    let out = compile(
+        src,
+        CompileOpts {
+            setup_url: None,
+            mode: CompileMode::View,
+            source_path: Some(PathBuf::from("routes/landing/page.sui")),
+            styles: None,
+            component_meta: None,
+            emit_dts: false,
+            emit_ssr: false,
+            emit_component_imports: false,
+        },
+    )
+    .expect("view with inline <style> compiles");
+    assert!(
+        out.js.contains(".hero { color: var(--foreground); }"),
+        "inline <style> CSS must be bundled into the view module, not dropped: {}",
+        out.js
+    );
+    assert!(
+        out.js.contains("data-sui-style"),
+        "the runtime style install (data-sui-style dedupe key) must be emitted: {}",
+        out.js
+    );
+    assert!(
+        out.js.contains("createElement(\"style\")"),
+        "the install must create a <style> element at mount: {}",
+        out.js
+    );
+}
+
+#[test]
+fn view_without_inline_style_emits_no_style_install() {
+    // No `<style>` → no install block. The injection is gated on a non-blank
+    // `program.styles`, so an ordinary view stays byte-for-byte what it was.
+    let src = r#"<div class="plain">hi</div>"#;
+    let out = compile(
+        src,
+        CompileOpts {
+            setup_url: None,
+            mode: CompileMode::View,
+            source_path: Some(PathBuf::from("routes/plain/page.sui")),
+            styles: None,
+            component_meta: None,
+            emit_dts: false,
+            emit_ssr: false,
+            emit_component_imports: false,
+        },
+    )
+    .expect("plain view compiles");
+    assert!(
+        !out.js.contains("data-sui-style"),
+        "a view with no inline <style> must emit no style install: {}",
+        out.js
+    );
+}
+
+#[test]
 fn cli_styles_flag_threads_css_into_emitted_module() {
     let bin = binary_path();
     if !bin.exists() {

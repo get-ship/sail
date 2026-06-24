@@ -23,6 +23,72 @@
 //! - `@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }`
 //!   (single-line, single inner rule with `*` selector)
 
+use super::writer::js_string;
+
+/// Emit the idempotent runtime install of a view/component's lifted `<style>`
+/// CSS at the top of `container`. Returns the JS statements to inline at the
+/// start of a mount body, or an empty string when `css` is blank.
+///
+/// The `data-sui-style` key is an FNV-1a 32-bit hash of the content — a
+/// re-mount of the same view finds the existing `<style>` and skips
+/// re-inserting. The `<style>` lives inside `container` so it serializes into
+/// the SSR first-paint and applies on the client (the browser treats any
+/// in-document `<style>` as an active stylesheet, regardless of location). No
+/// marker-attribute query, no `querySelector` — the server DOM does not
+/// implement `querySelector`, so a hand-rolled `firstChild` walk is the only
+/// isomorphic option (and the dedupe only matters on re-mount, hit O(1)).
+///
+/// `typed` selects the flavor: `true` emits TS type annotations + casts (the
+/// synthetic emit produces type-checked `.ts`); `false` emits plain JS (the
+/// production view emit). One source of truth for both mount paths.
+pub(crate) fn styles_install_js(css: &str, typed: bool) -> String {
+    let css = css.trim();
+    if css.is_empty() {
+        return String::new();
+    }
+    let key = fnv1a32_hex(css.as_bytes());
+    // Type annotations + the `as Element` cast differ between the typed (TS)
+    // and plain-JS flavors; everything else is identical.
+    let (el_ann, node_ann, n_ref, n_assign) = if typed {
+        (": Element | null", ": Node | null", "(__n as Element)", "__n as Element")
+    } else {
+        ("", "", "__n", "__n")
+    };
+    let mut b = String::new();
+    b.push_str(&format!("const __suiStylesKey = \"{key}\";\n"));
+    b.push_str(&format!("const __suiStyles = {};\n", js_string(css)));
+    b.push_str("{\n");
+    b.push_str(&format!("  let __existing{el_ann} = null;\n"));
+    b.push_str(&format!("  let __n{node_ann} = container.firstChild;\n"));
+    b.push_str("  while (__n) {\n");
+    b.push_str(&format!("    if (__n.nodeType === 1 && {n_ref}.tagName === 'STYLE' &&\n"));
+    b.push_str(&format!("        {n_ref}.getAttribute(\"data-sui-style\") === __suiStylesKey) {{\n"));
+    b.push_str(&format!("      __existing = {n_assign};\n"));
+    b.push_str("      break;\n");
+    b.push_str("    }\n");
+    b.push_str("    __n = __n.nextSibling;\n");
+    b.push_str("  }\n");
+    b.push_str("  if (!__existing) {\n");
+    b.push_str("    const __el = document.createElement(\"style\");\n");
+    b.push_str("    __el.setAttribute(\"data-sui-style\", __suiStylesKey);\n");
+    b.push_str("    __el.textContent = __suiStyles;\n");
+    b.push_str("    container.insertBefore(__el, container.firstChild);\n");
+    b.push_str("  }\n");
+    b.push_str("}\n");
+    b
+}
+
+/// FNV-1a 32-bit hash, hex string. A tiny dep-free helper to key the
+/// `data-sui-style` dedupe attribute.
+fn fnv1a32_hex(bytes: &[u8]) -> String {
+    let mut h: u32 = 0x811c_9dc5;
+    for &b in bytes {
+        h ^= b as u32;
+        h = h.wrapping_mul(0x0100_0193);
+    }
+    format!("{h:08x}")
+}
+
 /// Remove shared base-sheet rules from `styles`. Returns the stripped
 /// CSS. Idempotent — running it twice produces the same result.
 ///
