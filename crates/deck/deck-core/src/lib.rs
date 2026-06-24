@@ -93,7 +93,7 @@ pub use resolver::{register_view_output, set_project_root};
 pub use meta::{serve_meta, DaemonBuildInfo};
 pub use mode_html::{inject_mode_meta, mode_str};
 // (formerly `packs::serve_catalog_workspace`) — purged with the `.deck/` runtime read.
-pub use setup::{redirect, serve_setup_placeholder};
+pub use setup::redirect;
 pub use themes::{list_themes, resolve_theme_css, serve_theme_css, serve_themes_list, ThemeMeta, ThemeSource};
 pub use view_tokens::serve_view_tokens;
 pub use view::{serve_sui_view_setup, ViewSetupQuery};

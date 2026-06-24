@@ -54,8 +54,11 @@ fn primary_app(apps: &Option<Extension<Arc<Vec<AppServeConfig>>>>) -> Option<Arc
 }
 
 /// `GET /` — serve the primary app's `index.html` once provisioned; on a
-/// fresh install redirect to `/setup`. The app's client router lands on
-/// the home surface.
+/// fresh install redirect to `/setup`. `/setup` itself has no server route —
+/// it falls through to the SPA fallback, which serves the app shell so the
+/// app's own client-side `/setup` wizard renders. The first-run redirect here
+/// is the only server-side first-run signal deck keeps; the wizard lives in
+/// the app.
 pub async fn serve_index(
     mode: Option<Extension<DaemonMode>>,
     apps: Option<Extension<Arc<Vec<AppServeConfig>>>>,
@@ -74,20 +77,6 @@ pub async fn serve_index(
             "no primary app configured for /",
             mode_from_ext(mode),
         )),
-    }
-}
-
-/// `GET /setup` — serve the setup placeholder on a fresh install, otherwise
-/// redirect to `/` so the wizard can't wipe an existing install.
-pub async fn serve_setup(
-    mode: Option<Extension<DaemonMode>>,
-    port: Option<Extension<Arc<dyn DataPort>>>,
-) -> Response {
-    let mode_val = mode_from_ext(mode);
-    if is_provisioned(&port) {
-        into_axum(deck_core::redirect("/", mode_val))
-    } else {
-        into_axum(deck_core::serve_setup_placeholder(mode_val))
     }
 }
 
@@ -161,12 +150,9 @@ pub async fn spa_fallback(
 }
 /// Router helper for the host to mount the first-run flow. The L1
 /// framework exports the handler, the host chooses how to mount it.
-/// shipd merges this into its root.
+/// shipd merges this into its root. There is no `/setup` route helper:
+/// `/setup` is an app client-route that falls through to the SPA fallback
+/// (which serves the app shell), so the app's own `/setup` wizard renders.
 pub fn serve_index_route() -> Router {
     Router::new().route("/", get(serve_index))
-}
-
-/// Router helper for `/setup`. Same pattern as `serve_index_route`.
-pub fn serve_setup_route() -> Router {
-    Router::new().route("/setup", get(serve_setup))
 }
