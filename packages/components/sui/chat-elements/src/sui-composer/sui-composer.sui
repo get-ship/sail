@@ -39,14 +39,14 @@
   .frame {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2, 8px);
-    padding: var(--space-2, 8px);
+    gap: var(--space-2);
+    padding: var(--space-2);
     background: var(--background);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg, 10px);
+    border-radius: var(--radius-lg);
     transition:
-      border-color var(--duration-fast, 120ms) var(--ease-out),
-      box-shadow var(--duration-fast, 120ms) var(--ease-out);
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
   }
   .frame:focus-within {
     border-color: var(--primary);
@@ -61,13 +61,13 @@
   ::slotted([slot='attachments']) {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-1, 4px);
+    gap: var(--space-1);
   }
 
   .row {
     display: flex;
     align-items: flex-end;
-    gap: var(--space-2, 8px);
+    gap: var(--space-2);
   }
 
   .field {
@@ -79,10 +79,10 @@
     resize: none;
     font: inherit;
     font-family: var(--font-body);
-    font-size: 13px;
+    font-size: var(--text-base);
     line-height: 1.5;
     color: var(--foreground);
-    padding: 4px 2px;
+    padding: var(--space-1) 2px;
   }
   .field::placeholder { color: var(--muted-foreground); }
   .field:disabled { cursor: not-allowed; }
@@ -95,7 +95,7 @@
   .actions {
     display: flex;
     align-items: center;
-    gap: var(--space-1, 4px);
+    gap: var(--space-1);
     flex: 0 0 auto;
   }
 </style>

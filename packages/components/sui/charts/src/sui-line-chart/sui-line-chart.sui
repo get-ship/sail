@@ -46,7 +46,7 @@
   .legend {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: var(--space-3);
     font-size: var(--text-xs);
     color: var(--muted-foreground);
     font-family: var(--font-body);

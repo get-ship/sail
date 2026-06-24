@@ -40,13 +40,13 @@
   :host {
     display: flex;
     align-items: center;
-    gap: var(--space-2, 8px);
+    gap: var(--space-2);
     height: var(--ship-top-bar-h, 40px);
-    padding: 0 var(--space-3, 12px);
+    padding: 0 var(--space-3);
     border-bottom: 1px solid var(--border);
     background: var(--muted);
-    font-family: var(--font-body, system-ui, sans-serif);
-    font-size: var(--text-sm, 13px);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
     color: var(--foreground);
     user-select: none;
     -webkit-user-select: none;
@@ -55,7 +55,7 @@
     flex-shrink: 0;
   }
   :host([hidden]) { display: none; }
-  :host([sticky]) { position: sticky; top: 0; z-index: var(--z-sticky, 10); }
+  :host([sticky]) { position: sticky; top: 0; z-index: var(--z-sticky); }
   :host([sticky]) { backdrop-filter: saturate(180%) blur(8px); }
 
   .brand {
@@ -67,7 +67,7 @@
   .primary {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2, 8px);
+    gap: var(--space-2);
     flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
@@ -76,7 +76,7 @@
   .actions {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-1, 4px);
+    gap: var(--space-1);
     flex-shrink: 0;
   }
 </style>

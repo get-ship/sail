@@ -32,7 +32,7 @@
   :host {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1, 4px);
+    gap: var(--space-1);
     max-width: 100%;
     font-family: var(--font-body);
     color: var(--foreground);
@@ -68,22 +68,22 @@
   .meta {
     display: flex;
     align-items: baseline;
-    gap: var(--space-2, 8px);
-    font-size: 11px;
+    gap: var(--space-2);
+    font-size: var(--text-xs);
     color: var(--muted-foreground);
     padding-inline: 2px;
   }
-  .role-label { text-transform: capitalize; font-weight: var(--font-weight-medium, 500); }
+  .role-label { text-transform: capitalize; font-weight: var(--font-weight-medium); }
   .time { font-variant-numeric: tabular-nums; }
 
   .bubble {
     box-sizing: border-box;
-    padding: var(--space-2, 8px) var(--space-3, 12px);
+    padding: var(--space-2) var(--space-3);
     background: var(--bubble-bg);
     border: 1px solid var(--bubble-border);
-    border-radius: var(--radius-lg, 10px);
+    border-radius: var(--radius-lg);
     color: var(--bubble-fg);
-    font-size: 13px;
+    font-size: var(--text-base);
     line-height: 1.5;
     overflow-wrap: anywhere;
   }
@@ -92,8 +92,8 @@
   :host([content-type='code']) .content,
   :host([content-type='terminal-snapshot']) .content,
   :host([content-type='tool-call']) .content {
-    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
-    font-size: 12px;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
     white-space: pre-wrap;
   }
   :host([content-type='terminal-snapshot']) .bubble {
@@ -109,11 +109,11 @@
   :host([content-type='drawing']) ::slotted(*),
   :host([content-type='image']) ::slotted(*) {
     max-width: 100%;
-    border-radius: var(--radius-md, 8px);
+    border-radius: var(--radius-md);
   }
 
   .trailing { display: contents; }
-  ::slotted([slot='trailing']) { margin-top: var(--space-1, 4px); }
+  ::slotted([slot='trailing']) { margin-top: var(--space-1); }
 </style>
 
 <div class="meta" part="meta">

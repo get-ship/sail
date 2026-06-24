@@ -25,20 +25,20 @@
   .pill {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-1);
     max-width: 220px;
     padding: 1px 7px 1px 3px;
     font-family: var(--font-body);
-    font-size: 11px;
+    font-size: var(--text-xs);
     line-height: 1.4;
     color: var(--foreground);
     background: color-mix(in oklch, var(--muted) 55%, var(--card));
     border: 1px solid var(--border);
-    border-radius: var(--radius-full, 999px);
+    border-radius: var(--radius-full);
     cursor: pointer;
     transition:
-      background-color var(--duration-fast, 120ms) var(--ease-out),
-      border-color var(--duration-fast, 120ms) var(--ease-out);
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
   }
   .pill:hover {
     background: color-mix(in oklch, var(--primary) 12%, var(--card));
@@ -54,12 +54,12 @@
     justify-content: center;
     min-width: 16px;
     height: 16px;
-    padding: 0 4px;
+    padding: 0 var(--space-1);
     font-variant-numeric: tabular-nums;
-    font-weight: var(--font-weight-semibold, 600);
-    color: var(--primary-foreground, var(--background));
+    font-weight: var(--font-weight-semibold);
+    color: var(--primary-foreground);
     background: var(--primary);
-    border-radius: var(--radius-full, 999px);
+    border-radius: var(--radius-full);
   }
   .label {
     overflow: hidden;

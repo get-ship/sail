@@ -41,15 +41,15 @@
     /* State-colored left rail — instant at-a-glance scannability of the
        invocation's status, echoing the status dot / status-text tint. */
     border-left: 3px solid var(--status-color);
-    border-radius: var(--radius-md, 8px);
+    border-radius: var(--radius-md);
     background: var(--card);
     overflow: hidden;
   }
   .header {
     display: flex;
     align-items: center;
-    gap: var(--space-2, 8px);
-    padding: var(--space-2, 8px) var(--space-3, 12px);
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
   }
   .status-dot {
     width: 8px;
@@ -59,7 +59,7 @@
     flex: 0 0 auto;
   }
   :host([status='running']) .status-dot {
-    animation: sui-tool-call-pulse 1.4s var(--ease-in-out, ease-in-out) infinite;
+    animation: sui-tool-call-pulse 1.4s var(--ease-in-out) infinite;
   }
   @keyframes sui-tool-call-pulse {
     0%, 100% { opacity: 1; }
@@ -70,9 +70,9 @@
   }
 
   .name {
-    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
-    font-size: 12px;
-    font-weight: var(--font-weight-medium, 500);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
     color: var(--foreground);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -80,23 +80,23 @@
   }
   .status-text {
     margin-inline-start: auto;
-    font-size: 11px;
+    font-size: var(--text-xs);
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--status-color);
   }
   .chevron {
     flex: 0 0 auto;
-    transition: transform var(--duration-fast, 120ms) var(--ease-out);
+    transition: transform var(--duration-fast) var(--ease-out);
     color: var(--muted-foreground);
   }
   :host([open]) .chevron { transform: rotate(90deg); }
 
   .body {
     border-top: 1px solid var(--border);
-    padding: var(--space-2, 8px) var(--space-3, 12px);
-    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
-    font-size: 12px;
+    padding: var(--space-2) var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
     line-height: 1.5;
   }
   .body-label {
@@ -106,10 +106,10 @@
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--muted-foreground);
-    margin-bottom: 4px;
+    margin-bottom: var(--space-1);
   }
   .args { white-space: pre-wrap; overflow-wrap: anywhere; }
-  .result-block { margin-top: var(--space-2, 8px); }
+  .result-block { margin-top: var(--space-2); }
   ::slotted([slot='result']) { white-space: pre-wrap; overflow-wrap: anywhere; }
 </style>
 
