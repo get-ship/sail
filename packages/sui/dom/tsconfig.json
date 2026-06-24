@@ -11,6 +11,7 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "dist",
+    "rootDir": "src",
     "skipLibCheck": true,
     "esModuleInterop": true,
     "isolatedModules": true,
@@ -18,5 +19,5 @@
     "noEmit": true
   },
   "include": ["src/**/*"],
-  "exclude": ["test", "dist"]
+  "exclude": ["test", "dist", "src/test-utils"]
 }

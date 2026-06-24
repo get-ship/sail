@@ -62,7 +62,7 @@ function pathnameOf(url: string | URL): string {
         return url
       }
     }
-    return url.split('?')[0].split('#')[0] || '/'
+    return url.split('?')[0]?.split('#')[0] || '/'
   }
   return url.pathname
 }

@@ -33,7 +33,13 @@
 // CustomEvent `sui:navigate` dispatch for legacy hosts — the unified
 // router listens to both. (Chrome is slated to die; this fallback
 // is the minimum decouple, not a new feature.)
-declare const globalThis: { __suiNavigate?: (path: string, opts?: { replace?: boolean }) => void } & typeof globalThis
+
+// Host-set global navigate hook. Declared as a local cast helper instead
+// of `declare const globalThis: … & typeof globalThis` (which is self-
+// referential — TS2502) or a `declare global` augmentation (which would
+// leak `__suiNavigate` onto every consumer's global scope).
+type SuiNavigateGlobal = { __suiNavigate?: (path: string, opts?: { replace?: boolean }) => void }
+
 /** Toast / status tone palette. Matches the values `<sui-toast>` paints
  *  (`info` · `success` · `warning` · `destructive`). `error` is accepted
  *  as an alias for `destructive` so callers can speak the more natural
@@ -158,15 +164,12 @@ export const chrome = {
     // the host's `RouterPort`). Fall back to a CustomEvent dispatch for
     // legacy hosts that haven't wired the unified router.
     const replace = opts?.replace ? { replace: true } : undefined
-    if (typeof globalThis.__suiNavigate === 'function') {
-      globalThis.__suiNavigate(path, replace)
+    const suiNavigate = (globalThis as SuiNavigateGlobal).__suiNavigate
+    if (typeof suiNavigate === 'function') {
+      suiNavigate(path, replace)
     } else {
       emit('sui:navigate', { path, replace: !!opts?.replace })
     }
-  },
-  // `unified-deck-router`.
-  navigate(path: string, opts?: NavigateOpts): void {
-    routeNavigate(path, opts?.replace ? { replace: true } : {})
   },
 
   dock: {

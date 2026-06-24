@@ -275,6 +275,13 @@ export { suiTonesSheet, suiBaseSheet, adoptSuiSheets } from './styles/index'
 export { mount } from './mount'
 export type { ViewPayload, MountOptions, MountHandle, SuiLoader } from './mount'
 
+// SUI-local structural route type. Canonical home is the runtime (see
+// route-signals.ts) — views read `scope.route.params.<name>()` against this
+// shape, and the deck router's `route()` factory returns a structurally
+// compatible value. Exported so consumers (and the dom test harness) can
+// name `RouteSignals` without importing `@ship/deck/router` (keeps sui ⊥ deck).
+export type { RouteSignals } from './route-signals'
+
 // Chrome IPC — typed wrapper around the shell's event-driven chrome
 // surfaces (toasts, dock, command-bar, breadcrumb, status, theme,
 // focus mode, modal queue). See packages/sui/runtime/src/chrome.ts.

@@ -119,7 +119,9 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
       opts.loader ? pathname : coBundledPayload(pathname),
       {
         module: mod as never,
-        clients: opts.clients,
+        // `clients` is an exactOptionalPropertyType — present-but-undefined is
+        // rejected, so omit the key entirely when the host passed no clients.
+        ...(opts.clients ? { clients: opts.clients } : {}),
         loader: opts.loader as never,
         route: routeSignals,
         navigate,
