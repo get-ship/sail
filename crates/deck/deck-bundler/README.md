@@ -4,7 +4,7 @@
 bundler runs **in-process inside `shipd`** (Rolldown, compiled into the binary)
 with no child processes and no external worker. The only runtime dependency
 outside this crate is the `sui-compiler` binary, which the daemon installs under
-`~/.ship/runtime/` and spawns per-file during bundling.
+`~/.deck/runtime/` (deck's own namespace) and spawns per-file during bundling.
 
 > History (#163, #167): this used to be a `bun`-driven `bundler.ts` worker the
 > daemon spawned over a JSON-line stdin/stdout protocol. That worker is
@@ -16,21 +16,22 @@ See the decision record:
 
 ---
 
-## Runtime directory — `~/.ship/runtime/`
+## Runtime directory — `~/.deck/runtime/`
 
 The runtime dir holds exactly one thing: the `sui-compiler` binary the bundler
 spawns to compile `.sui` files. It mirrors what `rustup` does for Rust toolchains:
-one well-known path, pinned to the Ship version that installed it.
+one well-known path, pinned to the version that installed it. The dir lives under
+deck's own `~/.deck/` namespace — deck names no host-private path.
 
 ```
-~/.ship/runtime/
+~/.deck/runtime/
   sui-compiler        # Rust release build of crates/sui/compiler
 ```
 
-The directory is owned by
-`crates/core/ship-substrate/src/home/ship_home.rs` — every accessor
-(`runtime_dir`, `runtime_sui_compiler`) lives there; no other code constructs
-paths under the runtime dir directly.
+The path accessor (`runtime_dir`, `runtime_sui_compiler`) is host-owned: in the
+Ship deployment it lives in `ship-substrate`'s `home/ship_home.rs`, and no other
+code constructs paths under the runtime dir directly. Renaming the accessor's
+base from `~/.ship/runtime/` to `~/.deck/runtime/` is a host-side follow-up.
 
 ---
 
@@ -86,7 +87,7 @@ never ships in the daemon or the shell bundle.)
 ## CLI
 
 ```sh
-ship runtime install   # populate ~/.ship/runtime/ (sui-compiler) from local sources
+ship runtime install   # populate ~/.deck/runtime/ (sui-compiler) from local sources
 ship runtime update    # wipe + reinstall
 ship runtime doctor    # verify sui-compiler is present + executable
 ```
