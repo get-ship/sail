@@ -21,7 +21,7 @@ import {
   jsonAsset,
   notFound,
   svgAsset,
-} from "./response.ts";
+} from "./response";
 
 export interface DeckAdaptorConfig {
   /** The `deck build` output dir (`<project>/.deck`): index.html + assets/. */

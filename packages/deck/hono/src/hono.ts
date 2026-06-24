@@ -7,7 +7,7 @@
 // already has Hono. The types are imported type-only to avoid a hard dep.
 
 import type { Context, MiddlewareHandler } from "hono";
-import { createDeckRouter, type DeckAdaptorConfig } from "./router.ts";
+import { createDeckRouter, type DeckAdaptorConfig } from "./router";
 
 /**
  * Returns Hono middleware that serves deck-owned routes and calls `next()` for

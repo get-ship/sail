@@ -19,7 +19,7 @@
         "@ship/sui-runtime": "workspace:*",
       },
       "devDependencies": {
-        "@ship/test-setup": "file:/home/madvib/dev/ship-worktrees/carve-ship/packages/test-setup",
+        "@ship/test-setup": "^0.0.0",
         "vitest": "^4.1.5",
       },
     },
@@ -32,7 +32,7 @@
         "@ship/sui-runtime": "workspace:*",
       },
       "devDependencies": {
-        "@ship/test-setup": "file:/home/madvib/dev/ship-worktrees/carve-ship/packages/test-setup",
+        "@ship/test-setup": "^0.0.0",
         "vitest": "^4.1.5",
       },
     },
@@ -45,7 +45,7 @@
         "@ship/sui-runtime": "workspace:*",
       },
       "devDependencies": {
-        "@ship/test-setup": "file:/home/madvib/dev/ship-worktrees/carve-ship/packages/test-setup",
+        "@ship/test-setup": "^0.0.0",
         "happy-dom": "^20.9.0",
         "vitest": "^4.1.5",
       },
@@ -54,12 +54,12 @@
       "name": "@ship/sui-primitives",
       "version": "0.1.0",
       "dependencies": {
-        "@ship/sdk-client": "file:/home/madvib/dev/ship-worktrees/carve-ship/packages/sdk-client",
+        "@ship/sdk-client": "^0.1.0",
         "@ship/sui-dom": "workspace:*",
         "@ship/sui-runtime": "workspace:*",
       },
       "devDependencies": {
-        "@ship/test-setup": "file:/home/madvib/dev/ship-worktrees/carve-ship/packages/test-setup",
+        "@ship/test-setup": "^0.0.0",
         "@types/node": "24.12.4",
         "fast-formula-parser": "1.0.19",
         "vitest": "^4.1.5",
@@ -75,7 +75,7 @@
         "@ship/sui-runtime": "workspace:*",
       },
       "devDependencies": {
-        "@ship/test-setup": "file:/home/madvib/dev/ship-worktrees/carve-ship/packages/test-setup",
+        "@ship/test-setup": "^0.0.0",
         "happy-dom": "^20.9.0",
         "vitest": "^4.1.5",
       },
@@ -96,6 +96,21 @@
         "typescript": "^5.5.0",
         "vitest": "^4.1.5",
       },
+    },
+    "packages/deck/hono": {
+      "name": "@ship/deck-hono",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@types/node": "^24.0.0",
+        "hono": "^4",
+        "typescript": "~5.8.3",
+      },
+      "peerDependencies": {
+        "hono": "^4",
+      },
+      "optionalPeers": [
+        "hono",
+      ],
     },
     "packages/deck/host": {
       "name": "@ship/deck-host",
@@ -119,7 +134,7 @@
       },
     },
     "packages/deck/router": {
-      "name": "@ship/deck/router",
+      "name": "@ship/deck-router",
       "version": "0.1.0",
       "dependencies": {
         "@ship/sui-runtime": "workspace:*",
@@ -144,7 +159,7 @@
         "@ship/sui-runtime": "workspace:*",
       },
       "devDependencies": {
-        "@ship/test-setup": "file:/home/madvib/dev/ship-worktrees/carve-ship/packages/test-setup",
+        "@ship/test-setup": "^0.0.0",
         "jsdom": "^25.0.0",
         "typescript": "^5.5.0",
         "vitest": "^4.1.5",
@@ -154,7 +169,7 @@
       "name": "@ship/sui-runtime",
       "version": "0.1.0",
       "devDependencies": {
-        "@ship/test-setup": "file:/home/madvib/dev/ship-worktrees/carve-ship/packages/test-setup",
+        "@ship/test-setup": "^0.0.0",
         "@tanstack/virtual-core": "^3.16.1",
         "@vitest/browser": "^4.1.5",
         "axe-core": "^4.11.4",
@@ -172,12 +187,18 @@
     "lightningcss",
   ],
   "overrides": {
-    "@ship/sdk": "file:/home/madvib/dev/ship-worktrees/carve-ship/packages/sdk",
+    "@ship/sdk": "^0.2.0",
   },
   "packages": {
     "@asamuzakjp/css-color": ["@asamuzakjp/css-color@3.2.0", "", { "dependencies": { "@csstools/css-calc": "^2.1.3", "@csstools/css-color-parser": "^3.0.9", "@csstools/css-parser-algorithms": "^3.0.4", "@csstools/css-tokenizer": "^3.0.3", "lru-cache": "^10.4.3" } }, "sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw=="],
 
     "@blazediff/core": ["@blazediff/core@1.9.1", "", {}, "sha512-ehg3jIkYKulZh+8om/O25vkvSsXXwC+skXmyA87FFx6A/45eqOkZsBltMw/TVteb0mloiGT8oGRTcjRAz66zaA=="],
+
+    "@bufbuild/protobuf": ["@bufbuild/protobuf@2.12.1", "", {}, "sha512-BvAMfS6LrgZiryOAZ4pBYucu4wG/Ei/9o9DZ9akbREnMLbPJiom2i8b9C8IsKErQoiKqVhrerzt3kOT/RrzLHg=="],
+
+    "@connectrpc/connect": ["@connectrpc/connect@2.1.2", "", { "peerDependencies": { "@bufbuild/protobuf": "^2.7.0" } }, "sha512-MXkBijtcX09R10Eb6sFeIetc6w6746eio6xtfuyVOH7oQAacT1X0GzMIQFux6Qy8cq3W/T5qX5Bei8YbFtmRGA=="],
+
+    "@connectrpc/connect-web": ["@connectrpc/connect-web@2.1.2", "", { "peerDependencies": { "@bufbuild/protobuf": "^2.7.0", "@connectrpc/connect": "2.1.2" } }, "sha512-1tfaK85MU+gJjwwmL31d2rzdf0XCYX99chZf63uG89SGBUd4XuZ4ZzhGo2u79TPXOE6nLIZQ2okrpyey42PYdg=="],
 
     "@csstools/color-helpers": ["@csstools/color-helpers@5.1.0", "", {}, "sha512-S11EXWJyy0Mz5SYvRmY8nJYTFFd1LCNV+7cXyAgQtOOuzb4EsgfqDufL+9esx72/eLhsRdGZwaldu/h+E4t4BA=="],
 
@@ -243,11 +264,17 @@
 
     "@rolldown/pluginutils": ["@rolldown/pluginutils@1.0.1", "", {}, "sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw=="],
 
+    "@ship/deck-hono": ["@ship/deck-hono@workspace:packages/deck/hono"],
+
     "@ship/deck-host": ["@ship/deck-host@workspace:packages/deck/host"],
+
+    "@ship/deck-router": ["@ship/deck-router@workspace:packages/deck/router"],
 
     "@ship/deck-test-harness": ["@ship/deck-test-harness@workspace:packages/deck/test-harness"],
 
-    "@ship/deck/router": ["@ship/deck/router@workspace:packages/deck/router"],
+    "@ship/sdk": ["@ship/sdk@0.2.0", "http://localhost:4873/@ship/sdk/-/sdk-0.2.0.tgz", { "dependencies": { "@bufbuild/protobuf": "^2.5.2", "@connectrpc/connect": "^2.0.3", "@connectrpc/connect-web": "^2.0.3" } }, "sha512-YN/FUFmgfW2BHOvOMFY6GA9mUpWRATJG9aehXrOSPNrDFU1/YkefqhL9gpC0jNrpPhhJPS6jQQdB7atGFUZa/w=="],
+
+    "@ship/sdk-client": ["@ship/sdk-client@0.1.0", "http://localhost:4873/@ship/sdk-client/-/sdk-client-0.1.0.tgz", { "dependencies": { "@ship/sdk": "0.2.0" }, "peerDependencies": { "@ship/sui-runtime": "^0.1.0" } }, "sha512-lVxMqzf4ZoGhMOAEEBEj+X0We/a226aMLi6rg5YCktpI9R0BYiwnTYfmhwykqp4mVlPMDs7ba68XLPAontgFzg=="],
 
     "@ship/sui-charts": ["@ship/sui-charts@workspace:packages/components/sui/charts"],
 
@@ -268,6 +295,8 @@
     "@ship/sui-runtime": ["@ship/sui-runtime@workspace:packages/sui/runtime"],
 
     "@ship/sui-viewer": ["@ship/sui-viewer@workspace:packages/components/sui/viewer"],
+
+    "@ship/test-setup": ["@ship/test-setup@0.0.0", "http://localhost:4873/@ship/test-setup/-/test-setup-0.0.0.tgz", { "dependencies": { "@ship/deck-router": "^0.1.0", "@ship/sui-compiler-wasm": "^0.1.0", "@ship/sui-dom": "^0.1.0", "@ship/sui-runtime": "^0.1.0" } }, "sha512-fw+0RdEpkv6UARbekAjDKD3DMaeuBxxciED5bD7IiARYCubl2yhcHdluM1lT1EZMiSHdu+1THvFrlIARrNcdzQ=="],
 
     "@ship/tokens": ["@ship/tokens@workspace:packages/sui/tokens"],
 
@@ -382,6 +411,8 @@
     "has-tostringtag": ["has-tostringtag@1.0.2", "", { "dependencies": { "has-symbols": "^1.0.3" } }, "sha512-NqADB8VjPFLM2V0VvHUewwwsw0ZWBaIdgo+ieHtK3hasLz4qeCRjYcqfB6AQrBggRKppKF8L52/VqdVsO47Dlw=="],
 
     "hasown": ["hasown@2.0.4", "", { "dependencies": { "function-bind": "^1.1.2" } }, "sha512-T2UbfbBEF32wiepXIsMlTW9+dDYC6wMh/t/vYA4tuOMKqWz/n3vr1NFSxQiyP+zk2mXsoMA/i/7qV6LKut1t1A=="],
+
+    "hono": ["hono@4.12.27", "", {}, "sha512-1yrb/+w6HWQJrUCLkJ2IF5jNIPvvFkblV5RNOYl6bV+OA6p9GLcMpHFFGTosSvHvcAUibuUukRqhlYI4z32C7Q=="],
 
     "html-encoding-sniffer": ["html-encoding-sniffer@4.0.0", "", { "dependencies": { "whatwg-encoding": "^3.1.1" } }, "sha512-Y22oTqIU4uuPgEemfz7NDJz6OeKf12Lsu+QC+s3BVpda64lTiMYCyGwg5ki4vFxkMwQdeZDl2adZoqUgdFuTgQ=="],
 
@@ -529,23 +560,7 @@
 
     "xmlchars": ["xmlchars@2.2.0", "", {}, "sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw=="],
 
-    "@ship/sui-charts/@ship/test-setup": ["@ship/test-setup@file:../ship-worktrees/carve-ship/packages/test-setup", { "dependencies": { "@ship/sui-compiler-wasm": "file:/home/madvib/dev/sui/packages/sui/compiler-wasm", "@ship/sui-dom": "file:/home/madvib/dev/sui/packages/sui/dom", "@ship/sui-runtime": "file:/home/madvib/dev/sui/packages/sui/runtime" }, "devDependencies": { "happy-dom": "^20.9.0", "typescript": "~5.8.3", "vitest": "^4.1.5" } }],
-
-    "@ship/sui-chat-elements/@ship/test-setup": ["@ship/test-setup@file:../ship-worktrees/carve-ship/packages/test-setup", { "dependencies": { "@ship/sui-compiler-wasm": "file:/home/madvib/dev/sui/packages/sui/compiler-wasm", "@ship/sui-dom": "file:/home/madvib/dev/sui/packages/sui/dom", "@ship/sui-runtime": "file:/home/madvib/dev/sui/packages/sui/runtime" }, "devDependencies": { "happy-dom": "^20.9.0", "typescript": "~5.8.3", "vitest": "^4.1.5" } }],
-
-    "@ship/sui-dom/@ship/test-setup": ["@ship/test-setup@file:../ship-worktrees/carve-ship/packages/test-setup", { "dependencies": { "@ship/sui-compiler-wasm": "file:/home/madvib/dev/sui/packages/sui/compiler-wasm", "@ship/sui-dom": "file:/home/madvib/dev/sui/packages/sui/dom", "@ship/sui-runtime": "file:/home/madvib/dev/sui/packages/sui/runtime" }, "devDependencies": { "happy-dom": "^20.9.0", "typescript": "~5.8.3", "vitest": "^4.1.5" } }],
-
-    "@ship/sui-media/@ship/test-setup": ["@ship/test-setup@file:../ship-worktrees/carve-ship/packages/test-setup", { "dependencies": { "@ship/sui-compiler-wasm": "file:/home/madvib/dev/sui/packages/sui/compiler-wasm", "@ship/sui-dom": "file:/home/madvib/dev/sui/packages/sui/dom", "@ship/sui-runtime": "file:/home/madvib/dev/sui/packages/sui/runtime" }, "devDependencies": { "happy-dom": "^20.9.0", "typescript": "~5.8.3", "vitest": "^4.1.5" } }],
-
-    "@ship/sui-primitives/@ship/sdk-client": ["@ship/sdk-client@file:../ship-worktrees/carve-ship/packages/sdk-client", { "dependencies": { "@ship/sdk": "workspace:*", "@ship/sui-runtime": "workspace:*" }, "devDependencies": { "typescript": "^5.5.0", "vitest": "^4.1.5" } }],
-
-    "@ship/sui-primitives/@ship/test-setup": ["@ship/test-setup@file:../ship-worktrees/carve-ship/packages/test-setup", { "dependencies": { "@ship/sui-compiler-wasm": "file:/home/madvib/dev/sui/packages/sui/compiler-wasm", "@ship/sui-dom": "file:/home/madvib/dev/sui/packages/sui/dom", "@ship/sui-runtime": "file:/home/madvib/dev/sui/packages/sui/runtime" }, "devDependencies": { "happy-dom": "^20.9.0", "typescript": "~5.8.3", "vitest": "^4.1.5" } }],
-
     "@ship/sui-primitives/@types/node": ["@types/node@24.12.4", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-GUUEShf+PBCGW2KaXwcIt3Yk+e3pkKwWKb9GSyM9WQVE+ep2jzmHdGsHzu4wgcZy5fN9FBdVzjpBQsYlpfpgLA=="],
-
-    "@ship/sui-runtime/@ship/test-setup": ["@ship/test-setup@file:../ship-worktrees/carve-ship/packages/test-setup", { "dependencies": { "@ship/sui-compiler-wasm": "file:/home/madvib/dev/sui/packages/sui/compiler-wasm", "@ship/sui-dom": "file:/home/madvib/dev/sui/packages/sui/dom", "@ship/sui-runtime": "file:/home/madvib/dev/sui/packages/sui/runtime" }, "devDependencies": { "happy-dom": "^20.9.0", "typescript": "~5.8.3", "vitest": "^4.1.5" } }],
-
-    "@ship/sui-viewer/@ship/test-setup": ["@ship/test-setup@file:../ship-worktrees/carve-ship/packages/test-setup", { "dependencies": { "@ship/sui-compiler-wasm": "file:/home/madvib/dev/sui/packages/sui/compiler-wasm", "@ship/sui-dom": "file:/home/madvib/dev/sui/packages/sui/dom", "@ship/sui-runtime": "file:/home/madvib/dev/sui/packages/sui/runtime" }, "devDependencies": { "happy-dom": "^20.9.0", "typescript": "~5.8.3", "vitest": "^4.1.5" } }],
 
     "cssstyle/rrweb-cssom": ["rrweb-cssom@0.8.0", "", {}, "sha512-guoltQEx+9aMf2gDZ0s62EcV8lsXR+0w8915TC3ITdn2YueuNjdAYh/levpU9nFaoChh9RUS5ZdQMrKfVEN9tw=="],
 
@@ -555,50 +570,6 @@
 
     "vite/fsevents": ["fsevents@2.3.3", "", { "os": "darwin" }, "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw=="],
 
-    "@ship/sui-charts/@ship/test-setup/@ship/sui-compiler-wasm": ["@ship/sui-compiler-wasm@file:packages/sui/compiler-wasm", {}],
-
-    "@ship/sui-charts/@ship/test-setup/@ship/sui-dom": ["@ship/sui-dom@file:packages/sui/dom", {}],
-
-    "@ship/sui-charts/@ship/test-setup/@ship/sui-runtime": ["@ship/sui-runtime@file:packages/sui/runtime", {}],
-
-    "@ship/sui-chat-elements/@ship/test-setup/@ship/sui-compiler-wasm": ["@ship/sui-compiler-wasm@file:packages/sui/compiler-wasm", {}],
-
-    "@ship/sui-chat-elements/@ship/test-setup/@ship/sui-dom": ["@ship/sui-dom@file:packages/sui/dom", {}],
-
-    "@ship/sui-chat-elements/@ship/test-setup/@ship/sui-runtime": ["@ship/sui-runtime@file:packages/sui/runtime", {}],
-
-    "@ship/sui-dom/@ship/test-setup/@ship/sui-compiler-wasm": ["@ship/sui-compiler-wasm@file:packages/sui/compiler-wasm", {}],
-
-    "@ship/sui-dom/@ship/test-setup/@ship/sui-dom": ["@ship/sui-dom@file:packages/sui/dom", {}],
-
-    "@ship/sui-dom/@ship/test-setup/@ship/sui-runtime": ["@ship/sui-runtime@file:packages/sui/runtime", {}],
-
-    "@ship/sui-media/@ship/test-setup/@ship/sui-compiler-wasm": ["@ship/sui-compiler-wasm@file:packages/sui/compiler-wasm", {}],
-
-    "@ship/sui-media/@ship/test-setup/@ship/sui-dom": ["@ship/sui-dom@file:packages/sui/dom", {}],
-
-    "@ship/sui-media/@ship/test-setup/@ship/sui-runtime": ["@ship/sui-runtime@file:packages/sui/runtime", {}],
-
-    "@ship/sui-primitives/@ship/sdk-client/@ship/sdk": ["@ship/sdk@file:/home/madvib/dev/ship-worktrees/carve-ship/packages/sdk", {}],
-
-    "@ship/sui-primitives/@ship/test-setup/@ship/sui-compiler-wasm": ["@ship/sui-compiler-wasm@file:packages/sui/compiler-wasm", {}],
-
-    "@ship/sui-primitives/@ship/test-setup/@ship/sui-dom": ["@ship/sui-dom@file:packages/sui/dom", {}],
-
-    "@ship/sui-primitives/@ship/test-setup/@ship/sui-runtime": ["@ship/sui-runtime@file:packages/sui/runtime", {}],
-
     "@ship/sui-primitives/@types/node/undici-types": ["undici-types@7.16.0", "", {}, "sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw=="],
-
-    "@ship/sui-runtime/@ship/test-setup/@ship/sui-compiler-wasm": ["@ship/sui-compiler-wasm@file:packages/sui/compiler-wasm", {}],
-
-    "@ship/sui-runtime/@ship/test-setup/@ship/sui-dom": ["@ship/sui-dom@file:packages/sui/dom", {}],
-
-    "@ship/sui-runtime/@ship/test-setup/@ship/sui-runtime": ["@ship/sui-runtime@file:packages/sui/runtime", {}],
-
-    "@ship/sui-viewer/@ship/test-setup/@ship/sui-compiler-wasm": ["@ship/sui-compiler-wasm@file:packages/sui/compiler-wasm", {}],
-
-    "@ship/sui-viewer/@ship/test-setup/@ship/sui-dom": ["@ship/sui-dom@file:packages/sui/dom", {}],
-
-    "@ship/sui-viewer/@ship/test-setup/@ship/sui-runtime": ["@ship/sui-runtime@file:packages/sui/runtime", {}],
   }
 }

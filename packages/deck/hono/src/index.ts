@@ -5,7 +5,7 @@
 // `Bun.serve`, or use the Hono binding (`@ship/deck-hono/hono`) to mount it as
 // middleware alongside an existing Hono app (ship-ops's /api, /mcp, /events).
 
-export { createDeckRouter, type DeckAdaptorConfig } from "./router.ts";
+export { createDeckRouter, type DeckAdaptorConfig } from "./router";
 export {
   type DaemonMode,
   type CachePolicy,
@@ -24,4 +24,4 @@ export {
   redirect,
   sse,
   HTML_SECURITY_HEADERS,
-} from "./response.ts";
+} from "./response";
