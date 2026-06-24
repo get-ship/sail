@@ -46,6 +46,20 @@ pub(crate) const FRAMEWORK_SINGLETONS: &[FrameworkSingleton] = &[
         out_file: "sui-sdk-client.js",
         externals: &["@ship/sui-runtime"],
     },
+    // `@ship/sdk` — the Connect SDK (generated protobuf/Connect client, the
+    // `@ship/sdk/connect` surface). It is large (~1.5MB) and shared across
+    // every app that talks to the daemon, so it is a framework singleton: one
+    // shared bundle, referenced via the importmap, NOT inlined per-app. Before
+    // this, an app like cmdk that imports `@ship/sdk/connect` inlined the whole
+    // SDK into its own bundle. Standalone (no `@ship/sui-runtime` dependency),
+    // so it externalises nothing. Resolved by node from the project being built
+    // and skipped when absent (consumer repos that don't depend on it).
+    FrameworkSingleton {
+        name: "sdk",
+        spec: "@ship/sdk",
+        out_file: "sdk.js",
+        externals: &[],
+    },
     // `@ship/deck-router` — the unified router singleton (defineRoutes / route /
     // navigate / mountRouter / mergeRoutes). Every per-app `routes.gen.ts`
     // imports `mountRouter` from it (ADR unified-deck-router), and the daemon
