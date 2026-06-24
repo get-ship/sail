@@ -228,8 +228,9 @@ impl BundleLayout {
     }
 
     /// The `views/` bucket dirs the framework walks for view discovery —
-    /// every `source_root` × `cfg.view_dirs` (defaults `["views",
-    /// ".ship/views"]`). One definition, two consumers: `discover_view_bundles`
+    /// every `source_root` × `cfg.view_dirs` (defaults `["views"]`; a host
+    /// serving more buckets overrides it). One definition, two consumers:
+    /// `discover_view_bundles`
     /// scans these for view *bundles*, and the view-table codegen
     /// (`<bucket>/routes.gen.ts` + `<bucket>/meta.gen.ts`, run from
     /// `build_all`) walks the same dirs. SSOT for "where views live" — no
@@ -248,7 +249,8 @@ impl BundleLayout {
     /// (#273 — deck hardcodes no path):
     ///
     /// - For each `source_root`, walk each `cfg.view_dirs` bucket
-    ///   (defaults to `["views", ".ship/views"]`) and look for a
+    ///   (defaults to `["views"]`; a host serving more buckets overrides
+    ///   it) and look for a
     ///   `<bucket>/<name>/<view_leaf>` artifact. The leaf is
     ///   `cfg.view_leaf` (defaults to `page.sui`) — one convention for
     ///   all buckets, fixing the #254 `index.sui` vs `page.sui` divergence.
@@ -394,7 +396,7 @@ mod tests {
         let l = BundleLayout::with_config(PathBuf::from("/repo"), None, DeckConfig::defaults());
         assert_eq!(
             l.view_bucket_dirs(),
-            vec![PathBuf::from("/repo/views"), PathBuf::from("/repo/.ship/views")],
+            vec![PathBuf::from("/repo/views")],
         );
         // External-project mode: repo_root + workspace_root, each × view_dirs.
         let l2 = BundleLayout::with_config(
@@ -406,9 +408,7 @@ mod tests {
             l2.view_bucket_dirs(),
             vec![
                 PathBuf::from("/repo/views"),
-                PathBuf::from("/repo/.ship/views"),
                 PathBuf::from("/ws/views"),
-                PathBuf::from("/ws/.ship/views"),
             ],
         );
     }

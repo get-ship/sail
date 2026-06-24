@@ -11,15 +11,27 @@ fn with_tempdir<F: FnOnce(&Path)>(f: F) {
     f(tmp.path());
 }
 
-/// `ViewLayout` used by every test in this file. Matches the zero-config
-/// layout deck used to bake before #273 de-hardcoded the view bucket names
-/// and the `page.sui` leaf.
+/// The deck-native zero-config layout — the single `views/` bucket and the
+/// `page.sui` leaf. Deck names no host-private path in its default.
 fn layout() -> ViewLayout {
     ViewLayout::conventional()
 }
 
+/// A HOST-OVERRIDE layout: the deck-native `views/` bucket plus Ship's
+/// `.ship/views`. The override path stays — a host that serves additional
+/// buckets supplies them; deck does not bake them into `conventional()`.
+fn host_layout() -> ViewLayout {
+    ViewLayout {
+        view_dirs: vec!["views".into(), ".ship/views".into()],
+        view_leaf: "page.sui".into(),
+        first_party_root: None,
+    }
+}
+
 #[test]
-fn on_disk_page_sui_resolves_in_ship_views() {
+fn on_disk_page_sui_resolves_in_overridden_ship_views() {
+    // A host that overrides `view_dirs` to add `.ship/views` resolves views
+    // from that bucket — the override path the framework default no longer bakes.
     with_tempdir(|root| {
         let view_dir = root.join(".ship/views/widget");
         fs::create_dir_all(&view_dir).unwrap();
@@ -29,7 +41,7 @@ fn on_disk_page_sui_resolves_in_ship_views() {
         )
         .unwrap();
 
-        let r = resolve(root, &layout(), "widget", None).expect("on-disk widget resolves");
+        let r = resolve(root, &host_layout(), "widget", None).expect("on-disk widget resolves");
         assert!(r.source.contains("name=\"x\""));
         assert!(r.source_path.is_some());
         assert!(r.params.is_empty());
@@ -39,7 +51,7 @@ fn on_disk_page_sui_resolves_in_ship_views() {
 #[test]
 fn on_disk_param_segment_captures() {
     with_tempdir(|root| {
-        let leaf = root.join(".ship/views/things/[id]");
+        let leaf = root.join("views/things/[id]");
         fs::create_dir_all(&leaf).unwrap();
         fs::write(
             leaf.join("page.sui"),
@@ -55,10 +67,10 @@ fn on_disk_param_segment_captures() {
 #[test]
 fn missing_view_returns_diagnostic() {
     with_tempdir(|root| {
-        let err = resolve(root, &layout(), "ghost", None).unwrap_err();
+        // With a host-override layout, both configured buckets are named in
+        // the diagnostic so an author can see every place deck looked.
+        let err = resolve(root, &host_layout(), "ghost", None).unwrap_err();
         assert!(err.message.contains("ghost"));
-        // Both configured buckets are named in the diagnostic so an author
-        // can see what deck looked for.
         assert!(err.message.contains("views/"));
         assert!(err.message.contains(".ship/views/"));
     });
@@ -74,7 +86,7 @@ fn bump_mtime(path: &Path, secs_forward: u64) {
 #[test]
 fn mtime_cache_reuses_render_until_source_touched() {
     with_tempdir(|root| {
-        let view_dir = root.join(".ship/views/cachey");
+        let view_dir = root.join("views/cachey");
         fs::create_dir_all(&view_dir).unwrap();
         let path = view_dir.join("page.sui");
         fs::write(&path, r#"<p>first</p>"#).unwrap();
@@ -99,7 +111,7 @@ fn oversized_source_is_rejected() {
     // process per request. The cap stats the file first and rejects it before
     // any bytes are read, surfacing as a 404 upstream.
     with_tempdir(|root| {
-        let view_dir = root.join(".ship/views/huge");
+        let view_dir = root.join("views/huge");
         fs::create_dir_all(&view_dir).unwrap();
         let mut big = String::with_capacity((MAX_VIEW_SOURCE_BYTES as usize) + 16);
         big.push_str("<p>");
@@ -135,7 +147,7 @@ fn read_view_artifact_caps_oversized() {
 #[cfg(unix)]
 #[test]
 fn symlink_leaf_escaping_root_is_rejected() {
-    // A symlink inside `.ship/views/<name>` whose target lives outside the
+    // A symlink inside `views/<name>` whose target lives outside the
     // views bucket (here: a secret elsewhere on disk) must NOT be followed
     // and served — the containment guard rejects it (404 upstream), even
     // though the view NAME is perfectly valid.
@@ -145,7 +157,7 @@ fn symlink_leaf_escaping_root_is_rejected() {
         let secret = secret_dir.join("secret.sui");
         fs::write(&secret, "<p>top-secret</p>").unwrap();
 
-        let view_dir = root.join(".ship/views/leaky");
+        let view_dir = root.join("views/leaky");
         fs::create_dir_all(&view_dir).unwrap();
         // page.sui in the view dir is a symlink pointing OUT of the bucket.
         std::os::unix::fs::symlink(&secret, view_dir.join("page.sui")).unwrap();
@@ -165,7 +177,7 @@ fn symlink_leaf_inside_root_is_allowed() {
     // A symlink that stays WITHIN the views bucket is fine — containment is
     // about escaping the project, not banning symlinks outright.
     with_tempdir(|root| {
-        let views = root.join(".ship/views");
+        let views = root.join("views");
         let real_dir = views.join("real");
         fs::create_dir_all(&real_dir).unwrap();
         let real_leaf = real_dir.join("page.sui");
@@ -206,7 +218,7 @@ fn dotdot_segments_in_sub_path_stripped_before_walk() {
     // canonicalize containment guard fires.
     with_tempdir(|root| {
         // Create a view that would be hit IF ".." didn't escape.
-        let view_dir = root.join(".ship/views/myview");
+        let view_dir = root.join("views/myview");
         fs::create_dir_all(&view_dir).unwrap();
         fs::write(view_dir.join("page.sui"), r#"<p>safe</p>"#).unwrap();
 

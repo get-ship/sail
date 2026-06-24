@@ -25,7 +25,7 @@ fn body_str(resp: &crate::DeckResponse) -> String {
 fn payload_injects_mutation_action_into_html() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
-    let view_dir = tmp.path().join(".ship/views/host-inject-form");
+    let view_dir = tmp.path().join("views/host-inject-form");
     fs::create_dir_all(&view_dir).unwrap();
     fs::write(
         view_dir.join("page.sui"),
@@ -59,7 +59,7 @@ fn payload_injects_mutation_action_into_html() {
 fn payload_leaves_author_action_untouched() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
-    let view_dir = tmp.path().join(".ship/views/host-inject-form-author");
+    let view_dir = tmp.path().join("views/host-inject-form-author");
     fs::create_dir_all(&view_dir).unwrap();
     fs::write(
         view_dir.join("page.sui"),
@@ -87,7 +87,7 @@ fn payload_leaves_author_action_untouched() {
 fn payload_injects_subscribe_into_scope_for_live_view() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
-    let view_dir = tmp.path().join(".ship/views/host-inject-live");
+    let view_dir = tmp.path().join("views/host-inject-live");
     fs::create_dir_all(&view_dir).unwrap();
     fs::write(
         view_dir.join("page.sui"),
@@ -115,7 +115,7 @@ fn payload_injects_subscribe_into_scope_for_live_view() {
 fn payload_subpath_injects_subscribe_with_sub() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
-    let view_dir = tmp.path().join(".ship/views/host-inject-live-sub");
+    let view_dir = tmp.path().join("views/host-inject-live-sub");
     let sub_dir = view_dir.join("[id]");
     fs::create_dir_all(&sub_dir).unwrap();
     fs::write(view_dir.join("page.sui"), "<p>root</p>").unwrap();
@@ -140,7 +140,7 @@ fn payload_subpath_injects_subscribe_with_sub() {
 fn view_host_injects_mutation_action_into_ssr() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
-    let view_dir = tmp.path().join(".ship/views/host-host-inject-form");
+    let view_dir = tmp.path().join("views/host-host-inject-form");
     fs::create_dir_all(&view_dir).unwrap();
     fs::write(
         view_dir.join("page.sui"),
@@ -169,7 +169,7 @@ fn view_host_injects_into_precompiled_ssr_html() {
     use crate::view_host::evict_ssr_cache;
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
-    let view_dir = tmp.path().join(".ship/views/host-host-precompiled-inject");
+    let view_dir = tmp.path().join("views/host-host-precompiled-inject");
     let dist_dir = view_dir.join("dist");
     fs::create_dir_all(&dist_dir).unwrap();
     fs::write(view_dir.join("page.sui"), "<p>hi</p>").unwrap();

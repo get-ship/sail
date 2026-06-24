@@ -243,10 +243,10 @@ pub struct DeckConfig {
     pub packs: Vec<String>,
     /// Per-source-root view bucket names. The resolver and bundler scan
     /// `<source_root>/<view_dir>/<name>/<view_leaf>` for each `view_dir` in
-    /// this list. Defaults to the conventional `["views", ".ship/views"]`,
-    /// so a zero-config host still resolves from both top-level and
-    /// project-scoped view buckets. Hosts with a different layout override
-    /// this list; deck no longer bakes the bucket names.
+    /// this list. Defaults to the deck-native `["views"]`, so a zero-config
+    /// host resolves from the top-level view bucket. A host that serves
+    /// additional buckets (Ship's `.ship/views`) overrides this list — deck
+    /// no longer bakes a host-private path into its default.
     pub view_dirs: Vec<String>,
     /// The leaf filename for view artifacts under each `view_dir/<name>/`.
     /// Defaults to `"page.sui"`. A single leaf convention across all
@@ -262,17 +262,19 @@ impl Default for DeckConfig {
 }
 impl DeckConfig {
     /// Built-in defaults — a zero-config host (e.g. deck-conformance) gets these
-    /// when the host passes no override. Conventional `["views", ".ship/views"]`
-    /// view buckets and the unified `page.sui` leaf (#254).
+    /// when the host passes no override. The deck-native `["views"]` bucket and
+    /// the unified `page.sui` leaf (#254). Deck names no host-private path: a
+    /// host serving Ship's `.ship/views` supplies it as an override.
     pub fn defaults() -> Self {
         Self {
             source_roots: vec![PathBuf::from(".")],
             watch: Vec::new(),
             packs: Vec::new(),
-            // Conventional view buckets. Hosts that need a different layout
-            // construct a `DeckConfig` (clone `defaults()` + override) and pass
-            // it in — no file load.
-            view_dirs: vec!["views".into(), ".ship/views".into()],
+            // Deck-native view bucket. Hosts that need a different layout
+            // (or additional buckets like Ship's `.ship/views`) construct a
+            // `DeckConfig` (clone `defaults()` + override) and pass it in — no
+            // file load, no baked host path.
+            view_dirs: vec!["views".into()],
             // Single leaf convention — fixes the #254 `index.sui`/`page.sui`
             // divergence. Both buckets look up `<name>/<view_leaf>`.
             view_leaf: Some("page.sui".into()),
@@ -353,8 +355,8 @@ mod tests {
             serde_json::from_str(&strip_jsonc_comments(json)).expect("partial deck.jsonc parses");
         assert_eq!(
             cfg.view_dirs,
-            vec!["views".to_string(), ".ship/views".to_string()],
-            "partial config must inherit the conventional view buckets"
+            vec!["views".to_string()],
+            "partial config must inherit the deck-native view bucket default"
         );
         assert_eq!(cfg.view_leaf.as_deref(), Some("page.sui"));
     }

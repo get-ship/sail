@@ -46,7 +46,7 @@ fn repo_root() -> &'static std::path::Path {
 fn top_level_view_payload_shape() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
-    let view_dir = tmp.path().join(".ship/views/demo");
+    let view_dir = tmp.path().join("views/demo");
     fs::create_dir_all(&view_dir).unwrap();
     fs::write(view_dir.join("page.sui"),
         r#"<div><p>{count()}</p></div>"#).unwrap();
@@ -72,7 +72,7 @@ fn top_level_view_payload_shape() {
 fn sub_path_payload_concatenates_css() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
-    let view_dir = tmp.path().join(".ship/views/demo");
+    let view_dir = tmp.path().join("views/demo");
     let sub_dir = view_dir.join("[name]");
     fs::create_dir_all(&sub_dir).unwrap();
     fs::write(view_dir.join("page.sui"), r#"<div></div>"#).unwrap();
@@ -114,7 +114,7 @@ fn host_unknown_view_serves_html_404_with_available_views() {
 
     // Two real views so the not-found page has something to list.
     for name in ["counter", "dashboard"] {
-        let dir = tmp.path().join(format!(".ship/views/{name}"));
+        let dir = tmp.path().join(format!("views/{name}"));
         fs::create_dir_all(&dir).unwrap();
         fs::write(dir.join("page.sui"), "<p>hi</p>").unwrap();
     }
@@ -151,7 +151,7 @@ fn invalid_name_returns_404_json() {
 fn compile_error_returns_500_with_position() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
-    let view_dir = tmp.path().join(".ship/views/broken");
+    let view_dir = tmp.path().join("views/broken");
     fs::create_dir_all(&view_dir).unwrap();
     fs::write(view_dir.join("page.sui"), "<div><span></div>").unwrap();
 

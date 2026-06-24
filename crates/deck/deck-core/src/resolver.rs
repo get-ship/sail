@@ -89,8 +89,8 @@ pub(crate) fn detect_project_root_from(cwd: &std::path::Path) -> Option<PathBuf>
 
 use deck_host::resolver::ViewLayout;
 pub use deck_host::resolver::{ResolvedView, ResolveError, render_resolved};
-/// Build a [`ViewLayout`] from the conventional `["views", ".ship/views"]`
-/// buckets with a single `page.sui` leaf. The leaf is unified across all
+/// Build a [`ViewLayout`] from the conventional `["views"]` bucket with a
+/// single `page.sui` leaf. The leaf is unified across all
 /// buckets (fixes the #254 `index.sui` vs `page.sui` divergence). The
 /// framework does not load any config file — a host that needs a different
 /// layout (custom view buckets, custom leaf) constructs a `DeckConfig`
@@ -186,7 +186,7 @@ fn join_request(name: &str, sub_path: Option<&str>) -> String {
 /// human-facing not-found page. Scans the same on-disk roots the resolver
 /// consults — the first-party bucket (config-driven via
 /// `first_party_app.root` or the legacy env-var fallback) plus every
-/// bucket in the host's `view_dirs` (default `["views", ".ship/views"]`).
+/// bucket in the host's `view_dirs` (default `["views"]`).
 /// Cheap (one shallow `read_dir` per root, no compilation) and graceful:
 /// any missing root contributes nothing, and with no project root at
 /// all the list is simply empty. Names are deduped and sorted so the

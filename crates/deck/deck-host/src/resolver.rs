@@ -32,11 +32,13 @@ pub const MAX_VIEW_SOURCE_BYTES: u64 = 4 * 1024 * 1024;
 /// Config-driven view resolution layout (#273 — deck hardcodes no path).
 ///
 /// `view_dirs` are the bucket names appended to the project root
-/// (e.g. `["views", ".ship/views"]`). For each `view_dirs[i]`, the
+/// (e.g. `["views"]`). For each `view_dirs[i]`, the
 /// resolver looks for `<root>/<view_dirs[i]>/<name>/<view_leaf>`. All
 /// buckets share one `view_leaf` (defaults to `page.sui`), which fixes
-/// the #254 `index.sui` vs `page.sui` divergence between the two
-/// buckets. `first_party_root`, when set, takes precedence over the
+/// the #254 `index.sui` vs `page.sui` divergence between
+/// buckets. A host that serves additional buckets (Ship's `.ship/views`)
+/// supplies them as an OVERRIDE — deck names no host-private path.
+/// `first_party_root`, when set, takes precedence over the
 /// `view_dirs` buckets — the host declares its own first-party app
 /// source root (e.g. `apps/shell/src`) and that bucket wins for any
 /// matching view name.
@@ -47,12 +49,13 @@ pub struct ViewLayout {
     pub first_party_root: Option<PathBuf>,
 }
 impl ViewLayout {
-    /// Conventional defaults — the two view buckets and the
-    /// `page.sui` leaf. Matches the zero-config behaviour of the
-    /// previous hardcoded layout.
+    /// Conventional defaults — the deck-native `views/` bucket and the
+    /// `page.sui` leaf. A host that serves additional buckets (Ship's
+    /// `.ship/views`) supplies them as an override; deck names no
+    /// host-private path in its zero-config default.
     pub fn conventional() -> Self {
         Self {
-            view_dirs: vec!["views".into(), ".ship/views".into()],
+            view_dirs: vec!["views".into()],
             view_leaf: "page.sui".into(),
             first_party_root: None,
         }
@@ -106,8 +109,8 @@ pub fn resolve(
     // Walk every configured view-dir bucket in order. First hit wins; the
     // rest are reported as "tried" so a 404 names every bucket consulted.
     // A single leaf convention (`layout.view_leaf`) replaces the old
-    // `page.sui` for `views/` and `index.sui` for `.ship/views/` divergence
-    // (#254).
+    // `page.sui`/`index.sui` per-bucket divergence (#254): every configured
+    // bucket looks up the same `<name>/<view_leaf>`.
     for bucket in &layout.view_dirs {
         let bucket_root = project_root.join(bucket);
         let view_root = bucket_root.join(name);

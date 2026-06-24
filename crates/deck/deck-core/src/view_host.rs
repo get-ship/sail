@@ -227,7 +227,7 @@ mod tests {
         // view in URL) keeps serving the shell with an empty name.
         let tmp = tempfile::tempdir().unwrap();
         let _root = crate::test_lock::ProjectRootGuard::new(tmp.path());
-        let view_dir = tmp.path().join(".ship/views/some-view");
+        let view_dir = tmp.path().join("views/some-view");
         std::fs::create_dir_all(&view_dir).unwrap();
         std::fs::write(view_dir.join("page.sui"), "<p>hi</p>").unwrap();
 
@@ -253,7 +253,7 @@ mod tests {
     fn ssr_file_spliced_into_root() {
         let tmp = tempfile::tempdir().unwrap();
         let _root = crate::test_lock::ProjectRootGuard::new(tmp.path());
-        let view_dir = tmp.path().join(".ship/views/ssr-host-splice");
+        let view_dir = tmp.path().join("views/ssr-host-splice");
         let dist_dir = view_dir.join("dist");
         std::fs::create_dir_all(&dist_dir).unwrap();
         std::fs::write(view_dir.join("page.sui"), "<p>hi</p>").unwrap();
@@ -284,7 +284,7 @@ mod tests {
         // artifact once its mtime advances.
         let tmp = tempfile::tempdir().unwrap();
         let _root = crate::test_lock::ProjectRootGuard::new(tmp.path());
-        let view_dir = tmp.path().join(".ship/views/ssr-cache-bust");
+        let view_dir = tmp.path().join("views/ssr-cache-bust");
         let dist_dir = view_dir.join("dist");
         std::fs::create_dir_all(&dist_dir).unwrap();
         std::fs::write(view_dir.join("page.sui"), "<p>hi</p>").unwrap();
@@ -316,7 +316,7 @@ mod tests {
         // appears, the next request must serve it.
         let tmp = tempfile::tempdir().unwrap();
         let _root = crate::test_lock::ProjectRootGuard::new(tmp.path());
-        let view_dir = tmp.path().join(".ship/views/ssr-late-artifact");
+        let view_dir = tmp.path().join("views/ssr-late-artifact");
         let dist_dir = view_dir.join("dist");
         std::fs::create_dir_all(&dist_dir).unwrap();
         std::fs::write(view_dir.join("page.sui"), "<p>hi</p>").unwrap();

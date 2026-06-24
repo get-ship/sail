@@ -946,7 +946,8 @@ fn generate_routes_one(spec: &RouteGenSpec) -> Result<usize> {
 // contract — the router is host-agnostic; the host reads the meta.
 
 /// Generate the view route + meta tables for a single views bucket dir
-/// (`views/`, `.ship/views/`). Walks `<views_dir>/<name>/manifest.jsonc`
+/// (`views/` by default; a host may override `view_dirs` to add more).
+/// Walks `<views_dir>/<name>/manifest.jsonc`
 /// and writes `<views_dir>/routes.gen.ts` (router fields) +
 /// `<views_dir>/meta.gen.ts` (host fields). No-op when the dir is absent
 /// or holds no manifests. Returns the number of views discovered.
@@ -1642,8 +1643,8 @@ mod tests {
 
     /// No-op safety: an absent bucket dir and a present-but-empty bucket both
     /// return 0 and write nothing. `build_all` calls this for EVERY configured
-    /// bucket (`views`, `.ship/views`); a host without a `.ship/views` must not
-    /// get an empty artifact written there.
+    /// bucket (the default `views`, plus any a host overrides in); a bucket a
+    /// project does not have must not get an empty artifact written there.
     #[test]
     fn generate_view_artifacts_noop_without_dir_or_manifests() {
         let root = tempfile::tempdir().unwrap();

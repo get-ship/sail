@@ -21,7 +21,7 @@ fn payload_uses_precompiled_ssr_html() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
 
-    let view_dir = tmp.path().join(".ship/views/ssr-payload-precompiled");
+    let view_dir = tmp.path().join("views/ssr-payload-precompiled");
     let dist_dir = view_dir.join("dist");
     fs::create_dir_all(&dist_dir).unwrap();
     fs::write(view_dir.join("page.sui"), "<div><p>source</p></div>").unwrap();
@@ -45,7 +45,7 @@ fn payload_falls_back_to_runtime_render_without_ssr_file() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
 
-    let view_dir = tmp.path().join(".ship/views/ssr-payload-fallback");
+    let view_dir = tmp.path().join("views/ssr-payload-fallback");
     fs::create_dir_all(&view_dir).unwrap();
     fs::write(view_dir.join("page.sui"), "<div><p>runtime</p></div>").unwrap();
 
@@ -66,7 +66,7 @@ fn view_host_splices_precompiled_ssr() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
 
-    let view_dir = tmp.path().join(".ship/views/ssr-host-test-splice");
+    let view_dir = tmp.path().join("views/ssr-host-test-splice");
     let dist_dir = view_dir.join("dist");
     fs::create_dir_all(&dist_dir).unwrap();
     fs::write(view_dir.join("page.sui"), "<p>hi</p>").unwrap();
@@ -96,7 +96,7 @@ fn view_host_without_ssr_live_emits_from_source() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
 
-    let view_dir = tmp.path().join(".ship/views/ssr-host-test-empty");
+    let view_dir = tmp.path().join("views/ssr-host-test-empty");
     fs::create_dir_all(&view_dir).unwrap();
     fs::write(view_dir.join("page.sui"), "<p>hi</p>").unwrap();
 
@@ -130,7 +130,7 @@ fn view_host_prod_ssr_cache_revalidates_on_mtime() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
     let view_name = "ssr-mode-cache-test";
-    let view_dir = tmp.path().join(format!(".ship/views/{view_name}"));
+    let view_dir = tmp.path().join(format!("views/{view_name}"));
     let dist_dir = view_dir.join("dist");
     fs::create_dir_all(&dist_dir).unwrap();
     fs::write(view_dir.join("page.sui"), "<p>hi</p>").unwrap();
@@ -165,7 +165,7 @@ fn view_host_dev_bypasses_ssr_cache() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
     let view_name = "ssr-mode-dev-bypass";
-    let view_dir = tmp.path().join(format!(".ship/views/{view_name}"));
+    let view_dir = tmp.path().join(format!("views/{view_name}"));
     let dist_dir = view_dir.join("dist");
     fs::create_dir_all(&dist_dir).unwrap();
     fs::write(view_dir.join("page.sui"), "<p>hi</p>").unwrap();
@@ -189,7 +189,7 @@ fn view_host_dev_bypasses_ssr_cache() {
 fn view_payload_prod_cache_header_and_etag() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
-    let view_dir = tmp.path().join(".ship/views/prod-cache-check");
+    let view_dir = tmp.path().join("views/prod-cache-check");
     fs::create_dir_all(&view_dir).unwrap();
     fs::write(view_dir.join("page.sui"), "<div><p>hello</p></div>").unwrap();
 
@@ -204,7 +204,7 @@ fn view_payload_prod_cache_header_and_etag() {
 fn view_payload_dev_no_cache_no_etag() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
-    let view_dir = tmp.path().join(".ship/views/dev-cache-check");
+    let view_dir = tmp.path().join("views/dev-cache-check");
     fs::create_dir_all(&view_dir).unwrap();
     fs::write(view_dir.join("page.sui"), "<div><p>hello</p></div>").unwrap();
 
@@ -219,7 +219,7 @@ fn view_payload_dev_no_cache_no_etag() {
 fn view_payload_prod_compile_error_redacted() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
-    let view_dir = tmp.path().join(".ship/views/broken-prod");
+    let view_dir = tmp.path().join("views/broken-prod");
     fs::create_dir_all(&view_dir).unwrap();
     fs::write(view_dir.join("page.sui"), "<div><span></div>").unwrap();
 
@@ -237,7 +237,7 @@ fn view_payload_prod_compile_error_redacted() {
 fn view_payload_dev_compile_error_includes_detail() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
-    let view_dir = tmp.path().join(".ship/views/broken-dev");
+    let view_dir = tmp.path().join("views/broken-dev");
     fs::create_dir_all(&view_dir).unwrap();
     fs::write(view_dir.join("page.sui"), "<div><span></div>").unwrap();
 
@@ -259,7 +259,7 @@ fn payload_split_cache_revalidates_on_source_mtime() {
     let tmp = tempfile::tempdir().unwrap();
     let _g = lock_with_dir(tmp.path());
     let view_name = "split-cache-revalidate";
-    let view_dir = tmp.path().join(format!(".ship/views/{view_name}"));
+    let view_dir = tmp.path().join(format!("views/{view_name}"));
     fs::create_dir_all(&view_dir).unwrap();
     let src = view_dir.join("page.sui");
     fs::write(&src, "<p>split-v1</p>").unwrap();
