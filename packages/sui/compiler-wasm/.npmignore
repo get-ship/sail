@@ -1,0 +1,2 @@
+# .npmignore — overrides .gitignore so that pkg/ (in files[]) is included in the tarball.
+# All inclusions are governed by the "files" field in package.json.
