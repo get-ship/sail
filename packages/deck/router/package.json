@@ -1,5 +1,5 @@
 {
-  "name": "@ship/deck/router",
+  "name": "@ship/deck-router",
   "version": "0.1.0",
   "description": "Deck route surface — URL state as reactive signals, navigate(), setRouterPort, mergeRoutes, and the edit-mode toggle. Owns the SHAPES/INSTANCES registries and the popstate listener; the SUI runtime imports it as a thin re-export for backwards compatibility, but the canonical home is here.",
   "type": "module",

@@ -18,7 +18,7 @@
 
 import * as suiRuntime from '@ship/sui-runtime'
 import * as suiDom from '@ship/sui-dom'
-import * as suiRoute from '@ship/deck/router'
+import * as suiRoute from '@ship/deck-router'
 import '@ship/sui-runtime/template-hooks'
 import type { ViewDef } from '@ship/sui-runtime'
 

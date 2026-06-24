@@ -7,7 +7,7 @@ const { mountCalls } = vi.hoisted(() => ({
 }))
 
 // Mock the runtime instead of importing it: the real @ship/sui-runtime pulls
-// chrome.ts → @ship/deck/router, a cycle vitest can't resolve (pre-existing).
+// chrome.ts → @ship/deck-router, a cycle vitest can't resolve (pre-existing).
 // A minimal signal + a recording mount is all the router needs.
 // The mock calls opts.module.__mount(target) when present so layout-module
 // stubs can simulate rendering (proves authored markup is rendered, not dropped).

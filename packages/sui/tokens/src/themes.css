@@ -452,6 +452,155 @@
 }
 
 /* ───────────────────────────────────────────────────────────────────
+ * neutral-light — brand-free default. The agnostic baseline a customer
+ * gets when building on SUI without adopting any product identity:
+ * neutral cool-slate surfaces, a deep-slate "ink" primary, and one
+ * restrained slate-blue accent. Standard semantic colors. The display
+ * face is demoted to the body sans so no distinctive heading typography
+ * leaks through. Standard radii and motion — neutral is unopinionated,
+ * not bent. Carries zero brand: every brand-bearing token is restated
+ * here so nothing falls through to the SHIP palette in tokens.css.
+ * ─────────────────────────────────────────────────────────────────── */
+:root[data-theme='neutral-light'],
+[data-theme-preview='neutral-light'] {
+  --background: oklch(0.985 0.002 264);
+  --foreground: oklch(0.21 0.015 264);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.015 264);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.015 264);
+  --primary: oklch(0.27 0.020 264);
+  --primary-foreground: oklch(0.985 0.002 264);
+  --secondary: oklch(0.96 0.004 264);
+  --secondary-foreground: oklch(0.27 0.020 264);
+  --muted: oklch(0.96 0.004 264);
+  --muted-foreground: oklch(0.50 0.015 264);
+  --accent: oklch(0.55 0.090 255);
+  --accent-foreground: oklch(0.985 0.005 255);
+  --destructive: oklch(0.58 0.220 27);
+  --success: oklch(0.62 0.150 150);
+  --warning: oklch(0.72 0.150 75);
+  --info: oklch(0.58 0.150 245);
+  --border: oklch(0.21 0.015 264 / 14%);
+  --input: oklch(0.21 0.015 264 / 14%);
+  --ring: oklch(0.55 0.090 255 / 40%);
+  /* Focus reads as the slate-blue accent, not the near-black primary. */
+  --ring-color: var(--accent);
+
+  /* Surfaces: light-mode plateau at white — depth is shadow + border. */
+  --surface-0: oklch(0.985 0.002 264);
+  --surface-1: oklch(1 0 0);
+  --surface-2: oklch(1 0 0);
+  --surface-3: oklch(1 0 0);
+  --border-subtle: oklch(0.21 0.015 264 / 8%);
+  --border-strong: oklch(0.21 0.015 264 / 30%);
+
+  /* Neutral grey elevation — no warm brand tint. The accent glow is the
+   * only color in the shadow vocabulary. */
+  --shadow-xs: 0 1px 2px 0 oklch(0 0 0 / 5%);
+  --shadow-sm: 0 1px 3px 0 oklch(0 0 0 / 7%), 0 1px 2px -1px oklch(0 0 0 / 5%);
+  --shadow-md: 0 4px 12px -2px oklch(0 0 0 / 9%), 0 2px 4px -2px oklch(0 0 0 / 6%);
+  --shadow-lg: 0 12px 32px -6px oklch(0 0 0 / 13%), 0 4px 12px -4px oklch(0 0 0 / 8%);
+  --shadow-xl: 0 24px 64px -12px oklch(0 0 0 / 18%), 0 8px 24px -8px oklch(0 0 0 / 10%);
+  --shadow-card-rest: 0 1px 2px 0 oklch(0 0 0 / 4%), 0 0 0 1px oklch(0 0 0 / 5%);
+  --shadow-hover: 0 8px 20px oklch(0 0 0 / 10%), 0 0 0 1px oklch(0 0 0 / 6%);
+  --shadow-sticky: 0 2px 6px -2px oklch(0 0 0 / 8%), 0 1px 2px oklch(0 0 0 / 4%);
+  --shadow-inset-soft: inset 0 1px 2px oklch(0 0 0 / 5%);
+  --shadow-edge-top: 0 -8px 24px -8px oklch(0 0 0 / 8%), 0 -1px 0 oklch(0 0 0 / 4%);
+  --shadow-accent: 0 0 0 3px oklch(0.55 0.090 255 / 22%), 0 8px 24px -6px oklch(0.55 0.090 255 / 28%);
+  --backdrop: oklch(0 0 0 / 40%);
+  --scrim: oklch(0 0 0 / 20%);
+
+  /* Chrome surfaces match the neutral views, not the SHIP defaults. */
+  --sidebar: oklch(0.985 0.002 264);
+  --sidebar-foreground: oklch(0.21 0.015 264);
+  --sidebar-primary: oklch(0.27 0.020 264);
+  --sidebar-primary-foreground: oklch(0.985 0.002 264);
+  --sidebar-accent: oklch(0.96 0.004 264);
+  --sidebar-accent-foreground: oklch(0.21 0.015 264);
+  --sidebar-border: oklch(0.21 0.015 264 / 12%);
+  --sidebar-ring: oklch(0.55 0.090 255 / 30%);
+
+  /* Brand-free typography: demote the display face to the body sans. */
+  --heading-font: var(--font-body);
+  --heading-weight: var(--font-weight-semibold);
+  --heading-tracking: var(--tracking-tight);
+}
+
+/* ───────────────────────────────────────────────────────────────────
+ * neutral-dark — sibling to neutral-light. The same brand-free slate
+ * design system after dark: cool deep-slate surfaces, a near-white
+ * "ink" primary, the same slate-blue accent lifted for legibility on
+ * dark. Standard semantics, standard radii + motion. Carries
+ * `dark: true` so the canonical .dark elevation flips; this block
+ * re-states the full palette, surfaces, and shadow stack so nothing
+ * from the SHIP-dark base bleeds through.
+ * ─────────────────────────────────────────────────────────────────── */
+:root[data-theme='neutral-dark'],
+[data-theme-preview='neutral-dark'] {
+  --background: oklch(0.18 0.008 264);
+  --foreground: oklch(0.96 0.003 264);
+  --card: oklch(0.22 0.010 264);
+  --card-foreground: oklch(0.96 0.003 264);
+  --popover: oklch(0.24 0.012 264);
+  --popover-foreground: oklch(0.96 0.003 264);
+  --primary: oklch(0.92 0.008 264);
+  --primary-foreground: oklch(0.21 0.015 264);
+  --secondary: oklch(0.27 0.012 264);
+  --secondary-foreground: oklch(0.96 0.003 264);
+  --muted: oklch(0.27 0.012 264);
+  --muted-foreground: oklch(0.70 0.012 264);
+  --accent: oklch(0.70 0.100 255);
+  --accent-foreground: oklch(0.18 0.020 255);
+  --destructive: oklch(0.62 0.210 25);
+  --success: oklch(0.70 0.150 150);
+  --warning: oklch(0.78 0.150 80);
+  --info: oklch(0.68 0.140 240);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.70 0.100 255 / 40%);
+  --ring-color: var(--accent);
+
+  /* Cool-slate surface ladder — ~+4% L per step lifts elevated panels. */
+  --surface-0: oklch(0.18 0.008 264);
+  --surface-1: oklch(0.22 0.010 264);
+  --surface-2: oklch(0.25 0.012 264);
+  --surface-3: oklch(0.28 0.014 264);
+  --border-subtle: oklch(1 0 0 / 8%);
+  --border-strong: oklch(1 0 0 / 22%);
+
+  /* Cool-neutral elevation — tinted just enough to read on dark slate. */
+  --shadow-xs: 0 1px 2px 0 oklch(0.05 0.010 264 / 40%);
+  --shadow-sm: 0 1px 3px 0 oklch(0.05 0.010 264 / 45%), 0 1px 2px -1px oklch(0.05 0.010 264 / 30%);
+  --shadow-md: 0 4px 14px -2px oklch(0.05 0.010 264 / 50%), 0 2px 6px -2px oklch(0.05 0.010 264 / 35%);
+  --shadow-lg: 0 14px 32px -6px oklch(0.05 0.010 264 / 60%), 0 4px 12px -4px oklch(0.05 0.010 264 / 40%);
+  --shadow-xl: 0 28px 64px -12px oklch(0.05 0.010 264 / 65%), 0 8px 24px -8px oklch(0.05 0.010 264 / 45%);
+  --shadow-card-rest: 0 1px 3px oklch(0 0 0 / 30%), 0 0 0 1px oklch(0.5 0.010 264 / 12%);
+  --shadow-hover: 0 8px 20px oklch(0 0 0 / 40%), 0 0 0 1px oklch(0.5 0.010 264 / 18%);
+  --shadow-sticky: 0 2px 6px -2px oklch(0.05 0.010 264 / 45%), 0 1px 2px oklch(0.05 0.010 264 / 30%);
+  --shadow-inset-soft: inset 0 1px 2px oklch(0 0 0 / 25%);
+  --shadow-edge-top: 0 -8px 24px -8px oklch(0.05 0.010 264 / 45%), 0 -1px 0 oklch(1 0 0 / 4%);
+  --shadow-accent: 0 0 0 3px oklch(0.70 0.100 255 / 22%), 0 8px 24px -6px oklch(0.70 0.100 255 / 30%);
+  --backdrop: oklch(0 0 0 / 55%);
+  --scrim: oklch(0 0 0 / 30%);
+
+  /* Chrome surfaces — a hair darker than the page so the rail seats. */
+  --sidebar: oklch(0.16 0.008 264);
+  --sidebar-foreground: oklch(0.96 0.003 264);
+  --sidebar-primary: oklch(0.92 0.008 264);
+  --sidebar-primary-foreground: oklch(0.21 0.015 264);
+  --sidebar-accent: oklch(0.25 0.012 264);
+  --sidebar-accent-foreground: oklch(0.96 0.003 264);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.70 0.100 255 / 30%);
+
+  /* Brand-free typography: demote the display face to the body sans. */
+  --heading-font: var(--font-body);
+  --heading-weight: var(--font-weight-semibold);
+  --heading-tracking: var(--tracking-tight);
+}
+
+/* ───────────────────────────────────────────────────────────────────
  * Daily-driver depth — ship-light & ship-dark get a barely-there
  * noise grain so the page surface isn't a perfect flat color, plus a
  * subtle vertical lift on --surface-0. Both stay invisible until you
@@ -778,6 +927,27 @@
   --surface-overlay-opacity: 1;
   --radius-md: 3px;
   --radius-sm: 2px;
+}
+
+/* Neutral themes demote the display face to the body sans (brand-free)
+ * and use standard radii. These resets keep a preview tile rendering
+ * its own neutral look regardless of which theme the document carries. */
+[data-theme-preview='neutral-light'],
+[data-theme-preview='neutral-dark'] {
+  --font-body: var(--font-sans, system-ui, sans-serif);
+  --body-font: var(--font-body);
+  --heading-font: var(--font-body);
+  --label-font: var(--font-body);
+  --heading-weight: var(--font-weight-semibold);
+  --heading-tracking: var(--tracking-tight);
+  --label-weight: var(--font-weight-semibold);
+  --label-tracking: var(--tracking-normal);
+  --card-backdrop-filter: none;
+  --surface-overlay: none;
+  --surface-overlay-blend: normal;
+  --surface-overlay-opacity: 1;
+  --radius-md: 6px;
+  --radius-sm: 4px;
 }
 
 /* ───────────────────────────────────────────────────────────────────

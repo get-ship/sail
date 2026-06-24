@@ -10,7 +10,7 @@ export default defineConfig({
         replacement: resolve(__dirname, '../runtime/src/template-hooks/index.ts'),
       },
       {
-        find: '@ship/deck/router',
+        find: '@ship/deck-router',
         replacement: resolve(__dirname, '../deck/router/src/index.ts'),
       },
       {

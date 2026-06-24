@@ -1,6 +1,6 @@
-// @ship/deck/router — the SERVER (V8 / no-browser) resolution.
+// @ship/deck-router — the SERVER (V8 / no-browser) resolution.
 //
-// The synthetic SSR build aliases `@ship/deck/router` to THIS module. On the
+// The synthetic SSR build aliases `@ship/deck-router` to THIS module. On the
 // server there is no `window`, so URL state can't come from `window.location`
 // (the browser module's source). It comes from the HOST: the SSR entry fetches
 // `route.current` over ship-js's host-dispatch wire and parks the result on

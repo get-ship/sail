@@ -26,7 +26,7 @@
 //   the mounted route changes. Callers can override with `{ viewId }` on
 //   any state-bearing call.
 
-// Slice 2 — `navigate` no longer imports from `@ship/deck/router`. The
+// Slice 2 — `navigate` no longer imports from `@ship/deck-router`. The
 // runtime's own `navigate()` (exported from `./mount` / wired through
 // the host's `RouterPort`) is the canonical entry; chrome calls that
 // via the global `__suiNavigate` set by the host. Falls back to a

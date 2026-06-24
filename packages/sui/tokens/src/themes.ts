@@ -21,6 +21,8 @@ export type ThemeId =
   | 'console'
   | 'contrast'
   | 'glass'
+  | 'neutral-light'
+  | 'neutral-dark'
 
 export interface Theme {
   id: ThemeId
@@ -96,6 +98,27 @@ export const THEMES: Theme[] = [
       'oklch(0.99 0.005 240)',     // frosted card surface
       'oklch(0.62 0.16 50)',       // muted brand orange
       'oklch(0.62 0.14 280)',      // iridescent violet accent
+    ],
+  },
+  {
+    // Brand-free default for building on SUI without adopting any
+    // product identity. Neutral slate surfaces, a deep-slate "ink"
+    // primary, one restrained slate-blue accent. Carries zero brand.
+    id: 'neutral-light', label: 'Neutral Light', dark: false,
+    swatches: [
+      'oklch(0.985 0.002 264)',    // cool off-white background
+      'oklch(1 0 0)',              // white card
+      'oklch(0.27 0.020 264)',     // deep-slate ink primary
+      'oklch(0.55 0.090 255)',     // restrained slate-blue accent
+    ],
+  },
+  {
+    id: 'neutral-dark', label: 'Neutral Dark', dark: true,
+    swatches: [
+      'oklch(0.18 0.008 264)',     // deep cool-slate background
+      'oklch(0.22 0.010 264)',     // lifted slate card
+      'oklch(0.92 0.008 264)',     // near-white ink primary
+      'oklch(0.70 0.100 255)',     // restrained slate-blue accent
     ],
   },
 ]

@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url'
 
 import * as suiRuntime from '@ship/sui-runtime'
 import * as suiDom from '@ship/sui-dom'
-// Slice 2 — `@ship/deck/router` is no longer imported by the
+// Slice 2 — `@ship/deck-router` is no longer imported by the
 // @ship/sui-dom test harness. The structural `RouteSignals` lives
 // in `@ship/sui-runtime` now; the test util constructs an empty
 // instance inline (the mount surface uses the host-wired `navigate`

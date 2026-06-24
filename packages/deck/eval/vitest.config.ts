@@ -4,7 +4,7 @@ import { resolve } from 'node:path'
 export default defineConfig({
   resolve: {
     alias: {
-      '@ship/deck/router': resolve(__dirname, '../../deck/router/src/index.ts'),
+      '@ship/deck-router': resolve(__dirname, '../../deck/router/src/index.ts'),
       '@ship/sui-runtime/template-hooks': resolve(__dirname, '../../sui/runtime/src/template-hooks/index.ts'),
 
       '@ship/sui-runtime': resolve(__dirname, '../../sui/runtime/src/index.ts'),

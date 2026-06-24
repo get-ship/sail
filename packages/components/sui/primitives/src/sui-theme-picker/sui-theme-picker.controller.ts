@@ -9,7 +9,7 @@ import {
   type ThemeId,
   type Theme,
 } from '@ship/tokens/themes'
-import { navigate } from '@ship/deck/router'
+import { navigate } from '@ship/deck-router'
 import { DECK_API_ASSETS } from '@ship/sdk-client'
 import type { Scope } from './sui-theme-picker.sui'
 

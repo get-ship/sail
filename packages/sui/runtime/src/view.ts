@@ -12,7 +12,7 @@
 
 import type { ShipHost, Clients } from './ship'
 // Slice 2 — SUI-local structural `RouteSignals` (replaces the
-// `@ship/deck/router` import). The deck-side `RouteSignals` is
+// `@ship/deck-router` import). The deck-side `RouteSignals` is
 // structurally compatible (both import the same `Signal` from
 // `@ship/sui-runtime`); the deck `route` factory's return value
 // satisfies this structural type at the assignment site.

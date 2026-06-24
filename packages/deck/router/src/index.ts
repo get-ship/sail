@@ -27,12 +27,12 @@
 import { signal, type Signal } from '@ship/sui-runtime'
 
 // Layout-chain resolution + the router live in their own modules (this file
-// is at the size cap). Re-exported so `@ship/deck/router` is one import site.
+// is at the size cap). Re-exported so `@ship/deck-router` is one import site.
 export { resolveLayoutChain, type LayoutShape } from './layouts'
 export { mountRouter, type MountRouterOptions, type RouterHandle } from './mount-router'
 
 // `RouteSignals` and `RouteShape` live in `./types` (importable without the
-// browser router) and are re-exported here so `@ship/deck/router`'s public
+// browser router) and are re-exported here so `@ship/deck-router`'s public
 // surface is unchanged. Param names are discovered lazily: reading
 // `route.params.id` for the first time creates the signal and seeds it from
 // the current pathname.
@@ -113,7 +113,7 @@ export function isEditMode(): boolean {
  * for now it's an imperative call.
  *
  * ```ts
- * import { defineRoutes } from '@ship/deck/router'
+ * import { defineRoutes } from '@ship/deck-router'
  * defineRoutes([{ pattern: '/agents/:id' }])
  * ```
  */
@@ -214,7 +214,7 @@ export interface RouterPort {
 /**
  * Register the host router. Call once at host startup. The port is held
  * on `globalThis` so it is visible to every bundle that shares the single
- * `@ship/deck/router` instance (matching `__shipSetRouteUpdate`).
+ * `@ship/deck-router` instance (matching `__shipSetRouteUpdate`).
  */
 export function setRouterPort(port: RouterPort): void {
   globalThis.__shipRouterPort = port
