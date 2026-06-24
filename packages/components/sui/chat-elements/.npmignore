@@ -1,0 +1,5 @@
+# Overrides root .gitignore's "dist/" exclusion so dist/custom-elements.json
+# reaches the tarball. All inclusions are governed by the "files" field in
+# package.json.
+node_modules/
+*.tsbuildinfo

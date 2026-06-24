@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "Ship Media pack — the PURE leaf content renderers (sui-media-image raster+SVG, sui-media-csv→sui-table, sui-media-av audio/video) plus the pure detection/parse engine (createMimeRegistry resolution, MIME detect, CSV parse, the ViewerRenderer contract). Renderers receive already-resolved bytes/text via `prop:src` identity and never fetch. The kind→TAG dispatch table lives in the @ship/viewer router, not here — this engine resolves whatever entry list it is handed.",
   "type": "module",
+  "files": [
+    "src",
+    "dist/custom-elements.json"
+  ],
   "main": "src/index.ts",
   "types": "src/index.ts",
   "customElements": "dist/custom-elements.json",
@@ -11,6 +15,7 @@
     "./engine": "./src/engine/index.ts"
   },
   "scripts": {
+    "prepublishOnly": "test -f dist/custom-elements.json || (cd ../../../.. && cargo run -p deck-cli -- build-assets)",
     "test": "vitest run",
     "test:watch": "vitest"
   },

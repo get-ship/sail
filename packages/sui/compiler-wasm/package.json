@@ -6,6 +6,9 @@
   "files": [
     "pkg"
   ],
+  "scripts": {
+    "prepack": "test -f pkg/sui_compiler.js || (cd ../../../.. && bun run wasm) ; printf '# override wasm-pack .gitignore\\n' > pkg/.npmignore"
+  },
   "main": "./pkg/sui_compiler.js",
   "types": "./pkg/sui_compiler.d.ts",
   "exports": {
