@@ -1,8 +1,11 @@
 {
   "name": "@ship/sui-compiler-wasm",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "type": "module",
+  "files": [
+    "pkg"
+  ],
   "main": "./pkg/sui_compiler.js",
   "types": "./pkg/sui_compiler.d.ts",
   "exports": {
