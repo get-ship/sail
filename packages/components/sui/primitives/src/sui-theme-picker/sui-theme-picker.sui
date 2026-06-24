@@ -297,6 +297,11 @@
     box-shadow: var(--shadow-card-rest, var(--shadow-sm));
     backdrop-filter: var(--card-backdrop-filter, none);
     -webkit-backdrop-filter: var(--card-backdrop-filter, none);
+    /* Clip the glass backdrop-filter to --radius-md so its corners match the
+       card border (no escaping shadow here → overflow:clip is safe). Mirrors
+       the already-correct sibling .tc-bg (overflow:hidden + isolation). */
+    overflow: clip;
+    isolation: isolate;
   }
   .tc-card-head { display: flex; flex-direction: column; gap: 2px; }
   .tc-eyebrow {

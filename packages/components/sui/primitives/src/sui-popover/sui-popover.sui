@@ -80,6 +80,10 @@
     box-shadow: var(--shadow-lg), inset 0 1px 0 var(--background);
     backdrop-filter: var(--card-backdrop-filter);
     -webkit-backdrop-filter: var(--card-backdrop-filter);
+    /* Establish a stacking context so the glass backdrop-filter clips to
+       --radius-lg. isolation (not overflow:hidden) because --shadow-lg must
+       paint OUTSIDE the surface; an overflow clip would crop the drop shadow. */
+    isolation: isolate;
     font-family: var(--font-body);
     font-size: var(--text-base);
   }

@@ -52,6 +52,13 @@
     border: 1px solid var(--border);
     border-radius: var(--table-radius);
     background: var(--surface-1);
+    /* Frost on glass themes (--card-backdrop-filter is `none` elsewhere).
+       isolation establishes a stacking context so the backdrop-filter clips to
+       --table-radius — works with the existing overflow:hidden. One change
+       covers all rows, which render inside .wrap. */
+    backdrop-filter: var(--card-backdrop-filter);
+    -webkit-backdrop-filter: var(--card-backdrop-filter);
+    isolation: isolate;
     box-shadow: var(--shadow-xs);
     overflow: hidden;
     overflow-x: auto;

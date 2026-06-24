@@ -62,6 +62,13 @@
     --card-radius: var(--radius-lg);
     border-radius: var(--card-radius);
     overflow: clip;
+    /* Frost on glass themes (--card-backdrop-filter resolves to a blur there,
+       `none` everywhere else). isolation establishes a stacking context so the
+       backdrop-filter clips to --card-radius — belt-and-suspenders with the
+       existing overflow:clip. Frost goes on :host (the ::before is the accent-bar). */
+    backdrop-filter: var(--card-backdrop-filter);
+    -webkit-backdrop-filter: var(--card-backdrop-filter);
+    isolation: isolate;
     box-shadow: var(--shadow-card-rest);
     --card-px: 20px;
     --card-py: 16px;
