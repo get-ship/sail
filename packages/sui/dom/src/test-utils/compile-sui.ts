@@ -20,15 +20,14 @@ import { fileURLToPath } from 'node:url'
 
 import * as suiRuntime from '@ship/sui-runtime'
 import * as suiDom from '@ship/sui-dom'
-// Slice 2 — `@ship/deck-router` is no longer imported by the
-// @ship/sui-dom test harness. The structural `RouteSignals` lives
-// in `@ship/sui-runtime` now; the test util constructs an empty
-// instance inline (the mount surface uses the host-wired `navigate`
-// and reads `route` through the structural type — a test-local
-// mock satisfies both). The `makeRoute` import is GONE — keeps
-// sui ⊥ deck at the test boundary.
+// Slice 2 — `@ship/deck-router` is NOT imported here: sui ⊥ deck at the test
+// boundary (@ship/sui-dom depends only on @ship/sui-runtime). Real route
+// matching / popstate wiring lives in deck; the harness only needs the
+// structural `RouteSignals` shape (which lives in @ship/sui-runtime), so the
+// local `makeRoute` below builds a mock instance from the already-imported
+// runtime `signal()` rather than importing deck's `route()` factory.
 import { signal } from '@ship/sui-runtime'
-import type { RouteSignals } from '@ship/sui-runtime'
+import type { RouteSignals, Signal } from '@ship/sui-runtime'
 import '@ship/sui-runtime/template-hooks'
 /* ----------------------- native addon load ----------------------- */
 
@@ -173,6 +172,49 @@ export function compileSui(source: string, opts: CompileOpts = {}): CompiledSui 
   return { js: result.js, css: result.css, dts: result.dts, ssrHtml: result.ssrHtml }
 }
 
+/* ----------------------------- route mock ----------------------------- */
+
+// Test-local `RouteSignals` factory. `@ship/sui-dom` does not depend on
+// `@ship/deck-router` (sui ⊥ deck — see the import note at the top), so the
+// harness can't call deck's real `route()`. It builds the same structural
+// shape from the already-imported runtime `signal()`: `pathname`/`hash`
+// signals seeded from the URL, and lazy `params`/`query` proxies whose keys
+// materialize a signal on first access (no route table at the test boundary,
+// so `params` reads `undefined`; `query` reads the URL's search params). Enough
+// for a compiled view that reads `route.params.x()`, `route.query.q()`,
+// `route.pathname()`, or `route.hash()` to evaluate and mount.
+function makeRoute(opts: { url?: URL } = {}): RouteSignals {
+  const url = opts.url ?? new URL('http://localhost/')
+  const lazy = (
+    seed: (key: string) => string | undefined,
+  ): Record<string, Signal<string | undefined>> => {
+    const cache = new Map<string, Signal<string | undefined>>()
+    return new Proxy({} as Record<string, Signal<string | undefined>>, {
+      get(_target, key) {
+        if (typeof key !== 'string') return undefined
+        let s = cache.get(key)
+        if (!s) {
+          s = signal(seed(key))
+          cache.set(key, s)
+        }
+        return s
+      },
+    })
+  }
+  return {
+    params: lazy(() => undefined),
+    query: lazy((key) => url.searchParams.get(key) ?? undefined),
+    pathname: signal(url.pathname),
+    hash: signal(url.hash),
+  }
+}
+
+// The module shape a compiled view's
+// `import { route as __routeFactory } from "@ship/sui-runtime/route"`
+// resolves to after `stripImports` rewrites it to `__route.route`. Mirrors the
+// deck-router module's `{ route }` export, but backed by the local mock above.
+const routeModule: { route: typeof makeRoute } = { route: makeRoute }
+
 /* ----------------------------- eval API ----------------------------- */
 
 const SETUP_MARKER = '__test_setup__'
@@ -182,7 +224,7 @@ type UserSetup = ((ctx: unknown) => Record<string, unknown> | void) | { setup: (
 interface EvalDeps {
   __runtime: typeof suiRuntime
   __dom: typeof suiDom
-  __route: typeof suiRoute
+  __route: typeof routeModule
   __setup: { setup: (ctx: unknown) => unknown } | null
 }
 
@@ -199,8 +241,9 @@ function stripImports(js: string): string {
       'const { $1 } = __dom;',
     )
     // import { route as __routeFactory } from "@ship/sui-runtime/route"
+    // (the specifier the compiler emits — see crates/sui/compiler/src/emit/js/imports.rs).
     .replace(
-      /^\s*import\s*\{\s*route\s+as\s+__routeFactory\s*\}\s*from\s*["']@ship\/deck\/route["']\s*;?\s*$/gm,
+      /^\s*import\s*\{\s*route\s+as\s+__routeFactory\s*\}\s*from\s*["']@ship\/sui-runtime\/route["']\s*;?\s*$/gm,
       'const __routeFactory = __route.route;',
     )
     // side-effect: import "@ship/sui-runtime"
@@ -222,7 +265,7 @@ export function evalCompiledJs(
   const deps: EvalDeps = {
     __runtime: suiRuntime,
     __dom: suiDom,
-    __route: suiRoute,
+    __route: routeModule,
     __setup: setupObj,
   }
   return fn(deps.__runtime, deps.__dom, deps.__route, deps.__setup) as ReturnType<typeof evalCompiledJs>

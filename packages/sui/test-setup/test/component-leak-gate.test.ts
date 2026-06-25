@@ -19,13 +19,59 @@
 // `.sui` under packages/components/sui/primitives/src; controller-less ones need
 // no wiring. Keep CYCLES bounded.
 
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { existsSync, readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
 import { describe, expect, it, beforeEach, afterEach } from 'vitest'
 import { compileSui, evalCompiledJs } from '@ship/sui-dom/test-utils'
 import { measureMountLeakAsync, gcAvailable, type RetentionCycle } from '../src/leak-retention'
 
-const PRIM_ROOT = resolve(__dirname, '../../components/sui/primitives/src')
+// Resolve the sui primitives package by walking up to the workspace root and
+// landing on the package by NAME — NOT by counting `../` from this test file
+// (the brittle traversal that broke the moment test-setup moved one dir).
+//
+// Why not `require.resolve('@ship/sui-primitives')`: it is not a declared
+// dependency of @ship/test-setup, and bun's per-package node_modules layout
+// leaves it unresolvable from here (verified: MODULE_NOT_FOUND) — declaring it
+// would mean editing the lockfile. So we use the repo's OTHER sanctioned
+// resolution pattern: walk to the `workspaces` root (the same heuristic as
+// test-setup's own findRepoRoot). This survives THIS test moving, and confirms
+// the package by its manifest `name` so a relocation of the primitives package
+// fails loudly instead of with a silent wrong-path ENOENT.
+function workspaceRoot(): string {
+  let dir = __dirname
+  for (let i = 0; i < 20; i++) {
+    const manifest = resolve(dir, 'package.json')
+    if (existsSync(manifest)) {
+      try {
+        const { workspaces } = JSON.parse(readFileSync(manifest, 'utf8')) as { workspaces?: unknown }
+        if (workspaces != null) return dir
+      } catch {
+        /* malformed package.json — keep walking */
+      }
+    }
+    const parent = dirname(dir)
+    if (parent === dir) break
+    dir = parent
+  }
+  throw new Error(`[component-leak-gate] could not locate the workspaces root from ${__dirname}`)
+}
+
+function primitivesSrc(): string {
+  const pkgDir = resolve(workspaceRoot(), 'packages/components/sui/primitives')
+  const pkgJson = resolve(pkgDir, 'package.json')
+  const name = existsSync(pkgJson)
+    ? (JSON.parse(readFileSync(pkgJson, 'utf8')) as { name?: string }).name
+    : undefined
+  if (name !== '@ship/sui-primitives') {
+    throw new Error(
+      `[component-leak-gate] expected @ship/sui-primitives at ${pkgDir} but found ${name ?? '(missing)'} — ` +
+        `update this resolver if the primitives package moved.`,
+    )
+  }
+  return resolve(pkgDir, 'src')
+}
+
+const PRIM_ROOT = primitivesSrc()
 
 // Bounded per the safety constraint: enough cycles that a per-cycle leak (1
 // node/define each) is unmistakable, small enough to stay sub-second in jsdom.
