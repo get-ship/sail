@@ -5,6 +5,10 @@ import type { Scope } from './sui-tree-view.sui'
 export interface TreeNode {
   id: string
   label: string
+  /** Optional per-node `<sui-icon>` name — lets a file tree show a glyph per
+   *  file type. Rendered by `<sui-tree>` ahead of the label; falls back to the
+   *  `node-icon` slot when unset. */
+  icon?: string
   children?: TreeNode[]
 }
 

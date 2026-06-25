@@ -92,6 +92,12 @@
 
   .gutter { display: inline-flex; align-items: center; flex: none; }
 
+  .node-icon {
+    flex: none;
+    color: var(--muted-foreground);
+  }
+  .row[data-selected] .node-icon { color: var(--foreground); }
+
   .label {
     flex: 1;
     min-width: 0;
@@ -172,7 +178,11 @@
               ></sui-checkbox>
             </span>
           {/if}
-          <slot name="node-icon"></slot>
+          {#if w.icon !== ''}
+            <sui-icon class="node-icon" part="node-icon" name={w.icon} size="sm"></sui-icon>
+          {:else}
+            <slot name="node-icon"></slot>
+          {/if}
           <span class="label" part="label">{w.label}</span>
           <span class="trailing"><slot name="node-trailing"></slot></span>
         </div>

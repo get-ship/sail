@@ -74,7 +74,7 @@
         "@ship/sui-runtime": "workspace:*",
       },
       "devDependencies": {
-        "@ship/test-setup": "^0.0.0",
+        "@ship/test-setup": "workspace:*",
         "@types/node": "24.12.4",
         "fast-formula-parser": "1.0.19",
         "vitest": "^4.1.5",
@@ -195,7 +195,7 @@
     },
     "packages/sui/test-setup": {
       "name": "@ship/test-setup",
-      "version": "0.0.0",
+      "version": "0.0.1",
       "dependencies": {
         "@ship/deck-router": "^0.1.0",
         "@ship/sui-compiler-wasm": "^0.1.0",
@@ -608,7 +608,19 @@
 
     "xmlchars": ["xmlchars@2.2.0", "", {}, "sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw=="],
 
+    "@ship/sui-charts/@ship/test-setup": ["@ship/test-setup@0.0.0", "http://localhost:4873/@ship/test-setup/-/test-setup-0.0.0.tgz", { "dependencies": { "@ship/deck-router": "^0.1.0", "@ship/sui-compiler-wasm": "^0.1.0", "@ship/sui-dom": "^0.1.0", "@ship/sui-runtime": "^0.1.0" } }, "sha512-fw+0RdEpkv6UARbekAjDKD3DMaeuBxxciED5bD7IiARYCubl2yhcHdluM1lT1EZMiSHdu+1THvFrlIARrNcdzQ=="],
+
+    "@ship/sui-chat-elements/@ship/test-setup": ["@ship/test-setup@0.0.0", "http://localhost:4873/@ship/test-setup/-/test-setup-0.0.0.tgz", { "dependencies": { "@ship/deck-router": "^0.1.0", "@ship/sui-compiler-wasm": "^0.1.0", "@ship/sui-dom": "^0.1.0", "@ship/sui-runtime": "^0.1.0" } }, "sha512-fw+0RdEpkv6UARbekAjDKD3DMaeuBxxciED5bD7IiARYCubl2yhcHdluM1lT1EZMiSHdu+1THvFrlIARrNcdzQ=="],
+
+    "@ship/sui-dom/@ship/test-setup": ["@ship/test-setup@0.0.0", "http://localhost:4873/@ship/test-setup/-/test-setup-0.0.0.tgz", { "dependencies": { "@ship/deck-router": "^0.1.0", "@ship/sui-compiler-wasm": "^0.1.0", "@ship/sui-dom": "^0.1.0", "@ship/sui-runtime": "^0.1.0" } }, "sha512-fw+0RdEpkv6UARbekAjDKD3DMaeuBxxciED5bD7IiARYCubl2yhcHdluM1lT1EZMiSHdu+1THvFrlIARrNcdzQ=="],
+
+    "@ship/sui-media/@ship/test-setup": ["@ship/test-setup@0.0.0", "http://localhost:4873/@ship/test-setup/-/test-setup-0.0.0.tgz", { "dependencies": { "@ship/deck-router": "^0.1.0", "@ship/sui-compiler-wasm": "^0.1.0", "@ship/sui-dom": "^0.1.0", "@ship/sui-runtime": "^0.1.0" } }, "sha512-fw+0RdEpkv6UARbekAjDKD3DMaeuBxxciED5bD7IiARYCubl2yhcHdluM1lT1EZMiSHdu+1THvFrlIARrNcdzQ=="],
+
     "@ship/sui-primitives/@types/node": ["@types/node@24.12.4", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-GUUEShf+PBCGW2KaXwcIt3Yk+e3pkKwWKb9GSyM9WQVE+ep2jzmHdGsHzu4wgcZy5fN9FBdVzjpBQsYlpfpgLA=="],
+
+    "@ship/sui-runtime/@ship/test-setup": ["@ship/test-setup@0.0.0", "http://localhost:4873/@ship/test-setup/-/test-setup-0.0.0.tgz", { "dependencies": { "@ship/deck-router": "^0.1.0", "@ship/sui-compiler-wasm": "^0.1.0", "@ship/sui-dom": "^0.1.0", "@ship/sui-runtime": "^0.1.0" } }, "sha512-fw+0RdEpkv6UARbekAjDKD3DMaeuBxxciED5bD7IiARYCubl2yhcHdluM1lT1EZMiSHdu+1THvFrlIARrNcdzQ=="],
+
+    "@ship/sui-viewer/@ship/test-setup": ["@ship/test-setup@0.0.0", "http://localhost:4873/@ship/test-setup/-/test-setup-0.0.0.tgz", { "dependencies": { "@ship/deck-router": "^0.1.0", "@ship/sui-compiler-wasm": "^0.1.0", "@ship/sui-dom": "^0.1.0", "@ship/sui-runtime": "^0.1.0" } }, "sha512-fw+0RdEpkv6UARbekAjDKD3DMaeuBxxciED5bD7IiARYCubl2yhcHdluM1lT1EZMiSHdu+1THvFrlIARrNcdzQ=="],
 
     "cssstyle/rrweb-cssom": ["rrweb-cssom@0.8.0", "", {}, "sha512-guoltQEx+9aMf2gDZ0s62EcV8lsXR+0w8915TC3ITdn2YueuNjdAYh/levpU9nFaoChh9RUS5ZdQMrKfVEN9tw=="],
 
