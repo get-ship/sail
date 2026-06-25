@@ -12,9 +12,10 @@ path = "src/lib.rs"
 # The synthetic emitter — used as a pure function (no CLI shell-out).
 sui-compiler = { path = "../../sui/compiler" }
 # The L0 JS engine: the deno_core/V8 isolate + the host-dispatch wire.
-# Consumed from the standalone ship-js repo (same git source as Ship's own
-# consumers) so there is a single ship-js copy in the lockfile — no collision.
-ship-js = { git = "file:///home/madvib/dev/ship-js", features = ["deno"] }
+# ship-js is Ship's runtime — consumed by path from the sibling Ship repo.
+# (Main-checkout builds dedupe on this path; a worktree-safe published form
+#  is a follow-up, not a separate repo.)
+ship-js = { path = "/home/madvib/dev/Ship/crates/core/ship-substrate/crates/ship-js", features = ["deno"] }
 # Deck's request/data contracts (DataPort) the host Dispatch maps onto.
 deck-core = { path = "../deck-core" }
 # The project's own bundler (Rolldown), so the measured bundle matches the
