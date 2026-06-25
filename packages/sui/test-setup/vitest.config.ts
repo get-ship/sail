@@ -10,25 +10,21 @@ export default defineConfig({
     alias: [
       {
         find: '@ship/sui-dom/test-utils',
-        replacement: resolve(__dirname, '../sui/dom/src/test-utils/compile-sui.ts'),
+        replacement: resolve(__dirname, '../dom/src/test-utils/compile-sui.ts'),
       },
-      { find: '@ship/sui-dom', replacement: resolve(__dirname, '../sui/dom/src/index.ts') },
+      { find: '@ship/sui-dom', replacement: resolve(__dirname, '../dom/src/index.ts') },
       {
         find: '@ship/sui-runtime/template-hooks',
-        replacement: resolve(__dirname, '../sui/runtime/src/template-hooks/index.ts'),
+        replacement: resolve(__dirname, '../runtime/src/template-hooks/index.ts'),
       },
       {
         find: '@ship/deck-router',
-        replacement: resolve(__dirname, '../deck/route/src/index.ts'),
+        replacement: resolve(__dirname, '../../deck/router/src/index.ts'),
       },
-      {
-        find: '@ship/sui-runtime/route',
-        replacement: resolve(__dirname, '../sui/runtime/src/route/index.ts'),
-      },
-      { find: '@ship/sui-runtime', replacement: resolve(__dirname, '../sui/runtime/src/index.ts') },
+      { find: '@ship/sui-runtime', replacement: resolve(__dirname, '../runtime/src/index.ts') },
       {
         find: '@ship/sui-compiler-wasm',
-        replacement: resolve(__dirname, '../sui/compiler-wasm/pkg/sui_compiler.js'),
+        replacement: resolve(__dirname, '../compiler-wasm/pkg/sui_compiler.js'),
       },
     ],
     extensions: ['.mts', '.ts', '.tsx', '.mjs', '.js', '.jsx', '.json'],

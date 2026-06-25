@@ -1,9 +1,9 @@
 {
   "name": "@ship/test-setup",
   "private": false,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
-  "description": "Shared vitest/jsdom setup helpers: JSDOM polyfills (ResizeObserver, matchMedia, Popover, Dialog, ToggleEvent, PointerEvent) + lucide-icon-map loader. Each consumer's test/setup.ts imports from here so the polyfills + icon shape stay in lockstep \u2014 replaces ~360 lines of copy-pasted boilerplate across three test setups.",
+  "description": "Shared vitest/jsdom setup harness for SUI component packs: JSDOM polyfills (ResizeObserver, matchMedia, Popover, Dialog, ToggleEvent, PointerEvent) + lucide-icon-map loader, the repo-agnostic suiComponentVitestConfig() factory, renderView/renderComponent, and the lightweight mount/flush/createContainerRegistry container helpers. One source of truth so consuming packs stop rolling their own test-utils.",
   "main": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",

@@ -25,21 +25,28 @@ const require = createRequire(import.meta.url)
  *  repo is carved out so all carve-offs share one test-setup build. */
 const KNOWN_ROOT_NAMES = new Set(['ship-monorepo', 'ship-kit'])
 
-/** Walk up from this module until we hit the monorepo root package.json.
+/** Walk up from this module until we hit the workspace root package.json.
  *  A root is identified by a known package name (see KNOWN_ROOT_NAMES) or,
- *  as a fallback, by the presence of a `"workspaces"` field — which is
- *  present in every Ship workspace root and absent in leaf packages. */
+ *  more generally, by the presence of a `"workspaces"` field — in EITHER the
+ *  npm/yarn array form (`["packages/*"]`) or the bun/ship-apps object form
+ *  (`{ "packages": [...] }`). Repo-agnostic: any consuming repo with a
+ *  workspaces root works, not just the original Ship monorepo. Never throws —
+ *  the root is only used for Vite's fs allow-list and optional native-compile
+ *  lookups, both of which tolerate an approximate root, so a standalone
+ *  consumer falls back to the highest package.json dir (or cwd). */
 function findRepoRoot(): string {
   let dir = dirname(fileURLToPath(import.meta.url))
-  for (let i = 0; i < 12; i++) {
+  let highestWithPkg: string | null = null
+  for (let i = 0; i < 20; i++) {
     const pkg = resolve(dir, 'package.json')
     if (existsSync(pkg)) {
+      highestWithPkg = dir
       try {
         const manifest = JSON.parse(readFileSync(pkg, 'utf8')) as {
           name?: string
           workspaces?: unknown
         }
-        if (KNOWN_ROOT_NAMES.has(manifest.name ?? '') || Array.isArray(manifest.workspaces))
+        if (KNOWN_ROOT_NAMES.has(manifest.name ?? '') || manifest.workspaces != null)
           return dir
       } catch {
         /* keep walking */
@@ -49,12 +56,18 @@ function findRepoRoot(): string {
     if (parent === dir) break
     dir = parent
   }
-  throw new Error('[test-setup/vitest] could not locate the monorepo root (checked KNOWN_ROOT_NAMES + workspaces field)')
+  return highestWithPkg ?? process.cwd()
 }
 
 const repoRoot = findRepoRoot()
 const mirrorRoot = resolve(repoRoot, '.ship/sui-out')
 const compilerBin = resolve(repoRoot, 'target/debug/sui-compiler')
+// The native/CLI sui-compiler is only reachable in a repo that carries the
+// Rust workspace (a root `Cargo.toml`) or a prebuilt binary. A JS-only
+// consumer (e.g. ship-apps post-carve) has neither, so `.sui` sources compile
+// through the inline WASM fallback instead of shelling out to `cargo`.
+const nativeCompileAvailable =
+  existsSync(compilerBin) || existsSync(resolve(repoRoot, 'Cargo.toml'))
 
 // Honesty guard — runs `expect.hasAssertions()` before every test so a body
 // that asserts nothing FAILS instead of passing green. Prepended to every
@@ -102,11 +115,16 @@ function ensureWasm(): (source: string, optsJson: string) => unknown {
   return wasmCompile
 }
 
-/** Compile a `.sui` file to its emitted JS module. Throws on compile error. */
-export function compileSuiToJs(suiPath: string): string {
+/** Compile a `.sui` file to its emitted JS module. Throws on compile error.
+ *  Pass `shadow: true` for component sources so the WASM emit matches the
+ *  bin/FFI `.compiled.js` shape (which hardcodes shadow DOM) — without it the
+ *  WASM/native default is `shadow:false` and `el.shadowRoot` comes back null. */
+export function compileSuiToJs(suiPath: string, opts: { shadow?: boolean } = {}): string {
   const compile = ensureWasm()
   const source = readFileSync(suiPath, 'utf8')
-  const result = compile(source, JSON.stringify({ mode: 'auto' })) as
+  const compileOpts: Record<string, unknown> = { mode: 'auto' }
+  if (opts.shadow) compileOpts.shadow = true
+  const result = compile(source, JSON.stringify(compileOpts)) as
     | { kind: 'ok'; js: string }
     | { kind: 'err'; message: string; line: number | null; col: number | null }
   if (result.kind === 'err') {
@@ -187,6 +205,34 @@ export function shadowForComponentCompilePlugin(name: string): Plugin {
   }
 }
 
+// The @ship/* specifiers that renderView/renderComponent (and the SUI runtime's
+// internal subpaths) need pinned to ONE resolved instance. Subpaths first (most
+// specific) so they win over the bare-name aliases. A JS-only consumer may not
+// ship every runtime subpath (`./route`, `./virtual` were dropped in the
+// sui→deck closure), so `resolveSuiAliases` skips whatever doesn't resolve and
+// lets node resolution cover the rest — keeping one factory across repos.
+const SUI_ALIAS_SPECS = [
+  '@ship/sui-dom/test-utils',
+  '@ship/sui-runtime/template-hooks',
+  '@ship/deck-router',
+  '@ship/sui-runtime/route',
+  '@ship/sui-runtime/virtual',
+  '@ship/sui-runtime',
+  '@ship/sui-dom',
+] as const
+
+function resolveSuiAliases(): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const spec of SUI_ALIAS_SPECS) {
+    try {
+      out[spec] = require.resolve(spec)
+    } catch {
+      /* not present in this repo — let node resolution handle it */
+    }
+  }
+  return out
+}
+
 export interface SuiComponentVitestOptions {
   /** Extra `resolve.alias` entries merged over the SUI defaults. */
   alias?: Record<string, string>
@@ -215,17 +261,11 @@ export function suiComponentVitestConfig(opts: SuiComponentVitestOptions = {}) {
     // above the package dir by default, so allow-list the repo root.
     server: { fs: { allow: [repoRoot] } },
     resolve: {
+      // Resolved by package name → point at the framework source, move-proof.
+      // `resolveSuiAliases` skips any specifier not present in the consuming
+      // repo, so the same factory works in a JS-only carve-off.
       alias: {
-        // Resolved by package name → point at the framework source, move-proof.
-        // Subpaths first (most specific) so they win over the bare-name alias —
-        // renderView/renderComponent in @ship/test-setup import these.
-        '@ship/sui-dom/test-utils': require.resolve('@ship/sui-dom/test-utils'),
-        '@ship/sui-runtime/template-hooks': require.resolve('@ship/sui-runtime/template-hooks'),
-        '@ship/deck-router': require.resolve('@ship/deck-router'),
-        '@ship/sui-runtime/route': require.resolve('@ship/sui-runtime/route'),
-        '@ship/sui-runtime/virtual': require.resolve('@ship/sui-runtime/virtual'),
-        '@ship/sui-runtime': require.resolve('@ship/sui-runtime'),
-        '@ship/sui-dom': require.resolve('@ship/sui-dom'),
+        ...resolveSuiAliases(),
         ...opts.alias,
       },
     },
@@ -257,8 +297,13 @@ export function suiComponentVitestConfig(opts: SuiComponentVitestOptions = {}) {
             (!existsSync(suiFile) || statSync(mirrorFile).mtimeMs >= statSync(suiFile).mtimeMs)
           if (mirrorFresh) return mirrorFile
           if (existsSync(suiFile)) {
-            compileSui(suiFile, stem)
-            if (existsSync(mirrorFile)) return mirrorFile
+            // Native/CLI compile produces a cached mirror artifact; only attempt
+            // it where the Rust workspace exists. Elsewhere (JS-only consumers)
+            // skip straight to the inline WASM fallback below.
+            if (nativeCompileAvailable) {
+              compileSui(suiFile, stem)
+              if (existsSync(mirrorFile)) return mirrorFile
+            }
             return `\0compiled-js-shim:${suiFile}`
           }
           return null
@@ -266,7 +311,9 @@ export function suiComponentVitestConfig(opts: SuiComponentVitestOptions = {}) {
         load(id: string) {
           const prefix = '\0compiled-js-shim:'
           if (!id.startsWith(prefix)) return null
-          return compileSuiToJs(id.slice(prefix.length))
+          // Every `<tag>.compiled.js` artifact is a component — match the
+          // bin compiler's hardcoded shadow DOM so shadow-root queries resolve.
+          return compileSuiToJs(id.slice(prefix.length), { shadow: true })
         },
       },
     ],

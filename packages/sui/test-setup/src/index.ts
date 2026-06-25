@@ -1,4 +1,10 @@
 export { initJsdomPolyfills, type JsdomPolyfillOpts } from './jsdom-polyfills'
+export {
+  createContainerRegistry,
+  mount,
+  flush,
+  type TestContainerRegistry,
+} from './dom-harness'
 export { loadLucideIconMap, primeLucideIcons, defaultLucideIconsPath } from './lucide-icons'
 export {
   renderView,
