@@ -45,22 +45,22 @@
   /* Role tones the bubble surface + aligns user turns to the end. */
   :host([role='user']) {
     align-items: flex-end;
-    --bubble-bg: color-mix(in oklch, var(--primary) 14%, var(--card));
-    --bubble-border: color-mix(in oklch, var(--primary) 30%, transparent);
+    --bubble-bg: var(--tone-primary-bg);
+    --bubble-border: var(--tone-primary-border);
   }
   :host([role='system']) {
-    --bubble-bg: color-mix(in oklch, var(--muted) 60%, var(--card));
+    --bubble-bg: var(--tone-muted-bg);
     --bubble-border: var(--border);
     --bubble-fg: var(--muted-foreground);
   }
   :host([role='tool']) {
-    --bubble-bg: color-mix(in oklch, var(--accent) 10%, var(--card));
-    --bubble-border: color-mix(in oklch, var(--accent) 28%, transparent);
+    --bubble-bg: var(--tone-accent-bg);
+    --bubble-border: var(--tone-accent-border);
   }
 
   /* Status tints the leading edge of the bubble. */
   :host([status='error']) {
-    --bubble-border: color-mix(in oklch, var(--destructive) 55%, transparent);
+    --bubble-border: var(--tone-destructive-border);
     --bubble-fg: var(--foreground);
   }
   :host([status='sending']) .bubble { opacity: 0.7; }
@@ -97,9 +97,9 @@
     white-space: pre-wrap;
   }
   :host([content-type='terminal-snapshot']) .bubble {
-    background: color-mix(in oklch, var(--foreground) 92%, var(--background));
-    color: color-mix(in oklch, var(--background) 88%, var(--foreground));
-    border-color: color-mix(in oklch, var(--foreground) 18%, transparent);
+    background: var(--surface-inverse);
+    color: var(--background);
+    border-color: var(--border-subtle);
   }
   /* Framed media for visual content. */
   :host([content-type='drawing']) .content,

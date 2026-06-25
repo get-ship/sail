@@ -50,7 +50,7 @@
   }
   .frame:focus-within {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 22%, transparent);
+    box-shadow: 0 0 0 3px var(--tone-primary-ring);
   }
   :host([disabled]) .frame {
     background: var(--muted);

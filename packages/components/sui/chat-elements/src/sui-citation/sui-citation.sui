@@ -32,7 +32,7 @@
     font-size: var(--text-xs);
     line-height: 1.4;
     color: var(--foreground);
-    background: color-mix(in oklch, var(--muted) 55%, var(--card));
+    background: var(--muted);
     border: 1px solid var(--border);
     border-radius: var(--radius-full);
     cursor: pointer;
@@ -41,8 +41,8 @@
       border-color var(--duration-fast) var(--ease-out);
   }
   .pill:hover {
-    background: color-mix(in oklch, var(--primary) 12%, var(--card));
-    border-color: color-mix(in oklch, var(--primary) 35%, transparent);
+    background: var(--tone-primary-bg);
+    border-color: var(--tone-primary-border);
   }
   .pill:focus-visible {
     outline: var(--focus-ring);

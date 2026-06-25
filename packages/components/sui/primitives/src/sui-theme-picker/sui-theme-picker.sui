@@ -75,14 +75,14 @@
   }
   .trigger:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px color-mix(in oklch, var(--primary) 50%, transparent);
+    box-shadow: 0 0 0 2px var(--ring);
   }
 
   .dot {
     width: 10px; height: 10px;
     border-radius: var(--radius-full);
     background: var(--primary);
-    box-shadow: 0 0 0 1px color-mix(in oklch, var(--foreground) 15%, transparent);
+    box-shadow: 0 0 0 1px var(--border-subtle);
     flex: 0 0 auto;
   }
 
@@ -170,7 +170,7 @@
   }
   .customize:focus-visible {
     outline: none;
-    box-shadow: inset 0 0 0 2px color-mix(in oklch, var(--primary) 50%, transparent);
+    box-shadow: inset 0 0 0 2px var(--ring);
   }
   .customize-meta {
     flex: 1;
@@ -217,10 +217,10 @@
   }
   .card:focus-visible {
     background: var(--hover-bg);
-    box-shadow: 0 0 0 2px color-mix(in oklch, var(--primary) 50%, transparent);
+    box-shadow: 0 0 0 2px var(--ring);
   }
   .card[aria-selected='true'] {
-    background: color-mix(in oklch, var(--primary) 10%, transparent);
+    background: var(--selected-bg);
   }
 
   .row {
@@ -240,7 +240,7 @@
   .radio {
     width: 12px; height: 12px;
     border-radius: var(--radius-full);
-    border: 1.5px solid color-mix(in oklch, var(--foreground) 40%, transparent);
+    border: 1.5px solid var(--border-strong);
     background: transparent;
     position: relative;
     flex-shrink: 0;
@@ -270,6 +270,9 @@
     border-radius: 8px;
     overflow: hidden;
     isolation: isolate;
+    /* theme-facsimile: the inset border tints from currentColor so each
+       theme preview shows its own surface tone. Skipped by the
+       sui-css-literals tone-ramp migration. */
     box-shadow: inset 0 0 0 1px color-mix(in oklch, currentColor 14%, transparent);
   }
   .tc-overlay {
@@ -330,7 +333,7 @@
     font-size: 9px;
     padding: 1px var(--space-1);
     border-radius: 3px;
-    background: color-mix(in oklch, var(--foreground) 6%, transparent);
+    background: var(--hover-bg);
     color: var(--muted-foreground);
   }
   .tc-controls { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
@@ -358,12 +361,15 @@
     border-radius: var(--radius-full);
   }
   .tc-chip-accent {
+    /* theme-facsimile: the "New" chip deliberately tints from --accent
+       so the chip's hue matches the previewed theme, not primary.
+       Skipped by the sui-css-literals tone-ramp migration. */
     background: color-mix(in oklch, var(--accent) 18%, transparent);
     color: var(--accent);
     box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--accent) 30%, transparent);
   }
   .tc-chip-muted {
-    background: color-mix(in oklch, var(--foreground) 8%, transparent);
+    background: var(--hover-bg);
     color: var(--muted-foreground);
   }
 </style>
