@@ -22,6 +22,7 @@ import {
   type RouteShape,
 } from './index'
 import { resolveLayoutChain, type LayoutShape } from './layouts'
+import { installRouteBoundary, type RouteBoundaryHandle } from './route-boundary'
 
 export interface MountRouterOptions {
   /** Mount target — a selector or element. Injected by the emitted entry; the
@@ -47,6 +48,12 @@ export interface MountRouterOptions {
    *  the same behavior as before this field existed — so tag-only layouts
    *  never regress. Emitted by the bundler alongside `modules`. */
   layoutModules?: Record<string, unknown>
+  /** Install the DEFAULT route-level error boundary (the framework wraps every
+   *  route outlet so a throwing view degrades to an error card, not a dead
+   *  subtree). On by default. Set `false` to opt the whole app out — a layout
+   *  can opt out a subtree on its own by supplying its own `<sui-error-boundary>`
+   *  (which this detects and defers to). */
+  errorBoundary?: boolean
 }
 
 /** A running router. `dispose()` detaches its global listeners (HMR/tests). */
@@ -66,12 +73,19 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
   const routeSignals = createRoute({ routes: opts.routes })
   const layouts = opts.layouts ?? []
   const layoutModules = opts.layoutModules ?? {}
+  const errorBoundaryEnabled = opts.errorBoundary !== false
 
   let token = 0
   let current: MountHandle | null = null
   // Layout MountHandles for the current navigation. Disposed when the next
   // navigation replaces the chrome chain or the router itself disposes.
   let prevLayoutHandles: MountHandle[] = []
+  // The default route boundary installed on the current outlet. For chrome
+  // navigations the outlet is a fresh slot discarded with the old chrome tree;
+  // for the rootless case it persists and is reused (the double-wrap check in
+  // installRouteBoundary returns null, leaving this untouched). Detached on
+  // router dispose.
+  let routeBoundary: RouteBoundaryHandle | null = null
 
   async function mountCurrent(): Promise<void> {
     const pathname = location.pathname
@@ -105,6 +119,16 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
     if (myToken !== token) {
       for (const h of layoutHandles) h.dispose()
       return
+    }
+    // Install the DEFAULT route boundary on the outlet BEFORE mounting the view,
+    // so a throw during the view's render / controller mount / effect is caught
+    // and degrades to an error card. No-op when a layout already supplied a
+    // boundary (installRouteBoundary returns null) or when opted out.
+    if (errorBoundaryEnabled) {
+      const installed = installRouteBoundary(target, {
+        onReset: () => { void mountCurrent() },
+      })
+      if (installed) routeBoundary = installed
     }
     const previous = current
     const prevHandles = prevLayoutHandles
@@ -182,6 +206,8 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
       window.removeEventListener('popstate', onPop)
       current?.dispose()
       current = null
+      routeBoundary?.dispose()
+      routeBoundary = null
       for (const h of prevLayoutHandles) h.dispose()
       prevLayoutHandles = []
     },

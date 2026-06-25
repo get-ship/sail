@@ -30,6 +30,12 @@ import { signal, type Signal } from '@ship/sui-runtime'
 // is at the size cap). Re-exported so `@ship/deck-router` is one import site.
 export { resolveLayoutChain, type LayoutShape } from './layouts'
 export { mountRouter, type MountRouterOptions, type RouterHandle } from './mount-router'
+export {
+  installRouteBoundary,
+  isDevMode,
+  type RouteBoundaryHandle,
+  type RouteBoundaryOptions,
+} from './route-boundary'
 
 // `RouteSignals` and `RouteShape` live in `./types` (importable without the
 // browser router) and are re-exported here so `@ship/deck-router`'s public

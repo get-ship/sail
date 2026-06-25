@@ -108,6 +108,7 @@ function showOverlay(e) {
   if (typeof document === 'undefined') return
   clearOverlay()
   const loc = e.file ? `${e.file}${e.line ? `:${e.line}${e.col ? `:${e.col}` : ''}` : ''}` : ''
+
   const el = document.createElement('div')
   el.id = OVERLAY_ID
   el.setAttribute('role', 'alert')
@@ -115,9 +116,36 @@ function showOverlay(e) {
     'position:fixed', 'inset:0', 'z-index:2147483647',
     'background:var(--destructive,#7f1d1d)', 'color:var(--destructive-foreground,#fff)',
     'font:13px/1.6 var(--font-mono,ui-monospace,monospace)',
-    'padding:2rem', 'overflow:auto', 'white-space:pre-wrap',
+    'padding:2rem', 'overflow:auto',
   ].join(';')
-  const where = loc ? `\n\n${loc}` : ''
-  el.textContent = `Compile error — ${e.target}\n\n${e.message || ''}${where}`
+
+  // Heading — names the failure as a compile error and points at the target,
+  // so it can't be mistaken for a runtime crash.
+  const heading = document.createElement('div')
+  heading.style.cssText = 'font-weight:700;font-size:15px;margin-bottom:.25rem'
+  heading.textContent = `Compile error — ${e.target || 'unknown target'}`
+  el.appendChild(heading)
+
+  if (loc) {
+    const where = document.createElement('div')
+    where.style.cssText = 'opacity:.85;margin-bottom:1rem'
+    where.textContent = loc
+    el.appendChild(where)
+  }
+
+  // Diagnostic body — the compiler's rendered message. `textContent` (not
+  // innerHTML) keeps compiler output from being interpreted as markup.
+  const body = document.createElement('pre')
+  body.style.cssText = 'margin:0;white-space:pre-wrap;word-break:break-word'
+  body.textContent = e.message || '(no message)'
+  el.appendChild(body)
+
+  // Recovery hint — this overlay is dev-only and self-clears, so make that
+  // explicit rather than leaving the user wondering how to dismiss it.
+  const hint = document.createElement('div')
+  hint.style.cssText = 'opacity:.7;margin-top:1.5rem;font-size:12px'
+  hint.textContent = 'Fix the file and save — this overlay clears on the next successful compile.'
+  el.appendChild(hint)
+
   document.body.appendChild(el)
 }

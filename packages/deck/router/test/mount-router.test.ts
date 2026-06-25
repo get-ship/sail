@@ -27,11 +27,35 @@ vi.mock('@ship/sui-runtime', () => {
     mountCalls.push({ target, name, opts })
     return { dispose: vi.fn() }
   })
-  return { signal, mount }
+  // Faithful re-implementation of the runtime's error-boundary helpers (same
+  // Symbol key + DOM walk) so the router's default route boundary behaves
+  // exactly as it does against the real runtime, without pulling the cycle.
+  const BOUNDARY_KEY = Symbol.for('sui:error-boundary')
+  const attachBoundary = (host: any, handle: unknown) => { host[BOUNDARY_KEY] = handle }
+  const detachBoundary = (host: any) => { delete host[BOUNDARY_KEY] }
+  const findNearestBoundary = (node: any): unknown => {
+    let cur: any = node
+    while (cur) {
+      if (cur instanceof Element && cur[BOUNDARY_KEY]) return cur[BOUNDARY_KEY]
+      cur = cur.parentNode ?? cur.host ?? null
+    }
+    return null
+  }
+  const runProtected = (node: any, source: string, fn: () => unknown): unknown => {
+    try {
+      return fn()
+    } catch (err) {
+      const handle = findNearestBoundary(node) as { catch(e: unknown, s: string): void } | null
+      if (handle) { handle.catch(err, source); return undefined }
+      throw err
+    }
+  }
+  return { signal, mount, attachBoundary, detachBoundary, findNearestBoundary, runProtected }
 })
 
 import { mountRouter, type RouterHandle } from '../src/mount-router'
 import { navigate, setEditMode } from '../src/index'
+import { findNearestBoundary, runProtected } from '@ship/sui-runtime'
 
 // Generic, app-agnostic fixtures. The router is framework code (deck) and must
 // not know any app's routes — so these are abstract paths/tags, never an app's
@@ -293,5 +317,58 @@ describe('layout module rendering', () => {
     expect(chrome).not.toBeNull()
     const slot = chrome!.querySelector('div[slot="route"]')
     expect(slot).not.toBeNull()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Default route error boundary — every route outlet is wrapped so a throwing
+// view degrades to an error card instead of a dead subtree.
+// ---------------------------------------------------------------------------
+
+describe('default route error boundary', () => {
+  it('installs a boundary on the route outlet by default (rootless case)', async () => {
+    router = start()
+    await flush()
+    const root = document.getElementById('root')!
+    // The mount target is still the root (boundary attaches, does not re-parent).
+    expect(mountCalls[0].target).toBe(root)
+    // A node anywhere under the outlet resolves to the installed boundary.
+    expect(findNearestBoundary(root)).not.toBeNull()
+  })
+
+  it('installs the boundary on the inner route slot under chrome', async () => {
+    router = start([{ pathPrefix: '/a', tag: 'x-chrome' }])
+    await flush()
+    navigate('/a/b')
+    await vi.waitFor(() => expect(mountCalls).toHaveLength(2))
+    const slot = document.getElementById('root')!.querySelector('div[slot="route"]')!
+    expect(findNearestBoundary(slot)).not.toBeNull()
+  })
+
+  it('a view that throws on render degrades to an error card, not a crash', async () => {
+    router = start()
+    await flush()
+    const root = document.getElementById('root')!
+    // Simulate the view throwing through a runtime-protected call site.
+    const viewNode = document.createElement('span')
+    root.appendChild(viewNode)
+    expect(() =>
+      runProtected(viewNode, 'render', () => { throw new Error('view boom') }),
+    ).not.toThrow()
+    // No sui-error-state registered here → the registration-free bare card.
+    expect(root.querySelector('.deck-route-error')).not.toBeNull()
+    expect(root.hasAttribute('data-route-error')).toBe(true)
+  })
+
+  it('errorBoundary:false opts the whole app out', async () => {
+    router = mountRouter({
+      root: '#root',
+      routes: [{ pattern: '/' }],
+      modules: { '/': MOD_INDEX },
+      errorBoundary: false,
+    })
+    await flush()
+    const root = document.getElementById('root')!
+    expect(findNearestBoundary(root)).toBeNull()
   })
 })
