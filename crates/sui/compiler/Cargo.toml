@@ -12,9 +12,10 @@ crate-type = ["lib", "cdylib"]
 path = "src/lib.rs"
 
 [build-dependencies]
-# TEMP: absolute path, becomes ../ship/... after the layout reshuffle
-# build-info stayed in the ship repo (leaf crate, not carved out).
-build-info = { path = "/home/madvib/dev/Ship/crates/build-info" }
+# Per-repo build-time identity. sui owns its copy (package `sui-build-info`,
+# referenced in code as `build_info`) so there is no absolute back-edge to the
+# Ship repo and no build-info package collision in Ship's lockfile.
+build-info = { package = "sui-build-info", path = "../../build-info" }
 
 [[bin]]
 name = "sui-compiler"
@@ -56,9 +57,11 @@ optional = true
 path = "../lint"
 
 [dependencies.build-info]
-# TEMP: absolute path, becomes ../ship/... after the layout reshuffle
-# build-info stayed in the ship repo (leaf crate, not carved out).
-path = "/home/madvib/dev/Ship/crates/build-info"
+# Per-repo build-time identity. sui owns its copy (package `sui-build-info`,
+# referenced in code as `build_info`) so there is no absolute back-edge to the
+# Ship repo and no build-info package collision in Ship's lockfile.
+package = "sui-build-info"
+path = "../../build-info"
 
 [dev-dependencies]
 tempfile = { workspace = true }
