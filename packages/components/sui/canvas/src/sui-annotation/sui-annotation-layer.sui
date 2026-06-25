@@ -1,0 +1,145 @@
+<!--
+  <sui-annotation-layer> — SUI port of <ship-annotation-layer>.
+  Framework-agnostic capture overlay. Wraps slotted content, captures pointer
+  gestures (point click or region drag), opens an inline note popover, and
+  either POSTs each annotation immediately or stages them for batch send().
+
+  Prop surface
+  ──────────────────────────────────────────────────────────────────────────────
+  view-id   (string, '')              target.view_id on emitted events
+  mode      (off|point|region, 'off', reflect)  gesture capture mode
+  endpoint  (string, '/api/feedback') override default POST target
+  staging   (bool, false, reflect)    batch until send() is called
+  ──────────────────────────────────────────────────────────────────────────────
+  Events (bubbles, composed):
+    sui-annotation-staged  → detail: AnnotationEvent
+    sui-annotation-sent    → detail: { id, status }
+    sui-annotation-error   → detail: { code, message?, id? }
+  ──────────────────────────────────────────────────────────────────────────────
+  JS methods (exposed on host by controller):
+    send()   — POST all staged items serially
+    clear()  — drop all staged items without sending
+  JS property:
+    staged: AnnotationEvent[]  — current staged array (readonly getter)
+  ──────────────────────────────────────────────────────────────────────────────
+  Slots: (default) — wraps the annotatable content
+  Parts: surface, overlay
+  ──────────────────────────────────────────────────────────────────────────────
+  Parity vs <ship-annotation-layer>:
+    view-id, mode, endpoint, staging attrs  → identical
+    ship-annotation-staged/sent/error       → sui-annotation-staged/sent/error
+    send(), clear()                         → identical
+-->
+
+<prop name="view-id" type="string" default="" />
+<prop name="mode" values="off|point|region" default="off" reflect />
+<prop name="endpoint" type="string" default="/api/feedback" />
+<prop name="staging" type="bool" default="false" reflect />
+
+<style>
+  :host {
+    position: relative;
+    display: block;
+    font-family: var(--font-body);
+  }
+  :host([hidden]) { display: none; }
+
+  .surface {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-dropdown);
+    pointer-events: none;
+  }
+  :host([mode='point']) .overlay,
+  :host([mode='region']) .overlay {
+    pointer-events: auto;
+    cursor: crosshair;
+  }
+
+  /* Drag selection rectangle */
+  .drag-rect {
+    position: absolute;
+    border: 2px dashed var(--primary);
+    background: color-mix(in oklch, var(--primary) 8%, transparent);
+    pointer-events: none;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Inline note popover */
+  .popover {
+    position: absolute;
+    z-index: var(--z-sticky);
+    min-width: 220px;
+    padding: var(--space-2);
+    background: var(--popover, var(--background));
+    color: var(--popover-foreground, var(--foreground));
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    pointer-events: auto;
+  }
+  .popover textarea {
+    font: inherit;
+    width: 100%;
+    min-height: 60px;
+    resize: vertical;
+    padding: var(--space-1) 6px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--background);
+    color: var(--foreground);
+    box-sizing: border-box;
+  }
+  .popover-actions { display: flex; justify-content: flex-end; gap: 6px; }
+  .popover button {
+    font: inherit;
+    font-size: var(--text-sm);
+    padding: var(--space-1) 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--background);
+    color: var(--foreground);
+    cursor: pointer;
+  }
+  .popover button[data-primary] {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-color: var(--primary);
+  }
+</style>
+
+<div class="surface" part="surface">
+  <slot></slot>
+  <div class="overlay" part="overlay" bind:this={overlayEl}>
+    {#if dragVisible()}
+      <div class="drag-rect" style={dragRectStyle()}></div>
+    {/if}
+    {#for m of markers() key={m.id}}
+      <sui-annotation-marker
+        prop:kind={m.kind}
+        prop:index={m.index}
+        prop:rect={m.rect}
+        prop:x={m.pos.x}
+        prop:y={m.pos.y}
+      ></sui-annotation-marker>
+    {/for}
+    {#if pending()}
+      <div class="popover" data-annotation-popover style={popoverStyle()} on:pointerdown={(e) => e.stopPropagation()}>
+        <textarea part="note-input" placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown}></textarea>
+        <div class="popover-actions">
+          <button type="button" on:click={cancelPending}>Cancel</button>
+          <button type="button" data-primary on:click={sendNote}>Send</button>
+        </div>
+      </div>
+    {/if}
+  </div>
+</div>

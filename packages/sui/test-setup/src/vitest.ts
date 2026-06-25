@@ -1,0 +1,274 @@
+// Shared vitest config for SUI component packages.
+//
+// One factory, `suiComponentVitestConfig()`, replaces the ~90-line
+// `compiled-js-test-shim` plugin that used to be copy-pasted into every
+// component package's `vitest.config.ts` — plus the depth-counted relative
+// imports (`../../../vitest.shared`, `../../../scripts/...`) that broke the
+// moment a package moved between directories.
+//
+// EVERYTHING is resolved by package name or by walking up to the repo root, so
+// a config authored with this factory is location-independent: move the package
+// anywhere under `packages/` and its tests keep working with zero edits.
+
+import { defineConfig } from 'vitest/config'
+import type { Plugin, ViteUserConfig as VitestUserConfig } from 'vitest/config'
+import { createRequire } from 'node:module'
+import { existsSync, readFileSync, statSync } from 'node:fs'
+import { resolve, dirname, basename, relative } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+// @ts-expect-error — JS module, no .d.ts.
+import { spawnBoundedOrThrow } from './spawn-bounded.mjs'
+
+const require = createRequire(import.meta.url)
+
+/** Known root package names across Ship monorepos. Extend here when a new
+ *  repo is carved out so all carve-offs share one test-setup build. */
+const KNOWN_ROOT_NAMES = new Set(['ship-monorepo', 'ship-kit'])
+
+/** Walk up from this module until we hit the monorepo root package.json.
+ *  A root is identified by a known package name (see KNOWN_ROOT_NAMES) or,
+ *  as a fallback, by the presence of a `"workspaces"` field — which is
+ *  present in every Ship workspace root and absent in leaf packages. */
+function findRepoRoot(): string {
+  let dir = dirname(fileURLToPath(import.meta.url))
+  for (let i = 0; i < 12; i++) {
+    const pkg = resolve(dir, 'package.json')
+    if (existsSync(pkg)) {
+      try {
+        const manifest = JSON.parse(readFileSync(pkg, 'utf8')) as {
+          name?: string
+          workspaces?: unknown
+        }
+        if (KNOWN_ROOT_NAMES.has(manifest.name ?? '') || Array.isArray(manifest.workspaces))
+          return dir
+      } catch {
+        /* keep walking */
+      }
+    }
+    const parent = dirname(dir)
+    if (parent === dir) break
+    dir = parent
+  }
+  throw new Error('[test-setup/vitest] could not locate the monorepo root (checked KNOWN_ROOT_NAMES + workspaces field)')
+}
+
+const repoRoot = findRepoRoot()
+const mirrorRoot = resolve(repoRoot, '.ship/sui-out')
+const compilerBin = resolve(repoRoot, 'target/debug/sui-compiler')
+
+// Honesty guard — runs `expect.hasAssertions()` before every test so a body
+// that asserts nothing FAILS instead of passing green. Prepended to every
+// package's setupFiles (its own setup.ts still runs after). Resolved by
+// package subpath so it survives the package moving, same as @ship/sui-* below.
+const assertHonestySetup = require.resolve('@ship/test-setup/assert-honesty')
+
+const MAX_FORKS = Number(process.env.VITEST_MAX_FORKS ?? 2)
+
+/** Workers + timeouts. vitest defaults to one fork per core; each jsdom fork
+ *  holds ~500 MB, so an unbounded run exhausts memory on WSL2. Cap it once. */
+export const SHIP_VITEST_DEFAULTS: NonNullable<VitestUserConfig['test']> = {
+  pool: 'forks',
+  maxForks: MAX_FORKS,
+  minForks: 1,
+  testTimeout: 10_000,
+  hookTimeout: 10_000,
+  // Zero-collection guard (runtime half): fail the run if it collected no
+  // tests at all, instead of vitest's default green-on-empty. The static
+  // `scripts/check-zero-collection.mjs` catches the per-file empty case; this
+  // catches a whole suite that silently collected nothing.
+  passWithNoTests: false,
+}
+
+// ── WASM fallback for the compiled-js shim ──────────────────────────────────
+// Resolved through the `@ship/sui-compiler-wasm` package, NOT a hardcoded
+// `packages/sui/compiler-wasm/pkg` path — so it survives the package moving.
+let wasmCompile: ((source: string, optsJson: string) => unknown) | null = null
+function ensureWasm(): (source: string, optsJson: string) => unknown {
+  if (wasmCompile) return wasmCompile
+  let jsPath: string
+  let wasmPath: string
+  try {
+    jsPath = require.resolve('@ship/sui-compiler-wasm')
+    wasmPath = require.resolve('@ship/sui-compiler-wasm/sui_compiler_bg.wasm')
+  } catch {
+    throw new Error('[test-setup/vitest] sui-compiler-wasm not built. Run `just sui-wasm`.')
+  }
+  const mod = require(jsPath) as {
+    initSync: (input: { module: Buffer }) => unknown
+    compile: (source: string, optsJson: string) => unknown
+  }
+  mod.initSync({ module: readFileSync(wasmPath) })
+  wasmCompile = mod.compile
+  return wasmCompile
+}
+
+/** Compile a `.sui` file to its emitted JS module. Throws on compile error. */
+export function compileSuiToJs(suiPath: string): string {
+  const compile = ensureWasm()
+  const source = readFileSync(suiPath, 'utf8')
+  const result = compile(source, JSON.stringify({ mode: 'auto' })) as
+    | { kind: 'ok'; js: string }
+    | { kind: 'err'; message: string; line: number | null; col: number | null }
+  if (result.kind === 'err') {
+    throw new Error(
+      `[test-setup/vitest] sui-compiler error in ${suiPath} (${result.line ?? '?'}:${result.col ?? '?'}): ${result.message}`,
+    )
+  }
+  return result.js
+}
+
+function compileSui(suiPath: string, stem: string): void {
+  const hasBin = existsSync(compilerBin)
+  const cmd = hasBin ? compilerBin : 'cargo'
+  const args = hasBin
+    ? ['build', suiPath, '--component-name', stem, '--no-dts']
+    : ['run', '--quiet', '-p', 'sui-compiler', '--', 'build', suiPath, '--component-name', stem, '--no-dts']
+  spawnBoundedOrThrow(cmd, args, `sui-compiler ${suiPath}`, { cwd: repoRoot })
+}
+
+function mirrorArtifactFor(sourceDir: string, stem: string): string {
+  return resolve(mirrorRoot, relative(repoRoot, sourceDir), `${stem}.compiled.js`)
+}
+
+// ── Shared Vite plugin factories ────────────────────────────────────────────
+//
+// `pinImportMetaUrlPlugin` and `shadowForComponentCompilePlugin` were
+// previously copy-pasted into every component package that mounts
+// renderComponent-based tests (sui-media, sui-primitives, ship-viewer).
+// Export them here so each vitest.config.ts calls the factory instead.
+
+/**
+ * Pin `import.meta.url` in spec files to the literal `file://` URL of the
+ * test file, BEFORE Vite's `assetImportMetaUrl` plugin rewrites
+ * `new URL('<lit>', import.meta.url)` to `self.location` (an http URL under
+ * happy-dom, which `readFileSync` rejects).
+ *
+ * @param name - Component name used as the plugin name prefix (e.g. `'sui-media'`).
+ */
+export function pinImportMetaUrlPlugin(name: string): Plugin {
+  return {
+    name: `${name}:pin-import-meta-url`,
+    enforce: 'pre',
+    transform(code: string, id: string) {
+      const path = id.split('?', 1)[0] ?? id
+      // Narrow on purpose: only spec files directly under a test/ dir — the
+      // byte-identical behavior of the inline plugins this factory replaced
+      // (SD-7). A broad /\.test\.ts$/ would also rewrite engine/helper specs
+      // that never asked for the pin.
+      if (!/[\\/]test[\\/][^\\/]+\.test\.ts$/.test(path)) return null
+      if (!code.includes('import.meta.url')) return null
+      const literal = JSON.stringify(pathToFileURL(path).href)
+      return { code: code.split('import.meta.url').join(literal), map: null }
+    },
+  }
+}
+
+/**
+ * Inject `shadow: true` into the component-mode compile opts so an inline
+ * test compile matches the production shadow-DOM shape. The bin/FFI compiler
+ * that produces `.compiled.js` hardcodes `shadow:true`; the WASM/native
+ * default is `shadow:false`. Component mode only — view compiles are untouched.
+ *
+ * @param name - Component name used as the plugin name prefix (e.g. `'sui-media'`).
+ */
+export function shadowForComponentCompilePlugin(name: string): Plugin {
+  return {
+    name: `${name}:shadow-for-component-compile`,
+    enforce: 'pre',
+    transform(code: string, id: string) {
+      if (!/[\\/]test-utils[\\/]compile-sui\.ts$/.test(id)) return null
+      const needle = 'setupUrl: opts.setupMarker,'
+      if (!code.includes(needle)) return null
+      return {
+        code: code.replace(needle, `${needle}\n    shadow: opts.componentName != null,`),
+        map: null,
+      }
+    },
+  }
+}
+
+export interface SuiComponentVitestOptions {
+  /** Extra `resolve.alias` entries merged over the SUI defaults. */
+  alias?: Record<string, string>
+  /** Override the default test setup files. */
+  setupFiles?: string[]
+  /** Override the default include globs. */
+  include?: string[]
+  /** DOM environment. Defaults to `jsdom`. Use `happy-dom` for packs whose
+   *  components inject modern scoped CSS — jsdom 25's parser throws
+   *  "Could not parse CSS stylesheet" on mount; happy-dom tolerates it. */
+  environment?: 'jsdom' | 'happy-dom'
+}
+
+/**
+ * The one config every SUI component package's `vitest.config.ts` should use:
+ *
+ * ```ts
+ * import { suiComponentVitestConfig } from '@ship/test-setup/vitest'
+ * export default suiComponentVitestConfig()
+ * ```
+ */
+export function suiComponentVitestConfig(opts: SuiComponentVitestOptions = {}) {
+  return defineConfig({
+    // The honesty-guard setup file lives in @ship/test-setup, outside each
+    // consuming package's root. Vite's dev FS guard (`/@fs/…`) blocks reads
+    // above the package dir by default, so allow-list the repo root.
+    server: { fs: { allow: [repoRoot] } },
+    resolve: {
+      alias: {
+        // Resolved by package name → point at the framework source, move-proof.
+        // Subpaths first (most specific) so they win over the bare-name alias —
+        // renderView/renderComponent in @ship/test-setup import these.
+        '@ship/sui-dom/test-utils': require.resolve('@ship/sui-dom/test-utils'),
+        '@ship/sui-runtime/template-hooks': require.resolve('@ship/sui-runtime/template-hooks'),
+        '@ship/deck-router': require.resolve('@ship/deck-router'),
+        '@ship/sui-runtime/route': require.resolve('@ship/sui-runtime/route'),
+        '@ship/sui-runtime/virtual': require.resolve('@ship/sui-runtime/virtual'),
+        '@ship/sui-runtime': require.resolve('@ship/sui-runtime'),
+        '@ship/sui-dom': require.resolve('@ship/sui-dom'),
+        ...opts.alias,
+      },
+    },
+    test: {
+      include: opts.include ?? ['test/**/*.test.ts', 'src/**/*.test.ts'],
+      environment: opts.environment ?? 'jsdom',
+      // Honesty guard first, then the package's own setup. `hasAssertions()`
+      // fails any test whose executed body ran zero assertions.
+      setupFiles: [assertHonestySetup, ...(opts.setupFiles ?? ['./test/setup.ts'])],
+      ...SHIP_VITEST_DEFAULTS,
+    },
+    // `<tag>.compiled.js` shim — resolve to the mirror-tree artifact (produced
+    // by the `pretest` hook), CLI-compile on demand from a sibling `.sui` if
+    // missing, and wasm-compile inline as the final watch-mode fallback.
+    plugins: [
+      {
+        name: 'compiled-js-test-shim',
+        resolveId(id: string, importer?: string) {
+          if (!id.endsWith('.compiled.js') || !importer) return null
+          const sourceArtifact = resolve(resolve(importer, '..'), id)
+          const sourceDir = dirname(sourceArtifact)
+          const stem = basename(sourceArtifact).replace(/\.compiled\.js$/, '')
+          const mirrorFile = mirrorArtifactFor(sourceDir, stem)
+          const suiFile = resolve(sourceDir, `${stem}.sui`)
+          // A mirror artifact is only valid while it's at least as new as its
+          // `.sui` source — a stale mirror silently tests yesterday's compile.
+          const mirrorFresh =
+            existsSync(mirrorFile) &&
+            (!existsSync(suiFile) || statSync(mirrorFile).mtimeMs >= statSync(suiFile).mtimeMs)
+          if (mirrorFresh) return mirrorFile
+          if (existsSync(suiFile)) {
+            compileSui(suiFile, stem)
+            if (existsSync(mirrorFile)) return mirrorFile
+            return `\0compiled-js-shim:${suiFile}`
+          }
+          return null
+        },
+        load(id: string) {
+          const prefix = '\0compiled-js-shim:'
+          if (!id.startsWith(prefix)) return null
+          return compileSuiToJs(id.slice(prefix.length))
+        },
+      },
+    ],
+  })
+}

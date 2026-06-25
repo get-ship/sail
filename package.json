@@ -7,6 +7,7 @@
       "packages/sui/dom",
       "packages/sui/runtime",
       "packages/sui/tokens",
+      "packages/sui/test-setup",
       "packages/components/sui/*",
       "packages/deck/*"
     ]

@@ -1,0 +1,97 @@
+/* <sui-draw> — SVG-native whiteboard styling. Token-only: no hex, oklch,
+   color-mix, raw px-on-color, or hardcoded fonts (design-system anti-smells;
+   review-enforced — sui-css-token validates name resolution only). Element
+   geometry is inline SVG path `d` in world coords; this sheet owns appearance
+   + selection/draft affordances. */
+
+:host {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  color: var(--foreground);
+}
+:host([hidden]) {
+  display: none;
+}
+
+/* Tool toolbar — a thin band above the surface; consumer fills the slot. */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+}
+.toolbar:empty {
+  display: none;
+}
+
+/* The scene overlay spans the full world layer. Elements receive pointer
+   events (select/drag); the surface beneath handles draft + clear. */
+.scene {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.el {
+  fill: none;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+/* Pen + filled shapes read as a nib fill rather than an outline. */
+.el[data-kind='pen'] {
+  fill: currentColor;
+  stroke: none;
+  pointer-events: fill;
+}
+.el-text {
+  pointer-events: fill;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+}
+.el[data-selected='true'] {
+  stroke: var(--primary);
+}
+.el-text[data-selected='true'] {
+  fill: var(--primary);
+}
+
+/* The in-progress draft — slightly muted until committed. */
+.el-draft {
+  fill: none;
+  stroke-width: 2;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* The selection AABB overlay. */
+.selection-box {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  pointer-events: none;
+}
+
+/* The live-region status line (zoom/selection announcements). */
+.status {
+  position: absolute;
+  bottom: var(--space-1);
+  left: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+:host([readonly]) .el {
+  cursor: default;
+  pointer-events: none;
+}
