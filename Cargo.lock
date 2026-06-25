@@ -368,10 +368,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "build-info"
-version = "0.1.0"
-
-[[package]]
 name = "bumpalo"
 version = "3.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4077,6 +4073,7 @@ dependencies = [
 [[package]]
 name = "ship-js"
 version = "0.1.0"
+source = "git+file:///home/madvib/dev/ship-js#47af145334f9cc2a5d18dd46289a58c0abe9b5b6"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4296,16 +4293,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "sui-build-info"
+version = "0.1.0"
+
+[[package]]
 name = "sui-compiler"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "build-info",
  "clap",
  "libc",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
+ "sui-build-info",
  "sui-lint",
  "tempfile",
  "thiserror 2.0.18",
