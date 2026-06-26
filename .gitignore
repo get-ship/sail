@@ -38,3 +38,25 @@ crates/deck/deck-core/assets/sui-custom-elements.json
 
 # Task artifacts (CLAUDE.md: artifacts → .artifacts/)
 .artifacts/
+
+# Ship-harness output + runtime (mirror og Ship/ship). `.ship/` holds tracked
+# config too, so ignore selectively: the sui-compiler's `.ship/sui-out/` mirror,
+# worktrees, and local dbs are generated/runtime — never committed.
+.ship/sui-out/
+.ship/worktrees/
+.ship/.trash/
+.ship/.boundary
+.ship/*.db
+.ship/*.db-*
+
+# Generated agent config — never committed (mirror og Ship/ship).
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+.mcp.json
+.claude/
+.codex/
+.cursor/
+.gemini/
+.agents/
+skills-lock.json
