@@ -23,7 +23,8 @@
   ],
   "scripts": {
     "wasm": "wasm-pack build crates/sui/compiler --target web --out-dir ../../../packages/sui/compiler-wasm/pkg --out-name sui_compiler -- --features wasm",
-    "build:bundles": "cargo run -p deck-cli -- build-assets"
+    "build:bundles": "cargo run -p deck-cli -- build-assets",
+    "typecheck": "node scripts/typecheck-components.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
