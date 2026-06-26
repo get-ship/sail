@@ -275,15 +275,7 @@ pub fn run_pack(name: String) -> Result<()> {
          \"esModuleInterop\": true,\n    \
          \"isolatedModules\": true,\n    \
          \"verbatimModuleSyntax\": true,\n    \
-         \"noEmit\": false,\n    \
-         // The `.sui.d.ts` declarations sui-compiler emits land in the\n    \
-         // project mirror tree at `<repo-root>/.ship/sui-out/<src-rel>/`.\n    \
-         // rootDirs lets tsc treat src + the mirror as one virtual root\n    \
-         // for relative module resolution (the import-from-./X.sui case).\n    \
-         \"rootDirs\": [\n      \
-         \"src\",\n      \
-         \"../../../.ship/sui-out/packages/components/{name}/src\"\n    \
-         ]\n  \
+         \"noEmit\": false\n  \
          }},\n  \
          \"include\": [\"src/**/*\"],\n  \
          \"exclude\": [\"test\", \"dist\"]\n\
