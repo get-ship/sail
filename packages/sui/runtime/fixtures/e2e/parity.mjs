@@ -139,11 +139,16 @@ function elementCount(c) {
 // ── Playwright mode ───────────────────────────────────────────────────────
 
 async function findShipd() {
+  // The sui repo root (5 up from this fixture), then the sibling ship repo
+  // where shipd is built (post-nest layout: <parent>/{sui,ship}). Derived from
+  // this file's dir so it survives the checkout moving; SHIPD_BIN overrides.
+  // (Note: the module-level ROOT is sui/packages, not the repo root — don't
+  //  reuse it here.)
+  const suiRoot = path.resolve(__dirname, '../../../../..')
   const candidates = [
     process.env.SHIPD_BIN,
-    path.join(ROOT, 'target/debug/shipd'),
-    '/home/madvib/dev/ship-worktrees/templates-phase1-retire/target/debug/shipd',
-    '/home/madvib/dev/Ship/target/debug/shipd',
+    path.join(suiRoot, 'target/debug/shipd'),
+    path.join(suiRoot, '../ship/target/debug/shipd'),
   ].filter(Boolean)
   return candidates.find(p => existsSync(p)) ?? null
 }
