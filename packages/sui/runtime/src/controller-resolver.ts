@@ -271,14 +271,19 @@ export interface ControllerExport<Scope = object> {
 // with no type arguments; the explicit-`<Scope>` overloads below are the
 // deprecated legacy/curried bridges (an explicit single `<Scope>` can't bind
 // this overload's two inferred params, so resolution falls through to them).
-// `__def` is added to the canonical return so the synthetic controller
-// can recover the scope-factory return type via
-// `typeof __authored.__def.scope` (slice 2 G4). The original `D` generic
-// preserves the precise literal type of `def` (including the inferred
-// `Ctx` + `SC`).
-export function controller<Ctx, SC extends Record<string, unknown>, D extends ScopedControllerDef<Ctx, SC> = ScopedControllerDef<Ctx, SC>>(
-  def: D,
-): ControllerExport<Ctx & SC> & { __def: D }
+// `__def` is added to the canonical return so the synthetic controller can
+// recover the scope-factory return type via `typeof __authored.__def.scope`
+// (slice 2 G4). Typing `def` DIRECTLY as `ScopedControllerDef<Ctx, SC>` (not a
+// generic `D extends ScopedControllerDef<Ctx, SC>`) is load-bearing: it gives
+// `Ctx`/`SC` real inference positions — the `scope` param annotation drives
+// `Ctx`, its return drives `SC` — so handler state over `Ctx & SC` is precise.
+// A `D`-generic param erased those positions (nothing infers `Ctx`/`SC` from a
+// bare `def: D`), so `Ctx` fell to `unknown`, the contravariant `scope` param
+// check failed, and EVERY call silently resolved to the legacy overload below —
+// the framework-wide "factory signals untyped in handlers, must cast" bug.
+export function controller<Ctx, SC extends Record<string, unknown>>(
+  def: ScopedControllerDef<Ctx, SC>,
+): ControllerExport<Ctx & SC> & { __def: ScopedControllerDef<Ctx, SC> }
 // Legacy form `controller<Scope>(def)` — for controllers with NO `scope:`
 // factory (only `on`/`mount`). Their scope is entirely template-declared, so
 // the compiler-emitted `Scope` is already precise (no casts). A controller

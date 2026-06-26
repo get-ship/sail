@@ -15,6 +15,7 @@
 // (pointer drag + Shift+Arrow → engine + sui-* emits) lives in `./sui-calendar.interactions`.
 
 import { controller, derived, effect, signal } from '@ship/sui-runtime'
+import type { ViewScope } from '@ship/sui-runtime'
 import { createCalendar } from './engine'
 import type { Calendar, CalendarEvent, DateRange, MonthCell, ViewMode } from './engine'
 import { wireCalendarInteractions } from './sui-calendar.interactions'
@@ -46,16 +47,9 @@ function weekdayLabels(weekStartsOn: number): { key: string; label: string }[] {
   return out
 }
 
-export default controller<Scope>({
-  scope: ({
-    events,
-    focusDate,
-    weekStartsOn,
-    slotMinutes,
-    dayStartHour,
-    dayEndHour,
-    rangeMode,
-  }) => {
+export default controller({
+  scope: (ctx: ViewScope<Scope>) => {
+    const { events, focusDate, weekStartsOn, slotMinutes, dayStartHour, dayEndHour, rangeMode } = ctx
     // The live engine. `prop:calendar` identity (set in mount) supersedes; until
     // then we seed from the SSR `events` string + the focus-date attr so a
     // declarative (no-parent-controller) mount still renders.
@@ -157,20 +151,20 @@ export default controller<Scope>({
     // routed into the scope signal so every derived re-resolves onto it.
     Object.defineProperty(host, 'calendar', {
       configurable: true,
-      get: () => (state as unknown as { $signals: { engine: () => Calendar | null } }).$signals.engine(),
+      get: () => state.$signals.engine(),
       set: (c: Calendar | null) => {
-        (state as unknown as { engine: Calendar | null }).engine = c
+        state.engine = c
       },
     })
 
     // Keep the reflected `view` attribute synced to the engine view so the
     // host CSS layout branches follow programmatic setView() too.
     const stopView = effect(() => {
-      const v = (state as unknown as { $signals: { view: () => ViewMode } }).$signals.view()
+      const v = state.$signals.view()
       if (host.getAttribute('view') !== v) host.setAttribute('view', v)
     })
 
-    const active = (): Calendar => (state as unknown as { $signals: { cal: () => Calendar } }).$signals.cal()
+    const active = (): Calendar => state.$signals.cal()
 
     // Deduped emit (sui-combobox lastEmitted pattern) over host.emit!. When
     // prop:calendar swaps the engine identity we re-seed from the NEW engine
