@@ -518,11 +518,16 @@ fn compile_one(
         fs::write(&meta_path, pretty)
             .with_context(|| format!("write {}", meta_path.display()))?;
     }
-    // `.sui.d.ts` lands in the mirror tree alongside the other emit
-    // artifacts. Controllers' `import type { Scope } from './<name>.sui'`
-    // resolves to it via the workspace tsconfig `paths` mapping.
+    // `.sui.d.ts` is a TYPE companion to its source, so it is written
+    // ADJACENT to the `.sui` (not into the build mirror like the JS/CEM/SSR
+    // artifacts). That lets a controller's `import type { Scope } from
+    // './<name>.sui'` resolve natively to the sibling `.d.ts` — no `rootDirs`
+    // round-trip into `.ship/sui-out` in every consumer's tsconfig (which was
+    // fragile and, when mispathed, silently masked type errors as `any`).
+    // Gitignored via `*.sui.d.ts`.
     if let Some(dts) = result.dts {
-        let dts_path = out_dir.join(format!("{stem}.d.ts"));
+        let dts_dir = path.parent().unwrap_or(out_dir.as_path());
+        let dts_path = dts_dir.join(format!("{stem}.d.ts"));
         fs::write(&dts_path, dts)
             .with_context(|| format!("write {}", dts_path.display()))?;
     }

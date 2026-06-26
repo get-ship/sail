@@ -1,9 +1,13 @@
 //! Canonical output-tree layout for sui-compiler emit artifacts.
 //!
-//! Tooling outputs (`.compiled.js`, `.sui.d.ts`, `.custom-elements.json`,
-//! `.schema.json`, `.sui.meta.json`, `.ssr.html`) land under one project-
-//! level mirror tree at `<repo-root>/.ship/sui-out/<source-rel>/` instead
-//! of a per-component sibling `dist/` directory.
+//! Build artifacts (`.compiled.js`, `.custom-elements.json`, `.schema.json`,
+//! `.sui.meta.json`, `.ssr.html`) land under the mirror tree at
+//! `<repo-root>/.ship/sui-out/<source-rel>/` (or the `--out` dir). The
+//! `.sui.d.ts` type companion is the EXCEPTION: it is written ADJACENT to its
+//! `.sui` source (see `compile_one` in the bin), so a controller's
+//! `import type { Scope } from './x.sui'` resolves with no `rootDirs` into a
+//! build dir. NOTE: `.ship/sui-out` is the Ship dynamic-views output and is
+//! moving — it must not be load-bearing for component typing.
 //!
 //! Production-distribution bundles (`crates/deck/deck-core/assets/sui-*.js`)
 //! are a separate concern and are NOT routed through this module.

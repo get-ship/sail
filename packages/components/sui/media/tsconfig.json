@@ -16,16 +16,7 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
-    "noEmit": false,
-    // Controllers do `import type { Scope } from './<stem>.sui'`. The
-    // sui-compiler emits `<stem>.sui.d.ts` into the project mirror tree
-    // at `<repo-root>/.ship/sui-out/<src-rel>/`. `rootDirs` lets tsc
-    // treat the source tree and its mirror as a single virtual root for
-    // relative module resolution.
-    "rootDirs": [
-      "src",
-      "../../../../.ship/sui-out/packages/components/sui/media/src"
-    ]
+    "noEmit": false
   },
   "include": ["src/**/*"],
   "exclude": ["test", "dist"]
