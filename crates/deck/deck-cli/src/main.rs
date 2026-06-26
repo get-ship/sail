@@ -405,6 +405,21 @@ fn build(
         .map_err(|e| anyhow::anyhow!("{e:#}"))?;
     if b.framework_assets > 0 {
         println!("  _deck  {} files (self-contained)", b.framework_assets);
+    } else if !bundle_framework {
+        // The silent trap: with no `--bundle-framework`, the build emits the app
+        // but ZERO framework (`_deck/runtime.js`, `dom.js`, `route.js`) and still
+        // exits 0. Fine for a shipd-served app (shipd embeds the framework via
+        // `include_str!`), but a standalone host (a Tauri shell, a custom server)
+        // serves nothing — every `<sui-*>` stays unregistered and the app renders
+        // unstyled with no error. shipd bundles in-process via `bundle_app`, not
+        // this CLI path, so this warning targets exactly the standalone builds.
+        eprintln!(
+            "  warning: built WITHOUT a framework bundle (no --bundle-framework).\n  \
+             This app's <sui-*> components need /_deck/runtime.js, dom.js and route.js\n  \
+             served by the host. shipd embeds them; a standalone host serves nothing,\n  \
+             so the app then renders unstyled with every custom element unregistered.\n  \
+             For a self-contained build, re-run with --bundle-framework."
+        );
     }
     // Opt-in type-check pass (#1). Runs AFTER the bundle so the generated
     // `routes.gen.ts` / `entry.gen.ts` exist and are covered. Default build
