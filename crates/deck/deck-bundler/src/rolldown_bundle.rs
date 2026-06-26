@@ -140,7 +140,7 @@ pub async fn bundle_target(
     })
 }
 
-const MODULE_PRUNE: &[&str] = &["node_modules", ".git", "target", "dist", ".deck", "sui-out"];
+const MODULE_PRUNE: &[&str] = &["node_modules", ".git", "target", "dist", ".deck", ".sui-out", "sui-out"];
 
 fn extract_module_paths(output: &rolldown::BundleOutput) -> Vec<PathBuf> {
     use rolldown_common::Output;

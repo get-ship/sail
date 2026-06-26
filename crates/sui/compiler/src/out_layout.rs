@@ -19,17 +19,18 @@ use std::path::{Path, PathBuf};
 /// the ancestor walk so the mirror layout works the same from any cwd.
 const WORKSPACE_MARKER: &str = "[workspace]";
 
-/// Default mirror sub-directory, relative to the repo root. SUI is a mechanical
-/// part of Ship and this monorepo is a Ship project, so the output lives where
-/// it lives on customer machines: under `.ship/` (gitignored). It is NOT a fixed
-/// constant — a host configures it via `SUI_OUT_DIR` (a non-Ship SUI consumer
-/// would point it elsewhere). We just don't dump at the repo root by default.
-const DEFAULT_SUI_OUT_DIR: &str = ".ship/sui-out";
+/// Default mirror sub-directory, relative to the repo root. The compiler is
+/// framework-neutral and must NOT bake a `.ship/` (Ship) path: `.ship/sui-out`
+/// is the Ship dynamic-views location, it is MOVING, and the host owns it. So
+/// the default is a neutral, sui-owned scratch dir; a host (deck/shipd — "however
+/// Ship compiles deck") points it at the real location via `SUI_OUT_DIR`.
+const DEFAULT_SUI_OUT_DIR: &str = ".sui-out";
 
 /// The mirror sub-directory in effect: `SUI_OUT_DIR` env override, else the
-/// default. Relative to the repo root. Kept a function (not a const) so the
-/// host can configure where compiler artifacts land.
-fn sui_out_dir() -> String {
+/// neutral default. Relative to the repo root. `pub` so consumers (deck's
+/// catalog) resolve the SAME location the compiler writes to — never a second
+/// hardcoded copy that can drift.
+pub fn sui_out_dir() -> String {
     std::env::var("SUI_OUT_DIR")
         .ok()
         .filter(|s| !s.trim().is_empty())
@@ -119,6 +120,6 @@ mod tests {
         let sui = src_dir.join("bar.sui");
         std::fs::write(&sui, "x").unwrap();
         let out = mirror_dir_for(&sui).unwrap();
-        assert_eq!(out, tmp.path().join(".ship/sui-out/packages/foo/src"));
+        assert_eq!(out, tmp.path().join(".sui-out/packages/foo/src"));
     }
 }

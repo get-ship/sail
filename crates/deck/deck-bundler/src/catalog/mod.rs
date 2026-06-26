@@ -21,7 +21,6 @@ pub use workspace::{
 };
 use workspace::{read_json, source_tags_for_package};
 
-const SUI_OUT: &str = ".ship/sui-out";
 const CEM_SUFFIX: &str = ".custom-elements.json";
 const SKIP_DIRS: [&str; 4] = ["node_modules", "dist", "target", ".git"];
 
@@ -288,7 +287,7 @@ fn entries_from_sui_out(
     repo_root: &Path,
     packages: &[WorkspacePackage],
 ) -> Vec<CatalogEntry> {
-    let root = repo_root.join(SUI_OUT);
+    let root = repo_root.join(sui_compiler::out_layout::sui_out_dir());
     if !root.exists() {
         return vec![];
     }
@@ -380,7 +379,7 @@ fn find_owning_package<'a>(
 fn source_path_for_cem(repo_root: &Path, cem_abs: &Path) -> String {
     let repo_rel = rel_unix(repo_root, cem_abs);
     let mirrored = repo_rel
-        .strip_prefix(&format!("{SUI_OUT}/"))
+        .strip_prefix(&format!("{}/", sui_compiler::out_layout::sui_out_dir()))
         .unwrap_or(&repo_rel);
     let file = mirrored.rsplit('/').next().unwrap_or(mirrored);
     let stem = file.strip_suffix(CEM_SUFFIX).unwrap_or(file);
@@ -450,7 +449,7 @@ mod tests {
         write(&root.join("packages/charts/dist/custom-elements.json"), &cem("sui-bar"));
         // A shell-local component in the sui-out mirror.
         write(
-            &root.join(".ship/sui-out/apps/shell/src/sui-x/sui-x.custom-elements.json"),
+            &root.join(".sui-out/apps/shell/src/sui-x/sui-x.custom-elements.json"),
             &cem("sui-x"),
         );
 
@@ -479,7 +478,7 @@ mod tests {
         let root = tmp.path();
         write(&root.join("package.json"), r#"{"workspaces":[]}"#);
         write(
-            &root.join(".ship/sui-out/apps/shell/src/sui-x/sui-x.custom-elements.json"),
+            &root.join(".sui-out/apps/shell/src/sui-x/sui-x.custom-elements.json"),
             &cem("sui-x"),
         );
         let workspace = build_catalog(root).unwrap();
