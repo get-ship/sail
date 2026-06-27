@@ -17,7 +17,7 @@
 //   9. writes during reaction            (effect-writes-signal propagate, terminate)
 //  10. selector                          (fine-grained membership; only 2 buckets fire)
 
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { signal, derived, effect, batch, untrack, selector } from '../src/signal'
 import type { Derived } from '../src/signal'
 
@@ -325,5 +325,136 @@ describe('reactivity/selector', () => {
 
     selected.set(2) // bucket 1 (off) + bucket 2 (on) flip; 3 untouched
     expect(runs).toEqual({ 1: 3, 2: 2, 3: 1 })
+  })
+})
+
+// ── 11. Deep linear chains ───────────────────────────────────────────────────
+describe('reactivity/deep-chains', () => {
+  it('a linear chain settles each node exactly once, in order', () => {
+    const a = signal(1)
+    const b = counted(() => a() + 1)
+    const c = counted(() => b.d() + 1)
+    const d = counted(() => c.d() + 1)
+    const seen: number[] = []
+    effect(() => seen.push(d.d())) // 1→2→3→4
+    expect(seen).toEqual([4])
+    expect([b.runs(), c.runs(), d.runs()]).toEqual([1, 1, 1])
+    a.set(10) // 10→11→12→13
+    expect(seen).toEqual([4, 13])
+    expect([b.runs(), c.runs(), d.runs()]).toEqual([2, 2, 2])
+  })
+})
+
+// ── 12. Partial suppression through a diamond ─────────────────────────────────
+describe('reactivity/partial-suppression', () => {
+  it('an unchanging diamond arm is suppressed while the live arm propagates once', () => {
+    const a = signal(2)
+    const constArm = counted(() => a() * 0) // always 0 — never changes value
+    const liveArm = counted(() => a() * 10)
+    const join = counted(() => constArm.d() + liveArm.d())
+    const seen: number[] = []
+    effect(() => seen.push(join.d())) // 0 + 20 = 20
+    expect(seen).toEqual([20])
+    a.set(5) // constArm still 0, liveArm 50 → join 50
+    expect(seen).toEqual([20, 50])
+    // constArm re-evaluated (input changed) but produced an equal value so it
+    // did not propagate; join recomputed once because liveArm changed.
+    expect(constArm.runs()).toBe(2)
+    expect(liveArm.runs()).toBe(2)
+    expect(join.runs()).toBe(2)
+  })
+})
+
+// ── 13. A signal and a derived of it, read by one effect ──────────────────────
+describe('reactivity/signal-and-derived', () => {
+  it('an effect reading both a signal and a derived of it sees a consistent pair, once', () => {
+    const a = signal(1)
+    const double = derived(() => a() * 2)
+    const pairs: Array<[number, number]> = []
+    effect(() => pairs.push([a(), double()]))
+    a.set(5)
+    expect(pairs).toEqual([
+      [1, 2],
+      [5, 10],
+    ]) // never the glitch pair [5, 2]
+  })
+})
+
+// ── 14. Effects on intermediate and leaf nodes ────────────────────────────────
+describe('reactivity/multiple-effects', () => {
+  it('effects on an intermediate and a leaf each run once per write', () => {
+    const a = signal(0)
+    const b = derived(() => a() + 1)
+    const d = derived(() => b() + 1)
+    const bSeen: number[] = []
+    const dSeen: number[] = []
+    effect(() => bSeen.push(b()))
+    effect(() => dSeen.push(d()))
+    a.set(10)
+    expect(bSeen).toEqual([1, 11])
+    expect(dSeen).toEqual([2, 12])
+  })
+})
+
+// ── 15. Disposal during a flush ───────────────────────────────────────────────
+describe('reactivity/dispose-during-flush', () => {
+  it('an effect disposed by another effect in the same cycle does not run', () => {
+    const a = signal(0)
+    const bRan: number[] = []
+    let disposeB: (() => void) | null = null
+    // Disposer subscribes FIRST so it is processed before B in the same flush.
+    effect(() => {
+      if (a() > 0 && disposeB) disposeB()
+    })
+    disposeB = effect(() => bRan.push(a()))
+    a.set(1)
+    expect(bRan).toEqual([0]) // B was torn down before it could re-run
+  })
+})
+
+// ── 16. Batch value semantics ─────────────────────────────────────────────────
+describe('reactivity/batch-semantics', () => {
+  it('a read inside a batch sees the written value immediately; effects defer', () => {
+    const s = signal(1)
+    const seen: number[] = []
+    effect(() => seen.push(s()))
+    batch(() => {
+      s.set(2)
+      expect(s()).toBe(2) // value is synchronous
+      s.set(3)
+    })
+    expect(seen).toEqual([1, 3]) // effect saw only the final value, once
+  })
+})
+
+// ── 17. A throwing derived is contained ───────────────────────────────────────
+describe('reactivity/error-containment', () => {
+  it('a throwing derived surfaces at the reader and does not wedge the graph', () => {
+    const a = signal(1)
+    const bad = derived(() => {
+      if (a() === 0) throw new Error('boom')
+      return a() * 2
+    })
+    expect(bad()).toBe(2)
+    a.set(0)
+    expect(() => bad()).toThrow('boom')
+    a.set(3) // graph still works after the throw
+    expect(bad()).toBe(6)
+  })
+})
+
+// ── 18. Runaway-loop guard ────────────────────────────────────────────────────
+describe('reactivity/runaway-guard', () => {
+  it('an unbounded self-scheduling effect is aborted, not hung', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const a = signal(0)
+    // No fixpoint — writes forever. The flush guard must abort + log.
+    effect(() => {
+      a.set(a() + 1)
+    })
+    expect(spy).toHaveBeenCalled()
+    const logged = spy.mock.calls.flat().map(String).join(' ')
+    expect(logged).toMatch(/aborting flush|scheduling itself|infinite/i)
+    spy.mockRestore()
   })
 })

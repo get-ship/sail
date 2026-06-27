@@ -288,13 +288,27 @@ function runReaction(node: Computation): void {
   else node.state = CLEAN
 }
 
+/** Runaway backstop — far above any real cascade (which settles in a
+ *  handful of rounds). Trips only when a reaction keeps scheduling itself
+ *  with no fixpoint (e.g. an effect writing a signal it reads, unbounded). */
+const MAX_FLUSH_ROUNDS = 100_000
+
 /** Drain the effect queue. Re-entrant writes just enqueue; the outermost
  *  flush loop picks them up. */
 function flush(): void {
   if (RUNNING) return
   RUNNING = true
+  let rounds = 0
   try {
     while (QUEUE.length > 0) {
+      if (++rounds > MAX_FLUSH_ROUNDS) {
+        QUEUE = []
+        throw new Error(
+          `[sui] reactivity: aborting flush after ${MAX_FLUSH_ROUNDS} rounds — ` +
+            'a reaction keeps scheduling itself (likely an effect writing a ' +
+            'signal it reads with no stable fixpoint).',
+        )
+      }
       const batchRun = QUEUE
       QUEUE = []
       for (let i = 0; i < batchRun.length; i++) runReaction(batchRun[i]!)
