@@ -14,12 +14,11 @@ fn compile_sui(name: &str) -> String {
     let source = fs::read_to_string(&path).expect("read fixture");
     let opts = CompileOpts {
         setup_url: None,
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: Some(path),
         styles: None,
         component_meta: None,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = compile(&source, opts).expect("compile transition fixture");
@@ -69,42 +68,11 @@ fn transition_directive_auto_imports_builtins() {
         );
     }
 }
-
-#[test]
-fn transition_directive_emits_no_ssr_marker() {
-    let path = fixtures_dir().join("transition.sui");
-    let source = fs::read_to_string(&path).unwrap();
-    let opts = CompileOpts {
-        mode: CompileMode::View,
-        source_path: Some(path),
-        emit_ssr: true,
-        emit_component_imports: false,
-        ..CompileOpts::default()
-    };
-    let out = compile(&source, opts).expect("compile transition fixture for ssr");
-    let ssr = out.ssr_html.expect("ssr_html present in view mode");
-    // The SSR output must not leak `transition:fade="..."` or similar
-    // marker attributes — transitions register on construction, not
-    // through the marker dispatch.
-    assert!(
-        !ssr.contains("transition:"),
-        "SSR must not emit transition: markers; got:\n{ssr}"
-    );
-    assert!(
-        !ssr.contains(" in:"),
-        "SSR must not emit in: markers; got:\n{ssr}"
-    );
-    assert!(
-        !ssr.contains(" out:"),
-        "SSR must not emit out: markers; got:\n{ssr}"
-    );
-}
-
 #[test]
 fn transition_directive_rejects_unknown_value_shape() {
     let source = r#"<div transition:fade="oops"></div>"#;
     let opts = CompileOpts {
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         ..CompileOpts::default()
     };
     let err = compile(source, opts).expect_err("unexpected success");
@@ -130,7 +98,7 @@ fn transition_opts_object_literal_passes_scope_bound() {
     // missing controller is fine.
     let source = r#"<div transition:slide={{ duration: 180 }}></div>"#;
     let opts = CompileOpts {
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: Some(PathBuf::from("/nonexistent/_regression.sui")),
         ..CompileOpts::default()
     };
@@ -143,8 +111,7 @@ fn transition_directive_custom_name_resolves_via_scope() {
 <div transition:myfx={{ duration: 100 }}></div>
 "#;
     let opts = CompileOpts {
-        mode: CompileMode::View,
-        emit_ssr: false,
+        mode: CompileMode::Component,
         emit_component_imports: false,
         ..CompileOpts::default()
     };

@@ -40,7 +40,6 @@ fn styles_opt_emits_styles_field_in_component_export() {
             styles: Some(css.clone()),
             component_meta: Some(ComponentMeta { name: "ship-styled-test".into(), shadow: true }),
             emit_dts: false,
-            emit_ssr: false,
             emit_component_imports: false,
         },
     )
@@ -74,7 +73,6 @@ fn styles_opt_rejects_non_component_source() {
             styles: Some(":host { color: red }".into()),
             component_meta: None,
             emit_dts: false,
-            emit_ssr: false,
             emit_component_imports: false,
         },
     )
@@ -105,7 +103,6 @@ fn styles_opt_merges_with_existing_inline_style_block() {
             styles: Some(".external { color: var(--muted-foreground); }".into()),
             component_meta: Some(ComponentMeta { name: "ship-mixed-test".into(), shadow: false }),
             emit_dts: false,
-            emit_ssr: false,
             emit_component_imports: false,
         },
     )
@@ -130,12 +127,11 @@ fn view_inline_style_is_installed_at_mount_not_dropped() {
         src,
         CompileOpts {
             setup_url: None,
-            mode: CompileMode::View,
+            mode: CompileMode::Component,
             source_path: Some(PathBuf::from("routes/landing/page.sui")),
             styles: None,
             component_meta: None,
             emit_dts: false,
-            emit_ssr: false,
             emit_component_imports: false,
         },
     )
@@ -166,12 +162,11 @@ fn view_without_inline_style_emits_no_style_install() {
         src,
         CompileOpts {
             setup_url: None,
-            mode: CompileMode::View,
+            mode: CompileMode::Component,
             source_path: Some(PathBuf::from("routes/plain/page.sui")),
             styles: None,
             component_meta: None,
             emit_dts: false,
-            emit_ssr: false,
             emit_component_imports: false,
         },
     )

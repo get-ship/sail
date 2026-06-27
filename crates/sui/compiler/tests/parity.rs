@@ -40,7 +40,6 @@ fn compile_fixture(name: &str, mode: CompileMode, setup: Option<&str>) -> String
             styles: None,
             component_meta,
             emit_dts: false,
-            emit_ssr: false,
             emit_component_imports: false,
         },
     )
@@ -60,41 +59,54 @@ fn write_mjs(name: &str, js: &str) -> PathBuf {
 }
 
 fn node_check(path: &PathBuf) {
-    let status = Command::new("node")
+    let output = Command::new("node")
         .arg("--check")
         .arg(path)
-        .status();
-    let status = match status {
-        Ok(s) => s,
+        .output();
+    let output = match output {
+        Ok(o) => o,
         Err(e) => {
             eprintln!("`node` not found ({e}); skipping parity syntactic check");
             return;
         }
     };
-    assert!(
-        status.success(),
-        "compiled JS at {} did not parse with `node --check`",
+    if output.status.success() {
+        return;
+    }
+    // This is a SYNTAX check, not a resolution check (the full hydrate-and-run
+    // path is `full_parity_with_interpreter`, gated on RUN_PARITY + a workspace
+    // install). The `node` on PATH here is a Bun shim, and Bun's `node --check`
+    // *resolves* bare imports — unlike real node's `--check`, which only parses.
+    // Module resolution happens AFTER parsing, so a "Cannot find module" error
+    // means the file parsed cleanly: that's a pass for this gate. Only a genuine
+    // parse/syntax failure (which never reaches resolution) should fail.
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    if stderr.contains("Cannot find module") {
+        return;
+    }
+    panic!(
+        "compiled JS at {} did not parse with `node --check`:\n{stderr}",
         path.display()
     );
 }
 
 #[test]
 fn hello_compiles_to_valid_js() {
-    let js = compile_fixture("hello", CompileMode::View, None);
+    let js = compile_fixture("hello", CompileMode::Component, None);
     let p = write_mjs("hello", &js);
     node_check(&p);
 }
 
 #[test]
 fn counter_compiles_to_valid_js() {
-    let js = compile_fixture("counter", CompileMode::View, Some("./counter.controller.ts"));
+    let js = compile_fixture("counter", CompileMode::Component, Some("./counter.controller.ts"));
     let p = write_mjs("counter", &js);
     node_check(&p);
 }
 
 #[test]
 fn agents_compiles_to_valid_js() {
-    let js = compile_fixture("agents", CompileMode::View, Some("./agents.controller.ts"));
+    let js = compile_fixture("agents", CompileMode::Component, Some("./agents.controller.ts"));
     let p = write_mjs("agents", &js);
     node_check(&p);
 }
@@ -112,9 +124,9 @@ fn ship_button_compiles_to_valid_js() {
 #[test]
 fn compile_is_deterministic() {
     for (name, mode, setup) in [
-        ("hello", CompileMode::View, None),
-        ("counter", CompileMode::View, Some("./counter.controller.ts")),
-        ("agents", CompileMode::View, Some("./agents.controller.ts")),
+        ("hello", CompileMode::Component, None),
+        ("counter", CompileMode::Component, Some("./counter.controller.ts")),
+        ("agents", CompileMode::Component, Some("./agents.controller.ts")),
         ("ship-button", CompileMode::Component, None),
     ] {
         let a = compile_fixture(name, mode, setup);
@@ -133,7 +145,7 @@ fn compile_is_deterministic() {
 /// see the IIFE's parameter binding.
 #[test]
 fn for_iteration_emit_has_no_scope_tdz() {
-    let js = compile_fixture("agents", CompileMode::View, Some("./agents.controller.ts"));
+    let js = compile_fixture("agents", CompileMode::Component, Some("./agents.controller.ts"));
     // The view's setup body legitimately declares the outer scope
     // exactly once: `const $scope = Object.create(null);`. Any
     // additional `const $scope = …` is the TDZ-shadow pattern.

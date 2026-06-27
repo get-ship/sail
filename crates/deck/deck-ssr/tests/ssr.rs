@@ -68,7 +68,7 @@ fn greet_first_paint_via_ship_js_with_route_through_host_dispatch() {
         .build()
         .expect("tokio runtime for bundling");
     let bundle = rt
-        .block_on(synthesize_and_bundle(&repo, GREET, MANIFEST, CompileMode::View, &[], &build_dir))
+        .block_on(synthesize_and_bundle(&repo, GREET, MANIFEST, CompileMode::Component, &[], &build_dir))
         .expect("synthesize + bundle");
     assert!(bundle.len() > 1000, "bundle should be a real self-contained module");
     // `ship` is the only external import (the host wire); nothing else leaks.
@@ -110,7 +110,7 @@ fn board_control_flow_first_paint_via_ship_js() {
             &repo,
             BOARD,
             MANIFEST,
-            CompileMode::View,
+            CompileMode::Component,
             Some(&repo.join(BOARD_CTRL)),
             &[],
             &build_dir,
@@ -149,7 +149,7 @@ fn glyph_svg_first_paint_serializes_namespaced() {
     let build_dir = repo.join("target/deck-ssr-test/glyph");
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
     let bundle = rt
-        .block_on(synthesize_and_bundle(&repo, GLYPH, MANIFEST, CompileMode::View, &[], &build_dir))
+        .block_on(synthesize_and_bundle(&repo, GLYPH, MANIFEST, CompileMode::Component, &[], &build_dir))
         .expect("synthesize + bundle glyph");
 
     let dispatch = Arc::new(SsrDispatch::for_request("/glyph", json!({}), json!({})));
@@ -184,7 +184,7 @@ fn feed_data_client_value_resolves_via_host_dispatch() {
         server_entry: repo.join(DEMO_SERVER),
     };
     let bundle = rt
-        .block_on(synthesize_and_bundle(&repo, FEED, MANIFEST, CompileMode::View, &[client], &build_dir))
+        .block_on(synthesize_and_bundle(&repo, FEED, MANIFEST, CompileMode::Component, &[client], &build_dir))
         .expect("synthesize + bundle feed");
 
     let dispatch = Arc::new(
@@ -223,7 +223,7 @@ fn styled_view_lifted_style_reaches_ssr_first_paint() {
     let build_dir = repo.join("target/deck-ssr-test/styled");
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
     let bundle = rt
-        .block_on(synthesize_and_bundle(&repo, STYLED, MANIFEST, CompileMode::View, &[], &build_dir))
+        .block_on(synthesize_and_bundle(&repo, STYLED, MANIFEST, CompileMode::Component, &[], &build_dir))
         .expect("synthesize + bundle styled");
 
     let dispatch = Arc::new(SsrDispatch::for_request("/styled.view", json!({}), json!({})));

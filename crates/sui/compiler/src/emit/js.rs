@@ -48,7 +48,7 @@ use super::writer::Writer;
 use crate::ir::*;
 use crate::keys::BindingRegistry;
 use crate::lower::Lowered;
-use crate::{CompileMode, CompileOpts};
+use crate::CompileOpts;
 
 mod component;
 mod imports;
@@ -60,7 +60,6 @@ pub fn emit_module(
     lowered: &Lowered,
     bindings: &BindingRegistry,
     opts: &CompileOpts,
-    mode: CompileMode,
 ) -> String {
     let mut w = Writer::new();
     // Leading `_compilerVersion` legal comment. Lets the shell compare
@@ -83,12 +82,16 @@ pub fn emit_module(
 
     let mut body = Writer::new();
     body.enter();
-    setup::emit_setup_body(&mut body, program, bindings, mode, opts, lowered);
+    setup::emit_setup_body(&mut body, program, bindings, opts, lowered);
     body.leave();
 
-    match mode {
-        CompileMode::Component => component::emit_component_export(&mut w, program, body, opts),
-        _ => view::emit_view_export(&mut w, program, body),
+    // The view/component split is keyed on the tag (`component_meta`), not a
+    // mode flag: a tagged source registers a custom element; a tagless one
+    // emits the mount-form ("view"/page). `CompileMode::View` is gone.
+    if opts.component_meta.is_some() {
+        component::emit_component_export(&mut w, program, body, opts);
+    } else {
+        view::emit_view_export(&mut w, program, body);
     }
     // Phase 3b.5 (gate I): the `bindings` manifest is gone — every
     // binding kind is now wired by the compiled view's

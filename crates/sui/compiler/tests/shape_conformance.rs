@@ -1,7 +1,7 @@
 //! Shape-conformance integration test.
 //!
-//! Compiles every checked-in `.sui` template (under `views/` and
-//! `packages/components/ui-components/src/`) with the in-process compiler API,
+//! Compiles every checked-in `.sui` component (under `packages/components/`)
+//! with the in-process compiler API,
 //! merges the emitted JS into a tempdir, and runs `tsc --noEmit`
 //! against it with paths mapped to the runtime / ui-dom sources.
 //!
@@ -61,11 +61,12 @@ fn walk_collect(dir: &Path, out: &mut Vec<PathBuf>) {
 }
 
 /// Determine compile mode + component metadata for a given `.sui` path.
-/// Files under `packages/components/ui-components/src/` are components; their
-/// component name is the file stem. Files under `views/` are views.
+/// Files under `packages/components/` are components; their component name is
+/// the file stem. (The framework builds components, full stop — there is no
+/// `views/` concept here; views are a Ship/deck applet feature.)
 fn classify(path: &Path, repo: &Path) -> (CompileMode, Option<ComponentMeta>) {
     let rel = path.strip_prefix(repo).unwrap_or(path);
-    let is_component = rel.starts_with("packages/components/ui-components/src");
+    let is_component = rel.starts_with("packages/components");
     if is_component {
         let stem = path
             .file_stem()
@@ -84,7 +85,7 @@ fn classify(path: &Path, repo: &Path) -> (CompileMode, Option<ComponentMeta>) {
             }),
         )
     } else {
-        (CompileMode::View, None)
+        (CompileMode::Component, None)
     }
 }
 
@@ -107,7 +108,6 @@ fn compile_one(path: &Path, repo: &Path) -> Result<String, String> {
         styles: None,
         component_meta,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = compile(&source, opts).map_err(|e| {
@@ -365,7 +365,7 @@ fn structural_check(
 #[test]
 fn every_sui_compiles_and_imports_resolve() {
     let repo = repo_root();
-    let roots = [repo.join("views"), repo.join("packages/components/ui-components/src")];
+    let roots = [repo.join("packages/components")];
     let files = collect_sui_files(&roots);
     assert!(
         !files.is_empty(),
@@ -422,7 +422,7 @@ fn every_sui_typechecks_against_runtime_dts() {
     let temp = tempfile::tempdir().expect("tempdir");
     let temp_path = temp.path().to_path_buf();
 
-    let roots = [repo.join("views"), repo.join("packages/components/ui-components/src")];
+    let roots = [repo.join("packages/components")];
     let files = collect_sui_files(&roots);
     assert!(!files.is_empty());
 

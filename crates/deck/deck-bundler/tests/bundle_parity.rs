@@ -393,7 +393,6 @@ fn native_compile(repo: &Path, f: &Fixture) -> Result<String, String> {
         styles: None,
         component_meta,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     compile(&source, opts)

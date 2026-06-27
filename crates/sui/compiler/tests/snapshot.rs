@@ -19,22 +19,22 @@ struct Fixture {
 
 fn fixtures() -> Vec<Fixture> {
     vec![
-        Fixture { name: "hello",       setup_url: None,               mode: CompileMode::View,      component_meta: None },
-        Fixture { name: "counter",     setup_url: Some("./counter.controller.ts"), mode: CompileMode::View,     component_meta: None },
-        Fixture { name: "agents",      setup_url: Some("./agents.controller.ts"),  mode: CompileMode::View,     component_meta: None },
+        Fixture { name: "hello",       setup_url: None,               mode: CompileMode::Component,      component_meta: None },
+        Fixture { name: "counter",     setup_url: Some("./counter.controller.ts"), mode: CompileMode::Component,     component_meta: None },
+        Fixture { name: "agents",      setup_url: Some("./agents.controller.ts"),  mode: CompileMode::Component,     component_meta: None },
         Fixture { name: "ship-button", setup_url: None,               mode: CompileMode::Component,
             component_meta: Some(ComponentMeta { name: "ship-button-test".into(), shadow: false }) },
-        Fixture { name: "bind-this-button", setup_url: None,           mode: CompileMode::View,      component_meta: None },
+        Fixture { name: "bind-this-button", setup_url: None,           mode: CompileMode::Component,      component_meta: None },
         Fixture { name: "reflect-empty-slot", setup_url: None,         mode: CompileMode::Component,
             component_meta: Some(ComponentMeta { name: "reflect-empty-slot-test".into(), shadow: true }) },
         Fixture { name: "shadow-tones", setup_url: None,               mode: CompileMode::Component,
             component_meta: Some(ComponentMeta { name: "shadow-tones-test".into(), shadow: true }) },
-        Fixture { name: "comment-and-whitespace", setup_url: None,    mode: CompileMode::View,      component_meta: None },
-        Fixture { name: "for-update",  setup_url: None,               mode: CompileMode::View,      component_meta: None },
-        Fixture { name: "for-static",  setup_url: None,               mode: CompileMode::View,      component_meta: None },
-        Fixture { name: "for-static-text", setup_url: None,           mode: CompileMode::View,      component_meta: None },
-        Fixture { name: "for-static-attr", setup_url: None,           mode: CompileMode::View,      component_meta: None },
-        Fixture { name: "for-dynamic-mixed", setup_url: None,         mode: CompileMode::View,      component_meta: None },
+        Fixture { name: "comment-and-whitespace", setup_url: None,    mode: CompileMode::Component,      component_meta: None },
+        Fixture { name: "for-update",  setup_url: None,               mode: CompileMode::Component,      component_meta: None },
+        Fixture { name: "for-static",  setup_url: None,               mode: CompileMode::Component,      component_meta: None },
+        Fixture { name: "for-static-text", setup_url: None,           mode: CompileMode::Component,      component_meta: None },
+        Fixture { name: "for-static-attr", setup_url: None,           mode: CompileMode::Component,      component_meta: None },
+        Fixture { name: "for-dynamic-mixed", setup_url: None,         mode: CompileMode::Component,      component_meta: None },
     ]
 }
 
@@ -57,22 +57,6 @@ fn compile_fixture(f: &Fixture) -> String {
     let out = compile(&source, opts).expect("compile");
     out.js
 }
-
-fn compile_ssr_fixture(name: &str) -> String {
-    let path = fixtures_dir().join(format!("{name}.sui"));
-    let source = fs::read_to_string(&path).expect("read fixture");
-    let opts = CompileOpts {
-        mode: CompileMode::View,
-        source_path: Some(path),
-        emit_dts: false,
-        emit_ssr: true,
-        emit_component_imports: false,
-        ..CompileOpts::default()
-    };
-    let out = compile(&source, opts).expect("compile");
-    out.ssr_html.expect("ssr_html present for view mode")
-}
-
 fn assert_snapshot(name: &str, actual: &str, expected_path: &Path) {
     let normalized_actual = strip_version_stamp(actual);
     if std::env::var("UPDATE_SNAPSHOTS").is_ok() {
@@ -142,12 +126,11 @@ fn bind_this_button_direct_emits_hydrate_ref() {
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         setup_url: None,
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: Some(path),
         styles: None,
         component_meta: None,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = compile(&source, opts).expect("compile");
@@ -212,12 +195,11 @@ fn for_static_body_omits_v_sentinel() {
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         setup_url: None,
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: Some(path),
         styles: None,
         component_meta: None,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = sui_compiler::compile(&source, opts).expect("compile");
@@ -271,12 +253,11 @@ fn for_body_referencing_index_refreshes_on_row_reuse() {
 "#;
     let opts = CompileOpts {
         setup_url: None,
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: None,
         styles: None,
         component_meta: None,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = compile(src, opts).expect("compile");
@@ -338,12 +319,11 @@ fn for_static_text_inlines_text_content() {
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         setup_url: None,
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: Some(path),
         styles: None,
         component_meta: None,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = sui_compiler::compile(&source, opts).expect("compile");
@@ -368,12 +348,11 @@ fn for_static_attr_inlines_set_attribute() {
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         setup_url: None,
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: Some(path),
         styles: None,
         component_meta: None,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = sui_compiler::compile(&source, opts).expect("compile");
@@ -398,12 +377,11 @@ fn for_dynamic_mixed_inlines_only_static() {
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         setup_url: None,
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: Some(path),
         styles: None,
         component_meta: None,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = sui_compiler::compile(&source, opts).expect("compile");
@@ -425,12 +403,11 @@ fn for_render_closure_emits_update_field() {
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         setup_url: None,
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: Some(path),
         styles: None,
         component_meta: None,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = sui_compiler::compile(&source, opts).expect("compile");
@@ -472,12 +449,11 @@ fn route_view_emits_route_import() {
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         setup_url: None,
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: Some(path),
         styles: None,
         component_meta: None,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = sui_compiler::compile(&source, opts).expect("compile");
@@ -499,12 +475,11 @@ fn routeless_view_omits_route_import() {
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         setup_url: None,
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: Some(path),
         styles: None,
         component_meta: None,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = sui_compiler::compile(&source, opts).expect("compile");
@@ -527,12 +502,11 @@ fn comment_nodes_not_emitted() {
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         setup_url: None,
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: Some(path),
         styles: None,
         component_meta: None,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = sui_compiler::compile(&source, opts).expect("compile");
@@ -551,12 +525,11 @@ fn whitespace_text_nodes_dropped_between_elements() {
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         setup_url: None,
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: Some(path),
         styles: None,
         component_meta: None,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = sui_compiler::compile(&source, opts).expect("compile");
@@ -588,7 +561,6 @@ fn shadow_tones_emits_adopted_style_sheets_call() {
             shadow: true,
         }),
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = compile(&source, opts).expect("compile");
@@ -608,7 +580,6 @@ fn shadow_tones_emits_adopted_style_sheets_call() {
             shadow: false,
         }),
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let light_out = compile(
@@ -637,7 +608,6 @@ fn reflect_empty_slot_emits_bind_slot_empty_call() {
             shadow: true,
         }),
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = compile(&source, opts).expect("compile");
@@ -665,7 +635,6 @@ fn ship_button_emits_cem() {
         styles: None,
         component_meta: Some(ComponentMeta { name: "ship-button-test".into(), shadow: false }),
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = compile(&source, opts).expect("compile");
@@ -687,7 +656,6 @@ fn schema_emitted_for_each_fixture() {
             styles: None,
             component_meta: fx.component_meta.clone(),
             emit_dts: false,
-            emit_ssr: false,
             emit_component_imports: false,
         };
         let out = compile(&source, opts).expect("compile");
@@ -697,43 +665,6 @@ fn schema_emitted_for_each_fixture() {
         assert_snapshot(&format!("{}.schema", fx.name), &s, &expected);
     }
 }
-
-/// SSR snapshot tests — assert that the static HTML skeleton emitted by
-/// `emit_ssr_html` is deterministic and matches the checked-in expectation.
-/// On first run (or with UPDATE_SNAPSHOTS=1) the file is written and the
-/// test passes.
-
-#[test]
-fn ssr_simple_snapshot() {
-    let html = compile_ssr_fixture("ssr-simple");
-    let expected_path = fixtures_dir().join("ssr-simple.expected.ssr.html");
-    assert_snapshot("ssr-simple.ssr", &html, &expected_path);
-}
-
-#[test]
-fn ssr_if_snapshot() {
-    let html = compile_ssr_fixture("ssr-if");
-    let expected_path = fixtures_dir().join("ssr-if.expected.ssr.html");
-    assert_snapshot("ssr-if.ssr", &html, &expected_path);
-    // status is in loading state → condition is false → else branch renders.
-    assert!(
-        html.contains("<sui-if") && html.contains("Loading"),
-        "{{#if}} with false condition must render else branch; got: {html:?}"
-    );
-}
-
-#[test]
-fn ssr_for_snapshot() {
-    let html = compile_ssr_fixture("ssr-for");
-    let expected_path = fixtures_dir().join("ssr-for.expected.ssr.html");
-    assert_snapshot("ssr-for.ssr", &html, &expected_path);
-    // {#for} with non-array iterable renders as a hidden placeholder.
-    assert!(
-        html.contains("<sui-for") && html.contains("hidden"),
-        "non-array {{#for}} must emit hidden sui-for placeholder; got: {html:?}"
-    );
-}
-
 /// Phase 3b.5 (gate L): every fixture emits a `.sui.meta.json` sidecar
 /// with binding info. The runtime never loads it; it's purely
 /// developer-tooling fuel (LSP hover, error overlay, HMR diff).
@@ -749,7 +680,6 @@ fn meta_sidecar_emitted_for_each_fixture() {
             styles: None,
             component_meta: fx.component_meta.clone(),
             emit_dts: false,
-            emit_ssr: false,
             emit_component_imports: false,
         };
         let out = compile(&source, opts).expect("compile");

@@ -200,11 +200,6 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
         source
     };
 
-    let mode = match opts.mode {
-        CompileMode::Auto => CompileMode::Component,
-        m => m,
-    };
-
     let program = parse::parse(effective_source).map_err(|e| attach_path(e, &opts))?;
     check::run(&program, effective_source, opts.source_path.as_deref())
         .map_err(|e| attach_path(e, &opts))?;
@@ -216,10 +211,16 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     check::gate(&program, effective_source, opts.source_path.as_deref())
         .map_err(|e| attach_path(e, &opts))?;
     let bindings = bindings::build(&program);
-    let lowered = lower::lower(&program, false);
+    // `is_view` is the master view/component switch in lowering (which runtime
+    // factory to import, direct-emit hydration, route detection). A source is a
+    // view iff it is tagless (no `component_meta`); a tag makes it a component.
+    let lowered = lower::lower(&program, opts.component_meta.is_none());
 
-    let js = emit::js::emit_module(&program, &lowered, &bindings, &opts, mode);
-    let cem = if mode == CompileMode::Component {
+    let js = emit::js::emit_module(&program, &lowered, &bindings, &opts);
+    // CEM (custom-elements-manifest) describes a custom element, so it's emitted
+    // only for tagged sources (components) — a tagless page has no element to
+    // describe. Keyed on the tag, like the emit split itself.
+    let cem = if opts.component_meta.is_some() {
         Some(emit::cem::emit_cem(&program, &opts))
     } else {
         None

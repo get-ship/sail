@@ -19,12 +19,11 @@ fn compile_sui(name: &str) -> String {
     let source = fs::read_to_string(&path).expect("read fixture");
     let opts = CompileOpts {
         setup_url: None,
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: Some(path),
         styles: None,
         component_meta: None,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = compile(&source, opts).expect("compile morph fixture");
@@ -58,26 +57,5 @@ fn morph_directive_emits_no_reactive_wiring() {
     assert!(
         !js.contains("bindAttr") || js.matches("bindAttr").count() == 0,
         "morph directive should not emit bindAttr; got:\n{js}"
-    );
-}
-
-#[test]
-fn morph_directive_ssr_includes_marker_attr() {
-    let path = fixtures_dir().join("morph-directive.sui");
-    let source = fs::read_to_string(&path).unwrap();
-    let opts = CompileOpts {
-        mode: CompileMode::View,
-        source_path: Some(path),
-        emit_ssr: true,
-        emit_component_imports: false,
-        ..CompileOpts::default()
-    };
-    let out = compile(&source, opts).expect("compile morph fixture for ssr");
-    let ssr = out.ssr_html.expect("ssr_html present in view mode");
-    // The marker has to survive SSR — bindRawHtml inspects the element
-    // after attach() to decide morph vs innerHTML.
-    assert!(
-        ssr.contains("morph"),
-        "SSR must include the morph marker; got:\n{ssr}"
     );
 }

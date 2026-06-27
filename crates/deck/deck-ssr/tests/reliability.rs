@@ -206,7 +206,7 @@ fn run_target(repo: &Path, t: &Target) -> Outcome {
             repo,
             &t.source,
             t.manifest,
-            CompileMode::View,
+            CompileMode::Component,
             ctrl_abs.as_deref(),
             &aliases,
             &build_dir,
@@ -316,7 +316,7 @@ fn slice1_warm_ssr_latency() {
         let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
         let bundle = rt
             .block_on(synthesize_and_bundle_with(
-                &repo, source, manifest, CompileMode::View, ctrl_abs.as_deref(), &[], &build_dir,
+                &repo, source, manifest, CompileMode::Component, ctrl_abs.as_deref(), &[], &build_dir,
             ))
             .expect("bundle latency sample");
         let mut times = Vec::new();

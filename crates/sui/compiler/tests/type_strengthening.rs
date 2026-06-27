@@ -17,12 +17,11 @@ fn fixtures_dir() -> PathBuf {
 fn paired_opts(path: PathBuf) -> CompileOpts {
     CompileOpts {
         setup_url: Some("./view.controller.ts".into()),
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: Some(path),
         styles: None,
         component_meta: None,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     }
 }
@@ -30,12 +29,11 @@ fn paired_opts(path: PathBuf) -> CompileOpts {
 fn standalone_opts(path: PathBuf) -> CompileOpts {
     CompileOpts {
         setup_url: None,
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: Some(path),
         styles: None,
         component_meta: None,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     }
 }

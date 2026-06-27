@@ -7,7 +7,7 @@
 use sui_compiler::{compile, CompileMode, CompileOpts};
 
 fn opts() -> CompileOpts {
-    CompileOpts { setup_url: None, mode: CompileMode::View, source_path: None, styles: None, component_meta: None, emit_dts: false, emit_ssr: false, emit_component_imports: false }
+    CompileOpts { setup_url: None, mode: CompileMode::Component, source_path: None, styles: None, component_meta: None, emit_dts: false, emit_component_imports: false }
 }
 
 fn compile_view(src: &str) -> sui_compiler::CompileError {
@@ -93,18 +93,6 @@ fn allows_on_handler_with_arrow_and_args() {
         opts(),
     )
     .expect("event handlers may use arrows + arg-bearing calls");
-}
-
-#[test]
-fn git_view_compiles_through_full_pipeline() {
-    // The real view file in the repo. Must continue to pass through
-    // the renderable check.
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../../views/git/page.sui");
-    let src = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
-    compile(&src, opts())
-        .unwrap_or_else(|e| panic!("agents view should compile: {}", e.render(&src)));
 }
 
 #[test]

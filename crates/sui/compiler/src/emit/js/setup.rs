@@ -4,18 +4,21 @@ use super::super::writer::{js_string, Writer};
 use crate::ir::*;
 use crate::keys::BindingRegistry;
 use crate::lower::Lowered;
-use crate::{CompileMode, CompileOpts};
+use crate::CompileOpts;
 use std::collections::BTreeSet;
 
 pub(super) fn emit_setup_body(
     w: &mut Writer,
     program: &Program,
     bindings: &BindingRegistry,
-    mode: CompileMode,
     opts: &CompileOpts,
     lowered: &Lowered,
 ) {
-    let is_component = matches!(mode, CompileMode::Component);
+    // A source is a COMPONENT (custom element) iff it carries a tag
+    // (`component_meta`); otherwise it's a tagless mount-form ("view"/page).
+    // This is the sole view/component distinction now that `CompileMode::View`
+    // is gone — keyed on the tag, not a mode flag.
+    let is_component = opts.component_meta.is_some();
     // A view that DECLARES `<client name="ship" />` opts into the keyed
     // injection surface: `ship` resolves from `ctx.clients.ship`, falling
     // back to the legacy `ctx.ship` alias so hosts that only pass

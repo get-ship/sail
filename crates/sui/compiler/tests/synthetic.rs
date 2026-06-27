@@ -37,7 +37,7 @@ fn route_is_a_real_import_not_a_builtin() {
     let (ctrl, render) = synth(
         "<h1>Hello, {route.params.id()}</h1>",
         ROUTE_MANIFEST,
-        CompileMode::View,
+        CompileMode::Component,
     );
     // The controller imports `route` as a REAL ESM import + constructs it.
     assert!(
@@ -62,7 +62,7 @@ fn route_typo_is_a_real_member_access_for_tsgo_to_reject() {
     let (_ctrl, render) = synth(
         "<h1>Hello, {route.parms.id()}</h1>",
         ROUTE_MANIFEST,
-        CompileMode::View,
+        CompileMode::Component,
     );
     assert!(
         render.contains("scope.route.parms.id()"),
@@ -86,7 +86,7 @@ fn control_flow_reuses_template_emitter_with_mixed_prefix() {
   </ul>
   {/if}
 </div>"#;
-    let (ctrl, render) = synth(src, SHIP_MANIFEST, CompileMode::View);
+    let (ctrl, render) = synth(src, SHIP_MANIFEST, CompileMode::Component);
 
     // Controller: live data lowered + typed scope.
     assert!(ctrl.contains("const list = live(() => (ship.demo.todos()));"), "live data:\n{ctrl}");
@@ -116,7 +116,7 @@ fn control_flow_reuses_template_emitter_with_mixed_prefix() {
 fn non_live_data_lowers_to_data_handle() {
     let src = r#"<data name="cfg" source="ship.demo.config()" />
 <p>{cfg().value}</p>"#;
-    let (ctrl, _render) = synth(src, SHIP_MANIFEST, CompileMode::View);
+    let (ctrl, _render) = synth(src, SHIP_MANIFEST, CompileMode::Component);
     assert!(
         ctrl.contains("const cfg = data({ initial: undefined, source: () => (ship.demo.config()) });"),
         "non-live <data> lowers to the data() handle shape:\n{ctrl}"
@@ -138,7 +138,7 @@ fn authored_controller_is_composed_via_setup_not_rewritten() {
         &manifest,
         Some(&authored),
         "./page.synthetic.controller.ts",
-        CompileMode::View,
+        CompileMode::Component,
         None,
     )
     .expect("emit");
@@ -192,7 +192,7 @@ fn authored_compose_maps_manifest_clients_into_resolver_ctx() {
         &manifest,
         Some(&authored),
         "./page.synthetic.controller.ts",
-        CompileMode::View,
+        CompileMode::Component,
         None,
     )
     .expect("emit");
@@ -232,7 +232,7 @@ fn async_let_lifts_as_v_binding_into_typed_scope() {
 {#async thing as v}{:loading}<p>…</p>{:error err}<p>{err.message}</p>{:ok}<p>{v.x}</p>{/async}"#;
     let program = parse(src).expect("parse");
     let manifest = AppManifest::parse(SHIP_MANIFEST).expect("manifest");
-    let out = emit_synthetic(&program, &manifest, None, "./c.ts", CompileMode::View, None)
+    let out = emit_synthetic(&program, &manifest, None, "./c.ts", CompileMode::Component, None)
         .expect("G5: {#async … as v} must synthesize in slice 2");
     // Controller exposes the `v` binding on the typed scope (the
     // `as v` binder declared in the template, lifted into the controller).
@@ -263,7 +263,7 @@ fn client_emit_returns_mount_and_hydrate_contract() {
         &manifest,
         None,
         "./page.synthetic.controller.ts",
-        CompileMode::View,
+        CompileMode::Component,
         None,
     )
     .expect("emit");
@@ -295,7 +295,7 @@ fn merged_client_module_is_self_contained() {
 <ul>{#for item of list().value.items key={item.id}}<li>{item.text}</li>{/for}</ul>"#;
     let program = parse(src).expect("parse");
     let manifest = AppManifest::parse(SHIP_MANIFEST).expect("manifest");
-    let merged = emit_synthetic_client_module(&program, &manifest, None, CompileMode::View, None)
+    let merged = emit_synthetic_client_module(&program, &manifest, None, CompileMode::Component, None)
         .expect("merged client module");
     assert!(
         !merged.contains("import { scope } from"),
@@ -323,7 +323,7 @@ fn merged_client_module_is_self_contained() {
 #[test]
 fn only_referenced_manifest_clients_are_imported() {
     // route is in the manifest but unused → not imported.
-    let (ctrl, _render) = synth("<p>static</p>", ROUTE_MANIFEST, CompileMode::View);
+    let (ctrl, _render) = synth("<p>static</p>", ROUTE_MANIFEST, CompileMode::Component);
     assert!(!ctrl.contains("@ship/deck/router"), "unused manifest client must not import:\n{ctrl}");
     assert!(ctrl.contains("export const scope = {  };"), "empty scope when nothing referenced:\n{ctrl}");
 }
@@ -357,7 +357,7 @@ fn template_literal_outside_interpolation_does_not_trigger_manifest_import() {
     let (ctrl, _render) = synth(
         r#"<p class:active={kind === `ship-light`}>x</p>"#,
         manifest,
-        CompileMode::View,
+        CompileMode::Component,
     );
     assert!(
         !ctrl.contains("__make_ship"),
@@ -391,7 +391,7 @@ export default controller({
         &manifest,
         Some(&authored),
         "./page.synthetic.controller.ts",
-        CompileMode::View,
+        CompileMode::Component,
         None,
     )
     .expect("emit");

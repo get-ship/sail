@@ -13,7 +13,7 @@ fn fuzz_2026_05_11_amp_entity_in_interpolation() {
     let _ = compile(
         src,
         CompileOpts {
-            mode: CompileMode::View,
+            mode: CompileMode::Component,
             ..Default::default()
         },
     );
@@ -32,7 +32,7 @@ fn fuzz_2026_05_12_deep_template_nesting() {
     let _ = compile(
         src,
         CompileOpts {
-            mode: CompileMode::View,
+            mode: CompileMode::Component,
             ..Default::default()
         },
     );
@@ -67,7 +67,7 @@ fn fuzz_2026_05_12_nested_template_sect_entity() {
     let _ = compile(
         src,
         CompileOpts {
-            mode: CompileMode::View,
+            mode: CompileMode::Component,
             ..Default::default()
         },
     );
@@ -87,7 +87,7 @@ fn fuzz_2026_05_12_dollar_stack_in_template() {
     let _ = compile(
         src,
         CompileOpts {
-            mode: CompileMode::View,
+            mode: CompileMode::Component,
             ..Default::default()
         },
     );
@@ -118,7 +118,7 @@ fn fuzz_2026_05_12_amp_prime_entity_in_template_literal() {
     let _ = compile(
         src,
         CompileOpts {
-            mode: CompileMode::View,
+            mode: CompileMode::Component,
             ..Default::default()
         },
     );

@@ -28,9 +28,10 @@ fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..").canonicalize().unwrap()
 }
 
+// The in-repo conformance app is the canonical fixture. App-level targets
+// (apps/hub, views/) live OUTSIDE the framework boundary — sui-compiler's tests
+// resolve only against in-repo fixtures.
 const CONF_MANIFEST: &str = "crates/deck/deck-conformance/app/app.manifest.jsonc";
-const HUB_MANIFEST: &str = "apps/hub/app.manifest.jsonc";
-const VIEWS_MANIFEST: &str = "views/app.manifest.jsonc";
 
 struct Target {
     name: &'static str,
@@ -149,15 +150,6 @@ function norm(html: string): string {{
 }}
 
 describe('synthetic CLIENT contract — CSR (__mount via mount.ts)', () => {{
-  it('hub / renders its text binding client-side', async () => {{
-    const mod = await import('./hub.client.ts')
-    const el = document.createElement('div')
-    const handle = await mount(el, payload('hub', ''), {{ module: mod as any }})
-    expect(el.querySelector('h1')?.textContent).toBe('Hub')
-    expect(el.textContent).toContain("Ship's primary app")
-    handle.dispose()
-  }})
-
   it('badge (a real component) mounts and stays reactive', async () => {{
     const mod = await import('./badge.client.ts')
     const el = document.createElement('div')
@@ -199,19 +191,15 @@ describe('isomorphic-render parity / clean hydration (acceptance #3)', () => {{
     handle.dispose()
   }})
 
-  it('showcase (a real view-host view): mount.ts adopts the ship-js SSR HTML with no mismatch', async () => {{
-    const html_ssr = await ssrHtml('showcase')
-    const mod = await import('./showcase.client.ts')
-    // Seed the container with the SSR HTML, as the view-host shell would.
-    const el = document.createElement('div')
-    el.innerHTML = html_ssr
-    const before = norm(el.innerHTML)
-    const handle = await mount(el, payload('showcase', html_ssr), {{ module: mod as any }})
-    // the adopted DOM is unchanged (clean hydration).
-    expect(norm(el.innerHTML)).toBe(before)
-    expect(el.textContent).toContain('sui-area-chart')
-    handle.dispose()
-  }})
+  // FOLLOW-UP (in-boundary fixture needed): the clean-ADOPT proof (mount onto
+  // SSR HTML leaves the DOM byte-identical — no teardown) and the
+  // hydrate-reattach-reactivity proof below previously used the `hub`/`showcase`
+  // app targets, which lived OUTSIDE the framework boundary. They need a
+  // dedicated in-repo conformance fixture: a clean view whose mount has no
+  // side-effect AND a controller-owned signal + dynamic text. The conformance
+  // app's `badge` is stateful (mounting flips its count), so it's not a clean
+  // adopt fixture. board-parity (above) + greet markers (below) still gate the
+  // core isomorphism + marker contracts.
 }})
 
 describe('slice 2 — hydration markers + reactivity', () => {{
@@ -224,37 +212,9 @@ describe('slice 2 — hydration markers + reactivity', () => {{
     expect(html_ssr).toMatch(/<!--\/sui-->/)
   }})
 
-  // Slice 2 — marker-based client `hydrate()` reattaches reactivity
-  // to ship-js SSR'd HTML. The synthetic emit's `mount(container)`
-  it('client `hydrate()` reattaches reactivity to ship-js SSR HTML (marker-based)', async () => {{
-    // SSR the hub view (the dynamic text binding name() is the only one)
-    // and mount the client module onto the SSR'd DOM. The marker-based
-    // `hydrate(root)` finds the `<!--sui:text:bN-->` comment and rewires
-    // the text binding to the controller's `name` signal. Mutating the
-    // signal post-hydrate propagates to the DOM — proves the marker
-    // contract works end-to-end (synthetic SSR ↔ client hydrate).
-    const html_ssr = await ssrHtml('hub')
-    expect(html_ssr).toMatch(/<!--sui:text:b\d+-->/)
-    const mod = await import('./hub.client.ts')
-    const el = document.createElement('div')
-    el.innerHTML = html_ssr
-    const handle = await mount(el, payload('hub', html_ssr), {{ module: mod as any }})
-
-    const h1 = el.querySelector('h1')
-    expect(h1).toBeTruthy()
-    const before = h1?.textContent ?? ''
-    // `name` is on the controller's authored scope — `mod.default.setup(ctx).name`
-    // is the signal. mount.ts's lifecycle wires the handle so the scope
-    // re-emits the signal; mutate through the handle to drive the hydrate
-    // binding's effect.
-    const sig = (handle.scope as any).name
-    expect(sig).toBeTruthy()
-    sig.set('UPDATED BY HYDRATE')
-    expect(h1?.textContent).toBe('UPDATED BY HYDRATE')
-    // SSR'd content survived the hydrate (no teardown).
-    expect(before).not.toBe('UPDATED BY HYDRATE')
-    handle.dispose()
-  }})
+  // The hydrate-reattach-reactivity proof (mount onto SSR HTML, then drive a
+  // signal write and watch the DOM update) needs the clean stateful fixture
+  // described in the FOLLOW-UP note above — tracked separately.
 }})
 "#,
         mount = mount_path,
@@ -281,14 +241,6 @@ fn client_contract_csr_and_hydration_in_jsdom() {
 
     let targets = [
         Target {
-            name: "hub",
-            source_rel: "apps/hub/routes/page.sui",
-            manifest_rel: HUB_MANIFEST,
-            mode: CompileMode::View,
-            controller_rel: Some("apps/hub/routes/controller.ts"),
-            component_tag: None,
-        },
-        Target {
             name: "badge",
             source_rel: "crates/deck/deck-conformance/app/components/badge/badge.sui",
             manifest_rel: CONF_MANIFEST,
@@ -300,7 +252,7 @@ fn client_contract_csr_and_hydration_in_jsdom() {
             name: "board",
             source_rel: "crates/deck/deck-conformance/app/views/board/page.sui",
             manifest_rel: CONF_MANIFEST,
-            mode: CompileMode::View,
+            mode: CompileMode::Component,
             controller_rel: Some("crates/deck/deck-conformance/app/views/board/controller.ts"),
             component_tag: None,
         },
@@ -308,15 +260,7 @@ fn client_contract_csr_and_hydration_in_jsdom() {
             name: "greet",
             source_rel: "crates/deck/deck-conformance/app/views/greet/[id]/page.sui",
             manifest_rel: CONF_MANIFEST,
-            mode: CompileMode::View,
-            controller_rel: None,
-            component_tag: None,
-        },
-        Target {
-            name: "showcase",
-            source_rel: "views/showcase/page.sui",
-            manifest_rel: VIEWS_MANIFEST,
-            mode: CompileMode::View,
+            mode: CompileMode::Component,
             controller_rel: None,
             component_tag: None,
         },

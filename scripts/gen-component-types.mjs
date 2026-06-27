@@ -55,9 +55,10 @@ for (const pack of PACKS) {
   for (const sui of walkSui(src)) {
     const stem = basename(sui, '.sui')
     // `--out <pack>/dist`: build artifacts land in the pack's own dist; the
-    // `.sui.d.ts` lands adjacent to the source regardless. `--no-ssr`: SSR
-    // skeletons are a views concern, not a component one.
-    execFileSync(COMPILER, ['build', sui, '--component-name', stem, '--out', dist, '--no-ssr'], {
+    // `.sui.d.ts` lands adjacent to the source regardless. (The compiler emits
+    // no SSR skeletons — that path was removed in the JS-only SSR cutover — so
+    // there's nothing to suppress here.)
+    execFileSync(COMPILER, ['build', sui, '--component-name', stem, '--out', dist], {
       stdio: ['inherit', 'ignore', 'inherit'],
     })
     total++

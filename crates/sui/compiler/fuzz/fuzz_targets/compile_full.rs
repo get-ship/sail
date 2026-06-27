@@ -31,7 +31,7 @@ fuzz_target!(|data: &[u8]| {
     let _ = compile(
         src,
         CompileOpts {
-            mode: CompileMode::View,
+            mode: CompileMode::Component,
             ..Default::default()
         },
     );

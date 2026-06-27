@@ -36,7 +36,6 @@ fn output_to_json(out: &CompileOutput) -> serde_json::Value {
         "cem": out.cem,
         "schema": out.schema,
         "dts": out.dts.as_deref().map(strip_version_stamp),
-        "ssrHtml": out.ssr_html,
         "meta": out.meta,
     })
 }

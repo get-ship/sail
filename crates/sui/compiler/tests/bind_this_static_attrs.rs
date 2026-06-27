@@ -22,7 +22,6 @@ fn component_opts(setup_url: Option<&str>, component_imports: bool) -> CompileOp
         styles: None,
         component_meta: Some(ComponentMeta { name: "probe-test".into(), shadow: true }),
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: component_imports,
     }
 }
@@ -57,29 +56,5 @@ fn static_attrs_survive_bind_this_with_production_component_opts() {
         out.js.contains(r#"setAttribute("part", "dag")"#),
         "part must survive in production component compile:\n{}",
         out.js
-    );
-}
-
-#[test]
-fn static_attrs_survive_bind_this_in_view_ssr() {
-    let opts = CompileOpts {
-        mode: CompileMode::View,
-        source_path: None,
-        emit_dts: false,
-        emit_ssr: true,
-        emit_component_imports: false,
-        ..CompileOpts::default()
-    };
-    let out = compile(REF_WITH_STATIC, opts).expect("compile");
-    let html = out.ssr_html.expect("ssr html present in view mode");
-    assert!(
-        html.contains(r#"class="rows""#),
-        "class must appear in the SSR skeleton alongside the bind:this marker:\n{}",
-        html
-    );
-    assert!(
-        html.contains(r#"part="rows""#),
-        "part must appear in the SSR skeleton alongside the bind:this marker:\n{}",
-        html
     );
 }

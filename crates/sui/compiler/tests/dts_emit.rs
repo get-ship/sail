@@ -9,12 +9,11 @@ use sui_compiler::{compile, CompileMode, CompileOpts};
 fn compile_dts(source: &str) -> String {
     let opts = CompileOpts {
         setup_url: None,
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: None,
         styles: None,
         component_meta: None,
         emit_dts: true,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     compile(source, opts)
@@ -38,12 +37,11 @@ fn compile_dts_with_controller(stem: &str, sui_src: &str, controller_ts: &str) -
     fs::write(&ctrl_path, controller_ts).expect("write controller");
     let opts = CompileOpts {
         setup_url: None,
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: Some(sui_path),
         styles: None,
         component_meta: None,
         emit_dts: true,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     compile(sui_src, opts)
@@ -61,7 +59,6 @@ fn compile_component_dts(source: &str) -> String {
         styles: None,
         component_meta: Some(ComponentMeta { name: "test-el".into(), shadow: false }),
         emit_dts: true,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     compile(source, opts)
@@ -119,12 +116,11 @@ fn use_hook_with_as_emits_return_type() {
 fn emit_dts_false_returns_none() {
     let opts = CompileOpts {
         setup_url: None,
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: None,
         styles: None,
         component_meta: None,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = compile(r#"<p>hi</p>"#, opts).expect("compile");

@@ -16,9 +16,8 @@ const COMPONENT_SRC: &str = r#"<prop name="label" type="string" default="" />
 
 fn view_opts() -> CompileOpts {
     CompileOpts {
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         emit_dts: true,
-        emit_ssr: false,
         emit_component_imports: false,
         ..Default::default()
     }
@@ -32,7 +31,6 @@ fn component_opts() -> CompileOpts {
             shadow: false,
         }),
         emit_dts: true,
-        emit_ssr: false,
         emit_component_imports: false,
         ..Default::default()
     }

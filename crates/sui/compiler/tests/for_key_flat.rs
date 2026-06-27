@@ -15,12 +15,11 @@ use sui_compiler::{compile, CompileMode, CompileOpts};
 fn view_opts() -> CompileOpts {
     CompileOpts {
         setup_url: None,
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: None,
         styles: None,
         component_meta: None,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     }
 }

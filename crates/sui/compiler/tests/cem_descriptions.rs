@@ -25,7 +25,6 @@ fn jsdoc_above_prop_emits_description_in_cem() {
             shadow: false,
         }),
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
     let out = compile(&source, opts).expect("compile");

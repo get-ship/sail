@@ -53,7 +53,7 @@ fn synthesized_board_client_mounts_and_stays_reactive() {
         &manifest,
         Some(&authored),
         "./board.synthetic.controller.ts",
-        CompileMode::View,
+        CompileMode::Component,
         None,
     )
     .unwrap();

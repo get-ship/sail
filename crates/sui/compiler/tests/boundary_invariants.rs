@@ -17,12 +17,11 @@ use sui_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
 fn view_opts(setup: Option<&str>) -> CompileOpts {
     CompileOpts {
         setup_url: setup.map(|s| s.to_string()),
-        mode: CompileMode::View,
+        mode: CompileMode::Component,
         source_path: None,
         styles: None,
         component_meta: None,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     }
 }
@@ -35,7 +34,6 @@ fn component_opts(setup: Option<&str>) -> CompileOpts {
         styles: None,
         component_meta: Some(ComponentMeta { name: "sui-x".into(), shadow: true }),
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     }
 }
@@ -69,61 +67,8 @@ fn component_output_emits_no_behavior_or_urls() {
     assert_clean(&out.js, "component");
 }
 
-/// Gate: a `<form mutation=...>` view must produce SSR HTML with NO `/_deck/`
-/// URL (action injection is the host's job, not the compiler's).
-#[test]
-fn form_mutation_ssr_contains_no_sui_urls() {
-    use sui_compiler::{bindings, parse, render};
-    let src = r#"<form mutation="ship.demo.create"><button type="submit">Go</button></form>"#;
-    let program = parse::parse(src).expect("parse");
-    let registry = bindings::build(&program);
-    let opts = render::RenderOpts { view_name: "myview".to_string() };
-    let out = render::render(&program, &registry, &opts).expect("render");
-    for (needle, why) in FORBIDDEN {
-        assert!(
-            !out.html.contains(needle),
-            "I1 violation in form-mutation SSR html: contains {needle:?} ({why}).\n--- html ---\n{}",
-            out.html
-        );
-        let init_str = serde_json::to_string(&out.init).unwrap();
-        assert!(
-            !init_str.contains(needle),
-            "I1 violation in form-mutation init JSON: contains {needle:?} ({why}).\n--- init ---\n{init_str}",
-        );
-    }
-    // The mutation marker itself must still be present.
-    assert!(
-        out.html.contains(r#"mutation="b0""#),
-        "mutation marker must be present in SSR; got: {}",
-        out.html
-    );
-}
-
-/// Gate: a `<data live>` view must NOT emit `__subscribe__` in the compiler
-/// output's init — the host injects it. `has_live_data` is the signal.
-#[test]
-fn live_data_ssr_contains_no_sui_urls() {
-    use sui_compiler::{bindings, parse, render};
-    let src = r#"<data name="t" source="ship.demo.clock()" live /><p>hello</p>"#;
-    let program = parse::parse(src).expect("parse");
-    let registry = bindings::build(&program);
-    let opts = render::RenderOpts { view_name: "clock".to_string() };
-    let split = render::render_split(&program, &registry, &opts).expect("render_split");
-
-    // has_live_data must be true — the host reads this.
-    assert!(split.has_live_data, "has_live_data must be true");
-
-    // No /_deck/ in HTML.
-    for (needle, why) in FORBIDDEN {
-        assert!(
-            !split.html.contains(needle),
-            "I1 violation in live-data SSR html: contains {needle:?} ({why}).\n--- html ---\n{}",
-            split.html
-        );
-        let init_str = serde_json::to_string(&split.init).unwrap();
-        assert!(
-            !init_str.contains(needle),
-            "I1 violation in live-data init JSON: contains {needle:?} ({why}).\n--- init ---\n{init_str}",
-        );
-    }
-}
+// The render-eval SSR I1 tests (compiler SSR/init contains no `/_deck/`) were
+// removed with render-eval: the compiler no longer emits SSR, so there is no
+// SSR output to leak a URL into. The I1 invariant is still enforced above on
+// the compiled JS (view/component), and the host-injection + has_live_data
+// behavior is covered by deck-core's payload tests.
