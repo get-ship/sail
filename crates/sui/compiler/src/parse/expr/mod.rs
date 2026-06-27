@@ -21,9 +21,11 @@
 
 pub mod ast;
 pub mod grammar;
+pub mod idents;
 
 pub use ast::{Arg, Ast, AstKind, ObjEntry, ObjKey, TemplatePart};
 pub use grammar::{parse_expression, parse_expression_with_arrows, ParseError};
+pub use idents::collect_idents;
 
 use crate::diagnostics::{CompileError, Span};
 

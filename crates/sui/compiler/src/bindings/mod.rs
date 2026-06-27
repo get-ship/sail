@@ -28,7 +28,7 @@
 
 use crate::ir::*;
 use crate::keys::{Binding, BindingKind, BindingRegistry, KeyAllocator};
-use crate::render::eval::collect_idents;
+use crate::parse::expr::collect_idents;
 use crate::escape::is_void_element;
 
 #[cfg(test)]
