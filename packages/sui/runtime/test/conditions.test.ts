@@ -45,21 +45,19 @@ describe('runtime/2 — glitch-free, exactly-once propagation', () => {
     return { a, seen } // initial: a=1 → b=2, c=10, d=12
   }
 
-  // GAP (condition 2 unmet by default): a bare write fans out a→b and a→c as
-  // two notifications, so the effect runs once on the b-update with c stale
-  // (3+10=13), then again at 23 → seen = [12, 13, 23]. Not glitch-free, and the
-  // effect ran twice for one write. This `it.fails` pins that reality and flips
-  // red (→ promote to a real assertion) the day the scheduler dedupes.
-  it.fails('a bare diamond write updates the dependent exactly once with no stale read', () => {
+  // The colored push-pull scheduler settles the diamond in one pass: a write
+  // marks b,c DIRTY and d CHECK, then the effect pulls d, which recomputes once
+  // after both arms settle → seen = [12, 23], never the stale intermediate 13.
+  // (See reactivity.test.ts for the full glitch-freedom + minimality taxonomy.)
+  it('a bare diamond write updates the dependent exactly once with no stale read', () => {
     const { a, seen } = diamond()
     a.set(2)
     expect(seen).toEqual([12, 23])
   })
 
-  // GAP, sharper: wrapping the write in batch() does NOT coalesce the diamond
-  // fan-out either — still [12, 13, 23]. So this is a scheduler property, not a
-  // missing batch boundary; glitch-freedom can't be reached from author code.
-  it.fails('a batched diamond write is glitch-free and runs the effect once', () => {
+  // Same property holds under batch — coalescing the trigger never reintroduces
+  // a half-updated read.
+  it('a batched diamond write is glitch-free and runs the effect once', () => {
     const { a, seen } = diamond()
     batch(() => a.set(2))
     expect(seen).toEqual([12, 23])
