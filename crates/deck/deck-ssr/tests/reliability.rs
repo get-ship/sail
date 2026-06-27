@@ -286,9 +286,28 @@ fn slice1_reliability_sweep() {
     // reliability, it does not assert universality. We require only that the
     // launch-relevant core (hub /, showcase, board, counter, glyph,
     // greet/[id]) renders correctly — a regression in those is a real break.
+    //
+    // `hub /` + `views/showcase` source from the `apps/` and `views/` trees,
+    // which live OUTSIDE the framework repo (the framework/app boundary split).
+    // When their `.sui` source is absent here, skip the gate with a note rather
+    // than fail — the conformance core (board, counter, glyph, greet/[id]) is
+    // the in-repo fidelity floor. In an app repo (apps/ present) all six are
+    // required again, unchanged.
     let core = ["hub /", "views/showcase", "board", "counter", "glyph", "greet/[id]"];
     for name in core {
         let o = outcomes.iter().find(|o| o.name == name).expect("core target present");
+        let src = targets
+            .iter()
+            .find(|t| t.name == name)
+            .map(|t| t.source.clone())
+            .unwrap_or_default();
+        if !repo.join(&src).exists() {
+            eprintln!(
+                "SKIP core target `{name}`: source `{src}` absent — \
+                 apps/ or views/ content outside the framework boundary"
+            );
+            continue;
+        }
         assert!(o.correct, "core target `{}` must render correctly: {}", name, o.note);
     }
 }
@@ -311,6 +330,17 @@ fn slice1_warm_ssr_latency() {
     lines.push("| target | warm median | min | max |".to_string());
     lines.push("|---|---|---|---|".to_string());
     for (name, source, manifest, ctrl, pathname) in &samples {
+        // `hub /` sources from `apps/hub`, outside the framework repo (the
+        // framework/app boundary split). Skip the sample with a note when its
+        // source is absent rather than panic on the `.expect` below — board +
+        // glyph (conformance) remain the in-repo latency samples.
+        if !repo.join(source).exists() {
+            eprintln!(
+                "SKIP latency sample `{name}`: source `{source}` absent — \
+                 apps/ content outside the framework boundary"
+            );
+            continue;
+        }
         let build_dir = repo.join("target/deck-ssr-latency").join(sanitize(name));
         let ctrl_abs = ctrl.as_ref().map(|c| repo.join(c));
         let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
