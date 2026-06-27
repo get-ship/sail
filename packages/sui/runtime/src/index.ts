@@ -282,27 +282,12 @@ export type { ViewPayload, MountOptions, MountHandle, SuiLoader } from './mount'
 // name `RouteSignals` without importing `@ship/deck-router` (keeps sui ⊥ deck).
 export type { RouteSignals } from './route-signals'
 
-// Chrome IPC — typed wrapper around the shell's event-driven chrome
-// surfaces (toasts, dock, command-bar, breadcrumb, status, theme,
-// focus mode, modal queue). See packages/sui/runtime/src/chrome.ts.
-export { chrome, notifyViewUnmount } from './chrome'
-
-// Per-view edit-mode UI state. Used by the dev panel + chrome to gate
+// Per-view edit-mode UI state. Used by the dev panel to gate
 // view-authoring tabs and annotation rendering. See edit-mode.ts.
 export {
   editModeForView, toggleEditMode, setEditMode,
   annotationModeForView, toggleAnnotationMode, setAnnotationMode,
 } from './edit-mode'
-export type {
-  BreadcrumbItem,
-  ModalAction,
-  ModalRequestOpts,
-  NavigateOpts,
-  NotifyOpts,
-  NotifyTone,
-  ScopeOpt,
-  StatusValue,
-} from './chrome'
 
 // Re-export the patch applicator for the same reason as the route
 // surface above: `@ship/sdk-client`'s SSE layer imports
