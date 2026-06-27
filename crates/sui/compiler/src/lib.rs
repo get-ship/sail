@@ -42,6 +42,9 @@ pub mod lower;
 pub mod out_layout;
 pub mod parse;
 pub mod render;
+pub mod escape;
+pub mod view_init;
+pub use view_init::{view_init, ViewInit};
 pub(crate) mod scan;
 
 #[cfg(target_arch = "wasm32")]

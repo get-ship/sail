@@ -21,7 +21,6 @@ use crate::ir::{AttrInstr, ElementInstr, ForInstr, IfInstr, Instr, MatchInstr, P
 use crate::keys::BindingRegistry;
 
 mod control_flow;
-mod escape;
 pub(crate) mod eval;
 mod island;
 mod out;
@@ -34,7 +33,7 @@ mod walker_attrs;
 #[cfg(test)]
 mod tests;
 
-pub use escape::{escape_attr_value, escape_text_value, is_void_element};
+pub use crate::escape::{escape_attr_value, escape_text_value, is_void_element};
 
 /// Public entry point.
 #[derive(Debug, Clone)]

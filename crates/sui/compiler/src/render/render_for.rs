@@ -11,7 +11,7 @@ use serde_json::Value;
 
 use crate::ir::{ForInstr, Instr};
 
-use super::escape::escape_attr_value;
+use crate::escape::escape_attr_value;
 use super::eval::{eval, stringify};
 use super::template_helpers::{
     close_active, close_for_item, empty_template, open_active, open_for_item,

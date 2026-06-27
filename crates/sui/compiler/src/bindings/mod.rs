@@ -29,7 +29,7 @@
 use crate::ir::*;
 use crate::keys::{Binding, BindingKind, BindingRegistry, KeyAllocator};
 use crate::render::eval::collect_idents;
-use crate::render::is_void_element;
+use crate::escape::is_void_element;
 
 #[cfg(test)]
 mod tests;

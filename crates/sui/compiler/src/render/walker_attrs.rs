@@ -4,7 +4,7 @@
 
 use crate::ir::{AttrInstr, ElementInstr};
 
-use super::escape::escape_attr_value;
+use crate::escape::escape_attr_value;
 use super::eval::{eval, stringify, truthy};
 use super::walker::Walker;
 use super::{EmitDecision, decide_element};

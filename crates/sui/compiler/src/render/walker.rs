@@ -28,7 +28,7 @@ use crate::ir::Instr;
 use crate::keys::{BindingRegistry, KeyAllocator};
 
 use super::control_flow;
-use super::escape::escape_text_value;
+use crate::escape::escape_text_value;
 use super::eval::{Scope, eval, stringify};
 use super::out::Out;
 
