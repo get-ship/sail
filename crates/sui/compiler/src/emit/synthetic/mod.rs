@@ -19,11 +19,10 @@
 //!    controller's typed `scope`.
 //!
 //! Nothing here consults `check::scope_bound`'s `BUILTINS` or the ambient
-//! `emit/js/setup.rs` ctx handling. The view-host handles `route` and
-//! `navigate` resolve through [`convention_client`] (a real
-//! `@ship/deck/router` import); every other client resolves through the
-//! app manifest. This path is additive: the ambient/`BUILTINS` path and
-//! the Rust render-eval are untouched.
+//! `emit/js/setup.rs` ctx handling. EVERY free name a `.sui` uses — `route`,
+//! `navigate`, `ship`, data sources — resolves through the app manifest; the
+//! compiler names no provider (no `@ship/deck/router` hardcode, no
+//! convention fallback). The host declares its context into the manifest seam.
 mod merge;
 pub mod render;
 mod scan;
@@ -63,42 +62,15 @@ pub struct AppManifest {
     pub clients: BTreeMap<String, ManifestClient>,
 }
 
-/// The view-host handles every `.sui` view uses, but that NO app needs to
-/// declare in its `app.manifest.jsonc`. The synthetic emit resolves them by
-/// convention: a real ESM import from `@ship/deck/router`, `construct: true`
-/// for `route` (its export is the `route()` factory, not a `RouteSignals`
-/// instance) and a plain value-import for `navigate` (it's a function
-/// reference, not a factory). Apps that want to override the convention can
-/// still declare the name in the manifest — the manifest wins, the
-/// convention is the fallback for the absent case.
-///
-/// We keep the convention list small and stable; adding a new well-known
-/// handle is an explicit, single-file change.
-pub fn convention_client(name: &str) -> Option<ManifestClient> {
-    match name {
-        "route" => Some(ManifestClient {
-            from: "@ship/deck/router".to_string(),
-            import: "route".to_string(),
-            construct: true,
-        }),
-        "navigate" => Some(ManifestClient {
-            from: "@ship/deck/router".to_string(),
-            import: "navigate".to_string(),
-            construct: false,
-        }),
-        _ => None,
-    }
-}
-
-/// Look up a manifested name; fall back to the convention table when the
-/// manifest is silent. Returns a borrowed `ManifestClient` that always
-/// reflects the manifest's authored shape (construct / alias / specifier)
-/// when present — only the absent case is the convention's path.
-fn resolve_client<'a>(manifest: &'a AppManifest, name: &str) -> Option<ManifestClient> {
-    if let Some(c) = manifest.clients.get(name) {
-        return Some(c.clone());
-    }
-    convention_client(name)
+/// Look up a manifested name. **SUI names no host:** a name resolves ONLY
+/// through the app manifest. The host (deck) declares its own context —
+/// `route`, `navigate`, and anything else — into the manifest seam; the
+/// compiler stays ignorant of any specific provider (no `@ship/deck/router`
+/// hardcode, no convention fallback). An unmanifested free name simply isn't a
+/// client and falls through to the typed scope (a typo is a hard type error
+/// downstream, not an ambient passthrough).
+fn resolve_client(manifest: &AppManifest, name: &str) -> Option<ManifestClient> {
+    manifest.clients.get(name).cloned()
 }
 
 impl AppManifest {
@@ -160,28 +132,17 @@ const HEADER: &str = "\
 // resolves member access against the imported type, so a typo like
 // `route.parms.id` is a hard type error, not an ambient passthrough.";
 
-/// Compute the set of client names this `program` actually uses, unioned
-/// with any convention-backed name (`route`/`navigate`) the template or
-/// `<data source>` references. The manifest's authored shape (construct /
-/// alias / specifier) wins when a name is present there — only the
-/// absent case is the convention's path. Stable order: manifest clients
-/// first, then convention names — so the generated import block is
+/// Compute the set of manifest client names this `program` actually
+/// references (template or `<data source>`). Per-view resolver: import only
+/// what's used. Names are taken solely from the app manifest — there is no
+/// host convention; the host declares `route`/`navigate`/etc. into the
+/// manifest itself. Manifest key order (a `BTreeMap`) keeps the import block
 /// byte-stable for the same inputs.
 pub(crate) fn used_clients(program: &Program, manifest: &AppManifest) -> Vec<String> {
     let mut used: Vec<String> = Vec::new();
     for name in manifest.clients.keys() {
         if scan::references_ident(program, name) {
             used.push(name.clone());
-        }
-    }
-    // Convention fallback — the same scan drives this so a view that
-    // never references `route` still doesn't pull in `@ship/deck/router`.
-    for name in ["route", "navigate"] {
-        if manifest.clients.contains_key(name) {
-            continue;
-        }
-        if scan::references_ident(program, name) {
-            used.push(name.to_string());
         }
     }
     used
@@ -201,9 +162,8 @@ pub fn emit_synthetic(
 ) -> Result<SyntheticOutput, CompileError> {
     // Per-view resolver: import only the manifest clients this template (or
     // a `<data source>`) actually references — mirrors how the production
-    // emitter imports only the tags a view uses. Convention-backed names
-    // (`route`/`navigate`) join the list when the manifest is silent —
-    // see [`used_clients`].
+    // emitter imports only the tags a view uses. Names come solely from the
+    // manifest (see [`used_clients`]); the compiler names no host provider.
     let used = used_clients(program, manifest);
 
 

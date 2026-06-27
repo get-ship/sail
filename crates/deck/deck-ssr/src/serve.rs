@@ -107,7 +107,7 @@ impl ShipJsSsr {
                 &repo,
                 &view_rel,
                 &manifest_rel,
-                CompileMode::View,
+                CompileMode::Component,
                 authored.as_deref(),
                 &aliases,
                 &build_dir,

@@ -76,8 +76,13 @@ pub async fn synthesize_and_bundle_with(
         .with_context(|| format!("read manifest {manifest_rel}"))?;
     let program =
         parse(&source).map_err(|e| anyhow!("parse view: {}", e.render(&source)))?;
-    let manifest = AppManifest::parse(&manifest_src)
+    let mut manifest = AppManifest::parse(&manifest_src)
         .map_err(|e| anyhow!("parse manifest: {}", e.render(&manifest_src)))?;
+    // Deck declares its host context (route/navigate -> @ship/deck/router) into
+    // the manifest seam; the app's own entries win. SUI names no host.
+    for (name, client) in deck_core::host_context::host_context_clients() {
+        manifest.clients.entry(name).or_insert(client);
+    }
     let authored = authored.map(|p| AuthoredController { specifier: path_str(p) });
     let out =
         emit_synthetic(&program, &manifest, authored.as_ref(), "./page.synthetic.controller.ts", mode, None)

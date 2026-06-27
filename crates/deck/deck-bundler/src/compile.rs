@@ -145,8 +145,13 @@ fn try_synthetic_client(sui_file: &Path) -> Result<Option<String>, CompileError>
     let manifest_src = std::fs::read_to_string(&manifest_path)
         .map_err(|e| CompileError::Read(manifest_path.clone(), e))?;
     let program = parse(&source).map_err(|e| CompileError::Compile(e.render(&source)))?;
-    let manifest =
+    let mut manifest =
         AppManifest::parse(&manifest_src).map_err(|e| CompileError::Compile(e.render(&manifest_src)))?;
+    // Deck declares its host context (route/navigate -> @ship/deck/router) into
+    // the manifest seam; the app's own entries win. SUI names no host.
+    for (name, client) in deck_core::host_context::host_context_clients() {
+        manifest.clients.entry(name).or_insert(client);
+    }
     let authored = sibling_controller_abs(sui_file)
         .map(|specifier| AuthoredController { specifier });
     let js = emit_synthetic_client_module(&program, &manifest, authored.as_ref(), SuiMode::Component, None)

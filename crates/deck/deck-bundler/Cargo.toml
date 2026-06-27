@@ -50,5 +50,8 @@ g3 = []
 [dependencies.sui-compiler]
 path = "../../sui/compiler"
 
+[dependencies.deck-core]
+path = "../deck-core"
+
 [lints]
 workspace = true

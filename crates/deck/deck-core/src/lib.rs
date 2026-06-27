@@ -24,6 +24,7 @@ pub mod resolver;
 pub mod routes;
 pub mod setup;
 pub mod synthetic_ssr;
+pub mod host_context;
 pub mod themes;
 pub mod view;
 pub mod view_tokens;
