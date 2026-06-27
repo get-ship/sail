@@ -12,10 +12,13 @@ path = "src/lib.rs"
 # The synthetic emitter — used as a pure function (no CLI shell-out).
 sui-compiler = { path = "../../sui/compiler" }
 # The L0 JS engine: the deno_core/V8 isolate + the host-dispatch wire.
-# ship-js is Ship's runtime — consumed by path from the sibling Ship repo.
-# (Main-checkout builds dedupe on this path; a worktree-safe published form
-#  is a follow-up, not a separate repo.)
-ship-js = { path = "../../../../ship/crates/core/ship-substrate/crates/ship-js", features = ["deno"] }
+# ship-js is Ship's runtime — a cargo-managed, REV-PINNED git dependency, not a
+# relative path. A path like `../../../../ship` resolves to a different place
+# from a git worktree (different checkout depth), which is what kept biting
+# agents; a git dep resolves identically from any worktree. Bump `rev` to adopt
+# a newer ship-js. Local file:// URL for now (no SSH-auth dependency); swap to
+# `ssh://git@github.com/madvib/Ship.git` (same rev) for cross-machine / CI.
+ship-js = { git = "file:///home/madvib/dev/Ship/ship", rev = "82909ba18371d702f3ae83fe7222ec009685f753", features = ["deno"] }
 # Deck's request/data contracts (DataPort) the host Dispatch maps onto.
 deck-core = { path = "../deck-core" }
 # The project's own bundler (Rolldown), so the measured bundle matches the
