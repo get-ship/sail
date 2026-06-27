@@ -1,6 +1,6 @@
 //! SSR acceptance: a SYNTHESIZED view renders correct first-paint HTML through
-//! ship-js (deno_core/V8), with the route param resolved over host-dispatch —
-//! NOT the Rust render-eval. This is the production TS-SSR path, beside it.
+//! ship-js (deno_core/V8), with the route param resolved over host-dispatch.
+//! This is the production TS-SSR path (the Rust render-eval engine was removed).
 
 use std::sync::Arc;
 
@@ -81,7 +81,7 @@ fn greet_first_paint_via_ship_js_with_route_through_host_dispatch() {
     let dispatch = Arc::new(SsrDispatch::for_request("/greet/zelda", json!({ "id": "zelda" }), json!({})));
     let out = render(&bundle, dispatch).expect("render in ship-js");
 
-    // First paint produced by ship-js run_module (NOT render-eval).
+    // First paint produced by ship-js run_module.
     let html = strip_markers(&out.html);
     assert!(
         html.contains("<h1>Hello, zelda</h1>"),

@@ -13,8 +13,8 @@
 //!      the real op surface. A minimal server-DOM lets the SAME synthesized
 //!      render run unchanged and serialize to a first-paint HTML string.
 //!
-//! This is a PARALLEL, ADDITIVE path beside the Rust render-eval
-//! (`sui-compiler::render::eval`, `render/scope.rs`) — it never touches it.
+//! ship-js is THE SSR path: the Rust render-eval engine was removed in the
+//! JS-only SSR cutover, so there is no second rendering path.
 
 pub mod build;
 pub mod host;

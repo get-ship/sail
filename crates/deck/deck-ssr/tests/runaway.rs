@@ -1,9 +1,9 @@
 //! The bound's end-to-end proof: a runaway controller is terminated by the
 //! deadline and the SSR render path returns a CLEAN `Err` (not a hang, not a
-//! panic). The gate (`deck_core::synthetic_ssr`) catches that `Err` and falls
-//! back to the archived render-eval — this is the contract reliability.rs
-//! already assumes ("a failure records the precise gap, never a silent
-//! exclusion").
+//! panic). The gate (`deck_core::synthetic_ssr`) catches that `Err` and serves
+//! CSR (an empty `#sui-root`, logged loudly) — this is the contract
+//! reliability.rs already assumes ("a failure records the precise gap, never a
+//! silent exclusion").
 //!
 //! These tests exercise the real `deck_ssr::run::render_with_limits` entry
 //! point with a hand-rolled runaway bundle, so they cover the full chain:

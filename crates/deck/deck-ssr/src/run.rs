@@ -9,8 +9,9 @@
 //! **Bounded:** every run carries a [`RunLimits`] (wall-clock + heap cap). A
 //! runaway controller — infinite loop, stuck host op, unbounded allocation —
 //! is **terminated** and `render` returns an `Err`, so the SSR gate
-//! (`deck_core::synthetic_ssr`) falls back to the archived render-eval rather
-//! than 500ing the request or wedging the daemon. The bound is configurable
+//! (`deck_core::synthetic_ssr`) serves an empty `#sui-root` for the client to
+//! mount (CSR; the error is logged loudly) rather than 500ing the request or
+//! wedging the daemon. The bound is configurable
 //! per-call (`render_with_limits`) or host-wide via `SHIP_JS_DEADLINE_MS` /
 //! `SHIP_JS_MAX_HEAP_MB` env vars; defaults are 5 s wall-clock + 256 MiB heap.
 //!
