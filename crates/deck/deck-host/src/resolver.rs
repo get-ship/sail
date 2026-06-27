@@ -1,12 +1,6 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
-use std::time::SystemTime;
 
-use sui_compiler::{
-    parse,
-    render::{self, RenderOutput},
-};
 
 #[derive(Debug, serde::Serialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
@@ -263,55 +257,6 @@ fn join_request(name: &str, sub_path: Option<&str>) -> String {
     }
 }
 
-struct CacheEntry {
-    mtime: SystemTime,
-    rendered: RenderOutput,
-}
-
-fn cache() -> &'static Mutex<HashMap<(PathBuf, String), CacheEntry>> {
-    static CACHE: std::sync::OnceLock<Mutex<HashMap<(PathBuf, String), CacheEntry>>> =
-        std::sync::OnceLock::new();
-    CACHE.get_or_init(|| Mutex::new(HashMap::new()))
-}
-
-pub fn render_resolved(
-    resolved: &ResolvedView,
-    view_name: &str,
-) -> Result<RenderOutput, String> {
-    let path = resolved.source_path.as_ref().ok_or_else(|| {
-        "render_resolved called without a source_path".to_string()
-    })?;
-    let mtime = std::fs::metadata(path)
-        .and_then(|m| m.modified())
-        .map_err(|e| format!("stat {}: {e}", path.display()))?;
-    let key = (path.clone(), view_name.to_string());
-    {
-        let guard = cache().lock().expect("sui_resolver cache poisoned");
-        if let Some(entry) = guard.get(&key)
-            && entry.mtime == mtime
-        {
-            return Ok(entry.rendered.clone());
-        }
-    }
-    let rendered = compile(&resolved.source, view_name)?;
-    let mut guard = cache().lock().expect("sui_resolver cache poisoned");
-    guard.insert(
-        key,
-        CacheEntry {
-            mtime,
-            rendered: rendered.clone(),
-        },
-    );
-    Ok(rendered)
-}
-
-fn compile(source: &str, view_name: &str) -> Result<RenderOutput, String> {
-    let program = parse::parse(source).map_err(|e| e.render(source))?;
-    let opts = render::RenderOpts {
-        view_name: view_name.to_string(),
-    };
-    render::render_default(&program, &opts).map_err(|e| e.render(source))
-}
 
 #[cfg(test)]
 #[path = "resolver_tests.rs"]

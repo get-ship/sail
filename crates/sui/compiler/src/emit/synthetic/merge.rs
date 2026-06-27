@@ -46,7 +46,6 @@ pub fn emit_synthetic_client_module(
     let client_ts = render::emit_render_client(
         program,
         MERGED_CONTROLLER_SPEC,
-        mode,
         component_tag,
     )?;
     let (ctrl_imports, ctrl_body) = split_module(&controller_ts);

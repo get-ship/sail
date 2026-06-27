@@ -64,7 +64,6 @@ enum NapiResult {
         js: String,
         css: Option<String>,
         dts: Option<String>,
-        ssr_html: Option<String>,
     },
     Err {
         message: String,
@@ -101,12 +100,11 @@ fn compile_to_result(source: &str, opts_json: &str) -> Result<NapiResult, String
     };
 
     let mode = match parsed.mode.as_deref() {
-        Some("view") => CompileMode::View,
         Some("component") => CompileMode::Component,
         Some("auto") | None => CompileMode::Auto,
         Some(other) => {
             return Err(format!(
-                "unknown mode {other:?} — expected view / component / auto"
+                "unknown mode {other:?} — expected component / auto"
             ))
         }
     };
@@ -123,7 +121,6 @@ fn compile_to_result(source: &str, opts_json: &str) -> Result<NapiResult, String
         styles: parsed.styles,
         component_meta,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
 
@@ -132,7 +129,6 @@ fn compile_to_result(source: &str, opts_json: &str) -> Result<NapiResult, String
             js: out.js,
             css: out.css,
             dts: out.dts,
-            ssr_html: out.ssr_html,
         },
         Err(err) => NapiResult::Err {
             message: err.message.clone(),

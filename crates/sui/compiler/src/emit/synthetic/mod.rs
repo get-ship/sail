@@ -208,9 +208,9 @@ pub fn emit_synthetic(
 
 
     let controller_ts = emit_controller(program, manifest, &used, authored, mode)?;
-    let render_ts = render::emit_render(program, controller_specifier, mode, component_tag)?;
+    let render_ts = render::emit_render(program, controller_specifier, component_tag)?;
     let render_client_ts =
-        render::emit_render_client(program, controller_specifier, mode, component_tag)?;
+        render::emit_render_client(program, controller_specifier, component_tag)?;
     Ok(SyntheticOutput { controller_ts, render_ts, render_client_ts, used_clients: used })
 }
 

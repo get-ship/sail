@@ -12,7 +12,6 @@
 //! step uses the IR plus this `Lowered` struct to produce JS.
 
 use crate::ir::*;
-use crate::CompileMode;
 use std::collections::BTreeSet;
 
 pub mod bindings;
@@ -58,10 +57,9 @@ pub struct Lowered {
 }
 
 /// Walk the program, build a `Lowered` summary.
-pub fn lower(program: &Program, mode: CompileMode) -> Lowered {
+pub fn lower(program: &Program, is_view: bool) -> Lowered {
     let mut out = Lowered::default();
-    let is_view = mode == CompileMode::View;
-    if mode == CompileMode::Component {
+    if !is_view {
         out.runtime_imports.insert("component");
         if !program.props.is_empty() {
             out.runtime_imports.insert("prop");

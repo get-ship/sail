@@ -86,9 +86,6 @@ enum Command {
         /// Suppress emitting the `.sui.d.ts` declaration file.
         #[arg(long)]
         no_dts: bool,
-        /// Suppress emitting the `.ssr.html` static SSR file (e.g. for island bundles).
-        #[arg(long)]
-        no_ssr: bool,
         /// Emit `import "@sui-tag/<tag>";` per used custom-element tag so the
         /// bundler can tree-shake exactly the components a view uses (the
         /// per-view resolver). The bundler resolves `@sui-tag/<tag>` to the
@@ -132,7 +129,6 @@ enum Command {
 
 #[derive(Clone, Debug, clap::ValueEnum)]
 enum ModeArg {
-    View,
     Component,
     Auto,
 }
@@ -140,7 +136,6 @@ enum ModeArg {
 impl From<ModeArg> for CompileMode {
     fn from(m: ModeArg) -> Self {
         match m {
-            ModeArg::View => CompileMode::View,
             ModeArg::Component => CompileMode::Component,
             ModeArg::Auto => CompileMode::Auto,
         }
@@ -152,10 +147,10 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.cmd {
         Command::Build {
-            input, out, clean, mode, no_dts, styles, component_name, no_ssr,
+            input, out, clean, mode, no_dts, styles, component_name,
             emit_component_imports,
         } => build(
-            input, out, clean, mode, no_dts, styles, component_name, no_ssr,
+            input, out, clean, mode, no_dts, styles, component_name,
             emit_component_imports,
         ),
         Command::Synthesize { input, manifest, out_dir, component } => {
@@ -187,7 +182,7 @@ fn synthesize(
     let mode = if force_component || raw_stem != "page" {
         CompileMode::Component
     } else {
-        CompileMode::View
+        CompileMode::Component
     };
 
     let stem = {
@@ -284,7 +279,6 @@ fn build(
     no_dts: bool,
     styles: Option<PathBuf>,
     component_name: Option<String>,
-    no_ssr: bool,
     emit_component_imports: bool,
 ) -> Result<()> {
     let mut targets = Vec::new();
@@ -376,7 +370,7 @@ fn build(
             (_, Some(name)) => Some(ComponentMeta { name, shadow: true }),
             _ => None,
         };
-        compile_one(&path, out.as_deref(), mode.clone(), no_dts, styles_text.as_deref(), component_meta, no_ssr, emit_component_imports)?;
+        compile_one(&path, out.as_deref(), mode.clone(), no_dts, styles_text.as_deref(), component_meta, emit_component_imports)?;
     }
     println!("compiled {count} file(s)");
     Ok(())
@@ -437,7 +431,6 @@ fn compile_one(
     no_dts: bool,
     styles: Option<&str>,
     component_meta: Option<ComponentMeta>,
-    no_ssr: bool,
     emit_component_imports: bool,
 ) -> Result<()> {
     let source = fs::read_to_string(path)
@@ -468,7 +461,6 @@ fn compile_one(
         styles: styles.map(|s| s.to_string()),
         component_meta,
         emit_dts: !no_dts,
-        emit_ssr: !no_ssr,
         emit_component_imports,
     };
     let result = compile(&source, opts).map_err(|e| {
@@ -530,13 +522,6 @@ fn compile_one(
         let dts_path = dts_dir.join(format!("{stem}.d.ts"));
         fs::write(&dts_path, dts)
             .with_context(|| format!("write {}", dts_path.display()))?;
-    }
-    // Write the static SSR HTML skeleton so the server can splice it into
-    // the first-paint response without re-rendering at request time.
-    if let Some(ssr_html) = result.ssr_html {
-        let ssr_path = out_dir.join(format!("{stem_no_ext}.ssr.html"));
-        fs::write(&ssr_path, ssr_html)
-            .with_context(|| format!("write {}", ssr_path.display()))?;
     }
     Ok(())
 }

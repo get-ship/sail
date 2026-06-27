@@ -59,7 +59,7 @@ pub fn compile_sui(
         setup_url: paired_controller(sui_file, stem),
         mode: match mode {
             CompileMode::Component => SuiMode::Component,
-            CompileMode::View => SuiMode::View,
+            CompileMode::View => SuiMode::Component,
         },
         source_path: Some(sui_file.to_path_buf()),
         styles: None,
@@ -68,7 +68,6 @@ pub fn compile_sui(
         // The bundler reads only the JS — dts/ssr are the CLI bake's job, and
         // the CEM is walked from disk by the catalog, not returned here.
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports,
     };
     match compile(&source, opts) {
@@ -150,7 +149,7 @@ fn try_synthetic_client(sui_file: &Path) -> Result<Option<String>, CompileError>
         AppManifest::parse(&manifest_src).map_err(|e| CompileError::Compile(e.render(&manifest_src)))?;
     let authored = sibling_controller_abs(sui_file)
         .map(|specifier| AuthoredController { specifier });
-    let js = emit_synthetic_client_module(&program, &manifest, authored.as_ref(), SuiMode::View, None)
+    let js = emit_synthetic_client_module(&program, &manifest, authored.as_ref(), SuiMode::Component, None)
         .map_err(|e| CompileError::Compile(e.render(&source)))?;
     Ok(Some(js))
 }

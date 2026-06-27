@@ -15,7 +15,7 @@ sui-compiler = { path = "../../sui/compiler" }
 # ship-js is Ship's runtime — consumed by path from the sibling Ship repo.
 # (Main-checkout builds dedupe on this path; a worktree-safe published form
 #  is a follow-up, not a separate repo.)
-ship-js = { path = "../../../../ship/crates/core/ship-substrate/crates/ship-js", features = ["deno"] }
+ship-js = { path = "/home/madvib/dev/ship-worktrees/platform-db-reliability/crates/core/ship-substrate/crates/ship-js", features = ["deno"] }
 # Deck's request/data contracts (DataPort) the host Dispatch maps onto.
 deck-core = { path = "../deck-core" }
 # The project's own bundler (Rolldown), so the measured bundle matches the

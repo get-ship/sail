@@ -41,7 +41,6 @@ pub mod keys;
 pub mod lower;
 pub mod out_layout;
 pub mod parse;
-pub mod render;
 pub mod escape;
 pub mod view_init;
 pub use view_init::{view_init, ViewInit};
@@ -95,12 +94,12 @@ pub fn compiler_version() -> CompilerVersion {
     }
 }
 
-/// Compile mode.
+/// Compile mode. Every `.sui` compiles to a component; `Auto` resolves to
+/// `Component`. The retired `View` mode (static SSR HTML + a hydration island)
+/// is gone — SSR is the host's job, run on the same component via ship-js.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CompileMode {
-    /// Auto-detect: picks `Component` when `component_meta` is set, otherwise `View`.
     Auto,
-    View,
     Component,
 }
 
@@ -131,10 +130,6 @@ pub struct CompileOpts {
     /// Emit a `.sui.d.ts` declaration file alongside the JS module.
     /// Defaults to `true`. Pass `false` (via `--no-dts`) to suppress.
     pub emit_dts: bool,
-    /// Emit a `.ssr.html` static SSR snapshot alongside the JS module
-    /// (view mode only). Defaults to `true`. Pass `false` (via `--no-ssr`)
-    /// to suppress, e.g. for island bundles that have no static skeleton.
-    pub emit_ssr: bool,
     /// Emit a side-effect `import "@sui-tag/<tag>";` for every custom-element
     /// tag the template uses, so components enter the module's import graph and
     /// the bundler can tree-shake exactly what a view needs — the per-view
@@ -154,7 +149,6 @@ impl Default for CompileOpts {
             styles: None,
             component_meta: None,
             emit_dts: true,
-            emit_ssr: true,
             emit_component_imports: false,
         }
     }
@@ -172,10 +166,6 @@ pub struct CompileOutput {
     /// for LSP/IDE consumption. The runtime never loads this; it's purely
     /// developer-tooling fuel.
     pub meta: Option<serde_json::Value>,
-    /// Static SSR HTML body fragment, present when `CompileOpts::emit_ssr` is
-    /// true and mode is `View`. Written to the project mirror tree as
-    /// `<repo-root>/.ship/sui-out/<src-rel>/<stem>.ssr.html` by the CLI.
-    pub ssr_html: Option<String>,
 }
 
 /// Check a `.sui` source string and return **every** diagnostic, not just
@@ -191,43 +181,6 @@ pub fn check_all(source: &str, source_path: Option<&std::path::Path>) -> Vec<Dia
         Ok(program) => check::collect(&program, source, source_path),
         Err(e) => vec![Diagnostic::from_compile_error(&e, source)],
     }
-}
-
-/// Output of [`render_view`]: the split body/scope plus the declared
-/// `<client>` names. Bundled together so a host (deck-core's view-payload
-/// serve path) gets everything one request needs from a single call instead
-/// of reaching into the compiler's `parse` / `bindings` / `render`
-/// sub-modules itself.
-#[derive(Debug, Clone)]
-pub struct RenderView {
-    /// Body HTML + initial scope, returned separately (see
-    /// [`render::RenderSplit`]). `__subscribe__` is NOT injected — the host
-    /// reads `split.has_live_data` and folds the served URL in with its own
-    /// route builders.
-    pub split: render::RenderSplit,
-    /// Declared `<client>` names, in source order.
-    pub clients: Vec<String>,
-}
-
-/// Render a `.sui` view source to a [`RenderView`] — the
-/// `parse::parse → bindings::build → render::render_split` chain packaged
-/// behind one public entry point.
-///
-/// This is the serve-path counterpart to [`compile`] (which emits the ESM
-/// module): it produces the first-paint split + the client list a host ships
-/// in its view payload. Hosts call this instead of touching the internal
-/// sub-modules. Serve concerns stay on the host side — `__subscribe__`
-/// injection (via [`render::RenderSplit::has_live_data`]) and any
-/// mtime-gated caching are the host's, not the compiler's.
-pub fn render_view(
-    source: &str,
-    opts: &render::RenderOpts,
-) -> Result<RenderView, CompileError> {
-    let program = parse::parse(source)?;
-    let registry = bindings::build(&program);
-    let split = render::render_split(&program, &registry, opts)?;
-    let clients = program.clients.iter().map(|c| c.name.clone()).collect();
-    Ok(RenderView { split, clients })
 }
 
 /// Compile a `.sui` source string.
@@ -248,13 +201,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     };
 
     let mode = match opts.mode {
-        CompileMode::Auto => {
-            if opts.component_meta.is_some() {
-                CompileMode::Component
-            } else {
-                CompileMode::View
-            }
-        }
+        CompileMode::Auto => CompileMode::Component,
         m => m,
     };
 
@@ -269,7 +216,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     check::gate(&program, effective_source, opts.source_path.as_deref())
         .map_err(|e| attach_path(e, &opts))?;
     let bindings = bindings::build(&program);
-    let lowered = lower::lower(&program, mode);
+    let lowered = lower::lower(&program, false);
 
     let js = emit::js::emit_module(&program, &lowered, &bindings, &opts, mode);
     let cem = if mode == CompileMode::Component {
@@ -288,18 +235,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
         None
     };
     let meta = Some(emit::meta::emit_meta(&program, &bindings));
-    let ssr_html = if opts.emit_ssr && mode == CompileMode::View {
-        let view_name = opts.source_path
-            .as_ref()
-            .and_then(|p| p.file_stem())
-            .and_then(|s| s.to_str())
-            .map(|s| s.trim_end_matches(".html").to_string())
-            .unwrap_or_else(|| "view".to_string());
-        Some(emit::ssr::emit_ssr_html(&program, &bindings, &view_name))
-    } else {
-        None
-    };
-    Ok(CompileOutput { js, css: None, cem, schema, dts, meta, ssr_html })
+    Ok(CompileOutput { js, css: None, cem, schema, dts, meta })
 }
 
 fn attach_path(err: CompileError, opts: &CompileOpts) -> CompileError {

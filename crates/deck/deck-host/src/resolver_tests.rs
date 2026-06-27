@@ -76,35 +76,6 @@ fn missing_view_returns_diagnostic() {
     });
 }
 
-fn bump_mtime(path: &Path, secs_forward: u64) {
-    let now = std::fs::metadata(path).and_then(|m| m.modified()).unwrap();
-    let bumped = now + std::time::Duration::from_secs(secs_forward);
-    filetime::set_file_mtime(path, filetime::FileTime::from_system_time(bumped))
-        .expect("bump mtime");
-}
-
-#[test]
-fn mtime_cache_reuses_render_until_source_touched() {
-    with_tempdir(|root| {
-        let view_dir = root.join("views/cachey");
-        fs::create_dir_all(&view_dir).unwrap();
-        let path = view_dir.join("page.sui");
-        fs::write(&path, r#"<p>first</p>"#).unwrap();
-
-        let r = resolve(root, &layout(), "cachey", None).unwrap();
-        let first = render_resolved(&r, "cachey").unwrap();
-
-        let second = render_resolved(&r, "cachey").unwrap();
-        assert_eq!(first.html, second.html);
-
-        fs::write(&path, r#"<p>second</p>"#).unwrap();
-        bump_mtime(&path, 5);
-        let r2 = resolve(root, &layout(), "cachey", None).unwrap();
-        let third = render_resolved(&r2, "cachey").unwrap();
-        assert_ne!(third.html, first.html);
-    });
-}
-
 #[test]
 fn oversized_source_is_rejected() {
     // A pathologically large `.sui` would otherwise be slurped + compiled in

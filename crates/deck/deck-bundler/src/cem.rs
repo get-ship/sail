@@ -71,7 +71,6 @@ pub fn write_pack_cem(pack_root: &Path) -> Result<Option<PathBuf>> {
                 shadow: true,
             }),
             emit_dts: false,
-            emit_ssr: false,
             emit_component_imports: false,
         };
         let out = sui_compiler::compile(&source, opts)

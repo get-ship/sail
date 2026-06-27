@@ -88,7 +88,7 @@ pub(crate) fn detect_project_root_from(cwd: &std::path::Path) -> Option<PathBuf>
 }
 
 use deck_host::resolver::ViewLayout;
-pub use deck_host::resolver::{ResolvedView, ResolveError, render_resolved};
+pub use deck_host::resolver::{ResolvedView, ResolveError};
 /// Build a [`ViewLayout`] from the conventional `["views"]` bucket with a
 /// single `page.sui` leaf. The leaf is unified across all
 /// buckets (fixes the #254 `index.sui` vs `page.sui` divergence). The
