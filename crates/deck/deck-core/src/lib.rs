@@ -19,7 +19,6 @@ pub mod live_wire;
 pub mod meta;
 pub mod mode_html;
 // (formerly `pub mod packs;`) — purged with the `.deck/` runtime read.
-pub mod render_eval_archived;
 pub mod render_helpers;
 pub mod resolver;
 pub mod routes;

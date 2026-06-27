@@ -7,13 +7,11 @@
 //! a cycle. Instead deck-ssr **registers** an implementation here at host
 //! startup, and the serve path calls through this seam.
 //!
-//! ship-js is now the **default** first-paint engine. It is selected whenever a
-//! renderer has been registered AND it renders without error — either failing
-//! falls straight back to the **archived** Rust render-eval (see
-//! [`crate::render_eval_archived`]). So a daemon built without deck-ssr, or one
-//! that opts back out via `DECK_SSR=render-eval`, keeps the byte-for-byte
-//! render-eval output. The path stays additive: the fallback is always
-//! render-eval; ship-js only swaps the first-paint source when it is available.
+//! ship-js is the one first-paint engine. It produces HTML whenever a renderer
+//! has been registered AND it renders without error. When no renderer is
+//! registered (e.g. a V8-less context) or a render fails, there is no server
+//! HTML and the caller serves an empty `#sui-root` for the client to mount
+//! (CSR) — there is no second rendering path.
 
 use std::path::Path;
 use std::sync::OnceLock;
@@ -60,28 +58,18 @@ fn renderer() -> Option<&'static dyn SyntheticSsr> {
     RENDERER.get().map(|b| b.as_ref())
 }
 
-/// The gate. Default ON (ship-js). `DECK_SSR=render-eval` opts BACK to the
-/// archived render-eval engine; every other value (including unset) selects
-/// ship-js. The escape hatch's single source of truth is
-/// [`crate::render_eval_archived::requested`] — this is its inverse.
-pub fn enabled() -> bool {
-    !crate::render_eval_archived::requested()
-}
-
-/// First-paint HTML through ship-js when the gate is on AND a renderer is
-/// registered AND it succeeds; otherwise `None`, and the caller renders via
-/// the Rust render-eval path exactly as before.
+/// First-paint HTML through ship-js when a renderer is registered AND it
+/// succeeds; otherwise `None`, and the caller serves an empty `#sui-root` for
+/// the client to mount (CSR). A render error is logged loudly (it is a real
+/// failure, not a quiet downgrade) — it does not fall back to a second engine.
 pub fn first_paint(req: &SsrRequest) -> Option<String> {
-    if !enabled() {
-        return None;
-    }
     let r = renderer()?;
     match r.first_paint(req) {
         Ok(html) => Some(html),
         Err(e) => {
-            tracing::warn!(
+            tracing::error!(
                 view = req.view_name,
-                "ship-js SSR failed; falling back to render-eval: {e:#}"
+                "ship-js SSR failed; serving an empty #sui-root (client mounts via CSR): {e:#}"
             );
             None
         }

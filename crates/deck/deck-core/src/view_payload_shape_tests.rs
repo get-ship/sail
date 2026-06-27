@@ -59,8 +59,12 @@ fn top_level_view_payload_shape() {
     let v: serde_json::Value = serde_json::from_str(&body_str(&resp)).unwrap();
     assert_eq!(v["name"], "demo");
     assert!(v["sub"].is_null());
+    // First-paint HTML now comes solely from ship-js (V8) — absent in this
+    // V8-less unit context, so html is empty and the client mounts via CSR.
+    // This test pins the payload SHAPE; SSR-output coverage lives in the
+    // conformance / deck-ssr layer. The scope island must never be inlined into
+    // the html regardless — scope is a separate field.
     let html = v["html"].as_str().unwrap();
-    assert!(html.contains("<p>"), "html should contain rendered template, got {html}");
     assert!(!html.contains("__set_init__"),
         "html must NOT include the script island — scope is a separate field");
     assert_eq!(v["css"], "p { color: red; }");
