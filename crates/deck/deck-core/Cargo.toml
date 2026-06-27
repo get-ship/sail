@@ -17,7 +17,6 @@ specta = ["dep:specta", "deck-host/specta"]
 deck-config = { path = "../deck-config" }
 deck-host = { path = "../deck-host" }
 sui-compiler = { path = "../../sui/compiler" }
-sui-signals = { path = "../../sui/signals" }
 
 serde = { workspace = true }
 serde_json = { workspace = true }
