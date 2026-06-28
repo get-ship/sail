@@ -12,7 +12,7 @@ pub(super) fn emit_setup_body(
     program: &Program,
     bindings: &BindingRegistry,
     opts: &CompileOpts,
-    lowered: &Lowered,
+    _lowered: &Lowered,
 ) {
     // A source is a COMPONENT (custom element) iff it carries a tag
     // (`component_meta`); otherwise it's a tagless mount-form ("view"/page).
@@ -157,15 +157,6 @@ fn emit_view_hydrate(
     w.line("},");
 }
 
-fn emit_component_scope_seed(w: &mut Writer, program: &Program) {
-    for p in &program.props {
-        w.line(&format!(
-            "$scope.{ident} = props.{ident};",
-            ident = js_ident(&camel_of(&p.name))
-        ));
-    }
-}
-
 fn emit_data_decls(w: &mut Writer, program: &Program) {
     // The view's setup closure already destructures `ship`, `route`,
     // `navigate` from `ctx` into its lexical scope, so the data thunk
@@ -275,43 +266,3 @@ fn emit_setup_call(w: &mut Writer) {
     w.line("}");
 }
 
-fn emit_component_setup_call(w: &mut Writer) {
-    // Component variant: expose $scope to the controller so its on-handlers
-    // can mutate <state> signals via the writable proxy. Store __r in a
-    // let-binding so emit_component_lifecycle_wiring can read LIFECYCLE_KEY
-    // from it after the template has rendered (bind:this refs land in $scope
-    // during emit_top_level, which runs after this call).
-    w.line("let __r = null;");
-    w.line("if (setup && typeof setup.setup === \"function\") {");
-    w.enter();
-    w.line("ctx.scope = $scope;");
-    w.line("__r = setup.setup(ctx);");
-    w.line("if (__r && typeof __r === \"object\") Object.assign($scope, __r);");
-    w.leave();
-    w.line("}");
-}
-
-fn emit_component_lifecycle_wiring(w: &mut Writer) {
-    // Called after emit_top_level so bind:this refs are in $scope. Reads
-    // the LIFECYCLE_KEY bundle from the controller's setup result and wires
-    // mount + unmount into __cleanups.
-    //
-    // `__sp` is the component-mount state: raw-signal reads (so refs/prop
-    // signals stay callable, `state.termHost()`) plus `state.$signals.x`. It's
-    // the SAME runtime builder the view-mount + on-handler paths use — the
-    // compiler emits a CALL to it, never a hand-rolled proxy, so the proxy
-    // contract can't drift between compiled output and the runtime (the #121
-    // `$signals`-undefined regression class).
-    w.line("if (__r != null) {");
-    w.enter();
-    w.line("const __lc = Object.getOwnPropertyDescriptor(__r, \"__shipSetLifecycle\")?.value;");
-    w.line("if (__lc) {");
-    w.enter();
-    w.line("const __sp = componentMountState($scope);");
-    w.line("if (__lc.mount) { const __mc = __lc.mount(__sp, host); if (typeof __mc === \"function\") __cleanups.push(__mc); }");
-    w.line("if (__lc.unmount) __cleanups.push(() => __lc.unmount(__sp));");
-    w.leave();
-    w.line("}");
-    w.leave();
-    w.line("}");
-}
