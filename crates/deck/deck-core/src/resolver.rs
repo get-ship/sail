@@ -14,6 +14,59 @@ static PROJECT_ROOT_OVERRIDE: RwLock<Option<PathBuf>> = RwLock::new(None);
 static VIEW_OUTPUTS: Mutex<BTreeMap<String, PathBuf>> = Mutex::new(BTreeMap::new());
 static DETECTION_WARN_ONCE: Once = Once::new();
 
+/// Per-instance resolution context — the mount-scoped replacement for the
+/// process-global `PROJECT_ROOT_OVERRIDE` + `VIEW_OUTPUTS`. A host constructs
+/// one per project and carries it per-request (like the `DataPort` Extension),
+/// so one process serves many projects without cross-talk
+/// (`inv-deck-single-root-scoped`).
+///
+/// The host declares view roots in PRECEDENCE ORDER and expresses "these are
+/// mine first" by ordering — deck privileges no named 'first-party' bucket
+/// (`inv-deck-no-first-party`); `roots[0]` simply wins.
+///
+/// (Step 1: the abstraction + its isolation contract. Step 2 threads it through
+/// the resolve/serve path in place of the globals; the shipd caller migration
+/// is the ship-repo follow-on.)
+#[derive(Debug, Clone, Default)]
+pub struct Resolution {
+    roots: Vec<PathBuf>,
+    view_outputs: BTreeMap<String, PathBuf>,
+}
+
+impl Resolution {
+    /// An empty context — no roots, no view outputs.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Append a view root. Earlier calls have higher precedence (first wins).
+    pub fn with_root(mut self, root: impl Into<PathBuf>) -> Self {
+        self.roots.push(root.into());
+        self
+    }
+
+    /// Register a per-app view-output dir (replaces the global VIEW_OUTPUTS).
+    pub fn register_view_output(&mut self, app: impl Into<String>, dir: impl Into<PathBuf>) {
+        self.view_outputs.insert(app.into(), dir.into());
+    }
+
+    /// The host's declared roots, in precedence order.
+    pub fn roots(&self) -> &[PathBuf] {
+        &self.roots
+    }
+
+    /// The highest-precedence root, if any. (No 'first-party' privilege — this
+    /// is simply the first declared root.)
+    pub fn project_root(&self) -> Option<&std::path::Path> {
+        self.roots.first().map(|p| p.as_path())
+    }
+
+    /// The view-output dir for `app`, if registered.
+    pub fn view_output(&self, app: &str) -> Option<&std::path::Path> {
+        self.view_outputs.get(app).map(|p| p.as_path())
+    }
+}
+
 /// Authoritative project-root override set ONCE at host startup.
 ///
 /// Long-running / embedding hosts (shipd, deck-conformance) call this with the
@@ -363,6 +416,41 @@ mod project_root_tests {
             detect_project_root_from(&root),
             None,
             "a deck.jsonc at root with no views/ nearby is still inert"
+        );
+    }
+
+    /// inv-deck-single-root-scoped + inv-deck-no-first-party (BDD — now GREEN at
+    /// the type level). Two projects in one process each carry their own
+    /// `Resolution`, so host B registering its root does NOT clobber host A:
+    /// resolution is mount-scoped, not a shared process-global. Precedence is
+    /// the ORDER of declared roots (`roots[0]` wins) — deck blesses no named
+    /// 'first-party' bucket.
+    ///
+    /// (Step 1 proves the abstraction isolates. The remaining gap — the
+    /// resolve/serve PATH still reads the global override, and shipd is its
+    /// caller — stays tracked on the blueprint; this test is the contract that
+    /// step 2's threading must keep green.)
+    #[test]
+    fn resolution_is_mount_scoped_not_a_shared_global() {
+        // Host A boots against project A; host B against project B — SAME process.
+        let a = super::Resolution::new().with_root("/tmp/projA");
+        let b = super::Resolution::new().with_root("/tmp/projB");
+        // B registering its root does not clobber A — each handle keeps its own.
+        assert_eq!(a.project_root(), Some(std::path::Path::new("/tmp/projA")));
+        assert_eq!(
+            b.project_root(),
+            Some(std::path::Path::new("/tmp/projB")),
+            "mount-scoped: B is isolated from A — there is no shared global to clobber"
+        );
+        // Precedence is the ORDER of roots, not a privileged 'first-party' bucket.
+        let host = super::Resolution::new()
+            .with_root("/srv/app")
+            .with_root("/srv/shared");
+        assert_eq!(host.roots().len(), 2);
+        assert_eq!(
+            host.project_root(),
+            Some(std::path::Path::new("/srv/app")),
+            "first declared root wins by ordering — deck names no first-party bucket"
         );
     }
 }

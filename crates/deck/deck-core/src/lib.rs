@@ -89,7 +89,7 @@ pub use assets::{
     serve_sui_live_reload, serve_sui_runtime, serve_sui_sdk_client,
 };
 pub use form_inject::inject_form_actions;
-pub use resolver::{register_view_output, set_project_root};
+pub use resolver::{register_view_output, set_project_root, Resolution};
 pub use meta::{serve_meta, DaemonBuildInfo};
 pub use mode_html::{inject_mode_meta, mode_str};
 // (formerly `packs::serve_catalog_workspace`) — purged with the `.deck/` runtime read.
