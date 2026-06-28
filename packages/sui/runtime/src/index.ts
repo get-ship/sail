@@ -288,6 +288,16 @@ export type { ViewPayload, MountOptions, MountHandle, SuiLoader } from './mount'
 // name `RouteSignals` without importing `@ship/deck-router` (keeps sui ⊥ deck).
 export type { RouteSignals } from './route-signals'
 
+// Re-export the route factory (the passive RouteSignals reader) for the SAME
+// reason as the patch surface below: a compiled view imports `route` from
+// `@ship/sui-runtime/route`, and the deck importmap points that subpath at the
+// single `runtime.js` bundle — so the symbol must be reachable from THIS entry
+// or production resolves it to a bundle that doesn't export it. (Policy —
+// history/navigate/route-table — stays in the deck router; this is the SUI
+// mechanism half: sui ⊥ deck.)
+export { route, routeWithUpdate } from './route'
+export type { RouteHandle } from './route'
+
 // Per-view edit-mode UI state. Used by the dev panel to gate
 // view-authoring tabs and annotation rendering. See edit-mode.ts.
 export {
