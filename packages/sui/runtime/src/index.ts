@@ -201,6 +201,10 @@ export type {
 export type { ShipHost, Clients } from './ship'
 
 export { component, prop } from './component'
+// Child composition: mount an (internal, unregistered) component module into a
+// host node within a parent's render. The compiler emits a call to this for an
+// underscore-named component reference; registration stays the export path.
+export { mountComponent } from './compose'
 export type { PropDef, ComponentDef, ComponentSetupContext } from './component'
 
 export type {
