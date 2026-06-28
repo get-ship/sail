@@ -19,8 +19,8 @@ function parseBoard(raw: string): { nodes?: Node[]; edges?: Edge[] } | null {
 // <sui-board> controller — SVG-native nodes/edges/ports on the canvas
 // substrate. Geometry lives in the board model (world coords); the view maps
 // to screen through the substrate transform. Node visuals are a per-node slot.
-export default controller<Scope>({
-  scope: ({ value, layout }) => {
+export default controller({
+  scope: ({ value }: Scope) => {
     const seed = parseBoard(value())
     const board = createBoardModel({
       nodes: seed?.nodes ?? [],
@@ -35,21 +35,24 @@ export default controller<Scope>({
     // Outbound debounced change source: a monotonic version bumped on mutation.
     const version = signal(0)
     const changeSrc = debounce(version, 200)
-    return { board, canvas, draggingNode, lastPointer, version, changeSrc, layout }
-  },
-
-  derived: {
-    nodes: ({ board }) => board.nodes(),
-    routes: ({ board }) => board.routes(),
-    selectedSet: ({ board }) => new Set(board.selectedNodes()),
-    incidentSet: ({ board }) => new Set(board.incidentEdges()),
-    pendingPath: ({ board, canvas }) => {
+    // Derived memos fold into the scope factory — the canonical form replaces the
+    // historical `derived:` section (ScopedControllerDef merges only
+    // scope/on/use/mount/unmount, so a top-level `derived:` is silently dropped).
+    const nodes = derived(() => board.nodes())
+    const routes = derived(() => board.routes())
+    const selectedSet = derived(() => new Set(board.selectedNodes()))
+    const incidentSet = derived(() => new Set(board.incidentEdges()))
+    const pendingPath = derived(() => {
       const pe = board.pendingEdge()
       if (!pe) return ''
       const a = canvas.worldToScreen(pe.start)
       const b = canvas.worldToScreen(pe.end)
       return `M ${a.x} ${a.y} L ${b.x} ${b.y}`
-    },
+    })
+    return {
+      board, canvas, draggingNode, lastPointer, version, changeSrc,
+      nodes, routes, selectedSet, incidentSet, pendingPath,
+    }
   },
 
   on: {

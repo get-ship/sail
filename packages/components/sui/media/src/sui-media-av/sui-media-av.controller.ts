@@ -52,8 +52,8 @@ function bytesOf(src: MediaSrc): ArrayBuffer | Uint8Array | null {
   return src.bytes ?? null
 }
 
-export default controller<Scope>({
-  scope: () => {
+export default controller({
+  scope: (_ctx: Scope) => {
     // prop:src identity — assigned to the host `src` property in mount.
     const srcSig = signal<MediaSrc>(null)
     // The `kind` override is read off the host attribute in `isVideo` so the

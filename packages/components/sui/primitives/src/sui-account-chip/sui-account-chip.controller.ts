@@ -13,8 +13,8 @@ import {
 } from '@ship/sdk-client'
 import type { Scope } from './sui-account-chip.sui'
 
-export default controller<Scope>({
-  scope: ({ account }) => {
+export default controller({
+  scope: ({ account }: Scope) => {
     const identity = derived(() => readAccountIdentity(account().value))
     const name = derived(() => accountDisplayName(identity()))
     const initials = derived(() => accountInitials(identity()))

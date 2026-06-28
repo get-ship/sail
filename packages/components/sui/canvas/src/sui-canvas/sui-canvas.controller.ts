@@ -17,8 +17,8 @@ function parseSnapshot(raw: string): { transform?: Partial<Transform> } | null {
 // <sui-canvas> controller — the bare substrate primitive. Builds a
 // createCanvas() in scope, forwards raw pointer/wheel events to the engine
 // in on:*, and emits a debounced sui-canvas-viewport event via host.emit!.
-export default controller<Scope>({
-  scope: ({ value }) => {
+export default controller({
+  scope: ({ value }: Scope) => {
     const viewportEl = ref<HTMLDivElement>(null)
     // Fallback engine — used when no engine is injected via prop:canvas.
     const fallback = createCanvas({
@@ -75,7 +75,7 @@ export default controller<Scope>({
       },
     })
 
-    // controller<Scope> OVER-CONSTRAINS union-typed reads — read the
+    // The typed scope OVER-CONSTRAINS union-typed reads — read the
     // reflected enum/number props imperatively off the host (the verified
     // sui-table.controller.ts:95 precedent), not through the typed scope.
     const minScale = host.getAttribute('min-scale')
@@ -95,7 +95,7 @@ export default controller<Scope>({
     return () => {
       stopEmit()
       delete (host as { canvas?: unknown }).canvas
-      state.$signals.fallback().dispose()
+      state.fallback.dispose()
     }
   },
 })

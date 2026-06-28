@@ -24,8 +24,8 @@ function textOf(src: ViewerSource | string | null): string {
   return src.text ?? ''
 }
 
-export default controller<Scope>({
-  scope: () => {
+export default controller({
+  scope: (_ctx: Scope) => {
     // prop:src identity — assigned to the host `src` property in mount; the
     // table engine + error message are the reactive render inputs.
     const srcSig = signal<ViewerSource | string | null>(null)

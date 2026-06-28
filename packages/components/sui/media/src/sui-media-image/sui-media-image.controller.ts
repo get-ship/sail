@@ -62,8 +62,8 @@ function rasterUrlOf(src: ViewerSource | string | null): { url: string; created:
   return { url: '', created: false }
 }
 
-export default controller<Scope>({
-  scope: () => {
+export default controller({
+  scope: (_ctx: Scope) => {
     // prop:src identity — assigned to the host `src` property in mount.
     const srcSig = signal<ImageSrc>(null)
     const activeIndex = signal(0)
