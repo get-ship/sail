@@ -53,7 +53,6 @@ enum WasmResult {
         js: String,
         css: Option<String>,
         dts: Option<String>,
-        ssr_html: Option<String>,
     },
     Err {
         message: String,
@@ -77,9 +76,10 @@ pub fn compile(source: &str, opts_json: &str) -> Result<JsValue, JsValue> {
     };
 
     let mode = match parsed.mode.as_deref() {
-        Some("view") => CompileMode::View,
+        // "view" is a legacy alias — a tagless source is just Auto with no
+        // component_name (deck owns the view feature; SUI builds components).
+        Some("view") | Some("auto") | None => CompileMode::Auto,
         Some("component") => CompileMode::Component,
-        Some("auto") | None => CompileMode::Auto,
         Some(other) => {
             return Err(JsValue::from_str(&format!(
                 "unknown mode {other:?} — expected view / component / auto"
@@ -99,7 +99,6 @@ pub fn compile(source: &str, opts_json: &str) -> Result<JsValue, JsValue> {
         styles: parsed.styles,
         component_meta,
         emit_dts: false,
-        emit_ssr: false,
         emit_component_imports: false,
     };
 
@@ -108,7 +107,6 @@ pub fn compile(source: &str, opts_json: &str) -> Result<JsValue, JsValue> {
             js: out.js,
             css: out.css,
             dts: out.dts,
-            ssr_html: out.ssr_html,
         },
         Err(err) => WasmResult::Err {
             message: err.message.clone(),
