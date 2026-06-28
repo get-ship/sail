@@ -85,8 +85,16 @@ mod tests {
         assert!(resp.content_type.contains("text/html"));
         let body = std::str::from_utf8(&resp.body).unwrap();
         assert!(body.contains("<!doctype html>"));
-        assert!(body.contains("import { mount } from '@ship/sui-runtime'"));
+        assert!(body.contains("import { mount, attachBoundary } from '@ship/sui-runtime'"));
         assert!(body.contains("/_deck/views/"));
+        // inv-deck-no-silent-errors: the shell installs a DEFAULT error boundary
+        // at the mount root, so an unwrapped runtime throw (re-run effect,
+        // bindFor/bindIf render, child-component mount) surfaces here instead of
+        // vanishing into console.error. Guard the wiring against regression.
+        assert!(
+            body.contains("attachBoundary(target,"),
+            "view-host must install a default error boundary at the mount root"
+        );
         let imap = body.find("type=\"importmap\"").expect("importmap present");
         let module = body.find("type=\"module\"").expect("module script present");
         assert!(imap < module, "importmap must come before any module script");

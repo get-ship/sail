@@ -49,7 +49,7 @@
        → name = "ship-ui-studio/sui-button"). The runtime fetches
        /_deck/views/<that> and mounts the payload here. -->
   <script type="module">
-    import { mount } from '@ship/sui-runtime'
+    import { mount, attachBoundary } from '@ship/sui-runtime'
 
     function viewPathFromLocation() {
       const path = location.pathname
@@ -62,6 +62,32 @@
 
     const target = document.getElementById('sui-root')
     const viewPath = viewPathFromLocation()
+
+    // Default error boundary — deck installs ONE at the view-host root so a
+    // runtime throw the author never wrapped (a re-run effect, a bindFor/bindIf
+    // render, a child component's mount) surfaces HERE instead of vanishing into
+    // console.error. The runtime's runProtected/findNearestBoundary walks up to
+    // this handle whenever no nearer <sui-error-boundary> exists (inv-deck-no-
+    // silent-errors). Dev shows the real message + source + stack; prod degrades
+    // to a safe generic message. textContent (not innerHTML) — never inject the
+    // error text as markup.
+    const isDev =
+      (document.querySelector('meta[name="ship-mode"]')?.getAttribute('content') ?? '') === 'development'
+    let __boundaryFired = false
+    attachBoundary(target, {
+      catch(err, source) {
+        if (__boundaryFired) return // first error wins; ignore cascades
+        __boundaryFired = true
+        const e = err instanceof Error ? err : new Error(String(err))
+        const panel = document.createElement('div')
+        panel.className = 'view-host-error'
+        panel.textContent = isDev
+          ? 'Runtime error (' + source + '): ' + e.message + '\n\n' + (e.stack || '')
+          : 'Something went wrong rendering this view.'
+        target.replaceChildren(panel)
+      },
+      reset() { __boundaryFired = false; location.reload() },
+    })
 
     if (!viewPath) {
       target.innerHTML =
