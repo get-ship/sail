@@ -439,12 +439,12 @@ fn for_render_closure_emits_update_field() {
     );
 }
 
-/// R2: views that reference `route` in template expressions must emit
-/// `import { route as __routeFactory } from "@ship/sui-runtime/route"` and
-/// use `ctx.route ?? __routeFactory()` for `$scope.route`. Views that don't
-/// reference `route` must not include the import.
+/// Routing is deck's: a view that references `route` reads the handle from
+/// `ctx.route` (deck injects it via host-context). SUI vends no route factory,
+/// so the compiled output must NOT import `@ship/sui-runtime/route`, and assigns
+/// `$scope.route = route` straight from the ctx destructure.
 #[test]
-fn route_view_emits_route_import() {
+fn route_view_reads_route_from_ctx() {
     let path = fixtures_dir().join("route-view.sui");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
@@ -458,13 +458,13 @@ fn route_view_emits_route_import() {
     };
     let out = sui_compiler::compile(&source, opts).expect("compile");
     assert!(
-        out.js.contains("import { route as __routeFactory } from \"@ship/sui-runtime/route\""),
-        "expected route subpath import, got:\n{}",
+        !out.js.contains("@ship/sui-runtime/route") && !out.js.contains("__routeFactory"),
+        "routing is deck: no SUI route-factory import or fallback, got:\n{}",
         out.js
     );
     assert!(
-        out.js.contains("$scope.route = ctx.route ?? __routeFactory()"),
-        "expected ctx.route ?? __routeFactory() assignment, got:\n{}",
+        out.js.contains("$scope.route = route"),
+        "the route handle must come straight from ctx, got:\n{}",
         out.js
     );
 }

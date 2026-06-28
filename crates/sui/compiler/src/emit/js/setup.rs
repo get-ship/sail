@@ -30,15 +30,6 @@ pub(super) fn emit_setup_body(
         w.line("const { props, host } = ctx;");
         w.line("if (!ctx.cleanups) ctx.cleanups = [];");
         w.line("const __cleanups = ctx.cleanups;");
-    } else if lowered.uses_route {
-        // Don't destructure `route` from ctx — the module-level
-        // `__routeFactory` import (from `@ship/sui-runtime/route`) uses
-        // the same name. Access `ctx.route` directly so there's no clash.
-        if ship_via_clients {
-            w.line("const { navigate } = ctx;");
-        } else {
-            w.line("const { ship, navigate } = ctx;");
-        }
     } else if ship_via_clients {
         w.line("const { route, navigate } = ctx;");
     } else {
@@ -52,13 +43,12 @@ pub(super) fn emit_setup_body(
         emit_component_scope_seed(w, program);
     } else {
         w.line("$scope.ship = ship;");
-        if lowered.uses_route {
-            // Use host-provided RouteSignals or fall back to constructing
-            // one via the view's own import of `@ship/sui-runtime/route`.
-            w.line("$scope.route = ctx.route ?? __routeFactory();");
-        } else {
-            w.line("$scope.route = route;");
-        }
+        // Routing is deck's: the route handle arrives via `ctx.route` (deck
+        // injects it through host-context). SUI vends no router and no factory
+        // fallback — a route-using page with no host-provided route gets
+        // `undefined`, which is the honest signal that it wasn't mounted under
+        // a router, not a silently-fabricated browser route.
+        w.line("$scope.route = route;");
         w.line("$scope.navigate = navigate;");
     }
     // Declared `<client>` names: destructure each from `ctx.clients` and seed

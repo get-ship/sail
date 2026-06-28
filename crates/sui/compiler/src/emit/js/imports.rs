@@ -50,9 +50,6 @@ pub(super) fn emit_imports(w: &mut Writer, lowered: &Lowered, opts: &CompileOpts
     if lowered.uses_template_hooks {
         w.line("import \"@ship/sui-runtime/template-hooks\";");
     }
-    if lowered.uses_route {
-        w.line("import { route as __routeFactory } from \"@ship/sui-runtime/route\";");
-    }
     if let Some(setup) = &opts.setup_url {
         w.line(&format!("import setup from {};", js_string(setup)));
     }
