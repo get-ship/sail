@@ -18,7 +18,7 @@
 
 import * as suiRuntime from '@ship/sui-runtime'
 import * as suiDom from '@ship/sui-dom'
-import * as suiRoute from '@ship/deck-router'
+import * as suiRoute from '@ship/sui-runtime/route'
 import '@ship/sui-runtime/template-hooks'
 import type { MountModule } from '@ship/sui-runtime'
 

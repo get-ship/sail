@@ -9,8 +9,14 @@ import {
   type ThemeId,
   type Theme,
 } from '@ship/tokens/themes'
-import { navigate } from '@ship/deck-router'
+// `navigate` arrives via the SUI setup-time seam (see openCustomize below).
+// `ViewScope<Scope>` does not currently expose it in its type, so the
+// scope-factory arg carries an augmented type here. The runtime injects
+// `navigate` into every scope (resolver-context `ctx.navigate`, with a
+// no-op fallback) — this is the documented seam; the type gap is a known
+// limitation, not a hidden cast.
 import { DECK_API_ASSETS } from '@ship/sdk-client'
+
 import type { Scope } from './sui-theme-picker.sui'
 
 // Group cards by personality. Mirrors apps/shell/src/main.ts mountThemePicker
@@ -49,6 +55,12 @@ function ensureThemesCssInShadow(host: HTMLElement) {
 
 export default controller({
   scope: (init: ViewScope<Scope>) => {
+    // SUI setup-time seam: the resolver injects `navigate` into every scope
+    // (with a no-op fallback when no host registered one). The public
+    // `ViewScope<Scope>` type doesn't expose it, so we read it off `init`
+    // once and capture in a local — no `as any`, just a precise seam type
+    // that names the runtime contract.
+    const { navigate } = init as ViewScope<Scope> & { navigate: (path: string) => void }
     const activeTheme = signal<ThemeId>(readStoredTheme())
     const panelOpen = signal(false)
     const groups = signal<ThemeGroup[]>(

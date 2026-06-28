@@ -9,7 +9,7 @@
 // Authority: build-spec Slice 4, §"Backbone #2 — ViewerRenderer contract".
 
 import { controller, effect, signal } from '@ship/sui-runtime'
-import { createTable, type Table } from '../../../primitives/src/sui-table/engine/create-table'
+import { createTable, type Table } from '@ship/sui-primitives'
 import type { ViewerSource } from '../engine/types'
 import { CsvParseError, parseCsv, type CsvDelimiter } from '../engine/csv-parse'
 import { emitViewerError, emitViewerLoad } from '../engine/renderer-contract'

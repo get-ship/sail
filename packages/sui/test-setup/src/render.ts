@@ -22,7 +22,7 @@
 //   v.unmount()
 
 import { compileSui, evalCompiledJs } from '@ship/sui-dom/test-utils'
-import { route as makeRoute } from '@ship/deck-router'
+import { route as makeRoute } from '@ship/sui-runtime/route'
 import type { ControllerExport } from '@ship/sui-runtime'
 
 /** A controller's default export (the `controller({...})` shape, which carries

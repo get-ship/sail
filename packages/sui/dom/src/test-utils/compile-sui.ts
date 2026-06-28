@@ -20,14 +20,15 @@ import { fileURLToPath } from 'node:url'
 
 import * as suiRuntime from '@ship/sui-runtime'
 import * as suiDom from '@ship/sui-dom'
-// Slice 2 — `@ship/deck-router` is NOT imported here: sui ⊥ deck at the test
-// boundary (@ship/sui-dom depends only on @ship/sui-runtime). Real route
-// matching / popstate wiring lives in deck; the harness only needs the
-// structural `RouteSignals` shape (which lives in @ship/sui-runtime), so the
-// local `makeRoute` below builds a mock instance from the already-imported
-// runtime `signal()` rather than importing deck's `route()` factory.
-import { signal } from '@ship/sui-runtime'
-import type { RouteSignals, Signal } from '@ship/sui-runtime'
+// The runtime's `/route` subpath provides a passive `RouteSignals` reader
+// built from a URL — exactly the shape the compiled view's
+// `import { route as __routeFactory } from "@ship/sui-runtime/route"`
+// expects after the eval layer strips imports. The deck router owns the
+// *policy* (history, popstate, route table, `navigate`); the runtime
+// owns the *mechanism*. The test harness needs only the mechanism, and
+// `@ship/sui-runtime/route` is sui ⊥ deck by construction.
+import { route as makeRoute } from '@ship/sui-runtime/route'
+import type { RouteSignals } from '@ship/sui-runtime'
 import '@ship/sui-runtime/template-hooks'
 /* ----------------------- native addon load ----------------------- */
 
@@ -172,49 +173,11 @@ export function compileSui(source: string, opts: CompileOpts = {}): CompiledSui 
   return { js: result.js, css: result.css, dts: result.dts, ssrHtml: result.ssrHtml }
 }
 
-/* ----------------------------- route mock ----------------------------- */
-
-// Test-local `RouteSignals` factory. `@ship/sui-dom` does not depend on
-// `@ship/deck-router` (sui ⊥ deck — see the import note at the top), so the
-// harness can't call deck's real `route()`. It builds the same structural
-// shape from the already-imported runtime `signal()`: `pathname`/`hash`
-// signals seeded from the URL, and lazy `params`/`query` proxies whose keys
-// materialize a signal on first access (no route table at the test boundary,
-// so `params` reads `undefined`; `query` reads the URL's search params). Enough
-// for a compiled view that reads `route.params.x()`, `route.query.q()`,
-// `route.pathname()`, or `route.hash()` to evaluate and mount.
-function makeRoute(opts: { url?: URL } = {}): RouteSignals {
-  const url = opts.url ?? new URL('http://localhost/')
-  const lazy = (
-    seed: (key: string) => string | undefined,
-  ): Record<string, Signal<string | undefined>> => {
-    const cache = new Map<string, Signal<string | undefined>>()
-    return new Proxy({} as Record<string, Signal<string | undefined>>, {
-      get(_target, key) {
-        if (typeof key !== 'string') return undefined
-        let s = cache.get(key)
-        if (!s) {
-          s = signal(seed(key))
-          cache.set(key, s)
-        }
-        return s
-      },
-    })
-  }
-  return {
-    params: lazy(() => undefined),
-    query: lazy((key) => url.searchParams.get(key) ?? undefined),
-    pathname: signal(url.pathname),
-    hash: signal(url.hash),
-  }
-}
-
 // The module shape a compiled view's
 // `import { route as __routeFactory } from "@ship/sui-runtime/route"`
-// resolves to after `stripImports` rewrites it to `__route.route`. Mirrors the
-// deck-router module's `{ route }` export, but backed by the local mock above.
+// resolves to after `stripImports` rewrites it to `__route.route`. Backed
+// by the runtime's `/route` subpath — see the import note at the top.
 const routeModule: { route: typeof makeRoute } = { route: makeRoute }
-
 /* ----------------------------- eval API ----------------------------- */
 
 const SETUP_MARKER = '__test_setup__'

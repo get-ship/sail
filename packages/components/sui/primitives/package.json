@@ -22,7 +22,8 @@
   "dependencies": {
     "@ship/sdk-client": "^0.1.0",
     "@ship/sui-dom": "workspace:*",
-    "@ship/sui-runtime": "workspace:*"
+    "@ship/sui-runtime": "workspace:*",
+    "@ship/tokens": "workspace:*"
   },
   "devDependencies": {
     "@ship/test-setup": "workspace:*",

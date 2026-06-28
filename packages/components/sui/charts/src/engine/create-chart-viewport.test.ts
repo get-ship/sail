@@ -39,7 +39,7 @@ beforeEach(() => {
       disconnects++
     }
   }
-  // @ts-expect-error — test double
+  // Test double — the runtime global accepts the class structurally.
   globalThis.ResizeObserver = TestRO
 })
 

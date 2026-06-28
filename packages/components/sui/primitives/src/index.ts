@@ -107,6 +107,43 @@ export type Tone =
 
 /** The canonical size union. `md` is always the default. Primitives
  *  needing finer granularity declare additional values explicitly with
- *  rationale — sui-avatar (xs|sm|md|lg|xl), sui-dialog (sm|md|lg|full). */
+ *  rationale — sui-avatar (xs|sm|md|xl), sui-dialog (sm|md|full). */
+// ── Public table engine ─────────────────────────────────────────────
+//
+// `createTable` is the SUI table engine (Backbone #1) — a thin assembler
+// composing the filter/sort/group/page pipeline + the orthogonal
+// selection + column lanes. Re-exported here so adjacent packs (media
+// at present, future `chart-table` / `sheet-table` siblings) can use
+// the engine via the public package entry instead of reaching into
+// `primitives/src/sui-table/engine/*` (a path that breaks `rootDir`
+// isolation and the sui ⊥ sui pack boundary).
+export { createTable, type Table, type TableOptions } from './sui-table/engine/create-table'
+// Re-export the public type catalog from `types.ts` so consumers can
+// name `ColumnDef`, `Row`, `Cell`, `SortState`, etc. without reaching
+// into the engine directory.
+export type {
+  ColumnDef,
+  ColumnBase,
+  AccessorColumn,
+  DisplayColumn,
+  GroupColumn,
+  Cell,
+  CellValue,
+  ColumnApi,
+  ColumnFilter,
+  ExpandedState,
+  Header,
+  HeaderGroup,
+  PaginationState,
+  Row,
+  RowSelectionState,
+  RowModel,
+  SortDirection,
+  SortState,
+  TableState,
+  VisibilityState,
+} from './sui-table/engine/types'
+/** The canonical size union. `md` is always the default. Primitives
+ *  needing finer granularity declare additional values explicitly with
+ *  rationale — sui-avatar (xs|sm|md|xl), sui-dialog (sm|md|full). */
 export type Size = 'sm' | 'md' | 'lg'
-

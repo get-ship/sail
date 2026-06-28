@@ -15,7 +15,6 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@ship/deck-router": "^0.1.0",
     "@ship/sui-compiler-wasm": "^0.1.0",
     "@ship/sui-dom": "^0.1.0",
     "@ship/sui-runtime": "^0.1.0"
