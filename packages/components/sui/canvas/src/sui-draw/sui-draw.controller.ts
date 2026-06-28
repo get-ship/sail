@@ -31,8 +31,8 @@ const TOOL_KEYS: Record<string, DrawTool> = {
 // substrate. The scene model holds elements (world coords); the view maps to
 // screen through the substrate transform. Pen drafting + shape drag + select
 // + undo/redo run through on:* handlers / mount (Cardinal 3).
-export default controller<Scope>({
-  scope: ({ value, sketchy, readonly }) => {
+export default controller({
+  scope: ({ value, sketchy }: Scope) => {
     const seed = parseScene(value())
     const scene = createDrawScene({
       elements: seed?.elements ?? [],
@@ -46,19 +46,21 @@ export default controller<Scope>({
     const lastPointer = signal<{ x: number; y: number } | null>(null)
     const version = signal(0)
     const changeSrc = debounce(version, 200)
-    return { scene, canvas, drawing, movingSelection, lastPointer, version, changeSrc, readonly }
-  },
-
-  derived: {
-    rendered: ({ scene }) => scene.rendered(),
-    selectedSet: ({ scene }) => new Set(scene.selection()),
-    draftPath: ({ scene }) => scene.draft()?.path ?? '',
-    draftColor: ({ scene }) => scene.draft()?.color ?? 'currentColor',
-    selectionRect: ({ scene }) => scene.selectionBounds(),
-    statusLabel: ({ scene }) => {
+    // Derived memos fold into the scope factory — the canonical controller form
+    // replaces the historical `derived:` section; types flow through inference.
+    const rendered = derived(() => scene.rendered())
+    const selectedSet = derived(() => new Set(scene.selection()))
+    const draftPath = derived(() => scene.draft()?.path ?? '')
+    const draftColor = derived(() => scene.draft()?.color ?? 'currentColor')
+    const selectionRect = derived(() => scene.selectionBounds())
+    const statusLabel = derived(() => {
       const n = scene.selection().length
       return n > 0 ? `${n} selected` : `${scene.elements().length} elements`
-    },
+    })
+    return {
+      scene, canvas, drawing, movingSelection, lastPointer, version, changeSrc,
+      rendered, selectedSet, draftPath, draftColor, selectionRect, statusLabel,
+    }
   },
 
   on: {
