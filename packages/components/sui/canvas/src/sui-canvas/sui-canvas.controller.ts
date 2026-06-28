@@ -21,9 +21,12 @@ export default controller({
   scope: ({ value }: Scope) => {
     const viewportEl = ref<HTMLDivElement>(null)
     // Fallback engine — used when no engine is injected via prop:canvas.
+    // exactOptionalPropertyTypes: only set initialTransform when present —
+    // passing `undefined` to the optional field is itself a type error.
+    const seedTransform = parseSnapshot(value())?.transform
     const fallback = createCanvas({
       getViewportElement: () => viewportEl(),
-      initialTransform: parseSnapshot(value())?.transform,
+      ...(seedTransform ? { initialTransform: seedTransform } : {}),
     })
     // An engine injected by a composing face (sui-board / sui-draw) via
     // prop:canvas identity. When present it supersedes the fallback so the
