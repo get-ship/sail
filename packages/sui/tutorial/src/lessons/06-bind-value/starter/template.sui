@@ -1,0 +1,15 @@
+<prop name="shadow" type="bool" default="false" />
+
+<div class="form">
+  <label>name <input bind:value={name} placeholder="your name" /></label>
+  <label>qty  <input bind:value={quantity} type="number" min="0" /></label>
+  <!-- TODO 1: add a checkbox: bind:checked={agreed} -->
+  <!-- TODO 2: add a <select bind:value={size}> with S/M/L options -->
+
+  <div class="preview">
+    <p>hello, <strong>{name() || 'stranger'}</strong></p>
+    <p>quantity: <strong>{quantity()}</strong></p>
+  </div>
+
+  <button type="button">Submit</button>
+</div>

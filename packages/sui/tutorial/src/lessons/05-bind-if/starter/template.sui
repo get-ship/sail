@@ -1,0 +1,12 @@
+<prop name="shadow" type="bool" default="false" />
+
+<div class="branch">
+  {#if state() === 'idle'}
+    <button on:click={() => start()}>start request</button>
+  {:else if state() === 'loading'}
+    <p class="muted">loading…</p>
+  {:else}
+    <p class="ok">done! ✓</p>
+    <!-- TODO: add a "start over" button here -->
+  {/if}
+</div>

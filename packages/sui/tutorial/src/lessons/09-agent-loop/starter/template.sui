@@ -1,0 +1,19 @@
+<prop name="shadow" type="bool" default="false" />
+
+<!-- Four deliberate diagnostics for the agent to discover and fix.
+     See the prose pane for what an agent would do with sui_diagnostics. -->
+<div class="dash">
+  <h3>request rate</h3>
+
+  <!-- BUG 1: .toFixed() not in the renderable subset -->
+  <p>errors / sec: <strong>{rate().toFixed(2)}</strong></p>
+
+  <!-- BUG 2: unknown event modifier "once" — only the allowlist works -->
+  <button on:click|once={() => init()}>init</button>
+
+  <!-- BUG 3: stale signal — `oldRate` was renamed; reads nothing -->
+  <p>previous: {oldRate()}</p>
+
+  <!-- BUG 4: bind:value on a signal that doesn't exist in scope -->
+  <input bind:value={query} placeholder="search" />
+</div>

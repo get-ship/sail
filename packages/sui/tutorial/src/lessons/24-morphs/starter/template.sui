@@ -1,0 +1,24 @@
+<prop name="shadow" type="bool" default="false" />
+
+<data name="users" source="ship.users.list()" live />
+
+<div class="add-user">
+  <h3>users</h3>
+
+  <form on:submit|preventDefault={(e) => add(name())} class="row">
+    <input bind:value={name} placeholder="new user name" />
+    <button type="submit">add</button>
+  </form>
+
+  {#if users().kind === 'loading'}
+    <p class="muted">loading…</p>
+  {:else if users().kind === 'error'}
+    <p class="err">{users().error.message}</p>
+  {:else}
+    <ul>
+      {#for u of users().value.items key={u.id}}
+        <li>{u.name}</li>
+      {/for}
+    </ul>
+  {/if}
+</div>

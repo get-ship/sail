@@ -1,0 +1,22 @@
+<prop name="shadow" type="bool" default="false" />
+
+<div class="slots-demo">
+  <sui-card>
+    <sui-chip slot="header" tone={count() > 5 ? 'warning' : 'primary'}>{label()}</sui-chip>
+    <p>count: <strong>{count()}</strong></p>
+    <sui-button slot="footer" size="sm" tone="primary" on:click={() => bump(1)}>+1 from footer</sui-button>
+  </sui-card>
+
+  {#if count() > 5}
+    <sui-alert tone="warning">
+      <span slot="title">notice</span>
+      Count exceeded 5 — adjust threshold or reset.
+    </sui-alert>
+  {/if}
+
+  <div class="row">
+    <sui-button variant="ghost" size="sm" on:click={() => bump(1)}>+1</sui-button>
+    <sui-button variant="ghost" size="sm" on:click={() => bump(-1)}>−1</sui-button>
+    <sui-button variant="ghost" size="sm" on:click={() => count.set(0)}>reset</sui-button>
+  </div>
+</div>

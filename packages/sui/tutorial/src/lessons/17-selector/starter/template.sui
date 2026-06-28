@@ -1,0 +1,16 @@
+<prop name="shadow" type="bool" default="false" />
+
+<style>
+  .rows { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 2px; max-height: 240px; overflow-y: auto; }
+  .row { padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-mono); font-size: 12px; text-align: center; }
+  .row.selected { background: var(--primary); color: var(--background); border-color: var(--primary); }
+</style>
+
+<div class="grid">
+  <p>selected: <strong>{selectedId()}</strong> · press j/k to move</p>
+  <div class="rows" on:keydown|key:j={() => move(1)} on:keydown|key:k={() => move(-1)} tabindex="0">
+    {#for r of rows() key={r.id}}
+      <div class="row" class:selected={selectedId() === r.id}>{r.label}</div>
+    {/for}
+  </div>
+</div>

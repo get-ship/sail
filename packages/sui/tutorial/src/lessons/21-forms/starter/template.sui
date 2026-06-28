@@ -1,0 +1,33 @@
+<prop name="shadow" type="bool" default="false" />
+
+<style>
+  .signup { display: grid; gap: 8px; max-width: 28rem; }
+  .signup label { display: grid; gap: 4px; font-size: 0.875rem; }
+  .signup input[type="text"], .signup input[type="email"] { padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--background); color: var(--foreground); }
+  .err { color: var(--destructive); font-size: 0.75rem; margin: 0; }
+  .signup button { padding: 6px 12px; background: var(--primary); color: var(--background); border: none; border-radius: 6px; font-weight: 500; cursor: pointer; }
+  .signup button:disabled { opacity: 0.5; cursor: not-allowed; }
+</style>
+
+<form class="signup" on:submit|preventDefault={(e) => form.submit(e)}>
+  <label>name <input type="text" bind:value={form.name} /></label>
+  {#if form.errors().name}<p class="err">{form.errors().name}</p>{/if}
+
+  <label>email <input type="email" bind:value={form.email} /></label>
+  {#if form.errors().email}<p class="err">{form.errors().email}</p>{/if}
+
+  <label style="flex-direction: row; align-items: center;">
+    <input type="checkbox" bind:checked={form.accept} /> I accept the terms
+  </label>
+  {#if form.errors().accept}<p class="err">{form.errors().accept}</p>{/if}
+
+  <div style="display: flex; gap: 8px; align-items: center;">
+    <button type="submit" disabled={!form.valid() || form.pending()}>
+      {form.pending() ? 'submitting…' : 'submit'}
+    </button>
+    <button type="button" on:click={() => form.reset()} style="background: transparent; color: var(--foreground); border: 1px solid var(--border);">reset</button>
+    <span style="font-size: 0.75rem; color: var(--muted-foreground); margin-left: auto;">{form.dirty() ? 'dirty' : 'clean'}</span>
+  </div>
+
+  {#if form.lastError()}<p class="err">submit failed: {form.lastError().message}</p>{/if}
+</form>

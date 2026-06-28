@@ -1,0 +1,9 @@
+<prop name="shadow" type="bool" default="false" />
+
+<div class="metrics">
+  <p>cpu: <strong>{cpu()}%</strong></p>
+  <p>mem: <strong>{mem()}MB</strong></p>
+  <p>req: <strong>{req()}/s</strong></p>
+  <p>last tick stamp: <strong>{stamp()}</strong></p>
+  <p class="hint">open the console — the effect logs once per tick (batched), not three times.</p>
+</div>

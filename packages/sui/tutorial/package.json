@@ -1,0 +1,28 @@
+{
+  "name": "@ship/sui-tutorial",
+  "version": "0.1.0",
+  "description": "SUI tutorial — 25 lessons (paired starter + solved controller + template). Droppable into the marketing site or any host.",
+  "private": false,
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    "./lessons/*": "./src/lessons/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src"
+  ],
+  "publishConfig": {
+    "registry": "http://localhost:4873"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ship/sui-runtime": "0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

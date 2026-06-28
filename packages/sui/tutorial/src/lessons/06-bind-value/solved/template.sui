@@ -1,0 +1,24 @@
+<prop name="shadow" type="bool" default="false" />
+
+<div class="form">
+  <label>name <input bind:value={name} placeholder="your name" /></label>
+  <label>qty  <input bind:value={quantity} type="number" min="0" /></label>
+  <label>size
+    <select bind:value={size}>
+      <option value="S">S</option>
+      <option value="M">M</option>
+      <option value="L">L</option>
+    </select>
+  </label>
+  <label class="agree">
+    <input type="checkbox" bind:checked={agreed} />
+    I agree to the terms
+  </label>
+
+  <div class="preview">
+    <p>hello, <strong>{name() || 'stranger'}</strong></p>
+    <p>order: <strong>{quantity()}</strong> × size <strong>{size()}</strong></p>
+  </div>
+
+  <button type="button" disabled={!agreed()}>Submit</button>
+</div>

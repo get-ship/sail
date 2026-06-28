@@ -6,7 +6,7 @@
       "name": "sui-framework",
       "devDependencies": {
         "@playwright/test": "^1.58.2",
-        "playwright": "^1.59.1",
+        "playwright": "^1.59.3",
         "typescript": "~5.8.3",
         "vitest": "^4.1.5",
       },
@@ -212,6 +212,16 @@
       "name": "@ship/tokens",
       "version": "0.1.0",
     },
+    "packages/sui/tutorial": {
+      "name": "@ship/sui-tutorial",
+      "version": "0.1.0",
+      "dependencies": {
+        "@ship/sui-runtime": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "^5.5.0",
+      },
+    },
   },
   "trustedDependencies": [
     "lightningcss",
@@ -329,6 +339,8 @@
     "@ship/sui-primitives": ["@ship/sui-primitives@workspace:packages/components/sui/primitives"],
 
     "@ship/sui-runtime": ["@ship/sui-runtime@workspace:packages/sui/runtime"],
+
+    "@ship/sui-tutorial": ["@ship/sui-tutorial@workspace:packages/sui/tutorial"],
 
     "@ship/sui-viewer": ["@ship/sui-viewer@workspace:packages/components/sui/viewer"],
 

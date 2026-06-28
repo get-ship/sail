@@ -1,0 +1,17 @@
+<prop name="shadow" type="bool" default="false" />
+
+<div class="chat">
+  <ul class="log">
+    {#for m of messages() key={m.id}}
+      <li>{m.text}</li>
+    {/for}
+  </ul>
+
+  <form on:submit|preventDefault={() => send()}>
+    <input bind:value={draft} on:keydown|key:Enter={() => send()} placeholder="press enter to send" />
+    <button type="submit">Send</button>
+  </form>
+
+  <!-- TODO 1: wrap with on:click|self={() => dismiss()} -->
+  <!-- TODO 2: add a button with on:keydown|key:Escape={() => dismiss()} -->
+</div>

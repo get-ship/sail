@@ -1,0 +1,15 @@
+<prop name="shadow" type="bool" default="false" />
+
+<div class="fetcher">
+  <label>endpoint
+    <select bind:value={endpoint}>
+      <option value="/api/users">/api/users</option>
+      <option value="/api/teams">/api/teams</option>
+      <option value="/api/projects">/api/projects</option>
+    </select>
+  </label>
+
+  <p>request #<strong>{requestId()}</strong> → status: <strong>{status()}</strong></p>
+  <p>last response from: <strong>{lastEndpoint() || '(none yet)'}</strong></p>
+  <p class="hint">change the select while a request is in flight — the abort cleanup fires before the new fetch.</p>
+</div>
