@@ -779,8 +779,13 @@ name = "deck-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "axum",
  "clap",
+ "deck-axum",
  "deck-bundler",
+ "deck-config",
+ "deck-core",
+ "serde_json",
  "tempfile",
  "tokio",
  "tracing-subscriber",

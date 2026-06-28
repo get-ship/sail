@@ -10,9 +10,12 @@ mod scaffold;
 mod typecheck;
 
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use anyhow::{Context, Result, bail};
 use clap::{Parser, Subcommand};
+
+use deck_axum::DaemonMode;
 
 #[derive(Parser)]
 #[command(name = "deck", about = "The deck framework CLI", version)]
@@ -78,6 +81,25 @@ enum Command {
         /// Opt-in: off by default; fails the command on type errors.
         #[arg(long)]
         typecheck: bool,
+    },
+
+    /// Run a standalone dev server for a SUI project — the framework
+    /// standing on its own, no shipd, no host adapter. Boots the
+    /// bundler FS watcher (HMR) and serves the deck router on
+    /// `127.0.0.1:<port>`. `Ctrl-C` triggers a graceful bundler
+    /// shutdown before the process exits.
+    Dev {
+        /// Project root (the dev's deck project: `routes/` + `package.json`
+        /// + `public/`). Default: cwd.
+        #[arg(long, default_value = ".")]
+        project: PathBuf,
+        /// Address to bind (host:port). Default `127.0.0.1:7878`.
+        #[arg(long, default_value = "127.0.0.1:7878")]
+        addr: String,
+        /// Use the in-memory `DemoStore` with sample data instead of the
+        /// no-op data port. Opt-in; off by default.
+        #[arg(long)]
+        demo: bool,
     },
 
     /// Emit already-baked target bundles (plus their lazy-chunk closure) into
@@ -227,6 +249,7 @@ fn run() -> Result<()> {
         }
         Command::Emit { targets, out } => emit(targets, out),
         Command::BuildAssets => build_assets(),
+        Command::Dev { project, addr, demo } => dev(project, addr, demo),
     }
 }
 /// closure — see `deck_bundler::emit`).
@@ -429,3 +452,125 @@ fn build(
     }
     Ok(())
 }
+
+// ── `deck dev` — standalone dev server ─────────────────────────────────────
+//
+// Composes the existing bundler + router (the same wiring as
+// `deck_conformance::deck_dev_server`) so deck can run as a framework
+// without a host adapter or shipd. The watcher rebuilds on edit and
+// pushes HMR; the router serves the whole `/_deck/*` surface.
+//
+// The default data port is a `NoopDataPort`: there is no per-view live
+// data wired here. `--demo` is the documented escape hatch for hosts
+// that want the conformance `DemoStore` — it lives in
+// `deck-conformance`, which is test-only by design; for now the
+// standalone CLI defers the wired-demo shape to `deck dev --demo`
+// (rejected at runtime until the host wiring is upstreamed).
+
+/// A `DataPort` that resolves nothing. Default in `deck dev` —
+/// live-data is opt-in via `--demo`. (`is_provisioned` defaults to
+/// `false` from the trait, so the framework's first-run routing serves
+/// `/setup` until a host opts in.)
+struct NoopDataPort;
+
+impl deck_core::DataPort for NoopDataPort {
+    fn resolve(
+        &self,
+        _domain: &str,
+        _op: &str,
+        _args: &serde_json::Value,
+    ) -> Option<serde_json::Value> {
+        None
+    }
+}
+
+fn dev(project: PathBuf, addr: String, demo: bool) -> Result<()> {
+    if demo {
+        anyhow::bail!(
+            "deck dev --demo is reserved for the conformance harness; \
+             use `cargo run -p deck-conformance` for the wired-demo shape"
+        );
+    }
+
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .context("build tokio runtime")?;
+    runtime.block_on(async move {
+        // Resolve the project root. Canonicalize so symlinks/bare
+        // relative paths collapse to a single absolute path the bundler
+        // and resolver can key off.
+        let cwd = std::env::current_dir().context("cwd")?;
+        let project_path = if project.is_absolute() {
+            project.clone()
+        } else {
+            cwd.join(&project)
+        };
+        let repo_root = project_path
+            .canonicalize()
+            .with_context(|| format!("canonicalize {}", project_path.display()))?;
+        // Bail up front if the path isn't a directory — keeps the
+        // later bundler diagnostics readable.
+        if !repo_root.is_dir() {
+            anyhow::bail!("{} is not a directory", repo_root.display());
+        }
+
+        // Point deck-core's resolver at this root (set once per
+        // process; deck serves one project per daemon).
+        deck_core::resolver::set_project_root(repo_root.clone());
+
+        // Bundler construction mirrors `deck_conformance::make_bundler`:
+        // built-in DeckConfig defaults, single-project root, FS watcher
+        // running in-process.
+        let cfg = deck_config::DeckConfig::defaults();
+        let bundler = deck_bundler::Bundler::start(repo_root.clone(), None, cfg.clone());
+        if let Err(e) = bundler.start_watching().await {
+            eprintln!("deck dev: watcher failed to start: {e}");
+        }
+        // The hosting surface. Extension layers match what deck-axum's
+        // handlers read: `DaemonMode` for mode-aware hand-offs, the
+        // parsed `DeckConfig` (Arc) for scaffold lookups, the
+        // `Bundler` itself for `/_deck/views/{name}/setup` on-demand
+        // rebuilds, and a `DataPort` extension so a future multiplex
+        // mount can reach it with no shape change here. The default
+        // data port is the no-op impl — `deck dev --demo` is the
+        // documented escape hatch for the conformance `DemoStore`
+        // (rejected today; the conformance harness is where the
+        // wired-demo shape lives).
+        let app = deck_axum::router()
+            .layer(axum::Extension(DaemonMode::Development))
+            .layer(axum::Extension(Arc::new(cfg)))
+            .layer(axum::Extension(bundler.clone()))
+            .layer(axum::Extension(Arc::new(NoopDataPort) as Arc<dyn deck_core::DataPort>));
+        let bind_addr = addr.clone();
+        let listener = tokio::net::TcpListener::bind(&bind_addr)
+            .await
+            .with_context(|| format!("bind {bind_addr}"))?;
+        let bound = listener
+            .local_addr()
+            .map(|a| a.to_string())
+            .unwrap_or_else(|_| bind_addr.clone());
+        println!("deck dev: serving {} on http://{bound}", repo_root.display());
+        println!("deck dev: ctrl-c to stop");
+
+        // Graceful shutdown: a ctrl-c finishes the in-flight request
+        // (axum::serve's documented hook) and then we tear the
+        // bundler's watch loop down before exit.
+        axum::serve(listener, app)
+            .with_graceful_shutdown(async {
+                if let Err(e) = tokio::signal::ctrl_c().await {
+                    eprintln!("deck dev: ctrl_c handler: {e}");
+                }
+            })
+            .await
+            .context("dev server")?;
+
+        // Bundler watchdog: stop the watch task before returning so
+        // the process doesn't linger on a detached tokio task.
+        if let Err(e) = bundler.shutdown().await {
+            eprintln!("deck dev: bundler shutdown: {e}");
+        }
+        Ok(())
+    })
+}
+
