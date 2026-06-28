@@ -55,9 +55,12 @@ export default controller({
     // declarative (no-parent-controller) mount still renders.
     const engine = signal<Calendar | null>(null)
 
+    // exactOptionalPropertyTypes: omit initialDate when empty rather than
+    // passing `undefined` to the optional field.
+    const initialDate = focusDate()
     const fallback = createCalendar({
       events: derived(() => parseJsonEvents(events())),
-      initialDate: focusDate() || undefined,
+      ...(initialDate ? { initialDate } : {}),
       weekStartsOn: (weekStartsOn() || 0) as 0,
       slotMinutes: slotMinutes() || 30,
       dayStartHour: dayStartHour() ?? 0,

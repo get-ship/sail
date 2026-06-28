@@ -49,7 +49,10 @@ export default controller({
     // `fieldEl` swaps element when `multiline` toggles the {#if}, so
     // track it via effect to rebind keydown onto the live field.
     const stopField = effect(() => {
-      const field = state.fieldEl as HTMLInputElement | HTMLTextAreaElement | null
+      // HTMLElement (not the input|textarea union): addEventListener's typed
+      // overload resolves the 'keydown' listener cleanly on a single element
+      // type, where the union receiver collapses it to a non-assignable shape.
+      const field = state.fieldEl as HTMLElement | null
       if (!field) return
       field.addEventListener('keydown', onKeydown)
       return () => field.removeEventListener('keydown', onKeydown)

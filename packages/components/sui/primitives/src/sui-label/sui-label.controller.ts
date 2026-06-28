@@ -7,8 +7,8 @@ export default controller<Scope>({
     const stopFor = effect(() => {
       const labelEl = state.$signals.labelEl() as HTMLLabelElement | null
       if (!labelEl) return
-      // bracket notation avoids reserved-word TS parsing issues
-      labelEl.htmlFor = (state.$signals as Record<string, () => string>)['for']?.() ?? ''
+      // bracket notation handles the reserved-word key without a cast
+      labelEl.htmlFor = state.$signals['for']?.() ?? ''
     })
 
     return () => {
