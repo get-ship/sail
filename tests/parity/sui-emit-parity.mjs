@@ -44,16 +44,17 @@ const FIXTURES = [
   { name: 'shadow-tones',          mode: 'component', componentName: 'shadow-tones-test' },
 ]
 
-const fixturesDir = join('/home/madvib/dev/Ship/sui', 'crates', 'sui', 'compiler', 'tests', 'fixtures')
+// Post-carve: sui-compiler lives in this same sui repo (the script itself
+// is a parity check that runs against the in-tree fixtures + cargo bin).
+// The fixture dir and Cargo.toml are resolved relative to `repoRoot`
+// (computed above) so the script works on any checkout, worktree, or CI
+// run — not just the original author's machine.
+const fixturesDir = join(repoRoot, 'crates', 'sui', 'compiler', 'tests', 'fixtures')
 const tmp = mkdtempSync(join(tmpdir(), 'sui-emit-parity-'))
 
 function compileFixture(fx) {
-  // Post-carve: sui-compiler lives in the external sui repo. Run via
-  // the explicit --manifest-path. The fixtures source dir below also
-  // moved (`/home/madvib/dev/Ship/sui/crates/sui/compiler/tests/fixtures/`)
-  // — see fixturesDir below.
   const src = join(fixturesDir, `${fx.name}.sui`)
-  const args = ['run', '-q', '--manifest-path', '/home/madvib/dev/Ship/sui/Cargo.toml', '-p', 'sui-compiler', '--', 'build', src, '--out', tmp, '--no-dts']
+  const args = ['run', '-q', '--manifest-path', join(repoRoot, 'Cargo.toml'), '-p', 'sui-compiler', '--', 'build', src, '--out', tmp, '--no-dts']
   if (fx.mode === 'component' && fx.componentName) {
     args.push('--component-name', fx.componentName)
   }

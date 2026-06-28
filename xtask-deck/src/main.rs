@@ -98,12 +98,16 @@ fn extract_inner(svg: &str) -> Result<String> {
 
 pub fn run(repo_root: &Path) -> Result<()> {
     let icons_dir = locate_lucide_icons(repo_root)?;
-    // SMELL: hardcoded path to suirepo local. The gen-icons tool lives in
-    // ship; its output is a sui asset. Pre-multi-repo-split this was an
-    // internal path; post-split it should be in a published deck crate or
-    // behind a SUI_PATH env var. For now the smell is loud on purpose
-    // until gen-icons moves to suirepo (where the asset is committed).
-    let out_path = std::path::PathBuf::from("/home/madvib/dev/Ship/sui/crates/deck/deck-core/assets/lucide-icons.json");
+    // Output lives inside this sui repo at the canonical deck-core assets
+    // path. We join against `repo_root` instead of hardcoding an absolute
+    // path so the tool is portable across checkouts and worktrees; pass
+    // `repo_root` as the cwd (or override via SUI_GEN_ICONS_OUT) for a
+    // custom layout.
+    let out_path = std::env::var_os("SUI_GEN_ICONS_OUT")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| {
+            repo_root.join("crates/deck/deck-core/assets/lucide-icons.json")
+        });
     fs::create_dir_all(out_path.parent().unwrap())
         .with_context(|| format!("mkdir parent of {}", out_path.display()))?;
 

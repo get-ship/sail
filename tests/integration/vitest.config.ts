@@ -2,20 +2,41 @@
 //
 // Aliases sui runtime + dom to the sui repo's own source, and the
 // contract SDK to ship-contracts. Relative paths so the config is
-// portable across clones — the previous absolute
-// `/home/madvib/dev/Ship/sui/...` aliases only worked on the original
-// author's machine.
+// portable across clones — earlier revisions hardcoded
+// absolute author-machine paths which only worked on the original
+// author's checkout.
 //
 // SHIP_CONTRACTS_DIR overrides the contract SDK's checkout path so CI
 // can pin a different location (e.g. a sibling worktree) without
 // touching this file.
 
+// Resolve the sibling ship-contracts checkout relative to a discovered
+// Ship umbrella root, not a hardcoded absolute path. Walks up from
+// import.meta.url looking for a parent that contains a `ship-contracts`
+// subdir (the same idiom helm's `scripts/_path.ts discoverShipRoot` uses).
+// `SHIP_CONTRACTS_DIR` overrides for CI / containers / non-umbrella layouts.
+
+import { existsSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import { defineConfig } from 'vitest/config'
-import { resolve } from 'node:path'
 import { SHIP_VITEST_DEFAULTS } from '../packages/sui/test-setup/src/vitest.ts'
 
+function discoverShipContractsDir(): string {
+  let dir = new URL('.', import.meta.url).pathname
+  for (let i = 0; i < 8; i++) {
+    const parent = resolve(dir, '..')
+    if (parent === dir) break
+    if (existsSync(join(parent, 'ship-contracts'))) {
+      return join(parent, 'ship-contracts')
+    }
+    dir = parent
+  }
+  return resolve(import.meta.dirname, '..', '..', 'ship-contracts')
+}
+
+const SHIP_CONTRACTS_DIR = process.env.SHIP_CONTRACTS_DIR ?? discoverShipContractsDir()
 const SHIP_CONTRACTS_SDK_CLIENT = resolve(
-  process.env.SHIP_CONTRACTS_DIR ?? '/home/madvib/dev/Ship/ship-contracts',
+  SHIP_CONTRACTS_DIR,
   'packages/sdk-client/src/index.ts',
 )
 
