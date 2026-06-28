@@ -260,8 +260,14 @@ export async function mount<Scope = Record<string, unknown>>(
   // 8. Lifecycle mount.
   const lifecycle = extractLifecycle(setupRet)
   if (lifecycle?.mount) {
+    // Run the controller's mount() INSIDE the same effect scope as setup (line
+    // 206), exactly as compose.ts does for component mount. setup's withScope has
+    // already closed by here, so a live()/data()/hook subscription opened in a
+    // controller's mount() callback hit onCleanup() with CURRENT_SCOPE=null — a
+    // no-op — and leaked one open SSE subscription per navigation (the OOM).
+    const lifecycleMount = lifecycle.mount
     try {
-      const result = lifecycle.mount(lifecycle.state, target) as unknown
+      const result = withScope(scope, () => lifecycleMount(lifecycle.state, target)) as unknown
       // Controller mount may return any of:
       //   - void                — nothing to clean up
       //   - () => void          — disposer; idiomatic Solid/Svelte shape
@@ -513,9 +519,11 @@ function awaitChannelOpen(es: EventSource, timeoutMs: number): Promise<void> {
   if (es.readyState === 1) return Promise.resolve()
   return new Promise((resolve) => {
     let settled = false
+    let timerId: ReturnType<typeof setTimeout> | undefined
     const settle = (): void => {
       if (settled) return
       settled = true
+      if (timerId !== undefined) clearTimeout(timerId)
       es.removeEventListener('open', settle)
       es.removeEventListener('error', settle)
       resolve()
@@ -526,7 +534,10 @@ function awaitChannelOpen(es: EventSource, timeoutMs: number): Promise<void> {
     // initial connect attempt has finished. Don't keep mount() waiting.
     es.addEventListener('error', settle)
     if (timeoutMs > 0) {
-      setTimeout(settle, timeoutMs)
+      // Store the id so settle() cancels it — else the timer holds its closure
+      // (and the resolve continuation) alive for the full timeout after the
+      // channel already opened/errored.
+      timerId = setTimeout(settle, timeoutMs)
     }
   })
 }

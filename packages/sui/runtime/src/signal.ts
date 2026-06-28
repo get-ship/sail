@@ -29,6 +29,7 @@
 // the Rust side to follow.
 
 import { findNearestBoundary } from './error-boundary'
+import { onCleanup } from './effect-scope'
 
 /** Legacy alias retained for the public `Signal.__subs` field shape. */
 type Subscriber = () => void
@@ -537,13 +538,18 @@ export function selector<T>(source: Signal<T>): (key: T) => boolean {
   let current = source.__peek()
   // One ambient effect subscribes to source. On change, mark exactly
   // the two affected buckets (old + new) and advance current.
-  effect(() => {
+  const stopSelector = effect(() => {
     const next = source()
     if (Object.is(next, current)) return
     notifyBucket(buckets.get(current))
     notifyBucket(buckets.get(next))
     current = next
   })
+  // Enroll the ambient effect's teardown with the current scope so it stops on
+  // unmount — like live()'s effect (live.ts onCleanup(stop)). Without this it
+  // stays subscribed to `source` forever, accumulating one dead observer per
+  // selector() call across navigations.
+  onCleanup(stopSelector)
   return (key: T): boolean => {
     const obs = CURRENT_OBSERVER
     if (obs !== null) {
