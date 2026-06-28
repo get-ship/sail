@@ -14,6 +14,7 @@ import { decoderFor } from './component-decoders'
 import { clearFormHooks, installFormHooks } from './component-form'
 import type { Decoder } from './decode'
 import { effect, signal, type Signal } from './signal'
+import type { MountSetup, MountModule } from './component-mount'
 
 /** Declarative description of a component prop. */
 export interface PropDef<T> {
@@ -187,9 +188,18 @@ const buildSchema = (def: ComponentDef): ComponentSchema => {
 }
 
 /**
- * Register a `<tag>` custom element from a declarative definition.
+ * `component(...)` — the one factory a compiled `.sui` exports. Two shapes,
+ * disjoint on the first argument so the compiler (and the rare direct caller)
+ * can never confuse them:
  *
- * `component()` desugars `def` into the lower-level `ComponentSchema` +
+ *   • `component(setup)` — tagless MOUNT form. Returns `{ setup }`; the host
+ *     (deck / `attach()`) mounts it into a node. No custom-element registration.
+ *     This is what the compiler emits for a tagless `.sui` (a deck page).
+ *   • `component(tag, def)` — REGISTER a `<tag>` custom element from a
+ *     declarative definition (this overload, documented below). A hyphenated
+ *     tag is the only thing that turns a component into a registered element.
+ *
+ * `component(tag, def)` desugars `def` into the lower-level `ComponentSchema` +
  * `ComponentFactory` shape that `defineComponent` consumes. Props become
  * observed attributes with per-type decoders; `styles` are injected
  * (scoped via `[data-component="<tag>"]` in light DOM, attached to the
@@ -217,10 +227,21 @@ const buildSchema = (def: ComponentDef): ComponentSchema => {
  *
  * @see defineComponent for the lower-level imperative API.
  */
+export function component<Bindings>(setup: MountSetup<Bindings>): MountModule<Bindings>
+export function component<Bindings>(tag: string, def: ComponentDef<Bindings>): void
 export function component<Bindings>(
-  tag: string,
-  def: ComponentDef<Bindings>,
-): void {
+  tagOrSetup: string | MountSetup<Bindings>,
+  maybeDef?: ComponentDef<Bindings>,
+): MountModule<Bindings> | void {
+  // One function argument → the tagless MOUNT form: a component mounted into a
+  // host (deck page / synthetic render), not registered as a custom element.
+  // Returns the `{ setup }` module `attach()` consumes. No tag, no define.
+  if (typeof tagOrSetup === 'function') {
+    return { setup: tagOrSetup }
+  }
+  // Two arguments (tag + def) → REGISTER a custom element.
+  const tag = tagOrSetup
+  const def = maybeDef as ComponentDef<Bindings>
   const schema = buildSchema(def as ComponentDef)
   const propEntries = Object.entries(def.props ?? {})
 

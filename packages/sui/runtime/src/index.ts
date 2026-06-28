@@ -229,8 +229,10 @@ export type {
   ResolvedBindings,
 } from './controller-resolver'
 
-export { view } from './view'
-export type { ViewContext, ViewSetup, ViewDef } from './view'
+// The tagless mount-form of `component()` (the function-arg overload) + its
+// context/setup/module types. `component` itself is exported above (line 203);
+// these are the types the mount-form's setup + default export carry.
+export type { MountContext, MountSetup, MountModule } from './component-mount'
 
 // Slice 2 — hydration-marker recording helpers. The synthetic emit calls
 // these next to `bindText` / `bindOn` / `bindFor` / etc. so the ship-js

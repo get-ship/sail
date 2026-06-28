@@ -111,7 +111,7 @@ pub struct SyntheticOutput {
     /// The SSR render module (markup half, mount-only), importing the
     /// controller's `scope`. This is what ship-js SSR runs.
     pub render_ts: String,
-    /// The CLIENT render module: `export default view(() => …)` whose setup
+    /// The CLIENT render module: `export default component(() => …)` whose setup
     /// returns the `__mount` + `hydrate` contract `mount.ts` drives. Same
     /// mount body as `render_ts`, plus the production hydrate buffers. Empty
     /// of nothing — always emitted (additive; the SSR path ignores it).

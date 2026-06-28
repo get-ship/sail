@@ -113,14 +113,14 @@ fn synth_client_into(repo: &Path, gendir: &Path, s: &Surface) {
     fs::write(dir.join(format!("{stem}.client.ts")), out.render_client_ts).unwrap();
 }
 
-/// Write the `@ship/sui-runtime` shim: the SSR server surface + the `view()`
-/// wrapper (which the server entry omits). Lightweight — avoids pulling the
-/// full browser index graph into the check.
+/// Write the `@ship/sui-runtime` shim: the SSR server surface + the
+/// `component()` factory (which the server entry omits). Lightweight — avoids
+/// pulling the full browser index graph into the check.
 fn write_runtime_shim(repo: &Path, work: &Path) {
     let r = repo.display();
     let shim = format!(
         "export * from \"{r}/packages/sui/runtime/src/server.ts\";\n\
-         export {{ view }} from \"{r}/packages/sui/runtime/src/view.ts\";\n\
+         export {{ component }} from \"{r}/packages/sui/runtime/src/component.ts\";\n\
          // Slice 2 — re-export the hydration-marker recording helpers so\n\
          // the synthetic emit's `mount(container)` (which calls\n\
          // `markHydrateText` next to `bindText`) type-checks under tsc.\n\

@@ -20,7 +20,7 @@ import * as suiRuntime from '@ship/sui-runtime'
 import * as suiDom from '@ship/sui-dom'
 import * as suiRoute from '@ship/deck-router'
 import '@ship/sui-runtime/template-hooks'
-import type { ViewDef } from '@ship/sui-runtime'
+import type { MountModule } from '@ship/sui-runtime'
 
 /** A user setup the host injects for a view-mode specimen (the throwing-setup
  *  diagnostic path, or a future ctx-bearing view). */
@@ -62,10 +62,10 @@ function normalizeSetup(setup: InjectedSetup | undefined): { setup: (ctx: unknow
 }
 
 /**
- * Evaluate a compiled view-mode module and return its `{ setup }` default —
- * the same `ViewDef` the compiler's `view((ctx) => …)` wrapper produces.
+ * Evaluate a compiled mount-form module and return its `{ setup }` default —
+ * the same `MountModule` the compiler's `component((ctx) => …)` wrapper produces.
  */
-export function evalViewModule(js: string, setup?: InjectedSetup): ViewDef {
+export function evalViewModule(js: string, setup?: InjectedSetup): MountModule {
   const body = rewriteImports(js).replace(/\bexport\s+default\s+/g, 'return ')
   // eslint-disable-next-line @typescript-eslint/no-implied-eval
   const fn = new Function('__runtime', '__dom', '__route', '__setup', body) as (
@@ -73,7 +73,7 @@ export function evalViewModule(js: string, setup?: InjectedSetup): ViewDef {
     d: typeof suiDom,
     rt: typeof suiRoute,
     s: { setup: (ctx: unknown) => unknown } | null,
-  ) => ViewDef
+  ) => MountModule
   return fn(suiRuntime, suiDom, suiRoute, normalizeSetup(setup))
 }
 

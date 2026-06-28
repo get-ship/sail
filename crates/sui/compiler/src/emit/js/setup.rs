@@ -289,7 +289,7 @@ fn collect_bind_this_targets(instrs: &[Instr], out: &mut BTreeSet<String>) {
 
 fn emit_setup_call(w: &mut Writer) {
     // Author-facing paired-controller shape is `controller(def)` (and
-    // `view(setup)` for views) — both wrap into `{ setup }`. No raw
+    // `component(setup)` for the mount-form) — both wrap into `{ setup }`. No raw
     // `function setup(ctx)` author export. Compiler emits a single call
     // path; if a paired `.ts` returns a non-object, we ignore it instead
     // of letting it shadow the runtime's $scope.

@@ -49,10 +49,10 @@ const SCOPE_PREFIX: &str = "scope.";
 
 /// Author-side runtime symbols that belong in the **controller**, not the
 /// render. `lower` reports them in `runtime_imports`, but the render never
-/// calls `view()`/`component()`/`data()`/`live()`/`prop()` — those lower
-/// into the controller's logic half. Everything else `lower` reports is a
-/// template binder the mount body uses.
-const CONTROLLER_ONLY_IMPORTS: &[&str] = &["view", "component", "prop", "data", "live"];
+/// calls `component()`/`data()`/`live()`/`prop()` — those lower into the
+/// controller's logic half. Everything else `lower` reports is a template
+/// binder the mount body uses.
+const CONTROLLER_ONLY_IMPORTS: &[&str] = &["component", "prop", "data", "live"];
 
 /// The reusable template walk: drives the production [`TemplateEmitter`] with
 /// the `scope.` author prefix and returns the emitted pieces. `is_view` gates
@@ -159,7 +159,7 @@ pub(super) fn emit_render(
     Ok(w.into_string())
 }
 
-/// Emit the CLIENT render module: `export default view(() => …)` whose setup
+/// Emit the CLIENT render module: `export default component(() => …)` whose setup
 /// returns `__mount` (the CSR DOM build) + `hydrate` (adopt SSR markers) —
 /// the contract `packages/sui/runtime/src/mount.ts` drives. This is the
 /// browser counterpart of the SSR [`emit_render`]: SAME mount body, SAME
@@ -178,15 +178,15 @@ pub(super) fn emit_render_client(
 
     let walked = walk(program, true);
 
-    // The client render is ALWAYS view-shaped — the walk forces `is_view =
-    // true` so the `hydrate` buffers populate even for a component target
-    // (mounted standalone). The import sets must agree with that, so they are
-    // computed as a View regardless of `mode`; otherwise a component's hydrate
-    // body would call `hydrateText`/`hydrateOn` without importing them (the
-    // component lowering leaves `dom_imports` empty).
+    // The client render is ALWAYS mount-shaped — the walk forces `is_view =
+    // true` so the `hydrate` buffers populate even for a registered-component
+    // target (mounted standalone). The import sets must agree with that, so
+    // they are computed as the mount-form regardless of `mode`; otherwise a
+    // component's hydrate body would call `hydrateText`/`hydrateOn` without
+    // importing them (the component lowering leaves `dom_imports` empty).
     let mut runtime_imports = render_runtime_imports(program, true);
-    if !runtime_imports.iter().any(|s| s == "view") {
-        runtime_imports.push("view".to_string());
+    if !runtime_imports.iter().any(|s| s == "component") {
+        runtime_imports.push("component".to_string());
         runtime_imports.sort();
     }
     // DOM imports: the `hydrate*` helpers + `collect*` preambles the hydrate
@@ -210,7 +210,7 @@ pub(super) fn emit_render_client(
     w.line(&format!("import {{ scope }} from {};", js_string(controller_specifier)));
     w.nl();
     w.line("/** Client mount contract — `default.setup(ctx)` → `{ __mount, hydrate }`. */");
-    w.line("export default view(() => {");
+    w.line("export default component(() => {");
     w.enter();
     // eslint-disable + `any` for the same reason as the SSR render: the
     // emitter machinery adds ad-hoc props (`__v`, row binders) to `$scope`.

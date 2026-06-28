@@ -268,10 +268,10 @@ fn client_emit_returns_mount_and_hydrate_contract() {
     )
     .expect("emit");
     let client = out.render_client_ts;
-    assert!(client.contains("export default view(() => {"), "client wraps in view():\n{client}");
+    assert!(client.contains("export default component(() => {"), "client wraps in component():\n{client}");
     assert!(client.contains("__mount(container: HTMLElement) {"), "client has __mount:\n{client}");
     assert!(client.contains("hydrate(root: HTMLElement) {"), "client has hydrate:\n{client}");
-    // It imports `view` from the runtime and the text hydrate helpers from
+    // It imports `component` from the runtime and the text hydrate helpers from
     // @ship/sui-dom (the production split).
     assert!(client.contains("from \"@ship/sui-dom\""), "imports hydrate helpers from sui-dom:\n{client}");
     assert!(client.contains("collectTextOpens") && client.contains("hydrateText"), "text hydrate:\n{client}");
@@ -280,7 +280,7 @@ fn client_emit_returns_mount_and_hydrate_contract() {
     // The SSR render stays the bare `mount` export (unchanged contract).
     assert!(
         out.render_ts.contains("export function mount(container: HTMLElement)")
-            && !out.render_ts.contains("export default view"),
+            && !out.render_ts.contains("export default component"),
         "SSR render keeps its mount-only export:\n{}",
         out.render_ts
     );
@@ -304,7 +304,7 @@ fn merged_client_module_is_self_contained() {
     // The controller's `scope` const is present as a local (its export line).
     assert!(merged.contains("export const scope = { ship, list };"), "scope is local:\n{merged}");
     // The client default export is present.
-    assert!(merged.contains("export default view(() => {"), "client default export present:\n{merged}");
+    assert!(merged.contains("export default component(() => {"), "client default export present:\n{merged}");
     // The live-data lowering (controller) and the for-binder (render) coexist.
     assert!(merged.contains("const list = live(() => (ship.demo.todos()));"), "controller body:\n{merged}");
     assert!(merged.contains("bindFor("), "render body:\n{merged}");

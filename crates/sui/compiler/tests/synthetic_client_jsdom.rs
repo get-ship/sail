@@ -90,7 +90,7 @@ fn write_harness(repo: &Path, work: &Path) {
         work.join("runtime-shim.ts"),
         format!(
             "export * from \"{r}/packages/sui/runtime/src/server.ts\";\n\
-             export {{ view }} from \"{r}/packages/sui/runtime/src/view.ts\";\n\
+             export {{ component }} from \"{r}/packages/sui/runtime/src/component.ts\";\n\
              export {{ markHydrateText, markHydrateAttr, markHydrateBoundary }} from \"{r}/packages/sui/runtime/src/hydrate-mark.ts\";\n\
              export type {{ Modifier, OnOptions }} from \"{r}/packages/sui/runtime/src/on.ts\";\n"
         ),

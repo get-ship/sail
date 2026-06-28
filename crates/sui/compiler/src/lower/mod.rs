@@ -59,13 +59,12 @@ pub struct Lowered {
 /// Walk the program, build a `Lowered` summary.
 pub fn lower(program: &Program, is_view: bool) -> Lowered {
     let mut out = Lowered::default();
-    if !is_view {
-        out.runtime_imports.insert("component");
-        if !program.props.is_empty() {
-            out.runtime_imports.insert("prop");
-        }
-    } else {
-        out.runtime_imports.insert("view");
+    // Every compiled `.sui` exports `component(...)` — the tagless mount-form
+    // (`component(setup)`) or the registered custom element (`component(tag,
+    // def)`). `prop` only rides along when a registered component declares props.
+    out.runtime_imports.insert("component");
+    if !is_view && !program.props.is_empty() {
+        out.runtime_imports.insert("prop");
     }
     if !program.data.is_empty() {
         out.runtime_imports.insert("data");

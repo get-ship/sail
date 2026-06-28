@@ -3,10 +3,10 @@
 //! Layout of the emitted module:
 //!
 //! ```js
-//! import { view, … } from "@ship/sui-runtime";
-//! import setup from "./view.ts";        // when paired
+//! import { component, … } from "@ship/sui-runtime";
+//! import setup from "./controller.ts";  // when paired
 //!
-//! export default view((ctx) => {
+//! export default component((ctx) => {
 //!   const $scope = Object.create(null);
 //!   $scope.ship = ctx.ship; …
 //!   //  state signals come from the controller's `scope:` factory:
@@ -40,8 +40,8 @@
 //!
 //! Internal structure:
 //!  * `imports` — runtime/dom/setup import block
-//!  * `view` — `export default view(…)` wrapper
-//!  * `component` — `export default component(…)` wrapper + props schema
+//!  * `mount` — `export default component((ctx) => …)` mount-form wrapper
+//!  * `component` — `export default component(tag, …)` wrapper + props schema
 //!  * `setup` — setup body, $scope seeding, lifecycle wiring
 
 use super::writer::Writer;
@@ -52,8 +52,8 @@ use crate::CompileOpts;
 
 mod component;
 mod imports;
+mod mount;
 mod setup;
-mod view;
 
 pub fn emit_module(
     program: &Program,
@@ -63,13 +63,13 @@ pub fn emit_module(
 ) -> String {
     let mut w = Writer::new();
     // Leading `_compilerVersion` legal comment. Lets the shell compare
-    // its loaded view bundle against the daemon's `/_deck/meta` and
+    // its loaded component bundle against the daemon's `/_deck/meta` and
     // surface drift loudly instead of silently rendering against a
     // stale export surface (cf. the `fade` regression that prompted
     // this).
     //
     // We also attach `_compilerVersion` to the default export inside
-    // `view.rs` / `component.rs` — that property travels through
+    // `mount.rs` / `component.rs` — that property travels through
     // tree-shaking bundlers like Bun.build, which would otherwise drop
     // unused top-level exports and module-level comments.
     let cv = crate::compiler_version();
@@ -85,13 +85,14 @@ pub fn emit_module(
     setup::emit_setup_body(&mut body, program, bindings, opts, lowered);
     body.leave();
 
-    // The view/component split is keyed on the tag (`component_meta`), not a
-    // mode flag: a tagged source registers a custom element; a tagless one
-    // emits the mount-form ("view"/page). `CompileMode::View` is gone.
+    // The mount/register split is keyed on the tag (`component_meta`), not a
+    // mode flag: a tagged source registers a custom element (`component(tag,
+    // def)`); a tagless one emits the mount-form (`component(setup)` — a deck
+    // page). Both call `component(...)`; the tag decides which overload.
     if opts.component_meta.is_some() {
         component::emit_component_export(&mut w, program, body, opts);
     } else {
-        view::emit_view_export(&mut w, program, body);
+        mount::emit_mount_export(&mut w, program, body);
     }
     // Phase 3b.5 (gate I): the `bindings` manifest is gone — every
     // binding kind is now wired by the compiled view's

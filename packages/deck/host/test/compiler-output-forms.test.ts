@@ -1,7 +1,7 @@
 // Regression: the lowering must handle the forms the SUI COMPILER actually
 // emits — not the hand-written `export default {…}` fixtures the earlier tests
-// used. A real compiled view.js (e.g. views/git) emits:
-//   import { bindText, view, … } from "@ship/sui-runtime";
+// used. A real compiled page module (e.g. views/git) emits:
+//   import { bindText, component, … } from "@ship/sui-runtime";
 //   import { collectElementMarkers, … } from "@ship/sui-dom";
 //   import"@ship/sui-runtime/template-hooks";   ← no space, side-effect
 //   …
@@ -21,7 +21,7 @@ describe('lowerFrameworkImports — real compiler import forms', () => {
 
   it('strips named framework imports while leaving non-framework imports', () => {
     const src =
-      'import { bindText, view } from "@ship/sui-runtime";\n' +
+      'import { bindText, component } from "@ship/sui-runtime";\n' +
       'import { collectElementMarkers } from "@ship/sui-dom";\n' +
       'import { foo } from "./local-dep";\n'
     const out = lowerFrameworkImports(src)
@@ -34,8 +34,8 @@ describe('lowerFrameworkImports — real compiler import forms', () => {
 describe('lowerModuleToExpression — `export { X as default }`', () => {
   it('trails the local bound to default (multi-line export block)', () => {
     const src =
-      'import { view } from "@ship/sui-runtime";\n' +
-      'const page_default = view({ setup: () => ({}) });\n' +
+      'import { component } from "@ship/sui-runtime";\n' +
+      'const page_default = component(() => ({}));\n' +
       'export {\n  page_default as default\n};\n'
     const out = lowerModuleToExpression(src)
     expect(out).not.toMatch(/export\s*\{/)
