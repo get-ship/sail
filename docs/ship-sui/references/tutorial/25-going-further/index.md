@@ -58,7 +58,8 @@ The docs site isn't coupled to a daemon. Things you'll see in a real
 Ship project but not here:
 
 - **Routing**: route params, `<Link>`, redirects, route-level data
-  preloads. Lives in `@ship/sui-runtime/route`.
+  preloads. Routes and navigation arrive through the host context
+  (`ctx.route`, `ctx.navigate`) — routing lives in **deck**, not SUI.
 - **SSR**: the server pre-renders `<data live>` to HTML, the client
   attach takes over. Covered in `ssr-hydration.md`.
 - **Manifest**: `manifest.jsonc` declares routes + auth + theme +

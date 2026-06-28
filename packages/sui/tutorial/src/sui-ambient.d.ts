@@ -11,7 +11,10 @@
 // declaration instead.
 //
 // `Scope` is the per-template binding shape that controllers parameterize
-// their `controller<Scope>(…)` and `MutableState<Scope>` calls on. The
+// their legacy `controller<Scope>(…)` calls on (see README § "Scope
+// type companion" for why the no-arg `controller({…})` form is not
+// used here despite being the framework's canonical controller
+// contract). The
 // structural shape the runtime consumes is `Record<string, unknown>` —
 // `MutableState<Scope>` is built off `StateKeys<Scope>` (a mapped type
 // over signal-valued keys) plus the non-signal scope keys; the tests

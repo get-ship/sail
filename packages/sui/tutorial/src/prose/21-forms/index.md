@@ -17,7 +17,7 @@ template the same way you'd read any signal.
 ```ts
 import { controller, useForm } from '@ship/sui-runtime'
 
-export default controller<Scope>({
+export default controller({
   use: {
     form: useForm({
       initial: { name: '', email: '', accept: false },

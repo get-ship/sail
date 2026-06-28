@@ -54,7 +54,7 @@ controller (covered in step 4):
 ```ts
 import { controller, signal, effect } from '@ship/sui-runtime'
 
-export default controller<Scope>({
+export default controller({
   scope: () => {
     const count = signal(0)
     effect(() => { document.title = `count: ${count()}` })

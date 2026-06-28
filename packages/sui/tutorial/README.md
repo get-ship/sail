@@ -43,8 +43,12 @@ import controller from '@ship/sui-tutorial/lessons/01-hello-signal/solved/contro
 
 The package does not ship a runtime of its own; it depends on
 `@ship/sui-runtime@0.1.0` (published sibling) and uses the same
-`controller<Scope>(…)` / `template.sui` contract as the rest of the
-framework.
+`controller({ scope, on, mount })` / `template.sui` contract as the
+rest of the framework. (See "Scope type companion" below for the one
+tutorial-specific deviation: the lesson `.ts` files parameterize
+`controller<Scope>({...})` explicitly because the tutorial does not
+run the sui-compiler and falls back to an ambient `*.sui` declaration
+for portability. The canonical no-arg form is taught in the prose.)
 
 ## Scope type companion
 
@@ -59,7 +63,10 @@ The sui-compiler normally emits a `<stem>.sui.d.ts` adjacent to every
 asset, not a component pack, and the compiler binary isn't required for
 typecheck — `src/sui-ambient.d.ts` resolves `*.sui` to
 `Scope = Record<string, unknown>` instead, which is precise enough for
-the controllers' `controller<Scope>(…)` parameterization. The
+the controllers' legacy `controller<Scope>(…)` parameterization — the
+ambient `*.sui` declaration is too loose to satisfy the no-arg
+`controller({…})` form's TS2742 portability requirement without
+compiler-emitted `<stem>.sui.d.ts` files. The
 `template.sui` is a SUI source file, not a TS module; it never executes
 on the host.
 

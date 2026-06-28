@@ -30,7 +30,7 @@ The shape:
 ```
 
 ```ts
-export default controller<Scope>({
+export default controller({
   scope: () => {
     const name = signal('')
     return {

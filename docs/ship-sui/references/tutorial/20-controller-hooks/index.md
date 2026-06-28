@@ -22,7 +22,7 @@ const AGENTS = [
   { id: 'qa',       label: 'QA — Playwright + screenshot suite' },
 ]
 
-export default controller<Scope>({
+export default controller({
   scope: () => ({ items: signal(AGENTS) }),
   use: {
     list: useFilteredList(

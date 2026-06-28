@@ -25,7 +25,7 @@ because you can't know when the unmount will fire.
 ```ts
 import { signal, effect, onCleanup } from '@ship/sui-runtime'
 
-export default controller<Scope>({
+export default controller({
   scope: () => {
     const count = signal(0)
 

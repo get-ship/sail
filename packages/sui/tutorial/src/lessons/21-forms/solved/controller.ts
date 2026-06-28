@@ -1,7 +1,7 @@
 import { controller, useForm } from '@ship/sui-runtime'
 import type { Scope } from './template.sui'
 
-interface SignupFields { name: string; email: string; accept: boolean }
+interface SignupFields extends Record<string, unknown> { name: string; email: string; accept: boolean }
 
 export default controller<Scope>({
   scope: () => ({}),
