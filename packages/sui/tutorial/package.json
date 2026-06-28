@@ -1,12 +1,13 @@
 {
   "name": "@ship/sui-tutorial",
-  "version": "0.1.0",
-  "description": "SUI tutorial — 25 lessons (paired starter + solved controller + template). Droppable into the marketing site or any host.",
+  "version": "0.1.1",
+  "description": "SUI tutorial — 25 lessons (paired starter + solved controller + template, plus prose). Droppable into the marketing site or any host.",
   "private": false,
   "type": "module",
   "license": "MIT",
   "exports": {
     "./lessons/*": "./src/lessons/*",
+    "./prose/*": "./src/prose/*",
     "./package.json": "./package.json"
   },
   "files": [
