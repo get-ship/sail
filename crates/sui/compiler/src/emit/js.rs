@@ -89,8 +89,8 @@ pub fn emit_module(
     // mode flag: a tagged source registers a custom element (`component(tag,
     // def)`); a tagless one emits the mount-form (`component(setup)` — a deck
     // page). Both call `component(...)`; the tag decides which overload.
-    if opts.component_meta.is_some() {
-        component::emit_component_export(&mut w, program, body, opts);
+    if let Some(meta) = opts.component_meta.as_ref() {
+        component::emit_registered_component(&mut w, program, body, meta);
     } else {
         mount::emit_mount_export(&mut w, program, body);
     }

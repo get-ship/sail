@@ -17,6 +17,7 @@ export default Object.assign(component((ctx) => {
   return Object.assign({}, $scope, {
     __mount(container) {
 const __cleanups = [];
+const __root = container.shadowRoot ?? container;
 const __e0 = document.createElement("div");
 __e0.setAttribute("class", "counter");
 const __e1 = document.createElement("p");
@@ -42,7 +43,7 @@ __cleanups.push(on(__e7, "click", (function () { const __h = (() => $scope.count
 const __t8 = document.createTextNode("\n    reset\n  ");
 __e7.appendChild(__t8);
 __e0.appendChild(__e7);
-container.appendChild(__e0);
+__root.appendChild(__e0);
 return () => { for (const c of __cleanups) try { c(); } catch (e) {} };
     },
     hydrate(root, ctx) {

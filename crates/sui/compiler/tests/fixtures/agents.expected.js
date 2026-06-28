@@ -115,6 +115,7 @@ const __wireBoundary_b3 = (anchor) => bindIf({
   return Object.assign({}, $scope, {
     __mount(container) {
 const __cleanups = [];
+const __root = container.shadowRoot ?? container;
 const __e0 = document.createElement("section");
 __e0.setAttribute("class", "agents");
 const __wlAnchor5 = document.createComment("while-loading");
@@ -126,7 +127,7 @@ __cleanups.push(bindWhileError({ anchor: __weAnchor12, signal: $scope.agents, re
 const __ifAnchor13 = document.createComment("if");
 __e0.appendChild(__ifAnchor13);
 __cleanups.push(__wireBoundary_b3(__ifAnchor13));
-container.appendChild(__e0);
+__root.appendChild(__e0);
 return () => { for (const c of __cleanups) try { c(); } catch (e) {} };
     },
     hydrate(root, ctx) {

@@ -12,12 +12,13 @@ export default Object.assign(component((ctx) => {
   return Object.assign({}, $scope, {
     __mount(container) {
 const __cleanups = [];
+const __root = container.shadowRoot ?? container;
 const __e0 = document.createElement("button");
 attachRef($scope, "btnEl", __e0);
 __e0.setAttribute("part", "button");
 const __t1 = document.createTextNode("click");
 __e0.appendChild(__t1);
-container.appendChild(__e0);
+__root.appendChild(__e0);
 return () => { for (const c of __cleanups) try { c(); } catch (e) {} };
     },
     hydrate(root, ctx) {

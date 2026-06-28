@@ -2,33 +2,27 @@ use super::super::styles::strip_shared_rules;
 use super::super::writer::{js_string, Writer};
 use crate::ir::*;
 use crate::lower::directives::prop_default_literal;
-use crate::CompileOpts;
+use crate::ComponentMeta;
 
-#[allow(clippy::expect_used)]
-pub(super) fn emit_component_export(
+/// Emit a TAGGED source: the mount-form module bound to a const, then a
+/// `component(tag, def, module)` registration. The runtime registration builds
+/// the observed-attribute schema from `props`, injects `styles` (data-component
+/// scoped, or into the shadow root), wires form-association, and on connect
+/// mounts the module via `mountComponent` — the one engine the page /
+/// internal-composition paths also use. Setup/lifecycle live in the module
+/// (via `emit_setup_body` + `mountComponent`), not here.
+pub(super) fn emit_registered_component(
     w: &mut Writer,
     program: &Program,
     body: Writer,
-    opts: &CompileOpts,
+    meta: &ComponentMeta,
 ) {
-    let meta = opts
-        .component_meta
-        .as_ref()
-        .expect("component_meta required for component mode");
-    w.line(&format!("export default component({}, {{", js_string(&meta.name)));
+    // The module — same mount-form shape a page exports, bound to a const so
+    // the registration + default export can both reference it.
+    super::mount::emit_module(w, program, body, "const __default = ");
+
+    w.line(&format!("component({}, {{", js_string(&meta.name)));
     w.enter();
-    // Stamp the component config so the bundled artifact carries
-    // compiler identity. The runtime's `component()` factory ignores
-    // unknown fields; this travels with the default export and is
-    // therefore safe from tree-shaking.
-    let cv = crate::compiler_version();
-    w.line(&format!(
-        "_compilerVersion: {{ cargo: {}, git: {}, dirty: {}, builtAt: {} }},",
-        js_string(cv.cargo),
-        js_string(cv.git),
-        cv.dirty,
-        js_string(cv.built_at),
-    ));
     emit_props_object(w, &program.props);
     if meta.shadow {
         w.line("shadow: true,");
@@ -44,8 +38,7 @@ pub(super) fn emit_component_export(
             w.line(&format!("formDisabled: {},", js_string(&p.name)));
         }
     }
-    let is_shadow = meta.shadow;
-    let emitted_styles = if is_shadow {
+    let emitted_styles = if meta.shadow {
         strip_shared_rules(&program.styles)
     } else {
         program.styles.clone()
@@ -53,11 +46,9 @@ pub(super) fn emit_component_export(
     if !emitted_styles.trim().is_empty() {
         w.line(&format!("styles: {},", js_string(&emitted_styles)));
     }
-    w.line("setup(ctx) {");
-    w.push_str(&body.into_string());
-    w.line("},");
     w.leave();
-    w.line("});");
+    w.line("}, __default);");
+    w.line("export default __default;");
 }
 
 fn emit_props_object(w: &mut Writer, props: &[PropDecl]) {

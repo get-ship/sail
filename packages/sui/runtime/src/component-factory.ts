@@ -15,6 +15,7 @@ import { clearFormHooks, installFormHooks } from './component-form'
 import type { Decoder } from './decode'
 import { effect, signal, type Signal } from './signal'
 import type { MountSetup, MountModule } from './component-mount'
+import { mountComponent } from './compose'
 
 /** Declarative description of a component prop. */
 export interface PropDef<T> {
@@ -228,20 +229,29 @@ const buildSchema = (def: ComponentDef): ComponentSchema => {
  * @see defineComponent for the lower-level imperative API.
  */
 export function component<Bindings>(setup: MountSetup<Bindings>): MountModule<Bindings>
-export function component<Bindings>(tag: string, def: ComponentDef<Bindings>): void
+export function component<Bindings>(
+  tag: string,
+  def: ComponentDef<Bindings>,
+  module: MountModule<Bindings>,
+): void
 export function component<Bindings>(
   tagOrSetup: string | MountSetup<Bindings>,
   maybeDef?: ComponentDef<Bindings>,
+  maybeModule?: MountModule<Bindings>,
 ): MountModule<Bindings> | void {
   // One function argument → the tagless MOUNT form: a component mounted into a
-  // host (deck page / synthetic render), not registered as a custom element.
-  // Returns the `{ setup }` module `attach()` consumes. No tag, no define.
+  // host (deck page / internal child), not registered as a custom element.
+  // Returns the `{ setup }` module the host (`attach` / `mountComponent`) consumes.
   if (typeof tagOrSetup === 'function') {
     return { setup: tagOrSetup }
   }
-  // Two arguments (tag + def) → REGISTER a custom element.
+  // (tag, def, module) → REGISTER a custom element backed by `module`. The
+  // wrapper seeds prop signals, injects styles, wires form association, then
+  // mounts the SAME module via mountComponent on connect — the one engine the
+  // page and internal-composition paths also use.
   const tag = tagOrSetup
   const def = maybeDef as ComponentDef<Bindings>
+  const module = maybeModule as MountModule<Bindings>
   const schema = buildSchema(def as ComponentDef)
   const propEntries = Object.entries(def.props ?? {})
 
@@ -293,11 +303,17 @@ export function component<Bindings>(
       if (typeof stopValue === 'function') cleanups.push(stopValue)
     }
 
-    if (def.setup) {
-      const ctx: ComponentSetupContext = { props: propSignals, host, cleanups }
-      if (internals) ctx.internals = internals
-      def.setup(ctx)
+    // Mount the module via the single engine: `setup(ctx)` seeds $scope from
+    // `ctx.props`, then `__mount(host)` renders and the controller lifecycle
+    // (LIFECYCLE_KEY) wires. `internals` rides along for form-associated
+    // controllers. The returned disposer tears the child down on disconnect.
+    const ctx: { props: Record<string, Signal<unknown>>; internals?: ElementInternals } = {
+      props: propSignals,
     }
+    if (internals) ctx.internals = internals
+    // `mountComponent` treats the module opaquely (it only reads `setup`); the
+    // cast erases the per-component `Bindings` to the default module shape.
+    cleanups.push(mountComponent(module as MountModule, host, ctx))
 
     return () => {
       clearFormHooks(host)

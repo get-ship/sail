@@ -12,14 +12,6 @@ pub(super) fn emit_imports(w: &mut Writer, lowered: &Lowered, opts: &CompileOpts
             imports.sort();
         }
     }
-    // Component + paired controller → the lifecycle wiring (setup.rs) emits
-    // `componentMountState($scope)` to build the mount-state proxy. Import it.
-    if opts.component_meta.is_some() && opts.setup_url.is_some() {
-        let sym = "componentMountState".to_string();
-        if !imports.contains(&sym) {
-            imports.push(sym);
-        }
-    }
     // Built-in transition factories are auto-imported when the template
     // references them — authors don't have to wire fade/slide/scale by
     // hand. Custom transition names (anything not in this set) still

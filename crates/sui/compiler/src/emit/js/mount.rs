@@ -15,6 +15,14 @@ use crate::ir::Program;
 /// host-supplied `opts.clients` map and warns on missing keys instead of
 /// letting `<data source>` thunks fail opaquely.
 pub(super) fn emit_mount_export(w: &mut Writer, program: &Program, body: Writer) {
+    emit_module(w, program, body, "export default ");
+}
+
+/// Write `<prefix>Object.assign(component((ctx) => { <body> }), { _compilerVersion,
+/// clients });` — the mount-form module. Shared by the page default export and
+/// the registered-component module const (a tagged source binds it to a tag via
+/// `defineComponent`).
+pub(super) fn emit_module(w: &mut Writer, program: &Program, body: Writer, prefix: &str) {
     let cv = crate::compiler_version();
     let stamp = format!(
         "{{\"cargo\":\"{}\",\"git\":\"{}\",\"dirty\":{},\"builtAt\":\"{}\"}}",
@@ -26,7 +34,7 @@ pub(super) fn emit_mount_export(w: &mut Writer, program: &Program, body: Writer)
         .map(|c| js_string(&c.name))
         .collect::<Vec<_>>()
         .join(", ");
-    w.line("export default Object.assign(component((ctx) => {");
+    w.line(&format!("{prefix}Object.assign(component((ctx) => {{"));
     w.push_str(&body.into_string());
     w.line(&format!(
         "}}), {{ _compilerVersion: {stamp}, clients: [{clients}] }});"

@@ -19,51 +19,46 @@ pub(super) fn emit_setup_body(
     // This is the sole view/component distinction now that `CompileMode::View`
     // is gone — keyed on the tag, not a mode flag.
     let is_component = opts.component_meta.is_some();
-    // A view that DECLARES `<client name="ship" />` opts into the keyed
-    // injection surface: `ship` resolves from `ctx.clients.ship`, falling
-    // back to the legacy `ctx.ship` alias so hosts that only pass
-    // `opts.ship` keep working through the migration. Undeclared `ship`
-    // stays the grandfathered ambient default (plain ctx destructure).
-    let ship_via_clients =
-        !is_component && program.clients.iter().any(|c| c.name == "ship");
-    if is_component {
-        w.line("const { props, host } = ctx;");
-        w.line("if (!ctx.cleanups) ctx.cleanups = [];");
-        w.line("const __cleanups = ctx.cleanups;");
-    } else if ship_via_clients {
+    let is_shadow = opts.component_meta.as_ref().map(|m| m.shadow).unwrap_or(false);
+    // A source that DECLARES `<client name="ship" />` resolves `ship` from
+    // `ctx.clients.ship` (falling back to the `ctx.ship` alias); undeclared
+    // `ship` stays the ambient ctx default.
+    let ship_via_clients = program.clients.iter().any(|c| c.name == "ship");
+
+    // ── ctx → $scope seeding (unified) ──────────────────────────────────────
+    // Every compiled `.sui` is a component module: `setup(ctx)` seeds the scope
+    // and returns `{ …$scope, __mount(container), [hydrate] }`. ship/route/
+    // navigate always come from ctx (deck injects them for pages; `undefined`
+    // for a registered component, which never reads them). Routing is deck's —
+    // SUI vends no router or factory fallback. Props come from `ctx.props`
+    // (registered components have them, pages don't).
+    if ship_via_clients {
         w.line("const { route, navigate } = ctx;");
+        w.line("const ship = (ctx.clients ?? {}).ship ?? ctx.ship;");
     } else {
         w.line("const { ship, route, navigate } = ctx;");
     }
-    if ship_via_clients {
-        w.line("const ship = (ctx.clients ?? {}).ship ?? ctx.ship;");
-    }
     w.line("const $scope = Object.create(null);");
-    if is_component {
-        emit_component_scope_seed(w, program);
-    } else {
-        w.line("$scope.ship = ship;");
-        // Routing is deck's: the route handle arrives via `ctx.route` (deck
-        // injects it through host-context). SUI vends no router and no factory
-        // fallback — a route-using page with no host-provided route gets
-        // `undefined`, which is the honest signal that it wasn't mounted under
-        // a router, not a silently-fabricated browser route.
-        w.line("$scope.route = route;");
-        w.line("$scope.navigate = navigate;");
+    w.line("$scope.ship = ship;");
+    w.line("$scope.route = route;");
+    w.line("$scope.navigate = navigate;");
+    // Declared `<client>` names → seed from `ctx.clients` so `<data
+    // source="X.op()">` + inline handlers resolve bare `X` (host-injected).
+    for client in &program.clients {
+        let name = client.name.as_str();
+        if name == "ship" || name == "route" || name == "navigate" {
+            continue;
+        }
+        w.line(&format!("const {{ {name} }} = ctx.clients ?? {{}};"));
+        w.line(&format!("$scope.{name} = {name};"));
     }
-    // Declared `<client>` names: destructure each from `ctx.clients` and seed
-    // `$scope` so a view's `<data source="X.op()">` + inline handlers resolve
-    // bare `X` (the per-view, host-injected data sources — the generalization
-    // of the single `ship`). `ship`/`route`/`navigate` are already seeded above;
-    // components inject clients via their own seam, not this path.
-    if !is_component {
-        for client in &program.clients {
-            let name = client.name.as_str();
-            if name == "ship" || name == "route" || name == "navigate" {
-                continue;
-            }
-            w.line(&format!("const {{ {name} }} = ctx.clients ?? {{}};"));
-            w.line(&format!("$scope.{name} = {name};"));
+    // Props (registered components) → seed from `ctx.props` (the prop signals
+    // the custom-element adapter passes). Pages declare none.
+    if !program.props.is_empty() {
+        w.line("const __props = ctx.props ?? {};");
+        for p in &program.props {
+            let ident = js_ident(&camel_of(&p.name));
+            w.line(&format!("$scope.{ident} = __props.{ident};"));
         }
     }
     emit_data_decls(w, program);
@@ -77,91 +72,64 @@ pub(super) fn emit_setup_body(
     // instead of crashing with `headerEl is not a function`.
     emit_ref_slot_seeds(w, &program.template);
     if opts.setup_url.is_some() {
-        if is_component {
-            // Component path: pass $scope as ctx.scope so the controller's
-            // on-handlers can mutate state signals. Store __r outside the
-            // if-block so we can read LIFECYCLE_KEY after the template renders.
-            emit_component_setup_call(w);
-        } else {
-            emit_setup_call(w);
-        }
+        // Expose `$scope` to the controller (`ctx.scope`) and merge its return.
+        // The LIFECYCLE_KEY bundle flows through the setup return to
+        // `mountComponent` — the single engine that wires mount()/unmount() —
+        // so there is no inline lifecycle wiring here anymore.
+        emit_setup_call(w);
     }
 
-    // Single-pass walk: emit the template body into a side writer so
-    // the emitter's boundary-hoist buffer fills up. Drain hoists into
-    // `w` before writing the body — the `__wireBoundary_b<N>` consts
-    // must be in scope at every bindIf/bindFor call site they wrap.
-    let mut emitter = TemplateEmitter::new(bindings, !is_component);
-    if is_component {
-        let mut tpl_w = Writer::new();
-        tpl_w.line("const __root = host.shadowRoot ?? host;");
-        let is_shadow = opts.component_meta.as_ref().map(|m| m.shadow).unwrap_or(false);
-        if is_shadow {
-            tpl_w.line("adoptSuiSheets(__root);");
-        }
-        emitter.emit_top_level(&mut tpl_w, &program.template, "__root", "__cleanups");
-        if opts.setup_url.is_some() {
-            // bind:this refs are now in $scope; call mount (if any) with a
-            // proxy that reads them lazily — giving the controller access to
-            // e.g. `state.termHost()` even though termHost was not yet in
-            // $scope when setup.setup(ctx) ran above.
-            emit_component_lifecycle_wiring(&mut tpl_w);
-        }
-        tpl_w.line("return $scope;");
-
-        let hoists = emitter.take_boundary_hoists();
-        if !hoists.is_empty() {
-            w.push_str(&hoists);
-        }
-        w.push_str(&tpl_w.into_string());
-    } else {
-        let mut mount_w = Writer::new();
-        mount_w.line("const __cleanups = [];");
-        // Install the view's lifted top-level `<style>` CSS at the top of
-        // `container` BEFORE the template body builds — first-class inline
-        // `<style>` for route views, the same runtime install components and
-        // the synthetic render path already use. Without this the bundler
-        // silently DROPS a route `page.sui`'s inline `<style>` (the author
-        // gets no styling and no error). A blank `program.styles` emits nothing.
-        let styles_install =
-            crate::emit::styles::styles_install_js(&program.styles, false);
+    // ── deferred render: `__mount(container)` + optional `hydrate(root, ctx)` ─
+    // One shape for both forms. The custom-element adapter calls `__mount(host)`
+    // on connect (`__root = host.shadowRoot ?? host`); a page / internal child
+    // calls it with its container. Always view-shaped so the hydrate buffers
+    // populate (harmless for CSR-island components — `mountComponent` ignores
+    // `hydrate`). The controller lifecycle is wired by `mountComponent` from the
+    // LIFECYCLE_KEY that rides the return, not inline here. Hoists drain into
+    // `w` before the body so the `__wireBoundary_b<N>` consts are in scope.
+    let mut emitter = TemplateEmitter::new(bindings, true);
+    let mut mount_w = Writer::new();
+    mount_w.line("const __cleanups = [];");
+    mount_w.line("const __root = container.shadowRoot ?? container;");
+    if is_shadow {
+        mount_w.line("adoptSuiSheets(__root);");
+    }
+    // Pages install their lifted top-level `<style>` into the container.
+    // Registered components install styles via the custom-element adapter
+    // (scoped by `data-component` / the shadow root), so the module skips it.
+    if !is_component {
+        let styles_install = crate::emit::styles::styles_install_js(&program.styles, false);
         if !styles_install.is_empty() {
             mount_w.push_str(&styles_install);
         }
-        emitter.emit_top_level(
-            &mut mount_w,
-            &program.template,
-            "container",
-            "__cleanups",
-        );
-        mount_w.line("return () => { for (const c of __cleanups) try { c(); } catch (e) {} };");
-
-        let hoists = emitter.take_boundary_hoists();
-        let callbacks = emitter.take_render_callbacks();
-        let hydrate_uses_text = emitter.hydrate_uses_text();
-        let hydrate_uses_markers = emitter.hydrate_uses_markers();
-        let hydrate_calls = emitter.take_hydrate_calls();
-
-        if !hoists.is_empty() {
-            w.push_str(&hoists);
-        }
-
-        w.line("return Object.assign({}, $scope, {");
-        w.enter();
-        w.line("__mount(container) {");
-        w.enter();
-        w.push_str(&mount_w.into_string());
-        w.leave();
-        w.line("},");
-        if !hydrate_calls.is_empty() {
-            emit_view_hydrate(w, &hydrate_calls, hydrate_uses_text, hydrate_uses_markers);
-        }
-        if !callbacks.is_empty() {
-            w.push_str(&callbacks);
-        }
-        w.leave();
-        w.line("});");
     }
+    emitter.emit_top_level(&mut mount_w, &program.template, "__root", "__cleanups");
+    mount_w.line("return () => { for (const c of __cleanups) try { c(); } catch (e) {} };");
+
+    let hoists = emitter.take_boundary_hoists();
+    let callbacks = emitter.take_render_callbacks();
+    let hydrate_uses_text = emitter.hydrate_uses_text();
+    let hydrate_uses_markers = emitter.hydrate_uses_markers();
+    let hydrate_calls = emitter.take_hydrate_calls();
+
+    if !hoists.is_empty() {
+        w.push_str(&hoists);
+    }
+    w.line("return Object.assign({}, $scope, {");
+    w.enter();
+    w.line("__mount(container) {");
+    w.enter();
+    w.push_str(&mount_w.into_string());
+    w.leave();
+    w.line("},");
+    if !hydrate_calls.is_empty() {
+        emit_view_hydrate(w, &hydrate_calls, hydrate_uses_text, hydrate_uses_markers);
+    }
+    if !callbacks.is_empty() {
+        w.push_str(&callbacks);
+    }
+    w.leave();
+    w.line("});");
 }
 
 /// Emit the `hydrate(root, ctx)` named property on a view's setup

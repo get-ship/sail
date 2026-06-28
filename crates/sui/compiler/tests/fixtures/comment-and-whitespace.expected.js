@@ -10,6 +10,7 @@ export default Object.assign(component((ctx) => {
   return Object.assign({}, $scope, {
     __mount(container) {
 const __cleanups = [];
+const __root = container.shadowRoot ?? container;
 const __e0 = document.createElement("div");
 __e0.setAttribute("class", "wrapper");
 const __e1 = document.createElement("p");
@@ -22,7 +23,7 @@ __e3.setAttribute("class", "spacer");
 const __t4 = document.createTextNode(" ");
 __e3.appendChild(__t4);
 __e0.appendChild(__e3);
-container.appendChild(__e0);
+__root.appendChild(__e0);
 return () => { for (const c of __cleanups) try { c(); } catch (e) {} };
     },
   });

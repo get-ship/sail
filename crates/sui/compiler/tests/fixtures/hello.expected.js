@@ -10,14 +10,15 @@ export default Object.assign(component((ctx) => {
   return Object.assign({}, $scope, {
     __mount(container) {
 const __cleanups = [];
+const __root = container.shadowRoot ?? container;
 const __e0 = document.createElement("h1");
 const __t1 = document.createTextNode("Hello, world.");
 __e0.appendChild(__t1);
-container.appendChild(__e0);
+__root.appendChild(__e0);
 const __e2 = document.createElement("p");
 const __t3 = document.createTextNode("The interpreter renders static markup verbatim.");
 __e2.appendChild(__t3);
-container.appendChild(__e2);
+__root.appendChild(__e2);
 return () => { for (const c of __cleanups) try { c(); } catch (e) {} };
     },
   });

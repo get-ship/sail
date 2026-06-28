@@ -1,22 +1,35 @@
 import { describe, expect, it, vi } from 'vitest'
 import { component, prop } from '../src/component-factory'
+import { onCleanup } from '../src/effect-scope'
 import type { Signal } from '../src/signal'
 
 let tagCounter = 0
 const nextTag = () => `ship-set-cf-${++tagCounter}`
 const flushMicrotasks = () => new Promise((r) => setTimeout(r, 0))
 
+// A no-op module — for registration tests that don't inspect the mount ctx.
+const noopModule = () => component(() => ({}))
+// A module whose setup captures the mount ctx (the prop signals + internals the
+// custom-element wrapper passes to `mountComponent`). This is the unified
+// contract: a registered component is `component(tag, def, module)`; the module
+// receives `ctx.props` (signals) and, when form-associated, `ctx.internals`.
+const capturing = (capture: (ctx: { props: Record<string, Signal<unknown>>; internals?: ElementInternals }) => void) =>
+  component((ctx) => {
+    capture(ctx as { props: Record<string, Signal<unknown>>; internals?: ElementInternals })
+    return {}
+  })
+
 describe('component() — basic registration', () => {
   it('registers a custom element', () => {
     const tag = nextTag()
-    component(tag, { props: {} })
+    component(tag, { props: {} }, noopModule())
     expect(customElements.get(tag)).toBeDefined()
   })
 
   it('is idempotent', () => {
     const tag = nextTag()
-    component(tag, { props: {} })
-    component(tag, { props: {} })
+    component(tag, { props: {} }, noopModule())
+    component(tag, { props: {} }, noopModule())
     expect(customElements.get(tag)).toBeDefined()
   })
 })
@@ -25,12 +38,13 @@ describe('component() — bool prop with reflect', () => {
   it('reflects signal writes back to the host attribute', async () => {
     const tag = nextTag()
     let captured: Signal<boolean> | undefined
-    component(tag, {
-      props: { open: prop.bool({ default: false, reflect: true }) },
-      setup: ({ props }) => {
-        captured = props.open as Signal<boolean>
-      },
-    })
+    component(
+      tag,
+      { props: { open: prop.bool({ default: false, reflect: true }) } },
+      capturing((ctx) => {
+        captured = ctx.props.open as Signal<boolean>
+      }),
+    )
     const el = document.createElement(tag)
     document.body.appendChild(el)
     expect(el.hasAttribute('open')).toBe(false)
@@ -46,12 +60,13 @@ describe('component() — bool prop with reflect', () => {
   it('seeds signal from initial host attribute', () => {
     const tag = nextTag()
     let captured: Signal<boolean> | undefined
-    component(tag, {
-      props: { open: prop.bool({ default: false }) },
-      setup: ({ props }) => {
-        captured = props.open as Signal<boolean>
-      },
-    })
+    component(
+      tag,
+      { props: { open: prop.bool({ default: false }) } },
+      capturing((ctx) => {
+        captured = ctx.props.open as Signal<boolean>
+      }),
+    )
     const el = document.createElement(tag)
     el.setAttribute('open', '')
     document.body.appendChild(el)
@@ -60,33 +75,32 @@ describe('component() — bool prop with reflect', () => {
   })
 })
 
-describe('component() — setup invocation', () => {
-  it('setup gets called with prop signals', () => {
+describe('component() — module mount', () => {
+  it('mounts the module with the prop signals on ctx.props', () => {
     const tag = nextTag()
-    const setup = vi.fn(() => undefined)
-    component(tag, {
-      props: { name: prop.string({ default: 'x' }) },
-      setup,
-    })
+    const setup = vi.fn(() => ({}))
+    component(tag, { props: { name: prop.string({ default: 'x' }) } }, component(setup))
     const el = document.createElement(tag)
     document.body.appendChild(el)
     expect(setup).toHaveBeenCalledOnce()
-    const ctx = setup.mock.calls[0]![0]
+    const ctx = setup.mock.calls[0]![0] as { props: Record<string, Signal<unknown>> }
     expect(typeof ctx.props.name).toBe('function')
-    expect(ctx.host).toBe(el)
-    expect(Array.isArray(ctx.cleanups)).toBe(true)
     el.remove()
   })
 
-  it('cleanups array is drained on disconnect', () => {
+  it('disposes the mounted child on disconnect (onCleanup fires)', () => {
     const tag = nextTag()
     const cleanup = vi.fn()
-    component(tag, {
-      props: {},
-      setup: ({ cleanups }) => {
-        cleanups.push(cleanup)
-      },
-    })
+    component(
+      tag,
+      { props: {} },
+      component(() => {
+        // onCleanup enrolls on the child scope mountComponent owns; the
+        // custom-element disconnect tears that scope down.
+        onCleanup(cleanup)
+        return {}
+      }),
+    )
     const el = document.createElement(tag)
     document.body.appendChild(el)
     expect(cleanup).not.toHaveBeenCalled()
@@ -99,14 +113,13 @@ describe('component() — union props', () => {
   it('decodes valid values and rejects invalid ones', () => {
     const tag = nextTag()
     let captured: Signal<'sm' | 'md' | 'lg'> | undefined
-    component(tag, {
-      props: {
-        size: prop.union(['sm', 'md', 'lg'] as const, { default: 'md' }),
-      },
-      setup: ({ props }) => {
-        captured = props.size as Signal<'sm' | 'md' | 'lg'>
-      },
-    })
+    component(
+      tag,
+      { props: { size: prop.union(['sm', 'md', 'lg'] as const, { default: 'md' }) } },
+      capturing((ctx) => {
+        captured = ctx.props.size as Signal<'sm' | 'md' | 'lg'>
+      }),
+    )
     const el = document.createElement(tag)
     el.setAttribute('size', 'lg')
     document.body.appendChild(el)
@@ -118,35 +131,32 @@ describe('component() — union props', () => {
 })
 
 describe('component() — formAssociated', () => {
-  it('passes ElementInternals to setup when formAssociated is true', () => {
+  it('passes ElementInternals to the module ctx when formAssociated is true', () => {
     const tag = nextTag()
     let receivedInternals: ElementInternals | undefined
-    component(tag, {
-      formAssociated: true,
-      props: {},
-      setup: ({ internals }) => {
-        receivedInternals = internals
-      },
-    })
+    component(
+      tag,
+      { formAssociated: true, props: {} },
+      capturing((ctx) => {
+        receivedInternals = ctx.internals
+      }),
+    )
     const el = document.createElement(tag)
     document.body.appendChild(el)
     expect(receivedInternals).toBeDefined()
-    // jsdom's ElementInternals is partial — setFormValue isn't always
-    // implemented. Verifying the object reaches setup is enough.
     el.remove()
   })
 
   it('omits internals when formAssociated is false', () => {
     const tag = nextTag()
-    let receivedInternals: ElementInternals | undefined = undefined as
-      | ElementInternals
-      | undefined
-    component(tag, {
-      props: {},
-      setup: ({ internals }) => {
-        receivedInternals = internals
-      },
-    })
+    let receivedInternals: ElementInternals | undefined
+    component(
+      tag,
+      { props: {} },
+      capturing((ctx) => {
+        receivedInternals = ctx.internals
+      }),
+    )
     const el = document.createElement(tag)
     document.body.appendChild(el)
     expect(receivedInternals).toBeUndefined()
@@ -158,10 +168,13 @@ describe('component() — number and object props', () => {
   it('decodes number prop', () => {
     const tag = nextTag()
     let captured: Signal<number> | undefined
-    component(tag, {
-      props: { count: prop.number({ default: 0 }) },
-      setup: ({ props }) => { captured = props.count as Signal<number> },
-    })
+    component(
+      tag,
+      { props: { count: prop.number({ default: 0 }) } },
+      capturing((ctx) => {
+        captured = ctx.props.count as Signal<number>
+      }),
+    )
     const el = document.createElement(tag)
     el.setAttribute('count', '7')
     document.body.appendChild(el)
@@ -172,10 +185,13 @@ describe('component() — number and object props', () => {
   it('decodes object prop with fallback on bad json', () => {
     const tag = nextTag()
     let captured: Signal<{ a: number }> | undefined
-    component(tag, {
-      props: { data: prop.object<{ a: number }>({ default: { a: 0 } }) },
-      setup: ({ props }) => { captured = props.data as Signal<{ a: number }> },
-    })
+    component(
+      tag,
+      { props: { data: prop.object<{ a: number }>({ default: { a: 0 } }) } },
+      capturing((ctx) => {
+        captured = ctx.props.data as Signal<{ a: number }>
+      }),
+    )
     const el = document.createElement(tag)
     el.setAttribute('data', 'not-json')
     document.body.appendChild(el)
@@ -189,10 +205,7 @@ describe('component() — number and object props', () => {
 describe('component() — styles', () => {
   it('injects scoped style for light DOM', () => {
     const tag = nextTag()
-    component(tag, {
-      props: {},
-      styles: 'color: red;',
-    })
+    component(tag, { props: {}, styles: 'color: red;' }, noopModule())
     const el = document.createElement(tag)
     document.body.appendChild(el)
     const style = document.getElementById(`ship-set-style-${tag}`)
@@ -204,11 +217,7 @@ describe('component() — styles', () => {
 
   it('attaches style to shadow root for shadow DOM', () => {
     const tag = nextTag()
-    component(tag, {
-      props: {},
-      shadow: true,
-      styles: 'color: blue;',
-    })
+    component(tag, { props: {}, shadow: true, styles: 'color: blue;' }, noopModule())
     const el = document.createElement(tag)
     document.body.appendChild(el)
     expect(el.shadowRoot).toBeTruthy()

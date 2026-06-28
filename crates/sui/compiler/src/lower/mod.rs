@@ -63,6 +63,9 @@ pub fn lower(program: &Program, is_view: bool) -> Lowered {
     // (`component(setup)`) or the registered custom element (`component(tag,
     // def)`). `prop` only rides along when a registered component declares props.
     out.runtime_imports.insert("component");
+    // A tagged source registers itself via `component(tag, def, __default)` —
+    // the same `component` symbol, 3-arg overload — so no extra import. `prop`
+    // rides along only when a registered component declares props.
     if !is_view && !program.props.is_empty() {
         out.runtime_imports.insert("prop");
     }

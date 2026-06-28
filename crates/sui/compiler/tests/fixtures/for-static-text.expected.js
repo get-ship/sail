@@ -33,11 +33,12 @@ __frag3.appendChild(__e5);
   return Object.assign({}, $scope, {
     __mount(container) {
 const __cleanups = [];
+const __root = container.shadowRoot ?? container;
 const __e0 = document.createElement("ul");
 const __forAnchor1 = document.createComment("for");
 __e0.appendChild(__forAnchor1);
 __cleanups.push(__wireBoundary_b0(__forAnchor1));
-container.appendChild(__e0);
+__root.appendChild(__e0);
 return () => { for (const c of __cleanups) try { c(); } catch (e) {} };
     },
     hydrate(root, ctx) {
