@@ -5400,6 +5400,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "xtask-deck"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "serde_json",
+]
+
+[[package]]
 name = "xxhash-rust"
 version = "0.8.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
