@@ -1,0 +1,35 @@
+<!--
+  Recipe detail (`/recipes/[id]`). The dynamic segment is read as a SIGNAL via
+  the `route` built-in: `route.params.id()` (NOT `params.id`). The controller
+  derives `recipe` from that signal + the data client.
+-->
+<section class="detail">
+  <p class="crumbs"><a href="/recipes">← All recipes</a></p>
+
+  {#if recipe()}
+  <header class="head">
+    <h1>{recipe().title}</h1>
+    <div class="meta">
+      <sui-badge tone="primary" variant="soft">{recipe().cuisine}</sui-badge>
+      <sui-badge tone="muted" variant="soft">{recipe().minutes} min</sui-badge>
+    </div>
+    <div class="tags">
+      {#for t of recipe().tags key={t}}
+      <sui-badge tone="accent" variant="soft" size="sm">{t}</sui-badge>
+      {/for}
+    </div>
+  </header>
+
+  <ol class="steps">
+    {#for step of recipe().steps key={step}}
+    <li>{step}</li>
+    {/for}
+  </ol>
+  {:else}
+  <div class="missing">
+    <h1>Not found</h1>
+    <p>No recipe with id <code>{route.params.id()}</code> is in the box.</p>
+    <button class="btn" type="button" on:click={() => navigate('/recipes')}>Back to recipes</button>
+  </div>
+  {/if}
+</section>

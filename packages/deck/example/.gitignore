@@ -1,0 +1,16 @@
+# deck build output (emitted by `deck build` / `deck dev` into the project)
+/.deck/
+
+# deck codegen (regenerated on every build — never committed)
+/routes.gen.ts
+/entry.gen.ts
+/components.gen.ts
+
+# Playwright run outputs
+/test-results/
+/playwright-report/
+/blob-report/
+/.cache/
+
+# throwaway diagnostics
+scratch-*.mjs

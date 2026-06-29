@@ -1,0 +1,7 @@
+<!--
+  Root layout (prefix slash) — wraps every route. deck reads this file's first
+  custom-element tag (sui-app-shell) as the chrome wrapper, then mounts each
+  route's content into that chrome's route slot. The header and theme toggle
+  persist across client-side navigations; only the route slot swaps.
+-->
+<sui-app-shell></sui-app-shell>

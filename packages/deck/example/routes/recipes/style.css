@@ -1,0 +1,60 @@
+/* Recipes index styles. */
+.recipes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.recipes .head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.recipes .head h1 {
+  margin: 0;
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-bold);
+}
+.recipes .list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+.recipes .card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.recipes .card-link:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+}
+.recipes .card-link h3 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-semibold);
+}
+.recipes .meta {
+  margin: 0 0 var(--space-3);
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+}
+.recipes .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.recipes .empty {
+  color: var(--muted-foreground);
+}
+
+/* Shared card surface (route content is light DOM). */
+.card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+  padding: var(--space-5);
+}
