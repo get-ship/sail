@@ -1,0 +1,9 @@
+{
+  "name": "deck-e2e-app",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@ship/sui-runtime": "workspace:*",
+    "@ship/sui-dom": "workspace:*"
+  }
+}

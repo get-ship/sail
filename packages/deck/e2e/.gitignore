@@ -1,0 +1,14 @@
+# Playwright run outputs
+/test-results/
+/playwright-report/
+/blob-report/
+/.cache/
+
+# deck build artifacts emitted into the app fixture by the CLI
+/app/.deck/
+/app/routes.gen.ts
+/app/entry.gen.ts
+/app/components.gen.ts
+
+# throwaway diagnostics
+scratch-*.mjs

@@ -1,0 +1,14 @@
+{
+  "name": "@ship/deck-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Browser-e2e harness for the deck framework. Drives the real `deck` CLI standalone (no shipd) against a non-trivial routes/ app and proves runtime behavioral conditions in headless Chromium.",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}
