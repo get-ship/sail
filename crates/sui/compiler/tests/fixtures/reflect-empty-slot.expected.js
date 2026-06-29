@@ -17,7 +17,7 @@ adoptSuiSheets(__root);
 const __e0 = document.createElement("button");
 __e0.setAttribute("part", "button");
 const __e1 = document.createElement("slot");
-__cleanups.push(bindSlotEmpty(__e1, host, "data-icon-only"));
+__cleanups.push(bindSlotEmpty(__e1, container, "data-icon-only"));
 __e0.appendChild(__e1);
 __root.appendChild(__e0);
 return () => { for (const c of __cleanups) try { c(); } catch (e) {} };
