@@ -1,24 +1,32 @@
-//! Theme discovery and resolution — a deck-owned serving concern.
+//! Theme serving — a deck-owned serving concern.
 //!
-//! Themes override the design tokens served by `view-tokens.css`. Two on-disk
-//! sources are searched (global wins over project on a name collision):
+//! Themes are a SUI-native feature (CSS vars). The layering:
+//!   - SUI ships a default light + dark theme (its base tokens).
+//!   - deck ships a default light + dark theme — its base tokens, served as
+//!     `view-tokens.css`. deck's default IS that base; the `theme.css` override
+//!     is empty by default (the base tokens apply as-is).
+//!   - A host (e.g. ship) ships several themes that OVERRIDE the defaults.
 //!
-//! 1. **Project** — `<project_root>/.ship/themes/*.css`, resolved through the
-//!    deck resolver's one project root.
-//! 2. **Global** — `<home>/.ship/themes/*.css` in the user's home directory.
+//! The override is a BUNDLING concern, and the theme CONTENT is shipped by
+//! whoever owns the layer — the host owns NO plumbing. deck-core therefore does
+//! NOT discover themes by reaching into a host directory at runtime (the old
+//! host-config fs-walk was a ship-product reach + the wrong shape —
+//! inv-deck-standalone). deck serves its own default here; the bundler will
+//! resolve + bake the theme cascade (SUI default → deck default → host themes)
+//! and deck will serve the baked result, exactly as it serves `view-tokens.css`.
 //!
-//! The active theme is the `DECK_ACTIVE_THEME` value (default `"ship"`).
-//! `"ship"` means no override — the base tokens are used as-is, so the
-//! theme.css endpoint returns an empty body. This is a deck-owned seam; the
-//! host injects nothing and deck names no Ship concept (the `.ship/themes`
-//! directory is a path convention, not a domain import).
+//! TARGET (not yet built — bundler theme-cascade): `serve_theme_css` reads the
+//! baked override; `list_themes` reports the baked set. Until then deck serves
+//! its default only (empty override, empty override list). Tracked: the deck
+//! standalone overhaul (themes model). RELEASE-DEP: a host's themes return via
+//! the bundler cascade, not a runtime directory read.
 
 use serde::Serialize;
-use std::path::{Path, PathBuf};
 
 use crate::{CachePolicy, DaemonMode, DeckResponse};
 
-/// Metadata for a discovered theme.
+/// Metadata for a discovered theme. Retained as the public list-endpoint shape;
+/// populated by the bundler theme-cascade (the list is empty until then).
 #[derive(Debug, Clone, Serialize)]
 pub struct ThemeMeta {
     pub name: String,
@@ -27,15 +35,22 @@ pub struct ThemeMeta {
     pub has_dark: bool,
 }
 
-/// Where a theme was loaded from.
+/// Where a theme was baked from (for the future bundler-populated list).
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ThemeSource {
-    Project,
-    Global,
+    /// The framework's own default (SUI/deck base tokens).
+    Default,
+    /// A host-shipped override theme (baked by the bundler cascade).
+    Host,
 }
 
 /// `GET /api/assets/theme.css` — the active theme's CSS overrides.
+///
+/// deck serves its OWN default, whose override is empty (the base tokens in
+/// `view-tokens.css` are the default light/dark). A host's override themes are
+/// baked by the bundler cascade and served from there — deck-core does not
+/// reach into a host directory at runtime.
 pub fn serve_theme_css(mode: DaemonMode) -> DeckResponse {
     let mut r = DeckResponse::new(
         200,
@@ -48,7 +63,9 @@ pub fn serve_theme_css(mode: DaemonMode) -> DeckResponse {
     r
 }
 
-/// `GET /api/v1/themes` — JSON list of all discovered themes.
+/// `GET /api/v1/themes` — JSON list of override themes. Empty until the bundler
+/// theme-cascade bakes a host's themes; deck's default is implicit (not a
+/// selectable override).
 pub fn serve_themes_list(mode: DaemonMode) -> DeckResponse {
     let json = serde_json::to_string(&list_themes()).unwrap_or_else(|_| "[]".to_string());
     let mut r = DeckResponse::new(
@@ -62,95 +79,17 @@ pub fn serve_themes_list(mode: DaemonMode) -> DeckResponse {
     r
 }
 
-/// Return metadata for all discovered themes across both sources.
+/// Override themes available to select. Empty until the bundler theme-cascade
+/// populates it — deck's default is implicit (the base tokens), not a listed
+/// override.
 pub fn list_themes() -> Vec<ThemeMeta> {
-    let mut themes = Vec::new();
-    if let Some(dir) = project_themes_dir() {
-        collect_dir_themes(&dir, ThemeSource::Project, &mut themes);
-    }
-    if let Some(dir) = global_themes_dir() {
-        collect_dir_themes(&dir, ThemeSource::Global, &mut themes);
-    }
-    themes
+    Vec::new()
 }
 
-/// Resolve the CSS for the currently active theme.
-///
-/// Returns an empty string when the active theme is `"ship"` (the default)
-/// or when the requested theme cannot be found.
+/// CSS for the active theme override. deck's default is "no override" (the base
+/// tokens apply), so this is empty until the bundler bakes a host theme.
 pub fn resolve_theme_css() -> String {
-    let name = active_theme_name();
-    if name == "ship" {
-        return String::new();
-    }
-    resolve_css_by_name(&name)
-}
-
-// ── Internals ────────────────────────────────────────────────────────────────
-
-fn active_theme_name() -> String {
-    std::env::var("DECK_ACTIVE_THEME")
-        .ok()
-        .filter(|s| !s.is_empty())
-        .unwrap_or_else(|| "ship".to_string())
-}
-
-fn project_themes_dir() -> Option<PathBuf> {
-    crate::resolver::resolve_project_root().map(|r| r.join(".ship").join("themes"))
-}
-
-fn global_themes_dir() -> Option<PathBuf> {
-    home_dir().map(|h| h.join(".ship").join("themes"))
-}
-
-/// Best-effort home directory via the standard env vars — no external crate.
-fn home_dir() -> Option<PathBuf> {
-    std::env::var_os("HOME")
-        .or_else(|| std::env::var_os("USERPROFILE"))
-        .map(PathBuf::from)
-        .filter(|p| !p.as_os_str().is_empty())
-}
-
-fn resolve_css_by_name(name: &str) -> String {
-    // Global > project (last-write-wins for overrides).
-    if let Some(dir) = global_themes_dir() {
-        if let Ok(css) = std::fs::read_to_string(dir.join(format!("{name}.css"))) {
-            return css;
-        }
-    }
-    if let Some(dir) = project_themes_dir() {
-        if let Ok(css) = std::fs::read_to_string(dir.join(format!("{name}.css"))) {
-            return css;
-        }
-    }
     String::new()
-}
-
-fn collect_dir_themes(dir: &Path, source: ThemeSource, out: &mut Vec<ThemeMeta>) {
-    let entries = match std::fs::read_dir(dir) {
-        Ok(e) => e,
-        Err(_) => return,
-    };
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if path.extension().and_then(|e| e.to_str()) != Some("css") {
-            continue;
-        }
-        let name = match path.file_stem().and_then(|s| s.to_str()) {
-            Some(n) => n.to_string(),
-            None => continue,
-        };
-        let css = match std::fs::read_to_string(&path) {
-            Ok(c) => c,
-            Err(_) => continue,
-        };
-        out.push(ThemeMeta {
-            name,
-            source: source.clone(),
-            has_light: css.contains(":root"),
-            has_dark: css.contains(".dark"),
-        });
-    }
 }
 
 #[cfg(test)]
@@ -158,8 +97,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn resolve_unknown_returns_empty() {
-        assert!(resolve_css_by_name("nonexistent-theme-xyz").is_empty());
+    fn default_theme_override_is_empty() {
+        // deck serves its own default — base tokens apply, no override CSS.
+        assert!(resolve_theme_css().is_empty());
     }
 
     #[test]
