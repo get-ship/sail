@@ -37,20 +37,20 @@ import { runProtected, findNearestBoundary } from '@ship/sui-runtime'
 let outlet: HTMLElement
 
 beforeEach(() => {
-  document.head.querySelector('meta[name="ship-mode"]')?.remove()
+  document.head.querySelector('meta[name="deck-mode"]')?.remove()
   document.body.innerHTML = '<div id="outlet"></div>'
   outlet = document.getElementById('outlet')!
 })
 
 afterEach(() => {
-  document.head.querySelector('meta[name="ship-mode"]')?.remove()
+  document.head.querySelector('meta[name="deck-mode"]')?.remove()
 })
 
 const setDevMeta = (on: boolean) => {
-  document.head.querySelector('meta[name="ship-mode"]')?.remove()
+  document.head.querySelector('meta[name="deck-mode"]')?.remove()
   if (on) {
     const m = document.createElement('meta')
-    m.setAttribute('name', 'ship-mode')
+    m.setAttribute('name', 'deck-mode')
     m.setAttribute('content', 'development')
     document.head.appendChild(m)
   }

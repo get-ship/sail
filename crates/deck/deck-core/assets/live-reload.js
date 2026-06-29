@@ -10,7 +10,7 @@
 // (`view-host.html`) and the first-party shell. There is deliberately no
 // second implementation — HMR is one thing, done one way.
 //
-// Gating: this no-ops unless `<meta name="ship-mode" content="development">`
+// Gating: this no-ops unless `<meta name="deck-mode" content="development">`
 // is present, so the daemon's mode is the single source of truth. The
 // route is served in every mode, but the client only subscribes in dev.
 //
@@ -27,7 +27,7 @@ const OVERLAY_ID = '__sui_live_reload_overlay'
 /** True when the served HTML declares the daemon is in development mode. */
 export function isDevMode() {
   if (typeof document === 'undefined') return false
-  const meta = document.querySelector('meta[name="ship-mode"]')
+  const meta = document.querySelector('meta[name="deck-mode"]')
   return meta?.getAttribute('content') === 'development'
 }
 

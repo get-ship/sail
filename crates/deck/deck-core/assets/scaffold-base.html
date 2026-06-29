@@ -7,7 +7,7 @@
 
     * charset + viewport (every SUI SPA)
     * favicon + ship-logo SVG (every SUI SPA)
-    * the <meta name="ship-mode"> tag (daemon rewrites in production)
+    * the <meta name="deck-mode"> tag (daemon rewrites in production)
     * /api/assets/view-tokens.css (design tokens — daemon-served, root-absolute)
     * /src/chrome/layout.css (the per-app chrome baseline)
     * pre-paint theme script (FOUC guard — reads localStorage theme)
@@ -48,11 +48,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- ship-mode: daemon rewrites `development` → `production` when it serves
+  <!-- deck-mode: daemon rewrites `development` → `production` when it serves
        this HTML directly. main.ts reads it onto window.__shipMode; the
        status bar shows the [mode] tag. Both apps/shell and apps/spaces
        keep this tag. -->
-  <meta name="ship-mode" content="development" />
+  <meta name="deck-mode" content="development" />
 
   <!-- Design tokens + the per-app chrome baseline. Daemon-served, root-
        absolute (`/api/...` for tokens, `/src/chrome/layout.css` for layout).

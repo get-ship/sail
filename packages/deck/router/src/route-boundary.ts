@@ -29,14 +29,14 @@ import {
 /**
  * True when the served HTML declares the daemon is in development mode.
  * Mirrors the `isDevMode()` in deck-core's `live-reload.js`: the
- * `<meta name="ship-mode" content="development">` tag the daemon injects is
+ * `<meta name="deck-mode" content="development">` tag the daemon injects is
  * the single source of truth, so dev detail is shown only when the *server*
  * says it is a dev session — never inferred from the bundle.
  */
 export function isDevMode(): boolean {
   if (typeof document === 'undefined') return false
   return (
-    document.querySelector('meta[name="ship-mode"]')?.getAttribute('content') ===
+    document.querySelector('meta[name="deck-mode"]')?.getAttribute('content') ===
     'development'
   )
 }

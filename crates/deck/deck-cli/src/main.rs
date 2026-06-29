@@ -439,7 +439,7 @@ fn build(
         eprintln!(
             "  warning: built WITHOUT a framework bundle (no --bundle-framework).\n  \
              This app's <sui-*> components need /_deck/runtime.js, dom.js and route.js\n  \
-             served by the host. shipd embeds them; a standalone host serves nothing,\n  \
+             served by the host. A bundling host embeds them; a standalone host serves nothing,\n  \
              so the app then renders unstyled with every custom element unregistered.\n  \
              For a self-contained build, re-run with --bundle-framework."
         );

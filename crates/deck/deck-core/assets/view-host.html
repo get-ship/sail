@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- Daemon mode — rewritten by `inject_mode_meta` to reflect the running
        daemon. The live-reload client self-gates on content="development". -->
-  <meta name="ship-mode" content="development" />
+  <meta name="deck-mode" content="development" />
   <title>SUI View</title>
 
   <!-- Design tokens (always-on for SUI components). -->
@@ -72,7 +72,7 @@
     // to a safe generic message. textContent (not innerHTML) — never inject the
     // error text as markup.
     const isDev =
-      (document.querySelector('meta[name="ship-mode"]')?.getAttribute('content') ?? '') === 'development'
+      (document.querySelector('meta[name="deck-mode"]')?.getAttribute('content') ?? '') === 'development'
     let __boundaryFired = false
     attachBoundary(target, {
       catch(err, source) {
@@ -151,7 +151,7 @@
 
           // Live-reload: in development the daemon's bundler rebuilds this
           // view on save and emits an SSE event. The Deck live-reload client
-          // (self-gated on the ship-mode meta) re-fetches the payload and
+          // (self-gated on the deck-mode meta) re-fetches the payload and
           // re-mounts in place via the handle — signal state is preserved.
           try {
             const { attachLiveReload } = await import('/_deck/live-reload.js')

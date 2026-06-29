@@ -1,18 +1,18 @@
 //! Inject `<meta name="ship-*">` tags into served HTML shells.
 //!
-//! shell's index.html ships a static <meta name="ship-mode"
+//! shell's index.html ships a static <meta name="deck-mode"
 //! content="development"> tag. When shipd serves the same HTML in
 //! production mode it rewrites that tag via `inject_mode_meta` so the
 //! shell's status bar can render the DEV badge appropriately. The same
 //! rewrite-or-insert mechanism surfaces the app's render mode via
-//! `inject_render_meta` (`<meta name="ship-render">`) so CSR-vs-SSR is
+//! `inject_render_meta` (`<meta name="deck-render">`) so CSR-vs-SSR is
 //! legible client-side rather than implicit.
 
 use crate::DaemonMode;
 use deck_config::RenderMode;
 
 /// Short string label for the daemon mode. Used as the `content`
-/// attribute of `<meta name="ship-mode">`.
+/// attribute of `<meta name="deck-mode">`.
 pub fn mode_str(mode: DaemonMode) -> &'static str {
     match mode {
         DaemonMode::Development => "development",
@@ -21,7 +21,7 @@ pub fn mode_str(mode: DaemonMode) -> &'static str {
 }
 
 /// Short string label for the render mode. Used as the `content`
-/// attribute of `<meta name="ship-render">` (`csr` / `ssr`).
+/// attribute of `<meta name="deck-render">` (`csr` / `ssr`).
 pub fn render_str(render: RenderMode) -> &'static str {
     match render {
         RenderMode::Csr => "csr",
@@ -62,16 +62,16 @@ fn inject_named_meta(html: &str, name: &str, value: &str) -> String {
     html.to_string()
 }
 
-/// Rewrite (or insert) the `<meta name="ship-mode" content="…">` tag
+/// Rewrite (or insert) the `<meta name="deck-mode" content="…">` tag
 /// in an HTML string to reflect the daemon's current mode.
 pub fn inject_mode_meta(html: &str, mode: DaemonMode) -> String {
-    inject_named_meta(html, "ship-mode", mode_str(mode))
+    inject_named_meta(html, "deck-mode", mode_str(mode))
 }
 
-/// Rewrite (or insert) the `<meta name="ship-render" content="csr|ssr">` tag
+/// Rewrite (or insert) the `<meta name="deck-render" content="csr|ssr">` tag
 /// so the app's active render mode is observable client-side.
 pub fn inject_render_meta(html: &str, render: RenderMode) -> String {
-    inject_named_meta(html, "ship-render", render_str(render))
+    inject_named_meta(html, "deck-render", render_str(render))
 }
 
 #[cfg(test)]
@@ -81,7 +81,7 @@ mod tests {
     #[test]
     fn rewrites_existing_tag() {
         let html =
-            "<head>\n<meta name=\"ship-mode\" content=\"development\" />\n</head>";
+            "<head>\n<meta name=\"deck-mode\" content=\"development\" />\n</head>";
         let out = inject_mode_meta(html, DaemonMode::Production);
         assert!(out.contains("content=\"production\""));
         assert!(!out.contains("content=\"development\""));
@@ -91,7 +91,7 @@ mod tests {
     fn inserts_when_missing() {
         let html = "<head>\n<title>X</title>\n</head>";
         let out = inject_mode_meta(html, DaemonMode::Development);
-        assert!(out.contains("<meta name=\"ship-mode\" content=\"development\""));
+        assert!(out.contains("<meta name=\"deck-mode\" content=\"development\""));
     }
 
     #[test]
@@ -105,24 +105,24 @@ mod tests {
     fn render_meta_inserted_when_missing() {
         let html = "<head>\n<title>X</title>\n</head>";
         let out = inject_render_meta(html, RenderMode::Ssr);
-        assert!(out.contains("<meta name=\"ship-render\" content=\"ssr\""));
+        assert!(out.contains("<meta name=\"deck-render\" content=\"ssr\""));
     }
 
     #[test]
     fn render_meta_rewrites_existing_tag() {
-        let html = "<head>\n<meta name=\"ship-render\" content=\"csr\" />\n</head>";
+        let html = "<head>\n<meta name=\"deck-render\" content=\"csr\" />\n</head>";
         let out = inject_render_meta(html, RenderMode::Ssr);
         assert!(out.contains("content=\"ssr\""));
         assert!(!out.contains("content=\"csr\""));
     }
 
     /// The two meta injectors are independent — injecting render leaves an
-    /// already-present ship-mode tag intact (different `name`).
+    /// already-present deck-mode tag intact (different `name`).
     #[test]
     fn render_and_mode_meta_coexist() {
-        let html = "<head>\n<meta name=\"ship-mode\" content=\"development\" />\n</head>";
+        let html = "<head>\n<meta name=\"deck-mode\" content=\"development\" />\n</head>";
         let out = inject_render_meta(html, RenderMode::Csr);
-        assert!(out.contains("name=\"ship-mode\" content=\"development\""));
-        assert!(out.contains("name=\"ship-render\" content=\"csr\""));
+        assert!(out.contains("name=\"deck-mode\" content=\"development\""));
+        assert!(out.contains("name=\"deck-render\" content=\"csr\""));
     }
 }

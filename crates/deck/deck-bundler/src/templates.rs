@@ -10,7 +10,7 @@
 //!
 //! The template is intentionally minimal. The dev's project adds static
 //! assets via `apps/<x>/public/` (copied verbatim to `<x>/.deck/public/`).
-//! Anything fancier (theme pre-paint, font preloading, ship-mode metadata)
+//! Anything fancier (theme pre-paint, font preloading, deck-mode metadata)
 //! is a separate concern — the template can grow as needed.
 //!
 //! The importmap MUST come before any module script: browsers freeze the

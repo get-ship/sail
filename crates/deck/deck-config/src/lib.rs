@@ -104,7 +104,7 @@ pub use jsonc::strip_jsonc_comments;
 /// before hydration. This is the OBSERVABLE "does this app server-render at
 /// all" flag the router/serving path consumes — NOT the SSR-engine selector
 /// (which engine renders is a separate, host-gated concern). The served
-/// `index.html` carries the active mode as `<meta name="ship-render">` so it
+/// `index.html` carries the active mode as `<meta name="deck-render">` so it
 /// is legible client-side.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
@@ -151,7 +151,7 @@ pub struct AppServeConfig {
     #[serde(default)]
     pub inject_globals: BTreeMap<String, String>,
     /// How the app paints its first frame — `csr` (default) or `ssr`. Made
-    /// observable by serving it as a `<meta name="ship-render">` tag in the
+    /// observable by serving it as a `<meta name="deck-render">` tag in the
     /// app's `index.html`. Absent ⇒ `csr` (the implicit-empty-`#ship-root`
     /// posture every app had before this field existed).
     #[serde(default)]

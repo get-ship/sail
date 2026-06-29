@@ -123,7 +123,7 @@ fn candidate_view_roots() -> Vec<std::path::PathBuf> {
 // `window.<key>=<value>` globals to inject (`inject_globals`). The app's
 // `name` is its URL namespace — assets are written by the bundler with
 // the final served path. This single function handles every scaffold
-// route (shell `GET /`, space `GET /space/{id}`, etc.).
+// route (shell `GET /`, space `GET /app/{id}`, etc.).
 //
 // `params` are route-param substitutions — e.g. `&[("id", "my-space")]` lets
 // the config value `"$id"` resolve to the actual route param. Any `$key` token
@@ -209,7 +209,7 @@ pub fn serve_scaffold(
 /// The `file` parameter comes from the axum path extractor and is
 /// percent-decoded but NOT stripped of `..` segments. Validate it before
 /// constructing the path to prevent directory traversal: a request like
-/// `/space/_assets/../../../etc/passwd` would otherwise escape the assets dir.
+/// `/app/_assets/../../../etc/passwd` would otherwise escape the assets dir.
 pub fn serve_scaffold_asset(mode: DaemonMode, scaffold: &AppServeConfig, file: &str) -> DeckResponse {
     // Reject path-traversal patterns. Only simple filenames (no slashes, no
     // leading dots, no ".." components) are valid asset names. The chunk
@@ -380,7 +380,7 @@ pub fn serve_sui_icon(mode: DaemonMode, name: &str) -> DeckResponse {
 
 /// `GET /_deck/live-reload.js` — the one HMR client, shared by the view
 /// host and the shell. Served in every mode (it self-gates on the
-/// `ship-mode` meta tag); only subscribes when the daemon is in dev.
+/// `deck-mode` meta tag); only subscribes when the daemon is in dev.
 pub fn serve_sui_live_reload(mode: DaemonMode) -> DeckResponse {
     let js = read_asset("live-reload.js").unwrap_or_else(|| LIVE_RELOAD_JS.to_string());
     DeckResponse::js_asset(js, mode)
@@ -529,13 +529,13 @@ mod tests {
         // was purged with the framework's `.deck/` runtime read).
         let scaffold_dir = dir.path().join("my-scaffold");
         std::fs::create_dir_all(&scaffold_dir).unwrap();
-        let html = r#"<!doctype html><html><head></head><body><script src="/space/main.js"></script></body></html>"#;
+        let html = r#"<!doctype html><html><head></head><body><script src="/app/main.js"></script></body></html>"#;
         std::fs::write(scaffold_dir.join("index.html"), html).unwrap();
         let mut globals = std::collections::BTreeMap::new();
         globals.insert("DECK_APP_ID".to_string(), "$id".to_string());
         let scaffold = AppServeConfig {
             name: "space".to_string(),
-            route: "/space/{id}".to_string(),
+            route: "/app/{id}".to_string(),
             source: "my-scaffold".to_string(),
             inject_globals: globals,
             render: RenderMode::Csr,
@@ -546,12 +546,12 @@ mod tests {
         assert_eq!(resp.status, 200);
         // The asset href is preserved (bundler wrote the final URL).
         let body = std::str::from_utf8(&resp.body).unwrap();
-        assert!(body.contains("/space/main.js"), "expected /space/main.js in: {body}");
+        assert!(body.contains("/app/main.js"), "expected /app/main.js in: {body}");
         // The inject_globals block lands before </head>.
         assert!(body.contains("window.DECK_APP_ID=\"my-space\""), "expected injected global in: {body}");
     }
 
-    /// serve_scaffold surfaces the app's render mode as a `ship-render` meta
+    /// serve_scaffold surfaces the app's render mode as a `deck-render` meta
     /// tag so CSR-vs-SSR is observable client-side. An `ssr` app emits
     /// `content="ssr"`; the default `csr` app emits `content="csr"`.
     #[test]
@@ -578,8 +578,16 @@ mod tests {
         assert_eq!(resp.status, 200);
         let body = std::str::from_utf8(&resp.body).unwrap();
         assert!(
-            body.contains("name=\"ship-render\" content=\"ssr\""),
-            "render mode must be observable as ship-render meta; got: {body}"
+            body.contains("name=\"deck-render\" content=\"ssr\""),
+            "render mode must be observable as deck-render meta; got: {body}"
+        );
+        // inv-deck-standalone: deck's served HTML must NOT carry ship-product
+        // branding. The framework wire/meta strings are deck-branded; a
+        // regression that reintroduces `ship-mode`/`ship-render` leaks ship into
+        // a zero-ship app's first paint.
+        assert!(
+            !body.contains("ship-mode") && !body.contains("ship-render"),
+            "served scaffold leaks ship-* branding (inv-deck-standalone); got: {body}"
         );
     }
 
@@ -602,7 +610,7 @@ mod tests {
         .unwrap();
         let scaffold = AppServeConfig {
             name: "space".to_string(),
-            route: "/space/{id}".to_string(),
+            route: "/app/{id}".to_string(),
             source: "my-scaffold".to_string(),
             inject_globals: std::collections::BTreeMap::new(),
             render: RenderMode::Csr,

@@ -16,7 +16,7 @@
 //! event: patch
 //! data: {"op":"set","value":<JSON>,"_expr":"<expr>"}
 //!
-//! : ship-keepalive
+//! : deck-keepalive
 //! ```
 //!
 //! `patch-signals` updates a named LiveSignal in the runtime scope.
@@ -141,7 +141,7 @@ pub fn format_patch_elements(patch: &PatchElements) -> String {
 /// Format a keepalive comment frame. Sent periodically to prevent proxies
 /// from closing idle SSE connections.
 pub fn format_keepalive() -> &'static str {
-    ": ship-keepalive\n\n"
+    ": deck-keepalive\n\n"
 }
 
 // ── multiplex (live-data subscription fan-out) ───────────────────────────────
@@ -425,7 +425,7 @@ mod tests {
 
     #[test]
     fn keepalive_exact_bytes() {
-        assert_eq!(format_keepalive(), ": ship-keepalive\n\n");
+        assert_eq!(format_keepalive(), ": deck-keepalive\n\n");
     }
 
     #[test]
