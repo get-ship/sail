@@ -24,6 +24,24 @@ fn ring_drops_oldest_when_full() {
     );
 }
 
+/// FAIL LOUD: an overflow eviction is a SKIPPED rebuild, so it must be COUNTED
+/// (and surfaced by the consumer), not silently lost. `take_dropped` reports the
+/// eviction count and resets — without it a dropped edit serves stale output with
+/// nothing in the logs (the silent-eviction hazard).
+#[test]
+fn overflow_drops_are_counted_not_silent() {
+    let q = WatchQueue::default();
+    for i in 0..(WATCH_CHANNEL_CAP + 5) {
+        q.push(WatchSignal { path: PathBuf::from(format!("/p/{i}")), is_create: false });
+    }
+    assert_eq!(q.take_dropped(), 5, "the 5 evictions are recorded, not silent");
+    assert_eq!(q.take_dropped(), 0, "take_dropped resets the counter");
+    // No overflow ⇒ no phantom drops.
+    let q2 = WatchQueue::default();
+    q2.push(WatchSignal { path: PathBuf::from("/a"), is_create: false });
+    assert_eq!(q2.take_dropped(), 0, "under capacity ⇒ zero dropped");
+}
+
 #[test]
 fn drain_empties_the_ring() {
     let q = WatchQueue::default();

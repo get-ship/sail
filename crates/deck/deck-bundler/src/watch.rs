@@ -18,7 +18,7 @@
 
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -124,6 +124,20 @@ pub(crate) async fn run(b: &Bundler) {
         // Debounce: let the burst accumulate over 150ms, then drain it all.
         tokio::time::sleep(Duration::from_millis(150)).await;
         let changed = queue.drain();
+        // FAIL LOUD on overflow: a drop-oldest eviction is a SKIPPED rebuild, so
+        // a silent drop would serve stale output with no signal. Surface it (and
+        // invalidate the targets snapshot so the next build re-walks structure —
+        // a partial recovery; the dropped leaf still needs its own re-save).
+        let dropped = queue.take_dropped();
+        if dropped > 0 {
+            warn!(
+                dropped,
+                cap = WATCH_CHANNEL_CAP,
+                "bundler: watch ring overflowed under load — change events dropped; \
+                 some rebuilds were skipped and outputs may be stale until the next edit or restart"
+            );
+            b.invalidate_targets_for_watch();
+        }
         if changed.is_empty() {
             if !b.watching_flag().load(Ordering::SeqCst) {
                 break;
@@ -290,6 +304,10 @@ fn classify(sig: &WatchSignal) -> SignalAction {
 struct WatchQueue {
     buf: Mutex<VecDeque<WatchSignal>>,
     notify: Notify,
+    /// Count of signals evicted to overflow since the last drain. Non-zero means
+    /// the ring overran the consumer and some rebuilds were skipped — surfaced
+    /// LOUDLY so a dropped edit doesn't silently serve stale output.
+    dropped: AtomicU64,
 }
 
 impl WatchQueue {
@@ -299,11 +317,23 @@ impl WatchQueue {
         {
             let mut buf = self.buf.lock().unwrap_or_else(|e| e.into_inner());
             if buf.len() >= WATCH_CHANNEL_CAP {
+                // Overflow: a write storm outran the consumer. Drop-oldest keeps
+                // the ring bounded, but a dropped signal is a SKIPPED rebuild —
+                // count it so the consumer warns loudly instead of silently
+                // serving stale output (a lost edit would otherwise vanish).
                 buf.pop_front();
+                self.dropped.fetch_add(1, Ordering::Relaxed);
             }
             buf.push_back(sig);
         }
         self.notify.notify_one();
+    }
+
+    /// Take + reset the overflow-drop count since the last call. Non-zero means
+    /// the ring overflowed and some rebuilds were skipped — the consumer surfaces
+    /// it rather than letting a lost edit go unnoticed.
+    fn take_dropped(&self) -> u64 {
+        self.dropped.swap(0, Ordering::Relaxed)
     }
 
     /// Drain every queued signal in arrival order.
