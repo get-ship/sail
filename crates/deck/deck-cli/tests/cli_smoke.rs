@@ -348,3 +348,58 @@ fn scaffold_pack_writes_package_json_tsconfig_and_src() {
         "package.json missing {expected:?}; contents:\n{pkg}"
     );
 }
+
+// ── inv-deck-standalone (behavioral proof) ───────────────────────────────────
+
+/// The REAL standalone test (the boundary lint in deck-conformance is only the
+/// backstop): deck BUILDS a zero-ship-PRODUCT app — a plain `routes/` page that
+/// depends on the SUI framework and nothing of the ship product — into a served
+/// SPA. If deck can compile + emit a runnable app that names nothing ship, it
+/// stands on its own. This serves development (it proves the capability) and
+/// doesn't break when a path is renamed, unlike a forbidden-string scan.
+#[test]
+fn builds_a_zero_ship_product_app() {
+    let proj = TempDir::new().expect("tempdir");
+    let root = proj.path();
+    std::fs::create_dir_all(root.join("routes")).expect("routes dir");
+    // Framework deps only (@ship/* is the org npm SCOPE — sui-runtime/dom are
+    // framework packages, not the ship product). No @ship/sdk-client, no
+    // ship.* client, no .ship/ — a genuinely host-free app.
+    std::fs::write(
+        root.join("package.json"),
+        r#"{"name":"zeroship","type":"module","dependencies":{"@ship/sui-runtime":"workspace:*","@ship/sui-dom":"workspace:*"}}"#,
+    )
+    .expect("package.json");
+    std::fs::write(
+        root.join("routes").join("page.sui"),
+        "<main>\n  <h1>zero-ship</h1>\n  <p>sum is {1 + 1}</p>\n</main>\n",
+    )
+    .expect("page.sui");
+
+    let out = run_deck(&["build", "--project", root.to_str().unwrap()]);
+    assert!(
+        out.status.success(),
+        "deck build of a zero-ship-product app failed (status {:?}):\n{}",
+        out.status,
+        String::from_utf8_lossy(&out.stderr),
+    );
+
+    // The built SPA shell exists and is wired (importmap + a mount root).
+    let index = root.join(".deck").join("index.html");
+    assert!(index.exists(), "deck build did not emit .deck/index.html");
+    let html = std::fs::read_to_string(&index).expect("read index.html");
+    assert!(html.contains("importmap"), "built index.html missing importmap:\n{html}");
+    assert!(html.contains("ship-root"), "built index.html missing the #ship-root mount point:\n{html}");
+
+    // The entry chunk was bundled (the routes/ page compiled into the SPA).
+    let assets = root.join(".deck").join("assets");
+    let has_entry = std::fs::read_dir(&assets)
+        .map(|d| {
+            d.filter_map(|e| e.ok()).any(|e| {
+                let n = e.file_name().to_string_lossy().into_owned();
+                n.starts_with("entry-") && n.ends_with(".js")
+            })
+        })
+        .unwrap_or(false);
+    assert!(has_entry, "deck build did not emit an entry-*.js chunk in {}", assets.display());
+}
