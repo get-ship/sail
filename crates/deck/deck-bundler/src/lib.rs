@@ -428,6 +428,11 @@ impl Bundler {
     }
     pub(crate) fn invalidate_targets_for_watch(&self) {
         self.invalidate_targets();
+        // A structural change (a `.sui` CREATE) may have ADDED or removed a
+        // component; the tag→source CEM index is memoized process-globally, so
+        // clear it too — otherwise a component authored mid-session resolves to a
+        // virtual no-op until restart (the `component_index` staleness hazard).
+        crate::sui_plugin::invalidate_component_index();
     }
     /// Rebuild one target from the watcher, COALESCED through the same
     /// single-flight gate the on-demand `build` path uses. A watcher rebuild of

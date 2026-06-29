@@ -425,12 +425,53 @@ mod tests {
         assert!(global.index.contains_key("ship-agent-card"));
         assert!(global.shadowed.is_empty(), "global scope shadows nothing");
     }
+
+    /// Watch-mode invalidation: the index is memoized process-globally, so a
+    /// component ADDED mid-session is invisible until `invalidate_component_index`
+    /// clears the cache (the documented hazard — the new tag would otherwise
+    /// resolve to a virtual no-op until restart). Proves stale-then-fresh across
+    /// the clear. The temp root is unique, so this test owns its cache key; only
+    /// this test invalidates, so the `stale` read is deterministic.
+    #[test]
+    fn invalidate_component_index_picks_up_a_mid_session_component() {
+        let tmp = two_pack_fixture();
+        let root = tmp.path();
+
+        // First walk caches the index — sui-button present, sui-late absent.
+        let first = component_index(root, &[]);
+        assert!(first.index.contains_key("sui-button"));
+        assert!(!first.index.contains_key("sui-late"), "the new tag does not exist yet");
+
+        // A component appears mid-session (what an author does under `deck dev`).
+        write(
+            &root.join("packages/primitives/src/sui-late/sui-late.sui"),
+            "<span><slot></slot></span>\n",
+        );
+
+        // Without invalidation the cache still serves the STALE index — the bug.
+        let stale = component_index(root, &[]);
+        assert!(
+            !stale.index.contains_key("sui-late"),
+            "cached index is stale: the mid-session component is invisible (the hazard)"
+        );
+
+        // The watcher's structural-change hook clears the cache; the re-walk sees it.
+        invalidate_component_index();
+        let fresh = component_index(root, &[]);
+        assert!(
+            fresh.index.contains_key("sui-late"),
+            "after invalidation the re-walk picks up the new component"
+        );
+        assert!(fresh.index.contains_key("sui-button"), "and keeps the original");
+    }
 }
 
 /// Cached `<tag>` → source `.sui` index for a repo (the per-view resolver's
-/// lookup). The CEM walk is process-stable; build once per repo root and share.
-/// A component added mid-process isn't picked up until restart — until then its
-/// tag resolves to a virtual no-op.
+/// lookup). Memoized per `(repo_root, packs)` so a one-shot build walks the CEM
+/// once. Under `deck dev`'s watcher a component can be ADDED/REMOVED mid-session,
+/// so the watcher calls [`invalidate_component_index`] on a structural change to
+/// clear this cache — without that, a newly-authored tag resolves to a virtual
+/// no-op until process restart (the hazard this memo used to assert away).
 ///
 /// `` comes from `deck.jsonc` and drives the shell-local CEM
 /// projection (which app root gets a special origin label). `None` in
@@ -442,14 +483,20 @@ mod tests {
 /// diagnostics; when empty the index is global and nothing is shadowed. The
 /// cache is keyed by `(repo_root, packs)` so two projects sharing a repo root
 /// but declaring different packs don't collide.
+type ComponentIndexCacheKey = (PathBuf, Vec<String>);
+static COMPONENT_INDEX_CACHE: OnceLock<Mutex<HashMap<ComponentIndexCacheKey, ResolverIndex>>> =
+    OnceLock::new();
+
+fn component_index_cache() -> &'static Mutex<HashMap<ComponentIndexCacheKey, ResolverIndex>> {
+    COMPONENT_INDEX_CACHE.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
 pub(crate) fn component_index(
     repo_root: &Path,
     packs: &[String],
 ) -> ResolverIndex {
-    type CacheKey = (PathBuf, Vec<String>);
-    static CACHE: OnceLock<Mutex<HashMap<CacheKey, ResolverIndex>>> = OnceLock::new();
-    let cache = CACHE.get_or_init(|| Mutex::new(HashMap::new()));
-    let key: CacheKey = (repo_root.to_path_buf(), packs.to_vec());
+    let cache = component_index_cache();
+    let key: ComponentIndexCacheKey = (repo_root.to_path_buf(), packs.to_vec());
     let mut guard = cache.lock().unwrap_or_else(|e| e.into_inner());
     if let Some(idx) = guard.get(&key) {
         return idx.clone();
@@ -463,4 +510,17 @@ pub(crate) fn component_index(
     };
     guard.insert(key, resolver.clone());
     resolver
+}
+
+/// Clear the memoized component index. The CEM walk is cached process-globally on
+/// the assumption it's stable for the life of the process — TRUE for a one-shot
+/// build, FALSE under `deck dev`'s watcher, where a component added or removed
+/// mid-session would otherwise stay invisible (its tag resolving to a virtual
+/// no-op) until restart. [`Bundler::invalidate_targets_for_watch`] calls this on
+/// a structural change so the next build re-walks the CEM and sees the new or
+/// removed component. A no-op before the cache is first populated.
+pub(crate) fn invalidate_component_index() {
+    if let Some(cache) = COMPONENT_INDEX_CACHE.get() {
+        cache.lock().unwrap_or_else(|e| e.into_inner()).clear();
+    }
 }
