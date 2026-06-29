@@ -785,6 +785,7 @@ dependencies = [
  "deck-bundler",
  "deck-config",
  "deck-core",
+ "notify",
  "serde_json",
  "tempfile",
  "tokio",

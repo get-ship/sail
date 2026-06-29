@@ -201,6 +201,21 @@ pub fn serve_scaffold(
     // Surface the app's render mode (csr|ssr) so it's legible client-side
     // rather than implicit (empty `#ship-root` = csr was the old tell).
     let html = crate::mode_html::inject_render_meta(&html, scaffold.render);
+    // Dev-only: attach the live-reload client. deck dev rebuilds the SPA on an
+    // edit and emits `module-changed`; this client (no opts → full-document
+    // reload) drives the refresh. Served at `/_deck/live-reload.js`; it self-
+    // gates on the `deck-mode=development` meta injected above, so this is inert
+    // in production even if the tag is present.
+    let html = if matches!(mode, DaemonMode::Development) {
+        let tag = "<script type=\"module\">import { attachLiveReload } from '/_deck/live-reload.js'; attachLiveReload()</script>";
+        if html.contains("</body>") {
+            html.replace("</body>", &format!("  {tag}\n</body>"))
+        } else {
+            format!("{html}{tag}")
+        }
+    } else {
+        html
+    };
     DeckResponse::html_view(html, mode)
 }
 

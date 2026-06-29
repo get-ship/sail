@@ -598,6 +598,99 @@ fn dev(project: PathBuf, addr: String, demo: bool) -> Result<()> {
             eprintln!("deck dev: watcher failed to start: {e}");
         }
 
+        // ── HMR (foundational, full-document) ────────────────────────────────
+        // The bundler's own watcher rebuilds TARGETS (views, framework). The
+        // SPA is the one-shot `bundle_app` ENTRY — not a target — so `routes/` +
+        // `src/` edits emit nothing through it. deck dev owns this loop: a notify
+        // watcher on the authored source re-runs `bundle_app` and emits a
+        // `module-changed` (target `app`) on the bundler's firehose, which
+        // `serve_bundle_hmr` streams to the live-reload client → full-document
+        // reload. (Module-granular reload is the next layer.) We watch `routes/`
+        // + `src/` + `public/` ONLY — never the project root or `.deck/` — so the
+        // regenerated `routes.gen.ts` / `.deck/` writes can't self-trigger a loop.
+        let hmr_packs = cfg.packs.clone();
+        let (hmr_tx, mut hmr_rx) = tokio::sync::mpsc::channel::<()>(8);
+        let mut hmr_watcher = {
+            use notify::Watcher;
+            let tx = hmr_tx;
+            let mut w = notify::recommended_watcher(move |res: notify::Result<notify::Event>| {
+                use notify::EventKind;
+                use notify::event::ModifyKind;
+                let Ok(ev) = res else { return };
+                // CRITICAL: ignore read/stat events. `bundle_app` READS the
+                // source to compile it, which fires Access/Metadata events —
+                // firing a rebuild on those is the read→rebuild→read CPU-spin
+                // loop. Mirror the bundler's own watch filter.
+                if matches!(
+                    ev.kind,
+                    EventKind::Access(_) | EventKind::Modify(ModifyKind::Metadata(_))
+                ) {
+                    return;
+                }
+                // Ignore generated artifacts a rebuild writes (`.gen.ts`,
+                // `.sui.d.ts` companions, `.compiled.js`) so they can't
+                // self-trigger.
+                let all_generated = !ev.paths.is_empty()
+                    && ev.paths.iter().all(|p| {
+                        let s = p.to_string_lossy();
+                        s.ends_with(".gen.ts")
+                            || s.contains(".sui.d.ts")
+                            || s.contains(".compiled.js")
+                    });
+                if all_generated {
+                    return;
+                }
+                // Coalesce a save's event burst into one rebuild via the debounce
+                // below; dropping on a full channel is fine (the next tick rebuilds).
+                let _ = tx.try_send(());
+            })
+            .map_err(|e| anyhow::anyhow!("deck dev: HMR watcher init: {e}"))?;
+            for sub in ["routes", "src", "public"] {
+                let dir = project_dir.join(sub);
+                if dir.is_dir() {
+                    let _ = w.watch(&dir, notify::RecursiveMode::Recursive);
+                }
+            }
+            w
+        };
+        {
+            let bundler_hmr = bundler.clone();
+            let ws = workspace_root.clone();
+            let proj = project_dir.clone();
+            let od = out_dir.clone();
+            tokio::spawn(async move {
+                while hmr_rx.recv().await.is_some() {
+                    // Debounce: settle the burst, then drain coalesced ticks.
+                    tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+                    while hmr_rx.try_recv().is_ok() {}
+                    match deck_bundler::app::bundle_app(&ws, &hmr_packs, &proj, &od, false, false).await {
+                        Ok(_) => {
+                            let _ = bundler_hmr.emit_watch_event(
+                                deck_bundler::BundlerEvent::ModuleChanged {
+                                    target: "app".to_string(),
+                                    out_path: od.join("index.html").display().to_string(),
+                                    bytes: 0,
+                                },
+                            );
+                            println!("deck dev: rebuilt app (HMR)");
+                        }
+                        Err(e) => {
+                            eprintln!("deck dev: rebuild failed: {e:#}");
+                            let _ = bundler_hmr.emit_watch_event(
+                                deck_bundler::BundlerEvent::CompileError {
+                                    target: "app".to_string(),
+                                    message: format!("{e:#}"),
+                                    line: None,
+                                    col: None,
+                                    file: None,
+                                },
+                            );
+                        }
+                    }
+                }
+            });
+        }
+
         // The FULL hosting surface. `deck_axum::router()` is the `/_deck/*`
         // framework infra; it sets NO fallback by design (it expects to
         // merge alongside a host's Connect-ops router, which owns the
@@ -659,7 +752,10 @@ fn dev(project: PathBuf, addr: String, demo: bool) -> Result<()> {
             .context("dev server")?;
 
         // Bundler watchdog: stop the watch task before returning so
-        // the process doesn't linger on a detached tokio task.
+        // the process doesn't linger on a detached tokio task. Drop the HMR
+        // watcher too (it lived for the server's lifetime; dropping ends its
+        // notify thread).
+        drop(hmr_watcher);
         if let Err(e) = bundler.shutdown().await {
             eprintln!("deck dev: bundler shutdown: {e}");
         }

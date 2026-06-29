@@ -444,7 +444,11 @@ impl Bundler {
             None => Ok(self.manifest_for_built(target)),
         }
     }
-    pub(crate) fn emit_watch_event(
+    /// Emit an HMR event on the bundler's broadcast channel (the firehose
+    /// `serve_bundle_hmr` streams to the live-reload client). The watcher uses
+    /// this on a target rebuild; a standalone host (deck dev) uses it to push a
+    /// reload after rebuilding its SPA entry, which is NOT a bundler target.
+    pub fn emit_watch_event(
         &self,
         ev: BundlerEvent,
     ) -> Result<usize, broadcast::error::SendError<BundlerEvent>> {
