@@ -19,33 +19,57 @@ describe('defineComponent', () => {
     expect(customElements.get(tag)).toBeDefined()
   })
 
-  it('is idempotent', () => {
+  it('re-defining our own tag is a silent HMR hot-swap (no warn)', () => {
+    // Pre-#40 this was a warned no-op. Now a re-define of OUR tag swaps the impl
+    // (component hot-swap), so it must NOT warn — that would spam every edit.
     const tag = nextTag()
-    const f = vi.fn(() => () => {})
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    defineComponent(tag, { observedAttrs: [], props: {} }, f)
-    defineComponent(tag, { observedAttrs: [], props: {} }, f)
-    const el = document.createElement(tag)
-    document.body.appendChild(el)
-    expect(f).toHaveBeenCalledTimes(1)
-    el.remove()
-    // Duplicate register still triggers the dev-mode warn.
-    expect(warn).toHaveBeenCalled()
+    defineComponent(tag, { observedAttrs: [], props: {} }, () => () => {})
+    defineComponent(tag, { observedAttrs: [], props: {} }, () => () => {})
+    defineComponent(tag, { observedAttrs: [], props: {} }, () => () => {})
+    expect(warn).not.toHaveBeenCalled()
+    warn.mockRestore()
+  })
+
+  it('warns once on a FOREIGN tag collision (a tag we did not define)', () => {
+    // The collision warn is preserved for the genuine case: a tag registered
+    // OUTSIDE defineComponent (another module reaching customElements.define).
+    const tag = nextTag()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    customElements.define(tag, class extends HTMLElement {})
+    defineComponent(tag, { observedAttrs: [], props: {} }, () => () => {})
+    defineComponent(tag, { observedAttrs: [], props: {} }, () => () => {})
+    expect(warn).toHaveBeenCalledTimes(1)
     expect(warn.mock.calls[0]![0]).toMatch(/called twice/)
     warn.mockRestore()
   })
 
-  it('warns once per duplicate tag, not per duplicate call', () => {
+  it('re-define hot-swaps live instances (HMR), clearing old DOM', () => {
     const tag = nextTag()
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    defineComponent(tag, { observedAttrs: [], props: {} }, () => () => {})
-    defineComponent(tag, { observedAttrs: [], props: {} }, () => () => {})
-    defineComponent(tag, { observedAttrs: [], props: {} }, () => () => {})
-    defineComponent(tag, { observedAttrs: [], props: {} }, () => () => {})
-    // Three duplicates, one warn — saves the console from noise spam
-    // when a buggy module imports a component file repeatedly.
-    expect(warn).toHaveBeenCalledTimes(1)
-    warn.mockRestore()
+    const renderInto = (label: string) => (host: HTMLElement) => {
+      const s = document.createElement('span')
+      s.textContent = label
+      host.append(s) // APPEND (not replace) — proves __suiReRun clears old DOM
+      return () => {}
+    }
+    defineComponent(tag, { observedAttrs: [], props: {} }, renderInto('A'))
+    const el = document.createElement(tag)
+    document.body.appendChild(el)
+    expect(el.querySelectorAll('span').length).toBe(1)
+    expect(el.textContent).toBe('A')
+
+    // Re-define (what an HMR re-import does) with a NEW factory. The LIVE
+    // instance must re-render with the new code — and NOT duplicate the DOM.
+    defineComponent(tag, { observedAttrs: [], props: {} }, renderInto('B'))
+    expect(el.textContent).toBe('B')
+    expect(el.querySelectorAll('span').length).toBe(1)
+
+    // A fresh instance mounted after the swap uses the new factory too.
+    const el2 = document.createElement(tag)
+    document.body.appendChild(el2)
+    expect(el2.textContent).toBe('B')
+    el.remove()
+    el2.remove()
   })
 
   it('runs factory on connect, cleanup on disconnect', () => {

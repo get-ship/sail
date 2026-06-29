@@ -83,11 +83,12 @@ export interface ComponentSchema {
  * signals, runs `factory` on connect, and runs the returned cleanup on
  * disconnect.
  *
- * Idempotent — calling twice with the same tag is a no-op (the browser
- * would otherwise throw on the second `customElements.define`). A
- * `console.warn` fires in dev so the duplicate doesn't go unnoticed;
- * silenced when the registered class is the very same factory reference
- * (re-import from HMR).
+ * Re-define = HMR HOT-SWAP (#40): calling again with the SAME tag swaps the
+ * factory/schema behind the (once-registered) wrapper class and re-renders every
+ * live instance in place — no full document reload. (Custom elements can't be
+ * re-registered, hence the stable-wrapper + mutable-registry indirection.) A
+ * FOREIGN collision — a tag registered OUTSIDE defineComponent — still warns
+ * once and no-ops, since that's a real bug, not an HMR cycle.
  *
  * The ship-set compiler emits exactly one call per `.set` file. Authors
  * shouldn't need to reach for this directly.
@@ -114,17 +115,45 @@ export interface ComponentSchema {
  */
 const warnedDuplicateTags = new Set<string>()
 
+/** A live component registration. The wrapper class is registered ONCE with the
+ *  browser (custom elements can't be re-registered), but the per-instance
+ *  `factory` + `schema` behind it are mutable — so an HMR re-define can swap
+ *  them and re-render every live instance in place (component hot-swap, #40). */
+interface ComponentReg {
+  schema: ComponentSchema
+  factory: ComponentFactory
+  /** Connected instances, so a re-define can re-render them. */
+  instances: Set<{ __suiReRun(): void }>
+}
+const liveComponents = new Map<string, ComponentReg>()
+
 export function defineComponent(
   tag: string,
   schema: ComponentSchema,
   factory: ComponentFactory,
 ): void {
+  const existing = liveComponents.get(tag)
+  if (existing) {
+    // ── HMR hot-swap (#40) ── our tag, re-defined (a re-imported module). Swap
+    // the impl + re-render every live instance in place. The wrapper class stays
+    // registered; observedAttributes is frozen at first define, so adding/
+    // removing observed attrs still needs a full reload — but render/factory
+    // changes hot-swap with no full document reload.
+    existing.factory = factory
+    existing.schema = schema
+    for (const el of existing.instances) {
+      try {
+        el.__suiReRun()
+      } catch (err) {
+        console.error(`[ship-set:${tag}] HMR re-run threw:`, err)
+      }
+    }
+    return
+  }
   if (customElements.get(tag)) {
-    // Silent overwrite would mask bugs (two modules trying to register
-    // the same tag). Warn once per tag. HMR cycles legitimately re-run
-    // the registration with the SAME factory; that case stays silent
-    // because we never reach this branch — the first define captured
-    // the factory and the second call is a no-op for the new factory.
+    // A FOREIGN registration: this tag exists but we didn't define it (another
+    // module reached for `customElements.define` directly). Keep the warn-once
+    // no-op so a real collision doesn't go unnoticed.
     if (!warnedDuplicateTags.has(tag)) {
       warnedDuplicateTags.add(tag)
       console.warn(
@@ -135,6 +164,10 @@ export function defineComponent(
     }
     return
   }
+  // First registration: the wrapper class registers once; its `factory`/`schema`
+  // live in a mutable registry behind it so a later re-define can hot-swap.
+  const reg: ComponentReg = { schema, factory, instances: new Set() }
+  liveComponents.set(tag, reg)
 
   // Two class shapes — form-associated requires `static formAssociated`
   // to be present at class-definition time so the browser registers
@@ -144,7 +177,7 @@ export function defineComponent(
     class ShipSetFormElement extends HTMLElement {
       static formAssociated = true
       static get observedAttributes(): string[] {
-        return schema.observedAttrs
+        return reg.schema.observedAttrs
       }
 
       private cleanup: Disposer | undefined
@@ -167,13 +200,11 @@ export function defineComponent(
         this.internals = this.attachInternals()
       }
 
-      connectedCallback() {
-        this.dataset.component = tag
-        attachHostApi(this)
+      private runSetup() {
         this.scope = createScope()
         try {
           this.cleanup = withScope(this.scope, () =>
-            withHost(this, () => factory(this, this.propSignals, this.internals)),
+            withHost(this, () => reg.factory(this, this.propSignals, this.internals)),
           )
         } catch (err) {
           const boundary = findNearestBoundary(this.parentNode)
@@ -184,17 +215,15 @@ export function defineComponent(
           }
         }
         // Flush any prop values set via JS property BEFORE the factory
-        // populated propSignals. The prop accessors' setter writes to
-        // pendingProps when no signal exists yet; without this flush
-        // the value is lost (this is the #P0.2 sui-pagination form-value
-        // bug). Same pattern as the non-form class below.
+        // populated propSignals (pre-connect writes buffered by the accessors;
+        // the #P0.2 sui-pagination form-value bug without this flush).
         if (this.pendingProps) {
           for (const k in this.pendingProps) this.propSignals[k]?.set(this.pendingProps[k])
           this.pendingProps = undefined
         }
       }
 
-      disconnectedCallback() {
+      private teardown() {
         try {
           this.cleanup?.()
         } catch (e) {
@@ -209,8 +238,30 @@ export function defineComponent(
         this.scope = undefined
       }
 
+      connectedCallback() {
+        this.dataset.component = tag
+        attachHostApi(this)
+        reg.instances.add(this)
+        this.runSetup()
+      }
+
+      disconnectedCallback() {
+        reg.instances.delete(this)
+        this.teardown()
+      }
+
+      // HMR (#40): re-render this live instance with the current `reg.factory`.
+      // Tears down, clears the rendered DOM (cleanup only disposes bindings; the
+      // new factory would otherwise duplicate it), re-runs. State resets.
+      __suiReRun() {
+        this.teardown()
+        ;(this.shadowRoot ?? this).replaceChildren()
+        this.propSignals = {}
+        this.runSetup()
+      }
+
       attributeChangedCallback(attrName: string, _old: string, value: string) {
-        const meta = schema.props[attrName]
+        const meta = reg.schema.props[attrName]
         if (!meta) return
         const sig = this.propSignals[meta.camel]
         if (sig) sig.set(meta.decode(value))
@@ -265,7 +316,7 @@ export function defineComponent(
 
   class ShipSetElement extends HTMLElement {
     static get observedAttributes(): string[] {
-      return schema.observedAttrs
+      return reg.schema.observedAttrs
     }
 
     private cleanup: Disposer | undefined
@@ -275,13 +326,11 @@ export function defineComponent(
      *  `propSignals` — buffered by the prop accessors, flushed on connect. */
     private pendingProps: Record<string, unknown> | undefined
 
-    connectedCallback() {
-      this.dataset.component = tag
-      attachHostApi(this)
+    private runSetup() {
       this.scope = createScope()
       try {
         this.cleanup = withScope(this.scope, () =>
-          withHost(this, () => factory(this, this.propSignals)),
+          withHost(this, () => reg.factory(this, this.propSignals)),
         )
         // Apply any prop set via JS property before connection created the
         // signals (the prop accessors buffer pre-connect writes here).
@@ -299,7 +348,7 @@ export function defineComponent(
       }
     }
 
-    disconnectedCallback() {
+    private teardown() {
       try {
         this.cleanup?.()
       } catch (e) {
@@ -314,8 +363,30 @@ export function defineComponent(
       this.scope = undefined
     }
 
+    connectedCallback() {
+      this.dataset.component = tag
+      attachHostApi(this)
+      reg.instances.add(this)
+      this.runSetup()
+    }
+
+    disconnectedCallback() {
+      reg.instances.delete(this)
+      this.teardown()
+    }
+
+    // HMR (#40): re-render this live instance with the current `reg.factory`.
+    // Tears down, clears the rendered DOM (cleanup only disposes bindings; the
+    // new factory would otherwise duplicate it), re-runs. State resets.
+    __suiReRun() {
+      this.teardown()
+      ;(this.shadowRoot ?? this).replaceChildren()
+      this.propSignals = {}
+      this.runSetup()
+    }
+
     attributeChangedCallback(attrName: string, _old: string, value: string) {
-      const meta = schema.props[attrName]
+      const meta = reg.schema.props[attrName]
       if (!meta) return
       const sig = this.propSignals[meta.camel]
       if (sig) sig.set(meta.decode(value))
