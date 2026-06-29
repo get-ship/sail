@@ -603,6 +603,16 @@ fn dev(project: PathBuf, addr: String, demo: bool) -> Result<()> {
         let app_ext = Arc::new(app_cfg.clone());
         let apps: Arc<Vec<deck_config::AppServeConfig>> = Arc::new(vec![app_cfg]);
 
+        // `Resolution` Step 2: carry deck dev's single root as a per-request
+        // mount-scoped handle so the SSR first-paint resolves THROUGH the threaded
+        // resolver (`resolve_project_root_with`) rather than reading the process
+        // global directly. deck dev serves ONE project, so this root equals the
+        // global — but threading it proves the serve path honors a per-request
+        // Resolution end-to-end (the harness exercises it). The multi-app host
+        // (shipd) is the path that carries a DISTINCT Resolution per app, killing
+        // the cross-talk for real (`inv-deck-single-root-scoped`).
+        let resolution = Arc::new(deck_core::Resolution::new().with_root(project_dir.clone()));
+
         // Bundler with the FS watcher (HMR SSE on `/_deck/dev/hmr`). The
         // up-front `bundle_app` is the one-shot SPA bundle that makes the
         // app servable; the watcher drives rebuilds + live-reload on edit.
@@ -740,6 +750,7 @@ fn dev(project: PathBuf, addr: String, demo: bool) -> Result<()> {
             .layer(axum::Extension(Arc::new(cfg)))
             .layer(axum::Extension(bundler.clone()))
             .layer(axum::Extension(apps))
+            .layer(axum::Extension(resolution))
             .layer(axum::Extension(Arc::new(NoopDataPort) as Arc<dyn deck_core::DataPort>));
         let bind_addr = addr.clone();
         let listener = tokio::net::TcpListener::bind(&bind_addr)

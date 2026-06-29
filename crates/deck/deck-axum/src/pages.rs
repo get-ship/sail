@@ -55,6 +55,7 @@ fn primary_app(apps: &Option<Extension<Arc<Vec<AppServeConfig>>>>) -> Option<Arc
 pub async fn serve_index(
     mode: Option<Extension<DaemonMode>>,
     apps: Option<Extension<Arc<Vec<AppServeConfig>>>>,
+    resolution: Option<Extension<Arc<deck_core::Resolution>>>,
 ) -> Response {
     match primary_app(&apps) {
         Some(app) => into_axum(deck_core::serve_scaffold(
@@ -62,6 +63,7 @@ pub async fn serve_index(
             app.as_ref(),
             &[],
             Some("/"),
+            resolution.as_ref().map(|e| e.0.as_ref()),
         )),
         None => into_axum(deck_core::DeckResponse::not_found(
             "no primary app configured for /",
@@ -80,6 +82,7 @@ pub async fn serve_index(
 pub async fn spa_or_public_asset(
     mode: Option<Extension<DaemonMode>>,
     apps: Option<Extension<Arc<Vec<AppServeConfig>>>>,
+    resolution: Option<Extension<Arc<deck_core::Resolution>>>,
     Path(file): Path<String>,
 ) -> Response {
     let Some(app) = primary_app(&apps) else {
@@ -104,6 +107,7 @@ pub async fn spa_or_public_asset(
         app.as_ref(),
         &[],
         Some(&req_path),
+        resolution.as_ref().map(|e| e.0.as_ref()),
     ))
 }
 
@@ -118,6 +122,7 @@ pub async fn spa_fallback(
     mode: Option<Extension<DaemonMode>>,
     apps: Option<Extension<Arc<Vec<AppServeConfig>>>>,
     host_backend_prefixes: Option<Extension<Arc<Vec<String>>>>,
+    resolution: Option<Extension<Arc<deck_core::Resolution>>>,
 ) -> Response {
     let path = uri.path();
     // deck owns ONLY its own framework surface: `/api/*` (token + theme CSS),
@@ -141,6 +146,7 @@ pub async fn spa_fallback(
                 app.as_ref(),
                 &[],
                 Some(path),
+                resolution.as_ref().map(|e| e.0.as_ref()),
             ));
         }
     }

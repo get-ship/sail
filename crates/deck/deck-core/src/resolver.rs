@@ -24,9 +24,14 @@ static DETECTION_WARN_ONCE: Once = Once::new();
 /// mine first" by ordering — deck privileges no named 'first-party' bucket
 /// (`inv-deck-no-first-party`); `roots[0]` simply wins.
 ///
-/// (Step 1: the abstraction + its isolation contract. Step 2 threads it through
-/// the resolve/serve path in place of the globals; the shipd caller migration
-/// is the ship-repo follow-on.)
+/// (Step 1: the abstraction + its isolation contract. Step 2: threaded through
+/// the routes/ SERVE PATH via [`resolve_project_root_with`] — `serve_scaffold`
+/// → `routes_first_paint` resolve against the per-request Resolution, and
+/// `deck dev` carries one (proven by the e2e SSR loop). The remaining work is
+/// the SHIPD multi-app caller migration — passing a DISTINCT Resolution per app
+/// so the cross-talk dies in the long-running host — which is the ship-repo
+/// follow-on, plus the secondary readers (`resolve_view_js`, `serve_public_asset`)
+/// the view path will thread when ship-views grows its own Resolution.)
 #[derive(Debug, Clone, Default)]
 pub struct Resolution {
     roots: Vec<PathBuf>,
@@ -213,6 +218,20 @@ pub(crate) fn resolve_project_root() -> Option<PathBuf> {
     None
 }
 
+/// Resolution-aware project root — the mount-scoped seam the SERVE PATH threads
+/// instead of reading the global directly (`Resolution` Step 2). The per-request
+/// [`Resolution`]'s highest-precedence root wins, so one process serving project
+/// B does not resolve against project A's global override
+/// (`inv-deck-single-root-scoped`, proven on the real path). When no Resolution
+/// is carried (the single-root deck-dev default), falls back to the process
+/// global + cwd floor via [`resolve_project_root`].
+pub fn resolve_project_root_with(resolution: Option<&Resolution>) -> Option<PathBuf> {
+    if let Some(root) = resolution.and_then(|r| r.project_root()) {
+        return Some(root.to_path_buf());
+    }
+    resolve_project_root()
+}
+
 /// One-shot warn behind `std::sync::Once`. Catches a future long-running host
 /// that mounts the resolver without calling `set_project_root` — a smell,
 /// because the cwd-detection floor is the fragile path.
@@ -276,6 +295,13 @@ fn collect_view_dirs(dir: &std::path::Path, out: &mut std::collections::BTreeSet
 mod project_root_tests {
     use super::{detect_project_root_from, reset_project_root_override_for_test, set_project_root};
     use std::path::PathBuf;
+    use std::sync::Mutex;
+
+    /// Serializes the tests that MUTATE the process-global override
+    /// (`PROJECT_ROOT_OVERRIDE`), so cargo's parallel test threads don't clobber
+    /// each other's `set_project_root` between a set and an assert. Poison is
+    /// ignored — a failing test already fails; the lock must not cascade.
+    static ROOT_OVERRIDE_TEST_LOCK: Mutex<()> = Mutex::new(());
 
     /// Nested project: monorepo root has a `views/`, the inner project's
     /// `app/` ALSO has a `views/`. Detection must pick the NEAREST one
@@ -352,6 +378,7 @@ mod project_root_tests {
     /// would otherwise be detected as a project root.
     #[test]
     fn override_wins_over_detection() {
+        let _guard = ROOT_OVERRIDE_TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_project_root_override_for_test();
         let tmp = tempfile::tempdir().unwrap();
         let detected_root = tmp.path().to_path_buf();
@@ -428,10 +455,12 @@ mod project_root_tests {
     /// the ORDER of declared roots (`roots[0]` wins) — deck blesses no named
     /// 'first-party' bucket.
     ///
-    /// (Step 1 proves the abstraction isolates. The remaining gap — the
-    /// resolve/serve PATH still reads the global override, and shipd is its
-    /// caller — stays tracked on the blueprint; this test is the contract that
-    /// step 2's threading must keep green.)
+    /// (Step 1 proves the abstraction isolates. Step 2 — threading it through
+    /// the routes/ serve path — is now done; see
+    /// `resolve_path_honors_per_request_resolution_over_the_global` below, which
+    /// proves the RESOLVE PATH (not just the struct) honors the per-request
+    /// handle over the global. This test stays as the struct's isolation
+    /// contract; the shipd multi-app caller migration is the ship-repo follow-on.)
     #[test]
     fn resolution_is_mount_scoped_not_a_shared_global() {
         // Host A boots against project A; host B against project B — SAME process.
@@ -454,5 +483,45 @@ mod project_root_tests {
             Some(std::path::Path::new("/srv/app")),
             "first declared root wins by ordering — deck names no first-party bucket"
         );
+    }
+
+    /// The REAL invariant the struct-only test above could not prove: the
+    /// resolve PATH the serve path threads (`resolve_project_root_with`) honors
+    /// the per-request [`Resolution`] OVER the process-global override — so one
+    /// process serving project B does not first-paint B's routes against project
+    /// A's global root (`inv-deck-single-root-scoped`, on the real path).
+    ///
+    /// This is the `Resolution` Step-2 contract: the green-but-lying gap (a test
+    /// that exercised the struct in isolation while the serve path still read the
+    /// global) is closed by asserting the *resolver the serve path now calls*.
+    #[test]
+    fn resolve_path_honors_per_request_resolution_over_the_global() {
+        let _guard = ROOT_OVERRIDE_TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        reset_project_root_override_for_test();
+        // A prior request / another app in the SAME process set the global to A.
+        set_project_root(PathBuf::from("/tmp/projA"));
+        // THIS request carries a Resolution for project B. The resolve path must
+        // return B (the per-request handle), never A — the cross-talk fix.
+        let b = super::Resolution::new().with_root("/tmp/projB");
+        assert_eq!(
+            super::resolve_project_root_with(Some(&b)),
+            Some(PathBuf::from("/tmp/projB")),
+            "the resolve path must use the per-request Resolution, not the shared global override"
+        );
+        // And carrying NO Resolution still sees the global — the single-root
+        // `deck dev` default is intact, not clobbered by B's per-request root.
+        assert_eq!(
+            super::resolve_project_root_with(None),
+            Some(PathBuf::from("/tmp/projA")),
+            "no Resolution ⇒ the global override is the fallback (deck-dev single-root default)"
+        );
+        // A Resolution with no declared root falls through to the global too.
+        let empty = super::Resolution::new();
+        assert_eq!(
+            super::resolve_project_root_with(Some(&empty)),
+            Some(PathBuf::from("/tmp/projA")),
+            "an empty Resolution carries no root ⇒ global fallback"
+        );
+        reset_project_root_override_for_test();
     }
 }
