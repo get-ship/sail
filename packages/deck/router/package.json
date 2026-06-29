@@ -3,16 +3,17 @@
   "version": "0.1.1",
   "description": "Deck route surface — URL state as reactive signals, navigate(), setRouterPort, mergeRoutes, and the edit-mode toggle. Owns the SHAPES/INSTANCES registries and the popstate listener; the SUI runtime imports it as a thin re-export for backwards compatibility, but the canonical home is here.",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "//": "SRC-DIRECT (like sui-runtime/sui-dom/deck-host). The deck bake compiles framework-singleton SRC in-process via resolve_entry's manifest `main`; pointing at a built dist/ let dist go stale relative to src (e.g. the lazy-mountRouter change shipped to src but a stale dist served the eager build). Resolving to src means the bundle always reflects source — no separate `tsc` build to keep in sync.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
     },
     "./server": {
-      "types": "./dist/server.d.ts",
-      "import": "./dist/server.js"
+      "types": "./src/server.ts",
+      "import": "./src/server.ts"
     }
   },
   "files": [

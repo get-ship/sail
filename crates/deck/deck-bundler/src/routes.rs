@@ -642,17 +642,19 @@ fn render_routes_gen_with(tree: &RouteTree, include_token_import: bool) -> Strin
         .map(|l| format!("  {{ pathPrefix: '{}', tag: '{}' }},", l.path_prefix, l.tag))
         .collect::<Vec<_>>()
         .join("\n");
-    // Each route's view module is statically imported (route0, route1, …) so
-    // the bundler pulls it into the graph, and keyed by pattern in the module
-    // map handed to `mountRouter`. The map reference is a real use, so the
-    // tree-shaker keeps the modules — no globalThis stash needed.
-    let route_imports = tree
-        .routes
-        .iter()
-        .enumerate()
-        .map(|(i, r)| format!("import * as route{i} from '{}';", module_import_path(&r.pattern)))
-        .collect::<Vec<_>>()
-        .join("\n");
+    // Route modules are CODE-SPLIT: the module map holds `() => import(...)`
+    // thunks (below), so rolldown emits one chunk per route and the client loads
+    // a route's chunk on demand (mountRouter awaits the thunk — the lazy path).
+    // NO static `import * as route{i}`: a static import would co-bundle the
+    // module into the entry and defeat the split. dev==prod parity — both builds
+    // split the same way, so HMR can later swap a single route chunk.
+    //
+    // PREREQUISITE: the served `@ship/deck-router` framework bundle must carry
+    // the lazy mountRouter (awaits function-valued module entries). It ships from
+    // packages/deck/router/dist — rebuild it (`bun run build`) after touching the
+    // router src, else the bake serves an eager mountRouter and the lazy thunks
+    // arrive un-awaited (mount() sees a function, not a module).
+    let route_imports = String::new();
     // Per-route `style.css` (deck-route-css convention): a route whose dir
     // holds a sibling `style.css` is statically imported next to its
     // `page.sui` so the bundler's CSS-asset path (`module_types: { ".css"
@@ -682,11 +684,19 @@ fn render_routes_gen_with(tree: &RouteTree, include_token_import: bool) -> Strin
         .map(|(i, l)| format!("import * as layout{i} from '{}';", layout_module_path(&l.path_prefix)))
         .collect::<Vec<_>>()
         .join("\n");
+    // Pattern → `() => import('<route>/page.sui')` thunk. The dynamic import is
+    // rolldown's code-split signal (one chunk per route); mountRouter's lazy path
+    // awaits it on navigation.
     let module_map = tree
         .routes
         .iter()
-        .enumerate()
-        .map(|(i, r)| format!("    '{}': route{i},", r.pattern))
+        .map(|r| {
+            format!(
+                "    '{}': () => import('{}'),",
+                r.pattern,
+                module_import_path(&r.pattern)
+            )
+        })
         .collect::<Vec<_>>()
         .join("\n");
     // pathPrefix → layout module map, parallel to `modules` for routes.
