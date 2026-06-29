@@ -260,7 +260,7 @@ mod tests {
         unsafe { std::env::remove_var("SUI_CLIENT_EMIT") };
         let off = compile_sui(&sui, CompileMode::View, "page", false).expect("compiles");
         assert!(
-            off.contains("view((ctx)") && !off.contains("export default view(() =>"),
+            off.contains("component((ctx)") && !off.contains("export default component(() =>"),
             "flag-off must be the production emit:\n{off}"
         );
 
@@ -268,7 +268,7 @@ mod tests {
         unsafe { std::env::set_var("SUI_CLIENT_EMIT", "synthetic") };
         let on_no_manifest = compile_sui(&sui, CompileMode::View, "page", false).expect("compiles");
         assert!(
-            on_no_manifest.contains("view((ctx)"),
+            on_no_manifest.contains("component((ctx)"),
             "flag-on without a manifest stays production:\n{on_no_manifest}"
         );
 
@@ -280,7 +280,7 @@ mod tests {
         .unwrap();
         let on = compile_sui(&sui, CompileMode::View, "page", false).expect("compiles");
         assert!(
-            on.contains("export default view(() =>") && on.contains("__mount(container"),
+            on.contains("export default component(() =>") && on.contains("__mount(container"),
             "flag-on + manifest emits the synthetic client contract:\n{on}"
         );
 
@@ -323,7 +323,7 @@ mod tests {
         .unwrap();
         let on = compile_sui(&sui, CompileMode::View, "page", false).expect("compiles");
         assert!(
-            on.contains("export default view(() =>") && on.contains("__mount(container"),
+            on.contains("export default component(() =>") && on.contains("__mount(container"),
             "convention must drive the synthetic client contract:\n{on}"
         );
         // `route` is a construct: the convention emits
