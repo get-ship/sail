@@ -816,6 +816,7 @@ dependencies = [
  "futures-util",
  "serde",
  "serde_json",
+ "ship-views",
  "sui-compiler",
  "tempfile",
  "tokio",
@@ -3966,6 +3967,22 @@ dependencies = [
  "deno_error",
  "serde_json",
  "thiserror 2.0.18",
+ "tokio",
+]
+
+[[package]]
+name = "ship-views"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "deck-axum",
+ "deck-bundler",
+ "deck-core",
+ "deck-host",
+ "serde",
+ "serde_json",
+ "sui-compiler",
+ "tempfile",
  "tokio",
 ]
 

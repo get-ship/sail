@@ -7,10 +7,10 @@ use sui_compiler::ViewInit;
 pub use deck_host::view_payload::ViewPayload;
 use deck_host::resolver::read_view_artifact;
 
-use crate::{CachePolicy, DaemonMode, DeckResponse};
-use crate::form_inject::inject_form_actions;
-use crate::resolver::resolve;
-use crate::routes::subscribe_url;
+use deck_core::{CachePolicy, DaemonMode, DeckResponse};
+use deck_core::inject_form_actions;
+use deck_core::resolver::resolve;
+use deck_core::routes::subscribe_url;
 
 /// Memoizes the per-request parse (`view_init`) keyed on the source `.sui`'s
 /// mtime. A hit re-stats the source and only reuses the seed when the mtime is
@@ -54,7 +54,7 @@ pub fn serve_view_payload_subpath(mode: DaemonMode, name: &str, sub_path: &str) 
 }
 
 fn serve(name: &str, sub_path: Option<&str>, mode: DaemonMode) -> DeckResponse {
-    if !crate::view::is_valid_view_name(name) {
+    if !deck_host::render_helpers::is_valid_view_name(name) {
         return json_error(404, PayloadErrorBody::InvalidName { name: name.to_string() });
     }
     let resolved = match resolve(name, sub_path) {
@@ -90,7 +90,7 @@ fn serve(name: &str, sub_path: Option<&str>, mode: DaemonMode) -> DeckResponse {
         vi
     };
     let css = collect_view_css(name, resolved.source_path.as_deref());
-    let module_url = crate::routes::view_module_url(name, sub_path);
+    let module_url = deck_core::routes::view_module_url(name, sub_path);
     // First-paint HTML comes solely from the JS SSR engine (ship-js). When no
     // renderer is registered (e.g. a V8-less context), there is no server HTML
     // and the client mounts the component itself (CSR) — never a degraded
@@ -137,7 +137,7 @@ fn synthetic_first_paint(
     let source_path = resolved.source_path.as_deref()?;
     let params = serde_json::to_value(&resolved.params).unwrap_or(serde_json::Value::Null);
     let pathname = format!("/{view_name}");
-    let req = crate::synthetic_ssr::SsrRequest {
+    let req = deck_core::synthetic_ssr::SsrRequest {
         view_name,
         sub_path,
         source_path,
@@ -145,7 +145,7 @@ fn synthetic_first_paint(
         params,
         query: serde_json::json!({}),
     };
-    crate::synthetic_ssr::first_paint(&req)
+    deck_core::synthetic_ssr::first_paint(&req)
 }
 
 fn collect_view_css(name: &str, source_path: Option<&std::path::Path>) -> String {

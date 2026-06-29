@@ -99,7 +99,7 @@ Daemon-side route table (`apps/shipd/src/router.rs`) mounts the surface:
 | `GET /_deck/icons/{name}.svg` | `/home/madvib/dev/Ship/sui/crates/deck/deck-core/src/assets.rs` (per-icon lucide; daemon embeds the set) |
 | `GET /_deck/sui-components/{name}.js` | separate-bundle component |
 | `GET /_deck/views/{name}/view.sui` / `view.js` / `view.css` | `/home/madvib/dev/Ship/sui/crates/deck/deck-core/src/view.rs` (route segment stems are `view.*` regardless of on-disk `page.sui`/`controller.ts`/`style.css`) |
-| `GET /_deck/views/{name}` | `/home/madvib/dev/Ship/sui/crates/deck/deck-core/src/view_payload.rs` |
+| `GET /_deck/views/{name}` | `/home/madvib/dev/Ship/sui/crates/ship-views/src/view_payload.rs` (extracted out of deck into the `ship-views` crate) |
 | `GET /_deck/views/{name}/sse` | `apps/shipd/src/views/sui_patch_channel.rs` |
 | `GET /_deck/hmr` / `hmr-client.js` / `dev/hmr` | `apps/shipd/src/views/sui_hmr.rs` |
 | `GET /_deck/data` | `apps/shipd/src/views/sui_data.rs` (the `<data live>` SSE channel) |

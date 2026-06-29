@@ -3,10 +3,8 @@
 //! tests live there).
 
 use std::fs;
-use std::path::PathBuf;
-use std::sync::OnceLock;
 
-use crate::DaemonMode;
+use deck_core::DaemonMode;
 use crate::view_host::serve_view_host;
 use crate::view_payload::{serve_view_payload, serve_view_payload_subpath};
 
@@ -17,29 +15,8 @@ fn lock_with_dir(p: &std::path::Path) -> ProjectRootGuard {
 }
 
 
-fn body_str(resp: &crate::DeckResponse) -> String {
+fn body_str(resp: &deck_core::DeckResponse) -> String {
     String::from_utf8(resp.body.clone()).unwrap()
-}
-
-fn repo_root() -> &'static std::path::Path {
-    static ROOT: OnceLock<PathBuf> = OnceLock::new();
-    ROOT.get_or_init(|| {
-        let mut cur = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        loop {
-            let cargo = cur.join("Cargo.toml");
-            if cargo.is_file()
-                && std::fs::read_to_string(&cargo)
-                    .map(|s| s.contains("[workspace]"))
-                    .unwrap_or(false)
-            {
-                return cur;
-            }
-            if !cur.pop() {
-                panic!("could not find repo root from {}", env!("CARGO_MANIFEST_DIR"));
-            }
-        }
-    });
-    ROOT.get().unwrap()
 }
 
 #[test]

@@ -20,10 +20,10 @@ pub use handlers::{
     serve_sui_live_reload,
     serve_sui_runtime,
     serve_sui_sdk_client,
-    serve_sui_view_setup,
-    serve_view_host, serve_view_payload,
-    serve_view_payload_subpath,
 };
+// The named-view handlers (serve_sui_view_setup / serve_view_host /
+// serve_view_payload[_subpath]) moved to the `ship-views` crate. deck-axum's
+// router serves ONLY deck's own framework + routes/ SPA surface.
 
 // Re-export the contract types so `deck`'s facade (and shipd through it)
 // can name them without depending on deck-core directly.
@@ -69,13 +69,16 @@ pub fn into_axum(resp: DeckResponse) -> Response {
         .unwrap_or_else(|_| Response::new(Body::from("response build failed")))
 }
 
-/// deck's whole hosting surface as one mountable `Router`.
+/// deck's framework + routes/ SPA hosting surface as one mountable `Router`.
 ///
 /// Registers: framework bundles (runtime/dom/sdk-client/components),
-/// per-icon lucide serving, the workspace catalog, per-view setup (compiled
-/// `view.js`), view-host (two paths under `/_deck/view/`), and view-payload
-/// (top-level + sub-path). Paths mirror shipd's canonical `Route` enum so a
-/// host can mount this in lieu of wiring each handler.
+/// per-icon lucide serving, the theme/token CSS, the per-tag source viewer,
+/// the HMR firehose, and `/_deck/meta`. Paths mirror shipd's canonical `Route`
+/// enum so a host can mount this in lieu of wiring each handler.
+///
+/// The named-view surface (`/_deck/view(s)/*`) is NO LONGER registered here —
+/// it moved to `ship_views::router()` (deck ⊥ ship-views). A host that serves
+/// views merges that router alongside this one.
 ///
 /// HMR and the state-aware SUI endpoints (sse/data/mutation/patch) are NOT
 /// registered here — they need host-supplied extensions or router state.
@@ -147,21 +150,11 @@ pub fn router() -> Router {
         // — purged with `packs::serve_catalog_workspace` and the
         // `.deck/catalogs/workspace.json` write.
         .route("/_deck/meta", get(serve_meta))
-        .route("/_deck/views/{name}/view.js", get(serve_sui_view_setup))
-        // `GET /_deck/views/{name}/{*sub_path}` — the JSON payload for a
-        // nested / parameterized view route. The `view.js` route above
-        // accepts `?sub=<path>` for the same payload client-side; the path
-        // form here is the canonical API for the runtime + the conformance
-        // param test. Without it, `/_deck/views/<name>/<sub>` 404s and the
-        // resolver-side `[id]` behavior the unit tests prove is invisible
-        // to the e2e suite.
-        .route(
-            "/_deck/views/{name}/{*sub_path}",
-            get(serve_view_payload_subpath),
-        )
-        .route("/_deck/views/{name}", get(serve_view_payload))
-        .route("/_deck/view/{name}", get(serve_view_host))
-        .route("/_deck/view/{name}/{*sub_path}", get(serve_view_host))
+        // The named-view routes (`/_deck/views/{name}/view.js`,
+        // `/_deck/views/{name}[/{*sub}]`, `/_deck/view/{name}[/{*sub}]`) moved to
+        // `ship_views::router()`. A host that serves views merges that router
+        // alongside this one; deck itself no longer carries the feature
+        // (deck ⊥ ship-views).
         // `POST /_deck/mutation/{name}` — 410 tombstone. The progressive-
         // enhancement form endpoint is gone; JS-attached mutations call the SDK
         // directly. deck still composes this URL as the `<form mutation>`

@@ -8,7 +8,7 @@
 
 use std::fs;
 
-use crate::DaemonMode;
+use deck_core::DaemonMode;
 use crate::test_lock::ProjectRootGuard;
 use crate::view_payload::{serve_view_payload, serve_view_payload_subpath};
 
@@ -16,7 +16,7 @@ fn lock_with_dir(p: &std::path::Path) -> ProjectRootGuard {
     ProjectRootGuard::new(p)
 }
 
-fn body_str(resp: &crate::DeckResponse) -> String {
+fn body_str(resp: &deck_core::DeckResponse) -> String {
     String::from_utf8(resp.body.clone()).unwrap()
 }
 

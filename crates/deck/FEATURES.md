@@ -64,9 +64,9 @@ Each handler logic lives in `deck-core` and returns a `DeckResponse`; the matchi
 
 | Feature | Route | Implementation | Description |
 | --- | --- | --- | --- |
-| View host shell | `GET /_deck/view/{name}[/{*sub}]` | `crates/deck/deck-core/src/view_host.rs::serve_view_host` | Serves the HTML shell with SSR content spliced in; live-emits SSR on cold miss, mtime-caches in prod, renders the styled 404 for an unresolvable name. |
-| View payload (JSON) | `GET /_deck/views/{name}` | `crates/deck/deck-core/src/view_payload.rs::serve_view_payload` | Returns the `ViewPayload` JSON (html, css, scope, moduleUrl, params) the runtime mounts. |
-| View payload (sub-route) | `GET /_deck/views/{name}/{*sub}` | `crates/deck/deck-core/src/view_payload.rs::serve_view_payload_subpath` | Same payload for a nested/parameterized route; folds the sub into the subscribe URL. |
+| View host shell | `GET /_deck/view/{name}[/{*sub}]` | `crates/ship-views/src/view_host.rs::serve_view_host` | Serves the HTML shell with SSR content spliced in; live-emits SSR on cold miss, mtime-caches in prod, renders the styled 404 for an unresolvable name. (Extracted out of deck into the `ship-views` crate — registered via `ship_views::router()`; deck ⊥ ship-views.) |
+| View payload (JSON) | `GET /_deck/views/{name}` | `crates/ship-views/src/view_payload.rs::serve_view_payload` | Returns the `ViewPayload` JSON (html, css, scope, moduleUrl, params) the runtime mounts. (Lives in `ship-views`.) |
+| View payload (sub-route) | `GET /_deck/views/{name}/{*sub}` | `crates/ship-views/src/view_payload.rs::serve_view_payload_subpath` | Same payload for a nested/parameterized route; folds the sub into the subscribe URL. (Lives in `ship-views`.) |
 | Compiled view module | `GET /_deck/views/{name}/view.js` | `crates/deck/deck-core/src/view.rs::serve_sui_view_setup` | Serves the per-view ESM bundle; compiles on demand when no `.deck` artifact exists. |
 | sui-runtime bundle | `GET /_deck/runtime.js` | `crates/deck/deck-core/src/assets.rs::serve_sui_runtime` | Deck's own baked runtime singleton. |
 | sui-dom bundle | `GET /_deck/dom.js` | `crates/deck/deck-core/src/assets.rs::serve_sui_dom` | Deck's own baked DOM module. |
@@ -138,7 +138,7 @@ The pure SUI-facing read side, plus the framework CLI.
 | --- | --- | --- | --- |
 | View resolver | (on-disk lookup) | `crates/deck/deck-host/src/resolver.rs::resolve` | Resolves a view name + sub-path across first-party / `views/` / `.ship/views/` roots with `[param]` dirs. |
 | Resolved view | (resolution result) | `crates/deck/deck-host/src/resolver.rs::ResolvedView` | Source + params + canonical source path returned by the resolver. |
-| Render + mtime cache | (SSR) | `crates/deck/deck-core/src/view_payload.rs::serve_view_payload` | Compiles + renders a resolved view, mtime-keyed (`INIT_CACHE`) so a re-emitted artifact is never stale. |
+| Render + mtime cache | (SSR) | `crates/ship-views/src/view_payload.rs::serve_view_payload` | Compiles + renders a resolved view, mtime-keyed (`INIT_CACHE`) so a re-emitted artifact is never stale. (Lives in `ship-views`.) |
 | View payload shape | (JSON contract) | `crates/deck/deck-host/src/view_payload.rs::ViewPayload` | The serialized payload contract (html/css/scope/moduleUrl/params) shared with the runtime. |
 | Render helper | (source read) | `crates/deck/deck-host/src/render_helpers.rs::render_view_source` | Reads a view's `page.sui` source from the project root. |
 | CLI: build app | `deck build` | `crates/deck/deck-cli/src/main.rs` | Builds a SUI SPA app to a static output dir. |
