@@ -252,7 +252,22 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
     if (matchRoute(location.pathname)?.pattern === pattern) await reloadCurrent()
   }
 
-  ;(globalThis as unknown as { __deckHmr?: unknown }).__deckHmr = { reloadCurrent, swapModule }
+  // Replace the whole module map with a freshly-built one (the rebuilt entry's
+  // `modules`, whose thunks point at the new chunk URLs), then re-mount the
+  // current route preserving state. The HMR-aware entry bootstrap calls this on
+  // re-import instead of re-running mountRouter — so a full app rebuild becomes
+  // a state-preserving soft reload, no full document reload.
+  async function swapModules(fresh: Record<string, unknown>): Promise<void> {
+    const map = opts.modules as Record<string, unknown>
+    for (const k of Object.keys(fresh)) map[k] = fresh[k]
+    await reloadCurrent()
+  }
+
+  ;(globalThis as unknown as { __deckHmr?: unknown }).__deckHmr = {
+    reloadCurrent,
+    swapModule,
+    swapModules,
+  }
 
   return {
     dispose(): void {

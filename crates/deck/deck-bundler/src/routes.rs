@@ -843,13 +843,23 @@ import {{ mountRouter }} from '@ship/deck/router';
   layoutModules,
 }} from './routes.gen';
 import '@ship/tokens/tokens.css';
-mountRouter({{
-  root: '#{root_id}',
-  routes: DYNAMIC_ROUTE_PATTERNS,
-  layouts: LAYOUTS,
-  modules,
-  layoutModules,{clients_field}
-}});
+// On an HMR re-import the framework router is already mounted (it exposes
+// `globalThis.__deckHmr`). Swap the freshly-bundled `modules` (their thunks
+// point at the new chunk URLs) into the running router + re-mount preserving
+// state, instead of mounting a second time. First load: `__deckHmr` is unset,
+// so mount normally.
+const __deckHmr = (globalThis as unknown as {{ __deckHmr?: {{ swapModules: (m: unknown) => void }} }}).__deckHmr;
+if (__deckHmr) {{
+  __deckHmr.swapModules(modules);
+}} else {{
+  mountRouter({{
+    root: '#{root_id}',
+    routes: DYNAMIC_ROUTE_PATTERNS,
+    layouts: LAYOUTS,
+    modules,
+    layoutModules,{clients_field}
+  }});
+}}
 ",
         label = tree.label,
         root_id = crate::templates::ROOT_ID,

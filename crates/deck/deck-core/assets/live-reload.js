@@ -61,6 +61,15 @@ export function attachLiveReload(opts = {}) {
     }
     clearOverlay()
     const target = e.target || ''
+    // routes/ SPA soft reload: a full app rebuild (target `app`) re-imports the
+    // freshly-bundled entry into the RUNNING router — state-preserving, no full
+    // document reload. Gated on the SPA router being mounted (it exposes
+    // `globalThis.__deckHmr`); the named-view host path below keeps its own
+    // in-place / full-reload policy.
+    if (globalThis.__deckHmr && target === 'app') {
+      void softReloadSpa()
+      return
+    }
     if (target.startsWith('views/')) {
       // When the host pins a `viewName` (single-view host like view-host.html),
       // filter to it. When omitted (a navigating host like the shell), deliver
@@ -102,6 +111,30 @@ export function attachLiveReload(opts = {}) {
 function clearOverlay() {
   if (typeof document === 'undefined') return
   document.getElementById(OVERLAY_ID)?.remove()
+}
+
+/**
+ * SPA soft reload (routes/ apps). Re-fetch the index, find the rebuilt entry
+ * module URL (content-hashed, so it changed), and import it. The entry's
+ * HMR-aware bootstrap detects the running router (`globalThis.__deckHmr`) and
+ * swaps the fresh `modules` in + re-mounts the current route preserving signal
+ * state — no full document reload. Any failure falls back to a full reload so a
+ * broken soft reload never leaves a stale page.
+ */
+async function softReloadSpa() {
+  try {
+    const res = await fetch(location.pathname, {
+      cache: 'no-store',
+      headers: { accept: 'text/html' },
+    })
+    const html = await res.text()
+    const m = html.match(/<script[^>]+type="module"[^>]+src="([^"]+)"/i)
+    if (!m) throw new Error('entry module script not found in index')
+    await import(/* @vite-ignore */ new URL(m[1], location.origin).href)
+  } catch (err) {
+    console.warn('[deck/hmr] soft reload failed — falling back to full reload:', err)
+    window.location.reload()
+  }
 }
 
 function showOverlay(e) {
