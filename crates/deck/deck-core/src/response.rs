@@ -125,12 +125,10 @@ impl DeckResponse {
         // All HTML responses carry the deck-defined security header set. The
         // values live in `HTML_SECURITY_HEADERS` (top of file) — the single
         // mint point, with a behavior test pinning the bytes so a half-edit
-        // is caught before it ships.
-        let mut resp = Self::new(200, "text/html; charset=utf-8", CachePolicy::View, mode, body);
-        for (name, value) in HTML_SECURITY_HEADERS {
-            resp = resp.with_header(name, *value);
-        }
-        resp
+        // is caught before it ships. The error responses (`not_found`/
+        // `render_error`) carry the same set via `carrying_security_headers`.
+        Self::new(200, "text/html; charset=utf-8", CachePolicy::View, mode, body)
+            .carrying_security_headers()
     }
     pub fn json_asset(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
         Self::new(200, "application/json; charset=utf-8", CachePolicy::Asset, mode, body)
@@ -153,7 +151,11 @@ impl DeckResponse {
         };
         let mut r = Self::new(404, "text/plain; charset=utf-8", CachePolicy::None, mode, body.into_bytes());
         r.cache_control = "no-cache";
-        r
+        // The 404 body in Development reflects request-derived detail (callers do
+        // `format!("invalid asset path: {file}")`, etc.), so it MUST carry the
+        // security header set — above all `nosniff`, so a browser never MIME-
+        // sniffs the text/plain body as HTML and runs reflected markup.
+        r.carrying_security_headers()
     }
 
     /// 500 — in Production the message is hidden; in Development it's surfaced.
@@ -162,11 +164,29 @@ impl DeckResponse {
             DaemonMode::Production => "render error".to_string(),
             DaemonMode::Development => msg.into(),
         };
+        // Same reflection risk as `not_found` (the dev body surfaces `msg`):
+        // carry the security set so a reflected text/plain 500 is never sniffed.
         Self::new(500, "text/plain; charset=utf-8", CachePolicy::None, mode, body.into_bytes())
+            .carrying_security_headers()
     }
 
     pub fn with_header(mut self, name: &'static str, value: impl Into<String>) -> Self {
         self.extra_headers.push((name, value.into()));
+        self
+    }
+
+    /// Apply deck's security header set (`HTML_SECURITY_HEADERS`, the single mint
+    /// point) to this response. Used by `html_view` AND the error responses
+    /// (`not_found`/`render_error`): a text/plain error body reflects request-
+    /// derived detail in Development, so it MUST send `X-Content-Type-Options:
+    /// nosniff` to stop a browser MIME-sniffing it as HTML and executing
+    /// reflected markup; X-Frame-Options + CSP ride along as defence-in-depth.
+    /// Assets deliberately skip this — a JS/CSS asset is not an HTML execution
+    /// context (see `js_asset_does_not_carry_html_security_headers`).
+    fn carrying_security_headers(mut self) -> Self {
+        for (name, value) in HTML_SECURITY_HEADERS {
+            self = self.with_header(name, *value);
+        }
         self
     }
 }
@@ -294,6 +314,41 @@ mod tests {
             expected_count,
             "extra_headers count drifted from HTML_SECURITY_HEADERS.len() — \
              either `html_view` added an extra header or the const shrank",
+        );
+    }
+
+    #[test]
+    fn not_found_carries_security_headers() {
+        // A 404 reflects request-derived detail in Development (callers do
+        // `format!("invalid asset path: {file}")`), so the text/plain error body
+        // MUST carry nosniff — else a browser could MIME-sniff it as HTML and run
+        // reflected markup (`GET /<script>…` lands the path in the 404 body).
+        // This is the one user-influenced error surface; it was shipping bare.
+        let resp = DeckResponse::not_found(
+            "invalid asset path: <script>alert(1)</script>",
+            DaemonMode::Development,
+        );
+        assert_eq!(
+            header_value(&resp, "X-Content-Type-Options"),
+            Some("nosniff"),
+            "the 404 MUST send nosniff so a reflected text/plain body is never sniffed as HTML",
+        );
+        assert_eq!(header_value(&resp, "X-Frame-Options"), Some("SAMEORIGIN"));
+        assert!(
+            header_value(&resp, "Content-Security-Policy").is_some(),
+            "the error response carries the full security set (defence-in-depth)",
+        );
+    }
+
+    #[test]
+    fn render_error_carries_security_headers() {
+        // The 500 dev body surfaces `msg` too — same reflection risk, same fix.
+        let resp =
+            DeckResponse::render_error("boom <img src=x onerror=1>", DaemonMode::Development);
+        assert_eq!(
+            header_value(&resp, "X-Content-Type-Options"),
+            Some("nosniff"),
+            "the 500 MUST send nosniff for the same reason as the 404",
         );
     }
 
