@@ -91,8 +91,8 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
     const pathname = location.pathname
     const myToken = ++token
     const matched = matchRoute(pathname)
-    const mod = matched ? opts.modules[matched.pattern] : undefined
-    if (!mod) {
+    const raw = matched ? opts.modules[matched.pattern] : undefined
+    if (!raw) {
       // No bundled view for this path — build the layout chain (so the nav +
       // studio rail stay visible) and mount a graceful fallback in the route slot.
       // A missing route must never produce a blank screen.
@@ -109,6 +109,17 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
       prevLayoutHandles = layoutHandles
       return
     }
+    // Module resolution. Eager (co-bundled, static `import * as`) modules ARE
+    // the view namespace already. Code-split modules are a `() => import(...)`
+    // thunk that resolves to the namespace — await it here so a route's chunk
+    // loads on demand (the module-granular bundling path). Backward-compatible:
+    // a non-function `raw` (the eager norm) passes straight through.
+    const mod =
+      typeof raw === 'function'
+        ? await (raw as () => Promise<unknown>)()
+        : raw
+    // A navigation during the dynamic import supersedes this one.
+    if (myToken !== token) return
     const { target, layoutHandles } = await buildMountTarget(
       rootEl!,
       resolveLayoutChain(pathname, layouts),
