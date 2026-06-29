@@ -1,0 +1,27 @@
+<!-- Recipes index (`/recipes`). Lists the data client's reactive `recipes`. -->
+<section class="recipes">
+  <header class="head">
+    <h1>Recipes</h1>
+    <sui-badge tone="primary" variant="soft">{recipes().length} in the box</sui-badge>
+  </header>
+
+  {#if recipes().length > 0}
+  <ul class="list">
+    {#for r of recipes() key={r.id}}
+    <li>
+      <a class="card card-link" href={`/recipes/${r.id}`}>
+        <h3>{r.title}</h3>
+        <p class="meta">{r.cuisine} · {r.minutes} min</p>
+        <div class="tags">
+          {#for t of r.tags key={t}}
+          <sui-badge tone="muted" variant="soft" size="sm">{t}</sui-badge>
+          {/for}
+        </div>
+      </a>
+    </li>
+    {/for}
+  </ul>
+  {:else}
+  <p class="empty">No recipes yet — add one in the kitchen.</p>
+  {/if}
+</section>
