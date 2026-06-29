@@ -135,7 +135,7 @@ The pure SUI-facing read side, plus the framework CLI.
 | --- | --- | --- | --- |
 | View resolver | (on-disk lookup) | `crates/deck/deck-host/src/resolver.rs::resolve` | Resolves a view name + sub-path across first-party / `views/` / `.ship/views/` roots with `[param]` dirs. |
 | Resolved view | (resolution result) | `crates/deck/deck-host/src/resolver.rs::ResolvedView` | Source + params + canonical source path returned by the resolver. |
-| Render + mtime cache | (SSR) | `crates/deck/deck-host/src/resolver.rs::render_resolved` | Compiles + renders a resolved view, mtime-keyed so a re-emitted artifact is never stale. |
+| Render + mtime cache | (SSR) | `crates/deck/deck-core/src/view_payload.rs::serve_view_payload` | Compiles + renders a resolved view, mtime-keyed (`INIT_CACHE`) so a re-emitted artifact is never stale. |
 | View payload shape | (JSON contract) | `crates/deck/deck-host/src/view_payload.rs::ViewPayload` | The serialized payload contract (html/css/scope/moduleUrl/params) shared with the runtime. |
 | Render helper | (source read) | `crates/deck/deck-host/src/render_helpers.rs::render_view_source` | Reads a view's `page.sui` source from the project root. |
 | CLI: build app | `deck build` | `crates/deck/deck-cli/src/main.rs` | Builds a SUI SPA app to a static output dir. |
