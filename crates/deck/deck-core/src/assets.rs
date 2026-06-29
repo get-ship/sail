@@ -1,6 +1,5 @@
 use crate::{CachePolicy, DaemonMode, DeckResponse};
 use deck_config::AppServeConfig;
-#[cfg(test)]
 use deck_config::RenderMode;
 
 const ASSETS_DIR: &str = env!("CARGO_MANIFEST_DIR");
@@ -138,10 +137,66 @@ fn candidate_view_roots() -> Vec<std::path::PathBuf> {
 /// Reads the built `.deck/<source>/index.html`; in dev (no build artifact yet)
 /// falls back to the authored source `<source>/index.html`. Returns a styled
 /// 404 only when neither exists.
+/// First-paint HTML for the `routes/` page matching `request_path`, via the
+/// ship-js SSR seam. Mirrors the named-`view` path (`view_payload`) but with the
+/// file-routed layout: split the URL into name + sub-path, resolve the matching
+/// `routes/<…>/page.sui` (+ captured `[param]` params), and render through
+/// `synthetic_ssr`. Returns `None` (→ empty `#ship-root`, client mounts CSR)
+/// when there's no project root, no matching page, no registered renderer, or
+/// the render fails (the failure is logged loud inside `synthetic_ssr`).
+fn routes_first_paint(request_path: &str) -> Option<String> {
+    let project_root = crate::resolver::current_project_root_override()?;
+    // `/greet/zelda` → name=greet, sub=zelda; `/counter` → name=counter, sub=None;
+    // `/` → name="" (the index `routes/page.sui`).
+    let trimmed = request_path.trim_start_matches('/');
+    let (name, sub) = match trimmed.split_once('/') {
+        Some((n, rest)) if !rest.is_empty() => (n, Some(rest)),
+        _ => (trimmed, None),
+    };
+    // The index route is `routes/page.sui` (empty name). `resolve()` keys off a
+    // non-empty `<name>` dir, so resolve the index leaf directly.
+    if name.is_empty() {
+        let source = project_root.join("routes").join("page.sui");
+        if !source.is_file() {
+            return None;
+        }
+        let req = crate::synthetic_ssr::SsrRequest {
+            view_name: "",
+            sub_path: None,
+            source_path: &source,
+            pathname: request_path,
+            params: serde_json::json!({}),
+            query: serde_json::json!({}),
+        };
+        return crate::synthetic_ssr::first_paint(&req);
+    }
+    let layout = deck_host::resolver::ViewLayout {
+        view_dirs: vec!["routes".to_string()],
+        view_leaf: "page.sui".to_string(),
+        first_party_root: None,
+    };
+    let resolved = deck_host::resolver::resolve(&project_root, &layout, name, sub).ok()?;
+    let source_path = resolved.source_path.as_deref()?;
+    let params = serde_json::to_value(&resolved.params).unwrap_or(serde_json::Value::Null);
+    let req = crate::synthetic_ssr::SsrRequest {
+        view_name: name,
+        sub_path: sub,
+        source_path,
+        pathname: request_path,
+        params,
+        query: serde_json::json!({}),
+    };
+    crate::synthetic_ssr::first_paint(&req)
+}
+
 pub fn serve_scaffold(
     mode: DaemonMode,
     scaffold: &AppServeConfig,
     params: &[(&str, &str)],
+    // The request pathname, when the caller is a route handler (serve_index /
+    // spa_* / spa_fallback). Drives `render: ssr` first-paint resolution. `None`
+    // (e.g. the multi-app host path, tests) ⇒ no SSR resolution → CSR shell.
+    request_path: Option<&str>,
 ) -> DeckResponse {
     let Some(html) = read_source_asset(&format!("{}/index.html", scaffold.source))
     else {
@@ -201,6 +256,24 @@ pub fn serve_scaffold(
     // Surface the app's render mode (csr|ssr) so it's legible client-side
     // rather than implicit (empty `#ship-root` = csr was the old tell).
     let html = crate::mode_html::inject_render_meta(&html, scaffold.render);
+    // SSR (`render: ssr`): render the matched `routes/` page server-side and
+    // inject its first-paint HTML into the (otherwise empty) mount root, so the
+    // client HYDRATES it instead of building from scratch. The mount-root id is
+    // the bundler's `templates::ROOT_ID` contract (`ship-root`); deck-core can't
+    // depend on deck-bundler (cycle), so the id is pinned here. No registered
+    // engine / no route match / a render error ⇒ `routes_first_paint` is None
+    // and we serve the empty shell (CSR) exactly as before.
+    let html = match (scaffold.render, request_path) {
+        (RenderMode::Ssr, Some(path)) => match routes_first_paint(path) {
+            Some(ssr) => html.replacen(
+                "<div id=\"ship-root\"></div>",
+                &format!("<div id=\"ship-root\">{ssr}</div>"),
+                1,
+            ),
+            None => html,
+        },
+        _ => html,
+    };
     // Dev-only: attach the live-reload client. deck dev rebuilds the SPA on an
     // edit and emits `module-changed`; this client (no opts → full-document
     // reload) drives the refresh. Served at `/_deck/live-reload.js`; it self-
@@ -512,7 +585,7 @@ mod tests {
     #[test]
     fn serve_scaffold_missing_source_returns_404() {
         let scaffold = make_scaffold("test", vec![]);
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[]);
+        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[], None);
         assert_eq!(resp.status, 404);
     }
     #[test]
@@ -556,7 +629,7 @@ mod tests {
             render: RenderMode::Csr,
             entry: None,
         };
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[("id", "my-space")]);
+        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[("id", "my-space")], None);
 
         assert_eq!(resp.status, 200);
         // The asset href is preserved (bundler wrote the final URL).
@@ -589,7 +662,7 @@ mod tests {
             render: RenderMode::Ssr,
             entry: None,
         };
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[]);
+        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[], None);
         assert_eq!(resp.status, 200);
         let body = std::str::from_utf8(&resp.body).unwrap();
         assert!(
@@ -627,7 +700,7 @@ mod tests {
             render: RenderMode::Csr,
             entry: None,
         };
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[("id", "x")]);
+        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[("id", "x")], None);
         // Status 200 is the only contract: the source-fallback path
         // served the unbuilt scaffold. The body shape is incidental.
         assert_eq!(resp.status, 200, "source-fallback must serve the unbuilt scaffold");
@@ -703,7 +776,7 @@ mod tests {
             render: RenderMode::Csr,
             entry: None,
         };
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[]);
+        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[], None);
 
         assert_eq!(resp.status, 200);
         let body = std::str::from_utf8(&resp.body).unwrap();

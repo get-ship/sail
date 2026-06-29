@@ -580,6 +580,19 @@ fn dev(project: PathBuf, addr: String, demo: bool) -> Result<()> {
         } else {
             deck_config::AppServeConfig::default()
         };
+        // SSR engine: only spin up ship-js (V8) when this app opts into SSR
+        // (`deck.jsonc { "render": "ssr" }`). A CSR app (the default) pays no
+        // V8 cost. Standalone dev has no live data port, so the engine renders
+        // with NoopData (None). Additive — if the engine can't start, log +
+        // continue; the serve path falls back to CSR.
+        if app_cfg.render == deck_config::RenderMode::Ssr {
+            match deck_ssr::serve::register(None) {
+                Ok(()) => println!("deck dev: ship-js SSR engine registered (render: ssr)"),
+                Err(e) => eprintln!(
+                    "deck dev: ship-js SSR engine unavailable, serving CSR: {e:#}"
+                ),
+            }
+        }
         app_cfg.name = app_url_namespace(&project_dir)?;
         app_cfg.route = "/".to_string();
         app_cfg.source = ".deck".to_string();

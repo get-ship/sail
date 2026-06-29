@@ -67,7 +67,11 @@ pub async fn serve_app_index(
         .iter()
         .map(|(k, v)| (k.as_str(), v.as_str()))
         .collect();
-    into_axum(deck_core::serve_scaffold(mode_val, app, &params_refs))
+    // `None` request path: the multi-app host serve doesn't yet wire per-route
+    // SSR resolution (it's the standalone `deck dev` path that first-paints
+    // routes/ today). An `ssr` app served here falls back to CSR until the host
+    // path threads its request path through. TODO(deck-ssr-host).
+    into_axum(deck_core::serve_scaffold(mode_val, app, &params_refs, None))
 }
 
 /// `GET /<app.name>/{file}` — serve a per-app static asset

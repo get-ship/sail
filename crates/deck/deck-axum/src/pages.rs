@@ -61,6 +61,7 @@ pub async fn serve_index(
             mode_from_ext(mode),
             app.as_ref(),
             &[],
+            Some("/"),
         )),
         None => into_axum(deck_core::DeckResponse::not_found(
             "no primary app configured for /",
@@ -95,11 +96,14 @@ pub async fn spa_or_public_asset(
             &file,
         ));
     }
-    // Bare segment — SPA navigation, serve the app's `index.html`.
+    // Bare segment — SPA navigation, serve the app's `index.html`. Pass the
+    // request path so an `ssr` app first-paints this exact route server-side.
+    let req_path = format!("/{file}");
     into_axum(deck_core::serve_scaffold(
         mode_from_ext(mode),
         app.as_ref(),
         &[],
+        Some(&req_path),
     ))
 }
 
@@ -136,6 +140,7 @@ pub async fn spa_fallback(
                 mode_from_ext(mode),
                 app.as_ref(),
                 &[],
+                Some(path),
             ));
         }
     }

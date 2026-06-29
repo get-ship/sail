@@ -7,6 +7,9 @@ import { defineConfig, devices } from '@playwright/test'
 const HOST = '127.0.0.1'
 const PORT = Number(process.env.DECK_E2E_PORT ?? 7878)
 const BASE_URL = `http://${HOST}:${PORT}`
+// The SSR fixture (`app-ssr`, render: ssr) runs on its own port. Its spec uses
+// absolute URLs, so it needs no per-project baseURL.
+const SSR_PORT = Number(process.env.DECK_E2E_SSR_PORT ?? 7879)
 
 export default defineConfig({
   testDir: './tests',
@@ -23,13 +26,24 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  webServer: {
-    command: `cargo run -q -p deck-cli -- dev --project ./app --addr ${HOST}:${PORT}`,
-    url: BASE_URL,
-    // First run may compile the deck CLI; allow generous startup.
-    timeout: 180_000,
-    reuseExistingServer: !process.env.CI,
-    stdout: 'pipe',
-    stderr: 'pipe',
-  },
+  webServer: [
+    {
+      command: `cargo run -q -p deck-cli -- dev --project ./app --addr ${HOST}:${PORT}`,
+      url: BASE_URL,
+      // First run may compile the deck CLI; allow generous startup.
+      timeout: 180_000,
+      reuseExistingServer: !process.env.CI,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+    {
+      // The SSR fixture (render: ssr) — proves server first-paint + hydration.
+      command: `cargo run -q -p deck-cli -- dev --project ./app-ssr --addr ${HOST}:${SSR_PORT}`,
+      url: `http://${HOST}:${SSR_PORT}`,
+      timeout: 180_000,
+      reuseExistingServer: !process.env.CI,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+  ],
 })

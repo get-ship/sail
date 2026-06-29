@@ -785,6 +785,7 @@ dependencies = [
  "deck-bundler",
  "deck-config",
  "deck-core",
+ "deck-ssr",
  "notify",
  "serde_json",
  "tempfile",
