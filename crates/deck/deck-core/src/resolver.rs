@@ -116,20 +116,18 @@ pub(crate) fn reset_project_root_override_for_test() {
 }
 
 /// Nearest-ancestor detection: upwalk from `cwd`, accept the first ancestor
-/// that contains a deck-owned SOURCE marker (`views/` > `.ship/views/`).
-/// Bounded at ~32 hops. Std-only — never reaches a TOPMOST-Cargo.toml
-/// workspace resolver (which would shadow a nested project's root onto
-/// the monorepo root). Never keys on `.deck` (build output, absent on
-/// fresh checkout, flips post-build) — and never on `deck.jsonc` (the
-/// file the framework used to load; purged — see deck-purge-root).
+/// that contains the deck-owned SOURCE marker (`views/`). Bounded at ~32 hops.
+/// Std-only — never reaches a TOPMOST-Cargo.toml workspace resolver (which
+/// would shadow a nested project's root onto the monorepo root). Never keys on
+/// `.deck` (build output, absent on fresh checkout, flips post-build), never on
+/// `deck.jsonc` (purged — see deck-purge-root), and never sniffs a host-private
+/// dir (a host with a non-conventional layout, e.g. a different view bucket,
+/// calls `set_project_root` — the safe path; deck names no host dir here).
 pub(crate) fn detect_project_root_from(cwd: &std::path::Path) -> Option<PathBuf> {
     const MAX_DEPTH: usize = 32;
     let mut cur = cwd;
     for _ in 0..MAX_DEPTH {
         if cur.join("views").is_dir() {
-            return Some(cur.to_path_buf());
-        }
-        if cur.join(".ship").join("views").is_dir() {
             return Some(cur.to_path_buf());
         }
         match cur.parent() {
@@ -327,14 +325,18 @@ mod project_root_tests {
         assert_eq!(detected, Some(inner));
     }
 
-    /// `.ship/views/` is the third marker (legacy deck-style placement).
+    /// deck detects via its OWN marker (`views/`) only. A `.ship/views`-only
+    /// layout is a HOST convention, not deck's — detection must NOT key on it
+    /// (a host with that layout calls `set_project_root`, the safe path).
+    /// inv-deck-standalone. (This test was inverted from one that REQUIRED the
+    /// `.ship/views` marker — it had codified the very ship coupling we removed.)
     #[test]
-    fn detection_accepts_dot_ship_views_marker() {
+    fn detection_ignores_dot_ship_views_marker() {
         let tmp = tempfile::tempdir().unwrap();
         let root = tmp.path().to_path_buf();
         std::fs::create_dir_all(root.join(".ship").join("views")).unwrap();
-        let detected = detect_project_root_from(&root);
-        assert_eq!(detected, Some(root));
+        // No deck-owned `views/` marker present → not auto-detected.
+        assert_eq!(detect_project_root_from(&root), None);
     }
     /// No marker anywhere up the tree → `None`. (Caller falls back to
     /// cwd.)

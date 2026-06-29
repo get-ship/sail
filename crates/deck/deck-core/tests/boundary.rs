@@ -69,6 +69,12 @@ const FORBIDDEN: &[&str] = &[
     "/space/",
     "/space",
     "/shell",
+    // The Ship product config directory. deck must never reach into `.ship`
+    // at runtime (themes, views, build output) — it serves its own defaults
+    // and takes host paths via config/ports, naming no ship-product dir. Bare
+    // `.ship` (not `.ship/`) so the path-component form `join(".ship")` is
+    // caught, not just slash-literals.
+    ".ship",
     // Framework wire/meta strings must be deck-branded, not ship-branded —
     // deck's own contract, served to every app's HTML/SSE (inv-deck-standalone).
     "ship-mode",
