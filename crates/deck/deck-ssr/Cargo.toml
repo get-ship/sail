@@ -11,14 +11,17 @@ path = "src/lib.rs"
 [dependencies]
 # The synthetic emitter — used as a pure function (no CLI shell-out).
 sui-compiler = { path = "../../sui/compiler" }
-# The L0 JS engine: the deno_core/V8 isolate + the host-dispatch wire.
-# ship-js is Ship's runtime — a cargo-managed, REV-PINNED git dependency, not a
-# relative path. A path like `../../../../ship` resolves to a different place
-# from a git worktree (different checkout depth), which is what kept biting
-# agents; a git dep resolves identically from any worktree. Bump `rev` to adopt
-# a newer ship-js. Local file:// URL for now (no SSH-auth dependency); swap to
-# `ssh://git@github.com/madvib/Ship.git` (same rev) for cross-machine / CI.
-ship-js = { git = "file:///home/madvib/dev/Ship/ship", rev = "82909ba18371d702f3ae83fe7222ec009685f753", features = ["deno"] }
+# ship-js — the org's shared L0 deno_core/V8 isolate (the consistent JS execution
+# environment; home for configurable sandboxes / egress / allowed-expression
+# policy). Shared org INFRASTRUCTURE, not a ship-PRODUCT coupling. Local path dep
+# against the sibling ship checkout: kills the machine-specific `file://` URL AND
+# the rev-drift (builds against the current ship-js, not a pinned rev).
+# NOTE: a path dep doesn't resolve from a git WORKTREE at a different depth — the
+# worktree-robust + smell-free home is a LOCAL CARGO REGISTRY (the Verdaccio-for-
+# cargo equivalent: Kellnr / cargo-http-registry), published when ship-js
+# stabilizes. ship-js is a clean leaf (crates.io + deno_core only), so that
+# publish won't cascade. Tracked as the proper fix.
+ship-js = { path = "../../../../ship/crates/core/ship-substrate/crates/ship-js", features = ["deno"] }
 # Deck's request/data contracts (DataPort) the host Dispatch maps onto.
 deck-core = { path = "../deck-core" }
 # The project's own bundler (Rolldown), so the measured bundle matches the

@@ -3957,7 +3957,6 @@ dependencies = [
 [[package]]
 name = "ship-js"
 version = "0.1.0"
-source = "git+file:///home/madvib/dev/Ship/ship?rev=82909ba18371d702f3ae83fe7222ec009685f753#82909ba18371d702f3ae83fe7222ec009685f753"
 dependencies = [
  "anyhow",
  "async-trait",
