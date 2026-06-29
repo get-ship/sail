@@ -28,8 +28,11 @@ each is guarded by a dedicated gate test:
 - **deck / server seam** — Deck's host + bundler crates (`deck-core`,
   `deck-axum`, `deck-host`, `deck-bundler`, `deck-config`) name no Ship app
   concept. They serve and build for *any* host: roots and config are passed in,
-  never assumed. Gate: `crates/deck/deck-core/tests/boundary.rs`
-  (`deck_crates_name_no_ship_app`).
+  never assumed. Gate (the conformance layer, OUTSIDE deck's shipped crates):
+  `crates/deck/deck-conformance/tests/boundary.rs`
+  (`deck_crates_name_no_ship_app`) — a backstop. The real proof is behavioral:
+  deck-cli's cli_smoke standalone build test compiles + emits a zero-ship-product
+  app.
 
 ## Crate map
 
