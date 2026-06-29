@@ -219,6 +219,26 @@ export async function mount<Scope = Record<string, unknown>>(
     if (built.scope[k]) finalScope[k] = built.scope[k]
   }
 
+  // 6b. HMR / reload: re-seed WRITABLE signals from the restore snapshot AFTER
+  //     setup recreated them. `buildScopeFromPayload` only seeds payload/SSR
+  //     signals; a controller's own `signal()` (the common case) is created in
+  //     setup and would otherwise reset every re-mount. Setting it here — before
+  //     the CSR `__mount` — means state survives an HMR re-mount and the first
+  //     render reflects the restored value (no flash). Non-writable scope
+  //     members are skipped.
+  if (opts.restoreScope) {
+    for (const [k, v] of Object.entries(opts.restoreScope)) {
+      const sig = finalScope[k]
+      if (typeof sig === 'function' && typeof (sig as unknown as { set?: unknown }).set === 'function') {
+        try {
+          ;(sig as unknown as { set: (x: unknown) => void }).set(v)
+        } catch {
+          /* not a writable signal — skip */
+        }
+      }
+    }
+  }
+
   // 7. CSR path: if the target is still empty (no SSR HTML and no
   // `payload.html`), call the view's `__mount(target)` to create
   // the DOM. The compiled view's `__mount` is the CSR equivalent

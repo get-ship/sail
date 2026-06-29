@@ -87,7 +87,11 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
   // router dispose.
   let routeBoundary: RouteBoundaryHandle | null = null
 
-  async function mountCurrent(): Promise<void> {
+  // `restore`: snapshot of the previous mount's signal VALUES (HMR / reload).
+  // Passed to `mount()` as `restoreScope` so the fresh module's matching signals
+  // seed from the old values — state survives a re-mount. Undefined for a normal
+  // navigation (fresh scope).
+  async function mountCurrent(restore?: Record<string, unknown>): Promise<void> {
     const pathname = location.pathname
     const myToken = ++token
     const matched = matchRoute(pathname)
@@ -157,6 +161,8 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
         // `clients` is an exactOptionalPropertyType — present-but-undefined is
         // rejected, so omit the key entirely when the host passed no clients.
         ...(opts.clients ? { clients: opts.clients } : {}),
+        // Same exactOptional discipline for the HMR/reload scope snapshot.
+        ...(restore ? { restoreScope: restore } : {}),
         loader: opts.loader as never,
         route: routeSignals,
         navigate,
@@ -211,10 +217,48 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
 
   void mountCurrent()
 
+  // ── HMR seam ─────────────────────────────────────────────────────────────
+  // Snapshot the current mount's WRITABLE signals (value, not the signal) so a
+  // re-mount can re-seed them. Only signals (callable + `.set`) are captured;
+  // every other scope member rebuilds fresh from the new module.
+  function captureScope(handle: MountHandle | null): Record<string, unknown> | undefined {
+    if (!handle?.scope) return undefined
+    const out: Record<string, unknown> = {}
+    for (const k of Object.keys(handle.scope)) {
+      const v = (handle.scope as Record<string, unknown>)[k]
+      if (typeof v === 'function' && typeof (v as { set?: unknown }).set === 'function') {
+        try {
+          out[k] = (v as () => unknown)()
+        } catch {
+          /* not a readable signal — skip */
+        }
+      }
+    }
+    return out
+  }
+
+  // Re-mount the current route preserving signal state. The module is re-read
+  // from `opts.modules` (so a `swapModule` patch takes effect) and re-imported.
+  async function reloadCurrent(): Promise<void> {
+    await mountCurrent(captureScope(current))
+  }
+
+  // HMR: point a route at a fresh chunk URL, then re-mount it preserving state
+  // IF it's the route on screen (else the next navigation loads it fresh). The
+  // deck dev live-reload client calls this with the rebuilt chunk on edit.
+  async function swapModule(pattern: string, freshUrl: string): Promise<void> {
+    ;(opts.modules as Record<string, unknown>)[pattern] = () =>
+      import(/* @vite-ignore */ freshUrl)
+    if (matchRoute(location.pathname)?.pattern === pattern) await reloadCurrent()
+  }
+
+  ;(globalThis as unknown as { __deckHmr?: unknown }).__deckHmr = { reloadCurrent, swapModule }
+
   return {
     dispose(): void {
       document.removeEventListener('click', onClick)
       window.removeEventListener('popstate', onPop)
+      delete (globalThis as unknown as { __deckHmr?: unknown }).__deckHmr
       current?.dispose()
       current = null
       routeBoundary?.dispose()
