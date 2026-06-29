@@ -27,3 +27,8 @@ tracing = { workspace = true }
 tower = { version = "0.5", features = ["util"] }
 tempfile = "3"
 serde_json = { workspace = true }
+# For the deck-boundary conformance tests (boundary.rs): they scan + structurally
+# probe the deck crates from OUTSIDE deck's shipped surface. The conformance layer
+# is where "deck names no ship-PRODUCT concept" lives — NOT embedded in deck-core.
+deck-bundler = { path = "../deck-bundler" }
+deck-config = { path = "../deck-config" }

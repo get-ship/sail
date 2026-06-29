@@ -807,6 +807,8 @@ version = "0.0.0"
 dependencies = [
  "axum",
  "deck",
+ "deck-bundler",
+ "deck-config",
  "deck-core",
  "form_urlencoded",
  "futures-util",
