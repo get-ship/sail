@@ -467,6 +467,27 @@ fn build(
 // standalone CLI defers the wired-demo shape to `deck dev --demo`
 // (rejected at runtime until the host wiring is upstreamed).
 
+/// The app's URL namespace = `package.json#name`'s last `/`-segment
+/// (`@ship/hub` → `hub`). MUST equal what `bundle_app` baked the asset
+/// hrefs under, so `serve_apps`' `/<name>/<file>` route resolves them.
+/// Mirrors the bundler's own `read_package_name` + `rsplit_once('/')`.
+fn app_url_namespace(project: &Path) -> Result<String> {
+    let pkg_path = project.join("package.json");
+    let body = std::fs::read_to_string(&pkg_path)
+        .with_context(|| format!("read {}", pkg_path.display()))?;
+    let json: serde_json::Value =
+        serde_json::from_str(&body).with_context(|| format!("parse {}", pkg_path.display()))?;
+    let name = json
+        .get("name")
+        .and_then(|v| v.as_str())
+        .with_context(|| format!("{} missing \"name\"", pkg_path.display()))?;
+    Ok(name
+        .rsplit_once('/')
+        .map(|(_, tail)| tail)
+        .unwrap_or(name)
+        .to_string())
+}
+
 /// A `DataPort` that resolves nothing. Default in `deck dev` —
 /// live-data is opt-in via `--demo`. (`is_provisioned` defaults to
 /// `false` from the trait, so the framework's first-run routing serves
@@ -506,41 +527,113 @@ fn dev(project: PathBuf, addr: String, demo: bool) -> Result<()> {
         } else {
             cwd.join(&project)
         };
-        let repo_root = project_path
+        let project_dir = project_path
             .canonicalize()
             .with_context(|| format!("canonicalize {}", project_path.display()))?;
         // Bail up front if the path isn't a directory — keeps the
         // later bundler diagnostics readable.
-        if !repo_root.is_dir() {
-            anyhow::bail!("{} is not a directory", repo_root.display());
+        if !project_dir.is_dir() {
+            anyhow::bail!("{} is not a directory", project_dir.display());
         }
 
-        // Point deck-core's resolver at this root (set once per
-        // process; deck serves one project per daemon).
-        deck_core::resolver::set_project_root(repo_root.clone());
+        // Point deck-core's resolver at this root: `serve_index` /
+        // `serve_apps` / `spa_fallback` read the app's built assets
+        // (`.deck/index.html`, `/<name>/<file>`) relative to it.
+        deck_core::resolver::set_project_root(project_dir.clone());
 
-        // Bundler construction mirrors `deck_conformance::make_bundler`:
-        // built-in DeckConfig defaults, single-project root, FS watcher
-        // running in-process.
         let cfg = deck_config::DeckConfig::defaults();
-        let bundler = deck_bundler::Bundler::start(repo_root.clone(), None, cfg.clone());
+
+        // Build the app ONCE up front. `start_watching` only REBUILDS on
+        // edit; without an initial build the project emits no `.deck/`
+        // output and EVERY page 404s — the gap a runtime-only smoke test
+        // (just `/_deck/runtime.js`) misses. `bundle_framework = false`:
+        // deck dev serves the framework singletons itself at `/_deck/*`,
+        // so the app graph keeps them external (no per-app copy). The real
+        // workspace root (component/workspace resolution) is found by
+        // walking up from the project; the project dir itself is one app.
+        let workspace_root = find_repo_root(&project_dir)?;
+        let out_dir = project_dir.join(".deck");
+        let build = deck_bundler::app::bundle_app(
+            &workspace_root,
+            &cfg.packs,
+            &project_dir,
+            &out_dir,
+            false,
+            false,
+        )
+        .await
+        .map_err(|e| anyhow::anyhow!("deck dev: initial app build failed: {e:#}"))?;
+        println!("deck dev: built app ({} css asset(s))", build.css_hrefs.len());
+
+        // Register the project as the PRIMARY app at `/`. `name` MUST equal
+        // the URL namespace `bundle_app` baked the asset hrefs under
+        // (`package.json#name`'s last `/`-segment) so `/<name>/<file>`
+        // resolves; `source` is the build out dir relative to the project
+        // root. `deck.jsonc` (optional) carries injectGlobals / render /
+        // entry — name/route/source are host-bound here, never the file's.
+        let app_cfg_path = project_dir.join("deck.jsonc");
+        let mut app_cfg = if app_cfg_path.exists() {
+            let raw = std::fs::read_to_string(&app_cfg_path)
+                .with_context(|| format!("read {}", app_cfg_path.display()))?;
+            deck_config::AppServeConfig::parse_deck_jsonc(&raw)
+                .with_context(|| format!("parse {}", app_cfg_path.display()))?
+        } else {
+            deck_config::AppServeConfig::default()
+        };
+        app_cfg.name = app_url_namespace(&project_dir)?;
+        app_cfg.route = "/".to_string();
+        app_cfg.source = ".deck".to_string();
+        // The per-app asset namespace is the app's name (`/<name>/<file>`);
+        // `serve_app_asset` reads the app off this per-route extension and
+        // maps to `<source>/assets/<file>`.
+        let asset_route = format!("/{}/{{file}}", app_cfg.name);
+        let app_ext = Arc::new(app_cfg.clone());
+        let apps: Arc<Vec<deck_config::AppServeConfig>> = Arc::new(vec![app_cfg]);
+
+        // Bundler with the FS watcher (HMR SSE on `/_deck/dev/hmr`). The
+        // up-front `bundle_app` is the one-shot SPA bundle that makes the
+        // app servable; the watcher drives rebuilds + live-reload on edit.
+        let bundler = deck_bundler::Bundler::start(project_dir.clone(), None, cfg.clone());
         if let Err(e) = bundler.start_watching().await {
             eprintln!("deck dev: watcher failed to start: {e}");
         }
-        // The hosting surface. Extension layers match what deck-axum's
-        // handlers read: `DaemonMode` for mode-aware hand-offs, the
-        // parsed `DeckConfig` (Arc) for scaffold lookups, the
-        // `Bundler` itself for `/_deck/views/{name}/setup` on-demand
-        // rebuilds, and a `DataPort` extension so a future multiplex
-        // mount can reach it with no shape change here. The default
-        // data port is the no-op impl — `deck dev --demo` is the
-        // documented escape hatch for the conformance `DemoStore`
-        // (rejected today; the conformance harness is where the
-        // wired-demo shape lives).
+
+        // The FULL hosting surface. `deck_axum::router()` is the `/_deck/*`
+        // framework infra; it sets NO fallback by design (it expects to
+        // merge alongside a host's Connect-ops router, which owns the
+        // fallback — two merged fallbacks panic axum). deck dev IS the
+        // host, so it adds the primary `/` index, the per-app routes
+        // (`serve_apps`: asset namespace + single-segment public catch-all),
+        // and the SPA navigation fallback that serves the app shell for
+        // multi-segment client routes. Extension layers: `DaemonMode`, the
+        // `DeckConfig` (Arc), the app list (`serve_index` / `spa_fallback`
+        // read it to find the primary app), the `Bundler`, and the no-op
+        // `DataPort` (live-data is opt-in via `--demo`).
+        use axum::routing::get;
         let app = deck_axum::router()
+            // `/` → the primary app's index.html.
+            .route("/", get(deck_axum::pages::serve_index))
+            // `/<name>/<file>` → the app's hashed bundle assets
+            // (`entry-*.js`, `tokens-*.css`) under `<source>/assets/`.
+            .route(
+                &asset_route,
+                get(deck_axum::apps::serve_app_asset).layer(axum::Extension(app_ext)),
+            )
+            // `/<seg>` → single-segment: a DOTTED name is a public asset
+            // (`favicon.ico`); a BARE segment is a CLIENT route (spaces'
+            // `/:appId`), so serve the app shell and let client-side routing
+            // resolve it. `serve_app_public` (what `serve_apps` mounts here)
+            // would 404 the bare case — `spa_or_public_asset` handles both.
+            .route("/{file}", get(deck_axum::pages::spa_or_public_asset))
+            // Deeper unmatched GET navigations (multi-segment client routes)
+            // → the shell. deck's `router()` sets no fallback by design (it
+            // expects to merge alongside a host's ops router); deck dev IS
+            // the host, so it owns the fallback.
+            .fallback(deck_axum::pages::spa_fallback)
             .layer(axum::Extension(DaemonMode::Development))
             .layer(axum::Extension(Arc::new(cfg)))
             .layer(axum::Extension(bundler.clone()))
+            .layer(axum::Extension(apps))
             .layer(axum::Extension(Arc::new(NoopDataPort) as Arc<dyn deck_core::DataPort>));
         let bind_addr = addr.clone();
         let listener = tokio::net::TcpListener::bind(&bind_addr)
@@ -550,7 +643,7 @@ fn dev(project: PathBuf, addr: String, demo: bool) -> Result<()> {
             .local_addr()
             .map(|a| a.to_string())
             .unwrap_or_else(|_| bind_addr.clone());
-        println!("deck dev: serving {} on http://{bound}", repo_root.display());
+        println!("deck dev: serving {} on http://{bound}", project_dir.display());
         println!("deck dev: ctrl-c to stop");
 
         // Graceful shutdown: a ctrl-c finishes the in-flight request
