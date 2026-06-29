@@ -1,6 +1,6 @@
-use crate::{DaemonMode, DeckResponse};
-use crate::form_inject::inject_form_actions;
-use crate::resolver::resolve;
+use deck_core::{DaemonMode, DeckResponse};
+use deck_core::inject_form_actions;
+use deck_core::resolver::resolve;
 
 const VIEW_HOST_SHELL: &str = include_str!("../assets/view-host.html");
 const SSR_PLACEHOLDER: &str = "<!-- SUI_SSR_CONTENT -->";
@@ -26,7 +26,7 @@ fn synthetic_first_paint_host(name: &str) -> Option<String> {
     let source_path = resolved.source_path.as_deref()?;
     let params = serde_json::to_value(&resolved.params).unwrap_or(serde_json::Value::Null);
     let pathname = format!("/{name}");
-    let req = crate::synthetic_ssr::SsrRequest {
+    let req = deck_core::synthetic_ssr::SsrRequest {
         view_name: name,
         sub_path: None,
         source_path,
@@ -34,7 +34,7 @@ fn synthetic_first_paint_host(name: &str) -> Option<String> {
         params,
         query: serde_json::json!({}),
     };
-    crate::synthetic_ssr::first_paint(&req)
+    deck_core::synthetic_ssr::first_paint(&req)
 }
 
 pub fn serve_view_host(mode: DaemonMode, path: &str) -> DeckResponse {
@@ -46,9 +46,9 @@ pub fn serve_view_host(mode: DaemonMode, path: &str) -> DeckResponse {
     // (no name) keeps serving the shell. The programmatic payload endpoint
     // (`/_deck/views/<name>`) is untouched and still answers JSON.
     if let Some(name) = view_name.as_deref()
-        && (!crate::view::is_valid_view_name(name) || resolve(name, None).is_err())
+        && (!deck_host::render_helpers::is_valid_view_name(name) || resolve(name, None).is_err())
     {
-        return crate::error_page::view_not_found(mode, name);
+        return deck_core::error_page::view_not_found(mode, name);
     }
     // First-paint HTML comes solely from ship-js. No renderer registered (or a
     // render error) → empty #sui-root and the client mounts the component (CSR);
@@ -70,7 +70,7 @@ pub fn serve_view_host(mode: DaemonMode, path: &str) -> DeckResponse {
         .replace(SSR_PLACEHOLDER, &ssr_content);
     // Reflect the daemon mode so the live-reload client self-gates: it only
     // subscribes when content="development".
-    let body = crate::mode_html::inject_mode_meta(&body, mode);
+    let body = deck_core::inject_mode_meta(&body, mode);
     DeckResponse::html_view(body, mode)
 }
 

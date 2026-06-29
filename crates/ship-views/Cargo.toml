@@ -1,0 +1,33 @@
+[package]
+name = "ship-views"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "The ship-Views serving feature, extracted out of deck. Serves the named-view surface (/_deck/view(s)/*) as a mountable axum router. Depends on deck (deck-core/host/bundler/axum); deck never depends on ship-views (deck ⊥ ship-views)."
+
+[lib]
+name = "ship_views"
+path = "src/lib.rs"
+
+[dependencies]
+# Deck infra the moved serving core calls into. ship-views depends DOWN on
+# deck; deck must NEVER depend on ship-views (the deck ⊥ ship-views invariant).
+deck-core = { path = "../deck/deck-core" }
+deck-host = { path = "../deck/deck-host" }
+deck-bundler = { path = "../deck/deck-bundler" }
+# The axum adapter — reuse its `into_axum` (DeckResponse → axum::Response, an
+# orphan-rule shim) and `mode_from_ext` rather than re-deriving them here.
+deck-axum = { path = "../deck/deck-axum" }
+# The view-payload path parses/compiles the `.sui` source in-process.
+sui-compiler = { path = "../sui/compiler" }
+
+axum = { workspace = true, features = ["http1", "tokio"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"
+tokio = { workspace = true, features = ["test-util", "macros", "rt-multi-thread", "time"] }
+
+[lints]
+workspace = true

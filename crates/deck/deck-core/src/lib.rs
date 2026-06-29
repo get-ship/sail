@@ -28,16 +28,12 @@ pub mod host_context;
 pub mod themes;
 pub mod view;
 pub mod view_tokens;
-pub mod view_host;
-pub mod view_payload;
+// `view_host` + `view_payload` (the named-view SERVING CORE) moved to the
+// `ship-views` crate (deck ⊥ ship-views). deck-core keeps the SHARED infra both
+// paths use: `resolver`, `synthetic_ssr` (the SSR seam), `view::serve_sui_view_setup`,
+// `error_page`, `form_inject`. ship-views calls into those.
 pub mod window_registry;
 
-#[cfg(test)]
-mod view_payload_tests;
-#[cfg(test)]
-mod view_payload_shape_tests;
-#[cfg(test)]
-mod view_payload_injection_tests;
 #[cfg(test)]
 mod mode_tests;
 
@@ -97,8 +93,7 @@ pub use setup::redirect;
 pub use themes::{list_themes, resolve_theme_css, serve_theme_css, serve_themes_list, ThemeMeta, ThemeSource};
 pub use view_tokens::serve_view_tokens;
 pub use view::{serve_sui_view_setup, ViewSetupQuery};
-pub use view_host::serve_view_host;
-pub use view_payload::{serve_view_payload, serve_view_payload_subpath};
+// `serve_view_host` / `serve_view_payload[_subpath]` moved to `ship-views`.
 
 /// Daemon operating mode — controls cache headers, HMR availability, SSR cache.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

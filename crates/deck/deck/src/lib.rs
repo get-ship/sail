@@ -12,10 +12,11 @@ pub use deck_axum::{
     serve_deck_route,
     serve_sui_dom, serve_sui_icon, serve_sui_live_reload,
     serve_sui_runtime, serve_sui_sdk_client,
-    serve_sui_view_setup, serve_view_host,
-    serve_view_payload,
-    serve_view_payload_subpath,
 };
+// The named-view handlers + router moved to the `ship-views` crate
+// (deck ⊥ ship-views). A host serves views by merging `ship_views::router()`;
+// the facade no longer re-exports the view handlers (it cannot depend on
+// ship-views).
 pub use deck_config::{AppServeConfig, RenderMode};
 pub use deck_core::AppRegistry;
 pub use deck_axum::multiplex::{MultiplexState, multiplex_router, HEARTBEAT_MS};
@@ -42,9 +43,13 @@ pub use deck_core::live_wire;
 // Submodule surfaces consumers reach into directly (shipd, xtask SDK gen).
 //
 // `render_helpers` lives in deck-axum (its `not_found` returns an axum
-// response); `resolver` + `view_payload` are pure and live in deck-core.
+// response); `resolver` is pure and lives in deck-core. `view_payload` (the
+// `ViewPayload` wire DTO) is a shared low-level type that lives in deck-host —
+// it stayed put when the view SERVING moved to ship-views, so the facade still
+// surfaces `deck::view_payload::ViewPayload` from deck-host (no ship-views dep).
 pub use deck_axum::render_helpers;
-pub use deck_core::{resolver, view_payload};
+pub use deck_core::resolver;
+pub use deck_host::view_payload;
 
 // The bundler — deck owns bundling (#167). Consumers that named
 // `ship_platform::bundler::*` now use `deck::bundler::*`.

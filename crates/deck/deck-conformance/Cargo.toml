@@ -12,6 +12,12 @@ path = "src/main.rs"
 [dependencies]
 deck = { path = "../deck" }
 deck-core = { path = "../deck-core" }
+# The named-view feature was extracted out of deck into `ship-views`. The
+# conformance harness is a TEST crate, so it MAY depend on ship-views (the
+# deck ⊥ ship-views invariant forbids this only for deck's own crates). It
+# merges `ship_views::router()` so the existing view conformance tests still
+# exercise the feature — now served by ship-views.
+ship-views = { path = "../../ship-views" }
 sui-compiler = { path = "../../sui/compiler" }
 axum = { workspace = true, features = ["http1", "tokio"] }
 tokio = { workspace = true, features = ["full"] }

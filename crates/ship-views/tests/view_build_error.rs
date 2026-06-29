@@ -14,7 +14,7 @@
 use axum::body::to_bytes;
 use axum::extract::{Extension, Path, Query};
 
-use deck_axum::serve_sui_view_setup;
+use ship_views::serve_sui_view_setup;
 use deck_bundler::{Bundler, DeckConfig};
 use deck_core::{DaemonMode, ViewSetupQuery};
 
