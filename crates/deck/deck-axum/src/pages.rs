@@ -113,20 +113,24 @@ pub async fn spa_fallback(
     uri: Uri,
     mode: Option<Extension<DaemonMode>>,
     apps: Option<Extension<Arc<Vec<AppServeConfig>>>>,
+    host_backend_prefixes: Option<Extension<Arc<Vec<String>>>>,
 ) -> Response {
     let path = uri.path();
-    let is_backend_or_asset = path.starts_with("/api")
-        || path.starts_with("/_deck")
-        || path.starts_with("/hooks")
-        || path.starts_with("/auth")
-        || path.starts_with("/daemon")
-        || path.starts_with("/space")
-        || path.starts_with("/shell")
-        // Connect-RPC paths are `/ship.ops.v1.*` and assets carry an
-        // extension — both contain a `.`, so this single check covers
-        // them.
-        || path.contains('.');
-    if method == Method::GET && !is_backend_or_asset {
+    // deck owns ONLY its own framework surface: `/api/*` (token + theme CSS),
+    // `/_deck/*` (the framework routes), and any path carrying an extension (a
+    // static asset, or a Connect-RPC `*.*` path). Every OTHER backend prefix is
+    // the HOST's — `/auth`, `/daemon`, `/space`, `/shell` are ship-PRODUCT
+    // routes, not deck's, so deck must not name them (inv-deck-standalone). The
+    // host declares its backend prefixes via `host_backend_prefixes`; absent ⇒
+    // none (the standalone default — deck dev has no host routes). A host's
+    // real routes are matched before the fallback fires, so this list only
+    // guards UNMATCHED paths under a host prefix from being served the SPA shell.
+    let deck_owns =
+        path.starts_with("/api") || path.starts_with("/_deck") || path.contains('.');
+    let host_owns = host_backend_prefixes
+        .as_ref()
+        .is_some_and(|hp| hp.0.iter().any(|p| path.starts_with(p.as_str())));
+    if method == Method::GET && !deck_owns && !host_owns {
         if let Some(app) = primary_app(&apps) {
             return into_axum(deck_core::serve_scaffold(
                 mode_from_ext(mode),

@@ -59,11 +59,21 @@ const FORBIDDEN: &[&str] = &[
     // The ship-app identifier macro.
     "__SHIP_APP_ID__",
     // Route patterns that only exist inside Ship apps — a deck crate must
-    // not bake one of these paths into a router or asset URL.
+    // not bake one of these paths into a router or asset URL. Both the
+    // trailing-slash forms AND the bare prefixes (`starts_with("/space")`)
+    // count: deck's SPA fallback must take host backend-prefixes via config,
+    // never hardcode an app-side route.
     "/shell/",
     "/shell/_assets/",
     "/spaces/",
     "/space/",
+    "/space",
+    "/shell",
+    // Framework wire/meta strings must be deck-branded, not ship-branded —
+    // deck's own contract, served to every app's HTML/SSE (inv-deck-standalone).
+    "ship-mode",
+    "ship-render",
+    "ship-keepalive",
     // Daemon-side identifiers (the binary name + the daemon env-var prefix
     // when used as an env-var name in deck source — e.g. `SHIPD_PORT`).
     "shipd",

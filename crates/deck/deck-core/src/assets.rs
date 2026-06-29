@@ -581,14 +581,10 @@ mod tests {
             body.contains("name=\"deck-render\" content=\"ssr\""),
             "render mode must be observable as deck-render meta; got: {body}"
         );
-        // inv-deck-standalone: deck's served HTML must NOT carry ship-product
-        // branding. The framework wire/meta strings are deck-branded; a
-        // regression that reintroduces `ship-mode`/`ship-render` leaks ship into
-        // a zero-ship app's first paint.
-        assert!(
-            !body.contains("ship-mode") && !body.contains("ship-render"),
-            "served scaffold leaks ship-* branding (inv-deck-standalone); got: {body}"
-        );
+        // The "no ship-* branding" regression is guarded at the SOURCE level by
+        // boundary.rs::deck_crates_name_no_ship_app (the forbidden set includes
+        // `ship-mode`/`ship-render`/`ship-keepalive`) — a stronger guard than a
+        // runtime output check, since it catches the emitter at authoring time.
     }
 
     /// serve_scaffold falls back to the authored SOURCE `<source>/index.html`
