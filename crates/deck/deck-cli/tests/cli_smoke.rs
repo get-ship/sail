@@ -393,13 +393,28 @@ fn builds_a_zero_ship_product_app() {
 
     // The entry chunk was bundled (the routes/ page compiled into the SPA).
     let assets = root.join(".deck").join("assets");
-    let has_entry = std::fs::read_dir(&assets)
-        .map(|d| {
-            d.filter_map(|e| e.ok()).any(|e| {
+    let entry_js = std::fs::read_dir(&assets)
+        .ok()
+        .and_then(|d| {
+            d.filter_map(|e| e.ok()).find(|e| {
                 let n = e.file_name().to_string_lossy().into_owned();
                 n.starts_with("entry-") && n.ends_with(".js")
             })
         })
-        .unwrap_or(false);
-    assert!(has_entry, "deck build did not emit an entry-*.js chunk in {}", assets.display());
+        .map(|e| e.path());
+    let entry_js = entry_js.unwrap_or_else(|| {
+        panic!("deck build did not emit an entry-*.js chunk in {}", assets.display())
+    });
+
+    // The entry must BOOTSTRAP, not merely export data: a standalone app's
+    // entry chunk has to call `mountRouter` so it actually mounts into
+    // #ship-root. (Build-success alone is not proof the app runs — deck once
+    // emitted a data-only entry that never mounted; this guards that
+    // regression at build time, the browser e2e proves it end-to-end.)
+    let entry_src = std::fs::read_to_string(&entry_js).expect("read entry chunk");
+    assert!(
+        entry_src.contains("mountRouter"),
+        "entry chunk must call mountRouter (the SPA bootstrap), else nothing mounts:\n{}",
+        &entry_src[..entry_src.len().min(600)],
+    );
 }

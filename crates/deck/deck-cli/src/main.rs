@@ -610,7 +610,7 @@ fn dev(project: PathBuf, addr: String, demo: bool) -> Result<()> {
         // regenerated `routes.gen.ts` / `.deck/` writes can't self-trigger a loop.
         let hmr_packs = cfg.packs.clone();
         let (hmr_tx, mut hmr_rx) = tokio::sync::mpsc::channel::<()>(8);
-        let mut hmr_watcher = {
+        let hmr_watcher = {
             use notify::Watcher;
             let tx = hmr_tx;
             let mut w = notify::recommended_watcher(move |res: notify::Result<notify::Event>| {

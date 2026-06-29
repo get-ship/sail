@@ -509,15 +509,12 @@ pub async fn bundle_app(
     let externals = importmap_externals_from_json(&importmap_json)?;
     // 4. Render `index.html` from the template. The dev doesn't author
     // index.html — it's deck's entry contract. The template has placeholders
-    // for the project name, the importmap, and the entry module name.
-    // The entry module is `entry.gen.ts` when the host declares one (the
-    // `entry.bootstrap` shape in `deck.jsonc`); otherwise fall back to the
-    // historical `routes.gen.ts`-as-entry shape so legacy builds keep working.
-    let entry_module = if entry_bootstrap.is_some() {
-        "entry.gen.ts"
-    } else {
-        "routes.gen.ts"
-    };
+    // for the project name, the importmap, and the entry module name. The
+    // entry is ALWAYS the generated `entry.gen.ts` bootstrap (it calls
+    // `mountRouter`); `generate_routes` emits it unconditionally — deck's
+    // default when the host declares no `entry.bootstrap`, the host's clients
+    // wired in when it does. (`routes.gen.ts` is data-only and never mounts.)
+    let entry_module = "entry.gen.ts";
     let html = crate::templates::render_index_html(
         &project_name,
         &importmap_json,
@@ -1260,9 +1257,12 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
         assert!(html.contains("@ship/sui-runtime"), "framework runtime in importmap");
         assert!(html.contains("@ship/sui-dom"), "framework dom in importmap");
         assert!(html.contains("@ship/deck/router"), "framework route in importmap");
-        // Since no `entry.bootstrap` was declared, the legacy shape is
-        // used: `routes.gen.ts` IS the entry.
-        assert!(r.join("routes.gen.ts").exists(), "routes.gen.ts is the entry (no deck.jsonc ⇒ no entry.gen.ts)");
-        assert!(!r.join("entry.gen.ts").exists(), "no entry.gen.ts without an entry bootstrap");
+        // No `entry.bootstrap` declared ⇒ deck emits its DEFAULT bootstrap:
+        // `entry.gen.ts` is ALWAYS written (it calls mountRouter so a
+        // standalone app mounts) with no host clients; `routes.gen.ts` is the
+        // data-only companion. (Previously the no-deck.jsonc case fell back to
+        // routes.gen.ts-as-entry, which never mounted — inv-deck-standalone.)
+        assert!(r.join("routes.gen.ts").exists(), "routes.gen.ts (data) is emitted");
+        assert!(r.join("entry.gen.ts").exists(), "deck emits a default entry.gen.ts bootstrap even without a host entry");
     }
 }
