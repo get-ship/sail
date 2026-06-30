@@ -12,4 +12,8 @@
     "clientsModule": "./src/clients.ts",
     "exposeNames": ["store"]
   }
+  // Rendering: CSR (the default). deck's SSR mode (`"render": "ssr"`) is real and
+  // proven by the e2e harness's dedicated SSR app; this docs site stays CSR
+  // because its custom-element layout + clients-seam controllers exercise the
+  // other native paths (routing, [param], layouts, data, build) more directly.
 }

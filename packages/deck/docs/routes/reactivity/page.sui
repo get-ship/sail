@@ -60,4 +60,9 @@
       that intermediate value exist.
     </p>
   </aside>
+
+  <div class="page-nav">
+    <a href="/layouts">← Layouts</a>
+    <a href="/data">The data seam →</a>
+  </div>
 </section>
