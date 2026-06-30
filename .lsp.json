@@ -1,0 +1,8 @@
+{
+  "sui": {
+    "command": "sui-lsp",
+    "extensionToLanguage": {
+      ".sui": "sui"
+    }
+  }
+}
