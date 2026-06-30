@@ -126,6 +126,27 @@ pub async fn bundle_target(
         .map_err(|e| anyhow!("{} tag-collision check failed: {e}", target.name))?;
     let out_path = out_dir.join(&target.out_file);
     let bytes = std::fs::metadata(&out_path).map(|m| m.len() as usize).unwrap_or(0);
+    let dropped_side_effect_modules = detect_dropped_side_effect_modules(&module_paths, &entry);
+    // Emit a warning per drop. The manifest already records the drops
+    // (so callers and the watcher can surface them), but the spec also
+    // requires a "no silent drop" rule: a CSS or `customElements.define`
+    // import that vanished from the bundle must show up in the build
+    // log with the dropped module + the importer that pulled it in.
+    // The reason is the `package.json#sideEffects` value (false or
+    // array form) so the author can fix the contract on either side.
+    for d in &dropped_side_effect_modules {
+        tracing::warn!(
+            target: "deck-bundler",
+            bundle = %target.name,
+            module = %d.module_path.display(),
+            importer = %d.importer,
+            reason = %d.reason,
+            "deck-bundler: dropped side-effect-only module — its body was \
+             tree-shaken per the importing package's `sideEffects: false` \
+             contract. CSS imports and `customElements.define` calls live \
+             here; if a registration is missing at runtime, this is why."
+        );
+    }
     Ok(BundleManifest {
         target: target.name.clone(),
         out_path: out_path.to_string_lossy().to_string(),
@@ -137,8 +158,267 @@ pub async fn bundle_target(
             }
         },
         modules: module_paths,
+        dropped_side_effect_modules,
     })
 }
+
+/// Detect side-effect-only modules that the bundler dropped (a bare
+/// `import '…'` whose target is not in `module_paths`). The recursion
+/// walks the entry's import graph on disk and reports every bare import
+/// whose resolved file is absent from the bundle — provided the target
+/// itself is side-effect-only on disk (no `export` statements). This is
+/// the spec's "no silent drop" rule: a CSS or `customElements.define`
+/// import that vanished from the bundle must show up in
+/// `BundleManifest.dropped_side_effect_modules` so the build can
+/// `tracing::warn!` with module + importer + reason.
+///
+/// **Path canonicalization.** Rolldown emits `module_ids` as
+/// `std::fs::canonicalize`d absolute paths (no `.` or `..` segments).
+/// A naive `Path::join("..")` produces a non-canonical path that never
+/// matches. We canonicalize every resolved path before comparing.
+fn detect_dropped_side_effect_modules(
+    module_paths: &[PathBuf],
+    entry: &Path,
+) -> Vec<super::proto::DroppedSideEffectModule> {
+    use std::collections::HashSet;
+    use std::fs;
+    let kept: HashSet<PathBuf> = module_paths
+        .iter()
+        .filter_map(|p| canonicalize(p))
+        .collect();
+    let entry_canon = canonicalize(entry).unwrap_or_else(|| entry.to_path_buf());
+    let mut dropped: Vec<super::proto::DroppedSideEffectModule> = Vec::new();
+    let mut visited: HashSet<PathBuf> = HashSet::new();
+    // The entry is the root of the walk. Its "importer" is itself
+    // (so the emitted warning names the file that pulled in the
+    // dropped side-effect-only module — empty would be a footgun in
+    // the opposite direction, a warning with no caller to attribute
+    // the drop to).
+    let mut stack: Vec<(PathBuf, PathBuf)> = vec![(entry_canon.clone(), entry_canon.clone())];
+    while let Some((path, importer)) = stack.pop() {
+        if !visited.insert(path.clone()) {
+            continue;
+        }
+        let body = match fs::read_to_string(&path) {
+            Ok(b) => b,
+            Err(_) => continue,
+        };
+        for line in body.lines() {
+            // A bare side-effect import: `import '…';` — no default,
+            // no namespace, no destructuring. Anything else (`import x from`,
+            // `import * as`, `import {a}`) keeps a binding the importer
+            // uses, so the drop is intentional and not a footgun.
+            let trimmed = line.trim_start();
+            let Some(after_kw) = trimmed
+                .strip_prefix("import ")
+                .or_else(|| trimmed.strip_prefix("import\t"))
+            else {
+                continue;
+            };
+            let spec = match parse_bare_import_spec(after_kw) {
+                Some(s) => s,
+                None => continue,
+            };
+            let Some(resolved) = resolve_import(&path, &spec) else {
+                continue;
+            };
+            let resolved_canon = match canonicalize(&resolved) {
+                Some(p) => p,
+                None => continue,
+            };
+            if !kept.contains(&resolved_canon) {
+                // The target file is absent from the bundle. Confirm
+                // it really is side-effect-only on disk — files that
+                // have an `export` (even a dead one) are reported by
+                // the dead-export path, not this one.
+                if !is_side_effect_only_on_disk(&resolved_canon) {
+                    continue;
+                }
+                let reason = side_effects_reason(&resolved_canon);
+                dropped.push(super::proto::DroppedSideEffectModule {
+                    module_path: resolved_canon,
+                    importer: importer.to_string_lossy().to_string(),
+                    reason,
+                });
+                continue;
+            }
+            if !visited.contains(&resolved_canon) {
+                stack.push((resolved_canon, path.clone()));
+            }
+        }
+    }
+    // Dedup by (module_path, importer) so the warning emission sees one
+    // row per dropped module even when the same target is reached via
+    // two paths.
+    let mut seen: HashSet<(PathBuf, String)> = HashSet::new();
+    dropped.retain(|d| seen.insert((d.module_path.clone(), d.importer.clone())));
+    dropped
+}
+
+/// Canonicalize a path; on failure (nonexistent file), clean `.` /
+/// `..` segments without touching the filesystem so the comparison
+/// against `module_paths` (which are also canonical) works.
+fn canonicalize(p: &Path) -> Option<PathBuf> {
+    if let Ok(c) = std::fs::canonicalize(p) {
+        return Some(c);
+    }
+    // Best-effort lexical normalization — `path-clean`-equivalent
+    // for the filesystem-lookup fallback in `resolve_import`.
+    let mut out = PathBuf::new();
+    for comp in p.components() {
+        match comp {
+            std::path::Component::CurDir => {}
+            std::path::Component::ParentDir => {
+                if !out.pop() {
+                    return None;
+                }
+            }
+            other => out.push(other.as_os_str()),
+        }
+    }
+    Some(out)
+}
+
+/// Parse the specifier from a bare `import '…';` statement. The
+/// input is the source text after the `import` keyword (already
+/// trimmed). Returns `None` for any non-bare form (default, namespace,
+/// destructured) so the caller can skip it.
+fn parse_bare_import_spec(after_kw: &str) -> Option<String> {
+    let rest = after_kw.trim_start();
+    // Bare: starts with a quote. Anything else (`x from`, `* as`,
+    // `{a, b}`) is a binding import — not what we want.
+    if rest.starts_with('\'') || rest.starts_with('"') {
+        let quote = rest.chars().next().unwrap();
+        let end = rest[1..].find(quote)?;
+        Some(rest[1..1 + end].to_string())
+    } else {
+        None
+    }
+}
+
+/// True when `path` has no `export` statements in its source. The
+/// check is intentionally lenient (substring match on `export `) —
+/// false positives are fine, false negatives would let a footgun
+/// through. Comments are ignored by the test setup.
+fn is_side_effect_only_on_disk(path: &Path) -> bool {
+    let body = match std::fs::read_to_string(path) {
+        Ok(b) => b,
+        Err(_) => return false,
+    };
+    !body.lines().any(|l| l.trim_start().starts_with("export "))
+}
+
+
+/// Resolve an `import '…'` specifier against an importer's directory.
+/// Supports relative paths (`.`, `..`, absolute) and the
+/// `@ship/<name>` workspace map (the `SuiPlugin` resolves bare
+/// specifiers through this map). Anything else is left to the caller.
+fn resolve_import(importer: &Path, spec: &str) -> Option<PathBuf> {
+    use std::path::PathBuf;
+    let p: PathBuf = if spec.starts_with("./") || spec.starts_with("../") {
+        importer.parent()?.join(spec)
+    } else if spec.starts_with('/') {
+        PathBuf::from(spec)
+    } else if let Some(rest) = spec.strip_prefix("@ship/") {
+        // The SuiPlugin re-anchors `@ship/<name>` to the workspace
+        // package's `src/index.ts`. The detector uses the same map
+        // (via `discover_workspace_packages`) so the warning names
+        // the exact file the plugin resolved.
+        let name = rest.split('/').next()?.to_string();
+        return resolve_ship_package(importer, &format!("@ship/{name}"));
+    } else {
+        return None;
+    };
+    // Try the obvious extensions the bundler accepts.
+    let candidates: &[&str] = &[
+        "",
+        ".ts",
+        ".tsx",
+        ".js",
+        ".mjs",
+        ".cjs",
+        "/index.ts",
+        "/index.js",
+    ];
+    for ext in candidates {
+        let candidate = if ext.is_empty() { p.clone() } else { p.with_extension(&ext[1..]) };
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+    }
+    // The path may not exist on disk in this fixture (rare); return
+    // the guessed `.ts` form so the warning can still name it.
+    Some(p.with_extension("ts"))
+}
+
+/// Resolve `@ship/<name>` against the workspace by walking up from the
+/// importer looking for a `package.json` that declares a `workspaces`
+/// field (the repo root), then asking the catalog for the package
+/// map (`@ship/<name>` → dir) and reading `src/index.ts`. This is the
+/// same map `SuiPlugin::resolve_id` uses to re-anchor bare specifiers,
+/// so the drop detector stays in lockstep with the live resolver.
+fn resolve_ship_package(importer: &Path, name: &str) -> Option<PathBuf> {
+    let repo_root = find_workspace_root(importer)?;
+    let roots = crate::catalog::discover_workspace_packages(&repo_root).unwrap_or_default();
+    let map: std::collections::HashMap<String, std::path::PathBuf> = roots
+        .into_iter()
+        .map(|p| (p.name, p.root))
+        .collect();
+    let dir = map.get(name)?;
+    let idx = dir.join("src/index.ts");
+    if idx.is_file() {
+        Some(idx)
+    } else {
+        Some(dir.join("index.ts"))
+    }
+}
+
+/// Walk up from `start` looking for a directory whose `package.json`
+/// declares a `workspaces` field. That directory is the workspace root
+/// `SuiPlugin` reads via `component_package_roots`. Returns the first
+/// such ancestor; the test fixture's own package.json sets
+/// `workspaces: [...]` so this resolves to the temp root.
+fn find_workspace_root(start: &Path) -> Option<PathBuf> {
+    let mut dir: Option<&Path> = start.parent();
+    while let Some(d) = dir {
+        let pj = d.join("package.json");
+        if pj.is_file() {
+            if let Ok(body) = std::fs::read_to_string(&pj) {
+                if let Ok(v) = serde_json::from_str::<serde_json::Value>(&body) {
+                    if v.get("workspaces").is_some() {
+                        return Some(d.to_path_buf());
+                    }
+                }
+            }
+        }
+        dir = d.parent();
+    }
+    None
+}
+
+/// Best-effort reason lookup: read the nearest `package.json` and
+/// report its `sideEffects` value. Falls back to a generic message
+/// when the `package.json` is absent or unreadable.
+fn side_effects_reason(module_path: &Path) -> String {
+    let mut dir = module_path.parent();
+    while let Some(d) = dir {
+        let pj = d.join("package.json");
+        if pj.is_file() {
+            if let Ok(body) = std::fs::read_to_string(&pj) {
+                if let Ok(v) = serde_json::from_str::<serde_json::Value>(&body) {
+                    if let Some(se) = v.get("sideEffects") {
+                        return format!("package.json#sideEffects = {se}");
+                    }
+                }
+            }
+            return "package.json without sideEffects field".to_string();
+        }
+        dir = d.parent();
+    }
+    "no package.json found".to_string()
+}
+
+
 
 const MODULE_PRUNE: &[&str] = &["node_modules", ".git", "target", "dist", ".deck", ".sui-out", "sui-out"];
 
@@ -396,5 +676,194 @@ mod tests {
             "entry in module set");
         assert!(manifest.modules.iter().any(|m| m.ends_with("app/src/helper.ts")),
             "imported src file in module set — this is the apps/hub regression");
+    }
+
+    /// A side-effect-only import — an entry that pulls in a module whose only
+    /// effect is a top-level `customElements.define(...)` — must NOT silently
+    /// disappear. The default Rolldown setting (`module_side_effects = true`)
+    /// keeps the module's body in the bundle; the deck bundler must NOT
+    /// override that. Regression for the sui-sideeffects footgun: authors
+    /// were forced to route such imports through a graph-anchored module
+    /// (the shell) because the bundler dropped their CSS/registration
+    /// import without warning.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn side_effect_only_module_is_preserved_in_bundle() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("app")).unwrap();
+        std::fs::create_dir_all(root.join("sidefx")).unwrap();
+        // Entry imports the registration module purely for its side effect.
+        std::fs::write(
+            root.join("app/entry.ts"),
+            "import '../sidefx/register.ts';\nexport const ready = true;\n",
+        )
+        .unwrap();
+        // The registration module exports nothing — its only effect is
+        // registering a custom element. Rolldown must keep the body
+        // (default `module_side_effects = true`).
+        std::fs::write(
+            root.join("sidefx/register.ts"),
+            "if (typeof customElements !== 'undefined') {\n  customElements.define('x-sidefx-fixture', class extends HTMLElement {});\n}\n",
+        )
+        .unwrap();
+
+        let scratch = tempfile::tempdir().unwrap();
+        let staging = tempfile::tempdir().unwrap();
+        let layout = BundleLayout::with_config(root.to_path_buf(), None, DeckConfig::defaults())
+            .with_out_root(scratch.path().to_path_buf());
+        let target = BundleTarget {
+            name: "app/sidefx".to_string(),
+            entry: TargetEntry::Real(root.join("app/entry.ts")),
+            externals: vec![],
+            out_file: "sidefx.js".to_string(),
+            lazy: false,
+        };
+        let manifest = bundle_target(&layout, &target, staging.path(), false).await.unwrap();
+        let body = std::fs::read_to_string(&manifest.out_path).unwrap();
+        // The side effect must survive — the registration call is the
+        // observable proof the module's body ran.
+        assert!(
+            body.contains("x-sidefx-fixture"),
+            "side-effect-only module was tree-shaken: registration marker missing in bundle"
+        );
+        // And it should NOT appear in the dropped list (it wasn't dropped).
+        assert!(
+            manifest.dropped_side_effect_modules.is_empty(),
+            "default-sideEffects module must not be reported as dropped, got: {:?}",
+            manifest.dropped_side_effect_modules
+        );
+    }
+
+    /// A side-effect-only module whose owning `package.json` declares
+    /// `sideEffects: false` IS dropped by Rolldown (per spec — that field is
+    /// the tree-shaking contract). The deck bundler must NOT do this
+    /// silently: it has to report the drop on the manifest so the build
+    /// emits a clear warning naming the module and the importer. A build
+    /// that drops a side-effect-only module without surfacing it is the
+    /// sui-sideeffects footgun this regression guards against.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn side_effect_false_drop_is_reported_not_silent() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("app")).unwrap();
+        std::fs::create_dir_all(root.join("sidefx-pkg/src")).unwrap();
+        // Workspace marker so the fixture mirrors a real Sui workspace.
+        // The `*` glob matches every subdir of root (each subdir is a
+        // package) — the same pattern the deck-bundler test fixtures
+        // use to keep the test self-contained without depending on
+        // npm-style nested workspace globs.
+        std::fs::write(
+            root.join("package.json"),
+            r#"{"workspaces":["*"]}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("sidefx-pkg/package.json"),
+            r#"{"name":"@ship/sidefx-fixture","sideEffects":false}"#,
+        )
+        .unwrap();
+        // Entry pulls the side-effect-only module in purely for its
+        // `customElements.define` registration.
+        std::fs::write(
+            root.join("app/entry.ts"),
+            "import '@ship/sidefx-fixture';\nexport const ready = true;\n",
+        )
+        .unwrap();
+        // The package's only entry is the registration module — exports
+        // nothing, side effects only.
+        std::fs::write(
+            root.join("sidefx-pkg/src/index.ts"),
+            "if (typeof customElements !== 'undefined') {\n  customElements.define('x-sidefx-pkg-fixture', class extends HTMLElement {});\n}\n",
+        )
+        .unwrap();
+
+        let scratch = tempfile::tempdir().unwrap();
+        let staging = tempfile::tempdir().unwrap();
+        let layout = BundleLayout::with_config(root.to_path_buf(), None, DeckConfig::defaults())
+            .with_out_root(scratch.path().to_path_buf());
+        let target = BundleTarget {
+            name: "app/sidefx-pkg".to_string(),
+            entry: TargetEntry::Real(root.join("app/entry.ts")),
+            externals: vec![],
+            out_file: "sidefx-pkg.js".to_string(),
+            lazy: false,
+        };
+        let manifest = bundle_target(&layout, &target, staging.path(), false).await.unwrap();
+        // The body of the dropped module must NOT be in the bundle — the
+        // `sideEffects: false` contract is honored (we drop the right
+        // thing, we just don't do it silently).
+        let body = std::fs::read_to_string(&manifest.out_path).unwrap();
+        assert!(
+            !body.contains("x-sidefx-pkg-fixture"),
+            "sideEffects:false module should be dropped, but its body was kept: {body}"
+        );
+        // ...and the drop must be reported on the manifest, NOT silent.
+        assert!(
+            !manifest.dropped_side_effect_modules.is_empty(),
+            "side-effect-only drop was silent — sui-sideeffects footgun. \
+             Manifest must report every dropped side-effect-only module so \
+             the build emits a warning. modules={:?}, dropped={:?}",
+            manifest.modules,
+            manifest.dropped_side_effect_modules
+        );
+        // The reported drop must name the dropped module and the importer
+        // (so the warning authors see is actionable).
+        let report = &manifest.dropped_side_effect_modules[0];
+        assert!(
+            report.module_path.to_string_lossy().contains("sidefx-pkg"),
+            "dropped module path missing, got: {:?}",
+            report
+        );
+        assert!(
+            !report.importer.is_empty(),
+            "dropped module importer missing, got: {:?}",
+            report
+        );
+    }
+
+    /// Sanity check that the new behavior doesn't over-correct: a barrel
+    /// entry that exports a name with no consumer in the entry must still
+    /// be tree-shaken (the constant must NOT appear in the bundle). This
+    /// is the contract tree-shaking MUST keep: only side-effect-only
+    /// modules are protected from silent drop — genuinely dead exports
+    /// still shake.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn dead_exports_still_shake() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("app")).unwrap();
+        std::fs::create_dir_all(root.join("lib")).unwrap();
+        std::fs::write(
+            root.join("app/entry.ts"),
+            "import { used } from '../lib/barrel.ts';\nexport const v = used;\n",
+        )
+        .unwrap();
+        // Barrel re-exports `used` (consumed) and `UNUSED` (dead). The
+        // dead export must be shaken; the side-effect-only protection is
+        // scoped to modules with no exports at all, not "modules that
+        // happen to have a dead export".
+        std::fs::write(
+            root.join("lib/barrel.ts"),
+            "export const used = 1;\nexport const UNUSED_DEAD_MARKER = 'sentinel-please-shake';\n",
+        )
+        .unwrap();
+
+        let scratch = tempfile::tempdir().unwrap();
+        let staging = tempfile::tempdir().unwrap();
+        let layout = BundleLayout::with_config(root.to_path_buf(), None, DeckConfig::defaults())
+            .with_out_root(scratch.path().to_path_buf());
+        let target = BundleTarget {
+            name: "app/dead".to_string(),
+            entry: TargetEntry::Real(root.join("app/entry.ts")),
+            externals: vec![],
+            out_file: "dead.js".to_string(),
+            lazy: false,
+        };
+        let manifest = bundle_target(&layout, &target, staging.path(), false).await.unwrap();
+        let body = std::fs::read_to_string(&manifest.out_path).unwrap();
+        assert!(
+            !body.contains("sentinel-please-shake"),
+            "dead export was not shaken — tree-shaking regressed: {body}"
+        );
     }
 }

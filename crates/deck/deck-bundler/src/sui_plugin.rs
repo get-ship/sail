@@ -253,9 +253,24 @@ impl Plugin for SuiPlugin {
                         }
                     };
                     if target.exists() {
-                        return Ok(Some(HookResolveIdOutput::from_id(
-                            target.to_string_lossy().to_string(),
-                        )));
+                        // Surface the owning `package.json` so Rolldown
+                        // can apply the `sideEffects` contract — without
+                        // this the bundler would silently keep a
+                        // `sideEffects: false` package's body (sui-
+                        // sideeffects footgun). The detector in
+                        // `rolldown_bundle` relies on the SAME field
+                        // to flag the drop on the manifest so the
+                        // build emits a loud warning.
+                        let package_json_path = pkg.join("package.json");
+                        return Ok(Some(HookResolveIdOutput {
+                            id: target.to_string_lossy().to_string().into(),
+                            package_json_path: if package_json_path.is_file() {
+                                Some(package_json_path.to_string_lossy().to_string())
+                            } else {
+                                None
+                            },
+                            ..Default::default()
+                        }));
                     }
                 }
             }

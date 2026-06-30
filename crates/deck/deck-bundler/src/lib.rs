@@ -256,6 +256,7 @@ impl Bundler {
                 }
             },
             modules: vec![],
+            dropped_side_effect_modules: vec![],
         }
     }
 
