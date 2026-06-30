@@ -1,7 +1,7 @@
 //! Component catalog aggregation.
 //!
 //! Walk per-component CEMs from published packages (each package's
-//! `customElements` manifest) AND from `.ship/sui-out/**/*.custom-elements.json`
+//! `customElements` manifest) AND from `.sui-out/**/*.custom-elements.json`
 //! (non-packaged: shell-local, view-local), merge into the canonical workspace
 //! catalog document. Filesystem-only, deterministic (sort by tagName).
 //! Pass-through CEM arrays are kept as raw JSON so component metadata isn't
@@ -312,7 +312,7 @@ fn entries_from_sui_out(
         // Owning pack with a resolvable aggregated manifest → served from there;
         // skip. When the manifest path is declared in `package.json` but the
         // file is absent (the pack hasn't been built), fall through to the
-        // `.ship/sui-out/` path — that's what we just compiled.
+        // `.sui-out/` path — that's what we just compiled.
         if let Some((_, p)) = owning {
             if let Some(ce) = &p.custom_elements {
                 if p.root.join(ce).exists() {
@@ -375,7 +375,7 @@ fn find_owning_package<'a>(
 }
 
 /// Repo-relative source `.sui` path for a per-component CEM under
-/// `.ship/sui-out/<mirror>/<stem>.custom-elements.json`.
+/// `.sui-out/<mirror>/<stem>.custom-elements.json`.
 fn source_path_for_cem(repo_root: &Path, cem_abs: &Path) -> String {
     let repo_rel = rel_unix(repo_root, cem_abs);
     let mirrored = repo_rel

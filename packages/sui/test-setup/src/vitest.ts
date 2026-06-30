@@ -60,7 +60,12 @@ function findRepoRoot(): string {
 }
 
 const repoRoot = findRepoRoot()
-const mirrorRoot = resolve(repoRoot, '.ship/sui-out')
+// The compiler's neutral, sui-owned mirror dir. MUST match the canonical
+// `sui_compiler::out_layout::DEFAULT_SUI_OUT_DIR` (`.sui-out`) — the compiler is
+// framework-neutral and deliberately does NOT bake a `.ship/` path. (This was
+// `.ship/sui-out` and silently fell back to the stale WASM compiler when the
+// native compile landed in `.sui-out` where the harness wasn't looking.)
+const mirrorRoot = resolve(repoRoot, '.sui-out')
 const compilerBin = resolve(repoRoot, 'target/debug/sui-compiler')
 // The native/CLI sui-compiler is only reachable in a repo that carries the
 // Rust workspace (a root `Cargo.toml`) or a prebuilt binary. A JS-only

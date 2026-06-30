@@ -2,7 +2,8 @@
 //!
 //! Build artifacts (`.compiled.js`, `.custom-elements.json`, `.schema.json`,
 //! `.sui.meta.json`, `.ssr.html`) land under the mirror tree at
-//! `<repo-root>/.ship/sui-out/<source-rel>/` (or the `--out` dir). The
+//! `<repo-root>/.sui-out/<source-rel>/` (the neutral default — or `SUI_OUT_DIR`
+//! / the `--out` dir). The
 //! `.sui.d.ts` type companion is the EXCEPTION: it is written ADJACENT to its
 //! `.sui` source (see `compile_one` in the bin), so a controller's
 //! `import type { Scope } from './x.sui'` resolves with no `rootDirs` into a
@@ -66,7 +67,7 @@ pub fn find_repo_root(start: &Path) -> Option<PathBuf> {
 /// Resolve the canonical mirror directory for a given `.sui` source path.
 ///
 /// Layout: `<repo-root>/<SUI_OUT_DIR>/<source-dir-relative-to-repo-root>/`,
-/// where `<SUI_OUT_DIR>` defaults to `.ship/sui-out` and is host-configurable.
+/// where `<SUI_OUT_DIR>` defaults to `.sui-out` and is host-configurable.
 ///
 /// Returns `None` when no repo root can be located OR the source path is
 /// outside the repo (e.g. a tempdir test fixture). Callers fall back to a

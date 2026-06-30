@@ -1,6 +1,6 @@
 //! `sui-compiler` CLI. Compiles a single `.sui` file or a directory of
 //! them, writing the emitted JS (and CEM/schema/meta/dts/ssr.html sidecars)
-//! into a project-level mirror tree at `<repo-root>/.ship/sui-out/<source-
+//! into a project-level mirror tree at `<repo-root>/.sui-out/<source-
 //! relative-path>/`. Pass `--out <dir>` to override and emit every file to
 //! a single directory (legacy behaviour). Errors render with file path,
 //! line, and column.
@@ -70,7 +70,7 @@ enum Command {
         /// Path to a `.sui` file or a directory.
         input: PathBuf,
         /// Output directory. When omitted, each file's outputs land in the
-        /// project mirror tree at `<repo-root>/.ship/sui-out/<source-rel>/`
+        /// project mirror tree at `<repo-root>/.sui-out/<source-rel>/`
         /// and the JS module is named `<stem>.compiled.js`. When supplied,
         /// every file is emitted into this single directory and the JS
         /// module is named `<stem>.js` (legacy behaviour).
@@ -437,7 +437,7 @@ fn compile_one(
         .with_context(|| format!("read {}", path.display()))?;
     let mode = mode.map(|m| m.into()).unwrap_or(CompileMode::Auto);
     // Resolve the emit dir for this file. Without --out, outputs land in
-    // the project mirror tree at `<repo-root>/.ship/sui-out/<src-rel>/`;
+    // the project mirror tree at `<repo-root>/.sui-out/<src-rel>/`;
     // with --out, all files share that directory (legacy single-dir mode).
     let mirror_mode = out_override.is_none();
     let out_dir: PathBuf = match out_override {
