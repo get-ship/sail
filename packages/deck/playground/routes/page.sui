@@ -1,0 +1,41 @@
+<!--
+  Overview (`/`) — the hero. A live signal counter (instant reactivity) beside a
+  PERSISTED visit counter (durable state above the router). Together they make
+  the distinction concrete: route signals reset on nav; store state doesn't.
+-->
+<section class="hero">
+  <p class="eyebrow">deck · the reactive web framework</p>
+  <h1>Build with <b>signals</b>,<br />ship <b>standalone</b>.</h1>
+  <p class="lede">
+    A SUI app — file-routed pages, server render + hydrate, state-preserving HMR,
+    and a glitch-free reactive core. This whole site is deck: no ship, no daemon,
+    no SDK. Just <code>routes/</code> and a dev server.
+  </p>
+  <div class="cta">
+    <a class="btn btn-primary" href="/reactivity">Open the reactivity playground →</a>
+  </div>
+
+  <div class="cards">
+    <article class="card">
+      <header class="card-head"><span class="dot signal"></span><h3>Live reactivity</h3></header>
+      <p class="big">{count()}</p>
+      <div class="row">
+        <button class="btn" type="button" on:click={() => dec()}>–</button>
+        <button class="btn btn-primary" type="button" on:click={() => inc()}>+</button>
+        <button class="btn ghost" type="button" on:click={() => reset()}>reset</button>
+      </div>
+      <p class="muted">A plain signal. The number re-renders the instant it changes — and nothing else on the page does.</p>
+    </article>
+
+    <article class="card">
+      <header class="card-head"><span class="dot derived"></span><h3>Durable state</h3></header>
+      <p class="big">{visits()}</p>
+      <p class="muted">
+        Times you've landed here — held in a store <em>above</em> the router, so it
+        survives client-side navigation <em>and</em> a full reload. Navigate to
+        Reactivity and back: this keeps counting; the signal above resets.
+      </p>
+      <div class="row"><button class="btn ghost" type="button" on:click={() => resetVisits()}>reset</button></div>
+    </article>
+  </div>
+</section>

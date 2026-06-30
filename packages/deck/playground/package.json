@@ -1,0 +1,17 @@
+{
+  "name": "@ship/deck-playground",
+  "private": true,
+  "type": "module",
+  "description": "The deck reactivity playground — the canonical standalone deck showcase. A ship-free app, deck-themed (not the ship palette), that visualizes SUI's signal graph: signals, derived values, and effects as live nodes, including a diamond-dependency demo that proves the glitch-free push-pull scheduler.",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "dependencies": {
+    "@ship/sui-runtime": "workspace:*",
+    "@ship/sui-dom": "workspace:*",
+    "@ship/tokens": "workspace:*"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}

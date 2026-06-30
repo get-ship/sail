@@ -1,0 +1,79 @@
+/*
+  Shared, document-level UI primitives for the playground — buttons, cards, the
+  reactivity dots, type. Loaded globally via the clients seam so every route
+  shares one definition (route style.css files only do per-route layout). Colors
+  come entirely from the deck palette (deck-theme.css).
+*/
+
+body {
+  font-family: var(--font-body);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+code, .mono {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--surface-2);
+  padding: 0.1em 0.4em;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────── */
+.btn {
+  font: inherit;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--foreground);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  transition: background-color 0.15s, border-color 0.15s, transform 0.05s;
+}
+.btn:hover { border-color: var(--border-strong); background: var(--surface-3); }
+.btn:active { transform: translateY(1px); }
+.btn-primary {
+  background: var(--primary);
+  border-color: transparent;
+  color: var(--primary-foreground);
+}
+.btn-primary:hover { background: var(--primary-hover); }
+.btn.ghost { background: transparent; }
+a.btn { text-decoration: none; display: inline-block; }
+
+/* ── Cards ────────────────────────────────────────────────────────────── */
+.card {
+  background: color-mix(in oklch, var(--surface-1) 88%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.card-head h3 { font-size: var(--text-md); margin: 0; }
+
+/* ── Reactivity legend dots ───────────────────────────────────────────── */
+.dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: var(--radius-full);
+  flex: none;
+}
+.dot.signal { background: var(--signal); box-shadow: 0 0 0 3px color-mix(in oklch, var(--signal) 25%, transparent); }
+.dot.derived { background: var(--derived); box-shadow: 0 0 0 3px color-mix(in oklch, var(--derived) 25%, transparent); }
+.dot.effect { background: var(--effect); box-shadow: 0 0 0 3px color-mix(in oklch, var(--effect) 25%, transparent); }
+
+.muted { color: var(--muted-foreground); }
+.row { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
