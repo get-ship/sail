@@ -4,6 +4,13 @@
 -->
 <style>
   .pg { display: grid; grid-template-columns: 13rem minmax(0, 1fr); gap: var(--space-6); align-items: start; }
+  /* The viewer column must be allowed to shrink below its content's intrinsic
+     width (grid items default to min-width:auto), or wide knob/source panels
+     force the whole page to scroll horizontally. */
+  .pg > main { min-width: 0; overflow-x: hidden; }
+  .pg > main sui-component-viewer { display: block; max-width: 100%; }
+  .pg > main sui-component-viewer::part(stage-shell),
+  .pg > main sui-component-viewer::part(knobs) { max-width: 100%; overflow-x: auto; }
   .pg-list {
     position: sticky;
     top: 4.5rem;
