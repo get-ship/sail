@@ -31,6 +31,12 @@ pub const INDEX_HTML_TEMPLATE: &str = r#"<!doctype html>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{project_name}}</title>
 
+  <!-- Favicon. A project drops `favicon.svg` (preferred) and/or `favicon.ico`
+       into `public/`; both are copied to the output root, and an absent file
+       simply 404s harmlessly. -->
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+
   <!-- Importmap: bare specifier → daemon-served ESM URL. The bundler
        writes this from FRAMEWORK_ASSETS at build time. -->
   <script type="importmap">
