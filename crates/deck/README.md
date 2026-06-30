@@ -23,6 +23,32 @@ compiled JS + SSR payload, the view-host, space/shell scaffolds, the SPA
 navigation handler, and the dev HMR firehose. If a byte reaches the browser, a
 deck handler served it. `shipd` serves no frontend — it is RPC + daemon only.
 
+## Rendering & build modes
+
+deck runs **standalone** (`deck dev` / `deck build` — no shipd) OR **mounted in a
+host** (shipd merges `deck::router()`). The frontend has three modes, each proven
+end-to-end by the browser harness (`packages/deck/e2e`):
+
+| Mode | Command | What the browser gets |
+|---|---|---|
+| **Dev — CSR SPA** | `deck dev` (default) | An empty `#ship-root` + importmap shell; the client entry mounts the file-routed `routes/` SPA and renders. `<a>` nav is client-side (no document reload). |
+| **Dev — SSR** | `deck dev`, `render: "ssr"` in `deck.jsonc` | The matched `routes/<…>/page.sui` is server-rendered (via ship-js) INTO `#ship-root`; the client hydrates it. |
+| **Prod build** | `deck build --bundle-framework` | A self-contained static dir: `index.html` (importmap) + `_deck/{runtime,dom,route}.js` (framework singletons, materialized) + `assets/page-<hash>.js` (one **code-split, lazily-loaded** chunk per route). |
+
+**Routing.** File-routed: `routes/<seg>/page.sui` (+ optional `controller.ts`); a
+`[param]` dir segment is a dynamic route (`routes.gen.ts` emits a typed `:param`
+pattern). The bundler generates the entry; you write pages.
+
+**HMR (dev only).** Editing a route's `.sui` soft-reloads it with **state
+preserved** (no full document reload); a `<sui-*>` component edit **hot-swaps**
+live instances in place.
+
+**Serve-time vs baked.** `deck dev` injects the `deck-render`/`deck-mode` metas
+and the live-reload client at serve time; a `deck build` artifact carries **none**
+of that — a shipped build is clean. (Caveat: a build references its app assets
+under the per-app serve namespace, so it is not yet directly dumb-static-servable
+without URL rewriting — tracked.)
+
 ## Crate map
 
 | Crate | Role |
@@ -102,6 +128,7 @@ Two composition rules the host must honor:
 
 ## CLI
 
+deck dev --project ./my-app          # standalone dev server + HMR on 127.0.0.1:7878 — NO shipd
 deck build --project apps/hub --bundle-framework
 deck build-assets          # bake framework + consumer bundles (in-process Rolldown)
 deck routes --root apps/shell --root apps/spaces
