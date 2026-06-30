@@ -26,7 +26,7 @@
       <sui-switch
         label="Toggle burner"
         prop:checked={timerOn()}
-        on:change={(e) => timerOn.set(e.detail.checked)}
+        on:sui-change={(e) => timerOn.set(e.detail.checked)}
       ></sui-switch>
     </article>
   </div>
