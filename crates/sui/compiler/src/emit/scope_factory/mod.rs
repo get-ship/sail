@@ -149,32 +149,43 @@ fn word_appears(ty: &str, word: &str) -> bool {
 fn locate_return_object(bytes: &[u8], span: Span) -> Option<Span> {
     let start = span.start;
     let end = span.end.min(bytes.len());
-
-    // Block body: prefer the LAST top-level `return {...}` we find.
-    let return_kw = b"return";
-    let mut i = start;
-    let mut last_return_obj: Option<usize> = None;
-    while i + return_kw.len() <= end {
-        if bytes[i..].starts_with(return_kw) {
-            // Word-boundary guard so we don't match `returnX`.
-            let prev_ok = i == start || !is_ident_cont(bytes[i - 1]);
-            let next = i + return_kw.len();
-            let post_ok = next >= end || !is_ident_cont(bytes[next]);
-            if prev_ok && post_ok {
-                let after = skip_trivia(bytes, next, end);
-                if after < end && bytes[after] == b'{' {
-                    last_return_obj = Some(after);
-                }
-            }
+    match find_factory_body_brace(bytes, start, end) {
+        Some(BodyShape::Expression(k)) => {
+            // `=> ({...})` — `k` points at the result object's `{`.
+            let close = skip_balanced(bytes, k, end);
+            Some(Span::new(k + 1, close.saturating_sub(1)))
         }
-        i += 1;
+        Some(BodyShape::Block(k)) => {
+            // `=> { ... return {…} }` — walk the block body looking
+            // for the last top-level `return {…}`. The walker is
+            // string/template/comment-aware and tracks brace + paren
+            // depth so doc snippets (`"return { count }"`), template
+            // literals, `//` line comments, and `/* */` block
+            // comments cannot inject keys; `return` inside a nested
+            // function body or helper closure is also ignored.
+            find_last_top_level_return_object(bytes, k, end).map(|s| {
+                let e = skip_balanced(bytes, s, end);
+                Span::new(s + 1, e.saturating_sub(1))
+            })
+        }
+        None => None,
     }
-    if let Some(s) = last_return_obj {
-        let e = skip_balanced(bytes, s, end);
-        return Some(Span::new(s + 1, e.saturating_sub(1)));
-    }
+}
 
-    // Expression body: skip params and `=>`, then look for `({…})` or `{…}`.
+/// Shape of the scope factory's body, once we've located the
+/// opening brace. `Expression` covers `=> ({...})`; `Block` covers
+/// `=> { ... return {…} }`. Both carry the offset of the `{` that
+/// opens the result.
+enum BodyShape {
+    Expression(usize),
+    Block(usize),
+}
+
+/// Skip past the arrow's parameter list (and any return-type
+/// annotation) and return the offset of the brace that opens the
+/// factory body. Distinguishes expression-body (`=> ({...})`) from
+/// block-body (`=> { ... }`).
+fn find_factory_body_brace(bytes: &[u8], start: usize, end: usize) -> Option<BodyShape> {
     let mut k = skip_trivia(bytes, start, end);
     if k >= end {
         return None;
@@ -198,15 +209,139 @@ fn locate_return_object(bytes: &[u8], span: Span) -> Option<Span> {
         return None;
     }
     k = skip_trivia(bytes, k + 2, end);
-    // Allow an outer `({...})` wrapper.
-    while k < end && bytes[k] == b'(' {
+    // `=> ({...})` — the wrapping `(` distinguishes expression-body.
+    if k < end && bytes[k] == b'(' {
         k = skip_trivia(bytes, k + 1, end);
-    }
-    if k >= end || bytes[k] != b'{' {
+        if k < end && bytes[k] == b'{' {
+            return Some(BodyShape::Expression(k));
+        }
         return None;
     }
-    let close = skip_balanced(bytes, k, end);
-    Some(Span::new(k + 1, close.saturating_sub(1)))
+    if k < end && bytes[k] == b'{' {
+        Some(BodyShape::Block(k))
+    } else {
+        None
+    }
+}
+
+/// Walk `bytes[start..end]` (which spans the factory's block body,
+/// starting at its opening `{`) looking for the last top-level
+/// `return {` outside of strings, template literals, and comments.
+/// Returns the offset of the `{`.
+///
+/// Pre-fix: the walker was a naïve byte scan that matched any
+/// `return` substring. So a doc snippet like `"return { count }"`
+/// (or a comment `// return { count }`) would inject a fake `count`
+/// key into the extracted set when it appeared AFTER the real
+/// `return { name }` — or (worse) overwrite the real key set when it
+/// was the only match. That's the bug.
+///
+/// Depth tracking ensures `return` inside a nested function body or
+/// helper closure is ignored — those aren't scope-factory returns.
+/// `target_depth == 1` because we start AT the factory's opening
+/// `{` (depth 0); the first `{` we walk over is the factory body's
+/// own opening, taking us to depth 1.
+fn find_last_top_level_return_object(bytes: &[u8], start: usize, end: usize) -> Option<usize> {
+    debug_assert!(start < end && bytes[start] == b'{');
+    let return_kw = b"return";
+    let target_depth: i32 = 1;
+    let mut i = start;
+    let mut last: Option<usize> = None;
+    let mut brace_depth: i32 = 0;
+    let mut paren_depth: i32 = 0;
+    while i < end {
+        let c = bytes[i];
+        // ── string / template literals ────────────────────────────────
+        if c == b'"' || c == b'\'' || c == b'`' {
+            i = skip_string(bytes, i, end, c);
+            continue;
+        }
+        // ── comments ───────────────────────────────────────────────────
+        if c == b'/' && i + 1 < end && bytes[i + 1] == b'/' {
+            while i < end && bytes[i] != b'\n' {
+                i += 1;
+            }
+            continue;
+        }
+        if c == b'/' && i + 1 < end && bytes[i + 1] == b'*' {
+            i += 2;
+            while i + 1 < end && !(bytes[i] == b'*' && bytes[i + 1] == b'/') {
+                i += 1;
+            }
+            i = (i + 2).min(end);
+            continue;
+        }
+        // ── bracket depth tracking ─────────────────────────────────────
+        if c == b'{' {
+            brace_depth += 1;
+            i += 1;
+            continue;
+        }
+        if c == b'}' {
+            brace_depth -= 1;
+            i += 1;
+            if brace_depth < target_depth {
+                // Stepped out of the factory body — any `return`
+                // beyond this belongs to the outer scope, not the
+                // factory.
+                break;
+            }
+            continue;
+        }
+        if c == b'(' {
+            paren_depth += 1;
+            i += 1;
+            continue;
+        }
+        if c == b')' {
+            paren_depth -= 1;
+            i += 1;
+            continue;
+        }
+        // ── `return` keyword (only at factory-body depth) ──────────────
+        if brace_depth == target_depth
+            && paren_depth == 0
+            && i + return_kw.len() <= end
+            && bytes[i..].starts_with(return_kw)
+        {
+            let prev_ok = i == start || !is_ident_cont(bytes[i - 1]);
+            let next = i + return_kw.len();
+            let post_ok = next >= end || !is_ident_cont(bytes[next]);
+            if prev_ok && post_ok {
+                let after = skip_trivia(bytes, next, end);
+                if after < end && bytes[after] == b'{' {
+                    last = Some(after);
+                }
+            }
+        }
+        i += 1;
+    }
+    last
+}
+
+/// Advance past a string / template literal starting at `i` (which
+/// must point at the opening quote). Handles `\\` escapes and `${…}`
+/// template substitutions (each substitution opens a real JS
+/// expression, so we re-enter the string-state machine after its
+/// matching `}`). Returns the offset just past the closing quote.
+fn skip_string(bytes: &[u8], i: usize, end: usize, quote: u8) -> usize {
+    let mut k = i + 1;
+    while k < end {
+        let c = bytes[k];
+        if c == b'\\' {
+            k = (k + 2).min(end);
+            continue;
+        }
+        if c == quote {
+            return k + 1;
+        }
+        if quote == b'`' && c == b'$' && k + 1 < end && bytes[k + 1] == b'{' {
+            k = skip_balanced(bytes, k + 1, end);
+            continue;
+        }
+        k += 1;
+    }
+    end
 }
 
 /// Walk a `{ key: value, … }` slice (start/end excluding the braces) and
@@ -429,10 +564,10 @@ mod tests {
     fn ctrl(src: &str) -> ParsedController {
         parse(PathBuf::from("x.controller.ts"), src.to_string()).expect("parsed")
     }
-
     fn names_types(v: &[(String, String)]) -> Vec<(&str, &str)> {
         v.iter().map(|(a, b)| (a.as_str(), b.as_str())).collect()
     }
+
 
     #[test]
     fn typed_signal_generic_uses_generic_arg() {
@@ -650,5 +785,143 @@ mod tests {
         );
         let v = extract(&c);
         assert_eq!(names_types(&v), vec![("weird", "unknown")]);
+    }
+    #[test]
+    fn string_return_object_does_not_inject_keys() {
+        // The snippet string appears AFTER the real return — so the
+        // buggy scanner, which picks the LAST `return {…}` it sees,
+        // finds the snippet's `{ count }` and treats it as the scope
+        // keys. (Doc snippets are commonly appended.)
+        let c = ctrl(
+            "export default controller({\n  \
+               scope: () => {\n    \
+                 const name = signal('ada')\n    \
+                 return { name }\n    \
+                 const snippet = \"return { count }\"\n  \
+               },\n});",
+        );
+        let v = extract(&c);
+        let names: Vec<&str> = v.iter().map(|(n, _)| n.as_str()).collect();
+        assert!(
+            !names.contains(&"count"),
+            "string literal leaked into scope keys: {names:?}"
+        );
+        assert!(
+            names.contains(&"name"),
+            "real return key missing: {names:?}"
+        );
+        assert_eq!(v.len(), 1, "expected exactly one key, got {names:?}");
+    }
+
+    #[test]
+    fn template_literal_return_object_does_not_inject_keys() {
+        // Same shape, but with a backtick template literal. The
+        // naïve scanner doesn't even skip template substitutions
+        // (`${...}`); a string-aware tokenizer must.
+        let c = ctrl(
+            "export default controller({\n  \
+               scope: () => {\n    \
+                 const name = signal('ada')\n    \
+                 return { name }\n    \
+                 const snippet = `return { count }`\n  \
+               },\n});",
+        );
+        let v = extract(&c);
+        let names: Vec<&str> = v.iter().map(|(n, _)| n.as_str()).collect();
+        assert!(
+            !names.contains(&"count"),
+            "template literal leaked into scope keys: {names:?}"
+        );
+        assert!(
+            names.contains(&"name"),
+            "real return key missing: {names:?}"
+        );
+        assert_eq!(v.len(), 1, "expected exactly one key, got {names:?}");
+    }
+
+    #[test]
+    fn comment_return_object_does_not_inject_keys() {
+        // Comment text containing `return { ghost }` must not
+        // contribute a `ghost` key. (Existing behaviour for code in
+        // `//` comments is already correct because the `prev_ok`
+        // boundary check sees the `/`; this test pins it.)
+        let c = ctrl(
+            "export default controller({\n  \
+               scope: () => {\n    \
+                 // return { ghost }\n    \
+                 const name = signal('ada')\n    \
+                 return { name }\n  \
+               },\n});",
+        );
+        let v = extract(&c);
+        let names: Vec<&str> = v.iter().map(|(n, _)| n.as_str()).collect();
+        assert!(
+            !names.contains(&"ghost"),
+            "comment leaked into scope keys: {names:?}"
+        );
+        assert!(
+            names.contains(&"name"),
+            "real return key missing: {names:?}"
+        );
+        assert_eq!(v.len(), 1, "expected exactly one key, got {names:?}");
+    }
+
+    #[test]
+    fn block_body_with_complex_scope_extracts_top_level_keys() {
+        // Legitimately complex scope: helpers, comments, nested
+        // objects. Top-level keys must be exactly the three in the
+        // return object — helpers live in `const` / `function`
+        // declarations, not in the return shape.
+        let c = ctrl(
+            "export default controller({\n  \
+               scope: (_b: unknown, host?: Element) => {\n    \
+                 // helper\n    \
+                 function endSession(id: string): void {\n      \
+                   void fetch(`/x/${id}`)\n    \
+                 }\n    \
+                 const caughtError = signal<Error | null>(null)\n    \
+                 const reset = (): void => { caughtError.set(null) }\n    \
+                 return { caughtError, reset, endSession }\n  \
+               },\n});",
+        );
+        let v = extract(&c);
+        let names: Vec<&str> = v.iter().map(|(n, _)| n.as_str()).collect();
+        assert!(
+            names.contains(&"caughtError"),
+            "missing caughtError: {names:?}"
+        );
+        assert!(names.contains(&"reset"), "missing reset: {names:?}");
+        assert!(
+            names.contains(&"endSession"),
+            "missing endSession: {names:?}"
+        );
+        // The function body of `endSession` mentions `id` but `id` is
+        // NOT a top-level return key.
+        assert!(
+            !names.contains(&"id"),
+            "function param leaked into scope keys: {names:?}"
+        );
+        assert_eq!(v.len(), 3, "expected exactly 3 keys, got {names:?}");
+    }
+
+    #[test]
+    fn block_body_with_string_mentioning_signal_does_not_inject_keys() {
+        // Doc snippet inside a string contains `signal(...)` — must
+        // not inject anything into the keys.
+        let c = ctrl(
+            "export default controller({\n  \
+               scope: () => {\n    \
+                 const name = signal('ada')\n    \
+                 const doc = \"use signal(count) to track\" \n    \
+                 return { name }\n  \
+               },\n});",
+        );
+        let v = extract(&c);
+        let names: Vec<&str> = v.iter().map(|(n, _)| n.as_str()).collect();
+        assert!(!names.contains(&"count"), "string leaked: {names:?}");
+        assert!(
+            names.contains(&"name"),
+            "real return key missing: {names:?}"
+        );
     }
 }
