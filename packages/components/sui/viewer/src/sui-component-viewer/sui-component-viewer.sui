@@ -109,11 +109,13 @@
     <div class="stage-shell" part="stage-shell">
       <sui-render
         part="stage"
+        mode={componentName() !== '' ? 'tag' : 'source'}
         component-name={componentName()}
         viewport-width={viewportWidth()}
         prop:compile={compile()}
         prop:source={sourceText()}
         prop:prop-values={propValues()}
+        prop:slots={slots()}
       ></sui-render>
     </div>
 

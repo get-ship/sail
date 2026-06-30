@@ -67,7 +67,10 @@ function hashSource(source: string): string {
 function ensureDefined(compile: CompileFn, baseTag: string, source: string, versioned: boolean): string {
   const tag = versioned ? `${baseTag}-v${hashSource(source)}` : baseTag
   if (customElements.get(tag)) return tag
-  const compiled = compile(source, { mode: 'component', componentName: tag })
+  // `shadow: true` — primitives are shadow components; without it the wasm
+  // compiles the versioned element light-DOM (no `<slot>`, no scoped styles),
+  // so the specimen renders as bare unstyled content.
+  const compiled = compile(source, { mode: 'component', componentName: tag, shadow: true })
   if (compiled.kind === 'err') {
     const where = compiled.line != null ? ` (${compiled.line}:${compiled.col ?? 0})` : ''
     throw new Error(`sui-compiler: ${compiled.message}${where}`)

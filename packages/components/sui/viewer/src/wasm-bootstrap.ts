@@ -39,6 +39,11 @@ export interface WasmCompileOpts {
    *  marker under `setupMarker`; the production wasm reads `setupUrl`. The
    *  engine passes both so a single opts object works across either compile. */
   setupMarker?: string
+  /** Component-mode shadow flag. The wasm defaults it to `false` (light DOM) —
+   *  so a tag-mode mount of a shadow primitive must pass `true`, else the
+   *  versioned element compiles without a shadow root: no `<slot>`, no scoped
+   *  `<style>`, just bare light content. */
+  shadow?: boolean
 }
 
 /** The bound compile function the engine drives. Pure: source in, result out —
@@ -107,6 +112,7 @@ export function makeCompile(): CompileFn {
       mode: opts.mode ?? 'auto',
       componentName: opts.componentName,
       setupUrl: opts.setupUrl,
+      shadow: opts.shadow ?? false,
     })
     return wasmCompile(source, optsJson) as WasmCompileResult
   }
