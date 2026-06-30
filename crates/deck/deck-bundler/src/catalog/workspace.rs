@@ -338,6 +338,22 @@ pub fn component_package_roots(repo_root: &Path) -> Arc<HashMap<String, PathBuf>
         .into_iter()
         .map(|p| (p.name, p.root))
         .collect();
+    // Overlay the ENCLOSING JS workspace (the bun/npm workspace root above the
+    // project). A pure-JS consumer (ship-apps) is built with `repo_root` set to
+    // the APP subdir (`ship-apps/apps/helm`) — not the workspace root — so the
+    // project-only walk above sees only the app's own declared deps and MISSES
+    // its SIBLING workspace packs (`@ship/agents`, …). Without those in the map,
+    // `SuiPlugin` can't re-anchor a bare `import "@ship/agents"` to source, it
+    // falls through to a bare external the importmap never covers, and the app
+    // renders blank. Resolve the enclosing workspace root and union its packages
+    // (skip when it IS the project root — the sui monorepo, where they coincide).
+    if let Some(ws_root) = crate::paths::topmost_workspace_root(repo_root) {
+        if ws_root != repo_root {
+            for p in discover_workspace_packages(&ws_root).unwrap_or_default() {
+                roots.insert(p.name, p.root);
+            }
+        }
+    }
     // Overlay sui's own workspace (sui wins on collision). Skip when sui IS the
     // project root — its packages are already in `roots`, and re-walking would
     // only be redundant work for an identical result.

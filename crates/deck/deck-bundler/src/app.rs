@@ -158,6 +158,117 @@ fn importmap_externals_from_json(importmap_json: &str) -> Result<HashSet<String>
     Ok(imports.keys().cloned().collect())
 }
 
+/// Extract bare ESM import specifiers from emitted JS — static `import`/`from`
+/// and dynamic `import(...)`. Hand-rolled (deck-bundler has no regex dep): scan
+/// for each `from` / `import` keyword at an identifier boundary and read the
+/// string literal that immediately follows (after optional whitespace / `(`).
+/// "Bare" = the specifier does not start with `.` or `/` — a package specifier,
+/// not a relative/absolute path. Works on both minified (`from"x"`) and
+/// pretty-printed (`from "x"`) output.
+fn scan_bare_specifiers(js: &str) -> Vec<String> {
+    let bytes = js.as_bytes();
+    let is_ident = |b: u8| b.is_ascii_alphanumeric() || b == b'_' || b == b'$';
+    let at = |i: usize, kw: &[u8]| bytes.len() >= i + kw.len() && &bytes[i..i + kw.len()] == kw;
+    let mut out = Vec::new();
+    let mut i = 0;
+    while i < bytes.len() {
+        let kw_len = if at(i, b"import") {
+            Some(6)
+        } else if at(i, b"from") {
+            Some(4)
+        } else {
+            None
+        };
+        if let Some(len) = kw_len {
+            let prev_ok = i == 0 || !is_ident(bytes[i - 1]);
+            let after = i + len;
+            let next_ok = after >= bytes.len() || !is_ident(bytes[after]);
+            if prev_ok && next_ok {
+                // Skip whitespace and an optional `(` (dynamic import).
+                let mut j = after;
+                while j < bytes.len() && (bytes[j].is_ascii_whitespace() || bytes[j] == b'(') {
+                    j += 1;
+                }
+                if j < bytes.len() && (bytes[j] == b'"' || bytes[j] == b'\'') {
+                    let quote = bytes[j];
+                    let start = j + 1;
+                    let mut k = start;
+                    while k < bytes.len() && bytes[k] != quote {
+                        k += 1;
+                    }
+                    if k < bytes.len() {
+                        if let Ok(spec) = std::str::from_utf8(&bytes[start..k]) {
+                            if !spec.is_empty() && !spec.starts_with('.') && !spec.starts_with('/') {
+                                out.push(spec.to_string());
+                            }
+                        }
+                        i = k + 1;
+                        continue;
+                    }
+                }
+            }
+        }
+        i += 1;
+    }
+    out
+}
+
+/// Fail the build when an emitted chunk would ship a bare `@ship/*` ESM import
+/// the document importmap does NOT resolve. Such a specifier throws "Failed to
+/// resolve module specifier" at module-instantiation time, leaving an empty
+/// `#ship-root` — a SILENT blank page. deck owns the `@ship/*` namespace
+/// contract: every `@ship/*` bare import the bundle externalizes must EITHER be
+/// inlined (a workspace package resolvable from this project) OR be in the
+/// importmap (a framework singleton / provider-declared singleton). This guard
+/// turns that silent blank into a loud, actionable error.
+///
+/// `importmap_keys` are the specifiers the generated importmap resolves; the
+/// match is exact plus the standard importmap trailing-slash prefix form
+/// (`@ship/x/` covers `@ship/x/sub`). Scoped to `@ship/*`: a non-`@ship` bare
+/// import may be a host-provided global and is out of deck's contract.
+fn assert_pack_imports_resolved(
+    assets_dir: &Path,
+    importmap_keys: &HashSet<String>,
+) -> Result<()> {
+    let resolves = |spec: &str| -> bool {
+        importmap_keys.contains(spec)
+            || importmap_keys.iter().any(|k| k.ends_with('/') && spec.starts_with(k.as_str()))
+    };
+    // (specifier, chunk file) — BTreeSet for a stable, deduped report.
+    let mut offenders: std::collections::BTreeSet<(String, String)> =
+        std::collections::BTreeSet::new();
+    for entry in std::fs::read_dir(assets_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.extension().and_then(|e| e.to_str()) != Some("js") {
+            continue;
+        }
+        let js = std::fs::read_to_string(&path)?;
+        for spec in scan_bare_specifiers(&js) {
+            if spec.starts_with("@ship/") && !resolves(&spec) {
+                offenders.insert((spec, entry.file_name().to_string_lossy().into_owned()));
+            }
+        }
+    }
+    if !offenders.is_empty() {
+        let list = offenders
+            .iter()
+            .map(|(spec, file)| format!("  - `{spec}` (in assets/{file})"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        bail!(
+            "app build: the bundle externalized {} bare `@ship/*` import(s) the document \
+             importmap does NOT resolve — each throws \"Failed to resolve module specifier\" \
+             at runtime, blanking the page:\n{list}\n  Each must be EITHER inlined (a workspace \
+             package resolvable from this project) OR a framework singleton in the importmap. \
+             The usual cause is the app importing a package it does not declare as a dependency \
+             — add it to the app's package.json (and install) so the bundler can resolve it.",
+            offenders.len()
+        );
+    }
+    Ok(())
+}
+
 pub struct AppBuild {
     pub out_dir: PathBuf,
     pub js_href: String,
@@ -588,6 +699,15 @@ pub async fn bundle_app(
         .write()
         .await
         .map_err(|e| anyhow!("rolldown write(app): {e:?}"))?;
+    // 5b. Blank-page guard: every emitted chunk's bare `@ship/*` imports must be
+    // resolvable by the document importmap (or have been inlined). A bare
+    // `@ship/*` the importmap doesn't cover throws "Failed to resolve module
+    // specifier" at runtime — a silent blank page — so fail loud here naming the
+    // offender(s). `importmap_externals_from_json` re-derives the key set from
+    // the same `importmap_json` the document carries (single source of truth).
+    let importmap_keys = importmap_externals_from_json(&importmap_json)?;
+    assert_pack_imports_resolved(&assets_dir, &importmap_keys)
+        .with_context(|| format!("app build: {}", project.display()))?;
     // 6. The entry chunk is `assets/entry-<hash>.js` (input name "entry").
     // The script href in the generated HTML is the final URL — the
     // bundler is the only place that knows the project name (the
@@ -1264,5 +1384,78 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
         // routes.gen.ts-as-entry, which never mounted — inv-deck-standalone.)
         assert!(r.join("routes.gen.ts").exists(), "routes.gen.ts (data) is emitted");
         assert!(r.join("entry.gen.ts").exists(), "deck emits a default entry.gen.ts bootstrap even without a host entry");
+    }
+
+    /// `scan_bare_specifiers` extracts package specifiers from every ESM import
+    /// shape — minified `import"x"` / `from"x"`, pretty `import "x"` /
+    /// `from "x"`, and dynamic `import("x")` — and IGNORES relative/absolute
+    /// paths plus bare strings that aren't in an import position.
+    #[test]
+    fn scan_bare_specifiers_covers_import_shapes() {
+        let js = r#"import"@ship/agents";import x from"@ship/sui-runtime";
+export{a}from'@ship/sui-dom';const y=await import("@ship/lazy/sub");
+import "./local.js";import"/abs.js";const s="@ship/not-an-import";"#;
+        let mut got = scan_bare_specifiers(js);
+        got.sort();
+        got.dedup();
+        assert_eq!(
+            got,
+            vec![
+                "@ship/agents".to_string(),
+                "@ship/lazy/sub".to_string(),
+                "@ship/sui-dom".to_string(),
+                "@ship/sui-runtime".to_string(),
+            ],
+            "bare import specifiers only — no `./local.js`, `/abs.js`, or the plain string"
+        );
+    }
+
+    /// The blank-page guard: a chunk whose every bare `@ship/*` import is in the
+    /// importmap PASSES; one carrying an un-importmapped `@ship/*` bare import
+    /// FAILS loud and NAMES it. This is the regression bar — `--bundle-framework`
+    /// must never ship a bare pack specifier the importmap can't resolve (the
+    /// silent blank page this fix removed).
+    #[test]
+    fn pack_import_guard_fails_on_unimportmapped_bare_specifier() {
+        let dir = tempfile::tempdir().unwrap();
+        let assets = dir.path().join("assets");
+        std::fs::create_dir_all(&assets).unwrap();
+        let keys: HashSet<String> = ["@ship/sui-runtime", "@ship/deck/router"]
+            .into_iter()
+            .map(String::from)
+            .collect();
+
+        // All importmapped → OK.
+        std::fs::write(assets.join("ok.js"), r#"import"@ship/sui-runtime";from"@ship/deck/router";"#)
+            .unwrap();
+        assert_pack_imports_resolved(&assets, &keys).expect("all imports importmapped");
+
+        // Add a chunk with an un-importmapped `@ship/*` bare import → fail loud.
+        std::fs::write(assets.join("bad.js"), r#"from"@ship/sdk/connect";"#).unwrap();
+        let err = assert_pack_imports_resolved(&assets, &keys)
+            .expect_err("an un-importmapped `@ship/*` bare import must fail the build");
+        let msg = format!("{err:#}");
+        assert!(msg.contains("@ship/sdk/connect"), "error names the offender: {msg}");
+        assert!(msg.contains("bad.js"), "error names the offending chunk: {msg}");
+    }
+
+    /// A non-`@ship` bare import is OUTSIDE deck's importmap contract (it may be
+    /// a host-provided global), so the guard does NOT flag it; and the standard
+    /// importmap trailing-slash prefix form resolves subpaths.
+    #[test]
+    fn pack_import_guard_scopes_to_ship_and_honors_prefix() {
+        let dir = tempfile::tempdir().unwrap();
+        let assets = dir.path().join("assets");
+        std::fs::create_dir_all(&assets).unwrap();
+        // `@ship/sui-runtime/` (trailing slash) covers the `/route` subpath.
+        let keys: HashSet<String> =
+            ["@ship/sui-runtime/".to_string()].into_iter().collect();
+        std::fs::write(
+            assets.join("c.js"),
+            r#"import"@ship/sui-runtime/route";import"lodash";from"react";"#,
+        )
+        .unwrap();
+        assert_pack_imports_resolved(&assets, &keys)
+            .expect("prefix-mapped `@ship/*` subpath ok; non-`@ship` bare imports ignored");
     }
 }

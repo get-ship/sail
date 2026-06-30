@@ -370,6 +370,15 @@ fn build_assets() -> Result<()> {
 /// external consumer overrides the latter with `DECK_FRAMEWORK_ASSETS_DIR` and
 /// resolves the framework specifiers as importmap externals (they never need
 /// source). A Cargo workspace is therefore NOT required.
+///
+/// NOTE: for a pure-JS bun/npm workspace built from an app subdir
+/// (`ship-apps/apps/helm`), `start` is the app dir, NOT the workspace root —
+/// framework + node_modules resolution must key off the app dir (its per-app
+/// `node_modules`), but `@ship/<pkg>` SIBLING-pack discovery must reach the
+/// enclosing workspace. That broadening lives in
+/// `catalog::component_package_roots` (it unions the enclosing JS workspace via
+/// [`deck_bundler::paths::topmost_workspace_root`]), NOT here — so this root
+/// stays the project dir and framework resolution is unchanged.
 fn find_repo_root(start: &Path) -> Result<PathBuf> {
     Ok(deck_bundler::paths::topmost_cargo_root(start).unwrap_or_else(|| start.to_path_buf()))
 }
