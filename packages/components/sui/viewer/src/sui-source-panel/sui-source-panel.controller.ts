@@ -23,42 +23,25 @@ function escapeText(s: string): string {
 }
 
 export default controller({
-  // The scope factory receives `host` (the sui-error-boundary pattern), so the
-  // structured prop signals, the derived snippet, and the `copy` handler bound
-  // by the template's `on:click={copy}` all live here as known scope members.
-  scope: (_ctx: ViewScope<Scope>, host?: Element) => {
+  scope: (_ctx: ViewScope<Scope>) => {
     const sourceEl = ref<HTMLElement>(null)
     const snippetEl = ref<HTMLElement>(null)
     const copied = signal(false)
 
-    // --- host prop:* → signals (identity/snapshot; never a stringified attr) ---
+    // --- structured host props, as signals (identity/snapshot; never a
+    //     stringified attr). Wired to the host element in `wireHost`, below. ---
     const source = signal<string>('')
     const cem = signal<CemAttr[] | null>(null)
     const values = signal<Record<string, unknown>>({})
     const slotContent = signal<string | null>(null)
-
-    const defineHostProp = <T>(
-      name: string,
-      sig: { (): T; set: (u: (p: T) => T) => void },
-      coerce: (v: unknown) => T,
-    ): void => {
-      if (!host) return
-      const existing = (host as unknown as Record<string, unknown>)[name]
-      if (existing !== undefined) sig.set(() => coerce(existing))
-      Object.defineProperty(host, name, {
-        configurable: true,
-        get: () => sig(),
-        set: (v: unknown) => sig.set(() => coerce(v)),
-      })
-    }
-    defineHostProp('source', source, (v) => (typeof v === 'string' ? v : ''))
-    defineHostProp('props', cem, (v) => (Array.isArray(v) ? (v as CemAttr[]) : null))
-    defineHostProp('value', values, (v) => (v && typeof v === 'object' ? (v as Record<string, unknown>) : {}))
-    defineHostProp('slotContent', slotContent, (v) => (typeof v === 'string' ? v : null))
+    // The host element. The runtime hands it to `mount()`, NOT the scope factory
+    // ("SUI names no host" — manifest-only), so `componentName` and the copy
+    // emit read it through this signal, set once in `wireHost`.
+    const hostEl = signal<EmitHost | null>(null)
 
     // --- the recomputed snippet (default-diff; degraded when CEM absent) ---
     const snippet = derived(() => {
-      const tag = (host as EmitHost | undefined)?.componentName || 'sui-component'
+      const tag = hostEl()?.componentName || 'sui-component'
       return buildSnippet(tag, values(), cem() ?? undefined, slotContent() ?? undefined)
     })
 
@@ -78,18 +61,46 @@ export default controller({
           copiedTimer = null
         }, 1400)
       })
-      ;(host as EmitHost | undefined)?.emit?.('sui-source-copy', { text })
+      hostEl()?.emit?.('sui-source-copy', { text })
     }
     const clearCopyTimer = (): void => {
       if (copiedTimer) clearTimeout(copiedTimer)
       copiedTimer = null
     }
 
-    return { sourceEl, snippetEl, copied, source, snippet, copy, clearCopyTimer }
+    // --- DEFERRED host wiring. The host element only exists at mount(); this
+    //     closure carries the signal wiring there. Installs `prop:*` accessors
+    //     (set `el.source`/`props`/`value`/`slotContent` → signals) + hands the
+    //     element to `hostEl`. ---
+    const wireHost = (host: EmitHost): void => {
+      hostEl.set(() => host)
+      const defineHostProp = <T>(
+        name: string,
+        sig: { (): T; set: (u: (p: T) => T) => void },
+        coerce: (v: unknown) => T,
+      ): void => {
+        const existing = (host as unknown as Record<string, unknown>)[name]
+        if (existing !== undefined) sig.set(() => coerce(existing))
+        Object.defineProperty(host, name, {
+          configurable: true,
+          get: () => sig(),
+          set: (v: unknown) => sig.set(() => coerce(v)),
+        })
+      }
+      defineHostProp('source', source, (v) => (typeof v === 'string' ? v : ''))
+      defineHostProp('props', cem, (v) => (Array.isArray(v) ? (v as CemAttr[]) : null))
+      defineHostProp('value', values, (v) => (v && typeof v === 'object' ? (v as Record<string, unknown>) : {}))
+      defineHostProp('slotContent', slotContent, (v) => (typeof v === 'string' ? v : null))
+    }
+
+    return { sourceEl, snippetEl, copied, source, snippet, copy, clearCopyTimer, wireHost }
   },
 
-  mount(state) {
-    // Render source + snippet text via bindHtml (morph-backed, not a raw assign).
+  mount(state, host) {
+    // The runtime hands the real host element here. Wire the structured props
+    // now that it exists, then render source + snippet text via bindHtml.
+    ;(state.wireHost as (h: EmitHost) => void)(host as EmitHost)
+
     const srcEl = state.$signals.sourceEl() as HTMLElement | null
     const snipEl = state.$signals.snippetEl() as HTMLElement | null
     const stopSource = srcEl ? bindHtml(srcEl, () => escapeText(state.$signals.source())) : () => {}
