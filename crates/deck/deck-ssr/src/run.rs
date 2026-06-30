@@ -56,7 +56,9 @@ pub fn render_with_limits(
         dispatch.clone(),
         move |b, d| async move {
             let host: Arc<dyn Dispatch> = d;
-            run_module_with_limits(host, SHIP_SDK.to_string(), b, limits)
+            // ship-exec v2 added op/module allow-lists to run_module_with_limits;
+            // deck-ssr imposes no allow-list (None, None) — same behavior as before.
+            run_module_with_limits(host, None, None, SHIP_SDK.to_string(), b, limits)
                 .await
                 .map_err(|e| anyhow!("run_module: {e:?}"))
         },
