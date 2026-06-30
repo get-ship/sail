@@ -10,7 +10,8 @@
 // shell is in every route's module graph, so these side-effect imports can't be
 // tree-shaken — whereas an export-less clients module gets dropped.
 import '../sui-theme.css'
-import '../base.css'
+import '@ship/sui-code-editor' // side-effect: defines <sui-code-editor> for the tutorial + future live surfaces
+import '@ship/sui-viewer'       // side-effect: defines <sui-component-viewer> + children for /components
 import { controller, signal } from '@ship/sui-runtime'
 
 const MODE_KEY = 'sui-mode'

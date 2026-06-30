@@ -162,15 +162,12 @@
     <div class="group">
       <h4>Core concepts</h4>
       <a href="/reactivity" class:active={path() === '/reactivity'}>Reactivity</a>
-      <a href="/data" class:active={path() === '/data'}>Data</a>
-    </div>
-    <div class="group">
-      <h4>Reference</h4>
-      <a href="/components" class:active={path() === '/components'}>Component library</a>
-      <a href="/playground" class:active={path() === '/playground'}>Playground</a>
+      <a href="/control-flow" class:active={path() === '/control-flow'}>Control flow</a>
+      <a href="/lifecycle-hooks" class:active={path() === '/lifecycle-hooks'}>Lifecycle</a>
+      <a href="/data-binding" class:active={path() === '/data-binding'}>Data binding</a>
+      <a href="/data" class:active={path() === '/data'}>Live data</a>
     </div>
   </nav>
-
   <main class="content" part="content">
     <slot name="route"></slot>
   </main>
