@@ -312,13 +312,13 @@ export {
 export { applyPatch, applyPatches, tokenizePath } from './patch'
 export type { Patch, PatchOp, PathToken } from './patch'
 
-// Generated daemon ↔ runtime data contract. Authored by `cargo xtask
-// gen-types` from Rust source; do not edit `generated.ts` by hand.
-// View-system contract types only — Ship daemon-domain data (git/agents/
-// account) lives in @ship/sdk-client, never the framework.
-// (LintFinding + the Write* request/response types left this surface when
-// the write paths + lint moved to the view-edit Connect wire — their specta
-// registrations were retired; see crates/xtask/src/types.rs.)
+// Daemon ↔ runtime data contract. The committed `./generated.d.ts` is a
+// hand-maintained mirror of the Rust wire types in this repo (no `gen-types`
+// task exists; `./generated.ts` is gitignored). Keep `.d.ts` in sync when
+// the Rust wire types grow a new field the runtime depends on — the
+// typecheck script will catch drift. View-system contract types only — Ship
+// daemon-domain data (git/agents/account) lives in @ship/sdk-client, never
+// the framework.
 export type {
   ManifestRail,
   RailMeta,

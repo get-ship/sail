@@ -272,7 +272,7 @@ impl Bundler {
     /// or PDF packs (Pixi.js + pdfjs-dist together are ~4 MB of JS that the
     /// browser heap retains even though no view references them; this is the
     /// 400 MB dev-loop reading measured 2026-06-06). Production builds
-    /// (`cargo xtask build-assets` for the dist, or any consumer that
+    /// (`cargo run -p deck-cli -- build-assets` for the dist, or any consumer that
     /// explicitly wants the full asset graph) leave the env var unset and
     /// every target emits as before — the gate is a manual dev lever, so the
     /// default bake is identical whether a target is eager or lazy.

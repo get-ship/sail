@@ -5,9 +5,10 @@ import { createContainerRegistry, flush, mount } from '../src/test-utils'
 const reg = createContainerRegistry()
 afterEach(() => reg.cleanup())
 
-// ElementInternals.setFormValue is partial under jsdom — the FormData
-// round-trip needs the real webview tier (proof owed in #164). Gate, not skip
-// silently past the only assert.
+// HOST-CONDITIONAL (intentional, not fossilized) — every `it.skipIf(setFormValueAbsent)`
+// below is gated on jsdom's partial ElementInternals.setFormValue; the FormData
+// round-trip needs the real webview tier (proof owed in #164). When jsdom ships
+// a real setFormValue, the gate flips automatically — no test logic changes.
 const setFormValueAbsent =
   typeof (window as unknown as { ElementInternals?: { prototype: ElementInternals } })
     .ElementInternals?.prototype?.setFormValue !== 'function'

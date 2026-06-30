@@ -52,7 +52,7 @@ There is one bundler: the in-process Rust Rolldown bundler in `/home/madvib/dev/
 - **Development** — the daemon serves compiled `.sui` as un-bundled native ESM; HMR re-compiles only the edited component.
 - **Production** — Rolldown emits per-entry traced chunks with `sui-runtime`/`sui-dom` as the shared external, immutable-cached.
 
-**Baking.** `cargo xtask build-assets` (aliased `bun run build:bundles`) bakes the framework singletons + the `sui-components` umbrella + per-component islands (`<bundle separate />`) + per-view bundles + the site's `sui-marketing.js` / `sui-arcade.js` into `/home/madvib/dev/Ship/sui/crates/deck/deck-core/assets/` and `.deck/` — the same on-disk asset trees the release binary `include_str!`s. It's what `smoke-deploy.sh` runs and what `just cem` invokes.
+**Baking.** `cargo run -p deck-cli -- build-assets` (aliased `bun run build:bundles`) bakes the framework singletons + the `sui-components` umbrella + per-component islands (`<bundle separate />`) + per-view bundles + the site's `sui-marketing.js` / `sui-arcade.js` into `/home/madvib/dev/Ship/sui/crates/deck/deck-core/assets/` and `.deck/` — the same on-disk asset trees the release binary `include_str!`s. It's what `smoke-deploy.sh` runs and what `just cem` invokes.
 
 ## `sui-lsp` — the language server
 
@@ -192,7 +192,7 @@ For a clean dev restart use `just dev-restart`. Visual regressions: `just visual
 
 ## Fresh-clone bootstrap
 
-`just bootstrap` runs the full first-time-setup sequence (verifies bun on PATH, then `cargo xtask gen-types` → `cargo build -p ship-cli` → `bun install` → `bun run --filter @ship/ui-components icons` → `bun run --filter @ship/ui-components build` → `bun run --filter @ship/ui-components build` → `just dev-runtime-install`). After it completes, `just dev` brings up the daemon.
+`just bootstrap` runs the full first-time-setup sequence (verifies bun on PATH, then `cargo build -p ship-cli` → `bun install` → `bun run --filter @ship/ui-components icons` → `bun run --filter @ship/ui-components build` → `bun run --filter @ship/ui-components build` → `just dev-runtime-install`). After it completes, `just dev` brings up the daemon.
 
 ## Development vs production modes
 
@@ -214,7 +214,7 @@ Producing a deployable artifact set:
 
 ```sh
 just build       # one-shot: gen-types → component packs (primitives, ui-components,
-                 # charts, pipelines) → cargo xtask build-assets → cargo build
+                 # charts, pipelines) → cargo run -p deck-cli -- build-assets → cargo build
                  # --release → verify outputs
 ship build       # equivalent CLI wrapper for users without `just` installed
 ```

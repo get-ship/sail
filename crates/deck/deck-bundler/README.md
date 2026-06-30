@@ -115,13 +115,13 @@ bun is **dev/build-time tooling only**, never in the deploy bundle:
   via this crate (`sui-build` was retired in #220). The lucide icon set is
   committed source at `crates/deck/deck-core/assets/lucide-icons.json` and
   regenerated only on a lucide-static version bump via
-  `cargo run -p xtask -- gen-icons` (#172).
+  `cargo run -p xtask-deck -- gen-icons` (#172).
 
 The `apps/shell` / `apps/spaces` SPA prod build is **not** bun: `deck build`
 (`crates/deck/deck-cli`, #170) bundles the app via Rolldown, compiling each `.sui`
 in-process — no separate pre-compile step. One engine for framework + views + apps.
 
-The framework-asset bake is **not** bun: `cargo xtask build-assets` drives the
+The framework-asset bake is **not** bun: `cargo run -p deck-cli -- build-assets` drives the
 same in-process Rolldown `Bundler::build_all`, writing the framework bundles to
 `crates/deck/deck-core/assets`. `just build` step [6/9] and `npm run
 build:bundles` both call it. There is one bundle-target definition

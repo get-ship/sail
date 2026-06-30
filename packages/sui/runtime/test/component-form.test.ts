@@ -16,9 +16,10 @@ const nextTag = () => `form-prop-${++tagCounter}`
 
 const noopModule = () => component(() => ({}))
 
-// jsdom's ElementInternals.setFormValue is partial — the spy/round-trip needs
-// the real webview tier (proof owed in #164). Gate the suite's setFormValue
-// assertions on it; do NOT silently early-return past the only assert.
+// HOST-CONDITIONAL (intentional, not fossilized) — every `it.skipIf(setFormValueAbsent)`
+// below is gated on jsdom's partial ElementInternals.setFormValue; the spy/round-trip
+// needs the real webview tier (proof owed in #164). When jsdom ships a real
+// setFormValue, the gate flips automatically — no test logic changes.
 const setFormValueAbsent =
   typeof (window as unknown as { ElementInternals?: { prototype: ElementInternals } })
     .ElementInternals?.prototype?.setFormValue !== 'function'

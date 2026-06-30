@@ -1,17 +1,16 @@
-//! `cargo xtask gen-icons` — bake the lucide SVG set into the sui repo's
-//! deck-core assets directory (see SMELL comment in `pub fn run` for the
-//! exact hardcoded path). The output is the embedded source the daemon
-//! reads to answer `/_deck/icons/{name}.svg` per-icon. The
-//! `crates/deck/deck-core/assets/` directory lives in the external sui
-//! repo post-carve; the assets are committed source there.
+//! `cargo run -p xtask-deck -- gen-icons` — bake the lucide SVG set into the
+//! sui repo's deck-core assets directory (see SMELL comment in `pub fn run`
+//! for the exact hardcoded path). The output is the embedded source the
+//! daemon reads to answer `/_deck/icons/{name}.svg` per-icon. The
+//! `crates/deck/deck-core/assets/` directory lives in the external sui repo
+//! post-carve; the assets are committed source there.
 //! This replaces the retired `scripts/codegen/generate-lucide-registry.mjs`.
-//! It joins the `gen-*` family in this crate (gen-skills, gen-fixtures,
-//! gen-ops, gen-sdk, gen-types) — codegen that crosses a language boundary
-//! belongs in xtask, not scripts/.
+//! `gen-icons` is the only task in this crate — codegen that crosses a
+//! language boundary belongs here, not in `scripts/`.
 //!
 //! Run after a `lucide-static` version bump:
 //!   bun install
-//!   cargo run -p xtask -- gen-icons
+//!   cargo run -p xtask-deck -- gen-icons
 //!   git add <sui-repo>/crates/deck/deck-core/assets/lucide-icons.json && git commit
 use std::collections::BTreeMap;
 use std::fs;

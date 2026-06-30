@@ -12,7 +12,7 @@
 //! The lucide icon set is committed source (`assets/lucide-icons.json`) —
 //! the daemon embeds it and serves per-icon at `/_deck/icons/{name}.svg`;
 //! regenerate after a lucide-static version bump via
-//! `cargo run -p xtask -- gen-icons`.
+//! `cargo run -p xtask-deck -- gen-icons`.
 //! The workspace catalog is emitted to `.deck/catalogs/workspace.json`
 //! by `build-assets` and read at runtime by `src/packs.rs`.
 //!
