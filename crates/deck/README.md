@@ -58,11 +58,11 @@ asset URLs become `/assets/<file>`, matching the on-disk layout. (`deck build
 | Crate | Role |
 |---|---|
 | `deck-core` | Transport-agnostic hosting logic. Produces a `DeckResponse` (status + bytes + headers); never speaks HTTP. Owns view resolution, SSR payload assembly, token/theme CSS, the setup flow, and the `DataPort` trait. |
-| `deck-axum` | The axum adapter. Thin `serve_*` shims map `DeckResponse` → `axum::Response`. `router()` registers deck's whole serving surface as one mountable unit; `multiplex_router()` is the live-data transport. |
+| `deck-axum` | The axum adapter. Thin `serve_*` shims map `DeckResponse` → `axum::Response`. `router()` registers deck's whole serving surface as one mountable unit; `multiplex_router()` is the live-data transport — **host-wired, not mounted by `deck dev`** (see the data seam below). |
 | `deck-host` | Pure host helpers shared across adapters: `render_helpers`, `resolver` (project-root + view resolution), `view_payload`. |
 | `deck-bundler` | The one bundler (#163). In-process Rolldown; a Rust plugin compiles `.sui` via the linked `sui-compiler`. Builds framework singletons, packs, views, and app scaffolds. |
 | `deck-config` | Parses `deck.jsonc` into `DeckConfig` — the host's single configuration surface (below). |
-| `deck-cli` | The `deck` binary: `build`, `build-assets`, `routes`, `scaffold {view,component,pack}`. The `next`/`vite` analog. |
+| `deck-cli` | The `deck` binary: `dev`, `build`, `build-assets`, `routes`, `emit`, `scaffold {view,component,pack}`. The `next`/`vite` analog. |
 | `deck` | Thin re-export facade so a host writes `deck::*` for everything above. |
 
 ## The data seam — `DataPort`
@@ -83,9 +83,19 @@ pub trait DataPort {
 }
 ```
 
-`shipd`'s `ShipDataPort` is the only implementor today. This is the sole
-coupling point between deck and the app — deck stays host-generic; the app keeps
-its domains.
+The reference implementor is `shipd`'s `ShipDataPort` (in the `shipd` repo —
+deck names it but does not contain it). A host merges `deck::multiplex_router()`
+for the live-data transport (`/_deck/mux/*`) and layers its `DataPort` as an
+`Extension`. This is the sole coupling point between deck and the app — deck
+stays host-generic; the app keeps its domains.
+
+**Standalone has no live data (yet).** `deck dev` / `deck build` serve routing,
+assets, SSR and HMR, but do **not** mount the multiplex or any real `DataPort`,
+so a `<data source="ship.x.y()" live />` binding is **not served** standalone —
+live data is a host capability today. Making it work without a host (JS server
+functions backing `DataPort::resolve`) is the server-functions arc (#32),
+targeted for a later release. Standalone views should render without server
+`<data>`, or run under a host (shipd) that wires the seam.
 
 ## Configuration surface — `deck.jsonc` / `DeckConfig`
 

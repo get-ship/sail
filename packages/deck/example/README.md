@@ -18,7 +18,7 @@ no ship product, no daemon, no SDK client.
 | **Dynamic `[param]` route** | `routes/recipes/[id]/page.sui` — reads the param as a **signal**: `route.params.id()` (note the `()`) |
 | **Layout chain** | `routes/_layout.sui` mounts the `<sui-app-shell>` chrome (header, nav, theme toggle); each route renders into its `<slot name="route">` |
 | **Reactivity / controllers** | `signal(...)` controllers: a counter, a toggle, and a form (`routes/kitchen/`) |
-| **Local data client (clients seam)** | `deck.jsonc#entry` wires `src/clients.ts`'s `data` export; views read it as `ctx.clients.data` |
+| **Client-side data client (clients seam)** | `deck.jsonc#entry` wires `src/clients.ts`'s `data` export; views read it as `ctx.clients.data`. This is an in-memory **client signal**, not server live `<data source>` — standalone deck has no live-data transport (that's a host capability / #32). |
 | **Form / mutation** | the kitchen "Add a recipe" form appends to the shared client signal, then navigates to the new recipe |
 | **Component packs** | real `@ship/sui-primitives` elements — `<sui-badge>`, `<sui-switch>` — plus the local `<sui-app-shell>` chrome |
 | **Theming** | `@ship/tokens` light/dark; the header toggle flips the `.dark` class on `<html>` |

@@ -102,10 +102,6 @@ enum Command {
         /// Address to bind (host:port). Default `127.0.0.1:7878`.
         #[arg(long, default_value = "127.0.0.1:7878")]
         addr: String,
-        /// Use the in-memory `DemoStore` with sample data instead of the
-        /// no-op data port. Opt-in; off by default.
-        #[arg(long)]
-        demo: bool,
     },
 
     /// Emit already-baked target bundles (plus their lazy-chunk closure) into
@@ -255,7 +251,7 @@ fn run() -> Result<()> {
         }
         Command::Emit { targets, out } => emit(targets, out),
         Command::BuildAssets => build_assets(),
-        Command::Dev { project, addr, demo } => dev(project, addr, demo),
+        Command::Dev { project, addr } => dev(project, addr),
     }
 }
 /// closure — see `deck_bundler::emit`).
@@ -477,12 +473,12 @@ fn build(
 // without a host adapter or shipd. The watcher rebuilds on edit and
 // pushes HMR; the router serves the whole `/_deck/*` surface.
 //
-// The default data port is a `NoopDataPort`: there is no per-view live
-// data wired here. `--demo` is the documented escape hatch for hosts
-// that want the conformance `DemoStore` — it lives in
-// `deck-conformance`, which is test-only by design; for now the
-// standalone CLI defers the wired-demo shape to `deck dev --demo`
-// (rejected at runtime until the host wiring is upstreamed).
+// The data port is a `NoopDataPort` and the live-data multiplex transport
+// (`/_deck/mux/*`) is NOT mounted: standalone `deck dev` serves routing,
+// assets, SSR and HMR, but NOT live server `<data source>`. Live data is a
+// HOST capability — a host (shipd) merges `deck::multiplex_router()` and
+// layers its own `DataPort`. Wiring live data into the standalone CLI is the
+// server-functions arc (#32), targeted for a later release.
 
 /// The app's URL namespace = `package.json#name`'s last `/`-segment
 /// (`@ship/hub` → `hub`). MUST equal what `bundle_app` baked the asset
@@ -505,10 +501,11 @@ fn app_url_namespace(project: &Path) -> Result<String> {
         .to_string())
 }
 
-/// A `DataPort` that resolves nothing. Default in `deck dev` —
-/// live-data is opt-in via `--demo`. (`is_provisioned` defaults to
-/// `false` from the trait, so the framework's first-run routing serves
-/// `/setup` until a host opts in.)
+/// A `DataPort` that resolves nothing — the standalone `deck dev` default.
+/// The live-data multiplex is not mounted here, so this is never actually
+/// queried; it satisfies the `Extension<Arc<dyn DataPort>>` the shared
+/// handlers expect. (`is_provisioned` defaults to `false` from the trait, so
+/// the framework's first-run routing serves `/setup` until a host opts in.)
 struct NoopDataPort;
 
 impl deck_core::DataPort for NoopDataPort {
@@ -522,14 +519,7 @@ impl deck_core::DataPort for NoopDataPort {
     }
 }
 
-fn dev(project: PathBuf, addr: String, demo: bool) -> Result<()> {
-    if demo {
-        anyhow::bail!(
-            "deck dev --demo is reserved for the conformance harness; \
-             use `cargo run -p deck-conformance` for the wired-demo shape"
-        );
-    }
-
+fn dev(project: PathBuf, addr: String) -> Result<()> {
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
@@ -741,7 +731,8 @@ fn dev(project: PathBuf, addr: String, demo: bool) -> Result<()> {
         // multi-segment client routes. Extension layers: `DaemonMode`, the
         // `DeckConfig` (Arc), the app list (`serve_index` / `spa_fallback`
         // read it to find the primary app), the `Bundler`, and the no-op
-        // `DataPort` (live-data is opt-in via `--demo`).
+        // `DataPort`. The live-data multiplex (`/_deck/mux/*`) is intentionally
+        // NOT merged here — standalone deck has no live `<data source>` (#32).
         use axum::routing::get;
         let app = deck_axum::router()
             // `/` → the primary app's index.html.

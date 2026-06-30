@@ -105,9 +105,10 @@ Fixed (each backed by a harness test):
 
 Still open:
 
-- **No `deck serve` / `deck dev`.** The CLI only has `build` + `scaffold` +
-  `routes`; serving a deck app standalone requires hand-writing this binary.
-  `lib.rs::deck_dev_server` is effectively the missing `deck serve`.
+- ~~**No `deck serve` / `deck dev`.**~~ **Shipped:** `deck dev` is now a real
+  CLI subcommand (standalone dev server — CSR/SSR routing, HMR, no live data).
+  `lib.rs::deck_dev_server` here remains the wired-demo variant (with the
+  conformance `DemoStore`) the standalone CLI deliberately does not bundle.
 - **`Bundler` construction couples to `ship_substrate::ShipHome`.** Its
   constructor takes `&ShipHome` (used only to locate `sui-compiler` + a staging
   dir). A standalone deck should accept a plain compiler path + staging dir.
