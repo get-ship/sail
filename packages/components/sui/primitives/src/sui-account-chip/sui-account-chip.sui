@@ -6,15 +6,14 @@
   <sui-account-menu>, which slots the chip into its trigger
   when a popover is wanted.
 
-  The account state is the same LiveState that <sui-account-menu>
-  uses: `ship.account.state()` is auto-generated as a reactive
-  signal by the SUI compiler from the `<data>` directive. The
-  controller reads the normalise helpers from `@ship/sdk-client`
-  (`readIdentity`, `displayName`, `initials`) and derives the
-  view-model.
+  Generic + SDK-free: identity is plain props (`name`, `image`) — the
+  consuming app owns the `ship.account.state()` subscription and feeds
+  the chip. Initials fall back from the name when no image is given.
 
   Prop / event surface
   ───────────────────────────────────────────────────────────────────
+  name  (string, '')   display name; initials derive from it.
+  image (string, '')   avatar image URL; falls back to initials.
   size  (enum, 'sm')   sm | md  — avatar diameter.
   hide-name  (bool, false)  when true, only the avatar renders
                               (useful in narrow chrome strips).
@@ -24,12 +23,10 @@
   ───────────────────────────────────────────────────────────────────
 -->
 
+<prop name="name" type="string" default="" />
+<prop name="image" type="string" default="" />
 <prop name="size" values="sm|md" default="sm" reflect />
 <prop name="hide-name" type="bool" default="false" reflect />
-
-<client name="ship" />
-
-<data name="account" source="ship.account.state()" live />
 
 <style>
   :host {
@@ -81,5 +78,11 @@
   :host([hide-name]) .name { display: none; }
 </style>
 
-<span class="avatar" part="avatar" aria-hidden="true">{initials()}</span>
+<span class="avatar" part="avatar" aria-hidden="true">
+  {#if image() !== ''}
+    <img src={image()} alt="" />
+  {:else}
+    {initials()}
+  {/if}
+</span>
 <span class="name" part="name">{name()}</span>

@@ -15,7 +15,6 @@ import {
 // `navigate` into every scope (resolver-context `ctx.navigate`, with a
 // no-op fallback) — this is the documented seam; the type gap is a known
 // limitation, not a hidden cast.
-import { DECK_API_ASSETS } from '@ship/sdk-client'
 
 import type { Scope } from './sui-theme-picker.sui'
 
@@ -38,17 +37,18 @@ type PopoverEl = HTMLElement & {
   hidePopover?: () => void
 }
 
-// Inject view-tokens.css (which the daemon bundles with themes.css) into
-// the picker's shadow root so [data-theme-preview="X"] rules apply to
-// cards in shadow. Without this, document-level rules can't reach shadow
-// children.
-function ensureThemesCssInShadow(host: HTMLElement) {
+// Inject view-tokens.css (the [data-theme-preview="X"] rules) into the
+// picker's shadow root so previews apply to cards in shadow — document-level
+// rules can't reach shadow children. The href is a ship-free seam: the
+// `tokens-href` prop (default `/view-tokens.css`, host-overridable) names
+// where the consuming app serves the preview stylesheet. SDK-free.
+function ensureThemesCssInShadow(host: HTMLElement, href: string) {
   const root = host.shadowRoot
-  if (!root) return
+  if (!root || !href) return
   if (root.querySelector('link[data-sui-theme-preview-styles]')) return
   const link = document.createElement('link')
   link.rel = 'stylesheet'
-  link.href = `${DECK_API_ASSETS}/view-tokens.css`
+  link.href = href
   link.setAttribute('data-sui-theme-preview-styles', '')
   root.appendChild(link)
 }
@@ -87,9 +87,16 @@ export default controller({
 
     // Mount populates these so scope-side handlers can dispatch on the
     // host and drive the native popover. Templates never bind to this.
-    const internals: { host: HTMLElement | null; panel: PopoverEl | null } = {
+    // `tokensHref` carries the preview-stylesheet seam (the `tokens-href`
+    // prop) through to mount's shadow injection.
+    const internals: {
+      host: HTMLElement | null
+      panel: PopoverEl | null
+      tokensHref: () => string
+    } = {
       host: null,
       panel: null,
+      tokensHref: init.tokensHref,
     }
 
     function togglePanel(): void {
@@ -148,7 +155,7 @@ export default controller({
       activeTheme: activeThemeSignal, panelOpen: panelOpenSignal } = state.$signals
 
     state._internals.host = host
-    ensureThemesCssInShadow(host)
+    ensureThemesCssInShadow(host, state._internals.tokensHref())
 
     // Apply stored theme on first mount. Idempotent if the boot script
     // already applied it — applyTheme just re-dispatches ship:theme:change.

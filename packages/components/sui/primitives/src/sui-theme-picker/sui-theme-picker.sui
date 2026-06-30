@@ -25,6 +25,9 @@
                                               both use this
     persist (bool, true, reflect)             write-through to localStorage
                                               via the host theme transport
+    tokens-href (string, '/view-tokens.css')  where the host serves the
+                                              [data-theme-preview] stylesheet
+                                              injected into the shadow root
   ────────────────────────────────────────────────────────────────────────
   Events: sui-theme-change   { detail: { id, dark } }   bubbles, composed
   Slots: (none — fully self-contained)
@@ -41,6 +44,10 @@
      translucent menubar) and the Customize footer is hidden because the static
      site has no /theme-studio route. -->
 <prop name="surface" values="app|marketing" default="app" reflect />
+<!-- Ship-free seam: the host names where the preview stylesheet
+     ([data-theme-preview] rules) is served; injected into the shadow root so
+     previews reach shadow children. Default is origin-relative. -->
+<prop name="tokens-href" type="string" default="/view-tokens.css" />
 
 <style>
   :host {
