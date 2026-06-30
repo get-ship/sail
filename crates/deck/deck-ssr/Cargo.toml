@@ -21,7 +21,7 @@ sui-compiler = { path = "../../sui/compiler" }
 # cargo equivalent: Kellnr / cargo-http-registry), published when ship-js
 # stabilizes. ship-js is a clean leaf (crates.io + deno_core only), so that
 # publish won't cascade. Tracked as the proper fix.
-ship-js = { path = "../../../../../Ship/ship-exec/crates/ship-js", features = ["deno"] }
+ship-js = { path = "/home/madvib/dev/Ship/ship-exec/crates/ship-js", features = ["deno"] }
 # Deck's request/data contracts (DataPort) the host Dispatch maps onto.
 deck-core = { path = "../deck-core" }
 # The project's own bundler (Rolldown), so the measured bundle matches the
