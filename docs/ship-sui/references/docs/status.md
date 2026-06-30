@@ -78,10 +78,11 @@ The AOT path is live in production: the daemon compiles `.sui` through `sui_comp
 
 ## Legacy / compatibility surface
 
-- **`view()` factory.** Still exported from `@ship/sui-runtime` (`/home/madvib/dev/Ship/sui/packages/sui/runtime/src/index.ts` — `view`, `ViewContext`, `ViewSetup`, `ViewDef`). `controller()` is the current authoring shape and every shipped view uses it; `view()` remains as the lower-level wrapper `controller()` builds on and for host code.
+- (none currently tracked here.)
 
 ## Removed shapes (formerly here, now gone)
 
+- **`view()` factory + `ViewContext` / `ViewSetup` / `ViewDef`** — removed in the de-view convergence. `@ship/sui-runtime` no longer exports them; the overloaded `component(setup)` is the lower-level primitive and `controller()` is the authoring shape. Routing moved to deck (the runtime no longer carries a route factory).
 - **`.ship` SFC three-block format** and **sail-era script-block syntax** (`prop X: T = default`, `mount {}`, `effect on X`) — never made it to a working compiler under the current framework. See the phased-out `ship-components` skill for what was there.
 
 ## Open questions

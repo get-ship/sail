@@ -27,7 +27,7 @@ Pure transformation. No filesystem walk, no daemon, no network. Library entry: `
 pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, CompileError>
 ```
 
-`CompileOpts` knobs: `setup_url` (paired `.ts` import), `mode` (`View | Component | Auto`), `source_path` (diagnostic spans), `component_meta` (tag name + shadow flag), `styles` (component-only external CSS), `emit_dts`, `emit_ssr`.
+`CompileOpts` knobs: `setup_url` (paired `.ts` import), `mode` (`Component | Auto`), `source_path` (diagnostic spans), `component_meta` (tag name + shadow flag), `styles` (component-only external CSS), `emit_dts`, `emit_component_imports`.
 
 `CompileOutput` carries:
 
@@ -39,9 +39,8 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
 | `schema` | Prop schema JSON — read by `decode.ts` to validate runtime prop values. |
 | `dts` | Typed `Scope` for the paired controller. Includes both `<data>` names and `scope:` factory keys. |
 | `meta` | `.sui.meta.json` — binding kinds / exprs / deps / renderKey. Developer-tooling fuel; the runtime never loads it. |
-| `ssr_html` | Static SSR body fragment (view mode only). Written to `<repo-root>/.ship/sui-out/<src-rel>/<stem>.ssr.html`. |
 
-Pipeline (`src/lib.rs:185` `compile()`): `parse::parse` → `check::run` → `bindings::build` → `lower::lower` → `emit::js::emit_module` (+ `emit::cem`, `emit::schema`, `emit::dts`, `emit::meta`, `emit::ssr`). Diagnostics carry byte spans (`src/diagnostics.rs`).
+Pipeline (`src/lib.rs:185` `compile()`): `parse::parse` → `check::run` → `bindings::build` → `lower::lower` → `emit::js::emit_module` (+ `emit::cem`, `emit::schema`, `emit::dts`, `emit::meta`). SSR is no longer a compiler concern — the host (ship-js) renders the module server-side. Diagnostics carry byte spans (`src/diagnostics.rs`).
 
 Binary: `/home/madvib/dev/Ship/sui/crates/sui/compiler/src/bin/sui-compiler.rs` (the `sui-compiler` Cargo bin). Used by the deck bundler and editor extensions for one-shot compiles.
 
@@ -65,7 +64,7 @@ Public API barrel: `/home/madvib/dev/Ship/sui/packages/sui/runtime/src/index.ts`
 | Transitions | `registerTransition`, `runIn`, `runOut`, `runEnter`, `runLeave`, `cancelTransitions`, `fade`, `slide`, `scale` |
 | Morph / boundary | `morph`, `attachBoundary`, `detachBoundary`, `findNearestBoundary`, `runProtected` |
 | While-states | `bindWhileLoading`, `bindWhileError` |
-| Controller | `controller`, `resolveController`, `LIFECYCLE_KEY`, `view` |
+| Controller | `controller`, `resolveController`, `LIFECYCLE_KEY` |
 | Template hooks | `registerTemplateHook`, `getTemplateHook`, `clearRegistry`, `listRegisteredHooks` |
 | Mount | `mount(target, payload, opts) -> MountHandle` |
 | Styles | `suiTonesSheet`, `suiBaseSheet`, `adoptSuiSheets` |
