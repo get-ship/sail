@@ -1,0 +1,21 @@
+{
+  "name": "@ship/sui-site",
+  "private": true,
+  "type": "module",
+  "description": "The SUI site — a deck app that documents SUI and catalogs the component library, with a live in-browser preview of every primitive via @ship/sui-viewer (SDK-free).",
+  "scripts": {
+    "gen": "node scripts/gen-gallery-manifest.mjs",
+    "test": "playwright test"
+  },
+  "dependencies": {
+    "@ship/sui-runtime": "workspace:*",
+    "@ship/sui-dom": "workspace:*",
+    "@ship/sui-viewer": "workspace:*",
+    "@ship/sui-primitives": "workspace:*",
+    "@ship/sui-compiler-wasm": "workspace:*",
+    "@ship/tokens": "workspace:*"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}

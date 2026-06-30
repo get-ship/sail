@@ -1,0 +1,71 @@
+/* SUI catalog — layout. Colors come from @ship/tokens (loaded by the entry). */
+html, body { margin: 0; background: var(--background); color: var(--foreground); }
+body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+
+.gallery {
+  display: grid;
+  grid-template-columns: 16rem minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.gallery-nav {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  padding: var(--space-5) var(--space-4);
+  border-right: 1px solid var(--border);
+  background: var(--surface-1);
+}
+.gallery-nav .eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0;
+}
+.gallery-nav .count { font-size: var(--text-sm); color: var(--muted-foreground); margin: var(--space-1) 0 var(--space-4); }
+.gallery-nav ul { list-style: none; margin: 0; padding: 0; }
+.gallery-nav button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: var(--text-sm);
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  background: none;
+  color: var(--muted-foreground);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.gallery-nav button:hover { background: var(--surface-2); color: var(--foreground); }
+.gallery-nav button.active {
+  background: color-mix(in oklch, var(--primary) 14%, transparent);
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.gallery-stage { padding: var(--space-7) var(--space-7); max-width: 64rem; }
+.stage-head { display: flex; align-items: baseline; gap: var(--space-3); margin-bottom: var(--space-5); }
+.stage-head h1 { margin: 0; font-size: var(--text-3xl); }
+.stage-head .tag { font-family: var(--font-mono); font-size: var(--text-md); color: var(--accent); }
+
+.code {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  overflow-x: auto;
+  white-space: pre;
+  tab-size: 2;
+}
+
+.viewer {
+  display: block;
+  min-height: 24rem;
+}

@@ -1,0 +1,7 @@
+{
+  // The clients seam registers the viewer + primitive packs and loads the theme.
+  "entry": {
+    "clientsModule": "./src/clients.ts",
+    "exposeNames": ["gallery"]
+  }
+}

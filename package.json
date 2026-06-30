@@ -10,7 +10,8 @@
       "packages/sui/test-setup",
       "packages/sui/tutorial",
       "packages/components/sui/*",
-      "packages/deck/*"
+      "packages/deck/*",
+      "apps/*"
     ]
   },
   "engines": {

@@ -1,0 +1,16 @@
+# deck build output + codegen (regenerated every build)
+/.deck/
+/routes.gen.ts
+/entry.gen.ts
+/components.gen.ts
+
+# generated gallery manifest (regenerated from the primitive sources)
+/src/gallery-manifest.json
+
+# the compiler WASM is copied in from @ship/sui-compiler-wasm at build time
+/public/sui_compiler_bg.wasm
+
+# Playwright
+/test-results/
+/playwright-report/
+/.cache/

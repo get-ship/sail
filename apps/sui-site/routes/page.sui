@@ -1,0 +1,38 @@
+<!--
+  The SUI primitive gallery. A sidebar of every @ship/sui-primitives element;
+  the selected one renders LIVE in <sui-component-viewer> — its `.sui` source
+  + CEM attributes arrive via prop:* identity, compiled in-browser by the wasm
+  seam (prop:compile). SDK-free end to end.
+-->
+<section class="gallery">
+  <aside class="gallery-nav">
+    <p class="eyebrow">SUI · primitives</p>
+    <p class="count">{count} components</p>
+    <ul>
+      {#for entry of entries() key={entry.tag}}
+        <li>
+          <button
+            type="button"
+            class:active={entry.tag === selected()}
+            on:click={() => select(entry.tag)}
+          >{entry.title}</button>
+        </li>
+      {/for}
+    </ul>
+  </aside>
+
+  <main class="gallery-stage">
+    <header class="stage-head">
+      <h1>{selectedTitle()}</h1>
+      <code class="tag">&lt;{selected()}&gt;</code>
+    </header>
+    <sui-component-viewer
+      class="viewer"
+      part="viewer"
+      component-name={selected()}
+      prop:source={selectedSource()}
+      prop:cem={selectedCem()}
+      prop:compile={compile()}
+    ></sui-component-viewer>
+  </main>
+</section>
