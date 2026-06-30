@@ -99,17 +99,27 @@ export default controller({
     // `props` = the CEM `attributes[]`; `value` = the controlled propValues
     // snapshot the URL/deep-link seam drives. Both set as JS properties.
     type AnySig = { (): unknown; set: (u: (p: unknown) => unknown) => void }
-    const defineHostProp = (name: string, sig: { (): unknown; set: (v: never) => void }): void => {
+    const identity = (v: unknown): unknown => v
+    const defineHostProp = (
+      name: string,
+      sig: { (): unknown; set: (v: never) => void },
+      coerce: (v: unknown) => unknown = identity,
+    ): void => {
       const s = sig as unknown as AnySig
       const existing = (host as unknown as Record<string, unknown>)[name]
-      if (existing !== undefined) s.set(() => existing)
+      if (existing !== undefined) s.set(() => coerce(existing))
       Object.defineProperty(host, name, {
         configurable: true,
         get: () => s(),
-        set: (v: unknown) => s.set(() => v),
+        set: (v: unknown) => s.set(() => coerce(v)),
       })
     }
-    defineHostProp('props', state.$signals.cemAttrs)
+    // `props` = the CEM `attributes[]`. The composing viewer threads
+    // `prop:props={cem()}` where `cem()` is null during the initial render
+    // window (its own source signal seeds only in mount) — a null must degrade
+    // to "no knobs", never crash the `cemAttrs().map` / seed-effect iteration.
+    // Coalesce here so the `CemAttr[]` contract holds at every read site.
+    defineHostProp('props', state.$signals.cemAttrs, (v) => v ?? [])
     // `value` is the controlled snapshot — feed it straight into propValues.
     defineHostProp('value', state.$signals.propValues)
 
