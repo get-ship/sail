@@ -1,0 +1,36 @@
+<!--
+  /lifecycle-hooks — onMount/onCleanup + template/controller hooks.
+-->
+<div class="doc">
+  <p class="eyebrow">Concepts</p>
+  <h1>Lifecycle &amp; hooks</h1>
+  <p class="lead">
+    SUI's hooks are a tiny, predictable set. The template-side hooks fire at
+    mount/cleanup; the controller-side hooks let you register disposers
+    alongside the signals they manage.
+  </p>
+
+  <h2>Mount &amp; cleanup</h2>
+  <p>
+    An <code>onMount()</code> callback runs once after the element is in the DOM.
+    <code>onCleanup()</code> runs when the element unloads or the surrounding
+    effect tears down. Use cleanup for timers, listeners, workers.
+  </p>
+  <sui-codeblock code={code.mount}></sui-codeblock>
+
+  <h2>Template hooks</h2>
+  <p>Template-side hooks let you wire a hot path declaratively:</p>
+  <sui-codeblock code={code.template}></sui-codeblock>
+
+  <h2>Controller hooks</h2>
+  <p>Inside the controller <code>scope()</code>, an effect's cleanup is
+    registered automatically when it returns a function. No
+    <code>onCleanup()</code> ceremony needed for the common case.
+  </p>
+  <sui-codeblock code={code.controller}></sui-codeblock>
+
+  <div class="page-nav">
+    <a class="btn" href="/control-flow">← Control flow</a>
+    <a class="btn btn-primary" href="/data-binding">Data binding →</a>
+  </div>
+</div>

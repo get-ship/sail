@@ -1,49 +1,32 @@
 <!--
-  Overview — the SUI docs home. Hero + a live, native reactive counter shown
-  next to its source, then the value-prop feature grid.
+  Landing page. Hero with copy that sells SUI directly ("real data, no vDOM"),
+  followed by 3-4 LIVE component compositions rendered by the page's own
+  scope (signals + derives drive them — proves SUI works in this page without
+  needing wasm compile or textareas). The counter pair, the todo composer,
+  and the theme picker demonstrate signals/derived, two-way binding, and
+  the live <sui-* primitive family all in one render.
 -->
-<style>
-  .counter { display: flex; align-items: center; gap: var(--space-3); }
-  .counter output {
-    font-family: var(--font-mono);
-    font-size: var(--text-3xl);
-    font-weight: 700;
-    min-width: 2.5ch;
-    text-align: center;
-    color: var(--primary);
-  }
-  .counter button {
-    width: 2.4rem; height: 2.4rem;
-    font-size: var(--text-xl);
-    display: inline-flex; align-items: center; justify-content: center;
-    padding: 0;
-  }
-  .live .muted { margin-top: var(--space-3); font-family: var(--font-mono); font-size: var(--text-sm); }
-</style>
+<div class="doc landing">
+  <section class="hero">
+    <p class="eyebrow">SUI · 0.2.0</p>
+    <h1>Reactive UIs with <span class="grad">real data</span>, in minutes.</h1>
+    <p class="lead">
+      SUI is a compiler-first reactive UI framework. Signals, derived values,
+      and effects — authored in <code>.sui</code> files, compiled to small,
+      fast web components. No virtual DOM, no diffing, no runtime tax.
+    </p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="/getting-started">Get started</a>
+      <a class="btn" href="/components">Component library</a>
+      <a class="btn btn-ghost" href="/tutorial">Try the tutorial</a>
+    </div>
+  </section>
 
-<section class="hero">
-  <p class="eyebrow">SUI · 0.2.0</p>
-  <h1>Reactive UIs with <span class="grad">real data</span>, in minutes.</h1>
-  <p class="lead">
-    SUI is a compiler-first reactive UI framework. Signals, derived values, and
-    effects — authored in <code>.sui</code> files, compiled to small, fast web
-    components. No virtual DOM, no diffing, no runtime tax.
-  </p>
-  <div class="hero-cta">
-    <a class="btn btn-primary" href="/getting-started">Get started</a>
-    <a class="btn" href="/components">Component library</a>
-  </div>
-</section>
-
-<section class="split">
-  <div>
-    <p class="pane-label">the code</p>
-    <sui-codeblock code={counterSrc}></sui-codeblock>
-  </div>
-  <div>
-    <p class="pane-label">live · running on this page</p>
-    <div class="live">
-      <div>
+  <section class="live-compositions">
+    <article class="demo">
+      <header><p class="pane-label">the code</p><sui-codeblock code={counterSrc}></sui-codeblock></header>
+      <div class="pane">
+        <p class="pane-label">live · running on this page</p>
         <div class="counter">
           <button class="btn" type="button" on:click={() => dec()}>−</button>
           <output>{count()}</output>
@@ -51,27 +34,74 @@
         </div>
         <p class="muted">doubled → {doubled()}</p>
       </div>
-    </div>
-  </div>
-</section>
+    </article>
 
-<section>
-  <div class="feature-grid">
-    <div class="card">
-      <h3>Signals, not magic</h3>
-      <p>State is explicit. A <code>signal()</code> is a value; a <code>derived()</code> recomputes when its inputs change; an <code>effect()</code> runs side-effects. You can read the graph.</p>
+    <article class="demo">
+      <header><p class="pane-label">the code</p><sui-codeblock code={todoSrc}></sui-codeblock></header>
+      <div class="pane">
+        <p class="pane-label">live · component composition</p>
+        <sui-card class="todo-card">
+          <h3 slot="title">Things to ship today</h3>
+          <sui-input placeholder="add a thing…" bind:value={draft}></sui-input>
+          <sui-cluster gap="2">
+            <sui-button tone="primary" size="sm" on:click={add}>Add</sui-button>
+            <sui-button variant="ghost" size="sm" on:click={() => items.set([])}>Clear</sui-button>
+          </sui-cluster>
+          {#if items().length === 0}
+            <p class="muted">nothing yet — type above and press Add.</p>
+          {:else}
+            <ul class="items">
+              {#for it of items() key={it}}
+                <li>
+                  <sui-checkbox checked={it === done()} on:change={() => toggle(it)}>{it}</sui-checkbox>
+                  <sui-button variant="ghost" size="sm" on:click={() => remove(it)}>×</sui-button>
+                </li>
+              {/for}
+            </ul>
+          {/if}
+        </sui-card>
+      </div>
+    </article>
+
+    <article class="demo">
+      <header><p class="pane-label">the code</p><sui-codeblock code={clockSrc}></sui-codeblock></header>
+      <div class="pane">
+        <p class="pane-label">live · ticking once a second</p>
+        <sui-card class="clock-card">
+          <h3 slot="title">Server clock (no vDOM)</h3>
+          <p class="clock-time">{time()}</p>
+          <p class="muted">an <code>effect()</code> schedules <code>setInterval</code>; the
+            text node updates in place via the binding graph.</p>
+        </sui-card>
+      </div>
+    </article>
+  </section>
+
+  <section class="why">
+    <p class="eyebrow">why sui</p>
+    <h2>Designed for real apps, not toy demos.</h2>
+    <div class="why-grid">
+      <article><h3>Compiler-first</h3>
+        <p>Templates compile AOT to direct DOM operations — no virtual DOM, no
+          diffing. The output is a plain web component.</p></article>
+      <article><h3>Live data, built in</h3>
+        <p>The <code>&lt;data&gt;</code> seam binds live sources straight into
+          your view, with loading and error states handled for you.</p></article>
+      <article><h3>Real data, real examples</h3>
+        <p>Twenty-five tutorial lessons, sixty-eight primitives, every page on
+          this site built with the framework it documents.</p></article>
+      <article><h3>Agent authorable</h3>
+        <p>The compiler exposes static analysis to agent loops — your AI pair
+          reads a <code>.sui</code> file the same way you do.</p></article>
     </div>
-    <div class="card">
-      <h3>Compiler-first</h3>
-      <p>Templates compile ahead-of-time to direct DOM operations — no virtual DOM, no re-render diffing. The output is a plain web component.</p>
+  </section>
+
+  <section class="next">
+    <p class="eyebrow">next</p>
+    <div class="next-cta">
+      <a class="btn btn-primary" href="/getting-started">Getting started</a>
+      <a class="btn" href="/reactivity">Read the reactivity tour</a>
+      <a class="btn btn-ghost" href="/components">Browse 68 components</a>
     </div>
-    <div class="card">
-      <h3>Real data, built in</h3>
-      <p>The <code>&lt;data&gt;</code> seam binds live sources straight into your view, with loading and error states handled for you.</p>
-    </div>
-    <div class="card">
-      <h3>68 components, ready</h3>
-      <p>A full primitive library — buttons, inputs, dialogs, tables, charts — every one a themeable web component you can drop in.</p>
-    </div>
-  </div>
-</section>
+  </section>
+</div>
