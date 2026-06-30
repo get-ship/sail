@@ -7,17 +7,28 @@ interface HostWithReset extends HTMLElement {
 }
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>, host?: Element) => {
+  scope: (_ctx: ViewScope<Scope>, _host?: Element) => {
     const caughtError = signal<Error | null>(null)
     const hasFallbackSlot = signal<boolean>(false)
+    // The host element is not present in the scope factory (the post-
+    // convergence "SUI names no host" compile stops passing it as the 2nd
+    // arg), so read it through this signal — set in `mount` once the
+    // runtime hands over the real element. The template wires
+    // `on:click={reset}`, so reset must always read the latest host.
+    const hostEl = signal<HTMLElement | null>(null)
     const reset = (): void => {
       caughtError.set(null)
-      if (host instanceof HTMLElement) host.removeAttribute('data-error-message')
+      const h = hostEl()
+      if (h) h.removeAttribute('data-error-message')
     }
-    return { caughtError, hasFallbackSlot, reset }
+    return { caughtError, hasFallbackSlot, reset, hostEl }
   },
 
   mount(state, host) {
+    // The runtime hands the real host element here. The scope's `reset`
+    // closure reads through `hostEl` (the dead-`host` workaround) — publish
+    // the element now that it exists, before the first user click.
+    state.hostEl = host as HTMLElement
     // Authors commonly wrap their custom fallback in <template slot="fallback">
     // so the markup isn't visible while the boundary is healthy. Templates
     // don't render their contents, so we clone the inert template into a

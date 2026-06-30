@@ -23,7 +23,7 @@ interface Drag {
 const DEFAULT_ENDPOINT = '/api/feedback'
 
 export default controller({
-  scope: (props: ViewScope<Scope>, host?: Element) => {
+  scope: (props: ViewScope<Scope>, _host?: Element) => {
     const viewIdProp = props.viewId
     const endpointProp = props.endpoint
     const stagingProp = props.staging
@@ -32,6 +32,14 @@ export default controller({
     const pending = signal<Pending | null>(null)
     const drag = signal<Drag | null>(null)
     const noteText = signal('')
+
+    // The host element is not present in the scope factory (the post-
+    // convergence "SUI names no host" compile stops passing it as the 2nd
+    // arg), so read it through this signal — set in `mount` once the
+    // runtime hands over the real element. The `sendOne` / `confirmNote`
+    // closures below emit `sui-annotation-{staged,sent,error}` on the host,
+    // so they must read the host from this signal, not the dead scope arg.
+    const hostEl = signal<HTMLElement | null>(null)
 
     const _positions: Record<string, { x: number; y: number }> = {}
 
@@ -79,7 +87,7 @@ export default controller({
           body: JSON.stringify(ev),
         })
         if (!resp.ok) {
-          host!.dispatchEvent(
+          hostEl()?.dispatchEvent(
             new CustomEvent('sui-annotation-error', {
               detail: { code: `http_${resp.status}`, id: ev.id },
               bubbles: true,
@@ -89,7 +97,7 @@ export default controller({
           return
         }
         staged.set(staged().filter((s) => s.id !== ev.id))
-        host!.dispatchEvent(
+        hostEl()?.dispatchEvent(
           new CustomEvent('sui-annotation-sent', {
             detail: { id: ev.id, status: resp.status },
             bubbles: true,
@@ -97,7 +105,7 @@ export default controller({
           }),
         )
       } catch (e) {
-        host!.dispatchEvent(
+        hostEl()?.dispatchEvent(
           new CustomEvent('sui-annotation-error', {
             detail: { code: 'network_error', message: String(e), id: ev.id },
             bubbles: true,
@@ -125,7 +133,7 @@ export default controller({
       })
       _positions[ev.id] = { x: p.x, y: p.y }
       staged.set([...staged(), ev])
-      host!.dispatchEvent(
+      hostEl()?.dispatchEvent(
         new CustomEvent('sui-annotation-staged', {
           detail: ev,
           bubbles: true,
@@ -172,10 +180,16 @@ export default controller({
       cancelPending,
       onNoteKeydown,
       sendOne,
+      hostEl,
     }
   },
 
   mount(state, host) {
+    // The runtime hands the real host element here. The scope's `sendOne`
+    // and `confirmNote` closures read through `hostEl` (the dead-`host`
+    // workaround) — publish the element now that it exists, before the
+    // first user gesture can fire.
+    state.hostEl = host as HTMLElement
 
     let _drag: Drag | null = null
     let _raf: number | null = null
