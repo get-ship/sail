@@ -179,5 +179,10 @@ Astro build needs and shells out to `cargo run -p deck-cli -- emit`.
 
 ## See also
 
+- `packages/deck/docs` — the deck **documentation site**, built with deck and
+  served by deck. It is the canonical standalone example (a ship-free, file-routed
+  app exercising routing, dynamic `[param]` routes, layouts, controllers/reactivity,
+  the data seam, HMR and the static build) AND the native-path release gate
+  (`bunx playwright test` drives the real CLI; 6 specs).
 - `.claude/skills/ship-sui` — authoring `.sui` views + components.
 - `docs/ship-adrs/` — the architectural decisions deck implements.
