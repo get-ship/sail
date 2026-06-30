@@ -1,0 +1,22 @@
+<article class="doc">
+  <p class="eyebrow">Routing</p>
+  <h1>Layouts</h1>
+  <p class="lead">A <code>_layout.sui</code> wraps every route beneath it in shared chrome — a header, a nav, a sidebar — that survives navigation.</p>
+
+  <h2>A layout is chrome</h2>
+  <p>deck reads the layout's <strong>first custom-element tag</strong> as the chrome wrapper, then mounts each route into that element's <code>&lt;slot name="route"&gt;</code>.</p>
+  <pre class="code">{layoutFile}</pre>
+  <p>This docs site's <code>routes/_layout.sui</code> is exactly that one line. <code>&lt;sui-shell&gt;</code> projects a <code>&lt;slot name="route"&gt;</code> — the sidebar and top bar around this page are the chrome; the article is the route.</p>
+
+  <h2>The chrome persists</h2>
+  <p>On a client-side navigation only the route slot swaps. The header, nav, and any layout state stay mounted across navigations — no chrome reflow, no flash.</p>
+
+  <h2>Layouts compose</h2>
+  <p>Nested <code>_layout.sui</code> files form a layout chain: a route is wrapped by every layout above it, outermost first.</p>
+  <pre class="code">{layoutChain}</pre>
+
+  <div class="page-nav">
+    <a href="/dynamic-routes">← Dynamic routes</a>
+    <a href="/reactivity">Reactivity →</a>
+  </div>
+</article>
