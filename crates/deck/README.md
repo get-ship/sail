@@ -45,9 +45,13 @@ live instances in place.
 
 **Serve-time vs baked.** `deck dev` injects the `deck-render`/`deck-mode` metas
 and the live-reload client at serve time; a `deck build` artifact carries **none**
-of that — a shipped build is clean. (Caveat: a build references its app assets
-under the per-app serve namespace, so it is not yet directly dumb-static-servable
-without URL rewriting — tracked.)
+of that — a shipped build is clean.
+
+**Static hosting.** By default a build references app assets under the per-app
+serve namespace (`/<name>/<file>`, which a host maps to `assets/`). For a build a
+dumb static host (Netlify/S3/nginx) can serve directly, pass **`--base assets`** —
+asset URLs become `/assets/<file>`, matching the on-disk layout. (`deck build
+--bundle-framework --base assets`.)
 
 ## Crate map
 
