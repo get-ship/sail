@@ -11,7 +11,9 @@ import { test, expect } from '@playwright/test'
 // Runs on its own port against `--out ./.prod-build` so it never clobbers the
 // dev server's `./app/.deck`. Absolute URLs (own webServer, no baseURL).
 
-const PROD_PORT = Number(process.env.DECK_E2E_PROD_PORT ?? 7880)
+// Must match playwright.config.ts's PROD_PORT default (7882 — off the example
+// app's 7880 to avoid a cross-harness collision).
+const PROD_PORT = Number(process.env.DECK_E2E_PROD_PORT ?? 7882)
 const BASE = `http://127.0.0.1:${PROD_PORT}`
 
 test.describe('deck build — shipped static SPA', () => {
@@ -19,7 +21,7 @@ test.describe('deck build — shipped static SPA', () => {
     const res = await request.get(`${BASE}/`)
     expect(res.status()).toBe(200)
     const html = await res.text()
-    expect(html).toContain('id="ship-root"')
+    expect(html).toContain('id="root"')
     expect(html).toContain('importmap')
     // The framework singletons are materialized into the build (--bundle-framework),
     // so the importmap points at the app's OWN /_deck/* — not an external CDN.
@@ -35,7 +37,7 @@ test.describe('deck build — shipped static SPA', () => {
     expect(html).not.toContain('live-reload.js')
     expect(html).not.toContain('deck-mode')
     // CSR: the route renders client-side, so its text is absent from raw bytes
-    // (the empty #ship-root + missing route text IS the csr tell, not a meta).
+    // (the empty #root + missing route text IS the csr tell, not a meta).
     expect(html).not.toContain('two plus two is 4')
   })
 

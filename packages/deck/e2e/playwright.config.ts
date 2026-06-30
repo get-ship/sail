@@ -13,7 +13,10 @@ const SSR_PORT = Number(process.env.DECK_E2E_SSR_PORT ?? 7879)
 // The PROD fixture: `deck build --bundle-framework` output, static-served (no
 // deck process). Built to an isolated `--out` so it never clobbers the dev
 // server's `./app/.deck`. Its spec uses absolute URLs.
-const PROD_PORT = Number(process.env.DECK_E2E_PROD_PORT ?? 7880)
+// Distinct from the example app's dev server (which defaults to 7880) so the
+// two harnesses never collide — a shared port + `reuseExistingServer` made the
+// prod bake silently serve a stale dev server.
+const PROD_PORT = Number(process.env.DECK_E2E_PROD_PORT ?? 7882)
 
 export default defineConfig({
   testDir: './tests',
@@ -55,10 +58,14 @@ export default defineConfig({
       // Build a COPY (`.prod-src`) so the build's generated `routes.gen.ts`
       // never races the dev server (port 7878), which writes the same file in
       // `./app` on startup. `--out` isolates the bundle into `.prod-build`.
-      command: `rm -rf ./.prod-src && cp -r ./app ./.prod-src && cargo run -q -p deck-cli -- build --project ./.prod-src --out ./.prod-build --bundle-framework --base assets && node serve-built.mjs ./.prod-build ${PROD_PORT}`,
+      command: `rm -rf ./.prod-src ./.prod-build && cp -r ./app ./.prod-src && cargo run -q -p deck-cli -- build --project ./.prod-src --out ./.prod-build --bundle-framework --base assets && node serve-built.mjs ./.prod-build ${PROD_PORT}`,
       url: `http://${HOST}:${PROD_PORT}`,
       timeout: 180_000,
-      reuseExistingServer: !process.env.CI,
+      // NEVER reuse: this fixture bakes a static artifact that must reflect the
+      // CURRENT code. Reusing a prior server would serve a stale build (or, on a
+      // port clash, a dev server) — which is exactly how 4 prod specs went green-
+      // but-wrong. Always tear down `.prod-*` and rebuild from the live binary.
+      reuseExistingServer: false,
       stdout: 'pipe',
       stderr: 'pipe',
     },
