@@ -99,7 +99,78 @@ pub(super) fn partition_inline_updates(
     (Some(body), fallback)
 }
 
+/// Does any instruction in this subtree carry a `<slot reflect-empty>`?
+///
+/// A `<slot reflect-empty>` emits `bindSlotEmpty(slot, container, attr)`, which
+/// reflects an attr on the HOST. Inside a hoisted `__wireBoundary_b<N>` helper
+/// (the `{#if}`/`{#for}`/`{#match}` branch closures live at factory scope, NOT
+/// in `__mount(container)`), `container` is unbound — so when a boundary's
+/// subtree contains such a slot, the helper must take `container` as a param
+/// and every call site must pass it. This walk gates that threading so
+/// boundaries WITHOUT a reflect-empty slot stay byte-identical (no churn).
+///
+/// Recurses through nested boundaries: a slot in a nested `{#if}` makes the
+/// nested helper take `container` AND the outer helper (whose branch holds the
+/// nested call site, which now passes `container`) take it too.
+fn instrs_have_reflect_empty_slot(instrs: &[Instr]) -> bool {
+    instrs.iter().any(instr_has_reflect_empty_slot)
+}
+
+fn instr_has_reflect_empty_slot(instr: &Instr) -> bool {
+    match instr {
+        Instr::Element(e) => {
+            e.attrs
+                .iter()
+                .any(|a| matches!(a, AttrInstr::SlotReflectEmpty { .. }))
+                || instrs_have_reflect_empty_slot(&e.children)
+        }
+        Instr::If(i) => {
+            i.branches
+                .iter()
+                .any(|b| instrs_have_reflect_empty_slot(&b.body))
+                || i.else_body
+                    .as_deref()
+                    .is_some_and(instrs_have_reflect_empty_slot)
+        }
+        Instr::For(f) => {
+            instrs_have_reflect_empty_slot(&f.body)
+                || f.else_body
+                    .as_deref()
+                    .is_some_and(instrs_have_reflect_empty_slot)
+        }
+        Instr::Match(m) => {
+            m.cases
+                .iter()
+                .any(|c| instrs_have_reflect_empty_slot(&c.body))
+                || m.default
+                    .as_deref()
+                    .is_some_and(instrs_have_reflect_empty_slot)
+        }
+        Instr::WhileLoading(w) => instrs_have_reflect_empty_slot(&w.body),
+        Instr::WhileError(w) => instrs_have_reflect_empty_slot(&w.body),
+        Instr::Let(l) => instrs_have_reflect_empty_slot(&l.body),
+        Instr::StaticText { .. } | Instr::DynamicText { .. } | Instr::Comment { .. } => false,
+    }
+}
+
 impl TemplateEmitter {
+    /// The `container` arg appended to a `__wireBoundary` helper signature /
+    /// call when its subtree reflects a slot (see `instrs_have_reflect_empty_slot`).
+    /// Empty when not needed — so non-slot boundaries emit unchanged.
+    fn boundary_host_param(&self, needs_host: bool) -> String {
+        if needs_host {
+            format!(", {}", self.machinery_param("container", "HTMLElement"))
+        } else {
+            String::new()
+        }
+    }
+    fn boundary_host_arg(needs_host: bool) -> &'static str {
+        if needs_host {
+            ", container"
+        } else {
+            ""
+        }
+    }
     pub(in crate::emit) fn emit_if(
         &mut self,
         w: &mut Writer,
@@ -110,13 +181,25 @@ impl TemplateEmitter {
         let key = self.next_key();
         let anchor = self.fresh("ifAnchor");
 
+        // A `<slot reflect-empty>` anywhere in this boundary's subtree means the
+        // hoisted helper reflects on the host → it must take `container`.
+        let needs_host = instr
+            .branches
+            .iter()
+            .any(|b| instrs_have_reflect_empty_slot(&b.body))
+            || instr
+                .else_body
+                .as_deref()
+                .is_some_and(instrs_have_reflect_empty_slot);
+
         // __mount-side: anchor + invoke hoisted handler.
         w.line(&format!(
             "const {anchor} = document.createComment(\"if\");"
         ));
         w.line(&format!("{parent_var}.appendChild({anchor});"));
         w.line(&format!(
-            "{cleanups_var}.push(__wireBoundary_{key}({anchor}));"
+            "{cleanups_var}.push(__wireBoundary_{key}({anchor}{host}));",
+            host = Self::boundary_host_arg(needs_host)
         ));
 
         // Direct-emit hydrate dispatch (parent before children — outer
@@ -124,7 +207,7 @@ impl TemplateEmitter {
         // calls become no-ops via the `__m[k]` guard).
         if self.is_view && self.boundary_depth == 0 {
             self.hydrate_uses_markers = true;
-            self.emit_boundary_hydrate(&key, "if");
+            self.emit_boundary_hydrate(&key, "if", needs_host);
         }
 
         // Hoisted handler — emitted into `boundary_hoists`, drained
@@ -132,7 +215,8 @@ impl TemplateEmitter {
         let mut h = Writer::new();
         let ap = self.machinery_param("anchor", "Comment");
         h.line(&format!(
-            "const __wireBoundary_{key} = ({ap}) => bindIf({{"
+            "const __wireBoundary_{key} = ({ap}{host}) => bindIf({{",
+            host = self.boundary_host_param(needs_host)
         ));
         h.enter();
         h.line("anchor,");
@@ -175,18 +259,25 @@ impl TemplateEmitter {
         let key = self.next_key();
         let anchor = self.fresh("forAnchor");
 
+        let needs_host = instrs_have_reflect_empty_slot(&instr.body)
+            || instr
+                .else_body
+                .as_deref()
+                .is_some_and(instrs_have_reflect_empty_slot);
+
         // __mount-side: anchor + invoke hoisted handler.
         w.line(&format!(
             "const {anchor} = document.createComment(\"for\");"
         ));
         w.line(&format!("{parent_var}.appendChild({anchor});"));
         w.line(&format!(
-            "{cleanups_var}.push(__wireBoundary_{key}({anchor}));"
+            "{cleanups_var}.push(__wireBoundary_{key}({anchor}{host}));",
+            host = Self::boundary_host_arg(needs_host)
         ));
 
         if self.is_view && self.boundary_depth == 0 {
             self.hydrate_uses_markers = true;
-            self.emit_boundary_hydrate(&key, "for");
+            self.emit_boundary_hydrate(&key, "for", needs_host);
         }
 
         let it_rw = self.rw(&instr.iterable.source, &[]);
@@ -209,7 +300,8 @@ impl TemplateEmitter {
         let mut h = Writer::new();
         let ap = self.machinery_param("anchor", "Comment");
         h.line(&format!(
-            "const __wireBoundary_{key} = ({ap}) => bindFor({{"
+            "const __wireBoundary_{key} = ({ap}{host}) => bindFor({{",
+            host = self.boundary_host_param(needs_host)
         ));
         h.enter();
         h.line("anchor,");
@@ -445,24 +537,35 @@ impl TemplateEmitter {
         let key = self.next_key();
         let anchor = self.fresh("matchAnchor");
 
+        let needs_host = instr
+            .cases
+            .iter()
+            .any(|c| instrs_have_reflect_empty_slot(&c.body))
+            || instr
+                .default
+                .as_deref()
+                .is_some_and(instrs_have_reflect_empty_slot);
+
         w.line(&format!(
             "const {anchor} = document.createComment(\"match\");"
         ));
         w.line(&format!("{parent_var}.appendChild({anchor});"));
         w.line(&format!(
-            "{cleanups_var}.push(__wireBoundary_{key}({anchor}));"
+            "{cleanups_var}.push(__wireBoundary_{key}({anchor}{host}));",
+            host = Self::boundary_host_arg(needs_host)
         ));
 
         if self.is_view && self.boundary_depth == 0 {
             self.hydrate_uses_markers = true;
-            self.emit_boundary_hydrate(&key, "match");
+            self.emit_boundary_hydrate(&key, "match", needs_host);
         }
 
         let disc_rw = self.rw(&instr.discriminant.source, &[]);
         let mut h = Writer::new();
         let ap = self.machinery_param("anchor", "Comment");
         h.line(&format!(
-            "const __wireBoundary_{key} = ({ap}) => bindIf({{"
+            "const __wireBoundary_{key} = ({ap}{host}) => bindIf({{",
+            host = self.boundary_host_param(needs_host)
         ));
         h.enter();
         h.line("anchor,");
@@ -504,7 +607,7 @@ impl TemplateEmitter {
     /// a Comment anchor, and invokes the hoisted `__wireBoundary_b<N>`
     /// helper — same shape the legacy `__bN_attach` named property used
     /// to expose, just inlined into the unified hydrate function.
-    fn emit_boundary_hydrate(&mut self, key: &str, kind: &str) {
+    fn emit_boundary_hydrate(&mut self, key: &str, kind: &str, needs_host: bool) {
         let k = js_string(key);
         self.hydrate_calls.line(&format!("if (__m[{k}]) {{"));
         self.hydrate_calls.line(&format!("  const __t = __m[{k}];"));
@@ -522,8 +625,16 @@ impl TemplateEmitter {
         // always an element boundary, so the Comment branch always wins at
         // runtime. Production emits untyped JS, so no cast there.
         let anchor_arg = if self.is_synthetic() { "__anchor as Comment" } else { "__anchor" };
+        // When the boundary reflects a slot, pass the host. In hydrate the
+        // mount target `root` IS the host (a view hydrates into its container);
+        // synthetic mode narrows since `root`'s param type is broader.
+        let host_arg = if needs_host {
+            if self.is_synthetic() { ", root as HTMLElement" } else { ", root" }
+        } else {
+            ""
+        };
         self.hydrate_calls.line(&format!(
-            "  __cleanups.push(__wireBoundary_{key}({anchor_arg}));"
+            "  __cleanups.push(__wireBoundary_{key}({anchor_arg}{host_arg}));"
         ));
         self.hydrate_calls.line("}");
     }

@@ -625,6 +625,52 @@ fn reflect_empty_slot_emits_bind_slot_empty_call() {
 }
 
 #[test]
+fn reflect_empty_slot_in_conditional_threads_container() {
+    // A `<slot reflect-empty>` inside an `{#if}` lands in a hoisted
+    // `__wireBoundary` helper at FACTORY scope, where `container` (the
+    // `__mount(container)` param) is NOT bound. The helper must therefore TAKE
+    // `container` as a param and every call site must PASS it — otherwise
+    // mounting the conditional branch throws `ReferenceError: container is not
+    // defined` (the bug behind every `<sui-*>` with a conditional reflect-empty
+    // slot, e.g. sui-input's `<slot name="trailing">`).
+    use sui_compiler::compile;
+    let path = fixtures_dir().join("reflect-empty-slot-conditional.sui");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let opts = CompileOpts {
+        setup_url: None,
+        mode: CompileMode::Component,
+        source_path: Some(path),
+        styles: None,
+        component_meta: Some(ComponentMeta {
+            name: "reflect-empty-slot-conditional-test".into(),
+            shadow: true,
+        }),
+        emit_dts: false,
+        emit_component_imports: false,
+    };
+    let out = compile(&source, opts).expect("compile");
+    // The hoisted helper THREADS `container` (so the slot binding inside it
+    // resolves the host).
+    assert!(
+        out.js.contains("(anchor, container) => bindIf("),
+        "expected the hoisted __wireBoundary helper to take `container`:\n{}",
+        out.js
+    );
+    // The slot binding lives inside that helper and reflects via `container`.
+    assert!(
+        out.js.contains("bindSlotEmpty(") && out.js.contains(", container, "),
+        "expected bindSlotEmpty(slot, container, attr) inside the helper:\n{}",
+        out.js
+    );
+    // The `__mount` call site PASSES `container` to the helper.
+    assert!(
+        out.js.contains(", container));"),
+        "expected the __mount call site to pass `container`:\n{}",
+        out.js
+    );
+}
+
+#[test]
 fn ship_button_emits_cem() {
     let path = fixtures_dir().join("ship-button.sui");
     let source = fs::read_to_string(&path).unwrap();
