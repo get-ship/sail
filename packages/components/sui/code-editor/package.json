@@ -28,6 +28,7 @@
   "dependencies": {
     "@ship/sui-runtime": "workspace:*",
     "@ship/sui-dom": "workspace:*",
+    "@ship/sui-lsp-browser": "workspace:*",
     "@ship/sui-primitives": "workspace:*",
     "@codemirror/autocomplete": "^6",
     "@codemirror/commands": "^6",

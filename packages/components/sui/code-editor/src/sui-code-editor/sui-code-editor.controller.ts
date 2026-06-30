@@ -1,12 +1,4 @@
-// <sui-code-editor> — SUI primitive, framework-pure. CodeMirror 6 wrapped as a
-// lazy-loaded web-component. Drop-in for any code-editing surface in sui-site
-// (or any SUI app) without depending on the ship platform.
-//
 // bind:this + mount() pattern: ref → EditorView → event bridge → cleanup.
-// Same controller shape the ship-code-editor pack uses, minus the LSP worker
-// (the deck bundler doesn't support `?worker` Vite suffix). Diagnostics and
-// completions can be hot-patched by the host via setDiagnostics/setCompletions
-// (the canonical path used by the tutorial compile-error squiggle flow).
 
 import { controller, effect } from '@ship/sui-runtime'
 import type { Signal } from '@ship/sui-runtime'
@@ -22,24 +14,18 @@ import {
   defaultHighlightStyle, syntaxHighlighting,
   indentOnInput, bracketMatching, foldGutter, foldKeymap,
 } from '@codemirror/language'
-import {
-  defaultKeymap, history, historyKeymap, indentWithTab,
-} from '@codemirror/commands'
+import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
 import {
   closeBrackets, closeBracketsKeymap,
   autocompletion,
   type CompletionContext, type CompletionResult, type Completion,
 } from '@codemirror/autocomplete'
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search'
-import {
-  lintGutter, setDiagnostics as cmSetDiagnostics,
-  type Diagnostic,
-} from '@codemirror/lint'
+import { lintGutter, setDiagnostics as cmSetDiagnostics, type Diagnostic } from '@codemirror/lint'
 import { suiEditorTheme, suiHighlighting } from './sui-code-editor.theme'
 import { loadLanguage } from './sui-code-editor.lang'
 import type { Scope } from './sui-code-editor.sui'
 
-/** A single editor diagnostic. Lines/columns are 1-based. */
 export interface SuiDiagnostic {
   line: number
   column?: number
@@ -50,7 +36,6 @@ export interface SuiDiagnostic {
   source?: string
 }
 
-/** A completion item source — the trigger string + the labels/inserts. */
 export interface SuiCompletionSource {
   trigger: string
   items: Array<{
@@ -61,17 +46,11 @@ export interface SuiCompletionSource {
   }>
 }
 
-/** Host-facing imperative API exposed on the element instance. */
-export interface SuiCodeEditorApi {
-  setDiagnostics: (diags: SuiDiagnostic[]) => void
-  setCompletions: (src: SuiCompletionSource[]) => void
-  focus: () => void
-}
-
 const DEBOUNCE_MS = 150
 
 export default controller<Scope>({
   mount(state, host) {
+
     const hostEl = (state.$signals.editorHost as unknown as Signal<HTMLElement | null>)()
     if (!hostEl) {
       console.warn('[sui-code-editor] bind:this ref is null — CodeMirror not initialized')
@@ -95,6 +74,7 @@ export default controller<Scope>({
     const roSig = state.$signals.readonly as unknown as Signal<boolean>
     const lnSig = state.$signals.lineNumbers as unknown as Signal<boolean>
     const phSig = state.$signals.placeholder as unknown as Signal<string>
+    const wasmUrlSig = state.$signals.wasmUrl as unknown as Signal<string>
 
     function buildCompletionExt(): Extension {
       if (completions.length === 0) return []
@@ -106,7 +86,7 @@ export default controller<Scope>({
       valSig.set(newValue)
       suppressUpdate = false
       host.dispatchEvent(new Event('input', { bubbles: true, composed: true }))
-      clearTimeout(debounceTimer)
+      if (debounceTimer) clearTimeout(debounceTimer)
       debounceTimer = setTimeout(() => {
         host.dispatchEvent(new CustomEvent('sui-change', {
           detail: { value: newValue }, bubbles: true, composed: true,
@@ -202,16 +182,20 @@ export default controller<Scope>({
       view.dispatch(cmSetDiagnostics(st, cmDiags))
     }
 
-    const api = host as unknown as Partial<SuiCodeEditorApi>
-    api.setDiagnostics = (diags: SuiDiagnostic[]) => {
+    const el = host as HTMLElement & {
+      setDiagnostics?: ((d: SuiDiagnostic[]) => void) | undefined
+      setCompletions?: ((src: SuiCompletionSource[]) => void) | undefined
+      focus?: () => void
+    }
+    el.setDiagnostics = (diags: SuiDiagnostic[]) => {
       if (!view) { pendingDiagnostics = diags; return }
       applyDiagnostics(diags)
     }
-    api.setCompletions = (src: SuiCompletionSource[]) => {
+    el.setCompletions = (src: SuiCompletionSource[]) => {
       completions = src ?? []
       view?.dispatch({ effects: completionCompartment.reconfigure(buildCompletionExt()) })
     }
-    api.focus = () => { view?.focus() }
+    el.focus = () => { view?.focus() }
 
     Object.defineProperty(host, 'value', {
       get: () => view?.state.doc.toString() ?? valSig(),
@@ -245,6 +229,59 @@ export default controller<Scope>({
       }
     }))
 
+    // ── Browser LSP integration ───────────────────────────────────
+    // For `.sui` content, run sui-lsp-browser's pure analyser on the
+    // main thread (no worker — the `?worker` Vite suffix isn't supported
+    // by the deck bundler, our chrome bundler). Diagnostics stream into
+    // setDiagnostics on every debounced doc change; completions are
+    // seeded once from allSources. Hover deferred to a follow-up; if
+    // the parse cost ever shows in the input loop, switch to a worker
+    // with a Bun-compatible URL.
+    type LspDiagnoseFn = (text: string) => Promise<SuiDiagnostic[]>
+    type LspAllSourcesFn = () => SuiCompletionSource[]
+    let lspDiagnose: LspDiagnoseFn | null = null
+    let lspDebounce: ReturnType<typeof setTimeout> | null = null
+    let lspInit: Promise<void> | null = null
+    async function ensureLsp(): Promise<void> {
+      if (lspDiagnose || lspInit) { await lspInit; return }
+      lspInit = (async () => {
+        try {
+          const [diag, comp] = await Promise.all([
+            import('@ship/sui-lsp-browser/diagnostics') as unknown as Promise<{ diagnose: LspDiagnoseFn }>,
+            import('@ship/sui-lsp-browser/completions') as unknown as Promise<{ allSources: LspAllSourcesFn }>,
+          ])
+          lspDiagnose = diag.diagnose
+          try { el.setCompletions?.(comp.allSources()) } catch { /* best-effort */ }
+        } catch (err) {
+          console.warn('[sui-code-editor] LSP init failed; diagnostics unavailable', err)
+        }
+      })()
+      await lspInit
+    }
+    disposers.push(effect(() => {
+      const lang = langSig()
+      if (lang !== 'sui') return
+      void ensureLsp()
+    }))
+    disposers.push(effect(() => {
+      const text = valSig()
+      if (langSig() !== 'sui') return
+      if (lspDebounce) clearTimeout(lspDebounce)
+      lspDebounce = setTimeout(async () => {
+        if (!lspDiagnose) await ensureLsp()
+        if (!lspDiagnose) return
+        try {
+          const out = await lspDiagnose(text, wasmUrlSig())
+          el.setDiagnostics?.(out)
+        } catch { /* best-effort */ }
+      }, 350)
+    }))
+    disposers.push(() => {
+      if (lspDebounce) clearTimeout(lspDebounce)
+      lspDiagnose = null
+      lspInit = null
+    })
+
     disposers.push(effect(() => {
       view?.dispatch({ effects: readonlyCompartment.reconfigure(EditorState.readOnly.of(roSig())) })
     }))
@@ -264,11 +301,11 @@ export default controller<Scope>({
     }))
 
     return () => {
-      clearTimeout(debounceTimer)
+      if (debounceTimer) clearTimeout(debounceTimer)
       for (const d of disposers) d()
-      api.setDiagnostics = undefined
-      api.setCompletions = undefined
-      // Leave api.focus — it shadows native HTMLElement.focus; nulling breaks it.
+      el.setDiagnostics = undefined
+      el.setCompletions = undefined
+      // Leave el.focus — shadows native HTMLElement.focus; nulling breaks it.
       try {
         delete (host as unknown as Record<string, unknown>).value
       } catch {
@@ -280,6 +317,8 @@ export default controller<Scope>({
   },
 })
 
+// CodeMirror's Completion treats absent detail/info as "none"; under
+// exactOptionalPropertyTypes we can't pass `undefined` for them, so omit.
 function toCmCompletion(it: SuiCompletionSource['items'][number]): Completion {
   const c: Completion = { label: it.label, apply: it.insert ?? it.label }
   if (it.detail !== undefined) c.detail = it.detail

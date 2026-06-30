@@ -1,9 +1,8 @@
 /**
- * CodeMirror theme using SUI design tokens.
+ * CodeMirror theme using Ship design tokens.
  *
  * Colors reference CSS custom properties from tokens.css so the theme
- * adapts to the sui document's [data-mode="dark"] / default light axis
- * automatically — no separate editor stylesheet.
+ * adapts to light/dark mode automatically via the .dark class.
  */
 
 import { EditorView } from '@codemirror/view'
@@ -12,7 +11,7 @@ import { tags } from '@lezer/highlight'
 
 export const suiEditorTheme = EditorView.theme({
   '&': {
-    backgroundColor: 'var(--surface-1)',
+    backgroundColor: 'var(--card)',
     color: 'var(--foreground)',
     fontSize: 'inherit',
     fontFamily: 'inherit',
@@ -27,43 +26,43 @@ export const suiEditorTheme = EditorView.theme({
     borderLeftWidth: '2px',
   },
   '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': {
-    background: 'color-mix(in oklch, var(--primary) 24%, transparent)',
+    background: 'var(--tone-primary-bg)',
   },
   '.cm-activeLine': {
-    backgroundColor: 'color-mix(in oklch, var(--surface-2) 70%, transparent)',
+    backgroundColor: 'color-mix(in oklch, var(--muted) 30%, transparent)',
   },
   '.cm-gutters': {
-    backgroundColor: 'var(--surface-2)',
+    backgroundColor: 'var(--muted)',
     color: 'var(--muted-foreground)',
     border: 'none',
     borderRight: '1px solid var(--border)',
   },
   '.cm-activeLineGutter': {
-    backgroundColor: 'var(--surface-2)',
+    backgroundColor: 'color-mix(in oklch, var(--muted) 60%, transparent)',
     color: 'var(--foreground)',
   },
   '.cm-foldPlaceholder': {
-    backgroundColor: 'var(--surface-2)',
+    backgroundColor: 'var(--muted)',
     border: '1px solid var(--border)',
     color: 'var(--muted-foreground)',
   },
   '.cm-tooltip': {
-    backgroundColor: 'var(--surface-1)',
-    color: 'var(--foreground)',
+    backgroundColor: 'var(--popover)',
+    color: 'var(--popover-foreground)',
     border: '1px solid var(--border)',
     borderRadius: 'var(--radius-md)',
-    boxShadow: 'var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.08))',
+    boxShadow: 'var(--shadow-md)',
   },
   '.cm-tooltip-autocomplete': {
     '& > ul > li[aria-selected]': {
-      backgroundColor: 'var(--surface-2)',
+      backgroundColor: 'var(--muted)',
     },
   },
   '.cm-searchMatch': {
-    backgroundColor: 'color-mix(in oklch, var(--primary) 30%, transparent)',
+    backgroundColor: 'var(--tone-info-border)',
   },
   '.cm-searchMatch.cm-searchMatch-selected': {
-    backgroundColor: 'color-mix(in oklch, var(--primary) 50%, transparent)',
+    backgroundColor: 'var(--tone-primary-border)',
   },
   '.cm-placeholder': {
     color: 'var(--muted-foreground)',
@@ -76,8 +75,9 @@ export const suiEditorTheme = EditorView.theme({
   },
 })
 
-// Syntax colors read --syntax-* tokens (tokens.css) so themes that intentionally
-// subdue their brand palette keep code legible at AA contrast.
+// Syntax colors read --syntax-* tokens (tokens.css) rather than --primary
+// / --accent so themes that intentionally subdue their brand palette
+// (halo, paper) can still keep code legible at AA contrast.
 const suiHighlightStyle = HighlightStyle.define([
   { tag: tags.keyword, color: 'var(--syntax-keyword)' },
   { tag: tags.operator, color: 'var(--syntax-keyword)' },
@@ -93,13 +93,13 @@ const suiHighlightStyle = HighlightStyle.define([
   { tag: tags.comment, color: 'var(--syntax-comment)', fontStyle: 'italic' },
   { tag: tags.blockComment, color: 'var(--syntax-comment)', fontStyle: 'italic' },
   { tag: tags.lineComment, color: 'var(--syntax-comment)', fontStyle: 'italic' },
-  { tag: tags.variableName, color: 'var(--foreground)' },
-  { tag: tags.definition(tags.variableName), color: 'var(--foreground)', fontWeight: '500' },
+  { tag: tags.variableName, color: 'var(--syntax-variable)' },
+  { tag: tags.definition(tags.variableName), color: 'var(--syntax-variable)', fontWeight: '500' },
   { tag: tags.function(tags.variableName), color: 'var(--syntax-function)' },
-  { tag: tags.typeName, color: 'var(--syntax-function)' },
-  { tag: tags.className, color: 'var(--syntax-function)' },
-  { tag: tags.propertyName, color: 'var(--foreground)' },
-  { tag: tags.definition(tags.propertyName), color: 'var(--foreground)' },
+  { tag: tags.typeName, color: 'var(--syntax-type)' },
+  { tag: tags.className, color: 'var(--syntax-type)' },
+  { tag: tags.propertyName, color: 'var(--syntax-variable)' },
+  { tag: tags.definition(tags.propertyName), color: 'var(--syntax-variable)' },
   { tag: tags.atom, color: 'var(--syntax-number)' },
   { tag: tags.meta, color: 'var(--syntax-comment)' },
   { tag: tags.tagName, color: 'var(--syntax-tag)' },

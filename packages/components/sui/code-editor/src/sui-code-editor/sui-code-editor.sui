@@ -32,6 +32,7 @@
 <prop name="size" values="sm|md|lg" default="md" reflect />
 <prop name="tone" values="default|info|success|warning|destructive" default="default" reflect />
 <prop name="theme" values="light|dark|auto" default="auto" reflect />
+<prop name="wasm-url" type="string" default="/sui_compiler_bg.wasm" />
 
 <style>
   :host {

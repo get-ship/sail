@@ -1,11 +1,8 @@
 /**
- * Dynamic language loaders for <sui-code-editor>.
+ * Dynamic language loaders for <ship-code-editor>.
  *
  * Each language extension is imported on demand so the base bundle
- * only includes the editor core + theme. The dynamic imports are
- * justified by exception: the language is runtime-selected via the
- * `language` prop and we don't want every install to ship every parser
- * (~150KB gzipped across all 11 languages).
+ * only includes the editor core and theme.
  */
 
 import type { Extension } from '@codemirror/state'
@@ -17,7 +14,6 @@ export type SupportedLanguage =
 export async function loadLanguage(lang: string): Promise<Extension> {
   switch (lang as SupportedLanguage) {
     case 'yaml': {
-      // Runtime-selected parser — see file header.
       const { yaml } = await import('@codemirror/lang-yaml')
       return yaml()
     }

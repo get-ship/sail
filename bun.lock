@@ -89,6 +89,7 @@
         "@codemirror/view": "^6",
         "@lezer/highlight": "^1",
         "@ship/sui-dom": "workspace:*",
+        "@ship/sui-lsp-browser": "workspace:*",
         "@ship/sui-primitives": "workspace:*",
         "@ship/sui-runtime": "workspace:*",
       },
