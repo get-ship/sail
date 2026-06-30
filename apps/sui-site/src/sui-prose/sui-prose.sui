@@ -1,0 +1,65 @@
+<!--
+  <sui-prose> — renders a trusted, pre-rendered HTML string (the tutorial prose,
+  already converted from markdown by scripts/gen-tutorial.mjs) into its shadow
+  root via bindHtml, mirroring <sui-codeblock>/<sui-markdown>. Self-styled so the
+  doc typography survives the shadow boundary; uses the same tokens as base.css's
+  `.doc` rules so it matches the surrounding page.
+-->
+<prop name="html" type="string" default="" />
+
+<style>
+  :host { display: block; }
+  .prose > * + * { margin-top: var(--space-4); }
+  .prose > :first-child { margin-top: 0; }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+    color: var(--foreground);
+  }
+  h2 {
+    font-size: var(--text-xl);
+    margin-top: var(--space-7);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border-subtle);
+  }
+  h3 { font-size: var(--text-lg); margin-top: var(--space-5); }
+  p { line-height: 1.7; color: var(--foreground); }
+  ul, ol { line-height: 1.7; padding-inline-start: var(--space-5); }
+  li + li { margin-top: var(--space-1); }
+  a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  a:hover { text-decoration: underline; }
+  strong { color: var(--foreground); font-weight: 650; }
+  em { font-style: italic; }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--surface-2);
+    padding: 0.12em 0.4em;
+    border-radius: var(--radius-sm);
+  }
+  pre.code {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4) var(--space-5);
+    overflow-x: auto;
+    white-space: pre;
+    tab-size: 2;
+    color: var(--foreground);
+  }
+  pre.code code { background: transparent; padding: 0; border-radius: 0; font-size: inherit; }
+  blockquote {
+    margin: 0;
+    padding: var(--space-2) var(--space-4);
+    border-left: 3px solid var(--primary);
+    color: var(--muted-foreground);
+  }
+</style>
+
+<div class="prose" bind:this={contentEl}></div>

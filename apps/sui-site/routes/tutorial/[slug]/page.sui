@@ -1,0 +1,22 @@
+<div class="doc">
+  <p class="eyebrow">Tutorial</p>
+  <h1>{title()}</h1>
+  <p class="lead">{description()}</p>
+
+  <sui-prose html={proseHtml()}></sui-prose>
+
+  <h2>Starter</h2>
+  <p>The code you begin from — open it and follow the steps above.</p>
+  <sui-codeblock code={starterTemplate()} lang="sui"></sui-codeblock>
+  <sui-codeblock code={starterController()} lang="ts"></sui-codeblock>
+
+  <h2>Solution</h2>
+  <p>One valid answer. There's usually more than one correct shape.</p>
+  <sui-codeblock code={solvedTemplate()} lang="sui"></sui-codeblock>
+  <sui-codeblock code={solvedController()} lang="ts"></sui-codeblock>
+
+  <div class="page-nav">
+    <a class="btn" href={prevHref()}>{prevLabel()}</a>
+    <a class="btn" href={nextHref()}>{nextLabel()}</a>
+  </div>
+</div>

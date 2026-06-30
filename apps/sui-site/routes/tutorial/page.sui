@@ -1,0 +1,28 @@
+<div class="doc">
+  <p class="eyebrow">Tutorial</p>
+  <h1>Learn SUI</h1>
+  <p class="lead">
+    Twenty-five short, hands-on lessons — from your first signal to morphs and
+    agent authoring. Each one pairs a concept with a starter to edit and a
+    worked solution.
+  </p>
+
+  {#for group of groups key={group.chapter}}
+  <section class="chapter">
+    <h2>{group.title}</h2>
+    <ul class="lesson-list">
+      {#for lesson of group.lessons key={lesson.slug}}
+      <li>
+        <a href={lesson.href}>{lesson.order}. {lesson.title}</a>
+        <span class="muted"> — {lesson.description}</span>
+      </li>
+      {/for}
+    </ul>
+  </section>
+  {/for}
+
+  <div class="page-nav">
+    <a class="btn" href="/reactivity">← Reactivity</a>
+    <a class="btn btn-primary" href="/tutorial/01-hello-signal">Start lesson 1 →</a>
+  </div>
+</div>
