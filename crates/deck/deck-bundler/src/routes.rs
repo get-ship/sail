@@ -1063,6 +1063,7 @@ mod tests {
         }
     }
 
+    #[test]
     fn shell_route_discovery() {
         let root = tempfile::tempdir().unwrap();
         let r = root.path().join("routes");

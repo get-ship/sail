@@ -46,7 +46,6 @@ pub fn subscribe_url(name: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::Path;
 
     #[test]
     fn deck_prefix_is_the_canonical_literal() {

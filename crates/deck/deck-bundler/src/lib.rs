@@ -413,16 +413,7 @@ impl Bundler {
 
     // ── `watch.rs` accessors ──────────────────────────────────────────────
     // The watcher lives in a sibling module, so it reaches the private build
-    // state through these `pub(crate)` views rather than touching fields.
-    pub(crate) fn repo_root(&self) -> &std::path::Path {
-        &self.repo_root
-    }
-    pub(crate) fn workspace(&self) -> Option<&std::path::Path> {
-        self.workspace.as_deref()
-    }
-    pub(crate) fn cfg_watch(&self) -> &[std::path::PathBuf] {
-        &self.cfg.watch
-    }
+    // state through this `pub(crate)` view rather than touching fields.
     pub(crate) fn watching_flag(&self) -> &AtomicBool {
         &self.watching
     }

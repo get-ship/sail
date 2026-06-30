@@ -404,5 +404,5 @@ export default controller({
     // (The authored module isn't actually imported for this unit test —
     // the G4 tsc proof lives in `synthetic_client_tsc::hub_controller_recovers_scope_factory_return_type`
     // which uses the real on-disk controller.)
-    drop(authored_src);
+    let _ = authored_src;
 }
