@@ -46,27 +46,17 @@ createServer(async (req, res) => {
   const ext = extname(path)
   // Bare path (no extension) → SPA client route → index.html.
   if (path === '/' || ext === '') return sendIndex(res)
-  // Traversal-guard then serve the file by path.
+  // Traversal-guard then serve the file by path. With `deck build --base assets`
+  // the emitted asset URLs (`/assets/<file>`, `/_deck/<file>`) MATCH the on-disk
+  // layout, so a plain by-path lookup serves the whole build — no URL rewriting,
+  // exactly as a dumb static host (Netlify/S3/nginx) would.
   const rel = normalize(path).replace(/^(\.\.([/\\]|$))+/, '')
   const ct = TYPES[ext] ?? 'application/octet-stream'
   try {
     const body = await readFile(join(dir, rel))
-    return void res.writeHead(200, { 'content-type': ct }).end(body)
+    res.writeHead(200, { 'content-type': ct }).end(body)
   } catch {
-    // `deck build` references app assets under the per-app SERVE namespace
-    // (`/<app-name>/<file>`, deck's multi-app route → `assets/<file>`), not at
-    // their on-disk `assets/<file>` location — so the output is not yet
-    // DUMB-static-servable (tracked: deck v1 static-servability gap). Bridge it
-    // here by falling back to `assets/<basename>`, so this still proves the
-    // PRODUCTION BUNDLE (minified, code-split, framework-bundled) renders —
-    // the dev/prod parity — even though a real static host would need URL
-    // rewriting until the build emits output-relative asset paths.
-    try {
-      const body = await readFile(join(dir, 'assets', rel.split('/').pop()))
-      return void res.writeHead(200, { 'content-type': ct }).end(body)
-    } catch {
-      res.writeHead(404).end(`not found: ${path}`)
-    }
+    res.writeHead(404).end(`not found: ${path}`)
   }
 }).listen(port, '127.0.0.1', () => {
   console.log(`deck prod static serve: ${dir} on http://127.0.0.1:${port}`)

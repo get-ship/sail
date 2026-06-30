@@ -24,6 +24,11 @@ test.describe('deck build — shipped static SPA', () => {
     // The framework singletons are materialized into the build (--bundle-framework),
     // so the importmap points at the app's OWN /_deck/* — not an external CDN.
     expect(html).toContain('/_deck/')
+    // `--base assets`: app assets (entry + CSS) are referenced under `/assets/<file>`,
+    // MATCHING their on-disk location — so the build is DIRECTLY static-host-servable
+    // (no per-app serve route needed). Static-servability is the point of a build.
+    expect(html).toContain('/assets/')
+    expect(html).not.toContain('/deck-e2e-app/') // NOT the per-app serve namespace
     // A STATIC build carries NO serve-time injections: the `deck-render`/`deck-mode`
     // metas AND the live-reload client are added by `deck dev`'s serve path, never
     // baked — so a shipped build is clean (no dev cruft, nothing to strip).

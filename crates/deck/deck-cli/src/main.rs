@@ -81,6 +81,12 @@ enum Command {
         /// Opt-in: off by default; fails the command on type errors.
         #[arg(long)]
         typecheck: bool,
+        /// Asset-URL base. `--base assets` makes asset URLs (`/assets/<file>`)
+        /// match the on-disk `assets/` layout, so the build is directly
+        /// static-host-servable (no deck server). Default: the package-name
+        /// serve namespace (a host maps `/<name>/<file>` → `assets/<file>`).
+        #[arg(long)]
+        base: Option<String>,
     },
 
     /// Run a standalone dev server for a SUI project — the framework
@@ -241,8 +247,8 @@ fn run() -> Result<()> {
         Command::Scaffold(Scaffold::Component { tag, controller }) => {
             scaffold::run_component(tag, controller)
         }
-        Command::Build { project, out, bundle_framework, no_minify, typecheck } => {
-            build(project, out, bundle_framework, !no_minify, typecheck)
+        Command::Build { project, out, bundle_framework, no_minify, typecheck, base } => {
+            build(project, out, bundle_framework, !no_minify, typecheck, base)
         }
         Command::Scaffold(Scaffold::Pack { name }) => {
             scaffold::run_pack(name)
@@ -389,6 +395,7 @@ fn build(
     bundle_framework: bool,
     minify: bool,
     typecheck: bool,
+    base: Option<String>,
 ) -> Result<()> {
     let cwd = std::env::current_dir().context("cwd")?;
     let abs = |p: &Path| if p.is_absolute() { p.to_path_buf() } else { cwd.join(p) };
@@ -426,13 +433,14 @@ fn build(
         .build()
         .context("tokio runtime")?;
     let b = rt
-        .block_on(deck_bundler::app::bundle_app(
+        .block_on(deck_bundler::app::bundle_app_with_base(
             &repo_root,
             &cfg.packs,
             &project,
             &out_dir,
             minify,
             bundle_framework,
+            base.as_deref(),
         ))
         .map_err(|e| anyhow::anyhow!("{e:#}"))?;
     if b.framework_assets > 0 {

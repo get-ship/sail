@@ -539,6 +539,10 @@ async fn bundle_owned_framework(
 /// (`package.json` + `routes/` + `public/`). The dev does NOT author
 /// `index.html` or any entry script — those are generated from a template
 /// and the routes/ walk, respectively.
+///
+/// Asset URLs use the package-name SERVE namespace (`/<name>/<file>`, which a
+/// host maps to `assets/<file>`). For a build a dumb static host can serve
+/// directly, use [`bundle_app_with_base`] with `Some("assets")`.
 pub async fn bundle_app(
     repo_root: &Path,
     packs: &[String],
@@ -546,6 +550,24 @@ pub async fn bundle_app(
     out_dir: &Path,
     minify: bool,
     bundle_framework: bool,
+) -> Result<AppBuild> {
+    bundle_app_with_base(repo_root, packs, project, out_dir, minify, bundle_framework, None).await
+}
+
+/// `bundle_app` with an explicit asset-URL `base`. `base` overrides the URL
+/// namespace the generated `index.html` references assets under: `Some("assets")`
+/// makes the URLs (`/assets/<file>`) MATCH the on-disk `assets/<file>` layout, so
+/// the output is directly static-host-servable (no deck process / serve route) —
+/// e.g. `deck build --bundle-framework --base assets`. `None` keeps the
+/// package-name serve namespace (the host's per-app route maps it to `assets/`).
+pub async fn bundle_app_with_base(
+    repo_root: &Path,
+    packs: &[String],
+    project: &Path,
+    out_dir: &Path,
+    minify: bool,
+    bundle_framework: bool,
+    base: Option<&str>,
 ) -> Result<AppBuild> {
     // 0. Load the host's per-app `deck.jsonc` (optional). The file is
     // OPTIONAL — an app without one is a valid conventional app: no
@@ -604,11 +626,17 @@ pub async fn bundle_app(
     // truth: `package.json#name`.
     let project_name = read_package_name(project)
         .with_context(|| format!("read package.json at {}", project.display()))?;
-    let url_namespace = project_name
-        .rsplit_once('/')
-        .map(|(_, tail)| tail)
-        .unwrap_or(&project_name)
-        .to_string();
+    // The asset-URL namespace: an explicit `base` (static-host build) wins;
+    // otherwise the package name's last segment (`@ship/hub` → `hub`), the per-app
+    // serve route a host maps to `assets/`.
+    let url_namespace = match base {
+        Some(b) => b.trim_matches('/').to_string(),
+        None => project_name
+            .rsplit_once('/')
+            .map(|(_, tail)| tail)
+            .unwrap_or(&project_name)
+            .to_string(),
+    };
     // 3. Generate the importmap. The framework serves the runtime singletons
     // at /_deck/* — the workspace root. Discovered provider-declared
     // singletons (each dep's `package.json#deckFramework`) ride the same
@@ -834,6 +862,48 @@ mod tests {
     fn write(p: &Path, s: &str) {
         std::fs::create_dir_all(p.parent().unwrap()).unwrap();
         std::fs::write(p, s).unwrap();
+    }
+
+    /// `bundle_app_with_base(Some("assets"))` emits asset URLs that MATCH the
+    /// on-disk `assets/<file>` layout, so a `deck build --base assets` is directly
+    /// static-host-servable — vs the default package-name serve namespace
+    /// (`/<name>/<file>`) a host maps to `assets/` via its per-app route. (T18.)
+    #[tokio::test(flavor = "multi_thread")]
+    async fn bundle_app_with_base_emits_static_servable_asset_urls() {
+        let root = tempfile::tempdir().unwrap();
+        let r = root.path();
+        write(
+            &r.join("package.json"),
+            r#"{"name":"@scope/branded-app","private":true,"type":"module"}"#,
+        );
+        write(&r.join("routes/page.sui"), "<main>home</main>\n");
+
+        // Default: the package name's last segment is the serve namespace.
+        let out_def = r.join("dist-default");
+        let def = bundle_app(r, &[], r, &out_def, false, false).await.expect("default");
+        assert!(
+            def.js_href.starts_with("/branded-app/entry-"),
+            "default uses the package-name serve namespace; got {}",
+            def.js_href,
+        );
+
+        // `--base assets`: the URL matches the on-disk `assets/` dir.
+        let out_base = r.join("dist-base");
+        let based = bundle_app_with_base(r, &[], r, &out_base, false, false, Some("assets"))
+            .await
+            .expect("with base");
+        assert!(
+            based.js_href.starts_with("/assets/entry-"),
+            "base override emits /assets/<file>; got {}",
+            based.js_href,
+        );
+        // The static-servability invariant: the emitted URL resolves to a real
+        // file under the output (a dumb by-path host would find it).
+        assert!(
+            out_base.join(based.js_href.trim_start_matches('/')).exists(),
+            "emitted URL {} must resolve to a real file in the output",
+            based.js_href,
+        );
     }
 
     /// The dev authors `package.json`, `routes/`, `public/`. The bundler
