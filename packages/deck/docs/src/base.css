@@ -1,9 +1,75 @@
 /*
-  Shared, document-level UI primitives for the playground — buttons, cards, the
-  reactivity dots, type. Loaded globally via the clients seam so every route
-  shares one definition (route style.css files only do per-route layout). Colors
-  come entirely from the deck palette (deck-theme.css).
+  Shared, document-level UI primitives for the docs site — doc typography, code
+  blocks, buttons, cards, the reactivity dots. Loaded globally via the clients
+  seam so every route shares one definition (route style.css files only do
+  per-route layout). Colors come entirely from the deck palette (deck-theme.css).
 */
+
+/* ── Doc content typography ───────────────────────────────────────────── */
+.doc { max-width: 44rem; }
+.doc > * + * { margin-top: var(--space-4); }
+.doc h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); margin: 0; }
+.doc h2 {
+  font-size: var(--text-xl);
+  margin-top: var(--space-7);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+}
+.doc h3 { font-size: var(--text-lg); margin-top: var(--space-5); }
+.doc .lead { font-size: var(--text-lg); line-height: 1.55; color: var(--muted-foreground); }
+.doc p { line-height: 1.65; }
+.doc ul, .doc ol { line-height: 1.65; padding-inline-start: var(--space-5); }
+.doc li + li { margin-top: var(--space-1); }
+.doc a:not(.btn) { color: var(--accent); text-decoration: none; }
+.doc a:not(.btn):hover { text-decoration: underline; }
+.doc strong { color: var(--foreground); font-weight: 650; }
+
+.doc .eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 var(--space-2);
+}
+
+/* ── Code blocks ──────────────────────────────────────────────────────── */
+.code {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  overflow-x: auto;
+  white-space: pre;
+  tab-size: 2;
+}
+.code .tok-path { color: var(--accent); }
+
+/* ── Callout ──────────────────────────────────────────────────────────── */
+.callout {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-md);
+  background: color-mix(in oklch, var(--surface-1) 70%, transparent);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--muted-foreground);
+}
+.callout strong { color: var(--foreground); }
+
+/* ── Page nav (prev/next) ─────────────────────────────────────────────── */
+.page-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-7);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+.page-nav a { font-size: var(--text-sm); }
 
 body {
   font-family: var(--font-body);

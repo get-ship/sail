@@ -1,8 +1,8 @@
 {
-  "name": "@ship/deck-playground",
+  "name": "@ship/deck-docs",
   "private": true,
   "type": "module",
-  "description": "The deck reactivity playground — the canonical standalone deck showcase. A ship-free app, deck-themed (not the ship palette), that visualizes SUI's signal graph: signals, derived values, and effects as live nodes, including a diamond-dependency demo that proves the glitch-free push-pull scheduler.",
+  "description": "The deck documentation site — built with deck, served by deck. A ship-free, SSR'd content site that documents the framework AND exercises its whole native surface (file routing, dynamic [param] routes, layouts, controllers/reactivity, the data seam, SSR + hydrate, HMR, static build) through the real deck CLI. Deck's own docs are deck's canonical example + release test.",
   "scripts": {
     "test": "playwright test"
   },

@@ -1,11 +1,9 @@
-// Controller for <sui-shell> — the playground chrome.
+// Controller for <sui-shell> — the docs chrome (top bar + sidebar + content).
 //
-// Owns the theme: it brands <html> with `data-theme="deck"` (which makes the
-// deck palette win specificity over the entry-contract tokens.css) and manages
-// dark/light via `data-mode`. Dark is the default (deck is dark-first); the
-// choice persists. The `dark` signal seeds from the live DOM so the toggle
-// label stays correct even though mountRouter rebuilds the chrome on every
-// navigation (the attributes live on <html>, outside the chrome).
+// Owns the theme (brands <html data-theme="deck">, manages dark/light, dark-
+// first, persisted) and the current path for sidebar active-state. mountRouter
+// rebuilds the chrome on every client-side navigation, so reading
+// location.pathname at scope time always reflects the active route.
 import { controller, signal } from '@ship/sui-runtime'
 
 const MODE_KEY = 'deck-mode'
@@ -22,9 +20,7 @@ export default controller({
         return null
       }
     })()
-    // Dark-first: only light if explicitly chosen.
-    const dark = signal<boolean>(stored !== 'light')
-
+    const dark = signal<boolean>(stored !== 'light') // dark-first
     const apply = (isDark: boolean): void => {
       if (isDark) root.removeAttribute('data-mode')
       else root.setAttribute('data-mode', 'light')
@@ -38,10 +34,12 @@ export default controller({
       try {
         localStorage.setItem(MODE_KEY, next ? 'dark' : 'light')
       } catch {
-        /* no storage — fine */
+        /* no storage */
       }
     }
 
-    return { dark, toggleTheme }
+    const path = signal<string>(typeof location !== 'undefined' ? location.pathname : '/')
+
+    return { dark, toggleTheme, path }
   },
 })

@@ -1,41 +1,38 @@
 <!--
-  Overview (`/`) — the hero. A live signal counter (instant reactivity) beside a
-  PERSISTED visit counter (durable state above the router). Together they make
-  the distinction concrete: route signals reset on nav; store state doesn't.
+  Overview (`/`) — the docs landing. What deck is, the 30-second app, where it
+  sits relative to SUI. Code snippets come from the controller as strings
+  (literal `{` in a template would parse as interpolation).
 -->
-<section class="hero">
-  <p class="eyebrow">deck · the reactive web framework</p>
-  <h1>Build with <b>signals</b>,<br />ship <b>standalone</b>.</h1>
-  <p class="lede">
-    A SUI app — file-routed pages, server render + hydrate, state-preserving HMR,
-    and a glitch-free reactive core. This whole site is deck: no ship, no daemon,
-    no SDK. Just <code>routes/</code> and a dev server.
+<article class="doc">
+  <p class="eyebrow">deck · 0.2.0</p>
+  <h1>The standalone web framework for SUI.</h1>
+  <p class="lead">
+    deck mounts SUI views, routes them from the filesystem, server-renders or
+    statically builds them, and serves every asset — with a dev server and
+    state-preserving HMR. It is to SUI what Next is to React.
   </p>
-  <div class="cta">
-    <a class="btn btn-primary" href="/reactivity">Open the reactivity playground →</a>
+
+  <div class="callout">
+    <strong>This site is a deck app.</strong> Every page you read is a file-routed
+    deck route, server-rendered and hydrated. The docs are deck's own canonical
+    example — and its release test.
   </div>
 
-  <div class="cards">
-    <article class="card">
-      <header class="card-head"><span class="dot signal"></span><h3>Live reactivity</h3></header>
-      <p class="big">{count()}</p>
-      <div class="row">
-        <button class="btn" type="button" on:click={() => dec()}>–</button>
-        <button class="btn btn-primary" type="button" on:click={() => inc()}>+</button>
-        <button class="btn ghost" type="button" on:click={() => reset()}>reset</button>
-      </div>
-      <p class="muted">A plain signal. The number re-renders the instant it changes — and nothing else on the page does.</p>
-    </article>
+  <h2>The 30-second app</h2>
+  <p>A deck app is a <code>routes/</code> folder and a dev server. No config file, no scaffold step.</p>
+  <pre class="code">{quickstart}</pre>
+  <p>That's a running SUI single-page app, with HMR, on <code>127.0.0.1:7878</code>.</p>
 
-    <article class="card">
-      <header class="card-head"><span class="dot derived"></span><h3>Durable state</h3></header>
-      <p class="big">{visits()}</p>
-      <p class="muted">
-        Times you've landed here — held in a store <em>above</em> the router, so it
-        survives client-side navigation <em>and</em> a full reload. Navigate to
-        Reactivity and back: this keeps counting; the signal above resets.
-      </p>
-      <div class="row"><button class="btn ghost" type="button" on:click={() => resetVisits()}>reset</button></div>
-    </article>
+  <h2>Where it sits</h2>
+  <pre class="code">{layers}</pre>
+  <p>
+    SUI is the component language — signals, templates, controllers. deck is the
+    framework around it — routing, rendering, build, serving. Your app is what
+    you write under <code>routes/</code>.
+  </p>
+
+  <div class="page-nav">
+    <span></span>
+    <a class="btn btn-primary" href="/getting-started">Getting started →</a>
   </div>
-</section>
+</article>
