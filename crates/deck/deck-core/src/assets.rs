@@ -141,7 +141,7 @@ fn candidate_view_roots() -> Vec<std::path::PathBuf> {
 /// ship-js SSR seam. Mirrors the named-`view` path (`view_payload`) but with the
 /// file-routed layout: split the URL into name + sub-path, resolve the matching
 /// `routes/<…>/page.sui` (+ captured `[param]` params), and render through
-/// `synthetic_ssr`. Returns `None` (→ empty `#ship-root`, client mounts CSR)
+/// `synthetic_ssr`. Returns `None` (→ empty `#root`, client mounts CSR)
 /// when there's no project root, no matching page, no registered renderer, or
 /// the render fails (the failure is logged loud inside `synthetic_ssr`).
 fn routes_first_paint(
@@ -267,20 +267,20 @@ pub fn serve_scaffold(
 
     let html = crate::mode_html::inject_mode_meta(&html, mode);
     // Surface the app's render mode (csr|ssr) so it's legible client-side
-    // rather than implicit (empty `#ship-root` = csr was the old tell).
+    // rather than implicit (empty `#root` = csr was the old tell).
     let html = crate::mode_html::inject_render_meta(&html, scaffold.render);
     // SSR (`render: ssr`): render the matched `routes/` page server-side and
     // inject its first-paint HTML into the (otherwise empty) mount root, so the
     // client HYDRATES it instead of building from scratch. The mount-root id is
-    // the bundler's `templates::ROOT_ID` contract (`ship-root`); deck-core can't
+    // the bundler's `templates::ROOT_ID` contract (`root`); deck-core can't
     // depend on deck-bundler (cycle), so the id is pinned here. No registered
     // engine / no route match / a render error ⇒ `routes_first_paint` is None
     // and we serve the empty shell (CSR) exactly as before.
     let html = match (scaffold.render, request_path) {
         (RenderMode::Ssr, Some(path)) => match routes_first_paint(path, resolution) {
             Some(ssr) => html.replacen(
-                "<div id=\"ship-root\"></div>",
-                &format!("<div id=\"ship-root\">{ssr}</div>"),
+                "<div id=\"root\"></div>",
+                &format!("<div id=\"root\">{ssr}</div>"),
                 1,
             ),
             None => html,

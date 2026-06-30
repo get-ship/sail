@@ -21,7 +21,7 @@
 /// `<div id>` AND the `mountRouter({ root })` call the route emitter writes
 /// (`routes.rs`) — change it here and both move together, no hardcoded
 /// literal drifting on either side.
-pub const ROOT_ID: &str = "ship-root";
+pub const ROOT_ID: &str = "root";
 
 /// The minimal `index.html` template for a deck project.
 pub const INDEX_HTML_TEMPLATE: &str = r#"<!doctype html>
@@ -36,6 +36,16 @@ pub const INDEX_HTML_TEMPLATE: &str = r#"<!doctype html>
   <script type="importmap">
 {{importmap}}
   </script>
+
+  <!-- Base reset. Kills the UA's default 8px body margin (which otherwise
+       frames a full-bleed app in a white gutter — invisible in light mode,
+       ugly in dark) and lets the document surface adopt the theme tokens, so
+       dark mode is dark edge-to-edge and overscroll matches. Apps that load no
+       tokens fall back to the UA canvas. -->
+  <style>
+    html { background: var(--background); color: var(--foreground); }
+    body { margin: 0; min-height: 100vh; }
+  </style>
 </head>
 <body>
   <div id="{{root_id}}"></div>

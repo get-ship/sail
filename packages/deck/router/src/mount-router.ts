@@ -26,7 +26,7 @@ import { installRouteBoundary, type RouteBoundaryHandle } from './route-boundary
 
 export interface MountRouterOptions {
   /** Mount target — a selector or element. Injected by the emitted entry; the
-   *  framework bakes in no `#ship-root`. */
+   *  framework bakes in no `#root`. */
   root: string | HTMLElement
   /** The generated route table (`DYNAMIC_ROUTE_PATTERNS`). */
   routes: RouteShape[]

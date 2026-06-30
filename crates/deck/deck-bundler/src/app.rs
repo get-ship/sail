@@ -216,7 +216,7 @@ fn scan_bare_specifiers(js: &str) -> Vec<String> {
 /// Fail the build when an emitted chunk would ship a bare `@ship/*` ESM import
 /// the document importmap does NOT resolve. Such a specifier throws "Failed to
 /// resolve module specifier" at module-instantiation time, leaving an empty
-/// `#ship-root` — a SILENT blank page. deck owns the `@ship/*` namespace
+/// `#root` — a SILENT blank page. deck owns the `@ship/*` namespace
 /// contract: every `@ship/*` bare import the bundle externalizes must EITHER be
 /// inlined (a workspace package resolvable from this project) OR be in the
 /// importmap (a framework singleton / provider-declared singleton). This guard

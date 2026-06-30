@@ -51,7 +51,7 @@ bunx playwright test        # headless; boots `deck dev` via the webServer hook
 ```
 
 The dev `routes/` SPA path is **CSR**: the served HTML is a shell
-(`<meta name="deck-render" content="csr">` + an empty `#ship-root` + the
+(`<meta name="deck-render" content="csr">` + an empty `#root` + the
 importmap), and route content appears after the client bundle mounts. The dev
 server streams live-reload SSE that never idles, so tests wait on `load` +
 locators, never `networkidle`.

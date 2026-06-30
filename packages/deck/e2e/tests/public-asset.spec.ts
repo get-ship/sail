@@ -22,5 +22,5 @@ test('a bare segment is an SPA route (shell), NOT a public-asset 404', async ({ 
   // while `/favicon.svg` hits the asset path).
   const res = await request.get('/some-client-route')
   expect(res.status()).toBe(200)
-  expect(await res.text()).toContain('id="ship-root"')
+  expect(await res.text()).toContain('id="root"')
 })

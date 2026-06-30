@@ -8,13 +8,13 @@ import { test, expect } from '@playwright/test'
 // appears after JS loads; specs wait on locators (never `networkidle`).
 
 test.describe('deck example — Mise (ship-free showcase)', () => {
-  test('serves a CSR SPA shell (importmap + #ship-root, route text not in raw bytes)', async ({
+  test('serves a CSR SPA shell (importmap + #root, route text not in raw bytes)', async ({
     request,
   }) => {
     const res = await request.get('/')
     expect(res.status()).toBe(200)
     const html = await res.text()
-    expect(html).toContain('id="ship-root"')
+    expect(html).toContain('id="root"')
     expect(html).toContain('importmap')
     expect(html).toContain('content="csr"')
     // Shell only — the route renders client-side.

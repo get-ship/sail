@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test'
 // behavioral conditions the dev SPA path actually satisfies, verified by manual
 // probe before they were written here (no aspirational assertions):
 //
-//   • deck serves a CSR SPA shell (importmap + #ship-root + deck-render:csr)
+//   • deck serves a CSR SPA shell (importmap + #root + deck-render:csr)
 //   • the client entry mounts the router and renders the home route
 //   • <a> navigation is client-side (mountRouter intercepts; no document reload)
 //   • the counter hydrates to 0 and signal reactivity drives DOM updates
@@ -18,13 +18,13 @@ import { test, expect } from '@playwright/test'
 // per-route SSR, that assertion goes red and we update it consciously.
 
 test.describe('deck dev — standalone SPA runtime loop', () => {
-  test('serves the CSR SPA shell (importmap + #ship-root, route content not in raw bytes)', async ({
+  test('serves the CSR SPA shell (importmap + #root, route content not in raw bytes)', async ({
     request,
   }) => {
     const res = await request.get('/')
     expect(res.status()).toBe(200)
     const html = await res.text()
-    expect(html).toContain('id="ship-root"')
+    expect(html).toContain('id="root"')
     expect(html).toContain('importmap')
     expect(html).toContain('content="csr"')
     // Shell only — the route renders client-side, so its text is absent from

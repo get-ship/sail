@@ -99,7 +99,7 @@ pub use jsonc::strip_jsonc_comments;
 ///
 /// How an app paints its first frame.
 ///
-/// `Csr` (the default) ships an empty mount point (`#ship-root`) and lets the
+/// `Csr` (the default) ships an empty mount point (`#root`) and lets the
 /// client bundle render. `Ssr` means the app server-renders its first frame
 /// before hydration. This is the OBSERVABLE "does this app server-render at
 /// all" flag the router/serving path consumes — NOT the SSR-engine selector
@@ -109,7 +109,7 @@ pub use jsonc::strip_jsonc_comments;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum RenderMode {
-    /// Client-side render — empty `#ship-root`, the client bundle paints.
+    /// Client-side render — empty `#root`, the client bundle paints.
     #[default]
     Csr,
     /// Server-side render — the first frame is rendered before hydration.
@@ -152,7 +152,7 @@ pub struct AppServeConfig {
     pub inject_globals: BTreeMap<String, String>,
     /// How the app paints its first frame — `csr` (default) or `ssr`. Made
     /// observable by serving it as a `<meta name="deck-render">` tag in the
-    /// app's `index.html`. Absent ⇒ `csr` (the implicit-empty-`#ship-root`
+    /// app's `index.html`. Absent ⇒ `csr` (the implicit-empty-`#root`
     /// posture every app had before this field existed).
     #[serde(default)]
     pub render: RenderMode,
@@ -424,7 +424,7 @@ mod tests {
 
 
     /// `render` is optional and defaults to `csr` — the implicit posture
-    /// every app had before the field existed (empty `#ship-root`,
+    /// every app had before the field existed (empty `#root`,
     /// client paints). The default-constructed config also lands on csr.
     #[test]
     fn parse_app_deck_render_defaults_to_csr() {

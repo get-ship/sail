@@ -389,7 +389,7 @@ fn builds_a_zero_ship_product_app() {
     assert!(index.exists(), "deck build did not emit .deck/index.html");
     let html = std::fs::read_to_string(&index).expect("read index.html");
     assert!(html.contains("importmap"), "built index.html missing importmap:\n{html}");
-    assert!(html.contains("ship-root"), "built index.html missing the #ship-root mount point:\n{html}");
+    assert!(html.contains("root"), "built index.html missing the #root mount point:\n{html}");
 
     // The entry chunk was bundled (the routes/ page compiled into the SPA).
     let assets = root.join(".deck").join("assets");
@@ -408,7 +408,7 @@ fn builds_a_zero_ship_product_app() {
 
     // The entry must BOOTSTRAP, not merely export data: a standalone app's
     // entry chunk has to call `mountRouter` so it actually mounts into
-    // #ship-root. (Build-success alone is not proof the app runs — deck once
+    // #root. (Build-success alone is not proof the app runs — deck once
     // emitted a data-only entry that never mounted; this guards that
     // regression at build time, the browser e2e proves it end-to-end.)
     let entry_src = std::fs::read_to_string(&entry_js).expect("read entry chunk");

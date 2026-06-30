@@ -1,6 +1,6 @@
 {
   // Opt this app into server-side first paint. deck dev registers the ship-js
   // (V8) engine and the serve path renders the matched routes/ page into
-  // #ship-root before sending HTML; the client then hydrates.
+  // #root before sending HTML; the client then hydrates.
   "render": "ssr"
 }

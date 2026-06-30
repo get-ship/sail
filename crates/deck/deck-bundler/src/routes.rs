@@ -958,7 +958,7 @@ fn generate_routes_one(spec: &RouteGenSpec) -> Result<usize> {
     // mounts with no host. A host `deck.jsonc#entry` (when present) only
     // customizes the `clients` map; the router call is deck's. Without this, a
     // standalone deck app served a data-only entry that never called
-    // mountRouter — `#ship-root` stayed empty (inv-deck-standalone).
+    // mountRouter — `#root` stayed empty (inv-deck-standalone).
     let entry_path = spec
         .out
         .parent()
@@ -1460,7 +1460,7 @@ mod tests {
         let ts = render_entry_gen(&tree, None);
         assert!(ts.contains("import { mountRouter } from '@ship/deck/router';"), "imports mountRouter: {ts}");
         assert!(ts.contains("mountRouter("), "calls mountRouter so the app mounts: {ts}");
-        assert!(ts.contains("root: '#ship-root'"), "mounts into #ship-root: {ts}");
+        assert!(ts.contains("root: '#root'"), "mounts into #root: {ts}");
         assert!(ts.contains("import '@ship/tokens/tokens.css';"), "ships tokens before first paint: {ts}");
         // No host clients: neither a client-module import nor a clients field.
         assert!(!ts.contains("clients:"), "default bootstrap wires no clients: {ts}");
