@@ -1,0 +1,75 @@
+<!--
+  /playground — the interactive component storybook. Pick a primitive from the
+  list; <sui-component-viewer> renders it live with CEM-driven knobs + source.
+-->
+<style>
+  .pg { display: grid; grid-template-columns: 13rem minmax(0, 1fr); gap: var(--space-6); align-items: start; }
+  .pg-list {
+    position: sticky;
+    top: 4.5rem;
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    padding-right: var(--space-3);
+  }
+  .pg-list button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    font-size: var(--text-sm);
+    padding: var(--space-1) var(--space-2);
+    border: none;
+    background: none;
+    color: var(--muted-foreground);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+  }
+  .pg-list button:hover { background: var(--surface-2); color: var(--foreground); }
+  .pg-list button.active {
+    background: color-mix(in oklch, var(--primary) 12%, transparent);
+    color: var(--foreground);
+    font-weight: 600;
+  }
+  .pg-stage-head { display: flex; align-items: baseline; gap: var(--space-3); margin-bottom: var(--space-4); }
+  .pg-stage-head h1 { margin: 0; font-size: var(--text-2xl); }
+  .pg-stage-head .tag { font-family: var(--font-mono); font-size: var(--text-md); color: var(--accent); }
+  sui-component-viewer { display: block; }
+
+  @media (max-width: 820px) {
+    .pg { grid-template-columns: 1fr; }
+    .pg-list { position: static; max-height: none; border-right: none; border-bottom: 1px solid var(--border); padding-bottom: var(--space-3); }
+  }
+</style>
+
+<header style="margin-bottom: var(--space-6)">
+  <p class="eyebrow">Reference · Playground</p>
+  <h1 style="margin:0; font-size: clamp(1.8rem, 4vw, 2.4rem)">Component playground</h1>
+  <p class="muted" style="margin: var(--space-2) 0 0">{count} primitives, compiled live in your browser — pick one, then tweak its props.</p>
+</header>
+
+<div class="pg">
+  <aside class="pg-list">
+    {#for entry of entries() key={entry.tag}}
+      <button
+        type="button"
+        class:active={entry.tag === selected()}
+        on:click={() => select(entry.tag)}
+      >{entry.title}</button>
+    {/for}
+  </aside>
+
+  <main>
+    <div class="pg-stage-head">
+      <h1>{selectedTitle()}</h1>
+      <code class="tag">&lt;{selected()}&gt;</code>
+    </div>
+    <sui-component-viewer
+      component-name={selected()}
+      prop:source={selectedSource()}
+      prop:cem={selectedCem()}
+      prop:compile={compile()}
+      prop:slots={selectedSlots()}
+    ></sui-component-viewer>
+  </main>
+</div>

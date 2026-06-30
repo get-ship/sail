@@ -156,6 +156,10 @@
       <a href="/getting-started" class:active={path() === '/getting-started'}>Getting started</a>
     </div>
     <div class="group">
+      <h4>Tutorial</h4>
+      <a href="/tutorial" class:active={path().includes('/tutorial')}>Interactive lessons</a>
+    </div>
+    <div class="group">
       <h4>Core concepts</h4>
       <a href="/reactivity" class:active={path() === '/reactivity'}>Reactivity</a>
       <a href="/data" class:active={path() === '/data'}>Data</a>
@@ -163,6 +167,7 @@
     <div class="group">
       <h4>Reference</h4>
       <a href="/components" class:active={path() === '/components'}>Component library</a>
+      <a href="/playground" class:active={path() === '/playground'}>Playground</a>
     </div>
   </nav>
 

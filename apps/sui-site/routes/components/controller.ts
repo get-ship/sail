@@ -5,10 +5,10 @@
 import '@ship/sui-primitives' // side-effect: customElements.define for every <sui-*>
 import { controller, type ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
-import { code } from './snippets'
+import { code, jsonData } from './snippets'
 
 export default controller({
   scope: (_ctx: ViewScope<Scope>) => {
-    return { code }
+    return { code, jsonData }
   },
 })

@@ -14,3 +14,5 @@
 /test-results/
 /playwright-report/
 /.cache/
+/src/playground-manifest.json
+/src/gallery-manifest.json
