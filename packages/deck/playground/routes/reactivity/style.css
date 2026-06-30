@@ -20,12 +20,16 @@
   align-items: center;
   gap: var(--space-2);
 }
+/* b and c share ONE bordered container with a single divider — never two
+   adjacent borders reading as a heavy seam. */
 .pair {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
   width: 100%;
   max-width: 520px;
+  border: 1px solid color-mix(in oklch, var(--derived) 35%, var(--border));
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 .node {
@@ -37,7 +41,13 @@
   padding: var(--space-4) var(--space-5);
   text-align: center;
 }
-.pair .node { max-width: none; }
+.pair .node {
+  max-width: none;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+.pair .node:first-child { border-right: 1px solid var(--border); }
 .node.signal { border-color: color-mix(in oklch, var(--signal) 45%, var(--border)); }
 .node.derived { border-color: color-mix(in oklch, var(--derived) 35%, var(--border)); }
 .node.join {
