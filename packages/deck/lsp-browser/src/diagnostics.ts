@@ -10,7 +10,7 @@
 
 import initWasm, { analyze as wasmAnalyze } from '@ship/sui-compiler-wasm'
 
-/** Shape consumed by `<ship-code-editor>.setDiagnostics()`. */
+/** Shape consumed by `<sui-code-editor>.setDiagnostics()`. */
 export interface SuiDiagnostic {
   line: number
   column?: number
@@ -36,19 +36,27 @@ interface WasmAnalysis {
 }
 
 // Lazy one-time WASM init — the worker is long-lived; init once, reuse.
-// Called with no argument so the wasm-bindgen shim self-resolves the wasm via
-// `new URL('sui_compiler_bg.wasm', import.meta.url)` — works under both Vite
-// (docs playground) and Bun.build (the shell's ship-code-editor bundle); a
-// Vite-only `?url` import broke the latter.
+//
+// `wasmUrl` is REQUIRED. The deck bundler can't auto-resolve the `.wasm`
+// URL the way Vite (the docs playground) does — the wasm-bindgen
+// default is a build-time `new URL('./sui_compiler_bg.wasm', import.meta.url)`
+// that gets erased when the module is inlined into the entry bundle.
+// Callers MUST pass the canonical /sui_compiler_bg.wasm URL the deck
+// router serves with `application/wasm` MIME. The default falls back to
+// the same path for plain convenience; ship the URL through if you need
+// a different mount.
 let wasmReady: Promise<unknown> | null = null
-function ensureWasm(): Promise<unknown> {
-  if (!wasmReady) wasmReady = initWasm()
+function ensureWasm(wasmUrl: string): Promise<unknown> {
+  if (!wasmReady) wasmReady = initWasm(wasmUrl)
   return wasmReady
 }
 
 /** Analyse a `.sui` document and map every diagnostic to the editor shape. */
-export async function diagnose(source: string): Promise<SuiDiagnostic[]> {
-  await ensureWasm()
+export async function diagnose(
+  source: string,
+  wasmUrl: string = '/sui_compiler_bg.wasm',
+): Promise<SuiDiagnostic[]> {
+  await ensureWasm(wasmUrl)
   const analysis = wasmAnalyze(source) as WasmAnalysis
   return (analysis.diagnostics ?? []).map((d) => ({
     line: d.line,
