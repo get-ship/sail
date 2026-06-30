@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en" data-theme="sui">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SUI tutorial host</title>
+  <script>
+    // Stamp the SUI theme + light/dark mode the parent passes via ?mode=.
+    // The sui-site has a single brand theme ("sui") with a light/dark mode
+    // axis (data-theme="sui" + data-mode="dark") — mirror exactly what the
+    // sui-site-shell sets on the top document so every var(--…) resolves the
+    // same inside the preview as on the page.
+    (function () {
+      var p = new URLSearchParams(location.search)
+      var mode = p.get('mode') === 'dark' ? 'dark' : 'light'
+      var root = document.documentElement
+      root.dataset.theme = 'sui'
+      if (mode === 'dark') root.dataset.mode = 'dark'
+      else delete root.dataset.mode
+    })()
+  </script>
+  <!-- SUI tokens + theme + base, concatenated by gen-tutorial-host.mjs from the
+       same three sheets the top document links (tokens.css + themes.css +
+       sui-theme.css + base.css). Makes every var(--…) inside the preview resolve
+       identically to the page. -->
+  <link rel="stylesheet" href="/tut-preview-theme.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: var(--font-body, system-ui, -apple-system, sans-serif);
+      background: var(--background);
+      color: var(--foreground);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .err {
+      font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+      font-size: 13px;
+      background: color-mix(in oklch, var(--destructive) 12%, transparent);
+      color: var(--destructive);
+      padding: 12px;
+      border-radius: var(--radius-md, 6px);
+      border-left: 3px solid var(--destructive);
+      white-space: pre-wrap;
+    }
+    /* Lesson example containers — read SUI tokens so they flip with the
+       parent's light/dark mode. The hand-crafted .counter/.todo/.dash
+       containers in the lesson templates pick these up. */
+    .counter, .card, .todo, .dash, .form, .users, .clock,
+    .branch, .chat, .grid, .metrics, .refs-demo,
+    .effect, .slots-demo, .list, .hooks-demo, .catalog,
+    .signup, .closer, .add-user, .fetcher, .branches {
+      display: flex; flex-direction: column; gap: 12px;
+      padding: 16px;
+      background: var(--surface-1, var(--card, var(--background)));
+      color: var(--foreground);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg, 10px);
+      max-width: 32rem;
+    }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    p { margin: 0; }
+    strong { font-family: var(--font-mono, ui-monospace, monospace); }
+    button:not([class^="sui-"]), input:not([class^="sui-"]) {
+      background: transparent; color: inherit;
+      border: 1px solid var(--border); padding: 6px 12px;
+      border-radius: var(--radius-md, 6px); font: inherit; font-size: 14px; cursor: pointer;
+    }
+    input:not([class^="sui-"]) { cursor: text; min-width: 200px; }
+    button:not([class^="sui-"]):hover { border-color: var(--primary); }
+    .todo ul, .users ul, .chat ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+    .todo li, .users li, .chat li { padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-md, 6px); }
+    .todo li { cursor: pointer; transition: opacity 120ms; }
+    .todo li.done { opacity: 0.5; text-decoration: line-through; }
+    .todo li.empty { cursor: default; opacity: 0.6; font-style: italic; }
+    .todo form, .add-user form { display: flex; gap: 8px; }
+    .todo form input, .add-user form input { flex: 1; }
+    .muted, .hint { color: var(--muted-foreground, var(--foreground)); font-size: 0.875rem; opacity: 0.7; }
+    .err { color: var(--destructive); }
+    .ok  { color: var(--success); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <div id="err" class="err" hidden></div>
+
+  <!-- Importmap so compiled output's `import { … } from "@ship/sui-runtime"`
+       resolves to deck's stable served framework bundles. Mirrors the top
+       document's importmap (apps/sui-site/.deck/index.html). -->
+  <script type="importmap">
+    {
+      "imports": {
+        "@ship/sui-runtime": "/_deck/runtime.js",
+        "@ship/sui-runtime/route": "/_deck/runtime.js",
+        "@ship/sui-runtime/template-hooks": "/_deck/runtime.js",
+        "@ship/sui-runtime/patch": "/_deck/runtime.js",
+        "@ship/sui-dom": "/_deck/dom.js",
+        "@ship/deck/router": "/_deck/route.js",
+        "@ship/sui-primitives": "/tut-sui-primitives.js"
+      }
+    }
+  </script>
+
+  <script type="module">
+    // Register every <sui-*> primitive in THIS iframe's customElements registry
+    // (a separate document → its own registry) BEFORE we signal ready, so a
+    // lesson that mounts e.g. <sui-card> finds it defined. Guarded: a missing or
+    // broken bundle degrades to plain elements rather than breaking every lesson.
+    try {
+      await import('/tut-sui-primitives.js')
+    } catch (e) {
+      console.warn('[tutorial-host] primitives bundle failed to load:', e)
+    }
+
+    // Mock-daemon service worker — intercepts /_deck/data/<source> SSE requests
+    // and /_deck/api/<path> mutations, serving them from per-step scenarios.
+    // Tutorial steps that exercise <data live>, {#while-loading}, or morphs
+    // route through this SW. Registration is best-effort.
+    async function registerSw() {
+      if (!('serviceWorker' in navigator)) return null
+      try {
+        // Flat asset paths (the deck copies only top-level public/ files), so
+        // scope the SW to the host doc itself — it controls THIS preview frame
+        // (and thus its /_deck/data SSE fetches) without claiming the whole site.
+        const reg = await navigator.serviceWorker.register('/tut-sw.js', { scope: '/tut-host.html' })
+        await navigator.serviceWorker.ready
+        return reg
+      } catch (e) {
+        console.warn('[tutorial-host] sw register failed:', e)
+        return null
+      }
+    }
+
+    async function loadScenario(scenario) {
+      const reg = await registerSw()
+      if (!reg) return false
+      const ctrl = navigator.serviceWorker.controller ?? reg.active
+      if (!ctrl) return false
+      ctrl.postMessage({ kind: 'load-scenario', scenario })
+      return true
+    }
+
+    // `ship` proxy — any `ship.<domain>.<op>(...)` returns a LiveSource that
+    // subscribes via SSE against /_deck/data/<domain>/<op>. The SW intercepts
+    // those URLs and plays back scenario frames as envelopes.
+    window.ship = new Proxy({}, {
+      get: (_t, domain) => new Proxy({}, {
+        get: (_t2, op) => (..._args) => ({
+          subscribe: (sig) => {
+            const url = `/_deck/data/${String(domain)}/${String(op)}`
+            const es = new EventSource(url)
+            es.onmessage = (e) => {
+              try { sig.set(JSON.parse(e.data)) } catch (err) {
+                sig.set({ kind: 'error', error: { message: String(err) } })
+              }
+            }
+            es.onerror = () => {
+              sig.set({ kind: 'error', error: { message: 'SSE connection error' } })
+            }
+            return () => es.close()
+          },
+        }),
+      }),
+    })
+
+    // Inject the compiled JS modules (template + controller) as blob URLs so
+    // they import normally through the importmap. A fresh unique tag per run —
+    // custom-element registrations are permanent.
+    let lastBlobs = []
+    function freeBlobs() {
+      for (const b of lastBlobs) URL.revokeObjectURL(b)
+      lastBlobs = []
+    }
+    function makeBlobUrl(code) {
+      const blob = new Blob([code], { type: 'application/javascript' })
+      const url = URL.createObjectURL(blob)
+      lastBlobs.push(url)
+      return url
+    }
+
+    window.addEventListener('message', async (e) => {
+      if (e.data && e.data.kind === 'tutorial:scenario') {
+        await loadScenario(e.data.scenario || {})
+        return
+      }
+      if (!e.data || e.data.kind !== 'tutorial:run') return
+      const { template, controller, tag } = e.data
+      const errEl = document.getElementById('err')
+      const root = document.getElementById('root')
+      errEl.hidden = true
+      errEl.textContent = ''
+
+      while (root.firstChild) root.removeChild(root.firstChild)
+      freeBlobs()
+
+      try {
+        // The compiled template imports its setup from `./<tag>.controller.ts`.
+        // Rewrite that import to a blob URL of the compiled controller, then
+        // dynamic-import the template blob and mount a fresh <tag> instance.
+        const controllerBlob = makeBlobUrl(controller)
+        const templateRewritten = template.replace(
+          /from\s+["'][^"']*\.controller\.ts["']/,
+          `from ${JSON.stringify(controllerBlob)}`,
+        )
+        const templateBlob = makeBlobUrl(templateRewritten)
+
+        await import(templateBlob)
+        const el = document.createElement(tag)
+        root.appendChild(el)
+      } catch (err) {
+        errEl.hidden = false
+        errEl.textContent = String((err && err.message) || err)
+      }
+    })
+
+    // Tell the parent we're ready to receive runs.
+    window.parent?.postMessage({ kind: 'tutorial:ready' }, '*')
+  </script>
+</body>
+</html>
