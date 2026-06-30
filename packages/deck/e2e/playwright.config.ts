@@ -10,6 +10,10 @@ const BASE_URL = `http://${HOST}:${PORT}`
 // The SSR fixture (`app-ssr`, render: ssr) runs on its own port. Its spec uses
 // absolute URLs, so it needs no per-project baseURL.
 const SSR_PORT = Number(process.env.DECK_E2E_SSR_PORT ?? 7879)
+// The PROD fixture: `deck build --bundle-framework` output, static-served (no
+// deck process). Built to an isolated `--out` so it never clobbers the dev
+// server's `./app/.deck`. Its spec uses absolute URLs.
+const PROD_PORT = Number(process.env.DECK_E2E_PROD_PORT ?? 7880)
 
 export default defineConfig({
   testDir: './tests',
@@ -40,6 +44,19 @@ export default defineConfig({
       // The SSR fixture (render: ssr) — proves server first-paint + hydration.
       command: `cargo run -q -p deck-cli -- dev --project ./app-ssr --addr ${HOST}:${SSR_PORT}`,
       url: `http://${HOST}:${SSR_PORT}`,
+      timeout: 180_000,
+      reuseExistingServer: !process.env.CI,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+    {
+      // The PROD fixture: build the app self-contained, then serve the static
+      // output with a dumb file server (no deck process) — the shipped path.
+      // Build a COPY (`.prod-src`) so the build's generated `routes.gen.ts`
+      // never races the dev server (port 7878), which writes the same file in
+      // `./app` on startup. `--out` isolates the bundle into `.prod-build`.
+      command: `rm -rf ./.prod-src && cp -r ./app ./.prod-src && cargo run -q -p deck-cli -- build --project ./.prod-src --out ./.prod-build --bundle-framework && node serve-built.mjs ./.prod-build ${PROD_PORT}`,
+      url: `http://${HOST}:${PROD_PORT}`,
       timeout: 180_000,
       reuseExistingServer: !process.env.CI,
       stdout: 'pipe',

@@ -14,5 +14,9 @@
 /app-ssr/entry.gen.ts
 /app-ssr/components.gen.ts
 
+# prod-mode harness: isolated copied source + `deck build --out` output
+/.prod-src/
+/.prod-build/
+
 # throwaway diagnostics
 scratch-*.mjs
