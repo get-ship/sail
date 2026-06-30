@@ -1,0 +1,110 @@
+/*
+  SUI identity — warm + red. Light-first (fresh, clean, approachable), with a
+  dark mode. Layered on @ship/tokens' complete `:root` base (already a warm,
+  complete LIGHT palette), so light mode only re-paints the signature; dark mode
+  redefines the structural surfaces/ink.
+
+  Brand hue: a warm vermilion red (oklch hue ~27) — deliberately distinct from
+  ship's orange (~58) and deck's violet (~285). `:root[data-theme="sui"]` is
+  light; `[data-mode="dark"]` layers the dark surfaces on top.
+*/
+
+/* ── LIGHT (default) — inherit the warm base, re-paint to red ──────────── */
+:root[data-theme='sui'] {
+  --primary: oklch(0.575 0.205 27);
+  --primary-hover: oklch(0.52 0.21 27);
+  --primary-foreground: oklch(0.99 0.012 40);
+  --ring: oklch(0.575 0.205 27 / 40%);
+  --ring-color: var(--primary);
+
+  /* Links/eyebrows ride a deeper brick so they read distinct from buttons. */
+  --accent: oklch(0.52 0.17 33);
+  --accent-foreground: oklch(0.99 0.012 40);
+
+  /* Warm the neutrals a touch toward the brand hue. */
+  --background: oklch(0.985 0.004 60);
+  --surface-0: oklch(0.975 0.005 55);
+  --surface-1: oklch(1 0 0);
+  --surface-2: oklch(0.965 0.006 50);
+  --surface-3: oklch(0.945 0.008 48);
+  --muted: oklch(0.955 0.006 50);
+
+  --border: oklch(0.18 0.01 40 / 12%);
+  --border-subtle: oklch(0.18 0.01 40 / 7%);
+  --border-strong: oklch(0.18 0.01 40 / 22%);
+
+  --sidebar: oklch(0.978 0.005 55);
+  --sidebar-primary: var(--primary);
+
+  /* Reactivity vocabulary (signal / derived / effect) for any live demos. */
+  --signal: oklch(0.575 0.205 27);
+  --derived: oklch(0.60 0.13 230);
+  --effect: oklch(0.62 0.16 150);
+
+  color-scheme: light;
+}
+
+/* ── DARK — warm charcoal surfaces, brighter red ──────────────────────── */
+:root[data-theme='sui'][data-mode='dark'] {
+  --background: oklch(0.165 0.006 40);
+  --surface-0: oklch(0.185 0.007 40);
+  --surface-1: oklch(0.205 0.008 40);
+  --surface-2: oklch(0.245 0.009 40);
+  --surface-3: oklch(0.285 0.010 40);
+
+  --foreground: oklch(0.965 0.004 70);
+  --muted: oklch(0.245 0.009 40);
+  --muted-foreground: oklch(0.70 0.014 55);
+
+  --card: oklch(0.195 0.008 40);
+  --card-foreground: oklch(0.965 0.004 70);
+  --popover: oklch(0.205 0.008 40);
+  --popover-foreground: oklch(0.965 0.004 70);
+
+  --primary: oklch(0.66 0.205 27);
+  --primary-hover: oklch(0.71 0.205 27);
+  --primary-foreground: oklch(0.16 0.012 40);
+  --ring: oklch(0.66 0.205 27 / 42%);
+
+  --secondary: oklch(0.27 0.02 40);
+  --secondary-foreground: oklch(0.93 0.01 60);
+  --accent: oklch(0.72 0.15 40);
+  --accent-foreground: oklch(0.16 0.012 40);
+
+  --border: oklch(0.965 0.004 70 / 12%);
+  --border-subtle: oklch(0.965 0.004 70 / 7%);
+  --border-strong: oklch(0.965 0.004 70 / 22%);
+  --input: oklch(0.965 0.004 70 / 14%);
+
+  --destructive: oklch(0.64 0.22 25);
+  --destructive-foreground: oklch(0.99 0.02 25);
+  --success: oklch(0.70 0.17 150);
+  --success-foreground: oklch(0.15 0.02 150);
+  --warning: oklch(0.80 0.15 75);
+  --warning-foreground: oklch(0.18 0.03 75);
+  --info: oklch(0.68 0.15 250);
+  --info-foreground: oklch(0.15 0.02 250);
+
+  --sidebar: oklch(0.185 0.007 40);
+  --sidebar-foreground: oklch(0.965 0.004 70);
+  --sidebar-accent: oklch(0.245 0.009 40);
+  --sidebar-accent-foreground: oklch(0.965 0.004 70);
+  --sidebar-border: oklch(0.965 0.004 70 / 10%);
+
+  /* Syntax — brighter, warm-leaning variants for the dark surface. */
+  --syntax-keyword: oklch(0.72 0.16 25);
+  --syntax-string: oklch(0.78 0.14 150);
+  --syntax-number: oklch(0.78 0.13 230);
+  --syntax-function: oklch(0.80 0.13 60);
+  --syntax-type: oklch(0.78 0.12 200);
+  --syntax-tag: oklch(0.74 0.16 25);
+  --syntax-attr: oklch(0.82 0.13 75);
+  --syntax-comment: oklch(0.60 0.02 60);
+  --syntax-variable: var(--foreground);
+
+  --signal: oklch(0.66 0.205 27);
+  --derived: oklch(0.70 0.13 230);
+  --effect: oklch(0.72 0.15 150);
+
+  color-scheme: dark;
+}

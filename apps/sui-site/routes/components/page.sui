@@ -1,0 +1,195 @@
+<!--
+  Component library reference. Each primitive is rendered LIVE (registered by the
+  clients seam) next to its usage source. A representative cross-section for now;
+  the full 68 follow the same shape.
+-->
+<style>
+  .ref-head { max-width: 46rem; margin-bottom: var(--space-7); }
+  .ref-head h1 { font-size: clamp(2rem, 4vw, 2.7rem); margin: 0 0 var(--space-3); }
+  .ref-head p { color: var(--muted-foreground); font-size: var(--text-lg); line-height: 1.55; margin: 0; }
+
+  .cat { margin-top: var(--space-8); }
+  .cat > h2 {
+    font-size: var(--text-md);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted-foreground);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: var(--space-2);
+    margin: 0 0 var(--space-5);
+  }
+
+  .comp + .comp { margin-top: var(--space-6); }
+  .comp-head { display: flex; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-3); }
+  .comp-head h3 { font-size: var(--text-lg); margin: 0; }
+  .comp-head .tag { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--accent); }
+
+  .demo {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .demo .preview {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    background: radial-gradient(130% 130% at 30% 0%, var(--surface-2), var(--surface-1));
+  }
+  .demo sui-codeblock { display: block; }
+  .demo sui-codeblock::part(pre) {
+    border: none;
+    border-left: 1px solid var(--border);
+    border-radius: 0;
+    font-size: var(--text-xs);
+    background: var(--surface-0);
+    height: 100%;
+  }
+  @media (max-width: 760px) {
+    .demo { grid-template-columns: 1fr; }
+    .demo sui-codeblock::part(pre) { border-left: none; border-top: 1px solid var(--border); }
+  }
+</style>
+
+<header class="ref-head">
+  <p class="eyebrow">Reference</p>
+  <h1>Component library</h1>
+  <p>Every primitive is a themeable web component. Drop the tag in, set props, slot content. Each renders live below — these are the real components, not images.</p>
+</header>
+
+<section class="cat">
+  <h2>Actions</h2>
+
+  <div class="comp">
+    <div class="comp-head"><h3>Button</h3><span class="tag">&lt;sui-button&gt;</span></div>
+    <div class="demo">
+      <div class="preview">
+        <sui-button tone="primary">Save changes</sui-button>
+        <sui-button variant="outline">Cancel</sui-button>
+        <sui-button variant="ghost">Ghost</sui-button>
+      </div>
+      <sui-codeblock code={code.button}></sui-codeblock>
+    </div>
+  </div>
+
+  <div class="comp">
+    <div class="comp-head"><h3>Chip</h3><span class="tag">&lt;sui-chip&gt;</span></div>
+    <div class="demo">
+      <div class="preview">
+        <sui-chip>Design</sui-chip>
+        <sui-chip tone="primary" selected>Selected</sui-chip>
+        <sui-chip removable>Removable</sui-chip>
+      </div>
+      <sui-codeblock code={code.chip}></sui-codeblock>
+    </div>
+  </div>
+
+  <div class="comp">
+    <div class="comp-head"><h3>Badge</h3><span class="tag">&lt;sui-badge&gt;</span></div>
+    <div class="demo">
+      <div class="preview">
+        <sui-badge>Default</sui-badge>
+        <sui-badge tone="success">Live</sui-badge>
+        <sui-badge tone="primary" variant="solid">New</sui-badge>
+      </div>
+      <sui-codeblock code={code.badge}></sui-codeblock>
+    </div>
+  </div>
+</section>
+
+<section class="cat">
+  <h2>Forms</h2>
+
+  <div class="comp">
+    <div class="comp-head"><h3>Input</h3><span class="tag">&lt;sui-input&gt;</span></div>
+    <div class="demo">
+      <div class="preview">
+        <sui-input placeholder="you@example.com"></sui-input>
+      </div>
+      <sui-codeblock code={code.input}></sui-codeblock>
+    </div>
+  </div>
+
+  <div class="comp">
+    <div class="comp-head"><h3>Checkbox</h3><span class="tag">&lt;sui-checkbox&gt;</span></div>
+    <div class="demo">
+      <div class="preview">
+        <sui-checkbox checked>Subscribe to updates</sui-checkbox>
+      </div>
+      <sui-codeblock code={code.checkbox}></sui-codeblock>
+    </div>
+  </div>
+
+  <div class="comp">
+    <div class="comp-head"><h3>Switch</h3><span class="tag">&lt;sui-switch&gt;</span></div>
+    <div class="demo">
+      <div class="preview">
+        <sui-switch checked tone="primary"></sui-switch>
+      </div>
+      <sui-codeblock code={code.switch}></sui-codeblock>
+    </div>
+  </div>
+</section>
+
+<section class="cat">
+  <h2>Feedback</h2>
+
+  <div class="comp">
+    <div class="comp-head"><h3>Alert</h3><span class="tag">&lt;sui-alert&gt;</span></div>
+    <div class="demo">
+      <div class="preview">
+        <sui-alert tone="success">Your changes were saved.</sui-alert>
+      </div>
+      <sui-codeblock code={code.alert}></sui-codeblock>
+    </div>
+  </div>
+
+  <div class="comp">
+    <div class="comp-head"><h3>Spinner</h3><span class="tag">&lt;sui-spinner&gt;</span></div>
+    <div class="demo">
+      <div class="preview">
+        <sui-spinner></sui-spinner>
+      </div>
+      <sui-codeblock code={code.spinner}></sui-codeblock>
+    </div>
+  </div>
+</section>
+
+<section class="cat">
+  <h2>Display</h2>
+
+  <div class="comp">
+    <div class="comp-head"><h3>Avatar</h3><span class="tag">&lt;sui-avatar&gt;</span></div>
+    <div class="demo">
+      <div class="preview">
+        <sui-avatar initials="MC"></sui-avatar>
+        <sui-avatar name="Ada Lovelace"></sui-avatar>
+      </div>
+      <sui-codeblock code={code.avatar}></sui-codeblock>
+    </div>
+  </div>
+
+  <div class="comp">
+    <div class="comp-head"><h3>Card</h3><span class="tag">&lt;sui-card&gt;</span></div>
+    <div class="demo">
+      <div class="preview">
+        <sui-card>A card groups related content on a raised surface.</sui-card>
+      </div>
+      <sui-codeblock code={code.card}></sui-codeblock>
+    </div>
+  </div>
+
+  <div class="comp">
+    <div class="comp-head"><h3>Code</h3><span class="tag">&lt;sui-code&gt;</span></div>
+    <div class="demo">
+      <div class="preview">
+        <sui-code>const sum = (a, b) =&gt; a + b</sui-code>
+      </div>
+      <sui-codeblock code={code.code}></sui-codeblock>
+    </div>
+  </div>
+</section>

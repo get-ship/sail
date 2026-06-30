@@ -1,38 +1,77 @@
 <!--
-  The SUI primitive gallery. A sidebar of every @ship/sui-primitives element;
-  the selected one renders LIVE in <sui-component-viewer> — its `.sui` source
-  + CEM attributes arrive via prop:* identity, compiled in-browser by the wasm
-  seam (prop:compile). SDK-free end to end.
+  Overview — the SUI docs home. Hero + a live, native reactive counter shown
+  next to its source, then the value-prop feature grid.
 -->
-<section class="gallery">
-  <aside class="gallery-nav">
-    <p class="eyebrow">SUI · primitives</p>
-    <p class="count">{count} components</p>
-    <ul>
-      {#for entry of entries() key={entry.tag}}
-        <li>
-          <button
-            type="button"
-            class:active={entry.tag === selected()}
-            on:click={() => select(entry.tag)}
-          >{entry.title}</button>
-        </li>
-      {/for}
-    </ul>
-  </aside>
+<style>
+  .counter { display: flex; align-items: center; gap: var(--space-3); }
+  .counter output {
+    font-family: var(--font-mono);
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    min-width: 2.5ch;
+    text-align: center;
+    color: var(--primary);
+  }
+  .counter button {
+    width: 2.4rem; height: 2.4rem;
+    font-size: var(--text-xl);
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0;
+  }
+  .live .muted { margin-top: var(--space-3); font-family: var(--font-mono); font-size: var(--text-sm); }
+</style>
 
-  <main class="gallery-stage">
-    <header class="stage-head">
-      <h1>{selectedTitle()}</h1>
-      <code class="tag">&lt;{selected()}&gt;</code>
-    </header>
-    <sui-component-viewer
-      class="viewer"
-      part="viewer"
-      component-name={selected()}
-      prop:source={selectedSource()}
-      prop:cem={selectedCem()}
-      prop:compile={compile()}
-    ></sui-component-viewer>
-  </main>
+<section class="hero">
+  <p class="eyebrow">SUI · 0.2.0</p>
+  <h1>Reactive UIs with <span class="grad">real data</span>, in minutes.</h1>
+  <p class="lead">
+    SUI is a compiler-first reactive UI framework. Signals, derived values, and
+    effects — authored in <code>.sui</code> files, compiled to small, fast web
+    components. No virtual DOM, no diffing, no runtime tax.
+  </p>
+  <div class="hero-cta">
+    <a class="btn btn-primary" href="/getting-started">Get started</a>
+    <a class="btn" href="/components">Component library</a>
+  </div>
+</section>
+
+<section class="split">
+  <div>
+    <p class="pane-label">the code</p>
+    <sui-codeblock code={counterSrc}></sui-codeblock>
+  </div>
+  <div>
+    <p class="pane-label">live · running on this page</p>
+    <div class="live">
+      <div>
+        <div class="counter">
+          <button class="btn" type="button" on:click={() => dec()}>−</button>
+          <output>{count()}</output>
+          <button class="btn" type="button" on:click={() => inc()}>+</button>
+        </div>
+        <p class="muted">doubled → {doubled()}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="feature-grid">
+    <div class="card">
+      <h3>Signals, not magic</h3>
+      <p>State is explicit. A <code>signal()</code> is a value; a <code>derived()</code> recomputes when its inputs change; an <code>effect()</code> runs side-effects. You can read the graph.</p>
+    </div>
+    <div class="card">
+      <h3>Compiler-first</h3>
+      <p>Templates compile ahead-of-time to direct DOM operations — no virtual DOM, no re-render diffing. The output is a plain web component.</p>
+    </div>
+    <div class="card">
+      <h3>Real data, built in</h3>
+      <p>The <code>&lt;data&gt;</code> seam binds live sources straight into your view, with loading and error states handled for you.</p>
+    </div>
+    <div class="card">
+      <h3>68 components, ready</h3>
+      <p>A full primitive library — buttons, inputs, dialogs, tables, charts — every one a themeable web component you can drop in.</p>
+    </div>
+  </div>
 </section>

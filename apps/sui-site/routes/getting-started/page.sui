@@ -1,0 +1,41 @@
+<div class="doc">
+  <p class="eyebrow">Introduction</p>
+  <h1>Getting started</h1>
+  <p class="lead">
+    A SUI view is two files: a <code>.sui</code> template and a paired
+    controller. The compiler turns them into a small, fast web component — no
+    bundler runtime, no virtual DOM.
+  </p>
+
+  <h2>Install</h2>
+  <sui-codeblock code={code.install}></sui-codeblock>
+
+  <h2>Your first view</h2>
+  <p>
+    The template declares the markup and binds to scope. The controller owns the
+    state. Reading <code>name()</code> in the template subscribes that text node
+    to the signal.
+  </p>
+  <sui-codeblock code={code.template}></sui-codeblock>
+  <sui-codeblock code={code.controller}></sui-codeblock>
+
+  <h2>A reusable component</h2>
+  <p>
+    Add <code>&lt;prop&gt;</code> declarations and a scoped
+    <code>&lt;style&gt;</code> and the same file compiles to a custom element you
+    can drop in anywhere — exactly how the
+    <a href="/components">component library</a> is built.
+  </p>
+  <sui-codeblock code={code.component}></sui-codeblock>
+
+  <p class="callout">
+    <strong>One model, top to bottom.</strong> Pages, layouts, and library
+    components are all the same <code>.sui</code> + controller pair. Learn it
+    once.
+  </p>
+
+  <div class="page-nav">
+    <a class="btn" href="/">← Overview</a>
+    <a class="btn" href="/reactivity">Reactivity →</a>
+  </div>
+</div>

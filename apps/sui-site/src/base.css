@@ -1,0 +1,192 @@
+/*
+  Shared, document-level UI for the SUI docs site — doc typography, code blocks
+  (+ syntax-token colors), buttons, cards, callouts, the home hero, and the
+  component-library layout. Loaded globally via the clients seam. Colors come
+  from the SUI palette (sui-theme.css) + the @ship/tokens base.
+*/
+
+html, body { margin: 0; background: var(--background); color: var(--foreground); }
+* { box-sizing: border-box; }
+body {
+  font-family: var(--font-body);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+}
+
+/* ── Doc content typography ───────────────────────────────────────────── */
+.doc { max-width: 46rem; }
+.doc > * + * { margin-top: var(--space-4); }
+.doc h1 { font-size: clamp(2rem, 4vw, 2.7rem); margin: 0; }
+.doc h2 {
+  font-size: var(--text-xl);
+  margin-top: var(--space-7);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+.doc h3 { font-size: var(--text-lg); margin-top: var(--space-5); }
+.doc .lead { font-size: var(--text-lg); line-height: 1.55; color: var(--muted-foreground); }
+.doc p { line-height: 1.7; }
+.doc ul, .doc ol { line-height: 1.7; padding-inline-start: var(--space-5); }
+.doc li + li { margin-top: var(--space-1); }
+.doc a:not(.btn) { color: var(--accent); text-decoration: none; font-weight: 500; }
+.doc a:not(.btn):hover { text-decoration: underline; }
+.doc strong { color: var(--foreground); font-weight: 650; }
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 var(--space-2);
+}
+
+code, .mono {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--surface-2);
+  padding: 0.12em 0.4em;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Code blocks + syntax tokens ──────────────────────────────────────── */
+.code {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  overflow-x: auto;
+  white-space: pre;
+  tab-size: 2;
+  color: var(--foreground);
+}
+.code .tok-tag { color: var(--syntax-tag); }
+.code .tok-attr { color: var(--syntax-attr); }
+.code .tok-string { color: var(--syntax-string); }
+.code .tok-comment { color: var(--syntax-comment); font-style: italic; }
+.code .tok-keyword { color: var(--syntax-keyword); }
+.code .tok-fn { color: var(--syntax-function); }
+.code .tok-number { color: var(--syntax-number); }
+.code .tok-bind { color: var(--syntax-function); }
+.code .tok-punct { color: var(--muted-foreground); }
+
+/* ── Callout ──────────────────────────────────────────────────────────── */
+.callout {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-md);
+  background: color-mix(in oklch, var(--surface-1) 70%, transparent);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--muted-foreground);
+}
+.callout strong { color: var(--foreground); }
+
+/* ── Buttons ──────────────────────────────────────────────────────────── */
+.btn {
+  font: inherit;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--foreground);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  transition: background-color 0.15s, border-color 0.15s, transform 0.05s;
+  text-decoration: none;
+  display: inline-block;
+}
+.btn:hover { border-color: var(--border-strong); background: var(--surface-3); }
+.btn:active { transform: translateY(1px); }
+.btn-primary {
+  background: var(--primary);
+  border-color: transparent;
+  color: var(--primary-foreground);
+}
+.btn-primary:hover { background: var(--primary-hover); }
+
+/* ── Cards ────────────────────────────────────────────────────────────── */
+.card {
+  background: color-mix(in oklch, var(--surface-1) 92%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+/* ── Page nav (prev/next) ─────────────────────────────────────────────── */
+.page-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-8);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+.page-nav a { font-size: var(--text-sm); }
+
+.muted { color: var(--muted-foreground); }
+
+/* ── Home hero ────────────────────────────────────────────────────────── */
+.hero {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-8) 0 var(--space-7);
+  max-width: 52rem;
+}
+.hero h1 {
+  font-size: clamp(2.4rem, 6vw, 3.8rem);
+  margin: 0;
+  letter-spacing: -0.035em;
+}
+.hero h1 .grad {
+  background: linear-gradient(100deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero .lead { font-size: clamp(1.1rem, 2.5vw, 1.4rem); color: var(--muted-foreground); line-height: 1.5; max-width: 40rem; }
+.hero-cta { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-2); }
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+.feature-grid .card h3 { font-size: var(--text-md); margin: 0 0 var(--space-2); }
+.feature-grid .card p { margin: 0; font-size: var(--text-sm); color: var(--muted-foreground); line-height: 1.6; }
+
+/* ── Split demo (code → live) ─────────────────────────────────────────── */
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  align-items: stretch;
+  margin-top: var(--space-5);
+}
+.split .pane-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-foreground);
+  margin: 0 0 var(--space-2);
+}
+.split .live {
+  display: grid;
+  place-items: center;
+  background: radial-gradient(130% 130% at 50% 0%, var(--surface-2), var(--surface-1));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  min-height: 8rem;
+}
+@media (max-width: 720px) { .split { grid-template-columns: 1fr; } }

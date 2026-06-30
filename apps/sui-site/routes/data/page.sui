@@ -1,0 +1,35 @@
+<div class="doc">
+  <p class="eyebrow">Core concepts</p>
+  <h1>The data seam</h1>
+  <p class="lead">
+    Real apps run on real data. The <code>&lt;data&gt;</code> directive binds a
+    live source straight into your view as a signal — with loading and error
+    states modelled for you, so the network never leaks into your template.
+  </p>
+
+  <h2>Declaring a source</h2>
+  <p>
+    A <code>&lt;data&gt;</code> binds the result of a client call to a signal.
+    Reading it gives you a tagged state — <code>loading</code>,
+    <code>error</code>, or a value — so the three cases are impossible to forget.
+  </p>
+  <sui-codeblock code={code.data}></sui-codeblock>
+
+  <h2>Live sources</h2>
+  <p>
+    Mark a source <code>live</code> and the signal updates as new values stream
+    in. The same reactive rules apply: only the bindings that read it re-render.
+  </p>
+  <sui-codeblock code={code.live}></sui-codeblock>
+
+  <p class="callout">
+    <strong>Hard rule:</strong> data access only happens in a
+    <code>&lt;data&gt;</code> directive — never inline in markup. The template
+    stays a pure function of state, which is what makes it predictable.
+  </p>
+
+  <div class="page-nav">
+    <a class="btn" href="/reactivity">← Reactivity</a>
+    <a class="btn" href="/components">Component library →</a>
+  </div>
+</div>

@@ -1,0 +1,49 @@
+<div class="doc">
+  <p class="eyebrow">Core concepts</p>
+  <h1>Reactivity</h1>
+  <p class="lead">
+    SUI's reactivity is three small primitives: a <strong>signal</strong> holds a
+    value, a <strong>derived</strong> computes one from others, and an
+    <strong>effect</strong> runs a side-effect when its inputs change. No
+    proxies, no dependency arrays — you read the graph.
+  </p>
+
+  <h2>Signals</h2>
+  <p>
+    A signal is a readable, writable value. Call it to read; call
+    <code>.set()</code> to write. Reading a signal inside a derived or effect
+    subscribes to it automatically.
+  </p>
+  <sui-codeblock code={code.signal}></sui-codeblock>
+
+  <h2>Derived</h2>
+  <p>
+    A derived value recomputes from the signals it reads. It's lazy and cached —
+    it only recomputes when you read it <em>and</em> an input actually changed.
+  </p>
+  <sui-codeblock code={code.derived}></sui-codeblock>
+
+  <h2>Effects</h2>
+  <p>
+    An effect runs immediately, then re-runs whenever a signal it read changes.
+    Use it for the edges of your app — logging, the DOM, network, storage.
+  </p>
+  <sui-codeblock code={code.effect}></sui-codeblock>
+
+  <h2>In a component</h2>
+  <p>
+    Templates bind to signals directly. When the signal changes, only the exact
+    DOM that read it updates — no virtual DOM, no re-render of the component.
+  </p>
+  <sui-codeblock code={code.template}></sui-codeblock>
+  <p class="callout">
+    <strong>The mental model:</strong> a text binding is itself an effect the
+    compiler wrote for you. Change the signal, and that one text node updates —
+    nothing else re-runs. That's the whole runtime.
+  </p>
+
+  <div class="page-nav">
+    <a class="btn" href="/getting-started">← Getting started</a>
+    <a class="btn" href="/data">The data seam →</a>
+  </div>
+</div>
