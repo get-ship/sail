@@ -2,9 +2,12 @@
   "name": "@ship/sui-site",
   "private": true,
   "type": "module",
-  "description": "The SUI site — a deck app that documents SUI and catalogs the component library, with a live in-browser preview of every primitive via @ship/sui-viewer (SDK-free).",
+  "description": "The SUI docs site — a deck app: docs, the 25-lesson tutorial, the component library, and an interactive component playground. SUI's own red identity, light + dark.",
   "scripts": {
-    "gen": "node scripts/gen-gallery-manifest.mjs",
+    "wasm": "(cd ../.. && bun run wasm) && cp ../../packages/sui/compiler-wasm/pkg/sui_compiler_bg.wasm public/sui_compiler_bg.wasm",
+    "gen": "node scripts/gen-manifest.mjs && node scripts/gen-tutorial.mjs && cp ../../packages/sui/compiler-wasm/pkg/sui_compiler_bg.wasm public/sui_compiler_bg.wasm 2>/dev/null || true",
+    "dev": "bun run gen && (cd ../.. && cargo run -q -p deck-cli -- dev --project apps/sui-site --addr 127.0.0.1:7878)",
+    "build": "bun run gen && (cd ../.. && cargo run -q -p deck-cli -- build --project apps/sui-site --base assets --bundle-framework)",
     "test": "playwright test"
   },
   "dependencies": {
