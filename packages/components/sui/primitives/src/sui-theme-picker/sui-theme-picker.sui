@@ -48,6 +48,13 @@
      ([data-theme-preview] rules) is served; injected into the shadow root so
      previews reach shadow children. Default is origin-relative. -->
 <prop name="tokens-href" type="string" default="/view-tokens.css" />
+<!-- `scope` isolates the picker's theme application to the host element's
+     subtree (a catalog preview, an isolated panel). Empty (default) preserves
+     the document-level behavior the shell + marketing site depend on;
+     a non-empty value disables `applyTheme(documentElement)` on mount and
+     routes any selection to the host's own `data-theme` + `.dark` class so
+     the document root is never mutated. -->
+<prop name="scope" type="string" default="" />
 
 <style>
   :host {
