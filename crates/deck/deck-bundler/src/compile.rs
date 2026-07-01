@@ -69,6 +69,8 @@ pub fn compile_sui(
         // the CEM is walked from disk by the catalog, not returned here.
         emit_dts: false,
         emit_component_imports,
+        // Strict default — the bundler never softens the design-system lints.
+        lint_overrides: Vec::new(),
     };
     match compile(&source, opts) {
         Ok(out) => {
@@ -92,7 +94,7 @@ pub fn compile_sui(
 /// this is reached. Mirrors the CLI/MCP rendering: `<path>:<line>:<col>
 /// [<rule>] <message>`.
 fn emit_build_warnings(sui_file: &Path, source: &str) {
-    for d in sui_compiler::check_all(source, Some(sui_file)) {
+    for d in sui_compiler::check_all(source, Some(sui_file), &[]) {
         if d.severity != sui_compiler::DiagSeverity::Warning {
             continue;
         }

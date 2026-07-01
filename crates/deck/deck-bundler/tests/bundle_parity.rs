@@ -394,6 +394,7 @@ fn native_compile(repo: &Path, f: &Fixture) -> Result<String, String> {
         component_meta,
         emit_dts: false,
         emit_component_imports: false,
+        lint_overrides: Vec::new(),
     };
     compile(&source, opts)
         .map(|out| out.js)
