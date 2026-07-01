@@ -120,6 +120,8 @@ fn engine_run_module_with_limits_terminates_runaway_script() {
     let t0 = Instant::now();
     let r = rt.block_on(run_module_with_limits(
         arc_echo(),
+        None,
+        None,
         "export const noop = 1;".to_string(),
         RUNAWAY_BUNDLE.to_string(),
         RunLimits {
