@@ -295,7 +295,7 @@ fn client_render_typo_is_caught_by_tsgo() {
 /// `controller()`-typing work (the `__def` contract must hold for the zero-ctx
 /// case); un-ignore + restore board/badge to the green set once it lands.
 #[test]
-#[ignore = "blocked on ef696e5 controller() __def regression (zero-ctx scope factory → recovery yields {}); see doc comment"]
+#[ignore = "blocked on ef696e5 controller() __def regression (zero-ctx scope factory → __def recovery yields {}, every controller-added member is a TS2339). Unblock: __def contract must hold for the zero-ctx case — see doc comment."]
 fn controller_recovers_scope_factory_return_type() {
     let repo = repo_root();
     let Some(tsc) = tsc_path(&repo) else {

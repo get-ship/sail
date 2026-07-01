@@ -598,7 +598,12 @@ pub(crate) struct RouteTree {
 }
 
 
-#[allow(dead_code)] // legacy callers + tests still go through `render_routes_gen`.
+// Retained as a thin wrapper over `render_routes_gen_with` for the 3 in-file
+// tests below; the `#[cfg(test)]` usages make the function unreachable in
+// non-test builds, hence the allow. Removing the wrapper would force the
+// tests to call `render_routes_gen_with(tree, true)` with the magic `true`
+// — the wrapper's only contract is "legacy `include_token_import=true` shape".
+#[allow(dead_code)]
 fn render_routes_gen(tree: &RouteTree) -> String {
     render_routes_gen_with(tree, true)
 }

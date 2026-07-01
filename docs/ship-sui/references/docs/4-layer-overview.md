@@ -68,7 +68,7 @@ Public API barrel: `/home/madvib/dev/Ship/sui/packages/sui/runtime/src/index.ts`
 | Template hooks | `registerTemplateHook`, `getTemplateHook`, `clearRegistry`, `listRegisteredHooks` |
 | Mount | `mount(target, payload, opts) -> MountHandle` |
 | Styles | `suiTonesSheet`, `suiBaseSheet`, `adoptSuiSheets` |
-| Generated types | `AgentSummary`, `GitOverview`, `LintFinding`, `ManifestRail`, `StatusBuckets`, `ViewListEntry`, `ViewManifest`, … (daemon ↔ runtime contract, authored by `cargo xtask gen-types`) |
+| Wire-contract types | `ManifestRail`, `ViewListEntry`, `ViewManifest`, … (daemon ↔ runtime contract; committed at `packages/sui/runtime/src/generated.d.ts` — a hand-maintained mirror of the Rust wire types, no `gen-types` task exists in this repo) |
 
 The dev-only leak detector lives at the subpath `@ship/sui-runtime/dev` so it doesn't ship in production bundles.
 

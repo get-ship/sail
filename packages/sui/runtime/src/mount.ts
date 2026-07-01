@@ -27,9 +27,11 @@ import type { ViewPayload as GeneratedViewPayload } from './generated'
 
 /**
  * Wire shape returned by `GET /_deck/views/<name>[/<sub>]`. The base type
- * is generated from `crates/deck/deck-host/src/view_payload.rs::ViewPayload`
- * via `cargo xtask gen-types`. The local generic specializes `scope` —
- * Rust ships it as untyped JSON; per-view modules narrow it here.
+ * is committed at `./generated.d.ts` (a hand-maintained mirror of
+ * `crates/deck/deck-host/src/view_payload.rs::ViewPayload`; `./generated.ts`
+ * is gitignored and no `gen-types` task exists in this repo). The local
+ * generic specializes `scope` — Rust ships it as untyped JSON; per-view
+ * modules narrow it here.
  */
 export type ViewPayload<Scope = Record<string, unknown>> =
   Omit<GeneratedViewPayload, 'scope'> & { scope: Scope }

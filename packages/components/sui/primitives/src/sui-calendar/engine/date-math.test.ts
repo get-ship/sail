@@ -126,8 +126,13 @@ describe('date-math — datetime primitives (local wall-clock)', () => {
     expect(rangeOverlaps(30, 90, 0, 60)).toBe(true) // symmetric
   })
 
-  // DECIDED v1 GAP — see date-math.ts header. DST fold/gap is out of scope for
-  // v1 (local wall-clock, no offset/zone). Pinned, not silently assumed.
+  // SKIP-FOSSIL ANNOTATION: DECIDED v1 GAP — see date-math.ts header.
+  // Blocking reason: `parseIsoDateTime` + `addMinutes` use local wall-clock
+  // arithmetic, so the 02:30 spring-forward instant has no defined offset
+  // (the JS Date would silently shift to 03:30 with the new offset, which
+  // the v1 model can't represent). Unblock criterion: ship a v2
+  // explicit-offset / IANA-zone mode and route through the new helpers;
+  // for now, normalize upstream and feed wall-clock strings.
   it.skip('DST spring-forward gap (2am→3am) — v1 gap: wall-clock has no zone', () => {
     // A zone-aware build would skip the non-existent 02:30 local time.
     // v1 treats wall-clock as nominal minutes; DST handling is deferred.

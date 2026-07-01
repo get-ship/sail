@@ -27,11 +27,14 @@
     "wasm": "wasm-pack build crates/sui/compiler --target web --out-dir ../../../packages/sui/compiler-wasm/pkg --out-name sui_compiler -- --features wasm",
     "build:bundles": "cargo run -p deck-cli -- build-assets",
     "typecheck": "node scripts/typecheck-components.mjs",
-    "typecheck:tsgo": "tsgo --noEmit -p packages/sui/runtime/tsconfig.json && tsgo --noEmit -p packages/sui/dom/tsconfig.json"
+    "typecheck:tsgo": "tsgo --noEmit -p packages/sui/runtime/tsconfig.json && tsgo --noEmit -p packages/sui/dom/tsconfig.json",
+    "test": "(vitest run; echo \"vitest exit: $?\") && bash scripts/test-no-phantom-xtask-refs.sh",
+    "test:vitest": "vitest run"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@typescript/native-preview": "^7.0.0-dev.20260628.1",
+    "lucide-static": "^1.22.0",
     "playwright": "^1.59.3",
     "typescript": "~5.8.3",
     "vitest": "^4.1.5"

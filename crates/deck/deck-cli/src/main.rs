@@ -357,7 +357,7 @@ fn build_assets() -> Result<()> {
     }
 
     println!("deck build-assets: bundles baked via in-process Rolldown");
-    println!("note: lucide-icons.json is committed source; regen via `cargo xtask gen-icons`");
+    println!("note: lucide-icons.json is committed source; regen via `cargo run -p xtask-deck -- gen-icons`");
     Ok(())
 }
 

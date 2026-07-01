@@ -15,6 +15,12 @@ const reg = createContainerRegistry()
 afterEach(() => reg.cleanup())
 
 describe('<sui-scroll-area>', () => {
+  // SKIP-FOSSIL ANNOTATION: every it.skip below is jsdom zero-dim
+  // (no layout engine → thumb ratios are NaN, scrollbar geometry is 0×0).
+  // The unblock criterion is a real layout engine: port the suite to a
+  // Playwright probe at tests/e2e/scroll-area.spec.ts (the canonical
+  // coverage for layout-dependent scroll behavior). See file header.
+
 
   it('default orientation attribute absent (SUI defers attribute reflection until prop changes)', () => {
     const { el } = mount(reg, 'sui-scroll-area', {})
