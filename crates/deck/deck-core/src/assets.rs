@@ -374,6 +374,7 @@ fn public_asset_content_type(file: &str) -> &'static str {
         Some("webp") => "image/webp",
         Some("gif") => "image/gif",
         Some("css") => "text/css; charset=utf-8",
+        Some("html" | "htm") => "text/html; charset=utf-8",
         Some("js" | "mjs") => "application/javascript; charset=utf-8",
         Some("json") => "application/json; charset=utf-8",
         Some("woff2") => "font/woff2",
