@@ -26,9 +26,23 @@
   <h2>Effects</h2>
   <p>
     An effect runs immediately, then re-runs whenever a signal it read changes.
-    Use it for the edges of your app — logging, the DOM, network, storage.
+    Use it for the edges of your app — logging, the DOM, network, storage. Return
+    a function and the effect cleans up after itself: that cleanup runs before the
+    next run and when the effect is disposed, so a timer, socket, or listener is
+    never left dangling. <code>effect()</code> returns a disposer to stop it
+    entirely.
   </p>
   <sui-codeblock code={code.effect}></sui-codeblock>
+
+  <h2>Escape hatches</h2>
+  <p>
+    Two tools for when the default tracking isn't what you want.
+    <code>batch()</code> coalesces several writes into a single update pass, so
+    effects run once instead of once per write. <code>untrack()</code> reads a
+    signal without subscribing to it — useful when an effect should react to one
+    input but only sample another.
+  </p>
+  <sui-codeblock code={code.escape}></sui-codeblock>
 
   <h2>In a component</h2>
   <p>
