@@ -1,6 +1,6 @@
 {
   "name": "tree-sitter-sui",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Tree-sitter grammar for the SUI .sui template language",
   "main": "bindings/node",

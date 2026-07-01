@@ -1,6 +1,6 @@
 {
   "name": "@ship/sui-code-editor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "SUI code-editor pack — <sui-code-editor> (CodeMirror 6), framework-pure (no ship-platform deps). Drop-in successor to <ship-code-editor> for sui-site public surfaces.",
   "type": "module",
   "main": "src/index.ts",

@@ -1,6 +1,6 @@
 {
   "name": "@ship/sui-charts",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Ship Charts pack \u2014 `<sui-*-chart>` + sparkline / donut / gauge / meter / heatmap custom elements.",
   "type": "module",
   "files": [
