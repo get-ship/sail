@@ -16,6 +16,7 @@ fn opts() -> CompileOpts {
         component_meta: None,
         emit_dts: false,
         emit_component_imports: false,
+        lint_overrides: Vec::new(),
     }
 }
 
@@ -28,7 +29,7 @@ fn collects_multiple_errors_where_compile_stops_at_one() {
     compile(src, opts()).expect_err("compile should fail");
 
     // check_all surfaces both.
-    let diags = check_all(src, None);
+    let diags = check_all(src, None, &[]);
     assert!(
         diags.len() >= 2,
         "expected >=2 diagnostics, got {}: {diags:?}",
@@ -43,21 +44,21 @@ fn collects_multiple_errors_where_compile_stops_at_one() {
 fn clean_source_yields_no_diagnostics() {
     // Bare interpolation is renderable; with no controller path, scope-bound
     // checks are skipped, so this is clean.
-    let diags = check_all("<p>{name}</p>", None);
+    let diags = check_all("<p>{name}</p>", None, &[]);
     assert!(diags.is_empty(), "expected no diagnostics, got {diags:?}");
 }
 
 #[test]
 fn parse_error_is_a_single_diagnostic() {
     // Nothing can run without an AST, so a parse failure is exactly one diag.
-    let diags = check_all("<p>{", None);
+    let diags = check_all("<p>{", None, &[]);
     assert_eq!(diags.len(), 1, "parse error should yield one diag: {diags:?}");
 }
 
 #[test]
 fn diagnostics_are_sorted_by_position() {
     let src = "<span>{this.value}</span>\n<p>{new Date()}</p>";
-    let diags = check_all(src, None);
+    let diags = check_all(src, None, &[]);
     let positions: Vec<(usize, usize)> = diags.iter().map(|d| (d.line, d.col)).collect();
     let mut sorted = positions.clone();
     sorted.sort();

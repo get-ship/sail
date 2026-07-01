@@ -50,6 +50,7 @@ pub(crate) mod scan;
 pub mod wasm;
 
 pub use diagnostics::{CompileError, DiagSeverity, Diagnostic, Span};
+pub use check::lint_overrides::{LintOverride, OverrideSeverity};
 pub use analysis::{analyze, completions_at, hover_at, Analysis, Hover, Symbol};
 
 /// Identity stamp embedded in every emitted artifact (JS leading
@@ -97,8 +98,9 @@ pub fn compiler_version() -> CompilerVersion {
 /// Compile mode. Every `.sui` compiles to a component; `Auto` resolves to
 /// `Component`. The retired `View` mode (static SSR HTML + a hydration island)
 /// is gone — SSR is the host's job, run on the same component via ship-js.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum CompileMode {
+    #[default]
     Auto,
     Component,
 }
@@ -111,7 +113,6 @@ pub struct ComponentMeta {
     pub name: String,
     pub shadow: bool,
 }
-
 #[derive(Debug, Clone)]
 pub struct CompileOpts {
     /// Path to the paired `.ts` setup module, relative to the emitted
@@ -138,6 +139,37 @@ pub struct CompileOpts {
     /// `@sui-tag/<tag>` to the component source. Defaults to `false` — the
     /// registry path is unaffected until the bundler opts in.
     pub emit_component_imports: bool,
+    /// Per-rule severity overrides applied at the build gate. The
+    /// lint engine emits findings at the rule's natural severity
+    /// (Error for the typo-catching rules, Warn for surfaced-but-
+    /// non-blocking rules); this list downgrades specific rules'
+    /// Error findings to Warning (or drops them) so an external
+    /// SUI consumer can opt out of a strict rule without editing
+    /// the rule itself. The internal monorepo leaves this empty
+    /// (the default) and stays strict. See
+    /// `crate::check::lint_overrides::LintOverride` for the shape.
+    pub lint_overrides: Vec<check::lint_overrides::LintOverride>,
+}
+
+impl CompileOpts {
+    /// Builder-style append: add a per-rule severity override and
+    /// return `self` for chaining. A typical call site:
+    ///
+    /// ```ignore
+    /// let opts = CompileOpts::default()
+    ///     .with_lint_override("sui-css-token", OverrideSeverity::Off);
+    /// ```
+    pub fn with_lint_override(
+        mut self,
+        rule: impl Into<String>,
+        severity: check::lint_overrides::OverrideSeverity,
+    ) -> Self {
+        self.lint_overrides.push(check::lint_overrides::LintOverride {
+            rule: rule.into(),
+            severity,
+        });
+        self
+    }
 }
 
 impl Default for CompileOpts {
@@ -150,6 +182,7 @@ impl Default for CompileOpts {
             component_meta: None,
             emit_dts: true,
             emit_component_imports: false,
+            lint_overrides: Vec::new(),
         }
     }
 }
@@ -176,9 +209,13 @@ pub struct CompileOutput {
 /// A fatal parse error returns a single diagnostic (nothing else can run
 /// without an AST). `source_path` locates the paired `.controller.ts` for
 /// the controller-aware passes; pass `None` for an unsaved/synthetic buffer.
-pub fn check_all(source: &str, source_path: Option<&std::path::Path>) -> Vec<Diagnostic> {
+pub fn check_all(
+    source: &str,
+    source_path: Option<&std::path::Path>,
+    overrides: &[LintOverride],
+) -> Vec<Diagnostic> {
     match parse::parse(source) {
-        Ok(program) => check::collect(&program, source, source_path),
+        Ok(program) => check::collect(&program, source, source_path, overrides),
         Err(e) => vec![Diagnostic::from_compile_error(&e, source)],
     }
 }
@@ -201,15 +238,25 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     };
 
     let program = parse::parse(effective_source).map_err(|e| attach_path(e, &opts))?;
-    check::run(&program, effective_source, opts.source_path.as_deref())
-        .map_err(|e| attach_path(e, &opts))?;
+    check::run(
+        &program,
+        effective_source,
+        opts.source_path.as_deref(),
+        &opts.lint_overrides,
+    )
+    .map_err(|e| attach_path(e, &opts))?;
     // One contract per boundary (#255): the full Error-severity lint stream
     // (sui-prop-value, sui-attr-bool-prop, sui-css-content-text, controller-*)
     // gates `compile()` itself, so the daemon + napi harness reject exactly
     // what the CLI does. The CLI's post-compile `fatal_diagnostics_gate` is now
     // redundant-but-harmless.
-    check::gate(&program, effective_source, opts.source_path.as_deref())
-        .map_err(|e| attach_path(e, &opts))?;
+    check::gate(
+        &program,
+        effective_source,
+        opts.source_path.as_deref(),
+        &opts.lint_overrides,
+    )
+    .map_err(|e| attach_path(e, &opts))?;
     let bindings = bindings::build(&program);
     // `is_view` is the master view/component switch in lowering (which runtime
     // factory to import, direct-emit hydration, route detection). A source is a

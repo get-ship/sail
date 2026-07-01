@@ -128,7 +128,7 @@ pub fn compile(source: &str, opts_json: &str) -> Result<JsValue, JsValue> {
 /// checks + lint still run. Mirrors `sui_compiler::analyze`.
 #[wasm_bindgen]
 pub fn analyze(source: &str) -> Result<JsValue, JsValue> {
-    let analysis = crate::analyze(source, None);
+    let analysis = crate::analyze(source, None, &[]);
     serde_wasm_bindgen::to_value(&analysis)
         .map_err(|e| JsValue::from_str(&format!("serialize analysis: {e}")))
 }

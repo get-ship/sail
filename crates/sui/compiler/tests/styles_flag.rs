@@ -41,6 +41,7 @@ fn styles_opt_emits_styles_field_in_component_export() {
             component_meta: Some(ComponentMeta { name: "ship-styled-test".into(), shadow: true }),
             emit_dts: false,
             emit_component_imports: false,
+        lint_overrides: Vec::new(),
         },
     )
     .expect("compile with styles");
@@ -74,7 +75,8 @@ fn styles_opt_rejects_non_component_source() {
             component_meta: None,
             emit_dts: false,
             emit_component_imports: false,
-        },
+        
+            lint_overrides: Vec::new(),},
     )
     .expect_err("must reject styles on non-component source");
     assert!(
@@ -104,7 +106,8 @@ fn styles_opt_merges_with_existing_inline_style_block() {
             component_meta: Some(ComponentMeta { name: "ship-mixed-test".into(), shadow: false }),
             emit_dts: false,
             emit_component_imports: false,
-        },
+        
+            lint_overrides: Vec::new(),},
     )
     .expect("compile mixed inline + external styles");
     assert!(out.js.contains(".inline { color: var(--foreground); }"), "inline style lost: {}", out.js);
@@ -133,7 +136,8 @@ fn view_inline_style_is_installed_at_mount_not_dropped() {
             component_meta: None,
             emit_dts: false,
             emit_component_imports: false,
-        },
+        
+            lint_overrides: Vec::new(),},
     )
     .expect("view with inline <style> compiles");
     assert!(
@@ -168,7 +172,8 @@ fn view_without_inline_style_emits_no_style_install() {
             component_meta: None,
             emit_dts: false,
             emit_component_imports: false,
-        },
+        
+            lint_overrides: Vec::new(),},
     )
     .expect("plain view compiles");
     assert!(

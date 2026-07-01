@@ -16,6 +16,7 @@ fn component_opts(name: &str) -> CompileOpts {
         component_meta: Some(ComponentMeta { name: name.into(), shadow: false }),
         emit_dts: true,
         emit_component_imports: false,
+        lint_overrides: Vec::new(),
     }
 }
 

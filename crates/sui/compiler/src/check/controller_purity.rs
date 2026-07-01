@@ -11,7 +11,10 @@ use std::path::Path;
 
 use crate::diagnostics::{CompileError, Span};
 
-pub fn check(source_path: Option<&Path>) -> Result<(), CompileError> {
+pub fn check(
+    source_path: Option<&Path>,
+    overrides: &[crate::check::lint_overrides::LintOverride],
+) -> Result<(), CompileError> {
     let Some(p) = source_path else { return Ok(()); };
     let Some(stem) = p.file_stem().and_then(|s| s.to_str()) else { return Ok(()); };
     let dir = p.parent().unwrap_or(Path::new("."));
@@ -29,7 +32,14 @@ pub fn check(source_path: Option<&Path>) -> Result<(), CompileError> {
         Err(_) => return Ok(()), // unreadable — let other tooling surface it
     };
 
-    let findings = sui_lint::lint_controller_source(&controller_path, &source);
+    // Apply the build host's lint overrides before the Error filter. The
+    // rule's natural severity is preserved for everyone who consumes
+    // the lint directly (the LSP, `sui_lint` CLI); the override only
+    // affects this build-time gate.
+    let findings = crate::check::lint_overrides::apply_overrides(
+        sui_lint::lint_controller_source(&controller_path, &source),
+        overrides,
+    );
     // The build gate fails only on Error-severity findings. Warnings surface
     // through the LSP / `sui-lint` CLI (which call `lint_controller_source`
     // directly) but don't break compilation — so a rule can ship as a

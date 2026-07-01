@@ -9,6 +9,26 @@
 //! suggest the closest match across both the theme registry and the
 //! component-local definitions.
 //!
+//! Some token names are not declared in the canonical
+//! `packages/sui/tokens/src/{tokens,themes}.css` but are still
+//! legitimate, well-known conventions — the canonical source uses
+//! them in `var(--name, fallback)` chains across every theme-preview
+//! block. The canonical example is `--font-sans`: `@ship/tokens`
+//! sets `--font-body: var(--font-sans, system-ui, sans-serif);` in
+//! every theme preview even though no `--font-sans: ...;`
+//! declaration exists. These *convention* tokens are listed in
+//! `tokens.json` so the lint recognizes them. When `@ship/tokens`
+//! introduces a new convention, add the name to `theme.tokens` (or
+//! the appropriate `channels` group) and bump the JSON.
+//!
+//! Severity: `Error` — the build hard-fails on an unknown token. The
+//! intent is to catch typos, NOT to reject real tokens; the
+//! convention-tokens block above is the way real-but-undeclared
+//! names are recognized. External SUI apps that want a softer
+//! behavior can opt-out via `CompileOpts::lint_overrides`
+//! (`OverrideSeverity::Warn` or `Off`); the internal monorepo
+//! compiles with the default (Error) and stays strict.
+//!
 //! Out of scope:
 //! - Light/dark theme variant validation — we just check token-name
 //!   existence; whether dark-mode also defines the value is the

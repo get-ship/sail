@@ -103,7 +103,7 @@ fn handle_notification(
 
 fn publish_diagnostics(conn: &Connection, uri: &Url, text: &str) -> anyhow::Result<()> {
     let path = uri.to_file_path().ok();
-    let analysis = sui_compiler::analyze(text, path.as_deref());
+    let analysis = sui_compiler::analyze(text, path.as_deref(), &[]);
     let diagnostics: Vec<Diagnostic> = analysis.diagnostics.iter().map(diag_to_lsp).collect();
     let params = PublishDiagnosticsParams { uri: uri.clone(), diagnostics, version: None };
     conn.sender.send(Message::Notification(lsp_server::Notification {
@@ -203,7 +203,7 @@ fn on_definition(
     if h.line == 0 {
         return None;
     }
-    let analysis = sui_compiler::analyze(&text, path.as_deref());
+    let analysis = sui_compiler::analyze(&text, path.as_deref(), &[]);
     let ctrl = analysis.controller_path?;
     let uri = Url::from_file_path(&ctrl).ok()?;
     let pos = to_lsp_pos(h.line, h.col);

@@ -88,7 +88,8 @@ fn synth_client_into(repo: &Path, gendir: &Path, s: &Surface) {
     if s.mode == CompileMode::Component {
         let dts = compile(
             &src,
-            CompileOpts { mode: s.mode, emit_dts: true, ..Default::default() },
+            CompileOpts { mode: s.mode, emit_dts: true,
+            lint_overrides: Vec::new(), ..Default::default() },
         )
         .unwrap_or_else(|e| panic!("compile dts {}: {}", s.name, e.render(&src)))
         .dts

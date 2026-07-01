@@ -26,6 +26,7 @@ fn jsdoc_above_prop_emits_description_in_cem() {
         }),
         emit_dts: false,
         emit_component_imports: false,
+        lint_overrides: Vec::new(),
     };
     let out = compile(&source, opts).expect("compile");
     let cem = out.cem.expect("CEM emitted for component-mode");

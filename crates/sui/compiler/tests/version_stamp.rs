@@ -19,6 +19,7 @@ fn view_opts() -> CompileOpts {
         mode: CompileMode::Component,
         emit_dts: true,
         emit_component_imports: false,
+        lint_overrides: Vec::new(),
         ..Default::default()
     }
 }
@@ -35,7 +36,6 @@ fn component_opts() -> CompileOpts {
         ..Default::default()
     }
 }
-
 #[test]
 fn compiler_version_struct_is_populated() {
     let cv = compiler_version();

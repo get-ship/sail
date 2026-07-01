@@ -23,6 +23,7 @@ fn view_opts(setup: Option<&str>) -> CompileOpts {
         component_meta: None,
         emit_dts: false,
         emit_component_imports: false,
+        lint_overrides: Vec::new(),
     }
 }
 
@@ -35,9 +36,9 @@ fn component_opts(setup: Option<&str>) -> CompileOpts {
         component_meta: Some(ComponentMeta { name: "sui-x".into(), shadow: true }),
         emit_dts: false,
         emit_component_imports: false,
+        lint_overrides: Vec::new(),
     }
 }
-
 const FORBIDDEN: &[(&str, &str)] = &[
     ("new Proxy($scope", "hand-rolled scope proxy — call the runtime builder (componentMountState)"),
     ("/_deck/", "a served URL — serving is Deck's concern, SUI emits no URLs"),

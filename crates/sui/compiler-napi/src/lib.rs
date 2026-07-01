@@ -122,6 +122,7 @@ fn compile_to_result(source: &str, opts_json: &str) -> Result<NapiResult, String
         component_meta,
         emit_dts: false,
         emit_component_imports: false,
+        lint_overrides: Vec::new(),
     };
 
     Ok(match native_compile(source, opts) {
@@ -192,6 +193,11 @@ mod tests {
     #[test]
     fn compile_error_carries_line_col() {
         // A CSS-token typo in a component is an Error-severity finding.
+        // The default-config build rejects it, and the line/col of the
+        // `var(--…)` reference are carried through the napi boundary
+        // into the Err result. The `--nope-not-a-token` reference is
+        // on line 2 (1-based) of the source — counted from the start
+        // of the file, not the start of the `<style>` block.
         let json = compile_to_result(
             "<prop name=\"x\"/>\n<style>.a{ color: var(--nope-not-a-token); }</style>\n<div class=\"a\">x</div>",
             r#"{"componentName":"sui-x"}"#,
