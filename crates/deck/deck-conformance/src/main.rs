@@ -5,9 +5,10 @@
 //! ship domains, NO Ship component pack — the deck framework standing on its
 //! own (effectively the `deck serve` the CLI doesn't have yet).
 //!
-//! Run: `cargo run -p deck-conformance`, then open:
-//!   - http://127.0.0.1:7878/_deck/view/hello    (SSR, no controller, no build step)
-//!   - http://127.0.0.1:7878/_deck/view/counter  (controller → bundled → hydrated)
+//! Run: `cargo run -p deck-conformance`. It exposes deck's own surface (framework
+//! assets, the live-data port, the mutation tombstone). The named-view routes
+//! (`/_deck/view(s)/*`) moved to the separate `ship-views` repo and are not served
+//! here.
 
 #[tokio::main]
 async fn main() {
@@ -20,6 +21,5 @@ async fn main() {
         .await
         .unwrap_or_else(|e| panic!("deck-conformance: bind {addr}: {e}"));
     println!("deck-conformance: serving {} on http://{addr}", app_dir.display());
-    println!("deck-conformance: try /_deck/view/hello (SSR) or /_deck/view/counter (hydrated)");
     axum::serve(listener, app).await.expect("deck-conformance: serve");
 }

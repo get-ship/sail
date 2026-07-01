@@ -19,9 +19,6 @@ members = [
     "crates/deck/deck",
     "crates/deck/deck-conformance",
     "crates/deck/deck-ssr",
-    # ship-views — the named-view serving feature extracted out of deck.
-    # Depends DOWN on deck; deck never depends on it (deck ⊥ ship-views).
-    "crates/ship-views",
     "packages/sui/grammar",
     "xtask-deck",
 ]
@@ -42,7 +39,6 @@ default-members = [
     "crates/deck/deck-axum",
     "crates/deck/deck",
     "crates/deck/deck-conformance",
-    "crates/ship-views",
     "packages/sui/grammar",
 ]
 # `crates/sui/compiler/fuzz` declares its own [workspace] (cargo-fuzz drives it
