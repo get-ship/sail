@@ -15,7 +15,7 @@ use rolldown::plugin::{
     HookLoadArgs, HookLoadOutput, HookLoadReturn, HookResolveIdArgs, HookResolveIdOutput,
     HookResolveIdReturn, HookUsage, Plugin, PluginContext, SharedLoadPluginContext,
 };
-use rolldown_common::{ModuleType, ResolvedExternal};
+use rolldown_common::{ModuleType, ResolvedExternal, side_effects::HookSideEffects};
 
 
 use crate::compile::{compile_sui, CompileMode};
@@ -253,6 +253,21 @@ impl Plugin for SuiPlugin {
                         }
                     };
                     if target.exists() {
+                        // Don't surface the owning `package.json` here.
+                        // If we do, Rolldown's `lazy_check_side_effects`
+                        // honors `package.json#sideEffects: false` and
+                        // drops the body — but a bare `import
+                        // '@ship/<pkg>'` is a deliberate side-effect
+                        // request from the importer, and the package's
+                        // `sideEffects: false` is a tree-shaking hint
+                        // for tooling that can't tell a binding import
+                        // from a side-effect import. The deck bundler
+                        // CAN, so the importer's intent wins. Setting
+                        // `package_json_path: None` makes Rolldown
+                        // fall through to its analyzer (any source
+                        // statement with a side effect keeps the body)
+                        // and per-statement tree-shaking still shakes
+                        // dead exports inside the kept body.
                         return Ok(Some(HookResolveIdOutput::from_id(
                             target.to_string_lossy().to_string(),
                         )));
@@ -293,8 +308,52 @@ impl Plugin for SuiPlugin {
                 ..Default::default()
             }));
         }
-        // Real .ts/.js — Rolldown loads + transpiles natively.
-        Ok(None)
+        // Real .ts/.js — we read the source and override
+        // `side_effects` to `True` so the importer's bare
+        // `import 'x'` keeps the body regardless of
+        // `package.json#sideEffects: false` (sui-sideeffects
+        // footgun). Per-statement tree-shaking still applies
+        // inside the kept body, so a barrel's dead export is
+        // still shaken.
+        // Skip CSS / JSON entirely — the built-in AssetModulePlugin
+        // handles them via the `module_types: { ".css" -> Asset }` map
+        // set on `BundlerOptions`. Returning anything here (even
+        // `side_effects: Some(True)`) would short-circuit the asset
+        // pipeline and trip the "module with type `asset` during AST
+        // parsing" error. Side-effect preservation for CSS is moot
+        // anyway: the AssetModulePlugin emits the CSS file as a hashed
+        // `assets/<name>-<hash>.css` regardless of `package.json#sideEffects`
+        // (the asset IS the body, there's no JS to drop).
+        if id.ends_with(".css") || id.ends_with(".json") {
+            return Ok(None);
+        }
+        let module_type = if id.ends_with(".tsx") {
+            ModuleType::Tsx
+        } else if id.ends_with(".ts") {
+            ModuleType::Ts
+        } else if id.ends_with(".jsx") {
+            ModuleType::Jsx
+        } else {
+            ModuleType::Js
+        };
+        // Read the source. A read error is propagated as a
+        // build diagnostic (fail-loud per the "no silent
+        // errors" rule) — silently emitting an empty `code`
+        // would surface downstream as a confusing
+        // `MissingExport` on a named-import consumer, masking
+        // the real cause (a missing or unreadable file).
+        let code = std::fs::read_to_string(id)
+            .map_err(|e| {
+                anyhow::anyhow!(
+                    "deck-bundler: failed to read module `{id}`: {e}"
+                )
+            })?;
+        Ok(Some(HookLoadOutput {
+            code: code.into(),
+            side_effects: Some(HookSideEffects::True),
+            module_type: Some(module_type),
+            ..Default::default()
+        }))
     }
 
     fn register_hook_usage(&self) -> HookUsage {
