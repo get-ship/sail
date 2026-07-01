@@ -7,6 +7,7 @@ import type { Scope } from './page.sui'
 
 const code = {
   basic: [
+    '<prop name="title" type="string" default="Card" />',
     '<prop name="tone" values="default|primary|accent" default="default" />',
     '',
     '<style>',
