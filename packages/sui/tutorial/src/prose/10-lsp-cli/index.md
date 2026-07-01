@@ -49,9 +49,9 @@ the project mirror tree. Use this after the lint check is clean.
 
 ## The `sui-lsp` binary (editors)
 
-For editors — the ship-agent's built-in tooling, VS Code (`apps/vscode/`),
-or any LSP-capable client — the `sui-lsp` binary (`/home/madvib/dev/Ship/sui/crates/sui/lsp/`) provides
-the same intelligence over stdio. Same Rust grammar; hover, completion, and
+For editors — VS Code, Neovim, Helix, or any LSP-capable client — the
+`sui-lsp` binary provides the same intelligence over stdio. Same Rust
+grammar; hover, completion, and
 go-to-definition on top. The ship-agent uses this binary under the hood; the
 editor integration is the developer-facing path.
 

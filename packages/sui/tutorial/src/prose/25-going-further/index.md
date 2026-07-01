@@ -28,9 +28,9 @@ loop against a mock daemon. From here:
 
 ## Tooling reach
 
-- **LSP**: the native `sui-lsp` binary (`/home/madvib/dev/Ship/sui/crates/sui/lsp/`, on PATH after
-  `just install-dev`) — diagnostics/hover/completion over stdio, the same
-  `sui-compiler` grammar the build uses.
+- **LSP**: the native `sui-lsp` binary (on your PATH after install) —
+  diagnostics/hover/completion over stdio, the same `sui-compiler`
+  grammar the build uses.
 - **Binary lint/compile loop**: `cargo run -p sui-lint --example check -- <file>` for
   fast per-edit lint; `cargo run -p sui-compiler -- build <file>` for the full compile.
   Every authoring surface is documented in `docs/ship-sui/references/docs/agent-surfaces.md`.

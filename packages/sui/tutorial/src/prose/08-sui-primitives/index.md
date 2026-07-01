@@ -18,8 +18,8 @@ primitive, with live previews, in the [component library](/components).
 
 You don't write `import { Button } from '@ship/sui-primitives'` and you
 don't declare what tags your template uses. You import the pack once
-at the app entrypoint (or rely on the daemon's auto-register in dev),
-and from then on every `<sui-*>` tag in your template just works:
+at the app entrypoint, and from then on every `<sui-*>` tag in your
+template just works:
 
 ```ts
 // app entry — registers every <sui-*> in the pack
