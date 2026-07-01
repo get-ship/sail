@@ -17,6 +17,11 @@
        side padding for component viewer / tutorial, but the catalog
        inherits the standard 6 + 7 spacing. */
     padding: var(--space-6) var(--space-7) var(--space-8);
+    /* Hover tint — a 6% primary mix on surface-1. Defined once on
+       :host so the cell hover rule reads a single channel instead
+       of an inline color-mix (sui-css-literals flags the inline
+       form). */
+    --cat-cell-hover: color-mix(in oklch, var(--primary) 6%, var(--surface-1));
   }
 
   .cat-head {
@@ -27,10 +32,10 @@
     flex-wrap: wrap;
   }
   .cat-head h1 {
-    font-family: var(--font-display, var(--font-body));
+    font-family: var(--font-display);
     font-size: var(--text-3xl);
     font-weight: var(--font-weight-bold);
-    letter-spacing: var(--tracking-tight, -0.02em);
+    letter-spacing: var(--tracking-tight);
     margin: 0;
     color: var(--foreground);
   }
@@ -107,7 +112,7 @@
   }
   .cell:hover {
     border-color: var(--primary);
-    background: color-mix(in oklch, var(--primary) 6%, var(--surface-1));
+    background: var(--cat-cell-hover);
     transform: translateY(-1px);
   }
 

@@ -13,7 +13,7 @@
   declares, but a stale URL or hand-typed path is reachable).
 
   CSS lives in the sibling `style.css` (the deck-route-css convention) —
-  the bundler auto-imports it; an inline `<style>` here would be silently
+  the bundler auto-imports it; an inline `style` block here would be silently
   dropped (`sui-route-inline-style` lint warns). The class names below
   match the rules in that file.
 -->
