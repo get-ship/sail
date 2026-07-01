@@ -19,6 +19,29 @@
   <sui-codeblock code={code.template}></sui-codeblock>
   <sui-codeblock code={code.controller}></sui-codeblock>
 
+  <h2>The two-file model</h2>
+  <p>The split is the whole mental model, and it's rigid on purpose:</p>
+  <ul>
+    <li>
+      <strong>The <code>.sui</code> template</strong> is markup and bindings — a
+      pure read of state. It reads signals (<code>&#123;name()&#125;</code>),
+      wires events (<code>on:click</code>), and binds inputs
+      (<code>bind:value</code>). It holds no logic.
+    </li>
+    <li>
+      <strong>The <code>.controller.ts</code></strong> owns the state and the
+      logic. Its <code>scope()</code> returns the signals, derived values, and
+      handlers the template binds to; <code>mount(state, host)</code> runs side
+      effects once the element is in the DOM.
+    </li>
+  </ul>
+  <p>
+    The template can only bind names the controller's <code>scope()</code> hands
+    it — the compiler enforces it. Markup on one side, state on the other,
+    nothing tangled between them: that boundary is why every SUI component reads
+    the same way.
+  </p>
+
   <h2>A reusable component</h2>
   <p>
     Add <code>&lt;prop&gt;</code> declarations and a scoped
