@@ -84,6 +84,24 @@ compile 0.30 / lint 0.10 / structural 0.20 / behavior 0.40. Without it the legac
 bun eval/scripts/behavior-grade.ts <lane-dir> <view-path> <spec.behavior.jsonc>
 ```
 
+### Primitive-adherence (composition axis)
+
+`primitive-adherence.ts` scores whether each `.sui` **composes** the design
+system — `<sui-grid>` / `<sui-stack>` / `<sui-cluster>` + other `<sui-*>`
+primitives, values spent as `var(--token)` — or **hand-rolls** it (ad-hoc
+`display:grid`/`flex` off `:host`, hex/px/raw-font literals). It contributes
+0.20 of the structural fraction (see `structuralFraction` in `grade.ts`) and
+the overall lands in each jsonl row as `structural.primitiveAdherence` with a
+per-file `structural.primitiveAdherenceByFile` breakdown. The formula is
+documented at the top of the file. Run it standalone on any file or dir:
+
+```bash
+bun eval/scripts/primitive-adherence.ts <file.sui | dir> [...]
+# self-check on the bundled fixtures (hand-rolled → 0.00, composed → 1.00):
+bun eval/scripts/primitive-adherence.ts eval/scripts/fixtures/primitive-adherence/
+bun test eval/scripts/primitive-adherence.test.ts
+```
+
 ## Cleanup
 
 After scoring, remove lane worktrees + branches:

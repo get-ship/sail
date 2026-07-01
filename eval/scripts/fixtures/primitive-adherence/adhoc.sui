@@ -1,0 +1,49 @@
+<!-- FIXTURE (negative): hand-rolls everything the SUI contract forbids.
+     Ad-hoc display:grid + display:flex off :host, hex colors, px values, a
+     raw font stack, and NOT a single <sui-*> primitive or var(--token). This
+     is the LOW-scoring shape the grader must catch. It deliberately does NOT
+     compile clean (sui-css-token / sui-css-literal reject it) — it is a
+     grader fixture, not a shippable view. -->
+<prop name="title" type="string" default="" />
+
+<style>
+  :host {
+    display: block;
+  }
+  .board {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    padding: 24px;
+    background: #0e0e11;
+    color: #f5f5f5;
+    font-family: "Inter", system-ui, sans-serif;
+  }
+  .row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid #2a2a2e;
+    border-radius: 6px;
+    padding: 12px;
+  }
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+</style>
+
+<div class="board">
+  <div class="toolbar">
+    <button class="btn">{title()}</button>
+    <button class="btn">Add</button>
+  </div>
+  <div class="row">
+    <span>Item one</span>
+    <span>Item two</span>
+  </div>
+  <div class="row">
+    <span>Item three</span>
+  </div>
+</div>

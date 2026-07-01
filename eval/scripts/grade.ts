@@ -8,7 +8,8 @@
 //   1. compile every .sui file under the view dir via sui-compiler
 //   2. lint via sui-lint
 //   3. structural pass: required signals + control-flow + token-only CSS +
-//      pure-expression templates (no capabilities/statements in `.sui`)
+//      pure-expression templates (no capabilities/statements in `.sui`) +
+//      primitive-adherence (composes <sui-*> + tokens vs hand-rolls layout)
 //   4. behavioral pass (when SUI_EVAL_BEHAVIOR_SPEC is set): scenario runner
 //      in jsdom via behavior-grade.ts
 //   5. emit one JSON row per lane → .artifacts/sui-eval-runs/<run-id>.jsonl
@@ -21,6 +22,7 @@ import { readdirSync, statSync, existsSync, readFileSync, mkdirSync, writeFileSy
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { scanTemplatePurity } from './template-purity'
+import { gradePrimitiveAdherence, type PerFileAdherence } from './primitive-adherence'
 
 const RUN_ID = process.env.SHIP_PIPELINE_RUN_ID ?? `local-${process.env.SHIP_ACTOR_ID ?? 'unknown'}`
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
@@ -88,6 +90,11 @@ interface LaneScore {
     requiredFragments: { found: string[]; missing: string[] }
     cssTokenViolations: string[]
     templatePurityViolations: string[]
+    // Composes primitives + tokens vs hand-rolls layout/values — see
+    // primitive-adherence.ts. `primitiveAdherence` is the overall [0,1];
+    // the per-file breakdown carries the detector counts.
+    primitiveAdherence: number
+    primitiveAdherenceByFile: PerFileAdherence[]
     viewFiles: string[]
   }
   behavior?: BehaviorScore
@@ -254,11 +261,23 @@ function structuralCheck(worktree: string, files: string[]): LaneScore['structur
   // controller.ts. See template-purity.ts + docs/ship-sui authoring-model.
   const templatePurityViolations = scanTemplatePurity(templateText)
 
+  // Composition axis: does each `.sui` reach for <sui-*> primitives + tokens,
+  // or hand-roll layout (ad-hoc display:grid/flex) and literal values? Scored
+  // per-file so one bad file doesn't hide behind good ones. See
+  // primitive-adherence.ts.
+  const adherence = gradePrimitiveAdherence(
+    files
+      .filter((p) => p.endsWith('.sui'))
+      .map((p) => ({ file: p.replace(worktree + '/', ''), text: readFileSync(p, 'utf8') })),
+  )
+
   return {
     manifestOk,
     requiredFragments: { found, missing },
     cssTokenViolations,
     templatePurityViolations,
+    primitiveAdherence: adherence.overall,
+    primitiveAdherenceByFile: adherence.perFile,
     viewFiles: files.map((p) => p.replace(worktree + '/', '')),
   }
 }
@@ -272,9 +291,16 @@ function structuralFraction(s: LaneScore['structural']): number {
   // Pure-expression template gate: any capability/statement in a `.sui` file
   // floors this slice (the line must hold for the structure to count as sound).
   const templatePure = s.templatePurityViolations.length === 0 ? 1 : 0
-  // Weights: template fragments 0.4, css purity 0.2, manifest 0.2,
-  // template purity 0.2.
-  return (reqHits / reqTotal) * 0.4 + cssClean * 0.2 + manifest * 0.2 + templatePure * 0.2
+  // Composition axis is already a continuous [0,1] (primitive-adherence.ts).
+  // Weights: template fragments 0.35, css purity 0.15, manifest 0.15,
+  // template purity 0.15, primitive adherence 0.20.
+  return (
+    (reqHits / reqTotal) * 0.35 +
+    cssClean * 0.15 +
+    manifest * 0.15 +
+    templatePure * 0.15 +
+    s.primitiveAdherence * 0.2
+  )
 }
 
 // --- main -----------------------------------------------------------------
@@ -298,7 +324,8 @@ for (const r of results) {
   const beh = r.behavior ? ` behavior=${r.behavior.passed}/${r.behavior.total}` : ''
   const impure = r.structural.templatePurityViolations.length
   const pure = impure === 0 ? '' : ` impure=${impure}!`
-  console.log(`  ${r.laneId.padEnd(8)} composite=${r.composite.toFixed(2)} compile=${tag} lint=${r.lint.errors}e/${r.lint.warnings}w${pure}${beh}`)
+  const adh = ` adh=${r.structural.primitiveAdherence.toFixed(2)}`
+  console.log(`  ${r.laneId.padEnd(8)} composite=${r.composite.toFixed(2)} compile=${tag} lint=${r.lint.errors}e/${r.lint.warnings}w${pure}${adh}${beh}`)
 }
 
 // Exit 0 even if a lane scored zero — `grade` is a measurement, not a gate.
