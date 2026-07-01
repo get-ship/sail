@@ -1,7 +1,10 @@
-// Code snippets for the /ai/eval page.
+// Code snippets for the /ai/eval page. The original 11-sui-eval lesson
+// shows `import ... from '@ship/sui-eval'` lines; we omit the `import`
+// statement here so the bundler doesn't try to externalize the
+// `@ship/sui-eval` bare specifier (this site doesn't depend on it).
+// The API call shapes are unchanged.
 
-export const evalExample = `import { runEval, type EvalTask, loadCatalog } from '@ship/sui-eval'
-
+export const evalExample = `// runEval + loadCatalog come from the sui-eval package.
 const task: EvalTask = {
   description: 'A counter with +1/-1 buttons and a reset.',
   catalog: await loadCatalog(),       // the component catalog
@@ -23,8 +26,7 @@ const result = await runEval(task, { model: 'sonnet' })
 //     output: { template, controller },
 //   }`
 
-export const hatchExample = `import { sniffEscapeHatches } from '@ship/sui-eval'
-
+export const hatchExample = `// sniffEscapeHatches() comes from the sui-eval package.
 const hatches = sniffEscapeHatches(result.output)
 // → [
 //     { kind: 'raw-script', line: 14, msg: '<script> in template' },
