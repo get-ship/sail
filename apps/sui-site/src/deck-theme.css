@@ -1,0 +1,64 @@
+/*
+  deck-theme.css — the deck section's identity. Violet (hue ~285) vs SUI's red
+  (27), cool neutrals vs warm. Applied when <html data-theme="deck">; the /deck
+  route's controller sets it on mount and restores "sui" on unmount, so the two
+  sections of the shared site read as distinctly different products.
+*/
+:root[data-theme='deck'] {
+  --primary: oklch(0.55 0.20 285);
+  --primary-hover: oklch(0.50 0.21 285);
+  --primary-foreground: oklch(0.99 0.01 285);
+  --ring: oklch(0.55 0.20 285 / 40%);
+  --ring-color: var(--primary);
+
+  --accent: oklch(0.54 0.17 280);
+  --accent-foreground: oklch(0.99 0.01 285);
+
+  /* Cool the neutrals toward the violet hue. */
+  --background: oklch(0.985 0.004 280);
+  --surface-0: oklch(0.975 0.006 280);
+  --surface-1: oklch(1 0 0);
+  --surface-2: oklch(0.965 0.008 278);
+  --surface-3: oklch(0.945 0.010 278);
+  --muted: oklch(0.955 0.008 278);
+
+  --border: oklch(0.20 0.02 285 / 12%);
+  --border-subtle: oklch(0.20 0.02 285 / 7%);
+  --border-strong: oklch(0.20 0.02 285 / 22%);
+
+  --sidebar: oklch(0.978 0.006 280);
+  --sidebar-primary: var(--primary);
+
+  color-scheme: light;
+}
+
+:root[data-theme='deck'][data-mode='dark'] {
+  --background: oklch(0.165 0.012 285);
+  --surface-0: oklch(0.185 0.014 285);
+  --surface-1: oklch(0.205 0.016 285);
+  --surface-2: oklch(0.245 0.018 285);
+  --surface-3: oklch(0.285 0.020 285);
+
+  --foreground: oklch(0.965 0.006 285);
+  --muted: oklch(0.245 0.018 285);
+  --muted-foreground: oklch(0.70 0.02 285);
+
+  --card: oklch(0.195 0.015 285);
+  --card-foreground: oklch(0.965 0.006 285);
+  --popover: oklch(0.205 0.016 285);
+  --popover-foreground: oklch(0.965 0.006 285);
+
+  --primary: oklch(0.68 0.19 285);
+  --primary-hover: oklch(0.73 0.19 285);
+  --primary-foreground: oklch(0.16 0.02 285);
+  --ring: oklch(0.68 0.19 285 / 42%);
+  --accent: oklch(0.74 0.15 285);
+  --accent-foreground: oklch(0.16 0.02 285);
+
+  --border: oklch(0.965 0.006 285 / 12%);
+  --border-subtle: oklch(0.965 0.006 285 / 7%);
+  --border-strong: oklch(0.965 0.006 285 / 22%);
+  --input: oklch(0.965 0.006 285 / 14%);
+
+  color-scheme: dark;
+}

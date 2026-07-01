@@ -1,0 +1,37 @@
+<!--
+  /deck — MOCKUP of the deck section. Same shell, its own violet identity (set
+  by the controller via data-theme="deck"). Demonstrates the shared-site concept:
+  distinct theme per product. Full deck docs (packages/deck/docs) move in here.
+-->
+<div class="doc deck-landing">
+  <p class="eyebrow">Deck</p>
+  <h1>The app framework for SUI</h1>
+  <p class="lead">
+    SUI compiles components. <strong>deck builds applications</strong>:
+    file-based routing, server rendering with hydration, bundling, live data,
+    and a hot-reloading dev loop — all driving the SUI compiler for you. Use SUI
+    on its own, or reach for deck when a component graph becomes an app.
+  </p>
+
+  <h2>What deck adds</h2>
+  <ul>
+    <li><strong>Routing</strong> — file-based routes with nested layouts.</li>
+    <li><strong>SSR + hydration</strong> — server-render a SUI component, hydrate on the client.</li>
+    <li><strong>Bundling</strong> — in-process Rolldown; one self-contained build.</li>
+    <li><strong>Live data</strong> — the SSE / patch server half behind <code>data live</code>.</li>
+    <li><strong>Dev loop</strong> — <code>deck dev</code> with HMR.</li>
+  </ul>
+
+  <p class="callout">
+    <strong>This is a mockup.</strong> It's the deck half of the shared site —
+    same shell, its own violet theme, switched on mount. The real deck docs
+    (routing, rendering, HMR, build, data) already exist in
+    <code>packages/deck/docs</code> and would move in under <code>/deck</code>
+    with a deck-specific nav.
+  </p>
+
+  <div class="page-nav">
+    <a class="btn" href="/">← Back to SUI</a>
+    <a class="btn btn-primary" href="/getting-started">Getting started →</a>
+  </div>
+</div>
