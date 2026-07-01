@@ -6,11 +6,10 @@
 // view template compiles paired with its controller (`build` on the dir);
 // the component compiles on its own. Re-run the compiler before editing a sample.
 export const code = {
-  install: `# the runtime and the primitive library
+  install: `# the runtime + the primitive library
 bun add @ship/sui-runtime @ship/sui-primitives
 
-# the compiler, as dev tooling
-bun add -D @ship/sui-compiler-wasm`,
+# the deck CLI (a native binary) compiles + serves .sui — see the deck docs`,
 
   template: `<!-- hello.sui — the template -->
 <label>Name <input type="text" bind:value={name} /></label>
