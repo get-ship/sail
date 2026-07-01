@@ -1,0 +1,91 @@
+<!--
+  /transitions — enter/leave animation model.
+
+  Grounded in the runtime: transition.ts (registerTransition at construction,
+  runIn/runOut, fade/slide/scale, applyReduced), transition-runner.ts
+  (runEnter/runLeave/cancelTransitions indirection), and if.ts (runEnter after
+  insert, runLeave before removal, cancelTransitions on interrupt).
+-->
+<div class="doc">
+  <p class="eyebrow">Core concepts</p>
+  <h1>Transitions</h1>
+  <p class="lead">
+    A <code>transition:</code> directive animates an element as it enters or
+    leaves the DOM. It only fires where mounts happen — inside
+    <code>&#123;#if&#125;</code> and <code>&#123;#for&#125;</code> — and the
+    runtime holds a leaving node in place until its animation finishes before
+    removing it.
+  </p>
+
+  <h2>Enter and leave</h2>
+  <p>
+    The compiler turns a <code>transition:name</code> directive into a
+    registration on the element at construction time. When the branch mounts,
+    the <code>&#123;#if&#125;</code> runtime runs the enter phase on the freshly
+    inserted nodes; when it unmounts, it runs the leave phase <em>before</em>
+    removing them and defers the actual removal until the out-animation
+    resolves. If no leave transition is registered, removal is synchronous — the
+    old, transition-free behavior is preserved.
+  </p>
+  <sui-codeblock code={code.basic}></sui-codeblock>
+
+  <h2>Asymmetric directions</h2>
+  <p>
+    <code>transition:</code> applies to both phases. Split them with
+    <code>in:</code> and <code>out:</code> when enter and leave should differ —
+    slide in, fade out. Either side may be omitted; the runtime treats a missing
+    phase as a no-op.
+  </p>
+  <sui-codeblock code={code.asymmetric}></sui-codeblock>
+
+  <h2>The built-ins</h2>
+  <p>
+    <code>fade</code>, <code>slide</code>, and <code>scale</code> ship with the
+    runtime and drive the Web Animations API (<code>Element.animate</code>), so
+    there is no per-frame JavaScript interpolation cost. Every config reads
+    <code>duration</code> (default 200ms), <code>easing</code>, and
+    <code>delay</code>, plus per-transition extras — <code>slide.axis</code>
+    (<code>'x'</code> / <code>'y'</code>) and <code>scale.from</code>.
+  </p>
+  <sui-codeblock code={code.builtins}></sui-codeblock>
+
+  <h2>Custom transitions</h2>
+  <p>
+    A custom transition is any object matching the <code>Transition</code>
+    type — an <code>in</code> and/or <code>out</code> function that takes the
+    node plus its resolved config and returns an <code>Animation</code>. Return
+    it from the controller's <code>scope()</code> so the template can name it
+    like a built-in.
+  </p>
+  <sui-codeblock code={code.custom}></sui-codeblock>
+  <sui-codeblock code={code.customTemplate}></sui-codeblock>
+
+  <h2>Interruptions &amp; cleanup</h2>
+  <p>
+    Starting a phase cancels any animation already in flight on the same
+    element, so a rapid toggle never stacks conflicting animations. If a branch
+    is re-selected while its leave is still running, the runtime cancels the
+    departure and re-promotes the nodes — the enter picks up from the current
+    animated frame instead of restarting off-screen. A hard teardown (the view
+    unmounting) skips animation entirely and removes everything at once.
+  </p>
+  <p>
+    Under <code>prefers-reduced-motion: reduce</code> the runtime collapses
+    <code>duration</code> and <code>delay</code> to <code>0</code>, so the state
+    change is instant but still correct. Transitions never surface in SSR — they
+    register on construction, which happens on the client (both the clean-mount
+    and hydrate paths), so the server-rendered HTML is unaffected.
+  </p>
+
+  <p class="callout">
+    <strong>Transitions live on mounts.</strong> They animate the boundary of
+    <code>&#123;#if&#125;</code> / <code>&#123;#for&#125;</code>, not arbitrary
+    attribute changes. To animate a value in place — a width, a color — reach
+    for CSS transitions on the bound element instead.
+  </p>
+
+  <div class="page-nav">
+    <a class="btn" href="/ssr">← SSR &amp; hydration</a>
+    <a class="btn btn-primary" href="/theming">Theming →</a>
+  </div>
+</div>

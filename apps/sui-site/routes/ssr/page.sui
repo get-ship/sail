@@ -1,0 +1,81 @@
+<!--
+  /ssr — server-side rendering + client hydration.
+
+  Grounded in the runtime: @ship/sui-runtime/server (server.ts) is the V8
+  render entry; hydrate-mark.ts stamps the marker contract; mount.ts adopts
+  the SSR markup (morph) and runs the compiled module's hydrate().
+-->
+<div class="doc">
+  <p class="eyebrow">Core concepts</p>
+  <h1>SSR &amp; hydration</h1>
+  <p class="lead">
+    A SUI view renders to HTML on the server for instant first paint, then the
+    client re-attaches reactivity on top of that same markup — no re-render, no
+    blank flash. One template, one set of bindings, two places they run.
+  </p>
+
+  <h2>One render, two runtimes</h2>
+  <p>
+    There is no second string-renderer. The server build aliases
+    <code>@ship/sui-runtime</code> to its <code>/server</code> entry, which
+    installs a minimal server DOM as <code>globalThis.document</code> and runs
+    the <em>same</em> <code>bindText</code> / <code>bindAttr</code> /
+    <code>bindIf</code> / <code>bindFor</code> binders the browser runs. Because
+    the binders only touch the node they are handed, the identical render walks
+    the server DOM and serializes to first-paint HTML — one isomorphic render
+    artifact, not two code paths that can drift.
+  </p>
+
+  <h2>What the server produces</h2>
+  <p>
+    The serialized HTML is not inert. Each dynamic position carries a hydration
+    marker so the client knows where reactivity re-attaches: dynamic text is
+    wrapped in <code>&lt;!--sui:text:bN--&gt;…&lt;!--/sui--&gt;</code>, event
+    handlers become <code>on:event="bN"</code>, and control-flow boundaries
+    become <code>&lt;sui-if key="bN"&gt;</code> wrappers. The
+    <code>markHydrateText</code> / <code>markHydrateAttr</code> /
+    <code>markHydrateBoundary</code> helpers stamp these onto the server DOM;
+    on the browser DOM they are true no-ops.
+  </p>
+  <sui-codeblock code={code.markers}></sui-codeblock>
+
+  <h2>What the client does</h2>
+  <p>
+    Boot calls <code>mount(target, payload)</code>. When the target already
+    holds server markup, mount does not overwrite it — it <code>morph</code>es
+    the DOM in place toward the payload's HTML, preserving node identity, focus,
+    scroll, and custom-element state (overwriting via <code>innerHTML</code>
+    would discard the SSR content and cause a blank flash). With no server
+    markup, it clean-mounts instead: the compiled view's <code>__mount</code>
+    builds the DOM fresh.
+  </p>
+  <p>
+    Either way, mount then imports the compiled module, runs its
+    <code>setup(ctx)</code>, and calls the module's <code>hydrate(root, ctx)</code>.
+    That is the step that reads the markers above and wires the live bindings
+    back onto the existing nodes. <code>hydrate</code> returns a disposer, which
+    mount registers alongside the rest of the view's cleanups.
+  </p>
+
+  <h2>Server or client?</h2>
+  <p>
+    <code>scope()</code> is isomorphic. It runs on the server to produce the
+    HTML and again on the client to hydrate it, so it must stay pure — reaching
+    for <code>document</code> or <code>window</code> there throws in the V8
+    render isolate that has neither. Anything browser-only belongs in
+    <code>mount()</code>, which runs only on the client, after the DOM exists.
+  </p>
+  <sui-codeblock code={code.guard}></sui-codeblock>
+
+  <p class="callout">
+    <strong>Guard by placement, not by feature-detection.</strong> You rarely
+    need a <code>typeof window</code> check — put pure derivation in
+    <code>scope()</code> and browser side effects in <code>mount()</code>, and
+    the split falls out for free. The server never runs <code>mount()</code>.
+  </p>
+
+  <div class="page-nav">
+    <a class="btn" href="/data">← Live data</a>
+    <a class="btn btn-primary" href="/transitions">Transitions →</a>
+  </div>
+</div>
