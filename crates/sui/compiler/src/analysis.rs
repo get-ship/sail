@@ -57,8 +57,12 @@ pub struct Analysis {
 
 /// Full analysis of a `.sui` source: diagnostics + scope symbols + the tag /
 /// event dependency surface. `source_path` locates the paired controller.
-pub fn analyze(source: &str, source_path: Option<&Path>) -> Analysis {
-    let diagnostics = crate::check_all(source, source_path);
+pub fn analyze(
+    source: &str,
+    source_path: Option<&Path>,
+    overrides: &[crate::LintOverride],
+) -> Analysis {
+    let diagnostics = crate::check_all(source, source_path, overrides);
     let Ok(program) = crate::parse::parse(source) else {
         // Without an AST we can still return the parse diagnostic.
         return Analysis {
@@ -314,7 +318,7 @@ mod tests {
     #[test]
     fn analyze_reports_tags_and_events() {
         let src = r#"<div><sui-button on:click={go}>Go</sui-button><span>{x}</span></div>"#;
-        let a = analyze(src, None);
+        let a = analyze(src, None, &[]);
         assert!(a.tags.contains(&"sui-button".to_string()), "tags: {:?}", a.tags);
         assert!(!a.tags.iter().any(|t| t == "div" || t == "span"), "native tags leaked: {:?}", a.tags);
         assert!(a.events.contains(&"click".to_string()), "events: {:?}", a.events);
@@ -322,7 +326,7 @@ mod tests {
 
     #[test]
     fn analyze_surfaces_diagnostics() {
-        let a = analyze("<p>{new Date()}</p>", None);
+        let a = analyze("<p>{new Date()}</p>", None, &[]);
         assert!(!a.diagnostics.is_empty(), "expected a diagnostic for `new`");
     }
 

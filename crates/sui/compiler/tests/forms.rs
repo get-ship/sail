@@ -17,6 +17,7 @@ fn compile_view(source: &str) -> sui_compiler::CompileError {
             component_meta: None,
             emit_dts: false,
             emit_component_imports: false,
+        lint_overrides: Vec::new(),
         },
     )
     .expect_err("expected error")

@@ -462,6 +462,7 @@ fn compile_one(
         component_meta,
         emit_dts: !no_dts,
         emit_component_imports,
+        lint_overrides: Vec::new(),
     };
     let result = compile(&source, opts).map_err(|e| {
         let rendered = e.render(&source);
@@ -538,7 +539,7 @@ fn compile_one(
 /// as fatal so batch OK-checks (`sui-compiler build <dir> && …`) mean what they
 /// say.
 fn fatal_diagnostics_gate(source: &str, path: &Path) -> Result<()> {
-    let fatal: Vec<_> = check_all(source, Some(path))
+    let fatal: Vec<_> = check_all(source, Some(path), &[])
         .into_iter()
         .filter(|d| d.severity == DiagSeverity::Error)
         .collect();

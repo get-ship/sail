@@ -42,7 +42,7 @@ fn assert_clean(step: &str, variant: &str) {
         );
         return;
     };
-    let analysis = analyze(&src, None);
+    let analysis = analyze(&src, None, &[]);
     let errors: Vec<_> = analysis
         .diagnostics
         .iter()

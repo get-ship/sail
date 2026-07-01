@@ -20,6 +20,7 @@ fn compile_sui(name: &str) -> String {
         component_meta: None,
         emit_dts: false,
         emit_component_imports: false,
+        lint_overrides: Vec::new(),
     };
     let out = compile(&source, opts).expect("compile transition fixture");
     out.js
@@ -73,7 +74,7 @@ fn transition_directive_rejects_unknown_value_shape() {
     let source = r#"<div transition:fade="oops"></div>"#;
     let opts = CompileOpts {
         mode: CompileMode::Component,
-        ..CompileOpts::default()
+        ..Default::default()
     };
     let err = compile(source, opts).expect_err("unexpected success");
     let msg = err.to_string();
@@ -100,7 +101,7 @@ fn transition_opts_object_literal_passes_scope_bound() {
     let opts = CompileOpts {
         mode: CompileMode::Component,
         source_path: Some(PathBuf::from("/nonexistent/_regression.sui")),
-        ..CompileOpts::default()
+        ..Default::default()
     };
     compile(source, opts).expect("transition opts object literal must compile");
 }
@@ -113,7 +114,7 @@ fn transition_directive_custom_name_resolves_via_scope() {
     let opts = CompileOpts {
         mode: CompileMode::Component,
         emit_component_imports: false,
-        ..CompileOpts::default()
+        ..Default::default()
     };
     // Custom transition names compile (resolve via $scope at run time).
     // HTML lowercases attribute names, so authors must write the

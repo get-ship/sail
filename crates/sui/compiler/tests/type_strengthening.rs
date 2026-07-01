@@ -23,6 +23,7 @@ fn paired_opts(path: PathBuf) -> CompileOpts {
         component_meta: None,
         emit_dts: false,
         emit_component_imports: false,
+        lint_overrides: Vec::new(),
     }
 }
 
@@ -35,6 +36,7 @@ fn standalone_opts(path: PathBuf) -> CompileOpts {
         component_meta: None,
         emit_dts: false,
         emit_component_imports: false,
+        lint_overrides: Vec::new(),
     }
 }
 

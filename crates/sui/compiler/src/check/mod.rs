@@ -11,6 +11,7 @@ pub mod controller_parse;
 mod controller_parse_tests;
 pub mod controller_purity;
 pub mod css_token;
+pub mod lint_overrides;
 pub mod expr_subset;
 pub mod handler_complexity;
 pub(crate) mod js_scan;
@@ -41,6 +42,7 @@ pub fn run(
     program: &Program,
     source: &str,
     source_path: Option<&Path>,
+    overrides: &[crate::check::lint_overrides::LintOverride],
 ) -> Result<(), CompileError> {
     visit_program(program, &mut |e| {
         if e.allow_arrow {
@@ -50,8 +52,8 @@ pub fn run(
     })?;
     check_mutations(program)?;
     handler_complexity::check(program, source_path)?;
-    controller_purity::check(source_path)?;
-    css_token::check(source, source_path)?;
+    controller_purity::check(source_path, overrides)?;
+    css_token::check(source, source_path, overrides)?;
     let controller = controller_parse::read_paired_controller(source_path);
     if let Some(c) = controller.as_ref() {
         closed_sections::check(c)?;
@@ -98,8 +100,9 @@ pub fn gate(
     program: &Program,
     source: &str,
     source_path: Option<&Path>,
+    overrides: &[crate::check::lint_overrides::LintOverride],
 ) -> Result<(), CompileError> {
-    let fatal = collect(program, source, source_path)
+    let fatal = collect(program, source, source_path, overrides)
         .into_iter()
         .find(|d| d.severity == DiagSeverity::Error);
     let Some(d) = fatal else {
@@ -148,7 +151,12 @@ fn offset_for_line_col(source: &str, line: usize, col: usize) -> usize {
 /// running them too would double-report. Per-pass full collection (e.g. all
 /// unbound identifiers, not just the first) is a future refinement; the
 /// structure here makes it additive.
-pub fn collect(program: &Program, source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> {
+pub fn collect(
+    program: &Program,
+    source: &str,
+    source_path: Option<&Path>,
+    overrides: &[crate::check::lint_overrides::LintOverride],
+) -> Vec<Diagnostic> {
     let mut diags: Vec<Diagnostic> = Vec::new();
 
     // expr-subset — collect EVERY offending interpolation, not just the first.
@@ -187,12 +195,27 @@ pub fn collect(program: &Program, source: &str, source_path: Option<&Path>) -> V
     // Full `sui-lint` pass — the multi-finding source of truth for
     // css_token / css_literal / for_key / event_name / prop_value (template)
     // and controller_purity (the paired `.ts`).
+    //
+    // `apply_overrides` runs after the lint emits its findings at the
+    // rule's natural severity (Error for `sui-css-token`, etc.). The
+    // override only downgrades; the rule itself stays strict. This is
+    // the single chokepoint the build host uses to opt out of a rule.
     let lint_path = source_path.unwrap_or_else(|| Path::new("<synthetic>.sui"));
-    for f in sui_lint::lint_sui_template_source(lint_path, source) {
+    let template_findings =
+        crate::check::lint_overrides::apply_overrides(
+            sui_lint::lint_sui_template_source(lint_path, source),
+            overrides,
+        );
+    for f in template_findings {
         diags.push(finding_to_diag(&f));
     }
     if let Some(c) = controller.as_ref() {
-        for f in sui_lint::lint_controller_source(&c.path, &c.source) {
+        let controller_findings =
+            crate::check::lint_overrides::apply_overrides(
+                sui_lint::lint_controller_source(&c.path, &c.source),
+                overrides,
+            );
+        for f in controller_findings {
             diags.push(finding_to_diag(&f));
         }
     }
@@ -417,7 +440,7 @@ mod gate_tests {
     fn gate_rejects_lint_error_rule_run_skips() {
         let src = r#"<sui-button variant="primary">x</sui-button>"#;
         let program = parse::parse(src).unwrap();
-        let err = super::gate(&program, src, None).unwrap_err();
+        let err = super::gate(&program, src, None, &[]).unwrap_err();
         assert_eq!(err.category.as_deref(), Some("sui-prop-value"), "{err:?}");
     }
 
@@ -425,7 +448,7 @@ mod gate_tests {
     fn gate_passes_valid_source() {
         let src = r#"<sui-button variant="solid">x</sui-button>"#;
         let program = parse::parse(src).unwrap();
-        super::gate(&program, src, None).unwrap();
+        super::gate(&program, src, None, &[]).unwrap();
     }
 
     /// The gate's span must map back to the offending line/col so the
@@ -435,7 +458,7 @@ mod gate_tests {
     fn gate_error_span_round_trips_to_finding_location() {
         let src = "<div>\n  <sui-button variant=\"primary\">x</sui-button>\n</div>";
         let program = parse::parse(src).unwrap();
-        let err = super::gate(&program, src, None).unwrap_err();
+        let err = super::gate(&program, src, None, &[]).unwrap_err();
         let span = err.span.expect("gate error carries a span");
         let (line, _col) = line_col(src, span.start);
         assert_eq!(line, 2, "the bad variant is on line 2");

@@ -22,7 +22,8 @@ fn off_by_default_emits_no_component_imports() {
 
 #[test]
 fn flag_emits_registration_import_per_used_custom_tag() {
-    let opts = CompileOpts { emit_component_imports: true, ..CompileOpts::default() };
+    let opts = CompileOpts { emit_component_imports: true,
+            lint_overrides: Vec::new(), ..CompileOpts::default() };
     let out = compile(
         "<div><sui-table></sui-table><ship-card></ship-card><span>plain</span></div>",
         opts,
@@ -44,7 +45,8 @@ fn flag_emits_registration_import_per_used_custom_tag() {
 
 #[test]
 fn flag_collects_tags_nested_in_control_flow() {
-    let opts = CompileOpts { emit_component_imports: true, ..CompileOpts::default() };
+    let opts = CompileOpts { emit_component_imports: true,
+            lint_overrides: Vec::new(), ..CompileOpts::default() };
     let out = compile(
         "<div>{#if cond()}<sui-a></sui-a>{:else}<sui-b></sui-b>{/if}</div>",
         opts,

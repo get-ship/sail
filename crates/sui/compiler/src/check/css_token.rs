@@ -16,7 +16,11 @@ use std::path::Path;
 
 use crate::diagnostics::{CompileError, Span};
 
-pub fn check(source: &str, source_path: Option<&Path>) -> Result<(), CompileError> {
+pub fn check(
+    source: &str,
+    source_path: Option<&Path>,
+    overrides: &[crate::check::lint_overrides::LintOverride],
+) -> Result<(), CompileError> {
     if source.is_empty() {
         return Ok(());
     }
@@ -32,12 +36,21 @@ pub fn check(source: &str, source_path: Option<&Path>) -> Result<(), CompileErro
         }
     };
 
+    // Apply the build host's lint overrides before the Error filter.
+    // The rule's natural severity is preserved for everyone who
+    // consumes the lint directly (the LSP, `sui_lint` CLI, the agent
+    // tooling); the override only affects this build-time gate. An
+    // external SUI app that wants the softer behavior sets
+    // `CompileOpts::lint_overrides` and threads it through here.
+    let findings = crate::check::lint_overrides::apply_overrides(
+        sui_lint::lint_sui_template_source(path, source),
+        overrides,
+    );
     // Only Severity::Error findings become compile errors. Warnings
     // (e.g. `sui-for-key`, `sui-event-name`) surface in LSP but don't
     // block the build — they catch silent-bug classes that the team
     // wants to fix but that existing views are allowed to have during
     // migration.
-    let findings = sui_lint::lint_sui_template_source(path, source);
     let Some(first) = findings
         .iter()
         .find(|f| matches!(f.severity, sui_lint::Severity::Error))

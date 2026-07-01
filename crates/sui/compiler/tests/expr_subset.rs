@@ -7,7 +7,16 @@
 use sui_compiler::{compile, CompileMode, CompileOpts};
 
 fn opts() -> CompileOpts {
-    CompileOpts { setup_url: None, mode: CompileMode::Component, source_path: None, styles: None, component_meta: None, emit_dts: false, emit_component_imports: false }
+    CompileOpts {
+        setup_url: None,
+        mode: CompileMode::Component,
+        source_path: None,
+        styles: None,
+        component_meta: None,
+        emit_dts: false,
+        emit_component_imports: false,
+        lint_overrides: Vec::new(),
+    }
 }
 
 fn compile_view(src: &str) -> sui_compiler::CompileError {

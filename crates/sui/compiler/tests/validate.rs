@@ -22,6 +22,7 @@ fn opts(source_path: PathBuf) -> CompileOpts {
         component_meta: None,
         emit_dts: false,
         emit_component_imports: false,
+        lint_overrides: Vec::new(),
     }
 }
 
