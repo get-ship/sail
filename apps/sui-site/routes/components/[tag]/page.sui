@@ -1,86 +1,82 @@
 <!--
   /components/[tag] — per-component detail view.
 
-  Larger, focused surface for a single component: a header (back link + tag +
-  description), a live preview mounted from the registered custom element,
-  the CEM-driven props/slots/events table, and the optional knob playground
-  when the component exposes `attributes[]` in the CEM.
+  Renders one live example per CEM enum value of the primary axis prop
+  (the enum with the most values, e.g. sui-button.tone with 8 values),
+  each at natural size + the code underneath. The whole gallery packs
+  into <sui-grid> so big specimens (calendar, table) get the room they
+  need while small ones (badge, chip) stay small — the layout primitive
+  does the work, not bespoke CSS.
 
-  Routing: the dynamic [tag] segment is read via `ctx.route.params.tag()` in
-  the controller. Lookups walk the same build-time `COMPONENTS_CATALOG` the
-  flat grid reads. Unknown tag → an "unknown component" empty state with a
-  back link, NOT a 404 (the catalog grid only links to tags the CEM
-  declares, but a stale URL or hand-typed path is reachable).
+  Routing: the dynamic [tag] segment is read via `ctx.route.params.tag()`
+  in the controller. Unknown tag → an empty state with a back link, not
+  a 404 (stale URLs are reachable).
 
   CSS lives in the sibling `style.css` (the deck-route-css convention) —
-  the bundler auto-imports it; an inline `style` block here would be silently
-  dropped (`sui-route-inline-style` lint warns). The class names below
-  match the rules in that file.
+  the bundler auto-imports it. Only the page chrome (header, title, the
+  variant card surface) lives there; structure is the primitives'.
 -->
 
 {#if !entry()}
-  <div class="detail-unknown" data-test="detail-unknown">
+  <sui-stack class="detail-unknown" gap="3" align="center" data-test="detail-unknown">
     <h2>Unknown component</h2>
     <p>No component registered as <code>&lt;{tag()}&gt;</code> in the current bundle.</p>
     <a class="detail-back" href="/components">← Back to all components</a>
-  </div>
+  </sui-stack>
 {:else}
-  <div class="detail-head">
+  <sui-cluster class="detail-head" gap="3" align="center">
     <a class="detail-back" href="/components" data-test="detail-back">← All components</a>
     <span class="detail-pack" data-test="detail-pack">{entry().pkg}</span>
-  </div>
+  </sui-cluster>
 
   <h1 class="detail-title" data-test="detail-title"><code>&lt;{entry().tag}&gt;</code></h1>
   {#if entry().description}
     <p class="detail-desc" data-test="detail-desc">{entry().description}</p>
   {/if}
 
-  <div class="detail-stage" data-test="detail-stage" data-tag={entry().tag}>
-    <div class="detail-stage-cell" bind:this={stageEl}></div>
-  </div>
-
-  <div class="detail-panels">
-    <div class="detail-panel" data-test="detail-knobs-panel">
-      <div class="detail-panel-h">
-        <span class="detail-panel-label">Props</span>
-        <span class="detail-panel-meta">{entry().props.length} prop{entry().props.length === 1 ? '' : 's'}</span>
+  <sui-grid class="detail-variants" min="md" gap="3" flow="dense" bind:this={gridEl}>
+    {#for v of variants() key={v.key}}
+      <div
+        class={'variant ' + (v.isCanonical ? 'variant-canonical' : '')}
+        data-test="variant-card"
+        attr:data-key={v.key}
+        attr:data-tall={v.tall}
+      >
+        <span class="variant-label" data-test="variant-label">{v.label}</span>
+        <sui-cluster class="variant-preview" align="center" justify="center" attr:data-mount-for={v.key}></sui-cluster>
+        <sui-code class="variant-code" block>{v.code}</sui-code>
       </div>
-      {#if entry().props.length > 0}
-        <sui-prop-knobs class="detail-knob-host" prop:props={entry().props}></sui-prop-knobs>
-      {:else}
-        <p class="detail-empty-note">This component has no documented props.</p>
+    {/for}
+  </sui-grid>
+
+  <section class="detail-api" data-test="detail-api">
+    <sui-cluster class="detail-api-h" gap="2" align="center" justify="between">
+      <span class="detail-api-label">API</span>
+      <span class="detail-api-meta">{entry().props.length} props · {entry().slots.length} slots · {entry().events.length} events</span>
+    </sui-cluster>
+    <div class="detail-api-table" role="table" data-test="api-table">
+      {#for p of entry().props key={p.name}}
+        <div class="detail-api-row" role="row">
+          <span class="detail-api-name" role="cell">{p.name}</span>
+          <span class="detail-api-type" role="cell">{p.type}</span>
+          <span class="detail-api-def" role="cell">{p.default ?? '—'}</span>
+        </div>
+      {/for}
+      {#for s of entry().slots key={s.name ?? '(default)'}}
+        <div class="detail-api-row" role="row" data-kind="slot">
+          <span class="detail-api-name" role="cell" data-test="api-slot">slot: {s.name || '(default)'}</span>
+          <span class="detail-api-type" role="cell" colspan="2">{s.description ?? ''}</span>
+        </div>
+      {/for}
+      {#for e of entry().events key={e.name ?? ''}}
+        <div class="detail-api-row" role="row" data-kind="event">
+          <span class="detail-api-name" role="cell" data-test="api-event">event: {e.name}</span>
+          <span class="detail-api-type" role="cell" colspan="2">{e.description ?? ''}</span>
+        </div>
+      {/for}
+      {#if entry().props.length === 0 && entry().slots.length === 0 && entry().events.length === 0}
+        <p class="detail-empty-note">No documented API surface in the CEM yet.</p>
       {/if}
     </div>
-
-    <div class="detail-panel" data-test="detail-api-panel">
-      <div class="detail-panel-h">
-        <span class="detail-panel-label">API</span>
-        <span class="detail-panel-meta">{entry().props.length} props · {entry().slots.length} slots · {entry().events.length} events</span>
-      </div>
-      <div class="detail-api-table" role="table" data-test="api-table">
-        {#for p of entry().props key={p.name}}
-          <div class="detail-api-row" role="row">
-            <span class="detail-api-name" role="cell">{p.name}</span>
-            <span class="detail-api-type" role="cell">{p.type}</span>
-            <span class="detail-api-def" role="cell">{p.default ?? '—'}</span>
-          </div>
-        {/for}
-        {#for s of entry().slots key={s.name ?? '(default)'}}
-          <div class="detail-api-row" role="row" data-kind="slot">
-            <span class="detail-api-name" role="cell" data-test="api-slot">slot: {s.name || '(default)'}</span>
-            <span class="detail-api-type" role="cell" colspan="2">{s.description ?? ''}</span>
-          </div>
-        {/for}
-        {#for e of entry().events key={e.name ?? ''}}
-          <div class="detail-api-row" role="row" data-kind="event">
-            <span class="detail-api-name" role="cell" data-test="api-event">event: {e.name}</span>
-            <span class="detail-api-type" role="cell" colspan="2">{e.description ?? ''}</span>
-          </div>
-        {/for}
-        {#if entry().props.length === 0 && entry().slots.length === 0 && entry().events.length === 0}
-          <p class="detail-empty-note">No documented API surface in the CEM yet.</p>
-        {/if}
-      </div>
-    </div>
-  </div>
+  </section>
 {/if}
