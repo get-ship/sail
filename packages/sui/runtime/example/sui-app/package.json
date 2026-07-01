@@ -1,7 +1,7 @@
 {
   "name": "sui-example-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.2.0",
   "description": "Standalone SUI demo — no daemon, no shell, no view-host. Plain HTML + esbuild + the SUI runtime + compiler. Sanity check for the framework.",
   "type": "module",
   "scripts": {

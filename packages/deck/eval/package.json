@@ -1,6 +1,6 @@
 {
   "name": "@ship/sui-eval",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "SUI eval rig — dispatch a feature spec to a model and assert the output is a working .sui view.",
   "type": "module",
   "license": "MIT",
