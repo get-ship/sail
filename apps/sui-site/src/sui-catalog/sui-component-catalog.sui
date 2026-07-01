@@ -10,7 +10,9 @@
   never bespoke CSS:
     <sui-stack>    the vertical page rhythm (hero → search → chips → grid)
     <sui-cluster>  centers the search field, the pack chips, and each card's
-                   meta row + preview stage
+                   meta row
+    <sui-center>   parks the live specimen dead-center of the framed stage
+                   (both axes), so specimens no longer hug the top edge
     <sui-grid>     the responsive auto-fill card gallery (min="lg" gap="4")
 
   Filtering is reactive without re-rendering: the controller exposes a
@@ -112,8 +114,8 @@
     box-shadow: var(--shadow-lg);
   }
 
-  /* Preview stage — bounded, tinted, clipped. <sui-cluster> centers the
-     mounted specimen; this rule owns the framed surface. */
+  /* Preview stage — bounded, tinted, clipped. <sui-center> centers the
+     mounted specimen on both axes; this rule owns the framed surface. */
   .stage {
     height: 12rem;
     overflow: hidden;
@@ -201,7 +203,7 @@
         attr:hidden={c.hidden() ? true : null}
         data-test="catalog-cell"
       >
-        <sui-cluster class="stage" align="center" justify="center" attr:data-preview-for={c.tag}></sui-cluster>
+        <sui-center class="stage" attr:data-preview-for={c.tag}></sui-center>
         <div class="cell-foot">
           <sui-cluster class="cell-meta" justify="between" align="baseline" gap="2">
             <span class="cell-tag" data-test="catalog-tag">{c.tag}</span>
