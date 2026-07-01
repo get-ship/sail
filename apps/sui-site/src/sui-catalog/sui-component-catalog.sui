@@ -12,16 +12,26 @@
 <style>
   :host {
     display: block;
-    padding-bottom: var(--space-8);
+    /* Page padding — comfortable on the sides + room to breathe at the
+       bottom. The `fullscreen` route variant on the shell strips
+       side padding for component viewer / tutorial, but the catalog
+       inherits the standard 6 + 7 spacing. */
+    padding: var(--space-6) var(--space-7) var(--space-8);
   }
 
-  .cat-head { margin-bottom: var(--space-6); }
+  .cat-head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+    flex-wrap: wrap;
+  }
   .cat-head h1 {
     font-family: var(--font-display, var(--font-body));
     font-size: var(--text-3xl);
     font-weight: var(--font-weight-bold);
     letter-spacing: var(--tracking-tight, -0.02em);
-    margin: 0 0 var(--space-1);
+    margin: 0;
     color: var(--foreground);
   }
   .cat-sub {
@@ -30,7 +40,9 @@
     color: var(--muted-foreground);
   }
 
-  .pack { margin-bottom: var(--space-7); }
+  .pack {
+    margin-bottom: var(--space-7);
+  }
   .pack-h {
     display: flex;
     align-items: baseline;
@@ -51,23 +63,49 @@
     color: var(--muted-foreground);
   }
 
+  /* Content-driven grid: dense auto-flow + per-cell column / row spans
+     driven by the `size` class on each cell. Big components
+     (calendar, table, tree, code-editor) span two columns / two rows
+     and get the room they need; small ones (status-dot, badge, switch,
+     separator) shrink to a single column. The 280px min stays for
+     `normal` / `wide` cells; `tall` is 280×~360 minimum so the cell
+     preview has headroom; `compact` is 220px min so the cell packs
+     tighter. `auto-flow: dense` backfills gaps when a `wide` cell
+     can't fit a sibling. */
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: var(--space-3);
+    grid-auto-flow: dense;
+    gap: var(--space-4);
   }
-
   .cell {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-3);
+    gap: var(--space-3);
+    padding: var(--space-4);
     background: var(--surface-1);
     border: 1px solid var(--border);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     text-decoration: none;
     color: inherit;
     transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+    /* Cells occupy the same slot in the grid by default — overrides
+       below. `wide` spans 2 columns, `tall` spans 2 rows. */
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+  .cell.wide { grid-column: span 2; }
+  .cell.tall { grid-row: span 2; }
+  @media (max-width: 720px) {
+    .cell.wide { grid-column: span 1; }
+    .cell.tall { grid-row: span 1; }
+  }
+  .cell.compact {
+    min-height: 0;
+  }
+  .cell.compact .cell-preview {
+    min-height: var(--space-8);
+    padding: var(--space-2) var(--space-3);
   }
   .cell:hover {
     border-color: var(--primary);
@@ -75,6 +113,11 @@
     transform: translateY(-1px);
   }
 
+  .cell-head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+  }
   .cell-tag {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
@@ -93,16 +136,22 @@
     overflow: hidden;
   }
 
+  /* The preview cell: the area that holds the mounted custom element.
+     Heights are content-driven: a `compact` cell is short, a `tall`
+     cell is generous (calendar / table need vertical space). */
   .cell-preview {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: var(--space-8);
-    padding: var(--space-2);
+    min-height: 7rem;
+    padding: var(--space-3) var(--space-4);
     background: var(--surface-2);
     border: 1px dashed var(--border);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
+    overflow: auto;
   }
+  .cell.wide .cell-preview { min-height: 9rem; }
+  .cell.tall .cell-preview { min-height: 22rem; align-items: flex-start; justify-content: flex-start; }
 
   .preview-empty {
     font-family: var(--font-mono);
@@ -110,15 +159,28 @@
     color: var(--muted-foreground);
   }
 
-  .meta { margin: 0; display: flex; flex-direction: column; gap: var(--space-1); }
-  .meta-row { display: flex; gap: var(--space-2); align-items: baseline; }
+  .meta {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .meta-row {
+    display: flex;
+    gap: var(--space-2);
+    align-items: baseline;
+  }
   .meta-label {
     flex: 0 0 var(--space-8);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--muted-foreground);
   }
-  .meta-chips { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+  .meta-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
   .chip {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
@@ -148,7 +210,7 @@
     </header>
     <div class="grid">
       {#for c of group.components key={c.tag}}
-        <a class="cell" data-test="catalog-cell" attr:data-tag={c.tag} href={'/components/' + c.tag}>
+        <a class={'cell ' + c.size} data-test="catalog-cell" attr:data-tag={c.tag} attr:data-size={c.size} href={'/components/' + c.tag}>
           <span class="cell-tag" data-test="catalog-tag">&lt;{c.tag}&gt;</span>
           {#if c.description}
             <p class="cell-desc">{c.description}</p>

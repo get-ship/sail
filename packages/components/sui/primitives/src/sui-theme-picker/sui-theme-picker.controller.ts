@@ -88,15 +88,19 @@ export default controller({
     // Mount populates these so scope-side handlers can dispatch on the
     // host and drive the native popover. Templates never bind to this.
     // `tokensHref` carries the preview-stylesheet seam (the `tokens-href`
-    // prop) through to mount's shadow injection.
+    // prop) through to mount's shadow injection. `scope` carries the
+    // isolation seam (the `scope` prop) — a non-empty value routes every
+    // theme write to the host element subtree only, never documentElement.
     const internals: {
       host: HTMLElement | null
       panel: PopoverEl | null
       tokensHref: () => string
+      scope: () => string
     } = {
       host: null,
       panel: null,
       tokensHref: init.tokensHref,
+      scope: init.scope,
     }
 
     function togglePanel(): void {
@@ -108,9 +112,20 @@ export default controller({
 
     function selectTheme(id: ThemeId): void {
       const next = applyTheme(id)
-      if (init.persist()) persistTheme(next)
-      activeTheme.set(next)
+      const scoped = internals.scope().length > 0
       const host = internals.host
+      // `scope` isolation: a non-empty scope routes the write to the host
+      // element's subtree only (its `data-theme` + `.dark` class) and skips
+      // the document-level write `applyTheme` performs. Persistence is
+      // intentionally SKIPPED in scoped mode — a preview's transient
+      // selection must never poison the global theme.
+      if (scoped && host) {
+        const dark = THEMES_BY_ID.get(next)?.dark ?? false
+        host.setAttribute('data-theme', next)
+        host.classList.toggle('dark', dark)
+      }
+      if (init.persist() && !scoped) persistTheme(next)
+      activeTheme.set(next)
       if (host) {
         host.dispatchEvent(new CustomEvent('sui-theme-change', {
           detail: { id: next, dark: THEMES_BY_ID.get(next)?.dark ?? false },
@@ -159,7 +174,12 @@ export default controller({
 
     // Apply stored theme on first mount. Idempotent if the boot script
     // already applied it — applyTheme just re-dispatches ship:theme:change.
-    applyTheme(readStoredTheme())
+    // In `scope` mode the document must not be touched; sync the host's own
+    // subtree (no read-side effect — the picker's `activeTheme` signal was
+    // already seeded from `readStoredTheme()` in scope) and skip the write.
+    if (state._internals.scope().length === 0) {
+      applyTheme(readStoredTheme())
+    }
 
     // Sync panel ref into internals + listen for native open/close so
     // panelOpen mirrors the popover state (drives aria-expanded).
