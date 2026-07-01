@@ -1,0 +1,73 @@
+// Behavioral spec for the create-space eval task. Derived ENTIRELY from the
+// prose "Behavior requirements" in task-spec.md (1-5) — no mockup needed; it
+// keys off the named text + controls, which the prompt states either way.
+//
+// This is the spec the lane agent builds against and the eval scores on
+// (% scenarios passing, run in the webview against the real mounted view).
+// Queries are by what a user sees — visible text, button names, field labels —
+// never CSS or signal names, so two faithful-but-different builds both pass.
+{
+  "view": "create-space",
+  "scenarios": [
+    {
+      "name": "welcome screen shows on first load",
+      "given": { "url": "/create-space" },
+      "steps": [
+        { "see": "role:button name:Skip" },
+        { "see": "role:button name:Create your first space" }
+      ]
+    },
+    {
+      "name": "welcome advances to step 1 (name + glyph + accent)",
+      "given": { "url": "/create-space" },
+      "steps": [
+        { "click": "Create your first space" },
+        { "see": "Brand Voice" },
+        { "see": "role:button name:Continue" },
+        { "see": "role:button name:Back" }
+      ]
+    },
+    {
+      "name": "naming the space updates the preview",
+      "given": { "url": "/create-space" },
+      "steps": [
+        { "click": "Create your first space" },
+        { "fill": { "field": "name", "value": "My Space" } },
+        { "see": "My Space" }
+      ]
+    },
+    {
+      "name": "step 1 continues to step 2 (theme + navigation + dock)",
+      "given": { "url": "/create-space" },
+      "steps": [
+        { "click": "Create your first space" },
+        { "click": "Continue" },
+        { "see": "You can change all of this later, in Studio." },
+        { "choose": { "option": "Dark", "in": "Theme" } }
+      ]
+    },
+    {
+      "name": "step 2 continues to the registered summary",
+      "given": { "url": "/create-space" },
+      "steps": [
+        { "click": "Create your first space" },
+        { "click": "Continue" },
+        { "click": "Continue" },
+        { "see": "Applications" },
+        { "see": "Spotlight" },
+        { "see": "Ship hub" },
+        { "see": "Shell PATH" },
+        { "see": "role:button name:Done" }
+      ]
+    },
+    {
+      "name": "back from step 1 returns to welcome",
+      "given": { "url": "/create-space" },
+      "steps": [
+        { "click": "Create your first space" },
+        { "click": "Back" },
+        { "see": "role:button name:Create your first space" }
+      ]
+    }
+  ]
+}
