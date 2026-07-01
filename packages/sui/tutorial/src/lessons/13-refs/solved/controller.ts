@@ -1,9 +1,9 @@
-import { controller, signal, effect } from '@ship/sui-runtime'
+import { controller, ref, signal, effect } from '@ship/sui-runtime'
 import type { Scope } from './template.sui'
 
 export default controller<Scope>({
   scope: () => {
-    const inputEl = signal<HTMLInputElement | null>(null)
+    const inputEl = ref<HTMLInputElement | null>(null)
     const text = signal('')
     const width = signal(0)
 

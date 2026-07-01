@@ -1,6 +1,7 @@
 <prop name="shadow" type="bool" default="false" />
 
 <style>
+  :host { --pct: 0%; }
   .todo-row { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
   .todo-row.done { opacity: 0.5; text-decoration: line-through; }
   .todo-row.overdue { border-color: var(--destructive); color: var(--destructive); }
