@@ -36,8 +36,8 @@ loop against a mock daemon. From here:
   Every authoring surface is documented in `docs/ship-sui/references/docs/agent-surfaces.md`.
 - **`@ship/sui-eval`**: programmatic behavioural scoring. Wire into
   CI to gate PRs that touch `.sui` files.
-- **VS Code extension** at `apps/vscode/` — auto-launches `sui-lsp` on
-  `.sui` open; other editors map the `sui` language id to the same binary.
+- **Editor LSP** — register `sui-lsp` via `.lsp.json` and any LSP-capable
+  editor (VS Code, Neovim, Helix) attaches on `.sui` open.
 
 ## Where to read next
 

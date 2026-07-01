@@ -52,11 +52,11 @@ the project mirror tree. Use this after the lint check is clean.
 For editors — VS Code, Neovim, Helix, or any LSP-capable client — the
 `sui-lsp` binary provides the same intelligence over stdio. Same Rust
 grammar; hover, completion, and
-go-to-definition on top. The ship-agent uses this binary under the hood; the
-editor integration is the developer-facing path.
+go-to-definition on top. Register it for `.sui` files with a `.lsp.json`
+at your project root and any LSP-capable editor attaches automatically:
 
-```sh
-just install-dev   # builds + installs sui-lsp to ~/.local/bin
+```json
+{ "sui": { "command": "sui-lsp", "extensionToLanguage": { ".sui": "sui" } } }
 ```
 
 ## Why this matters
