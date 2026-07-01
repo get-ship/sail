@@ -74,6 +74,87 @@ fn compile_attr(
     }
     if is_expr_value(value) {
         let inner = strip_braces(value).to_string();
+        // Parse the STRIPPED inner expression — `signal(0)`,
+        // `state.x`, `"hello"` all parse fine; `count` parses as an
+        // ident. Parse failures then fall into a first-char-based
+        // classifier:
+        //  * first non-trivia char `"` or `{` → author almost
+        //    certainly meant a JSON-string or nested object, not an
+        //    expression binding. Fail loud with a fix hint.
+        //  * inner matches a renderable-subset forbidden-keyword
+        //    pattern (`new`/`await`/`yield`/... as a standalone
+        //    ident, or a tagged-template shape `ident\\`…\\``) →
+        //    defer to the downstream subset check (it produces the
+        //    sharper message).
+        //  * otherwise → genuine structural mistake; fail loud.
+        let base = value_span.start + value.len().saturating_sub(inner.len() + 2);
+        let ast = match expr::grammar::parse_expression(&inner, base) {
+            Ok(ast) => ast,
+            Err(e) => {
+                let trimmed = inner.trim();
+                let first = trimmed.as_bytes().first().copied().unwrap_or(0);
+                // Inner starts with `"` (JSON-shaped) or `{` (nested
+                // object) — author mistake, not a deferred subset
+                // rejection.
+                let looks_json_like = first == b'"' || first == b'\'' || first == b'{';
+                if !looks_json_like && defer_to_renderable_subset(&inner) {
+                    return Ok(AttrInstr::Expr {
+                        name: name.to_string(),
+                        expr: Expr::new(inner, value_span, false),
+                        span: value_span,
+                    });
+                }
+                let is_arrow = inner.contains("=>");
+                let msg = if is_arrow {
+                    format!(
+                        "attribute `{name}` value `{value}` is an arrow function — \
+                         attribute expressions must be a plain JS value, not an arrow; \
+                         for an event handler use `on:event={{...}}` instead"
+                    )
+                } else {
+                    format!(
+                        "attribute `{name}` has malformed `{{…}}` value `{value}` \
+                         ({}); attribute expression bodies must be a valid JS \
+                         expression — to pass a literal value that begins with `{{`, \
+                         write it as a JS string (`attr=\"{{…}}\"`) or bind a controller \
+                         value (`attr={{myValue}}`)",
+                        e.message,
+                    )
+                };
+                return Err(
+                    CompileError::new(msg)
+                        .with_span(value_span)
+                        .with_category(loc.to_string()),
+                );
+            }
+        };
+        // Object AST with an explicit `key: value` entry is the
+        // JSON-as-string mistake (`data='{"a":1}'`) — fail loud
+        // with a fix hint. Bare shorthand entries (`{count}`,
+        // `{...spread}`, `{"hello"}`) are normal JSX-style
+        // JSX-style bindings and pass through.
+        if let crate::parse::expr::AstKind::Object(entries) = &ast.kind {
+            let has_key_value = entries
+                .iter()
+                .any(|e| {
+                    matches!(e.key, crate::parse::expr::ObjKey::Ident(_) | crate::parse::expr::ObjKey::String(_))
+                        && e.value.is_some()
+                });
+            if has_key_value {
+                let msg = format!(
+                    "attribute `{name}` value `{value}` is an object literal — \
+                     attribute bindings must be a JS expression, not an object. \
+                     To pass a JSON-shaped string, quote it: `attr=\"{value}\"` \
+                     or escape the braces (`attr=\"{{…}}\"`); to bind a value, \
+                     reference it: `attr={{myValue}}`.",
+                );
+                return Err(CompileError::new(msg)
+                    .with_span(value_span)
+                    .with_category(loc.to_string()));
+            }
+        }
+        // Use the validated inner as the emit source so downstream
+        // passes see the same expression we just parsed.
         expr::validate_at(&inner, false, loc, value_span)?;
         return Ok(AttrInstr::Expr {
             name: name.to_string(),
@@ -86,6 +167,97 @@ fn compile_attr(
         value: value.to_string(),
         span: value_span,
     })
+}
+/// True when a parse failure on the brace body is best deferred to
+/// the renderable-subset check downstream rather than surfaced here
+/// as a "malformed brace body" error. Used when the grammar parser
+/// rejects an inner shape the subset check rejects more precisely:
+///
+///  * any of the subset's forbidden keywords (`new`, `await`,
+///    `yield`, `this`, `function`, `delete`, `void`) appears as a
+///    standalone identifier — the subset produces a sharper
+///    `"\`new\` is not allowed in renderable expressions"` etc.
+///  * the body is a tagged template literal (`html\`…\``) — subset
+///    says "tagged template literals are not allowed…".
+///  * the body is an arrow function — the existing `arrow
+///    functions are not allowed` message is sharper.
+///
+/// Anything else (`{@!#}`, trailing-comma object, empty `{}`, …) is
+/// treated as a structural mistake and reported from
+/// `compile_attr` itself.
+fn defer_to_renderable_subset(inner: &str) -> bool {
+    if inner.contains("=>") {
+        return true;
+    }
+    const FORBIDDEN: &[&str] = &[
+        "new", "await", "yield", "this", "function", "delete", "void",
+    ];
+    let bytes = inner.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        // Skip strings / template literals — the forbidden-keyword
+        // search must not match inside literal text.
+        let c = bytes[i];
+        if c == b'"' || c == b'\'' || c == b'`' {
+            let q = c;
+            i += 1;
+            while i < bytes.len() && bytes[i] != q {
+                if bytes[i] == b'\\' && i + 1 < bytes.len() {
+                    i += 2;
+                    continue;
+                }
+                // Template substitution: ${expr} re-enters JS.
+                if q == b'`' && bytes[i] == b'$' && i + 1 < bytes.len() && bytes[i + 1] == b'{' {
+                    let mut depth = 0i32;
+                    i += 2;
+                    while i < bytes.len() {
+                        match bytes[i] {
+                            b'{' => depth += 1,
+                            b'}' => {
+                                depth -= 1;
+                                if depth == 0 {
+                                    i += 1;
+                                    break;
+                                }
+                            }
+                            _ => {}
+                        }
+                        i += 1;
+                    }
+                    continue;
+                }
+                i += 1;
+            }
+            if i < bytes.len() {
+                i += 1;
+            }
+            continue;
+        }
+        if c.is_ascii_alphabetic() || c == b'_' || c == b'$' {
+            let start = i;
+            while i < bytes.len()
+                && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_' || bytes[i] == b'$')
+            {
+                i += 1;
+            }
+            let word = &inner[start..i];
+            if FORBIDDEN.contains(&word) {
+                return true;
+            }
+            // Tagged template: an identifier immediately followed by
+            // a backtick (after optional whitespace).
+            let mut k = i;
+            while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                k += 1;
+            }
+            if k < bytes.len() && bytes[k] == b'`' {
+                return true;
+            }
+            continue;
+        }
+        i += 1;
+    }
+    false
 }
 
 fn is_expr_value(v: &str) -> bool {
@@ -426,5 +598,146 @@ mod tests {
         // Don't regress the happy path.
         compile_dynamic_attr("min", "{n()}", Span::new(0, 5), "[<sui-slider> attr:min]")
             .expect("expression-value attr: should compile");
+    }
+
+    // ── Fix 1: fail-loud on malformed `{…}` attribute bodies ─────────────
+    //
+    // An attribute value is classified as an expression binding iff it
+    // `trim().starts_with('{') && ends_with('}')`. When the brace body
+    // is not actually a JS expression — or when it's an object literal
+    // the author almost certainly intended as a JSON-string literal —
+    // we MUST raise a CompileError with a span and a helpful hint.
+    // Silent bad output (invalid JS at runtime) is the bug.
+
+    #[test]
+    fn attr_value_json_object_literal_errors_with_span_and_hint() {
+        // `data='{"a":1}'` — author meant a string, compiler would
+        // otherwise emit `bindAttr(el, "data", () => ({"a":1}))` and
+        // the runtime would assign an object to the attribute. The
+        // brace body parses as a JS expression (object literal), but
+        // the author's intent is the literal string. Fail loud.
+        let err = compile_attr("data", "{\"a\":1}", Span::new(0, 9), "[<el> data]", false)
+            .expect_err("JSON-object attribute value must error, not silently emit");
+        let msg = err.message.as_str();
+        // Names the offending attribute.
+        assert!(
+            msg.contains("data"),
+            "error must name the attribute `data`, got: {msg}"
+        );
+        // Shows the offending source so the author can spot it.
+        assert!(
+            msg.contains("{\"a\":1}") || msg.contains("{"),
+            "error must echo the offending source, got: {msg}"
+        );
+        // Points at the author's likely fix.
+        assert!(
+            msg.contains("string") || msg.contains("bind") || msg.contains("escape"),
+            "error must hint at the fix, got: {msg}"
+        );
+        // Has a span pointing at the value.
+        assert!(err.span.is_some(), "error must carry a span");
+        assert_eq!(err.span.unwrap(), Span::new(0, 9));
+    }
+
+    #[test]
+    fn attr_value_garbage_in_braces_errors_with_span_and_hint() {
+        // `attr={`"a":1,}` — trailing comma — not a valid object
+        // literal. The expression parser will reject it. The error
+        // must surface at this site (not as a cryptic downstream
+        // parse error) with the attribute name and a fix hint.
+        let err = compile_attr("attr", "{\"a\":1,}", Span::new(0, 10), "[<el> attr]", false)
+            .expect_err("malformed object literal in attribute must error");
+        let msg = err.message.as_str();
+        assert!(msg.contains("attr"), "must name the attribute, got: {msg}");
+        assert!(
+            msg.contains("string") || msg.contains("bind") || msg.contains("escape"),
+            "must hint at the fix, got: {msg}"
+        );
+        assert!(err.span.is_some(), "must carry a span");
+    }
+
+    #[test]
+    fn attr_value_unparseable_braces_errors_not_panics() {
+        // `{@!#}` — gibberish. Must produce a CompileError, never panic.
+        let err = compile_attr("aria", "{@!#}", Span::new(0, 5), "[<el> aria]", false)
+            .expect_err("gibberish in braces must error");
+        let msg = err.message.as_str();
+        assert!(msg.contains("aria"), "must name the attribute, got: {msg}");
+        assert!(err.span.is_some(), "must carry a span");
+    }
+
+    #[test]
+    fn attr_value_valid_expression_unchanged() {
+        // Happy path: `attr={count}` keeps compiling as an expression
+        // binding. Don't regress.
+        let instr =
+            compile_attr("disabled", "{count}", Span::new(0, 7), "[<el> disabled]", false)
+                .expect("valid expression attr should compile");
+        match instr {
+            AttrInstr::Expr { ref name, ref expr, .. } => {
+                assert_eq!(name, "disabled");
+                assert_eq!(expr.source, "count");
+            }
+            other => panic!("expected AttrInstr::Expr, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn attr_value_call_expression_unchanged() {
+        // `attr={signal(0)}` — call expression, not an object literal.
+        // Must compile as expression binding (this is the intended
+        // Svelte/JSX-like shape).
+        let instr =
+            compile_attr("value", "{signal(0)}", Span::new(0, 10), "[<el> value]", false)
+                .expect("call-expression attr should compile");
+        match instr {
+            AttrInstr::Expr { ref expr, .. } => assert_eq!(expr.source, "signal(0)"),
+            other => panic!("expected AttrInstr::Expr, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn attr_value_member_expression_unchanged() {
+        // `attr={state.user.name}` — member access. Must compile.
+        let instr = compile_attr(
+            "title",
+            "{state.user.name}",
+            Span::new(0, 17),
+            "[<el> title]",
+            false,
+        )
+        .expect("member-expression attr should compile");
+        match instr {
+            AttrInstr::Expr { ref expr, .. } => assert_eq!(expr.source, "state.user.name"),
+            other => panic!("expected AttrInstr::Expr, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn attr_value_string_literal_inside_braces_still_compiles() {
+        // `attr={"hello"}` — a string-literal expression. The braces
+        // wrap an expression, not an object literal — must compile.
+        let instr = compile_attr(
+            "placeholder",
+            "{\"hello\"}",
+            Span::new(0, 9),
+            "[<el> placeholder]",
+            false,
+        )
+        .expect("string-literal expression attr should compile");
+        match instr {
+            AttrInstr::Expr { ref expr, .. } => assert_eq!(expr.source, "\"hello\""),
+            other => panic!("expected AttrInstr::Expr, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn attr_value_empty_braces_errors_with_hint() {
+        // `attr={}` — empty brace body. Must error.
+        let err = compile_attr("data", "{}", Span::new(0, 2), "[<el> data]", false)
+            .expect_err("empty brace body must error");
+        let msg = err.message.as_str();
+        assert!(msg.contains("data"), "must name the attribute, got: {msg}");
+        assert!(err.span.is_some(), "must carry a span");
     }
 }
