@@ -191,15 +191,21 @@ mod tests {
 
     #[test]
     fn compile_error_carries_line_col() {
-        // A CSS-token typo in a component is an Error-severity finding.
+        // An unterminated tag in the body is a parse error — line/col
+        // are carried through the napi boundary into the Err result.
+        // (Previously this test used a CSS-token typo as the Error
+        // source, but unknown `--name` is now a Warn — the build
+        // accepts the var() and the lint still surfaces a close-match
+        // suggestion. Parse errors remain the canonical Error
+        // source for the napi error-path contract.)
         let json = compile_to_result(
-            "<prop name=\"x\"/>\n<style>.a{ color: var(--nope-not-a-token); }</style>\n<div class=\"a\">x</div>",
+            "<prop name=\"x\"/>\n<style>.a{ color: var(--nope-not-a-token); }</style>\n<div class=\"a\">x</div",
             r#"{"componentName":"sui-x"}"#,
         )
         .unwrap();
         let v = serde_json::to_value(&json).unwrap();
         assert_eq!(v["kind"], "err");
-        assert_eq!(v["line"], 2);
+        assert_eq!(v["line"], 3);
     }
 
     #[test]

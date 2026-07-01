@@ -1,13 +1,28 @@
-//! `sui-css-token` — `var(--xyz)` inside a `.sui` `<style>` block must
-//! resolve to either the canonical theme registry
-//! (`crates/sui/compiler/tokens.json`) or a custom property set
-//! locally inside the same `<style>` block.
+//! `sui-css-token` — `var(--xyz)` inside a `.sui` `<style>` block, when
+//! the name is not in the theme registry
+//! (`crates/sui/compiler/tokens.json`) and not defined locally as
+//! `--xyz: ...;` inside the same `<style>` block, surfaces a `Warn`
+//! finding with a Levenshtein-suggested close match.
 //!
 //! Catches typos that today fall through silently (the variable is
 //! undefined, the fallback or empty string is used, the visual is
-//! wrong but nothing screams). When the name is unknown we Levenshtein-
-//! suggest the closest match across both the theme registry and the
-//! component-local definitions.
+//! wrong but nothing screams). The finding is a *warning*, not an
+//! error: a `var(--…)` reference is still valid CSS, the browser
+//! falls back to the supplied default (or the property's initial
+//! value) at runtime.
+//!
+//! Some token names are not declared in the canonical
+//! `packages/sui/tokens/src/{tokens,themes}.css` but are still
+//! legitimate, well-known conventions — the canonical source uses
+//! them in `var(--name, fallback)` chains across every theme-preview
+//! block. The canonical example is `--font-sans`: `@ship/tokens`
+//! sets `--font-body: var(--font-sans, system-ui, sans-serif);` in
+//! every theme preview even though no `--font-sans: ...;`
+//! declaration exists. These *convention* tokens are listed in
+//! `tokens.json` so the lint recognizes them as silent
+//! references. When `@ship/tokens` introduces a new convention,
+//! add the name to `theme.tokens` (or the appropriate `channels`
+//! group) and bump the JSON.
 //!
 //! Out of scope:
 //! - Light/dark theme variant validation — we just check token-name
@@ -70,7 +85,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 line,
                 col,
                 rule: RULE_ID,
-                severity: Severity::Error,
+                severity: Severity::Warn,
                 message,
                 suggest: Some(suggest_text(suggestion.as_deref())),
             });
