@@ -104,6 +104,15 @@ export default controller<Scope>({
         if (tag && customElements.get(tag)) {
           try {
             const el = document.createElement(tag)
+            // A bare `createElement` + `appendChild` is enough for the
+            // vast majority of previews. The single confirmed exception is
+            // <sui-theme-picker>: its mount calls `applyTheme()` which
+            // writes `data-theme` + `.dark` on documentElement. The picker
+            // exposes a `scope` prop that, when non-empty, isolates those
+            // writes to its host subtree. Setting `scope="preview"` here
+            // keeps the catalog from flipping the document theme on every
+            // page load.
+            if (tag === 'sui-theme-picker') el.setAttribute('scope', 'preview')
             slot.appendChild(el)
             slot.dataset.previewState = 'live'
             mounted.push(el)
