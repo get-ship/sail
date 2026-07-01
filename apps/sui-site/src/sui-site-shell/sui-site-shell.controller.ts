@@ -10,6 +10,7 @@
 // shell is in every route's module graph, so these side-effect imports can't be
 // tree-shaken — whereas an export-less clients module gets dropped.
 import '../sui-theme.css'
+import '../deck-theme.css' // deck (violet) product theme; SUI red is the default
 import '../base.css' // doc typography + .doc reading column (the comment above promised this; it was missing)
 import '@ship/sui-code-editor' // side-effect: defines <sui-code-editor> for the tutorial + future live surfaces
 import '@ship/sui-viewer'       // side-effect: defines <sui-component-viewer> + children for /components
@@ -17,10 +18,30 @@ import { controller, signal, derived } from '@ship/sui-runtime'
 
 const MODE_KEY = 'sui-mode'
 
+// Ship UI is ONE site with a top product switcher (SUI · Deck · Components · AI),
+// SolidJS-style. The active product is derived from the path; each drives its own
+// sidebar and accent. Tutorial + Components render full-screen (no sidebar) — the
+// operator's "no nested nav bars" rule: one switcher + one sidebar, never stacked.
+function productFor(p: string): string {
+  if (p === '/deck' || p.startsWith('/deck/')) return 'deck'
+  if (p === '/ai' || p.startsWith('/ai/')) return 'ai'
+  if (p === '/components') return 'components'
+  if (p.startsWith('/tutorial')) return 'tutorial'
+  return 'sui'
+}
+// Per-product accent. Deck is violet; the rest ride SUI red for now (AI/Components
+// accents land next). data-theme is the single source of truth — set here in the
+// shell so no route has to manage it.
+function themeFor(product: string): string {
+  return product === 'deck' ? 'deck' : 'sui'
+}
+
 export default controller({
   scope: () => {
     const root = document.documentElement
-    root.setAttribute('data-theme', 'sui')
+    const path = signal<string>(typeof location !== 'undefined' ? location.pathname : '/')
+    const product = derived(() => productFor(path()))
+    root.setAttribute('data-theme', themeFor(product()))
 
     const stored = (() => {
       try {
@@ -47,7 +68,6 @@ export default controller({
       }
     }
 
-    const path = signal<string>(typeof location !== 'undefined' ? location.pathname : '/')
     // Component viewer + individual tutorial LESSONS render full-screen (no docs
     // sidebar, full width). The /tutorial index (the TOC) keeps the normal
     // padded sidebar layout — full-screen padding:0 pushed its list flush-left.
@@ -56,6 +76,6 @@ export default controller({
       return p === '/components' || p.startsWith('/tutorial/')
     })
 
-    return { dark, toggleTheme, path, fullscreen }
+    return { dark, toggleTheme, path, product, fullscreen }
   },
 })

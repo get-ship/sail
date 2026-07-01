@@ -74,6 +74,40 @@
   }
   .theme-toggle:hover { border-color: var(--border-strong); }
 
+  /* ── Product switcher (SolidJS-style: SUI · Deck · Components · AI) ────── */
+  .switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin-left: var(--space-4);
+    padding: 0.2rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+  }
+  .switcher a {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--muted-foreground);
+    text-decoration: none;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full);
+    line-height: 1.4;
+  }
+  .switcher a:hover { color: var(--foreground); }
+  .switcher a.on {
+    color: var(--primary-foreground);
+    background: var(--primary);
+  }
+
+  .side-note {
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+    line-height: 1.5;
+    margin: 0 var(--space-2);
+  }
+  .side-note code { font-size: 0.95em; }
+
   /* ── Body grid ────────────────────────────────────────────────────────── */
   .body {
     display: grid;
@@ -139,7 +173,7 @@
 </style>
 
 <header class="topbar" part="topbar">
-  <a class="brand" href="/" aria-label="SUI home">
+  <a class="brand" href="/" aria-label="Ship UI home">
     <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
       <circle cx="6" cy="6" r="3.4" fill="var(--primary)" />
       <circle cx="20" cy="6" r="3.4" fill="var(--primary)" opacity="0.45" />
@@ -147,13 +181,16 @@
       <circle cx="20" cy="20" r="3.4" fill="var(--primary)" opacity="0.7" />
       <path d="M6 6 L20 20 M6 6 L20 6 M6 6 L6 20" stroke="var(--primary)" stroke-width="1.4" opacity="0.5" stroke-linecap="round" />
     </svg>
-    <span class="word"><b>SUI</b></span>
+    <span class="word"><b>Ship</b> UI</span>
   </a>
-  <span class="ver">0.2.0</span>
+  <nav class="switcher" aria-label="Products">
+    <a href="/" class:on={product() === 'sui'}>SUI</a>
+    <a href="/deck" class:on={product() === 'deck'}>Deck</a>
+    <a href="/components" class:on={product() === 'components'}>Components</a>
+    <a href="/ai" class:on={product() === 'ai'}>AI</a>
+  </nav>
   <span class="spacer"></span>
-  <a class="toplink" href="/tutorial">Tutorial</a>
-  <a class="toplink" href="/components">Components</a>
-  <a class="toplink" href="/deck">Deck ↗</a>
+  <a class="toplink" href="/tutorial" class:active={product() === 'tutorial'}>Tutorial</a>
   <button class="theme-toggle" type="button" on:click={() => toggleTheme()}>
     {dark() ? '☀ Light' : '☾ Dark'}
   </button>
@@ -161,35 +198,51 @@
 
 <div class="body" class:fullscreen={fullscreen()}>
   <nav class="sidebar" part="sidebar">
-    <div class="group">
-      <h4>Introduction</h4>
-      <a href="/" class:active={path() === '/'}>Overview</a>
-      <a href="/why" class:active={path() === '/why'}>Why SUI</a>
-      <a href="/getting-started" class:active={path() === '/getting-started'}>Getting started</a>
-    </div>
-    <div class="group">
-      <h4>Tutorial</h4>
-      <a href="/tutorial" class:active={path().includes('/tutorial')}>Interactive lessons</a>
-    </div>
-    <div class="group">
-      <h4>Core concepts</h4>
-      <a href="/reactivity" class:active={path() === '/reactivity'}>Reactivity</a>
-      <a href="/control-flow" class:active={path() === '/control-flow'}>Control flow</a>
-      <a href="/lifecycle-hooks" class:active={path() === '/lifecycle-hooks'}>Lifecycle</a>
-      <a href="/data-binding" class:active={path() === '/data-binding'}>Data binding</a>
-      <a href="/data" class:active={path() === '/data'}>Live data</a>
-    </div>
-    <div class="group">
-      <h4>Guides</h4>
-      <a href="/theming" class:active={path() === '/theming'}>Theming</a>
-      <a href="/styling" class:active={path() === '/styling'}>Styling</a>
-      <a href="/composition" class:active={path() === '/composition'}>Composition</a>
-      <a href="/tooling" class:active={path() === '/tooling'}>Tooling</a>
-    </div>
-    <div class="group">
-      <h4>Reference</h4>
-      <a href="/reference" class:active={path() === '/reference'}>Directives &amp; API</a>
-    </div>
+    {#if product() === 'deck'}
+      <div class="group">
+        <h4>Deck</h4>
+        <a href="/deck" class:active={path() === '/deck'}>Overview</a>
+      </div>
+      <div class="group">
+        <h4>Migrating in</h4>
+        <p class="side-note">Getting started, Routing, Rendering, Live data, HMR, and Build move in here from <code>packages/deck/docs</code>.</p>
+      </div>
+    {:else if product() === 'ai'}
+      <div class="group">
+        <h4>AI</h4>
+        <a href="/ai" class:active={path() === '/ai'}>Overview</a>
+      </div>
+      <div class="group">
+        <h4>Planned</h4>
+        <p class="side-note">Authoring guide, MCP &amp; tooling, Skills, and the eval harness — the agent-first story.</p>
+      </div>
+    {:else}
+      <div class="group">
+        <h4>Introduction</h4>
+        <a href="/" class:active={path() === '/'}>Overview</a>
+        <a href="/why" class:active={path() === '/why'}>Why SUI</a>
+        <a href="/getting-started" class:active={path() === '/getting-started'}>Getting started</a>
+      </div>
+      <div class="group">
+        <h4>Core concepts</h4>
+        <a href="/reactivity" class:active={path() === '/reactivity'}>Reactivity</a>
+        <a href="/control-flow" class:active={path() === '/control-flow'}>Control flow</a>
+        <a href="/lifecycle-hooks" class:active={path() === '/lifecycle-hooks'}>Lifecycle</a>
+        <a href="/data-binding" class:active={path() === '/data-binding'}>Data binding</a>
+        <a href="/data" class:active={path() === '/data'}>Live data</a>
+      </div>
+      <div class="group">
+        <h4>Guides</h4>
+        <a href="/theming" class:active={path() === '/theming'}>Theming</a>
+        <a href="/styling" class:active={path() === '/styling'}>Styling</a>
+        <a href="/composition" class:active={path() === '/composition'}>Composition</a>
+        <a href="/tooling" class:active={path() === '/tooling'}>Tooling</a>
+      </div>
+      <div class="group">
+        <h4>Reference</h4>
+        <a href="/reference" class:active={path() === '/reference'}>Directives &amp; API</a>
+      </div>
+    {/if}
    </nav>
   <main class="content" part="content">
     <slot name="route"></slot>
