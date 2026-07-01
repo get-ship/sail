@@ -37,8 +37,12 @@ export default controller({
     // plain `let` the effect ran once (compile still null), returned, and never
     // re-ran — so the tutorial never booted (empty editors, no preview).
     const compile = signal<CompileFn | null>(null)
+    // Store makeCompile() as the signal's VALUE via a thunk. `compile` holds a
+    // function, and signal.set(fn) treats fn as an UPDATER (calls it with the
+    // current value) — so set(makeCompile()) would invoke the compiler with a
+    // null source. The `() => …` thunk returns the fn to store, uncalled.
     ensureWasm('/sui_compiler_bg.wasm')
-      .then(() => { compile.set(makeCompile() as unknown as CompileFn) })
+      .then(() => compile.set(() => makeCompile() as unknown as CompileFn))
       .catch((err) => console.error('[sui-site] wasm compile seam failed:', err))
 
     let handle: TutorialHandle | null = null
