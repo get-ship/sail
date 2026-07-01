@@ -20,7 +20,7 @@
   </section>
 
   <section class="products">
-    <a class="product-card" href="/getting-started">
+    <a class="product-card" href="/overview">
       <h3>SUI <span class="tag">framework</span></h3>
       <p>The reactive component framework. Signals and a strict lint, compiled ahead-of-time to standard web components.</p>
     </a>

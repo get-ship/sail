@@ -1,0 +1,30 @@
+<div class="doc">
+  <p class="eyebrow">SUI</p>
+  <h1>The reactive component framework</h1>
+  <p class="lead">
+    SUI compiles <code>.sui</code> files ahead-of-time into standard web
+    components. Signals for reactivity, a strict lint for the design system, and
+    output you can drop into any page — no virtual DOM, no framework runtime tax.
+  </p>
+
+  <h2>What makes it SUI</h2>
+  <ul>
+    <li><strong>Compiler-first</strong> — templates lower to direct DOM operations; the output is a plain custom element.</li>
+    <li><strong>Signals</strong> — fine-grained reactivity; only the readers of a changed signal re-run, no diffing.</li>
+    <li><strong>Two files</strong> — a <code>.sui</code> template (markup + bindings) and a paired <code>.controller.ts</code> (state + logic).</li>
+    <li><strong>Strict by design</strong> — the lint turns design-system violations into build errors, so on-brand is the default.</li>
+  </ul>
+
+  <h2>Start here</h2>
+  <ul>
+    <li><a href="/getting-started">Getting started</a> — install, write a component, use it anywhere.</li>
+    <li><a href="/reactivity">Reactivity</a> — signals, derived values, and effects.</li>
+    <li><a href="/tutorial">The tutorial</a> — 25 interactive lessons in the browser.</li>
+    <li><a href="/reference">Reference</a> — every directive and the runtime API.</li>
+  </ul>
+
+  <div class="page-nav">
+    <a class="btn btn-primary" href="/getting-started">Getting started →</a>
+    <a class="btn" href="/tutorial">Try the tutorial</a>
+  </div>
+</div>

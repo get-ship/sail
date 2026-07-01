@@ -184,7 +184,7 @@
   </a>
   <span class="spacer"></span>
   <nav class="switcher" aria-label="Products">
-    <a href="/" class:on={product() === 'sui'}>SUI</a>
+    <a href="/overview" class:on={product() === 'sui'}>SUI</a>
     <a href="/deck" class:on={product() === 'deck'}>Deck</a>
     <a href="/components" class:on={product() === 'components'}>Components</a>
     <a href="/ai" class:on={product() === 'ai'}>AI</a>
@@ -219,7 +219,7 @@
     {:else}
       <div class="group">
         <h4>Introduction</h4>
-        <a href="/" class:active={path() === '/'}>Overview</a>
+        <a href="/overview" class:active={path() === '/overview'}>Overview</a>
         <a href="/why" class:active={path() === '/why'}>Why SUI</a>
         <a href="/getting-started" class:active={path() === '/getting-started'}>Getting started</a>
       </div>

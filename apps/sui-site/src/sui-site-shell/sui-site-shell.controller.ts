@@ -23,17 +23,24 @@ const MODE_KEY = 'sui-mode'
 // sidebar and accent. Tutorial + Components render full-screen (no sidebar) — the
 // operator's "no nested nav bars" rule: one switcher + one sidebar, never stacked.
 function productFor(p: string): string {
+  if (p === '/') return 'ship'
   if (p === '/deck' || p.startsWith('/deck/')) return 'deck'
   if (p === '/ai' || p.startsWith('/ai/')) return 'ai'
   if (p === '/components' || p.startsWith('/components/')) return 'components'
   if (p.startsWith('/tutorial')) return 'tutorial'
   return 'sui'
 }
-// Per-product accent. Deck is violet; the rest ride SUI red for now (AI/Components
-// accents land next). data-theme is the single source of truth — set here in the
-// shell so no route has to manage it.
+// Each product has its own accent (data-theme). The umbrella landing is ship
+// (teal); SUI red; Deck violet; Components green; AI blue. Tutorial rides SUI's.
+// data-theme is the single source of truth — set here so no route manages it.
 function themeFor(product: string): string {
-  return product === 'deck' ? 'deck' : 'sui'
+  switch (product) {
+    case 'ship': return 'ship'
+    case 'deck': return 'deck'
+    case 'components': return 'components'
+    case 'ai': return 'ai'
+    default: return 'sui'
+  }
 }
 
 export default controller({

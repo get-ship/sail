@@ -1,8 +1,124 @@
 /*
+  Product themes for the Ship UI site. Each of the five sections gets its own
+  identity, keyed by <html data-theme>: ship (umbrella, teal), sui (red, in
+  sui-theme.css), deck (violet), components (green), ai (blue). The shell sets
+  data-theme by active product. Dark variants live alongside each light block.
+*/
+
+/* ── SHIP — umbrella / landing, teal ──────────────────────────────────── */
+:root[data-theme='ship'] {
+  --primary: oklch(0.58 0.11 195);
+  --primary-hover: oklch(0.53 0.12 195);
+  --primary-foreground: oklch(0.99 0.01 195);
+  --ring: oklch(0.58 0.11 195 / 40%);
+  --ring-color: var(--primary);
+  --accent: oklch(0.55 0.10 200);
+  --accent-foreground: oklch(0.99 0.01 195);
+  --background: oklch(0.985 0.004 210);
+  --surface-0: oklch(0.975 0.005 210);
+  --surface-1: oklch(1 0 0);
+  --surface-2: oklch(0.965 0.006 208);
+  --surface-3: oklch(0.945 0.008 208);
+  --muted: oklch(0.955 0.006 208);
+  --border: oklch(0.20 0.02 210 / 12%);
+  --border-subtle: oklch(0.20 0.02 210 / 7%);
+  --border-strong: oklch(0.20 0.02 210 / 22%);
+  --sidebar: oklch(0.978 0.005 210);
+  --sidebar-primary: var(--primary);
+  color-scheme: light;
+}
+:root[data-theme='ship'][data-mode='dark'] {
+  --background: oklch(0.165 0.010 210); --surface-0: oklch(0.185 0.012 210);
+  --surface-1: oklch(0.205 0.014 210); --surface-2: oklch(0.245 0.016 210);
+  --surface-3: oklch(0.285 0.018 210); --foreground: oklch(0.965 0.006 210);
+  --muted: oklch(0.245 0.016 210); --muted-foreground: oklch(0.70 0.02 210);
+  --card: oklch(0.195 0.013 210); --card-foreground: oklch(0.965 0.006 210);
+  --popover: oklch(0.205 0.014 210); --popover-foreground: oklch(0.965 0.006 210);
+  --primary: oklch(0.72 0.11 195); --primary-hover: oklch(0.77 0.11 195);
+  --primary-foreground: oklch(0.16 0.02 210); --ring: oklch(0.72 0.11 195 / 42%);
+  --accent: oklch(0.74 0.10 200); --accent-foreground: oklch(0.16 0.02 210);
+  --border: oklch(0.965 0.006 210 / 12%); --border-subtle: oklch(0.965 0.006 210 / 7%);
+  --border-strong: oklch(0.965 0.006 210 / 22%); --input: oklch(0.965 0.006 210 / 14%);
+  color-scheme: dark;
+}
+
+/* ── COMPONENTS — library, green ──────────────────────────────────────── */
+:root[data-theme='components'] {
+  --primary: oklch(0.56 0.14 155);
+  --primary-hover: oklch(0.51 0.15 155);
+  --primary-foreground: oklch(0.99 0.01 155);
+  --ring: oklch(0.56 0.14 155 / 40%);
+  --ring-color: var(--primary);
+  --accent: oklch(0.53 0.13 150);
+  --accent-foreground: oklch(0.99 0.01 155);
+  --background: oklch(0.985 0.004 160);
+  --surface-0: oklch(0.975 0.005 160);
+  --surface-1: oklch(1 0 0);
+  --surface-2: oklch(0.965 0.006 158);
+  --surface-3: oklch(0.945 0.008 158);
+  --muted: oklch(0.955 0.006 158);
+  --border: oklch(0.20 0.02 155 / 12%);
+  --border-subtle: oklch(0.20 0.02 155 / 7%);
+  --border-strong: oklch(0.20 0.02 155 / 22%);
+  --sidebar: oklch(0.978 0.005 160);
+  --sidebar-primary: var(--primary);
+  color-scheme: light;
+}
+:root[data-theme='components'][data-mode='dark'] {
+  --background: oklch(0.165 0.010 155); --surface-0: oklch(0.185 0.012 155);
+  --surface-1: oklch(0.205 0.014 155); --surface-2: oklch(0.245 0.016 155);
+  --surface-3: oklch(0.285 0.018 155); --foreground: oklch(0.965 0.006 155);
+  --muted: oklch(0.245 0.016 155); --muted-foreground: oklch(0.70 0.02 155);
+  --card: oklch(0.195 0.013 155); --card-foreground: oklch(0.965 0.006 155);
+  --popover: oklch(0.205 0.014 155); --popover-foreground: oklch(0.965 0.006 155);
+  --primary: oklch(0.70 0.15 155); --primary-hover: oklch(0.75 0.15 155);
+  --primary-foreground: oklch(0.16 0.02 155); --ring: oklch(0.70 0.15 155 / 42%);
+  --accent: oklch(0.72 0.14 150); --accent-foreground: oklch(0.16 0.02 155);
+  --border: oklch(0.965 0.006 155 / 12%); --border-subtle: oklch(0.965 0.006 155 / 7%);
+  --border-strong: oklch(0.965 0.006 155 / 22%); --input: oklch(0.965 0.006 155 / 14%);
+  color-scheme: dark;
+}
+
+/* ── AI — agent-first, blue ───────────────────────────────────────────── */
+:root[data-theme='ai'] {
+  --primary: oklch(0.55 0.18 255);
+  --primary-hover: oklch(0.50 0.19 255);
+  --primary-foreground: oklch(0.99 0.01 255);
+  --ring: oklch(0.55 0.18 255 / 40%);
+  --ring-color: var(--primary);
+  --accent: oklch(0.52 0.16 250);
+  --accent-foreground: oklch(0.99 0.01 255);
+  --background: oklch(0.985 0.004 250);
+  --surface-0: oklch(0.975 0.005 250);
+  --surface-1: oklch(1 0 0);
+  --surface-2: oklch(0.965 0.006 248);
+  --surface-3: oklch(0.945 0.008 248);
+  --muted: oklch(0.955 0.006 248);
+  --border: oklch(0.20 0.02 255 / 12%);
+  --border-subtle: oklch(0.20 0.02 255 / 7%);
+  --border-strong: oklch(0.20 0.02 255 / 22%);
+  --sidebar: oklch(0.978 0.005 250);
+  --sidebar-primary: var(--primary);
+  color-scheme: light;
+}
+:root[data-theme='ai'][data-mode='dark'] {
+  --background: oklch(0.165 0.012 255); --surface-0: oklch(0.185 0.014 255);
+  --surface-1: oklch(0.205 0.016 255); --surface-2: oklch(0.245 0.018 255);
+  --surface-3: oklch(0.285 0.020 255); --foreground: oklch(0.965 0.006 255);
+  --muted: oklch(0.245 0.018 255); --muted-foreground: oklch(0.70 0.02 255);
+  --card: oklch(0.195 0.015 255); --card-foreground: oklch(0.965 0.006 255);
+  --popover: oklch(0.205 0.016 255); --popover-foreground: oklch(0.965 0.006 255);
+  --primary: oklch(0.68 0.17 255); --primary-hover: oklch(0.73 0.17 255);
+  --primary-foreground: oklch(0.16 0.02 255); --ring: oklch(0.68 0.17 255 / 42%);
+  --accent: oklch(0.72 0.15 250); --accent-foreground: oklch(0.16 0.02 255);
+  --border: oklch(0.965 0.006 255 / 12%); --border-subtle: oklch(0.965 0.006 255 / 7%);
+  --border-strong: oklch(0.965 0.006 255 / 22%); --input: oklch(0.965 0.006 255 / 14%);
+  color-scheme: dark;
+}
+
+/*
   deck-theme.css — the deck section's identity. Violet (hue ~285) vs SUI's red
-  (27), cool neutrals vs warm. Applied when <html data-theme="deck">; the /deck
-  route's controller sets it on mount and restores "sui" on unmount, so the two
-  sections of the shared site read as distinctly different products.
+  (27), cool neutrals vs warm.
 */
 :root[data-theme='deck'] {
   --primary: oklch(0.55 0.20 285);
