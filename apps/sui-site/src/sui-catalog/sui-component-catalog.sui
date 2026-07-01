@@ -16,21 +16,24 @@
        bottom. The `fullscreen` route variant on the shell strips
        side padding for component viewer / tutorial, but the catalog
        inherits the standard 6 + 7 spacing. */
-    padding: var(--space-6) var(--space-7) var(--space-8);
+    /* Hover tint — reads the pre-computed --tone-primary-bg ramp
+       (a 14% primary mix defined in tokens.css) so the formula
+       doesn't drift across primitives. */
+    --cat-cell-hover: var(--tone-primary-bg);
   }
 
   .cat-head {
     display: flex;
     align-items: baseline;
     gap: var(--space-3);
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-5);
     flex-wrap: wrap;
   }
   .cat-head h1 {
-    font-family: var(--font-display, var(--font-body));
+    font-family: var(--font-display);
     font-size: var(--text-3xl);
     font-weight: var(--font-weight-bold);
-    letter-spacing: var(--tracking-tight, -0.02em);
+    letter-spacing: var(--tracking-tight);
     margin: 0;
     color: var(--foreground);
   }
@@ -41,7 +44,7 @@
   }
 
   .pack {
-    margin-bottom: var(--space-7);
+    margin-bottom: var(--space-6);
   }
   .pack-h {
     display: flex;
@@ -67,25 +70,23 @@
      driven by the `size` class on each cell. Big components
      (calendar, table, tree, code-editor) span two columns / two rows
      and get the room they need; small ones (status-dot, badge, switch,
-     separator) shrink to a single column. The 280px min stays for
-     `normal` / `wide` cells; `tall` is 280×~360 minimum so the cell
-     preview has headroom; `compact` is 220px min so the cell packs
-     tighter. `auto-flow: dense` backfills gaps when a `wide` cell
-     can't fit a sibling. */
+     separator) shrink to a single column. Column min is 240px so the
+     1280px shell width packs FIVE columns; `auto-flow: dense` backfills
+     gaps when a `wide` cell can't fit a sibling. */
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     grid-auto-flow: dense;
-    gap: var(--space-4);
+    gap: var(--space-3);
   }
   .cell {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
-    padding: var(--space-4);
+    gap: var(--space-2);
+    padding: var(--space-3);
     background: var(--surface-1);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     text-decoration: none;
     color: inherit;
     transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
@@ -105,11 +106,11 @@
   }
   .cell.compact .cell-preview {
     min-height: var(--space-8);
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-2);
   }
   .cell:hover {
     border-color: var(--primary);
-    background: color-mix(in oklch, var(--primary) 6%, var(--surface-1));
+    background: var(--cat-cell-hover);
     transform: translateY(-1px);
   }
 
@@ -117,18 +118,20 @@
     display: flex;
     align-items: baseline;
     gap: var(--space-2);
+    min-height: var(--density-text);
   }
   .cell-tag {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     font-weight: var(--font-weight-semibold);
     color: var(--primary);
+    line-height: var(--leading-tight);
   }
 
   .cell-desc {
     font-size: var(--text-xs);
     color: var(--muted-foreground);
-    line-height: 1.4;
+    line-height: var(--leading-normal);
     margin: 0;
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -137,20 +140,22 @@
   }
 
   /* The preview cell: the area that holds the mounted custom element.
-     Heights are content-driven: a `compact` cell is short, a `tall`
-     cell is generous (calendar / table need vertical space). */
+     Bounded — small components stay centered, big components opt into
+     wider/taller cells. `min-height` keeps the cell consistent; the
+     inner element overflows with scroll if a specimen is taller than
+     the box (overflow: auto on the parent catches the rest). */
   .cell-preview {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 7rem;
-    padding: var(--space-3) var(--space-4);
+    min-height: 6.5rem;
+    padding: var(--space-2) var(--space-3);
     background: var(--surface-2);
     border: 1px dashed var(--border);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     overflow: auto;
   }
-  .cell.wide .cell-preview { min-height: 9rem; }
+  .cell.wide .cell-preview { min-height: 8rem; }
   .cell.tall .cell-preview { min-height: 22rem; align-items: flex-start; justify-content: flex-start; }
 
   .preview-empty {
@@ -163,7 +168,7 @@
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
+    gap: var(--space-1);
   }
   .meta-row {
     display: flex;
@@ -189,6 +194,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     padding: 0 var(--space-1);
+    line-height: 1.5;
   }
   .meta-none {
     font-family: var(--font-mono);
