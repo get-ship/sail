@@ -25,7 +25,7 @@ const MODE_KEY = 'sui-mode'
 function productFor(p: string): string {
   if (p === '/deck' || p.startsWith('/deck/')) return 'deck'
   if (p === '/ai' || p.startsWith('/ai/')) return 'ai'
-  if (p === '/components') return 'components'
+  if (p === '/components' || p.startsWith('/components/')) return 'components'
   if (p.startsWith('/tutorial')) return 'tutorial'
   return 'sui'
 }
@@ -73,7 +73,9 @@ export default controller({
     // padded sidebar layout — full-screen padding:0 pushed its list flush-left.
     const fullscreen = derived(() => {
       const p = path()
-      return p === '/components' || p.startsWith('/tutorial/')
+      // The umbrella landing, the component catalog, and tutorial lessons own the
+      // full width (no sidebar). Docs pages keep the per-product sidebar.
+      return p === '/' || p === '/components' || p.startsWith('/components/') || p.startsWith('/tutorial/')
     })
 
     return { dark, toggleTheme, path, product, fullscreen }
