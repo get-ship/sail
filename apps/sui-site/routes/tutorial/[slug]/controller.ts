@@ -14,6 +14,7 @@ import {
   derived,
   effect,
   ref,
+  signal,
   type ViewScope,
 } from '@ship/sui-runtime'
 import { ensureWasm, makeCompile } from '@ship/sui-viewer'
@@ -31,9 +32,13 @@ export default controller({
     const nextSlug = derived(() => lesson()?.next ?? '')
 
     const rootEl = ref<HTMLElement>(null)
-    let compile: CompileFn | null = null
+    // compile MUST be a signal: it's set asynchronously after the wasm loads,
+    // and the boot effect below has to re-run when it becomes available. As a
+    // plain `let` the effect ran once (compile still null), returned, and never
+    // re-ran — so the tutorial never booted (empty editors, no preview).
+    const compile = signal<CompileFn | null>(null)
     ensureWasm('/sui_compiler_bg.wasm')
-      .then(() => { compile = makeCompile() as unknown as CompileFn })
+      .then(() => { compile.set(makeCompile() as unknown as CompileFn) })
       .catch((err) => console.error('[sui-site] wasm compile seam failed:', err))
 
     let handle: TutorialHandle | null = null
@@ -41,8 +46,9 @@ export default controller({
     effect(() => {
       const root = rootEl()
       const l = lesson()
-      if (!root || !compile) return
-      if (!handle) handle = bootTutorialApp(root, compile)
+      const c = compile()
+      if (!root || !c) return
+      if (!handle) handle = bootTutorialApp(root, c)
       if (l && l.slug !== lastSlug) {
         lastSlug = l.slug
         handle.setLesson({
