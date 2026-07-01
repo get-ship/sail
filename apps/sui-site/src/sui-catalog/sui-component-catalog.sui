@@ -113,28 +113,20 @@
      inner element overflows with scroll if a specimen is taller than
      the box (overflow: auto on the parent catches the rest). */
   .cell-preview {
-    /* The cluster primitive provides the centering flex; this rule
-       owns the visual surface only (frame, floor, overflow). */
-    min-height: 6.5rem;
+    /* Size to the SPECIMEN's own content — a small floor for a bare element,
+       then the component's natural height drives the cell. No fixed per-span
+       heights: sui-grid's dense flow packs the variable heights (calendar
+       tall, chip short) so nothing swims in an oversized box. */
+    min-height: var(--space-8);
     padding: var(--space-2) var(--space-3);
     background: var(--surface-2);
     border: 1px dashed var(--border);
     border-radius: var(--radius-sm);
     overflow: auto;
   }
-  /* `compact` is set on the preview when the seed has `size: 'compact'`
-     (small primitives: icon, badge, chip, status-dot, separator). The
-     cell itself still has the same `data-col-span` / `data-row-span`
-     as before — only the preview is shrunk. */
   .cell-preview[data-compact] {
-    min-height: var(--space-8);
+    min-height: var(--space-6);
     padding: var(--space-2);
-  }
-  /* Big preview when the cell spans two columns. */
-  .cell[data-col-span='2'] .cell-preview { min-height: 8rem; }
-  /* Tall preview when the cell spans two rows (calendar, tree, table). */
-  .cell[data-row-span='2'] .cell-preview {
-    min-height: 22rem;
   }
   .preview-empty {
     font-family: var(--font-mono);
