@@ -151,6 +151,7 @@
   </a>
   <span class="ver">0.2.0</span>
   <span class="spacer"></span>
+  <a class="toplink" href="/tutorial">Tutorial</a>
   <a class="toplink" href="/components">Components</a>
   <button class="theme-toggle" type="button" on:click={() => toggleTheme()}>
     {dark() ? '☀ Light' : '☾ Dark'}

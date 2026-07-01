@@ -48,10 +48,12 @@ export default controller({
     }
 
     const path = signal<string>(typeof location !== 'undefined' ? location.pathname : '/')
-    // Tutorial + component viewer render full-screen (no docs sidebar, full width).
+    // Component viewer + individual tutorial LESSONS render full-screen (no docs
+    // sidebar, full width). The /tutorial index (the TOC) keeps the normal
+    // padded sidebar layout — full-screen padding:0 pushed its list flush-left.
     const fullscreen = derived(() => {
       const p = path()
-      return p === '/components' || p.startsWith('/tutorial')
+      return p === '/components' || p.startsWith('/tutorial/')
     })
 
     return { dark, toggleTheme, path, fullscreen }
