@@ -19,11 +19,15 @@ cd "$repo_root"
 #   - harness / skill / user content under `.claude/` (the dispatch.sh comment
 #     explicitly acknowledges the multi-repo split — that script lives in
 #     the outer `ship` repo and the `xtask` ref is intentional residue)
-#   - any node_modules / target / .deck / .artifacts / generated dirs
+#   - any built / gitignored tree: node_modules, target, dist, coverage,
+#     .deck, .artifacts, .git (bundled JS + source maps inline doc comments
+#     that can quote the phantom names — a built example must not fail the gate)
 #   - any committed fixture (tokens.json header is updated separately)
 excludes=(
   --exclude-dir=node_modules
   --exclude-dir=target
+  --exclude-dir=dist
+  --exclude-dir=coverage
   --exclude-dir=.deck
   --exclude-dir=.artifacts
   --exclude-dir=.git
