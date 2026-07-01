@@ -81,18 +81,24 @@ const ATTR_MODIFIERS_NO_ARG = new Set([
 const ATTR_MODIFIERS_ARG = new Set(['key', 'debounce', 'throttle'])
 
 /**
- * Match an opening directive inner: `if`, `for x of list key={…}`,
- * `match x`, `async`, `while-loading of x`, `while-error err of x`.
- * Returns `{ keyword, exprStart, exprEnd }` or `null`.
+ * Match a directive *body* (the text after the opening sigil). Returns
+ * `{ keyword, bodyStart, bodyEnd }` indices into the original `inner`,
+ * or `null` when the body doesn't start with one of the SUI directive
+ * keywords. `inner` is the full text between `{` and `}`, including the
+ * leading `#`, `/`, or `:` — exactly as the Rust compiler's
+ * `classify_brace` receives it (crates/sui/compiler/src/parse/template/
+ * tokenize.rs).
  */
-function matchOpen(inner: string): { keyword: string; exprStart: number; exprEnd: number } | null {
+function matchOpenBody(inner: string): { keyword: string; bodyStart: number; bodyEnd: number } | null {
+  if (inner[0] !== '#') return null
+  const afterHash = inner.slice(1)
   // Longest-first so `while-loading` / `while-error` win over `if`/`for`.
   for (const kw of OPEN_KEYWORDS) {
-    if (inner === kw) return { keyword: kw, exprStart: inner.length, exprEnd: inner.length }
-    if (inner.startsWith(kw)) {
-      const after = inner.slice(kw.length)
-      if (after.length > 0 && /\s/.test(after[0]!)) {
-        return { keyword: kw, exprStart: kw.length, exprEnd: inner.length }
+    if (afterHash === kw) return { keyword: kw, bodyStart: 1, bodyEnd: inner.length }
+    if (afterHash.startsWith(kw)) {
+      const rest = afterHash.slice(kw.length)
+      if (rest.length > 0 && /\s/.test(rest[0]!)) {
+        return { keyword: kw, bodyStart: 1 + kw.length, bodyEnd: inner.length }
       }
     }
   }
@@ -100,24 +106,24 @@ function matchOpen(inner: string): { keyword: string; exprStart: number; exprEnd
 }
 
 /**
- * Match a continuation inner: `else if expr`, `else`, `case expr`,
- * `default`, `loading`, `error expr`, `ok`. Returns the keyword text
- * and the (trimmed) expression slice, or `null`.
+ * Match a continuation body (the text after a `:` sigil). Recognises
+ * `else if expr`, `else`, `case expr`, `default`, `loading`, `error expr`,
+ * `ok`. Returns the keyword text + body indices, or `null`.
  */
-function matchContinuation(inner: string): { keyword: string; exprStart: number; exprEnd: number } | null {
-  const trimmed = inner.trim()
+function matchContinuationBody(inner: string): { keyword: string; bodyStart: number; bodyEnd: number } | null {
+  if (inner[0] !== ':') return null
+  const afterColon = inner.slice(1)
+  const trimmed = afterColon.trimStart()
+  const leading = afterColon.length - trimmed.length
   for (const kw of CONTINUATION_KEYWORDS) {
-    if (trimmed === kw) return { keyword: kw, exprStart: inner.length, exprEnd: inner.length }
+    if (trimmed === kw) return { keyword: kw, bodyStart: inner.length, bodyEnd: inner.length }
     if (trimmed.startsWith(kw)) {
-      const after = trimmed.slice(kw.length)
-      if (after.length > 0 && /\s/.test(after[0]!)) {
-        // Map back to original-position indices.
-        const leading = inner.length - trimmed.length
-        return {
-          keyword: kw,
-          exprStart: leading + kw.length,
-          exprEnd: leading + trimmed.length,
-        }
+      const rest = trimmed.slice(kw.length)
+      if (rest.length === 0) {
+        return { keyword: kw, bodyStart: 1 + leading + kw.length, bodyEnd: inner.length }
+      }
+      if (/\s/.test(rest[0]!)) {
+        return { keyword: kw, bodyStart: 1 + leading + kw.length, bodyEnd: inner.length }
       }
     }
   }
@@ -125,11 +131,15 @@ function matchContinuation(inner: string): { keyword: string; exprStart: number;
 }
 
 /**
- * Match a closer inner: `/if`, `/for`, …
+ * Match a closer body (the text after a `/` sigil). Recognises `/if`,
+ * `/for`, `/match`, `/async`, `/while-loading`, `/while-error`. Returns
+ * the matched keyword, or `null`.
  */
-function matchClose(inner: string): string | null {
+function matchCloseBody(inner: string): string | null {
+  if (inner[0] !== '/') return null
+  const afterSlash = inner.slice(1)
   for (const kw of CLOSE_KEYWORDS) {
-    if (inner === `/${kw}`) return kw
+    if (afterSlash === kw) return kw
   }
   return null
 }
@@ -155,46 +165,56 @@ function scanTextRange(
     if (close < 0) { i++; continue }
     const inner = source.slice(i + 1, close)
     // Try the more specific shapes first.
-    const open = matchOpen(inner)
+    const open = matchOpenBody(inner)
     if (open) {
       const absOpen = base + i
       const absClose = base + close + 1
-      builder.add(absOpen, absOpen + 1, Decoration.mark({ class: CLS_DIRECTIVE_SIGIL }))
-      builder.add(absOpen + 1, absOpen + 1 + ('#' + open.keyword).length,
-        Decoration.mark({ class: `${CLS_DIRECTIVE_SIGIL} ${CLS_DIRECTIVE_KW}` }))
-      // Skip the leading whitespace before the expression.
-      let exprFrom = i + 1 + open.exprStart
+      // `{` is the brace, `#` is the sigil, then the keyword.
+      builder.add(absOpen, absOpen + 1, Decoration.mark({ class: CLS_INTERP_BRACE }))
+      builder.add(absOpen + 1, absOpen + 2, Decoration.mark({ class: CLS_DIRECTIVE_SIGIL }))
+      builder.add(absOpen + 2, absOpen + 2 + open.keyword.length,
+        Decoration.mark({ class: CLS_DIRECTIVE_KW }))
+      // Skip the leading whitespace before the expression. `bodyStart`
+      // is the index within `inner` (which starts at `i+1`), so the
+      // source position is `i + 1 + bodyStart`.
+      let exprFrom = i + 1 + open.bodyStart
       while (exprFrom < close && /\s/.test(source[exprFrom]!)) exprFrom++
       if (exprFrom < close) {
         builder.add(base + exprFrom, base + close, Decoration.mark({ class: CLS_DIRECTIVE_EXPR }))
       }
-      builder.add(base + close, absClose, Decoration.mark({ class: CLS_DIRECTIVE_SIGIL }))
+      builder.add(base + close, absClose, Decoration.mark({ class: CLS_INTERP_BRACE }))
       i = close + 1
       continue
     }
-    const cont = matchContinuation(inner)
+    const cont = matchContinuationBody(inner)
     if (cont) {
       const absOpen = base + i
       const absClose = base + close + 1
-      builder.add(absOpen, absOpen + 2, Decoration.mark({ class: CLS_DIRECTIVE_SIGIL }))
+      // `{`, `:` sigil, keyword, expression, `}`.
+      builder.add(absOpen, absOpen + 1, Decoration.mark({ class: CLS_INTERP_BRACE }))
+      builder.add(absOpen + 1, absOpen + 2, Decoration.mark({ class: CLS_DIRECTIVE_SIGIL }))
       builder.add(absOpen + 2, absOpen + 2 + cont.keyword.length,
-        Decoration.mark({ class: `${CLS_DIRECTIVE_SIGIL} ${CLS_DIRECTIVE_KW}` }))
-      let exprFrom = i + 1 + cont.exprStart
+        Decoration.mark({ class: CLS_DIRECTIVE_KW }))
+      // Same offset rule as the open branch above: `bodyStart` is an
+      // index into `inner`, so add the brace offset to get the source.
+      let exprFrom = i + 1 + cont.bodyStart
       while (exprFrom < close && /\s/.test(source[exprFrom]!)) exprFrom++
       if (exprFrom < close) {
         builder.add(base + exprFrom, base + close, Decoration.mark({ class: CLS_DIRECTIVE_EXPR }))
       }
-      builder.add(base + close, absClose, Decoration.mark({ class: CLS_DIRECTIVE_SIGIL }))
+      builder.add(base + close, absClose, Decoration.mark({ class: CLS_INTERP_BRACE }))
       i = close + 1
       continue
     }
-    const closeKw = matchClose(inner)
+    const closeKw = matchCloseBody(inner)
     if (closeKw) {
       const absOpen = base + i
       const absClose = base + close + 1
-      builder.add(absOpen, absOpen + 2, Decoration.mark({ class: CLS_DIRECTIVE_SIGIL }))
+      // `{`, `/` sigil, keyword, `}`.
+      builder.add(absOpen, absOpen + 1, Decoration.mark({ class: CLS_INTERP_BRACE }))
+      builder.add(absOpen + 1, absOpen + 2, Decoration.mark({ class: CLS_DIRECTIVE_SIGIL }))
       builder.add(absOpen + 2, absClose - 1, Decoration.mark({ class: CLS_DIRECTIVE_KW }))
-      builder.add(absClose - 1, absClose, Decoration.mark({ class: CLS_DIRECTIVE_SIGIL }))
+      builder.add(absClose - 1, absClose, Decoration.mark({ class: CLS_INTERP_BRACE }))
       i = close + 1
       continue
     }
