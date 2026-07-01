@@ -10,8 +10,9 @@
 //! 1. Point the resolver at an app dir via `DECK_PROJECT_DIR` (leave
 //!    `DECK_FIRST_PARTY_VIEWS` unset — non-ship host, no first-party bucket).
 //!    The resolver also reads built bundles from `<app_dir>/.deck/`.
-//! 2. Mount `deck::router()` + `ship_views::router()` (the named-view surface
-//!    was extracted out of deck into the `ship-views` crate).
+//! 2. Mount `deck::router()`. (The named-view surface — `/_deck/view(s)/*` —
+//!    was extracted out of deck into the separate `ship-views` repo and is no
+//!    longer served here; its conformance tests moved out with it.)
 //! 3. Layer the extensions deck's handlers read — `DaemonMode` and a
 //!    `Bundler` (so a controller view gets its Rolldown bundle on demand).
 //! 4. Mount the data port (`data_port::router`) for the live-data endpoints
@@ -72,12 +73,10 @@ fn build_router(
 ) -> Router {
     router()
         // The named-view surface (`/_deck/view(s)/*`) was extracted out of deck
-        // into `ship-views`; deck's own `router()` no longer carries it. Merge it
-        // back here so the conformance view tests still exercise the feature —
-        // now served by ship-views. This is the proof the extraction kept the
-        // feature working. The view handlers read `Extension<DaemonMode>` +
-        // `Extension<Bundler>`, both layered below, so the merge needs no state.
-        .merge(ship_views::router())
+        // into the separate `ship-views` repo; deck's own `router()` no longer
+        // carries it and this harness no longer merges it back. The remaining
+        // conformance tests cover deck's own surface (assets, mutation
+        // tombstone, prod caching) plus the local data port.
         // Tokens (/api/assets/view-tokens.css), HMR (/_deck/dev/hmr), and the
         // mutation tombstone come from deck's own router since the shipd
         // UI-purge — no host wiring.
