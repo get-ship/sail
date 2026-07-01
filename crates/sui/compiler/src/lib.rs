@@ -13,7 +13,7 @@
 //!
 //! let out = compile(source, CompileOpts {
 //!     setup_url: Some("./view.ts".into()),
-//!     mode: CompileMode::View,
+//!     mode: CompileMode::Component,
 //!     source_path: None,
 //!     component_meta: None,
 //!     styles: None,
