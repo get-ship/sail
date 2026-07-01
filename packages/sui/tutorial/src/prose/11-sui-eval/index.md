@@ -19,7 +19,7 @@ import { runEval, type EvalTask, loadCatalog } from '@ship/sui-eval'
 
 const task: EvalTask = {
   description: 'A counter with +1/-1 buttons and a reset.',
-  catalog: await loadCatalog(),       // ship://components dump
+  catalog: await loadCatalog(),       // the component catalog
   spec: {
     interactions: [
       { action: 'click', selector: 'button[data-test="bump-up"]' },

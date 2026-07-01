@@ -36,9 +36,9 @@ declaration, a stale signal reference, and a render-subset escape
    returns findings, each with `line`, `col`, `severity`, `message`.
 2. **Fix** — one round-trip per error category. The agent edits the
    file (here: the editor pane) and re-diagnoses.
-3. **Compile-check** — `mcp__ship__view_compile_check({ file })` runs
-   the full lowering pipeline and surfaces anything `sui_diagnostics`
-   missed (lowering-only failures).
+3. **Compile-check** — `sui-compiler build page.sui` runs the full
+   lowering pipeline and surfaces anything the lint pass missed
+   (lowering-only failures). A non-zero exit is a hard failure.
 4. **Score** — once the view compiles, `@ship/sui-eval` runs it in
    jsdom against a behavioural spec and returns `{ score, sub, report }`.
    The agent decides whether to retry based on the score.

@@ -65,9 +65,9 @@ There is **one** source of truth — the Rust `sui_compiler` grammar — flowing
 through multiple surfaces:
 
 - **`sui-lint`** — fast per-edit binary for agents and CI
-- **`sui-compiler`** — full compile with emit, used by the deck bundler and the daemon
+- **`sui-compiler`** — full compile with emit, used by the deck bundler
 - **`sui-lsp`** — LSP server for editors over stdio
-- **WASM compiler** (`/home/madvib/dev/Ship/sui/packages/sui/compiler-wasm`) — in-browser diagnostics for the docs playground
+- **WASM compiler** (`@ship/sui-compiler-wasm`) — in-browser diagnostics for the docs and any embedded editor
 
 A human typing in the docs site, an agent running `sui-lint`, and an editor
 on your laptop all see the *same* diagnostics — because they're all the same
