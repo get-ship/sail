@@ -1,31 +1,49 @@
 <div class="doc">
   <p class="eyebrow">Core concepts</p>
-  <h1>The data seam</h1>
+  <h1>Live data</h1>
   <p class="lead">
-    Real apps run on real data. The <code>&lt;data&gt;</code> directive binds a
-    live source straight into your view as a signal — with loading and error
-    states modelled for you, so the network never leaks into your template.
+    Asynchronous data has three states — loading, error, and loaded — and
+    forgetting one is where interfaces rot. SUI makes all three explicit.
+    <code>live()</code> wraps any async source in a reactive state signal, and
+    the template renders each state on its own terms.
   </p>
 
-  <h2>Declaring a source</h2>
+  <h2>Wrap an async source</h2>
   <p>
-    A <code>&lt;data&gt;</code> binds the result of a client call to a signal.
-    Reading it gives you a tagged state — <code>loading</code>,
-    <code>error</code>, or a value — so the three cases are impossible to forget.
+    <code>live()</code> takes a function that returns a promise (or a plain
+    value) and hands back a signal of a tagged state:
+    <code>&#123; kind: 'loading' &#125;</code>, then either
+    <code>&#123; kind: 'ok', value &#125;</code> or
+    <code>&#123; kind: 'error', error &#125;</code>.
+    It starts loading immediately and settles when the source resolves.
   </p>
-  <sui-codeblock code={code.data}></sui-codeblock>
+  <sui-codeblock code={code.source}></sui-codeblock>
 
-  <h2>Live sources</h2>
+  <h2>Render the three states</h2>
   <p>
-    Mark a source <code>live</code> and the signal updates as new values stream
-    in. The same reactive rules apply: only the bindings that read it re-render.
+    <code>&#123;#while-loading of x&#125;</code> and
+    <code>&#123;#while-error err of x&#125;</code> render the pending and failed
+    states; <code>&#123;#if x().kind === 'ok'&#125;</code> guards the loaded one,
+    where <code>x().value</code> holds the data. The three cases are structural —
+    you can't render the list without having handled loading and error first.
   </p>
-  <sui-codeblock code={code.live}></sui-codeblock>
+  <sui-codeblock code={code.states}></sui-codeblock>
+
+  <h2>Live server data</h2>
+  <p>
+    For data that lives on the server and changes over time,
+    <code>data()</code> gives you a signal that's server-rendered at request
+    time and then patched over a stream — no polling, no manual wiring. The
+    server half — the endpoint, the patch feed, SSR — is <a href="/deck">deck</a>'s
+    job; the view just reads the signal.
+  </p>
+  <sui-codeblock code={code.server}></sui-codeblock>
 
   <p class="callout">
-    <strong>Hard rule:</strong> data access only happens in a
-    <code>&lt;data&gt;</code> directive — never inline in markup. The template
-    stays a pure function of state, which is what makes it predictable.
+    <strong>The state is the contract.</strong> Because the loaded value is only
+    reachable through <code>kind === 'ok'</code>, a template physically can't
+    render data it hasn't confirmed has arrived. The loading spinner and the
+    error message aren't good manners — they're the only way through.
   </p>
 
   <div class="page-nav">
