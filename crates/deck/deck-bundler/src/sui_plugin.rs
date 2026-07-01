@@ -308,40 +308,13 @@ impl Plugin for SuiPlugin {
                 ..Default::default()
             }));
         }
-        // Real .ts/.js — read the source and return it with
-        // `side_effects: Some(HookSideEffects::True)`. Two things
-        // going on:
-        //
-        // 1. We MUST return the actual source (the `code` field
-        //    is the module body; empty `code` would make the
-        //    named-import consumer see a `MissingExport`).
-        //    Returning `None` here would defer to Rolldown's
-        //    native load — but then we couldn't set the
-        //    `side_effects` field, so we'd fall back to
-        //    priority 2 (the `package.json#sideEffects` field,
-        //    which drops the body when set to `false`).
-        //
-        // 2. The forced `HookSideEffects::True` (priority 1 in
-        //    Rolldown's `normalize_side_effects`) wins over
-        //    `package.json#sideEffects` (priority 2), keeping
-        //    the body regardless of the package's tree-shaking
-        //    hint. This is the deck bundler's "respect the
-        //    importer's intent" contract: a bare `import
-        //    'x.css'` / `import './register.ts'` / `import
-        //    '@ship/<pkg>'` is a deliberate side-effect
-        //    request; the package's `sideEffects: false` is a
-        //    tree-shaking hint for tooling that can't tell the
-        //    difference between a binding import and a
-        //    side-effect import. The deck bundler can, so the
-        //    importer's intent wins.
-        //
-        // Authors who genuinely want tree-shaking still get it
-        // via named imports: a barrel's `export const USED`
-        // consumed by the entry is kept; `export const UNUSED`
-        // with no consumer is shaken (the spec's
-        // "genuinely-dead exports still shake" contract). The
-        // forcing only applies to the MODULE's body, not to its
-        // unused exports.
+        // Real .ts/.js — we read the source and override
+        // `side_effects` to `True` so the importer's bare
+        // `import 'x'` keeps the body regardless of
+        // `package.json#sideEffects: false` (sui-sideeffects
+        // footgun). Per-statement tree-shaking still applies
+        // inside the kept body, so a barrel's dead export is
+        // still shaken.
         // Skip CSS / JSON entirely — the built-in AssetModulePlugin
         // handles them via the `module_types: { ".css" -> Asset }` map
         // set on `BundlerOptions`. Returning anything here (even
@@ -354,33 +327,6 @@ impl Plugin for SuiPlugin {
         if id.ends_with(".css") || id.ends_with(".json") {
             return Ok(None);
         }
-        // Real .ts/.js — read the source and return it with
-        // `side_effects: Some(HookSideEffects::True)`. The forced
-        // `HookSideEffects::True` (priority 1 in Rolldown's
-        // `normalize_side_effects`) wins over `package.json#sideEffects`
-        // (priority 2), keeping the body regardless of the package's
-        // tree-shaking hint. This is the deck bundler's "respect the
-        // importer's intent" contract: a bare `import 'x.css'` /
-        // `import './register.ts'` / `import '@ship/<pkg>'` is a
-        // deliberate side-effect request; the package's
-        // `sideEffects: false` is a tree-shaking hint for tooling
-        // that can't tell the difference between a binding import
-        // and a side-effect import. The deck bundler can, so the
-        // importer's intent wins.
-        //
-        // We MUST return the actual source — the `code` field is the
-        // module body; empty `code` would make any named-import
-        // consumer see a `MissingExport`. Returning `None` would defer
-        // to Rolldown's native load but loses the `side_effects`
-        // override, falling back to priority 2 (the `package.json`
-        // field, which drops the body when set to `false`).
-        //
-        // Authors who genuinely want tree-shaking still get it via
-        // named imports: a barrel's `export const USED` consumed by
-        // the entry is kept; `export const UNUSED` with no consumer
-        // is shaken (the spec's "genuinely-dead exports still shake"
-        // contract). The forcing only applies to the MODULE's body,
-        // not to its unused exports.
         let module_type = if id.ends_with(".tsx") {
             ModuleType::Tsx
         } else if id.ends_with(".ts") {
@@ -390,23 +336,18 @@ impl Plugin for SuiPlugin {
         } else {
             ModuleType::Js
         };
-        // The forced `HookSideEffects::True` routes through
-        // `lazy_check_side_effects` in Rolldown's
-        // `normalize_side_effects`. With `package_json_path` not
-        // surfaced by `resolve_id` (so `lazy_check_side_effects` sees
-        // no `package.json`), the function falls through to the
-        // ANALYZED branch: any source statement with a side effect
-        // (`customElements.define(...)`, top-level `addEventListener`,
-        // etc.) keeps the module's body. Per-statement tree-shaking
-        // still applies to the kept body, so a barrel's dead export
-        // is shaken even when the body survives.
-        //
-        // Without this hook, Rolldown's default
-        // (`module_side_effects: true`) keeps the body but a
-        // `package.json#sideEffects: false` annotation on the
-        // importing package can still drop it — a documented
-        // sui-sideeffects footgun.
-        let code = std::fs::read_to_string(id).unwrap_or_default();
+        // Read the source. A read error is propagated as a
+        // build diagnostic (fail-loud per the "no silent
+        // errors" rule) — silently emitting an empty `code`
+        // would surface downstream as a confusing
+        // `MissingExport` on a named-import consumer, masking
+        // the real cause (a missing or unreadable file).
+        let code = std::fs::read_to_string(id)
+            .map_err(|e| {
+                anyhow::anyhow!(
+                    "deck-bundler: failed to read module `{id}`: {e}"
+                )
+            })?;
         Ok(Some(HookLoadOutput {
             code: code.into(),
             side_effects: Some(HookSideEffects::True),

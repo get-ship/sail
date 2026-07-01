@@ -222,6 +222,27 @@ fn detect_dropped_side_effect_modules(
             let Some(resolved) = resolve_import(&path, &spec) else {
                 continue;
             };
+            // Skip asset extensions (CSS / JSON / SVG / image /
+            // font). These don't appear in `module_paths` because
+            // they are emitted by the built-in AssetModulePlugin
+            // as hashed `assets/<name>-<hash>.<ext>` files, NOT
+            // tracked as JS module_ids in any chunk. Without
+            // this filter, a bare `import './x.css'` would
+            // resolve to the source file, find it missing from
+            // `kept`, and emit a spurious "dropped side-effect
+            // module" warning — even though the CSS is correctly
+            // emitted as an asset and the import is a deliberate
+            // side-effect request for styles, not JS.
+            //
+            // The list mirrors what the deck bundler hands to
+            // the AssetModulePlugin via `module_types` (the
+            // `.css` → Asset mapping in `app.rs` / the per-view
+            // build). The detector's contract is "JS side-effect
+            // imports" — assets are out of scope; their absence
+            // from the JS chunk graph is expected, not a bug.
+            if is_asset_extension(&resolved) {
+                continue;
+            }
             let resolved_canon = match canonicalize(&resolved) {
                 Some(p) => p,
                 None => continue,
@@ -231,8 +252,6 @@ fn detect_dropped_side_effect_modules(
                 // `import '…'` whose target is missing means the
                 // author asked for a side effect and the bundler
                 // didn't deliver. Report it regardless of whether
-                // the file has exports — a `const UNUSED = …`
-                // (an export no one uses) is a likely bug in the
                 // import form (should be a named import) AND in the
                 // bundler's analysis (the export should have been
                 // shaken; the body is gone; the side effect is
@@ -302,9 +321,28 @@ fn parse_bare_import_spec(after_kw: &str) -> Option<String> {
     }
 }
 
+/// True when `path`'s extension is one the deck bundler hands to
+/// the built-in `AssetModulePlugin` via the `module_types` map
+/// (currently `.css`; `.json` is reserved for the same pipeline
+/// in case a future mapping adds it). The detector skips these
+/// so a bare `import './x.css'` doesn't get reported as a
+/// dropped side-effect module — the asset pipeline emits it
+/// separately as `assets/<name>-<hash>.css` and the
+/// `module_paths` it doesn't appear in is expected, not a bug.
+/// Image / font / SVG are pre-emptively listed (they aren't
+/// mapped today, but if/when they are, the detector stays
+/// correct without a per-extension patch).
+fn is_asset_extension(path: &Path) -> bool {
+    const ASSET_EXTS: &[&str] = &[
+        "css", "json", "svg", "png", "jpg", "jpeg", "gif", "webp",
+        "avif", "ico", "woff", "woff2", "ttf", "otf", "eot",
+    ];
+    path.extension()
+        .and_then(|e| e.to_str())
+        .map(|e| ASSET_EXTS.contains(&e.to_ascii_lowercase().as_str()))
+        .unwrap_or(false)
+}
 
-
-/// Resolve an `import '…'` specifier against an importer's directory.
 /// Supports relative paths (`.`, `..`, absolute) and the
 /// `@ship/<name>` workspace map (the `SuiPlugin` resolves bare
 /// specifiers through this map). Anything else is left to the caller.
@@ -673,7 +711,163 @@ mod tests {
             "imported src file in module set — this is the apps/hub regression");
     }
 
-    /// A side-effect-only import — an entry that pulls in a module whose only
+    /// Unit test for the detector's asset-extension filter. A
+    /// bare `import './x.css'` (and similarly for `.json`,
+    /// `.svg`, ...) is a deliberate side-effect request for an
+    /// asset, NOT a JS module. The asset pipeline emits it
+    /// separately (the AssetModulePlugin in `app.rs` adds
+    /// `.css` → Asset, and future mappings extend the same
+    /// path for `.json`/`.svg`/...). The detector's job is
+    /// to track JS side-effect imports; assets are out of
+    /// scope. A spurious "dropped side-effect module" warning
+    /// for a correctly-emitted CSS would erode trust in the
+    /// detector's signal — every true drop gets harder to
+    /// spot against the noise.
+    ///
+    /// We can't test this through `bundle_target` because
+    /// Rolldown 1.0.3 has REMOVED experimental CSS bundling
+    /// (issue rolldown/rolldown#4271); the bundler errors
+    /// before the detector runs. The test is therefore a
+    /// direct unit test of `detect_dropped_side_effect_modules`
+    /// with synthetic input: an entry that bare-imports a
+    /// CSS file, an empty `module_paths` for non-CSS modules
+    /// (emulating the "CSS was emitted as an asset, not a
+    /// chunk" reality).
+    #[test]
+    fn detector_skips_css_bare_import() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("app")).unwrap();
+        std::fs::create_dir_all(root.join("styles")).unwrap();
+        std::fs::write(
+            root.join("app/entry.ts"),
+            "import '../styles/global.css';\nexport const ready = true;\n",
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("styles/global.css"),
+            ":root { --x: 1; }\n",
+        )
+        .unwrap();
+        let entry = root.join("app/entry.ts");
+        // No JS modules in the bundle beyond the entry —
+        // emulating "the CSS was emitted as an asset, not a
+        // JS chunk".
+        let module_paths = vec![entry.clone()];
+        let dropped = detect_dropped_side_effect_modules(
+            &module_paths,
+            &entry,
+        );
+        assert!(
+            dropped.is_empty(),
+            "detector must skip the CSS bare import — the \
+             asset pipeline handles it, so it must NOT appear \
+             in the dropped list. dropped={dropped:?}"
+        );
+    }
+
+    #[test]
+    fn detector_skips_json_bare_import() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("app")).unwrap();
+        std::fs::create_dir_all(root.join("data")).unwrap();
+        std::fs::write(
+            root.join("app/entry.ts"),
+            "import '../data/manifest.json';\nexport const ready = true;\n",
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("data/manifest.json"),
+            r#"{"name":"fixture"}"#,
+        )
+        .unwrap();
+        let entry = root.join("app/entry.ts");
+        let module_paths = vec![entry.clone()];
+        let dropped = detect_dropped_side_effect_modules(
+            &module_paths,
+            &entry,
+        );
+        assert!(
+            dropped.is_empty(),
+            "detector must skip the JSON bare import. dropped={dropped:?}"
+        );
+    }
+
+    #[test]
+    fn detector_skips_svg_bare_import() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("app")).unwrap();
+        std::fs::create_dir_all(root.join("icons")).unwrap();
+        std::fs::write(
+            root.join("app/entry.ts"),
+            "import '../icons/logo.svg';\nexport const ready = true;\n",
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("icons/logo.svg"),
+            "<svg xmlns=\"http://www.w3.org/2000/svg\"/>",
+        )
+        .unwrap();
+        let entry = root.join("app/entry.ts");
+        let module_paths = vec![entry.clone()];
+        let dropped = detect_dropped_side_effect_modules(
+            &module_paths,
+            &entry,
+        );
+        assert!(
+            dropped.is_empty(),
+            "detector must skip the SVG bare import. dropped={dropped:?}"
+        );
+    }
+
+    /// Negative-control test: a bare `import './missing.ts'`
+    /// of a JS file (NOT an asset) that exists on disk but
+    /// doesn't appear in `module_paths` IS a dropped
+    /// side-effect module and the detector must report it.
+    /// Guards against the asset filter becoming too broad
+    /// (e.g. matching `.ts` by accident).
+    #[test]
+    fn detector_reports_missing_ts_bare_import() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("app")).unwrap();
+        std::fs::create_dir_all(root.join("orphan")).unwrap();
+        std::fs::write(
+            root.join("app/entry.ts"),
+            "import '../orphan/dead.ts';\nexport const ready = true;\n",
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("orphan/dead.ts"),
+            "// a .ts file with no observable side effect\n",
+        )
+        .unwrap();
+        let entry = root.join("app/entry.ts");
+        // The .ts file isn't in the bundle (the analyzer
+        // finds no side effect, so the body is dropped).
+        let module_paths = vec![entry.clone()];
+        let dropped = detect_dropped_side_effect_modules(
+            &module_paths,
+            &entry,
+        );
+        let ts_drops: Vec<_> = dropped
+            .iter()
+            .filter(|d| {
+                d.module_path
+                    .extension()
+                    .is_some_and(|e| e == "ts")
+            })
+            .collect();
+        assert!(
+            !ts_drops.is_empty(),
+            "detector must still report a .ts bare import as a drop — \
+             the asset filter must not over-match. dropped={dropped:?}"
+        );
+    }
+
+
     /// effect is a top-level `customElements.define(...)` — must NOT silently
     /// disappear. The default Rolldown setting (`module_side_effects = true`)
     /// keeps the module's body in the bundle; the deck bundler must NOT
@@ -902,7 +1096,78 @@ mod tests {
         );
     }
 
-    /// Sanity check that the new behavior doesn't over-correct: a barrel
+    /// Direct unit test for `SuiPlugin::load`'s read-error
+    /// path. A failed read must fail-loud (the "no silent
+    /// errors" rule) — silently emitting an empty `code`
+    /// would surface downstream as a confusing
+    /// `MissingExport` on a named-import consumer, masking
+    /// the real cause (a missing or unreadable file).
+    ///
+    /// This is a unit test, not a `bundle_target`
+    /// integration test: Rolldown's resolve step catches
+    /// a missing relative import with a "Module not found"
+    /// error BEFORE the load hook runs, so the
+    /// integration path can't reach the load hook's
+    /// read-failure branch. Calling the hook directly
+    /// with a path that does not exist on disk exercises
+    /// the read-error propagation specifically.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn load_hook_propagates_read_error_for_missing_module() {
+        use crate::sui_plugin::SuiPlugin;
+        use rolldown::plugin::{
+            HookLoadArgs, LoadPluginContext, Plugin, PluginContext,
+            SharedLoadPluginContext,
+        };
+        use rolldown_common::ModuleIdx;
+        // The SuiPlugin's `load` hook doesn't read the
+        // context (it only uses `args.id`), so a
+        // `PluginContext::new_napi_context()` is a valid
+        // stand-in for the test — it's the only
+        // public constructor the type exposes.
+        let ctx: SharedLoadPluginContext =
+            std::sync::Arc::new(LoadPluginContext::new(
+                PluginContext::new_napi_context(),
+                ModuleIdx::new(0),
+            ));
+        let plugin = SuiPlugin {
+            repo_root: PathBuf::from("/nonexistent"),
+            emit_component_imports: false,
+            component_index: Default::default(),
+            shadowed_tags: Default::default(),
+            component_roots: Default::default(),
+        };
+        // A path that does not exist on disk. The
+        // `read_to_string` call in `load` will fail; the
+        // hook must propagate the error, NOT return an
+        // `Ok(HookLoadOutput { code: "", .. })` that
+        // would silently empty the module.
+        let missing_str: &str = "/tmp/this-file-definitely-does-not-exist-deck-bundler-1234567.ts";
+        let args = HookLoadArgs {
+            id: missing_str,
+            asserted_module_type: None,
+            module_idx: ModuleIdx::new(0),
+        };
+        let result = plugin.load(ctx, &args).await;
+        let err = result.expect_err(
+            "load hook must fail-loud on a missing file — \
+             silent empty bodies mask missing files as \
+             MissingExport errors downstream",
+        );
+        let err_str = format!("{err}");
+        assert!(
+            err_str.contains("failed to read module"),
+            "load hook error must come from the read \
+             failure ('failed to read module ...'); a \
+             silent empty body would mask the cause. got: {err_str}"
+        );
+        assert!(
+            err_str.contains(missing_str),
+            "load hook error must name the missing file path; got: {err_str}"
+        );
+    }
+
+
+
     /// entry that exports a name with no consumer in the entry must still
     /// be tree-shaken (the constant must NOT appear in the bundle). This
     /// is the contract tree-shaking MUST keep: only side-effect-only
