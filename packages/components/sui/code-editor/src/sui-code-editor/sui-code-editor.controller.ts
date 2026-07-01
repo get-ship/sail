@@ -199,7 +199,27 @@ export default controller<Scope>({
 
     Object.defineProperty(host, 'value', {
       get: () => view?.state.doc.toString() ?? valSig(),
-      set: (v: string) => { valSig.set(v ?? '') },
+      // Apply directly: sync the signal AND push the document to the
+      // EditorView in the same tick. The reactive effect below is the
+      // source of truth for subsequent user edits, but the initial
+      // host-driven assignment (e.g. the tutorial boot wiring the
+      // first lesson) must populate the view synchronously — otherwise
+      // CodeMirror shows an empty line "1" while the effect queues a
+      // microtask that never observes a non-empty valSig.
+      set: (v: string) => {
+        const next = v ?? ''
+        if (view) {
+          const current = view.state.doc.toString()
+          if (current !== next) {
+            suppressUpdate = true
+            view.dispatch({
+              changes: { from: 0, to: view.state.doc.length, insert: next },
+            })
+            suppressUpdate = false
+          }
+        }
+        valSig.set(next)
+      },
       configurable: true,
       enumerable: false,
     })
