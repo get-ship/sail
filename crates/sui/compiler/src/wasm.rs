@@ -100,6 +100,7 @@ pub fn compile(source: &str, opts_json: &str) -> Result<JsValue, JsValue> {
         component_meta,
         emit_dts: false,
         emit_component_imports: false,
+        lint_overrides: Vec::new(),
     };
 
     let result = match native_compile(source, opts) {
