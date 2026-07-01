@@ -4,32 +4,41 @@
   pipeline content-hashes the file and adds a <link> in the served HTML.
 */
 
-/* Full-screen tutorial. The shared .doc column (max-width 46rem) would squish
-   the two panes into a card — override it (higher specificity than base.css's
-   .doc) so the editor + preview fill the width. Header + prose stay readable. */
-.doc.tut-page {
+/* Full-screen split: lesson prose on the LEFT, editor + preview STACKED in a
+   column on the RIGHT (the original marketing-site layout). Fills the viewport
+   below the top bar. */
+.tut-page.tut-split {
+  display: grid;
+  grid-template-columns: minmax(0, 30rem) minmax(0, 1fr);
+  gap: 0;
   max-width: none;
-  padding: var(--space-5) var(--space-6);
+  height: calc(100vh - 3.5rem);
 }
-.tut-page > .tut-header,
-.tut-page > .prose-wrap { max-width: 54rem; }
-.tut-page > .tut-app-root { min-height: 72vh; }
+.tut-lesson {
+  overflow-y: auto;
+  padding: var(--space-6);
+  border-right: 1px solid var(--border);
+  max-width: none;
+}
 
 .tut-header {
   margin-bottom: var(--space-4);
 }
 .tut-title {
   margin: 0;
-  font-size: clamp(1.7rem, 3.5vw, 2.3rem);
+  font-size: clamp(1.5rem, 3vw, 2rem);
 }
 .tut-header .lead { margin: var(--space-2) 0 0; }
 
 .tut-app-root {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--space-4);
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-3);
   align-items: stretch;
-  margin-top: var(--space-5);
+  padding: var(--space-4);
+  min-height: 0;
+  height: 100%;
 }
 /* grid items must shrink below intrinsic width or wide code lines force the
    whole page to scroll horizontally. */

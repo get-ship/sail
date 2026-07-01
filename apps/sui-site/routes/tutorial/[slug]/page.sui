@@ -16,15 +16,17 @@
   Sibling style.css carries the visual rules (the bundler drops inline
   `<style>` in a `page.sui`).
 -->
-<div class="doc tut-page">
-  <header class="tut-header">
-    <p class="eyebrow">Tutorial</p>
-    <h1 class="tut-title">{title()}</h1>
-    <p class="lead">{description()}</p>
-  </header>
+<div class="tut-page tut-split">
+  <div class="doc tut-lesson">
+    <header class="tut-header">
+      <p class="eyebrow">Tutorial</p>
+      <h1 class="tut-title">{title()}</h1>
+      <p class="lead">{description()}</p>
+    </header>
 
-  <div class="prose-wrap">
-    <sui-prose html={proseHtml()}></sui-prose>
+    <div class="prose-wrap">
+      <sui-prose html={proseHtml()}></sui-prose>
+    </div>
   </div>
 
   <div class="tut-app-root" bind:this={rootEl}>
