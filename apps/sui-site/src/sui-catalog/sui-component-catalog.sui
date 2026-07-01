@@ -1,232 +1,221 @@
 <!--
-  <sui-component-catalog> — `/components` index for the SUI site.
+  <sui-component-catalog> — the `/components` gallery index for the SUI site.
 
-  Renders the build-time `COMPONENTS_CATALOG` (a flat CEM aggregated from
-  every `<sui-*>` pack the site depends on), grouped by source package, with
-  live previews of every component actually registered in the bundle, the CEM
-  metadata (props / slots / events), and one-click links into a deep viewer.
+  A centered column: a hero (eyebrow + display title + lead), a centered
+  search field, a centered row of pack-filter chips, then the component
+  card grid. Every component links to its /components/<tag> detail page and
+  shows a LIVE specimen mounted into a framed preview stage.
 
-  Sourced from `apps/sui-site/components.gen.ts` — emitted by `deck build`'s
-  build_assets pass. Framework-pure (no ship-platform deps).
+  Layout is the library dogfooding itself — structure comes from primitives,
+  never bespoke CSS:
+    <sui-stack>    the vertical page rhythm (hero → search → chips → grid)
+    <sui-cluster>  centers the search field, the pack chips, and each card's
+                   meta row + preview stage
+    <sui-grid>     the responsive auto-fill card gallery (min="lg" gap="4")
 
-  Layout: this view is the dogfood for the layout primitives — every
-  grouping reads from the library:
-    <sui-cluster>   header (h1 + count) and chip lists
-    <sui-stack>     cell body (tag / desc / preview / meta) and meta list
-    <sui-grid>      the gallery itself, with per-cell span attributes
-                    (`data-col-span` / `data-row-span`) so a calendar
-                    card is 2×2 and a chip card is 1×1 — content-aware,
-                    not uniform.
-  Only the surface chrome (border, hover tint, font tokens) lives in
-  this stylesheet; structure is the primitives'.
+  Filtering is reactive without re-rendering: the controller exposes a
+  `query` signal (two-way bound to <sui-input>) and an `activePack` signal;
+  a card's `visible(entry)` derives from both and drives `attr:hidden`, so
+  the one-shot live-preview mount (in the controller) is never disturbed.
+
+  Data source: the build-time CEM at apps/sui-site/components.gen.ts. Only
+  the visual surface (framing, tints, font tokens) lives in this stylesheet;
+  every value is a design token — no literal colours, no ad-hoc grid/flex.
 -->
 <style>
   :host {
     display: block;
-    /* Hover tint — reads the pre-computed --tone-primary-bg ramp
-       (a 14% primary mix defined in tokens.css) so the formula
-       doesn't drift across primitives. */
-    --cat-cell-hover: var(--tone-primary-bg);
+    max-width: 74rem;
+    margin: 0 auto;
+    padding: var(--space-8) var(--space-6);
   }
 
-  .cat-head {
-    margin-bottom: var(--space-5);
-  }
-  .cat-head h1 {
-    font-family: var(--font-display);
-    font-size: var(--text-3xl);
-    font-weight: var(--font-weight-bold);
-    letter-spacing: var(--tracking-tight);
-    margin: 0;
-    color: var(--foreground);
-  }
-  .cat-sub {
+  /* ── Hero ──────────────────────────────────────────────────────────── */
+  .hero { text-align: center; }
+  .eyebrow {
+    display: block;
     font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    color: var(--muted-foreground);
-  }
-
-  .pack {
-    margin-bottom: var(--space-6);
-  }
-  .pack-h {
-    align-items: baseline;
-    gap: var(--space-2);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+    color: var(--primary);
     margin-bottom: var(--space-3);
-    padding-bottom: var(--space-2);
-    border-bottom: 1px solid var(--border);
   }
-  .pack-name {
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    font-weight: var(--font-weight-semibold);
+  .title {
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 4vw, 2.85rem);
+    font-weight: 800;
+    letter-spacing: var(--tracking-tight);
+    line-height: 1.05;
     color: var(--foreground);
+    margin: 0 0 var(--space-4);
   }
-  .pack-count {
+  .lead {
+    color: var(--muted-foreground);
+    font-size: var(--text-lg);
+    line-height: var(--leading-normal);
+    max-width: 52ch;
+    margin: 0 auto;
+  }
+
+  /* ── Search field ──────────────────────────────────────────────────── */
+  .search {
+    width: 35rem;
+    max-width: 100%;
+  }
+  .search-glyph {
+    color: var(--muted-foreground);
+    font-size: var(--text-md);
+  }
+
+  /* ── Pack chips ────────────────────────────────────────────────────── */
+  .chip {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--muted-foreground);
-  }
-
-  /* Per-cell chrome. Layout (column/row spans + grid-auto-flow) lives
-     in <sui-grid>; only the visual surface lives here. The cell body
-     uses <sui-stack> for vertical rhythm. */
-  .cell {
-    display: block;
-    padding: var(--space-3);
     background: var(--surface-1);
     border: 1px solid var(--border);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-full);
+    padding: var(--space-1) var(--space-3);
+    cursor: pointer;
+    transition:
+      border-color var(--duration-fast) var(--ease-out),
+      color var(--duration-fast) var(--ease-out),
+      background var(--duration-fast) var(--ease-out);
+  }
+  .chip:hover { border-color: var(--border-strong); color: var(--foreground); }
+  .chip-on {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-color: var(--primary);
+  }
+  .chip-count { margin-left: var(--space-2); opacity: 0.7; }
+
+  /* ── Cards ─────────────────────────────────────────────────────────── */
+  .cell {
+    display: block;
     text-decoration: none;
     color: inherit;
-    transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
-    min-height: 0;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    transition:
+      transform var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
   }
+  .cell[hidden] { display: none; }
   .cell:hover {
     border-color: var(--primary);
-    background: var(--cat-cell-hover);
-    transform: translateY(-1px);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
   }
 
+  /* Preview stage — bounded, tinted, clipped. <sui-cluster> centers the
+     mounted specimen; this rule owns the framed surface. */
+  .stage {
+    height: 12rem;
+    overflow: hidden;
+    padding: var(--space-3);
+    background: color-mix(in oklch, var(--primary) 6%, transparent);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .cell-foot { padding: var(--space-3) var(--space-4) var(--space-4); }
   .cell-tag {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    font-weight: var(--font-weight-semibold);
-    color: var(--primary);
-    line-height: var(--leading-tight);
+    color: var(--foreground);
   }
-
-  .cell-desc {
+  .cell-props {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+  }
+  .cell-blurb {
+    margin: var(--space-2) 0 0;
     font-size: var(--text-xs);
     color: var(--muted-foreground);
     line-height: var(--leading-normal);
-    margin: 0;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
   }
 
-  /* The preview cell: the area that holds the mounted custom element.
-     Bounded — small components stay centered, big components opt into
-     wider/taller cells. `min-height` keeps the cell consistent; the
-     inner element overflows with scroll if a specimen is taller than
-     the box (overflow: auto on the parent catches the rest). */
-  .cell-preview {
-    /* Size to the SPECIMEN's own content — a small floor for a bare element,
-       then the component's natural height drives the cell. No fixed per-span
-       heights: sui-grid's dense flow packs the variable heights (calendar
-       tall, chip short) so nothing swims in an oversized box. */
-    min-height: var(--space-8);
-    padding: var(--space-2) var(--space-3);
-    background: var(--surface-2);
-    border: 1px dashed var(--border);
-    border-radius: var(--radius-sm);
-    overflow: auto;
-  }
-  .cell-preview[data-compact] {
-    min-height: var(--space-6);
-    padding: var(--space-2);
-  }
+  /* Empty / fallback states */
   .preview-empty {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--muted-foreground);
   }
-
-  .meta {
-    margin: 0;
-  }
-  .meta-label {
-    flex: 0 0 var(--space-8);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
+  .no-results {
+    text-align: center;
     color: var(--muted-foreground);
-  }
-  .chip {
     font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--foreground);
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 0 var(--space-1);
-    line-height: 1.5;
-  }
-  .meta-none {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--muted-foreground);
+    font-size: var(--text-sm);
+    padding: var(--space-6) 0;
   }
 </style>
 
-<sui-cluster class="cat-head" gap="3" data-test="catalog-head">
-  <h1>Component library</h1>
-  <span class="cat-sub">{totalComponents()} components · {totalPacks()} packs</span>
-</sui-cluster>
+<sui-stack class="page" gap="6" data-test="catalog">
+  <div class="hero" data-test="catalog-hero">
+    <span class="eyebrow">— {totalComponents()} components · {totalPacks()} packs</span>
+    <h1 class="title">Component library</h1>
+    <p class="lead">Every primitive in the Ship set. Batteries-included, on-brand, and compiled to standard web components.</p>
+  </div>
 
-{#for group of groups() key={group.id}}
-  <section class="pack" data-test="catalog-pack" attr:data-pack={group.pkg}>
-    <sui-cluster class="pack-h" gap="2">
-      <span class="pack-name">{group.pkg}</span>
-      <span class="pack-count">{group.count}</span>
-    </sui-cluster>
-    <sui-grid min="md" gap="3" flow="dense">
-      {#for c of group.components key={c.tag}}
-        <a
-          class="cell"
-          data-test="catalog-cell"
-          attr:data-tag={c.tag}
-          attr:data-size={c.size}
-          attr:data-col-span={c.size === 'wide' ? '2' : null}
-          attr:data-row-span={c.size === 'tall' ? '2' : null}
-          href={'/components/' + c.tag}
-        >
-          <sui-stack gap="2">
-            <span class="cell-tag" data-test="catalog-tag">&lt;{c.tag}&gt;</span>
-            {#if c.description}
-              <p class="cell-desc">{c.description}</p>
-            {/if}
-            <sui-cluster class="cell-preview" align="center" justify="center" attr:data-preview-for={c.tag} attr:data-compact={c.size === 'compact'}></sui-cluster>
-            <dl class="meta">
-              <sui-stack gap="1">
-                <sui-cluster class="meta-row" gap="2" align="baseline">
-                  <dt class="meta-label">props</dt>
-                  <dd class="meta-chips">
-                    {#if c.props.length}
-                      <sui-cluster gap="1">
-                        {#for p of c.props key={p.name}}<span class="chip" attr:title={p.type}>{p.name}</span>{/for}
-                      </sui-cluster>
-                    {:else}
-                      <span class="meta-none">—</span>
-                    {/if}
-                  </dd>
-                </sui-cluster>
-                {#if c.slots.length}
-                  <sui-cluster class="meta-row" gap="2" align="baseline">
-                    <dt class="meta-label">slots</dt>
-                    <dd class="meta-chips">
-                      <sui-cluster gap="1">
-                        {#for s of c.slots key={s.name}}<span class="chip">{s.name}</span>{/for}
-                      </sui-cluster>
-                    </dd>
-                  </sui-cluster>
-                {/if}
-                {#if c.events.length}
-                  <sui-cluster class="meta-row" gap="2" align="baseline">
-                    <dt class="meta-label">events</dt>
-                    <dd class="meta-chips">
-                      <sui-cluster gap="1">
-                        {#for e of c.events key={e.name}}<span class="chip">{e.name}</span>{/for}
-                      </sui-cluster>
-                    </dd>
-                  </sui-cluster>
-                {/if}
-              </sui-stack>
-            </dl>
-          </sui-stack>
-        </a>
-      {/for}
-    </sui-grid>
-  </section>
-{/for}
+  <sui-cluster class="search-row" justify="center">
+    <sui-input
+      class="search"
+      type="search"
+      tone="primary"
+      placeholder="Search 74 components…"
+      aria-label="Search components"
+      on:sui-input={onSearch}
+      data-test="catalog-search"
+    >
+      <span slot="leading" class="search-glyph" aria-hidden="true">⌕</span>
+    </sui-input>
+  </sui-cluster>
+
+  <sui-cluster class="packs" justify="center" gap="2" data-test="catalog-packs">
+    {#for p of packs() key={p.id}}
+      <button
+        type="button"
+        class="chip"
+        class:chip-on={activePack() === p.id}
+        on:click={() => setPack(p.id)}
+        attr:data-pack={p.id}
+        data-test="catalog-pack-chip"
+      >
+        <span class="chip-label">{p.label}</span>
+        <span class="chip-count">{p.count}</span>
+      </button>
+    {/for}
+  </sui-cluster>
+
+  <sui-grid class="grid" min="lg" gap="4" data-test="catalog-grid">
+    {#for c of components() key={c.tag}}
+      <a
+        class="cell"
+        href={'/components/' + c.tag}
+        attr:data-tag={c.tag}
+        attr:hidden={c.hidden() ? true : null}
+        data-test="catalog-cell"
+      >
+        <sui-cluster class="stage" align="center" justify="center" attr:data-preview-for={c.tag}></sui-cluster>
+        <div class="cell-foot">
+          <sui-cluster class="cell-meta" justify="between" align="baseline" gap="2">
+            <span class="cell-tag" data-test="catalog-tag">{c.tag}</span>
+            <span class="cell-props">{c.propCount} props</span>
+          </sui-cluster>
+          {#if c.description}
+            <p class="cell-blurb">{c.description}</p>
+          {/if}
+        </div>
+      </a>
+    {/for}
+  </sui-grid>
+
+  {#if visibleCount() === 0}
+    <p class="no-results" data-test="catalog-empty">No components match “{query()}”.</p>
+  {/if}
+</sui-stack>
