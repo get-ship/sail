@@ -35,15 +35,43 @@ prop:name={value}             pass a prop down to a child component`,
 {#while-error err of users} {err.message} {/while-error}
 {#if users().kind === 'ok'} … users().value … {/if}`,
 
-  runtime: `import { signal, derived, effect, batch, untrack, onCleanup } from '@ship/sui-runtime'
+  runtime: `import { signal, derived, effect, batch, untrack, onCleanup, selector, debounce } from '@ship/sui-runtime'
 
 const count = signal(0)              // () to read, .set(v) / .set(fn) to write
 const doubled = derived(() => count() * 2)   // auto-tracked, lazy, cached
 const dispose = effect(() => { … return cleanup })  // runs on dep change
 
-batch(() => { … })                   // coalesce writes into one update
+batch(() => { … })                   // coalesce writes into one update pass
 untrack(() => sig())                 // read without subscribing
-onCleanup(() => …)                   // teardown on unmount`,
+onCleanup(() => …)                   // teardown on unmount
+const isActive = selector(activeId)  // isActive(id): O(1) membership, no over-notify
+const q = debounce(query, 200)       // a derived signal that lags by N ms`,
+
+  liveHelpers: `import { live, unwrap, unwrapOr } from '@ship/sui-runtime'
+
+const users = live(() => fetch('/api/users').then((r) => r.json()))
+// users() -> { kind: 'loading' | 'error' | 'ok', value?, error? }
+unwrap(users)              // the value, or undefined until 'ok'
+unwrapOr(users, [])        // the value, or a fallback`,
+
+  hooks: `import { useForm, useFilteredList, useSelection } from '@ship/sui-runtime'
+
+// controller hooks — composable state bundles, spread into scope()
+useForm({ initial: { name: '', email: '' }, submit })  // + pending + lastError
+useFilteredList(items, (item, q) => item.name.includes(q))  // + { query }
+useSelection(items, (item) => item.id)                      // + { selectedId }`,
+
+  context: `import { shared, provide, useShared } from '@ship/sui-runtime'
+
+// share a signal down a subtree, no prop drilling
+provide(host, 'theme', shared(themeSignal))   // in a parent's mount(state, host)
+const theme = useShared(host, 'theme')        // in a descendant's mount`,
+
+  advanced: `import { defineComponent, morph } from '@ship/sui-runtime'
+
+defineComponent('sui-widget', schema, factory)  // register a custom element
+//   the compiler emits this — you rarely call it by hand
+morph(targetEl, htmlOrElement)   // patch the DOM in place to match a new tree`,
 
   declarations: `<!-- component props: name, type, default, enum values -->
 <prop name="tone" values="default|primary|accent" default="default" />
