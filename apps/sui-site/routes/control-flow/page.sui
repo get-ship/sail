@@ -16,6 +16,8 @@
   <p>Render a branch when a signal is truthy. The <code>&#123;:else&#125;</code> branch is
     optional. The whole block toggles in place — no diffing of unrelated parts
     of the tree.</p>
+  <sui-codeblock code={code.if}></sui-codeblock>
+
   <h2>&#123;#for&#125; · loop render</h2>
   <p>Iterate over an array signal. The <code>key</code> attribute tells the
     runtime how to identity items between renders; supply a unique primitive
@@ -37,7 +39,7 @@
   </p>
 
   <div class="page-nav">
-    <a class="btn" href="/components-controllers">← Components &amp; controllers</a>
-    <a class="btn btn-primary" href="/data-binding">Data binding →</a>
+    <a class="btn" href="/reactivity">← Reactivity</a>
+    <a class="btn btn-primary" href="/lifecycle-hooks">Lifecycle →</a>
   </div>
 </div>

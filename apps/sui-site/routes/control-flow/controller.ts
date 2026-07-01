@@ -1,42 +1,32 @@
 import { controller } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 
+// Each sample is compile-checked against the in-repo sui-compiler (paired with
+// a controller declaring isOpen/items/status). Note the {#for} tag closes with
+// }} — a dropped brace is the classic control-flow mistake.
 const code = {
   if: [
-    '<!-- {#if} splices one branch into the surrounding template. -->',
+    '<!-- {#if} splices one branch in place — no wrapper element. -->',
     '{#if isOpen()}',
-    '  <section class="panel">',
-    '    <h3>Open</h3>',
-    '    <p>...content...</p>',
-    '  </section>',
+    '  <section class="panel"><h3>Details</h3></section>',
     '{:else}',
-    '  <button on:click={() => isOpen.set(true)}>Open</button>',
+    '  <button on:click={() => isOpen.set(true)}>Show details</button>',
     '{/if}',
   ].join('\n'),
   for: [
-    '<!-- items is a signal of an array. key= is required for stable reorders. -->',
+    '<!-- items() is a signal of an array. key= is required for stable reorders. -->',
     '<ul>',
-    '  {#for item of items() key={item.id}',
-    '    <li>',
-    '      <input',
-    '        value={item.text}',
-    '        on:input={(e) => item.text = e.target.value}',
-    '      />',
-    '      <button on:click={() => remove(item.id)}>×</button>',
-    '    </li>',
+    '  {#for item of items() key={item.id}}',
+    '    <li>{item.label}</li>',
     '  {/for}',
     '</ul>',
   ].join('\n'),
   match: [
+    '<!-- match a discriminant; {:default} catches the rest. -->',
     '{#match status()}',
-    "  {:case 'loading'}",
-    '    <sui-spinner></sui-spinner>',
-    "  {:case 'error'}",
-    '    <sui-alert tone="destructive">{error().message}</sui-alert>',
-    "  {:case 'ok'}",
-    '    <ul>{#for x of data() key={x.id}<li>{x.name}</li>{/for}</ul>',
-    '  {:default}',
-    '    <sui-empty-state>No data yet</sui-empty-state>',
+    "  {:case 'loading'}<p class=\"muted\">Loading…</p>",
+    "  {:case 'ready'}<p>Done</p>",
+    '  {:default}<p class="muted">Idle</p>',
     '{/match}',
   ].join('\n'),
 }
