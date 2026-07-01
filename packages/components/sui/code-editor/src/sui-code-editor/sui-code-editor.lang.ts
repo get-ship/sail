@@ -9,7 +9,7 @@ import type { Extension } from '@codemirror/state'
 
 export type SupportedLanguage =
   | 'yaml' | 'json' | 'jsonc' | 'javascript' | 'typescript'
-  | 'rust' | 'markdown' | 'html' | 'css' | 'shell' | 'python'
+  | 'rust' | 'markdown' | 'html' | 'css' | 'shell' | 'python' | 'sui'
 
 export async function loadLanguage(lang: string): Promise<Extension> {
   switch (lang as SupportedLanguage) {
@@ -38,6 +38,9 @@ export async function loadLanguage(lang: string): Promise<Extension> {
       const { markdown } = await import('@codemirror/lang-markdown')
       return markdown()
     }
+    // SUI is HTML-shaped (tags, attributes, {expr} + {#directives}); base the
+    // highlighting on the HTML mode so tags/attributes/text are colored.
+    case 'sui':
     case 'html': {
       const { html: htmlLang } = await import('@codemirror/lang-html')
       return htmlLang()
