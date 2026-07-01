@@ -34,9 +34,16 @@ const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 function resolveCompiler(): { cmd: string; preArgs: string[] } {
   const envBin = process.env.SUI_COMPILER
   if (envBin && existsSync(envBin)) return { cmd: envBin, preArgs: [] }
-  const suiBin = 'sui/target/debug/sui-compiler'
-  if (existsSync(suiBin)) return { cmd: suiBin, preArgs: [] }
-  return { cmd: 'cargo', preArgs: ['run', '--manifest-path', 'sui/Cargo.toml', '-p', 'sui-compiler', '--'] }
+  // Prebuilt binary. This repo now OWNS both the eval and the compiler, so the
+  // in-repo `target/` wins; the legacy ship-sibling `sui/target/` stays as a
+  // fallback for a ship-orchestrated run.
+  for (const bin of ['target/debug/sui-compiler', 'target/release/sui-compiler', 'sui/target/debug/sui-compiler']) {
+    if (existsSync(bin)) return { cmd: bin, preArgs: [] }
+  }
+  // cargo fallback (rare — the eval prefers the prebuilt binary). In-repo
+  // manifest when the sui-compiler crate lives here, else the sibling checkout.
+  const manifest = existsSync('crates/sui/compiler/Cargo.toml') ? 'Cargo.toml' : 'sui/Cargo.toml'
+  return { cmd: 'cargo', preArgs: ['run', '--manifest-path', manifest, '-p', 'sui-compiler', '--'] }
 }
 const COMPILER = resolveCompiler()
 
