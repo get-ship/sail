@@ -16,9 +16,19 @@
 use crate::diagnostics::{CompileError, Span};
 use crate::ir::expr::Expr;
 
-/// Method names allowed when called with arguments. Covers the real
-/// usage in `views/agents/view.sui` (`.slice`, `.length`) plus
-/// the natural read-only collection helpers.
+/// Method names allowed when called with arguments.
+///
+/// Principle: side-effect-free, deterministic methods on primitives/collections
+/// — no mutation, no I/O, no eval-shaped args. The list covers the natural
+/// idioms agents reach for in templates (`count.toFixed(2)`, `name.startsWith(prefix)`,
+/// `xs.includes(x)`, `xs.find(pred)`) so authors don't bounce through a controller
+/// signal just to format a value.
+///
+/// Mutation-shaped methods (`push`, `pop`, `splice`, `sort`, `reverse`, `fill`,
+/// `copyWithin`, …) deliberately stay out — they alias the receiver and would
+/// silently mutate controller state from a render path. Forbidden keywords
+/// (`new`, `await`, `yield`, `this`, …) are rejected on an independent path
+/// in `check_call` / `FORBIDDEN_KEYWORDS`.
 const METHOD_ALLOWLIST: &[&str] = &[
     "slice", "map", "filter", "includes", "toString", "length", "keys", "values", "entries",
     // Read-only Set / Map membership accessors — `selected.has(id)` /
@@ -32,6 +42,16 @@ const METHOD_ALLOWLIST: &[&str] = &[
     // the natural shape and used to reject; documenting the workaround in SKILL is
     // strictly worse than admitting it.
     "toFixed",
+    // String predicates / search — read-only, no I/O, no mutation.
+    "startsWith", "endsWith", "indexOf", "lastIndexOf",
+    // String formatters / shapers — pure, deterministic, no I/O.
+    "trim", "trimStart", "trimEnd", "toLowerCase", "toUpperCase",
+    "padStart", "padEnd", "repeat", "charAt", "charCodeAt", "concat",
+    // Array / collection read-only access — same posture as the already-allowlisted
+    // `map` / `filter`: callbacks are passed through verbatim, but the call sites
+    // are restricted to method calls on identifiers / chains (not bare `expr`
+    // calls), so the callback body itself is checked by the surrounding rules.
+    "at", "join", "find", "findIndex", "some", "every", "flat",
 ];
 
 /// Forbidden keywords that may appear bare in an expression.

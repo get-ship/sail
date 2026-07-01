@@ -95,6 +95,58 @@ fn allowlisted_method_calls() {
 }
 
 #[test]
+fn pure_method_allowlist_broadening() {
+    // String read-only predicates / search.
+    ok("name.startsWith('a')");
+    ok("name.endsWith('z')");
+    ok("name.includes('mid')");
+    ok("s.indexOf(':')");
+    ok("s.lastIndexOf(':')");
+    // String formatters — no mutation, no I/O.
+    ok("name.trim()");
+    ok("name.trimStart()");
+    ok("name.trimEnd()");
+    ok("name.toLowerCase()");
+    ok("name.toUpperCase()");
+    ok("name.padStart(4, '0')");
+    ok("name.padEnd(4, '0')");
+    ok("name.repeat(2)");
+    ok("name.charAt(0)");
+    ok("name.charCodeAt(0)");
+    ok("a.concat(b)");
+    // Array read-only search / iteration — deterministic callbacks only,
+    // same posture as the already-allowlisted `map` / `filter`.
+    ok("xs.at(0)");
+    ok("xs.join(',')");
+    ok("xs.find(isActive)");
+    ok("xs.findIndex(isActive)");
+    ok("xs.some(isActive)");
+    ok("xs.every(isActive)");
+    ok("xs.flat()");
+}
+
+#[test]
+fn mutators_and_forbidden_constructs_still_reject() {
+    // Mutators stay out — they would alias the receiver. Use non-empty arg
+    // lists so the call reaches the allowlist check; bare `xs.sort()` looks
+    // like a zero-arg signal read and is treated on its own path.
+    let push = err("xs.push(3)");
+    assert!(push.contains("push"), "msg: {push}");
+    let splice = err("xs.splice(0, 1)");
+    assert!(splice.contains("splice"), "msg: {splice}");
+    let fill = err("xs.fill(0)");
+    assert!(fill.contains("fill"), "msg: {fill}");
+    let copy = err("xs.copyWithin(0)");
+    assert!(copy.contains("copyWithin"), "msg: {copy}");
+    // Forbidden bare keywords stay out regardless of method-allowlist
+    // changes — these are independent rejection paths.
+    let new_kw = err("new Date()");
+    assert!(new_kw.contains("`new`"), "msg: {new_kw}");
+    let this_kw = err("this.value");
+    assert!(this_kw.contains("`this`"), "msg: {this_kw}");
+}
+
+#[test]
 fn agents_view_real_expressions() {
     // Real expressions lifted from views/agents/view.sui.
     ok("total()");
