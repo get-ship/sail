@@ -185,6 +185,10 @@
       <a href="/composition" class:active={path() === '/composition'}>Composition</a>
       <a href="/tooling" class:active={path() === '/tooling'}>Tooling</a>
     </div>
+    <div class="group">
+      <h4>Reference</h4>
+      <a href="/reference" class:active={path() === '/reference'}>Directives &amp; API</a>
+    </div>
    </nav>
   <main class="content" part="content">
     <slot name="route"></slot>
