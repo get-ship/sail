@@ -44,12 +44,12 @@
     background: var(--surface-1);
     box-shadow: var(--shadow-xs);
     font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
-    font-size: var(--text-sm, 13px);
+    font-size: var(--text-sm);
     line-height: 1.6;
   }
   :host([hidden]) { display: none; }
-  :host([size="sm"]) { font-size: var(--text-xs, 11px); line-height: 1.5; }
-  :host([size="lg"]) { font-size: var(--text-base, 14px); line-height: 1.7; }
+  :host([size="sm"]) { font-size: var(--text-xs); line-height: 1.5; }
+  :host([size="lg"]) { font-size: var(--text-base); line-height: 1.7; }
 
   :host([tone="info"])        { --ring-color: var(--tone-info-border); }
   :host([tone="success"])     { --ring-color: var(--tone-success-border); }

@@ -167,7 +167,15 @@
       <a href="/data-binding" class:active={path() === '/data-binding'}>Data binding</a>
       <a href="/data" class:active={path() === '/data'}>Live data</a>
     </div>
-  </nav>
+    <div class="group">
+      <h4>Guides</h4>
+      <a href="/theming" class:active={path() === '/theming'}>Theming</a>
+      <a href="/styling" class:active={path() === '/styling'}>Styling</a>
+      <a href="/composition" class:active={path() === '/composition'}>Composition</a>
+      <a href="/tooling" class:active={path() === '/tooling'}>Tooling</a>
+      <a href="/compare" class:active={path() === '/compare'}>Compare to React, Svelte, Solid</a>
+    </div>
+   </nav>
   <main class="content" part="content">
     <slot name="route"></slot>
   </main>

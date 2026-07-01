@@ -1,7 +1,7 @@
 <!--
-  /control-flow — {#if}, {#for}, {#match}. SUI's three control-flow
-  directives. They are partials — they don't create a wrapper element,
-  just splice the matching branch.
+  /control-flow — {#if}, {#for}, {#match}. The three control-flow
+  directives. They are partials; they splice a branch into the surrounding
+  template without a wrapper element.
 -->
 <div class="doc">
   <p class="eyebrow">Concepts</p>

@@ -1,11 +1,7 @@
-// Landing page — drives the three live compositions. Every demo on the home
-// proves a different SUI primitive in the page's own scope:
-//   - the counter = signals + derived
-//   - the todo card = two-way binding + array iteration + children slots
-//   - the clock = effect with setInterval cleanup
-//
-// All under one controller so the cost of setting this up is the cost of
-// shipping the page. No wasm compile needed.
+// Landing page controller. The three live compositions (counter, todo, clock)
+// each exercise a different SUI primitive in the page's own scope:
+// signals + derived, two-way binding + array iteration, and an effect with
+// setInterval cleanup.
 
 import { controller, signal, derived, effect, type ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'

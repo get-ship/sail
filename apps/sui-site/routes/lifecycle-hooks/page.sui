@@ -1,5 +1,5 @@
 <!--
-  /lifecycle-hooks — onMount/onCleanup + template/controller hooks.
+  /lifecycle-hooks — onMount/onCleanup + template + controller hooks.
 -->
 <div class="doc">
   <p class="eyebrow">Concepts</p>

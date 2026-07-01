@@ -18,6 +18,7 @@
         "@ship/sui-code-editor": "workspace:*",
         "@ship/sui-compiler-wasm": "workspace:*",
         "@ship/sui-dom": "workspace:*",
+        "@ship/sui-lsp-browser": "workspace:*",
         "@ship/sui-primitives": "workspace:*",
         "@ship/sui-runtime": "workspace:*",
         "@ship/sui-tutorial": "workspace:*",

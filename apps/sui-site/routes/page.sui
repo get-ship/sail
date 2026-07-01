@@ -1,10 +1,9 @@
 <!--
-  Landing page. Hero with copy that sells SUI directly ("real data, no vDOM"),
-  followed by 3-4 LIVE component compositions rendered by the page's own
-  scope (signals + derives drive them — proves SUI works in this page without
-  needing wasm compile or textareas). The counter pair, the todo composer,
-  and the theme picker demonstrate signals/derived, two-way binding, and
-  the live <sui-* primitive family all in one render.
+  Landing page. The hero pairs the SUI one-liner with three live
+  component compositions driven by this page's own scope — a counter
+  (signals + derived), a todo (two-way binding + array iteration), and a
+  clock (an effect with setInterval cleanup). Every demo here is a real
+  SUI component, mounted in-place; the home itself documents the framework.
 -->
 <div class="doc landing">
   <section class="hero">

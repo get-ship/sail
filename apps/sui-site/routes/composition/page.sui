@@ -1,0 +1,87 @@
+<!--
+  /composition — slots, refs (bind:this), events + modifiers.
+-->
+<div class="doc composition-doc">
+  <p class="eyebrow">Guides</p>
+  <h1>Composition</h1>
+  <p class="lead">
+    SUI components compose through three seams: named slots for content
+    layout, <code>bind:this</code> for imperative refs, and a small
+    attribute-driven event surface with chainable modifiers. All three
+    are part of the same template syntax — no slot API to learn, no
+    ref-forwarding boilerplate.
+  </p>
+
+  <h2>Named slots</h2>
+  <p>
+    A slot is a content well at a known name. The receiving component
+    declares <code>&lt;slot name="…"&gt;</code> at the position it wants
+    the content, and the consumer fills it by placing an element on a
+    slot attribute (for example, the string "title"). Slots can be defaulted, can be
+    named or unnamed (the default well), and can be empty.
+  </p>
+  <sui-codeblock code={code.card}></sui-codeblock>
+  <p>
+    The card above declares a default well and an <code>actions</code>
+    well. Putting an element with a slot attribute (for example, a slot whose name is "title")
+    puts it in the named position. Anything without a slot attribute lands in
+    the default well.
+  </p>
+
+  <h2>Refs (bind:this)</h2>
+  <p>
+    For imperative work — focusing an input, measuring a node, integrating
+    with a third-party library — wire a ref through
+    <code>bind:this</code>. The template side passes the element to a
+    signal in the controller; the controller reads it on mount, uses it
+    on cleanup.
+  </p>
+  <sui-codeblock code={code.ref}></sui-codeblock>
+  <p>
+    The signal updates after mount with the host element. Use
+    <code>onMount</code> in the controller to do work that depends on
+    the node being in the DOM. Cleanup happens on unmount.
+  </p>
+
+  <h2>Events + modifiers</h2>
+  <p>
+    Bind native events with <code>on:event</code>. Modifiers chain on
+    the attribute to read intent — prevent default, stop propagation,
+    fire only on the host (not bubbles), debounce by ms.
+  </p>
+  <sui-codeblock code={code.events}></sui-codeblock>
+  <ul class="mod-list">
+    <li><code>prevent</code> — call <code>event.preventDefault()</code> first</li>
+    <li><code>stop</code> — call <code>event.stopPropagation()</code> first</li>
+    <li><code>self</code> — fire only when <code>event.target === event.currentTarget</code></li>
+    <li><code>debounce:&lt;ms&gt;</code> — debounce by N ms</li>
+    <li><code>throttle:&lt;ms&gt;</code> — throttle to once per N ms</li>
+  </ul>
+  <p>
+    The same modifiers work on <code>on:input</code>, <code>on:keydown</code>,
+    <code>on:submit</code>, and every other DOM event. The host reads the
+    event object in the bound handler.
+  </p>
+
+  <h2>Composing signals through props</h2>
+  <p>
+    A parent signal can drive a child by binding it as a prop. The child
+    template reads <code>prop()</code> in the same place it would read
+    a local signal — no different syntax, no events bubbling up. The
+    parent owns the state; the child renders it.
+  </p>
+  <sui-codeblock code={code.bindings}></sui-codeblock>
+
+  <h2>The canonical pattern</h2>
+  <p>
+    Slots for static content, two-way bindings for form state, ref only
+    when the underlying DOM is the right tool. SUI's compiler is happy
+    to host all three in the same component; use the seam that fits the
+    shape of the data.
+  </p>
+
+  <div class="page-nav">
+    <a class="btn" href="/styling">← Styling</a>
+    <a class="btn btn-primary" href="/tooling">Tooling →</a>
+  </div>
+</div>

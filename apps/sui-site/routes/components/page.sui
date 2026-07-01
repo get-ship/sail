@@ -1,9 +1,7 @@
 <!--
-  /components — the SUI site's single component-library page. Renders the
-  build-time component catalog grouped by pack via <sui-component-catalog>;
-  each cell is a live preview + props/slots/events. Subroutes
-  `/components/:tag` are reserved for a future deep viewer (the
-  <sui-component-viewer> primitive could land here when needed).
+  /components — the single component-library page. Renders the build-time
+  component catalog grouped by pack via <sui-component-catalog>; each cell
+  is a live preview + props/slots/events.
 -->
 <div class="doc">
   <sui-component-catalog></sui-component-catalog>
