@@ -1,0 +1,53 @@
+<!--
+  <sui-center> — box that centers its child on BOTH axes.
+
+  The fourth layout primitive in the canonical set (stack / cluster /
+  grid / center). Where <sui-stack> flows children vertically and
+  <sui-cluster> flows them horizontally, <sui-center> parks its content
+  in the dead middle of the box on both the inline and block axes. Reach
+  for it whenever a specimen, empty-state, spinner, or hero must sit
+  centered inside its container instead of hugging the top-left corner.
+
+  A single grid box with `place-items: center` centers one child; more
+  than one child flows in a centered column separated by the `gap`
+  spacing token. The layout host IS the grid — there is no inner
+  wrapper, so the box fills the space the consumer gives it. Vertical
+  centering needs a height: set one on the element (the framed preview
+  `.stage` does) or let a flex/grid parent stretch it.
+
+  Prop / event / slot
+  ─────────────────────────────────────────────────────────────────────
+  gap (enum, '0')  0..8 → var(--space-N). Gap between children when more
+                   than one is centered. 0 = no gap.
+  ─────────────────────────────────────────────────────────────────────
+  (no events)
+  ─────────────────────────────────────────────────────────────────────
+  slots: (default)
+  parts: (none — the host is the layout box)
+-->
+
+<prop name="gap" values="0|1|2|3|4|5|6|7|8" default="0" reflect />
+
+<style>
+  :host {
+    display: grid;
+    place-items: center;
+    place-content: center;
+    gap: var(--center-gap);
+    width: 100%;
+    --center-gap: 0;
+  }
+  :host([hidden]) { display: none; }
+
+  :host([gap='0']) { --center-gap: 0; }
+  :host([gap='1']) { --center-gap: var(--space-1); }
+  :host([gap='2']) { --center-gap: var(--space-2); }
+  :host([gap='3']) { --center-gap: var(--space-3); }
+  :host([gap='4']) { --center-gap: var(--space-4); }
+  :host([gap='5']) { --center-gap: var(--space-5); }
+  :host([gap='6']) { --center-gap: var(--space-6); }
+  :host([gap='7']) { --center-gap: var(--space-7); }
+  :host([gap='8']) { --center-gap: var(--space-8); }
+</style>
+
+<slot></slot>

@@ -173,7 +173,7 @@
             <span class="gutter" part="gutter">
               <sui-checkbox
                 size="sm"
-                prop:checked={w.selected}
+                prop:checked={w.checked}
                 prop:indeterminate={w.someSelected}
               ></sui-checkbox>
             </span>

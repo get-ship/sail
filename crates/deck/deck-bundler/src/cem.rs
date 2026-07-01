@@ -125,9 +125,15 @@ pub fn write_all_pack_cems(repo_root: &Path) -> Result<usize> {
     Ok(written)
 }
 
-/// Walk `dir` recursively and collect `.sui` files that follow the component
-/// convention: the file stem equals its immediate parent directory name
-/// (e.g. `src/sui-foo/sui-foo.sui`).
+/// Walk `dir` recursively and collect every component `.sui` file. Per the SUI
+/// authoring convention the filename stem IS the custom-element tag — a `.sui`
+/// file always declares a component (dynamic markup lives inside it via control
+/// flow, never in sibling partials). Companion tags (`sui-tab` in `sui-tabs/`,
+/// `sui-accordion-item` in `sui-accordion/`, the `sui-annotation-*` family) are
+/// co-located under the PRIMARY tag's directory, so their stem does NOT equal
+/// the parent dir — an earlier `stem == parent` filter silently dropped them
+/// from every pack's manifest. The only requirement is that the stem be a valid
+/// custom-element name (contains a hyphen); anything without one can't register.
 fn walk_component_sui_files(dir: &Path, out: &mut Vec<PathBuf>) {
     let Ok(entries) = std::fs::read_dir(dir) else { return };
     for entry in entries.flatten() {
@@ -135,9 +141,11 @@ fn walk_component_sui_files(dir: &Path, out: &mut Vec<PathBuf>) {
         if p.is_dir() {
             walk_component_sui_files(&p, out);
         } else if p.extension().map_or(false, |e| e == "sui") {
-            // stem == immediate parent dir name → component convention
-            let is_component = p.file_stem().map(|s| s.to_str())
-                == p.parent().and_then(|d| d.file_name()).map(|s| s.to_str());
+            // The stem is the tag; a custom element must contain a hyphen.
+            let is_component = p
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .is_some_and(|stem| stem.contains('-'));
             if is_component {
                 out.push(p);
             }

@@ -49,7 +49,15 @@ export interface TreeRowView {
   setSize: number
   canExpand: boolean
   expanded: boolean
+  /** Row HIGHLIGHT (`data-selected` / `aria-selected`): the EXPLICIT engine
+   *  selection membership (`selectedRowIds`), NOT the branch leaf-cascade — a
+   *  branch highlights only when it is itself in the selected set, never merely
+   *  because all its leaf descendants are (that surfaces as the checkbox tri-state
+   *  below). Matches the interactions reflect exactly, so the two never disagree. */
   selected: boolean
+  /** Checkbox CHECKED state: the branch leaf-cascade (`row.getIsSelected()`) — a
+   *  branch is checked when every selectable leaf descendant is selected. */
+  checked: boolean
   someSelected: boolean
   /** A synthetic "loading children" placeholder row (consumer-injected for the
    *  lazy seam) — the view styles it as a skeleton, not a real selectable node. */
@@ -95,6 +103,7 @@ function toRowView<T extends TreeNode>(
   item: VirtualItem,
   cols: ColumnApi<T>[],
   indentStep: number,
+  selectedSet: Set<string>,
 ): TreeRowView {
   // The lazy seam: a consumer marks a branch whose children load on first expand
   // with `original.lazy`. The engine reports `getCanExpand()=false` while that
@@ -118,7 +127,10 @@ function toRowView<T extends TreeNode>(
     setSize: row.getSetSize(),
     canExpand,
     expanded: canExpand && row.getIsExpanded(),
-    selected: row.getIsSelected(),
+    // Row highlight tracks EXPLICIT selection membership (matches the reflect);
+    // the checkbox tracks the branch leaf-cascade.
+    selected: selectedSet.has(row.id),
+    checked: row.getIsSelected(),
     someSelected: row.getIsSomeSelected(),
     pending,
     indent: row.depth * indentStep,
@@ -180,11 +192,15 @@ export function windowTreeRows<T extends TreeNode>(
     const rows = tab.rows()
     const cols = tab.visibleLeafColumns()
     const step = indentStep()
+    // EXPLICIT selection membership (the displayed selectedRowIds, no branch
+    // cascade) drives the per-row highlight — the same source the interactions
+    // reflect reads, so template + reflect never fight over `data-selected`.
+    const selectedSet = new Set(tab.selectedRowIds())
     const out: TreeRowView[] = []
     for (const it of items()) {
       const row = rows[it.index]
       if (!row) continue
-      out.push(toRowView(row, it, cols, step))
+      out.push(toRowView(row, it, cols, step, selectedSet))
     }
     return out
   })

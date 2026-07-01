@@ -131,12 +131,24 @@ export default controller({
         if (!th.hasAttribute('role')) th.setAttribute('role', 'columnheader')
       })
     }
+    // A "body row" is any data <tr> under the host's table/tbody that is NOT a
+    // header row (carries a direct <th>) and NOT the slotted head row. The header
+    // exclusion is done in JS — jsdom (the component test env) throws on the
+    // `:not(:has(th))` selector, which silently aborted this whole reflect and
+    // left [data-empty] unset when only an empty slot was present.
+    const findBodyRow = (): Element | null => {
+      const candidates = host.querySelectorAll(
+        ':scope > table tbody > tr, :scope > table > tr, :scope > tbody > tr, :scope > tr',
+      )
+      for (const tr of candidates) {
+        if (tr.getAttribute('slot') === 'head') continue
+        if (tr.querySelector(':scope > th') != null) continue
+        return tr
+      }
+      return null
+    }
     const syncEmptyState = (): void => {
-      const bodyRow =
-        host.querySelector(':scope > table tbody > tr') ||
-        host.querySelector(':scope > table > tr:not(:has(th))') ||
-        host.querySelector(':scope > tbody > tr') ||
-        host.querySelector(':scope > tr:not([slot="head"])')
+      const bodyRow = findBodyRow()
       const hasEmptySlot = host.querySelector('[slot="empty"]') != null
       if (!bodyRow && hasEmptySlot) host.setAttribute('data-empty', '')
       else if (!isData()) host.removeAttribute('data-empty')
