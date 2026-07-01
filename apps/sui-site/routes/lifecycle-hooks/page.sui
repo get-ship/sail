@@ -30,6 +30,15 @@
     Everything you start in <code>mount</code> is undone here, so nothing leaks
     when the element leaves the page.
   </p>
+  <p>
+    You rarely wire this up by hand. The runtime owns cleanup by <em>scope</em>:
+    everything allocated during a component's setup — an <code>effect</code>, a
+    <code>live()</code> subscription, a <code>data()</code> stream — enrolls its
+    teardown in that component's scope, and they all run in reverse order the
+    moment it unmounts. Nested components dispose with their parent. That
+    ownership is why a SUI app doesn't leak the way manual
+    add/remove-listener bookkeeping tends to.
+  </p>
 
   <p class="callout">
     <strong>Reach out from mount, not the template.</strong> The template stays a
