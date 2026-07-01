@@ -16,12 +16,10 @@
        bottom. The `fullscreen` route variant on the shell strips
        side padding for component viewer / tutorial, but the catalog
        inherits the standard 6 + 7 spacing. */
-    padding: var(--space-6) var(--space-7) var(--space-8);
-    /* Hover tint — a 6% primary mix on surface-1. Defined once on
-       :host so the cell hover rule reads a single channel instead
-       of an inline color-mix (sui-css-literals flags the inline
-       form). */
-    --cat-cell-hover: color-mix(in oklch, var(--primary) 6%, var(--surface-1));
+    /* Hover tint — reads the pre-computed --tone-primary-bg ramp
+       (a 14% primary mix defined in tokens.css) so the formula
+       doesn't drift across primitives. */
+    --cat-cell-hover: var(--tone-primary-bg);
   }
 
   .cat-head {
