@@ -1,36 +1,38 @@
 <!--
-  /deck — MOCKUP of the deck section. Same shell, its own violet identity (set
-  by the controller via data-theme="deck"). Demonstrates the shared-site concept:
-  distinct theme per product. Full deck docs (packages/deck/docs) move in here.
+  /deck — Deck overview. The shell sets data-theme="deck" (violet); this page
+  is pure content. Adapted from packages/deck/docs/routes/page.sui to the
+  sui-site's .doc prose convention (eyebrow / h1 / lead / h2).
 -->
-<div class="doc deck-landing">
-  <p class="eyebrow">Deck</p>
-  <h1>The app framework for SUI</h1>
+<article class="doc">
+  <p class="eyebrow">deck · 0.2.0</p>
+  <h1>The standalone web framework for SUI.</h1>
   <p class="lead">
-    SUI compiles components. <strong>deck builds applications</strong>:
-    file-based routing, server rendering with hydration, bundling, live data,
-    and a hot-reloading dev loop — all driving the SUI compiler for you. Use SUI
-    on its own, or reach for deck when a component graph becomes an app.
+    deck mounts SUI views, routes them from the filesystem, server-renders or
+    statically builds them, and serves every asset — with a dev server and
+    state-preserving HMR. It is to SUI what Next is to React.
   </p>
 
-  <h2>What deck adds</h2>
-  <ul>
-    <li><strong>Routing</strong> — file-based routes with nested layouts.</li>
-    <li><strong>SSR + hydration</strong> — server-render a SUI component, hydrate on the client.</li>
-    <li><strong>Bundling</strong> — in-process Rolldown; one self-contained build.</li>
-    <li><strong>Live data</strong> — the SSE / patch server half behind <code>data live</code>.</li>
-    <li><strong>Dev loop</strong> — <code>deck dev</code> with HMR.</li>
-  </ul>
+  <div class="callout">
+    <strong>This site is a deck app.</strong> Every page you read is a file-routed
+    deck route, server-rendered and hydrated. The docs are deck's own canonical
+    example — and its release test.
+  </div>
 
-  <p class="callout">
-    <strong>This is a mockup.</strong> It's the deck half of the shared site —
-    same shell, its own violet theme, switched on mount. The real deck docs
-    (routing, rendering, HMR, build, data) already exist in
-    <code>packages/deck/docs</code> and would move in under <code>/deck</code>
-    with a deck-specific nav.
+  <h2>The 30-second app</h2>
+  <p>A deck app is a <code>routes/</code> folder and a dev server. No config file, no scaffold step.</p>
+  <pre class="code">{quickstart}</pre>
+  <p>That's a running SUI single-page app, with HMR, on <code>127.0.0.1:7878</code>.</p>
+
+  <h2>Where it sits</h2>
+  <pre class="code">{layers}</pre>
+  <p>
+    SUI is the component language — signals, templates, controllers. deck is the
+    framework around it — routing, rendering, build, serving. Your app is what
+    you write under <code>routes/</code>.
   </p>
 
   <div class="page-nav">
-    <a class="btn" href="/">← SHIP UI</a>
+    <span></span>
+    <a class="btn btn-primary" href="/deck/getting-started">Getting started →</a>
   </div>
-</div>
+</article>

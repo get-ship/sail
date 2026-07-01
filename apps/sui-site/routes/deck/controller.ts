@@ -1,8 +1,9 @@
-// /deck — the Deck product section of the Ship UI site. Theme is owned by the
-// shell (data-theme by product), so this route just renders content.
-import { controller } from '@ship/sui-runtime'
+// /deck — the Deck overview. The shell owns the deck (violet) theme via
+// data-theme; this controller only supplies the page's code snippets.
+import { controller, type ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
+import { quickstart, layers } from './snippets'
 
 export default controller({
-  scope: () => ({}),
+  scope: (_ctx: ViewScope<Scope>) => ({ quickstart, layers }),
 })

@@ -1,0 +1,28 @@
+<!--
+  /deck/getting-started — adapted from packages/deck/docs/routes/getting-started/page.sui.
+  Snippets live in ./snippets so literal braces in example code never get scope-scanned.
+-->
+<article class="doc">
+  <p class="eyebrow">Introduction</p>
+  <h1>Getting started</h1>
+  <p class="lead">You need the <code>deck</code> CLI and a folder. No project scaffold, no install, no config to start.</p>
+
+  <h2>1. A page is a file</h2>
+  <p>Create <code>routes/page.sui</code>. Whatever markup it holds is your page.</p>
+  <pre class="code">{pageExample}</pre>
+
+  <h2>2. Add a controller</h2>
+  <p>Co-locate <code>routes/controller.ts</code> for reactive state. It returns a scope the template reads by name.</p>
+  <pre class="code">{controllerExample}</pre>
+
+  <h2>3. Run the dev server</h2>
+  <pre class="code">{devCmd}</pre>
+  <div class="callout">
+    <strong>No build step to develop.</strong> deck compiles <code>.sui</code> in-process and serves the SPA with HMR — edit a route and it soft-reloads with state preserved.
+  </div>
+
+  <div class="page-nav">
+    <a href="/deck">← Overview</a>
+    <a href="/deck/routing">File routing →</a>
+  </div>
+</article>

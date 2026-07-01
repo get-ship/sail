@@ -200,21 +200,31 @@
   <nav class="sidebar" part="sidebar">
     {#if product() === 'deck'}
       <div class="group">
-        <h4>Deck</h4>
+        <h4>Introduction</h4>
         <a href="/deck" class:active={path() === '/deck'}>Overview</a>
+        <a href="/deck/getting-started" class:active={path() === '/deck/getting-started'}>Getting started</a>
       </div>
       <div class="group">
-        <h4>Migrating in</h4>
-        <p class="side-note">Getting started, Routing, Rendering, Live data, HMR, and Build move in here from <code>packages/deck/docs</code>.</p>
+        <h4>Concepts</h4>
+        <a href="/deck/routing" class:active={path() === '/deck/routing'}>Routing</a>
+        <a href="/deck/dynamic-routes" class:active={path() === '/deck/dynamic-routes'}>Dynamic routes</a>
+        <a href="/deck/layouts" class:active={path() === '/deck/layouts'}>Layouts</a>
+        <a href="/deck/rendering" class:active={path() === '/deck/rendering'}>Rendering</a>
+        <a href="/deck/reactivity" class:active={path() === '/deck/reactivity'}>Reactivity</a>
+        <a href="/deck/data" class:active={path() === '/deck/data'}>Live data</a>
+      </div>
+      <div class="group">
+        <h4>Tooling</h4>
+        <a href="/deck/hmr" class:active={path() === '/deck/hmr'}>HMR</a>
+        <a href="/deck/build" class:active={path() === '/deck/build'}>Build</a>
       </div>
     {:else if product() === 'ai'}
       <div class="group">
         <h4>AI</h4>
         <a href="/ai" class:active={path() === '/ai'}>Overview</a>
-      </div>
-      <div class="group">
-        <h4>Planned</h4>
-        <p class="side-note">Authoring guide, MCP &amp; tooling, Skills, and the eval harness — the agent-first story.</p>
+        <a href="/ai/authoring" class:active={path() === '/ai/authoring'}>Authoring</a>
+        <a href="/ai/tooling" class:active={path() === '/ai/tooling'}>Tooling</a>
+        <a href="/ai/eval" class:active={path() === '/ai/eval'}>Eval</a>
       </div>
     {:else}
       <div class="group">

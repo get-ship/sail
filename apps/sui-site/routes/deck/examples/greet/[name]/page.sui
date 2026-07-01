@@ -1,0 +1,25 @@
+<!--
+  /deck/examples/greet/[name] — adapted from
+  packages/deck/docs/routes/examples/greet/[name]/page.sui. A live [param]
+  route: routes/examples/greet/[name]/page.sui matches /examples/greet/:name.
+  `route` is ambient in every view; route.params.name() reads the segment
+  as a signal, so the heading tracks the URL.
+-->
+<article class="doc">
+  <p class="eyebrow">Live example</p>
+  <h1>Hello, {route.params.name()}.</h1>
+  <p class="lead">
+    This page is <code>routes/examples/greet/[name]/page.sui</code>. The
+    <code>[name]</code> directory is a route parameter, and
+    <code>route.params.name()</code> reads it as a signal.
+  </p>
+  <p>
+    Change the URL to change the greeting — try
+    <a href="/deck/examples/greet/ada">/deck/examples/greet/ada</a> or
+    <a href="/deck/examples/greet/deck">/deck/examples/greet/deck</a>.
+  </p>
+  <div class="page-nav">
+    <a href="/deck/dynamic-routes">← Dynamic routes</a>
+    <span></span>
+  </div>
+</article>
