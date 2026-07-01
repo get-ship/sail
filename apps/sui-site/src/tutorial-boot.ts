@@ -1,24 +1,25 @@
-// Tutorial editor↔preview wiring — a port of ship-marketing's proven
-// TutorialApp bootApp, adapted for the deck sui-site:
-//   - the editor is a sui-native <textarea> per pane (NO ship-code-editor —
-//     sui-site ships public and must not depend on the ship platform);
-//   - the compile seam is @ship/sui-viewer's wasm `CompileFn` (object opts);
-//   - the preview is a sandboxed <iframe src="/tutorial/host.html"> that runs
-//     the compiled lesson in full isolation (its own /_deck/runtime.js).
+// Tutorial editor↔preview wiring — sui-site's port of ship-marketing's
+// TutorialApp. Uses `<sui-code-editor>` (the local SUI CodeMirror wrapper,
+// framework-pure) for the two editor panes + a sandboxed iframe preview.
 //
-// Flow on every edit (debounced): wasmCompile(template, {componentName: tag,
-// shadow:false, setupUrl:'./<tag>.controller.ts'}) → tsToEsm(controller) regex
-// TS→JS → postMessage({kind:'tutorial:run', template, controller, tag}) to the
-// iframe, which blob-injects the controller, rewrites the template's controller
-// import to that blob, dynamic-imports the template, and mounts a fresh <tag>.
+// Flow on every edit (debounced):
+//   sui-change (debounced 150ms inside <sui-code-editor>)
+//     → wasm compile(source, {componentName: tag, setupUrl: ...})
+//     → tsToEsm(controller) regex strip
+//     → postMessage({kind:'tutorial:run', template, controller, tag}) to iframe
 //
-// This module is plain imperative TS kept OUT of the route controller so the
-// SUI compiler's scope-scanner never sees the regex/postMessage code strings.
+// The iframe (public/tut-host.html) blob-injects the controller, rewrites the
+// template's controller import to that blob, dynamic-imports the template,
+// and mounts a fresh <tag>.
+//
+// Plain imperative TS, kept OUT of the route controller so the SUI compiler's
+// scope-scanner never sees the regex / postMessage / signal code strings.
 
 /** The wasm compile result the engine returns (mirrors @ship/sui-viewer). */
 type CompileResult =
   | { kind: 'ok'; js: string; css?: string | null }
   | { kind: 'err'; message: string; line?: number | null; col?: number | null }
+
 /** The bound compile function (source, opts) → result. */
 export type CompileFn = (
   source: string,
@@ -34,22 +35,67 @@ export interface LessonCode {
 }
 
 export interface TutorialHandle {
-  /** Load a lesson — resets the editors to its starter and re-runs. */
   setLesson: (lesson: LessonCode) => void
-  /** Tear down listeners + observers. */
   dispose: () => void
 }
 
-const DEBOUNCE_MS = 300
+interface SuiDiagnostic {
+  line: number
+  column?: number
+  severity: 'error' | 'warning' | 'info'
+  message: string
+  source?: string
+}
 
-// Slugs that ship a mock-daemon scenario (public/tut-<slug>.js). Kept as an
-// explicit set so the host never HEAD-probes a non-existent scenario (a 404 the
-// browser surfaces as a console error). Mirrors the committed tut-*.js files.
+/** Imperative handle to a `<sui-code-editor>` once it has upgraded. */
+interface CodeEditor {
+  host: HTMLElement
+  getValue: () => string
+  setValue: (next: string) => void
+  setDiagnostics: (diags: SuiDiagnostic[]) => void
+}
+
+/** Narrow an unknown element to a `<sui-code-editor>` host-shape via a small
+ *  set of structural checks — avoid the inline `(... as { ... }).x` pattern. */
+function asCodeEditor(el: Element | null): CodeEditor | null {
+  if (!el) return null
+  const host = el as HTMLElement & Record<string, unknown>
+  if (typeof host.value !== 'string') return null
+  if (typeof host.setDiagnostics !== 'function') return null
+  return {
+    host,
+    getValue: () => host.value as string,
+    setValue: (next: string) => { host.value = next },
+    setDiagnostics: (diags) => {
+      const fn = host.setDiagnostics as (...a: unknown[]) => void
+      fn.call(host, diags)
+    },
+  }
+}
+
+interface DiffHandle { from: string; to: string }
+function asDiff(el: Element | null): DiffHandle | null {
+  if (!el) return null
+  const host = el as HTMLElement & Record<string, unknown>
+  if (typeof host.from !== 'string' || typeof host.to !== 'string') return null
+  return {
+    get from() { return host.from as string },
+    set from(s: string) { host.from = s },
+    get to() { return host.to as string },
+    set to(s: string) { host.to = s },
+  }
+}
+
+const DEBOUNCE_MS = 200
+
+// Slugs that ship a mock-daemon scenario (public/tut-<slug>.js). Mirrors the
+// committed tut-*.js files — explicit set so we don't HEAD-probe non-existent
+// scenarios and surface 404s as console errors.
 const SCENARIO_SLUGS = new Set(['22-data-live', '23-while-loading', '24-morphs'])
 
-/** Strip TypeScript-only syntax from a (simple) lesson controller so it runs as
- *  ESM in the preview iframe. Verbatim port of ship-marketing's tsToEsm — the
- *  lesson controllers are simple and this transform is framework-agnostic. */
+/** Strip TypeScript-only syntax from a (simple) lesson controller so it runs
+ *  as ESM in the preview iframe. Verbatim port of ship-marketing's tsToEsm —
+ *  the lesson controllers are simple and this transform is framework-agnostic. */
 function tsToEsm(src: string): string {
   let s = src
   s = s.replace(/^\s*import\s+type\s+\{[^}]*\}\s+from\s+["'][^"']+["']\s*;?\s*$/gm, '')
@@ -62,8 +108,6 @@ function tsToEsm(src: string): string {
     return `import { ${cleaned} } from`
   })
   s = s.replace(/^\s*interface\s+\w+(\s+extends\s+[^{]+)?\s*\{[^}]*\}\s*/gm, '')
-  // Type aliases — terminated by `;` OR end-of-line (lesson controllers don't
-  // always semicolon them, e.g. `type State = 'idle' | 'loading'`).
   s = s.replace(/^\s*type\s+\w+\s*=\s*[^;\n]+;?[ \t]*$/gm, '')
   s = s.replace(/\(([^()]*)\)\s*(:\s*[^=>{;,)]+)?\s*=>/g, (_m, params: string) => {
     const cleaned = params
@@ -79,52 +123,27 @@ function tsToEsm(src: string): string {
   return s
 }
 
-/** Insert two spaces on Tab (and outdent on Shift+Tab) in a textarea editor. */
-function wireTabKey(ta: HTMLTextAreaElement): void {
-  ta.addEventListener('keydown', (e) => {
-    if (e.key !== 'Tab') return
-    e.preventDefault()
-    const start = ta.selectionStart
-    const end = ta.selectionEnd
-    const v = ta.value
-    if (e.shiftKey) {
-      // Outdent: drop up to two leading spaces on the current line.
-      const lineStart = v.lastIndexOf('\n', start - 1) + 1
-      const removed = v.slice(lineStart).match(/^ {1,2}/)?.[0].length ?? 0
-      if (removed) {
-        ta.value = v.slice(0, lineStart) + v.slice(lineStart + removed)
-        ta.selectionStart = ta.selectionEnd = Math.max(lineStart, start - removed)
-      }
-    } else {
-      ta.value = v.slice(0, start) + '  ' + v.slice(end)
-      ta.selectionStart = ta.selectionEnd = start + 2
-    }
-    ta.dispatchEvent(new Event('input', { bubbles: true }))
-  })
+function createDebouncer(): (fn: () => void) => () => void {
+  let timer: ReturnType<typeof setTimeout> | null = null
+  return (fn: () => void) => {
+    clearTimeout(timer)
+    timer = setTimeout(fn, DEBOUNCE_MS)
+  }
 }
 
-const TONE_MAP: Record<string, string> = {
-  idle: 'muted',
-  typing: 'info',
-  running: 'warning',
-  ok: 'success',
-  error: 'destructive',
-}
-
-/**
- * Boot the editor↔preview wiring on an already-mounted root element. `compile`
- * is the bound wasm compile fn (must be ready). Returns a handle whose
- * `setLesson` swaps in a lesson and re-runs.
- */
 export function bootTutorialApp(root: HTMLElement, compile: CompileFn): TutorialHandle {
-  const tplEl = root.querySelector<HTMLTextAreaElement>('textarea[data-pane="template"]')!
-  const ctrlEl = root.querySelector<HTMLTextAreaElement>('textarea[data-pane="controller"]')!
-  const iframe = root.querySelector<HTMLIFrameElement>('.tut-preview')!
+  const tplEl = asCodeEditor(root.querySelector('sui-code-editor[data-pane="template"]'))
+  const ctrlEl = asCodeEditor(root.querySelector('sui-code-editor[data-pane="controller"]'))
+  const iframe = root.querySelector<HTMLIFrameElement>('.tut-preview')
   const statusDot = root.querySelector<HTMLElement>('.tut-status-dot')
   const errorBox = root.querySelector<HTMLElement>('.tut-error')
   const errorMsg = root.querySelector<HTMLElement>('.tut-error-msg')
-  const tplDiff = root.querySelector<HTMLElement & { from?: string; to?: string }>('sui-diff[data-pane="template"]')
-  const ctrlDiff = root.querySelector<HTMLElement & { from?: string; to?: string }>('sui-diff[data-pane="controller"]')
+  const tplDiff = asDiff(root.querySelector('sui-diff[data-pane="template"]'))
+  const ctrlDiff = asDiff(root.querySelector('sui-diff[data-pane="controller"]'))
+  if (!tplEl || !ctrlEl || !iframe) {
+    console.error('[sui-site] tutorial editor panes not found')
+    return { setLesson: () => {}, dispose: () => {} }
+  }
 
   let lesson: LessonCode = {
     slug: '',
@@ -133,27 +152,25 @@ export function bootTutorialApp(root: HTMLElement, compile: CompileFn): Tutorial
     solvedTemplate: '',
     solvedController: '',
   }
-  let currentTemplate = ''
-  let currentController = ''
   let tagSeq = 0
   let iframeReady = false
-  let debounceTimer = 0
+  const schedule = createDebouncer()
 
   function setStatus(state: string, text: string): void {
     if (statusDot) {
-      statusDot.setAttribute('tone', TONE_MAP[state] ?? 'muted')
+      const toneMap: Record<string, string> = {
+        idle: 'muted', typing: 'info', running: 'warning',
+        ok: 'success', error: 'destructive',
+      }
+      statusDot.setAttribute('tone', toneMap[state] ?? 'muted')
       if (state === 'typing' || state === 'running') statusDot.setAttribute('pulse', '')
       else statusDot.removeAttribute('pulse')
       statusDot.setAttribute('label', text)
     }
     root.dataset.tutState = state
     if (errorBox && errorMsg) {
-      if (state === 'error') {
-        errorMsg.textContent = text
-        errorBox.hidden = false
-      } else {
-        errorBox.hidden = true
-      }
+      if (state === 'error') { errorMsg.textContent = text; errorBox.hidden = false }
+      else { errorBox.hidden = true }
     }
   }
 
@@ -161,9 +178,9 @@ export function bootTutorialApp(root: HTMLElement, compile: CompileFn): Tutorial
     return document.documentElement.dataset.mode === 'dark' ? 'dark' : 'light'
   }
   function reloadIframe(): void {
-    const base = iframe.dataset.baseSrc ?? '/tut-host.html'
+    const base = iframe!.dataset.baseSrc ?? '/tut-host.html'
     iframeReady = false
-    iframe.src = `${base}?mode=${resolvedMode()}&_=${Date.now()}`
+    iframe!.src = `${base}?mode=${resolvedMode()}&_=${Date.now()}`
   }
 
   function runNow(): void {
@@ -172,17 +189,25 @@ export function bootTutorialApp(root: HTMLElement, compile: CompileFn): Tutorial
     const safeSlug = (lesson.slug || 'lesson').replace(/[^a-z0-9-]/gi, '')
     const tag = `tut-${safeSlug}-${++tagSeq}`
     try {
-      const result = compile(currentTemplate, {
+      const result = compile(tplEl.getValue(), {
         componentName: tag,
         shadow: false,
         setupUrl: `./${tag}.controller.ts`,
       })
       if (result.kind === 'err') {
         setStatus('error', result.message)
+        tplEl.setDiagnostics([{
+          line: result.line ?? 1,
+          column: result.col ?? 1,
+          severity: 'error',
+          message: result.message,
+          source: 'sui-compiler',
+        }])
         return
       }
-      const controllerJs = tsToEsm(currentController)
-      iframe.contentWindow!.postMessage(
+      tplEl.setDiagnostics([])
+      const controllerJs = tsToEsm(ctrlEl.getValue())
+      iframe!.contentWindow?.postMessage(
         { kind: 'tutorial:run', template: result.js, controller: controllerJs, tag },
         '*',
       )
@@ -194,36 +219,29 @@ export function bootTutorialApp(root: HTMLElement, compile: CompileFn): Tutorial
 
   function scheduleRun(): void {
     setStatus('typing', 'editing…')
-    clearTimeout(debounceTimer)
-    debounceTimer = window.setTimeout(runNow, DEBOUNCE_MS)
+    schedule(runNow)
   }
 
-  function updateDiffFrom(): void {
-    if (tplDiff) tplDiff.from = currentTemplate
-    if (ctrlDiff) ctrlDiff.from = currentController
+  function onTplChange(ev: Event): void {
+    const v = (ev as CustomEvent<{ value: string }>).detail?.value
+    if (typeof v !== 'string') return
+    if (tplDiff) tplDiff.from = v
+    scheduleRun()
   }
-
-  // --- editors ---
-  tplEl.addEventListener('input', () => {
-    currentTemplate = tplEl.value
-    updateDiffFrom()
+  function onCtrlChange(ev: Event): void {
+    const v = (ev as CustomEvent<{ value: string }>).detail?.value
+    if (typeof v !== 'string') return
+    if (ctrlDiff) ctrlDiff.from = v
     scheduleRun()
-  })
-  ctrlEl.addEventListener('input', () => {
-    currentController = ctrlEl.value
-    updateDiffFrom()
-    scheduleRun()
-  })
-  wireTabKey(tplEl)
-  wireTabKey(ctrlEl)
+  }
+  tplEl.host.addEventListener('sui-change', onTplChange)
+  ctrlEl.host.addEventListener('sui-change', onCtrlChange)
 
-  // --- actions ---
   function applyCode(template: string, controller: string): void {
-    currentTemplate = template
-    currentController = controller
-    tplEl.value = template
-    ctrlEl.value = controller
-    updateDiffFrom()
+    tplEl.setValue(template)
+    ctrlEl.setValue(controller)
+    if (tplDiff) tplDiff.from = template
+    if (ctrlDiff) ctrlDiff.from = controller
     runNow()
   }
   root.querySelector('[data-action="reset"]')?.addEventListener('click', () => {
@@ -234,7 +252,6 @@ export function bootTutorialApp(root: HTMLElement, compile: CompileFn): Tutorial
   })
   root.querySelector('[data-action="run"]')?.addEventListener('click', () => runNow())
 
-  // --- tab switching (sui-tabs emits sui-tab-change once upgraded) ---
   const panels = Array.from(root.querySelectorAll<HTMLElement>('sui-tab-panel'))
   function showPanel(name: string): void {
     for (const panel of panels) {
@@ -251,24 +268,23 @@ export function bootTutorialApp(root: HTMLElement, compile: CompileFn): Tutorial
     const name = (e as CustomEvent<{ name: string }>).detail?.name
     if (name) showPanel(name)
   }
-  const tabs = root.querySelector('sui-tabs')
-  tabs?.addEventListener('sui-tab-change', onTabChange)
+  root.querySelector('sui-tabs')?.addEventListener('sui-tab-change', onTabChange)
 
-  // --- iframe lifecycle: ready → load scenario → run; theme follows parent ---
   const onMessage = async (e: MessageEvent): Promise<void> => {
-    if (e.source !== iframe.contentWindow) return
+    if (e.source !== iframe!.contentWindow) return
     if (e.data?.kind !== 'tutorial:ready') return
     if (SCENARIO_SLUGS.has(lesson.slug)) {
       try {
-        const mod: { default: Record<string, unknown> } = await import(
-          /* @vite-ignore */ `/tut-${lesson.slug}.js`
-        )
-        iframe.contentWindow!.postMessage({ kind: 'tutorial:scenario', scenario: mod.default }, '*')
-        // Give the SW a beat to ingest the scenario before runNow wires the
-        // EventSource subscriptions.
-        await new Promise((r) => setTimeout(r, 80))
+        const scenarioUrl = `/tut-${lesson.slug}.js`
+        const head = await fetch(scenarioUrl, { method: 'HEAD' })
+        if (head.ok) {
+          // Runtime-selected scenario — see SCENARIO_SLUGS.
+          const mod = (await import(/* @vite-ignore */ scenarioUrl)) as { default: Record<string, unknown> }
+          iframe!.contentWindow?.postMessage({ kind: 'tutorial:scenario', scenario: mod.default }, '*')
+          await new Promise((r) => setTimeout(r, 80))
+        }
       } catch (err) {
-        console.warn('[tutorial] scenario load skipped:', err)
+        console.warn('[sui-site/tutorial] scenario load skipped:', err)
       }
     }
     iframeReady = true
@@ -285,21 +301,17 @@ export function bootTutorialApp(root: HTMLElement, compile: CompileFn): Tutorial
   return {
     setLesson(next: LessonCode): void {
       lesson = next
-      currentTemplate = next.starterTemplate
-      currentController = next.starterController
-      tplEl.value = next.starterTemplate
-      ctrlEl.value = next.starterController
-      if (tplDiff) tplDiff.to = next.solvedTemplate
-      if (ctrlDiff) ctrlDiff.to = next.solvedController
-      updateDiffFrom()
-      // Reload the iframe so the new lesson's scenario (if any) is primed before
-      // the first run, then runNow fires on `tutorial:ready`.
+      tplEl.setValue(next.starterTemplate)
+      ctrlEl.setValue(next.starterController)
+      if (tplDiff) { tplDiff.to = next.solvedTemplate; tplDiff.from = next.starterTemplate }
+      if (ctrlDiff) { ctrlDiff.to = next.solvedController; ctrlDiff.from = next.starterController }
       reloadIframe()
     },
     dispose(): void {
-      clearTimeout(debounceTimer)
+      tplEl.host.removeEventListener('sui-change', onTplChange)
+      ctrlEl.host.removeEventListener('sui-change', onCtrlChange)
       window.removeEventListener('message', onMessage)
-      tabs?.removeEventListener('sui-tab-change', onTabChange)
+      root.querySelector('sui-tabs')?.removeEventListener('sui-tab-change', onTabChange)
       themeObserver.disconnect()
     },
   }

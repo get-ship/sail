@@ -1,0 +1,189 @@
+<!--
+  <sui-component-catalog> — `/components` index for the SUI site.
+
+  Renders the build-time `COMPONENTS_CATALOG` (a flat CEM aggregated from
+  every `<sui-*>` pack the site depends on), grouped by source package, with
+  live previews of every component actually registered in the bundle, the CEM
+  metadata (props / slots / events), and one-click links into a deep viewer.
+
+  Sourced from `apps/sui-site/components.gen.ts` — emitted by `deck build`'s
+  build_assets pass. Framework-pure (no ship-platform deps).
+-->
+<style>
+  :host {
+    display: block;
+    padding-bottom: var(--space-8);
+  }
+
+  .cat-head { margin-bottom: var(--space-6); }
+  .cat-head h1 {
+    font-family: var(--font-display, var(--font-body));
+    font-size: var(--text-3xl);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--tracking-tight, -0.02em);
+    margin: 0 0 var(--space-1);
+    color: var(--foreground);
+  }
+  .cat-sub {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--muted-foreground);
+  }
+
+  .pack { margin-bottom: var(--space-7); }
+  .pack-h {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border);
+  }
+  .pack-name {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--foreground);
+  }
+  .pack-count {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-3);
+  }
+
+  .cell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+  }
+  .cell:hover {
+    border-color: var(--primary);
+    background: color-mix(in oklch, var(--primary) 6%, var(--surface-1));
+    transform: translateY(-1px);
+  }
+
+  .cell-tag {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--primary);
+  }
+
+  .cell-desc {
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+    line-height: 1.4;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .cell-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--space-8);
+    padding: var(--space-2);
+    background: var(--surface-2);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+  }
+
+  .preview-empty {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+  }
+
+  .meta { margin: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+  .meta-row { display: flex; gap: var(--space-2); align-items: baseline; }
+  .meta-label {
+    flex: 0 0 var(--space-8);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+  }
+  .meta-chips { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+  .chip {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--foreground);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 var(--space-1);
+  }
+  .meta-none {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+  }
+</style>
+
+<section class="cat-head" data-test="catalog-head">
+  <h1>Component library</h1>
+  <span class="cat-sub">{totalComponents()} components · {totalPacks()} packs</span>
+</section>
+
+{#for group of groups() key={group.id}}
+  <section class="pack" data-test="catalog-pack" attr:data-pack={group.pkg}>
+    <header class="pack-h">
+      <span class="pack-name">{group.pkg}</span>
+      <span class="pack-count">{group.count}</span>
+    </header>
+    <div class="grid">
+      {#for c of group.components key={c.tag}}
+        <a class="cell" data-test="catalog-cell" attr:data-tag={c.tag} href={'/components/' + c.tag}>
+          <span class="cell-tag" data-test="catalog-tag">&lt;{c.tag}&gt;</span>
+          {#if c.description}
+            <p class="cell-desc">{c.description}</p>
+          {/if}
+          <div class="cell-preview" attr:data-preview-for={c.tag}></div>
+          <dl class="meta">
+            <div class="meta-row">
+              <dt class="meta-label">props</dt>
+              <dd class="meta-chips">
+                {#if c.props.length}
+                  {#for p of c.props key={p.name}}<span class="chip" attr:title={p.type}>{p.name}</span>{/for}
+                {:else}
+                  <span class="meta-none">—</span>
+                {/if}
+              </dd>
+            </div>
+            {#if c.slots.length}
+              <div class="meta-row">
+                <dt class="meta-label">slots</dt>
+                <dd class="meta-chips">
+                  {#for s of c.slots key={s.name}}<span class="chip">{s.name}</span>{/for}
+                </dd>
+              </div>
+            {/if}
+            {#if c.events.length}
+              <div class="meta-row">
+                <dt class="meta-label">events</dt>
+                <dd class="meta-chips">
+                  {#for e of c.events key={e.name}}<span class="chip">{e.name}</span>{/for}
+                </dd>
+              </div>
+            {/if}
+          </dl>
+        </a>
+      {/for}
+    </div>
+  </section>
+{/for}

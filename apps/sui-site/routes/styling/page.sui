@@ -1,0 +1,87 @@
+<!--
+  /styling — the <style> block, scoping, and the token convention.
+  Component styles live inside their own .sui file (no separate stylesheet
+  to coordinate) and resolve their tokens from the document root.
+-->
+<div class="doc styling-doc">
+  <p class="eyebrow">Guides</p>
+  <h1>Styling</h1>
+  <p class="lead">
+    SUI components style themselves inline. A <code>&lt;style&gt;</code>
+    block in a <code>.sui</code> file ships with the component, scopes to
+    the host element, and reads tokens from the document root. There is no
+    global stylesheet to coordinate, no CSS-in-JS runtime, and no separate
+    bundle to ship alongside the component.
+  </p>
+
+  <h2>Inline <code>&lt;style&gt;</code></h2>
+  <p>
+    Place a <code>&lt;style&gt;</code> block anywhere in the template. The
+    compiler hoists it into the component's shadow root at build time.
+    The rules apply to the host element and its descendants; nothing
+    outside the shadow root is affected.
+  </p>
+  <sui-codeblock code={code.basic}></sui-codeblock>
+  <p>
+    That <code>my-card</code> element is now styled — drop a
+    <code>&lt;my-card&gt;</code> in any page and the styles ship with
+    it. No external CSS, no build step, no class-name collisions.
+  </p>
+
+  <h2>Scope</h2>
+  <p>
+    Inline styles are scoped per-instance. The <code>:host</code>
+    pseudo-element targets the component's own element; any descendant
+    selector targets the shadow tree. Outer-page styles do not bleed
+    in, and the component does not leak out.
+  </p>
+  <sui-codeblock code={code.scoping}></sui-codeblock>
+
+  <h2>Tokens, not literals</h2>
+  <p>
+    Read tokens from the document root. A literal value — a hex color, a
+    pixel size, a fixed font-family — defeats theming, breaks dark mode,
+    and locks the component to one brand voice. Use
+    <code>var(--token)</code> with no fallback; tokens.css is loaded
+    before any component renders, so the resolver always wins.
+  </p>
+  <sui-codeblock code={code.tokens}></sui-codeblock>
+  <p>
+    The four layers — semantic surfaces, tone ramps, brand palette,
+    primitives — keep the choice of token aligned with intent. A card
+    reads <code>var(--surface-1)</code>; a status alert reads
+    <code>var(--tone-warning-bg)</code>; a headline reads
+    <code>var(--font-display)</code>. Reach for a primitive only when
+    no semantic token captures the role.
+  </p>
+
+  <h2>Status tones, not palette colors</h2>
+  <p>
+    Tone ramps are status surfaces, not brand colors. <code>success</code>
+    is the right token for a positive confirmation; <code>primary</code> is
+    a brand action. Mixing the two breaks every theme that ships its
+    own success color.
+  </p>
+  <sui-codeblock code={code.tone}></sui-codeblock>
+
+  <h2>Layout primitives</h2>
+  <p>
+    Reach for <code>&lt;sui-stack&gt;</code>, <code>&lt;sui-cluster&gt;</code>,
+    and <code>&lt;sui-grid&gt;</code> before reaching for a hand-rolled
+    flex layout. They encode the design system's spacing scale, the
+    breakpoints, and the responsive defaults — so a layout that reads
+    <code>gap="3"</code> in one place looks the same wherever it's reused.
+  </p>
+  <sui-codeblock code={code.layout}></sui-codeblock>
+  <p>
+    For one-off layouts where a layout primitive doesn't fit, an inline
+    <code>display: flex; gap: var(--space-3)</code> is the right call —
+    not because flex is forbidden, but because reaching for the layout
+    primitive first means most components stay consistent by default.
+  </p>
+
+  <div class="page-nav">
+    <a class="btn" href="/theming">← Theming</a>
+    <a class="btn btn-primary" href="/composition">Composition →</a>
+  </div>
+</div>

@@ -378,7 +378,7 @@ fn public_asset_content_type(file: &str) -> &'static str {
         Some("json") => "application/json; charset=utf-8",
         Some("woff2") => "font/woff2",
         Some("woff") => "font/woff",
-        Some("webmanifest") => "application/manifest+json; charset=utf-8",
+        Some("wasm") => "application/wasm",
         _ => "application/octet-stream",
     }
 }

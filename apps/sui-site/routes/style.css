@@ -1,0 +1,164 @@
+/*
+  /  (landing) — visual rules. Companion to routes/page.sui. The deck
+  bundler auto-picks this file up via the deck-route-css convention.
+*/
+
+.landing .hero {
+  padding: var(--space-7) 0 var(--space-6) 0;
+  max-width: 64rem;
+}
+.landing .eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  margin: 0 0 var(--space-3) 0;
+}
+.landing .hero h1 {
+  font-family: var(--font-display, var(--font-body));
+  font-weight: 800;
+  font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin: 0 0 var(--space-4) 0;
+  color: var(--foreground);
+}
+.landing .grad {
+  background: linear-gradient(90deg, var(--primary), color-mix(in oklch, var(--primary) 60%, var(--accent)));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.landing .lead {
+  font-size: var(--text-lg);
+  line-height: 1.55;
+  color: var(--muted-foreground);
+  margin: 0 0 var(--space-5) 0;
+  max-width: 50rem;
+}
+.landing .hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.live-compositions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+}
+@media (min-width: 980px) {
+  .live-compositions { grid-template-columns: 1fr; }
+}
+.demo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+.demo > header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.demo .pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  min-width: 0;
+}
+.demo .pane-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+.demo sui-codeblock { display: block; font-size: var(--text-xs); }
+.demo sui-codeblock::part(pre) {
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--surface-0);
+  font-size: var(--text-xs);
+  max-height: 16rem;
+  overflow: auto;
+}
+@media (max-width: 820px) { .demo { grid-template-columns: 1fr; } }
+
+.counter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.counter output {
+  font-family: var(--font-mono);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  min-width: 3ch;
+  text-align: center;
+  color: var(--primary);
+}
+.counter button {
+  width: 2.4rem; height: 2.4rem;
+  font-size: var(--text-xl);
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0;
+}
+.muted { color: var(--muted-foreground); margin: var(--space-2) 0 0; font-family: var(--font-mono); font-size: var(--text-sm); }
+
+.todo-card, .clock-card {
+  display: flex; flex-direction: column; gap: var(--space-3);
+}
+.items {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: var(--space-2);
+}
+.items li {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+.clock-time {
+  font-family: var(--font-mono);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0;
+  letter-spacing: 0.05em;
+}
+
+.why { margin-top: var(--space-9); }
+.why h2 {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.6rem, 2.5vw, 2rem);
+  margin: 0 0 var(--space-5) 0;
+  letter-spacing: -0.02em;
+}
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+}
+.why-grid article {
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex; flex-direction: column; gap: var(--space-2);
+}
+.why-grid h3 { margin: 0; font-size: var(--text-md); }
+.why-grid p { margin: 0; color: var(--muted-foreground); line-height: 1.5; font-size: var(--text-sm); }
+
+.next { margin: var(--space-9) 0 var(--space-7) 0; }
+.next-cta { display: flex; flex-wrap: wrap; gap: var(--space-3); }

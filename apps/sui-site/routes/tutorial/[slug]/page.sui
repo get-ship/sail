@@ -1,95 +1,25 @@
 <!--
   /tutorial/[slug] — an INTERACTIVE lesson (svelte.dev/tutorial-style), ported
   from ship-marketing's proven TutorialApp. Prose renders ABOVE two panes:
-    LEFT  = editor: <sui-tabs> (template.sui / controller.ts / diff) over a
-            sui-native <textarea> per pane, with Reset + Show-solution actions.
-    RIGHT = a sandboxed <iframe src="/tutorial/host.html"> preview that compiles
+    LEFT  = editor: <sui-tabs> (template.sui / controller.ts / diff) over
+            a <sui-code-editor> per pane, with Reset + Show-solution actions.
+            The editor is `<sui-code-editor>` (CodeMirror 6 wrapped as a SUI
+            primitive), NOT a textarea — per spec, no native text surfaces
+            anywhere on the sui-site.
+    RIGHT = a sandboxed <iframe src="/tut-host.html"> preview that compiles
             + RUNS the lesson live in full isolation.
-  All wiring lives in the controller + src/tutorial-boot.ts. The editor is a
-  plain themed <textarea> (NO ship-code-editor — sui-site ships public and must
-  not depend on the ship platform). Everything else IS a sui primitive.
+
+  All wiring lives in the controller + ../../src/tutorial-boot.ts. The page
+  is pure markup; the controller orchestrates wasm compile, postMessage,
+  iframe lifecycle, theme sync.
+
+  Sibling style.css carries the visual rules (the bundler drops inline
+  `<style>` in a `page.sui`).
 -->
-<style>
-  .tut-app-root {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: var(--space-4);
-    align-items: stretch;
-    margin-top: var(--space-5);
-  }
-  /* grid items must shrink below intrinsic width or wide code lines force the
-     whole page to scroll horizontally. */
-  .tut-app-root > * { min-width: 0; }
-
-  .tut-pane {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    background: var(--surface-1);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-  }
-  .tut-pane-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-3);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-    min-height: 2.5rem;
-    box-sizing: border-box;
-  }
-  .tut-actions { display: flex; gap: var(--space-1); align-items: center; }
-
-  .tut-tabs { display: inline-flex; align-items: center; }
-
-  .tut-editor-host { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; position: relative; }
-  .tut-editor-host > sui-tab-panel { flex: 1; min-height: 0; }
-  .tut-editor-host > sui-tab-panel[hidden] { display: none; }
-  .tut-editor-host > sui-tab-panel[active] { display: flex; flex-direction: column; }
-
-  .tut-editor {
-    flex: 1; width: 100%; min-width: 0; box-sizing: border-box;
-    min-height: 22rem; resize: vertical;
-    font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6;
-    tab-size: 2; white-space: pre; overflow: auto;
-    background: var(--surface-1); color: var(--foreground);
-    border: none; border-radius: 0; padding: var(--space-4) var(--space-5);
-  }
-  .tut-editor:focus { outline: 2px solid var(--primary); outline-offset: -2px; }
-
-  .tut-diff-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3); overflow-y: auto; }
-  .tut-diff-row { display: flex; flex-direction: column; gap: var(--space-1); }
-  .tut-diff-label {
-    font-family: var(--font-mono); font-size: var(--text-xs); color: var(--muted-foreground);
-    text-transform: uppercase; letter-spacing: 0.06em;
-  }
-
-  .tut-preview-host { flex: 1 1 auto; min-height: 0; display: flex; }
-  .tut-preview { flex: 1; width: 100%; min-height: 24rem; border: none; background: var(--background); }
-
-  .tut-error { margin: var(--space-2) var(--space-3) 0; flex-shrink: 0; padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-md); border-left: 3px solid var(--destructive);
-    background: color-mix(in oklch, var(--destructive) 12%, transparent); }
-  .tut-error[hidden] { display: none; }
-  .tut-error-title { font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.05em;
-    text-transform: uppercase; color: var(--destructive); margin-bottom: var(--space-1); }
-  .tut-error-msg { margin: 0; font-family: var(--font-mono); font-size: var(--text-xs);
-    white-space: pre-wrap; word-break: break-word; max-height: 8rem; overflow-y: auto; color: var(--destructive); }
-
-  .prose-wrap { margin-bottom: var(--space-2); }
-
-  @media (max-width: 880px) {
-    .tut-app-root { grid-template-columns: 1fr; }
-  }
-</style>
-
-<div class="doc" style="max-width: none">
-  <header style="margin-bottom: var(--space-4)">
+<div class="doc">
+  <header class="tut-header">
     <p class="eyebrow">Tutorial</p>
-    <h1 style="margin:0; font-size: clamp(1.7rem, 3.5vw, 2.3rem)">{title()}</h1>
+    <h1 class="tut-title">{title()}</h1>
     <p class="lead">{description()}</p>
   </header>
 
@@ -106,16 +36,26 @@
           <sui-tab name="diff">diff</sui-tab>
         </sui-tabs>
         <div class="tut-actions">
-          <sui-button data-action="reset" variant="ghost" size="sm" title="Reset to the starter code">↺ Reset</sui-button>
-          <sui-button data-action="solution" variant="soft" tone="primary" size="sm" title="Replace with the answer">Show solution</sui-button>
+          <sui-button data-action="reset" variant="ghost" size="sm">↺ Reset</sui-button>
+          <sui-button data-action="solution" variant="soft" tone="primary" size="sm">Show solution</sui-button>
         </div>
       </div>
       <div class="tut-editor-host">
         <sui-tab-panel name="template" active>
-          <textarea class="tut-editor" data-pane="template" spellcheck="false" autocomplete="off" autocapitalize="off" wrap="off"></textarea>
+          <sui-code-editor
+            class="tut-editor"
+            data-pane="template"
+            language="sui"
+            size="md"
+          ></sui-code-editor>
         </sui-tab-panel>
         <sui-tab-panel name="controller" hidden>
-          <textarea class="tut-editor" data-pane="controller" spellcheck="false" autocomplete="off" autocapitalize="off" wrap="off"></textarea>
+          <sui-code-editor
+            class="tut-editor"
+            data-pane="controller"
+            language="typescript"
+            size="md"
+          ></sui-code-editor>
         </sui-tab-panel>
         <sui-tab-panel name="diff" hidden>
           <div class="tut-diff-wrap">
@@ -135,7 +75,7 @@
     <section class="tut-pane tut-pane--preview">
       <div class="tut-pane-bar">
         <sui-status-dot class="tut-status-dot" tone="muted" size="sm" label="ready"></sui-status-dot>
-        <sui-button data-action="run" variant="ghost" size="sm" title="Re-run with the current code">↻ Run</sui-button>
+        <sui-button data-action="run" variant="ghost" size="sm">↻ Run</sui-button>
       </div>
       <div class="tut-error" hidden>
         <div class="tut-error-title">Compile error</div>

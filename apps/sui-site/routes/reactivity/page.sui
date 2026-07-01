@@ -37,9 +37,9 @@
   </p>
   <sui-codeblock code={code.template}></sui-codeblock>
   <p class="callout">
-    <strong>The mental model:</strong> a text binding is itself an effect the
-    compiler wrote for you. Change the signal, and that one text node updates —
-    nothing else re-runs. That's the whole runtime.
+    A text binding <code>&#123;count()&#125;</code> is a compiled effect. When the
+    signal changes, the compiler updates only the one text node that read it
+    — nothing else in the tree re-runs. That is the whole runtime.
   </p>
 
   <div class="page-nav">
