@@ -1,0 +1,84 @@
+<!--
+  /why — the case for SUI, built from the architecture. Spine: Ship needs
+  correct custom UI fast from agents; the bottleneck is decisions and
+  correctness, not reactivity; so remove decisions (standard library +
+  enforced design system + narrow grammar) and tighten the loop. Competitive
+  machinery, agent-first priorities. Do not name competitors; do not dunk.
+-->
+<div class="doc why-doc">
+  <p class="eyebrow">Introduction</p>
+  <h1>Why SUI</h1>
+  <p class="lead">
+    Ship exists to build custom applications fast — and, increasingly, to
+    build them with agents. SUI is Ship's UI layer, and every decision in it
+    follows from that one requirement: an agent, handed a spec, should produce
+    a working, correct, on-brand interface without a person babysitting a
+    thousand small choices.
+  </p>
+  <p>
+    SUI is a compiler-based reactive UI framework. On syntax and performance it
+    sits with the modern compilers — signals, fine-grained updates, compilation
+    to standard custom elements with shadow-DOM-scoped styles. What's different
+    isn't the machinery; it's the priorities. SUI is built to be the most
+    ergonomic framework for an <em>agent</em> to write — not the most ergonomic
+    for a human to hand-author. Those aren't the same target, and nearly
+    everything else optimizes for the second.
+  </p>
+
+  <h2>What "ergonomic for an agent" means</h2>
+  <p>
+    <strong>Tight feedback loops.</strong> The compiler, the language server,
+    and a strict linter give instant, precise ground truth on every edit. An
+    unknown token, a hand-rolled layout that should be a primitive, a value off
+    the spacing scale — the model learns it's wrong the moment it writes it,
+    from the same analysis a human editor surfaces, not from a broken render
+    three steps later.
+  </p>
+  <p>
+    <strong>Batteries included.</strong> A large standard library — around sixty
+    designed, accessible primitives, plus packs for charts, media, code, and
+    canvas — means the component already exists. The agent composes a
+    <code>sui-combobox</code>; it doesn't rebuild one from <code>div</code>s and
+    get the keyboard handling subtly wrong. Data and server rendering come with
+    the stack — that's <a href="/deck">deck</a>'s half: <code>data live</code>
+    yields a server-rendered value that hydrates and updates over a live stream,
+    with no plumbing to author.
+  </p>
+  <p>
+    <strong>Strict opinions.</strong> The language is narrow on purpose — one way
+    to declare a prop, bind a value, loop — and the design system is enforced by
+    the compiler, where off-system styling is a build error, not a review note.
+    The smaller the space of valid programs, the less there is to get wrong and
+    the more the tooling can guarantee.
+  </p>
+
+  <h2>Why this is the right shape</h2>
+  <p>
+    The hard part of agent-authored UI was never reactivity. It's decisions and
+    correctness. A model building a screen makes hundreds of small choices —
+    color, spacing, focus behavior, whether that dropdown is genuinely
+    accessible — and gets them confidently, plausibly wrong. Hand it more
+    freedom and more primitives and you only widen the surface to be wrong on.
+    SUI goes the other way: the standard library makes the components a given,
+    the design system makes the styling a given, the strict grammar makes the
+    shape a given. What's left for the model is the part that actually needs
+    intelligence — composition and logic.
+  </p>
+  <p>
+    And it stays on the platform: html, ts, and css compiling to standard custom
+    elements, no parallel universe to learn for a person or a model.
+    <a href="/deck">deck</a> wraps it with routing, server rendering, bundling,
+    and live data, so an application is a full stack rather than a pile of view
+    components.
+  </p>
+
+  <h2>The honest version</h2>
+  <p>
+    SUI is the same kind of tool as the compilers it's measured against, with a
+    different set of priorities. It optimizes for tight loops, batteries, and
+    strict opinions — for a machine writing UI and a human steering it — and it
+    will feel constrained if you came looking for a flexible toolkit to
+    hand-write. That constraint is the product. It's what turns "an agent built
+    this" from a warning into a guarantee.
+  </p>
+</div>
