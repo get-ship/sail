@@ -7,6 +7,7 @@
       "devDependencies": {
         "@playwright/test": "^1.58.2",
         "@typescript/native-preview": "^7.0.0-dev.20260628.1",
+        "lucide-static": "^1.22.0",
         "playwright": "^1.59.3",
         "typescript": "~5.8.3",
         "vitest": "^4.1.5",
@@ -633,6 +634,8 @@
     "lightningcss-win32-x64-msvc": ["lightningcss-win32-x64-msvc@1.32.0", "", { "os": "win32", "cpu": "x64" }, "sha512-Amq9B/SoZYdDi1kFrojnoqPLxYhQ4Wo5XiL8EVJrVsB8ARoC1PWW6VGtT0WKCemjy8aC+louJnjS7U18x3b06Q=="],
 
     "lru-cache": ["lru-cache@10.4.3", "", {}, "sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ=="],
+
+    "lucide-static": ["lucide-static@1.22.0", "", {}, "sha512-xJ1V0cJLZtgnyoD7Cqvj8B48se3JI/YcC2XyNQ9sVoK7eb74JdYL9rHuWJiPGYo6dcj8K/Yrx74XrjJAA3t/Dw=="],
 
     "magic-string": ["magic-string@0.30.21", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.5" } }, "sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ=="],
 
