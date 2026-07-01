@@ -8,14 +8,21 @@
 
   Sourced from `apps/sui-site/components.gen.ts` — emitted by `deck build`'s
   build_assets pass. Framework-pure (no ship-platform deps).
+
+  Layout: this view is the dogfood for the layout primitives — every
+  grouping reads from the library:
+    <sui-cluster>   header (h1 + count) and chip lists
+    <sui-stack>     cell body (tag / desc / preview / meta) and meta list
+    <sui-grid>      the gallery itself, with per-cell span attributes
+                    (`data-col-span` / `data-row-span`) so a calendar
+                    card is 2×2 and a chip card is 1×1 — content-aware,
+                    not uniform.
+  Only the surface chrome (border, hover tint, font tokens) lives in
+  this stylesheet; structure is the primitives'.
 -->
 <style>
   :host {
     display: block;
-    /* Page padding — comfortable on the sides + room to breathe at the
-       bottom. The `fullscreen` route variant on the shell strips
-       side padding for component viewer / tutorial, but the catalog
-       inherits the standard 6 + 7 spacing. */
     /* Hover tint — reads the pre-computed --tone-primary-bg ramp
        (a 14% primary mix defined in tokens.css) so the formula
        doesn't drift across primitives. */
@@ -23,11 +30,7 @@
   }
 
   .cat-head {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-3);
     margin-bottom: var(--space-5);
-    flex-wrap: wrap;
   }
   .cat-head h1 {
     font-family: var(--font-display);
@@ -47,7 +50,6 @@
     margin-bottom: var(--space-6);
   }
   .pack-h {
-    display: flex;
     align-items: baseline;
     gap: var(--space-2);
     margin-bottom: var(--space-3);
@@ -66,23 +68,11 @@
     color: var(--muted-foreground);
   }
 
-  /* Content-driven grid: dense auto-flow + per-cell column / row spans
-     driven by the `size` class on each cell. Big components
-     (calendar, table, tree, code-editor) span two columns / two rows
-     and get the room they need; small ones (status-dot, badge, switch,
-     separator) shrink to a single column. Column min is 240px so the
-     1280px shell width packs FIVE columns; `auto-flow: dense` backfills
-     gaps when a `wide` cell can't fit a sibling. */
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    grid-auto-flow: dense;
-    gap: var(--space-3);
-  }
+  /* Per-cell chrome. Layout (column/row spans + grid-auto-flow) lives
+     in <sui-grid>; only the visual surface lives here. The cell body
+     uses <sui-stack> for vertical rhythm. */
   .cell {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
+    display: block;
     padding: var(--space-3);
     background: var(--surface-1);
     border: 1px solid var(--border);
@@ -90,23 +80,7 @@
     text-decoration: none;
     color: inherit;
     transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
-    /* Cells occupy the same slot in the grid by default — overrides
-       below. `wide` spans 2 columns, `tall` spans 2 rows. */
-    grid-column: span 1;
-    grid-row: span 1;
-  }
-  .cell.wide { grid-column: span 2; }
-  .cell.tall { grid-row: span 2; }
-  @media (max-width: 720px) {
-    .cell.wide { grid-column: span 1; }
-    .cell.tall { grid-row: span 1; }
-  }
-  .cell.compact {
     min-height: 0;
-  }
-  .cell.compact .cell-preview {
-    min-height: var(--space-8);
-    padding: var(--space-2);
   }
   .cell:hover {
     border-color: var(--primary);
@@ -114,12 +88,6 @@
     transform: translateY(-1px);
   }
 
-  .cell-head {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-2);
-    min-height: var(--density-text);
-  }
   .cell-tag {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
@@ -145,9 +113,8 @@
      inner element overflows with scroll if a specimen is taller than
      the box (overflow: auto on the parent catches the rest). */
   .cell-preview {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    /* The cluster primitive provides the centering flex; this rule
+       owns the visual surface only (frame, floor, overflow). */
     min-height: 6.5rem;
     padding: var(--space-2) var(--space-3);
     background: var(--surface-2);
@@ -155,9 +122,20 @@
     border-radius: var(--radius-sm);
     overflow: auto;
   }
-  .cell.wide .cell-preview { min-height: 8rem; }
-  .cell.tall .cell-preview { min-height: 22rem; align-items: flex-start; justify-content: flex-start; }
-
+  /* `compact` is set on the preview when the seed has `size: 'compact'`
+     (small primitives: icon, badge, chip, status-dot, separator). The
+     cell itself still has the same `data-col-span` / `data-row-span`
+     as before — only the preview is shrunk. */
+  .cell-preview[data-compact] {
+    min-height: var(--space-8);
+    padding: var(--space-2);
+  }
+  /* Big preview when the cell spans two columns. */
+  .cell[data-col-span='2'] .cell-preview { min-height: 8rem; }
+  /* Tall preview when the cell spans two rows (calendar, tree, table). */
+  .cell[data-row-span='2'] .cell-preview {
+    min-height: 22rem;
+  }
   .preview-empty {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
@@ -166,25 +144,12 @@
 
   .meta {
     margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-  }
-  .meta-row {
-    display: flex;
-    gap: var(--space-2);
-    align-items: baseline;
   }
   .meta-label {
     flex: 0 0 var(--space-8);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--muted-foreground);
-  }
-  .meta-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1);
   }
   .chip {
     font-family: var(--font-mono);
@@ -203,55 +168,73 @@
   }
 </style>
 
-<section class="cat-head" data-test="catalog-head">
+<sui-cluster class="cat-head" gap="3" data-test="catalog-head">
   <h1>Component library</h1>
   <span class="cat-sub">{totalComponents()} components · {totalPacks()} packs</span>
-</section>
+</sui-cluster>
 
 {#for group of groups() key={group.id}}
   <section class="pack" data-test="catalog-pack" attr:data-pack={group.pkg}>
-    <header class="pack-h">
+    <sui-cluster class="pack-h" gap="2">
       <span class="pack-name">{group.pkg}</span>
       <span class="pack-count">{group.count}</span>
-    </header>
-    <div class="grid">
+    </sui-cluster>
+    <sui-grid min="md" gap="3" flow="dense">
       {#for c of group.components key={c.tag}}
-        <a class={'cell ' + c.size} data-test="catalog-cell" attr:data-tag={c.tag} attr:data-size={c.size} href={'/components/' + c.tag}>
-          <span class="cell-tag" data-test="catalog-tag">&lt;{c.tag}&gt;</span>
-          {#if c.description}
-            <p class="cell-desc">{c.description}</p>
-          {/if}
-          <div class="cell-preview" attr:data-preview-for={c.tag}></div>
-          <dl class="meta">
-            <div class="meta-row">
-              <dt class="meta-label">props</dt>
-              <dd class="meta-chips">
-                {#if c.props.length}
-                  {#for p of c.props key={p.name}}<span class="chip" attr:title={p.type}>{p.name}</span>{/for}
-                {:else}
-                  <span class="meta-none">—</span>
+        <a
+          class="cell"
+          data-test="catalog-cell"
+          attr:data-tag={c.tag}
+          attr:data-size={c.size}
+          attr:data-col-span={c.size === 'wide' ? '2' : null}
+          attr:data-row-span={c.size === 'tall' ? '2' : null}
+          href={'/components/' + c.tag}
+        >
+          <sui-stack gap="2">
+            <span class="cell-tag" data-test="catalog-tag">&lt;{c.tag}&gt;</span>
+            {#if c.description}
+              <p class="cell-desc">{c.description}</p>
+            {/if}
+            <sui-cluster class="cell-preview" align="center" justify="center" attr:data-preview-for={c.tag} attr:data-compact={c.size === 'compact'}></sui-cluster>
+            <dl class="meta">
+              <sui-stack gap="1">
+                <sui-cluster class="meta-row" gap="2" align="baseline">
+                  <dt class="meta-label">props</dt>
+                  <dd class="meta-chips">
+                    {#if c.props.length}
+                      <sui-cluster gap="1">
+                        {#for p of c.props key={p.name}}<span class="chip" attr:title={p.type}>{p.name}</span>{/for}
+                      </sui-cluster>
+                    {:else}
+                      <span class="meta-none">—</span>
+                    {/if}
+                  </dd>
+                </sui-cluster>
+                {#if c.slots.length}
+                  <sui-cluster class="meta-row" gap="2" align="baseline">
+                    <dt class="meta-label">slots</dt>
+                    <dd class="meta-chips">
+                      <sui-cluster gap="1">
+                        {#for s of c.slots key={s.name}}<span class="chip">{s.name}</span>{/for}
+                      </sui-cluster>
+                    </dd>
+                  </sui-cluster>
                 {/if}
-              </dd>
-            </div>
-            {#if c.slots.length}
-              <div class="meta-row">
-                <dt class="meta-label">slots</dt>
-                <dd class="meta-chips">
-                  {#for s of c.slots key={s.name}}<span class="chip">{s.name}</span>{/for}
-                </dd>
-              </div>
-            {/if}
-            {#if c.events.length}
-              <div class="meta-row">
-                <dt class="meta-label">events</dt>
-                <dd class="meta-chips">
-                  {#for e of c.events key={e.name}}<span class="chip">{e.name}</span>{/for}
-                </dd>
-              </div>
-            {/if}
-          </dl>
+                {#if c.events.length}
+                  <sui-cluster class="meta-row" gap="2" align="baseline">
+                    <dt class="meta-label">events</dt>
+                    <dd class="meta-chips">
+                      <sui-cluster gap="1">
+                        {#for e of c.events key={e.name}}<span class="chip">{e.name}</span>{/for}
+                      </sui-cluster>
+                    </dd>
+                  </sui-cluster>
+                {/if}
+              </sui-stack>
+            </dl>
+          </sui-stack>
         </a>
       {/for}
-    </div>
+    </sui-grid>
   </section>
 {/for}

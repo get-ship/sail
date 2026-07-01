@@ -7,7 +7,7 @@
 // as a binding delimiter by the compiler, which mangles inline JSON.
 export const jsonData = '{"agent":"gatekeeper","files":14,"passing":true,"findings":null}'
 
-export const code = {
+export const code: Record<string, string> = {
   // ── Actions ──
   button: `<sui-button tone="primary" variant="solid">Save changes</sui-button>
 <sui-button variant="outline">Cancel</sui-button>
