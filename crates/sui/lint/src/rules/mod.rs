@@ -31,6 +31,7 @@ pub mod event_name;
 pub mod font_literal;
 pub mod for_key;
 pub mod layout_primitive;
+pub mod prefer_primitive;
 pub mod prop_value;
 pub mod space_literal;
 pub mod primary_for_status;
@@ -67,6 +68,7 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (attr_bool_prop::RULE_ID, attr_bool_prop::check),
     (space_literal::RULE_ID, space_literal::check),
     (layout_primitive::RULE_ID, layout_primitive::check),
+    (prefer_primitive::RULE_ID, prefer_primitive::check),
     (dimension_literal::RULE_ID, dimension_literal::check),
     (client_directive::RULE_ID, client_directive::check),
     (primary_for_status::RULE_ID, primary_for_status::check),
