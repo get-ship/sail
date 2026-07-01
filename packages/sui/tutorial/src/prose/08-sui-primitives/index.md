@@ -1,6 +1,6 @@
 ---
 title: "Composing UI primitives"
-description: "Using the @ship/primitives pack inside your app."
+description: "Using the @ship/sui-primitives pack inside your app."
 group: "Tutorial"
 order: 8
 slug: "08-sui-primitives"
@@ -9,24 +9,22 @@ next: "09-agent-loop"
 chapter: "components"
 ---
 
-Ship's primitive set ships as **`@ship/primitives`** — about 80 custom
+Ship's primitive set ships as **`@ship/sui-primitives`** — about 80 custom
 elements (`<sui-button>`, `<sui-card>`, `<sui-input>`, `<sui-tabs>`,
 `<sui-status-dot>`, `<sui-alert>`, …) each with a stable prop / event /
-slot contract. Charts live in a separate pack, **`@ship/charts`**
-(`<sui-area-chart>`, `<sui-bar-chart>`, `<sui-donut>`, …). Both
-packs are surfaced in the workspace catalog at
-`mcp__ship__ReadMcpResource(ship://components)` and in the live
-component picker.
+slot contract. Charts live in a separate pack, **`@ship/sui-charts`**
+(`<sui-area-chart>`, `<sui-bar-chart>`, `<sui-donut>`, …). Browse every
+primitive, with live previews, in the [component library](/components).
 
-You don't write `import { Button } from '@ship/primitives'` and you
+You don't write `import { Button } from '@ship/sui-primitives'` and you
 don't declare what tags your template uses. You import the pack once
 at the app entrypoint (or rely on the daemon's auto-register in dev),
 and from then on every `<sui-*>` tag in your template just works:
 
 ```ts
 // app entry — registers every <sui-*> in the pack
-import '@ship/primitives'
-import '@ship/charts'        // optional
+import '@ship/sui-primitives'
+import '@ship/sui-charts'        // optional
 ```
 
 ```sui
@@ -48,25 +46,6 @@ Three things that are good to know:
   (`slot="header"`, `slot="footer"`, `slot="leading"`); the default
   slot takes the rest. The component owns the chrome — you own the
   content.
-
-## Packs vs. the umbrella
-
-Ship used to ship a single `@ship/ui-components` package. That's been
-decomposed into **independent workspace packs** under
-`packages/components/<pack>/`, each with its own `package.json`,
-bundle, and `custom-elements.json`. Two projections:
-
-| Catalog | Contents | Use |
-|---|---|---|
-| `workspace.json` | Every pack in the repo (public + private) | Tooling, agents, picker, design-system audits |
-| `published.json` | Only `!private` packs | Library consumers, npm publishing |
-
-The daemon serves per-pack bundles at `/_deck/packs/<pack>/<bundle>.js`
-and the picker groups by pack origin instead of regex heuristics.
-
-For an authoring agent: read `ship://components` to get the merged
-manifest, then filter by `pack` if you only want primitives or only
-charts.
 
 ## Try it
 
