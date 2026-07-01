@@ -28,6 +28,13 @@
   </p>
   <sui-codeblock code={code.component}></sui-codeblock>
 
+  <h2>Run it</h2>
+  <p>
+    deck compiles the <code>.sui</code> files, serves them, and hot-reloads on
+    save. Point it at your project and open the printed URL.
+  </p>
+  <sui-codeblock code={code.run}></sui-codeblock>
+
   <p class="callout">
     <strong>One model, top to bottom.</strong> Pages, layouts, and library
     components are all the same <code>.sui</code> + controller pair. Learn it

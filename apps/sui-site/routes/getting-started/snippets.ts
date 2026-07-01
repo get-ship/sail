@@ -1,28 +1,40 @@
 // Code snippets for the getting-started page. Kept OUT of the controller so the
 // compiler's scope scan isn't fooled by `return {…}` / `signal(…)` patterns
 // inside these strings (it reads the controller file textually).
+//
+// Every .sui sample is compile-checked against the in-repo sui-compiler: the
+// view template compiles paired with its controller (`build` on the dir);
+// the component compiles on its own. Re-run the compiler before editing a sample.
 export const code = {
-  install: `# add the SUI runtime to your project
-npm install @ship/sui-runtime @ship/sui-dom`,
+  install: `# the runtime and the primitive library
+bun add @ship/sui-runtime @ship/sui-primitives
+
+# the compiler, as dev tooling
+bun add -D @ship/sui-compiler-wasm`,
+
   template: `<!-- hello.sui — the template -->
-<h1>Hello, {name()}</h1>
-<input value={name()} on:input={(e) => name.set(e.target.value)} />`,
+<label>Name <input type="text" bind:value={name} /></label>
+<p>Hello, {name() || 'world'}.</p>`,
+
   controller: `// hello.controller.ts — the logic
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
   scope: () => {
-    const name = signal('world')
+    const name = signal('')
     return { name }
   },
 })`,
+
   component: `<!-- greeting.sui — a reusable component -->
-<prop name="name" type="string" default="world" />
+<prop name="who" type="string" default="world" />
 
 <style>
-  :host { display: block; font-family: var(--font-body); }
-  strong { color: var(--primary); }
+  :host { display: block; }
+  p { color: var(--foreground); }
 </style>
 
-<p>Hello, <strong>{name()}</strong></p>`,
+<p>Hello, {who()}.</p>`,
+
+  run: `deck dev --project .`,
 }
