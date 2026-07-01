@@ -15,7 +15,7 @@ use rolldown::plugin::{
     HookLoadArgs, HookLoadOutput, HookLoadReturn, HookResolveIdArgs, HookResolveIdOutput,
     HookResolveIdReturn, HookUsage, Plugin, PluginContext, SharedLoadPluginContext,
 };
-use rolldown_common::{ModuleType, ResolvedExternal};
+use rolldown_common::{ModuleType, ResolvedExternal, side_effects::HookSideEffects};
 
 
 use crate::compile::{compile_sui, CompileMode};
@@ -253,24 +253,24 @@ impl Plugin for SuiPlugin {
                         }
                     };
                     if target.exists() {
-                        // Surface the owning `package.json` so Rolldown
-                        // can apply the `sideEffects` contract — without
-                        // this the bundler would silently keep a
-                        // `sideEffects: false` package's body (sui-
-                        // sideeffects footgun). The detector in
-                        // `rolldown_bundle` relies on the SAME field
-                        // to flag the drop on the manifest so the
-                        // build emits a loud warning.
-                        let package_json_path = pkg.join("package.json");
-                        return Ok(Some(HookResolveIdOutput {
-                            id: target.to_string_lossy().to_string().into(),
-                            package_json_path: if package_json_path.is_file() {
-                                Some(package_json_path.to_string_lossy().to_string())
-                            } else {
-                                None
-                            },
-                            ..Default::default()
-                        }));
+                        // Don't surface the owning `package.json` here.
+                        // If we do, Rolldown's `lazy_check_side_effects`
+                        // honors `package.json#sideEffects: false` and
+                        // drops the body — but a bare `import
+                        // '@ship/<pkg>'` is a deliberate side-effect
+                        // request from the importer, and the package's
+                        // `sideEffects: false` is a tree-shaking hint
+                        // for tooling that can't tell a binding import
+                        // from a side-effect import. The deck bundler
+                        // CAN, so the importer's intent wins. Setting
+                        // `package_json_path: None` makes Rolldown
+                        // fall through to its analyzer (any source
+                        // statement with a side effect keeps the body)
+                        // and per-statement tree-shaking still shakes
+                        // dead exports inside the kept body.
+                        return Ok(Some(HookResolveIdOutput::from_id(
+                            target.to_string_lossy().to_string(),
+                        )));
                     }
                 }
             }
@@ -308,8 +308,111 @@ impl Plugin for SuiPlugin {
                 ..Default::default()
             }));
         }
-        // Real .ts/.js — Rolldown loads + transpiles natively.
-        Ok(None)
+        // Real .ts/.js — read the source and return it with
+        // `side_effects: Some(HookSideEffects::True)`. Two things
+        // going on:
+        //
+        // 1. We MUST return the actual source (the `code` field
+        //    is the module body; empty `code` would make the
+        //    named-import consumer see a `MissingExport`).
+        //    Returning `None` here would defer to Rolldown's
+        //    native load — but then we couldn't set the
+        //    `side_effects` field, so we'd fall back to
+        //    priority 2 (the `package.json#sideEffects` field,
+        //    which drops the body when set to `false`).
+        //
+        // 2. The forced `HookSideEffects::True` (priority 1 in
+        //    Rolldown's `normalize_side_effects`) wins over
+        //    `package.json#sideEffects` (priority 2), keeping
+        //    the body regardless of the package's tree-shaking
+        //    hint. This is the deck bundler's "respect the
+        //    importer's intent" contract: a bare `import
+        //    'x.css'` / `import './register.ts'` / `import
+        //    '@ship/<pkg>'` is a deliberate side-effect
+        //    request; the package's `sideEffects: false` is a
+        //    tree-shaking hint for tooling that can't tell the
+        //    difference between a binding import and a
+        //    side-effect import. The deck bundler can, so the
+        //    importer's intent wins.
+        //
+        // Authors who genuinely want tree-shaking still get it
+        // via named imports: a barrel's `export const USED`
+        // consumed by the entry is kept; `export const UNUSED`
+        // with no consumer is shaken (the spec's
+        // "genuinely-dead exports still shake" contract). The
+        // forcing only applies to the MODULE's body, not to its
+        // unused exports.
+        // Skip CSS / JSON entirely — the built-in AssetModulePlugin
+        // handles them via the `module_types: { ".css" -> Asset }` map
+        // set on `BundlerOptions`. Returning anything here (even
+        // `side_effects: Some(True)`) would short-circuit the asset
+        // pipeline and trip the "module with type `asset` during AST
+        // parsing" error. Side-effect preservation for CSS is moot
+        // anyway: the AssetModulePlugin emits the CSS file as a hashed
+        // `assets/<name>-<hash>.css` regardless of `package.json#sideEffects`
+        // (the asset IS the body, there's no JS to drop).
+        if id.ends_with(".css") || id.ends_with(".json") {
+            return Ok(None);
+        }
+        // Real .ts/.js — read the source and return it with
+        // `side_effects: Some(HookSideEffects::True)`. The forced
+        // `HookSideEffects::True` (priority 1 in Rolldown's
+        // `normalize_side_effects`) wins over `package.json#sideEffects`
+        // (priority 2), keeping the body regardless of the package's
+        // tree-shaking hint. This is the deck bundler's "respect the
+        // importer's intent" contract: a bare `import 'x.css'` /
+        // `import './register.ts'` / `import '@ship/<pkg>'` is a
+        // deliberate side-effect request; the package's
+        // `sideEffects: false` is a tree-shaking hint for tooling
+        // that can't tell the difference between a binding import
+        // and a side-effect import. The deck bundler can, so the
+        // importer's intent wins.
+        //
+        // We MUST return the actual source — the `code` field is the
+        // module body; empty `code` would make any named-import
+        // consumer see a `MissingExport`. Returning `None` would defer
+        // to Rolldown's native load but loses the `side_effects`
+        // override, falling back to priority 2 (the `package.json`
+        // field, which drops the body when set to `false`).
+        //
+        // Authors who genuinely want tree-shaking still get it via
+        // named imports: a barrel's `export const USED` consumed by
+        // the entry is kept; `export const UNUSED` with no consumer
+        // is shaken (the spec's "genuinely-dead exports still shake"
+        // contract). The forcing only applies to the MODULE's body,
+        // not to its unused exports.
+        let module_type = if id.ends_with(".tsx") {
+            ModuleType::Tsx
+        } else if id.ends_with(".ts") {
+            ModuleType::Ts
+        } else if id.ends_with(".jsx") {
+            ModuleType::Jsx
+        } else {
+            ModuleType::Js
+        };
+        // The forced `HookSideEffects::True` routes through
+        // `lazy_check_side_effects` in Rolldown's
+        // `normalize_side_effects`. With `package_json_path` not
+        // surfaced by `resolve_id` (so `lazy_check_side_effects` sees
+        // no `package.json`), the function falls through to the
+        // ANALYZED branch: any source statement with a side effect
+        // (`customElements.define(...)`, top-level `addEventListener`,
+        // etc.) keeps the module's body. Per-statement tree-shaking
+        // still applies to the kept body, so a barrel's dead export
+        // is shaken even when the body survives.
+        //
+        // Without this hook, Rolldown's default
+        // (`module_side_effects: true`) keeps the body but a
+        // `package.json#sideEffects: false` annotation on the
+        // importing package can still drop it — a documented
+        // sui-sideeffects footgun.
+        let code = std::fs::read_to_string(id).unwrap_or_default();
+        Ok(Some(HookLoadOutput {
+            code: code.into(),
+            side_effects: Some(HookSideEffects::True),
+            module_type: Some(module_type),
+            ..Default::default()
+        }))
     }
 
     fn register_hook_usage(&self) -> HookUsage {

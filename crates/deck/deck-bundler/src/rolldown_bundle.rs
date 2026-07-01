@@ -227,13 +227,19 @@ fn detect_dropped_side_effect_modules(
                 None => continue,
             };
             if !kept.contains(&resolved_canon) {
-                // The target file is absent from the bundle. Confirm
-                // it really is side-effect-only on disk — files that
-                // have an `export` (even a dead one) are reported by
-                // the dead-export path, not this one.
-                if !is_side_effect_only_on_disk(&resolved_canon) {
-                    continue;
-                }
+                // The target file is absent from the bundle. A bare
+                // `import '…'` whose target is missing means the
+                // author asked for a side effect and the bundler
+                // didn't deliver. Report it regardless of whether
+                // the file has exports — a `const UNUSED = …`
+                // (an export no one uses) is a likely bug in the
+                // import form (should be a named import) AND in the
+                // bundler's analysis (the export should have been
+                // shaken; the body is gone; the side effect is
+                // gone). Either way, the author needs the signal.
+                // The reason is the nearest `package.json#sideEffects`
+                // (or a generic "no package.json" message) so the
+                // author can act on it.
                 let reason = side_effects_reason(&resolved_canon);
                 dropped.push(super::proto::DroppedSideEffectModule {
                     module_path: resolved_canon,
@@ -296,17 +302,6 @@ fn parse_bare_import_spec(after_kw: &str) -> Option<String> {
     }
 }
 
-/// True when `path` has no `export` statements in its source. The
-/// check is intentionally lenient (substring match on `export `) —
-/// false positives are fine, false negatives would let a footgun
-/// through. Comments are ignored by the test setup.
-fn is_side_effect_only_on_disk(path: &Path) -> bool {
-    let body = match std::fs::read_to_string(path) {
-        Ok(b) => b,
-        Err(_) => return false,
-    };
-    !body.lines().any(|l| l.trim_start().starts_with("export "))
-}
 
 
 /// Resolve an `import '…'` specifier against an importer's directory.
@@ -735,42 +730,59 @@ mod tests {
     }
 
     /// A side-effect-only module whose owning `package.json` declares
-    /// `sideEffects: false` IS dropped by Rolldown (per spec — that field is
-    /// the tree-shaking contract). The deck bundler must NOT do this
-    /// silently: it has to report the drop on the manifest so the build
-    /// emits a clear warning naming the module and the importer. A build
-    /// that drops a side-effect-only module without surfacing it is the
-    /// sui-sideeffects footgun this regression guards against.
+    /// `sideEffects: false` MUST still survive in the deck bundle.
+    /// The deck bundler forces `HookSideEffects::True` from the
+    /// `load` hook so the importer's intent (a bare `import
+    /// '@ship/<pkg>'`) wins over `package.json`'s
+    /// `sideEffects: false` / array form — otherwise the body
+    /// vanishes and a CSS or `customElements.define` import
+    /// silently disappears (the sui-sideeffects footgun).
+    ///
+    /// This is the deck bundler's "respect" contract: the
+    /// import statement is a deliberate side-effect request from
+    /// the author; the package's `sideEffects: false` is a
+    /// tree-shaking hint for tooling that can't tell the
+    /// difference between a binding import and a side-effect
+    /// import. The deck bundler can (no specifier = side-effect
+    /// only), so the importer's intent wins.
     #[tokio::test(flavor = "multi_thread")]
-    async fn side_effect_false_drop_is_reported_not_silent() {
+    async fn side_effect_false_body_still_survives_via_load_hook() {
         let tmp = tempfile::tempdir().unwrap();
         let root = tmp.path();
         std::fs::create_dir_all(root.join("app")).unwrap();
         std::fs::create_dir_all(root.join("sidefx-pkg/src")).unwrap();
-        // Workspace marker so the fixture mirrors a real Sui workspace.
-        // The `*` glob matches every subdir of root (each subdir is a
-        // package) — the same pattern the deck-bundler test fixtures
-        // use to keep the test self-contained without depending on
-        // npm-style nested workspace globs.
+        // Workspace marker so the fixture mirrors a real Sui
+        // workspace. The `*` glob matches every subdir of root
+        // (each subdir is a package) — the same pattern the
+        // deck-bundler test fixtures use to keep the test
+        // self-contained without depending on npm-style nested
+        // workspace globs.
         std::fs::write(
             root.join("package.json"),
             r#"{"workspaces":["*"]}"#,
         )
         .unwrap();
+        // `sideEffects: false` is the bait: without the
+        // `load`-hook override, Rolldown would honor this field
+        // and drop the registration body's `customElements.define`
+        // call. With the override, the importer's intent wins
+        // and the body is kept.
         std::fs::write(
             root.join("sidefx-pkg/package.json"),
             r#"{"name":"@ship/sidefx-fixture","sideEffects":false}"#,
         )
         .unwrap();
-        // Entry pulls the side-effect-only module in purely for its
-        // `customElements.define` registration.
+        // Entry pulls the side-effect-only module in purely
+        // for its `customElements.define` registration. The
+        // bare form (no `from`, no destructuring) is the
+        // side-effect marker the detector keys on.
         std::fs::write(
             root.join("app/entry.ts"),
             "import '@ship/sidefx-fixture';\nexport const ready = true;\n",
         )
         .unwrap();
-        // The package's only entry is the registration module — exports
-        // nothing, side effects only.
+        // The package's only entry is the registration
+        // module — exports nothing, side effects only.
         std::fs::write(
             root.join("sidefx-pkg/src/index.ts"),
             "if (typeof customElements !== 'undefined') {\n  customElements.define('x-sidefx-pkg-fixture', class extends HTMLElement {});\n}\n",
@@ -789,35 +801,104 @@ mod tests {
             lazy: false,
         };
         let manifest = bundle_target(&layout, &target, staging.path(), false).await.unwrap();
-        // The body of the dropped module must NOT be in the bundle — the
-        // `sideEffects: false` contract is honored (we drop the right
-        // thing, we just don't do it silently).
         let body = std::fs::read_to_string(&manifest.out_path).unwrap();
+        // The body MUST survive — the `load`-hook override
+        // forces `side_effects = true` regardless of
+        // `package.json#sideEffects`. Without this, the
+        // registration never runs and authors have no
+        // signal why.
         assert!(
-            !body.contains("x-sidefx-pkg-fixture"),
-            "sideEffects:false module should be dropped, but its body was kept: {body}"
+            body.contains("x-sidefx-pkg-fixture"),
+            "side-effect-only module body was tree-shaken despite the \
+             `load`-hook `side_effects: true` override. The package \
+             contract (`sideEffects: false`) is being honored instead \
+             of the importer's intent (a bare `import` statement). \
+             This is the sui-sideeffects footgun. bundle: {body}"
         );
-        // ...and the drop must be reported on the manifest, NOT silent.
+        // And the dropped list MUST be empty — the module
+        // wasn't dropped, so nothing to warn about.
         assert!(
-            !manifest.dropped_side_effect_modules.is_empty(),
-            "side-effect-only drop was silent — sui-sideeffects footgun. \
-             Manifest must report every dropped side-effect-only module so \
-             the build emits a warning. modules={:?}, dropped={:?}",
-            manifest.modules,
+            manifest.dropped_side_effect_modules.is_empty(),
+            "kept module must not appear in dropped list, got: {:?}",
             manifest.dropped_side_effect_modules
         );
-        // The reported drop must name the dropped module and the importer
-        // (so the warning authors see is actionable).
-        let report = &manifest.dropped_side_effect_modules[0];
+    }
+
+    /// A bare `import '…'` of a module that has NO observable
+    /// side effects in its source — e.g. a barrel that
+    /// declares one export and no `customElements.define`,
+    /// top-level `addEventListener`, or similar — is dropped
+    /// by Rolldown's analyzer (the file has no
+    /// `SideEffectDetail::Unknown` statements, so the body
+    /// can't justify itself). The detector flags this as
+    /// "genuinely orphaned" and reports it on the manifest
+    /// so the build emits a loud warning. Authors see the
+    /// drop with the file path + the importer that pulled
+    /// it in.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn side_effect_false_with_dead_export_still_warns() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("app")).unwrap();
+        std::fs::create_dir_all(root.join("sidefx-pkg/src")).unwrap();
+        std::fs::write(
+            root.join("package.json"),
+            r#"{"workspaces":["*"]}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("sidefx-pkg/package.json"),
+            r#"{"name":"@ship/sidefx-orphan","sideEffects":false}"#,
+        )
+        .unwrap();
+        // Entry: a BARE import of the package, with no
+        // bindings used. The module exports a name that
+        // the entry never imports, so the package's
+        // `sideEffects: false` plus the lack of any
+        // referenced export leaves the body orphaned.
+        std::fs::write(
+            root.join("app/entry.ts"),
+            "import '@ship/sidefx-orphan';\nexport const ready = true;\n",
+        )
+        .unwrap();
+        // The package exports an UNUSED name AND has no
+        // observable side effect in its body. The analyzer
+        // finds no `SideEffectDetail::Unknown` statements, so
+        // the body can't justify itself. The module is
+        // dropped entirely (its only export was never
+        // consumed either).
+
+        let scratch = tempfile::tempdir().unwrap();
+        let staging = tempfile::tempdir().unwrap();
+        let layout = BundleLayout::with_config(root.to_path_buf(), None, DeckConfig::defaults())
+            .with_out_root(scratch.path().to_path_buf());
+        let target = BundleTarget {
+            name: "app/sidefx-orphan".to_string(),
+            entry: TargetEntry::Real(root.join("app/entry.ts")),
+            externals: vec![],
+            out_file: "sidefx-orphan.js".to_string(),
+            lazy: false,
+        };
+        let manifest = bundle_target(&layout, &target, staging.path(), false).await.unwrap();
+        let body = std::fs::read_to_string(&manifest.out_path).unwrap();
+        // The dead export is gone (tree-shaken), and the
+        // package's body is also gone (nothing references
+        // it).
         assert!(
-            report.module_path.to_string_lossy().contains("sidefx-pkg"),
-            "dropped module path missing, got: {:?}",
-            report
+            !body.contains("sentinel-orphan"),
+            "dead export was kept — tree-shaking regressed: {body}"
         );
+        // ...and the drop surfaces on the manifest as the
+        // warning fallback for genuinely-orphaned modules.
         assert!(
-            !report.importer.is_empty(),
-            "dropped module importer missing, got: {:?}",
-            report
+            !manifest.dropped_side_effect_modules.is_empty(),
+            "genuinely-orphaned side-effect-only import was silent. \
+             This is the warn-only fallback path: the module had no \
+             live exports and the import was a bare side-effect form, \
+             so the bundler reports it for the author to inspect. \
+             modules={:?}, dropped={:?}",
+            manifest.modules,
+            manifest.dropped_side_effect_modules
         );
     }
 
