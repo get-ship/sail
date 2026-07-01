@@ -13,7 +13,7 @@ import '../sui-theme.css'
 import '../base.css' // doc typography + .doc reading column (the comment above promised this; it was missing)
 import '@ship/sui-code-editor' // side-effect: defines <sui-code-editor> for the tutorial + future live surfaces
 import '@ship/sui-viewer'       // side-effect: defines <sui-component-viewer> + children for /components
-import { controller, signal } from '@ship/sui-runtime'
+import { controller, signal, derived } from '@ship/sui-runtime'
 
 const MODE_KEY = 'sui-mode'
 
@@ -48,7 +48,12 @@ export default controller({
     }
 
     const path = signal<string>(typeof location !== 'undefined' ? location.pathname : '/')
+    // Tutorial + component viewer render full-screen (no docs sidebar, full width).
+    const fullscreen = derived(() => {
+      const p = path()
+      return p === '/components' || p.startsWith('/tutorial')
+    })
 
-    return { dark, toggleTheme, path }
+    return { dark, toggleTheme, path, fullscreen }
   },
 })

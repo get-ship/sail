@@ -4,6 +4,17 @@
   pipeline content-hashes the file and adds a <link> in the served HTML.
 */
 
+/* Full-screen tutorial. The shared .doc column (max-width 46rem) would squish
+   the two panes into a card — override it (higher specificity than base.css's
+   .doc) so the editor + preview fill the width. Header + prose stay readable. */
+.doc.tut-page {
+  max-width: none;
+  padding: var(--space-5) var(--space-6);
+}
+.tut-page > .tut-header,
+.tut-page > .prose-wrap { max-width: 54rem; }
+.tut-page > .tut-app-root { min-height: 72vh; }
+
 .tut-header {
   margin-bottom: var(--space-4);
 }

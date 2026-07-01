@@ -3,6 +3,4 @@
   component catalog grouped by pack via <sui-component-catalog>; each cell
   is a live preview + props/slots/events.
 -->
-<div class="doc">
-  <sui-component-catalog></sui-component-catalog>
-</div>
+<sui-component-catalog></sui-component-catalog>

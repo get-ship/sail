@@ -122,6 +122,15 @@
     min-width: 0;
   }
 
+  /* Full-screen surfaces (tutorial + component viewer): no sidebar, full width,
+     no content padding — the page owns the whole viewport below the top bar. */
+  .body.fullscreen {
+    grid-template-columns: 1fr;
+    max-width: none;
+  }
+  .body.fullscreen .sidebar { display: none; }
+  .body.fullscreen .content { padding: 0; }
+
   @media (max-width: 860px) {
     .body { grid-template-columns: 1fr; }
     .sidebar { display: none; }
@@ -148,7 +157,7 @@
   </button>
 </header>
 
-<div class="body">
+<div class="body" class:fullscreen={fullscreen()}>
   <nav class="sidebar" part="sidebar">
     <div class="group">
       <h4>Introduction</h4>
