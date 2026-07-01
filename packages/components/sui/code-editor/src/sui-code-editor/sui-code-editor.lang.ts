@@ -6,6 +6,7 @@
  */
 
 import type { Extension } from '@codemirror/state'
+import { suiHighlight } from './sui-code-editor.sui-highlight'
 
 export type SupportedLanguage =
   | 'yaml' | 'json' | 'jsonc' | 'javascript' | 'typescript'
@@ -39,8 +40,12 @@ export async function loadLanguage(lang: string): Promise<Extension> {
       return markdown()
     }
     // SUI is HTML-shaped (tags, attributes, {expr} + {#directives}); base the
-    // highlighting on the HTML mode so tags/attributes/text are colored.
-    case 'sui':
+    // highlighting on the HTML mode so tags/attributes/text are colored,
+    // then layer the SUI directive + interpolation overlay on top.
+    case 'sui': {
+      const { html: htmlLang } = await import('@codemirror/lang-html')
+      return [htmlLang(), suiHighlight]
+    }
     case 'html': {
       const { html: htmlLang } = await import('@codemirror/lang-html')
       return htmlLang()
