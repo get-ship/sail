@@ -1,33 +1,41 @@
 <!--
-  /lifecycle-hooks — onMount/onCleanup + template + controller hooks.
+  /lifecycle-hooks — the mount(state, host) controller section + onCleanup.
+  onMount does not exist; mount is a controller section and cleanup is onCleanup.
 -->
 <div class="doc">
-  <p class="eyebrow">Concepts</p>
-  <h1>Lifecycle &amp; hooks</h1>
+  <p class="eyebrow">Core concepts</p>
+  <h1>Lifecycle</h1>
   <p class="lead">
-    SUI's hooks are a tiny, predictable set. The template-side hooks fire at
-    mount/cleanup; the controller-side hooks let you register disposers
-    alongside the signals they manage.
+    Most of a component is declarative — signals in, DOM out. When you need to
+    reach outside that model — an observer, a subscription, a third-party library
+    — the controller's <code>mount</code> section is where it goes, and
+    <code>onCleanup</code> is how it's undone.
   </p>
 
-  <h2>Mount &amp; cleanup</h2>
+  <h2>mount</h2>
   <p>
-    An <code>onMount()</code> callback runs once after the element is in the DOM.
-    <code>onCleanup()</code> runs when the element unloads or the surrounding
-    effect tears down. Use cleanup for timers, listeners, workers.
+    <code>mount(state, host)</code> runs once, after the element is in the DOM.
+    <code>state</code> is the scope you returned from <code>scope()</code>;
+    <code>host</code> is the element itself. Write a signal from here with plain
+    assignment — <code>state.size = …</code> — and the proxy routes it through
+    <code>signal.set</code> for you.
   </p>
   <sui-codeblock code={code.mount}></sui-codeblock>
-
-  <h2>Template hooks</h2>
-  <p>Template-side hooks let you wire a hot path declaratively:</p>
   <sui-codeblock code={code.template}></sui-codeblock>
 
-  <h2>Controller hooks</h2>
-  <p>Inside the controller <code>scope()</code>, an effect's cleanup is
-    registered automatically when it returns a function. No
-    <code>onCleanup()</code> ceremony needed for the common case.
+  <h2>Cleanup</h2>
+  <p>
+    <code>onCleanup()</code> registers a teardown that runs when the component
+    unmounts — disconnect the observer, close the socket, clear the timer.
+    Everything you start in <code>mount</code> is undone here, so nothing leaks
+    when the element leaves the page.
   </p>
-  <sui-codeblock code={code.controller}></sui-codeblock>
+
+  <p class="callout">
+    <strong>Reach out from mount, not the template.</strong> The template stays a
+    pure read of state; effects on the outside world live in <code>mount</code>
+    and are always paired with an <code>onCleanup</code>.
+  </p>
 
   <div class="page-nav">
     <a class="btn" href="/control-flow">← Control flow</a>
