@@ -25,6 +25,12 @@
 // `setRouterPort` plug-in keeps the runtime host-agnostic.
 
 import { signal, type Signal } from '@ship/sui-runtime'
+import {
+  installScrollRestoration,
+  onNavigate,
+  onPopState,
+  applyScroll,
+} from './scroll-restoration'
 
 // Layout-chain resolution + the router live in their own modules (this file
 // is at the size cap). Re-exported so `@ship/deck-router` is one import site.
@@ -247,12 +253,17 @@ export function navigate(path: string, opts: { replace?: boolean } = {}): void {
     return
   }
   if (typeof window === 'undefined' || !window.history) return
+  // Save the outgoing scroll offset and get the history state (carrying this
+  // entry's scroll key) before we change the URL.
+  const state = onNavigate(opts.replace ?? false)
   if (opts.replace) {
-    window.history.replaceState({}, '', path)
+    window.history.replaceState(state, '', path)
   } else {
-    window.history.pushState({}, '', path)
+    window.history.pushState(state, '', path)
   }
   globalThis.__shipSetRouteUpdate?.()
+  // A fresh push scrolls to the top once the new view has rendered.
+  applyScroll()
 }
 
 /**
@@ -481,8 +492,13 @@ function ensurePopstateListener(): void {
   if (popstateBound) return
   if (typeof window === 'undefined' || !window.addEventListener) return
   popstateBound = true
+  installScrollRestoration()
   window.addEventListener('popstate', () => {
+    // Record the destination entry's restore intent, apply the route update,
+    // then restore that entry's saved scroll offset once it has rendered.
+    onPopState()
     globalThis.__shipSetRouteUpdate?.()
+    applyScroll()
   })
 }
 
