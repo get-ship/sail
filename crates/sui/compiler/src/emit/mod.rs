@@ -13,6 +13,7 @@ pub mod js;
 pub mod meta;
 pub mod schema;
 pub mod scope_factory;
+pub mod static_html;
 pub mod synthetic;
 pub mod styles;
 pub mod template_emit;
