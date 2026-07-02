@@ -15,7 +15,7 @@
   </p>
 
   <h2>Fast per-edit lint</h2>
-  <pre class="code">{lintCmd}</pre>
+  <sui-codeblock code={lintCmd} lang="bash"></sui-codeblock>
   <p>
     Exits 1 on findings. Covers grammar errors, missing bindings, unstable-key
     warnings, purity violations, CSS token errors, and prop-value mismatches.
@@ -24,7 +24,7 @@
   </p>
 
   <p>Output on a file with issues:</p>
-  <pre class="code">{lintOutput}</pre>
+  <sui-codeblock code={lintOutput} lang="text"></sui-codeblock>
   <p>
     <code>severity</code> is <code>error</code> (compile-blocking) or
     <code>warning</code> (compiles but suspicious). The rule id is in brackets
@@ -33,7 +33,7 @@
   </p>
 
   <h2>Full compile</h2>
-  <pre class="code">{compileCmd}</pre>
+  <sui-codeblock code={compileCmd} lang="bash"></sui-codeblock>
   <p>
     Runs the full pipeline (parse → check → lint → lower → emit) and aborts on
     errors. More thorough than the lint check — catches lowering-level issues
@@ -50,7 +50,7 @@
     it for <code>.sui</code> files with a <code>.lsp.json</code> at your
     project root and any LSP-capable editor attaches automatically:
   </p>
-  <pre class="code">{lspJson}</pre>
+  <sui-codeblock code={lspJson} lang="json"></sui-codeblock>
 
   <h2>Why this matters</h2>
   <p>
