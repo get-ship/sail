@@ -20,7 +20,7 @@ deck scaffold pack <name>
 
 `<name>` is lowercase + hyphens and becomes `@ship/<name>`. The scaffold writes,
 under `packages/components/<name>/`
-(`/home/madvib/dev/Ship/sui/crates/deck/deck-cli/src/scaffold.rs:225`):
+(`crates/deck/deck-cli/src/scaffold.rs:225`):
 
 - `package.json` — `@ship/<name>`, `type: module`, `main`/`types` →
   `src/index.ts`, `workspace:*` deps on `@ship/sui-dom` + `@ship/sui-runtime`,
@@ -63,7 +63,7 @@ file).
 ## The compile gate — `sui-compiler build --component-name`
 
 A `.sui` is compiled in component mode by passing `--component-name <tag>`,
-which implies component mode (`/home/madvib/dev/Ship/sui/crates/sui/compiler/src/bin/sui-compiler.rs:104`):
+which implies component mode (`crates/sui/compiler/src/bin/sui-compiler.rs:104`):
 
 ```sh
 sui-compiler build packages/components/<name>/src/<tag>/<tag>.sui \
@@ -81,7 +81,7 @@ run the build, and the umbrella picks them up.
 ## CEM emission
 
 Every component build also emits a Custom Elements Manifest beside the module:
-`<tag>.custom-elements.json` (`/home/madvib/dev/Ship/sui/crates/sui/compiler/src/bin/sui-compiler.rs:364`).
+`<tag>.custom-elements.json` (`crates/sui/compiler/src/bin/sui-compiler.rs:364`).
 It is generated from the component's declared `<prop>`s and serves tooling — the
 component viewer's prop knobs, catalog generation, IDE metadata. You don't write
 it; declare props honestly in the template and the manifest follows.
@@ -110,8 +110,8 @@ that asserts nothing fails instead of passing green. Real consumers:
 ## Design-token rules
 
 A pack's CSS consumes the Ship token API; it never hardcodes color, depth, or
-motion. The canonical tokens live in `/home/madvib/dev/Ship/sui/packages/sui/tokens/src/tokens.css`, and
-themes override them in `/home/madvib/dev/Ship/sui/packages/sui/tokens/src/themes.css`. Read the **highest
+motion. The canonical tokens live in `packages/sui/tokens/src/tokens.css`, and
+themes override them in `packages/sui/tokens/src/themes.css`. Read the **highest
 layer that fits**:
 
 | Layer | Examples | Use for |

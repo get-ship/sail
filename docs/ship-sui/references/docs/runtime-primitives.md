@@ -7,7 +7,7 @@ description: The signal/bind/effect primitives the SUI runtime exposes.
 
 # SUI — Runtime Primitives
 
-All symbols below are re-exported from `/home/madvib/dev/Ship/sui/packages/sui/runtime/src/index.ts`. Anything not in that barrel is internal.
+All symbols below are re-exported from `packages/sui/runtime/src/index.ts`. Anything not in that barrel is internal.
 
 ## Reactivity
 

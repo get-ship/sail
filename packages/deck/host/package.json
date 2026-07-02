@@ -3,6 +3,7 @@
   "version": "0.2.0",
   "private": false,
   "type": "module",
+  "license": "MIT",
   "description": "Deck's browser-side host: secure view-controller execution (SES Compartment runner). Deck runs views, so Deck owns confined execution; the SUI runtime provides the hardened endowment surface.",
   "main": "src/index.ts",
   "exports": {

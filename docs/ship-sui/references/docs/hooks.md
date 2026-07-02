@@ -173,7 +173,7 @@ Bundles of `scope` / `derived` / `on` / `mount` returned from a factory function
 A controller hook is a function that returns the controller shape:
 
 ```ts
-// /home/madvib/dev/Ship/sui/packages/sui/runtime/src/hooks/filtered-list.ts
+// packages/sui/runtime/src/hooks/filtered-list.ts
 import { signal } from '@ship/sui-runtime'
 import type { ControllerHook } from '@ship/sui-runtime'
 

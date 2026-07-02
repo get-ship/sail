@@ -2,6 +2,7 @@
 name = "sui-lsp"
 version = "0.1.0"
 edition = "2024"
+license.workspace = true
 description = "Language Server for SUI `.sui` templates — thin LSP shell over sui-compiler."
 
 [[bin]]

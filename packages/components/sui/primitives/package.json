@@ -3,6 +3,7 @@
   "version": "0.2.0",
   "description": "Ship Primitives pack — generic `<sui-*>` UI elements (button, input, dialog, popover, etc.).",
   "type": "module",
+  "license": "MIT",
   "files": [
     "src",
     "dist/custom-elements.json"

@@ -3,6 +3,7 @@
   "version": "0.2.0",
   "private": false,
   "type": "module",
+  "license": "MIT",
   "description": "View test harness — real-browser (webview) behavioral tier + (planned) QuickJS logic tier. The shared unlock for SES verification (#165) and authoring-TDD (#164). Dev/CI tooling; ships in nothing.",
   "scripts": {
     "build": "bun build.ts",

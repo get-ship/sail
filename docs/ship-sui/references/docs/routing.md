@@ -56,7 +56,7 @@ Param names are not declared at construction. They are matched against the
 patterns registered via `defineRoutes`. A view that reads `route.params.id()`
 **must** register the pattern that captures `id`, or the signal stays
 `undefined` until a future navigation introduces a matching segment
-(`/home/madvib/dev/Ship/sui/packages/sui/runtime/src/route/index.ts:98`, `:237`).
+(`packages/sui/runtime/src/route/index.ts:98`, `:237`).
 
 ```ts
 // views/agents/[id]/controller.ts
@@ -93,7 +93,7 @@ defineRoutes([
 > **Hard rule.** Per-controller `defineRoutes` only works because every bundle
 > shares the single `@ship/sui-runtime` instance. The shape registry and the
 > global URL updater both live on `globalThis`
-> (`/home/madvib/dev/Ship/sui/packages/sui/runtime/src/route/index.ts:72`, `:309`). A second runtime copy
+> (`packages/sui/runtime/src/route/index.ts:72`, `:309`). A second runtime copy
 > would register into a different proxy the shell never reads.
 
 `:param` segments compile to `([^/]+)` and are captured by name
@@ -106,7 +106,7 @@ registration — `route.query.q()` works for any key.
 the host's registered `RouterPort` when one exists (the shell owns matching +
 mounting, so the view actually switches); without a port — a single-view host or
 a test — it updates history and the `route.*` signals in place
-(`/home/madvib/dev/Ship/sui/packages/sui/runtime/src/route/index.ts:192`).
+(`packages/sui/runtime/src/route/index.ts:192`).
 
 ```ts
 import { navigate } from '@ship/sui-runtime/route'

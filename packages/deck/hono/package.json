@@ -3,6 +3,7 @@
   "version": "0.2.0",
   "description": "Deck transport adaptor for Hono / Bun — the TypeScript sibling of deck-axum. Serves a `deck build` SPA output (index.html + hashed assets), the /_deck/* framework singletons, and the live-data SSE / data port, mirroring deck-core's DeckResponse serve contract byte-for-byte. The serve core is framework-agnostic (Request -> Response); the Hono binding is a thin layer.",
   "type": "module",
+  "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
