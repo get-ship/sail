@@ -74,4 +74,6 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (primary_for_status::RULE_ID, primary_for_status::check),
     (route_inline_style::RULE_ID, route_inline_style::check),
     (surface_not_card::RULE_ID, surface_not_card::check),
+    (for_key::RULE_ID, for_key::check),
+    (dead_affordance::RULE_ID, dead_affordance::check),
 ];
