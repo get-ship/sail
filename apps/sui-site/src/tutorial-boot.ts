@@ -165,9 +165,12 @@ export function bootTutorialApp(root: HTMLElement, compile: CompileFn): Tutorial
   const MAX_LOG = 50
   type LogKind = 'info' | 'success' | 'warn' | 'error'
   const pad2 = (n: number): string => (n < 10 ? '0' + n : String(n))
+  // Elapsed session time (MM:SS since the lesson booted), not wall clock —
+  // "00:07 ▶ ran template.sui" reads as a session log.
+  const bootedAt = Date.now()
   function stamp(): string {
-    const d = new Date()
-    return pad2(d.getMinutes()) + ':' + pad2(d.getSeconds())
+    const s = Math.floor((Date.now() - bootedAt) / 1000)
+    return pad2(Math.floor(s / 60)) + ':' + pad2(s % 60)
   }
   function log(message: string, kind: LogKind = 'info'): void {
     if (!consoleEl) return
