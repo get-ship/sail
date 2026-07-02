@@ -13,7 +13,7 @@
 import { defineConfig } from 'vitest/config'
 import type { Plugin, ViteUserConfig as VitestUserConfig } from 'vitest/config'
 import { createRequire } from 'node:module'
-import { existsSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { resolve, dirname, basename, relative } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 // @ts-expect-error — JS module, no .d.ts.
@@ -236,6 +236,128 @@ function resolveSuiAliases(): Record<string, string> {
     }
   }
   return out
+}
+
+// ── Workspace-wide @ship/* alias table (exports-map driven) ─────────────────
+//
+// `resolveSuiAliases` above pins a CURATED set of specifiers through
+// `require.resolve` (node's own `exports` resolution) — that's why every
+// component package authored with `suiComponentVitestConfig()` resolves subpath
+// imports fine. Two hand-written vitest configs did NOT go through the factory:
+// test-setup's own and deck-eval's. They listed the runtime by BARE name plus a
+// couple of subpaths and silently missed the rest (`/route`, `/server`, `/dev`,
+// `/patch`, `/virtual`, and `@ship/tokens/themes`). An unlisted subpath like
+// `@ship/sui-runtime/route` then fell through to the bare `@ship/sui-runtime`
+// string alias and resolved to `…/src/index.ts/route` — a path that doesn't
+// exist — so vitest reported "Failed to resolve import".
+//
+// `shipWorkspaceAliases()` derives the COMPLETE alias table straight from every
+// workspace package's `exports` map, so every published entry (bare, subpath,
+// or wildcard) maps to its real source file with zero per-config maintenance.
+// It reads the `exports` maps but never mutates them — they stay correct for
+// publish; this only mirrors them for vitest.
+
+/** Expand the repo-root `workspaces` globs to a `name → package dir` map for
+ *  every `@ship/*` workspace package. Only a trailing `/*` glob is expanded
+ *  (the sole form the repo uses); anything unreadable is skipped. */
+function discoverShipPackages(): Map<string, string> {
+  const out = new Map<string, string>()
+  let globs: string[] = []
+  try {
+    const rootPkg = JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8')) as {
+      workspaces?: string[] | { packages?: string[] }
+    }
+    const ws = rootPkg.workspaces
+    globs = Array.isArray(ws) ? ws : (ws?.packages ?? [])
+  } catch {
+    return out
+  }
+  const dirs: string[] = []
+  for (const glob of globs) {
+    if (glob.endsWith('/*')) {
+      const base = resolve(repoRoot, glob.slice(0, -2))
+      try {
+        for (const entry of readdirSync(base, { withFileTypes: true }))
+          if (entry.isDirectory()) dirs.push(resolve(base, entry.name))
+      } catch {
+        /* missing workspace dir — skip */
+      }
+    } else {
+      dirs.push(resolve(repoRoot, glob))
+    }
+  }
+  for (const dir of dirs) {
+    try {
+      const pkg = JSON.parse(readFileSync(resolve(dir, 'package.json'), 'utf8')) as { name?: string }
+      if (typeof pkg.name === 'string' && pkg.name.startsWith('@ship/')) out.set(pkg.name, dir)
+    } catch {
+      /* not a package dir — skip */
+    }
+  }
+  return out
+}
+
+/** Resolve one `exports` value to its target path string. Plain-string targets
+ *  pass through; a conditional object picks the first source-like condition. */
+function pickExportTarget(value: unknown): string | null {
+  if (typeof value === 'string') return value
+  if (value && typeof value === 'object') {
+    const conds = value as Record<string, unknown>
+    for (const key of ['import', 'module', 'browser', 'default', 'node', 'require', 'types']) {
+      const target = conds[key]
+      if (typeof target === 'string') return target
+      if (target && typeof target === 'object') {
+        const nested = pickExportTarget(target)
+        if (nested) return nested
+      }
+    }
+  }
+  return null
+}
+
+const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/**
+ * The full `resolve.alias` table for a vitest run, derived from every
+ * `@ship/*` workspace package's `exports` map. Each export key becomes an alias:
+ * `.` → the bare package name, `./route` → `<name>/route`, and a wildcard like
+ * `./lessons/*` → a regex that captures the trailing segment. Subpath entries
+ * sort BEFORE the bare name (longest `find` first) so `@ship/sui-runtime/route`
+ * can never fall through to the `@ship/sui-runtime` alias. Location-independent:
+ * every path is resolved from the package's real directory (walked from the
+ * repo root), so a config that spreads this list works from any package.
+ */
+export function shipWorkspaceAliases(): Array<{ find: string | RegExp; replacement: string }> {
+  const stringAliases: Array<{ find: string; replacement: string }> = []
+  const regexAliases: Array<{ find: RegExp; replacement: string }> = []
+  for (const [name, dir] of discoverShipPackages()) {
+    let exportsMap: Record<string, unknown> | undefined
+    try {
+      const pkg = JSON.parse(readFileSync(resolve(dir, 'package.json'), 'utf8')) as {
+        exports?: Record<string, unknown>
+      }
+      exportsMap = pkg.exports
+    } catch {
+      /* unreadable — skip */
+    }
+    if (!exportsMap || typeof exportsMap !== 'object') continue
+    for (const [key, value] of Object.entries(exportsMap)) {
+      const target = pickExportTarget(value)
+      if (!target) continue
+      // '.' → bare name, './route' → '<name>/route', './lessons/*' → wildcard.
+      const spec = key === '.' ? name : name + key.slice(1)
+      if (key.includes('*')) {
+        const findPrefix = spec.slice(0, spec.indexOf('*'))
+        const replacement = resolve(dir, target).replace('*', '$1')
+        regexAliases.push({ find: new RegExp(`^${escapeRegExp(findPrefix)}(.*)$`), replacement })
+      } else {
+        stringAliases.push({ find: spec, replacement: resolve(dir, target) })
+      }
+    }
+  }
+  // Longest `find` first → a subpath alias always wins over the bare-name one.
+  stringAliases.sort((a, b) => b.find.length - a.find.length)
+  return [...regexAliases, ...stringAliases]
 }
 
 export interface SuiComponentVitestOptions {

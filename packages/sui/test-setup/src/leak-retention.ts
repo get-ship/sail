@@ -133,9 +133,20 @@ export async function measureRetention(
   const gcUnavailable = !gcAvailable()
   await forceGc(gcPasses)
 
-  let retainedAfterTeardown = 0
-  for (const ref of refs) {
-    if (ref.deref() !== undefined) retainedAfterTeardown++
+  const countLive = (): number =>
+    refs.reduce((n, ref) => n + (ref.deref() !== undefined ? 1 : 0), 0)
+  let retainedAfterTeardown = countLive()
+  // GC + FinalizationRegistry draining is nondeterministic: the first `gcPasses`
+  // rounds don't always evict every collectable probe (young-gen timing, the DOM
+  // env's internal bookkeeping), which surfaces as a spurious 1–3 survivor
+  // "leak" that varies run to run. Keep GC-ing while survivors remain — the live
+  // count is monotonically non-increasing (a cleared WeakRef never un-clears),
+  // so a genuine leak (a HARD reference, e.g. the negative-control test) plateaus
+  // at its true count and is STILL reported, while pure timing-survivors drain to
+  // 0. Bounded so a real leak can't spin the loop forever.
+  for (let round = 0; !gcUnavailable && retainedAfterTeardown > 0 && round < 20; round++) {
+    await forceGc(2)
+    retainedAfterTeardown = countLive()
   }
 
   const bodyDelta = document.body.childElementCount - baseline
