@@ -29,7 +29,7 @@
 // the Rust side to follow.
 
 import { findNearestBoundary } from './error-boundary'
-import { onCleanup } from './effect-scope'
+import { onCleanup, withScope, type EffectScope } from './effect-scope'
 
 /** Legacy alias retained for the public `Signal.__subs` field shape. */
 type Subscriber = () => void
@@ -63,6 +63,25 @@ interface Computation extends SourceNode {
   value?: unknown
   /** Effect: the error-boundary host captured at creation. */
   host?: Node | null
+  /** Effect: reused ownership-scope adapter (allocated once, lazily). Nested
+   *  effects + `onCleanup`s registered during the body enroll straight onto
+   *  `cleanups` through it — no per-run allocation. */
+  scope?: EffectScope
+}
+
+/** Build an effect node's reused ownership-scope adapter. Cleanups registered
+ *  while this scope is current (the body run) land directly on `node.cleanups`,
+ *  which `runEffect`'s `runCleanups` fires before each re-run and the effect's
+ *  disposer fires on teardown. `dispose`/`disposed` are inert: the node owns
+ *  its own lifecycle, so the scope is purely a routing target for `onCleanup`. */
+function makeOwnerScope(node: Computation): EffectScope {
+  return {
+    cleanup(fn: () => void) {
+      node.cleanups.push(fn)
+    },
+    dispose() {},
+    disposed: false,
+  }
 }
 
 interface SignalNode<T> extends SourceNode {
@@ -223,10 +242,16 @@ function runEffect(node: Computation): void {
   runCleanups(node)
   unlinkSources(node)
   node.state = CLEAN
+  // Reused ownership scope (allocated once per node, NOT per run — this is the
+  // reactivity hot path). Effects created + `onCleanup`s registered inside the
+  // body enroll straight onto `node.cleanups` through it, so the NEXT re-run —
+  // runCleanups, at the top of this fn — disposes them before the body runs
+  // again. Closes the nested-effect leak with zero per-run allocation.
+  const scope = (node.scope ??= makeOwnerScope(node))
   const prev = CURRENT_OBSERVER
   CURRENT_OBSERVER = node
   try {
-    const c = node.fn()
+    const c = withScope(scope, () => node.fn())
     if (typeof c === 'function') node.cleanups.push(c as Cleanup)
   } catch (e) {
     const boundary = node.host ? findNearestBoundary(node.host) : null
@@ -488,13 +513,34 @@ export function effect(fn: () => void | (() => void)): () => void {
   // through the re-entrancy-guarded loop.
   runEffect(node)
 
-  return () => {
+  const dispose = (): void => {
     if (!node.active) return
     node.active = false
     runCleanups(node)
     unlinkSources(node)
     node.state = CLEAN
   }
+
+  // Enroll on the enclosing scope so the OWNER disposes this effect: the
+  // parent effect's per-run scope when nested (→ disposed on the parent's
+  // re-run), or the mount scope at `setup()` time (→ disposed on unmount).
+  // This is the owner tree — it makes nested effects auto-clean and closes
+  // the on-navigation leak. `dispose()` is idempotent, so a later manual
+  // dispose() (or the owner firing it) is a safe no-op. No current scope
+  // (tests, globals, SSR shims) → no-op, and the caller owns disposal.
+  // Enroll on the enclosing scope ONLY when this effect is created inside a
+  // running computation (CURRENT_OBSERVER ≠ null) — i.e. a genuinely NESTED
+  // effect. Then the owner is the parent's per-run scope (nested rows are
+  // rendered under their own scope via `renderInScope`, so they enroll there
+  // instead), and the parent's next re-run disposes it: the owner tree that
+  // closes the nested-effect leak. Effects created at setup/render time
+  // (CURRENT_OBSERVER === null) are NOT auto-owned here — their lifecycle is
+  // the mount scope, handled by the existing `withScope(setup)` + explicit
+  // `onCleanup` registrations; auto-owning them would wrongly capture a
+  // component's own bindings. `dispose()` is idempotent → double-fire is safe.
+  if (CURRENT_OBSERVER !== null) onCleanup(dispose)
+
+  return dispose
 }
 
 /**

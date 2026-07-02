@@ -22,6 +22,7 @@
 // See docs/ship-set/03-runtime-architecture.md § Conditional render.
 
 import { effect } from './signal'
+import { renderInScope } from './effect-scope'
 import type { Disposer } from './bind'
 import { runProtected } from './error-boundary'
 import { runEnter, runLeave, cancelTransitions } from './transition-runner'
@@ -174,9 +175,27 @@ export function bindIf(opts: BindIfOptions): Disposer {
 
     lastIdx = idx
     if (idx < 0 || idx >= branches.length) return
-    const rendered = runProtected(anchor, 'render', () => branches[idx]!())
-    if (!rendered) return
-    active = rendered
+    // Render the branch in its OWN scope so its effects — including a nested
+    // {#for}'s list effect — are owned by the branch's lifetime and disposed
+    // on SWAP, not on every re-run of this bindIf effect. A same-branch re-run
+    // (the guard above) must not tear the branch's nested effects down: they
+    // live in the branch scope, not this effect's per-run scope. The scope's
+    // disposer is folded into the branch cleanup, which every teardown path
+    // already invokes.
+    const [rendered, disposeBranch] = renderInScope(() =>
+      runProtected(anchor, 'render', () => branches[idx]!()),
+    )
+    if (!rendered) {
+      disposeBranch()
+      return
+    }
+    active = {
+      nodes: rendered.nodes,
+      cleanup: () => {
+        rendered.cleanup?.()
+        disposeBranch()
+      },
+    }
     const parent = anchor.parentNode
     if (!parent) return
     for (const n of active.nodes) parent.insertBefore(n, anchor)

@@ -8,6 +8,7 @@
 // branch renders again.
 
 import { effect } from './signal'
+import { renderInScope } from './effect-scope'
 import type { Disposer } from './bind'
 import type { BranchRender } from './if'
 
@@ -73,24 +74,39 @@ export function bindAwait(opts: BindAwaitOptions): Disposer {
     for (const n of br.nodes) parent.insertBefore(n, anchor)
   }
 
+  // Render a branch inside its OWN scope so its effects (e.g. a nested {#for}'s
+  // list effect) are owned by the branch's lifetime and disposed on the next
+  // `tearDown`/swap, not captured by this bindAwait effect's per-run scope. The
+  // scope disposer is folded into the branch cleanup that `tearDown` invokes.
+  const scoped = (make: () => BranchRender): BranchRender => {
+    const [br, disposeScope] = renderInScope(make)
+    return {
+      nodes: br.nodes,
+      cleanup: () => {
+        br.cleanup?.()
+        disposeScope()
+      },
+    }
+  }
+
   const dispose = effect(() => {
     const myToken = ++token
     const p = promise()
     tearDown()
-    insert(loading())
+    insert(scoped(() => loading()))
     p.then(
       (v) => {
         if (myToken !== token) return
         if (then_) {
           tearDown()
-          insert(then_(v))
+          insert(scoped(() => then_(v)))
         }
       },
       (e) => {
         if (myToken !== token) return
         if (catch_) {
           tearDown()
-          insert(catch_(e))
+          insert(scoped(() => catch_(e)))
         }
       },
     )

@@ -120,3 +120,21 @@ export function createChildScope(parent?: EffectScope): EffectScope {
   return child
 }
 
+/** Run `body` inside a fresh, STANDALONE scope; return its result plus the
+ *  scope's disposer.
+ *
+ *  For the control-flow primitives (`bindFor`, `bindIf`, `bindAwait`): each
+ *  rendered child (a row, a branch) must own the effects created while
+ *  rendering it, so they tear down when THAT child is removed / swapped — not
+ *  when the enclosing reconciler effect re-runs. Rendering the child through
+ *  `renderInScope` enrolls its effects on the child's own scope (via each
+ *  `effect()`'s `onCleanup`), which the primitive disposes on removal (and on
+ *  its own teardown). Standalone — NOT a child of the current scope — because
+ *  the primitive owns the child's disposal explicitly; the reconciler effect's
+ *  per-run scope must not capture it. */
+export function renderInScope<T>(body: () => T): [T, () => void] {
+  const scope = createScope()
+  const value = withScope(scope, body)
+  return [value, () => scope.dispose()]
+}
+

@@ -349,3 +349,46 @@ describe('selector', () => {
     expect(fires).toHaveBeenCalledTimes(2)
   })
 })
+
+describe('nested-effect owner tree (auto-cleanup)', () => {
+  it('disposes a nested effect when its parent re-runs — no leak, no double-fire', () => {
+    const outer = signal(0)
+    const inner = signal(0)
+    const innerRun = vi.fn()
+
+    effect(() => {
+      outer() // parent dependency
+      effect(() => {
+        inner()
+        innerRun()
+      })
+    })
+
+    expect(innerRun).toHaveBeenCalledTimes(1) // the child's initial run
+    inner.set(1)
+    expect(innerRun).toHaveBeenCalledTimes(2) // the one live child fires
+
+    outer.set(1) // parent re-runs: old child disposed, new child created (its initial run)
+    expect(innerRun).toHaveBeenCalledTimes(3)
+
+    inner.set(2) // only the NEW child is alive → +1. (Pre-fix, the orphaned old
+    expect(innerRun).toHaveBeenCalledTimes(4) //  child would still fire too → 5.)
+  })
+
+  it('disposes nested effects when the parent effect is disposed', () => {
+    const inner = signal(0)
+    const innerRun = vi.fn()
+
+    const disposeParent = effect(() => {
+      effect(() => {
+        inner()
+        innerRun()
+      })
+    })
+
+    expect(innerRun).toHaveBeenCalledTimes(1)
+    disposeParent() // parent disposal runs its cleanups → the child disposes too
+    inner.set(1)
+    expect(innerRun).toHaveBeenCalledTimes(1) // child no longer fires
+  })
+})
