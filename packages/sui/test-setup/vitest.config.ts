@@ -1,32 +1,15 @@
 import { defineConfig } from 'vitest/config'
-import { resolve } from 'node:path'
-import { SHIP_VITEST_DEFAULTS } from './src/vitest'
+import { SHIP_VITEST_DEFAULTS, shipWorkspaceAliases } from './src/vitest'
 
 // render.ts pulls the wasm-backed compile harness from @ship/sui-dom/test-utils
-// plus the runtime. Mirror sui-dom's aliases so the same source resolves here.
-// Order matters — most specific subpath first.
+// plus the runtime — and the runtime's SUBPATH exports (`@ship/sui-runtime/route`
+// et al.). `shipWorkspaceAliases()` derives the full @ship/* alias table from
+// every package's `exports` map (subpaths sorted before bare names), so those
+// subpaths resolve to their real source file instead of falling through to the
+// bare `@ship/sui-runtime` alias.
 export default defineConfig({
   resolve: {
-    alias: [
-      {
-        find: '@ship/sui-dom/test-utils',
-        replacement: resolve(__dirname, '../dom/src/test-utils/compile-sui.ts'),
-      },
-      { find: '@ship/sui-dom', replacement: resolve(__dirname, '../dom/src/index.ts') },
-      {
-        find: '@ship/sui-runtime/template-hooks',
-        replacement: resolve(__dirname, '../runtime/src/template-hooks/index.ts'),
-      },
-      {
-        find: '@ship/deck-router',
-        replacement: resolve(__dirname, '../../deck/router/src/index.ts'),
-      },
-      { find: '@ship/sui-runtime', replacement: resolve(__dirname, '../runtime/src/index.ts') },
-      {
-        find: '@ship/sui-compiler-wasm',
-        replacement: resolve(__dirname, '../compiler-wasm/pkg/sui_compiler.js'),
-      },
-    ],
+    alias: shipWorkspaceAliases(),
     extensions: ['.mts', '.ts', '.tsx', '.mjs', '.js', '.jsx', '.json'],
   },
   test: {

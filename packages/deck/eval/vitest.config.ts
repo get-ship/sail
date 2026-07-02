@@ -1,16 +1,17 @@
 import { defineConfig } from 'vitest/config'
-import { resolve } from 'node:path'
+// Relative import (not the `@ship/test-setup/vitest` specifier) because eval does
+// not declare test-setup as a dependency — consistent with this config's other
+// relative `../../sui/...` paths. The shared module's internal resolution is
+// anchored to its own file location, so it works regardless of the import style.
+import { shipWorkspaceAliases } from '../../sui/test-setup/src/vitest'
 
 export default defineConfig({
   resolve: {
-    alias: {
-      '@ship/deck-router': resolve(__dirname, '../../deck/router/src/index.ts'),
-      '@ship/sui-runtime/template-hooks': resolve(__dirname, '../../sui/runtime/src/template-hooks/index.ts'),
-
-      '@ship/sui-runtime': resolve(__dirname, '../../sui/runtime/src/index.ts'),
-      '@ship/sui-dom/test-utils': resolve(__dirname, '../../sui/dom/src/test-utils/compile-sui.ts'),
-      '@ship/sui-dom': resolve(__dirname, '../../sui/dom/src/index.ts'),
-    },
+    // The eval's compile path pulls the runtime (including its SUBPATH exports —
+    // `@ship/sui-runtime/route` et al.) through @ship/sui-dom/test-utils. Derive
+    // the full @ship/* alias table from every package's `exports` map so those
+    // subpaths resolve to source instead of the bare `@ship/sui-runtime` alias.
+    alias: shipWorkspaceAliases(),
   },
   test: {
     include: ['test/**/*.test.ts'],
