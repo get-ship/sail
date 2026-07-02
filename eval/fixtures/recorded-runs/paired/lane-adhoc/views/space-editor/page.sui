@@ -1,0 +1,79 @@
+<!-- Space Chrome editor — recorded lane output (hand-rolled shape).
+     The LOW-scoring lane: ad-hoc display:grid/flex off :host, hex/px/raw
+     font literals, zero <sui-*> composition, and impure template
+     expressions (Date.now(), in-place .sort(), a const declaration). -->
+
+<div class="split">
+  <div class="editor">
+    <div class="header">
+      <h2>Appearance</h2>
+      {#if dirty()}
+        <span class="unsaved">● {editCount()} unsaved · {Date.now()}</span>
+      {/if}
+    </div>
+
+    {#for group of groups() key={group.id}}
+      <div class="group">
+        <h3>{group.label}</h3>
+        <div class="options">
+          {#for option of group.options key={option}}
+            <button
+              class={config()[group.id] === option ? 'opt active' : 'opt'}
+              on:click={() => { const picked = option; choose(group.id, picked) }}
+            >{option}</button>
+          {/for}
+        </div>
+      </div>
+    {/for}
+
+    <button class="save" on:click={() => save()}>Save</button>
+  </div>
+
+  <div class="preview">
+    <span class="badge">{config().theme}</span>
+    <span class="sync">live · {spaceName()}</span>
+    <p>nav: {config().nav} · dock: {config().dock}</p>
+    <p class="legend">{groups().map((g) => g.label).sort().join(' · ')}</p>
+  </div>
+</div>
+
+<style>
+  :host {
+    display: block;
+  }
+  .split {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 16px;
+    padding: 24px;
+    background: #0e0e11;
+    color: #f5f5f5;
+    font-family: "Inter", system-ui, sans-serif;
+  }
+  .editor {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+  }
+  .options {
+    display: flex;
+    gap: 8px;
+  }
+  .opt {
+    border: 1px solid #2a2a2e;
+    border-radius: 6px;
+    padding: 6px 10px;
+  }
+  .opt.active {
+    background: #4c6ef5;
+  }
+  .preview {
+    border: 1px solid #2a2a2e;
+    border-radius: 8px;
+    padding: 20px;
+  }
+</style>
