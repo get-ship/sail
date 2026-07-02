@@ -19,6 +19,7 @@
 import { controller, signal, derived, bindHtml, type Derived } from '@ship/sui-runtime'
 import type { Scope } from './sui-component-catalog.sui'
 import { COMPONENTS_CATALOG } from '../../components.gen'
+import { PREVIEW_SEEDS, type PreviewSeed } from './preview-seeds'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -69,85 +70,11 @@ function packLabel(pkg: string): string {
   return pkg.replace(/^@ship\/sui-/, '').replace(/^@ship\//, '')
 }
 
-/** Per-tag cell preview seed. A bare `document.createElement` on most
- *  primitives renders nothing meaningful (no slotted content, no useful
- *  default props), so the seed map supplies both default props and
- *  default-slot innerHTML. Tags absent from the map fall through to a bare
- *  createElement with no slot content. */
-export interface PreviewSeed {
-  props?: Record<string, string>
-  innerHTML?: string
-}
-export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
-  'sui-button':        { props: { tone: 'primary', variant: 'solid' }, innerHTML: 'Button' },
-  'sui-icon':          { innerHTML: 'star' },
-  'sui-badge':         { innerHTML: 'Badge' },
-  'sui-chip':          { innerHTML: 'Chip' },
-  'sui-card':          { innerHTML: '<h3 slot="title">Card title</h3><p>A SUI card preview.</p>' },
-  'sui-alert':         { innerHTML: 'An informational alert.' },
-  'sui-label':         { innerHTML: 'Label' },
-  'sui-link':          { props: { href: '#' }, innerHTML: 'Link text' },
-  'sui-button-group':  { innerHTML: '<sui-button tone="primary">One</sui-button><sui-button tone="secondary">Two</sui-button>' },
-  'sui-empty-state':   { innerHTML: 'Nothing here yet.' },
-  'sui-spinner':       { props: { label: 'Loading' } },
-  'sui-tooltip':       { innerHTML: 'Tooltip text' },
-  'sui-progress':      { props: { value: '60' } },
-  'sui-avatar':        { props: { name: 'Ada Lovelace' } },
-  'sui-account-chip':  { props: { name: 'Ada Lovelace' } },
-  'sui-kbd':           { innerHTML: '⌘ K' },
-  'sui-separator':     {},
-  'sui-toast':         { props: { tone: 'info' }, innerHTML: 'Toast message' },
-  'sui-skeleton':      {},
-  'sui-skeleton-line': {},
-  'sui-accordion':     { innerHTML: '<sui-accordion-item open><span slot="title">Item one</span>Body one.</sui-accordion-item><sui-accordion-item><span slot="title">Item two</span>Body two.</sui-accordion-item>' },
-  'sui-tabs':          { innerHTML: '<sui-tab-list><sui-tab name="one">One</sui-tab><sui-tab name="two">Two</sui-tab></sui-tab-list><sui-tab-panel name="one">Panel one</sui-tab-panel><sui-tab-panel name="two">Panel two</sui-tab-panel>' },
-  'sui-radio-group':   { innerHTML: '<sui-radio value="a">Alpha</sui-radio><sui-radio value="b">Beta</sui-radio>' },
-  'sui-toggle-group':  { innerHTML: '<sui-toggle value="a">Alpha</sui-toggle><sui-toggle value="b">Beta</sui-toggle>' },
-  'sui-checkbox':      { innerHTML: 'Accept terms' },
-  'sui-switch':        {},
-  'sui-slider':        { props: { value: '40' } },
-  'sui-input':         { props: { placeholder: 'Type here…' } },
-  'sui-textarea':      { innerHTML: 'Pre-filled text' },
-  'sui-select':        { innerHTML: '<sui-option value="a">Alpha</sui-option><sui-option value="b">Beta</sui-option>' },
-  'sui-combobox':      { innerHTML: '<sui-option value="a">Alpha</sui-option><sui-option value="b">Beta</sui-option>' },
-  'sui-field':         { innerHTML: '<sui-label>Field label</sui-label><sui-input placeholder="Field input"></sui-input>' },
-  'sui-form':          { innerHTML: '<sui-field label="Name"><sui-input></sui-input></sui-field>' },
-  'sui-dialog':        { innerHTML: 'Dialog content' },
-  'sui-sheet':         { innerHTML: 'Sheet content' },
-  'sui-popover':       { innerHTML: 'Popover content' },
-  'sui-dropdown-menu': { innerHTML: '<button>Open</button><div slot="content">Menu</div>' },
-  'sui-context-menu':  { innerHTML: 'Right-click here' },
-  'sui-tooltip-host':  { innerHTML: 'Hover me' },
-  'sui-collapsible':   { innerHTML: '<span slot="trigger">Toggle</span><div>Hidden content.</div>' },
-  'sui-hover-card':    { innerHTML: 'Hover over me' },
-  'sui-markdown':      { innerHTML: '# Markdown' },
-  'sui-code':          { innerHTML: 'const x = 1' },
-  'sui-codeblock':     { innerHTML: 'const x = 1' },
-  'sui-json-view':     { innerHTML: '{"hello": "world"}' },
-  'sui-diff':          { innerHTML: '- old\n+ new' },
-  'sui-timeline':      { innerHTML: '<sui-timeline-item time="2025">First</sui-timeline-item><sui-timeline-item time="2026">Second</sui-timeline-item>' },
-  'sui-tree':          { innerHTML: '<sui-tree-item>Root</sui-tree-item>' },
-  'sui-tree-view':     { innerHTML: '<sui-tree-item>Root</sui-tree-item>' },
-  'sui-tree-grid':     {},
-  'sui-calendar':      { props: { value: '2026-07-01' } },
-  'sui-cmdk':          { innerHTML: '<sui-cmdk-input placeholder="Search…"></sui-cmdk-input>' },
-  'sui-table':         {},
-  'sui-navigation-menu': { innerHTML: '<sui-navigation-item>Home</sui-navigation-item>' },
-  'sui-pagination':    { props: { total: '50', page: '1' } },
-  'sui-breadcrumbs':   { innerHTML: '<a>One</a><a>Two</a><a>Three</a>' },
-  'sui-file-upload':   { innerHTML: 'Drop a file' },
-  'sui-color-picker':  { props: { value: '#cc5500' } },
-  'sui-date-picker':   { props: { value: '2026-07-01' } },
-  'sui-stepper':       { innerHTML: '<sui-step>One</sui-step><sui-step>Two</sui-step>' },
-  'sui-stat':          { innerHTML: '<span slot="label">Users</span><span slot="value">1,234</span>' },
-  'sui-feature-card':  {},
-  'sui-account-menu':  {},
-  'sui-project-switcher': {},
-  'sui-nav-top':       {},
-  'sui-status-dot':    { props: { tone: 'success', label: 'OK' } },
-  'sui-code-editor':   { props: { value: '// hello', lang: 'js' } },
-  'sui-error-state':   { innerHTML: 'Something went wrong' },
-}
+// Per-tag preview seed lives in the shared `preview-seeds` module — imported
+// above and consumed by BOTH this grid and the /components/[tag] detail page.
+// Tags absent from the map fall through to a bare createElement with no slot
+// content. `PreviewSeed` is re-exported for any downstream typing needs.
+export type { PreviewSeed }
 
 // ── Catalog ingestion ────────────────────────────────────────────────────────
 
