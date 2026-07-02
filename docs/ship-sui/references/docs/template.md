@@ -122,7 +122,7 @@ The `mutation` attribute is a `ship.*` SDK chain. `<form mutation>` is the write
 
 Progressive enhancement: when JS is absent the SSR walker injects `action="/_deck/mutation/{view}?form=bN"` and `method="post"` on the form. The daemon handles the POST and redirects back to `Referer`. See [data-subscriptions.md](data-subscriptions.md#mutations) for the full envelope shape and PE flow.
 
-**Threshold rule.** A template with no paired `controller.ts` (tier-1) may not have multi-statement `on:event` handler bodies. The compiler enforces this at build time (`/home/madvib/dev/Ship/sui/crates/sui/compiler/src/check/handler_complexity.rs`):
+**Threshold rule.** A template with no paired `controller.ts` (tier-1) may not have multi-statement `on:event` handler bodies. The compiler enforces this at build time (`crates/sui/compiler/src/check/handler_complexity.rs`):
 
 ```html
 <!-- fails without controller.ts -->

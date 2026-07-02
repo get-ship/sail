@@ -46,6 +46,10 @@ default-members = [
 exclude = [".artifacts", "crates/sui/compiler/fuzz"]
 resolver = "2"
 
+# Shared package metadata. Member crates opt in via `license.workspace = true`.
+[workspace.package]
+license = "MIT"
+
 # Hoisted dependency versions. Member crates inherit via `{ workspace = true, features = [...] }`.
 # Ported from the ship monorepo root Cargo.toml — only the deps the carved
 # crates actually consume are kept here.

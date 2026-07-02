@@ -11,8 +11,8 @@ The chain from `.sui` source on disk to a live, hot-reloaded view in the browser
 
 ## `sui-compiler` — the Rust ahead-of-time compiler
 
-- **Library:** `/home/madvib/dev/Ship/sui/crates/sui/compiler/src/lib.rs`. Pure transformation; no filesystem walk, no daemon, no network. The `compile(source, opts) -> CompileOutput` entry is documented in `references/4-layer-overview.md` § Layer 1.
-- **Binary:** `/home/madvib/dev/Ship/sui/crates/sui/compiler/src/bin/sui-compiler.rs` — the `sui-compiler` Cargo bin. One subcommand today: `build`.
+- **Library:** `crates/sui/compiler/src/lib.rs`. Pure transformation; no filesystem walk, no daemon, no network. The `compile(source, opts) -> CompileOutput` entry is documented in `references/4-layer-overview.md` § Layer 1.
+- **Binary:** `crates/sui/compiler/src/bin/sui-compiler.rs` — the `sui-compiler` Cargo bin. One subcommand today: `build`.
 
 ```sh
 # Compile a single file. Emits to the project mirror tree
@@ -28,7 +28,7 @@ cargo run -q -p sui-compiler -- build packages/components/ui-components/src/sui-
   --styles packages/components/ui-components/src/sui-button/sui-button.css
 ```
 
-Flags (from `/home/madvib/dev/Ship/sui/crates/sui/compiler/src/bin/sui-compiler.rs`):
+Flags (from `crates/sui/compiler/src/bin/sui-compiler.rs`):
 
 | Flag | Purpose |
 |---|---|
@@ -40,11 +40,11 @@ Flags (from `/home/madvib/dev/Ship/sui/crates/sui/compiler/src/bin/sui-compiler.
 | `--styles <file>` | Prepend a CSS file as a `<style>` block. Component sources only. |
 | `--component-name <tag>` | Set the custom element tag name; implies component mode. |
 
-The binary is also exposed as a `cdylib` (`crate-type = ["lib", "cdylib"]` in `Cargo.toml`) so editor extensions and the deck bundler can call it without spawning a subprocess. The Rust release build is what the daemon ships at `~/.ship/runtime/sui-compiler` (see `/home/madvib/dev/Ship/sui/crates/deck/deck-bundler/README.md` — the toolchain doc moved next to its code per the docs charter).
+The binary is also exposed as a `cdylib` (`crate-type = ["lib", "cdylib"]` in `Cargo.toml`) so editor extensions and the deck bundler can call it without spawning a subprocess. The Rust release build is what the daemon ships at `~/.ship/runtime/sui-compiler` (see `crates/deck/deck-bundler/README.md` — the toolchain doc moved next to its code per the docs charter).
 
 ## The deck bundler — the ONLY bundler
 
-There is one bundler: the in-process Rust Rolldown bundler in `/home/madvib/dev/Ship/sui/crates/deck/deck-bundler/` (#163, #167, #220). The retired `@ship/sui-build` (esbuild, one package at a time) and the old `packages/deck/bundler/index.ts` Bun worker are both gone — components are no longer pre-compiled to on-disk `dist/` bundles per package.
+There is one bundler: the in-process Rust Rolldown bundler in `crates/deck/deck-bundler/` (#163, #167, #220). The retired `@ship/sui-build` (esbuild, one package at a time) and the old `packages/deck/bundler/index.ts` Bun worker are both gone — components are no longer pre-compiled to on-disk `dist/` bundles per package.
 
 **How it works.** A Rust Rolldown plugin (`SuiPlugin`) compiles each `.sui` via `sui-compiler` in its `load` hook — no bun worker, no subprocess, no `.compiled.js` pre-step. Membership is **traced**, not declared: each entry (a view, an app, a marketing/arcade page) is bundled by following its imports and template tags.
 
@@ -52,11 +52,11 @@ There is one bundler: the in-process Rust Rolldown bundler in `/home/madvib/dev/
 - **Development** — the daemon serves compiled `.sui` as un-bundled native ESM; HMR re-compiles only the edited component.
 - **Production** — Rolldown emits per-entry traced chunks with `sui-runtime`/`sui-dom` as the shared external, immutable-cached.
 
-**Baking.** `cargo run -p deck-cli -- build-assets` (aliased `bun run build:bundles`) bakes the framework singletons + the `sui-components` umbrella + per-component islands (`<bundle separate />`) + per-view bundles + the site's `sui-marketing.js` / `sui-arcade.js` into `/home/madvib/dev/Ship/sui/crates/deck/deck-core/assets/` and `.deck/` — the same on-disk asset trees the release binary `include_str!`s. It's what `smoke-deploy.sh` runs and what `just cem` invokes.
+**Baking.** `cargo run -p deck-cli -- build-assets` (aliased `bun run build:bundles`) bakes the framework singletons + the `sui-components` umbrella + per-component islands (`<bundle separate />`) + per-view bundles + the site's `sui-marketing.js` / `sui-arcade.js` into `crates/deck/deck-core/assets/` and `.deck/` — the same on-disk asset trees the release binary `include_str!`s. It's what `smoke-deploy.sh` runs and what `just cem` invokes.
 
 ## `sui-lsp` — the language server
 
-Source: `/home/madvib/dev/Ship/sui/crates/sui/lsp/` (Rust). A thin LSP/stdio shell over the `sui-compiler`
+Source: `crates/sui/lsp/` (Rust). A thin LSP/stdio shell over the `sui-compiler`
 analysis facade — **one grammar, no TypeScript, no WASM, no Node**. The same
 Rust intelligence serves three consumers:
 
@@ -179,14 +179,14 @@ just dev                              # daemon (in-process Rolldown bundler)
 # (optional) just shell-dev          # vite outer shell at :3200, proxies to daemon
 # edit views/home/page.sui or controller.ts
 #  → the daemon's in-process bundler (notify watch) re-bundles via Rolldown,
-#    writing to /home/madvib/dev/Ship/sui/crates/deck/deck-core/assets/... or .deck/...
+#    writing to crates/deck/deck-core/assets/... or .deck/...
 #  → emits BundlerEvent::ModuleChanged (broadcast) → sui_hmr
 #  → shipd republishes on /_deck/dev/hmr (SSE)
 #  → apps/shell/src/hmr.ts cache-busts /_deck/views/home/view.js
 #  → mount() re-runs in place; SSR snapshot stays, no full reload
 ```
 
-`just dev` starts only the daemon (`scripts/dev/start.sh`); bundling + watching happen IN-PROCESS (`/home/madvib/dev/Ship/sui/crates/deck/deck-bundler/`, `Bundler::start_watching`) — no spawned worker. To hit the daemon through the outer shell, run `just shell-dev` in a second terminal — it proxies `/api`, `/_deck`, `^/sui/.*`, and `/view-host` to the daemon.
+`just dev` starts only the daemon (`scripts/dev/start.sh`); bundling + watching happen IN-PROCESS (`crates/deck/deck-bundler/`, `Bundler::start_watching`) — no spawned worker. To hit the daemon through the outer shell, run `just shell-dev` in a second terminal — it proxies `/api`, `/_deck`, `^/sui/.*`, and `/view-host` to the daemon.
 
 For a clean dev restart use `just dev-restart`. Visual regressions: `just visual` (Playwright vs committed PNGs; pass `--update-snapshots` to refresh after a deliberate change). Perf regressions: `just bench-check` (fails on >15% vs the latest committed baseline; override via `BENCH_REGRESSION_THRESHOLD`).
 
@@ -219,4 +219,4 @@ just build       # one-shot: gen-types → component packs (primitives, ui-compo
 ship build       # equivalent CLI wrapper for users without `just` installed
 ```
 
-Both write release binaries to `target/release/{ship,shipd,mcp}` and rebuild the front-end asset trees that shipd's `include_str!` directives consume (`/home/madvib/dev/Ship/sui/crates/deck/deck-core/assets/`, `apps/shipd/assets/`). After `just build`, run `shipd --mode production` to serve them.
+Both write release binaries to `target/release/{ship,shipd,mcp}` and rebuild the front-end asset trees that shipd's `include_str!` directives consume (`crates/deck/deck-core/assets/`, `apps/shipd/assets/`). After `just build`, run `shipd --mode production` to serve them.

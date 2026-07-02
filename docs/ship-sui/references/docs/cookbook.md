@@ -174,7 +174,7 @@ Declarative-form alternative (no optimistic overlay):
 
 `$mutation` is auto-injected into scope by the compiler when a
 `<form mutation="…">` is present (see
-`/home/madvib/dev/Ship/sui/packages/sui/runtime/src/index.ts` `wireFormMutation` and
+`packages/sui/runtime/src/index.ts` `wireFormMutation` and
 `references/runtime-primitives.md` § Mutations).
 
 ---
@@ -489,7 +489,7 @@ prop:rows={rowsSignal}>…</my-widget>`. The compiler emits the
 A view names the data clients it consumes with `<client>`; the host
 supplies a keyed map at mount. `ship` is just the key Ship hosts use —
 here a deck host injects its own client as `api`. Worked exemplar in
-the repo: `/home/madvib/dev/Ship/sui/crates/deck/deck-conformance/app/views/clock/page.sui`.
+the repo: `crates/deck/deck-conformance/app/views/clock/page.sui`.
 
 `app/views/clock/page.sui`:
 

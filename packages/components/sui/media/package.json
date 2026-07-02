@@ -3,6 +3,7 @@
   "version": "0.2.0",
   "description": "Ship Media pack — the PURE leaf content renderers (sui-media-image raster+SVG, sui-media-csv→sui-table, sui-media-av audio/video) plus the pure detection/parse engine (createMimeRegistry resolution, MIME detect, CSV parse, the ViewerRenderer contract). Renderers receive already-resolved bytes/text via `prop:src` identity and never fetch. The kind→TAG dispatch table lives in the @ship/viewer router, not here — this engine resolves whatever entry list it is handed.",
   "type": "module",
+  "license": "MIT",
   "files": [
     "src",
     "dist/custom-elements.json"

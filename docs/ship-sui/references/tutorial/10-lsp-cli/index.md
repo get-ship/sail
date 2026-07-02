@@ -50,7 +50,7 @@ the project mirror tree. Use this after the lint check is clean.
 ## The `sui-lsp` binary (editors)
 
 For editors — the ship-agent's built-in tooling, VS Code (`apps/vscode/`),
-or any LSP-capable client — the `sui-lsp` binary (`/home/madvib/dev/Ship/sui/crates/sui/lsp/`) provides
+or any LSP-capable client — the `sui-lsp` binary (`crates/sui/lsp/`) provides
 the same intelligence over stdio. Same Rust grammar; hover, completion, and
 go-to-definition on top. The ship-agent uses this binary under the hood; the
 editor integration is the developer-facing path.
@@ -67,7 +67,7 @@ through multiple surfaces:
 - **`sui-lint`** — fast per-edit binary for agents and CI
 - **`sui-compiler`** — full compile with emit, used by the deck bundler and the daemon
 - **`sui-lsp`** — LSP server for editors over stdio
-- **WASM compiler** (`/home/madvib/dev/Ship/sui/packages/sui/compiler-wasm`) — in-browser diagnostics for the docs playground
+- **WASM compiler** (`packages/sui/compiler-wasm`) — in-browser diagnostics for the docs playground
 
 A human typing in the docs site, an agent running `sui-lint`, and an editor
 on your laptop all see the *same* diagnostics — because they're all the same
