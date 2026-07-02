@@ -1,14 +1,13 @@
-// Dynamic tutorial lesson page — an INTERACTIVE, side-by-side experience
-// (svelte.dev/tutorial-style), ported from ship-marketing's proven TutorialApp.
-// Prose renders above two panes: LEFT an editable template.sui / controller.ts
-// code area using <sui-code-editor>; RIGHT a sandboxed <iframe src="/tut-host.html">
-// that compiles + RUNS the lesson live in full isolation.
+// Dynamic tutorial lesson page — the "Tutorial — refined (2a)" layout. Prose +
+// progress stepper on the LEFT; an interactive playground (editor card + live
+// preview + output console) on the RIGHT. Ported from ship-marketing's proven
+// TutorialApp.
 //
 // The slug comes from the route param (`ctx.route.params.slug()`). All
-// editor↔preview wiring (debounce, regex TS→JS, postMessage, theme sync)
-// lives in the imported `tutorial-boot` module — kept OUT of this controller
-// body so the compiler's scope-scanner never trips on lesson code strings or
-// the `signal(…)` / `derived(…)` text snippets inside.
+// editor↔preview wiring (debounce, regex TS→JS, postMessage, theme sync, the
+// output-console log) lives in the imported `tutorial-boot` module — kept OUT of
+// this controller body so the compiler's scope-scanner never trips on lesson
+// code strings or the `signal(…)` / `derived(…)` text snippets inside.
 import {
   controller,
   derived,
@@ -25,10 +24,23 @@ import { bootTutorialApp, type CompileFn, type TutorialHandle } from '../../../s
 const BY_SLUG: Record<string, TutorialLesson> = {}
 for (const l of TUTORIAL_LESSONS) BY_SLUG[l.slug] = l
 
+// Lessons in presentation order — drives the progress stepper. RAW_LESSONS is
+// authored per-chapter, so sort by `order` to guarantee a monotonic 1..N strip.
+const ORDERED_LESSONS: TutorialLesson[] = [...TUTORIAL_LESSONS].sort((a, b) => a.order - b.order)
+
+// One thin segment per lesson. `cls` is precomputed so the template stays a pure
+// read (no class interpolation) and `current` drives aria-current + the tint.
+interface StepSegment {
+  slug: string
+  href: string
+  cls: string
+  title: string
+  current: boolean
+}
+
 export default controller({
   scope: (ctx: ViewScope<Scope>) => {
     const lesson = derived(() => BY_SLUG[ctx.route.params.slug() ?? ''])
-    const prevSlug = derived(() => lesson()?.prev ?? '')
     const nextSlug = derived(() => lesson()?.next ?? '')
 
     const rootEl = ref<HTMLElement>(null)
@@ -65,19 +77,33 @@ export default controller({
       }
     })
 
+    const steps = derived((): StepSegment[] => {
+      const cur = lesson()?.order ?? 0
+      return ORDERED_LESSONS.map((l) => {
+        const state = l.order < cur ? 'done' : l.order === cur ? 'current' : 'todo'
+        return {
+          slug: l.slug,
+          href: '/tutorial/' + l.slug,
+          cls: 'tut-step tut-step--' + state,
+          title: 'Lesson ' + l.order + ' — ' + l.title,
+          current: state === 'current',
+        }
+      })
+    })
+
+    const pad2 = (n: number): string => (n < 10 ? '0' + n : String(n))
+
     return {
       title: derived(() => lesson()?.title ?? 'Lesson not found'),
       description: derived(() => lesson()?.description ?? ''),
       proseHtml: derived(() => lesson()?.proseHtml ?? ''),
       rootEl,
-      prevHref: derived(() => (prevSlug() ? '/tutorial/' + prevSlug() : '/tutorial')),
+      steps,
+      lessonNumLabel: derived(() => pad2(lesson()?.order ?? 0)),
+      totalLessons: derived(() => ORDERED_LESSONS.length),
+      hasNext: derived(() => Boolean(nextSlug())),
       nextHref: derived(() => (nextSlug() ? '/tutorial/' + nextSlug() : '/tutorial')),
-      prevLabel: derived(() =>
-        prevSlug() ? '← ' + (BY_SLUG[prevSlug()]?.title ?? '') : '← All lessons',
-      ),
-      nextLabel: derived(() =>
-        nextSlug() ? (BY_SLUG[nextSlug()]?.title ?? '') + ' →' : 'All lessons →',
-      ),
+      nextTitle: derived(() => (BY_SLUG[nextSlug()]?.title ?? '') + ' →'),
     }
   },
 })

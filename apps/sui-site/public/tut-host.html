@@ -19,6 +19,32 @@
       else delete root.dataset.mode
     })()
   </script>
+  <script>
+    // Forward the preview's own console.{log,warn,error,info} up to the parent
+    // page so the tutorial's OUTPUT CONSOLE can show real lesson output (and
+    // the parent's tutorial-boot.ts appends each as a log line). Installed
+    // synchronously, before any module runs, so lesson console calls are caught.
+    (function () {
+      var levels = ['log', 'warn', 'error', 'info']
+      levels.forEach(function (level) {
+        var orig = typeof console[level] === 'function' ? console[level].bind(console) : function () {}
+        console[level] = function () {
+          try {
+            var text = Array.prototype.map
+              .call(arguments, function (a) {
+                if (typeof a === 'string') return a
+                try { return JSON.stringify(a) } catch (e) { return String(a) }
+              })
+              .join(' ')
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({ kind: 'tutorial:console', level: level, text: text }, '*')
+            }
+          } catch (e) { /* forwarding is best-effort */ }
+          orig.apply(console, arguments)
+        }
+      })
+    })()
+  </script>
   <!-- SUI tokens + theme + base, concatenated by gen-tutorial-host.mjs from the
        same three sheets the top document links (tokens.css + themes.css +
        sui-theme.css + base.css). Makes every var(--…) inside the preview resolve

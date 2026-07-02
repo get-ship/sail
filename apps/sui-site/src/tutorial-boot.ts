@@ -136,10 +136,9 @@ export function bootTutorialApp(root: HTMLElement, compile: CompileFn): Tutorial
   const ctrlEl = asCodeEditor(root.querySelector('sui-code-editor[data-pane="controller"]'))
   const iframe = root.querySelector<HTMLIFrameElement>('.tut-preview')
   const statusDot = root.querySelector<HTMLElement>('.tut-status-dot')
-  const errorBox = root.querySelector<HTMLElement>('.tut-error')
-  const errorMsg = root.querySelector<HTMLElement>('.tut-error-msg')
   const tplDiff = asDiff(root.querySelector('sui-diff[data-pane="template"]'))
   const ctrlDiff = asDiff(root.querySelector('sui-diff[data-pane="controller"]'))
+  const consoleEl = root.querySelector<HTMLElement>('.tut-console-lines')
   if (!tplEl || !ctrlEl || !iframe) {
     console.error('[sui-site] tutorial editor panes not found')
     return { setLesson: () => {}, dispose: () => {} }
@@ -156,6 +155,41 @@ export function bootTutorialApp(root: HTMLElement, compile: CompileFn): Tutorial
   let iframeReady = false
   const schedule = createDebouncer()
 
+  // ── Output console ──────────────────────────────────────────────────────
+  // An honest log of the real boot flow: compile start/success, compile errors
+  // (full message, destructive tone), run / reset / solution actions, plus
+  // console.{log,warn,error} forwarded from inside the preview iframe. Capped at
+  // MAX_LOG entries, auto-scrolled to the newest line. Elements are built via
+  // createElement + textContent (never innerHTML) so compiler / user output is
+  // rendered as inert text.
+  const MAX_LOG = 50
+  type LogKind = 'info' | 'success' | 'warn' | 'error'
+  const pad2 = (n: number): string => (n < 10 ? '0' + n : String(n))
+  function stamp(): string {
+    const d = new Date()
+    return pad2(d.getMinutes()) + ':' + pad2(d.getSeconds())
+  }
+  function log(message: string, kind: LogKind = 'info'): void {
+    if (!consoleEl) return
+    const line = document.createElement('div')
+    line.className = kind === 'info' ? 'tut-log-line' : `tut-log-line tut-log-line--${kind}`
+    const ts = document.createElement('span')
+    ts.className = 'tut-log-ts'
+    ts.textContent = stamp()
+    const msg = document.createElement('span')
+    msg.className = 'tut-log-msg'
+    msg.textContent = message
+    line.append(ts, msg)
+    consoleEl.append(line)
+    while (consoleEl.childElementCount > MAX_LOG && consoleEl.firstElementChild) {
+      consoleEl.firstElementChild.remove()
+    }
+    consoleEl.scrollTop = consoleEl.scrollHeight
+  }
+  function clearLog(): void {
+    if (consoleEl) consoleEl.replaceChildren()
+  }
+
   function setStatus(state: string, text: string): void {
     if (statusDot) {
       const toneMap: Record<string, string> = {
@@ -163,15 +197,17 @@ export function bootTutorialApp(root: HTMLElement, compile: CompileFn): Tutorial
         ok: 'success', error: 'destructive',
       }
       statusDot.setAttribute('tone', toneMap[state] ?? 'muted')
-      if (state === 'typing' || state === 'running') statusDot.setAttribute('pulse', '')
-      else statusDot.removeAttribute('pulse')
+      // Pulse while working AND when live+green — the resting "· live" state.
+      if (state === 'typing' || state === 'running' || state === 'ok') {
+        statusDot.setAttribute('pulse', '')
+      } else {
+        statusDot.removeAttribute('pulse')
+      }
       statusDot.setAttribute('label', text)
     }
     root.dataset.tutState = state
-    if (errorBox && errorMsg) {
-      if (state === 'error') { errorMsg.textContent = text; errorBox.hidden = false }
-      else { errorBox.hidden = true }
-    }
+    // Compile errors surface in the OUTPUT CONSOLE (full message, destructive
+    // tone) rather than a cramped inline box — see runNow()'s log() calls.
   }
 
   function resolvedMode(): 'light' | 'dark' {
@@ -196,6 +232,9 @@ export function bootTutorialApp(root: HTMLElement, compile: CompileFn): Tutorial
       })
       if (result.kind === 'err') {
         setStatus('error', result.message)
+        // The big UX win: the FULL compiler message lands in the console,
+        // destructive-toned, instead of a cramped one-line box.
+        log(result.message, 'error')
         tplEl.setDiagnostics([{
           line: result.line ?? 1,
           column: result.col ?? 1,
@@ -212,8 +251,11 @@ export function bootTutorialApp(root: HTMLElement, compile: CompileFn): Tutorial
         '*',
       )
       setStatus('ok', 'running')
+      log('▶ ran template.sui', 'success')
     } catch (e: unknown) {
-      setStatus('error', e instanceof Error ? e.message : String(e))
+      const msg = e instanceof Error ? e.message : String(e)
+      setStatus('error', msg)
+      log(msg, 'error')
     }
   }
 
@@ -244,13 +286,33 @@ export function bootTutorialApp(root: HTMLElement, compile: CompileFn): Tutorial
     if (ctrlDiff) ctrlDiff.from = controller
     runNow()
   }
+  // Solution is a toggle: Show solution → Hide solution (back to your code).
+  let solutionShown = false
+  const solutionBtn = root.querySelector<HTMLElement>('[data-action="solution"]')
+  function syncSolutionBtn(): void {
+    if (solutionBtn) solutionBtn.textContent = solutionShown ? 'Hide solution' : 'Show solution'
+  }
   root.querySelector('[data-action="reset"]')?.addEventListener('click', () => {
+    solutionShown = false
+    syncSolutionBtn()
     applyCode(lesson.starterTemplate, lesson.starterController)
+    log('↺ reset to starter', 'info')
   })
-  root.querySelector('[data-action="solution"]')?.addEventListener('click', () => {
-    applyCode(lesson.solvedTemplate, lesson.solvedController)
+  solutionBtn?.addEventListener('click', () => {
+    solutionShown = !solutionShown
+    syncSolutionBtn()
+    if (solutionShown) {
+      applyCode(lesson.solvedTemplate, lesson.solvedController)
+      log('shown solution', 'info')
+    } else {
+      applyCode(lesson.starterTemplate, lesson.starterController)
+      log('hid solution — back to your code', 'info')
+    }
   })
-  root.querySelector('[data-action="run"]')?.addEventListener('click', () => runNow())
+  root.querySelector('[data-action="run"]')?.addEventListener('click', () => {
+    log('▶ run', 'info')
+    runNow()
+  })
 
   const panels = Array.from(root.querySelectorAll<HTMLElement>('sui-tab-panel'))
   function showPanel(name: string): void {
@@ -272,6 +334,14 @@ export function bootTutorialApp(root: HTMLElement, compile: CompileFn): Tutorial
 
   const onMessage = async (e: MessageEvent): Promise<void> => {
     if (e.source !== iframe!.contentWindow) return
+    // console.{log,warn,error} forwarded from inside the preview iframe.
+    if (e.data?.kind === 'tutorial:console') {
+      const level = String(e.data.level ?? 'log')
+      const text = String(e.data.text ?? '')
+      const kind: LogKind = level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'info'
+      log(`[preview] ${text}`, kind)
+      return
+    }
     if (e.data?.kind !== 'tutorial:ready') return
     if (SCENARIO_SLUGS.has(lesson.slug)) {
       try {
@@ -301,10 +371,14 @@ export function bootTutorialApp(root: HTMLElement, compile: CompileFn): Tutorial
   return {
     setLesson(next: LessonCode): void {
       lesson = next
+      solutionShown = false
+      syncSolutionBtn()
       tplEl.setValue(next.starterTemplate)
       ctrlEl.setValue(next.starterController)
       if (tplDiff) { tplDiff.to = next.solvedTemplate; tplDiff.from = next.starterTemplate }
       if (ctrlDiff) { ctrlDiff.to = next.solvedController; ctrlDiff.from = next.starterController }
+      clearLog()
+      log(`loaded ${next.slug || 'lesson'}`, 'info')
       reloadIframe()
     },
     dispose(): void {
