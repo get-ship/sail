@@ -1,35 +1,63 @@
 <!--
-  /tutorial/[slug] — an INTERACTIVE lesson (svelte.dev/tutorial-style), ported
-  from ship-marketing's proven TutorialApp. Prose renders ABOVE two panes:
-    LEFT  = editor: <sui-tabs> (template.sui / controller.ts / diff) over
-            a <sui-code-editor> per pane, with Reset + Show-solution actions.
-            The editor is `<sui-code-editor>` (CodeMirror 6 wrapped as a SUI
-            primitive), NOT a textarea — per spec, no native text surfaces
-            anywhere on the sui-site.
-    RIGHT = a sandboxed <iframe src="/tut-host.html"> preview that compiles
-            + RUNS the lesson live in full isolation.
+  /tutorial/[slug] — INTERACTIVE lesson, the "Tutorial — refined (2a)" layout.
+  A two-column split:
+    LEFT  = the lesson: header row (eyebrow + "Lesson NN / 25"), a progress
+            STEPPER (one segment per lesson), the h1 / lead / prose, and a
+            bottom-pinned nav bar (All lessons ← | → next lesson).
+    RIGHT = the playground: a matched header row (eyebrow + Reset + Show
+            solution), an EDITOR CARD (<sui-tabs> template.sui / controller.ts /
+            diff over <sui-code-editor>), and a PREVIEW CARD (live status dot +
+            Run, the sandboxed <iframe src="/tut-host.html">, and an OUTPUT
+            CONSOLE that logs real compile / run / preview-console events).
 
-  All wiring lives in the controller + ../../src/tutorial-boot.ts. The page
-  is pure markup; the controller orchestrates wasm compile, postMessage,
-  iframe lifecycle, theme sync.
+  All wiring lives in the controller + ../../src/tutorial-boot.ts. This template
+  is a pure read of state; the controller orchestrates wasm compile, postMessage,
+  iframe lifecycle, theme sync, and the console log.
 
   Sibling style.css carries the visual rules (the bundler drops inline
   `<style>` in a `page.sui`).
 -->
 <div class="tut-page tut-split">
-  <div class="doc tut-lesson">
-    <header class="tut-header">
-      <p class="eyebrow">Tutorial</p>
-      <h1 class="tut-title">{title()}</h1>
-      <p class="lead">{description()}</p>
-    </header>
+  <div class="tut-lesson">
+    <div class="tut-lesson-scroll">
+      <header class="tut-lesson-head">
+        <div class="tut-head-row">
+          <p class="tut-eyebrow">— Tutorial</p>
+          <span class="tut-lesson-count">Lesson {lessonNumLabel()} / {totalLessons()}</span>
+        </div>
 
-    <div class="prose-wrap">
-      <sui-prose html={proseHtml()}></sui-prose>
+        <nav class="tut-stepper" aria-label="Lesson progress">
+          {#for step of steps() key={step.slug}}
+            <a class={step.cls} href={step.href} title={step.title} aria-current={step.current ? 'step' : null}></a>
+          {/for}
+        </nav>
+
+        <h1 class="tut-title">{title()}</h1>
+        <p class="tut-lead">{description()}</p>
+      </header>
+
+      <div class="prose-wrap">
+        <sui-prose html={proseHtml()}></sui-prose>
+      </div>
     </div>
+
+    <nav class="tut-bottom-nav">
+      <a class="tut-navbtn tut-navbtn--ghost" href="/tutorial">← All lessons</a>
+      {#if hasNext()}
+        <a class="tut-navbtn tut-navbtn--primary" href={nextHref()}>{nextTitle()}</a>
+      {/if}
+    </nav>
   </div>
 
   <div class="tut-app-root" bind:this={rootEl}>
+    <div class="tut-play-head">
+      <p class="tut-eyebrow tut-eyebrow--muted">— Playground</p>
+      <div class="tut-actions">
+        <sui-button data-action="reset" variant="ghost" size="sm">↺ Reset</sui-button>
+        <sui-button data-action="solution" variant="outline" tone="primary" size="sm">Show solution</sui-button>
+      </div>
+    </div>
+
     <section class="tut-pane tut-pane--editor">
       <div class="tut-pane-bar">
         <sui-tabs active="template" variant="pill" size="sm" class="tut-tabs">
@@ -37,10 +65,6 @@
           <sui-tab name="controller">controller.ts</sui-tab>
           <sui-tab name="diff">diff</sui-tab>
         </sui-tabs>
-        <div class="tut-actions">
-          <sui-button data-action="reset" variant="ghost" size="sm">↺ Reset</sui-button>
-          <sui-button data-action="solution" variant="soft" tone="primary" size="sm">Show solution</sui-button>
-        </div>
       </div>
       <div class="tut-editor-host">
         <sui-tab-panel name="template" active>
@@ -75,22 +99,19 @@
     </section>
 
     <section class="tut-pane tut-pane--preview">
-      <div class="tut-pane-bar">
-        <sui-status-dot class="tut-status-dot" tone="muted" size="sm" label="ready"></sui-status-dot>
-        <sui-button data-action="run" variant="ghost" size="sm">↻ Run</sui-button>
-      </div>
-      <div class="tut-error" hidden>
-        <div class="tut-error-title">Compile error</div>
-        <pre class="tut-error-msg"></pre>
+      <div class="tut-pane-bar tut-preview-bar">
+        <div class="tut-live">
+          <sui-status-dot class="tut-status-dot" tone="success" pulse size="sm" label="ready"></sui-status-dot>
+          <span class="tut-live-label">Preview · live</span>
+        </div>
+        <sui-button data-action="run" variant="outline" tone="primary" size="sm">▶ Run</sui-button>
       </div>
       <div class="tut-preview-host">
         <iframe class="tut-preview" data-base-src="/tut-host.html" title="Tutorial preview" sandbox="allow-scripts allow-same-origin"></iframe>
       </div>
+      <div class="tut-console" role="log" aria-live="polite" aria-label="Preview console">
+        <div class="tut-console-lines"></div>
+      </div>
     </section>
-  </div>
-
-  <div class="page-nav">
-    <a class="btn" href={prevHref()}>{prevLabel()}</a>
-    <a class="btn" href={nextHref()}>{nextLabel()}</a>
   </div>
 </div>
