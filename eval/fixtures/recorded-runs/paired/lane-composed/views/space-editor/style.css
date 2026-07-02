@@ -1,0 +1,10 @@
+/* Space Chrome editor — tokens only, no raw hex/px in themed properties. */
+:root {
+  --space-editor-pane-gap: var(--space-4);
+}
+
+.space-editor {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--body-font);
+}
