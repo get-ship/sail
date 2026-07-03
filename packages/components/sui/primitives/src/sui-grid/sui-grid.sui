@@ -54,6 +54,7 @@
 <style>
   :host {
     display: block;
+    min-width: 0;
     --grid-gap: var(--space-3);
     --grid-min: 20rem;
   }
@@ -87,7 +88,9 @@
      `data-col-span` / `data-row-span` to the slotted element when its
      content needs the room. Under 720px we collapse the spans so a
      calendar never overflows a phone. */
-  .grid ::slotted(*) { grid-column: span 1; grid-row: span 1; }
+  /* min-width:0 so a wide cell (long code line, table, path) shrinks to its
+     track instead of forcing the grid wider than its container. */
+  .grid ::slotted(*) { grid-column: span 1; grid-row: span 1; min-width: 0; }
   .grid ::slotted(*[data-col-span='2']) { grid-column: span 2; }
   .grid ::slotted(*[data-col-span='3']) { grid-column: span 3; }
   .grid ::slotted(*[data-col-span='4']) { grid-column: span 4; }

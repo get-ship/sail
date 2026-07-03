@@ -28,10 +28,14 @@
 <prop name="gap" values="0|1|2|3|4|5|6|7|8" default="3" reflect />
 <prop name="align" values="start|center|end|baseline" default="center" />
 <prop name="justify" values="start|center|end|between|around" default="start" reflect />
+<prop name="direction" values="row|column" default="row" reflect />
 
 <style>
   :host {
     display: block;
+    /* min-width:0 so a cluster nested in a flex/grid parent can shrink instead
+       of forcing the parent wider — overflow is structurally impossible. */
+    min-width: 0;
     --cluster-gap: var(--space-3);
   }
   :host([hidden]) { display: none; }
@@ -52,7 +56,15 @@
     gap: var(--cluster-gap);
     align-items: center;
     justify-content: flex-start;
+    min-width: 0;
   }
+  /* direction="column" makes it a wrapping vertical group (rare, but symmetric
+     with the row default); row is the default. */
+  :host([direction='column']) .cluster { flex-direction: column; align-items: flex-start; }
+  /* Slotted children default to min-width:0 so long labels/paths/dates wrap or
+     ellipsize inside the cluster instead of overflowing (the missions title,
+     claim meta, etc. — fixed structurally, not per-page). */
+  .cluster ::slotted(*) { min-width: 0; }
   :host([align='start'])    .cluster { align-items: flex-start; }
   :host([align='center'])   .cluster { align-items: center; }
   :host([align='end'])      .cluster { align-items: flex-end; }

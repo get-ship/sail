@@ -25,10 +25,16 @@
 -->
 
 <prop name="gap" values="0|1|2|3|4|5|6|7|8" default="4" reflect />
+<prop name="direction" values="column|row" default="column" reflect />
 <style>
 
   :host {
     display: block;
+    /* Never let a stack blow out its container: as a flex/grid CHILD it would
+       otherwise carry min-width:auto (= its content's intrinsic width) and push
+       the parent wider. min-width:0 is the design-system default so overflow is
+       structurally impossible, not something every consumer re-discovers. */
+    min-width: 0;
     --stack-gap: var(--space-4);
   }
   :host([hidden]) { display: none; }
@@ -48,11 +54,19 @@
     flex-direction: column;
     gap: var(--stack-gap);
     align-items: stretch;
+    min-width: 0;
   }
+  /* direction="row" turns the stack into a rigid (non-wrapping) horizontal line;
+     the wrapping row is <sui-cluster>. Column is the default. */
+  :host([direction='row']) .stack { flex-direction: row; }
   :host([align='start'])   .stack { align-items: flex-start; }
   :host([align='center'])  .stack { align-items: center; }
   :host([align='end'])     .stack { align-items: flex-end; }
   :host([align='stretch']) .stack { align-items: stretch; }
+  /* Slotted children may not shrink below their content by default (flex/grid
+     min-width:auto) — the root cause of text/table/label overflow. Default them
+     to min-width:0 so long content wraps or ellipsizes INSIDE the layout. */
+  .stack ::slotted(*) { min-width: 0; }
 </style>
 
 <div class="stack"><slot></slot></div>
