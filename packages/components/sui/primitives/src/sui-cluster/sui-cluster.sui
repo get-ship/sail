@@ -28,7 +28,6 @@
 <prop name="gap" values="0|1|2|3|4|5|6|7|8" default="3" reflect />
 <prop name="align" values="start|center|end|baseline" default="center" />
 <prop name="justify" values="start|center|end|between|around" default="start" reflect />
-<prop name="direction" values="row|column" default="row" reflect />
 
 <style>
   :host {
@@ -58,9 +57,6 @@
     justify-content: flex-start;
     min-width: 0;
   }
-  /* direction="column" makes it a wrapping vertical group (rare, but symmetric
-     with the row default); row is the default. */
-  :host([direction='column']) .cluster { flex-direction: column; align-items: flex-start; }
   /* Slotted children default to min-width:0 so long labels/paths/dates wrap or
      ellipsize inside the cluster instead of overflowing (the missions title,
      claim meta, etc. — fixed structurally, not per-page). */
