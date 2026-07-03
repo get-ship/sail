@@ -1,0 +1,35 @@
+{
+  "name": "@ship/sui-mermaid",
+  "version": "0.2.0",
+  "description": "SUI mermaid pack — <sui-mermaid>, renders mermaid source text to a themed SVG with an error tile. Mermaid is heavy, so this pack is its own deck bundle, framework-external, lazy-loaded.",
+  "type": "module",
+  "license": "MIT",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "customElements": "dist/custom-elements.json",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "deck": {
+    "bundles": [
+      {
+        "name": "sui-mermaid",
+        "entry": "src/index.ts",
+        "externals": [
+          "@ship/sui-runtime",
+          "@ship/sui-dom"
+        ],
+        "lazy": true
+      }
+    ]
+  },
+  "scripts": {
+    "prepublishOnly": "test -f dist/custom-elements.json || (cd ../../../.. && cargo run -p deck-cli -- build-assets)",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ship/sui-runtime": "workspace:*",
+    "@ship/sui-dom": "workspace:*",
+    "mermaid": "^11.4.0"
+  }
+}

@@ -1,0 +1,94 @@
+<!--
+  <sui-mermaid> — the canonical mermaid render primitive.
+
+  Takes mermaid SOURCE TEXT in its `value` prop (NOT a URL — the caller fetches
+  the .mmd/.mermaid file and hands the text in) and renders the SVG into its
+  shadow root, themed to the app (dark/light, app font), with an inline error
+  state for bad syntax.
+
+  Mermaid is heavy; the pack is its own deck bundle (`lazy: true`) and the
+  controller dynamically imports 'mermaid' on first render, so the dep is only
+  fetched when a diagram actually needs to draw.
+
+  Rendering is async (mermaid.render returns a Promise) so we don't bindHtml the
+  source directly: a render effect (tracks `value` + the theme) does the async
+  render and writes the resulting SVG (or an escaped error box) into an `html`
+  signal, which a bindHtml() binding morphs into a `bind:this` shadow-root
+  <div> — the sanctioned, purity-lint-clean path for reactive innerHTML.
+-->
+
+<prop name="value" type="string" default="" reflect />
+
+<style>
+  :host {
+    display: block;
+    min-width: 0;
+    font-family: var(--font-body);
+    color: var(--foreground);
+  }
+  :host([hidden]) { display: none; }
+
+  /* The rendered SVG fills the host width; mermaid's useMaxWidth keeps it
+     responsive. Centered so smaller diagrams sit nicely in a card frame. */
+  .mmd-root {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 2rem;
+  }
+  .mmd-root svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Error state — bad mermaid syntax. Escaped message + collapsible source so a
+     broken diagram is legible + fixable, never a blank/crashed tile. */
+  .mmd-err {
+    width: 100%;
+    box-sizing: border-box;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--tone-destructive-border, var(--border-strong));
+    border-radius: var(--radius-md);
+    background: var(--tone-destructive-bg, var(--surface-1));
+    color: var(--foreground);
+    font-size: var(--text-sm);
+  }
+  .mmd-err-h {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-weight: var(--font-weight-semibold);
+    color: var(--destructive, var(--foreground));
+    margin-bottom: var(--space-2);
+  }
+  .mmd-err-msg {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--muted-foreground);
+  }
+  .mmd-err-src { margin-top: var(--space-2); }
+  .mmd-err-src summary {
+    cursor: pointer;
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+  }
+  .mmd-err-src pre {
+    margin: var(--space-2) 0 0;
+    padding: var(--space-2) var(--space-3);
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-x: auto;
+  }
+</style>
+
+<div class="mmd-root" bind:this={container}></div>
