@@ -14,7 +14,107 @@ const VOID_TAGS: &[&str] = &[
 ];
 
 pub fn preprocess(source: &str) -> String {
-    expand_self_close(&quote_brace_attrs(source))
+    // sx-lowering runs LAST so the injected `<style>` (which contains `{...}`)
+    // isn't touched by the brace-attr quoter. Off-token sx is rejected earlier
+    // by `check::css_token` (the sui-sx lint) which reads the raw source; here we
+    // only lower the valid pairs.
+    lower_sx(&expand_self_close(&quote_brace_attrs(source)))
+}
+
+/// Lower every static `sx="…"` attribute to `class="sx-…"` + an injected
+/// `<style>` of deduped atomic rules. The prop→CSS mapping is
+/// `sui_lint::rules::sx::lower` — the same vocabulary the lint validates.
+fn lower_sx(source: &str) -> String {
+    let bytes = source.as_bytes();
+    let mut out = String::with_capacity(source.len() + 256);
+    let mut css = String::new();
+    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut i = 0;
+    let mut last = 0;
+    while i < bytes.len() {
+        if source[i..].starts_with("<!--") {
+            match source[i..].find("-->") {
+                Some(end) => {
+                    i += end + 3;
+                    continue;
+                }
+                None => break,
+            }
+        }
+        if i > 0
+            && bytes[i - 1].is_ascii_whitespace()
+            && source[i..].starts_with("sx")
+            && is_eq_quote(&bytes[i + 2..])
+        {
+            let mut j = i + 2;
+            while j < bytes.len() && bytes[j] != b'"' && bytes[j] != b'{' {
+                j += 1;
+            }
+            if j < bytes.len() && bytes[j] == b'"' {
+                let vstart = j + 1;
+                if let Some(rel) = source[vstart..].find('"') {
+                    let val = &source[vstart..vstart + rel];
+                    out.push_str(&source[last..i]);
+                    out.push_str("class=\"");
+                    out.push_str(&lower_sx_value(val, &mut css, &mut seen));
+                    out.push('"');
+                    i = vstart + rel + 1;
+                    last = i;
+                    continue;
+                }
+            }
+        }
+        i += 1;
+    }
+    out.push_str(&source[last..]);
+    if css.is_empty() {
+        out
+    } else {
+        format!("<style>{css}</style>\n{out}")
+    }
+}
+
+fn lower_sx_value(
+    val: &str,
+    css: &mut String,
+    seen: &mut std::collections::HashSet<String>,
+) -> String {
+    let mut classes: Vec<String> = Vec::new();
+    for pair in val.split_whitespace() {
+        let Some((prop, token)) = pair.split_once(':') else {
+            continue;
+        };
+        let sanitized: String = token.chars().filter(|c| c.is_ascii_alphanumeric()).collect();
+        let class = format!("sx-{prop}-{sanitized}");
+        if let Some(decls) = sui_lint::rules::sx::lower(prop, token) {
+            if seen.insert(class.clone()) {
+                let body = decls
+                    .iter()
+                    .map(|(p, v)| format!("{p}:{v}"))
+                    .collect::<Vec<_>>()
+                    .join(";");
+                css.push_str(&format!(".{class}{{{body}}}"));
+            }
+        }
+        classes.push(class);
+    }
+    classes.join(" ")
+}
+
+/// After the `sx` name: optional ws, `=`, optional ws, then a `"`.
+fn is_eq_quote(rest: &[u8]) -> bool {
+    let mut k = 0;
+    while k < rest.len() && rest[k].is_ascii_whitespace() {
+        k += 1;
+    }
+    if k >= rest.len() || rest[k] != b'=' {
+        return false;
+    }
+    k += 1;
+    while k < rest.len() && rest[k].is_ascii_whitespace() {
+        k += 1;
+    }
+    k < rest.len() && rest[k] == b'"'
 }
 
 fn quote_brace_attrs(source: &str) -> String {

@@ -69,6 +69,91 @@ fn allowed(kind: Kind) -> &'static [&'static str] {
     }
 }
 
+/// The CSS property/properties a `prop` shorthand maps to.
+fn css_props(prop: &str) -> &'static [&'static str] {
+    match prop {
+        "p" => &["padding"],
+        "px" => &["padding-inline"],
+        "py" => &["padding-block"],
+        "pt" => &["padding-top"],
+        "pr" => &["padding-right"],
+        "pb" => &["padding-bottom"],
+        "pl" => &["padding-left"],
+        "m" => &["margin"],
+        "mt" => &["margin-top"],
+        "mr" => &["margin-right"],
+        "mb" => &["margin-bottom"],
+        "ml" => &["margin-left"],
+        "gap" => &["gap"],
+        "bg" => &["background"],
+        "fg" => &["color"],
+        "radius" => &["border-radius"],
+        "text" => &["font-size"],
+        "align" => &["align-items"],
+        "justify" => &["justify-content"],
+        _ => &[],
+    }
+}
+
+fn color_var(token: &str) -> &'static str {
+    match token {
+        "surface-0" => "--surface-0",
+        "surface-1" => "--surface-1",
+        "surface-2" => "--surface-2",
+        "surface-3" => "--surface-3",
+        "fg" => "--foreground",
+        "muted" => "--muted-foreground",
+        "border" => "--border",
+        "primary" => "--primary",
+        "success" => "--success",
+        "warning" => "--warning",
+        "destructive" => "--destructive",
+        "accent" => "--accent",
+        "info" => "--info",
+        _ => "--foreground",
+    }
+}
+
+fn flex_val(token: &str) -> &'static str {
+    match token {
+        "start" => "flex-start",
+        "end" => "flex-end",
+        "between" => "space-between",
+        "around" => "space-around",
+        "center" => "center",
+        "stretch" => "stretch",
+        "baseline" => "baseline",
+        _ => "flex-start",
+    }
+}
+
+/// Lower a VALID `prop:token` to its CSS declarations, or `None` if the pair is
+/// off-vocabulary. Single source of truth for the sx → CSS mapping; the
+/// compiler's `preprocess` generates atomic CSS from this, the `check` above
+/// validates against the same vocabulary. Kept in sync by construction.
+pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
+    let kind = prop_kind(prop)?;
+    if !allowed(kind).contains(&token) {
+        return None;
+    }
+    let decls = match kind {
+        Kind::Space => css_props(prop).iter().map(|p| (*p, format!("var(--space-{token})"))).collect(),
+        Kind::Color => css_props(prop).iter().map(|p| (*p, format!("var({})", color_var(token)))).collect(),
+        Kind::Radius => {
+            let v = if token == "none" { "0".to_string() } else { format!("var(--radius-{token})") };
+            css_props(prop).iter().map(|p| (*p, v.clone())).collect()
+        }
+        Kind::Text => css_props(prop).iter().map(|p| (*p, format!("var(--text-{token})"))).collect(),
+        Kind::Align => vec![("align-items", flex_val(token).to_string())],
+        Kind::Justify => vec![("justify-content", flex_val(token).to_string())],
+        Kind::Dir => vec![
+            ("display", "flex".to_string()),
+            ("flex-direction", if token == "col" { "column" } else { "row" }.to_string()),
+        ],
+    };
+    Some(decls)
+}
+
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
     for (val, offset) in scan_sx(source) {
