@@ -79,14 +79,11 @@ fn prop_kind(prop: &str) -> Option<Kind> {
     })
 }
 
-// SCALES are NOT hand-maintained here — they are derived from the shared token
-// registry (`crate::tokens`), so sx can never drift from `tokens.css` (the
-// drift that wrongly rejected `text:3xl`). Only COLOR keeps a curated alias set
-// (short ergonomic names like `fg`/`muted` that map to token names below).
-const COLOR: &[&str] = &[
-    "surface-0", "surface-1", "surface-2", "surface-3", "fg", "muted", "border",
-    "primary", "success", "warning", "destructive", "accent", "info",
-];
+// Vocabularies are NOT hand-maintained here — spacing/text/radius/shadow/z/…
+// scales and the color surface all derive from the shared token registry
+// (`crate::tokens`), so sx can never drift from `tokens.css` (the drift that
+// wrongly rejected `text:3xl` and dropped `bg:success-bg`). Colors are the
+// token names directly — the value IS the variable.
 const ALL_PROPS: &[&str] = &[
     "p", "px", "py", "pt", "pr", "pb", "pl", "m", "mt", "mr", "mb", "ml",
     "bg", "fg", "radius", "text", "shadow", "z", "weight", "leading", "tracking",
@@ -98,7 +95,7 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
     use Kind::*;
     match kind {
         Space => crate::tokens::space_values().to_vec(),
-        Color => COLOR.to_vec(),
+        Color => crate::tokens::color_values().to_vec(),
         Radius => crate::tokens::radius_values().to_vec(),
         Text => crate::tokens::text_values().to_vec(),
         Shadow => {
@@ -112,12 +109,12 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
         Tracking => crate::tokens::suffixes("tracking-"),
         Ring => {
             let mut v = vec!["none"];
-            v.extend(COLOR.iter().copied());
+            v.extend(crate::tokens::color_values());
             v
         }
         Border => {
             let mut v = vec!["none", "subtle", "strong"];
-            v.extend(COLOR.iter().copied());
+            v.extend(crate::tokens::color_values());
             v
         }
         Size => {
@@ -181,24 +178,6 @@ fn css_props(prop: &str) -> &'static [&'static str] {
     }
 }
 
-fn color_var(token: &str) -> &'static str {
-    match token {
-        "surface-0" => "--surface-0",
-        "surface-1" => "--surface-1",
-        "surface-2" => "--surface-2",
-        "surface-3" => "--surface-3",
-        "fg" => "--foreground",
-        "muted" => "--muted-foreground",
-        "border" => "--border",
-        "primary" => "--primary",
-        "success" => "--success",
-        "warning" => "--warning",
-        "destructive" => "--destructive",
-        "accent" => "--accent",
-        "info" => "--info",
-        _ => "--foreground",
-    }
-}
 
 /// Lower a VALID `prop:token` to its CSS declarations, or `None` if off-vocab.
 /// Single source of truth for the sx → CSS mapping; the compiler's `preprocess`
@@ -215,7 +194,7 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
     let value: String = match kind {
         // `0`/`none` are the literal zeros (no `--space-0`/`--radius-none` token).
         Space => if token == "0" { "0".into() } else { format!("var(--space-{token})") },
-        Color => format!("var({})", color_var(token)),
+        Color => format!("var(--{token})"),
         Radius => if token == "none" { "0".into() } else { format!("var(--radius-{token})") },
         Text => format!("var(--text-{token})"),
         Shadow => if token == "none" { "none".into() } else { format!("var(--shadow-{token})") },
@@ -227,14 +206,14 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
         Ring => if token == "none" {
             "none".into()
         } else {
-            format!("0 0 0 var(--ring-width) var({})", color_var(token))
+            format!("0 0 0 var(--ring-width) var(--{token})")
         },
         // a hairline border in the chosen color (or the strength words / off).
         Border => match token {
             "none" => "none".into(),
             "subtle" => "1px solid var(--border-subtle)".into(),
             "strong" => "1px solid var(--border-strong)".into(),
-            _ => format!("1px solid var({})", color_var(token)),
+            _ => format!("1px solid var(--{token})"),
         },
         Size => match token {
             "full" => "100%".into(),

@@ -94,6 +94,56 @@ pub fn text_values() -> &'static [&'static str] {
     C.get_or_init(|| suffixes("text-"))
 }
 
+/// Every token whose VALUE is a color — the surface `sx`'s `bg`/`fg`/`border`
+/// draw from. Found by parsing `tokens.css`: a color is an `oklch`/`rgb`/`hsl`/
+/// hex/`color-mix` literal, or a `var(--X)` alias resolving to one. Derived, so a
+/// new tone channel or surface is usable in sx the moment it lands in the CSS —
+/// no hand-maintained color list to drift (the flaw that dropped `bg:success-bg`).
+pub fn color_values() -> &'static [&'static str] {
+    static C: OnceLock<Vec<&'static str>> = OnceLock::new();
+    C.get_or_init(|| {
+        // (name, value) for every custom-property declaration.
+        let decls: Vec<(&'static str, &'static str)> = TOKENS_CSS
+            .lines()
+            .filter_map(|line| {
+                let rest = line.trim_start().strip_prefix("--")?;
+                let colon = rest.find(':')?;
+                let name = rest[..colon].trim_end();
+                if name.is_empty() || !name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-') {
+                    return None;
+                }
+                Some((name, rest[colon + 1..].trim()))
+            })
+            .collect();
+        let is_literal = |v: &str| {
+            v.starts_with("oklch")
+                || v.starts_with("rgb")
+                || v.starts_with("hsl")
+                || v.starts_with('#')
+                || v.starts_with("color-mix")
+        };
+        let mut colors: HashSet<&'static str> =
+            decls.iter().filter(|(_, v)| is_literal(v)).map(|(n, _)| *n).collect();
+        // Resolve `var(--X)` aliases to a known color — a few rounds for chains.
+        for _ in 0..4 {
+            for (n, v) in &decls {
+                if colors.contains(n) {
+                    continue;
+                }
+                if let Some(inner) = v.strip_prefix("var(--") {
+                    let refname = inner.split([',', ')']).next().unwrap_or("").trim();
+                    if colors.contains(refname) {
+                        colors.insert(n);
+                    }
+                }
+            }
+        }
+        let mut out: Vec<&'static str> = colors.into_iter().collect();
+        out.sort_unstable();
+        out
+    })
+}
+
 /// Allowed `sx` radius values: the `--radius-*` scale plus the literal `none`
 /// (→ `0`). No phantom `xs` — the scale is whatever the tokens declare.
 pub fn radius_values() -> &'static [&'static str] {
@@ -133,6 +183,21 @@ mod tests {
         assert!(r.contains(&"none"));
         assert!(r.contains(&"full") && r.contains(&"lg"));
         assert!(!r.contains(&"xs"), "radius `xs` was a phantom — not in tokens.css");
+    }
+
+    #[test]
+    fn color_values_derive_the_full_surface_not_a_curated_list() {
+        let c = color_values();
+        // base palette + tonal channels + surfaces — all value-derived from CSS
+        for want in [
+            "primary", "foreground", "success", "surface-1", "muted-foreground",
+            "tone-success-bg", "tone-primary-fg", "accent-foreground",
+        ] {
+            assert!(c.contains(&want), "color surface missing `{want}`");
+        }
+        // non-colors must NOT leak into the color surface
+        assert!(!c.contains(&"space-4") && !c.contains(&"text-2xl") && !c.contains(&"radius-lg"));
+        assert!(c.len() > 40, "expected the real ~85-token surface, got {}", c.len());
     }
 
     #[test]
