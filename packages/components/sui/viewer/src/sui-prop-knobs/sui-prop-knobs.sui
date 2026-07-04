@@ -30,9 +30,9 @@
   :host([hidden]) { display: none; }
 </style>
 
-<sui-stack gap="4" part="knobs">
+<column gap="4" part="knobs">
   {#for knob of knobs() key={knob.name}}
-    <sui-stack gap="2" part="knob" data-knob={knob.name}>
+    <column gap="2" part="knob" data-knob={knob.name}>
       <sui-label size="sm">{knob.name}</sui-label>
 
       {#match knob.kind}
@@ -54,6 +54,6 @@
         {:default}
           <sui-input type="text" size="sm" prop:value={knob.value()}></sui-input>
       {/match}
-    </sui-stack>
+    </column>
   {/for}
-</sui-stack>
+</column>

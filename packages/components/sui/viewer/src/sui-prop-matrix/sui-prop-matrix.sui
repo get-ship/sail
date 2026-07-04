@@ -42,7 +42,7 @@
   }
 
   /* A cell is row-shaped — padding from the density channel, not --space-*.
-     The vertical rhythm is the inner <sui-stack>; this rule is only the
+     The vertical rhythm is the inner <column>; this rule is only the
      button frame (border / surface / active ring). */
   .cell {
     display: block;
@@ -91,7 +91,7 @@
         data-active={activeId() === cell.id ? true : null}
         aria-pressed={activeId() === cell.id ? 'true' : 'false'}
       >
-        <sui-stack gap="1">
+        <column gap="1">
           <span class="cell-label" part="cell-label">{cell.label}</span>
           <span class="cell-stage" part="cell-stage">
             <sui-render
@@ -103,7 +103,7 @@
               prop:slots={slotContent()}
             ></sui-render>
           </span>
-        </sui-stack>
+        </column>
       </button>
     {/for}
   </div>

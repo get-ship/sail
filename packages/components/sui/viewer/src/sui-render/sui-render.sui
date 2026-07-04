@@ -60,7 +60,7 @@
 </style>
 
 <sui-error-boundary fallback-text="The specimen threw while rendering.">
-  <sui-stack gap="2" class="frame" part="frame">
+  <column gap="2" class="frame" part="frame">
     {#if compiling()}
       <div class="compiling" part="compiling">
         <sui-spinner size="sm" label="Compiling"></sui-spinner>
@@ -68,19 +68,19 @@
     {/if}
 
     {#if compileError() !== null}
-      <sui-stack gap="2" part="compile-error" data-test="compile-error">
+      <column gap="2" part="compile-error" data-test="compile-error">
         <sui-alert tone="destructive">{compileErrorSummary()}</sui-alert>
         <sui-code block lang="text">{compileErrorBody()}</sui-code>
-      </sui-stack>
+      </column>
     {/if}
 
     {#if runtimeError() !== null}
-      <sui-stack gap="2" part="runtime-error" data-test="runtime-error">
+      <column gap="2" part="runtime-error" data-test="runtime-error">
         <sui-alert tone="destructive">The specimen threw at runtime.</sui-alert>
         <sui-code block lang="text">{runtimeError()}</sui-code>
-      </sui-stack>
+      </column>
     {/if}
 
     <div class="stage" part="stage" bind:this={stageEl}></div>
-  </sui-stack>
+  </column>
 </sui-error-boundary>

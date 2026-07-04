@@ -47,22 +47,23 @@
   }
 </style>
 
-<sui-stack gap="3" class="panel" part="panel">
-  <sui-stack gap="2" class="section" part="source-section">
+<column gap="3" class="panel" part="panel">
+  <column gap="2" class="section" part="source-section">
     <span class="section-label" part="source-label">Source</span>
     <sui-code block lang={lang()} part="source-code"><span bind:this={sourceEl}></span></sui-code>
-  </sui-stack>
+  </column>
 
-  <sui-stack gap="2" class="section" part="snippet-section">
+  <column gap="2" class="section" part="snippet-section">
     <div class="snippet-head" part="snippet-head">
       <span class="section-label" part="snippet-label">Snippet</span>
-      <sui-stack direction="row" gap="2" align="center">
+      <column direction="row" gap="2" align="center">
         {#if copied()}
           <span class="copied" part="copied" aria-live="polite">Copied</span>
         {/if}
         <sui-button size="xs" variant="soft" on:click={copy} part="copy-button">Copy</sui-button>
-      </sui-stack>
+      </column>
     </div>
     <sui-code block lang={lang()} part="snippet-code"><span bind:this={snippetEl}></span></sui-code>
-  </sui-stack>
-</sui-stack>
+  </column>
+</column>
+

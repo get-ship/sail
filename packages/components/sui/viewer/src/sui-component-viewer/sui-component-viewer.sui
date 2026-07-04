@@ -100,7 +100,7 @@
 </style>
 
 <sui-error-boundary fallback-text="The viewer threw while composing.">
-  <sui-stack gap="4" class="layout" part="layout">
+  <column gap="4" class="layout" part="layout">
 
     <!-- The live render stage (view-mode over the source signal). A flip of the
          host's source signal re-derives sourceText() → the stage re-mounts. The
@@ -196,5 +196,5 @@
         </div>
       </sui-tab-panel>
     </sui-tabs>
-  </sui-stack>
+  </column>
 </sui-error-boundary>
