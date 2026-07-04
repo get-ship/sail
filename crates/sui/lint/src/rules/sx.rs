@@ -28,10 +28,27 @@ pub const RULE_ID: &str = "sui-sx";
 
 #[derive(Clone, Copy)]
 enum Kind {
+    // token-scaled: value is a token-scale suffix → `var(--<prefix><value>)`
     Space,
     Color,
     Radius,
     Text,
+    Shadow,
+    Z,
+    Weight,
+    Leading,
+    Tracking,
+    // preset: value picks a curated composition
+    Ring,
+    Border,
+    Size,
+    Opacity,
+    // enum-keyword: value is one of a closed keyword set → the CSS keyword itself
+    Display,
+    Overflow,
+    Position,
+    Cursor,
+    Visibility,
 }
 
 fn prop_kind(prop: &str) -> Option<Kind> {
@@ -44,6 +61,20 @@ fn prop_kind(prop: &str) -> Option<Kind> {
         "bg" | "fg" => Color,
         "radius" => Radius,
         "text" => Text,
+        "shadow" => Shadow,
+        "z" => Z,
+        "weight" => Weight,
+        "leading" => Leading,
+        "tracking" => Tracking,
+        "ring" => Ring,
+        "border" => Border,
+        "w" | "h" | "min-w" | "min-h" | "max-w" | "max-h" => Size,
+        "opacity" => Opacity,
+        "display" => Display,
+        "overflow" | "overflow-x" | "overflow-y" => Overflow,
+        "position" => Position,
+        "cursor" => Cursor,
+        "visibility" => Visibility,
         _ => return None,
     })
 }
@@ -58,15 +89,51 @@ const COLOR: &[&str] = &[
 ];
 const ALL_PROPS: &[&str] = &[
     "p", "px", "py", "pt", "pr", "pb", "pl", "m", "mt", "mr", "mb", "ml",
-    "bg", "fg", "radius", "text",
+    "bg", "fg", "radius", "text", "shadow", "z", "weight", "leading", "tracking",
+    "ring", "border", "w", "h", "min-w", "min-h", "max-w", "max-h", "opacity",
+    "display", "overflow", "overflow-x", "overflow-y", "position", "cursor", "visibility",
 ];
 
 fn allowed(kind: Kind) -> Vec<&'static str> {
+    use Kind::*;
     match kind {
-        Kind::Space => crate::tokens::space_values().to_vec(),
-        Kind::Color => COLOR.to_vec(),
-        Kind::Radius => crate::tokens::radius_values().to_vec(),
-        Kind::Text => crate::tokens::text_values().to_vec(),
+        Space => crate::tokens::space_values().to_vec(),
+        Color => COLOR.to_vec(),
+        Radius => crate::tokens::radius_values().to_vec(),
+        Text => crate::tokens::text_values().to_vec(),
+        Shadow => {
+            let mut v = vec!["none"];
+            v.extend(crate::tokens::suffixes("shadow-"));
+            v
+        }
+        Z => crate::tokens::suffixes("z-"),
+        Weight => crate::tokens::suffixes("font-weight-"),
+        Leading => crate::tokens::suffixes("leading-"),
+        Tracking => crate::tokens::suffixes("tracking-"),
+        Ring => {
+            let mut v = vec!["none"];
+            v.extend(COLOR.iter().copied());
+            v
+        }
+        Border => {
+            let mut v = vec!["none", "subtle", "strong"];
+            v.extend(COLOR.iter().copied());
+            v
+        }
+        Size => {
+            let mut v = vec!["full", "auto", "fit", "screen", "min", "max", "0"];
+            v.extend(crate::tokens::suffixes("space-"));
+            v
+        }
+        Opacity => vec!["0", "25", "50", "75", "100"],
+        Display => vec!["block", "inline", "inline-block", "inline-flex", "none"],
+        Overflow => vec!["visible", "hidden", "scroll", "auto", "clip"],
+        Position => vec!["static", "relative", "absolute", "fixed", "sticky"],
+        Cursor => vec![
+            "auto", "default", "pointer", "text", "wait", "move", "not-allowed", "help", "grab",
+            "cell", "progress", "none",
+        ],
+        Visibility => vec!["visible", "hidden"],
     }
 }
 
@@ -89,6 +156,27 @@ fn css_props(prop: &str) -> &'static [&'static str] {
         "fg" => &["color"],
         "radius" => &["border-radius"],
         "text" => &["font-size"],
+        "shadow" => &["box-shadow"],
+        "z" => &["z-index"],
+        "weight" => &["font-weight"],
+        "leading" => &["line-height"],
+        "tracking" => &["letter-spacing"],
+        "ring" => &["box-shadow"],
+        "border" => &["border"],
+        "w" => &["width"],
+        "h" => &["height"],
+        "min-w" => &["min-width"],
+        "min-h" => &["min-height"],
+        "max-w" => &["max-width"],
+        "max-h" => &["max-height"],
+        "opacity" => &["opacity"],
+        "display" => &["display"],
+        "overflow" => &["overflow"],
+        "overflow-x" => &["overflow-x"],
+        "overflow-y" => &["overflow-y"],
+        "position" => &["position"],
+        "cursor" => &["cursor"],
+        "visibility" => &["visibility"],
         _ => &[],
     }
 }
@@ -120,20 +208,56 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
     if !allowed(kind).contains(&token) {
         return None;
     }
-    let decls = match kind {
-        Kind::Space => {
-            // `0` is the literal zero (no `--space-0` token); everything else is
-            // a `--space-N` token derived from the registry.
-            let v = if token == "0" { "0".to_string() } else { format!("var(--space-{token})") };
-            css_props(prop).iter().map(|p| (*p, v.clone())).collect()
+    use Kind::*;
+    // Every kind resolves to ONE CSS value string, applied to each of the prop's
+    // `css_props` (usually one; the padding/margin longhands are the exception).
+    // Token-scaled kinds emit `var(--…)`; enum kinds emit the validated keyword.
+    let value: String = match kind {
+        // `0`/`none` are the literal zeros (no `--space-0`/`--radius-none` token).
+        Space => if token == "0" { "0".into() } else { format!("var(--space-{token})") },
+        Color => format!("var({})", color_var(token)),
+        Radius => if token == "none" { "0".into() } else { format!("var(--radius-{token})") },
+        Text => format!("var(--text-{token})"),
+        Shadow => if token == "none" { "none".into() } else { format!("var(--shadow-{token})") },
+        Z => format!("var(--z-{token})"),
+        Weight => format!("var(--font-weight-{token})"),
+        Leading => format!("var(--leading-{token})"),
+        Tracking => format!("var(--tracking-{token})"),
+        // a focus ring at the standard ring width in the chosen tone (or off).
+        Ring => if token == "none" {
+            "none".into()
+        } else {
+            format!("0 0 0 var(--ring-width) var({})", color_var(token))
+        },
+        // a hairline border in the chosen color (or the strength words / off).
+        Border => match token {
+            "none" => "none".into(),
+            "subtle" => "1px solid var(--border-subtle)".into(),
+            "strong" => "1px solid var(--border-strong)".into(),
+            _ => format!("1px solid var({})", color_var(token)),
+        },
+        Size => match token {
+            "full" => "100%".into(),
+            "auto" => "auto".into(),
+            "fit" => "fit-content".into(),
+            "screen" => if matches!(prop, "h" | "min-h" | "max-h") { "100vh".into() } else { "100vw".into() },
+            "min" => "min-content".into(),
+            "max" => "max-content".into(),
+            "0" => "0".into(),
+            _ => format!("var(--space-{token})"),
+        },
+        Opacity => match token {
+            "0" => "0",
+            "25" => "0.25",
+            "50" => "0.5",
+            "75" => "0.75",
+            _ => "1",
         }
-        Kind::Color => css_props(prop).iter().map(|p| (*p, format!("var({})", color_var(token)))).collect(),
-        Kind::Radius => {
-            let v = if token == "none" { "0".to_string() } else { format!("var(--radius-{token})") };
-            css_props(prop).iter().map(|p| (*p, v.clone())).collect()
-        }
-        Kind::Text => css_props(prop).iter().map(|p| (*p, format!("var(--text-{token})"))).collect(),
+        .into(),
+        // enum-keyword kinds: the validated keyword IS the CSS value.
+        Display | Overflow | Position | Cursor | Visibility => token.to_string(),
     };
+    let decls = css_props(prop).iter().map(|p| (*p, value.clone())).collect();
     Some(decls)
 }
 
@@ -350,6 +474,26 @@ mod tests {
     #[test]
     fn accepts_surface_tokens() {
         assert!(run(r#"<sui-card sx="p:4 bg:surface-2 radius:lg text:sm fg:muted">x</sui-card>"#).is_empty());
+    }
+
+    #[test]
+    fn accepts_widened_surface() {
+        assert!(run(r#"<sui-card sx="border:strong shadow:sm cursor:pointer w:full z:sticky weight:semibold leading:tight tracking:wide overflow:hidden opacity:75 position:relative ring:primary visibility:visible">x</sui-card>"#).is_empty());
+    }
+
+    #[test]
+    fn widened_props_lower_from_tokens() {
+        assert_eq!(lower("shadow", "sm").unwrap(), vec![("box-shadow", "var(--shadow-sm)".to_string())]);
+        assert_eq!(lower("z", "sticky").unwrap(), vec![("z-index", "var(--z-sticky)".to_string())]);
+        assert_eq!(lower("weight", "semibold").unwrap(), vec![("font-weight", "var(--font-weight-semibold)".to_string())]);
+        assert_eq!(lower("cursor", "pointer").unwrap(), vec![("cursor", "pointer".to_string())]);
+        assert_eq!(lower("opacity", "50").unwrap(), vec![("opacity", "0.5".to_string())]);
+        assert_eq!(lower("border", "strong").unwrap(), vec![("border", "1px solid var(--border-strong)".to_string())]);
+        assert_eq!(lower("w", "full").unwrap(), vec![("width", "100%".to_string())]);
+        // off-scale / off-enum are rejected (no silent fallthrough)
+        assert!(lower("shadow", "huge").is_none());
+        assert!(lower("cursor", "banana").is_none());
+        assert!(lower("z", "99").is_none());
     }
 
     #[test]

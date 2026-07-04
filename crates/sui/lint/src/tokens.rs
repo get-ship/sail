@@ -64,11 +64,11 @@ pub fn registry() -> &'static HashSet<&'static str> {
     })
 }
 
-/// The suffix values of a scale family, e.g. `scale_suffixes("space-")` →
-/// `["1",…,"8"]`, `scale_suffixes("text-")` → `["2xl","3xl","4xl","base",…]`.
+/// The suffix values of a scale family, e.g. `suffixes("space-")` →
+/// `["1",…,"8"]`, `suffixes("text-")` → `["2xl","3xl","4xl","base",…]`.
 /// Sorted for deterministic diagnostics. Derived from [`registry`], so the
 /// scale can never drift from the tokens.
-fn scale_suffixes(prefix: &str) -> Vec<&'static str> {
+pub fn suffixes(prefix: &str) -> Vec<&'static str> {
     let mut out: Vec<&'static str> = registry()
         .iter()
         .filter_map(|&t| t.strip_prefix(prefix).filter(|s| !s.is_empty()))
@@ -83,7 +83,7 @@ pub fn space_values() -> &'static [&'static str] {
     static C: OnceLock<Vec<&'static str>> = OnceLock::new();
     C.get_or_init(|| {
         let mut v = vec!["0"];
-        v.extend(scale_suffixes("space-"));
+        v.extend(suffixes("space-"));
         v
     })
 }
@@ -91,7 +91,7 @@ pub fn space_values() -> &'static [&'static str] {
 /// Allowed `sx` text values: the full `--text-*` scale (xs … 4xl, base).
 pub fn text_values() -> &'static [&'static str] {
     static C: OnceLock<Vec<&'static str>> = OnceLock::new();
-    C.get_or_init(|| scale_suffixes("text-"))
+    C.get_or_init(|| suffixes("text-"))
 }
 
 /// Allowed `sx` radius values: the `--radius-*` scale plus the literal `none`
@@ -100,7 +100,7 @@ pub fn radius_values() -> &'static [&'static str] {
     static C: OnceLock<Vec<&'static str>> = OnceLock::new();
     C.get_or_init(|| {
         let mut v = vec!["none"];
-        v.extend(scale_suffixes("radius-"));
+        v.extend(suffixes("radius-"));
         v
     })
 }
