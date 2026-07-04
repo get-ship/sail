@@ -170,64 +170,79 @@ fn lower_layout(source: &str) -> (String, String) {
                 None => break,
             }
         }
-        if let Some(t) = open_at.get(&i) {
-            let axis: Vec<(String, String)> = t
-                .attrs
-                .iter()
-                .filter(|(n, _)| matches!(n.as_str(), "gap" | "align" | "justify" | "min" | "flow"))
-                .cloned()
-                .collect();
-            if let Some((classes, rules)) = layout::lower(&t.tag, &axis) {
-                for r in rules {
-                    if seen.insert(r.clone()) {
-                        css.push_str(&r);
-                    }
+        if let Some(t) = open_at.get(&i)
+            && let Some((base_class, base_rules)) = layout::base(&t.tag)
+        {
+            for r in base_rules {
+                if seen.insert(r.clone()) {
+                    css.push_str(&r);
                 }
-                let mut static_class = classes.join(" ");
-                let mut dyn_class: Option<String> = None;
-                let mut rest = String::new();
-                for (name, value) in &t.attrs {
-                    match name.as_str() {
-                        "gap" | "align" | "justify" | "min" | "flow" => {}
-                        "class" if value.starts_with('{') => {
-                            dyn_class = Some(value[1..value.len() - 1].to_string());
-                        }
-                        "class" => {
-                            if !value.is_empty() {
-                                static_class.push(' ');
-                                static_class.push_str(value);
-                            }
-                        }
-                        _ => {
-                            rest.push(' ');
-                            rest.push_str(name);
-                            if !value.is_empty() {
-                                rest.push_str("=\"");
-                                rest.push_str(value);
-                                rest.push('"');
-                            }
-                        }
-                    }
-                }
-                out.push_str("<div class=");
-                match dyn_class {
-                    // Fold computed classes into the user's dynamic binding, as a
-                    // quoted brace attr (what quote_brace_attrs would have emitted).
-                    Some(expr) => {
-                        out.push_str(&format!("\"{{'{static_class} ' + ({expr})}}\""));
-                    }
-                    None => {
-                        out.push_str(&format!("\"{static_class}\""));
-                    }
-                }
-                out.push_str(&rest);
-                out.push('>');
-                if t.self_closing {
-                    out.push_str("</div>");
-                }
-                i = t.end;
-                continue;
             }
+            // Static class parts join into `class="…"`; dynamic parts (a dynamic
+            // axis or a user `class={expr}`) each become a JS expression, and the
+            // whole thing lowers to a `class={…}` binding.
+            let mut static_parts: Vec<String> = vec![base_class];
+            let mut dyn_parts: Vec<String> = Vec::new();
+            for &prop in layout::tag_props(&t.tag) {
+                let attr = t.attrs.iter().find(|(n, _)| n == prop).map(|(_, v)| v.as_str());
+                match layout::lower_axis(&t.tag, prop, attr) {
+                    Some(layout::AxisLower::Static { class, rule }) => {
+                        if seen.insert(rule.clone()) {
+                            css.push_str(&rule);
+                        }
+                        static_parts.push(class);
+                    }
+                    Some(layout::AxisLower::Dynamic { class_expr, rules }) => {
+                        for r in rules {
+                            if seen.insert(r.clone()) {
+                                css.push_str(&r);
+                            }
+                        }
+                        dyn_parts.push(class_expr);
+                    }
+                    None => {}
+                }
+            }
+            let mut rest = String::new();
+            for (name, value) in &t.attrs {
+                match name.as_str() {
+                    "gap" | "align" | "justify" | "min" | "flow" => {}
+                    "class" if value.starts_with('{') => {
+                        dyn_parts.push(format!("({})", &value[1..value.len() - 1]));
+                    }
+                    "class" => {
+                        if !value.is_empty() {
+                            static_parts.push(value.clone());
+                        }
+                    }
+                    _ => {
+                        rest.push(' ');
+                        rest.push_str(name);
+                        if !value.is_empty() {
+                            rest.push_str("=\"");
+                            rest.push_str(value);
+                            rest.push('"');
+                        }
+                    }
+                }
+            }
+            let static_str = static_parts.join(" ");
+            out.push_str("<div class=");
+            if dyn_parts.is_empty() {
+                out.push_str(&format!("\"{static_str}\""));
+            } else {
+                // `class={'<static> ' + <dyn1> + ' ' + <dyn2> …}` — a quoted brace
+                // attr, what quote_brace_attrs would have emitted for a binding.
+                let dyn_expr = dyn_parts.join(" + ' ' + ");
+                out.push_str(&format!("\"{{'{static_str} ' + {dyn_expr}}}\""));
+            }
+            out.push_str(&rest);
+            out.push('>');
+            if t.self_closing {
+                out.push_str("</div>");
+            }
+            i = t.end;
+            continue;
         }
         // Layout close tag → `</div>` (every layout tag lowers to a div).
         if source[i..].starts_with("</")
@@ -596,6 +611,19 @@ mod tests {
         let out = preprocess(r#"<column><row><center>x</center></row></column>"#);
         assert_eq!(out.matches("<div").count(), 3, "three divs: {out}");
         assert_eq!(out.matches("</div>").count(), 3, "three closes: {out}");
+    }
+
+    #[test]
+    fn dynamic_axis_lowers_to_a_class_binding_with_full_rules() {
+        // a component parameterizing its layout: `align={pick()}`
+        let out = preprocess(r#"<column align={pick()}>x</column>"#);
+        assert!(out.contains(r#"class="{"#), "emits a dynamic class binding: {out}");
+        assert!(out.contains("'sui-ai-' + (pick())"), "dynamic align fragment: {out}");
+        // EVERY align rule injected, so whatever `pick()` returns has a match.
+        assert!(
+            out.contains(".sui-ai-start{") && out.contains(".sui-ai-center{") && out.contains(".sui-ai-stretch{"),
+            "full align rule set injected: {out}"
+        );
     }
 
     #[test]

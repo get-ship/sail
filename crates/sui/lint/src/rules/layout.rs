@@ -37,7 +37,7 @@ pub fn is_layout_tag(tag: &str) -> bool {
 
 /// Which axis props each tag understands. Used by both the lowering (to know
 /// what to read) and the lint (to reject props that don't apply to a tag).
-fn tag_props(tag: &str) -> &'static [&'static str] {
+pub fn tag_props(tag: &str) -> &'static [&'static str] {
     match tag {
         "column" => &["gap", "align"],
         "row" => &["gap", "align", "justify"],
@@ -170,6 +170,60 @@ fn modifier(prop: &str, value: &str) -> Option<(String, String)> {
     })
 }
 
+/// The base structural class + CSS for a tag (no axis modifiers). The div always
+/// gets this; axes ride on top via [`lower_axis`].
+pub fn base(tag: &str) -> Option<(String, Vec<String>)> {
+    if !is_layout_tag(tag) {
+        return None;
+    }
+    Some((base_class(tag).to_string(), base_css(tag)))
+}
+
+/// The atomic-class PREFIX for an axis (`align` → `sui-ai-`), so a dynamic value
+/// can lower to `'<prefix>' + (expr)`.
+fn axis_prefix(prop: &str) -> Option<&'static str> {
+    Some(match prop {
+        "gap" => "sui-g-",
+        "align" => "sui-ai-",
+        "justify" => "sui-jc-",
+        "min" => "sui-gm-",
+        "flow" => "sui-gf-",
+        _ => return None,
+    })
+}
+
+/// One resolved axis for the lowering.
+pub enum AxisLower {
+    /// A concrete class + its one CSS rule.
+    Static { class: String, rule: String },
+    /// A dynamic `class` fragment (`'sui-ai-' + (expr)`) plus EVERY rule for the
+    /// axis, so whatever the expression evaluates to at runtime has a match.
+    Dynamic { class_expr: String, rules: Vec<String> },
+}
+
+/// Resolve one axis prop for a tag. `attr` is the raw attribute value if present
+/// (`Some("center")` static, `Some("{expr}")` dynamic) or `None` (use the tag's
+/// default). Returns `None` if the prop doesn't apply or the static value is
+/// off-enum (the lint surfaces that separately).
+pub fn lower_axis(tag: &str, prop: &str, attr: Option<&str>) -> Option<AxisLower> {
+    match attr {
+        Some(v) if v.starts_with('{') => {
+            let inner = &v[1..v.len().saturating_sub(1)];
+            let prefix = axis_prefix(prop)?;
+            let rules = allowed(prop)
+                .iter()
+                .filter_map(|val| modifier(prop, val).map(|(_, r)| r))
+                .collect();
+            Some(AxisLower::Dynamic { class_expr: format!("'{prefix}' + ({inner})"), rules })
+        }
+        other => {
+            let val = other.or_else(|| default_for(tag, prop))?;
+            let (class, rule) = modifier(prop, val)?;
+            Some(AxisLower::Static { class, rule })
+        }
+    }
+}
+
 /// Lower one layout element to (classes, css-rules). `attrs` is the element's
 /// resolved axis props (already parsed out of the tag). Off-enum values are
 /// dropped here (the lint surfaces them); the base class always applies so the
@@ -217,15 +271,10 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 continue;
             }
             if value.starts_with('{') {
-                findings.push(mk(
-                    path,
-                    line,
-                    col,
-                    format!(
-                        "dynamic `{name}={{…}}` on <{}> — layout is compile-time; use a static value",
-                        t.tag
-                    ),
-                ));
+                // Dynamic axis (`align={expr}`) — a component parameterizing its
+                // layout. Lowered to a dynamic `class` binding with the full rule
+                // set injected, so any runtime value matches. The value is a
+                // runtime expression; we can't (and needn't) enum-check it here.
                 continue;
             }
             if !allowed(name).contains(&value.as_str()) {
@@ -452,10 +501,10 @@ mod tests {
     }
 
     #[test]
-    fn rejects_dynamic_axis() {
-        let m = run(r#"<row align={x() ? 'start' : 'end'}>x</row>"#);
-        assert_eq!(m.len(), 1);
-        assert!(m[0].contains("dynamic"), "{}", m[0]);
+    fn accepts_dynamic_axis() {
+        // A component parameterizing its layout — lowered to a dynamic `class`
+        // binding (see preprocess::lower_layout), not rejected.
+        assert!(run(r#"<row align={x() ? 'start' : 'end'}>x</row>"#).is_empty());
     }
 
     #[test]
