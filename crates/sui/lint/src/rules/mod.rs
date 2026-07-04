@@ -30,6 +30,7 @@ pub mod css_token;
 pub mod event_name;
 pub mod font_literal;
 pub mod for_key;
+pub mod layout;
 pub mod layout_primitive;
 pub mod prefer_primitive;
 pub mod prop_value;
@@ -82,6 +83,7 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (for_key::RULE_ID, for_key::check),
     (dead_affordance::RULE_ID, dead_affordance::check),
     (sx::RULE_ID, sx::check),
+    (layout::RULE_ID, layout::check),
     (no_raw_container::RULE_ID, no_raw_container::check),
     (no_style_block::RULE_ID, no_style_block::check),
     (no_sx::RULE_ID, no_sx::check),

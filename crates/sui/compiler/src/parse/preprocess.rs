@@ -14,17 +14,31 @@ const VOID_TAGS: &[&str] = &[
 ];
 
 pub fn preprocess(source: &str) -> String {
-    // sx-lowering runs LAST so the injected `<style>` (which contains `{...}`)
-    // isn't touched by the brace-attr quoter. Off-token sx is rejected earlier
-    // by `check::css_token` (the sui-sx lint) which reads the raw source; here we
-    // only lower the valid pairs.
-    lower_sx(&expand_self_close(&quote_brace_attrs(source)))
+    // Brace-quoting + self-close expansion normalize the raw source first. Then
+    // the two compile-time lowerings run on that HTML: `sx=` attributes → atomic
+    // surface classes, then the layout keywords (`<column>`/`<row>`/…) → `<div>`
+    // + atomic layout classes. Both return the deduped CSS they need; we inject
+    // it as ONE `<style>` at the very end so the brace-attr quoter never sees its
+    // `{…}`-bearing rules. sx runs before layout so a layout element's own `sx=`
+    // is already a `class` that the layout rewrite folds into the div's classes.
+    // Off-vocab values are rejected earlier by the lints (`sui-sx` / `sui-layout`)
+    // reading the raw source; here we only lower valid ones.
+    let s = expand_self_close(&quote_brace_attrs(source));
+    let (s, sx_css) = lower_sx(&s);
+    let (s, layout_css) = lower_layout(&s);
+    let css = format!("{sx_css}{layout_css}");
+    if css.is_empty() {
+        s
+    } else {
+        format!("<style>{css}</style>\n{s}")
+    }
 }
 
-/// Lower every static `sx="…"` attribute to `class="sx-…"` + an injected
-/// `<style>` of deduped atomic rules. The prop→CSS mapping is
-/// `sui_lint::rules::sx::lower` — the same vocabulary the lint validates.
-fn lower_sx(source: &str) -> String {
+/// Lower every static `sx="…"` attribute to `class="sx-…"`, returning the
+/// rewritten body and the deduped atomic CSS (the caller injects it into the
+/// shared `<style>`). The prop→CSS mapping is `sui_lint::rules::sx::lower` — the
+/// same vocabulary the lint validates.
+fn lower_sx(source: &str) -> (String, String) {
     let bytes = source.as_bytes();
     let mut out = String::with_capacity(source.len() + 256);
     let mut css = String::new();
@@ -75,11 +89,7 @@ fn lower_sx(source: &str) -> String {
         i = n;
     }
     out.push_str(&source[last..]);
-    if css.is_empty() {
-        out
-    } else {
-        format!("<style>{css}</style>\n{out}")
-    }
+    (out, css)
 }
 
 fn lower_sx_value(
@@ -123,6 +133,118 @@ fn is_eq_quote(rest: &[u8]) -> bool {
         k += 1;
     }
     k < rest.len() && rest[k] == b'"'
+}
+
+/// Lower each layout keyword (`<column>`, `<row>`, `<grid>`, `<center>`,
+/// `<stack>`) to a `<div>` + atomic layout classes, returning the rewritten body
+/// and the deduped CSS. Axis props (gap/align/justify/min/flow) become classes
+/// and drop off the tag; every other attribute passes through, and an existing
+/// `class` (static or dynamic) is merged into the computed classes. Close tags
+/// become `</div>`. The class/CSS mapping is `sui_lint::rules::layout` — the same
+/// vocabulary the `sui-layout` lint validates against the raw source.
+fn lower_layout(source: &str) -> (String, String) {
+    use sui_lint::rules::layout;
+    let opens = layout::scan_open_tags(source);
+    if opens.is_empty() {
+        return (source.to_string(), String::new());
+    }
+    let open_at: std::collections::HashMap<usize, &layout::OpenTag> =
+        opens.iter().map(|t| (t.start, t)).collect();
+
+    let bytes = source.as_bytes();
+    let mut out = String::with_capacity(source.len() + 256);
+    let mut css = String::new();
+    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut i = 0;
+    while i < bytes.len() {
+        if source[i..].starts_with("<!--") {
+            match source[i..].find("-->") {
+                Some(end) => {
+                    out.push_str(&source[i..i + end + 3]);
+                    i += end + 3;
+                    continue;
+                }
+                None => break,
+            }
+        }
+        if let Some(t) = open_at.get(&i) {
+            let axis: Vec<(String, String)> = t
+                .attrs
+                .iter()
+                .filter(|(n, _)| matches!(n.as_str(), "gap" | "align" | "justify" | "min" | "flow"))
+                .cloned()
+                .collect();
+            if let Some((classes, rules)) = layout::lower(&t.tag, &axis) {
+                for r in rules {
+                    if seen.insert(r.clone()) {
+                        css.push_str(&r);
+                    }
+                }
+                let mut static_class = classes.join(" ");
+                let mut dyn_class: Option<String> = None;
+                let mut rest = String::new();
+                for (name, value) in &t.attrs {
+                    match name.as_str() {
+                        "gap" | "align" | "justify" | "min" | "flow" => {}
+                        "class" if value.starts_with('{') => {
+                            dyn_class = Some(value[1..value.len() - 1].to_string());
+                        }
+                        "class" => {
+                            if !value.is_empty() {
+                                static_class.push(' ');
+                                static_class.push_str(value);
+                            }
+                        }
+                        _ => {
+                            rest.push(' ');
+                            rest.push_str(name);
+                            if !value.is_empty() {
+                                rest.push_str("=\"");
+                                rest.push_str(value);
+                                rest.push('"');
+                            }
+                        }
+                    }
+                }
+                out.push_str("<div class=");
+                match dyn_class {
+                    // Fold computed classes into the user's dynamic binding, as a
+                    // quoted brace attr (what quote_brace_attrs would have emitted).
+                    Some(expr) => {
+                        out.push_str(&format!("\"{{'{static_class} ' + ({expr})}}\""));
+                    }
+                    None => {
+                        out.push_str(&format!("\"{static_class}\""));
+                    }
+                }
+                out.push_str(&rest);
+                out.push('>');
+                if t.self_closing {
+                    out.push_str("</div>");
+                }
+                i = t.end;
+                continue;
+            }
+        }
+        // Layout close tag → `</div>` (every layout tag lowers to a div).
+        if source[i..].starts_with("</")
+            && let Some(tag) = layout::TAGS.iter().find(|&&tg| {
+                source[i + 2..].starts_with(tg) && bytes.get(i + 2 + tg.len()) == Some(&b'>')
+            })
+        {
+            out.push_str("</div>");
+            i += 2 + tag.len() + 1;
+            continue;
+        }
+        let mut n = i + 1;
+        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
+            n += 1;
+        }
+        out.push_str(&source[i..n]);
+        i = n;
+    }
+    out.push_str(&source[i..]);
+    (out, css)
 }
 
 fn quote_brace_attrs(source: &str) -> String {
@@ -439,6 +561,38 @@ mod tests {
         let out = preprocess(src);
         assert!(out.contains("café ☕"), "multibyte content preserved: {out}");
         assert!(out.contains("class=\"sx-p-4\""), "sx still lowered: {out}");
+    }
+
+    #[test]
+    fn lowers_column_to_div_with_classes_and_style() {
+        let out = preprocess(r#"<column gap="4"><p>hi</p></column>"#);
+        assert!(out.contains(r#"<div class="sui-col sui-g-4 sui-ai-stretch">"#), "col lowered: {out}");
+        assert!(out.contains("</div>"), "close tag lowered: {out}");
+        assert!(!out.contains("<column"), "no column tag remains: {out}");
+        assert!(out.contains(".sui-col{display:flex;flex-direction:column"), "base css: {out}");
+        assert!(out.contains(".sui-g-4{gap:var(--space-4)}"), "gap css: {out}");
+    }
+
+    #[test]
+    fn layout_element_sx_merges_into_one_class() {
+        // sx lowers first (→ class), then layout folds it into the div's classes.
+        let out = preprocess(r#"<column gap="2" sx="p:4">x</column>"#);
+        assert!(out.contains(r#"class="sui-col sui-g-2 sui-ai-stretch sx-p-4""#), "merged: {out}");
+        assert_eq!(out.matches("class=").count(), 1, "exactly one class attr: {out}");
+    }
+
+    #[test]
+    fn passes_through_id_and_merges_static_class() {
+        let out = preprocess(r#"<row id="bar" class="mine">x</row>"#);
+        assert!(out.contains(r#"id="bar""#), "id preserved: {out}");
+        assert!(out.contains("sui-row") && out.contains("mine"), "class merged: {out}");
+    }
+
+    #[test]
+    fn nested_layout_lowers_every_box() {
+        let out = preprocess(r#"<column><row><center>x</center></row></column>"#);
+        assert_eq!(out.matches("<div").count(), 3, "three divs: {out}");
+        assert_eq!(out.matches("</div>").count(), 3, "three closes: {out}");
     }
 
     #[test]
