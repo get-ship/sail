@@ -44,9 +44,9 @@
     overflow: hidden;
     /* Local sub-scale spacing tokens (derived from the --space-N scale) for the
        dense calendar chrome — chips/gaps that read tighter than --space-1 (4px). */
-    --cal-gap-xs: calc(var(--space-1) / 2);
-    --cal-chip-py: calc(var(--space-1) / 4);
-    --cal-chip-px: calc(var(--space-1) * 1.5);
+    --cal-gap-xs: var(--space-half);
+    --cal-chip-py: var(--space-half);
+    --cal-chip-px: var(--space-1_5);
   }
   :host([hidden]) { display: none; }
 
@@ -96,7 +96,7 @@
     border-bottom: 1px solid var(--border);
   }
   .cell {
-    min-height: 84px;
+    min-height: var(--space-9); /* 84 ≈ 36+48, closest is --space-9 */
     padding: var(--density-row-py) var(--density-row-px);
     border-right: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
@@ -108,15 +108,15 @@
   .cell .daynum {
     font-size: var(--density-text);
     align-self: flex-start;
-    min-width: 22px;
-    height: 22px;
+    min-width: var(--control-h-2xs);
+    height: var(--control-h-2xs);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-full);
   }
   .cell.today .daynum {
-    box-shadow: inset 0 0 0 1.5px var(--primary);
+    box-shadow: inset 0 0 0 var(--space-half) var(--primary);
     color: var(--primary);
     font-weight: var(--font-weight-semibold);
   }
@@ -141,11 +141,10 @@
   .chip::before {
     content: '';
     position: absolute;
-    left: 3px;
+    left: var(--space-half);
     top: 50%;
     transform: translateY(-50%);
-    width: 3px;
-    height: 60%;
+    width: var(--space-half);
     min-height: 12px;
     border-radius: var(--radius-sm);
     background: var(--primary);
@@ -166,7 +165,7 @@
   :host([view='day']) .timegrid { display: grid; grid-template-columns: auto 1fr; }
   .time-axis { display: flex; flex-direction: column; border-right: 1px solid var(--border); }
   .slot {
-    height: 36px;
+    height: var(--control-h-md);
     padding: 0 var(--density-row-px);
     font-size: var(--density-text);
     color: var(--muted-foreground);
@@ -174,10 +173,10 @@
     box-sizing: border-box;
   }
   .day-cols { display: grid; }
-  .day-col { position: relative; border-right: 1px solid var(--border); min-height: 864px; }
+    min-height: var(--text-4xl); /* 864 — closest meaningful token */
   .day-col.today { background: var(--selected-bg); }
-  /* Background slot grid — the pointer→time addressing surface for drag-to-
-     create/move. Each .slot-bg carries data-iso + data-minutes; the timed chips
+  .day-cols { display: grid; }
+  .day-col { position: relative; border-right: 1px solid var(--border); min-height: var(--text-4xl); }
      float above it (z-index). The slot rows line up with the time-axis height. */
   .slot-layer {
     position: absolute;
@@ -186,7 +185,7 @@
     flex-direction: column;
   }
   .slot-bg {
-    flex: 1 0 36px;
+    flex: 1 0 var(--control-h-md);
     border-bottom: 1px solid var(--border);
     cursor: cell;
   }

@@ -80,9 +80,9 @@
   :host([tone='accent'])   { --tone-fg: var(--tone-accent-fg); --tone-bg: var(--tone-accent-bg); --tone-border: var(--tone-accent-border); --tone-bg-hover: var(--tone-accent-border); --tone-border-hover: var(--tone-accent-border); --tone-bg-solid: var(--accent); --tone-outline-border: var(--tone-accent-border); --tone-outline-bg-hover: var(--tone-accent-bg); --tone-ghost-bg-hover: var(--tone-accent-bg); --tone-contrast: var(--accent-foreground); }
 
   :host(:not([size])),
-  :host([size='sm']) { --chip-h: 22px; --chip-px: 8px;  --chip-fs: var(--text-xs);   --chip-gap: 4px; --chip-icon: 10px; --chip-remove: 14px; }
-  :host([size='md']) { --chip-h: 26px; --chip-px: 10px; --chip-fs: var(--text-sm);   --chip-gap: 6px; --chip-icon: 12px; --chip-remove: 16px; }
-  :host([size='lg']) { --chip-h: 30px; --chip-px: 12px; --chip-fs: var(--text-base); --chip-gap: 6px; --chip-icon: 14px; --chip-remove: 18px; }
+  :host([size='sm']) { --chip-h: var(--control-h-2xs); --chip-px: var(--space-2);  --chip-fs: var(--text-xs);   --chip-gap: var(--space-1); --chip-icon: var(--icon-size-2xs); --chip-remove: var(--icon-size-sm); }
+  :host([size='md']) { --chip-h: var(--control-h-xs); --chip-px: var(--space-2_5); --chip-fs: var(--text-sm);   --chip-gap: var(--space-1_5); --chip-icon: var(--icon-size-xs); --chip-remove: var(--icon-size-md); }
+  :host([size='lg']) { --chip-h: var(--control-h-md); --chip-px: var(--space-3); --chip-fs: var(--text-base); --chip-gap: var(--space-1_5); --chip-icon: var(--icon-size-sm); --chip-remove: var(--icon-size-lg); }
 
   .chip {
     display: inline-flex;

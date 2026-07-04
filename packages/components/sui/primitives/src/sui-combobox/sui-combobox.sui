@@ -40,9 +40,9 @@
     vertical-align: middle;
     --tone-border: var(--border);
     --tone-ring: var(--primary);
-    --h: 34px;
-    --fs: 13px;
-    --px: 10px;
+    --h: var(--control-h-md);
+    --fs: var(--density-text);
+    --px: var(--density-row-px);
   }
   :host([tone='primary'])     { --tone-border: var(--primary);          --tone-ring: var(--primary); }
   :host([tone='info'])        { --tone-border: var(--info);              --tone-ring: var(--info); }
@@ -52,9 +52,9 @@
   :host([tone='accent'])      { --tone-border: var(--accent);            --tone-ring: var(--accent); }
   :host([tone='muted'])       { --tone-border: var(--muted-foreground);  --tone-ring: var(--muted-foreground); }
 
-  :host([size='sm']) { --h: 28px; --fs: 12px; --px: 8px; }
-  :host([size='md']) { --h: 34px; --fs: 13px; --px: 10px; }
-  :host([size='lg']) { --h: 40px; --fs: 14px; --px: 12px; }
+  :host([size='sm']) { --h: var(--control-h-sm); --fs: var(--text-xs); --px: var(--space-2); }
+  :host([size='md']) { --h: var(--control-h-md); --fs: var(--density-text); --px: var(--density-row-px); }
+  :host([size='lg']) { --h: var(--control-h-lg); --fs: var(--text-sm); --px: var(--space-3); }
 
   .wrap {
     display: inline-flex;
@@ -113,8 +113,8 @@
 
   .chevron {
     flex: 0 0 auto;
-    width: 14px;
-    height: 14px;
+    width: var(--icon-size-sm);
+    height: var(--icon-size-sm);
     color: var(--muted-foreground);
     pointer-events: none;
     transition: transform var(--duration-fast) var(--ease-out);
@@ -123,10 +123,10 @@
 
   .listbox {
     position: absolute;
-    top: calc(100% + 4px);
+    top: calc(100% + var(--space-1));
     left: 0;
     right: 0;
-    max-height: 240px;
+    max-height: var(--panel-max-h-sm);
     overflow-y: auto;
     margin: 0;
     padding: var(--space-1);

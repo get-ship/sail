@@ -70,8 +70,8 @@
     -webkit-backdrop-filter: var(--card-backdrop-filter);
     isolation: isolate;
     box-shadow: var(--shadow-card-rest);
-    --card-px: 20px;
-    --card-py: 16px;
+    --card-px: var(--space-5);
+    --card-py: var(--space-4);
     --card-gap: var(--space-3);
     --tone-fg: var(--foreground);
     --tone-border: var(--border);
@@ -108,7 +108,7 @@
    * 3-px body-text-coloured stripe (meaningless decoration with the
    * weight of an emphasis cue). Default tone hides the rail. */
   :host([status-rail]) {
-    border-left: 3px solid var(--tone-fg);
+    border-left: var(--space-half) solid var(--tone-fg);
     padding-inline-start: calc(var(--card-px) - var(--space-1));
   }
   :host([status-rail]:not([tone])),
@@ -129,7 +129,7 @@
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 2px;
+    height: var(--space-half);
     background: linear-gradient(90deg, var(--primary), var(--accent));
     opacity: 0;
     border-radius: var(--card-radius) var(--card-radius) 0 0;
@@ -143,7 +143,7 @@
   :host([interactive]:hover) {
     border-color: var(--border-strong);
     box-shadow: var(--shadow-hover);
-    transform: translateY(-1px);
+    transform: translateY(calc(-1 * var(--space-1)));
   }
   @media (prefers-reduced-motion: reduce) {
     :host([interactive]:hover) { transform: none; }
@@ -151,7 +151,7 @@
   :host([interactive]:active) {
     box-shadow: var(--shadow-card-rest);
     transform: translateY(0);
-    transition-duration: 60ms;
+    transition-duration: var(--duration-instant);
   }
   :host([interactive]:focus-visible) {
     outline: var(--focus-ring);

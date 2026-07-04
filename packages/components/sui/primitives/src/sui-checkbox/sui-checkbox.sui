@@ -88,9 +88,9 @@
   :host([tone='primary'])     { --tone: var(--primary);     --tone-on-fg: var(--primary-foreground); }
 
   :host(:not([size])),
-  :host([size='md']) { --cb-size: 16px; --cb-radius: var(--radius-sm); --cb-stroke: 2px; }
-  :host([size='sm']) { --cb-size: 14px; --cb-radius: 3px;                   --cb-stroke: 1.75px; }
-  :host([size='lg']) { --cb-size: 18px; --cb-radius: var(--radius-sm); --cb-stroke: 2.25px; }
+  :host([size='md']) { --cb-size: var(--icon-size-md); --cb-radius: var(--radius-sm); --cb-stroke: 2px; }
+  :host([size='sm']) { --cb-size: var(--icon-size-sm); --cb-radius: var(--radius-sm); --cb-stroke: 1.75px; }
+  :host([size='lg']) { --cb-size: var(--icon-size-lg); --cb-radius: var(--radius-sm); --cb-stroke: 2.25px; }
 
   label {
     display: inline-flex;
