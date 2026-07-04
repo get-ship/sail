@@ -35,7 +35,7 @@
   .error {
     font-family: var(--font-body);
     font-size: var(--text-xs);
-    line-height: 1.45;
+    line-height: var(--leading-snug);
   }
   .hint { color: var(--muted-foreground); }
   .error {
@@ -43,9 +43,9 @@
     align-items: flex-start;
     gap: var(--space-1);
     color: var(--destructive);
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
   }
-  .error svg { width: 13px; height: 13px; flex-shrink: 0; }
+  .error svg { width: var(--icon-size-sm); height: var(--icon-size-sm); flex-shrink: 0; }
 
   :host(:not([invalid])) .error { display: none; }
   :host([invalid]) .hint { display: none; }

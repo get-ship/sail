@@ -37,10 +37,10 @@
   :host { display: contents; }
   :host([hidden]) { display: none; }
 
-  :host(:not([size])), :host([size='md']) { --dlg-max-w: 500px; --dlg-px: 24px; --dlg-hpy: 18px; --dlg-bpy: 16px; --dlg-fpy: 16px; }
-  :host([size='sm']) { --dlg-max-w: 400px; --dlg-px: 20px; --dlg-hpy: 16px; --dlg-bpy: 14px; --dlg-fpy: 14px; }
-  :host([size='lg']) { --dlg-max-w: 700px; --dlg-px: 28px; --dlg-hpy: 20px; --dlg-bpy: 20px; --dlg-fpy: 18px; }
-  :host([size='full']) { --dlg-max-w: 90vw; --dlg-px: 28px; --dlg-hpy: 20px; --dlg-bpy: 20px; --dlg-fpy: 18px; }
+  :host(:not([size])), :host([size='md']) { --dlg-max-w: var(--panel-max-w-md); --dlg-px: var(--space-6); --dlg-hpy: var(--space-4_5); --dlg-bpy: var(--space-4); --dlg-fpy: var(--space-4); }
+  :host([size='sm']) { --dlg-max-w: var(--panel-max-w-sm); --dlg-px: var(--space-5); --dlg-hpy: var(--space-4); --dlg-bpy: var(--space-3_5); --dlg-fpy: var(--space-3_5); }
+  :host([size='lg']) { --dlg-max-w: var(--panel-max-w-lg); --dlg-px: var(--space-7); --dlg-hpy: var(--space-5); --dlg-bpy: var(--space-5); --dlg-fpy: var(--space-4_5); }
+  :host([size='full']) { --dlg-max-w: 90vw; --dlg-px: var(--space-7); --dlg-hpy: var(--space-5); --dlg-bpy: var(--space-5); --dlg-fpy: var(--space-4_5); }
 
   /* `dialog:not([open])` MUST stay display:none — overriding to
      display:flex on the bare selector caused a closed dialog to paint
@@ -57,16 +57,16 @@
     border-radius: var(--radius-xl);
     background: var(--surface-1);
     color: var(--card-foreground);
-    width: calc(100vw - 32px);
+    width: calc(100vw - var(--space-7));
     max-width: var(--dlg-max-w);
-    max-height: min(calc(100vh - 32px), 85vh);
+    max-height: min(calc(100vh - var(--space-7)), var(--panel-vh-md));
     box-shadow: var(--shadow-xl);
     font-family: var(--font-body);
     overflow: visible;
     display: flex;
     flex-direction: column;
   }
-  :host([size='full']) dialog[open] { max-height: 90vh; }
+  :host([size='full']) dialog[open] { max-height: var(--panel-vh-lg); }
 
   /* Open/close polish is driven by the `transition:fade` directive on
      the content wrapper (Web Animations API) and by the native
@@ -122,9 +122,9 @@
 
   .close {
     position: absolute;
-    top: 12px;
-    inset-inline-end: 12px;
-    width: 28px; height: 28px;
+    top: var(--space-3);
+    inset-inline-end: var(--space-3);
+    width: var(--control-h-sm); height: var(--control-h-sm);
     display: inline-flex; align-items: center; justify-content: center;
     background: transparent;
     border: 1px solid transparent;
@@ -136,7 +136,7 @@
   }
   .close:hover { background: var(--muted); color: var(--foreground); }
   .close:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
-  .close svg { width: 14px; height: 14px; display: block; }
+  .close svg { width: var(--icon-size-sm); height: var(--icon-size-sm); display: block; }
   :host([no-close-button]) .close { display: none; }
 
   @media (prefers-reduced-motion: reduce) {

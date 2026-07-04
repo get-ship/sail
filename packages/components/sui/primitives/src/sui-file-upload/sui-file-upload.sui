@@ -42,7 +42,7 @@
   :host([hidden]) { display: none; }
   :host([disabled]) {
     color: var(--muted-foreground);
-    filter: saturate(0.4);
+    filter: saturate(0.6);
     pointer-events: none;
   }
 
@@ -61,7 +61,7 @@
     justify-content: center;
     gap: var(--space-2);
     padding: var(--space-6) var(--space-4);
-    border: 1.5px dashed var(--border);
+    border: var(--space-1_25) dashed var(--border);
     border-radius: var(--radius-lg);
     background: transparent;
     cursor: pointer;
@@ -88,12 +88,12 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
+    width: var(--space-9);
+    height: var(--space-9);
     border-radius: var(--radius-lg);
     background: var(--muted);
     color: var(--muted-foreground);
-    font-size: 1.25rem;
+    font-size: var(--text-lg);
     line-height: 1;
     flex: none;
     transition: background-color var(--duration-fast), color var(--duration-fast);
@@ -128,8 +128,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 34px;
-    height: 34px;
+    width: var(--control-h-md);
+    height: var(--control-h-md);
     border-radius: var(--radius-md);
     background: var(--tone-info-bg);
     color: var(--tone-info-fg);
@@ -166,8 +166,8 @@
     border-radius: var(--radius-sm);
     font-size: var(--text-lg);
     font-family: inherit;
-    width: 28px;
-    height: 28px;
+    width: var(--control-h-sm);
+    height: var(--control-h-sm);
     display: inline-flex;
     align-items: center;
     justify-content: center;

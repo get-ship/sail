@@ -32,9 +32,9 @@
   :host { display: contents; }
   :host([hidden]) { display: none; }
 
-  :host(:not([size])), :host([size='md']) { --dr-w: 420px; --dr-px: 24px; --dr-hpy: 16px; --dr-bpy: 16px; --dr-fpy: 14px; }
-  :host([size='sm']) { --dr-w: 320px; --dr-px: 20px; --dr-hpy: 14px; --dr-bpy: 14px; --dr-fpy: 12px; }
-  :host([size='lg']) { --dr-w: 560px; --dr-px: 28px; --dr-hpy: 20px; --dr-bpy: 20px; --dr-fpy: 16px; }
+  :host(:not([size])), :host([size='md']) { --dr-w: var(--panel-max-w-md); --dr-px: var(--space-6); --dr-hpy: var(--space-4); --dr-bpy: var(--space-4); --dr-fpy: var(--space-3_5); }
+  :host([size='sm']) { --dr-w: var(--panel-max-w-sm); --dr-px: var(--space-5); --dr-hpy: var(--space-3_5); --dr-bpy: var(--space-3_5); --dr-fpy: var(--space-3); }
+  :host([size='lg']) { --dr-w: var(--panel-max-w-md); --dr-px: var(--space-7); --dr-hpy: var(--space-5); --dr-bpy: var(--space-5); --dr-fpy: var(--space-4); }
 
   dialog {
     position: fixed;
@@ -119,8 +119,8 @@
 
   .close {
     position: absolute;
-    top: 12px; inset-inline-end: 12px;
-    width: 28px; height: 28px;
+    top: var(--space-3); inset-inline-end: var(--space-3);
+    width: var(--control-h-sm); height: var(--control-h-sm);
     display: inline-flex; align-items: center; justify-content: center;
     background: transparent;
     border: 1px solid transparent;
@@ -132,7 +132,7 @@
   }
   .close:hover { background: var(--muted); color: var(--foreground); }
   .close:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
-  .close svg { width: 14px; height: 14px; display: block; }
+  .close svg { width: var(--icon-size-sm); height: var(--icon-size-sm); display: block; }
 
   @media (prefers-reduced-motion: reduce) {
     dialog { transition: none; transform: none !important; opacity: 1; }

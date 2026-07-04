@@ -76,14 +76,14 @@
   /* Size matrix — applies to the controller-injected SVG */
   svg.sui-icon-svg {
     display: block;
-    width: 16px;
-    height: 16px;
+    width: var(--icon-size-md);
+    height: var(--icon-size-md);
     flex: 0 0 auto;
   }
-  :host([size='xs']) svg.sui-icon-svg { width: 10px; height: 10px; }
-  :host([size='sm']) svg.sui-icon-svg { width: 14px; height: 14px; }
-  :host([size='lg']) svg.sui-icon-svg { width: 20px; height: 20px; }
-  :host([size='xl']) svg.sui-icon-svg { width: 24px; height: 24px; }
+  :host([size='xs']) svg.sui-icon-svg { width: var(--icon-size-2xs); height: var(--icon-size-2xs); }
+  :host([size='sm']) svg.sui-icon-svg { width: var(--icon-size-sm); height: var(--icon-size-sm); }
+  :host([size='lg']) svg.sui-icon-svg { width: var(--icon-size-xl); height: var(--icon-size-xl); }
+  :host([size='xl']) svg.sui-icon-svg { width: var(--icon-size-2xl); height: var(--icon-size-2xl); }
 
   /* Spin — opt-in rotation, gated on reduced-motion */
   @media (prefers-reduced-motion: no-preference) {
@@ -98,7 +98,7 @@
   /* App set: frame styling */
   :host([set='app']) {
     --app-accent: var(--foreground);
-    --tile-size: 20px;
+    --tile-size: var(--space-5);
     --tile-radius: var(--radius-md);
     width: var(--tile-size);
     height: var(--tile-size);
@@ -122,9 +122,9 @@
   :host([set='app'][name='mesh'])        { --app-accent: var(--app-accent-mesh); }
   :host([set='app'][name='theme-studio']) { --app-accent: var(--app-accent-theme); }
 
-  :host([set='app'][size='sm']) { --tile-size: 16px; --glyph-size: 12px; --tile-radius: var(--radius-sm); }
-  :host([set='app'][size='md']) { --tile-size: 20px; --glyph-size: 14px; --tile-radius: var(--radius-md); }
-  :host([set='app'][size='lg']) { --tile-size: 28px; --glyph-size: 18px; --tile-radius: var(--radius-lg); }
+  :host([set='app'][size='sm']) { --tile-size: var(--icon-size-md); --glyph-size: var(--icon-size-xs); --tile-radius: var(--radius-sm); }
+  :host([set='app'][size='md']) { --tile-size: var(--space-5); --glyph-size: var(--icon-size-sm); --tile-radius: var(--radius-md); }
+  :host([set='app'][size='lg']) { --tile-size: var(--control-h-sm); --glyph-size: var(--icon-size-lg); --tile-radius: var(--radius-lg); }
 
   :host([set='app'][radius='sm'])   { --tile-radius: var(--radius-sm); }
   :host([set='app'][radius='md'])   { --tile-radius: var(--radius-md); }

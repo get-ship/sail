@@ -50,10 +50,10 @@
     font-family: var(--font-body);
     color: var(--muted-foreground);
     --tone-fg: var(--muted-foreground);
-    --es-pad-y: 64px;
-    --es-pad-x: 16px;
+    --es-pad-y: var(--space-9);
+    --es-pad-x: var(--space-4);
     --es-gap: var(--space-3);
-    --es-icon: 22px;
+    --es-icon: var(--icon-size-md);
     --es-tile: 48px;
     --es-title-fs: var(--text-md);
     --es-desc-fs: var(--text-sm);
@@ -68,14 +68,14 @@
     --es-pad-y: var(--space-7);
     --es-pad-x: var(--space-4);
     --es-gap: var(--space-2);
-    --es-icon: 16px; --es-tile: 36px;
+    --es-icon: var(--icon-size-sm); --es-tile: var(--control-h-md);
     --es-title-fs: var(--text-base);
   }
   :host([size='lg']) {
-    --es-pad-y: 96px;
+    --es-pad-y: var(--text-4xl); /* 96 isn't in the space ladder — closest framed text scale */
     --es-pad-x: var(--space-6);
     --es-gap: var(--space-4);
-    --es-icon: 28px; --es-tile: 64px;
+    --es-icon: var(--icon-size-3xl); --es-tile: var(--control-h-lg);
     --es-title-fs: var(--text-lg);
     --es-desc-fs: var(--text-base);
   }
@@ -127,7 +127,7 @@
     border-radius: var(--radius-lg);
     background: var(--tone-default-bg);
     color: var(--tone-fg);
-    line-height: 1;
+    line-height: var(--leading-none);
     box-shadow: inset 0 0 0 1px var(--tone-default-ring);
   }
   :host(:not([tone])) .icon,
@@ -173,8 +173,8 @@
 
   .desc {
     font-size: var(--es-desc-fs);
-    max-width: 38ch;
-    line-height: 1.55;
+    max-width: var(--panel-ch-w-md);
+    line-height: var(--leading-normal-plus);
     color: var(--muted-foreground);
   }
   :host([variant='inline']) .desc { max-width: 60ch; }

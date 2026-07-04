@@ -44,7 +44,7 @@
 
   .line {
     display: grid;
-    grid-template-columns: 16px 1fr;
+    grid-template-columns: var(--space-4) 1fr;
     padding: var(--diff-line-pad-y) var(--space-2);
     white-space: pre-wrap;
     word-break: break-word;
