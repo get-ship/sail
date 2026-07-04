@@ -5,8 +5,8 @@
   page.sui, content-hashed, linked from the served HTML).
 
   A view cannot carry an inline <style>, so the page chrome lives here.
-  Structure is the primitives' — <sui-stack> owns the vertical rhythm,
-  <sui-cluster> centers the preview stage / variant chips / meta pills.
+  Structure is the primitives' — <column> owns the vertical rhythm,
+  <row> centers the preview stage / variant chips / meta pills.
   This stylesheet owns only visual surface + font tokens.
 
   The ONE legitimate bespoke grid is the API reference table (`.api-row`) —
@@ -43,8 +43,8 @@
 .detail-back:hover { color: var(--foreground); background: var(--surface-2); }
 
 /* ── Preview stage ─────────────────────────────────────────────────────────
-   The big framed hero preview. <sui-cluster> centers the mounted specimen
-   horizontally; this rule owns the bounded frame + tint. */
+  The big framed hero preview. <row> centers the mounted specimen
+  horizontally; this rule owns the bounded frame + tint. */
 .detail-stage {
   height: 19rem;
   overflow: hidden;

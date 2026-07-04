@@ -94,8 +94,6 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   'sui-tab-panel':    { props: { name: 'overview', active: 'true' }, innerHTML: 'Standalone tab-panel content.' },
   'sui-timeline':     { innerHTML: '<sui-timeline-item at="09:30" tone="success"><span slot="title">Build passed</span>24 checks green in 42s.</sui-timeline-item><sui-timeline-item at="09:45" tone="info"><span slot="title">Deployed to staging</span>job/site-demos → staging.</sui-timeline-item><sui-timeline-item at="10:02"><span slot="title">Promoted to production</span>Live for all users.</sui-timeline-item>' },
   'sui-scroll-area':  { props: { size: 'sm' }, innerHTML: '<div>sui-button</div><div>sui-card</div><div>sui-input</div><div>sui-select</div><div>sui-table</div><div>sui-tree</div><div>sui-calendar</div><div>sui-dialog</div><div>sui-tabs</div><div>sui-timeline</div><div>sui-accordion</div><div>sui-tooltip</div>' },
-  'sui-stack':        { innerHTML: '<sui-badge tone="success">Live</sui-badge><sui-badge tone="info">Beta</sui-badge><sui-badge tone="warning">Deprecated</sui-badge>' },
-  'sui-cluster':      { innerHTML: '<sui-badge tone="success">Live</sui-badge><sui-badge tone="info">Beta</sui-badge><sui-badge tone="warning">Deprecated</sui-badge>' },
   'sui-center':       { innerHTML: '<sui-badge tone="primary">Centered</sui-badge>' },
   'sui-grid':         { innerHTML: '<sui-card>One</sui-card><sui-card>Two</sui-card><sui-card>Three</sui-card>' },
 

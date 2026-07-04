@@ -1,5 +1,5 @@
 <!-- FIXTURE (positive): composes the layout primitives, spends design tokens.
-     Layout is sui-grid / sui-stack / sui-cluster; UI is sui-* primitives;
+     Layout is sui-grid / column / row; UI is sui-* primitives;
      props ride the design-system scale (gap="4", min="md") and every style
      value is a design token. No ad-hoc grid/flex layout off :host, no
      hex/px/raw font. This is the HIGH-scoring shape and it compiles clean

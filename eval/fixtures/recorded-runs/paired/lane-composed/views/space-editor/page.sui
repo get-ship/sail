@@ -1,6 +1,5 @@
 <!-- Space Chrome editor — recorded lane output (composed shape).
-     Split view: appearance inspector (left) + live preview (right).
-     Layout is sui-grid/sui-stack/sui-cluster; every styled value is a token;
+     Layout is sui-grid / column / row; every styled value is a token;
      every template expression is a pure function of scope signals. -->
 
 <sui-grid min="lg" gap="4">

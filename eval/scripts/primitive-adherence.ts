@@ -2,7 +2,7 @@
 // primitive-adherence.ts — does a produced `.sui` COMPOSE, or hand-roll?
 //
 // The SUI contract (.claude/skills/sui/SKILL.md) is: compose primitives for
-// layout (`<sui-grid>` / `<sui-stack>` / `<sui-cluster>`) and UI (`<sui-*>`),
+// layout (`<sui-grid>` / `<column>` / `<row>`) and UI (`<sui-*>`),
 // spend design tokens via `var(--token)`, and NEVER hand-roll layout (ad-hoc
 // `display:grid` / `display:flex`) or literal values (hex / px / raw font
 // stacks) that a token already owns. A view that obeys this reads as one
@@ -10,7 +10,6 @@
 // `sui-css-token`, `sui-css-literal`, and `sui-font-literal` police the same
 // line at compile time — this grader turns it into a scalar so the eval can
 // score the *degree* of adherence, not just pass/fail.
-//
 // ── The score ───────────────────────────────────────────────────────────────
 //
 //   rewards   = W_PRIM  * primitiveUses    // <sui-*> composition in the body
@@ -109,7 +108,7 @@ function ruleBlocks(css: string): { selector: string; body: string }[] {
 }
 
 // Ad-hoc `display:flex|grid`, excluding the component's own `:host` root
-// layout (there's no `<sui-stack>` to swap the host itself with). Mirrors the
+// layout (there's no `<column>` to swap the host itself with). Mirrors the
 // `:host` exemption in `sui-layout-primitive`.
 function adHocLayoutCount(css: string): number {
   let n = 0

@@ -87,7 +87,7 @@ bun eval/scripts/behavior-grade.ts <lane-dir> <view-path> <spec.behavior.jsonc>
 ### Primitive-adherence (composition axis)
 
 `primitive-adherence.ts` scores whether each `.sui` **composes** the design
-system — `<sui-grid>` / `<sui-stack>` / `<sui-cluster>` + other `<sui-*>`
+system — `<sui-grid>` / `<column>` / `<row>` + other `<sui-*>`
 primitives, values spent as `var(--token)` — or **hand-rolls** it (ad-hoc
 `display:grid`/`flex` off `:host`, hex/px/raw-font literals). It contributes
 0.20 of the structural fraction (see `structuralFraction` in `grade.ts`) and
