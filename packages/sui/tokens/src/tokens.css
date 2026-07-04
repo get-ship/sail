@@ -42,6 +42,54 @@
   --space-6: 24px;
   --space-7: 32px;
   --space-8: 40px;
+  /* Fine steps between the 4px base — kills the `calc(var(--space-2)/2)`
+     anti-pattern (60 raw occurrences across 17 primitives). */
+  --space-half: 2px;
+  --space-0_75: 3px;
+  --space-1_25: 5px;
+  --space-1_5: 6px;
+  --space-2_5: 10px;
+  --space-3_5: 14px;
+  --space-4_5: 18px;
+  --space-9: 36px;
+
+  /* Icon sizes — chevrons/carets/dots/glyphs (78 raw-px occurrences, 23
+     primitives). Consume via `sx="w:icon-md h:icon-md"`. */
+  --icon-size-3xs: 8px;
+  --icon-size-2xs: 10px;
+  --icon-size-xs: 12px;
+  --icon-size-sm: 14px;
+  --icon-size-md: 16px;
+  --icon-size-lg: 18px;
+  --icon-size-xl: 20px;
+  --icon-size-2xl: 24px;
+  --icon-size-3xl: 28px;
+
+  /* Control heights — inputs/buttons/switches (32 occurrences, 13 primitives).
+     One ladder so control feel is consistent and theme-tunable. */
+  --control-h-2xs: 22px;
+  --control-h-xs: 24px;
+  --control-h-sm: 28px;
+  --control-h-md: 34px;
+  --control-h-lg: 40px;
+  --control-h-xl: 44px;
+
+  /* Panel clamps — menus/popovers/dialogs/drawers/lists (166 occurrences, 48
+     primitives — the single biggest raw-value family). */
+  --panel-max-w-sm: 320px;
+  --panel-max-w-md: 480px;
+  --panel-max-w-lg: 720px;
+  --panel-max-h-sm: 240px;
+  --panel-max-h-md: 480px;
+  --panel-max-h-lg: 720px;
+  --panel-min-w-sm: 180px;
+  --panel-min-w-md: 240px;
+  --panel-min-w-lg: 320px;
+  --panel-vh-sm: 50vh;
+  --panel-vh-md: 80vh;
+  --panel-vh-lg: 90vh;
+  --panel-ch-w-md: 38ch;
+  --panel-ch-w-lg: 60ch;
 
   /* Z-index scale */
   --z-base: 0;
@@ -64,8 +112,11 @@
   --text-3xl: 28px;
   --text-4xl: 36px;
 
+  --leading-none: 1;
   --leading-tight: 1.2;
+  --leading-snug: 1.35;
   --leading-normal: 1.5;
+  --leading-normal-plus: 1.55;
   --leading-relaxed: 1.7;
 
   --font-weight-normal: 400;
