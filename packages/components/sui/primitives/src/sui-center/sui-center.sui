@@ -2,8 +2,8 @@
   <sui-center> — box that centers its child on BOTH axes.
 
   The fourth layout primitive in the canonical set (stack / cluster /
-  grid / center). Where <sui-stack> flows children vertically and
-  <sui-cluster> flows them horizontally, <sui-center> parks its content
+  grid / center). Where <column> flows children vertically and
+  <row> flows them horizontally, <sui-center> parks its content
   in the dead middle of the box on both the inline and block axes. Reach
   for it whenever a specimen, empty-state, spinner, or hero must sit
   centered inside its container instead of hugging the top-left corner.
