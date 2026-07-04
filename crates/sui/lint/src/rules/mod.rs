@@ -37,6 +37,7 @@ pub mod space_literal;
 pub mod primary_for_status;
 pub mod route_inline_style;
 pub mod surface_not_card;
+pub mod sx;
 
 /// Function signature every rule conforms to.
 pub type RuleFn = fn(&Path, &str) -> Vec<Finding>;
@@ -76,4 +77,5 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (surface_not_card::RULE_ID, surface_not_card::check),
     (for_key::RULE_ID, for_key::check),
     (dead_affordance::RULE_ID, dead_affordance::check),
+    (sx::RULE_ID, sx::check),
 ];
