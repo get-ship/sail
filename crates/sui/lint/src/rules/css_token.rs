@@ -54,16 +54,10 @@
 
 use std::collections::HashSet;
 use std::path::Path;
-use std::sync::OnceLock;
 
 use crate::report::{Finding, Severity};
 
 pub const RULE_ID: &str = "sui-css-token";
-
-/// Embedded registry. The `include_str!` baked into the binary keeps
-/// us decoupled from runtime cwd / FS layout (LSP, daemon, CLI all
-/// see the same tokens). Keep this path in sync if the JSON moves.
-const TOKENS_JSON: &str = include_str!("../../../compiler/tokens.json");
 
 /// Lint a `.sui` source. Walks every `<style>...</style>` block: each
 /// `var(--xyz)` reference must be in the theme registry or defined
@@ -113,50 +107,12 @@ fn suggest_text(closest: Option<&str>) -> String {
     s
 }
 
-/// Return the flat set of theme token names, computed once. The leaf
-/// arrays under each top-level category are unioned — categories are
-/// for human review only, the lint treats every leaf as equivalent.
+/// The flat set of theme token names — delegated to the shared
+/// `crate::tokens` registry. (This file used to carry its own duplicate
+/// loader of the same `tokens.json`; the registry is now the single source
+/// both this lint and the `sx` vocabulary read.)
 fn theme_tokens() -> &'static HashSet<&'static str> {
-    static CACHE: OnceLock<HashSet<&'static str>> = OnceLock::new();
-    CACHE.get_or_init(|| {
-        let v: serde_json::Value = serde_json::from_str(TOKENS_JSON)
-            .expect("tokens.json must be valid JSON");
-        let mut out = HashSet::new();
-        // Walk every nested array of strings. Top-level may contain a
-        // non-array `$comment` field; ignored.
-        collect_string_leaves(&v, &mut out);
-        out
-    })
-}
-
-/// Recursively pull every JSON string leaf into `out`. We `Box::leak`
-/// the strings so the registry can be `&'static str`-keyed; the cache
-/// is one-shot for the life of the process.
-fn collect_string_leaves(v: &serde_json::Value, out: &mut HashSet<&'static str>) {
-    match v {
-        serde_json::Value::String(s) => {
-            // Skip the doc-comment field (it's a string but lives
-            // alongside the categories, not inside one).
-            // collect_string_leaves only descends through Object/Array,
-            // so a top-level `$comment` value reaches us only when the
-            // caller is iterating object values directly.
-            out.insert(Box::leak(s.clone().into_boxed_str()));
-        }
-        serde_json::Value::Array(items) => {
-            for item in items {
-                collect_string_leaves(item, out);
-            }
-        }
-        serde_json::Value::Object(map) => {
-            for (k, val) in map {
-                if k.starts_with('$') {
-                    continue; // $comment, $schema, …
-                }
-                collect_string_leaves(val, out);
-            }
-        }
-        _ => {}
-    }
+    crate::tokens::registry()
 }
 
 /// One scanned `<style>` block.

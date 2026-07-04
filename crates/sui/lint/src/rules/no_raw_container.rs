@@ -2,10 +2,14 @@
 //!
 //! They are pure hand-rolled containers whose only job is structure — which
 //! belongs to the layout primitives: `<sui-stack>` (column), `<sui-cluster>`
-//! (row), `<sui-grid>`, `<sui-card>` (surface). This is the STERN version of
-//! `sui-prefer-primitive` (a Warn): here the container TAG itself does not
-//! compile, so an agent physically cannot hand-roll layout with a token-styled
-//! `<div>` (the exact failure the recipe-card bake-off surfaced).
+//! (row), `<sui-grid>`, `<sui-card>` (surface).
+//!
+//! A **stripped-mode** rule, NOT a floor rule: raw `<div>`/`<span>` are fine at
+//! the floor (primitives compose structure from them). Natural severity `Warn`;
+//! `check::policy::Policy::Floor` *silences* it (divs are legitimate there),
+//! and `Policy::Stripped` promotes it to a hard `Error` — so app authors
+//! physically cannot hand-roll layout with a token-styled `<div>` (the failure
+//! the recipe-card bake-off surfaced) while primitive authors keep their boxes.
 //!
 //! Deliberately SCOPED to `div`/`span`. Content/semantic HTML stays legal —
 //! `<p>`, `<ul>`/`<ol>`/`<li>`, `<h1>`–`<h6>`, `<a>`, `<img>`, `<strong>`,
@@ -13,9 +17,8 @@
 //! should not) own a primitive for every content element. Only the two generic
 //! "unstyled box" tags are closed.
 //!
-//! Severity: `Error` — promoted to a `CompileError` by `check::css_token`.
-//! Skips HTML comments. Existing views migrate first (like `sui-prop-value`
-//! did), then Error becomes safe to leave on.
+//! Skips HTML comments. A package sets `sui.config.json` `{ "policy": "stripped" }`
+//! once its files compose primitives and no longer hand-roll raw boxes.
 
 use std::path::Path;
 
@@ -58,7 +61,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                             line,
                             col,
                             rule: RULE_ID,
-                            severity: Severity::Error,
+                            severity: Severity::Warn,
                             message: format!(
                                 "raw <{tag}> is not allowed — structure belongs to the layout primitives; {}",
                                 suggestion(tag)
@@ -72,7 +75,12 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 }
             }
         }
+        // Advance one full UTF-8 char so `source[i..]` stays on a boundary — a
+        // bare `i += 1` panics mid-codepoint on any multi-byte char.
         i += 1;
+        while i < bytes.len() && (bytes[i] & 0xC0) == 0x80 {
+            i += 1;
+        }
     }
     findings
 }
@@ -117,5 +125,11 @@ mod tests {
     #[test]
     fn skips_comments_and_wordlike() {
         assert_eq!(run(r#"<!-- <div> --> <divider>ok</divider>"#), 0);
+    }
+
+    #[test]
+    fn multibyte_source_does_not_panic() {
+        assert_eq!(run(r#"<p>café — ☕</p><div>x</div>"#), 1);
+        assert_eq!(run(r#"<sui-card>café ☕ retry…</sui-card>"#), 0);
     }
 }

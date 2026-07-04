@@ -8,6 +8,7 @@ pub mod prop_registry;
 pub mod report;
 pub mod rules;
 pub mod source;
+pub mod tokens;
 
 #[cfg(test)]
 mod tests;

@@ -44,9 +44,10 @@ fn prop_kind(prop: &str) -> Option<Kind> {
     })
 }
 
-const SPACE: &[&str] = &["0", "1", "2", "3", "4", "5", "6", "7", "8"];
-const RADIUS: &[&str] = &["none", "xs", "sm", "md", "lg", "xl", "full"];
-const TEXT: &[&str] = &["xs", "sm", "md", "lg", "xl", "2xl"];
+// SCALES are NOT hand-maintained here — they are derived from the shared token
+// registry (`crate::tokens`), so sx can never drift from `tokens.json` (the
+// drift that wrongly rejected `text:3xl`). Only COLOR keeps a curated alias set
+// (short ergonomic names like `fg`/`muted` that map to token names below).
 const COLOR: &[&str] = &[
     "surface-0", "surface-1", "surface-2", "surface-3", "fg", "muted", "border",
     "primary", "success", "warning", "destructive", "accent", "info",
@@ -56,12 +57,12 @@ const ALL_PROPS: &[&str] = &[
     "bg", "fg", "radius", "text",
 ];
 
-fn allowed(kind: Kind) -> &'static [&'static str] {
+fn allowed(kind: Kind) -> Vec<&'static str> {
     match kind {
-        Kind::Space => SPACE,
-        Kind::Color => COLOR,
-        Kind::Radius => RADIUS,
-        Kind::Text => TEXT,
+        Kind::Space => crate::tokens::space_values().to_vec(),
+        Kind::Color => COLOR.to_vec(),
+        Kind::Radius => crate::tokens::radius_values().to_vec(),
+        Kind::Text => crate::tokens::text_values().to_vec(),
     }
 }
 
@@ -116,7 +117,12 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
         return None;
     }
     let decls = match kind {
-        Kind::Space => css_props(prop).iter().map(|p| (*p, format!("var(--space-{token})"))).collect(),
+        Kind::Space => {
+            // `0` is the literal zero (no `--space-0` token); everything else is
+            // a `--space-N` token derived from the registry.
+            let v = if token == "0" { "0".to_string() } else { format!("var(--space-{token})") };
+            css_props(prop).iter().map(|p| (*p, v.clone())).collect()
+        }
         Kind::Color => css_props(prop).iter().map(|p| (*p, format!("var({})", color_var(token)))).collect(),
         Kind::Radius => {
             let v = if token == "none" { "0".to_string() } else { format!("var(--radius-{token})") };
@@ -158,7 +164,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                     m.push_str(" (raw values are not allowed; spend a token)");
                 }
                 m.push_str(&format!(". allowed: {}", opts.join(", ")));
-                if let Some(s) = nearest(token, opts) {
+                if let Some(s) = nearest(token, &opts) {
                     m.push_str(&format!("; did you mean `{prop}:{s}`?"));
                 }
                 findings.push(mk(path, line, col, m));
@@ -219,7 +225,12 @@ fn scan_sx(source: &str) -> Vec<(&str, usize)> {
                 }
             }
         }
+        // Advance one full UTF-8 char so `source[i..]` stays on a boundary — a
+        // bare `i += 1` panics mid-codepoint on any multi-byte char (…, emoji).
         i += 1;
+        while i < bytes.len() && (bytes[i] & 0xC0) == 0x80 {
+            i += 1;
+        }
     }
     out
 }
@@ -305,6 +316,14 @@ mod tests {
     fn rejects_raw_and_unknown() {
         assert_eq!(run(r#"<sui-card sx="p:13px">x</sui-card>"#).len(), 1);
         assert_eq!(run(r#"<sui-card sx="bg:#0af">x</sui-card>"#).len(), 1);
+    }
+
+    #[test]
+    fn multibyte_source_does_not_panic() {
+        // Regression: `scan_sx` byte-walked and sliced `source[i..]`, panicking
+        // mid-codepoint on any multi-byte char (the async golden crash).
+        assert!(run(r#"<p>Failed — retry…</p><sui-card sx="p:4">café ☕</sui-card>"#).is_empty());
+        assert_eq!(run(r#"<sui-card>☕</sui-card><sui-card sx="p:99">x</sui-card>"#).len(), 1);
     }
 
     #[test]
