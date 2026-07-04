@@ -29,7 +29,8 @@ pub fn preprocess(source: &str) -> String {
     let s = expand_self_close(&quote_brace_attrs(source));
     let (s, sx_css) = lower_sx(&s);
     let (s, layout_css) = lower_layout(&s);
-    let css = format!("{sx_css}{layout_css}");
+    let (s, variants_css) = lower_variants(&s);
+    let css = format!("{sx_css}{layout_css}{variants_css}");
     if css.is_empty() {
         s
     } else {
@@ -263,6 +264,90 @@ fn lower_layout(source: &str) -> (String, String) {
     }
     out.push_str(&source[i..]);
     (out, css)
+}
+
+/// Lower a `<variants>` block — the component's declarative variant table — into
+/// `:host([prop='value']){…}` CSS. Each line is `<selector>: <sx-list>`:
+/// ```text
+///   tone=success:            bg:success-bg fg:success   → :host([tone='success'])
+///   size=lg:                 text:lg min-h:12
+///   [disabled]:              opacity:50 cursor:not-allowed → :host([disabled])
+///   (tone=primary, size=lg): shadow:md                  → :host([tone='primary'][size='lg'])
+/// ```
+/// Values lower through the SAME `sui_lint::rules::sx::lower` vocabulary — the
+/// author writes the closed sx grammar, never CSS. The block is stripped from the
+/// template (the parser never sees it); its CSS joins the injected `<style>`.
+fn lower_variants(source: &str) -> (String, String) {
+    let Some(start) = source.find("<variants>") else {
+        return (source.to_string(), String::new());
+    };
+    let after = start + "<variants>".len();
+    let Some(rel) = source[after..].find("</variants>") else {
+        return (source.to_string(), String::new());
+    };
+    let body = &source[after..after + rel];
+    let block_end = after + rel + "</variants>".len();
+
+    let mut css = String::new();
+    for line in body.lines() {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+        let Some((sel_part, sx_part)) = line.split_once(':') else { continue };
+        let Some(selector) = variant_selector(sel_part) else { continue };
+        let decls = lower_variant_sx(sx_part);
+        if !decls.is_empty() {
+            css.push_str(&format!(":host({selector}){{{decls}}}"));
+        }
+    }
+
+    let mut out = String::with_capacity(source.len());
+    out.push_str(&source[..start]);
+    out.push_str(&source[block_end..]);
+    (out, css)
+}
+
+/// A variant selector → a `:host(...)` attribute-match. `tone=success` →
+/// `[tone='success']`; `[disabled]` → `[disabled]`; `(a=x, b=y)` →
+/// `[a='x'][b='y']` (compound).
+fn variant_selector(sel: &str) -> Option<String> {
+    let sel = sel.trim();
+    if let Some(inner) = sel.strip_prefix('(').and_then(|s| s.strip_suffix(')')) {
+        let mut out = String::new();
+        for part in inner.split(',') {
+            out.push_str(&attr_match(part.trim())?);
+        }
+        Some(out)
+    } else {
+        attr_match(sel)
+    }
+}
+
+fn attr_match(s: &str) -> Option<String> {
+    let s = s.trim();
+    if s.starts_with('[') && s.ends_with(']') && s.len() > 2 {
+        Some(s.to_string())
+    } else if let Some((prop, val)) = s.split_once('=') {
+        Some(format!("[{}='{}']", prop.trim(), val.trim()))
+    } else {
+        None
+    }
+}
+
+/// Lower a space-separated sx list to `prop:value;…` via the shared sx vocab.
+fn lower_variant_sx(list: &str) -> String {
+    let mut out = String::new();
+    for pair in list.split_whitespace() {
+        if let Some((prop, tok)) = pair.split_once(':')
+            && let Some(decls) = sui_lint::rules::sx::lower(prop, tok)
+        {
+            for (p, v) in decls {
+                out.push_str(&format!("{p}:{v};"));
+            }
+        }
+    }
+    out
 }
 
 fn quote_brace_attrs(source: &str) -> String {
@@ -623,6 +708,23 @@ mod tests {
         assert!(
             out.contains(".sui-ai-start{") && out.contains(".sui-ai-center{") && out.contains(".sui-ai-stretch{"),
             "full align rule set injected: {out}"
+        );
+    }
+
+    #[test]
+    fn variants_block_lowers_to_host_css() {
+        let out = preprocess(
+            "<variants>\n  tone=success: bg:tone-success-bg fg:tone-success-fg\n  [disabled]: opacity:50 cursor:not-allowed\n  (tone=primary, size=lg): shadow:md\n</variants>\n<button>x</button>",
+        );
+        assert!(!out.contains("<variants>"), "block stripped from template: {out}");
+        assert!(
+            out.contains(":host([tone='success']){background:var(--tone-success-bg);color:var(--tone-success-fg);}"),
+            "attr variant: {out}"
+        );
+        assert!(out.contains(":host([disabled]){opacity:0.5;cursor:not-allowed;}"), "boolean variant: {out}");
+        assert!(
+            out.contains(":host([tone='primary'][size='lg']){box-shadow:var(--shadow-md);}"),
+            "compound variant: {out}"
         );
     }
 
