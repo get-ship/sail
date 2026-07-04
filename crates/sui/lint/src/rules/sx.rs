@@ -7,8 +7,8 @@
 //! No bracket escape (cf. Tailwind `p-[13px]`).
 //!
 //! SCOPE — surface only. `sx` deliberately does NOT own layout: `dir`, `gap`,
-//! `align`, `justify` belong to the layout primitives (`<sui-stack>`,
-//! `<sui-cluster>`, `<sui-grid>`), which carry the semantics/a11y/overflow
+//! `align`, `justify` belong to the layout keywords (`<row>`, `<column>`,
+//! `<grid>`), which carry the semantics/a11y/overflow
 //! handling a hand-rolled flex box loses. Keeping layout out of `sx` (plus
 //! `sui-no-raw-container` banning raw `<div>`) forces structure through the
 //! primitives; `sx` is only the surface treatment a `<style>` block used to do.
@@ -55,8 +55,8 @@ fn prop_kind(prop: &str) -> Option<Kind> {
     use Kind::*;
     Some(match prop {
         // element-level spacing (padding = a surface inset, margin = a nudge).
-        // NOTE: `gap` is intentionally absent — sibling spacing is the layout
-        // primitive's job (`<sui-stack gap="3">`), not a per-element style.
+        // NOTE: `gap`/`align`/`justify` are intentionally absent — sibling spacing
+        // and flow are the layout keywords' job (`<column gap="3">`), not sx.
         "p" | "px" | "py" | "pt" | "pr" | "pb" | "pl" | "m" | "mt" | "mr" | "mb" | "ml" => Space,
         "bg" | "fg" => Color,
         "radius" => Radius,
@@ -261,7 +261,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 let mut m = format!("sx unknown property `{prop}:` — not in the surface vocabulary");
                 // steer layout attempts to the primitives, not a bigger sx
                 if matches!(prop, "dir" | "gap" | "align" | "justify" | "row" | "col") {
-                    m.push_str("; layout belongs to the primitives — use <sui-stack>/<sui-cluster>/<sui-grid>, not sx");
+                    m.push_str("; layout belongs to the primitives — use <row>/<column>/<grid>, not sx");
                 } else if let Some(s) = nearest(prop, ALL_PROPS) {
                     m.push_str(&format!("; did you mean `{s}:`?"));
                 }
@@ -299,7 +299,7 @@ fn mk(path: &Path, line: usize, col: usize, message: String) -> Finding {
         message,
         suggest: Some(
             "sx is surface-only: spacing 0–8 (p/m…), colors (bg/fg), radius, text. \
-             Layout is the primitives' job (<sui-stack>/<sui-cluster>/<sui-grid>). \
+             Layout is the primitives' job (<row>/<column>/<grid>). \
              Raw px/hex are not expressible."
                 .to_string(),
         ),
@@ -476,10 +476,10 @@ mod tests {
     }
 
     #[test]
-    fn rejects_layout_props_and_steers_to_primitives() {
+    fn rejects_layout_props_and_steers_to_keywords() {
         let m = run(r#"<sui-card sx="dir:col">x</sui-card>"#);
         assert_eq!(m.len(), 1);
-        assert!(m[0].contains("sui-stack"), "should steer to primitives: {}", m[0]);
+        assert!(m[0].contains("column"), "should steer to the layout keywords: {}", m[0]);
         assert_eq!(run(r#"<sui-card sx="gap:3">x</sui-card>"#).len(), 1);
     }
 
