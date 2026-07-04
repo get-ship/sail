@@ -67,11 +67,11 @@
   }
   :host([hidden]) { display: none; }
 
-  :host([size='xs']) { --sz: 20px; --fs: 10px; }
-  :host([size='sm']) { --sz: 28px; --fs: 11px; }
-  :host([size='md']) { --sz: 32px; --fs: 13px; }
-  :host([size='lg']) { --sz: 40px; --fs: 15px; }
-  :host([size='xl']) { --sz: 56px; --fs: 22px; }
+  :host([size='xs']) { --sz: var(--space-5); --fs: var(--text-xs); }
+  :host([size='sm']) { --sz: var(--control-h-sm); --fs: var(--text-xs); }
+  :host([size='md']) { --sz: var(--space-7); --fs: var(--text-base); }
+  :host([size='lg']) { --sz: var(--control-h-lg); --fs: var(--text-lg); }
+  :host([size='xl']) { --sz: var(--control-h-xl); --fs: var(--text-2xl); }
 
   /* Tone channel for initials background */
   :host([tone='primary'])     { --av-bg: var(--primary);     --av-fg: var(--primary-foreground); }

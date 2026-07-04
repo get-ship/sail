@@ -46,8 +46,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: var(--icon-size-2xl);
+    height: var(--icon-size-2xl);
     border-radius: 50%;
     background: var(--muted-foreground);
     color: var(--background);
@@ -57,7 +57,7 @@
     overflow: hidden;
     line-height: 1;
   }
-  :host([size="md"]) .avatar { width: 28px; height: 28px; font-size: var(--text-xs); }
+  :host([size="md"]) .avatar { width: var(--control-h-sm); height: var(--control-h-sm); font-size: var(--text-xs); }
   :host([size="md"]) { font-size: var(--text-base); }
 
   .avatar img {
@@ -73,7 +73,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 160px;
+    max-width: var(--panel-min-w-sm);
   }
   :host([hide-name]) .name { display: none; }
 </style>

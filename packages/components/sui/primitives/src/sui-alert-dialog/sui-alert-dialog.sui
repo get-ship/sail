@@ -45,14 +45,14 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: var(--control-h-md);
+    height: var(--control-h-md);
     border-radius: var(--radius-lg);
     background: var(--ad-bg);
     color: var(--ad-fg);
     flex: none;
   }
-  .badge svg { width: 19px; height: 19px; }
+  .badge svg { width: var(--icon-size-lg); height: var(--icon-size-lg); }
 </style>
 
 <sui-dialog

@@ -22,7 +22,7 @@
     display: inline-flex;
     vertical-align: middle;
     flex: none;
-    --ship-mark-size: 28px;
+    --ship-mark-size: var(--control-h-sm);
     width: var(--ship-mark-size);
     height: var(--ship-mark-size);
     /* Bespoke logo ramp: collapses to canonical tokens so the SVG fill
@@ -37,9 +37,9 @@
     --mark-c-highlight:      var(--tone-primary-bg);
   }
   :host([hidden]) { display: none; }
-  :host([size='sm']) { --ship-mark-size: 22px; }
-  :host([size='md']) { --ship-mark-size: 28px; }
-  :host([size='lg']) { --ship-mark-size: 48px; }
+  :host([size='sm']) { --ship-mark-size: var(--control-h-2xs); }
+  :host([size='md']) { --ship-mark-size: var(--control-h-sm); }
+  :host([size='lg']) { --ship-mark-size: var(--control-h-xl); }
 
   svg { width: 100%; height: 100%; display: block; }
 

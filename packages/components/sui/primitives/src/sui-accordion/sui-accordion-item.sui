@@ -71,8 +71,8 @@
 
   .chevron {
     flex-shrink: 0;
-    width: 16px;
-    height: 16px;
+    width: var(--icon-size-md);
+    height: var(--icon-size-md);
     color: var(--muted-foreground);
     transition: transform var(--duration-medium) var(--ease-out);
   }

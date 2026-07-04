@@ -18,11 +18,11 @@
       --tone-bg: var(--hover-bg);
       --tone-border: var(--border);
       --tone-ring: var(--ring);
-      --btn-h: 34px;
+      --btn-h: var(--control-h-md);
       --btn-px: var(--space-3);
-      --btn-fs: 13px;
+      --btn-fs: var(--text-base);
       --btn-fw: var(--font-weight-medium);
-      --btn-gap: 8px;
+      --btn-gap: var(--space-2);
     }
     :host([tone='primary'])     { --tone: var(--primary);     --tone-fg: var(--primary);     --tone-bg: var(--tone-primary-bg);     --tone-border: var(--tone-primary-border);     --tone-ring: var(--tone-primary-ring); }
     :host([tone='info'])        { --tone: var(--info);        --tone-fg: var(--info);        --tone-bg: var(--tone-info-bg);        --tone-border: var(--tone-info-border);        --tone-ring: var(--tone-info-ring); }
@@ -34,10 +34,10 @@
     :host([hidden]) { display: none; }
 
     /* Size matrix */
-    :host([size='xs']) { --btn-h: 22px; --btn-fs: 11px; --btn-px: 8px;  --btn-gap: 4px; }
-    :host([size='sm']) { --btn-h: 28px; --btn-fs: 12px; --btn-px: 10px; --btn-gap: 6px; }
-    :host([size='md']) { --btn-h: 34px; --btn-fs: 13px; --btn-px: 12px; --btn-gap: 8px; }
-    :host([size='lg']) { --btn-h: 40px; --btn-fs: 14px; --btn-px: 16px; --btn-gap: 8px; }
+    :host([size='xs']) { --btn-h: var(--control-h-2xs); --btn-fs: var(--text-xs); --btn-px: var(--space-2);  --btn-gap: var(--space-1); }
+    :host([size='sm']) { --btn-h: var(--control-h-sm); --btn-fs: var(--text-sm); --btn-px: var(--space-2_5); --btn-gap: var(--space-1_5); }
+    :host([size='md']) { --btn-h: var(--control-h-md); --btn-fs: var(--text-base); --btn-px: var(--space-3); --btn-gap: var(--space-2); }
+    :host([size='lg']) { --btn-h: var(--control-h-lg); --btn-fs: var(--text-md); --btn-px: var(--space-4); --btn-gap: var(--space-2); }
 
     button {
       display: inline-flex;
@@ -181,8 +181,8 @@
       pointer-events: none;
     }
     .spinner {
-      width: 14px;
-      height: 14px;
+      width: var(--icon-size-sm);
+      height: var(--icon-size-sm);
       border: 1.5px solid currentColor;
       border-right-color: transparent;
       border-radius: 50%;
