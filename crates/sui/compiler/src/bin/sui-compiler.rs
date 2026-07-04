@@ -447,9 +447,14 @@ fn compile_one(
     // don't write the .controller.ts file.
     let setup_url = paired_setup(path, &out_dir, mirror_mode);
     // Resolve the styling policy from the nearest `sui.config.json` walking up
-    // from this file. `floor` (the default) is opinionated: raw <style> is an
-    // error, sx is the styling surface, raw <div> is fine. `stripped` also bans
-    // raw containers. Migration is per-package config.
+    // from this file. OPT-IN (identical to the deck bundler): a package with no
+    // config gets no overrides and compiles exactly as before, so the floor rolls
+    // out per-package instead of failing every un-migrated file — critically, the
+    // primitives (which legitimately author `<style>` blocks) still compile via
+    // the CLI. A package opts in with `{"policy":"floor|stripped|strictest"}`; the
+    // eval lanes do exactly that. `floor` bans raw `<style>`/`style=` and makes sx
+    // the styling surface; `stripped` also bans raw containers; `strictest` also
+    // bans sx.
     let opts = CompileOpts {
         setup_url,
         mode,
@@ -458,7 +463,7 @@ fn compile_one(
         component_meta,
         emit_dts: !no_dts,
         emit_component_imports,
-        lint_overrides: Policy::resolve(path).overrides(),
+        lint_overrides: Policy::resolve_opt(path).map(|p| p.overrides()).unwrap_or_default(),
     };
     let result = compile(&source, opts).map_err(|e| {
         let rendered = e.render(&source);
