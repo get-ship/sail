@@ -329,7 +329,7 @@
       {/match}
     {/if}
   </span>
-  <sui-stack class="content" gap="0">
+  <column class="content" gap="0">
     <div class="title">
       <slot name="title" bind:this={titleSlotEl}></slot>
     </div>
@@ -337,7 +337,7 @@
     <div class="actions">
       <slot name="actions" bind:this={actionsSlotEl}></slot>
     </div>
-  </sui-stack>
+  </column>
   {#if dismissible()}
     <button class="close" part="close" type="button" aria-label="Dismiss notification" bind:this={closeBtn}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

@@ -202,7 +202,7 @@
     <sui-icon name={icon()} size="md"></sui-icon>
   </div>
 
-  <sui-stack class="copy" gap="1" align={variant() === 'inline' ? 'start' : 'center'}>
+  <column class="copy" gap="1" align={variant() === 'inline' ? 'start' : 'center'}>
     <div class="title" part="title">
       <slot name="title">{title() || 'Something went wrong'}</slot>
     </div>
@@ -214,7 +214,7 @@
     <div class="details" bind:this={detailsPanel}>
       <slot name="details" bind:this={detailsSlot}></slot>
     </div>
-  </sui-stack>
+  </column>
 
   <div class="actions" part="actions">
     <slot name="action" bind:this={actionSlot}></slot>

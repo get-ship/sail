@@ -182,7 +182,7 @@
   />
 </div>
 {#if open() && !disabled()}
-  <sui-stack class="panel" gap="2" part="panel" role="dialog" aria-label="Choose color"
+  <column class="panel" gap="2" part="panel" role="dialog" aria-label="Choose color"
        bind:this={panelEl}>
     <div class="swatches">
       {#for sw of swatches() key={sw.hex}}
@@ -196,7 +196,7 @@
         ></button>
       {/for}
     </div>
-    <sui-stack class="sliders" gap="1">
+    <column class="sliders" gap="1">
       <div class="slider-row">
         <label for={hueId()}>H</label>
         <input id={hueId()} type="range" min="0" max="360" step="1"
@@ -215,7 +215,7 @@
                bind:value={lightText} data-axis="l" />
         <span class="val">{light()}%</span>
       </div>
-    </sui-stack>
+    </column>
     <div class="hex-row">
       <span class="label">Hex</span>
       <input
@@ -227,5 +227,5 @@
         aria-label="Hex color"
       />
     </div>
-  </sui-stack>
+  </column>
 {/if}

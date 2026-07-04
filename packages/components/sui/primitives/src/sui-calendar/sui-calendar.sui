@@ -100,7 +100,7 @@
     padding: var(--density-row-py) var(--density-row-px);
     border-right: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
-    /* Layout (display:flex column, gap) is provided by <sui-stack>. */
+    /* Layout (display:flex column, gap) is provided by <column>. */
   }
   .cell.out { color: var(--muted-foreground); background: var(--muted); }
   .cell.weekend { background: var(--tone-muted-bg); }
@@ -194,7 +194,7 @@
   .allday-zone {
     position: relative;
     z-index: var(--z-elevated);
-    /* Layout (display:flex column, gap) is provided by <sui-stack>. */
+    /* Layout (display:flex column, gap) is provided by <column>. */
     padding: var(--cal-gap-xs);
   }
   .allday-zone:empty { display: none; }
@@ -253,7 +253,7 @@
     {#for wk of weekRows() key={wk.key}}
       <div class="week" role="row">
         {#for cr of wk.cells key={cr.key}}
-          <sui-stack
+          <column
             class="cell"
             role="gridcell"
             data-iso={cr.cell.iso}
@@ -280,7 +280,7 @@
             {#if cr.cell.overflowCount > 0}
               <span class="overflow">+{cr.cell.overflowCount} more</span>
             {/if}
-          </sui-stack>
+          </column>
         {/for}
       </div>
     {/for}
@@ -300,7 +300,7 @@
               <div class="slot-bg" data-iso={dc.col.iso} data-minutes={slot.minutes}></div>
             {/for}
           </div>
-          <sui-stack class="allday-zone" gap="1">
+          <column class="allday-zone" gap="1">
             {#for ev of dc.col.allDayEvents key={ev.id}}
               <button
                 type="button"
@@ -310,7 +310,7 @@
                 title={ev.title}
               >{ev.title}</button>
             {/for}
-          </sui-stack>
+          </column>
           {#for pe of dc.col.laidOut key={pe.event.id}}
             <button
               type="button"

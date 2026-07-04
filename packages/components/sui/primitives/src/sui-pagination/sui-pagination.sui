@@ -91,7 +91,7 @@
   }
 </style>
 
-<sui-cluster class="nav" part="nav" gap="3" align="center" aria-label={label()} bind:this={navEl}>
+<row class="nav" part="nav" gap="3" align="center" aria-label={label()} bind:this={navEl}>
   <div class="edges">
     <sui-button
       part="first"
@@ -166,4 +166,4 @@
       </sui-select>
     </label>
   {/if}
-</sui-cluster>
+</row>

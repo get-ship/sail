@@ -22,5 +22,5 @@
 
 </style>
 
-<sui-stack class="list" part="list" gap="1"><slot></slot></sui-stack>
+<column class="list" part="list" gap="1"><slot></slot></column>
 

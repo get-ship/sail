@@ -92,10 +92,10 @@
         <path d="M12 9v4"></path>
         <path d="M12 17h.01"></path>
       </svg>
-      <sui-stack class="fallback-body" gap="1">
+      <column class="fallback-body" gap="1">
         <div class="message" part="message">{fallbackText() || 'Something went wrong'}</div>
         <button class="retry" part="retry" type="button" on:click={reset}>Retry</button>
-      </sui-stack>
+      </column>
     </div>
   {/if}
 {/if}
