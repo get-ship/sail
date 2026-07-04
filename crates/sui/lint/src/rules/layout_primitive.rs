@@ -1,16 +1,16 @@
 //! `sui-layout-primitive` — a `<style>` rule that hand-rolls a flex layout the
 //! design system already provides as a primitive should use that primitive.
 //!
-//! The every-layout primitives exist (`<sui-stack>`, `<sui-cluster>`,
+//! The every-layout keywords exist (`<column>`, `<row>`,
 //! `<sui-grid>`) but are under-adopted: most components re-derive
 //! `display:flex; flex-direction:column; gap:…` by hand, which is where layout
 //! drift and inconsistency live. This rule is the adoption driver — it flags the
 //! two unambiguous shapes and teaches the primitive in the suggest text.
 //!
 //! Deliberately conservative to stay low-noise:
-//! - **Stack**: `display:flex` + `flex-direction:column` + a `gap` → `<sui-stack>`.
+//! - **Stack**: `display:flex` + `flex-direction:column` + a `gap` → `<column>`.
 //! - **Cluster**: `display:flex` + `flex-wrap:wrap` + a `gap`, row direction →
-//!   `<sui-cluster>`.
+//!   `<row>`.
 //! - **Skips** any block with `justify-content` — the primitives model the
 //!   cross-axis (`align`) and the gap, not main-axis distribution, so a block
 //!   that distributes is not a clean swap and is left alone.
@@ -28,7 +28,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     for block in scan_style_blocks(source) {
         for rule in scan_rule_blocks(block.content) {
             // Exempt the custom element's own `:host` rule. `:host` IS the
-            // host element — there is no `<sui-stack>` to swap it with; the
+            // host element — there is no `<column>` to swap it with; the
             // host's own `display: inline-flex` + `flex-direction: column` +
             // `gap` is the host's root layout, not a hand-rolled sub-stack.
             // Both bare `:host` and functional `:host([attr=…])` count.
@@ -78,9 +78,9 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                     line,
                     col,
                     "this rule hand-rolls a vertical flex stack (`display:flex` + \
-                     `flex-direction:column` + `gap`) — use the `<sui-stack>` \
+                     `flex-direction:column` + `gap`) — use the `<column>` \
                      layout primitive instead",
-                    "Replace the element with `<sui-stack gap=N>` (gap 1..8 → \
+                    "Replace the element with `<column gap=N>` (gap 1..8 → \
                      var(--space-N)); use the `align` attr for align-items. Drop \
                      the hand-rolled flex rule.",
                 ));
@@ -91,8 +91,8 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                     col,
                     "this rule hand-rolls a horizontal wrapping flex row \
                      (`display:flex` + `flex-wrap:wrap` + `gap`) — use the \
-                     `<sui-cluster>` layout primitive instead",
-                    "Replace the element with `<sui-cluster gap=N>` (gap 1..8 → \
+                     `<row>` layout keyword instead",
+                    "Replace the element with `<row gap=N>` (gap 1..8 → \
                      var(--space-N)). Drop the hand-rolled flex rule.",
                 ));
             }
@@ -118,7 +118,7 @@ fn mk(path: &Path, line: usize, col: usize, message: &str, suggest: &str) -> Fin
 /// rule whose selector ends at `body_offset - 1`, the `{`) is a `:host`
 /// rule — bare `:host` or functional `:host(...)`. The host's own layout
 /// is the host element itself, not a hand-rolled sub-stack; flagging it
-/// as a `<sui-stack>` swap is meaningless.
+/// as a `<column>` swap is meaningless.
 ///
 /// We work from `content[..body_offset]` — the slice that contains the
 /// selector. The selector is everything from the start of the content (or
@@ -344,14 +344,14 @@ mod tests {
     fn vertical_stack_warns() {
         let f = run("<style>.x { display: flex; flex-direction: column; gap: var(--space-3); }</style>");
         assert_eq!(f.len(), 1, "{f:?}");
-        assert!(f[0].message.contains("sui-stack"));
+        assert!(f[0].message.contains("column"));
     }
 
     #[test]
     fn wrapping_cluster_warns() {
         let f = run("<style>.x { display: flex; flex-wrap: wrap; gap: var(--space-2); }</style>");
         assert_eq!(f.len(), 1, "{f:?}");
-        assert!(f[0].message.contains("sui-cluster"));
+        assert!(f[0].message.contains("row"));
     }
 
     #[test]
@@ -378,7 +378,7 @@ mod tests {
     fn flex_flow_shorthand_column_warns() {
         let f = run("<style>.x { display: flex; flex-flow: column nowrap; gap: var(--space-2); }</style>");
         assert_eq!(f.len(), 1);
-        assert!(f[0].message.contains("sui-stack"));
+        assert!(f[0].message.contains("column"));
     }
 
     #[test]
@@ -422,7 +422,7 @@ mod tests {
         // same hand-rolled flex shape is NOT a host rule — should warn.
         let f = run("<style>:host { display: inline-flex; flex-direction: column; gap: var(--space-1); } .wrap { display: flex; flex-direction: column; gap: var(--space-2); }</style>");
         assert_eq!(f.len(), 1, "{f:?}");
-        assert!(f[0].message.contains("sui-stack"));
+        assert!(f[0].message.contains("column"));
     }
 
     #[test]
