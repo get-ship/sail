@@ -50,7 +50,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                         .to_string(),
                 suggest: Some(
                     "Text is already styled: write <h1>-<h6> and <p> plain — they take the type \
-                     scale automatically. For structure use <sui-stack>/<sui-cluster>/<sui-grid>; \
+                     scale automatically. For structure use <row>/<column>/<grid>; \
                      for surface/tone use a primitive prop (padding, tone, size, variant). If \
                      nothing fits, that's a missing primitive to add, not a reason to keep sx."
                         .to_string(),

@@ -1,8 +1,8 @@
 //! `sui-no-raw-container` — raw `<div>` / `<span>` are banned in `.sui` templates.
 //!
 //! They are pure hand-rolled containers whose only job is structure — which
-//! belongs to the layout primitives: `<sui-stack>` (column), `<sui-cluster>`
-//! (row), `<sui-grid>`, `<sui-card>` (surface).
+//! belongs to the layout keywords: `<column>` (vertical), `<row>`
+//! (horizontal), `<grid>`, plus `<sui-card>` (surface).
 //!
 //! A **stripped-mode** rule, NOT a floor rule: raw `<div>`/`<span>` are fine at
 //! the floor (primitives compose structure from them). Natural severity `Warn`;
@@ -28,8 +28,8 @@ pub const RULE_ID: &str = "sui-no-raw-container";
 
 fn suggestion(tag: &str) -> &'static str {
     match tag {
-        "div" => "use <sui-stack> (column), <sui-cluster> (row), <sui-grid>, or <sui-card> (surface) — style it with sx",
-        "span" => "use <sui-cluster> for inline grouping, or a semantic inline tag (<strong>/<em>/<a>) styled with sx",
+        "div" => "use <column> (vertical), <row> (horizontal), <grid>, or <sui-card> (surface) — style it with sx",
+        "span" => "use <row> for inline grouping, or a semantic inline tag (<strong>/<em>/<a>) styled with sx",
         _ => "compose a sui-* primitive",
     }
 }
@@ -118,7 +118,7 @@ mod tests {
 
     #[test]
     fn allows_content_and_primitives() {
-        assert_eq!(run(r#"<sui-stack gap="3"><h2>Ingredients</h2><ul><li>x</li></ul></sui-stack>"#), 0);
+        assert_eq!(run(r#"<column gap="3"><h2>Ingredients</h2><ul><li>x</li></ul></column>"#), 0);
         assert_eq!(run(r#"<sui-card><p>hi</p><a href="/x">link</a></sui-card>"#), 0);
     }
 
