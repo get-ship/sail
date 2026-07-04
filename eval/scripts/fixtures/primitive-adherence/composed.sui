@@ -21,21 +21,21 @@
   }
 </style>
 
-<sui-stack gap="4">
-  <sui-cluster gap="2" justify="between">
+<column gap="4">
+  <row gap="2" justify="between">
     <sui-button tone="primary">{title()}</sui-button>
     <sui-button>Add</sui-button>
-  </sui-cluster>
+  </row>
 
   <sui-grid class="panel" min="md" gap="3">
     <sui-card>
-      <sui-stack gap="2">
+      <column gap="2">
         <sui-badge tone="success">Ready</sui-badge>
         <span>Item one</span>
-      </sui-stack>
+      </column>
     </sui-card>
     <sui-card>
       <span>Item two</span>
     </sui-card>
   </sui-grid>
-</sui-stack>
+</column>

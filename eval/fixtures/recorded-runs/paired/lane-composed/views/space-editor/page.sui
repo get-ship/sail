@@ -6,18 +6,18 @@
 <sui-grid min="lg" gap="4">
   <!-- Editor pane: the appearance inspector -->
   <sui-card>
-    <sui-stack gap="4">
-      <sui-cluster gap="2" justify="between">
+    <column gap="4">
+      <row gap="2" justify="between">
         <h2>Appearance</h2>
         {#if dirty()}
           <sui-badge tone="warning">● {editCount()} unsaved</sui-badge>
         {/if}
-      </sui-cluster>
+      </row>
 
       {#for group of groups() key={group.id}}
-        <sui-stack gap="2">
+        <column gap="2">
           <h3>{group.label}</h3>
-          <sui-cluster gap="1" role="radiogroup" aria-label={group.label}>
+          <row gap="1" role="radiogroup" aria-label={group.label}>
             {#for option of group.options key={option}}
               <sui-button
                 tone={config()[group.id] === option ? 'primary' : 'neutral'}
@@ -25,23 +25,23 @@
                 on:click={() => choose(group.id, option)}
               >{option}</sui-button>
             {/for}
-          </sui-cluster>
-        </sui-stack>
+          </row>
+        </column>
       {/for}
 
-      <sui-cluster gap="2" justify="end">
+      <row gap="2" justify="end">
         <sui-button tone="primary" on:click={() => save()}>Save</sui-button>
-      </sui-cluster>
-    </sui-stack>
+      </row>
+    </column>
   </sui-card>
 
   <!-- Preview pane: the live space, derived from the editor state -->
   <sui-card class="preview">
-    <sui-stack gap="3">
-      <sui-cluster gap="2" justify="between">
+    <column gap="3">
+      <row gap="2" justify="between">
         <sui-badge tone="info">{config().theme}</sui-badge>
         <span class="sync">live · {spaceName()} · {editCount()} edits</span>
-      </sui-cluster>
+      </row>
 
       {#match config().nav}
         {:case 'top'}
@@ -54,7 +54,7 @@
 
       <p>dock: {config().dock} · density: {config().density}</p>
       <p>glyph: {config().glyph} · accent: {config().accent}</p>
-    </sui-stack>
+    </column>
   </sui-card>
 </sui-grid>
 
