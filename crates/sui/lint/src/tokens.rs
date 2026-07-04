@@ -56,7 +56,7 @@ pub fn registry() -> &'static HashSet<&'static str> {
             let Some(rest) = line.trim_start().strip_prefix("--") else { continue };
             let Some(colon) = rest.find(':') else { continue };
             let name = rest[..colon].trim_end();
-            if !name.is_empty() && name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-') {
+            if !name.is_empty() && name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_') {
                 out.insert(&*Box::leak(name.to_owned().into_boxed_str()));
             }
         }
@@ -109,7 +109,7 @@ pub fn color_values() -> &'static [&'static str] {
                 let rest = line.trim_start().strip_prefix("--")?;
                 let colon = rest.find(':')?;
                 let name = rest[..colon].trim_end();
-                if name.is_empty() || !name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-') {
+                if name.is_empty() || !name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_') {
                     return None;
                 }
                 Some((name, rest[colon + 1..].trim()))
