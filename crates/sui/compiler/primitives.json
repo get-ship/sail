@@ -10,6 +10,24 @@
       "open": { "type": "bool", "default": "false" },
       "value": { "type": "string", "default": "" }
     },
+    "sui-account-chip": {
+      "hide-name": { "type": "bool", "default": "false" },
+      "image": { "type": "string", "default": "" },
+      "name": { "type": "string", "default": "" },
+      "size": { "values": ["sm", "md"], "default": "sm" }
+    },
+    "sui-account-menu": {
+      "busy": { "type": "bool", "default": "false" },
+      "email": { "type": "string", "default": "" },
+      "error": { "type": "string", "default": "" },
+      "image": { "type": "string", "default": "" },
+      "label-style": { "values": ["text", "compact"], "default": "text" },
+      "name": { "type": "string", "default": "" },
+      "placement": { "values": ["top", "top-end", "bottom", "bottom-end", "left", "left-end", "right", "right-end"], "default": "bottom-end" },
+      "plan": { "type": "string", "default": "" },
+      "provider": { "type": "string", "default": "" },
+      "status": { "values": ["signed-out", "signed-in", "pending"], "default": "signed-out" }
+    },
     "sui-alert": {
       "dismissible": { "type": "bool", "default": "false" },
       "tone": { "values": ["default", "info", "success", "warning", "destructive", "muted"], "default": "default" }
@@ -19,12 +37,6 @@
       "confirm-label": { "type": "string", "default": "Confirm" },
       "open": { "type": "bool", "default": "false" },
       "tone": { "values": ["default", "destructive"], "default": "default" }
-    },
-    "sui-auth-dialog": {
-      "backdrop": { "values": ["default", "blur", "solid"], "default": "blur" },
-      "loading": { "type": "bool", "default": "false" },
-      "mode": { "values": ["sign-in", "sign-up"], "default": "sign-in" },
-      "open": { "type": "bool", "default": "false" }
     },
     "sui-autocomplete": {
       "disabled": { "type": "bool", "default": "false" },
@@ -45,10 +57,13 @@
       "tone": { "values": ["default", "primary", "info", "success", "warning", "destructive", "accent", "muted"], "default": "muted" }
     },
     "sui-badge": {
-      "pill": { "type": "bool", "default": "false" },
       "size": { "values": ["sm", "md", "lg"], "default": "md" },
       "tone": { "values": ["default", "primary", "info", "success", "warning", "destructive", "accent", "muted"], "default": "default" },
       "variant": { "values": ["solid", "soft", "outline"], "default": "soft" }
+    },
+    "sui-brand-mark": {
+      "label": { "type": "string", "default": "" },
+      "size": { "values": ["sm", "md", "lg"], "default": "md" }
     },
     "sui-button": {
       "disabled": { "type": "bool", "default": "false" },
@@ -61,6 +76,18 @@
       "type": { "values": ["button", "submit", "reset"], "default": "button" },
       "variant": { "values": ["solid", "soft", "outline", "ghost", "default"], "default": "default" }
     },
+    "sui-calendar": {
+      "day-end-hour": { "type": "number", "default": "24" },
+      "day-start-hour": { "type": "number", "default": "0" },
+      "editable": { "type": "bool", "default": "false" },
+      "events": { "type": "string", "default": "" },
+      "focus-date": { "type": "string", "default": "" },
+      "label": { "type": "string", "default": "" },
+      "range-mode": { "values": ["none", "date", "datetime"], "default": "none" },
+      "slot-minutes": { "type": "number", "default": "30" },
+      "view": { "values": ["month", "week", "day"], "default": "month" },
+      "week-starts-on": { "type": "number", "default": "0" }
+    },
     "sui-card": {
       "accent-bar": { "values": ["off", "hover", "static"], "default": "off" },
       "fill": { "type": "bool", "default": "false" },
@@ -69,6 +96,9 @@
       "status-rail": { "type": "bool", "default": "false" },
       "tone": { "values": ["default", "primary", "info", "success", "warning", "destructive", "accent", "muted"], "default": "default" },
       "variant": { "values": ["default", "outline"], "default": "default" }
+    },
+    "sui-center": {
+      "gap": { "values": ["0", "1", "2", "3", "4", "5", "6", "7", "8"], "default": "0" }
     },
     "sui-checkbox": {
       "checked": { "type": "bool", "default": "false" },
@@ -90,10 +120,12 @@
       "tone": { "values": ["default", "primary", "info", "success", "warning", "destructive", "accent", "muted"], "default": "default" },
       "variant": { "values": ["solid", "soft", "outline", "ghost"], "default": "soft" }
     },
-    "sui-cluster": {
-      "align": { "values": ["start", "center", "end", "baseline"], "default": "center" },
-      "gap": { "values": ["0", "1", "2", "3", "4", "5", "6", "7", "8"], "default": "3" },
-      "justify": { "values": ["start", "center", "end", "between", "around"], "default": "start" }
+    "sui-cmdk": {
+      "empty-label": { "type": "string", "default": "No results found." },
+      "label": { "type": "string", "default": "Command palette" },
+      "open": { "type": "bool", "default": "false" },
+      "placeholder": { "type": "string", "default": "Type a command or search…" },
+      "size": { "values": ["sm", "md", "lg"], "default": "md" }
     },
     "sui-code": {
       "block": { "type": "bool", "default": "false" },
@@ -166,6 +198,7 @@
     },
     "sui-error-state": {
       "body": { "type": "string", "default": "" },
+      "code": { "type": "string", "default": "" },
       "icon": { "type": "string", "default": "alert-circle" },
       "size": { "values": ["sm", "md", "lg"], "default": "md" },
       "title": { "type": "string", "default": "" },
@@ -181,39 +214,10 @@
       "multiple": { "type": "bool", "default": "false" },
       "tone": { "values": ["default", "primary", "info", "success", "warning", "destructive", "accent", "muted"], "default": "default" }
     },
-    "ship-git-diff": {
-      "additions": { "type": "number", "default": "0" },
-      "deletions": { "type": "number", "default": "0" },
-      "empty": { "type": "bool", "default": "false" },
-      "files": { "type": "number", "default": "0" }
-    },
-    "ship-git-diff-file": {
-      "additions": { "type": "number", "default": "0" },
-      "collapsed": { "type": "bool", "default": "false" },
-      "deletions": { "type": "number", "default": "0" },
-      "path": { "type": "string", "default": "" }
-    },
-    "ship-git-diff-hunk": {
-      "header": { "type": "string", "default": "" }
-    },
-    "ship-git-diff-line": {
-      "comment-count": { "type": "number", "default": "0" },
-      "new": { "type": "string", "default": "" },
-      "old": { "type": "string", "default": "" },
-      "type": { "values": ["add", "del", "context"], "default": "context" }
-    },
-    "sui-graph-canvas": {
-      "edges": { "type": "string", "default": "" },
-      "height": { "type": "number", "default": "600" },
-      "layout": { "values": ["positioned", "radial"], "default": "positioned" },
-      "nodes": { "type": "string", "default": "" },
-      "selected-id": { "type": "string", "default": "" },
-      "width": { "type": "number", "default": "1000" }
-    },
-    "sui-harness-blob": {
-      "harness": { "values": ["claude", "codex", "cursor", "gemini", "opencode"], "default": "claude" },
-      "size": { "values": ["sm", "md", "lg"], "default": "md" },
-      "variant": { "values": ["tile", "glyph"], "default": "tile" }
+    "sui-grid": {
+      "flow": { "values": ["auto", "dense"], "default": "dense" },
+      "gap": { "values": ["0", "1", "2", "3", "4", "5", "6", "7", "8"], "default": "3" },
+      "min": { "values": ["xs", "sm", "md", "lg"], "default": "md" }
     },
     "sui-hover-card": {
       "hide-delay": { "type": "number", "default": "100" },
@@ -227,6 +231,7 @@
       "radius": { "type": "string", "default": "" },
       "set": { "values": ["lucide", "app"], "default": "lucide" },
       "size": { "values": ["xs", "sm", "md", "lg", "xl"], "default": "md" },
+      "spin": { "type": "bool", "default": "false" },
       "src": { "type": "string", "default": "" },
       "tone": { "values": ["default", "info", "success", "warning", "destructive", "accent", "muted", "primary"], "default": "default" },
       "variant": { "values": ["glyph", "tile", "solid"], "default": "glyph" }
@@ -267,15 +272,11 @@
       "tone": { "values": ["default", "primary", "info", "success", "warning", "destructive", "accent", "muted"], "default": "default" },
       "variant": { "values": ["default", "underline", "subtle"], "default": "default" }
     },
-    "sui-log-stream": {
-      "active": { "type": "bool", "default": "false" },
-      "autoscroll": { "type": "bool", "default": "false" },
-      "event": { "type": "string", "default": "log" },
-      "max-bytes": { "type": "number", "default": "1000000" },
-      "url": { "type": "string", "default": "" }
-    },
     "sui-markdown": {
       "value": { "type": "string", "default": "" }
+    },
+    "sui-nav-top": {
+      "sticky": { "type": "bool", "default": "false" }
     },
     "sui-navigation-item": {
       "active": { "type": "bool", "default": "false" },
@@ -286,12 +287,23 @@
     "sui-navigation-menu": {
       "value": { "type": "string", "default": "" }
     },
+    "sui-pagination": {
+      "label": { "type": "string", "default": "Pagination" },
+      "page": { "type": "number", "default": "1" },
+      "page-size": { "type": "number", "default": "10" },
+      "page-size-options": { "type": "string", "default": "" },
+      "size-label": { "type": "string", "default": "Rows per page" },
+      "total": { "type": "number", "default": "0" }
+    },
     "sui-popover": {
       "open": { "type": "bool", "default": "false" },
       "placement": { "values": ["top", "top-end", "bottom", "bottom-end", "left", "left-end", "right", "right-end"], "default": "bottom" }
     },
     "sui-portal": {
       "target": { "type": "string", "default": "body" }
+    },
+    "sui-project-switcher": {
+      "active-id": { "type": "string", "default": "" }
     },
     "sui-radio": {
       "checked": { "type": "bool", "default": "false" },
@@ -330,6 +342,16 @@
       "tone": { "values": ["default", "muted", "primary", "info", "success", "warning", "destructive", "accent"], "default": "default" },
       "variant": { "values": ["solid", "dashed"], "default": "solid" }
     },
+    "sui-sheet": {
+      "label": { "type": "string", "default": "" },
+      "readonly": { "type": "bool", "default": "false" },
+      "selection-mode": { "values": ["cell", "range", "multi"], "default": "range" },
+      "show-formula-bar": { "type": "bool", "default": "true" },
+      "show-gridlines": { "type": "bool", "default": "true" },
+      "show-headers": { "type": "bool", "default": "true" },
+      "size": { "values": ["sm", "md", "lg"], "default": "md" },
+      "workbook": { "type": "string", "default": "" }
+    },
     "sui-skeleton": {
       "shape": { "values": ["text", "line", "block", "circle"], "default": "text" },
       "size": { "values": ["sm", "md", "lg"], "default": "md" }
@@ -350,10 +372,6 @@
       "label": { "type": "string", "default": "Loading" },
       "size": { "values": ["xs", "sm", "md", "lg"], "default": "md" },
       "tone": { "values": ["default", "primary", "info", "success", "warning", "destructive", "accent", "muted"], "default": "default" }
-    },
-    "sui-stack": {
-      "align": { "values": ["start", "center", "end", "stretch"], "default": "stretch" },
-      "gap": { "values": ["0", "1", "2", "3", "4", "5", "6", "7", "8"], "default": "4" }
     },
     "sui-status-dot": {
       "label": { "type": "string", "default": "" },
@@ -382,11 +400,13 @@
       "name": { "type": "string", "default": "" }
     },
     "sui-table": {
-      "dense": { "type": "bool", "default": "false" },
-      "density": { "values": ["compact", "default", "comfortable"], "default": "default" },
+      "columns": { "type": "string", "default": "" },
       "gutter": { "type": "bool", "default": "false" },
       "hoverable": { "type": "bool", "default": "true" },
       "label": { "type": "string", "default": "" },
+      "rows": { "type": "string", "default": "" },
+      "selectable": { "values": ["none", "single", "multi"], "default": "none" },
+      "size": { "values": ["sm", "md", "lg"], "default": "md" },
       "sticky-first-col": { "type": "bool", "default": "false" },
       "sticky-header": { "type": "bool", "default": "false" },
       "striped": { "type": "bool", "default": "false" },
@@ -416,6 +436,14 @@
       "tone": { "values": ["default", "primary", "info", "success", "warning", "destructive", "accent", "muted"], "default": "default" },
       "value": { "type": "string", "default": "" },
       "variant": { "values": ["default", "code"], "default": "default" }
+    },
+    "sui-theme-picker": {
+      "label-style": { "values": ["text", "compact"], "default": "compact" },
+      "persist": { "type": "bool", "default": "true" },
+      "placement": { "values": ["top", "top-end", "bottom", "bottom-end", "left", "left-end", "right", "right-end"], "default": "bottom-end" },
+      "scope": { "type": "string", "default": "" },
+      "surface": { "values": ["app", "marketing"], "default": "app" },
+      "tokens-href": { "type": "string", "default": "/view-tokens.css" }
     },
     "sui-timeline-item": {
       "at": { "type": "string", "default": "" },
@@ -454,6 +482,26 @@
     },
     "sui-tooltip": {
       "placement": { "values": ["top", "bottom", "left", "right"], "default": "top" }
+    },
+    "sui-tree": {
+      "error": { "type": "string", "default": "" },
+      "expand-on-select": { "type": "bool", "default": "false" },
+      "label": { "type": "string", "default": "" },
+      "loading": { "type": "bool", "default": "false" },
+      "nodes": { "type": "string", "default": "" },
+      "selectable": { "values": ["none", "single", "multi"], "default": "none" },
+      "show-guides": { "type": "bool", "default": "true" },
+      "size": { "values": ["sm", "md", "lg"], "default": "md" }
+    },
+    "sui-tree-grid": {
+      "columns": { "type": "string", "default": "" },
+      "error": { "type": "string", "default": "" },
+      "expand-on-select": { "type": "bool", "default": "false" },
+      "label": { "type": "string", "default": "" },
+      "loading": { "type": "bool", "default": "false" },
+      "nodes": { "type": "string", "default": "" },
+      "selectable": { "values": ["none", "single", "multi"], "default": "none" },
+      "size": { "values": ["sm", "md", "lg"], "default": "md" }
     },
     "sui-tree-item": {
       "expanded": { "type": "bool", "default": "false" },
