@@ -51,6 +51,7 @@ pub mod wasm;
 
 pub use diagnostics::{CompileError, DiagSeverity, Diagnostic, Span};
 pub use check::lint_overrides::{LintOverride, OverrideSeverity};
+pub use check::policy::Policy;
 pub use analysis::{analyze, completions_at, hover_at, Analysis, Hover, Symbol};
 
 /// Identity stamp embedded in every emitted artifact (JS leading
@@ -237,12 +238,36 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
         source
     };
 
+    // The --styles mechanism prepends a COMPILER-INJECTED <style> block (a
+    // component's external CSS). That block is not author-written template
+    // content, so it must not trip the `sui-no-style-block` floor rule — which
+    // governs authored <style>. Suppress the rule for this compile when we
+    // injected styles. (--styles is itself a pre-floor component-CSS path the
+    // floor will eventually retire; the rule still fires on authored blocks.)
+    let effective_overrides: Vec<check::lint_overrides::LintOverride> =
+        if opts.styles.is_some() {
+            let mut o = opts.lint_overrides.clone();
+            // Prepend, not append: `apply_overrides` is first-match-wins, and
+            // the resolved policy may already carry a `no-style-block → Error`
+            // promotion. The injected-styles exemption must take precedence.
+            o.insert(
+                0,
+                check::lint_overrides::LintOverride {
+                    rule: "sui-no-style-block".to_string(),
+                    severity: check::lint_overrides::OverrideSeverity::Off,
+                },
+            );
+            o
+        } else {
+            opts.lint_overrides.clone()
+        };
+
     let program = parse::parse(effective_source).map_err(|e| attach_path(e, &opts))?;
     check::run(
         &program,
         effective_source,
         opts.source_path.as_deref(),
-        &opts.lint_overrides,
+        &effective_overrides,
     )
     .map_err(|e| attach_path(e, &opts))?;
     // One contract per boundary (#255): the full Error-severity lint stream
@@ -254,7 +279,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
         &program,
         effective_source,
         opts.source_path.as_deref(),
-        &opts.lint_overrides,
+        &effective_overrides,
     )
     .map_err(|e| attach_path(e, &opts))?;
     let bindings = bindings::build(&program);

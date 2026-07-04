@@ -12,6 +12,7 @@ mod controller_parse_tests;
 pub mod controller_purity;
 pub mod css_token;
 pub mod lint_overrides;
+pub mod policy;
 pub mod expr_subset;
 pub mod handler_complexity;
 pub(crate) mod js_scan;

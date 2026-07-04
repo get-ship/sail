@@ -21,7 +21,7 @@ use anyhow::{anyhow, Context, Result};
 use clap::{Parser, Subcommand};
 
 use sui_compiler::out_layout::resolve_out_dir;
-use sui_compiler::{check_all, compile, CompileMode, ComponentMeta, CompileOpts, DiagSeverity};
+use sui_compiler::{check_all, compile, CompileMode, ComponentMeta, CompileOpts, DiagSeverity, Policy};
 
 /// Hard caps on virtual memory and wall-clock time. A bug in the
 /// compiler (or a pathological input) must never be able to OOM the
@@ -446,6 +446,10 @@ fn compile_one(
     // `./<stem>.controller.ts`. Authors who want template-only just
     // don't write the .controller.ts file.
     let setup_url = paired_setup(path, &out_dir, mirror_mode);
+    // Resolve the styling policy from the nearest `sui.config.json` walking up
+    // from this file. `floor` (the default) is opinionated: raw <style> is an
+    // error, sx is the styling surface, raw <div> is fine. `stripped` also bans
+    // raw containers. Migration is per-package config.
     let opts = CompileOpts {
         setup_url,
         mode,
@@ -454,7 +458,7 @@ fn compile_one(
         component_meta,
         emit_dts: !no_dts,
         emit_component_imports,
-        lint_overrides: Vec::new(),
+        lint_overrides: Policy::resolve(path).overrides(),
     };
     let result = compile(&source, opts).map_err(|e| {
         let rendered = e.render(&source);

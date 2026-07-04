@@ -15,8 +15,12 @@
 //! `sui_lint` CLI, `ship_view_lint`). The compiler just downgrades the
 //! rule's gate impact.
 //!
-//! The override is opt-out only — it can soften a rule (Error → Warn or
-//! Off) but cannot tighten it. Tighten a rule by editing the rule.
+//! Overrides mostly *soften* (Error → Warn or Off) so an external consumer can
+//! opt out of a rule without editing it. They can also *promote* (→ Error):
+//! the styling policy (`check::policy::Policy`) uses that direction to turn a
+//! migration-Warn rule (`sui-no-style-block`, `sui-no-raw-container`) into a
+//! hard wall for the `floor`/`stripped` modes. Promotion is reserved for those
+//! policy rules — arbitrary Warn rules are tightened by editing the rule.
 //!
 //! Plumbing: `CompileOpts::lint_overrides` carries a `Vec<LintOverride>`
 //! from the build host (CLI / napi / wasm) into `compile()`. The
@@ -61,6 +65,13 @@ pub enum OverrideSeverity {
     /// finding if the consumer wants — `sui-lint`'s `lint_path` is
     /// unaffected). The opt-out.
     Off,
+    /// PROMOTE the rule's findings to Error at the build gate. Unlike
+    /// `Warn`/`Off` (which soften), this *tightens*. It is how the styling
+    /// policy (`check::policy::Policy`) turns a migration-Warn rule
+    /// (`sui-no-style-block`, `sui-no-raw-container`) into a hard wall for the
+    /// `floor`/`stripped` modes — without editing the rule. The rule's natural
+    /// Warn still stands for an unconfigured package.
+    Error,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -97,6 +108,10 @@ pub fn apply_overrides(
                         OverrideSeverity::Off => None,
                         OverrideSeverity::Warn => {
                             f.severity = sui_lint::Severity::Warn;
+                            Some(f)
+                        }
+                        OverrideSeverity::Error => {
+                            f.severity = sui_lint::Severity::Error;
                             Some(f)
                         }
                     };

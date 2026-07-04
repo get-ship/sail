@@ -64,7 +64,15 @@ fn lower_sx(source: &str) -> String {
                 }
             }
         }
-        i += 1;
+        // Advance one FULL UTF-8 char. A bare `i += 1` lands mid-codepoint on
+        // any multi-byte char (…, emoji, accents) and the next `source[i..]`
+        // slice panics — the crash the async golden fixtures hit. Mirrors the
+        // char-safe stepping in `quote_brace_attrs` / `expand_self_close`.
+        let mut n = i + 1;
+        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
+            n += 1;
+        }
+        i = n;
     }
     out.push_str(&source[last..]);
     if css.is_empty() {
@@ -420,6 +428,17 @@ mod tests {
                 || out.contains(r#"on:click="{() =&gt; f()}""#),
             "on:click brace-attr after comment must get quoted, got:\n{out}",
         );
+    }
+
+    #[test]
+    fn lower_sx_handles_multibyte_chars_without_panicking() {
+        // Regression: `lower_sx` byte-walked with `i += 1` and sliced
+        // `source[i..]`, panicking mid-codepoint on any multi-byte char — the
+        // crash the async golden fixtures hit (an em-dash / ellipsis in copy).
+        let src = "<p>Failed — retry…</p>\n<sui-card sx=\"p:4\">café ☕</sui-card>";
+        let out = preprocess(src);
+        assert!(out.contains("café ☕"), "multibyte content preserved: {out}");
+        assert!(out.contains("class=\"sx-p-4\""), "sx still lowered: {out}");
     }
 
     #[test]

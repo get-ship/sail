@@ -23,7 +23,9 @@ fn opts() -> CompileOpts {
 #[test]
 fn collects_multiple_errors_where_compile_stops_at_one() {
     // Two distinct renderable-subset violations on two lines: `new` and `this`.
-    let src = "<p>{new Date()}</p>\n<span>{this.value}</span>";
+    // Content tags (<p>/<em>) — not raw <div>/<span> — so the only diagnostics
+    // are the two expr-subset Errors, keeping this test about multi-collection.
+    let src = "<p>{new Date()}</p>\n<em>{this.value}</em>";
 
     // compile() stops at the first.
     compile(src, opts()).expect_err("compile should fail");
@@ -57,7 +59,7 @@ fn parse_error_is_a_single_diagnostic() {
 
 #[test]
 fn diagnostics_are_sorted_by_position() {
-    let src = "<span>{this.value}</span>\n<p>{new Date()}</p>";
+    let src = "<em>{this.value}</em>\n<p>{new Date()}</p>";
     let diags = check_all(src, None, &[]);
     let positions: Vec<(usize, usize)> = diags.iter().map(|d| (d.line, d.col)).collect();
     let mut sorted = positions.clone();
