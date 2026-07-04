@@ -4234,6 +4234,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sui-compiler",
+ "sui-lint",
 ]
 
 [[package]]
