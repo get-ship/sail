@@ -8,8 +8,8 @@
   Structure is the library dogfooding itself:
     <sui-center>   parks the live specimen dead-center of the preview stage
                    (both axes), so it no longer hugs the top edge
-    <sui-cluster>  centers the variant chips and the meta pills (justify="center")
-    <sui-stack>    the unknown-tag empty state
+    <row>          centers the variant chips and the meta pills (justify="center")
+    <column>       the unknown-tag empty state
 
   The preview is a SINGLE live instance mounted by the controller into the
   `bind:this={stageEl}` stage; clicking a variant chip flips `activeVariant`

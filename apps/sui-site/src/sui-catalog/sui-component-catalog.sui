@@ -8,8 +8,8 @@
 
   Layout is the library dogfooding itself — structure comes from primitives,
   never bespoke CSS:
-    <sui-stack>    the vertical page rhythm (hero → search → chips → grid)
-    <sui-cluster>  centers the search field, the pack chips, and each card's
+    <column>       the vertical page rhythm (hero → search → chips → grid)
+    <row>          centers the search field, the pack chips, and each card's
                    meta row
     <sui-center>   parks the live specimen dead-center of the framed stage
                    (both axes), so specimens no longer hug the top edge
