@@ -27,7 +27,7 @@ import { signal } from '@ship/sui-runtime'
 
 // RED: the Slice-5 deliverables register the tag + bring the composed engine /
 // controls. `@ship/sui-primitives` registers sui-error-boundary / sui-tabs /
-// sui-tab-panel / sui-stack / sui-empty-state / sui-code the viewer composes.
+// sui-tab-panel / sui-empty-state / sui-code the viewer composes.
 import '@ship/sui-primitives'
 import '../src/sui-render/sui-render.compiled.js'
 import '../src/sui-prop-knobs/sui-prop-knobs.compiled.js'

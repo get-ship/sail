@@ -100,7 +100,7 @@ const knobRow = (el: HTMLElement, name: string) => root(el).querySelector(`[data
 
 describe('<sui-prop-knobs> — registration + shell', () => {
 
-  it('renders its knob panel subtree (the sui-stack part)', async () => {
+  it('renders its knob panel subtree (the column part)', async () => {
     const c = mountKnobs({ props: [] })
     await c.flush()
     expect(root(c.el).querySelector('[part="knobs"]')).not.toBeNull()
