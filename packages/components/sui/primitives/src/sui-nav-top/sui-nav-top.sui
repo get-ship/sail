@@ -56,7 +56,7 @@
   }
   :host([hidden]) { display: none; }
   :host([sticky]) { position: sticky; top: 0; z-index: var(--z-sticky); }
-  :host([sticky]) { backdrop-filter: saturate(180%) blur(8px); }
+  :host([sticky]) { backdrop-filter: saturate(180%) blur(var(--space-2)); }
 
   .brand {
     display: inline-flex;

@@ -59,7 +59,7 @@
     color: var(--link-fg);
     text-decoration: underline;
     text-decoration-thickness: 1px;
-    text-underline-offset: 2px;
+    text-underline-offset: var(--ring-offset);
     text-decoration-color: var(--link-underline);
     display: inline;
     border-radius: var(--radius-sm);
@@ -70,7 +70,7 @@
   }
   a:hover {
     text-decoration-color: var(--link-fg);
-    text-underline-offset: 3px;
+    text-underline-offset: var(--ring-width);
   }
   :host([variant='underline']) a {
     text-decoration-color: var(--link-underline);

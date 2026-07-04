@@ -79,8 +79,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 22px;
-    height: 30px;
+    min-width: var(--control-h-2xs);
+    height: var(--control-h-md);
     color: var(--muted-foreground);
     font-variant-numeric: tabular-nums;
     user-select: none;

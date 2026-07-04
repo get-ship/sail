@@ -32,7 +32,7 @@
     display: block;
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    line-height: 1.65;
+    line-height: var(--leading-normal-plus);
     color: var(--foreground);
   }
   :host([hidden]) { display: none; }
@@ -58,12 +58,12 @@
   .leaf:hover { background: var(--hover-bg); }
   .caret {
     display: inline-flex;
-    width: 11px;
-    height: 11px;
+    width: var(--icon-size-3xs);
+    height: var(--icon-size-3xs);
     color: var(--muted-foreground);
     transition: transform var(--duration-fast) var(--ease-out);
   }
-  .caret svg { width: 11px; height: 11px; display: block; }
+  .caret svg { width: var(--icon-size-3xs); height: var(--icon-size-3xs); display: block; }
   details[open] > summary .caret { transform: rotate(90deg); }
   .punc { color: var(--muted-foreground); }
   .key { color: var(--foreground); font-weight: var(--font-weight-medium); }

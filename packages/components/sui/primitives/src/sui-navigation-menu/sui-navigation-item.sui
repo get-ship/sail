@@ -67,9 +67,9 @@
   .indicator {
     position: absolute;
     bottom: 0;
-    left: 14px;
-    right: 14px;
-    height: 2px;
+    left: var(--space-3_5);
+    right: var(--space-3_5);
+    height: var(--space-half);
     background: var(--foreground);
     border-radius: var(--radius-full);
     opacity: 0;
