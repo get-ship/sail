@@ -267,16 +267,23 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         };
         let (line, col) = offset_to_line_col(source, offset);
         for pair in val.split_whitespace() {
-            // `prop:token`, or `state:prop:token` (e.g. `hover:bg:surface-2`).
+            // Bare `group` marks an ancestor for `group-<state>:` propagation.
+            if pair == "group" {
+                continue;
+            }
+            // `prop:token`, or `state:prop:token` (e.g. `hover:bg:surface-2`), where
+            // `state` is a pseudo (`hover`) or a propagation (`group-hover`).
             let (prop, token) = match pair.splitn(3, ':').collect::<Vec<_>>().as_slice() {
                 [prop, token] => (*prop, *token),
                 [state, prop, token] => {
-                    if state_pseudo(state).is_none() {
+                    let ok = state_pseudo(state).is_some()
+                        || state.strip_prefix("group-").is_some_and(|b| state_pseudo(b).is_some());
+                    if !ok {
                         findings.push(mk(
                             path,
                             line,
                             col,
-                            format!("sx unknown state `{state}:` — use hover:/focus:/focus-within:/active:/disabled:"),
+                            format!("sx unknown state `{state}:` — use hover:/focus:/focus-within:/active:/disabled: (or group-hover: to react to an ancestor)"),
                         ));
                         continue;
                     }

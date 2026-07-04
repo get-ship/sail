@@ -103,6 +103,12 @@ fn lower_sx_value(
 ) -> String {
     let mut classes: Vec<String> = Vec::new();
     for pair in val.split_whitespace() {
+        // Bare `group` marks an ancestor so descendants can react to its state
+        // with `group-<state>:` (the `.field:hover .chevron` propagation case).
+        if pair == "group" {
+            classes.push("sui-grp".to_string());
+            continue;
+        }
         // `prop:token`, or `state:prop:token` — a state prefix lowers to an atomic
         // class carrying that pseudo-class (`hover:bg:surface-2` →
         // `.sx-hover-bg-surface2:hover{background:var(--surface-2)}`).
@@ -111,12 +117,24 @@ fn lower_sx_value(
             [state, prop, token] => (Some(*state), *prop, *token),
             _ => continue,
         };
-        let pseudo = match state {
-            None => "",
-            Some(s) => match sui_lint::rules::sx::state_pseudo(s) {
-                Some(p) => p,
-                None => continue,
-            },
+        // A `<state>` is a pseudo (`hover`) or a propagation (`group-hover` → the
+        // rule keys on an ancestor `.sui-grp:hover`). `prefix` is a leading
+        // ancestor selector; `pseudo` a trailing pseudo-class on the element.
+        let (prefix, pseudo): (String, &str) = match state {
+            None => (String::new(), ""),
+            Some(s) => {
+                if let Some(base) = s.strip_prefix("group-") {
+                    match sui_lint::rules::sx::state_pseudo(base) {
+                        Some(p) => (format!(".sui-grp{p} "), ""),
+                        None => continue,
+                    }
+                } else {
+                    match sui_lint::rules::sx::state_pseudo(s) {
+                        Some(p) => (String::new(), p),
+                        None => continue,
+                    }
+                }
+            }
         };
         let sanitized: String = token.chars().filter(|c| c.is_ascii_alphanumeric()).collect();
         let class = match state {
@@ -130,7 +148,7 @@ fn lower_sx_value(
                     .map(|(p, v)| format!("{p}:{v}"))
                     .collect::<Vec<_>>()
                     .join(";");
-                css.push_str(&format!(".{class}{pseudo}{{{body}}}"));
+                css.push_str(&format!("{prefix}.{class}{pseudo}{{{body}}}"));
             }
         }
         classes.push(class);
