@@ -13,8 +13,12 @@
 //! `sui-no-raw-container` banning raw `<div>`) forces structure through the
 //! primitives; `sx` is only the surface treatment a `<style>` block used to do.
 //!
-//! Only static `sx="…"` literals are validated; dynamic `sx={…}` and
-//! attributes inside HTML comments are skipped.
+//! `sx` is compile-time and static: it lowers to atomic classes + injected
+//! CSS at build. A dynamic `sx={…}` therefore cannot be lowered and used to
+//! silently vanish (`class=""`) — the footgun this rule now closes: dynamic
+//! `sx` is a hard `Error`, steering conditional styling to a primitive prop
+//! (`tone={…}`) or a precomputed static class. Attributes inside HTML comments
+//! are skipped.
 
 use std::path::Path;
 
@@ -135,7 +139,15 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
-    for (val, offset) in scan_sx(source) {
+    for hit in scan_sx(source) {
+        let (val, offset) = match hit {
+            SxHit::Dynamic(offset) => {
+                let (line, col) = offset_to_line_col(source, offset);
+                findings.push(mk_dynamic(path, line, col));
+                continue;
+            }
+            SxHit::Static(val, offset) => (val, offset),
+        };
         let (line, col) = offset_to_line_col(source, offset);
         for pair in val.split_whitespace() {
             let Some((prop, token)) = pair.split_once(':') else {
@@ -191,9 +203,36 @@ fn mk(path: &Path, line: usize, col: usize, message: String) -> Finding {
     }
 }
 
-/// Find every static `sx="…"` value + the byte offset of its value, skipping
-/// HTML comments and dynamic `sx={…}`.
-fn scan_sx(source: &str) -> Vec<(&str, usize)> {
+/// Dynamic `sx={…}` — cannot be lowered (sx is compile-time). Reject it loudly
+/// instead of silently emitting `class=""`.
+fn mk_dynamic(path: &Path, line: usize, col: usize) -> Finding {
+    Finding {
+        file: path.to_path_buf(),
+        line,
+        col,
+        rule: RULE_ID,
+        severity: Severity::Error,
+        message: "dynamic `sx={…}` is not supported — sx is a compile-time, static \
+                  surface style, so a dynamic value silently lowers to nothing"
+            .to_string(),
+        suggest: Some(
+            "Drive a primitive prop instead (e.g. `tone={ok() ? 'success' : 'destructive'}`), \
+             or select between static `sx=\"…\"` values with an {#if} branch."
+                .to_string(),
+        ),
+    }
+}
+
+/// One `sx` attribute occurrence: a static literal (value + offset) to validate,
+/// or a dynamic `sx={…}` binding (offset of the `sx`) to reject.
+enum SxHit<'a> {
+    Static(&'a str, usize),
+    Dynamic(usize),
+}
+
+/// Find every `sx=` attribute — static `sx="…"` or dynamic `sx={…}`. Skips HTML
+/// comments.
+fn scan_sx(source: &str) -> Vec<SxHit<'_>> {
     let bytes = source.as_bytes();
     let mut out = Vec::new();
     let mut i = 0;
@@ -207,21 +246,23 @@ fn scan_sx(source: &str) -> Vec<(&str, usize)> {
                 None => break,
             }
         }
-        if i > 0
-            && bytes[i - 1].is_ascii_whitespace()
-            && source[i..].starts_with("sx")
-            && is_eq_quote(&bytes[i + 2..])
-        {
-            let mut j = i + 2;
-            while j < bytes.len() && bytes[j] != b'"' && bytes[j] != b'{' {
-                j += 1;
-            }
-            if j < bytes.len() && bytes[j] == b'"' {
-                let vstart = j + 1;
-                if let Some(rel) = source[vstart..].find('"') {
-                    out.push((&source[vstart..vstart + rel], vstart));
-                    i = vstart + rel + 1;
-                    continue;
+        if i > 0 && bytes[i - 1].is_ascii_whitespace() && source[i..].starts_with("sx") {
+            if let Some(rel) = sx_value_delim(&bytes[i + 2..]) {
+                let dpos = i + 2 + rel;
+                if bytes[dpos] == b'"' {
+                    let vstart = dpos + 1;
+                    if let Some(q) = source[vstart..].find('"') {
+                        out.push(SxHit::Static(&source[vstart..vstart + q], vstart));
+                        i = vstart + q + 1;
+                        continue;
+                    }
+                } else {
+                    // dynamic `sx={…}` — flag at the `sx`, skip past the brace.
+                    out.push(SxHit::Dynamic(i));
+                    if let Some(close) = source[dpos..].find('}') {
+                        i = dpos + close + 1;
+                        continue;
+                    }
                 }
             }
         }
@@ -235,19 +276,26 @@ fn scan_sx(source: &str) -> Vec<(&str, usize)> {
     out
 }
 
-fn is_eq_quote(rest: &[u8]) -> bool {
+/// After `sx`: `(ws)* = (ws)*` then `"` (static) or `{` (dynamic). Returns the
+/// byte offset (within `rest`) of that delimiter, or None if this isn't an
+/// `sx=`-valued attribute (e.g. `sxy=`, or `sx` with no following `=`).
+fn sx_value_delim(rest: &[u8]) -> Option<usize> {
     let mut k = 0;
     while k < rest.len() && rest[k].is_ascii_whitespace() {
         k += 1;
     }
     if k >= rest.len() || rest[k] != b'=' {
-        return false;
+        return None;
     }
     k += 1;
     while k < rest.len() && rest[k].is_ascii_whitespace() {
         k += 1;
     }
-    k < rest.len() && rest[k] == b'"'
+    if k < rest.len() && (rest[k] == b'"' || rest[k] == b'{') {
+        Some(k)
+    } else {
+        None
+    }
 }
 
 fn offset_to_line_col(source: &str, offset: usize) -> (usize, usize) {
@@ -327,7 +375,24 @@ mod tests {
     }
 
     #[test]
-    fn skips_comments_and_dynamic() {
-        assert!(run(r#"<!-- <sui-card sx="p:99"> --> <sui-card sx={dynamic}>x</sui-card>"#).is_empty());
+    fn skips_commented_out_sx() {
+        // sx inside an HTML comment is not real markup — no findings.
+        assert!(run(r#"<!-- <sui-card sx="p:99"> --> <sui-card sx="p:4">x</sui-card>"#).is_empty());
+    }
+
+    #[test]
+    fn rejects_dynamic_sx() {
+        // sx can't be lowered from a runtime value; it must be a hard error,
+        // not the old silent `class=""`.
+        let m = run(r#"<sui-card sx={cond() ? 'a' : 'b'}>x</sui-card>"#);
+        assert_eq!(m.len(), 1, "dynamic sx must produce exactly one error: {m:?}");
+        assert!(m[0].contains("dynamic"), "message names the problem: {}", m[0]);
+    }
+
+    #[test]
+    fn static_sx_after_a_dynamic_one_still_validates() {
+        // the scanner must recover past `sx={…}` and keep checking later attrs.
+        let m = run(r#"<sui-card sx={x}>a</sui-card><sui-card sx="p:99">b</sui-card>"#);
+        assert_eq!(m.len(), 2, "one dynamic + one off-scale static: {m:?}");
     }
 }
