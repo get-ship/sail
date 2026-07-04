@@ -55,8 +55,9 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                      never compile."
                         .to_string(),
                 suggest: Some(
-                    "Move surface styling to sx= (or a primitive prop). There is no raw-CSS \
-                     escape at any tier — that's the point of the floor."
+                    "Text is already styled — write <h1>-<h6>/<p> plain (they take the type \
+                     scale). For everything else use sx= (floor/stripped) or a primitive prop. \
+                     There is no raw-CSS escape at any tier — that's the point of the floor."
                         .to_string(),
                 ),
             });

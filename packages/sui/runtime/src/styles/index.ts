@@ -17,6 +17,27 @@ const BASE_CSS =
   ':host([hidden]) { display: none !important; }\n' +
   '@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }\n'
 
+// LANGUAGE-LAYER TYPOGRAPHY. Semantic content tags are styled from the type
+// scale automatically — the author writes `<h1>`/`<p>` plain and gets taste,
+// with no sx and no <style>. This is what makes the `strictest` policy livable:
+// text has a home (the tags themselves) instead of needing a styling escape.
+// Every value is a token; nothing here is hand-tuned. Adopted into every shadow
+// component alongside the resets.
+const TYPOGRAPHY_CSS =
+  'h1,h2,h3,h4,h5,h6 { margin: 0; font-family: var(--heading-font, inherit); font-weight: var(--heading-weight, 700); line-height: var(--leading-tight, 1.15); color: var(--foreground); }\n' +
+  'h1 { font-size: var(--text-4xl); }\n' +
+  'h2 { font-size: var(--text-2xl); }\n' +
+  'h3 { font-size: var(--text-xl); }\n' +
+  'h4 { font-size: var(--text-lg); }\n' +
+  'h5 { font-size: var(--text-md); }\n' +
+  'h6 { font-size: var(--text-sm); }\n' +
+  'p  { margin: 0; font-size: var(--text-md); line-height: 1.55; color: var(--foreground); }\n' +
+  'small { font-size: var(--text-sm); color: var(--muted-foreground); }\n' +
+  'a { color: var(--primary); text-decoration: none; }\n' +
+  'a:hover { text-decoration: underline; }\n' +
+  'strong { font-weight: var(--heading-weight, 700); }\n' +
+  'code { font-family: var(--mono-font, monospace); font-size: 0.9em; }\n'
+
 function makeSheet(css: string): CSSStyleSheet | null {
   if (typeof CSSStyleSheet === 'undefined') return null
   try {
@@ -30,6 +51,7 @@ function makeSheet(css: string): CSSStyleSheet | null {
 
 export const suiTonesSheet: CSSStyleSheet | null = makeSheet(TONES_CSS)
 export const suiBaseSheet: CSSStyleSheet | null = makeSheet(BASE_CSS)
+export const suiTypographySheet: CSSStyleSheet | null = makeSheet(TYPOGRAPHY_CSS)
 
 /**
  * Adopt every shared sheet into a shadow root (no-op for light DOM /
@@ -47,7 +69,7 @@ export const suiBaseSheet: CSSStyleSheet | null = makeSheet(BASE_CSS)
 export function adoptSuiSheets(root: unknown): void {
   if (typeof ShadowRoot === 'undefined') return
   if (!(root instanceof ShadowRoot)) return
-  const sheets = [suiBaseSheet, suiTonesSheet].filter(
+  const sheets = [suiBaseSheet, suiTonesSheet, suiTypographySheet].filter(
     (s): s is CSSStyleSheet => s != null,
   )
   if (sheets.length === 0) return

@@ -49,8 +49,10 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                      their props; there is no styling escape at this tier."
                         .to_string(),
                 suggest: Some(
-                    "Reach for a primitive prop (gap, padding, tone, size, variant…). If none \
-                     fits, that's a missing primitive/prop to add, not a reason to keep sx."
+                    "Text is already styled: write <h1>-<h6> and <p> plain — they take the type \
+                     scale automatically. For structure use <sui-stack>/<sui-cluster>/<sui-grid>; \
+                     for surface/tone use a primitive prop (padding, tone, size, variant). If \
+                     nothing fits, that's a missing primitive to add, not a reason to keep sx."
                         .to_string(),
                 ),
             });

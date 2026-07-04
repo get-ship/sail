@@ -60,9 +60,10 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                              CSS. This is the opinionated floor; primitives use it too."
                                 .to_string(),
                         suggest: Some(
-                            "Express token styling with sx=. If a primitive genuinely can't yet \
-                             be said in the floor, that's a language-element gap to close, not a \
-                             reason to hand-author CSS."
+                            "Text elements (<h1>-<h6>, <p>) are styled from the type scale \
+                             automatically — write them plain. Everything else: sx= for surface \
+                             tokens, <sui-stack>/<sui-cluster> for structure. A gap here is a \
+                             missing language element to add, not a reason to hand-author CSS."
                                 .to_string(),
                         ),
                     });
