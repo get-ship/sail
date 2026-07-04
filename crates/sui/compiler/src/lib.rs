@@ -222,7 +222,45 @@ pub fn check_all(
 }
 
 /// Compile a `.sui` source string.
+/// Validate a custom-element tag name — the subset whose violation makes
+/// `customElements.define` throw: non-empty, contains a hyphen, lowercase ASCII
+/// start, no uppercase, only `[a-z0-9._-]`. (The full spec's reserved-name and
+/// PCEN rules are stricter, but these are the ones authors actually trip.)
+fn validate_custom_element_name(name: &str) -> Result<(), &'static str> {
+    if name.is_empty() {
+        return Err("it is empty");
+    }
+    if !name.contains('-') {
+        return Err("it has no hyphen");
+    }
+    if !name.as_bytes()[0].is_ascii_lowercase() {
+        return Err("it must start with a lowercase letter");
+    }
+    if name.bytes().any(|b| b.is_ascii_uppercase()) {
+        return Err("it must not contain uppercase letters");
+    }
+    if name
+        .bytes()
+        .any(|b| !(b.is_ascii_lowercase() || b.is_ascii_digit() || matches!(b, b'-' | b'.' | b'_')))
+    {
+        return Err("it contains an invalid character");
+    }
+    Ok(())
+}
+
 pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, CompileError> {
+    // A tagged component registers via `customElements.define(name, …)`, which
+    // throws at runtime unless `name` is a valid custom-element name. Reject it
+    // at compile time (fail-loud) rather than emit code that explodes on load.
+    if let Some(meta) = &opts.component_meta
+        && let Err(why) = validate_custom_element_name(&meta.name)
+    {
+        return Err(CompileError::new(format!(
+            "invalid component name `{}`: {why}. A custom-element tag must be lowercase, \
+             start with a letter, and contain a hyphen — e.g. `dash-panel`, not `dashboard`.",
+            meta.name
+        )));
+    }
     let merged_owned;
     let effective_source: &str = if let Some(css) = opts.styles.as_deref() {
         let is_component =
@@ -315,5 +353,37 @@ fn attach_path(err: CompileError, opts: &CompileOpts) -> CompileError {
     match &opts.source_path {
         Some(p) => err.with_path(p.clone()),
         None => err,
+    }
+}
+
+#[cfg(test)]
+mod name_validation_tests {
+    use super::*;
+
+    #[test]
+    fn rejects_names_that_would_throw_at_define() {
+        assert_eq!(validate_custom_element_name("dashboard"), Err("it has no hyphen"));
+        assert_eq!(validate_custom_element_name(""), Err("it is empty"));
+        assert_eq!(validate_custom_element_name("Dash-Panel"), Err("it must start with a lowercase letter"));
+        assert_eq!(validate_custom_element_name("dash-Panel"), Err("it must not contain uppercase letters"));
+        assert_eq!(validate_custom_element_name("1-panel"), Err("it must start with a lowercase letter"));
+        assert_eq!(validate_custom_element_name("dash-pan!el"), Err("it contains an invalid character"));
+    }
+
+    #[test]
+    fn accepts_valid_tags() {
+        assert!(validate_custom_element_name("dash-panel").is_ok());
+        assert!(validate_custom_element_name("sui-trading-journal").is_ok());
+        assert!(validate_custom_element_name("x-1").is_ok());
+    }
+
+    #[test]
+    fn compile_rejects_a_hyphenless_component_name() {
+        let opts = CompileOpts {
+            component_meta: Some(ComponentMeta { name: "dashboard".into(), shadow: true }),
+            ..CompileOpts::default()
+        };
+        let err = compile("<column><p>x</p></column>", opts).unwrap_err();
+        assert!(format!("{err:?}").contains("no hyphen"), "got: {err:?}");
     }
 }
