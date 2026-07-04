@@ -95,18 +95,18 @@
   </div>
   <sui-card class="custom-theme-card">
     <h3 slot="title">A SUI card, themed</h3>
-    <sui-stack gap="3">
+    <column gap="3">
       <p>The card surface is <code>--surface-1</code>; the heading uses
         <code>--foreground</code>; the body uses
         <code>--muted-foreground</code>. The primary button below uses the
         brand <code>--primary</code>. Nothing hardcoded.</p>
-      <sui-cluster>
+      <row>
         <sui-button tone="primary">Primary action</sui-button>
         <sui-button variant="outline">Secondary</sui-button>
         <sui-badge tone="info">Info badge</sui-badge>
         <sui-badge tone="success">Success badge</sui-badge>
-      </sui-cluster>
-    </sui-stack>
+      </row>
+    </column>
   </sui-card>
 
   <h2>Why tokens, not constants</h2>

@@ -157,14 +157,14 @@
   }
 </style>
 
-<sui-stack class="page" gap="6" data-test="catalog">
+<column class="page" gap="6" data-test="catalog">
   <div class="hero" data-test="catalog-hero">
     <span class="eyebrow">— {totalComponents()} components · {totalPacks()} packs</span>
     <h1 class="title">Component library</h1>
     <p class="lead">Every primitive in the Ship set. Batteries-included, on-brand, and compiled to standard web components.</p>
   </div>
 
-  <sui-cluster class="search-row" justify="center">
+  <row class="search-row" justify="center">
     <sui-input
       class="search"
       type="search"
@@ -176,9 +176,9 @@
     >
       <span slot="leading" class="search-glyph" aria-hidden="true">⌕</span>
     </sui-input>
-  </sui-cluster>
+  </row>
 
-  <sui-cluster class="packs" justify="center" gap="2" data-test="catalog-packs">
+  <row class="packs" justify="center" gap="2" data-test="catalog-packs">
     {#for p of packs() key={p.id}}
       <button
         type="button"
@@ -192,7 +192,7 @@
         <span class="chip-count">{p.count}</span>
       </button>
     {/for}
-  </sui-cluster>
+  </row>
 
   <sui-grid class="grid" min="lg" gap="4" data-test="catalog-grid">
     {#for c of components() key={c.tag}}
@@ -205,10 +205,10 @@
       >
         <sui-center class="stage" attr:data-preview-for={c.tag}></sui-center>
         <div class="cell-foot">
-          <sui-cluster class="cell-meta" justify="between" align="baseline" gap="2">
+          <row class="cell-meta" justify="between" align="baseline" gap="2">
             <span class="cell-tag" data-test="catalog-tag">{c.tag}</span>
             <span class="cell-props">{c.propCount} props</span>
-          </sui-cluster>
+          </row>
           {#if c.description}
             <p class="cell-blurb">{c.description}</p>
           {/if}
@@ -220,4 +220,4 @@
   {#if visibleCount() === 0}
     <p class="no-results" data-test="catalog-empty">No components match “{query()}”.</p>
   {/if}
-</sui-stack>
+</column>

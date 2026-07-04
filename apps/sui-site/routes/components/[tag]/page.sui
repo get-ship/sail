@@ -24,19 +24,19 @@
 -->
 
 {#if !entry()}
-  <sui-stack class="detail-unknown" gap="3" align="center" data-test="detail-unknown">
+  <column class="detail-unknown" gap="3" align="center" data-test="detail-unknown">
     <h2>Unknown component</h2>
     <p>No component registered as <code>&lt;{tag()}&gt;</code> in the current bundle.</p>
     <a class="detail-back" href="/components">← All components</a>
-  </sui-stack>
+  </column>
 {:else}
-  <sui-stack class="detail" gap="5" data-test="detail">
+  <column class="detail" gap="5" data-test="detail">
     <a class="detail-back" href="/components" data-test="detail-back">← All components</a>
 
     <sui-center class="detail-stage" bind:this={stageEl} data-test="detail-stage"></sui-center>
 
     {#if variants().length}
-      <sui-cluster class="detail-variants" justify="center" gap="2" data-test="detail-variants">
+      <row class="detail-variants" justify="center" gap="2" data-test="detail-variants">
         {#for v of variants() key={v}}
           <button
             type="button"
@@ -47,7 +47,7 @@
             data-test="variant-chip"
           >{v}</button>
         {/for}
-      </sui-cluster>
+      </row>
     {/if}
 
     <div class="detail-head">
@@ -56,11 +56,11 @@
       {#if entry().description}
         <p class="detail-desc" data-test="detail-desc">{entry().description}</p>
       {/if}
-      <sui-cluster class="detail-meta" justify="center" gap="2">
+      <row class="detail-meta" justify="center" gap="2">
         <span class="meta-pill">{entry().props.length} props</span>
         <span class="meta-pill">{entry().slots.length} slots</span>
         <span class="meta-pill">{entry().events.length} events</span>
-      </sui-cluster>
+      </row>
     </div>
 
     <section class="detail-api" data-test="detail-api">
@@ -85,5 +85,5 @@
         {/if}
       </div>
     </section>
-  </sui-stack>
+  </column>
 {/if}
