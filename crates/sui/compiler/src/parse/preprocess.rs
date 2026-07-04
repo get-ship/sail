@@ -103,11 +103,26 @@ fn lower_sx_value(
 ) -> String {
     let mut classes: Vec<String> = Vec::new();
     for pair in val.split_whitespace() {
-        let Some((prop, token)) = pair.split_once(':') else {
-            continue;
+        // `prop:token`, or `state:prop:token` — a state prefix lowers to an atomic
+        // class carrying that pseudo-class (`hover:bg:surface-2` →
+        // `.sx-hover-bg-surface2:hover{background:var(--surface-2)}`).
+        let (state, prop, token) = match pair.splitn(3, ':').collect::<Vec<_>>().as_slice() {
+            [prop, token] => (None, *prop, *token),
+            [state, prop, token] => (Some(*state), *prop, *token),
+            _ => continue,
+        };
+        let pseudo = match state {
+            None => "",
+            Some(s) => match sui_lint::rules::sx::state_pseudo(s) {
+                Some(p) => p,
+                None => continue,
+            },
         };
         let sanitized: String = token.chars().filter(|c| c.is_ascii_alphanumeric()).collect();
-        let class = format!("sx-{prop}-{sanitized}");
+        let class = match state {
+            None => format!("sx-{prop}-{sanitized}"),
+            Some(s) => format!("sx-{s}-{prop}-{sanitized}"),
+        };
         if let Some(decls) = sui_lint::rules::sx::lower(prop, token) {
             if seen.insert(class.clone()) {
                 let body = decls
@@ -115,7 +130,7 @@ fn lower_sx_value(
                     .map(|(p, v)| format!("{p}:{v}"))
                     .collect::<Vec<_>>()
                     .join(";");
-                css.push_str(&format!(".{class}{{{body}}}"));
+                css.push_str(&format!(".{class}{pseudo}{{{body}}}"));
             }
         }
         classes.push(class);

@@ -240,6 +240,20 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
     Some(decls)
 }
 
+/// A state prefix (`hover:`/`focus:`/…) → its CSS pseudo-class. `focus` maps to
+/// `:focus-visible` (the modern default — no ring on a mouse click). Shared by
+/// the lint (validation) and preprocess (lowering) so they can't diverge.
+pub fn state_pseudo(state: &str) -> Option<&'static str> {
+    Some(match state {
+        "hover" => ":hover",
+        "focus" => ":focus-visible",
+        "focus-within" => ":focus-within",
+        "active" => ":active",
+        "disabled" => ":disabled",
+        _ => return None,
+    })
+}
+
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
     for hit in scan_sx(source) {
@@ -253,9 +267,25 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         };
         let (line, col) = offset_to_line_col(source, offset);
         for pair in val.split_whitespace() {
-            let Some((prop, token)) = pair.split_once(':') else {
-                findings.push(mk(path, line, col, format!("sx `{pair}` — expected `prop:token`")));
-                continue;
+            // `prop:token`, or `state:prop:token` (e.g. `hover:bg:surface-2`).
+            let (prop, token) = match pair.splitn(3, ':').collect::<Vec<_>>().as_slice() {
+                [prop, token] => (*prop, *token),
+                [state, prop, token] => {
+                    if state_pseudo(state).is_none() {
+                        findings.push(mk(
+                            path,
+                            line,
+                            col,
+                            format!("sx unknown state `{state}:` — use hover:/focus:/focus-within:/active:/disabled:"),
+                        ));
+                        continue;
+                    }
+                    (*prop, *token)
+                }
+                _ => {
+                    findings.push(mk(path, line, col, format!("sx `{pair}` — expected `prop:token` or `state:prop:token`")));
+                    continue;
+                }
             };
             let Some(kind) = prop_kind(prop) else {
                 let mut m = format!("sx unknown property `{prop}:` — not in the surface vocabulary");
@@ -453,6 +483,14 @@ mod tests {
     #[test]
     fn accepts_surface_tokens() {
         assert!(run(r#"<sui-card sx="p:4 bg:surface-2 radius:lg text:sm fg:muted">x</sui-card>"#).is_empty());
+    }
+
+    #[test]
+    fn accepts_state_prefixes_and_rejects_bad_state() {
+        assert!(run(r#"<sui-card sx="bg:surface-1 hover:bg:surface-2 focus:ring:primary disabled:opacity:50">x</sui-card>"#).is_empty());
+        let m = run(r#"<sui-card sx="hoverr:bg:surface-2">x</sui-card>"#);
+        assert_eq!(m.len(), 1);
+        assert!(m[0].contains("unknown state"), "{}", m[0]);
     }
 
     #[test]
