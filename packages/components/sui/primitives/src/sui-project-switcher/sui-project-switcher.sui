@@ -34,8 +34,8 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    height: 28px;
-    max-width: 220px;
+    height: var(--control-h-sm);
+    max-width: var(--panel-min-w-lg);
     padding: 0 var(--space-2);
     border: 0;
     border-radius: var(--radius-sm);
@@ -47,12 +47,12 @@
   .trigger:hover { background: var(--hover-bg); }
   .trigger:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px var(--ring);
+    box-shadow: 0 0 0 var(--ring-width) var(--ring);
   }
 
   .dot {
-    width: 10px;
-    height: 10px;
+    width: var(--space-2_5);
+    height: var(--space-2_5);
     flex: 0 0 auto;
     border-radius: 50%;
     background: var(--dot, var(--muted-foreground));
@@ -75,8 +75,8 @@
     line-height: 1;
   }
   .chev {
-    width: 10px;
-    height: 6px;
+    width: var(--space-2_5);
+    height: var(--space-1_5);
     flex: 0 0 auto;
     color: var(--muted-foreground);
   }
@@ -86,8 +86,8 @@
     inset: auto;
     margin: 0;
     padding: var(--space-1) 0;
-    min-width: 240px;
-    max-width: 360px;
+    min-width: var(--panel-min-w-md);
+    max-width: var(--panel-max-w-md);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     background: var(--popover);
@@ -97,9 +97,9 @@
   }
   .menu-title {
     padding: var(--space-2) var(--space-3) var(--space-1);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-wider);
     text-transform: uppercase;
     color: var(--muted-foreground);
   }
@@ -113,7 +113,7 @@
     gap: var(--space-2);
     width: 100%;
     padding: var(--space-2) var(--space-3);
-    padding-right: 36px;
+    padding-right: var(--space-9);
     border: 0;
     background: transparent;
     color: inherit;
@@ -123,16 +123,16 @@
   }
   .row:hover { background: var(--hover-bg); }
   .row[data-active] { background: var(--selected-bg); }
-  .row-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+  .row-main { display: flex; flex-direction: column; gap: var(--space-half); min-width: 0; flex: 1; }
   .row-name {
     font-size: var(--text-base);
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .row-path {
-    font-size: 11px;
+    font-size: var(--text-xs);
     color: var(--muted-foreground);
     white-space: nowrap;
     overflow: hidden;
@@ -141,12 +141,12 @@
   .row-open {
     position: absolute;
     top: 50%;
-    right: 6px;
+    right: var(--space-1_5);
     transform: translateY(-50%);
     appearance: none;
     background: transparent;
     border: none;
-    padding: 4px;
+    padding: var(--space-1);
     margin: 0;
     cursor: pointer;
     color: var(--muted-foreground);

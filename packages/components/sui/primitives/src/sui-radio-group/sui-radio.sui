@@ -47,9 +47,9 @@
   :host([tone='muted'])       { --tone: var(--muted-foreground); }
 
   :host(:not([size])),
-  :host([size='md']) { --rd-size: 16px; --rd-dot: 8px; }
-  :host([size='sm']) { --rd-size: 14px; --rd-dot: 6px; }
-  :host([size='lg']) { --rd-size: 20px; --rd-dot: 10px; }
+  :host([size='md']) { --rd-size: var(--icon-size-md); --rd-dot: var(--space-2); }
+  :host([size='sm']) { --rd-size: var(--icon-size-sm); --rd-dot: var(--space-1_5); }
+  :host([size='lg']) { --rd-size: var(--icon-size-xl); --rd-dot: var(--space-2_5); }
 
   /* Selectable option card: bordered --card row with a custom dot. */
   label {

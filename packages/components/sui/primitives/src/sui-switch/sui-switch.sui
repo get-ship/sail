@@ -71,9 +71,9 @@
   :host([tone='primary'])     { --tone: var(--primary);     --tone-on-fg: var(--primary-foreground); }
 
   :host(:not([size])),
-  :host([size='md']) { --sw-w: 28px; --sw-h: 16px; --sw-thumb: 12px; }
-  :host([size='sm']) { --sw-w: 24px; --sw-h: 14px; --sw-thumb: 10px; }
-  :host([size='lg']) { --sw-w: 32px; --sw-h: 18px; --sw-thumb: 14px; }
+  :host([size='md']) { --sw-w: var(--control-h-sm); --sw-h: var(--icon-size-md); --sw-thumb: var(--space-3); }
+  :host([size='sm']) { --sw-w: var(--control-h-xs); --sw-h: var(--icon-size-sm); --sw-thumb: var(--space-2_5); }
+  :host([size='lg']) { --sw-w: var(--space-7); --sw-h: var(--icon-size-lg); --sw-thumb: var(--icon-size-sm); }
 
   label {
     display: inline-flex;
@@ -134,7 +134,7 @@
     pointer-events: none;
   }
   :host([checked]) .thumb {
-    left: calc(100% - var(--sw-thumb) - 3px);
+    left: calc(100% - var(--sw-thumb) - var(--ring-width));
     background: var(--tone-on-fg);
   }
 

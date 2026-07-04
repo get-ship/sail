@@ -41,20 +41,20 @@
   :host([tone='muted'])       { --tone-fg: var(--muted-foreground); --tone-halo-strong: var(--tone-muted-border);  --tone-halo-soft: var(--tone-muted-ring); }
   .dot {
     display: inline-block;
-    width: 8px;
-    height: 8px;
+    width: var(--icon-size-3xs);
+    height: var(--icon-size-3xs);
     border-radius: 50%;
     background: var(--tone-fg);
     box-shadow:
-      0 0 0 1.5px var(--tone-halo-strong),
-      0 0 0 4.5px var(--tone-halo-soft);
+      0 0 0 var(--space-1_25) var(--tone-halo-strong),
+      0 0 0 var(--space-4_5) var(--tone-halo-soft);
   }
   :host([size='sm']) .dot {
-    width: 6px;
-    height: 6px;
+    width: var(--space-1_5);
+    height: var(--space-1_5);
     box-shadow:
       0 0 0 1px var(--tone-halo-strong),
-      0 0 0 3.5px var(--tone-halo-soft);
+      0 0 0 var(--space-3_5) var(--tone-halo-soft);
   }
 
   :host([pulse]) .dot { animation: sui-status-dot-pulse 2.5s var(--ease-out) infinite; }

@@ -65,19 +65,19 @@
   :host([shape='text']) .sk,
   :host([shape='line']) .sk { width: 100%; }
   :host([size='sm'][shape='text']) .sk,
-  :host([size='sm'][shape='line']) .sk { height: 8px; }
+  :host([size='sm'][shape='line']) .sk { height: var(--space-2); }
   :host([size='md'][shape='text']) .sk,
-  :host([size='md'][shape='line']) .sk { height: 12px; }
+  :host([size='md'][shape='line']) .sk { height: var(--space-3); }
   :host([size='lg'][shape='text']) .sk,
-  :host([size='lg'][shape='line']) .sk { height: 16px; }
+  :host([size='lg'][shape='line']) .sk { height: var(--space-4); }
 
   /* Block — fills parent width with a fixed min-height. */
   :host([shape='block']) .sk { width: 100%; min-height: 80px; }
 
   /* Circle — fixed diameters per size. */
-  :host([shape='circle'][size='sm']) .sk { width: 24px; height: 24px; }
-  :host([shape='circle'][size='md']) .sk { width: 32px; height: 32px; }
-  :host([shape='circle'][size='lg']) .sk { width: 48px; height: 48px; }
+  :host([shape='circle'][size='sm']) .sk { width: var(--icon-size-2xl); height: var(--icon-size-2xl); }
+  :host([shape='circle'][size='md']) .sk { width: var(--space-7); height: var(--space-7); }
+  :host([shape='circle'][size='lg']) .sk { width: var(--text-4xl); height: var(--text-4xl); }
 
   @keyframes sui-skeleton-shimmer {
     0%   { background-position: 200% 0; }

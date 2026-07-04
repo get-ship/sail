@@ -38,8 +38,8 @@
     display: inline-flex;
     vertical-align: middle;
     --tone-fg: var(--muted-foreground);
-    --sz: 16px;
-    --bw: 2px;
+    --sz: var(--icon-size-md);
+    --bw: var(--space-half);
   }
   :host([tone='primary'])     { --tone-fg: var(--primary);     --tone-ring: var(--tone-primary-ring); }
   :host([tone='info'])        { --tone-fg: var(--info);         --tone-ring: var(--tone-info-ring); }
@@ -47,10 +47,10 @@
   :host([tone='warning'])     { --tone-fg: var(--warning);      --tone-ring: var(--tone-warning-ring); }
   :host([tone='destructive']) { --tone-fg: var(--destructive);  --tone-ring: var(--tone-destructive-ring); }
   :host([tone='accent'])      { --tone-fg: var(--accent);       --tone-ring: var(--tone-accent-ring); }
-  :host([size='xs']) { --sz: 10px; --bw: 1.5px; }
-  :host([size='sm']) { --sz: 12px; --bw: 1.5px; }
-  :host([size='md']) { --sz: 16px; --bw: 2px; }
-  :host([size='lg']) { --sz: 24px; --bw: 2.5px; }
+  :host([size='xs']) { --sz: var(--icon-size-2xs); --bw: var(--space-half); }
+  :host([size='sm']) { --sz: var(--icon-size-xs); --bw: var(--space-half); }
+  :host([size='md']) { --sz: var(--icon-size-md); --bw: var(--space-half); }
+  :host([size='lg']) { --sz: var(--icon-size-2xl); --bw: var(--space-1_25); }
 
   /* `centered` — block-level wrapper with vertical breathing room.
    * The 8-place inline pattern `style="margin: var(--space-8) auto;
