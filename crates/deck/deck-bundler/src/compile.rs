@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 
 use sui_compiler::emit::synthetic::{emit_synthetic_client_module, AppManifest, AuthoredController};
 use sui_compiler::parse::parse;
-use sui_compiler::{compile, CompileMode as SuiMode, CompileOpts, ComponentMeta};
+use sui_compiler::{compile, CompileMode as SuiMode, CompileOpts, ComponentMeta, Policy};
 
 /// A `.sui` compiles as a custom-element (`component`) or a view. Component mode
 /// passes a tag name so the element is registered; view mode emits a route module.
@@ -55,6 +55,15 @@ pub fn compile_sui(
     }
     let source = std::fs::read_to_string(sui_file)
         .map_err(|e| CompileError::Read(sui_file.to_path_buf(), e))?;
+    // The styling floor is resolved per-package from the nearest `sui.config.json`
+    // walking up from this file, and applied in-process exactly as the CLI does —
+    // otherwise the policy is a lie in real deck builds. OPT-IN: `resolve_opt`
+    // returns None (→ no overrides) when a package has no `sui.config.json`, so
+    // the floor rolls out package-by-package and every unconfigured tree compiles
+    // exactly as before. A package opts in by declaring `{"policy":"…"}`.
+    let policy_overrides = Policy::resolve_opt(sui_file)
+        .map(|p| p.overrides())
+        .unwrap_or_default();
     let opts = CompileOpts {
         setup_url: paired_controller(sui_file, stem),
         mode: match mode {
@@ -69,8 +78,10 @@ pub fn compile_sui(
         // the CEM is walked from disk by the catalog, not returned here.
         emit_dts: false,
         emit_component_imports,
-        // Strict default — the bundler never softens the design-system lints.
-        lint_overrides: Vec::new(),
+        // The resolved per-package floor (empty for unconfigured packages). The
+        // bundler never softens the design-system lints beyond a package's own
+        // declared policy.
+        lint_overrides: policy_overrides.clone(),
     };
     match compile(&source, opts) {
         Ok(out) => {
@@ -82,7 +93,7 @@ pub fn compile_sui(
             // gate, so only Warnings remain. Re-runs the collect() pass (a
             // parse + lint over this one file); cheap next to bundling and
             // only on the build path.
-            emit_build_warnings(sui_file, &source);
+            emit_build_warnings(sui_file, &source, &policy_overrides);
             Ok(out.js)
         }
         Err(e) => Err(CompileError::Compile(e.render(&source))),
@@ -93,8 +104,8 @@ pub fn compile_sui(
 /// surfacing seam for #2). Errors never appear — they fail `compile()` before
 /// this is reached. Mirrors the CLI/MCP rendering: `<path>:<line>:<col>
 /// [<rule>] <message>`.
-fn emit_build_warnings(sui_file: &Path, source: &str) {
-    for d in sui_compiler::check_all(source, Some(sui_file), &[]) {
+fn emit_build_warnings(sui_file: &Path, source: &str, overrides: &[sui_compiler::LintOverride]) {
+    for d in sui_compiler::check_all(source, Some(sui_file), overrides) {
         if d.severity != sui_compiler::DiagSeverity::Warning {
             continue;
         }

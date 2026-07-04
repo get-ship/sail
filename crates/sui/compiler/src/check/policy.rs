@@ -106,15 +106,26 @@ impl Policy {
     /// is unreadable/unparseable (fail-open to the floor, and stop — a present
     /// config is the package's declared intent).
     pub fn resolve(source_file: &Path) -> Policy {
+        Self::resolve_opt(source_file).unwrap_or_default()
+    }
+
+    /// Like [`resolve`] but returns `None` when no `sui.config.json` is found on
+    /// the walk up, instead of falling back to the Floor default. This is the
+    /// **opt-in** entry the deck bundler uses: the floor applies only to packages
+    /// that have explicitly declared a policy, so it rolls out per-package and
+    /// every unconfigured tree keeps compiling exactly as before. (A present-but-
+    /// unparseable config still resolves to the Floor default — its presence is
+    /// the package's declared intent.)
+    pub fn resolve_opt(source_file: &Path) -> Option<Policy> {
         let mut dir = source_file.parent();
         while let Some(d) = dir {
             let cfg = d.join(CONFIG_FILE);
             match std::fs::read_to_string(&cfg) {
-                Ok(text) => return parse_config(&text).unwrap_or_default(),
+                Ok(text) => return Some(parse_config(&text).unwrap_or_default()),
                 Err(_) => dir = d.parent(),
             }
         }
-        Policy::default()
+        None
     }
 }
 
