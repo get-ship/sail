@@ -81,8 +81,8 @@
   .bubble::after {
     content: '';
     position: absolute;
-    width: 7px;
-    height: 7px;
+    width: var(--space-1_25);
+    height: var(--space-1_25);
     background: var(--foreground);
     transform: rotate(45deg);
   }

@@ -30,7 +30,7 @@
   :host {
     /* Segmented variant: 2px frame, 1px cell separator. Off the spacing
      * scale — exposed as local tokens so component CSS stays scale-free. */
-    --tg-seg-pad: 2px;
+    --tg-seg-pad: var(--space-half);
     --tg-seg-gap: 1px;
     display: inline-flex;
     gap: 0;

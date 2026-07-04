@@ -100,7 +100,7 @@
   .grid-head {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(80px, 1fr);
+    grid-auto-columns: minmax(var(--space-9), 1fr);
     position: sticky;
     top: 0;
     z-index: var(--z-sticky);
@@ -109,7 +109,7 @@
   }
   :host([gutter]) .grid-head,
   :host([gutter]) .grid-row {
-    grid-template-columns: 40px repeat(var(--sui-col-count), minmax(80px, 1fr));
+    grid-template-columns: var(--control-h-md) repeat(var(--sui-col-count), minmax(var(--space-9), 1fr));
     grid-auto-flow: row;
     grid-auto-columns: auto;
   }
@@ -121,7 +121,7 @@
     font-weight: var(--font-weight-semibold);
     font-size: var(--text-xs);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: var(--tracking-wider);
     color: var(--muted-foreground);
     border-bottom: 1px solid var(--border);
     white-space: nowrap;
@@ -147,7 +147,7 @@
     position: relative;
     width: 100%;
     overflow-y: auto;
-    max-height: 480px;
+    max-height: var(--panel-max-h-md);
   }
   .spacer {
     position: relative;
@@ -156,7 +156,7 @@
   .grid-row {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(80px, 1fr);
+    grid-auto-columns: minmax(var(--space-9), 1fr);
     position: absolute;
     left: 0;
     width: 100%;
@@ -165,7 +165,7 @@
   }
   :host([hoverable]) .grid-row:hover > .grid-cell { background: var(--hover-bg); }
   .grid-row[data-selected] > .grid-cell { background: var(--selected-bg); }
-  .grid-row[data-selected] > .grid-cell:first-child { box-shadow: inset 3px 0 0 0 var(--primary); }
+  .grid-row[data-selected] > .grid-cell:first-child { box-shadow: inset var(--space-half) 0 0 0 var(--primary); }
   .grid-row:focus-visible {
     outline: none;
     box-shadow: inset 0 0 0 var(--ring-width) var(--ring-color);

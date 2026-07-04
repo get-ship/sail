@@ -27,13 +27,13 @@
   :host([hidden]) { display: none; }
 
   :host(:not([size])), :host([size='md']) {
-    --tgl-h: 36px; --tgl-px: 12px; --tgl-fs: var(--text-base);
+    --tgl-h: var(--control-h-md); --tgl-px: var(--space-3); --tgl-fs: var(--text-base);
   }
   :host([size='sm']) {
-    --tgl-h: 28px; --tgl-px: 8px; --tgl-fs: var(--text-sm);
+    --tgl-h: var(--control-h-sm); --tgl-px: var(--space-2); --tgl-fs: var(--text-sm);
   }
   :host([size='lg']) {
-    --tgl-h: 42px; --tgl-px: 16px; --tgl-fs: var(--text-base);
+    --tgl-h: var(--control-h-xl); --tgl-px: var(--space-4); --tgl-fs: var(--text-base);
   }
 
   button {
@@ -46,7 +46,7 @@
     font-family: var(--font-body);
     font-size: var(--tgl-fs);
     font-weight: var(--font-weight-medium);
-    line-height: 1;
+    line-height: var(--leading-none);
     color: var(--muted-foreground);
     background: var(--surface-1);
     border: 1px solid var(--border-strong);
@@ -74,7 +74,7 @@
   :host([disabled]) button {
     cursor: not-allowed;
     color: var(--muted-foreground);
-    filter: saturate(0.4);
+    filter: saturate(0.6);
     pointer-events: none;
   }
 

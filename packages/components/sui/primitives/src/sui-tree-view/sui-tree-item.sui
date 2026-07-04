@@ -63,8 +63,8 @@
 
   .caret {
     display: inline-flex;
-    width: 12px;
-    height: 12px;
+    width: var(--space-3);
+    height: var(--space-3);
     color: var(--muted-foreground);
     transition: transform var(--duration-fast) var(--ease-out);
   }

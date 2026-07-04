@@ -46,7 +46,7 @@
     background: var(--surface-1);
     overflow: hidden;
     font-variant-numeric: tabular-nums;
-    --sui-grid-template: repeat(var(--sui-col-count), minmax(80px, 1fr));
+    --sui-grid-template: repeat(var(--sui-col-count), minmax(var(--space-9), 1fr));
   }
 
   .head {
@@ -67,7 +67,7 @@
     font-weight: var(--font-weight-semibold);
     font-size: var(--text-xs);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: var(--tracking-wider);
     color: var(--foreground);
     border-bottom: 1px solid var(--border-subtle);
     white-space: nowrap;
@@ -108,7 +108,7 @@
     position: relative;
     width: 100%;
     overflow-y: auto;
-    max-height: 480px;
+    max-height: var(--panel-max-h-md);
   }
   .spacer { position: relative; width: 100%; }
 
@@ -130,8 +130,8 @@
   .row[data-selected]::before {
     content: '';
     position: absolute;
-    left: 0; top: 4px; bottom: 4px;
-    width: 3px;
+    left: 0; top: var(--space-1); bottom: var(--space-1);
+    width: var(--space-1);
     border-radius: var(--radius-full);
     background: var(--primary);
   }

@@ -30,7 +30,7 @@
 <style>
   :host {
     display: grid;
-    grid-template-columns: 20px 1fr;
+    grid-template-columns: var(--space-5) 1fr;
     column-gap: var(--space-2);
     padding: var(--space-2) 0;
     position: relative;
@@ -58,22 +58,22 @@
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 2px;
+    width: var(--space-half);
     background: var(--border-subtle);
   }
-  :host(:first-of-type) .gutter::before { top: 10px; }
-  :host(:last-of-type) .gutter::before { bottom: calc(100% - 10px); }
+  :host(:first-of-type) .gutter::before { top: var(--space-2_5); }
+  :host(:last-of-type) .gutter::before { bottom: calc(100% - var(--space-2_5)); }
 
   .dot {
     position: relative;
     z-index: var(--z-elevated);
-    width: 10px;
-    height: 10px;
+    width: var(--space-2_5);
+    height: var(--space-2_5);
     border-radius: var(--radius-full);
     background: var(--tone-fg);
     margin-top: var(--space-1);
     flex-shrink: 0;
-    box-shadow: 0 0 0 3px var(--surface-1);
+    box-shadow: 0 0 0 var(--space-1) var(--surface-1);
   }
 
   .body { min-width: 0; }
@@ -92,7 +92,7 @@
     font-family: var(--font-mono);
     color: var(--muted-foreground);
     font-size: var(--text-xs);
-    letter-spacing: 0.02em;
+    letter-spacing: var(--tracking-normal);
     margin-inline-start: auto;
   }
 
