@@ -1,15 +1,20 @@
-//! `sui-sx` — the token-only inline style attribute.
+//! `sui-sx` — the token-only inline **surface** style attribute.
 //!
-//! `sx="p:4 gap:3 bg:surface-2 radius:lg"` is a space-separated list of
-//! `prop:token` pairs drawn from a CLOSED vocabulary. An unknown property, an
-//! off-scale spacing, a raw px/hex, or an unknown color/radius/text token is
-//! `Severity::Error` — which `sui-compiler::check::css_token` promotes to a
-//! build failure, and the LSP surfaces identically. There is no bracket escape
-//! (cf. Tailwind `p-[13px]`): off-token does not compile.
+//! `sx="p:4 bg:surface-2 radius:lg text:sm"` is a space-separated list of
+//! `prop:token` pairs from a CLOSED, token-only vocabulary. Off-token (raw
+//! px/hex, off-scale, unknown prop) is `Severity::Error` → promoted to a
+//! `CompileError` by `check::css_token`, and surfaced identically in the LSP.
+//! No bracket escape (cf. Tailwind `p-[13px]`).
+//!
+//! SCOPE — surface only. `sx` deliberately does NOT own layout: `dir`, `gap`,
+//! `align`, `justify` belong to the layout primitives (`<sui-stack>`,
+//! `<sui-cluster>`, `<sui-grid>`), which carry the semantics/a11y/overflow
+//! handling a hand-rolled flex box loses. Keeping layout out of `sx` (plus
+//! `sui-no-raw-container` banning raw `<div>`) forces structure through the
+//! primitives; `sx` is only the surface treatment a `<style>` block used to do.
 //!
 //! Only static `sx="…"` literals are validated; dynamic `sx={…}` and
-//! attributes inside HTML comments are skipped. The generated CSS is emitted
-//! by `sui-compiler::emit::styles`; this rule owns validation only.
+//! attributes inside HTML comments are skipped.
 
 use std::path::Path;
 
@@ -23,21 +28,18 @@ enum Kind {
     Color,
     Radius,
     Text,
-    Align,
-    Justify,
-    Dir,
 }
 
 fn prop_kind(prop: &str) -> Option<Kind> {
     use Kind::*;
     Some(match prop {
-        "p" | "px" | "py" | "pt" | "pr" | "pb" | "pl" | "m" | "mt" | "mr" | "mb" | "ml" | "gap" => Space,
+        // element-level spacing (padding = a surface inset, margin = a nudge).
+        // NOTE: `gap` is intentionally absent — sibling spacing is the layout
+        // primitive's job (`<sui-stack gap="3">`), not a per-element style.
+        "p" | "px" | "py" | "pt" | "pr" | "pb" | "pl" | "m" | "mt" | "mr" | "mb" | "ml" => Space,
         "bg" | "fg" => Color,
         "radius" => Radius,
         "text" => Text,
-        "align" => Align,
-        "justify" => Justify,
-        "dir" => Dir,
         _ => return None,
     })
 }
@@ -49,12 +51,9 @@ const COLOR: &[&str] = &[
     "surface-0", "surface-1", "surface-2", "surface-3", "fg", "muted", "border",
     "primary", "success", "warning", "destructive", "accent", "info",
 ];
-const ALIGN: &[&str] = &["start", "center", "end", "stretch", "baseline"];
-const JUSTIFY: &[&str] = &["start", "center", "end", "between", "around"];
-const DIR: &[&str] = &["row", "col"];
 const ALL_PROPS: &[&str] = &[
-    "p", "px", "py", "pt", "pr", "pb", "pl", "m", "mt", "mr", "mb", "ml", "gap",
-    "bg", "fg", "radius", "text", "align", "justify", "dir",
+    "p", "px", "py", "pt", "pr", "pb", "pl", "m", "mt", "mr", "mb", "ml",
+    "bg", "fg", "radius", "text",
 ];
 
 fn allowed(kind: Kind) -> &'static [&'static str] {
@@ -63,9 +62,6 @@ fn allowed(kind: Kind) -> &'static [&'static str] {
         Kind::Color => COLOR,
         Kind::Radius => RADIUS,
         Kind::Text => TEXT,
-        Kind::Align => ALIGN,
-        Kind::Justify => JUSTIFY,
-        Kind::Dir => DIR,
     }
 }
 
@@ -84,13 +80,10 @@ fn css_props(prop: &str) -> &'static [&'static str] {
         "mr" => &["margin-right"],
         "mb" => &["margin-bottom"],
         "ml" => &["margin-left"],
-        "gap" => &["gap"],
         "bg" => &["background"],
         "fg" => &["color"],
         "radius" => &["border-radius"],
         "text" => &["font-size"],
-        "align" => &["align-items"],
-        "justify" => &["justify-content"],
         _ => &[],
     }
 }
@@ -114,23 +107,9 @@ fn color_var(token: &str) -> &'static str {
     }
 }
 
-fn flex_val(token: &str) -> &'static str {
-    match token {
-        "start" => "flex-start",
-        "end" => "flex-end",
-        "between" => "space-between",
-        "around" => "space-around",
-        "center" => "center",
-        "stretch" => "stretch",
-        "baseline" => "baseline",
-        _ => "flex-start",
-    }
-}
-
-/// Lower a VALID `prop:token` to its CSS declarations, or `None` if the pair is
-/// off-vocabulary. Single source of truth for the sx → CSS mapping; the
-/// compiler's `preprocess` generates atomic CSS from this, the `check` above
-/// validates against the same vocabulary. Kept in sync by construction.
+/// Lower a VALID `prop:token` to its CSS declarations, or `None` if off-vocab.
+/// Single source of truth for the sx → CSS mapping; the compiler's `preprocess`
+/// generates atomic CSS from this, the `check` below validates the same set.
 pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
     let kind = prop_kind(prop)?;
     if !allowed(kind).contains(&token) {
@@ -144,12 +123,6 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
             css_props(prop).iter().map(|p| (*p, v.clone())).collect()
         }
         Kind::Text => css_props(prop).iter().map(|p| (*p, format!("var(--text-{token})"))).collect(),
-        Kind::Align => vec![("align-items", flex_val(token).to_string())],
-        Kind::Justify => vec![("justify-content", flex_val(token).to_string())],
-        Kind::Dir => vec![
-            ("display", "flex".to_string()),
-            ("flex-direction", if token == "col" { "column" } else { "row" }.to_string()),
-        ],
     };
     Some(decls)
 }
@@ -164,8 +137,11 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 continue;
             };
             let Some(kind) = prop_kind(prop) else {
-                let mut m = format!("sx unknown property `{prop}:` — not in the styling vocabulary");
-                if let Some(s) = nearest(prop, ALL_PROPS) {
+                let mut m = format!("sx unknown property `{prop}:` — not in the surface vocabulary");
+                // steer layout attempts to the primitives, not a bigger sx
+                if matches!(prop, "dir" | "gap" | "align" | "justify" | "row" | "col") {
+                    m.push_str("; layout belongs to the primitives — use <sui-stack>/<sui-cluster>/<sui-grid>, not sx");
+                } else if let Some(s) = nearest(prop, ALL_PROPS) {
                     m.push_str(&format!("; did you mean `{s}:`?"));
                 }
                 findings.push(mk(path, line, col, m));
@@ -201,9 +177,9 @@ fn mk(path: &Path, line: usize, col: usize, message: String) -> Finding {
         severity: Severity::Error,
         message,
         suggest: Some(
-            "Use a design-system token (spacing 0–8, the surface/tone colors, \
-             radius none–full, text xs–2xl). Raw px/hex are intentionally not \
-             expressible in sx — that is the point."
+            "sx is surface-only: spacing 0–8 (p/m…), colors (bg/fg), radius, text. \
+             Layout is the primitives' job (<sui-stack>/<sui-cluster>/<sui-grid>). \
+             Raw px/hex are not expressible."
                 .to_string(),
         ),
     }
@@ -216,7 +192,7 @@ fn scan_sx(source: &str) -> Vec<(&str, usize)> {
     let mut out = Vec::new();
     let mut i = 0;
     while i < bytes.len() {
-        if bytes[i..].starts_with(b"<!--") {
+        if source[i..].starts_with("<!--") {
             match source[i..].find("-->") {
                 Some(end) => {
                     i += end + 3;
@@ -227,7 +203,7 @@ fn scan_sx(source: &str) -> Vec<(&str, usize)> {
         }
         if i > 0
             && bytes[i - 1].is_ascii_whitespace()
-            && bytes[i..].starts_with(b"sx")
+            && source[i..].starts_with("sx")
             && is_eq_quote(&bytes[i + 2..])
         {
             let mut j = i + 2;
@@ -235,10 +211,10 @@ fn scan_sx(source: &str) -> Vec<(&str, usize)> {
                 j += 1;
             }
             if j < bytes.len() && bytes[j] == b'"' {
-                let start = j + 1;
-                if let Some(rel) = source[start..].find('"') {
-                    out.push((&source[start..start + rel], start));
-                    i = start + rel + 1;
+                let vstart = j + 1;
+                if let Some(rel) = source[vstart..].find('"') {
+                    out.push((&source[vstart..vstart + rel], vstart));
+                    i = vstart + rel + 1;
                     continue;
                 }
             }
@@ -248,7 +224,6 @@ fn scan_sx(source: &str) -> Vec<(&str, usize)> {
     out
 }
 
-/// After the `sx` name: optional ws, `=`, optional ws, then a `"` (a literal).
 fn is_eq_quote(rest: &[u8]) -> bool {
     let mut k = 0;
     while k < rest.len() && rest[k].is_ascii_whitespace() {
@@ -308,27 +283,32 @@ fn lev(a: &str, b: &str) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::Path;
 
     fn run(src: &str) -> Vec<String> {
         check(Path::new("t.sui"), src).into_iter().map(|f| f.message).collect()
     }
 
     #[test]
-    fn accepts_tokens() {
-        assert!(run(r#"<div sx="p:4 gap:3 bg:surface-2 radius:lg dir:col">x</div>"#).is_empty());
+    fn accepts_surface_tokens() {
+        assert!(run(r#"<sui-card sx="p:4 bg:surface-2 radius:lg text:sm fg:muted">x</sui-card>"#).is_empty());
+    }
+
+    #[test]
+    fn rejects_layout_props_and_steers_to_primitives() {
+        let m = run(r#"<sui-card sx="dir:col">x</sui-card>"#);
+        assert_eq!(m.len(), 1);
+        assert!(m[0].contains("sui-stack"), "should steer to primitives: {}", m[0]);
+        assert_eq!(run(r#"<sui-card sx="gap:3">x</sui-card>"#).len(), 1);
     }
 
     #[test]
     fn rejects_raw_and_unknown() {
-        assert_eq!(run(r#"<div sx="p:13px">x</div>"#).len(), 1);
-        assert_eq!(run(r#"<div sx="bg:#0af">x</div>"#).len(), 1);
-        assert_eq!(run(r#"<div sx="gap:12">x</div>"#).len(), 1);
-        assert_eq!(run(r#"<div sx="shadow:4">x</div>"#).len(), 1);
+        assert_eq!(run(r#"<sui-card sx="p:13px">x</sui-card>"#).len(), 1);
+        assert_eq!(run(r#"<sui-card sx="bg:#0af">x</sui-card>"#).len(), 1);
     }
 
     #[test]
     fn skips_comments_and_dynamic() {
-        assert!(run(r#"<!-- <div sx="p:99"> --> <div sx={dynamic}>x</div>"#).is_empty());
+        assert!(run(r#"<!-- <sui-card sx="p:99"> --> <sui-card sx={dynamic}>x</sui-card>"#).is_empty());
     }
 }
