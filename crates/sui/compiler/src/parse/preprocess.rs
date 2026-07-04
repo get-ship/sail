@@ -1,12 +1,15 @@
-//! Source preprocessor — exact mirror of
-//! `packages/sui/dom/src/preprocess.ts`.
+//! Source preprocessor — the single, Rust-only path. (There is no JS twin:
+//! the legacy `@ship/sui-dom` preprocess was removed when every directive was
+//! made to round-trip through this crate; deck's bundler and the Node test
+//! harness both compile in-process through `sui_compiler`.)
 //!
-//! Two transforms run before the HTML parser sees the source:
+//! Transforms, in order, before the HTML parser sees the source:
 //!  1. Quote unquoted brace attributes — `disabled={x || y}` becomes
-//!     `disabled="{x || y}"` with `"` inside the expression escaped
-//!     to `&quot;`.
-//!  2. Expand non-void self-closing tags — `<data … />` becomes
-//!     `<data …></data>`.
+//!     `disabled="{x || y}"` with `"` inside the expression escaped to `&quot;`.
+//!  2. Expand non-void self-closing tags — `<data … />` becomes `<data …></data>`.
+//!  3. Lower `sx="…"` surface attributes → atomic `class`es.
+//!  4. Lower the layout keywords (`<column>`/`<row>`/…) → `<div>` + atomic classes.
+//! Steps 3–4 emit deduped CSS that `preprocess` injects as one `<style>`.
 
 const VOID_TAGS: &[&str] = &[
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta",
