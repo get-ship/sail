@@ -1,26 +1,65 @@
 //! The shared design-token registry — the **single source** both the
-//! `sui-css-token` lint and the `sx` vocabulary read from. Loads
-//! `crates/sui/compiler/tokens.json` once.
+//! `sui-css-token` lint and the `sx` vocabulary read from.
+//!
+//! There is exactly one source of truth for design-token *names*: the canonical
+//! token CSS at `packages/sui/tokens/src/tokens.css`. This module parses the
+//! `--name:` custom-property declarations out of it directly — no hand-mirrored
+//! JSON, so the registry can never drift from the CSS (the drift that made
+//! `sx="text:3xl"` wrongly fail). `themes.css` only *overrides* these names, so
+//! parsing `tokens.css` alone captures every global token.
 //!
 //! Token names are stored WITHOUT the `--` prefix (e.g. `"space-4"`,
-//! `"text-3xl"`). `sx` must never hand-maintain its own copy of the scales:
-//! its allowed spacing/text/radius values are *derived* from this registry, so
-//! adding `--text-3xl` to the tokens makes `sx="text:3xl"` legal automatically
-//! and the two can never drift (the drift that made `text:3xl` wrongly fail).
+//! `"text-3xl"`). `sx`'s allowed spacing/text/radius values are *derived* from
+//! this registry (filtered by prefix), so adding `--text-3xl` to the token CSS
+//! makes `sx="text:3xl"` legal automatically.
 
 use std::collections::HashSet;
 use std::sync::OnceLock;
 
-const TOKENS_JSON: &str = include_str!("../../compiler/tokens.json");
+/// The canonical token definitions. This is the ONE source — no mirror file.
+const TOKENS_CSS: &str = include_str!("../../../../packages/sui/tokens/src/tokens.css");
 
-/// Every theme-token name (no `--` prefix), flattened from `tokens.json`.
+/// Contextual custom properties that are legitimate in component `var(--x)`
+/// references but are **not** global design tokens, so they carry no value in
+/// `tokens.css:root` and cannot be parsed from it. They are set per-context
+/// (at runtime, by a parent primitive, or inside a component's own shadow) —
+/// a curated lint allowlist, not the token system. Keep this list tight;
+/// anything with a global value belongs in `tokens.css`, not here.
+///
+/// Public so the LSP shares the exact same list (it completes these too) —
+/// one definition, no cross-crate drift.
+pub const CONVENTION_TOKENS: &[&str] = &[
+    // Tone channel — set by the `tone` prop on a parent, read by descendants.
+    "tone", "tone-bg", "tone-border", "tone-contrast", "tone-fg", "tone-on-fg", "tone-ring",
+    // Floating-primitive positioning channels (dropdown / hovercard / popover / tooltip).
+    "sui-dd-anchor", "sui-dd-default",
+    "sui-hc-anchor", "sui-hc-default",
+    "sui-popover-anchor", "sui-popover-default",
+    "sui-tooltip-anchor", "sui-tooltip-default",
+    // App-shell layout channels (Ship/helm rail + top bar).
+    "rail-item-justify", "rail-label-display",
+    "ship-rail-w", "ship-rail-w-collapsed", "ship-top-bar-h",
+    // Misc component-local channels.
+    "card-shadow-style", "font-sans", "toast-duration", "z-overlay",
+];
+
+/// Every valid design-token name (no `--` prefix): the custom-property
+/// declarations parsed from `tokens.css`, plus the [`CONVENTION_TOKENS`]
+/// allowlist. Parsed once.
 pub fn registry() -> &'static HashSet<&'static str> {
     static CACHE: OnceLock<HashSet<&'static str>> = OnceLock::new();
     CACHE.get_or_init(|| {
-        let v: serde_json::Value =
-            serde_json::from_str(TOKENS_JSON).expect("tokens.json must be valid JSON");
-        let mut out = HashSet::new();
-        collect_string_leaves(&v, &mut out);
+        let mut out: HashSet<&'static str> = CONVENTION_TOKENS.iter().copied().collect();
+        // A custom-property *declaration* is `--name: …`. A `var(--name)` usage
+        // is `--name)` (no following `:`), so keying on the colon skips usages.
+        for line in TOKENS_CSS.lines() {
+            let Some(rest) = line.trim_start().strip_prefix("--") else { continue };
+            let Some(colon) = rest.find(':') else { continue };
+            let name = rest[..colon].trim_end();
+            if !name.is_empty() && name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-') {
+                out.insert(&*Box::leak(name.to_owned().into_boxed_str()));
+            }
+        }
         out
     })
 }
@@ -29,10 +68,7 @@ pub fn registry() -> &'static HashSet<&'static str> {
 /// `["1",…,"8"]`, `scale_suffixes("text-")` → `["2xl","3xl","4xl","base",…]`.
 /// Sorted for deterministic diagnostics. Derived from [`registry`], so the
 /// scale can never drift from the tokens.
-fn scale_suffixes(prefix: &'static str) -> Vec<&'static str> {
-    // Registry entries are `&'static str`, so `strip_prefix` yields a
-    // `&'static str` suffix directly. Exclude the empty tail (the bare
-    // `radius` token has no `-suffix`; `radius-full` → `full`).
+fn scale_suffixes(prefix: &str) -> Vec<&'static str> {
     let mut out: Vec<&'static str> = registry()
         .iter()
         .filter_map(|&t| t.strip_prefix(prefix).filter(|s| !s.is_empty()))
@@ -69,31 +105,6 @@ pub fn radius_values() -> &'static [&'static str] {
     })
 }
 
-/// Recursively pull every JSON string leaf into `out`, skipping `$`-prefixed
-/// metadata keys (`$comment`, `$schema`). Mirrors the walk the CSS-token lint
-/// used before this module centralized it.
-fn collect_string_leaves(v: &serde_json::Value, out: &mut HashSet<&'static str>) {
-    match v {
-        serde_json::Value::String(s) => {
-            out.insert(Box::leak(s.clone().into_boxed_str()));
-        }
-        serde_json::Value::Array(items) => {
-            for item in items {
-                collect_string_leaves(item, out);
-            }
-        }
-        serde_json::Value::Object(map) => {
-            for (k, val) in map {
-                if k.starts_with('$') {
-                    continue;
-                }
-                collect_string_leaves(val, out);
-            }
-        }
-        _ => {}
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -122,5 +133,18 @@ mod tests {
         assert!(r.contains(&"none"));
         assert!(r.contains(&"full") && r.contains(&"lg"));
         assert!(!r.contains(&"xs"), "radius `xs` was a phantom — not in tokens.css");
+    }
+
+    #[test]
+    fn parses_global_tokens_and_keeps_conventions() {
+        let reg = registry();
+        // parsed straight from tokens.css
+        assert!(reg.contains("primary"), "brand token from tokens.css");
+        assert!(reg.contains("surface-1"), "semantic surface from tokens.css");
+        assert!(reg.contains("space-4") && reg.contains("text-2xl"));
+        // curated convention allowlist (no global value, must still be accepted)
+        assert!(reg.contains("tone-bg") && reg.contains("sui-tooltip-anchor"));
+        // a var() *usage* inside a value must never be mistaken for a declaration
+        assert!(!reg.contains("foreground)"), "var() usages must not leak in");
     }
 }

@@ -69,7 +69,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                     message,
                     suggest: Some(
                         "Pick the closest tone token from \
-                         crates/sui/compiler/tokens.json — typically \
+                         packages/sui/tokens/src/tokens.css — typically \
                          --foreground, --background, --muted-foreground, \
                          --border, --destructive, etc. Custom color \
                          channels should be declared locally as \

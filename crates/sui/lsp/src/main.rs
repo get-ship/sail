@@ -265,16 +265,9 @@ fn completion_kind(kind: &str) -> CompletionItemKind {
 /// Canonical token source — `--name: value;` declarations under `:root` in
 /// `packages/sui/tokens/src/tokens.css`. Embedded at build time so the LSP
 /// has zero runtime IO and a missing token file is a compile error, not a
-/// silent empty completion. 247 leaves (parity with the compiler's
-/// `tokens.json`).
+/// silent empty completion. This is the single source; the css-token lint
+/// parses the same file (see `sui_lint::tokens`).
 const TOKENS_CSS: &str = include_str!("../../../../packages/sui/tokens/src/tokens.css");
-
-/// Canonical name list (the compiler's hand-maintained 247-leaf registry).
-/// `tokens.css` is the value source, but a few contract tokens (e.g.
-/// `--font-sans`) are documented without a `:root` value — those still
-/// need to be completable, so we union the JSON names with the CSS
-/// values.
-const TOKENS_JSON: &str = include_str!("../../../../crates/sui/compiler/tokens.json");
 
 /// `(name, value)` pairs with leading `--` stripped. Sorted by name so
 /// completion order is stable across builds.
@@ -282,63 +275,17 @@ type TokenTable = Vec<(String, String)>;
 
 static TOKENS: LazyLock<TokenTable> = LazyLock::new(|| {
     let mut by_name = parse_tokens(TOKENS_CSS);
-    let json_names = json_token_names(TOKENS_JSON);
-    for name in json_names {
-        if !by_name.iter().any(|(n, _)| n == &name) {
-            by_name.push((name, String::new()));
+    // Contextual tokens with no `:root` value (tone channel, floating-primitive
+    // anchors, app-shell) — completable, but valued at runtime. Shared verbatim
+    // with the css-token lint so the two registries can never diverge.
+    for &name in sui_lint::tokens::CONVENTION_TOKENS {
+        if !by_name.iter().any(|(n, _)| n == name) {
+            by_name.push((name.to_string(), String::new()));
         }
     }
     by_name.sort_by(|a, b| a.0.cmp(&b.0));
     by_name
 });
-
-/// Pull the `theme.tokens` array out of the compiler's `tokens.json`.
-/// The JSON shape is `{ theme: { tokens: ["name", ...] }, ... }`. We
-/// hand-parse to avoid pulling in a full JSON value tree for what is
-/// essentially a one-key lookup. The names are ASCII, so byte-level
-/// scanning is safe — a stray `]` inside a string is not possible here.
-fn json_token_names(src: &str) -> Vec<String> {
-    // Locate the `theme` object's `tokens` array.
-    let theme_key = "\"theme\"";
-    let after_theme = src.find(theme_key).map(|p| p + theme_key.len());
-    let tokens_key = "\"tokens\"";
-    let Some(after_theme) = after_theme else { return Vec::new() };
-    let Some(rel) = src[after_theme..].find(tokens_key) else { return Vec::new() };
-    let after_tokens = after_theme + rel + tokens_key.len();
-    let Some(bracket_rel) = src[after_tokens..].find('[') else { return Vec::new() };
-    let array_start = after_tokens + bracket_rel + 1;
-    let Some(bracket_rel) = src[after_tokens..].find(']') else { return Vec::new() };
-    let array_end = after_tokens + bracket_rel;
-    let bytes = src.as_bytes();
-    let mut names = Vec::with_capacity(256);
-    let mut in_str = false;
-    let mut escape = false;
-    let mut cur = String::new();
-    for &b in &bytes[array_start..array_end] {
-        if escape {
-            escape = false;
-            if in_str { cur.push(b as char); }
-            continue;
-        }
-        if b == b'\\' && in_str {
-            escape = true;
-            continue;
-        }
-        if b == b'"' {
-            if in_str && !cur.is_empty() {
-                names.push(std::mem::take(&mut cur));
-            } else {
-                cur.clear();
-            }
-            in_str = !in_str;
-            continue;
-        }
-        if in_str {
-            cur.push(b as char);
-        }
-    }
-    names
-}
 
 /// Hand-rolled `--name: value;` extractor. We don't need a CSS parser —
 /// tokens.css is a known, well-formed file (canonical token source), and

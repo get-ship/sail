@@ -1,7 +1,7 @@
 //! `sui-css-token` — `var(--xyz)` inside a `.sui` `<style>` block must
-//! resolve to either the canonical theme registry
-//! (`crates/sui/compiler/tokens.json`) or a custom property set
-//! locally inside the same `<style>` block.
+//! resolve to either the canonical token CSS
+//! (`packages/sui/tokens/src/tokens.css`, parsed by `crate::tokens`) or a
+//! custom property set locally inside the same `<style>` block.
 //!
 //! Catches typos that today fall through silently (the variable is
 //! undefined, the fallback or empty string is used, the visual is
@@ -17,9 +17,8 @@
 //! sets `--font-body: var(--font-sans, system-ui, sans-serif);` in
 //! every theme preview even though no `--font-sans: ...;`
 //! declaration exists. These *convention* tokens are listed in
-//! `tokens.json` so the lint recognizes them. When `@ship/tokens`
-//! introduces a new convention, add the name to `theme.tokens` (or
-//! the appropriate `channels` group) and bump the JSON.
+//! `crate::tokens::CONVENTION_TOKENS` so the lint recognizes them. When
+//! `@ship/tokens` introduces a new convention, add the name there.
 //!
 //! Severity: `Error` — the build hard-fails on an unknown token. The
 //! intent is to catch typos, NOT to reject real tokens; the
@@ -40,9 +39,8 @@
 //! Position reporting is on the `var(...)` call, not the `<style>`
 //! block as a whole — exactly where the typo lives.
 //!
-//! The registry shape (top-level keys + nested arrays of names) is
-//! described in `tokens.json`; we flatten every leaf string into a
-//! single set at first use.
+//! The registry is parsed once from `tokens.css`'s `--name:` declarations
+//! by `crate::tokens` (plus the convention allowlist) — no mirror file.
 //!
 //! Related rule: `sui-controller-purity` (controllers don't write raw
 //! HTML) — same finding shape, same plumbing into the compiler check
@@ -98,7 +96,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
 /// fix the typo.
 fn suggest_text(closest: Option<&str>) -> String {
     let mut s = String::from(
-        "Use a token from the theme registry (crates/sui/compiler/tokens.json) \
+        "Use a token from the canonical token CSS (packages/sui/tokens/src/tokens.css) \
          or define `--<name>: ...;` in this <style> block.",
     );
     if let Some(name) = closest {
@@ -108,9 +106,8 @@ fn suggest_text(closest: Option<&str>) -> String {
 }
 
 /// The flat set of theme token names — delegated to the shared
-/// `crate::tokens` registry. (This file used to carry its own duplicate
-/// loader of the same `tokens.json`; the registry is now the single source
-/// both this lint and the `sx` vocabulary read.)
+/// `crate::tokens` registry, parsed from `tokens.css` (plus the convention
+/// allowlist). The single source both this lint and the `sx` vocabulary read.
 fn theme_tokens() -> &'static HashSet<&'static str> {
     crate::tokens::registry()
 }

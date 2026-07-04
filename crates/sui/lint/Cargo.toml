@@ -19,8 +19,8 @@ oxc_ast_visit = "0.128"
 oxc_allocator = "0.128"
 oxc_span      = "0.128"
 
-# Loading the canonical CSS-token registry from
-# crates/sui/compiler/tokens.json (compile-time `include_str!`).
+# Loading the primitive-prop registry (prop_registry.rs) from
+# crates/sui/compiler/primitives.json (compile-time `include_str!`).
 serde_json = { workspace = true }
 
 [dev-dependencies]

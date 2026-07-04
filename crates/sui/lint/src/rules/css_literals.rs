@@ -104,7 +104,7 @@ fn scan_block(path: &Path, source: &str, block: &StyleBlock) -> Vec<Finding> {
                 "Ship is OKLCH-native, but a raw color literal bypasses the \
                  palette and ignores the active theme. Use the matching token \
                  (`--primary`, `--foreground`, `--border`, a `--tone-*` ramp, …) \
-                 from crates/sui/compiler/tokens.json (anti-smells #1, #3)."
+                 from packages/sui/tokens/src/tokens.css (anti-smells #1, #3)."
                     .to_string(),
             ),
         };
@@ -135,7 +135,7 @@ fn scan_block(path: &Path, source: &str, block: &StyleBlock) -> Vec<Finding> {
             ),
             suggest: Some(
                 "Hardcoded hex ignores the active theme. Pick the closest token \
-                 from crates/sui/compiler/tokens.json (anti-smell #3)."
+                 from packages/sui/tokens/src/tokens.css (anti-smell #3)."
                     .to_string(),
             ),
         });

@@ -45,7 +45,7 @@ fn prop_kind(prop: &str) -> Option<Kind> {
 }
 
 // SCALES are NOT hand-maintained here — they are derived from the shared token
-// registry (`crate::tokens`), so sx can never drift from `tokens.json` (the
+// registry (`crate::tokens`), so sx can never drift from `tokens.css` (the
 // drift that wrongly rejected `text:3xl`). Only COLOR keeps a curated alias set
 // (short ergonomic names like `fg`/`muted` that map to token names below).
 const COLOR: &[&str] = &[

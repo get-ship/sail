@@ -3,7 +3,7 @@
 //!
 //! Contract pinned by these tests:
 //!
-//!   1. `var(--known-token)` — present in `tokens.json` or defined
+//!   1. `var(--known-token)` — declared in `tokens.css` or defined
 //!      locally in the same `<style>` block — produces zero
 //!      `sui-css-token` findings. Silent at the build gate.
 //!   2. `var(--legitimate-convention)` — names the canonical
@@ -63,7 +63,7 @@ fn css_token_findings(source: &str, overrides: &[LintOverride]) -> Vec<(DiagSeve
 
 #[test]
 fn known_theme_token_is_silent() {
-    // `--foreground` is in `tokens.json`. The lint must NOT surface a
+    // `--foreground` is declared in `tokens.css`. The lint must NOT surface a
     // finding for it.
     let src = r#"<prop name="title" type="string" default="" />
 <style>
@@ -98,7 +98,7 @@ fn font_sans_convention_token_is_silent() {
     // convention used in `var(--font-sans, system-ui, sans-serif)`
     // fallback chains across every theme-preview block in
     // `packages/sui/tokens/src/themes.css`. It is listed in
-    // `crates/sui/compiler/tokens.json` so the lint recognizes it
+    // `sui_lint::tokens::CONVENTION_TOKENS` so the lint recognizes it
     // without an Error.
     let src = r#"<prop name="title" type="string" default="" />
 <style>
