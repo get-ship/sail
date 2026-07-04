@@ -154,18 +154,18 @@
 
   <!-- Cluster + Stack layout primitives -->
   <section class="gsp-section">
-    <h2 class="gsp-label">sui-cluster / sui-stack</h2>
+    <h2 class="gsp-label">row / column</h2>
     <div class="gsp-col">
-      <sui-cluster gap="3" align="center">
+      <row gap="3" align="center">
         <sui-badge tone="primary">A</sui-badge>
         <sui-badge tone="success">B</sui-badge>
         <sui-badge tone="accent">C</sui-badge>
-      </sui-cluster>
-      <sui-stack gap="2">
+      </row>
+      <column gap="2">
         <sui-badge tone="info">Stack item 1</sui-badge>
         <sui-badge tone="warning">Stack item 2</sui-badge>
         <sui-badge tone="destructive">Stack item 3</sui-badge>
-      </sui-stack>
+      </column>
     </div>
   </section>
 
