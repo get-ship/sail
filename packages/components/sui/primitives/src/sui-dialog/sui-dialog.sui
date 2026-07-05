@@ -33,20 +33,43 @@
 <prop name="no-footer" type="bool" default="false" reflect />
 <prop name="role-override" values="dialog|alertdialog" default="dialog" reflect />
 
-<style>
-  :host { display: contents; }
-  :host([hidden]) { display: none; }
+<variants part="dialog">
+  size=sm: max-w:panel-max-w-sm px:5
+  size=md: max-w:panel-max-w-md px:6
+  size=lg: max-w:panel-max-w-lg px:7
+  size=full: max-w:panel-vh-lg px:7
+</variants>
 
+<variants part="header">
+  [no-header]: display:none
+</variants>
+
+<variants part="footer">
+  [no-footer]: display:none
+</variants>
+
+<variants part="close">
+  [no-close-button]: display:none
+</variants>
+
+<!--
+  Residual <style> — truly unavoidable bits:
+  - :host display: contents + display: none when hidden
+  - dialog:not([open]) display: none (must override browser default)
+  - dialog[open] position:fixed + inset + margin + padding + border + bg + color + width + max-height + box-shadow + font-family + display: flex + flex-direction: column (raw, dialog element heavy)
+  - :host([size='full']) dialog[open] max-height override
+  - dialog::backdrop background + opacity + transition (pseudo + multi-prop)
+  - :host([backdrop='blur']) dialog::backdrop backdrop-filter (vendor prefix + pseudo)
+  - :host([backdrop='solid']) dialog::backdrop background
+  - dialog[open]::backdrop opacity: 1
+  - .sentinel position + size + pointer-events + opacity
+  - .header padding + padding-right calc + flex + text + weight + color + border-bottom
+  - .body padding + flex + min-height + overflow-y + overscroll + text + line-height + scrollbar-width
+  - .footer padding + border-top + background + display:flex + gap + justify-content + align-items + flex
   :host(:not([size])), :host([size='md']) { --dlg-max-w: var(--panel-max-w-md); --dlg-px: var(--space-6); --dlg-hpy: var(--space-4_5); --dlg-bpy: var(--space-4); --dlg-fpy: var(--space-4); }
   :host([size='sm']) { --dlg-max-w: var(--panel-max-w-sm); --dlg-px: var(--space-5); --dlg-hpy: var(--space-4); --dlg-bpy: var(--space-3_5); --dlg-fpy: var(--space-3_5); }
   :host([size='lg']) { --dlg-max-w: var(--panel-max-w-lg); --dlg-px: var(--space-7); --dlg-hpy: var(--space-5); --dlg-bpy: var(--space-5); --dlg-fpy: var(--space-4_5); }
   :host([size='full']) { --dlg-max-w: 90vw; --dlg-px: var(--space-7); --dlg-hpy: var(--space-5); --dlg-bpy: var(--space-5); --dlg-fpy: var(--space-4_5); }
-
-  /* `dialog:not([open])` MUST stay display:none — overriding to
-     display:flex on the bare selector caused a closed dialog to paint
-     a 2px artifact at viewport center, visible as a faint horizontal
-     line across every view that mounted a sui-dialog. Qualifying with
-     `[open]` keeps the closed dialog hidden per browser default. */
   dialog:not([open]) { display: none; }
   dialog[open] {
     position: fixed;
@@ -58,7 +81,6 @@
     background: var(--surface-1);
     color: var(--card-foreground);
     width: calc(100vw - var(--space-7));
-    max-width: var(--dlg-max-w);
     max-height: min(calc(100vh - var(--space-7)), var(--panel-vh-md));
     box-shadow: var(--shadow-xl);
     font-family: var(--font-body);
@@ -67,25 +89,19 @@
     flex-direction: column;
   }
   :host([size='full']) dialog[open] { max-height: var(--panel-vh-lg); }
-
-  /* Open/close polish is driven by the `transition:fade` directive on
-     the content wrapper (Web Animations API) and by the native
-     ::backdrop fade below — no CSS transition on `dialog` itself. */
-  .dialog-content {
-    display: contents;
-  }
-
+  .dialog-content { display: contents; }
   dialog::backdrop {
     background: var(--backdrop);
     opacity: 0;
     transition: opacity var(--duration-medium) var(--ease-out);
   }
   dialog[open]::backdrop { opacity: 1; }
-  :host([backdrop='blur']) dialog::backdrop { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  :host([backdrop='blur']) dialog::backdrop {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
   :host([backdrop='solid']) dialog::backdrop { background: var(--background); }
-
   .sentinel { position: fixed; width: 1px; height: 1px; pointer-events: none; opacity: 0; }
-
   .header {
     padding: var(--dlg-hpy) var(--dlg-px);
     padding-right: calc(var(--dlg-px) + var(--space-7));
@@ -95,8 +111,6 @@
     color: var(--foreground);
     border-bottom: 1px solid var(--border-subtle);
   }
-  :host([no-header]) .header { display: none; }
-
   .body {
     padding: var(--dlg-bpy) var(--dlg-px);
     flex: 1 1 auto;
@@ -107,38 +121,29 @@
     line-height: var(--leading-normal);
     scrollbar-width: thin;
   }
-
   .footer {
     padding: var(--dlg-fpy) var(--dlg-px);
     border-top: 1px solid var(--border-subtle);
     background: var(--tone-muted-border);
-    display: flex;
-    gap: var(--space-2);
-    justify-content: flex-end;
-    align-items: center;
     flex: 0 0 auto;
   }
-  :host([no-footer]) .footer { display: none; }
-
   .close {
     position: absolute;
     top: var(--space-3);
     inset-inline-end: var(--space-3);
     width: var(--control-h-sm); height: var(--control-h-sm);
-    display: inline-flex; align-items: center; justify-content: center;
     background: transparent;
     border: 1px solid transparent;
     border-radius: var(--radius-md);
     color: var(--muted-foreground);
     cursor: pointer; padding: 0; font: inherit; z-index: var(--z-elevated);
-    transition: background-color var(--duration-fast) var(--ease-out),
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
       color var(--duration-fast) var(--ease-out);
   }
   .close:hover { background: var(--muted); color: var(--foreground); }
   .close:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
   .close svg { width: var(--icon-size-sm); height: var(--icon-size-sm); display: block; }
-  :host([no-close-button]) .close { display: none; }
-
   @media (prefers-reduced-motion: reduce) {
     dialog::backdrop { transition: none; }
   }
@@ -163,28 +168,37 @@
   `:has` selectors without poking into shadow DOM.
 -->
 
-<dialog part="dialog" bind:this={dialogEl}>
+<dialog part="dialog" bind:this={dialogEl}
+  sx="radius:xl bg:surface-1 fg:card-foreground border:border shadow:xl">
   <span tabindex="0" class="sentinel" aria-hidden="true" bind:this={sentinelStart}></span>
-  <button class="close" part="close" type="button" aria-label="Close dialog" bind:this={closeBtn}>
+  <row class="close" part="close" type="button" aria-label="Close dialog" bind:this={closeBtn}
+    align="center" gap="0" justify="center"
+    sx="w:control-h-sm h:control-h-sm radius:md fg:muted-foreground cursor:pointer p:0 z:elevated">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"
-      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+      sx="w:icon-size-sm h:icon-size-sm">
       <path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/>
     </svg>
-  </button>
+  </row>
   {#if open()}
     <div class="dialog-content" transition:fade={{ duration: 150 }}>
-      <div class="header" part="header" bind:this={headerEl}>
+      <div class="header" part="header" bind:this={headerEl}
+        sx="text:lg weight:semibold fg:foreground">
         <slot name="header"></slot>
       </div>
-      <div class="body" part="body" bind:this={bodyEl}>
+      <div class="body" part="body" bind:this={bodyEl}
+        sx="text:base leading:normal">
         <slot></slot>
       </div>
-      <div class="footer" part="footer">
+      <row class="footer" part="footer" gap="2" align="center"
+        sx="bg:tone-muted-border">
         <slot name="footer"></slot>
-      </div>
+      </row>
     </div>
   {/if}
   <span tabindex="0" class="sentinel" aria-hidden="true" bind:this={sentinelEnd}></span>
+
+
 </dialog>
 {#if open()}
   <sui-portal target="body">
