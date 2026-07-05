@@ -275,6 +275,21 @@ pub fn lower_channel(prop: &str, channel: &str) -> Option<Vec<(&'static str, Str
     Some(css_props(prop).iter().map(|p| (*p, value.clone())).collect())
 }
 
+/// A condition prefix (`motion-reduce:`/`forced-colors:`/…) → its `@media` query.
+/// A CLOSED set of the standard user-preference / environment queries — never an
+/// arbitrary `@media` (that would be a raw-CSS escape). An sx pair carrying a
+/// condition lowers into that media block.
+pub fn condition_media(name: &str) -> Option<&'static str> {
+    Some(match name {
+        "motion-reduce" => "(prefers-reduced-motion: reduce)",
+        "motion-safe" => "(prefers-reduced-motion: no-preference)",
+        "forced-colors" => "(forced-colors: active)",
+        "dark" => "(prefers-color-scheme: dark)",
+        "light" => "(prefers-color-scheme: light)",
+        _ => return None,
+    })
+}
+
 /// A state prefix (`hover:`/`focus:`/…) → its CSS pseudo-class. `focus` maps to
 /// `:focus-visible` (the modern default — no ring on a mouse click). Shared by
 /// the lint (validation) and preprocess (lowering) so they can't diverge.
@@ -341,6 +356,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 [prop, token] => (*prop, *token),
                 [state, prop, token] => {
                     let ok = state_pseudo(state).is_some()
+                        || condition_media(state).is_some()
                         || state.strip_prefix("group-").is_some_and(|b| state_pseudo(b).is_some());
                     if !ok {
                         findings.push(mk(

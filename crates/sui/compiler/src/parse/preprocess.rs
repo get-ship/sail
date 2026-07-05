@@ -125,17 +125,19 @@ fn lower_sx_value(
         // A `<state>` is a pseudo (`hover`) or a propagation (`group-hover` → the
         // rule keys on an ancestor `.sui-grp:hover`). `prefix` is a leading
         // ancestor selector; `pseudo` a trailing pseudo-class on the element.
-        let (prefix, pseudo): (String, &str) = match state {
-            None => (String::new(), ""),
+        let (media, prefix, pseudo): (&str, String, &str) = match state {
+            None => ("", String::new(), ""),
             Some(s) => {
-                if let Some(base) = s.strip_prefix("group-") {
+                if let Some(m) = sui_lint::rules::sx::condition_media(s) {
+                    (m, String::new(), "")
+                } else if let Some(base) = s.strip_prefix("group-") {
                     match sui_lint::rules::sx::state_pseudo(base) {
-                        Some(p) => (format!(".sui-grp{p} "), ""),
+                        Some(p) => ("", format!(".sui-grp{p} "), ""),
                         None => continue,
                     }
                 } else {
                     match sui_lint::rules::sx::state_pseudo(s) {
-                        Some(p) => (String::new(), p),
+                        Some(p) => ("", String::new(), p),
                         None => continue,
                     }
                 }
@@ -163,7 +165,12 @@ fn lower_sx_value(
                     .map(|(p, v)| format!("{p}:{v}"))
                     .collect::<Vec<_>>()
                     .join(";");
-                css.push_str(&format!("{prefix}.{class}{pseudo}{{{body}}}"));
+                let rule = format!("{prefix}.{class}{pseudo}{{{body}}}");
+                if media.is_empty() {
+                    css.push_str(&rule);
+                } else {
+                    css.push_str(&format!("@media {media}{{{rule}}}"));
+                }
             }
         }
         classes.push(class);
@@ -843,6 +850,13 @@ mod tests {
             out.contains(".sui-ai-start{") && out.contains(".sui-ai-center{") && out.contains(".sui-ai-stretch{"),
             "full align rule set injected: {out}"
         );
+    }
+
+    #[test]
+    fn condition_prefix_wraps_in_media() {
+        let out = preprocess(r#"<div sx="motion-reduce:shadow:none forced-colors:border:strong">x</div>"#);
+        assert!(out.contains("@media (prefers-reduced-motion: reduce){.sx-motion-reduce-shadow-none{box-shadow:none}}"), "{out}");
+        assert!(out.contains("@media (forced-colors: active){.sx-forced-colors-border-strong{border:1px solid var(--border-strong)}}"), "{out}");
     }
 
     #[test]
