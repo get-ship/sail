@@ -1,31 +1,55 @@
 // <sui-component-catalog> — `/components` "gallery" index. Reads the build-time
 // `COMPONENTS_CATALOG` (emitted by `deck build`'s cem pass into
-// `apps/sui-site/components.gen.ts`) and projects it into a flat, searchable
-// card gallery. Framework-pure — no ship-platform coupling.
+// `apps/sui-site/components.gen.ts`) and projects it into a searchable,
+// category-filtered card gallery. Framework-pure — no ship-platform coupling.
 //
-// Interactivity is two signals: `query` (search text, two-way bound to the
-// <sui-input> via bind:value) and `activePack` (the pack chip filter). A card's
-// visibility derives from both — `visible(entry)` — so filtering is a reactive
-// attribute toggle (`attr:hidden`), never a re-render. That keeps the live
-// preview mount a single one-shot pass: every registered specimen mounts once
-// in `mount()`, and filtering only shows/hides already-mounted cards.
+// Curated surfaces (this commit):
+//   - Grouping: by CATEGORY (Forms & Inputs / Layout / Overlays / etc.), not
+//     by pack. The pack field is preserved on every entry (the /components/
+//     [tag] detail page still reads it) but the chip row drops the pack
+//     axis entirely.
+//   - Hidden surface: the internal sub-primitives that compose but never
+//     appear standalone (accordion-item / tab / tab-panel / tree-item /
+//     timeline-item / toast* / radio etc.) are filtered out of the entry
+//     list in `buildCatalog()`, before the card array is built, so neither
+//     the chip row nor the empty-state ever see them.
+//   - Search: case-insensitive substring on the tag, two-way bound through
+//     the <sui-input>'s custom `sui-input` event (its native `input` does
+//     not cross the shadow boundary).
 //
-// The preview mount is the SAME harness the catalog has always used: for each
-// `[data-preview-for]` stage the template renders, mount one bare instance of
-// the registered custom element, seeded from `PREVIEW_SEEDS` (default props +
-// default-slot innerHTML via the runtime's `bindHtml` — NOT a raw
-// `el.innerHTML = …` write, which the sui-controller-purity lint forbids).
+// Interactivity is two signals: `query` (the search text) and
+// `activeCategory` (the category chip). A card's visibility derives from
+// both — `visible(entry)` — so filtering is a reactive `attr:hidden`
+// toggle, never a re-render. The one-shot preview mount therefore fires
+// exactly once: every registered specimen mounts once in `mount()`, and
+// filtering only shows/hides already-mounted cards.
+//
+// The preview mount is the SAME harness the catalog has always used:
+// for each `[data-preview-for]` stage the template renders, mount one
+// bare instance of the registered custom element, seeded from
+// `PREVIEW_SEEDS` (default props via setAttribute, default-slot innerHTML
+// via the runtime's `bindHtml` — NOT a raw `el.innerHTML = …` write,
+// which the sui-controller-purity lint forbids).
 
 import { controller, signal, derived, bindHtml, type Derived } from '@ship/sui-runtime'
 import type { Scope } from './sui-component-catalog.sui'
 import { COMPONENTS_CATALOG } from '../../components.gen'
 import { PREVIEW_SEEDS, type PreviewSeed } from './preview-seeds'
+import {
+  HIDDEN_TAGS,
+  TAG_CATEGORY,
+  CATEGORY_LABELS,
+  CATEGORY_ORDER,
+  type CategoryId,
+} from './category-map'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface ComponentEntry {
   tag: string
   pack: string
+  /** Public category the tag belongs to (see `category-map.ts`). */
+  category: CategoryId
   description: string
   propCount: number
   slotCount: number
@@ -40,8 +64,8 @@ export interface CardEntry extends ComponentEntry {
   hidden: Derived<boolean>
 }
 
-export interface PackChip {
-  id: string
+export interface CategoryChip {
+  id: CategoryId | 'all'
   label: string
   count: number
 }
@@ -58,16 +82,11 @@ interface CemDecl {
 }
 interface CemModule { package?: string; declarations?: CemDecl[] }
 
-/** Framework `@ship/sui-*` packs sort before app/domain packs; ties break
- *  alphabetically. A stable, readable pack order for the chip row. */
-function packRank(pkg: string): number {
-  return pkg.startsWith('@ship/sui-') ? 0 : 1
-}
-
-/** Short chip label for a pack id — strip the `@ship/sui-` (or `@ship/`)
- *  namespace so the chip reads `primitives` / `viewer` / `code-editor`. */
-function packLabel(pkg: string): string {
-  return pkg.replace(/^@ship\/sui-/, '').replace(/^@ship\//, '')
+/** Resolve the public category for a tag. Falls through to `CategoryId.Utility`
+ *  when the tag is missing from the map — under-claim, never over-claim. */
+function categoryFor(tag: string): CategoryId {
+  const explicit = TAG_CATEGORY[tag]
+  return explicit ?? 'utility'
 }
 
 // Per-tag preview seed lives in the shared `preview-seeds` module — imported
@@ -78,45 +97,57 @@ export type { PreviewSeed }
 
 // ── Catalog ingestion ────────────────────────────────────────────────────────
 
-/** Project the generated CEM into a flat, tag-sorted entry list plus the pack
- *  chip row. Pure + synchronous — bundled data computed once at module load. */
-function buildCatalog(): { entries: ComponentEntry[]; packs: PackChip[] } {
-  const modules = (COMPONENTS_CATALOG as { modules?: CemModule[] }).modules ?? []
+/** Project the generated CEM into a flat, tag-sorted entry list plus the
+ *  category chip row. Filters out hidden sub-primitives BEFORE projection so
+ *  the chip-row counts reflect what the user actually sees. Pure + sync —
+ *  bundled data computed once at module load. */
+function buildCatalog(): { entries: ComponentEntry[]; chips: CategoryChip[] } {
+  const catalog = COMPONENTS_CATALOG as unknown as { modules?: CemModule[] }
+  const modules = catalog.modules ?? []
   const entries: ComponentEntry[] = []
-  const packCounts = new Map<string, number>()
+  const catCounts = new Map<CategoryId, number>()
   for (const m of modules) {
     const pack = m.package ?? 'workspace'
     for (const d of m.declarations ?? []) {
       if (d.kind !== 'class' || !d.customElement || !d.tagName) continue
+      const tag = d.tagName
+      // Curated hidden surface: internal sub-primitives compose but never
+      // appear as standalone catalog entries.
+      if (HIDDEN_TAGS[tag]) continue
+      const category = categoryFor(tag)
       entries.push({
-        tag: d.tagName,
+        tag,
         pack,
+        category,
         description: (d.description ?? '').split('\n')[0]?.trim() ?? '',
         propCount: (d.attributes ?? []).length,
         slotCount: (d.slots ?? []).length,
         eventCount: (d.events ?? []).length,
       })
-      packCounts.set(pack, (packCounts.get(pack) ?? 0) + 1)
+      catCounts.set(category, (catCounts.get(category) ?? 0) + 1)
     }
   }
   entries.sort((a, b) => a.tag.localeCompare(b.tag))
 
-  const packChips: PackChip[] = [...packCounts.entries()]
-    .map(([id, count]): PackChip => ({ id, label: packLabel(id), count }))
-    .sort((a, b) => packRank(a.id) - packRank(b.id) || a.id.localeCompare(b.id))
-  const packs: PackChip[] = [{ id: 'all', label: 'All', count: entries.length }, ...packChips]
-
-  return { entries, packs }
+  // Build the category chip row in the canonical display order from
+  // `CATEGORY_ORDER`. Any zero-count category still appears as an empty chip
+  // so the chip row is stable across builds (no flicker on a new
+  // primitive landing under an empty category).
+  const chips: CategoryChip[] = [{ id: 'all', label: 'All', count: entries.length }]
+  for (const id of CATEGORY_ORDER) {
+    chips.push({ id, label: CATEGORY_LABELS[id], count: catCounts.get(id) ?? 0 })
+  }
+  return { entries, chips }
 }
 
-const { entries: ENTRIES, packs: PACKS } = buildCatalog()
+const { entries: ENTRIES, chips: CHIPS } = buildCatalog()
 
 // ── Controller ───────────────────────────────────────────────────────────────
 
 export default controller<Scope>({
   scope: () => {
     const query = signal<string>('')
-    const activePack = signal<string>('all')
+    const activeCategory = signal<CategoryId | 'all'>('all')
 
     // <sui-input> emits a custom `sui-input` event (its internal native input's
     // `input` doesn't cross the shadow boundary), so a native two-way
@@ -126,15 +157,15 @@ export default controller<Scope>({
       const detail = (e as CustomEvent<{ value?: string }>).detail
       query.set(detail?.value ?? '')
     }
-    const setPack = (id: string): void => { activePack.set(id) }
+    const setCategory = (id: CategoryId | 'all'): void => { activeCategory.set(id) }
 
-    // A card is visible when it matches BOTH the active pack filter and the
+    // A card is visible when it matches BOTH the active category AND the
     // search substring (case-insensitive, on the tag). Reads both signals.
     const visible = (c: ComponentEntry): boolean => {
       const q = query().trim().toLowerCase()
-      const packOk = activePack() === 'all' || c.pack === activePack()
+      const catOk = activeCategory() === 'all' || c.category === activeCategory()
       const qOk = q === '' || c.tag.toLowerCase().includes(q)
-      return packOk && qOk
+      return catOk && qOk
     }
 
     // Decorate each entry with a reactive `hidden` derived so the template can
@@ -149,18 +180,18 @@ export default controller<Scope>({
 
     return {
       components: derived<CardEntry[]>(() => cards),
-      packs: derived<PackChip[]>(() => PACKS),
+      chips: derived<CategoryChip[]>(() => CHIPS),
       totalComponents: derived<number>(() => ENTRIES.length),
-      totalPacks: derived<number>(() => PACKS.length - 1),
+      totalCategories: derived<number>(() => CHIPS.length - 1),
       visibleCount: derived<number>(() => ENTRIES.filter((c) => visible(c)).length),
       query,
-      activePack,
-      setPack,
+      activeCategory,
+      setCategory,
       onSearch,
     }
   },
 
-  mount(_state, host) {
+  mount(_state: unknown, host: HTMLElement) {
     // One-shot preview mount: for each rendered [data-preview-for] stage, mount
     // a single bare instance of the registered custom element. Seeded from
     // PREVIEW_SEEDS (props via setAttribute, default-slot innerHTML via the

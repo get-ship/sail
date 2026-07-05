@@ -2,23 +2,33 @@
   <sui-component-catalog> — the `/components` gallery index for the SUI site.
 
   A centered column: a hero (eyebrow + display title + lead), a centered
-  search field, a centered row of pack-filter chips, then the component
+  search field, a centered row of category-filter chips, then the component
   card grid. Every component links to its /components/<tag> detail page and
   shows a LIVE specimen mounted into a framed preview stage.
 
   Layout is the library dogfooding itself — structure comes from primitives,
   never bespoke CSS:
     <column>       the vertical page rhythm (hero → search → chips → grid)
-    <row>          centers the search field, the pack chips, and each card's
-                   meta row
+    <row>          centers the search field, the category chips, and each
+                   card's meta row
     <sui-center>   parks the live specimen dead-center of the framed stage
                    (both axes), so specimens no longer hug the top edge
     <sui-grid>     the responsive auto-fill card gallery (min="lg" gap="4")
 
   Filtering is reactive without re-rendering: the controller exposes a
-  `query` signal (two-way bound to <sui-input>) and an `activePack` signal;
+  `query` signal (bound to <sui-input>) and an `activeCategory` signal;
   a card's `visible(entry)` derives from both and drives `attr:hidden`, so
   the one-shot live-preview mount (in the controller) is never disturbed.
+
+  Curation (the public surface):
+    - The catalog filters out internal sub-primitives (sui-accordion-item,
+      sui-tab/tab-panel, sui-tree-item, sui-timeline-item, sui-toast*,
+      sui-radio etc.) inside the controller, BEFORE the chip row is built
+      — so a category never promises more cards than it actually shows.
+    - The chip row is in CATEGORY_ORDER declared by category-map.ts
+      (Forms & Inputs, Layout, Overlays, Navigation, Feedback, Data Display,
+      Typography, Utility) so the chip axis reflects the eight folds of the
+      public API surface, not the workspace's npm pack layout.
 
   Data source: the build-time CEM at apps/sui-site/components.gen.ts. Only
   the visual surface (framing, tints, font tokens) lives in this stylesheet;
@@ -70,7 +80,7 @@
     font-size: var(--text-md);
   }
 
-  /* ── Pack chips ────────────────────────────────────────────────────── */
+  /* ── Category chips ────────────────────────────────────────────────── */
   .chip {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
@@ -92,6 +102,11 @@
     border-color: var(--primary);
   }
   .chip-count { margin-left: var(--space-2); opacity: 0.7; }
+  .chips-wrap {
+    flex-wrap: wrap;
+    row-gap: var(--space-2);
+    max-width: 64rem;
+  }
 
   /* ── Cards ─────────────────────────────────────────────────────────── */
   .cell {
@@ -114,16 +129,22 @@
     box-shadow: var(--shadow-lg);
   }
 
-  /* Preview stage — bounded, tinted, clipped. <sui-center> centers the
-     mounted specimen on both axes; this rule owns the framed surface. */
+  /* Preview stage — fitted to content, not a fixed box. A bare element's
+     natural size drives the stage; tiny components (sui-status-dot,
+     sui-switch) stay tiny, big ones (sui-calendar, sui-table) expand.
+     <sui-center> still centers the specimen on both axes; min-height +
+     horizontal padding prevent the surface from looking cramped when the
+     specimen is a one-line label, without forcing tall primitives into a
+     fixed-frame box. */
   .stage {
-    height: 12rem;
-    overflow: hidden;
-    padding: var(--space-3);
+    min-height: 7rem;
+    padding: var(--space-4);
     background: color-mix(in oklch, var(--primary) 6%, transparent);
     border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
-
   .cell-foot { padding: var(--space-3) var(--space-4) var(--space-4); }
   .cell-tag {
     font-family: var(--font-mono);
@@ -159,9 +180,9 @@
 
 <column class="page" gap="6" data-test="catalog">
   <div class="hero" data-test="catalog-hero">
-    <span class="eyebrow">— {totalComponents()} components · {totalPacks()} packs</span>
+    <span class="eyebrow">— {totalComponents()} components · {totalCategories()} categories</span>
     <h1 class="title">Component library</h1>
-    <p class="lead">Every primitive in the Ship set. Batteries-included, on-brand, and compiled to standard web components.</p>
+    <p class="lead">The public SUI primitive surface, grouped by category. Every component is a standard web component, themed by design tokens, and compiled ahead-of-time.</p>
   </div>
 
   <row class="search-row" justify="center">
@@ -169,7 +190,7 @@
       class="search"
       type="search"
       tone="primary"
-      placeholder="Search 74 components…"
+      placeholder="Search components…"
       aria-label="Search components"
       on:sui-input={onSearch}
       data-test="catalog-search"
@@ -178,18 +199,18 @@
     </sui-input>
   </row>
 
-  <row class="packs" justify="center" gap="2" data-test="catalog-packs">
-    {#for p of packs() key={p.id}}
+  <row class="chips-wrap" justify="center" gap="2" data-test="catalog-chips">
+    {#for c of chips() key={c.id}}
       <button
         type="button"
         class="chip"
-        class:chip-on={activePack() === p.id}
-        on:click={() => setPack(p.id)}
-        attr:data-pack={p.id}
-        data-test="catalog-pack-chip"
+        class:chip-on={activeCategory() === c.id}
+        on:click={() => setCategory(c.id)}
+        attr:data-category={c.id}
+        data-test="catalog-category-chip"
       >
-        <span class="chip-label">{p.label}</span>
-        <span class="chip-count">{p.count}</span>
+        <span class="chip-label">{c.label}</span>
+        <span class="chip-count">{c.count}</span>
       </button>
     {/for}
   </row>
