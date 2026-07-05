@@ -427,6 +427,26 @@ fn compile_one(
 ) -> Result<()> {
     let source = fs::read_to_string(path)
         .with_context(|| format!("read {}", path.display()))?;
+    // SFC: an inline `<controller>` block is extracted and written to the
+    // generated `<stem>.controller.ts` module that `paired_setup` + the emit
+    // already consume — so authoring is one file, with no emit change. (A
+    // paired `.controller.ts` on disk stays valid; the inline block wins.)
+    let (source, inline_controller) =
+        sui_compiler::parse::preprocess::extract_controller_block(&source);
+    if let Some(body) = &inline_controller {
+        if let (Some(parent), Some(file_name)) =
+            (path.parent(), path.file_name().and_then(|s| s.to_str()))
+        {
+            let stem = file_name.strip_suffix(".sui").unwrap_or(file_name);
+            let ctl_file = if stem == "page" {
+                "controller.ts".to_string()
+            } else {
+                format!("{stem}.controller.ts")
+            };
+            fs::write(parent.join(&ctl_file), body)
+                .with_context(|| format!("write generated controller {ctl_file}"))?;
+        }
+    }
     let mode = mode.map(|m| m.into()).unwrap_or(CompileMode::Auto);
     // Resolve the emit dir for this file. Without --out, outputs land in
     // the project mirror tree at `<repo-root>/.sui-out/<src-rel>/`;
