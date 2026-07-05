@@ -24,11 +24,16 @@
   :host { display: contents; }
   :host([hidden]) { display: none; }
 
+  /* The <column> primitive absorbs display:flex + flex-direction:column
+     (the lowered .sui-col class). The remaining .panel rules are raw
+     values no construct reaches: inset:auto (popover default override),
+     margin:0 (slot default reset), min-width (no sx prop), font-family
+     (no sx font: prop), opacity/transform + multi-prop transition
+     (motion), the :popover-open pseudo, ::backdrop transparent. */
   .panel {
     inset: auto;
     margin: 0;
     min-width: var(--panel-min-w-md);
-    display: flex; flex-direction: column;
     font-family: var(--font-body);
     opacity: 0;
     transform: scale(0.96);
@@ -42,6 +47,11 @@
   }
   .panel::backdrop { background: transparent; }
 
+  /* ::slotted descendants — buttons, role=menuitems, hr separators, and
+     data-section labels — are authored in the consumer's slot. They use
+     pseudo-class / attribute-selector styling that variants/sx can't
+     express. The transparent raw keyword and multi-prop transitions
+     further anchor this as residual. */
   ::slotted(button), ::slotted([role='menuitem']) {
     display: flex; align-items: center; gap: var(--space-2);
     text-align: start;
@@ -71,6 +81,7 @@
 </style>
 
 <slot name="trigger" bind:this={triggerSlot}></slot>
-<div class="panel" part="panel" popover="auto" role="menu" aria-label="Context menu" bind:this={panelEl} sx="p:1 bg:popover fg:popover-foreground border:border radius:md shadow:lg text:sm">
+<column class="panel" part="panel" gap="0" popover="auto" role="menu" aria-label="Context menu" bind:this={panelEl}
+  sx="p:1 bg:popover fg:popover-foreground border:border radius:md shadow:lg text:sm">
   <slot bind:this={itemSlot}></slot>
-</div>
+</column>
