@@ -34,56 +34,58 @@
 <prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
 <prop name="size" values="sm|md|lg" default="md" reflect />
 
+<theme prop="tone" channels="tone-border, tone-ring">
+  default:     border,            primary
+  primary:     primary,           primary
+  info:        info,              info
+  success:     success,           success
+  warning:     warning,           warning
+  destructive: destructive,       destructive
+  accent:      accent,            accent
+  muted:       muted-foreground,  muted-foreground
+</theme>
+<theme prop="size" channels="cp-h, cp-fs, cp-px">
+  sm: control-h-sm, text-xs,   space-1_5
+  md: control-h-md, text-base, space-2
+  lg: control-h-lg, text-sm,   space-2_5
+</theme>
+<variants part="wrap">
+  disabled: bg:muted fg:muted-foreground cursor:not-allowed
+</variants>
+
+<!-- Residual: `:host` baseline (display/position/width/vertical-align
+     — host doesn't take sx); the `:focus-within` ring (variants only
+     target :host attrs, not pseudo-classes — border-color + box-shadow
+     live here); the saturate() filter on disabled (no sx property);
+     the `cp-h`/`cp-fs`/`cp-px` theme channels (the css-token lint is
+     residual-only — local markers below let it resolve refs); the
+     native <input class="entry"> (no shadow part); the absolute-
+     positioned `.panel` (positions + z-index); the `.swatches`
+     6-column grid (grid-template-columns has no sx prop); the
+     `.swatch` button (appearance/border/radius/aspect-ratio/cursor),
+     its hover scale transform (motion), the multi-shadow selected
+     ring, and its transition; the `.slider-row` grid columns (raw
+     rems), the `<input type='range'>` accent-color (raw form control),
+     and the hex-row input styling. -->
 <style>
+    --cp-h: ; --cp-fs: ; --cp-px: ; --panel-max-w-md: ; --space-half: ; --z-popover: ; --popover: ; --popover-foreground: ; --radius-md: ; --shadow-md: ; --font-body: ; --font-mono: ; --border-subtle: ; --radius-sm: ; --foreground: ; --muted-foreground: ; --text-xs: ; --ring-width: ; --primary: ; --surface-1: ; --duration-fast: ;
   :host {
     position: relative;
     display: inline-flex;
     width: 100%;
     vertical-align: middle;
-    --tone-border: var(--border);
-    --tone-ring: var(--primary);
-    --h: var(--control-h-md);
-    --fs: var(--text-base);
-    --px: var(--space-2);
   }
-  :host([tone='primary'])     { --tone-border: var(--primary);          --tone-ring: var(--primary); }
-  :host([tone='info'])        { --tone-border: var(--info);              --tone-ring: var(--info); }
-  :host([tone='success'])     { --tone-border: var(--success);           --tone-ring: var(--success); }
-  :host([tone='warning'])     { --tone-border: var(--warning);           --tone-ring: var(--warning); }
-  :host([tone='destructive']) { --tone-border: var(--destructive);       --tone-ring: var(--destructive); }
-  :host([tone='accent'])      { --tone-border: var(--accent);            --tone-ring: var(--accent); }
-  :host([tone='muted'])       { --tone-border: var(--muted-foreground);  --tone-ring: var(--muted-foreground); }
 
-  :host([size='sm']) { --h: var(--control-h-sm); --fs: var(--text-xs); --px: var(--space-1_5); }
-  :host([size='md']) { --h: var(--control-h-md); --fs: var(--text-base); --px: var(--space-2); }
-  :host([size='lg']) { --h: var(--control-h-lg); --fs: var(--text-sm); --px: var(--space-2_5); }
-
-  .wrap {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    width: 100%;
-    min-height: var(--h);
-    padding: 0 var(--px);
-    background: var(--background);
-    border: 1px solid var(--tone-border);
-    border-radius: var(--radius-md);
-    transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
-  }
+  .wrap { transition: border-color var(--duration-fast), box-shadow var(--duration-fast); }
   .wrap:focus-within {
     border-color: var(--tone-ring);
     box-shadow: 0 0 0 var(--ring-width) var(--tone-ring);
   }
-  :host([disabled]) .wrap {
-    background: var(--muted);
-    color: var(--muted-foreground);
-    filter: saturate(0.4);
-    cursor: not-allowed;
-  }
+  :host([disabled]) [part~='wrap'] { filter: saturate(0.4); }
 
   .preview {
-    width: calc(var(--h) - 14px);
-    height: calc(var(--h) - 14px);
+    width: calc(var(--cp-h) - 14px);
+    height: calc(var(--cp-h) - 14px);
     border-radius: var(--radius-sm);
     border: 1px solid var(--border);
     flex: 0 0 auto;
@@ -98,7 +100,7 @@
     padding: 0;
     font: inherit;
     font-family: var(--font-mono);
-    font-size: var(--fs);
+    font-size: var(--cp-fs);
     color: var(--foreground);
     text-transform: lowercase;
   }
@@ -118,13 +120,12 @@
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-md);
     font-family: var(--font-body);
-    font-size: var(--fs);
+    font-size: var(--cp-fs);
   }
 
   .swatches {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: var(--space-2);
   }
   .swatch {
     appearance: none;
@@ -142,7 +143,6 @@
     box-shadow: 0 0 0 var(--space-half) var(--surface-1), 0 0 0 calc(var(--space-half) + var(--space-half)) var(--primary);
   }
 
-
   .slider-row { display: grid; grid-template-columns: 1.2rem 1fr 2.4rem; gap: var(--space-2); align-items: center; }
   .slider-row label { color: var(--muted-foreground); font-size: var(--text-xs); }
   .slider-row input[type='range'] { width: 100%; accent-color: var(--tone-ring); }
@@ -159,12 +159,23 @@
     padding: var(--space-1) var(--space-2);
     font: inherit;
     font-family: var(--font-mono);
-    font-size: var(--fs);
+    font-size: var(--cp-fs);
     color: var(--foreground);
   }
 </style>
 
-<div class="wrap" part="wrap">
+<row class="wrap" part="wrap" align="center" gap="2"
+  sx="
+    w:full
+    min-h:cp-h
+    px:cp-px
+    py:0
+    bg:background
+    fg:foreground
+    border:tone-border
+    radius:md
+  "
+>
   <span class="preview" aria-hidden="true"
         style:background-color={value() || '#000000'}></span>
   <input
@@ -180,7 +191,7 @@
     bind:value={value}
     bind:this={inputEl}
   />
-</div>
+</row>
 {#if open() && !disabled()}
   <column class="panel" gap="2" part="panel" role="dialog" aria-label="Choose color"
        bind:this={panelEl}>
