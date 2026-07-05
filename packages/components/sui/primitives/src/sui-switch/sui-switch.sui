@@ -41,6 +41,23 @@
 <prop name="value" type="string" default="on" />
 <prop name="label" type="string" default="" />
 
+<theme prop="size" channels="sw-w, sw-h, sw-thumb">
+  default: control-h-sm, icon-size-md, space-3
+  sm:      control-h-xs, icon-size-sm, space-2_5
+  md:      control-h-sm, icon-size-md, space-3
+  lg:      space-7,     icon-size-lg, icon-size-sm
+</theme>
+<theme prop="tone" channels="tone, tone-on-fg">
+  default:     primary, primary-foreground
+  primary:     primary, primary-foreground
+  info:        info,    info-foreground
+  success:     success, success-foreground
+  warning:     warning, warning-foreground
+  destructive: destructive, destructive-foreground
+  accent:      accent,  accent-foreground
+  muted:       muted-foreground, background
+</theme>
+
 <style>
   :host {
     display: inline-flex;
@@ -54,26 +71,14 @@
 
     --tone: var(--primary);
     --tone-on-fg: var(--primary-foreground);
+    /* sw- prefix locals — the <theme prop="size"> block overrides per
+     * size; declared here so the css_token lint resolves the references
+     * in .track / .thumb (the lint does not see <theme> blocks). */
+    --sw-w: var(--control-h-sm);
+    --sw-h: var(--icon-size-md);
+    --sw-thumb: var(--space-3);
   }
   :host([hidden]) { display: none; }
-
-  :host(:not([tone])),
-  :host([tone='default']) {
-    --tone: var(--primary);
-    --tone-on-fg: var(--primary-foreground);
-  }
-  :host([tone='info'])        { --tone: var(--info);        --tone-on-fg: var(--info-foreground); }
-  :host([tone='success'])     { --tone: var(--success);     --tone-on-fg: var(--success-foreground); }
-  :host([tone='warning'])     { --tone: var(--warning);     --tone-on-fg: var(--warning-foreground); }
-  :host([tone='destructive']) { --tone: var(--destructive); --tone-on-fg: var(--destructive-foreground); }
-  :host([tone='accent'])      { --tone: var(--accent);      --tone-on-fg: var(--accent-foreground); }
-  :host([tone='muted'])       { --tone: var(--muted-foreground); --tone-on-fg: var(--background); }
-  :host([tone='primary'])     { --tone: var(--primary);     --tone-on-fg: var(--primary-foreground); }
-
-  :host(:not([size])),
-  :host([size='md']) { --sw-w: var(--control-h-sm); --sw-h: var(--icon-size-md); --sw-thumb: var(--space-3); }
-  :host([size='sm']) { --sw-w: var(--control-h-xs); --sw-h: var(--icon-size-sm); --sw-thumb: var(--space-2_5); }
-  :host([size='lg']) { --sw-w: var(--space-7); --sw-h: var(--icon-size-lg); --sw-thumb: var(--icon-size-sm); }
 
   label {
     display: inline-flex;

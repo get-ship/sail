@@ -22,17 +22,35 @@
 <prop name="orientation" values="vertical|horizontal|both" default="vertical" reflect />
 <prop name="size" values="sm|md|lg" default="md" reflect />
 
+<theme prop="size" channels="sb-size">
+  default: space-2
+  sm:      space-1_5
+  md:      space-2
+  lg:      space-2_5
+</theme>
+<variants part="viewport">
+  (orientation=vertical): overflow-y:auto
+  (orientation=horizontal): overflow-x:auto
+  (orientation=both): overflow:auto
+</variants>
+<variants part="scrollbar-v">
+  (orientation=horizontal): display:none
+</variants>
+<variants part="scrollbar-h">
+  (orientation=vertical): display:none
+</variants>
+
 <style>
   :host {
     display: block;
     position: relative;
     overflow: hidden;
+    /* sb- prefix local — the <theme prop="size"> block overrides per
+     * size; declared here so the css_token lint resolves the
+     * reference in .scrollbar-v (the lint does not see <theme>
+     * blocks). */
+    --sb-size: var(--space-2);
   }
-  :host([hidden]) { display: none; }
-
-  :host(:not([size])), :host([size='md']) { --sb-size: var(--space-2); }
-  :host([size='sm']) { --sb-size: var(--space-1_5); }
-  :host([size='lg']) { --sb-size: var(--space-2_5); }
 
   .viewport {
     width: 100%;
@@ -43,9 +61,6 @@
   }
   .viewport::-webkit-scrollbar { display: none; }
 
-  :host(:not([orientation])) .viewport,
-  :host([orientation='vertical']) .viewport { overflow-y: auto; }
-  :host([orientation='horizontal']) .viewport { overflow-x: auto; }
   :host([orientation='both']) .viewport { overflow: auto; }
 
   /* Overlay scrollbar tracks — absolute-positioned, opacity-fade on hover/scroll */
@@ -63,15 +78,8 @@
     top: 0; right: var(--space-half); bottom: 0;
     width: var(--sb-size);
   }
-  .scrollbar-h {
-    left: 0; right: 0; bottom: var(--space-half);
-    height: var(--sb-size);
-  }
 
-  /* Orientation-driven track visibility */
-  :host(:not([orientation])) .scrollbar-h,
-  :host([orientation='vertical']) .scrollbar-h { display: none; }
-  :host([orientation='horizontal']) .scrollbar-v { display: none; }
+
 
   .thumb {
     position: absolute;

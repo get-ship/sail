@@ -32,6 +32,14 @@
 <prop name="size" values="sm|md|lg" default="md" reflect />
 <prop name="label" type="string" default="" />
 
+
+<variants part="wrap">
+  sticky-header: overflow-y:auto
+</variants>
+<variants part="empty">
+  data-empty: display:block
+</variants>
+
 <style>
   :host {
     display: block;
@@ -73,22 +81,12 @@
     font-variant-numeric: tabular-nums;
   }
 
-  :host([sticky-header]) { display: block; }
-  :host([sticky-header]) .wrap {
-    overflow-y: auto;
-    max-height: inherit;
-  }
+  :host([sticky-header]) .wrap { max-height: inherit; }
 
   .empty {
     display: none;
-    padding: var(--space-7) var(--space-5);
     text-align: center;
-    color: var(--muted-foreground);
-    font-size: var(--text-sm);
-    background: var(--surface-1);
   }
-  :host([data-empty]) .empty { display: block; }
-  :host([data-empty]) table { display: none; }
 
   /* ── Data variant — CSS-grid "table" (windowed center band) ─────────────── */
   .grid {
@@ -304,14 +302,14 @@
     <thead part="thead"><slot name="head"></slot></thead>
     <tbody part="tbody"><slot></slot></tbody>
   </table>
-  <div class="empty" part="empty" role="status">
+  <div class="empty" part="empty" role="status" sx="p:7 px:5 text:sm bg:surface-1 fg:muted-foreground">
     <slot name="empty"></slot>
   </div>
 </div>
 {:else}
 <div class="wrap" part="wrap">
   <slot></slot>
-  <div class="empty" part="empty" role="status">
+  <div class="empty" part="empty" role="status" sx="p:7 px:5 text:sm bg:surface-1 fg:muted-foreground">
     <slot name="empty"></slot>
   </div>
 </div>

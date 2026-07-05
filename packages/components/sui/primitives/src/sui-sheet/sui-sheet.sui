@@ -28,6 +28,10 @@
 <prop name="selection-mode" values="cell|range|multi" default="range" reflect />
 <prop name="size" values="sm|md|lg" default="md" reflect />
 
+<variants part="cell">
+  show-gridlines: border-right:subtle border-bottom:subtle
+</variants>
+
 <style>
   :host {
     display: block;
@@ -119,10 +123,6 @@
     color: var(--foreground);
     overflow: hidden;
     white-space: nowrap;
-  }
-  :host([show-gridlines]) .cell {
-    border-right-color: var(--divider);
-    border-bottom-color: var(--divider);
   }
   .cell[data-active] {
     box-shadow: inset 0 0 0 var(--ring-width) var(--ring-color);

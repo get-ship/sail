@@ -52,6 +52,26 @@
 <prop name="shape" values="round|square" default="round" reflect />
 <prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="muted" reflect />
 
+<theme prop="size" channels="sz, fs">
+  xs: space-5, text-xs
+  sm: control-h-sm, text-xs
+  md: space-7, text-base
+  lg: control-h-lg, text-lg
+  xl: control-h-xl, text-2xl
+</theme>
+<theme prop="tone" channels="av-bg, av-fg">
+  primary:     primary, primary-foreground
+  accent:      accent, accent-foreground
+  info:        tone-info-bg, info
+  success:     tone-success-bg, success
+  warning:     tone-warning-bg, warning
+  destructive: tone-destructive-bg, destructive
+</theme>
+<variants part="root">
+  shape=round:  radius:full
+  shape=square: radius:sm
+</variants>
+
 <style>
   :host {
     display: inline-flex;
@@ -66,22 +86,6 @@
     --av-fg: var(--foreground);
   }
   :host([hidden]) { display: none; }
-
-  :host([size='xs']) { --sz: var(--space-5); --fs: var(--text-xs); }
-  :host([size='sm']) { --sz: var(--control-h-sm); --fs: var(--text-xs); }
-  :host([size='md']) { --sz: var(--space-7); --fs: var(--text-base); }
-  :host([size='lg']) { --sz: var(--control-h-lg); --fs: var(--text-lg); }
-  :host([size='xl']) { --sz: var(--control-h-xl); --fs: var(--text-2xl); }
-
-  /* Tone channel for initials background */
-  :host([tone='primary'])     { --av-bg: var(--primary);     --av-fg: var(--primary-foreground); }
-  :host([tone='accent'])      { --av-bg: var(--accent);      --av-fg: var(--accent-foreground); }
-  :host([tone='info'])        { --av-bg: var(--tone-info-bg);        --av-fg: var(--info); }
-  :host([tone='success'])     { --av-bg: var(--tone-success-bg);     --av-fg: var(--success); }
-  :host([tone='warning'])     { --av-bg: var(--tone-warning-bg);     --av-fg: var(--warning); }
-  :host([tone='destructive']) { --av-bg: var(--tone-destructive-bg); --av-fg: var(--destructive); }
-  :host([tone='muted'])       { --av-bg: linear-gradient(135deg, var(--primary), var(--accent)); --av-fg: var(--foreground); }
-  :host([tone='default'])     { --av-bg: linear-gradient(135deg, var(--primary), var(--accent)); --av-fg: var(--foreground); }
 
   .root {
     position: relative;
@@ -104,8 +108,6 @@
     box-shadow: inset 0 0 0 1px var(--border),
                 inset 0 1px 0 var(--background);
   }
-  :host([shape='round'])  .root { border-radius: 50%; }
-  :host([shape='square']) .root { border-radius: var(--radius-sm); }
 
   img {
     width: 100%;
@@ -117,7 +119,7 @@
   }
 </style>
 
-<span class="root" part="root"
+<span class="root" part="root" sx="w:sz h:sz weight:bold text:fs overflow:hidden"
       role="img"
       aria-label={name() || initials() || 'avatar'}>
   {#if (iconSlug() || src()) && !errored()}

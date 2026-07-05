@@ -28,15 +28,8 @@
     inset: auto;
     margin: 0;
     min-width: var(--panel-min-w-md);
-    padding: var(--space-1);
-    background: var(--popover);
-    color: var(--popover-foreground);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg), inset 0 1px 0 var(--tone-muted-bg);
     display: flex; flex-direction: column;
     font-family: var(--font-body);
-    font-size: var(--text-sm);
     opacity: 0;
     transform: scale(0.96);
     transition:
@@ -78,6 +71,6 @@
 </style>
 
 <slot name="trigger" bind:this={triggerSlot}></slot>
-<div class="panel" part="panel" popover="auto" role="menu" aria-label="Context menu" bind:this={panelEl}>
+<div class="panel" part="panel" popover="auto" role="menu" aria-label="Context menu" bind:this={panelEl} sx="p:1 bg:popover fg:popover-foreground border:border radius:md shadow:lg text:sm">
   <slot bind:this={itemSlot}></slot>
 </div>

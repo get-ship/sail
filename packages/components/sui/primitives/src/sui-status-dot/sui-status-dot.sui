@@ -25,20 +25,28 @@
 <prop name="size" values="sm|md" default="md" reflect />
 <prop name="label" type="string" default="" />
 
+<theme prop="tone" channels="tone-fg, tone-halo-strong, tone-halo-soft">
+  default:     foreground,         tone-default-border,     tone-default-ring
+  primary:     primary,            tone-primary-border,     tone-primary-ring
+  info:        info,               tone-info-border,        tone-info-ring
+  success:     success,            tone-success-border,     tone-success-ring
+  warning:     warning,            tone-warning-border,     tone-warning-ring
+  destructive: destructive,        tone-destructive-border, tone-destructive-ring
+  accent:      accent,             tone-accent-border,      tone-accent-ring
+  muted:       muted-foreground,   tone-muted-border,       tone-muted-ring
+</theme>
+
 <style>
   :host {
     display: inline-flex;
     vertical-align: middle;
+    /* tone-prefix locals — the <theme prop="tone"> block overrides
+     * per tone; declared here so the css_token lint resolves the
+     * references in .dot (the lint does not see <theme> blocks). */
     --tone-fg: var(--success);
+    --tone-halo-strong: var(--tone-success-border);
+    --tone-halo-soft: var(--tone-success-ring);
   }
-  :host([tone='default'])     { --tone-fg: var(--foreground);     --tone-halo-strong: var(--tone-default-border); --tone-halo-soft: var(--tone-default-ring); }
-  :host([tone='primary'])     { --tone-fg: var(--primary);         --tone-halo-strong: var(--tone-primary-border); --tone-halo-soft: var(--tone-primary-ring); }
-  :host([tone='info'])        { --tone-fg: var(--info);            --tone-halo-strong: var(--tone-info-border);    --tone-halo-soft: var(--tone-info-ring); }
-  :host([tone='success'])     { --tone-fg: var(--success);         --tone-halo-strong: var(--tone-success-border); --tone-halo-soft: var(--tone-success-ring); }
-  :host([tone='warning'])     { --tone-fg: var(--warning);         --tone-halo-strong: var(--tone-warning-border); --tone-halo-soft: var(--tone-warning-ring); }
-  :host([tone='destructive']) { --tone-fg: var(--destructive);     --tone-halo-strong: var(--tone-destructive-border); --tone-halo-soft: var(--tone-destructive-ring); }
-  :host([tone='accent'])      { --tone-fg: var(--accent);          --tone-halo-strong: var(--tone-accent-border);  --tone-halo-soft: var(--tone-accent-ring); }
-  :host([tone='muted'])       { --tone-fg: var(--muted-foreground); --tone-halo-strong: var(--tone-muted-border);  --tone-halo-soft: var(--tone-muted-ring); }
   .dot {
     display: inline-block;
     width: var(--icon-size-3xs);
