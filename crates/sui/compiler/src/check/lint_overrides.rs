@@ -19,7 +19,7 @@
 //! opt out of a rule without editing it. They can also *promote* (→ Error):
 //! the styling policy (`check::policy::Policy`) uses that direction to turn a
 //! migration-Warn rule (`sui-no-style-block`, `sui-no-raw-container`) into a
-//! hard wall for the `floor`/`stripped` modes. Promotion is reserved for those
+//! hard wall for the `full`/`strict` presets. Promotion is reserved for those
 //! policy rules — arbitrary Warn rules are tightened by editing the rule.
 //!
 //! Plumbing: `CompileOpts::lint_overrides` carries a `Vec<LintOverride>`
@@ -69,7 +69,7 @@ pub enum OverrideSeverity {
     /// `Warn`/`Off` (which soften), this *tightens*. It is how the styling
     /// policy (`check::policy::Policy`) turns a migration-Warn rule
     /// (`sui-no-style-block`, `sui-no-raw-container`) into a hard wall for the
-    /// `floor`/`stripped` modes — without editing the rule. The rule's natural
+    /// `full`/`strict` presets — without editing the rule. The rule's natural
     /// Warn still stands for an unconfigured package.
     Error,
 }

@@ -1,37 +1,42 @@
-//! The styling **policy** — an *opinionated floor*, plus a tighter *stripped*
-//! mode. This is NOT a spectrum from "escape hatch" to "strict"; there is no
-//! blessed escape hatch. Both modes are opinionated, and both forbid raw CSS.
+//! The styling **policy** — a non-negotiable *floor* plus a small set of
+//! *capability* keys the compiler dials on or off. This is NOT a spectrum from
+//! "escape hatch" to "strict": there is no blessed escape hatch anywhere. Every
+//! tier forbids raw CSS.
 //!
-//! Universal (every mode, every tier, primitives included): design **tokens**
-//! (`sui-css-token` + the value-literal rules) and valid **`sx`** (`sui-sx`).
-//! Off-token styling never compiles, anywhere.
+//! ## The floor — not a key, cannot be turned off
 //!
-//! - [`Policy::Floor`] — the opinionated baseline, and the **default**. One way
-//!   to do CSS: `sx` token utilities (raw `<style>` is an error). Raw `<div>`/
-//!   `<span>` are fine — primitives compose structure from them. This is the
-//!   mode **primitives** live in: not an escape hatch, not "strict", just the
-//!   floor. Its opinions (what `sx` covers, which elements auto-wrap, which
-//!   motion/variant/responsive language elements exist) are refined by evals.
-//! - [`Policy::Stripped`] — the floor with raw HTML stripped away: no raw
-//!   `<div>`/`<span>` either, so app authors compose primitives only. Strictly
-//!   tighter than the floor; same no-`<style>`, sx still allowed.
-//! - [`Policy::Strictest`] — the maximal tier: stripped **plus no `sx`**. "Here
-//!   are the primitives — compose them and use their props; no styling escape
-//!   at all." Tests whether the primitive vocabulary is rich enough to need
-//!   zero styling surface.
+//! Authored `<style>` blocks (`sui-no-style-block`) and inline `style=`
+//! (`sui-no-inline-style`) are a hard `Error` under **every** policy, and there
+//! is no config key to relax them. This is what "floor" means: the thing not
+//! even the compiler's configuration allows. (The compiler's own `--styles`
+//! injection is internal, not authored source, so `sx`'s generated block is
+//! never mistaken for author CSS.)
 //!
-//! Migration is per package via `sui.config.json` `{ "policy": "stripped" }`.
-//! An un-configured package gets the floor — opinionated by default. There is
-//! no "allow raw styles" preset: a package that genuinely cannot yet express a
-//! primitive within the floor is scaffolding to be removed, handled by an
-//! explicit granular escape, never dignified as a mode.
+//! ## The capability keys — the dial
+//!
+//! Three keys, each on/off, gate the styling surface *above* the floor:
+//! - `sx` — the `sx="…"` token utility surface (`sui-no-sx`)
+//! - `variants` — the `<variants>` prop→style table (`sui-no-variants`)
+//! - `raw_containers` — raw `<div>`/`<span>` (`sui-no-raw-container`)
+//!
+//! ## The presets
+//!
+//! - [`Policy::FULL`] — primitive-authoring: every capability on. Where the SUI
+//!   primitives are built. The floor still holds; a dissolved primitive expresses
+//!   itself in `sx` + `<variants>` + layout keywords, never raw CSS.
+//! - [`Policy::STRICT`] — app-authoring: every capability off. Compose primitives,
+//!   drive them with props, use the layout keywords — no styling escape at all.
+//!   Tests whether the primitive vocabulary is rich enough to need zero surface.
+//!
+//! A `sui.config.json` may name a preset (`{ "preset": "strict" }`) and/or set
+//! individual keys (`{ "preset": "full", "raw_containers": false }`) — keys
+//! override the preset; the floor is never a key. An un-configured package
+//! resolves to `None` (opt-in): the policy applies only where a package has
+//! declared one, so it rolls out per-package and every unconfigured tree — the
+//! primitives still mid-dissolution — compiles exactly as before.
 //!
 //! Implementation: a `Policy` *compiles to* a bundle of [`LintOverride`]s that
-//! rides the existing `lint_overrides` plumbing through `compile()`. `Floor`
-//! promotes `sui-no-style-block` to Error and silences `sui-no-raw-container`
-//! (divs are fine); `Stripped` promotes both. The `<style>` gate is a
-//! raw-source lint, so `sx`'s own injected block is never mistaken for author
-//! CSS.
+//! rides the existing `lint_overrides` plumbing through `compile()`.
 
 use std::path::Path;
 
@@ -39,89 +44,75 @@ use super::lint_overrides::{LintOverride, OverrideSeverity};
 
 const CONFIG_FILE: &str = "sui.config.json";
 
-/// A package's styling policy. See the module docs.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum Policy {
-    /// The opinionated baseline, and the default: no raw `<style>` (sx only),
-    /// tokens enforced, raw containers allowed. Where primitives live.
-    #[default]
-    Floor,
-    /// The floor with raw HTML stripped: no raw `<div>`/`<span>` either. Where
-    /// app authors live — compose primitives, don't hand-roll boxes. sx allowed.
-    Stripped,
-    /// The maximal tier: stripped **plus no `sx`**. Primitives + their props
-    /// only, no styling escape whatsoever.
-    Strictest,
+/// A package's styling policy: the (implicit, non-overridable) floor plus the
+/// three capability keys. See the module docs.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Policy {
+    /// The `sx="…"` token styling surface.
+    pub sx: bool,
+    /// The `<variants>` prop→style table.
+    pub variants: bool,
+    /// Raw `<div>`/`<span>` containers.
+    pub raw_containers: bool,
 }
 
 impl Policy {
-    /// Parse the `"policy"` config value. Unknown strings return `None` (caller
-    /// falls back to the default rather than failing the build).
-    pub fn parse(s: &str) -> Option<Policy> {
-        match s.trim() {
-            "floor" => Some(Policy::Floor),
-            "stripped" => Some(Policy::Stripped),
-            "strictest" => Some(Policy::Strictest),
+    /// `full` — primitive-authoring: every capability unlocked (the floor still
+    /// holds). Where the primitives are built and dissolved.
+    pub const FULL: Policy = Policy { sx: true, variants: true, raw_containers: true };
+
+    /// `strict` — app-authoring: every capability off. Compose primitives and use
+    /// their props; no `sx`, no `<variants>`, no raw boxes.
+    pub const STRICT: Policy = Policy { sx: false, variants: false, raw_containers: false };
+
+    /// Parse a preset name. Unknown names return `None`.
+    pub fn preset(name: &str) -> Option<Policy> {
+        match name.trim() {
+            "full" => Some(Policy::FULL),
+            "strict" => Some(Policy::STRICT),
             _ => None,
         }
     }
 
-    /// The `LintOverride` bundle this policy implies. Both modes promote
-    /// `sui-no-style-block` to Error (the floor's core opinion — one way to do
-    /// CSS). They differ only on raw containers: the floor silences them (divs
-    /// are legitimate structure), `stripped` promotes them to Error.
+    /// The `LintOverride` bundle this policy implies. The **floor** is always
+    /// `Error` and is emitted regardless of the keys — no configuration can bring
+    /// authored `<style>` / `style=` back. The three capability keys toggle their
+    /// ban rules between `Off` (allowed) and `Error` (forbidden).
     pub fn overrides(self) -> Vec<LintOverride> {
         use OverrideSeverity::{Error, Off};
         let lo = |rule: &str, severity| LintOverride { rule: rule.to_string(), severity };
+        let cap = |on: bool| if on { Off } else { Error };
         vec![
-            // Raw `<style>` and raw inline `style=` are both banned at every
-            // policy — the floor's core opinion is "one way to do CSS," and both
-            // are a second, untokened way. (The strictest eval caught agents
-            // falling through to `style=` when sx and `<style>` were closed.)
+            // FLOOR — non-overridable, present under every policy.
             lo("sui-no-style-block", Error),
             lo("sui-no-inline-style", Error),
-            // Raw `<div>`/`<span>`: fine at the floor (silence the warn), banned
-            // once stripped.
-            lo(
-                "sui-no-raw-container",
-                match self {
-                    Policy::Floor => Off,
-                    Policy::Stripped | Policy::Strictest => Error,
-                },
-            ),
-            // `sx`: blessed at floor + stripped, banned at strictest.
-            lo(
-                "sui-no-sx",
-                match self {
-                    Policy::Floor | Policy::Stripped => Off,
-                    Policy::Strictest => Error,
-                },
-            ),
+            // CAPABILITY keys — the dial.
+            lo("sui-no-sx", cap(self.sx)),
+            lo("sui-no-variants", cap(self.variants)),
+            lo("sui-no-raw-container", cap(self.raw_containers)),
         ]
     }
 
-    /// Resolve the policy for a source file: walk up from its directory to the
-    /// nearest `sui.config.json` carrying a `"policy"` key. Defaults to `Floor`
-    /// (opinionated by default) when none is found, or when the nearest config
-    /// is unreadable/unparseable (fail-open to the floor, and stop — a present
-    /// config is the package's declared intent).
+    /// Resolve the policy for a source file, falling back to [`Policy::FULL`] when
+    /// no config is found. (Direct callers that want the opt-in `None` should use
+    /// [`resolve_opt`](Policy::resolve_opt).)
     pub fn resolve(source_file: &Path) -> Policy {
-        Self::resolve_opt(source_file).unwrap_or_default()
+        Self::resolve_opt(source_file).unwrap_or(Policy::FULL)
     }
 
     /// Like [`resolve`] but returns `None` when no `sui.config.json` is found on
-    /// the walk up, instead of falling back to the Floor default. This is the
-    /// **opt-in** entry the deck bundler uses: the floor applies only to packages
-    /// that have explicitly declared a policy, so it rolls out per-package and
-    /// every unconfigured tree keeps compiling exactly as before. (A present-but-
-    /// unparseable config still resolves to the Floor default — its presence is
-    /// the package's declared intent.)
+    /// the walk up, instead of a default. This is the **opt-in** entry the deck
+    /// bundler and CLI use: the policy applies only to packages that have declared
+    /// one, so it rolls out per-package and every unconfigured tree keeps
+    /// compiling exactly as before. A present-but-unparseable config fails open to
+    /// [`Policy::FULL`] (permissive — a config typo never hard-fails a build) and
+    /// stops the walk (its presence is the package's declared intent).
     pub fn resolve_opt(source_file: &Path) -> Option<Policy> {
         let mut dir = source_file.parent();
         while let Some(d) = dir {
             let cfg = d.join(CONFIG_FILE);
             match std::fs::read_to_string(&cfg) {
-                Ok(text) => return Some(parse_config(&text).unwrap_or_default()),
+                Ok(text) => return Some(parse_config(&text).unwrap_or(Policy::FULL)),
                 Err(_) => dir = d.parent(),
             }
         }
@@ -129,72 +120,91 @@ impl Policy {
     }
 }
 
+/// Parse a `sui.config.json`. A recognised `"preset"` sets the base; individual
+/// `"sx"` / `"variants"` / `"raw_containers"` booleans override it. With neither
+/// a preset nor any key, returns `None` (not a policy config). A config that
+/// names only keys starts from `STRICT` (the app default) and dials up.
 fn parse_config(text: &str) -> Option<Policy> {
     let v: serde_json::Value = serde_json::from_str(text).ok()?;
-    Policy::parse(v.get("policy")?.as_str()?)
+    let has_preset = v.get("preset").is_some();
+    let mut p = match v.get("preset").and_then(|x| x.as_str()) {
+        Some(name) => Policy::preset(name)?,
+        None => Policy::STRICT,
+    };
+    let bool_key = |k: &str| v.get(k).and_then(|x| x.as_bool());
+    let mut touched = has_preset;
+    if let Some(b) = bool_key("sx") {
+        p.sx = b;
+        touched = true;
+    }
+    if let Some(b) = bool_key("variants") {
+        p.variants = b;
+        touched = true;
+    }
+    if let Some(b) = bool_key("raw_containers") {
+        p.raw_containers = b;
+        touched = true;
+    }
+    touched.then_some(p)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn default_is_the_floor() {
-        assert_eq!(Policy::default(), Policy::Floor);
-    }
-
-    #[test]
-    fn floor_bans_style_but_allows_divs() {
-        let ovr = Policy::Floor.overrides();
-        let style = ovr.iter().find(|o| o.rule == "sui-no-style-block").unwrap();
-        let div = ovr.iter().find(|o| o.rule == "sui-no-raw-container").unwrap();
-        assert_eq!(style.severity, OverrideSeverity::Error, "floor forbids <style>");
-        assert_eq!(div.severity, OverrideSeverity::Off, "floor allows raw <div>");
-    }
-
     fn sev(p: Policy, rule: &str) -> OverrideSeverity {
         p.overrides().iter().find(|o| o.rule == rule).unwrap().severity
     }
 
     #[test]
-    fn floor_allows_divs_and_sx() {
-        assert_eq!(sev(Policy::Floor, "sui-no-raw-container"), OverrideSeverity::Off);
-        assert_eq!(sev(Policy::Floor, "sui-no-sx"), OverrideSeverity::Off);
-    }
-
-    #[test]
-    fn stripped_bans_divs_keeps_sx() {
-        assert_eq!(sev(Policy::Stripped, "sui-no-raw-container"), OverrideSeverity::Error);
-        assert_eq!(sev(Policy::Stripped, "sui-no-sx"), OverrideSeverity::Off);
-    }
-
-    #[test]
-    fn strictest_bans_everything() {
-        let ovr = Policy::Strictest.overrides();
-        assert_eq!(ovr.len(), 4); // style-block, inline-style, raw-container, sx
-        assert!(ovr.iter().all(|o| o.severity == OverrideSeverity::Error));
-    }
-
-    #[test]
-    fn inline_style_banned_at_every_policy() {
-        for p in [Policy::Floor, Policy::Stripped, Policy::Strictest] {
+    fn floor_is_error_under_every_preset_and_is_not_a_key() {
+        for p in [Policy::FULL, Policy::STRICT] {
+            assert_eq!(sev(p, "sui-no-style-block"), OverrideSeverity::Error);
             assert_eq!(sev(p, "sui-no-inline-style"), OverrideSeverity::Error);
         }
+        // No config key can turn the floor off — only capability keys exist.
+        let p = parse_config(r#"{"preset":"full","sx":false}"#).unwrap();
+        assert_eq!(sev(p, "sui-no-style-block"), OverrideSeverity::Error);
     }
 
     #[test]
-    fn parses_known_modes_only() {
-        assert_eq!(Policy::parse("floor"), Some(Policy::Floor));
-        assert_eq!(Policy::parse("  stripped "), Some(Policy::Stripped));
-        assert_eq!(Policy::parse("strictest"), Some(Policy::Strictest));
-        assert_eq!(Policy::parse("authoring"), None);
+    fn full_unlocks_every_capability() {
+        assert_eq!(sev(Policy::FULL, "sui-no-sx"), OverrideSeverity::Off);
+        assert_eq!(sev(Policy::FULL, "sui-no-variants"), OverrideSeverity::Off);
+        assert_eq!(sev(Policy::FULL, "sui-no-raw-container"), OverrideSeverity::Off);
     }
 
     #[test]
-    fn parse_config_reads_policy_key() {
-        assert_eq!(parse_config(r#"{"policy":"stripped"}"#), Some(Policy::Stripped));
-        assert_eq!(parse_config(r#"{"policy":"floor"}"#), Some(Policy::Floor));
+    fn strict_forbids_every_capability() {
+        assert_eq!(sev(Policy::STRICT, "sui-no-sx"), OverrideSeverity::Error);
+        assert_eq!(sev(Policy::STRICT, "sui-no-variants"), OverrideSeverity::Error);
+        assert_eq!(sev(Policy::STRICT, "sui-no-raw-container"), OverrideSeverity::Error);
+    }
+
+    #[test]
+    fn parses_presets() {
+        assert_eq!(Policy::preset("full"), Some(Policy::FULL));
+        assert_eq!(Policy::preset("  strict "), Some(Policy::STRICT));
+        assert_eq!(Policy::preset("stripped"), None);
+    }
+
+    #[test]
+    fn granular_keys_override_the_preset() {
+        // full, but raw containers banned
+        let p = parse_config(r#"{"preset":"full","raw_containers":false}"#).unwrap();
+        assert!(p.sx && p.variants && !p.raw_containers);
+        // strict, but sx re-enabled — the in-between tier
+        let p = parse_config(r#"{"preset":"strict","sx":true}"#).unwrap();
+        assert!(p.sx && !p.variants && !p.raw_containers);
+        // keys only, no preset → base STRICT, dial up
+        let p = parse_config(r#"{"sx":true}"#).unwrap();
+        assert!(p.sx && !p.variants && !p.raw_containers);
+    }
+
+    #[test]
+    fn non_policy_config_is_none() {
         assert_eq!(parse_config(r#"{"other":1}"#), None);
         assert_eq!(parse_config("not json"), None);
+        assert_eq!(parse_config(r#"{"preset":"bogus"}"#), None);
     }
 }

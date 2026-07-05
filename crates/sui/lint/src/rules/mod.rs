@@ -43,6 +43,7 @@ pub mod sx;
 pub mod no_raw_container;
 pub mod no_style_block;
 pub mod no_sx;
+pub mod no_variants;
 pub mod no_inline_style;
 
 /// Function signature every rule conforms to.
@@ -89,5 +90,6 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (no_raw_container::RULE_ID, no_raw_container::check),
     (no_style_block::RULE_ID, no_style_block::check),
     (no_sx::RULE_ID, no_sx::check),
+    (no_variants::RULE_ID, no_variants::check),
     (no_inline_style::RULE_ID, no_inline_style::check),
 ];

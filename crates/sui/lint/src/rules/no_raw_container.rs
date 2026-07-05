@@ -4,10 +4,10 @@
 //! belongs to the layout keywords: `<column>` (vertical), `<row>`
 //! (horizontal), `<grid>`, plus `<sui-card>` (surface).
 //!
-//! A **stripped-mode** rule, NOT a floor rule: raw `<div>`/`<span>` are fine at
-//! the floor (primitives compose structure from them). Natural severity `Warn`;
-//! `check::policy::Policy::Floor` *silences* it (divs are legitimate there),
-//! and `Policy::Stripped` promotes it to a hard `Error` — so app authors
+//! A **`strict`-tier** rule, NOT a floor rule: raw `<div>`/`<span>` are fine
+//! under `full` (primitives compose structure from them). Natural severity `Warn`;
+//! `check::policy::Policy::FULL` *silences* it (divs are legitimate there),
+//! and `Policy::STRICT` promotes it to a hard `Error` — so app authors
 //! physically cannot hand-roll layout with a token-styled `<div>` (the failure
 //! the recipe-card bake-off surfaced) while primitive authors keep their boxes.
 //!
@@ -17,7 +17,7 @@
 //! should not) own a primitive for every content element. Only the two generic
 //! "unstyled box" tags are closed.
 //!
-//! Skips HTML comments. A package sets `sui.config.json` `{ "policy": "stripped" }`
+//! Skips HTML comments. A package sets `sui.config.json` `{ "preset": "strict" }`
 //! once its files compose primitives and no longer hand-roll raw boxes.
 
 use std::path::Path;

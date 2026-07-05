@@ -1,14 +1,14 @@
-//! `sui-no-sx` — the `sx=` styling attribute is banned under the STRICTEST policy.
+//! `sui-no-sx` — the `sx=` styling attribute is banned under the `strict` policy.
 //!
-//! `floor` and `stripped` bless `sx` (the token styling surface). The strictest
-//! policy removes even that: "here are the primitives — compose them, use their
-//! props, no styling escape at all." It's the maximal "make the wrong thing
-//! unrepresentable" tier for app authors.
+//! `full` blesses `sx` (the token styling surface). The `strict` app tier removes
+//! even that: "here are the primitives — compose them, use their props, no
+//! styling escape at all." It's the maximal "make the wrong thing unrepresentable"
+//! tier for app authors.
 //!
-//! Natural severity `Warn` so an unconfigured / floor / stripped package keeps
-//! compiling silently (those policies override it to Off); `Policy::Strictest`
-//! promotes it to a hard `Error`. Catches both static `sx="…"` and dynamic
-//! `sx={…}`. Skips HTML comments; advances char-safely.
+//! Natural severity `Warn` so an unconfigured / `full` package keeps compiling
+//! silently (that overrides it to Off); `Policy::STRICT` promotes it to a hard
+//! `Error`. Catches both static `sx="…"` and dynamic `sx={…}`. Skips HTML
+//! comments; advances char-safely.
 
 use std::path::Path;
 
@@ -45,7 +45,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 rule: RULE_ID,
                 severity: Severity::Warn,
                 message:
-                    "sx= is not allowed under the strictest policy — compose primitives and use \
+                    "sx= is not allowed under the strict policy — compose primitives and use \
                      their props; there is no styling escape at this tier."
                         .to_string(),
                 suggest: Some(
