@@ -8,196 +8,74 @@
   <prop name="pressed" values="true|false|mixed" default="false" reflect />
   <prop name="expanded" type="string" default="" reflect />
 
+  <theme prop="tone" channels="tone, tone-fg, tone-contrast, tone-bg, tone-border, tone-ring">
+    default:     foreground, foreground, background, hover-bg, border, ring
+    primary:     primary,     primary,     background, tone-primary-bg,     tone-primary-border,     tone-primary-ring
+    info:        info,        info,        background, tone-info-bg,        tone-info-border,        tone-info-ring
+    success:     success,     tone-success-fg, background, tone-success-bg, tone-success-border,     tone-success-ring
+    warning:     warning,     tone-warning-fg, background, tone-warning-bg, tone-warning-border,     tone-warning-ring
+    destructive: destructive, destructive, background, tone-destructive-bg, tone-destructive-border, tone-destructive-ring
+    accent:      accent,      accent,      background, tone-accent-bg,      tone-accent-border,      tone-accent-ring
+    muted:       muted-foreground, muted-foreground, background, tone-muted-bg, tone-muted-border, tone-muted-ring
+  </theme>
+
+  <theme prop="size" channels="btn-h, btn-px, btn-fs, btn-fw, btn-gap">
+    xs: control-h-2xs, space-2,  text-xs,  font-weight-medium, space-1
+    sm: control-h-sm,  space-2_5, text-sm,  font-weight-medium, space-1_5
+    md: control-h-md,  space-3,  text-base, font-weight-medium, space-2
+    lg: control-h-lg,  space-4,  text-md,  font-weight-medium, space-2
+  </theme>
+
+  <variants part="button">
+    variant=default:  bg:background border:border fg:foreground shadow:xs
+  </variants>
+
   <style>
-    :host {
-      display: inline-flex;
-      vertical-align: middle;
-      --tone: var(--foreground);
-      --tone-fg: var(--foreground);
-      --tone-contrast: var(--background);
-      --tone-bg: var(--hover-bg);
-      --tone-border: var(--border);
-      --tone-ring: var(--ring);
-      --btn-h: var(--control-h-md);
-      --btn-px: var(--space-3);
-      --btn-fs: var(--text-base);
-      --btn-fw: var(--font-weight-medium);
-      --btn-gap: var(--space-2);
-    }
-    :host([tone='primary'])     { --tone: var(--primary);     --tone-fg: var(--primary);     --tone-bg: var(--tone-primary-bg);     --tone-border: var(--tone-primary-border);     --tone-ring: var(--tone-primary-ring); }
-    :host([tone='info'])        { --tone: var(--info);        --tone-fg: var(--info);        --tone-bg: var(--tone-info-bg);        --tone-border: var(--tone-info-border);        --tone-ring: var(--tone-info-ring); }
-    :host([tone='success'])     { --tone: var(--success);     --tone-fg: var(--tone-success-fg); --tone-bg: var(--tone-success-bg);  --tone-border: var(--tone-success-border);  --tone-ring: var(--tone-success-ring); }
-    :host([tone='warning'])     { --tone: var(--warning);     --tone-fg: var(--tone-warning-fg); --tone-bg: var(--tone-warning-bg);  --tone-border: var(--tone-warning-border);  --tone-ring: var(--tone-warning-ring); }
-    :host([tone='destructive']) { --tone: var(--destructive); --tone-fg: var(--destructive); --tone-bg: var(--tone-destructive-bg); --tone-border: var(--tone-destructive-border); --tone-ring: var(--tone-destructive-ring); }
-    :host([tone='accent'])      { --tone: var(--accent);      --tone-fg: var(--accent);      --tone-bg: var(--tone-accent-bg);      --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring); }
-    :host([tone='muted'])       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-bg: var(--tone-muted-bg); --tone-border: var(--tone-muted-border); --tone-ring: var(--tone-muted-ring); }
-    :host([hidden]) { display: none; }
+    /* Residual: raw `transparent` keyword (sx is token-only, no
+     * --transparent token), transforms (raw px/scale), multi-property
+     * transition, focus outline, disabled state (saturate(.6) is raw),
+     * spinner keyframes + positioning, icon-only shape, ::slotted —
+     * none reducible to sx/variants/theme. The `--xxx: ;` lines are
+     * local-marker declarations so the css-token lint recognizes the
+     * theme channels + focus tokens referenced from this block. */
+    --btn-h: ; --btn-gap: ; --icon-size-sm: ; --focus-ring: ; --focus-ring-offset: ; --tone: ; --tone-fg: ; --tone-bg: ; --tone-border: ; --tone-ring: ; --tone-contrast: ; --border-strong: ; --muted: ; --muted-foreground: ;
+    :host { display: inline-flex; vertical-align: middle; }
+    [part='button'] { background: transparent; border: 1px solid transparent; isolation: isolate; font-family: var(--font-body); line-height: 1; letter-spacing: -0.005em; user-select: none; white-space: nowrap; }
+    :host([variant='solid']) [part='button'] { background: var(--tone); border-color: var(--tone); color: var(--tone-contrast); box-shadow: var(--shadow-xs); }
+    :host([variant='solid']:not([disabled])) [part='button']:hover { background: var(--hover-bg); box-shadow: var(--shadow-sm); }
+    :host([variant='soft']) [part='button'] { background: var(--tone-bg); border-color: var(--tone-border); color: var(--tone-fg); }
+    :host([variant='soft']:not([disabled])) [part='button']:hover { background: var(--tone-ring); }
+    :host([variant='outline']) [part='button'] { background: transparent; border-color: var(--tone); color: var(--tone-fg); }
+    :host([variant='outline']:not([disabled])) [part='button']:hover { background: var(--hover-bg); }
+    :host([variant='default']:not([disabled])) [part='button']:hover { background: var(--muted); border-color: var(--border-strong); }
 
-    /* Size matrix */
-    :host([size='xs']) { --btn-h: var(--control-h-2xs); --btn-fs: var(--text-xs); --btn-px: var(--space-2);  --btn-gap: var(--space-1); }
-    :host([size='sm']) { --btn-h: var(--control-h-sm); --btn-fs: var(--text-sm); --btn-px: var(--space-2_5); --btn-gap: var(--space-1_5); }
-    :host([size='md']) { --btn-h: var(--control-h-md); --btn-fs: var(--text-base); --btn-px: var(--space-3); --btn-gap: var(--space-2); }
-    :host([size='lg']) { --btn-h: var(--control-h-lg); --btn-fs: var(--text-md); --btn-px: var(--space-4); --btn-gap: var(--space-2); }
+    :host([variant='ghost']:not([disabled])) [part='button']:hover { background: var(--hover-bg); }
 
-    button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--btn-gap);
-      min-height: var(--btn-h);
-      padding: 0 var(--btn-px);
-      font-family: var(--font-body);
-      font-weight: var(--btn-fw);
-      font-size: var(--btn-fs);
-      line-height: 1;
-      letter-spacing: -0.005em;
-      border-radius: var(--radius-md);
-      border: 1px solid transparent;
-      background: transparent;
-      color: var(--foreground);
-      cursor: pointer;
-      user-select: none;
-      white-space: nowrap;
-      isolation: isolate;
-      position: relative;
-      transition:
-        background-color var(--duration-fast) var(--ease-out),
-        border-color var(--duration-fast) var(--ease-out),
-        box-shadow var(--duration-fast) var(--ease-out),
-        transform var(--duration-fast) var(--ease-out);
+    [part='button'] { transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
     }
-
-    /* Default (no variant attr) — neutral bordered button. */
-    :host(:not([variant])) button,
-    :host([variant='default']) button {
-      background: var(--background);
-      border-color: var(--border);
-      color: var(--foreground);
-      box-shadow: var(--shadow-xs);
-    }
-    :host(:not([variant])) button:hover:not(:disabled),
-    :host([variant='default']) button:hover:not(:disabled) {
-      background: var(--muted);
-      border-color: var(--border-strong);
-      transform: translateY(-1px);
-    }
-
-    /* Solid */
-    :host([variant='solid']) button {
-      background: var(--tone);
-      border-color: var(--tone);
-      color: var(--tone-contrast);
-      box-shadow: var(--shadow-xs);
-    }
-    :host([variant='solid']) button:hover:not(:disabled) {
-      background: var(--hover-bg);
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-sm);
-    }
-
-    /* Soft */
-    :host([variant='soft']) button {
-      background: var(--tone-bg);
-      border-color: var(--tone-border);
-      color: var(--tone-fg);
-    }
-    :host([variant='soft']) button:hover:not(:disabled) {
-      background: var(--tone-ring);
-    }
-
-    /* Outline */
-    :host([variant='outline']) button {
-      background: transparent;
-      border-color: var(--tone);
-      color: var(--tone-fg);
-    }
-    :host([variant='outline']) button:hover:not(:disabled) {
-      background: var(--hover-bg);
-    }
-
-    /* Ghost */
-    :host([variant='ghost']) button {
-      background: transparent;
-      border-color: transparent;
-      color: var(--tone-fg);
-    }
-    :host([variant='ghost']) button:hover:not(:disabled) {
-      background: var(--hover-bg);
-    }
-    /* Default-tone ghost hover lightens because `--tone` resolves to
-     * `--foreground` — 12% foreground reads heavy on light themes. */
-    :host([variant='ghost']:not([tone])) button:hover:not(:disabled),
-    :host([variant='ghost'][tone='default']) button:hover:not(:disabled) {
-      background: var(--hover-bg);
-    }
-
-    /* Active press — feels clicked across all variants. */
-    :host(:not([disabled]):not([loading])) button:active:not(:disabled) {
-      transform: translateY(1px) scale(0.98);
-    }
+    [part='button']:hover:not(:disabled) { transform: translateY(-1px); }
+    :host(:not([disabled]):not([loading])) [part='button']:active:not(:disabled) { transform: translateY(1px) scale(0.98); }
     @media (prefers-reduced-motion: reduce) {
-      button { transition: none; }
-      button:active { transform: none !important; }
+      [part='button'] { transition: none; }
+      [part='button']:hover:not(:disabled), [part='button']:active:not(:disabled) { transform: none !important; }
     }
+    [part='button']:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+    [part='button']:disabled { cursor: not-allowed; color: var(--muted-foreground); background: var(--muted); border-color: var(--border); box-shadow: none; transform: none; filter: saturate(0.6); }
+    :host([variant='ghost']) [part='button']:disabled, :host([variant='outline']) [part='button']:disabled { background: transparent; }
+    :host([loading]) [part='button'] { cursor: progress; }
+    :host([loading]) [part='button'] .content { opacity: 0; }
+    :host([data-icon-only]) [part='button'] { padding-inline: 0; width: var(--btn-h); min-width: var(--btn-h); }
 
-    /* Focus ring — consume the system token. Outline (not stacked
-     * box-shadow) so `forced-colors: active` still draws a system
-     * ring and the ring isn't clipped by neighbouring shadows. */
-    button:focus-visible {
-      outline: var(--focus-ring);
-      outline-offset: var(--focus-ring-offset);
-    }
-
-    /* Disabled */
-    button:disabled {
-      cursor: not-allowed;
-      color: var(--muted-foreground);
-      background: var(--muted);
-      border-color: var(--border);
-      box-shadow: none;
-      transform: none;
-      filter: saturate(0.6);
-    }
-    :host([variant='ghost']) button:disabled,
-    :host([variant='outline']) button:disabled {
-      background: transparent;
-    }
-
-    /* Loading state — fade the label, overlay a spinner. */
-    :host([loading]) button { cursor: progress; }
-    :host([loading]) .content { opacity: 0; }
-    .content {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--btn-gap);
-      transition: opacity var(--duration-fast) var(--ease-out);
-    }
-    .spinner-wrap {
-      position: absolute;
-      inset: 0;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-    }
-    .spinner {
-      width: var(--icon-size-sm);
-      height: var(--icon-size-sm);
-      border: 1.5px solid currentColor;
-      border-right-color: transparent;
-      border-radius: 50%;
-      animation: sui-button-spin 0.7s linear infinite;
-    }
+    .spinner-wrap { position: absolute; inset: 0; display: inline-flex; align-items: center; justify-content: center; pointer-events: none; }
+    .spinner { width: var(--icon-size-sm); height: var(--icon-size-sm); border: 1.5px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: sui-button-spin 0.7s linear infinite; }
     @keyframes sui-button-spin { to { transform: rotate(360deg); } }
 
-    /* Icon-only — collapse padding to a square when default slot is empty. */
-    :host([data-icon-only]) button {
-      padding-inline: 0;
-      width: var(--btn-h);
-      min-width: var(--btn-h);
-    }
 
-    ::slotted([slot='leading']),
+    .content { gap: var(--btn-gap); transition: opacity var(--duration-fast) var(--ease-out); }
     ::slotted([slot='trailing']) {
       display: inline-flex;
       align-items: center;
@@ -214,12 +92,25 @@
   aria-label={label()}
   aria-pressed={pressed()}
   aria-expanded={expanded()}
+  sx="
+    display:inline-flex
+    fg:foreground
+    border:none
+    radius:md
+    cursor:pointer
+    position:relative
+    min-h:btn-h
+    px:btn-px
+    text:btn-fs
+    py:0
+    weight:btn-fw
+  "
 >
-  <span class="content">
+  <row class="content" align="center" justify="center">
     <slot name="leading"></slot>
     <slot reflect-empty="data-icon-only"></slot>
     <slot name="trailing"></slot>
-  </span>
+  </row>
   {#if loading()}
     <span class="spinner-wrap" aria-hidden="true"><span class="spinner"></span></span>
   {/if}
