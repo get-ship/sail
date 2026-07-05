@@ -7,25 +7,49 @@
 <prop name="loading" type="bool" default="false" reflect />
 <prop name="error" type="string" default="" />
 
+<host sx="display:block w:full fg:foreground" />
+<variants>[hidden]: display:none</variants>
+
 <style>
   /* Local markers so the css-token lint recognizes the density/tokens
    * referenced from this residual block. */
   --density-text: ; --density-row-px: ; --density-row-py: ; --density-row-gap: ; --density-icon: ; --space-1: ; --space-9: ; --surface-1: ; --surface-2: ; --sui-col-count: ; --sui-grid-template: ; --z-sticky: ; --ring-width: ; --ring-color: ; --tracking-wider: ; --text-xs: ; --font-body: ; --border: ; --border-subtle: ; --primary: ; --muted-foreground: ; --foreground: ; --hover-bg: ; --selected-bg: ; --radius-lg: ; --radius-sm: ; --radius-full: ; --duration-fast: ; --ease-out: ; --panel-max-h-md: ;
-  /* The whole component is a complex grid with dynamic column count
-   * (the .grid / .head / .row share `--sui-grid-template`, set per
-   * render via inline style from the controller) — sx can't drive
-   * the grid-template-columns, the .row absolute positioning for the
-   * virtualized list, the sticky head z-index, the cell/caret
-   * per-element layout, the sort-glyph color, the resize handle
-  :host { display: block; width: 100%; font-family: var(--font-body); font-size: var(--density-text); color: var(--foreground); --sui-col-count: 1; --sui-grid-template: repeat(var(--sui-col-count), minmax(var(--space-9), 1fr)); --sui-tree-indent: var(--density-row-px); }
-   * box-shadow (inset ring), the multi-property transitions, the
-   * `font-variant-numeric: tabular-nums` (no sx prop), and the
-   * @media (forced-colors) CanvasText outline. */
-  :host { display: block; width: 100%; font-family: var(--font-body); font-size: var(--density-text); color: var(--foreground); }
-  :host([hidden]) { display: none; }
+  /* Residual — the dominant reason this file is large:
+   *
+   *   1. :host font-family (no sx prop), :host font-size (--density-text
+   *      is a runtime var, not a token), :host --sui-tree-indent (set
+   *      per-render, not a static token).
+   *
+   *   2. The whole component is a complex grid with a dynamic column
+   *      count. .grid / .head / .row all share --sui-grid-template, set
+   *      per render via inline style from the controller — sx can't
+   *      drive grid-template-columns. The .row absolute positioning +
+   *      the per-window transform are the virtualized list offset
+   *      bookkeeping. The .head is sticky with z-index: var(--z-sticky).
+   *
+   *   3. The per-element layouts on .head / .row / .cell / .caret /
+   *      .col-head / .col-menu / .resize-handle are display:grid/flex
+   *      on existing semantic elements (not wrappers), so they can't
+   *      be replaced by layout elements without adding wrapping
+   *      semantics. The cell / caret gap is a density var, not a
+   *      token, so layout elements with a gap prop can't drive it
+   *      either.
+   *
+   *   4. The selected ::before pseudo-element marker; the focus-visible
+   *      inset box-shadow (canonical ring substitute); font-variant-numeric
+   *      (no sx prop); the multi-property transitions; the
+   *      @media (forced-colors) CanvasText outline; text-transform /
+   *      white-space / user-select (no sx prop); border-bottom (sx
+   *      `border:` sets all 4 sides).
+   *
+   *   5. Descendant-selector rules — .row[data-expanded] .caret,
+   *      .row:not([data-can-expand]) .caret, .col-head[data-sortable]
+   *      cursor/hover, .col-head .sort-glyph, .col-head .col-label,
+   *      .col-head .col-menu. Variants only target :host attrs, not
+   *      descendant data-* attributes, so these stay raw. */
+  :host { font-family: var(--font-body); font-size: var(--density-text); --sui-tree-indent: var(--density-row-px); }
 
   .grid {
-    display: flex; flex-direction: column;
     width: 100%;
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
@@ -152,15 +176,17 @@
   </slot>
 </div>
 {:else}
-<div
+<column
   class="grid"
   part="grid"
   role="treegrid"
+  gap="0"
   aria-label={label() || null}
   aria-rowcount={rowCount()}
   aria-multiselectable={selectable() === 'multi' ? 'true' : null}
   style:--sui-col-count={headers().length}
   style:--sui-grid-template={gridTemplate()}
+  sx="w:full overflow:hidden bg:surface-1 border:border radius:lg"
 >
   <div class="head" part="thead" role="row">
     {#for h of headers() key={h.id}}
@@ -236,5 +262,5 @@
       {/for}
     </div>
   </div>
-</div>
+</column>
 {/if}
