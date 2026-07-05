@@ -25,6 +25,48 @@
 <prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
 <prop name="size" values="sm|md|lg" default="md" reflect />
 
+<theme prop="tone" channels="radio-tone">
+  default:     primary
+  primary:     primary
+  info:        info
+  success:     success
+  warning:     warning
+  destructive: destructive
+  accent:      accent
+  muted:       muted-foreground
+</theme>
+<theme prop="size" channels="radio-size, radio-dot">
+  default: icon-size-md, space-2
+  md:      icon-size-md, space-2
+  sm:      icon-size-sm, space-1_5
+  lg:      icon-size-xl, space-2_5
+</theme>
+<variants>
+  [hidden]:  display:none
+  checked:   border:selected border:tone:radio-tone bg:selected
+  [disabled]: cursor:not-allowed opacity:75
+</variants>
+<variants part="label">
+  hover: border:strong
+  checked: border:selected border:tone:radio-tone bg:selected
+  [disabled]: cursor:not-allowed
+</variants>
+<variants part="circle">
+  checked: border:tone:radio-tone
+</variants>
+<variants part="dot">
+  checked: opacity:100
+</variants>
+
+<!-- Residual: option-card layout (display:flex + align-items:flex-start +
+     padding + border-radius + cursor + user-select + box-shadow) — a
+     complex compound control surface the layout keywords don't express;
+     .circle geometry (width/height/position:relative/border-radius:50%
+     + box-sizing); .dot geometry (width/height/border-radius:50%);
+     multi-property transitions (motion); the :has() focus-within
+     parent selector (no sx/variants story); forced-colors CanvasText
+     / Highlight system colors; saturate(0.6) compound disabled
+     filter; ::slotted descendant styling. -->
 <style>
   :host {
     display: block;
@@ -32,27 +74,14 @@
     font-size: var(--text-base);
     color: var(--foreground);
     -webkit-tap-highlight-color: transparent;
-    --tone: var(--primary);
   }
-  :host([hidden]) { display: none; }
-
-  :host(:not([tone])),
-  :host([tone='default'])     { --tone: var(--primary); }
-  :host([tone='primary'])     { --tone: var(--primary); }
-  :host([tone='info'])        { --tone: var(--info); }
-  :host([tone='success'])     { --tone: var(--success); }
-  :host([tone='warning'])     { --tone: var(--warning); }
-  :host([tone='destructive']) { --tone: var(--destructive); }
-  :host([tone='accent'])      { --tone: var(--accent); }
-  :host([tone='muted'])       { --tone: var(--muted-foreground); }
-
-  :host(:not([size])),
-  :host([size='md']) { --rd-size: var(--icon-size-md); --rd-dot: var(--space-2); }
-  :host([size='sm']) { --rd-size: var(--icon-size-sm); --rd-dot: var(--space-1_5); }
-  :host([size='lg']) { --rd-size: var(--icon-size-xl); --rd-dot: var(--space-2_5); }
-
-  /* Selectable option card: bordered --card row with a custom dot. */
-  label {
+  :host {
+    --radio-tone: var(--primary);
+    --radio-size: var(--icon-size-md);
+    --radio-dot: var(--space-2);
+  }
+  :host([disabled]) { color: var(--muted-foreground); }
+  [part~='label'] {
     display: flex;
     align-items: flex-start;
     gap: var(--space-3);
@@ -68,21 +97,19 @@
       border-color var(--duration-fast) var(--ease-out),
       background var(--duration-fast) var(--ease-out);
   }
-  :host([disabled]) label { cursor: not-allowed; }
-  :host(:not([disabled]):not([checked])) label:hover { border-color: var(--border-strong); }
-  :host([checked]) label {
+  :host(:not([disabled]):not([checked])) [part~='label']:hover { border-color: var(--border-strong); }
+  :host([checked]) [part~='label'] {
     border-color: var(--selected-border);
     background: var(--selected-bg);
   }
-
-  .circle {
+  [part~='circle'] {
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: var(--rd-size);
-    height: var(--rd-size);
+    width: var(--radio-size);
+    height: var(--radio-size);
     background: var(--background);
     border: 1px solid var(--border);
     border-radius: 50%;
@@ -91,17 +118,15 @@
       border-color var(--duration-fast) var(--ease-out),
       box-shadow var(--duration-fast) var(--ease-out);
   }
-
-  :host(:not([disabled]):not([checked])) label:hover .circle {
+  :host(:not([disabled]):not([checked])) [part~='label']:hover [part~='circle'] {
     border-color: var(--border-strong);
   }
-  :host([checked]) .circle { border-color: var(--tone); }
-
-  .dot {
-    width: var(--rd-dot);
-    height: var(--rd-dot);
+  :host([checked]) [part~='circle'] { border-color: var(--radio-tone); }
+  [part~='dot'] {
+    width: var(--radio-dot);
+    height: var(--radio-dot);
     border-radius: 50%;
-    background: var(--tone);
+    background: var(--radio-tone);
     opacity: 0;
     transform: scale(0);
     transition:
@@ -109,8 +134,34 @@
       transform var(--duration-fast) var(--ease-out);
     pointer-events: none;
   }
-  :host([checked]) .dot { opacity: 1; transform: scale(1); }
-
+  :host([checked]) [part~='dot'] { opacity: 1; transform: scale(1); }
+  :host(:not([disabled])) [part~='label']:has(input:focus-visible) {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+  @media (forced-colors: active) {
+    [part~='circle'] { border-color: CanvasText; }
+    :host([checked]) [part~='dot'] { background: Highlight; }
+    :host(:not([disabled])) [part~='label']:has(input:focus-visible) {
+      outline: 2px solid CanvasText;
+      outline-offset: 2px;
+    }
+  }
+  :host([disabled]) [part~='circle'] {
+    background: var(--muted);
+    border-color: var(--border);
+    filter: saturate(0.6);
+  }
+  :host([disabled][checked]) [part~='circle'] { border-color: var(--border); }
+  :host([disabled][checked]) [part~='dot'] { background: var(--muted); }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+  ::slotted(*) {
+    font: inherit;
+    color: inherit;
+    line-height: var(--leading-tight);
+  }
   input {
     position: absolute;
     inset: 0;
@@ -122,44 +173,6 @@
     cursor: inherit;
     appearance: none;
     -webkit-appearance: none;
-  }
-
-  /* Canonical focus convention on the option card. */
-  :host(:not([disabled])) label:has(input:focus-visible) {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-ring-offset);
-  }
-
-  @media (forced-colors: active) {
-    .circle { border-color: CanvasText; }
-    :host([checked]) .dot { background: Highlight; }
-    :host(:not([disabled])) label:has(input:focus-visible) {
-      outline: 2px solid CanvasText;
-      outline-offset: 2px;
-    }
-  }
-
-  :host([disabled]) { color: var(--muted-foreground); }
-  :host([disabled]) .circle {
-    background: var(--muted);
-    border-color: var(--border);
-    filter: saturate(0.6);
-  }
-  :host([disabled][checked]) .circle {
-    border-color: var(--border);
-  }
-  :host([disabled][checked]) .dot {
-    background: var(--muted);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; animation: none !important; }
-  }
-
-  ::slotted(*) {
-    font: inherit;
-    color: inherit;
-    line-height: var(--leading-tight);
   }
 </style>
 
