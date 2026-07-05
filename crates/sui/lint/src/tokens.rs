@@ -144,6 +144,25 @@ pub fn color_values() -> &'static [&'static str] {
     })
 }
 
+/// Dimensional size tokens the sx `w`/`h`/`min-*`/`max-*` props draw from — the
+/// icon, control-height, and panel-clamp families that the primitives now depend
+/// on. The value IS the token name (`max-h:panel-max-h-md` → `var(--panel-max-h-md)`),
+/// so a new size family is usable in sx the moment it lands in `tokens.css`.
+pub fn size_values() -> &'static [&'static str] {
+    static C: OnceLock<Vec<&'static str>> = OnceLock::new();
+    C.get_or_init(|| {
+        let mut v: Vec<&'static str> = registry()
+            .iter()
+            .copied()
+            .filter(|t| {
+                t.starts_with("icon-size-") || t.starts_with("control-h-") || t.starts_with("panel-")
+            })
+            .collect();
+        v.sort_unstable();
+        v
+    })
+}
+
 /// Allowed `sx` radius values: the `--radius-*` scale plus the literal `none`
 /// (→ `0`). No phantom `xs` — the scale is whatever the tokens declare.
 pub fn radius_values() -> &'static [&'static str] {

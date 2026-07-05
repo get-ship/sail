@@ -120,6 +120,7 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
         Size => {
             let mut v = vec!["full", "auto", "fit", "screen", "min", "max", "0"];
             v.extend(crate::tokens::suffixes("space-"));
+            v.extend(crate::tokens::size_values());
             v
         }
         Opacity => vec!["0", "25", "50", "75", "100"],
@@ -223,6 +224,14 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
             "min" => "min-content".into(),
             "max" => "max-content".into(),
             "0" => "0".into(),
+            // A dimensional size token (icon/control/panel) is used by its full
+            // name; the bare-number fallthrough is a spacing-scale step.
+            _ if token.starts_with("icon-size-")
+                || token.starts_with("control-h-")
+                || token.starts_with("panel-") =>
+            {
+                format!("var(--{token})")
+            }
             _ => format!("var(--space-{token})"),
         },
         Opacity => match token {
@@ -518,6 +527,13 @@ mod tests {
         assert!(lower("shadow", "huge").is_none());
         assert!(lower("cursor", "banana").is_none());
         assert!(lower("z", "99").is_none());
+    }
+
+    #[test]
+    fn size_props_accept_size_tokens_and_spacing() {
+        assert!(run(r#"<sui-card sx="max-h:panel-max-h-md w:icon-size-lg h:control-h-md min-w:4">x</sui-card>"#).is_empty());
+        // a bogus size token is still rejected
+        assert_eq!(run(r#"<sui-card sx="w:icon-size-huge">x</sui-card>"#).len(), 1);
     }
 
     #[test]
