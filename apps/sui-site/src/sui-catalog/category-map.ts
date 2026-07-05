@@ -83,6 +83,10 @@ export const HIDDEN_TAGS: Record<string, true> = {
   // radio (radio-group is the public entry; radio is its slot)
   'sui-radio': true,
 
+  // Brand mark — the SHIP logo, not a public component. It is brand
+  // chrome (it composes the topbar, account menu, etc.) and has no
+  // place in the /components catalog card grid.
+  'sui-brand-mark': true,
   // Viewer scaffolding — these primitives need the JS-prop path
   // (`prop:source` / `prop:compile` set as host JS properties, NOT a
   // `setAttribute` write) to render. A bare mount leaves them empty,
@@ -163,7 +167,6 @@ export const TAG_CATEGORY: Record<string, CategoryId> = {
   'sui-calendar':        'data',
   'sui-json-view':       'data',
   'sui-sheet':           'data',
-
   // ── @ship/sui-primitives — Typography & identity ──────────────────────
   'sui-button':          'typography',
   'sui-link':            'typography',
@@ -171,11 +174,9 @@ export const TAG_CATEGORY: Record<string, CategoryId> = {
   'sui-avatar':          'typography',
   'sui-account-chip':    'typography',
   'sui-account-menu':    'typography',
-  'sui-brand-mark':      'typography',
   'sui-badge':           'typography',
   'sui-chip':            'typography',
   'sui-status-dot':      'typography',
-
   // ── @ship/sui-primitives — Utility ────────────────────────────────────
   'sui-theme-picker':    'utility',
 

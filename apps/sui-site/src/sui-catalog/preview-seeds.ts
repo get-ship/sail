@@ -12,11 +12,14 @@
 // exactly that, per tag, so every catalog cell renders something
 // representative of a real design system.
 //
-// Curated for the public surface: every tag visible in TAG_CATEGORY (minus
-// HIDDEN_TAGS) has a seed entry here. Viewer-internal primitives
-// (sui-render / sui-source-panel / sui-prop-knobs / sui-prop-matrix /
-// sui-component-viewer) need the JS-prop seam — they're hidden from the
-// catalog upstream, so no seed is required.
+// Curated for the public surface: every tag visible in TAG_CATEGORY
+// (minus HIDDEN_TAGS) has a seed entry here. HIDDEN_TAGS includes the
+// composed slots (sui-accordion-item / sui-tab / sui-tab-panel / sui-
+// tree-item / sui-timeline-item / sui-toast[-container] / sui-radio),
+// the JS-prop-only viewer primitives (sui-render / sui-source-panel /
+// sui-prop-knobs / sui-prop-matrix / sui-component-viewer), AND brand
+// chrome (sui-brand-mark — the SHIP logo, used inside <sui-nav-top>,
+// <sui-account-chip>, etc. as a slotted child, never standalone).
 //
 // TWO delivery channels (mirroring how the host applies a seed):
 //   • `props`     — set via `setAttribute` BEFORE the element connects, so a
@@ -113,7 +116,9 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   'sui-avatar':          { props: { name: 'Ada Lovelace', size: 'lg' } },
   'sui-account-chip':    { props: { name: 'Ada Lovelace' } },
   'sui-account-menu':    { props: { status: 'signed-in', name: 'Ada Lovelace', email: 'ada@ship.dev', plan: 'Pro', provider: 'GitHub' } },
-  'sui-brand-mark':      { props: { label: 'Ship', size: 'lg' } },
+  // sui-brand-mark has no standalone seed — it's hidden from the
+  // catalog (brand chrome, not a public component) and is composed
+  // inside <sui-nav-top>, <sui-account-chip>, etc. as a slotted child.
   // Badges: full semantic range reads better than one tone — pick the
   // most visually representative (success-soft) for the default cell.
   'sui-badge':           { props: { tone: 'success', variant: 'soft' }, innerHTML: 'Passing' },
