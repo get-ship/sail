@@ -521,6 +521,44 @@ fn parse_variants_object(body: &str) -> Vec<(String, String)> {
     pairs
 }
 
+/// Desugar a wrapper-less `<controller>` body — bare `export function`/`export
+/// const` — into the canonical `controller({ scope })` form the pipeline reads.
+/// The exported names become the template scope, so an author writes plain
+/// functions with no `controller({…})` ceremony. Bodies that already call
+/// `controller(` or have a `export default` pass through unchanged.
+fn wrap_controller_body(body: &str) -> String {
+    if body.contains("controller(") || body.contains("export default") {
+        return body.to_string();
+    }
+    let mut names: Vec<String> = Vec::new();
+    let mut lines: Vec<String> = Vec::new();
+    for line in body.lines() {
+        let t = line.trim_start();
+        if let Some(rest) = t.strip_prefix("export function ") {
+            if let Some(name) = rest.split('(').next().map(str::trim) {
+                if !name.is_empty() {
+                    names.push(name.to_string());
+                }
+            }
+            lines.push(line.replacen("export ", "", 1));
+        } else if let Some(rest) = t.strip_prefix("export const ") {
+            if let Some(name) = rest.split([' ', '=', ':']).next().map(str::trim) {
+                if !name.is_empty() {
+                    names.push(name.to_string());
+                }
+            }
+            lines.push(line.replacen("export ", "", 1));
+        } else {
+            lines.push(line.to_string());
+        }
+    }
+    format!(
+        "import {{ controller }} from '@ship/sui-runtime';\n{}\nexport default controller({{ scope: () => ({{ {} }}) }});\n",
+        lines.join("\n"),
+        names.join(", ")
+    )
+}
+
 /// Extract an inline `<controller>` block for the single-file-component model.
 /// Returns the template with the block removed + the block's raw TS body (the
 /// one locked-down `controller({…})` function). `None` if there's no block.
@@ -542,7 +580,7 @@ pub fn extract_controller_block(source: &str) -> (String, Option<String>) {
         return (source.to_string(), None);
     };
     let body_end = body_start + rel;
-    let body = source[body_start..body_end].trim().to_string();
+    let body = wrap_controller_body(source[body_start..body_end].trim());
     let block_end = body_end + "</controller>".len();
     let mut stripped = String::with_capacity(source.len());
     stripped.push_str(&source[..start]);
