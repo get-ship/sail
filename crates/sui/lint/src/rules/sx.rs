@@ -249,6 +249,26 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
     Some(decls)
 }
 
+/// Lower a `prop:channel` where `channel` is a `<theme>` channel (a file-local
+/// CSS custom property the theme fills per prop value). The value is the kind's
+/// template with `var(--channel)` as the atom — so `border:tone-border` becomes
+/// `1px solid var(--tone-border)` (a full border), `min-h:sel-h` becomes
+/// `var(--sel-h)`, `fg:tone-fg` becomes `var(--tone-fg)`. The compiler calls this
+/// for values the lint accepted as declared channels.
+pub fn lower_channel(prop: &str, channel: &str) -> Option<Vec<(&'static str, String)>> {
+    use Kind::*;
+    let kind = prop_kind(prop)?;
+    let atom = format!("var(--{channel})");
+    let value = match kind {
+        Border => format!("1px solid {atom}"),
+        Ring => format!("0 0 0 var(--ring-width) {atom}"),
+        // Color / Size / Space / Radius / Text / Shadow / … all take the bare
+        // var — the channel is already the full variable, no scale prefix.
+        _ => atom,
+    };
+    Some(css_props(prop).iter().map(|p| (*p, value.clone())).collect())
+}
+
 /// A state prefix (`hover:`/`focus:`/…) → its CSS pseudo-class. `focus` maps to
 /// `:focus-visible` (the modern default — no ring on a mouse click). Shared by
 /// the lint (validation) and preprocess (lowering) so they can't diverge.
@@ -263,8 +283,37 @@ pub fn state_pseudo(state: &str) -> Option<&'static str> {
     })
 }
 
+/// Channel names declared by this file's `<theme … channels="…">` blocks — the
+/// file-local sx values a component may consume (`border:tone-border`). A CLOSED
+/// set: only names the component itself declared, never an open escape.
+pub fn source_channels(source: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut rest = source;
+    while let Some(start) = rest.find("<theme") {
+        let after = &rest[start..];
+        let Some(tag_end) = after.find('>') else { break };
+        let tag = &after[..tag_end];
+        if let Some(key) = tag.find("channels=\"") {
+            let vstart = key + "channels=\"".len();
+            if let Some(vlen) = tag[vstart..].find('"') {
+                out.extend(
+                    tag[vstart..vstart + vlen]
+                        .split(',')
+                        .map(|s| s.trim().to_string())
+                        .filter(|s| !s.is_empty()),
+                );
+            }
+        }
+        rest = &after[tag_end + 1..];
+    }
+    out
+}
+
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
+    // Channels declared by this file's `<theme>` blocks are legal sx values
+    // (`border:tone-border`) — a closed set, not an open escape.
+    let channels = source_channels(source);
     for hit in scan_sx(source) {
         let (val, offset) = match hit {
             SxHit::Dynamic(offset) => {
@@ -315,7 +364,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 continue;
             };
             let opts = allowed(kind);
-            if !opts.contains(&token) {
+            if !opts.contains(&token) && !channels.iter().any(|c| c == token) {
                 let raw = token.chars().next().is_some_and(|c| c.is_ascii_digit() || c == '#')
                     || token.ends_with("px")
                     || token.ends_with("rem")
@@ -499,6 +548,13 @@ mod tests {
     #[test]
     fn accepts_surface_tokens() {
         assert!(run(r#"<sui-card sx="p:4 bg:surface-2 radius:lg text:sm fg:muted">x</sui-card>"#).is_empty());
+    }
+
+    #[test]
+    fn accepts_declared_theme_channels_only() {
+        let themed = "<theme prop=\"tone\" channels=\"tone-fg\">\n  default: foreground\n</theme>\n<sui-card sx=\"fg:tone-fg\">x</sui-card>";
+        assert!(run(themed).is_empty(), "declared channel is a legal sx value");
+        assert_eq!(run(r#"<sui-card sx="fg:tone-fg">x</sui-card>"#).len(), 1, "undeclared channel is rejected");
     }
 
     #[test]

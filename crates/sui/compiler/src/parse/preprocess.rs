@@ -30,7 +30,8 @@ pub fn preprocess(source: &str) -> String {
     let (s, sx_css) = lower_sx(&s);
     let (s, layout_css) = lower_layout(&s);
     let (s, variants_css) = lower_variants(&s);
-    let css = format!("{sx_css}{layout_css}{variants_css}");
+    let (s, theme_css) = lower_theme(&s);
+    let css = format!("{theme_css}{sx_css}{layout_css}{variants_css}");
     if css.is_empty() {
         s
     } else {
@@ -47,6 +48,9 @@ fn lower_sx(source: &str) -> (String, String) {
     let mut out = String::with_capacity(source.len() + 256);
     let mut css = String::new();
     let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+    // Channels declared by this file's `<theme>` blocks — legal sx values that
+    // lower to `var(--channel)` (the theme fills them per prop value).
+    let channels = sui_lint::rules::sx::source_channels(source);
     let mut i = 0;
     let mut last = 0;
     while i < bytes.len() {
@@ -74,7 +78,7 @@ fn lower_sx(source: &str) -> (String, String) {
                     let val = &source[vstart..vstart + rel];
                     out.push_str(&source[last..i]);
                     out.push_str("class=\"");
-                    out.push_str(&lower_sx_value(val, &mut css, &mut seen));
+                    out.push_str(&lower_sx_value(val, &mut css, &mut seen, &channels));
                     out.push('"');
                     i = vstart + rel + 1;
                     last = i;
@@ -100,6 +104,7 @@ fn lower_sx_value(
     val: &str,
     css: &mut String,
     seen: &mut std::collections::HashSet<String>,
+    channels: &[String],
 ) -> String {
     let mut classes: Vec<String> = Vec::new();
     for pair in val.split_whitespace() {
@@ -141,7 +146,17 @@ fn lower_sx_value(
             None => format!("sx-{prop}-{sanitized}"),
             Some(s) => format!("sx-{s}-{prop}-{sanitized}"),
         };
-        if let Some(decls) = sui_lint::rules::sx::lower(prop, token) {
+        // A declared `<theme>` channel lowers to `var(--channel)` on the prop's
+        // CSS properties (the theme fills the channel per prop value); otherwise
+        // the normal token vocabulary.
+        let decls = sui_lint::rules::sx::lower(prop, token).or_else(|| {
+            channels
+                .iter()
+                .any(|c| c == token)
+                .then(|| sui_lint::rules::sx::lower_channel(prop, token))
+                .flatten()
+        });
+        if let Some(decls) = decls {
             if seen.insert(class.clone()) {
                 let body = decls
                     .iter()
@@ -339,6 +354,78 @@ fn lower_variants(source: &str) -> (String, String) {
     out.push_str(&source[..start]);
     out.push_str(&source[block_end..]);
     (out, css)
+}
+
+/// Lower every `<theme prop="…" channels="…">` block to `:host` custom-property
+/// declarations — the *channel contract* (StyleX/vanilla-extract theme model). A
+/// row `value: fill1, fill2, …` fills the declared channels for that prop value;
+/// `default:` fills them on the bare `:host`. Fills are token names → `var(--…)`.
+/// The channels themselves become file-local sx values (see `theme_channels`).
+///
+///   <theme prop="tone" channels="tone-fg, tone-border">
+///     default: foreground, border
+///     info:    info, tone-info-border
+///   </theme>
+///
+/// →  :host{--tone-fg:var(--foreground);--tone-border:var(--border);}
+///    :host([tone='info']){--tone-fg:var(--info);--tone-border:var(--tone-info-border);}
+fn lower_theme(source: &str) -> (String, String) {
+    let mut out = source.to_string();
+    let mut css = String::new();
+    // Multiple blocks (e.g. a `tone` theme and a `size` theme).
+    loop {
+        let Some(start) = out.find("<theme") else { break };
+        let Some(tag_rel) = out[start..].find('>') else { break };
+        let tag_end = start + tag_rel + 1;
+        let open_tag = out[start..tag_end].to_string();
+        let Some(close_rel) = out[tag_end..].find("</theme>") else { break };
+        let body = out[tag_end..tag_end + close_rel].to_string();
+        let block_end = tag_end + close_rel + "</theme>".len();
+
+        let prop = attr_value(&open_tag, "prop");
+        let channels: Vec<String> = attr_value(&open_tag, "channels")
+            .map(|c| c.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect())
+            .unwrap_or_default();
+
+        if let Some(prop) = prop {
+            for line in body.lines() {
+                let line = line.trim();
+                if line.is_empty() {
+                    continue;
+                }
+                let Some((value, fills_part)) = line.split_once(':') else { continue };
+                let value = value.trim();
+                let mut decls = String::new();
+                for (chan, fill) in channels.iter().zip(fills_part.split(',').map(str::trim)) {
+                    if fill.is_empty() {
+                        continue;
+                    }
+                    decls.push_str(&format!("--{chan}:var(--{fill});"));
+                }
+                if decls.is_empty() {
+                    continue;
+                }
+                if value == "default" {
+                    css.push_str(&format!(":host{{{decls}}}"));
+                } else {
+                    css.push_str(&format!(":host([{prop}='{value}']){{{decls}}}"));
+                }
+            }
+        }
+        let mut next = String::with_capacity(out.len());
+        next.push_str(&out[..start]);
+        next.push_str(&out[block_end..]);
+        out = next;
+    }
+    (out, css)
+}
+
+/// Extract `name="value"` from an opening tag. `None` if absent.
+fn attr_value(tag: &str, name: &str) -> Option<String> {
+    let key = format!("{name}=\"");
+    let start = tag.find(&key)? + key.len();
+    let rel = tag[start..].find('"')?;
+    Some(tag[start..start + rel].to_string())
 }
 
 /// A variant selector → a `:host(...)` attribute-match. `tone=success` →
@@ -741,6 +828,27 @@ mod tests {
         assert!(
             out.contains(".sui-ai-start{") && out.contains(".sui-ai-center{") && out.contains(".sui-ai-stretch{"),
             "full align rule set injected: {out}"
+        );
+    }
+
+    #[test]
+    fn theme_block_lowers_channels_and_sx_consumes_them() {
+        let out = preprocess(
+            "<theme prop=\"tone\" channels=\"tone-fg, tone-border\">\n  default: foreground, border\n  info: info, tone-info-border\n</theme>\n<div sx=\"fg:tone-fg border:tone-border\">x</div>",
+        );
+        assert!(!out.contains("<theme"), "block stripped: {out}");
+        assert!(
+            out.contains(":host{--tone-fg:var(--foreground);--tone-border:var(--border);}"),
+            "default channel row: {out}"
+        );
+        assert!(
+            out.contains(":host([tone='info']){--tone-fg:var(--info);--tone-border:var(--tone-info-border);}"),
+            "info channel row: {out}"
+        );
+        assert!(out.contains(".sx-fg-tonefg{color:var(--tone-fg)}"), "channel as color: {out}");
+        assert!(
+            out.contains(".sx-border-toneborder{border:1px solid var(--tone-border)}"),
+            "channel as full border: {out}"
         );
     }
 
