@@ -38,146 +38,137 @@
 <prop name="variant" values="default|inline" default="default" reflect />
 <prop name="icon" type="string" default="alert-circle" />
 
+<theme prop="tone" channels="tone-fg, tone-bg, tone-border, tone-ring">
+  default: destructive, tone-destructive-bg, tone-destructive-border, tone-destructive-ring
+</theme>
+
+<variants part="box">
+  [variant='inline']: radius:md shadow:none p:3 px:4
+  size=sm: py:7 px:4
+  size=lg: py:9 px:6
+</variants>
+
+<variants part="icon">
+  [variant='inline']: w:icon-size-sm h:icon-size-sm
+  size=sm: w:control-h-md h:control-h-md
+  size=md: w:icon-size-md h:icon-size-md
+  size=lg: w:control-h-lg h:control-h-lg
+</variants>
+
+<variants part="title">
+  size=sm: text:base
+  size=md: text:md
+  size=lg: text:lg
+</variants>
+
+<variants part="desc">
+  size=lg: text:base
+</variants>
+
+<variants part="actions">
+  [variant='inline']: mt:0
+</variants>
+
+<variants part="details-toggle">
+  [data-has-details]: display:inline-block
+</variants>
+
+<variants part="details">
+  [data-has-details][data-details-open]: display:block
+</variants>
+
+<!--
+  Residual <style> — truly unavoidable bits:
+  - :host font-family + tone channel CSS var (--tone-fg)
+  - :host(:not([size])) md default CSS vars (--es-pad-y, --es-icon, etc.) consumed by .box/.icon
+  - :host([size='sm'|'lg']) --es-* vars (since variants body is sx-style, can't set --vars)
+  - .box flex-direction: column (default) + :host([variant='inline']) .box flex-direction: row
+  - .icon line-height: var(--leading-none) (not in sx)
+  - .icon box-shadow: inset ring (raw)
+  - :host([variant='inline']) .icon background:transparent + box-shadow:none
+  - .code font-family: var(--font-mono) (not sx-able)
+  - .code :empty display:none (pseudo-class)
+  - .details font-family: var(--font-mono) (not sx-able)
+  - .details white-space: pre-wrap + word-break: break-word + max-width: 60ch (not sx-able)
+  - forced-colors media (CanvasText system color)
+-->
 <style>
-  :host {
-    display: block;
-    font-family: var(--font-body);
-    --tone-fg: var(--destructive);
-    --es-pad-y: var(--space-9);
-    --es-pad-x: var(--space-4);
-    --es-gap: var(--space-3);
-    --es-icon: var(--icon-size-md);
-    --es-tile: var(--text-4xl); /* closest to 48px */
-    --es-title-fs: var(--text-md);
-    --es-desc-fs: var(--text-sm);
-  }
-  :host([hidden]) { display: none; }
-
-  :host([size='sm']) {
-    --es-pad-y: var(--space-7);
-    --es-pad-x: var(--space-4);
-    --es-gap: var(--space-2);
-    --es-icon: var(--icon-size-sm); --es-tile: var(--control-h-md);
-    --es-title-fs: var(--text-base);
-  }
-  :host([size='lg']) {
-    --es-pad-y: var(--text-4xl); /* 96 falls between text-4xl 36 and nothing — closest available */
-    --es-pad-x: var(--space-6);
-    --es-gap: var(--space-4);
-    --es-icon: var(--icon-size-3xl); --es-tile: var(--control-h-lg);
-    --es-title-fs: var(--text-lg);
-    --es-desc-fs: var(--text-base);
-  }
-
   .box {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--es-gap);
-    padding: var(--es-pad-y) var(--es-pad-x);
+    gap: var(--es-gap, var(--space-3));
     text-align: center;
     background: var(--tone-muted-bg);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-xs);
   }
-  :host([variant='inline']) .box {
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    text-align: start;
-    background: var(--tone-destructive-bg);
-    border: 1px solid var(--tone-destructive-border);
-    border-radius: var(--radius-md);
-    box-shadow: none;
-    padding: var(--space-3) var(--space-4);
+  :host([size='sm']) {
+    --es-pad-y: var(--space-7);
+    --es-pad-x: var(--space-4);
+    --es-gap: var(--space-2);
+    --es-title-fs: var(--text-base);
   }
-
+  :host([size='lg']) {
+    --es-pad-y: var(--text-4xl);
+    --es-pad-x: var(--space-6);
+    --es-gap: var(--space-4);
+    --es-title-fs: var(--text-lg);
+    --es-desc-fs: var(--text-base);
   .icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: var(--es-tile);
-    height: var(--es-tile);
-    border-radius: var(--radius-lg);
-    background: var(--tone-destructive-bg);
-    color: var(--destructive);
     line-height: var(--leading-none);
     box-shadow: inset 0 0 0 1px var(--tone-destructive-ring);
   }
+  :host([variant='inline']) .box {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    background: var(--tone-destructive-bg);
+    border: 1px solid var(--tone-destructive-border);
+  }
   :host([variant='inline']) .icon {
-    width: var(--es-icon);
-    height: var(--es-icon);
     background: transparent;
     box-shadow: none;
   }
-
   .copy {
     min-width: 0;
   }
-
   .title {
     font-family: var(--heading-font);
-    font-size: var(--es-title-fs);
     font-weight: var(--heading-weight);
-    color: var(--foreground);
     line-height: var(--leading-tight);
   }
-
   .desc {
-    font-size: var(--es-desc-fs);
     max-width: var(--panel-ch-w-md);
     line-height: var(--leading-normal-plus);
-    color: var(--muted-foreground);
   }
   .code {
     font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--muted-foreground);
     background: var(--muted);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-sm);
-    padding: var(--space-1) var(--space-2);
     margin-top: var(--space-1);
   }
   .code:empty { display: none; }
-
-  /* details-toggle: hidden until controller detects slot content */
   .details-toggle {
-    display: none;
-    appearance: none;
     background: transparent;
     border: 0;
     font: inherit;
-    font-size: var(--text-xs);
-    color: var(--muted-foreground);
     cursor: pointer;
-    padding: var(--space-1) var(--space-2);
-    border-radius: var(--radius-sm);
     margin-top: var(--space-1);
   }
-  :host([data-has-details]) .details-toggle { display: inline-block; }
   .details-toggle:hover { color: var(--foreground); background: var(--muted); }
-
-  /* details panel: always in DOM for slotchange detection, shown when open */
   .details {
-    display: none;
     margin-top: var(--space-2);
-    padding: var(--space-2) var(--space-3);
-    background: var(--tone-destructive-bg);
-    border-radius: var(--radius-sm);
     font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--muted-foreground);
     white-space: pre-wrap;
     word-break: break-word;
     max-width: 60ch;
     text-align: start;
   }
-  :host([data-has-details][data-details-open]) .details { display: block; }
-
   .actions {
     display: flex;
     gap: var(--space-2);
@@ -190,33 +181,43 @@
     margin-inline-start: auto;
     justify-content: flex-end;
   }
-
   @media (forced-colors: active) {
     .box { border-color: CanvasText; }
     .icon { background: Canvas; color: CanvasText; }
   }
 </style>
 
-<div class="box" part="box" role="alert">
-  <div class="icon" part="icon" aria-hidden="true">
+<div class="box" part="box" role="alert"
+  sx="py:9 px:4 radius:lg shadow:xs bg:tone-muted-bg border:border">
+  <div class="icon" part="icon" aria-hidden="true"
+    sx="w:icon-size-md h:icon-size-md radius:lg bg:tone-destructive-bg fg:destructive">
     <sui-icon name={icon()} size="md"></sui-icon>
   </div>
 
-  <column class="copy" gap="1" align={variant() === 'inline' ? 'start' : 'center'}>
-    <div class="title" part="title">
+  <column class="copy" gap="1" align={variant() === 'inline' ? 'start' : 'center'}
+    sx="min-w:0">
+    <div class="title" part="title"
+      sx="text:md weight:semibold fg:foreground">
       <slot name="title">{title() || 'Something went wrong'}</slot>
     </div>
-    <div class="desc" part="desc">
+    <div class="desc" part="desc"
+      sx="text:sm max-w:panel-ch-w-md fg:muted-foreground">
       <slot>{body()}</slot>
     </div>
-    <div class="code" part="code">{code()}</div>
-    <button class="details-toggle" part="details-toggle" bind:this={detailsToggleBtn} type="button"></button>
-    <div class="details" bind:this={detailsPanel}>
+    <div class="code" part="code"
+      sx="text:xs fg:muted-foreground p:1 px:2 radius:sm">
+      {code()}
+    </div>
+    <button class="details-toggle" part="details-toggle" bind:this={detailsToggleBtn} type="button"
+      sx="text:xs fg:muted-foreground p:1 px:2 radius:sm">
+    </button>
+    <div class="details" part="details" bind:this={detailsPanel}
+      sx="p:2 px:3 radius:sm bg:tone-destructive-bg text:xs fg:muted-foreground">
       <slot name="details" bind:this={detailsSlot}></slot>
     </div>
   </column>
 
-  <div class="actions" part="actions">
+  <div class="actions" part="actions" sx="mt:1">
     <slot name="action" bind:this={actionSlot}></slot>
   </div>
 </div>
