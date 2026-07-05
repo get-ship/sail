@@ -27,6 +27,36 @@
 <prop name="at" type="string" default="" reflect />
 <prop name="interactive" type="bool" default="false" reflect />
 
+<theme prop="tone" channels="dot-tone">
+  default:     foreground
+  primary:     primary
+  info:        info
+  success:     success
+  warning:     warning
+  destructive: destructive
+  accent:      accent-foreground
+  muted:       muted-foreground
+</theme>
+<variants>
+  [hidden]: display:none
+</variants>
+<variants part="dot">
+  interactive: cursor:pointer
+</variants>
+
+<!-- Residual: 2-column grid layout (grid-template-columns: var(--space-5) 1fr) —
+     no layout primitive; .gutter::before connector line + :first-of-type /
+     :last-of-type pseudo-clipped top/bottom (descendant pseudo + structural
+     pseudo — no sx/variants story); .dot geometry (width/height/border-radius
+     + z-index + margin-top + flex-shrink + box-shadow ring with explicit
+     offset ring); .head row (display:flex + align-items:baseline + gap +
+     font + color); .at monospace label (font-family: var(--font-mono) + color
+     + size + letter-spacing + margin-inline-start:auto); .content body
+     typography; :host([interactive]) cursor + border-radius + outline reset;
+     :host([interactive]:hover) background; the 2-layer focus ring box-shadow
+     (vs the sx `ring:` shorthand — used here with explicit ring-offset +
+     ring-width for visual parity); forced-colors CanvasText outline
+     (system color). -->
 <style>
   :host {
     display: grid;
@@ -34,20 +64,21 @@
     column-gap: var(--space-2);
     padding: var(--space-2) 0;
     position: relative;
-    --tone-fg: var(--muted-foreground);
   }
-  :host([hidden]) { display: none; }
-
-  /* Tone color mapping */
-  :host([tone='default'])     { --tone-fg: var(--foreground); }
-  :host([tone='primary'])     { --tone-fg: var(--primary); }
-  :host([tone='info'])        { --tone-fg: var(--info); }
-  :host([tone='success'])     { --tone-fg: var(--success); }
-  :host([tone='warning'])     { --tone-fg: var(--warning); }
-  :host([tone='destructive']) { --tone-fg: var(--destructive); }
-  :host([tone='accent'])      { --tone-fg: var(--accent-foreground); }
-  :host([tone='muted'])       { --tone-fg: var(--muted-foreground); }
-
+  [part~='dot'] {
+    position: relative;
+    z-index: var(--z-elevated);
+  :host {
+    --dot-tone: var(--muted-foreground);
+  }
+    width: var(--space-2_5);
+    height: var(--space-2_5);
+    border-radius: var(--radius-full);
+    background: var(--dot-tone);
+    margin-top: var(--space-1);
+    flex-shrink: 0;
+    box-shadow: 0 0 0 var(--space-1) var(--surface-1);
+  }
   .gutter {
     position: relative;
     display: flex;
@@ -63,21 +94,7 @@
   }
   :host(:first-of-type) .gutter::before { top: var(--space-2_5); }
   :host(:last-of-type) .gutter::before { bottom: calc(100% - var(--space-2_5)); }
-
-  .dot {
-    position: relative;
-    z-index: var(--z-elevated);
-    width: var(--space-2_5);
-    height: var(--space-2_5);
-    border-radius: var(--radius-full);
-    background: var(--tone-fg);
-    margin-top: var(--space-1);
-    flex-shrink: 0;
-    box-shadow: 0 0 0 var(--space-1) var(--surface-1);
-  }
-
   .body { min-width: 0; }
-
   .head {
     display: flex;
     align-items: baseline;
@@ -87,7 +104,6 @@
     font-weight: var(--font-weight-medium);
     color: var(--foreground);
   }
-
   .at {
     font-family: var(--font-mono);
     color: var(--muted-foreground);
@@ -95,14 +111,12 @@
     letter-spacing: var(--tracking-normal);
     margin-inline-start: auto;
   }
-
   .content {
     font-size: var(--text-sm);
     color: var(--muted-foreground);
     line-height: var(--leading-normal);
     margin-top: var(--space-1);
   }
-
   :host([interactive]) {
     cursor: pointer;
     border-radius: var(--radius-sm);
@@ -120,13 +134,15 @@
   }
 </style>
 
-<div class="gutter"><span class="dot" part="dot"></span></div>
-<div class="body" part="body">
-  <div class="head">
+<column class="gutter" gap="0" sx="position:relative">
+  <span class="dot" part="dot"></span>
+</column>
+<column class="body" part="body" gap="0">
+  <row class="head" align="baseline" gap="2">
     <slot name="title"></slot>
     {#if at()}
-      <span class="at" part="at">{at()}</span>
+      <span class="at" part="at" sx="fg:muted-foreground">{at()}</span>
     {/if}
-  </div>
-  <div class="content"><slot></slot></div>
-</div>
+  </row>
+  <column class="content" gap="0" sx="text:sm fg:muted-foreground"><slot></slot></column>
+</column>
