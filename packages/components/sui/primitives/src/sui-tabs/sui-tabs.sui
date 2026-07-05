@@ -34,6 +34,7 @@
   Roving tabindex                  ✓ controller manages       ✓ via sui-tab.active
     (active tab = 0, rest = -1)      sui-tab[active] attr;     prop → sui-tab.ts
                                      sui-tab.ts syncs btn      mirrors to tabIndex
+                                     tabIndex on init
   aria-selected                    ✓ on button in sui-tab     ✓ via sui-tab template
     (button role=tab)                template (active prop)
   aria-controls                    ✓ set by controller        note: panel elements
@@ -63,9 +64,9 @@
                                                               are a follow-up.
   ResizeObserver + indicator       DEFERRED                  underline indicator
     animation                                                animation requires
-                                                             CSS custom property
-                                                             measurement; not in
-                                                             scope for Tier 3.
+                                                              CSS custom property
+                                                              measurement; not in
+                                                              scope for Tier 3.
   ──────────────────────────────────────────────────────────────────────────────
 -->
 
@@ -77,45 +78,54 @@
 <prop name="orientation" values="horizontal|vertical" default="horizontal" reflect />
 <prop name="activation-mode" values="automatic|manual" default="automatic" reflect />
 
-<style>
-  :host {
-    display: block;
-    --tone: var(--primary);
-  }
-  :host([tone='info'])        { --tone: var(--info); }
-  :host([tone='success'])     { --tone: var(--success); }
-  :host([tone='warning'])     { --tone: var(--warning); }
-  :host([tone='destructive']) { --tone: var(--destructive); }
-  :host([tone='accent'])      { --tone: var(--accent); }
-  :host([sticky]) { position: sticky; top: 0; z-index: var(--z-sticky); background: var(--background); }
+<!-- `tone` becomes --tone on :host, which sui-tab reads for its own active
+     styling (active tab border-bottom-color: var(--tone)). Naming the
+     channel `tone` keeps the variable name that the child component
+     already binds to. -->
+<theme prop="tone" channels="tone">
+  default:     primary
+  primary:     primary
+  info:        info
+  success:     success
+  warning:     warning
+  destructive: destructive
+  accent:      accent
+  muted:       muted-foreground
+</theme>
 
+<variants>
+  sticky: position:sticky z:sticky bg:background
+</variants>
+
+<!-- pill strips are bg-filled, no underline; enclosed keeps the underline. -->
+<variants part="strip">
+  variant=pill: border:none bg:muted radius:md p:1
+</variants>
+
+<style>
+  /* Residual: bare `:host` rule (no prop selector), ::slotted children
+     selector (`flex: 0 0 auto` on slotted sui-tab), the .strip box (no
+     element-level sx shortcut for the strip's own
+     display+align-items+gap+border-bottom), the orientation=vertical
+     flip (no `flex-direction` / `border-right` props in sx; the row
+     primitive bakes its direction into its base class), the `gap:0`
+     on enclosed, and `[sticky]` top:0 (no `top` prop in sx). */
+  :host { display: block; }
+  :host([hidden]) { display: none; }
+  :host([sticky]) { top: 0; }
   .strip {
     display: flex;
     align-items: center;
     gap: var(--space-1);
     border-bottom: 1px solid var(--border);
   }
-
+  :host([variant='enclosed']) .strip { gap: 0; }
   :host([orientation='vertical']) .strip {
     flex-direction: column;
     align-items: flex-start;
     border-bottom: 0;
     border-right: 1px solid var(--border);
   }
-
-  :host([variant='pill']) .strip {
-    gap: var(--space-1);
-    border-bottom: 0;
-    padding: var(--space-1);
-    background: var(--muted);
-    border-radius: var(--radius-md);
-  }
-
-  :host([variant='enclosed']) .strip {
-    gap: 0;
-    border-bottom: 1px solid var(--border);
-  }
-
   ::slotted(sui-tab),
   ::slotted([slot='tab']) {
     flex: 0 0 auto;
