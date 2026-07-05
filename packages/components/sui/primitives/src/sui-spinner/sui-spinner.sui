@@ -4,8 +4,6 @@
 
   Prop / event / method parity vs <ship-spinner>
   ─────────────────────────────────────────────────────────────────────────────
-  Lit                             SUI                     Notes
-  ─────────────────────────────────────────────────────────────────────────────
   tone (String, 'info')           tone (union, reflect)   ✓ default changed to
                                                           'default' (muted-fg)
                                                           as a more neutral base
@@ -33,33 +31,39 @@
 <prop name="label" type="string" default="Loading" />
 <prop name="centered" type="bool" default="false" reflect />
 
+<theme prop="tone" channels="tone-fg, tone-ring">
+  default:     muted-foreground, tone-muted-ring
+  primary:     primary,          tone-primary-ring
+  info:        info,             tone-info-ring
+  success:     success,          tone-success-ring
+  warning:     warning,          tone-warning-ring
+  destructive: destructive,      tone-destructive-ring
+  accent:      accent,           tone-accent-ring
+  muted:       muted-foreground, tone-muted-ring
+</theme>
+
+<variants>
+  centered: display:block
+</variants>
+
 <style>
+  /* Residual: keyframes + the motion-reduce override aren't reachable
+     through the sx theme/variants constructs. The size-aware --sz / --bw
+     vars stay locally defined here because sx has no border-width prop
+     and expressing them through <theme> would rename the vars (changing
+     the .ring references). Centered's margin-bottom keeps the original
+     declaration so the top-of-block <variants> only owns `display:block`. */
   :host {
     display: inline-flex;
     vertical-align: middle;
-    --tone-fg: var(--muted-foreground);
     --sz: var(--icon-size-md);
     --bw: var(--space-half);
   }
-  :host([tone='primary'])     { --tone-fg: var(--primary);     --tone-ring: var(--tone-primary-ring); }
-  :host([tone='info'])        { --tone-fg: var(--info);         --tone-ring: var(--tone-info-ring); }
-  :host([tone='success'])     { --tone-fg: var(--success);      --tone-ring: var(--tone-success-ring); }
-  :host([tone='warning'])     { --tone-fg: var(--warning);      --tone-ring: var(--tone-warning-ring); }
-  :host([tone='destructive']) { --tone-fg: var(--destructive);  --tone-ring: var(--tone-destructive-ring); }
-  :host([tone='accent'])      { --tone-fg: var(--accent);       --tone-ring: var(--tone-accent-ring); }
+  :host([centered]) { margin: var(--space-8) auto; }
   :host([size='xs']) { --sz: var(--icon-size-2xs); --bw: var(--space-half); }
-  :host([size='sm']) { --sz: var(--icon-size-xs); --bw: var(--space-half); }
-  :host([size='md']) { --sz: var(--icon-size-md); --bw: var(--space-half); }
+  :host([size='sm']) { --sz: var(--icon-size-xs);  --bw: var(--space-half); }
+  :host([size='md']) { --sz: var(--icon-size-md);  --bw: var(--space-half); }
   :host([size='lg']) { --sz: var(--icon-size-2xl); --bw: var(--space-1_25); }
-
-  /* `centered` — block-level wrapper with vertical breathing room.
-   * The 8-place inline pattern `style="margin: var(--space-8) auto;
-   * display: block"` is now a one-attribute opt-in. */
-  :host([centered]) {
-    display: block;
-    margin: var(--space-8) auto;
-  }
-
   .ring {
     display: inline-block;
     width: var(--sz);

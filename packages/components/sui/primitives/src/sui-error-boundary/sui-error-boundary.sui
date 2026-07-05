@@ -26,57 +26,19 @@
 <prop name="fallback-text" type="string" default="" />
 
 <style>
-  :host {
-    display: block;
-    font-family: var(--font-body);
-  }
+  /* Residual: `font-family: var(--font-body)` isn't reachable through sx
+     (no `font-family` prop in the vocabulary) — the host + fallback both
+     relied on it. The `<row>` + `<column>` primitives carry the flex
+     layout; `appearance: none` on `<button>`, multi-property transitions,
+     and `flex: 0 0 auto` for the icon (no `flex` prop in sx) stay here. */
+  :host { display: block; font-family: var(--font-body); }
   :host([hidden]) { display: none; }
-
-  .fallback {
-    display: flex;
-    gap: var(--space-3);
-    align-items: flex-start;
-    padding: var(--space-4) var(--space-5);
-    border: 1px solid var(--tone-destructive-border);
-    border-radius: var(--radius-md);
-    background: var(--tone-destructive-bg);
-    color: var(--foreground);
-    font-size: var(--text-sm);
-    box-shadow: var(--shadow-xs);
-  }
-
-  .fallback-icon {
-    width: var(--icon-size-lg);
-    height: var(--icon-size-lg);
-    flex: 0 0 auto;
-    color: var(--destructive);
-    margin-top: var(--space-1);
-  }
-
+  .fallback-icon { flex: 0 0 auto; }
   .fallback-body { min-width: 0; }
-
-  .message {
-    color: var(--muted-foreground);
-    line-height: var(--leading-normal);
-  }
-
   .retry {
-    align-self: flex-start;
     appearance: none;
-    background: var(--surface-1);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: var(--space-1) var(--space-3);
     font: inherit;
-    font-size: var(--text-xs);
-    font-weight: var(--font-weight-semibold);
-    color: var(--foreground);
-    cursor: pointer;
-    box-shadow: var(--shadow-xs);
     transition: background-color var(--duration-fast) var(--ease-out);
-  }
-  .retry:hover {
-    background: var(--muted);
   }
 </style>
 
@@ -86,16 +48,20 @@
   {#if hasFallbackSlot()}
     <slot name="fallback"></slot>
   {:else}
-    <div class="fallback" part="fallback" role="alert">
-      <svg class="fallback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <row class="fallback" part="fallback" role="alert" gap="3" align="start"
+      sx="p:4 px:5 border:tone-destructive-border radius:md bg:tone-destructive-bg fg:foreground text:sm shadow:xs">
+      <svg class="fallback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+        sx="w:icon-size-lg h:icon-size-lg fg:destructive mt:1">
         <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
         <path d="M12 9v4"></path>
         <path d="M12 17h.01"></path>
       </svg>
       <column class="fallback-body" gap="1">
-        <div class="message" part="message">{fallbackText() || 'Something went wrong'}</div>
-        <button class="retry" part="retry" type="button" on:click={reset}>Retry</button>
+        <div class="message" part="message"
+          sx="fg:muted-foreground leading:normal">{fallbackText() || 'Something went wrong'}</div>
+        <button class="retry" part="retry" type="button" on:click={reset}
+          sx="bg:surface-1 border:subtle radius:sm p:1 pr:3 text:xs weight:semibold fg:foreground cursor:pointer shadow:xs hover:bg:muted">Retry</button>
       </column>
-    </div>
+    </row>
   {/if}
 {/if}

@@ -27,6 +27,10 @@
 <prop name="required" type="bool" default="false" reflect />
 
 <style>
+  /* Residual: bare `:host` rules without a prop selector (the `<column>`
+     primitive lowers flex layout to an INNER element, not the host). The
+     `font-family` belongs here too — no `font-family` prop in the sx
+     vocabulary. */
   :host {
     display: flex;
     flex-direction: column;

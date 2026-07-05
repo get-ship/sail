@@ -52,7 +52,38 @@
 <prop name="status-rail" type="bool" default="false" reflect />
 <prop name="fill" type="bool" default="false" reflect />
 
+<theme prop="tone" channels="tone-fg, tone-border, tone-bg">
+  default:     foreground,        border,            transparent
+  primary:     primary,           tone-primary-border, tone-primary-bg
+  info:        info,              tone-info-border,    tone-info-bg
+  success:     success,           tone-success-border, tone-success-bg
+  warning:     warning,           tone-warning-border, tone-warning-bg
+  destructive: destructive,       tone-destructive-border, tone-destructive-bg
+  accent:      accent,            tone-accent-border,  tone-accent-bg
+  muted:       muted-foreground,  border,              muted
+</theme>
+
+<variants>
+  variant=outline: bg:transparent shadow:none
+  interactive:     cursor:pointer
+  padding=none:    p:0
+  padding=sm:      py:2 px:3
+  padding=md:      py:4 px:5
+  padding=lg:      py:5 px:6
+</variants>
+
 <style>
+  /* Residual: host baseline + card local custom props + backdrop-filter /
+     isolation stack (no such props in sx) + multi-property transition.
+     The accent-bar ::before pseudo-element + opacity transition;
+     [interactive] hover/active/focus-visible states; [status-rail]
+     border-left with tone-fg + the tone=default fallback; [fill]
+     bg/border from theme channels; per-padding --card-* local vars;
+     [data-no-header]/[data-no-footer] :host-not combinators; the
+     .header/.footer wrappers + separator borders + per-padding overrides.
+     Plus the forced-colors override and reduce-motion override on the
+     interactive hover translateY. Note: variants do not reach theme
+     channels (sx::lower only); tone-bound attributes stay here. */
   :host {
     display: block;
     position: relative;
@@ -62,10 +93,6 @@
     --card-radius: var(--radius-lg);
     border-radius: var(--card-radius);
     overflow: clip;
-    /* Frost on glass themes (--card-backdrop-filter resolves to a blur there,
-       `none` everywhere else). isolation establishes a stacking context so the
-       backdrop-filter clips to --card-radius — belt-and-suspenders with the
-       existing overflow:clip. Frost goes on :host (the ::before is the accent-bar). */
     backdrop-filter: var(--card-backdrop-filter);
     -webkit-backdrop-filter: var(--card-backdrop-filter);
     isolation: isolate;
@@ -73,9 +100,6 @@
     --card-px: var(--space-5);
     --card-py: var(--space-4);
     --card-gap: var(--space-3);
-    --tone-fg: var(--foreground);
-    --tone-border: var(--border);
-    --tone-bg: transparent;
     padding: var(--card-py) var(--card-px);
     transition:
       background-color var(--duration-fast) var(--ease-out),
@@ -85,45 +109,8 @@
   }
   :host([hidden]) { display: none; }
 
-  :host([tone='primary'])     { --tone-fg: var(--primary);     --tone-border: var(--tone-primary-border);     --tone-bg: var(--tone-primary-bg); }
-  :host([tone='info'])        { --tone-fg: var(--info);        --tone-border: var(--tone-info-border);        --tone-bg: var(--tone-info-bg); }
-  :host([tone='success'])     { --tone-fg: var(--success);     --tone-border: var(--tone-success-border);     --tone-bg: var(--tone-success-bg); }
-  :host([tone='warning'])     { --tone-fg: var(--warning);     --tone-border: var(--tone-warning-border);     --tone-bg: var(--tone-warning-bg); }
-  :host([tone='destructive']) { --tone-fg: var(--destructive); --tone-border: var(--tone-destructive-border); --tone-bg: var(--tone-destructive-bg); }
-  :host([tone='accent'])      { --tone-fg: var(--accent);      --tone-border: var(--tone-accent-border);      --tone-bg: var(--tone-accent-bg); }
-  :host([tone='muted'])       { --tone-border: var(--border); --tone-bg: var(--muted); }
-
   :host([tone]:not([tone='default'])) { border-color: var(--tone-border); }
-  :host([fill]) { background: var(--tone-bg); border-color: var(--tone-border); }
 
-  :host([padding='none']) { --card-px: 0px; --card-py: 0px; --card-gap: 0px; padding: 0; }
-  :host([padding='sm'])   { --card-px: var(--space-3); --card-py: var(--space-2); --card-gap: var(--space-2); padding: var(--space-2) var(--space-3); }
-  :host([padding='md'])   { --card-px: var(--space-5); --card-py: var(--space-4); padding: var(--space-4) var(--space-5); }
-  :host([padding='lg'])   { --card-px: var(--space-6); --card-py: var(--space-5); --card-gap: var(--space-4); padding: var(--space-5) var(--space-6); }
-
-  :host([variant='outline']) { background: transparent; box-shadow: none; }
-
-  /* Tone-rail. The rail is only meaningful when a tone is explicitly set
-   * — otherwise --tone-fg resolves to --foreground and we'd draw a
-   * 3-px body-text-coloured stripe (meaningless decoration with the
-   * weight of an emphasis cue). Default tone hides the rail. */
-  :host([status-rail]) {
-    border-left: var(--space-half) solid var(--tone-fg);
-    padding-inline-start: calc(var(--card-px) - var(--space-1));
-  }
-  :host([status-rail]:not([tone])),
-  :host([status-rail][tone='default']) {
-    border-left-color: var(--border-strong);
-  }
-
-  /* Accent bar. Two modes:
-   *   hover  — fades in on hover (the default, preserves prior behaviour
-   *            on interactive cards).
-   *   static — always-visible at full opacity (right for hero cards,
-   *            print exports, touch contexts where hover never fires).
-   * Bar clips to the card's border-radius via inherit/match — when
-   * `padding="none"` flattens the card, the bar still respects the
-   * top-corner radius via the same token. */
   :host([accent-bar='hover'])::before,
   :host([accent-bar='static'])::before {
     content: '';
@@ -139,7 +126,7 @@
   :host([accent-bar='hover']:hover)::before { opacity: 1; }
   :host([accent-bar='static'])::before { opacity: 1; }
 
-  :host([interactive]) { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  :host([interactive]) { -webkit-tap-highlight-color: transparent; }
   :host([interactive]:hover) {
     border-color: var(--border-strong);
     box-shadow: var(--shadow-hover);
@@ -158,9 +145,23 @@
     outline-offset: var(--focus-ring-offset);
   }
 
-  .header, .footer { display: block; }
+  :host([status-rail]) {
+    border-left: var(--space-half) solid var(--tone-fg);
+    padding-inline-start: calc(var(--card-px) - var(--space-1));
+  }
+  :host([status-rail]:not([tone])),
+  :host([status-rail][tone='default']) {
+    border-left-color: var(--border-strong);
+  }
 
-  /* Separator — show only when slot has projected content */
+  :host([fill]) { background: var(--tone-bg); border-color: var(--tone-border); }
+
+  :host([padding='none']) { --card-px: 0px; --card-py: 0px; --card-gap: 0px; padding: 0; }
+  :host([padding='sm'])   { --card-px: var(--space-3); --card-py: var(--space-2); --card-gap: var(--space-2); padding: var(--space-2) var(--space-3); }
+  :host([padding='md'])   { --card-px: var(--space-5); --card-py: var(--space-4); padding: var(--space-4) var(--space-5); }
+  :host([padding='lg'])   { --card-px: var(--space-6); --card-py: var(--space-5); --card-gap: var(--space-4); padding: var(--space-5) var(--space-6); }
+
+  .header, .footer { display: block; }
   :host(:not([data-no-header])) .header {
     margin: calc(var(--card-py) * -1) calc(var(--card-px) * -1) var(--card-gap);
     padding: var(--card-py) var(--card-px);
