@@ -26,24 +26,22 @@
 <prop name="show-delay" type="number" default="300" />
 <prop name="hide-delay" type="number" default="100" />
 
+<!--
+  Residual <style> — truly unavoidable bits:
+  - :host display: inline-flex / display: none
+  - .panel inset + margin + multi-prop transition + transform
+  - .panel:popover-open opacity + transform
+  - .panel::backdrop background
+  - .panel CSS Anchor Positioning (@supports, position-try-fallbacks, anchor(), justify-self, align-self, etc.)
+  - prefers-reduced-motion media (panel transition off)
+  - forced-colors media
+-->
 <style>
   :host { display: inline-flex; }
   :host([hidden]) { display: none; }
-
   .panel {
     inset: auto;
     margin: 0;
-    min-width: var(--panel-min-w-md);
-    max-width: var(--panel-min-w-lg);
-    padding: var(--space-4);
-    background: var(--popover);
-    color: var(--popover-foreground);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-lg), inset 0 1px 0 var(--surface-1);
-    font-family: var(--font-body);
-    font-size: var(--text-base);
-    line-height: var(--leading-normal);
     opacity: 0;
     transform: translateY(calc(-1 * var(--space-1)));
     transition:
@@ -55,13 +53,6 @@
     transform: translateY(0);
   }
   .panel::backdrop { background: transparent; }
-
-  /* CSS Anchor Positioning — same shape as sui-popover and
-     sui-dropdown-menu. Controller sets `--sui-hc-anchor` to a unique
-     per-instance name on the slotted trigger; CSS resolves placement
-     against that anchor. `position-try-fallbacks` auto-flips when the
-     chosen placement would clip the viewport. The controller's JS
-     positionPanel is skipped when this branch is live. */
   @supports (anchor-name: --x) {
     ::slotted([slot='trigger']) {
       anchor-name: var(--sui-hc-anchor);
@@ -90,7 +81,6 @@
       align-self: anchor-center;
     }
   }
-
   @media (prefers-reduced-motion: reduce) {
     .panel { transition: none; transform: none !important; }
   }
@@ -100,6 +90,7 @@
 </style>
 
 <slot name="trigger" bind:this={triggerSlot}></slot>
-<div class="panel" part="panel" popover="auto" bind:this={panelEl}>
+<div class="panel" part="panel" popover="auto" bind:this={panelEl}
+  sx="min-w:panel-min-w-md max-w:panel-min-w-lg p:4 bg:popover fg:popover-foreground border:border radius:xl shadow:lg text:base leading:normal">
   <slot></slot>
 </div>

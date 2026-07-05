@@ -38,281 +38,247 @@
 <prop name="placement" values="top|top-end|bottom|bottom-end|left|left-end|right|right-end" default="bottom-end" reflect />
 <prop name="label-style" values="text|compact" default="text" reflect />
 
+
+
+<!--
+  Residual <style> — truly unavoidable bits:
+  - :host position: relative + display: inline-flex
+  - .trigger background:transparent + border:1px solid transparent + multi-prop transition
+  - .trigger :focus-visible box-shadow (raw)
+  - .avatar + .avatar-fallback box-shadow ring (raw)
+  - .avatar-fallback.signed-out class rule (variants part selectors don't reach class)
+  - .panel position:fixed + inset + width + multi-prop transition + transform
+  - .panel::backdrop background
+  - .panel popover-open transform
+  - .panel reduced-motion override (transition: none + transform: none !important)
+  - .id-block border-bottom
+  - .id-block .avatar / .avatar-fallback flex:0 0 auto
+  - .name white-space:nowrap + overflow:hidden + text-overflow:ellipsis (not sx-able)
+  - .id-name, .id-email white-space:nowrap + overflow:hidden + text-overflow:ellipsis
+  - .plan text-transform: uppercase (not in sx)
+  - .action background:transparent + border:0 + text-align:left + font:inherit + transition
+  - .action :focus-visible box-shadow inset
+  - .action.danger color: destructive (class selector)
+  - .action[disabled] opacity:50 cursor:default (attribute selector)
+  - .action .meta margin-left:auto + color:muted-foreground
+  - .divider height:1px + margin + background
+  - :host([label-style='compact']) .name display:none (host data-driven)
+-->
 <style>
-:host {
-  position: relative;
-  display: inline-flex;
-}
-:host([hidden]) { display: none; }
-
-.trigger {
-  appearance: none;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  padding: var(--space-half) var(--space-1_5) var(--space-half) var(--space-half);
-  font: inherit;
-  font-size: var(--text-sm);
-  color: var(--foreground);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1_5);
-  max-width: var(--panel-min-w-lg);
-  transition:
-    background-color var(--duration-fast) var(--ease-out),
-    border-color var(--duration-fast) var(--ease-out);
-}
-.trigger:hover { background: var(--hover-bg); }
-.trigger:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 var(--ring-width) var(--ring);
-}
-
-.avatar, .avatar-fallback {
-  width: var(--control-h-2xs);
-  height: var(--control-h-2xs);
-  border-radius: var(--radius-full);
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  box-shadow: 0 0 0 1px var(--border-subtle);
-}
-.avatar { object-fit: cover; }
-.avatar-fallback {
-  background: var(--tone-primary-bg);
-  color: var(--primary);
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--tracking-wide);
-}
-.avatar-fallback.signed-out {
-  background: var(--hover-bg);
-  color: var(--muted-foreground);
-}
-
-.name {
-  font-weight: var(--font-weight-medium);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: var(--panel-ch-w-md);
-  line-height: var(--leading-none);
-}
-
-:host([label-style='compact']) .name { display: none; }
-
-.caret {
-  width: var(--icon-size-sm); height: var(--icon-size-xs);
-  flex: 0 0 auto;
-  color: var(--muted-foreground);
-}
-
-.panel {
-  position: fixed;
-  inset: auto;
-  margin: 0;
-  border: 0;
-  padding: 0;
-  width: var(--panel-max-w-sm);
-  background: var(--popover);
-  color: var(--popover-foreground);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  opacity: 0;
-  transform: translateY(calc(-1 * var(--space-1))) scale(0.97);
-  transition:
-    opacity var(--duration-medium) var(--ease-out),
-    transform var(--duration-medium) var(--ease-out);
-}
-.panel:popover-open {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-.panel::backdrop { background: transparent; }
-@media (prefers-reduced-motion: reduce) {
-  .panel { transition: none; transform: none !important; }
-}
-
-.id-block {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2_5);
-  padding: var(--space-3) var(--space-3_5);
-  border-bottom: 1px solid var(--border);
-}
-.id-block .avatar,
-.id-block .avatar-fallback {
-  width: var(--control-h-md);
-  height: var(--control-h-md);
-  font-size: var(--text-base);
-}
-.id-stack {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.id-name {
-  font-weight: var(--font-weight-semibold);
-  font-size: var(--text-base);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.id-email {
-  color: var(--muted-foreground);
-  font-size: var(--text-xs);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.plan {
-  margin-left: auto;
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wider);
-  color: var(--muted-foreground);
-  padding: var(--space-half) var(--space-1_5);
-  border-radius: var(--radius-full);
-  background: var(--hover-bg);
-  flex: 0 0 auto;
-}
-
-.actions { display: flex; flex-direction: column; padding: var(--space-1); }
-.action {
-  appearance: none;
-  background: transparent;
-  border: 0;
-  border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-2_5);
-  cursor: pointer;
-  text-align: left;
-  font: inherit;
-  font-size: var(--text-sm);
-  color: var(--foreground);
-  display: flex;
-  align-items: center;
-  gap: var(--space-2_5);
-  transition: background var(--duration-fast) var(--ease-out);
-}
-.action:hover { background: var(--hover-bg); }
-.action:focus-visible {
-  outline: none;
-  background: var(--hover-bg);
-  box-shadow: inset 0 0 0 var(--ring-width) var(--ring);
-}
-.action.danger { color: var(--destructive); }
-.action[disabled] { opacity: 0.5; cursor: default; }
-.action .meta { margin-left: auto; color: var(--muted-foreground); font-size: var(--text-xs); }
-.divider {
-  height: 1px;
-  margin: var(--space-1) 0;
-  background: var(--border);
-}
-.status-line {
-  padding: var(--space-2) var(--space-3_5) var(--space-3);
-  font-size: var(--text-xs);
-  color: var(--muted-foreground);
-}
-.status-line.err { color: var(--destructive); }
+  :host {
+    position: relative;
+    display: inline-flex;
+  }
+  .trigger {
+    background: transparent;
+    border: 1px solid transparent;
+    padding: var(--space-half) var(--space-1_5) var(--space-half) var(--space-half);
+    font: inherit;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+  }
+  .trigger:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 var(--ring-width) var(--ring);
+  }
+  :host([label-style='compact']) .name { display: none; }
+  .avatar, .avatar-fallback {
+    flex: 0 0 auto;
+    box-shadow: 0 0 0 1px var(--border-subtle);
+  }
+  .avatar-fallback.signed-out { background: var(--hover-bg); color: var(--muted-foreground); }
+  .name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .id-block {
+    border-bottom: 1px solid var(--border);
+  }
+  .id-block .avatar,
+  .id-block .avatar-fallback { flex: 0 0 auto; }
+  .panel {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    border: 0;
+    padding: 0;
+    width: var(--panel-max-w-sm);
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--space-1))) scale(0.97);
+    transition:
+      opacity var(--duration-medium) var(--ease-out),
+      transform var(--duration-medium) var(--ease-out);
+  }
+  .panel:popover-open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  .panel::backdrop { background: transparent; }
+  @media (prefers-reduced-motion: reduce) {
+    .panel { transition: none; transform: none !important; }
+  }
+  .id-block {
+    border-bottom: 1px solid var(--border);
+  }
+  .id-name, .id-email {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .plan {
+    text-transform: uppercase;
+  }
+  .action {
+    background: transparent;
+    border: 0;
+    text-align: left;
+    font: inherit;
+    transition: background var(--duration-fast) var(--ease-out);
+  }
+  .action.danger { color: var(--destructive); }
+  .action[disabled] { opacity: 0.5; cursor: default; }
+  .action:focus-visible {
+    outline: none;
+    background: var(--hover-bg);
+    box-shadow: inset 0 0 0 var(--ring-width) var(--ring);
+  }
+  .action .meta {
+    color: var(--muted-foreground);
+    margin-left: auto;
+  }
+  .divider {
+    height: 1px;
+    margin: var(--space-1) 0;
+    background: var(--border);
+  }
 </style>
 
-<button class="trigger" part="trigger" type="button" bind:this={triggerBtn}
+<row class="trigger" part="trigger" type="button" bind:this={triggerBtn}
+  align="center" gap="2"
+  on:click={() => togglePanel()}
   aria-haspopup="dialog"
   aria-expanded={panelOpen() ? 'true' : 'false'}
   aria-label={triggerAria()}
   title={triggerAria()}
-  on:click={() => togglePanel()}>
+  sx="p:1_5 radius:sm text:sm fg:foreground cursor:pointer max-w:panel-min-w-lg hover:bg:hover-bg">
   {#if status() === 'signed-in' && image() !== ''}
-    <img class="avatar" part="avatar" src={image()} alt="" />
+    <img class="avatar" part="avatar" src={image()} alt=""
+      sx="w:control-h-2xs h:control-h-2xs radius:full" />
   {:else if status() === 'signed-in'}
-    <span class="avatar-fallback" part="avatar" aria-hidden="true">{initials()}</span>
+    <row class="avatar-fallback" part="avatar" aria-hidden="true" align="center" gap="0" justify="center"
+      sx="w:control-h-2xs h:control-h-2xs radius:full overflow:hidden bg:tone-primary-bg fg:primary text:xs weight:semibold tracking:wide">{initials()}</row>
   {:else}
-    <span class="avatar-fallback signed-out" part="avatar" aria-hidden="true">
+    <row class="avatar-fallback signed-out" part="avatar" aria-hidden="true" align="center" gap="0" justify="center"
+      sx="w:control-h-2xs h:control-h-2xs radius:full overflow:hidden bg:hover-bg fg:muted-foreground text:xs weight:semibold tracking:wide">
       <sui-icon name="user" size="sm"></sui-icon>
-    </span>
+    </row>
   {/if}
-  <span class="name" part="name">{triggerLabel()}</span>
-  <svg class="caret" viewBox="0 0 10 6" aria-hidden="true">
+  <span class="name" part="name"
+    sx="weight:medium max-w:panel-ch-w-md leading:none">{triggerLabel()}</span>
+  <svg class="caret" viewBox="0 0 10 6" aria-hidden="true"
+    sx="w:icon-size-sm h:icon-size-xs fg:muted-foreground">
     <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
   </svg>
-</button>
+</row>
 
-<div class="panel" part="panel" popover="auto" bind:this={panelEl} role="menu" aria-label="Account">
+<div class="panel" part="panel" popover="auto" bind:this={panelEl} role="menu" aria-label="Account"
+  sx="w:panel-max-w-sm bg:popover fg:popover-foreground border:border radius:md shadow:lg">
   {#if status() === 'signed-in'}
-    <div class="id-block">
+    <row class="id-block" align="center" gap="2"
+      sx="p:3 px:3_5">
+
       {#if image() !== ''}
-        <img class="avatar" src={image()} alt="" />
+        <img class="avatar" src={image()} alt=""
+          sx="w:control-h-md h:control-h-md radius:full" />
       {:else}
-        <span class="avatar-fallback" aria-hidden="true">{initials()}</span>
+        <row class="avatar-fallback" aria-hidden="true" align="center" gap="0" justify="center"
+          sx="w:control-h-md h:control-h-md radius:full overflow:hidden bg:tone-primary-bg fg:primary text:base weight:semibold tracking:wide">{initials()}</row>
       {/if}
-      <div class="id-stack">
-        <span class="id-name">{name() !== '' ? name() : 'Account'}</span>
+      <column class="id-stack" gap="0" sx="min-w:0">
+        <span class="id-name"
+          sx="weight:semibold text:base fg:popover-foreground">{name() !== '' ? name() : 'Account'}</span>
         {#if email() !== ''}
-          <span class="id-email">{email()}</span>
+          <span class="id-email"
+            sx="fg:muted-foreground text:xs">{email()}</span>
         {/if}
-      </div>
+      </column>
       {#if plan() !== ''}
-        <span class="plan">{plan()}</span>
+        <span class="plan"
+          sx="text:xs fg:muted-foreground p:1_5 radius:full bg:hover-bg">{plan()}</span>
       {/if}
-    </div>
+    </row>
   {:else}
-    <div class="id-block">
-      <span class="avatar-fallback signed-out" aria-hidden="true">
+    <row class="id-block" align="center" gap="2"
+      sx="p:3 px:3_5">
+      <row class="avatar-fallback signed-out" aria-hidden="true" align="center" gap="0" justify="center"
+        sx="w:control-h-md h:control-h-md radius:full overflow:hidden bg:hover-bg fg:muted-foreground text:base weight:semibold tracking:wide">
         <sui-icon name="user" size="sm"></sui-icon>
-      </span>
-      <div class="id-stack">
-        <span class="id-name">Not signed in</span>
-        <span class="id-email">{disconnectedHint()}</span>
-      </div>
-    </div>
+      </row>
+      <column class="id-stack" gap="0" sx="min-w:0">
+        <span class="id-name"
+          sx="weight:semibold text:base fg:popover-foreground">Not signed in</span>
+        <span class="id-email"
+          sx="fg:muted-foreground text:xs">{disconnectedHint()}</span>
+      </column>
+    </row>
   {/if}
 
-  <div class="actions" role="none">
+  <column class="actions" gap="0" role="none" sx="p:1">
     {#if status() === 'signed-in'}
-      <button class="action" type="button" role="menuitem" on:click={() => onSettings()}>
+      <row class="action" part="action" type="button" role="menuitem" gap="2" align="center"
+        on:click={() => onSettings()}
+        sx="p:2 px:2_5 radius:sm cursor:pointer text:sm fg:foreground hover:bg:hover-bg">
         <sui-icon name="settings" size="sm"></sui-icon>
         <span>Account settings</span>
-      </button>
-      <button class="action" type="button" role="menuitem" on:click={() => onBilling()}>
+      </row>
+      <row class="action" part="action" type="button" role="menuitem" gap="2" align="center"
+        on:click={() => onBilling()}
+        sx="p:2 px:2_5 radius:sm cursor:pointer text:sm fg:foreground hover:bg:hover-bg">
         <sui-icon name="credit-card" size="sm"></sui-icon>
         <span>Billing</span>
-        <sui-icon class="meta" name="external-link" size="sm"></sui-icon>
-      </button>
-      <div class="divider" role="separator"></div>
-      <button class="action danger" type="button" role="menuitem"
+        <sui-icon class="meta" name="external-link" size="sm" sx="text:xs"></sui-icon>
+      </row>
+      <div class="divider" role="separator" sx="m:1"></div>
+      <row class="action danger" part="action" type="button" role="menuitem" gap="2" align="center"
         disabled={busy()}
-        on:click={() => onSignOut()}>
+        on:click={() => onSignOut()}
+        sx="p:2 px:2_5 radius:sm cursor:pointer text:sm fg:destructive hover:bg:hover-bg">
         <sui-icon name="log-out" size="sm"></sui-icon>
         <span>Sign out</span>
-      </button>
+      </row>
     {:else if status() === 'pending'}
-      <button class="action" type="button" role="menuitem" disabled>
+      <row class="action" part="action" type="button" role="menuitem" gap="2" align="center" disabled
+        sx="p:2 px:2_5 radius:sm cursor:pointer text:sm fg:foreground opacity:50">
         <sui-icon name="loader" size="sm"></sui-icon>
         <span>Completing sign-in…</span>
-      </button>
-      <button class="action" type="button" role="menuitem" on:click={() => onSettings()}>
+      </row>
+      <row class="action" part="action" type="button" role="menuitem" gap="2" align="center"
+        on:click={() => onSettings()}
+        sx="p:2 px:2_5 radius:sm cursor:pointer text:sm fg:foreground hover:bg:hover-bg">
         <sui-icon name="settings" size="sm"></sui-icon>
         <span>Account settings</span>
-      </button>
+      </row>
     {:else}
-      <button class="action" type="button" role="menuitem"
+      <row class="action" part="action" type="button" role="menuitem" gap="2" align="center"
         disabled={busy()}
-        on:click={() => onSignIn()}>
+        on:click={() => onSignIn()}
+        sx="p:2 px:2_5 radius:sm cursor:pointer text:sm fg:foreground hover:bg:hover-bg">
         <sui-icon name="log-in" size="sm"></sui-icon>
         <span>{signInLabel()}</span>
-      </button>
-      <button class="action" type="button" role="menuitem" on:click={() => onSettings()}>
+      </row>
+      <row class="action" part="action" type="button" role="menuitem" gap="2" align="center"
+        on:click={() => onSettings()}
+        sx="p:2 px:2_5 radius:sm cursor:pointer text:sm fg:foreground hover:bg:hover-bg">
         <sui-icon name="settings" size="sm"></sui-icon>
         <span>Account settings</span>
-      </button>
+      </row>
     {/if}
-  </div>
+  </column>
 
   {#if error() !== ''}
-    <div class="status-line err" role="status">{error()}</div>
+    <div class="status-line err" role="status"
+      sx="p:2 px:3_5 pb:3 text:xs fg:destructive">{error()}</div>
   {/if}
 </div>

@@ -27,113 +27,75 @@
 
 <prop name="active-id" type="string" default="" />
 
-<style>
-  :host { display: inline-flex; align-items: center; }
+<variants part="row">
+  [data-active]: bg:selected-bg
+</variants>
 
-  .trigger {
+
+
+<!--
+  Residual <style> — truly unavoidable bits:
+  - :host display: inline-flex + align-items: center
+  - .dot[data-hue=X] CSS var per hue (variants part selectors target host, not descendant)
+  - .name white-space + overflow + text-overflow (not sx-able)
+  - .menu position: fixed + inset + margin + overflow
+  - .row-wrap position: relative (since .row-open is absolute)
+  - .row text-align + font: inherit + cursor
+  - .row-open position: absolute + top/right + transform: translateY(-50%) + multi-prop transition
+  - .row-wrap:hover .row-open opacity: 1 (descendant rule; variants body doesn't support state prefixes)
+  - .row-name + .row-path white-space + overflow + text-overflow
+-->
+<style>
+  :host {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
-    height: var(--control-h-sm);
-    max-width: var(--panel-min-w-lg);
-    padding: 0 var(--space-2);
-    border: 0;
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--foreground);
-    font: inherit;
-    cursor: pointer;
   }
-  .trigger:hover { background: var(--hover-bg); }
-  .trigger:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 var(--ring-width) var(--ring);
-  }
-
-  .dot {
-    width: var(--space-2_5);
-    height: var(--space-2_5);
-    flex: 0 0 auto;
-    border-radius: 50%;
-    background: var(--dot, var(--muted-foreground));
-  }
+  .dot { flex: 0 0 auto; }
   .dot[data-hue="red"]    { --dot: var(--hue-red); }
   .dot[data-hue="orange"] { --dot: var(--hue-orange); }
   .dot[data-hue="amber"]  { --dot: var(--hue-amber); }
   .dot[data-hue="green"]  { --dot: var(--hue-green); }
-  .dot[data-hue="teal"]   { --dot: var(--hue-teal); }
-  .dot[data-hue="blue"]   { --dot: var(--hue-blue); }
-  .dot[data-hue="violet"] { --dot: var(--hue-violet); }
-  .dot[data-hue="pink"]   { --dot: var(--hue-pink); }
-  .dot[data-hue="slate"]  { --dot: var(--muted-foreground); }
-
+  .trigger { background: transparent; }
+  .row { background: transparent; }
+  .row-open { background: transparent; }
+  .dot { flex: 0 0 auto; }
   .name {
-    font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 1;
   }
-  .chev {
-    width: var(--space-2_5);
-    height: var(--space-1_5);
-    flex: 0 0 auto;
-    color: var(--muted-foreground);
-  }
-
   .menu {
     position: fixed;
     inset: auto;
     margin: 0;
-    padding: var(--space-1) 0;
-    min-width: var(--panel-min-w-md);
-    max-width: var(--panel-max-w-md);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    background: var(--popover);
-    color: var(--popover-foreground);
-    box-shadow: var(--shadow-lg);
     overflow: hidden;
   }
   .menu-title {
-    padding: var(--space-2) var(--space-3) var(--space-1);
-    font-size: var(--text-xs);
-    font-weight: var(--font-weight-semibold);
-    letter-spacing: var(--tracking-wider);
     text-transform: uppercase;
-    color: var(--muted-foreground);
   }
   .row-wrap {
     position: relative;
     display: flex;
   }
   .row {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    width: 100%;
-    padding: var(--space-2) var(--space-3);
-    padding-right: var(--space-9);
-    border: 0;
-    background: transparent;
-    color: inherit;
-    font: inherit;
     text-align: left;
+    font: inherit;
+    color: inherit;
     cursor: pointer;
   }
-  .row:hover { background: var(--hover-bg); }
-  .row[data-active] { background: var(--selected-bg); }
-  .row-main { display: flex; flex-direction: column; gap: var(--space-half); min-width: 0; flex: 1; }
+  .row-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
   .row-name {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .row-path {
-    font-size: var(--text-xs);
-    color: var(--muted-foreground);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -143,17 +105,10 @@
     top: 50%;
     right: var(--space-1_5);
     transform: translateY(-50%);
-    appearance: none;
     background: transparent;
     border: none;
-    padding: var(--space-1);
     margin: 0;
     cursor: pointer;
-    color: var(--muted-foreground);
-    border-radius: var(--radius-sm);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     opacity: 0;
     transition:
       opacity var(--duration-fast) var(--ease-out),
@@ -161,59 +116,59 @@
       color var(--duration-fast) var(--ease-out);
   }
   .row-wrap:hover .row-open,
-  .row-open:focus-visible {
-    opacity: 1;
-  }
-  .row-open:hover {
-    background: var(--hover-bg);
-    color: var(--foreground);
-  }
-  .menu-empty {
-    padding: var(--space-3);
-    text-align: center;
-    font-size: var(--text-sm);
-    color: var(--muted-foreground);
-  }
+  .row-open:focus-visible { opacity: 1; }
+  .menu-empty { text-align: center; }
 </style>
 
-<button class="trigger" part="trigger" type="button" bind:this={triggerBtn}
+<row class="trigger" part="trigger" type="button" bind:this={triggerBtn}
+  align="center" gap="2"
+  on:click={() => toggleMenu()}
   aria-haspopup="menu"
   aria-expanded={menuOpen() ? 'true' : 'false'}
   aria-label={triggerAria()}
   title={activeName()}
-  on:click={() => toggleMenu()}>
-  <span class="dot" part="dot" attr:data-hue={activeHue()}></span>
-  <span class="name" part="name">{activeName()}</span>
-  <svg class="chev" viewBox="0 0 10 6" aria-hidden="true">
+  sx="h:control-h-sm max-w:panel-min-w-lg p:0 px:2 radius:sm border:none fg:foreground cursor:pointer hover:bg:hover-bg">
+  <span class="dot" part="dot" attr:data-hue={activeHue()}
+    sx="w:2_5 h:2_5 radius:full bg:muted-foreground"></span>
+  <span class="name" part="name"
+    sx="weight:medium">{activeName()}</span>
+  <svg class="chev" viewBox="0 0 10 6" aria-hidden="true"
+    sx="w:2_5 h:1_5 fg:muted-foreground">
     <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
   </svg>
-</button>
+</row>
 
-<div class="menu" part="menu" popover="auto" bind:this={menuEl} role="menu" aria-label="Switch project">
-  <div class="menu-title">Switch project</div>
+<div class="menu" part="menu" popover="auto" bind:this={menuEl} role="menu" aria-label="Switch project"
+  sx="py:1 min-w:panel-min-w-md max-w:panel-max-w-md bg:popover fg:popover-foreground border:border radius:md shadow:lg">
+  <div class="menu-title"
+    sx="p:2 px:3 pb:1 text:xs weight:semibold tracking:wider fg:muted-foreground">Switch project</div>
   {#for p of rows() key={p.id}}
-    <div class="row-wrap" role="presentation">
-      <button class="row" type="button" role="menuitemradio"
+    <row class="row-wrap" role="presentation" gap="0">
+      <row class="row" part="row" type="button" role="menuitemradio" align="center" gap="2"
         attr:aria-checked={p.id === activeId() ? 'true' : 'false'}
         attr:data-active={p.id === activeId()}
-        on:click={() => pick(p.id)}>
-        <span class="dot" attr:data-hue={p.hue}></span>
-        <span class="row-main">
-          <span class="row-name">{p.name}</span>
+        on:click={() => pick(p.id)}
+        sx="w:full p:2 px:3 pr:9 border:none group">
+        <span class="dot" attr:data-hue={p.hue}
+          sx="w:2_5 h:2_5 radius:full bg:muted-foreground"></span>
+        <column class="row-main" gap="0" sx="min-w:0">
+          <span class="row-name" sx="text:base weight:medium">{p.name}</span>
           {#if p.path !== ''}
-            <span class="row-path">{p.path}</span>
+            <span class="row-path" sx="text:xs fg:muted-foreground">{p.path}</span>
           {/if}
-        </span>
-      </button>
-      <button class="row-open" type="button"
+        </column>
+      </row>
+      <row class="row-open" part="row-open" type="button"
         title="Open this project in its own window"
         aria-label="Open in its own window"
-        on:click={() => openAsWindow(p.id)}>
+        on:click={() => openAsWindow(p.id)}
+        align="center" gap="0" justify="center"
+        sx="radius:sm fg:muted-foreground p:1">
         <sui-icon name="external-link" size="sm"></sui-icon>
-      </button>
-    </div>
+      </row>
+    </row>
   {/for}
   {#if rows().length === 0}
-    <div class="menu-empty">No projects found.</div>
+    <div class="menu-empty" sx="p:3 text:sm fg:muted-foreground">No projects found.</div>
   {/if}
 </div>

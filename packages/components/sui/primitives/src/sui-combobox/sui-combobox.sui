@@ -31,6 +31,54 @@
 <prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
 <prop name="size" values="sm|md|lg" default="md" reflect />
 
+<theme prop="tone" channels="tone-border, tone-ring">
+  default:     border,    primary
+  primary:     primary,   primary
+  info:        info,      info
+  success:     success,   success
+  warning:     warning,   warning
+  destructive: destructive, destructive
+  accent:      accent,    accent
+  muted:       muted-foreground, muted-foreground
+</theme>
+
+<variants part="wrap">
+  size=sm: min-h:control-h-sm text:xs px:2
+  size=md: min-h:control-h-md text:base px:density-row-px
+  size=lg: min-h:control-h-lg text:sm px:3
+
+  disabled:    bg:muted border:border cursor:not-allowed
+</variants>
+
+<variants part="chevron">
+  [data-open]: shadow:none
+</variants>
+
+<variants part="opt">
+  [data-hl]: bg:selected-bg
+</variants>
+
+<variants part="input">
+  disabled: cursor:not-allowed
+</variants>
+
+<!--
+  Residual <style> — truly unavoidable bits:
+  - :host position + display + flex-direction + width + vertical-align
+  - :host tone/size CSS vars (consumed by .wrap via calc)
+  - .wrap :hover elevation (host(:not([disabled])) .wrap:hover:not(:focus-within):not([data-open]))
+  - .wrap :focus-within + [data-open] box-shadow ring (raw, calc off a --tone-ring var)
+  - :host([disabled]) .wrap filter: saturate(0.6)
+  - :host([disabled]) input.entry color: muted-foreground
+  - input.entry font: inherit + font-family + outline: 0
+  - input.entry::placeholder color
+  - input.entry:disabled cursor
+  - .chevron transform: rotate(180deg) on [data-open] (raw transform)
+  - .listbox position: absolute + top calc + max-height + overflow-y + z-index
+  - .opt font-family + user-select
+  - .opt[aria-selected='true'] font-weight
+  - .empty text-align: center
+-->
 <style>
   :host {
     position: relative;
@@ -38,64 +86,19 @@
     flex-direction: column;
     width: 100%;
     vertical-align: middle;
-    --tone-border: var(--border);
-    --tone-ring: var(--primary);
-    --h: var(--control-h-md);
-    --fs: var(--density-text);
-    --px: var(--density-row-px);
   }
-  :host([tone='primary'])     { --tone-border: var(--primary);          --tone-ring: var(--primary); }
-  :host([tone='info'])        { --tone-border: var(--info);              --tone-ring: var(--info); }
-  :host([tone='success'])     { --tone-border: var(--success);           --tone-ring: var(--success); }
-  :host([tone='warning'])     { --tone-border: var(--warning);           --tone-ring: var(--warning); }
-  :host([tone='destructive']) { --tone-border: var(--destructive);       --tone-ring: var(--destructive); }
-  :host([tone='accent'])      { --tone-border: var(--accent);            --tone-ring: var(--accent); }
-  :host([tone='muted'])       { --tone-border: var(--muted-foreground);  --tone-ring: var(--muted-foreground); }
-
-  :host([size='sm']) { --h: var(--control-h-sm); --fs: var(--text-xs); --px: var(--space-2); }
-  :host([size='md']) { --h: var(--control-h-md); --fs: var(--density-text); --px: var(--density-row-px); }
-  :host([size='lg']) { --h: var(--control-h-lg); --fs: var(--text-sm); --px: var(--space-3); }
-
   .wrap {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    width: 100%;
-    min-height: var(--h);
-    padding: 0 var(--px);
-    background: var(--background);
-    border: 1px solid var(--tone-border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-xs);
-    transition:
-      background-color var(--duration-fast) var(--ease-out),
-      border-color var(--duration-fast) var(--ease-out),
-      box-shadow var(--duration-fast) var(--ease-out);
+    box-shadow: 0 0 0 3px var(--tone-ring);
   }
-
-  /* Hover affordance — design bundle elevation (forms after-pattern,
-   * rest-shadow, hover). Matches sui-input / sui-select / sui-textarea. */
   :host(:not([disabled])) .wrap:hover:not(:focus-within):not([data-open]) {
     border-color: var(--border-strong);
     box-shadow: var(--shadow-sm);
   }
-
-  .wrap:focus-within,
-  :host([data-open]) .wrap {
-    border-color: var(--tone-ring);
-    box-shadow: 0 0 0 3px var(--tone-ring);
-  }
-
-  /* Disabled — system pattern, not blunt opacity. Matches select / input. */
+  :host([data-open]) .wrap { border-color: var(--tone-ring); }
   :host([disabled]) .wrap {
-    background: var(--muted);
-    border-color: var(--border);
-    box-shadow: none;
-    cursor: not-allowed;
     filter: saturate(0.6);
   }
   :host([disabled]) input.entry { color: var(--muted-foreground); }
-
   input.entry {
     flex: 1;
     min-width: 0;
@@ -105,22 +108,16 @@
     padding: 0;
     font: inherit;
     font-family: var(--font-body);
-    font-size: var(--fs);
     color: var(--foreground);
   }
   input.entry::placeholder { color: var(--muted-foreground); }
   input.entry:disabled { cursor: not-allowed; }
-
   .chevron {
     flex: 0 0 auto;
-    width: var(--icon-size-sm);
-    height: var(--icon-size-sm);
-    color: var(--muted-foreground);
     pointer-events: none;
     transition: transform var(--duration-fast) var(--ease-out);
   }
   :host([data-open]) .chevron { transform: rotate(180deg); }
-
   .listbox {
     position: absolute;
     top: calc(100% + var(--space-1));
@@ -129,45 +126,23 @@
     max-height: var(--panel-max-h-sm);
     overflow-y: auto;
     margin: 0;
-    padding: var(--space-1);
     list-style: none;
-    background: var(--popover);
-    color: var(--popover-foreground);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
     z-index: var(--z-popover);
   }
   .opt {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-2);
-    border-radius: var(--radius-sm);
     font-family: var(--font-body);
-    font-size: var(--fs);
-    color: var(--foreground);
-    cursor: pointer;
     user-select: none;
   }
   .opt[aria-selected='true'] { font-weight: var(--font-weight-semibold); }
-  .opt.hl {
-    background: var(--selected-bg);
-  }
   .empty {
-    padding: var(--space-2);
-    font-family: var(--font-body);
-    font-size: var(--fs);
-    color: var(--muted-foreground);
     text-align: center;
   }
 </style>
 
-<div class="wrap" part="wrap">
+<row class="wrap" part="wrap" align="center" gap="2"
+  sx="w:full bg:background border:tone-border radius:md shadow:xs">
   <input
-    class="entry"
-    part="input"
-    type="text"
+    class="entry" part="input" type="text"
     name={name()}
     placeholder={placeholder()}
     disabled={disabled()}
@@ -182,28 +157,35 @@
     bind:value={filterText}
     bind:this={inputEl}
   />
-  <svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"
+  <svg class="chevron" part="chevron" viewBox="0 0 16 16" aria-hidden="true"
        fill="none" stroke="currentColor" stroke-width="1.75"
-       stroke-linecap="round" stroke-linejoin="round">
+       stroke-linecap="round" stroke-linejoin="round"
+       sx="w:icon-size-sm h:icon-size-sm fg:muted-foreground">
     <path d="M4 6l4 4 4-4"></path>
   </svg>
-</div>
+</row>
 {#if open() && !disabled()}
-  <ul class="listbox" part="listbox" role="listbox" id={listId()}
-      bind:this={listEl}>
+  <column class="listbox" part="listbox" role="listbox" id={listId()} gap="0"
+    bind:this={listEl}
+    sx="p:1 bg:popover fg:popover-foreground border:border radius:md shadow:md">
     {#for o of visibleOptions() key={o.id}}
-      <li
-        class="opt"
+      <row
+        class="opt" part="opt"
         class:hl={o.idx === highlight()}
+        attr:data-hl={o.idx === highlight()}
         role="option"
         id={o.id}
         data-value={o.value}
         aria-selected={o.value === value() ? 'true' : 'false'}
-      >{o.label}</li>
+        align="center" gap="2"
+        sx="p:2 radius:sm fg:foreground cursor:pointer"
+      >{o.label}</row>
+
     {/for}
     {#if visibleOptions().length === 0}
-      <li class="empty" role="presentation">No matches</li>
+      <li class="empty" part="empty" role="presentation"
+        sx="p:2 fg:muted-foreground">No matches</li>
     {/if}
-  </ul>
+  </column>
 {/if}
 <span hidden><slot bind:this={optionsSlot}></slot></span>
