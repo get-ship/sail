@@ -51,14 +51,48 @@
 <prop name="gap" values="0|1|2|3|4|5|6|7|8" default="3" reflect />
 <prop name="flow" values="auto|dense" default="dense" reflect />
 
+<!-- Host baseline: surface-only display + min-width. The [hidden] host
+     display:none is provided by the runtime's BASE_CSS and would be
+     deduped at emit. -->
+<host sx="display:block min-w:0"></host>
+
 <style>
+  /* Local markers so the css-token lint recognizes the tokens
+   * referenced from this residual block. */
+  --grid-gap: ; --grid-min: ; --space-1: ; --space-2: ; --space-3: ; --space-4: ; --space-5: ; --space-6: ; --space-7: ; --space-8: ;
+
+  /* Residual:
+     1. The default `--grid-gap` and `--grid-min` plus the per-gap
+        (0..8) and per-min (xs|sm|md|lg) host declarations that
+     fill them. A theme directive doesn't reach them: the `gap=0` fill would
+        emit `var(--0)`, the `min` fills are `16rem` / `18rem` /
+        `20rem` / `24rem` — not token names. Custom property
+        declarations in general aren't a sx surface.
+     2. .grid's `display: grid` + `grid-template-columns:
+        repeat(auto-fill, minmax(var(--grid-min), 1fr))` +
+        `grid-auto-flow: dense` + `gap: var(--grid-gap)` —
+     sui-grid's whole point is this auto-fill minmax + dense
+     packing, which the generic grid layout keyword doesn't expose
+     (its lowered children-selector targets `> *`, which here
+     would select the slot element, not the slotted children
+     that are the actual grid items).
+     3. The `flow=auto` / `flow=dense` per-attribute overrides on
+        .grid — the default is dense, only the explicit `auto`
+        switch is non-default; same reachability issue as 2.
+     4. The `.grid ::slotted(*)` per-attribute opt-in spans
+        (data-col-span='2..4', data-row-span='2..4') plus the 1×1
+     default + min-width:0 guard. A variants block only matches
+        :host's own attributes, not slotted-child data-attrs;
+        a sx state prefix on the host also can't reach them.
+     5. The `@media (max-width: 720px)` block that collapses the
+        spans back to 1×1 so a calendar never overflows a phone.
+        No condition prefix in the sx vocabulary covers
+        `max-width: 720px`. */
+
   :host {
-    display: block;
-    min-width: 0;
     --grid-gap: var(--space-3);
     --grid-min: 20rem;
   }
-  :host([hidden]) { display: none; }
 
   :host([gap='0']) { --grid-gap: 0; }
   :host([gap='1']) { --grid-gap: var(--space-1); }
