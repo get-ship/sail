@@ -106,23 +106,32 @@ pub fn check_component_variants(
 fn gen_variants_harness(props: &str) -> String {
     const TONE: &str =
         "'default'|'primary'|'info'|'success'|'warning'|'destructive'|'accent'|'muted'";
-    const SIZE: &str = "'sm'|'md'|'lg'";
+    const SIZE: &str = "'xs'|'sm'|'md'|'lg'";
     let mut members = Vec::new();
     for (name, val) in parse_object_fields(props) {
-        let ty = match (name.as_str(), val.trim()) {
-            ("tone", "") => TONE.to_string(),
-            ("size", "") => SIZE.to_string(),
-            (_, v) if v.starts_with('[') => v
-                .trim_start_matches('[')
+        let n = name.as_str();
+        let v = val.trim();
+        let ty = if n == "tone" {
+            TONE.to_string()
+        } else if n == "size" {
+            SIZE.to_string()
+        } else if v.contains('|') {
+            // Real-TS union — already valid TS, pass through verbatim.
+            v.to_string()
+        } else if v.starts_with('[') {
+            v.trim_start_matches('[')
                 .trim_end_matches(']')
                 .split(',')
                 .filter(|s| !s.trim().is_empty())
                 .map(|s| format!("'{}'", s.trim().trim_matches(['\'', '"'])))
                 .collect::<Vec<_>>()
-                .join("|"),
-            (_, "bool") => "boolean".to_string(),
-            (_, "number") => "number".to_string(),
-            _ => "string".to_string(),
+                .join("|")
+        } else if v == "boolean" || v == "bool" {
+            "boolean".to_string()
+        } else if v == "number" {
+            "number".to_string()
+        } else {
+            "string".to_string()
         };
         members.push(format!("  {name}: {ty};"));
     }

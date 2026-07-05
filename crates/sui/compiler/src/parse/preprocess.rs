@@ -648,28 +648,46 @@ fn lower_component(source: &str) -> String {
 fn expand_props(obj: &str) -> String {
     let mut out = String::new();
     for (name, val) in parse_object_fields(obj) {
+        let n = name.as_str();
         let val = val.trim();
-        let tag = match (name.as_str(), val) {
-            // Built-in props: naming them IS the declaration + contract opt-in.
-            ("tone", "") => "<prop name=\"tone\" values=\"default|primary|info|success|warning|destructive|accent|muted\" default=\"default\" reflect />".to_string(),
-            ("size", "") => "<prop name=\"size\" values=\"sm|md|lg\" default=\"md\" reflect />".to_string(),
-            // Inline enum: `variant: ['solid','soft']`.
-            (n, v) if v.starts_with('[') => {
-                let inner = v.trim_start_matches('[').trim_end_matches(']');
-                let vals: Vec<String> = split_top_level(inner, ',')
-                    .into_iter()
-                    .map(|s| unquote(&s))
-                    .collect();
-                let default = vals.first().cloned().unwrap_or_default();
-                format!(
-                    "<prop name=\"{n}\" values=\"{}\" default=\"{default}\" reflect />",
-                    vals.join("|")
-                )
-            }
-            (n, "bool") => format!("<prop name=\"{n}\" type=\"bool\" default=\"false\" reflect />"),
-            (n, "number") => format!("<prop name=\"{n}\" type=\"number\" default=\"0\" />"),
-            // `string`, a bare shorthand, or anything else → a string prop.
-            (n, _) => format!("<prop name=\"{n}\" type=\"string\" default=\"\" />"),
+        // Built-in framework props: `tone`/`size` — bare or annotated `: Tone`/
+        // `: Size`. Naming them IS the contract opt-in (channels come for free).
+        let tag = if n == "tone" {
+            "<prop name=\"tone\" values=\"default|primary|info|success|warning|destructive|accent|muted\" default=\"default\" reflect />".to_string()
+        } else if n == "size" {
+            "<prop name=\"size\" values=\"xs|sm|md|lg\" default=\"md\" reflect />".to_string()
+        } else if val.contains('|') {
+            // Real-TS union: `variant: 'default' | 'solid' | 'outline'`. The
+            // default is the first member — order the union with it first.
+            let vals: Vec<String> = val
+                .split('|')
+                .map(|s| unquote(s.trim()))
+                .filter(|s| !s.is_empty())
+                .collect();
+            let default = vals.first().cloned().unwrap_or_default();
+            format!(
+                "<prop name=\"{n}\" values=\"{}\" default=\"{default}\" reflect />",
+                vals.join("|")
+            )
+        } else if val.starts_with('[') {
+            // Transitional array form: `['solid','soft']`.
+            let inner = val.trim_start_matches('[').trim_end_matches(']');
+            let vals: Vec<String> = split_top_level(inner, ',')
+                .into_iter()
+                .map(|s| unquote(&s))
+                .collect();
+            let default = vals.first().cloned().unwrap_or_default();
+            format!(
+                "<prop name=\"{n}\" values=\"{}\" default=\"{default}\" reflect />",
+                vals.join("|")
+            )
+        } else if val == "boolean" || val == "bool" {
+            format!("<prop name=\"{n}\" type=\"bool\" default=\"false\" reflect />")
+        } else if val == "number" {
+            format!("<prop name=\"{n}\" type=\"number\" default=\"0\" />")
+        } else {
+            // `string`, `String`, or a bare shorthand → a string prop.
+            format!("<prop name=\"{n}\" type=\"string\" default=\"\" />")
         };
         out.push_str(&tag);
         out.push('\n');
