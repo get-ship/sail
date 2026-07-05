@@ -27,6 +27,9 @@ pub fn preprocess(source: &str) -> String {
     // Off-vocab values are rejected earlier by the lints (`sui-sx` / `sui-layout`)
     // reading the raw source; here we only lower valid ones.
     let s = expand_self_close(&quote_brace_attrs(source));
+    // Desugar the SFC `<component>` block into the `<prop>` tags + object
+    // `<variants>` the rest of the chain already lowers.
+    let s = lower_component(&s);
     // `<host>` first: it consumes its own `sx` into a `:host{…}` rule before
     // `lower_sx` would otherwise fold that sx into a class on the (non-)element.
     let (s, host_css) = lower_host(&s);
@@ -545,6 +548,75 @@ pub fn extract_controller_block(source: &str) -> (String, Option<String>) {
     stripped.push_str(&source[..start]);
     stripped.push_str(&source[block_end..]);
     (stripped, Some(body))
+}
+
+/// Desugar the SFC `<component>` block — the single declarative surface — into
+/// the `<prop>` tags + object-`<variants>` block the existing pipeline lowers.
+/// `props:` maps built-in shorthands (`tone`/`size`) to their canonical union +
+/// contract, arrays to enum props, and `bool`/`string`/`number` to typed props;
+/// `variants:` becomes a `<variants>` block; `meta:` is filename-derived today.
+fn lower_component(source: &str) -> String {
+    let Some(start) = source.find("<component") else {
+        return source.to_string();
+    };
+    let Some(open_rel) = source[start..].find('>') else {
+        return source.to_string();
+    };
+    let body_start = start + open_rel + 1;
+    let Some(rel) = source[body_start..].find("</component>") else {
+        return source.to_string();
+    };
+    let body_end = body_start + rel;
+    let block_end = body_end + "</component>".len();
+
+    let mut generated = String::new();
+    for (key, val) in parse_object_fields(&source[body_start..body_end]) {
+        match key.as_str() {
+            "props" => generated.push_str(&expand_props(&val)),
+            "variants" => generated.push_str(&format!("<variants>{val}</variants>\n")),
+            // meta.tag is the filename-derived tag today; nothing to emit yet.
+            _ => {}
+        }
+    }
+    let mut out = String::with_capacity(source.len());
+    out.push_str(&source[..start]);
+    out.push_str(&generated);
+    out.push_str(&source[block_end..]);
+    out
+}
+
+/// Expand a props object `{ tone, size, variant: ['solid','soft'], disabled: bool }`
+/// into `<prop …/>` tags.
+fn expand_props(obj: &str) -> String {
+    let mut out = String::new();
+    for (name, val) in parse_object_fields(obj) {
+        let val = val.trim();
+        let tag = match (name.as_str(), val) {
+            // Built-in props: naming them IS the declaration + contract opt-in.
+            ("tone", "") => "<prop name=\"tone\" values=\"default|primary|info|success|warning|destructive|accent|muted\" default=\"default\" reflect />".to_string(),
+            ("size", "") => "<prop name=\"size\" values=\"sm|md|lg\" default=\"md\" reflect />".to_string(),
+            // Inline enum: `variant: ['solid','soft']`.
+            (n, v) if v.starts_with('[') => {
+                let inner = v.trim_start_matches('[').trim_end_matches(']');
+                let vals: Vec<String> = split_top_level(inner, ',')
+                    .into_iter()
+                    .map(|s| unquote(&s))
+                    .collect();
+                let default = vals.first().cloned().unwrap_or_default();
+                format!(
+                    "<prop name=\"{n}\" values=\"{}\" default=\"{default}\" reflect />",
+                    vals.join("|")
+                )
+            }
+            (n, "bool") => format!("<prop name=\"{n}\" type=\"bool\" default=\"false\" reflect />"),
+            (n, "number") => format!("<prop name=\"{n}\" type=\"number\" default=\"0\" />"),
+            // `string`, a bare shorthand, or anything else → a string prop.
+            (n, _) => format!("<prop name=\"{n}\" type=\"string\" default=\"\" />"),
+        };
+        out.push_str(&tag);
+        out.push('\n');
+    }
+    out
 }
 
 /// Lower every `<theme prop="…" channels="…">` block to `:host` custom-property
