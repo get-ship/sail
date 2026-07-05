@@ -56,27 +56,75 @@
      the document root is never mutated. -->
 <prop name="scope" type="string" default="" />
 
+<!--
+  Theme channel: --tp-trigger-gap drives the inner gap of the trigger, and
+  --tp-trigger-px / --tp-trigger-py drive the trigger's horizontal and vertical
+  padding. `compact` collapses the trigger to a single icon (no inner gap,
+  symmetric padding). `text` adds the label + caret with the canonical 6/8 px
+  rhythm. `default` and `compact` land on the same values because the runtime's
+  reflect=true only writes the attribute when the prop actually changes — an
+  unset prop leaves the host attribute absent, so the bare `:host` rule has to
+  already be the compact values.
+-->
+<theme prop="label-style" channels="tp-trigger-gap, tp-trigger-px, tp-trigger-py">
+  default: 0,         space-1, space-1
+  compact: 0,         space-1, space-1
+  text:    space-1_5, space-2, space-1
+</theme>
+
+<!--
+  Residual <style> — the bulk of this component's surface styling:
+  - :host bare baseline + the .trigger surface (transition / appearance /
+    background:transparent / border:1px solid transparent / font:inherit /
+    display:inline-flex + align-items — gap is a flex prop, no sx).
+  - .trigger :hover / :focus-visible :hover stays in residual because the
+    focus ring uses a single-layer box-shadow (raw --ring-width+--ring);
+    sx `ring:` is the 2-layer offset ring, different geometry.
+  - .label :white-space / text-overflow:ellipsis (no sx).
+  - .label / .caret display:none under :not(text) — variants don't support
+    :not() selectors, so the :host(:not([label-style='text'])) .label /
+    .caret / .trigger rules stay inline.
+  - .panel popover surface: position:fixed + inset:auto + multi-prop
+    transition + transform/opacity motion; .panel:popover-open state;
+    .panel::backdrop (pseudo).
+  - .grid raw width:332px + gap:10px (not in spacing tokens) + scrollbar
+    + overflow-y — flex→column is also a layout primitive, but the raw
+    gap doesn't fit the 0–8 scale.
+  - .customize appearance / background:transparent / text-align / font /
+    border-top:1px (directional, no sx) + transition + the single-layer
+    focus-visible ring.
+  - .card descendant `display:flex` (layout primitive, but the gap is
+    space-1_5 which IS in the 0–8 scale → can move to <column gap="1_5">).
+  - .radio raw 12px dimensions + border:var(--space-1_25) (raw thickness,
+    not a token) + flex-shrink (no sx).
+  - .tc-* preview tile rules: raw 132px / inset 2px / 7px / 6px / 5px / etc.
+    dimension values (no tokens), color-mix() backgrounds, backdrop-filter /
+    -webkit-backdrop-filter, isolation, ::after pseudo on .radio, scrollbar
+    state, the prefers-reduced-motion @media queries that turn transitions
+    off and hide .tc-overlay, .card[aria-selected='true'] .radio descendant
+    rule (variants don't reach descendants), .tc-chip-accent uses color-mix
+    (--accent tinting — explicitly skipped by the tone-ramp migration).
+  - Surface prop variants: no surface-driven CSS — marketing just sets the
+    icon's `style:color` (handled in JS via the triggerIconColor() binding),
+    so no `<theme prop="surface">` block needed.
+-->
 <style>
+  /* Local markers — the css-token lint only sees tokens.css + declarations
+   * in this block; the <theme> channels and tokens referenced from this
+   * residual style must be declared as bare variables so the lint recognizes
+   * them. */
+  --tp-trigger-gap: ; --tp-trigger-px: ; --tp-trigger-py: ; --panel-vh-md: ; --space-half: ;
   :host {
     position: relative;
     display: inline-flex;
-    --tp-trigger-gap: var(--space-1_5);
   }
   :host([hidden]) { display: none; }
 
-  /* Trigger button — uses ghost-button visual: transparent until hover.
-     Mirrors the look of the shell's <ship-button variant=ghost size=sm>
-     because we don't (yet) want sui-theme-picker to depend on sui-button. */
   .trigger {
     appearance: none;
     background: transparent;
     border: 1px solid transparent;
-    border-radius: var(--radius-sm);
-    padding: var(--space-1) var(--space-2);
     font: inherit;
-    font-size: var(--text-base);
-    color: var(--foreground);
-    cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: var(--tp-trigger-gap);
@@ -101,42 +149,22 @@
   }
 
   .label {
-    font-weight: var(--font-weight-medium);
     white-space: nowrap;
-    overflow: hidden;
     text-overflow: ellipsis;
-    max-width: var(--panel-ch-w-md);
   }
-  /* Compact is the default. Only the explicit `[label-style='text']`
-     opt-in shows the current-theme label + caret next to the icon.
-     We can't rely on `:host([label-style='compact'])` because the SUI
-     runtime's reflect=true only writes the attribute when the prop
-     actually changes — an unset prop sitting at its default leaves the
-     host attribute absent, and the selector wouldn't match. */
+
   :host(:not([label-style='text'])) .label { display: none; }
   :host(:not([label-style='text'])) .caret { display: none; }
-  /* Compact trigger collapses to just the palette icon — no inner gap. */
-  :host(:not([label-style='text'])) .trigger { --tp-trigger-gap: 0; padding: var(--space-1); }
 
   .caret {
-    width: var(--space-2_5); height: var(--space-1_5);
     flex: 0 0 auto;
-    color: var(--muted-foreground);
   }
 
-  /* Native popover panel. Reset the UA's default centering and let
-     the controller place us via getBoundingClientRect on the trigger. */
   .panel {
     position: fixed;
     inset: auto;
     margin: 0;
     border: 0;
-    padding: var(--space-1);
-    background: var(--popover);
-    color: var(--popover-foreground);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
     opacity: 0;
     transform: translateY(calc(-1 * var(--space-1))) scale(0.97);
     transition:
@@ -150,8 +178,6 @@
   .panel::backdrop { background: transparent; }
 
   .grid {
-    display: flex;
-    flex-direction: column;
     gap: 10px;
     width: 332px;
     max-height: min(var(--panel-vh-md), 720px);
@@ -159,23 +185,13 @@
     scrollbar-width: thin;
   }
 
-  /* Customize footer — bottom-pinned link that routes to /theme-studio for
-     per-token editing. Visually separated from the theme cards by a divider. */
   .customize {
     appearance: none;
     background: transparent;
     border: 0;
     border-top: 1px solid var(--border);
-    margin-top: var(--space-1);
-    padding: var(--space-2_5) var(--space-3);
-    cursor: pointer;
     text-align: left;
     font: inherit;
-    font-size: var(--text-xs);
-    color: var(--foreground);
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
     border-radius: 0 0 var(--radius-md) var(--radius-md);
     transition: background var(--duration-fast) var(--ease-out);
   }
@@ -208,26 +224,18 @@
   }
   .group-rows { display: flex; flex-direction: column; gap: var(--space-1); }
 
-  /* Card — full-width entry per theme. Aria-selected drives a tinted
-     background + radio fill. */
   .card {
     appearance: none;
     background: transparent;
     border: 0;
-    border-radius: var(--radius-lg);
-    padding: var(--space-1_5);
-    cursor: pointer;
-    text-align: left;
-    font: inherit;
     display: flex;
     flex-direction: column;
     gap: var(--space-1_5);
+    text-align: left;
+    font: inherit;
     outline: none;
     transition:
       background var(--duration-fast) var(--ease-out);
-  }
-  .card:hover {
-    background: var(--hover-bg);
   }
   .card:focus-visible {
     background: var(--hover-bg);
@@ -237,10 +245,8 @@
     background: var(--selected-bg);
   }
 
-  .row {
-    display: flex; align-items: center; gap: var(--space-2);
-    padding: 0 var(--space-1);
-  }
+  .row { display: flex; align-items: center; gap: var(--space-2); }
+
   .name {
     flex: 1;
     font-family: var(--font-body);
@@ -253,7 +259,6 @@
   }
   .radio {
     width: 12px; height: 12px;
-    border-radius: var(--radius-full);
     border: var(--space-1_25) solid var(--border-strong);
     background: transparent;
     position: relative;
@@ -268,10 +273,6 @@
     background: var(--primary);
   }
 
-  /* Mini card preview tile. Each .tc-bg carries data-theme-preview="<id>",
-     which the per-theme `[data-theme-preview]` rules in themes.css scope
-     for. The controller links view-tokens.css (which bundles themes.css)
-     into the shadow root so those rules reach these elements. */
   .tc-bg {
     position: relative;
     display: flex;
@@ -279,14 +280,9 @@
     justify-content: center;
     width: 100%;
     height: 132px;
-    background: var(--background);
-    color: var(--foreground);
     border-radius: 8px;
     overflow: hidden;
     isolation: isolate;
-    /* theme-facsimile: the inset border tints from currentColor so each
-       theme preview shows its own surface tone. Skipped by the
-       sui-css-literals tone-ramp migration. */
     box-shadow: inset 0 0 0 1px color-mix(in oklch, currentColor 14%, transparent);
   }
   .tc-overlay {
@@ -295,7 +291,6 @@
     background: var(--surface-overlay);
     mix-blend-mode: var(--surface-overlay-blend);
     opacity: var(--surface-overlay-opacity);
-    z-index: var(--z-elevated);
   }
   @media (prefers-reduced-motion: reduce) {
     .tc-overlay { display: none; }
@@ -307,16 +302,9 @@
     display: flex; flex-direction: column; gap: 7px;
     width: calc(100% - 24px);
     padding: 10px var(--space-3) 11px;
-    background: var(--card);
-    color: var(--card-foreground);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
     box-shadow: var(--shadow-card-rest);
     backdrop-filter: var(--card-backdrop-filter);
     -webkit-backdrop-filter: var(--card-backdrop-filter);
-    /* Clip the glass backdrop-filter to --radius-md so its corners match the
-       card border (no escaping shadow here → overflow:clip is safe). Mirrors
-       the already-correct sibling .tc-bg (overflow:hidden + isolation). */
     overflow: clip;
     isolation: isolate;
   }
@@ -375,9 +363,6 @@
     border-radius: var(--radius-full);
   }
   .tc-chip-accent {
-    /* theme-facsimile: the "New" chip deliberately tints from --accent
-       so the chip's hue matches the previewed theme, not primary.
-       Skipped by the sui-css-literals tone-ramp migration. */
     background: color-mix(in oklch, var(--accent) 18%, transparent);
     color: var(--accent);
     box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--accent) 30%, transparent);
@@ -392,30 +377,34 @@
   aria-label="Choose theme"
   aria-haspopup="dialog"
   aria-expanded={panelOpen() ? 'true' : 'false'}
+  sx="radius:sm py:tp-trigger-py px:tp-trigger-px text:base fg:foreground cursor:pointer"
   on:click={() => togglePanel()}>
   <sui-icon class="tp-icon" part="dot" name="palette" size="lg" style:color={triggerIconColor()} aria-hidden="true"></sui-icon>
-  <span class="label" part="label">{triggerLabel()}</span>
-  <svg class="caret" viewBox="0 0 10 6" aria-hidden="true">
+  <span class="label" part="label"
+    sx="weight:medium overflow:hidden max-w:panel-ch-w-md">{triggerLabel()}</span>
+  <svg class="caret" part="caret" viewBox="0 0 10 6" aria-hidden="true" sx="w:2_5 h:1_5 fg:muted-foreground">
     <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
   </svg>
 </button>
 
-<div class="panel" part="panel" popover="auto" bind:this={panelEl}>
-  <div class="grid" part="grid" role="listbox" aria-label="Theme">
+<div class="panel" part="panel" popover="auto" bind:this={panelEl}
+  sx="p:1 bg:popover fg:popover-foreground border:border radius:md shadow:lg">
+  <column class="grid" part="grid" role="listbox" aria-label="Theme" sx="max-h:panel-vh-md">
     {#for g of groups() key={g.label}}
       <section class="group" aria-label={g.label}>
         <div class="group-h">{g.label}</div>
         <div class="group-rows">
           {#for t of g.themes key={t.id}}
-            <button class="card" role="option" type="button"
+            <button class="card" part="card" role="option" type="button"
               data-theme-card={t.id}
               aria-label={t.label}
               aria-selected={activeTheme() === t.id ? 'true' : 'false'}
               tabindex={activeTheme() === t.id ? '0' : '-1'}
+              sx="radius:lg p:1_5 cursor:pointer hover:bg:hover-bg"
               on:click={() => selectTheme(t.id)}>
               <span class="tc-bg" data-theme-preview={t.id} aria-hidden="true">
-                <span class="tc-overlay"></span>
-                <span class="tc-card">
+                <span class="tc-overlay" sx="z:elevated"></span>
+                <span class="tc-card" sx="position:relative bg:card fg:card-foreground border:border radius:md">
                   <span class="tc-card-head">
                     <span class="tc-eyebrow">THEME</span>
                     <span class="tc-heading">{t.label}</span>
@@ -432,10 +421,10 @@
                   </span>
                 </span>
               </span>
-              <span class="row">
+              <row class="row" align="center" gap="2" sx="px:1">
                 <span class="name">{t.label}</span>
-                <span class="radio" aria-hidden="true"></span>
-              </span>
+                <span class="radio" aria-hidden="true" sx="radius:full"></span>
+              </row>
             </button>
           {/for}
         </div>
@@ -443,13 +432,16 @@
     {/for}
     {#if showCustomize()}
       <button class="customize" type="button" data-theme-customize
+        sx="cursor:pointer text:xs fg:foreground mt:1 py:2_5 px:3"
         on:click={openCustomize}>
-        <span>Customize…</span>
-        <span class="customize-meta">Per-token editor</span>
-        <svg class="customize-chev" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-          <path d="M3 1l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <row align="center" gap="2">
+          <span>Customize…</span>
+          <span class="customize-meta">Per-token editor</span>
+          <svg class="customize-chev" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+            <path d="M3 1l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </row>
       </button>
     {/if}
-  </div>
+  </column>
 </div>
