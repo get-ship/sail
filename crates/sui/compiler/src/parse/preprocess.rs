@@ -352,14 +352,27 @@ fn lower_variants(source: &str) -> (String, String) {
         // `part="field"` re-targets the rule from `:host` to `[part='field']`.
         let part = attr_value(&open_tag, "part");
 
-        for line in body.lines() {
-            let line = line.trim();
-            if line.is_empty() {
-                continue;
-            }
-            let Some((sel_part, sx_part)) = line.split_once(':') else { continue };
-            let Some(selector) = variant_selector(sel_part) else { continue };
-            let decls = lower_variant_sx(sx_part);
+        // Two body forms, ONE emission. A body starting with `{` is the
+        // TS-object form (CVA-shaped: `variant: { solid: 'sx…' }` + `compound`);
+        // otherwise it's the legacy `selector: sx` line DSL. Both lower to the
+        // same `(selector-dsl, sx)` pairs the existing helpers consume.
+        let pairs: Vec<(String, String)> = if body.trim_start().starts_with('{') {
+            parse_variants_object(&body)
+        } else {
+            body.lines()
+                .filter_map(|line| {
+                    let line = line.trim();
+                    if line.is_empty() {
+                        return None;
+                    }
+                    let (sel, sx) = line.split_once(':')?;
+                    Some((sel.trim().to_string(), sx.trim().to_string()))
+                })
+                .collect()
+        };
+        for (sel, sx) in pairs {
+            let Some(selector) = variant_selector(&sel) else { continue };
+            let decls = lower_variant_sx(&sx);
             if decls.is_empty() {
                 continue;
             }
@@ -375,6 +388,134 @@ fn lower_variants(source: &str) -> (String, String) {
         out = next;
     }
     (out, css)
+}
+
+/// Split `s` on top-level `delim`, ignoring delimiters nested inside `{}`/`[]`
+/// or string literals. The primitive under the `<variants>` object parser.
+fn split_top_level(s: &str, delim: char) -> Vec<String> {
+    let mut parts = Vec::new();
+    let mut depth = 0i32;
+    let mut in_str: Option<char> = None;
+    let mut cur = String::new();
+    for c in s.chars() {
+        match in_str {
+            Some(q) => {
+                cur.push(c);
+                if c == q {
+                    in_str = None;
+                }
+            }
+            None => match c {
+                '\'' | '"' => {
+                    in_str = Some(c);
+                    cur.push(c);
+                }
+                '{' | '[' => {
+                    depth += 1;
+                    cur.push(c);
+                }
+                '}' | ']' => {
+                    depth -= 1;
+                    cur.push(c);
+                }
+                d if d == delim && depth == 0 => {
+                    parts.push(cur.trim().to_string());
+                    cur.clear();
+                }
+                _ => cur.push(c),
+            },
+        }
+    }
+    if !cur.trim().is_empty() {
+        parts.push(cur.trim().to_string());
+    }
+    parts
+}
+
+/// Index of the first top-level `:` in `s` (skips `:` inside `{}`/`[]`/strings —
+/// e.g. the `:` in an sx value `'bg:tone'`).
+fn top_level_colon(s: &str) -> Option<usize> {
+    let mut depth = 0i32;
+    let mut in_str: Option<char> = None;
+    for (i, c) in s.char_indices() {
+        match in_str {
+            Some(q) => {
+                if c == q {
+                    in_str = None;
+                }
+            }
+            None => match c {
+                '\'' | '"' => in_str = Some(c),
+                '{' | '[' => depth += 1,
+                '}' | ']' => depth -= 1,
+                ':' if depth == 0 => return Some(i),
+                _ => {}
+            },
+        }
+    }
+    None
+}
+
+/// Strip a single layer of matching quotes.
+fn unquote(s: &str) -> String {
+    let s = s.trim();
+    let b = s.as_bytes();
+    if b.len() >= 2 && (b[0] == b'\'' || b[0] == b'"') && b[b.len() - 1] == b[0] {
+        s[1..s.len() - 1].to_string()
+    } else {
+        s.to_string()
+    }
+}
+
+/// Parse `{ key: value, … }` into `(key, raw-value)` pairs. Values keep their
+/// raw text (a quoted string, a nested `{…}`, or an `[…]`) for the caller.
+fn parse_object_fields(obj: &str) -> Vec<(String, String)> {
+    let inner = obj
+        .trim()
+        .trim_start_matches('{')
+        .trim_end_matches('}')
+        .trim();
+    split_top_level(inner, ',')
+        .into_iter()
+        .filter_map(|entry| {
+            let idx = top_level_colon(&entry)?;
+            let key = unquote(entry[..idx].trim());
+            let val = entry[idx + 1..].trim().to_string();
+            Some((key, val))
+        })
+        .collect()
+}
+
+/// Lower the TS-object form of a `<variants>` body to the same `(selector-dsl,
+/// sx)` pairs the line DSL produces. CVA-shaped:
+///   `{ variant: { solid: 'sx…' }, size: { sm: 'sx…' },`
+///   `  compound: [ { when: { variant: 'solid', size: 'lg' }, sx: 'sx…' } ] }`
+/// A prop group `variant: { solid: 'x' }` → `("variant=solid", "x")`; a compound
+/// `{ when: { a:'1', b:'2' }, sx: 'x' }` → `("(a=1, b=2)", "x")`.
+fn parse_variants_object(body: &str) -> Vec<(String, String)> {
+    let mut pairs = Vec::new();
+    for (key, val) in parse_object_fields(body) {
+        if key == "compound" {
+            let arr = val.trim().trim_start_matches('[').trim_end_matches(']');
+            for obj in split_top_level(arr, ',') {
+                let fields = parse_object_fields(&obj);
+                let when = fields.iter().find(|(k, _)| k == "when").map(|(_, v)| v.clone());
+                let sx = fields.iter().find(|(k, _)| k == "sx").map(|(_, v)| unquote(v));
+                if let (Some(when), Some(sx)) = (when, sx) {
+                    let conds: Vec<String> = parse_object_fields(&when)
+                        .into_iter()
+                        .map(|(k, v)| format!("{k}={}", unquote(&v)))
+                        .collect();
+                    pairs.push((format!("({})", conds.join(", ")), sx));
+                }
+            }
+        } else {
+            for (value, sx) in parse_object_fields(&val) {
+                pairs.push((format!("{key}={value}"), unquote(&sx)));
+            }
+        }
+    }
+    pairs
 }
 
 /// Lower every `<theme prop="…" channels="…">` block to `:host` custom-property
@@ -937,6 +1078,28 @@ mod tests {
         let out = preprocess("<variants part=\"field\">\n  invalid: border:destructive\n  disabled: cursor:not-allowed\n</variants>\n<div part=\"field\">x</div>");
         assert!(out.contains(":host([invalid]) [part='field']{border:1px solid var(--destructive);}"), "slot variant: {out}");
         assert!(out.contains(":host([disabled]) [part='field']{cursor:not-allowed;}"), "bare boolean → slot: {out}");
+    }
+
+    #[test]
+    fn variants_object_form_matches_line_dsl() {
+        // The CVA-shaped TS-object body lowers to the same CSS as the line DSL:
+        // prop groups → `[prop='value']`, `compound` → AND-ed conditions.
+        let obj = preprocess(
+            "<variants part=\"button\">{\n  variant: { solid: 'bg:primary fg:background', outline: 'border:strong fg:foreground' },\n  size: { sm: 'min-h:control-h-sm', lg: 'min-h:control-h-lg' },\n  compound: [ { when: { variant: 'solid', size: 'lg' }, sx: 'shadow:md' } ],\n}</variants>\n<button part=\"button\">x</button>",
+        );
+        assert!(!obj.contains("<variants"), "object block stripped: {obj}");
+        assert!(
+            obj.contains(":host([variant='solid']) [part='button']{background:var(--primary);color:var(--background);}"),
+            "prop-group variant from object form: {obj}"
+        );
+        assert!(
+            obj.contains(":host([size='lg']) [part='button']{min-height:var(--control-h-lg);}"),
+            "prop-group size from object form: {obj}"
+        );
+        assert!(
+            obj.contains(":host([variant='solid'][size='lg']) [part='button']{box-shadow:var(--shadow-md);}"),
+            "compound AND-ed selector from object form: {obj}"
+        );
     }
 
     #[test]
