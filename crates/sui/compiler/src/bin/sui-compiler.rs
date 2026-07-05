@@ -485,6 +485,27 @@ fn compile_one(
         emit_component_imports,
         lint_overrides: Policy::resolve_opt(path).map(|p| p.overrides()).unwrap_or_default(),
     };
+    // Optional real-TypeScript validation of the `<component>` variants against
+    // the declared props. Env-gated so the fast inner-loop build stays fast; the
+    // LSP and CI set the toolchain env and get honest type errors the hand-parse
+    // cannot produce (e.g. a variant value outside a prop's union → dead CSS).
+    if let (Ok(node), Ok(tsgo_js)) =
+        (std::env::var("SUI_TSGO_NODE"), std::env::var("SUI_TSGO_JS"))
+    {
+        let tdir = std::env::temp_dir().join("sui-tsgo-check");
+        let diags = sui_compiler::check::tscheck::check_component_variants(
+            &source, &tdir, &node, &tsgo_js,
+        )
+        .unwrap_or_default();
+        if let Some(d) = diags.first() {
+            anyhow::bail!(
+                "{}: <component> variants type error [{}]: {}",
+                path.display(),
+                d.code,
+                d.message
+            );
+        }
+    }
     let result = compile(&source, opts).map_err(|e| {
         let rendered = e.render(&source);
         anyhow!("{rendered}")

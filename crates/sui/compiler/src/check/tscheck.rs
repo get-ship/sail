@@ -6,6 +6,7 @@
 //! the load-bearing bridge: it writes a harness (the props()/variants() surface)
 //! + the author's block to a temp dir, runs tsgo, and parses the diagnostics
 //! back into structured form the compiler can remap onto `.sui` spans.
+use crate::parse::preprocess::{extract_component_body, parse_object_fields};
 use std::path::Path;
 use std::process::Command;
 
@@ -68,6 +69,74 @@ fn parse_line(line: &str) -> Option<TsDiag> {
     })
 }
 
+/// Type-check the `<component>` block's `variants:` object against the declared
+/// `props:` — REAL TS validates the table's group keys are declared props and
+/// its value keys are members of that prop's union (catches `variant: { sold }`,
+/// a typo'd group like `varient`, a value outside the union). The sx *strings*
+/// are the sx lint's job; this owns the *shape* — killing the hand-parse's
+/// silent shadowing. Returns tsgo diagnostics (empty = clean); `Ok(vec![])` when
+/// there is no `<component>` block or no `variants:`.
+pub fn check_component_variants(
+    source: &str,
+    out_dir: &Path,
+    node: &str,
+    tsgo_js: &str,
+) -> std::io::Result<Vec<TsDiag>> {
+    let Some(body) = extract_component_body(source) else {
+        return Ok(Vec::new());
+    };
+    let fields = parse_object_fields(&body);
+    let find = |k: &str| {
+        fields
+            .iter()
+            .find(|(fk, _)| fk == k)
+            .map(|(_, v)| v.clone())
+    };
+    let (Some(props), Some(variants)) = (find("props"), find("variants")) else {
+        return Ok(Vec::new());
+    };
+    let harness = gen_variants_harness(&props);
+    let block = format!("import {{ variants }} from './sui-embed-harness'\nvariants({variants})\n");
+    typecheck_block(&harness, &block, out_dir, node, tsgo_js)
+}
+
+/// Build the `variants()` harness from the declared props: a `PropVals` map
+/// (prop → value union) and a `variants()` signature whose table keys must be
+/// declared props and whose value keys must be members of that prop's union.
+fn gen_variants_harness(props: &str) -> String {
+    const TONE: &str =
+        "'default'|'primary'|'info'|'success'|'warning'|'destructive'|'accent'|'muted'";
+    const SIZE: &str = "'sm'|'md'|'lg'";
+    let mut members = Vec::new();
+    for (name, val) in parse_object_fields(props) {
+        let ty = match (name.as_str(), val.trim()) {
+            ("tone", "") => TONE.to_string(),
+            ("size", "") => SIZE.to_string(),
+            (_, v) if v.starts_with('[') => v
+                .trim_start_matches('[')
+                .trim_end_matches(']')
+                .split(',')
+                .filter(|s| !s.trim().is_empty())
+                .map(|s| format!("'{}'", s.trim().trim_matches(['\'', '"'])))
+                .collect::<Vec<_>>()
+                .join("|"),
+            (_, "bool") => "boolean".to_string(),
+            (_, "number") => "number".to_string(),
+            _ => "string".to_string(),
+        };
+        members.push(format!("  {name}: {ty};"));
+    }
+    format!(
+        "type Sx = string\n\
+         type PropVals = {{\n{}\n}}\n\
+         export function variants(\n  \
+         _t: Partial<{{ [K in keyof PropVals]: Partial<Record<Extract<PropVals[K], string>, Sx>> }}>\n      \
+         & {{ compound?: Array<{{ when: Partial<PropVals>; sx: Sx }}> }},\n\
+         ): void {{}}\n",
+        members.join("\n")
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -120,6 +189,36 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
             hit.message.contains("Did you mean 'size'"),
             "expected the 'did you mean size' suggestion, got: {}",
             hit.message
+        );
+    }
+
+    #[test]
+    fn variants_check_catches_undeclared_value() {
+        let Some((node, js)) = tsgo() else {
+            eprintln!("skip: SUI_TSGO_NODE/SUI_TSGO_JS not set");
+            return;
+        };
+        let dir = std::env::temp_dir().join("sui-variants-check-test");
+
+        // VALID: every variant value is a declared member of the prop union.
+        let ok = "<component>{ props: { variant: ['solid','outline'], size },\n\
+                  variants: { variant: { solid: 'bg:tone', outline: 'border:tone' } } }\
+                  </component>\n<button>x</button>";
+        assert!(
+            check_component_variants(ok, &dir, &node, &js).unwrap().is_empty(),
+            "valid variants should be clean"
+        );
+
+        // BROKEN: `sold` is not a declared value of `variant: 'solid'|'outline'`.
+        // The hand-parse would silently emit `:host([variant='sold'])` CSS that
+        // never matches; tsgo rejects it.
+        let bad = "<component>{ props: { variant: ['solid','outline'] },\n\
+                   variants: { variant: { solid: 'bg:tone', sold: 'border:tone' } } }\
+                   </component>\n<button>x</button>";
+        let diags = check_component_variants(bad, &dir, &node, &js).unwrap();
+        assert!(
+            !diags.is_empty(),
+            "undeclared variant value 'sold' should be rejected, got {diags:?}"
         );
     }
 }

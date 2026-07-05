@@ -472,7 +472,7 @@ fn unquote(s: &str) -> String {
 
 /// Parse `{ key: value, … }` into `(key, raw-value)` pairs. Values keep their
 /// raw text (a quoted string, a nested `{…}`, or an `[…]`) for the caller.
-fn parse_object_fields(obj: &str) -> Vec<(String, String)> {
+pub(crate) fn parse_object_fields(obj: &str) -> Vec<(String, String)> {
     let inner = obj
         .trim()
         .trim_start_matches('{')
@@ -593,6 +593,16 @@ pub fn extract_controller_block(source: &str) -> (String, Option<String>) {
 /// `props:` maps built-in shorthands (`tone`/`size`) to their canonical union +
 /// contract, arrays to enum props, and `bool`/`string`/`number` to typed props;
 /// `variants:` becomes a `<variants>` block; `meta:` is filename-derived today.
+/// Return the raw body of the `<component>` block (the `{ props, variants, meta }`
+/// object text), or `None` if there is no block. Used by the tsgo type-check.
+pub(crate) fn extract_component_body(source: &str) -> Option<String> {
+    let start = source.find("<component")?;
+    let open_rel = source[start..].find('>')?;
+    let body_start = start + open_rel + 1;
+    let rel = source[body_start..].find("</component>")?;
+    Some(source[body_start..body_start + rel].trim().to_string())
+}
+
 fn lower_component(source: &str) -> String {
     let Some(start) = source.find("<component") else {
         return source.to_string();
