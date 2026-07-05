@@ -40,8 +40,9 @@
   ─────────────────────────────────────────────────────────────────────────────
 -->
 
-<prop name="shape" values="text|line|block|circle" default="text" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
+<component>{
+  props: { shape: ['text', 'line', 'block', 'circle'], size }
+}</component>
 
 <variants>
   shape=block: display:block

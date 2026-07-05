@@ -481,10 +481,20 @@ pub(crate) fn parse_object_fields(obj: &str) -> Vec<(String, String)> {
     split_top_level(inner, ',')
         .into_iter()
         .filter_map(|entry| {
-            let idx = top_level_colon(&entry)?;
-            let key = unquote(entry[..idx].trim());
-            let val = entry[idx + 1..].trim().to_string();
-            Some((key, val))
+            let entry = entry.trim();
+            if entry.is_empty() {
+                return None;
+            }
+            // A colon-less field is a bare shorthand (`tone`, `size`) — key with
+            // an empty value. Without this, ES-style shorthands were silently
+            // dropped, so a built-in prop declared as `{ tone, size }` vanished.
+            match top_level_colon(entry) {
+                Some(idx) => Some((
+                    unquote(entry[..idx].trim()),
+                    entry[idx + 1..].trim().to_string(),
+                )),
+                None => Some((unquote(entry), String::new())),
+            }
         })
         .collect()
 }
