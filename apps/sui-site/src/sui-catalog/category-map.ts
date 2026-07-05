@@ -97,6 +97,7 @@ export const HIDDEN_TAGS: Record<string, true> = {
   'sui-prop-knobs': true,
   'sui-prop-matrix': true,
   'sui-component-viewer': true,
+}
 
 // ── Public tag → category mapping ───────────────────────────────────────────
 
