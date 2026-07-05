@@ -33,6 +33,28 @@
 <prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
 <prop name="variant" values="solid|soft|outline" default="soft" reflect />
 <prop name="size" values="sm|md|lg" default="md" reflect />
+
+<theme prop="size" channels="bdg-h, bdg-px, bdg-fs, bdg-gap, bdg-icon, bdg-radius">
+  default: control-h-2xs, space-2, text-xs, space-1, icon-size-2xs, radius-sm
+  sm:      control-h-2xs, space-1_5, text-xs, space-half, space-2, radius-sm
+  md:      control-h-2xs, space-2, text-xs, space-1, icon-size-2xs, radius-sm
+  lg:      control-h-xs, space-2_5, text-xs, space-1_25, icon-size-xs, radius-sm
+</theme>
+<theme prop="tone" channels="tone, tone-fg, tone-contrast, tone-bg, tone-border">
+  default:     muted-foreground, muted-foreground, background, tone-muted-bg, tone-muted-border
+  primary:     muted-foreground, muted-foreground, background, tone-muted-bg, tone-muted-border
+  info:        muted-foreground, muted-foreground, background, tone-muted-bg, tone-muted-border
+  success:     muted-foreground, muted-foreground, background, tone-muted-bg, tone-muted-border
+  warning:     muted-foreground, muted-foreground, background, tone-muted-bg, tone-muted-border
+  destructive: muted-foreground, muted-foreground, background, tone-muted-bg, tone-muted-border
+  accent:      muted-foreground, muted-foreground, background, tone-muted-bg, tone-muted-border
+  muted:       muted-foreground, muted-foreground, background, tone-muted-bg, tone-muted-border
+</theme>
+<variants part="badge">
+  pill: radius:full
+  (variant=solid): bg:tone border:tone fg:tone-contrast
+  (variant=outline): bg:transparent border:tone-border fg:tone-fg
+</variants>
 <style>
 
   /* Tone-color mapping — defaults to the muted tone ramp so the base
@@ -59,13 +81,6 @@
   }
   :host([hidden]) { display: none; }
 
-  /* Size matrix */
-  :host([size='sm']) { --bdg-h: var(--control-h-2xs); --bdg-px: var(--space-1_5);  --bdg-fs: var(--text-xs);  --bdg-gap: var(--space-half); --bdg-icon: var(--space-2); }
-  :host([size='md']) { --bdg-h: var(--control-h-2xs); --bdg-px: var(--space-2);  --bdg-fs: var(--text-xs); --bdg-gap: var(--space-1); --bdg-icon: var(--icon-size-2xs); }
-  :host([size='lg']) { --bdg-h: var(--control-h-xs); --bdg-px: var(--space-2_5); --bdg-fs: var(--text-xs); --bdg-gap: var(--space-1_25); --bdg-icon: var(--icon-size-xs); }
-
-  /* Shape — square default, pill when opted-in */
-  :host([pill]) { --bdg-radius: var(--radius-full); }
 
   .badge {
     display: inline-flex;
@@ -86,21 +101,11 @@
     font-variant-numeric: tabular-nums;
   }
   /* Variant matrix */
-  :host([variant='soft']) .badge {
-    background: var(--tone-bg);
-    border-color: var(--tone-border);
-    color: var(--tone-fg);
-  }
   :host([variant='solid']) .badge {
     background: var(--tone);
     border-color: var(--tone);
     color: var(--tone-contrast);
     box-shadow: inset 0 1px 0 0 var(--hover-bg);
-  }
-  :host([variant='outline']) .badge {
-    background: transparent;
-    border-color: var(--tone-border);
-    color: var(--tone-fg);
   }
 
   /* Leading slot wrapper — hidden when empty */
@@ -113,6 +118,7 @@
     flex-shrink: 0;
     color: currentColor;
   }
+
   .leading:has(::slotted(*)) { display: inline-flex; }
   ::slotted([slot='leading']) {
     display: inline-flex;
@@ -121,14 +127,13 @@
     width: 100%;
     height: 100%;
   }
-
   @media (forced-colors: active) {
     .badge { border-color: CanvasText; color: CanvasText; }
     :host([variant='solid']) .badge { background: Highlight; color: HighlightText; border-color: Highlight; }
   }
 </style>
 
-<span class="badge" part="badge">
+<span class="badge" part="badge" sx="min-h:bdg-h py:0 px:bdg-px text:bdg-fs weight:semibold radius:bdg-radius">
   <span class="leading" part="leading"><slot name="leading"></slot></span>
   <slot></slot>
 </span>
