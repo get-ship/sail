@@ -36,55 +36,70 @@
 <prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
 <prop name="size" values="sm|md|lg" default="md" reflect />
 
+<theme prop="tone" channels="tone-border, tone-ring">
+  default:     border,          ring
+  primary:     primary,         primary
+  info:        info,            info
+  success:     success,         success
+  warning:     warning,         warning
+  destructive: destructive,     destructive
+  accent:      accent,          accent
+  muted:       muted-foreground, muted-foreground
+</theme>
+
+<theme prop="size" channels="dp-h, dp-fs, dp-px">
+  sm: control-h-sm, text-sm, space-2
+  md: control-h-md, density-text, density-row-px
+  lg: control-h-lg, text-sm, space-3
+</theme>
+
+<variants part="wrap">
+  disabled: bg:muted fg:muted-foreground cursor:not-allowed
+</variants>
+
+<!--
+  Residual <style> — what sx/variants/theme can't express in this primitive:
+  - :host base (the new <host sx="..."> directive is position/display-able,
+    but vertical-align:middle isn't tokenized).
+  - [part='wrap'] multi-property transition (border-color + box-shadow).
+  - :host([disabled]) [part='wrap'] `filter: saturate(0.4)` (filter has no sx kw).
+  - input.entry: flex:1 + min-width:0 (the <row>'s child needs flex shorthand,
+    not in sx), border:0 / outline:0 / background:transparent / padding:0 (raw
+    resets; sx has no `none`/`transparent`); font: inherit + font-family /
+    font-size (font: shorthand and per-property inheritance).
+  - input.entry::placeholder color cue.
+  - input.entry:disabled cursor.
+  - .cal-icon flex:0 0 auto + pointer-events:none.
+  - .panel top: calc(100% + var(--space-1)) + left:0 (absolute math — sx has
+    position: but no `top:` / `left:` vocab); font-family: var(--font-body);
+    font-size: var(--dp-fs).
+  - .nav margin-bottom: var(--space-1).
+  - .nav button: appearance:none / border:0 / background:transparent /
+    padding:0 / font:inherit / font-size (font: shorthand + per-property);
+    line-height (raw); display:inline-flex + align-items:center +
+    justify-content:center (raw flex centering for the glyph within).
+  - .label flex:1 + text-align:center (raw flex + text-align not in sx).
+  - .dow text-align:center (text-align not in sx).
+  - .day button: appearance:none / border:0 / background:transparent /
+    font:inherit (raw); color/cursor/text-align:center/padding/border-radius
+    on the bare state; box-shadow:none on .selected; the inset outline
+    (focused:not(.selected)); the inset 1px (today:not(.selected)) — not
+    the sx ring: model.
+-->
 <style>
+  --tone-border: ; --tone-ring: ; --dp-h: ; --dp-fs: ; --dp-px: ;
   :host {
     position: relative;
     display: inline-flex;
     width: 100%;
     vertical-align: middle;
-    --tone-border: var(--border);
-    --tone-ring: var(--primary);
-    --h: var(--control-h-md);
-    --fs: var(--density-text);
-    --px: var(--density-row-px);
   }
-  :host([tone='primary'])     { --tone-border: var(--primary);          --tone-ring: var(--primary); }
-  :host([tone='info'])        { --tone-border: var(--info);              --tone-ring: var(--info); }
-  :host([tone='success'])     { --tone-border: var(--success);           --tone-ring: var(--success); }
-  :host([tone='warning'])     { --tone-border: var(--warning);           --tone-ring: var(--warning); }
-  :host([tone='destructive']) { --tone-border: var(--destructive);       --tone-ring: var(--destructive); }
-  :host([tone='accent'])      { --tone-border: var(--accent);            --tone-ring: var(--accent); }
-  :host([tone='muted'])       { --tone-border: var(--muted-foreground);  --tone-ring: var(--muted-foreground); }
-
-  :host([size='sm']) { --h: var(--control-h-sm); --fs: var(--text-sm); --px: var(--space-2); }
-  :host([size='md']) { --h: var(--control-h-md); --fs: var(--density-text); --px: var(--density-row-px); }
-  :host([size='lg']) { --h: var(--control-h-lg); --fs: var(--text-sm); --px: var(--space-3); }
-
-  .wrap {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    width: 100%;
-    min-height: var(--h);
-    padding: 0 var(--px);
-    background: var(--background);
-    border: 1px solid var(--tone-border);
-    border-radius: var(--radius-md);
+  [part='wrap'] {
     transition:
       border-color var(--duration-fast) var(--ease-out),
       box-shadow var(--duration-fast) var(--ease-out);
   }
-  .wrap:focus-within {
-    border-color: var(--tone-ring);
-    box-shadow: 0 0 0 var(--ring-width) var(--tone-ring);
-  }
-  :host([disabled]) .wrap {
-    background: var(--muted);
-    color: var(--muted-foreground);
-    filter: saturate(0.4);
-    cursor: not-allowed;
-  }
-
+  :host([disabled]) [part='wrap'] { filter: saturate(0.4); }
   input.entry {
     flex: 1;
     min-width: 0;
@@ -94,79 +109,35 @@
     padding: 0;
     font: inherit;
     font-family: var(--font-body);
-    font-size: var(--fs);
+    font-size: var(--dp-fs);
     color: var(--foreground);
   }
   input.entry::placeholder { color: var(--muted-foreground); }
   input.entry:disabled { cursor: not-allowed; }
 
-  .cal-icon {
-    flex: 0 0 auto;
-    width: var(--icon-size-sm);
-    height: var(--icon-size-sm);
-    color: var(--muted-foreground);
-    pointer-events: none;
-  }
+  .cal-icon { flex: 0 0 auto; pointer-events: none; }
 
   .panel {
-    position: absolute;
     top: calc(100% + var(--space-1));
     left: 0;
-    z-index: var(--z-popover);
-    width: var(--panel-max-w-md);
-    padding: var(--space-2);
-    background: var(--popover);
-    color: var(--popover-foreground);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
     font-family: var(--font-body);
-    font-size: var(--fs);
+    font-size: var(--dp-fs);
   }
-  .nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--space-1);
-  }
+  .nav { margin-bottom: var(--space-1); }
   .nav button {
     appearance: none;
     border: 0;
     background: transparent;
-    color: var(--muted-foreground);
-    cursor: pointer;
-    width: var(--icon-size-2xl);
-    height: var(--icon-size-2xl);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     padding: 0;
-    border-radius: var(--radius-sm);
     font: inherit;
     font-size: var(--text-md);
     line-height: var(--leading-none);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
-  .nav button:hover:not(:disabled) {
-    background: var(--muted);
-    color: var(--foreground);
-  }
-  .label {
-    font-weight: var(--font-weight-semibold);
-    text-align: center;
-    flex: 1;
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: var(--space-1);
-  }
-  .dow {
-    font-size: var(--text-xs);
-    text-align: center;
-    color: var(--muted-foreground);
-    padding: var(--space-1) 0;
-    font-weight: var(--font-weight-medium);
-  }
+  .label { flex: 1; text-align: center; }
+  .dow { text-align: center; }
   .day {
     appearance: none;
     border: 0;
@@ -179,16 +150,7 @@
     border-radius: var(--radius-sm);
   }
   .day:disabled { color: var(--muted-foreground); opacity: 0.4; cursor: not-allowed; }
-  .day.empty { visibility: hidden; }
-  .day:hover:not(:disabled):not(.empty) {
-    background: var(--hover-bg);
-  }
-  .day.selected {
-    background: var(--tone-ring);
-    color: var(--background);
-    font-weight: var(--font-weight-semibold);
-    box-shadow: none;
-  }
+  .day.selected { box-shadow: none; }
   .day.focused:not(.selected) {
     outline: var(--ring-width) solid var(--tone-ring);
     outline-offset: calc(-1 * var(--ring-width));
@@ -198,7 +160,8 @@
   }
 </style>
 
-<div class="wrap" part="wrap">
+<row class="wrap" part="wrap" gap="2" align="center"
+  sx="w:full min-h:dp-h px:dp-px bg:background fg:foreground border:tone-border radius:md focus-within:ring:tone-ring">
   <input
     class="entry"
     part="input"
@@ -213,40 +176,43 @@
     bind:value={value}
     bind:this={inputEl}
   />
-  <svg class="cal-icon" viewBox="0 0 16 16" aria-hidden="true"
+  <svg class="cal-icon" part="cal-icon" viewBox="0 0 16 16" aria-hidden="true"
        fill="none" stroke="currentColor" stroke-width="1.5"
-       stroke-linecap="round" stroke-linejoin="round">
+       stroke-linecap="round" stroke-linejoin="round"
+       sx="w:icon-size-sm h:icon-size-sm fg:muted-foreground">
     <rect x="2" y="3" width="12" height="11" rx="1.5"></rect>
     <path d="M2 6h12 M5 1.5v3 M11 1.5v3"></path>
   </svg>
-</div>
+</row>
 {#if open() && !disabled()}
   <div class="panel" part="panel" role="dialog" aria-label="Choose date"
-       bind:this={panelEl}>
-    <div class="nav">
-      <button type="button" data-act="prev" aria-label="Previous month">‹</button>
-      <span class="label">{monthLabel()}</span>
-      <button type="button" data-act="next" aria-label="Next month">›</button>
-    </div>
-    <div class="grid" role="grid">
+       bind:this={panelEl}
+       sx="position:absolute z:popover w:panel-max-w-md p:2 bg:popover fg:popover-foreground border:border radius:md shadow:md">
+    <row class="nav" part="nav" align="center" justify="between">
+      <button type="button" data-act="prev" aria-label="Previous month" part="nav-btn"
+        sx="w:icon-size-2xl h:icon-size-2xl radius:sm fg:muted-foreground cursor:pointer hover:bg:muted hover:fg:foreground">‹</button>
+      <span class="label" part="label"
+        sx="weight:semibold">{monthLabel()}</span>
+      <button type="button" data-act="next" aria-label="Next month" part="nav-btn"
+        sx="w:icon-size-2xl h:icon-size-2xl radius:sm fg:muted-foreground cursor:pointer hover:bg:muted hover:fg:foreground">›</button>
+    </row>
+    <grid class="grid" part="grid" role="grid" cols="7" gap="1">
       {#for d of dayHeaders() key={d.key}}
-        <span class="dow" role="columnheader">{d.label}</span>
+        <span class="dow" role="columnheader" part="dow"
+          sx="text:xs fg:muted-foreground py:1 weight:medium">{d.label}</span>
       {/for}
       {#for cell of monthCells() key={cell.key}}
         <button
           type="button"
-          class="day"
-          class:empty={cell.empty}
-          class:selected={cell.selected}
-          class:focused={cell.focused}
-          class:today={cell.today}
-          data-iso={cell.iso}
+          part="day"
           disabled={cell.disabled}
           aria-label={cell.label}
           aria-selected={cell.selected ? 'true' : 'false'}
           tabindex={cell.focused ? '0' : '-1'}
+          class="day {cell.empty ? 'empty' : ''} {cell.selected ? 'selected' : ''} {cell.focused ? 'focused' : ''} {cell.today ? 'today' : ''}"
+          data-iso={cell.iso}
         >{cell.day}</button>
       {/for}
-    </div>
+    </grid>
   </div>
 {/if}

@@ -6,48 +6,73 @@
   ARIA reflection, and a unified `sui-toggle` event.
 
   Prop / event / method parity vs <ship-popover>
-  ────────────────────────────────────────────────────────────────────────────
+  ───────────────────────────────────────────────────────────────────────────
   Lit                          SUI                          Notes
-  ────────────────────────────────────────────────────────────────────────────
+  ───────────────────────────────────────────────────────────────────────────
   open (bool, false)           open (bool, false, reflect)  ✓
   placement                    placement (union, 'bottom',  ✓ adds bottom-end,
     'top'|'bottom'|'left'|       reflect)                     top-end, right-end,
     'right'                                                    left-end
-  ────────────────────────────────────────────────────────────────────────────
+  ───────────────────────────────────────────────────────────────────────────
   Events: ship-open,           sui-toggle                   { detail: { open } }
     ship-close                                                — single event
                                                                replaces pair
-  ────────────────────────────────────────────────────────────────────────────
+  ───────────────────────────────────────────────────────────────────────────
   show(), hide(), toggle()     show(), hide(), toggle()     ✓ delegate to
                                                                showPopover /
                                                                hidePopover /
                                                                togglePopover
-  ────────────────────────────────────────────────────────────────────────────
+  ───────────────────────────────────────────────────────────────────────────
   Slots: trigger, (default)    trigger, (default)           ✓
   Parts: (none)                panel, surface               ✓
-  ────────────────────────────────────────────────────────────────────────────
+  ───────────────────────────────────────────────────────────────────────────
   Click-outside / Esc /        DELEGATED to native          ✓ less code,
   focus-return:                  popover="auto"              ✓ better a11y,
     hand-rolled in JS                                         ✓ top-layer
-  ────────────────────────────────────────────────────────────────────────────
+  ───────────────────────────────────────────────────────────────────────────
   Trigger ARIA:                Same — controller sets       ✓
     aria-haspopup="dialog",      aria-haspopup,
     aria-expanded,               aria-expanded,
     aria-controls=panelId        aria-controls + the
                                   popovertarget attribute that
                                   wires native open/close
-  ────────────────────────────────────────────────────────────────────────────
+  ───────────────────────────────────────────────────────────────────────────
   Position:                    CSS Anchor Positioning       ✓ Chrome/Safari;
     pure CSS top/left            (anchor-name +              ✓ getBoundingClientRect
     selectors keyed off           position-anchor +           fallback for FF +
     [placement]                   anchor())                   older Safari
-  ────────────────────────────────────────────────────────────────────────────
+  ───────────────────────────────────────────────────────────────────────────
 -->
 
 <prop name="open" type="bool" default="false" reflect />
 <prop name="placement" values="top|top-end|bottom|bottom-end|left|left-end|right|right-end" default="bottom" reflect />
 
+<!--
+  Residual <style> — every rule here is fundamentally not reducible to
+  sx/variants/theme:
+  - :host base + [hidden] (the new <host sx="..."> directive would cover
+    position/display but the `--sui-popover-anchor` var-setup belongs
+    here for the @supports anchor positioning block).
+  - .panel reset (margin/border/padding/background/overflow/inset) —
+    native popover defaults are aggressive and need the override.
+    None are in the sx surface vocab.
+  - .panel::backdrop transparent (pseudo-element + transparent).
+  - .panel > .surface: backdrop-filter + isolation (no sx kw), the
+    inset 1px highlight (multi-shadow, not the sx ring: model), the
+    semantic-stack isolation rule, font-family/font-size.
+  - @supports (anchor-name: --x): the CSS Anchor Positioning rules
+    driving .panel placement — anchor-name, position-anchor,
+    position-try-fallbacks, position-try-order, and the per-placement
+    top/bottom/left/right anchor() math. New CSS features outside the
+    sx vocabulary.
+  - ::slotted([slot='trigger']) anchor-name wiring (the :host scopes
+    the slotted child via the --sui-popover-anchor var).
+  - @media (prefers-reduced-motion: reduce) — .surface { transform: none }
+    because the surface gets `transition:scale` from `{#if open()}` at
+    runtime, not in sx.
+-->
 <style>
+  --font-body: ; --text-base: ; --border: ; --z-popover: ; --muted-foreground: ; --surface-2: ; --background: ; --space-2: ; --panel-min-w-sm: ; --radius-lg: ; --shadow-lg: ; --popover: ; --popover-foreground: ; --card-backdrop-filter: ;
   :host {
     position: relative;
     display: inline-flex;
