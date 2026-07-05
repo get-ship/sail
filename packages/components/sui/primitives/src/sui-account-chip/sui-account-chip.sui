@@ -3,20 +3,32 @@
 <prop name="size" values="sm|md" default="sm" reflect />
 <prop name="hide-name" type="bool" default="false" reflect />
 
+<host sx="display:inline-flex" />
+<variants>
+  [size=md]:    text:base
+  [hidden]:     display:none
+</variants>
+<variants part="avatar">
+  [size=md]: w:control-h-sm h:control-h-sm text:xs
+</variants>
+<variants part="name">
+  [hide-name]: display:none
+</variants>
+
 <style>
   /* Local markers so the css-token lint recognizes the tokens
    * referenced from this residual block. */
   --font-body: ; --foreground: ; --background: ; --muted-foreground: ; --icon-size-2xl: ; --control-h-sm: ; --text-sm: ; --text-base: ; --text-xs: ; --font-weight-medium: ; --font-weight-semibold: ; --space-2: ; --panel-min-w-sm: ;
-  /* Residual: `:host` (host element, no sx), the avatar's
-   * display:inline-flex + align + justify + flex-shrink + 50%
-   * border-radius (no sx prop for radius) + overflow:hidden +
-   * line-height:1 (raw value), the avatar img cover fit, the
-   * [size='md'] .avatar override (control-h-sm is a different
-   * size token than the default icon-size-2xl), the [size='md']
-   * :host font-size override, the .name font-weight + ellipsis,
-   * and the [hide-name] .name display:none. */
+  /* Residual:
+   *   * :host align-items + gap (host directive's sx is surface-only
+   *     — no layout), font-family (no sx prop), font-size (default
+   *     text-sm — the [size=md] override comes from <variants>),
+   *     user-select (-webkit-user-select fallback too), box-sizing
+   *   * the avatar's flex-shrink: 0 (not in sx)
+   *   * the avatar img cover-fit + 100% size
+   *   * the .name white-space:nowrap + overflow:hidden + text-overflow:ellipsis
+   *     (no sx props; sx can't express text-overflow or text clipping) */
   :host {
-    display: inline-flex;
     align-items: center;
     gap: var(--space-2);
     font-family: var(--font-body);
@@ -26,46 +38,35 @@
     -webkit-user-select: none;
     box-sizing: border-box;
   }
-  :host([hidden]) { display: none; }
 
-  .avatar {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: var(--icon-size-2xl);
-    height: var(--icon-size-2xl);
-    border-radius: 50%;
-    background: var(--muted-foreground);
-    color: var(--background);
-    font-size: var(--text-xs);
-    font-weight: var(--font-weight-semibold);
+  [part='avatar'] {
     flex-shrink: 0;
-    overflow: hidden;
-    line-height: 1;
   }
-  :host([size="md"]) .avatar { width: var(--control-h-sm); height: var(--control-h-sm); font-size: var(--text-xs); }
-  :host([size="md"]) { font-size: var(--text-base); }
 
-  .avatar img {
+  [part='avatar'] img {
     width: 100%; height: 100%;
     object-fit: cover;
     display: block;
   }
 
-  .name {
-    color: var(--foreground);
-    font-weight: var(--font-weight-medium);
+  [part='name'] {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: var(--panel-min-w-sm);
   }
-  :host([hide-name]) .name { display: none; }
 </style>
 
-<span class="avatar" part="avatar" aria-hidden="true">
+<row
+  part="avatar"
+  aria-hidden="true"
+  align="center"
+  justify="center"
+  sx="w:icon-size-2xl h:icon-size-2xl radius:full bg:muted-foreground fg:background text:xs weight:semibold overflow:hidden leading:none"
+>
   {#if image() !== ''}
     <img src={image()} alt="" />
   {:else}
     {initials()}
   {/if}
-</span>
-<span class="name" part="name">{name()}</span>
+</row>
+<span part="name" sx="fg:foreground weight:medium max-w:panel-min-w-sm">{name()}</span>
