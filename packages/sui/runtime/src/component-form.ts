@@ -45,7 +45,12 @@ export function installFormHooks(
     const decode = decoderFor(propDef)
     stopValueEffect = effect(() => {
       const v = sig()
-      internals.setFormValue(stringifyFormValue(v))
+      // Feature-guarded: jsdom (and other partial ElementInternals shims)
+      // implement attachInternals without setFormValue — skipping the sync
+      // beats crashing the effect in an environment with no form to sync.
+      if (typeof internals.setFormValue === 'function') {
+        internals.setFormValue(stringifyFormValue(v))
+      }
     })
     hooks.reset = () => { sig.set(initial as unknown) }
     hooks.restore = (state: string | null) => { sig.set(decode(state)) }

@@ -21,11 +21,25 @@ import type { Disposer } from './bind'
 /** AOT-baked WAAPI animation. */
 export type BakedAnimation = Animation
 
-/** Per-call config the compiler emits. */
+/** Per-call config the compiler emits. The arrays may carry `null` holes:
+ * the emitted `el.animate(...)` calls are guarded (`typeof el.animate ===
+ * 'function' ? ... : null`) so environments without WAAPI — jsdom, SSR —
+ * mount cleanly instead of crashing component setup. */
 export interface MotionAttachConfig {
   trigger: string
-  enter: BakedAnimation[]
-  leave: BakedAnimation[]
+  enter: Array<BakedAnimation | null>
+  leave: Array<BakedAnimation | null>
+}
+
+/** WAAPI animations are programmatic — the runtime's CSS kill switch
+ * (`* { animation: none !important }`) cannot stop them, so `motion:`
+ * triggers consult the media query directly, per event (the preference
+ * can change mid-session). */
+function prefersReducedMotion(): boolean {
+  return (
+    typeof matchMedia === 'function' &&
+    matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
 }
 
 /** DOM events that drive a `motion:` trigger. `(enter, leave)`. */
@@ -73,7 +87,12 @@ export function __sui_motion_attach(
   el: Element,
   config: MotionAttachConfig,
 ): Disposer {
-  const { trigger, enter, leave } = config
+  const { trigger } = config
+  // Drop the null holes from WAAPI-less environments; with nothing to
+  // play, attach nothing (a disposer no-op keeps the call site uniform).
+  const enter = config.enter.filter((a): a is BakedAnimation => a != null)
+  const leave = config.leave.filter((a): a is BakedAnimation => a != null)
+  if (enter.length === 0) return () => {}
   // Pause the enter animations so the initial state matches the
   // "rest" pose until the first trigger event.
   for (const a of enter) {
@@ -113,12 +132,14 @@ export function __sui_motion_attach(
   }
   const [enterEvent, leaveEvent, cancelEvent] = events
   const onEnter = (ev: Event) => {
+    if (prefersReducedMotion()) return
     if (trigger === 'focus-visible' && !isFocusVisible(ev as FocusEvent)) {
       return
     }
     playForward()
   }
   const onLeave = () => {
+    if (prefersReducedMotion()) return
     playReverse()
   }
   el.addEventListener(enterEvent, onEnter as EventListener)
