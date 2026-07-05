@@ -55,6 +55,25 @@
 <prop name="empty-label" type="string" default="No results found." />
 <prop name="size" values="sm|md|lg" default="md" reflect />
 
+<!-- Residual: `:host { display:contents }` baseline (host doesn't
+     take sx); `sui-dialog::part(body) { padding:0 }` — restyling a
+     downstream shadow part can't reach via variants/sx; the
+     `.cmdk` font-family (font: isn't an sx prop); `.search`
+     border-bottom (no border-side sx prop) + flex:0 0 auto (no flex
+     sx prop) — keeps the search bar a fixed-height strip; the
+     native <input class="entry"> (input element, no shadow part);
+     `.list` overflow-y/overscroll-behavior/scrollbar-width/min-
+     height/flex raw values (no sx prop); `.group` text-transform +
+     user-select (text-transform not in sx); `.item` user-select +
+     scroll-margin + the .item.hl/.item.disabled class selectors
+     (variants don't reach class selectors); `.item.hl .item-icon`
+     descendant compound; `.item-icon { flex:0 0 auto }` raw; the
+     `.item-label` text-overflow + white-space (text-overflow not
+     in sx); `.item-hint` flex/margin-inline-start/font-family
+     raw; `.empty` list-style/text-align raw. The `<li>` items
+     inside `<ul>` are listbox rows so they keep the <li> element
+     (cannot swap to <row>) — the .item .item.hl .item.disabled
+     class rules therefore stay. -->
 <style>
   :host { display: contents; }
   :host([hidden]) { display: none; }
@@ -65,22 +84,14 @@
      dialog's private shadow vars. */
   sui-dialog::part(body) { padding: 0; }
 
-  .cmdk {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    font-family: var(--font-body);
-    color: var(--foreground);
-  }
+  .cmdk { font-family: var(--font-body); }
 
   .search {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
     border-bottom: 1px solid var(--border-subtle);
     flex: 0 0 auto;
   }
   .search-icon { flex: 0 0 auto; }
+
   .entry {
     flex: 1;
     min-width: 0;
@@ -100,7 +111,6 @@
   .list {
     list-style: none;
     margin: 0;
-    padding: var(--space-1);
     overflow-y: auto;
     overscroll-behavior: contain;
     min-height: 0;
@@ -156,8 +166,10 @@
   prop:open={open()}
   bind:this={dialogEl}
 >
-  <div class="cmdk" part="panel">
-    <div class="search" part="search" sx="p:3 px:4">
+  <column class="cmdk" part="panel" gap="0"
+    sx="min-h:0 fg:foreground">
+    <row class="search" part="search" align="center" gap="2"
+      sx="p:3 px:4">
       <sui-icon class="search-icon" name="search" size="sm"></sui-icon>
       <input
         class="entry"
@@ -177,11 +189,11 @@
         bind:value={query}
         bind:this={inputEl}
       />
-    </div>
+    </row>
     <ul
       class="list"
       part="list"
-      sx="max-h:panel-vh-sm"
+      sx="max-h:panel-vh-sm p:1"
       role="listbox"
       id={listId()}
       aria-label={label()}
@@ -218,5 +230,5 @@
         <li class="empty" part="empty" role="presentation" sx="p:6 px:4 text:sm fg:muted-foreground">{emptyLabel()}</li>
       {/if}
     </ul>
-  </div>
+  </column>
 </sui-dialog>
