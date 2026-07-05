@@ -1,9 +1,12 @@
 #[test]
 fn sui_button_with_motion_compiles() {
     use sui_compiler::{compile, CompileMode, CompileOpts};
-    let source = std::fs::read_to_string(
-        "/home/madvib/dev/Ship/ship-worktrees/sui-motion/packages/components/sui/primitives/src/sui-button/sui-button.sui"
-    ).expect("read sui-button.sui");
+    // Repo-relative so it survives worktree moves (was a hardcoded absolute
+    // path to the old sui-motion worktree, which broke on reorg).
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../packages/components/sui/primitives/src/sui-button/sui-button.sui");
+    let source = std::fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
     let opts = CompileOpts {
         setup_url: None,
         mode: CompileMode::Component,
