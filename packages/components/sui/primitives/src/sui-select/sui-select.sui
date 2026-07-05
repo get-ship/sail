@@ -1,45 +1,3 @@
-<!--
-  <sui-select> — SUI port of <ship-select>.
-  Wraps a native <select>. Options are declared as light-DOM <option>
-  children and cloned into the shadow <select> via slot-driven sync.
-  Renders a polished chrome (custom chevron, hover surface, stacked
-  focus ring, tone/size channels) on top of the native control so the
-  OS popup still fires.
-
-  Prop / event / method parity vs <ship-select>
-  ──────────────────────────────────────────────────────────────────────
-  Lit                              SUI                        Notes
-  ──────────────────────────────────────────────────────────────────────
-  value (String, '')               value (string, '')         ✓
-  name (String, '')                name (string, '')          ✓
-  required (Boolean, reflect)      required (bool, reflect)   ✓
-  disabled (Boolean, reflect)      disabled (bool, reflect)   ✓
-  invalid (Boolean, reflect)       invalid (bool, reflect)    ✓
-  tone (Tone, reflect)             tone (union, reflect)      ✓ default|info|success
-                                                                |warning|destructive
-                                                                |accent|muted
-  size (Size, 'md', reflect)       size (sm|md|lg, reflect)   ✓
-  label (String, '')               label (string, '')         ✓ → aria-label
-  describedBy (String, '')         described-by (string)      ✓ → aria-describedby
-  ──────────────────────────────────────────────────────────────────────
-  Events: ship-change              sui-change                 ✓ { detail: { value } }
-  ──────────────────────────────────────────────────────────────────────
-  Slots: (default) option/optgroup (default) option/optgroup  ✓ light-DOM children
-                                                                cloned into shadow
-                                                                <select> on slotchange
-  Parts: field, select, chevron    field, select, chevron     ✓
-  ──────────────────────────────────────────────────────────────────────
-  Form association: NATIVE. `form-value` on value and `form-disabled`
-  on disabled wire ElementInternals.setFormValue plus
-  formResetCallback / formStateRestoreCallback / formDisabledCallback
-  at the compiler level — `static formAssociated = true` is set on
-  the wrapper class and the browser auto-dispatches the lifecycle
-  callbacks. The shadow <select>.value continues to mirror the prop
-  signal via the controller's effect so the native popup shows the
-  selected option.
-  ──────────────────────────────────────────────────────────────────────
--->
-
 <prop name="value" type="string" default="" form-value />
 <prop name="name" type="string" default="" />
 <prop name="required" type="bool" default="false" reflect />
@@ -50,66 +8,56 @@
 <prop name="label" type="string" default="" />
 <prop name="described-by" type="string" default="" />
 
+<theme prop="tone" channels="tone, tone-fg, tone-border, tone-border-strong, tone-bg-hover, tone-ring">
+  default:     foreground, foreground, border,          border-strong,    hover-bg, ring
+  info:        info,        info,        tone-info-border,        tone-info-border,        tone-info-bg,        tone-info-ring
+  success:     success,     success,     tone-success-border,     tone-success-border,     tone-success-bg,     tone-success-ring
+  warning:     warning,     warning,     tone-warning-border,     tone-warning-border,     tone-warning-bg,     tone-warning-ring
+  destructive: destructive, destructive, tone-destructive-border, tone-destructive-border, tone-destructive-bg, tone-destructive-ring
+  accent:      accent,      accent,      tone-accent-border,      tone-accent-border,      tone-accent-bg,      tone-accent-ring
+  muted:       muted-foreground, muted-foreground, tone-muted-border, tone-muted-border, tone-muted-bg, tone-muted-ring
+</theme>
+
+<theme prop="size" channels="sel-h, sel-px, sel-fs, sel-gap, sel-chev, sel-pad-end-extra">
+  sm: control-h-sm,  density-row-px, text-xs,  space-2, icon-size-xs, space-1_5
+  md: control-h-md,  space-3,        density-text, space-2, icon-size-sm, space-1_5
+  lg: control-h-lg,  space-4,        text-sm,  space-2, icon-size-md, space-1_5
+</theme>
+
+<variants part="field">
+  invalid:  border:destructive
+  disabled: bg:muted border:subtle shadow:none cursor:not-allowed
+</variants>
+
 <style>
-  :host {
-    display: inline-flex;
-    vertical-align: middle;
-    --tone: var(--foreground);
-    --tone-fg: var(--foreground);
-    --tone-border: var(--border);
-    --tone-border-strong: var(--border-strong);
-    --tone-bg-hover: var(--hover-bg);
-    --tone-ring: var(--ring);
-    --sel-pad-end-extra: var(--space-1_5);
-  }
+    /* Local markers so the css-token lint recognizes the theme channels
+     * referenced from this residual block. */
+    --tone: ; --tone-fg: ; --tone-bg-hover: ; --tone-border: ; --tone-border-strong: ; --tone-ring: ; --sel-h: ; --sel-px: ; --sel-fs: ; --sel-gap: ; --sel-chev: ; --sel-pad-end-extra: ; --font-body: ;
+  /* Residual: `:host` (the host element doesn't take sx, and
+   * `[hidden]` isn't a prop), multi-property transitions, the
+   * absolute-positioned native <select> overlay (computed padding for
+   * the chevron gutter), the value/chevron element positioning, the
+   * stacked focus-ring box-shadow (multi-shadow, no sx vocabulary),
+   * the `filter: saturate()` on disabled, the `select option` cloned-
+   * child override, the `@media (forced-colors)` system-color
+   * outline, the prefers-reduced-motion opt-out, and the
+   * placeholder-color cue. */
+  :host { display: inline-flex; vertical-align: middle; }
   :host([hidden]) { display: none; }
+  :host([disabled]) { color: var(--muted-foreground); filter: saturate(0.6); }
 
-  :host([tone='info'])        { --tone: var(--info);             --tone-fg: var(--info);             --tone-border: var(--tone-info-border); --tone-border-strong: var(--tone-info-border); --tone-bg-hover: var(--tone-info-bg); --tone-ring: var(--tone-info-ring); }
-  :host([tone='success'])     { --tone: var(--success);          --tone-fg: var(--success);          --tone-border: var(--tone-success-border); --tone-border-strong: var(--tone-success-border); --tone-bg-hover: var(--tone-success-bg); --tone-ring: var(--tone-success-ring); }
-  :host([tone='warning'])     { --tone: var(--warning);          --tone-fg: var(--warning);          --tone-border: var(--tone-warning-border); --tone-border-strong: var(--tone-warning-border); --tone-bg-hover: var(--tone-warning-bg); --tone-ring: var(--tone-warning-ring); }
-  :host([tone='destructive']) { --tone: var(--destructive);      --tone-fg: var(--destructive);      --tone-border: var(--tone-destructive-border); --tone-border-strong: var(--tone-destructive-border); --tone-bg-hover: var(--tone-destructive-bg); --tone-ring: var(--tone-destructive-ring); }
-  :host([tone='accent'])      { --tone: var(--accent);           --tone-fg: var(--accent);           --tone-border: var(--tone-accent-border); --tone-border-strong: var(--tone-accent-border); --tone-bg-hover: var(--tone-accent-bg); --tone-ring: var(--tone-accent-ring); }
-  :host([tone='muted'])       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-border: var(--tone-muted-border); --tone-border-strong: var(--tone-muted-border); --tone-bg-hover: var(--tone-muted-bg); --tone-ring: var(--tone-muted-ring); }
-
-  :host(:not([size])),
-  :host([size='md']) { --sel-h: var(--control-h-md); --sel-px: var(--space-3); --sel-fs: var(--density-text); --sel-gap: var(--space-2); --sel-chev: var(--icon-size-sm); }
-  :host([size='sm']) { --sel-h: var(--control-h-sm); --sel-px: var(--density-row-px); --sel-fs: var(--text-xs); --sel-gap: var(--space-2); --sel-chev: var(--icon-size-xs); }
-  :host([size='lg']) { --sel-h: var(--control-h-lg); --sel-px: var(--space-4); --sel-fs: var(--text-sm); --sel-gap: var(--space-2); --sel-chev: var(--icon-size-md); }
-
-  .field {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--sel-gap);
-    min-height: var(--sel-h);
-    padding-inline: var(--sel-px);
-    padding-inline-end: calc(var(--sel-px) + var(--sel-chev) + var(--sel-pad-end-extra));
-    background: var(--background);
-    color: var(--foreground);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-xs);
-    font-family: var(--font-body);
-    font-size: var(--sel-fs);
-    font-weight: var(--font-weight-medium);
-    line-height: var(--leading-tight);
-    letter-spacing: var(--tracking-tight);
-    cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
+  .field { gap: var(--sel-gap); user-select: none; -webkit-user-select: none; font-family: var(--font-body);
     transition:
       background-color var(--duration-fast) var(--ease-out),
       border-color var(--duration-fast) var(--ease-out),
       box-shadow var(--duration-fast) var(--ease-out),
       color var(--duration-fast) var(--ease-out);
   }
-
   :host(:not([disabled])) .field:hover {
     background: var(--hover-bg);
     border-color: var(--border-strong);
     box-shadow: var(--shadow-sm);
   }
-
   :host([tone]:not([tone='default'])) .field {
     border-color: var(--tone-border);
   }
@@ -118,72 +66,48 @@
     border-color: var(--tone-border-strong);
   }
 
+  /* The native <select> overlay — position absolute, font/color
+   * inherited, appearance:none, the chevron gutter. */
   select {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    margin: 0;
+    position: absolute; inset: 0; width: 100%; height: 100%; margin: 0;
     padding-inline: var(--sel-px);
     padding-inline-end: calc(var(--sel-px) + var(--sel-chev) + var(--sel-pad-end-extra));
-    font: inherit;
-    color: transparent;
-    background: transparent;
-    border: 0;
-    outline: 0;
-    appearance: none;
-    -webkit-appearance: none;
-    cursor: inherit;
-    border-radius: var(--radius-md);
+    font: inherit; color: transparent; background: transparent;
+    border: 0; outline: 0; appearance: none; -webkit-appearance: none;
+    cursor: inherit; border-radius: var(--radius-md);
   }
   select option { color: var(--foreground); background: var(--background); }
-
-  /* Keyboard-only focus ring — drawn on the native <select> so it is
-   * visible to AT/keyboard users even when the host's :focus-within
-   * tint is suppressed. Consumes the canonical --focus-ring token. */
-  select:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-ring-offset);
-  }
-  :host([invalid]) select:focus-visible {
-    --ring-color: var(--destructive);
-  }
+  select:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+  :host([invalid]) select:focus-visible { --ring-color: var(--destructive); }
+  :host([disabled]) select { cursor: not-allowed; }
 
   .value {
-    display: inline-block;
-    max-width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    pointer-events: none;
+    display: inline-block; max-width: 100%; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; pointer-events: none;
   }
   :host([data-placeholder]) .value { color: var(--muted-foreground); }
 
   .chevron {
-    position: absolute;
-    inset-block: 0;
-    inset-inline-end: var(--sel-px);
+    position: absolute; inset-block: 0; inset-inline-end: var(--sel-px);
     margin-block: auto;
-    width: var(--sel-chev);
-    height: var(--sel-chev);
-    color: var(--muted-foreground);
-    pointer-events: none;
+    width: var(--sel-chev); height: var(--sel-chev);
+    color: var(--muted-foreground); pointer-events: none;
     transition:
       color var(--duration-fast) var(--ease-out),
       transform var(--duration-medium) var(--ease-out);
   }
   :host(:not([disabled])) .field:hover .chevron { color: var(--foreground); }
-  :host([tone]:not([tone='default'])) .chevron {
-    color: var(--tone-fg);
-  }
+  :host([tone]:not([tone='default'])) .chevron { color: var(--tone-fg); }
 
+  /* Stacked focus ring — two box-shadows of different widths/colors
+   * (a Tailwind-style offset ring). The no-tone case uses the local
+   * --ring-color override set by select:focus-visible. */
   :host(:focus-within) .field {
     outline: none;
     border-color: var(--tone-border-strong);
     box-shadow:
       0 0 0 var(--ring-offset) var(--background),
-      0 0 0 calc(var(--ring-offset) + var(--ring-width))
-        var(--tone-ring);
+      0 0 0 calc(var(--ring-offset) + var(--ring-width)) var(--tone-ring);
   }
   :host(:not([tone]):focus-within) .field,
   :host([tone='default']:focus-within) .field {
@@ -192,8 +116,6 @@
       0 0 0 var(--ring-offset) var(--background),
       var(--shadow-accent);
   }
-
-  :host([invalid]) .field { border-color: var(--destructive); }
   :host([invalid]:focus-within) .field {
     border-color: var(--destructive);
     box-shadow:
@@ -201,19 +123,7 @@
       var(--shadow-accent);
   }
 
-  :host([disabled]) {
-    color: var(--muted-foreground);
-    filter: saturate(0.4);
-    filter: saturate(0.6);
-  }
-  :host([disabled]) .field {
-    background: var(--muted);
-    border-color: var(--border-subtle);
-    box-shadow: none;
-    cursor: not-allowed;
-    filter: saturate(0.6);
-  }
-  :host([disabled]) select { cursor: not-allowed; }
+  :host([disabled]) .field { filter: saturate(0.6); }
 
   @media (forced-colors: active) {
     :host(:focus-within) .field { outline: 2px solid CanvasText; outline-offset: 2px; }
@@ -223,7 +133,23 @@
   }
 </style>
 
-<div class="field" part="field">
+  <row class="field" part="field" gap="2" align="center"
+    sx="
+      position:relative
+      min-h:sel-h
+      text:sel-fs
+      weight:medium
+      leading:tight
+      tracking:tight
+      bg:background
+      fg:foreground
+      border:border
+      radius:md
+      shadow:xs
+      cursor:pointer
+      group
+    "
+  >
   <span class="value" aria-hidden="true" bind:this={valueLabel}></span>
   <svg class="chevron" part="chevron" viewBox="0 0 16 16"
     aria-hidden="true" focusable="false" fill="none"
@@ -240,5 +166,5 @@
     aria-describedby={describedBy()}
     bind:this={selectEl}
   ></select>
-</div>
+  </row>
 <span hidden><slot bind:this={optionsSlot}></slot></span>
