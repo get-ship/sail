@@ -8,10 +8,6 @@
   <prop name="pressed" values="true|false|mixed" default="false" reflect />
   <prop name="expanded" type="string" default="" reflect />
 
-  <!-- tone channels (tone, tone-fg, tone-contrast, tone-bg, tone-border,
-       tone-ring) are framework-provided: declaring the `tone` prop is the
-       opt-in. See suiTonesSheet. No per-component <theme prop="tone"> needed. -->
-
   <theme prop="size" channels="btn-h, btn-px, btn-fs, btn-fw, btn-gap">
     xs: control-h-2xs, space-2,  text-xs,  font-weight-medium, space-1
     sm: control-h-sm,  space-2_5, text-sm,  font-weight-medium, space-1_5
