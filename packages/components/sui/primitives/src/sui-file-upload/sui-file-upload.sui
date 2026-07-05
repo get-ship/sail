@@ -32,29 +32,42 @@
 <prop name="disabled" type="bool" default="false" reflect />
 <prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
 
+<theme prop="tone" channels="tone-border, tone-bg, tone-ring">
+  default:     border,         tone-primary-bg, primary
+  primary:     tone-primary-border, tone-primary-bg, primary
+  info:        tone-info-border, tone-info-bg, info
+  success:     tone-success-border, tone-success-bg, success
+  warning:     tone-warning-border, tone-warning-bg, warning
+  destructive: tone-destructive-border, tone-destructive-bg, destructive
+  accent:      tone-accent-border, tone-accent-bg, accent
+  muted:       tone-muted-border, tone-muted-bg, muted-foreground
+</theme>
+<variants>
+  [hidden]:  display:none
+  [disabled]: opacity:75 cursor:not-allowed
+</variants>
+<variants part="dropzone">
+  over: border:tone-ring bg:tone-bg
+</variants>
+
+<!-- Residual: dashed border style + multi-property transition (motion) +
+     focus outline (vs the 2-layer box-shadow ring) + :host font defaults +
+     saturate filter / pointer-events (compound disabled state) + the
+     file-list/file-item/file-doc-icon/file-meta/file-name/file-size/remove
+     button visuals (mostly inline-flex, control sizing, single-line text
+     truncation, no sx prop equivalents for many of these). -->
 <style>
   :host {
     display: block;
-    --tone-border: var(--border);
-    --tone-bg: var(--tone-primary-bg);
-    --tone-ring: var(--primary);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
   }
-  :host([hidden]) { display: none; }
   :host([disabled]) {
     color: var(--muted-foreground);
     filter: saturate(0.6);
     pointer-events: none;
   }
-
-  :host([tone='primary'])     { --tone-ring: var(--primary);     --tone-bg: var(--tone-primary-bg); }
-  :host([tone='info'])        { --tone-ring: var(--info);         --tone-bg: var(--tone-info-bg); }
-  :host([tone='success'])     { --tone-ring: var(--success);      --tone-bg: var(--tone-success-bg); }
-  :host([tone='warning'])     { --tone-ring: var(--warning);      --tone-bg: var(--tone-warning-bg); }
-  :host([tone='destructive']) { --tone-ring: var(--destructive);  --tone-bg: var(--tone-destructive-bg); }
-  :host([tone='accent'])      { --tone-ring: var(--accent);       --tone-bg: var(--tone-accent-bg); }
-  :host([tone='muted'])       { --tone-ring: var(--muted-foreground); --tone-bg: var(--muted); }
-
-  .dropzone {
+  [part~='dropzone'] {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -65,25 +78,23 @@
     border-radius: var(--radius-lg);
     background: transparent;
     cursor: pointer;
+    color: var(--muted-foreground);
+    user-select: none;
+    text-align: center;
     transition:
       border-color var(--duration-fast) var(--ease-out),
       background-color var(--duration-fast) var(--ease-out);
-    color: var(--muted-foreground);
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    user-select: none;
-    text-align: center;
   }
-  .dropzone:focus-visible {
+  [part~='dropzone']:focus-visible {
     outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
   }
-  .dropzone.over {
+  [part~='dropzone']:not(.over) { border-style: dashed; }
+  [part~='dropzone'].over {
     border-style: dashed;
     border-color: var(--tone-ring);
     background: var(--tone-bg);
   }
-
   .icon {
     display: inline-flex;
     align-items: center;
@@ -98,19 +109,12 @@
     flex: none;
     transition: background-color var(--duration-fast), color var(--duration-fast);
   }
-  .dropzone.over .icon {
+  [part~='dropzone'].over .icon {
     background: var(--selected-bg);
     color: var(--tone-ring);
   }
-
-  input[type='file'] {
-    display: none;
-  }
-
-  .file-list {
-    margin-top: var(--space-2);
-  }
-
+  input[type='file'] { display: none; }
+  .file-list { margin-top: var(--space-2); }
   .file-item {
     display: flex;
     align-items: center;
@@ -119,11 +123,8 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     background: var(--surface-1);
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
     color: var(--foreground);
   }
-
   .file-doc-icon {
     display: inline-flex;
     align-items: center;
@@ -135,26 +136,19 @@
     color: var(--tone-info-fg);
     flex: none;
   }
-
-  .file-meta {
-    flex: 1;
-    min-width: 0;
-  }
-
+  .file-meta { flex: 1; min-width: 0; }
   .file-name {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     color: var(--foreground);
   }
-
   .file-size {
     color: var(--muted-foreground);
     font-size: var(--text-xs);
     font-variant-numeric: tabular-nums;
     flex-shrink: 0;
   }
-
   .remove {
     appearance: none;
     border: 0;
@@ -174,25 +168,18 @@
     flex: none;
     margin-left: auto;
   }
-  .remove:hover {
-    color: var(--foreground);
-    background: var(--muted);
-  }
+  .remove:hover { color: var(--foreground); background: var(--muted); }
   .remove:focus-visible {
     outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
   }
-
   .error {
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
     color: var(--destructive);
     margin-top: var(--space-1);
     padding: 0 var(--space-1);
   }
-
   @media (prefers-reduced-motion: reduce) {
-    .dropzone { transition: none; }
+    [part~='dropzone'] { transition: none; }
   }
 </style>
 
@@ -221,14 +208,14 @@
   bind:this={inputEl}
 />
 {#if errorMsg()}
-  <div class="error" role="alert" part="error">{errorMsg()}</div>
+  <div class="error" role="alert" part="error" sx="text:sm fg:destructive">{errorMsg()}</div>
 {/if}
 {#if displayFiles().length > 0}
   <column class="file-list" part="file-list" gap="1" aria-live="polite" bind:this={fileListEl}>
     {#for f of displayFiles() key={f.key}}
       <div class="file-item" part="file-item">
         <span class="file-doc-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2 2V8z"/><path d="M14 2v6h6"/></svg>
         </span>
         <column class="file-meta" part="file-meta" gap="1">
           <span class="file-name">{f.name}</span>
