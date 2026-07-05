@@ -8,7 +8,6 @@ use super::super::util::camel_of;
 use super::super::writer::{js_string, Writer};
 use super::TemplateEmitter;
 use crate::animation;
-use crate::diagnostics::CompileError;
 use crate::ir::*;
 use crate::lower;
 
