@@ -326,33 +326,44 @@ fn lower_layout(source: &str) -> (String, String) {
 /// author writes the closed sx grammar, never CSS. The block is stripped from the
 /// template (the parser never sees it); its CSS joins the injected `<style>`.
 fn lower_variants(source: &str) -> (String, String) {
-    let Some(start) = source.find("<variants>") else {
-        return (source.to_string(), String::new());
-    };
-    let after = start + "<variants>".len();
-    let Some(rel) = source[after..].find("</variants>") else {
-        return (source.to_string(), String::new());
-    };
-    let body = &source[after..after + rel];
-    let block_end = after + rel + "</variants>".len();
-
+    let mut out = source.to_string();
     let mut css = String::new();
-    for line in body.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        let Some((sel_part, sx_part)) = line.split_once(':') else { continue };
-        let Some(selector) = variant_selector(sel_part) else { continue };
-        let decls = lower_variant_sx(sx_part);
-        if !decls.is_empty() {
-            css.push_str(&format!(":host({selector}){{{decls}}}"));
-        }
-    }
+    // Multiple blocks: a bare `<variants>` (styles `:host`) and any number of
+    // `<variants part="field">` (Panda slot recipe — styles a shadow part).
+    loop {
+        let Some(start) = out.find("<variants") else { break };
+        let Some(tag_rel) = out[start..].find('>') else { break };
+        let tag_end = start + tag_rel + 1;
+        let open_tag = out[start..tag_end].to_string();
+        let Some(rel) = out[tag_end..].find("</variants>") else { break };
+        let body = out[tag_end..tag_end + rel].to_string();
+        let block_end = tag_end + rel + "</variants>".len();
 
-    let mut out = String::with_capacity(source.len());
-    out.push_str(&source[..start]);
-    out.push_str(&source[block_end..]);
+        // `part="field"` re-targets the rule from `:host` to `[part='field']`.
+        let part = attr_value(&open_tag, "part");
+
+        for line in body.lines() {
+            let line = line.trim();
+            if line.is_empty() {
+                continue;
+            }
+            let Some((sel_part, sx_part)) = line.split_once(':') else { continue };
+            let Some(selector) = variant_selector(sel_part) else { continue };
+            let decls = lower_variant_sx(sx_part);
+            if decls.is_empty() {
+                continue;
+            }
+            match &part {
+                Some(p) => css.push_str(&format!(":host({selector}) [part='{p}']{{{decls}}}")),
+                None => css.push_str(&format!(":host({selector}){{{decls}}}")),
+            }
+        }
+
+        let mut next = String::with_capacity(out.len());
+        next.push_str(&out[..start]);
+        next.push_str(&out[block_end..]);
+        out = next;
+    }
     (out, css)
 }
 
@@ -450,6 +461,9 @@ fn attr_match(s: &str) -> Option<String> {
         Some(s.to_string())
     } else if let Some((prop, val)) = s.split_once('=') {
         Some(format!("[{}='{}']", prop.trim(), val.trim()))
+    } else if !s.is_empty() && s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_') {
+        // A bare identifier is a boolean attribute: `invalid` → `[invalid]`.
+        Some(format!("[{s}]"))
     } else {
         None
     }
@@ -850,6 +864,13 @@ mod tests {
             out.contains(".sx-border-toneborder{border:1px solid var(--tone-border)}"),
             "channel as full border: {out}"
         );
+    }
+
+    #[test]
+    fn variants_part_attr_targets_a_slot() {
+        let out = preprocess("<variants part=\"field\">\n  invalid: border:destructive\n  disabled: cursor:not-allowed\n</variants>\n<div part=\"field\">x</div>");
+        assert!(out.contains(":host([invalid]) [part='field']{border:1px solid var(--destructive);}"), "slot variant: {out}");
+        assert!(out.contains(":host([disabled]) [part='field']{cursor:not-allowed;}"), "bare boolean → slot: {out}");
     }
 
     #[test]
