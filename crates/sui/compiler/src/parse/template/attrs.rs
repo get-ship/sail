@@ -72,6 +72,9 @@ fn compile_attr(
     if let Some(rest) = name.strip_prefix("out:") {
         return compile_transition(rest, value, value_span, loc, TransitionDir::Out);
     }
+    if let Some(rest) = name.strip_prefix("motion:") {
+        return compile_motion(rest, value, value_span, loc);
+    }
     if is_expr_value(value) {
         let inner = strip_braces(value).to_string();
         // Parse the STRIPPED inner expression — `signal(0)`,
@@ -525,6 +528,237 @@ fn compile_transition(
         return Err(err("transition options must be an {expression}".into()));
     };
     Ok(AttrInstr::Transition { name: name.to_string(), opts, dir, span: value_span })
+}
+/// Compile a `motion:<trigger>=…` directive. Milestone 1 accepts only a
+/// static object literal (`motion:hover={{ scale: 'sm' }}`); dynamic
+/// expressions (`motion:hover={someExpr}`) are explicitly rejected so
+/// the runtime never has to evaluate an animation config.
+///
+/// Returns an [`AttrInstr::Motion`] carrying the resolved property ->
+/// preset pairs (validated in the lower layer against
+/// `animation-presets.json`).
+fn compile_motion(
+    trigger: &str,
+    value: &str,
+    value_span: Span,
+    loc: &str,
+) -> Result<AttrInstr, CompileError> {
+    let err = |msg: String| {
+        CompileError::new(msg).with_span(value_span).with_category(loc.to_string())
+    };
+    if trigger.is_empty() {
+        return Err(err(
+            "motion: requires a trigger name (hover, press, focus, focus-visible, …)".into(),
+        ));
+    }
+    if !is_bare_identifier(trigger) {
+        return Err(err(format!(
+            "motion trigger \"{trigger}\" must be a bare identifier"
+        )));
+    }
+    if value.is_empty() {
+        return Err(err("motion: requires a config object".into()));
+    }
+
+    // Disambiguate `motion:hover={{...}}` (static) from
+    // first; only reject as dynamic when the body is not a static
+    // key/value list AND looks like an expression. This keeps the
+    // common author form working while still flagging actual
+    // Disambiguate `motion:hover={{ prop: 'value' }}` (static) from
+    // `motion:hover={someExpr}` (dynamic). The pre-pass delivers the
+    // value with both outer and inner braces intact for brace-attrs;
+    // strip the outermost pair before the static parser. Treat as
+    // dynamic ONLY when the body has no `:` separator (a key/value
+    // shape). If the body has a `:` but the static parser still
+    // rejects it (unknown property, malformed value, etc.), surface
+    // the static-shape error verbatim — the author clearly meant
+    // a static config.
+    fn has_static_shape(body: &str) -> bool {
+        let s = body.trim();
+        s.starts_with('{') && s.contains(':') && s.ends_with('}')
+    }
+    let stripped = value.trim();
+    let stripped = stripped.strip_prefix('{').unwrap_or(stripped);
+    let stripped = stripped.strip_suffix('}').unwrap_or(stripped);
+    let props = match parse_motion_static_config(stripped, value_span, loc) {
+        Ok(props) => props,
+        Err(parse_err) if !has_static_shape(value) => {
+            return Err(err(format!(
+                "motion:{trigger}={{...}} — dynamic configs are not yet supported; \
+                 the value must be a static object literal like \
+                 `motion:{trigger}={{ scale: 'sm' }}`"
+            )));
+        }
+        Err(parse_err) => return Err(parse_err),
+    };
+    Ok(AttrInstr::Motion {
+        trigger: trigger.to_string(),
+        props,
+        span: value_span,
+    })
+}
+
+/// Closed set of CSS-property names a `motion:` directive accepts as
+/// keys. Mirrors the design-system rule that motion is *only* applied
+/// to a known set of animatable properties — anything else would be a
+/// typo, not an authoring choice. Kept small on purpose.
+const MOTION_PROPERTIES: &[&str] = &[
+    "scale",
+    "opacity",
+    "translate-y",
+    "translate-x",
+    "rotate",
+];
+
+/// Parse the static object body of a `motion:trigger="…"` directive.
+/// Accepted shape: `{ <bare-identifier>: '<string-literal>' (, …) }`.
+/// Tolerant of whitespace and trailing commas. Anything more complex
+/// (numeric / boolean / nested object values, quoted keys, etc.) is a
+/// hard error with a byte-offset span.
+///
+/// Why hand-rolled: the compiler crate is WASM-safe and cannot pull in
+/// `serde_json`. The grammar is small and stable; we already have a
+/// similar hand-rolled parser in `lower/presets.rs`.
+fn parse_motion_static_config(
+    raw: &str,
+    value_span: Span,
+    loc: &str,
+) -> Result<Vec<MotionProp>, CompileError> {
+    let err = |msg: String| -> CompileError {
+        CompileError::new(msg).with_span(value_span).with_category(loc.to_string())
+    };
+    let s = raw.trim();
+    let bytes = s.as_bytes();
+    let mut i = 0usize;
+    // Skip leading whitespace (already done by `trim`).
+    if bytes.first() != Some(&b'{') {
+        return Err(err(format!(
+            "motion config must be a static object literal, got `{raw}`"
+        )));
+    }
+    i += 1;
+    // Future improvement: translate any inner parse offset into a
+    // Span pointing at the offending byte. We don't render that
+    // today — the directive's `value_span` is precise enough.
+    let mut props: Vec<MotionProp> = Vec::new();
+    loop {
+        i = skip_ws(bytes, i);
+        if i >= bytes.len() {
+            return Err(err("unterminated motion config — expected `}`".into()));
+        }
+        if bytes[i] == b'}' {
+            break;
+        }
+        // Allow trailing comma before `}`.
+        if bytes[i] == b',' {
+            i += 1;
+            i = skip_ws(bytes, i);
+            if i < bytes.len() && bytes[i] == b'}' {
+                break;
+            }
+            // Otherwise it's a leading-comma mistake; surface it.
+            return Err(err(format!(
+                "unexpected `,` in motion config near `{}`",
+                &s[i..s.len().min(i + 20)]
+            )));
+        }
+        // Parse key — bare identifier only.
+        let key_start = i;
+        let key_end = scan_ident(bytes, i).ok_or_else(|| {
+            err(format!(
+                "expected a property name (scale, opacity, …) near `{}`",
+                &s[key_start..s.len().min(key_start + 20)]
+            ))
+        })?;
+        let property = &s[key_start..key_end];
+        if !MOTION_PROPERTIES.contains(&property) {
+            return Err(err(format!(
+                "motion property `{property}` is not supported. Supported properties: {}",
+                MOTION_PROPERTIES.join(", ")
+            )));
+        }
+        i = skip_ws(bytes, key_end);
+        if i >= bytes.len() || bytes[i] != b':' {
+            return Err(err(format!(
+                "expected `:` after `{property}` in motion config"
+            )));
+        }
+        i = skip_ws(bytes, i + 1);
+        // Parse value — single- or double-quoted string literal.
+        let q = *bytes.get(i).ok_or_else(|| {
+            err(format!(
+                "expected a preset name (e.g. 'sm') after `{property}:`"
+            ))
+        })?;
+        if q != b'"' && q != b'\'' {
+            return Err(err(format!(
+                "motion config value for `{property}` must be a quoted string literal \
+                 (e.g. `{property}: 'sm'`); got `{raw}`"
+            )));
+        }
+        i += 1;
+        let val_start = i;
+        while i < bytes.len() && bytes[i] != q {
+            if bytes[i] == b'\\' && i + 1 < bytes.len() {
+                // Skip the escape — we don't try to interpret it; the
+                // preset name is consumed as raw text and resolved
+                // later against the presets JSON.
+                i += 2;
+                continue;
+            }
+            i += 1;
+        }
+        if i >= bytes.len() {
+            return Err(err(format!(
+                "unterminated string literal in motion config for `{property}`"
+            )));
+        }
+        let preset = &s[val_start..i];
+        i += 1; // consume the closing quote
+        props.push(MotionProp {
+            property: property.to_string(),
+            preset: preset.to_string(),
+        });
+        i = skip_ws(bytes, i);
+        // Expect `,` or `}`.
+        if i < bytes.len() && bytes[i] == b',' {
+            i += 1;
+            continue;
+        }
+        if i < bytes.len() && bytes[i] == b'}' {
+            break;
+        }
+        return Err(err(format!(
+            "expected `,` or `}}` after `{property}: '{preset}'`"
+        )));
+    }
+    // Allow trailing whitespace + optional closing brace + trailing
+    // whitespace — already consumed.
+    if props.is_empty() {
+        return Err(err("motion config must declare at least one property".into()));
+    }
+    Ok(props)
+}
+
+fn skip_ws(bytes: &[u8], mut i: usize) -> usize {
+    while i < bytes.len() && (bytes[i] as char).is_whitespace() {
+        i += 1;
+    }
+    i
+}
+
+fn scan_ident(bytes: &[u8], mut i: usize) -> Option<usize> {
+    let first = *bytes.get(i)?;
+    if !(first.is_ascii_alphabetic() || first == b'_' || first == b'$') {
+        return None;
+    }
+    i += 1;
+    while i < bytes.len()
+        && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_' || bytes[i] == b'-')
+    {
+        i += 1;
+    }
+    Some(i)
 }
 
 fn compile_dynamic_attr(

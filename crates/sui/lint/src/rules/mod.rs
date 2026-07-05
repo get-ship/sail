@@ -45,8 +45,7 @@ pub mod no_style_block;
 pub mod no_sx;
 pub mod no_variants;
 pub mod no_inline_style;
-
-/// Function signature every rule conforms to.
+pub mod animate_token_only;
 pub type RuleFn = fn(&Path, &str) -> Vec<Finding>;
 
 /// Rules that lint a paired `<stem>.controller.ts` source. The dispatcher
@@ -92,4 +91,5 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (no_sx::RULE_ID, no_sx::check),
     (no_variants::RULE_ID, no_variants::check),
     (no_inline_style::RULE_ID, no_inline_style::check),
+    (animate_token_only::RULE_ID, animate_token_only::check),
 ];

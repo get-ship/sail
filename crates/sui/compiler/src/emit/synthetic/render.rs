@@ -270,7 +270,9 @@ pub(super) fn emit_render_client(
 /// The runtime symbols the render imports from `@ship/sui-runtime`: the
 /// template binders `lower` detected, minus the controller-only set.
 fn render_runtime_imports(program: &Program, is_view: bool) -> Vec<String> {
-    let lowered = lower::lower(program, is_view);
+    let Ok(lowered) = lower::lower(program, is_view) else {
+        return Vec::new();
+    };
     let mut imports: Vec<String> = lowered
         .runtime_imports
         .iter()
@@ -278,6 +280,12 @@ fn render_runtime_imports(program: &Program, is_view: bool) -> Vec<String> {
         .map(|s| s.to_string())
         .collect();
     for &name in &lowered.transition_builtins {
+        let s = name.to_string();
+        if !imports.contains(&s) {
+            imports.push(s);
+        }
+    }
+    for &name in &lowered.motion_builtins {
         let s = name.to_string();
         if !imports.contains(&s) {
             imports.push(s);
@@ -293,9 +301,10 @@ fn render_runtime_imports(program: &Program, is_view: bool) -> Vec<String> {
 /// which is why this is client-only. Mirrors the production view emit's
 /// `lowered.dom_imports` exactly.
 fn render_dom_imports(program: &Program, is_view: bool) -> Vec<String> {
-    let lowered = lower::lower(program, is_view);
+    let Ok(lowered) = lower::lower(program, is_view) else {
+        return Vec::new();
+    };
     let mut imports: Vec<String> = lowered.dom_imports.iter().map(|s| s.to_string()).collect();
-    imports.sort();
     imports
 }
 

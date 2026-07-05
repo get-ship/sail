@@ -71,7 +71,8 @@ fn attr_references_ident(attr: &AttrInstr, name: &str) -> bool {
         }
         AttrInstr::Static { .. }
         | AttrInstr::BindThis { .. }
-        | AttrInstr::SlotReflectEmpty { .. } => false,
+        | AttrInstr::SlotReflectEmpty { .. }
+        | AttrInstr::Motion { .. } => false,
     }
 }
 

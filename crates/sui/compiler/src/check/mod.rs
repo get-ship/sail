@@ -425,6 +425,10 @@ where
                 f(e)?;
             }
         }
+        // `motion:` config is statically parsed in the attr
+        // compiler — no JS expression body to type-check. Future
+        // milestones that allow dynamic configs will need an arm here.
+        AttrInstr::Motion { .. } => {}
     }
     Ok(())
 }

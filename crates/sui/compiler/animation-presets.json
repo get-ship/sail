@@ -1,0 +1,108 @@
+{
+  "$comment": "Sui motion preset vocabulary — a CLOSED, design-system-owned set of spring + tween configs. The compiler resolves a `motion: { scale: 'sm' }` reference against this file at build time. Adding a preset = adding a row here + (optionally) extending the sx token surface. Mirrors the `sui-sx` rule's design: token-only, no raw values, no bracket escape.",
+
+  "presets": {
+    "spring:snappy": {
+      "kind": "spring",
+      "stiffness": 380,
+      "damping": 30,
+      "mass": 1.0,
+      "rest_speed": 0.01,
+      "rest_delta": 0.005,
+      "$doc": "high-stiffness, well-damped — quick UI feedback (button press, toggle)"
+    },
+    "spring:gentle": {
+      "kind": "spring",
+      "stiffness": 170,
+      "damping": 26,
+      "mass": 1.0,
+      "rest_speed": 0.01,
+      "rest_delta": 0.005,
+      "$doc": "softer settling — hover state, panel expand"
+    },
+    "spring:bouncy": {
+      "kind": "spring",
+      "stiffness": 320,
+      "damping": 14,
+      "mass": 1.0,
+      "rest_speed": 0.01,
+      "rest_delta": 0.005,
+      "$doc": "visible overshoot — playful micro-interaction, badge pop"
+    },
+    "spring:deliberate": {
+      "kind": "spring",
+      "stiffness": 110,
+      "damping": 18,
+      "mass": 1.0,
+      "rest_speed": 0.01,
+      "rest_delta": 0.005,
+      "$doc": "slow, weighty — page transitions, drawer slide"
+    },
+    "press": {
+      "kind": "tween",
+      "from": 1.0,
+      "to": 0.96,
+      "duration_token": "duration-instant",
+      "easing": "cubic-bezier(0.2, 0, 0, 1)",
+      "$doc": "scale-down on pointerdown — paired with a spring:snappy release"
+    },
+    "release": {
+      "kind": "tween",
+      "from": 0.96,
+      "to": 1.0,
+      "duration_token": "duration-fast",
+      "easing": "cubic-bezier(0.4, 0, 1, 1)",
+      "$doc": "scale-up on pointerup — completes the press/release pair"
+    },
+    "pulse": {
+      "kind": "tween",
+      "from": 1.0,
+      "to": 1.04,
+      "duration_token": "duration-slow",
+      "easing": "ease-in-out",
+      "iterations": "infinite",
+      "direction": "alternate",
+      "$doc": "gentle scale pulse, infinite — loading state, attention"
+    },
+    "fade": {
+      "kind": "tween",
+      "from": 0.0,
+      "to": 1.0,
+      "duration_token": "duration-fast",
+      "easing": "cubic-bezier(0.2, 0, 0, 1)",
+      "$doc": "opacity 0→1 — extension of existing transition:fade"
+    },
+    "fade-out": {
+      "kind": "tween",
+      "from": 1.0,
+      "to": 0.0,
+      "duration_token": "duration-fast",
+      "easing": "cubic-bezier(0.4, 0, 1, 1)",
+      "$doc": "opacity 1→0 — exit phase"
+    }
+  },
+
+  "duration_tokens": {
+    "instant": "duration-instant",
+    "fast": "duration-fast",
+    "medium": "duration-medium",
+    "slow": "duration-slow",
+    "deliberate": "duration-deliberate"
+  },
+
+  "easing_tokens": {
+    "spring": "ease-spring",
+    "out": "cubic-bezier(0.2, 0, 0, 1)",
+    "in": "cubic-bezier(0.4, 0, 1, 1)",
+    "in-out": "cubic-bezier(0.4, 0, 0.2, 1)"
+  },
+
+  "property_aliases": {
+    "xs": 0.96,
+    "sm": 1.02,
+    "md": 1.06,
+    "lg": 1.10,
+    "xl": 1.18,
+    "$doc": "Property values for `motion: { scale: 'sm' }` — the agent picks a scale alias, the compiler resolves to (0.96/1.02/1.06/...). Mirrors how `sx=\u0022text:sm\u0022` resolves to `var(--text-sm)`."
+  }
+}
