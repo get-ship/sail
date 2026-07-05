@@ -29,5 +29,6 @@ component("reflect-empty-slot-test", {
     "label": prop.string({ default: "" }),
   },
   shadow: true,
+  styles: ":host { display: inline-flex; }\n",
 }, __default);
 export default __default;

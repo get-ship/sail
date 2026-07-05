@@ -30,6 +30,11 @@ pub fn preprocess(source: &str) -> String {
     // Desugar the SFC `<component>` block into the `<prop>` tags + object
     // `<variants>` the rest of the chain already lowers.
     let s = lower_component(&s);
+    // Framework-owned host display: the component presents as its root element
+    // naturally would (inheriting the standard, not a per-component knob). Block
+    // is the default, so this only emits an override for inline-natured roots.
+    // Computed now, before lower_layout rewrites <row>/<column> into <div>.
+    let host_display_css = derive_host_display(&s);
     // `<host>` first: it consumes its own `sx` into a `:host{…}` rule before
     // `lower_sx` would otherwise fold that sx into a class on the (non-)element.
     let (s, host_css) = lower_host(&s);
@@ -37,7 +42,8 @@ pub fn preprocess(source: &str) -> String {
     let (s, layout_css) = lower_layout(&s);
     let (s, variants_css) = lower_variants(&s);
     let (s, theme_css) = lower_theme(&s);
-    let css = format!("{host_css}{theme_css}{sx_css}{layout_css}{variants_css}");
+    let css =
+        format!("{host_display_css}{host_css}{theme_css}{sx_css}{layout_css}{variants_css}");
     if css.is_empty() {
         s
     } else {
@@ -603,6 +609,76 @@ pub fn extract_controller_block(source: &str) -> (String, Option<String>) {
 /// `props:` maps built-in shorthands (`tone`/`size`) to their canonical union +
 /// contract, arrays to enum props, and `bool`/`string`/`number` to typed props;
 /// `variants:` becomes a `<variants>` block; `meta:` is filename-derived today.
+/// Derive the framework-owned `:host` display from the component's root template
+/// element — the host presents as that element naturally would. Block is the
+/// framework default, so this emits an override only for inline-natured roots
+/// (a link is inline, a label is inline-block, a row/button control is
+/// inline-flex). No per-component declaration, no renamed CSS.
+fn derive_host_display(source: &str) -> String {
+    let display = match first_template_tag(source).as_deref() {
+        Some("a") => "inline",
+        Some("label") => "inline-block",
+        Some("row") | Some("button") | Some("input") | Some("select") | Some("span") => {
+            "inline-flex"
+        }
+        // Block-natured or unknown roots keep the framework block default.
+        _ => return String::new(),
+    };
+    format!(":host {{ display: {display}; }}\n")
+}
+
+/// The tag name of the first real template element — skipping HTML comments and
+/// the non-visual blocks the compiler generates/consumes (`<prop>`, `<variants>`,
+/// `<theme>`, `<host>`, `<style>`, `<component>`, `<controller>`).
+fn first_template_tag(source: &str) -> Option<String> {
+    const SKIP: &[&str] = &[
+        "prop",
+        "variants",
+        "theme",
+        "host",
+        "style",
+        "component",
+        "controller",
+    ];
+    let bytes = source.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] != b'<' {
+            i += 1;
+            continue;
+        }
+        if source[i..].starts_with("<!--") {
+            match source[i..].find("-->") {
+                Some(end) => {
+                    i += end + 3;
+                    continue;
+                }
+                None => break,
+            }
+        }
+        // A close tag `</…>` or a non-name char after `<` — step over it.
+        let name: String = source[i + 1..]
+            .chars()
+            .take_while(|c| c.is_ascii_alphanumeric() || *c == '-')
+            .collect();
+        if name.is_empty() {
+            i += 1;
+            continue;
+        }
+        if SKIP.contains(&name.as_str()) {
+            match source[i..].find('>') {
+                Some(gt) => {
+                    i += gt + 1;
+                    continue;
+                }
+                None => break,
+            }
+        }
+        return Some(name);
+    }
+    None
+}
+
 /// Return the raw body of the `<component>` block (the `{ props, variants, meta }`
 /// object text), or `None` if there is no block. Used by the tsgo type-check.
 pub(crate) fn extract_component_body(source: &str) -> Option<String> {

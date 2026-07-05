@@ -13,6 +13,26 @@ export default Object.assign(component((ctx) => {
     __mount(container) {
 const __cleanups = [];
 const __root = container.shadowRoot ?? container;
+const __suiStylesKey = "29917f71";
+const __suiStyles = ":host { display: inline-flex; }";
+{
+  let __existing = null;
+  let __n = container.firstChild;
+  while (__n) {
+    if (__n.nodeType === 1 && __n.tagName === 'STYLE' &&
+        __n.getAttribute("data-sui-style") === __suiStylesKey) {
+      __existing = __n;
+      break;
+    }
+    __n = __n.nextSibling;
+  }
+  if (!__existing) {
+    const __el = document.createElement("style");
+    __el.setAttribute("data-sui-style", __suiStylesKey);
+    __el.textContent = __suiStyles;
+    container.insertBefore(__el, container.firstChild);
+  }
+}
 const __e0 = document.createElement("button");
 attachRef($scope, "btnEl", __e0);
 __e0.setAttribute("part", "button");
