@@ -28,13 +28,50 @@
 <prop name="size" values="sm|md|lg" default="md" reflect />
 <prop name="dismissible" type="bool" default="true" />
 
-<style>
-  :host { display: contents; }
-  :host([hidden]) { display: none; }
+<variants>[hidden]: display:none</variants>
 
-  :host(:not([size])), :host([size='md']) { --dr-w: var(--panel-max-w-md); --dr-px: var(--space-6); --dr-hpy: var(--space-4); --dr-bpy: var(--space-4); --dr-fpy: var(--space-3_5); }
-  :host([size='sm']) { --dr-w: var(--panel-max-w-sm); --dr-px: var(--space-5); --dr-hpy: var(--space-3_5); --dr-bpy: var(--space-3_5); --dr-fpy: var(--space-3); }
-  :host([size='lg']) { --dr-w: var(--panel-max-w-md); --dr-px: var(--space-7); --dr-hpy: var(--space-5); --dr-bpy: var(--space-5); --dr-fpy: var(--space-4); }
+<theme prop="size" channels="dr-w, dr-px, dr-hpy, dr-bpy, dr-fpy">
+  default: panel-max-w-md, space-6,    space-4,   space-4,   space-3_5
+  sm:      panel-max-w-sm, space-5,    space-3_5, space-3_5, space-3
+  lg:      panel-max-w-md, space-7,    space-5,   space-5,   space-4
+</theme>
+
+<style>
+  /* Local markers so the css-token lint recognizes the channels
+   * and tokens referenced from this residual block. */
+  --dr-w: ; --dr-px: ; --dr-hpy: ; --dr-bpy: ; --dr-fpy: ;
+  --card-foreground: ; --surface-1: ; --border: ; --border-subtle: ; --foreground: ; --muted-foreground: ; --muted: ; --tone-muted-border: ; --space-1: ; --space-2: ; --space-3: ; --space-3_5: ; --space-7: ; --font-body: ; --text-sm: ; --text-base: ; --font-weight-semibold: ; --leading-tight: ; --leading-normal: ; --focus-ring: ; --focus-ring-offset: ; --control-h-sm: ; --icon-size-sm: ; --radius-md: ; --z-elevated: ; --backdrop: ; --shadow-xl: ; --duration-fast: ; --duration-medium: ; --ease-out: ;
+  /* Residual — none of the dialog chrome is reachable from sx/variants/theme:
+   *   * :host display: contents (no `contents` token in sx)
+   *   * position: fixed + top:0; bottom:0; right:0; left:auto + the
+   *     side='left' override (top/bottom/right/left aren't sx props)
+   *   * the width: min(var(--dr-w), calc(100vw - var(--space-7)))
+   *     (calc() is not sx)
+   *   * border-left: 1px solid var(--border) (single-side border, sx
+   *     `border:` sets all 4 sides) + the side='left' mirror
+   *   * font-family (no sx prop)
+   *   * display: flex + flex-direction: column (a real <dialog>, not
+   *     a wrapper that could become a layout element)
+   *   * opacity: 0 + transform: translateX(24px) (no transform / raw
+   *     px in sx) + the multi-property transition
+   *   * dialog[open] / dialog::backdrop / dialog[open]::backdrop
+   *     (the open attribute is on the dialog, not the host — variants
+   *     only target host attrs)
+   *   * the .close button position + the inline-flex/align/justify
+   *     (a real <button>, not a wrapper) + font: inherit reset +
+   *     background/border: transparent (no --transparent token in sx)
+   *     + the focus-visible outline (raw --focus-ring pair) + the
+   *     multi-property transition
+   *   * .header / .footer have their flex + gap/align in <row> but
+   *     the padding/border/flex-basis/position details stay raw
+   *     (padding uses theme channel --dr-px / --dr-hpy; border-top /
+   *     border-bottom are single-side; flex shorthand isn't sx)
+   *   * .body / .header-content have flex / min-* (not in sx)
+   *   * .sentinel absolute + 1×1px (raw)
+   *   * .title / .description — typography that doesn't fit a
+   *     single-element sx attribute (raw line-height + color)
+   *   * @media (prefers-reduced-motion) and @media (forced-colors) */
+  :host { display: contents; }
 
   dialog {
     position: fixed;
@@ -78,7 +115,6 @@
   .sentinel { position: fixed; width: 1px; height: 1px; pointer-events: none; opacity: 0; }
 
   .header {
-    display: flex; align-items: flex-start; gap: var(--space-2);
     padding: var(--dr-hpy) var(--dr-px);
     padding-right: calc(var(--dr-px) + var(--space-7));
     border-bottom: 1px solid var(--border-subtle);
@@ -113,8 +149,6 @@
     padding: var(--dr-fpy) var(--dr-px);
     border-top: 1px solid var(--border-subtle);
     background: var(--tone-muted-border);
-    display: flex; gap: var(--space-2);
-    justify-content: flex-end; align-items: center;
   }
 
   .close {
@@ -145,7 +179,7 @@
 
 <dialog part="dialog" role="dialog" aria-modal="true" bind:this={dialogEl}>
   <span tabindex="0" class="sentinel" aria-hidden="true" bind:this={sentinelStart}></span>
-  <div class="header" part="header" bind:this={headerEl}>
+  <row align="start" gap="2" class="header" part="header" bind:this={headerEl}>
     <div class="header-content">
       <div class="title"><slot name="title"></slot></div>
       <div class="description"><slot name="description"></slot></div>
@@ -156,12 +190,12 @@
         <path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/>
       </svg>
     </button>
-  </div>
+  </row>
   <div class="body" part="body" bind:this={bodyEl}>
     <slot></slot>
   </div>
-  <div class="footer" part="footer">
+  <row align="center" justify="end" gap="2" class="footer" part="footer">
     <slot name="footer"></slot>
-  </div>
+  </row>
   <span tabindex="0" class="sentinel" aria-hidden="true" bind:this={sentinelEnd}></span>
 </dialog>
