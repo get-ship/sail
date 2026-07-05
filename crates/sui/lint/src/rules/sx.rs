@@ -207,7 +207,10 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
         Ring => if token == "none" {
             "none".into()
         } else {
-            format!("0 0 0 var(--ring-width) var(--{token})")
+            format!(
+                "0 0 0 var(--ring-offset) var(--background), \
+                 0 0 0 calc(var(--ring-offset) + var(--ring-width)) var(--{token})"
+            )
         },
         // a hairline border in the chosen color (or the strength words / off).
         Border => match token {
@@ -261,7 +264,10 @@ pub fn lower_channel(prop: &str, channel: &str) -> Option<Vec<(&'static str, Str
     let atom = format!("var(--{channel})");
     let value = match kind {
         Border => format!("1px solid {atom}"),
-        Ring => format!("0 0 0 var(--ring-width) {atom}"),
+        Ring => format!(
+            "0 0 0 var(--ring-offset) var(--background), \
+             0 0 0 calc(var(--ring-offset) + var(--ring-width)) {atom}"
+        ),
         // Color / Size / Space / Radius / Text / Shadow / … all take the bare
         // var — the channel is already the full variable, no scale prefix.
         _ => atom,
