@@ -41,6 +41,7 @@ pub mod route_inline_style;
 pub mod surface_not_card;
 pub mod sx;
 pub mod no_raw_container;
+pub mod no_script;
 pub mod no_style_block;
 pub mod no_sx;
 pub mod no_variants;
@@ -87,6 +88,7 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (layout::RULE_ID, layout::check),
     (legacy_layout::RULE_ID, legacy_layout::check),
     (no_raw_container::RULE_ID, no_raw_container::check),
+    (no_script::RULE_ID, no_script::check),
     (no_style_block::RULE_ID, no_style_block::check),
     (no_sx::RULE_ID, no_sx::check),
     (no_variants::RULE_ID, no_variants::check),
