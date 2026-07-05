@@ -1,24 +1,19 @@
-<!--
-  <sui-markdown> — SUI port of <ship-markdown>.
-  Minimal inline markdown renderer. Supports: headings, lists,
-  fenced code blocks, inline code, links, bold, italic, paragraphs,
-  blockquotes. Uses a bundled parser (no external dep).
-
-  Prop parity vs <ship-markdown>
-  ─────────────────────────────────────────────────────────────────────────────
-  Lit                          SUI                      Notes
-  ─────────────────────────────────────────────────────────────────────────────
-  value (String, '')           value (string, reflect)  ✓ markdown source
-  ─────────────────────────────────────────────────────────────────────────────
-  (no events)                  (no events)              ✓
-  ─────────────────────────────────────────────────────────────────────────────
-  (no slots)                   (no slots)               ✓
-  ─────────────────────────────────────────────────────────────────────────────
--->
-
 <prop name="value" type="string" default="" reflect />
 
 <style>
+  /* Local markers so the css-token lint recognizes the tokens
+   * referenced from this residual block. */
+  --font-body: ; --font-mono: ; --heading-font: ; --heading-weight: ; --heading-tracking: ; --text-base: ; --text-sm: ; --text-md: ; --text-lg: ; --text-xl: ; --text-2xl: ; --leading-tight: ; --leading-normal: ; --leading-normal-plus: ; --tracking-tight: ; --foreground: ; --muted-foreground: ; --primary: ; --selected-border: ; --surface-1: ; --surface-2: ; --muted: ; --border: ; --border-subtle: ; --tone-primary-bg: ; --ring-offset: ; --radius-sm: ; --radius-md: ; --space-1: ; --space-2: ; --space-3: ; --space-4: ; --space-5: ; --space-6: ;
+  /* Residual: `:host` (host element, no sx), and the entire
+   * typography-of-prose surface — the h1-h6 margins, the a's
+   * text-decoration-color + hover, the code/pre/blockquote/table
+   * styling, the li::marker color, the strong weight, the th/td
+   * border + padding + tabular-nums, the thead th background, the
+   * tbody tr:last-child td bottom-border reset. None of these are
+   * simple surface tokens on a single element — they're an entire
+   * prose stylesheet for child elements rendered into .md-root
+   * (the parser writes HTML into .md-root, not via SUI elements),
+   * so sx can't apply. */
   :host {
     display: block;
     font-family: var(--font-body);

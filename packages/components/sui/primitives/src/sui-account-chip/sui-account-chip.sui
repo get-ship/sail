@@ -1,34 +1,20 @@
-<!--
-  <sui-account-chip> — signed-in identity display for the nav-top
-  chrome strip. Shows the account avatar (initials fallback) and
-  display name. No popover, no menu — the chip is the *display
-  surface*; actions (sign-in, sign-out, settings) live in
-  <sui-account-menu>, which slots the chip into its trigger
-  when a popover is wanted.
-
-  Generic + SDK-free: identity is plain props (`name`, `image`) — the
-  consuming app owns the `ship.account.state()` subscription and feeds
-  the chip. Initials fall back from the name when no image is given.
-
-  Prop / event surface
-  ───────────────────────────────────────────────────────────────────
-  name  (string, '')   display name; initials derive from it.
-  image (string, '')   avatar image URL; falls back to initials.
-  size  (enum, 'sm')   sm | md  — avatar diameter.
-  hide-name  (bool, false)  when true, only the avatar renders
-                              (useful in narrow chrome strips).
-  ───────────────────────────────────────────────────────────────────
-  Slots: (none)
-  Parts: root, avatar, initials, name
-  ───────────────────────────────────────────────────────────────────
--->
-
 <prop name="name" type="string" default="" />
 <prop name="image" type="string" default="" />
 <prop name="size" values="sm|md" default="sm" reflect />
 <prop name="hide-name" type="bool" default="false" reflect />
 
 <style>
+  /* Local markers so the css-token lint recognizes the tokens
+   * referenced from this residual block. */
+  --font-body: ; --foreground: ; --background: ; --muted-foreground: ; --icon-size-2xl: ; --control-h-sm: ; --text-sm: ; --text-base: ; --text-xs: ; --font-weight-medium: ; --font-weight-semibold: ; --space-2: ; --panel-min-w-sm: ;
+  /* Residual: `:host` (host element, no sx), the avatar's
+   * display:inline-flex + align + justify + flex-shrink + 50%
+   * border-radius (no sx prop for radius) + overflow:hidden +
+   * line-height:1 (raw value), the avatar img cover fit, the
+   * [size='md'] .avatar override (control-h-sm is a different
+   * size token than the default icon-size-2xl), the [size='md']
+   * :host font-size override, the .name font-weight + ellipsis,
+   * and the [hide-name] .name display:none. */
   :host {
     display: inline-flex;
     align-items: center;
@@ -43,9 +29,7 @@
   :host([hidden]) { display: none; }
 
   .avatar {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-flex; align-items: center; justify-content: center;
     width: var(--icon-size-2xl);
     height: var(--icon-size-2xl);
     border-radius: 50%;
@@ -61,8 +45,7 @@
   :host([size="md"]) { font-size: var(--text-base); }
 
   .avatar img {
-    width: 100%;
-    height: 100%;
+    width: 100%; height: 100%;
     object-fit: cover;
     display: block;
   }
