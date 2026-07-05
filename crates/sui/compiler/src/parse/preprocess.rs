@@ -27,11 +27,14 @@ pub fn preprocess(source: &str) -> String {
     // Off-vocab values are rejected earlier by the lints (`sui-sx` / `sui-layout`)
     // reading the raw source; here we only lower valid ones.
     let s = expand_self_close(&quote_brace_attrs(source));
+    // `<host>` first: it consumes its own `sx` into a `:host{…}` rule before
+    // `lower_sx` would otherwise fold that sx into a class on the (non-)element.
+    let (s, host_css) = lower_host(&s);
     let (s, sx_css) = lower_sx(&s);
     let (s, layout_css) = lower_layout(&s);
     let (s, variants_css) = lower_variants(&s);
     let (s, theme_css) = lower_theme(&s);
-    let css = format!("{theme_css}{sx_css}{layout_css}{variants_css}");
+    let css = format!("{host_css}{theme_css}{sx_css}{layout_css}{variants_css}");
     if css.is_empty() {
         s
     } else {
@@ -434,6 +437,48 @@ fn lower_theme(source: &str) -> (String, String) {
         next.push_str(&out[..start]);
         next.push_str(&out[block_end..]);
         out = next;
+    }
+    (out, css)
+}
+
+/// Lower `<host sx="…">` — an element-less directive that styles the component
+/// host itself. Its sx lowers to a `:host { … }` rule (not a class), then the tag
+/// is removed. Closes the ubiquitous bare-`:host` base-styling residual (display,
+/// vertical-align via `align`, surface props) that no other construct reaches —
+/// the host is not a real element, so it cannot carry a class.
+fn lower_host(source: &str) -> (String, String) {
+    let mut out = source.to_string();
+    let mut css = String::new();
+    let mut from = 0;
+    loop {
+        let Some(rel) = out[from..].find("<host") else { break };
+        let start = from + rel;
+        // Must be a real `<host>` tag: the char after the name ends it.
+        let after = out.as_bytes().get(start + 5).copied();
+        if !matches!(after, Some(b) if b == b'>' || b == b'/' || b.is_ascii_whitespace()) {
+            from = start + 5; // e.g. `<hostname>` — skip, keep searching
+            continue;
+        }
+        let Some(tag_rel) = out[start..].find('>') else { break };
+        let mut tag_end = start + tag_rel + 1;
+        let open_tag = out[start..tag_end].to_string();
+        // Consume a matching `</host>` for the non-self-closing form.
+        if !open_tag.trim_end().ends_with("/>") {
+            if let Some(close_rel) = out[tag_end..].find("</host>") {
+                tag_end += close_rel + "</host>".len();
+            }
+        }
+        if let Some(sx) = attr_value(&open_tag, "sx") {
+            let decls = lower_variant_sx(&sx);
+            if !decls.is_empty() {
+                css.push_str(&format!(":host{{{decls}}}"));
+            }
+        }
+        let mut next = String::with_capacity(out.len());
+        next.push_str(&out[..start]);
+        next.push_str(&out[tag_end..]);
+        out = next;
+        from = start;
     }
     (out, css)
 }
@@ -857,6 +902,13 @@ mod tests {
         let out = preprocess(r#"<div sx="motion-reduce:shadow:none forced-colors:border:strong">x</div>"#);
         assert!(out.contains("@media (prefers-reduced-motion: reduce){.sx-motion-reduce-shadow-none{box-shadow:none}}"), "{out}");
         assert!(out.contains("@media (forced-colors: active){.sx-forced-colors-border-strong{border:1px solid var(--border-strong)}}"), "{out}");
+    }
+
+    #[test]
+    fn host_directive_lowers_to_host_rule() {
+        let out = preprocess(r#"<host sx="display:inline-flex p:2" /><button>x</button>"#);
+        assert!(out.contains(":host{display:inline-flex;padding:var(--space-2);}"), "{out}");
+        assert!(!out.contains("<host"), "tag removed: {out}");
     }
 
     #[test]
