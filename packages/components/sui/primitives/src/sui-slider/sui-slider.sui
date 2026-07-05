@@ -4,7 +4,7 @@
   pointer drag, click-on-track, and full keyboard suite.
 
   Prop parity vs <ship-slider>
-  ────────────────────────────────────────────────────────────────────────
+  ─────────────────────────────────────────────────────────────────────────────
   value (number, 0)           ✓ reflect
   min (number, 0)             ✓
   max (number, 100)           ✓
@@ -14,9 +14,9 @@
   size (sm|md|lg, 'md')       ✓ reflect
   name (string, '')           ✓ — form field name
   label (string, 'slider')    ✓ — aria-label on thumb
-  ────────────────────────────────────────────────────────────────────────
+  ─────────────────────────────────────────────────────────────────────────────
   Events: ship-change → sui-change { detail: { value: number } }
-  ────────────────────────────────────────────────────────────────────────
+  ─────────────────────────────────────────────────────────────────────────────
   Parts: track, fill, thumb
 -->
 
@@ -30,56 +30,78 @@
 <prop name="name" type="string" default="" />
 <prop name="label" type="string" default="slider" />
 
+<theme prop="tone" channels="tone">
+  default:     primary
+  primary:     primary
+  info:        info
+  success:     success
+  warning:     warning
+  destructive: destructive
+  accent:      accent
+  muted:       muted-foreground
+</theme>
+
+<variants part="container">
+  size=sm: h:icon-size-xs
+  size=md: h:icon-size-md
+  size=lg: h:icon-size-xl
+  disabled: cursor:not-allowed fg:muted-foreground
+</variants>
+
+<variants part="track">
+  size=sm: h:1
+  size=md: h:1_5
+  size=lg: h:2
+</variants>
+
+<variants part="thumb">
+  size=sm: w:icon-size-xs h:icon-size-xs
+  size=md: w:icon-size-md h:icon-size-md
+  size=lg: w:icon-size-xl h:icon-size-xl
+</variants>
+
+<!--
+  Residual <style> — truly unavoidable bits:
+  - :host display + font-family + -webkit-tap-highlight-color
+  - :host(:not([tone])) default --tone (covered by <theme> default)
+  - :host([size]) --sl-h/--sl-thumb vars (consumed by children)
+  - .container display:flex + align-items + touch-action
+  - :host([disabled]) .container filter
+  - .track background + border-radius + box-shadow inset
+  - .fill position + height + box-shadow inset highlight
+  - .thumb position + top + border (tone-tinged via var) + border-radius + transform translate(-50%,-50%) + box-shadow + transition multi-prop + box-sizing + outline
+  - .thumb :hover box-shadow + transform scale(1.05)
+  - :host(:not([disabled])) .thumb:focus-visible --ring-color + outline + outline-offset
+-->
 <style>
   :host {
     display: block;
     font-family: var(--font-body);
     -webkit-tap-highlight-color: transparent;
-    --tone: var(--primary);
+    --icon-size-xs: 12px;
+    --icon-size-md: 16px;
+    --icon-size-xl: 20px;
   }
-  :host([hidden]) { display: none; }
-
-  :host(:not([tone])),
-  :host([tone='default'])     { --tone: var(--primary); }
-  :host([tone='primary'])     { --tone: var(--primary); }
-  :host([tone='info'])        { --tone: var(--info); }
-  :host([tone='success'])     { --tone: var(--success); }
-  :host([tone='warning'])     { --tone: var(--warning); }
-  :host([tone='destructive']) { --tone: var(--destructive); }
-  :host([tone='accent'])      { --tone: var(--accent); }
-  :host([tone='muted'])       { --tone: var(--muted-foreground); }
-
-  :host(:not([size])),
-  :host([size='md']) { --sl-h: var(--space-1_5); --sl-thumb: var(--icon-size-md); }
   :host([size='sm']) { --sl-h: var(--space-1); --sl-thumb: var(--icon-size-xs); }
+  :host([size='md']) { --sl-h: var(--space-1_5); --sl-thumb: var(--icon-size-md); }
   :host([size='lg']) { --sl-h: var(--space-2); --sl-thumb: var(--icon-size-xl); }
-
   .container {
     position: relative;
     display: flex;
     align-items: center;
     width: 100%;
-    height: var(--sl-thumb);
     cursor: pointer;
     touch-action: none;
   }
-  :host([disabled]) .container {
-    cursor: not-allowed;
-    color: var(--muted-foreground);
-    filter: saturate(0.6);
-  }
-
+  :host([disabled]) .container { filter: saturate(0.6); }
   .track {
     position: relative;
     width: 100%;
-    height: var(--sl-h);
     background: var(--muted);
     border-radius: var(--radius-full);
     overflow: hidden;
-    /* Hairline inset so the groove reads on light themes. */
     box-shadow: inset 0 0 0 1px var(--border);
   }
-
   .fill {
     position: absolute;
     top: 0;
@@ -87,15 +109,11 @@
     height: 100%;
     background: var(--tone);
     border-radius: inherit;
-    /* Soft top inset-highlight for depth. */
     box-shadow: inset 0 1px 0 var(--surface-2);
   }
-
   .thumb {
     position: absolute;
     top: 50%;
-    width: var(--sl-thumb);
-    height: var(--sl-thumb);
     background: var(--surface-1);
     border: var(--ring-width) solid var(--tone);
     border-radius: 50%;
@@ -109,33 +127,30 @@
   }
   .thumb:hover { box-shadow: var(--shadow-md); transform: translate(-50%, -50%) scale(1.05); }
   .thumb:active { transform: translate(-50%, -50%) scale(0.95); }
-
-  /* Canonical focus convention, tone-tinted via local --ring-color. */
   :host(:not([disabled])) .thumb:focus-visible {
     --ring-color: var(--tone);
     outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
   }
-
   @media (forced-colors: active) {
     .thumb { border-color: CanvasText; }
     .fill { background: Highlight; }
     .thumb:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
   }
-
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
   }
 </style>
 
-<div class="container" bind:this={containerEl}>
-  <div class="track" part="track" bind:this={trackEl}>
-    <div class="fill" part="fill" bind:this={fillEl}></div>
+<div class="container" part="container" bind:this={containerEl}
+  sx="position:relative w:full cursor:pointer">
+  <div class="track" part="track" bind:this={trackEl}
+    sx="w:full bg:muted radius:full overflow:hidden">
+    <div class="fill" part="fill" bind:this={fillEl}
+      sx="position:absolute h:full bg:tone radius:full"></div>
   </div>
   <div
-    class="thumb"
-    part="thumb"
-    role="slider"
+    class="thumb" part="thumb" role="slider"
     tabindex={disabled() ? '-1' : '0'}
     aria-valuemin={min()}
     aria-valuemax={max()}
@@ -143,5 +158,6 @@
     aria-label={label() || 'slider'}
     aria-disabled={disabled() ? 'true' : 'false'}
     bind:this={thumbEl}
+    sx="position:absolute bg:surface-1 radius:full shadow:sm"
   ></div>
 </div>
