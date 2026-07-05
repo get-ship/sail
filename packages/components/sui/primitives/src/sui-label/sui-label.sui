@@ -40,7 +40,7 @@
   label { font-family: var(--font-body); }
 </style>
 
-<label part="label" bind:this={labelEl} for={for()}
+<label part="label" bind:this={labelEl}
   sx="display:inline weight:semibold tracking:normal fg:foreground cursor:pointer text:label-fs">
   <slot></slot>
   {#if required()}<span class="req" aria-hidden="true" sx="fg:destructive ml:1 weight:bold">*</span>{/if}
