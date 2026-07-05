@@ -40,29 +40,40 @@
 
 
 
+<variants part="action">
+  [disabled]: opacity:50 cursor:default
+</variants>
+
 <!--
-  Residual <style> — truly unavoidable bits:
+  Residual <style> — sx/variants/theme can't reach these:
   - :host position: relative + display: inline-flex
   - .trigger background:transparent + border:1px solid transparent + multi-prop transition
+    (transparent is raw, no token; transition is multi-prop; padding uses
+    --space-half which isn't in sx spacing vocabulary)
   - .trigger :focus-visible box-shadow (raw)
-  - .avatar + .avatar-fallback box-shadow ring (raw)
-  - .avatar-fallback.signed-out class rule (variants part selectors don't reach class)
-  - .panel position:fixed + inset + width + multi-prop transition + transform
+  - :host([label-style='compact']) .name display:none (host-attr + descendant
+    compound — variants don't reach descendants of :host attrs)
+  - .avatar + .avatar-fallback flex:0 0 auto + box-shadow ring (raw)
+  - .avatar-fallback.signed-out class rule (variants don't reach class selectors)
+  - .name white-space:nowrap + overflow:hidden + text-overflow:ellipsis
+    (text-overflow isn't sx; white-space isn't an sx prop)
+  - .id-block border-bottom 1px solid (no border-bottom sx prop)
+  - .id-name, .id-email same as .name
+  - .plan text-transform: uppercase (text-transform not in sx)
+  - .action background:transparent + border:0 + text-align:left + font:inherit +
+    transition (transparent raw + multi-prop transition + font not sx)
+  - .action :focus-visible box-shadow inset (raw + pseudo)
+  - .action.danger color: destructive (class selector — variants reach parts,
+    not classes)
+  - .action .meta margin-left:auto + color:muted-foreground (descendant)
+  - .panel popover-open transform (.panel is host-owned positioning residual)
   - .panel::backdrop background
-  - .panel popover-open transform
-  - .panel reduced-motion override (transition: none + transform: none !important)
-  - .id-block border-bottom
-  - .id-block .avatar / .avatar-fallback flex:0 0 auto
-  - .name white-space:nowrap + overflow:hidden + text-overflow:ellipsis (not sx-able)
-  - .id-name, .id-email white-space:nowrap + overflow:hidden + text-overflow:ellipsis
-  - .plan text-transform: uppercase (not in sx)
-  - .action background:transparent + border:0 + text-align:left + font:inherit + transition
-  - .action :focus-visible box-shadow inset
-  - .action.danger color: destructive (class selector)
-  - .action[disabled] opacity:50 cursor:default (attribute selector)
-  - .action .meta margin-left:auto + color:muted-foreground
+  - .panel reduced-motion override (transition: none + transform: none)
   - .divider height:1px + margin + background
-  - :host([label-style='compact']) .name display:none (host data-driven)
+
+  Dissolved (moved out): `.action[disabled] { opacity:0.5; cursor:default }`
+  is now `<variants part="action"> [disabled]: opacity:50 cursor:default
+  </variants>`; `:host([disabled]) [part='action']` is the lowered selector.
 -->
 <style>
   :host {
@@ -96,32 +107,6 @@
   .id-block {
     border-bottom: 1px solid var(--border);
   }
-  .id-block .avatar,
-  .id-block .avatar-fallback { flex: 0 0 auto; }
-  .panel {
-    position: fixed;
-    inset: auto;
-    margin: 0;
-    border: 0;
-    padding: 0;
-    width: var(--panel-max-w-sm);
-    opacity: 0;
-    transform: translateY(calc(-1 * var(--space-1))) scale(0.97);
-    transition:
-      opacity var(--duration-medium) var(--ease-out),
-      transform var(--duration-medium) var(--ease-out);
-  }
-  .panel:popover-open {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  .panel::backdrop { background: transparent; }
-  @media (prefers-reduced-motion: reduce) {
-    .panel { transition: none; transform: none !important; }
-  }
-  .id-block {
-    border-bottom: 1px solid var(--border);
-  }
   .id-name, .id-email {
     white-space: nowrap;
     overflow: hidden;
@@ -138,7 +123,6 @@
     transition: background var(--duration-fast) var(--ease-out);
   }
   .action.danger { color: var(--destructive); }
-  .action[disabled] { opacity: 0.5; cursor: default; }
   .action:focus-visible {
     outline: none;
     background: var(--hover-bg);
