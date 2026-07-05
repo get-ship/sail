@@ -10,13 +10,14 @@
 //!
 //! Mostly this is a walk over the IR collecting metadata. The emit
 //! step uses the IR plus this `Lowered` struct to produce JS.
-
+use crate::diagnostics::CompileError;
 use crate::ir::*;
 use std::collections::BTreeSet;
 
 pub mod bindings;
 pub mod directives;
 pub mod for_uses_row;
+pub mod presets;
 pub mod row_field_uses;
 pub mod template;
 
@@ -48,6 +49,16 @@ pub struct Lowered {
     /// authors don't have to import them manually. Custom transition
     /// names (anything else) resolve through `$scope`.
     pub transition_builtins: BTreeSet<&'static str>,
+    /// Runtime attacher symbols referenced by `motion:` directives.
+    /// Mirrors [`transition_builtins`] — the emitter folds these into
+    /// the `@ship/sui-runtime` import list so views using `motion:`
+    /// pull in the spring_attach / tween_attach helpers transparently.
+    /// In milestone 1 the only entries are `"spring_attach"` (when any
+    /// `motion:` preset resolves to a spring) and `"tween_attach"`
+    /// (when any resolves to a tween). Inserted by
+    /// [`crate::lower::bindings::collect_attr_imports`] when an
+    /// `AttrInstr::Motion` is lowered.
+    pub motion_builtins: BTreeSet<&'static str>,
     /// Every custom-element tag the template uses (`sui-*` / `ship-*`).
     /// Emitted as side-effect `import "@sui-tag/<tag>";` when
     /// `CompileOpts::emit_component_imports` is set, so components join the
@@ -57,7 +68,12 @@ pub struct Lowered {
 }
 
 /// Walk the program, build a `Lowered` summary.
-pub fn lower(program: &Program, is_view: bool) -> Lowered {
+///
+/// Returns `Err` for hard validation failures discovered during the
+/// walk (currently: `motion:` directives that reference an unknown
+/// preset). Soft signals (`uses_setup`, `uses_route`, …) stay on the
+/// [`Lowered`] value.
+pub fn lower(program: &Program, is_view: bool) -> Result<Lowered, CompileError> {
     let mut out = Lowered::default();
     // Every compiled `.sui` exports `component(...)` — the tagless mount-form
     // (`component(setup)`) or the registered custom element (`component(tag,
@@ -74,9 +90,9 @@ pub fn lower(program: &Program, is_view: bool) -> Lowered {
         out.runtime_imports.insert("live");
     }
     let mut depth = 0;
-    walk_instrs(&program.template, &mut out, is_view, &mut depth);
+    walk_instrs(&program.template, &mut out, is_view, &mut depth)?;
     out.used_component_tags = crate::islands::collect_used_tags(&program.template);
-    out
+    Ok(out)
 }
 
 fn is_ident_char(b: u8) -> bool {
@@ -130,7 +146,8 @@ fn check_attr_for_route(a: &AttrInstr, out: &mut Lowered) {
         }
         AttrInstr::Static { .. }
         | AttrInstr::BindThis { .. }
-        | AttrInstr::SlotReflectEmpty { .. } => {}
+        | AttrInstr::SlotReflectEmpty { .. }
+        | AttrInstr::Motion { .. } => {}
         AttrInstr::Transition { opts, .. } => {
             if let Some(e) = opts
                 && expr_references_route(&e.source)
@@ -141,13 +158,13 @@ fn check_attr_for_route(a: &AttrInstr, out: &mut Lowered) {
     }
 }
 
-fn walk_instrs(instrs: &[Instr], out: &mut Lowered, is_view: bool, depth: &mut usize) {
+fn walk_instrs(instrs: &[Instr], out: &mut Lowered, is_view: bool, depth: &mut usize) -> Result<(), CompileError> {
     for instr in instrs {
-        walk_instr(instr, out, is_view, depth);
+        walk_instr(instr, out, is_view, depth)?;
     }
+    Ok(())
 }
-
-fn walk_instr(instr: &Instr, out: &mut Lowered, is_view: bool, depth: &mut usize) {
+fn walk_instr(instr: &Instr, out: &mut Lowered, is_view: bool, depth: &mut usize) -> Result<(), CompileError> {
     match instr {
         Instr::StaticText { .. } | Instr::Comment { .. } => {}
         Instr::DynamicText { expr } => {
@@ -180,9 +197,9 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_view: bool, depth: &mut usize
                 if is_view {
                     check_attr_for_route(a, out);
                 }
-                bindings::collect_attr_imports(a, out, is_view, *depth);
+                bindings::collect_attr_imports(a, out, is_view, *depth)?;
             }
-            walk_instrs(&el.children, out, is_view, depth);
+            walk_instrs(&el.children, out, is_view, depth)?;
         }
         Instr::WhileLoading(wl) => {
             out.runtime_imports.insert("bindWhileLoading");
@@ -191,7 +208,7 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_view: bool, depth: &mut usize
                 out.dom_imports.insert("hydrateWhileLoading");
             }
             *depth += 1;
-            walk_instrs(&wl.body, out, is_view, depth);
+            walk_instrs(&wl.body, out, is_view, depth)?;
             *depth -= 1;
         }
         Instr::WhileError(we) => {
@@ -201,7 +218,7 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_view: bool, depth: &mut usize
                 out.dom_imports.insert("hydrateWhileError");
             }
             *depth += 1;
-            walk_instrs(&we.body, out, is_view, depth);
+            walk_instrs(&we.body, out, is_view, depth)?;
             *depth -= 1;
         }
         Instr::Let(l) => {
@@ -209,7 +226,7 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_view: bool, depth: &mut usize
             // snapshot the signal's `.value`. No new runtime imports
             // beyond what the body already needs.
             *depth += 1;
-            walk_instrs(&l.body, out, is_view, depth);
+            walk_instrs(&l.body, out, is_view, depth)?;
             *depth -= 1;
         }
         Instr::If(IfInstr { branches, else_body, .. }) => {
@@ -222,16 +239,15 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_view: bool, depth: &mut usize
                 if is_view && !out.uses_route && expr_references_route(&b.cond.source) {
                     out.uses_route = true;
                 }
-                walk_instrs(&b.body, out, is_view, depth);
+                walk_instrs(&b.body, out, is_view, depth)?;
             }
             if let Some(eb) = else_body {
-                walk_instrs(eb, out, is_view, depth);
+                walk_instrs(eb, out, is_view, depth)?;
             }
             *depth -= 1;
         }
         Instr::For(ForInstr { var_name, index_name, iterable, key, body, else_body, .. }) => {
             out.runtime_imports.insert("bindFor");
-            // D3: `signal` only needed when the body actually observes
             // the per-row update (i.e. emit_for will keep the `__v`
             // version sentinel). Static row bodies skip it.
             if for_uses_row::body_references_for_vars(
@@ -253,9 +269,9 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_view: bool, depth: &mut usize
                     }
             }
             *depth += 1;
-            walk_instrs(body, out, is_view, depth);
+            walk_instrs(body, out, is_view, depth)?;
             if let Some(eb) = else_body {
-                walk_instrs(eb, out, is_view, depth);
+                walk_instrs(eb, out, is_view, depth)?;
             }
             *depth -= 1;
         }
@@ -272,12 +288,13 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_view: bool, depth: &mut usize
                 if is_view && !out.uses_route && expr_references_route(&c.test.source) {
                     out.uses_route = true;
                 }
-                walk_instrs(&c.body, out, is_view, depth);
+                walk_instrs(&c.body, out, is_view, depth)?;
             }
             if let Some(d) = default {
-                walk_instrs(d, out, is_view, depth);
+                walk_instrs(d, out, is_view, depth)?;
             }
             *depth -= 1;
         }
     }
+    Ok(())
 }

@@ -87,6 +87,7 @@
   part="button"
   type={type()}
   disabled={disabled() || loading()}
+  motion:hover={{ scale: 'spring:snappy' }}
   aria-busy={loading() ? 'true' : 'false'}
   aria-disabled={(disabled() || loading()) ? 'true' : 'false'}
   aria-label={label()}

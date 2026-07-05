@@ -32,6 +32,7 @@ use std::path::PathBuf;
 
 pub mod bindings;
 pub mod analysis;
+pub mod animation;
 pub mod check;
 pub mod diagnostics;
 pub mod emit;
@@ -324,7 +325,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     // `is_view` is the master view/component switch in lowering (which runtime
     // factory to import, direct-emit hydration, route detection). A source is a
     // view iff it is tagless (no `component_meta`); a tag makes it a component.
-    let lowered = lower::lower(&program, opts.component_meta.is_none());
+    let lowered = lower::lower(&program, opts.component_meta.is_none()).map_err(|e| attach_path(e, &opts))?;
 
     let js = emit::js::emit_module(&program, &lowered, &bindings, &opts);
     // CEM (custom-elements-manifest) describes a custom element, so it's emitted

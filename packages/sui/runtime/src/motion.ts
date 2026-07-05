@@ -1,0 +1,145 @@
+// Motion runtime helpers — the consumer side of the compiler's
+// AOT-baked `motion:` directive. The compiler emits
+// `el.animate(keyframes, options)` for every `MotionProp`, then a
+// `__sui_motion_attach(el, { trigger, enter, leave })` call that
+// wires the resulting `Animation` objects to a DOM event or signal.
+//
+// Triggers supported (milestone 1):
+//   - `hover`         — mouseenter / mouseleave
+//   - `press`         — pointerdown / pointerup / pointercancel
+//   - `focus`         — focus / blur
+//   - `focus-visible` — focusin / focusout (with :focus-visible
+//                       polyfill: skip if not keyboard-triggered)
+//   - any other       — no-op; the call is recorded as a warning
+//                       source for the future signal-triggers milestone.
+//
+// The `enter` and `leave` arrays are AOT-baked `Animation` objects
+// — the per-property `el.animate(...)` results. We pause them all
+// on first attach (the initial state is the "rest" pose), then
+import type { Disposer } from './bind'
+
+/** AOT-baked WAAPI animation. */
+export type BakedAnimation = Animation
+
+/** Per-call config the compiler emits. */
+export interface MotionAttachConfig {
+  trigger: string
+  enter: BakedAnimation[]
+  leave: BakedAnimation[]
+}
+
+/** DOM events that drive a `motion:` trigger. `(enter, leave)`. */
+const TRIGGER_EVENTS: Record<string, [string, string, string?]> = {
+  hover: ['mouseenter', 'mouseleave'],
+  press: ['pointerdown', 'pointerup', 'pointercancel'],
+  focus: ['focus', 'blur'],
+  'focus-visible': ['focusin', 'focusout'],
+}
+
+/** `true` if `el` matches `:focus-visible` semantics. Uses the
+ * modern `:focus-visible` heuristic: focus came from a keyboard
+ * interaction, not a mouse click. Without a real
+ * `:focus-visible` selector (some older browsers), falls back to
+ * checking that focus came from keyboard. */
+function isFocusVisible(ev: FocusEvent): boolean {
+  // Modern browsers expose `ev.target.matches(':focus-visible')`.
+  const target = ev.target as Element | null
+  if (target && typeof target.matches === 'function') {
+    try {
+      return target.matches(':focus-visible')
+    } catch {
+      // Selector not supported — fall through.
+    }
+  }
+  // Fallback heuristic: tag the focus source. We track a flag on
+  // the window for the first keydown vs first mousedown.
+  return focusSource === 'keyboard'
+}
+
+let focusSource: 'keyboard' | 'mouse' | 'unknown' = 'unknown'
+if (typeof window !== 'undefined') {
+  window.addEventListener('keydown', () => {
+    focusSource = 'keyboard'
+  }, { capture: true })
+  window.addEventListener('mousedown', () => {
+    focusSource = 'mouse'
+  }, { capture: true })
+}
+
+/** Public: called by the compiler's emitted JS for every
+ * `motion:` directive. Returns a disposer that cancels all
+ * attached animations and removes the event listeners. */
+export function __sui_motion_attach(
+  el: Element,
+  config: MotionAttachConfig,
+): Disposer {
+  const { trigger, enter, leave } = config
+  // Pause the enter animations so the initial state matches the
+  // "rest" pose until the first trigger event.
+  for (const a of enter) {
+    a.pause()
+  }
+  // Build the play/reverse actions. We play `enter` forward on the
+  // enter event and reverse on the leave event.
+  const playForward = () => {
+    for (const a of enter) {
+      a.play()
+    }
+  }
+  const playReverse = () => {
+    // For the leave phase, cancel each `enter` animation and
+    // re-play the corresponding `leave` animation from the
+    // start. `enter` and `leave` are AOT-paired by the compiler
+    // (same length, same index).
+    enter.forEach((a, i) => {
+      const b = leave[i] ?? a
+      try {
+        a.cancel()
+      } catch {
+        // already finished
+      }
+      b.currentTime = 0
+      b.play()
+    })
+  }
+  // Trigger dispatch.
+  const events = TRIGGER_EVENTS[trigger]
+  if (!events) {
+    // Unknown trigger — no-op. Future milestones will support
+    // signal-driven triggers (loading, error, etc.).
+    return () => {
+      for (const a of enter) a.cancel()
+    }
+  }
+  const [enterEvent, leaveEvent, cancelEvent] = events
+  const onEnter = (ev: Event) => {
+    if (trigger === 'focus-visible' && !isFocusVisible(ev as FocusEvent)) {
+      return
+    }
+    playForward()
+  }
+  const onLeave = () => {
+    playReverse()
+  }
+  el.addEventListener(enterEvent, onEnter as EventListener)
+  el.addEventListener(leaveEvent, onLeave as EventListener)
+  if (cancelEvent) {
+    el.addEventListener(cancelEvent, onLeave as EventListener)
+  }
+  // Cleanup disposer.
+  return () => {
+    el.removeEventListener(enterEvent, onEnter as EventListener)
+    el.removeEventListener(leaveEvent, onLeave as EventListener)
+    if (cancelEvent) {
+      el.removeEventListener(cancelEvent, onLeave as EventListener)
+    }
+    for (const a of enter) {
+      try {
+        a.cancel()
+      } catch {
+        // already finished
+      }
+    }
+  }
+}
+

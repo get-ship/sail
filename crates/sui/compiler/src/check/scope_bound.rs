@@ -402,6 +402,9 @@ fn visit_attr(attr: &AttrInstr, v: &mut Visitor) {
                 check_expr(e, v, &[]);
             }
         }
+        // `motion:` has no expression body in milestone 1 (statically
+        // parsed object literal) — nothing to check here.
+        AttrInstr::Motion { .. } => {}
     }
 }
 

@@ -103,6 +103,26 @@ pub enum AttrInstr {
         dir: TransitionDir,
         span: Span,
     },
+    /// `motion:trigger={...}` — declarative state-triggered animation.
+    /// The config is a static object literal mapping CSS-style property
+    /// names to animation preset names. Compiles to a pre-baked
+    /// `element.animate(...)` call wired to the trigger's DOM events.
+    Motion {
+        trigger: String,
+        props: Vec<MotionProp>,
+        span: Span,
+    },
+ }
+
+/// One animated property within a `motion:` config. The preset name
+/// resolves against `crates/sui/compiler/animation-presets.json` at
+/// emit time. Multiple `MotionProp`s in the same `motion:` directive
+/// share a trigger and fire from the same DOM event pair, but each
+/// becomes its own `element.animate(...)` call.
+#[derive(Debug, Clone, PartialEq)]
+pub struct MotionProp {
+    pub property: String,
+    pub preset: String,
 }
 
 /// Which phase(s) a `transition:` directive applies to. `transition:`

@@ -7,7 +7,10 @@
 use super::super::util::camel_of;
 use super::super::writer::{js_string, Writer};
 use super::TemplateEmitter;
+use crate::animation;
+use crate::diagnostics::CompileError;
 use crate::ir::*;
+use crate::lower;
 
 /// SVG attribute names that require camelCase preservation. The HTML
 /// parser lowercases all attribute names (mirroring DOMParser), but
@@ -397,6 +400,131 @@ impl TemplateEmitter {
                     d = dir.as_str(),
                 ));
             }
+             AttrInstr::Motion { trigger, props, span } => {
+                // AOT-baked `motion:` directive. Each `MotionProp` produces
+                // one pre-baked `el.animate(...)` call; all are wired to
+                // the same trigger via `__sui_motion_attach`. The runtime
+                // helper is auto-imported by the `motion_builtins` walk in
+                // `emit/js/imports.rs` and `emit/synthetic/render.rs`.
+                let db = lower::presets::load()
+                    .expect("animation-presets.json is bundled at compile time");
+                let mut anim_vars: Vec<String> = Vec::with_capacity(props.len());
+                for prop in props {
+                    // The target value is the property's "active" end
+                    // state — for milestone 1 every preset animates
+                    // the property to its natural identity (scale 1,
+                    // opacity 1, translate 0). The sm/md/lg alias
+                    // system is a future-milestone concern; today
+                    // `motion:scale:sm` and `motion:scale:md` are
+                    // equivalent. Presets that DO move to a different
+                    // value (press → 0.96, release → 1.0) encode that
+                    // in their `from`/`to` fields.
+                    let target = match prop.property.as_str() {
+                        "scale" => 1.0,
+                        "opacity" => 1.0,
+                        "translate-y" | "translate-x" => 0.0,
+                        "rotate" => 0.0,
+                        _ => unreachable!("MOTION_PROPERTIES enforced by parser"),
+                    };
+                    let spec = db
+                        .preset(&prop.preset)
+                        .expect("preset already validated in lower/bindings");
+                    let baked = match spec.kind {
+                        lower::presets::PresetKind::Spring => animation::bake(
+                            &animation::AnimationConfig::Spring(animation::SpringConfig {
+                                stiffness: spec.stiffness.unwrap_or(170.0),
+                                damping: spec.damping.unwrap_or(26.0),
+                                mass: spec.mass.unwrap_or(1.0),
+                                from: Some(0.0),
+                                to: Some(target),
+                                rest_speed: spec.rest_speed.unwrap_or(0.01),
+                                ..Default::default()
+                            }),
+                        ),
+                        lower::presets::PresetKind::Tween => {
+                            let token = spec
+                                .duration_token
+                                .as_deref()
+                                .unwrap_or("duration-medium");
+                            animation::bake(&animation::AnimationConfig::Tween(
+                                animation::keyframes::TweenConfig {
+                                    from: spec.from.unwrap_or(0.0),
+                                    to: spec.to.unwrap_or(target),
+                                    duration_ms: duration_token_to_ms(token),
+                                    easing: spec.easing.clone().unwrap_or_else(|| "linear".into()),
+                                    ..Default::default()
+                                },
+                            ))
+                        }
+                    }
+                    .unwrap_or_else(|e| {
+                        panic!("motion: bake failed for {}/{}: {e:?}", prop.property, prop.preset)
+                    });
+                    let (css_key, value_at_zero, value_at_one) = match prop.property.as_str() {
+                        "scale" => (
+                            "transform",
+                            "scale(1)".to_string(),
+                            format!("scale({target})"),
+                        ),
+                        "opacity" => ("opacity", "1".to_string(), format!("{target}")),
+                        "translate-y" => (
+                            "transform",
+                            "translateY(0px)".to_string(),
+                            format!("translateY({target}px)"),
+                        ),
+                        "translate-x" => (
+                            "transform",
+                            "translateX(0px)".to_string(),
+                            format!("translateX({target}px)"),
+                        ),
+                        "rotate" => (
+                            "transform",
+                            "rotate(0deg)".to_string(),
+                            format!("rotate({target}deg)"),
+                        ),
+                        _ => unreachable!("MOTION_PROPERTIES enforced by parser"),
+                    };
+                    let kf_var = self.fresh("kf");
+                    let anim_var = self.fresh("anim");
+                    if baked.keyframes.len() == 2 {
+                        w.line(&format!(
+                            "const {kf_var} = [ {{ {k}: {v0} }}, {{ {k}: {v1} }} ];",
+                            k = js_string(css_key),
+                            v0 = js_string(&value_at_zero),
+                            v1 = js_string(&value_at_one),
+                        ));
+                    } else {
+                        let kf_items: Vec<String> = baked
+                            .keyframes
+                            .iter()
+                            .map(|kf| {
+                                format!(
+                                    "{{ offset: {off}, {k}: {v} }}",
+                                    off = kf.offset,
+                                    k = js_string(css_key),
+                                    v = js_string(&value_at_one)
+                                )
+                            })
+                            .collect();
+                        w.line(&format!(
+                            "const {kf_var} = [ {} ];",
+                            kf_items.join(", ")
+                        ));
+                    }
+                    w.line(&format!(
+                        "const {anim_var} = {el_var}.animate({kf_var}, {{ duration: {dur}, easing: {easing}, fill: {fill} }});",
+                        dur = baked.timing.duration_ms,
+                        easing = js_string(&baked.timing.easing),
+                        fill = js_string(&baked.timing.fill),
+                    ));
+                    anim_vars.push(anim_var);
+                 }
+                w.line(&format!(
+                    "__sui_motion_attach({el_var}, {{ trigger: {trigger}, enter: [{anims}], leave: [{anims}] }});",
+                    trigger = js_string(trigger),
+                    anims = anim_vars.join(", "),
+                ));
+            }
         }
     }
 
@@ -573,4 +701,21 @@ fn collect_kbd_shortcuts(children: &[Instr]) -> String {
         }
     }
     format!("[{}]", items.join(", "))
+}
+
+/// Resolve a duration token name (e.g. `duration-medium`) to its
+/// numeric ms value. Mirrors the values in
+/// `packages/sui/tokens/src/tokens.css` lines 140-145. The compiler
+/// is the source of truth for these values because it owns the bake;
+/// the runtime reads the resolved number from the emitted JS and
+/// does not look up tokens.
+fn duration_token_to_ms(token: &str) -> f64 {
+    match token.strip_prefix("duration-").unwrap_or(token) {
+        "instant" => 60.0,
+        "fast" => 120.0,
+        "medium" => 180.0,
+        "slow" => 280.0,
+        "deliberate" => 420.0,
+        _ => 180.0,
+    }
 }

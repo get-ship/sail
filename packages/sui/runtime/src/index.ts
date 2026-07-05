@@ -274,8 +274,13 @@ export {
 } from './error-boundary'
 export type { BoundaryHandle, BoundarySource } from './error-boundary'
 
-export { suiTonesSheet, suiBaseSheet, adoptSuiSheets } from './styles/index'
-
+// `motion:` directive runtime — AOT-baked `el.animate(...)` + a tiny
+// attach helper that wires the animations to a DOM event per
+// trigger. Apps that don't use `motion:` directives don't import
+// `__sui_motion_attach` from the emitted code, so this export is
+// tree-shaken when unused.
+export { __sui_motion_attach } from './motion'
+export type { MotionAttachConfig, BakedAnimation } from './motion'
 // F1 mount unification — hosts call mount(target, payload, opts) to put
 // a view on screen. See .artifacts/design-f1-mount-unification.md.
 export { mount } from './mount'
