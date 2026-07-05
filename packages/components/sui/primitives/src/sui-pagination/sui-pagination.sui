@@ -31,6 +31,12 @@
 <prop name="size-label" type="string" default="Rows per page" />
 
 <style>
+  /* Residual: `font-family: var(--font-body)` (no `font-family` prop in sx),
+     `flex: 1 1 auto` on .spacer (no `flex` prop), the
+     `sui-button[aria-current='page']` child-component selector, and text
+     properties the sx vocabulary doesn't expose (`white-space`, `user-select`,
+     `font-variant-numeric`). The forced-colors `CanvasText` system color is
+     also residual — not a token. */
   :host {
     display: block;
     font-family: var(--font-body);
@@ -38,61 +44,22 @@
     color: var(--foreground);
   }
   :host([hidden]) { display: none; }
-
-
-
-  .range {
-    color: var(--muted-foreground);
-    white-space: nowrap;
-    user-select: none;
-    font-variant-numeric: tabular-nums;
-  }
-
   .spacer { flex: 1 1 auto; }
-
-  .pages {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-  }
-
-  .edges {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-  }
-
-  .size {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    color: var(--muted-foreground);
+  .range {
     white-space: nowrap;
-  }
-
-  /* The active page button reads as "current" — a soft tonal fill via the
-     sui-button soft variant + primary tone, set from the controller. */
-  sui-button[aria-current='page'] { pointer-events: none; }
-
-  /* Ellipsis separator emitted by the controller between discontinuous page ranges */
-  .ellipsis {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: var(--control-h-2xs);
-    height: var(--control-h-md);
-    color: var(--muted-foreground);
-    font-variant-numeric: tabular-nums;
     user-select: none;
+    -webkit-user-select: none;
+    font-variant-numeric: tabular-nums;
   }
-
+  .size { white-space: nowrap; }
+  sui-button[aria-current='page'] { pointer-events: none; }
   @media (forced-colors: active) {
     .range { color: CanvasText; }
   }
 </style>
 
 <row class="nav" part="nav" gap="3" align="center" aria-label={label()} bind:this={navEl}>
-  <div class="edges">
+  <row class="edges" part="edges" gap="1" align="center">
     <sui-button
       part="first"
       variant="ghost"
@@ -113,9 +80,9 @@
     >
       <sui-icon name="chevron-left" size="sm" aria-hidden="true"></sui-icon>
     </sui-button>
-  </div>
+  </row>
 
-  <div class="pages" part="pages">
+  <row class="pages" part="pages" gap="1" align="center">
     {#for p of pageNumbers() key={p.page}}
       <sui-button
         part="page"
@@ -127,9 +94,9 @@
         aria-label={p.label}
       >{p.page}</sui-button>
     {/for}
-  </div>
+  </row>
 
-  <div class="edges">
+  <row class="edges" part="edges" gap="1" align="center">
     <sui-button
       part="next"
       variant="ghost"
@@ -150,20 +117,22 @@
     >
       <sui-icon name="chevrons-right" size="sm" aria-hidden="true"></sui-icon>
     </sui-button>
-  </div>
+  </row>
 
-  <span class="spacer"></span>
+  <span class="spacer" part="spacer"></span>
 
-  <span class="range" part="range" role="status" aria-live="polite">{rangeLabel()}</span>
+  <span class="range" part="range" role="status" aria-live="polite"
+    sx="fg:muted-foreground">{rangeLabel()}</span>
 
   {#if sizeOptions().length > 0}
-    <label class="size" part="size">
+    <row class="size" part="size" gap="2" align="center"
+      sx="fg:muted-foreground">
       <span>{sizeLabel()}</span>
       <sui-select size="sm" label={sizeLabel()} prop:value={pageSizeStr()} bind:this={sizeSelectEl}>
         {#for opt of sizeOptions() key={opt}}
           <option value={opt}>{opt}</option>
         {/for}
       </sui-select>
-    </label>
+    </row>
   {/if}
 </row>
