@@ -27,6 +27,18 @@
 <prop name="expanded" type="bool" default="false" reflect />
 <prop name="depth" type="number" default="1" reflect />
 
+<variants>
+  [hidden]: display:none
+</variants>
+
+<!-- Residual: everything — the JSON tree markup is controller-generated
+     via {@ html}, so every selector is a descendant pseudo (.node,
+     .branch, details > summary, .leaf, .caret, .punc, .key, .s, .n,
+     .b, .null, .meta, .error). Variants only match :host's own attrs.
+     The summary/caret/leaf visuals, the syntax-color classes (.s/.n/.b/
+     .null), the .meta chip, the multi-property transition (caret
+     transform), and the ::-webkit-details-marker reset are all
+     controller-output-target styling with no sx/variants construct. -->
 <style>
   :host {
     display: block;
@@ -35,8 +47,6 @@
     line-height: var(--leading-normal-plus);
     color: var(--foreground);
   }
-  :host([hidden]) { display: none; }
-
   .node { display: block; border-radius: var(--radius-sm); }
   .branch {
     margin-inline-start: var(--space-2);
