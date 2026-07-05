@@ -1,0 +1,200 @@
+<!--
+  <sui-language-showcase> — the "Language" surface at the top of /components.
+
+  Five panels: <row>/<column>/<grid> · sx · <theme> · <variants> · motion.
+  Each panel pairs a live rendered demo (authored inline below) with its
+  source — the source strings live in the controller's PANELS array.
+
+  Layout is the library dogfooding itself:
+    <column>  the vertical rhythm of panels
+    <row>     the two-column split inside each panel (demo | source)
+    <sui-card>the surface that owns each panel's chrome
+
+  No raw <div>/<span>/<style> — every primitive here is itself a sui-*
+  primitive or a compiler-built-in layout keyword.
+-->
+<style>
+  :host {
+    display: block;
+    max-width: 74rem;
+    margin: 0 auto;
+    padding: var(--space-8) var(--space-6) 0;
+  }
+
+  /* ── Section header ────────────────────────────────────────────────── */
+  .section-head { text-align: center; }
+  .section-eyebrow {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+    color: var(--primary);
+    margin-bottom: var(--space-2);
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+    font-weight: 800;
+    letter-spacing: var(--tracking-tight);
+    line-height: 1.1;
+    color: var(--foreground);
+    margin: 0 0 var(--space-3);
+  }
+  .section-lead {
+    color: var(--muted-foreground);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+    max-width: 56ch;
+    margin: 0 auto var(--space-4);
+  }
+
+  /* ── Panel: two-column card (demo | source) ────────────────────────── */
+  .panel {
+    padding: 0;
+    overflow: hidden;
+  }
+  .panel-meta {
+    padding: var(--space-5) var(--space-5) var(--space-3);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .panel-eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+    color: var(--muted-foreground);
+    margin-bottom: var(--space-1);
+  }
+  .panel-title {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--foreground);
+    margin: 0 0 var(--space-1);
+  }
+  .panel-lead {
+    color: var(--muted-foreground);
+    font-size: var(--text-sm);
+    margin: 0;
+    line-height: var(--leading-normal);
+  }
+  .panel-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0;
+  }
+  .panel-demo {
+    padding: var(--space-5);
+    background: color-mix(in oklch, var(--primary) 4%, transparent);
+    border-right: 1px solid var(--border-subtle);
+    min-height: 16rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .panel-source {
+    background: var(--surface-1);
+  }
+  .panel-source sui-codeblock { display: block; }
+
+  /* Stack on narrow viewports — the demo column takes full width under the
+     source column rather than the other way around (the rendered result is
+     the headline; source is the supporting evidence). */
+  @media (max-width: 720px) {
+    .panel-split { grid-template-columns: minmax(0, 1fr); }
+    .panel-demo { border-right: 0; border-bottom: 1px solid var(--border-subtle); }
+  }
+</style>
+
+<column gap="6" part="root">
+  <div class="section-head" part="head">
+    <span class="section-eyebrow">— Language</span>
+    <h2 class="section-title">The new surface</h2>
+    <p class="section-lead">
+      Five compiler features that replaced the deleted components. The
+      primitives below show what shipped; this page shows how the language
+      itself changed.
+    </p>
+  </div>
+
+  {#for p of panels() key={p.id}}
+    <sui-card class="panel" part={p.partName} attr:data-test={p.testId} padding="none">
+      <div class="panel-meta" part="panel-meta">
+        <h3 class="panel-title">{p.title}</h3>
+        <p class="panel-lead">{p.lead}</p>
+      </div>
+
+      <div class="panel-split" part="panel-split">
+        <!-- Live rendered demo. Each branch is keyed by panel id so reordering
+             authoring patterns doesn't trigger a re-render. -->
+        <div class="panel-demo" part="panel-demo">
+          {#if p.id === 'layout'}
+            <column gap="4" sx="p:5" data-test="lang-demo-layout">
+              <row gap="3" justify="between" align="center">
+                <h3>Released in 0.3</h3>
+                <sui-badge tone="success" variant="soft">stable</sui-badge>
+              </row>
+              <p>Three CSS keywords, zero token literals.</p>
+              <sui-grid min="md" gap="3">
+                <sui-card tone="primary"><strong>One</strong></sui-card>
+                <sui-card tone="success"><strong>Two</strong></sui-card>
+                <sui-card tone="info"><strong>Three</strong></sui-card>
+              </sui-grid>
+            </column>
+          {:else if p.id === 'sx'}
+            <column gap="2" data-test="lang-demo-sx">
+              <div sx="p:5 bg:surface-2 radius:lg">
+                <strong sx="fg:foreground">Token-only inline styling</strong>
+              </div>
+              <span sx="fg:muted-foreground text:sm">
+                Never a hex, never a px — always a token.
+              </span>
+              <div sx="p:3 bg:muted radius:sm text:xs fg:muted-foreground motion-reduce:opacity:50">
+                motion-reduce: trims transitions under the user preference.
+              </div>
+            </column>
+          {:else if p.id === 'theme'}
+            <column gap="3" data-test="lang-demo-theme">
+              <sui-card tone="success" variant="outline">
+                <strong slot="header">Tone=success fills the theme channels</strong>
+                <code>var(--tone)</code> in the styled region.
+              </sui-card>
+              <sui-card tone="warning">
+                <strong slot="header">Tone=warning</strong>
+                Same <code>var(--tone)</code>; the theme filled it differently.
+              </sui-card>
+              <sui-card tone="destructive">
+                <strong slot="header">Tone=destructive</strong>
+                The channel contract: one prop, many fills.
+              </sui-card>
+            </column>
+          {:else if p.id === 'variants'}
+            <row gap="3" data-test="lang-demo-variants">
+              <sui-badge tone="success" variant="solid">Passing</sui-badge>
+              <sui-badge tone="warning" variant="soft">Pending</sui-badge>
+              <sui-badge tone="destructive" variant="soft">Failing</sui-badge>
+            </row>
+          {:else if p.id === 'motion'}
+            <column gap="3" data-test="lang-demo-motion">
+              <sui-button
+                tone="primary"
+                motion:hover={{ scale: 'spring:snappy' }}
+                motion:press={{ scale: 'spring:bouncy' }}
+              >Hover me</sui-button>
+              <div sx="p:3 bg:surface-2 radius:md text:sm fg:muted-foreground motion-reduce:opacity:50">
+                The <code>motion-reduce:</code> sx prefix pauses all of this
+                when the OS asks to.
+              </div>
+            </column>
+          {/if}
+        </div>
+
+        <!-- Source — pre-formatted in the controller's PANELS array -->
+        <div class="panel-source" part="panel-source">
+          <sui-codeblock lang="sui" code={p.source}></sui-codeblock>
+        </div>
+      </div>
+    </sui-card>
+  {/for}
+</column>

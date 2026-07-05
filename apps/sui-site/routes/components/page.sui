@@ -1,6 +1,17 @@
 <!--
-  /components — the single component-library page. Renders the build-time
-  component catalog grouped by pack via <sui-component-catalog>; each cell
-  is a live preview + props/slots/events.
+  /components — the single component-library page.
+
+  Two sections, top-to-bottom:
+    1. <sui-language-showcase> — the "Language" surface. Five panels that
+       evidence the compiler features that shipped in 0.3 (the deletion of
+       sui-stack / sui-cluster, and the introduction of the layout keywords,
+       sx, <theme>, <variants>, and motion).
+    2. <sui-component-catalog> — the curated public primitive gallery,
+       grouped by category (Forms & Inputs / Layout / Overlays / …) with a
+       search box and a per-cell live preview.
+
+  The page consumes the same `/components/[tag]` detail view for every card;
+  the catalog is the gallery index, the showcase is the language narrative.
 -->
+<sui-language-showcase></sui-language-showcase>
 <sui-component-catalog></sui-component-catalog>
