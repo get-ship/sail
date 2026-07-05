@@ -37,7 +37,6 @@
     "lucide-static": "^1.22.0",
     "playwright": "^1.59.3",
     "typescript": "~5.8.3",
-    "vitest": "^4.1.5",
-    "vitest-evals": "^0.14.0"
+    "vitest": "^4.1.5"
   }
 }

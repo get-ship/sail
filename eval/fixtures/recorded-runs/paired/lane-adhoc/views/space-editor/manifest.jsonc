@@ -1,6 +1,0 @@
-{
-  // hand-rolled lane forgot `auth` — grade.ts's manifest check would flag it
-  "name": "space-editor",
-  "path": "/space-editor",
-  "title": "Space Chrome editor"
-}
