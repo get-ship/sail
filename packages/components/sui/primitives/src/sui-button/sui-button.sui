@@ -8,16 +8,9 @@
   <prop name="pressed" values="true|false|mixed" default="false" reflect />
   <prop name="expanded" type="string" default="" reflect />
 
-  <theme prop="tone" channels="tone, tone-fg, tone-contrast, tone-bg, tone-border, tone-ring">
-    default:     foreground, foreground, background, hover-bg, border, ring
-    primary:     primary,     primary,     background, tone-primary-bg,     tone-primary-border,     tone-primary-ring
-    info:        info,        info,        background, tone-info-bg,        tone-info-border,        tone-info-ring
-    success:     success,     tone-success-fg, background, tone-success-bg, tone-success-border,     tone-success-ring
-    warning:     warning,     tone-warning-fg, background, tone-warning-bg, tone-warning-border,     tone-warning-ring
-    destructive: destructive, destructive, background, tone-destructive-bg, tone-destructive-border, tone-destructive-ring
-    accent:      accent,      accent,      background, tone-accent-bg,      tone-accent-border,      tone-accent-ring
-    muted:       muted-foreground, muted-foreground, background, tone-muted-bg, tone-muted-border, tone-muted-ring
-  </theme>
+  <!-- tone channels (tone, tone-fg, tone-contrast, tone-bg, tone-border,
+       tone-ring) are framework-provided: declaring the `tone` prop is the
+       opt-in. See suiTonesSheet. No per-component <theme prop="tone"> needed. -->
 
   <theme prop="size" channels="btn-h, btn-px, btn-fs, btn-fw, btn-gap">
     xs: control-h-2xs, space-2,  text-xs,  font-weight-medium, space-1
