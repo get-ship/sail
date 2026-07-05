@@ -518,6 +518,35 @@ fn parse_variants_object(body: &str) -> Vec<(String, String)> {
     pairs
 }
 
+/// Extract an inline `<controller>` block for the single-file-component model.
+/// Returns the template with the block removed + the block's raw TS body (the
+/// one locked-down `controller({…})` function). `None` if there's no block.
+///
+/// The SFC compile model (as Vue extracts its `<script>`): the compiler writes
+/// this body to the generated `<stem>.controller.ts` module that the emit
+/// already imports and the analysis already reads — so no emit surgery, and the
+/// author writes ONE file. The body is type-checked by the tsgo bridge and the
+/// existing `controller_*` lockdown lints, exactly as a paired file is today.
+pub fn extract_controller_block(source: &str) -> (String, Option<String>) {
+    let Some(start) = source.find("<controller") else {
+        return (source.to_string(), None);
+    };
+    let Some(open_rel) = source[start..].find('>') else {
+        return (source.to_string(), None);
+    };
+    let body_start = start + open_rel + 1;
+    let Some(rel) = source[body_start..].find("</controller>") else {
+        return (source.to_string(), None);
+    };
+    let body_end = body_start + rel;
+    let body = source[body_start..body_end].trim().to_string();
+    let block_end = body_end + "</controller>".len();
+    let mut stripped = String::with_capacity(source.len());
+    stripped.push_str(&source[..start]);
+    stripped.push_str(&source[block_end..]);
+    (stripped, Some(body))
+}
+
 /// Lower every `<theme prop="…" channels="…">` block to `:host` custom-property
 /// declarations — the *channel contract* (StyleX/vanilla-extract theme model). A
 /// row `value: fill1, fill2, …` fills the declared channels for that prop value;
