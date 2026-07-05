@@ -9,7 +9,7 @@
   htmlFor / attribute: 'for'   for (string, '')         ✓ forwarded to inner
                                                           label.htmlFor via
                                                           controller
-  size ('sm'|'md', 'sm')       size (sm|md, reflect)    ✓
+  size ('sm'|'md', 'sm')       size (sm|md|lg, reflect) ✓
   required (bool, false)       required (bool, reflect) ✓ shows * marker
   ─────────────────────────────────────────────────────────────────────────────
   (no events)                  (no events)              ✓
@@ -24,34 +24,24 @@
 <prop name="size" values="sm|md|lg" default="md" reflect />
 <prop name="required" type="bool" default="false" reflect />
 
+<theme prop="size" channels="label-fs">
+  default: text-base
+  sm:      text-sm
+  md:      text-base
+  lg:      text-sm
+</theme>
+
 <style>
-  :host {
-    display: inline-block;
-  }
-  :host([hidden]) { display: none; }
-
-  label {
-    display: inline;
-    font-family: var(--font-body);
-    font-weight: var(--font-weight-semibold);
-    letter-spacing: var(--tracking-normal);
-    color: var(--foreground);
-    cursor: pointer;
-  }
-
-  :host(:not([size])) label,
-  :host([size='md']) label { font-size: var(--text-base); }
-  :host([size='sm']) label,
-  :host([size='lg']) label { font-size: var(--text-sm); }
-
-  .req {
-    color: var(--destructive);
-    margin-left: var(--space-1);
-    font-weight: var(--font-weight-bold);
-  }
+  /* Residual: bare `:host` rule with no prop selector (host is
+     `inline-block` regardless of attribute state) and the inner
+     <label>'s `font-family` aren't reachable through the sx
+     theme/variants constructs. */
+  :host { display: inline-block; }
+  label { font-family: var(--font-body); }
 </style>
 
-<label part="label" bind:this={labelEl}>
+<label part="label" bind:this={labelEl} for={for()}
+  sx="display:inline weight:semibold tracking:normal fg:foreground cursor:pointer text:label-fs">
   <slot></slot>
-  {#if required()}<span class="req" aria-hidden="true">*</span>{/if}
+  {#if required()}<span class="req" aria-hidden="true" sx="fg:destructive ml:1 weight:bold">*</span>{/if}
 </label>
