@@ -28,15 +28,39 @@
 <prop name="disabled" type="bool" default="false" reflect />
 <prop name="open" type="bool" default="false" reflect />
 
+<variants>
+  [hidden]:   display:none
+  [open]:     bg:muted
+</variants>
+<variants part="trigger">
+  hover:     bg:hover-bg
+  [disabled]: cursor:not-allowed opacity:50
+</variants>
+<variants part="chevron">
+  [open]:    fg:foreground
+</variants>
+<variants part="content">
+  [open]:    grid-template-rows:1fr
+</variants>
+
+<!-- Residual: .trigger visual (display:flex + align-items + width +
+     padding + background + border:0 + text-align + font:inherit +
+     font-size + font-weight + color + cursor + gap); .chevron
+     geometry (flex-shrink + width + height + color + transform on
+     open); .content-wrap grid-template-rows 0fr (no sx prop for
+     grid-template-rows; the open variant flips to 1fr); the
+     transform/grid-template-rows transitions (motion); the .trigger
+     focus outline (vs the 2-layer box-shadow ring); forced-colors
+     CanvasText outline (system color); the prefers-reduced-motion
+     reset; .trigger-label flex:1; .content-inner overflow:hidden;
+     .content-body padding. -->
 <style>
   :host {
     display: block;
     font-family: var(--font-body);
     color: var(--foreground);
   }
-  :host([hidden]) { display: none; }
-
-  .trigger {
+  [part~='trigger'] {
     display: flex;
     align-items: center;
     width: 100%;
@@ -52,41 +76,29 @@
     gap: var(--space-2);
     transition: background var(--duration-fast) var(--ease-out);
   }
-  .trigger:hover { background: var(--hover-bg); }
-  .trigger:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  /* Open row's header tints with --muted so the active section reads at a glance. */
-  :host([open]) .trigger { background: var(--muted); }
-  .trigger:focus-visible {
+  [part~='trigger']:focus-visible {
     outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
   }
   @media (forced-colors: active) {
-    .trigger:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
+    [part~='trigger']:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
   }
-
   .trigger-label { flex: 1; }
-
-  .chevron {
+  [part~='chevron'] {
     flex-shrink: 0;
     width: var(--icon-size-md);
     height: var(--icon-size-md);
     color: var(--muted-foreground);
     transition: transform var(--duration-medium) var(--ease-out);
   }
-  :host([open]) .chevron { transform: rotate(180deg); color: var(--foreground); }
-  @media (prefers-reduced-motion: reduce) { .chevron { transition: none; } }
-
-  .content-wrap {
+  :host([open]) [part~='chevron'] { transform: rotate(180deg); }
+  @media (prefers-reduced-motion: reduce) { [part~='chevron'] { transition: none; } }
+  [part~='content'] {
     display: grid;
     grid-template-rows: 0fr;
     transition: grid-template-rows var(--duration-medium) var(--ease-out);
   }
-  :host([open]) .content-wrap { grid-template-rows: 1fr; }
-  @media (prefers-reduced-motion: reduce) { .content-wrap { transition: none; } }
-
+  @media (prefers-reduced-motion: reduce) { [part~='content'] { transition: none; } }
   .content-inner { overflow: hidden; }
   .content-body { padding: var(--space-3) 0; }
 </style>
