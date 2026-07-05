@@ -1,11 +1,16 @@
 <prop name="value" type="string" default="" reflect />
 
+<!-- Host baseline: surface-only sx props (display + text + line-height
+     + foreground). font-family has no sx token, so it stays in the
+     residual <style> below. -->
+<host sx="display:block text:base leading:normal fg:foreground"></host>
+
 <style>
   /* Local markers so the css-token lint recognizes the tokens
    * referenced from this residual block. */
-  --font-body: ; --font-mono: ; --heading-font: ; --heading-weight: ; --heading-tracking: ; --text-base: ; --text-sm: ; --text-md: ; --text-lg: ; --text-xl: ; --text-2xl: ; --leading-tight: ; --leading-normal: ; --leading-normal-plus: ; --tracking-tight: ; --foreground: ; --muted-foreground: ; --primary: ; --selected-border: ; --surface-1: ; --surface-2: ; --muted: ; --border: ; --border-subtle: ; --tone-primary-bg: ; --ring-offset: ; --radius-sm: ; --radius-md: ; --space-1: ; --space-2: ; --space-3: ; --space-4: ; --space-5: ; --space-6: ;
-  /* Residual: `:host` (host element, no sx), and the entire
-   * typography-of-prose surface — the h1-h6 margins, the a's
+  --font-body: ; --font-mono: ; --heading-font: ; --heading-weight: ; --heading-tracking: ; --text-sm: ; --text-md: ; --text-lg: ; --text-xl: ; --text-2xl: ; --leading-tight: ; --leading-normal-plus: ; --tracking-tight: ; --muted-foreground: ; --primary: ; --selected-border: ; --surface-1: ; --surface-2: ; --muted: ; --border: ; --border-subtle: ; --tone-primary-bg: ; --ring-offset: ; --radius-sm: ; --radius-md: ; --space-1: ; --space-2: ; --space-3: ; --space-4: ; --space-5: ; --space-6: ;
+  /* Residual: the host's `font-family` (no font-family in sx); and the
+   * entire typography-of-prose surface — the h1-h6 margins, the a's
    * text-decoration-color + hover, the code/pre/blockquote/table
    * styling, the li::marker color, the strong weight, the th/td
    * border + padding + tabular-nums, the thead th background, the
@@ -13,15 +18,11 @@
    * simple surface tokens on a single element — they're an entire
    * prose stylesheet for child elements rendered into .md-root
    * (the parser writes HTML into .md-root, not via SUI elements),
-   * so sx can't apply. */
+   * so sx can't apply. The host's [hidden] display:none is provided
+   * by the runtime's BASE_CSS and would be deduped at emit. */
   :host {
-    display: block;
     font-family: var(--font-body);
-    font-size: var(--text-base);
-    line-height: var(--leading-normal);
-    color: var(--foreground);
   }
-  :host([hidden]) { display: none; }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--heading-font);
