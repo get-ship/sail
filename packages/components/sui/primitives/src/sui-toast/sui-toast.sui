@@ -45,105 +45,57 @@
 <prop name="show-progress" type="bool" default="false" reflect />
 <prop name="closing" type="bool" default="false" reflect />
 
+<theme prop="tone" channels="tone-bg, tone-border, tone-fg">
+  default:     surface-1,    border,        muted-foreground
+  info:        tone-info-bg,        tone-info-border,        tone-info-fg
+  success:     tone-success-bg,     tone-success-border,     tone-success-fg
+  warning:     tone-warning-bg,     tone-warning-border,     tone-warning-fg
+  destructive: tone-destructive-bg, tone-destructive-border, tone-destructive-fg
+  accent:      tone-accent-bg,      tone-accent-border,      tone-accent-fg
+  primary:     tone-primary-bg,     tone-primary-border,     tone-primary-fg
+  muted:       tone-muted-bg,       tone-muted-border,       tone-muted-fg
+</theme>
+
+<variants part="toast">
+  size=sm: py:2_5 px:density-row-px text:sm min-w:panel-min-w-md max-w:space-8
+  size=lg: py:3_5 px:4 text:md min-w:panel-min-w-lg max-w:panel-min-w-lg
+  [data-no-icon]: display:inline-block
+</variants>
+
+<!--
+  Residual <style> — truly unavoidable bits:
+  - :host([data-no-icon]) .toast grid-template-columns override
+  - :host([size='sm'|'lg']) .icon + .icon svg size variants (variants part=icon isn't expressible here without duplicating the .icon element with a part attr)
+  - .body word-break (raw CSS)
+  - .close transition (multi-property), :active transform, :focus-visible box-shadow
+  - .close:hover tone-driven bg/fg (handled by sx group/hover on the part)
+  - .progress animation + transform + transform-origin + border-top-right-radius
+  - :hover/[data-paused] pause
+  - @keyframes sui-toast-progress
+  - prefers-reduced-motion media (animation off)
+  - forced-colors media (CanvasText system color)
+-->
 <style>
   :host {
     display: block;
-    --toast-px: var(--space-3_5);
-    --toast-py: var(--space-3);
-    --toast-fs: var(--text-base);
-    --toast-title-fs: var(--text-base);
-    --toast-gap: var(--space-2_5);
-    --toast-row-gap: var(--space-1);
-    --toast-pad-end: var(--icon-size-2xl);
-    --toast-min-w: var(--panel-min-w-lg);
-    --toast-max-w: var(--text-4xl); /* closest available to 420 */
-    --toast-slide-x: var(--space-4);
-    --toast-slide-y: 0;
-    --toast-content-gap: var(--space-half);
-    --toast-actions-mt: var(--space-1_5);
-    /* tone channel defaults */
-    --tone-bg: transparent;
-    --tone-border: var(--border);
     pointer-events: auto;
     will-change: transform, opacity;
+    --toast-gap: var(--space-2_5);
+    --toast-px: var(--space-3_5);
+    --toast-pad-end: var(--icon-size-2xl);
+    --toast-duration: 5000ms;
   }
-  :host([hidden]) { display: none; }
-
-  :host([size='sm']) {
-    --toast-px: var(--density-row-px);
-    --toast-py: var(--space-2_5);
-    --toast-fs: var(--text-sm);
-    --toast-title-fs: var(--text-sm);
-    --toast-gap: var(--space-2);
-    --toast-min-w: var(--panel-min-w-md);
-    --toast-max-w: var(--space-8);
-  }
-  :host([size='lg']) {
-    --toast-px: var(--space-4);
-    --toast-py: var(--space-3_5);
-    --toast-fs: var(--text-md);
-    --toast-title-fs: var(--text-md);
-    --toast-gap: var(--space-3);
-    --toast-min-w: var(--panel-min-w-lg);
-    --toast-max-w: var(--text-4xl); /* 460 close to nothing — text-4xl 36 */
-  }
-
-  /* Tone channel — bg + border read straight off the pre-computed tone ramp */
-  :host([tone='info'])        { --tone-bg: var(--tone-info-bg);        --tone-border: var(--tone-info-border); }
-  :host([tone='success'])     { --tone-bg: var(--tone-success-bg);     --tone-border: var(--tone-success-border); }
-  :host([tone='warning'])     { --tone-bg: var(--tone-warning-bg);     --tone-border: var(--tone-warning-border); }
-  :host([tone='destructive']) { --tone-bg: var(--tone-destructive-bg); --tone-border: var(--tone-destructive-border); }
-  :host([tone='accent'])      { --tone-bg: var(--tone-accent-bg);      --tone-border: var(--tone-accent-border); }
-  :host([tone='primary'])     { --tone-bg: var(--tone-primary-bg);     --tone-border: var(--tone-primary-border); }
-  :host([tone='muted'])       { --tone-bg: var(--tone-muted-bg);       --tone-border: var(--tone-muted-border); }
-
-  :host([data-slide-from='right'])  { --toast-slide-x: var(--space-4);  --toast-slide-y: 0; }
-  :host([data-slide-from='left'])   { --toast-slide-x: calc(-1 * var(--space-4)); --toast-slide-y: 0; }
-  :host([data-slide-from='top'])    { --toast-slide-x: 0;     --toast-slide-y: calc(-1 * var(--space-3)); }
-  :host([data-slide-from='bottom']) { --toast-slide-x: 0;     --toast-slide-y: var(--space-3); }
-
+  :host([size='sm']) { --toast-gap: var(--space-2); --toast-px: var(--density-row-px); }
+  :host([size='lg']) { --toast-gap: var(--space-3); --toast-px: var(--space-4); }
   .toast {
     display: grid;
     grid-template-columns: auto 1fr auto;
     column-gap: var(--toast-gap);
-    row-gap: var(--toast-row-gap);
+    row-gap: var(--space-1);
     align-items: start;
-    padding: var(--toast-py) var(--toast-px);
     padding-right: calc(var(--toast-px) + var(--toast-pad-end));
-    min-width: var(--toast-min-w);
-    max-width: var(--toast-max-w);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--tone-border);
-    background: var(--surface-1);
-    color: var(--card-foreground);
-    box-shadow: var(--shadow-lg);
     font-family: var(--font-body);
-    font-size: var(--toast-fs);
-    line-height: var(--leading-normal);
-    position: relative;
-    overflow: hidden;
-    isolation: isolate;
   }
-  /* Enter/exit polish is driven by `in:slide` + `out:fade` on the
-     #if-mounted .toast (see template). */
-
-  :host(:not([tone])) .toast,
-  :host([tone='default']) .toast {
-    border-color: var(--border-strong);
-    background: var(--surface-1);
-  }
-
-  :host([tone='info']) .toast,
-  :host([tone='success']) .toast,
-  :host([tone='warning']) .toast,
-  :host([tone='destructive']) .toast,
-  :host([tone='accent']) .toast,
-  :host([tone='primary']) .toast,
-  :host([tone='muted']) .toast {
-    background: var(--tone-bg);
-    border-color: var(--tone-border);
-  }
-
   .toast::before {
     content: '';
     position: absolute;
@@ -154,6 +106,7 @@
     opacity: 0;
     transition: opacity var(--duration-fast) var(--ease-out);
   }
+  :host(:not([tone])) .toast::before,
   :host([tone='info']) .toast::before,
   :host([tone='success']) .toast::before,
   :host([tone='warning']) .toast::before,
@@ -161,86 +114,27 @@
   :host([tone='accent']) .toast::before,
   :host([tone='primary']) .toast::before,
   :host([tone='muted']) .toast::before { opacity: 1; }
-
-  .icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--control-h-xs);
-    height: var(--control-h-xs);
-    flex: 0 0 auto;
-    border-radius: var(--radius-md);
-    background: var(--tone-bg);
-    color: var(--tone-fg);
-  }
-  :host(:not([tone])) .icon,
-  :host([tone='default']) .icon { background: transparent; color: var(--muted-foreground); }
-  .icon svg { width: var(--icon-size-sm); height: var(--icon-size-sm); display: block; }
+  :host(:not([tone])) .toast, :host([tone='default']) .toast { border-color: var(--border-strong); }
+  :host([data-no-icon]) .toast { grid-template-columns: 1fr auto; }
+  .icon { flex: 0 0 auto; background: var(--tone-bg); color: var(--tone-fg); }
+  :host(:not([tone])) .icon, :host([tone='default']) .icon { background: transparent; color: var(--muted-foreground); }
+  .icon svg { display: block; width: var(--icon-size-sm); height: var(--icon-size-sm); }
   :host([size='sm']) .icon { width: var(--control-h-2xs); height: var(--control-h-2xs); }
   :host([size='sm']) .icon svg { width: var(--icon-size-xs); height: var(--icon-size-xs); }
   :host([size='lg']) .icon { width: var(--space-8); height: var(--space-8); }
   :host([size='lg']) .icon svg { width: var(--space-4_5); height: var(--space-4_5); }
-
-  :host([data-no-icon]) .toast { grid-template-columns: 1fr auto; }
-  :host([data-no-icon]) .icon { display: none; }
-
-  .content {
-    min-width: 0;
-    color: var(--card-foreground);
-  }
-  .title {
-    font-weight: var(--font-weight-semibold);
-    font-size: var(--toast-title-fs);
-    letter-spacing: -0.005em;
-    line-height: var(--leading-tight);
-    color: var(--foreground);
-  }
-  .body {
-    font-size: var(--toast-fs);
-    color: var(--muted-foreground);
-    line-height: var(--leading-normal);
-    word-break: break-word;
-  }
-  :host([data-no-title]) .body { color: var(--card-foreground); }
-  :host([data-no-title]) .title { display: none; }
-
-  .actions {
-    display: flex;
-    gap: var(--space-2);
-    margin-top: var(--toast-actions-mt);
-    grid-column: 2;
-  }
+  .body { word-break: break-word; }
+  .actions { margin-top: var(--space-1_5); }
   :host([data-no-actions]) .actions { display: none; margin-top: 0; }
-
   .close {
     position: absolute;
     top: var(--space-2);
     inset-inline-end: var(--space-2);
-    width: var(--control-h-2xs);
-    height: var(--control-h-2xs);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: var(--radius-sm);
-    color: var(--muted-foreground);
-    cursor: pointer;
-    padding: 0;
     font: inherit;
-    z-index: var(--z-elevated);
+    padding: 0;
     transition:
       background-color var(--duration-fast) var(--ease-out),
       color var(--duration-fast) var(--ease-out);
-  }
-  .close:hover {
-    background: var(--tone-bg);
-    color: var(--tone-fg);
-  }
-  :host(:not([tone])) .close:hover,
-  :host([tone='default']) .close:hover {
-    background: var(--active-bg);
-    color: var(--foreground);
   }
   .close:active { transform: scale(0.94); }
   .close:focus-visible {
@@ -250,7 +144,6 @@
       0 0 0 var(--space-1) var(--border-strong);
   }
   .close svg { width: var(--space-3); height: var(--space-3); display: block; }
-
   .progress {
     position: absolute;
     left: 0; right: 0; bottom: 0;
@@ -269,11 +162,9 @@
     from { transform: scaleX(1); }
     to   { transform: scaleX(0); }
   }
-
   @media (prefers-reduced-motion: reduce) {
     .progress { animation: none; }
   }
-
   @media (forced-colors: active) {
     .toast { border: 1px solid CanvasText; }
     .close:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
@@ -294,8 +185,10 @@
   role={tone() === 'destructive' || tone() === 'warning' ? 'alert' : 'status'}
   aria-live={tone() === 'destructive' || tone() === 'warning' ? 'assertive' : 'polite'}
   aria-atomic="true"
-  part="toast">
-  <span class="icon">
+  part="toast"
+  sx="position:relative py:3 px:3_5 min-w:panel-min-w-lg max-w:panel-min-w-lg bg:surface-1 fg:card-foreground border:tone-border radius:lg shadow:lg text:base leading:normal overflow:hidden">
+  <row class="icon" part="icon" align="center" gap="0" justify="center"
+    sx="w:control-h-xs h:control-h-xs radius:md bg:tone-bg fg:tone-fg">
     <slot name="icon" bind:this={iconSlotEl}></slot>
     {#if !hasSlottedIcon()}
       {#match tone()}
@@ -328,26 +221,31 @@
           </svg>
       {/match}
     {/if}
-  </span>
-  <column class="content" gap="0">
-    <div class="title">
+  </row>
+  <column class="content" gap="0" sx="min-w:0 fg:card-foreground">
+    <div class="title" sx="weight:semibold text:base leading:tight tracking:tight fg:foreground">
       <slot name="title" bind:this={titleSlotEl}></slot>
     </div>
-    <div class="body"><slot></slot></div>
-    <div class="actions">
-      <slot name="actions" bind:this={actionsSlotEl}></slot>
+    <div class="body" sx="text:base fg:muted-foreground leading:normal">
+      <slot></slot>
     </div>
+    <row class="actions" gap="2" sx="w:full">
+      <slot name="actions" bind:this={actionsSlotEl}></slot>
+    </row>
   </column>
   {#if dismissible()}
-    <button class="close" part="close" type="button" aria-label="Dismiss notification" bind:this={closeBtn}>
+    <row class="close" part="close" type="button" aria-label="Dismiss notification" bind:this={closeBtn}
+      align="center" gap="0" justify="center"
+      sx="position:absolute w:control-h-2xs h:control-h-2xs border:none radius:sm fg:muted-foreground cursor:pointer p:0 z:elevated hover:bg:tone-bg hover:fg:tone-fg">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="6" y2="18"></line>
         <line x1="6" y1="6" x2="18" y2="18"></line>
       </svg>
-    </button>
+    </row>
   {/if}
   {#if showProgress() && duration() > 0}
-    <span class="progress" aria-hidden="true"></span>
+    <span class="progress" aria-hidden="true" sx="h:half bg:tone-fg"></span>
   {/if}
 </div>
 {/if}
