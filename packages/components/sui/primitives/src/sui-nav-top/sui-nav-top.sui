@@ -1,18 +1,29 @@
 <prop name="sticky" type="bool" default="false" reflect />
 
+<!--
+  Residual <style> — sui-nav-top is largely irreducible. The host is a
+  flex bar that wants display:flex + align-items:center + gap + explicit
+  pixel height + border-bottom + background + font-family + user-select
+  + box-sizing + flex-shrink; only display + bg + fg are reachable
+  from sx via the new host-sx directive — the rest stay. The [sticky]
+  variant adds position:sticky + top + z-index + backdrop-filter, none
+  of which are sx surface props. The .brand / .primary / .actions
+  child zones use raw flex shorthand (flex 1 1 auto, flex-shrink 0,
+  min-width 0, overflow hidden) that has no sx equivalent.
+
+  Lifted to host-sx: display:flex + bg:muted + fg:foreground. The
+  rest stays as :host residual.
+
+  Local token markers are kept so the css-token lint recognizes the
+  tokens referenced from this block.
+-->
+<host sx="bg:muted fg:foreground" />
+
 <style>
-  /* Local markers so the css-token lint recognizes the tokens
-   * referenced from this residual block. */
   --font-body: ; --foreground: ; --muted: ; --border: ; --ship-top-bar-h: ; --space-1: ; --space-2: ; --space-3: ; --text-sm: ; --z-sticky: ;
-  /* Residual: `:host` (host element, no sx) with its display:flex
-   * + align-items + gap layout (it's a real flex container — not a
-   * layout primitive), the height + padding + border-bottom +
-   * background + user-select + box-sizing + flex-shrink, the
-   * [sticky] sticky position + z-index, the [sticky] backdrop
-   * filter (saturate(180%) + blur, no sx prop for backdrop-filter),
-   * and the .brand / .primary / .actions child layouts (all inline
-   * flex containers with the flex/gap/flex-shrink values the
-   * original had). */
+  /* Residual: `:host` flex layout (align-items + gap), height +
+   * padding + border-bottom + user-select + box-sizing + flex-shrink
+   * (none in sx), the [sticky] sticky position + z-index, the [sticky]
   :host {
     display: flex;
     align-items: center;
@@ -20,15 +31,9 @@
     height: var(--ship-top-bar-h, 40px);
     padding: 0 var(--space-3);
     border-bottom: 1px solid var(--border);
-    background: var(--muted);
     font-family: var(--font-body);
     font-size: var(--text-sm);
-    color: var(--foreground);
     user-select: none;
-    -webkit-user-select: none;
-    overflow: hidden;
-    box-sizing: border-box;
-    flex-shrink: 0;
   }
   :host([hidden]) { display: none; }
   :host([sticky]) { position: sticky; top: 0; z-index: var(--z-sticky); }
