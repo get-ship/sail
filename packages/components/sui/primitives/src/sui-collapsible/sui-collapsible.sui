@@ -4,8 +4,6 @@
 
   Prop parity vs <ship-collapsible>
   ─────────────────────────────────────────────────────────────────────────────
-  Lit                          SUI                      Notes
-  ─────────────────────────────────────────────────────────────────────────────
   open (bool, false)           open (bool, reflect)     ✓
   disabled (bool, false)       disabled (bool, reflect) ✓
   ─────────────────────────────────────────────────────────────────────────────
@@ -32,38 +30,40 @@
 <prop name="open" type="bool" default="false" reflect />
 <prop name="disabled" type="bool" default="false" reflect />
 
+<variants>
+  [hidden]: display:none
+</variants>
+<variants part="content">
+  [open]: grid-template-rows:1fr
+</variants>
+
+<!-- Residual: .content-wrap grid-template-rows 0fr (no sx prop for
+     grid-template-rows; the open variant flips to 1fr); the
+     grid-template-rows transition (motion); .content-inner
+     overflow:hidden; ::slotted([slot='trigger']) cursor + user-
+     select + transition (descendant pseudo — variants only match
+     :host's own attrs); the hover wash on the disclosure header;
+     the focus outline (vs the 2-layer box-shadow ring); the
+     disabled cursor + opacity; the prefers-reduced-motion reset. -->
 <style>
   :host {
     display: block;
     font-family: var(--font-body);
     color: var(--foreground);
   }
-  :host([hidden]) { display: none; }
-
-  .content-wrap {
+  [part~='content'] {
     display: grid;
     grid-template-rows: 0fr;
     transition: grid-template-rows var(--duration-medium) var(--ease-out);
   }
-  :host([open]) .content-wrap {
-    grid-template-rows: 1fr;
-  }
-
-  .content-inner {
-    overflow: hidden;
-  }
-
+  .content-inner { overflow: hidden; }
   ::slotted([slot='trigger']) {
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
     transition: background var(--duration-fast) var(--ease-out);
   }
-  /* Hover wash on the disclosure header. */
-  ::slotted([slot='trigger']:hover) {
-    background: var(--hover-bg);
-  }
-  /* Canonical focus convention — replaces the design's box-shadow ring. */
+  ::slotted([slot='trigger']:hover) { background: var(--hover-bg); }
   ::slotted([slot='trigger']:focus-visible) {
     outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
@@ -72,9 +72,8 @@
     cursor: not-allowed;
     opacity: 0.5;
   }
-
   @media (prefers-reduced-motion: reduce) {
-    .content-wrap { transition: none; }
+    [part~='content'] { transition: none; }
   }
 </style>
 
