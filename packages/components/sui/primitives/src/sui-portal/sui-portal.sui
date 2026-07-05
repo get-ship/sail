@@ -26,6 +26,11 @@
 <prop name="target" type="string" default="body" />
 
 <style>
+  /* Host is invisible — slotted children are physically teleported under
+     `target`; rendering them in the host's own box would double-render in
+     the original location. Bare `:host { display: none }` cannot be
+     expressed via the sx/theme/variants constructs (those emit a class on
+     a real element or a `:host([prop])` channel). */
   :host { display: none; }
 </style>
 
