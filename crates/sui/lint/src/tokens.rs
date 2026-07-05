@@ -138,6 +138,20 @@ pub fn color_values() -> &'static [&'static str] {
                 }
             }
         }
+        // The universal framework tone channels. suiTonesSheet sets these on
+        // every shadow component from the `tone` prop, so they are valid sx
+        // color values everywhere — no per-component <theme channels="…">
+        // declaration needed (that ceremony is gone in the collapsed shape).
+        for ch in [
+            "tone",
+            "tone-fg",
+            "tone-contrast",
+            "tone-bg",
+            "tone-border",
+            "tone-ring",
+        ] {
+            colors.insert(ch);
+        }
         let mut out: Vec<&'static str> = colors.into_iter().collect();
         out.sort_unstable();
         out
