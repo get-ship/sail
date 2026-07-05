@@ -5,22 +5,43 @@
 <prop name="active" type="bool" default="false" reflect />
 <prop name="variant" values="line|pill|enclosed" default="line" reflect />
 
+<variants part="button">
+  [active]:               weight:semibold fg:foreground
+  disabled:               cursor:not-allowed opacity:50
+  (variant=pill):         radius:sm
+  (variant=pill, active): bg:surface-1 fg:foreground
+</variants>
+
 <style>
   /* Local markers so the css-token lint recognizes the tokens
    * referenced from this residual block. */
   --tone: ; --tone-bg: ; --tone-ring: ; --font-body: ; --ring-width: ; --border: ; --border-subtle: ; --surface-1: ; --muted-foreground: ; --muted: ; --foreground: ; --hover-bg: ; --radius-sm: ; --radius-full: ; --shadow-xs: ; --text-sm: ; --text-xs: ; --font-weight-medium: ; --font-weight-semibold: ; --space-1_25: ; --space-2: ; --space-3: ; --duration-fast: ; --ease-out: ;
-  /* Residual: `:host` (host element, no sx), the button's
-   * display:inline-flex + align-items + gap (layout primitives
-   * don't apply to <button>), font-family (no sx prop), the multi-
-   * property transition, the :host([active]) color/weight/underline
-   * + the :hover override, the :disabled cursor + opacity:0.5
-   * (raw), the .leading :has(::slotted) reveal (sx can't reach
-   * slot children), the .count badge bg + the active color/bg
-   * override, the focus-visible outline (canonical --ring-width +
-   * --tone-ring pair), and the variant=pill/enclosed rest styling
-   * (the bottom: -1px negative-positioning hack for the enclosed
-   * active tab to align with the panel below, and the multi-shadow
-   * on the pill variant). */
+  /* Residual:
+   *   * the <button>'s display:inline-flex + align-items + gap (a
+   *     real <button>, not a wrapper — layout primitives don't
+   *     apply), font-family (no sx prop), the multi-property
+   *     transition, the background/border: transparent reset
+   *     (no --transparent token), the border-bottom-width custom
+   *     value (var(--space-1_25) is not a border prop in sx), the
+   *     :hover:not(:disabled) negation (state prefixes don't compose
+   *     with :not()), the :active [hover] override, the active
+   *     border-bottom-color (single-side border, sx `border:` sets
+   *     all 4), the focus-visible outline (raw --ring-width +
+   *     --tone-ring pair — adding a theme channel just to move one
+   *     rule wouldn't help)
+   *   * the per-variant rest styling: border-bottom:0 + border-radius
+   *     not a token (enclosed) + border:1px solid transparent
+   *     (enclosed) + box-shadow: var(--shadow-xs), inset 0 0 0 1px
+   *     var(--border-subtle) (multi-shadow, sx `shadow:` is a
+   *     single token) + border-color: var(--border) var(--border)
+   *     transparent (3-side) + position: relative + bottom: -1px
+   *     (no `bottom` prop in sx)
+   *   * the .leading :has(::slotted(*)) reveal (sx can't reach
+   *     slot children) + the `flex: 0 0 auto` and `color:
+   *     currentColor` (no sx props)
+   *   * the .count :host([active]) color/background override
+   *     (descendant selector; sx variants only target host attrs
+   *     on a shadow part) */
   button {
     display: inline-flex; align-items: center; gap: var(--space-2);
     background: transparent; border: 0;
@@ -38,13 +59,9 @@
   }
 
   :host([active]) button {
-    color: var(--foreground);
-    font-weight: var(--font-weight-semibold);
     border-bottom-color: var(--tone);
   }
   :host([active]) button:hover:not(:disabled) { background: transparent; }
-
-  button:disabled { cursor: not-allowed; opacity: 0.5; }
 
   .leading {
     display: none;
@@ -74,12 +91,9 @@
 
   :host([variant='pill']) button {
     border-bottom: 0;
-    border-radius: var(--radius-sm);
   }
   :host([variant='pill'][active]) button {
-    background: var(--surface-1);
     box-shadow: var(--shadow-xs), inset 0 0 0 1px var(--border-subtle);
-    color: var(--foreground);
   }
   :host([variant='pill'][active]) button:hover:not(:disabled) { background: var(--surface-1); }
 
