@@ -28,7 +28,37 @@
 <prop name="loading" type="bool" default="false" reflect />
 <prop name="error" type="string" default="" />
 
+<!--
+  Residual <style> — sui-tree is largely irreducible: there is no prop here
+  that channels per-value styling (size/selectable don't drive CSS rules),
+  so <theme> adds nothing. The row is a flex container drawn via <row>
+  (display:flex + align-items + gap live on the keyword), but most of the
+  chrome is raw, because most of the rules are descendant state-driven:
+  they target data-* attrs that live ON the row, not host — and <variants>
+  selectors only match host attrs.
+
+  Rules:
+  - :host base (display + width + font-family + density-driven font-size +
+    --sui-tree-indent indirection).
+  - .viewport / .spacer layout (position + width:100% + overflow-y:auto +
+    max-height panel token).
+  - .row layout box (position:absolute + left + width:100% + box-sizing;
+    the inline-flex row's display:flex + align-items + gap are <row>;
+    padding/gap go via density-* tokens in the .row descendant CSS).
+  - .row:hover, .row[data-selected], .row[data-pending], .row:focus-visible
+    state rules.
+  - .caret flex: none + transition + the row[data-expanded] caret rotate +
+    row:not([data-can-expand]) caret visibility:hidden (descendant state).
+  - .gutter / .node-icon .row[data-selected] .node-icon color (descendant
+    reacts to row[data-selected]).
+  - .label raw `flex:1` + min-width + white-space + overflow + text-overflow.
+  - .trailing margin-inline-start:auto (the `auto` margin is not in sx).
+  - :host([show-guides]) .row::before pseudo-element.
+  - @media (forced-colors: active) CanvasText outline.
+-->
 <style>
+  --font-body: ; --foreground: ; --muted-foreground: ; --hover-bg: ; --selected-bg: ; --radius-sm: ; --text-xs: ; --border: ; --density-text: ; --density-row-py: ; --density-row-px: ; --density-row-gap: ; --density-icon: ; --ring-width: ; --ring-color: ; --panel-max-h-md: ; --font-weight-medium: ;
+
   :host {
     display: block;
     width: 100%;
@@ -45,24 +75,16 @@
     overflow-y: auto;
     max-height: var(--panel-max-h-md);
   }
-  .spacer {
-    position: relative;
-    width: 100%;
-  }
+  .spacer { position: relative; width: 100%; }
 
   .row {
-    display: flex;
-    align-items: center;
-    gap: var(--density-row-gap);
-    padding: var(--density-row-py) var(--density-row-px);
     position: absolute;
     left: 0;
     width: 100%;
     box-sizing: border-box;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
+    padding: var(--density-row-py) var(--density-row-px);
+    gap: var(--density-row-gap);
     outline: none;
-    color: var(--foreground);
     transition: background-color var(--duration-fast) var(--ease-out);
   }
   .row:hover { background: var(--hover-bg); }
@@ -73,14 +95,9 @@
     font-style: italic;
   }
   .row[data-pending]:hover { background: transparent; }
-  .row:focus-visible {
-    box-shadow: inset 0 0 0 var(--ring-width) var(--ring-color);
-  }
+  .row:focus-visible { box-shadow: inset 0 0 0 var(--ring-width) var(--ring-color); }
 
   .caret {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     flex: none;
     width: var(--density-icon);
     height: var(--density-icon);
@@ -147,9 +164,10 @@
   <div class="viewport" part="viewport" bind:this={viewportEl}>
     <div class="spacer" part="spacer" style:height={`${totalSize()}px`}>
       {#for w of windowItems() key={w.key}}
-        <div
+        <row
           class="row"
           part="row"
+          align="center"
           role="treeitem"
           data-node-id={w.id}
           aria-level={w.level}
@@ -165,10 +183,13 @@
           tabindex={w.id === activeRowId() ? '0' : '-1'}
           style:transform={`translateY(${w.start}px)`}
           style:padding-inline-start={`calc(var(--density-row-px) + ${w.indent}px)`}
+          sx="radius:sm cursor:pointer fg:foreground hover:bg:hover-bg"
         >
-          <span class="caret" part="caret" aria-hidden="true">
+          <row class="caret" part="caret" aria-hidden="true" align="center" justify="center"
+            sx="fg:muted-foreground">
             <sui-icon name="chevron-right" size="xs"></sui-icon>
-          </span>
+          </row>
+
           {#if selectable() === 'multi'}
             <span class="gutter" part="gutter">
               <sui-checkbox
@@ -185,7 +206,7 @@
           {/if}
           <span class="label" part="label">{w.label}</span>
           <span class="trailing"><slot name="node-trailing"></slot></span>
-        </div>
+        </row>
       {/for}
     </div>
   </div>
