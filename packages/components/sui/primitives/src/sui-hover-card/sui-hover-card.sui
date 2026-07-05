@@ -24,11 +24,13 @@
 <prop name="open" type="bool" default="false" reflect />
 <prop name="placement" values="top|bottom|left|right" default="bottom" reflect />
 <prop name="show-delay" type="number" default="300" />
-<prop name="hide-delay" type="number" default="100" />
+
+<!-- Host baseline: surface-only display. The [hidden] host display:none
+     is provided by the runtime's BASE_CSS and would be deduped at emit. -->
+<host sx="display:inline-flex"></host>
 
 <!--
   Residual <style> — truly unavoidable bits:
-  - :host display: inline-flex / display: none
   - .panel inset + margin + multi-prop transition + transform
   - .panel:popover-open opacity + transform
   - .panel::backdrop background
@@ -37,8 +39,6 @@
   - forced-colors media
 -->
 <style>
-  :host { display: inline-flex; }
-  :host([hidden]) { display: none; }
   .panel {
     inset: auto;
     margin: 0;
