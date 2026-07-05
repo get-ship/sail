@@ -37,15 +37,22 @@
 <prop name="decorative" type="bool" default="false" reflect />
 <prop name="tone" values="default|muted|primary|info|success|warning|destructive|accent" default="default" reflect />
 
+<theme prop="tone" channels="tone-bg">
+  primary:     tone-primary-border
+  destructive: tone-destructive-border
+</theme>
+
+<!--
+  Residual <style> — tone channel base value (default/muted/info/success/warning/accent
+  all use the baseline `--border-subtle`), and the full `.sep` element styling:
+  the inner <hr>'s horizontal-vs-vertical geometry, the directional dashed border
+  (no `border-top`/`border-left` shorthand in sx), the raw 1px/1em dimensions (no
+  token), and the host's `display: inline-flex` for vertical orientation (no
+  orientation-driven sx on the host).
+-->
 <style>
-  :host {
-    display: block;
-    --tone-bg: var(--border-subtle);
-  }
+  :host { display: block; --tone-bg: var(--border-subtle); }
   :host([hidden]) { display: none; }
-  :host([tone='muted'])       { --tone-bg: var(--border-subtle); }
-  :host([tone='primary'])     { --tone-bg: var(--tone-primary-border); }
-  :host([tone='destructive']) { --tone-bg: var(--tone-destructive-border); }
 
   .sep {
     border: 0;
@@ -66,11 +73,6 @@
     background: transparent;
     border-top: 1px dashed var(--tone-bg);
     height: 0;
-  }
-  /* inset: indent to align past a leading icon/avatar */
-  :host(:not([orientation='vertical'])[decorative='false']) .sep,
-  :host(:not([orientation='vertical'])) .sep {
-    /* width 100% already set above */
   }
 
   /* Vertical */
