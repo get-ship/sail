@@ -11,6 +11,17 @@ const TONES_CSS =
   ":host([tone='accent'])      { --tone: var(--accent);           --tone-fg: var(--accent);           --tone-contrast: var(--accent-foreground);      --tone-bg: var(--tone-accent-bg);      --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring); }\n" +
   ":host([tone='muted'])       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-contrast: var(--background);              --tone-bg: var(--tone-muted-bg);       --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring); }\n"
 
+const SIZES_CSS =
+  // The FULL size contract, framework-owned — the exact analogue of tone. A
+  // component that declares a `size` prop gets the dimensional channels for free
+  // (`--size-h` control height, `--size-px` inline padding, `--size-fs` font
+  // size, `--size-gap` inner gap). No per-component <theme prop="size"> block:
+  // one global scale keeps every control coherent, and we own the compiler.
+  ":host([size='xs']) { --size-h: var(--control-h-2xs); --size-px: var(--space-2);   --size-fs: var(--text-xs);   --size-gap: var(--space-1); }\n" +
+  ":host([size='sm']) { --size-h: var(--control-h-sm);  --size-px: var(--space-2_5); --size-fs: var(--text-sm);   --size-gap: var(--space-1_5); }\n" +
+  ":host([size='md']) { --size-h: var(--control-h-md);  --size-px: var(--space-3);   --size-fs: var(--text-base); --size-gap: var(--space-2); }\n" +
+  ":host([size='lg']) { --size-h: var(--control-h-lg);  --size-px: var(--space-4);   --size-fs: var(--text-md);   --size-gap: var(--space-2); }\n"
+
 // R3: shared host-resets adopted into every shadow component. Rules
 // here are duplicated literally in nearly every <style> block; hoisting
 // them lets the sui-compiler strip the per-component copies (see
@@ -59,6 +70,7 @@ function makeSheet(css: string): CSSStyleSheet | null {
 }
 
 export const suiTonesSheet: CSSStyleSheet | null = makeSheet(TONES_CSS)
+export const suiSizesSheet: CSSStyleSheet | null = makeSheet(SIZES_CSS)
 export const suiBaseSheet: CSSStyleSheet | null = makeSheet(BASE_CSS)
 export const suiTypographySheet: CSSStyleSheet | null = makeSheet(TYPOGRAPHY_CSS)
 
@@ -78,7 +90,7 @@ export const suiTypographySheet: CSSStyleSheet | null = makeSheet(TYPOGRAPHY_CSS
 export function adoptSuiSheets(root: unknown): void {
   if (typeof ShadowRoot === 'undefined') return
   if (!(root instanceof ShadowRoot)) return
-  const sheets = [suiBaseSheet, suiTonesSheet, suiTypographySheet].filter(
+  const sheets = [suiBaseSheet, suiTonesSheet, suiSizesSheet, suiTypographySheet].filter(
     (s): s is CSSStyleSheet => s != null,
   )
   if (sheets.length === 0) return

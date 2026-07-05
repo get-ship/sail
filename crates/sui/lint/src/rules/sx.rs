@@ -94,10 +94,21 @@ const ALL_PROPS: &[&str] = &[
 fn allowed(kind: Kind) -> Vec<&'static str> {
     use Kind::*;
     match kind {
-        Space => crate::tokens::space_values().to_vec(),
+        // `size-px`/`size-fs`/`size-h` are the framework size channels
+        // (suiSizesSheet), valid everywhere the `size` prop is declared — the
+        // dimensional analogue of the tone channels in color_values().
+        Space => {
+            let mut v = crate::tokens::space_values().to_vec();
+            v.push("size-px");
+            v
+        }
         Color => crate::tokens::color_values().to_vec(),
         Radius => crate::tokens::radius_values().to_vec(),
-        Text => crate::tokens::text_values().to_vec(),
+        Text => {
+            let mut v = crate::tokens::text_values().to_vec();
+            v.push("size-fs");
+            v
+        }
         Shadow => {
             let mut v = vec!["none"];
             v.extend(crate::tokens::suffixes("shadow-"));
@@ -118,7 +129,7 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
             v
         }
         Size => {
-            let mut v = vec!["full", "auto", "fit", "screen", "min", "max", "0"];
+            let mut v = vec!["full", "auto", "fit", "screen", "min", "max", "0", "size-h"];
             v.extend(crate::tokens::suffixes("space-"));
             v.extend(crate::tokens::size_values());
             v
@@ -189,6 +200,17 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
         return None;
     }
     use Kind::*;
+    // Framework size channels (`size-px`/`size-fs`/`size-h`, from suiSizesSheet)
+    // are already the full custom-property name — they lower to their own var,
+    // not a kind-prefixed one (`var(--size-px)`, not `var(--space-size-px)`).
+    if token.starts_with("size-") {
+        return Some(
+            css_props(prop)
+                .iter()
+                .map(|p| (*p, format!("var(--{token})")))
+                .collect(),
+        );
+    }
     // Every kind resolves to ONE CSS value string, applied to each of the prop's
     // `css_props` (usually one; the padding/margin longhands are the exception).
     // Token-scaled kinds emit `var(--…)`; enum kinds emit the validated keyword.
