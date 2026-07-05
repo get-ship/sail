@@ -22,14 +22,30 @@
 
 <prop name="invalid" type="bool" default="false" reflect />
 
+<variants>
+  [hidden]: display:none
+</variants>
+<variants part="error">
+  [invalid]:     display:none
+  :not([invalid]): display:flex
+</variants>
+<variants part="hint">
+  [invalid]: display:none
+</variants>
+
+<!-- Residual: the host flex column layout (no layout primitive for the
+     vertical stack of label + control + hint/error); .msg/.hint/.error
+     typography + the .hint margin-top; the .error row geometry
+     (align-items:flex-start doesn't fit <row align=>'s start/center/
+     end/stretch/baseline enum, and the error row needs the specific
+     flex-start alignment for icon alignment); the inline SVG icon
+     (width/height/flex-shrink). -->
 <style>
   :host {
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
   }
-  :host([hidden]) { display: none; }
-
   .msg { margin-top: var(--space-1); }
   .hint,
   .error {
@@ -46,15 +62,12 @@
     font-weight: var(--font-weight-medium);
   }
   .error svg { width: var(--icon-size-sm); height: var(--icon-size-sm); flex-shrink: 0; }
-
-  :host(:not([invalid])) .error { display: none; }
-  :host([invalid]) .hint { display: none; }
 </style>
 
 <slot name="label"></slot>
 <slot bind:this={controlSlot}></slot>
-<div class="hint msg" bind:this={hintEl}><slot name="hint"></slot></div>
-<div class="error msg" role="alert" aria-live="polite" bind:this={errorEl}>
+<div class="hint msg" part="hint" bind:this={hintEl}><slot name="hint"></slot></div>
+<div class="error msg" part="error" role="alert" aria-live="polite" bind:this={errorEl}>
   <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path><path d="M12 9v4M12 17h.01"></path></svg>
   <span><slot name="error"></slot></span>
 </div>
