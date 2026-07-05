@@ -55,6 +55,31 @@
 <prop name="radius" type="string" default="" reflect />
 <prop name="spin" type="bool" default="false" reflect />
 
+<variants part="svg">
+  size=xs: w:icon-size-2xs h:icon-size-2xs
+  size=sm: w:icon-size-sm h:icon-size-sm
+  size=lg: w:icon-size-xl h:icon-size-xl
+  size=xl: w:icon-size-2xl h:icon-size-2xl
+</variants>
+<theme prop="name" channels="app-accent">
+  dashboard:    app-accent-dashboard
+  pipelines:    app-accent-pipelines
+  agents:       app-accent-agents
+  skills:       app-accent-skills
+  git:          app-accent-git
+  collections:  app-accent-collections
+  canvas:       app-accent-canvas
+  settings:     app-accent-settings
+  chat:         app-accent-chat
+  events:       app-accent-events
+  specs:        app-accent-specs
+  theme:        app-accent-theme
+  setup:        app-accent-setup
+  overview:     app-accent-overview
+  mesh:         app-accent-mesh
+  theme-studio: app-accent-theme
+</theme>
+
 <style>
   :host {
     display: inline-flex;
@@ -80,10 +105,6 @@
     height: var(--icon-size-md);
     flex: 0 0 auto;
   }
-  :host([size='xs']) svg.sui-icon-svg { width: var(--icon-size-2xs); height: var(--icon-size-2xs); }
-  :host([size='sm']) svg.sui-icon-svg { width: var(--icon-size-sm); height: var(--icon-size-sm); }
-  :host([size='lg']) svg.sui-icon-svg { width: var(--icon-size-xl); height: var(--icon-size-xl); }
-  :host([size='xl']) svg.sui-icon-svg { width: var(--icon-size-2xl); height: var(--icon-size-2xl); }
 
   /* Spin — opt-in rotation, gated on reduced-motion */
   @media (prefers-reduced-motion: no-preference) {
@@ -104,23 +125,6 @@
     height: var(--tile-size);
     color: var(--app-accent);
   }
-
-  :host([set='app'][name='dashboard'])   { --app-accent: var(--app-accent-dashboard); }
-  :host([set='app'][name='pipelines'])   { --app-accent: var(--app-accent-pipelines); }
-  :host([set='app'][name='agents'])      { --app-accent: var(--app-accent-agents); }
-  :host([set='app'][name='skills'])      { --app-accent: var(--app-accent-skills); }
-  :host([set='app'][name='git'])         { --app-accent: var(--app-accent-git); }
-  :host([set='app'][name='collections']) { --app-accent: var(--app-accent-collections); }
-  :host([set='app'][name='canvas'])      { --app-accent: var(--app-accent-canvas); }
-  :host([set='app'][name='settings'])    { --app-accent: var(--app-accent-settings); }
-  :host([set='app'][name='chat'])        { --app-accent: var(--app-accent-chat); }
-  :host([set='app'][name='events'])      { --app-accent: var(--app-accent-events); }
-  :host([set='app'][name='specs'])       { --app-accent: var(--app-accent-specs); }
-  :host([set='app'][name='theme'])       { --app-accent: var(--app-accent-theme); }
-  :host([set='app'][name='setup'])       { --app-accent: var(--app-accent-setup); }
-  :host([set='app'][name='overview'])    { --app-accent: var(--app-accent-overview); }
-  :host([set='app'][name='mesh'])        { --app-accent: var(--app-accent-mesh); }
-  :host([set='app'][name='theme-studio']) { --app-accent: var(--app-accent-theme); }
 
   :host([set='app'][size='sm']) { --tile-size: var(--icon-size-md); --glyph-size: var(--icon-size-xs); --tile-radius: var(--radius-sm); }
   :host([set='app'][size='md']) { --tile-size: var(--space-5); --glyph-size: var(--icon-size-sm); --tile-radius: var(--radius-md); }
