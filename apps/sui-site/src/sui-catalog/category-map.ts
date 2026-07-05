@@ -56,10 +56,12 @@ export const CATEGORY_ORDER: readonly CategoryId[] = [
 
 // ── Hidden sub-primitives ────────────────────────────────────────────────────
 
-/** Tags that compose a parent primitive but are NOT standalone catalog
- *  entries. The composed parent (e.g. `<sui-accordion-item>` rolls up into
- *  `<sui-accordion>`; `<sui-tab-panel>` into `<sui-tabs>`) is the public API.
- *  Review/edit this list in one place. */
+/** Tags that compose a parent primitive, are pure scaffolding, or need a
+ *  non-attribute prop seam (the JS-prop path) to render meaningfully — none
+ *  of them belong in a public gallery cell. The composed parent (e.g.
+ *  `<sui-accordion-item>` rolls up into `<sui-accordion>`,
+ *  `<sui-tab-panel>` into `<sui-tabs>`) is the public API. Review/edit
+ *  this list in one place. */
 export const HIDDEN_TAGS: Record<string, true> = {
   // accordion — the item is internal; the parent is the API
   'sui-accordion-item': true,
@@ -70,14 +72,27 @@ export const HIDDEN_TAGS: Record<string, true> = {
   'sui-tree-item': true,
   // timeline — item is a slot of `<sui-timeline>`
   'sui-timeline-item': true,
-  // toast — the host is the public API; toast + container are internals
+  // toast family — toast + toast-container + toast-host internals; the
+  // composed parent routes a `ship:notify` event into the container's
+  // programmatic `show()` API. The cell preview cannot drive that event
+  // from a bare mount, so the cell would always be empty. Keep the host
+  // entry visible — its description explains the contract.
   'sui-toast': true,
   'sui-toast-container': true,
-  // toast-host-as-one-entry — the host is the entry; drop the duplicate name
-  // by also hiding any `sui-toast-host` collision with the public toast group.
-  // (Kept named for parity — no collision exists today.)
-  'sui-radio': true, // radio-group is the entry; radio is its slot
-}
+
+  // radio (radio-group is the public entry; radio is its slot)
+  'sui-radio': true,
+
+  // Viewer scaffolding — these primitives need the JS-prop path
+  // (`prop:source` / `prop:compile` set as host JS properties, NOT a
+  // `setAttribute` write) to render. A bare mount leaves them empty,
+  // which is misleading in a public gallery. The full demo harness lives
+  // on the /components/[tag] detail page.
+  'sui-render': true,
+  'sui-source-panel': true,
+  'sui-prop-knobs': true,
+  'sui-prop-matrix': true,
+  'sui-component-viewer': true,
 
 // ── Public tag → category mapping ───────────────────────────────────────────
 

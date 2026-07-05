@@ -129,16 +129,22 @@
     box-shadow: var(--shadow-lg);
   }
 
-  /* Preview stage — bounded, tinted, clipped. <sui-center> centers the
-     mounted specimen on both axes; this rule owns the framed surface. */
+  /* Preview stage — fitted to content, not a fixed box. A bare element's
+     natural size drives the stage; tiny components (sui-status-dot,
+     sui-switch) stay tiny, big ones (sui-calendar, sui-table) expand.
+     <sui-center> still centers the specimen on both axes; min-height +
+     horizontal padding prevent the surface from looking cramped when the
+     specimen is a one-line label, without forcing tall primitives into a
+     fixed-frame box. */
   .stage {
-    height: 12rem;
-    overflow: hidden;
-    padding: var(--space-3);
+    min-height: 7rem;
+    padding: var(--space-4);
     background: color-mix(in oklch, var(--primary) 6%, transparent);
     border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
-
   .cell-foot { padding: var(--space-3) var(--space-4) var(--space-4); }
   .cell-tag {
     font-family: var(--font-mono);
