@@ -5,7 +5,7 @@
   and host method delegation.
 
   Prop / event / method parity vs <ship-input>
-  ────────────────────────────────────────────────────────────���─────────────────
+  ──────────────────────────────────────────────────────────────────────────────
   Lit                            SUI                       Notes
   ──────────────────────────────────────────────────────────────────────────────
   type (String, 'text')          type (union, 'text',      ✓ values enumerated
@@ -80,6 +80,40 @@
 <prop name="described-by" type="string" default="" />
 <prop name="error-message" type="string" default="" />
 
+<theme prop="tone" channels="tone-border, tone-ring, tone-ring-soft">
+  default:     border,                primary,        border-subtle
+  primary:     primary,               primary,        tone-primary-border
+  info:        info,                  info,           tone-info-border
+  success:     success,               success,        tone-success-border
+  warning:     warning,               warning,        tone-warning-border
+  destructive: destructive,           destructive,    tone-destructive-border
+  accent:      accent,                accent,         tone-accent-border
+  muted:       muted-foreground,      muted-foreground, border-subtle
+</theme>
+<theme prop="size" channels="input-h, input-fs, input-px, input-icon">
+  default: control-h-md, density-text, density-row-px, icon-size-sm
+  sm:      control-h-sm, text-xs,     space-2,        icon-size-xs
+  md:      control-h-md, density-text, density-row-px, icon-size-sm
+  lg:      control-h-lg, text-sm,     space-3,        icon-size-md
+</theme>
+<variants>
+  [hidden]:  display:none
+</variants>
+<variants part="wrap">
+  focus-within: border:tone-ring
+</variants>
+
+<!-- Residual: host column layout (flex column + gap + width — no layout
+     primitive for the input+error vertical stack); compound descendant
+     state selectors (`.wrap:hover:not(:focus-within)`) — variants only
+     target :host attrs; the inner <input> element styling (no sx, no
+     shadow part, native form control); ::placeholder/::slotted pseudo-
+     elements (no sx story); multi-property transition (motion);
+     @keyframes (animation); forced-colors CanvasText focus outline
+     (system color); saturate filter (compound disabled state); the
+     spinner border-color: a 2-tone border with border-top-color override
+     (no sx prop for per-side color); the .error/--input-icon local vars
+     + .wrap layout detail. -->
 <style>
   :host {
     display: inline-flex;
@@ -87,35 +121,29 @@
     gap: var(--space-1);
     vertical-align: middle;
     width: 100%;
-    --tone-border: var(--border);
-    --tone-ring: var(--primary);
     --tone-ring-soft: var(--border-subtle);
-    --h: var(--control-h-md);
-    --fs: var(--density-text);
-    --px: var(--density-row-px);
-    --icon: var(--icon-size-sm);
+    --input-h: var(--control-h-md);
+    --input-fs: var(--density-text);
+    --input-px: var(--density-row-px);
+    --input-icon: var(--icon-size-sm);
   }
-
-  :host([tone='primary'])     { --tone-border: var(--primary);     --tone-ring: var(--primary);     --tone-ring-soft: var(--tone-primary-border); }
-  :host([tone='info'])        { --tone-border: var(--info);         --tone-ring: var(--info);         --tone-ring-soft: var(--tone-info-border); }
-  :host([tone='success'])     { --tone-border: var(--success);      --tone-ring: var(--success);      --tone-ring-soft: var(--tone-success-border); }
-  :host([tone='warning'])     { --tone-border: var(--warning);      --tone-ring: var(--warning);      --tone-ring-soft: var(--tone-warning-border); }
-  :host([tone='destructive']),
-  :host([invalid])            { --tone-border: var(--destructive);  --tone-ring: var(--destructive);  --tone-ring-soft: var(--tone-destructive-border); }
-  :host([tone='accent'])      { --tone-border: var(--accent);       --tone-ring: var(--accent);       --tone-ring-soft: var(--tone-accent-border); }
-  :host([tone='muted'])       { --tone-border: var(--muted-foreground); --tone-ring: var(--muted-foreground); --tone-ring-soft: var(--border-subtle); }
-
-  :host([size='sm']) { --h: var(--control-h-sm); --fs: var(--text-xs); --px: var(--space-2);  --icon: var(--icon-size-xs); }
-  :host([size='md']) { --h: var(--control-h-md); --fs: var(--density-text); --px: var(--density-row-px); --icon: var(--icon-size-sm); }
-  :host([size='lg']) { --h: var(--control-h-lg); --fs: var(--text-sm); --px: var(--space-3); --icon: var(--icon-size-md); }
-
-  .wrap {
+  :host([variant='ghost']) { --tone-border: transparent; }
+  :host([variant='default']:not([disabled])) [part~='wrap']:hover:not(:focus-within) {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-sm);
+  }
+  :host([variant='ghost']:not([disabled])) [part~='wrap']:hover:not(:focus-within) {
+    background: var(--tone-muted-bg);
+    border-color: transparent;
+    box-shadow: none;
+  }
+  [part~='wrap'] {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
     width: 100%;
-    min-height: var(--h);
-    padding: 0 var(--px);
+    min-height: var(--input-h);
+    padding: 0 var(--input-px);
     background: var(--background);
     border: 1px solid var(--tone-border);
     border-radius: var(--radius-md);
@@ -125,51 +153,19 @@
       border-color var(--duration-fast) var(--ease-out),
       box-shadow var(--duration-fast) var(--ease-out);
   }
-
-  /* Resting elevation + matched hover state — design bundle elevation
-   * (forms.after / rest-shadow, hover). The default variant gained a
-   * hover affordance to match sui-select / sui-combobox. */
-  :host(:not([variant='ghost']):not([disabled])) .wrap:hover:not(:focus-within) {
-    border-color: var(--border-strong);
-    box-shadow: var(--shadow-sm);
-  }
-
-  :host([variant='ghost']) .wrap {
+  [part~='wrap']:host([variant='ghost']) { border-color: transparent; }
+  :host([variant='ghost']) [part~='wrap'] {
     border-color: transparent;
     background: transparent;
     box-shadow: none;
   }
-
-  /* Ghost gains a hover surface so it's discoverable before focus.
-   * `tone-muted-bg` is the canonical 60% muted-transparent mix in tokens.css. */
-  :host([variant='ghost']:not([disabled])) .wrap:hover:not(:focus-within) {
-    background: var(--tone-muted-bg);
-    border-color: transparent;
-    box-shadow: none;
-  }
-
-  /* Focus-within tints the border; the inner input's :focus-visible
-   * already draws the canonical --focus-ring outline. No box-shadow
-   * ring here — kept the focus affordance single-channel so themes
-   * that flatten the ring token don't show a phantom shadow. */
-  .wrap:focus-within {
-    border-color: var(--tone-ring);
-  }
-
-  /* Disabled — system pattern, not a blunt opacity. Matches the
-   * approach used by select / combobox (so disabled fields read as
-   * "off" not "ghosted"). saturate(.6) dims iconography; --border-subtle
-   * (60% border-transparent) is the canonical softened-border ramp;
-   * this is more conservative than the previous 80% mix but tokens.css
-   * owns the formula, not the component. */
-  :host([disabled]) .wrap {
+  :host([disabled]) [part~='wrap'] {
     background: var(--muted);
     border-color: var(--border-subtle);
     box-shadow: none;
     cursor: not-allowed;
     filter: saturate(0.6);
   }
-
   input {
     flex: 1;
     min-width: 0;
@@ -179,17 +175,11 @@
     padding: 0;
     font: inherit;
     font-family: var(--font-body);
-    font-size: var(--fs);
+    font-size: var(--input-fs);
     color: var(--foreground);
   }
   input::placeholder { color: var(--muted-foreground); }
   input:disabled { cursor: not-allowed; }
-
-  /* Keyboard-only focus ring — drawn on the inner input so it is
-   * visible even when the wrap container's :focus-within tint is
-   * suppressed by themes that flatten ring tokens. Consumes the
-   * canonical --focus-ring token; per-tone tinting is via the local
-   * --ring-color override (e.g. [invalid] sets --destructive). */
   input:focus-visible {
     outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
@@ -197,32 +187,28 @@
   @media (forced-colors: active) {
     input:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
   }
-
   ::slotted([slot='leading']),
   ::slotted([slot='trailing']) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     flex: 0 0 auto;
-    width: var(--icon);
-    height: var(--icon);
+    width: var(--input-icon);
+    height: var(--input-icon);
     color: var(--muted-foreground);
   }
-
   .spinner {
     display: inline-block;
     flex: 0 0 auto;
-    width: var(--icon);
+    width: var(--input-icon);
     border: 2px solid var(--tone-ring-soft);
     border-top-color: var(--tone-ring);
     border-radius: 50%;
     animation: sui-spin 0.6s linear infinite;
   }
-
   @keyframes sui-spin {
     to { transform: rotate(360deg); }
   }
-
   .error {
     font-family: var(--font-body);
     font-size: var(--text-sm);
@@ -231,7 +217,7 @@
   }
 </style>
 
-<div class="wrap" part="wrap">
+<row class="wrap" part="wrap" align="center" gap="2">
   <slot name="leading" reflect-empty="data-no-leading"></slot>
   <input
     part="input"
@@ -254,7 +240,7 @@
   {:else}
     <slot name="trailing" reflect-empty="data-no-trailing"></slot>
   {/if}
-</div>
+</row>
 {#if invalid() && errorMessage()}
-  <span class="error" role="alert" bind:this={errorEl}>{errorMessage()}</span>
+  <span class="error" role="alert" bind:this={errorEl} sx="text:sm fg:destructive">{errorMessage()}</span>
 {/if}
