@@ -218,7 +218,7 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   'sui-bar-chart':       { props: { width: '240', height: '120', data: BAR_CHART_DATA, tone: 'primary' } },
   'sui-donut':           { props: { size: '120', thickness: '16', data: '[{"label":"Shipped","value":42},{"label":"In review","value":18},{"label":"Blocked","value":7}]' } },
   'sui-gauge':           { props: { value: '68', tone: 'success', size: '120', thickness: '12' } },
-  'sui-heatmap':         { props: { cell-size: '18', gap: '3', rows: '["Mon","Tue","Wed","Thu","Fri"]', cols: '["9","10","11","12","13"]', data: HEATMAP_DATA, tone: 'primary' } },
+  'sui-heatmap':         { props: { 'cell-size': '18', gap: '3', rows: '["Mon","Tue","Wed","Thu","Fri"]', cols: '["9","10","11","12","13"]', data: HEATMAP_DATA, tone: 'primary' } },
   'sui-line-chart':      { props: { width: '240', height: '120', series: LINE_CHART_SERIES, labels: LINE_CHART_LABELS, points: 'true' } },
   'sui-sparkline':       { props: { width: '120', height: '32', data: SPARKLINE_DATA, tone: 'primary', fill: 'true' } },
 
