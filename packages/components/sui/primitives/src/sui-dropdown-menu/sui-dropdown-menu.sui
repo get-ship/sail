@@ -22,11 +22,27 @@
 
 <prop name="open" type="bool" default="false" reflect />
 
+<variants>
+  [hidden]: display:none
+</variants>
+<variants part="panel">
+  popover-open: opacity:100
+</variants>
+
+<!-- Residual: .panel popover visuals (inset/margin/min-width/padding/
+     background/color/border/border-radius/box-shadow) — popover panels
+     have a specific visual recipe; CSS Anchor Positioning (position-
+     anchor + calc(anchor(...)) + position-try-fallbacks) — raw CSS;
+     ::slotted anchor-name (controller sets --sui-dd-anchor per
+     instance); the open-state transform/opacity transition (multi-
+     property motion — no construct); ::slotted(button) and ::slotted(
+     [role=menuitem]) styling (descendant pseudo selectors — variants
+     only match :host attrs); ::slotted(hr) / ::slotted([data-section])
+     styling; forced-colors CanvasText panel border; the .panel::backdrop
+     transparent background. -->
 <style>
   :host { display: inline-flex; }
-  :host([hidden]) { display: none; }
-
-  .panel {
+  [part~='panel'] {
     inset: auto;
     margin: 0;
     min-width: var(--panel-min-w-md);
@@ -45,17 +61,11 @@
       opacity var(--duration-medium) var(--ease-out),
       transform var(--duration-medium) var(--ease-out);
   }
-
-  /* CSS Anchor Positioning. Controller sets `--sui-dd-anchor` to a
-     unique per-instance name on the slotted trigger so each dropdown
-     anchors to its own trigger without inline-style juggling. The
-     controller skips its `positionPanel` JS fallback when this path
-     is live so we don't double-position. */
   @supports (anchor-name: --x) {
     ::slotted([slot='trigger']) {
       anchor-name: var(--sui-dd-anchor);
     }
-    .panel {
+    [part~='panel'] {
       position-anchor: var(--sui-dd-anchor);
       top: calc(anchor(bottom) + 4px);
       left: anchor(left);
@@ -63,12 +73,11 @@
       position-try-order: most-block-size;
     }
   }
-  .panel:popover-open {
+  [part~='panel']:popover-open {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
-  .panel::backdrop { background: transparent; }
-
+  [part~='panel']::backdrop { background: transparent; }
   ::slotted(button), ::slotted([role='menuitem']) {
     display: flex; align-items: center; gap: var(--space-2);
     text-align: start;
@@ -88,12 +97,11 @@
   ::slotted(button[data-tone='destructive']:hover) { background: var(--tone-destructive-bg); }
   ::slotted(hr) { height: 1px; border: 0; background: var(--border-subtle); margin: var(--space-1) var(--space-1); }
   ::slotted([data-section]) { font-size: var(--text-xs); font-weight: var(--font-weight-semibold); letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--muted-foreground); padding: var(--space-2) var(--space-2) var(--space-1); }
-
   @media (prefers-reduced-motion: reduce) {
-    .panel { transition: none; transform: none !important; }
+    [part~='panel'] { transition: none; transform: none !important; }
   }
   @media (forced-colors: active) {
-    .panel { border: 1px solid CanvasText; }
+    [part~='panel'] { border: 1px solid CanvasText; }
   }
 </style>
 
