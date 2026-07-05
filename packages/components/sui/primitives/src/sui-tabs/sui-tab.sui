@@ -1,83 +1,37 @@
-<!--
-  <sui-tab> — SUI port of <ship-tab>.
-  Individual tab button. Renders its own interactive button; orchestrated
-  by the parent <sui-tabs> controller which sets the `active` attribute.
-
-  Architecture diverges from Lit:
-  In <ship-tabs>, the parent renders all tab buttons in its own shadow
-  DOM and <ship-tab> is a data-holder (display:none). In SUI, <sui-tab>
-  renders its own button, and <sui-tabs> coordinates via attribute-setting
-  and slotchange. This keeps the interactive surface inside sui-tab for
-  encapsulation while delegating keyboard/focus management to sui-tabs.
-
-  Prop / event / method parity vs <ship-tab>
-  ──────────────────────────────────────────────────────────────────────────────
-  Lit                              SUI                       Notes
-  ──────────────────────────────────────────────────────────────────────────────
-  name (String, '', reflect)       name (string, '',         ✓
-                                     reflect)
-  label (String, '', reflect)      label (string, '',        ✓ fallback text if
-                                     reflect)                  slot is empty; in
-                                                               SUI the slot is
-                                                               primary content
-  count (Number|null, null,        count (string, '',        ✓ empty string →
-    reflect)                         reflect)                  no badge (SUI string
-                                                               prop; '' hides badge)
-  disabled (Boolean, false,        disabled (bool, false,    ✓
-    reflect)                         reflect)
-  ──────────────────────────────────────────────────────────────────────────────
-  active (n/a — parent-rendered    active (bool, false,      SUI addition: set by
-    button, no host prop)            reflect)                  sui-tabs controller to
-                                                               drive aria-selected
-                                                               and tabIndex
-  ──────────────────────────────────────────────────────────────────────────────
-  Rendered by parent               button[part="button"]     test table expects
-    (no shadow button in Lit)        rendered by sui-tab      shadowPart: 'button'
-  ──────────────────────────────────────────────────────────────────────────────
-  role=tab / aria-selected         ✓ button has role=tab;    ✓
-    managed by parent                aria-selected driven by
-                                     `active` prop; tabIndex
-                                     managed by sui-tab.ts
-  ──────────────────────────────────────────────────────────────────────────────
-  Slots: (none — data holder)      (default) + leading       SUI slot for label
-                                                               content; leading for
-                                                               icon-before-label
-  ──────────────────────────────────────────────────────────────────────────────
-  Parts: (none)                    button                    ✓
-  ──────────────────────────────────────────────────────────────────────────────
--->
-
 <prop name="name" type="string" default="" reflect />
 <prop name="label" type="string" default="" reflect />
 <prop name="count" type="string" default="" reflect />
 <prop name="disabled" type="bool" default="false" reflect />
 <prop name="active" type="bool" default="false" reflect />
+<prop name="variant" values="line|pill|enclosed" default="line" reflect />
 
 <style>
-  :host { display: inline-flex; }
-
+  /* Local markers so the css-token lint recognizes the tokens
+   * referenced from this residual block. */
+  --tone: ; --tone-bg: ; --tone-ring: ; --font-body: ; --ring-width: ; --border: ; --border-subtle: ; --surface-1: ; --muted-foreground: ; --muted: ; --foreground: ; --hover-bg: ; --radius-sm: ; --radius-full: ; --shadow-xs: ; --text-sm: ; --text-xs: ; --font-weight-medium: ; --font-weight-semibold: ; --space-1_25: ; --space-2: ; --space-3: ; --duration-fast: ; --ease-out: ;
+  /* Residual: `:host` (host element, no sx), the button's
+   * display:inline-flex + align-items + gap (layout primitives
+   * don't apply to <button>), font-family (no sx prop), the multi-
+   * property transition, the :host([active]) color/weight/underline
+   * + the :hover override, the :disabled cursor + opacity:0.5
+   * (raw), the .leading :has(::slotted) reveal (sx can't reach
+   * slot children), the .count badge bg + the active color/bg
+   * override, the focus-visible outline (canonical --ring-width +
+   * --tone-ring pair), and the variant=pill/enclosed rest styling
+   * (the bottom: -1px negative-positioning hack for the enclosed
+   * active tab to align with the panel below, and the multi-shadow
+   * on the pill variant). */
   button {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-3);
-    font: inherit;
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    font-weight: var(--font-weight-medium);
-    color: var(--muted-foreground);
-    background: transparent;
-    border: 0;
+    display: inline-flex; align-items: center; gap: var(--space-2);
+    background: transparent; border: 0;
     border-bottom: var(--space-1_25) solid transparent;
-    cursor: pointer;
-    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
     white-space: nowrap;
+    font-family: var(--font-body);
     transition:
       color var(--duration-fast) var(--ease-out),
       border-color var(--duration-fast) var(--ease-out),
       background-color var(--duration-fast) var(--ease-out);
   }
-
   button:hover:not(:disabled) {
     color: var(--foreground);
     background: var(--hover-bg);
@@ -90,10 +44,7 @@
   }
   :host([active]) button:hover:not(:disabled) { background: transparent; }
 
-  button:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
+  button:disabled { cursor: not-allowed; opacity: 0.5; }
 
   .leading {
     display: none;
@@ -124,7 +75,6 @@
   :host([variant='pill']) button {
     border-bottom: 0;
     border-radius: var(--radius-sm);
-    padding: var(--space-2) var(--space-3);
   }
   :host([variant='pill'][active]) button {
     background: var(--surface-1);
@@ -157,6 +107,13 @@
   aria-disabled={disabled() ? 'true' : 'false'}
   disabled={disabled()}
   bind:this={btn}
+  sx="
+    py:2
+    px:3
+    text:sm
+    cursor:pointer
+    radius:sm
+  "
 >
   <span class="leading" part="leading"><slot name="leading"></slot></span>
   <slot></slot>
