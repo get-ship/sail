@@ -31,29 +31,42 @@
 <prop name="tone" values="default|info|success|warning|destructive|muted" default="default" reflect />
 <prop name="dismissible" type="bool" default="false" reflect />
 
+<theme prop="tone" channels="tone, tone-fg, tone-bg">
+  default:     foreground,   foreground,        tone-default-bg
+  info:        info,         info,              tone-info-bg
+  success:     success,      tone-success-fg,   tone-success-bg
+  warning:     warning,      tone-warning-fg,   tone-warning-bg
+  destructive: destructive,  destructive,       tone-destructive-bg
+  muted:       muted-foreground, muted-foreground, muted
+</theme>
+
+<variants part="close">
+  [dismissible]: display:inline-flex
+</variants>
+
+<!--
+  Residual <style> — truly unavoidable bits:
+  - :host display: block + --tone default (covered by <theme> default)
+  - .box display: grid + grid-template-columns + gap + padding + radius + overflow + border + bg + font-family + text + line-height + box-shadow
+  - .box::before content + position + left/top/bottom + width + bg
+  - .ico flex-shrink: 0 (layout)
+  - .title font-weight: semibold (overflow from .content — typo in original)
+  - .actions display: flex + margin-top (layout)
+  - .close background:transparent + border:0 + cursor + line-height (sx can't do bg:transparent or text line-height)
+  - .close :hover bg + fg
+  - .close :focus-visible outline + outline-offset
+  - ::slotted([slot='icon']) display + width + height
+-->
 <style>
   :host {
     display: block;
-    --tone: var(--foreground);
-    --tone-fg: var(--foreground);
-    --tone-bg: var(--tone-default-bg);
   }
-  :host([hidden]) { display: none; }
-
-  :host([tone='info'])        { --tone: var(--info);             --tone-fg: var(--info);             --tone-bg: var(--tone-info-bg); }
-  :host([tone='success'])     { --tone: var(--success);          --tone-fg: var(--tone-success-fg);  --tone-bg: var(--tone-success-bg); }
-  :host([tone='warning'])     { --tone: var(--warning);          --tone-fg: var(--tone-warning-fg);  --tone-bg: var(--tone-warning-bg); }
-  :host([tone='destructive']) { --tone: var(--destructive);      --tone-fg: var(--destructive);      --tone-bg: var(--tone-destructive-bg); }
-  :host([tone='muted'])       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-bg: var(--muted); }
-  :host([tone='default'])     { --tone: var(--foreground);       --tone-fg: var(--foreground);       --tone-bg: var(--tone-default-bg); }
-
   .box {
-    position: relative;
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: start;
     gap: var(--space-3);
-    padding: var(--space-3) var(--space-3) var(--space-3) var(--space-3);
+    padding: var(--space-3);
     border-radius: var(--radius);
     overflow: hidden;
     border: 1px solid var(--border);
@@ -70,7 +83,6 @@
     width: var(--space-1);
     background: var(--tone);
   }
-
   .ico {
     display: inline-flex;
     align-items: center;
@@ -82,59 +94,49 @@
     background: var(--tone-bg);
     color: var(--tone-fg);
   }
-
   .content { min-width: 0; }
-    font-weight: var(--font-weight-semibold);
+  .title { font-weight: var(--font-weight-semibold); }
   .body { color: var(--muted-foreground); }
-
   .actions {
     display: flex;
     gap: var(--space-2);
     margin-top: var(--space-2);
   }
-
   .close {
     display: none;
     background: transparent;
     border: 0;
     color: var(--muted-foreground);
     cursor: pointer;
-    font-size: var(--text-md);
-    width: var(--control-h-2xs);
-    height: var(--control-h-2xs);
-    border-radius: var(--radius-sm);
-    align-items: center;
-    justify-content: center;
     line-height: 1;
   }
-  :host([dismissible]) .close {
-    display: inline-flex;
-  }
-  .close:hover {
-    background: var(--tone-bg);
-    color: var(--tone-fg);
-  }
+  :host([dismissible]) .close { display: inline-flex; }
+  .close:hover { background: var(--tone-bg); color: var(--tone-fg); }
   .close:focus-visible {
     outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
   }
-
   ::slotted([slot='icon']) { display: inline-flex; width: var(--icon-size-sm); height: var(--icon-size-sm); }
 </style>
 
-<div class="box"
-     part="box"
+<div class="box" part="box"
      role={tone() === 'destructive' || tone() === 'warning' ? 'alert' : 'status'}
      aria-live={tone() === 'destructive' || tone() === 'warning' ? 'assertive' : 'polite'}
-     aria-atomic="true">
-  <span class="ico"><slot name="icon"></slot></span>
-  <column class="content" gap="1">
-    <div class="title"><slot name="title"></slot></div>
-    <div class="body"><slot></slot></div>
-    <div class="actions"><slot name="actions"></slot></div>
+     aria-atomic="true"
+     sx="p:3 radius:md overflow:hidden border:border bg:surface-1 text:base leading:normal shadow:xs">
+  <span class="ico" part="ico"
+    sx="radius:md bg:tone-bg fg:tone-fg">
+    <slot name="icon"></slot>
+  </span>
+  <column class="content" part="content" gap="1" sx="min-w:0">
+    <div class="title" part="title"
+      sx="weight:semibold"><slot name="title"></slot></div>
+    <div class="body" part="body" sx="fg:muted-foreground"><slot></slot></div>
+    <div class="actions" part="actions"><slot name="actions"></slot></div>
   </column>
-  <button class="close" part="close" type="button" aria-label="Dismiss" bind:this={closeBtn}>
-    <svg viewBox="0 0 10 10" aria-hidden="true">
+  <button class="close" part="close" type="button" aria-label="Dismiss" bind:this={closeBtn}
+    sx="w:control-h-2xs h:control-h-2xs radius:sm fg:muted-foreground">
+    <svg viewBox="0 0 10 10" aria-hidden="true" sx="w:icon-size-sm h:icon-size-sm">
       <path d="M2 2 L8 8 M8 2 L2 8" stroke="currentColor"
             stroke-width="1.75" stroke-linecap="round" fill="none"/>
     </svg>
