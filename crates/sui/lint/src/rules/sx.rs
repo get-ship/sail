@@ -574,9 +574,13 @@ mod tests {
 
     #[test]
     fn accepts_declared_theme_channels_only() {
-        let themed = "<theme prop=\"tone\" channels=\"tone-fg\">\n  default: foreground\n</theme>\n<sui-card sx=\"fg:tone-fg\">x</sui-card>";
+        // `tone-fg` is now a universal framework channel (always valid), so use a
+        // genuinely bespoke channel (`tone-on-fg`) for the declared-vs-undeclared test.
+        let themed = "<theme prop=\"tone\" channels=\"tone-on-fg\">\n  default: foreground\n</theme>\n<sui-card sx=\"fg:tone-on-fg\">x</sui-card>";
         assert!(run(themed).is_empty(), "declared channel is a legal sx value");
-        assert_eq!(run(r#"<sui-card sx="fg:tone-fg">x</sui-card>"#).len(), 1, "undeclared channel is rejected");
+        assert_eq!(run(r#"<sui-card sx="fg:tone-on-fg">x</sui-card>"#).len(), 1, "undeclared bespoke channel is rejected");
+        // The framework channels are valid with NO declaration at all.
+        assert!(run(r#"<sui-card sx="bg:tone fg:tone-contrast border:tone-border">x</sui-card>"#).is_empty(), "framework channels need no <theme> declaration");
     }
 
     #[test]
