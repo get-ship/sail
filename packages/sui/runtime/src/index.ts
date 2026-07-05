@@ -281,6 +281,12 @@ export type { BoundaryHandle, BoundarySource } from './error-boundary'
 // tree-shaken when unused.
 export { __sui_motion_attach } from './motion'
 export type { MotionAttachConfig, BakedAnimation } from './motion'
+// Shared-sheet adoption for shadow components. Compiler-emitted client
+// code calls `adoptSuiSheets(__root)` in every component mount (see
+// crates/sui/compiler/src/emit/js/setup.rs). It is client-safe (no-ops
+// without ShadowRoot) and MUST be on the client entry, not just server.ts,
+// or the bundled runtime lacks the export the emit imports.
+export { adoptSuiSheets } from './styles/index'
 // F1 mount unification — hosts call mount(target, payload, opts) to put
 // a view on screen. See .artifacts/design-f1-mount-unification.md.
 export { mount } from './mount'
