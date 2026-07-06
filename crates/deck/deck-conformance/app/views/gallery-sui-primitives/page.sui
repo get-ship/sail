@@ -155,14 +155,7 @@
     </div>
   </section>
 
-  <!-- Code -->
-  <section class="gsp-section">
-    <h2 class="gsp-label">sui-code</h2>
-    <div class="gsp-col">
-      <sui-code lang="ts">const x = signal(0);</sui-code>
-      <sui-code lang="ts">const y = derived(() => x() * 2);</sui-code>
-    </div>
-  </section>
+  <!-- Code dissolved to L1 (bare code/pre + sx) — see dissolve-gate.md -->
 
   <!-- Collapsible -->
   <section class="gsp-section">

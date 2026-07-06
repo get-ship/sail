@@ -159,6 +159,8 @@ interaction patterns.
 | sui-separator | `<separator>` | T2 | |
 | sui-avatar | `<img>` reset + stdlib avatar | T2 | image baseline L1; initials-fallback logic L2 |
 | sui-badge | bare `<span>` + sx | dissolved | JS-free, static; no L1 element registered — dissolves to a semantic tag styled by the closed sx vocabulary + the global tone contract, not a stdlib skin |
+| sui-link | bare `<a>` + sx | dissolved | JS-free; decoration/hover styling (no sx `decoration` prop) and the external-link sr-only text dropped as cosmetic — zero usages in-repo |
+| sui-code | bare `<code>` (inline) / `<div>`+`<header>`+`<separator>`+`<pre>` (block) + sx | dissolved | JS-free; the block-mode header's border-bottom (sx has no per-edge border) is composed with the L1 `<separator>` element instead, and its uppercase transform (sx has no `text-transform`) moves into the template expression (`{lang().toUpperCase()}`) — both losslessly, no stdlib skin needed |
 | sui-scroll-area | `<scroll>` | T3 | scrollbar chrome is deliberately inexpressible elsewhere |
 | sui-table | `<table>` family reset + stdlib table | T3 | visual baseline L1; sort/select behavior L2 |
 | (new) | `<progress>`, `<visually-hidden>`, `<kbd>`, list resets | T2/T3 | no current dir; born language-level |
@@ -174,7 +176,7 @@ sui-calendar, sui-file-upload, sui-field.
 Disclosure/nav: sui-accordion, sui-collapsible, sui-tabs (+tab, tab-panel),
 sui-navigation-menu, sui-pagination.
 Data/content: sui-tree, sui-tree-view, sui-tree-grid, sui-json-view,
-sui-diff, sui-markdown, sui-code, sui-timeline (+item).
+sui-diff, sui-markdown, sui-timeline (+item).
 Status/display: sui-alert, sui-chip, sui-card, sui-status-dot,
 sui-skeleton, sui-error-boundary (runtime-backed).
 

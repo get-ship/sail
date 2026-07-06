@@ -70,14 +70,22 @@
     {#if compileError() !== null}
       <column gap="2" part="compile-error" data-test="compile-error">
         <sui-alert tone="destructive">{compileErrorSummary()}</sui-alert>
-        <sui-code block lang="text">{compileErrorBody()}</sui-code>
+        <div role="region" aria-label="text code block" sx="bg:surface-2 fg:foreground border:subtle radius:md overflow:hidden">
+          <header sx="p:2 px:3 text:xs fg:muted-foreground bg:muted weight:medium tracking:wide">TEXT</header>
+          <separator sx="m:0"></separator>
+          <pre sx="py:3 px:4 overflow-x:auto leading:normal-plus">{compileErrorBody()}</pre>
+        </div>
       </column>
     {/if}
 
     {#if runtimeError() !== null}
       <column gap="2" part="runtime-error" data-test="runtime-error">
         <sui-alert tone="destructive">The specimen threw at runtime.</sui-alert>
-        <sui-code block lang="text">{runtimeError()}</sui-code>
+        <div role="region" aria-label="text code block" sx="bg:surface-2 fg:foreground border:subtle radius:md overflow:hidden">
+          <header sx="p:2 px:3 text:xs fg:muted-foreground bg:muted weight:medium tracking:wide">TEXT</header>
+          <separator sx="m:0"></separator>
+          <pre sx="py:3 px:4 overflow-x:auto leading:normal-plus">{runtimeError()}</pre>
+        </div>
       </column>
     {/if}
 

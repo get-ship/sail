@@ -16,21 +16,21 @@ import type { ComponentExample } from '@ship/sui-runtime'
 export const sources: Record<string, string> = {
   'Button — solid primary': `<sui-button variant="solid" tone="primary">Dispatch lane</sui-button>`,
   'Alert — destructive': `<sui-alert tone="destructive">Gate failed: 3 findings block the merge.</sui-alert>`,
-  'Code block — diff': `<sui-code block lang="diff">- old\n+ new</sui-code>`,
+  'Chip — removable': `<sui-chip removable tone="primary">TypeScript</sui-chip>`,
 }
 
 /** Current knob `value` snapshots the snippet diffs against the CEM default. */
 export const values: Record<string, Record<string, unknown>> = {
   'Button — solid primary': { variant: 'solid', tone: 'primary', size: 'md' },
   'Alert — destructive': { tone: 'destructive' },
-  'Code block — diff': { block: true, lang: 'diff' },
+  'Chip — removable': { removable: true, tone: 'primary' },
 }
 
 /** Composed slot content for each snippet's inner. */
 export const slots: Record<string, string> = {
   'Button — solid primary': 'Dispatch lane',
   'Alert — destructive': 'Gate failed: 3 findings block the merge.',
-  'Code block — diff': '- old\n+ new',
+  'Chip — removable': 'TypeScript',
 }
 
 export const examples: ComponentExample[] = [
@@ -45,8 +45,8 @@ export const examples: ComponentExample[] = [
     props: { 'component-name': 'sui-alert', lang: 'html' },
   },
   {
-    name: 'Code block — diff',
-    description: 'A bool prop (block) renders as a bare attribute in the recomputed snippet.',
-    props: { 'component-name': 'sui-code', lang: 'html' },
+    name: 'Chip — removable',
+    description: 'A bool prop (removable) renders as a bare attribute in the recomputed snippet.',
+    props: { 'component-name': 'sui-chip', lang: 'html' },
   },
 ]

@@ -11,7 +11,8 @@
 //      `snippet.ts` logic reproduced over the CEM `attributes[]` shape.
 //   2. <sui-source-panel> — driven through `renderComponent` (the production
 //      Rust/WASM compiler under happy-dom, the authority/charts convention),
-//      composing the registered `sui-code` + `sui-button` from
+//      composing the dissolved code display (bare `<pre>` + sx — sui-code was
+//      retired to L1) + the registered `sui-button` from
 //      `@ship/sui-primitives`. Structured data (source, CEM attrs, propValues,
 //      slot content) arrives via JS PROPERTIES (the `prop:*` identity rule) —
 //      scalar control props (`component-name`, `lang`) via `attrs`.
@@ -20,7 +21,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderComponent } from '@ship/test-setup'
-import '@ship/sui-primitives' // register the composed sui-code / sui-button
+import '@ship/sui-primitives' // register the composed sui-button (sui-code is dissolved to bare pre + sx)
 import controller from '../src/sui-source-panel/sui-source-panel.controller'
 import { buildSnippet, copyText, type CemAttr } from '../src/sui-source-panel/snippet'
 
@@ -174,13 +175,13 @@ const root = (el: HTMLElement) => el
 
 describe('<sui-source-panel> — registration + composition', () => {
 
-  it('composes sui-code (display) + sui-button (copy action)', async () => {
+  it('composes the dissolved code display (bare pre) + sui-button (copy action)', async () => {
     const c = mountPanel(
       { 'component-name': 'sui-button' },
       { source: '<button>hi</button>', props: BUTTON_CEM, value: {} },
     )
     await c.flush()
-    expect(root(c.el).querySelector('sui-code')).not.toBeNull()
+    expect(root(c.el).querySelector('[part="source-code"] pre')).not.toBeNull()
     expect(root(c.el).querySelector('sui-button')).not.toBeNull()
   })
 })

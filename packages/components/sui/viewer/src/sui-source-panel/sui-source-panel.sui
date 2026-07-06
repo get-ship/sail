@@ -50,7 +50,13 @@
 <column gap="3" class="panel" part="panel">
   <column gap="2" class="section" part="source-section">
     <span class="section-label" part="source-label">Source</span>
-    <sui-code block lang={lang()} part="source-code"><span bind:this={sourceEl}></span></sui-code>
+    <div part="source-code" role="region" aria-label={lang() ? lang() + ' code block' : 'code block'} sx="bg:surface-2 fg:foreground border:subtle radius:md overflow:hidden">
+      {#if lang()}
+        <header sx="p:2 px:3 text:xs fg:muted-foreground bg:muted weight:medium tracking:wide">{lang().toUpperCase()}</header>
+        <separator sx="m:0"></separator>
+      {/if}
+      <pre sx="py:3 px:4 overflow-x:auto leading:normal-plus"><span bind:this={sourceEl}></span></pre>
+    </div>
   </column>
 
   <column gap="2" class="section" part="snippet-section">
@@ -63,7 +69,13 @@
         <sui-button size="xs" variant="soft" on:click={copy} part="copy-button">Copy</sui-button>
       </column>
     </div>
-    <sui-code block lang={lang()} part="snippet-code"><span bind:this={snippetEl}></span></sui-code>
+    <div part="snippet-code" role="region" aria-label={lang() ? lang() + ' code block' : 'code block'} sx="bg:surface-2 fg:foreground border:subtle radius:md overflow:hidden">
+      {#if lang()}
+        <header sx="p:2 px:3 text:xs fg:muted-foreground bg:muted weight:medium tracking:wide">{lang().toUpperCase()}</header>
+        <separator sx="m:0"></separator>
+      {/if}
+      <pre sx="py:3 px:4 overflow-x:auto leading:normal-plus"><span bind:this={snippetEl}></span></pre>
+    </div>
   </column>
 </column>
 

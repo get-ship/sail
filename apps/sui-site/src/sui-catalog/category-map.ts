@@ -220,7 +220,6 @@ export const TAG_CATEGORY: Record<string, CategoryId> = {
   'sui-mermaid':         'data',
 
   // ── @ship/sui-code — Typography ───────────────────────────────────────
-  'sui-code':            'typography',
   'sui-diff':            'typography',
   'sui-markdown':        'typography',
 }
