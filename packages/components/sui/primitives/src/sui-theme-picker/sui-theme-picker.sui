@@ -347,7 +347,7 @@
   .tc-controls { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
   .tc-cta {
     display: inline-flex; align-items: center;
-    font-weight: 500; font-size: 9.5px; line-height: 1;
+    font-weight: var(--font-weight-medium); font-size: 9.5px; line-height: 1;
     padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-sm);
     background: var(--primary);
@@ -355,7 +355,7 @@
   }
   .tc-ghost {
     display: inline-flex; align-items: center;
-    font-weight: 500; font-size: 9.5px; line-height: 1;
+    font-weight: var(--font-weight-medium); font-size: 9.5px; line-height: 1;
     padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-sm);
     background: transparent;
