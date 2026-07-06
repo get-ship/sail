@@ -67,7 +67,7 @@
   <h2>Layout primitives</h2>
   <p>
     Reach for <code>&lt;column&gt;</code>, <code>&lt;row&gt;</code>, and
-    <code>&lt;sui-grid&gt;</code> before reaching for a hand-rolled flex
+    <code>&lt;grid&gt;</code> before reaching for a hand-rolled flex
     layout. They encode the design system's spacing scale, the breakpoints,
     and the responsive defaults — so a layout that reads
     <code>gap="3"</code> in one place looks the same wherever it's reused.

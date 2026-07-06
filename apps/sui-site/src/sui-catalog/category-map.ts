@@ -126,7 +126,6 @@ export const TAG_CATEGORY: Record<string, CategoryId> = {
   'sui-tabs':            'layout',
   'sui-timeline':        'layout',
   'sui-scroll-area':     'layout',
-  'sui-grid':            'layout',
   'sui-collapsible':     'layout',
 
   // ── @ship/sui-primitives — Overlays ───────────────────────────────────

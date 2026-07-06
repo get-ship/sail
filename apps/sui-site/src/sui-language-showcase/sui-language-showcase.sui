@@ -136,11 +136,11 @@
                 <span tone="success" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">stable</span>
               </row>
               <p>Three CSS keywords, zero token literals.</p>
-              <sui-grid min="md" gap="3">
+              <grid min="md" gap="3">
                 <sui-card tone="primary"><strong>One</strong></sui-card>
                 <sui-card tone="success"><strong>Two</strong></sui-card>
                 <sui-card tone="info"><strong>Three</strong></sui-card>
-              </sui-grid>
+              </grid>
             </column>
           {:else if p.id === 'sx'}
             <column gap="2" data-test="lang-demo-sx">

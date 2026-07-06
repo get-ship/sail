@@ -83,10 +83,10 @@ const code = {
     '</row>',
     '',
     '<!-- A two-column grid that collapses. -->',
-    '<sui-grid columns="2" gap="6">',
+    '<grid min="sm" gap="6">',
     '  <article>...</article>',
     '  <article>...</article>',
-    '</sui-grid>',
+    '</grid>',
   ].join('\n'),
 }
 

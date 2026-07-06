@@ -13,7 +13,7 @@
                    card's meta row
     <center>       parks the live specimen dead-center of the framed stage
                    (both axes), so specimens no longer hug the top edge
-    <sui-grid>     the responsive auto-fill card gallery (min="lg" gap="4")
+    <grid>         the responsive auto-fill card gallery (min="lg" gap="4")
 
   Filtering is reactive without re-rendering: the controller exposes a
   `query` signal (bound to <sui-input>) and an `activeCategory` signal;
@@ -215,7 +215,7 @@
     {/for}
   </row>
 
-  <sui-grid class="grid" min="lg" gap="4" data-test="catalog-grid">
+  <grid class="grid" min="lg" gap="4" data-test="catalog-grid">
     {#for c of components() key={c.tag}}
       <a
         class="cell"
@@ -236,7 +236,7 @@
         </div>
       </a>
     {/for}
-  </sui-grid>
+  </grid>
 
   {#if visibleCount() === 0}
     <p class="no-results" data-test="catalog-empty">No components match “{query()}”.</p>
