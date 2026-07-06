@@ -50,7 +50,7 @@ LANG-GAP(prop-default): the SFC component block desugars
   props: {
     size: 'xs' | 'sm' | 'md' | 'lg',
     tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
-    label: string,
+    label: 'Loading',
     centered: bool,
   },
 }</component>
