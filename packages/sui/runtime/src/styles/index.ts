@@ -129,10 +129,40 @@ const CONTROL_CONTRACTS_CSS =
   // Interactive transition defaults from the motion tokens.
   '[data-component] :where(button, a, [tabindex]) { transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }\n'
 
+// L1 <button> — the first language element skin. A bare <button> inside any
+// SUI subtree IS the design system's button ("the web with default styles"):
+// tone/size arrive through the attribute-keyed channel contracts above,
+// variant surfaces mirror the hand-polished baseline, and every rule sits at
+// :where() zero specificity so sx atomics and component variants win ties.
+// Fallbacks carry the no-attribute defaults (tone=default, size=md).
+const BUTTON_SKIN_CSS =
+  '[data-component] :where(button) { display: inline-flex; align-items: center; justify-content: center; gap: var(--size-gap, var(--space-2)); min-height: var(--size-h, var(--control-h-md)); padding: 0 var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); font-weight: var(--font-weight-medium); border-radius: var(--radius-md); border: 1px solid transparent; background: transparent; isolation: isolate; position: relative; }\n' +
+  // default / no-variant: neutral bordered surface.
+  "[data-component] :where(button:not([variant]), button[variant='default']) { background: var(--background); border-color: var(--border); color: var(--foreground); box-shadow: var(--shadow-xs); }\n" +
+  "[data-component] :where(button:not([variant]), button[variant='default']):hover:not(:disabled) { background: var(--muted); border-color: var(--border-strong); }\n" +
+  // solid: the tone fill.
+  "[data-component] :where(button[variant='solid']) { background: var(--tone, var(--foreground)); border-color: var(--tone, var(--foreground)); color: var(--tone-contrast, var(--background)); box-shadow: var(--shadow-xs); }\n" +
+  "[data-component] :where(button[variant='solid']):hover:not(:disabled) { background: var(--hover-bg); box-shadow: var(--shadow-sm); }\n" +
+  // soft: the tinted surface.
+  "[data-component] :where(button[variant='soft']) { background: var(--tone-bg, var(--hover-bg)); border-color: var(--tone-border, var(--border)); color: var(--tone-fg, var(--foreground)); }\n" +
+  "[data-component] :where(button[variant='soft']):hover:not(:disabled) { background: var(--tone-ring, var(--ring)); }\n" +
+  // outline / ghost.
+  "[data-component] :where(button[variant='outline']) { border-color: var(--tone, var(--foreground)); color: var(--tone-fg, var(--foreground)); }\n" +
+  "[data-component] :where(button[variant='outline'], button[variant='ghost']):hover:not(:disabled) { background: var(--hover-bg); }\n" +
+  "[data-component] :where(button[variant='ghost']) { color: var(--tone-fg, var(--foreground)); }\n" +
+  // Interaction motion (the baseline lift/press — reduced-motion kills it
+  // via the global media rule).
+  '[data-component] :where(button):hover:not(:disabled) { transform: translateY(-1px); }\n' +
+  '[data-component] :where(button):active:not(:disabled) { transform: translateY(1px) scale(0.98); }\n' +
+  // Disabled surface (the contract handles cursor/opacity; ghost/outline go
+  // transparent like the baseline).
+  "[data-component] :where(button[variant='ghost'], button[variant='outline']):disabled { background: transparent; }\n"
+
 const LIGHT_CONTRACTS_CSS =
   hostAttrs(TONES_CSS) +
   hostAttrs(SIZES_CSS) +
   CONTROL_CONTRACTS_CSS +
+  BUTTON_SKIN_CSS +
   // Host defaults for light components (the :host base rules, element-keyed).
   '[data-component] { display: block; color: var(--foreground); }\n' +
   '[data-component][hidden] { display: none !important; }\n' +

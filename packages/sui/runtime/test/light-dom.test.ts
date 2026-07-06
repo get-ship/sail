@@ -105,6 +105,13 @@ describe('light-DOM component registration', () => {
     expect(css).toContain(':disabled')
     expect(css).toContain('forced-colors: active')
     expect(css).toMatch(/:where\(button\)[^}]*user-select: none/)
+    // The L1 <button> skin: variant surfaces at zero specificity, channels
+    // with no-attribute fallbacks. Layer invisibility: the same [tone]/[size]
+    // contracts drive a bare <button> and a light L2 component identically.
+    expect(css).toContain("button[variant='solid']")
+    expect(css).toContain("button[variant='soft']")
+    expect(css).toMatch(/min-height: var\(--size-h, var\(--control-h-md\)\)/)
+    expect(css).toContain('translateY(-1px)')
   })
 
   it('shadow: true still attaches a shadow root (the containment feature)', () => {
