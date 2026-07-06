@@ -8,7 +8,7 @@ export const examples: ComponentExample[] = [
     slots: `
       <span slot="header">Dispatch <code>ship-it</code> 🚀</span>
       <sui-field label="Spec" hint="What should this run do?">
-        <sui-textarea rows="3" placeholder="Wire the components explorer to live examples…"></sui-textarea>
+        <textarea rows="3" placeholder="Wire the components explorer to live examples…"></textarea>
       </sui-field>
       <sui-field label="Provider">
         <sui-select>
@@ -17,8 +17,8 @@ export const examples: ComponentExample[] = [
         </sui-select>
       </sui-field>
       <div class="toolbar toolbar--footer" slot="footer">
-        <sui-button variant="outline">Cancel</sui-button>
-        <sui-button tone="primary" variant="solid">Dispatch</sui-button>
+        <button variant="outline">Cancel</button>
+        <button variant="solid" tone="primary">Dispatch</button>
       </div>
     `,
   },
@@ -30,8 +30,8 @@ export const examples: ComponentExample[] = [
       <span slot="header">gatekeeper went quiet</span>
       <p>The session for <code>job/sui-framework</code> ended after 41 minutes with no <code>step_done</code>. Re-dispatch from the last snapshot?</p>
       <div class="toolbar toolbar--footer" slot="footer">
-        <sui-button variant="ghost">Dismiss</sui-button>
-        <sui-button tone="primary" variant="solid">Re-dispatch</sui-button>
+        <button variant="ghost">Dismiss</button>
+        <button variant="solid" tone="primary">Re-dispatch</button>
       </div>
     `,
   },

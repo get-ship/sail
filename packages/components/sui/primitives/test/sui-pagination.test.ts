@@ -1,19 +1,18 @@
 // <sui-pagination> — behavioral specs (TDD-first).
 //
-// The pagination bar composes sui-button (first / prev / page-numbers / next /
-// last) + sui-select (page-size) and renders an "N–M of T" range label. It is a
-// CONTROLLED, presentational primitive: it never owns the page — it reflects the
-// `page` / `page-size` / `total` props it is given and EMITS the requested
-// transition as `sui-page-change { page, pageSize }` (bubbles + composed). The
-// consumer (e.g. the sui-table footer) applies the change and feeds the new
-// props back.
+// The pagination bar composes bare <button>s (first / prev / page-numbers /
+// next / last — dissolved from <sui-button>) + sui-select (page-size) and
+// renders an "N–M of T" range label. It is a CONTROLLED, presentational
+// primitive: it never owns the page — it reflects the `page` / `page-size` /
+// `total` props it is given and EMITS the requested transition as
+// `sui-page-change { page, pageSize }` (bubbles + composed). The consumer
+// (e.g. the sui-table footer) applies the change and feeds the new props back.
 //
-// The child compiled modules are imported so the real `<button disabled>` /
-// `<select>` chrome renders — disabled-state + change assertions read those.
+// The child compiled modules are imported so the real `<select>` chrome
+// renders — the change assertions read that.
 
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sui-pagination/sui-pagination.compiled.js'
-import '../src/sui-button/sui-button.compiled.js'
 import '../src/sui-select/sui-select.compiled.js'
 import { createContainerRegistry, flush, mount } from '../src/test-utils'
 
@@ -30,14 +29,11 @@ const action = (el: HTMLElement, name: string): HTMLElement | null =>
 const pageButtons = (el: HTMLElement): HTMLElement[] =>
   Array.from(shadow(el).querySelectorAll('[data-page]'))
 
-/** A control reads as disabled when its host sui-button has the prop, or — when
- *  sui-button is registered — its inner <button> is disabled. Assert on the
- *  reflected `disabled` attribute the controller drives via prop:disabled. */
+/** A control reads as disabled when the bare <button> carries the reflected
+ *  `disabled` attribute the controller drives via `disabled={…}`. */
 const isDisabled = (btn: HTMLElement | null): boolean =>
   btn != null &&
-  (btn.hasAttribute('disabled') ||
-    (btn as { disabled?: boolean }).disabled === true ||
-    btn.shadowRoot?.querySelector('button')?.disabled === true)
+  (btn.hasAttribute('disabled') || (btn as { disabled?: boolean }).disabled === true)
 
 describe('<sui-pagination>', () => {
 

@@ -41,7 +41,8 @@ const ports: PortCase[] = [
   { tag: 'sui-separator',  attr: 'orientation', value: 'vertical', shadowPart: '.sep' },
   { tag: 'sui-skeleton',   attr: 'shape', value: 'circle',  shadowPart: '.sk' },
   { tag: 'sui-avatar',     attr: 'size',  value: 'lg',      shadowPart: '.root' },
-  { tag: 'sui-button',     attr: 'tone',  value: 'primary', shadowPart: 'button' },
+  // sui-button dissolved to bare <button> (L1 tone/variant/size contract) —
+  // no longer a custom element, so it drops out of this per-port smoke net.
   { tag: 'sui-tabs',       attr: 'variant', value: 'pill',  shadowPart: '.strip' },
   { tag: 'sui-tab',        attr: 'name',  value: 'one',     shadowPart: 'button' },
   { tag: 'sui-empty-state', attr: 'tone', value: 'muted',   shadowPart: '.title' },

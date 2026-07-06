@@ -106,7 +106,6 @@ export const HIDDEN_TAGS: Record<string, true> = {
 export const TAG_CATEGORY: Record<string, CategoryId> = {
   // ── @ship/sui-primitives — Forms & Inputs ─────────────────────────────
   'sui-input':           'forms',
-  'sui-textarea':        'forms',
   'sui-checkbox':        'forms',
   'sui-switch':          'forms',
   'sui-radio-group':     'forms',
@@ -167,7 +166,6 @@ export const TAG_CATEGORY: Record<string, CategoryId> = {
   'sui-json-view':       'data',
   'sui-sheet':           'data',
   // ── @ship/sui-primitives — Typography & identity ──────────────────────
-  'sui-button':          'typography',
   'sui-icon':            'typography',
   'sui-avatar':          'typography',
   'sui-chip':            'typography',

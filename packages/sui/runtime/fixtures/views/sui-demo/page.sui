@@ -3,47 +3,47 @@
   <p>Visual sanity-check for the SUI component bundle.</p>
 
   <section>
-    <h2>sui-button — solid</h2>
-    <sui-button variant="solid">Default</sui-button>
-    <sui-button variant="solid" tone="primary">Primary</sui-button>
-    <sui-button variant="solid" tone="success">Success</sui-button>
-    <sui-button variant="solid" tone="warning">Warning</sui-button>
-    <sui-button variant="solid" tone="destructive">Destructive</sui-button>
-    <sui-button variant="solid" tone="info">Info</sui-button>
+    <h2>button — solid</h2>
+    <button solid>Default</button>
+    <button solid primary>Primary</button>
+    <button solid success>Success</button>
+    <button solid warning>Warning</button>
+    <button solid destructive>Destructive</button>
+    <button solid info>Info</button>
   </section>
 
   <section>
-    <h2>sui-button — soft</h2>
-    <sui-button variant="soft">Default</sui-button>
-    <sui-button variant="soft" tone="primary">Primary</sui-button>
-    <sui-button variant="soft" tone="success">Success</sui-button>
-    <sui-button variant="soft" tone="destructive">Destructive</sui-button>
+    <h2>button — soft</h2>
+    <button soft>Default</button>
+    <button soft primary>Primary</button>
+    <button soft success>Success</button>
+    <button soft destructive>Destructive</button>
   </section>
 
   <section>
-    <h2>sui-button — outline</h2>
-    <sui-button variant="outline" tone="primary">Primary</sui-button>
-    <sui-button variant="outline" tone="success">Success</sui-button>
-    <sui-button variant="outline" tone="destructive">Destructive</sui-button>
+    <h2>button — outline</h2>
+    <button outline primary>Primary</button>
+    <button outline success>Success</button>
+    <button outline destructive>Destructive</button>
   </section>
 
   <section>
-    <h2>sui-button — ghost</h2>
-    <sui-button variant="ghost" tone="primary">Primary</sui-button>
-    <sui-button variant="ghost" tone="destructive">Destructive</sui-button>
+    <h2>button — ghost</h2>
+    <button ghost primary>Primary</button>
+    <button ghost destructive>Destructive</button>
   </section>
 
   <section>
-    <h2>sui-button — sizes</h2>
-    <sui-button variant="solid" tone="primary" size="sm">Small</sui-button>
-    <sui-button variant="solid" tone="primary" size="md">Medium</sui-button>
-    <sui-button variant="solid" tone="primary" size="lg">Large</sui-button>
+    <h2>button — sizes</h2>
+    <button solid primary sm>Small</button>
+    <button solid primary md>Medium</button>
+    <button solid primary lg>Large</button>
   </section>
 
   <section>
-    <h2>sui-button — states</h2>
-    <sui-button variant="solid" tone="primary" disabled>Disabled</sui-button>
-    <sui-button variant="solid" tone="primary" loading>Loading</sui-button>
+    <h2>button — states</h2>
+    <button solid primary disabled>Disabled</button>
+    <button solid primary disabled aria-busy="true"><spinner size="sm"></spinner> Loading</button>
   </section>
 
   <section>
@@ -61,7 +61,7 @@
     <sui-card>
       <h3 slot="header">Card title</h3>
       <p>Card body content lives in the default slot.</p>
-      <div slot="footer"><sui-button variant="solid" tone="primary">Action</sui-button></div>
+      <div slot="footer"><button solid primary>Action</button></div>
     </sui-card>
   </section>
 </div>

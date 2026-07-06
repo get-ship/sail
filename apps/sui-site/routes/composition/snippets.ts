@@ -14,7 +14,7 @@ export const code = {
 <sui-card>
   <h2 slot="title">A new project</h2>
   <p>Body content goes in the default slot.</p>
-  <sui-button slot="actions" tone="primary">Save</sui-button>
+  <button slot="actions" primary>Save</button>
 </sui-card>`,
 
   props: `<!-- pass props down; the child declares them with <prop> and reads

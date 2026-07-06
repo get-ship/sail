@@ -1,6 +1,6 @@
 // viewer-polish snapshot + console-error spec — captures before/after
 // screenshots of the /components catalog and the per-component detail
-// view at the two representative tags (sui-button — small, sui-calendar
+// view at the two representative tags (sui-badge — small, sui-calendar
 // — tall) AND asserts no NEW console errors land on those surfaces
 // after the polish.
 //
@@ -55,7 +55,7 @@ function attach(page: Page, label: string): void {
 
 const ROUTES = [
   { name: 'catalog', path: '/components', expect: 'catalog' as const },
-  { name: 'detail-sui-button', path: '/components/sui-button', expect: 'detail' as const },
+  { name: 'detail-sui-badge', path: '/components/sui-badge', expect: 'detail' as const },
   { name: 'detail-sui-calendar', path: '/components/sui-calendar', expect: 'detail' as const },
 ] as const
 

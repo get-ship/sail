@@ -66,7 +66,7 @@
         {#if copied()}
           <span class="copied" part="copied" aria-live="polite">Copied</span>
         {/if}
-        <sui-button size="xs" variant="soft" on:click={copy} part="copy-button">Copy</sui-button>
+        <button soft xs on:click={copy} part="copy-button">Copy</button>
       </column>
     </div>
     <div part="snippet-code" role="region" aria-label={lang() ? lang() + ' code block' : 'code block'} sx="bg:surface-2 fg:foreground border:subtle radius:md overflow:hidden">

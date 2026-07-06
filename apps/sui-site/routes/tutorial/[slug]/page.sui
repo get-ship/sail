@@ -53,8 +53,8 @@
     <div class="tut-play-head">
       <p class="tut-eyebrow tut-eyebrow--muted">— Playground</p>
       <div class="tut-actions">
-        <sui-button data-action="reset" variant="ghost" size="sm">↺ Reset</sui-button>
-        <sui-button data-action="solution" variant="outline" tone="primary" size="sm">Show solution</sui-button>
+        <button data-action="reset" ghost sm>↺ Reset</button>
+        <button data-action="solution" outline primary sm>Show solution</button>
       </div>
     </div>
 
@@ -104,7 +104,7 @@
           <sui-status-dot class="tut-status-dot" tone="success" pulse size="sm" label="ready"></sui-status-dot>
           <span class="tut-live-label">Preview · live</span>
         </div>
-        <sui-button data-action="run" variant="outline" tone="primary" size="sm">▶ Run</sui-button>
+        <button data-action="run" outline primary sm>▶ Run</button>
       </div>
       <div class="tut-preview-host">
         <iframe class="tut-preview" data-base-src="/tut-host.html" title="Tutorial preview" sandbox="allow-scripts allow-same-origin"></iframe>

@@ -10,8 +10,8 @@ export const examples: ComponentExample[] = [
       <p>17 uncommitted changes across 6 files will be lost. The branch
       <code>job/sui-framework</code> is not merged. This cannot be undone.</p>
       <div class="toolbar toolbar--footer" slot="footer">
-        <sui-button variant="outline">Keep it</sui-button>
-        <sui-button tone="destructive" variant="solid">Delete worktree</sui-button>
+        <button variant="outline">Keep it</button>
+        <button variant="solid" tone="destructive">Delete worktree</button>
       </div>
     `,
   },

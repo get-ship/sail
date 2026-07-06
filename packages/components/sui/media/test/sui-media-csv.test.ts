@@ -10,9 +10,11 @@
 //
 // Harness: `renderComponent` compiles the renderer `.sui` under the
 // `sui-media-csv` tag; the composed committed `sui-table` (+ its footer's
-// sui-pagination/sui-button, + sui-empty-state) are registered via their
-// primitives `.compiled.js`. The CSV renderer parses text and feeds the
-// committed engine — the rendered grid is the proof the composition seam holds.
+// sui-pagination, + sui-empty-state) are registered via their primitives
+// `.compiled.js` (sui-pagination's nav buttons are bare <button>s, dissolved
+// from <sui-button> — no separate registration needed). The CSV renderer
+// parses text and feeds the committed engine — the rendered grid is the proof
+// the composition seam holds.
 //
 // Authority: build-spec Slice 4 (sui-media-csv composes sui-table; NO
 // density/dense on the composed table), §"Backbone #2 — ViewerRenderer
@@ -29,7 +31,6 @@ import { renderComponent } from '@ship/test-setup'
 // package `exports` only maps `.`).
 import '../../primitives/src/sui-table/sui-table.compiled.js'
 import '../../primitives/src/sui-pagination/sui-pagination.compiled.js'
-import '../../primitives/src/sui-button/sui-button.compiled.js'
 import '../../primitives/src/sui-empty-state/sui-empty-state.compiled.js'
 import '../../primitives/src/sui-checkbox/sui-checkbox.compiled.js'
 import '../../primitives/src/sui-input/sui-input.compiled.js'

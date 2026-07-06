@@ -8,7 +8,7 @@ import { test, expect } from '@playwright/test'
 test('theming page: light/dark toggle flips data-mode', async ({ page }) => {
   await page.goto('/theming', { waitUntil: 'domcontentloaded' })
   await page.waitForFunction(
-    () => document.querySelectorAll('sui-button').length > 0,
+    () => document.querySelectorAll('.theme-toggle-row button').length > 0,
     undefined,
     { timeout: 30_000 },
   )
@@ -38,7 +38,7 @@ test('theming page: light/dark toggle flips data-mode', async ({ page }) => {
 test('theming page: custom theme switches data-theme', async ({ page }) => {
   await page.goto('/theming', { waitUntil: 'domcontentloaded' })
   await page.waitForFunction(
-    () => document.querySelectorAll('sui-button').length > 0,
+    () => document.querySelectorAll('.theme-toggle-row button').length > 0,
     undefined,
     { timeout: 30_000 },
   )

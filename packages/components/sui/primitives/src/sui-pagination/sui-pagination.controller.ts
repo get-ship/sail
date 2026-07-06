@@ -113,9 +113,9 @@ export default controller({
 
     // ── Delegated navigation ────────────────────────────────────────────────
     // One listener on the <nav> covers the edge controls AND the numbered page
-    // buttons. A disabled <sui-button> swallows its own click (the inner native
-    // <button disabled>), so no edge guard is needed here — but a defensive
-    // bounds check keeps the contract honest if a host overrides disabled CSS.
+    // buttons. A disabled <button> swallows its own click, so no edge guard is
+    // needed here — but a defensive bounds check keeps the contract honest if
+    // a host overrides disabled CSS.
     const onClick = (e: Event): void => {
       const target = e.target as HTMLElement
       const numbered = target.closest('[data-page]')

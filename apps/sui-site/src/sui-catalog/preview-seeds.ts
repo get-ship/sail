@@ -108,7 +108,6 @@ const TOAST_ITEMS = JSON.stringify([
 
 export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   // ── Actions & identity ──────────────────────────────────────────────
-  'sui-button':          { props: { tone: 'primary', variant: 'solid' }, innerHTML: 'Save changes' },
   'sui-icon':            { props: { name: 'sparkles', variant: 'tile', tone: 'primary', size: 'lg' } },
   'sui-avatar':          { props: { name: 'Ada Lovelace', size: 'lg' } },
   // catalog (brand chrome, not a public component) and is composed
@@ -125,22 +124,22 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   'sui-toast-host':      { props: { position: 'bottom-right' } },
   'sui-spinner':         { props: { label: 'Loading…' } },
   'sui-skeleton':        {},
-  'sui-empty-state':     { innerHTML: '<sui-icon slot="icon" name="inbox"></sui-icon><span slot="title">No deployments yet</span>Ship your first build and it will appear here.<sui-button slot="action" tone="primary">New deployment</sui-button>' },
+  'sui-empty-state':     { innerHTML: '<sui-icon slot="icon" name="inbox"></sui-icon><span slot="title">No deployments yet</span>Ship your first build and it will appear here.<button slot="action" tone="primary">New deployment</button>' },
   'sui-error-state':     { props: { title: 'Service unavailable', body: 'The upstream service did not respond in time.', code: '502' } },
   'sui-error-boundary':  { innerHTML: '<div>Protected subtree — its children render here unless one throws.</div>' },
 
   // ── Overlays with an inline trigger ────────────────────────────────
   // Each overlay is seeded with a real-looking trigger; the cells render
   // the trigger only (the overlay opens on user interaction).
-  'sui-tooltip':         { innerHTML: '<sui-button variant="outline">Hover for help</sui-button><span slot="content">Extra context appears in the bubble.</span>' },
-  'sui-popover':         { innerHTML: '<sui-button slot="trigger" variant="outline">Open popover</sui-button><div>Popover body — rich content anchored to the trigger.</div>' },
-  'sui-hover-card':      { innerHTML: '<sui-button slot="trigger" variant="ghost">@ada-lovelace</sui-button><div><strong>Ada Lovelace</strong><br/>First programmer · Analytical Engine</div>' },
-  'sui-dropdown-menu':   { innerHTML: '<sui-button slot="trigger" variant="outline">Actions ▾</sui-button><button>Edit</button><button>Duplicate</button><button>Delete</button>' },
-  'sui-context-menu':    { innerHTML: '<sui-button slot="trigger" variant="outline">Right-click me</sui-button><button>Cut</button><button>Copy</button><button>Paste</button>' },
-  'sui-collapsible':     { innerHTML: '<sui-button slot="trigger" variant="ghost">Show advanced settings</sui-button><div>Region revealed when the trigger is toggled.</div>' },
+  'sui-tooltip':         { innerHTML: '<button variant="outline">Hover for help</button><span slot="content">Extra context appears in the bubble.</span>' },
+  'sui-popover':         { innerHTML: '<button slot="trigger" variant="outline">Open popover</button><div>Popover body — rich content anchored to the trigger.</div>' },
+  'sui-hover-card':      { innerHTML: '<button slot="trigger" variant="ghost">@ada-lovelace</button><div><strong>Ada Lovelace</strong><br/>First programmer · Analytical Engine</div>' },
+  'sui-dropdown-menu':   { innerHTML: '<button slot="trigger" variant="outline">Actions ▾</button><button>Edit</button><button>Duplicate</button><button>Delete</button>' },
+  'sui-context-menu':    { innerHTML: '<button slot="trigger" variant="outline">Right-click me</button><button>Cut</button><button>Copy</button><button>Paste</button>' },
+  'sui-collapsible':     { innerHTML: '<button slot="trigger" variant="ghost">Show advanced settings</button><div>Region revealed when the trigger is toggled.</div>' },
 
   // ── Modal overlays (portal to the top layer on `open`; seeded for that state)
-  'sui-dialog':          { innerHTML: '<h2 slot="header">Confirm deployment</h2><p>Deploy <code>job/site-demos</code> to production?</p><div slot="footer"><sui-button variant="ghost">Cancel</sui-button><sui-button tone="primary">Deploy</sui-button></div>' },
+  'sui-dialog':          { innerHTML: '<h2 slot="header">Confirm deployment</h2><p>Deploy <code>job/site-demos</code> to production?</p><div slot="footer"><button variant="ghost">Cancel</button><button tone="primary">Deploy</button></div>' },
   'sui-alert-dialog':    { props: { tone: 'destructive', 'confirm-label': 'Delete', 'cancel-label': 'Keep' }, innerHTML: '<span slot="title">Delete project?</span>This permanently removes the project and every deployment under it.' },
   'sui-drawer':          { props: { side: 'right' }, innerHTML: '<span slot="title">Filters</span><span slot="description">Refine the component list</span><p>Drawer body content.</p>' },
   'sui-cmdk':            { props: { placeholder: 'Type a command…', items: JSON.stringify(TOAST_ITEMS) } },
@@ -151,7 +150,6 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
 
   // ── Forms ───────────────────────────────────────────────────────────
   'sui-input':           { props: { value: 'Ada Lovelace', label: 'Full name', placeholder: 'Enter your name' } },
-  'sui-textarea':        { props: { label: 'Release notes', rows: '3', value: 'Enriched the /components catalog with representative demo data for every primitive.' } },
   // Checked + a label makes the box visibly checked and labeled — not an
   // empty unchecked default.
   'sui-checkbox':        { props: { checked: 'true' }, innerHTML: 'Enable automatic deploys' },

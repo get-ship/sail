@@ -2,8 +2,8 @@
   <sui-pagination> — the data-grid footer pager.
 
   first / prev / numbered page buttons / next / last + an "N–M of T" range label,
-  and an optional page-size <sui-select>. Composes <sui-button> (edges + numbers)
-  and <sui-select> (page size) — no bespoke button/select chrome.
+  and an optional page-size <sui-select>. Composes bare <button>s (edges +
+  numbers) and <sui-select> (page size) — no bespoke button/select chrome.
 
   CONTROLLED + presentational: the component never owns the page. It reflects the
   `page` / `page-size` / `total` props it is handed and EMITS the requested
@@ -54,6 +54,9 @@
     so this keeps full fidelity without inventing a workaround.
   - No LANG-GAP: every prop/slot/event/ARIA rule from the baseline is fully
     expressible on this surface.
+  - `<sui-button>` dissolved to bare `<button>` (dissolve-gate pass): the L1
+    button contract (tone/variant/size attrs) already covers ghost/soft +
+    size=sm; no visual change, one less registration.
 -->
 
 <prop name="page" type="number" default="1" reflect />
@@ -66,8 +69,8 @@
 <style>
   /* Residual: `font-family: var(--font-body)` (no `font-family` prop in sx),
      `flex: 1 1 auto` on .spacer (no `flex` prop), the
-     `sui-button[aria-current='page']` child-component selector, and text
-     properties the sx vocabulary doesn't expose (`white-space`, `user-select`,
+     `button[aria-current='page']` child selector, and text properties the sx
+     vocabulary doesn't expose (`white-space`, `user-select`,
      `font-variant-numeric`). The forced-colors `CanvasText` system color is
      also residual — not a token. */
   :host {
@@ -85,7 +88,7 @@
     font-variant-numeric: tabular-nums;
   }
   .size { white-space: nowrap; }
-  sui-button[aria-current='page'] { pointer-events: none; }
+  button[aria-current='page'] { pointer-events: none; }
   @media (forced-colors: active) {
     .range { color: CanvasText; }
   }
@@ -93,63 +96,63 @@
 
 <row class="nav" part="nav" gap="3" align="center" aria-label={label()} bind:this={navEl}>
   <row class="edges" part="edges" gap="1" align="center">
-    <sui-button
+    <button
+      ghost
+      sm
       part="first"
-      variant="ghost"
-      size="sm"
       data-page-action="first"
-      label="First page"
-      prop:disabled={atStart()}
+      aria-label="First page"
+      disabled={atStart()}
     >
       <sui-icon name="chevrons-left" size="sm" aria-hidden="true"></sui-icon>
-    </sui-button>
-    <sui-button
+    </button>
+    <button
+      ghost
+      sm
       part="prev"
-      variant="ghost"
-      size="sm"
       data-page-action="prev"
-      label="Previous page"
-      prop:disabled={atStart()}
+      aria-label="Previous page"
+      disabled={atStart()}
     >
       <sui-icon name="chevron-left" size="sm" aria-hidden="true"></sui-icon>
-    </sui-button>
+    </button>
   </row>
 
   <row class="pages" part="pages" gap="1" align="center">
     {#for p of pageNumbers() key={p.page}}
-      <sui-button
+      <button
+        sm
         part="page"
         variant={p.current ? 'soft' : 'ghost'}
         tone={p.current ? 'primary' : 'default'}
-        size="sm"
         data-page={p.page}
         aria-current={p.current ? 'page' : null}
         aria-label={p.label}
-      >{p.page}</sui-button>
+      >{p.page}</button>
     {/for}
   </row>
 
   <row class="edges" part="edges" gap="1" align="center">
-    <sui-button
+    <button
+      ghost
+      sm
       part="next"
-      variant="ghost"
-      size="sm"
       data-page-action="next"
-      label="Next page"
-      prop:disabled={atEnd()}
+      aria-label="Next page"
+      disabled={atEnd()}
     >
       <sui-icon name="chevron-right" size="sm" aria-hidden="true"></sui-icon>
-    </sui-button>
-    <sui-button
+    </button>
+    <button
+      ghost
+      sm
       part="last"
-      variant="ghost"
-      size="sm"
       data-page-action="last"
-      label="Last page"
-      prop:disabled={atEnd()}
+      aria-label="Last page"
+      disabled={atEnd()}
     >
       <sui-icon name="chevrons-right" size="sm" aria-hidden="true"></sui-icon>
-    </sui-button>
+    </button>
   </row>
 
   <span class="spacer" part="spacer"></span>

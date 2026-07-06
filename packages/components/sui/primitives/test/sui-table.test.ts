@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sui-table/sui-table.compiled.js'
-// Behavioral spec #7 (pagination UI) renders the footer <sui-pagination>, which
-// composes <sui-button>. Register both so the footer + its delegated nav clicks
-// drive the engine through real custom elements.
+// Behavioral spec #7 (pagination UI) renders the footer <sui-pagination>, whose
+// nav controls are bare <button>s (dissolved from <sui-button>). Register it so
+// the footer + its delegated nav clicks drive the engine through the real
+// custom element.
 import '../src/sui-pagination/sui-pagination.compiled.js'
-import '../src/sui-button/sui-button.compiled.js'
 import { createTable } from '../src/sui-table/engine/create-table'
 import type { ColumnDef } from '../src/sui-table/engine/types'
 import { createContainerRegistry, flush, mount } from '../src/test-utils'

@@ -38,7 +38,8 @@ function escapeAttr(v: string): string {
 }
 
 /** A humanized fallback for the snippet's inner content when no slot markup is
- *  supplied: `sui-button` → `Button`. Mirrors studio `slotLabel`. */
+ *  supplied: `button` → `Button`, `sui-alert` → `Alert`. Mirrors studio
+ *  `slotLabel`. */
 export function slotLabel(tag: string): string {
   const base = tag
     .replace(/^sui-/, '')
