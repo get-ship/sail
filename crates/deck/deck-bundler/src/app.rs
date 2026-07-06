@@ -1079,9 +1079,13 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
              `styles-` (got {css_on_disk:?})"
         );
         assert!(
-            css_on_disk.iter().all(|n| n.starts_with("styles-") || n.starts_with("tokens-")),
-            "only the app CSS (`styles-`) and the entry-contract tokens CSS \
-             (`tokens-`) should be emitted (got {css_on_disk:?})"
+            css_on_disk.iter().all(|n| n.starts_with("styles-")
+                || n.starts_with("tokens-")
+                || n.starts_with("contracts-")
+                || n.starts_with("element-skins-")),
+            "only the app CSS (`styles-`), the tokens CSS (`tokens-`), and \
+             the framework stylesheet halves (`contracts-`, `element-skins-`) \
+             should be emitted (got {css_on_disk:?})"
         );
 
         // Gate 2: AppBuild exposes the absolute URLs the index.html link
@@ -1090,7 +1094,9 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
         for href in &build.css_hrefs {
             assert!(
                 (href.starts_with("/css-test-app/styles-")
-                    || href.starts_with("/css-test-app/tokens-"))
+                    || href.starts_with("/css-test-app/tokens-")
+                    || href.starts_with("/css-test-app/contracts-")
+                    || href.starts_with("/css-test-app/element-skins-"))
                     && href.ends_with(".css"),
                 "css_href uses the same URL convention as the entry (/<ns>/<file>.css), got {href}"
             );
@@ -1170,7 +1176,9 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
         write(
             &r.join("packages/sui/tokens/package.json"),
             r#"{"name":"@ship/tokens","type":"module",
-                "exports":{".":"./src/index.ts","./tokens.css":"./src/tokens.css"}}"#,
+                "exports":{".":"./src/index.ts","./tokens.css":"./src/tokens.css",
+                "./contracts.css":"./src/contracts.css",
+                "./element-skins.css":"./src/element-skins.css"}}"#,
         );
         // Bare-minimum tokens.css: a single `:root` block with the
         // `--background` token the spec names as the gate's exemplar.
@@ -1179,6 +1187,17 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
         write(
             &r.join("packages/sui/tokens/src/tokens.css"),
             ":root { --background: oklch(20% 0 0); }\n",
+        );
+        // The framework stylesheet the entry also imports (contracts + skins,
+        // each a direct JS import). Minimal but real so the bundle resolves
+        // the extra entry imports.
+        write(
+            &r.join("packages/sui/tokens/src/contracts.css"),
+            "[tone='default'] { --tone: var(--foreground); }\n",
+        );
+        write(
+            &r.join("packages/sui/tokens/src/element-skins.css"),
+            ".sui-spinner { display: inline-flex; }\n",
         );
         write(
             &r.join("packages/sui/tokens/src/index.ts"),
