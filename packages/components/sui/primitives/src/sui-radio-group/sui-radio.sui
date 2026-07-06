@@ -17,56 +17,72 @@
   ────────────────────────────────────────────────────────────────────────
   Parts: circle, dot, input, label
   Slots: (default) — label content
+  ────────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from feat/next, parity-gate pass)
+  ────────────────────────────────────────────────────────────────────────
+  - The `theme prop="tone" channels="radio-tone"` block DELETED. The tone IS
+    framework channel now (suiTonesSheet); the radio reads --tone
+    directly. The feat/next local --radio-tone channel duplicated the
+    global --tone — no loss removing it.
+  - The `theme prop="size" channels="radio-size, radio-dot"` block DELETED
+    per-component channels are the "closed sx" back door the new surface
+    forbids. The two local CSS vars (circle diameter, dot diameter) keep
+    the same icon-size-N / space-N ladder, declared directly in style
+    on :host per size. They're component-internal: a circle that's
+    NOT one of the framework's `text` field sizes (icon-size-md is
+    coincidentally the default, not a contract).
+  - The `variants` block used `border:tone:radio-tone` and
+    `bg:selected` etc. — `border:tone:radio-tone` was the per-component
+    channel syntax. Re-authored as the global --tone (a plain
+    `var(--tone)` in residual style, since the variants machinery
+    doesn't read CSS vars — only the sx token vocabulary).
+  - The dot's `background: var(--radio-tone)` becomes
+    `var(--tone)` (same value, global channel). The circle's
+    `border-color: var(--radio-tone)` becomes `var(--tone)`.
+  - The framework's input type="radio" control skin (TOGGLE_CONTROLS_CSS)
+    sets a visible radio look; this component's input is intentionally
+    hidden (visual lives on the custom .circle + .dot). The
+    `input { position: absolute; opacity: 0; ... }` rules have higher
+    specificity than the framework's :where() contract and win ties;
+    the framework's accent colors are still applied to the input (invisibly
+    under opacity:0). No ad-hoc skinning required.
 -->
 
-<prop name="value" type="string" default="" reflect />
-<prop name="disabled" type="bool" default="false" reflect />
-<prop name="checked" type="bool" default="false" reflect />
-<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
+<component>{
+  props: {
+    value: '',
+    disabled: false,
+    checked: false,
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
+    size: 'sm' | 'md' | 'lg',
+  },
+}</component>
 
-<theme prop="tone" channels="radio-tone">
-  default:     primary
-  primary:     primary
-  info:        info
-  success:     success
-  warning:     warning
-  destructive: destructive
-  accent:      accent
-  muted:       muted-foreground
-</theme>
-<theme prop="size" channels="radio-size, radio-dot">
-  default: icon-size-md, space-2
-  md:      icon-size-md, space-2
-  sm:      icon-size-sm, space-1_5
-  lg:      icon-size-xl, space-2_5
-</theme>
 <variants>
-  [hidden]:  display:none
-  checked:   border:selected border:tone:radio-tone bg:selected
-  [disabled]: cursor:not-allowed opacity:75
-</variants>
-<variants part="label">
-  hover: border:strong
-  checked: border:selected border:tone:radio-tone bg:selected
+  [hidden]:   display:none
   [disabled]: cursor:not-allowed
 </variants>
-<variants part="circle">
-  checked: border:tone:radio-tone
-</variants>
-<variants part="dot">
-  checked: opacity:100
+
+<variants part="label">
+  [disabled]: cursor:not-allowed
 </variants>
 
-<!-- Residual: option-card layout (display:flex + align-items:flex-start +
-     padding + border-radius + cursor + user-select + box-shadow) — a
-     complex compound control surface the layout keywords don't express;
-     .circle geometry (width/height/position:relative/border-radius:50%
-     + box-sizing); .dot geometry (width/height/border-radius:50%);
-     multi-property transitions (motion); the :has() focus-within
-     parent selector (no sx/variants story); forced-colors CanvasText
-     / Highlight system colors; saturate(0.6) compound disabled
-     filter; ::slotted descendant styling. -->
+<!--
+  Residual: option-card layout (display:flex + align-items:flex-start +
+  padding + border-radius + cursor + user-select + box-shadow) — a
+  complex compound control surface the layout keywords don't express;
+  .circle geometry (width/height/position:relative/border-radius:50%
+  + box-sizing); .dot geometry (width/height/border-radius:50%);
+  multi-property transitions (motion); the :has() focus-within
+  parent selector (no sx/variants story); forced-colors CanvasText
+  / Highlight system colors; saturate(0.6) compound disabled
+  filter; ::slotted descendant styling; per-size local CSS vars
+  (the circle/dot diameter ladder, the per-tone --tone is
+  already global); checked state on the custom .circle/.dot
+  parts (the dot's transform:scale and opacity transition is
+  a multi-property motion the variants don't express).
+-->
 <style>
   :host {
     display: block;
@@ -75,12 +91,25 @@
     color: var(--foreground);
     -webkit-tap-highlight-color: transparent;
   }
-  :host {
-    --radio-tone: var(--primary);
+
+  /* size channel — local CSS vars (the circle/dot diameter ladder
+     doesn't ride the global size prop, which is for L1 form controls;
+     the radio's own circle/dot are component-specific). */
+  :host(:not([size])), :host([size='md']) {
     --radio-size: var(--icon-size-md);
     --radio-dot: var(--space-2);
   }
+  :host([size='sm']) {
+    --radio-size: var(--icon-size-sm);
+    --radio-dot: var(--space-1_5);
+  }
+  :host([size='lg']) {
+    --radio-size: var(--icon-size-xl);
+    --radio-dot: var(--space-2_5);
+  }
+
   :host([disabled]) { color: var(--muted-foreground); }
+
   [part~='label'] {
     display: flex;
     align-items: flex-start;
@@ -97,11 +126,14 @@
       border-color var(--duration-fast) var(--ease-out),
       background var(--duration-fast) var(--ease-out);
   }
-  :host(:not([disabled]):not([checked])) [part~='label']:hover { border-color: var(--border-strong); }
+  :host(:not([disabled]):not([checked])) [part~='label']:hover {
+    border-color: var(--border-strong);
+  }
   :host([checked]) [part~='label'] {
     border-color: var(--selected-border);
     background: var(--selected-bg);
   }
+
   [part~='circle'] {
     position: relative;
     display: inline-flex;
@@ -121,12 +153,15 @@
   :host(:not([disabled]):not([checked])) [part~='label']:hover [part~='circle'] {
     border-color: var(--border-strong);
   }
-  :host([checked]) [part~='circle'] { border-color: var(--radio-tone); }
+  /* --tone is the global tone channel (set by the host's [tone] attribute
+     via suiTonesSheet). The per-component radio-tone channel is gone. */
+  :host([checked]) [part~='circle'] { border-color: var(--tone); }
+
   [part~='dot'] {
     width: var(--radio-dot);
     height: var(--radio-dot);
     border-radius: 50%;
-    background: var(--radio-tone);
+    background: var(--tone);
     opacity: 0;
     transform: scale(0);
     transition:
@@ -135,10 +170,15 @@
     pointer-events: none;
   }
   :host([checked]) [part~='dot'] { opacity: 1; transform: scale(1); }
+
+  /* :has() parent selector for focus-visible — the framework's input
+     focus ring targets the input itself; the visual is on the label
+     wrapper (the .circle sits inside it). */
   :host(:not([disabled])) [part~='label']:has(input:focus-visible) {
     outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
   }
+
   @media (forced-colors: active) {
     [part~='circle'] { border-color: CanvasText; }
     :host([checked]) [part~='dot'] { background: Highlight; }
@@ -147,6 +187,7 @@
       outline-offset: 2px;
     }
   }
+
   :host([disabled]) [part~='circle'] {
     background: var(--muted);
     border-color: var(--border);
@@ -154,9 +195,11 @@
   }
   :host([disabled][checked]) [part~='circle'] { border-color: var(--border); }
   :host([disabled][checked]) [part~='dot'] { background: var(--muted); }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
   }
+
   ::slotted(*) {
     font: inherit;
     color: inherit;
