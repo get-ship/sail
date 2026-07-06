@@ -21,7 +21,7 @@
 :where(button, input, textarea, select, a, [tabindex]):focus-visible { outline: var(--ring-width, 2px) solid var(--ring); outline-offset: var(--ring-offset, 2px); }
 @media (forced-colors: active) { :where(button, input, textarea, select, a, [tabindex]):focus-visible { outline: 2px solid CanvasText; } }
 :where(button, input, textarea, select):disabled { cursor: not-allowed; opacity: 0.5; }
-:where(button, a, [tabindex]) { transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
+:where(button, input, textarea, select, a, [tabindex]) { transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
 :where(button) { display: inline-flex; align-items: center; justify-content: center; gap: var(--size-gap, var(--space-2)); min-height: var(--size-h, var(--control-h-md)); padding: 0 var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); font-weight: var(--font-weight-medium); border-radius: var(--radius-md); border: 1px solid transparent; background: transparent; isolation: isolate; position: relative; }
 :where(button:not([variant]), button[variant='default']) { background: var(--background); border-color: var(--border); color: var(--foreground); box-shadow: var(--shadow-xs); }
 :where(button:not([variant]), button[variant='default']):hover:not(:disabled) { background: var(--muted); border-color: var(--border-strong); }
@@ -35,6 +35,10 @@
 :where(button):hover:not(:disabled) { transform: translateY(-1px); }
 :where(button):active:not(:disabled) { transform: translateY(1px) scale(0.98); }
 :where(button[variant='ghost'], button[variant='outline']):disabled { background: transparent; }
+:where(input, textarea, select) { display: block; min-height: var(--size-h, var(--control-h-md)); padding: var(--space-1_5) var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-xs); }
+:where(input, textarea, select):hover:not(:disabled) { border-color: var(--border-strong); }
+:where(input, textarea, select)::placeholder { color: var(--muted-foreground); }
+:where(textarea) { min-height: calc(var(--control-h-md) * 2); resize: vertical; }
 [data-component] { display: block; color: var(--foreground); }
 [data-component][hidden] { display: none !important; }
 [data-component] slot { display: contents; }

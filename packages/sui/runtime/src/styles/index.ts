@@ -130,7 +130,18 @@ const CONTROL_CONTRACTS_CSS =
   // Disabled: the treatment, once.
   ':where(button, input, textarea, select):disabled { cursor: not-allowed; opacity: 0.5; }\n' +
   // Interactive transition defaults from the motion tokens.
-  ':where(button, a, [tabindex]) { transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }\n'
+  ':where(button, input, textarea, select, a, [tabindex]) { transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }\n'
+
+// L1 <input> / <textarea> / <select> — the field surface. A bordered control
+// on the background, sized by the size channel and sharing the button's
+// radius/shadow language, so a plain <input> IS the design system's field.
+// select/textarea share it (native chrome already dropped via appearance:none
+// in the baseline). Every rule at :where() zero specificity.
+const INPUT_SKIN_CSS =
+  ':where(input, textarea, select) { display: block; min-height: var(--size-h, var(--control-h-md)); padding: var(--space-1_5) var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-xs); }\n' +
+  ':where(input, textarea, select):hover:not(:disabled) { border-color: var(--border-strong); }\n' +
+  ':where(input, textarea, select)::placeholder { color: var(--muted-foreground); }\n' +
+  ':where(textarea) { min-height: calc(var(--control-h-md) * 2); resize: vertical; }\n'
 
 // L1 <button> — the first language element skin. A bare <button> anywhere in
 // a SUI document IS the design system's button ("the web with default styles"):
@@ -172,6 +183,7 @@ export const LIGHT_CONTRACTS_CSS =
   hostAttrs(SIZES_CSS) +
   CONTROL_CONTRACTS_CSS +
   BUTTON_SKIN_CSS +
+  INPUT_SKIN_CSS +
   // Host defaults for light components (the :host base rules, element-keyed).
   '[data-component] { display: block; color: var(--foreground); }\n' +
   '[data-component][hidden] { display: none !important; }\n' +
