@@ -158,7 +158,7 @@ const BUTTON_SKIN_CSS =
   // transparent like the baseline).
   "[data-component] :where(button[variant='ghost'], button[variant='outline']):disabled { background: transparent; }\n"
 
-const LIGHT_CONTRACTS_CSS =
+export const LIGHT_CONTRACTS_CSS =
   hostAttrs(TONES_CSS) +
   hostAttrs(SIZES_CSS) +
   CONTROL_CONTRACTS_CSS +
@@ -183,6 +183,13 @@ export function ensureLightContracts(): void {
   lightContractsInstalled = true
   const id = 'sui-light-contracts'
   if (document.getElementById(id)) return
+  // A host that SERVES the contracts asset (deck links
+  // /api/assets/sui.css, marked data-sui-contracts) wins — injection is
+  // the migration-window fallback for JS-only hosts and dies when the
+  // last one converts.
+  if (document.querySelector('link[data-sui-contracts], style[data-sui-contracts]')) {
+    return
+  }
   const style = document.createElement('style')
   style.id = id
   style.textContent = LIGHT_CONTRACTS_CSS
