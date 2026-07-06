@@ -16,6 +16,7 @@ pub struct StdlibElement {
 const SOURCES: &[(&str, &str)] = &[
     ("spinner", include_str!("../stdlib/spinner.sui")),
     ("separator", include_str!("../stdlib/separator.sui")),
+    ("icon", include_str!("../stdlib/icon.sui")),
 ];
 
 /// Compiled stdlib elements, memoized for the process lifetime. A stdlib
