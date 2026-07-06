@@ -30,18 +30,34 @@
 <prop name="multiple" type="bool" default="false" />
 <prop name="max-size" type="number" default="10485760" />
 <prop name="disabled" type="bool" default="false" reflect />
-<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
-
-<theme prop="tone" channels="tone-border, tone-bg, tone-ring">
-  default:     border,         tone-primary-bg, primary
-  primary:     tone-primary-border, tone-primary-bg, primary
-  info:        tone-info-border, tone-info-bg, info
-  success:     tone-success-border, tone-success-bg, success
-  warning:     tone-warning-border, tone-warning-bg, warning
-  destructive: tone-destructive-border, tone-destructive-bg, destructive
-  accent:      tone-accent-border, tone-accent-bg, accent
-  muted:       tone-muted-border, tone-muted-bg, muted-foreground
-</theme>
+<!--
+  NEW SURFACE (re-port from feat/next, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────
+  - tone is a GLOBAL framework channel now (contracts.css / suiTonesSheet).
+    No <theme> block, no per-component :host([tone='…']) redeclaration.
+    The tone prop still reflects on the host (so the catalog contract
+    is intact) and the dropzone's `over` variant reads var(--tone-ring)
+    / var(--tone-bg) directly — the framework fills them from whichever
+    tone the host's [tone] attribute names.
+  - The .remove dismiss button is a framework `<button ghost sm>` — no
+    hand-styled color/hover/focus/padding/background. The framework's
+    L1 control skin (adoptSuiSheets now carries the button contracts)
+    supplies them. The .remove class is kept for the test selector
+    (anatomy is class-based, see <parity-gate>).
+  - sx is closed-vocab (tokens + tone-* channels only). The dropzone
+    geometry, padding, border, color, file-item row layout, file-doc
+    icon, file-name/file-size, and error all live in sx; <style> keeps
+    only what sx/variants cannot express (dashed border + multi-prop
+    transition + saturate filter / pointer-events for the compound
+    :host([disabled]) + the host font defaults + the file-list top
+    margin that lives on a class and is target-able through a single
+    class rule + the dropzone focus ring that pairs an outline with
+    the variant tint).
+  - <row>/<column> primitives replace the hand-rolled flex/grid in
+    feat/next's <sui-stack> containers.
+  - L1 <input type="file"> is hidden via the existing input[type='file']
+    rule (no L1 file-input control in the framework).
+-->
 <variants>
   [hidden]:  display:none
   [disabled]: opacity:75 cursor:not-allowed
@@ -50,12 +66,6 @@
   over: border:tone-ring bg:tone-bg
 </variants>
 
-<!-- Residual: dashed border style + multi-property transition (motion) +
-     focus outline (vs the 2-layer box-shadow ring) + :host font defaults +
-     saturate filter / pointer-events (compound disabled state) + the
-     file-list/file-item/file-doc-icon/file-meta/file-name/file-size/remove
-     button visuals (mostly inline-flex, control sizing, single-line text
-     truncation, no sx prop equivalents for many of these). -->
 <style>
   :host {
     display: block;
@@ -149,30 +159,6 @@
     font-variant-numeric: tabular-nums;
     flex-shrink: 0;
   }
-  .remove {
-    appearance: none;
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-    color: var(--muted-foreground);
-    padding: var(--space-1);
-    line-height: 1;
-    border-radius: var(--radius-sm);
-    font-size: var(--text-lg);
-    font-family: inherit;
-    width: var(--control-h-sm);
-    height: var(--control-h-sm);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: none;
-    margin-left: auto;
-  }
-  .remove:hover { color: var(--foreground); background: var(--muted); }
-  .remove:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-ring-offset);
-  }
   .error {
     color: var(--destructive);
     margin-top: var(--space-1);
@@ -222,6 +208,8 @@
           <span class="file-size">{f.sizeStr}</span>
         </column>
         <button
+          ghost
+          sm
           class="remove"
           part="remove"
           type="button"
