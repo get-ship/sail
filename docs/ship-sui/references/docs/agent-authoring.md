@@ -15,6 +15,16 @@ Throughout: file paths are relative to the repo root, every snippet is
 either lifted from a real view (cited inline) or testable in isolation
 against `bun run --filter @ship/sui-runtime test`.
 
+> **Light-DOM contract.** Every `sui-*` element renders into its
+> own custom element in the page's tree — no shadow root by
+> default. Cross-root ARIA (`label[for]`, `aria-describedby`),
+> native form participation, and a single document cascade all
+> work without any retargeting. A component opts into a shadow
+> boundary only when it wraps foreign content the page cascade
+> would interfere with (the tiptap wrapper, embedded
+> third-party widgets, the FFI boundary); that opt-in is declared
+> in the anatomy manifest, not the template.
+
 ---
 
 ## 1. The 30-second scaffold
@@ -105,15 +115,22 @@ Surface in compact form (full grammar in
 | `on:event={fn}` | DOM or `sui-*`/`ship-*` custom event listener. |
 | `class:x={fn}` / `style:prop={fn}` / `attr:name={fn}` | Reactive class / style / attribute toggle. |
 | `prop:rows={rowsSignal}` | Structured prop into a child component (skips attr serialization). |
-| `<slot name="leading"></slot>` | Slot (components only). |
+| `<slot name="leading"></slot>` (component body) + `slot="leading"` (consumer) | Projection region: consumer-side `slot="…"` attribute fills the matching `<slot name="…">` wrapper; runtime projects at connect. |
 | `<use-kbd>…</use-kbd>` / `<use-click-outside>` | Template hooks; side-effect import emitted by compiler. |
 
 **Scoped CSS.** A view's `style.css` is page-scoped (auto-linked). A
 component's CSS goes in a `<style>` block inside the `.sui`, or for
 external CSS via `compile_opts.styles`. The compiler does **not**
-shadow-DOM views — class names leak across views unless prefixed
-(`<name>-…` is the convention, see `views/agents/style.css` for the
-`.agents-*` prefix pattern).
+shadow-DOM anything by default — every `sui-*` renders into its
+own element with no shadow root. Scoped CSS is `@scope
+([data-component="sui-x"]) to ([data-sui])` (a donut that stops
+at nested component boundaries); the compiler rewrites `:host` →
+`:scope` and `::slotted(<sel>)` → `slot > <sel>` at emit time
+(`crates/sui/compiler/src/emit/styles.rs` `light_dom_selectors`).
+Class names still need a per-view prefix (`<name>-…`, see
+`views/agents/style.css` for the `.agents-*` pattern) for the
+**page-cascade** portion — `@scope` covers component-internal
+rules, not view-scoped page CSS.
 
 ---
 
@@ -244,7 +261,18 @@ all three; never assume `ok`:
     </ul>
   {/if}
 {/if}
+
 ```
+
+> **Projection in this snippet.** The `<sui-button slot="action">`
+> and `<span slot="title">` are projected children — the
+> `slot="…"` attribute names the region, the runtime
+> (`@ship/sui-runtime/slot-project.ts`) matches it to the
+> corresponding `<slot name="…">` wrapper in the host's body at
+> connect. The contract is the same as web-component slots, but
+> the implementation is light-DOM (no shadow root, the slot is
+> a `display: contents` wrapper). See
+> [template.md](template.md#projection) for the full model.
 
 Worked exemplars in this repo: `views/home/page.sui` (compact),
 `views/agents/page.sui` (full skeleton grid), `views/sessions/page.sui`,
