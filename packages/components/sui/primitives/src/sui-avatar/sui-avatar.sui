@@ -77,7 +77,7 @@
     display: inline-flex;
     vertical-align: middle;
     --sz: 32px;
-    --fs: 13px;
+    --fs: var(--text-base);
     --av-bg: linear-gradient(
       135deg,
       var(--primary),
