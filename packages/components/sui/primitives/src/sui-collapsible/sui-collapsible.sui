@@ -93,6 +93,21 @@
   }
 
   .content-inner { padding: 0; }
+
+  /* Open/close animation via the native content pseudo-element. Degrades
+     gracefully — browsers without ::details-content / interpolate-size just
+     show/hide instantly (the native default). */
+  :host { interpolate-size: allow-keywords; }
+  details::details-content {
+    height: 0;
+    overflow: clip;
+    transition: height var(--duration-medium) var(--ease-out),
+                content-visibility var(--duration-medium) allow-discrete;
+  }
+  details[open]::details-content { height: auto; }
+  @media (prefers-reduced-motion: reduce) {
+    details::details-content { transition: none; }
+  }
 </style>
 
 <details bind:this={detailsEl}>

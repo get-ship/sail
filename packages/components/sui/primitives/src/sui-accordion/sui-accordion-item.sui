@@ -115,6 +115,20 @@
   @media (prefers-reduced-motion: reduce) { .chevron { transition: none; } }
 
   .content-body { padding: var(--space-3) 0; }
+
+  /* Open/close animation via the native content pseudo-element — degrades
+     gracefully (instant show/hide where unsupported). */
+  :host { interpolate-size: allow-keywords; }
+  details::details-content {
+    height: 0;
+    overflow: clip;
+    transition: height var(--duration-medium) var(--ease-out),
+                content-visibility var(--duration-medium) allow-discrete;
+  }
+  details[open]::details-content { height: auto; }
+  @media (prefers-reduced-motion: reduce) {
+    details::details-content { transition: none; }
+  }
 </style>
 
 <details bind:this={detailsEl}>
