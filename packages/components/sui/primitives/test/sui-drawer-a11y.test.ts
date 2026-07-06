@@ -17,7 +17,8 @@ afterEach(() => reg.cleanup())
 
 const shadow = (el: HTMLElement) => el.shadowRoot!
 const nativeDialog = (el: HTMLElement) => shadow(el).querySelector('dialog') as HTMLDialogElement
-const closeBtn = (el: HTMLElement) => shadow(el).querySelector('.close') as HTMLButtonElement
+// Anchor on the public part contract, not the styling class (.close).
+const closeBtn = (el: HTMLElement) => shadow(el).querySelector('[part="close"]') as HTMLButtonElement
 const sentinelsOf = (el: HTMLElement) =>
   Array.from(shadow(el).querySelectorAll('.sentinel')) as HTMLElement[]
 

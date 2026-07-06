@@ -7,7 +7,8 @@ afterEach(() => reg.cleanup())
 
 const shadow = (el: HTMLElement) => el.shadowRoot!
 const dialogEl = (el: HTMLElement) => shadow(el).querySelector('dialog') as HTMLDialogElement | null
-const closeBtn = (el: HTMLElement) => shadow(el).querySelector('.close') as HTMLButtonElement | null
+// Anchor on the public part contract, not the styling class (.close).
+const closeBtn = (el: HTMLElement) => shadow(el).querySelector('[part="close"]') as HTMLButtonElement | null
 
 function makeDrawer(attrs: Record<string, string | boolean> = {}, inner = '') {
   return mount(reg, 'sui-drawer', attrs, inner)
