@@ -36,12 +36,39 @@ L0  TOKENS          primitive → semantic → component tiers; six themes today
                     consumes them.
 ```
 
-**The naming seam is physical.** Custom elements require a hyphen
-(`customElements.define`), lowered elements don't. So the tag itself declares
-the layer: a bare name (`<row>`, `<button>`, `<icon>`) is a language element —
-it compiles away; a hyphenated name (`<sui-dialog>`) is a stdlib component —
-it exists at runtime. Userland components are also hyphenated but live outside
-the toolchain and are subject to L3 rules.
+**The naming seam.** A bare name (`<row>`, `<button>`, `<icon>`) is a
+language element — it compiles away; a hyphenated name (`<sui-dialog>`) is a
+stdlib component — it exists at runtime. Userland components are also
+hyphenated but live outside the toolchain and are subject to L3 rules.
+
+**LIGHT DOM IS THE DEFAULT — for every layer.** L1 elements were always
+light; L2 components render into their own element, no shadow root. What
+this buys: native form participation (the ElementInternals plumbing mostly
+dies), cross-root ARIA works (`label[for]`, `aria-describedby` reach
+everything), SSR is plain HTML (no declarative-shadow dance, no hydration
+flash), one document cascade (no per-root sheet adoption), and honest
+devtools/tests. What it obligates: compiler-managed slot projection (native
+`<slot>` is shadow-only), compiler-generated unique IDs for ARIA wiring,
+and style containment by construction — component rules compile into
+`@scope (sui-x) to ([data-sui])` donuts so a component styles its own
+subtree and stops at nested component boundaries. Never by accident, never
+by encapsulation technology.
+
+**Shadow DOM is a containment FEATURE, not the component model.** It is
+declared per component for exactly one job: wrapping foreign content whose
+styles/DOM we do not own (the tiptap wrapper, embedded third-party widgets,
+the FFI boundary). A shadow-wrapped component pays the full isolation tax
+(sheet adoption, slot mechanics, internals) knowingly — and the compiler
+knows it from the manifest.
+
+**`part` and `::part`/`:host` are not authoring surface.** In light DOM the
+host is just the element (`sui-x[attr]`) and "parts" are the anatomy's
+classes and attributes — published API in the manifest, styleable by skins
+directly. The `<host>` directive and `part=` attributes are shadow-era
+idioms and retire with it. The anatomy manifest is CEM — the standard
+custom-elements.json schema, enriched with the anatomy fields (parts as
+class contracts, states, slots-as-projection-points, layer) — so standard
+tooling reads our contracts for free.
 
 ## The leverage gradient
 
