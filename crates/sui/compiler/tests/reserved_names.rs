@@ -17,10 +17,19 @@ fn opts() -> CompileOpts {
 
 #[test]
 fn unknown_bare_tag_is_rejected() {
-    let err = compile("<card>hi</card>", opts()).unwrap_err();
+    // A bare name that is neither HTML/SVG nor a registered L1 element.
+    // (`card` used to be the example — it's now a real L1 element, which is
+    // exactly the point: promoting it claimed the name.)
+    let err = compile("<gizmo>hi</gizmo>", opts()).unwrap_err();
     let m = format!("{err:?}");
-    assert!(m.contains("unknown element") && m.contains("card"), "{m}");
+    assert!(m.contains("unknown element") && m.contains("gizmo"), "{m}");
     assert!(m.contains("reserved for the language"), "{m}");
+}
+
+#[test]
+fn a_promoted_l1_element_is_now_valid() {
+    // `<card>` is a registered L1 element (promoted) — it lowers, not errors.
+    assert!(compile("<card>hi</card>", opts()).is_ok());
 }
 
 #[test]
