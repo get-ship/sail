@@ -194,6 +194,19 @@ in our own code first.
 
 ## The seams in detail
 
+**One authoring TECHNOLOGY for every layer (element mode).** L1 elements are
+authored in `.sui` like everything else — `<component>{ props }`, template,
+variants/sx skin — compiled in **element mode**, which changes only the
+output targets: the template becomes a use-site lowering (like the layout
+keywords) instead of a registered module; the skin routes into the framework
+sheet keyed on the element + attributes; the props block feeds the manifest
+AND derives the bare-shorthand vocabulary. Element mode enforces the seam
+test as a compile error: element templates are static structure + slots —
+no control flow, no `<controller>`. Needing either means the element is a
+component. Stdlib element sources compile at toolchain build and bake in;
+an element moves between L1 and L2 by changing its compile mode, never by
+rewriting its source.
+
 **One authoring API, two implementations (the layer-invisibility rule).**
 The single biggest footgun in this architecture: L1 elements are lowered at
 compile time and L2 components are custom elements — but the AUTHORED API
