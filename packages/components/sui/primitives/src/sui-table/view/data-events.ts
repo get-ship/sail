@@ -23,7 +23,7 @@ interface DataHost extends HTMLElement {
   shadowRoot: ShadowRoot | null
 }
 
-/** Toggle a reflected boolean attribute (the form sui-checkbox observes). */
+/** Toggle a reflected boolean attribute. */
 function toggleAttr(el: Element, name: string, on: boolean): void {
   if (on) el.setAttribute(name, '')
   else el.removeAttribute(name)
@@ -149,14 +149,14 @@ export function wireDataVariant(
       toggleAttr(rowEl, 'data-selected', isSel)
       toggleAttr(rowEl, 'aria-selected', isSel)
       rowEl.setAttribute('tabindex', focus === id ? '0' : '-1')
-      const box = rowEl.querySelector('sui-checkbox[data-row-select]')
-      if (box) toggleAttr(box, 'checked', isSel)
+      const box = rowEl.querySelector<HTMLInputElement>('input[type="checkbox"][data-row-select]')
+      if (box) box.checked = isSel
     })
-    const headerBox = shadow.querySelector('[data-select-all]')
+    const headerBox = shadow.querySelector<HTMLInputElement>('[data-select-all]')
     if (headerBox) {
       const all = tab.getIsAllPageRowsSelected()
-      toggleAttr(headerBox, 'checked', all)
-      toggleAttr(headerBox, 'indeterminate', !all && tab.getIsSomePageRowsSelected())
+      headerBox.checked = all
+      headerBox.indeterminate = !all && tab.getIsSomePageRowsSelected()
     }
   })
 

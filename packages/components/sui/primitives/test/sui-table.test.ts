@@ -462,7 +462,7 @@ describe('<sui-table> data variant — engine-backed view', () => {
     expect(caught!.composed).toBe(true)
   })
 
-  it('toggling a gutter sui-checkbox sets [data-selected] + emits sui-row-select', async () => {
+  it('toggling a gutter checkbox sets [data-selected] + emits sui-row-select', async () => {
     const { el, shadow } = mountWithEngine(
       [
         { id: '1', name: 'Alice', age: 30 },
@@ -477,7 +477,7 @@ describe('<sui-table> data variant — engine-backed view', () => {
 
     const firstRow = shadow!.querySelector('[data-row-id="1"]') as HTMLElement
     expect(firstRow.hasAttribute('data-selected')).toBe(false)
-    const box = firstRow.querySelector('sui-checkbox') as HTMLElement
+    const box = firstRow.querySelector('input[type="checkbox"]') as HTMLInputElement
     expect(box).not.toBeNull()
     box.click()
     await flush()
@@ -493,7 +493,7 @@ describe('<sui-table> data variant — engine-backed view', () => {
     expect(last.composed).toBe(true)
   })
 
-  it('header sui-checkbox shows indeterminate on partial selection', async () => {
+  it('header checkbox shows indeterminate on partial selection', async () => {
     const { shadow, table } = mountWithEngine(
       [
         { id: '1', name: 'Alice', age: 30 },
@@ -503,13 +503,13 @@ describe('<sui-table> data variant — engine-backed view', () => {
       { gutter: true, selectable: 'multi' },
     )
     await flush()
-    const headerBox = shadow!.querySelector('thead sui-checkbox') as HTMLElement
+    const headerBox = shadow!.querySelector('thead input[type="checkbox"]') as HTMLInputElement
     expect(headerBox).not.toBeNull()
     table.toggleRowSelected('1', true)
     await flush()
     // partial → indeterminate (one of two selected), not fully checked
-    expect(headerBox.hasAttribute('indeterminate')).toBe(true)
-    expect(headerBox.hasAttribute('checked')).toBe(false)
+    expect(headerBox.indeterminate).toBe(true)
+    expect(headerBox.checked).toBe(false)
   })
 
   it('a per-row-disabled row cannot be selected', async () => {
@@ -530,7 +530,7 @@ describe('<sui-table> data variant — engine-backed view', () => {
     ;(el as any).table = table
     await flush()
     const secondRow = shadow!.querySelector('[data-row-id="2"]') as HTMLElement
-    const box = secondRow.querySelector('sui-checkbox') as HTMLElement
+    const box = secondRow.querySelector('input[type="checkbox"]') as HTMLInputElement
     box.click()
     await flush()
     expect(secondRow.hasAttribute('data-selected')).toBe(false)

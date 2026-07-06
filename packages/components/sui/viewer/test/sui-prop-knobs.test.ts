@@ -126,12 +126,12 @@ describe('<sui-prop-knobs> — FOUR-way classification', () => {
     expect(group.querySelectorAll('sui-toggle').length).toBe(ATTR_ENUM_VARIANT.values!.length)
   })
 
-  it("type 'boolean' → bool control is a sui-switch (or sui-checkbox)", async () => {
+  it("type 'boolean' → bool control is a sui-switch", async () => {
     const c = mountKnobs({ props: [ATTR_BOOL_DISABLED] })
     await c.flush()
     const row = knobRow(c.el, 'disabled') as HTMLElement
     expect(row).not.toBeNull()
-    expect(row.querySelector('sui-switch, sui-checkbox')).not.toBeNull()
+    expect(row.querySelector('sui-switch')).not.toBeNull()
   })
 
   it("type 'number' (no values) → numeric control (sui-slider or sui-input type=number)", async () => {
@@ -261,7 +261,7 @@ describe('<sui-prop-knobs> — sui-prop-change emission', () => {
       detail = (e as CustomEvent).detail as typeof detail
     })
     const toggle = (knobRow(c.el, 'disabled') as HTMLElement).querySelector(
-      'sui-switch, sui-checkbox',
+      'sui-switch',
     ) as HTMLElement
     toggle.dispatchEvent(
       new CustomEvent('sui-change', { detail: { checked: true }, bubbles: true, composed: true }),

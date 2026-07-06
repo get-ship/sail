@@ -230,8 +230,10 @@ const CHECK_MARK =
 const DASH_MARK =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' d='M4 8h8'/%3E%3C/svg%3E\")"
 const TOGGLE_CONTROLS_CSS =
-  // Shared box: sized to the font, bordered, on the background.
-  ":where(input[type='checkbox'], input[type='radio']) { appearance: none; flex: none; width: 1.15em; height: 1.15em; min-height: 0; padding: 0; border: 1.5px solid var(--border-strong); background: var(--background); box-shadow: var(--shadow-xs); cursor: pointer; vertical-align: -0.2em; }\n" +
+  // Shared box: sized to the font, bordered, on the background. The box is
+  // 1.15em square, so the `[size=...]` channel's --size-fs (shared with
+  // button/input) scales it too — same channel, same fallback (md/text-base).
+  ":where(input[type='checkbox'], input[type='radio']) { appearance: none; flex: none; width: 1.15em; height: 1.15em; min-height: 0; padding: 0; font-size: var(--size-fs, var(--text-base)); border: 1.5px solid var(--border-strong); background: var(--background); box-shadow: var(--shadow-xs); cursor: pointer; vertical-align: -0.2em; }\n" +
   ":where(input[type='checkbox']) { border-radius: var(--radius-sm); }\n" +
   ":where(input[type='radio']) { border-radius: 50%; }\n" +
   // Checked: fill with the tone (default → primary), stamp the mark.
@@ -242,7 +244,12 @@ const TOGGLE_CONTROLS_CSS =
   // is a live DOM state (set in JS), not an attribute, so it only reaches
   // here; tree/table select-all glyphs rely on it.
   ":where(input[type='checkbox']:indeterminate) { background-color: var(--tone, var(--primary)); border-color: var(--tone, var(--primary)); }\n" +
-  `:where(input[type='checkbox']:indeterminate) { background-image: ${DASH_MARK}; background-position: center; background-size: 0.9em; background-repeat: no-repeat; }\n`
+  `:where(input[type='checkbox']:indeterminate) { background-image: ${DASH_MARK}; background-position: center; background-size: 0.9em; background-repeat: no-repeat; }\n` +
+  // Invalid: destructive border override (an [invalid] attribute, mirroring
+  // the field/select convention elsewhere in the framework — native
+  // `aria-invalid="true"` is honored too so plain HTML forms get it for free).
+  ":where(input[type='checkbox'][invalid], input[type='radio'][invalid], input[type='checkbox'][aria-invalid='true'], input[type='radio'][aria-invalid='true']) { border-color: var(--destructive); }\n" +
+  ":where(input[type='checkbox'][invalid]:checked, input[type='radio'][invalid]:checked, input[type='checkbox'][aria-invalid='true']:checked, input[type='radio'][aria-invalid='true']:checked) { background-color: var(--destructive); border-color: var(--destructive); }\n"
 
 // L1 <button> — the first language element skin. A bare <button> anywhere in
 // a SUI document IS the design system's button ("the web with default styles"):

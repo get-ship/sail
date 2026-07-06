@@ -11,8 +11,8 @@ import { initJsdomPolyfills } from '@ship/test-setup'
 initJsdomPolyfills()
 
 // happy-dom (this pack's environment) does not implement `attachInternals`,
-// which form-associated custom elements call in connectedCallback (sui-input /
-// sui-checkbox the composed sui-table renders). Stub it so those specimens
+// which form-associated custom elements call in connectedCallback (sui-input,
+// the composed sui-table renders). Stub it so those specimens
 // connect; tests assert DOM/ARIA/event flow, not form-internals behaviour, so a
 // no-op ElementInternals is sufficient.
 const proto = HTMLElement.prototype as HTMLElement & { attachInternals?: () => unknown }
