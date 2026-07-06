@@ -30,52 +30,55 @@
     <a class="detail-back" href="/components">← All components</a>
   </column>
 {:else}
-  <column class="detail" gap="5" data-test="detail">
+  <column class="detail" gap="0" data-test="detail">
     <a class="detail-back" href="/components" data-test="detail-back">← All components</a>
 
-    <center class="detail-stage" bind:this={stageEl} data-test="detail-stage"></center>
-
-    {#if variants().length}
-      <row class="detail-variants" justify="center" gap="2" data-test="detail-variants">
-        {#for v of variants() key={v}}
-          <button
-            type="button"
-            class="vchip"
-            class:vchip-on={activeVariant() === v}
-            on:click={() => setVariant(v)}
-            attr:data-variant={v}
-            data-test="variant-chip"
-          >{v}</button>
-        {/for}
-      </row>
-    {/if}
-
-    <div class="detail-head">
+    <!-- HERO — editorial, left-aligned, strong hierarchy. -->
+    <header class="detail-hero">
       <span class="detail-pack" data-test="detail-pack">{entry().pack}</span>
       <h1 class="detail-title" data-test="detail-title">{entry().tag}</h1>
       {#if entry().description}
         <p class="detail-desc" data-test="detail-desc">{entry().description}</p>
       {/if}
-      <row class="detail-meta" justify="center" gap="2">
-        <span class="meta-pill">{entry().props.length} props</span>
-        <span class="meta-pill">{entry().slots.length} slots</span>
-        <span class="meta-pill">{entry().events.length} events</span>
-      </row>
+      <div class="detail-meta">
+        <span class="meta-stat"><strong>{entry().props.length}</strong> props</span>
+        <span class="meta-dot"></span>
+        <span class="meta-stat"><strong>{entry().slots.length}</strong> slots</span>
+        <span class="meta-dot"></span>
+        <span class="meta-stat"><strong>{entry().events.length}</strong> events</span>
+      </div>
+    </header>
+
+    <!-- PREVIEW — the centerpiece: designed backdrop, elevated specimen. -->
+    <div class="detail-preview">
+      <center class="detail-stage" bind:this={stageEl} data-test="detail-stage"></center>
+      {#if variants().length}
+        <row class="detail-variants" gap="2" data-test="detail-variants">
+          {#for v of variants() key={v}}
+            <button
+              type="button"
+              class="vchip"
+              class:vchip-on={activeVariant() === v}
+              on:click={() => setVariant(v)}
+              attr:data-variant={v}
+              data-test="variant-chip"
+            >{v}</button>
+          {/for}
+        </row>
+      {/if}
     </div>
 
+    <!-- API — compact, demoted reference (no longer half the page). -->
     <section class="detail-api" data-test="detail-api">
-      <span class="detail-api-eyebrow">API reference</span>
+      <div class="api-headrow">
+        <span class="detail-api-eyebrow">Props</span>
+        <span class="api-count">{entry().props.length}</span>
+      </div>
       <div class="api-table" role="table" data-test="api-table">
-        <div class="api-row api-head" role="row">
-          <span class="api-cell" role="columnheader">Prop</span>
-          <span class="api-cell" role="columnheader">Type</span>
-          <span class="api-cell" role="columnheader">Default</span>
-          <span class="api-cell" role="columnheader">Description</span>
-        </div>
         {#for p of entry().props key={p.name}}
           <div class="api-row" role="row" data-test="api-prop-row">
-            <span class="api-prop" role="cell">{p.name}</span>
-            <span class="api-type" role="cell">{p.type}</span>
+            <code class="api-prop" role="cell">{p.name}</code>
+            <code class="api-type" role="cell">{p.type}</code>
             <span class="api-def" role="cell">{p.default ?? '—'}</span>
             <span class="api-desc" role="cell">{p.description ?? ''}</span>
           </div>
