@@ -140,15 +140,21 @@ const BUTTON_SKIN_CSS =
   // default / no-variant: neutral bordered surface.
   "[data-component] :where(button:not([variant]), button[variant='default']) { background: var(--background); border-color: var(--border); color: var(--foreground); box-shadow: var(--shadow-xs); }\n" +
   "[data-component] :where(button:not([variant]), button[variant='default']):hover:not(:disabled) { background: var(--muted); border-color: var(--border-strong); }\n" +
-  // solid: the tone fill.
+  // solid: the tone fill. Hover shifts the fill TOWARD the foreground —
+  // color-mix makes this mode-aware for free (foreground is dark in light
+  // mode → darker; light in dark mode → lighter), so the button stays its
+  // own tone instead of collapsing to a neutral grey, and --tone-contrast
+  // text stays readable.
   "[data-component] :where(button[variant='solid']) { background: var(--tone, var(--foreground)); border-color: var(--tone, var(--foreground)); color: var(--tone-contrast, var(--background)); box-shadow: var(--shadow-xs); }\n" +
-  "[data-component] :where(button[variant='solid']):hover:not(:disabled) { background: var(--hover-bg); box-shadow: var(--shadow-sm); }\n" +
-  // soft: the tinted surface.
+  "[data-component] :where(button[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); border-color: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); box-shadow: var(--shadow-sm); }\n" +
+  // soft: the tinted surface. Hover deepens the tint by mixing in more of
+  // the pure tone (stays in the tone family; --tone-fg text stays readable).
   "[data-component] :where(button[variant='soft']) { background: var(--tone-bg, var(--hover-bg)); border-color: var(--tone-border, var(--border)); color: var(--tone-fg, var(--foreground)); }\n" +
-  "[data-component] :where(button[variant='soft']):hover:not(:disabled) { background: var(--tone-ring, var(--ring)); }\n" +
-  // outline / ghost.
+  "[data-component] :where(button[variant='soft']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone-bg, var(--hover-bg)), var(--tone, var(--foreground)) 18%); border-color: var(--tone, var(--tone-border)); }\n" +
+  // outline / ghost. Hover is a low-alpha wash of the TONE (not a neutral
+  // grey), so it reads as the control's own colour in both modes.
   "[data-component] :where(button[variant='outline']) { border-color: var(--tone, var(--foreground)); color: var(--tone-fg, var(--foreground)); }\n" +
-  "[data-component] :where(button[variant='outline'], button[variant='ghost']):hover:not(:disabled) { background: var(--hover-bg); }\n" +
+  "[data-component] :where(button[variant='outline'], button[variant='ghost']):hover:not(:disabled) { background: color-mix(in srgb, var(--tone, var(--foreground)) 10%, transparent); }\n" +
   "[data-component] :where(button[variant='ghost']) { color: var(--tone-fg, var(--foreground)); }\n" +
   // Interaction motion (the baseline lift/press — reduced-motion kills it
   // via the global media rule).

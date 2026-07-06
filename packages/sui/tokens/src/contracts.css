@@ -26,11 +26,11 @@
 [data-component] :where(button:not([variant]), button[variant='default']) { background: var(--background); border-color: var(--border); color: var(--foreground); box-shadow: var(--shadow-xs); }
 [data-component] :where(button:not([variant]), button[variant='default']):hover:not(:disabled) { background: var(--muted); border-color: var(--border-strong); }
 [data-component] :where(button[variant='solid']) { background: var(--tone, var(--foreground)); border-color: var(--tone, var(--foreground)); color: var(--tone-contrast, var(--background)); box-shadow: var(--shadow-xs); }
-[data-component] :where(button[variant='solid']):hover:not(:disabled) { background: var(--hover-bg); box-shadow: var(--shadow-sm); }
+[data-component] :where(button[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); border-color: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); box-shadow: var(--shadow-sm); }
 [data-component] :where(button[variant='soft']) { background: var(--tone-bg, var(--hover-bg)); border-color: var(--tone-border, var(--border)); color: var(--tone-fg, var(--foreground)); }
-[data-component] :where(button[variant='soft']):hover:not(:disabled) { background: var(--tone-ring, var(--ring)); }
+[data-component] :where(button[variant='soft']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone-bg, var(--hover-bg)), var(--tone, var(--foreground)) 18%); border-color: var(--tone, var(--tone-border)); }
 [data-component] :where(button[variant='outline']) { border-color: var(--tone, var(--foreground)); color: var(--tone-fg, var(--foreground)); }
-[data-component] :where(button[variant='outline'], button[variant='ghost']):hover:not(:disabled) { background: var(--hover-bg); }
+[data-component] :where(button[variant='outline'], button[variant='ghost']):hover:not(:disabled) { background: color-mix(in srgb, var(--tone, var(--foreground)) 10%, transparent); }
 [data-component] :where(button[variant='ghost']) { color: var(--tone-fg, var(--foreground)); }
 [data-component] :where(button):hover:not(:disabled) { transform: translateY(-1px); }
 [data-component] :where(button):active:not(:disabled) { transform: translateY(1px) scale(0.98); }
