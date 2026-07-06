@@ -32,10 +32,7 @@
 <prop name="label" type="string" default="" />
 
 <variants>
-  view=month: display:block
-  view=week:  display:grid
-  view=day:   display:grid
-  [hidden]:   display:none
+  [hidden]: display:none
 </variants>
 <variants part="grid">
   view=month: display:block
@@ -49,15 +46,25 @@
      NOT use the literal `<style>` tag, so the css-token lint's
      scan_style_blocks doesn't pick this comment up as a style block. -->
 <style>
-/* Residual (small): file-local sub-scale CSS custom properties on host;
-   fixed 7-column grid for the month view; descendant aria-selected rules;
-   chip ::before dot; border-bottom/right hairlines; flex on title and
-   slot-layer/slot-bg; text-align on dow/empty. */
+/* Residual: file-local sub-scale CSS custom properties on host; fixed
+   7-column grid for the month view; descendant aria-selected rules; chip
+   ::before dot; border-bottom/right hairlines; flex on title and
+   slot-layer/slot-bg; text-align on dow/empty; the density-reactive row
+   rhythm (toolbar/dow/cell/slot/empty padding + gap + font-size read
+   --density-* — sx's p/px/py/text families only reach the fixed --space-N /
+   --text-N scales, not the density channel, so these stay raw `var()`
+   references here); the month-cell (84px) and day-column (864px) min-heights
+   — bespoke calendar-grid measurements, not on the --space-N scale (min-height
+   isn't lint-policed the way padding/margin/gap are), so kept as literal px,
+   matching feat/next exactly. */
   :host {
     --cal-gap-xs: var(--space-half);
     --cal-chip-py: var(--space-half);
     --cal-chip-px: var(--space-1_5);
   }
+  /* Container base font — density-reactive, sx has no `text:density-text`
+     token (the `text:` family is the fixed xs..4xl scale only). */
+  .cal { font-family: var(--font-body); font-size: var(--density-text); }
   .dow-row,
   .week {
     display: grid;
@@ -77,12 +84,35 @@
     top: 50%;
     transform: translateY(-50%);
     width: var(--space-half);
+    height: 60%;
     min-height: 12px;
     border-radius: var(--radius-sm);
     background: var(--primary);
   }
   .chip.allday::before { background: var(--accent); }
-  .toolbar { border-bottom: 1px solid var(--border); }
+  /* Density-reactive row rhythm — sx's `p`/`px`/`py` family maps only to the
+     fixed --space-N scale, not the --density-* channel, so these stay here. */
+  .toolbar {
+    gap: var(--density-row-gap);
+    padding: var(--density-row-py) var(--density-row-px);
+    border-bottom: 1px solid var(--border);
+  }
+  .dow {
+    padding: var(--density-row-py) 0;
+    font-size: var(--density-text);
+  }
+  .cell {
+    padding: var(--density-row-py) var(--density-row-px);
+    min-height: 84px;
+  }
+  .slot {
+    padding: 0 var(--density-row-px);
+    font-size: var(--density-text);
+  }
+  .empty {
+    padding: calc(var(--density-row-py) * 4) var(--density-row-px);
+  }
+  .day-col { min-height: 864px; }
   .time-axis,
   .cell,
   .day-col { border-right: 1px solid var(--border); }
@@ -176,9 +206,7 @@
 <div class="cal" part="wrap"
      sx="display:block bg:background fg:foreground border:border radius:lg shadow:xs overflow:hidden"
 >
-  <row class="toolbar" part="toolbar" align="center" gap="3"
-       sx="py:2 px:3"
-  >
+  <row class="toolbar" part="toolbar" align="center">
     <row class="nav-group" part="nav-group" gap="1" align="center">
       <button type="button" class="tb" data-nav="prev" aria-label="Previous">‹</button>
       <button type="button" class="tb" data-nav="today">Today</button>
@@ -193,7 +221,7 @@
   </row>
 
   {#if isEmpty()}
-    <div class="empty" part="empty" role="status" sx="p:6 px:3 fg:muted-foreground">
+    <div class="empty" part="empty" role="status" sx="fg:muted-foreground">
       <slot name="empty">No events</slot>
     </div>
   {/if}
@@ -203,7 +231,7 @@
   >
     <div class="dow-row" role="presentation">
       {#for d of weekdays() key={d.key}}
-        <span class="dow" part="dow" role="columnheader" sx="p:2 fg:muted-foreground weight:medium text:base">{d.label}</span>
+        <span class="dow" part="dow" role="columnheader" sx="fg:muted-foreground weight:medium">{d.label}</span>
       {/for}
     </div>
     {#for wk of weekRows() key={wk.key}}
@@ -221,7 +249,6 @@
             aria-current={cr.cell.today ? 'date' : null}
             aria-label={cr.cell.iso}
             gap="1"
-            sx="min-h:9 py:2 px:3"
           >
             <span class="daynum">{cr.cell.day}</span>
             {#for ev of cr.cell.events key={ev.id}}
@@ -248,18 +275,18 @@
   >
     <column class="time-axis" part="time-axis" role="rowgroup" gap="0">
       {#for slot of timeSlots() key={slot.key}}
-        <div class="slot" data-slot={slot.minutes} role="rowheader" sx="h:control-h-md p:0 px:3 text:base fg:muted-foreground">{slot.label}</div>
+        <div class="slot" data-slot={slot.minutes} role="rowheader" sx="h:control-h-md fg:muted-foreground">{slot.label}</div>
       {/for}
     </column>
     <div class="day-cols" part="day-col">
       {#for dc of dayColumns() key={dc.key}}
-        <div class="day-col" class:today={dc.col.today} data-iso={dc.col.iso} sx="position:relative min-h:9">
+        <div class="day-col" class:today={dc.col.today} data-iso={dc.col.iso} sx="position:relative">
           <column class="slot-layer" part="slot-layer" gap="0" sx="position:absolute">
             {#for slot of timeSlots() key={slot.key}}
               <div class="slot-bg" data-iso={dc.col.iso} data-minutes={slot.minutes} sx="cursor:cell hover:bg:hover-bg"></div>
             {/for}
           </column>
-          <column class="allday-zone" gap="1" sx="position:relative z:elevated p:1">
+          <column class="allday-zone" gap="1" sx="position:relative z:elevated p:half">
             {#for ev of dc.col.allDayEvents key={ev.id}}
               <button
                 type="button"
