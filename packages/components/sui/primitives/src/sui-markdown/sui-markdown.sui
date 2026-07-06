@@ -1,5 +1,28 @@
 <prop name="value" type="string" default="" reflect />
 
+<!--
+  NEW SURFACE (re-port from feat/next, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────
+  - markdown has no tone/size of its own. No theme block, no
+    per-component :host([tone='…']) or :host([size='…']) redeclaration
+    in this style. The framework's global tone/size channels are
+    irrelevant — markdown renders prose, not control chrome.
+  - The host's surface baseline moves to a host sx attribute: display,
+    text size, line-height, foreground color are all reachable via
+    tokens. font-family is the one host surface the sx vocabulary
+    doesn't expose, so it stays in style as a single line.
+  - The prose body (h1-h6 / p / a / code / pre / blockquote / ul / ol /
+    li / strong / table / thead / tbody) is intentionally NOT in sx:
+    the parser writes raw HTML into .md-root, not SUI elements, so
+    sx can't apply to children — the whole prose stylesheet has to
+    live in style. The selector list + each property is chosen so
+    the css-token lint passes (every value is a token; the lint
+    local-marker comment at the top of style declares the set the
+    residual block references).
+  - The host [hidden] display:none is provided by the runtime's
+    BASE_CSS — not authored here.
+-->
+
 <!-- Host baseline: surface-only sx props (display + text + line-height
      + foreground). font-family has no sx token, so it stays in the
      residual <style> below. -->
