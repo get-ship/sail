@@ -20,7 +20,40 @@
   consumers that hold a live array bind it as the host `pageSizeOptions` property
   (prop:* identity), which the controller mirrors into the same parsed list.
 
-  Parts: nav, range, first, prev, pages, page, next, last, size.
+  Parts: nav, edges, range, first, prev, pages, page, next, last, size.
+
+  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────────────
+  - `<sui-cluster>` (removed from this surface) → the built-in `<row>` keyword
+    for the nav toolbar + the edges/pages groups. `<row>` lowers to
+    `display:flex; flex-wrap:wrap` + gap/align — the same wrapping-cluster
+    behavior the baseline's sui-cluster gave, so no visual loss. The `.edges`/
+    `.pages` hand-CSS (display:inline-flex + gap) is now expressed via the
+    row's own `gap`/`align` attributes instead of a residual <style> rule.
+  - The page-size `<label class="size">` wrapper → `<row class="size">`. A
+    bare `<label>` tag is an L1 stdlib element on this surface (see
+    crates/sui/compiler/stdlib/label.sui) — using one here would splice in
+    the framework's own label skin (bold weight, `--foreground` color,
+    pointer cursor) tag-wide, which visually fights this control's intended
+    muted, non-bold treatment. No functional loss: the accessible name for
+    the page-size control is carried directly by `<sui-select label={…}>`
+    (rendered as `aria-label` on the inner native `<select>`), so the
+    implicit label-for association `<label>` would have given was
+    redundant, not load-bearing.
+  - `.range`/`.size` foreground color moved from residual <style> into
+    `sx="fg:muted-foreground"` on the element (closed-sx can express a
+    plain token color; only non-sx properties — font-family, white-space,
+    user-select, font-variant-numeric, the forced-colors system color —
+    stay in the residual block).
+  - Props are left as plain `<prop>` tags (not the `<component>{props:{…}}}`
+    sugar): `page`/`total`/`page-size` need `reflect` preserved from the
+    baseline, and the sugar's number-literal-default expansion
+    (`expand_props` in preprocess.rs) does not emit `reflect` for a typed
+    number default — only bool/union/tone/size get it automatically. Raw
+    `<prop>` tags are the same underlying mechanism the sugar desugars to,
+    so this keeps full fidelity without inventing a workaround.
+  - No LANG-GAP: every prop/slot/event/ARIA rule from the baseline is fully
+    expressible on this surface.
 -->
 
 <prop name="page" type="number" default="1" reflect />
