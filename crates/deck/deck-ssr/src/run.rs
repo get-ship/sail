@@ -28,6 +28,7 @@ use std::sync::Arc;
 use anyhow::{anyhow, Result};
 use serde_json::Value;
 use ship_js::deno::{run_module_with_limits, RunLimits};
+use ship_js::dispatch::{CancellationToken, SesPolicy};
 use ship_js::Dispatch;
 
 use crate::host::SsrDispatch;
@@ -56,11 +57,26 @@ pub fn render_with_limits(
         dispatch.clone(),
         move |b, d| async move {
             let host: Arc<dyn Dispatch> = d;
-            // ship-exec v2 added op/module allow-lists to run_module_with_limits;
-            // deck-ssr imposes no allow-list (None, None) — same behavior as before.
-            run_module_with_limits(host, None, None, SHIP_SDK.to_string(), b, limits)
-                .await
-                .map_err(|e| anyhow!("run_module: {e:?}"))
+            // ship-exec grew per-run gates (allow-lists, expression policy,
+            // compartments, module cache, cancellation, SES). deck-ssr wants
+            // the "no gate" semantics ship-js's own `run_module` wrapper uses:
+            // no lists/policy/compartment/cache, a fresh (un-cancelled) token,
+            // SES off — behavior-identical to before the signature grew.
+            run_module_with_limits(
+                host,
+                None, // op_allow_list
+                None, // module_allow_list
+                None, // expression_policy
+                None, // compartment_id
+                None, // module_cache_key
+                CancellationToken::new(),
+                SesPolicy::Off,
+                SHIP_SDK.to_string(),
+                b,
+                limits,
+            )
+            .await
+            .map_err(|e| anyhow!("run_module: {e:?}"))
         },
     )?;
     let first = emits.first().ok_or_else(|| anyhow!("ssr entry emitted nothing"))?;
