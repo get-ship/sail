@@ -122,11 +122,12 @@
   .opt.hl .opt-check { opacity: 1; }
 </style>
 
+<!-- De-translated: min-h:h / px:px removed — the residual .wrap rule already
+     declares min-height/padding via var(--h)/var(--px); ad-hoc channels are
+     not sx vocabulary. -->
 <row class="wrap" part="wrap" gap="2" align="center"
   sx="
     w:full
-    min-h:h
-    px:px
     py:0
     bg:surface-1
     border:tone-border

@@ -139,7 +139,7 @@
 <style>
   /* Local markers so the css-token lint recognizes the theme channels
    * + tokens referenced from this residual block. */
-  --cb-stroke: ; --tone: ; --tone-on-fg: ; --foreground: ; --text-base: ; --font-body: ; --space-2: ; --border-strong: ; --shadow-xs: ; --shadow-sm: ; --destructive: ; --selected-border: ; --muted: ; --muted-foreground: ; --border: ; --duration-fast: ; --ease-out: ; --focus-ring: ; --focus-ring-offset: ; --leading-tight: ; --radius-sm: ; --icon-size-md: ; --icon-size-sm: ; --icon-size-lg: ; --surface-1: ;
+  --cb-stroke: ; --cb-size: ; --cb-radius: ; --tone: ; --tone-on-fg: ; --foreground: ; --text-base: ; --font-body: ; --space-2: ; --border-strong: ; --shadow-xs: ; --shadow-sm: ; --destructive: ; --selected-border: ; --muted: ; --muted-foreground: ; --border: ; --duration-fast: ; --ease-out: ; --focus-ring: ; --focus-ring-offset: ; --leading-tight: ; --radius-sm: ; --icon-size-md: ; --icon-size-sm: ; --icon-size-lg: ; --surface-1: ;
 
   /* Residual (the unavoidable bits):
      1. Host baseline (vertical-align, font-family, -webkit-tap-highlight-color,
@@ -216,6 +216,12 @@
   .box {
     flex-shrink: 0;
     box-sizing: border-box;
+    /* De-translated from sx (w:cb-size h:cb-size radius:cb-radius) — ad-hoc
+       theme channels are not sx vocabulary; the channel-driven dimensions
+       live here with the rest of the box's irreducible styling. */
+    width: var(--cb-size);
+    height: var(--cb-size);
+    border-radius: var(--cb-radius);
     transition:
       background-color var(--duration-fast) var(--ease-out),
       border-color var(--duration-fast) var(--ease-out),
@@ -245,6 +251,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    /* De-translated from sx (fg:tone-on-fg) — a per-component theme channel,
+       not sx vocabulary. The glyph ink follows the tone's on-color. */
+    color: var(--tone-on-fg);
     transform: scale(0.6);
     transition:
       opacity var(--duration-fast) var(--ease-out),
@@ -334,7 +343,7 @@
 
 <label part="label" sx="cursor:pointer">
   <span class="box" part="box"
-    sx="position:relative display:inline-block bg:surface-1 border:strong radius:cb-radius w:cb-size h:cb-size shadow:xs">
+    sx="position:relative display:inline-block bg:surface-1 border:strong shadow:xs">
     <input
       part="input"
       type="checkbox"
@@ -349,9 +358,9 @@
       bind:this={inputEl}
     />
     <span class="glyph check" part="check" aria-hidden="true"
-      sx="position:absolute fg:tone-on-fg opacity:0"></span>
+      sx="position:absolute opacity:0"></span>
     <span class="glyph mixed" part="mixed" aria-hidden="true"
-      sx="position:absolute fg:tone-on-fg opacity:0"></span>
+      sx="position:absolute opacity:0"></span>
   </span>
   <slot></slot>
 </label>

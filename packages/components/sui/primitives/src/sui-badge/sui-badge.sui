@@ -133,7 +133,11 @@
   }
 </style>
 
-<span class="badge" part="badge" sx="min-h:bdg-h py:0 px:bdg-px text:bdg-fs weight:semibold radius:bdg-radius">
+<!-- De-translated: the channel-valued sx pairs (min-h:bdg-h, px:bdg-px,
+     text:bdg-fs, radius:bdg-radius) duplicated declarations the residual
+     .badge rule already carries via var(--bdg-*). Ad-hoc theme channels are
+     not sx vocabulary — sx speaks tokens and framework contracts only. -->
+<span class="badge" part="badge" sx="py:0 weight:semibold">
   <span class="leading" part="leading"><slot name="leading"></slot></span>
   <slot></slot>
 </span>

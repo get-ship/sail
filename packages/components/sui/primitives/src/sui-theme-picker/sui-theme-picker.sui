@@ -130,6 +130,10 @@
     display: inline-flex;
     align-items: center;
     gap: var(--tp-trigger-gap);
+    /* De-translated from sx (py:tp-trigger-py px:tp-trigger-px) — ad-hoc
+       channels are not sx vocabulary. */
+    padding-block: var(--tp-trigger-py);
+    padding-inline: var(--tp-trigger-px);
     transition:
       background-color var(--duration-fast) var(--ease-out),
       border-color var(--duration-fast) var(--ease-out);
@@ -379,7 +383,7 @@
   aria-label="Choose theme"
   aria-haspopup="dialog"
   aria-expanded={panelOpen() ? 'true' : 'false'}
-  sx="radius:sm py:tp-trigger-py px:tp-trigger-px text:base fg:foreground cursor:pointer"
+  sx="radius:sm text:base fg:foreground cursor:pointer"
   on:click={() => togglePanel()}>
   <sui-icon class="tp-icon" part="dot" name="palette" size="lg" style:color={triggerIconColor()} aria-hidden="true"></sui-icon>
   <span class="label" part="label"

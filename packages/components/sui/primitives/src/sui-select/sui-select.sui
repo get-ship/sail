@@ -47,6 +47,10 @@
   :host([disabled]) { color: var(--muted-foreground); filter: saturate(0.6); }
 
   .field { gap: var(--sel-gap); user-select: none; -webkit-user-select: none; font-family: var(--font-body);
+    /* De-translated from sx (min-h:sel-h text:sel-fs) — ad-hoc channels are
+       not sx vocabulary. */
+    min-height: var(--sel-h);
+    font-size: var(--sel-fs);
     transition:
       background-color var(--duration-fast) var(--ease-out),
       border-color var(--duration-fast) var(--ease-out),
@@ -136,8 +140,6 @@
   <row class="field" part="field" gap="2" align="center"
     sx="
       position:relative
-      min-h:sel-h
-      text:sel-fs
       weight:medium
       leading:tight
       tracking:tight

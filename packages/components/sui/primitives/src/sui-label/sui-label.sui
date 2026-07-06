@@ -32,16 +32,24 @@
 </theme>
 
 <style>
+  /* Local markers so the css-token lint recognizes the theme channels
+   * referenced from this residual block. */
+  --label-fs: ;
   /* Residual: bare `:host` rule with no prop selector (host is
      `inline-block` regardless of attribute state) and the inner
      <label>'s `font-family` aren't reachable through the sx
      theme/variants constructs. */
   :host { display: inline-block; }
-  label { font-family: var(--font-body); }
+  label {
+    font-family: var(--font-body);
+    /* De-translated from sx (text:label-fs) — ad-hoc channels are not sx
+       vocabulary. */
+    font-size: var(--label-fs);
+  }
 </style>
 
 <label part="label" bind:this={labelEl}
-  sx="display:inline weight:semibold tracking:normal fg:foreground cursor:pointer text:label-fs">
+  sx="display:inline weight:semibold tracking:normal fg:foreground cursor:pointer">
   <slot></slot>
   {#if required()}<span class="req" aria-hidden="true" sx="fg:destructive ml:1 weight:bold">*</span>{/if}
 </label>

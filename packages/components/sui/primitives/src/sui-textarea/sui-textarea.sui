@@ -46,6 +46,13 @@
 
   textarea {
     font-family: var(--font-body);
+    /* De-translated from sx (radius:ta-radius px:ta-px py:ta-py text:ta-fs
+       leading:ta-lh) — ad-hoc channels are not sx vocabulary. */
+    border-radius: var(--ta-radius);
+    padding-inline: var(--ta-px);
+    padding-block: var(--ta-py);
+    font-size: var(--ta-fs);
+    line-height: var(--ta-lh);
     transition:
       background-color var(--duration-fast) var(--ease-out),
       border-color var(--duration-fast) var(--ease-out),
@@ -115,11 +122,6 @@
     bg:background
     fg:foreground
     border:border
-    radius:ta-radius
-    px:ta-px
-    py:ta-py
-    text:ta-fs
-    leading:ta-lh
     tracking:tight
     shadow:xs
   "

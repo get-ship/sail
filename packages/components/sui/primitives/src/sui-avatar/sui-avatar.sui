@@ -119,7 +119,9 @@
   }
 </style>
 
-<span class="root" part="root" sx="w:sz h:sz weight:bold text:fs overflow:hidden"
+<!-- De-translated: w:sz / h:sz / text:fs removed — the residual .root rule
+     already declares width/height/font-size via var(--sz)/var(--fs). -->
+<span class="root" part="root" sx="weight:bold overflow:hidden"
       role="img"
       aria-label={name() || initials() || 'avatar'}>
   {#if (iconSlug() || src()) && !errored()}

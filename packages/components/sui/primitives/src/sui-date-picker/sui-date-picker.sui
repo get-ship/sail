@@ -158,10 +158,16 @@
   .day.today:not(.selected) {
     box-shadow: inset 0 0 0 1px var(--border-strong);
   }
+  .wrap {
+    /* De-translated from sx (min-h:dp-h px:dp-px) — ad-hoc channels are not
+       sx vocabulary. */
+    min-height: var(--dp-h);
+    padding-inline: var(--dp-px);
+  }
 </style>
 
 <row class="wrap" part="wrap" gap="2" align="center"
-  sx="w:full min-h:dp-h px:dp-px bg:background fg:foreground border:tone-border radius:md focus-within:ring:tone-ring">
+  sx="w:full bg:background fg:foreground border:tone-border radius:md focus-within:ring:tone-ring">
   <input
     class="entry"
     part="input"

@@ -32,6 +32,9 @@
   a {
     display: inline;
     border-radius: var(--radius-sm);
+    /* De-translated from sx (fg:link-fg) — ad-hoc channels are not sx
+       vocabulary. */
+    color: var(--link-fg);
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: var(--ring-offset);
@@ -78,7 +81,6 @@
    href={href()}
    target={external() ? '_blank' : target()}
    rel={external() ? 'noopener noreferrer' : rel()}
-   sx="fg:link-fg"
 >
   <slot></slot>
   {#if external()}

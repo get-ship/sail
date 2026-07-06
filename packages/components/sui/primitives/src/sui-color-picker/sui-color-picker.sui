@@ -76,7 +76,13 @@
     vertical-align: middle;
   }
 
-  .wrap { transition: border-color var(--duration-fast), box-shadow var(--duration-fast); }
+  .wrap {
+    transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+    /* De-translated from sx (min-h:cp-h px:cp-px) — ad-hoc channels are not
+       sx vocabulary. */
+    min-height: var(--cp-h);
+    padding-inline: var(--cp-px);
+  }
   .wrap:focus-within {
     border-color: var(--tone-ring);
     box-shadow: 0 0 0 var(--ring-width) var(--tone-ring);
@@ -164,11 +170,11 @@
   }
 </style>
 
+<!-- De-translated: min-h:cp-h / px:cp-px moved into the residual .wrap rule
+     (ad-hoc channels are not sx vocabulary). -->
 <row class="wrap" part="wrap" align="center" gap="2"
   sx="
     w:full
-    min-h:cp-h
-    px:cp-px
     py:0
     bg:background
     fg:foreground

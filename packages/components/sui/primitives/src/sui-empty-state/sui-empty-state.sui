@@ -22,7 +22,7 @@
 <style>
   /* Local markers so the css-token lint recognizes the theme channels
    * and tokens referenced from this residual block. */
-  --es-icon: ; --es-tile: ; --leading-normal-plus: ; --leading-none: ; --tone-default-ring: ; --tone-default-bg: ; --heading-font: ; --heading-weight: ; --font-body: ; --panel-ch-w-md: ; --tone-fg: ; --tone-muted-bg: ; --tone-muted-border: ; --border: ; --radius-lg: ; --radius-md: ; --shadow-xs: ; --space-1: ; --space-3: ; --space-6: ; --space-9: ;
+  --es-icon: ; --es-tile: ; --es-pad-y: ; --es-pad-x: ; --es-title-fs: ; --es-desc-fs: ; --leading-normal-plus: ; --leading-none: ; --tone-default-ring: ; --tone-default-bg: ; --heading-font: ; --heading-weight: ; --font-body: ; --panel-ch-w-md: ; --tone-fg: ; --tone-muted-bg: ; --tone-muted-border: ; --border: ; --radius-lg: ; --radius-md: ; --shadow-xs: ; --space-1: ; --space-3: ; --space-6: ; --space-9: ;
   /* Residual: `:host` (host element, no sx), the per-variant .box
    * rest styling (the variant's border shorthand is a multi-token
    * value that doesn't fit a <theme> channel; placeholder/connecting
@@ -38,7 +38,12 @@
   :host { display: block; font-family: var(--font-body); color: var(--muted-foreground); }
   :host([hidden]) { display: none; }
 
-  .box { text-align: center; }
+  .box {
+    text-align: center;
+    /* De-translated from sx (py:es-pad-y px:es-pad-x). */
+    padding-block: var(--es-pad-y);
+    padding-inline: var(--es-pad-x);
+  }
   :host([variant='default']) .box { background: var(--tone-muted-bg); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); }
   :host([variant='inline']) .box { background: var(--tone-muted-border); border: 1px dashed var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-xs); flex-direction: row; justify-content: flex-start; text-align: start; }
   :host([variant='placeholder']) .box,
@@ -72,6 +77,9 @@
     font-family: var(--heading-font);
     font-weight: var(--heading-weight);
     line-height: var(--leading-tight);
+    /* De-translated from sx (text:es-title-fs) — ad-hoc channels are not
+       sx vocabulary. */
+    font-size: var(--es-title-fs);
   }
   :host([variant='connecting']) .title,
   :host([variant='placeholder']) .title {
@@ -79,7 +87,7 @@
     color: var(--muted-foreground);
   }
 
-  .desc { line-height: var(--leading-normal-plus); }
+  .desc { line-height: var(--leading-normal-plus); font-size: var(--es-desc-fs); }
   :host([variant='inline']) .desc { max-width: 60ch; }
 
   .actions { margin-top: var(--space-1); }
@@ -94,11 +102,8 @@
 <column class="box" part="box" gap="3" align="center"
      role={variant() === 'connecting' ? 'status' : 'note'}
      aria-live={variant() === 'connecting' ? 'polite' : 'off'}
-     sx="
-      py:es-pad-y
-      px:es-pad-x
-     "
 >
+<!-- De-translated: py/px moved into the residual .box rule. -->
   <row class="icon" part="icon" align="center" justify="center" aria-hidden="true"
     sx="
       radius:lg
@@ -109,8 +114,8 @@
     <slot name="icon" reflect-empty="data-no-icon"></slot>
   </row>
   <column class="copy" gap="1" align={variant() === 'inline' ? 'start' : 'center'}>
-    <div class="title" part="title" sx="text:es-title-fs fg:foreground"><slot name="title"></slot></div>
-    <div class="desc" part="desc" sx="text:es-desc-fs max-w:panel-ch-w-md fg:muted-foreground"><slot></slot></div>
+    <div class="title" part="title" sx="fg:foreground"><slot name="title"></slot></div>
+    <div class="desc" part="desc" sx="max-w:panel-ch-w-md fg:muted-foreground"><slot></slot></div>
   </column>
   <row class="actions" part="actions" gap="2" align="center" justify="center">
     <slot name="action"></slot>
