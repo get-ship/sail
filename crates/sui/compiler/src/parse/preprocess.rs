@@ -27,6 +27,10 @@ pub fn preprocess(source: &str) -> String {
     // Off-vocab values are rejected earlier by the lints (`sui-sx` / `sui-layout`)
     // reading the raw source; here we only lower valid ones.
     let s = expand_self_close(&quote_brace_attrs(source));
+    // Bare framework-enum shorthand: `<button primary solid sm>` →
+    // tone/variant/size attributes. Framework vocabulary on framework tags
+    // only (L1 controls + sui-*); userland components stay explicit.
+    let s = lower_prop_shorthand(&s);
     // Desugar the SFC `<component>` block into the `<prop>` tags + object
     // `<variants>` the rest of the chain already lowers.
     let s = lower_component(&s);
@@ -187,6 +191,159 @@ fn lower_sx_value(
 }
 
 /// After the `sx` name: optional ws, `=`, optional ws, then a `"`.
+/// Bare framework-enum shorthand (authoring sugar): on framework tags, a bare
+/// attribute matching a framework enum value desugars to its prop —
+/// `<button primary solid sm>` → `<button tone="primary" variant="solid"
+/// size="sm">`. Rules that keep it deterministic:
+///   - Framework tags only: the L1 control set + any `sui-*` tag. Userland
+///     components keep explicit attributes (their prop names could collide).
+///   - The vocabularies are disjoint by construction (tones ∪ sizes ∪
+///     variants share no member); `default` is excluded (ambiguous between
+///     tone and variant, and it IS the default — writing it is a no-op).
+///   - An explicit attribute wins: a tag already carrying `tone=` gets no
+///     tone sugar. First bare value wins per category; later ones pass
+///     through untouched (harmless attributes a lint can flag).
+///   - Static only, like all sugar — the DOM carries the real attributes, so
+///     skins, contracts, and CEM see nothing new.
+fn lower_prop_shorthand(source: &str) -> String {
+    const TONES: &[&str] =
+        &["primary", "info", "success", "warning", "destructive", "accent", "muted"];
+    const SIZES: &[&str] = &["xs", "sm", "md", "lg", "xl"];
+    const VARIANTS: &[&str] = &["solid", "soft", "outline", "ghost"];
+    const L1_TAGS: &[&str] = &["button", "input", "textarea", "select"];
+
+    let bytes = source.as_bytes();
+    let mut out = String::with_capacity(source.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if source[i..].starts_with("<!--") {
+            let end = source[i..].find("-->").map(|e| i + e + 3).unwrap_or(bytes.len());
+            out.push_str(&source[i..end]);
+            i = end;
+            continue;
+        }
+        if bytes[i] == b'<' && i + 1 < bytes.len() && bytes[i + 1].is_ascii_alphabetic() {
+            // Tag name + framework check.
+            let mut j = i + 1;
+            while j < bytes.len()
+                && (bytes[j].is_ascii_alphanumeric() || bytes[j] == b'-')
+            {
+                j += 1;
+            }
+            let tag_name = &source[i + 1..j];
+            let is_framework = L1_TAGS.contains(&tag_name) || tag_name.starts_with("sui-");
+            // Find tag end honoring quotes.
+            let mut k = j;
+            let mut quote: Option<u8> = None;
+            while k < bytes.len() {
+                match (quote, bytes[k]) {
+                    (Some(q), b) if b == q => quote = None,
+                    (None, b'"') | (None, b'\'') => quote = Some(bytes[k]),
+                    (None, b'>') => break,
+                    _ => {}
+                }
+                k += 1;
+            }
+            if k < bytes.len() && is_framework {
+                let tag = &source[i..=k];
+                out.push_str(&desugar_tag(tag, TONES, SIZES, VARIANTS));
+                i = k + 1;
+                continue;
+            }
+            if k < bytes.len() {
+                out.push_str(&source[i..=k]);
+                i = k + 1;
+                continue;
+            }
+        }
+        let next = bytes[i + 1..]
+            .iter()
+            .position(|&b| b == b'<')
+            .map(|n| i + 1 + n)
+            .unwrap_or(bytes.len());
+        out.push_str(&source[i..next]);
+        i = next;
+    }
+    out
+}
+
+/// Desugar one framework open-tag: replace bare vocab attributes with their
+/// prop form, honoring explicit-attribute precedence and first-wins.
+fn desugar_tag(tag: &str, tones: &[&str], sizes: &[&str], variants: &[&str]) -> String {
+    let has = |needle: &str| tag.contains(needle);
+    let mut tone_done = has(" tone=") || has("\ntone=");
+    let mut size_done = has(" size=") || has("\nsize=");
+    let mut variant_done = has(" variant=") || has("\nvariant=");
+
+    let bytes = tag.as_bytes();
+    let mut out = String::with_capacity(tag.len() + 24);
+    let mut i = 0;
+    let mut quote: Option<u8> = None;
+    while i < bytes.len() {
+        match (quote, bytes[i]) {
+            (Some(q), b) if b == q => {
+                quote = None;
+                out.push(bytes[i] as char);
+                i += 1;
+                continue;
+            }
+            (Some(_), _) => {
+                // Inside a quoted value — copy one full UTF-8 char.
+                let mut n = i + 1;
+                while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
+                    n += 1;
+                }
+                out.push_str(&tag[i..n]);
+                i = n;
+                continue;
+            }
+            (None, b'"') | (None, b'\'') => {
+                quote = Some(bytes[i]);
+                out.push(bytes[i] as char);
+                i += 1;
+                continue;
+            }
+            _ => {}
+        }
+        // A bare word starts after whitespace.
+        if i > 0 && bytes[i - 1].is_ascii_whitespace() && bytes[i].is_ascii_alphabetic() {
+            let mut j = i;
+            while j < bytes.len() && (bytes[j].is_ascii_alphanumeric() || bytes[j] == b'-') {
+                j += 1;
+            }
+            let word = &tag[i..j];
+            let ends_bare = bytes
+                .get(j)
+                .is_none_or(|&b| b.is_ascii_whitespace() || b == b'>' || b == b'/');
+            if ends_bare {
+                let prop = if !tone_done && tones.contains(&word) {
+                    tone_done = true;
+                    Some("tone")
+                } else if !size_done && sizes.contains(&word) {
+                    size_done = true;
+                    Some("size")
+                } else if !variant_done && variants.contains(&word) {
+                    variant_done = true;
+                    Some("variant")
+                } else {
+                    None
+                };
+                if let Some(p) = prop {
+                    out.push_str(&format!("{p}=\"{word}\""));
+                    i = j;
+                    continue;
+                }
+            }
+            out.push_str(word);
+            i = j;
+            continue;
+        }
+        out.push(bytes[i] as char);
+        i += 1;
+    }
+    out
+}
+
 /// Merge every open tag's duplicate static `class="…"` attributes into the
 /// first one (values space-joined, source order). `lower_sx` rewrites `sx=` to
 /// a fresh `class=` without looking for an existing one, so
@@ -1592,6 +1749,33 @@ mod tests {
             out.contains(":host([variant='solid']) .box{background:var(--primary);}"),
             "dotted key becomes a class-targeted block:\n{out}"
         );
+    }
+
+    #[test]
+    fn bare_enum_shorthand_desugars_on_framework_tags() {
+        let out = preprocess(r#"<button primary solid sm on:click={f}>Go</button>"#);
+        assert!(out.contains(r#"tone="primary""#), "{out}");
+        assert!(out.contains(r#"variant="solid""#), "{out}");
+        assert!(out.contains(r#"size="sm""#), "{out}");
+        let out = preprocess(r#"<sui-chip accent outline>x</sui-chip>"#);
+        assert!(out.contains(r#"tone="accent""#) && out.contains(r#"variant="outline""#), "{out}");
+    }
+
+    #[test]
+    fn bare_enum_shorthand_respects_explicit_and_scope() {
+        // Explicit attribute wins — no double tone.
+        let out = preprocess(r#"<button tone="info" primary>x</button>"#);
+        assert!(out.contains(r#"tone="info""#), "{out}");
+        assert!(!out.contains(r#"tone="primary""#), "explicit wins: {out}");
+        assert!(out.contains(" primary"), "bare word passes through: {out}");
+        // Userland/HTML tags are untouched.
+        let out = preprocess(r#"<my-card primary>x</my-card><p sm>y</p>"#);
+        assert!(out.contains("<my-card primary>"), "{out}");
+        assert!(out.contains("<p sm>"), "{out}");
+        // Boolean props and quoted values never collide.
+        let out = preprocess(r#"<button disabled data-x="sm primary">x</button>"#);
+        assert!(out.contains(" disabled"), "{out}");
+        assert!(out.contains(r#"data-x="sm primary""#), "quoted values untouched: {out}");
     }
 
     #[test]
