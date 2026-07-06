@@ -22,94 +22,93 @@
   ─────────────────────────────────────────────────────────────────────────────
   animation: grid-template-rows 0fr→1fr (same as sui-collapsible)
   ─────────────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────────────
+  - No tone channel on this component — nothing to globalize there.
+  - L1 CONTROL: the trigger is now a bare framework-styled `<button ghost>`
+    instead of a hand-skinned `.trigger` (own background/border/hover/
+    focus/disabled CSS). The framework's control contracts (adopted into
+    this shadow root via adoptSuiSheets — the shadow-control-skin fix
+    noted in the gate) now own:
+      - transparent background + no border (ghost variant baseline)
+      - hover wash (ghost variant's tone-tinted hover)
+      - :focus-visible ring (CONTROL_CONTRACTS_CSS, generic — this
+        trigger has no tone concept of its own, so the generic ring is
+        a faithful match, not an approximation)
+      - :disabled cursor/opacity (CONTROL_CONTRACTS_CSS)
+    None of those are hand-authored here anymore.
+  - What's left genuinely component-specific, expressed via sx + a
+    class-targeted variants directive: full-width layout (a row
+    primitive inside the button for the label/chevron split — sx has
+    no flex/gap/justify, that's the layout primitives' job, not sx's),
+    the padding/font baseline, and the "open" row tint (`bg:muted` —
+    this targets the `.trigger` class specifically; the pre-existing
+    spike file had this on bare `:host([open])`, which tints the WHOLE
+    host rather than just the trigger row — a bug this re-port fixes
+    by porting feat/next's actual selector, `:host([open]) .trigger`,
+    faithfully instead of copying the spike).
+  - The chevron stays a hand-authored inline <svg> (not the `<icon>`
+    language element): it needs a two-state color swap (muted-foreground
+    → foreground on open) and a rotate transform, and `<icon>` has no
+    tone/color channel of its own yet (a LANG-GAP already documented in
+    its own source, not one this file should route around). sui-alert's
+    icon slot is the same shape — plain sx-sized/colored SVG, not `<icon>`.
+    Rotation/transition stay in <style> (sx has no transform channel).
+  - `display:block`/`color`/`[hidden]` on :host dropped — framework-owned
+    (BASE_CSS) now.
 -->
 
+<component>{
+  props: {
+    disabled: bool,
+    open: bool,
+  },
+}</component>
 <prop name="value" type="string" default="" reflect />
-<prop name="disabled" type="bool" default="false" reflect />
-<prop name="open" type="bool" default="false" reflect />
 
-<variants>
-  [hidden]:   display:none
-  [open]:     bg:muted
+<variants class="trigger">
+  [open]: bg:muted
 </variants>
-<variants part="trigger">
-  hover:     bg:hover-bg
-  [disabled]: cursor:not-allowed opacity:50
-</variants>
-<variants part="chevron">
-  [open]:    fg:foreground
-</variants>
-<variants part="content">
-  [open]:    grid-template-rows:1fr
+<variants class="chevron">
+  [open]: fg:foreground
 </variants>
 
-<!-- Residual: .trigger visual (display:flex + align-items + width +
-     padding + background + border:0 + text-align + font:inherit +
-     font-size + font-weight + color + cursor + gap); .chevron
-     geometry (flex-shrink + width + height + color + transform on
-     open); .content-wrap grid-template-rows 0fr (no sx prop for
-     grid-template-rows; the open variant flips to 1fr); the
-     transform/grid-template-rows transitions (motion); the .trigger
-     focus outline (vs the 2-layer box-shadow ring); forced-colors
-     CanvasText outline (system color); the prefers-reduced-motion
-     reset; .trigger-label flex:1; .content-inner overflow:hidden;
-     .content-body padding. -->
 <style>
   :host {
-    display: block;
     font-family: var(--font-body);
-    color: var(--foreground);
   }
-  [part~='trigger'] {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: var(--space-3) var(--space-4);
-    background: transparent;
-    border: 0;
-    text-align: start;
-    font: inherit;
-    font-size: var(--text-sm);
-    font-weight: var(--font-weight-semibold);
-    color: var(--foreground);
-    cursor: pointer;
-    gap: var(--space-2);
-    transition: background var(--duration-fast) var(--ease-out);
-  }
-  [part~='trigger']:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-ring-offset);
-  }
-  @media (forced-colors: active) {
-    [part~='trigger']:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
-  }
-  .trigger-label { flex: 1; }
-  [part~='chevron'] {
+
+  .chevron {
     flex-shrink: 0;
-    width: var(--icon-size-md);
-    height: var(--icon-size-md);
-    color: var(--muted-foreground);
     transition: transform var(--duration-medium) var(--ease-out);
   }
-  :host([open]) [part~='chevron'] { transform: rotate(180deg); }
-  @media (prefers-reduced-motion: reduce) { [part~='chevron'] { transition: none; } }
-  [part~='content'] {
+  :host([open]) .chevron { transform: rotate(180deg); }
+  @media (prefers-reduced-motion: reduce) { .chevron { transition: none; } }
+
+  .content-wrap {
     display: grid;
     grid-template-rows: 0fr;
     transition: grid-template-rows var(--duration-medium) var(--ease-out);
   }
-  @media (prefers-reduced-motion: reduce) { [part~='content'] { transition: none; } }
+  :host([open]) .content-wrap { grid-template-rows: 1fr; }
+  @media (prefers-reduced-motion: reduce) { .content-wrap { transition: none; } }
+
   .content-inner { overflow: hidden; }
   .content-body { padding: var(--space-3) 0; }
 </style>
 
-<button class="trigger" part="trigger" bind:this={triggerBtn} disabled={disabled()}>
-  <span class="trigger-label"><slot name="trigger"></slot></span>
-  <svg class="chevron" part="chevron" viewBox="0 0 16 16" fill="none"
-    stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
-    stroke-linejoin="round" aria-hidden="true">
-    <path d="M4 6l4 4 4-4"></path>
-  </svg>
+<button ghost class="trigger" part="trigger" bind:this={triggerBtn} disabled={disabled()}
+  sx="w:full py:3 px:4 text:sm weight:semibold">
+  <row align="center" justify="between" gap="2" sx="w:full">
+    <span class="trigger-label"><slot name="trigger"></slot></span>
+    <svg class="chevron" part="chevron" viewBox="0 0 16 16" fill="none"
+      stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+      stroke-linejoin="round" aria-hidden="true"
+      sx="w:icon-size-md h:icon-size-md fg:muted-foreground">
+      <path d="M4 6l4 4 4-4"></path>
+    </svg>
+  </row>
 </button>
 <div class="content-wrap" part="content" bind:this={contentWrap} role="region">
   <div class="content-inner">

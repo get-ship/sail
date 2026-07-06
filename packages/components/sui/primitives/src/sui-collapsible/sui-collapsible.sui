@@ -4,6 +4,8 @@
 
   Prop parity vs <ship-collapsible>
   ─────────────────────────────────────────────────────────────────────────────
+  Lit                          SUI                      Notes
+  ─────────────────────────────────────────────────────────────────────────────
   open (bool, false)           open (bool, reflect)     ✓
   disabled (bool, false)       disabled (bool, reflect) ✓
   ─────────────────────────────────────────────────────────────────────────────
@@ -25,45 +27,58 @@
     rows 0fr→1fr; respects
     prefers-reduced-motion
   ─────────────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────────────
+  - No tone/size usage here — nothing to move onto the global channels.
+    The bare host baseline this file used to declare (display:block,
+    color:foreground, [hidden]→display:none) is now framework-owned
+    (BASE_CSS, adopted into every shadow root) — dropped from here.
+  - No L1 controls of its own — the trigger is consumer-slotted (a <button>,
+    a <div>, whatever the caller passes); there's no dismiss/close button
+    of this component's own to re-skin the way sui-alert's was.
+  - Everything else in <style> stays, verbatim feat/next, tokens only:
+    the grid-template-rows 0fr→1fr trick (no sx property for
+    grid-template-rows), the ::slotted() trigger styling (cursor/user-
+    select/hover/focus/disabled — sx/variants can't reach slotted
+    content, only :host attributes), and the prefers-reduced-motion
+    override.
 -->
 
-<prop name="open" type="bool" default="false" reflect />
-<prop name="disabled" type="bool" default="false" reflect />
+<component>{
+  props: {
+    open: bool,
+    disabled: bool,
+  },
+}</component>
 
-<variants>
-  [hidden]: display:none
-</variants>
-<variants part="content">
-  [open]: grid-template-rows:1fr
-</variants>
-
-<!-- Residual: .content-wrap grid-template-rows 0fr (no sx prop for
-     grid-template-rows; the open variant flips to 1fr); the
-     grid-template-rows transition (motion); .content-inner
-     overflow:hidden; ::slotted([slot='trigger']) cursor + user-
-     select + transition (descendant pseudo — variants only match
-     :host's own attrs); the hover wash on the disclosure header;
-     the focus outline (vs the 2-layer box-shadow ring); the
-     disabled cursor + opacity; the prefers-reduced-motion reset. -->
 <style>
   :host {
-    display: block;
     font-family: var(--font-body);
-    color: var(--foreground);
   }
-  [part~='content'] {
+
+  .content-wrap {
     display: grid;
     grid-template-rows: 0fr;
     transition: grid-template-rows var(--duration-medium) var(--ease-out);
   }
-  .content-inner { overflow: hidden; }
+  :host([open]) .content-wrap {
+    grid-template-rows: 1fr;
+  }
+
+  .content-inner {
+    overflow: hidden;
+  }
+
   ::slotted([slot='trigger']) {
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
     transition: background var(--duration-fast) var(--ease-out);
   }
-  ::slotted([slot='trigger']:hover) { background: var(--hover-bg); }
+  ::slotted([slot='trigger']:hover) {
+    background: var(--hover-bg);
+  }
   ::slotted([slot='trigger']:focus-visible) {
     outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
@@ -72,8 +87,9 @@
     cursor: not-allowed;
     opacity: 0.5;
   }
+
   @media (prefers-reduced-motion: reduce) {
-    [part~='content'] { transition: none; }
+    .content-wrap { transition: none; }
   }
 </style>
 

@@ -34,7 +34,6 @@
   Roving tabindex                  ✓ controller manages       ✓ via sui-tab.active
     (active tab = 0, rest = -1)      sui-tab[active] attr;     prop → sui-tab.ts
                                      sui-tab.ts syncs btn      mirrors to tabIndex
-                                     tabIndex on init
   aria-selected                    ✓ on button in sui-tab     ✓ via sui-tab template
     (button role=tab)                template (active prop)
   aria-controls                    ✓ set by controller        note: panel elements
@@ -64,59 +63,74 @@
                                                               are a follow-up.
   ResizeObserver + indicator       DEFERRED                  underline indicator
     animation                                                animation requires
-                                                              CSS custom property
-                                                              measurement; not in
-                                                              scope for Tier 3.
+                                                             CSS custom property
+                                                             measurement; not in
+                                                             scope for Tier 3.
   ──────────────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  ──────────────────────────────────────────────────────────────────────────────
+  - `tone` is a GLOBAL framework channel now. feat/next's per-component
+    `:host{--tone:var(--primary)} :host([tone='info']){--tone:var(--info)}…`
+    block is DELETED — the framework ships all 8 catalog tones globally
+    (suiTonesSheet). One real behavior shift this causes: feat/next's
+    unconditional `--tone: var(--primary)` fired regardless of the
+    `tone` attribute's actual value (there was no `[tone='default']` or
+    `[tone='primary']` override, so BOTH resolved to primary) — under
+    the global contract, `tone="default"` now resolves to
+    `var(--foreground)` (the catalog's neutral default), matching the
+    convention sui-alert/sui-badge/sui-chip already established for
+    "default". `tone="primary"` still resolves to primary explicitly.
+    So the out-of-the-box (no `tone` attribute set) active-tab color
+    moves from primary-blue to foreground-neutral. This is the same
+    catalog-wide convention shift sui-alert's own header comment
+    documents for its own default tone — not a LANG-GAP, a deliberate,
+    already-precedented consequence of tone going global. A caller
+    that wants the old default look sets `tone="primary"` explicitly.
+  - `sui-tab` (the child) never declares its own `tone` prop — it only
+    reads `var(--tone)`/`var(--tone-bg)`/`var(--tone-ring)`, which
+    inherit down through the light DOM from this host. That plumbing is
+    unchanged; only the SOURCE of `--tone` moved from a local block to
+    the global sheet.
+  - The `.strip` container is now a `row` layout primitive (gap, center
+    alignment) instead of a hand-rolled flex div — sx doesn't own
+    gap/align (that's the layout primitives' job), so this is the
+    correct new-surface home for it, not a workaround.
+  - `display:block` and `[hidden]` dropped from :host — framework-owned
+    now (BASE_CSS).
+  - Residual <style> (verbatim feat/next, tokens only): `.strip`'s
+    `border-bottom` (sx `border:` is a 4-side shorthand, no single-side
+    channel), the orientation=vertical flip (flex-direction/border-side
+    swap — no such sx channels), the pill/enclosed gap tweak (`gap`
+    isn't sx vocabulary), and `[sticky]`'s `top:0` (no `top` channel).
+    The rest of `sticky`'s and `variant=pill`'s declarations move to a
+    variants directive (position/z-index/background/border/radius/
+    padding are all valid sx tokens).
 -->
 
 <prop name="active" type="string" default="" reflect />
-<prop name="variant" values="underline|pill|enclosed" default="underline" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
-<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
-<prop name="sticky" type="bool" default="false" reflect />
-<prop name="orientation" values="horizontal|vertical" default="horizontal" reflect />
-<prop name="activation-mode" values="automatic|manual" default="automatic" reflect />
-
-<!-- `tone` becomes --tone on :host, which sui-tab reads for its own active
-     styling (active tab border-bottom-color: var(--tone)). Naming the
-     channel `tone` keeps the variable name that the child component
-     already binds to. -->
-<theme prop="tone" channels="tone">
-  default:     primary
-  primary:     primary
-  info:        info
-  success:     success
-  warning:     warning
-  destructive: destructive
-  accent:      accent
-  muted:       muted-foreground
-</theme>
+<component>{
+  props: {
+    variant: 'underline' | 'pill' | 'enclosed',
+    size: 'sm' | 'md' | 'lg',
+    tone,
+    sticky: bool,
+    orientation: 'horizontal' | 'vertical',
+    'activation-mode': 'automatic' | 'manual',
+  },
+}</component>
 
 <variants>
   sticky: position:sticky z:sticky bg:background
 </variants>
-
-<!-- pill strips are bg-filled, no underline; enclosed keeps the underline. -->
-<variants part="strip">
+<variants class="strip">
   variant=pill: border:none bg:muted radius:md p:1
 </variants>
 
 <style>
-  /* Residual: bare `:host` rule (no prop selector), ::slotted children
-     selector (`flex: 0 0 auto` on slotted sui-tab), the .strip box (no
-     element-level sx shortcut for the strip's own
-     display+align-items+gap+border-bottom), the orientation=vertical
-     flip (no `flex-direction` / `border-right` props in sx; the row
-     primitive bakes its direction into its base class), the `gap:0`
-     on enclosed, and `[sticky]` top:0 (no `top` prop in sx). */
-  :host { display: block; }
-  :host([hidden]) { display: none; }
   :host([sticky]) { top: 0; }
+
   .strip {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
     border-bottom: 1px solid var(--border);
   }
   :host([variant='enclosed']) .strip { gap: 0; }
@@ -126,14 +140,16 @@
     border-bottom: 0;
     border-right: 1px solid var(--border);
   }
+
   ::slotted(sui-tab),
   ::slotted([slot='tab']) {
     flex: 0 0 auto;
   }
 </style>
 
-<div class="strip" part="strip" role="tablist"
+<row class="strip" part="strip" role="tablist"
      aria-orientation={orientation()}
-     bind:this={strip}>
+     bind:this={strip}
+     gap="1" align="center">
   <slot bind:this={tabSlot}></slot>
-</div>
+</row>
