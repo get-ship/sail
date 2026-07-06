@@ -1327,11 +1327,39 @@ fn expand_props(obj: &str, form_value: Option<&str>, form_disabled: Option<&str>
         let n = name.as_str();
         let val = val.trim();
         // Built-in framework props: `tone`/`size` — bare or annotated `: Tone`/
-        // `: Size`. Naming them IS the contract opt-in (channels come for free).
-        let tag = if n == "tone" {
-            "<prop name=\"tone\" values=\"default|primary|info|success|warning|destructive|accent|muted\" default=\"default\" reflect />".to_string()
-        } else if n == "size" {
-            "<prop name=\"size\" values=\"xs|sm|md|lg\" default=\"md\" reflect />".to_string()
+        // `: Size`. Naming them IS the contract opt-in (the tone-*/size-*
+        // channels come for free). The DEFAULT vocabulary applies to a bare
+        // prop; an EXPLICIT union widens/narrows it (e.g. <icon> adding `xl`)
+        // — the enum values are the attribute contract, independent of the sx
+        // channel vocabulary, so this never touches lint. The built-in
+        // default (md/default) is kept when it's a member, else the union's
+        // first member wins.
+        let tag = if (n == "tone" || n == "size") && !val.contains('|') {
+            let (vocab, builtin_default) = if n == "tone" {
+                ("default|primary|info|success|warning|destructive|accent|muted", "default")
+            } else {
+                ("xs|sm|md|lg", "md")
+            };
+            format!("<prop name=\"{n}\" values=\"{vocab}\" default=\"{builtin_default}\" reflect />")
+        } else if n == "tone" || n == "size" {
+            // Explicit union on a framework prop: honor the author's
+            // vocabulary, keep the contract (reflect), prefer the built-in
+            // default when present.
+            let builtin_default = if n == "tone" { "default" } else { "md" };
+            let vals: Vec<String> = val
+                .split('|')
+                .map(|s| unquote(s.trim()))
+                .filter(|s| !s.is_empty())
+                .collect();
+            let default = if vals.iter().any(|v| v == builtin_default) {
+                builtin_default.to_string()
+            } else {
+                vals.first().cloned().unwrap_or_default()
+            };
+            format!(
+                "<prop name=\"{n}\" values=\"{}\" default=\"{default}\" reflect />",
+                vals.join("|")
+            )
         } else if val.contains('|') {
             // Real-TS union: `variant: 'default' | 'solid' | 'outline'`. The
             // default is the first member — order the union with it first.
@@ -2344,5 +2372,33 @@ mod tests {
         let src = "<!-- never closed";
         let out = preprocess(src);
         assert_eq!(out, src);
+    }
+
+    #[test]
+    fn bare_size_prop_gets_the_default_vocabulary() {
+        let out = expand_props("{ size }", None, None);
+        assert!(out.contains(r#"name="size""#));
+        assert!(out.contains(r#"values="xs|sm|md|lg""#), "{out}");
+        assert!(out.contains(r#"default="md""#), "{out}");
+        assert!(out.contains("reflect"), "framework contract kept: {out}");
+    }
+
+    #[test]
+    fn explicit_size_union_widens_the_vocabulary() {
+        // The sonnet-agent LANG-GAP: a framework prop with an explicit union
+        // (icon adding `xl`) must honor the author's vocabulary, not be
+        // clobbered back to xs|sm|md|lg. The contract (reflect) and the `md`
+        // default are kept.
+        let out = expand_props("{ size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' }", None, None);
+        assert!(out.contains(r#"values="xs|sm|md|lg|xl""#), "{out}");
+        assert!(out.contains(r#"default="md""#), "md preferred as default: {out}");
+        assert!(out.contains("reflect"), "{out}");
+    }
+
+    #[test]
+    fn explicit_tone_union_narrows_and_keeps_default() {
+        let out = expand_props("{ tone: 'default' | 'primary' | 'destructive' }", None, None);
+        assert!(out.contains(r#"values="default|primary|destructive""#), "{out}");
+        assert!(out.contains(r#"default="default""#), "{out}");
     }
 }
