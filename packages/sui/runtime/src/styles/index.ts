@@ -258,6 +258,25 @@ const STATUS_DOT_SKIN_CSS =
   ":where(span[dot][pulse]) { animation: sui-status-dot-pulse 2.5s var(--ease-out) infinite; }\n" +
   '@keyframes sui-status-dot-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.82; transform: scale(0.92); } }\n'
 
+// L1 <span skeleton> — the shimmer-placeholder surface. `skeleton` scopes
+// the skin the same way `dot` does above. shape/size drive width/height/
+// radius; the shimmer gradient/keyframe and the circle-lg 48px are
+// off-vocabulary for sx (no `bg:linear-gradient()`, no animation primitive,
+// no 48px token — see the former wrapper's own LANG-GAP note), so they land
+// here instead.
+const SKELETON_SKIN_CSS =
+  ":where(span[skeleton]) { display: inline-block; vertical-align: middle; background: linear-gradient(90deg, var(--muted) 0%, var(--tone-muted-bg) 50%, var(--muted) 100%); background-size: 200% 100%; animation: sui-skeleton-shimmer 1.5s ease-in-out infinite; border-radius: var(--radius-sm); }\n" +
+  ":where(span[skeleton][shape='block']) { display: block; width: 100%; min-height: 80px; }\n" +
+  ":where(span[skeleton][shape='circle']) { border-radius: var(--radius-full); }\n" +
+  ":where(span[skeleton][shape='text'], span[skeleton][shape='line']) { width: 100%; }\n" +
+  ":where(span[skeleton][shape='text'][size='sm'], span[skeleton][shape='line'][size='sm']) { height: var(--space-2); }\n" +
+  ":where(span[skeleton][shape='text'][size='md'], span[skeleton][shape='line'][size='md']) { height: var(--space-3); }\n" +
+  ":where(span[skeleton][shape='text'][size='lg'], span[skeleton][shape='line'][size='lg']) { height: var(--space-4); }\n" +
+  ":where(span[skeleton][shape='circle'][size='sm']) { width: var(--icon-size-2xl); height: var(--icon-size-2xl); }\n" +
+  ":where(span[skeleton][shape='circle'][size='md']) { width: var(--space-7); height: var(--space-7); }\n" +
+  ":where(span[skeleton][shape='circle'][size='lg']) { width: 48px; height: 48px; }\n" +
+  '@keyframes sui-skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }\n'
+
 // The CONTROL half of the contracts — element-keyed channels + control
 // baseline + button/input/toggle skins, WITHOUT the light host rules
 // (display:block, slot, [hidden]) which are the light-DOM component's job.
@@ -274,7 +293,8 @@ export const CONTROL_SKINS_CSS =
   INPUT_SKIN_CSS +
   TOGGLE_CONTROLS_CSS +
   HR_SKIN_CSS +
-  STATUS_DOT_SKIN_CSS
+  STATUS_DOT_SKIN_CSS +
+  SKELETON_SKIN_CSS
 
 export const LIGHT_CONTRACTS_CSS =
   hostAttrs(TONES_CSS) +
@@ -285,6 +305,7 @@ export const LIGHT_CONTRACTS_CSS =
   TOGGLE_CONTROLS_CSS +
   HR_SKIN_CSS +
   STATUS_DOT_SKIN_CSS +
+  SKELETON_SKIN_CSS +
   // Host defaults for light components (the :host base rules, element-keyed).
   '[data-component] { display: block; color: var(--foreground); }\n' +
   '[data-component][hidden] { display: none !important; }\n' +

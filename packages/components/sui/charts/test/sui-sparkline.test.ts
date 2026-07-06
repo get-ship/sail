@@ -106,7 +106,7 @@ describe('<sui-sparkline>', () => {
     const { el } = mount(reg, 'sui-sparkline', { data: '1,2,3', loading: true })
     await flush()
     expect(shadow(el).querySelector('sui-spinner')).not.toBeNull()
-    expect(shadow(el).querySelector('sui-skeleton')).toBeNull()
+    expect(shadow(el).querySelector('[skeleton]')).toBeNull()
   })
 
   it('loading reflects to host attribute', () => {

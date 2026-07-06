@@ -122,7 +122,6 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   // and the description on the card explains the contract).
   'sui-toast-host':      { props: { position: 'bottom-right' } },
   'sui-spinner':         { props: { label: 'Loading…' } },
-  'sui-skeleton':        {},
   'sui-empty-state':     { innerHTML: '<sui-icon slot="icon" name="inbox"></sui-icon><span slot="title">No deployments yet</span>Ship your first build and it will appear here.<button slot="action" tone="primary">New deployment</button>' },
   'sui-error-state':     { props: { title: 'Service unavailable', body: 'The upstream service did not respond in time.', code: '502' } },
   'sui-error-boundary':  { innerHTML: '<div>Protected subtree — its children render here unless one throws.</div>' },

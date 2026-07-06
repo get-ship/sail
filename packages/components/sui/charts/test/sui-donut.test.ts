@@ -125,7 +125,7 @@ describe('<sui-donut>', () => {
     // MIGRATED: the engine isLoading discriminator drives the loading branch.
     const { el } = mount(reg, 'sui-donut', { data: seg('a', 1), loading: true })
     await flush()
-    expect(shadow(el).querySelector('sui-skeleton')).not.toBeNull()
+    expect(shadow(el).querySelector('[skeleton]')).not.toBeNull()
     expect(shadow(el).querySelector('svg[role="img"]')).toBeNull()
   })
 

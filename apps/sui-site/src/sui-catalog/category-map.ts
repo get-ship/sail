@@ -151,7 +151,6 @@ export const TAG_CATEGORY: Record<string, CategoryId> = {
   'sui-alert':           'feedback',
   'sui-toast-host':      'feedback',
   'sui-spinner':         'feedback',
-  'sui-skeleton':        'feedback',
   'sui-empty-state':     'feedback',
   'sui-error-state':     'feedback',
   'sui-error-boundary':  'feedback',

@@ -185,7 +185,7 @@ describe('<sui-heatmap>', () => {
       loading: true,
     })
     await flush()
-    expect(shadow(el).querySelector('sui-skeleton')).not.toBeNull()
+    expect(shadow(el).querySelector('[skeleton]')).not.toBeNull()
     expect(shadow(el).querySelector('svg[role="img"]')).toBeNull()
   })
 
