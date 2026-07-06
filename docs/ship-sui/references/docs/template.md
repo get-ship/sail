@@ -2,7 +2,7 @@
 group: Views
 order: 2
 title: The template surface
-description: Everything you can write in a `.sui` file — directives, control flow, bindings, hooks, slots, expressions.
+description: Everything you can write in a `.sui` file — directives, control flow, bindings, hooks, projection, expressions.
 ---
 
 # The template surface
@@ -15,7 +15,7 @@ These appear at the top of the file (before the rendered DOM). They declare reac
 
 ### Reactive state — declared in the controller's `scope:` factory
 
-Reactive component state lives in the paired controller — there is no `<state>` directive. Templates declare data subscriptions, slots, and props; controllers own the signals templates read.
+Reactive component state lives in the paired controller — there is no `<state>` directive. Templates declare data subscriptions, projection regions, and props; controllers own the signals templates read.
 
 ```ts
 // controller.ts
@@ -100,9 +100,23 @@ With the declaration in place, a `<data source>` that is a single call on a decl
 <button disabled={disabled() || loading()}>{label()}</button>
 ```
 
-The file IS the component. `<prop>` appears at the top of a component `.sui` file alongside `<data>` — no wrapper element needed. There is no per-component config file: the compiler takes the tag name and shadow flag via `CompileOpts.component_meta` (driven by the deck bundler from the directory name). Convention is the contract — directory name is the tag name. Views (top-level page surfaces) do not use `<prop>`.
+The file IS the component. `<prop>` appears at the top of a component `.sui` file alongside `<data>` — no wrapper element needed. Convention is the contract: directory name is the tag name. Views (top-level page surfaces) do not use `<prop>`.
 
 Prop kinds: `string` (default), `bool`, `number`, `values="a|b|c"` (union). `reflect` mirrors the prop to the host element's attributes.
+
+> **Removed in the light-DOM default.** The `component_meta.shadow`
+> compile-opt is gone. Shadow is a per-component containment feature
+> declared in the anatomy manifest, paid for only by components that
+> genuinely wrap foreign content (the tiptap wrapper, embedded
+> third-party widgets, the FFI boundary). The compiler does not
+> default-shadow anything, ever.
+>
+> **Removed in the light-DOM default.** The `form-value` and
+> `form-disabled` prop flags are gone. The element participates in
+> form submission by being a light-DOM element; the L1 `<input>` /
+> `<textarea>` reset, the L1 `<button>` and `<select>` primitives,
+> and the L2 component counterparts all participate in native form
+> semantics without compiler-emitted `formAssociated` plumbing.
 
 ### `<form mutation>` — write operation
 
@@ -259,30 +273,97 @@ Element-shaped registrations for host-side side effects and platform context. Li
 <use-title>{agents().value?.items.length ?? 0} agents</use-title>
 ```
 
-Authoring rule: hook **attributes** are bindings (`as="X"`, `bind:foo={ref}`), never expressions. Hook **children** are template fragments and may contain expressions, control flow, slots.
+Authoring rule: hook **attributes** are bindings (`as="X"`, `bind:foo={ref}`), never expressions. Hook **children** are template fragments and may contain expressions, control flow, and projected children.
 
-## Slots
+## Projection
 
-Standard web-component slot semantics resolved in light DOM at mount time:
+Components invite the call site to fill in their chrome. The model
+is **compiler-managed projection**: a component declares the regions
+it accepts in its anatomy manifest (and a `<slot>` element in the
+body for each region), and a consumer fills those regions by writing
+`slot="<region>"` on the projected child. The children live in the
+host's light-DOM subtree from first paint; the runtime projects them
+into the matching `<slot>` wrapper at connect time. No shadow root,
+no native slot redistribution — the runtime reimplements the
+`slot=` / `<slot>` semantics in light DOM, since native `<slot>` only
+works inside a shadow root.
 
-```html
-<!-- in sui-button.sui -->
-<button>
-  <span class="content">
-    <slot name="leading"></slot>
+**Author surface** (compile-plausible today):
+
+- The consumer's projected child carries a `slot="<name>"` attribute
+  (the same name as the corresponding `<slot name="<name>">` in the
+  component's body). An un-named child goes to the default `<slot>`.
+- The component body has `<slot name="…">` elements at the position
+  the projected children should appear. The runtime swaps the slot's
+  fallback content for the assigned children at connect.
+- The component's anatomy manifest lists the regions it accepts —
+  the *published contract*. Consumers read it the same way they read
+  `props` and `events` (LSP, `@ship/sui-eval`).
+
+**`[SPEC-PENDING: anatomy-manifest-shape]`** — the manifest's regions
+block is illustrative; the CEM-enriched `custom-elements.json`
+schema is the design agent's call.
+
+**`[SPEC-PENDING: scoped-projection-syntax]`** — shadow slots
+support `<slot name="x" item={x}>` and consumer `let:item`. The
+light-DOM projection is one-shot at connect; the compiler-managed
+equivalent for scoped binding is its own design work.
+
+```sui
+<!-- in sui-card.sui — body declares the chrome; regions are in the manifest -->
+<div class="card">
+  <header class="card-head">
+    <slot name="header"></slot>
+  </header>
+  <div class="card-body">
     <slot></slot>
-    <slot name="trailing"></slot>
-  </span>
-</button>
-
-<!-- in a consumer -->
-<sui-button>
-  <sui-icon slot="leading" name="plus" />
-  New agent
-</sui-button>
+  </div>
+  <footer class="card-foot">
+    <slot name="footer"></slot>
+  </footer>
+</div>
 ```
 
-Named slots, default slot, fallback content, scoped slots (`<slot name="x" item={x}>` + consumer `let:item`) all supported.
+```sui
+<!-- in a consumer -->
+<sui-card>
+  <sui-chip slot="header" tone="primary">draft</sui-chip>
+  <p>This is the body — it lands in the default region.</p>
+  <sui-button slot="footer" on:click={save}>Save</sui-button>
+</sui-card>
+```
+
+What the contract buys:
+
+- **Reactive in the projected scope.** A signal read inside a
+  projected child re-renders the same way it would outside —
+  projection does not break reactivity.
+- **Native form participation.** Projected inputs are real
+  descendants of the host; `<form>` traversal sees them.
+- **Cross-root ARIA works.** `label[for]` and `aria-describedby`
+  resolve against the host's children without any retargeting.
+- **Honest devtools / tests.** The DOM is what the user sees.
+- **Honest SSR.** The server-rendered HTML is the post-projection
+  tree; no declarative-shadow dance, no hydration flash.
+
+**`[SPEC-PENDING: empty-region-reflection]`** — the previous model
+hand-rolled `data-no-header` / `data-no-footer` host attributes in
+each component to drive empty-region chrome. The runtime helper
+`bindSlotEmpty(slotEl, host, attrName)` (`packages/sui/runtime/src/slot-empty.ts`)
+is the replacement: it toggles a host attribute based on whether
+the slot's assigned content is visible. The compiler emits one call
+per `<slot reflect-empty="<attr>">` directive in the body.
+
+**`[SPEC-PENDING: projection-runtime-api]`** — the runtime API
+surface (`resolveProjection`, `isProjected`, `bindProjectedEmpty`)
+is the design call; today's `bindSlotEmpty` is the prototype.
+
+**Known limit (documented, not hidden):** projection runs once at
+connect. Children appended to the host LATER are not re-projected —
+the dynamic composition path in SUI templates goes through compiled
+call sites, not raw DOM appends, so this covers the authored
+surface. Streaming-parse upgrades are the other gap; bundles load
+deferred today so the DOM is complete at registration.
 
 ## What's NOT in the template
 

@@ -15,16 +15,30 @@ How to author a SUI view, a SUI component, and the controller that pairs with ea
 |---|---|---|
 | Filename stem | `page.sui` (manifest-keyed route) | `<tag>.sui` (registers a custom element) |
 | Lives under | `views/<name>/`, `.ship/views/<name>/` | `packages/components/ui-components/src/<tag>/`, `_components/<view>-<tag>/` |
-| Has `manifest.jsonc`? | Yes — required | No |
+| Has `manifest.jsonc`? | Yes — required | Yes — anatomy regions / containment declaration live here |
 | Has `<prop>` directives? | No | Yes — declares the public attribute / property contract |
-| Has slots? | No | Yes — `<slot>` / `<slot name="…">` |
-| Has shadow DOM? | No — composes into the page | Optional; toggled via `component_meta.shadow` in the compile opts |
-| Has scoped CSS? | `style.css` (auto-linked, page-scoped) | `<style>` block inside `.sui` (or external CSS prepended via `compile_opts.styles`) |
-| Form-associated? | No | Optional — `<prop … form-value>` / `form-disabled` |
+| Has projection regions? | No | Yes — declared in the anatomy manifest; runtime projects matching children at connect. |
+| Has a shadow root? | No | **Only** for components that wrap foreign content (tiptap, third-party widgets, FFI boundary); declared in the manifest, paid for knowingly. |
+| Has scoped CSS? | `style.css` (auto-linked, page-scoped) | Component rules compile to `@scope (sui-x) to ([data-sui])` donuts. A skin restyles an existing anatomy; a skin cannot add regions or states. |
+| Form participation? | Native (the element is in the light DOM) | Native (the host is in the light DOM; projected inputs are real descendants). |
 | `customElements.define`? | n/a | Compiler-emitted; never written by hand |
 | Used by | Other views, the shell, deep links from `<a>` | Composed inside views or other components |
 
 A view that wants reusable markup pulls a component in (`packages/components/ui-components/` for first-party, `_components/` for view-private). The reverse is illegal — components don't mount routes.
+
+> **`[SPEC-PENDING: anatomy-manifest-shape]`**. The anatomy fields a
+> component declares in its manifest (regions, parts, states,
+> layer, optional shadow boundary) are a CEM-extension. The schema
+> needs the design agent's call.
+>
+> **`[SPEC-PENDING: shadow-bounded-component-list]`**. The
+> components that legitimately need a shadow boundary are the
+> ones that wrap foreign content. Today's stdlib does not name a
+> single one — the tiptap wrapper, the embedded third-party
+> widgets, and the FFI boundary are placeholders for things that
+> have not yet landed. Until a real component needs a shadow
+> boundary, the manifest's "containment" field is unset and the
+> compiler never emits a shadow root.
 
 ## The 2-file bet
 
@@ -72,17 +86,23 @@ The `sui-controller-purity` rule rejects markup-producing code in `*.controller.
 
 - `<el>.innerHTML = …` / `outerHTML = …` / `insertAdjacentHTML(…)`
 - A sibling `render.ts` of HTML-string template-literal helpers
-- Re-querying the shadow DOM after `mount` (use `bind:this` for refs)
+- Re-querying the host's children after `mount` for what a
+  `bind:this` would have given you (use `bind:this` for refs)
 - A `.sui` body that is just `<div bind:this={ref}></div>` — the template is the renderer
 
 For HTML-blob cases (markdown rendering, third-party SVG generators, icon-pack swaps), use `bindHtml(el, () => string)` from `@ship/sui-runtime`. It auto-morphs across re-renders.
 
+> **The host element IS the component.** A `bind:this` on the
+> component's own root gives the controller a handle to the same
+> element the consumer sees in the light DOM. No "query the shadow
+> DOM" workaround.
+
 ## `<prop>` directive — components only
 
 ```html
-<prop name="value"    type="string" default="" form-value />
+<prop name="value"    type="string" default="" />
 <prop name="tone"     values="default|primary|danger" default="default" reflect />
-<prop name="disabled" type="bool"   default="false" reflect form-disabled />
+<prop name="disabled" type="bool"   default="false" reflect />
 <prop name="rows"     type="json"   default="[]" />
 ```
 
@@ -93,10 +113,24 @@ For HTML-blob cases (markdown rendering, third-party SVG generators, icon-pack s
 | `values` | Enum string — pipe-separated literals. Mutually exclusive with `type`. |
 | `default` | Coerced via the decoder; required for non-string types. |
 | `reflect` | Reflect property writes back to the attribute. Required for CSS to react. |
-| `form-value` | Mark this prop as the form-association value. Compiler emits `static formAssociated = true`. |
-| `form-disabled` | Wires `formDisabledCallback` to this prop. |
 
-Form-association example: `packages/components/ui-components/src/sui-input/sui-input.sui` (real `<prop name="value" type="string" default="" form-value />` line). Full contract: see the `ship-views` skill's `references/form-association.md`.
+> **Removed in the light-DOM default.** The `form-value` and
+> `form-disabled` flags are gone. The component participates in
+> form submission by being a light-DOM element; the L1 `<input>` /
+> `<textarea>` reset and the L2 component counterparts all work
+> against native form semantics without compiler-emitted
+> `formAssociated` plumbing.
+>
+> **`[SPEC-PENDING: form-participation-surface]`**. The L1 reset
+> covers the common cases (text input, textarea, select, button).
+> The stdlib's `<sui-input>` / `<sui-textarea>` / `<sui-select>`
+> components participate natively by being light-DOM descendants
+> of the host `<form>`. If a future stdlib component needs a
+> non-native form value (e.g. a custom value-serialization), the
+> surface for declaring that is its own design work; the answer
+> is NOT a return to the old `form-value` flag.
+
+The prop table is otherwise unchanged.
 
 ## Refs — `bind:this`
 
@@ -113,6 +147,11 @@ const dialogEl = ref<HTMLDivElement>(null)
 
 `<use-click-outside bind:target={dialogEl} …>` and the other template hooks consume refs directly.
 
+> **What changed.** The host element is the component. A
+> `bind:this` on the component's own root gives the controller a
+> handle to the same element the consumer sees in the light DOM.
+> No "query the shadow DOM" workaround.
+
 ## Passing complex values into components
 
 | Form | Use when |
@@ -127,7 +166,7 @@ const dialogEl = ref<HTMLDivElement>(null)
 
 ## Cross-component reactive context — `shared` / `useShared`
 
-For component packs that split into a public outer host + internal pieces (e.g. `sui-tabs` / `sui-tab`), share signals from parent to descendants without prop drilling. The parent calls `shared(signal(…))` inside `scope:`; descendants call `useShared<ParentScope>('parent-tag')` to resolve the same identity. `useShared` walks DOM ancestry across shadow boundaries; returns `null` when no provider is found.
+For component packs that split into a public outer host + internal pieces (e.g. `sui-tabs` / `sui-tab`), share signals from parent to descendants without prop drilling. The parent calls `shared(signal(…))` inside `scope:`; descendants call `useShared<ParentScope>('parent-tag')` to resolve the same identity. `useShared` walks DOM ancestry in the light DOM; returns `null` when no provider is found.
 
 Worked examples and lookup semantics are in the `ship-views` skill's `references/shared-context.md`.
 
