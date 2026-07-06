@@ -14,6 +14,17 @@ view. Every recipe is either lifted from a working view in this repo
 Read `agent-authoring.md` first — these are the patterns; that file
 explains the rules.
 
+> **Projection in the recipes.** Several recipes fill component
+> regions with `<el slot="region-name">…</el>`. The `slot="…"`
+> attribute names the region; the runtime
+> (`@ship/sui-runtime/slot-project.ts`) matches it to the
+> corresponding `<slot name="…">` wrapper in the host's body at
+> connect. The contract is the same as web-component slots, but
+> the implementation is light-DOM (no shadow root, the slot
+> wrapper is `display: contents`). See
+> [template.md#projection](template.md#projection) for the full
+> model; the recipes below rely on it.
+
 ---
 
 ## 1. Simple list view with live SSE
@@ -459,7 +470,7 @@ The scaffold lays out:
 
 ```
 packages/components/ui-components/src/my-widget/
-  my-widget.sui            # <prop> directives + body + <slot>
+  my-widget.sui            # <prop> directives + body with <slot> wrappers (light-DOM anatomy) + anatomy manifest
   my-widget.controller.ts  # optional
   my-widget.css            # optional
 ```
@@ -468,13 +479,20 @@ Component-side `<prop>` syntax (full table in
 `references/authoring-patterns.md` § `<prop>` directive):
 
 ```html
-<prop name="value"    type="string" default="" form-value />
+<prop name="value"    type="string" default="" />
 <prop name="tone"     values="default|primary|danger" default="default" reflect />
 <prop name="disabled" type="bool"   default="false" reflect />
 <prop name="rows"     type="json"   default="[]" />
 
+<!-- Light-DOM anatomy: the host is the element, the regions are
+     declared in the body via <slot> wrappers, and the matching
+     contract is published in the anatomy manifest. The runtime
+     projects consumers' `slot="…"` children into the matching
+     wrapper at connect. -->
 <div class="my-widget" attr:data-tone={tone()} class:is-disabled={disabled()}>
+  <slot name="leading"></slot>
   <slot></slot>
+  <slot name="trailing"></slot>
 </div>
 ```
 
