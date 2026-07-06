@@ -562,6 +562,15 @@ mod tests {
     }
 
     #[test]
+    fn panel_pad_tokens_are_not_sx_sizes() {
+        // The panel-pad-* component tokens are skin knobs, not sizing
+        // vocabulary — the registry harvests only dimensional panel-*
+        // subfamilies into w:/h:.
+        assert_eq!(run(r#"<sui-card sx="w:panel-pad-x">x</sui-card>"#).len(), 1, "pad token rejected as a size");
+        assert!(run(r#"<sui-card sx="max-w:panel-max-w-md w:panel-w-side">x</sui-card>"#).is_empty(), "dimensional panel families still valid");
+    }
+
+    #[test]
     fn accepts_state_prefixes_and_rejects_bad_state() {
         assert!(run(r#"<sui-card sx="bg:surface-1 hover:bg:surface-2 focus:ring:primary disabled:opacity:50">x</sui-card>"#).is_empty());
         let m = run(r#"<sui-card sx="hoverr:bg:surface-2">x</sui-card>"#);

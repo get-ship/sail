@@ -169,7 +169,17 @@ pub fn size_values() -> &'static [&'static str] {
             .iter()
             .copied()
             .filter(|t| {
-                t.starts_with("icon-size-") || t.starts_with("control-h-") || t.starts_with("panel-")
+                // Only the DIMENSIONAL panel subfamilies join the sizing
+                // vocabulary. The panel-pad-* component tokens are padding
+                // knobs consumed by skins, not sx sizes — a broad `panel-`
+                // prefix would leak them into `w:`/`h:`.
+                t.starts_with("icon-size-")
+                    || t.starts_with("control-h-")
+                    || t.starts_with("panel-max-")
+                    || t.starts_with("panel-min-")
+                    || t.starts_with("panel-ch-")
+                    || t.starts_with("panel-vh-")
+                    || t.starts_with("panel-w-")
             })
             .collect();
         v.sort_unstable();

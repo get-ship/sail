@@ -91,6 +91,36 @@
   --panel-ch-w-md: 38ch;
   --panel-ch-w-lg: 60ch;
 
+  /* Panel paddings — the component-token tier for overlay shells
+     (dialog/drawer/sheet/toast + the popover/menu quartet), census-locked
+     (mission m-sui-stdlib, census/overlay.md). Defaults are the dialog md
+     column; the systematic dialog-vs-drawer 2px header/footer offset is
+     unified here (the re-port gate will show the 2px diffs as intentional).
+     NOTE: dialog's 500px max-w unifies onto --panel-max-w-md (480px) at
+     re-port — intentional, oracle-visible.
+     `pad` tokens are deliberately NOT in the sx sizing vocabulary (the
+     registry harvests only the dimensional panel-* subfamilies). */
+  --panel-pad-x: var(--space-6);
+  --panel-head-pad-y: 18px;
+  --panel-body-pad-y: var(--space-4);
+  --panel-foot-pad-y: var(--space-4);
+  --panel-close-inset: var(--space-7);
+  --panel-pad-card: var(--space-2);
+  --panel-pad-menu: var(--space-1);
+  --panel-w-side: 420px;
+
+  /* Control accents — census/control-glyph.md. The glyph box scale ALIASES
+     the icon scale exactly (14/16/18 = icon-size-sm/md/lg): no separate
+     glyph tokens. Stroke is the one real knob. */
+  --control-stroke: 2px;
+
+  /* Long-form body leading — the census's three-component 1.55 cluster,
+     ruled a typography primitive (not a component token). */
+  --leading-loose: 1.55;
+
+  /* Filled-surface top-edge highlight (badge/chip) — brand-definable. */
+  --edge-highlight: inset 0 1px 0 0 var(--hover-bg);
+
   /* Z-index scale */
   --z-base: 0;
   --z-elevated: 1;
