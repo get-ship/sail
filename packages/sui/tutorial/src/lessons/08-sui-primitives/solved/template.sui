@@ -1,7 +1,7 @@
 <prop name="shadow" type="bool" default="false" />
 
 <div class="dash">
-  <sui-card tone={alarming() ? 'warning' : 'default'}>
+  <card tone={alarming() ? 'warning' : 'default'}>
     <h3 style="margin: 0 0 8px;">request rate</h3>
     <sui-stat tone={alarming() ? 'destructive' : 'default'} size="lg">
       <span slot="label">errors / sec</span>
@@ -33,5 +33,5 @@
       <button ghost sm on:click={() => bumpRate(-1)}>−1</button>
       <button soft primary sm on:click={() => reset()}>reset</button>
     </div>
-  </sui-card>
+  </card>
 </div>
