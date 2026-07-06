@@ -1,46 +1,89 @@
 <!--
   <sui-diff> — SUI port of <ship-diff>.
   Unified diff renderer. Accepts from/to (LCS diff computed) or
-  a raw unified-diff string via `value`.
+  a raw unified-diff string via value.
 
   Prop parity vs <ship-diff>
-  ─────────────────────────────────────────────────────────────────────────────
+  ----------------------------------------------------------------
   Lit                          SUI                      Notes
-  ─────────────────────────────────────────────────────────────────────────────
+  ----------------------------------------------------------------
   from (String, '')            from (string, reflect)   ✓ original text
   to (String, '')              to (string, reflect)     ✓ revised text
   value (String, '')           value (string, reflect)  ✓ raw unified-diff
-  ─────────────────────────────────────────────────────────────────────────────
+  ----------------------------------------------------------------
   (no events)                  (no events)              ✓
-  ─────────────────────────────────────────────────────────────────────────────
   (no slots)                   (no slots)               ✓
-  ─────────────────────────────────────────────────────────────────────────────
   parts: line                  line                     ✓
-  ─────────────────────────────────────────────────────────────────────────────
   ARIA: host role=region +     controller sets on       ✓
     aria-label="diff"            host if absent
-  ─────────────────────────────────────────────────────────────────────────────
+  ----------------------------------------------------------------
+
+  Anatomy (the controller renders the lines into the .diff-root
+  projection target — every public hook has part= + data-line-kind +
+  role=listitem + aria-label, the test selectors pin to those, not
+  to .line.add/.line.del/.line.hunk styling classes):
+
+    <sui-diff>                 shadow root, role=region, aria-label=diff
+      └── .diff-root           the projection target (bind:this)
+          └── div[part=line, data-line-kind=add|del|ctx|hunk,
+                          role=listitem, aria-label=…]  one per line
+              ├── span[aria-hidden=true] the gutter sign
+              └── span          the line text
+
+  NEW SURFACE (re-port from feat/next, parity-gate pass)
+  ----------------------------------------------------------------
+  - No tone prop on the host — each line carries its own tone-derived
+    background via the per-line .add/.del/.ctx/.hunk class which
+    reads the GLOBAL --tone-*-bg channels directly. The host itself
+    has no tone (it's a neutral muted surface, not a tone-tinted
+    card), so no per-host tone block was ever authored and none is
+    added. The .line.add/.line.del/.line.hunk color choices
+    (--tone-success-bg, --tone-destructive-bg, --tone-info-bg) are
+    the same six-channel contract every other tone-tinted surface
+    reads; this component is a pure consumer.
+  - The .diff-root surface (the rounded card the lines render into)
+    moves to the closed-sx host block: bg:muted/border:border/
+    radius:md/overflow:hidden. font-family stays in the style block
+    (no sx prop for it); font-size/line-height likewise.
+  - The :host --diff-line-pad-y local var (a 1px hairline) stays
+    in the style block as a real local declaration. The lint sees
+    it as locally-defined so the .line padding reference resolves.
+    Kept as a named local (with a comment explaining the off-scale
+    1px intent) — it's a one-component, one-purpose value, not a
+    candidate for a global token.
+  - sx is closed-vocabulary. The style block keeps: font-family,
+    font-size, line-height (no sx prop for any of these), the
+    --diff-line-pad-y local var, the .line display:grid +
+    grid-template-columns (grid + the column-track string is
+    non-sx), .line padding (the off-scale hairline var), the .line
+    white-space/word-break (no sx prop), the .line.add/.line.del/
+    .line.hunk per-line background+color (the .add/.del/.hunk
+    class on a controller-emitted element is not an :host
+    attribute, so it cannot be a per-host variant target either;
+    stays in the style block as descendant-class rules), and the
+    .sign + .line.X .sign per-kind sign colors.
+  - The .line grid template is 16px | 1fr. feat/next's raw 16px
+    snapped to --space-4 (also 16px) — exact match, no rounding.
+
+  No new LANG-GAP.
 -->
 
 <prop name="from" type="string" default="" reflect />
 <prop name="to" type="string" default="" reflect />
 <prop name="value" type="string" default="" reflect />
 
+<host sx="display:block bg:muted border:border radius:md overflow:hidden" />
+<variants>[hidden]: display:none</variants>
+
 <style>
   :host {
-    display: block;
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     line-height: var(--leading-normal);
-    background: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    /* Off-scale: 1px hairline — line padding rounds the gutter markers without */
-    /* adding real vertical space. */
+    /* Off-scale: 1px hairline — line padding rounds the gutter markers
+     * without adding real vertical space. Local-only on purpose. */
     --diff-line-pad-y: 1px;
   }
-  :host([hidden]) { display: none; }
 
   .line {
     display: grid;
