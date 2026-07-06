@@ -92,11 +92,6 @@ enum Command {
         /// component source; default off leaves component loading to the host.
         #[arg(long)]
         emit_component_imports: bool,
-        /// Path to a CSS file whose contents are prepended as a `<style>`
-        /// block. Only valid for component sources (requires --component-name).
-        /// Requires `input` to be a single file (not a directory).
-        #[arg(long)]
-        styles: Option<PathBuf>,
         /// Custom element tag name for this component file. Setting this flag
         /// implies component mode — no `--mode component` needed. When omitted
         /// for a file in component mode, defaults to the filename stem.
@@ -172,10 +167,10 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.cmd {
         Command::Build {
-            input, out, clean, mode, no_dts, styles, component_name,
+            input, out, clean, mode, no_dts, component_name,
             emit_component_imports, light,
         } => build(
-            input, out, clean, mode, no_dts, styles, component_name,
+            input, out, clean, mode, no_dts, component_name,
             emit_component_imports, light,
         ),
         Command::Skill { dir, out } => gen_skill(dir, out),
@@ -389,18 +384,12 @@ fn build(
     clean: bool,
     mode: Option<ModeArg>,
     no_dts: bool,
-    styles: Option<PathBuf>,
     component_name: Option<String>,
     emit_component_imports: bool,
     light: bool,
 ) -> Result<()> {
     let mut targets = Vec::new();
     if input.is_dir() {
-        if styles.is_some() {
-            return Err(anyhow!(
-                "--styles requires a single .sui input, not a directory"
-            ));
-        }
         collect_targets(&input, &mut targets)?;
     } else if input
         .file_name()
@@ -440,13 +429,6 @@ fn build(
             .with_context(|| format!("create out dir {}", out_dir.display()))?;
     }
 
-    let styles_text = match styles.as_deref() {
-        Some(p) => Some(
-            fs::read_to_string(p)
-                .with_context(|| format!("read --styles {}", p.display()))?,
-        ),
-        None => None,
-    };
     // Component mode: tag name comes from --component-name when supplied,
     // otherwise defaults to the filename stem at compile-one time. Shadow
     // is always on for components — no opt-out flag.
@@ -508,7 +490,7 @@ fn build(
             (_, Some(name)) => Some(ComponentMeta { name, shadow: !light }),
             _ => None,
         };
-        compile_one(&path, out.as_deref(), mode.clone(), no_dts, styles_text.as_deref(), component_meta, emit_component_imports)?;
+        compile_one(&path, out.as_deref(), mode.clone(), no_dts, component_meta, emit_component_imports)?;
     }
     println!("compiled {count} file(s)");
     Ok(())
@@ -567,7 +549,6 @@ fn compile_one(
     out_override: Option<&Path>,
     mode: Option<ModeArg>,
     no_dts: bool,
-    styles: Option<&str>,
     component_meta: Option<ComponentMeta>,
     emit_component_imports: bool,
 ) -> Result<()> {
@@ -625,7 +606,6 @@ fn compile_one(
         setup_url,
         mode,
         source_path: Some(path.to_path_buf()),
-        styles: styles.map(|s| s.to_string()),
         component_meta,
         emit_dts: !no_dts,
         emit_component_imports,

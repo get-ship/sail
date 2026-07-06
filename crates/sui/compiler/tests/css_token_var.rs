@@ -34,7 +34,6 @@ fn opts(component_name: &str) -> CompileOpts {
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(format!("components/{component_name}/{component_name}.sui").into()),
-        styles: None,
         component_meta: Some(ComponentMeta {
             name: component_name.into(),
             shadow: true,

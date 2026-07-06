@@ -11,7 +11,6 @@ fn sui_button_with_motion_compiles() {
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(std::path::PathBuf::from("sui-button.sui")),
-        styles: None,
         component_meta: None,
         emit_dts: false,
         emit_component_imports: false,

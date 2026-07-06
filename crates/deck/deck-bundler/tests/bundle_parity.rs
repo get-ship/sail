@@ -390,7 +390,6 @@ fn native_compile(repo: &Path, f: &Fixture) -> Result<String, String> {
         mode: f.mode,
         // Matches the wasm export's `CompileOpts` exactly (wasm.rs).
         source_path: None,
-        styles: None,
         component_meta,
         emit_dts: false,
         emit_component_imports: false,

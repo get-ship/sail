@@ -10,7 +10,6 @@ fn view_opts(source_path: Option<std::path::PathBuf>) -> CompileOpts {
         setup_url: Some("./view.controller.ts".into()),
         mode: CompileMode::Component,
         source_path,
-        styles: None,
         component_meta: None,
         emit_dts: false,
         emit_component_imports: false,

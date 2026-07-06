@@ -25,7 +25,6 @@ fn opts(name: &str, path: &str) -> CompileOpts {
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(PathBuf::from(path)),
-        styles: None,
         component_meta: Some(ComponentMeta {
             name: name.into(),
             shadow: true,

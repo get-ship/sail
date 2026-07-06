@@ -19,7 +19,6 @@ fn component_opts(setup_url: Option<&str>, component_imports: bool) -> CompileOp
         setup_url: setup_url.map(Into::into),
         mode: CompileMode::Component,
         source_path: None,
-        styles: None,
         component_meta: Some(ComponentMeta { name: "probe-test".into(), shadow: true }),
         emit_dts: false,
         emit_component_imports: component_imports,

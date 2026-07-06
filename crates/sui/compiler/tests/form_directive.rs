@@ -12,7 +12,6 @@ fn component_opts(name: &str) -> CompileOpts {
         setup_url: None,
         mode: CompileMode::Component,
         source_path: None,
-        styles: None,
         component_meta: Some(ComponentMeta { name: name.into(), shadow: false }),
         emit_dts: true,
         emit_component_imports: false,

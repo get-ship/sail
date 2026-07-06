@@ -16,7 +16,6 @@
 //!     mode: CompileMode::Component,
 //!     source_path: None,
 //!     component_meta: None,
-//!     styles: None,
 //!     emit_dts: true,
 //! })?;
 //! println!("{}", out.js);
@@ -124,10 +123,6 @@ pub struct CompileOpts {
     pub mode: CompileMode,
     /// For diagnostics. Optional.
     pub source_path: Option<PathBuf>,
-    /// External CSS to prepend as a `<style>` block before parsing. Only
-    /// valid for component sources (`component_meta` must be set or `mode`
-    /// must be `Component`); otherwise `compile()` errors.
-    pub styles: Option<String>,
     /// Component metadata (tag name + shadow flag). When set, `compile()`
     /// treats the source as a component file regardless of `mode`.
     pub component_meta: Option<ComponentMeta>,
@@ -181,7 +176,6 @@ impl Default for CompileOpts {
             setup_url: None,
             mode: CompileMode::Auto,
             source_path: None,
-            styles: None,
             component_meta: None,
             emit_dts: true,
             emit_component_imports: false,
@@ -281,44 +275,11 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
             meta.name
         )));
     }
-    let merged_owned;
-    let effective_source: &str = if let Some(css) = opts.styles.as_deref() {
-        let is_component =
-            opts.component_meta.is_some() || opts.mode == CompileMode::Component;
-        if !is_component {
-            return Err(CompileError::new(
-                "--styles is only valid for component sources",
-            ));
-        }
-        merged_owned = format!("<style>{css}</style>\n{source}");
-        &merged_owned
-    } else {
-        source
-    };
-
-    // The --styles mechanism prepends a COMPILER-INJECTED <style> block (a
-    // component's external CSS). That block is not author-written template
-    // content, so it must not trip the `sui-no-style-block` floor rule — which
-    // governs authored <style>. Suppress the rule for this compile when we
-    // injected styles. (--styles is itself a pre-floor component-CSS path the
-    // floor will eventually retire; the rule still fires on authored blocks.)
-    let effective_overrides: Vec<check::lint_overrides::LintOverride> =
-        if opts.styles.is_some() {
-            let mut o = opts.lint_overrides.clone();
-            // Prepend, not append: `apply_overrides` is first-match-wins, and
-            // the resolved policy may already carry a `no-style-block → Error`
-            // promotion. The injected-styles exemption must take precedence.
-            o.insert(
-                0,
-                check::lint_overrides::LintOverride {
-                    rule: "sui-no-style-block".to_string(),
-                    severity: check::lint_overrides::OverrideSeverity::Off,
-                },
-            );
-            o
-        } else {
-            opts.lint_overrides.clone()
-        };
+    // (--styles is gone — complete cutover: the pre-floor external-CSS
+    // injection path had zero producers. Element skins are the sanctioned
+    // toolchain-CSS home now.)
+    let effective_source: &str = source;
+    let effective_overrides = opts.lint_overrides.clone();
 
     let program = parse::parse(effective_source).map_err(|e| attach_path(e, &opts))?;
     check::run(

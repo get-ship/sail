@@ -71,7 +71,6 @@ pub fn compile_sui(
             CompileMode::View => SuiMode::Component,
         },
         source_path: Some(sui_file.to_path_buf()),
-        styles: None,
         component_meta: (mode == CompileMode::Component)
             .then(|| ComponentMeta { name: stem.to_string(), shadow: true }),
         // The bundler reads only the JS — dts/ssr are the CLI bake's job, and

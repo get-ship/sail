@@ -19,7 +19,6 @@ fn jsdoc_above_prop_emits_description_in_cem() {
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),
-        styles: None,
         component_meta: Some(ComponentMeta {
             name: "jsdoc-prop-test".into(),
             shadow: false,

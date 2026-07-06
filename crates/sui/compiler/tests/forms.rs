@@ -13,7 +13,6 @@ fn compile_view(source: &str) -> sui_compiler::CompileError {
             setup_url: None,
             mode: CompileMode::Component,
             source_path: None,
-            styles: None,
             component_meta: None,
             emit_dts: false,
             emit_component_imports: false,

@@ -17,7 +17,6 @@ fn component_opts(setup: Option<&str>) -> CompileOpts {
         setup_url: setup.map(|s| s.to_string()),
         mode: CompileMode::Component,
         source_path: None,
-        styles: None,
         component_meta: Some(ComponentMeta {
             name: "sui-test-dock".into(),
             shadow: true,

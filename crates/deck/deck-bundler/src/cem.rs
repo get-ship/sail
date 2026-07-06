@@ -65,7 +65,6 @@ pub fn write_pack_cem(pack_root: &Path) -> Result<Option<PathBuf>> {
             setup_url: None,
             mode: sui_compiler::CompileMode::Component,
             source_path: Some(sui_file.to_path_buf()),
-            styles: None,
             component_meta: Some(sui_compiler::ComponentMeta {
                 name: stem.clone(),
                 shadow: true,

@@ -15,7 +15,6 @@ fn compile_motion(source: &str) -> Result<String, String> {
         setup_url: None,
         mode: CompileMode::Component,
         source_path: None,
-        styles: None,
         component_meta: None,
         emit_dts: false,
         emit_component_imports: false,

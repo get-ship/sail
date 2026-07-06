@@ -37,7 +37,6 @@ fn compile_fixture(name: &str, mode: CompileMode, setup: Option<&str>) -> String
             setup_url: setup.map(String::from),
             mode,
             source_path: Some(path),
-            styles: None,
             component_meta,
             emit_dts: false,
             emit_component_imports: false,

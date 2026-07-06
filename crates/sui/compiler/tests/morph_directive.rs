@@ -21,7 +21,6 @@ fn compile_sui(name: &str) -> String {
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),
-        styles: None,
         component_meta: None,
         emit_dts: false,
         emit_component_imports: false,

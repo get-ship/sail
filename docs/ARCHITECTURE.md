@@ -274,6 +274,18 @@ not a styling escape: static values in `style:` are a lint error (spend a
 token), and userland never gets the directive at all. The lint rides the
 policy floor.
 
+## Complete cutover — no shims, ever
+
+The migration doctrine: **either we want the code or we remove it.** Dual
+paths exist only inside the migration window, and every one has a named
+death: a transitional construct dies per-component at re-port, and its
+lowering code is DELETED — not deprecated, not shimmed, not aliased — the
+same day its last user converts. No compatibility layers survive a
+cutover; no "legacy mode" ships; nothing is kept "just in case" (git
+history is the just-in-case). A trim pass runs at every milestone: code
+that no longer earns its place is removed in the same breath that adds
+its successor.
+
 ## Transitional constructs (compiled today, dying by design)
 
 These still compile so the un-migrated tree keeps building; each dies

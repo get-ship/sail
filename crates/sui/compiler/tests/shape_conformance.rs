@@ -105,7 +105,6 @@ fn compile_one(path: &Path, repo: &Path) -> Result<String, String> {
         setup_url: None,
         mode,
         source_path: Some(path.to_path_buf()),
-        styles: None,
         component_meta,
         emit_dts: false,
         emit_component_imports: false,
