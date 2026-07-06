@@ -137,11 +137,32 @@ const CONTROL_CONTRACTS_CSS =
 // radius/shadow language, so a plain <input> IS the design system's field.
 // select/textarea share it (native chrome already dropped via appearance:none
 // in the baseline). Every rule at :where() zero specificity.
+const TEXT_FIELD = "input:not([type='checkbox'], [type='radio'])"
 const INPUT_SKIN_CSS =
-  ':where(input, textarea, select) { display: block; min-height: var(--size-h, var(--control-h-md)); padding: var(--space-1_5) var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-xs); }\n' +
-  ':where(input, textarea, select):hover:not(:disabled) { border-color: var(--border-strong); }\n' +
-  ':where(input, textarea, select)::placeholder { color: var(--muted-foreground); }\n' +
+  `:where(${TEXT_FIELD}, textarea, select) { display: block; min-height: var(--size-h, var(--control-h-md)); padding: var(--space-1_5) var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-xs); }\n` +
+  `:where(${TEXT_FIELD}, textarea, select):hover:not(:disabled) { border-color: var(--border-strong); }\n` +
+  `:where(${TEXT_FIELD}, textarea, select)::placeholder { color: var(--muted-foreground); }\n` +
   ':where(textarea) { min-height: calc(var(--control-h-md) * 2); resize: vertical; }\n'
+
+// L1 checkbox / radio — appearance:none native inputs the framework renders.
+// Square (checkbox) or round (radio); checked fills with the tone. The
+// checkmark is a background SVG (baked white — reads on every tone fill, the
+// same contrast --tone-contrast resolves to); the radio dot is an inset
+// box-shadow ring. Theme-reactive via --tone/--border/--background.
+// (SWITCH is intentionally not here: a sliding thumb needs a pseudo-element,
+// which doesn't render on a replaced <input> — it wants a wrapper, so it
+// lands as a structural element / L2, not a bare-input contract. LANG-GAP.)
+const CHECK_MARK =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.5l3 3 6-6'/%3E%3C/svg%3E\")"
+const TOGGLE_CONTROLS_CSS =
+  // Shared box: sized to the font, bordered, on the background.
+  ":where(input[type='checkbox'], input[type='radio']) { appearance: none; flex: none; width: 1.15em; height: 1.15em; min-height: 0; padding: 0; border: 1.5px solid var(--border-strong); background: var(--background); box-shadow: var(--shadow-xs); cursor: pointer; vertical-align: -0.2em; }\n" +
+  ":where(input[type='checkbox']) { border-radius: var(--radius-sm); }\n" +
+  ":where(input[type='radio']) { border-radius: 50%; }\n" +
+  // Checked: fill with the tone (default → primary), stamp the mark.
+  ":where(input[type='checkbox']:checked, input[type='radio']:checked) { background-color: var(--tone, var(--primary)); border-color: var(--tone, var(--primary)); }\n" +
+  `:where(input[type='checkbox']:checked) { background-image: ${CHECK_MARK}; background-position: center; background-size: 0.9em; background-repeat: no-repeat; }\n` +
+  ":where(input[type='radio']:checked) { box-shadow: inset 0 0 0 0.22em var(--background); }\n"
 
 // L1 <button> — the first language element skin. A bare <button> anywhere in
 // a SUI document IS the design system's button ("the web with default styles"):
@@ -184,6 +205,7 @@ export const LIGHT_CONTRACTS_CSS =
   CONTROL_CONTRACTS_CSS +
   BUTTON_SKIN_CSS +
   INPUT_SKIN_CSS +
+  TOGGLE_CONTROLS_CSS +
   // Host defaults for light components (the :host base rules, element-keyed).
   '[data-component] { display: block; color: var(--foreground); }\n' +
   '[data-component][hidden] { display: none !important; }\n' +

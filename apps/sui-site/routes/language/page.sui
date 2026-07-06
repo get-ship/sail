@@ -86,6 +86,12 @@
       <label required>Password</label>
       <input type="password" placeholder="••••••••" />
     </column>
+    <row gap="5" align="center">
+      <label><input type="checkbox" checked /> Remember me</label>
+      <label><input type="checkbox" /> Subscribe</label>
+      <label><input type="radio" name="plan" checked /> Monthly</label>
+      <label><input type="radio" name="plan" /> Yearly</label>
+    </row>
     <row gap="3" align="center">
       <button primary solid>Sign in</button>
       <button ghost>Cancel</button>
