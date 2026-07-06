@@ -4,8 +4,8 @@
   Companion panel element for <sui-tabs> / <sui-tab>. The parent
   <sui-tabs> controller queries `:scope > sui-tab-panel` and toggles
   the `active` attribute + `hidden` attribute based on the active
-  tab name. This component owns the visual display rule
-  (`:host([active]) { display: block }`) and the role/aria wiring.
+  tab name. This component owns the focus-visible ring and the
+  fade-in animation that fires when the panel becomes active.
 
   Prop / event / method parity vs <ship-tab-panel>
   ──────────────────────────────────────────────────────────────────────────────
@@ -26,16 +26,41 @@
   ──────────────────────────────────────────────────────────────────────────────
   Slots: (default)                  (default)                 ✓
   ──────────────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from feat/next, parity-gate pass)
+  ──────────────────────────────────────────────────────────────────────────────
+  - The `:host { display: none }` and `:host([active]) { display: block }`
+    pair DELETED. The framework's BASE_CSS sets `:host { display: block; }`
+    by default and `:host([hidden]) { display: none !important; }` for the
+    hidden attribute — and the parent <sui-tabs> controller sets/clears
+    `hidden` reactively based on the active tab name (see
+    sui-tabs.controller.ts). Display flow is fully framework-owned now.
+  - The fade-in animation (opacity + translateY) is preserved on
+    `:host([active])` in <style> — it's a real custom motion (not a token),
+    and the @keyframes + the `prefers-reduced-motion: no-preference` guard
+    have no sx/primitive equivalents.
+  - The focus-visible ring (composed box-shadow with --ring-offset and
+    --ring-width + --radius-md) is preserved in <style> — the
+    global CONTROL_CONTRACTS focus rule uses `outline`, not the two-layer
+    inset box-shadow this component paints. The visual treatment is
+    component-specific (a glow that matches the panel's own surface, not
+    an outline on the host's bounding box).
 -->
 
-<prop name="name" type="string" default="" reflect />
-<prop name="active" type="bool" default="false" reflect />
+<component>{
+  props: {
+    name: '',
+    active: false,
+  },
+}</component>
 
+<!--
+  Residual: fade-in keyframe animation (no animation primitive in sx;
+  controlled-motion @media guard) and focus-visible ring (composed
+  box-shadow with explicit ring-offset, distinct from the framework's
+  default outline-based focus indicator on controls).
+-->
 <style>
-  :host { display: none; }
-  :host([active]) {
-    display: block;
-  }
   @media (prefers-reduced-motion: no-preference) {
     :host([active]) {
       animation: sui-tab-panel-fade var(--duration-medium) var(--ease-out);
