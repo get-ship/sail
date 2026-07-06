@@ -17,6 +17,40 @@
   Events (host.emit): sui-toggle {id, expanded}, sui-expand-change {expanded},
   sui-select {id}, sui-node-select {selected, selectedIds}, sui-node-click
   {id, depth, index}.
+
+  NEW SURFACE (re-port from feat/next, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────────────
+  - No tone prop on this component — rule "tone is global now" doesn't apply.
+  - The row + its caret are the L1 layout keyword `row` (align/justify
+    attributes), not a hand-styled flex `<div>`/`<span>` — display:flex,
+    align-items and gap for both now come from the keyword, not authored CSS.
+    The row's cursor/radius/ink/hover-bg are sx (`sx="radius:sm cursor:pointer
+    fg:foreground hover:bg:hover-bg"` / `sx="fg:muted-foreground"` on the
+    caret) instead of raw `.row`/`.caret` declarations.
+  - L1 controls were already framework-composed pre-gate (sui-checkbox,
+    sui-icon, sui-empty-state, sui-error-state) — nothing hand-skinned.
+  - Dropped a dead line from the style block: a bare (outside any selector,
+    so inert in real CSS — a browser's parser discards top-level declarations
+    it can't attach to a rule) list of every token this file's raw CSS
+    references, each given an EMPTY value (`--font-body: ; --foreground: ;
+    …`). Harmless at runtime but pure noise; every name in it is a real,
+    already-registered global token, so it worked around nothing. Not in
+    feat/next; removed rather than re-ported.
+  - Anatomy (light DOM, class-based — part= left on per the wave sweep note):
+    .tree (root, role=tree) > .viewport > .spacer > row.row (role=treeitem,
+    one per visible node) > row.caret (chevron icon), span.gutter (multi-
+    select checkbox), sui-icon.node-icon / slot[name=node-icon], span.label,
+    span.trailing (slot[name=node-trailing]). .tree-error / .tree-empty are
+    the error/empty-state branches.
+
+  See the second comment below (unchanged from the prior pass) for why the
+  remaining `.row`/`.caret`/`.gutter`/`.node-icon`/`.label`/`.trailing` chrome
+  stays in the style block rather than sx: it's overwhelmingly descendant
+  state (`.row[data-selected] .node-icon`, `.row:not([data-can-expand])
+  .caret`, etc.) — sx and `<variants>` both only match HOST attributes, never
+  a descendant's data-* state, so there is no closed-vocabulary path to any
+  of it. Not a new LANG-GAP; the prior pass already identified and documented
+  this residual correctly.
 -->
 
 <prop name="nodes" type="string" default="" />
@@ -57,8 +91,6 @@
   - @media (forced-colors: active) CanvasText outline.
 -->
 <style>
-  --font-body: ; --foreground: ; --muted-foreground: ; --hover-bg: ; --selected-bg: ; --radius-sm: ; --text-xs: ; --border: ; --density-text: ; --density-row-py: ; --density-row-px: ; --density-row-gap: ; --density-icon: ; --ring-width: ; --ring-color: ; --panel-max-h-md: ; --font-weight-medium: ;
-
   :host {
     display: block;
     width: 100%;
