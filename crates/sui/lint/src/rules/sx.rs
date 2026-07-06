@@ -303,6 +303,17 @@ pub fn state_pseudo(state: &str) -> Option<&'static str> {
     })
 }
 
+/// The complete sx vocabulary — every prop with its full allowed-value list,
+/// in declaration order. THE single source for surface documentation (the
+/// compiler's agent-skill generator renders this, so what agents are told is
+/// what the lint enforces, by construction).
+pub fn vocabulary() -> Vec<(&'static str, Vec<&'static str>)> {
+    ALL_PROPS
+        .iter()
+        .map(|p| (*p, allowed(prop_kind(p).expect("ALL_PROPS entries have kinds"))))
+        .collect()
+}
+
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
     // NOTE deliberately absent: there is NO per-file channel fallback. The sx
