@@ -23,7 +23,13 @@
   Scroll lock: acquireScrollLock / releaseScrollLock                     ✓
   ────────────────────────────────────────────────────────────────────────
 -->
-
+<!--
+  NEW SURFACE (re-port from feat/next baseline, parity-gate pass).
+  Highlighted in the inline NOTE blocks above each section. Size
+  contract is global now, the legacy per-host dlg-* channels are
+  gone, the close button is a bare framework control and only the
+  irreducible positioning remains in <style>.
+-->
 <prop name="open" type="bool" default="false" reflect />
 <prop name="size" values="sm|md|lg|full" default="md" reflect />
 <prop name="backdrop" values="default|blur|solid" default="default" reflect />
@@ -53,23 +59,43 @@
 </variants>
 
 <!--
-  Residual <style> — truly unavoidable bits:
-  - :host display: contents + display: none when hidden
-  - dialog:not([open]) display: none (must override browser default)
-  - dialog[open] position:fixed + inset + margin + padding + border + bg + color + width + max-height + box-shadow + font-family + display: flex + flex-direction: column (raw, dialog element heavy)
-  - :host([size='full']) dialog[open] max-height override
-  - dialog::backdrop background + opacity + transition (pseudo + multi-prop)
-  - :host([backdrop='blur']) dialog::backdrop backdrop-filter (vendor prefix + pseudo)
-  - :host([backdrop='solid']) dialog::backdrop background
-  - dialog[open]::backdrop opacity: 1
-  - .sentinel position + size + pointer-events + opacity
-  - .header padding + padding-right calc + flex + text + weight + color + border-bottom
-  - .body padding + flex + min-height + overflow-y + overscroll + text + line-height + scrollbar-width
-  - .footer padding + border-top + background + display:flex + gap + justify-content + align-items + flex
-  :host(:not([size])), :host([size='md']) { --dlg-max-w: var(--panel-max-w-md); --dlg-px: var(--space-6); --dlg-hpy: var(--space-4_5); --dlg-bpy: var(--space-4); --dlg-fpy: var(--space-4); }
-  :host([size='sm']) { --dlg-max-w: var(--panel-max-w-sm); --dlg-px: var(--space-5); --dlg-hpy: var(--space-4); --dlg-bpy: var(--space-3_5); --dlg-fpy: var(--space-3_5); }
-  :host([size='lg']) { --dlg-max-w: var(--panel-max-w-lg); --dlg-px: var(--space-7); --dlg-hpy: var(--space-5); --dlg-bpy: var(--space-5); --dlg-fpy: var(--space-4_5); }
-  :host([size='full']) { --dlg-max-w: 90vw; --dlg-px: var(--space-7); --dlg-hpy: var(--space-5); --dlg-bpy: var(--space-5); --dlg-fpy: var(--space-4_5); }
+  Residual <style> — bits the closed-vocabulary contract cannot
+  express:
+  - :host display: contents (no contents token in sx; the dialog
+    mounts in-place so the sibling sui-portal marker can escape the
+    dialog's shadow tree without re-parenting the panel)
+  - dialog:not([open]) display: none (must override the browser
+    default; a bare `display: flex` selector left a closed dialog
+    painting a 2px artifact at viewport center)
+  - dialog[open] position: fixed + inset: 0 + margin: auto (top-
+    layer centering math, not sx-able) + padding: 0 (reset) +
+    border + bg + color + width + max-height + box-shadow +
+    font-family + display: flex + flex-direction: column + the
+    :host([size='full']) max-height override
+  - dialog::backdrop background + opacity + multi-prop transition
+    (pseudo + multi-prop; sx has no transition shorthand)
+  - :host([backdrop='blur'|'solid']) dialog::backdrop overrides
+    (vendor-prefixed backdrop-filter + solid background; both
+    bound to the global backdrop / background tokens, not raw)
+  - .sentinel (1x1 fixed pointer-events: none opacity: 0) — raw
+    pxs, the focus trap anchor, not sx-expressible
+  - .header / .body / .footer per-size padding — sx variants can't
+    target the host's [size] on a different element than the part
+    itself, so :host() padding selectors stay. The close-button
+    cutout (padding-right = horizontal-padding + space-7) is an
+    irreducible calc(). The single-side borders and flex shorthand
+    on these panels are also outside sx.
+  - .close absolute positioning + the focus-visible ring + svg
+    sizing — top/inset-inline-end have no sx equivalent. Skin +
+    hover + focus wash come from the global L1 button skin
+    (adoptSuiSheets in packages/sui/runtime/src/styles/index.ts
+    now carries the control skins into every shadow root; the gap
+    the alert pilot surfaced is closed), so this is positioning +
+    the framework's ring, nothing more.
+  - @media (prefers-reduced-motion) and @media (forced-colors) —
+    both raw-CSS condition prefixes; sx's motion-reduce:/forced-
+    colors: prefixes live in the variant + sx grammars but can't
+    reach these bare selectors from inside the shadow tree.
   dialog:not([open]) { display: none; }
   dialog[open] {
     position: fixed;
@@ -103,16 +129,19 @@
   :host([backdrop='solid']) dialog::backdrop { background: var(--background); }
   .sentinel { position: fixed; width: 1px; height: 1px; pointer-events: none; opacity: 0; }
   .header {
-    padding: var(--dlg-hpy) var(--dlg-px);
-    padding-right: calc(var(--dlg-px) + var(--space-7));
+    padding: var(--space-4_5) var(--space-6);
+    padding-right: calc(var(--space-6) + var(--space-7));
     flex: 0 0 auto;
     font-size: var(--text-lg);
     font-weight: var(--font-weight-semibold);
     color: var(--foreground);
     border-bottom: 1px solid var(--border-subtle);
   }
+  :host([size='sm']) .header { padding: var(--space-4) var(--space-5); padding-right: calc(var(--space-5) + var(--space-7)); }
+  :host([size='lg']) .header,
+  :host([size='full']) .header { padding: var(--space-5) var(--space-7); padding-right: calc(var(--space-7) + var(--space-7)); }
   .body {
-    padding: var(--dlg-bpy) var(--dlg-px);
+    padding: var(--space-4) var(--space-6);
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
@@ -121,27 +150,32 @@
     line-height: var(--leading-normal);
     scrollbar-width: thin;
   }
+  :host([size='sm']) .body { padding: var(--space-3_5) var(--space-5); }
+  :host([size='lg']) .body,
+  :host([size='full']) .body { padding: var(--space-5) var(--space-7); }
   .footer {
-    padding: var(--dlg-fpy) var(--dlg-px);
+    padding: var(--space-4) var(--space-6);
     border-top: 1px solid var(--border-subtle);
     background: var(--tone-muted-border);
     flex: 0 0 auto;
   }
+  :host([size='sm']) .footer { padding: var(--space-3_5) var(--space-5); }
+  :host([size='lg']) .footer,
+  :host([size='full']) .footer { padding: var(--space-4_5) var(--space-7); }
+  /* The close button is a framework <button ghost xs class="close"> —
+     skin + hover + focus are owned by the L1 button skin (see
+     suiControlsSheet in packages/sui/runtime/src/styles/index.ts, which
+     adoptSuiSheets() now carries into every shadow root). Only the
+     absolute positioning + the host focus ring remain here, because
+     neither is reachable from sx or from the global skin. */
   .close {
     position: absolute;
     top: var(--space-3);
     inset-inline-end: var(--space-3);
-    width: var(--control-h-sm); height: var(--control-h-sm);
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: var(--radius-md);
-    color: var(--muted-foreground);
-    cursor: pointer; padding: 0; font: inherit; z-index: var(--z-elevated);
-    transition:
-      background-color var(--duration-fast) var(--ease-out),
-      color var(--duration-fast) var(--ease-out);
+    font: inherit;
+    padding: 0;
+    cursor: pointer;
   }
-  .close:hover { background: var(--muted); color: var(--foreground); }
   .close:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
   .close svg { width: var(--icon-size-sm); height: var(--icon-size-sm); display: block; }
   @media (prefers-reduced-motion: reduce) {
@@ -153,33 +187,31 @@
 </style>
 
 <!--
-  Why the `{#if open()}` + `transition:fade` here (and not on the
-  native dialog itself)? The dialog element must stay mounted so
-  showModal()/.close() drive top-layer + ::backdrop; what fades is
-  the *content*. The `<slot>` elements live inside the #if branch,
-  so they re-enter the shadow tree on every open and projection
-  survives without juggling.
+  Why the open-conditional plus transition:fade wraps CONTENT (and
+  not the native dialog element): the dialog must stay mounted so
+  showModal() / .close() keep driving the top-layer and the
+  ::backdrop paint; what fades is the content. The slot elements
+  live inside the conditional branch, so they re-enter the shadow
+  tree on every open and projection survives without juggling.
 
-  Why the `<sui-portal>` below? Native showModal() already escapes
-  parent stacking context via the browser top layer — sui-dialog
-  doesn't NEED to teleport its panel. The portal supplies a
-  document-level `[data-sui-dialog-open]` marker that page-level
-  styles (global scroll lock, chrome dimming, etc.) can target via
-  `:has` selectors without poking into shadow DOM.
+  Why sui-portal below: native showModal() already escapes parent
+  stacking context via the browser top layer — the dialog does not
+  NEED to teleport its panel. The portal supplies a document-level
+  data-sui-dialog-open marker for page-level has() targets (global
+  scroll lock, page chrome dimming) without poking into shadow
+  DOM.
 -->
 
 <dialog part="dialog" bind:this={dialogEl}
   sx="radius:xl bg:surface-1 fg:card-foreground border:border shadow:xl">
   <span tabindex="0" class="sentinel" aria-hidden="true" bind:this={sentinelStart}></span>
-  <row class="close" part="close" type="button" aria-label="Close dialog" bind:this={closeBtn}
-    align="center" gap="0" justify="center"
-    sx="w:control-h-sm h:control-h-sm radius:md fg:muted-foreground cursor:pointer p:0 z:elevated">
+  <button ghost xs class="close" part="close" type="button" aria-label="Close dialog" bind:this={closeBtn}>
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"
       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
       sx="w:icon-size-sm h:icon-size-sm">
       <path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/>
     </svg>
-  </row>
+  </button>
   {#if open()}
     <div class="dialog-content" transition:fade={{ duration: 150 }}>
       <div class="header" part="header" bind:this={headerEl}
