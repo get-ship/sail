@@ -154,7 +154,6 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
 
   // ── Forms ───────────────────────────────────────────────────────────
   'sui-input':           { props: { value: 'Ada Lovelace', label: 'Full name', placeholder: 'Enter your name' } },
-  'sui-textarea':        { props: { label: 'Release notes', rows: '3', value: 'Enriched the /components catalog with representative demo data for every primitive.' } },
   // Checked + a label makes the box visibly checked and labeled — not an
   // empty unchecked default.
   'sui-checkbox':        { props: { checked: 'true' }, innerHTML: 'Enable automatic deploys' },

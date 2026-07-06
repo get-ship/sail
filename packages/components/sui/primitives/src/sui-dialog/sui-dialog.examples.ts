@@ -8,7 +8,7 @@ export const examples: ComponentExample[] = [
     slots: `
       <span slot="header">Dispatch <code>ship-it</code> 🚀</span>
       <sui-field label="Spec" hint="What should this run do?">
-        <sui-textarea rows="3" placeholder="Wire the components explorer to live examples…"></sui-textarea>
+        <textarea rows="3" placeholder="Wire the components explorer to live examples…"></textarea>
       </sui-field>
       <sui-field label="Provider">
         <sui-select>
