@@ -243,13 +243,13 @@ describe('<sui-tree> — branch tri-state via #240 getIsSomeSelected (behavioral
     tree.toggleRowSelected('src/lib/a.ts', true)
     await flush()
     const libRow = shadow!.querySelector('[data-node-id="src/lib"]') as HTMLElement
-    const box = libRow.querySelector('sui-checkbox') as HTMLElement
+    const box = libRow.querySelector('input[type="checkbox"]') as HTMLInputElement
     expect(box).not.toBeNull()
     // Engine: getIsSomeSelected() is the real tri-state on branch rows (#240),
     // NOT the () => false stub.
     expect(tree.getRow('src/lib')!.getIsSomeSelected()).toBe(true)
-    expect(box.hasAttribute('indeterminate')).toBe(true)
-    expect(box.hasAttribute('checked')).toBe(false)
+    expect(box.indeterminate).toBe(true)
+    expect(box.checked).toBe(false)
   })
 
   it('a branch shows fully-checked when ALL leaf descendants are selected', async () => {
@@ -259,10 +259,10 @@ describe('<sui-tree> — branch tri-state via #240 getIsSomeSelected (behavioral
     tree.toggleRowSelected('src/lib/b.ts', true)
     await flush()
     const libRow = shadow!.querySelector('[data-node-id="src/lib"]') as HTMLElement
-    const box = libRow.querySelector('sui-checkbox') as HTMLElement
+    const box = libRow.querySelector('input[type="checkbox"]') as HTMLInputElement
     expect(tree.getRow('src/lib')!.getIsSelected()).toBe(true)
-    expect(box.hasAttribute('checked')).toBe(true)
-    expect(box.hasAttribute('indeterminate')).toBe(false)
+    expect(box.checked).toBe(true)
+    expect(box.indeterminate).toBe(false)
   })
 })
 

@@ -165,10 +165,10 @@ export function wireTreeInteractions(
       toggleAttr(rowEl, 'data-selected', isSel)
       if (opts.selectable()) rowEl.setAttribute('aria-selected', String(isSel))
       rowEl.setAttribute('tabindex', focus === id ? '0' : '-1')
-      const box = rowEl.querySelector('sui-checkbox')
+      const box = rowEl.querySelector<HTMLInputElement>('input[type="checkbox"]')
       if (box) {
-        toggleAttr(box, 'checked', row.getIsSelected())
-        toggleAttr(box, 'indeterminate', row.getIsSomeSelected())
+        box.checked = row.getIsSelected()
+        box.indeterminate = row.getIsSomeSelected()
       }
     })
   })

@@ -224,11 +224,13 @@
 
           {#if selectable() === 'multi'}
             <span class="gutter" part="gutter">
-              <sui-checkbox
+              <input
+                type="checkbox"
                 size="sm"
+                aria-label={`Select ${w.label}`}
                 prop:checked={w.checked}
                 prop:indeterminate={w.someSelected}
-              ></sui-checkbox>
+              />
             </span>
           {/if}
           {#if w.icon !== ''}

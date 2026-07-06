@@ -148,9 +148,6 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
 
   // ── Forms ───────────────────────────────────────────────────────────
   'sui-input':           { props: { value: 'Ada Lovelace', label: 'Full name', placeholder: 'Enter your name' } },
-  // Checked + a label makes the box visibly checked and labeled — not an
-  // empty unchecked default.
-  'sui-checkbox':        { props: { checked: 'true' }, innerHTML: 'Enable automatic deploys' },
   'sui-switch':          { props: { checked: 'true' }, innerHTML: 'Dark mode' },
   'sui-slider':          { props: { value: '64', min: '0', max: '100', label: 'Volume' } },
   'sui-radio-group':     { props: { value: 'card', label: 'Payment method' }, innerHTML: '<sui-radio value="card">Credit card</sui-radio><sui-radio value="paypal">PayPal</sui-radio><sui-radio value="wire">Wire transfer</sui-radio>' },
