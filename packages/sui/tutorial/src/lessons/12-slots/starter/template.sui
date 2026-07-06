@@ -1,11 +1,11 @@
 <prop name="shadow" type="bool" default="false" />
 
 <div class="slots-demo">
-  <sui-card>
+  <card>
     <sui-chip slot="header" tone="primary">{label()}</sui-chip>
     <p>count: <strong>{count()}</strong></p>
     <!-- TODO 1: slot a button into "footer" that calls bump() -->
-  </sui-card>
+  </card>
 
   <div class="row">
     <button ghost sm on:click={() => bump(1)}>+1</button>

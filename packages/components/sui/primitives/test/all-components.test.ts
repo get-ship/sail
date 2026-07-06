@@ -36,11 +36,11 @@ interface PortCase {
 const ports: PortCase[] = [
   { tag: 'sui-spinner',    attr: 'size',  value: 'lg',      shadowPart: '.ring' },
   { tag: 'sui-chip',       attr: 'tone',  value: 'primary', shadowPart: '.chip' },
-  { tag: 'sui-card',       attr: 'padding', value: 'lg',    shadowPart: '.content' },
   { tag: 'sui-avatar',     attr: 'size',  value: 'lg',      shadowPart: '.root' },
-  // sui-button, sui-separator, sui-status-dot, sui-skeleton dissolved to
-  // bare <button>/<hr>/<span dot>/<span skeleton> (L1 contract) — no longer
-  // custom elements, so they drop out of this per-port smoke net.
+  // sui-button, sui-separator, sui-status-dot, sui-skeleton, sui-card
+  // dissolved to bare <button>/<hr>/<span dot>/<span skeleton>/<card>
+  // (L1 contract) — no longer custom elements, so they drop out of this
+  // per-port smoke net.
   { tag: 'sui-tabs',       attr: 'variant', value: 'pill',  shadowPart: '.strip' },
   { tag: 'sui-tab',        attr: 'name',  value: 'one',     shadowPart: 'button' },
   { tag: 'sui-empty-state', attr: 'tone', value: 'muted',   shadowPart: '.title' },

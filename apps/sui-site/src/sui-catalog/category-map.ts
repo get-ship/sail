@@ -121,7 +121,6 @@ export const TAG_CATEGORY: Record<string, CategoryId> = {
   'sui-slider':          'forms',
 
   // ── @ship/sui-primitives — Layout ─────────────────────────────────────
-  'sui-card':            'layout',
   'sui-accordion':       'layout',
   'sui-tabs':            'layout',
   'sui-timeline':        'layout',

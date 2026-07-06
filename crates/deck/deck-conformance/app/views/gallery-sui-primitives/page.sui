@@ -93,22 +93,22 @@
   <section class="gsp-section">
     <h2 class="gsp-label">sui-card</h2>
     <div class="gsp-row gsp-wrap">
-      <sui-card style="width:200px">
+      <card style="width:200px">
         <span slot="header">Default card</span>
         Content in the default slot.
         <span slot="footer">Footer</span>
-      </sui-card>
-      <sui-card tone="primary" variant="outline" style="width:200px">
+      </card>
+      <card tone="primary" variant="outline" style="width:200px">
         <span slot="header">Outline primary</span>
         Outline variant with primary tone.
-      </sui-card>
-      <sui-card tone="success" accent-bar="static" status-rail style="width:200px">
+      </card>
+      <card tone="success" accent-bar="static" status-rail style="width:200px">
         <span slot="header">Status rail</span>
         Accent bar + status rail active.
-      </sui-card>
-      <sui-card tone="info" fill padding="lg" style="width:200px">
+      </card>
+      <card tone="info" fill padding="lg" style="width:200px">
         Fill + large padding.
-      </sui-card>
+      </card>
     </div>
   </section>
 

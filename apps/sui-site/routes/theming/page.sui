@@ -93,7 +93,7 @@
     </button>
     <span class="muted">active: <code>data-theme="&#123;crimson() ? 'crimson-red' : 'ship-light'&#125;"</code></span>
   </div>
-  <sui-card class="custom-theme-card">
+  <card class="custom-theme-card">
     <h3 slot="title">A SUI card, themed</h3>
     <column gap="3">
       <p>The card surface is <code>--surface-1</code>; the heading uses
@@ -107,7 +107,7 @@
         <button outline>Secondary</button>
       </row>
     </column>
-  </sui-card>
+  </card>
 
   <h2>Why tokens, not constants</h2>
   <p>

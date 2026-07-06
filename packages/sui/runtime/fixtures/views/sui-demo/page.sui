@@ -58,10 +58,10 @@
 
   <section>
     <h2>sui-card</h2>
-    <sui-card>
+    <card>
       <h3 slot="header">Card title</h3>
       <p>Card body content lives in the default slot.</p>
       <div slot="footer"><button solid primary>Action</button></div>
-    </sui-card>
+    </card>
   </section>
 </div>
