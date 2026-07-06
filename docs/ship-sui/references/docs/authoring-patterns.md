@@ -26,12 +26,15 @@ How to author a SUI view, a SUI component, and the controller that pairs with ea
 
 A view that wants reusable markup pulls a component in (`packages/components/ui-components/` for first-party, `_components/` for view-private). The reverse is illegal — components don't mount routes.
 
-> **`[SPEC-PENDING: anatomy-manifest-shape]`**. The anatomy fields a
-> component declares in its manifest (regions, parts, states,
-> layer, optional shadow boundary) are a CEM-extension. The schema
-> needs the design agent's call.
+> **Anatomy manifest shape** (shipped): the compiler emits an `anatomy`
+> block on each declaration in the standard `custom-elements.json` —
+> `{ "dom": "light" | "shadow", "classes": [...], "slots": [...] }`.
+> Classes are the author class names from the template
+> (compile-generated `sx-*`/`sui-*` atomics excluded); slots list the
+> projection points (`(default)` for the unnamed slot); states ride the
+> standard `attributes`/`members` entries as `reflects: true`.
 >
-> **`[SPEC-PENDING: shadow-bounded-component-list]`**. The
+> **`[ROADMAP: shadow-bounded-component-list]`**. The
 > components that legitimately need a shadow boundary are the
 > ones that wrap foreign content. Today's stdlib does not name a
 > single one — the tiptap wrapper, the embedded third-party
@@ -127,7 +130,7 @@ For HTML-blob cases (markdown rendering, third-party SVG generators, icon-pack s
 > calls this "the ElementInternals plumbing mostly dies" — not
 > "is removed".
 >
-> **`[SPEC-PENDING: form-participation-surface]`**. The L1 reset
+> **`[ROADMAP: form-participation-surface]`**. The L1 reset
 > covers the common cases (text input, textarea, select, button).
 > Today's stdlib components (`<sui-input>`, `<sui-textarea>`,
 > `<sui-select>`, `<sui-checkbox>`, `<sui-switch>`) still declare

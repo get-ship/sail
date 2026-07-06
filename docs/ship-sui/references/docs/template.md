@@ -121,10 +121,10 @@ Prop kinds: `string` (default), `bool`, `number`, `values="a|b|c"` (union). `ref
 > descendant of a host `<form>` participates natively without any
 > prop flag, because it is a real child of the form in the same
 > DOM tree. ARCHITECTURE.md calls this "the ElementInternals
-> plumbing mostly dies" — not "is removed". `[SPEC-PENDING:
+> plumbing mostly dies" — not "is removed". `[ROADMAP:
 > form-participation-surface]` — which stdlib components still
 > need the flag (for non-native value serialization, custom
-> reset/restore behaviour) is the design call.
+> reset/restore behaviour) is decided per component at re-port.
 
 ### `<form mutation>` — write operation
 
@@ -308,11 +308,13 @@ works inside a shadow root.
   the *published contract*. Consumers read it the same way they read
   `props` and `events` (LSP, `@ship/sui-eval`).
 
-**`[SPEC-PENDING: anatomy-manifest-shape]`** — the manifest's regions
-block is illustrative; the CEM-enriched `custom-elements.json`
-schema is the design agent's call.
+**Anatomy manifest shape** (shipped): the compiler emits an `anatomy`
+block on each `custom-elements.json` declaration —
+`{ "dom": "light" | "shadow", "classes": [...], "slots": [...] }` —
+classes from the template (generated `sx-*`/`sui-*` atomics excluded),
+slots as the projection points (`(default)` for the unnamed slot).
 
-**`[SPEC-PENDING: scoped-projection-syntax]`** — shadow slots
+**`[ROADMAP: scoped-projection-syntax]`** — shadow slots
 support `<slot name="x" item={x}>` and consumer `let:item`. The
 light-DOM projection is one-shot at connect; the compiler-managed
 equivalent for scoped binding is its own design work.
@@ -354,17 +356,18 @@ What the contract buys:
 - **Honest SSR.** The server-rendered HTML is the post-projection
   tree; no declarative-shadow dance, no hydration flash.
 
-**`[SPEC-PENDING: empty-region-reflection]`** — the previous model
-hand-rolled `data-no-header` / `data-no-footer` host attributes in
-each component to drive empty-region chrome. The runtime helper
+**Empty-region reflection** (shipped): the runtime helper
 `bindSlotEmpty(slotEl, host, attrName)` (`packages/sui/runtime/src/slot-empty.ts`)
-is the replacement: it toggles a host attribute based on whether
-the slot's assigned content is visible. The compiler emits one call
-per `<slot reflect-empty="<attr>">` directive in the body.
+toggles a host attribute based on whether the slot's content is
+visible — `slotchange`-driven in shadow, `MutationObserver`-driven in
+light. The compiler emits one call per `<slot reflect-empty="<attr>">`
+directive; the attribute name is the author's, per slot.
 
-**`[SPEC-PENDING: projection-runtime-api]`** — the runtime API
-surface (`resolveProjection`, `isProjected`, `bindProjectedEmpty`)
-is the design call; today's `bindSlotEmpty` is the prototype.
+**Projection runtime API** (shipped, internal): `projectSlots(host,
+captured)` (`packages/sui/runtime/src/slot-project.ts`) is called by
+the component factory after mount — it is not authoring surface, and
+no public projection API exists by design: authors write `<slot>` and
+`slot="…"`, nothing else.
 
 **Known limit (documented, not hidden):** projection runs once at
 connect. Children appended to the host LATER are not re-projected —

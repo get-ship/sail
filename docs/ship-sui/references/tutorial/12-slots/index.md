@@ -34,12 +34,10 @@ Three things to know:
   directive in the body. The runtime helper `bindSlotEmpty`
   (`packages/sui/runtime/src/slot-empty.ts`) toggles a host
   attribute based on whether the slot is empty, and the skin trims
-  chrome accordingly. `[SPEC-PENDING: reflect-empty-attribute-name]`
-  — the previous `data-no-header` / `data-no-footer` host-attribute
-  pattern is replaced by a `reflect-empty="…"` directive on the
-  `<slot>` element, and the compiler emits a `bindSlotEmpty` call
-  per directive. The final attribute name and shape are the design
-  call.
+  chrome accordingly. The attribute name is the author's, per slot —
+  the directive's value IS the host attribute
+  (`<slot reflect-empty="data-no-header">` toggles `data-no-header`);
+  the compiler emits one `bindSlotEmpty` call per directive.
 - **Default region is the catch-all.** Anything projected without a
   `slot="…"` attribute lands in the unnamed `<slot>`.
 
@@ -104,36 +102,35 @@ notification widget. Try:
 - **Not style isolation by encapsulation.** Component rules compile
   to `@scope (sui-x) to ([data-sui])` donuts so a component styles
   its own subtree and stops at nested component boundaries. The
-  isolation is **scope**, not a shadow boundary. `[SPEC-PENDING:
-  scope-anchor]` — the `data-sui` attribute the scope closes on is
-  a convention the compiler is responsible for placing.
+  isolation is **scope**, not a shadow boundary. The scope anchor is
+  `data-component` — the runtime stamps it on every registered host,
+  and the donut is `@scope ([data-component="sui-x"]) to
+  ([data-component])`: rules stop at the next component boundary.
 
 ## Reading the anatomy manifest
 
-A `<sui-card>` component's anatomy (CEM-enriched
-`custom-elements.json`) carries a regions block:
+A `<sui-card>` component's anatomy rides its standard
+`custom-elements.json` declaration (the CEM extension the compiler
+emits):
 
 ```jsonc
 {
-  "name": "sui-card",
+  "tagName": "sui-card",
   "anatomy": {
-    "regions": [
-      { "name": "header",  "description": "Optional header chrome." },
-      { "name": "footer",  "description": "Optional footer chrome." },
-      { "name": "default", "description": "Card body. Catch-all." }
-    ]
+    "dom": "light",
+    "classes": ["card", "card-head", "card-body", "card-foot"],
+    "slots": ["(default)", "footer", "header"]
   }
 }
 ```
 
-Consumers read this the same way they read `props` and `events` —
-the LSP and `@ship/sui-eval` can validate projection declarations
-against the manifest. An undeclared region is a compile error in
-strict mode and a warning otherwise.
-
-`[SPEC-PENDING: anatomy-manifest-shape]`. The exact JSON shape
-above is illustrative; the manifest schema (CEM-extension vs. a
-sui-side schema) is its own design work.
+`dom` records which side of the light/shadow seam the component
+compiles to; `classes` are the published styling contract (skins are
+written against them); `slots` are the projection points, `(default)`
+for the unnamed slot. States ride the standard `attributes`/`members`
+entries as `reflects: true`. Consumers read this the same way they
+read `props` and `events` — the LSP and `@ship/sui-eval` can validate
+projection declarations against the manifest.
 
 ## Common recipes
 

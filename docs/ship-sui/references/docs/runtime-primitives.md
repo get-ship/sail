@@ -231,9 +231,10 @@ components — in light DOM it watches the slot wrapper's children
 via `MutationObserver` (no `slotchange` event fires); in shadow
 it listens to `slotchange`. The compiler emits one `bindSlotEmpty`
 call per `<slot reflect-empty="…">` directive in a component
-body. `[SPEC-PENDING: reflect-empty-attribute-name]` — the
-`reflect-empty` directive name and the final host-attribute name
-are the design call; the runtime helper is the prototype.
+body. The attribute name is author-chosen per slot — the directive's
+value IS the host attribute (`<slot reflect-empty="data-icon-only">`
+toggles `data-icon-only` on the host); there is no fixed name to
+specify.
 
 Known limit: projection runs once at connect. Children appended
 to the host LATER are not re-projected — the dynamic composition
