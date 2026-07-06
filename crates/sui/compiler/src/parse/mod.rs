@@ -25,7 +25,18 @@ pub use html::{Attr, Node};
 
 /// Parse a `.sui` source string into an IR program.
 pub fn parse(source: &str) -> Result<Program, CompileError> {
-    let prepared = preprocess::preprocess(source);
+    parse_inner(source, true)
+}
+
+/// Parse an ELEMENT source (element mode / the stdlib registry): identical
+/// pipeline minus the stdlib-element expansion pass — an element source may
+/// not use stdlib elements (no recursion, no element-in-element).
+pub(crate) fn parse_element_source(source: &str) -> Result<Program, CompileError> {
+    parse_inner(source, false)
+}
+
+fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileError> {
+    let prepared = preprocess::preprocess_impl(source, expand_elements);
     let nodes = html::parse_fragment(&prepared)?;
 
     let mut data: Vec<DataDecl> = Vec::new();

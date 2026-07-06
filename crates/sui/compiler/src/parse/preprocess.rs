@@ -17,6 +17,13 @@ const VOID_TAGS: &[&str] = &[
 ];
 
 pub fn preprocess(source: &str) -> String {
+    preprocess_impl(source, true)
+}
+
+/// The full pipeline with the stdlib-element pass switchable — element
+/// sources compile WITHOUT it (no element-in-element; no recursion when the
+/// registry compiles the stdlib with this same crate).
+pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> String {
     // Brace-quoting + self-close expansion normalize the raw source first. Then
     // the two compile-time lowerings run on that HTML: `sx=` attributes → atomic
     // surface classes, then the layout keywords (`<column>`/`<row>`/…) → `<div>`
@@ -31,6 +38,14 @@ pub fn preprocess(source: &str) -> String {
     // tone/variant/size attributes. Framework vocabulary on framework tags
     // only (L1 controls + sui-*); userland components stay explicit.
     let s = lower_prop_shorthand(&s);
+    // L1 stdlib elements: `<spinner …>` splices into its structure snippet
+    // (use-site attrs merged onto the root, default-slot children placed),
+    // its skin CSS joining the injected style once per tag.
+    let (s, elements_css) = if expand_elements {
+        lower_stdlib_elements(&s)
+    } else {
+        (s, String::new())
+    };
     // Desugar the SFC `<component>` block into the `<prop>` tags + object
     // `<variants>` the rest of the chain already lowers.
     let s = lower_component(&s);
@@ -51,8 +66,12 @@ pub fn preprocess(source: &str) -> String {
     let (s, layout_css) = lower_layout(&s);
     let (s, variants_css) = lower_variants(&s);
     let (s, theme_css) = lower_theme(&s);
-    let css =
-        format!("{host_display_css}{host_css}{theme_css}{sx_css}{layout_css}{variants_css}");
+    // NOTE elements_css rides the per-component injected style for now —
+    // duplicated across components that use the same element. It moves to
+    // the framework sheet with the deck style-delivery work.
+    let css = format!(
+        "{host_display_css}{host_css}{theme_css}{sx_css}{layout_css}{variants_css}{elements_css}"
+    );
     if css.is_empty() {
         s
     } else {
@@ -191,6 +210,188 @@ fn lower_sx_value(
 }
 
 /// After the `sx` name: optional ws, `=`, optional ws, then a `"`.
+/// L1 STDLIB ELEMENT LOWERING — splice each `<tag …>children</tag>` use of a
+/// registry element into its compiled structure snippet:
+///   - use-site attributes merge onto the snippet root (use-site wins on a
+///     name collision; `class` values concatenate),
+///   - children replace the snippet's default `<slot></slot>` (named-slot
+///     compile-time projection is slice 3; today's stdlib elements use at
+///     most the default slot),
+///   - the element's skin CSS joins the injected style ONCE per tag.
+fn lower_stdlib_elements(source: &str) -> (String, String) {
+    let registry = crate::stdlib::elements();
+    if registry.is_empty() {
+        return (source.to_string(), String::new());
+    }
+    let mut out = String::with_capacity(source.len());
+    let mut css = String::new();
+    let mut css_done: std::collections::HashSet<&str> = std::collections::HashSet::new();
+    let bytes = source.as_bytes();
+    let mut i = 0;
+    'outer: while i < bytes.len() {
+        if source[i..].starts_with("<!--") {
+            let end = source[i..].find("-->").map(|e| i + e + 3).unwrap_or(bytes.len());
+            out.push_str(&source[i..end]);
+            i = end;
+            continue;
+        }
+        if bytes[i] == b'<' && i + 1 < bytes.len() && bytes[i + 1].is_ascii_alphabetic() {
+            for el in registry {
+                let tag = el.tag;
+                if source[i + 1..].starts_with(tag) {
+                    let after = i + 1 + tag.len();
+                    let boundary = bytes
+                        .get(after)
+                        .is_some_and(|&b| b.is_ascii_whitespace() || b == b'>');
+                    if !boundary {
+                        continue;
+                    }
+                    // Open-tag end, quote-aware.
+                    let mut k = after;
+                    let mut quote: Option<u8> = None;
+                    while k < bytes.len() {
+                        match (quote, bytes[k]) {
+                            (Some(q), b) if b == q => quote = None,
+                            (None, b'"') | (None, b'\'') => quote = Some(bytes[k]),
+                            (None, b'>') => break,
+                            _ => {}
+                        }
+                        k += 1;
+                    }
+                    if k >= bytes.len() {
+                        break;
+                    }
+                    let use_attrs = source[after..k].trim().to_string();
+                    // Children up to the matching close (stdlib elements
+                    // don't self-nest; expand_self_close already paired
+                    // self-closing forms).
+                    let close = format!("</{tag}>");
+                    let Some(rel) = source[k + 1..].find(&close) else { break };
+                    let children = &source[k + 1..k + 1 + rel];
+                    let end = k + 1 + rel + close.len();
+
+                    out.push_str(&splice_element(&el.out, &use_attrs, children));
+                    if css_done.insert(tag) {
+                        css.push_str(&el.out.skin_css);
+                    }
+                    i = end;
+                    continue 'outer;
+                }
+            }
+        }
+        let next = bytes[i + 1..]
+            .iter()
+            .position(|&b| b == b'<')
+            .map(|n| i + 1 + n)
+            .unwrap_or(bytes.len());
+        out.push_str(&source[i..next]);
+        i = next;
+    }
+    (out, css)
+}
+
+/// Merge use-site attrs onto the snippet root and place children.
+fn splice_element(
+    el: &crate::emit::element::ElementOutput,
+    use_attrs: &str,
+    children: &str,
+) -> String {
+    let snippet = &el.structure_html;
+    let Some(root_end) = snippet.find('>') else { return snippet.clone() };
+    let root_open = &snippet[..root_end]; // "<span class=\"sui-x …\" …"
+    let rest = &snippet[root_end..]; // ">…</span>"
+
+    let mut snippet_attrs = parse_attr_list(&root_open[root_open.find(char::is_whitespace).map(|p| p + 1).unwrap_or(root_open.len())..]);
+    let use_list = parse_attr_list(use_attrs);
+    for (name, value) in use_list {
+        if name == "class" {
+            if let Some(slot) = snippet_attrs.iter_mut().find(|(n, _)| n == "class") {
+                let merged = format!(
+                    "{} {}",
+                    slot.1.trim_matches('"'),
+                    value.trim_matches('"')
+                );
+                slot.1 = format!("\"{merged}\"");
+                continue;
+            }
+        }
+        // Use-site wins on collision.
+        snippet_attrs.retain(|(n, _)| *n != name);
+        snippet_attrs.push((name, value));
+    }
+    let tag_name: String = root_open[1..]
+        .chars()
+        .take_while(|c| c.is_ascii_alphanumeric() || *c == '-')
+        .collect();
+    let mut outb = format!("<{tag_name}");
+    for (n, v) in &snippet_attrs {
+        outb.push(' ');
+        outb.push_str(n);
+        if !v.is_empty() {
+            outb.push('=');
+            outb.push_str(v);
+        }
+    }
+    // Children into the default slot; no slot → children dropped (shadow
+    // parity, same as the runtime projection).
+    let body = if rest.contains("<slot></slot>") {
+        rest.replacen("<slot></slot>", children, 1)
+    } else {
+        rest.to_string()
+    };
+    outb.push_str(&body);
+    outb
+}
+
+/// Parse a flat attribute list `a="1" b c={x}` into (name, raw-value) pairs
+/// (value includes its quotes; empty for bare attrs). Quote-aware.
+fn parse_attr_list(s: &str) -> Vec<(String, String)> {
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    let mut outv = Vec::new();
+    while i < bytes.len() {
+        while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+            i += 1;
+        }
+        if i >= bytes.len() || bytes[i] == b'/' {
+            break;
+        }
+        let name_start = i;
+        while i < bytes.len()
+            && !bytes[i].is_ascii_whitespace()
+            && bytes[i] != b'='
+            && bytes[i] != b'>'
+        {
+            i += 1;
+        }
+        let name = s[name_start..i].to_string();
+        if name.is_empty() {
+            break;
+        }
+        let mut value = String::new();
+        if bytes.get(i) == Some(&b'=') {
+            i += 1;
+            if let Some(&q) = bytes.get(i).filter(|&&b| b == b'"' || b == b'\'') {
+                let vstart = i;
+                i += 1;
+                while i < bytes.len() && bytes[i] != q {
+                    i += 1;
+                }
+                i = (i + 1).min(bytes.len());
+                value = s[vstart..i].to_string();
+            } else {
+                let vstart = i;
+                while i < bytes.len() && !bytes[i].is_ascii_whitespace() && bytes[i] != b'>' {
+                    i += 1;
+                }
+                value = s[vstart..i].to_string();
+            }
+        }
+        outv.push((name, value));
+    }
+    outv
+}
+
 /// Bare framework-enum shorthand (authoring sugar): on framework tags, a bare
 /// attribute matching a framework enum value desugars to its prop —
 /// `<button primary solid sm>` → `<button tone="primary" variant="solid"
@@ -1749,6 +1950,43 @@ mod tests {
             out.contains(":host([variant='solid']) .box{background:var(--primary);}"),
             "dotted key becomes a class-targeted block:\n{out}"
         );
+    }
+
+    #[test]
+    fn stdlib_spinner_lowers_at_use_site() {
+        let out = preprocess(r#"<div class="page"><spinner size="sm" aria-label="Saving"></spinner></div>"#);
+        // Root class stamped, use-site attrs merged, use-site wins the
+        // aria-label collision with the snippet default.
+        assert!(out.contains("sui-spinner spin"), "{out}");
+        assert!(out.contains(r#"size="sm""#), "{out}");
+        assert!(out.contains(r#"aria-label="Saving""#), "{out}");
+        assert!(!out.contains("aria-label=\"Loading\""), "use-site wins: {out}");
+        assert!(out.contains(r#"class="ring""#), "structure spliced: {out}");
+        // Skin joins the injected style once, keyed on the root class,
+        // keyframes riding along.
+        assert!(out.contains(".sui-spinner[size='sm']"), "{out}");
+        assert!(out.contains("@keyframes sui-spin"), "{out}");
+        assert_eq!(out.matches("@keyframes sui-spin").count(), 1);
+    }
+
+    #[test]
+    fn stdlib_separator_lowers_and_dedupes_skin() {
+        let out = preprocess("<separator orientation=\"vertical\"></separator><separator></separator>");
+        assert_eq!(out.matches("<hr").count(), 2, "{out}");
+        assert!(out.contains("sui-separator"), "{out}");
+        assert!(out.contains(r#"orientation="vertical""#), "{out}");
+        assert_eq!(
+            out.matches("--tone-bg: var(--border-subtle)").count(),
+            1,
+            "skin once despite two uses: {out}"
+        );
+    }
+
+    #[test]
+    fn stdlib_element_children_fill_default_slot_or_drop() {
+        // spinner has no default slot — children drop (shadow parity).
+        let out = preprocess("<spinner><b>x</b></spinner>");
+        assert!(!out.contains("<b>x</b>"), "slotless children drop: {out}");
     }
 
     #[test]

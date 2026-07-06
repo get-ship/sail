@@ -42,6 +42,7 @@ pub mod keys;
 pub mod lower;
 pub mod out_layout;
 pub mod parse;
+pub mod stdlib;
 pub mod escape;
 pub mod view_init;
 pub use view_init::{view_init, ViewInit};
@@ -261,7 +262,9 @@ pub fn compile_element(
     source: &str,
     name: &str,
 ) -> Result<emit::element::ElementOutput, CompileError> {
-    let program = parse::parse(source)?;
+    // parse_element_source: the pipeline minus the stdlib-element pass — an
+    // element source may not use stdlib elements (no recursion).
+    let program = parse::parse_element_source(source)?;
     emit::element::emit_element(&program, name)
 }
 
