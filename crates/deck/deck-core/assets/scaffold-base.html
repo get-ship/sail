@@ -59,6 +59,11 @@
        The layout.css href is REWRITTEN by `deck build` to the hashed
        asset URL (`/assets/layout-<hash>.css`); tokens stay static. -->
   <link rel="stylesheet" href="/api/assets/view-tokens.css" />
+  <!-- Framework stylesheet: light-DOM contracts + stdlib element skins, so
+       components/L1 elements are styled at first paint WITHOUT the runtime's
+       JS injection (SSR / no-FOUC). `data-sui-contracts` is the signal the
+       runtime's `ensureLightContracts` reads to skip its injection. -->
+  <link rel="stylesheet" href="/api/assets/sui.css" data-sui-contracts />
   <link rel="stylesheet" href="/src/chrome/layout.css" />
 
   <!-- Pre-paint theme (FOUC guard). Reads the persisted theme from

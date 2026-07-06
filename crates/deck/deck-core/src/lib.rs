@@ -25,6 +25,7 @@ pub mod routes;
 pub mod setup;
 pub mod synthetic_ssr;
 pub mod host_context;
+pub mod sui_css;
 pub mod themes;
 pub mod view;
 pub mod view_tokens;
@@ -91,6 +92,7 @@ pub use mode_html::{inject_mode_meta, mode_str};
 // (formerly `packs::serve_catalog_workspace`) — purged with the `.deck/` runtime read.
 pub use setup::redirect;
 pub use themes::{list_themes, resolve_theme_css, serve_theme_css, serve_themes_list, ThemeMeta, ThemeSource};
+pub use sui_css::serve_sui_css;
 pub use view_tokens::serve_view_tokens;
 pub use view::{serve_sui_view_setup, ViewSetupQuery};
 // `serve_view_host` / `serve_view_payload[_subpath]` moved to `ship-views`.

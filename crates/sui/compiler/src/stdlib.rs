@@ -42,3 +42,24 @@ pub fn elements() -> &'static [StdlibElement] {
 pub fn element(tag: &str) -> Option<&'static StdlibElement> {
     elements().iter().find(|e| e.tag == tag)
 }
+
+/// The concatenated stdlib element skins — the compiler's half of the
+/// framework stylesheet (the runtime's `LIGHT_CONTRACTS_CSS` is the other
+/// half). This is the SSOT: the served `sui.css` and the materialized
+/// `packages/sui/tokens/src/element-skins.css` both derive from here, and a
+/// drift test re-derives and compares. Each element contributes its skin
+/// once, under a header naming the tag.
+pub fn skins_css() -> String {
+    let mut out = String::new();
+    for el in elements() {
+        if el.out.skin_css.trim().is_empty() {
+            continue;
+        }
+        out.push_str(&format!("/* {} */\n", el.tag));
+        out.push_str(el.out.skin_css.trim_end());
+        out.push_str("\n\n");
+    }
+    out.truncate(out.trim_end().len());
+    out.push('\n');
+    out
+}

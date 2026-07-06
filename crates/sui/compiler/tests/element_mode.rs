@@ -78,3 +78,22 @@ fn element_rejects_hyphenated_names() {
         "hyphenated tag = custom element = component: {err:?}"
     );
 }
+
+#[test]
+fn element_skins_css_matches_registry() {
+    // The materialized framework stylesheet half must equal the registry's
+    // live derivation — regenerate with `cargo run -p sui-compiler --
+    // framework-css` when this fails (the stdlib registry is the SSOT).
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../packages/sui/tokens/src/element-skins.css"
+    );
+    let file = std::fs::read_to_string(path).expect("element-skins.css must exist");
+    // Strip the generated banner (everything through the first `*/\n`).
+    let body = &file[file.find("*/\n").expect("banner present") + 3..];
+    assert_eq!(
+        body,
+        sui_compiler::stdlib::skins_css(),
+        "element-skins.css is stale — run: cargo run -p sui-compiler -- framework-css"
+    );
+}

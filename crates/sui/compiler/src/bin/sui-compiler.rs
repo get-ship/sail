@@ -121,6 +121,17 @@ enum Command {
         #[arg(long)]
         out: Option<PathBuf>,
     },
+    /// Emit the framework's stdlib element skins as a single CSS file — the
+    /// compiler's half of the framework stylesheet (`sui.css`); the runtime's
+    /// contracts sheet is the other half. The registry is the SSOT; a drift
+    /// test keeps the materialized file honest. Regenerates
+    /// `packages/sui/tokens/src/element-skins.css` by default.
+    FrameworkCss {
+        /// Output file. Default: `packages/sui/tokens/src/element-skins.css`
+        /// relative to the workspace root.
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
     /// Synthesize a single `.sui` into a manifest-driven, tsc-checkable
     /// pair — a **synthetic controller** (`<stem>.synthetic.controller.ts`)
     /// and a **render** (`<stem>.render.ts`). Each name in `--manifest`
@@ -174,8 +185,47 @@ fn main() -> Result<()> {
             emit_component_imports, light,
         ),
         Command::Skill { dir, out } => gen_skill(dir, out),
+        Command::FrameworkCss { out } => gen_framework_css(out),
         Command::Synthesize { input, manifest, out_dir } => {
             synthesize(input, manifest, out_dir)
+        }
+    }
+}
+
+/// Materialize the stdlib element skins to a static CSS file — the
+/// compiler-sourced half of the framework stylesheet. deck-core serves it
+/// (concatenated with the runtime's contracts sheet) as `sui.css`; the
+/// drift test `element_skins_css_matches_registry` keeps it in sync.
+fn gen_framework_css(out: Option<PathBuf>) -> Result<()> {
+    let path = match out {
+        Some(p) => p,
+        None => workspace_root()?.join("packages/sui/tokens/src/element-skins.css"),
+    };
+    let banner = "/* GENERATED from the sui-compiler stdlib registry — do not hand-edit.\n \
+                  * Regenerate: cargo run -p sui-compiler -- framework-css\n \
+                  * The L1 element skins (spinner, separator, icon, label, …); the\n \
+                  * framework contracts ride separately in contracts.css. */\n";
+    let body = format!("{banner}{}", sui_compiler::stdlib::skins_css());
+    std::fs::write(&path, body)?;
+    println!("wrote {}", path.display());
+    Ok(())
+}
+
+/// Walk up from the current dir to the workspace root (the dir whose
+/// `Cargo.toml` declares `[workspace]`).
+fn workspace_root() -> Result<PathBuf> {
+    let mut dir = std::env::current_dir()?;
+    loop {
+        let manifest = dir.join("Cargo.toml");
+        if manifest.exists()
+            && std::fs::read_to_string(&manifest)
+                .map(|s| s.contains("[workspace]"))
+                .unwrap_or(false)
+        {
+            return Ok(dir);
+        }
+        if !dir.pop() {
+            anyhow::bail!("could not find workspace root (no [workspace] Cargo.toml above cwd)");
         }
     }
 }
