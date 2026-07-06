@@ -18,8 +18,6 @@
 // tree-item / sui-timeline-item / sui-toast[-container] / sui-radio),
 // the JS-prop-only viewer primitives (sui-render / sui-source-panel /
 // sui-prop-knobs / sui-prop-matrix / sui-component-viewer), AND brand
-// chrome (sui-brand-mark — the SHIP logo, used inside <sui-nav-top>,
-// <sui-account-chip>, etc. as a slotted child, never standalone).
 //
 // TWO delivery channels (mirroring how the host applies a seed):
 //   • `props`     — set via `setAttribute` BEFORE the element connects, so a
@@ -114,11 +112,7 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   'sui-link':            { props: { href: '#', variant: 'underline' }, innerHTML: 'View documentation' },
   'sui-icon':            { props: { name: 'sparkles', variant: 'tile', tone: 'primary', size: 'lg' } },
   'sui-avatar':          { props: { name: 'Ada Lovelace', size: 'lg' } },
-  'sui-account-chip':    { props: { name: 'Ada Lovelace' } },
-  'sui-account-menu':    { props: { status: 'signed-in', name: 'Ada Lovelace', email: 'ada@ship.dev', plan: 'Pro', provider: 'GitHub' } },
-  // sui-brand-mark has no standalone seed — it's hidden from the
   // catalog (brand chrome, not a public component) and is composed
-  // inside <sui-nav-top>, <sui-account-chip>, etc. as a slotted child.
   // Badges: full semantic range reads better than one tone — pick the
   // most visually representative (success-soft) for the default cell.
   'sui-badge':           { props: { tone: 'success', variant: 'soft' }, innerHTML: 'Passing' },
@@ -189,10 +183,8 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   'sui-separator':       {},
 
   // ── Navigation ──────────────────────────────────────────────────────
-  'sui-nav-top':         { innerHTML: '<sui-brand-mark slot="brand" label="Ship"></sui-brand-mark><a href="#">Docs</a><a href="#">Components</a><a href="#">Pricing</a><sui-button slot="actions" tone="primary" size="sm">Sign in</sui-button>' },
   'sui-navigation-menu': { props: { value: 'components' }, innerHTML: '<sui-navigation-item value="docs">Docs</sui-navigation-item><sui-navigation-item value="components">Components</sui-navigation-item><sui-navigation-item value="guides">Guides</sui-navigation-item>' },
   'sui-pagination':      { props: { page: '3', total: '248', 'page-size': '20' } },
-  'sui-project-switcher':{ props: { 'active-id': 'sui', projects: PROJECT_LIST } },
 
   // ── Data display (JSON-string scalar props — the SSR/declarative path)
   // Table: realistic project-status rows, not 1 column of empty cells.
