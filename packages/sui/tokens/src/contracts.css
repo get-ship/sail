@@ -3,6 +3,7 @@
  * The light-DOM framework contracts: tone/size channels (attribute-
  * keyed), interactive-surface baseline, focus/disabled, L1 element
  * skins ride separately via the stdlib registry. */
+@layer sui {
 [tone='default']     { --tone: var(--foreground);       --tone-fg: var(--foreground);       --tone-contrast: var(--background);              --tone-bg: var(--hover-bg);            --tone-border: var(--border);                 --tone-ring: var(--ring); }
 [tone='primary']     { --tone: var(--primary);          --tone-fg: var(--primary);          --tone-contrast: var(--primary-foreground);     --tone-bg: var(--tone-primary-bg);     --tone-border: var(--tone-primary-border);     --tone-ring: var(--tone-primary-ring); }
 [tone='info']        { --tone: var(--info);             --tone-fg: var(--info);             --tone-contrast: var(--info-foreground);        --tone-bg: var(--tone-info-bg);        --tone-border: var(--tone-info-border);        --tone-ring: var(--tone-info-ring); }
@@ -49,3 +50,4 @@
 [data-component][hidden] { display: none !important; }
 [data-component] slot { display: contents; }
 @media (prefers-reduced-motion: reduce) { [data-component], [data-component] *, :where(button, input, textarea, select, a, [tabindex]) { transition: none !important; animation: none !important; } }
+}

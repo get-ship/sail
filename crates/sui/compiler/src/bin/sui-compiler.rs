@@ -205,7 +205,9 @@ fn gen_framework_css(out: Option<PathBuf>) -> Result<()> {
                   * Regenerate: cargo run -p sui-compiler -- framework-css\n \
                   * The L1 element skins (spinner, separator, icon, label, …); the\n \
                   * framework contracts ride separately in contracts.css. */\n";
-    let body = format!("{banner}{}", sui_compiler::stdlib::skins_css());
+    // Wrapped in the `sui` cascade layer (matches the runtime contracts) so
+    // author CSS (unlayered) overrides element skins by layer order.
+    let body = format!("{banner}@layer sui {{\n{}}}\n", sui_compiler::stdlib::skins_css());
     std::fs::write(&path, body)?;
     println!("wrote {}", path.display());
     Ok(())

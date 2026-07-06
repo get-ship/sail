@@ -69,10 +69,18 @@ function makeSheet(css: string): CSSStyleSheet | null {
   }
 }
 
-export const suiTonesSheet: CSSStyleSheet | null = makeSheet(TONES_CSS)
-export const suiSizesSheet: CSSStyleSheet | null = makeSheet(SIZES_CSS)
-export const suiBaseSheet: CSSStyleSheet | null = makeSheet(BASE_CSS)
-export const suiTypographySheet: CSSStyleSheet | null = makeSheet(TYPOGRAPHY_CSS)
+/// Wrap framework CSS in the `sui` cascade layer. Author CSS is UNLAYERED,
+/// which beats any layer — so users override the design system by writing
+/// normal CSS (or a theme), never fighting specificity or reaching for
+/// !important. One rule governs all precedence: your styles are above ours.
+/// (`:where()` is kept inside for the framework's OWN internal cascade; it's
+/// invisible to the author-override story, which is pure layer order.)
+export const layered = (css: string): string => `@layer sui {\n${css}}\n`
+
+export const suiTonesSheet: CSSStyleSheet | null = makeSheet(layered(TONES_CSS))
+export const suiSizesSheet: CSSStyleSheet | null = makeSheet(layered(SIZES_CSS))
+export const suiBaseSheet: CSSStyleSheet | null = makeSheet(layered(BASE_CSS))
+export const suiTypographySheet: CSSStyleSheet | null = makeSheet(layered(TYPOGRAPHY_CSS))
 
 /**
  * Adopt every shared sheet into a shadow root (no-op for light DOM /
@@ -100,7 +108,7 @@ export const suiTypographySheet: CSSStyleSheet | null = makeSheet(TYPOGRAPHY_CSS
 let controlsSheetMemo: CSSStyleSheet | null | undefined
 function suiControlsSheet(): CSSStyleSheet | null {
   if (controlsSheetMemo === undefined) {
-    controlsSheetMemo = makeSheet(CONTROL_SKINS_CSS)
+    controlsSheetMemo = makeSheet(layered(CONTROL_SKINS_CSS))
   }
   return controlsSheetMemo
 }
@@ -275,6 +283,6 @@ export function ensureLightContracts(): void {
   }
   const style = document.createElement('style')
   style.id = id
-  style.textContent = LIGHT_CONTRACTS_CSS
+  style.textContent = layered(LIGHT_CONTRACTS_CSS)
   document.head.prepend(style)
 }

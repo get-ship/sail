@@ -16,7 +16,7 @@
 import { writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { LIGHT_CONTRACTS_CSS } from '../src/styles/index'
+import { LIGHT_CONTRACTS_CSS, layered } from '../src/styles/index'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const out = resolve(here, '../../tokens/src/contracts.css')
@@ -26,5 +26,5 @@ const banner =
   ' * The light-DOM framework contracts: tone/size channels (attribute-\n' +
   ' * keyed), interactive-surface baseline, focus/disabled, L1 element\n' +
   ' * skins ride separately via the stdlib registry. */\n'
-writeFileSync(out, banner + LIGHT_CONTRACTS_CSS)
-console.log(`wrote ${out} (${LIGHT_CONTRACTS_CSS.length} bytes)`)
+writeFileSync(out, banner + layered(LIGHT_CONTRACTS_CSS))
+console.log(`wrote ${out} (${LIGHT_CONTRACTS_CSS.length} bytes, @layer sui)`)

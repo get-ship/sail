@@ -18,6 +18,9 @@ describe('contracts.css asset', () => {
       'utf8',
     )
     const body = asset.slice(asset.indexOf('*/') + 3) // strip generated banner
-    expect(body).toBe(LIGHT_CONTRACTS_CSS)
+    // The asset is wrapped in the `sui` cascade layer; unwrap to compare the
+    // rule body against the constant.
+    const inner = body.replace(/^@layer sui \{\n/, '').replace(/\}\n$/, '')
+    expect(inner).toBe(LIGHT_CONTRACTS_CSS)
   })
 })

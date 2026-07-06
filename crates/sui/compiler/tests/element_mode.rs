@@ -89,10 +89,15 @@ fn element_skins_css_matches_registry() {
         "/../../../packages/sui/tokens/src/element-skins.css"
     );
     let file = std::fs::read_to_string(path).expect("element-skins.css must exist");
-    // Strip the generated banner (everything through the first `*/\n`).
-    let body = &file[file.find("*/\n").expect("banner present") + 3..];
+    // Strip the generated banner (through the first `*/\n`) and the `@layer
+    // sui { … }` wrapper, then compare the rule body to the registry.
+    let after_banner = &file[file.find("*/\n").expect("banner present") + 3..];
+    let inner = after_banner
+        .strip_prefix("@layer sui {\n")
+        .and_then(|s| s.strip_suffix("}\n"))
+        .expect("element-skins.css is wrapped in @layer sui");
     assert_eq!(
-        body,
+        inner,
         sui_compiler::stdlib::skins_css(),
         "element-skins.css is stale — run: cargo run -p sui-compiler -- framework-css"
     );
