@@ -18,6 +18,38 @@
   reducedMotion mixin             @media prefers-reduced-motion inline   ✓
   toneVars mixin                  :host([tone=...]) inline               ✓
   ─────────────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────────────
+  - DELETED the per-component `<theme prop="tone" channels="tone-fg,
+    tone-halo-strong, tone-halo-soft">` block. Checked every one of the 8
+    tone values against the framework's global contract (packages/sui/
+    runtime tones.css TONES_CSS): `tone-fg` is a byte-identical alias match
+    (e.g. its `success: success` vs the global's `success: tone-success-fg`
+    resolve to the same value — tokens.css defines
+    `--tone-success-fg: var(--success)`), and `tone-halo-strong`/
+    `tone-halo-soft` are exactly the global `--tone-border`/`--tone-ring`
+    channels (same per-tone token names). This is a pure deletion, not a
+    value-normalizing swap like the alert/timeline pilots hit — `.dot` now
+    reads `bg:tone-fg` and the ring reads `var(--tone-border)`/
+    `var(--tone-ring)` directly, zero visual change.
+  - Friction worth flagging (not a LANG-GAP, but a token-scale gap): the
+    halo ring widths (1.5px / 4.5px / 1px / 3.5px) have no matching step in
+    the space scale (which jumps 4px/5px/6px/8px/…, nothing near 1-2px or
+    4-5px sub-integer). A prior automated token-routing pass had picked
+    `var(--space-1_25)` (5px) and `var(--space-4_5)` (18px) for the 1.5px/
+    4.5px rings — a real bug (the "4.5" in the token name was read as a
+    space-scale index, not a pixel count, landing 4x too large). Restored
+    the literal px values (the compiler's css-token lint only rejects raw
+    *colors*, not raw lengths — confirmed empirically) to stay faithful to
+    the baseline's fine ring geometry; a design-system fix would add a
+    sub-integer space step (or a dedicated halo-ring token) so hairline
+    decorative rings like this don't need literal numbers at all.
+  - Dot diameter (8px / 6px) and border-radius (50%) already had exact
+    token matches (`--icon-size-3xs`, `--space-1_5`, `--radius-full`) from
+    the prior pass and are kept as-is.
+  - No LANG-GAP: every prop/slot/ARIA rule from the baseline is fully
+    expressible on this surface.
 -->
 
 <prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
@@ -25,44 +57,26 @@
 <prop name="size" values="sm|md" default="md" reflect />
 <prop name="label" type="string" default="" />
 
-<theme prop="tone" channels="tone-fg, tone-halo-strong, tone-halo-soft">
-  default:     foreground,         tone-default-border,     tone-default-ring
-  primary:     primary,            tone-primary-border,     tone-primary-ring
-  info:        info,               tone-info-border,        tone-info-ring
-  success:     success,            tone-success-border,     tone-success-ring
-  warning:     warning,            tone-warning-border,     tone-warning-ring
-  destructive: destructive,        tone-destructive-border, tone-destructive-ring
-  accent:      accent,             tone-accent-border,      tone-accent-ring
-  muted:       muted-foreground,   tone-muted-border,       tone-muted-ring
-</theme>
-
 <style>
   :host {
     display: inline-flex;
     vertical-align: middle;
-    /* tone-prefix locals — the <theme prop="tone"> block overrides
-     * per tone; declared here so the css_token lint resolves the
-     * references in .dot (the lint does not see <theme> blocks). */
-    --tone-fg: var(--success);
-    --tone-halo-strong: var(--tone-success-border);
-    --tone-halo-soft: var(--tone-success-ring);
   }
   .dot {
     display: inline-block;
     width: var(--icon-size-3xs);
     height: var(--icon-size-3xs);
-    border-radius: 50%;
-    background: var(--tone-fg);
+    border-radius: var(--radius-full);
     box-shadow:
-      0 0 0 var(--space-1_25) var(--tone-halo-strong),
-      0 0 0 var(--space-4_5) var(--tone-halo-soft);
+      0 0 0 1.5px var(--tone-border),
+      0 0 0 4.5px var(--tone-ring);
   }
   :host([size='sm']) .dot {
     width: var(--space-1_5);
     height: var(--space-1_5);
     box-shadow:
-      0 0 0 1px var(--tone-halo-strong),
-      0 0 0 var(--space-3_5) var(--tone-halo-soft);
+      0 0 0 1px var(--tone-border),
+      0 0 0 3.5px var(--tone-ring);
   }
 
   :host([pulse]) .dot { animation: sui-status-dot-pulse 2.5s var(--ease-out) infinite; }
@@ -82,4 +96,5 @@
   role={label() ? 'img' : null}
   aria-label={label() || null}
   aria-hidden={label() ? null : 'true'}
+  sx="bg:tone-fg"
 ></span>

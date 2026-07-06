@@ -1,29 +1,80 @@
+<!--
+  <sui-nav-top> — top application bar. A primitive layout that
+  provides the bar chrome (height, border, background) and three
+  named slots: `brand` (left), default (center, the primary nav
+  content), and `actions` (right, the trailing widgets). The
+  app fills each slot with whatever it needs — brand mark,
+  breadcrumbs, command-bar trigger, theme picker, account menu.
+
+  This is a composition primitive: the nav-top itself holds no
+  state. State lives in the slotted children (e.g. the theme
+  picker reads `ship.theme.state()`, the account chip reads
+  `ship.account.state()` via `@ship/sdk-client`). The nav-top
+  exposes a `sui:nav-top:ready` event after first mount so the
+  app can wire post-mount concerns.
+
+  Prop / event / slot
+  ───────────────────────────────────────────────────────────────────
+  sticky  (bool, false)  when true, position: sticky; top: 0 with
+                         a subtle backdrop blur.
+  ───────────────────────────────────────────────────────────────────
+  Slots:
+    brand     the brand mark / home link (left-aligned)
+    default   the primary nav content (center) — breadcrumbs,
+              per-view actions, command-bar host
+    actions   the trailing widgets (right) — theme, account, etc.
+  ───────────────────────────────────────────────────────────────────
+  Events (composed, bubbling):
+    sui:nav-top:ready {}  — fired once after first mount
+  ───────────────────────────────────────────────────────────────────
+  Parts: brand, primary, actions
+  ───────────────────────────────────────────────────────────────────
+  CSS custom properties:
+    --ship-top-bar-h  bar height; default 40px
+  ───────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────────────
+  - This component has THREE sibling root elements (brand/primary/actions
+    spans+div) — no single wrapping element to hang sx on for the host's
+    own chrome. `<host sx="…" />` is the compiler's directive for exactly
+    this: an element-less tag that lowers to a `:host{…}` rule (see
+    crates/sui/compiler/src/parse/preprocess.rs `lower_host_sx`). Used here
+    for the two closed-sx-expressible host declarations, `bg:muted` and
+    `fg:foreground`; `display:flex`, height, gap, padding, border,
+    typography, user-select, box-sizing, flex-shrink, and the `[sticky]`
+    position/z-index/backdrop-filter all stay in the residual `<style>` —
+    none of those are sx props (no raw-pixel height/backdrop-filter/
+    box-sizing/user-select surface).
+  - Fixed a real bug inherited from the prior automated sx-hoisting pass:
+    the residual-block explainer comment was left UNCLOSED (`/* Residual:
+    …` with no matching `*/`), which swallowed every rule after it —
+    `:host`, `.brand`, `.primary`, `.actions` — into one giant CSS comment.
+    The compiled stylesheet shipped with NO bar layout at all (just the
+    two hoisted host-sx declarations); this had no test coverage (feat/next
+    never had a sui-nav-top.test.ts either) so it would have shipped silently
+    broken. Closed the comment / rewrote it accurately.
+  - The empty `--token: ;` marker declarations above the residual block are
+    kept (harmless) — they exist so the css-token lint resolves the `var()`
+    references inside the residual block even though the block's own
+    selectors aren't literally `:host`/`.class` at parse time; same pattern
+    already used elsewhere on this surface (e.g. sui-select).
+  - No LANG-GAP: every prop/slot/event from the baseline is fully
+    expressible on this surface. No component test exists for this
+    primitive in feat/next either, so there is no vitest file to gate here.
+-->
+
 <prop name="sticky" type="bool" default="false" reflect />
 
-<!--
-  Residual <style> — sui-nav-top is largely irreducible. The host is a
-  flex bar that wants display:flex + align-items:center + gap + explicit
-  pixel height + border-bottom + background + font-family + user-select
-  + box-sizing + flex-shrink; only display + bg + fg are reachable
-  from sx via the new host-sx directive — the rest stay. The [sticky]
-  variant adds position:sticky + top + z-index + backdrop-filter, none
-  of which are sx surface props. The .brand / .primary / .actions
-  child zones use raw flex shorthand (flex 1 1 auto, flex-shrink 0,
-  min-width 0, overflow hidden) that has no sx equivalent.
-
-  Lifted to host-sx: display:flex + bg:muted + fg:foreground. The
-  rest stays as :host residual.
-
-  Local token markers are kept so the css-token lint recognizes the
-  tokens referenced from this block.
--->
 <host sx="bg:muted fg:foreground" />
 
 <style>
   --font-body: ; --foreground: ; --muted: ; --border: ; --ship-top-bar-h: ; --space-1: ; --space-2: ; --space-3: ; --text-sm: ; --z-sticky: ;
-  /* Residual: `:host` flex layout (align-items + gap), height +
-   * padding + border-bottom + user-select + box-sizing + flex-shrink
-   * (none in sx), the [sticky] sticky position + z-index, the [sticky]
+  /* Residual: `:host` flex layout (align-items + gap), height + padding +
+   * border-bottom + user-select + box-sizing + flex-shrink (none in sx),
+   * the [sticky] position/z-index + backdrop-filter, and the .brand /
+   * .primary / .actions child-zone flex shorthand (flex 1 1 auto,
+   * flex-shrink 0, min-width 0, overflow hidden) — no sx equivalent. */
   :host {
     display: flex;
     align-items: center;
@@ -34,10 +85,16 @@
     font-family: var(--font-body);
     font-size: var(--text-sm);
     user-select: none;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    overflow: hidden;
   }
-  :host([hidden]) { display: none; }
-  :host([sticky]) { position: sticky; top: 0; z-index: var(--z-sticky); }
-  :host([sticky]) { backdrop-filter: saturate(180%) blur(var(--space-2)); }
+  :host([sticky]) {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+    backdrop-filter: saturate(180%) blur(var(--space-2));
+  }
 
   .brand { display: inline-flex; align-items: center; flex-shrink: 0; }
   .primary {
