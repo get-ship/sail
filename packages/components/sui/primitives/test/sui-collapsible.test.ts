@@ -6,7 +6,8 @@ const reg = createContainerRegistry()
 afterEach(() => reg.cleanup())
 
 const shadow = (el: HTMLElement) => el.shadowRoot!
-const triggerWrap = (el: HTMLElement) => shadow(el).querySelector('.trigger-wrap') as HTMLElement | null
+const detailsEl = (el: HTMLElement) => shadow(el).querySelector('details') as HTMLDetailsElement | null
+const summaryEl = (el: HTMLElement) => shadow(el).querySelector('summary') as HTMLElement | null
 const contentWrap = (el: HTMLElement) => shadow(el).querySelector('.content-wrap') as HTMLElement | null
 
 function makeCollapsible(attrs: Record<string, string | boolean> = {}) {
@@ -25,25 +26,31 @@ describe('<sui-collapsible>', () => {
     expect(el.hasAttribute('open')).toBe(false)
   })
 
-  it('open attribute reflects on host', () => {
+  it('open attribute reflects on host and native <details>', async () => {
     const { el } = makeCollapsible({ open: true })
+    await flush()
     expect(el.hasAttribute('open')).toBe(true)
+    expect(detailsEl(el)!.open).toBe(true)
   })
 
-  it('trigger click opens collapsible', async () => {
+  it('renders a native <details>/<summary> pair', () => {
     const { el } = makeCollapsible()
-    const btn = el.querySelector('button[slot=trigger]') as HTMLButtonElement
-    btn.click()
+    expect(detailsEl(el)).not.toBeNull()
+    expect(summaryEl(el)).not.toBeNull()
+  })
+
+  it('clicking the summary (native disclosure) opens the collapsible', async () => {
+    const { el } = makeCollapsible()
+    summaryEl(el)!.click()
     await flush()
     expect(el.hasAttribute('open')).toBe(true)
   })
 
-  it('second trigger click closes collapsible', async () => {
+  it('second click closes it again', async () => {
     const { el } = makeCollapsible()
-    const btn = el.querySelector('button[slot=trigger]') as HTMLButtonElement
-    btn.click()
+    summaryEl(el)!.click()
     await flush()
-    btn.click()
+    summaryEl(el)!.click()
     await flush()
     expect(el.hasAttribute('open')).toBe(false)
   })
@@ -52,7 +59,7 @@ describe('<sui-collapsible>', () => {
     const { el } = makeCollapsible()
     let evt: CustomEvent | null = null
     el.addEventListener('sui-toggle', (e) => { evt = e as CustomEvent })
-    el.querySelector('button[slot=trigger]')!.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    summaryEl(el)!.click()
     await flush()
     expect(evt!.detail).toEqual({ open: true })
     expect(evt!.bubbles).toBe(true)
@@ -61,92 +68,24 @@ describe('<sui-collapsible>', () => {
 
   it('toggle fires sui-toggle with {open: false} on second click', async () => {
     const { el } = makeCollapsible({ open: true })
+    await flush()
     let detail: { open: boolean } | null = null
     el.addEventListener('sui-toggle', (e) => { detail = (e as CustomEvent).detail })
-    const tw = triggerWrap(el)!
-    tw.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    summaryEl(el)!.click()
     await flush()
     expect(detail).toEqual({ open: false })
   })
 
-  it('disabled=true — trigger click does nothing', async () => {
+  it('disabled=true — click on summary does nothing (LANG-GAP: <details> has no native disabled)', async () => {
     const { el } = makeCollapsible({ disabled: true })
-    el.querySelector('button[slot=trigger]')!.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    summaryEl(el)!.click()
     await flush()
     expect(el.hasAttribute('open')).toBe(false)
-  })
-
-  it('trigger has aria-expanded=false when closed', async () => {
-    const { el } = makeCollapsible()
-    await flush()
-    const btn = el.querySelector('button[slot=trigger]') as HTMLElement
-    expect(btn.getAttribute('aria-expanded')).toBe('false')
-  })
-
-  it('trigger has aria-expanded=true when open', async () => {
-    const { el } = makeCollapsible({ open: true })
-    await flush()
-    const btn = el.querySelector('button[slot=trigger]') as HTMLElement
-    expect(btn.getAttribute('aria-expanded')).toBe('true')
-  })
-
-  it('trigger aria-expanded updates after toggle', async () => {
-    const { el } = makeCollapsible()
-    const btn = el.querySelector('button[slot=trigger]') as HTMLButtonElement
-    await flush()
-    expect(btn.getAttribute('aria-expanded')).toBe('false')
-    btn.click()
-    await flush()
-    expect(btn.getAttribute('aria-expanded')).toBe('true')
-  })
-
-  it('trigger has aria-controls pointing to content-wrap id', async () => {
-    const { el } = makeCollapsible()
-    await flush()
-    const btn = el.querySelector('button[slot=trigger]') as HTMLElement
-    const controls = btn.getAttribute('aria-controls')
-    expect(controls).toBeTruthy()
-    const wrap = contentWrap(el)!
-    expect(wrap.id).toBe(controls)
-  })
-
-  it('content-wrap has an id attribute', async () => {
-    const { el } = makeCollapsible()
-    await flush()
-    expect(contentWrap(el)!.id).toMatch(/^sui-collapsible-\d+$/)
   })
 
   it('content-wrap has part=content', () => {
     const { el } = makeCollapsible()
     expect(contentWrap(el)!.getAttribute('part')).toBe('content')
-  })
-
-  it('non-interactive trigger gets tabindex=0', async () => {
-    const { el } = mount(
-      reg,
-      'sui-collapsible',
-      {},
-      '<div slot="trigger">Toggle</div><div>Content</div>',
-    )
-    await flush()
-    const trigger = el.querySelector('[slot=trigger]') as HTMLElement
-    expect(trigger.getAttribute('tabindex')).toBe('0')
-  })
-
-  it('Enter key on trigger-wrap toggles open', async () => {
-    const { el } = makeCollapsible()
-    const tw = triggerWrap(el)!
-    tw.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
-    await flush()
-    expect(el.hasAttribute('open')).toBe(true)
-  })
-
-  it('Space key on trigger-wrap toggles open', async () => {
-    const { el } = makeCollapsible()
-    const tw = triggerWrap(el)!
-    tw.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }))
-    await flush()
-    expect(el.hasAttribute('open')).toBe(true)
   })
 
   it('content slot projects into content-inner', () => {
