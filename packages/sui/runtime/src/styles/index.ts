@@ -111,9 +111,28 @@ const hostAttrs = (css: string): string =>
   // `:host([tone='x'])` → `[tone='x']` — the element IS the host in light DOM.
   css.replace(/:host\(\[([^)]+)\]\)/g, '[$1]')
 
+// The INTERACTIVE-SURFACE contracts — the framework decisions no component
+// re-makes (the audit's control-baseline + focus + disabled clusters:
+// ~18% of all baseline CSS was these, hand-repeated). Scoped inside
+// [data-component] so host pages are untouched; :where() keeps specificity
+// at zero so any component rule wins ties.
+const CONTROL_CONTRACTS_CSS =
+  // Control baseline: what a control IS before any skin.
+  '[data-component] :where(button, input, textarea, select) { font: inherit; font-family: var(--font-body); letter-spacing: inherit; color: inherit; }\n' +
+  '[data-component] :where(button) { line-height: 1; user-select: none; white-space: nowrap; cursor: pointer; }\n' +
+  '[data-component] :where(input, textarea, select) { appearance: none; }\n' +
+  // Focus: one ring, everywhere, token-driven — never re-authored.
+  '[data-component] :where(button, input, textarea, select, a, [tabindex]):focus-visible { outline: var(--ring-width, 2px) solid var(--ring); outline-offset: var(--ring-offset, 2px); }\n' +
+  '@media (forced-colors: active) { [data-component] :where(button, input, textarea, select, a, [tabindex]):focus-visible { outline: 2px solid CanvasText; } }\n' +
+  // Disabled: the treatment, once.
+  '[data-component] :where(button, input, textarea, select):disabled { cursor: not-allowed; opacity: 0.5; }\n' +
+  // Interactive transition defaults from the motion tokens.
+  '[data-component] :where(button, a, [tabindex]) { transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }\n'
+
 const LIGHT_CONTRACTS_CSS =
   hostAttrs(TONES_CSS) +
   hostAttrs(SIZES_CSS) +
+  CONTROL_CONTRACTS_CSS +
   // Host defaults for light components (the :host base rules, element-keyed).
   '[data-component] { display: block; color: var(--foreground); }\n' +
   '[data-component][hidden] { display: none !important; }\n' +

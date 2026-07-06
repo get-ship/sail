@@ -99,6 +99,12 @@ describe('light-DOM component registration', () => {
     expect(css).toContain("[size='sm']")
     expect(css).not.toContain(':host')
     expect(css).toContain('slot { display: contents; }')
+    // The interactive-surface contracts: baseline, focus, disabled,
+    // transitions — framework decisions no component re-makes.
+    expect(css).toContain(':focus-visible')
+    expect(css).toContain(':disabled')
+    expect(css).toContain('forced-colors: active')
+    expect(css).toMatch(/:where\(button\)[^}]*user-select: none/)
   })
 
   it('shadow: true still attaches a shadow root (the containment feature)', () => {
