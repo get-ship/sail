@@ -25,6 +25,27 @@
 
 <prop name="target" type="string" default="body" />
 
+<!--
+  NEW SURFACE (re-port from feat/next, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────
+  - portal has no tone/size. No <theme> block, no per-component
+    :host([tone='…']) or :host([size='…']) redeclaration. The
+    framework's global tone/size channels are irrelevant — the
+    portal element renders nothing in its own box.
+  - The :host display:none is the only surface authoring, and it
+    stays in <style> because sx/theme/variants can't reach a bare
+    :host display rule. The comment block in <style> above the
+    rule already documents the irreducible case.
+  - The teleportation is in the controller (mount/cleanup), not in
+    the template — this is a behavioral primitive, not a styled one.
+    Test selectors assert parent-of teleported nodes (document.body,
+    a custom sink) and the light-DOM parent's querySelector returning
+    null post-teleport; no class- or part-based anatomy to migrate.
+  - No L1 controls involved (the slot is content-only; the host
+    has no chrome).
+-->
+
+
 <style>
   /* Host is invisible — slotted children are physically teleported under
      `target`; rendering them in the host's own box would double-render in

@@ -55,6 +55,31 @@
 <prop name="empty-label" type="string" default="No results found." />
 <prop name="size" values="sm|md|lg" default="md" reflect />
 
+<!--
+  NEW SURFACE (re-port from feat/next, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────
+  - cmdk has no tone/size of its own. The framework's global tone/size
+    channels aren't relevant — this component never reads var(--tone)
+    or var(--size-h). No <theme> block, no per-component tone/size
+    redeclaration in :host.
+  - Closes its dialog through the <sui-dialog> it composes. The dialog
+    owns tone (its own prop), so cmdk's `size={size()}` is forwarded
+    into the dialog's tone/size contract — and the dialog renders
+    inside the same global channel system.
+  - sx is the closed-vocab surface for everything reachable via a
+    token + a layout keyword (column/row/gap/align/padding/radius/
+    color/text). The <row>/<column> primitives in the template carry
+    the flex/grid layout that feat/next authored by hand; the residual
+    <style> below only keeps the selectors sx/variants cannot express
+    (host baseline, downstream shadow part reset, native input reset,
+    list scroll/overscroll, listbox <li> per-row styling with the
+    class-selector + .hl + .disabled + .item-icon descendant compound).
+  - The L1 <input> skin (text input baseline from contracts.css) is
+    still inherited for font-family/color/focus-visible/disabled; the
+    .entry reset zeros the surface the cmdk owns (border, padding,
+    background, font-size) so the search bar is flush to its chrome.
+-->
+
 <!-- Residual: `:host { display:contents }` baseline (host doesn't
      take sx); `sui-dialog::part(body) { padding:0 }` — restyling a
      downstream shadow part can't reach via variants/sx; the
