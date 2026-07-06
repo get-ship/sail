@@ -118,6 +118,28 @@
 
   <separator></separator>
 
+  <!-- The growing L2 library — behavioral compounds composed ON the language.
+       (Follow-along: re-ported from feat/next onto the new surface, wave by
+       wave. These are shadow components; their internals use L1 controls.) -->
+  <column gap="5">
+    <label size="sm">the library — behavioral components, all on the new surface</label>
+    <sui-tabs active="overview">
+      <sui-tab name="overview">Overview</sui-tab>
+      <sui-tab name="activity" count="3">Activity</sui-tab>
+      <sui-tab name="settings">Settings</sui-tab>
+      <sui-tab-panel name="overview" active>A live overview of the deployment.</sui-tab-panel>
+      <sui-tab-panel name="activity">3 new events since your last visit.</sui-tab-panel>
+      <sui-tab-panel name="settings">Configure build &amp; deploy options.</sui-tab-panel>
+    </sui-tabs>
+    <sui-timeline>
+      <sui-timeline-item at="09:30" tone="success"><span slot="title">Build passed</span>24 checks green in 42s.</sui-timeline-item>
+      <sui-timeline-item at="09:45" tone="info"><span slot="title">Deployed to staging</span>job/site-demos → staging.</sui-timeline-item>
+      <sui-timeline-item at="10:02"><span slot="title">Promoted to production</span>Live for all users.</sui-timeline-item>
+    </sui-timeline>
+  </column>
+
+  <separator></separator>
+
   <!-- The minimal primitives, for completeness. -->
   <column gap="3">
     <label size="sm">spinner · icon</label>
