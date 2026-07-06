@@ -21,6 +21,56 @@
         aria-haspopup=listbox, aria-activedescendant pointing at the
         highlighted listbox row.
   ─────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────
+  - tone/size are GLOBAL framework channels now (contracts.css). feat/next
+    hand-rolled `:host([tone='x']) { --tone-border: …; --tone-ring: … }`
+    and `:host([size='x']) { --h: …; --fs: …; --px: … }` directly in its
+    own residual style block (no theme directive even there — an older
+    pattern still).
+    Both are DELETED; this skin reads var(--tone-border)/var(--tone-ring)
+    and var(--size-h)/var(--size-px)/var(--size-fs) straight off the
+    framework sheets. combobox's 8 tone values are exactly the framework's
+    8 tones, so there's no per-component gap to fill.
+  - The focus-within / open ring keeps feat/next's single box-shadow-glow
+    shape (not the framework's two-layer `ring:` sx composition — that
+    reads as a different, offset-gap shape). The raw `3px` becomes
+    `var(--ring-width)`, the framework's own token for this thickness.
+  - Disabled: feat/next's `filter: saturate(0.6)` has no sx/token
+    equivalent (filter isn't sx vocabulary, and no token expresses a
+    saturation amount) — collapsed to the sx `opacity:50` the framework's
+    own control-contracts already use for disabled controls
+    (`:disabled { opacity: 0.5 }`), same "dimmed, inert" signal through
+    the closed vocabulary instead of a hand-tuned filter.
+  - The input, once nested in a shadow root, now inherits the framework's
+    global field skin (border/padding/shadow/min-height — shadow roots
+    adopt the control skins alongside tone/size). Since the field "box"
+    look here lives on .wrap (not the bare input), the input's inherited
+    skin is cancelled via sx (border:none / shadow:none / p:0) so it
+    doesn't draw a second box inside the wrap. `outline: 0` (kept, feat/
+    next's own choice) similarly cancels the input's own focus-visible
+    ring in favour of the wrap's.
+
+  LANG-GAP — chevron rotation, compound hover state, and plain `flex`
+  ─────────────────────────────────────────────────────────────────────
+  `transform: rotate(180deg)` on the open chevron has no sx property at
+  all (no transform/rotate in the vocabulary) — kept in the residual style
+  block, same as feat/next; not a token-drift issue (no rotation-token
+  concept exists to have missed). Likewise the hover affordance
+  `:not([disabled]) .wrap:hover:not(:focus-within):not([data-open])` is a
+  compound, multi-condition selector neither sx state-prefixes nor a
+  variants block can express (its grammar covers single attributes or a
+  static AND-group, not :hover combined with two :not() exclusions) —
+  kept in the residual style, token-only (--border-strong, --shadow-sm).
+
+  A third, more systemic gap: sx's `display` enum offers `inline-flex`
+  but no plain `flex` — so a BLOCK-level flex row (needed here for the
+  full-width, full-height-hit-area option rows; inline-flex would shrink
+  each option row to its content width) can't be reached through sx at
+  all and stays hand-authored in the residual style. This isn't specific
+  to combobox — any full-width flex row (list rows, panel rows) hits the
+  same wall.
 -->
 
 <prop name="name" type="string" default="" />
@@ -31,87 +81,44 @@
 <prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
 <prop name="size" values="sm|md|lg" default="md" reflect />
 
-<theme prop="tone" channels="tone-border, tone-ring">
-  default:     border,    primary
-  primary:     primary,   primary
-  info:        info,      info
-  success:     success,   success
-  warning:     warning,   warning
-  destructive: destructive, destructive
-  accent:      accent,    accent
-  muted:       muted-foreground, muted-foreground
-</theme>
+<host sx="position:relative display:inline-flex w:full"></host>
 
 <variants part="wrap">
-  size=sm: min-h:control-h-sm text:xs px:2
-  size=md: min-h:control-h-md text:base px:density-row-px
-  size=lg: min-h:control-h-lg text:sm px:3
-
-  disabled:    bg:muted border:border cursor:not-allowed
+  [disabled]: bg:muted border:border shadow:none cursor:not-allowed opacity:50
 </variants>
 
-<variants part="chevron">
-  [data-open]: shadow:none
-</variants>
-
-<variants part="opt">
-  [data-hl]: bg:selected-bg
-</variants>
-
-<variants part="input">
-  disabled: cursor:not-allowed
-</variants>
-
-<!--
-  Residual <style> — truly unavoidable bits:
-  - :host position + display + flex-direction + width + vertical-align
-  - :host tone/size CSS vars (consumed by .wrap via calc)
-  - .wrap :hover elevation (host(:not([disabled])) .wrap:hover:not(:focus-within):not([data-open]))
-  - .wrap :focus-within + [data-open] box-shadow ring (raw, calc off a --tone-ring var)
-  - :host([disabled]) .wrap filter: saturate(0.6)
-  - :host([disabled]) input.entry color: muted-foreground
-  - input.entry font: inherit + font-family + outline: 0
-  - input.entry::placeholder color
-  - input.entry:disabled cursor
-  - .chevron transform: rotate(180deg) on [data-open] (raw transform)
-  - .listbox position: absolute + top calc + max-height + overflow-y + z-index
-  - .opt font-family + user-select
-  - .opt[aria-selected='true'] font-weight
-  - .empty text-align: center
--->
 <style>
   :host {
-    position: relative;
-    display: inline-flex;
     flex-direction: column;
-    width: 100%;
     vertical-align: middle;
   }
+  .wrap,
+  .opt,
+  .empty {
+    font-family: var(--font-body);
+  }
   .wrap {
-    box-shadow: 0 0 0 3px var(--tone-ring);
+    align-items: center;
+    gap: var(--space-2);
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
   }
   :host(:not([disabled])) .wrap:hover:not(:focus-within):not([data-open]) {
     border-color: var(--border-strong);
     box-shadow: var(--shadow-sm);
   }
-  :host([data-open]) .wrap { border-color: var(--tone-ring); }
-  :host([disabled]) .wrap {
-    filter: saturate(0.6);
+  .wrap:focus-within,
+  :host([data-open]) .wrap {
+    border-color: var(--tone-ring);
+    box-shadow: 0 0 0 var(--ring-width) var(--tone-ring);
   }
-  :host([disabled]) input.entry { color: var(--muted-foreground); }
-  input.entry {
+  .entry {
     flex: 1;
     min-width: 0;
-    border: 0;
     outline: 0;
-    background: transparent;
-    padding: 0;
-    font: inherit;
-    font-family: var(--font-body);
-    color: var(--foreground);
   }
-  input.entry::placeholder { color: var(--muted-foreground); }
-  input.entry:disabled { cursor: not-allowed; }
   .chevron {
     flex: 0 0 auto;
     pointer-events: none;
@@ -119,30 +126,29 @@
   }
   :host([data-open]) .chevron { transform: rotate(180deg); }
   .listbox {
-    position: absolute;
     top: calc(100% + var(--space-1));
     left: 0;
     right: 0;
-    max-height: var(--panel-max-h-sm);
-    overflow-y: auto;
-    margin: 0;
     list-style: none;
-    z-index: var(--z-popover);
   }
   .opt {
-    font-family: var(--font-body);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
     user-select: none;
   }
   .opt[aria-selected='true'] { font-weight: var(--font-weight-semibold); }
-  .empty {
-    text-align: center;
-  }
+  .opt.hl { background: var(--selected-bg); }
+  .empty { text-align: center; }
 </style>
 
-<row class="wrap" part="wrap" align="center" gap="2"
-  sx="w:full bg:background border:tone-border radius:md shadow:xs">
+<div class="wrap" part="wrap"
+  sx="display:inline-flex w:full min-h:size-h px:size-px bg:background border:tone-border radius:md shadow:xs">
   <input
-    class="entry" part="input" type="text"
+    class="entry"
+    part="input"
+    type="text"
     name={name()}
     placeholder={placeholder()}
     disabled={disabled()}
@@ -156,6 +162,7 @@
     aria-activedescendant={activeId()}
     bind:value={filterText}
     bind:this={inputEl}
+    sx="text:size-fs fg:foreground border:none shadow:none p:0"
   />
   <svg class="chevron" part="chevron" viewBox="0 0 16 16" aria-hidden="true"
        fill="none" stroke="currentColor" stroke-width="1.75"
@@ -163,29 +170,26 @@
        sx="w:icon-size-sm h:icon-size-sm fg:muted-foreground">
     <path d="M4 6l4 4 4-4"></path>
   </svg>
-</row>
+</div>
 {#if open() && !disabled()}
-  <column class="listbox" part="listbox" role="listbox" id={listId()} gap="0"
-    bind:this={listEl}
-    sx="p:1 bg:popover fg:popover-foreground border:border radius:md shadow:md">
+  <ul class="listbox" part="listbox" role="listbox" id={listId()}
+      bind:this={listEl}
+      sx="position:absolute m:0 p:1 max-h:panel-max-h-sm overflow-y:auto bg:popover fg:popover-foreground border:border radius:md shadow:md z:popover">
     {#for o of visibleOptions() key={o.id}}
-      <row
-        class="opt" part="opt"
+      <li
+        class="opt"
         class:hl={o.idx === highlight()}
-        attr:data-hl={o.idx === highlight()}
         role="option"
         id={o.id}
         data-value={o.value}
         aria-selected={o.value === value() ? 'true' : 'false'}
-        align="center" gap="2"
-        sx="p:2 radius:sm fg:foreground cursor:pointer"
-      >{o.label}</row>
-
+        sx="p:2 radius:sm text:size-fs fg:foreground"
+      >{o.label}</li>
     {/for}
     {#if visibleOptions().length === 0}
       <li class="empty" part="empty" role="presentation"
-        sx="p:2 fg:muted-foreground">No matches</li>
+        sx="p:2 text:size-fs fg:muted-foreground">No matches</li>
     {/if}
-  </column>
+  </ul>
 {/if}
 <span hidden><slot bind:this={optionsSlot}></slot></span>
