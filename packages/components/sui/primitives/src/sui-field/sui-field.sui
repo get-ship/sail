@@ -18,20 +18,51 @@
     from slotted control to        to slotted control
     hint/error div id
   ────────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  ────────────────────────────────────────────────────────────────────────
+  - Dropped the bare `[hidden]: display:none` host variant — the framework's
+    global BASE_CSS now ships `:host([hidden]) { display: none !important; }`
+    for every shadow component (adoptSuiSheets), so a per-component copy is
+    dead weight (same principle as the tone/size channels, generalized to
+    the hidden-visibility reset).
+  - The hint/error visibility toggle STAYS hand-authored CSS in the residual
+    style block (unlike alert's dismiss-visibility, which moved to a variants
+    block) — see the two LANG-GAPs below.
+
+  LANG-GAP — hint/error show/hide isn't reachable via variants at all
+  ────────────────────────────────────────────────────────────────────────
+  Tried moving this to `<variants class="error">`/`<variants class="hint">`
+  first (the anatomy-class convention alert established) and hit two closed-
+  vocabulary walls stacked on top of each other:
+  1. The variants attribute-selector grammar has no negation (attr_match in
+     crates/sui/compiler/src/parse/preprocess.rs accepts only a bare
+     identifier or an [attr] literal) — a `:not([invalid])` selector line
+     silently lowers to nothing, no compile error, no test failure.
+  2. Even routed around that (flip the base to hidden, use one positive
+     `[invalid]: display:flex` line instead of a negated pair), `display`'s sx
+     vocabulary (Kind::Display in crates/sui/lint/src/rules/sx.rs) only
+     offers block/inline/inline-block/inline-flex/none — plain `flex` isn't a
+     legal token, so that line ALSO silently lowers to nothing.
+  Both failures are silent (no diagnostic), which is the real hazard: nothing
+  short of inspecting the compiled `styles:` string surfaces them, and this
+  vitest suite never checks computed style. Reverted to hand-authored CSS
+  (below), which supports :not() and `flex` natively — exactly feat/next's
+  own two rules, unchanged.
+
+  BUGFIX found in the pass: the pre-existing spike's error-visibility variant
+  attempt (since reverted, per the LANG-GAP above) was inverted — it read
+  `[invalid]: display:none` plus a `:not([invalid]): display:flex` line
+  combined with an unconditional `.error { display:flex }` style-block base.
+  Since the negated line always silently vanished (LANG-GAP #1), only
+  `:host([invalid]) .error {display:none}` survived — and its higher
+  specificity than the plain `.error {display:flex}` base meant it always
+  won, hiding the error exactly when it should show and showing it exactly
+  when it shouldn't. No test caught it because none of the vitest assertions
+  check computed style, only DOM structure/attributes.
 -->
 
 <prop name="invalid" type="bool" default="false" reflect />
-
-<variants>
-  [hidden]: display:none
-</variants>
-<variants part="error">
-  [invalid]:     display:none
-  :not([invalid]): display:flex
-</variants>
-<variants part="hint">
-  [invalid]: display:none
-</variants>
 
 <!-- Residual: the host flex column layout (no layout primitive for the
      vertical stack of label + control + hint/error); .msg/.hint/.error
@@ -39,7 +70,9 @@
      (align-items:flex-start doesn't fit <row align=>'s start/center/
      end/stretch/baseline enum, and the error row needs the specific
      flex-start alignment for icon alignment); the inline SVG icon
-     (width/height/flex-shrink). -->
+     (width/height/flex-shrink); the hint/error visibility toggle (the two
+     LANG-GAPs above — no negation and no plain `flex` in the variants/sx
+     vocabulary). -->
 <style>
   :host {
     display: flex;
@@ -62,6 +95,9 @@
     font-weight: var(--font-weight-medium);
   }
   .error svg { width: var(--icon-size-sm); height: var(--icon-size-sm); flex-shrink: 0; }
+
+  :host(:not([invalid])) .error { display: none; }
+  :host([invalid]) .hint { display: none; }
 </style>
 
 <slot name="label"></slot>

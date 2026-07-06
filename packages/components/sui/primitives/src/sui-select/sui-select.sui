@@ -1,3 +1,64 @@
+<!--
+  sui-select — SUI port of ship-select. Wraps a native select. Options are
+  declared as light-DOM option/optgroup children and cloned into the shadow
+  select via slot-driven sync. Renders a polished chrome (custom chevron,
+  hover surface, stacked focus ring, tone/size channels) on top of the
+  native control so the OS popup still fires.
+
+  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  ────────────────────────────────────────────────────────────────────────
+  - Deleted both per-component theme blocks (a 6-channel tone block and a
+    6-channel size block). tone/tone-fg/tone-bg/tone-border/tone-ring now
+    come free from the framework's global tone contract (adopted into every
+    shadow root); size-h/size-px/size-fs/size-gap come free from the global
+    size contract. Both replace the old sel-* / tone-border-strong /
+    tone-bg-hover names below.
+  - Verified the old six per-tone rows against the new global tone contract
+    row by row: tone/tone-fg/tone-border/tone-ring are identical for every
+    one of the 7 tones this prop declares. tone-border-strong equaled
+    tone-border for every NAMED tone already (only the default-tone row
+    differed, and that branch is always overridden by the invalid/default
+    focus rule below anyway); tone-bg-hover equaled the new tone-bg,
+    tone-for-tone. So the rename is a pure channel-name swap, zero visual
+    change.
+  - Verified the old per-size row against the new global size contract too:
+    control-h-sm/md/lg, and the sm/md/lg font sizes and inline paddings, land
+    on the EXACT same pixel values as the old (already-token-based) sel-h/
+    sel-px/sel-fs — this scale was evidently reverse-engineered from these
+    very components. sel-gap is the one exception: old sel-gap was space-1_5
+    for sm and space-2 for md/lg; the new size-gap channel matches for md/lg
+    but the row layout primitive's gap= attribute only accepts a static
+    integer (no per-size responsiveness — see the LANG-GAP below), so this
+    was already approximated as a fixed gap="2" before this pass and stays
+    that way.
+  - No global channel replaces the old sel-chev (per-size chevron icon size)
+    or sel-pad-end-extra (the icon gutter's constant extra end-padding) —
+    the size contract is exactly 4 channels (h/px/fs/gap), nothing icon-
+    shaped. Re-expressed as a small LOCAL --chev custom property (attribute-
+    selector CSS, not a theme block) plus the plain space-1_5 token, in the
+    residual style block below — same values as before (icon-size-xs/sm/md
+    for sm/md/lg, space-1_5 always), just without the theme block ceremony.
+
+  LANG-GAP — the field row's gap can't track the size prop
+  ────────────────────────────────────────────────────────────────────────
+  <row>'s gap attribute is a static token (an integer 0-8), not a dynamic
+  binding — it cannot read a framework channel or vary per host-attribute
+  the way sx/variants can. feat/next's sel-gap varies (space-1_5 at sm,
+  space-2 at md/lg); the row is pinned to gap="2" (space-2) for all three
+  sizes, so the sm select's inner gap renders 2px wider than feat/next.
+  Pre-existing (carried over from the prior "dissolve style" pass, not
+  introduced here) — sui-button's own LANG-GAP list names the identical
+  limitation for its inner content row. Flagged again here since it recurs.
+
+  LANG-GAP (recurring, wave-wide, already reported by the alert pilot) —
+  this component still compiles shadow DOM, not light DOM. Per surface rule
+  5 light DOM is the target, but the shared vitest harness
+  (shadowForComponentCompilePlugin) hardcodes shadow mode and the CLI's own
+  component-mode default is also shadow; nothing in today's harness exercises
+  a light-DOM compile of a tagged component, so switching would be an
+  untested, ungatable change. Left on shadow, matching the alert precedent.
+-->
+
 <prop name="value" type="string" default="" form-value />
 <prop name="name" type="string" default="" />
 <prop name="required" type="bool" default="false" reflect />
@@ -8,49 +69,39 @@
 <prop name="label" type="string" default="" />
 <prop name="described-by" type="string" default="" />
 
-<theme prop="tone" channels="tone, tone-fg, tone-border, tone-border-strong, tone-bg-hover, tone-ring">
-  default:     foreground, foreground, border,          border-strong,    hover-bg, ring
-  info:        info,        info,        tone-info-border,        tone-info-border,        tone-info-bg,        tone-info-ring
-  success:     success,     success,     tone-success-border,     tone-success-border,     tone-success-bg,     tone-success-ring
-  warning:     warning,     warning,     tone-warning-border,     tone-warning-border,     tone-warning-bg,     tone-warning-ring
-  destructive: destructive, destructive, tone-destructive-border, tone-destructive-border, tone-destructive-bg, tone-destructive-ring
-  accent:      accent,      accent,      tone-accent-border,      tone-accent-border,      tone-accent-bg,      tone-accent-ring
-  muted:       muted-foreground, muted-foreground, tone-muted-border, tone-muted-border, tone-muted-bg, tone-muted-ring
-</theme>
-
-<theme prop="size" channels="sel-h, sel-px, sel-fs, sel-gap, sel-chev, sel-pad-end-extra">
-  sm: control-h-sm,  density-row-px, text-xs,  space-2, icon-size-xs, space-1_5
-  md: control-h-md,  space-3,        density-text, space-2, icon-size-sm, space-1_5
-  lg: control-h-lg,  space-4,        text-sm,  space-2, icon-size-md, space-1_5
-</theme>
-
-<variants part="field">
+<variants class="field">
   invalid:  border:destructive
   disabled: bg:muted border:subtle shadow:none cursor:not-allowed
 </variants>
 
 <style>
-    /* Local markers so the css-token lint recognizes the theme channels
-     * referenced from this residual block. */
-    --tone: ; --tone-fg: ; --tone-bg-hover: ; --tone-border: ; --tone-border-strong: ; --tone-ring: ; --sel-h: ; --sel-px: ; --sel-fs: ; --sel-gap: ; --sel-chev: ; --sel-pad-end-extra: ; --font-body: ;
-  /* Residual: `:host` (the host element doesn't take sx, and
-   * `[hidden]` isn't a prop), multi-property transitions, the
-   * absolute-positioned native <select> overlay (computed padding for
-   * the chevron gutter), the value/chevron element positioning, the
-   * stacked focus-ring box-shadow (multi-shadow, no sx vocabulary),
-   * the `filter: saturate()` on disabled, the `select option` cloned-
-   * child override, the `@media (forced-colors)` system-color
-   * outline, the prefers-reduced-motion opt-out, and the
-   * placeholder-color cue. */
+    /* Local markers so the css-token lint recognizes the framework size
+     * channels (size-h/size-px/size-fs/size-gap, from the global size
+     * contract) and this component's own local chevron-size custom
+     * property, referenced from this residual block. The tone channels
+     * need no marker — tone/tone-fg/tone-bg/tone-border/tone-ring are
+     * pre-registered convention tokens. */
+    --size-h: ; --size-px: ; --size-fs: ; --size-gap: ; --chev: ;
+  /* Residual: the host's own display/vertical-align (the framework's global
+   * block default doesn't fit an inline control), multi-property
+   * transitions, the absolute-positioned native select overlay (computed
+   * padding for the chevron gutter), the value/chevron element positioning,
+   * the stacked focus-ring box-shadow (multi-shadow, no sx vocabulary), the
+   * filter: saturate() on disabled, the select option cloned-child
+   * override, the forced-colors system-color outline, the
+   * prefers-reduced-motion opt-out, and the placeholder-color cue. */
   :host { display: inline-flex; vertical-align: middle; }
-  :host([hidden]) { display: none; }
   :host([disabled]) { color: var(--muted-foreground); filter: saturate(0.6); }
 
-  .field { gap: var(--sel-gap); user-select: none; -webkit-user-select: none; font-family: var(--font-body);
-    /* De-translated from sx (min-h:sel-h text:sel-fs) — ad-hoc channels are
-       not sx vocabulary. */
-    min-height: var(--sel-h);
-    font-size: var(--sel-fs);
+  .field {
+    gap: var(--size-gap);
+    user-select: none;
+    -webkit-user-select: none;
+    font-family: var(--font-body);
+    min-height: var(--size-h);
+    font-size: var(--size-fs);
+    padding-inline: var(--size-px);
+    padding-inline-end: calc(var(--size-px) + var(--chev, var(--icon-size-sm)) + var(--space-1_5));
     transition:
       background-color var(--duration-fast) var(--ease-out),
       border-color var(--duration-fast) var(--ease-out),
@@ -66,16 +117,18 @@
     border-color: var(--tone-border);
   }
   :host([tone]:not([tone='default']):not([disabled])) .field:hover {
-    background: var(--tone-bg-hover);
-    border-color: var(--tone-border-strong);
+    background: var(--tone-bg);
+    border-color: var(--tone-border);
   }
+  :host([size='sm']) { --chev: var(--icon-size-xs); }
+  :host([size='lg']) { --chev: var(--icon-size-md); }
 
-  /* The native <select> overlay — position absolute, font/color
-   * inherited, appearance:none, the chevron gutter. */
+  /* The native select overlay — position absolute, font/color inherited,
+   * appearance:none, the chevron gutter. */
   select {
     position: absolute; inset: 0; width: 100%; height: 100%; margin: 0;
-    padding-inline: var(--sel-px);
-    padding-inline-end: calc(var(--sel-px) + var(--sel-chev) + var(--sel-pad-end-extra));
+    padding-inline: var(--size-px);
+    padding-inline-end: calc(var(--size-px) + var(--chev, var(--icon-size-sm)) + var(--space-1_5));
     font: inherit; color: transparent; background: transparent;
     border: 0; outline: 0; appearance: none; -webkit-appearance: none;
     cursor: inherit; border-radius: var(--radius-md);
@@ -92,9 +145,9 @@
   :host([data-placeholder]) .value { color: var(--muted-foreground); }
 
   .chevron {
-    position: absolute; inset-block: 0; inset-inline-end: var(--sel-px);
+    position: absolute; inset-block: 0; inset-inline-end: var(--size-px);
     margin-block: auto;
-    width: var(--sel-chev); height: var(--sel-chev);
+    width: var(--chev, var(--icon-size-sm)); height: var(--chev, var(--icon-size-sm));
     color: var(--muted-foreground); pointer-events: none;
     transition:
       color var(--duration-fast) var(--ease-out),
@@ -108,7 +161,7 @@
    * --ring-color override set by select:focus-visible. */
   :host(:focus-within) .field {
     outline: none;
-    border-color: var(--tone-border-strong);
+    border-color: var(--tone-border);
     box-shadow:
       0 0 0 var(--ring-offset) var(--background),
       0 0 0 calc(var(--ring-offset) + var(--ring-width)) var(--tone-ring);
