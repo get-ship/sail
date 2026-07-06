@@ -36,6 +36,23 @@ pub fn emit_cem(program: &Program, opts: &CompileOpts) -> Value {
         let obj = declaration.as_object_mut().unwrap();
         obj.insert("formAssociated".into(), Value::Bool(true));
     }
+    // ANATOMY — the sui extension over standard CEM. Classes + slots are the
+    // published styling contract (classes ARE the anatomy in the light-DOM
+    // architecture; skins are written against them), `dom` records which side
+    // of the light/shadow seam this component compiles to. States live on the
+    // standard `attributes`/`members` entries (reflects: true).
+    {
+        let (classes, slots) = collect_anatomy(&program.template);
+        let obj = declaration.as_object_mut().unwrap();
+        obj.insert(
+            "anatomy".into(),
+            json!({
+                "dom": if meta.shadow { "shadow" } else { "light" },
+                "classes": classes,
+                "slots": slots,
+            }),
+        );
+    }
 
     let module = json!({
         "kind": "javascript-module",
@@ -54,6 +71,71 @@ pub fn emit_cem(program: &Program, opts: &CompileOpts) -> Value {
         "modules": [module],
         "_compilerVersion": crate::compiler_version().to_json(),
     })
+}
+
+/// Walk the template collecting the anatomy: author-authored class names
+/// (compile-generated `sx-*`/`sui-*` atomics excluded — they are emission
+/// detail, not contract) and slot names (`(default)` for the unnamed slot).
+/// Sorted + deduped for deterministic manifests.
+fn collect_anatomy(template: &[Instr]) -> (Vec<String>, Vec<String>) {
+    let mut classes = std::collections::BTreeSet::new();
+    let mut slots = std::collections::BTreeSet::new();
+    walk(template, &mut classes, &mut slots);
+    fn walk(
+        instrs: &[Instr],
+        classes: &mut std::collections::BTreeSet<String>,
+        slots: &mut std::collections::BTreeSet<String>,
+    ) {
+        for instr in instrs {
+            let children: &[Instr] = match instr {
+                Instr::Element(el) => {
+                    if el.tag == "slot" {
+                        let name = el.attrs.iter().find_map(|a| match a {
+                            AttrInstr::Static { name, value, .. } if name == "name" => {
+                                Some(value.clone())
+                            }
+                            _ => None,
+                        });
+                        slots.insert(name.unwrap_or_else(|| "(default)".into()));
+                    }
+                    for a in &el.attrs {
+                        if let AttrInstr::Static { name, value, .. } = a
+                            && name == "class"
+                        {
+                            for c in value.split_whitespace() {
+                                if !c.starts_with("sx-") && !c.starts_with("sui-") {
+                                    classes.insert(c.to_string());
+                                }
+                            }
+                        }
+                    }
+                    &el.children
+                }
+                Instr::If(i) => {
+                    for b in &i.branches {
+                        walk(&b.body, classes, slots);
+                    }
+                    &[]
+                }
+                Instr::For(f) => &f.body,
+                Instr::Match(m) => {
+                    for c in &m.cases {
+                        walk(&c.body, classes, slots);
+                    }
+                    if let Some(d) = &m.default {
+                        walk(d, classes, slots);
+                    }
+                    &[]
+                }
+                Instr::WhileLoading(w) => &w.body,
+                Instr::WhileError(w) => &w.body,
+                Instr::Let(l) => &l.body,
+                _ => &[],
+            };
+            walk(children, classes, slots);
+        }
+    }
+    (classes.into_iter().collect(), slots.into_iter().collect())
 }
 
 fn attr_entry(p: &PropDecl) -> Value {
