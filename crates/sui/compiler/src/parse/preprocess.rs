@@ -2006,6 +2006,24 @@ mod tests {
     }
 
     #[test]
+    fn stdlib_label_lowers_at_use_site() {
+        let out = preprocess(r#"<label for="email" required>Email</label>"#);
+        // Root class stamped, use-site attrs forwarded (bare `required` and
+        // `for` both merge onto the root untouched), children slotted.
+        assert!(out.contains("sui-label"), "{out}");
+        assert!(out.contains(r#"for="email""#), "{out}");
+        assert!(out.contains(" required"), "{out}");
+        assert!(out.contains(">Email<"), "children slotted: {out}");
+        assert!(out.contains(r#"class="req""#), "required marker is static structure: {out}");
+        // Skin joins once, keyed on the root class.
+        assert_eq!(
+            out.matches("font-family: var(--font-body)").count(),
+            1,
+            "skin once: {out}"
+        );
+    }
+
+    #[test]
     fn bare_enum_shorthand_desugars_on_framework_tags() {
         let out = preprocess(r#"<button primary solid sm on:click={f}>Go</button>"#);
         assert!(out.contains(r#"tone="primary""#), "{out}");
