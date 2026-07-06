@@ -47,6 +47,14 @@
 export interface PreviewSeed {
   props?: Record<string, string>
   innerHTML?: string
+  /** A representative STATIC surface, rendered instead of the live element.
+   *  For components that cannot show themselves in a frozen card — overlays
+   *  (closed + portaled to <body>) and disclosure (needs interaction) — this
+   *  is a hand-authored snapshot of what the component looks like OPEN,
+   *  using native HTML + token CSS vars only (runtime HTML can't use L1
+   *  elements or sx — both are compile-time). The mount renders this in the
+   *  stage and skips the live element entirely. */
+  staticHTML?: string
 }
 
 // Tiny sample-data helpers — keep the seeds readable. Strings only; the
