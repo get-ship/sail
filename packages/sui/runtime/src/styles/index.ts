@@ -184,6 +184,10 @@ const INPUT_SKIN_CSS =
 // lands as a structural element / L2, not a bare-input contract. LANG-GAP.)
 const CHECK_MARK =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.5l3 3 6-6'/%3E%3C/svg%3E\")"
+// The tri-state (indeterminate) glyph — a dash. Tree/table row-selection
+// drive this via `el.indeterminate = true` in JS; the contract must paint it.
+const DASH_MARK =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' d='M4 8h8'/%3E%3C/svg%3E\")"
 const TOGGLE_CONTROLS_CSS =
   // Shared box: sized to the font, bordered, on the background.
   ":where(input[type='checkbox'], input[type='radio']) { appearance: none; flex: none; width: 1.15em; height: 1.15em; min-height: 0; padding: 0; border: 1.5px solid var(--border-strong); background: var(--background); box-shadow: var(--shadow-xs); cursor: pointer; vertical-align: -0.2em; }\n" +
@@ -192,7 +196,12 @@ const TOGGLE_CONTROLS_CSS =
   // Checked: fill with the tone (default → primary), stamp the mark.
   ":where(input[type='checkbox']:checked, input[type='radio']:checked) { background-color: var(--tone, var(--primary)); border-color: var(--tone, var(--primary)); }\n" +
   `:where(input[type='checkbox']:checked) { background-image: ${CHECK_MARK}; background-position: center; background-size: 0.9em; background-repeat: no-repeat; }\n` +
-  ":where(input[type='radio']:checked) { box-shadow: inset 0 0 0 0.22em var(--background); }\n"
+  ":where(input[type='radio']:checked) { box-shadow: inset 0 0 0 0.22em var(--background); }\n" +
+  // Indeterminate (tri-state) checkbox — tone fill + dash. `:indeterminate`
+  // is a live DOM state (set in JS), not an attribute, so it only reaches
+  // here; tree/table select-all glyphs rely on it.
+  ":where(input[type='checkbox']:indeterminate) { background-color: var(--tone, var(--primary)); border-color: var(--tone, var(--primary)); }\n" +
+  `:where(input[type='checkbox']:indeterminate) { background-image: ${DASH_MARK}; background-position: center; background-size: 0.9em; background-repeat: no-repeat; }\n`
 
 // L1 <button> — the first language element skin. A bare <button> anywhere in
 // a SUI document IS the design system's button ("the web with default styles"):
