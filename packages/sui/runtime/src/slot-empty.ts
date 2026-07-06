@@ -30,33 +30,36 @@ export function bindSlotEmpty(
   host: HTMLElement,
   attrName: string,
 ): () => void {
-  // Light DOM: the slot is a plain projection wrapper (no shadow tree) —
-  // assignedNodes() is always [], the projected content lives INSIDE the
-  // slot as real children. Detect by root node.
-  const inShadow =
-    typeof ShadowRoot !== 'undefined' && slot.getRootNode() instanceof ShadowRoot
-  const nodesOf = (): Node[] =>
-    inShadow ? slot.assignedNodes({ flatten: true }) : Array.from(slot.childNodes)
+  // Where the content lives depends on the DOM kind: shadow assigns the
+  // host's light children to the slot (assignedNodes); light projection
+  // moves them INTO the slot wrapper (childNodes). This is decided LAZILY
+  // per read — the slot may still be detached (built in a fragment) at bind
+  // time, so a once-at-bind decision mis-routes (the sui-empty-state
+  // reflect-empty regression). Duck-type the shadow root by `.host`
+  // (`instanceof ShadowRoot` is unreliable under jsdom).
+  const nodesOf = (): Node[] => {
+    const root = slot.getRootNode() as { host?: unknown } | null
+    const inShadow = !!(root && root !== slot.ownerDocument && root.host)
+    return inShadow ? slot.assignedNodes({ flatten: true }) : Array.from(slot.childNodes)
+  }
   const sync = (): void => {
     const hasText = nodesOf().some(hasVisibleContent)
     if (hasText) host.removeAttribute(attrName)
     else host.setAttribute(attrName, '')
   }
-  // Shadow: slotchange is the change signal. Light: there is none — watch
-  // the wrapper's children (projection lands them after mount).
+  // Universal change signal: observe the HOST subtree — it catches shadow
+  // light-child assignment AND light projection (children moved into the
+  // wrapper), regardless of when the slot attaches. slotchange rides along
+  // for shadow browsers where it fires precisely (harmless where it doesn't).
+  slot.addEventListener('slotchange', sync)
   let observer: MutationObserver | null = null
-  if (inShadow) {
-    slot.addEventListener('slotchange', sync)
-  } else if (typeof MutationObserver !== 'undefined') {
+  if (typeof MutationObserver !== 'undefined') {
     observer = new MutationObserver(sync)
-    observer.observe(slot, { childList: true, subtree: true, characterData: true })
+    observer.observe(host, { childList: true, subtree: true, characterData: true })
   }
-  // Content may already be in place at attach time without a change event
-  // firing — sync immediately so the host attribute reflects the initial
-  // state.
   sync()
   return () => {
-    if (inShadow) slot.removeEventListener('slotchange', sync)
+    slot.removeEventListener('slotchange', sync)
     observer?.disconnect()
   }
 }

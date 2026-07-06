@@ -24,11 +24,17 @@ use serde_json::{json, Value};
 #[derive(Debug, Clone)]
 pub struct ElementOutput {
     /// Root class the lowering stamps and the skin keys on: `sui-<name>`.
+    /// (Unused for native-kind elements — their skin keys on the tag.)
     pub root_class: String,
+    /// NATIVE-KIND: the template root IS the element tag (label → <label>).
+    /// The tag already exists in HTML; there is nothing to splice — the
+    /// element is skin + manifest only, and rewriting real uses would
+    /// clobber every ordinary occurrence of the tag.
+    pub native: bool,
     /// Static structure snippet (single root element, slots preserved).
     pub structure_html: String,
-    /// Skin CSS keyed on `.sui-<name>` (from the source's variants/sx/host
-    /// lowering, `:host` rewritten).
+    /// Skin CSS — keyed on `.sui-<name>` for spliced elements, on the bare
+    /// tag selector for native-kind (from the source's `:host` idioms).
     pub skin_css: String,
     /// The element manifest (contract): tag, attributes, anatomy.
     pub manifest: Value,
@@ -77,10 +83,14 @@ pub fn emit_element(program: &Program, name: &str) -> Result<ElementOutput, Comp
         ));
     }
 
+    let native = root.tag == name;
     let mut structure = String::new();
     serialize_static(root, &root_class, true, &mut structure)?;
 
-    let skin_css = element_skin_selectors(&program.styles, &root_class);
+    // Spliced elements key their skin on the stamped root class; native-kind
+    // elements key on the tag itself — the tag IS the element.
+    let skin_root = if native { name.to_string() } else { format!(".{root_class}") };
+    let skin_css = element_skin_selectors(&program.styles, &skin_root);
 
     let attributes: Vec<Value> = program
         .props
@@ -100,12 +110,13 @@ pub fn emit_element(program: &Program, name: &str) -> Result<ElementOutput, Comp
     let manifest = json!({
         "kind": "element",
         "tag": name,
+        "native": native,
         "rootClass": root_class,
         "attributes": attributes,
         "anatomy": { "dom": "light", "classes": classes, "slots": slots },
     });
 
-    Ok(ElementOutput { root_class, structure_html: structure, skin_css, manifest })
+    Ok(ElementOutput { root_class, native, structure_html: structure, skin_css, manifest })
 }
 
 /// Serialize a static element tree. `is_root` stamps the root class so the
@@ -171,8 +182,8 @@ fn serialize_static(
 /// Rewrite the source's `:host`-keyed skin for the element's root class:
 /// `:host` → `.sui-<name>`, `:host(<sel>)` → `.sui-<name><sel>`,
 /// `::slotted(<sel>)` → `slot > <sel>`.
-fn element_skin_selectors(css: &str, root_class: &str) -> String {
-    let root = format!(".{root_class}");
+fn element_skin_selectors(css: &str, root_selector: &str) -> String {
+    let root = root_selector.to_string();
     let mut out = String::with_capacity(css.len());
     let bytes = css.as_bytes();
     let mut i = 0;

@@ -226,6 +226,17 @@ fn lower_stdlib_elements(source: &str) -> (String, String) {
     let mut out = String::with_capacity(source.len());
     let mut css = String::new();
     let mut css_done: std::collections::HashSet<&str> = std::collections::HashSet::new();
+    // Native-kind elements contribute their skin whenever the tag appears
+    // (tag-keyed selectors, no splice). Interim delivery like the spliced
+    // kind — moves to the framework sheet with deck style-delivery.
+    for el in registry {
+        if el.out.native
+            && source.contains(&format!("<{}", el.tag))
+            && css_done.insert(el.tag)
+        {
+            css.push_str(&el.out.skin_css);
+        }
+    }
     let bytes = source.as_bytes();
     let mut i = 0;
     'outer: while i < bytes.len() {
@@ -235,9 +246,28 @@ fn lower_stdlib_elements(source: &str) -> (String, String) {
             i = end;
             continue;
         }
+        // <style> blocks pass through UNTOUCHED — CSS text (selectors,
+        // /* comments */ mentioning element names) must never be spliced
+        // (the sonnet-agent find: a CSS comment naming <label> swallowed
+        // the rest of the file).
+        if source[i..].starts_with("<style") {
+            let end = source[i..]
+                .find("</style>")
+                .map(|e| i + e + "</style>".len())
+                .unwrap_or(bytes.len());
+            out.push_str(&source[i..end]);
+            i = end;
+            continue;
+        }
         if bytes[i] == b'<' && i + 1 < bytes.len() && bytes[i + 1].is_ascii_alphabetic() {
             for el in registry {
                 let tag = el.tag;
+                // NATIVE-KIND elements (root tag == element tag, e.g. label
+                // → <label>) are skin + manifest only — the tag already IS
+                // the element; splicing would rewrite every real HTML use.
+                if el.out.native {
+                    continue;
+                }
                 if source[i + 1..].starts_with(tag) {
                     let after = i + 1 + tag.len();
                     let boundary = bytes
@@ -2006,21 +2036,32 @@ mod tests {
     }
 
     #[test]
-    fn stdlib_label_lowers_at_use_site() {
+    fn stdlib_label_is_native_kind_skin_only() {
+        // label's template root IS <label> — NATIVE KIND: the tag is never
+        // spliced (splicing would rewrite every real HTML label inside
+        // component templates — the sonnet-agent find), the skin keys on the
+        // bare tag selector and joins once when the tag is used.
         let out = preprocess(r#"<label for="email" required>Email</label>"#);
-        // Root class stamped, use-site attrs forwarded (bare `required` and
-        // `for` both merge onto the root untouched), children slotted.
-        assert!(out.contains("sui-label"), "{out}");
-        assert!(out.contains(r#"for="email""#), "{out}");
-        assert!(out.contains(" required"), "{out}");
-        assert!(out.contains(">Email<"), "children slotted: {out}");
-        assert!(out.contains(r#"class="req""#), "required marker is static structure: {out}");
-        // Skin joins once, keyed on the root class.
+        assert!(!out.contains("sui-label"), "native kind never splices: {out}");
+        assert!(out.contains(r#"<label for="email" required>Email</label>"#), "{out}");
         assert_eq!(
             out.matches("font-family: var(--font-body)").count(),
             1,
-            "skin once: {out}"
+            "tag-keyed skin once: {out}"
         );
+        assert!(out.contains("label {") || out.contains("label{"), "skin keys on the tag: {out}");
+    }
+
+    #[test]
+    fn stdlib_pass_never_touches_style_blocks() {
+        // The other sonnet-agent find: CSS text mentioning an element name
+        // (a /* comment */ or selector containing `<label>`-ish text) must
+        // pass through untouched — <style> blocks are opaque to the pass.
+        let src = "<style>\n/* the <spinner> and <label> here are prose */\n.x { color: red; }\n</style>\n<div class=\"y\">z</div>";
+        let out = preprocess(src);
+        assert!(out.contains("/* the <spinner> and <label> here are prose */"), "{out}");
+        assert!(out.contains(".x { color: red; }"), "{out}");
+        assert!(!out.contains("sui-spinner"), "no splice inside style: {out}");
     }
 
     #[test]
