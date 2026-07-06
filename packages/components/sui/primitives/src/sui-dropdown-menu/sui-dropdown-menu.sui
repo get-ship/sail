@@ -25,9 +25,6 @@
 <variants>
   [hidden]: display:none
 </variants>
-<variants part="panel">
-  popover-open: opacity:100
-</variants>
 
 <!-- Residual: .panel popover visuals (inset/margin/min-width/padding/
      background/color/border/border-radius/box-shadow) — popover panels
