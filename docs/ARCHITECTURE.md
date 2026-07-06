@@ -252,6 +252,31 @@ only at computed-style equivalence with the `feat/next` baseline across
 parts × states × variants × sizes, plus green behavior tests. A port that
 cannot pass files a language gap; nothing ships degraded.
 
+## The `style:` directive ruling
+
+`style:prop={expr}` (single-property dynamic binding) is **toolchain-
+privileged, for data-driven values only** — a user-picked color, a computed
+hue, a drag position: values that cannot be tokens *by definition*. It is
+not a styling escape: static values in `style:` are a lint error (spend a
+token), and userland never gets the directive at all. The lint rides the
+policy floor.
+
+## Transitional constructs (compiled today, dying by design)
+
+These still compile so the un-migrated tree keeps building; each dies
+per-component at re-port, and its lowering code is deleted after the last
+user. None are part of the taggable authoring surface:
+
+| Construct | Successor |
+| --- | --- |
+| `<prop …/>` XML tags | `<component>{ props }` typed block |
+| `<theme prop channels>` | framework contracts + component-token families |
+| `<variants part="…">` | `<variants class="…">` / dotted keys (v2) |
+| line-DSL `<variants>` bodies | the TS-object form |
+| `<host>` directive | the element is the host (light DOM) |
+| `part=` attributes | anatomy classes (CEM-published) |
+| shadow-by-default emission | `--light` (flips to default at absorption end) |
+
 ## Enforcement map
 
 | Seam | Mechanism | Status |
