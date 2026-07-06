@@ -237,6 +237,25 @@ fn lower_stdlib_elements(source: &str) -> (String, String) {
             css.push_str(&el.out.skin_css);
         }
     }
+    lower_into(source, registry, &mut out, &mut css, &mut css_done);
+    (out, css)
+}
+
+/// The recursive core of stdlib lowering. Factored out so a nested element
+/// (a `<card>` inside a `<card>`) gets ITS children lowered too: the old
+/// single pass used `find("</tag>")` — the FIRST close — which paired the
+/// inner card's close with the outer card, corrupting the tree. Now the
+/// matching close is found depth-aware (elements CAN self-nest), and the
+/// children are lowered recursively before they splice into the slot. `css`
+/// / `css_done` are threaded so each tag's skin still joins exactly once,
+/// no matter how deeply it nests.
+fn lower_into(
+    source: &str,
+    registry: &'static [crate::stdlib::StdlibElement],
+    out: &mut String,
+    css: &mut String,
+    css_done: &mut std::collections::HashSet<&'static str>,
+) {
     let bytes = source.as_bytes();
     let mut i = 0;
     'outer: while i < bytes.len() {
@@ -292,18 +311,47 @@ fn lower_stdlib_elements(source: &str) -> (String, String) {
                         break;
                     }
                     let use_attrs = source[after..k].trim().to_string();
-                    // Children up to the matching close (stdlib elements
-                    // don't self-nest; expand_self_close already paired
-                    // self-closing forms).
+                    // Matching close, DEPTH-AWARE: skip the closes of nested
+                    // same-tag opens (expand_self_close already paired the
+                    // self-closing forms, so only `<tag …>` opens count).
+                    let open_prefix = format!("<{tag}");
                     let close = format!("</{tag}>");
-                    let Some(rel) = source[k + 1..].find(&close) else { break };
-                    let children = &source[k + 1..k + 1 + rel];
-                    let end = k + 1 + rel + close.len();
+                    let mut depth = 1usize;
+                    let mut scan = k + 1;
+                    let close_start = loop {
+                        if scan >= bytes.len() {
+                            break None;
+                        }
+                        if source[scan..].starts_with(&close) {
+                            depth -= 1;
+                            if depth == 0 {
+                                break Some(scan);
+                            }
+                            scan += close.len();
+                        } else if source[scan..].starts_with(&open_prefix)
+                            && bytes
+                                .get(scan + open_prefix.len())
+                                .is_some_and(|&b| b.is_ascii_whitespace() || b == b'>')
+                        {
+                            depth += 1;
+                            scan += open_prefix.len();
+                        } else {
+                            scan += 1;
+                        }
+                    };
+                    let Some(close_start) = close_start else { break };
+                    let children = &source[k + 1..close_start];
+                    let end = close_start + close.len();
 
-                    out.push_str(&splice_element(&el.out, &use_attrs, children));
+                    // Skin joins once per tag — before recursing, so a nested
+                    // same-tag element sees it already done.
                     if css_done.insert(tag) {
                         css.push_str(&el.out.skin_css);
                     }
+                    // Lower nested elements in the children, then splice.
+                    let mut lowered = String::new();
+                    lower_into(children, registry, &mut lowered, css, css_done);
+                    out.push_str(&splice_element(&el.out, &use_attrs, &lowered));
                     i = end;
                     continue 'outer;
                 }
@@ -317,7 +365,6 @@ fn lower_stdlib_elements(source: &str) -> (String, String) {
         out.push_str(&source[i..next]);
         i = next;
     }
-    (out, css)
 }
 
 /// Merge use-site attrs onto the snippet root and place children.

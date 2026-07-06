@@ -119,3 +119,25 @@ fn element_void_with_children_is_an_error() {
     // stray </hr> first (belt to the emitter's void-children suspenders).
     assert!(compile_element("<hr class=\"x\">nope</hr>", "sep").is_err());
 }
+
+#[test]
+fn stdlib_elements_can_self_nest() {
+    // card-in-card: use-site lowering must find the DEPTH-MATCHED close, not
+    // the first </card>. Regression — after card was promoted to L1 the old
+    // `find("</card>")` paired the inner close with the outer card and broke
+    // the /components showcase (a card of cards is an essential pattern).
+    use sui_compiler::{compile, CompileMode, CompileOpts};
+    let opts = CompileOpts {
+        setup_url: None,
+        mode: CompileMode::Component,
+        source_path: None,
+        component_meta: None,
+        emit_dts: false,
+        emit_component_imports: false,
+        lint_overrides: Vec::new(),
+    };
+    let out = compile("<card><card>inner</card></card>", opts).expect("nested cards compile");
+    // Both cards lowered — the card root class appears for each.
+    let n = out.js.matches("sui-card").count();
+    assert!(n >= 2, "expected both cards lowered, got {n}:\n{}", out.js);
+}
