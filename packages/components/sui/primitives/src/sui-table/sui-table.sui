@@ -18,6 +18,83 @@
   Events (host.emit): sui-sort {key, direction}, sui-sort-change {sorting},
   sui-row-click {id, index}, sui-row-select {id, selected, selectedIds},
   sui-cell-edit {rowId, columnId, value}.
+
+  NEW SURFACE (re-port from feat/next, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────────────
+  - No tone prop on this component — rule "tone is global now" doesn't apply.
+  - L1 controls were already framework-composed pre-gate (sui-checkbox,
+    sui-input, sui-icon, sui-pagination, sui-empty-state) — nothing hand-
+    skinned to strip.
+  - sx is closed-vocabulary on the two `.empty` divs (slot/native variants);
+    the style block keeps the data-variant grid layout, which sx structurally
+    cannot express (CSS grid template/auto-columns, position:sticky/absolute,
+    pseudo-selectors, @media forced-colors).
+  - The variants blocks targeting part=wrap / part=empty (below the props)
+    replace the old :host([sticky-header]) display:block-on-.wrap and
+    :host([data-empty]) display-toggle raw selectors.
+  - Anatomy (light DOM, class-based — part= left on per the wave sweep note):
+    .wrap (root frame) > table/.grid (variant switch) > thead/.grid-head,
+    tbody/.viewport > .spacer > .grid-row > .grid-cell; .empty (slot/native
+    empty state); .grid-empty (data-variant empty state, wraps sui-empty-state).
+
+  LANG-GAP — no space/dimension token in the ~45–179px range
+  ─────────────────────────────────────────────────────────────────────────────
+  The space scale jumps --control-h-xl (44px) → --panel-min-w-sm (180px); the
+  data-grid's feat/next column-min-width (80px, `minmax(80px, 1fr)` on both
+  `.grid-head` and `.grid-row`) has no home in the closed vocabulary. Snapped
+  to the nearest existing token, --space-8 (40px) — a real ~50% reduction in
+  the grid's minimum column floor, not a cosmetic rounding. Reported, not
+  routed around with a raw px value. (The 40px gutter/checkbox column DOES
+  have an exact match, --space-8 — corrected from the prior pass's wrong pick,
+  --control-h-md/34px.)
+
+  LANG-GAP (compiler bug) — `sui-css-token` rejects underscore-suffixed
+  fine-step space tokens
+  ─────────────────────────────────────────────────────────────────────────────
+  --space-0_75 (3px) is the EXACT match for the selected-row inset rail (was
+  3px in feat/next), but referencing it via var() in a style block fails the
+  sui-css-token lint: "unknown CSS token --space-0; did you mean --space-4?".
+  Root cause (crates/sui/lint/src/rules/css_token.rs `is_ident_cont`): the
+  var()-reference scanner's identifier char-class is
+  `[a-z0-9-]`, no `_`, so it truncates the name at the underscore
+  (`space-0_75` → `space-0`) — while `crate::tokens::registry()`'s
+  *declaration* parser (tokens.rs) DOES accept `_`, so the full name is
+  correctly registered and simply never matched against. Every other
+  fine-step token (--space-1_25, -1_5, -2_5, -3_5, -4_5) silently survives
+  this same bug only because its truncated prefix (space-1/-2/-3/-4) happens
+  to ALSO be a valid whole-unit token — --space-0_75 is the one family member
+  whose truncated prefix (space-0) isn't (by design: "no --space-0 token
+  exists; p:0 must mean zero padding, not a var" — tokens.rs). Kept
+  --space-half (2px, the prior pass's pick) rather than the exact match — a
+  compiler-level bug, not mine to fix; reported, not routed around.
+
+  LANG-GAP (minor) — no exact 0.06em letter-spacing token
+  ─────────────────────────────────────────────────────────────────────────────
+  --tracking-wide is 0.04em, --tracking-wider is 0.1em; feat/next's column-
+  header letter-spacing is 0.06em. Snapped to --tracking-wide (closer of the
+  two, off by 0.02em vs 0.04em). Cosmetic; noted for completeness.
+
+  LANG-GAP (compiler bug, HIGHER-severity — found authoring THIS comment) —
+  `lower_variants` isn't comment-aware
+  ─────────────────────────────────────────────────────────────────────────────
+  crates/sui/compiler/src/parse/preprocess.rs `lower_variants()` finds the
+  next real variants block via a raw source scan for the variants open-tag
+  prefix and its matching close-tag, with NO HTML-comment skip — unlike its sibling
+  lowering passes in the same file, which all explicitly check
+  `source[i..].starts_with("<!--")` and skip the comment body verbatim
+  (there's even a regression test guarding the identical failure mode for
+  element names, "a CSS comment naming <label> swallowed"). Writing this
+  component's own doc comment as prose describing its two variants blocks
+  (literally spelling the tag out, e.g. a backtick-quoted
+  "variants part=wrap" open-tag) made the scanner treat THAT prose mention
+  as the block start, walk forward to the real closing tag of the SECOND
+  real block, and splice out everything between — including this comment's
+  own closing marker — corrupting the file into an "unterminated comment"
+  parse error with no useful diagnostic pointing at the real cause. Worked
+  around by rephrasing the doc prose to avoid the literal open-tag spelling;
+  the underlying scanner gap is unfixed and will bite the next author who
+  documents a variants block by example. Compiler-level, not mine to fix;
+  reported, not routed around.
 -->
 
 <prop name="variant" values="slot|native|data" default="slot" reflect />
@@ -98,7 +175,7 @@
   .grid-head {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(var(--space-9), 1fr);
+    grid-auto-columns: minmax(var(--space-8), 1fr);
     position: sticky;
     top: 0;
     z-index: var(--z-sticky);
@@ -107,7 +184,7 @@
   }
   :host([gutter]) .grid-head,
   :host([gutter]) .grid-row {
-    grid-template-columns: var(--control-h-md) repeat(var(--sui-col-count), minmax(var(--space-9), 1fr));
+    grid-template-columns: var(--space-8) repeat(var(--sui-col-count), minmax(var(--space-8), 1fr));
     grid-auto-flow: row;
     grid-auto-columns: auto;
   }
@@ -119,7 +196,7 @@
     font-weight: var(--font-weight-semibold);
     font-size: var(--text-xs);
     text-transform: uppercase;
-    letter-spacing: var(--tracking-wider);
+    letter-spacing: var(--tracking-wide);
     color: var(--muted-foreground);
     border-bottom: 1px solid var(--border);
     white-space: nowrap;
@@ -154,7 +231,7 @@
   .grid-row {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(var(--space-9), 1fr);
+    grid-auto-columns: minmax(var(--space-8), 1fr);
     position: absolute;
     left: 0;
     width: 100%;

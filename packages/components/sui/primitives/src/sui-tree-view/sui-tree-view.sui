@@ -13,6 +13,16 @@
   ─────────────────────────────────────────────────────────────────────────────
   Slots: (default) sui-tree-item children
   ─────────────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from feat/next, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────────────
+  - No props at all, so no tone/L1-control/closed-sx surface to touch here.
+  - The old :host([hidden]) { display: none; } raw selector becomes a real
+    variants block (below), targeting the host's own [hidden] attribute —
+    exactly what variants blocks are for. The typography + child <ul> reset
+    stay raw (see the residual note below); nothing else in this file changed.
+  - Anatomy (light DOM): host (role=tree) > ul > sui-tree-item (one per root
+    node) when nodes() is non-empty, else a bare default slot.
 -->
 
 <variants>
