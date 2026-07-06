@@ -1,58 +1,107 @@
 <!--
-  /language — the new authoring surface, shown live. Every element below is
-  a LANGUAGE ELEMENT (L1): a bare lowercase tag (<spinner>, <separator>,
-  <icon>, <label>) that the compiler lowers to light-DOM structure + a
-  framework-owned skin — no component, no runtime identity, no <style> in
-  the page. The skins arrive via the bundled framework stylesheet
-  (contracts + element-skins), so these render styled at first paint.
+  /language — the new authoring surface, shown live. Every control below is
+  a plain HTML tag (<button>, <input>) or a language element (<spinner>,
+  <icon>, <label>, <separator>) — no components, no sx, no <style>. The
+  design system is applied by the framework stylesheet (tone/size contracts
+  + control skin + stdlib element skins), delivered as a bundled asset.
 
-  This page is itself the proof: it authors ONLY bare tags and layout
-  keywords — no sx, no CSS — and the framework does the rest.
+  The buttons use the BARE-ENUM SHORTHAND: `<button primary solid>` desugars
+  to `tone="primary" variant="solid"`. Every colour is a design token, so
+  the whole page recolours when the theme changes — try the theme toggle.
 -->
 <column class="doc" gap="8">
   <column gap="2">
     <p class="eyebrow">The language</p>
-    <h1>Standard-library elements</h1>
+    <h1>The web, with default styles</h1>
     <p class="lead">
-      The web, with default styles. These are not components you import — they
-      are elements of the language, lowered by the compiler and styled by the
-      framework. You write the tag; the design system is already applied.
+      These are not components you import — they are plain tags the compiler
+      lowers and the framework styles. You write the tag and pick a tone; the
+      design system, the states, and the theme are already applied.
     </p>
   </column>
 
   <separator></separator>
 
+  <!-- BUTTONS — the design system at full flex. -->
+  <column gap="6">
     <column gap="3">
-      <label size="sm">spinner</label>
-      <row gap="6" align="center">
-        <spinner size="sm"></spinner>
-        <spinner></spinner>
-        <spinner size="lg"></spinner>
-        <spinner tone="primary" size="lg"></spinner>
+      <label size="sm">solid — one line each: &lt;button primary solid&gt;</label>
+      <row gap="3" align="center">
+        <button solid>Default</button>
+        <button primary solid>Primary</button>
+        <button success solid>Success</button>
+        <button warning solid>Warning</button>
+        <button destructive solid>Destructive</button>
       </row>
     </column>
 
     <column gap="3">
-      <label size="sm">icon — sizes the slotted SVG and inks it currentColor</label>
-      <row gap="6" align="center">
-        <icon size="sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></icon>
-        <icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></icon>
-        <icon size="lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></icon>
-        <icon size="xl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></icon>
+      <label size="sm">soft</label>
+      <row gap="3" align="center">
+        <button soft>Default</button>
+        <button primary soft>Primary</button>
+        <button success soft>Success</button>
+        <button warning soft>Warning</button>
+        <button destructive soft>Destructive</button>
       </row>
     </column>
 
     <column gap="3">
-      <label size="sm">label — a native &lt;label&gt;, framework-skinned</label>
-      <column gap="2">
-        <label>Email address</label>
-        <label required>Password</label>
-      </column>
+      <label size="sm">outline &amp; ghost</label>
+      <row gap="3" align="center">
+        <button primary outline>Outline</button>
+        <button success outline>Outline</button>
+        <button destructive outline>Outline</button>
+        <button primary ghost>Ghost</button>
+        <button ghost>Ghost</button>
+      </row>
     </column>
 
     <column gap="3">
-      <label size="sm">separator — the horizontal rule, contract-styled</label>
-      <separator></separator>
+      <label size="sm">sizes &amp; states</label>
+      <row gap="3" align="center">
+        <button primary solid xs>xs</button>
+        <button primary solid sm>sm</button>
+        <button primary solid md>md</button>
+        <button primary solid lg>lg</button>
+        <button primary solid disabled>disabled</button>
+        <button primary solid>
+          <spinner size="sm"></spinner>
+          Loading
+        </button>
+      </row>
     </column>
+  </column>
+
+  <separator></separator>
+
+  <!-- FORM — plain inputs + native labels, framework-skinned. -->
+  <column gap="4">
+    <label size="sm">form controls</label>
+    <column gap="2">
+      <label>Email address</label>
+      <input type="email" placeholder="you@example.com" />
+    </column>
+    <column gap="2">
+      <label required>Password</label>
+      <input type="password" placeholder="••••••••" />
+    </column>
+    <row gap="3" align="center">
+      <button primary solid>Sign in</button>
+      <button ghost>Cancel</button>
+    </row>
+  </column>
+
+  <separator></separator>
+
+  <!-- The minimal primitives, for completeness. -->
+  <column gap="3">
+    <label size="sm">spinner · icon</label>
+    <row gap="6" align="center">
+      <spinner size="sm"></spinner>
+      <spinner></spinner>
+      <spinner tone="primary" size="lg"></spinner>
+      <icon size="lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></icon>
+    </row>
   </column>
 </column>
