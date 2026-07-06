@@ -73,6 +73,18 @@
     padding: var(--space-1) var(--space-3);
   }
   .theme-toggle:hover { border-color: var(--border-strong); }
+  .theme-select {
+    font: inherit;
+    font-size: var(--text-sm);
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--foreground);
+    border-radius: var(--radius-full);
+    padding: var(--space-1) var(--space-3);
+    min-height: 0;
+  }
+  .theme-select:hover { border-color: var(--border-strong); }
 
   /* ── Product switcher (SolidJS-style: SUI · Deck · Components · AI) ────── */
   .switcher {
@@ -191,6 +203,11 @@
   </nav>
   <span class="spacer"></span>
   <a class="toplink" href="/tutorial" class:active={product() === 'tutorial'}>Tutorial</a>
+  <select class="theme-select" aria-label="Theme" on:change={(e) => setTheme(e.target.value)}>
+    {#for t of themes key={t.id}}
+      <option value={t.id} attr:selected={themeName() === t.id ? true : null}>{t.label}</option>
+    {/for}
+  </select>
   <button class="theme-toggle" type="button" on:click={() => toggleTheme()}>
     {dark() ? '☀ Light' : '☾ Dark'}
   </button>

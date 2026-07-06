@@ -11,6 +11,7 @@
 // tree-shaken — whereas an export-less clients module gets dropped.
 import '../sui-theme.css'
 import '../deck-theme.css' // deck (violet) product theme; SUI red is the default
+import '@ship/tokens/themes.css' // the swappable theme library (paper/halo/glass/console/contrast)
 import '../base.css' // doc typography + .doc reading column (the comment above promised this; it was missing)
 import '@ship/sui-code-editor' // side-effect: defines <sui-code-editor> for the tutorial + future live surfaces
 import '@ship/sui-viewer'       // side-effect: defines <sui-component-viewer> + children for /components
@@ -43,12 +44,39 @@ function themeFor(product: string): string {
   }
 }
 
+// Selectable site themes for the header switcher. The product accent is the
+// default; a manual pick overrides it (persisted). Names are `data-theme`
+// values shipped by @ship/tokens/themes.css (imported in the .sui).
+const THEME_KEY = 'sui-site-theme'
+export const SITE_THEMES: Array<{ id: string; label: string }> = [
+  { id: '', label: 'Auto (per product)' },
+  { id: 'paper', label: 'Paper' },
+  { id: 'halo', label: 'Halo' },
+  { id: 'glass', label: 'Glass' },
+  { id: 'console', label: 'Console' },
+  { id: 'contrast', label: 'Contrast' },
+]
+
 export default controller({
   scope: () => {
     const root = document.documentElement
     const path = signal<string>(typeof location !== 'undefined' ? location.pathname : '/')
     const product = derived(() => productFor(path()))
-    root.setAttribute('data-theme', themeFor(product()))
+
+    // Manual theme override (persisted). Empty string = follow the product.
+    const storedTheme = (() => {
+      try { return localStorage.getItem(THEME_KEY) ?? '' } catch { return '' }
+    })()
+    const themeName = signal<string>(storedTheme)
+    const applyTheme = (): void => {
+      root.setAttribute('data-theme', themeName() || themeFor(product()))
+    }
+    applyTheme()
+    const setTheme = (id: string): void => {
+      themeName.set(id)
+      applyTheme()
+      try { id ? localStorage.setItem(THEME_KEY, id) : localStorage.removeItem(THEME_KEY) } catch { /* no storage */ }
+    }
 
     const stored = (() => {
       try {
@@ -85,6 +113,6 @@ export default controller({
       return p === '/' || p === '/components' || p.startsWith('/components/') || p.startsWith('/tutorial/')
     })
 
-    return { dark, toggleTheme, path, product, fullscreen }
+    return { dark, toggleTheme, themeName, setTheme, themes: SITE_THEMES, path, product, fullscreen }
   },
 })

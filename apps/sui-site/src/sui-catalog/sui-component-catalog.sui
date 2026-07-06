@@ -108,60 +108,88 @@
     max-width: 64rem;
   }
 
+  /* ── Bento grid ────────────────────────────────────────────────────── */
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+    grid-auto-rows: 12.5rem;
+    grid-auto-flow: dense;
+    gap: var(--space-4);
+  }
+
   /* ── Cards ─────────────────────────────────────────────────────────── */
   .cell {
-    display: block;
+    display: flex;
+    flex-direction: column;
     text-decoration: none;
     color: inherit;
     background: var(--surface-1);
     border: 1px solid var(--border);
     border-radius: var(--radius-xl);
     overflow: hidden;
+    /* NO transform on hover — border + shadow only, so nothing shifts. */
     transition:
-      transform var(--duration-fast) var(--ease-out),
       border-color var(--duration-fast) var(--ease-out),
       box-shadow var(--duration-fast) var(--ease-out);
   }
   .cell[hidden] { display: none; }
-  .cell:hover {
+  .cell:hover { border-color: var(--primary); box-shadow: var(--shadow-lg); }
+  .cell:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
     border-color: var(--primary);
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-lg);
   }
 
-  /* Preview stage — fitted to content, not a fixed box. A bare element's
-     natural size drives the stage; tiny components (sui-status-dot,
-     sui-switch) stay tiny, big ones (sui-calendar, sui-table) expand.
-     <center> still centers the specimen on both axes; min-height +
-     horizontal padding prevent the surface from looking cramped when the
-     specimen is a one-line label, without forcing tall primitives into a
-     fixed-frame box. */
+  /* Bento spans — data/complex earn a 2×2, horizontal a 2×1; dense flow
+     packs the 1×1s into the gaps. */
+  .cell.sz-wide { grid-column: span 2; }
+  .cell.sz-lg   { grid-column: span 2; grid-row: span 2; }
+
+  /* Preview stage — a FROZEN portrait. The specimen is a real component with
+     real styles, but `pointer-events:none` makes it non-interactive: no
+     hover, no clicking its buttons, no menus opening over the grid. So the
+     whole card is ONE clean link → detail (no element/link click fight), and
+     nothing can overflow (`overflow:hidden` + `contain:paint`). Interaction
+     lives in the detail view, where it's expected and framed. */
   .stage {
-    min-height: 7rem;
-    padding: var(--space-4);
-    background: color-mix(in oklch, var(--primary) 6%, transparent);
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+    contain: paint;
+    pointer-events: none;
+    padding: var(--space-5);
+    background: color-mix(in oklch, var(--primary) 5%, transparent);
     border-bottom: 1px solid var(--border-subtle);
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  .cell-foot { padding: var(--space-3) var(--space-4) var(--space-4); }
+  /* Scale the big specimens down a touch so more reads inside the 2×2. */
+  .cell.sz-lg .stage > * { transform: scale(0.82); transform-origin: center; }
+
+  .cell-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+  }
   .cell-tag {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     color: var(--foreground);
   }
-  .cell-props {
+  .cell-arrow {
     font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--muted-foreground);
+    color: var(--primary);
+    opacity: 0;
+    transform: translateX(-2px);
+    transition:
+      opacity var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
   }
-  .cell-blurb {
-    margin: var(--space-2) 0 0;
-    font-size: var(--text-xs);
-    color: var(--muted-foreground);
-    line-height: var(--leading-normal);
-  }
+  .cell:hover .cell-arrow { opacity: 1; transform: translateX(0); }
 
   /* Empty / fallback states */
   .preview-empty {
@@ -215,10 +243,12 @@
     {/for}
   </row>
 
-  <grid class="grid" min="lg" gap="4" data-test="catalog-grid">
+  <div class="bento" data-test="catalog-grid">
     {#for c of components() key={c.tag}}
       <a
         class="cell"
+        class:sz-wide={c.size === 'wide'}
+        class:sz-lg={c.size === 'lg'}
         href={'/components/' + c.tag}
         attr:data-tag={c.tag}
         attr:hidden={c.hidden() ? true : null}
@@ -226,17 +256,12 @@
       >
         <center class="stage" attr:data-preview-for={c.tag}></center>
         <div class="cell-foot">
-          <row class="cell-meta" justify="between" align="baseline" gap="2">
-            <span class="cell-tag" data-test="catalog-tag">{c.tag}</span>
-            <span class="cell-props">{c.propCount} props</span>
-          </row>
-          {#if c.description}
-            <p class="cell-blurb">{c.description}</p>
-          {/if}
+          <span class="cell-tag" data-test="catalog-tag">{c.tag}</span>
+          <span class="cell-arrow" aria-hidden="true">→</span>
         </div>
       </a>
     {/for}
-  </grid>
+  </div>
 
   {#if visibleCount() === 0}
     <p class="no-results" data-test="catalog-empty">No components match “{query()}”.</p>

@@ -54,6 +54,43 @@ export interface ComponentEntry {
   propCount: number
   slotCount: number
   eventCount: number
+  /** Bento cell size. Data/complex components earn a 2×2 (`lg`); horizontal
+   *  ones a 2×1 (`wide`); everything else is a 1×1 (`sm`, the default). */
+  size: BentoSize
+}
+
+export type BentoSize = 'sm' | 'wide' | 'lg'
+
+/** Cell size by component nature — the bento rhythm. Absent tags = `sm`. */
+const BENTO_SIZE: Record<string, BentoSize> = {
+  // 2×2 — data-dense / complex surfaces that need room to read.
+  'sui-table': 'lg',
+  'sui-tree-grid': 'lg',
+  'sui-calendar': 'lg',
+  'sui-code-editor': 'lg',
+  'sui-diff': 'lg',
+  'sui-markdown': 'lg',
+  'sui-spreadsheet': 'lg',
+  'sui-data-grid': 'lg',
+  'sui-kanban': 'lg',
+  'sui-command-palette': 'lg',
+  'sui-json-view': 'lg',
+  // 2×1 — horizontal / list-shaped components.
+  'sui-alert': 'wide',
+  'sui-banner': 'wide',
+  'sui-timeline': 'wide',
+  'sui-tabs': 'wide',
+  'sui-nav-top': 'wide',
+  'sui-navigation-menu': 'wide',
+  'sui-breadcrumb': 'wide',
+  'sui-pagination': 'wide',
+  'sui-progress': 'wide',
+  'sui-stepper': 'wide',
+  'sui-accordion': 'wide',
+  'sui-collapsible': 'wide',
+  'sui-toast': 'wide',
+  'sui-scroll-area': 'wide',
+  'sui-theme-picker': 'wide',
 }
 
 /** A catalog entry decorated with its own reactive `hidden` flag. Template
@@ -123,6 +160,7 @@ function buildCatalog(): { entries: ComponentEntry[]; chips: CategoryChip[] } {
         propCount: (d.attributes ?? []).length,
         slotCount: (d.slots ?? []).length,
         eventCount: (d.events ?? []).length,
+        size: BENTO_SIZE[tag] ?? 'sm',
       })
       catCounts.set(category, (catCounts.get(category) ?? 0) + 1)
     }
