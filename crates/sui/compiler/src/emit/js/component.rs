@@ -1,4 +1,4 @@
-use super::super::styles::strip_shared_rules;
+use super::super::styles::{light_dom_selectors, strip_shared_rules};
 use super::super::writer::{js_string, Writer};
 use crate::ir::*;
 use crate::lower::directives::prop_default_literal;
@@ -41,7 +41,12 @@ pub(super) fn emit_registered_component(
     let emitted_styles = if meta.shadow {
         strip_shared_rules(&program.styles)
     } else {
-        program.styles.clone()
+        // LIGHT DOM (the default architecture): the runtime wraps these styles
+        // in an `@scope ([data-component="tag"]) to ([data-component])` donut,
+        // so shadow idioms rewrite — :host → :scope, ::slotted(X) → slot > X.
+        // Shared-rule stripping also applies: the document-level contract
+        // sheets carry those rules once.
+        light_dom_selectors(&strip_shared_rules(&program.styles))
     };
     if !emitted_styles.trim().is_empty() {
         w.line(&format!("styles: {},", js_string(&emitted_styles)));

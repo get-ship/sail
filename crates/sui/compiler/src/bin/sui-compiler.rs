@@ -102,6 +102,13 @@ enum Command {
         /// for a file in component mode, defaults to the filename stem.
         #[arg(long)]
         component_name: Option<String>,
+        /// LIGHT-DOM emission (the target architecture): the component renders
+        /// into its own element — no shadow root. Styles emit with shadow
+        /// idioms rewritten (:host → :scope, ::slotted → slot >) for the
+        /// runtime's @scope donut. Shadow remains the default during the
+        /// migration; this flag flips per compile until the default flips.
+        #[arg(long)]
+        light: bool,
     },
     /// Synthesize a single `.sui` into a manifest-driven, tsc-checkable
     /// pair — a **synthetic controller** (`<stem>.synthetic.controller.ts`)
@@ -143,10 +150,10 @@ fn main() -> Result<()> {
     match cli.cmd {
         Command::Build {
             input, out, clean, mode, no_dts, styles, component_name,
-            emit_component_imports,
+            emit_component_imports, light,
         } => build(
             input, out, clean, mode, no_dts, styles, component_name,
-            emit_component_imports,
+            emit_component_imports, light,
         ),
         Command::Synthesize { input, manifest, out_dir } => {
             synthesize(input, manifest, out_dir)
@@ -272,6 +279,7 @@ fn build(
     styles: Option<PathBuf>,
     component_name: Option<String>,
     emit_component_imports: bool,
+    light: bool,
 ) -> Result<()> {
     let mut targets = Vec::new();
     if input.is_dir() {
@@ -357,9 +365,9 @@ fn build(
         let component_meta = match (mode.clone(), component_name.clone()) {
             (Some(ModeArg::Component), name) => Some(ComponentMeta {
                 name: name.unwrap_or_else(|| stem_of(&path)),
-                shadow: true,
+                shadow: !light,
             }),
-            (_, Some(name)) => Some(ComponentMeta { name, shadow: true }),
+            (_, Some(name)) => Some(ComponentMeta { name, shadow: !light }),
             _ => None,
         };
         compile_one(&path, out.as_deref(), mode.clone(), no_dts, styles_text.as_deref(), component_meta, emit_component_imports)?;

@@ -301,6 +301,76 @@ fn skip_ws_nl(bytes: &[u8], i: usize) -> Option<usize> {
     Some(i)
 }
 
+/// Rewrite shadow-idiom selectors for LIGHT-DOM emission. The runtime wraps a
+/// light component's styles in `@scope ([data-component="tag"]) to
+/// ([data-component])` — a donut that stops at nested component boundaries —
+/// so inside the sheet:
+///   `:host`        → `:scope`            (the host IS the element)
+///   `:host(<sel>)` → `:scope<sel>`       (compound, parens unwrapped)
+///   `::slotted(<sel>)` → `slot > <sel>`  (projected children stay real
+///                                         children inside the <slot> wrapper,
+///                                         which renders display:contents)
+/// Everything else passes through untouched; the transform is purely textual
+/// and boundary-safe (ASCII scanning, balanced-paren unwrap).
+pub fn light_dom_selectors(css: &str) -> String {
+    let mut out = String::with_capacity(css.len());
+    let bytes = css.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if css[i..].starts_with(":host") {
+            let after = i + ":host".len();
+            if bytes.get(after) == Some(&b'(') {
+                if let Some(close) = balanced_paren_end(bytes, after) {
+                    out.push_str(":scope");
+                    out.push_str(&css[after + 1..close]);
+                    i = close + 1;
+                    continue;
+                }
+            }
+            out.push_str(":scope");
+            i = after;
+            continue;
+        }
+        if css[i..].starts_with("::slotted(") {
+            let open = i + "::slotted".len();
+            if let Some(close) = balanced_paren_end(bytes, open) {
+                out.push_str("slot > ");
+                out.push_str(&css[open + 1..close]);
+                i = close + 1;
+                continue;
+            }
+        }
+        // Advance one full UTF-8 char (comments can carry multibyte text).
+        let mut n = i + 1;
+        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
+            n += 1;
+        }
+        out.push_str(&css[i..n]);
+        i = n;
+    }
+    out
+}
+
+/// Index of the `)` matching the `(` at `open`, honoring nesting.
+fn balanced_paren_end(bytes: &[u8], open: usize) -> Option<usize> {
+    let mut depth = 0usize;
+    let mut i = open;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'(' => depth += 1,
+            b')' => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(i);
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -348,6 +418,18 @@ mod tests {
     fn strips_reduced_motion_multiline() {
         let css = "  @media (prefers-reduced-motion: reduce) {\n    * { transition: none !important; animation: none !important; }\n  }\n";
         assert_eq!(strip_shared_rules(css), "");
+    }
+
+    #[test]
+    fn light_dom_rewrites_host_and_slotted() {
+        let css = ":host { display: inline-flex; }\n:host([tone='primary']) .badge { color: red; }\n:host(:not([size])) { --h: 1px; }\n::slotted([slot='leading']) { flex: none; }\n.badge { border: 0; }";
+        let out = light_dom_selectors(css);
+        assert!(out.contains(":scope { display: inline-flex; }"), "{out}");
+        assert!(out.contains(":scope[tone='primary'] .badge"), "{out}");
+        assert!(out.contains(":scope:not([size])"), "{out}");
+        assert!(out.contains("slot > [slot='leading'] { flex: none; }"), "{out}");
+        assert!(out.contains(".badge { border: 0; }"), "{out}");
+        assert!(!out.contains(":host"), "no :host survives: {out}");
     }
 
     #[test]
