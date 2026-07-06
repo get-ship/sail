@@ -1,79 +1,104 @@
-  <prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
-  <prop name="variant" values="solid|soft|outline|ghost|default" default="default" reflect />
-  <prop name="size" values="xs|sm|md|lg" default="md" reflect />
-  <prop name="type" values="button|submit|reset" default="button" reflect />
-  <prop name="disabled" type="bool" default="false" reflect />
-  <prop name="loading" type="bool" default="false" reflect />
-  <prop name="label" type="string" default="" />
-  <prop name="pressed" values="true|false|mixed" default="false" reflect />
-  <prop name="expanded" type="string" default="" reflect />
+<!--
+  sui-button — SUI port of ship-button. Tone-driven control button with five
+  visual variants (default / solid / soft / outline / ghost), four sizes
+  (xs / sm / md / lg), and loading / disabled / pressed / expanded ARIA
+  states. Mirrors the native button surface (type / submit / reset).
 
-  <theme prop="size" channels="btn-h, btn-px, btn-fs, btn-fw, btn-gap">
-    xs: control-h-2xs, space-2,  text-xs,  font-weight-medium, space-1
-    sm: control-h-sm,  space-2_5, text-sm,  font-weight-medium, space-1_5
-    md: control-h-md,  space-3,  text-base, font-weight-medium, space-2
-    lg: control-h-lg,  space-4,  text-md,  font-weight-medium, space-2
-  </theme>
+  Visible styling covered by the new collapsed SFC shape (sx + variants +
+  framework tone + size contracts):
+    - tone (free framework contract) drives bg / fg / border / contrast.
+    - size (free framework contract) drives min-h, padding, font-size.
+    - Variant block overrides the host baseline per variant:
+        default  - bg:background, fg:foreground, border, shadow-xs
+        solid    - bg:tone, fg:tone-contrast, border:tone, shadow-xs
+        soft     - bg:tone-bg, fg:tone-fg, border:tone-border
+        outline  - fg:tone-fg, border:tone (bg falls through to baseline)
+        ghost    - no override (uses host baseline: bg:tone-bg, border:none)
+    - Element sx carries the always-on baseline:
+        display:inline-flex, radius:md, cursor:pointer, position:relative,
+        min-h:size-h, px:size-px, text:size-fs, weight:medium, py:0.
+    - Hover / focus / disabled are state prefixes on the same sx:
+        hover:bg:hover-bg
+        focus:ring:primary
+        disabled:cursor:not-allowed, disabled:bg:muted, disabled:fg:muted-foreground
+    - motion:hover with scale spring:snappy AOT-bakes the hover scale.
 
-  <variants part="button">
-    variant=default:  bg:background border:border fg:foreground shadow:xs
-  </variants>
+  Open irreducibles (see MIGRATION-NOTES.md at the repo root) - these visuals
+  are OMITTED in this migration because the language today cannot express
+  them; the orchestrator closes each gap:
+    1. [part='button'] baseline properties - background:transparent,
+       border:1px solid transparent, isolation:isolate, font-family,
+       line-height:1, letter-spacing, user-select, white-space. No part
+       allowed; sx has no transparent, font-family, line-height,
+       letter-spacing, user-select, white-space.
+    2. Multi-property transition on bg / border / shadow / transform. sx
+       has no transition shorthand; the runtime already covers a single
+       reduced-motion fallback but not the four properties in concert.
+    3. Hover transform translateY(-1px) and active transform
+       translateY(1px) scale(0.98). sx has no transform utility; the
+       motion hover scale covers scale only.
+    4. Disabled filter saturate(0.6). sx has no filter; the color side
+       moves into the disabled state prefix.
+    5. Per-variant hover background colors. The variants body sx lowers
+       through lower_variant_sx (prop:tok pairs only, no state prefix),
+       so a per-variant hover rule cannot be authored. Hover falls back
+       to a single host-level hover:bg:hover-bg.
+    6. Variant-specific disabled override for ghost and outline
+       (background:transparent). The variants selector grammar lacks
+       pseudo-class selectors; disabled:bg:muted applies globally.
+    7. Loading state - :host(loading) cursor:progress and content
+       opacity:0. loading is not a state prefix; the cursor moves to the
+       disabled-style not-allowed cursor (covers it functionally).
+    8. Icon-only shape - :host(data-icon-only) padding-inline:0,
+       width:var(--btn-h), min-width:var(--btn-h). sx has no width / height
+       with theme channels; the icon-only override would need a per-size
+       selector the variant grammar lacks.
+    9. Spinner (keyframe animation + absolute positioning + opacity:0 of
+       content while loading). @keyframes is irreducible per the brief;
+       the loading conditional block is dropped entirely.
+   10. .content inner-row gap per size (xs:space-1, sm:space-1_5,
+       md:space-2, lg:space-2). The row gap attribute is a fixed token
+       (0 to 8, integer-only) and cannot read the framework size-gap
+       channel; the row uses gap=2 as a static default.
+   11. ::slotted([slot='trailing']) layout - display:inline-flex,
+       align-items:center, flex:0 0 auto. sx has no ::slotted; the slot
+       author is responsible for their icon's own sizing.
+   12. vertical-align:middle on the host. align is intentionally absent
+       from sx (layout = primitives); the host baseline loses
+       vertical-align.
+   13. Per-size font-weight channel (btn-fw). The framework size channels
+       are size-h / size-px / size-fs / size-gap only; btn-fw was a local
+       theme channel. The current values were font-weight-medium across
+       every size, so weight:medium is functionally equivalent.
 
-  <style>
-    /* Residual: raw `transparent` keyword (sx is token-only, no
-     * --transparent token), transforms (raw px/scale), multi-property
-     * transition, focus outline, disabled state (saturate(.6) is raw),
-     * spinner keyframes + positioning, icon-only shape, ::slotted —
-     * none reducible to sx/variants/theme. The `--xxx: ;` lines are
-     * local-marker declarations so the css-token lint recognizes the
-     * theme channels + focus tokens referenced from this block. */
-    --btn-h: ; --btn-gap: ; --icon-size-sm: ; --focus-ring: ; --focus-ring-offset: ; --tone: ; --tone-fg: ; --tone-bg: ; --tone-border: ; --tone-ring: ; --tone-contrast: ; --border-strong: ; --muted: ; --muted-foreground: ;
-    :host { display: inline-flex; vertical-align: middle; }
-    [part='button'] { background: transparent; border: 1px solid transparent; isolation: isolate; font-family: var(--font-body); line-height: 1; letter-spacing: -0.005em; user-select: none; white-space: nowrap; }
-    :host([variant='solid']) [part='button'] { background: var(--tone); border-color: var(--tone); color: var(--tone-contrast); box-shadow: var(--shadow-xs); }
-    :host([variant='solid']:not([disabled])) [part='button']:hover { background: var(--hover-bg); box-shadow: var(--shadow-sm); }
-    :host([variant='soft']) [part='button'] { background: var(--tone-bg); border-color: var(--tone-border); color: var(--tone-fg); }
-    :host([variant='soft']:not([disabled])) [part='button']:hover { background: var(--tone-ring); }
-    :host([variant='outline']) [part='button'] { background: transparent; border-color: var(--tone); color: var(--tone-fg); }
-    :host([variant='outline']:not([disabled])) [part='button']:hover { background: var(--hover-bg); }
-    :host([variant='default']:not([disabled])) [part='button']:hover { background: var(--muted); border-color: var(--border-strong); }
+  Controller: NONE. The button is stateless beyond the ARIA attrs it
+  mirrors; no event dispatch was previously wired and none is added
+  here. Consumers attach their own listeners via the onclick attribute.
+-->
 
-    :host([variant='ghost']:not([disabled])) [part='button']:hover { background: var(--hover-bg); }
-
-    [part='button'] { transition:
-      background-color var(--duration-fast) var(--ease-out),
-      border-color var(--duration-fast) var(--ease-out),
-      box-shadow var(--duration-fast) var(--ease-out),
-      transform var(--duration-fast) var(--ease-out);
-    }
-    [part='button']:hover:not(:disabled) { transform: translateY(-1px); }
-    :host(:not([disabled]):not([loading])) [part='button']:active:not(:disabled) { transform: translateY(1px) scale(0.98); }
-    @media (prefers-reduced-motion: reduce) {
-      [part='button'] { transition: none; }
-      [part='button']:hover:not(:disabled), [part='button']:active:not(:disabled) { transform: none !important; }
-    }
-    [part='button']:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
-    [part='button']:disabled { cursor: not-allowed; color: var(--muted-foreground); background: var(--muted); border-color: var(--border); box-shadow: none; transform: none; filter: saturate(0.6); }
-    :host([variant='ghost']) [part='button']:disabled, :host([variant='outline']) [part='button']:disabled { background: transparent; }
-    :host([loading]) [part='button'] { cursor: progress; }
-    :host([loading]) [part='button'] .content { opacity: 0; }
-    :host([data-icon-only]) [part='button'] { padding-inline: 0; width: var(--btn-h); min-width: var(--btn-h); }
-
-    .spinner-wrap { position: absolute; inset: 0; display: inline-flex; align-items: center; justify-content: center; pointer-events: none; }
-    .spinner { width: var(--icon-size-sm); height: var(--icon-size-sm); border: 1.5px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: sui-button-spin 0.7s linear infinite; }
-    @keyframes sui-button-spin { to { transform: rotate(360deg); } }
-
-
-    .content { gap: var(--btn-gap); transition: opacity var(--duration-fast) var(--ease-out); }
-    ::slotted([slot='trailing']) {
-      display: inline-flex;
-      align-items: center;
-      flex: 0 0 auto;
-    }
-  </style>
+<component>{
+  props: {
+    tone,
+    size,
+    variant: 'default' | 'solid' | 'soft' | 'outline' | 'ghost',
+    type: 'button' | 'submit' | 'reset',
+    disabled: bool,
+    loading: bool,
+    label: string,
+    pressed: 'false' | 'true' | 'mixed',
+    expanded: string,
+  },
+  variants: {
+    variant: {
+      default: 'bg:background border:border fg:foreground shadow:xs',
+      solid:   'bg:tone      border:tone   fg:tone-contrast shadow:xs',
+      soft:    'bg:tone-bg   border:tone-border fg:tone-fg',
+      outline: 'border:tone  fg:tone-fg',
+    },
+  }
+}</component>
 
 <button
-  part="button"
   type={type()}
   disabled={disabled() || loading()}
   motion:hover={{ scale: 'spring:snappy' }}
@@ -84,24 +109,27 @@
   aria-expanded={expanded()}
   sx="
     display:inline-flex
-    fg:foreground
-    border:none
     radius:md
     cursor:pointer
     position:relative
-    min-h:btn-h
-    px:btn-px
-    text:btn-fs
+    min-h:size-h
+    px:size-px
+    text:size-fs
+    weight:medium
     py:0
-    weight:btn-fw
+    bg:tone-bg
+    border:none
+    fg:tone-fg
+    hover:bg:hover-bg
+    focus:ring:primary
+    disabled:cursor:not-allowed
+    disabled:bg:muted
+    disabled:fg:muted-foreground
   "
 >
-  <row class="content" align="center" justify="center">
+  <row align="center" justify="center" gap="2">
     <slot name="leading"></slot>
     <slot reflect-empty="data-icon-only"></slot>
     <slot name="trailing"></slot>
   </row>
-  {#if loading()}
-    <span class="spinner-wrap" aria-hidden="true"><span class="spinner"></span></span>
-  {/if}
 </button>
