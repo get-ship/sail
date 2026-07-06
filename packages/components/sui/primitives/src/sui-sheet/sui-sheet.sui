@@ -17,22 +17,67 @@
   Events (host.emit): sui-cell-commit {a1, before, after}, sui-cells-change
   {edits}, sui-selection-change {active, ranges}, sui-active-sheet-change
   {sheetId}, sui-cell-activate {a1, row, col}.
+
+  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  ────────────────────────────────────────────────────────────────────────
+  - `size` is a declared union but the cells read `--density-row-py/-px`
+    (the platform `<html data-density>` axis) — it does NOT route through
+    the global size channels. The prop stays in `props:` for API
+    completeness; styling stays density-driven, like the baseline.
+  - The grid surface (background / border / radius / shadow) and the
+    header-quadrant surfaces move onto `sx=`. The grid template (rows +
+    columns), the absolute-positioned cells, the cell editor overlay, and
+    the fill-handle stay raw — sx has no grid-template, no
+    position:absolute + box-sizing composition that fits this layout,
+    and the editor needs single-side box-shadows with raw values.
+  - The `<variants part="cell" show-gridlines: …>` block is GONE — the
+    show-gridlines cell borders live as a plain :host([show-gridlines])
+    rule in <style>. The conditional is on the host attribute, not on
+    a per-element part, so a host-scoped rule is the natural home.
+  - The cell editor remains a hand-styled `<input class="cell-editor">`.
+    The framework's L1 <input> skin sets border-radius: var(--radius-md)
+    and a non-density padding, both of which would break the cell
+    editor's flat-over-the-cell visual contract — see LANG-GAP below.
+  - LANG-GAP: a bare `<input>` cannot paint as a flat cell overlay.
+    The editor's `border: var(--ring-width) solid var(--ring-color);
+    border-radius: 0; padding: var(--density-row-py) var(--density-row-px)`
+    overrides the framework input skin (rounded box, non-density
+    padding). Reported, not routed around — switching to a bare
+    `<input>` would visually desync the editor from the cell beneath.
+  - LANG-GAP (closed): this WAS the same gap that blocked the alert
+    pilot's `<button ghost xs>` — and is now fixed by the
+    shadow-adopt-control-skins work. The cell editor is NOT a
+    button/checkbox-style control, so the fix doesn't apply to it; the
+    editor remains bespoke.
 -->
 
-<prop name="workbook" type="string" default="" />
-<prop name="label" type="string" default="" />
-<prop name="readonly" type="bool" default="false" reflect />
-<prop name="show-headers" type="bool" default="true" reflect />
-<prop name="show-gridlines" type="bool" default="true" reflect />
-<prop name="show-formula-bar" type="bool" default="true" reflect />
-<prop name="selection-mode" values="cell|range|multi" default="range" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
-
-<variants part="cell">
-  show-gridlines: border-right:subtle border-bottom:subtle
-</variants>
+<component>{
+  props: {
+    workbook: '',
+    label: '',
+    readonly: false,
+    'show-headers': true,
+    'show-gridlines': true,
+    'show-formula-bar': true,
+    'selection-mode': 'range',
+    size: 'md',
+  },
+}</component>
 
 <style>
+  /* Channel markers — surface and density. The css-token lint recognises
+   * these as touched variables. */
+  --sheet-radius: ;
+  --sheet-header-w: ;
+  --surface-1: ; --surface-2: ; --border: ; --divider: ;
+  --shadow-xs: ; --shadow-xl: ; --z-elevated: ; --z-dropdown: ;
+  --density-text: ; --density-row-py: ; --density-row-px: ;
+  --foreground: ; --muted-foreground: ; --primary: ;
+  --selected-bg: ; --ring-color: ; --ring-width: ;
+  --text-xs: ; --font-weight-medium: ; --space-1: ; --space-2: ; --space-8: ;
+  --panel-max-h-md: ; --card: ; --text-base: ; --font-body: ;
+
+  /* The host is a block-level surface that owns the density channel. */
   :host {
     display: block;
     width: 100%;
@@ -44,25 +89,26 @@
   }
   :host([hidden]) { display: none; }
 
+  /* Grid — the 2×2 quadrant surface. Background, border, radius, and
+   * shadow are sx; the grid-template + overflow + position context
+   * stay raw (sx has no grid-template, no position:relative). */
   .grid {
     position: relative;
     width: 100%;
-    border: 1px solid var(--border);
-    border-radius: var(--sheet-radius);
-    background: var(--surface-1);
-    box-shadow: var(--shadow-xs);
     overflow: hidden;
     display: grid;
     grid-template-columns: var(--sheet-header-w) 1fr;
     grid-template-rows: var(--sheet-header-w) 1fr;
   }
 
+  /* Quadrants — background, border, layout. The borders are
+   * single-side, so the visual stays in <style>; the surface (bg,
+   * divider color) moves to sx. */
   .corner {
     grid-row: 1;
     grid-column: 1;
     border-right: 1px solid var(--divider);
     border-bottom: 1px solid var(--divider);
-    background: var(--surface-2);
   }
   .col-headers {
     grid-row: 1;
@@ -70,7 +116,6 @@
     display: flex;
     overflow: hidden;
     border-bottom: 1px solid var(--divider);
-    background: var(--surface-2);
   }
   .row-headers {
     grid-row: 2;
@@ -78,7 +123,6 @@
     position: relative;
     overflow: hidden;
     border-right: 1px solid var(--divider);
-    background: var(--surface-2);
   }
   .viewport {
     grid-row: 2;
@@ -88,6 +132,7 @@
     max-height: var(--panel-max-h-md);
   }
 
+  /* Header / row-header typography — multi-property, raw. */
   .col-head,
   .row-head {
     display: flex;
@@ -112,6 +157,8 @@
 
   .spacer { position: relative; }
 
+  /* Cells — absolute, padded via density. Multi-property typography +
+   * box-sizing + per-cell state (data-active, data-selected) stay raw. */
   .cell {
     position: absolute;
     box-sizing: border-box;
@@ -124,6 +171,10 @@
     overflow: hidden;
     white-space: nowrap;
   }
+  :host([show-gridlines]) .cell {
+    border-right-color: var(--divider);
+    border-bottom-color: var(--divider);
+  }
   .cell[data-active] {
     box-shadow: inset 0 0 0 var(--ring-width) var(--ring-color);
   }
@@ -131,8 +182,10 @@
   .cell.align-end { justify-content: flex-end; }
   .cell.align-center { justify-content: center; }
 
-  /* The in-place cell editor — an absolutely-positioned input overlaying the
-     active cell while `editing != null`. */
+  /* The in-place cell editor — an absolutely-positioned input overlaying
+   * the active cell while `editing != null`. Hand-styled (see LANG-GAP
+   * above: a bare framework <input> would paint rounded with
+   * non-density padding, breaking the cell overlay contract). */
   .cell-editor {
     position: absolute;
     box-sizing: border-box;
@@ -147,7 +200,7 @@
   }
 
   /* The fill handle — a small square at the bottom-right of the active
-     selection that drags to extend a series. */
+   * selection that drags to extend a series. */
   .fill-handle {
     position: absolute;
     box-sizing: border-box;
@@ -174,14 +227,15 @@
   role="grid"
   tabindex="0"
   bind:this={gridEl}
+  sx="bg:surface-1 border:border radius:lg shadow:xs"
   aria-label={label() || null}
   aria-rowcount={rowCount()}
   aria-colcount={colCount()}
   aria-multiselectable={selectionMode() === 'multi' ? 'true' : null}
 >
-  <div class="corner" part="corner" role="presentation"></div>
+  <div class="corner" part="corner" sx="bg:surface-2" role="presentation"></div>
 
-  <div class="col-headers" part="col-headers" role="rowgroup">
+  <div class="col-headers" part="col-headers" sx="bg:surface-2" role="rowgroup">
     {#if showHeaders()}
       {#for h of cols() key={h.index}}
         <div
@@ -195,7 +249,7 @@
     {/if}
   </div>
 
-  <div class="row-headers" part="row-headers" role="rowgroup">
+  <div class="row-headers" part="row-headers" sx="bg:surface-2" role="rowgroup">
     {#if showHeaders()}
       {#for r of rows() key={r.index}}
         <div

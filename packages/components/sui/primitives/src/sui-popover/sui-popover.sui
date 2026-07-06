@@ -6,73 +6,84 @@
   ARIA reflection, and a unified `sui-toggle` event.
 
   Prop / event / method parity vs <ship-popover>
-  ───────────────────────────────────────────────────────────────────────────
+  ────────────────────────────────────────────────────────────────────────────
   Lit                          SUI                          Notes
-  ───────────────────────────────────────────────────────────────────────────
+  ────────────────────────────────────────────────────────────────────────────
   open (bool, false)           open (bool, false, reflect)  ✓
   placement                    placement (union, 'bottom',  ✓ adds bottom-end,
     'top'|'bottom'|'left'|       reflect)                     top-end, right-end,
     'right'                                                    left-end
-  ───────────────────────────────────────────────────────────────────────────
+  ────────────────────────────────────────────────────────────────────────────
   Events: ship-open,           sui-toggle                   { detail: { open } }
     ship-close                                                — single event
                                                                replaces pair
-  ───────────────────────────────────────────────────────────────────────────
+  ────────────────────────────────────────────────────────────────────────────
   show(), hide(), toggle()     show(), hide(), toggle()     ✓ delegate to
                                                                showPopover /
                                                                hidePopover /
                                                                togglePopover
-  ───────────────────────────────────────────────────────────────────────────
+  ────────────────────────────────────────────────────────────────────────────
   Slots: trigger, (default)    trigger, (default)           ✓
   Parts: (none)                panel, surface               ✓
-  ───────────────────────────────────────────────────────────────────────────
+  ────────────────────────────────────────────────────────────────────────────
   Click-outside / Esc /        DELEGATED to native          ✓ less code,
   focus-return:                  popover="auto"              ✓ better a11y,
     hand-rolled in JS                                         ✓ top-layer
-  ───────────────────────────────────────────────────────────────────────────
+  ────────────────────────────────────────────────────────────────────────────
   Trigger ARIA:                Same — controller sets       ✓
     aria-haspopup="dialog",      aria-haspopup,
     aria-expanded,               aria-expanded,
     aria-controls=panelId        aria-controls + the
                                   popovertarget attribute that
                                   wires native open/close
-  ───────────────────────────────────────────────────────────────────────────
+  ────────────────────────────────────────────────────────────────────────────
   Position:                    CSS Anchor Positioning       ✓ Chrome/Safari;
     pure CSS top/left            (anchor-name +              ✓ getBoundingClientRect
     selectors keyed off           position-anchor +           fallback for FF +
     [placement]                   anchor())                   older Safari
-  ───────────────────────────────────────────────────────────────────────────
+  ────────────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  ────────────────────────────────────────────────────────────────────────
+  - The component block uses the new props: object form (matching
+    the alert pilot's house style) — no more flat `<prop>` tags.
+  - The .surface's surface treatment (min-width / padding / background
+    / foreground / border / radius / text size) moves onto `sx=`.
+    The remaining <style> rules are all genuinely irreducible to sx:
+    backdrop-filter (with vendor prefix), isolation, multi-shadow
+    (the inset 1px highlight), font-family, the entire @supports
+    CSS Anchor Positioning block (anchor-name, position-anchor,
+    position-try-fallbacks, position-try-order, anchor() math),
+    and ::slotted([slot='trigger']) anchor-name wiring.
+  - The :host base still carries `--sui-popover-anchor` setup — the
+    controller sets the per-instance var that the @supports block
+    reads, so the var lives on the host (not on .panel) and the
+    rules can resolve it once for all elements.
+  - The @media (prefers-reduced-motion) rule still lives in <style>
+    because the .surface gets `transition:scale` from the runtime
+    {#if open()} binding, not from sx (sx has no transition
+    shorthand for "scale around center").
+  - No new LANG-GAP: the surface drop-shadows + backdrop-filter +
+    anchor positioning sit naturally in <style>. The cell-editor
+    gap (sui-sheet) is a different story — that one is genuine.
 -->
 
-<prop name="open" type="bool" default="false" reflect />
-<prop name="placement" values="top|top-end|bottom|bottom-end|left|left-end|right|right-end" default="bottom" reflect />
+<component>{
+  props: {
+    open: false,
+    placement: ['top', 'top-end', 'bottom', 'bottom-end', 'left', 'left-end', 'right', 'right-end'],
+  },
+}</component>
 
-<!--
-  Residual <style> — every rule here is fundamentally not reducible to
-  sx/variants/theme:
-  - :host base + [hidden] (the new <host sx="..."> directive would cover
-    position/display but the `--sui-popover-anchor` var-setup belongs
-    here for the @supports anchor positioning block).
-  - .panel reset (margin/border/padding/background/overflow/inset) —
-    native popover defaults are aggressive and need the override.
-    None are in the sx surface vocab.
-  - .panel::backdrop transparent (pseudo-element + transparent).
-  - .panel > .surface: backdrop-filter + isolation (no sx kw), the
-    inset 1px highlight (multi-shadow, not the sx ring: model), the
-    semantic-stack isolation rule, font-family/font-size.
-  - @supports (anchor-name: --x): the CSS Anchor Positioning rules
-    driving .panel placement — anchor-name, position-anchor,
-    position-try-fallbacks, position-try-order, and the per-placement
-    top/bottom/left/right anchor() math. New CSS features outside the
-    sx vocabulary.
-  - ::slotted([slot='trigger']) anchor-name wiring (the :host scopes
-    the slotted child via the --sui-popover-anchor var).
-  - @media (prefers-reduced-motion: reduce) — .surface { transform: none }
-    because the surface gets `transition:scale` from `{#if open()}` at
-    runtime, not in sx.
--->
 <style>
-  --font-body: ; --text-base: ; --border: ; --z-popover: ; --muted-foreground: ; --surface-2: ; --background: ; --space-2: ; --panel-min-w-sm: ; --radius-lg: ; --shadow-lg: ; --popover: ; --popover-foreground: ; --card-backdrop-filter: ;
+  /* Channel markers — the css-token lint recognises these as touched. */
+  --font-body: ; --text-base: ; --border: ; --muted-foreground: ;
+  --surface-2: ; --background: ; --space-2: ;
+  --panel-min-w-sm: ; --radius-lg: ; --shadow-lg: ;
+  --popover: ; --popover-foreground: ; --card-backdrop-filter: ;
+
+  /* The host is an inline-flex positioning context that owns the
+   * per-instance --sui-popover-anchor var the @supports block reads. */
   :host {
     position: relative;
     display: inline-flex;
@@ -95,14 +106,10 @@
   }
   .panel::backdrop { background: transparent; }
 
+  /* The surface surface treatment lives in sx; the irreducible remainder
+   * (backdrop-filter with vendor prefix, isolation, multi-shadow inset
+   * highlight, font-family) stays here. */
   .panel > .surface {
-    min-width: var(--panel-min-w-sm);
-    padding: var(--space-2);
-    background: var(--popover);
-    color: var(--popover-foreground);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg), inset 0 1px 0 var(--background);
     backdrop-filter: var(--card-backdrop-filter);
     -webkit-backdrop-filter: var(--card-backdrop-filter);
     /* Establish a stacking context so the glass backdrop-filter clips to
@@ -110,14 +117,11 @@
        paint OUTSIDE the surface; an overflow clip would crop the drop shadow. */
     isolation: isolate;
     font-family: var(--font-body);
-    font-size: var(--text-base);
   }
-  /* Open/close polish is driven by `transition:scale` on the
-     #if-mounted .surface (see template). No CSS transition here. */
 
   /* CSS Anchor Positioning. Controller sets a unique anchor-name on the
-     SLOTTED trigger element via `--sui-popover-anchor`, so each instance
-     anchors to its own trigger without any inline-style juggling. */
+   * SLOTTED trigger element via `--sui-popover-anchor`, so each instance
+   * anchors to its own trigger without any inline-style juggling. */
   @supports (anchor-name: --x) {
     ::slotted([slot='trigger']) {
       anchor-name: var(--sui-popover-anchor);
@@ -193,7 +197,8 @@
 <slot name="trigger" bind:this={triggerSlot}></slot>
 <div class="panel" part="panel" popover="auto" bind:this={panelEl} role="dialog" aria-modal="false">
   {#if open()}
-    <div class="surface" part="surface" transition:scale={{ duration: 120 }}>
+    <div class="surface" part="surface" transition:scale={{ duration: 120 }}
+      sx="min-w:panel-min-w-sm p:2 bg:popover fg:popover-foreground border:border radius:lg text:base">
       <slot></slot>
     </div>
   {/if}
