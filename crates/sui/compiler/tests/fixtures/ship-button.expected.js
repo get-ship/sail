@@ -81,6 +81,6 @@ component("ship-button-test", {
     "loading": prop.bool({ default: false, reflect: true }),
     "label": prop.string({ default: "" }),
   },
-  styles: ":host { display: inline-flex; }\n",
+  styles: ":scope { display: inline-flex; }\n",
 }, __default);
 export default __default;

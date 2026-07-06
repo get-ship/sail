@@ -482,7 +482,12 @@ fn lower_variants(source: &str) -> (String, String) {
         let body = out[tag_end..tag_end + rel].to_string();
         let block_end = tag_end + rel + "</variants>".len();
 
-        // `part="field"` re-targets the rule from `:host` to `[part='field']`.
+        // Targeting (variants v2): `class="field"` re-targets the rule from
+        // `:host` to the anatomy class `.field` — classes ARE the anatomy in
+        // the light-DOM architecture. `part="field"` remains as the
+        // TRANSITIONAL shadow-era spelling ([part='field']); it dies with the
+        // part idiom.
+        let class_target = attr_value(&open_tag, "class");
         let part = attr_value(&open_tag, "part");
 
         // Two body forms, ONE emission. A body starting with `{` is the
@@ -503,15 +508,38 @@ fn lower_variants(source: &str) -> (String, String) {
                 })
                 .collect()
         };
+        let target: Option<String> = match (&class_target, &part) {
+            (Some(c), _) => Some(format!(".{c}")),
+            (None, Some(p)) => Some(format!("[part='{p}']")),
+            (None, None) => None,
+        };
         for (sel, sx) in pairs {
             let Some(selector) = variant_selector(&sel) else { continue };
-            let decls = lower_variant_sx(&sx);
-            if decls.is_empty() {
-                continue;
-            }
-            match &part {
-                Some(p) => css.push_str(&format!(":host({selector}) [part='{p}']{{{decls}}}")),
-                None => css.push_str(&format!(":host({selector}){{{decls}}}")),
+            for (state, decls) in lower_variant_sx(&sx) {
+                if decls.is_empty() {
+                    continue;
+                }
+                // Where a state attaches (v2):
+                //   host-level     → :host(SEL):hover           (state on host)
+                //   targeted       → :host(SEL) .box:hover      (state on target)
+                //   group-<s> +
+                //   targeted       → :host(SEL):hover .box      (host state drives
+                //                                                the target — the
+                //                                                label:hover .box
+                //                                                pattern)
+                //   condition      → @media (…) { rule }
+                let (media, host_pseudo, target_pseudo) =
+                    classify_variant_state(&state, target.is_some());
+                let rule = match &target {
+                    Some(t) => {
+                        format!(":host({selector}{host_pseudo}) {t}{target_pseudo}{{{decls}}}")
+                    }
+                    None => format!(":host({selector}{host_pseudo}){{{decls}}}"),
+                };
+                match media {
+                    Some(q) => css.push_str(&format!("@media {q}{{{rule}}}")),
+                    None => css.push_str(&rule),
+                }
             }
         }
 
@@ -845,7 +873,7 @@ fn lower_component(source: &str) -> String {
                 form_value.as_deref(),
                 form_disabled.as_deref(),
             )),
-            "variants" => generated.push_str(&format!("<variants>{val}</variants>\n")),
+            "variants" => generated.push_str(&expand_variants(&val)),
             // `form` was consumed above; meta.tag is filename-derived today.
             _ => {}
         }
@@ -854,6 +882,34 @@ fn lower_component(source: &str) -> String {
     out.push_str(&source[..start]);
     out.push_str(&generated);
     out.push_str(&source[block_end..]);
+    out
+}
+
+/// Expand the component block's `variants:` object (variants v2). A top-level
+/// key starting with `.` is an ANATOMY-CLASS TARGET whose value is its own
+/// variants object — it desugars to a `<variants class="…">` block; everything
+/// else stays in the bare (host-level) block:
+/// ```text
+///   variants: {
+///     variant: { solid: 'bg:tone' },            → <variants>{variant:{…}}</variants>
+///     '.box':  { variant: { solid: 'bg:tone' } } → <variants class="box">{…}</variants>
+///   }
+/// ```
+fn expand_variants(obj: &str) -> String {
+    let inner = obj.trim().trim_start_matches('{').trim_end_matches('}');
+    let mut host_fields: Vec<String> = Vec::new();
+    let mut out = String::new();
+    for (k, v) in parse_object_fields(inner) {
+        let key = k.trim().trim_matches('\'').trim_matches('"');
+        if let Some(class) = key.strip_prefix('.') {
+            out.push_str(&format!("<variants class=\"{class}\">{v}</variants>\n"));
+        } else {
+            host_fields.push(format!("{k}: {v}"));
+        }
+    }
+    if !host_fields.is_empty() {
+        out.push_str(&format!("<variants>{{ {} }}</variants>\n", host_fields.join(", ")));
+    }
     out
 }
 
@@ -1030,9 +1086,19 @@ fn lower_host(source: &str) -> (String, String) {
             }
         }
         if let Some(sx) = attr_value(&open_tag, "sx") {
-            let decls = lower_variant_sx(&sx);
-            if !decls.is_empty() {
-                css.push_str(&format!(":host{{{decls}}}"));
+            // <host sx> supports the same per-state groups as variants v2:
+            // base decls on :host, states as :host:hover etc., conditions in
+            // their media query.
+            for (state, decls) in lower_variant_sx(&sx) {
+                if decls.is_empty() {
+                    continue;
+                }
+                let (media, host_pseudo, _) = classify_variant_state(&state, false);
+                let rule = format!(":host{host_pseudo}{{{decls}}}");
+                match media {
+                    Some(q) => css.push_str(&format!("@media {q}{{{rule}}}")),
+                    None => css.push_str(&rule),
+                }
             }
         }
         let mut next = String::with_capacity(out.len());
@@ -1055,6 +1121,36 @@ fn attr_value(tag: &str, name: &str) -> Option<String> {
 /// A variant selector → a `:host(...)` attribute-match. `tone=success` →
 /// `[tone='success']`; `[disabled]` → `[disabled]`; `(a=x, b=y)` →
 /// `[a='x'][b='y']` (compound).
+/// Where a variants-v2 state prefix attaches. Returns
+/// `(media_query, host_pseudo, target_pseudo)`:
+/// - base (`""`) → nowhere
+/// - a condition (`motion-reduce`, `dark`, …) → an `@media` wrapper
+/// - `group-<s>` → pseudo on the HOST (host state drives the targeted
+///   descendant — the `label:hover .box` pattern); without a target it
+///   degrades to a plain host state
+/// - a plain state → pseudo on the target when one exists, else on the host
+fn classify_variant_state(
+    state: &str,
+    has_target: bool,
+) -> (Option<&'static str>, String, String) {
+    if state.is_empty() {
+        return (None, String::new(), String::new());
+    }
+    if let Some(q) = sui_lint::rules::sx::condition_media(state) {
+        return (Some(q), String::new(), String::new());
+    }
+    if let Some(base) = state.strip_prefix("group-")
+        && let Some(p) = sui_lint::rules::sx::state_pseudo(base)
+    {
+        return (None, p.to_string(), String::new());
+    }
+    match sui_lint::rules::sx::state_pseudo(state) {
+        Some(p) if has_target => (None, String::new(), p.to_string()),
+        Some(p) => (None, p.to_string(), String::new()),
+        None => (None, String::new(), String::new()),
+    }
+}
+
 fn variant_selector(sel: &str) -> Option<String> {
     let sel = sel.trim();
     if let Some(inner) = sel.strip_prefix('(').and_then(|s| s.strip_suffix(')')) {
@@ -1082,19 +1178,44 @@ fn attr_match(s: &str) -> Option<String> {
     }
 }
 
-/// Lower a space-separated sx list to `prop:value;…` via the shared sx vocab.
-fn lower_variant_sx(list: &str) -> String {
-    let mut out = String::new();
+/// Lower a space-separated sx list to per-state declaration groups via the
+/// shared sx vocab (variants v2). Returns `(state, "prop:value;…")` groups in
+/// first-appearance order; `state` is `""` for the base group, a pseudo state
+/// (`hover`, `focus`, …), a `group-<state>` propagation (host state →
+/// descendant target), or a condition (`motion-reduce`, …). This is what lets
+/// a variants table express `solid: 'bg:tone hover:bg:tone-bg-hover'` — the
+/// per-variant hover that translation waves had to drop.
+fn lower_variant_sx(list: &str) -> Vec<(String, String)> {
+    let mut groups: Vec<(String, String)> = Vec::new();
+    let mut push = |state: &str, decls: Vec<(&'static str, String)>| {
+        let body: String = decls.iter().map(|(p, v)| format!("{p}:{v};")).collect();
+        if let Some((_, existing)) = groups.iter_mut().find(|(s, _)| s == state) {
+            existing.push_str(&body);
+        } else {
+            groups.push((state.to_string(), body));
+        }
+    };
     for pair in list.split_whitespace() {
-        if let Some((prop, tok)) = pair.split_once(':')
-            && let Some(decls) = sui_lint::rules::sx::lower(prop, tok)
-        {
-            for (p, v) in decls {
-                out.push_str(&format!("{p}:{v};"));
+        match pair.splitn(3, ':').collect::<Vec<_>>().as_slice() {
+            [prop, tok] => {
+                if let Some(decls) = sui_lint::rules::sx::lower(prop, tok) {
+                    push("", decls);
+                }
             }
+            [state, prop, tok] => {
+                let known = sui_lint::rules::sx::state_pseudo(state).is_some()
+                    || sui_lint::rules::sx::condition_media(state).is_some()
+                    || state
+                        .strip_prefix("group-")
+                        .is_some_and(|b| sui_lint::rules::sx::state_pseudo(b).is_some());
+                if known && let Some(decls) = sui_lint::rules::sx::lower(prop, tok) {
+                    push(state, decls);
+                }
+            }
+            _ => {}
         }
     }
-    out
+    groups
 }
 
 fn quote_brace_attrs(source: &str) -> String {
@@ -1396,6 +1517,64 @@ mod tests {
     fn quoted_gt_inside_attr_does_not_break_class_merge() {
         let out = preprocess(r#"<span title="a > b" class="x" sx="p:4">y</span>"#);
         assert!(out.contains(r#"class="x sx-p-4""#), "got:\n{out}");
+    }
+
+    #[test]
+    fn variants_v2_class_target_and_states() {
+        // Class-targeted block + per-variant state — the grammar the re-ports
+        // need (per-variant hover was translation-wave loss #5).
+        let src = "<variants class=\"box\">\nvariant=solid: bg:primary hover:bg:muted\n</variants>\n<div>x</div>";
+        let out = preprocess(src);
+        assert!(
+            out.contains(":host([variant='solid']) .box{background:var(--primary);}"),
+            "base rule targets the anatomy class:\n{out}"
+        );
+        assert!(
+            out.contains(":host([variant='solid']) .box:hover{background:var(--muted);}"),
+            "state attaches to the target:\n{out}"
+        );
+    }
+
+    #[test]
+    fn variants_v2_host_state_and_group_propagation() {
+        let src = "<variants>\ndisabled: opacity:50 hover:opacity:75\n</variants>\n<variants class=\"glyph\">\nchecked: group-hover:opacity:100\n</variants>\n<div>x</div>";
+        let out = preprocess(src);
+        assert!(
+            out.contains(":host([disabled]){opacity:0.5;}"),
+            "host base:\n{out}"
+        );
+        assert!(
+            out.contains(":host([disabled]:hover){opacity:0.75;}"),
+            "host-level state lands on the host:\n{out}"
+        );
+        assert!(
+            out.contains(":host([checked]:hover) .glyph{opacity:1;}"),
+            "group state on host drives the target:\n{out}"
+        );
+    }
+
+    #[test]
+    fn variants_v2_condition_wraps_media() {
+        let src = "<variants class=\"spin\">\nloading: motion-reduce:visibility:hidden\n</variants>\n<div>x</div>";
+        let out = preprocess(src);
+        assert!(
+            out.contains("@media (prefers-reduced-motion: reduce){:host([loading]) .spin{visibility:hidden;}}"),
+            "condition wraps the rule in its media query:\n{out}"
+        );
+    }
+
+    #[test]
+    fn component_variants_dotted_keys_desugar_to_class_blocks() {
+        let src = "<component>{\n  props: { variant: 'solid' | 'soft' },\n  variants: {\n    variant: { solid: 'shadow:xs' },\n    '.box': { variant: { solid: 'bg:primary' } },\n  },\n}</component>\n<div>x</div>";
+        let out = preprocess(src);
+        assert!(
+            out.contains(":host([variant='solid']){box-shadow:var(--shadow-xs);}"),
+            "host-level group survives:\n{out}"
+        );
+        assert!(
+            out.contains(":host([variant='solid']) .box{background:var(--primary);}"),
+            "dotted key becomes a class-targeted block:\n{out}"
+        );
     }
 
     #[test]
