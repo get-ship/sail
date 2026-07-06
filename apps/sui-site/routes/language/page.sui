@@ -118,6 +118,27 @@
 
   <separator></separator>
 
+  <!-- SEMANTIC HTML, styled by default — no sx, no <style>. "The web, with
+       default styles" applied to the whole element set. -->
+  <column gap="4">
+    <label size="sm">semantic HTML — default-styled by the framework</label>
+    <blockquote>A plain &lt;blockquote&gt; gets a rule, muted ink, and spacing — nothing authored.</blockquote>
+    <table>
+      <thead><tr><th>Component</th><th>Layer</th><th>JS</th></tr></thead>
+      <tbody>
+        <tr><td>button</td><td>L1</td><td>none</td></tr>
+        <tr><td>dialog</td><td>L2</td><td>focus trap</td></tr>
+        <tr><td>card</td><td>L1 surface</td><td>none</td></tr>
+      </tbody>
+    </table>
+    <row gap="6" align="center">
+      <ul><li>bulleted</li><li>list</li></ul>
+      <p>Press <kbd>⌘</kbd> <kbd>K</kbd> to search.</p>
+    </row>
+  </column>
+
+  <separator></separator>
+
   <!-- The growing L2 library — behavioral compounds composed ON the language.
        (Follow-along: re-ported from feat/next onto the new surface, wave by
        wave. These are shadow components; their internals use L1 controls.) -->
