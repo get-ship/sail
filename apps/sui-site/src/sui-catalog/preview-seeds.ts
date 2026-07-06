@@ -109,7 +109,6 @@ const TOAST_ITEMS = JSON.stringify([
 export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   // ── Actions & identity ──────────────────────────────────────────────
   'sui-button':          { props: { tone: 'primary', variant: 'solid' }, innerHTML: 'Save changes' },
-  'sui-link':            { props: { href: '#', variant: 'underline' }, innerHTML: 'View documentation' },
   'sui-icon':            { props: { name: 'sparkles', variant: 'tile', tone: 'primary', size: 'lg' } },
   'sui-avatar':          { props: { name: 'Ada Lovelace', size: 'lg' } },
   // catalog (brand chrome, not a public component) and is composed

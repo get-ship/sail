@@ -233,16 +233,7 @@
     </div>
   </section>
 
-  <!-- Link -->
-  <section class="gsp-section">
-    <h2 class="gsp-label">sui-link</h2>
-    <div class="gsp-row gsp-wrap">
-      <sui-link href="#">Default link</sui-link>
-      <sui-link href="#" variant="underline" tone="primary">Underline primary</sui-link>
-      <sui-link href="#" variant="subtle" tone="muted">Subtle muted</sui-link>
-      <sui-link href="https://example.com" external>External</sui-link>
-    </div>
-  </section>
+  <!-- Link dissolved to L1 (bare <a> + sx) — see dissolve-gate.md -->
 
   <!-- Navigation menu -->
   <section class="gsp-section">

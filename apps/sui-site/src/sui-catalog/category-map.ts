@@ -168,7 +168,6 @@ export const TAG_CATEGORY: Record<string, CategoryId> = {
   'sui-sheet':           'data',
   // ── @ship/sui-primitives — Typography & identity ──────────────────────
   'sui-button':          'typography',
-  'sui-link':            'typography',
   'sui-icon':            'typography',
   'sui-avatar':          'typography',
   'sui-chip':            'typography',
