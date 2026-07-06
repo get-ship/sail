@@ -100,6 +100,24 @@
 
   <separator></separator>
 
+  <!-- L2 component with framework-styled INTERNAL controls (shadow DOM):
+       the dismiss button is a bare <button ghost> that now paints via the
+       shadow-adopted control sheet. -->
+  <column gap="3">
+    <label size="sm">sui-alert — an L2 component; its dismiss is a framework &lt;button&gt;</label>
+    <sui-alert tone="info" dismissible>
+      <span slot="title">Heads up</span>
+      A component built ON the language — its internal control is skinned by
+      the same contracts, across the shadow boundary.
+    </sui-alert>
+    <sui-alert tone="warning" dismissible>
+      <span slot="title">Careful</span>
+      Tone flows through to the surface and the dismiss control.
+    </sui-alert>
+  </column>
+
+  <separator></separator>
+
   <!-- The minimal primitives, for completeness. -->
   <column gap="3">
     <label size="sm">spinner · icon</label>
