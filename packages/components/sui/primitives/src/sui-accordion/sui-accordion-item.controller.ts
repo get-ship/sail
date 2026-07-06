@@ -1,34 +1,28 @@
 import { controller, effect } from '@ship/sui-runtime'
 import type { Scope } from './sui-accordion-item.sui'
 
-let _seq = 0
-
 export default controller<Scope>({
   mount(state, host) {
-    const uid = ++_seq
-    const triggerId = `sui-acc-trigger-${uid}`
-    const contentId = `sui-acc-content-${uid}`
+    // Guards against the 'toggle' event our own open-prop sync causes
+    // (native <details> fires 'toggle' whenever its `open` attribute
+    // changes, whether the browser or we did it) from being mistaken
+    // for a user-driven click that should ask the parent to coordinate.
+    let suppressToggle = false
 
-    const stopIds = effect(() => {
-      const btn = state.$signals.triggerBtn() as HTMLButtonElement | null
-      const wrap = state.$signals.contentWrap() as HTMLElement | null
-      if (btn) {
-        btn.id = triggerId
-        btn.setAttribute('aria-controls', contentId)
-      }
-      if (wrap) {
-        wrap.id = contentId
-        wrap.setAttribute('aria-labelledby', triggerId)
+    const stopOpenSync = effect(() => {
+      const details = state.$signals.detailsEl() as HTMLDetailsElement | null
+      const isOpen = state.$signals.open()
+      if (details && details.open !== isOpen) {
+        suppressToggle = true
+        details.open = isOpen
       }
     })
 
-    const stopAriaExpanded = effect(() => {
-      const btn = state.$signals.triggerBtn() as HTMLButtonElement | null
-      if (btn) btn.setAttribute('aria-expanded', state.$signals.open() ? 'true' : 'false')
-    })
-
-    const onClick = () => {
-      if (state.$signals.disabled()) return
+    const onToggle = () => {
+      if (suppressToggle) {
+        suppressToggle = false
+        return
+      }
       host.dispatchEvent(
         new CustomEvent('sui-accordion-item-toggle', {
           detail: { value: state.$signals.value() },
@@ -38,7 +32,17 @@ export default controller<Scope>({
       )
     }
 
-    const onKeydown = (e: KeyboardEvent) => {
+    // <details> has no native `disabled` state — the one bit of JS
+    // native HTML can't express. Block activation ourselves.
+    const onClickCapture = (e: MouseEvent) => {
+      if (state.$signals.disabled()) e.preventDefault()
+    }
+
+    const onKeydownCapture = (e: KeyboardEvent) => {
+      if (state.$signals.disabled() && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault()
+        return
+      }
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         e.preventDefault()
         host.dispatchEvent(
@@ -60,21 +64,22 @@ export default controller<Scope>({
       }
     }
 
-    const stopBtn = effect(() => {
-      const btn = state.$signals.triggerBtn() as HTMLButtonElement | null
-      if (!btn) return
-      btn.addEventListener('click', onClick)
-      btn.addEventListener('keydown', onKeydown)
+    const stopListeners = effect(() => {
+      const details = state.$signals.detailsEl() as HTMLDetailsElement | null
+      if (!details) return
+      details.addEventListener('toggle', onToggle)
+      details.addEventListener('click', onClickCapture, true)
+      details.addEventListener('keydown', onKeydownCapture, true)
       return () => {
-        btn.removeEventListener('click', onClick)
-        btn.removeEventListener('keydown', onKeydown)
+        details.removeEventListener('toggle', onToggle)
+        details.removeEventListener('click', onClickCapture, true)
+        details.removeEventListener('keydown', onKeydownCapture, true)
       }
     })
 
     return () => {
-      stopIds()
-      stopAriaExpanded()
-      stopBtn()
+      stopOpenSync()
+      stopListeners()
     }
   },
 })

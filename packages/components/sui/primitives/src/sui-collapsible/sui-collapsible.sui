@@ -1,48 +1,64 @@
 <!--
   <sui-collapsible> — SUI port of <ship-collapsible>.
-  Click-to-toggle disclosure with smooth height animation.
+  Native disclosure: a <details>/<summary> pair. The open/close toggle,
+  keyboard activation (Enter/Space on the trigger), and the ARIA
+  expanded-state exposure are the browser's now — none of that is
+  hand-rolled JS anymore.
 
   Prop parity vs <ship-collapsible>
   ─────────────────────────────────────────────────────────────────────────────
   Lit                          SUI                      Notes
   ─────────────────────────────────────────────────────────────────────────────
   open (bool, false)           open (bool, reflect)     ✓
-  disabled (bool, false)       disabled (bool, reflect) ✓
+  disabled (bool, false)       disabled (bool, reflect) ✓ LANG-GAP below
   ─────────────────────────────────────────────────────────────────────────────
   ship-toggle → {open: bool}   sui-toggle → {open:bool} event renamed
   ─────────────────────────────────────────────────────────────────────────────
-  slots: trigger               trigger                  ✓
+  slots: trigger               trigger                  ✓ now rendered inside
+                                                          <summary>
          (default) content     (default) content        ✓
   ─────────────────────────────────────────────────────────────────────────────
   parts: content               part="content"           ✓ the content-wrap div
   ─────────────────────────────────────────────────────────────────────────────
-  ARIA: aria-expanded +        controller sets same     ✓
-    aria-controls on trigger
+  ARIA: aria-expanded +        native <details>/         ✓ browser-owned; no
+    aria-controls on trigger    <summary> semantics        explicit aria-* set
     elements; tabindex=0 for
     non-focusable triggers
-  keyboard: Enter/Space        Enter/Space on           ✓
-    on trigger-wrap              trigger-wrap
+  keyboard: Enter/Space        native <summary>          ✓ browser-owned
+    on trigger-wrap              activation behavior
   ─────────────────────────────────────────────────────────────────────────────
-  animation: grid-template-    same CSS grid trick      ✓
+  animation: grid-template-    LANG-GAP — see below       ✗ dropped, see below
     rows 0fr→1fr; respects
     prefers-reduced-motion
   ─────────────────────────────────────────────────────────────────────────────
 
-  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  NATIVE REBUILD (native-rebuild-gate pass)
   ─────────────────────────────────────────────────────────────────────────────
-  - No tone/size usage here — nothing to move onto the global channels.
-    The bare host baseline this file used to declare (display:block,
-    color:foreground, [hidden]→display:none) is now framework-owned
-    (BASE_CSS, adopted into every shadow root) — dropped from here.
-  - No L1 controls of its own — the trigger is consumer-slotted (a <button>,
-    a <div>, whatever the caller passes); there's no dismiss/close button
-    of this component's own to re-skin the way sui-alert's was.
-  - Everything else in <style> stays, verbatim feat/next, tokens only:
-    the grid-template-rows 0fr→1fr trick (no sx property for
-    grid-template-rows), the ::slotted() trigger styling (cursor/user-
-    select/hover/focus/disabled — sx/variants can't reach slotted
-    content, only :host attributes), and the prefers-reduced-motion
-    override.
+  - <summary> IS the trigger-wrap now; the consumer's `slot="trigger"`
+    content (a <button>, a <div>, whatever) renders inside it. <summary>
+    is unconditionally focusable/keyboard-activatable per the HTML spec,
+    so the old manual tabindex=0-for-non-interactive-triggers and the
+    Enter/Space keydown handler are both DELETED — the browser does this
+    for free now.
+  - LANG-GAP: native <details> has no `disabled` concept. A click (or
+    Enter/Space) on <summary> always toggles natively. The controller
+    keeps a small capture-phase click/keydown listener that calls
+    preventDefault() when the `disabled` prop is set, which suppresses
+    the browser's native toggle. This is the one bit of JS native HTML
+    cannot express — everything else (open/close, focus, ARIA) is gone.
+  - LANG-GAP: the animated open/close (grid-template-rows 0fr→1fr) is
+    DROPPED. Native <details> shows/hides its non-summary children via
+    an internal UA behavior (not an overridable `display:none` rule at
+    normal specificity in every engine), so the old grid-rows trick no
+    longer has a reliable hook to animate against — the content is
+    either fully in the accessibility/layout tree (open) or fully
+    removed (closed), with no animatable intermediate state. The
+    `::details-content` pseudo-element (Chrome 131+) can restore this
+    but has no cross-browser support yet; flagged for the operator to
+    decide whether to spend a progressive-enhancement pass on it.
+    Toggling is now instant, no transition.
+  - `display:block`/`color`/`[hidden]` on :host — framework-owned
+    (BASE_CSS), same as before.
 -->
 
 <component>{
@@ -57,47 +73,35 @@
     font-family: var(--font-body);
   }
 
-  .content-wrap {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows var(--duration-medium) var(--ease-out);
-  }
-  :host([open]) .content-wrap {
-    grid-template-rows: 1fr;
-  }
-
-  .content-inner {
-    overflow: hidden;
-  }
-
-  ::slotted([slot='trigger']) {
+  summary.trigger-wrap {
+    list-style: none;
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
     transition: background var(--duration-fast) var(--ease-out);
   }
-  ::slotted([slot='trigger']:hover) {
-    background: var(--hover-bg);
-  }
-  ::slotted([slot='trigger']:focus-visible) {
+  summary.trigger-wrap::-webkit-details-marker { display: none; }
+  summary.trigger-wrap::marker { content: ''; }
+  summary.trigger-wrap:hover { background: var(--hover-bg); }
+  summary.trigger-wrap:focus-visible {
     outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
   }
-  :host([disabled]) ::slotted([slot='trigger']) {
+  :host([disabled]) summary.trigger-wrap {
     cursor: not-allowed;
     opacity: 0.5;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .content-wrap { transition: none; }
-  }
+  .content-inner { padding: 0; }
 </style>
 
-<div class="trigger-wrap" bind:this={triggerWrap}>
-  <slot name="trigger" bind:this={triggerSlot}></slot>
-</div>
-<div class="content-wrap" part="content" bind:this={contentWrap}>
-  <div class="content-inner">
-    <slot></slot>
+<details bind:this={detailsEl}>
+  <summary class="trigger-wrap" bind:this={triggerWrap}>
+    <slot name="trigger"></slot>
+  </summary>
+  <div class="content-wrap" part="content" bind:this={contentWrap}>
+    <div class="content-inner">
+      <slot></slot>
+    </div>
   </div>
-</div>
+</details>

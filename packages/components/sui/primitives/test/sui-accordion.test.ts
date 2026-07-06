@@ -7,6 +7,8 @@ const reg = createContainerRegistry()
 afterEach(() => reg.cleanup())
 
 const shadow = (el: HTMLElement) => el.shadowRoot!
+const summaryOf = (el: HTMLElement) => shadow(el).querySelector('summary') as HTMLElement
+const detailsOf = (el: HTMLElement) => shadow(el).querySelector('details') as HTMLDetailsElement
 
 function mountAccordion(type = 'single', value = '', extraItems = '') {
   const container = reg.mk()
@@ -59,14 +61,14 @@ describe('<sui-accordion>', () => {
     expect(items[1].hasAttribute('open')).toBe(false)
   })
 
-  it('single mode: clicking opens one item', async () => {
+  it('single mode: clicking opens one item (native <details> disclosure)', async () => {
     const el = mountAccordion()
     await flush()
     const itemA = el.querySelector('sui-accordion-item[value="a"]') as HTMLElement
-    const btn = shadow(itemA).querySelector('button') as HTMLButtonElement
-    btn.click()
+    summaryOf(itemA).click()
     await flush()
     expect(itemA.hasAttribute('open')).toBe(true)
+    expect(detailsOf(itemA).open).toBe(true)
   })
 
   it('single mode: clicking second item closes first', async () => {
@@ -74,11 +76,12 @@ describe('<sui-accordion>', () => {
     await flush()
     const itemA = el.querySelector('sui-accordion-item[value="a"]') as HTMLElement
     const itemB = el.querySelector('sui-accordion-item[value="b"]') as HTMLElement
-    shadow(itemA).querySelector('button')!.click()
+    summaryOf(itemA).click()
     await flush()
-    shadow(itemB).querySelector('button')!.click()
+    summaryOf(itemB).click()
     await flush()
     expect(itemA.hasAttribute('open')).toBe(false)
+    expect(detailsOf(itemA).open).toBe(false)
     expect(itemB.hasAttribute('open')).toBe(true)
   })
 
@@ -86,7 +89,7 @@ describe('<sui-accordion>', () => {
     const el = mountAccordion('single', 'a')
     await flush()
     const itemA = el.querySelector('sui-accordion-item[value="a"]') as HTMLElement
-    shadow(itemA).querySelector('button')!.click()
+    summaryOf(itemA).click()
     await flush()
     expect(itemA.hasAttribute('open')).toBe(false)
   })
@@ -96,19 +99,19 @@ describe('<sui-accordion>', () => {
     await flush()
     const itemA = el.querySelector('sui-accordion-item[value="a"]') as HTMLElement
     const itemB = el.querySelector('sui-accordion-item[value="b"]') as HTMLElement
-    shadow(itemA).querySelector('button')!.click()
+    summaryOf(itemA).click()
     await flush()
-    shadow(itemB).querySelector('button')!.click()
+    summaryOf(itemB).click()
     await flush()
     expect(itemA.hasAttribute('open')).toBe(true)
     expect(itemB.hasAttribute('open')).toBe(true)
   })
 
-  it('disabled item does not toggle', async () => {
+  it('disabled item does not toggle (LANG-GAP: <details> has no native disabled)', async () => {
     const el = mountAccordion()
     await flush()
     const itemC = el.querySelector('sui-accordion-item[value="c"]') as HTMLElement
-    shadow(itemC).querySelector('button')!.click()
+    summaryOf(itemC).click()
     await flush()
     expect(itemC.hasAttribute('open')).toBe(false)
   })
@@ -119,7 +122,7 @@ describe('<sui-accordion>', () => {
     let evt: CustomEvent | null = null
     el.addEventListener('sui-change', e => { evt = e as CustomEvent })
     const itemA = el.querySelector('sui-accordion-item[value="a"]') as HTMLElement
-    shadow(itemA).querySelector('button')!.click()
+    summaryOf(itemA).click()
     await flush()
     expect(evt!.detail).toEqual({ value: 'a' })
     expect(evt!.bubbles).toBe(true)
@@ -131,9 +134,10 @@ describe('<sui-accordion>', () => {
 
 describe('<sui-accordion-item>', () => {
 
-  it('renders trigger button and content-wrap in shadow root', () => {
+  it('renders a native <details>/<summary> trigger and content-wrap', () => {
     const { el } = mount(reg, 'sui-accordion-item', { value: 'x' })
-    expect(shadow(el).querySelector('button.trigger')).not.toBeNull()
+    expect(shadow(el).querySelector('details')).not.toBeNull()
+    expect(shadow(el).querySelector('summary.trigger')).not.toBeNull()
     expect(shadow(el).querySelector('.content-wrap')).not.toBeNull()
   })
 
@@ -144,34 +148,10 @@ describe('<sui-accordion-item>', () => {
     expect(el.hasAttribute('open')).toBe(true)
   })
 
-  it('trigger has aria-expanded=false when closed', async () => {
-    const { el } = mount(reg, 'sui-accordion-item', { value: 'x' })
-    await flush()
-    expect(shadow(el).querySelector('button')!.getAttribute('aria-expanded')).toBe('false')
-  })
-
-  it('trigger has aria-expanded=true when open', async () => {
+  it('open prop mirrors onto the native <details open>', async () => {
     const { el } = mount(reg, 'sui-accordion-item', { value: 'x', open: true })
     await flush()
-    expect(shadow(el).querySelector('button')!.getAttribute('aria-expanded')).toBe('true')
-  })
-
-  it('trigger aria-controls matches content-wrap id', async () => {
-    const { el } = mount(reg, 'sui-accordion-item', { value: 'x' })
-    await flush()
-    const btn = shadow(el).querySelector('button')!
-    const wrap = shadow(el).querySelector('.content-wrap') as HTMLElement
-    expect(btn.getAttribute('aria-controls')).toBe(wrap.id)
-    expect(wrap.id).toMatch(/^sui-acc-content-\d+$/)
-  })
-
-  it('content-wrap has role=region and aria-labelledby pointing to trigger', async () => {
-    const { el } = mount(reg, 'sui-accordion-item', { value: 'x' })
-    await flush()
-    const btn = shadow(el).querySelector('button')!
-    const wrap = shadow(el).querySelector('.content-wrap')!
-    expect(wrap.getAttribute('role')).toBe('region')
-    expect(wrap.getAttribute('aria-labelledby')).toBe(btn.id)
+    expect(detailsOf(el).open).toBe(true)
   })
 
   it('trigger has part="trigger" and chevron has part="chevron"', () => {
@@ -185,18 +165,12 @@ describe('<sui-accordion-item>', () => {
     expect(shadow(el).querySelector('[part~="content"]')).not.toBeNull()
   })
 
-  it('trigger button is disabled when disabled attribute set', async () => {
-    const { el } = mount(reg, 'sui-accordion-item', { value: 'x', disabled: true })
-    await flush()
-    expect(shadow(el).querySelector('button')!.hasAttribute('disabled')).toBe(true)
-  })
-
-  it('dispatches sui-accordion-item-toggle when trigger is clicked (bubbles + composed)', async () => {
+  it('dispatches sui-accordion-item-toggle when summary is clicked (bubbles + composed)', async () => {
     const { el } = mount(reg, 'sui-accordion-item', { value: 'abc' })
     await flush()
     let evt: CustomEvent | null = null
     el.addEventListener('sui-accordion-item-toggle', e => { evt = e as CustomEvent })
-    shadow(el).querySelector('button')!.click()
+    summaryOf(el).click()
     await flush()
     expect(evt!.detail).toEqual({ value: 'abc' })
     expect(evt!.bubbles).toBe(true)
@@ -208,7 +182,7 @@ describe('<sui-accordion-item>', () => {
     await flush()
     let count = 0
     el.addEventListener('sui-accordion-item-toggle', () => count++)
-    shadow(el).querySelector('button')!.click()
+    summaryOf(el).click()
     await flush()
     expect(count).toBe(0)
   })
@@ -223,7 +197,7 @@ describe('<sui-accordion> + <sui-accordion-item> integration', () => {
     const itemA = el.querySelector('sui-accordion-item[value="a"]') as HTMLElement
     let evt: CustomEvent | null = null
     el.addEventListener('sui-accordion-nav', e => { evt = e as CustomEvent })
-    shadow(itemA).querySelector('button')!.dispatchEvent(
+    summaryOf(itemA).dispatchEvent(
       new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }),
     )
     await flush()
@@ -238,7 +212,7 @@ describe('<sui-accordion> + <sui-accordion-item> integration', () => {
     const itemA = el.querySelector('sui-accordion-item[value="a"]') as HTMLElement
     let detail: { direction: string } | null = null
     el.addEventListener('sui-accordion-nav', e => { detail = (e as CustomEvent).detail })
-    shadow(itemA).querySelector('button')!.dispatchEvent(
+    summaryOf(itemA).dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Home', bubbles: true }),
     )
     await flush()
