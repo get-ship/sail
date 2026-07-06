@@ -89,7 +89,15 @@
               "attribute": "label",
               "default": ""
             }
-          ]
+          ],
+          "anatomy": {
+            "dom": "light",
+            "classes": [
+              "content",
+              "spinner"
+            ],
+            "slots": []
+          }
         }
       ],
       "exports": [

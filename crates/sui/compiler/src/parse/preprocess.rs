@@ -971,8 +971,25 @@ fn expand_props(obj: &str, form_value: Option<&str>, form_disabled: Option<&str>
             )
         } else if val == "boolean" || val == "bool" {
             format!("<prop name=\"{n}\" type=\"bool\" default=\"false\" reflect />")
+        } else if val == "true" || val == "false" {
+            // DEFAULT LITERAL, bool: `centered: false`. Without this arm the
+            // literal fell through to the string branch — a silently mistyped
+            // prop (the re-port pilot's find).
+            format!("<prop name=\"{n}\" type=\"bool\" default=\"{val}\" reflect />")
         } else if val == "number" {
             format!("<prop name=\"{n}\" type=\"number\" default=\"0\" />")
+        } else if val.parse::<f64>().is_ok() {
+            // DEFAULT LITERAL, number: `count: 3`.
+            format!("<prop name=\"{n}\" type=\"number\" default=\"{val}\" />")
+        } else if (val.starts_with('\'') && val.ends_with('\'') && val.len() >= 2)
+            || (val.starts_with('"') && val.ends_with('"') && val.len() >= 2)
+        {
+            // DEFAULT LITERAL, string: `label: 'Loading'`. Previously the
+            // literal was DISCARDED (default="") — spinner silently lost its
+            // aria-label default. Single-member unions don't reach here: a
+            // union requires `|`.
+            let default = unquote(val);
+            format!("<prop name=\"{n}\" type=\"string\" default=\"{default}\" />")
         } else {
             // `string`, `String`, or a bare shorthand → a string prop.
             format!("<prop name=\"{n}\" type=\"string\" default=\"\" />")
@@ -1574,6 +1591,27 @@ mod tests {
         assert!(
             out.contains(":host([variant='solid']) .box{background:var(--primary);}"),
             "dotted key becomes a class-targeted block:\n{out}"
+        );
+    }
+
+    #[test]
+    fn props_default_literals_are_honored() {
+        // The re-port pilot's find: default literals were silently discarded
+        // (`label: 'Loading'` → default="", killing spinner's aria-label;
+        // `centered: false` even mistyped as string).
+        let src = "<component>{\n  props: { label: 'Loading', centered: false, count: 3 },\n}</component>\n<div>x</div>";
+        let out = preprocess(src);
+        assert!(
+            out.contains(r#"<prop name="label" type="string" default="Loading" />"#),
+            "string default literal honored:\n{out}"
+        );
+        assert!(
+            out.contains(r#"<prop name="centered" type="bool" default="false" reflect />"#),
+            "bool default literal typed as bool:\n{out}"
+        );
+        assert!(
+            out.contains(r#"<prop name="count" type="number" default="3" />"#),
+            "number default literal honored:\n{out}"
         );
     }
 
