@@ -14,6 +14,10 @@
   ─────────────────────────────────────────────────────────────────────────────
   ARIA: role="list" on host    controller sets same     ✓
   ─────────────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE: `<sui-stack>` (removed from this surface) -> the built-in
+  `<column>` keyword — same flex-column + gap behavior, no visual change.
+  No LANG-GAP.
 -->
 
 <style>
