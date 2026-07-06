@@ -1,64 +1,87 @@
 <!--
-  <sui-toggle> — child element of <sui-toggle-group> or standalone.
-  Pressed/unpressed button that participates in single or multiple selection.
+  sui-toggle: child of sui-toggle-group or standalone. Pressed/unpressed
+  button. Prop parity vs ship-toggle: pressed (bool, false, reflect),
+  disabled (bool, false, reflect), value (string, '', reflect),
+  size (sm|md|lg, 'md', reflect),
+  variant (outline|ghost|segmented, 'outline', reflect). Events: ship-toggle
+  → sui-toggle { detail: { pressed, value } }. Slots: (default). Parts: button.
 
-  Prop parity vs <ship-toggle>
-  ────────────────────────────────────────────────────────────────────────
-  pressed (bool, false)             ✓ reflect
-  disabled (bool, false)            ✓ reflect
-  value (string, '')                ✓ reflect — identifier for group selection
-  size (sm|md|lg, 'md')             ✓ reflect
-  variant (outline|ghost, 'outline') ✓ reflect
-  ────────────────────────────────────────────────────────────────────────
-  Events: ship-toggle → sui-toggle { detail: { pressed, value } }
-  ────────────────────────────────────────────────────────────────────────
-  Slots: (default) — button content
-  Parts: button
+  NEW SURFACE — re-port from feat/next:
+  - The theme prop="size" block DELETED (ad-hoc per-component channels
+    "closed sx" back door the new surface forbids). The three local CSS
+    vars (button height, inline padding, font size per size) are declared
+    directly in the style block on :host with the same token values
+    (control-h-md / space-3 / text-base for default+md, etc.) — kept as a
+    component-internal ladder; the global size-h channel is for the size
+    prop's L1 contract and the toggle is its own visual unit, not a form
+    control).
+
+  - L1 <button> skin handles baseline font / line-height / focus-visible /
+    disabled cursor / transition; the component-specific skin (unpressed
+    muted-foreground, surface-1 fill, the pressed selected-bg, segmented
+    lift, disabled saturate) is sx via `variants part="button"`. The
+    descendant-state selectors (unpressed button's hover wash, disabled
+    saturate/pointer-events) and the segmented size ladder (per-size
+  height/padding/font-size) stay in the style block.
+  - part="button" STAYS on the inner <button> (the test table selects on
+    [part~="button"]; part= is the existing public hook, class= is the
+    forward-looking anatomy target — both can coexist for a single part).
+  - [hidden] display:none deleted (BASE_CSS owns it).
 -->
 
-<prop name="pressed" type="bool" default="false" reflect />
-<prop name="disabled" type="bool" default="false" reflect />
-<prop name="value" type="string" default="" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
-<prop name="variant" values="outline|ghost|segmented" default="outline" reflect />
+<component>{
+  props: {
+    pressed: false,
+    disabled: false,
+    value: '',
+    size: 'sm' | 'md' | 'lg',
+    variant: 'outline' | 'ghost' | 'segmented',
+  },
+}</component>
 
-<theme prop="size" channels="tgl-h, tgl-px, tgl-fs">
-  default: control-h-md, space-3, text-base
-  md:      control-h-md, space-3, text-base
-  sm:      control-h-sm, space-2, text-sm
-  lg:      control-h-xl, space-4, text-base
-</theme>
 <variants>
-  [hidden]:   display:none
-  [pressed]:  bg:selected fg:foreground weight:semibold
-  [disabled]: cursor:not-allowed opacity:75
-</variants>
-<variants part="button">
-  hover:           bg:hover-bg fg:foreground
-  (variant=segmented, [pressed]): bg:surface-1 fg:foreground shadow:xs
+  [disabled]: cursor:not-allowed
 </variants>
 
-<!-- Residual: button visual (display:inline-flex + align + justify +
-     gap + height + padding + font + line-height + color + background +
-     border + border-radius + cursor) — hand-rolled because the inner
-     <button> is a real form control with a `part` for the slot
-     recipe and the layout keywords don't fit; the segmented variant's
-     `border:0; border-radius:sm` reset + the compound
-     (variant=ghost, [pressed]) zeroing; aria-pressed:hover target on
-     the unpressed button (descendant attribute) — variants only match
-     :host's own attrs; multi-property transition (motion); forced-colors
-     CanvasText outline (system color); saturate(0.6) compound disabled
-     filter; pointer-events:none compound disabled; the focus outline
-     (vs the 2-layer box-shadow ring). -->
+<variants part="button">
+  [pressed]:                 bg:selected       fg:foreground       weight:semibold       border:selected-border
+  (variant=segmented, [pressed]):  bg:surface-1  fg:foreground  shadow:xs
+  (variant=segmented):       border:none        radius:sm           bg:transparent        fg:muted-foreground
+  (variant=ghost):           border:none        bg:transparent      fg:muted-foreground
+  [disabled]:                opacity:75         fg:muted-foreground
+</variants>
+
+<!--
+  Residual: host display override (inline-flex); per-size local CSS vars
+  (size channel ladder for the button's own height/padding/font-size);
+  button baseline (font, line-height, gap); the framework's button skin
+  runs at :where() zero specificity, and the component's button visual
+  needs the same non-zero specificity to win ties in the cascade;
+  descendant-state selectors; segmented size ladder; forced-colors
+  CanvasText outline (system color); reduce-motion kill.
+-->
 <style>
   :host { display: inline-flex; }
-  [part~='button'] {
-    display: inline-flex;
-  :host {
+
+  /* size channel — local CSS vars */
+  :host(:not([size])), :host([size='md']) {
     --tgl-h: var(--control-h-md);
     --tgl-px: var(--space-3);
     --tgl-fs: var(--text-base);
   }
+  :host([size='sm']) {
+    --tgl-h: var(--control-h-sm);
+    --tgl-px: var(--space-2);
+    --tgl-fs: var(--text-sm);
+  }
+  :host([size='lg']) {
+    --tgl-h: var(--control-h-xl);
+    --tgl-px: var(--space-4);
+    --tgl-fs: var(--text-base);
+  }
+
+  button {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
@@ -67,73 +90,52 @@
     font-family: var(--font-body);
     font-size: var(--tgl-fs);
     font-weight: var(--font-weight-medium);
-    line-height: var(--leading-none);
-    color: var(--muted-foreground);
+    line-height: 1;
     background: var(--surface-1);
     border: 1px solid var(--border-strong);
     border-radius: var(--radius);
-    cursor: pointer;
-    transition:
-      background-color var(--duration-fast) var(--ease-out),
-      color var(--duration-fast) var(--ease-out),
-      border-color var(--duration-fast) var(--ease-out);
   }
-  :host([variant='ghost']) [part~='button'] { border-color: transparent; background: transparent; }
-  [part~='button']:not([aria-pressed='true']):hover {
+  /* Unpressed hover wash: descendant state, no host attr. */
+  button:not([aria-pressed='true']):hover {
     background: var(--hover-bg);
     color: var(--foreground);
   }
-  [part~='button']:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-ring-offset);
-  }
-  :host([pressed]) [part~='button'] {
-    background: var(--selected-bg);
-    color: var(--foreground);
-    border-color: var(--selected-border);
-    font-weight: var(--font-weight-semibold);
-  }
-  :host([disabled]) [part~='button'] {
-    cursor: not-allowed;
-    color: var(--muted-foreground);
+  /* Disabled: cursor/opacity on variants; saturate + pointer-events
+     stay in <style> (compound descendant-state, no variants channel). */
+  :host([disabled]) button {
     filter: saturate(0.6);
     pointer-events: none;
   }
-  :host([variant='segmented']) [part~='button'] {
-    border: 0;
-    border-radius: var(--radius-sm);
-    color: var(--muted-foreground);
-    background: transparent;
-  }
-  :host([variant='segmented']:not([size])) [part~='button'],
-  :host([variant='segmented'][size='md']) [part~='button'] {
+  /* Segmented size ladder. Reset (border:0, transparent bg, sm radius)
+     is on variants; what's left is per-size dimensional composition. */
+  :host([variant='segmented']:not([size])) button,
+  :host([variant='segmented'][size='md']) button {
     height: auto;
     padding: var(--space-1) var(--space-3);
     font-size: var(--text-sm);
   }
-  :host([variant='segmented'][size='sm']) [part~='button'] {
+  :host([variant='segmented'][size='sm']) button {
     height: auto;
     padding: var(--space-1) var(--space-2);
     font-size: var(--text-xs);
   }
-  :host([variant='segmented'][size='lg']) [part~='button'] {
+  :host([variant='segmented'][size='lg']) button {
     height: auto;
     padding: var(--space-2) var(--space-4);
     font-size: var(--text-md);
   }
-  :host([variant='segmented']) [part~='button']:hover {
+  /* Segmented hover: descendant state. */
+  :host([variant='segmented']) button:hover {
     background: var(--hover-bg);
     color: var(--foreground);
   }
-  :host([variant='segmented'][pressed]) [part~='button'] {
-    background: var(--surface-1);
-    color: var(--foreground);
-    box-shadow: var(--shadow-xs);
-    border: 0;
-  }
+  /* Segmented pressed: variants paint bg:surface-1 + shadow:xs; the
+     border:0 here belt-and-suspenders against a parent cascade. */
+  :host([variant='segmented'][pressed]) button { border: 0; }
+
   @media (forced-colors: active) {
-    [part~='button']:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
-    :host([pressed]) [part~='button'] { outline: 2px solid CanvasText; }
+    button:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
+    :host([pressed]) button { outline: 2px solid CanvasText; }
   }
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }

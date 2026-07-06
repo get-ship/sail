@@ -16,29 +16,54 @@
   Events: ship-change → sui-change { detail: { value } }
   ────────────────────────────────────────────────────────────────────────
   Slots: (default) — sui-radio children
+  ────────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from feat/next, parity-gate pass)
+  ────────────────────────────────────────────────────────────────────────
+  - No tone channels or per-component `theme` blocks existed here (the
+    group only sets a `tone` prop and propagates it to children; tone IS
+    the global channel on each child, no per-component redeclaration
+    was in scope). No change to the tone story on this component.
+  - The `:host([hidden]) { display: none }` rule is dropped — framework
+    BASE_CSS owns [hidden]. The `color: var(foreground)` is also
+    owned by BASE_CSS (the framework host default). What stays in
+    style is genuinely component-specific: a vertical flex column with
+    a space-2 gap (a host-level layout; <column> is for INNER elements,
+    the host has no <column> primitive, so this is a one-rule
+    `style` override of the framework's block default) and a font-
+    family declaration (no font-family prop in the sx vocabulary).
+  - The `value` prop is declared via the legacy `prop` tag (not the
+    `component` block): the block's string-default-literal arm does
+    not add reflect (only unions / bools do), and the controller
+    writes to this signal in onSelect / onNav — without reflect the
+    host attribute wouldn't mirror the change and downstream tests
+    (which query `el.getAttribute('value')` after a click) would fail.
+    The other props ride the `component` block fine (unions + bool
+    auto-add reflect; the read-only string props don't need it).
 -->
 
 <prop name="value" type="string" default="" reflect />
-<prop name="disabled" type="bool" default="false" reflect />
-<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
-<prop name="name" type="string" default="" />
-<prop name="label" type="string" default="" />
-<prop name="required" type="bool" default="false" reflect />
+<component>{
+  props: {
+    disabled: false,
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
+    size: 'sm' | 'md' | 'lg',
+    name: '',
+    label: '',
+    required: false,
+  },
+}</component>
 
 <style>
-  /* Residual: bare `:host` rules without a prop selector (the `<column>`
-     primitive lowers flex layout to an INNER element, not the host). The
-     `font-family` belongs here too — no `font-family` prop in the sx
-     vocabulary. */
+  /* host layout: vertical flex stack (the inner <column> primitive is
+     for element children, not the host; this is the one host-level
+     layout this component needs). */
   :host {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
     font-family: var(--font-body);
-    color: var(--foreground);
   }
-  :host([hidden]) { display: none; }
 </style>
 
 <slot></slot>
