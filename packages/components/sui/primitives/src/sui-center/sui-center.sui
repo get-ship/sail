@@ -12,18 +12,30 @@
   child to a centered div, but the host element itself is a custom
   element, not a layout element, so its layout stays in the
   residual block).
+
+  NEW SURFACE (re-port from feat/next, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────
+  - The host IS the grid, so its display / place-items / place-content
+    / width / --center-gap setup is host chrome — <style>, not sx (sx
+    runs on rendered elements, not on the host itself; even if it
+    could, multi-decl values like `display:grid + place-items:center`
+    are a single line in <style> vs. three sx pairs).
+  - The per-gap rules are also host-only (they fill a custom property
+    on :host) — same reason. Each is a single :host([gap='N']) rule.
+  - No <theme>, no <variants>, no events, no parts, no controller. A
+    thin wrapper that reads a single prop and projects a slot.
+  - Default-first union (`'0' | '1' | … | '8'`) — the compiler's
+    expand_props treats the FIRST member of a TS union as the default,
+    and feat/next's <prop default="0"> matches that.
 -->
 
-<prop name="gap" values="0|1|2|3|4|5|6|7|8" default="0" reflect />
+<component>{
+  props: {
+    gap: '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8',
+  },
+}</component>
 
 <style>
-  /* Residual: `:host` (host element, no sx) is the grid itself, so
-   * the display:grid + place-items + place-content + width:100% +
-   * --center-gap:0 setup is the host chrome. The per-gap rules are
-   * the host's --center-gap channel fill — sx can't read the
-   * `gap` prop on the host, and the gap token is a literal that
-   * fits the per-value :host selectors more naturally than a
-   * <theme>. */
   :host {
     display: grid;
     place-items: center;
@@ -33,6 +45,7 @@
     --center-gap: 0;
   }
   :host([hidden]) { display: none; }
+
   :host([gap='0']) { --center-gap: 0; }
   :host([gap='1']) { --center-gap: var(--space-1); }
   :host([gap='2']) { --center-gap: var(--space-2); }

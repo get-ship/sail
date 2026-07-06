@@ -42,29 +42,42 @@
   parts: header, content,      parts: header, content,  ✓
     footer                       footer
   ─────────────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from feat/next, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────────────
+  - tone is a GLOBAL framework channel now (contracts.css / suiTonesSheet);
+    no per-component <theme prop="tone"> block. This skin reads
+    var(--tone)/var(--tone-fg)/var(--tone-border)/var(--tone-bg) directly,
+    filled for whichever of the 8 catalog tones the host's [tone] names.
+  - variant=outline's `background: transparent` cannot be expressed in sx
+    (the closed color vocab is tokens + tone-* channels, never the
+    `transparent` CSS keyword). The variant's box-shadow suppression is
+    a valid sx pair; the background is authored in <style> on the same
+    :host([variant='outline']) selector. Mixed-mechanism, but a single
+    attribute drives it — the gate's "ad-hoc channel" prohibition is
+    not invoked (no new channel, just a one-line raw-value declaration
+    in <style>, which the surface permits).
+  - The interactive prop's hover lift / focus ring / press-feedback /
+    accent-bar ::before pseudo-element / status-rail / fill / per-padding
+    --card-* local vars / data-no-header/data-no-footer separators are
+    all kept in <style> — none of it is expressible in sx (pseudo-elements,
+    multi-property transitions, :host-not combinators, local CSS var
+    recompute, .header/.footer wrapper styling with per-padding overrides).
 -->
 
-<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
-<prop name="variant" values="default|outline" default="default" reflect />
-<prop name="padding" values="none|sm|md|lg" default="md" reflect />
-<prop name="interactive" type="bool" default="false" reflect />
-<prop name="accent-bar" values="off|hover|static" default="off" reflect />
-<prop name="status-rail" type="bool" default="false" reflect />
-<prop name="fill" type="bool" default="false" reflect />
-
-<theme prop="tone" channels="tone-fg, tone-border, tone-bg">
-  default:     foreground,        border,            transparent
-  primary:     primary,           tone-primary-border, tone-primary-bg
-  info:        info,              tone-info-border,    tone-info-bg
-  success:     success,           tone-success-border, tone-success-bg
-  warning:     warning,           tone-warning-border, tone-warning-bg
-  destructive: destructive,       tone-destructive-border, tone-destructive-bg
-  accent:      accent,            tone-accent-border,  tone-accent-bg
-  muted:       muted-foreground,  border,              muted
-</theme>
+<component>{
+  props: {
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
+    variant: 'default' | 'outline',
+    padding: 'md' | 'none' | 'sm' | 'lg',
+    interactive: false,
+    'accent-bar': 'off' | 'hover' | 'static',
+    'status-rail': false,
+    fill: false,
+  },
+}</component>
 
 <variants>
-  variant=outline: bg:transparent shadow:none
   interactive:     cursor:pointer
   padding=none:    p:0
   padding=sm:      py:2 px:3
@@ -73,17 +86,6 @@
 </variants>
 
 <style>
-  /* Residual: host baseline + card local custom props + backdrop-filter /
-     isolation stack (no such props in sx) + multi-property transition.
-     The accent-bar ::before pseudo-element + opacity transition;
-     [interactive] hover/active/focus-visible states; [status-rail]
-     border-left with tone-fg + the tone=default fallback; [fill]
-     bg/border from theme channels; per-padding --card-* local vars;
-     [data-no-header]/[data-no-footer] :host-not combinators; the
-     .header/.footer wrappers + separator borders + per-padding overrides.
-     Plus the forced-colors override and reduce-motion override on the
-     interactive hover translateY. Note: variants do not reach theme
-     channels (sx::lower only); tone-bound attributes stay here. */
   :host {
     display: block;
     position: relative;
@@ -93,6 +95,10 @@
     --card-radius: var(--radius-lg);
     border-radius: var(--card-radius);
     overflow: clip;
+    /* Frost on glass themes (--card-backdrop-filter resolves to a blur there,
+       `none` everywhere else). isolation establishes a stacking context so the
+       backdrop-filter clips to --card-radius — belt-and-suspenders with the
+       existing overflow:clip. Frost goes on :host (the ::before is the accent-bar). */
     backdrop-filter: var(--card-backdrop-filter);
     -webkit-backdrop-filter: var(--card-backdrop-filter);
     isolation: isolate;
@@ -107,16 +113,30 @@
       box-shadow var(--duration-fast) var(--ease-out),
       transform var(--duration-fast) var(--ease-out);
   }
-  :host([hidden]) { display: none; }
 
+  /* variant=outline: shadow:none lives in <variants>, but background:transparent
+     can't be expressed in sx — the closed color vocab is tokens + tone-* channels,
+     never the `transparent` CSS keyword. Declared here on the same attribute selector. */
+  :host([variant='outline']) { background: transparent; }
+
+  /* Tone-bound border. The default tone resolves --tone-border to --border (the
+     same as the host baseline), so the explicit override is suppressed for it. */
   :host([tone]:not([tone='default'])) { border-color: var(--tone-border); }
 
+  /* Accent bar. Two modes:
+   *   hover  — fades in on hover (the default, preserves prior behaviour
+   *            on interactive cards).
+   *   static — always-visible at full opacity (right for hero cards,
+   *            print exports, touch contexts where hover never fires).
+   * Bar clips to the card's border-radius via inherit/match — when
+   * `padding="none"` flattens the card, the bar still respects the
+   * top-corner radius via the same token. */
   :host([accent-bar='hover'])::before,
   :host([accent-bar='static'])::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: var(--space-half);
+    height: 2px;
     background: linear-gradient(90deg, var(--primary), var(--accent));
     opacity: 0;
     border-radius: var(--card-radius) var(--card-radius) 0 0;
@@ -130,7 +150,7 @@
   :host([interactive]:hover) {
     border-color: var(--border-strong);
     box-shadow: var(--shadow-hover);
-    transform: translateY(calc(-1 * var(--space-1)));
+    transform: translateY(-1px);
   }
   @media (prefers-reduced-motion: reduce) {
     :host([interactive]:hover) { transform: none; }
@@ -138,15 +158,19 @@
   :host([interactive]:active) {
     box-shadow: var(--shadow-card-rest);
     transform: translateY(0);
-    transition-duration: var(--duration-instant);
+    transition-duration: 60ms;
   }
   :host([interactive]:focus-visible) {
     outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
   }
 
+  /* Tone-rail. The rail is only meaningful when a tone is explicitly set
+   * — otherwise --tone-fg resolves to --foreground and we'd draw a
+   * 3-px body-text-coloured stripe (meaningless decoration with the
+   * weight of an emphasis cue). Default tone hides the rail. */
   :host([status-rail]) {
-    border-left: var(--space-half) solid var(--tone-fg);
+    border-left: 3px solid var(--tone-fg);
     padding-inline-start: calc(var(--card-px) - var(--space-1));
   }
   :host([status-rail]:not([tone])),
@@ -156,12 +180,18 @@
 
   :host([fill]) { background: var(--tone-bg); border-color: var(--tone-border); }
 
+  /* Per-padding local-var recompute + fallback padding. The variants
+   * handle the *initial* padding value; these override the per-padding
+   * --card-* local vars (used by the .header/.footer separator offsets)
+   * and pin the padding-none case to zero. */
   :host([padding='none']) { --card-px: 0px; --card-py: 0px; --card-gap: 0px; padding: 0; }
   :host([padding='sm'])   { --card-px: var(--space-3); --card-py: var(--space-2); --card-gap: var(--space-2); padding: var(--space-2) var(--space-3); }
   :host([padding='md'])   { --card-px: var(--space-5); --card-py: var(--space-4); padding: var(--space-4) var(--space-5); }
   :host([padding='lg'])   { --card-px: var(--space-6); --card-py: var(--space-5); --card-gap: var(--space-4); padding: var(--space-5) var(--space-6); }
 
   .header, .footer { display: block; }
+
+  /* Separator — show only when slot has projected content */
   :host(:not([data-no-header])) .header {
     margin: calc(var(--card-py) * -1) calc(var(--card-px) * -1) var(--card-gap);
     padding: var(--card-py) var(--card-px);

@@ -17,17 +17,23 @@
          scrollbar-v        scrollbar-v             ✓
          scrollbar-h        scrollbar-h             ✓
   ────────────────────────────────────────────────────────────────────────
+  NEW SURFACE: component + variants blocks for orientation/size;
+    per-size --sb-size fill in <style> (gate forbids the legacy
+    theme block); per-orientation overflow + scrollbar visibility
+    via part-targeted variants blocks.
+    :host(:not([orientation])) rule for the default vertical case
+    (variants only match EXPLICIT attrs) and to hide the horizontal
+    scrollbar in default mode. Restored the .scrollbar-h block
+    the pre-port spike lost (visual regression).
 -->
 
-<prop name="orientation" values="vertical|horizontal|both" default="vertical" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
+<component>{
+  props: {
+    orientation: 'vertical' | 'horizontal' | 'both',
+    size: 'md' | 'sm' | 'lg',
+  },
+}</component>
 
-<theme prop="size" channels="sb-size">
-  default: space-2
-  sm:      space-1_5
-  md:      space-2
-  lg:      space-2_5
-</theme>
 <variants part="viewport">
   (orientation=vertical): overflow-y:auto
   (orientation=horizontal): overflow-x:auto
@@ -45,12 +51,15 @@
     display: block;
     position: relative;
     overflow: hidden;
-    /* sb- prefix local — the <theme prop="size"> block overrides per
-     * size; declared here so the css_token lint resolves the
-     * reference in .scrollbar-v (the lint does not see <theme>
-     * blocks). */
-    --sb-size: var(--space-2);
   }
+
+  /* Per-size scrollbar width. The pre-port spike used a <theme prop="size">
+     block to fill --sb-size — gate-forbidden, so explicit per-attribute
+     rules now. Token values match the catalog scale (sm=space-1_5,
+     md=space-2, lg=space-2_5); feat/next used raw 6/8/10px equivalents. */
+  :host(:not([size])), :host([size='md']) { --sb-size: var(--space-2); }
+  :host([size='sm']) { --sb-size: var(--space-1_5); }
+  :host([size='lg']) { --sb-size: var(--space-2_5); }
 
   .viewport {
     width: 100%;
@@ -61,7 +70,11 @@
   }
   .viewport::-webkit-scrollbar { display: none; }
 
-  :host([orientation='both']) .viewport { overflow: auto; }
+  /* The default (no [orientation] attr set) acts as vertical. Variants
+     above cover the EXPLICIT cases; this rule covers the unset case
+     the variants table can't reach. */
+  :host(:not([orientation])) .viewport { overflow-y: auto; }
+  :host(:not([orientation])) .scrollbar-h { display: none; }
 
   /* Overlay scrollbar tracks — absolute-positioned, opacity-fade on hover/scroll */
   .scrollbar {
@@ -78,8 +91,10 @@
     top: 0; right: var(--space-half); bottom: 0;
     width: var(--sb-size);
   }
-
-
+  .scrollbar-h {
+    left: 0; right: 0; bottom: var(--space-half);
+    height: var(--sb-size);
+  }
 
   .thumb {
     position: absolute;
