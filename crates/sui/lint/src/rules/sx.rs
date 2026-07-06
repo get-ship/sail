@@ -194,6 +194,16 @@ fn css_props(prop: &str) -> &'static [&'static str] {
 /// Lower a VALID `prop:token` to its CSS declarations, or `None` if off-vocab.
 /// Single source of truth for the sx → CSS mapping; the compiler's `preprocess`
 /// generates atomic CSS from this, the `check` below validates the same set.
+/// The sanctioned CSS-wide keyword colors — "named zeros" that carry no token
+/// (`bg:transparent` on an outline surface, `fg:currentColor` ink inheritance).
+/// Single source: `color_values()` injects these into the vocabulary and the
+/// lowering emits them verbatim, so the two can never drift.
+pub const KEYWORD_COLORS: &[&str] = &["transparent", "currentColor"];
+
+pub fn is_keyword_color(token: &str) -> bool {
+    KEYWORD_COLORS.contains(&token)
+}
+
 pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
     let kind = prop_kind(prop)?;
     if !allowed(kind).contains(&token) {
@@ -217,7 +227,9 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
     let value: String = match kind {
         // `0`/`none` are the literal zeros (no `--space-0`/`--radius-none` token).
         Space => if token == "0" { "0".into() } else { format!("var(--space-{token})") },
-        Color => format!("var(--{token})"),
+        // Sanctioned CSS keyword colors pass through verbatim (no `--token`);
+        // every other color is a token/tone channel.
+        Color => if is_keyword_color(token) { token.into() } else { format!("var(--{token})") },
         Radius => if token == "none" { "0".into() } else { format!("var(--radius-{token})") },
         Text => format!("var(--text-{token})"),
         Shadow => if token == "none" { "none".into() } else { format!("var(--shadow-{token})") },
@@ -239,6 +251,7 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
             "none" => "none".into(),
             "subtle" => "1px solid var(--border-subtle)".into(),
             "strong" => "1px solid var(--border-strong)".into(),
+            t if is_keyword_color(t) => format!("1px solid {t}"),
             _ => format!("1px solid var(--{token})"),
         },
         Size => match token {
@@ -658,5 +671,22 @@ mod tests {
         // the scanner must recover past `sx={…}` and keep checking later attrs.
         let m = run(r#"<sui-card sx={x}>a</sui-card><sui-card sx="p:99">b</sui-card>"#);
         assert_eq!(m.len(), 2, "one dynamic + one off-scale static: {m:?}");
+    }
+
+    #[test]
+    fn keyword_colors_are_sanctioned_and_lower_verbatim() {
+        // `transparent`/`currentColor` are named zeros — valid sx colors, and
+        // they emit the keyword, not `var(--transparent)` (the wave-1 LANG-GAP:
+        // outline/ghost surfaces need `bg:transparent`).
+        assert!(super::is_keyword_color("transparent"));
+        assert!(crate::tokens::color_values().contains(&"transparent"));
+        assert!(crate::tokens::color_values().contains(&"currentColor"));
+        assert_eq!(super::lower("bg", "transparent"), Some(vec![("background", "transparent".into())]));
+        assert_eq!(super::lower("fg", "currentColor"), Some(vec![("color", "currentColor".into())]));
+        assert_eq!(super::lower("border", "currentColor"), Some(vec![("border", "1px solid currentColor".into())]));
+        // A real token still resolves through var().
+        assert_eq!(super::lower("bg", "surface-2"), Some(vec![("background", "var(--surface-2)".into())]));
+        // No accidental widening — an off-vocab word is still rejected.
+        assert_eq!(super::lower("bg", "wheat"), None);
     }
 }
