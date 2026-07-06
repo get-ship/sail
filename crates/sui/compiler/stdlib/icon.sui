@@ -1,0 +1,60 @@
+<!--
+  <icon> — L1 language element (element mode). Sizing/color wrapper around a
+  slotted SVG glyph — bare tag, lowers away at compile time; the skin routes
+  to the framework layer keyed on .sui-icon; the contract feeds the element
+  manifest.
+
+  Split from the feat/next sui-icon baseline: `name`/`src`/`set`/`variant`/
+  `radius` (lucide/app-glyph fetch, tile/solid frame styling) all resolve
+  through CONTROLLER logic in the baseline — that is L2 behavior and stays
+  out. The L1 <icon> only sizes and inks whatever SVG the use site slots in;
+  named-glyph lookup belongs to an L2 component built on top of this element.
+
+  Tone stays out too, for a different reason: the baseline's per-tone color
+  comes from an externally-adopted `suiTonesSheet`, not from sui-icon's own
+  <style> block — there is nothing of the baseline's OWN skin to port. Ink
+  here is plain `currentColor` inheritance; a tone channel is future work
+  once the stdlib compiler can share a tones sheet across elements (a
+  LANG-GAP, not eaten).
+
+  `spin` is faithful to the baseline's bool prop, but reuses the `sui-spin`
+  keyframe that already ships in spinner's skin (baseline defines its own
+  `sui-icon-spin` — duplicating it here would fork one keyframe in two
+  places for the same rotation).
+-->
+
+<component>{
+  props: {
+    size: 'xs' | 'sm' | 'md' | 'lg' | 'xl',
+    spin: false,
+  },
+}</component>
+
+<style>
+  :host {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: -0.125em;
+    flex: 0 0 auto;
+    color: currentColor;
+    --sz: var(--icon-size-md);
+  }
+  :host([hidden]) { display: none; }
+  :host([size='xs']) { --sz: var(--icon-size-2xs); }
+  :host([size='sm']) { --sz: var(--icon-size-sm); }
+  :host([size='lg']) { --sz: var(--icon-size-xl); }
+  :host([size='xl']) { --sz: var(--icon-size-2xl); }
+
+  ::slotted(svg) {
+    display: block;
+    width: var(--sz);
+    height: var(--sz);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :host([spin]) ::slotted(svg) { animation: sui-spin 0.8s linear infinite; }
+  }
+</style>
+
+<span><slot></slot></span>
