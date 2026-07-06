@@ -168,10 +168,8 @@ export const TAG_CATEGORY: Record<string, CategoryId> = {
   'sui-sheet':           'data',
   // ── @ship/sui-primitives — Typography & identity ──────────────────────
   'sui-button':          'typography',
-  'sui-link':            'typography',
   'sui-icon':            'typography',
   'sui-avatar':          'typography',
-  'sui-badge':           'typography',
   'sui-chip':            'typography',
   'sui-status-dot':      'typography',
   // ── @ship/sui-primitives — Utility ────────────────────────────────────
@@ -222,7 +220,6 @@ export const TAG_CATEGORY: Record<string, CategoryId> = {
   'sui-mermaid':         'data',
 
   // ── @ship/sui-code — Typography ───────────────────────────────────────
-  'sui-code':            'typography',
   'sui-diff':            'typography',
   'sui-markdown':        'typography',
 }

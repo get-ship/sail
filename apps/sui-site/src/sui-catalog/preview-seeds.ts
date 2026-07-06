@@ -109,13 +109,9 @@ const TOAST_ITEMS = JSON.stringify([
 export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   // ── Actions & identity ──────────────────────────────────────────────
   'sui-button':          { props: { tone: 'primary', variant: 'solid' }, innerHTML: 'Save changes' },
-  'sui-link':            { props: { href: '#', variant: 'underline' }, innerHTML: 'View documentation' },
   'sui-icon':            { props: { name: 'sparkles', variant: 'tile', tone: 'primary', size: 'lg' } },
   'sui-avatar':          { props: { name: 'Ada Lovelace', size: 'lg' } },
   // catalog (brand chrome, not a public component) and is composed
-  // Badges: full semantic range reads better than one tone — pick the
-  // most visually representative (success-soft) for the default cell.
-  'sui-badge':           { props: { tone: 'success', variant: 'soft' }, innerHTML: 'Passing' },
   'sui-chip':            { props: { removable: 'true', tone: 'primary' }, innerHTML: 'TypeScript' },
   'sui-status-dot':      { props: { tone: 'success', label: 'Operational', pulse: 'true' } },
 
@@ -173,12 +169,12 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   'sui-file-upload':     { props: { accept: '.png,.jpg,.pdf', multiple: 'true' }, innerHTML: 'Drag files here or click to browse' },
 
   // ── Structure & layout ──────────────────────────────────────────────
-  'sui-card':            { props: { 'accent-bar': 'static', tone: 'primary' }, innerHTML: '<div slot="header"><strong>Deployment #1284</strong></div><p>Finished in 42s across 24 checks.</p><div slot="footer"><sui-badge tone="success">Live</sui-badge></div>' },
+  'sui-card':            { props: { 'accent-bar': 'static', tone: 'primary' }, innerHTML: '<div slot="header"><strong>Deployment #1284</strong></div><p>Finished in 42s across 24 checks.</p><div slot="footer"><span tone="success" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Live</span></div>' },
   'sui-accordion':       { innerHTML: '<sui-accordion-item open><span slot="trigger">What is Ship?</span>Ship compiles <code>.sui</code> templates to standard web components.</sui-accordion-item><sui-accordion-item><span slot="trigger">How do I theme it?</span>Every value is a design token — set a theme and every primitive follows.</sui-accordion-item><sui-accordion-item><span slot="trigger">Is it accessible?</span>ARIA roles and keyboard nav are built into every primitive.</sui-accordion-item>' },
   'sui-tabs':            { props: { active: 'overview' }, innerHTML: '<sui-tab name="overview">Overview</sui-tab><sui-tab name="activity" count="3">Activity</sui-tab><sui-tab name="settings">Settings</sui-tab><sui-tab-panel name="overview" active>A live overview of the deployment.</sui-tab-panel><sui-tab-panel name="activity">3 new events since your last visit.</sui-tab-panel><sui-tab-panel name="settings">Configure build &amp; deploy options.</sui-tab-panel>' },
   'sui-timeline':        { innerHTML: '<sui-timeline-item at="09:30" tone="success"><span slot="title">Build passed</span>24 checks green in 42s.</sui-timeline-item><sui-timeline-item at="09:45" tone="info"><span slot="title">Deployed to staging</span>job/site-demos → staging.</sui-timeline-item><sui-timeline-item at="10:02"><span slot="title">Promoted to production</span>Live for all users.</sui-timeline-item>' },
   'sui-scroll-area':     { props: { size: 'sm' }, innerHTML: '<div>sui-button</div><div>sui-card</div><div>sui-input</div><div>sui-select</div><div>sui-table</div><div>sui-tree</div><div>sui-calendar</div><div>sui-dialog</div><div>sui-tabs</div><div>sui-timeline</div><div>sui-accordion</div><div>sui-tooltip</div>' },
-  'sui-center':          { innerHTML: '<sui-badge tone="primary">Centered</sui-badge>' },
+  'sui-center':          { innerHTML: '<span tone="primary" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Centered</span>' },
   'sui-grid':            { innerHTML: '<sui-card>One</sui-card><sui-card>Two</sui-card><sui-card>Three</sui-card>' },
   'sui-separator':       {},
 
@@ -195,7 +191,6 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   'sui-sheet':           { props: { label: 'Q3 Budget', workbook: '{"sheets":[{"id":"q3","name":"Q3 Budget","rowCount":5,"colCount":4,"cells":{"A1":{"value":"Item"},"B1":{"value":"Q1"},"C1":{"value":"Q2"},"D1":{"value":"Q3"},"A2":{"value":"Revenue"},"B2":{"value":120},"C2":{"value":145},"D2":{"value":168},"A3":{"value":"Costs"},"B3":{"value":80},"C3":{"value":92},"D3":{"value":101},"A4":{"value":"Profit"},"B4":{"value":40,"formula":"=B2-B3"},"C4":{"value":53,"formula":"=C2-C3"},"D4":{"value":67,"formula":"=D2-D3"}}}]}' } },
 
   // ── Code & content ──────────────────────────────────────────────────
-  'sui-code':            { props: { block: 'true', lang: 'js' }, innerHTML: 'function sum(a, b) {\n  return a + b\n}' },
   'sui-code-editor':     { props: { language: 'html', value: '<prop name="tone" values="default|primary" default="default" />\n\n<button class="btn btn-{tone()}">\n  <slot></slot>\n</button>' } },
   'sui-markdown':        { props: { value: '# Ship SUI\n\n**Batteries-included** components for the web.\n\n- Compiles to standard web components\n- Themed with design tokens\n- `sui-compiler build` in the loop' } },
   'sui-diff':            { props: { from: "const tone = 'primary'\nconst size = 'md'", to: "const tone = 'success'\nconst size = 'lg'\nconst variant = 'solid'" } },

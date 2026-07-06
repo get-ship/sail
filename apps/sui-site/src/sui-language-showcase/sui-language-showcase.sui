@@ -133,7 +133,7 @@
             <column gap="4" sx="p:5" data-test="lang-demo-layout">
               <row gap="3" justify="between" align="center">
                 <h3>Released in 0.3</h3>
-                <sui-badge tone="success" variant="soft">stable</sui-badge>
+                <span tone="success" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">stable</span>
               </row>
               <p>Three CSS keywords, zero token literals.</p>
               <sui-grid min="md" gap="3">
@@ -171,9 +171,9 @@
             </column>
           {:else if p.id === 'variants'}
             <row gap="3" data-test="lang-demo-variants">
-              <sui-badge tone="success" variant="solid">Passing</sui-badge>
-              <sui-badge tone="warning" variant="soft">Pending</sui-badge>
-              <sui-badge tone="destructive" variant="soft">Failing</sui-badge>
+              <span tone="success" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone border:tone fg:tone-contrast">Passing</span>
+              <span tone="warning" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Pending</span>
+              <span tone="destructive" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Failing</span>
             </row>
           {:else if p.id === 'motion'}
             <column gap="3" data-test="lang-demo-motion">

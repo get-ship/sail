@@ -178,7 +178,7 @@
                 <div class="prop-row" part="prop-row" data-prop-row role="row">
                   <span class="prop-name" part="prop-name" role="cell">{row.name}</span>
                   <span class="prop-type" part="prop-type" role="cell">
-                    <sui-code lang="ts">{row.type}</sui-code>
+                    <code sx="py:1 px:2 radius:sm bg:surface-2 fg:foreground border:subtle text:sm">{row.type}</code>
                   </span>
                   <span class="prop-default" part="prop-default" role="cell">{row.def}</span>
                 </div>
