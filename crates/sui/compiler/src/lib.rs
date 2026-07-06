@@ -249,6 +249,22 @@ fn validate_custom_element_name(name: &str) -> Result<(), &'static str> {
     Ok(())
 }
 
+/// ELEMENT MODE — compile a `.sui` source as an L1 language element (one
+/// authoring technology per layer; see `emit::element`). Same parse pipeline
+/// as `compile()` — preprocess (sx/variants/component-block lowering) then
+/// parse — but the outputs are the element artifacts: a static structure
+/// snippet for use-site lowering, framework-sheet skin CSS keyed on
+/// `.sui-<name>`, and the element manifest. The mode enforces the seam test:
+/// control flow, dynamic attributes, `<data>`/`<client>`, or a controller
+/// are compile errors naming the source a component.
+pub fn compile_element(
+    source: &str,
+    name: &str,
+) -> Result<emit::element::ElementOutput, CompileError> {
+    let program = parse::parse(source)?;
+    emit::element::emit_element(&program, name)
+}
+
 pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, CompileError> {
     // A tagged component registers via `customElements.define(name, …)`, which
     // throws at runtime unless `name` is a valid custom-element name. Reject it

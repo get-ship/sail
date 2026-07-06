@@ -148,6 +148,10 @@ enum Command {
 #[derive(Clone, Debug, clap::ValueEnum)]
 enum ModeArg {
     Component,
+    /// L1 language element — static structure + slots + skin; no runtime
+    /// identity. Emits `<name>.element.json` (structure/skin/manifest) and
+    /// `<name>.skin.css`.
+    Element,
     Auto,
 }
 
@@ -155,6 +159,9 @@ impl From<ModeArg> for CompileMode {
     fn from(m: ModeArg) -> Self {
         match m {
             ModeArg::Component => CompileMode::Component,
+            // Element mode never reaches the component compile path — it is
+            // dispatched before compile_one (see the Build handler).
+            ModeArg::Element => CompileMode::Component,
             ModeArg::Auto => CompileMode::Auto,
         }
     }
@@ -467,6 +474,31 @@ fn build(
                  --mode component          (register under the filename stem)",
                 path.display(),
             ));
+        }
+        // ELEMENT MODE dispatches to its own pipeline: structure + skin +
+        // manifest artifacts, no component module.
+        if matches!(mode, Some(ModeArg::Element)) {
+            let name = component_name.clone().unwrap_or_else(|| stem_of(&path));
+            let source = std::fs::read_to_string(&path)?;
+            let el = sui_compiler::compile_element(&source, &name)
+                .map_err(|e| anyhow!("{}: {e}", path.display()))?;
+            let out_dir = out.clone().unwrap_or_else(|| {
+                path.parent().map(|p| p.to_path_buf()).unwrap_or_default()
+            });
+            std::fs::create_dir_all(&out_dir)?;
+            let artifact = serde_json::json!({
+                "tag": name,
+                "rootClass": el.root_class,
+                "structure": el.structure_html,
+                "skin": el.skin_css,
+                "manifest": el.manifest,
+            });
+            std::fs::write(
+                out_dir.join(format!("{name}.element.json")),
+                serde_json::to_string_pretty(&artifact)?,
+            )?;
+            std::fs::write(out_dir.join(format!("{name}.skin.css")), &el.skin_css)?;
+            continue;
         }
         let component_meta = match (mode.clone(), component_name.clone()) {
             (Some(ModeArg::Component), name) => Some(ComponentMeta {

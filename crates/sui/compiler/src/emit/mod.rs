@@ -7,6 +7,7 @@
 //! for the directive declarations bundle.
 
 pub mod cem;
+pub mod element;
 pub mod dts;
 pub mod expr_rewrite;
 pub mod js;

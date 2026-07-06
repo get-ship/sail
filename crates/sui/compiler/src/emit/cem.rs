@@ -77,7 +77,7 @@ pub fn emit_cem(program: &Program, opts: &CompileOpts) -> Value {
 /// (compile-generated `sx-*`/`sui-*` atomics excluded — they are emission
 /// detail, not contract) and slot names (`(default)` for the unnamed slot).
 /// Sorted + deduped for deterministic manifests.
-fn collect_anatomy(template: &[Instr]) -> (Vec<String>, Vec<String>) {
+pub(crate) fn collect_anatomy(template: &[Instr]) -> (Vec<String>, Vec<String>) {
     let mut classes = std::collections::BTreeSet::new();
     let mut slots = std::collections::BTreeSet::new();
     walk(template, &mut classes, &mut slots);
