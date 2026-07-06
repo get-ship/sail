@@ -161,6 +161,19 @@ fn serialize_static(
         out.push_str(&format!(" class=\"{root_class}\""));
     }
     out.push('>');
+    // Void elements (hr, br, img, input, …) take NO closing tag — emitting
+    // `</hr>` is invalid HTML the template parser rejects when the lowered
+    // structure is spliced back into a page. A void element with children
+    // is an authoring error (they can't hold content).
+    if is_void_element(&el.tag) {
+        if !el.children.is_empty() {
+            return Err(CompileError::new(format!(
+                "element mode: <{}> is a void element and cannot have children",
+                el.tag
+            )));
+        }
+        return Ok(());
+    }
     for child in &el.children {
         match child {
             Instr::Element(c) => serialize_static(c, root_class, false, out)?,
@@ -180,8 +193,14 @@ fn serialize_static(
 }
 
 /// Rewrite the source's `:host`-keyed skin for the element's root class:
-/// `:host` → `.sui-<name>`, `:host(<sel>)` → `.sui-<name><sel>`,
-/// `::slotted(<sel>)` → `slot > <sel>`.
+/// `:host` → `.sui-<name>`, `:host(<sel>)` → `.sui-<name><sel>`.
+///
+/// `::slotted(<sel>)` is subtle for L1: unlike a runtime light-DOM component
+/// (which keeps a real `<slot>` wrapper, so `slot > X` is right), an element's
+/// `<slot>` is REPLACED by the projected children at COMPILE time — the
+/// slotted node ends up a descendant of the ROOT. So `::slotted(X)` becomes a
+/// root-scoped descendant: `{root} X` when it opens a selector (bare), or just
+/// ` X` (descendant of the already-emitted `:host` compound) mid-selector.
 fn element_skin_selectors(css: &str, root_selector: &str) -> String {
     let root = root_selector.to_string();
     let mut out = String::with_capacity(css.len());
@@ -205,7 +224,18 @@ fn element_skin_selectors(css: &str, root_selector: &str) -> String {
         if css[i..].starts_with("::slotted(") {
             let open = i + "::slotted".len();
             if let Some(close) = balanced(bytes, open) {
-                out.push_str("slot > ");
+                // At selector start (last non-ws is a delimiter) the slotted
+                // rule has no scope of its own — anchor it to the root.
+                let at_selector_start = out
+                    .trim_end()
+                    .chars()
+                    .last()
+                    .map(|c| matches!(c, '{' | '}' | ','))
+                    .unwrap_or(true);
+                if at_selector_start {
+                    out.push_str(&root);
+                    out.push(' ');
+                }
                 out.push_str(&css[open + 1..close]);
                 i = close + 1;
                 continue;
@@ -219,6 +249,15 @@ fn element_skin_selectors(css: &str, root_selector: &str) -> String {
         i = n;
     }
     out
+}
+
+/// The HTML void elements — self-closing, no end tag.
+fn is_void_element(tag: &str) -> bool {
+    matches!(
+        tag,
+        "area" | "base" | "br" | "col" | "embed" | "hr" | "img" | "input"
+            | "link" | "meta" | "param" | "source" | "track" | "wbr"
+    )
 }
 
 fn balanced(bytes: &[u8], open: usize) -> Option<usize> {

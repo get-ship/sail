@@ -97,3 +97,20 @@ fn element_skins_css_matches_registry() {
         "element-skins.css is stale — run: cargo run -p sui-compiler -- framework-css"
     );
 }
+
+#[test]
+fn element_void_root_takes_no_closing_tag() {
+    // separator's root is <hr> — a void element. The structure must NOT
+    // carry </hr> (invalid HTML the template parser rejects when the lowered
+    // structure is spliced into a page — the /language showcase find).
+    let out = compile_element("<hr class=\"sep\">", "separator").unwrap();
+    assert!(out.structure_html.contains("<hr"), "{}", out.structure_html);
+    assert!(!out.structure_html.contains("</hr>"), "void: {}", out.structure_html);
+}
+
+#[test]
+fn element_void_with_children_is_an_error() {
+    // A void root with content is rejected — the template parser catches the
+    // stray </hr> first (belt to the emitter's void-children suspenders).
+    assert!(compile_element("<hr class=\"x\">nope</hr>", "sep").is_err());
+}

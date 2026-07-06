@@ -1,0 +1,58 @@
+<!--
+  /language — the new authoring surface, shown live. Every element below is
+  a LANGUAGE ELEMENT (L1): a bare lowercase tag (<spinner>, <separator>,
+  <icon>, <label>) that the compiler lowers to light-DOM structure + a
+  framework-owned skin — no component, no runtime identity, no <style> in
+  the page. The skins arrive via the bundled framework stylesheet
+  (contracts + element-skins), so these render styled at first paint.
+
+  This page is itself the proof: it authors ONLY bare tags and layout
+  keywords — no sx, no CSS — and the framework does the rest.
+-->
+<column class="doc" gap="8">
+  <column gap="2">
+    <p class="eyebrow">The language</p>
+    <h1>Standard-library elements</h1>
+    <p class="lead">
+      The web, with default styles. These are not components you import — they
+      are elements of the language, lowered by the compiler and styled by the
+      framework. You write the tag; the design system is already applied.
+    </p>
+  </column>
+
+  <separator></separator>
+
+    <column gap="3">
+      <label size="sm">spinner</label>
+      <row gap="6" align="center">
+        <spinner size="sm"></spinner>
+        <spinner></spinner>
+        <spinner size="lg"></spinner>
+        <spinner tone="primary" size="lg"></spinner>
+      </row>
+    </column>
+
+    <column gap="3">
+      <label size="sm">icon — sizes the slotted SVG and inks it currentColor</label>
+      <row gap="6" align="center">
+        <icon size="sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></icon>
+        <icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></icon>
+        <icon size="lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></icon>
+        <icon size="xl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></icon>
+      </row>
+    </column>
+
+    <column gap="3">
+      <label size="sm">label — a native &lt;label&gt;, framework-skinned</label>
+      <column gap="2">
+        <label>Email address</label>
+        <label required>Password</label>
+      </column>
+    </column>
+
+    <column gap="3">
+      <label size="sm">separator — the horizontal rule, contract-styled</label>
+      <separator></separator>
+    </column>
+  </column>
+</column>
