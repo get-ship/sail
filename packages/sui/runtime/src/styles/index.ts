@@ -279,6 +279,45 @@ const BUTTON_SKIN_CSS =
   // transparent like the baseline).
   ":where(button[variant='ghost'], button[variant='outline']):disabled { background: transparent; }\n"
 
+// L1 <hr> — the separator surface. Horizontal by default (a thin tone-tinted
+// rule); `orientation="vertical"` and `variant="dashed"` are attribute-keyed
+// like every other channel here. tone arrives for free via the generic
+// `[tone=...]` channel above (--tone-bg), so `<hr tone="primary">` just works.
+const HR_SKIN_CSS =
+  ":where(hr) { border: 0; margin: var(--space-2) 0; padding: 0; flex: 0 0 auto; display: block; width: 100%; height: 1px; background: var(--tone-bg, var(--border-subtle)); }\n" +
+  ":where(hr[variant='dashed']) { background: transparent; border-top: 1px dashed var(--tone-bg, var(--border-subtle)); height: 0; }\n" +
+  ":where(hr[orientation='vertical']) { display: inline-block; align-self: stretch; vertical-align: middle; width: 1px; height: auto; min-height: 1em; margin: 0 var(--space-2); background: var(--border); }\n" +
+  ":where(hr[orientation='vertical'][variant='dashed']) { background: transparent; border-left: 1px dashed var(--border); width: 0; }\n"
+
+// L1 <span dot> — the status-dot surface. `dot` scopes the skin so a plain
+// <span size="..."> elsewhere isn't affected (its size scale means something
+// different than the control size channel above). tone arrives for free via
+// the generic `[tone=...]` channel (--tone-fg/--tone-border/--tone-ring).
+const STATUS_DOT_SKIN_CSS =
+  ":where(span[dot]) { display: inline-block; vertical-align: middle; width: var(--icon-size-3xs); height: var(--icon-size-3xs); border-radius: var(--radius-full); background: var(--tone-fg); box-shadow: 0 0 0 1.5px var(--tone-border), 0 0 0 4.5px var(--tone-ring); }\n" +
+  ":where(span[dot][size='sm']) { width: var(--space-1_5); height: var(--space-1_5); box-shadow: 0 0 0 1px var(--tone-border), 0 0 0 3.5px var(--tone-ring); }\n" +
+  ":where(span[dot][pulse]) { animation: sui-status-dot-pulse 2.5s var(--ease-out) infinite; }\n" +
+  '@keyframes sui-status-dot-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.82; transform: scale(0.92); } }\n'
+
+// L1 <span skeleton> — the shimmer-placeholder surface. `skeleton` scopes
+// the skin the same way `dot` does above. shape/size drive width/height/
+// radius; the shimmer gradient/keyframe and the circle-lg 48px are
+// off-vocabulary for sx (no `bg:linear-gradient()`, no animation primitive,
+// no 48px token — see the former wrapper's own LANG-GAP note), so they land
+// here instead.
+const SKELETON_SKIN_CSS =
+  ":where(span[skeleton]) { display: inline-block; vertical-align: middle; background: linear-gradient(90deg, var(--muted) 0%, var(--tone-muted-bg) 50%, var(--muted) 100%); background-size: 200% 100%; animation: sui-skeleton-shimmer 1.5s ease-in-out infinite; border-radius: var(--radius-sm); }\n" +
+  ":where(span[skeleton][shape='block']) { display: block; width: 100%; min-height: 80px; }\n" +
+  ":where(span[skeleton][shape='circle']) { border-radius: var(--radius-full); }\n" +
+  ":where(span[skeleton][shape='text'], span[skeleton][shape='line']) { width: 100%; }\n" +
+  ":where(span[skeleton][shape='text'][size='sm'], span[skeleton][shape='line'][size='sm']) { height: var(--space-2); }\n" +
+  ":where(span[skeleton][shape='text'][size='md'], span[skeleton][shape='line'][size='md']) { height: var(--space-3); }\n" +
+  ":where(span[skeleton][shape='text'][size='lg'], span[skeleton][shape='line'][size='lg']) { height: var(--space-4); }\n" +
+  ":where(span[skeleton][shape='circle'][size='sm']) { width: var(--icon-size-2xl); height: var(--icon-size-2xl); }\n" +
+  ":where(span[skeleton][shape='circle'][size='md']) { width: var(--space-7); height: var(--space-7); }\n" +
+  ":where(span[skeleton][shape='circle'][size='lg']) { width: 48px; height: 48px; }\n" +
+  '@keyframes sui-skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }\n'
+
 // The CONTROL half of the contracts — element-keyed channels + control
 // baseline + button/input/toggle skins, WITHOUT the light host rules
 // (display:block, slot, [hidden]) which are the light-DOM component's job.
@@ -293,7 +332,10 @@ export const CONTROL_SKINS_CSS =
   CONTROL_CONTRACTS_CSS +
   BUTTON_SKIN_CSS +
   INPUT_SKIN_CSS +
-  TOGGLE_CONTROLS_CSS
+  TOGGLE_CONTROLS_CSS +
+  HR_SKIN_CSS +
+  STATUS_DOT_SKIN_CSS +
+  SKELETON_SKIN_CSS
 
 export const LIGHT_CONTRACTS_CSS =
   hostAttrs(TONES_CSS) +
@@ -307,6 +349,9 @@ export const LIGHT_CONTRACTS_CSS =
   BUTTON_SKIN_CSS +
   INPUT_SKIN_CSS +
   TOGGLE_CONTROLS_CSS +
+  HR_SKIN_CSS +
+  STATUS_DOT_SKIN_CSS +
+  SKELETON_SKIN_CSS +
   // Host defaults for light components (the :host base rules, element-keyed).
   '[data-component] { display: block; color: var(--foreground); }\n' +
   '[data-component][hidden] { display: none !important; }\n' +

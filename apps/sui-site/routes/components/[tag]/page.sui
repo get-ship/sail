@@ -6,7 +6,7 @@
   variant), the title/meta block, then the API reference table.
 
   Structure is the library dogfooding itself:
-    <sui-center>   parks the live specimen dead-center of the preview stage
+    <center>       parks the live specimen dead-center of the preview stage
                    (both axes), so it no longer hugs the top edge
     <row>          centers the variant chips and the meta pills (justify="center")
     <column>       the unknown-tag empty state
@@ -33,7 +33,7 @@
   <column class="detail" gap="5" data-test="detail">
     <a class="detail-back" href="/components" data-test="detail-back">← All components</a>
 
-    <sui-center class="detail-stage" bind:this={stageEl} data-test="detail-stage"></sui-center>
+    <center class="detail-stage" bind:this={stageEl} data-test="detail-stage"></center>
 
     {#if variants().length}
       <row class="detail-variants" justify="center" gap="2" data-test="detail-variants">

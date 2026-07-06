@@ -13,7 +13,6 @@
 
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sui-bar-chart/sui-bar-chart.compiled.js'
-import '../../primitives/src/sui-skeleton/sui-skeleton.compiled.js'
 import '../../primitives/src/sui-empty-state/sui-empty-state.compiled.js'
 import { createContainerRegistry, flush, mount } from '../src/test-utils'
 
@@ -42,7 +41,7 @@ describe('<sui-bar-chart> migration — engine-driven states', () => {
   it('loading attribute composes a sui-skeleton', async () => {
     const { el } = mount(reg, 'sui-bar-chart', { data: '1,2,3', loading: true })
     await flush()
-    expect(shadow(el).querySelector('sui-skeleton')).not.toBeNull()
+    expect(shadow(el).querySelector('[skeleton]')).not.toBeNull()
   })
 
   it('loading hides the data SVG', async () => {

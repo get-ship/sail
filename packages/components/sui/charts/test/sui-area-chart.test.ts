@@ -159,7 +159,7 @@ describe('<sui-area-chart>', () => {
     const series = JSON.stringify([{ name: 'a', data: [1, 2, 3] }])
     const { el } = mount(reg, 'sui-area-chart', { series, loading: true })
     await flush()
-    expect(shadow(el).querySelector('sui-skeleton')).not.toBeNull()
+    expect(shadow(el).querySelector('[skeleton]')).not.toBeNull()
     expect(shadow(el).querySelector('svg[role="img"]')).toBeNull()
   })
 

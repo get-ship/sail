@@ -10,7 +10,7 @@
     </sui-stat>
 
     <div class="row">
-      <sui-status-dot tone="success" size="sm" label="ok"></sui-status-dot>
+      <span dot tone="success" size="sm" role="img" aria-label="ok"></span>
       <span>system healthy</span>
     </div>
 

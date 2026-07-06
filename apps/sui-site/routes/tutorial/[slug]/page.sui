@@ -101,7 +101,7 @@
     <section class="tut-pane tut-pane--preview">
       <div class="tut-pane-bar tut-preview-bar">
         <div class="tut-live">
-          <sui-status-dot class="tut-status-dot" tone="success" pulse size="sm" label="ready"></sui-status-dot>
+          <span dot class="tut-status-dot" tone="success" pulse size="sm" role="img" aria-label="ready"></span>
           <span class="tut-live-label">Preview · live</span>
         </div>
         <button data-action="run" outline primary sm>▶ Run</button>

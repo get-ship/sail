@@ -63,7 +63,7 @@
 </style>
 
 {#if loading()}
-  <sui-skeleton shape="circle" size="lg" part="loading"></sui-skeleton>
+  <span skeleton shape="circle" size="lg" part="loading" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
 {:else if chart.error()}
   <sui-error-state part="error"></sui-error-state>
 {:else}

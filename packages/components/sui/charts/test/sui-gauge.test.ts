@@ -125,7 +125,7 @@ describe('<sui-gauge>', () => {
     // sui-skeleton via the engine isLoading discriminator.
     const { el } = mount(reg, 'sui-gauge', { value: '50', loading: true })
     await flush()
-    expect(shadow(el).querySelector('sui-skeleton')).not.toBeNull()
+    expect(shadow(el).querySelector('[skeleton]')).not.toBeNull()
     expect(shadow(el).querySelector('svg[role="img"]')).toBeNull()
   })
 

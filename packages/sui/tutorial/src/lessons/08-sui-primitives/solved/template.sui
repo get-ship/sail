@@ -10,12 +10,14 @@
     </sui-stat>
 
     <div class="row">
-      <sui-status-dot
+      <span
+        dot
         tone={alarming() ? 'destructive' : 'success'}
         size="sm"
         pulse={alarming()}
-        label={alarming() ? 'rate limit' : 'ok'}
-      ></sui-status-dot>
+        role="img"
+        aria-label={alarming() ? 'rate limit' : 'ok'}
+      ></span>
       <span>{alarming() ? 'rate limit exceeded' : 'system healthy'}</span>
     </div>
 

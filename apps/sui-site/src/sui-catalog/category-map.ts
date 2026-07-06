@@ -126,9 +126,6 @@ export const TAG_CATEGORY: Record<string, CategoryId> = {
   'sui-tabs':            'layout',
   'sui-timeline':        'layout',
   'sui-scroll-area':     'layout',
-  'sui-center':          'layout',
-  'sui-grid':            'layout',
-  'sui-separator':       'layout',
   'sui-collapsible':     'layout',
 
   // ── @ship/sui-primitives — Overlays ───────────────────────────────────
@@ -152,7 +149,6 @@ export const TAG_CATEGORY: Record<string, CategoryId> = {
   'sui-alert':           'feedback',
   'sui-toast-host':      'feedback',
   'sui-spinner':         'feedback',
-  'sui-skeleton':        'feedback',
   'sui-empty-state':     'feedback',
   'sui-error-state':     'feedback',
   'sui-error-boundary':  'feedback',
@@ -169,7 +165,6 @@ export const TAG_CATEGORY: Record<string, CategoryId> = {
   'sui-icon':            'typography',
   'sui-avatar':          'typography',
   'sui-chip':            'typography',
-  'sui-status-dot':      'typography',
   // ── @ship/sui-primitives — Utility ────────────────────────────────────
   'sui-theme-picker':    'utility',
 
