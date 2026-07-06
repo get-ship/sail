@@ -4,7 +4,7 @@ description: "Capture a DOM element into a signal."
 group: "Tutorial"
 order: 13
 slug: "13-refs"
-prev: "12-slots"
+prev: "12-projection"
 next: "14-class-style"
 chapter: "composition"
 ---

@@ -5,7 +5,7 @@ group: "Tutorial"
 order: 11
 slug: "11-sui-eval"
 prev: "10-lsp-cli"
-next: "12-slots"
+next: "12-projection"
 chapter: "agents"
 ---
 
