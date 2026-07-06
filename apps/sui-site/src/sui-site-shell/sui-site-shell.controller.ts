@@ -44,39 +44,12 @@ function themeFor(product: string): string {
   }
 }
 
-// Selectable site themes for the header switcher. The product accent is the
-// default; a manual pick overrides it (persisted). Names are `data-theme`
-// values shipped by @ship/tokens/themes.css (imported in the .sui).
-const THEME_KEY = 'sui-site-theme'
-export const SITE_THEMES: Array<{ id: string; label: string }> = [
-  { id: '', label: 'Auto (per product)' },
-  { id: 'paper', label: 'Paper' },
-  { id: 'halo', label: 'Halo' },
-  { id: 'glass', label: 'Glass' },
-  { id: 'console', label: 'Console' },
-  { id: 'contrast', label: 'Contrast' },
-]
-
 export default controller({
   scope: () => {
     const root = document.documentElement
     const path = signal<string>(typeof location !== 'undefined' ? location.pathname : '/')
     const product = derived(() => productFor(path()))
-
-    // Manual theme override (persisted). Empty string = follow the product.
-    const storedTheme = (() => {
-      try { return localStorage.getItem(THEME_KEY) ?? '' } catch { return '' }
-    })()
-    const themeName = signal<string>(storedTheme)
-    const applyTheme = (): void => {
-      root.setAttribute('data-theme', themeName() || themeFor(product()))
-    }
-    applyTheme()
-    const setTheme = (id: string): void => {
-      themeName.set(id)
-      applyTheme()
-      try { id ? localStorage.setItem(THEME_KEY, id) : localStorage.removeItem(THEME_KEY) } catch { /* no storage */ }
-    }
+    root.setAttribute('data-theme', themeFor(product()))
 
     const stored = (() => {
       try {
@@ -113,6 +86,6 @@ export default controller({
       return p === '/' || p === '/components' || p.startsWith('/components/') || p.startsWith('/tutorial/')
     })
 
-    return { dark, toggleTheme, themeName, setTheme, themes: SITE_THEMES, path, product, fullscreen }
+    return { dark, toggleTheme, path, product, fullscreen }
   },
 })
