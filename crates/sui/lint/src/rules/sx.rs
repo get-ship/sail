@@ -274,29 +274,6 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
     Some(decls)
 }
 
-/// Lower a `prop:channel` where `channel` is a `<theme>` channel (a file-local
-/// CSS custom property the theme fills per prop value). The value is the kind's
-/// template with `var(--channel)` as the atom — so `border:tone-border` becomes
-/// `1px solid var(--tone-border)` (a full border), `min-h:sel-h` becomes
-/// `var(--sel-h)`, `fg:tone-fg` becomes `var(--tone-fg)`. The compiler calls this
-/// for values the lint accepted as declared channels.
-pub fn lower_channel(prop: &str, channel: &str) -> Option<Vec<(&'static str, String)>> {
-    use Kind::*;
-    let kind = prop_kind(prop)?;
-    let atom = format!("var(--{channel})");
-    let value = match kind {
-        Border => format!("1px solid {atom}"),
-        Ring => format!(
-            "0 0 0 var(--ring-offset) var(--background), \
-             0 0 0 calc(var(--ring-offset) + var(--ring-width)) {atom}"
-        ),
-        // Color / Size / Space / Radius / Text / Shadow / … all take the bare
-        // var — the channel is already the full variable, no scale prefix.
-        _ => atom,
-    };
-    Some(css_props(prop).iter().map(|p| (*p, value.clone())).collect())
-}
-
 /// A condition prefix (`motion-reduce:`/`forced-colors:`/…) → its `@media` query.
 /// A CLOSED set of the standard user-preference / environment queries — never an
 /// arbitrary `@media` (that would be a raw-CSS escape). An sx pair carrying a
@@ -326,37 +303,13 @@ pub fn state_pseudo(state: &str) -> Option<&'static str> {
     })
 }
 
-/// Channel names declared by this file's `<theme … channels="…">` blocks — the
-/// file-local sx values a component may consume (`border:tone-border`). A CLOSED
-/// set: only names the component itself declared, never an open escape.
-pub fn source_channels(source: &str) -> Vec<String> {
-    let mut out = Vec::new();
-    let mut rest = source;
-    while let Some(start) = rest.find("<theme") {
-        let after = &rest[start..];
-        let Some(tag_end) = after.find('>') else { break };
-        let tag = &after[..tag_end];
-        if let Some(key) = tag.find("channels=\"") {
-            let vstart = key + "channels=\"".len();
-            if let Some(vlen) = tag[vstart..].find('"') {
-                out.extend(
-                    tag[vstart..vstart + vlen]
-                        .split(',')
-                        .map(|s| s.trim().to_string())
-                        .filter(|s| !s.is_empty()),
-                );
-            }
-        }
-        rest = &after[tag_end + 1..];
-    }
-    out
-}
-
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
-    // Channels declared by this file's `<theme>` blocks are legal sx values
-    // (`border:tone-border`) — a closed set, not an open escape.
-    let channels = source_channels(source);
+    // NOTE deliberately absent: there is NO per-file channel fallback. The sx
+    // vocabulary is the token registry + the framework contracts (tone-*,
+    // size-*), which live in `allowed()` via the registry — a `<theme>`
+    // declaration must never widen what validates (the closed back door:
+    // ad-hoc channels were how translation snuck past the design system).
     for hit in scan_sx(source) {
         let (val, offset) = match hit {
             SxHit::Dynamic(offset) => {
@@ -408,7 +361,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 continue;
             };
             let opts = allowed(kind);
-            if !opts.contains(&token) && !channels.iter().any(|c| c == token) {
+            if !opts.contains(&token) {
                 let raw = token.chars().next().is_some_and(|c| c.is_ascii_digit() || c == '#')
                     || token.ends_with("px")
                     || token.ends_with("rem")
@@ -595,14 +548,17 @@ mod tests {
     }
 
     #[test]
-    fn accepts_declared_theme_channels_only() {
-        // `tone-fg` is now a universal framework channel (always valid), so use a
-        // genuinely bespoke channel (`tone-on-fg`) for the declared-vs-undeclared test.
-        let themed = "<theme prop=\"tone\" channels=\"tone-on-fg\">\n  default: foreground\n</theme>\n<sui-card sx=\"fg:tone-on-fg\">x</sui-card>";
-        assert!(run(themed).is_empty(), "declared channel is a legal sx value");
-        assert_eq!(run(r#"<sui-card sx="fg:tone-on-fg">x</sui-card>"#).len(), 1, "undeclared bespoke channel is rejected");
-        // The framework channels are valid with NO declaration at all.
+    fn theme_declarations_never_widen_the_vocabulary() {
+        // THE CLOSED BACK DOOR: a `<theme channels="…">` declaration must not
+        // make its channel a legal sx value — ad-hoc channels were how
+        // translation snuck past the design system. Rejected DECLARED OR NOT.
+        let themed = "<theme prop=\"size\" channels=\"cb-size\">\n  default: icon-size-md\n</theme>\n<sui-card sx=\"w:cb-size\">x</sui-card>";
+        assert_eq!(run(themed).len(), 1, "declared ad-hoc channel is still rejected");
+        assert_eq!(run(r#"<sui-card sx="w:cb-size">x</sui-card>"#).len(), 1, "undeclared ad-hoc channel is rejected");
+        // The FRAMEWORK channels come from the token registry and are valid
+        // with no declaration at all — the only channels sx speaks.
         assert!(run(r#"<sui-card sx="bg:tone fg:tone-contrast border:tone-border">x</sui-card>"#).is_empty(), "framework channels need no <theme> declaration");
+        assert!(run(r#"<sui-card sx="min-h:size-h px:size-px text:size-fs">x</sui-card>"#).is_empty(), "framework size channels need no <theme> declaration");
     }
 
     #[test]

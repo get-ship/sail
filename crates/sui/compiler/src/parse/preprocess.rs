@@ -39,6 +39,11 @@ pub fn preprocess(source: &str) -> String {
     // `lower_sx` would otherwise fold that sx into a class on the (non-)element.
     let (s, host_css) = lower_host(&s);
     let (s, sx_css) = lower_sx(&s);
+    // An element that already carried `class="…"` now has a SECOND class attr
+    // from the sx lowering; downstream the DOM emitter would issue two
+    // `setAttribute("class", …)` calls and the sx one clobbers the author's.
+    // Merge them into one attribute here, while the tag text is still flat.
+    let s = merge_duplicate_class_attrs(&s);
     let (s, layout_css) = lower_layout(&s);
     let (s, variants_css) = lower_variants(&s);
     let (s, theme_css) = lower_theme(&s);
@@ -60,9 +65,6 @@ fn lower_sx(source: &str) -> (String, String) {
     let mut out = String::with_capacity(source.len() + 256);
     let mut css = String::new();
     let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
-    // Channels declared by this file's `<theme>` blocks — legal sx values that
-    // lower to `var(--channel)` (the theme fills them per prop value).
-    let channels = sui_lint::rules::sx::source_channels(source);
     let mut i = 0;
     let mut last = 0;
     while i < bytes.len() {
@@ -90,7 +92,7 @@ fn lower_sx(source: &str) -> (String, String) {
                     let val = &source[vstart..vstart + rel];
                     out.push_str(&source[last..i]);
                     out.push_str("class=\"");
-                    out.push_str(&lower_sx_value(val, &mut css, &mut seen, &channels));
+                    out.push_str(&lower_sx_value(val, &mut css, &mut seen));
                     out.push('"');
                     i = vstart + rel + 1;
                     last = i;
@@ -116,7 +118,6 @@ fn lower_sx_value(
     val: &str,
     css: &mut String,
     seen: &mut std::collections::HashSet<String>,
-    channels: &[String],
 ) -> String {
     let mut classes: Vec<String> = Vec::new();
     for pair in val.split_whitespace() {
@@ -160,17 +161,12 @@ fn lower_sx_value(
             None => format!("sx-{prop}-{sanitized}"),
             Some(s) => format!("sx-{s}-{prop}-{sanitized}"),
         };
-        // A declared `<theme>` channel lowers to `var(--channel)` on the prop's
-        // CSS properties (the theme fills the channel per prop value); otherwise
-        // the normal token vocabulary.
-        let decls = sui_lint::rules::sx::lower(prop, token).or_else(|| {
-            channels
-                .iter()
-                .any(|c| c == token)
-                .then(|| sui_lint::rules::sx::lower_channel(prop, token))
-                .flatten()
-        });
-        if let Some(decls) = decls {
+        // The token vocabulary + framework channels (tone-*/size-*) live in the
+        // registry `lower` consults. There is deliberately NO per-file channel
+        // path: a `<theme>`-declared channel is not sx vocabulary (the closed
+        // back door — ad-hoc channels were how translation snuck past the
+        // design system).
+        if let Some(decls) = sui_lint::rules::sx::lower(prop, token) {
             if seen.insert(class.clone()) {
                 let body = decls
                     .iter()
@@ -191,6 +187,134 @@ fn lower_sx_value(
 }
 
 /// After the `sx` name: optional ws, `=`, optional ws, then a `"`.
+/// Merge every open tag's duplicate static `class="…"` attributes into the
+/// first one (values space-joined, source order). `lower_sx` rewrites `sx=` to
+/// a fresh `class=` without looking for an existing one, so
+/// `<span class="badge" sx="p:4">` arrives here as two class attrs — the HTML
+/// parser keeps both and the emitted `setAttribute("class")` pair lets the
+/// second wipe the first at runtime (the sui-badge `.badge` regression).
+/// Conservative: a tag containing a dynamic `class="{…}"` is left untouched.
+fn merge_duplicate_class_attrs(source: &str) -> String {
+    let bytes = source.as_bytes();
+    let mut out = String::with_capacity(source.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if source[i..].starts_with("<!--") {
+            let end = source[i..].find("-->").map(|e| i + e + 3).unwrap_or(bytes.len());
+            out.push_str(&source[i..end]);
+            i = end;
+            continue;
+        }
+        // Only open tags: `<` + ASCII letter (not `</`, `<!`, `<{`).
+        if bytes[i] == b'<' && i + 1 < bytes.len() && bytes[i + 1].is_ascii_alphabetic() {
+            // Find the tag end, honoring quoted attribute values (a `>` inside
+            // a quoted value must not terminate the tag).
+            let mut j = i + 1;
+            let mut quote: Option<u8> = None;
+            while j < bytes.len() {
+                match (quote, bytes[j]) {
+                    (Some(q), b) if b == q => quote = None,
+                    (None, b'"') | (None, b'\'') => quote = Some(bytes[j]),
+                    (None, b'>') => break,
+                    _ => {}
+                }
+                j += 1;
+            }
+            if j < bytes.len() {
+                let tag = &source[i..=j];
+                out.push_str(&merge_tag_classes(tag));
+                i = j + 1;
+                continue;
+            }
+        }
+        // Copy up to the next `<` (or the rest). Byte-scan, NOT a str slice
+        // at `i + 1` — when `i` sits on a multi-byte char, `source[i + 1..]`
+        // is mid-codepoint and panics (the sui-date-picker `‹` regression).
+        // A `b'<'` byte position is always a char boundary.
+        let next = bytes[i + 1..]
+            .iter()
+            .position(|&b| b == b'<')
+            .map(|n| i + 1 + n)
+            .unwrap_or(bytes.len());
+        out.push_str(&source[i..next]);
+        i = next;
+    }
+    out
+}
+
+/// Merge the static `class="…"` attributes inside one open-tag slice. Returns
+/// the tag unchanged when it has fewer than two, or when any class value is a
+/// `{…}` expression (dynamic — the emitter owns that path).
+fn merge_tag_classes(tag: &str) -> String {
+    let bytes = tag.as_bytes();
+    // (attr_start, value_start, value_end) for each `class="…"`, where
+    // attr_start points at the `c` and the value span excludes the quotes.
+    let mut hits: Vec<(usize, usize, usize)> = Vec::new();
+    let mut i = 0;
+    let mut quote: Option<u8> = None;
+    while i < bytes.len() {
+        match (quote, bytes[i]) {
+            (Some(q), b) if b == q => {
+                quote = None;
+                i += 1;
+                continue;
+            }
+            (Some(_), _) => {
+                i += 1;
+                continue;
+            }
+            (None, b'"') | (None, b'\'') => {
+                quote = Some(bytes[i]);
+                i += 1;
+                continue;
+            }
+            _ => {}
+        }
+        // `bytes[i] == b'c'` first: it guarantees `i` is a char boundary
+        // (an ASCII byte is never a continuation byte), so the `tag[i..]`
+        // slice below cannot land mid-codepoint.
+        if i > 0
+            && bytes[i] == b'c'
+            && bytes[i - 1].is_ascii_whitespace()
+            && tag[i..].starts_with("class=\"")
+        {
+            let vstart = i + "class=\"".len();
+            if let Some(rel) = tag[vstart..].find('"') {
+                hits.push((i, vstart, vstart + rel));
+                i = vstart + rel + 1;
+                continue;
+            }
+        }
+        i += 1;
+    }
+    if hits.len() < 2 || hits.iter().any(|&(_, vs, ve)| tag[vs..ve].trim_start().starts_with('{')) {
+        return tag.to_string();
+    }
+    let merged = hits
+        .iter()
+        .map(|&(_, vs, ve)| tag[vs..ve].trim())
+        .filter(|v| !v.is_empty())
+        .collect::<Vec<_>>()
+        .join(" ");
+    let mut out = String::with_capacity(tag.len());
+    let (_, first_vs, _) = hits[0];
+    out.push_str(&tag[..first_vs]);
+    out.push_str(&merged);
+    // Copy the remainder, skipping every later `class="…"` attribute (and the
+    // single whitespace run that precedes it).
+    let mut pos = hits[0].2; // at the closing quote of the first value
+    for &(start, _, vend) in &hits[1..] {
+        let mut cut = start;
+        while cut > pos && bytes[cut - 1].is_ascii_whitespace() {
+            cut -= 1;
+        }
+        out.push_str(&tag[pos..cut]);
+        pos = vend + 1; // past the closing quote
+    }
+    out.push_str(&tag[pos..]);
+    out
+}
+
 fn is_eq_quote(rest: &[u8]) -> bool {
     let mut k = 0;
     while k < rest.len() && rest[k].is_ascii_whitespace() {
@@ -703,12 +827,26 @@ fn lower_component(source: &str) -> String {
     let body_end = body_start + rel;
     let block_end = body_end + "</component>".len();
 
+    let fields = parse_object_fields(&source[body_start..body_end]);
+    // `form: { value: 'checked', disabled: 'disabled' }` — names the props that
+    // carry ElementInternals form association. Parsed BEFORE the props expansion
+    // so the named props' tags gain `form-value` / `form-disabled` flags
+    // regardless of field order in the block.
+    let (form_value, form_disabled) = fields
+        .iter()
+        .find(|(k, _)| k == "form")
+        .map(|(_, v)| parse_form_field(v))
+        .unwrap_or((None, None));
     let mut generated = String::new();
-    for (key, val) in parse_object_fields(&source[body_start..body_end]) {
+    for (key, val) in fields {
         match key.as_str() {
-            "props" => generated.push_str(&expand_props(&val)),
+            "props" => generated.push_str(&expand_props(
+                &val,
+                form_value.as_deref(),
+                form_disabled.as_deref(),
+            )),
             "variants" => generated.push_str(&format!("<variants>{val}</variants>\n")),
-            // meta.tag is the filename-derived tag today; nothing to emit yet.
+            // `form` was consumed above; meta.tag is filename-derived today.
             _ => {}
         }
     }
@@ -719,9 +857,27 @@ fn lower_component(source: &str) -> String {
     out
 }
 
+/// Parse the `form: { value: '…', disabled: '…' }` object into the two prop
+/// names. Unknown keys are ignored (tsgo owns shape validation of the block).
+fn parse_form_field(obj: &str) -> (Option<String>, Option<String>) {
+    let mut value = None;
+    let mut disabled = None;
+    let inner = obj.trim().trim_start_matches('{').trim_end_matches('}');
+    for (k, v) in parse_object_fields(inner) {
+        match k.as_str() {
+            "value" => value = Some(unquote(v.trim())),
+            "disabled" => disabled = Some(unquote(v.trim())),
+            _ => {}
+        }
+    }
+    (value, disabled)
+}
+
 /// Expand a props object `{ tone, size, variant: ['solid','soft'], disabled: bool }`
-/// into `<prop …/>` tags.
-fn expand_props(obj: &str) -> String {
+/// into `<prop …/>` tags. `form_value` / `form_disabled` name the props that
+/// gain the `form-value` / `form-disabled` association flags (from the
+/// component block's `form:` field).
+fn expand_props(obj: &str, form_value: Option<&str>, form_disabled: Option<&str>) -> String {
     let mut out = String::new();
     for (name, val) in parse_object_fields(obj) {
         let n = name.as_str();
@@ -765,6 +921,17 @@ fn expand_props(obj: &str) -> String {
             // `string`, `String`, or a bare shorthand → a string prop.
             format!("<prop name=\"{n}\" type=\"string\" default=\"\" />")
         };
+        // Form association: the prop named by `form.value` syncs
+        // ElementInternals.setFormValue; `form.disabled` receives the
+        // fieldset-disabled callback. Flags append to whatever tag shape the
+        // prop expanded to.
+        let mut tag = tag;
+        if form_value == Some(n) {
+            tag = tag.replace(" />", " form-value />");
+        }
+        if form_disabled == Some(n) {
+            tag = tag.replace(" />", " form-disabled />");
+        }
         out.push_str(&tag);
         out.push('\n');
     }
@@ -1187,6 +1354,89 @@ mod tests {
         // `<x  />` (whitespace before `/`) is still XHTML-style self-close.
         let out = expand_self_close("<x  />");
         assert_eq!(out, "<x></x>");
+    }
+
+    #[test]
+    fn sx_merges_into_existing_class_attr() {
+        // Regression: `<span class="badge" sx="p:4">` used to lower into TWO
+        // class attributes; the emitted setAttribute("class") pair let the sx
+        // one clobber "badge" at runtime (sui-badge `.badge` querySelector
+        // returned null — 82 primitive-suite failures).
+        let out = preprocess(r#"<span class="badge" part="badge" sx="p:4">x</span>"#);
+        assert!(
+            out.contains(r#"class="badge sx-p-4" part="badge""#),
+            "author class + sx classes must merge into one attribute, got:\n{out}"
+        );
+        assert_eq!(out.matches("class=").count(), 1, "exactly one class attr:\n{out}");
+    }
+
+    #[test]
+    fn sx_before_class_also_merges() {
+        let out = preprocess(r#"<span sx="p:4" class="badge">x</span>"#);
+        assert!(
+            out.contains(r#"class="sx-p-4 badge""#),
+            "merge must work regardless of attribute order, got:\n{out}"
+        );
+        assert_eq!(out.matches("class=").count(), 1);
+    }
+
+    #[test]
+    fn dynamic_class_with_sx_is_left_alone() {
+        // A `{…}` class binding is the emitter's business — the merge pass
+        // must not fold static sx classes into an expression it can't evaluate.
+        let out = preprocess(r#"<span class={cls()} sx="p:4">x</span>"#);
+        assert_eq!(
+            out.matches("class=").count(),
+            2,
+            "dynamic class + sx stays two attrs for the emitter, got:\n{out}"
+        );
+    }
+
+    #[test]
+    fn quoted_gt_inside_attr_does_not_break_class_merge() {
+        let out = preprocess(r#"<span title="a > b" class="x" sx="p:4">y</span>"#);
+        assert!(out.contains(r#"class="x sx-p-4""#), "got:\n{out}");
+    }
+
+    #[test]
+    fn component_form_field_flags_the_named_props() {
+        // `form: { value, disabled }` → the named props' tags gain the
+        // ElementInternals association flags, independent of field order.
+        let src = "<component>{\n  props: { checked: bool, disabled: bool, name: string },\n  form: { value: 'checked', disabled: 'disabled' },\n}</component>\n<div>x</div>";
+        let out = preprocess(src);
+        assert!(
+            out.contains(r#"<prop name="checked" type="bool" default="false" reflect form-value />"#),
+            "checked carries form-value, got:\n{out}"
+        );
+        assert!(
+            out.contains(r#"<prop name="disabled" type="bool" default="false" reflect form-disabled />"#),
+            "disabled carries form-disabled, got:\n{out}"
+        );
+        assert!(
+            out.contains(r#"<prop name="name" type="string" default="" />"#),
+            "unnamed props unchanged, got:\n{out}"
+        );
+        assert!(!out.contains("<form"), "the form field itself emits nothing:\n{out}");
+    }
+
+    #[test]
+    fn component_form_field_before_props_also_flags() {
+        let src = "<component>{\n  form: { value: 'value' },\n  props: { value: string },\n}</component>\n<div>x</div>";
+        let out = preprocess(src);
+        assert!(
+            out.contains(r#"<prop name="value" type="string" default="" form-value />"#),
+            "form before props still flags, got:\n{out}"
+        );
+    }
+
+    #[test]
+    fn multibyte_chars_do_not_panic_class_merge() {
+        // Regression: the merge pass sliced `source[i + 1..]` while `i` sat on
+        // a multi-byte char (sui-date-picker's `‹`/`›` in a comment) — panic.
+        let src = "<!-- ‹prev / next› —— déjà-vu … -->\n<span class=\"x\" sx=\"p:4\">é…‹›</span>";
+        let out = preprocess(src);
+        assert!(out.contains(r#"class="x sx-p-4""#), "got:\n{out}");
+        assert!(out.contains("é…‹›"), "text content preserved:\n{out}");
     }
 
     #[test]

@@ -510,8 +510,11 @@ impl TemplateEmitter {
                             kf_items.join(", ")
                         ));
                     }
+                    // Guarded: WAAPI is absent under jsdom/SSR — a bare
+                    // `.animate()` call crashes the whole component setup
+                    // there. `__sui_motion_attach` drops the nulls.
                     w.line(&format!(
-                        "const {anim_var} = {el_var}.animate({kf_var}, {{ duration: {dur}, easing: {easing}, fill: {fill} }});",
+                        "const {anim_var} = typeof {el_var}.animate === 'function' ? {el_var}.animate({kf_var}, {{ duration: {dur}, easing: {easing}, fill: {fill} }}) : null;",
                         dur = baked.timing.duration_ms,
                         easing = js_string(&baked.timing.easing),
                         fill = js_string(&baked.timing.fill),
