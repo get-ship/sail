@@ -1,3 +1,73 @@
+<!--
+  <sui-tree-item> — SUI port of <ship-tree-node>. Co-located with <sui-tree-view>.
+  Expandable hierarchical list item with keyboard focus management.
+
+  Prop / event parity vs <ship-tree-node>
+  ─────────────────────────────────────────────────────────────────────────────
+  Lit                         SUI                         Notes
+  ─────────────────────────────────────────────────────────────────────────────
+  label (string, '')          label (string, '', reflect) ✓
+  expanded (bool, false)      expanded (bool, reflect)    ✓
+  selected (bool, false)      selected (bool, reflect)    ✓
+  leaf (bool, false)          leaf (bool, reflect)        ✓
+  ─────────────────────────────────────────────────────────────────────────────
+  ship-toggle → {expanded}    sui-toggle → {expanded}     event renamed
+  ship-select → {}            sui-select → {}             event renamed
+  ─────────────────────────────────────────────────────────────────────────────
+  role=treeitem set via       controller sets on host     ✓
+    connectedCallback
+  ─────────────────────────────────────────────────────────────────────────────
+  Keyboard: Enter/Space→select; ArrowRight→expand; ArrowLeft→collapse     ✓
+  ─────────────────────────────────────────────────────────────────────────────
+  Slots: (default) nested items, icon (leading), trailing
+  ─────────────────────────────────────────────────────────────────────────────
+  Parts: row, caret, label, children
+  ─────────────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from feat/next, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────────────
+  - No tone prop — rule "tone is global now" doesn't apply.
+  - The row is the L1 layout keyword row (gap/align attributes), not a
+    hand-styled flex div; its padding/radius/cursor/ink move to sx
+    (py:1 px:2 radius:sm cursor:pointer fg:foreground). The `:host([selected])
+    .row { background; color; font-weight }` rule becomes a real variants
+    block (below the props) targeting part=row, selected: bg:selected-bg
+    fg:foreground weight:medium — sx/variants both close over the exact same
+    3 declarations, so this one moved cleanly, unlike sui-tree's row (see
+    that component's re-port note: descendant data-* state can't move).
+  - The caret's fixed 12x12 box also moved to sx (w:3 h:3 — --space-3 is
+    12px, an exact match) plus its ink (fg:muted-foreground); its
+    rotate-on-expanded transform has no sx channel and stays raw (documented
+    in the residual note below).
+  - Restored this header comment, which the prior pass had dropped entirely
+    (no functional loss — the parity table above is unchanged from feat/next
+    — but the gate wants anatomy/parity noted, and a blank header isn't that).
+  - Dropped a dead line the prior pass added: a bare (outside any selector,
+    inert in real CSS) list of every token this residual references, each
+    given an EMPTY value, purportedly so "the css-token lint recognizes"
+    them. Unnecessary — every name in it (--foreground, --hover-bg,
+    --selected-bg, --background, --ring, --ring-offset, --ring-width,
+    --space-1/2/3, --radius-sm, --muted-foreground, --font-weight-medium,
+    --text-xs, --border-subtle, --duration-fast, --ease-out) is already a
+    real, registered global token; the lint never needed help. Not in
+    feat/next; removed rather than re-ported.
+  - Anatomy (light DOM, class-based — part= left on per the wave sweep note):
+    row.row (part=row, the clickable treeitem row) > span.caret (chevron
+    svg) + slot[name=icon] + span.label + span.trailing (slot[name=trailing]);
+    sibling div.children (part=children, role=group) holds nested
+    sui-tree-item recursion or the default slot.
+
+  Residual style (unchanged rationale from the prior pass): :host base +
+  [hidden], .row :hover + the stacked focus-ring box-shadow (two box-shadows
+  of different widths — the 2-layer offset ring that mirrors the sx ring:
+  model's emission but expressed here as a state-specific raw value), the
+  forced-colors media query, the caret's rotate-on-expanded transform (no sx
+  channel) + leaf visibility, .label's flex/ellipsis, .trailing's size/color,
+  .children's indent/border/padding + the not-expanded display:none — all
+  either pseudo-classes, transforms, or descendant selectors sx/variants
+  can't reach.
+-->
+
 <prop name="label" type="string" default="" reflect />
 <prop name="expanded" type="bool" default="false" reflect />
 <prop name="selected" type="bool" default="false" reflect />
@@ -8,18 +78,6 @@
 </variants>
 
 <style>
-  /* Local markers so the css-token lint recognizes the tokens
-   * referenced from this residual block. */
-  --foreground: ; --hover-bg: ; --selected-bg: ; --background: ; --ring: ; --ring-offset: ; --ring-width: ; --space-1: ; --space-2: ; --space-3: ; --radius-sm: ; --muted-foreground: ; --font-weight-medium: ; --text-xs: ; --border-subtle: ; --duration-fast: ; --ease-out: ;
-  /* Residual: `:host` (host element, no sx), the .row :hover
-   * surface, the stacked focus-ring box-shadow (two box-shadows of
-   * different widths — the 2-layer offset ring that mirrors the sx
-   * ring: model's emission but here expressed as a state-specific
-   * raw value), the @media (forced-colors) CanvasText outline, the
-   * .caret transform-rotate on expanded + the leaf visibility, the
-   * .label flex-1 + ellipsis, the .trailing size + color, the
-   * .children indent + border-left + padding + the not-expanded
-   * display:none. */
   :host { display: block; }
   :host([hidden]) { display: none; }
 
