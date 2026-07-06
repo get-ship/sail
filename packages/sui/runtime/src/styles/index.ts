@@ -58,6 +58,45 @@ const TYPOGRAPHY_CSS =
   'strong { font-weight: var(--heading-weight, 700); }\n' +
   'code { font-family: var(--mono-font, monospace); font-size: 0.9em; }\n'
 
+// SEMANTIC HTML DEFAULTS — "the web, with default styles". Every semantic
+// element we own gets a token-based default so a plain <ul>/<table>/<img>/
+// <blockquote> looks designed with no sx and no <style>. This is the L1
+// promise applied to the whole element set: reserved by the compiler,
+// styled by the framework, zero bundle cost until used. Media/lists/table/
+// quote/inline — all token-driven, theme-reactive, @layer sui.
+const SEMANTIC_ELEMENTS_CSS =
+  // Media — never overflow the container.
+  'img, video, canvas, svg { max-width: 100%; }\n' +
+  'img, video { height: auto; }\n' +
+  'figure { margin: 0; }\n' +
+  'figcaption { margin-top: var(--space-2); font-size: var(--text-sm); color: var(--muted-foreground); }\n' +
+  // Lists.
+  'ul, ol { margin: 0; padding-left: var(--space-6); }\n' +
+  'li { margin: var(--space-1) 0; }\n' +
+  'dl { margin: 0; }\n' +
+  'dt { font-weight: var(--font-weight-semibold, 600); color: var(--foreground); }\n' +
+  'dd { margin: 0 0 var(--space-2) 0; color: var(--muted-foreground); }\n' +
+  // Quotes.
+  'blockquote { margin: 0; padding-left: var(--space-4); border-left: 2px solid var(--border-strong); color: var(--muted-foreground); }\n' +
+  // Tables.
+  'table { border-collapse: collapse; width: 100%; font-size: var(--text-sm); }\n' +
+  'th, td { padding: var(--space-2) var(--space-3); text-align: left; border-bottom: 1px solid var(--border); }\n' +
+  'th { font-weight: var(--font-weight-semibold, 600); color: var(--foreground); }\n' +
+  'td { color: var(--muted-foreground); }\n' +
+  'caption { padding: var(--space-2); font-size: var(--text-sm); color: var(--muted-foreground); text-align: left; }\n' +
+  // Inline emphasis.
+  'mark { background: var(--tone-warning-bg, var(--hover-bg)); color: inherit; padding: 0 0.2em; border-radius: var(--radius-sm); }\n' +
+  'kbd { font-family: var(--mono-font, monospace); font-size: 0.85em; padding: 0.1em 0.4em; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: var(--radius-sm); background: var(--muted); color: var(--foreground); }\n' +
+  'abbr[title] { text-decoration: underline dotted; cursor: help; }\n' +
+  'sub, sup { font-size: 0.75em; line-height: 0; }\n' +
+  // Code block.
+  'pre { margin: 0; padding: var(--space-4); overflow-x: auto; background: var(--muted); border-radius: var(--radius-md); font-family: var(--mono-font, monospace); font-size: var(--text-sm); line-height: 1.5; }\n' +
+  'pre code { font-size: inherit; }\n' +
+  // Rule.
+  'hr { border: 0; border-top: 1px solid var(--border); margin: var(--space-4) 0; }\n' +
+  // Fluid media embeds.
+  'iframe { max-width: 100%; border: 0; }\n'
+
 function makeSheet(css: string): CSSStyleSheet | null {
   if (typeof CSSStyleSheet === 'undefined') return null
   try {
@@ -80,7 +119,9 @@ export const layered = (css: string): string => `@layer sui {\n${css}}\n`
 export const suiTonesSheet: CSSStyleSheet | null = makeSheet(layered(TONES_CSS))
 export const suiSizesSheet: CSSStyleSheet | null = makeSheet(layered(SIZES_CSS))
 export const suiBaseSheet: CSSStyleSheet | null = makeSheet(layered(BASE_CSS))
-export const suiTypographySheet: CSSStyleSheet | null = makeSheet(layered(TYPOGRAPHY_CSS))
+export const suiTypographySheet: CSSStyleSheet | null = makeSheet(
+  layered(TYPOGRAPHY_CSS + SEMANTIC_ELEMENTS_CSS),
+)
 
 /**
  * Adopt every shared sheet into a shadow root (no-op for light DOM /
@@ -257,6 +298,11 @@ export const CONTROL_SKINS_CSS =
 export const LIGHT_CONTRACTS_CSS =
   hostAttrs(TONES_CSS) +
   hostAttrs(SIZES_CSS) +
+  // Semantic-element + typography defaults reach light-DOM pages here (they
+  // were shadow-only before) — a bare <table>/<ul>/<img>/<h1> on a page is
+  // styled by the framework, no .ship-view wrapper needed.
+  TYPOGRAPHY_CSS +
+  SEMANTIC_ELEMENTS_CSS +
   CONTROL_CONTRACTS_CSS +
   BUTTON_SKIN_CSS +
   INPUT_SKIN_CSS +
