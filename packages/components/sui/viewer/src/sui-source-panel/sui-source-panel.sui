@@ -60,7 +60,7 @@
         {#if copied()}
           <span class="copied" part="copied" aria-live="polite">Copied</span>
         {/if}
-        <sui-button size="xs" variant="soft" on:click={copy} part="copy-button">Copy</sui-button>
+        <button soft xs on:click={copy} part="copy-button">Copy</button>
       </column>
     </div>
     <sui-code block lang={lang()} part="snippet-code"><span bind:this={snippetEl}></span></sui-code>

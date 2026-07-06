@@ -11,16 +11,17 @@
 //      `snippet.ts` logic reproduced over the CEM `attributes[]` shape.
 //   2. <sui-source-panel> — driven through `renderComponent` (the production
 //      Rust/WASM compiler under happy-dom, the authority/charts convention),
-//      composing the registered `sui-code` + `sui-button` from
-//      `@ship/sui-primitives`. Structured data (source, CEM attrs, propValues,
-//      slot content) arrives via JS PROPERTIES (the `prop:*` identity rule) —
-//      scalar control props (`component-name`, `lang`) via `attrs`.
+//      composing the registered `sui-code` + a bare `<button>` (dissolved
+//      from `sui-button`) from `@ship/sui-primitives`. Structured data
+//      (source, CEM attrs, propValues, slot content) arrives via JS
+//      PROPERTIES (the `prop:*` identity rule) — scalar control props
+//      (`component-name`, `lang`) via `attrs`.
 
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderComponent } from '@ship/test-setup'
-import '@ship/sui-primitives' // register the composed sui-code / sui-button
+import '@ship/sui-primitives' // register the composed sui-code
 import controller from '../src/sui-source-panel/sui-source-panel.controller'
 import { buildSnippet, copyText, type CemAttr } from '../src/sui-source-panel/snippet'
 
@@ -43,7 +44,7 @@ const BUTTON_CEM: CemAttr[] = [
 // ---------------------------------------------------------------------------
 describe('buildSnippet — default-diffing', () => {
   it('emits ONLY props that differ from the CEM default', () => {
-    const out = buildSnippet('sui-button', { variant: 'solid', size: 'md', label: '' }, BUTTON_CEM, undefined)
+    const out = buildSnippet('button', { variant: 'solid', size: 'md', label: '' }, BUTTON_CEM, undefined)
     // variant differs from default ('default') → emitted; size matches default
     // ('md') → omitted; empty label → omitted.
     expect(out).toContain('variant="solid"')
@@ -52,14 +53,14 @@ describe('buildSnippet — default-diffing', () => {
   })
 
   it('omits a prop whose value equals the declared default', () => {
-    const out = buildSnippet('sui-button', { variant: 'default', size: 'sm' }, BUTTON_CEM, undefined)
+    const out = buildSnippet('button', { variant: 'default', size: 'sm' }, BUTTON_CEM, undefined)
     // variant='default' matches default → omitted; size='sm' differs → emitted.
     expect(out).not.toContain('variant=')
     expect(out).toContain('size="sm"')
   })
 
   it('booleans use bare-attribute presence, omitted when false/default', () => {
-    const out = buildSnippet('sui-button', { disabled: true, loading: false }, BUTTON_CEM, undefined)
+    const out = buildSnippet('button', { disabled: true, loading: false }, BUTTON_CEM, undefined)
     // disabled true (default false) → bare attribute, NO ="true"; loading false
     // (matches default) → omitted entirely.
     expect(out).toContain(' disabled')
@@ -69,27 +70,27 @@ describe('buildSnippet — default-diffing', () => {
   })
 
   it('escapes string attribute values', () => {
-    const out = buildSnippet('sui-button', { label: 'a "b" & <c>' }, BUTTON_CEM, undefined)
+    const out = buildSnippet('button', { label: 'a "b" & <c>' }, BUTTON_CEM, undefined)
     expect(out).toContain('label="a &quot;b&quot; &amp; <c>"')
     // raw double-quote / ampersand never leak into the attribute value
     expect(out).not.toContain('label="a "b"')
   })
 
   it('inner = composed slot content when supplied', () => {
-    const out = buildSnippet('sui-button', { variant: 'solid' }, BUTTON_CEM, '<sui-icon name="check"></sui-icon>Save')
-    expect(out).toBe('<sui-button variant="solid"><sui-icon name="check"></sui-icon>Save</sui-button>')
+    const out = buildSnippet('button', { variant: 'solid' }, BUTTON_CEM, '<sui-icon name="check"></sui-icon>Save')
+    expect(out).toBe('<button variant="solid"><sui-icon name="check"></sui-icon>Save</button>')
   })
 
   it('inner falls back to a humanized slotLabel when no slot content is supplied', () => {
-    const out = buildSnippet('sui-button', {}, BUTTON_CEM, undefined)
-    // no diffing props, no slots → `<sui-button>Button</sui-button>` (slotLabel)
-    expect(out).toBe('<sui-button>Button</sui-button>')
+    const out = buildSnippet('button', {}, BUTTON_CEM, undefined)
+    // no diffing props, no slots → `<button>Button</button>` (slotLabel)
+    expect(out).toBe('<button>Button</button>')
   })
 
   it('no-CEM degraded mode: emits ALL current prop values (no diff)', () => {
     // CEM absent ⇒ the builder cannot know declared defaults, so it emits every
     // current value (the clearly-degraded mode). Booleans still use presence.
-    const out = buildSnippet('sui-button', { variant: 'soft', size: 'md', disabled: true }, undefined, undefined)
+    const out = buildSnippet('button', { variant: 'soft', size: 'md', disabled: true }, undefined, undefined)
     expect(out).toContain('variant="soft"')
     expect(out).toContain('size="md"') // NOT diffed away — no default known
     expect(out).toContain(' disabled')
@@ -99,7 +100,7 @@ describe('buildSnippet — default-diffing', () => {
   it('no-CEM degraded mode: false booleans + empty strings are still skipped', () => {
     // Degraded mode emits current values, but a false boolean / empty string
     // carries no information — they are skipped so the snippet stays clean.
-    const out = buildSnippet('sui-button', { variant: '', disabled: false, loading: true }, undefined, undefined)
+    const out = buildSnippet('button', { variant: '', disabled: false, loading: true }, undefined, undefined)
     expect(out).not.toContain('variant')
     expect(out).not.toContain('disabled')
     expect(out).toContain(' loading')
@@ -174,38 +175,38 @@ const root = (el: HTMLElement) => el
 
 describe('<sui-source-panel> — registration + composition', () => {
 
-  it('composes sui-code (display) + sui-button (copy action)', async () => {
+  it('composes sui-code (display) + a bare button (copy action)', async () => {
     const c = mountPanel(
-      { 'component-name': 'sui-button' },
+      { 'component-name': 'button' },
       { source: '<button>hi</button>', props: BUTTON_CEM, value: {} },
     )
     await c.flush()
     expect(root(c.el).querySelector('sui-code')).not.toBeNull()
-    expect(root(c.el).querySelector('sui-button')).not.toBeNull()
+    expect(root(c.el).querySelector('button')).not.toBeNull()
   })
 })
 
 describe('<sui-source-panel> — source view', () => {
   it('renders the raw .sui source verbatim (via bindHtml/text, escaped)', async () => {
-    const raw = '<sui-button variant="solid">Save & <go></sui-button>'
+    const raw = '<button variant="solid">Save & <go></button>'
     const c = mountPanel(
-      { 'component-name': 'sui-button' },
+      { 'component-name': 'button' },
       { source: raw, props: BUTTON_CEM, value: { variant: 'solid' } },
     )
     await c.flush()
     // The source is shown verbatim. Reading textContent recovers the raw
     // characters (so the `&` / `<` were rendered as text, not parsed as markup).
     const text = root(c.el).textContent ?? ''
-    expect(text).toContain('<sui-button variant="solid">Save & <go></sui-button>')
+    expect(text).toContain('<button variant="solid">Save & <go></button>')
   })
 })
 
 describe('<sui-source-panel> — recomputed snippet', () => {
   it('renders a snippet emitting only non-default props from current values', async () => {
     const c = mountPanel(
-      { 'component-name': 'sui-button' },
+      { 'component-name': 'button' },
       {
-        source: '<sui-button></sui-button>',
+        source: '<button></button>',
         props: BUTTON_CEM,
         value: { variant: 'solid', size: 'md' },
         slotContent: 'Save',
@@ -213,15 +214,15 @@ describe('<sui-source-panel> — recomputed snippet', () => {
     )
     await c.flush()
     const text = root(c.el).textContent ?? ''
-    expect(text).toContain('<sui-button variant="solid">Save</sui-button>')
+    expect(text).toContain('<button variant="solid">Save</button>')
     // size='md' equals the declared default → diffed away.
     expect(text).not.toContain('size=')
   })
 
   it('recomputes the snippet when prop values change (reactive)', async () => {
     const c = mountPanel(
-      { 'component-name': 'sui-button' },
-      { source: '<sui-button></sui-button>', props: BUTTON_CEM, value: { variant: 'solid' } },
+      { 'component-name': 'button' },
+      { source: '<button></button>', props: BUTTON_CEM, value: { variant: 'solid' } },
     )
     await c.flush()
     expect(root(c.el).textContent ?? '').toContain('variant="solid"')
@@ -235,9 +236,9 @@ describe('<sui-source-panel> — recomputed snippet', () => {
 
   it('no-CEM degraded mode: emits all current props (no diff) when props is absent', async () => {
     const c = mountPanel(
-      { 'component-name': 'sui-button' },
+      { 'component-name': 'button' },
       // props (CEM) deliberately omitted — degraded mode.
-      { source: '<sui-button></sui-button>', value: { variant: 'soft', size: 'md' } },
+      { source: '<button></button>', value: { variant: 'soft', size: 'md' } },
     )
     await c.flush()
     const text = root(c.el).textContent ?? ''
@@ -250,25 +251,25 @@ describe('<sui-source-panel> — recomputed snippet', () => {
 describe('<sui-source-panel> — copy affordance (the ONE clipboard path)', () => {
   it('Copy writes the recomputed snippet to navigator.clipboard', async () => {
     const c = mountPanel(
-      { 'component-name': 'sui-button' },
-      { source: '<sui-button></sui-button>', props: BUTTON_CEM, value: { variant: 'solid' }, slotContent: 'Save' },
+      { 'component-name': 'button' },
+      { source: '<button></button>', props: BUTTON_CEM, value: { variant: 'solid' }, slotContent: 'Save' },
     )
     await c.flush()
-    const btn = root(c.el).querySelector('sui-button') as HTMLElement
+    const btn = root(c.el).querySelector('button') as HTMLElement
     expect(btn).not.toBeNull()
     btn.click()
     await c.flush()
     expect(writeText).toHaveBeenCalledTimes(1)
-    expect(writeText.mock.calls[0][0]).toContain('<sui-button variant="solid">Save</sui-button>')
+    expect(writeText.mock.calls[0][0]).toContain('<button variant="solid">Save</button>')
   })
 
   it('shows transient "Copied" feedback after a successful copy', async () => {
     const c = mountPanel(
-      { 'component-name': 'sui-button' },
-      { source: '<sui-button></sui-button>', props: BUTTON_CEM, value: { variant: 'solid' } },
+      { 'component-name': 'button' },
+      { source: '<button></button>', props: BUTTON_CEM, value: { variant: 'solid' } },
     )
     await c.flush()
-    const btn = root(c.el).querySelector('sui-button') as HTMLElement
+    const btn = root(c.el).querySelector('button') as HTMLElement
     btn.click()
     await c.flush()
     expect(root(c.el).textContent ?? '').toMatch(/copied/i)
@@ -276,8 +277,8 @@ describe('<sui-source-panel> — copy affordance (the ONE clipboard path)', () =
 
   it('emits sui-source-copy {text} (bubbles + composed) on copy', async () => {
     const c = mountPanel(
-      { 'component-name': 'sui-button' },
-      { source: '<sui-button></sui-button>', props: BUTTON_CEM, value: { variant: 'solid' }, slotContent: 'Save' },
+      { 'component-name': 'button' },
+      { source: '<button></button>', props: BUTTON_CEM, value: { variant: 'solid' }, slotContent: 'Save' },
     )
     await c.flush()
     let detail: { text?: string } | null = null
@@ -288,26 +289,26 @@ describe('<sui-source-panel> — copy affordance (the ONE clipboard path)', () =
       bubbles = (e as CustomEvent).bubbles
       composed = (e as CustomEvent).composed
     })
-    const btn = root(c.el).querySelector('sui-button') as HTMLElement
+    const btn = root(c.el).querySelector('button') as HTMLElement
     btn.click()
     await c.flush()
     expect(detail).not.toBeNull()
-    expect(detail!.text).toContain('<sui-button variant="solid">Save</sui-button>')
+    expect(detail!.text).toContain('<button variant="solid">Save</button>')
     expect(bubbles).toBe(true)
     expect(composed).toBe(true)
   })
 
   it('sui-source-copy is DEDUPED per click — one event per press, not two', async () => {
     const c = mountPanel(
-      { 'component-name': 'sui-button' },
-      { source: '<sui-button></sui-button>', props: BUTTON_CEM, value: { variant: 'solid' } },
+      { 'component-name': 'button' },
+      { source: '<button></button>', props: BUTTON_CEM, value: { variant: 'solid' } },
     )
     await c.flush()
     let count = 0
     c.el.addEventListener('sui-source-copy', () => {
       count++
     })
-    const btn = root(c.el).querySelector('sui-button') as HTMLElement
+    const btn = root(c.el).querySelector('button') as HTMLElement
     btn.click()
     await c.flush()
     expect(count).toBe(1)

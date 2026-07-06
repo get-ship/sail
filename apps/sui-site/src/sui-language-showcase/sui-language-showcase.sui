@@ -177,11 +177,11 @@
             </row>
           {:else if p.id === 'motion'}
             <column gap="3" data-test="lang-demo-motion">
-              <sui-button
-                tone="primary"
+              <button
+                primary
                 motion:hover={{ scale: 'spring:snappy' }}
                 motion:press={{ scale: 'spring:bouncy' }}
-              >Hover me</sui-button>
+              >Hover me</button>
               <div sx="p:3 bg:surface-2 radius:md text:sm fg:muted-foreground motion-reduce:opacity:50">
                 The <code>motion-reduce:</code> sx prefix pauses all of this
                 when the OS asks to.

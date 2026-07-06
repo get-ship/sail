@@ -248,7 +248,6 @@
 
 /* Pressed CTA collapses outset → inset, preserving shadow as the
  * tactile signal. Skip transform under reduced motion via :active. */
-:root[data-theme='halo'] sui-button[variant='solid']:active::part(button),
 :root[data-theme='halo'] button:active,
 :root[data-theme='halo'] .dash-link-btn:active {
   box-shadow: var(--shadow-inset-soft);
@@ -1031,7 +1030,6 @@
   background-attachment: fixed;
 }
 @media (prefers-reduced-motion: no-preference) {
-  :root[data-theme='halo'] sui-button:hover::part(button),
   :root[data-theme='halo'] button:hover {
     box-shadow:
       -3px -3px 8px oklch(1 0 0 / 80%),

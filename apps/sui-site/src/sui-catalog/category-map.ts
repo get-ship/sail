@@ -167,7 +167,6 @@ export const TAG_CATEGORY: Record<string, CategoryId> = {
   'sui-json-view':       'data',
   'sui-sheet':           'data',
   // ── @ship/sui-primitives — Typography & identity ──────────────────────
-  'sui-button':          'typography',
   'sui-link':            'typography',
   'sui-icon':            'typography',
   'sui-avatar':          'typography',

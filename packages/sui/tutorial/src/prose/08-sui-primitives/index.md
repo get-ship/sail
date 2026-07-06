@@ -10,7 +10,7 @@ chapter: "components"
 ---
 
 Ship's primitive set ships as **`@ship/sui-primitives`** — about 80 custom
-elements (`<sui-button>`, `<sui-card>`, `<sui-input>`, `<sui-tabs>`,
+elements (`<sui-badge>`, `<sui-card>`, `<sui-input>`, `<sui-tabs>`,
 `<sui-status-dot>`, `<sui-alert>`, …) each with a stable prop / event /
 slot contract. Charts live in a separate pack, **`@ship/sui-charts`**
 (`<sui-area-chart>`, `<sui-bar-chart>`, `<sui-donut>`, …). Browse every
@@ -31,15 +31,15 @@ import '@ship/sui-charts'        // optional
 <sui-card>
   <sui-chip tone="primary" slot="header">draft</sui-chip>
   <p>{body()}</p>
-  <sui-button on:click={save} tone="primary" slot="footer">Save</sui-button>
+  <button on:click={save} primary slot="footer">Save</button>
 </sui-card>
 ```
 
 Three things that are good to know:
 
-- **Props are reactive.** Just like native attributes — `<sui-button
+- **Props are reactive.** Just like native attributes — `<button
   disabled={busy()}>` re-evaluates on every change.
-- **Events look native.** `<sui-button on:click={…}>`, no special
+- **Events look native.** `<button on:click={…}>`, no special
   prefix. Component-specific events are also `on:`-prefixed:
   `on:sui-change`, `on:sui-tab-change`.
 - **Slots project.** Most components define named slots
@@ -50,11 +50,11 @@ Three things that are good to know:
 ## Try it
 
 The dashboard composes `<sui-card>`, `<sui-stat>`, `<sui-status-dot>`,
-and `<sui-button>` into a small ops widget. Try:
+and a bare `<button>` into a small ops widget. Try:
 
 1. **Pulse on alarm.** When `errorRate() > 5`, set the status dot's
    `tone="destructive"` and `pulse` attribute so it animates.
-2. **Add a tone toggle.** Two `<sui-button>`s that flip the card's
+2. **Add a tone toggle.** Two `<button>`s that flip the card's
    `tone` between `"default"` and `"warning"` — observe how the
    card chrome re-skins to match.
 3. **Slot a sui-alert.** When `errorRate() > 5`, render a `<sui-alert

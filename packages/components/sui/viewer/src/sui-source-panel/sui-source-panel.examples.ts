@@ -14,7 +14,7 @@ import type { ComponentExample } from '@ship/sui-runtime'
 
 /** Raw `.sui` sources shown in the source pane, keyed by example `name`. */
 export const sources: Record<string, string> = {
-  'Button — solid primary': `<sui-button variant="solid" tone="primary">Dispatch lane</sui-button>`,
+  'Button — solid primary': `<button variant="solid" tone="primary">Dispatch lane</button>`,
   'Alert — destructive': `<sui-alert tone="destructive">Gate failed: 3 findings block the merge.</sui-alert>`,
   'Code block — diff': `<sui-code block lang="diff">- old\n+ new</sui-code>`,
 }
@@ -37,7 +37,7 @@ export const examples: ComponentExample[] = [
   {
     name: 'Button — solid primary',
     description: 'Source + a snippet that emits only the non-default props (size=md is diffed away).',
-    props: { 'component-name': 'sui-button', lang: 'html' },
+    props: { 'component-name': 'button', lang: 'html' },
   },
   {
     name: 'Alert — destructive',

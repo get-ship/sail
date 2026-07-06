@@ -20,7 +20,7 @@ under the call-site scope (your signals, your handlers).
 <sui-card>
   <sui-chip slot="header" tone="primary">draft</sui-chip>
   <p>This goes in the default slot.</p>
-  <sui-button slot="footer" on:click={save}>Save</sui-button>
+  <button slot="footer" on:click={save}>Save</button>
 </sui-card>
 ```
 
@@ -40,7 +40,7 @@ Three things to know:
 The example uses `<sui-card>` and `<sui-alert>` to build a small
 notification widget. Try:
 
-1. **Add a footer**: slot a `<sui-button slot="footer">` into the
+1. **Add a footer**: slot a `<button slot="footer">` into the
    card so it gets the dedicated footer chrome.
 2. **Empty header**: remove the `<sui-chip slot="header">` and
    observe the card collapses the header region via the

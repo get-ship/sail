@@ -27,10 +27,10 @@
     the icon size or the fill (inline-flex + flex:none aren't
     a single prop; the radius token is the closest match but the
     size is control-h-md which is a token). All in <style>.
-  - <sui-button variant="outline"> for Cancel and <sui-button
-    variant="solid" tone={confirmTone()}> for Confirm — those are
-    the re-ported L2 controls; the global skin handles their
-    hover/focus/disabled colors.
+  - <button outline> for Cancel and <button solid
+    tone={confirmTone()}> for Confirm — bare L1 controls (dissolved
+    from <sui-button> — the L1 skin already covers this surface); the
+    global skin handles their hover/focus/disabled colors.
   - The local `--ad-fg` and `--ad-bg` references in `.badge` below
     satisfy the css-token lint via the :host declarations on lines
     47-48 (same <style> block, same scope). No empty `--ad-fg: ;`
@@ -82,15 +82,15 @@
   </span>
   <slot></slot>
   <span slot="footer">
-    <sui-button variant="outline" on:click={onCancel}>
+    <button outline on:click={onCancel}>
       {cancelLabel()}
-    </sui-button>
-    <sui-button
-      variant="solid"
+    </button>
+    <button
+      solid
       tone={confirmTone()}
       on:click={onConfirm}
     >
       {confirmLabel()}
-    </sui-button>
+    </button>
   </span>
 </sui-dialog>

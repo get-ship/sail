@@ -24,8 +24,8 @@
     switch is instant and lossless.
   </p>
   <div class="theme-toggle-row">
-    <sui-button tone="primary" on:click={() => mode.set('light')}>Light</sui-button>
-    <sui-button tone="primary" variant="outline" on:click={() => mode.set('dark')}>Dark</sui-button>
+    <button primary on:click={() => mode.set('light')}>Light</button>
+    <button primary outline on:click={() => mode.set('dark')}>Dark</button>
     <span class="muted">active: <code>data-mode="&#123;mode()&#125;"</code> on <code>&lt;html&gt;</code></span>
   </div>
   <sui-codeblock code={code.toggleExample}></sui-codeblock>
@@ -88,9 +88,9 @@
     button to register the theme; press again to revert.
   </p>
   <div class="theme-card-row">
-    <sui-button tone="primary" on:click={toggleCrimson}>
+    <button primary on:click={toggleCrimson}>
       {crimson() ? 'Revert to SHIP Light' : 'Apply crimson-red theme'}
-    </sui-button>
+    </button>
     <span class="muted">active: <code>data-theme="&#123;crimson() ? 'crimson-red' : 'ship-light'&#125;"</code></span>
   </div>
   <sui-card class="custom-theme-card">
@@ -101,8 +101,8 @@
         <code>--muted-foreground</code>. The primary button below uses the
         brand <code>--primary</code>. Nothing hardcoded.</p>
       <row>
-        <sui-button tone="primary">Primary action</sui-button>
-        <sui-button variant="outline">Secondary</sui-button>
+        <button primary>Primary action</button>
+        <button outline>Secondary</button>
         <sui-badge tone="info">Info badge</sui-badge>
         <sui-badge tone="success">Success badge</sui-badge>
       </row>

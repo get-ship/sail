@@ -27,9 +27,9 @@
     {/if}
 
     <div class="actions">
-      <sui-button variant="ghost" size="sm" on:click={() => bumpRate(1)}>+1</sui-button>
-      <sui-button variant="ghost" size="sm" on:click={() => bumpRate(-1)}>−1</sui-button>
-      <sui-button variant="soft" tone="primary" size="sm" on:click={() => reset()}>reset</sui-button>
+      <button ghost sm on:click={() => bumpRate(1)}>+1</button>
+      <button ghost sm on:click={() => bumpRate(-1)}>−1</button>
+      <button soft primary sm on:click={() => reset()}>reset</button>
     </div>
   </sui-card>
 </div>

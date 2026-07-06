@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sui-dialog/sui-dialog.compiled.js'
-import '../src/sui-button/sui-button.compiled.js'
 import '../src/sui-alert-dialog/sui-alert-dialog.compiled.js'
 import { createContainerRegistry, flush, mount } from '../src/test-utils'
 
@@ -10,8 +9,11 @@ afterEach(() => reg.cleanup())
 const shadow = (el: HTMLElement) => el.shadowRoot!
 const innerDialog = (el: HTMLElement) =>
   shadow(el).querySelector('sui-dialog') as HTMLElement | null
+// Cancel/Confirm are bare <button>s (dissolved from <sui-button>) — sui-dialog
+// itself is a nested custom element with its own shadow root, so this
+// querySelectorAll never crosses into it; only the two footer buttons match.
 const innerButtons = (el: HTMLElement) =>
-  Array.from(shadow(el).querySelectorAll('sui-button')) as HTMLElement[]
+  Array.from(shadow(el).querySelectorAll('button')) as HTMLElement[]
 const cancelBtn = (el: HTMLElement) =>
   innerButtons(el).find((b) => b.getAttribute('variant') === 'outline') ?? null
 const confirmBtn = (el: HTMLElement) =>

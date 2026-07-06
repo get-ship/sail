@@ -1,5 +1,5 @@
 // Behavioral suite for <sui-composer> — submit/keydown event contracts.
-// AOT registration on import; the send action composes <sui-button>.
+// AOT registration on import; the send action is a bare <button>.
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sui-composer/sui-composer.compiled.js'
 
@@ -78,7 +78,7 @@ describe('<sui-composer>', () => {
     const rec = captureSubmit(el)
     type(el, 'via button')
     await flush()
-    el.shadowRoot!.querySelector<HTMLElement>('sui-button')!.click()
+    el.shadowRoot!.querySelector<HTMLElement>('button')!.click()
     expect(rec.detail).toEqual({ text: 'via button', attachments: [] })
   })
 

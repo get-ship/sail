@@ -4,11 +4,11 @@
   <sui-card>
     <sui-chip slot="header" tone="primary">{label()}</sui-chip>
     <p>count: <strong>{count()}</strong></p>
-    <!-- TODO 1: slot a sui-button into "footer" that calls bump() -->
+    <!-- TODO 1: slot a button into "footer" that calls bump() -->
   </sui-card>
 
   <div class="row">
-    <sui-button variant="ghost" size="sm" on:click={() => bump(1)}>+1</sui-button>
-    <sui-button variant="ghost" size="sm" on:click={() => bump(-1)}>−1</sui-button>
+    <button ghost sm on:click={() => bump(1)}>+1</button>
+    <button ghost sm on:click={() => bump(-1)}>−1</button>
   </div>
 </div>

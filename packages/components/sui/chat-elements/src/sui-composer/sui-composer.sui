@@ -1,8 +1,8 @@
 <!--
   <sui-composer> — the message input + send control. Single-line by
   default; `multiline` switches to a growing textarea. Enter submits;
-  Shift+Enter inserts a newline (multiline only). Composes <sui-button>
-  for the send action.
+  Shift+Enter inserts a newline (multiline only). Composes a bare
+  <button> for the send action.
 
   Attachments (files, canvases, code snippets) are owned by the
   consumer: render their chips into the `attachments` slot and set the
@@ -129,14 +129,14 @@
     {/if}
     <div class="actions">
       <slot name="trailing"></slot>
-      <sui-button
+      <button
         bind:this={sendEl}
-        variant="solid"
-        tone="primary"
-        size="sm"
-        label="Send"
+        solid
+        primary
+        sm
+        aria-label="Send"
         disabled={disabled() || text().trim().length === 0}
-      >Send</sui-button>
+      >Send</button>
     </div>
   </div>
 </div>
