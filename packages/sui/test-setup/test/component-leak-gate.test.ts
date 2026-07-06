@@ -94,10 +94,9 @@ interface Primitive {
 // would live. Data surfaces with engine controllers (sui-table, sui-calendar)
 // are a deliberate next step — the pattern above is how to add them.
 const PRIMITIVES: Primitive[] = [
-  // sui-button dissolved to bare <button> (L1 tone/variant/size contract) —
-  // no longer a checked-in .sui file to gate.
+  // sui-button, sui-separator dissolved to bare <button>/<hr> (L1 contract) —
+  // no longer checked-in .sui files to gate.
   { file: 'sui-badge/sui-badge.sui', tag: 'sui-badge-gate', attrs: { tone: 'success' } },
-  { file: 'sui-separator/sui-separator.sui', tag: 'sui-separator-gate' },
   { file: 'sui-spinner/sui-spinner.sui', tag: 'sui-spinner-gate' },
 ]
 

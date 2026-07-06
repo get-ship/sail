@@ -174,7 +174,6 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   'sui-scroll-area':     { props: { size: 'sm' }, innerHTML: '<div>sui-button</div><div>sui-card</div><div>sui-input</div><div>sui-select</div><div>sui-table</div><div>sui-tree</div><div>sui-calendar</div><div>sui-dialog</div><div>sui-tabs</div><div>sui-timeline</div><div>sui-accordion</div><div>sui-tooltip</div>' },
   'sui-center':          { innerHTML: '<span tone="primary" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Centered</span>' },
   'sui-grid':            { innerHTML: '<sui-card>One</sui-card><sui-card>Two</sui-card><sui-card>Three</sui-card>' },
-  'sui-separator':       {},
 
   // ── Navigation ──────────────────────────────────────────────────────
   'sui-navigation-menu': { props: { value: 'components' }, innerHTML: '<sui-navigation-item value="docs">Docs</sui-navigation-item><sui-navigation-item value="components">Components</sui-navigation-item><sui-navigation-item value="guides">Guides</sui-navigation-item>' },

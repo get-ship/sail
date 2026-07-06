@@ -238,6 +238,16 @@ const BUTTON_SKIN_CSS =
   // transparent like the baseline).
   ":where(button[variant='ghost'], button[variant='outline']):disabled { background: transparent; }\n"
 
+// L1 <hr> — the separator surface. Horizontal by default (a thin tone-tinted
+// rule); `orientation="vertical"` and `variant="dashed"` are attribute-keyed
+// like every other channel here. tone arrives for free via the generic
+// `[tone=...]` channel above (--tone-bg), so `<hr tone="primary">` just works.
+const HR_SKIN_CSS =
+  ":where(hr) { border: 0; margin: var(--space-2) 0; padding: 0; flex: 0 0 auto; display: block; width: 100%; height: 1px; background: var(--tone-bg, var(--border-subtle)); }\n" +
+  ":where(hr[variant='dashed']) { background: transparent; border-top: 1px dashed var(--tone-bg, var(--border-subtle)); height: 0; }\n" +
+  ":where(hr[orientation='vertical']) { display: inline-block; align-self: stretch; vertical-align: middle; width: 1px; height: auto; min-height: 1em; margin: 0 var(--space-2); background: var(--border); }\n" +
+  ":where(hr[orientation='vertical'][variant='dashed']) { background: transparent; border-left: 1px dashed var(--border); width: 0; }\n"
+
 // The CONTROL half of the contracts — element-keyed channels + control
 // baseline + button/input/toggle skins, WITHOUT the light host rules
 // (display:block, slot, [hidden]) which are the light-DOM component's job.
@@ -252,7 +262,8 @@ export const CONTROL_SKINS_CSS =
   CONTROL_CONTRACTS_CSS +
   BUTTON_SKIN_CSS +
   INPUT_SKIN_CSS +
-  TOGGLE_CONTROLS_CSS
+  TOGGLE_CONTROLS_CSS +
+  HR_SKIN_CSS
 
 export const LIGHT_CONTRACTS_CSS =
   hostAttrs(TONES_CSS) +
@@ -261,6 +272,7 @@ export const LIGHT_CONTRACTS_CSS =
   BUTTON_SKIN_CSS +
   INPUT_SKIN_CSS +
   TOGGLE_CONTROLS_CSS +
+  HR_SKIN_CSS +
   // Host defaults for light components (the :host base rules, element-keyed).
   '[data-component] { display: block; color: var(--foreground); }\n' +
   '[data-component][hidden] { display: none !important; }\n' +
