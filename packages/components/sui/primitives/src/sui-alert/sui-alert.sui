@@ -6,9 +6,11 @@
   ─────────────────────────────────────────────────────────────────────────────
   Lit                          SUI                      Notes
   ─────────────────────────────────────────────────────────────────────────────
-  tone ('info'|'success'|      tone (union, reflect)    ✓ same values
-    'warning'|'destructive'|
-    'muted', 'info')
+  tone ('info'|'success'|      tone (union, reflect)    ✓ same values; default
+    'warning'|'destructive'|                              changed 'info' →
+    'muted', 'info')                                      'default' (SUI
+                                                           catalog convention,
+                                                           as sui-badge/-chip)
   dismissible (bool, false)    dismissible (bool,       ✓
                                  reflect)
   ─────────────────────────────────────────────────────────────────────────────
@@ -24,57 +26,69 @@
     warning/destructive;
     "polite" otherwise
   ─────────────────────────────────────────────────────────────────────────────
-  parts: (none)                box, close               SUI adds parts
+  parts: (none)                box, ico, content,       SUI adds parts +
+                                title, body, actions,     classes (anatomy);
+                                close                     close mirrors class
   ─────────────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────────────
+  - tone is a GLOBAL framework channel now (contracts.css / suiTonesSheet):
+    no per-component <theme prop="tone"> block. This skin reads
+    var(--tone)/var(--tone-bg)/var(--tone-fg) directly, filled for whichever
+    of the 8 catalog tones the host's [tone] attribute names.
+  - The dismiss control is a bare framework `<button ghost xs>` — no
+    hand-styled `.close` (no color/hover/focus CSS authored here). See
+    LANG-GAP below: this doesn't yet render skinned (tracked, not routed
+    around).
+  - sx is closed-vocabulary (tokens + tone-*/size-* channels only); `<style>`
+    keeps only what sx structurally cannot express (pseudo-elements,
+    ::slotted, gap, grid, position/display for non-primitive elements).
+  - Bugfix while re-porting: the pre-existing spike `.box` had dropped
+    `position: relative` (present in feat/next) — without it the
+    `.box::before` tone stripe anchors to the wrong ancestor. Restored (as
+    sx `position:relative`, not <style>, per closed-sx).
+
+  LANG-GAP — dismiss button renders unskinned today
+  ─────────────────────────────────────────────────────────────────────────────
+  The framework's L1 `<button>` skin (ghost/solid/soft/outline — ownership of
+  color/hover/focus for a control) lives ONLY in the light-DOM document
+  contracts (`ensureLightContracts()` / `LIGHT_CONTRACTS_CSS` in
+  packages/sui/runtime/src/styles/index.ts). Shadow components adopt
+  `adoptSuiSheets()`, which carries base + tones + sizes + typography —
+  NOT the button/input/toggle control skins. This component still compiles
+  shadow (`shadowForComponentCompilePlugin` hardcodes `shadow:true`; the CLI
+  component-mode default is also shadow — `--light` is an opt-in the shared
+  test/build harness never passes). So `<button ghost xs>` here is, today, a
+  functionally-correct but VISUALLY BARE native button — no ghost background,
+  no hover wash, no size-channel padding. This is a framework/toolchain gap,
+  not a `.sui` authoring gap: nothing in this file can reach across the
+  shadow boundary to the document-level sheet. Reported, not eaten with an
+  ad-hoc `.close` skin (that would be exactly the escape hatch the parity
+  gate forbids). Fix belongs to the framework: either extend
+  `adoptSuiSheets()` to also carry the control skins for shadow components,
+  or flip this component's compile to `--light` once the harness supports a
+  per-component opt-in.
 -->
 
-<prop name="tone" values="default|info|success|warning|destructive|muted" default="default" reflect />
-<prop name="dismissible" type="bool" default="false" reflect />
+<component>{
+  props: {
+    tone: 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'muted',
+    dismissible: false,
+  },
+}</component>
 
-<theme prop="tone" channels="tone, tone-fg, tone-bg">
-  default:     foreground,   foreground,        tone-default-bg
-  info:        info,         info,              tone-info-bg
-  success:     success,      tone-success-fg,   tone-success-bg
-  warning:     warning,      tone-warning-fg,   tone-warning-bg
-  destructive: destructive,  destructive,       tone-destructive-bg
-  muted:       muted-foreground, muted-foreground, muted
-</theme>
-
-<variants part="close">
+<variants class="close">
   [dismissible]: display:inline-flex
 </variants>
 
-<!--
-  Residual <style> — truly unavoidable bits:
-  - :host display: block + --tone default (covered by <theme> default)
-  - .box display: grid + grid-template-columns + gap + padding + radius + overflow + border + bg + font-family + text + line-height + box-shadow
-  - .box::before content + position + left/top/bottom + width + bg
-  - .ico flex-shrink: 0 (layout)
-  - .title font-weight: semibold (overflow from .content — typo in original)
-  - .actions display: flex + margin-top (layout)
-  - .close background:transparent + border:0 + cursor + line-height (sx can't do bg:transparent or text line-height)
-  - .close :hover bg + fg
-  - .close :focus-visible outline + outline-offset
-  - ::slotted([slot='icon']) display + width + height
--->
 <style>
-  :host {
-    display: block;
-  }
   .box {
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: start;
     gap: var(--space-3);
-    padding: var(--space-3);
-    border-radius: var(--radius);
-    overflow: hidden;
-    border: 1px solid var(--border);
-    background: var(--surface-1);
     font-family: var(--font-body);
-    font-size: var(--text-base);
-    line-height: var(--leading-normal);
-    box-shadow: var(--shadow-xs);
   }
   .box::before {
     content: '';
@@ -87,35 +101,14 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: var(--control-h-xs);
-    height: var(--control-h-xs);
     flex-shrink: 0;
-    border-radius: var(--radius-md);
-    background: var(--tone-bg);
-    color: var(--tone-fg);
   }
-  .content { min-width: 0; }
-  .title { font-weight: var(--font-weight-semibold); }
-  .body { color: var(--muted-foreground); }
   .actions {
     display: flex;
     gap: var(--space-2);
     margin-top: var(--space-2);
   }
-  .close {
-    display: none;
-    background: transparent;
-    border: 0;
-    color: var(--muted-foreground);
-    cursor: pointer;
-    line-height: 1;
-  }
-  :host([dismissible]) .close { display: inline-flex; }
-  .close:hover { background: var(--tone-bg); color: var(--tone-fg); }
-  .close:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-ring-offset);
-  }
+  .close { display: none; }
   ::slotted([slot='icon']) { display: inline-flex; width: var(--icon-size-sm); height: var(--icon-size-sm); }
 </style>
 
@@ -123,19 +116,17 @@
      role={tone() === 'destructive' || tone() === 'warning' ? 'alert' : 'status'}
      aria-live={tone() === 'destructive' || tone() === 'warning' ? 'assertive' : 'polite'}
      aria-atomic="true"
-     sx="p:3 radius:md overflow:hidden border:border bg:surface-1 text:base leading:normal shadow:xs">
+     sx="position:relative p:3 radius:md overflow:hidden border:border bg:surface-1 text:base leading:normal shadow:xs">
   <span class="ico" part="ico"
-    sx="radius:md bg:tone-bg fg:tone-fg">
+    sx="w:control-h-xs h:control-h-xs radius:md bg:tone-bg fg:tone-fg">
     <slot name="icon"></slot>
   </span>
   <column class="content" part="content" gap="1" sx="min-w:0">
-    <div class="title" part="title"
-      sx="weight:semibold"><slot name="title"></slot></div>
+    <div class="title" part="title" sx="weight:semibold"><slot name="title"></slot></div>
     <div class="body" part="body" sx="fg:muted-foreground"><slot></slot></div>
     <div class="actions" part="actions"><slot name="actions"></slot></div>
   </column>
-  <button class="close" part="close" type="button" aria-label="Dismiss" bind:this={closeBtn}
-    sx="w:control-h-2xs h:control-h-2xs radius:sm fg:muted-foreground">
+  <button ghost xs class="close" part="close" type="button" aria-label="Dismiss" bind:this={closeBtn}>
     <svg viewBox="0 0 10 10" aria-hidden="true" sx="w:icon-size-sm h:icon-size-sm">
       <path d="M2 2 L8 8 M8 2 L2 8" stroke="currentColor"
             stroke-width="1.75" stroke-linecap="round" fill="none"/>
