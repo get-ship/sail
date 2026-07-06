@@ -76,8 +76,8 @@ export default controller<Scope>({
       }
 
       if (target) {
-        const btn = target.shadowRoot?.querySelector('button') as HTMLButtonElement | null
-        btn?.focus()
+        const summary = target.shadowRoot?.querySelector('summary') as HTMLElement | null
+        summary?.focus()
       }
     }
 

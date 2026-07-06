@@ -1,6 +1,7 @@
 <!--
   <sui-accordion-item> — co-located child for <sui-accordion>.
-  Expandable panel with grid-based height animation (same trick as sui-collapsible).
+  Native disclosure: a <details>/<summary> pair per item. Open/close,
+  keyboard activation, and ARIA expanded-state are the browser's.
 
   Prop parity vs <ship-accordion-item>
   ─────────────────────────────────────────────────────────────────────────────
@@ -8,55 +9,62 @@
   ─────────────────────────────────────────────────────────────────────────────
   value (string, '')           value (string, '',       ✓
                                  reflect)
-  disabled (bool, false)       disabled (bool, reflect) ✓
-  open (bool, false)           open (bool, reflect)     ✓ managed by parent
+  disabled (bool, false)       disabled (bool, reflect) ✓ LANG-GAP below
+  open (bool, false)           open (bool, reflect)     ✓ managed by parent,
+                                                          mirrors <details open>
   ─────────────────────────────────────────────────────────────────────────────
-  slots: trigger               trigger                  ✓
+  slots: trigger               trigger                  ✓ rendered inside
+                                                          <summary>
          (default) content     (default) content        ✓
   ─────────────────────────────────────────────────────────────────────────────
   parts: trigger, content,     trigger, content,        ✓
          chevron                chevron
   ─────────────────────────────────────────────────────────────────────────────
-  ARIA: aria-expanded + aria-controls on trigger;
-        role="region" + aria-labelledby on content region
+  ARIA: aria-expanded + aria-controls on trigger;   native <details>/<summary>
+        role="region" + aria-labelledby on content    semantics — browser-owned,
+        region                                        no explicit aria-* set
   ─────────────────────────────────────────────────────────────────────────────
-  animation: grid-template-rows 0fr→1fr (same as sui-collapsible)
+  animation: grid-template-rows 0fr→1fr              LANG-GAP — dropped, see
+                                                       sui-collapsible's note
+                                                       (same underlying gap)
   ─────────────────────────────────────────────────────────────────────────────
 
-  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  NATIVE REBUILD (native-rebuild-gate pass)
   ─────────────────────────────────────────────────────────────────────────────
+  - The trigger button/content pair becomes a <details>/<summary>. The
+    per-item controller no longer manages aria-expanded/aria-controls/
+    role/aria-labelledby by hand, and no longer listens for click —
+    the browser's native disclosure does all of that.
+  - ROUGH EDGE / step back from the prior L1-button dissolve: the
+    trigger can no longer BE the framework's L1 `<button ghost>`
+    control, because the native toggle affordance must be the
+    <summary> element itself (nesting a real <button> inside <summary>
+    would create two overlapping focusable/activatable regions — a
+    real a11y regression, not a hypothetical one). So `<summary
+    class="trigger">` is hand-styled here to visually match the ghost
+    button look (hover wash, focus ring, disabled opacity) instead of
+    reusing CONTROL_CONTRACTS_CSS. Flagged for the operator: either
+    accept the hand-styled summary permanently, or give the framework
+    a `<summary>`-shaped L1 control contract later.
+  - LANG-GAP: native <details> has no `disabled`. The controller keeps
+    a small capture-phase click/keydown listener that blocks toggling
+    when the `disabled` prop is set (same pattern as sui-collapsible).
+  - LANG-GAP: the grid-rows open/close animation is dropped — same
+    underlying reason as sui-collapsible (native show/hide has no
+    animatable hook without ::details-content, which isn't
+    cross-browser yet). Toggling is instant now.
+  - Arrow/Home/End cross-item keyboard navigation and single-vs-
+    multiple-open coordination remain genuinely-needed JS in the
+    controllers — no native HTML expresses "one details open at a
+    time across sibling shadow roots" or "arrow-key focus-move
+    between headers".
   - No tone channel on this component — nothing to globalize there.
-  - L1 CONTROL: the trigger is now a bare framework-styled `<button ghost>`
-    instead of a hand-skinned `.trigger` (own background/border/hover/
-    focus/disabled CSS). The framework's control contracts (adopted into
-    this shadow root via adoptSuiSheets — the shadow-control-skin fix
-    noted in the gate) now own:
-      - transparent background + no border (ghost variant baseline)
-      - hover wash (ghost variant's tone-tinted hover)
-      - :focus-visible ring (CONTROL_CONTRACTS_CSS, generic — this
-        trigger has no tone concept of its own, so the generic ring is
-        a faithful match, not an approximation)
-      - :disabled cursor/opacity (CONTROL_CONTRACTS_CSS)
-    None of those are hand-authored here anymore.
-  - What's left genuinely component-specific, expressed via sx + a
-    class-targeted variants directive: full-width layout (a row
-    primitive inside the button for the label/chevron split — sx has
-    no flex/gap/justify, that's the layout primitives' job, not sx's),
-    the padding/font baseline, and the "open" row tint (`bg:muted` —
-    this targets the `.trigger` class specifically; the pre-existing
-    spike file had this on bare `:host([open])`, which tints the WHOLE
-    host rather than just the trigger row — a bug this re-port fixes
-    by porting feat/next's actual selector, `:host([open]) .trigger`,
-    faithfully instead of copying the spike).
   - The chevron stays a hand-authored inline <svg> (not the `<icon>`
-    language element): it needs a two-state color swap (muted-foreground
-    → foreground on open) and a rotate transform, and `<icon>` has no
-    tone/color channel of its own yet (a LANG-GAP already documented in
-    its own source, not one this file should route around). sui-alert's
-    icon slot is the same shape — plain sx-sized/colored SVG, not `<icon>`.
-    Rotation/transition stay in <style> (sx has no transform channel).
-  - `display:block`/`color`/`[hidden]` on :host dropped — framework-owned
-    (BASE_CSS) now.
+    language element) — same reasoning as before this pass (color
+    swap + rotate, `<icon>` has no tone/color channel yet, a LANG-GAP
+    already documented in its own source).
+  - `display:block`/`color`/`[hidden]` on :host — framework-owned
+    (BASE_CSS).
 -->
 
 <component>{
@@ -79,6 +87,26 @@
     font-family: var(--font-body);
   }
 
+  .trigger {
+    display: flex;
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background var(--duration-fast) var(--ease-out);
+  }
+  .trigger::-webkit-details-marker { display: none; }
+  .trigger::marker { content: ''; }
+  .trigger:hover { background: var(--hover-bg); }
+  .trigger:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+  :host([disabled]) .trigger {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
   .chevron {
     flex-shrink: 0;
     transition: transform var(--duration-medium) var(--ease-out);
@@ -86,34 +114,25 @@
   :host([open]) .chevron { transform: rotate(180deg); }
   @media (prefers-reduced-motion: reduce) { .chevron { transition: none; } }
 
-  .content-wrap {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows var(--duration-medium) var(--ease-out);
-  }
-  :host([open]) .content-wrap { grid-template-rows: 1fr; }
-  @media (prefers-reduced-motion: reduce) { .content-wrap { transition: none; } }
-
-  .content-inner { overflow: hidden; }
   .content-body { padding: var(--space-3) 0; }
 </style>
 
-<button ghost class="trigger" part="trigger" bind:this={triggerBtn} disabled={disabled()}
-  sx="w:full py:3 px:4 text:sm weight:semibold">
-  <row align="center" justify="between" gap="2" sx="w:full">
-    <span class="trigger-label"><slot name="trigger"></slot></span>
-    <svg class="chevron" part="chevron" viewBox="0 0 16 16" fill="none"
-      stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
-      stroke-linejoin="round" aria-hidden="true"
-      sx="w:icon-size-md h:icon-size-md fg:muted-foreground">
-      <path d="M4 6l4 4 4-4"></path>
-    </svg>
-  </row>
-</button>
-<div class="content-wrap" part="content" bind:this={contentWrap} role="region">
-  <div class="content-inner">
+<details bind:this={detailsEl}>
+  <summary class="trigger" part="trigger" bind:this={triggerEl}
+    sx="w:full py:3 px:4 text:sm weight:semibold">
+    <row align="center" justify="between" gap="2" sx="w:full">
+      <span class="trigger-label"><slot name="trigger"></slot></span>
+      <svg class="chevron" part="chevron" viewBox="0 0 16 16" fill="none"
+        stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+        stroke-linejoin="round" aria-hidden="true"
+        sx="w:icon-size-md h:icon-size-md fg:muted-foreground">
+        <path d="M4 6l4 4 4-4"></path>
+      </svg>
+    </row>
+  </summary>
+  <div class="content-wrap" part="content">
     <div class="content-body">
       <slot></slot>
     </div>
   </div>
-</div>
+</details>
