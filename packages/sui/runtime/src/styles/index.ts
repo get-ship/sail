@@ -87,12 +87,34 @@ export const suiTypographySheet: CSSStyleSheet | null = makeSheet(TYPOGRAPHY_CSS
  * symbols at the call site. Keep the API surface tiny so the emitter
  * doesn't need to learn new imports per sheet.
  */
+// The CONTROL skins (button/input/checkbox/radio surfaces + their baseline)
+// live in the light-DOM document contracts, which do NOT cross a shadow
+// boundary. A shadow component that nests a framework-styled control (a
+// `<button ghost>` dismiss, an `<input>`) would render it visually bare
+// unless its shadow root ALSO carries the control skins. So build a sheet of
+// {element-keyed tone/size channels + control contracts + button/input/toggle
+// skins} and adopt it alongside the base sheets. Element-keyed (not :host-
+// keyed) so a nested `<button tone=primary>` resolves --tone on itself.
+// Lazy: the skin constants are defined further down the module. (Surfaced by
+// the sui-alert re-port pilot — bare controls in every shadow L2 otherwise.)
+let controlsSheetMemo: CSSStyleSheet | null | undefined
+function suiControlsSheet(): CSSStyleSheet | null {
+  if (controlsSheetMemo === undefined) {
+    controlsSheetMemo = makeSheet(CONTROL_SKINS_CSS)
+  }
+  return controlsSheetMemo
+}
+
 export function adoptSuiSheets(root: unknown): void {
   if (typeof ShadowRoot === 'undefined') return
   if (!(root instanceof ShadowRoot)) return
-  const sheets = [suiBaseSheet, suiTonesSheet, suiSizesSheet, suiTypographySheet].filter(
-    (s): s is CSSStyleSheet => s != null,
-  )
+  const sheets = [
+    suiBaseSheet,
+    suiTonesSheet,
+    suiSizesSheet,
+    suiTypographySheet,
+    suiControlsSheet(),
+  ].filter((s): s is CSSStyleSheet => s != null)
   if (sheets.length === 0) return
   try {
     root.adoptedStyleSheets = [...sheets, ...(root.adoptedStyleSheets ?? [])]
@@ -198,6 +220,22 @@ const BUTTON_SKIN_CSS =
   // Disabled surface (the contract handles cursor/opacity; ghost/outline go
   // transparent like the baseline).
   ":where(button[variant='ghost'], button[variant='outline']):disabled { background: transparent; }\n"
+
+// The CONTROL half of the contracts — element-keyed channels + control
+// baseline + button/input/toggle skins, WITHOUT the light host rules
+// (display:block, slot, [hidden]) which are the light-DOM component's job.
+// This is what shadow roots adopt (via adoptSuiSheets) so their nested
+// controls are skinned; the sui-alert pilot proved the boundary blocks the
+// document contracts otherwise. Exported so a unit test guards the invariant
+// (adoptedStyleSheets isn't constructable under jsdom, so the effect itself
+// is browser-only).
+export const CONTROL_SKINS_CSS =
+  hostAttrs(TONES_CSS) +
+  hostAttrs(SIZES_CSS) +
+  CONTROL_CONTRACTS_CSS +
+  BUTTON_SKIN_CSS +
+  INPUT_SKIN_CSS +
+  TOGGLE_CONTROLS_CSS
 
 export const LIGHT_CONTRACTS_CSS =
   hostAttrs(TONES_CSS) +
