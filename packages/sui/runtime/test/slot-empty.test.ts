@@ -19,6 +19,12 @@ interface MockSlot extends HTMLElement {
 
 function makeSlot(initial: Node[]): { slot: MockSlot; setNodes: (n: Node[]) => void } {
   const slot = document.createElement('slot') as unknown as MockSlot
+  // bindSlotEmpty routes by root node: ShadowRoot → assignedNodes +
+  // slotchange (what these stub-driven tests exercise); light DOM →
+  // childNodes + MutationObserver (covered in light-dom.test.ts). Mount the
+  // slot in a real shadow root so the stubs stay meaningful.
+  const shadowHost = document.createElement('div')
+  shadowHost.attachShadow({ mode: 'open' }).appendChild(slot)
   let nodes = initial
   slot.assignedNodes = (_opts?: { flatten: boolean }): Node[] => nodes
   return {

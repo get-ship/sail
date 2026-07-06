@@ -16,6 +16,8 @@ import type { Decoder } from './decode'
 import { effect, signal, type Signal } from './signal'
 import type { MountSetup, MountModule } from './component-mount'
 import { mountComponent } from './compose'
+import { projectSlots } from './slot-project'
+import { ensureLightContracts } from './styles/index'
 
 /** Declarative description of a component prop. */
 export interface PropDef<T> {
@@ -152,9 +154,13 @@ const injectScopedStyles = (tag: string, css: string): void => {
   if (document.getElementById(id)) return
   const style = document.createElement('style')
   style.id = id
-  // CSS nesting wraps every rule in the scope selector. The user's
-  // styles ride inside without further preprocessing.
-  style.textContent = `[data-component="${tag}"] { ${css} }`
+  // The @scope DONUT: rules apply from this component's element down, and
+  // STOP at any nested component boundary — light DOM's answer to shadow
+  // encapsulation, by construction instead of by technology. The compiler
+  // has already rewritten shadow idioms (:host → :scope, ::slotted →
+  // slot >) for exactly this wrapper.
+  style.textContent =
+    `@scope ([data-component="${tag}"]) to ([data-component]) { ${css} }`
   document.head.appendChild(style)
 }
 
@@ -257,6 +263,10 @@ export function component<Bindings>(
 
   defineComponent(tag, schema, (host, propSignals, internals) => {
     let shadowAttached: ShadowRoot | null = null
+    // Light DOM (the default architecture): capture the host's original
+    // children BEFORE the template renders — they are the slot content the
+    // projection pass places after mount.
+    let lightChildren: Node[] | null = null
     if (def.shadow) {
       shadowAttached = host.shadowRoot ?? host.attachShadow({ mode: 'open' })
       if (def.styles) {
@@ -264,8 +274,10 @@ export function component<Bindings>(
         style.textContent = def.styles
         shadowAttached.appendChild(style)
       }
-    } else if (def.styles) {
-      injectScopedStyles(tag, def.styles)
+    } else {
+      lightChildren = Array.from(host.childNodes)
+      ensureLightContracts()
+      if (def.styles) injectScopedStyles(tag, def.styles)
     }
 
     const cleanups: Array<() => void> = []
@@ -327,6 +339,9 @@ export function component<Bindings>(
     // `mountComponent` treats the module opaquely (it only reads `setup`); the
     // cast erases the per-component `Bindings` to the default module shape.
     cleanups.push(mountComponent(module as MountModule, host, ctx))
+    // Light DOM: the template has rendered into the host — place the
+    // captured original children into their <slot> wrappers.
+    if (lightChildren) projectSlots(host, lightChildren)
 
     return () => {
       clearFormHooks(host)

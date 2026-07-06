@@ -30,19 +30,34 @@ export function bindSlotEmpty(
   host: HTMLElement,
   attrName: string,
 ): () => void {
+  // Light DOM: the slot is a plain projection wrapper (no shadow tree) —
+  // assignedNodes() is always [], the projected content lives INSIDE the
+  // slot as real children. Detect by root node.
+  const inShadow =
+    typeof ShadowRoot !== 'undefined' && slot.getRootNode() instanceof ShadowRoot
+  const nodesOf = (): Node[] =>
+    inShadow ? slot.assignedNodes({ flatten: true }) : Array.from(slot.childNodes)
   const sync = (): void => {
-    const nodes = slot.assignedNodes({ flatten: true })
-    const hasText = nodes.some(hasVisibleContent)
+    const hasText = nodesOf().some(hasVisibleContent)
     if (hasText) host.removeAttribute(attrName)
     else host.setAttribute(attrName, '')
   }
-  slot.addEventListener('slotchange', sync)
-  // Assigned nodes may already be in place at attach time without a
-  // slotchange firing — sync immediately so the host attribute reflects
-  // the initial state.
+  // Shadow: slotchange is the change signal. Light: there is none — watch
+  // the wrapper's children (projection lands them after mount).
+  let observer: MutationObserver | null = null
+  if (inShadow) {
+    slot.addEventListener('slotchange', sync)
+  } else if (typeof MutationObserver !== 'undefined') {
+    observer = new MutationObserver(sync)
+    observer.observe(slot, { childList: true, subtree: true, characterData: true })
+  }
+  // Content may already be in place at attach time without a change event
+  // firing — sync immediately so the host attribute reflects the initial
+  // state.
   sync()
   return () => {
-    slot.removeEventListener('slotchange', sync)
+    if (inShadow) slot.removeEventListener('slotchange', sync)
+    observer?.disconnect()
   }
 }
 

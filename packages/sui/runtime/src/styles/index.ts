@@ -100,3 +100,42 @@ export function adoptSuiSheets(root: unknown): void {
     /* unsupported: silently fall back to inline <style> blocks */
   }
 }
+
+// ── LIGHT-DOM contracts ─────────────────────────────────────────────────────
+// The document-level, attribute-keyed form of the framework contracts. Where
+// the shadow path adopts :host-keyed sheets into every root, the light path
+// installs ONE sheet keyed on plain attributes — which is also what makes the
+// contracts layer-invisible: `[tone='primary']` styles an L1 <button> and a
+// light L2 <sui-chip> identically, and dynamic `tone={x()}` restyles both.
+const hostAttrs = (css: string): string =>
+  // `:host([tone='x'])` → `[tone='x']` — the element IS the host in light DOM.
+  css.replace(/:host\(\[([^)]+)\]\)/g, '[$1]')
+
+const LIGHT_CONTRACTS_CSS =
+  hostAttrs(TONES_CSS) +
+  hostAttrs(SIZES_CSS) +
+  // Host defaults for light components (the :host base rules, element-keyed).
+  '[data-component] { display: block; color: var(--foreground); }\n' +
+  '[data-component][hidden] { display: none !important; }\n' +
+  // <slot> stays in the light tree as the projection wrapper — transparent.
+  '[data-component] slot { display: contents; }\n' +
+  '@media (prefers-reduced-motion: reduce) { [data-component], [data-component] * { transition: none !important; animation: none !important; } }\n'
+
+let lightContractsInstalled = false
+
+/**
+ * Install the framework contracts once at document level for light-DOM
+ * components. Injected EARLY (head, before per-component scoped styles) so
+ * a component's own rules win ties by source order.
+ */
+export function ensureLightContracts(): void {
+  if (lightContractsInstalled) return
+  if (typeof document === 'undefined') return
+  lightContractsInstalled = true
+  const id = 'sui-light-contracts'
+  if (document.getElementById(id)) return
+  const style = document.createElement('style')
+  style.id = id
+  style.textContent = LIGHT_CONTRACTS_CSS
+  document.head.prepend(style)
+}
