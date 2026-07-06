@@ -1,9 +1,10 @@
 # sui
 
 An ahead-of-time-compiled UI framework. `.sui` templates compile to plain ESM
-bound to a fine-grained signal runtime — real custom elements, real shadow DOM,
-server-rendered and hydrated. **deck** is the meta-framework that hosts them:
-filesystem routing, SSR, bundling, the dev loop.
+bound to a fine-grained signal runtime — real custom elements, light DOM by
+default (shadow only as a per-component containment feature for foreign
+content), server-rendered and hydrated. **deck** is the meta-framework that
+hosts them: filesystem routing, SSR, bundling, the dev loop.
 
 ```
 SUI : deck  ::  React : Next

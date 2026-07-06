@@ -44,10 +44,7 @@ Three things that are good to know:
 - **Events look native.** `<sui-button on:click={…}>`, no special
   prefix. Component-specific events are also `on:`-prefixed:
   `on:sui-change`, `on:sui-tab-change`.
-- **Slots project.** Most components define named slots
-  (`slot="header"`, `slot="footer"`, `slot="leading"`); the default
-  slot takes the rest. The component owns the chrome — you own the
-  content.
+- **Projected children fill regions.** Most components accept named regions (`slot="header"`, `slot="footer"`, `slot="leading"`); the unnamed region takes the rest. The component's body has a matching `<slot name="…">` for each region; the runtime (`@ship/sui-runtime/slot-project.ts`) projects consumers' `slot="…"` children into the matching wrapper at connect. The component owns the chrome — you own the content. See [tutorial 12 (Projection)](../12-slots/) for the full model.
 
 ## Packs vs. the umbrella
 

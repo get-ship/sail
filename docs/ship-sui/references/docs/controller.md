@@ -178,7 +178,7 @@ views/<name>/
   manifest.jsonc        # route descriptor (required for views)
 ```
 
-The compiler emits `<file>.sui.d.ts` into the `.ship/sui-out/` mirror tree (not next to the source). Component files use the same directory-pairing convention. The file IS the component; the directory name IS the tag; shadow is always on; `<prop>` directives at the top declare the element's API:
+The compiler emits `<file>.sui.d.ts` into the `.ship/sui-out/` mirror tree (not next to the source). Component files use the same directory-pairing convention. The file IS the component; the directory name IS the tag; `<prop>` directives at the top declare the element's API:
 
 ```
 packages/components/ui-components/src/sui-button/

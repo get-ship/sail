@@ -163,7 +163,7 @@ Add the `morph` directive to any element whose contents are produced by `bindRaw
 
 Without the directive, `bindRawHtml` replaces `innerHTML` and destroys any in-progress UI state. With it, updates route through `morph()` — same-id elements are reused (even across reorders), attributes are swapped only when they change, and only truly-different subtrees are touched.
 
-`bindHtml` always morphs (no directive required); the directive only matters for `bindRawHtml` and any future HTML-producing binding. Limitations: doesn't preserve `<select>` value across morphs (browser quirk), doesn't morph into shadow DOM, matches by `id` and tag-plus-position only.
+`bindHtml` always morphs (no directive required); the directive only matters for `bindRawHtml` and any future HTML-producing binding. Limitations: doesn't preserve `<select>` value across morphs (browser quirk), matches only within a single DOM tree (component boundaries are in-DOM in light DOM — there is no shadow to morph into), matches by `id` and tag-plus-position only.
 
 ## Error boundary
 
@@ -177,7 +177,7 @@ Wrap fault-prone subtrees in `<sui-error-boundary>`. Throws inside the wrapped s
 
 Use `fallback-text` for a string fallback or `<template slot="fallback">` for custom markup. Call `.reset()` on the host element to retry. The boundary fires `sui-error-boundary:caught` (bubbling, composed) with `{ error, source }` where `source` is `'effect' | 'mount' | 'render' | 'unknown'`. Nest boundaries to scope recovery — the innermost catches first.
 
-Lookup is DOM-driven (`findNearestBoundary` walks up, crossing shadow roots), so the runtime, component factory, and effect layers don't need to carry a boundary reference.
+Lookup is DOM-driven (`findNearestBoundary` walks up the host's light-DOM tree — there are no shadow roots to cross in the default model), so the runtime, component factory, and effect layers don't need to carry a boundary reference.
 
 ## Portal
 
@@ -190,18 +190,55 @@ Lookup is DOM-driven (`findNearestBoundary` walks up, crossing shadow roots), so
 
 Teleports slotted content into a different DOM location for stacking-context escape. `target` is a CSS selector (default `body`). The portal element stays the logical parent — reactive bindings inside still fire and events bubble through the original DOM ancestry, not the target's. Missing target warns to the console and leaves children in place. Teleported nodes are removed from the target when the portal unmounts.
 
-Use it for *document-level state markers* (`[data-sui-dialog-open]`, `[data-sui-popover-open]`) and for slots that genuinely need to escape transformed / overflow ancestors (toast stacks). Don't re-portal panels whose host already uses the native top layer (`<dialog>.showModal()`, `popover="auto"`) — that breaks slot projection.
+Use it for *document-level state markers* (`[data-sui-dialog-open]`, `[data-sui-popover-open]`) and for content that genuinely needs to escape transformed / overflow ancestors (toast stacks). Don't re-portal panels whose host already uses the native top layer (`<dialog>.showModal()`, `popover="auto"`) — the host's native rendering already handles stacking.
 
 Worked exemplars: `sui-dialog`, `sui-popover`, `sui-toast-container`.
 
-## Slots
+## Projection
+
+Native `<slot>` is a shadow-DOM-only feature, so the runtime
+reimplements the `slot=` / `<slot>` contract in light DOM
+(`packages/sui/runtime/src/slot-project.ts`). Author surface is
+the same as web components:
 
 ```html
+<!-- in a component body -->
 <slot name="leading"></slot>
 <slot></slot>
+<slot name="trailing"></slot>
 ```
 
-`resolveSlots(host)` enumerates the slotted children; `snapshotChildren(host, name)` captures the assigned nodes; `slotFilled(host, name)` returns whether content is present; `bindSlotEmpty(host, name, fn)` runs `fn` when the slot is empty (typical empty-state pattern).
+The runtime entry point is `projectSlots(host, captured)` —
+captured is the host's original children, taken at connect before
+the template overwrote them. It assigns each child to the matching
+`<slot name="…">` (or the default `<slot>` for un-named children)
+and drops unslotted content. The same-named slots that shadow has
+(named, default, fallback-dropped-when-assigned) all apply.
+
+For component authors who need the declarative surface:
+`resolveSlots(host, slots, originalChildren)` takes an array of
+`SlotDecl` (name + anchor + fallback) and does the assignment;
+`snapshotChildren(host)` returns the host's children at call time;
+`slotFilled(host, name)` reports whether content landed. The
+component factory uses `projectSlots` directly; the declarative
+surface is for hand-written component bodies.
+
+For the empty-state pattern (host attribute when a region is
+empty), `bindSlotEmpty(slot, host, attrName)` (`slot-empty.ts`)
+toggles the named boolean attribute on `host` based on whether
+the slot has visible content. It works in both shadow and light
+components — in light DOM it watches the slot wrapper's children
+via `MutationObserver` (no `slotchange` event fires); in shadow
+it listens to `slotchange`. The compiler emits one `bindSlotEmpty`
+call per `<slot reflect-empty="…">` directive in a component
+body. `[SPEC-PENDING: reflect-empty-attribute-name]` — the
+`reflect-empty` directive name and the final host-attribute name
+are the design call; the runtime helper is the prototype.
+
+Known limit: projection runs once at connect. Children appended
+to the host LATER are not re-projected — the dynamic composition
+path in SUI templates goes through compiled call sites, not raw
+DOM appends, so this covers the authored surface.
 
 ## Template hooks — `<use-*>`
 

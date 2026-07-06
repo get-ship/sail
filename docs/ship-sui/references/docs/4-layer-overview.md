@@ -54,7 +54,7 @@ Public API barrel: `packages/sui/runtime/src/index.ts`. Anything not re-exported
 | DOM bindings | `bindText`, `bindShow`, `bindAttr`, `bindClass`, `bindProp`, `bindValue`, `bindChecked`, `bindHtml`, `bindRawHtml` |
 | Events | `on`, `matchesKey` |
 | Control flow | `bindFor`, `bindForSignal`, `bindIf`, `bindAwait` |
-| Slots | `resolveSlots`, `snapshotChildren`, `slotFilled`, `bindSlotEmpty` |
+| Projection | `projectSlots`, `resolveSlots`, `snapshotChildren`, `slotFilled`, `bindSlotEmpty` (light-DOM slot redistribution + empty-reflection; `projectSlots` is the runtime path the component factory uses at connect) |
 | Components | `defineComponent`, `component`, `prop`, `camelOf` |
 | Prop decoders | `decodeString`, `decodeNumber`, `decodeBoolean`, `decodeJson`, `decodeEnum` |
 | Data | `data`, `live`, `unwrap`, `unwrapOr`, `wireFormMutation` |
@@ -67,8 +67,20 @@ Public API barrel: `packages/sui/runtime/src/index.ts`. Anything not re-exported
 | Controller | `controller`, `resolveController`, `LIFECYCLE_KEY` |
 | Template hooks | `registerTemplateHook`, `getTemplateHook`, `clearRegistry`, `listRegisteredHooks` |
 | Mount | `mount(target, payload, opts) -> MountHandle` |
-| Styles | `suiTonesSheet`, `suiBaseSheet`, `adoptSuiSheets` |
 | Wire-contract types | `ManifestRail`, `ViewListEntry`, `ViewManifest`, … (daemon ↔ runtime contract; committed at `packages/sui/runtime/src/generated.d.ts` — a hand-maintained mirror of the Rust wire types, no `gen-types` task exists in this repo) |
+
+`CompileOpts` knobs: `setup_url` (paired `.ts` import), `mode` (`Component | Auto`), `source_path` (diagnostic spans), `component_meta` (tag name; shadow is no longer a per-component opt — it's declared in the anatomy manifest and only paid for by components that wrap foreign content), `styles` (component-only external CSS), `emit_dts`, `emit_component_imports`.
+
+`CompileOutput` carries:
+
+| Field | What it is |
+|---|---|
+| `js` | ESM module that imports from `@ship/sui-runtime`. Constructs the render tree directly — no parser ships to the client. |
+| `css` | Extracted / passed-through CSS (component `<style>` blocks, `styles` opt), present when the source carries styles. |
+| `cem` | Custom Elements Manifest (components only) — fuel for editor tooling. |
+| `schema` | Prop schema JSON — read by `decode.ts` to validate runtime prop values. |
+| `dts` | Typed `Scope` for the paired controller. Includes both `<data>` names and `scope:` factory keys. |
+| `meta` | `.sui.meta.json` — binding kinds / exprs / deps / renderKey. Developer-tooling fuel; the runtime never loads it. |
 
 The dev-only leak detector lives at the subpath `@ship/sui-runtime/dev` so it doesn't ship in production bundles.
 

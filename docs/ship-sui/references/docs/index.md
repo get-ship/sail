@@ -7,7 +7,7 @@ description: The three-role split, MVVM mapping, and the discipline that holds t
 
 # Architecture
 
-SUI is a single-file template DSL (`.sui`) compiled AOT to ESM that runs against a small signals runtime. Templates render server-side from `shipd`; a client runtime attaches reactive bindings, event handlers, and SSE subscriptions to the rendered DOM. Web components are the unit of composition (with shadow DOM opt-in, light DOM by default). The daemon is the data source.
+SUI is a single-file template DSL (`.sui`) compiled AOT to ESM that runs against a small signals runtime. Templates render server-side from `shipd`; a client runtime attaches reactive bindings, event handlers, and SSE subscriptions to the rendered DOM. Custom elements are the unit of composition; **light DOM is the default** — every `sui-*` renders into its own element with no shadow root, and components opt into a shadow boundary only when they wrap foreign content (declared in the manifest, paid for knowingly). The daemon is the data source.
 
 ## The three roles
 
@@ -88,7 +88,7 @@ Six edges SUI has over comparable frameworks:
 ## See also
 
 - **[The authoring model](./authoring-model/)** — the pure-expression-vs-capability line and the not-JSX split: what goes in `.sui` vs. `controller.ts`, and why.
-- **[The template surface](./template/)** — directives, control flow, bindings, slots, expressions.
+- **[The template surface](./template/)** — directives, control flow, bindings, projection, expressions.
 - **[The controller surface](./controller/)** — three tiers, scope rules, mutation discipline.
 - **[Hooks](./hooks/)** — template vs controller hooks, when to reach for which.
 - **[Data subscriptions](./data-subscriptions/)** — the canonical bridge to the daemon.
