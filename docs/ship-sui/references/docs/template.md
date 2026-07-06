@@ -111,12 +111,20 @@ Prop kinds: `string` (default), `bool`, `number`, `values="a|b|c"` (union). `ref
 > third-party widgets, the FFI boundary). The compiler does not
 > default-shadow anything, ever.
 >
-> **Removed in the light-DOM default.** The `form-value` and
-> `form-disabled` prop flags are gone. The element participates in
-> form submission by being a light-DOM element; the L1 `<input>` /
-> `<textarea>` reset, the L1 `<button>` and `<select>` primitives,
-> and the L2 component counterparts all participate in native form
-> semantics without compiler-emitted `formAssociated` plumbing.
+> **Form participation — mostly free in light DOM.** The
+> `form-value` and `form-disabled` prop flags still parse and still
+> wire `ElementInternals.setFormValue` / `formDisabledCallback`
+> (`crates/sui/compiler/src/ir/directive.rs`,
+> `packages/sui/runtime/src/component-factory.ts`), so a component
+> that needs explicit form association can still declare it. The
+> light-DOM default means most components don't: a `<sui-input>`
+> descendant of a host `<form>` participates natively without any
+> prop flag, because it is a real child of the form in the same
+> DOM tree. ARCHITECTURE.md calls this "the ElementInternals
+> plumbing mostly dies" — not "is removed". `[SPEC-PENDING:
+> form-participation-surface]` — which stdlib components still
+> need the flag (for non-native value serialization, custom
+> reset/restore behaviour) is the design call.
 
 ### `<form mutation>` — write operation
 

@@ -114,21 +114,28 @@ For HTML-blob cases (markdown rendering, third-party SVG generators, icon-pack s
 | `default` | Coerced via the decoder; required for non-string types. |
 | `reflect` | Reflect property writes back to the attribute. Required for CSS to react. |
 
-> **Removed in the light-DOM default.** The `form-value` and
-> `form-disabled` flags are gone. The component participates in
-> form submission by being a light-DOM element; the L1 `<input>` /
-> `<textarea>` reset and the L2 component counterparts all work
-> against native form semantics without compiler-emitted
-> `formAssociated` plumbing.
+> **Form participation — mostly free in light DOM.** The
+> `form-value` and `form-disabled` flags still parse and still
+> wire `ElementInternals.setFormValue` / `formDisabledCallback`
+> (`crates/sui/compiler/src/ir/directive.rs`,
+> `packages/sui/runtime/src/component-factory.ts`), so a
+> component that needs explicit form association can still
+> declare it. The light-DOM default means most components
+> don't: a `<sui-input>` descendant of a host `<form>`
+> participates natively without any prop flag, because it is a
+> real child of the form in the same DOM tree. ARCHITECTURE.md
+> calls this "the ElementInternals plumbing mostly dies" — not
+> "is removed".
 >
 > **`[SPEC-PENDING: form-participation-surface]`**. The L1 reset
 > covers the common cases (text input, textarea, select, button).
-> The stdlib's `<sui-input>` / `<sui-textarea>` / `<sui-select>`
-> components participate natively by being light-DOM descendants
-> of the host `<form>`. If a future stdlib component needs a
-> non-native form value (e.g. a custom value-serialization), the
-> surface for declaring that is its own design work; the answer
-> is NOT a return to the old `form-value` flag.
+> Today's stdlib components (`<sui-input>`, `<sui-textarea>`,
+> `<sui-select>`, `<sui-checkbox>`, `<sui-switch>`) still declare
+> `form-value` / `form-disabled` on their value/disabled props;
+> whether the port keeps those declarations or drops them
+> (relying on native form participation) is the design call.
+> The flag is not removed from the compiler; the question is
+> which stdlib components still need it.
 
 The prop table is otherwise unchanged.
 
