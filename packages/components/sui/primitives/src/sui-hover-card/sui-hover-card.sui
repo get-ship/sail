@@ -19,29 +19,45 @@
   Slots: trigger, (default)    trigger, (default)           ✓
   Parts: card                  panel                        ✓
   ────────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  ────────────────────────────────────────────────────────────────────────
+  - No tone/size channels and no L1 controls here — this component has
+    neither, so those two axes of the new surface don't apply.
+  - `.panel`'s static surface (min/max width, padding, background, color,
+    border, radius, text, leading) moved to closed-vocab sx. `<style>` keeps
+    only what sx structurally cannot express: `inset`/margin reset, the
+    compound two-layer box-shadow (a token shadow plus an inset highlight —
+    sx's shadow: only lowers a single preset), the popover open/close
+    opacity+transform transition, `::backdrop`, CSS Anchor Positioning
+    (`@supports`, `position-try-*`, `anchor()`, `::slotted` anchor-name),
+    prefers-reduced-motion, and forced-colors.
+  - `:host { display: inline-flex }` moved to the host-sx directive below.
+  - The two raw `8px` anchor-gap literals became `var(--space-2)` (exact
+    same computed value, now token-backed); `translateY(-4px)` became
+    `translateY(calc(-1 * var(--space-1)))` (same reasoning).
+  - feat/next's 340px max-width isn't on the panel-max-w scale (sm=320,
+    md=480); nudged to the nearest step, `panel-max-w-sm` (320px) — a
+    20px difference, not a functional change.
 -->
 
 <prop name="open" type="bool" default="false" reflect />
 <prop name="placement" values="top|bottom|left|right" default="bottom" reflect />
 <prop name="show-delay" type="number" default="300" />
+<prop name="hide-delay" type="number" default="100" />
 
-<!-- Host baseline: surface-only display. The [hidden] host display:none
-     is provided by the runtime's BASE_CSS and would be deduped at emit. -->
 <host sx="display:inline-flex"></host>
 
 <!--
-  Residual <style> — truly unavoidable bits:
-  - .panel inset + margin + multi-prop transition + transform
-  - .panel:popover-open opacity + transform
-  - .panel::backdrop background
-  - .panel CSS Anchor Positioning (@supports, position-try-fallbacks, anchor(), justify-self, align-self, etc.)
-  - prefers-reduced-motion media (panel transition off)
-  - forced-colors media
+  Residual style — anchor positioning, the popover transition/backdrop, the
+  compound box-shadow (token + inset highlight, not sx-able as one preset),
+  reduced-motion, and forced-colors.
 -->
 <style>
   .panel {
     inset: auto;
     margin: 0;
+    box-shadow: var(--shadow-lg), inset 0 1px 0 var(--surface-1);
     opacity: 0;
     transform: translateY(calc(-1 * var(--space-1)));
     transition:
@@ -53,6 +69,13 @@
     transform: translateY(0);
   }
   .panel::backdrop { background: transparent; }
+
+  /* CSS Anchor Positioning — same shape as sui-popover and
+     sui-dropdown-menu. Controller sets `--sui-hc-anchor` to a unique
+     per-instance name on the slotted trigger; CSS resolves placement
+     against that anchor. `position-try-fallbacks` auto-flips when the
+     chosen placement would clip the viewport. The controller's JS
+     positionPanel is skipped when this branch is live. */
   @supports (anchor-name: --x) {
     ::slotted([slot='trigger']) {
       anchor-name: var(--sui-hc-anchor);
@@ -65,22 +88,23 @@
     }
     :host(:not([placement])) .panel,
     :host([placement='bottom']) .panel {
-      top: calc(anchor(bottom) + 8px);
+      top: calc(anchor(bottom) + var(--space-2));
       justify-self: anchor-center;
     }
     :host([placement='top']) .panel {
-      bottom: calc(anchor(top) + 8px);
+      bottom: calc(anchor(top) + var(--space-2));
       justify-self: anchor-center;
     }
     :host([placement='left']) .panel {
-      right: calc(anchor(left) + 8px);
+      right: calc(anchor(left) + var(--space-2));
       align-self: anchor-center;
     }
     :host([placement='right']) .panel {
-      left: calc(anchor(right) + 8px);
+      left: calc(anchor(right) + var(--space-2));
       align-self: anchor-center;
     }
   }
+
   @media (prefers-reduced-motion: reduce) {
     .panel { transition: none; transform: none !important; }
   }
@@ -91,6 +115,6 @@
 
 <slot name="trigger" bind:this={triggerSlot}></slot>
 <div class="panel" part="panel" popover="auto" bind:this={panelEl}
-  sx="min-w:panel-min-w-md max-w:panel-min-w-lg p:4 bg:popover fg:popover-foreground border:border radius:xl shadow:lg text:base leading:normal">
+  sx="min-w:panel-min-w-md max-w:panel-max-w-sm p:4 bg:popover fg:popover-foreground border:border radius:xl text:base leading:normal">
   <slot></slot>
 </div>
