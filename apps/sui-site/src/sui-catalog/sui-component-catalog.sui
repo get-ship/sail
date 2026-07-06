@@ -11,7 +11,7 @@
     <column>       the vertical page rhythm (hero → search → chips → grid)
     <row>          centers the search field, the category chips, and each
                    card's meta row
-    <sui-center>   parks the live specimen dead-center of the framed stage
+    <center>       parks the live specimen dead-center of the framed stage
                    (both axes), so specimens no longer hug the top edge
     <sui-grid>     the responsive auto-fill card gallery (min="lg" gap="4")
 
@@ -132,7 +132,7 @@
   /* Preview stage — fitted to content, not a fixed box. A bare element's
      natural size drives the stage; tiny components (sui-status-dot,
      sui-switch) stay tiny, big ones (sui-calendar, sui-table) expand.
-     <sui-center> still centers the specimen on both axes; min-height +
+     <center> still centers the specimen on both axes; min-height +
      horizontal padding prevent the surface from looking cramped when the
      specimen is a one-line label, without forcing tall primitives into a
      fixed-frame box. */
@@ -224,7 +224,7 @@
         attr:hidden={c.hidden() ? true : null}
         data-test="catalog-cell"
       >
-        <sui-center class="stage" attr:data-preview-for={c.tag}></sui-center>
+        <center class="stage" attr:data-preview-for={c.tag}></center>
         <div class="cell-foot">
           <row class="cell-meta" justify="between" align="baseline" gap="2">
             <span class="cell-tag" data-test="catalog-tag">{c.tag}</span>
