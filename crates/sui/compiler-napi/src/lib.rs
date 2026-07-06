@@ -2,7 +2,7 @@
 //!
 //! Mirrors `crates/sui/compiler/src/wasm.rs` field-for-field — same
 //! `WasmOpts -> CompileOpts` mapping (`emit_dts:false`, `emit_ssr:false`,
-//! `source_path:None`; `setupUrl` / `componentName` / `mode` / `styles`
+//! `source_path:None`; `setupUrl` / `componentName` / `mode`
 //! passthrough) and the same discriminated result shape
 //! (`{kind:'ok',js,css,dts,ssrHtml}` | `{kind:'err',message,line,col,
 //! category}`). The wasm surface stays the browser-only path (docs
@@ -26,7 +26,7 @@ use sui_compiler::{compile as native_compile, CompileMode, CompileOpts, Componen
 
 /// JS-facing opts — identical field set + camelCase mapping to
 /// `wasm.rs::WasmOpts`. The harness passes
-/// `JSON.stringify({ mode, componentName, setupUrl })`; `shadow` / `styles`
+/// `JSON.stringify({ mode, componentName, setupUrl })`; `shadow`
 /// default and round-trip the same way the playground's do.
 #[derive(Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -42,8 +42,6 @@ struct NapiOpts {
     shadow: bool,
     /// Setup URL relative to the emitted JS. `None` => no `import setup …`.
     setup_url: Option<String>,
-    /// Optional CSS prepended as a `<style>` block (component sources only).
-    styles: Option<String>,
     /// On-disk path of the `.sui` source. When set, locates the paired
     /// `<stem>.controller.ts` for the four controller-aware check passes
     /// (`scope_bound`, `scope_member`, `bind_this_target`, `on_callable`)
@@ -118,7 +116,6 @@ fn compile_to_result(source: &str, opts_json: &str) -> Result<NapiResult, String
         setup_url: parsed.setup_url,
         mode,
         source_path: parsed.source_path.map(std::path::PathBuf::from),
-        styles: parsed.styles,
         component_meta,
         emit_dts: false,
         emit_component_imports: false,
