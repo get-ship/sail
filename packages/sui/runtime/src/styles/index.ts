@@ -113,56 +113,59 @@ const hostAttrs = (css: string): string =>
 
 // The INTERACTIVE-SURFACE contracts — the framework decisions no component
 // re-makes (the audit's control-baseline + focus + disabled clusters:
-// ~18% of all baseline CSS was these, hand-repeated). Scoped inside
-// [data-component] so host pages are untouched; :where() keeps specificity
-// at zero so any component rule wins ties.
+// ~18% of all baseline CSS was these, hand-repeated). GLOBAL: a SUI document
+// is SUI's canvas, so these apply to every control in the light tree, not
+// just component subtrees — "the web, with default styles." Interop with a
+// foreign page is a DIFFERENT mode (emit a web component; its shadow root
+// insulates it for free). :where() keeps specificity at zero so any explicit
+// component/sx rule wins ties.
 const CONTROL_CONTRACTS_CSS =
   // Control baseline: what a control IS before any skin.
-  '[data-component] :where(button, input, textarea, select) { font: inherit; font-family: var(--font-body); letter-spacing: inherit; color: inherit; }\n' +
-  '[data-component] :where(button) { line-height: 1; user-select: none; white-space: nowrap; cursor: pointer; }\n' +
-  '[data-component] :where(input, textarea, select) { appearance: none; }\n' +
+  ':where(button, input, textarea, select) { font: inherit; font-family: var(--font-body); letter-spacing: inherit; color: inherit; }\n' +
+  ':where(button) { line-height: 1; user-select: none; white-space: nowrap; cursor: pointer; }\n' +
+  ':where(input, textarea, select) { appearance: none; }\n' +
   // Focus: one ring, everywhere, token-driven — never re-authored.
-  '[data-component] :where(button, input, textarea, select, a, [tabindex]):focus-visible { outline: var(--ring-width, 2px) solid var(--ring); outline-offset: var(--ring-offset, 2px); }\n' +
-  '@media (forced-colors: active) { [data-component] :where(button, input, textarea, select, a, [tabindex]):focus-visible { outline: 2px solid CanvasText; } }\n' +
+  ':where(button, input, textarea, select, a, [tabindex]):focus-visible { outline: var(--ring-width, 2px) solid var(--ring); outline-offset: var(--ring-offset, 2px); }\n' +
+  '@media (forced-colors: active) { :where(button, input, textarea, select, a, [tabindex]):focus-visible { outline: 2px solid CanvasText; } }\n' +
   // Disabled: the treatment, once.
-  '[data-component] :where(button, input, textarea, select):disabled { cursor: not-allowed; opacity: 0.5; }\n' +
+  ':where(button, input, textarea, select):disabled { cursor: not-allowed; opacity: 0.5; }\n' +
   // Interactive transition defaults from the motion tokens.
-  '[data-component] :where(button, a, [tabindex]) { transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }\n'
+  ':where(button, a, [tabindex]) { transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }\n'
 
-// L1 <button> — the first language element skin. A bare <button> inside any
-// SUI subtree IS the design system's button ("the web with default styles"):
+// L1 <button> — the first language element skin. A bare <button> anywhere in
+// a SUI document IS the design system's button ("the web with default styles"):
 // tone/size arrive through the attribute-keyed channel contracts above,
 // variant surfaces mirror the hand-polished baseline, and every rule sits at
 // :where() zero specificity so sx atomics and component variants win ties.
 // Fallbacks carry the no-attribute defaults (tone=default, size=md).
 const BUTTON_SKIN_CSS =
-  '[data-component] :where(button) { display: inline-flex; align-items: center; justify-content: center; gap: var(--size-gap, var(--space-2)); min-height: var(--size-h, var(--control-h-md)); padding: 0 var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); font-weight: var(--font-weight-medium); border-radius: var(--radius-md); border: 1px solid transparent; background: transparent; isolation: isolate; position: relative; }\n' +
+  ':where(button) { display: inline-flex; align-items: center; justify-content: center; gap: var(--size-gap, var(--space-2)); min-height: var(--size-h, var(--control-h-md)); padding: 0 var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); font-weight: var(--font-weight-medium); border-radius: var(--radius-md); border: 1px solid transparent; background: transparent; isolation: isolate; position: relative; }\n' +
   // default / no-variant: neutral bordered surface.
-  "[data-component] :where(button:not([variant]), button[variant='default']) { background: var(--background); border-color: var(--border); color: var(--foreground); box-shadow: var(--shadow-xs); }\n" +
-  "[data-component] :where(button:not([variant]), button[variant='default']):hover:not(:disabled) { background: var(--muted); border-color: var(--border-strong); }\n" +
+  ":where(button:not([variant]), button[variant='default']) { background: var(--background); border-color: var(--border); color: var(--foreground); box-shadow: var(--shadow-xs); }\n" +
+  ":where(button:not([variant]), button[variant='default']):hover:not(:disabled) { background: var(--muted); border-color: var(--border-strong); }\n" +
   // solid: the tone fill. Hover shifts the fill TOWARD the foreground —
   // color-mix makes this mode-aware for free (foreground is dark in light
   // mode → darker; light in dark mode → lighter), so the button stays its
   // own tone instead of collapsing to a neutral grey, and --tone-contrast
   // text stays readable.
-  "[data-component] :where(button[variant='solid']) { background: var(--tone, var(--foreground)); border-color: var(--tone, var(--foreground)); color: var(--tone-contrast, var(--background)); box-shadow: var(--shadow-xs); }\n" +
-  "[data-component] :where(button[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); border-color: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); box-shadow: var(--shadow-sm); }\n" +
+  ":where(button[variant='solid']) { background: var(--tone, var(--foreground)); border-color: var(--tone, var(--foreground)); color: var(--tone-contrast, var(--background)); box-shadow: var(--shadow-xs); }\n" +
+  ":where(button[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); border-color: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); box-shadow: var(--shadow-sm); }\n" +
   // soft: the tinted surface. Hover deepens the tint by mixing in more of
   // the pure tone (stays in the tone family; --tone-fg text stays readable).
-  "[data-component] :where(button[variant='soft']) { background: var(--tone-bg, var(--hover-bg)); border-color: var(--tone-border, var(--border)); color: var(--tone-fg, var(--foreground)); }\n" +
-  "[data-component] :where(button[variant='soft']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone-bg, var(--hover-bg)), var(--tone, var(--foreground)) 18%); border-color: var(--tone, var(--tone-border)); }\n" +
+  ":where(button[variant='soft']) { background: var(--tone-bg, var(--hover-bg)); border-color: var(--tone-border, var(--border)); color: var(--tone-fg, var(--foreground)); }\n" +
+  ":where(button[variant='soft']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone-bg, var(--hover-bg)), var(--tone, var(--foreground)) 18%); border-color: var(--tone, var(--tone-border)); }\n" +
   // outline / ghost. Hover is a low-alpha wash of the TONE (not a neutral
   // grey), so it reads as the control's own colour in both modes.
-  "[data-component] :where(button[variant='outline']) { border-color: var(--tone, var(--foreground)); color: var(--tone-fg, var(--foreground)); }\n" +
-  "[data-component] :where(button[variant='outline'], button[variant='ghost']):hover:not(:disabled) { background: color-mix(in srgb, var(--tone, var(--foreground)) 10%, transparent); }\n" +
-  "[data-component] :where(button[variant='ghost']) { color: var(--tone-fg, var(--foreground)); }\n" +
+  ":where(button[variant='outline']) { border-color: var(--tone, var(--foreground)); color: var(--tone-fg, var(--foreground)); }\n" +
+  ":where(button[variant='outline'], button[variant='ghost']):hover:not(:disabled) { background: color-mix(in srgb, var(--tone, var(--foreground)) 10%, transparent); }\n" +
+  ":where(button[variant='ghost']) { color: var(--tone-fg, var(--foreground)); }\n" +
   // Interaction motion (the baseline lift/press — reduced-motion kills it
   // via the global media rule).
-  '[data-component] :where(button):hover:not(:disabled) { transform: translateY(-1px); }\n' +
-  '[data-component] :where(button):active:not(:disabled) { transform: translateY(1px) scale(0.98); }\n' +
+  ':where(button):hover:not(:disabled) { transform: translateY(-1px); }\n' +
+  ':where(button):active:not(:disabled) { transform: translateY(1px) scale(0.98); }\n' +
   // Disabled surface (the contract handles cursor/opacity; ghost/outline go
   // transparent like the baseline).
-  "[data-component] :where(button[variant='ghost'], button[variant='outline']):disabled { background: transparent; }\n"
+  ":where(button[variant='ghost'], button[variant='outline']):disabled { background: transparent; }\n"
 
 export const LIGHT_CONTRACTS_CSS =
   hostAttrs(TONES_CSS) +
@@ -174,7 +177,9 @@ export const LIGHT_CONTRACTS_CSS =
   '[data-component][hidden] { display: none !important; }\n' +
   // <slot> stays in the light tree as the projection wrapper — transparent.
   '[data-component] slot { display: contents; }\n' +
-  '@media (prefers-reduced-motion: reduce) { [data-component], [data-component] * { transition: none !important; animation: none !important; } }\n'
+  // Reduced motion kills transitions/animation for component subtrees AND the
+  // globally-styled controls (their lift/press/transition are document-wide now).
+  '@media (prefers-reduced-motion: reduce) { [data-component], [data-component] *, :where(button, input, textarea, select, a, [tabindex]) { transition: none !important; animation: none !important; } }\n'
 
 let lightContractsInstalled = false
 
