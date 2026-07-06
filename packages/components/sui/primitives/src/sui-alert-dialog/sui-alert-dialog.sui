@@ -3,15 +3,46 @@
 <prop name="confirm-label" type="string" default="Confirm" />
 <prop name="cancel-label" type="string" default="Cancel" />
 
+<!--
+  Residual <style> — bits the closed-vocabulary contract cannot
+  express:
+
+  - `:host` for the host element (no sx prop for display: contents)
+    AND the per-tone channel defaults (--ad-fg/--ad-bg). The
+    framework's global tone contract fills --tone / --tone-bg /
+    --tone-fg, but this component's alert-icon semantics map the
+    default tone to the brand primary (--primary / --selected-bg),
+    not to the framework's neutral foreground (--foreground /
+    --hover-bg) — so a per-component override is the right tool.
+    Switching to the global channel would CHANGE the default
+    badge from primary-tinted to neutral-tinted, a visible
+    regression. Keep the local overrides.
+  - `.head` grid layout — display: grid + grid-template-columns:
+    auto 1fr (icon | title) + gap + align. <row> would approximate
+    but the grid's explicit 1fr title-column reserves space
+    cleanly when the projected title is wrapped or absent. Real
+    grid wins.
+  - `.badge` inline-flex + flex: none + the 50%-no-rounding-tokens
+    size + the per-tone background/fill. sx would lose either
+    the icon size or the fill (inline-flex + flex:none aren't
+    a single prop; the radius token is the closest match but the
+    size is control-h-md which is a token). All in <style>.
+  - <sui-button variant="outline"> for Cancel and <sui-button
+    variant="solid" tone={confirmTone()}> for Confirm — those are
+    the re-ported L2 controls; the global skin handles their
+    hover/focus/disabled colors.
+  - The local `--ad-fg` and `--ad-bg` references in `.badge` below
+    satisfy the css-token lint via the :host declarations on lines
+    47-48 (same <style> block, same scope). No empty `--ad-fg: ;`
+    placeholder declarations are needed: the :host assignments
+    below ARE the local definitions.
+
+  The host element itself has no <theme prop="tone"> block —
+  tone is a global contract. Only the localized icon-badge
+  colors live here, and they reference tokens (var(--primary),
+  var(--selected-bg), var(--destructive), var(--tone-destructive-bg)).
+-->
 <style>
-  /* Local markers so the css-token lint recognizes the channels and
-   * tokens referenced from this residual block. */
-  --ad-fg: ; --ad-bg: ; --space-3: ; --control-h-md: ; --icon-size-lg: ; --radius-lg: ;
-  /* Residual: `:host` (host element, no sx), the .head grid layout
-   * (display:grid + grid-template-columns:auto 1fr + gap + align),
-   * the .badge inline-flex + align + justify + flex: none +
-   * 50% no-rounding-tokens radius, the badge svg size, and the
-   * ad-fg/ad-bg channel values applied per tone. */
   :host { display: contents; --ad-fg: var(--primary); --ad-bg: var(--selected-bg); }
   :host([tone='destructive']) { --ad-fg: var(--destructive); --ad-bg: var(--tone-destructive-bg); }
   :host([hidden]) { display: none; }
