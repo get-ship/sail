@@ -26,76 +26,86 @@
   Events
     sui-change  { detail: { value: string } }   // lowercase hex
   ─────────────────────────────────────────────────────────────────────
--->
 
+  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────
+  - tone is a GLOBAL framework channel (contracts.css / suiTonesSheet):
+    no per-component <theme prop="tone"> block. The wrap and the
+    HSL <input type=range> accent-color read var(--tone-border) /
+    var(--tone-ring) directly, filled for whichever of the 8 catalog
+    tones the host's [tone] attribute names.
+  - size is a GLOBAL framework channel: no per-component <theme
+    prop="size"> block. --size-h / --size-px / --size-fs are filled
+    for whichever size the host's [size] attribute names; the wrap
+    consumes them via min-h:size-h and px:size-px.
+  - The trigger entry is a bare framework-styled <input> — the input
+    skin (font, background, border, focus ring) is the framework's
+    L1 input contract, no .entry class to hand-author. Per the alert
+    pilot's precedented control-skin trade, the hand-rolled font-
+    mono override is kept in <style> (a closed-vocab exception, not
+    a sx atom — the global input contract sets font-family to the
+    body font, but the color-picker's hex is intentionally mono).
+  - The popover panel is a plain div, not <sui-popover> — the picker
+    owns its open/close behavior (input click, doc-pointer dismissal,
+    Escape) and renders into the picker's own shadow tree; reusing
+    <sui-popover> would require lifting those handlers out.
+  - sx is closed-vocabulary; <style> keeps only what sx structurally
+    cannot express: the native <input type=range> accent-color
+    (a raw form control, not in the framework skin set), the
+    `.swatches` 6-col grid (grid-template-columns has no sx prop),
+    the `.swatch` button (appearance/border/radius/aspect-ratio/
+    cursor + hover scale transform + the multi-shadow selected
+    ring), the `.slider-row` grid (raw rem column widths — no sx
+    story), the `text-transform: lowercase` (no sx prop), the
+    panel's `position: absolute` + `top` + `left` (sx has
+    `position:absolute` but no `top`/`left` props), the host-driven
+    `:host([disabled]) .wrap { filter: saturate(0.4) }` saturate
+    (compound host-attr → descendant selector — variants only
+    target the class element itself), and the input's font-mono +
+    min-width + flex (no `flex`/`min-width` in sx). See the
+    residual-rationale comment in <style> below for the full list.
+-->
 <prop name="name" type="string" default="" />
 <prop name="value" type="string" default="#000000" form-value />
 <prop name="disabled" type="bool" default="false" reflect form-disabled />
 <prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
 <prop name="size" values="sm|md|lg" default="md" reflect />
 
-<theme prop="tone" channels="tone-border, tone-ring">
-  default:     border,            primary
-  primary:     primary,           primary
-  info:        info,              info
-  success:     success,           success
-  warning:     warning,           warning
-  destructive: destructive,       destructive
-  accent:      accent,            accent
-  muted:       muted-foreground,  muted-foreground
-</theme>
-<theme prop="size" channels="cp-h, cp-fs, cp-px">
-  sm: control-h-sm, text-xs,   space-1_5
-  md: control-h-md, text-base, space-2
-  lg: control-h-lg, text-sm,   space-2_5
-</theme>
-<variants part="wrap">
-  disabled: bg:muted fg:muted-foreground cursor:not-allowed
-</variants>
-
-<!-- Residual: `:host` baseline (display/position/width/vertical-align
-     — host doesn't take sx); the `:focus-within` ring (variants only
-     target :host attrs, not pseudo-classes — border-color + box-shadow
-     live here); the saturate() filter on disabled (no sx property);
-     the `cp-h`/`cp-fs`/`cp-px` theme channels (the css-token lint is
-     residual-only — local markers below let it resolve refs); the
-     native <input class="entry"> (no shadow part); the absolute-
-     positioned `.panel` (positions + z-index); the `.swatches`
-     6-column grid (grid-template-columns has no sx prop); the
-     `.swatch` button (appearance/border/radius/aspect-ratio/cursor),
-     its hover scale transform (motion), the multi-shadow selected
-     ring, and its transition; the `.slider-row` grid columns (raw
-     rems), the `<input type='range'>` accent-color (raw form control),
-     and the hex-row input styling. -->
+<!--
+  Residual <style>:
+  - :host baseline (display:inline-flex / width:100% / vertical-align)
+  - The host-driven disabled saturate (host-attr → descendant compound
+    selector — variants only target the class element itself, not
+    descendants of :host attrs)
+  - entry input: text-transform:lowercase + font-family:mono
+    (text-transform has no sx prop; font-family-override keeps the
+    hex readable as code while the L1 contract sets the body font)
+  - swatch button + selection ring: appearance, border, radius,
+    aspect-ratio, cursor, the hover scale transform, the multi-
+    shadow selected ring (a shape `ring:` can't produce — it emits
+    the framework's 2-layer OUTER glow, never the inset halo +
+    tone border the swatch palette needs)
+  - slider-row grid: 3-col grid (label / range / value) with raw
+    rem column widths + the .val mono font + the <input type=range>
+    accent-color (raw form control)
+  - hex-row: flex layout + label spacing (no sx)
+-->
+<!--
+  --size-h/--size-px/--size-fs are the global size channels (adopted
+  from the framework's SIZES_CSS into every shadow root via
+  adoptSuiSheets). They're NOT in tokens.css, so the css-token lint
+  doesn't recognize them — declare empty markers in this style block
+  to satisfy the lint. Same pattern as sui-select.
+-->
 <style>
-    --cp-h: ; --cp-fs: ; --cp-px: ; --panel-max-w-md: ; --space-half: ; --z-popover: ; --popover: ; --popover-foreground: ; --radius-md: ; --shadow-md: ; --font-body: ; --font-mono: ; --border-subtle: ; --radius-sm: ; --foreground: ; --muted-foreground: ; --text-xs: ; --ring-width: ; --primary: ; --surface-1: ; --duration-fast: ;
+  --size-h: ; --size-px: ; --size-fs: ;
   :host {
-    position: relative;
     display: inline-flex;
     width: 100%;
     vertical-align: middle;
   }
-
-  .wrap {
-    transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
-    /* De-translated from sx (min-h:cp-h px:cp-px) — ad-hoc channels are not
-       sx vocabulary. */
-    min-height: var(--cp-h);
-    padding-inline: var(--cp-px);
-  }
-  .wrap:focus-within {
-    border-color: var(--tone-ring);
-    box-shadow: 0 0 0 var(--ring-width) var(--tone-ring);
-  }
-  :host([disabled]) [part~='wrap'] { filter: saturate(0.4); }
-
-  .preview {
-    width: calc(var(--cp-h) - 14px);
-    height: calc(var(--cp-h) - 14px);
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    flex: 0 0 auto;
-  }
+  :host([hidden]) { display: none; }
+  :host([disabled]) .wrap { filter: saturate(0.4); }
 
   input.entry {
     flex: 1;
@@ -104,34 +114,15 @@
     outline: 0;
     background: transparent;
     padding: 0;
-    font: inherit;
     font-family: var(--font-mono);
-    font-size: var(--cp-fs);
-    color: var(--foreground);
     text-transform: lowercase;
   }
   input.entry::placeholder { color: var(--muted-foreground); }
-  input.entry:disabled { cursor: not-allowed; }
-
-  .panel {
-    position: absolute;
-    top: calc(100% + var(--space-1));
-    left: 0;
-    z-index: var(--z-popover);
-    width: var(--panel-max-w-md);
-    padding: var(--space-3);
-    background: var(--popover);
-    color: var(--popover-foreground);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
-    font-family: var(--font-body);
-    font-size: var(--cp-fs);
-  }
 
   .swatches {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
+    gap: var(--space-2);
   }
   .swatch {
     appearance: none;
@@ -142,48 +133,65 @@
     cursor: pointer;
     transition: transform var(--duration-fast);
   }
-  .swatch:hover:not(:disabled) {
-    transform: scale(1.08);
-  }
+  .swatch:hover:not(:disabled) { transform: scale(1.08); }
   .swatch.selected {
-    box-shadow: 0 0 0 var(--space-half) var(--surface-1), 0 0 0 calc(var(--space-half) + var(--space-half)) var(--primary);
+    box-shadow:
+      0 0 0 var(--space-1) var(--surface-1),
+      0 0 0 calc(var(--space-1) + var(--space-1)) var(--primary);
   }
 
-  .slider-row { display: grid; grid-template-columns: 1.2rem 1fr 2.4rem; gap: var(--space-2); align-items: center; }
-  .slider-row label { color: var(--muted-foreground); font-size: var(--text-xs); }
-  .slider-row input[type='range'] { width: 100%; accent-color: var(--tone-ring); }
-  .slider-row .val { font-family: var(--font-mono); font-size: var(--text-xs); text-align: right; color: var(--foreground); }
-
-  .hex-row { display: flex; align-items: center; gap: var(--space-2); }
-  .hex-row .label { color: var(--muted-foreground); font-size: var(--text-xs); }
-  .hex-row input {
-    flex: 1;
-    appearance: none;
-    border: 1px solid var(--border);
-    background: var(--background);
-    border-radius: var(--radius-sm);
-    padding: var(--space-1) var(--space-2);
-    font: inherit;
+  .slider-row {
+    display: grid;
+    grid-template-columns: 1.2rem 1fr 2.4rem;
+    gap: var(--space-2);
+    align-items: center;
+  }
+  .slider-row label {
+    color: var(--muted-foreground);
+    font-size: var(--text-xs);
+  }
+  .slider-row input[type='range'] {
+    width: 100%;
+    accent-color: var(--tone-ring);
+  }
+  .slider-row .val {
     font-family: var(--font-mono);
-    font-size: var(--cp-fs);
+    font-size: var(--text-xs);
+    text-align: right;
     color: var(--foreground);
+  }
+
+  .hex-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .hex-row .label {
+    color: var(--muted-foreground);
+    font-size: var(--text-xs);
+  }
+  .hex-row input { flex: 1; }
+
+  .preview {
+    width: calc(var(--size-h) - 14px);
+    height: calc(var(--size-h) - 14px);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    flex: 0 0 auto;
+  }
+
+  .panel {
+    position: absolute;
+    top: calc(100% + var(--space-1));
+    left: 0;
+    font-family: var(--font-body);
   }
 </style>
 
-<!-- De-translated: min-h:cp-h / px:cp-px moved into the residual .wrap rule
-     (ad-hoc channels are not sx vocabulary). -->
 <row class="wrap" part="wrap" align="center" gap="2"
-  sx="
-    w:full
-    py:0
-    bg:background
-    fg:foreground
-    border:tone-border
-    radius:md
-  "
->
-  <span class="preview" aria-hidden="true"
-        style:background-color={value() || '#000000'}></span>
+  sx="min-h:size-h py:0 px:size-px bg:background fg:foreground border:tone-border radius:md">
+  <span class="preview" part="preview" aria-hidden="true"
+    style:background-color={value() || '#000000'}></span>
   <input
     class="entry"
     part="input"
@@ -199,9 +207,10 @@
   />
 </row>
 {#if open() && !disabled()}
-  <column class="panel" gap="2" part="panel" role="dialog" aria-label="Choose color"
-       bind:this={panelEl}>
-    <div class="swatches">
+  <column class="panel" part="panel" gap="2" role="dialog" aria-label="Choose color"
+       bind:this={panelEl}
+       sx="position:absolute z:popover w:panel-max-w-md p:3 bg:popover fg:popover-foreground border:border radius:md shadow:md text:size-fs">
+    <div class="swatches" part="swatches">
       {#for sw of swatches() key={sw.hex}}
         <button
           type="button"
