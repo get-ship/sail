@@ -136,7 +136,11 @@ fn stdlib_elements_can_self_nest() {
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
-    let out = compile("<card><card>inner</card></card>", opts).expect("nested cards compile");
+    // Multibyte chars (⌘/—/°) around the nested tags — the depth scan walks
+    // byte-by-byte, so it must compare on BYTES; slicing the &str mid-char
+    // would panic (the real-page regression that killed the daemon build).
+    let out = compile("<card>⌘ <card>— inner °</card> tail</card>", opts)
+        .expect("nested cards with multibyte chars compile");
     // Both cards lowered — the card root class appears for each.
     let n = out.js.matches("sui-card").count();
     assert!(n >= 2, "expected both cards lowered, got {n}:\n{}", out.js);

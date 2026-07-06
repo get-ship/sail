@@ -322,13 +322,17 @@ fn lower_into(
                         if scan >= bytes.len() {
                             break None;
                         }
-                        if source[scan..].starts_with(&close) {
+                        // Byte-level compares — `scan` advances by one byte in
+                        // the fallthrough, so it can land mid-multibyte-char;
+                        // slicing `source[scan..]` there would panic (the ⌘/—/°
+                        // in real pages). `bytes` slicing is boundary-free.
+                        if bytes[scan..].starts_with(close.as_bytes()) {
                             depth -= 1;
                             if depth == 0 {
                                 break Some(scan);
                             }
                             scan += close.len();
-                        } else if source[scan..].starts_with(&open_prefix)
+                        } else if bytes[scan..].starts_with(open_prefix.as_bytes())
                             && bytes
                                 .get(scan + open_prefix.len())
                                 .is_some_and(|&b| b.is_ascii_whitespace() || b == b'>')
