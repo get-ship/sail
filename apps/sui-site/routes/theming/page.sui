@@ -103,8 +103,8 @@
       <row>
         <sui-button tone="primary">Primary action</sui-button>
         <sui-button variant="outline">Secondary</sui-button>
-        <sui-badge tone="info">Info badge</sui-badge>
-        <sui-badge tone="success">Success badge</sui-badge>
+        <span tone="info" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Info badge</span>
+        <span tone="success" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Success badge</span>
       </row>
     </column>
   </sui-card>

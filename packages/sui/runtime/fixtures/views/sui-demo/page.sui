@@ -47,13 +47,13 @@
   </section>
 
   <section>
-    <h2>sui-badge</h2>
-    <sui-badge>default</sui-badge>
-    <sui-badge tone="primary">primary</sui-badge>
-    <sui-badge tone="success">success</sui-badge>
-    <sui-badge tone="warning" variant="solid">warning solid</sui-badge>
-    <sui-badge tone="info" variant="outline">info outline</sui-badge>
-    <sui-badge tone="destructive" variant="solid">destructive</sui-badge>
+    <h2>sui-badge (dissolved to bare span + sx)</h2>
+    <span tone="default" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">default</span>
+    <span tone="primary" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">primary</span>
+    <span tone="success" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">success</span>
+    <span tone="warning" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone border:tone fg:tone-contrast">warning solid</span>
+    <span tone="info" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:transparent border:tone-border fg:tone-fg">info outline</span>
+    <span tone="destructive" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone border:tone fg:tone-contrast">destructive</span>
   </section>
 
   <section>

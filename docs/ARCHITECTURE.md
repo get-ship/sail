@@ -158,6 +158,7 @@ interaction patterns.
 | sui-spinner | `<spinner>` | T2 | one spin keyframe, language-owned |
 | sui-separator | `<separator>` | T2 | |
 | sui-avatar | `<img>` reset + stdlib avatar | T2 | image baseline L1; initials-fallback logic L2 |
+| sui-badge | bare `<span>` + sx | dissolved | JS-free, static; no L1 element registered — dissolves to a semantic tag styled by the closed sx vocabulary + the global tone contract, not a stdlib skin |
 | sui-scroll-area | `<scroll>` | T3 | scrollbar chrome is deliberately inexpressible elsewhere |
 | sui-table | `<table>` family reset + stdlib table | T3 | visual baseline L1; sort/select behavior L2 |
 | (new) | `<progress>`, `<visually-hidden>`, `<kbd>`, list resets | T2/T3 | no current dir; born language-level |
@@ -174,14 +175,18 @@ Disclosure/nav: sui-accordion, sui-collapsible, sui-tabs (+tab, tab-panel),
 sui-navigation-menu, sui-pagination.
 Data/content: sui-tree, sui-tree-view, sui-tree-grid, sui-json-view,
 sui-diff, sui-markdown, sui-code, sui-timeline (+item).
-Status/display: sui-alert, sui-badge, sui-chip, sui-card, sui-status-dot,
+Status/display: sui-alert, sui-chip, sui-card, sui-status-dot,
 sui-skeleton, sui-error-boundary (runtime-backed).
 
 These keep custom-element identity (behavior, shadow DOM, anatomy manifest)
 but move **into the toolchain** and stop being a published userspace package.
-Design-vocabulary components (badge, chip, card, alert) are deliberately L2,
-not L1: they're design semantics, not platform behavior — but they are still
-stdlib, because the stdlib is where taste lives.
+Design-vocabulary components (chip, card, alert) are deliberately L2, not L1:
+they're design semantics, not platform behavior — but they are still stdlib,
+because the stdlib is where taste lives. sui-badge is the exception that
+proves the rule: unlike chip (keyboard/ARIA/remove-event behavior) it carries
+no runtime behavior at all, so per the north-star ruling ("L1 grows bigger
+than the ~10 — promote everything universal + JS-free") it dissolved straight
+to a bare tag instead of staying L2.
 
 ### → L3 userland (move out of primitives; the permanent dogfood canary)
 

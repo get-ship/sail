@@ -19,7 +19,7 @@ export const code = {
 
   props: `<!-- pass props down; the child declares them with <prop> and reads
      them as signals -->
-<sui-badge tone="primary" count={unread()}></sui-badge>`,
+<sui-chip tone="primary" count={unread()}></sui-chip>`,
 
   events: `<!-- on:<event> takes modifiers: |prevent, |stop, |self, |debounce:<ms> -->
 <form on:submit|prevent={save}>

@@ -36,7 +36,6 @@ interface PortCase {
 const ports: PortCase[] = [
   { tag: 'sui-status-dot', attr: 'tone',  value: 'primary', shadowPart: '.dot' },
   { tag: 'sui-spinner',    attr: 'size',  value: 'lg',      shadowPart: '.ring' },
-  { tag: 'sui-badge',      attr: 'tone',  value: 'success', shadowPart: '.badge' },
   { tag: 'sui-chip',       attr: 'tone',  value: 'primary', shadowPart: '.chip' },
   { tag: 'sui-card',       attr: 'padding', value: 'lg',    shadowPart: '.content' },
   { tag: 'sui-link',       attr: 'tone',  value: 'primary', shadowPart: 'a' },

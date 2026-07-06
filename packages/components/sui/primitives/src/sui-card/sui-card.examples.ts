@@ -5,7 +5,7 @@ export const examples: ComponentExample[] = [
     name: 'Agent at work',
     description: 'A live agent card — the kind the activity monitor renders.',
     slots: `
-      <span slot="header">gatekeeper · <sui-badge tone="info">reviewing</sui-badge></span>
+      <span slot="header">gatekeeper · <span tone="info" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">reviewing</span></span>
       <p><code>job/sui-framework</code> — 14 files, 3 findings so far. Burned 41k tokens.</p>
       <div class="toolbar toolbar--footer" slot="footer">
         <sui-button variant="ghost" size="sm">Open review</sui-button>

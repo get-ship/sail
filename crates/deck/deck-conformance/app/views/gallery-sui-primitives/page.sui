@@ -67,21 +67,7 @@
     </div>
   </section>
 
-  <!-- Badge -->
-  <section class="gsp-section">
-    <h2 class="gsp-label">sui-badge</h2>
-    <div class="gsp-row gsp-wrap">
-      <sui-badge tone="default" variant="solid">Solid</sui-badge>
-      <sui-badge tone="primary" variant="soft">Primary</sui-badge>
-      <sui-badge tone="info" variant="outline">Info</sui-badge>
-      <sui-badge tone="success" variant="soft">Success</sui-badge>
-      <sui-badge tone="warning" variant="soft">Warning</sui-badge>
-      <sui-badge tone="destructive" variant="solid">Error</sui-badge>
-      <sui-badge tone="accent" variant="soft" pill>Pill</sui-badge>
-      <sui-badge tone="muted" size="sm">sm</sui-badge>
-      <sui-badge tone="muted" size="lg">lg</sui-badge>
-    </div>
-  </section>
+  <!-- Badge dissolved to L1 (bare <span> + sx) — see dissolve-gate.md -->
 
   <!-- Button -->
   <section class="gsp-section">
@@ -157,14 +143,14 @@
     <h2 class="gsp-label">row / column</h2>
     <div class="gsp-col">
       <row gap="3" align="center">
-        <sui-badge tone="primary">A</sui-badge>
-        <sui-badge tone="success">B</sui-badge>
-        <sui-badge tone="accent">C</sui-badge>
+        <span tone="primary" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">A</span>
+        <span tone="success" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">B</span>
+        <span tone="accent" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">C</span>
       </row>
       <column gap="2">
-        <sui-badge tone="info">Stack item 1</sui-badge>
-        <sui-badge tone="warning">Stack item 2</sui-badge>
-        <sui-badge tone="destructive">Stack item 3</sui-badge>
+        <span tone="info" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Stack item 1</span>
+        <span tone="warning" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Stack item 2</span>
+        <span tone="destructive" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Stack item 3</span>
       </column>
     </div>
   </section>
@@ -544,9 +530,9 @@
     <div class="gsp-row">
       <sui-table variant="slot" label="Demo table" hoverable>
         <tr slot="head"><th>Name</th><th>Role</th><th>Status</th></tr>
-        <tr><td>Alice</td><td>Engineer</td><td><sui-badge tone="success" variant="soft" size="sm">Active</sui-badge></td></tr>
-        <tr><td>Bob</td><td>Designer</td><td><sui-badge tone="warning" variant="soft" size="sm">Away</sui-badge></td></tr>
-        <tr><td>Carol</td><td>PM</td><td><sui-badge tone="muted" variant="soft" size="sm">Offline</sui-badge></td></tr>
+        <tr><td>Alice</td><td>Engineer</td><td><span tone="success" sx="display:inline-flex min-h:control-h-2xs px:1_5 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Active</span></td></tr>
+        <tr><td>Bob</td><td>Designer</td><td><span tone="warning" sx="display:inline-flex min-h:control-h-2xs px:1_5 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Away</span></td></tr>
+        <tr><td>Carol</td><td>PM</td><td><span tone="muted" sx="display:inline-flex min-h:control-h-2xs px:1_5 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Offline</span></td></tr>
       </sui-table>
     </div>
   </section>
