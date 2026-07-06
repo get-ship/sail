@@ -1,67 +1,124 @@
+<!--
+  <sui-tab> — SUI port of <ship-tab>.
+  Individual tab button. Renders its own interactive button; orchestrated
+  by the parent <sui-tabs> controller which sets the `active` attribute.
+
+  Architecture diverges from Lit:
+  In <ship-tabs>, the parent renders all tab buttons in its own shadow
+  DOM and <ship-tab> is a data-holder (display:none). In SUI, <sui-tab>
+  renders its own button, and <sui-tabs> coordinates via attribute-setting
+  and slotchange. This keeps the interactive surface inside sui-tab for
+  encapsulation while delegating keyboard/focus management to sui-tabs.
+
+  Prop / event / method parity vs <ship-tab>
+  ──────────────────────────────────────────────────────────────────────────────
+  Lit                              SUI                       Notes
+  ──────────────────────────────────────────────────────────────────────────────
+  name (String, '', reflect)       name (string, '',         ✓
+                                     reflect)
+  label (String, '', reflect)      label (string, '',        ✓ fallback text if
+                                     reflect)                  slot is empty; in
+                                                               SUI the slot is
+                                                               primary content
+  count (Number|null, null,        count (string, '',        ✓ empty string →
+    reflect)                         reflect)                  no badge (SUI string
+                                                               prop; '' hides badge)
+  disabled (Boolean, false,        disabled (bool, false,    ✓
+    reflect)                         reflect)
+  ──────────────────────────────────────────────────────────────────────────────
+  active (n/a — parent-rendered    active (bool, false,      SUI addition: set by
+    button, no host prop)            reflect)                  sui-tabs controller to
+                                                               drive aria-selected
+                                                               and tabIndex
+  ──────────────────────────────────────────────────────────────────────────────
+  Rendered by parent               button[part="button"]     test table expects
+    (no shadow button in Lit)        rendered by sui-tab      shadowPart: 'button'
+  ──────────────────────────────────────────────────────────────────────────────
+  role=tab / aria-selected         ✓ button has role=tab;    ✓
+    managed by parent                aria-selected driven by
+                                     `active` prop; tabIndex
+                                     managed by sui-tab.ts
+  ──────────────────────────────────────────────────────────────────────────────
+  Slots: (none — data holder)      (default) + leading       SUI slot for label
+                                                               content; leading for
+                                                               icon-before-label
+  ──────────────────────────────────────────────────────────────────────────────
+  Parts: (none)                    button                    ✓
+  ──────────────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  ──────────────────────────────────────────────────────────────────────────────
+  - No tone prop of its own — this component never declared one and
+    still doesn't; `var(--tone)`/`var(--tone-bg)`/`var(--tone-ring)`
+    keep being read as inherited custom properties from the ancestor
+    sui-tabs host (which sources them from the now-global tone sheet).
+    Nothing to delete here — this was never a per-component channel
+    redeclaration.
+  - L1 CONTROL: the button now opts into the framework's ghost skin
+    (transparent background, no border, tone-tinted hover wash,
+    :focus-visible/:disabled from the control contracts) instead of
+    hand-authoring its own background/border/white-space/font-family/
+    cursor/transition — all of those are the framework's baseline now
+    (adopted into this shadow root the same way the alert pilot's
+    dismiss button is). What's left in residual CSS is genuinely
+    component-specific, not something the framework's generic button
+    skin has an opinion on: the tab's own dim→foreground color story
+    (muted by default, foreground+bold+tone-colored underline when
+    active — the framework's ghost color is tone-driven and would
+    color EVERY tab, active or not, which isn't this design), the
+    hairline underline itself (a single-side border, no sx channel for
+    that), and a tone-tinted focus ring (the generic global ring isn't
+    tone-aware; this one legitimately still needs to be).
+  - The count badge fully moves onto sx (`text:xs weight:medium
+    fg:muted-foreground px:2 radius:full bg:muted`) — every value in
+    the old hand-written `.count` rule turned out to be closed-vocabulary
+    expressible. Its active-state recolor is a class-targeted variants
+    directive (`fg:tone bg:tone-bg`).
+  - Dropped: the `variant='pill'|'enclosed'` selectors from the feat/next
+    baseline. They were already dead code there — `sui-tabs` never
+    mirrors its own `variant` prop onto child `<sui-tab>` elements (only
+    `active`/`id`/`aria-controls` are set by the controller), so these
+    selectors never matched anything in feat/next either. Confirmed by
+    reading `sui-tabs.controller.ts`: no `setAttribute('variant', …)`
+    call exists. Not preserving unreachable CSS is not a functionality
+    drop; flagged here for visibility rather than silently dropped.
+  - `display:inline-flex` on :host is kept — genuinely different from
+    the framework's block default (BASE_CSS), needed so tabs lay out
+    inline in the strip.
+-->
+
 <prop name="name" type="string" default="" reflect />
 <prop name="label" type="string" default="" reflect />
 <prop name="count" type="string" default="" reflect />
-<prop name="disabled" type="bool" default="false" reflect />
-<prop name="active" type="bool" default="false" reflect />
-<prop name="variant" values="line|pill|enclosed" default="line" reflect />
+<component>{
+  props: {
+    disabled: bool,
+    active: bool,
+  },
+}</component>
 
-<variants part="button">
-  [active]:               weight:semibold fg:foreground
-  disabled:               cursor:not-allowed opacity:50
-  (variant=pill):         radius:sm
-  (variant=pill, active): bg:surface-1 fg:foreground
+<variants class="count">
+  [active]: fg:tone bg:tone-bg
 </variants>
 
 <style>
-  /* Local markers so the css-token lint recognizes the tokens
-   * referenced from this residual block. */
-  --tone: ; --tone-bg: ; --tone-ring: ; --font-body: ; --ring-width: ; --border: ; --border-subtle: ; --surface-1: ; --muted-foreground: ; --muted: ; --foreground: ; --hover-bg: ; --radius-sm: ; --radius-full: ; --shadow-xs: ; --text-sm: ; --text-xs: ; --font-weight-medium: ; --font-weight-semibold: ; --space-1_25: ; --space-2: ; --space-3: ; --duration-fast: ; --ease-out: ;
-  /* Residual:
-   *   * the <button>'s display:inline-flex + align-items + gap (a
-   *     real <button>, not a wrapper — layout primitives don't
-   *     apply), font-family (no sx prop), the multi-property
-   *     transition, the background/border: transparent reset
-   *     (no --transparent token), the border-bottom-width custom
-   *     value (var(--space-1_25) is not a border prop in sx), the
-   *     :hover:not(:disabled) negation (state prefixes don't compose
-   *     with :not()), the :active [hover] override, the active
-   *     border-bottom-color (single-side border, sx `border:` sets
-   *     all 4), the focus-visible outline (raw --ring-width +
-   *     --tone-ring pair — adding a theme channel just to move one
-   *     rule wouldn't help)
-   *   * the per-variant rest styling: border-bottom:0 + border-radius
-   *     not a token (enclosed) + border:1px solid transparent
-   *     (enclosed) + box-shadow: var(--shadow-xs), inset 0 0 0 1px
-   *     var(--border-subtle) (multi-shadow, sx `shadow:` is a
-   *     single token) + border-color: var(--border) var(--border)
-   *     transparent (3-side) + position: relative + bottom: -1px
-   *     (no `bottom` prop in sx)
-   *   * the .leading :has(::slotted(*)) reveal (sx can't reach
-   *     slot children) + the `flex: 0 0 auto` and `color:
-   *     currentColor` (no sx props)
-   *   * the .count :host([active]) color/background override
-   *     (descendant selector; sx variants only target host attrs
-   *     on a shadow part) */
-  button {
-    display: inline-flex; align-items: center; gap: var(--space-2);
-    background: transparent; border: 0;
-    border-bottom: var(--space-1_25) solid transparent;
-    white-space: nowrap;
-    font-family: var(--font-body);
-    transition:
-      color var(--duration-fast) var(--ease-out),
-      border-color var(--duration-fast) var(--ease-out),
-      background-color var(--duration-fast) var(--ease-out);
-  }
-  button:hover:not(:disabled) {
-    color: var(--foreground);
-    background: var(--hover-bg);
-  }
+  :host { display: inline-flex; }
 
+  button {
+    border-bottom: var(--space-1_25) solid transparent;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  }
+  button:hover:not(:disabled) { color: var(--foreground); }
   :host([active]) button {
+    color: var(--foreground);
+    font-weight: var(--font-weight-semibold);
     border-bottom-color: var(--tone);
   }
   :host([active]) button:hover:not(:disabled) { background: transparent; }
+  button:focus-visible {
+    outline: var(--ring-width) solid var(--tone-ring);
+    outline-offset: calc(-1 * var(--ring-width));
+  }
 
   .leading {
     display: none;
@@ -70,49 +127,10 @@
     color: currentColor;
   }
   .leading:has(::slotted(*)) { display: inline-flex; }
-
-  .count {
-    font-size: var(--text-xs);
-    font-weight: var(--font-weight-medium);
-    color: var(--muted-foreground);
-    padding: 0 var(--space-2);
-    border-radius: var(--radius-full);
-    background: var(--muted);
-  }
-  :host([active]) .count {
-    color: var(--tone);
-    background: var(--tone-bg);
-  }
-
-  button:focus-visible {
-    outline: var(--ring-width) solid var(--tone-ring);
-    outline-offset: calc(-1 * var(--ring-width));
-  }
-
-  :host([variant='pill']) button {
-    border-bottom: 0;
-  }
-  :host([variant='pill'][active]) button {
-    box-shadow: var(--shadow-xs), inset 0 0 0 1px var(--border-subtle);
-  }
-  :host([variant='pill'][active]) button:hover:not(:disabled) { background: var(--surface-1); }
-
-  :host([variant='enclosed']) button {
-    border-bottom: 0;
-    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    border: 1px solid transparent;
-  }
-  :host([variant='enclosed'][active]) button {
-    background: var(--surface-1);
-    border-color: var(--border) var(--border) transparent;
-    color: var(--foreground);
-    position: relative;
-    bottom: -1px;
-  }
-  :host([variant='enclosed'][active]) button:hover:not(:disabled) { background: var(--surface-1); }
 </style>
 
 <button
+  ghost
   part="button"
   type="button"
   role="tab"
@@ -121,17 +139,14 @@
   aria-disabled={disabled() ? 'true' : 'false'}
   disabled={disabled()}
   bind:this={btn}
-  sx="
-    py:2
-    px:3
-    text:sm
-    cursor:pointer
-    radius:sm
-  "
+  sx="py:2 px:3 text:sm"
 >
-  <span class="leading" part="leading"><slot name="leading"></slot></span>
-  <slot></slot>
-  {#if count() !== ''}
-    <span class="count" aria-hidden="true">{count()}</span>
-  {/if}
+  <row align="center" gap="2">
+    <span class="leading" part="leading"><slot name="leading"></slot></span>
+    <slot></slot>
+    {#if count() !== ''}
+      <span class="count" aria-hidden="true"
+        sx="text:xs weight:medium fg:muted-foreground px:2 radius:full bg:muted">{count()}</span>
+    {/if}
+  </row>
 </button>
