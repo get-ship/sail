@@ -45,49 +45,60 @@
   `dense` flow backfills gaps when a wide cell can't fit a sibling
   beside it; under 720px the cell widths collapse and the spans fall
   back to 1×1 so a calendar never overflows a phone.
+
+  NEW SURFACE (re-port from feat/next, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────
+  - The host baseline (display:block + min-w:0) moved to the host
+    `sx` attribute. These are surface tokens the closed sx vocabulary
+    expresses directly; the pre-port spike inlined them in style with
+    raw CSS — same effect, more boilerplate.
+  - The [hidden] host display:none is provided by the runtime's
+    BASE_CSS and would be deduped at emit; not authored here.
+  - The per-gap / per-min rules stay in the style block: they fill
+    a custom property (`--grid-gap`, `--grid-min`) on the host,
+    which sx cannot express (sx is closed-vocabulary for layout-prop
+    output and explicitly does NOT include a "set custom property on
+    host" primitive). The values themselves are token refs (the
+    a `--space-*` token) or rem literals (16 / 18 / 20 / 24 rem).
+    rem is a length, not a design-token, and the column min-max
+    wants a fixed length regardless of theme density; spending a
+    token here is not justified.
+  - The inner style (display:grid + grid-template-columns:
+    repeat(auto-fill, minmax(...)) + grid-auto-flow: dense +
+    gap: var(--grid-gap)) stays: sx cannot express
+    grid-template-columns (no `grid-template` prop) and the lowered
+    grid layout keyword's child-selector targets `> *` which would
+    select the slot element, not the slotted children that are the
+    actual grid items. This is sui-grid's whole reason for being a
+    custom element.
+  - The flow=auto / flow=dense overrides, the per-attribute opt-in
+    spans on slotted children, and the @media (max-width: 720px)
+    collapse-to-1x1 all stay in the style block: sx's variant
+    selector matches host attributes only, not slotted-child
+    data-attrs; the sx condition vocabulary covers
+    prefers-reduced-motion / forced-colors / prefers-color-scheme
+    but NOT max-width media queries.
+  - Default-first unions: `min: 'md' | 'xs' | 'sm' | 'lg'`,
+    `gap: '3' | '0' | ... | '8'`, `flow: 'dense' | 'auto'` — the
+    compiler's expand_props treats the FIRST member as the default,
+    matching feat/next's `default="md"`, `default="3"`,
+    `default="dense"`.
 -->
 
-<prop name="min" values="xs|sm|md|lg" default="md" reflect />
-<prop name="gap" values="0|1|2|3|4|5|6|7|8" default="3" reflect />
-<prop name="flow" values="auto|dense" default="dense" reflect />
+<component>{
+  props: {
+    min: 'md' | 'xs' | 'sm' | 'lg',
+    gap: '3' | '0' | '1' | '2' | '4' | '5' | '6' | '7' | '8',
+    flow: 'dense' | 'auto',
+  },
+}</component>
 
-<!-- Host baseline: surface-only display + min-width. The [hidden] host
-     display:none is provided by the runtime's BASE_CSS and would be
-     deduped at emit. -->
 <host sx="display:block min-w:0"></host>
 
 <style>
   /* Local markers so the css-token lint recognizes the tokens
    * referenced from this residual block. */
   --grid-gap: ; --grid-min: ; --space-1: ; --space-2: ; --space-3: ; --space-4: ; --space-5: ; --space-6: ; --space-7: ; --space-8: ;
-
-  /* Residual:
-     1. The default `--grid-gap` and `--grid-min` plus the per-gap
-        (0..8) and per-min (xs|sm|md|lg) host declarations that
-     fill them. A theme directive doesn't reach them: the `gap=0` fill would
-        emit `var(--0)`, the `min` fills are `16rem` / `18rem` /
-        `20rem` / `24rem` — not token names. Custom property
-        declarations in general aren't a sx surface.
-     2. .grid's `display: grid` + `grid-template-columns:
-        repeat(auto-fill, minmax(var(--grid-min), 1fr))` +
-        `grid-auto-flow: dense` + `gap: var(--grid-gap)` —
-     sui-grid's whole point is this auto-fill minmax + dense
-     packing, which the generic grid layout keyword doesn't expose
-     (its lowered children-selector targets `> *`, which here
-     would select the slot element, not the slotted children
-     that are the actual grid items).
-     3. The `flow=auto` / `flow=dense` per-attribute overrides on
-        .grid — the default is dense, only the explicit `auto`
-        switch is non-default; same reachability issue as 2.
-     4. The `.grid ::slotted(*)` per-attribute opt-in spans
-        (data-col-span='2..4', data-row-span='2..4') plus the 1×1
-     default + min-width:0 guard. A variants block only matches
-        :host's own attributes, not slotted-child data-attrs;
-        a sx state prefix on the host also can't reach them.
-     5. The `@media (max-width: 720px)` block that collapses the
-        spans back to 1×1 so a calendar never overflows a phone.
-        No condition prefix in the sx vocabulary covers
-        `max-width: 720px`. */
 
   :host {
     --grid-gap: var(--space-3);
