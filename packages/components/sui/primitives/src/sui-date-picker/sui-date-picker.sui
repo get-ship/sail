@@ -25,6 +25,53 @@
   Events
     sui-change  { detail: { value: string } }   // ISO date or '' when cleared
   ─────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────
+  - Deleted the per-component tone theme block (prop=tone, channels
+    tone-border + tone-ring) — those two channel names are now GLOBAL
+    framework channels (contracts.css), and this component's old block
+    collided with them 1:1. `border:tone-border` /
+    `focus-within:ring:tone-ring` below now resolve against the framework's
+    tone contract directly, same as sui-alert/sui-card/sui-select.
+    (NOTE for future editors: don't spell the deleted block out in real
+    open/close theme-tag syntax in this comment — the compiler's theme
+    lowering pass scans for the literal tag text without regard for HTML
+    comment boundaries, and a stray opening mention here will pair with
+    the real closing tag on the surviving size-theme block below and
+    silently swallow every prop declaration in between. Prose only.)
+  - Kept the local size theme block (prop=size, channels dp-h/dp-fs/dp-px)
+    (channel NAMES don't collide with the global `size-*` contract, and the
+    values genuinely differ from it — global `[size]` padding is
+    space-2_5/3/4 at sm/md/lg, feat/next's picker used space-2/2_5/3; same
+    established pattern as sui-input/-badge/-chip keeping their own size
+    theme). Fixed two values while re-porting: the `md` row had drifted to
+    the density channel (`density-text`/`density-row-px`, unrelated to this
+    component — feat/next's md size is a fixed 13px/10px, not
+    density-reactive) — restored to `text-base`/`space-2_5`. The `lg` row's
+    font size had drifted to `text-sm` (12px) instead of feat/next's 14px —
+    restored to `text-md`.
+  - `.day.selected`'s background/color/font-weight had been dropped entirely
+    in the prior "dissolve style" pass (only `box-shadow:none` survived).
+    Restored using the SOLID `--tone`/`--tone-contrast` channel pair (not
+    `--tone-ring`, which is now a translucent wash, not a solid fill) — the
+    channel pairing the framework provides specifically for solid-fill +
+    readable-text scenarios. Net effect: still a solid, tone-colored,
+    legible selected-day pill, matching feat/next's intent; the untoned/
+    default case shifts from feat/next's hardcoded "solid primary" to the
+    framework's generic "solid foreground" (an intentional consequence of
+    tone no longer being a per-component color choice).
+  - `.day.empty { visibility: hidden; }` and
+    `.day:hover:not(:disabled):not(.empty) { background: var(--hover-bg); }`
+    were also dropped in the prior pass — restored (leading/trailing padding
+    cells were rendering as visible ghost buttons, and no day had hover
+    feedback).
+  - `.dow`'s font-size had drifted to `text:xs` (11px); feat/next's raw
+    `0.75rem` is 12px — restored to `text:sm`.
+  - `.panel`'s width had drifted to `w:panel-max-w-md` (480px); feat/next's
+    raw `260px` is far closer to `--panel-max-w-sm` (320px — still a
+    deliberate token-driven widening, per tokens.css's own documented
+    re-port convention, and gives the 7-column day grid comfortable room).
 -->
 
 <prop name="name" type="string" default="" />
@@ -36,21 +83,10 @@
 <prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
 <prop name="size" values="sm|md|lg" default="md" reflect />
 
-<theme prop="tone" channels="tone-border, tone-ring">
-  default:     border,          ring
-  primary:     primary,         primary
-  info:        info,            info
-  success:     success,         success
-  warning:     warning,         warning
-  destructive: destructive,     destructive
-  accent:      accent,          accent
-  muted:       muted-foreground, muted-foreground
-</theme>
-
 <theme prop="size" channels="dp-h, dp-fs, dp-px">
   sm: control-h-sm, text-sm, space-2
-  md: control-h-md, density-text, density-row-px
-  lg: control-h-lg, text-sm, space-3
+  md: control-h-md, text-base, space-2_5
+  lg: control-h-lg, text-md, space-3
 </theme>
 
 <variants part="wrap">
@@ -87,7 +123,7 @@
     the sx ring: model.
 -->
 <style>
-  --tone-border: ; --tone-ring: ; --dp-h: ; --dp-fs: ; --dp-px: ;
+  --dp-h: ; --dp-fs: ; --dp-px: ;
   :host {
     position: relative;
     display: inline-flex;
@@ -150,7 +186,14 @@
     border-radius: var(--radius-sm);
   }
   .day:disabled { color: var(--muted-foreground); opacity: 0.4; cursor: not-allowed; }
-  .day.selected { box-shadow: none; }
+  .day.empty { visibility: hidden; }
+  .day:hover:not(:disabled):not(.empty) { background: var(--hover-bg); }
+  .day.selected {
+    background: var(--tone);
+    color: var(--tone-contrast);
+    font-weight: var(--font-weight-semibold);
+    box-shadow: none;
+  }
   .day.focused:not(.selected) {
     outline: var(--ring-width) solid var(--tone-ring);
     outline-offset: calc(-1 * var(--ring-width));
@@ -193,7 +236,7 @@
 {#if open() && !disabled()}
   <div class="panel" part="panel" role="dialog" aria-label="Choose date"
        bind:this={panelEl}
-       sx="position:absolute z:popover w:panel-max-w-md p:2 bg:popover fg:popover-foreground border:border radius:md shadow:md">
+       sx="position:absolute z:popover w:panel-max-w-sm p:2 bg:popover fg:popover-foreground border:border radius:md shadow:md">
     <row class="nav" part="nav" align="center" justify="between">
       <button type="button" data-act="prev" aria-label="Previous month" part="nav-btn"
         sx="w:icon-size-2xl h:icon-size-2xl radius:sm fg:muted-foreground cursor:pointer hover:bg:muted hover:fg:foreground">‹</button>
@@ -205,7 +248,7 @@
     <grid class="grid" part="grid" role="grid" cols="7" gap="1">
       {#for d of dayHeaders() key={d.key}}
         <span class="dow" role="columnheader" part="dow"
-          sx="text:xs fg:muted-foreground py:1 weight:medium">{d.label}</span>
+          sx="text:sm fg:muted-foreground py:1 weight:medium">{d.label}</span>
       {/for}
       {#for cell of monthCells() key={cell.key}}
         <button
