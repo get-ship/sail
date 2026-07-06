@@ -14,6 +14,7 @@ pub mod css_token;
 pub mod lint_overrides;
 pub mod policy;
 pub mod expr_subset;
+pub mod reserved_names;
 pub mod tscheck;
 pub mod handler_complexity;
 pub(crate) mod js_scan;
@@ -53,6 +54,9 @@ pub fn run(
         expr_subset::check(e)
     })?;
     check_mutations(program)?;
+    // Bare names are the language's namespace — reject unknown bare tags
+    // (typos / not-yet-language elements) so L1 growth is safe.
+    reserved_names::check(program)?;
     handler_complexity::check(program, source_path)?;
     controller_purity::check(source_path, overrides)?;
     css_token::check(source, source_path, overrides)?;

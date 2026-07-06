@@ -1,0 +1,125 @@
+//! RESERVED NAMES — the language owns the bare-name namespace.
+//!
+//! Custom elements are hyphenated (`my-card`); the language's own elements
+//! are BARE (`card`, `dialog`, `button`). By check time, every language
+//! construct has lowered away — stdlib elements are spliced to their HTML
+//! structure, layout keywords (`<row>`/`<column>`) are `<div>`s — so any
+//! remaining BARE tag must be a real HTML/SVG element. A bare tag that is
+//! NEITHER valid HTML/SVG NOR a hyphenated component is an error: the
+//! author either typo'd (`<buton>`) or reached for a language element that
+//! does not exist yet (`<card>` before card is L1). Both should be told,
+//! not silently rendered as an unknown element.
+//!
+//! This is what makes L1 growth SAFE: when we promote a component to a bare
+//! language name, that name is already reserved — a user could never have
+//! shadowed it (they can't register a bare custom element), and using it
+//! before it lands gives a clear "not a known element" error.
+
+use crate::diagnostics::CompileError;
+use crate::ir::*;
+
+pub fn check(program: &Program) -> Result<(), CompileError> {
+    walk(&program.template)
+}
+
+fn walk(instrs: &[Instr]) -> Result<(), CompileError> {
+    for instr in instrs {
+        if let Instr::Element(el) = instr {
+            check_tag(el)?;
+            walk(&el.children)?;
+        }
+        match instr {
+            Instr::If(i) => {
+                for b in &i.branches {
+                    walk(&b.body)?;
+                }
+                if let Some(e) = &i.else_body {
+                    walk(e)?;
+                }
+            }
+            Instr::For(f) => {
+                walk(&f.body)?;
+                if let Some(e) = &f.else_body {
+                    walk(e)?;
+                }
+            }
+            Instr::Match(m) => {
+                for c in &m.cases {
+                    walk(&c.body)?;
+                }
+                if let Some(d) = &m.default {
+                    walk(d)?;
+                }
+            }
+            Instr::WhileLoading(wl) => walk(&wl.body)?,
+            Instr::WhileError(we) => walk(&we.body)?,
+            Instr::Let(l) => walk(&l.body)?,
+            _ => {}
+        }
+    }
+    Ok(())
+}
+
+fn check_tag(el: &ElementInstr) -> Result<(), CompileError> {
+    let tag = el.tag.as_str();
+    // Hyphenated = a custom element (component). The language does not police
+    // the hyphenated namespace — that belongs to the author.
+    if tag.contains('-') {
+        return Ok(());
+    }
+    // `<slot>` variants and the framework's own bare tags are HTML.
+    if is_known_element(tag) {
+        return Ok(());
+    }
+    Err(CompileError::new(format!(
+        "unknown element `<{tag}>` — bare names are reserved for the language. \
+         Use a hyphenated custom element (`<{tag}-x>`) for your own component, \
+         or check the spelling; `<{tag}>` is not a known HTML element or a \
+         language element."
+    ))
+    .with_span(el.span))
+}
+
+/// Case-insensitive membership. The parser normalizes tag case (`linearGradient`
+/// arrives as `lineargradient`), so both tables are lowercase and we match the
+/// lowered tag against both. (Correct-case SVG OUTPUT is the emitter's concern,
+/// not this reserved-namespace gate.)
+fn is_known_element(tag: &str) -> bool {
+    let lower = tag.to_ascii_lowercase();
+    HTML_ELEMENTS.contains(&lower.as_str()) || SVG_ELEMENTS.contains(&lower.as_str())
+}
+
+/// The HTML element names (lowercase). Comprehensive per the HTML Living
+/// Standard, plus `slot`/`template` for web-component authoring.
+const HTML_ELEMENTS: &[&str] = &[
+    "a", "abbr", "address", "area", "article", "aside", "audio", "b", "base",
+    "bdi", "bdo", "blockquote", "body", "br", "button", "canvas", "caption",
+    "cite", "code", "col", "colgroup", "data", "datalist", "dd", "del",
+    "details", "dfn", "dialog", "div", "dl", "dt", "em", "embed", "fieldset",
+    "figcaption", "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5",
+    "h6", "head", "header", "hgroup", "hr", "html", "i", "iframe", "img",
+    "input", "ins", "kbd", "label", "legend", "li", "link", "main", "map",
+    "mark", "menu", "meta", "meter", "nav", "noscript", "object", "ol",
+    "optgroup", "option", "output", "p", "param", "picture", "pre", "progress",
+    "q", "rp", "rt", "ruby", "s", "samp", "script", "search", "section",
+    "select", "slot", "small", "source", "span", "strong", "style", "sub",
+    "summary", "sup", "table", "tbody", "td", "template", "textarea", "tfoot",
+    "th", "thead", "time", "title", "tr", "track", "u", "ul", "var", "video",
+    "wbr",
+];
+
+/// The SVG element names (exact case — SVG is case-sensitive). `a`/`title`/
+/// `script`/`style`/`switch` overlap with HTML and are covered above.
+const SVG_ELEMENTS: &[&str] = &[
+    "svg", "path", "circle", "ellipse", "rect", "line", "polyline", "polygon",
+    "g", "defs", "use", "symbol", "marker", "mask", "clippath", "pattern",
+    "image", "text", "tspan", "textpath", "lineargradient", "radialgradient",
+    "stop", "filter", "foreignobject", "desc", "metadata", "view", "mpath",
+    "set", "animate", "animatemotion", "animatetransform", "fegaussianblur",
+    "feoffset", "feblend", "fecolormatrix", "fecomponenttransfer",
+    "fecomposite", "feconvolvematrix", "fediffuselighting",
+    "fedisplacementmap", "fedistantlight", "fedropshadow", "feflood",
+    "fefunca", "fefuncb", "fefuncg", "fefuncr", "feimage", "femerge",
+    "femergenode", "femorphology", "fepointlight", "fespecularlighting",
+    "fespotlight", "fetile", "feturbulence",
+];
