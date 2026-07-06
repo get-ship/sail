@@ -1,51 +1,101 @@
 <!--
   <sui-json-view> — SUI port of <ship-json-view>.
   Collapsible JSON tree with toggle-per-level behavior.
-  Uses {@ html} to render the controller-generated tree markup.
+  The DOM is controller-generated via {@ html} — the .sui file owns
+  only the host and the projection root, plus the style block that
+  styles the controller-emitted children (descendant selectors that
+  no sx/variants construct can express).
 
   Prop parity vs <ship-json-view>
-  ─────────────────────────────────────────────────────────────────────────────
+  ─────────────────────────────────────────────────────────────────────
   Lit                          SUI                      Notes
-  ─────────────────────────────────────────────────────────────────────────────
+  ─────────────────────────────────────────────────────────────────────
   data (String, '')            data (string, reflect)   ✓ JSON string to render
   expanded (Boolean, false)    expanded (bool, reflect) ✓ force-expand all
   depth (Number, 1)            depth (number, 1,        ✓ initial expand depth
                                 reflect)
-  ─────────────────────────────────────────────────────────────────────────────
+  ─────────────────────────────────────────────────────────────────────
   (no events)                  (no events)              ✓
-  ─────────────────────────────────────────────────────────────────────────────
   (no slots)                   (no slots)               ✓
-  ─────────────────────────────────────────────────────────────────────────────
   parts: root, error           root, error              ✓
-  ─────────────────────────────────────────────────────────────────────────────
   ARIA: host role=tree +       controller sets on       ✓
     aria-label="JSON tree"       host if absent
-  ─────────────────────────────────────────────────────────────────────────────
+  ─────────────────────────────────────────────────────────────────────
+
+  Anatomy (the controller renders into the .json-root projection
+  target — every public hook has part=; the .s/.n/.b/.null/.punc/
+  .key/.meta classes are private styling hooks for the syntax-
+  color spans the controller emits):
+
+    <sui-json-view>            shadow root, role=tree, aria-label=JSON tree
+      └─ .json-root            the projection target (bind:this)
+          └─ <div part=root>   wraps the rendered JSON tree
+              ├─ <details>     one per object/array, with a <summary>
+              │   ├─ <summary>
+              │   │   ├─ .caret         (the ▶ marker; rotates when open)
+              │   │   ├─ <span class="key">"name"</span>:   (for object keys)
+              │   │   ├─ { or [
+              │   │   └─ .meta          (the "N items/keys" pill)
+              │   └─ .branch   children of this branch
+              │       └─ <div class=node>…  (one per child value)
+              ├─ <span class="s">"…"</span>     string literals
+              ├─ <span class="n">123</span>     number literals
+              ├─ <span class="b">true/false</span>   boolean literals
+              ├─ <span class="null">null</span>  null literals
+              └─ <span class="error" part="error" role="alert">  invalid JSON
+                  Invalid JSON: …
+
+  NEW SURFACE (re-port from feat/next, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────
+  - The component has NO tone/size prop and never did — no per-component
+    <theme prop="tone"> block was ever here. Style block already used
+    tokens throughout (the spike's prior variants block stays in
+    variants, which is where the hidden attr belongs).
+  - The .caret is a UNICODE glyph (▶) inside a <span> emitted by the
+    controller — it is NOT a framework <icon> control and never was. A
+    `<sui-icon name=chevron-right size=xs>` would be a different shape
+    AND wouldn't render with the same color/text-transform as a
+    text-resident marker; substituting it would be a regression on the
+    JSON-view look. Kept verbatim.
+  - sx is closed-vocabulary. EVERY rule here targets a descendant of
+    the controller-emitted HTML — .node, .branch, details > summary,
+    .leaf, .caret, .punc, .key, .s, .n, .b, .null, .meta, .error. The
+    `details > summary` selector is a structural pseudo; `.leaf` is
+    a class on controller-emitted span/div leaves; the syntax-color
+    classes (.s/.n/.b/.null/.punc) are tiny inline-target spans. None
+    of these have an sx construct — they all stay in <style>. The
+    multi-property transition on .caret, the ::-webkit-details-marker
+    reset, and details[open] > summary .caret { transform: rotate } are
+    also non-sx (transition shorthand, vendor pseudo, attribute
+    descendant).
+  - The :host line-height was `1.65` in feat/next (raw number). The
+    prior worktree snap was --leading-normal-plus (the prior existing
+    token); kept that — `1.65` is a non-token value the css-token lint
+    would not block (it's not a font-size/radius/z-index), but the
+    same numeric value is a named token in tokens.css already.
+  - The .caret was 11px in feat/next (raw, no token). Snapped to
+    --icon-size-3xs (8px) — the closest existing scale step. Visual
+    change: a smaller disclosure marker. Not a LANG-GAP (a token exists
+    and the snap is within rounding tolerance for a 2-3px icon); the
+    pre-existing 11px value was off-scale and the snap is the same
+    quantization tokens.css already documents for the rest of the
+    primitive library.
+
+  No new LANG-GAP.
 -->
 
 <prop name="data" type="string" default="" reflect />
 <prop name="expanded" type="bool" default="false" reflect />
 <prop name="depth" type="number" default="1" reflect />
 
-<variants>
-  [hidden]: display:none
-</variants>
+<host sx="display:block fg:foreground" />
+<variants>[hidden]: display:none</variants>
 
-<!-- Residual: everything — the JSON tree markup is controller-generated
-     via {@ html}, so every selector is a descendant pseudo (.node,
-     .branch, details > summary, .leaf, .caret, .punc, .key, .s, .n,
-     .b, .null, .meta, .error). Variants only match :host's own attrs.
-     The summary/caret/leaf visuals, the syntax-color classes (.s/.n/.b/
-     .null), the .meta chip, the multi-property transition (caret
-     transform), and the ::-webkit-details-marker reset are all
-     controller-output-target styling with no sx/variants construct. -->
 <style>
   :host {
-    display: block;
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     line-height: var(--leading-normal-plus);
-    color: var(--foreground);
   }
   .node { display: block; border-radius: var(--radius-sm); }
   .branch {
