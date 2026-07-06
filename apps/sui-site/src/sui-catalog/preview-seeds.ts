@@ -112,7 +112,6 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   'sui-avatar':          { props: { name: 'Ada Lovelace', size: 'lg' } },
   // catalog (brand chrome, not a public component) and is composed
   'sui-chip':            { props: { removable: 'true', tone: 'primary' }, innerHTML: 'TypeScript' },
-  'sui-status-dot':      { props: { tone: 'success', label: 'Operational', pulse: 'true' } },
 
   // ── Feedback & status ───────────────────────────────────────────────
   // sui-alert ships filled-success: the canonical "all systems go" cell.

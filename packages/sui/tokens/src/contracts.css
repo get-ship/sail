@@ -52,6 +52,10 @@
 :where(hr[variant='dashed']) { background: transparent; border-top: 1px dashed var(--tone-bg, var(--border-subtle)); height: 0; }
 :where(hr[orientation='vertical']) { display: inline-block; align-self: stretch; vertical-align: middle; width: 1px; height: auto; min-height: 1em; margin: 0 var(--space-2); background: var(--border); }
 :where(hr[orientation='vertical'][variant='dashed']) { background: transparent; border-left: 1px dashed var(--border); width: 0; }
+:where(span[dot]) { display: inline-block; vertical-align: middle; width: var(--icon-size-3xs); height: var(--icon-size-3xs); border-radius: var(--radius-full); background: var(--tone-fg); box-shadow: 0 0 0 1.5px var(--tone-border), 0 0 0 4.5px var(--tone-ring); }
+:where(span[dot][size='sm']) { width: var(--space-1_5); height: var(--space-1_5); box-shadow: 0 0 0 1px var(--tone-border), 0 0 0 3.5px var(--tone-ring); }
+:where(span[dot][pulse]) { animation: sui-status-dot-pulse 2.5s var(--ease-out) infinite; }
+@keyframes sui-status-dot-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.82; transform: scale(0.92); } }
 [data-component] { display: block; color: var(--foreground); }
 [data-component][hidden] { display: none !important; }
 [data-component] slot { display: contents; }

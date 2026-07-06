@@ -248,6 +248,16 @@ const HR_SKIN_CSS =
   ":where(hr[orientation='vertical']) { display: inline-block; align-self: stretch; vertical-align: middle; width: 1px; height: auto; min-height: 1em; margin: 0 var(--space-2); background: var(--border); }\n" +
   ":where(hr[orientation='vertical'][variant='dashed']) { background: transparent; border-left: 1px dashed var(--border); width: 0; }\n"
 
+// L1 <span dot> — the status-dot surface. `dot` scopes the skin so a plain
+// <span size="..."> elsewhere isn't affected (its size scale means something
+// different than the control size channel above). tone arrives for free via
+// the generic `[tone=...]` channel (--tone-fg/--tone-border/--tone-ring).
+const STATUS_DOT_SKIN_CSS =
+  ":where(span[dot]) { display: inline-block; vertical-align: middle; width: var(--icon-size-3xs); height: var(--icon-size-3xs); border-radius: var(--radius-full); background: var(--tone-fg); box-shadow: 0 0 0 1.5px var(--tone-border), 0 0 0 4.5px var(--tone-ring); }\n" +
+  ":where(span[dot][size='sm']) { width: var(--space-1_5); height: var(--space-1_5); box-shadow: 0 0 0 1px var(--tone-border), 0 0 0 3.5px var(--tone-ring); }\n" +
+  ":where(span[dot][pulse]) { animation: sui-status-dot-pulse 2.5s var(--ease-out) infinite; }\n" +
+  '@keyframes sui-status-dot-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.82; transform: scale(0.92); } }\n'
+
 // The CONTROL half of the contracts — element-keyed channels + control
 // baseline + button/input/toggle skins, WITHOUT the light host rules
 // (display:block, slot, [hidden]) which are the light-DOM component's job.
@@ -263,7 +273,8 @@ export const CONTROL_SKINS_CSS =
   BUTTON_SKIN_CSS +
   INPUT_SKIN_CSS +
   TOGGLE_CONTROLS_CSS +
-  HR_SKIN_CSS
+  HR_SKIN_CSS +
+  STATUS_DOT_SKIN_CSS
 
 export const LIGHT_CONTRACTS_CSS =
   hostAttrs(TONES_CSS) +
@@ -273,6 +284,7 @@ export const LIGHT_CONTRACTS_CSS =
   INPUT_SKIN_CSS +
   TOGGLE_CONTROLS_CSS +
   HR_SKIN_CSS +
+  STATUS_DOT_SKIN_CSS +
   // Host defaults for light components (the :host base rules, element-keyed).
   '[data-component] { display: block; color: var(--foreground); }\n' +
   '[data-component][hidden] { display: none !important; }\n' +
