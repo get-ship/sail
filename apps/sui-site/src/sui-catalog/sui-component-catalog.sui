@@ -55,12 +55,16 @@
   }
   .title {
     font-family: var(--font-display);
-    font-size: clamp(2.2rem, 4vw, 2.85rem);
+    font-size: clamp(2.6rem, 5vw, 3.6rem);
     font-weight: 800;
     letter-spacing: var(--tracking-tight);
-    line-height: 1.05;
-    color: var(--foreground);
+    line-height: 1.0;
     margin: 0 0 var(--space-4);
+    /* POP: gradient ink, matching the detail hero. */
+    background: linear-gradient(118deg, var(--foreground) 32%, color-mix(in oklch, var(--primary) 68%, var(--foreground)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
   .lead {
     color: var(--muted-foreground);
@@ -159,12 +163,23 @@
     contain: paint;
     pointer-events: none;
     padding: var(--space-5);
-    background: color-mix(in oklch, var(--primary) 5%, transparent);
     border-bottom: 1px solid var(--border-subtle);
     display: flex;
     align-items: center;
     justify-content: center;
+    /* Designed backdrop — fine dot-grid over a soft tint, matching detail. */
+    background:
+      radial-gradient(circle at 1px 1px, color-mix(in oklch, var(--foreground) 6%, transparent) 1px, transparent 0) 0 0 / 20px 20px,
+      linear-gradient(155deg, color-mix(in oklch, var(--primary) 7%, var(--surface-1)) 0%, var(--surface-1) 62%);
   }
+  .stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(60% 60% at 50% 42%, color-mix(in oklch, var(--primary) 12%, transparent), transparent 74%);
+    pointer-events: none;
+  }
+  .stage > * { position: relative; z-index: 1; }
   /* Scale the big specimens down a touch so more reads inside the 2×2. */
   .cell.sz-lg .stage > * { transform: scale(0.82); transform-origin: center; }
 
