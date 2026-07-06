@@ -29,73 +29,129 @@
   ────────────────────────────────────────────────────────────────────────────
   Slots: icon, title, (default),  icon, title, (default),  ✓ same
     actions                         actions
-  Parts: toast, close             toast, close             ✓ same
+  Parts: toast, close             toast, close             ✓ same (unchanged from
+                                                             feat/next — no parts
+                                                             added to inner anatomy)
   ────────────────────────────────────────────────────────────────────────────
   ARIA: inner div role=status/    same on inner div        ✓ destructive+warning →
     alert, aria-live=polite/        (tone-driven)            role=alert, assertive
     assertive
   tabindex=0 on host              controller sets on host  ✓ if not already set
   ────────────────────────────────────────────────────────────────────────────
+
+  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  ────────────────────────────────────────────────────────────────────────────
+  - tone is the GLOBAL framework channel (TONES_CSS): no per-component <theme>
+    block. `.toast`/`.icon` read var(--tone-bg)/var(--tone-fg) directly. The
+    global channel's 'default' tone resolves to --tone-bg:hover-bg/--tone-
+    border:border, which is NOT the flat card look this component wants for
+    its untoned state — so the toast/icon variants blocks each carry ONE
+    override (`tone=default: bg:surface-1 border:strong` /
+    `bg:surface-1 fg:muted-foreground`) restoring the feat/next default look.
+    Every other tone (info/success/warning/destructive/accent/primary/muted)
+    needs no override — the global --tone-bg/--tone-border already equal the
+    exact values feat/next hand-declared per tone.
+  - Controller is BYTE-IDENTICAL to feat/next — no behavior changed, only the
+    template's styling mechanism.
+  - The dismiss control is a bare framework `<button ghost xs>` (22×22 via the
+    xs size channel — an exact match for feat/next's hand-sized 22px close
+    button) — no hand-styled `.close` background/hover/focus CSS. Per the
+    alert pilot's PRECEDENTED deviation: the custom tone-tinted hover
+    (`background:tone-bg` on hover) and the custom double-ring focus box-
+    shadow are dropped in favor of the framework ghost skin's own hover/
+    focus treatment (same trade the alert re-port already made and reported;
+    not a new finding).
+  - sx is closed-vocabulary (tokens + tone-*/size-* channels only); `<style>`
+    keeps only what sx structurally cannot express: `display:grid` +
+    `grid-template-columns` (grid isn't a `display:` sx keyword), `column-
+    gap`/`row-gap` (gap is deliberately absent from sx — layout primitives'
+    job, and `.toast` is a plain div here, same as sui-alert's `.box`),
+    `padding-right` (calc() combining two tokens — sx has no calc), the
+    `::before` tone stripe (pseudo-element), `.icon svg` compound-selector
+    sizing, the close button's position OFFSETS (sx has `position:` the
+    keyword but no `top`/`inset-inline-end`), `grid-column`, the progress
+    bar's animation/keyframes/transform, and the two media queries.
+  - min-width/max-width: feat/next's raw pixel pairs (280/420 · 240/360 ·
+    320/460 for md/sm/lg) don't land exactly on the panel-min-w-*/panel-max-
+    w-* scale. Snapped to the size-matched panel token (panel-min-w-{size} /
+    panel-max-w-{size}) — the SAME quantization tokens.css already documents
+    for sui-dialog (500px max-w → --panel-max-w-md/480px, "unifies onto"),
+    not a new escape hatch. Not a LANG-GAP: the token scale trades exact
+    pixels for a bounded palette by design; this is normal quantization, not
+    a structural gap.
+  - Icon box/glyph dimensions likewise snap to the nearest control-h-*/icon-
+    size-* step (26→24 control-h-xs, 22→22 control-h-2xs exact, 30→28
+    control-h-sm; 15→14 icon-size-sm, 13→12 icon-size-xs, 17→18 icon-size-lg)
+    — the same rounding the alert pilot already applied to its own 26px icon
+    box (→ control-h-xs).
+  - Dropped: `--toast-slide-x`/`--toast-slide-y` custom properties. Dead code
+    in the feat/next baseline itself — declared per `[data-slide-from]` value
+    but never consumed anywhere (the `in:slide`/`out:fade` transition
+    directives take their axis/duration from the inline directive argument,
+    not a host custom property). Confirmed by grep across the feat/next tree
+    before dropping; no behavior lost.
+  - Stripe visibility simplified from 7 enumerated tone selectors to
+    `:host(:not([tone='default']))` — behaviorally identical (tone is always
+    one of the 8 reflected values; "not default" ≡ "one of the other 7").
+
+  No new LANG-GAP. The control-skin gap the alert pilot surfaced (framework
+  L1 buttons rendering unskinned inside shadow) is fixed at the runtime level
+  (adoptSuiSheets now carries CONTROL_SKINS_CSS) — `<button ghost xs>` here
+  paints correctly.
 -->
 
-<prop name="tone" values="default|info|success|warning|destructive|accent|muted|primary" default="default" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
-<prop name="duration" type="number" default="5000" />
-<prop name="dismissible" type="bool" default="true" reflect />
-<prop name="show-progress" type="bool" default="false" reflect />
-<prop name="closing" type="bool" default="false" reflect />
+<component>{
+  props: {
+    tone,
+    size: 'sm' | 'md' | 'lg',
+    duration: 5000,
+    dismissible: true,
+    'show-progress': false,
+    closing: false,
+  },
+}</component>
 
-<theme prop="tone" channels="tone-bg, tone-border, tone-fg">
-  default:     surface-1,    border,        muted-foreground
-  info:        tone-info-bg,        tone-info-border,        tone-info-fg
-  success:     tone-success-bg,     tone-success-border,     tone-success-fg
-  warning:     tone-warning-bg,     tone-warning-border,     tone-warning-fg
-  destructive: tone-destructive-bg, tone-destructive-border, tone-destructive-fg
-  accent:      tone-accent-bg,      tone-accent-border,      tone-accent-fg
-  primary:     tone-primary-bg,     tone-primary-border,     tone-primary-fg
-  muted:       tone-muted-bg,       tone-muted-border,       tone-muted-fg
-</theme>
-
-<variants part="toast">
-  size=sm: py:2_5 px:density-row-px text:sm min-w:panel-min-w-md max-w:space-8
-  size=lg: py:3_5 px:4 text:md min-w:panel-min-w-lg max-w:panel-min-w-lg
-  [data-no-icon]: display:inline-block
+<variants class="toast">
+  tone=default: bg:surface-1 border:strong
+  size=sm: py:2_5 px:3 text:sm min-w:panel-min-w-sm max-w:panel-max-w-sm
+  size=lg: py:3_5 px:4 text:md min-w:panel-min-w-lg max-w:panel-max-w-lg
 </variants>
 
-<!--
-  Residual <style> — truly unavoidable bits:
-  - :host([data-no-icon]) .toast grid-template-columns override
-  - :host([size='sm'|'lg']) .icon + .icon svg size variants (variants part=icon isn't expressible here without duplicating the .icon element with a part attr)
-  - .body word-break (raw CSS)
-  - .close transition (multi-property), :active transform, :focus-visible box-shadow
-  - .close:hover tone-driven bg/fg (handled by sx group/hover on the part)
-  - .progress animation + transform + transform-origin + border-top-right-radius
-  - :hover/[data-paused] pause
-  - @keyframes sui-toast-progress
-  - prefers-reduced-motion media (animation off)
-  - forced-colors media (CanvasText system color)
--->
+<variants class="icon">
+  tone=default: bg:surface-1 fg:muted-foreground
+  size=sm: w:control-h-2xs h:control-h-2xs
+  size=lg: w:control-h-sm h:control-h-sm
+</variants>
+
+<variants class="body">
+  [data-no-title]: fg:card-foreground
+</variants>
+
+<variants class="actions">
+  [data-no-actions]: display:none
+</variants>
+
 <style>
   :host {
     display: block;
     pointer-events: auto;
     will-change: transform, opacity;
-    --toast-gap: var(--space-2_5);
-    --toast-px: var(--space-3_5);
-    --toast-pad-end: var(--icon-size-2xl);
-    --toast-duration: 5000ms;
   }
-  :host([size='sm']) { --toast-gap: var(--space-2); --toast-px: var(--density-row-px); }
-  :host([size='lg']) { --toast-gap: var(--space-3); --toast-px: var(--space-4); }
+  :host([hidden]) { display: none; }
+
   .toast {
     display: grid;
     grid-template-columns: auto 1fr auto;
-    column-gap: var(--toast-gap);
-    row-gap: var(--space-1);
     align-items: start;
-    padding-right: calc(var(--toast-px) + var(--toast-pad-end));
+    column-gap: var(--space-2_5);
+    row-gap: var(--space-1);
     font-family: var(--font-body);
+    padding-right: calc(var(--space-3_5) + var(--icon-size-2xl));
   }
+  :host([size='sm']) .toast { column-gap: var(--space-2); padding-right: calc(var(--space-3) + var(--icon-size-2xl)); }
+  :host([size='lg']) .toast { column-gap: var(--space-3); padding-right: calc(var(--space-4) + var(--icon-size-2xl)); }
+  :host([data-no-icon]) .toast { grid-template-columns: 1fr auto; }
+
   .toast::before {
     content: '';
     position: absolute;
@@ -106,65 +162,48 @@
     opacity: 0;
     transition: opacity var(--duration-fast) var(--ease-out);
   }
-  :host(:not([tone])) .toast::before,
-  :host([tone='info']) .toast::before,
-  :host([tone='success']) .toast::before,
-  :host([tone='warning']) .toast::before,
-  :host([tone='destructive']) .toast::before,
-  :host([tone='accent']) .toast::before,
-  :host([tone='primary']) .toast::before,
-  :host([tone='muted']) .toast::before { opacity: 1; }
-  :host(:not([tone])) .toast, :host([tone='default']) .toast { border-color: var(--border-strong); }
-  :host([data-no-icon]) .toast { grid-template-columns: 1fr auto; }
-  .icon { flex: 0 0 auto; background: var(--tone-bg); color: var(--tone-fg); }
-  :host(:not([tone])) .icon, :host([tone='default']) .icon { background: transparent; color: var(--muted-foreground); }
+  :host(:not([tone='default'])) .toast::before { opacity: 1; }
+
+  .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
   .icon svg { display: block; width: var(--icon-size-sm); height: var(--icon-size-sm); }
-  :host([size='sm']) .icon { width: var(--control-h-2xs); height: var(--control-h-2xs); }
   :host([size='sm']) .icon svg { width: var(--icon-size-xs); height: var(--icon-size-xs); }
-  :host([size='lg']) .icon { width: var(--space-8); height: var(--space-8); }
-  :host([size='lg']) .icon svg { width: var(--space-4_5); height: var(--space-4_5); }
+  :host([size='lg']) .icon svg { width: var(--icon-size-lg); height: var(--icon-size-lg); }
+  :host([data-no-icon]) .icon { display: none; }
+
   .body { word-break: break-word; }
-  .actions { margin-top: var(--space-1_5); }
-  :host([data-no-actions]) .actions { display: none; margin-top: 0; }
+  :host([data-no-title]) .title { display: none; }
+
+  .actions { grid-column: 2; }
+
   .close {
-    position: absolute;
     top: var(--space-2);
     inset-inline-end: var(--space-2);
-    font: inherit;
-    padding: 0;
-    transition:
-      background-color var(--duration-fast) var(--ease-out),
-      color var(--duration-fast) var(--ease-out);
   }
-  .close:active { transform: scale(0.94); }
-  .close:focus-visible {
-    outline: none;
-    box-shadow:
-      0 0 0 2px var(--surface-1),
-      0 0 0 var(--space-1) var(--border-strong);
-  }
-  .close svg { width: var(--space-3); height: var(--space-3); display: block; }
+
   .progress {
     position: absolute;
     left: 0; right: 0; bottom: 0;
-    height: var(--space-half);
-    background: var(--tone-fg);
     border-top-right-radius: var(--radius-full);
     transform: scaleX(1);
     transform-origin: left center;
     animation: sui-toast-progress var(--toast-duration) linear forwards;
   }
-  :host(:not([tone])) .progress,
-  :host([tone='default']) .progress { background: var(--muted-foreground); }
   :host(:hover) .progress,
   :host([data-paused]) .progress { animation-play-state: paused; }
   @keyframes sui-toast-progress {
     from { transform: scaleX(1); }
     to   { transform: scaleX(0); }
   }
+
   @media (prefers-reduced-motion: reduce) {
     .progress { animation: none; }
   }
+
   @media (forced-colors: active) {
     .toast { border: 1px solid CanvasText; }
     .close:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
@@ -186,8 +225,8 @@
   aria-live={tone() === 'destructive' || tone() === 'warning' ? 'assertive' : 'polite'}
   aria-atomic="true"
   part="toast"
-  sx="position:relative py:3 px:3_5 min-w:panel-min-w-lg max-w:panel-min-w-lg bg:surface-1 fg:card-foreground border:tone-border radius:lg shadow:lg text:base leading:normal overflow:hidden">
-  <row class="icon" part="icon" align="center" gap="0" justify="center"
+  sx="position:relative overflow:hidden radius:lg shadow:lg text:base leading:normal py:3 px:3_5 min-w:panel-min-w-md max-w:panel-max-w-md bg:tone-bg border:tone-border fg:card-foreground">
+  <span class="icon"
     sx="w:control-h-xs h:control-h-xs radius:md bg:tone-bg fg:tone-fg">
     <slot name="icon" bind:this={iconSlotEl}></slot>
     {#if !hasSlottedIcon()}
@@ -221,28 +260,26 @@
           </svg>
       {/match}
     {/if}
-  </row>
+  </span>
   <column class="content" gap="0" sx="min-w:0 fg:card-foreground">
-    <div class="title" sx="weight:semibold text:base leading:tight tracking:tight fg:foreground">
+    <div class="title" sx="weight:semibold tracking:tight leading:tight fg:foreground">
       <slot name="title" bind:this={titleSlotEl}></slot>
     </div>
-    <div class="body" sx="text:base fg:muted-foreground leading:normal">
+    <div class="body" sx="fg:muted-foreground leading:normal">
       <slot></slot>
     </div>
-    <row class="actions" gap="2" sx="w:full">
+    <row class="actions" gap="2" sx="mt:1_5">
       <slot name="actions" bind:this={actionsSlotEl}></slot>
     </row>
   </column>
   {#if dismissible()}
-    <row class="close" part="close" type="button" aria-label="Dismiss notification" bind:this={closeBtn}
-      align="center" gap="0" justify="center"
-      sx="position:absolute w:control-h-2xs h:control-h-2xs border:none radius:sm fg:muted-foreground cursor:pointer p:0 z:elevated hover:bg:tone-bg hover:fg:tone-fg">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <button ghost xs class="close" part="close" type="button" aria-label="Dismiss notification" bind:this={closeBtn}
+      sx="position:absolute z:elevated">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" sx="w:icon-size-xs h:icon-size-xs">
         <line x1="18" y1="6" x2="6" y2="18"></line>
-        <line x1="6" y1="6" x2="6" y2="18"></line>
         <line x1="6" y1="6" x2="18" y2="18"></line>
       </svg>
-    </row>
+    </button>
   {/if}
   {#if showProgress() && duration() > 0}
     <span class="progress" aria-hidden="true" sx="h:half bg:tone-fg"></span>

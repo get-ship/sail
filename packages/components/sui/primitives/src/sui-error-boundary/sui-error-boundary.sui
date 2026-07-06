@@ -21,20 +21,45 @@
   Event: `sui-error-boundary:caught` fires on the host when an error
   is caught; detail carries `{ error, source }` where `source` is
   `'effect' | 'mount' | 'render' | 'unknown'`.
+
+  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
+  ─────────────────────────────────────────────────────────────────────────────
+  - No tone/theme block: this component has no tone prop, and never had one
+    in feat/next — the destructive fallback tokens (tone-destructive-bg/
+    -border, destructive) are read directly, unconditionally.
+  - Controller is BYTE-IDENTICAL to feat/next.
+  - sui-stack → column, a bare flex row → the row layout keyword (gap/
+    align are its props now, not sx — sx deliberately doesn't own layout).
+  - sx is closed-vocabulary; the style block keeps only what it structurally
+    cannot express: font-family (no sx prop for it), `flex: 0 0 auto` on the
+    icon (no `flex` shorthand prop in sx), `appearance: none`, `font:
+    inherit`, and the multi-property background-color transition on the
+    retry button.
+  - Fixed two bugs found in the worktree's prior (pre-gate) spike pass while
+    re-deriving values from feat/next: the retry button's padding was
+    `p:1 pr:3`, which only widens the RIGHT side (left stayed at space-1/4px
+    instead of feat/next's symmetric space-3/12px horizontal) — corrected to
+    `py:1 px:3`. Its border was `border:subtle` (var(--border-subtle), a
+    lighter color-mix), which doesn't match feat/next's plain `var(--border)`
+    — corrected to `border:border`.
+  - Icon (18×18), message line-height (1.5), and retry font-weight (600) all
+    land EXACTLY on existing tokens (icon-size-lg, leading-normal, font-
+    weight-semibold) — no quantization needed anywhere in this component.
+  - No new LANG-GAP.
 -->
 
 <prop name="fallback-text" type="string" default="" />
 
 <style>
-  /* Residual: `font-family: var(--font-body)` isn't reachable through sx
-     (no `font-family` prop in the vocabulary) — the host + fallback both
-     relied on it. The `<row>` + `<column>` primitives carry the flex
-     layout; `appearance: none` on `<button>`, multi-property transitions,
-     and `flex: 0 0 auto` for the icon (no `flex` prop in sx) stay here. */
-  :host { display: block; font-family: var(--font-body); }
+  :host {
+    display: block;
+    font-family: var(--font-body);
+  }
   :host([hidden]) { display: none; }
+
   .fallback-icon { flex: 0 0 auto; }
   .fallback-body { min-width: 0; }
+
   .retry {
     appearance: none;
     font: inherit;
@@ -49,7 +74,7 @@
     <slot name="fallback"></slot>
   {:else}
     <row class="fallback" part="fallback" role="alert" gap="3" align="start"
-      sx="p:4 px:5 border:tone-destructive-border radius:md bg:tone-destructive-bg fg:foreground text:sm shadow:xs">
+      sx="py:4 px:5 border:tone-destructive-border radius:md bg:tone-destructive-bg fg:foreground text:sm shadow:xs">
       <svg class="fallback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
         sx="w:icon-size-lg h:icon-size-lg fg:destructive mt:1">
         <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
@@ -60,7 +85,7 @@
         <div class="message" part="message"
           sx="fg:muted-foreground leading:normal">{fallbackText() || 'Something went wrong'}</div>
         <button class="retry" part="retry" type="button" on:click={reset}
-          sx="bg:surface-1 border:subtle radius:sm p:1 pr:3 text:xs weight:semibold fg:foreground cursor:pointer shadow:xs hover:bg:muted">Retry</button>
+          sx="bg:surface-1 border:border radius:sm py:1 px:3 text:xs weight:semibold fg:foreground cursor:pointer shadow:xs hover:bg:muted">Retry</button>
       </column>
     </row>
   {/if}
