@@ -8,12 +8,16 @@
   value is a design token; the sui-css-* lints gate raw px / colour.
 */
 
-:host {
-  display: block;
+/* The route renders in LIGHT DOM inside the shell's full-bleed content slot,
+   so :host never matches — the page container must be a real class. */
+.detail,
+.detail-unknown {
   max-width: 62rem;
   margin: 0 auto;
-  padding: var(--space-6) var(--space-6) var(--space-9);
+  padding: var(--space-7) var(--space-6) var(--space-9);
 }
+/* Specimen never exceeds the stage. */
+.detail-stage > * { max-width: 100%; }
 
 /* ── Back link ─────────────────────────────────────────────────────────── */
 .detail-back {

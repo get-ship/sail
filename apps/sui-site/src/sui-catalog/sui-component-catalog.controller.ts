@@ -247,7 +247,23 @@ export default controller<Scope>({
       const stages = root.querySelectorAll<HTMLElement>('[data-preview-for]')
       stages.forEach((stage) => {
         const tag = stage.getAttribute('data-preview-for')
-        if (!tag || !customElements.get(tag)) {
+        if (!tag) return
+        const seed = PREVIEW_SEEDS[tag]
+        // Static representative surface — overlays (closed + portaled) and
+        // disclosure can't show themselves in a frozen card, so render a
+        // hand-authored snapshot of the OPEN surface (native HTML + token
+        // vars) instead of the live tag.
+        if (seed?.staticHTML) {
+          const wrap = document.createElement('div')
+          wrap.className = 'preview-static'
+          const html = seed.staticHTML
+          binds.push(bindHtml(wrap, () => html))
+          stage.appendChild(wrap)
+          stage.dataset.previewState = 'static'
+          mounted.push(wrap)
+          return
+        }
+        if (!customElements.get(tag)) {
           const note = document.createElement('span')
           note.className = 'preview-empty'
           note.textContent = 'not in bundle'
@@ -258,7 +274,6 @@ export default controller<Scope>({
         }
         try {
           const el = document.createElement(tag)
-          const seed = PREVIEW_SEEDS[tag]
           if (seed?.props) {
             for (const [k, v] of Object.entries(seed.props)) el.setAttribute(k, v)
           }
@@ -278,6 +293,24 @@ export default controller<Scope>({
           stage.dataset.previewState = 'unavailable'
           mounted.push(note)
         }
+      })
+      // FIT-TO-STAGE: measure each specimen and scale down anything larger
+      // than its stage so nothing bleeds out of the card (calendar, table,
+      // wide inputs, the dialog surfaces). Runs after layout settles.
+      requestAnimationFrame(() => {
+        root.querySelectorAll<HTMLElement>('[data-preview-for]').forEach((stage) => {
+          if (stage.dataset.previewState === 'unavailable') return
+          const el = stage.firstElementChild as HTMLElement | null
+          if (!el) return
+          const pad = 2 * (parseFloat(getComputedStyle(stage).paddingLeft) || 0)
+          const cw = stage.clientWidth - pad, ch = stage.clientHeight - pad
+          const sw = el.scrollWidth, sh = el.scrollHeight
+          if (cw > 0 && ch > 0 && (sw > cw + 2 || sh > ch + 2)) {
+            const s = Math.max(0.4, Math.min(cw / sw, ch / sh))
+            el.style.transform = `scale(${s})`
+            el.style.transformOrigin = 'center'
+          }
+        })
       })
     })
     return () => {

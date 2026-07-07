@@ -179,13 +179,29 @@ export default controller<Scope>({
       // `primaryProp` are plain scope functions and are called directly.
       const stage = state.$signals.stageEl() as HTMLElement | null
       const e = state.entry()
-      if (!stage || !e || !e.tag || !customElements.get(e.tag)) {
+      if (!stage || !e || !e.tag) {
+        if (attempts++ < 60) pollHandle = setTimeout(tryMount, 100)
+        return
+      }
+      const seed = DEMO_SEEDS[e.tag] ?? {}
+      // Static representative surface — overlays / color-picker / disclosure
+      // that can't show themselves live render their authored snapshot.
+      if (seed.staticHTML) {
+        const wrap = document.createElement('div')
+        wrap.className = 'preview-static'
+        const html = seed.staticHTML
+        disposers.push(bindHtml(wrap, () => html))
+        stage.appendChild(wrap)
+        el = wrap
+        stage.dataset.mountState = 'static'
+        return
+      }
+      if (!customElements.get(e.tag)) {
         if (attempts++ < 60) pollHandle = setTimeout(tryMount, 100)
         return
       }
       try {
         el = document.createElement(e.tag)
-        const seed = DEMO_SEEDS[e.tag] ?? {}
         if (seed.props) {
           for (const [k, v] of Object.entries(seed.props)) el.setAttribute(k, v)
         }
