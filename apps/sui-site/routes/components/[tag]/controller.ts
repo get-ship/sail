@@ -16,6 +16,7 @@
 // Framework-pure: no ship-platform coupling. The catalog CEM data is bundled at
 // build time via deck's components.gen pass.
 
+import '../../../src/register-all' // side-effect: register EVERY pack's <sui-*> — the viewer must register the REAL components it mounts
 import { controller, signal, effect, bindHtml, ref, type ViewScope } from '@ship/sui-runtime'
 import { COMPONENTS_CATALOG } from '../../../components.gen'
 import { PREVIEW_SEEDS as DEMO_SEEDS } from '../../../src/sui-catalog/preview-seeds'
@@ -122,6 +123,22 @@ function primaryEnumProp(entry: Entry): PropMeta | null {
   )
 }
 
+/** Full-bleed surfaces: width:100% with no intrinsic content width, so they
+ *  collapse in the centered stage and must stretch to fill it. */
+const FILL_TAGS = new Set(['sui-canvas', 'sui-draw', 'sui-board', 'sui-graph-canvas', 'sui-code-editor', 'sui-mermaid', 'sui-nav-top'])
+
+/** Components that open a panel BELOW their trigger — align to the top of the
+ *  stage so the dropdown has room to drop into view instead of overflowing. */
+const TOP_ALIGN_TAGS = new Set(['sui-color-picker', 'sui-select', 'sui-combobox', 'sui-autocomplete', 'sui-date-picker'])
+
+/** Block-level panel/list/disclosure containers. In real layouts these fill
+ *  their parent's width; in the centered preview stage they'd otherwise
+ *  shrink-wrap to their widest child (so the panel visibly resizes as content
+ *  changes — the accordion "changes size depending on the child" jank). Give
+ *  them a stable, comfortable measure so the panel holds its width and content
+ *  wraps within it. */
+const PANEL_TAGS = new Set(['sui-accordion', 'sui-collapsible', 'sui-alert', 'sui-error-state', 'sui-empty-state', 'sui-timeline', 'sui-field', 'sui-message', 'sui-message-list', 'sui-tool-call', 'sui-citation', 'sui-composer'])
+
 function defaultVariant(primary: PropMeta | null): string {
   if (!primary) return ''
   const values = primary.values ?? []
@@ -184,18 +201,9 @@ export default controller<Scope>({
         return
       }
       const seed = DEMO_SEEDS[e.tag] ?? {}
-      // Static representative surface — overlays / color-picker / disclosure
-      // that can't show themselves live render their authored snapshot.
-      if (seed.staticHTML) {
-        const wrap = document.createElement('div')
-        wrap.className = 'preview-static'
-        const html = seed.staticHTML
-        disposers.push(bindHtml(wrap, () => html))
-        stage.appendChild(wrap)
-        el = wrap
-        stage.dataset.mountState = 'static'
-        return
-      }
+      // The VIEWER surface always mounts the REAL component — never a static
+      // snapshot. `staticHTML` on a seed is a gallery-card poster only; here it
+      // is deliberately ignored so the detail page proves the language renders.
       if (!customElements.get(e.tag)) {
         if (attempts++ < 60) pollHandle = setTimeout(tryMount, 100)
         return
@@ -205,6 +213,12 @@ export default controller<Scope>({
         if (seed.props) {
           for (const [k, v] of Object.entries(seed.props)) el.setAttribute(k, v)
         }
+        // Full-bleed drawing/canvas surfaces are width:100% with no intrinsic
+        // content width, so the centered stage would shrink them to ~2px.
+        // Stretch those to fill; every other component stays centered.
+        if (FILL_TAGS.has(e.tag)) el.classList.add('detail-fill')
+        if (TOP_ALIGN_TAGS.has(e.tag)) el.classList.add('detail-top')
+        if (PANEL_TAGS.has(e.tag)) el.classList.add('detail-panel')
         stage.appendChild(el)
         if (seed.innerHTML) {
           const html = seed.innerHTML
@@ -219,6 +233,39 @@ export default controller<Scope>({
             const value = state.$signals.activeVariant() as string
             if (el && value) el.setAttribute(prop, value)
           }))
+        }
+        // Drive the component into its interesting state (open/expand). Runs
+        // after a frame so slotted children project first. The stage is a
+        // containing block (transform) + clips (overflow:hidden), so an opened
+        // fixed/portaled overlay is trapped inside the stage, not the page.
+        const drive = seed.drive
+        if (drive) {
+          const target = el as HTMLElement
+          const find = (sel: string): HTMLElement | null =>
+            (target.querySelector(sel) ?? target.shadowRoot?.querySelector(sel)) as HTMLElement | null
+          const pointer = (node: HTMLElement, types: string[]): void => {
+            const r = node.getBoundingClientRect()
+            const opts = { bubbles: true, composed: true, cancelable: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }
+            for (const type of types) node.dispatchEvent(new PointerEvent(type, opts as PointerEventInit))
+          }
+          // Retry across a few frames — some overlays wire their trigger
+          // listener only after connect + slot projection. Attrs/methods/hover
+          // are idempotent; `click` toggles, so it fires exactly ONCE (retrying
+          // only to *find* the trigger, never to re-click it).
+          let tries = 0
+          let clicked = false
+          const apply = (): void => {
+            if (!el) return
+            if (drive.attrs) for (const [k, v] of Object.entries(drive.attrs)) target.setAttribute(k, v)
+            if (drive.methods) for (const m of drive.methods) {
+              const fn = (target as unknown as Record<string, unknown>)[m]
+              if (typeof fn === 'function') (fn as () => void).call(target)
+            }
+            if (drive.hover) { const h = find(drive.hover); if (h) pointer(h, ['pointerover', 'pointerenter', 'mouseover', 'mouseenter']) }
+            if (drive.click && !clicked) { const c = find(drive.click); if (c) { pointer(c, ['pointerdown', 'mousedown', 'pointerup', 'mouseup']); c.click(); clicked = true } }
+            if (tries++ < 3) setTimeout(apply, 120)
+          }
+          requestAnimationFrame(apply)
         }
         stage.dataset.mountState = 'live'
       } catch {

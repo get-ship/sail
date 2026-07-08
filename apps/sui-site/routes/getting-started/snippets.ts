@@ -10,11 +10,8 @@ npm install @ship/sui-runtime @ship/sui-primitives`,
   component: `<!-- greeting.sui — a component is a <prop> + markup -->
 <prop name="who" type="string" default="world" />
 
-<style>
-  :host { display: block; }
-  p { color: var(--foreground); }
-</style>
-
+<!-- no <style> needed: text is styled from the type scale,
+     and layout/surface come from sx + the layout keywords -->
 <p>Hello, {who()}.</p>`,
 
   compile: `# lower the .sui to a standard custom-element module

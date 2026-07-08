@@ -1,23 +1,25 @@
 <prop name="shadow" type="bool" default="false" />
 
-<div class="dash">
-  <card>
-    <h3 style="margin: 0 0 8px;">request rate</h3>
-    <sui-stat tone="default" size="lg">
-      <span slot="label">errors / sec</span>
-      {rateText()}
-      <span slot="hint">over the last 60s</span>
-    </sui-stat>
+<card>
+  <column gap="3">
+    <h3>request rate</h3>
 
-    <div class="row">
+    <!-- a "stat" composed from primitives: label · big value · hint -->
+    <column gap="0">
+      <span sx="text:sm fg:muted-foreground">errors / sec</span>
+      <strong sx="text:3xl">{rateText()}</strong>
+      <span sx="text:xs fg:muted-foreground">over the last 60s</span>
+    </column>
+
+    <row gap="2" align="center">
       <span dot tone="success" size="sm" role="img" aria-label="ok"></span>
       <span>system healthy</span>
-    </div>
+    </row>
 
-    <div class="actions">
+    <row gap="2">
       <button ghost sm on:click={() => bumpRate(1)}>+1</button>
       <button ghost sm on:click={() => bumpRate(-1)}>−1</button>
       <button ghost sm on:click={() => reset()}>reset</button>
-    </div>
-  </card>
-</div>
+    </row>
+  </column>
+</card>

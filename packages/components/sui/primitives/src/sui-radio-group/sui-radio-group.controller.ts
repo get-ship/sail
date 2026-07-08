@@ -44,6 +44,13 @@ export default controller<Scope>({
       syncRadios()
     })
 
+    // Re-sync when radios are added/removed AFTER connect. The sync effect
+    // only re-runs on prop-signal changes, so radios inserted later (dynamic
+    // children, or a framework that sets attributes then projects children)
+    // would never pick up the initial `value`→`checked` state without this.
+    const mo = new MutationObserver(syncRadios)
+    mo.observe(host, { childList: true })
+
     const stopLabel = effect(() => {
       const label = state.$signals.label() as string
       if (label) host.setAttribute('aria-label', label)
@@ -103,6 +110,7 @@ export default controller<Scope>({
       stopSync()
       stopLabel()
       stopRequired()
+      mo.disconnect()
       host.removeEventListener('sui-radio-select', onSelect)
       host.removeEventListener('sui-radio-nav', onNav)
       hiddenInput.remove()

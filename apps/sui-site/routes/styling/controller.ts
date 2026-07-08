@@ -1,67 +1,61 @@
-// /styling controller. Source samples kept out of the controller body so
-// the compiler's scope scanner never sees the `style=` or `<style>` patterns
-// inside them.
+// /styling controller. The source samples live here (not inline in the
+// template) so the compiler's scope scanner never treats the sample strings
+// as real markup to bind.
 
 import { controller, type ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 
 const code = {
-  basic: [
+  // sx — the primary styling surface. Token utilities, right on the element.
+  sx: [
     '<prop name="title" type="string" default="Card" />',
-    '<prop name="tone" values="default|primary|accent" default="default" />',
     '',
-    '<style>',
-    '  :host {',
-    '    display: block;',
-    '    padding: var(--space-4);',
-    '    border-radius: var(--radius-lg);',
-    '    background: var(--surface-1);',
-    '    border: 1px solid var(--border);',
-    '  }',
-    '  :host([tone="primary"]) { border-color: var(--primary); }',
-    '  h3 { margin: 0 0 var(--space-2) 0; color: var(--foreground); }',
-    '  p { margin: 0; color: var(--muted-foreground); }',
-    '</style>',
-    '',
-    '<h3>{title()}</h3>',
-    '<p><slot></slot></p>',
+    '<column sx="p:4 gap:1 radius:lg bg:surface-1 border:border">',
+    '  <h3>{title()}</h3>',
+    '  <p sx="fg:muted-foreground"><slot></slot></p>',
+    '</column>',
   ].join('\n'),
-  scoping: [
-    '<!-- :host targets the component element itself -->',
-    ':host {',
-    '  display: block;',
-    '  background: var(--surface-1);',
-    '}',
+  // <host sx> — style the component's own element.
+  host: [
+    "<!-- <host sx> styles the component element itself. -->",
+    '<host sx="radius:lg overflow:hidden bg:surface-1 border:border" />',
     '',
-    '<!-- any descendant selector targets the shadow tree -->',
-    'header {',
-    '  padding: var(--space-3) var(--space-4);',
-    '  border-bottom: 1px solid var(--border);',
-    '}',
-    '',
-    '<!-- :host(<attr>) for state-driven variation -->',
-    ':host([variant="outline"]) {',
-    '  border: 1px solid var(--border-strong);',
-    '}',
+    '<row sx="py:3 px:4 bg:surface-2">',
+    '  <slot name="header"></slot>',
+    '</row>',
+    '<column sx="p:4 gap:2">',
+    '  <slot></slot>',
+    '</column>',
   ].join('\n'),
+  // <variants> — state-driven styling, keyed off the host's attributes.
+  variants: [
+    '<!-- A variant repaints an element when the host has an attribute. -->',
+    '<variants class="trigger">',
+    '  [open]:     bg:muted',
+    '  [disabled]: fg:muted-foreground',
+    '</variants>',
+    '',
+    '<button class="trigger" sx="w:full py:3 px:4 text:sm weight:semibold">',
+    '  <slot name="trigger"></slot>',
+    '</button>',
+  ].join('\n'),
+  // Tokens, not literals — sx is a closed, token-only vocabulary.
   tokens: [
-    '/* Read tokens from the document root. No fallbacks. */',
-    '.card {',
-    '  background: var(--surface-1);         /* semantic surface */',
-    '  color: var(--foreground);             /* brand palette */',
-    '  border: 1px solid var(--border);',
-    '  border-radius: var(--radius-md);     /* primitive scale */',
-    '  padding: var(--space-4);             /* primitive scale */',
-    '  font-family: var(--font-body);       /* type role */',
-    '}',
+    '<!-- sx is a closed vocabulary: every value is a token. -->',
+    '<!-- There is no sx="p:16px" and no sx="bg:#ffffff" —      -->',
+    '<!-- only design tokens resolve, so every theme just works. -->',
     '',
-    '/* A status surface reads the tone ramp, not the palette */',
-    '.alert-success {',
-    '  background: var(--tone-success-bg);',
-    '  border-color: var(--tone-success-border);',
-    '  color: var(--tone-success-fg);',
-    '}',
+    '<column sx="p:4 gap:2 radius:md bg:surface-1 border:border">',
+    '  <h3>{title()}</h3>',
+    '  <p sx="fg:muted-foreground"><slot></slot></p>',
+    '</column>',
+    '',
+    '<!-- Pick a token by INTENT, across the four layers:      -->',
+    '<!--   bg:surface-1         semantic surface              -->',
+    '<!--   fg:muted-foreground  brand palette role            -->',
+    '<!--   radius:md            primitive from the scale       -->',
   ].join('\n'),
+  // Status tones, not palette colors.
   tone: [
     '<!-- Tone ramps are status surfaces, not brand colors. -->',
     '<sui-alert tone="success">Saved.</sui-alert>',
@@ -69,8 +63,9 @@ const code = {
     '<sui-alert tone="destructive">Save failed.</sui-alert>',
     '<sui-alert tone="info">Tip: press <kbd>⌘ K</kbd> for the palette.</sui-alert>',
   ].join('\n'),
+  // Layout primitives — keywords, never raw divs.
   layout: [
-    '<!-- Reach for the layout primitive first. -->',
+    '<!-- Layout is keywords, not divs. -->',
     '<column gap="4">',
     '  <header>...</header>',
     '  <main>...</main>',
@@ -82,11 +77,26 @@ const code = {
     '  <button primary>Save</button>',
     '</row>',
     '',
-    '<!-- A two-column grid that collapses. -->',
+    '<!-- A responsive grid that collapses. -->',
     '<grid min="sm" gap="6">',
     '  <article>...</article>',
     '  <article>...</article>',
     '</grid>',
+  ].join('\n'),
+  // The escape hatch — raw <style> for what sx structurally can't express.
+  escape: [
+    '<!-- <style> is the escape hatch: use it only for what sx',
+    '     structurally cannot express — pseudo-elements, ::slotted,',
+    '     grid-template-columns, top/left, accent-color. -->',
+    '<style>',
+    '  .swatches {',
+    '    display: grid;',
+    '    grid-template-columns: repeat(6, 1fr);',
+    '    gap: var(--space-2);',
+    '  }',
+    "  input[type='range'] { accent-color: var(--tone-ring); }",
+    '  ::slotted(svg) { width: var(--icon-size-md); }',
+    '</style>',
   ].join('\n'),
 }
 

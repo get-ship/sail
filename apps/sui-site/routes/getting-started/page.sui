@@ -2,8 +2,8 @@
   <p class="eyebrow">Introduction</p>
   <h1>Getting started</h1>
   <p class="lead">
-    A SUI component is a <code>.sui</code> file — markup, an optional scoped
-    <code>&lt;style&gt;</code>, and optional state in a paired
+    A SUI component is a <code>.sui</code> file — markup, styling as
+    <code>sx</code> token utilities, and optional state in a paired
     <code>.controller.ts</code>. The compiler turns it into a <strong>standard
     custom element</strong> — a real web component you can use in any page, any
     framework, or none. No virtual DOM, no framework runtime wrapped around it.
@@ -15,8 +15,9 @@
 
   <h2>Write a component</h2>
   <p>
-    A <code>&lt;prop&gt;</code>, a scoped style, and markup that reads the prop.
-    No controller needed until there's state to own.
+    A <code>&lt;prop&gt;</code> and markup that reads it. Text takes the type
+    scale automatically; reach for <code>sx</code> when you need surface or
+    spacing. No controller needed until there's state to own.
   </p>
   <sui-codeblock code={code.component}></sui-codeblock>
 

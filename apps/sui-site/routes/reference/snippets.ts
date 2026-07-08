@@ -73,15 +73,16 @@ defineComponent('sui-widget', schema, factory)  // register a custom element
 //   the compiler emits this — you rarely call it by hand
 morph(targetEl, htmlOrElement)   // patch the DOM in place to match a new tree`,
 
-  declarations: `<!-- component props: name, type, default, enum values -->
-<prop name="tone" values="default|primary|accent" default="default" />
+  declarations: `<!-- component props: <prop> directive, or <component>{} object form -->
+<prop name="tone" values="default|primary|accent" default="default" reflect />
 <prop name="count" type="number" default="0" />
 
-<!-- scoped styles: :host + shadow tree, reads @ship/tokens -->
-<style>
-  :host { display: block; color: var(--foreground); }
-  :host([tone="primary"]) { border-color: var(--primary); }
-</style>
+<!-- styling: sx token utilities on elements; <host sx> for the host;
+     <variants> for state (keys off the host's attributes) -->
+<host sx="radius:md bg:surface-1 border:border" />
+<variants class="label">
+  [tone=primary]: fg:primary
+</variants>
 
 <!-- live server data (compiles to the runtime data() SSE handle) -->
 data live users = ship.users.list()`,

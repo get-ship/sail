@@ -1,32 +1,67 @@
-# SUI QA tooling
+# SUI QA harness — component render-correctness gate
 
-Deterministic, agent-native component QA. Detection is programmatic (no
-vision); agents fix what it flags.
+Deterministic, programmatic verification that every catalogued component
+actually renders in the component viewer. No vision, no eyeballing: the probe
+loads each `/components/<tag>` detail page (which mounts the **real** component
+and drives it into its interesting state — overlays open, disclosure expands),
+then asserts on the box model + composited colours. Agents fix what it flags.
 
-## Tools (CLI now; MCP wrapper later)
-- `node qa/probe.mjs <tag> [--theme=a,b]` — layout probe for ONE component:
-  structured box-model + defect flags (OUTSIDE-STAGE, OVERFLOW-X,
-  LOW-CONTRAST via WCAG). Scoped to the specimen subtree — no page/docs noise.
-- `node qa/probe.mjs --sweep [--theme=…]` — all components, CLUSTERED by
-  defect type → answers "few shared bugs vs many unique".
-- `qa/sweep.mjs` — earlier broad sweep (superseded by probe --sweep).
-- MCP: chrome-devtools-mcp added to /.mcp.json (CDP access for agents).
+## Run it
 
-## Finding so far
-Default (closed/unfocused) states are CLEAN across 80 components × 3 themes
-(geometry + contrast). So defects are NOT unique-per-component — they cluster
-in a FEW categories: (1) gallery preview strategy (overlays render closed/
-empty, disclosure dumps content), (2) INTERACTIVE states (open color-picker
-palette off-screen), (3) possible theme×state combos. The fix is bounded.
+```bash
+# from apps/sui-site, with the deck dev server on :7878
+node qa/probe.mjs <tag> [--theme=a,b]     # one component, verbose JSON
+node qa/probe.mjs --sweep [--theme=a,b]   # all components, clustered + report.json
+```
 
-## The one missing capability: STATE-DRIVING
-The probe must drive each component into its states before asserting —
-from the CEM manifest (tone/size/disabled/open as attributes) + interaction
-(click-to-open, focus). That's what catches the open-overlay / focused-input
-bugs. Next build.
+Default themes: `ship-light,glass,ship-dark`. The sweep writes
+`qa/report.json` (per-component host size + defects) and prints a cluster
+summary ("few-shared vs many-unique").
 
-## Severity model (borrowed from gstack qa taxonomy)
-critical (blocks/crashes) > high (feature unusable) > medium (works, visible
-problem) > cosmetic. Categories: Visual/UI, Functional, UX, Content, Perf,
-Console/Errors, Accessibility (contrast). Check EVERY state: empty, loading,
-error, full/overflow, open, focused, disabled.
+## Signals (all deterministic)
+
+| flag | meaning |
+|------|---------|
+| `NOT-RENDERED` | the real `<tag>` element is absent (unregistered pack / crash) |
+| `EMPTY-RENDER` | element exists but paints nothing (host + all descendants zero-area) |
+| `OUTSIDE-STAGE` | a painted box escapes the `.detail-stage` bounds (rect math — flags even when `overflow:hidden` clips it) |
+| `OVERFLOW-X` | a box scrolls horizontally with `overflow-x:visible` |
+| `LOW-CONTRAST` | visible text below ~2.5:1 against its effective background |
+| `ERR:…` | uncaught page error (compiler/runtime break) |
+
+Colours are rasterised through a 1×1 canvas → **true sRGB**, so oklch tokens
+are measured correctly (a naive regex parse garbles oklch as RGB and invents
+false low-contrast on normal body text — do not reintroduce it).
+
+`EXPECTED_EMPTY` (in probe.mjs) suppresses `EMPTY-RENDER` for components that
+render nothing at the host BY CONTRACT (sui-portal teleports, sui-toast-host is
+an empty stack, sui-render / sui-prop-knobs need a JS descriptor).
+
+## How the viewer stays honest
+
+- The `/components/[tag]` route imports `../../../src/register-all` (every pack)
+  — **register-all is the single source of truth** for what the viewer can
+  mount. A pack missing there = every one of its components shows NOT-RENDERED.
+- Seeds live in `src/sui-catalog/preview-seeds.ts`. A seed's `drive` directive
+  (`attrs` / `methods` / `click` / `hover`) opens overlays for real; `staticHTML`
+  is a **gallery-card poster only** and is ignored by the detail viewer.
+- Full-bleed surfaces (canvas/board/code/mermaid) get `.detail-fill`; downward
+  dropdowns (color-picker/select/…) get `.detail-top` — see the FILL_TAGS /
+  TOP_ALIGN_TAGS sets in the detail controller.
+
+## Blind spots (probe passes, still visually wrong)
+
+The box-model gate CANNOT catch "rendered but unstyled/structurally wrong"
+(e.g. an accordion whose items didn't register renders as run-on text but has
+paint, fits, and contrasts). Backstop those with screenshots
+(`playwright` element `.screenshot()` on `.detail-stage`) during review.
+
+## What this gate has caught (feat/next → spike/sui-sx)
+
+- Detail route registered ZERO components (missing `sui-primitives` import).
+- Site never imported 6 packs → 24 components unregistered.
+- Primitives index dropped 4 registrations (accordion-item, timeline, alert,
+  navigation-item) → e.g. accordion rendered as mashed text.
+- oklch contrast false-positives (20 components) — a probe bug, now fixed.
+- sui-board crash (seed node shape), heatmap SVG missing width/height,
+  json-view/mermaid missing seeds, canvas/table collapse in centered stage.

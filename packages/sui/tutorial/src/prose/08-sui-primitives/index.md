@@ -9,9 +9,9 @@ next: "09-agent-loop"
 chapter: "components"
 ---
 
-Ship's primitive set ships as **`@ship/sui-primitives`** — about 80 custom
-elements (`<sui-badge>`, `<sui-card>`, `<sui-input>`, `<sui-tabs>`,
-`<sui-status-dot>`, `<sui-alert>`, …) each with a stable prop / event /
+Ship's primitive set ships as **`@ship/sui-primitives`** — around sixty
+custom elements (`<card>`, `<sui-input>`, `<sui-tabs>`, `<sui-alert>`,
+`<sui-chip>`, …) each with a stable prop / event /
 slot contract. Charts live in a separate pack, **`@ship/sui-charts`**
 (`<sui-area-chart>`, `<sui-bar-chart>`, `<sui-donut>`, …). Browse every
 primitive, with live previews, in the [component library](/components).
@@ -28,11 +28,11 @@ import '@ship/sui-charts'        // optional
 ```
 
 ```sui
-<sui-card>
+<card>
   <sui-chip tone="primary" slot="header">draft</sui-chip>
   <p>{body()}</p>
   <button on:click={save} primary slot="footer">Save</button>
-</sui-card>
+</card>
 ```
 
 Three things that are good to know:
@@ -49,8 +49,8 @@ Three things that are good to know:
 
 ## Try it
 
-The dashboard composes `<sui-card>`, `<sui-stat>`, `<sui-status-dot>`,
-and a bare `<button>` into a small ops widget. Try:
+The dashboard composes `<card>`, a stat built from primitives, a status
+`<span dot>`, and bare `<button>`s into a small ops widget. Try:
 
 1. **Pulse on alarm.** When `errorRate() > 5`, set the status dot's
    `tone="destructive"` and `pulse` attribute so it animates.

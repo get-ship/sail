@@ -103,6 +103,9 @@
     display: inline-flex;
     width: 100%;
     vertical-align: middle;
+    /* The .panel is position:absolute; anchor it to the host, else it escapes
+       to the nearest positioned ancestor (page) and renders off-screen. */
+    position: relative;
   }
   :host([hidden]) { display: none; }
   :host([disabled]) .wrap { filter: saturate(0.4); }

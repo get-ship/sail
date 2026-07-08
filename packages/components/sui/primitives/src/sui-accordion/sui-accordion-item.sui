@@ -114,7 +114,10 @@
   :host([open]) .chevron { transform: rotate(180deg); }
   @media (prefers-reduced-motion: reduce) { .chevron { transition: none; } }
 
-  .content-body { padding: var(--space-3) 0; }
+  /* Content aligns horizontally with the trigger label (trigger is px:4) and
+     gets comfortable bottom breathing room. Horizontal padding was missing —
+     content sat flush-left under an indented header. */
+  .content-body { padding: var(--space-2) var(--space-4) var(--space-4); }
 
   /* Open/close animation via the native content pseudo-element — degrades
      gracefully (instant show/hide where unsupported). */

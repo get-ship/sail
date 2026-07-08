@@ -1,22 +1,27 @@
 <prop name="shadow" type="bool" default="false" />
 
+<!-- <style> is the escape hatch for the dynamic STATE classes class: toggles
+     (done/overdue/selected). Layout + spacing + text come from sx below. -->
 <style>
-  .todo-row { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
   .todo-row.done { opacity: 0.5; text-decoration: line-through; }
   .todo-row.overdue { border-color: var(--destructive); color: var(--destructive); }
-  .todo-row.selected { background: color-mix(in oklch, var(--primary) 14%, transparent); }
+  .todo-row.selected { background: var(--surface-2); }
 </style>
 
-<div class="list">
+<column gap="2">
   {#for t of todos() key={t.id}}
-    <div
+    <row
       class="todo-row"
       class:done={t.done}
       class:overdue={t.due < now()}
+      justify="between"
+      align="center"
+      gap="2"
+      sx="py:1_5 px:2_5 border:border radius:md"
       on:click={() => toggle(t.id)}
     >
       <strong>{t.label}</strong>
-      <span style="margin-left: auto; font-family: var(--font-mono); font-size: 0.75rem;">{t.due < now() ? 'overdue' : 'on time'}</span>
-    </div>
+      <span sx="text:xs fg:muted-foreground">{now() > t.due ? 'overdue' : 'on time'}</span>
+    </row>
   {/for}
-</div>
+</column>

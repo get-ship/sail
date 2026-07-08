@@ -17,10 +17,14 @@ export default controller<Scope>({
       if (!ts.length) return 0
       return Math.round((ts.filter((t) => t.done).length / ts.length) * 100)
     })
+    const select = (id: number): void => selectedId.set(id)
+    const toggle = (id: number): void =>
+      todos.set(todos().map((t) => t.id === id ? { ...t, done: !t.done } : t))
     return {
-      now, todos, selectedId, pct,
-      select: (id: number): void => selectedId.set(id),
-      toggle: (id: number): void => todos.set(todos().map((t) => t.id === id ? { ...t, done: !t.done } : t)),
+      now, todos, selectedId, pct, select, toggle,
+      // multi-step click logic lives in the controller; the template calls one
+      // handler (a template handler is a single expression, not a statement block)
+      selectRow: (id: number): void => { select(id); toggle(id) },
     }
   },
 })

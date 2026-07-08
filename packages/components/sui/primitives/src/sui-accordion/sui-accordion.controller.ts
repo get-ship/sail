@@ -32,6 +32,13 @@ export default controller<Scope>({
       syncItems()
     })
 
+    // Re-sync when items are added/removed AFTER connect. The value→open
+    // effect only re-runs on `value` changes, so items inserted later (dynamic
+    // children, or a framework that sets attributes then projects children)
+    // would never pick up the initial open value without this.
+    const mo = new MutationObserver(syncItems)
+    mo.observe(host, { childList: true })
+
     const onToggle = (e: Event) => {
       const ev = e as CustomEvent
       ev.stopPropagation()
@@ -86,6 +93,7 @@ export default controller<Scope>({
 
     return () => {
       stopEffect()
+      mo.disconnect()
       host.removeEventListener('sui-accordion-item-toggle', onToggle)
       host.removeEventListener('sui-accordion-nav', onNav)
     }

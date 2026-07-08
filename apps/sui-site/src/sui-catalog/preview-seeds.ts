@@ -44,16 +44,38 @@
 // (success / warning / destructive), inputs get filled labels with hint
 // text, overlays get a substantive trigger, charts ship realistic data.
 
+/** How to drive a component into its "interesting" visible state after mount.
+ *  Overlays are closed at rest and disclosure needs a toggle, so the DETAIL
+ *  ("viewer") surface — which must prove the REAL component renders — applies
+ *  this post-mount. The stage establishes a containing block (transform/
+ *  contain), so an opened fixed/portaled overlay is trapped inside the stage
+ *  instead of covering the page. */
+export interface DriveDirective {
+  /** Boolean/string attributes to set after mount (e.g. `{ open: 'true' }`). */
+  attrs?: Record<string, string>
+  /** Zero-arg host methods to call after mount (e.g. `['show']`). */
+  methods?: string[]
+  /** Click the first element matching this selector (searched light + shadow).
+   *  Dispatches a full pointer sequence and retries across a few frames, since
+   *  some overlays wire their trigger listener after connect. */
+  click?: string
+  /** Hover the first element matching this selector (pointerenter/over) — for
+   *  tooltip / hover-card that open on hover, not click. */
+  hover?: string
+}
+
 export interface PreviewSeed {
   props?: Record<string, string>
   innerHTML?: string
-  /** A representative STATIC surface, rendered instead of the live element.
-   *  For components that cannot show themselves in a frozen card — overlays
-   *  (closed + portaled to <body>) and disclosure (needs interaction) — this
-   *  is a hand-authored snapshot of what the component looks like OPEN,
-   *  using native HTML + token CSS vars only (runtime HTML can't use L1
-   *  elements or sx — both are compile-time). The mount renders this in the
-   *  stage and skips the live element entirely. */
+  /** Detail/viewer surface: how to open/expand the REAL component so its
+   *  interesting state is visible. The viewer mounts real and applies this —
+   *  never a fake. */
+  drive?: DriveDirective
+  /** Gallery-card POSTER ONLY. A frozen thumbnail (native HTML + token vars)
+   *  for true modal overlays that physically cannot render inside a 200px
+   *  card even when contained (dialog / alert-dialog / cmdk / drawer / sheet).
+   *  The gallery grid renders this as a thumbnail; the DETAIL page ignores it
+   *  entirely and mounts the real, driven component. */
   staticHTML?: string
 }
 
@@ -104,6 +126,21 @@ const PROJECT_LIST = JSON.stringify([
   { id: 'deck', name: 'Deck', path: '~/dev/deck' },
 ])
 
+// sui-board wants the full persisted node shape: rect {x,y,w,h} + ports +
+// kind (NOT flat {x,y}). The engine does not normalize, so a flat seed crashes
+// on `n.rect.x`. Three nodes, two bezier edges — the compile pipeline as a graph.
+const BOARD_DATA = JSON.stringify({
+  nodes: [
+    { id: 'a', rect: { x: 40, y: 80, w: 132, h: 52 }, ports: [{ id: 'out', side: 'right', offset: 0.5 }], kind: 'default', data: { label: 'Author .sui' } },
+    { id: 'b', rect: { x: 280, y: 30, w: 132, h: 52 }, ports: [{ id: 'in', side: 'left', offset: 0.5 }], kind: 'default', data: { label: 'Compile' } },
+    { id: 'c', rect: { x: 280, y: 140, w: 132, h: 52 }, ports: [{ id: 'in', side: 'left', offset: 0.5 }], kind: 'default', data: { label: 'Web component' } },
+  ],
+  edges: [
+    { id: 'e1', source: { node: 'a', port: 'out' }, target: { node: 'b', port: 'in' }, kind: 'bezier' },
+    { id: 'e2', source: { node: 'a', port: 'out' }, target: { node: 'c', port: 'in' }, kind: 'bezier' },
+  ],
+})
+
 const CALENDAR_EVENTS = JSON.stringify([
   { id: '1', title: 'Design review', allDay: true,  start: '2026-07-08' },
   { id: '2', title: 'Ship 0.3 launch', allDay: true,  start: '2026-07-15' },
@@ -134,21 +171,42 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   'sui-error-state':     { props: { title: 'Service unavailable', body: 'The upstream service did not respond in time.', code: '502' } },
   'sui-error-boundary':  { innerHTML: '<div>Protected subtree — its children render here unless one throws.</div>' },
 
-  // ── Overlays with an inline trigger ────────────────────────────────
-  // Each overlay is seeded with a real-looking trigger; the cells render
-  // the trigger only (the overlay opens on user interaction).
-  'sui-tooltip':         { innerHTML: '<button variant="outline">Hover for help</button><span slot="content">Extra context appears in the bubble.</span>' },
-  'sui-popover':         { innerHTML: '<button slot="trigger" variant="outline">Open popover</button><div>Popover body — rich content anchored to the trigger.</div>' },
-  'sui-hover-card':      { innerHTML: '<button slot="trigger" variant="ghost">@ada-lovelace</button><div><strong>Ada Lovelace</strong><br/>First programmer · Analytical Engine</div>' },
-  'sui-dropdown-menu':   { innerHTML: '<button slot="trigger" variant="outline">Actions ▾</button><button>Edit</button><button>Duplicate</button><button>Delete</button>' },
-  'sui-context-menu':    { innerHTML: '<button slot="trigger" variant="outline">Right-click me</button><button>Cut</button><button>Copy</button><button>Paste</button>' },
-  'sui-collapsible':     { innerHTML: '<button slot="trigger" variant="ghost">Show advanced settings</button><div>Region revealed when the trigger is toggled.</div>' },
+  // ── Overlays & disclosure — driven OPEN on the viewer surface ───────
+  // The detail page mounts the REAL component and applies `drive` to open
+  // it; the stage is a containing block, so a fixed/portaled panel is
+  // trapped inside the stage rather than covering the page. No fakes.
+  'sui-tooltip':         { innerHTML: '<button variant="outline">Hover for help</button><span slot="content">Extra context appears in the bubble.</span>', drive: { hover: 'button' } },
+  'sui-popover':         { innerHTML: '<button slot="trigger" variant="outline">Open popover</button><div>Popover body — rich content anchored to the trigger.</div>', drive: { click: '[slot="trigger"]' } },
+  'sui-hover-card':      { innerHTML: '<button slot="trigger" variant="ghost">@ada-lovelace</button><div><strong>Ada Lovelace</strong><br/>First programmer · Analytical Engine</div>', drive: { attrs: { open: 'true' } } },
+  'sui-dropdown-menu':   { innerHTML: '<button slot="trigger" variant="outline">Actions ▾</button><button>Edit</button><button>Duplicate</button><button>Delete</button>', drive: { click: '[slot="trigger"]' } },
+  'sui-context-menu':    { innerHTML: '<button slot="trigger" variant="outline">Right-click me</button><button>Cut</button><button>Copy</button><button>Paste</button>', drive: { attrs: { open: 'true' } } },
+  'sui-collapsible':     { innerHTML: '<button slot="trigger" variant="ghost">Show advanced settings</button><div>Region revealed when the trigger is toggled.</div>', drive: { click: '[slot="trigger"]' } },
 
-  // ── Modal overlays (portal to the top layer on `open`; seeded for that state)
-  'sui-dialog':          { staticHTML: '<div style="width:100%;max-width:21rem;background:var(--background);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:1.25rem;display:flex;flex-direction:column;gap:0.6rem;font-size:var(--text-sm)"><strong style="font-size:var(--text-md)">Confirm deployment</strong><p style="margin:0;color:var(--muted-foreground)">Deploy <code>job/site-demos</code> to production?</p><div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.4rem"><button>Cancel</button><button style="background:var(--primary);color:var(--primary-foreground);border-color:var(--primary)">Deploy</button></div></div>' },
-  'sui-alert-dialog':    { staticHTML: '<div style="width:100%;max-width:21rem;background:var(--background);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:1.25rem;display:flex;flex-direction:column;gap:0.6rem;font-size:var(--text-sm)"><strong style="font-size:var(--text-md);color:var(--destructive)">Delete project?</strong><p style="margin:0;color:var(--muted-foreground)">This permanently removes the project and every deployment under it.</p><div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.4rem"><button>Keep</button><button style="background:var(--destructive);color:var(--destructive-foreground);border-color:var(--destructive)">Delete</button></div></div>' },
-  'sui-drawer':          { props: { side: 'right' }, innerHTML: '<span slot="title">Filters</span><span slot="description">Refine the component list</span><p>Drawer body content.</p>' },
-  'sui-cmdk':            { staticHTML: '<div style="width:100%;max-width:22rem;background:var(--background);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);overflow:hidden;font-size:var(--text-sm)"><div style="padding:0.7rem 1rem;border-bottom:1px solid var(--border);color:var(--muted-foreground)">⌕&nbsp; Type a command…</div><div style="padding:0.4rem"><div style="padding:0.5rem 0.75rem;border-radius:var(--radius-md);background:var(--surface-2)">New deployment</div><div style="padding:0.5rem 0.75rem;color:var(--muted-foreground)">Open docs</div></div></div>' },
+  // ── Modal overlays ──────────────────────────────────────────────────
+  // DETAIL: real component, props open the panel, drive as backup.
+  // GALLERY: staticHTML poster (a 200px card can't hold a real modal).
+  'sui-dialog':          {
+    props: { open: 'true', size: 'sm' },
+    innerHTML: '<span slot="header">Confirm deployment</span><p>Deploy <code>job/site-demos</code> to production?</p><button slot="footer">Cancel</button><button slot="footer" tone="primary">Deploy</button>',
+    drive: { attrs: { open: 'true' } },
+    staticHTML: '<div style="width:100%;max-width:21rem;background:var(--background);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:1.25rem;display:flex;flex-direction:column;gap:0.6rem;font-size:var(--text-sm)"><strong style="font-size:var(--text-md)">Confirm deployment</strong><p style="margin:0;color:var(--muted-foreground)">Deploy <code>job/site-demos</code> to production?</p><div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.4rem"><button>Cancel</button><button style="background:var(--primary);color:var(--primary-foreground);border-color:var(--primary)">Deploy</button></div></div>' },
+  'sui-alert-dialog':    {
+    props: { open: 'true', tone: 'destructive', 'confirm-label': 'Delete', 'cancel-label': 'Keep' },
+    innerHTML: '<span slot="title">Delete project?</span>This permanently removes the project and every deployment under it.',
+    drive: { attrs: { open: 'true' } },
+    staticHTML: '<div style="width:100%;max-width:21rem;background:var(--background);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:1.25rem;display:flex;flex-direction:column;gap:0.6rem;font-size:var(--text-sm)"><strong style="font-size:var(--text-md);color:var(--destructive)">Delete project?</strong><p style="margin:0;color:var(--muted-foreground)">This permanently removes the project and every deployment under it.</p><div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.4rem"><button>Keep</button><button style="background:var(--destructive);color:var(--destructive-foreground);border-color:var(--destructive)">Delete</button></div></div>' },
+  // open lives in `drive` only (NOT props): a drawer portals to <body>, so an
+  // open prop would take over the GALLERY grid, not just the detail stage. The
+  // gallery renders the poster; the detail page drives the real drawer open.
+  'sui-drawer':          {
+    props: { side: 'right' },
+    innerHTML: '<span slot="title">Filters</span><span slot="description">Refine the component list</span><p>Drawer body content.</p>',
+    drive: { attrs: { open: 'true' } },
+    staticHTML: '<div style="width:100%;max-width:16rem;margin-left:auto;height:100%;min-height:13rem;background:var(--background);border-left:1px solid var(--border);box-shadow:var(--shadow-lg);padding:1.25rem;display:flex;flex-direction:column;gap:0.5rem;font-size:var(--text-sm)"><strong style="font-size:var(--text-md)">Filters</strong><span style="color:var(--muted-foreground)">Refine the component list</span><p style="margin:0.5rem 0 0">Drawer body content.</p></div>' },
+  'sui-cmdk':            {
+    props: { open: 'true' },
+    drive: { attrs: { open: 'true' } },
+    staticHTML: '<div style="width:100%;max-width:22rem;background:var(--background);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);overflow:hidden;font-size:var(--text-sm)"><div style="padding:0.7rem 1rem;border-bottom:1px solid var(--border);color:var(--muted-foreground)">⌕&nbsp; Type a command…</div><div style="padding:0.4rem"><div style="padding:0.5rem 0.75rem;border-radius:var(--radius-md);background:var(--surface-2)">New deployment</div><div style="padding:0.5rem 0.75rem;color:var(--muted-foreground)">Open docs</div></div></div>' },
   // sui-portal: teleports children; an empty stage at the host looks
   // empty. Honest emptiness here is the right cell — the description on
   // the card explains the contract.
@@ -166,23 +224,28 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   'sui-field':           { innerHTML: '<sui-label slot="label">Email address</sui-label><sui-input type="email" value="ada@ship.dev"></sui-input><span slot="hint">We\'ll never share your email.</span>' },
   'sui-label':           { props: { required: 'true' }, innerHTML: 'Email address' },
   'sui-date-picker':     { props: { value: '2026-07-15', label: 'Ship date' } },
-  'sui-color-picker':    { staticHTML: '<div style="display:flex;flex-direction:column;gap:0.6rem;align-items:center"><div style="display:flex;gap:0.4rem">' + ['#ef4444','#f59e0b','#22c55e','#4f46e5','#a855f7'].map(c => '<span style="width:1.6rem;height:1.6rem;border-radius:var(--radius-md);background:' + c + ';box-shadow:var(--shadow-xs)"></span>').join('') + '</div><div style="display:flex;align-items:center;gap:0.5rem;padding:0.35rem 0.6rem;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--background);font-family:var(--font-mono);font-size:var(--text-sm)"><span style="width:1rem;height:1rem;border-radius:var(--radius-sm);background:#4f46e5"></span>#4F46E5</div></div>' },
+  'sui-color-picker':    { props: { value: '#4f46e5' }, drive: { click: '[part="input"]' } },
   'sui-file-upload':     { props: { accept: '.png,.jpg,.pdf', multiple: 'true' }, innerHTML: 'Drag files here or click to browse' },
 
   // ── Structure & layout ──────────────────────────────────────────────
-  'sui-accordion':       { staticHTML: '<div style="width:100%;max-width:23rem;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--surface-1);font-size:var(--text-sm)"><div style="display:flex;justify-content:space-between;padding:0.55rem 1rem;font-weight:600;border-bottom:1px solid var(--border-subtle)">What is Ship?<span style="color:var(--muted-foreground)">＋</span></div><div style="display:flex;justify-content:space-between;padding:0.55rem 1rem;font-weight:600;border-bottom:1px solid var(--border-subtle)">How do I theme it?<span style="color:var(--muted-foreground)">＋</span></div><div style="display:flex;justify-content:space-between;padding:0.55rem 1rem;font-weight:600">Is it accessible?<span style="color:var(--muted-foreground)">＋</span></div></div>' },
+  'sui-accordion':       { props: { value: 'what' }, innerHTML: '<sui-accordion-item value="what" open><span slot="trigger">What is Ship?</span>A batteries-included component system that compiles to standard web components.</sui-accordion-item><sui-accordion-item value="theme"><span slot="trigger">How do I theme it?</span>Swap design tokens — every component tracks the active theme.</sui-accordion-item><sui-accordion-item value="a11y"><span slot="trigger">Is it accessible?</span>Yes — focus management, ARIA, and keyboard nav ship by default.</sui-accordion-item>' },
   'sui-tabs':            { props: { active: 'overview' }, innerHTML: '<sui-tab name="overview">Overview</sui-tab><sui-tab name="activity" count="3">Activity</sui-tab><sui-tab name="settings">Settings</sui-tab><sui-tab-panel name="overview" active>A live overview of the deployment.</sui-tab-panel><sui-tab-panel name="activity">3 new events since your last visit.</sui-tab-panel><sui-tab-panel name="settings">Configure build &amp; deploy options.</sui-tab-panel>' },
   'sui-timeline':        { innerHTML: '<sui-timeline-item at="09:30" tone="success"><span slot="title">Build passed</span>24 checks green in 42s.</sui-timeline-item><sui-timeline-item at="09:45" tone="info"><span slot="title">Deployed to staging</span>job/site-demos → staging.</sui-timeline-item><sui-timeline-item at="10:02"><span slot="title">Promoted to production</span>Live for all users.</sui-timeline-item>' },
   'sui-scroll-area':     { props: { size: 'sm' }, innerHTML: '<div>sui-button</div><div>sui-card</div><div>sui-input</div><div>sui-select</div><div>sui-table</div><div>sui-tree</div><div>sui-calendar</div><div>sui-dialog</div><div>sui-tabs</div><div>sui-timeline</div><div>sui-accordion</div><div>sui-tooltip</div>' },
 
   // ── Navigation ──────────────────────────────────────────────────────
+  'sui-nav-top':         { innerHTML: '<span slot="brand"><strong>SHIP</strong></span><a href="#">Docs</a><a href="#">Components</a><a href="#">Guides</a><button slot="actions" tone="primary">Sign in</button>' },
   'sui-navigation-menu': { props: { value: 'components' }, innerHTML: '<sui-navigation-item value="docs">Docs</sui-navigation-item><sui-navigation-item value="components">Components</sui-navigation-item><sui-navigation-item value="guides">Guides</sui-navigation-item>' },
   'sui-pagination':      { props: { page: '3', total: '248', 'page-size': '20' } },
 
   // ── Data display (JSON-string scalar props — the SSR/declarative path)
   // Table: realistic project-status rows, not 1 column of empty cells.
-  'sui-table':           { props: { variant: 'data', label: 'Components', columns: '[{"field":"name","label":"Component"},{"field":"pack","label":"Pack"},{"field":"status","label":"Status"}]', rows: PIPELINE_RUN_DATA } },
+  // native variant frames a real light-DOM <table> — renders reliably in the
+  // gallery (the virtualized `data` variant needs a live JS rows reference the
+  // attribute-only gallery can't supply, and windows to 0 rows without it).
+  'sui-table':           { props: { variant: 'native', label: 'Components' }, innerHTML: '<table><thead><tr><th>Component</th><th>Pack</th><th>Status</th></tr></thead><tbody><tr><td>sui-button</td><td>primitives</td><td>stable</td></tr><tr><td>sui-card</td><td>primitives</td><td>stable</td></tr><tr><td>sui-calendar</td><td>primitives</td><td>beta</td></tr><tr><td>sui-render</td><td>viewer</td><td>beta</td></tr></tbody></table>' },
   'sui-tree':            { props: { label: 'Files', nodes: SMALL_TREE_NODES } },
+  'sui-json-view':       { props: { data: '{"name":"@ship/sui","version":"0.3.0","stable":true,"packs":["primitives","charts","canvas"],"engine":{"compiler":"rust","runtime":"signals"}}', expanded: 'true' } },
   'sui-tree-grid':       { props: { label: 'Files', columns: '[{"field":"label","label":"Name"},{"field":"kind","label":"Kind"},{"field":"size","label":"Size"}]', nodes: SMALL_TREE_NODES } },
   'sui-tree-view':       { innerHTML: '<sui-tree-item label="src" expanded><sui-tree-item label="components" expanded><sui-tree-item label="sui-button.sui" leaf></sui-tree-item><sui-tree-item label="sui-card.sui" leaf></sui-tree-item></sui-tree-item><sui-tree-item label="index.ts" leaf></sui-tree-item></sui-tree-item>' },
   'sui-sheet':           { props: { label: 'Q3 Budget', workbook: '{"sheets":[{"id":"q3","name":"Q3 Budget","rowCount":5,"colCount":4,"cells":{"A1":{"value":"Item"},"B1":{"value":"Q1"},"C1":{"value":"Q2"},"D1":{"value":"Q3"},"A2":{"value":"Revenue"},"B2":{"value":120},"C2":{"value":145},"D2":{"value":168},"A3":{"value":"Costs"},"B3":{"value":80},"C3":{"value":92},"D3":{"value":101},"A4":{"value":"Profit"},"B4":{"value":40,"formula":"=B2-B3"},"C4":{"value":53,"formula":"=C2-C3"},"D4":{"value":67,"formula":"=D2-D3"}}}]}' } },
@@ -191,6 +254,7 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   'sui-code-editor':     { props: { language: 'html', value: '<prop name="tone" values="default|primary" default="default" />\n\n<button class="btn btn-{tone()}">\n  <slot></slot>\n</button>' } },
   'sui-markdown':        { props: { value: '# Ship SUI\n\n**Batteries-included** components for the web.\n\n- Compiles to standard web components\n- Themed with design tokens\n- `sui-compiler build` in the loop' } },
   'sui-diff':            { props: { from: "const tone = 'primary'\nconst size = 'md'", to: "const tone = 'success'\nconst size = 'lg'\nconst variant = 'solid'" } },
+  'sui-mermaid':         { props: { value: 'graph LR\n  A[Author .sui] --> B[Compile]\n  B --> C[Web Component]\n  C --> D[Themed by tokens]' } },
 
   // ── Theme picker ────────────────────────────────────────────────────
   // Scope=preview isolates the document-level applyTheme write — same
@@ -209,7 +273,7 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   // ── Canvas (board / canvas / draw / graph-canvas / annotations) ─────
   // Canvas family — a base sheet with brand grid + one shape; the bare
   // mount shows the editor chrome on top of a tokenized backdrop.
-  'sui-board':           { props: { theme: 'light', grid: 'dots', value: '{"nodes":[{"id":"a","x":60,"y":80},{"id":"b","x":160,"y":80},{"id":"c","x":110,"y":150}],"edges":[{"from":"a","to":"b"},{"from":"a","to":"c"}]}' } },
+  'sui-board':           { props: { theme: 'light', grid: 'dots', value: BOARD_DATA } },
   'sui-canvas':          { props: { theme: 'light', grid: 'dots' } },
   'sui-draw':            { props: { theme: 'light', grid: 'dots', tool: 'pen' } },
   'sui-graph-canvas':    { props: { width: '240', height: '160', layout: 'positioned', nodes: '[{"id":"a","x":40,"y":40},{"id":"b","x":120,"y":40},{"id":"c","x":80,"y":110}]', edges: '[{"from":"a","to":"b"},{"from":"a","to":"c"}]' } },

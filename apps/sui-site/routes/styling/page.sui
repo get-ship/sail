@@ -1,84 +1,95 @@
 <!--
-  /styling — the <style> block, scoping, and the token convention.
-  Component styles live inside their own .sui file (no separate stylesheet
-  to coordinate) and resolve their tokens from the document root.
+  /styling — sx token utilities, host + variant styling, and the token
+  convention. Styling lives on the element as sx utilities; raw <style> is
+  the escape hatch for what sx structurally can't express.
 -->
 <div class="doc styling-doc">
   <p class="eyebrow">Guides</p>
   <h1>Styling</h1>
   <p class="lead">
-    SUI components style themselves inline. A <code>&lt;style&gt;</code>
-    block in a <code>.sui</code> file ships with the component, scopes to
-    the host element, and reads tokens from the document root. There is no
-    global stylesheet to coordinate, no CSS-in-JS runtime, and no separate
-    bundle to ship alongside the component.
+    SUI components style themselves with <code>sx</code> — token utilities
+    written right on the element. No stylesheet to coordinate, no CSS-in-JS
+    runtime, no class names to invent. <code>sx</code> is a closed
+    vocabulary: every value is a design token, so a component is themed by
+    construction.
   </p>
 
-  <h2>Inline <code>&lt;style&gt;</code></h2>
+  <h2>The <code>sx</code> attribute</h2>
   <p>
-    Place a <code>&lt;style&gt;</code> block anywhere in the template. The
-    compiler hoists it into the component's shadow root at build time.
-    The rules apply to the host element and its descendants; nothing
-    outside the shadow root is affected.
+    Put styling on the element as an <code>sx</code> attribute — space-separated
+    <code>property:token</code> pairs. The compiler lowers each pair to an
+    atomic rule at build time; nothing is computed at runtime. Because the
+    vocabulary is closed, there is no pixel value like <code>p:16px</code> and
+    no hex like <code>bg:#fff</code> — only tokens resolve.
   </p>
-  <sui-codeblock code={code.basic}></sui-codeblock>
+  <sui-codeblock code={code.sx}></sui-codeblock>
   <p>
-    That <code>my-card</code> element is now styled — drop a
-    <code>&lt;my-card&gt;</code> in any page and the styles ship with
-    it. No external CSS, no build step, no class-name collisions.
+    Text is already styled: write <code>&lt;h1&gt;</code>–<code>&lt;h6&gt;</code>
+    and <code>&lt;p&gt;</code> plain and they take the type scale. Reach for
+    <code>sx</code> when you need surface, spacing, or tone.
   </p>
 
-  <h2>Scope</h2>
+  <h2>Styling the host</h2>
   <p>
-    Inline styles are scoped per-instance. The <code>:host</code>
-    pseudo-element targets the component's own element; any descendant
-    selector targets the shadow tree. Outer-page styles do not bleed
-    in, and the component does not leak out.
+    To style the component's own element — its border, radius, background —
+    use <code>&lt;host sx&gt;</code>. It is the <code>:host</code> rule,
+    expressed in the same token vocabulary as everything else.
   </p>
-  <sui-codeblock code={code.scoping}></sui-codeblock>
+  <sui-codeblock code={code.host}></sui-codeblock>
+
+  <h2>State with <code>&lt;variants&gt;</code></h2>
+  <p>
+    State-driven styling keys off the host's attributes. A
+    <code>&lt;variants&gt;</code> block repaints a class when the host
+    carries an attribute — <code>[open]</code>, <code>[disabled]</code>,
+    a <code>tone</code> value — without a controller writing styles by hand.
+  </p>
+  <sui-codeblock code={code.variants}></sui-codeblock>
 
   <h2>Tokens, not literals</h2>
   <p>
-    Read tokens from the document root. A literal value — a hex color, a
-    pixel size, a fixed font-family — defeats theming, breaks dark mode,
-    and locks the component to one brand voice. Use
-    <code>var(--token)</code> with no fallback; tokens.css is loaded
-    before any component renders, so the resolver always wins.
+    Because <code>sx</code> only speaks tokens, theming is automatic and dark
+    mode is free. A literal — a hex color, a pixel size, a fixed font — would
+    defeat theming and lock the component to one brand voice. Pick the token
+    by intent across the four layers: semantic surfaces, tone ramps, the
+    brand palette, and the primitive scale. A card sits on
+    <code>bg:surface-1</code>; a status alert reads
+    <code>bg:tone-warning-bg</code>; a headline reads
+    <code>text:xl</code>.
   </p>
   <sui-codeblock code={code.tokens}></sui-codeblock>
-  <p>
-    The four layers — semantic surfaces, tone ramps, brand palette,
-    primitives — keep the choice of token aligned with intent. A card
-    reads <code>var(--surface-1)</code>; a status alert reads
-    <code>var(--tone-warning-bg)</code>; a headline reads
-    <code>var(--font-display)</code>. Reach for a primitive only when
-    no semantic token captures the role.
-  </p>
 
   <h2>Status tones, not palette colors</h2>
   <p>
     Tone ramps are status surfaces, not brand colors. <code>success</code>
-    is the right token for a positive confirmation; <code>primary</code> is
-    a brand action. Mixing the two breaks every theme that ships its
-    own success color.
+    is the right token for a positive confirmation; <code>primary</code> is a
+    brand action. Mixing the two breaks every theme that ships its own
+    success color.
   </p>
   <sui-codeblock code={code.tone}></sui-codeblock>
 
-  <h2>Layout primitives</h2>
+  <h2>Layout is keywords</h2>
   <p>
-    Reach for <code>&lt;column&gt;</code>, <code>&lt;row&gt;</code>, and
-    <code>&lt;grid&gt;</code> before reaching for a hand-rolled flex
-    layout. They encode the design system's spacing scale, the breakpoints,
-    and the responsive defaults — so a layout that reads
-    <code>gap="3"</code> in one place looks the same wherever it's reused.
+    Structure comes from <code>&lt;column&gt;</code>,
+    <code>&lt;row&gt;</code>, <code>&lt;grid&gt;</code>, and
+    <code>&lt;center&gt;</code> — never a raw <code>&lt;div&gt;</code> or a
+    hand-rolled flexbox. The layout keywords encode the spacing scale, the
+    breakpoints, and the responsive defaults, so <code>gap="3"</code> looks
+    the same wherever it's reused. Raw containers are a lint error, not a
+    style choice.
   </p>
   <sui-codeblock code={code.layout}></sui-codeblock>
+
+  <h2>The escape hatch</h2>
   <p>
-    For one-off layouts where a layout primitive doesn't fit, an inline
-    <code>display: flex; gap: var(--space-3)</code> is the right call —
-    not because flex is forbidden, but because reaching for the layout
-    primitive first means most components stay consistent by default.
+    Some things <code>sx</code> structurally can't express: pseudo-elements,
+    <code>::slotted</code>, <code>grid-template-columns</code>,
+    <code>top</code>/<code>left</code>, <code>accent-color</code>. For those,
+    a raw <code>&lt;style&gt;</code> block is the honest escape hatch — still
+    scoped to the shadow root, still reading tokens. Keep it small: if a rule
+    <em>can</em> be an <code>sx</code> atom, it should be.
   </p>
+  <sui-codeblock code={code.escape}></sui-codeblock>
 
   <div class="page-nav">
     <a class="btn" href="/theming">← Theming</a>

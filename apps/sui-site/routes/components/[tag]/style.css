@@ -18,6 +18,14 @@
 }
 /* Specimen never exceeds the stage. */
 .detail-stage > * { max-width: 100%; }
+/* Full-bleed surfaces (canvas/board/code) stretch to fill the centered stage
+   instead of collapsing to their (zero) content width. */
+.detail-stage > .detail-fill { justify-self: stretch; align-self: stretch; width: 100%; min-height: 20rem; }
+/* Downward-dropdown components sit at the top so their panel drops into view. */
+.detail-stage > .detail-top { align-self: start; }
+/* Block panel/list containers hold a stable measure instead of shrink-wrapping
+   to their widest child (kills the "resizes as content changes" jank). */
+.detail-stage > .detail-panel { width: min(30rem, 100%); }
 
 /* ── Back link ─────────────────────────────────────────────────────────── */
 .detail-back {
@@ -84,9 +92,23 @@
 .detail-preview { margin-bottom: var(--space-8); }
 .detail-stage {
   position: relative;
-  min-height: 24rem;
+  min-height: 25rem;
   padding: var(--space-8);
   overflow: hidden;
+  /* Establish a containing block for position:fixed descendants so an opened
+     modal/overlay is trapped inside the stage (proof) rather than covering the
+     page. Pairs with overflow:hidden to clip the trapped panel to the stage. */
+  transform: translateZ(0);
+  display: grid;
+  /* Explicit full-width track so `justify-self: stretch` (fill components) can
+     reach the stage width; without it the implicit column sizes to content and
+     full-bleed surfaces collapse. Small components still center via place-items. */
+  grid-template-columns: minmax(0, 1fr);
+  /* Row fills the stage (never smaller than content, so tall specimens like the
+     calendar aren't clipped) so align-self can position items across the full
+     height — center by default, `start` for downward-dropdown components. */
+  grid-template-rows: minmax(min-content, 1fr);
+  place-items: center;
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   /* Designed backdrop: a fine dot-grid over a tint gradient. */

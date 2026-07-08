@@ -1,7 +1,7 @@
 // /components controller. Registers the catalog element + the primitive
 // packs so the catalog's preview slots find a defined tag for every component
 // in the site bundle.
-import '@ship/sui-primitives' // side-effect: customElements.define for every <sui-*>
+import '../../src/register-all' // side-effect: register EVERY pack's <sui-*> so every catalog card finds a defined tag
 import { controller, type ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 

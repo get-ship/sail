@@ -13,7 +13,7 @@ const code = {
     '',
     '# Useful flags',
     'sui-compiler build src/ --clean                    # wipe stale output first',
-    'sui-compiler build card.sui --component-name sui-card  # compile as a component',
+    'sui-compiler build greeting.sui --component-name sui-greeting  # compile as a component',
     'sui-compiler build src/ --out dist                 # emit into one directory',
   ].join('\n'),
   lspJson: [
