@@ -265,7 +265,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     let _ = writeln!(md, "## The hard rules (every policy)\n");
     let _ = writeln!(
         md,
-        "- NO `<style>` blocks, NO `style=` attributes — ever. Visuals flow through\n  tokens, props, and the surfaces listed below.\n- NO raw values anywhere (no px, no hex): spend a token.\n- Layout is elements, not CSS: `<row>`, `<column>`, `<grid>`, `<center>`,\n  `<stack>` with `gap`/`align`/`justify` attributes.\n- Behavior is unrestricted TypeScript in `<controller>` — the restraint is\n  visual, never logical.\n- Components: `<component>{{ props: {{ tone, size, label: 'Default', ... }} }}`\n  — typed props; `tone`/`size` built-ins opt into the framework contracts.\n"
+        "- NO `<style>` blocks, NO `style=` attributes — ever. Visuals flow through\n  tokens, props, and the surfaces listed below.\n- NO raw values anywhere (no px, no hex): spend a token.\n- Layout is elements, not CSS: `<row>`, `<column>`, `<grid>`, `<center>`,\n  `<stack>` with `gap`/`align`/`justify`/`cols` attributes. `cols` is a fixed\n  column count (1..=12) on `<grid>` and takes precedence over `min` when both\n  are present. Unrecognized attributes on a layout keyword are a compile error —\n  the language won't silently drop them.\n- Behavior is unrestricted TypeScript in `<controller>` — the restraint is\n  visual, never logical.\n- Components: `<component>{{ props: {{ tone, size, label: 'Default', ... }} }}`\n  — typed props; `tone`/`size` built-ins opt into the framework contracts.\n"
     );
     if effective.sx {
         let _ = writeln!(md, "## sx — the surface styling attribute\n");

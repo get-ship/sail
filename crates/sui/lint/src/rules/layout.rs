@@ -39,9 +39,19 @@ pub fn is_layout_tag(tag: &str) -> bool {
 /// what to read) and the lint (to reject props that don't apply to a tag).
 pub fn tag_props(tag: &str) -> &'static [&'static str] {
     match tag {
-        "column" => &["gap", "align"],
-        "row" => &["gap", "align", "justify"],
-        "grid" => &["gap", "min", "flow"],
+        "column" => &["gap", "align", "direction"],
+        // `direction` is a backward-compat alias for the old `<sui-stack
+        // direction="row">` escape hatch (horizontal stack). Accepted on
+        // row/column so legacy code keeps compiling through the keyword
+        // migration. Misuse (`<column direction="row">` when you really
+        // want `<row>`) is what `sui-legacy-layout` would flag, but the
+        // modern author has no reason to reach for `direction` — they use
+        // the keyword itself.
+        "row" => &["gap", "align", "justify", "direction"],
+        // `cols` is a fixed column count (1..=12); it conflicts with `min`
+        // (the responsive `auto-fill minmax` axis) — `cols` wins if both
+        // are present.
+        "grid" => &["gap", "min", "flow", "cols"],
         "center" => &["gap"],
         "stack" => &["align", "justify"],
         _ => &[],
@@ -108,11 +118,23 @@ fn default_for(tag: &str, prop: &str) -> Option<&'static str> {
         ("row", "justify") | ("stack", "justify") => "start",
         ("grid", "min") => "md",
         ("grid", "flow") => "dense",
+        // `direction` has NO default — the base class encodes the natural
+        // direction (`.sui-col{flex-direction:column}`). Modifier only
+        // fires when the author explicitly overrides.
+        // `cols` also has NO default — when absent, `min` owns the column
+        // track. Explicitly setting `cols` opts out of `min` (precedence:
+        // cols wins).
         _ => return None,
     })
 }
 
 /// Valid values for an axis prop. `None` = the prop is free-form-invalid here.
+///
+/// `cols` is a small positive integer as a string (the closed set matches
+/// what fits the language's grid vocabulary — 1..=12 covers author intent
+/// without opening a `length-as-string` hole). Dynamic `cols={n()}` lowers
+/// to a runtime class binding instead of going through this enum.
+pub const COLS_VALUES: &[&str] = &["1","2","3","4","5","6","7","8","9","10","11","12"];
 fn allowed(prop: &str) -> &'static [&'static str] {
     match prop {
         "gap" => &["0", "1", "2", "3", "4", "5", "6", "7", "8"],
@@ -120,6 +142,11 @@ fn allowed(prop: &str) -> &'static [&'static str] {
         "justify" => &["start", "center", "end", "between", "around"],
         "min" => &["xs", "sm", "md", "lg"],
         "flow" => &["auto", "dense"],
+        "cols" => COLS_VALUES,
+        // `direction` is a flex-direction suffix on row/column. Same shape
+        // as the underlying CSS property: `row` ↔ `flex-direction:row`,
+        // `column` ↔ `flex-direction:column`.
+        "direction" => &["row", "column"],
         _ => &[],
     }
 }
@@ -166,10 +193,26 @@ fn modifier(prop: &str, value: &str) -> Option<(String, String)> {
             )
         }
         "flow" => (format!("sui-gf-{value}"), format!(".sui-gf-{value}{{grid-auto-flow:{value}}}")),
+        // Fixed-N column grid: same shape as the JSX/CSS idiom, with minmax(0,1fr)
+        // so children can shrink (defeats the "unguarded min-content" overflow
+        // trap that haunts every hand-rolled grid-template-columns).
+        "cols" => (
+            format!("sui-gc-{value}"),
+            format!(".sui-gc-{value}{{grid-template-columns:repeat({value},minmax(0,1fr))}}"),
+        ),
+        // `direction` overrides the underlying flex-direction — used when an
+        // author reaches for `<column direction="row">` (the old sui-stack
+        // idiom) and we want the markup to keep its visual meaning. The base
+        // class already declares the default direction, so the modifier only
+        // applies on a value mismatch (and any explicit direction ends up on
+        // the same `.sui-{col,row}-{direction}` for predictable overrides).
+        "direction" => (
+            format!("sui-dir-{value}"),
+            format!(".sui-dir-{value}{{flex-direction:{value}}}"),
+        ),
         _ => return None,
     })
 }
-
 /// The base structural class + CSS for a tag (no axis modifiers). The div always
 /// gets this; axes ride on top via [`lower_axis`].
 pub fn base(tag: &str) -> Option<(String, Vec<String>)> {
@@ -188,6 +231,8 @@ fn axis_prefix(prop: &str) -> Option<&'static str> {
         "justify" => "sui-jc-",
         "min" => "sui-gm-",
         "flow" => "sui-gf-",
+        "cols" => "sui-gc-",
+        "direction" => "sui-dir-",
         _ => return None,
     })
 }
@@ -234,12 +279,32 @@ pub fn lower(tag: &str, attrs: &[(String, String)]) -> Option<(Vec<String>, Vec<
     }
     let mut classes = vec![base_class(tag).to_string()];
     let mut css = base_css(tag);
+    // Mirror the compiler-side precedence: `cols` wins over `min` on `<grid>`.
+    // Both own `grid-template-columns`, so when both axes are present the
+    // responsive one is dropped to avoid a CSS cascade / specificity tie.
+    let has_cols = attrs.iter().any(|(n, _)| n == "cols");
+    let skip: std::collections::HashSet<&str> = if tag == "grid" && has_cols {
+        std::iter::once("min").collect()
+    } else {
+        std::collections::HashSet::new()
+    };
     for &prop in tag_props(tag) {
-        let val = attrs
+        if skip.contains(prop) {
+            continue;
+        }
+        // Some axes (e.g. `cols`, `direction`) have NO default — only an
+        // explicit value lowers to a class+rule. Skip silently when the
+        // author didn't set one; the base class already encodes the
+        // natural state for the tag.
+        let val = match attrs
             .iter()
             .find(|(n, _)| n == prop)
             .map(|(_, v)| v.as_str())
-            .or_else(|| default_for(tag, prop))?;
+            .or_else(|| default_for(tag, prop))
+        {
+            Some(v) => v,
+            None => continue,
+        };
         if let Some((class, rule)) = modifier(prop, val) {
             classes.push(class);
             css.push(rule);
@@ -250,15 +315,35 @@ pub fn lower(tag: &str, attrs: &[(String, String)]) -> Option<(Vec<String>, Vec<
 
 /// Lint: every layout element's axis props must be in-enum, must apply to the
 /// tag, and must be static. Reads the raw source, scans the layout open tags.
+///
+/// Also enforces the no-silent-drop guarantee: any attribute on a layout
+/// keyword that ISN'T a known axis prop on the tag AND ISN'T an HTML pass-
+/// through is a compile error. A mistyped layout attribute would otherwise
+/// flow through to the lowered `<div>` as a dead HTML attr with no signal.
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
     for t in scan_open_tags(source) {
         let (line, col) = offset_to_line_col(source, t.start);
         let valid = tag_props(&t.tag);
         for (name, value) in &t.attrs {
-            // Non-axis attrs (id, class, sx, on:click, data-*) pass straight
-            // through to the div — nothing to validate.
-            if !matches!(name.as_str(), "gap" | "align" | "justify" | "min" | "flow") {
+            if is_passthrough_attr(name) {
+                // Non-axis attrs (id, class, sx, on:click, data-*, a11y, …)
+                // pass straight through to the div — nothing to validate.
+                continue;
+            }
+            if !is_known_axis_prop(name) {
+                findings.push(mk(
+                    path,
+                    line,
+                    col,
+                    format!(
+                        "<{} {}=\"{}\"> — unknown attribute on layout keyword. {}",
+                        t.tag,
+                        name,
+                        value,
+                        unknown_attr_hint(&t.tag),
+                    ),
+                ));
                 continue;
             }
             if !valid.contains(&name.as_str()) {
@@ -272,9 +357,10 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             }
             if value.starts_with('{') {
                 // Dynamic axis (`align={expr}`) — a component parameterizing its
-                // layout. Lowered to a dynamic `class` binding with the full rule
-                // set injected, so any runtime value matches. The value is a
-                // runtime expression; we can't (and needn't) enum-check it here.
+                // layout. Lowered to a dynamic `class` binding with the full
+                // rule set injected, so any runtime value matches. The value
+                // is a runtime expression; we can't (and needn't) enum-check
+                // it here.
                 continue;
             }
             if !allowed(name).contains(&value.as_str()) {
@@ -293,7 +379,118 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     findings
 }
 
-/// A parsed layout open tag: the byte span of `<tag …>` and its attributes.
+/// Is `name` a layout-axis prop on ANY keyword? These get validated against
+/// the tag-specific allow-list and the per-prop enum.
+///
+/// `cols` was added in the `job/sui-oss-grid` pass: it lives only on `<grid>`,
+/// but listing it here lets the unknown-attr error name every axis prop the
+/// user might have meant. `direction` is the legacy `<sui-stack
+/// direction="row">` alias kept for migration.
+fn is_known_axis_prop(name: &str) -> bool {
+    matches!(
+        name,
+        "gap" | "align" | "justify" | "min" | "flow" | "cols" | "direction"
+    )
+}
+
+pub fn is_passthrough_attr(name: &str) -> bool {
+    // Universal attribute prefixes — namespaced attr families that ride through
+    // to the div unchanged. The SUI compile pass treats these as opaque to
+    // validation (the framework / browser own their semantics).
+    if name.starts_with("data-")
+        || name.starts_with("aria-")
+        || name.starts_with("on")
+            && name.as_bytes().get(2) == Some(&b':')
+        // SUI directive prefixes — framework bindings that the compiler
+        // understands (see `crates/sui/compiler/src/parse/template/attrs.rs`).
+        // `bind:`, `class:`, `style:`, `attr:`, `prop:`, `transition:`, `in:`,
+        // `out:`, `motion:`. Each is fully validated downstream; the layout
+        // keyword lowering passes them through to the div unchanged.
+        || name.starts_with("bind:")
+        || name.starts_with("class:")
+        || name.starts_with("style:")
+        || name.starts_with("attr:")
+        || name.starts_with("prop:")
+        || name.starts_with("transition:")
+        || name.starts_with("in:")
+        || name.starts_with("out:")
+        || name.starts_with("motion:")
+    {
+        return true;
+    }
+    matches!(
+        name,
+        "class"
+            | "id"
+            | "sx"
+            | "title"
+            | "role"
+            | "tabindex"
+            | "slot"
+            | "hidden"
+            | "draggable"
+            | "translate"
+            | "dir"
+            | "lang"
+            | "itemprop"
+            | "itemscope"
+            | "itemtype"
+            | "itemref"
+            | "itemid"
+            | "inert"
+            | "popover"
+            | "autofocus"
+            | "nonce"
+            | "is"
+            | "part"
+            | "exportparts"
+            | "shadowroot"
+            | "form"
+            | "name"
+            | "value"
+            | "checked"
+            | "selected"
+            | "disabled"
+            | "readonly"
+            | "required"
+            | "placeholder"
+            | "type"
+            | "href"
+            | "src"
+            | "alt"
+            | "for"
+            | "target"
+            | "rel"
+            | "muted"
+            | "loop"
+            | "controls"
+            | "autoplay"
+            | "open"
+            | "default"
+            | "contenteditable"
+            | "spellcheck"
+            | "inputmode"
+            | "enterkeyhint"
+            | "maxlength"
+            | "minlength"
+            | "pattern"
+    )
+}
+
+/// Message body for a `unknown attribute on layout keyword` finding. Points
+/// the author at what the tag does accept.
+fn unknown_attr_hint(tag: &str) -> String {
+    let axes = tag_props(tag);
+    if axes.is_empty() {
+        format!("<{tag}> takes no axis props; only pass-through attrs are allowed.")
+    } else {
+        format!(
+            "<{tag}> takes these axis props: {} — or any HTML/global pass-through (id, class, sx, data-*, aria-*, on:*, bind:*, class:*, style:*, attr:*, prop:*, transition:*, in:*, out:*, motion:*).",
+            axes.join(", ")
+        )
+    }
+}
+
 /// Shared by the lint (line/col) and the preprocess lowering (splice the span).
 pub struct OpenTag {
     pub tag: String,
@@ -516,6 +713,154 @@ mod tests {
     #[test]
     fn ignores_non_layout_similar_tags() {
         assert!(scan_open_tags("<rows><columns><rowish>").is_empty());
+    }
+
+    // --- `cols` axis on `<grid>` (m-sui-stdlib / job/sui-oss-grid) -----------
+
+    #[test]
+    fn accepts_grid_cols_static() {
+        // The bug we closed: `<grid cols="7">` used to silently produce a
+        // single-column broken grid. Now it lowers cleanly and lints clean.
+        assert!(run(r#"<grid cols="7" gap="4">x</grid>"#).is_empty());
+    }
+
+    #[test]
+    fn accepts_grid_cols_dynamic() {
+        // A component parameterizing column count, the same shape as
+        // `<row align={pick()}>`: a dynamic `class` binding with all 12 rules
+        // pre-injected so any runtime value matches.
+        assert!(run(r#"<grid cols={n()}>x</grid>"#).is_empty());
+    }
+
+    #[test]
+    fn lowers_grid_cols_to_repeat_minmax() {
+        let (classes, css) = lower("grid", &[("cols".into(), "7".into())]).unwrap();
+        assert!(classes.contains(&"sui-grid".to_string()));
+        assert!(classes.contains(&"sui-gc-7".to_string()));
+        assert!(
+            css.iter().any(|r| r.contains("grid-template-columns:repeat(7,minmax(0,1fr))")),
+            "repeat(7,minmax(0,1fr)) rule present: {css:?}"
+        );
+        // Precedence: `cols` wins over `min` on `<grid>`. `lower()` mirrors
+        // the compiler-side logic — when `cols` is present, the responsive
+        // `min` axis is suppressed (no `sui-gm-*` class, no auto-fill rule).
+        assert!(!classes.iter().any(|c| c.starts_with("sui-gm-")), "no min class when cols wins: {classes:?}");
+    }
+
+    #[test]
+    fn rejects_off_enum_cols() {
+        // 13 is outside the closed 1..=12 set; off-enum must surface as an
+        // explicit finding so a too-large/col-zero typo doesn't silently
+        // collapse to a broken grid.
+        let m = run(r#"<grid cols="13">x</grid>"#);
+        assert_eq!(m.len(), 1);
+        assert!(m[0].contains("13") && m[0].contains("not valid"), "got: {}", m[0]);
+    }
+
+    #[test]
+    fn rejects_cols_on_a_tag_that_doesnt_take_it() {
+        // `cols` is `<grid>`-only; `<column cols="5">` is a real author mistake
+        // — say so.
+        let m = run(r#"<column cols="5">x</column>"#);
+        assert_eq!(m.len(), 1);
+        assert!(m[0].contains("<column>"), "got: {}", m[0]);
+        assert!(m[0].contains("cols"), "names the bad attr: {}", m[0]);
+    }
+
+    // --- `direction` backward-compat (regression: was unknown-attr) ---------
+
+    #[test]
+    fn accepts_legacy_direction_idiom() {
+        // `<column direction="row">` was the `<sui-stack direction="row">`
+        // idiom; kept compiling through the keyword migration so existing
+        // components don't break. The lint should accept it.
+        assert!(run(r#"<column gap="2" direction="row">x</column>"#).is_empty());
+        assert!(run(r#"<row gap="2" direction="column">x</row>"#).is_empty());
+    }
+
+    #[test]
+    fn lowers_direction_to_flex_direction() {
+        // Explicit override emits the `sui-dir-*` modifier.
+        let (classes, css) = lower(
+            "column",
+            &[("direction".into(), "row".into())],
+        )
+        .unwrap();
+        assert!(
+            classes.contains(&"sui-dir-row".to_string()),
+            "direction override class: {classes:?}"
+        );
+        assert!(
+            css.iter().any(|r| r.contains("flex-direction:row")),
+            "direction override rule: {css:?}"
+        );
+        // No default — no `sui-dir-column` on a plain `<column>`.
+        let (classes, _) = lower("column", &[]).unwrap();
+        assert!(
+            !classes.iter().any(|c| c.starts_with("sui-dir-")),
+            "no implicit direction class: {classes:?}"
+        );
+    }
+
+    #[test]
+    fn rejects_off_enum_direction() {
+        let m = run(r#"<column direction="diagonal">x</column>"#);
+        assert_eq!(m.len(), 1);
+        assert!(m[0].contains("diagonal"), "names the bad value: {}", m[0]);
+    }
+
+    // --- no silent drop ---------------------------------------------------
+
+    #[test]
+    fn unknown_layout_attribute_is_rejected() {
+        // The original bug: `cols="7"` used to be treated as an unknown attr
+        // that flowed through to the div as a dead HTML attribute with no
+        // warning. Now any unrecognized attribute on a layout keyword is a
+        // hard error.
+        let m = run(r#"<grid bogus="x">x</grid>"#);
+        assert_eq!(m.len(), 1);
+        assert!(m[0].contains("unknown"), "got: {}", m[0]);
+        assert!(m[0].contains("bogus"), "names the bad attr: {}", m[0]);
+    }
+
+    #[test]
+    fn recognized_html_passthroughs_still_pass() {
+        // The same surface as `passes_through_non_axis_attrs`, but with a
+        // wider vocabulary to lock in that we didn't regress the pass-through
+        // set in the unknown-attr refactor.
+        assert!(run(
+            r#"<column id="x" title="t" role="region" tabindex="-1" hidden draggable="true" aria-label="x" data-y="1" on:click={go()}>x</column>"#
+        ).is_empty());
+    }
+
+    #[test]
+    fn unknown_attr_does_not_reach_lower_layout_as_a_passthrough() {
+        // Lint and compiler share `is_passthrough_attr`; assert the source-of-
+        // truth truth: the attribute vocab recognized as a pass-through on the
+        // lint side is exactly what `lower_layout` would let ride through to
+        // the div. If either side ever grows the set without the other, the
+        // compiler stops agreeing with the lint — the silent-drop class of
+        // regression is back.
+        assert!(is_passthrough_attr("id"));
+        assert!(is_passthrough_attr("data-x"));
+        assert!(is_passthrough_attr("on:click"));
+        assert!(is_passthrough_attr("aria-label"));
+        assert!(!is_passthrough_attr("bogus"));
+        assert!(!is_passthrough_attr("clss"));
+        assert!(!is_passthrough_attr("colz"));
+    }
+
+    #[test]
+    fn axis_prop_names_not_treated_as_passthroughs() {
+        // `min`, `cols`, etc. are axis props; they MUST flow through
+        // `is_known_axis_prop` for validation, not be short-circuited as
+        // pass-throughs (which would silently hide `<column min="99">`).
+        assert!(!is_passthrough_attr("cols"));
+        assert!(!is_passthrough_attr("gap"));
+        assert!(!is_passthrough_attr("align"));
+        assert!(!is_passthrough_attr("justify"));
+        assert!(!is_passthrough_attr("min"));
+        assert!(!is_passthrough_attr("flow"));
     }
 }
 
