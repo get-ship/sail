@@ -4,16 +4,5 @@
     "glass",
     "ship-dark"
   ],
-  "flagged": [
-    {
-      "tag": "sui-media-csv",
-      "host": {
-        "w": 862,
-        "h": 181
-      },
-      "defects": [
-        "OVERFLOW-X:sui-input"
-      ]
-    }
-  ]
+  "flagged": []
 }

@@ -20,7 +20,7 @@
 import { chromium } from '/home/madvib/dev/Ship/worktrees/sui/sui-sx/node_modules/.bun/playwright@1.61.0/node_modules/playwright/index.mjs'
 import { readFileSync, writeFileSync } from 'node:fs'
 
-const BASE = 'http://127.0.0.1:7878'
+const BASE = process.env.SUI_PROBE_BASE ?? 'http://127.0.0.1:7878'
 const DARK = new Set(['ship-dark', 'console', 'contrast', 'neutral-dark'])
 // Empty-by-contract: these render nothing at the host BY DESIGN, so an
 // EMPTY-RENDER on them is expected, not a defect. sui-portal teleports its

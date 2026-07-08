@@ -68,7 +68,21 @@ export default controller({
         })
         const engine = createTable<CsvRecord>({
           data: rows,
-          columns: columns.map((c) => ({ id: c.field, accessorKey: c.field, header: c.label })),
+          // `enableColumnFilter: false` keeps the committed `sui-table`
+          // from rendering a per-column `<sui-input>` in each header
+          // cell. Without this opt-out, the input's intrinsic
+          // min-width (~189px) overflows the column track at narrow
+          // stages and the QA probe flags OVERFLOW-X inside the
+          // CSV host's shadow. The CSV renderer is read-only /
+          // data-display; filter affordance isn't part of the
+          // contract — authors can opt back in by overriding the
+          // column defs.
+          columns: columns.map((c) => ({
+            id: c.field,
+            accessorKey: c.field,
+            header: c.label,
+            enableColumnFilter: false,
+          })),
           getRowId: (r) => r.id,
         })
         state.tableEngine = engine
