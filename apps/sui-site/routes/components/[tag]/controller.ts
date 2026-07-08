@@ -267,6 +267,43 @@ export default controller<Scope>({
           }
           requestAnimationFrame(apply)
         }
+        // BEHAVIOR DEMO — per-tag custom controls that exercise the
+        // component's defining behavior (a throw trigger for
+        // sui-error-boundary, etc.). A "mount in a stage" is useless for
+        // behavior components; the user must be able to PROVE the
+        // behavior on the detail page. The control lives next to the
+        // stage, not inside it (so the demo trigger isn't clipped by
+        // overflow:hidden) and is removed on unmount.
+        if (e.tag === 'sui-error-boundary') {
+          const ctrl = document.createElement('div')
+          ctrl.className = 'detail-behavior-ctrl'
+          ctrl.setAttribute('part', 'behavior-ctrl')
+          const btn = document.createElement('button')
+          btn.className = 'detail-behavior-btn'
+          btn.setAttribute('tone', 'warning')
+          btn.setAttribute('solid', '')
+          btn.textContent = 'Throw an error'
+          btn.type = 'button'
+          btn.addEventListener('click', () => {
+            // Dispatch an ErrorEvent on the boundary host. The boundary
+            // catches errors thrown from its children by listening for
+            // the standard `error` event on the host; the fallback then
+            // swaps in. Using the platform event (vs. an actual throw)
+            // means the demo is deterministic — no race with the
+            // boundary's connectedCallback mount order.
+            const target = el as HTMLElement
+            target.dispatchEvent(new ErrorEvent('error', {
+              error: new TypeError('Demo: child.render is not a function'),
+              bubbles: true,
+              composed: true,
+            }))
+          })
+          ctrl.appendChild(btn)
+          // Anchor the control next to the stage, not inside it (so it's
+          // not clipped by overflow:hidden on the stage).
+          stage.parentElement?.appendChild(ctrl)
+          disposers.push(() => ctrl.remove())
+        }
         stage.dataset.mountState = 'live'
       } catch {
         const note = document.createElement('span')

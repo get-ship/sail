@@ -1,34 +1,48 @@
 <!--
   <sui-component-catalog> — the `/components` gallery index for the SUI site.
 
-  A centered column: a hero (eyebrow + display title + lead), a centered
-  search field, a centered row of category-filter chips, then the component
-  card grid. Every component links to its /components/<tag> detail page and
-  shows a LIVE specimen mounted into a framed preview stage.
+  Three vertical sections, each framed by its own design:
+
+    1. Hero — eyebrow + display title + lead, centered.
+    2. Search field — centered, native-style.
+    3. Pack chips — a row of pack filter chips (8 packs + "All"), centered.
+    4. LANGUAGE ELEMENTS section — a distinct top frame for the L1 bare
+       keywords (row/column/grid/center/stack · h1-h6/p/small/a/strong/code
+       · card/icon/label/separator/spinner). Rendered differently from the
+       pack grid: a denser chip-style row per group, a tinted backdrop, and
+       the word "Language" instead of a pack label — so a layout keyword
+       and an error-boundary never look like peers.
+    5. PACK SECTIONS — one bento grid per pack. Each section has its own
+       pack label + blurb. Cards are linked to the per-component detail
+       page; each card shows a LIVE specimen in a framed preview stage.
 
   Layout is the library dogfooding itself — structure comes from primitives,
   never bespoke CSS:
-    <column>       the vertical page rhythm (hero → search → chips → grid)
-    <row>          centers the search field, the category chips, and each
-                   card's meta row
+    <column>       the vertical page rhythm (hero → search → chips → L1 →
+                   pack sections)
+    <row>          centers the search field and the chip rows
     <center>       parks the live specimen dead-center of the framed stage
                    (both axes), so specimens no longer hug the top edge
-    <grid>         the responsive auto-fill card gallery (min="lg" gap="4")
+    <grid>         the responsive auto-fill card gallery per pack (min="lg"
+                   gap="4")
 
   Filtering is reactive without re-rendering: the controller exposes a
-  `query` signal (bound to <sui-input>) and an `activeCategory` signal;
+  `query` signal (bound to <sui-input>) and an `activePack` signal;
   a card's `visible(entry)` derives from both and drives `attr:hidden`, so
   the one-shot live-preview mount (in the controller) is never disturbed.
 
   Curation (the public surface):
     - The catalog filters out internal sub-primitives (sui-accordion-item,
-      sui-tab/tab-panel, sui-tree-item, sui-timeline-item, sui-toast*,
-      sui-radio etc.) inside the controller, BEFORE the chip row is built
-      — so a category never promises more cards than it actually shows.
-    - The chip row is in CATEGORY_ORDER declared by category-map.ts
-      (Forms & Inputs, Layout, Overlays, Navigation, Feedback, Data Display,
-      Typography, Utility) so the chip axis reflects the eight folds of the
-      public API surface, not the workspace's npm pack layout.
+      sui-tab/tab-panel, sui-tree-item, sui-timeline-item, sui-toggle,
+      sui-radio, sui-navigation-item, sui-toast*, viewer internals)
+      inside the controller, BEFORE the chip row is built — so a pack
+      never promises more cards than it actually shows.
+    - L1 elements are rendered in their own section with a separate
+      "Language" frame, then the pack sections render in canonical order
+      (primitives → charts → canvas → chat-elements → code-editor →
+      media → mermaid → viewer).
+    - Packs with zero components after filtering are NOT rendered (a
+      zero-card section is worse than no section).
 
   Data source: the build-time CEM at apps/sui-site/components.gen.ts. Only
   the visual surface (framing, tints, font tokens) lives in this stylesheet;
@@ -70,7 +84,7 @@
     color: var(--muted-foreground);
     font-size: var(--text-lg);
     line-height: var(--leading-normal);
-    max-width: 52ch;
+    max-width: 56ch;
     margin: 0 auto;
   }
 
@@ -84,7 +98,7 @@
     font-size: var(--text-md);
   }
 
-  /* ── Category chips ────────────────────────────────────────────────── */
+  /* ── Pack chips ────────────────────────────────────────────────────── */
   .chip {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
@@ -112,6 +126,381 @@
     max-width: 64rem;
   }
 
+  /* ── Section frames (shared by Language + each pack) ───────────────── */
+  .section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+  .section-id {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+    color: var(--muted-foreground);
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 2.4vw, 1.8rem);
+    font-weight: 800;
+    letter-spacing: var(--tracking-tight);
+    line-height: 1.1;
+    color: var(--foreground);
+    margin: 0;
+  }
+  .section-blurb {
+    color: var(--muted-foreground);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    max-width: 60ch;
+    margin: 0;
+  }
+  .section-meta {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+  }
+  .section-rule {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 0;
+  }
+
+  /* The Language section gets a distinct surface — a tinted card frame —
+     so it reads as a peer to the pack sections but visually different from
+     the bento. A layout keyword and an error-boundary never look alike. */
+  .lang-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .lang-group-head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+  }
+  .lang-group-title {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+    color: var(--foreground);
+  }
+  .lang-group-blurb {
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+  }
+  .lang-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .lang-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--foreground);
+  }
+  .lang-chip-preview {
+    min-width: 0;
+    min-height: 1.6rem;
+    max-width: 12rem;
+    overflow: hidden;
+    border: 1px dashed var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 0 var(--space-2);
+    background: var(--background);
+    display: inline-flex;
+    align-items: center;
+    color: var(--foreground);
+  }
+  /* Typography chip is the only one whose preview sits inside; let it
+     honour the chip's own font scale rather than the chip's mono. */
+  .lang-chip[data-group="typography"] .lang-chip-preview {
+    color: var(--foreground);
+  }
+  .lang-chip-tag {
+    color: var(--muted-foreground);
+  }
+  /* ── L1 HERO — language elements section is the headline. ──
+
+     Three composed showcases (layout / typography / stdlib) each framed
+     in a card with the tag-callout, blurb, and a live demo. Then a
+     per-tag chip row as a quick reference. The hero is the showcase —
+     the chip row is reference material. */
+  .lang-frame {
+    /* Promote to a real hero surface: stronger tint, larger radius,
+       bigger gap so the showcases can breathe. */
+    background:
+      radial-gradient(80% 60% at 50% 0%, color-mix(in oklch, var(--primary) 9%, transparent), transparent 70%),
+      color-mix(in oklch, var(--primary) 3%, var(--surface-1));
+    border: 1px solid color-mix(in oklch, var(--primary) 24%, var(--border));
+    border-radius: var(--radius-xl);
+    padding: var(--space-7) var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-7);
+  }
+  .lang-head {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    max-width: 56rem;
+    margin: 0 auto;
+  }
+  .lang-eyebrow {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+    color: var(--primary);
+  }
+  .lang-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3.2vw, 2.4rem);
+    font-weight: 800;
+    letter-spacing: var(--tracking-tight);
+    line-height: 1.1;
+    margin: 0;
+    color: var(--foreground);
+  }
+  .lang-lead {
+    color: var(--muted-foreground);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+    max-width: 56ch;
+    margin: 0 auto;
+  }
+  .lang-lead code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: color-mix(in oklch, var(--primary) 12%, transparent);
+    color: var(--foreground);
+    padding: 0 var(--space-1);
+    border-radius: var(--radius-sm);
+  }
+
+  /* Each showcase panel: a row of three figures (layout) or a single
+     column of rows (typography) or a 2×2 grid (stdlib). */
+  .lang-panel {
+    background: var(--background);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .lang-panel-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+  .lang-panel-id {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+    color: var(--primary);
+  }
+  .lang-panel-title {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--foreground);
+    margin: 0;
+    letter-spacing: var(--tracking-tight);
+  }
+  .lang-panel-blurb {
+    color: var(--muted-foreground);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    margin: 0;
+    max-width: 60ch;
+  }
+  .lang-panel-blurb code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: color-mix(in oklch, var(--primary) 12%, transparent);
+    color: var(--foreground);
+    padding: 0 var(--space-1);
+    border-radius: var(--radius-sm);
+  }
+
+  /* Layout showcase — three figures side-by-side, stacked on narrow. */
+  .lang-panel-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+  @media (max-width: 880px) {
+    .lang-panel-grid { grid-template-columns: minmax(0, 1fr); }
+  }
+  .lang-showcase {
+    margin: 0;
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .lang-showcase-cap {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+    text-align: center;
+    padding: 0 var(--space-1);
+  }
+  .lang-showcase-cap code {
+    color: var(--foreground);
+    font-weight: 600;
+  }
+  .lang-showcase-stage {
+    /* mirror the catalog card's stage surface so the language showcase
+       reads as "the same page" — designed backdrop, not a plain box. */
+    background:
+      radial-gradient(circle at 1px 1px, color-mix(in oklch, var(--foreground) 6%, transparent) 1px, transparent 0) 0 0 / 16px 16px,
+      linear-gradient(155deg, color-mix(in oklch, var(--primary) 7%, var(--surface-1)) 0%, var(--surface-1) 62%);
+    border-radius: var(--radius-md);
+    min-height: 7rem;
+    padding: var(--space-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .lang-row,
+  .lang-column,
+  .lang-grid {
+    display: flex;
+    gap: var(--space-2);
+    align-items: stretch;
+  }
+  .lang-row { flex-direction: row; }
+  .lang-column { flex-direction: column; }
+  .lang-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-2);
+    width: 100%;
+  }
+  .lang-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    flex: 1;
+  }
+
+  /* Typography showcase — tag column on the left, live element on the right. */
+  .lang-type {
+    width: 100%;
+  }
+  .lang-type-row {
+    align-items: baseline;
+    border-bottom: 1px dashed var(--border-subtle);
+    padding: var(--space-2) 0;
+  }
+  .lang-type-row:last-child { border-bottom: 0; }
+  .lang-type-tag {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+    min-width: 4.5rem;
+    flex-shrink: 0;
+  }
+  .lang-type-spec {
+    margin: 0;
+    color: var(--foreground);
+  }
+  .lang-type-spec ul { margin: 0; padding-left: 1.2rem; }
+
+  /* Stdlib L1 — a 2×2 grid of mini cards. */
+  .lang-stdlib {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+  @media (max-width: 720px) {
+    .lang-stdlib { grid-template-columns: minmax(0, 1fr); }
+  }
+  .lang-stdlib-cell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    align-items: flex-start;
+  }
+  .lang-stdlib-tag {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+  }
+  .lang-stdlib-cell strong {
+    font-size: var(--text-md);
+    color: var(--foreground);
+  }
+  .lang-stdlib-desc {
+    font-size: var(--text-sm);
+    color: var(--muted-foreground);
+    margin: 0;
+    line-height: var(--leading-normal);
+  }
+  .lang-stdlib-cell code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: color-mix(in oklch, var(--primary) 12%, transparent);
+    color: var(--foreground);
+    padding: 0 var(--space-1);
+    border-radius: var(--radius-sm);
+  }
+
+  /* Per-tag quick reference — sub-section of the language frame. */
+  .lang-reference {
+    border-top: 1px solid var(--border-subtle);
+    padding-top: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .lang-reference-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+  .lang-reference-id {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+    color: var(--muted-foreground);
+  }
+  .lang-reference-meta {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+  }
+
   /* ── Bento grid ────────────────────────────────────────────────────── */
   .bento {
     display: grid;
@@ -123,6 +512,7 @@
 
   /* ── Cards ─────────────────────────────────────────────────────────── */
   .cell {
+    position: relative;
     display: flex;
     flex-direction: column;
     text-decoration: none;
@@ -219,13 +609,36 @@
     font-size: var(--text-sm);
     padding: var(--space-6) 0;
   }
+  /* Behavior demo control — a trigger button injected next to a card
+     that needs to demonstrate a non-resting state (e.g. the
+     error-boundary's fallback). Lives next to the stage, not inside
+     it, so the stage's overflow:hidden doesn't clip the button. */
+  .preview-trigger-btn {
+    position: absolute;
+    bottom: var(--space-2);
+    right: var(--space-2);
+    z-index: 2;
+    background: var(--warning);
+    color: var(--warning-foreground);
+    border: 1px solid var(--warning);
+    border-radius: var(--radius-md);
+    padding: var(--space-1) var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition:
+      background var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+  .preview-trigger-btn:hover { transform: translateY(-1px); }
 </style>
-
 <column class="page" gap="6" data-test="catalog">
   <div class="hero" data-test="catalog-hero">
-    <span class="eyebrow">— {totalComponents()} components · {totalCategories()} categories</span>
+    <span class="eyebrow">— {totalL1()} language elements · {totalComponents()} components · {totalPacks()} packs</span>
     <h1 class="title">Component library</h1>
-    <p class="lead">The public SUI primitive surface, grouped by category. Every component is a standard web component, themed by design tokens, and compiled ahead-of-time.</p>
+    <p class="lead">The public SUI primitive surface, grouped by pack. Every component is a standard web component, themed by design tokens, and compiled ahead-of-time.</p>
   </div>
 
   <row class="search-row" justify="center">
@@ -247,10 +660,10 @@
       <button
         type="button"
         class="chip"
-        class:chip-on={activeCategory() === c.id}
-        on:click={() => setCategory(c.id)}
-        attr:data-category={c.id}
-        data-test="catalog-category-chip"
+        class:chip-on={activePack() === c.id}
+        on:click={() => setPack(c.id)}
+        attr:data-pack={c.id}
+        data-test="catalog-pack-chip"
       >
         <span class="chip-label">{c.label}</span>
         <span class="chip-count">{c.count}</span>
@@ -258,27 +671,208 @@
     {/for}
   </row>
 
-  <div class="bento" data-test="catalog-grid">
-    {#for c of components() key={c.tag}}
-      <a
-        class="cell"
-        class:sz-wide={c.size === 'wide'}
-        class:sz-lg={c.size === 'lg'}
-        href={'/components/' + c.tag}
-        attr:data-tag={c.tag}
-        attr:hidden={c.hidden() ? true : null}
-        data-test="catalog-cell"
-      >
-        <center class="stage" attr:data-preview-for={c.tag}></center>
-        <div class="cell-foot">
-          <span class="cell-tag" data-test="catalog-tag">{c.tag}</span>
-          <span class="cell-arrow" aria-hidden="true">→</span>
+  <!-- ── LANGUAGE ELEMENTS — the headline section. Composed showcases for
+       each L1 sub-group (layout / typography / stdlib), then a per-tag
+       chip row as a quick reference. "These are in the language." ── -->
+  <div class="lang-frame" data-test="lang-section" part="lang-frame">
+    <div class="lang-head" part="lang-head">
+      <span class="lang-eyebrow" data-test="lang-eyebrow">Language · the headline</span>
+      <h2 class="lang-title" data-test="lang-title">Layout, typography, and surfaces are tags in the language.</h2>
+      <p class="lang-lead" data-test="lang-lead">
+        SUI lowers the design system into the language itself. <code>&lt;row&gt;</code> is a flex container,
+        <code>&lt;column&gt;</code> is a stack, <code>&lt;grid cols="3"&gt;</code> is a CSS grid,
+        <code>&lt;card&gt;</code> is a surface — no import, no <code>sui-</code> prefix.
+        The design tokens, the type scale, and the theme are already applied.
+      </p>
+    </div>
+
+    <!-- Layout showcase — a row, a column, and a grid rendered live,
+         each composed of real <card> surfaces. Proves the layout keywords
+         are not abstract: they build the page. -->
+    <section class="lang-panel" data-lang-panel="layout" data-test="lang-panel-layout" part="lang-panel">
+      <header class="lang-panel-head" part="lang-panel-head">
+        <span class="lang-panel-id">01 · layout</span>
+        <h3 class="lang-panel-title">Flex and grid, lowered at compile time</h3>
+        <p class="lang-panel-blurb">Three keywords that replace the deleted layout components. Compose them with <code>&lt;card&gt;</code> and any other tag.</p>
+      </header>
+      <div class="lang-panel-grid" part="lang-panel-grid">
+        <figure class="lang-showcase" data-test="lang-show-row" part="lang-showcase">
+          <figcaption class="lang-showcase-cap"><code>&lt;row&gt;</code> &mdash; horizontal flow</figcaption>
+          <center class="lang-showcase-stage" data-test="lang-show-row-stage" part="lang-showcase-stage">
+            <row class="lang-row" part="lang-showcase-row" data-test="lang-show-row-demo">
+              <card class="lang-cell" tone="primary" padding="sm" part="lang-cell">Author</card>
+              <card class="lang-cell" tone="info" padding="sm" part="lang-cell">Compile</card>
+              <card class="lang-cell" tone="success" padding="sm" part="lang-cell">Ship</card>
+            </row>
+          </center>
+        </figure>
+        <figure class="lang-showcase" data-test="lang-show-column" part="lang-showcase">
+          <figcaption class="lang-showcase-cap"><code>&lt;column&gt;</code> &mdash; vertical flow</figcaption>
+          <center class="lang-showcase-stage" data-test="lang-show-column-stage" part="lang-showcase-stage">
+            <column class="lang-column" part="lang-showcase-column" data-test="lang-show-column-demo">
+              <card class="lang-cell" tone="primary" padding="sm" part="lang-cell">Author</card>
+              <card class="lang-cell" tone="info" padding="sm" part="lang-cell">Compile</card>
+              <card class="lang-cell" tone="success" padding="sm" part="lang-cell">Ship</card>
+            </column>
+          </center>
+        </figure>
+        <figure class="lang-showcase" data-test="lang-show-grid" part="lang-showcase">
+          <figcaption class="lang-showcase-cap"><code>&lt;grid cols="3"&gt;</code> &mdash; auto-fill grid</figcaption>
+          <center class="lang-showcase-stage" data-test="lang-show-grid-stage" part="lang-showcase-stage">
+            <grid class="lang-grid" cols="3" gap="3" part="lang-showcase-grid" data-test="lang-show-grid-demo">
+              <card class="lang-cell" padding="sm" part="lang-cell">A</card>
+              <card class="lang-cell" padding="sm" part="lang-cell">B</card>
+              <card class="lang-cell" padding="sm" part="lang-cell">C</card>
+              <card class="lang-cell" padding="sm" part="lang-cell">D</card>
+              <card class="lang-cell" padding="sm" part="lang-cell">E</card>
+              <card class="lang-cell" padding="sm" part="lang-cell">F</card>
+            </grid>
+          </center>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Typography showcase — the full type scale, rendered live as the
+         same tags lower to in real markup. One element per row, the chip
+         shows the tag and the result. -->
+    <section class="lang-panel" data-lang-panel="typography" data-test="lang-panel-typography" part="lang-panel">
+      <header class="lang-panel-head" part="lang-panel-head">
+        <span class="lang-panel-id">02 · typography</span>
+        <h3 class="lang-panel-title">The type scale, themed by tokens</h3>
+        <p class="lang-panel-blurb">Headings, body, marks, and lists — the text rhythm ships with the framework. Use plain tags; the type is already correct.</p>
+      </header>
+      <column class="lang-type" gap="2" part="lang-type" data-test="lang-type">
+        <row class="lang-type-row" align="baseline" gap="3" data-test="lang-type-h1">
+          <code class="lang-type-tag">&lt;h1&gt;</code>
+          <h1 class="lang-type-spec">Display heading</h1>
+        </row>
+        <row class="lang-type-row" align="baseline" gap="3" data-test="lang-type-h2">
+          <code class="lang-type-tag">&lt;h2&gt;</code>
+          <h2 class="lang-type-spec">Section heading</h2>
+        </row>
+        <row class="lang-type-row" align="baseline" gap="3" data-test="lang-type-h3">
+          <code class="lang-type-tag">&lt;h3&gt;</code>
+          <h3 class="lang-type-spec">Subsection</h3>
+        </row>
+        <row class="lang-type-row" align="baseline" gap="3" data-test="lang-type-p">
+          <code class="lang-type-tag">&lt;p&gt;</code>
+          <p class="lang-type-spec">Body text lowers to a typographic rhythm with a readable line height and an optimal measure.</p>
+        </row>
+        <row class="lang-type-row" align="baseline" gap="3" data-test="lang-type-inline">
+          <code class="lang-type-tag">marks</code>
+          <p class="lang-type-spec">
+            <strong>strong</strong>, <em>em</em>, <code>code</code>, <kbd>⌘K</kbd>, <a href="#">link</a>
+          </p>
+        </row>
+        <row class="lang-type-row" align="baseline" gap="3" data-test="lang-type-list">
+          <code class="lang-type-tag">&lt;ul&gt;</code>
+          <ul class="lang-type-spec">
+            <li>structured</li>
+            <li>tokenized</li>
+            <li>themed</li>
+          </ul>
+        </row>
+      </column>
+    </section>
+
+    <!-- Stdlib L1 showcase — the framework's foundational surfaces.
+         Each is a bare tag, not a custom element. -->
+    <section class="lang-panel" data-lang-panel="primitives" data-test="lang-panel-primitives" part="lang-panel">
+      <header class="lang-panel-head" part="lang-panel-head">
+        <span class="lang-panel-id">03 · stdlib L1</span>
+        <h3 class="lang-panel-title">Surfaces the framework ships</h3>
+        <p class="lang-panel-blurb">The five foundational L1 surfaces — same author experience as a custom element, with a lighter runtime cost.</p>
+      </header>
+      <grid class="lang-stdlib" cols="2" gap="3" part="lang-stdlib" data-test="lang-stdlib">
+        <card class="lang-stdlib-cell" tone="primary" padding="md" part="lang-stdlib-cell" data-test="lang-stdlib-card">
+          <span class="lang-stdlib-tag">&lt;card&gt;</span>
+          <strong>The content surface</strong>
+          <p class="lang-stdlib-desc">A tone-tinted container with optional accent bar, status rail, and hover lift.</p>
+        </card>
+        <card class="lang-stdlib-cell" tone="info" padding="md" part="lang-stdlib-cell" data-test="lang-stdlib-icon">
+          <span class="lang-stdlib-tag">&lt;icon&gt;</span>
+          <icon name="sparkles" size="lg" part="lang-stdlib-icon-glyph" data-test="lang-stdlib-icon-glyph"></icon>
+          <strong>Iconographic mark</strong>
+          <p class="lang-stdlib-desc">Sizes and inks any SVG. Tones inherit from the design system.</p>
+        </card>
+        <card class="lang-stdlib-cell" tone="muted" padding="md" part="lang-stdlib-cell" data-test="lang-stdlib-label">
+          <span class="lang-stdlib-tag">&lt;label&gt;</span>
+          <label required part="lang-stdlib-label-glyph" data-test="lang-stdlib-label-glyph">Field label</label>
+          <strong>The form caption</strong>
+          <p class="lang-stdlib-desc">A required field caption that lowers to a native <code>&lt;label&gt;</code>.</p>
+        </card>
+        <card class="lang-stdlib-cell" tone="default" padding="md" part="lang-stdlib-cell" data-test="lang-stdlib-separator">
+          <span class="lang-stdlib-tag">&lt;separator&gt;</span>
+          <strong>The rule between things</strong>
+          <separator part="lang-stdlib-separator-glyph" data-test="lang-stdlib-separator-glyph"></separator>
+          <spinner part="lang-stdlib-spinner-glyph" data-test="lang-stdlib-spinner-glyph"></spinner>
+          <p class="lang-stdlib-desc">A semantic rule, plus the loading mark — both bare tags.</p>
+        </card>
+      </grid>
+    </section>
+
+    <!-- Per-tag quick reference — every L1 keyword as a chip, with a
+         live mini-mount of the keyword itself. Lower-importance than the
+         composed showcases above (which is the HERO). -->
+    <section class="lang-reference" data-test="lang-reference" part="lang-reference">
+      <header class="lang-reference-head" part="lang-reference-head">
+        <span class="lang-reference-id">all keywords</span>
+        <span class="lang-reference-meta" data-test="lang-meta">{visibleL1Count()} of {totalL1()} visible</span>
+      </header>
+      {#for g of l1Groups() key={g.id}}
+        <div class="lang-group" attr:data-lang-group={g.id} part="lang-group">
+          <div class="lang-group-head">
+            <span class="lang-group-title">{g.label}</span>
+            <span class="lang-group-blurb">{g.blurb}</span>
+          </div>
+          <div class="lang-chips">
+            {#for el of g.elements key={el.tag}}
+              <span class="lang-chip" attr:data-group={g.id} attr:data-tag={el.tag} data-test="lang-chip">
+                <span class="lang-chip-tag">&lt;{el.tag}&gt;</span>
+                <span class="lang-chip-preview" attr:data-preview-for={el.tag}></span>
+              </span>
+            {/for}
+          </div>
         </div>
-      </a>
-    {/for}
+      {/for}
+    </section>
   </div>
 
-  {#if visibleCount() === 0}
+  <!-- ── PACK SECTIONS — one bento per pack ──────────────────────────────── -->
+  {#for s of sections() key={s.id}}
+    <section class="section" attr:data-pack={s.id} data-test="pack-section">
+      <hr class="section-rule" aria-hidden="true" />
+      <div class="section-head">
+        <div>
+          <span class="section-id">pack · {s.id}</span>
+          <h2 class="section-title">{s.label}</h2>
+          <p class="section-blurb">{s.blurb}</p>
+        </div>
+        <span class="section-meta">{s.entries.length} components</span>
+      </div>
+      <div class="bento" attr:data-pack-grid={s.id} data-test="catalog-grid">
+        {#for c of s.entries key={c.tag}}
+          <a
+            class="cell"
+            class:sz-wide={c.size === 'wide'}
+            class:sz-lg={c.size === 'lg'}
+            href={'/components/' + c.tag}
+            attr:data-tag={c.tag}
+            attr:hidden={c.hidden() ? true : null}
+            data-test="catalog-cell"
+          >
+            <center class="stage" attr:data-preview-for={c.tag}></center>
+            <div class="cell-foot">
+              <span class="cell-tag" data-test="catalog-tag">{c.tag}</span>
+              <span class="cell-arrow" aria-hidden="true">→</span>
+            </div>
+          </a>
+        {/for}
+      </div>
+    </section>
+  {/for}
+
+  {#if visibleCount() === 0 && visibleL1Count() === 0}
     <p class="no-results" data-test="catalog-empty">No components match “{query()}”.</p>
   {/if}
 </column>

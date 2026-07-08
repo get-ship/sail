@@ -1,57 +1,70 @@
-// Category taxonomy for the public SUI primitive catalog (apps/sui-site
-// /components page).
+// Pack taxonomy for the SUI component catalog (apps/sui-site /components).
 //
 // ONE source of truth for two questions:
-//   1. Which category a public primitive belongs to (TAG → Category).
+//   1. Which PACK a component belongs to (TAG → PackId). The packs are the
+//      eight npm workspace packages under packages/components/sui/ — the
+//      shipping boundary, not an invented UI taxonomy. The gallery groups
+//      by pack because the pack boundary is what the operator reasons about
+//      ("I need a charts pack component", "I need a media pack component").
 //   2. Which tags are NOT public catalog entries — the internal sub-primitives
 //      that compose but never appear standalone on /components
 //      (`HIDDEN_TAGS`).
 //
-// Why both lists live here:
-//   - The mapping is deliberately a `Record<string, CategoryId>` — a static
-//     lookup table keyed by tag (the compiler-built CEM produces the very
-//     same set of string keys).
-//   - The HIDDEN_TAGS set is kept right next to its parent entries'
-//     assignments so a reviewer can flip an entry from `hidden` to a
-//     category in one place — no second list to keep in sync across files.
-//   - A primitive missing the map falls into CategoryId.Utility so the
-//     catalog never silently drops an unknown tag (intentional under-claim,
-//     not over-claim of curation).
+// A primitive missing the pack map falls into PackId.Primitives so the
+// catalog never silently drops an unknown tag (intentional under-claim,
+// not over-claim of curation).
+//
+// Language elements (L1) are SEPARATE — they are bare tags the compiler
+// lowers (no `sui-` prefix), not custom elements. They live in a dedicated
+// `LANGUAGE_ELEMENTS` list rendered in its own section BEFORE the packs.
+// See L1_LANGUAGE_ELEMENTS below.
 
-// ── Categories ───────────────────────────────────────────────────────────────
+// ── Packs ────────────────────────────────────────────────────────────────────
 
-/** The eight fold-categories for the public primitive surface. Display order
- *  matches the chip row; `Utility` is the fallback bucket. */
-export type CategoryId =
-  | 'forms'
-  | 'layout'
-  | 'overlays'
-  | 'navigation'
-  | 'feedback'
-  | 'data'
-  | 'typography'
-  | 'utility'
+/** The eight shipping packs. Display order matches the gallery section order
+ *  — primitives first (the foundation), then chart/canvas/chat/code/media/
+ *  mermaid (sibling domain packs), then viewer (the harness). */
+export type PackId =
+  | 'primitives'
+  | 'charts'
+  | 'canvas'
+  | 'chat-elements'
+  | 'code-editor'
+  | 'media'
+  | 'mermaid'
+  | 'viewer'
 
-export const CATEGORY_LABELS: Record<CategoryId, string> = {
-  forms: 'Forms & Inputs',
-  layout: 'Layout',
-  overlays: 'Overlays',
-  navigation: 'Navigation',
-  feedback: 'Feedback',
-  data: 'Data Display',
-  typography: 'Typography',
-  utility: 'Utility',
+export const PACK_LABELS: Record<PackId, string> = {
+  primitives: 'Primitives',
+  charts: 'Charts',
+  canvas: 'Canvas',
+  'chat-elements': 'Chat elements',
+  'code-editor': 'Code editor',
+  media: 'Media',
+  mermaid: 'Mermaid',
+  viewer: 'Viewer',
 }
 
-export const CATEGORY_ORDER: readonly CategoryId[] = [
-  'forms',
-  'layout',
-  'overlays',
-  'navigation',
-  'feedback',
-  'data',
-  'typography',
-  'utility',
+export const PACK_BLURBS: Record<PackId, string> = {
+  primitives: 'The foundation. Forms, layout, overlays, navigation, feedback, typography — every custom element ships here.',
+  charts: 'Data viz — area, bar, donut, gauge, heatmap, line, sparkline.',
+  canvas: 'Spatial surfaces — board, draw, graph-canvas, annotation layers.',
+  'chat-elements': 'Conversational surfaces — composer, message, citation, tool-call, thinking-dots.',
+  'code-editor': 'CodeMirror-backed editor with language-aware highlighting.',
+  media: 'AV / image / CSV media primitives.',
+  mermaid: 'Diagram-as-element with the mermaid grammar.',
+  viewer: 'The harness — render, source-panel, prop-knobs, prop-matrix, component-viewer.',
+}
+
+export const PACK_ORDER: readonly PackId[] = [
+  'primitives',
+  'charts',
+  'canvas',
+  'chat-elements',
+  'code-editor',
+  'media',
+  'mermaid',
+  'viewer',
 ] as const
 
 // ── Hidden sub-primitives ────────────────────────────────────────────────────
@@ -72,20 +85,20 @@ export const HIDDEN_TAGS: Record<string, true> = {
   'sui-tree-item': true,
   // timeline — item is a slot of `<sui-timeline>`
   'sui-timeline-item': true,
-  // toast family — toast + toast-container + toast-host internals; the
-  // composed parent routes a `ship:notify` event into the container's
-  // programmatic `show()` API. The cell preview cannot drive that event
-  // from a bare mount, so the cell would always be empty. Keep the host
-  // entry visible — its description explains the contract.
+  // toggle-group — toggle is a slot of `<sui-toggle-group>`
+  'sui-toggle': true,
+  // radio-group — radio is a slot of `<sui-radio-group>`
+  'sui-radio': true,
+  // navigation-menu — item is a slot of `<sui-navigation-menu>`
+  'sui-navigation-item': true,
+  // toast family — toast + toast-container are internals; the composed
+  // host routes a `ship:notify` event into the container's programmatic
+  // `show()` API. The cell preview cannot drive that event from a bare
+  // mount, so the cell would always be empty. Keep the host entry visible
+  // — its description explains the contract.
   'sui-toast': true,
   'sui-toast-container': true,
 
-  // radio (radio-group is the public entry; radio is its slot)
-  'sui-radio': true,
-
-  // Brand mark — the SHIP logo, not a public component. It is brand
-  // chrome (it composes the topbar, account menu, etc.) and has no
-  // place in the /components catalog card grid.
   // Viewer scaffolding — these primitives need the JS-prop path
   // (`prop:source` / `prop:compile` set as host JS properties, NOT a
   // `setAttribute` write) to render. A bare mount leaves them empty,
@@ -98,119 +111,177 @@ export const HIDDEN_TAGS: Record<string, true> = {
   'sui-component-viewer': true,
 }
 
-// ── Public tag → category mapping ───────────────────────────────────────────
+// ── Public tag → pack mapping ────────────────────────────────────────────────
 
-/** Categorization for every public primitive. Organized by pack for review;
- *  the runtime only cares about the flat Record. Tags not in the map fall to
- *  `CategoryId.Utility`. */
-export const TAG_CATEGORY: Record<string, CategoryId> = {
-  // ── @ship/sui-primitives — Forms & Inputs ─────────────────────────────
-  'sui-input':           'forms',
-  'sui-switch':          'forms',
-  'sui-radio-group':     'forms',
-  'sui-toggle-group':    'forms',
-  'sui-select':          'forms',
-  'sui-combobox':        'forms',
-  'sui-autocomplete':    'forms',
-  'sui-field':           'forms',
-  'sui-label':           'forms',
-  'sui-date-picker':     'forms',
-  'sui-color-picker':    'forms',
-  'sui-file-upload':     'forms',
-  'sui-slider':          'forms',
+/** Pack membership for every public primitive. The runtime only cares about
+ *  the flat Record; the comments below mirror the workspace package layout
+ *  for review. Tags not in the map fall to `PackId.Primitives`. */
+export const TAG_PACK: Record<string, PackId> = {
+  // ── @ship/sui-primitives ─────────────────────────────────────────────
+  'sui-accordion':          'primitives',
+  'sui-alert':              'primitives',
+  'sui-alert-dialog':       'primitives',
+  'sui-autocomplete':       'primitives',
+  'sui-avatar':             'primitives',
+  'sui-chip':               'primitives',
+  'sui-cmdk':               'primitives',
+  'sui-collapsible':        'primitives',
+  'sui-color-picker':       'primitives',
+  'sui-combobox':           'primitives',
+  'sui-context-menu':       'primitives',
+  'sui-date-picker':        'primitives',
+  'sui-dialog':             'primitives',
+  'sui-dropdown-menu':      'primitives',
+  'sui-empty-state':        'primitives',
+  'sui-error-boundary':     'primitives',
+  'sui-error-state':        'primitives',
+  'sui-field':              'primitives',
+  'sui-file-upload':        'primitives',
+  'sui-hover-card':         'primitives',
+  'sui-icon':               'primitives',
+  'sui-input':              'primitives',
+  'sui-json-view':          'primitives',
+  'sui-label':              'primitives',
+  'sui-markdown':           'primitives',
+  'sui-nav-top':            'primitives',
+  'sui-navigation-menu':    'primitives',
+  'sui-pagination':         'primitives',
+  'sui-popover':            'primitives',
+  'sui-portal':             'primitives',
+  'sui-radio-group':        'primitives',
+  'sui-scroll-area':        'primitives',
+  'sui-select':             'primitives',
+  'sui-sheet':              'primitives',
+  'sui-slider':             'primitives',
+  'sui-spinner':            'primitives',
+  'sui-switch':             'primitives',
+  'sui-table':              'primitives',
+  'sui-tabs':               'primitives',
+  'sui-theme-picker':       'primitives',
+  'sui-timeline':           'primitives',
+  'sui-toast-host':         'primitives',
+  'sui-toggle-group':       'primitives',
+  'sui-tooltip':            'primitives',
+  'sui-tree':               'primitives',
+  'sui-tree-grid':          'primitives',
+  'sui-tree-view':          'primitives',
+  'sui-diff':               'primitives',
+  'sui-drawer':             'primitives',
 
-  // ── @ship/sui-primitives — Layout ─────────────────────────────────────
-  'sui-accordion':       'layout',
-  'sui-tabs':            'layout',
-  'sui-timeline':        'layout',
-  'sui-scroll-area':     'layout',
-  'sui-collapsible':     'layout',
+  // ── @ship/sui-canvas ────────────────────────────────────────────────
+  'sui-annotation-layer':   'canvas',
+  'sui-annotation-list':    'canvas',
+  'sui-annotation-marker':  'canvas',
+  'sui-board':              'canvas',
+  'sui-canvas':             'canvas',
+  'sui-draw':               'canvas',
+  'sui-graph-canvas':       'canvas',
 
-  // ── @ship/sui-primitives — Overlays ───────────────────────────────────
-  'sui-tooltip':         'overlays',
-  'sui-popover':         'overlays',
-  'sui-hover-card':      'overlays',
-  'sui-dropdown-menu':   'overlays',
-  'sui-context-menu':    'overlays',
-  'sui-dialog':          'overlays',
-  'sui-alert-dialog':    'overlays',
-  'sui-drawer':          'overlays',
-  'sui-cmdk':            'overlays',
-  'sui-portal':          'overlays',
+  // ── @ship/sui-charts ────────────────────────────────────────────────
+  'sui-area-chart':         'charts',
+  'sui-bar-chart':          'charts',
+  'sui-donut':              'charts',
+  'sui-gauge':              'charts',
+  'sui-heatmap':            'charts',
+  'sui-line-chart':         'charts',
+  'sui-sparkline':          'charts',
 
-  // ── @ship/sui-primitives — Navigation ─────────────────────────────────
-  'sui-nav-top':         'navigation',
-  'sui-navigation-menu': 'navigation',
-  'sui-pagination':      'navigation',
+  // ── @ship/sui-chat-elements ─────────────────────────────────────────
+  'sui-citation':           'chat-elements',
+  'sui-composer':           'chat-elements',
+  'sui-message':            'chat-elements',
+  'sui-message-list':       'chat-elements',
+  'sui-thinking-dots':      'chat-elements',
+  'sui-tool-call':          'chat-elements',
 
-  // ── @ship/sui-primitives — Feedback ───────────────────────────────────
-  'sui-alert':           'feedback',
-  'sui-toast-host':      'feedback',
-  'sui-spinner':         'feedback',
-  'sui-empty-state':     'feedback',
-  'sui-error-state':     'feedback',
-  'sui-error-boundary':  'feedback',
+  // ── @ship/sui-code-editor ───────────────────────────────────────────
+  'sui-code-editor':        'code-editor',
 
-  // ── @ship/sui-primitives — Data Display ───────────────────────────────
-  'sui-table':           'data',
-  'sui-tree':            'data',
-  'sui-tree-grid':       'data',
-  'sui-tree-view':       'data',
-  'sui-calendar':        'data',
-  'sui-json-view':       'data',
-  'sui-sheet':           'data',
-  // ── @ship/sui-primitives — Typography & identity ──────────────────────
-  'sui-icon':            'typography',
-  'sui-avatar':          'typography',
-  'sui-chip':            'typography',
-  // ── @ship/sui-primitives — Utility ────────────────────────────────────
-  'sui-theme-picker':    'utility',
+  // ── @ship/sui-media ─────────────────────────────────────────────────
+  'sui-media-av':           'media',
+  'sui-media-csv':          'media',
+  'sui-media-image':        'media',
 
-  // ── @ship/sui-viewer — Data Display (the engine primitives) ──────────
-  'sui-render':          'data',
-  'sui-source-panel':    'data',
-  'sui-prop-knobs':      'data',
-  'sui-prop-matrix':     'data',
-  'sui-component-viewer':'data',
+  // ── @ship/sui-mermaid ───────────────────────────────────────────────
+  'sui-mermaid':            'mermaid',
 
-  // ── @ship/sui-charts — Data Display ───────────────────────────────────
-  'sui-area-chart':      'data',
-  'sui-bar-chart':       'data',
-  'sui-donut':           'data',
-  'sui-gauge':           'data',
-  'sui-heatmap':         'data',
-  'sui-line-chart':      'data',
-  'sui-sparkline':       'data',
-
-  // ── @ship/sui-canvas ── Data Display ──────────────────────────────────
-  'sui-annotation-layer':'data',
-  'sui-annotation-list': 'data',
-  'sui-annotation-marker':'data',
-  'sui-board':           'data',
-  'sui-canvas':          'data',
-  'sui-draw':            'data',
-  'sui-graph-canvas':    'data',
-
-  // ── @ship/sui-code-editor — Typography (content authoring) ────────────
-  'sui-code-editor':     'typography',
-
-  // ── @ship/sui-chat-elements — Data Display ───────────────────────────
-  'sui-citation':        'data',
-  'sui-composer':        'data',
-  'sui-message':         'data',
-  'sui-message-list':    'data',
-  'sui-thinking-dots':   'data',
-  'sui-tool-call':       'data',
-
-  // ── @ship/sui-media — Data Display ────────────────────────────────────
-  'sui-media-av':        'data',
-  'sui-media-csv':       'data',
-  'sui-media-image':     'data',
-
-  // ── @ship/sui-mermaid — Data Display ──────────────────────────────────
-  'sui-mermaid':         'data',
-
-  // ── @ship/sui-code — Typography ───────────────────────────────────────
-  'sui-diff':            'typography',
-  'sui-markdown':        'typography',
+  // ── @ship/sui-viewer ────────────────────────────────────────────────
+  // All viewer entries are hidden (see HIDDEN_TAGS); this block documents
+  // that the pack exists in the workspace but does NOT contribute public
+  // gallery cells. The /components/[tag] route still resolves the viewer
+  // primitives (the harness) for tooling use.
 }
+
+// ── L1 language elements ────────────────────────────────────────────────────
+
+/** A L1 element the compiler lowers — bare `<tag>`, not a custom element.
+ *  These are NOT in the CEM; they live in the framework's compiler. The
+ *  gallery renders them in a separate "Language elements" section before
+ *  the pack sections, so a layout keyword and a behavior component never
+ *  look like peers. */
+export interface LanguageElement {
+  /** The bare tag name (no prefix). The gallery mounts a real instance of
+   *  this tag in its preview stage. */
+  tag: string
+  /** Short label for the card. */
+  label: string
+  /** Category of the element for sub-grouping. */
+  group: 'layout' | 'typography' | 'primitives'
+  /** The HTML to project into the element — its representative state.
+   *  Optional (default empty string): void elements like `<separator>`
+   *  carry no children. */
+  innerHTML?: string
+  /** Optional attributes the preview mount sets before connect. */
+  attrs?: Record<string, string>
+}
+
+export const LANGUAGE_GROUPS = [
+  { id: 'layout',      label: 'Layout',     blurb: 'Compiler-lowered flex & grid keywords.' },
+  { id: 'typography',  label: 'Typography', blurb: 'Text and inline marks, themed by tokens.' },
+  { id: 'primitives',  label: 'Stdlib L1',  blurb: 'Foundational surfaces the framework ships.' },
+] as const
+export type LanguageGroupId = typeof LANGUAGE_GROUPS[number]['id']
+
+/** The full L1 element set. Curated — every entry here corresponds to a
+ *  keyword the SUI compiler recognizes. The list is hand-picked, not
+ *  auto-generated, so the gallery's L1 section is a curated tour.
+ *
+ *  Each entry's `innerHTML` is the representative state — a real, recognisable
+ *  example of the keyword lowers to. Layout keywords compose with `<card>`
+ *  (also L1) for visible content; typography entries use the type scale
+ *  their tag lowers to. The composed "showcase" demos above the chip row
+ *  are authored in the catalog template. */
+export const L1_LANGUAGE_ELEMENTS: LanguageElement[] = [
+  // ── Layout — flex & grid keywords lowered at compile time ──
+  { tag: 'row',       label: 'row',       group: 'layout',     innerHTML: '<card padding="sm">A</card><card padding="sm">B</card><card padding="sm">C</card>' },
+  { tag: 'column',    label: 'column',    group: 'layout',     innerHTML: '<card padding="sm">A</card><card padding="sm">B</card><card padding="sm">C</card>' },
+  { tag: 'grid',      label: 'grid',      group: 'layout',     innerHTML: '<card padding="sm">1</card><card padding="sm">2</card><card padding="sm">3</card><card padding="sm">4</card>', attrs: { cols: '2', gap: '2' } },
+  { tag: 'center',    label: 'center',    group: 'layout',     innerHTML: '<card padding="sm">centered</card>' },
+  { tag: 'stack',     label: 'stack',     group: 'layout',     innerHTML: '<p>line one</p><p>line two</p><p>line three</p>' },
+
+  // ── Typography — text and inline marks, themed by tokens ──
+  { tag: 'h1',     label: 'h1',     group: 'typography', innerHTML: 'Display' },
+  { tag: 'h2',     label: 'h2',     group: 'typography', innerHTML: 'Heading' },
+  { tag: 'h3',     label: 'h3',     group: 'typography', innerHTML: 'Subhead' },
+  { tag: 'h4',     label: 'h4',     group: 'typography', innerHTML: 'Title' },
+  { tag: 'h5',     label: 'h5',     group: 'typography', innerHTML: 'Eyebrow' },
+  { tag: 'h6',     label: 'h6',     group: 'typography', innerHTML: 'Caption' },
+  { tag: 'p',      label: 'p',      group: 'typography', innerHTML: 'Body text lowers to a typographic rhythm.' },
+  { tag: 'small',  label: 'small',  group: 'typography', innerHTML: 'Hint / metadata' },
+  { tag: 'a',      label: 'a',      group: 'typography', innerHTML: 'inline link', attrs: { href: '#' } },
+  { tag: 'strong', label: 'strong', group: 'typography', innerHTML: 'strong emphasis' },
+  { tag: 'em',     label: 'em',     group: 'typography', innerHTML: 'stress emphasis' },
+  { tag: 'code',   label: 'code',   group: 'typography', innerHTML: 'const x = 1' },
+  { tag: 'kbd',    label: 'kbd',    group: 'typography', innerHTML: '⌘K' },
+  { tag: 'ul',     label: 'ul',     group: 'typography', innerHTML: '<li>one</li><li>two</li><li>three</li>' },
+  { tag: 'ol',     label: 'ol',     group: 'typography', innerHTML: '<li>one</li><li>two</li><li>three</li>' },
+  { tag: 'li',     label: 'li',     group: 'typography', innerHTML: 'list item' },
+  { tag: 'blockquote', label: 'blockquote', group: 'typography', innerHTML: 'A short quote lowers to a typographic block.' },
+
+  // ── Stdlib L1 — foundational surfaces the framework ships ──
+  { tag: 'card',      label: 'card',      group: 'primitives', innerHTML: 'A content surface with tone, padding, and an optional accent bar.' },
+  { tag: 'icon',      label: 'icon',      group: 'primitives', attrs: { name: 'sparkles' } },
+  { tag: 'label',     label: 'label',     group: 'primitives', innerHTML: 'Field label' },
+  { tag: 'separator', label: 'separator', group: 'primitives' },
+  { tag: 'spinner',   label: 'spinner',   group: 'primitives' },
+]
