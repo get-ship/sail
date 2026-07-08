@@ -47,5 +47,9 @@
     "@codemirror/state": "^6",
     "@codemirror/view": "^6",
     "@lezer/highlight": "^1"
+  },
+  "devDependencies": {
+    "@ship/test-setup": "workspace:*",
+    "vitest": "^4.1.5"
   }
 }

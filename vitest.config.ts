@@ -11,8 +11,8 @@
 import { defineConfig } from 'vitest/config'
 
 const PROJECTS = [
-  'packages/components/sui/canvas',
-  'packages/components/sui/charts',
+  'packages/components/sui/code-editor',
+  'packages/components/sui/mermaid',
   'packages/components/sui/chat-elements',
   'packages/components/sui/media',
   'packages/components/sui/primitives',
@@ -22,6 +22,7 @@ const PROJECTS = [
   'packages/deck/router',
   'packages/sui/dom',
   'packages/sui/runtime',
+  'packages/sui/tokens',
   'packages/sui/test-setup',
   'packages/sui/tutorial',
   // `tests/integration` is intentionally omitted — its `vitest.config.ts`

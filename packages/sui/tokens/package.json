@@ -14,5 +14,12 @@
   },
   "files": [
     "src"
-  ]
+  ],
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@ship/test-setup": "workspace:*",
+    "vitest": "^4.1.5"
+  }
 }

@@ -96,7 +96,12 @@ pub fn compile(source: &str, opts_json: &str) -> Result<JsValue, JsValue> {
         setup_url: parsed.setup_url,
         mode,
         source_path: None,
-        styles: parsed.styles,
+        // The optional styles-injection flag was removed from
+        // `CompileOpts` (the CLI no longer accepts `--styles`); the
+        // wasm surface was orphaned by that refactor and the
+        // playground never sent it. Drop the field reference; the
+        // `WasmOpts.styles` deserialization key stays (forward-
+        // compatible — ignored on this side).
         component_meta,
         emit_dts: false,
         emit_component_imports: false,

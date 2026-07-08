@@ -31,5 +31,9 @@
     "@ship/sui-runtime": "workspace:*",
     "@ship/sui-dom": "workspace:*",
     "mermaid": "^11.4.0"
+  },
+  "devDependencies": {
+    "@ship/test-setup": "workspace:*",
+    "vitest": "^4.1.5"
   }
 }
