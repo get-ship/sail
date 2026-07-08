@@ -173,6 +173,15 @@
     justify-content: center;
   }
   .label { flex: 1; text-align: center; }
+  /* Fixed 7-column day grid. grid-template-columns is a raw escape-hatch (sx has
+     no fixed-column keyword; the <grid> layout keyword is auto-fill-only, no
+     `cols`), so the week/day-of-week rows are a real CSS grid here — same
+     approach as sui-calendar's .dow-row/.week. */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: var(--space-1);
+  }
   .dow { text-align: center; }
   .day {
     appearance: none;
@@ -245,7 +254,7 @@
       <button type="button" data-act="next" aria-label="Next month" part="nav-btn"
         sx="w:icon-size-2xl h:icon-size-2xl radius:sm fg:muted-foreground cursor:pointer hover:bg:muted hover:fg:foreground">›</button>
     </row>
-    <grid class="grid" part="grid" role="grid" cols="7" gap="1">
+    <div class="grid" part="grid" role="grid">
       {#for d of dayHeaders() key={d.key}}
         <span class="dow" role="columnheader" part="dow"
           sx="text:sm fg:muted-foreground py:1 weight:medium">{d.label}</span>
@@ -260,8 +269,8 @@
           tabindex={cell.focused ? '0' : '-1'}
           class="day {cell.empty ? 'empty' : ''} {cell.selected ? 'selected' : ''} {cell.focused ? 'focused' : ''} {cell.today ? 'today' : ''}"
           data-iso={cell.iso}
-        >{cell.day}</button>
+        >{cell.empty ? '' : cell.day}</button>
       {/for}
-    </grid>
+    </div>
   </div>
 {/if}
