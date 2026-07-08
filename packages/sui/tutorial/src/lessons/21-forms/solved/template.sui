@@ -1,33 +1,36 @@
 <prop name="shadow" type="bool" default="false" />
 
+<!-- <style> is the escape hatch for: the per-label stack layout (sx
+     can't reach descendants), the `:disabled` pseudo on the submit
+     button, and `font-family` / `font-weight` (no sx props). -->
 <style>
-  .signup { display: grid; gap: 8px; max-width: 28rem; }
   .signup label { display: grid; gap: 4px; font-size: 0.875rem; }
-  .signup input[type="text"], .signup input[type="email"] { padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--background); color: var(--foreground); }
-  .err { color: var(--destructive); font-size: 0.75rem; margin: 0; }
-  .signup button { padding: 6px 12px; background: var(--primary); color: var(--background); border: none; border-radius: 6px; font-weight: 500; cursor: pointer; }
   .signup button:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>
 
-<form class="signup" on:submit|preventDefault={(e) => form.submit(e)}>
-  <label>name <input type="text" bind:value={form.name} /></label>
-  {#if form.errors().name}<p class="err">{form.errors().name}</p>{/if}
+<form class="signup" on:submit|preventDefault={(e) => form.submit(e)} sx="max-w:panel-max-w-md">
+  <column gap="2">
+    <label>name <input type="text" bind:value={form.name} sx="px:2 py:1_5 border:border radius:md bg:background fg:foreground" /></label>
+    {#if form.errors().name}<p class="err" sx="fg:destructive text:xs m:0">{form.errors().name}</p>{/if}
 
-  <label>email <input type="email" bind:value={form.email} /></label>
-  {#if form.errors().email}<p class="err">{form.errors().email}</p>{/if}
+    <label>email <input type="email" bind:value={form.email} sx="px:2 py:1_5 border:border radius:md bg:background fg:foreground" /></label>
+    {#if form.errors().email}<p class="err" sx="fg:destructive text:xs m:0">{form.errors().email}</p>{/if}
 
-  <label style="flex-direction: row; align-items: center;">
-    <input type="checkbox" bind:checked={form.accept} /> I accept the terms
-  </label>
-  {#if form.errors().accept}<p class="err">{form.errors().accept}</p>{/if}
+    <row align="center" gap="1">
+      <input type="checkbox" bind:checked={form.accept} /> I accept the terms
+    </row>
+    {#if form.errors().accept}<p class="err" sx="fg:destructive text:xs m:0">{form.errors().accept}</p>{/if}
 
-  <div style="display: flex; gap: 8px; align-items: center;">
-    <button type="submit" disabled={!form.valid() || form.pending()}>
-      {form.pending() ? 'submitting…' : 'submit'}
-    </button>
-    <button type="button" on:click={() => form.reset()} style="background: transparent; color: var(--foreground); border: 1px solid var(--border);">reset</button>
-    <span style="font-size: 0.75rem; color: var(--muted-foreground); margin-left: auto;">{form.dirty() ? 'dirty' : 'clean'}</span>
-  </div>
+    <row gap="2" align="center" justify="between">
+      <row gap="2" align="center">
+        <button type="submit" disabled={!form.valid() || form.pending()} sx="px:3 py:1_5 bg:primary fg:background border:none radius:md weight:medium cursor:pointer">
+          {form.pending() ? 'submitting…' : 'submit'}
+        </button>
+        <button type="button" on:click={() => form.reset()} sx="px:3 py:1_5 bg:transparent fg:foreground border:border radius:md cursor:pointer">reset</button>
+      </row>
+      <span sx="text:xs fg:muted-foreground">{form.dirty() ? 'dirty' : 'clean'}</span>
+    </row>
 
-  {#if form.lastError()}<p class="err">submit failed: {form.lastError().message}</p>{/if}
+    {#if form.lastError()}<p class="err" sx="fg:destructive text:xs m:0">submit failed: {form.lastError().message}</p>{/if}
+  </column>
 </form>
