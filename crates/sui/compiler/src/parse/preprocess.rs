@@ -814,7 +814,21 @@ fn lower_layout(source: &str) -> (String, String) {
             // whole thing lowers to a `class={…}` binding.
             let mut static_parts: Vec<String> = vec![base_class];
             let mut dyn_parts: Vec<String> = Vec::new();
+            // `cols` vs `min` precedence on `<grid>`: a fixed column count and a
+            // responsive `auto-fill minmax` axis are mutually exclusive — both
+            // own `grid-template-columns`. `cols` wins, so when present we
+            // skip the `min` lowering entirely (the underlying div only gets
+            // the `cols` rule, no `min` class, no minmax track list).
+            let has_cols = t.attrs.iter().any(|(n, _)| n == "cols");
+            let mut skip_props: std::collections::HashSet<&str> =
+                std::collections::HashSet::new();
+            if t.tag == "grid" && has_cols {
+                skip_props.insert("min");
+            }
             for &prop in layout::tag_props(&t.tag) {
+                if skip_props.contains(prop) {
+                    continue;
+                }
                 let attr = t.attrs.iter().find(|(n, _)| n == prop).map(|(_, v)| v.as_str());
                 match layout::lower_axis(&t.tag, prop, attr) {
                     Some(layout::AxisLower::Static { class, rule }) => {
@@ -837,7 +851,11 @@ fn lower_layout(source: &str) -> (String, String) {
             let mut rest = String::new();
             for (name, value) in &t.attrs {
                 match name.as_str() {
-                    "gap" | "align" | "justify" | "min" | "flow" => {}
+                    // Layout axis props — already consumed by the lowering loop
+                    // above; their classes/rules are folded into the div's
+                    // `class` and the injected stylesheet, NEVER emitted as
+                    // raw HTML attrs.
+                    "gap" | "align" | "justify" | "min" | "flow" | "cols" | "direction" => {}
                     "class" if value.starts_with('{') => {
                         dyn_parts.push(format!("({})", &value[1..value.len() - 1]));
                     }
@@ -846,7 +864,13 @@ fn lower_layout(source: &str) -> (String, String) {
                             static_parts.push(value.clone());
                         }
                     }
-                    _ => {
+                    name if layout::is_passthrough_attr(name) => {
+                        // Recognized HTML/global pass-through (id, data-*,
+                        // aria-*, on:*, type/value/href/src/…). Emit verbatim
+                        // onto the div. The lint and the compiler share this
+                        // pass-through list via `layout::is_passthrough_attr`,
+                        // so a typo or unsupported layout attr never silently
+                        // rides through to the div as a dead attribute.
                         rest.push(' ');
                         rest.push_str(name);
                         if !value.is_empty() {
@@ -854,6 +878,13 @@ fn lower_layout(source: &str) -> (String, String) {
                             rest.push_str(value);
                             rest.push('"');
                         }
+                    }
+                    _ => {
+                        // An attribute the lint would have already rejected
+                        // as an unknown layout-attr. We never reach here on
+                        // well-formed sources (the lint is the build gate);
+                        // emit nothing defensively so a bad attr can't
+                        // silently flow through to the div.
                     }
                 }
             }
@@ -2319,6 +2350,115 @@ mod tests {
         let out = preprocess(r#"<column><row><center>x</center></row></column>"#);
         assert_eq!(out.matches("<div").count(), 3, "three divs: {out}");
         assert_eq!(out.matches("</div>").count(), 3, "three closes: {out}");
+    }
+
+    // --- `<grid cols="…">` (m-sui-stdlib / job/sui-oss-grid) ---------------
+    //
+    // The original bug: `cols="7"` was treated as an unknown attribute and
+    // silently flowed through to the lowered `<div>` as a dead HTML attr —
+    // collapsing the calendar grid to a single column with no compile error.
+    // These tests pin both halves of the fix:
+    //   (1) `<grid cols="7">` lowers to a fixed-column grid (the API works).
+    //   (2) An unknown attribute name on a layout keyword is dropped from
+    //       the emit (the lint surfaces it as a hard error before this
+    //       pass runs; we defend in depth here so a future regression on
+    //       the lint side can't quietly produce broken HTML again).
+
+    #[test]
+    fn grid_cols_emits_repeat_minmax_track_list() {
+        let out = preprocess(r#"<grid cols="7" gap="4">x</grid>"#);
+        assert!(
+            out.contains(".sui-gc-7{grid-template-columns:repeat(7,minmax(0,1fr))}"),
+            "cols lowering produced the repeat(minmax) track: {out}"
+        );
+        assert!(out.contains("sui-gc-7"), "the atomic class is present: {out}");
+        assert!(out.contains("sui-grid"), "the base grid class still applied: {out}");
+        assert!(out.contains("sui-g-4"), "other axes still apply: {out}");
+        assert!(!out.contains("cols=\"7\""), "cols doesn't leak as a raw attr: {out}");
+    }
+
+    #[test]
+    fn grid_cols_precedence_min_is_suppressed() {
+        // `cols` and `min` both own `grid-template-columns`; the fixed count
+        // wins. With both present the responsive axis is dropped so the
+        // class list doesn't double the property.
+        let out = preprocess(r#"<grid cols="5" min="lg">x</grid>"#);
+        assert!(out.contains("sui-gc-5"), "cols class applied: {out}");
+        assert!(!out.contains("sui-gm-"), "min class suppressed: {out}");
+        assert!(
+            !out.contains("auto-fill"),
+            "no auto-fill track when cols is set: {out}"
+        );
+    }
+
+    #[test]
+    fn grid_cols_dynamic_lowers_to_a_class_binding_with_all_rules() {
+        // Same dynamic-axis shape as `<row align={pick()}>`: an inline
+        // expression concatenated with the prefix, and EVERY rule for the
+        // axis injected so any runtime value matches.
+        let out = preprocess(r#"<grid cols={n()}>x</grid>"#);
+        assert!(out.contains("'sui-gc-' + (n())"), "dynamic cols fragment: {out}");
+        for n in 1..=12 {
+            assert!(
+                out.contains(&format!(".sui-gc-{n}{{grid-template-columns:repeat({n},minmax(0,1fr))}}")),
+                "rule for cols={n} present: {out}"
+            );
+        }
+    }
+
+    #[test]
+    fn unknown_layout_attribute_is_dropped_not_passed_through() {
+        // Defensive: even if the lint weren't running, an unknown attr on a
+        // layout keyword must not silently flow through to the lowered div.
+        // The compile-emitted output must not carry a dead `bogus="x"`.
+        let out = preprocess(r#"<grid bogus="x">x</grid>"#);
+        assert!(!out.contains("bogus="), "unknown attr dropped from emit: {out}");
+        assert!(out.contains("sui-grid"), "the base layout class still there: {out}");
+    }
+
+    #[test]
+    fn recognized_passthroughs_ride_to_the_div() {
+        // The compiler's `lower_layout` consults the lint's
+        // `is_passthrough_attr` (single source of truth). Assert each known
+        // pass-through survives on the lowered div.
+        let out = preprocess(
+            r#"<grid id="hero" title="t" data-x="1" aria-label="x" role="region">x</grid>"#,
+        );
+        assert!(out.contains(r#"id="hero""#), "id survived: {out}");
+        assert!(out.contains(r#"title="t""#), "title survived: {out}");
+        assert!(out.contains(r#"data-x="1""#), "data-* survived: {out}");
+        assert!(out.contains(r#"aria-label="x""#), "aria-* survived: {out}");
+        assert!(out.contains(r#"role="region""#), "role survived: {out}");
+    }
+    #[test]
+    fn directive_prefixes_ride_to_the_div() {
+        // SUI directive attrs (`bind:this`, `class:out`, `style:transform`,
+        // `style:--custom-prop`, etc.) are framework bindings — they ride
+        // through the layout lowering unchanged so the compiler's later
+        // directive-handling pass can resolve them. The lint acknowledges
+        // the same vocabulary, so they are not "unknown attribute" errors.
+        let out = preprocess(
+            r#"<row bind:this={panelEl} class:out={!cr.cell.inMonth} style:transform={t()}>x</row>"#,
+        );
+        assert!(out.contains("bind:this="), "bind:this survives: {out}");
+        assert!(out.contains("class:out="), "class:out survives: {out}");
+        assert!(out.contains("style:transform="), "style:transform survives: {out}");
+    }
+
+    #[test]
+    fn column_direction_row_lowers_to_flex_direction_row_override() {
+        // Backward-compat: `<column direction="row">` was the old
+        // `<sui-stack direction="row">` idiom — the keyword lowering
+        // needs to honor it as an explicit flex-direction override so
+        // legacy components keep their visual layout.
+        let out = preprocess(r#"<column gap="2" direction="row">x</column>"#);
+        assert!(out.contains("sui-dir-row"), "direction class emitted: {out}");
+        assert!(
+            out.contains(".sui-dir-row{flex-direction:row}"),
+            "direction rule emitted: {out}"
+        );
+        // No `sui-dir-column` because there's no default.
+        assert!(!out.contains("sui-dir-column"), "no implicit direction: {out}");
     }
 
     #[test]
