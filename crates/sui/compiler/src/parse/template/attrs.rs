@@ -582,7 +582,7 @@ fn compile_motion(
     let stripped = stripped.strip_suffix('}').unwrap_or(stripped);
     let props = match parse_motion_static_config(stripped, value_span, loc) {
         Ok(props) => props,
-        Err(parse_err) if !has_static_shape(value) => {
+        Err(_) if !has_static_shape(value) => {
             return Err(err(format!(
                 "motion:{trigger}={{...}} — dynamic configs are not yet supported; \
                  the value must be a static object literal like \

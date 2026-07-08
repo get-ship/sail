@@ -161,10 +161,12 @@ fn str(v: Option<&Value>) -> Option<String> {
 #[derive(Debug, Clone)]
 enum Value {
     Object(BTreeMap<String, Value>),
-    Array(Vec<Value>),
+    // Array/Bool are recognized so the parser accepts any valid JSON, but the
+    // presets consumer only reads objects/strings/numbers — no payload retained.
+    Array,
     String(String),
     Number(f64),
-    Bool(bool),
+    Bool,
     Null,
 }
 
@@ -258,14 +260,13 @@ impl<'a> Parser<'a> {
 
     fn parse_array(&mut self) -> Result<Value, String> {
         self.eat(b'[')?;
-        let mut v = Vec::new();
         self.skip_ws_and_comments();
         if self.peek() == Some(b']') {
             self.pos += 1;
-            return Ok(Value::Array(v));
+            return Ok(Value::Array);
         }
         loop {
-            v.push(self.parse_value()?);
+            self.parse_value()?;
             self.skip_ws_and_comments();
             match self.peek() {
                 Some(b',') => {
@@ -273,7 +274,7 @@ impl<'a> Parser<'a> {
                 }
                 Some(b']') => {
                     self.pos += 1;
-                    return Ok(Value::Array(v));
+                    return Ok(Value::Array);
                 }
                 other => {
                     return Err(format!(
@@ -371,10 +372,10 @@ impl<'a> Parser<'a> {
     fn parse_bool(&mut self) -> Result<Value, String> {
         if self.bytes[self.pos..].starts_with(b"true") {
             self.pos += 4;
-            Ok(Value::Bool(true))
+            Ok(Value::Bool)
         } else if self.bytes[self.pos..].starts_with(b"false") {
             self.pos += 5;
-            Ok(Value::Bool(false))
+            Ok(Value::Bool)
         } else {
             Err("expected boolean".to_string())
         }

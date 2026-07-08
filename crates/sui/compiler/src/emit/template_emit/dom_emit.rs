@@ -399,7 +399,7 @@ impl TemplateEmitter {
                     d = dir.as_str(),
                 ));
             }
-             AttrInstr::Motion { trigger, props, span } => {
+             AttrInstr::Motion { trigger, props, span: _ } => {
                 // AOT-baked `motion:` directive. Each `MotionProp` produces
                 // one pre-baked `el.animate(...)` call; all are wired to
                 // the same trigger via `__sui_motion_attach`. The runtime

@@ -304,8 +304,7 @@ fn render_dom_imports(program: &Program, is_view: bool) -> Vec<String> {
     let Ok(lowered) = lower::lower(program, is_view) else {
         return Vec::new();
     };
-    let mut imports: Vec<String> = lowered.dom_imports.iter().map(|s| s.to_string()).collect();
-    imports
+    lowered.dom_imports.iter().map(|s| s.to_string()).collect()
 }
 
 /// Detect template features the synthetic render cannot yet emit correctly,

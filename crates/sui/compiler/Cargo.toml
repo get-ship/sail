@@ -2,6 +2,7 @@
 name = "sui-compiler"
 version = "0.1.0"
 edition = "2024"
+license.workspace = true
 publish = false
 build = "build.rs"
 description = "Ahead-of-time compiler for `.sui` source files. Emits ESM JS that hydrates against `@ship/sui-runtime` without re-parsing at load time."

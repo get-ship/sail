@@ -4,16 +4,29 @@
   "private": false,
   "type": "module",
   "license": "MIT",
+  "description": "In-browser WebAssembly build of the SUI compiler — compiles .sui source to ESM at edit time (docs playground + LSP worker).",
+  "keywords": [
+    "sui",
+    "compiler",
+    "wasm",
+    "webassembly",
+    "web-components"
+  ],
   "files": [
     "pkg"
   ],
   "scripts": {
-    "prepack": "test -f pkg/sui_compiler.js || (cd ../../../.. && bun run wasm) ; printf '# override wasm-pack .gitignore\\n' > pkg/.npmignore"
+    "pretest": "test -f pkg/sui_compiler.js || (cd ../../.. && bun run wasm)",
+    "test": "vitest run",
+    "prepack": "test -f pkg/sui_compiler.js || (cd ../../.. && bun run wasm) ; printf '# override wasm-pack .gitignore\\n' > pkg/.npmignore"
   },
   "main": "./pkg/sui_compiler.js",
   "types": "./pkg/sui_compiler.d.ts",
   "exports": {
     ".": "./pkg/sui_compiler.js",
     "./sui_compiler_bg.wasm": "./pkg/sui_compiler_bg.wasm"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.5"
   }
 }
