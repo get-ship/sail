@@ -7,22 +7,23 @@
   breadcrumbs, command-bar trigger, theme picker, account menu.
 
   This is a composition primitive: the nav-top itself holds no
-  state. State lives in the slotted children (e.g. the theme
-  picker reads `ship.theme.state()`, the account chip reads
-  `ship.account.state()` via `@ship/sdk-client`). The nav-top
-  exposes a `sui:nav-top:ready` event after first mount so the
-  app can wire post-mount concerns.
+  state. State lives in the slotted children; wiring any
+  theme/account/billing/project state is the CONSUMER's job
+  (slotted in). The nav-top exposes a `sui:nav-top:ready`
+  event after first mount so the app can wire post-mount
+  concerns.
 
-  Prop / event / slot
+  NEUTRAL API SURFACE (this component is domain-neutral)
   ───────────────────────────────────────────────────────────────────
   sticky  (bool, false)  when true, position: sticky; top: 0 with
                          a subtle backdrop blur.
   ───────────────────────────────────────────────────────────────────
   Slots:
-    brand     the brand mark / home link (left-aligned)
+    brand     the brand mark / home link (left-aligned) — generic
+              layout slot, not coupled to any product concept
     default   the primary nav content (center) — breadcrumbs,
               per-view actions, command-bar host
-    actions   the trailing widgets (right) — theme, account, etc.
+    actions   the trailing widgets (right) — caller-provided
   ───────────────────────────────────────────────────────────────────
   Events (composed, bubbling):
     sui:nav-top:ready {}  — fired once after first mount

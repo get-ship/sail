@@ -10,9 +10,10 @@
   applyTheme + persistTheme, dispatches `sui-theme-change`, closes the
   panel.
 
-  Listens to `ship:theme:change` on document (the canonical event
-  applyTheme dispatches) so external theme changes (devtools, settings,
-  programmatic) repaint the trigger and the card selection.
+  Listens to `sui-theme-change` on document (the neutral event
+  channel the picker itself emits, plus any host code that re-broadcasts
+  external theme applications onto it) so the trigger and card
+  selection stay in sync with sibling pickers.
 
   Prop / event surface
   ────────────────────────────────────────────────────────────────────────

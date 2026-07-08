@@ -173,7 +173,9 @@ export default controller({
     ensureThemesCssInShadow(host, state._internals.tokensHref())
 
     // Apply stored theme on first mount. Idempotent if the boot script
-    // already applied it — applyTheme just re-dispatches ship:theme:change.
+    // already applied it (re-applying is harmless). The picker also
+    // emits `sui-theme-change` from `selectTheme()`, so sibling pickers
+    // listening on the same channel stay in sync.
     // In `scope` mode the document must not be touched; sync the host's own
     // subtree (no read-side effect — the picker's `activeTheme` signal was
     // already seeded from `readStoredTheme()` in scope) and skip the write.
@@ -206,14 +208,18 @@ export default controller({
       panel.style.left = `${Math.max(8, r.right - panel.offsetWidth)}px`
     }
 
-    // Sync internal selection to the canonical document event so
-    // settings views, devtools, or programmatic callers stay in sync.
+    // Sync internal selection to the neutral `sui-theme-change` event so
+    // sibling pickers (and any host code that emits on the same channel)
+    // stay in sync. The picker itself emits `sui-theme-change` on
+    // selection; the consumer is responsible for re-broadcasting external
+    // theme applications (settings view, devtools, programmatic API) onto
+    // this channel — neutral prop/event API, not a product SDK read.
     function onExternalChange(e: Event) {
       const id = (e as CustomEvent<{ id?: string }>).detail?.id
       if (!isValidTheme(id)) return
       if (activeThemeSignal() !== id) activeThemeSignal.set(id)
     }
-    document.addEventListener('ship:theme:change', onExternalChange)
+    document.addEventListener('sui-theme-change', onExternalChange)
 
     // Arrow-key nav across cards while the panel is open.
     function onPanelKeydown(e: KeyboardEvent) {
@@ -268,7 +274,7 @@ export default controller({
     })
 
     return () => {
-      document.removeEventListener('ship:theme:change', onExternalChange)
+      document.removeEventListener('sui-theme-change', onExternalChange)
       stopPanelSync()
       stopKeyBind()
       stopFocusOnOpen()
