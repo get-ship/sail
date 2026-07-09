@@ -498,13 +498,20 @@ body::after {
   --tone-info-border: color-mix(in oklch, var(--info) 30%, transparent);
   --tone-info-ring: color-mix(in oklch, var(--info) 22%, transparent);
 
-  --tone-success-fg: var(--success);
+  /* Light-base tone: the raw base is too light to read as ink on the soft
+     fill / on the page. Darken (hue preserved) so soft/outline/ghost text
+     clears the contrast floor. Success has no dark -foreground anchor
+     (--success-foreground is white, the on-solid ink), so darken toward black. */
+  --tone-success-fg: color-mix(in oklch, var(--success) 66%, black);
   --tone-success-bg: color-mix(in oklch, var(--success) 14%, transparent);
   --tone-success-bg-solid: var(--success);
   --tone-success-border: color-mix(in oklch, var(--success) 30%, transparent);
   --tone-success-ring: color-mix(in oklch, var(--success) 22%, transparent);
 
-  --tone-warning-fg: var(--warning);
+  /* Light-base tone (L≈0.75): raw base is invisible as ink on the pale soft
+     fill. Darken toward the same-hue dark warning ink so text clears the
+     contrast floor; hue stays amber. */
+  --tone-warning-fg: color-mix(in oklch, var(--warning), var(--warning-foreground));
   --tone-warning-bg: color-mix(in oklch, var(--warning) 14%, transparent);
   --tone-warning-bg-solid: var(--warning);
   --tone-warning-border: color-mix(in oklch, var(--warning) 30%, transparent);
