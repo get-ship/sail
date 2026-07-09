@@ -105,6 +105,59 @@ iframe { max-width: 100%; border: 0; }
 :where(span[skeleton][shape='circle'][size='md']) { width: var(--space-7); height: var(--space-7); }
 :where(span[skeleton][shape='circle'][size='lg']) { width: 48px; height: 48px; }
 @keyframes sui-skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+:where(progress) { appearance: none; -webkit-appearance: none; -moz-appearance: none; display: inline-block; vertical-align: middle; width: 100%; height: var(--progress-h, var(--space-2)); border: 0; border-radius: var(--radius-full); overflow: hidden; background: var(--muted); color: var(--tone-fg, var(--primary)); }
+:where(progress[size='sm']) { height: var(--space-1_5); }
+:where(progress[size='lg']) { height: var(--space-3); }
+:where(progress)::-webkit-progress-bar { background: var(--muted); border-radius: var(--radius-full); }
+:where(progress)::-webkit-progress-value { background: var(--tone-fg, var(--primary)); border-radius: var(--radius-full); transition: width var(--duration-medium) var(--ease-out); }
+:where(progress)::-moz-progress-bar { background: var(--tone-fg, var(--primary)); border-radius: var(--radius-full); }
+:where(progress:not([value]))::-webkit-progress-bar { background-image: linear-gradient(90deg, transparent 0%, var(--tone-fg, var(--primary)) 50%, transparent 100%); background-repeat: no-repeat; background-size: 40% 100%; animation: sui-progress-indeterminate 1.2s ease-in-out infinite; }
+:where(progress:not([value])) { background-image: linear-gradient(90deg, transparent 0%, var(--tone-fg, var(--primary)) 50%, transparent 100%); background-repeat: no-repeat; background-size: 40% 100%; animation: sui-progress-indeterminate 1.2s ease-in-out infinite; }
+@keyframes sui-progress-indeterminate { 0% { background-position: -40% 0; } 100% { background-position: 140% 0; } }
+@media (prefers-reduced-motion: reduce) { :where(progress), :where(progress)::-webkit-progress-value { animation: none !important; transition: none !important; } }
+:where(meter) { appearance: none; -webkit-appearance: none; -moz-appearance: none; display: inline-block; vertical-align: middle; width: 100%; height: var(--meter-h, var(--space-2)); border: 0; border-radius: var(--radius-full); overflow: hidden; background: var(--muted); }
+:where(meter[size='sm']) { height: var(--space-1_5); }
+:where(meter[size='lg']) { height: var(--space-3); }
+:where(meter)::-webkit-meter-bar { background: var(--muted); border: 0; border-radius: var(--radius-full); }
+:where(meter)::-webkit-meter-optimum-value { background: var(--success); border-radius: var(--radius-full); }
+:where(meter)::-webkit-meter-suboptimum-value { background: var(--warning); border-radius: var(--radius-full); }
+:where(meter)::-webkit-meter-even-less-good-value { background: var(--destructive); border-radius: var(--radius-full); }
+meter::-moz-meter-bar { border-radius: var(--radius-full); }
+meter:-moz-meter-optimum::-moz-meter-bar { background: var(--success); }
+meter:-moz-meter-sub-optimum::-moz-meter-bar { background: var(--warning); }
+meter:-moz-meter-sub-sub-optimum::-moz-meter-bar { background: var(--destructive); }
+:where(details) { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-1, var(--background)); }
+:where(summary) { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-4); font-weight: var(--font-weight-medium); color: var(--foreground); cursor: pointer; list-style: none; user-select: none; -webkit-user-select: none; border-radius: var(--radius-md); }
+:where(summary)::-webkit-details-marker { display: none; }
+:where(summary)::marker { content: ''; }
+:where(summary)::before { content: ''; flex: 0 0 auto; width: 0; height: 0; border-left: 5px solid currentColor; border-top: 4px solid transparent; border-bottom: 4px solid transparent; margin-right: var(--space-1); color: var(--muted-foreground); transition: transform var(--duration-fast) var(--ease-out); }
+:where(details[open]) > summary::before { transform: rotate(90deg); }
+:where(summary:hover) { background: var(--hover-bg); }
+:where(details[open]) > summary { border-bottom: 1px solid var(--border-subtle); border-radius: var(--radius-md) var(--radius-md) 0 0; }
+:where(details) > summary ~ * { margin: var(--space-3) var(--space-4); }
+@media (prefers-reduced-motion: reduce) { :where(summary)::before { transition: none; } }
+:where(dialog) { position: fixed; inset: 0; margin: auto; padding: 0; width: calc(100vw - var(--space-7)); max-width: var(--panel-max-w-md); max-height: min(calc(100vh - var(--space-7)), var(--panel-vh-md)); overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--surface-1); color: var(--card-foreground); box-shadow: var(--shadow-xl); font-family: var(--font-body); }
+:where(dialog[open]) { display: flex; flex-direction: column; }
+:where(dialog)::backdrop { background: var(--backdrop); opacity: 0; transition: opacity var(--duration-medium) var(--ease-out); }
+:where(dialog[open])::backdrop { opacity: 1; }
+:where(dialog[backdrop='blur'])::backdrop { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+:where(dialog[backdrop='solid'])::backdrop { background: var(--background); }
+:where(dialog[size='sm']) { max-width: var(--panel-max-w-sm); }
+:where(dialog[size='lg']) { max-width: var(--panel-max-w-lg); }
+:where(dialog[size='full']) { max-width: var(--panel-vh-lg); max-height: var(--panel-vh-lg); }
+:where(dialog) > header { flex: 0 0 auto; padding: var(--space-4_5) var(--space-6); border-bottom: 1px solid var(--border-subtle); font-size: var(--text-lg); font-weight: var(--font-weight-semibold); color: var(--foreground); }
+:where(dialog) > section { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--space-4) var(--space-6); font-size: var(--text-base); line-height: var(--leading-normal); }
+:where(dialog) > footer { flex: 0 0 auto; display: flex; gap: var(--space-2); align-items: center; justify-content: flex-end; padding: var(--space-4) var(--space-6); border-top: 1px solid var(--border-subtle); background: var(--tone-muted-border); }
+@media (prefers-reduced-motion: reduce) { :where(dialog)::backdrop { transition: none; } }
+:where(html):has(dialog[open]) { overflow: hidden; }
+:where([popover]) { width: max-content; max-width: var(--panel-max-w-sm); padding: var(--space-1); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--popover); color: var(--popover-foreground); box-shadow: var(--shadow-lg); font-family: var(--font-body); font-size: var(--text-sm); }
+:where([popover][role='tooltip']) { padding: var(--space-1_5) var(--space-2_5); max-width: var(--panel-max-w-xs, 20rem); background: var(--foreground); color: var(--background); border-color: transparent; box-shadow: var(--shadow-md); }
+:where([popover][role='menu']) { min-width: var(--menu-min-w, 12rem); }
+:where([popover][role='menu']) button, :where([popover][role='menu']) [role='menuitem'] { display: flex; align-items: center; justify-content: flex-start; gap: var(--space-2); width: 100%; min-height: var(--control-h-sm); padding: var(--space-1_5) var(--space-2_5); border: 0; border-radius: var(--radius-sm); background: transparent; box-shadow: none; color: inherit; font: inherit; font-weight: var(--font-weight-normal); text-align: left; white-space: nowrap; cursor: pointer; }
+:where([popover][role='menu']) button:hover, :where([popover][role='menu']) [role='menuitem']:hover, :where([popover][role='menu']) button:focus-visible, :where([popover][role='menu']) [role='menuitem']:focus-visible { background: var(--hover-bg); outline: none; }
+:where([popover][role='menu']) button:disabled, :where([popover][role='menu']) [role='menuitem'][aria-disabled='true'] { color: var(--muted-foreground); pointer-events: none; }
+:where([popover][role='menu']) hr { margin: var(--space-1) calc(-1 * var(--space-1)); border: 0; border-top: 1px solid var(--border-subtle); }
+:where([popover])::backdrop { background: transparent; }
 [data-component] { display: block; color: var(--foreground); }
 [data-component][hidden] { display: none !important; }
 [data-component] slot { display: contents; }

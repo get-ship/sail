@@ -349,6 +349,48 @@ const PROGRESS_SKIN_CSS =
   "@keyframes sui-progress-indeterminate { 0% { background-position: -40% 0; } 100% { background-position: 140% 0; } }\n" +
   "@media (prefers-reduced-motion: reduce) { :where(progress), :where(progress)::-webkit-progress-value { animation: none !important; transition: none !important; } }\n"
 
+// L1 <meter> — the gauge (a value inside a range: disk usage, score, load).
+// Distinct from <progress>: the fill color reflects WHERE the value falls
+// relative to low/high/optimum, not just how full it is. The platform owns
+// that banding; the skin maps the three bands to the tone tokens. WebKit
+// exposes the bands as pseudo-ELEMENTS; Firefox as pseudo-CLASSES on a single
+// ::-moz-meter-bar — so, again, one rule per engine.
+const METER_SKIN_CSS =
+  ":where(meter) { appearance: none; -webkit-appearance: none; -moz-appearance: none; display: inline-block; vertical-align: middle; width: 100%; height: var(--meter-h, var(--space-2)); border: 0; border-radius: var(--radius-full); overflow: hidden; background: var(--muted); }\n" +
+  ":where(meter[size='sm']) { height: var(--space-1_5); }\n" +
+  ":where(meter[size='lg']) { height: var(--space-3); }\n" +
+  // WebKit — track + one pseudo-element per band.
+  ":where(meter)::-webkit-meter-bar { background: var(--muted); border: 0; border-radius: var(--radius-full); }\n" +
+  ":where(meter)::-webkit-meter-optimum-value { background: var(--success); border-radius: var(--radius-full); }\n" +
+  ":where(meter)::-webkit-meter-suboptimum-value { background: var(--warning); border-radius: var(--radius-full); }\n" +
+  ":where(meter)::-webkit-meter-even-less-good-value { background: var(--destructive); border-radius: var(--radius-full); }\n" +
+  // Firefox — one fill pseudo-element, colored by a band pseudo-class on the
+  // meter. (Kept out of :where() so the vendor selector isn't folded away.)
+  "meter::-moz-meter-bar { border-radius: var(--radius-full); }\n" +
+  "meter:-moz-meter-optimum::-moz-meter-bar { background: var(--success); }\n" +
+  "meter:-moz-meter-sub-optimum::-moz-meter-bar { background: var(--warning); }\n" +
+  "meter:-moz-meter-sub-sub-optimum::-moz-meter-bar { background: var(--destructive); }\n"
+
+// L1 <details>/<summary> — the native disclosure / accordion. Zero JS: the
+// platform owns the open/close toggle and the a11y. The skin frames it, hides
+// the OS triangle, and draws a rotating chevron; `[open]` divides the header
+// from the body. Group several with a wrapper to build an accordion.
+const DETAILS_SKIN_CSS =
+  ":where(details) { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-1, var(--background)); }\n" +
+  ":where(summary) { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-4); font-weight: var(--font-weight-medium); color: var(--foreground); cursor: pointer; list-style: none; user-select: none; -webkit-user-select: none; border-radius: var(--radius-md); }\n" +
+  // Hide the platform marker (standard + WebKit) — the chevron replaces it.
+  ":where(summary)::-webkit-details-marker { display: none; }\n" +
+  ":where(summary)::marker { content: ''; }\n" +
+  // Chevron — a pure-CSS caret that rotates from ▶ to ▼ on open.
+  ":where(summary)::before { content: ''; flex: 0 0 auto; width: 0; height: 0; border-left: 5px solid currentColor; border-top: 4px solid transparent; border-bottom: 4px solid transparent; margin-right: var(--space-1); color: var(--muted-foreground); transition: transform var(--duration-fast) var(--ease-out); }\n" +
+  ":where(details[open]) > summary::before { transform: rotate(90deg); }\n" +
+  ":where(summary:hover) { background: var(--hover-bg); }\n" +
+  ":where(details[open]) > summary { border-bottom: 1px solid var(--border-subtle); border-radius: var(--radius-md) var(--radius-md) 0 0; }\n" +
+  // Body — the content after <summary>. Margin (not padding) so stacked blocks
+  // collapse to a single inter-gap instead of doubling.
+  ":where(details) > summary ~ * { margin: var(--space-3) var(--space-4); }\n" +
+  "@media (prefers-reduced-motion: reduce) { :where(summary)::before { transition: none; } }\n"
+
 // L1 <dialog> — the modal surface. A bare native <dialog> IS the design
 // system's modal ("the web with default styles"): showModal() puts it in the
 // top layer and the platform gives us ::backdrop, ESC, focus-trap, and
@@ -418,7 +460,9 @@ export const CONTROL_SKINS_CSS =
   HR_SKIN_CSS +
   STATUS_DOT_SKIN_CSS +
   SKELETON_SKIN_CSS +
-  PROGRESS_SKIN_CSS
+  PROGRESS_SKIN_CSS +
+  METER_SKIN_CSS +
+  DETAILS_SKIN_CSS
 
 export const LIGHT_CONTRACTS_CSS =
   hostAttrs(TONES_CSS) +
@@ -436,6 +480,8 @@ export const LIGHT_CONTRACTS_CSS =
   STATUS_DOT_SKIN_CSS +
   SKELETON_SKIN_CSS +
   PROGRESS_SKIN_CSS +
+  METER_SKIN_CSS +
+  DETAILS_SKIN_CSS +
   DIALOG_SKIN_CSS +
   POPOVER_SKIN_CSS +
   // Host defaults for light components (the :host base rules, element-keyed).
