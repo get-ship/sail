@@ -366,6 +366,14 @@ const POPOVER_SKIN_CSS =
   ":where([popover]) { width: max-content; max-width: var(--panel-max-w-sm); padding: var(--space-1); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--popover); color: var(--popover-foreground); box-shadow: var(--shadow-lg); font-family: var(--font-body); font-size: var(--text-sm); }\n" +
   // Tooltip variant: tighter, muted surface, no interactive affordance.
   ":where([popover][role='tooltip']) { padding: var(--space-1_5) var(--space-2_5); max-width: var(--panel-max-w-xs, 20rem); background: var(--foreground); color: var(--background); border-color: transparent; box-shadow: var(--shadow-md); }\n" +
+  // Menu variant: item rows. An item <button> (or [role='menuitem']) sheds the
+  // L1 button box and becomes a full-width row — hover/focus highlights, <hr>
+  // divides, disabled dims. This is what turns a popover into a dropdown menu.
+  ":where([popover][role='menu']) { min-width: var(--menu-min-w, 12rem); }\n" +
+  ":where([popover][role='menu']) button, :where([popover][role='menu']) [role='menuitem'] { display: flex; align-items: center; justify-content: flex-start; gap: var(--space-2); width: 100%; min-height: var(--control-h-sm); padding: var(--space-1_5) var(--space-2_5); border: 0; border-radius: var(--radius-sm); background: transparent; box-shadow: none; color: inherit; font: inherit; font-weight: var(--font-weight-normal); text-align: left; white-space: nowrap; cursor: pointer; }\n" +
+  ":where([popover][role='menu']) button:hover, :where([popover][role='menu']) [role='menuitem']:hover, :where([popover][role='menu']) button:focus-visible, :where([popover][role='menu']) [role='menuitem']:focus-visible { background: var(--hover-bg); outline: none; }\n" +
+  ":where([popover][role='menu']) button:disabled, :where([popover][role='menu']) [role='menuitem'][aria-disabled='true'] { color: var(--muted-foreground); pointer-events: none; }\n" +
+  ":where([popover][role='menu']) hr { margin: var(--space-1) calc(-1 * var(--space-1)); border: 0; border-top: 1px solid var(--border-subtle); }\n" +
   ":where([popover])::backdrop { background: transparent; }\n"
 
 // The CONTROL half of the contracts — element-keyed channels + control
