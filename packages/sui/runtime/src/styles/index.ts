@@ -325,6 +325,30 @@ const SKELETON_SKIN_CSS =
   ":where(span[skeleton][shape='circle'][size='lg']) { width: 48px; height: 48px; }\n" +
   '@keyframes sui-skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }\n'
 
+// L1 <progress> — the determinate/indeterminate progress bar. A bare native
+// <progress value=.6> IS the design system's progress: the platform gives the
+// value semantics + a11y for free; this skin just replaces the OS chrome with
+// the token vocabulary. tone arrives via the generic `[tone=...]` channel
+// (--tone-fg), so `<progress tone=success>` tints the fill. WebKit and Firefox
+// expose the fill through DIFFERENT pseudo-elements, and a rule that groups
+// both selectors is dropped whole by either engine — so they're separate.
+const PROGRESS_SKIN_CSS =
+  ":where(progress) { appearance: none; -webkit-appearance: none; -moz-appearance: none; display: inline-block; vertical-align: middle; width: 100%; height: var(--progress-h, var(--space-2)); border: 0; border-radius: var(--radius-full); overflow: hidden; background: var(--muted); color: var(--tone-fg, var(--primary)); }\n" +
+  ":where(progress[size='sm']) { height: var(--space-1_5); }\n" +
+  ":where(progress[size='lg']) { height: var(--space-3); }\n" +
+  // Track (WebKit) — Firefox uses the element background set above.
+  ":where(progress)::-webkit-progress-bar { background: var(--muted); border-radius: var(--radius-full); }\n" +
+  // Determinate fill — one rule per engine (a shared selector is invalid to both).
+  ":where(progress)::-webkit-progress-value { background: var(--tone-fg, var(--primary)); border-radius: var(--radius-full); transition: width var(--duration-medium) var(--ease-out); }\n" +
+  ":where(progress)::-moz-progress-bar { background: var(--tone-fg, var(--primary)); border-radius: var(--radius-full); }\n" +
+  // Indeterminate (no [value]) — a sliding sheen, since appearance:none drops
+  // the native barber-pole. Animate the WebKit track and the element itself
+  // (the Firefox path) so both engines show motion.
+  ":where(progress:not([value]))::-webkit-progress-bar { background-image: linear-gradient(90deg, transparent 0%, var(--tone-fg, var(--primary)) 50%, transparent 100%); background-repeat: no-repeat; background-size: 40% 100%; animation: sui-progress-indeterminate 1.2s ease-in-out infinite; }\n" +
+  ":where(progress:not([value])) { background-image: linear-gradient(90deg, transparent 0%, var(--tone-fg, var(--primary)) 50%, transparent 100%); background-repeat: no-repeat; background-size: 40% 100%; animation: sui-progress-indeterminate 1.2s ease-in-out infinite; }\n" +
+  "@keyframes sui-progress-indeterminate { 0% { background-position: -40% 0; } 100% { background-position: 140% 0; } }\n" +
+  "@media (prefers-reduced-motion: reduce) { :where(progress), :where(progress)::-webkit-progress-value { animation: none !important; transition: none !important; } }\n"
+
 // L1 <dialog> — the modal surface. A bare native <dialog> IS the design
 // system's modal ("the web with default styles"): showModal() puts it in the
 // top layer and the platform gives us ::backdrop, ESC, focus-trap, and
@@ -393,7 +417,8 @@ export const CONTROL_SKINS_CSS =
   TOGGLE_CONTROLS_CSS +
   HR_SKIN_CSS +
   STATUS_DOT_SKIN_CSS +
-  SKELETON_SKIN_CSS
+  SKELETON_SKIN_CSS +
+  PROGRESS_SKIN_CSS
 
 export const LIGHT_CONTRACTS_CSS =
   hostAttrs(TONES_CSS) +
@@ -410,6 +435,7 @@ export const LIGHT_CONTRACTS_CSS =
   HR_SKIN_CSS +
   STATUS_DOT_SKIN_CSS +
   SKELETON_SKIN_CSS +
+  PROGRESS_SKIN_CSS +
   DIALOG_SKIN_CSS +
   POPOVER_SKIN_CSS +
   // Host defaults for light components (the :host base rules, element-keyed).
