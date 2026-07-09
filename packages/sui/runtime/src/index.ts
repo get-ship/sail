@@ -107,6 +107,12 @@ export type { Disposer } from './bind'
 export { on, matchesKey } from './on'
 export type { OnOptions, Modifier } from './on'
 
+// Native <dialog> behavior — the compiler emits bindOpen for
+// `<dialog bind:open={state}>`. Thin sugar over showModal()/close(); the
+// platform keeps the focus trap, top layer, ESC, and focus-return.
+export { bindOpen } from './enhance-dialog'
+export type { DialogOptions } from './enhance-dialog'
+
 export type { ComponentExample } from './component-example'
 
 export {
