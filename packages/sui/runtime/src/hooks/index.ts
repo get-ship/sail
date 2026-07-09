@@ -13,3 +13,5 @@ export { useForm } from './form'
 export type { UseFormOptions } from './form'
 
 export { useDialog } from './dialog'
+
+export { usePopover } from './popover'

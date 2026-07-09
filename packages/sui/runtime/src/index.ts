@@ -266,7 +266,12 @@ export {
   markHydrateBoundary,
 } from './hydrate-mark'
 
-export { useFilteredList, useSelection, useForm, useDialog } from './hooks'
+export { useFilteredList, useSelection, useForm, useDialog, usePopover } from './hooks'
+
+// Native popover behavior primitive — usePopover rides on it, mirroring
+// bindOpen<-useDialog. Exported for the same reasons.
+export { bindPopover } from './enhance-popover'
+export type { PopoverOptions } from './enhance-popover'
 export type { FilteredListSource, UseFormOptions } from './hooks'
 
 export {
