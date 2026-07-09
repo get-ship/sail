@@ -325,6 +325,36 @@ const SKELETON_SKIN_CSS =
   ":where(span[skeleton][shape='circle'][size='lg']) { width: 48px; height: 48px; }\n" +
   '@keyframes sui-skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }\n'
 
+// L1 <dialog> — the modal surface. A bare native <dialog> IS the design
+// system's modal ("the web with default styles"): showModal() puts it in the
+// top layer and the platform gives us ::backdrop, ESC, focus-trap, and
+// focus-return for free — no sentinels, no scroll-lock JS beyond a :has()
+// page rule, no custom element. This is the skin: panel, backdrop, size
+// matrix, and the header/body/footer structure. size + backdrop are
+// attribute-keyed like every other channel here.
+const DIALOG_SKIN_CSS =
+  // The panel — centered in the top layer, a flex column so header/footer pin
+  // and the body scrolls. Closed state is the UA default (display:none), so
+  // the layout only lands on [open] and there's no closed-state artifact.
+  ':where(dialog) { position: fixed; inset: 0; margin: auto; padding: 0; width: calc(100vw - var(--space-7)); max-width: var(--panel-max-w-md); max-height: min(calc(100vh - var(--space-7)), var(--panel-vh-md)); overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--surface-1); color: var(--card-foreground); box-shadow: var(--shadow-xl); font-family: var(--font-body); }\n' +
+  ':where(dialog[open]) { display: flex; flex-direction: column; }\n' +
+  // Backdrop — dim by default; blur / solid are attribute-keyed. Fades in.
+  ':where(dialog)::backdrop { background: var(--backdrop); opacity: 0; transition: opacity var(--duration-medium) var(--ease-out); }\n' +
+  ':where(dialog[open])::backdrop { opacity: 1; }\n' +
+  ":where(dialog[backdrop='blur'])::backdrop { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }\n" +
+  ":where(dialog[backdrop='solid'])::backdrop { background: var(--background); }\n" +
+  // Size matrix — max-width steps; full goes near-viewport.
+  ":where(dialog[size='sm']) { max-width: var(--panel-max-w-sm); }\n" +
+  ":where(dialog[size='lg']) { max-width: var(--panel-max-w-lg); }\n" +
+  ":where(dialog[size='full']) { max-width: var(--panel-vh-lg); max-height: var(--panel-vh-lg); }\n" +
+  // Structure — semantic children the author writes: <header> and <footer>
+  // pin, a <section> (the body) scrolls. Loose content (no <section>) rides
+  // the panel's own max-height.
+  ':where(dialog) > header { flex: 0 0 auto; padding: var(--space-4_5) var(--space-6); border-bottom: 1px solid var(--border-subtle); font-size: var(--text-lg); font-weight: var(--font-weight-semibold); color: var(--foreground); }\n' +
+  ':where(dialog) > section { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--space-4) var(--space-6); font-size: var(--text-base); line-height: var(--leading-normal); }\n' +
+  ':where(dialog) > footer { flex: 0 0 auto; display: flex; gap: var(--space-2); align-items: center; justify-content: flex-end; padding: var(--space-4) var(--space-6); border-top: 1px solid var(--border-subtle); background: var(--tone-muted-border); }\n' +
+  '@media (prefers-reduced-motion: reduce) { :where(dialog)::backdrop { transition: none; } }\n'
+
 // The CONTROL half of the contracts — element-keyed channels + control
 // baseline + button/input/toggle skins, WITHOUT the light host rules
 // (display:block, slot, [hidden]) which are the light-DOM component's job.
@@ -359,6 +389,7 @@ export const LIGHT_CONTRACTS_CSS =
   HR_SKIN_CSS +
   STATUS_DOT_SKIN_CSS +
   SKELETON_SKIN_CSS +
+  DIALOG_SKIN_CSS +
   // Host defaults for light components (the :host base rules, element-keyed).
   '[data-component] { display: block; color: var(--foreground); }\n' +
   '[data-component][hidden] { display: none !important; }\n' +
