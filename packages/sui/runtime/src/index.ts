@@ -255,7 +255,7 @@ export {
   markHydrateBoundary,
 } from './hydrate-mark'
 
-export { useFilteredList, useSelection, useForm } from './hooks'
+export { useFilteredList, useSelection, useForm, useDialog } from './hooks'
 export type { FilteredListSource, UseFormOptions } from './hooks'
 
 export {

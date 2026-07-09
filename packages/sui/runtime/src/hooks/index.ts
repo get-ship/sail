@@ -11,3 +11,5 @@ export { useSelection } from './selection'
 
 export { useForm } from './form'
 export type { UseFormOptions } from './form'
+
+export { useDialog } from './dialog'
