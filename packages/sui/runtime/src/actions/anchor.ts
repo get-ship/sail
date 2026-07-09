@@ -27,8 +27,14 @@ export const anchor: Action<AnchorPlacement | undefined> = (node, placement) => 
   const el = node as HTMLElement
   let place: AnchorPlacement = placement ?? 'bottom-start'
 
-  const trigger = (): HTMLElement | null =>
-    el.id ? document.querySelector<HTMLElement>(`[popovertarget="${el.id}"]`) : null
+  // Scope the lookup to the popover's own root (document or shadow root), so
+  // the trigger is found whether the pair lives in a light-DOM view or inside
+  // a component's shadow tree — native popovertarget requires them co-rooted.
+  const trigger = (): HTMLElement | null => {
+    if (!el.id) return null
+    const root = el.getRootNode() as ParentNode
+    return root.querySelector<HTMLElement>(`[popovertarget="${el.id}"]`)
+  }
 
   const reposition = () => {
     if (!el.matches(':popover-open')) return
