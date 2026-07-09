@@ -57,7 +57,7 @@ const BUILTINS: &[&str] = &[
     // Built-in `use:` actions — auto-imported when referenced by a `use:`
     // directive (see `lower::bindings::BUILTIN_ACTIONS`), so `use:anchor` &c
     // resolve without an explicit controller import.
-    "anchor", "autosize", "clickOutside",
+    "anchor", "autosize", "clickOutside", "dropzone",
 ];
 
 pub fn check(

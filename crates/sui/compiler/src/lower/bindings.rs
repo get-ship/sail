@@ -10,7 +10,7 @@ use crate::lower::Lowered;
 /// `@ship/sui-runtime` so it resolves as an ESM binding — no controller
 /// import, no `$scope.` lookup. Kept in sync with the `BUILTINS` lists in
 /// `emit::expr_rewrite` and `check::scope_bound`, which leave these bare.
-pub const BUILTIN_ACTIONS: &[&str] = &["anchor", "autosize", "clickOutside"];
+pub const BUILTIN_ACTIONS: &[&str] = &["anchor", "autosize", "clickOutside", "dropzone"];
 
 pub fn collect_attr_imports(
     a: &AttrInstr,

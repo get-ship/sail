@@ -361,6 +361,23 @@ const SKELETON_SKIN_CSS =
   ":where(span[skeleton][shape='circle'][size='lg']) { width: 48px; height: 48px; }\n" +
   '@keyframes sui-skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }\n'
 
+// L1 drop zone — `<div dropzone use:dropzone>` around a native file input.
+// The div is the drop surface + click-to-browse trigger (wired by the action);
+// the input is visually hidden but keeps form participation + the picker. A div
+// (not a label) so the compiler's form-label skin doesn't fight this one; the
+// container carries no compiler skin, so a clean zero-specificity `:where()`
+// wins and authors can still override.
+const DROPZONE_SKIN_CSS =
+  ":where([dropzone]) { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-1); min-height: calc(var(--control-h-lg) * 2); padding: var(--space-6); text-align: center; border: 1.5px dashed var(--border-strong); border-radius: var(--radius-lg); background: var(--muted); color: var(--muted-foreground); font-size: var(--text-sm); cursor: pointer; transition: border-color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }\n" +
+  ":where([dropzone]:hover) { border-color: var(--primary); color: var(--foreground); }\n" +
+  ":where([dropzone][data-drag]) { border-color: var(--primary); border-style: solid; background: var(--tone-primary-bg, var(--hover-bg)); color: var(--foreground); }\n" +
+  // Prompt line (medium) vs the hint / reflected filename (small, muted).
+  ":where([dropzone] > span:first-of-type) { font-weight: var(--font-weight-medium); color: inherit; }\n" +
+  ":where([dropzone] strong) { color: var(--primary); font-weight: var(--font-weight-medium); }\n" +
+  ":where([dropzone] [data-dz-files]) { font-size: var(--text-xs); font-weight: var(--font-weight-normal); color: var(--muted-foreground); }\n" +
+  // The nested file input — visually hidden, present for form value + picker.
+  ":where([dropzone] input[type='file']) { position: absolute; width: 1px; height: 1px; padding: 0; margin: 0; border: 0; opacity: 0; overflow: hidden; clip: rect(0 0 0 0); pointer-events: none; }\n"
+
 // L1 <fieldset>/<legend> — the form group. Native defaults (3D groove border,
 // odd padding, min-content width) are the web's ugliest built-in; this reframes
 // it as a clean bordered section with the legend riding the top edge. `min-
@@ -532,6 +549,7 @@ export const CONTROL_SKINS_CSS =
   METER_SKIN_CSS +
   RANGE_SKIN_CSS +
   FIELDSET_SKIN_CSS +
+  DROPZONE_SKIN_CSS +
   DETAILS_SKIN_CSS
 
 export const LIGHT_CONTRACTS_CSS =
@@ -553,6 +571,7 @@ export const LIGHT_CONTRACTS_CSS =
   METER_SKIN_CSS +
   RANGE_SKIN_CSS +
   FIELDSET_SKIN_CSS +
+  DROPZONE_SKIN_CSS +
   DETAILS_SKIN_CSS +
   DIALOG_SKIN_CSS +
   POPOVER_SKIN_CSS +
