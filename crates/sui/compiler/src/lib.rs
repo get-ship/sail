@@ -211,9 +211,23 @@ pub fn check_all(
     source_path: Option<&std::path::Path>,
     overrides: &[LintOverride],
 ) -> Vec<Diagnostic> {
-    match parse::parse(source) {
-        Ok(program) => check::collect(&program, source, source_path, overrides),
-        Err(e) => vec![Diagnostic::from_compile_error(&e, source)],
+    // SFC: strip the inline `<controller>` block (else it parses as a template)
+    // and resolve the controller (inline body wins, else paired file) for the
+    // scope-aware passes — mirrors `compile()`.
+    let (stripped, inline_controller_src) = parse::preprocess::extract_controller_block(source);
+    let controller = inline_controller_src
+        .and_then(|body| {
+            check::controller_parse::parse(
+                source_path.map(|p| p.to_path_buf()).unwrap_or_default(),
+                body,
+            )
+        })
+        .or_else(|| check::controller_parse::read_paired_controller(source_path));
+    match parse::parse(&stripped) {
+        Ok(program) => {
+            check::collect(&program, &stripped, source_path, controller.as_ref(), overrides)
+        }
+        Err(e) => vec![Diagnostic::from_compile_error(&e, &stripped)],
     }
 }
 
@@ -278,7 +292,27 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     // (--styles is gone — complete cutover: the pre-floor external-CSS
     // injection path had zero producers. Element skins are the sanctioned
     // toolchain-CSS home now.)
-    let effective_source: &str = source;
+    //
+    // SFC: strip an inline `<controller>` block before parsing so its body
+    // isn't misread as a template expression. This makes SFC first-class in
+    // core `compile()` — every caller (bin, deck, tests) handles it uniformly,
+    // not just the CLI. The controller module itself is materialized by the
+    // file-emitting callers (the bin writes `<stem>.controller.ts`); source
+    // that was already stripped (the bin pre-strips) is a no-op here.
+    let (stripped_source, inline_controller_src) =
+        parse::preprocess::extract_controller_block(source);
+    let effective_source: &str = &stripped_source;
+    // Resolve the controller for the scope-aware checks in-memory: the inline
+    // `<controller>` block (SFC) wins; else the paired `.controller.ts` on disk
+    // (views / not-yet-migrated). No filesystem round-trip for the inline case.
+    let controller = inline_controller_src
+        .and_then(|body| {
+            check::controller_parse::parse(
+                opts.source_path.clone().unwrap_or_default(),
+                body,
+            )
+        })
+        .or_else(|| check::controller_parse::read_paired_controller(opts.source_path.as_deref()));
     let effective_overrides = opts.lint_overrides.clone();
 
     let program = parse::parse(effective_source).map_err(|e| attach_path(e, &opts))?;
@@ -286,6 +320,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
         &program,
         effective_source,
         opts.source_path.as_deref(),
+        controller.as_ref(),
         &effective_overrides,
     )
     .map_err(|e| attach_path(e, &opts))?;
@@ -298,6 +333,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
         &program,
         effective_source,
         opts.source_path.as_deref(),
+        controller.as_ref(),
         &effective_overrides,
     )
     .map_err(|e| attach_path(e, &opts))?;

@@ -45,6 +45,7 @@ pub fn run(
     program: &Program,
     source: &str,
     source_path: Option<&Path>,
+    controller: Option<&controller_parse::ParsedController>,
     overrides: &[crate::check::lint_overrides::LintOverride],
 ) -> Result<(), CompileError> {
     visit_program(program, &mut |e| {
@@ -60,8 +61,9 @@ pub fn run(
     handler_complexity::check(program, source_path)?;
     controller_purity::check(source_path, overrides)?;
     css_token::check(source, source_path, overrides)?;
-    let controller = controller_parse::read_paired_controller(source_path);
-    if let Some(c) = controller.as_ref() {
+    // `controller` is resolved by the caller: the inline `<controller>` block
+    // (SFC) wins, else the paired `.controller.ts`.
+    if let Some(c) = controller {
         closed_sections::check(c)?;
         pure_derived::check(c)?;
     }
@@ -71,7 +73,7 @@ pub fn run(
     // one (synthetic fragments in unit tests), skip the check rather
     // than reject every reference as undeclared.
     if source_path.is_some() {
-        scope_bound::check(program, controller.as_ref())?;
+        scope_bound::check(program, controller)?;
     }
     // Type-strengthening passes — see crates/sui/compiler/EXPRESSIONS.md.
     // These run after scope_bound so the user gets the "name not declared"
@@ -80,9 +82,9 @@ pub fn run(
     key_identity::check(program)?;
     for_iterable::check(program)?;
     if source_path.is_some() {
-        scope_member::check(program, controller.as_ref())?;
-        bind_this_target::check(program, controller.as_ref())?;
-        on_callable::check(program, controller.as_ref())?;
+        scope_member::check(program, controller)?;
+        bind_this_target::check(program, controller)?;
+        on_callable::check(program, controller)?;
     }
     Ok(())
 }
@@ -106,9 +108,10 @@ pub fn gate(
     program: &Program,
     source: &str,
     source_path: Option<&Path>,
+    controller: Option<&controller_parse::ParsedController>,
     overrides: &[crate::check::lint_overrides::LintOverride],
 ) -> Result<(), CompileError> {
-    let fatal = collect(program, source, source_path, overrides)
+    let fatal = collect(program, source, source_path, controller, overrides)
         .into_iter()
         .find(|d| d.severity == DiagSeverity::Error);
     let Some(d) = fatal else {
@@ -161,6 +164,7 @@ pub fn collect(
     program: &Program,
     source: &str,
     source_path: Option<&Path>,
+    controller: Option<&controller_parse::ParsedController>,
     overrides: &[crate::check::lint_overrides::LintOverride],
 ) -> Vec<Diagnostic> {
     let mut diags: Vec<Diagnostic> = Vec::new();
@@ -178,24 +182,25 @@ pub fn collect(
 
     // Structural / semantic passes — first error from each, continuing past
     // failures so one bad pass doesn't mask the rest.
-    let controller = controller_parse::read_paired_controller(source_path);
+    // `controller` is resolved by the caller: the inline `<controller>` block
+    // (SFC) wins, else the paired `.controller.ts`.
     push(check_mutations(program), source, &mut diags);
     push(handler_complexity::check(program, source_path), source, &mut diags);
-    if let Some(c) = controller.as_ref() {
+    if let Some(c) = controller {
         push(closed_sections::check(c), source, &mut diags);
         push(pure_derived::check(c), source, &mut diags);
     }
     if source_path.is_some() {
         // Collect ALL out-of-scope references (one per expression), not just the
         // first — the common "I have three typos" case.
-        push_all(scope_bound::collect(program, controller.as_ref()), source, &mut diags);
+        push_all(scope_bound::collect(program, controller), source, &mut diags);
     }
     push(key_identity::check(program), source, &mut diags);
     push(for_iterable::check(program), source, &mut diags);
     if source_path.is_some() {
-        push_all(scope_member::collect(program, controller.as_ref()), source, &mut diags);
-        push(bind_this_target::check(program, controller.as_ref()), source, &mut diags);
-        push(on_callable::check(program, controller.as_ref()), source, &mut diags);
+        push_all(scope_member::collect(program, controller), source, &mut diags);
+        push(bind_this_target::check(program, controller), source, &mut diags);
+        push(on_callable::check(program, controller), source, &mut diags);
     }
 
     // Full `sui-lint` pass — the multi-finding source of truth for
@@ -215,7 +220,7 @@ pub fn collect(
     for f in template_findings {
         diags.push(finding_to_diag(&f));
     }
-    if let Some(c) = controller.as_ref() {
+    if let Some(c) = controller {
         let controller_findings =
             crate::check::lint_overrides::apply_overrides(
                 sui_lint::lint_controller_source(&c.path, &c.source),
@@ -455,7 +460,7 @@ mod gate_tests {
     fn gate_rejects_lint_error_rule_run_skips() {
         let src = r#"<sui-button variant="primary">x</sui-button>"#;
         let program = parse::parse(src).unwrap();
-        let err = super::gate(&program, src, None, &[]).unwrap_err();
+        let err = super::gate(&program, src, None, None, &[]).unwrap_err();
         assert_eq!(err.category.as_deref(), Some("sui-prop-value"), "{err:?}");
     }
 
@@ -463,7 +468,7 @@ mod gate_tests {
     fn gate_passes_valid_source() {
         let src = r#"<sui-button variant="solid">x</sui-button>"#;
         let program = parse::parse(src).unwrap();
-        super::gate(&program, src, None, &[]).unwrap();
+        super::gate(&program, src, None, None, &[]).unwrap();
     }
 
     /// The gate's span must map back to the offending line/col so the
@@ -473,7 +478,7 @@ mod gate_tests {
     fn gate_error_span_round_trips_to_finding_location() {
         let src = "<div>\n  <sui-button variant=\"primary\">x</sui-button>\n</div>";
         let program = parse::parse(src).unwrap();
-        let err = super::gate(&program, src, None, &[]).unwrap_err();
+        let err = super::gate(&program, src, None, None, &[]).unwrap_err();
         let span = err.span.expect("gate error carries a span");
         let (line, _col) = line_col(src, span.start);
         assert_eq!(line, 2, "the bad variant is on line 2");
