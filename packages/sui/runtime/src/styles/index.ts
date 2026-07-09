@@ -83,6 +83,11 @@ const SEMANTIC_ELEMENTS_CSS =
   'th, td { padding: var(--space-2) var(--space-3); text-align: left; border-bottom: 1px solid var(--border); }\n' +
   'th { font-weight: var(--font-weight-semibold, 600); color: var(--foreground); }\n' +
   'td { color: var(--muted-foreground); }\n' +
+  // Row hover aids scanning (default); zebra is opt-in via `<table zebra>`.
+  'tbody tr { transition: background-color var(--duration-fast) var(--ease-out); }\n' +
+  'tbody tr:hover { background: var(--hover-bg); }\n' +
+  'table[zebra] tbody tr:nth-child(even) { background: var(--muted); }\n' +
+  'table[zebra] tbody tr:nth-child(even):hover { background: var(--hover-bg); }\n' +
   'caption { padding: var(--space-2); font-size: var(--text-sm); color: var(--muted-foreground); text-align: left; }\n' +
   // Inline emphasis.
   'mark { background: var(--tone-warning-bg, var(--hover-bg)); color: inherit; padding: 0 0.2em; border-radius: var(--radius-sm); }\n' +
@@ -208,9 +213,12 @@ const CONTROL_CONTRACTS_CSS =
 // radius/shadow language, so a plain <input> IS the design system's field.
 // select/textarea share it (native chrome already dropped via appearance:none
 // in the baseline). Every rule at :where() zero specificity.
-// Text-entry fields only — NOT the toggles (checkbox/radio) or the slider
-// (range), which carry their own skins and must not inherit the bordered box.
-const TEXT_FIELD = "input:not([type='checkbox'], [type='radio'], [type='range'])"
+// Text-entry fields only — NOT the toggles (checkbox/radio), the slider
+// (range), or the color swatch, which carry their own skins and must not
+// inherit the bordered text-field box. (file/number/search/date DO want the
+// box — they read as fields — so they stay in.)
+const TEXT_FIELD =
+  "input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'])"
 const INPUT_SKIN_CSS =
   `:where(${TEXT_FIELD}, textarea, select) { display: block; min-height: var(--size-h, var(--control-h-md)); padding: var(--space-1_5) var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-xs); }\n` +
   `:where(${TEXT_FIELD}, textarea, select):hover:not(:disabled) { border-color: var(--border-strong); }\n` +
@@ -221,7 +229,19 @@ const INPUT_SKIN_CSS =
   // can't inherit currentColor); padding-right clears the glyph.
   ":where(select) { padding-right: var(--space-8); background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%23888888' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E\"); background-repeat: no-repeat; background-position: right var(--space-3) center; background-size: 1rem; }\n" +
   // Native option list — reset so the popup isn't OS-default black-on-white.
-  ':where(select) option { color: var(--foreground); background: var(--background); }\n'
+  ':where(select) option { color: var(--foreground); background: var(--background); }\n' +
+  // <input type=file> — keeps the field box, but flex-centers its parts and
+  // restyles the selector button as a small secondary button. Standard pseudo
+  // + legacy WebKit alias (separate rules — a grouped selector is dropped).
+  ":where(input[type='file']) { display: flex; align-items: center; padding: var(--space-1) var(--space-3); cursor: pointer; }\n" +
+  ":where(input[type='file'])::file-selector-button { margin-right: var(--space-3); padding: var(--space-1) var(--space-3); font: inherit; font-weight: var(--font-weight-medium); color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-xs); cursor: pointer; }\n" +
+  ":where(input[type='file'])::-webkit-file-upload-button { margin-right: var(--space-3); padding: var(--space-1) var(--space-3); font: inherit; font-weight: var(--font-weight-medium); color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-xs); cursor: pointer; }\n" +
+  ":where(input[type='file'])::file-selector-button:hover { background: var(--muted); border-color: var(--border-strong); }\n" +
+  // <input type=color> — a rounded swatch button (not a text field).
+  ":where(input[type='color']) { appearance: none; -webkit-appearance: none; -moz-appearance: none; width: var(--space-9); height: var(--control-h-md); padding: var(--space-1); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--background); box-shadow: var(--shadow-xs); cursor: pointer; }\n" +
+  ":where(input[type='color'])::-webkit-color-swatch-wrapper { padding: 0; }\n" +
+  ":where(input[type='color'])::-webkit-color-swatch { border: 0; border-radius: var(--radius-sm); }\n" +
+  ":where(input[type='color'])::-moz-color-swatch { border: 0; border-radius: var(--radius-sm); }\n"
 
 // L1 checkbox / radio — appearance:none native inputs the framework renders.
 // Square (checkbox) or round (radio); checked fills with the tone. The
