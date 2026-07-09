@@ -54,6 +54,10 @@ const BUILTINS: &[&str] = &[
     // `transition:` / `in:` / `out:` directives, so resolving them
     // without an explicit declaration is correct here.
     "fade", "slide", "scale",
+    // Built-in `use:` actions — auto-imported when referenced by a `use:`
+    // directive (see `lower::bindings::BUILTIN_ACTIONS`), so `use:anchor` &c
+    // resolve without an explicit controller import.
+    "anchor", "autosize", "clickOutside",
 ];
 
 pub fn check(

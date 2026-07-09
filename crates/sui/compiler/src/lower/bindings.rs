@@ -5,6 +5,13 @@ use crate::ir::*;
 use crate::lower::presets;
 use crate::lower::Lowered;
 
+/// Built-in `use:` actions shipped by the runtime. When a `use:` directive
+/// names one of these (a bare identifier), the compiler auto-imports it from
+/// `@ship/sui-runtime` so it resolves as an ESM binding — no controller
+/// import, no `$scope.` lookup. Kept in sync with the `BUILTINS` lists in
+/// `emit::expr_rewrite` and `check::scope_bound`, which leave these bare.
+pub const BUILTIN_ACTIONS: &[&str] = &["anchor", "autosize", "clickOutside"];
+
 pub fn collect_attr_imports(
     a: &AttrInstr,
     out: &mut Lowered,
@@ -109,8 +116,16 @@ pub fn collect_attr_imports(
                 _ => {}
             }
         }
-        AttrInstr::Use { .. } => {
+        AttrInstr::Use { action, .. } => {
             out.runtime_imports.insert("runAction");
+            // A bare built-in action name (`use:anchor`, `use:autosize`, …)
+            // is auto-imported from the runtime so it resolves as an ESM
+            // binding rather than an undefined `$scope.` lookup. Non-builtin
+            // actions (a hook handle or a controller-imported fn) resolve
+            // from scope and need no import.
+            if let Some(&builtin) = BUILTIN_ACTIONS.iter().find(|&&b| b == action.trim()) {
+                out.runtime_imports.insert(builtin);
+            }
         }
         AttrInstr::Motion { trigger, props, span } => {
             // `motion:` directives bake to literal `el.animate(...)`
