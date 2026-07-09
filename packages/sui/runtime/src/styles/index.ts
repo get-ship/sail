@@ -358,6 +358,16 @@ const DIALOG_SKIN_CSS =
   // open modal anywhere freezes the page behind it.
   ':where(html):has(dialog[open]) { overflow: hidden; }\n'
 
+// L1 [popover] — the floating surface for the menu / dropdown / tooltip family.
+// A native popover in the top layer (platform owns light-dismiss + ESC); the
+// `use:anchor` action positions it relative to its trigger. Surface only —
+// same token vocabulary as the dialog, one notch lighter shadow.
+const POPOVER_SKIN_CSS =
+  ":where([popover]) { width: max-content; max-width: var(--panel-max-w-sm); padding: var(--space-1); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--popover); color: var(--popover-foreground); box-shadow: var(--shadow-lg); font-family: var(--font-body); font-size: var(--text-sm); }\n" +
+  // Tooltip variant: tighter, muted surface, no interactive affordance.
+  ":where([popover][role='tooltip']) { padding: var(--space-1_5) var(--space-2_5); max-width: var(--panel-max-w-xs, 20rem); background: var(--foreground); color: var(--background); border-color: transparent; box-shadow: var(--shadow-md); }\n" +
+  ":where([popover])::backdrop { background: transparent; }\n"
+
 // The CONTROL half of the contracts — element-keyed channels + control
 // baseline + button/input/toggle skins, WITHOUT the light host rules
 // (display:block, slot, [hidden]) which are the light-DOM component's job.
@@ -393,6 +403,7 @@ export const LIGHT_CONTRACTS_CSS =
   STATUS_DOT_SKIN_CSS +
   SKELETON_SKIN_CSS +
   DIALOG_SKIN_CSS +
+  POPOVER_SKIN_CSS +
   // Host defaults for light components (the :host base rules, element-keyed).
   '[data-component] { display: block; color: var(--foreground); }\n' +
   '[data-component][hidden] { display: none !important; }\n' +

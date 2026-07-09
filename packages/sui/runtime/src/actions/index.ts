@@ -6,3 +6,5 @@
 
 export { autosize } from './autosize'
 export { clickOutside } from './click-outside'
+export { anchor } from './anchor'
+export type { AnchorPlacement } from './anchor'

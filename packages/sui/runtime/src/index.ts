@@ -116,7 +116,8 @@ export type { Action, ActionResult } from './action'
 
 // Built-in `use:` actions — reusable element behaviors (autosize, clickOutside…)
 // the L1 components lean on. `use:<name>` attaches them; no hand-wired refs/effects.
-export { autosize, clickOutside } from './actions'
+export { autosize, clickOutside, anchor } from './actions'
+export type { AnchorPlacement } from './actions'
 
 // Native <dialog> behavior — the compiler emits bindOpen for
 // `<dialog bind:open={state}>`. Thin sugar over showModal()/close(); the
