@@ -34,6 +34,232 @@
   :host([hidden]) { display: none; }
 </style>
 
+
+<controller>
+import { bindHtml, controller, effect, signal } from '@ship/sui-runtime'
+import type { Scope } from './sui-toast-container.sui'
+
+type ToastPosition =
+  | 'top-left' | 'top-center' | 'top-right'
+  | 'bottom-left' | 'bottom-center' | 'bottom-right'
+
+const SLIDE_FROM: Record<ToastPosition, 'top' | 'bottom'> = {
+  'top-left': 'top',
+  'top-center': 'top',
+  'top-right': 'top',
+  'bottom-left': 'bottom',
+  'bottom-center': 'bottom',
+  'bottom-right': 'bottom',
+}
+
+// Stack lives in `document.body` via sui-portal — shadow CSS doesn't
+// reach it, so positioning is applied inline by the controller.
+const EDGE = '16px'
+const STACK_BASE_STYLE =
+  'position:fixed;display:flex;gap:var(--space-2,8px);' +
+  'pointer-events:none;z-index:var(--z-toast,9999);' +
+  'max-width:min(440px,calc(100vw - 32px));' +
+  'padding:0;margin:0;box-sizing:border-box;'
+
+function stackStyleFor(position: ToastPosition): string {
+  switch (position) {
+    case 'top-right':
+      return `${STACK_BASE_STYLE}top:${EDGE};right:${EDGE};flex-direction:column;align-items:flex-end;`
+    case 'top-left':
+      return `${STACK_BASE_STYLE}top:${EDGE};left:${EDGE};flex-direction:column;align-items:flex-start;`
+    case 'top-center':
+      return `${STACK_BASE_STYLE}top:${EDGE};left:50%;transform:translateX(-50%);flex-direction:column;align-items:center;`
+    case 'bottom-left':
+      return `${STACK_BASE_STYLE}bottom:${EDGE};left:${EDGE};flex-direction:column-reverse;align-items:flex-start;`
+    case 'bottom-center':
+      return `${STACK_BASE_STYLE}bottom:${EDGE};left:50%;transform:translateX(-50%);flex-direction:column-reverse;align-items:center;`
+    case 'bottom-right':
+    default:
+      return `${STACK_BASE_STYLE}bottom:${EDGE};right:${EDGE};flex-direction:column-reverse;align-items:flex-end;`
+  }
+}
+
+interface ShowToastOptions {
+  tone?: string
+  size?: string
+  duration?: number
+  dismissible?: boolean
+  showProgress?: boolean
+  title?: string
+  description?: string
+  actionHtml?: string
+}
+
+export default controller<Scope>({
+  mount(state, host) {
+
+    // ARIA defaults
+    if (!host.hasAttribute('role')) host.setAttribute('role', 'region')
+    if (!host.hasAttribute('aria-label')) host.setAttribute('aria-label', 'Notifications')
+    if (!host.hasAttribute('aria-live')) host.setAttribute('aria-live', 'polite')
+
+    const slotVersion = signal(0)
+    const defaultSlotEl = state.$signals.defaultSlotEl() as HTMLSlotElement | null
+    const stackEl = state.$signals.stackEl() as HTMLElement | null
+
+    // Pull any author-supplied <sui-toast> children out of the host's
+    // light DOM and into the portal-teleported stack. The slot still
+    // exists in shadow for SSR-friendliness, but at runtime the toasts
+    // live alongside their siblings in body so the stack layout
+    // applies uniformly to slot + show()-created toasts.
+    const adoptIntoStack = (toast: HTMLElement): void => {
+      if (!stackEl) return
+      if (toast.parentElement !== stackEl) stackEl.appendChild(toast)
+    }
+
+    const getStackToasts = (): HTMLElement[] => {
+      if (!stackEl) return []
+      return Array.from(stackEl.children).filter(
+        (c) => c.tagName.toLowerCase() === 'sui-toast',
+      ) as HTMLElement[]
+    }
+
+    const stopStackStyleEffect = effect(() => {
+      if (!stackEl) return
+      const pos = state.$signals.position() as ToastPosition
+      stackEl.style.cssText = stackStyleFor(pos)
+      stackEl.setAttribute('data-position', pos)
+    })
+
+    const stopSlotEffect = effect(() => {
+      slotVersion()
+      const pos = state.$signals.position() as ToastPosition
+      const maxVis = state.$signals.maxVisible()
+      const dir = SLIDE_FROM[pos] ?? 'bottom'
+
+      const toasts = getStackToasts()
+      for (const t of toasts) {
+        t.setAttribute('data-slide-from', dir)
+        // Each toast needs its own `pointer-events` since the stack
+        // is `pointer-events: none`.
+        t.style.pointerEvents = 'auto'
+      }
+
+      if (maxVis > 0 && toasts.length > maxVis) {
+        const overflow = toasts.length - maxVis
+        for (let i = 0; i < overflow; i++) {
+          const victim = toasts[i] as HTMLElement & {
+            close?: (r: string) => void
+            dismiss?: (r: string) => void
+          }
+          if (typeof victim.close === 'function') void victim.close('programmatic')
+          else victim.dismiss?.('programmatic')
+        }
+      }
+    })
+
+    const onSlotChange = () => {
+      if (defaultSlotEl) {
+        for (const node of defaultSlotEl.assignedElements()) {
+          if (node.tagName.toLowerCase() === 'sui-toast') {
+            adoptIntoStack(node as HTMLElement)
+          }
+        }
+      }
+      slotVersion.set(slotVersion() + 1)
+    }
+    if (defaultSlotEl) {
+      defaultSlotEl.addEventListener('slotchange', onSlotChange)
+      // Initial adoption — assignedElements() is populated synchronously
+      // when slotted children were in light DOM at construct time, but
+      // slotchange doesn't fire for that initial assignment. Drain now.
+      onSlotChange()
+    }
+
+    // Also observe direct light-DOM children appended after mount but
+    // before they slot — show() routes through stackEl directly, but a
+    // test or consumer doing `host.appendChild(sui-toast)` should still
+    // land in the stack.
+    const hostObserver = new MutationObserver((records) => {
+      let dirty = false
+      for (const r of records) {
+        for (const n of r.addedNodes) {
+          if (n.nodeType === Node.ELEMENT_NODE) {
+            const el = n as HTMLElement
+            if (el.tagName.toLowerCase() === 'sui-toast') {
+              adoptIntoStack(el)
+              dirty = true
+            }
+          }
+        }
+        if (r.removedNodes.length) dirty = true
+      }
+      if (dirty) slotVersion.set(slotVersion() + 1)
+    })
+    hostObserver.observe(host, { childList: true })
+
+    // Drain any pre-existing light children at mount.
+    for (const child of Array.from(host.children)) {
+      if (child.tagName.toLowerCase() === 'sui-toast') {
+        adoptIntoStack(child as HTMLElement)
+      }
+    }
+    slotVersion.set(slotVersion() + 1)
+
+    // Track stack mutations too — toasts removing themselves via
+    // dismiss() should drop the stack count for max-visible enforcement.
+    const stackObserver = stackEl
+      ? new MutationObserver(() => slotVersion.set(slotVersion() + 1))
+      : null
+    if (stackEl && stackObserver) {
+      stackObserver.observe(stackEl, { childList: true })
+    }
+
+    function show(opts: ShowToastOptions = {}): HTMLElement {
+      const doc = host.ownerDocument ?? document
+      const t = doc.createElement('sui-toast') as HTMLElement & {
+        dismiss?: (r: string) => void
+        close?: (r: string) => void
+      }
+      if (opts.tone) t.setAttribute('tone', opts.tone)
+      if (opts.size) t.setAttribute('size', opts.size)
+      if (typeof opts.duration === 'number') t.setAttribute('duration', String(opts.duration))
+      if (opts.dismissible === false) t.removeAttribute('dismissible')
+      else t.setAttribute('dismissible', '')
+      if (opts.showProgress) t.setAttribute('show-progress', '')
+      if (opts.title) {
+        const span = doc.createElement('span')
+        span.setAttribute('slot', 'title')
+        span.textContent = opts.title
+        t.appendChild(span)
+      }
+      if (opts.description) {
+        t.appendChild(doc.createTextNode(opts.description))
+      }
+      if (opts.actionHtml) {
+        const wrap = doc.createElement('span')
+        const html = opts.actionHtml
+        wrap.setAttribute('slot', 'actions')
+        // bindHtml reconciles children only — `wrap`'s own attributes
+        // (the slot assignment above) survive the morph.
+        bindHtml(wrap, () => html)
+        t.appendChild(wrap)
+      }
+      if (stackEl) stackEl.appendChild(t)
+      else host.appendChild(t)
+      return t
+    }
+
+    ;(host as HTMLElement & { show: typeof show }).show = show
+
+    return () => {
+      stopSlotEffect()
+      stopStackStyleEffect()
+      hostObserver.disconnect()
+      stackObserver?.disconnect()
+      if (defaultSlotEl) {
+        defaultSlotEl.removeEventListener('slotchange', onSlotChange)
+      }
+    }
+  },
+})
+
+</controller>
 <!--
   Why `<sui-portal target="body">`? Transform / overflow / contain
   parents create new containing blocks for descendants — even

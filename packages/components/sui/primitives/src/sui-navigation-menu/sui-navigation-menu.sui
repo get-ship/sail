@@ -25,4 +25,87 @@
   :host([hidden]) { display: none; }
 </style>
 
+
+<controller>
+import { controller, effect } from '@ship/sui-runtime'
+import type { Scope } from './sui-navigation-menu.sui'
+
+type NavItem = HTMLElement & { focusLink?(): void }
+
+export default controller<Scope>({
+  mount(state, host) {
+
+    if (!host.hasAttribute('role')) host.setAttribute('role', 'navigation')
+
+    const getItems = (): NavItem[] =>
+      Array.from(host.querySelectorAll(':scope > sui-navigation-item')) as NavItem[]
+
+    const enabledItems = (): NavItem[] =>
+      getItems().filter(i => !i.hasAttribute('disabled'))
+
+    const syncItems = () => {
+      const val = state.$signals.value() as string
+      for (const item of getItems()) {
+        item.toggleAttribute('active', item.getAttribute('value') === val)
+      }
+    }
+
+    const onNavSelect = (e: Event) => {
+      const ce = e as CustomEvent
+      ce.stopPropagation()
+      const val = ce.detail.value as string
+      state.$signals.value.set(val)
+      syncItems()
+      host.dispatchEvent(new CustomEvent('sui-change', {
+        detail: { value: val },
+        bubbles: true,
+        composed: true,
+      }))
+    }
+
+    const onKeydown = (e: KeyboardEvent) => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft'
+        && e.key !== 'Home' && e.key !== 'End') return
+      const items = enabledItems()
+      if (!items.length) return
+      const current = (e.composedPath() as Element[]).find(
+        n => items.includes(n as NavItem),
+      ) as NavItem | null
+      const i = current ? items.indexOf(current) : -1
+      let target: NavItem | undefined
+
+      if (e.key === 'ArrowRight') target = items[(i + 1) % items.length]
+      else if (e.key === 'ArrowLeft') target = items[(i - 1 + items.length) % items.length]
+      else if (e.key === 'Home') target = items[0]
+      else if (e.key === 'End') target = items[items.length - 1]
+
+      if (target) { e.preventDefault(); target.focusLink?.() }
+    }
+
+    const stopSync = effect(() => {
+      state.$signals.value()
+      syncItems()
+    })
+
+    const stopSlot = effect(() => {
+      const slot = state.$signals.defaultSlotEl() as HTMLSlotElement | null
+      if (!slot) return
+      const onSlotChange = () => syncItems()
+      slot.addEventListener('slotchange', onSlotChange)
+      return () => slot.removeEventListener('slotchange', onSlotChange)
+    })
+
+    host.addEventListener('sui-nav-select', onNavSelect)
+    host.addEventListener('keydown', onKeydown)
+
+    return () => {
+      stopSync()
+      stopSlot()
+      host.removeEventListener('sui-nav-select', onNavSelect)
+      host.removeEventListener('keydown', onKeydown)
+    }
+  },
+})
+
+</controller>
 <slot bind:this={defaultSlotEl}></slot>

@@ -112,6 +112,33 @@
   ::slotted([slot='icon']) { display: inline-flex; width: var(--icon-size-sm); height: var(--icon-size-sm); }
 </style>
 
+
+<controller>
+import { controller, effect } from '@ship/sui-runtime'
+import type { Scope } from './sui-alert.sui'
+
+export default controller<Scope>({
+  mount(state, host) {
+
+    const stopDismiss = effect(() => {
+      const btn = state.$signals.closeBtn() as HTMLButtonElement | null
+      if (!btn) return
+      const onClick = () => {
+        if (!state.$signals.dismissible()) return
+        host.dispatchEvent(new CustomEvent('sui-dismiss', { bubbles: true, composed: true }))
+        host.remove()
+      }
+      btn.addEventListener('click', onClick)
+      return () => btn.removeEventListener('click', onClick)
+    })
+
+    return () => {
+      stopDismiss()
+    }
+  },
+})
+
+</controller>
 <div class="box" part="box"
      role={tone() === 'destructive' || tone() === 'warning' ? 'alert' : 'status'}
      aria-live={tone() === 'destructive' || tone() === 'warning' ? 'assertive' : 'polite'}
