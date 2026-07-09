@@ -137,6 +137,9 @@ meter:-moz-meter-sub-sub-optimum::-moz-meter-bar { background: var(--destructive
 :where(input[type='range']):focus-visible::-webkit-slider-thumb { outline: var(--ring-width, 2px) solid var(--ring); outline-offset: 2px; }
 :where(input[type='range']):focus-visible::-moz-range-thumb { outline: var(--ring-width, 2px) solid var(--ring); outline-offset: 2px; }
 :where(input[type='range']):disabled { opacity: 0.5; cursor: not-allowed; }
+:where(fieldset) { min-inline-size: 0; margin: 0; padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-md); background: transparent; }
+:where(legend) { padding: 0 var(--space-2); font-size: var(--text-sm); font-weight: var(--font-weight-medium); color: var(--foreground); }
+:where(output) { font-variant-numeric: tabular-nums; }
 :where(details) { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-1, var(--background)); }
 :where(summary) { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-4); font-weight: var(--font-weight-medium); color: var(--foreground); cursor: pointer; list-style: none; user-select: none; -webkit-user-select: none; border-radius: var(--radius-md); }
 :where(summary)::-webkit-details-marker { display: none; }

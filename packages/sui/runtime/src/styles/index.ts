@@ -333,6 +333,16 @@ const SKELETON_SKIN_CSS =
   ":where(span[skeleton][shape='circle'][size='lg']) { width: 48px; height: 48px; }\n" +
   '@keyframes sui-skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }\n'
 
+// L1 <fieldset>/<legend> — the form group. Native defaults (3D groove border,
+// odd padding, min-content width) are the web's ugliest built-in; this reframes
+// it as a clean bordered section with the legend riding the top edge. `min-
+// inline-size:0` kills the legacy min-content sizing so it flexes normally.
+const FIELDSET_SKIN_CSS =
+  ":where(fieldset) { min-inline-size: 0; margin: 0; padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-md); background: transparent; }\n" +
+  ":where(legend) { padding: 0 var(--space-2); font-size: var(--text-sm); font-weight: var(--font-weight-medium); color: var(--foreground); }\n" +
+  // <output> — a live form result; tabular figures so recomputes don't jitter.
+  ":where(output) { font-variant-numeric: tabular-nums; }\n"
+
 // L1 <input type=range> — the slider. appearance:none drops the OS control;
 // the skin rebuilds track + thumb from tokens. WebKit and Firefox expose the
 // track/thumb through different pseudo-elements (and, once again, a grouped
@@ -493,6 +503,7 @@ export const CONTROL_SKINS_CSS =
   PROGRESS_SKIN_CSS +
   METER_SKIN_CSS +
   RANGE_SKIN_CSS +
+  FIELDSET_SKIN_CSS +
   DETAILS_SKIN_CSS
 
 export const LIGHT_CONTRACTS_CSS =
@@ -513,6 +524,7 @@ export const LIGHT_CONTRACTS_CSS =
   PROGRESS_SKIN_CSS +
   METER_SKIN_CSS +
   RANGE_SKIN_CSS +
+  FIELDSET_SKIN_CSS +
   DETAILS_SKIN_CSS +
   DIALOG_SKIN_CSS +
   POPOVER_SKIN_CSS +
