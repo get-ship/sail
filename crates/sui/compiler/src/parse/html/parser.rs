@@ -172,8 +172,16 @@ impl<'a> Parser<'a> {
                 ))
                 .with_span(Span::point(self.i)));
             }
-            // Lowercase mirrors DOMParser's behavior.
-            let name = self.src[name_start..self.i].to_ascii_lowercase();
+            // Lowercase mirrors DOMParser's behavior — EXCEPT `use:<action>`,
+            // whose suffix is a case-sensitive JS identifier (the action/hook in
+            // scope, e.g. `use:clickOutside`). Preserve the suffix's case so it
+            // resolves; the `use:` prefix normalizes to lowercase.
+            let raw = &self.src[name_start..self.i];
+            let name = if raw.len() >= 4 && raw[..4].eq_ignore_ascii_case("use:") {
+                format!("use:{}", &raw[4..])
+            } else {
+                raw.to_ascii_lowercase()
+            };
             self.skip_ws();
             if self.i >= self.bytes.len() || self.bytes[self.i] != b'=' {
                 let span = Span::new(name_start, self.i);

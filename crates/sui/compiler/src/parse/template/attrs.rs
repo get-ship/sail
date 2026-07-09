@@ -552,12 +552,15 @@ fn compile_use(
     if !is_bare_identifier(name) {
         return Err(err(format!("action name \"{name}\" must be a bare identifier")));
     }
+    // Allow arrows in the param: an action's parameter is frequently a callback
+    // (`use:clickOutside={() => menu.close()}`), unlike a plain attribute value.
+    // The param is handler-capable so its arrow body rewrites against scope.
     let param = if value.is_empty() {
         None
     } else if is_expr_value(value) {
         let inner = strip_braces(value).to_string();
-        expr::validate_at(&inner, false, loc, value_span)?;
-        Some(Expr::new(inner, value_span, false))
+        expr::validate_at(&inner, true, loc, value_span)?;
+        Some(Expr::new(inner, value_span, true))
     } else {
         return Err(err("use: parameter must be an {expression}".into()));
     };
