@@ -208,12 +208,20 @@ const CONTROL_CONTRACTS_CSS =
 // radius/shadow language, so a plain <input> IS the design system's field.
 // select/textarea share it (native chrome already dropped via appearance:none
 // in the baseline). Every rule at :where() zero specificity.
-const TEXT_FIELD = "input:not([type='checkbox'], [type='radio'])"
+// Text-entry fields only — NOT the toggles (checkbox/radio) or the slider
+// (range), which carry their own skins and must not inherit the bordered box.
+const TEXT_FIELD = "input:not([type='checkbox'], [type='radio'], [type='range'])"
 const INPUT_SKIN_CSS =
   `:where(${TEXT_FIELD}, textarea, select) { display: block; min-height: var(--size-h, var(--control-h-md)); padding: var(--space-1_5) var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-xs); }\n` +
   `:where(${TEXT_FIELD}, textarea, select):hover:not(:disabled) { border-color: var(--border-strong); }\n` +
   `:where(${TEXT_FIELD}, textarea, select)::placeholder { color: var(--muted-foreground); }\n` +
-  ':where(textarea) { min-height: calc(var(--control-h-md) * 2); resize: vertical; }\n'
+  ':where(textarea) { min-height: calc(var(--control-h-md) * 2); resize: vertical; }\n' +
+  // <select> — appearance:none dropped the native arrow, so draw a chevron.
+  // A background SVG (neutral gray so it reads in both themes — a data-URI
+  // can't inherit currentColor); padding-right clears the glyph.
+  ":where(select) { padding-right: var(--space-8); background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%23888888' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E\"); background-repeat: no-repeat; background-position: right var(--space-3) center; background-size: 1rem; }\n" +
+  // Native option list — reset so the popup isn't OS-default black-on-white.
+  ':where(select) option { color: var(--foreground); background: var(--background); }\n'
 
 // L1 checkbox / radio — appearance:none native inputs the framework renders.
 // Square (checkbox) or round (radio); checked fills with the tone. The
@@ -324,6 +332,28 @@ const SKELETON_SKIN_CSS =
   ":where(span[skeleton][shape='circle'][size='md']) { width: var(--space-7); height: var(--space-7); }\n" +
   ":where(span[skeleton][shape='circle'][size='lg']) { width: 48px; height: 48px; }\n" +
   '@keyframes sui-skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }\n'
+
+// L1 <input type=range> — the slider. appearance:none drops the OS control;
+// the skin rebuilds track + thumb from tokens. WebKit and Firefox expose the
+// track/thumb through different pseudo-elements (and, once again, a grouped
+// selector is dropped whole by either), so every rule is per-engine. Firefox
+// fills the traversed portion for free via ::-moz-range-progress; the WebKit
+// filled-track needs a value-driven gradient (JS), left as an enhancement.
+const RANGE_SKIN_CSS =
+  ":where(input[type='range']) { appearance: none; -webkit-appearance: none; -moz-appearance: none; width: 100%; height: var(--space-5); background: transparent; cursor: pointer; }\n" +
+  // Track.
+  ":where(input[type='range'])::-webkit-slider-runnable-track { height: var(--space-1_5); border-radius: var(--radius-full); background: var(--muted); }\n" +
+  ":where(input[type='range'])::-moz-range-track { height: var(--space-1_5); border-radius: var(--radius-full); background: var(--muted); }\n" +
+  ":where(input[type='range'])::-moz-range-progress { height: var(--space-1_5); border-radius: var(--radius-full); background: var(--tone-fg, var(--primary)); }\n" +
+  // Thumb — the tone dot with a background-colored ring so it reads on the fill.
+  // WebKit needs a negative margin-top to center the thumb on the thinner track.
+  ":where(input[type='range'])::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: var(--space-4); height: var(--space-4); margin-top: calc((var(--space-1_5) - var(--space-4)) / 2); border-radius: var(--radius-full); background: var(--tone-fg, var(--primary)); border: 2px solid var(--background); box-shadow: var(--shadow-sm); }\n" +
+  ":where(input[type='range'])::-moz-range-thumb { width: var(--space-4); height: var(--space-4); border: 2px solid var(--background); border-radius: var(--radius-full); background: var(--tone-fg, var(--primary)); box-shadow: var(--shadow-sm); }\n" +
+  // Focus — ring on the thumb (the control's own :focus-visible outline would
+  // wrap the full-width invisible box).
+  ":where(input[type='range']):focus-visible::-webkit-slider-thumb { outline: var(--ring-width, 2px) solid var(--ring); outline-offset: 2px; }\n" +
+  ":where(input[type='range']):focus-visible::-moz-range-thumb { outline: var(--ring-width, 2px) solid var(--ring); outline-offset: 2px; }\n" +
+  ":where(input[type='range']):disabled { opacity: 0.5; cursor: not-allowed; }\n"
 
 // L1 <progress> — the determinate/indeterminate progress bar. A bare native
 // <progress value=.6> IS the design system's progress: the platform gives the
@@ -462,6 +492,7 @@ export const CONTROL_SKINS_CSS =
   SKELETON_SKIN_CSS +
   PROGRESS_SKIN_CSS +
   METER_SKIN_CSS +
+  RANGE_SKIN_CSS +
   DETAILS_SKIN_CSS
 
 export const LIGHT_CONTRACTS_CSS =
@@ -481,6 +512,7 @@ export const LIGHT_CONTRACTS_CSS =
   SKELETON_SKIN_CSS +
   PROGRESS_SKIN_CSS +
   METER_SKIN_CSS +
+  RANGE_SKIN_CSS +
   DETAILS_SKIN_CSS +
   DIALOG_SKIN_CSS +
   POPOVER_SKIN_CSS +
