@@ -22,29 +22,22 @@ fn compile_dts(source: &str) -> String {
         .expect("dts emitted")
 }
 
-/// Compile a `.sui` source paired with a `controller.ts` (or
-/// `<stem>.controller.ts`) so the d.ts emitter can pull the scope
-/// factory's fields. Returns the emitted d.ts text.
-fn compile_dts_with_controller(stem: &str, sui_src: &str, controller_ts: &str) -> String {
-    let dir = tempfile::tempdir().expect("tempdir");
-    let sui_path = dir.path().join(format!("{stem}.sui"));
-    let ctrl_path = if stem == "page" {
-        dir.path().join("controller.ts")
-    } else {
-        dir.path().join(format!("{stem}.controller.ts"))
-    };
-    fs::write(&sui_path, sui_src).expect("write sui");
-    fs::write(&ctrl_path, controller_ts).expect("write controller");
+/// Compile a `.sui` source whose controller is inlined as a `<controller>`
+/// block — the ONE source (the paired `.controller.ts` fallback is gone) — so
+/// the d.ts emitter can pull the scope factory's fields. Returns the d.ts text.
+fn compile_dts_with_controller(_stem: &str, sui_src: &str, controller_ts: &str) -> String {
+    let src = format!("<controller>\n{controller_ts}\n</controller>\n{sui_src}");
     let opts = CompileOpts {
         setup_url: None,
         mode: CompileMode::Component,
-        source_path: Some(sui_path),
+        source_path: None,
         component_meta: None,
         emit_dts: true,
         emit_component_imports: false,
-    
-            lint_overrides: Vec::new(),};
-    compile(sui_src, opts)
+
+        lint_overrides: Vec::new(),
+    };
+    compile(&src, opts)
         .expect("compile")
         .dts
         .expect("dts emitted")

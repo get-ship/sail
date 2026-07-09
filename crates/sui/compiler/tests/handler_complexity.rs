@@ -67,17 +67,18 @@ fn multi_stmt_fails_without_ts() {
 }
 
 #[test]
-fn multi_stmt_passes_with_sibling_controller_ts() {
-    let dir = tempfile::tempdir().expect("create tempdir");
-    let controller_src = "import { controller, signal } from '@ship/sui-runtime'\n\
+fn multi_stmt_passes_with_inline_controller() {
+    // The controller is the inline `<controller>` block — the ONE source (no
+    // paired `.controller.ts` fallback). It provides x/y so the multi-statement
+    // handler is allowed and its scope refs bind.
+    let src = "<controller>\n\
+        import { controller, signal } from '@ship/sui-runtime'\n\
         export default controller({\n\
           scope: () => ({ x: signal(0), y: signal(0) }),\n\
-        })\n";
-    std::fs::write(dir.path().join("view.controller.ts"), controller_src).unwrap();
-    let sui_path = dir.path().join("view.sui");
-    let src = r#"<button on:click={() => { x.set(1); y.set(2) }}>+</button>"#;
-    std::fs::write(&sui_path, src).unwrap();
+        })\n\
+        </controller>\n\
+        <button on:click={() => { x.set(1); y.set(2) }}>+</button>";
 
-    compile(src, view_opts(Some(sui_path)))
-        .expect("multi-statement handler with paired .controller.ts must pass");
+    compile(src, view_opts(None))
+        .expect("multi-statement handler with inline <controller> must pass");
 }

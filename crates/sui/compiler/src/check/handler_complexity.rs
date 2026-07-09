@@ -1,34 +1,20 @@
 //! Handler-complexity check — condition (1) of the tier-1/tier-2 threshold.
 //!
 //! Emits a build-time error when an `on:event` handler body is a block
-//! expression with more than one statement and no paired
-//! `<stem>.controller.ts` controller.
-
-use std::path::Path;
+//! expression with more than one statement and the source has no controller
+//! (the inline `<controller>` block, which owns complex handler logic).
 
 use crate::diagnostics::CompileError;
 use crate::ir::{AttrInstr, Instr, Program};
 
-/// Entry point. Skipped entirely when a `<stem>.controller.ts` file
-/// exists alongside the source (the controller is responsible for
-/// complex handler logic).
-pub fn check(program: &Program, source_path: Option<&Path>) -> Result<(), CompileError> {
-    if has_paired_ts(source_path) {
+/// Entry point. Skipped entirely when the source has a controller (its inline
+/// `<controller>` block) — the controller is responsible for complex handler
+/// logic. `has_controller` is resolved in-memory; there is no paired-file probe.
+pub fn check(program: &Program, has_controller: bool) -> Result<(), CompileError> {
+    if has_controller {
         return Ok(());
     }
     check_instrs(&program.template)
-}
-
-fn has_paired_ts(source_path: Option<&Path>) -> bool {
-    let Some(p) = source_path else { return false; };
-    let Some(stem) = p.file_stem().and_then(|s| s.to_str()) else { return false; };
-    let dir = p.parent().unwrap_or(Path::new("."));
-    let candidate = if stem == "page" {
-        dir.join("controller.ts")
-    } else {
-        dir.join(format!("{stem}.controller.ts"))
-    };
-    candidate.exists()
 }
 
 fn check_instrs(instrs: &[Instr]) -> Result<(), CompileError> {
@@ -81,7 +67,8 @@ fn check_attr(attr: &AttrInstr) -> Result<(), CompileError> {
     if let Some(block_body) = arrow_block_body(&handler.source)
         && count_stmts(block_body) > 1 {
             return Err(CompileError::new(
-                "multi-statement handler — paired `controller.ts` required for tier-2 work",
+                "multi-statement handler — move it into the `<controller>` block \
+                 (name the handler there and reference it) for tier-2 work",
             )
             .with_span(handler.span)
             .with_category(format!("on:{event} handler")));

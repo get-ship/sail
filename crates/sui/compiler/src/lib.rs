@@ -354,10 +354,8 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     };
     let schema = Some(emit::schema::emit_schema(&program, &opts));
     let dts = if opts.emit_dts {
-        // Re-read the paired controller for d.ts emission. Cheap — it's
-        // a small file read; the parsed shape is identical to the one
-        // `check::run` consumed above, so behaviour stays consistent.
-        let controller = check::controller_parse::read_paired_controller(opts.source_path.as_deref());
+        // Reuse the inline controller resolved above — one source, no re-read,
+        // no paired-file fallback.
         Some(emit::dts::emit_dts(&program, controller.as_ref()))
     } else {
         None

@@ -58,7 +58,7 @@ pub fn run(
     // Bare names are the language's namespace — reject unknown bare tags
     // (typos / not-yet-language elements) so L1 growth is safe.
     reserved_names::check(program)?;
-    handler_complexity::check(program, source_path)?;
+    handler_complexity::check(program, controller.is_some())?;
     controller_purity::check(source_path, overrides)?;
     css_token::check(source, source_path, overrides)?;
     // `controller` is resolved by the caller: the inline `<controller>` block
@@ -182,10 +182,10 @@ pub fn collect(
 
     // Structural / semantic passes — first error from each, continuing past
     // failures so one bad pass doesn't mask the rest.
-    // `controller` is resolved by the caller: the inline `<controller>` block
-    // (SFC) wins, else the paired `.controller.ts`.
+    // `controller` is resolved by the caller from the inline `<controller>`
+    // block (SFC) — the one source, no paired-file fallback.
     push(check_mutations(program), source, &mut diags);
-    push(handler_complexity::check(program, source_path), source, &mut diags);
+    push(handler_complexity::check(program, controller.is_some()), source, &mut diags);
     if let Some(c) = controller {
         push(closed_sections::check(c), source, &mut diags);
         push(pure_derived::check(c), source, &mut diags);
