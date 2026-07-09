@@ -241,7 +241,15 @@ const INPUT_SKIN_CSS =
   ":where(input[type='color']) { appearance: none; -webkit-appearance: none; -moz-appearance: none; width: var(--space-9); height: var(--control-h-md); padding: var(--space-1); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--background); box-shadow: var(--shadow-xs); cursor: pointer; }\n" +
   ":where(input[type='color'])::-webkit-color-swatch-wrapper { padding: 0; }\n" +
   ":where(input[type='color'])::-webkit-color-swatch { border: 0; border-radius: var(--radius-sm); }\n" +
-  ":where(input[type='color'])::-moz-color-swatch { border: 0; border-radius: var(--radius-sm); }\n"
+  ":where(input[type='color'])::-moz-color-swatch { border: 0; border-radius: var(--radius-sm); }\n" +
+  // The last bits of native input chrome — the date/time picker indicator and
+  // the search clear button. These already sit in the text-field box; just make
+  // them cursor-consistent and dim-until-hover so they don't shout.
+  ":where(input)::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.55; }\n" +
+  ":where(input)::-webkit-calendar-picker-indicator:hover { opacity: 1; }\n" +
+  ":where(input[type='search'])::-webkit-search-cancel-button { cursor: pointer; }\n" +
+  // <optgroup> label in the native option list.
+  ":where(optgroup) { font-weight: var(--font-weight-semibold); color: var(--muted-foreground); }\n"
 
 // L1 checkbox / radio — appearance:none native inputs the framework renders.
 // Square (checkbox) or round (radio); checked fills with the tone. The

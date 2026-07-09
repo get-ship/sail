@@ -90,6 +90,10 @@ iframe { max-width: 100%; border: 0; }
 :where(input[type='color'])::-webkit-color-swatch-wrapper { padding: 0; }
 :where(input[type='color'])::-webkit-color-swatch { border: 0; border-radius: var(--radius-sm); }
 :where(input[type='color'])::-moz-color-swatch { border: 0; border-radius: var(--radius-sm); }
+:where(input)::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.55; }
+:where(input)::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+:where(input[type='search'])::-webkit-search-cancel-button { cursor: pointer; }
+:where(optgroup) { font-weight: var(--font-weight-semibold); color: var(--muted-foreground); }
 :where(input[type='checkbox'], input[type='radio']) { appearance: none; flex: none; width: 1.15em; height: 1.15em; min-height: 0; padding: 0; font-size: var(--size-fs, var(--text-base)); border: 1.5px solid var(--border-strong); background: var(--background); box-shadow: var(--shadow-xs); cursor: pointer; vertical-align: -0.2em; }
 :where(input[type='checkbox']) { border-radius: var(--radius-sm); }
 :where(input[type='radio']) { border-radius: 50%; }
