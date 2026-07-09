@@ -109,6 +109,9 @@ pub fn collect_attr_imports(
                 _ => {}
             }
         }
+        AttrInstr::Use { .. } => {
+            out.runtime_imports.insert("runAction");
+        }
         AttrInstr::Motion { trigger, props, span } => {
             // `motion:` directives bake to literal `el.animate(...)`
             // calls plus a `__sui_motion_attach(...)` wrapper. The

@@ -399,6 +399,22 @@ impl TemplateEmitter {
                     d = dir.as_str(),
                 ));
             }
+            AttrInstr::Use { action, param, .. } => {
+                // `use:action` / `use:action={param}`. The action resolves
+                // from scope (a use-able hook handle or an imported action
+                // fn); `runAction` invokes it with the element on mount,
+                // calls its `update(param)` when the param thunk's deps
+                // change, and `destroy()` on unmount. Registers at element
+                // construction — no boundary key, no SSR marker.
+                let action_rw = self.rw(action, &[]);
+                let param_thunk = param
+                    .as_ref()
+                    .map(|e| format!("() => ({})", self.rw(&e.source, &[])))
+                    .unwrap_or_else(|| "undefined".to_string());
+                w.line(&format!(
+                    "runAction({el_var}, {action_rw}, {param_thunk});",
+                ));
+            }
              AttrInstr::Motion { trigger, props, span: _ } => {
                 // AOT-baked `motion:` directive. Each `MotionProp` produces
                 // one pre-baked `el.animate(...)` call; all are wired to

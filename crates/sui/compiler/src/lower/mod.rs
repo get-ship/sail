@@ -155,6 +155,13 @@ fn check_attr_for_route(a: &AttrInstr, out: &mut Lowered) {
                 out.uses_route = true;
             }
         }
+        AttrInstr::Use { param, .. } => {
+            if let Some(e) = param
+                && expr_references_route(&e.source)
+            {
+                out.uses_route = true;
+            }
+        }
     }
 }
 

@@ -107,6 +107,13 @@ export type { Disposer } from './bind'
 export { on, matchesKey } from './on'
 export type { OnOptions, Modifier } from './on'
 
+// The `use:` directive runtime — attaches a reusable "action" (element →
+// behavior + teardown) to an element. The compiler emits `runAction` for
+// `use:action` / `use:action={param}`. The primitive that removes
+// author-facing ref + effect for element behavior.
+export { runAction } from './action'
+export type { Action, ActionResult } from './action'
+
 // Native <dialog> behavior — the compiler emits bindOpen for
 // `<dialog bind:open={state}>`. Thin sugar over showModal()/close(); the
 // platform keeps the focus trap, top layer, ESC, and focus-return.

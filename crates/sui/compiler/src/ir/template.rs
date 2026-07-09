@@ -112,6 +112,20 @@ pub enum AttrInstr {
         props: Vec<MotionProp>,
         span: Span,
     },
+    /// `use:action` or `use:action={param}` — attach a reusable behavior
+    /// (an "action") to the rendered element. `action` resolves to a value
+    /// in scope (a hook handle that is itself use-able, or an imported
+    /// action fn); `param` is the optional reactive parameter. Compiles to
+    /// a runtime `runAction(el, action, () => param)` call that invokes the
+    /// action with the element on mount, calls its `update(param)` when the
+    /// param dependencies change, and `destroy()` on unmount. This is the
+    /// first-class element→behavior primitive: it removes author-facing
+    /// `ref` + `effect` for the whole element-behavior category.
+    Use {
+        action: String,
+        param: Option<Expr>,
+        span: Span,
+    },
  }
 
 /// One animated property within a `motion:` config. The preset name

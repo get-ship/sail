@@ -75,6 +75,9 @@ fn compile_attr(
     if let Some(rest) = name.strip_prefix("motion:") {
         return compile_motion(rest, value, value_span, loc);
     }
+    if let Some(rest) = name.strip_prefix("use:") {
+        return compile_use(rest, value, value_span, loc);
+    }
     if is_expr_value(value) {
         let inner = strip_braces(value).to_string();
         // Parse the STRIPPED inner expression — `signal(0)`,
@@ -528,6 +531,37 @@ fn compile_transition(
         return Err(err("transition options must be an {expression}".into()));
     };
     Ok(AttrInstr::Transition { name: name.to_string(), opts, dir, span: value_span })
+}
+
+/// Compile a `use:action` / `use:action={param}` directive — attach a
+/// reusable behavior (an "action") to the rendered element. `action` is a
+/// bare identifier resolving to a scope value (a use-able hook handle or an
+/// imported action fn); the optional `{param}` is its reactive parameter.
+fn compile_use(
+    name: &str,
+    value: &str,
+    value_span: Span,
+    loc: &str,
+) -> Result<AttrInstr, CompileError> {
+    let err = |msg: String| {
+        CompileError::new(msg).with_span(value_span).with_category(loc.to_string())
+    };
+    if name.is_empty() {
+        return Err(err("use: requires an action name".into()));
+    }
+    if !is_bare_identifier(name) {
+        return Err(err(format!("action name \"{name}\" must be a bare identifier")));
+    }
+    let param = if value.is_empty() {
+        None
+    } else if is_expr_value(value) {
+        let inner = strip_braces(value).to_string();
+        expr::validate_at(&inner, false, loc, value_span)?;
+        Some(Expr::new(inner, value_span, false))
+    } else {
+        return Err(err("use: parameter must be an {expression}".into()));
+    };
+    Ok(AttrInstr::Use { action: name.to_string(), param, span: value_span })
 }
 /// Compile a `motion:<trigger>=…` directive. Milestone 1 accepts only a
 /// static object literal (`motion:hover={{ scale: 'sm' }}`); dynamic
