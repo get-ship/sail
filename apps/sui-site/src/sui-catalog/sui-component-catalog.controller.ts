@@ -1,28 +1,34 @@
 // <sui-component-catalog> — `/components` "gallery" index. Reads the build-time
 // `COMPONENTS_CATALOG` (emitted by `deck build`'s cem pass into
 // `apps/sui-site/components.gen.ts`) and projects it into a searchable,
-// category-filtered card gallery. Framework-pure — no ship-platform coupling.
+// surface-filtered card gallery. Framework-pure — no ship-platform coupling.
 //
 // Curated surfaces (this commit):
-//   - Grouping: by CATEGORY (Forms & Inputs / Layout / Overlays / etc.), not
-//     by pack. The pack field is preserved on every entry (the /components/
-//     [tag] detail page still reads it) but the chip row drops the pack
-//     axis entirely.
+//   - Surface axis: TWO chips — Standard Library (default) vs Packs. There
+//     is no chip for "all"; the Standard Library chip IS the gallery, and
+//     Packs is a distinct secondary surface. There are no invented category
+//     buckets (no Forms / Layout / Overlays / Navigation / Feedback / Data /
+//     Typography / Utility).
+//   - Standard Library: the `@ship/sui-primitives` pack, surfaced as ONE
+//     clean alphabetical grid (no sub-category headers).
+//   - Packs: every Sail-authored pack grouped under a pack-name header, in
+//     canonical order (Charts, Canvas, Chat Elements, Media, Code Editor,
+//     Mermaid). Standard-library entries never appear here.
 //   - Hidden surface: the internal sub-primitives that compose but never
 //     appear standalone (accordion-item / tab / tab-panel / tree-item /
-//     timeline-item / toast* / radio etc.) are filtered out of the entry
-//     list in `buildCatalog()`, before the card array is built, so neither
-//     the chip row nor the empty-state ever see them.
+//     timeline-item / toast* / radio etc.) plus the entire viewer pack are
+//     filtered out of the entry list in `buildCatalog()`, before either
+//     chip is computed, so a chip never promises more cards than it shows.
 //   - Search: case-insensitive substring on the tag, two-way bound through
 //     the <sui-input>'s custom `sui-input` event (its native `input` does
 //     not cross the shadow boundary).
 //
-// Interactivity is two signals: `query` (the search text) and
-// `activeCategory` (the category chip). A card's visibility derives from
-// both — `visible(entry)` — so filtering is a reactive `attr:hidden`
-// toggle, never a re-render. The one-shot preview mount therefore fires
-// exactly once: every registered specimen mounts once in `mount()`, and
-// filtering only shows/hides already-mounted cards.
+// Interactivity is two signals: `query` (the search text) and `activeSurface`
+// (the chip). A card's visibility derives from both — `visible(entry)` — so
+// filtering is a reactive `attr:hidden` toggle, never a re-render. The one-
+// shot preview mount therefore fires exactly once: every registered specimen
+// mounts once in `mount()`, and filtering only shows/hides already-mounted
+// cards.
 //
 // The preview mount is the SAME harness the catalog has always used:
 // for each `[data-preview-for]` stage the template renders, mount one
@@ -37,19 +43,22 @@ import { COMPONENTS_CATALOG } from '../../components.gen'
 import { PREVIEW_SEEDS, type PreviewSeed } from './preview-seeds'
 import {
   HIDDEN_TAGS,
-  TAG_CATEGORY,
-  CATEGORY_LABELS,
-  CATEGORY_ORDER,
-  type CategoryId,
+  PACK_LABELS,
+  PACK_ORDER,
+  packOf,
+  surfaceOf,
+  type Surface,
 } from './category-map'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface ComponentEntry {
   tag: string
+  /** CEM `package` field — the npm pack name (e.g. `@ship/sui-charts`,
+   *  `@ship/sui-primitives`). Preserved on every entry for the detail page. */
   pack: string
-  /** Public category the tag belongs to (see `category-map.ts`). */
-  category: CategoryId
+  /** Surface label: pack name for pack tags, `null` for standard-library tags. */
+  packLabel: string | null
   description: string
   propCount: number
   slotCount: number
@@ -101,10 +110,20 @@ export interface CardEntry extends ComponentEntry {
   hidden: Derived<boolean>
 }
 
-export interface CategoryChip {
-  id: CategoryId | 'all'
+/** A chip on the surface row. Exactly two chips: Standard Library (default)
+ *  and Packs. */
+export interface SurfaceChip {
+  id: Surface
   label: string
   count: number
+}
+
+/** A pack group in the Packs view: a header label + the cards in that pack,
+ *  alphabetical. Empty packs are omitted from the rendered surface. */
+export interface PackGroup {
+  pack: string
+  label: string
+  cards: CardEntry[]
 }
 
 interface CemAttr { name?: string; type?: { text?: string }; default?: unknown }
@@ -119,13 +138,6 @@ interface CemDecl {
 }
 interface CemModule { package?: string; declarations?: CemDecl[] }
 
-/** Resolve the public category for a tag. Falls through to `CategoryId.Utility`
- *  when the tag is missing from the map — under-claim, never over-claim. */
-function categoryFor(tag: string): CategoryId {
-  const explicit = TAG_CATEGORY[tag]
-  return explicit ?? 'utility'
-}
-
 // Per-tag preview seed lives in the shared `preview-seeds` module — imported
 // above and consumed by BOTH this grid and the /components/[tag] detail page.
 // Tags absent from the map fall through to a bare createElement with no slot
@@ -135,14 +147,17 @@ export type { PreviewSeed }
 // ── Catalog ingestion ────────────────────────────────────────────────────────
 
 /** Project the generated CEM into a flat, tag-sorted entry list plus the
- *  category chip row. Filters out hidden sub-primitives BEFORE projection so
- *  the chip-row counts reflect what the user actually sees. Pure + sync —
- *  bundled data computed once at module load. */
-function buildCatalog(): { entries: ComponentEntry[]; chips: CategoryChip[] } {
+ *  two-chip surface row + pack-grouped sections. Filters out hidden sub-
+ *  primitives BEFORE projection so the chip-row counts reflect what the user
+ *  actually sees. Pure + sync — bundled data computed once at module load. */
+function buildCatalog(): {
+  entries: ComponentEntry[]
+  chips: SurfaceChip[]
+  packOrder: string[]
+} {
   const catalog = COMPONENTS_CATALOG as unknown as { modules?: CemModule[] }
   const modules = catalog.modules ?? []
   const entries: ComponentEntry[] = []
-  const catCounts = new Map<CategoryId, number>()
   for (const m of modules) {
     const pack = m.package ?? 'workspace'
     for (const d of m.declarations ?? []) {
@@ -151,41 +166,47 @@ function buildCatalog(): { entries: ComponentEntry[]; chips: CategoryChip[] } {
       // Curated hidden surface: internal sub-primitives compose but never
       // appear as standalone catalog entries.
       if (HIDDEN_TAGS[tag]) continue
-      const category = categoryFor(tag)
       entries.push({
         tag,
         pack,
-        category,
+        packLabel: packOf(tag),
         description: (d.description ?? '').split('\n')[0]?.trim() ?? '',
         propCount: (d.attributes ?? []).length,
         slotCount: (d.slots ?? []).length,
         eventCount: (d.events ?? []).length,
         size: BENTO_SIZE[tag] ?? 'sm',
       })
-      catCounts.set(category, (catCounts.get(category) ?? 0) + 1)
     }
   }
   entries.sort((a, b) => a.tag.localeCompare(b.tag))
 
-  // Build the category chip row in the canonical display order from
-  // `CATEGORY_ORDER`. Any zero-count category still appears as an empty chip
-  // so the chip row is stable across builds (no flicker on a new
-  // primitive landing under an empty category).
-  const chips: CategoryChip[] = [{ id: 'all', label: 'All', count: entries.length }]
-  for (const id of CATEGORY_ORDER) {
-    chips.push({ id, label: CATEGORY_LABELS[id], count: catCounts.get(id) ?? 0 })
-  }
-  return { entries, chips }
+  // Two-chip row in canonical order. Each chip's count is the number of
+  // visible entries on that surface — never inflated by hidden tags.
+  const stdlibCount = entries.filter((e) => surfaceOf(e.tag) === 'stdlib').length
+  const packCount = entries.filter((e) => surfaceOf(e.tag) === 'pack').length
+  const chips: SurfaceChip[] = [
+    { id: 'stdlib', label: 'Standard Library', count: stdlibCount },
+    { id: 'pack', label: 'Packs', count: packCount },
+  ]
+
+  // Pack display order — only packs that actually have entries, in canonical
+  // order. The runtime re-decorates each group's cards with reactive `hidden`
+  // deriveds in `scope()`; this pre-pass just establishes the section
+  // headers so the Packs view renders them in canonical order.
+  const packOrder = PACK_ORDER.filter((pack) =>
+    entries.some((e) => e.packLabel === pack),
+  )
+
+  return { entries, chips, packOrder }
 }
 
-const { entries: ENTRIES, chips: CHIPS } = buildCatalog()
-
+const { entries: ENTRIES, chips: CHIPS, packOrder: PACK_ORDER_VISIBLE } = buildCatalog()
 // ── Controller ───────────────────────────────────────────────────────────────
 
 export default controller<Scope>({
   scope: () => {
     const query = signal<string>('')
-    const activeCategory = signal<CategoryId | 'all'>('all')
+    const activeSurface = signal<Surface>('stdlib')
 
     // <sui-input> emits a custom `sui-input` event (its internal native input's
     // `input` doesn't cross the shadow boundary), so a native two-way
@@ -195,15 +216,15 @@ export default controller<Scope>({
       const detail = (e as CustomEvent<{ value?: string }>).detail
       query.set(detail?.value ?? '')
     }
-    const setCategory = (id: CategoryId | 'all'): void => { activeCategory.set(id) }
+    const setSurface = (id: Surface): void => { activeSurface.set(id) }
 
-    // A card is visible when it matches BOTH the active category AND the
+    // A card is visible when it matches BOTH the active surface AND the
     // search substring (case-insensitive, on the tag). Reads both signals.
     const visible = (c: ComponentEntry): boolean => {
       const q = query().trim().toLowerCase()
-      const catOk = activeCategory() === 'all' || c.category === activeCategory()
+      const surfOk = surfaceOf(c.tag) === activeSurface()
       const qOk = q === '' || c.tag.toLowerCase().includes(q)
-      return catOk && qOk
+      return surfOk && qOk
     }
 
     // Decorate each entry with a reactive `hidden` derived so the template can
@@ -216,15 +237,30 @@ export default controller<Scope>({
       hidden: derived<boolean>(() => !visible(e)),
     }))
 
+    // Pack groups carry their own per-card `hidden` flag, parallel to `cards`
+    // above. The Packs view renders from `packGroups` (so it can interleave
+    // pack-name headers between card groups); the Standard Library view
+    // renders from `cards`. Section order is the canonical PACK_ORDER_VISIBLE
+    // list computed once at module load — only packs with at least one entry
+    // appear, in the canonical Charts → Canvas → Chat Elements → Media →
+    // Code Editor → Mermaid order.
+    const packGroups: PackGroup[] = PACK_ORDER_VISIBLE.map((pack) => {
+      const label = PACK_LABELS[pack] ?? pack
+      const cards = ENTRIES
+        .filter((e) => e.packLabel === pack)
+        .map((e) => ({ ...e, hidden: derived<boolean>(() => !visible(e)) }))
+      return { pack, label, cards }
+    })
+
     return {
       components: derived<CardEntry[]>(() => cards),
-      chips: derived<CategoryChip[]>(() => CHIPS),
+      packGroups: derived<PackGroup[]>(() => packGroups),
+      chips: derived<SurfaceChip[]>(() => CHIPS),
       totalComponents: derived<number>(() => ENTRIES.length),
-      totalCategories: derived<number>(() => CHIPS.length - 1),
       visibleCount: derived<number>(() => ENTRIES.filter((c) => visible(c)).length),
       query,
-      activeCategory,
-      setCategory,
+      activeSurface,
+      setSurface,
       onSearch,
     }
   },

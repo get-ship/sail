@@ -1,60 +1,55 @@
-// Category taxonomy for the public SUI primitive catalog (apps/sui-site
+// Pack taxonomy for the public SUI component catalog (apps/sui-site
 // /components page).
 //
 // ONE source of truth for two questions:
-//   1. Which category a public primitive belongs to (TAG → Category).
+//   1. Which surface a public tag belongs to: the `primitives` pack
+//      ("Standard Library") vs any Sail-authored pack ("Packs").
 //   2. Which tags are NOT public catalog entries — the internal sub-primitives
 //      that compose but never appear standalone on /components
 //      (`HIDDEN_TAGS`).
 //
-// Why both lists live here:
-//   - The mapping is deliberately a `Record<string, CategoryId>` — a static
-//     lookup table keyed by tag (the compiler-built CEM produces the very
-//     same set of string keys).
-//   - The HIDDEN_TAGS set is kept right next to its parent entries'
-//     assignments so a reviewer can flip an entry from `hidden` to a
-//     category in one place — no second list to keep in sync across files.
-//   - A primitive missing the map falls into CategoryId.Utility so the
-//     catalog never silently drops an unknown tag (intentional under-claim,
-//     not over-claim of curation).
+// Why the flat `PACK` map lives here:
+//   - The mapping is a `Record<tag, packName>` — a static lookup table keyed
+//     by tag (the compiler-built CEM produces the same set of string keys).
+//   - The pack name on each entry IS the `package` field the deck build stamps
+//     on every CEM module (`@ship/sui-charts`, `@ship/sui-canvas`, …); a
+//     reviewer can flip a tag from one pack to another by editing one line.
+//   - Tags whose CEM `package` is the standard library (`@ship/sui-primitives`)
+//     are NOT in this map — they fall through to the `Surface = 'stdlib'`
+//     bucket by construction. Re-classifying a primitive as a pack requires
+//     moving it to a different package, which is the desired friction.
 
-// ── Categories ───────────────────────────────────────────────────────────────
+/** The two top-level surfaces surfaced as a single chip row on /components.
+ *  `stdlib` is the default; `pack` groups every Sail-authored pack. */
+export type Surface = 'stdlib' | 'pack'
 
-/** The eight fold-categories for the public primitive surface. Display order
- *  matches the chip row; `Utility` is the fallback bucket. */
-export type CategoryId =
-  | 'forms'
-  | 'layout'
-  | 'overlays'
-  | 'navigation'
-  | 'feedback'
-  | 'data'
-  | 'typography'
-  | 'utility'
+// ── Pack display order ──────────────────────────────────────────────────────
 
-export const CATEGORY_LABELS: Record<CategoryId, string> = {
-  forms: 'Forms & Inputs',
-  layout: 'Layout',
-  overlays: 'Overlays',
-  navigation: 'Navigation',
-  feedback: 'Feedback',
-  data: 'Data Display',
-  typography: 'Typography',
-  utility: 'Utility',
-}
-
-export const CATEGORY_ORDER: readonly CategoryId[] = [
-  'forms',
-  'layout',
-  'overlays',
-  'navigation',
-  'feedback',
-  'data',
-  'typography',
-  'utility',
+/** Canonical display order for packs (the chip row's group headers on the
+ *  Packs surface, AND the pack-name headers rendered above each card group). */
+export const PACK_ORDER: readonly string[] = [
+  'Charts',
+  'Canvas',
+  'Chat Elements',
+  'Media',
+  'Code Editor',
+  'Mermaid',
 ] as const
 
-// ── Hidden sub-primitives ────────────────────────────────────────────────────
+/** Display label per pack key. Keys equal `PACK_ORDER` entries; values are
+ *  the same human-readable names (no normalization needed — the keys ARE the
+ *  labels). Kept as a record so a header render can fall back to the raw key
+ *  if a pack disappears from PACK_ORDER. */
+export const PACK_LABELS: Record<string, string> = {
+  'Charts': 'Charts',
+  'Canvas': 'Canvas',
+  'Chat Elements': 'Chat Elements',
+  'Media': 'Media',
+  'Code Editor': 'Code Editor',
+  'Mermaid': 'Mermaid',
+}
+
+// ── Hidden sub-primitives ───────────────────────────────────────────────────
 
 /** Tags that compose a parent primitive, are pure scaffolding, or need a
  *  non-attribute prop seam (the JS-prop path) to render meaningfully — none
@@ -98,119 +93,65 @@ export const HIDDEN_TAGS: Record<string, true> = {
   'sui-component-viewer': true,
 }
 
-// ── Public tag → category mapping ───────────────────────────────────────────
+// ── Public tag → pack mapping ───────────────────────────────────────────────
 
-/** Categorization for every public primitive. Organized by pack for review;
- *  the runtime only cares about the flat Record. Tags not in the map fall to
- *  `CategoryId.Utility`. */
-export const TAG_CATEGORY: Record<string, CategoryId> = {
-  // ── @ship/sui-primitives — Forms & Inputs ─────────────────────────────
-  'sui-input':           'forms',
-  'sui-switch':          'forms',
-  'sui-radio-group':     'forms',
-  'sui-toggle-group':    'forms',
-  'sui-select':          'forms',
-  'sui-combobox':        'forms',
-  'sui-autocomplete':    'forms',
-  'sui-field':           'forms',
-  'sui-label':           'forms',
-  'sui-date-picker':     'forms',
-  'sui-color-picker':    'forms',
-  'sui-file-upload':     'forms',
-  'sui-slider':          'forms',
+/** Pack assignment for every public pack tag. Organized by pack for review;
+ *  the runtime only cares about the flat Record. Tags NOT in this map are
+ *  standard-library primitives (`@ship/sui-primitives`). The labels are the
+ *  exact `PACK_LABELS` keys (and `PACK_ORDER` entries) so a single string
+ *  drives display, grouping, and chip rendering — no second source of truth. */
+export const PACK: Record<string, string> = {
+  // ── @ship/sui-charts ────────────────────────────────────────────────
+  'sui-area-chart':      'Charts',
+  'sui-bar-chart':       'Charts',
+  'sui-donut':           'Charts',
+  'sui-gauge':           'Charts',
+  'sui-heatmap':         'Charts',
+  'sui-line-chart':      'Charts',
+  'sui-sparkline':       'Charts',
 
-  // ── @ship/sui-primitives — Layout ─────────────────────────────────────
-  'sui-accordion':       'layout',
-  'sui-tabs':            'layout',
-  'sui-timeline':        'layout',
-  'sui-scroll-area':     'layout',
-  'sui-collapsible':     'layout',
+  // ── @ship/sui-canvas ────────────────────────────────────────────────
+  // The annotation family (sui-annotation-{layer,list,marker}) lives under
+  // Canvas alongside sui-board / sui-canvas / sui-draw / sui-graph-canvas.
+  // Each is its own standalone tag — the .sui files declare them as
+  // distinct custom elements — so the gallery surfaces all of them.
+  'sui-annotation-layer':  'Canvas',
+  'sui-annotation-list':   'Canvas',
+  'sui-annotation-marker': 'Canvas',
+  'sui-board':             'Canvas',
+  'sui-canvas':            'Canvas',
+  'sui-draw':              'Canvas',
+  'sui-graph-canvas':      'Canvas',
 
-  // ── @ship/sui-primitives — Overlays ───────────────────────────────────
-  'sui-tooltip':         'overlays',
-  'sui-popover':         'overlays',
-  'sui-hover-card':      'overlays',
-  'sui-dropdown-menu':   'overlays',
-  'sui-context-menu':    'overlays',
-  'sui-dialog':          'overlays',
-  'sui-alert-dialog':    'overlays',
-  'sui-drawer':          'overlays',
-  'sui-cmdk':            'overlays',
-  'sui-portal':          'overlays',
+  // ── @ship/sui-chat-elements ─────────────────────────────────────────
+  'sui-citation':        'Chat Elements',
+  'sui-composer':        'Chat Elements',
+  'sui-message':         'Chat Elements',
+  'sui-message-list':    'Chat Elements',
+  'sui-thinking-dots':   'Chat Elements',
+  'sui-tool-call':       'Chat Elements',
 
-  // ── @ship/sui-primitives — Navigation ─────────────────────────────────
-  'sui-nav-top':         'navigation',
-  'sui-navigation-menu': 'navigation',
-  'sui-pagination':      'navigation',
+  // ── @ship/sui-media ─────────────────────────────────────────────────
+  'sui-media-av':        'Media',
+  'sui-media-csv':       'Media',
+  'sui-media-image':     'Media',
 
-  // ── @ship/sui-primitives — Feedback ───────────────────────────────────
-  'sui-alert':           'feedback',
-  'sui-toast-host':      'feedback',
-  'sui-spinner':         'feedback',
-  'sui-empty-state':     'feedback',
-  'sui-error-state':     'feedback',
-  'sui-error-boundary':  'feedback',
+  // ── @ship/sui-code-editor ───────────────────────────────────────────
+  'sui-code-editor':     'Code Editor',
 
-  // ── @ship/sui-primitives — Data Display ───────────────────────────────
-  'sui-table':           'data',
-  'sui-tree':            'data',
-  'sui-tree-grid':       'data',
-  'sui-tree-view':       'data',
-  'sui-calendar':        'data',
-  'sui-json-view':       'data',
-  'sui-sheet':           'data',
-  // ── @ship/sui-primitives — Typography & identity ──────────────────────
-  'sui-icon':            'typography',
-  'sui-avatar':          'typography',
-  'sui-chip':            'typography',
-  // ── @ship/sui-primitives — Utility ────────────────────────────────────
-  'sui-theme-picker':    'utility',
+  // ── @ship/sui-mermaid ───────────────────────────────────────────────
+  'sui-mermaid':         'Mermaid',
+}
 
-  // ── @ship/sui-viewer — Data Display (the engine primitives) ──────────
-  'sui-render':          'data',
-  'sui-source-panel':    'data',
-  'sui-prop-knobs':      'data',
-  'sui-prop-matrix':     'data',
-  'sui-component-viewer':'data',
+// ── Lookup helpers ──────────────────────────────────────────────────────────
 
-  // ── @ship/sui-charts — Data Display ───────────────────────────────────
-  'sui-area-chart':      'data',
-  'sui-bar-chart':       'data',
-  'sui-donut':           'data',
-  'sui-gauge':           'data',
-  'sui-heatmap':         'data',
-  'sui-line-chart':      'data',
-  'sui-sparkline':       'data',
+/** Surface for a public tag — `pack` when the tag is in `PACK`, otherwise
+ *  `stdlib` (the @ship/sui-primitives pack). */
+export function surfaceOf(tag: string): Surface {
+  return PACK[tag] ? 'pack' : 'stdlib'
+}
 
-  // ── @ship/sui-canvas ── Data Display ──────────────────────────────────
-  'sui-annotation-layer':'data',
-  'sui-annotation-list': 'data',
-  'sui-annotation-marker':'data',
-  'sui-board':           'data',
-  'sui-canvas':          'data',
-  'sui-draw':            'data',
-  'sui-graph-canvas':    'data',
-
-  // ── @ship/sui-code-editor — Typography (content authoring) ────────────
-  'sui-code-editor':     'typography',
-
-  // ── @ship/sui-chat-elements — Data Display ───────────────────────────
-  'sui-citation':        'data',
-  'sui-composer':        'data',
-  'sui-message':         'data',
-  'sui-message-list':    'data',
-  'sui-thinking-dots':   'data',
-  'sui-tool-call':       'data',
-
-  // ── @ship/sui-media — Data Display ────────────────────────────────────
-  'sui-media-av':        'data',
-  'sui-media-csv':       'data',
-  'sui-media-image':     'data',
-
-  // ── @ship/sui-mermaid — Data Display ──────────────────────────────────
-  'sui-mermaid':         'data',
-
-  // ── @ship/sui-code — Typography ───────────────────────────────────────
-  'sui-diff':            'typography',
-  'sui-markdown':        'typography',
+/** Pack label for a pack tag, `null` for standard-library tags. */
+export function packOf(tag: string): string | null {
+  return PACK[tag] ?? null
 }

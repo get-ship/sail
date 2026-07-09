@@ -2,33 +2,41 @@
   <sui-component-catalog> — the `/components` gallery index for the SUI site.
 
   A centered column: a hero (eyebrow + display title + lead), a centered
-  search field, a centered row of category-filter chips, then the component
+  search field, a centered row of surface-filter chips, then the component
   card grid. Every component links to its /components/<tag> detail page and
   shows a LIVE specimen mounted into a framed preview stage.
 
   Layout is the library dogfooding itself — structure comes from primitives,
   never bespoke CSS:
     <column>       the vertical page rhythm (hero → search → chips → grid)
-    <row>          centers the search field, the category chips, and each
+    <row>          centers the search field, the surface chips, and each
                    card's meta row
     <center>       parks the live specimen dead-center of the framed stage
                    (both axes), so specimens no longer hug the top edge
     <grid>         the responsive auto-fill card gallery (min="lg" gap="4")
 
   Filtering is reactive without re-rendering: the controller exposes a
-  `query` signal (bound to <sui-input>) and an `activeCategory` signal;
-  a card's `visible(entry)` derives from both and drives `attr:hidden`, so
+  `query` signal (bound to <sui-input>) and an `activeSurface` signal; a
+  card's `visible(entry)` derives from both and drives `attr:hidden`, so
   the one-shot live-preview mount (in the controller) is never disturbed.
 
-  Curation (the public surface):
-    - The catalog filters out internal sub-primitives (sui-accordion-item,
-      sui-tab/tab-panel, sui-tree-item, sui-timeline-item, sui-toast*,
-      sui-radio etc.) inside the controller, BEFORE the chip row is built
-      — so a category never promises more cards than it actually shows.
-    - The chip row is in CATEGORY_ORDER declared by category-map.ts
-      (Forms & Inputs, Layout, Overlays, Navigation, Feedback, Data Display,
-      Typography, Utility) so the chip axis reflects the eight folds of the
-      public API surface, not the workspace's npm pack layout.
+  Surfaces (the public surface):
+    - Two chip rows: Standard Library (default, selected on load) and Packs.
+      There is no "All" chip — the Standard Library chip IS the gallery,
+      and Packs is a distinct secondary surface. There are no invented
+      category buckets (no Forms / Layout / Overlays / Navigation / Feedback /
+      Data / Typography / Utility). The only organizing axis is the pack.
+    - Standard Library view: the @ship/sui-primitives pack rendered as one
+      alphabetical grid. No sub-category headers, no inner dividers.
+    - Packs view: each pack rendered under its pack-name header (in
+      canonical order: Charts, Canvas, Chat Elements, Media, Code Editor,
+      Mermaid). Standard-library entries never appear here.
+    - Hidden sub-primitives (sui-accordion-item, sui-tab/tab-panel,
+      sui-tree-item, sui-timeline-item, sui-toast*, sui-radio) and the
+      entire viewer pack (component-viewer, prop-knobs, prop-matrix,
+      render, source-panel) are filtered out inside the controller,
+      BEFORE either surface is built — so a chip never promises more
+      cards than it shows.
 
   Data source: the build-time CEM at apps/sui-site/components.gen.ts. Only
   the visual surface (framing, tints, font tokens) lives in this stylesheet;
@@ -84,7 +92,7 @@
     font-size: var(--text-md);
   }
 
-  /* ── Category chips ────────────────────────────────────────────────── */
+  /* ── Surface chips ─────────────────────────────────────────────────── */
   .chip {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
@@ -206,6 +214,32 @@
   }
   .cell:hover .cell-arrow { opacity: 1; transform: translateX(0); }
 
+  /* ── Pack sections (Packs view) ───────────────────────────────────── */
+  .pack-section + .pack-section { margin-top: var(--space-8); }
+  .pack-section[hidden] { display: none; }
+  .pack-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin: 0 0 var(--space-4);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .pack-title {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    letter-spacing: var(--tracking-tight);
+    margin: 0;
+    color: var(--foreground);
+  }
+  .pack-count {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+  }
+
   /* Empty / fallback states */
   .preview-empty {
     font-family: var(--font-mono);
@@ -223,9 +257,9 @@
 
 <column class="page" gap="6" data-test="catalog">
   <div class="hero" data-test="catalog-hero">
-    <span class="eyebrow">— {totalComponents()} components · {totalCategories()} categories</span>
+    <span class="eyebrow">— {totalComponents()} components</span>
     <h1 class="title">Component library</h1>
-    <p class="lead">The public SUI primitive surface, grouped by category. Every component is a standard web component, themed by design tokens, and compiled ahead-of-time.</p>
+    <p class="lead">The public SUI primitive surface, grouped by pack. Every component is a standard web component, themed by design tokens, and compiled ahead-of-time.</p>
   </div>
 
   <row class="search-row" justify="center">
@@ -247,10 +281,10 @@
       <button
         type="button"
         class="chip"
-        class:chip-on={activeCategory() === c.id}
-        on:click={() => setCategory(c.id)}
-        attr:data-category={c.id}
-        data-test="catalog-category-chip"
+        class:chip-on={activeSurface() === c.id}
+        on:click={() => setSurface(c.id)}
+        attr:data-surface={c.id}
+        data-test="catalog-surface-chip"
       >
         <span class="chip-label">{c.label}</span>
         <span class="chip-count">{c.count}</span>
@@ -258,7 +292,8 @@
     {/for}
   </row>
 
-  <div class="bento" data-test="catalog-grid">
+  <!-- Standard Library surface: one alphabetical grid, no sub-headers. -->
+  <div class="bento" attr:hidden={activeSurface() !== 'stdlib' ? true : null} data-test="catalog-grid">
     {#for c of components() key={c.tag}}
       <a
         class="cell"
@@ -277,6 +312,42 @@
       </a>
     {/for}
   </div>
+
+  <!-- Packs surface: each pack rendered under its name header, in canonical
+       order. Each section is its own grid (matching detail page rhythm); the
+       section itself hides when its pack isn't the active surface. -->
+  {#for g of packGroups() key={g.pack}}
+    <section
+      class="pack-section"
+      attr:hidden={activeSurface() !== 'pack' ? true : null}
+      attr:data-pack={g.pack}
+      data-test="catalog-pack-section"
+    >
+      <header class="pack-header">
+        <h2 class="pack-title">{g.label}</h2>
+        <span class="pack-count">{g.cards.length} components</span>
+      </header>
+      <div class="bento">
+        {#for c of g.cards key={c.tag}}
+          <a
+            class="cell"
+            class:sz-wide={c.size === 'wide'}
+            class:sz-lg={c.size === 'lg'}
+            href={'/components/' + c.tag}
+            attr:data-tag={c.tag}
+            attr:hidden={c.hidden() ? true : null}
+            data-test="catalog-cell"
+          >
+            <center class="stage" attr:data-preview-for={c.tag}></center>
+            <div class="cell-foot">
+              <span class="cell-tag" data-test="catalog-tag">{c.tag}</span>
+              <span class="cell-arrow" aria-hidden="true">→</span>
+            </div>
+          </a>
+        {/for}
+      </div>
+    </section>
+  {/for}
 
   {#if visibleCount() === 0}
     <p class="no-results" data-test="catalog-empty">No components match “{query()}”.</p>
