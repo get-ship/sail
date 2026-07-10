@@ -41,15 +41,22 @@ pub struct ElementOutput {
 }
 
 pub fn emit_element(program: &Program, name: &str) -> Result<ElementOutput, CompileError> {
-    // L1 tags are BARE names — the physical naming seam: hyphenated tags are
-    // custom elements, bare tags compile away.
-    if name.is_empty()
-        || !name.chars().all(|c| c.is_ascii_lowercase())
-        || name.contains('-')
-    {
+    // L1 element names are lowercase words, optionally hyphen-joined
+    // (`badge`, `empty-state`, `date-picker`). The naming seam is the STDLIB
+    // REGISTRY, not the hyphen: a tag in the registry compiles away (L1); a
+    // hyphenated tag NOT in the registry is an ordinary user custom element —
+    // `lower_stdlib_elements` only ever splices registered tags, so the two
+    // never collide.
+    let valid = !name.is_empty()
+        && name.chars().next().is_some_and(|c| c.is_ascii_lowercase())
+        && name.chars().all(|c| c.is_ascii_lowercase() || c == '-')
+        && !name.ends_with('-')
+        && !name.contains("--");
+    if !valid {
         return Err(CompileError::new(format!(
-            "element name `{name}` must be a bare lowercase word (no hyphen) — \
-             a hyphenated tag is a custom element, i.e. a component"
+            "element name `{name}` must be lowercase words joined by single \
+             hyphens (e.g. `badge`, `empty-state`) — the stdlib registry is what \
+             makes it an L1 element"
         )));
     }
     if !program.data.is_empty() || !program.clients.is_empty() {

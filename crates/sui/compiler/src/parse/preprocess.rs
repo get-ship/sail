@@ -2341,6 +2341,24 @@ mod tests {
     }
 
     #[test]
+    fn stdlib_hyphenated_element_lowers_and_projects() {
+        // empty-state is the first multi-word (hyphenated) L1 element — proves
+        // the registry-gated naming seam (a hyphenated REGISTERED tag compiles
+        // away) plus named-slot projection through it.
+        let out = preprocess(
+            r#"<empty-state variant="placeholder"><svg slot="icon"></svg><span slot="title">No results</span>Try a different search.<button slot="action">Reset</button></empty-state>"#,
+        );
+        assert!(out.contains("sui-empty-state"), "root class stamped: {out}");
+        assert!(out.contains(r#"variant="placeholder""#), "attr merged: {out}");
+        assert!(out.contains("use:emptyState"), "action rides the splice: {out}");
+        assert!(!out.contains("<slot"), "no slot survives: {out}");
+        assert!(out.contains(r#"class="icon" part="icon" aria-hidden="true"><svg slot="icon"></svg>"#), "icon slot: {out}");
+        assert!(out.contains(r#"class="title" part="title"><span slot="title">No results</span>"#), "title slot: {out}");
+        assert!(out.contains(r#"class="desc" part="desc">Try a different search."#), "default → desc: {out}");
+        assert!(out.contains(r#"class="actions" part="actions"><button slot="action">Reset</button>"#), "action slot: {out}");
+    }
+
+    #[test]
     fn project_children_partitions_by_slot_attr() {
         let (def, named) =
             project_children(r#"<i slot="leading">L</i>Body<b slot="actions">A</b>more"#);

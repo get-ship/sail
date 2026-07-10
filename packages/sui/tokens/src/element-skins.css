@@ -654,4 +654,140 @@ label { display: inline-block; }
     .sui-alert { border-color: CanvasText; }
     .sui-alert::before { background: CanvasText; }
   }
+
+/* empty-state */
+
+  .sui-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--es-gap);
+    padding: var(--es-pad-y) var(--es-pad-x);
+    text-align: center;
+    font-family: var(--font-body);
+    color: var(--muted-foreground);
+    background: var(--es-bg);
+    border: var(--es-border);
+    border-radius: var(--es-radius);
+    box-shadow: var(--es-shadow);
+    /* size: md base; sm/lg override below */
+    --es-pad-y: 64px;
+    --es-pad-x: 16px;
+    --es-gap: var(--space-3);
+    --es-icon: 22px;
+    --es-tile: 48px;
+    --es-title-fs: var(--text-md);
+    --es-desc-fs: var(--text-sm);
+    --es-radius: var(--radius-lg);
+    --es-border: 1px solid var(--border);
+    /* card surface — theme-adaptive (--card resolves dark in dark themes;
+       --tone-muted-bg does NOT and would render near-white, unreadable). */
+    --es-bg: var(--card);
+    --es-shadow: var(--shadow-xs);
+  }
+
+  .sui-empty-state[size='sm'] {
+    --es-pad-y: var(--space-7); --es-pad-x: var(--space-4); --es-gap: var(--space-2);
+    --es-icon: 16px; --es-tile: 36px; --es-title-fs: var(--text-base);
+  }
+  .sui-empty-state[size='lg'] {
+    --es-pad-y: 96px; --es-pad-x: var(--space-6); --es-gap: var(--space-4);
+    --es-icon: 28px; --es-tile: 64px; --es-title-fs: var(--text-lg); --es-desc-fs: var(--text-base);
+  }
+
+  .sui-empty-state[variant='placeholder'],
+  .sui-empty-state[variant='connecting'] {
+    --es-border: 0; --es-bg: transparent; --es-radius: 0; --es-shadow: none; --es-pad-y: var(--space-6);
+  }
+  .sui-empty-state[variant='inline'] {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: start;
+    --es-border: 1px dashed var(--border);
+    --es-bg: var(--tone-muted-border);
+    --es-radius: var(--radius-md);
+    --es-pad-y: var(--space-3);
+    --es-pad-x: var(--space-4);
+    --es-gap: var(--space-3);
+  }
+
+  .sui-empty-state .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: var(--es-tile);
+    height: var(--es-tile);
+    border-radius: var(--radius-lg);
+    background: var(--tone-bg);
+    color: var(--tone-fg);
+    line-height: 1;
+    box-shadow: inset 0 0 0 1px var(--tone-ring);
+  }
+  .sui-empty-state:not([tone]) .icon,
+  .sui-empty-state[tone='default'] .icon,
+  .sui-empty-state[tone='muted'] .icon {
+    background: var(--muted);
+    color: var(--muted-foreground);
+    box-shadow: none;
+  }
+  .sui-empty-state .icon:empty { display: none; }
+  .sui-empty-state[variant='inline'] .icon {
+    width: var(--es-icon); height: var(--es-icon);
+    background: transparent; box-shadow: none;
+  }
+  .sui-empty-state .icon svg { width: var(--es-icon); height: var(--es-icon); }
+
+  .sui-empty-state .copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    align-items: center;
+    min-width: 0;
+  }
+  .sui-empty-state[variant='inline'] .copy { align-items: start; }
+
+  .sui-empty-state .title {
+    font-family: var(--heading-font);
+    font-size: var(--es-title-fs);
+    font-weight: var(--heading-weight);
+    color: var(--foreground);
+    line-height: var(--leading-tight);
+  }
+  .sui-empty-state[variant='connecting'] .title,
+  .sui-empty-state[variant='placeholder'] .title {
+    font-weight: var(--font-weight-medium);
+    color: var(--muted-foreground);
+  }
+  .sui-empty-state .title:empty { display: none; }
+
+  .sui-empty-state .desc {
+    font-size: var(--es-desc-fs);
+    max-width: 38ch;
+    line-height: 1.55;
+    color: var(--muted-foreground);
+  }
+  .sui-empty-state[variant='inline'] .desc { max-width: 60ch; }
+  .sui-empty-state .desc:empty { display: none; }
+
+  .sui-empty-state .actions {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: center;
+    margin-top: var(--space-1);
+    flex-wrap: wrap;
+  }
+  .sui-empty-state[variant='inline'] .actions {
+    margin-top: 0;
+    margin-inline-start: auto;
+    justify-content: flex-end;
+  }
+  .sui-empty-state .actions:empty { display: none; }
+
+  @media (forced-colors: active) {
+    .sui-empty-state { border-color: CanvasText; }
+    .sui-empty-state .icon { background: Canvas; color: CanvasText; }
+  }
 }
