@@ -730,8 +730,9 @@ fn compile_one(
         // this file isn't inside the monorepo (nothing to resolve against).
         if let Some(ws) = workspace_root_for(path) {
             let sdir = std::env::temp_dir().join("sui-tsgo-synthetic");
+            let src_dir = path.parent().unwrap_or_else(|| Path::new("."));
             let diags = sui_compiler::check::tscheck::check_synthetic_controller(
-                &orig_source, &sdir, &node, &tsgo_js, &ws,
+                &orig_source, src_dir, &sdir, &node, &tsgo_js, &ws,
             )
             .unwrap_or_default();
             if let Some(d) = diags.first() {

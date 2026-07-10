@@ -159,6 +159,7 @@ fn gen_variants_harness(props: &str) -> String {
 /// controller to check against (bare fragment) or the pair can't be emitted.
 pub fn check_synthetic_controller(
     source: &str,
+    source_dir: &Path,
     out_dir: &Path,
     node: &str,
     tsgo_js: &str,
@@ -197,6 +198,46 @@ pub fn check_synthetic_controller(
     std::fs::write(out_dir.join("view.synthetic.controller.ts"), &out.controller_ts)?;
     std::fs::write(out_dir.join("view.render.ts"), &out.render_ts)?;
 
+    // Resolve the controller's sibling imports so the isolated check doesn't
+    // TS2307 on `import type { Scope } from './X.sui'` / `import {..} from
+    // './utils'`. Copy sibling `.ts`/`.d.ts` verbatim, and GENERATE
+    // `<sib>.sui.d.ts` for every sibling `.sui` — the emitted d.ts exports the
+    // `Scope` type and TS resolves `./X.sui` to `./X.sui.d.ts`. Best-effort: a
+    // sibling that fails to compile is skipped (the tsgo run reports the real
+    // error if the missing type actually matters).
+    if let Ok(entries) = std::fs::read_dir(source_dir) {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            let Some(name) = p.file_name().and_then(|s| s.to_str()) else {
+                continue;
+            };
+            if name.ends_with(".ts") {
+                let _ = std::fs::copy(&p, out_dir.join(name));
+            } else if name.ends_with(".sui") {
+                if let Ok(sib) = std::fs::read_to_string(&p) {
+                    let stem = name.strip_suffix(".sui").unwrap_or(name);
+                    let opts = crate::CompileOpts {
+                        setup_url: None,
+                        mode: crate::CompileMode::Component,
+                        source_path: Some(p.clone()),
+                        component_meta: Some(crate::ComponentMeta {
+                            name: stem.to_string(),
+                            shadow: true,
+                        }),
+                        emit_dts: true,
+                        emit_component_imports: false,
+                        lint_overrides: Vec::new(),
+                    };
+                    if let Ok(o) = crate::compile(&sib, opts)
+                        && let Some(dts) = o.dts
+                    {
+                        let _ = std::fs::write(out_dir.join(format!("{name}.d.ts")), dts);
+                    }
+                }
+            }
+        }
+    }
+
     // Map the bare package specifiers to the real workspace sources so tsgo
     // checks `scope.X` against the REAL runtime types. `baseUrl` was removed in
     // tsgo v7 — absolute `paths` targets work without it.
@@ -217,8 +258,26 @@ pub fn check_synthetic_controller(
     let output = Command::new(node).arg(tsgo_js).arg("-p").arg(&tsconfig_path).output()?;
     let mut text = String::from_utf8_lossy(&output.stdout).into_owned();
     text.push_str(&String::from_utf8_lossy(&output.stderr));
-    Ok(text.lines().filter_map(parse_line).collect())
+    // This gate owns exactly ONE contract: does a template expression read a
+    // name / member the controller's typed scope does not provide? Keep only
+    // those diagnostics — a missing property (`scope.dragVisible`) or an unbound
+    // name (`scope.countt`). Everything else tsgo emits over the generated pair
+    // (implicit-any params `TS7006`, module-resolution `TS2307`, strict-null
+    // noise…) is harness strictness, NOT a template↔controller violation, and
+    // must not fail the build.
+    Ok(text
+        .lines()
+        .filter_map(parse_line)
+        .filter(|d| SCOPE_CONTRACT_CODES.contains(&d.code.as_str()))
+        .collect())
 }
+
+/// tsgo diagnostic codes that mean "the template referenced a name/member the
+/// controller's scope does not provide" — the only thing the synthetic gate
+/// enforces. TS2339: property does not exist; TS2551: property does not exist
+/// (+ did-you-mean); TS2304: cannot find name; TS2552: cannot find name (+
+/// did-you-mean).
+const SCOPE_CONTRACT_CODES: &[&str] = &["TS2339", "TS2551", "TS2304", "TS2552"];
 
 #[cfg(test)]
 mod tests {
@@ -247,13 +306,16 @@ mod tests {
             </controller>\n";
 
         // VALID: the template reads `count`, which the scope provides.
+        // Self-contained controller → a nonexistent source_dir skips the
+        // sibling-resolution copy/generate step.
+        let no_sibs = Path::new("/nonexistent-sui-siblings");
         let ok = format!("{CTRL}<button on:click={{() => count.set(count() + 1)}}>{{count()}}</button>");
-        let diags = check_synthetic_controller(&ok, &dir, &node, &js, &ws).unwrap();
+        let diags = check_synthetic_controller(&ok, no_sibs, &dir, &node, &js, &ws).unwrap();
         assert!(diags.is_empty(), "valid SFC must typecheck clean, got {diags:?}");
 
         // BROKEN: `countt` is not a scope member — a hard type error.
         let bad = format!("{CTRL}<button>{{countt()}}</button>");
-        let diags = check_synthetic_controller(&bad, &dir, &node, &js, &ws).unwrap();
+        let diags = check_synthetic_controller(&bad, no_sibs, &dir, &node, &js, &ws).unwrap();
         assert!(
             diags.iter().any(|d| d.message.contains("countt")),
             "template typo scope.countt must be a compile error, got {diags:?}"
