@@ -112,9 +112,15 @@
   .panel > .surface {
     backdrop-filter: var(--card-backdrop-filter);
     -webkit-backdrop-filter: var(--card-backdrop-filter);
+    /* The floating-overlay drop shadow — the canonical `--shadow-lg` the rest
+       of the family (dropdown-menu, select, combobox…) carries. It was dropped
+       in the sx migration (sx has no multi-shadow vocabulary), leaving the
+       panel flat; the harness caught it as shadow:none. This is the
+       "irreducible remainder" the comment below sanctions living in CSS. */
+    box-shadow: var(--shadow-lg);
     /* Establish a stacking context so the glass backdrop-filter clips to
-       --radius-lg. isolation (not overflow:hidden) because --shadow-lg must
-       paint OUTSIDE the surface; an overflow clip would crop the drop shadow. */
+       the surface radius. isolation (not overflow:hidden) because --shadow-lg
+       must paint OUTSIDE the surface; an overflow clip would crop it. */
     isolation: isolate;
     font-family: var(--font-body);
   }
@@ -382,7 +388,7 @@ export default controller<Scope>({
 <div class="panel" part="panel" popover="auto" bind:this={panelEl} role="dialog" aria-modal="false">
   {#if open()}
     <div class="surface" part="surface" transition:scale={{ duration: 120 }}
-      sx="min-w:panel-min-w-sm p:2 bg:popover fg:popover-foreground border:border radius:lg text:base">
+      sx="min-w:panel-min-w-sm p:2 bg:popover fg:popover-foreground border:border radius:md text:base">
       <slot></slot>
     </div>
   {/if}
