@@ -226,7 +226,7 @@ export interface LanguageElement {
   /** Short label for the card. */
   label: string
   /** Category of the element for sub-grouping. */
-  group: 'layout' | 'typography' | 'primitives'
+  group: 'layout' | 'typography' | 'primitives' | 'forms'
   /** The HTML to project into the element — its representative state.
    *  Optional (default empty string): void elements like `<separator>`
    *  carry no children. */
@@ -238,6 +238,7 @@ export interface LanguageElement {
 export const LANGUAGE_GROUPS = [
   { id: 'layout',      label: 'Layout',     blurb: 'Compiler-lowered flex & grid keywords.' },
   { id: 'typography',  label: 'Typography', blurb: 'Text and inline marks, themed by tokens.' },
+  { id: 'forms',       label: 'Controls',   blurb: 'Native form & disclosure elements, skinned in @layer sui — sizes/tones from attributes.' },
   { id: 'primitives',  label: 'Stdlib L1',  blurb: 'Foundational surfaces the framework ships.' },
 ] as const
 export type LanguageGroupId = typeof LANGUAGE_GROUPS[number]['id']
@@ -277,6 +278,17 @@ export const L1_LANGUAGE_ELEMENTS: LanguageElement[] = [
   { tag: 'ol',     label: 'ol',     group: 'typography', innerHTML: '<li>one</li><li>two</li><li>three</li>' },
   { tag: 'li',     label: 'li',     group: 'typography', innerHTML: 'list item' },
   { tag: 'blockquote', label: 'blockquote', group: 'typography', innerHTML: 'A short quote lowers to a typographic block.' },
+
+  // ── Controls — native form & disclosure elements, skinned in @layer sui ──
+  // One entry per bare tag (the catalog keys by tag). <input type=checkbox|
+  // radio|range> variants need a separate key/id model — a follow-up.
+  { tag: 'details',  label: 'accordion',  group: 'forms', innerHTML: '<summary>Accordion header</summary><p>Panel content revealed on open.</p>', attrs: { open: '' } },
+  { tag: 'input',    label: 'input',      group: 'forms', attrs: { placeholder: 'you@example.com' } },
+  { tag: 'select',   label: 'select',     group: 'forms', innerHTML: '<option>Choose an option</option><option>Second</option>' },
+  { tag: 'textarea', label: 'textarea',   group: 'forms', innerHTML: 'Multiline text input.' },
+  { tag: 'button',   label: 'button',     group: 'forms', innerHTML: 'Button', attrs: { variant: 'solid', tone: 'primary' } },
+  { tag: 'progress', label: 'progress',   group: 'forms', attrs: { value: '0.6' } },
+  { tag: 'meter',    label: 'meter',      group: 'forms', attrs: { value: '0.7' } },
 
   // ── Stdlib L1 — foundational surfaces the framework ships ──
   { tag: 'card',      label: 'card',      group: 'primitives', innerHTML: 'A content surface with tone, padding, and an optional accent bar.' },

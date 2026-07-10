@@ -220,11 +220,12 @@ const { entries: ENTRIES, chips: CHIPS, sections: SECTION_SHELLS } = buildCatalo
 
 /** L1 language elements grouped by sub-section for the top section. */
 const L1_GROUPS = ((): readonly { id: LanguageGroupId; label: string; blurb: string; elements: LanguageElement[] }[] => {
-  const byGroup: Record<LanguageGroupId, LanguageElement[]> = { layout: [], typography: [], primitives: [] }
+  const byGroup: Record<LanguageGroupId, LanguageElement[]> = { layout: [], typography: [], forms: [], primitives: [] }
   for (const e of L1_LANGUAGE_ELEMENTS) byGroup[e.group].push(e)
   return [
     { id: 'layout' as const,     label: 'Layout',     blurb: 'Compiler-lowered flex & grid keywords.',     elements: byGroup.layout },
     { id: 'typography' as const, label: 'Typography', blurb: 'Text and inline marks, themed by tokens.',    elements: byGroup.typography },
+    { id: 'forms' as const,      label: 'Controls',   blurb: 'Native form & disclosure elements, skinned in @layer sui — sizes/tones from attributes.', elements: byGroup.forms },
     { id: 'primitives' as const, label: 'Stdlib L1',  blurb: 'Foundational surfaces the framework ships.', elements: byGroup.primitives },
   ].filter((g) => g.elements.length > 0)
 })()
