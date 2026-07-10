@@ -69,12 +69,6 @@
   unset prop leaves the host attribute absent, so the bare `:host` rule has to
   already be the compact values.
 -->
-<theme prop="label-style" channels="tp-trigger-gap, tp-trigger-px, tp-trigger-py">
-  default: 0,         space-1, space-1
-  compact: 0,         space-1, space-1
-  text:    space-1_5, space-2, space-1
-</theme>
-
 <!--
   Residual <style> — the bulk of this component's surface styling:
   - :host bare baseline + the .trigger surface (transition / appearance /
@@ -116,8 +110,12 @@
    * in this block; the <theme> channels and tokens referenced from this
    * residual style must be declared as bare variables so the lint recognizes
    * them. */
-  --tp-trigger-gap: ; --tp-trigger-px: ; --tp-trigger-py: ; --panel-vh-md: ; --space-half: ;
+  --panel-vh-md: ; --space-half: ;
+  /* label-style channels: compact (default) base; text overrides (was
+     <theme prop=label-style>). */
+  :host([label-style='text']) { --tp-trigger-gap: var(--space-1_5); --tp-trigger-px: var(--space-2); --tp-trigger-py: var(--space-1); }
   :host {
+    --tp-trigger-gap: 0; --tp-trigger-px: var(--space-1); --tp-trigger-py: var(--space-1);
     position: relative;
     display: inline-flex;
   }
