@@ -1164,7 +1164,7 @@ fn parse_variants_object(body: &str) -> Vec<(String, String)> {
 /// The exported names become the template scope, so an author writes plain
 /// functions with no `controller({…})` ceremony. Bodies that already call
 /// `controller(` or have a `export default` pass through unchanged.
-fn wrap_controller_body(body: &str) -> String {
+pub fn wrap_controller_body(body: &str) -> String {
     if body.contains("controller(") || body.contains("export default") {
         return body.to_string();
     }

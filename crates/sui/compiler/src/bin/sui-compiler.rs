@@ -327,14 +327,18 @@ fn synthesize(
     manifest_path: PathBuf,
     out_dir: PathBuf,
 ) -> Result<()> {
-    use sui_compiler::emit::synthetic::{emit_synthetic, AppManifest};
+    use sui_compiler::emit::synthetic::{emit_synthetic, AppManifest, AuthoredController};
     use sui_compiler::parse;
 
     let source = fs::read_to_string(&input)
         .with_context(|| format!("read {}", input.display()))?;
     let manifest_src = fs::read_to_string(&manifest_path)
         .with_context(|| format!("read manifest {}", manifest_path.display()))?;
-    let program = parse::parse(&source).map_err(|e| anyhow!("{}", e.render(&source)))?;
+    // SFC: strip the inline `<controller>` block before parse (mirrors
+    // `compile()`), so its body isn't misread as a template expression.
+    let (stripped, inline_controller_src) = parse::preprocess::extract_controller_block(&source);
+    let program =
+        parse::parse(&stripped).map_err(|e| anyhow!("{}", e.render(&stripped)))?;
     let manifest =
         AppManifest::parse(&manifest_src).map_err(|e| anyhow!("{}", e.render(&manifest_src)))?;
 
@@ -348,8 +352,24 @@ fn synthesize(
         let s = raw_stem.replace(['/', '\\'], "_");
         if s.is_empty() { "view".to_string() } else { s }
     };
-    // `page.sui` pairs with a sibling `controller.ts`; compose it when present.
-    let authored = sibling_controller(&input, &out_dir, raw_stem);
+    // Compose the controller. SFC: an inline `<controller>` block is
+    // materialized to `<stem>.controller.ts` (wrapped into the canonical
+    // `controller({…})` form) and composed by `emit_synthetic`, exactly as a
+    // paired file would be — so the synthetic controller + render pair is
+    // tsc-checkable for the SFC model too. Otherwise fall back to a sibling
+    // `controller.ts` on disk (views / not-yet-migrated).
+    fs::create_dir_all(&out_dir)
+        .with_context(|| format!("create out dir {}", out_dir.display()))?;
+    let authored = if let Some(body) = &inline_controller_src {
+        let wrapped = parse::preprocess::wrap_controller_body(body);
+        let ctrl_name = format!("{stem}.controller.ts");
+        let ctrl_path = out_dir.join(&ctrl_name);
+        fs::write(&ctrl_path, wrapped)
+            .with_context(|| format!("write {}", ctrl_path.display()))?;
+        Some(AuthoredController { specifier: format!("./{ctrl_name}") })
+    } else {
+        sibling_controller(&input, &out_dir, raw_stem)
+    };
     let controller_name = format!("{stem}.synthetic.controller.ts");
     let render_name = format!("{stem}.render.ts");
     let client_name = format!("{stem}.client.ts");
