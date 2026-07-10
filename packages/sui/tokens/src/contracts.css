@@ -18,7 +18,7 @@
 :where(input, select, textarea)[tone='warning']     { --tone-border: var(--tone-warning-border);     --tone-ring: var(--tone-warning-ring); }
 :where(input, select, textarea)[tone='accent']      { --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring); }
 :where(input, select, textarea)[tone='muted']       { --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring); }
-:where(input[invalid], input[aria-invalid='true'], select[aria-invalid='true'], textarea[aria-invalid='true']) { --tone-border: var(--destructive); --tone-ring: var(--tone-destructive-ring); }
+:where(input[invalid], input[aria-invalid='true'], select[invalid], select[aria-invalid='true'], textarea[invalid], textarea[aria-invalid='true']) { --tone-border: var(--destructive); --tone-ring: var(--tone-destructive-ring); }
 [size='xs'] { --size-h: var(--control-h-2xs); --size-px: var(--space-2);   --size-fs: var(--text-xs);   --size-gap: var(--space-1); }
 [size='sm'] { --size-h: var(--control-h-sm);  --size-px: var(--space-2_5); --size-fs: var(--text-sm);   --size-gap: var(--space-1_5); }
 [size='md'] { --size-h: var(--control-h-md);  --size-px: var(--space-3);   --size-fs: var(--text-base); --size-gap: var(--space-2); }

@@ -19,7 +19,7 @@ const TONES_CSS =
   ":where(input, select, textarea)[tone='warning']     { --tone-border: var(--tone-warning-border);     --tone-ring: var(--tone-warning-ring); }\n" +
   ":where(input, select, textarea)[tone='accent']      { --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring); }\n" +
   ":where(input, select, textarea)[tone='muted']       { --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring); }\n" +
-  ":where(input[invalid], input[aria-invalid='true'], select[aria-invalid='true'], textarea[aria-invalid='true']) { --tone-border: var(--destructive); --tone-ring: var(--tone-destructive-ring); }\n"
+  ":where(input[invalid], input[aria-invalid='true'], select[invalid], select[aria-invalid='true'], textarea[invalid], textarea[aria-invalid='true']) { --tone-border: var(--destructive); --tone-ring: var(--tone-destructive-ring); }\n"
 
 const SIZES_CSS =
   // The FULL size contract, framework-owned — the exact analogue of tone. A
