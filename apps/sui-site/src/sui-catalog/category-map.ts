@@ -155,7 +155,6 @@ export const TAG_PACK: Record<string, PackId> = {
   'sui-timeline':           'primitives',
   'sui-toast-host':         'primitives',
   'sui-toggle-group':       'primitives',
-  'sui-tooltip':            'primitives',
   'sui-tree':               'primitives',
   'sui-tree-grid':          'primitives',
   'sui-tree-view':          'primitives',

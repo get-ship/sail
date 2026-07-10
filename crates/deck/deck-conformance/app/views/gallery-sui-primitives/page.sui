@@ -435,20 +435,17 @@
 
   <!-- Tooltip -->
   <section class="gsp-section">
-    <h2 class="gsp-label">sui-tooltip</h2>
+    <h2 class="gsp-label">tooltip</h2>
     <div class="gsp-row gsp-wrap">
-      <sui-tooltip placement="top">
+      <tooltip placement="top" content="Tooltip on top">
         <sui-button variant="outline">Hover me (top)</sui-button>
-        <span slot="content">Tooltip on top</span>
-      </sui-tooltip>
-      <sui-tooltip placement="bottom">
+      </tooltip>
+      <tooltip placement="bottom" content="Tooltip on bottom">
         <sui-button variant="outline">Bottom</sui-button>
-        <span slot="content">Tooltip on bottom</span>
-      </sui-tooltip>
-      <sui-tooltip placement="right">
+      </tooltip>
+      <tooltip placement="right" content="Tooltip on right">
         <sui-button variant="outline">Right</sui-button>
-        <span slot="content">Tooltip on right</span>
-      </sui-tooltip>
+      </tooltip>
     </div>
   </section>
 

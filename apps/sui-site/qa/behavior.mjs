@@ -81,13 +81,12 @@ for (const m of CEM.modules) {
 
 const OVERLAY_FAMILY = [
   'sui-context-menu', 'sui-select', 'sui-dropdown-menu', 'sui-popover',
-  'sui-dialog', 'sui-alert-dialog', 'sui-tooltip', 'sui-hover-card',
+  'sui-dialog', 'sui-alert-dialog', 'sui-hover-card',
   'sui-combobox', 'sui-cmdk', 'sui-drawer', 'sui-sheet',
 ]
 const OVERLAY_FAMILY_SET = new Set(OVERLAY_FAMILY)
 
 const DRIVE_OVERLAY = {
-  'sui-tooltip':       { kind: 'hover',  trigger: 'button' },
   'sui-popover':       { kind: 'click',  trigger: '[slot="trigger"]' },
   'sui-hover-card':    { kind: 'attr',   attr: 'open' },
   'sui-dropdown-menu': { kind: 'click',  trigger: '[slot="trigger"]' },
