@@ -50,48 +50,28 @@
 <prop name="removable" type="bool" default="false" reflect />
 <prop name="disabled" type="bool" default="false" reflect />
 
-<theme prop="size" channels="chip-h, chip-px, chip-fs, chip-gap, chip-icon, chip-remove, chip-radius">
-  sm: control-h-2xs, space-2, text-xs, space-1, icon-size-2xs, icon-size-sm, radius-full
-  md: control-h-xs,  space-2_5, text-sm, space-1_5, icon-size-xs, icon-size-md, radius-full
-  lg: control-h-md,  space-3, text-base, space-1_5, icon-size-sm, icon-size-lg, radius-full
-</theme>
-
-<theme prop="tone" channels="tone-fg, tone-bg, tone-border, tone-bg-hover, tone-border-hover, tone-bg-solid, tone-outline-border, tone-outline-bg-hover, tone-ghost-bg-hover, tone-contrast">
-  default:     foreground, tone-default-bg, tone-default-border, tone-default-bg, tone-default-border, foreground, border-strong, hover-bg, hover-bg, background
-  primary:     primary,     tone-primary-bg, tone-primary-border, tone-primary-border, tone-primary-border, primary, tone-primary-border, tone-primary-bg, tone-primary-bg, primary-foreground
-  info:        info,        tone-info-bg, tone-info-border, tone-info-border, tone-info-border, info, tone-info-border, tone-info-bg, tone-info-bg, info-foreground
-  success:     success,     tone-success-bg, tone-success-border, tone-success-border, tone-success-border, success, tone-success-border, tone-success-bg, tone-success-bg, success-foreground
-  warning:     warning,     tone-warning-bg, tone-warning-border, tone-warning-border, tone-warning-border, warning, tone-warning-border, tone-warning-bg, tone-warning-bg, warning-foreground
-  destructive: destructive, tone-destructive-bg, tone-destructive-border, tone-destructive-border, tone-destructive-border, destructive, tone-destructive-border, tone-destructive-bg, tone-destructive-bg, destructive-foreground
-  muted:       muted-foreground, tone-muted-bg, tone-muted-border, tone-muted-bg, tone-muted-border, muted, border-strong, tone-muted-bg, tone-muted-bg, background
-</theme>
-
 <style>
   :host {
     display: inline-flex;
     vertical-align: middle;
     -webkit-tap-highlight-color: transparent;
-    /* chip- prefix locals — the <theme prop="size"> block overrides
-     * them per size; they are also declared here so the css_token
-     * lint resolves the references in .chip, .leading, .remove
-     * (the lint does not see <theme> blocks). */
-    --chip-h: var(--control-h-2xs);
-    --chip-px: var(--space-2);
-    --chip-fs: var(--text-xs);
-    --chip-gap: var(--space-1);
-    --chip-icon: var(--icon-size-2xs);
-    --chip-remove: var(--icon-size-sm);
+    /* chip- size channels: md is the base (default size); sm/lg override
+     * below via :host([size]) rules. radius is constant across sizes. */
+    --chip-h: var(--control-h-xs);
+    --chip-px: var(--space-2_5);
+    --chip-fs: var(--text-sm);
+    --chip-gap: var(--space-1_5);
+    --chip-icon: var(--icon-size-xs);
+    --chip-remove: var(--icon-size-md);
     --chip-radius: var(--radius-full);
     --chip-remove-ml: var(--space-1);
     --chip-remove-mr: calc(var(--space-1) * -1);
-    /* The tone- prefix defaults live in the <theme prop="tone">
-     * default row (the bare :host fills there). They were dropped
-     * from this block because the residual comes AFTER the
-     * theme-generated CSS in the cascade, so leaving them here
-     * would override the theme's default row with the prior muted
-     * values. The css_token lint is happy because the references
-     * further down are channel references; the <theme> declaration
-     * is the canonical source for the channel names. */
+    /* tone- channels: this base :host is the `default` tone row; the
+     * per-tone overrides live in the :host([tone]) rules below (was a
+     * <theme prop="tone"> block). The chip carries a rich 10-channel
+     * tone vocabulary — solid fill, soft fill, outline, ghost, hover,
+     * contrast — that the global framework tone channel doesn't cover,
+     * so it owns them locally. */
     --tone-fg: var(--foreground);
     --tone-bg: var(--tone-default-bg);
     --tone-border: var(--tone-default-border);
@@ -104,6 +84,62 @@
     --tone-contrast: var(--background);
   }
   :host([hidden]) { display: none; }
+
+  /* Size overrides (md is the base above). */
+  :host([size='sm']) {
+    --chip-h: var(--control-h-2xs); --chip-px: var(--space-2);   --chip-fs: var(--text-xs);
+    --chip-gap: var(--space-1);     --chip-icon: var(--icon-size-2xs); --chip-remove: var(--icon-size-sm);
+  }
+  :host([size='lg']) {
+    --chip-h: var(--control-h-md);  --chip-px: var(--space-3);   --chip-fs: var(--text-base);
+    --chip-gap: var(--space-1_5);   --chip-icon: var(--icon-size-sm);  --chip-remove: var(--icon-size-lg);
+  }
+
+  /* Tone overrides (default is the base above). Channel order:
+     fg, bg, border, bg-hover, border-hover, bg-solid, outline-border,
+     outline-bg-hover, ghost-bg-hover, contrast. */
+  :host([tone='primary']) {
+    --tone-fg: var(--primary); --tone-bg: var(--tone-primary-bg); --tone-border: var(--tone-primary-border);
+    --tone-bg-hover: var(--tone-primary-border); --tone-border-hover: var(--tone-primary-border);
+    --tone-bg-solid: var(--primary); --tone-outline-border: var(--tone-primary-border);
+    --tone-outline-bg-hover: var(--tone-primary-bg); --tone-ghost-bg-hover: var(--tone-primary-bg);
+    --tone-contrast: var(--primary-foreground);
+  }
+  :host([tone='info']) {
+    --tone-fg: var(--info); --tone-bg: var(--tone-info-bg); --tone-border: var(--tone-info-border);
+    --tone-bg-hover: var(--tone-info-border); --tone-border-hover: var(--tone-info-border);
+    --tone-bg-solid: var(--info); --tone-outline-border: var(--tone-info-border);
+    --tone-outline-bg-hover: var(--tone-info-bg); --tone-ghost-bg-hover: var(--tone-info-bg);
+    --tone-contrast: var(--info-foreground);
+  }
+  :host([tone='success']) {
+    --tone-fg: var(--success); --tone-bg: var(--tone-success-bg); --tone-border: var(--tone-success-border);
+    --tone-bg-hover: var(--tone-success-border); --tone-border-hover: var(--tone-success-border);
+    --tone-bg-solid: var(--success); --tone-outline-border: var(--tone-success-border);
+    --tone-outline-bg-hover: var(--tone-success-bg); --tone-ghost-bg-hover: var(--tone-success-bg);
+    --tone-contrast: var(--success-foreground);
+  }
+  :host([tone='warning']) {
+    --tone-fg: var(--warning); --tone-bg: var(--tone-warning-bg); --tone-border: var(--tone-warning-border);
+    --tone-bg-hover: var(--tone-warning-border); --tone-border-hover: var(--tone-warning-border);
+    --tone-bg-solid: var(--warning); --tone-outline-border: var(--tone-warning-border);
+    --tone-outline-bg-hover: var(--tone-warning-bg); --tone-ghost-bg-hover: var(--tone-warning-bg);
+    --tone-contrast: var(--warning-foreground);
+  }
+  :host([tone='destructive']) {
+    --tone-fg: var(--destructive); --tone-bg: var(--tone-destructive-bg); --tone-border: var(--tone-destructive-border);
+    --tone-bg-hover: var(--tone-destructive-border); --tone-border-hover: var(--tone-destructive-border);
+    --tone-bg-solid: var(--destructive); --tone-outline-border: var(--tone-destructive-border);
+    --tone-outline-bg-hover: var(--tone-destructive-bg); --tone-ghost-bg-hover: var(--tone-destructive-bg);
+    --tone-contrast: var(--destructive-foreground);
+  }
+  :host([tone='muted']) {
+    --tone-fg: var(--muted-foreground); --tone-bg: var(--tone-muted-bg); --tone-border: var(--tone-muted-border);
+    --tone-bg-hover: var(--tone-muted-bg); --tone-border-hover: var(--tone-muted-border);
+    --tone-bg-solid: var(--muted); --tone-outline-border: var(--border-strong);
+    --tone-outline-bg-hover: var(--tone-muted-bg); --tone-ghost-bg-hover: var(--tone-muted-bg);
+    --tone-contrast: var(--background);
+  }
 
   .chip {
     display: inline-flex;
