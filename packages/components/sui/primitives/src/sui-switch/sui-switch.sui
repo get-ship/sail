@@ -41,22 +41,6 @@
 <prop name="value" type="string" default="on" />
 <prop name="label" type="string" default="" />
 
-<theme prop="size" channels="sw-w, sw-h, sw-thumb">
-  default: control-h-sm, icon-size-md, space-3
-  sm:      control-h-xs, icon-size-sm, space-2_5
-  md:      control-h-sm, icon-size-md, space-3
-  lg:      space-7,     icon-size-lg, icon-size-sm
-</theme>
-<theme prop="tone" channels="tone, tone-on-fg">
-  default:     primary, primary-foreground
-  primary:     primary, primary-foreground
-  info:        info,    info-foreground
-  success:     success, success-foreground
-  warning:     warning, warning-foreground
-  destructive: destructive, destructive-foreground
-  accent:      accent,  accent-foreground
-  muted:       muted-foreground, background
-</theme>
 
 <style>
   :host {
@@ -69,16 +53,22 @@
     color: var(--foreground);
     -webkit-tap-highlight-color: transparent;
 
+    /* Tone: default is primary (switch reads as a brand toggle). The GLOBAL
+       tone channel (adopted via adoptSuiSheets) overrides --tone per [tone];
+       --tone-on-fg (the checked thumb ink) follows the global --tone-contrast,
+       so this component owns no <theme prop="tone"> block. */
     --tone: var(--primary);
-    --tone-on-fg: var(--primary-foreground);
-    /* sw- prefix locals — the <theme prop="size"> block overrides per
-     * size; declared here so the css_token lint resolves the references
-     * in .track / .thumb (the lint does not see <theme> blocks). */
+    --tone-on-fg: var(--tone-contrast, var(--primary-foreground));
+    /* sw- size channels: md is the base; sm/lg override below. Component-
+       specific dimensions that feed calc() thumb positioning — irreducible,
+       so they live here as :host([size]) rules (was a <theme prop="size">). */
     --sw-w: var(--control-h-sm);
     --sw-h: var(--icon-size-md);
     --sw-thumb: var(--space-3);
   }
   :host([hidden]) { display: none; }
+  :host([size='sm']) { --sw-w: var(--control-h-xs); --sw-h: var(--icon-size-sm); --sw-thumb: var(--space-2_5); }
+  :host([size='lg']) { --sw-w: var(--space-7);      --sw-h: var(--icon-size-lg); --sw-thumb: var(--icon-size-sm); }
 
   label {
     display: inline-flex;
