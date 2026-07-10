@@ -20,7 +20,14 @@ const SIZES_CSS =
   ":host([size='xs']) { --size-h: var(--control-h-2xs); --size-px: var(--space-2);   --size-fs: var(--text-xs);   --size-gap: var(--space-1); }\n" +
   ":host([size='sm']) { --size-h: var(--control-h-sm);  --size-px: var(--space-2_5); --size-fs: var(--text-sm);   --size-gap: var(--space-1_5); }\n" +
   ":host([size='md']) { --size-h: var(--control-h-md);  --size-px: var(--space-3);   --size-fs: var(--text-base); --size-gap: var(--space-2); }\n" +
-  ":host([size='lg']) { --size-h: var(--control-h-lg);  --size-px: var(--space-4);   --size-fs: var(--text-md);   --size-gap: var(--space-2); }\n"
+  ":host([size='lg']) { --size-h: var(--control-h-lg);  --size-px: var(--space-4);   --size-fs: var(--text-md);   --size-gap: var(--space-2); }\n" +
+  // Light-DOM mirror — bare L1 native controls (input/select/textarea/button)
+  // carry `size` in light DOM, where `:host()` never matches. Same scale, scoped
+  // to the controls so it only sets the vars their skins consume.
+  ":where(input, select, textarea, button)[size='xs'] { --size-h: var(--control-h-2xs); --size-px: var(--space-2);   --size-fs: var(--text-xs);   --size-gap: var(--space-1); }\n" +
+  ":where(input, select, textarea, button)[size='sm'] { --size-h: var(--control-h-sm);  --size-px: var(--space-2_5); --size-fs: var(--text-sm);   --size-gap: var(--space-1_5); }\n" +
+  ":where(input, select, textarea, button)[size='md'] { --size-h: var(--control-h-md);  --size-px: var(--space-3);   --size-fs: var(--text-base); --size-gap: var(--space-2); }\n" +
+  ":where(input, select, textarea, button)[size='lg'] { --size-h: var(--control-h-lg);  --size-px: var(--space-4);   --size-fs: var(--text-md);   --size-gap: var(--space-2); }\n"
 
 // R3: shared host-resets adopted into every shadow component. Rules
 // here are duplicated literally in nearly every <style> block; hoisting
