@@ -394,21 +394,32 @@ const FIELDSET_SKIN_CSS =
 // selector is dropped whole by either), so every rule is per-engine. Firefox
 // fills the traversed portion for free via ::-moz-range-progress; the WebKit
 // filled-track needs a value-driven gradient (JS), left as an enhancement.
+// Parity target: feat/next sui-slider — a muted rail with an inset border, a
+// tone fill with a top highlight, and a WHITE (--surface-1) thumb ringed in the
+// tone with a shadow that lifts+scales on hover/active. Size vars drive sm/md/lg.
 const RANGE_SKIN_CSS =
-  ":where(input[type='range']) { appearance: none; -webkit-appearance: none; -moz-appearance: none; width: 100%; height: var(--space-5); background: transparent; cursor: pointer; }\n" +
-  // Track.
-  ":where(input[type='range'])::-webkit-slider-runnable-track { height: var(--space-1_5); border-radius: var(--radius-full); background: var(--muted); }\n" +
-  ":where(input[type='range'])::-moz-range-track { height: var(--space-1_5); border-radius: var(--radius-full); background: var(--muted); }\n" +
-  ":where(input[type='range'])::-moz-range-progress { height: var(--space-1_5); border-radius: var(--radius-full); background: var(--tone-fg, var(--primary)); }\n" +
-  // Thumb — the tone dot with a background-colored ring so it reads on the fill.
-  // WebKit needs a negative margin-top to center the thumb on the thinner track.
-  ":where(input[type='range'])::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: var(--space-4); height: var(--space-4); margin-top: calc((var(--space-1_5) - var(--space-4)) / 2); border-radius: var(--radius-full); background: var(--tone-fg, var(--primary)); border: 2px solid var(--background); box-shadow: var(--shadow-sm); }\n" +
-  ":where(input[type='range'])::-moz-range-thumb { width: var(--space-4); height: var(--space-4); border: 2px solid var(--background); border-radius: var(--radius-full); background: var(--tone-fg, var(--primary)); box-shadow: var(--shadow-sm); }\n" +
+  ":where(input[type='range']) { appearance: none; -webkit-appearance: none; -moz-appearance: none; width: 100%; height: var(--space-5); background: transparent; cursor: pointer; --rng-track: var(--space-1_5); --rng-thumb: var(--space-4); }\n" +
+  ":where(input[type='range'][size='sm']) { --rng-track: var(--space-1); --rng-thumb: var(--space-3); }\n" +
+  ":where(input[type='range'][size='lg']) { --rng-track: var(--space-2); --rng-thumb: var(--space-5); }\n" +
+  // Track — muted rail with a subtle inset border (matches sui-slider .track).
+  ":where(input[type='range'])::-webkit-slider-runnable-track { height: var(--rng-track); border-radius: var(--radius-full); background: var(--muted); box-shadow: inset 0 0 0 1px var(--border); }\n" +
+  ":where(input[type='range'])::-moz-range-track { height: var(--rng-track); border-radius: var(--radius-full); background: var(--muted); box-shadow: inset 0 0 0 1px var(--border); }\n" +
+  // Fill (Firefox) — tone with a top highlight (matches sui-slider .fill).
+  ":where(input[type='range'])::-moz-range-progress { height: var(--rng-track); border-radius: var(--radius-full); background: var(--tone-fg, var(--primary)); box-shadow: inset 0 1px 0 var(--surface-2); }\n" +
+  // Thumb — white surface disc, tone ring, shadow; centered on the thinner track.
+  ":where(input[type='range'])::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; box-sizing: border-box; width: var(--rng-thumb); height: var(--rng-thumb); margin-top: calc((var(--rng-track) - var(--rng-thumb)) / 2); border-radius: 50%; background: var(--surface-1); border: 2px solid var(--tone-fg, var(--primary)); box-shadow: var(--shadow-sm); transition: box-shadow var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out); }\n" +
+  ":where(input[type='range'])::-moz-range-thumb { box-sizing: border-box; width: var(--rng-thumb); height: var(--rng-thumb); border-radius: 50%; background: var(--surface-1); border: 2px solid var(--tone-fg, var(--primary)); box-shadow: var(--shadow-sm); transition: box-shadow var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out); }\n" +
+  // Hover lift + press scale (matches sui-slider .thumb:hover/:active).
+  ":where(input[type='range']:hover)::-webkit-slider-thumb { box-shadow: var(--shadow-md); transform: scale(1.05); }\n" +
+  ":where(input[type='range']:hover)::-moz-range-thumb { box-shadow: var(--shadow-md); transform: scale(1.05); }\n" +
+  ":where(input[type='range']:active)::-webkit-slider-thumb { transform: scale(0.95); }\n" +
+  ":where(input[type='range']:active)::-moz-range-thumb { transform: scale(0.95); }\n" +
   // Focus — ring on the thumb (the control's own :focus-visible outline would
   // wrap the full-width invisible box).
   ":where(input[type='range']):focus-visible::-webkit-slider-thumb { outline: var(--ring-width, 2px) solid var(--ring); outline-offset: 2px; }\n" +
   ":where(input[type='range']):focus-visible::-moz-range-thumb { outline: var(--ring-width, 2px) solid var(--ring); outline-offset: 2px; }\n" +
-  ":where(input[type='range']):disabled { opacity: 0.5; cursor: not-allowed; }\n"
+  ":where(input[type='range']):disabled { opacity: 0.5; cursor: not-allowed; }\n" +
+  "@media (prefers-reduced-motion: reduce) { :where(input[type='range'])::-webkit-slider-thumb, :where(input[type='range'])::-moz-range-thumb { transition: none; } }\n"
 
 // L1 <progress> — the determinate/indeterminate progress bar. A bare native
 // <progress value=.6> IS the design system's progress: the platform gives the
