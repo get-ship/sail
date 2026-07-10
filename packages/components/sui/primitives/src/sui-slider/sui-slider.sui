@@ -35,15 +35,14 @@
 <prop name="name" type="string" default="" />
 <prop name="label" type="string" default="slider" />
 
-<theme prop="size" channels="sl-h, sl-thumb">
-  sm: space-1,    icon-size-xs
-  md: space-1_5,  icon-size-sm
-  lg: space-2,    icon-size-md
-</theme>
-
 <style>
-  --sl-h: ; --sl-thumb: ;
+  /* Size channels: md is the base; sm/lg override. Slider-specific dims that
+     drive the track height + thumb size (was a <theme prop="size"> block). */
+  :host([size='sm']) { --sl-h: var(--space-1);   --sl-thumb: var(--icon-size-xs); }
+  :host([size='lg']) { --sl-h: var(--space-2);   --sl-thumb: var(--icon-size-md); }
   :host {
+    --sl-h: var(--space-1_5);
+    --sl-thumb: var(--icon-size-sm);
     display: block;
     font-family: var(--font-body);
     -webkit-tap-highlight-color: transparent;
