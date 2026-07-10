@@ -138,19 +138,19 @@ describe('<sui-area-chart>', () => {
 
   it('tolerates bad JSON and renders an empty state (no spurious paths)', async () => {
     // MIGRATED: bad data routes through the engine isEmpty discriminator to
-    // sui-empty-state — no silent zero-path SVG.
+    // .sui-empty-state — no silent zero-path SVG.
     const { el } = mount(reg, 'sui-area-chart', { series: 'not-json' })
     await flush()
     expect(shadow(el).querySelectorAll('path').length).toBe(0)
-    expect(shadow(el).querySelector('sui-empty-state')).not.toBeNull()
+    expect(shadow(el).querySelector('.sui-empty-state')).not.toBeNull()
   })
 
-  it('empty data composes a sui-empty-state (no bare data SVG)', async () => {
-    // MIGRATED: empty data routes to sui-empty-state per the full-size
+  it('empty data composes a .sui-empty-state (no bare data SVG)', async () => {
+    // MIGRATED: empty data routes to .sui-empty-state per the full-size
     // presentation profile, replacing the silent zero-path render.
     const { el } = mount(reg, 'sui-area-chart')
     await flush()
-    expect(shadow(el).querySelector('sui-empty-state')).not.toBeNull()
+    expect(shadow(el).querySelector('.sui-empty-state')).not.toBeNull()
     expect(shadow(el).querySelector('svg[role="img"]')).toBeNull()
   })
 

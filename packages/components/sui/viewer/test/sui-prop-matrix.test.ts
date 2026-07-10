@@ -27,7 +27,7 @@ import { compileSui } from '@ship/sui-dom/test-utils'
 // RED: the Slice-3 deliverables. `sui-prop-matrix.compiled.js` registers the
 // tag; `sui-render.compiled.js` brings the committed engine the cells compose;
 // `@ship/sui-primitives` registers the composed sui-error-boundary /
-// sui-empty-state. The pure helpers live in `matrix.ts`.
+// .sui-empty-state. The pure helpers live in `matrix.ts`.
 import '@ship/sui-primitives'
 import '../src/sui-render/sui-render.compiled.js'
 import '../src/sui-prop-matrix/sui-prop-matrix.compiled.js'
@@ -215,7 +215,7 @@ describe('<sui-prop-matrix> — registration + grid shell', () => {
     )
     await flush()
     expect(cells(el)).toHaveLength(0)
-    expect(root(el).querySelector('sui-empty-state')).not.toBeNull()
+    expect(root(el).querySelector('.sui-empty-state')).not.toBeNull()
   })
 })
 

@@ -44,12 +44,12 @@ describe('<sui-bar-chart>', () => {
     expect(aria.startsWith('bar chart')).toBe(true)
   })
 
-  it('empty data composes a sui-empty-state (no bare aria-hidden SVG)', async () => {
-    // MIGRATED: the engine discriminator routes empty data to sui-empty-state,
+  it('empty data composes a .sui-empty-state (no bare aria-hidden SVG)', async () => {
+    // MIGRATED: the engine discriminator routes empty data to .sui-empty-state,
     // replacing the ad-hoc aria-hidden empty SVG.
     const { el } = mount(reg, 'sui-bar-chart')
     await flush()
-    expect(shadow(el).querySelector('sui-empty-state')).not.toBeNull()
+    expect(shadow(el).querySelector('.sui-empty-state')).not.toBeNull()
     expect(shadow(el).querySelector('svg[role="img"]')).toBeNull()
   })
 

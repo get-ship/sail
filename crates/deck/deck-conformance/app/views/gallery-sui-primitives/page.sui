@@ -172,16 +172,16 @@
   <section class="gsp-section">
     <h2 class="gsp-label">sui-empty-state / sui-error-state</h2>
     <div class="gsp-row gsp-wrap">
-      <sui-empty-state variant="default" size="sm">
+      <empty-state variant="default" size="sm">
         <sui-icon slot="icon" name="inbox"></sui-icon>
         <span slot="title">Nothing here yet</span>
         Start by creating a new item.
         <sui-button slot="action" tone="primary" variant="solid" size="sm">Create</sui-button>
-      </sui-empty-state>
-      <sui-empty-state variant="inline" size="sm" tone="muted">
+      </empty-state>
+      <empty-state variant="inline" size="sm" tone="muted">
         <span slot="title">No results</span>
         Adjust your filters.
-      </sui-empty-state>
+      </empty-state>
       <sui-error-state title="Load failed" size="sm" icon="alert-circle">
         Connection timed out.
         <sui-button slot="action" variant="outline" size="sm">Retry</sui-button>

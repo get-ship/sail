@@ -130,7 +130,7 @@ export default controller({
   {:else if chart.error()}
     <sui-error-state part="error"></sui-error-state>
   {:else if chart.isEmpty()}
-    <sui-empty-state part="empty"></sui-empty-state>
+    <empty-state part="empty"></empty-state>
   {:else}
     <svg
       viewBox={'0 0 ' + viewport.width() + ' ' + viewport.height()}

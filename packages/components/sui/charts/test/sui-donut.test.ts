@@ -59,12 +59,12 @@ describe('<sui-donut>', () => {
     expect(shadow(el).querySelector('circle[part="track"]')).not.toBeNull()
   })
 
-  it('empty data composes a sui-empty-state (full-size presentation profile)', async () => {
+  it('empty data composes a .sui-empty-state (full-size presentation profile)', async () => {
     // MIGRATED: empty data routes through the engine isEmpty discriminator to
-    // sui-empty-state, replacing the silent no-segment render.
+    // .sui-empty-state, replacing the silent no-segment render.
     const { el } = mount(reg, 'sui-donut')
     await flush()
-    expect(shadow(el).querySelector('sui-empty-state')).not.toBeNull()
+    expect(shadow(el).querySelector('.sui-empty-state')).not.toBeNull()
     expect(shadow(el).querySelector('svg[role="img"]')).toBeNull()
   })
 

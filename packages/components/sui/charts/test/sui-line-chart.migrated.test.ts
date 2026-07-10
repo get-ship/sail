@@ -7,12 +7,11 @@
 // viewBox tracks the measured viewport (no `preserveAspectRatio="none"`).
 //
 // Imports the migrated tag's compiled.js + the composed committed primitives'
-// compiled.js (sui-skeleton / sui-empty-state). Build-spec REPLACE #1/#3/#6 +
+// compiled.js (sui-skeleton / .sui-empty-state). Build-spec REPLACE #1/#3/#6 +
 // Slices 1/4/5, behavioral specs 1/5/6/7/11/13.
 
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sui-line-chart/sui-line-chart.compiled.js'
-import '../../primitives/src/sui-empty-state/sui-empty-state.compiled.js'
 import { createContainerRegistry, flush, mount } from '../src/test-utils'
 
 const reg = createContainerRegistry()
@@ -71,10 +70,10 @@ describe('<sui-line-chart> migration — engine-driven states', () => {
     expect(el.hasAttribute('loading')).toBe(true)
   })
 
-  it('empty (no series) composes a sui-empty-state', async () => {
+  it('empty (no series) composes a .sui-empty-state', async () => {
     const { el } = mount(reg, 'sui-line-chart')
     await flush()
-    expect(shadow(el).querySelector('sui-empty-state')).not.toBeNull()
+    expect(shadow(el).querySelector('.sui-empty-state')).not.toBeNull()
   })
 
   it('empty data renders no series paths', async () => {

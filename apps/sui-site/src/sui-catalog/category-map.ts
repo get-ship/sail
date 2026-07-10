@@ -128,7 +128,6 @@ export const TAG_PACK: Record<string, PackId> = {
   'sui-date-picker':        'primitives',
   'sui-dialog':             'primitives',
   'sui-dropdown-menu':      'primitives',
-  'sui-empty-state':        'primitives',
   'sui-error-boundary':     'primitives',
   'sui-error-state':        'primitives',
   'sui-field':              'primitives',

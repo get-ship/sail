@@ -93,11 +93,11 @@ describe('<sui-sparkline>', () => {
 
   it('empty data keeps the lightweight aria-hidden empty SVG (no empty-state)', async () => {
     // MIGRATED: sparkline is the ONLY lightweight exception — empty stays the
-    // aria-hidden empty SVG, NOT a full-size sui-empty-state.
+    // aria-hidden empty SVG, NOT a full-size .sui-empty-state.
     const { el } = mount(reg, 'sui-sparkline')
     await flush()
     expect(shadow(el).querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')
-    expect(shadow(el).querySelector('sui-empty-state')).toBeNull()
+    expect(shadow(el).querySelector('.sui-empty-state')).toBeNull()
   })
 
   it('loading attr composes a sui-spinner (inline loading profile, not skeleton)', async () => {

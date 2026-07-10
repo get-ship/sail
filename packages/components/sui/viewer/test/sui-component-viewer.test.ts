@@ -27,7 +27,7 @@ import { signal } from '@ship/sui-runtime'
 
 // RED: the Slice-5 deliverables register the tag + bring the composed engine /
 // controls. `@ship/sui-primitives` registers sui-error-boundary / sui-tabs /
-// sui-tab-panel / sui-empty-state / sui-code the viewer composes.
+// sui-tab-panel / .sui-empty-state / sui-code the viewer composes.
 import '@ship/sui-primitives'
 import '../src/sui-render/sui-render.compiled.js'
 import '../src/sui-prop-knobs/sui-prop-knobs.compiled.js'
@@ -298,14 +298,14 @@ describe('<sui-component-viewer> — the folded props/slots table', () => {
     expect(text).toMatch(/0\s*slots/)
   })
 
-  it('shows a sui-empty-state in the slots section when no prop:slots is supplied', async () => {
+  it('shows a .sui-empty-state in the slots section when no prop:slots is supplied', async () => {
     const el = mountViewer(
       { 'component-name': SPECIMEN_TAG },
       { compile: makeBoundCompile(), source: SPECIMEN_SRC, cem: BUTTON_CEM },
     )
     await flush()
     // Slots are daemon-only on the static path → empty-state, not an error.
-    expect(root(el).querySelector('[data-slots-section] sui-empty-state, sui-empty-state[part="slots-empty"]')).not.toBeNull()
+    expect(root(el).querySelector('[data-slots-section] .sui-empty-state, .sui-empty-state[part="slots-empty"]')).not.toBeNull()
   })
 })
 

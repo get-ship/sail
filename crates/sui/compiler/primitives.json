@@ -90,11 +90,6 @@
     "sui-dropdown-menu": {
       "open": { "type": "bool", "default": "false" }
     },
-    "sui-empty-state": {
-      "size": { "values": ["sm", "md", "lg"], "default": "md" },
-      "tone": { "values": ["default", "primary", "info", "success", "warning", "destructive", "accent", "muted"], "default": "default" },
-      "variant": { "values": ["default", "inline", "placeholder", "connecting"], "default": "default" }
-    },
     "sui-error-boundary": {
       "fallback-text": { "type": "string", "default": "" }
     },

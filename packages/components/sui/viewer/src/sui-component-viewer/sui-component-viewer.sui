@@ -325,7 +325,7 @@ export default controller({
           </div>
 
           {#if propRows().length === 0}
-            <sui-empty-state part="props-empty"></sui-empty-state>
+            <empty-state part="props-empty"></empty-state>
           {:else}
             <div class="props-table" part="props-table" role="table">
               {#for row of propRows() key={row.name}}
@@ -344,7 +344,7 @@ export default controller({
             {#if hasSlots()}
               <span class="meta-label" part="slots-label">Slots</span>
             {:else}
-              <sui-empty-state part="slots-empty"></sui-empty-state>
+              <empty-state part="slots-empty"></empty-state>
             {/if}
           </div>
         </div>

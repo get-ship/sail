@@ -31,7 +31,6 @@ import { renderComponent } from '@ship/test-setup'
 // package `exports` only maps `.`).
 import '../../primitives/src/sui-table/sui-table.compiled.js'
 import '../../primitives/src/sui-pagination/sui-pagination.compiled.js'
-import '../../primitives/src/sui-empty-state/sui-empty-state.compiled.js'
 import '../../primitives/src/sui-input/sui-input.compiled.js'
 import '../../primitives/src/sui-icon/sui-icon.compiled.js'
 // RED: greenfield CSV renderer controller.

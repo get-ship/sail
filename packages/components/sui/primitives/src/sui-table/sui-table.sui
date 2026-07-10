@@ -496,13 +496,13 @@ export { SUI_TABLE_LIGHT_DOM_CSS }
 <div class="wrap" part="wrap">
   {#if isEmptyInitial()}
     <div class="grid-empty" part="empty" role="status">
-      <sui-empty-state data-empty-initial></sui-empty-state>
+      <empty-state data-empty-initial></empty-state>
     </div>
   {:else if isEmptyFiltered()}
     <div class="grid-empty" part="empty" role="status">
-      <sui-empty-state>
+      <empty-state>
         <button slot="action" type="button" data-action="clear-filters">Clear filters</button>
-      </sui-empty-state>
+      </empty-state>
     </div>
   {:else}
     <div

@@ -137,7 +137,7 @@ const TOP_ALIGN_TAGS = new Set(['sui-color-picker', 'sui-select', 'sui-combobox'
  *  changes — the accordion "changes size depending on the child" jank). Give
  *  them a stable, comfortable measure so the panel holds its width and content
  *  wraps within it. */
-const PANEL_TAGS = new Set(['sui-collapsible', 'sui-error-state', 'sui-empty-state', 'sui-timeline', 'sui-field', 'sui-message', 'sui-message-list', 'sui-tool-call', 'sui-citation', 'sui-composer'])
+const PANEL_TAGS = new Set(['sui-collapsible', 'sui-error-state', 'sui-timeline', 'sui-field', 'sui-message', 'sui-message-list', 'sui-tool-call', 'sui-citation', 'sui-composer'])
 
 function defaultVariant(primary: PropMeta | null): string {
   if (!primary) return ''

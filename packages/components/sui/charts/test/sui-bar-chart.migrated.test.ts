@@ -3,7 +3,7 @@
 // The bar chart is migrated onto the createChartData engine + createChartViewport
 // adapter: the comma-string `data` decodes through `normalizeSeries`, bars become
 // a pure `derived` (present at first paint), the ad-hoc `isEmpty` signal is
-// replaced by the engine discriminator composing sui-empty-state, loading composes
+// replaced by the engine discriminator composing .sui-empty-state, loading composes
 // sui-skeleton, bars gain `part="series"`, and the bar `max=0`→auto domain
 // convention is preserved by the engine extent.
 //
@@ -13,7 +13,6 @@
 
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sui-bar-chart/sui-bar-chart.compiled.js'
-import '../../primitives/src/sui-empty-state/sui-empty-state.compiled.js'
 import { createContainerRegistry, flush, mount } from '../src/test-utils'
 
 const reg = createContainerRegistry()
@@ -55,10 +54,10 @@ describe('<sui-bar-chart> migration — engine-driven states', () => {
     expect(el.hasAttribute('loading')).toBe(true)
   })
 
-  it('empty data composes a sui-empty-state (not a bare aria-hidden SVG)', async () => {
+  it('empty data composes a .sui-empty-state (not a bare aria-hidden SVG)', async () => {
     const { el } = mount(reg, 'sui-bar-chart')
     await flush()
-    expect(shadow(el).querySelector('sui-empty-state')).not.toBeNull()
+    expect(shadow(el).querySelector('.sui-empty-state')).not.toBeNull()
   })
 
   it('empty data renders no rect elements', async () => {

@@ -574,11 +574,11 @@ describe('<sui-table> data variant — engine-backed view', () => {
     expect(shadow!.querySelector('sui-input')).not.toBeNull()
   })
 
-  it('empty state branches initial (no core rows) — sui-empty-state + [data-empty]', async () => {
+  it('empty state branches initial (no core rows) — .sui-empty-state + [data-empty]', async () => {
     const { el, shadow } = mountWithEngine([], PERSON_COLS)
     await flush()
     expect(el.hasAttribute('data-empty')).toBe(true)
-    const empty = shadow!.querySelector('sui-empty-state') as HTMLElement
+    const empty = shadow!.querySelector('.sui-empty-state') as HTMLElement
     expect(empty).not.toBeNull()
     // initial-empty: no "clear filters" affordance.
     expect(shadow!.querySelector('[data-action="clear-filters"]')).toBeNull()

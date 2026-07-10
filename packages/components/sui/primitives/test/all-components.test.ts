@@ -41,7 +41,6 @@ const ports: PortCase[] = [
   // per-port smoke net.
   { tag: 'sui-tabs',       attr: 'variant', value: 'pill',  shadowPart: '.strip' },
   { tag: 'sui-tab',        attr: 'name',  value: 'one',     shadowPart: 'button' },
-  { tag: 'sui-empty-state', attr: 'tone', value: 'muted',   shadowPart: '.title' },
   { tag: 'sui-input',      attr: 'size',  value: 'lg',      shadowPart: 'input' },
 ]
 
