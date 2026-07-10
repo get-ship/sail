@@ -20,6 +20,7 @@ const SOURCES: &[(&str, &str)] = &[
     ("label", include_str!("../stdlib/label.sui")),
     ("card", include_str!("../stdlib/card.sui")),
     ("switch", include_str!("../stdlib/switch.sui")),
+    ("badge", include_str!("../stdlib/badge.sui")),
 ];
 
 /// Compiled stdlib elements, memoized for the process lifetime. A stdlib

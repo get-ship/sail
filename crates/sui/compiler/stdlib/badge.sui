@@ -1,0 +1,95 @@
+<!--
+  <badge> — L1 language element (element mode). A small, static, tone-colored
+  status label. No behavior, no control flow — pure surface. Bare tag: lowers
+  to <span class="sui-badge">; the skin routes to the framework @layer keyed on
+  the element + attributes; the props feed the manifest + bare shorthand.
+
+  Faithful to the feat/next sui-badge baseline for tone/variant/size/pill.
+  Two baseline shadow-isms dissolve at L1:
+  - host/.badge split → collapsed onto the single root span (same as <label>
+    folded its host/inner-label split), since light DOM has one node.
+  - the named `leading` slot (an icon wrapper) → dropped; a use site puts a
+    leading icon inline in the default slot (light-DOM composition), which
+    element mode's single-default-slot projection expresses directly.
+
+  tone rides the GLOBAL [tone] channel (contracts.css) — [tone='X'] fills
+  --tone/-fg/-bg/-border/-contrast, so there are no per-tone rules here; the
+  base :host is the muted default (a soft, low-key label).
+-->
+
+<component>{
+  props: {
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
+    variant: 'solid' | 'soft' | 'outline',
+    size: 'sm' | 'md' | 'lg',
+    pill: false,
+  },
+}</component>
+
+<style>
+  :host {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    /* Size: md base; sm/lg override below. */
+    --bdg-h: 22px;
+    --bdg-px: 8px;
+    --bdg-fs: 10.5px;
+    --bdg-gap: 4px;
+    --bdg-radius: var(--radius-sm);
+    gap: var(--bdg-gap);
+    min-height: var(--bdg-h);
+    padding: 0 var(--bdg-px);
+    font-family: var(--font-body);
+    font-size: var(--bdg-fs);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1;
+    white-space: nowrap;
+    border-radius: var(--bdg-radius);
+    -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
+    /* soft is the default variant — base :host renders soft. */
+    background: var(--tone-bg);
+    border: 1px solid var(--tone-border);
+    color: var(--tone-fg);
+  }
+  :host([hidden]) { display: none; }
+
+  /* Tone: muted is the default. Scoped to no-tone/default (specificity 0,2,0)
+     so the GLOBAL [tone='X'] channel (contracts.css, 0,1,0) fills every branded
+     tone without a per-tone rule here and without an order-dependent clash. */
+  :host(:not([tone])),
+  :host([tone='default']) {
+    --tone: var(--muted-foreground);
+    --tone-fg: var(--muted-foreground);
+    --tone-contrast: var(--background);
+    --tone-bg: var(--tone-muted-bg);
+    --tone-border: var(--tone-muted-border);
+  }
+
+  :host([size='sm']) { --bdg-h: 18px; --bdg-px: 6px;  --bdg-fs: 9.5px;  --bdg-gap: 3px; }
+  :host([size='lg']) { --bdg-h: 26px; --bdg-px: 10px; --bdg-fs: 11.5px; --bdg-gap: 5px; }
+
+  /* Shape — square (radius-sm) default; pill opts into the full radius. */
+  :host([pill]) { --bdg-radius: var(--radius-full); }
+
+  /* Variant matrix (soft is the base above). */
+  :host([variant='solid']) {
+    background: var(--tone);
+    border-color: var(--tone);
+    color: var(--tone-contrast);
+    box-shadow: inset 0 1px 0 0 var(--hover-bg);
+  }
+  :host([variant='outline']) {
+    background: transparent;
+    border-color: var(--tone-border);
+    color: var(--tone-fg);
+  }
+
+  @media (forced-colors: active) {
+    :host { border-color: CanvasText; color: CanvasText; }
+    :host([variant='solid']) { background: Highlight; color: HighlightText; border-color: Highlight; }
+  }
+</style>
+
+<span><slot></slot></span>
