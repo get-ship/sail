@@ -42,8 +42,7 @@
     pointer-events: none;
     opacity: 0;
     transition: opacity var(--duration-fast) var(--ease-out);
-    position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
-    position-try-order: most-block-size;
+    position-try-fallbacks: flip-block, flip-inline;
   }
 
   :host(:hover) .bubble,
@@ -59,15 +58,22 @@
   }
 
   @supports (anchor-name: --x) {
+    /* Placement + centering via position-area: the box is laid into the region
+       on the named side of the anchor and centered on the perpendicular axis;
+       `margin` opens the gap toward the trigger. flip-* only kicks in on a real
+       viewport clip (we do NOT reorder by most-room, which would ignore the
+       author's chosen side). */
+    .bubble { margin: var(--space-2); }
     :host(:not([placement])) .bubble,
-    :host([placement='top']) .bubble { bottom: calc(anchor(top) - var(--space-2)); justify-self: anchor-center; }
+    :host([placement='top']) .bubble { position-area: top; }
+    :host([placement='bottom']) .bubble { position-area: bottom; }
+    :host([placement='left']) .bubble { position-area: left; }
+    :host([placement='right']) .bubble { position-area: right; }
+
     :host(:not([placement])) .bubble::after,
     :host([placement='top']) .bubble::after { bottom: calc(-1 * var(--space-1)); left: 50%; margin-left: var(--tt-arrow-shift); }
-    :host([placement='bottom']) .bubble { top: calc(anchor(bottom) + var(--space-2)); justify-self: anchor-center; }
     :host([placement='bottom']) .bubble::after { top: calc(-1 * var(--space-1)); left: 50%; margin-left: var(--tt-arrow-shift); }
-    :host([placement='left']) .bubble { right: calc(anchor(left) - var(--space-2)); align-self: anchor-center; }
     :host([placement='left']) .bubble::after { right: calc(-1 * var(--space-1)); top: 50%; margin-top: var(--tt-arrow-shift); }
-    :host([placement='right']) .bubble { left: calc(anchor(right) + var(--space-2)); align-self: anchor-center; }
     :host([placement='right']) .bubble::after { left: calc(-1 * var(--space-1)); top: 50%; margin-top: var(--tt-arrow-shift); }
   }
 
