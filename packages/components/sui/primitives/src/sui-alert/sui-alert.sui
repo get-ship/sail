@@ -97,17 +97,6 @@
     width: var(--space-1);
     background: var(--tone);
   }
-  .ico {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .actions {
-    display: flex;
-    gap: var(--space-2);
-    margin-top: var(--space-2);
-  }
   .close { display: none; }
   ::slotted([slot='icon']) { display: inline-flex; width: var(--icon-size-sm); height: var(--icon-size-sm); }
 </style>
@@ -144,14 +133,14 @@ export default controller<Scope>({
      aria-live={tone() === 'destructive' || tone() === 'warning' ? 'assertive' : 'polite'}
      aria-atomic="true"
      sx="position:relative p:3 radius:md overflow:hidden border:border bg:surface-1 text:base leading:normal shadow:xs">
-  <span class="ico" part="ico"
+  <row part="ico" align="center" justify="center"
     sx="w:control-h-xs h:control-h-xs radius:md bg:tone-bg fg:tone-fg">
     <slot name="icon"></slot>
-  </span>
+  </row>
   <column class="content" part="content" gap="1" sx="min-w:0">
     <div class="title" part="title" sx="weight:semibold"><slot name="title"></slot></div>
     <div class="body" part="body" sx="fg:muted-foreground"><slot></slot></div>
-    <div class="actions" part="actions"><slot name="actions"></slot></div>
+    <row part="actions" gap="2" sx="mt:2"><slot name="actions"></slot></row>
   </column>
   <button ghost xs class="close" part="close" type="button" aria-label="Dismiss" bind:this={closeBtn}>
     <svg viewBox="0 0 10 10" aria-hidden="true" sx="w:icon-size-sm h:icon-size-sm">
