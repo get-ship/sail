@@ -61,25 +61,6 @@
   size=lg: w:icon-size-xl h:icon-size-xl
   size=xl: w:icon-size-2xl h:icon-size-2xl
 </variants>
-<theme prop="name" channels="app-accent">
-  dashboard:    app-accent-dashboard
-  pipelines:    app-accent-pipelines
-  agents:       app-accent-agents
-  skills:       app-accent-skills
-  git:          app-accent-git
-  collections:  app-accent-collections
-  canvas:       app-accent-canvas
-  settings:     app-accent-settings
-  chat:         app-accent-chat
-  events:       app-accent-events
-  specs:        app-accent-specs
-  theme:        app-accent-theme
-  setup:        app-accent-setup
-  overview:     app-accent-overview
-  mesh:         app-accent-mesh
-  theme-studio: app-accent-theme
-</theme>
-
 <style>
   :host {
     display: inline-flex;
@@ -125,6 +106,28 @@
     height: var(--tile-size);
     color: var(--app-accent);
   }
+
+  /* Per-app accent glyph tint (was <theme prop="name">). App-domain tokens
+     live in the ship-app token layer, not the framework — so each falls back
+     to --foreground where the token is absent (e.g. this catalog), which
+     keeps a bare framework build identical to before. theme-studio aliases
+     the theme accent, mirroring APP_ALIASES in the controller. */
+  :host([set='app'][name='dashboard'])    { --app-accent: var(--app-accent-dashboard, var(--foreground)); }
+  :host([set='app'][name='pipelines'])    { --app-accent: var(--app-accent-pipelines, var(--foreground)); }
+  :host([set='app'][name='agents'])       { --app-accent: var(--app-accent-agents, var(--foreground)); }
+  :host([set='app'][name='skills'])       { --app-accent: var(--app-accent-skills, var(--foreground)); }
+  :host([set='app'][name='git'])          { --app-accent: var(--app-accent-git, var(--foreground)); }
+  :host([set='app'][name='collections'])  { --app-accent: var(--app-accent-collections, var(--foreground)); }
+  :host([set='app'][name='canvas'])       { --app-accent: var(--app-accent-canvas, var(--foreground)); }
+  :host([set='app'][name='settings'])     { --app-accent: var(--app-accent-settings, var(--foreground)); }
+  :host([set='app'][name='chat'])         { --app-accent: var(--app-accent-chat, var(--foreground)); }
+  :host([set='app'][name='events'])       { --app-accent: var(--app-accent-events, var(--foreground)); }
+  :host([set='app'][name='specs'])        { --app-accent: var(--app-accent-specs, var(--foreground)); }
+  :host([set='app'][name='theme'])        { --app-accent: var(--app-accent-theme, var(--foreground)); }
+  :host([set='app'][name='setup'])        { --app-accent: var(--app-accent-setup, var(--foreground)); }
+  :host([set='app'][name='overview'])     { --app-accent: var(--app-accent-overview, var(--foreground)); }
+  :host([set='app'][name='mesh'])         { --app-accent: var(--app-accent-mesh, var(--foreground)); }
+  :host([set='app'][name='theme-studio']) { --app-accent: var(--app-accent-theme, var(--foreground)); }
 
   :host([set='app'][size='sm']) { --tile-size: var(--icon-size-md); --glyph-size: var(--icon-size-xs); --tile-radius: var(--radius-sm); }
   :host([set='app'][size='md']) { --tile-size: var(--space-5); --glyph-size: var(--icon-size-sm); --tile-radius: var(--radius-md); }
