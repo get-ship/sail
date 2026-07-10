@@ -21,6 +21,11 @@
   does not exist). So this template declares no structural <prop>.
 -->
 
+<!-- Light DOM: prop-knobs composes L1 controls (the bool knob is the native
+     <switch>). Native `change`/`input` don't cross a shadow boundary, so the
+     knob-panel delegation must run with no boundary — the target architecture. -->
+<component>{ light: true }</component>
+
 <style>
   :host {
     display: block;
@@ -218,15 +223,23 @@ export default controller({
       return row?.dataset.knob ?? null
     }
 
-    // sui-toggle-group (enum) + sui-switch/sui-checkbox (bool) + sui-slider
-    // (number) all emit `sui-change`; detail carries `value` (enum/number) or
-    // `checked` (bool).
+    // sui-toggle-group (enum) + sui-slider (number) still emit `sui-change`;
+    // detail carries `value` (enum/number) or `checked` (bool).
     const onChange = (e: Event): void => {
       const name = knobNameOf(e.target)
       if (name == null) return
       const detail = (e as CustomEvent).detail as { value?: unknown; checked?: unknown } | undefined
       const raw = detail && 'checked' in detail ? detail.checked : detail?.value
       applyKnob(name, raw)
+    }
+    // The bool knob is the L1 <switch> (a native checkbox): it fires the native
+    // `change`, not `sui-change`, and its state is on the target, not a detail.
+    const onNativeChange = (e: Event): void => {
+      const t = e.target as (HTMLElement & { checked?: boolean }) | null
+      if (!t?.classList?.contains?.('sui-switch')) return
+      const name = knobNameOf(t)
+      if (name == null) return
+      applyKnob(name, t.checked === true)
     }
     // sui-input (string + number-input) emits `sui-input` with detail.value.
     const onInput = (e: Event): void => {
@@ -235,12 +248,17 @@ export default controller({
       const detail = (e as CustomEvent).detail as { value?: unknown } | undefined
       applyKnob(name, detail?.value)
     }
+    // Native `change` (unlike the composed sui-change) does NOT cross a shadow
+    // boundary, so the switch's change is caught on the render root, not host.
+    const nativeRoot = host.shadowRoot ?? host
     host.addEventListener('sui-change', onChange)
+    nativeRoot.addEventListener('change', onNativeChange)
     host.addEventListener('sui-input', onInput)
 
     return () => {
       stop()
       host.removeEventListener('sui-change', onChange)
+      nativeRoot.removeEventListener('change', onNativeChange)
       host.removeEventListener('sui-input', onInput)
     }
   },
@@ -265,7 +283,7 @@ export default controller({
             {/for}
           </sui-toggle-group>
         {:case 'bool'}
-          <sui-switch size="sm" prop:checked={knob.checked()}></sui-switch>
+          <switch size="sm" prop:checked={knob.checked()}></switch>
         {:case 'number'}
           <sui-input type="number" size="sm" prop:value={knob.value()}></sui-input>
         {:default}
