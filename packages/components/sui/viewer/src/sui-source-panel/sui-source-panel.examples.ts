@@ -15,7 +15,7 @@ import type { ComponentExample } from '@ship/sui-runtime'
 /** Raw `.sui` sources shown in the source pane, keyed by example `name`. */
 export const sources: Record<string, string> = {
   'Button — solid primary': `<button variant="solid" tone="primary">Dispatch lane</button>`,
-  'Alert — destructive': `<sui-alert tone="destructive">Gate failed: 3 findings block the merge.</sui-alert>`,
+  'Alert — destructive': `<alert tone="destructive">Gate failed: 3 findings block the merge.</alert>`,
   'Chip — removable': `<sui-chip removable tone="primary">TypeScript</sui-chip>`,
 }
 
@@ -42,7 +42,7 @@ export const examples: ComponentExample[] = [
   {
     name: 'Alert — destructive',
     description: 'A status alert; the snippet carries just the tone that differs from default.',
-    props: { 'component-name': 'sui-alert', lang: 'html' },
+    props: { 'component-name': 'sui-field', lang: 'html' },
   },
   {
     name: 'Chip — removable',

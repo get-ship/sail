@@ -24,10 +24,10 @@
     </row>
 
     {#if alarming()}
-      <sui-alert tone="destructive">
+      <alert tone="destructive">
         <span slot="title">rate limit exceeded</span>
         error rate is {rateText()}/s — investigate upstream.
-      </sui-alert>
+      </alert>
     {/if}
 
     <row gap="2">

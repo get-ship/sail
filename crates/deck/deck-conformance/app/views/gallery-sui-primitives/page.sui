@@ -28,28 +28,28 @@
 
   <!-- Alert -->
   <section class="gsp-section">
-    <h2 class="gsp-label">sui-alert</h2>
+    <h2 class="gsp-label">alert</h2>
     <div class="gsp-col">
-      <sui-alert tone="info">
+      <alert tone="info">
         <span slot="title">Info</span>
         This is an informational alert.
-      </sui-alert>
-      <sui-alert tone="success">
+      </alert>
+      <alert tone="success">
         <span slot="title">Success</span>
         Operation completed.
-      </sui-alert>
-      <sui-alert tone="warning" dismissible>
+      </alert>
+      <alert tone="warning" dismissible>
         <span slot="title">Warning</span>
         Check your configuration.
-      </sui-alert>
-      <sui-alert tone="destructive">
+      </alert>
+      <alert tone="destructive">
         <span slot="title">Error</span>
         Something went wrong.
-      </sui-alert>
-      <sui-alert tone="muted">
+      </alert>
+      <alert tone="muted">
         <span slot="title">Note</span>
         Muted tone for subtle notices.
-      </sui-alert>
+      </alert>
     </div>
   </section>
 

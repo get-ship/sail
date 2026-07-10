@@ -85,7 +85,6 @@ const BENTO_SIZE: Record<string, BentoSize> = {
   'sui-draw': 'lg',
   'sui-graph-canvas': 'lg',
   // 2×1 — horizontal / list-shaped components.
-  'sui-alert': 'wide',
   'sui-timeline': 'wide',
   'sui-tabs': 'wide',
   'sui-nav-top': 'wide',

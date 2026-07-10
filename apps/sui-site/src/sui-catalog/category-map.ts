@@ -117,7 +117,6 @@ export const HIDDEN_TAGS: Record<string, true> = {
 export const TAG_PACK: Record<string, PackId> = {
   // ── @ship/sui-primitives ─────────────────────────────────────────────
   // (accordion deduped → native <details> L1, see L1_LANGUAGE_ELEMENTS)
-  'sui-alert':              'primitives',
   'sui-alert-dialog':       'primitives',
   'sui-autocomplete':       'primitives',
   'sui-chip':               'primitives',

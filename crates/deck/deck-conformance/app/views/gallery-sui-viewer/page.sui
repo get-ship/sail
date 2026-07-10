@@ -28,7 +28,7 @@
       </div>
       <div class="variant-row">
         <span class="variant-label">viewport-width=tablet</span>
-        <sui-component-viewer component-name="sui-alert" viewport-width="tablet"></sui-component-viewer>
+        <sui-component-viewer component-name="sui-field" viewport-width="tablet"></sui-component-viewer>
       </div>
       <div class="variant-row">
         <span class="variant-label">viewport-width=mobile</span>
@@ -67,8 +67,8 @@
         <sui-prop-matrix component-name="sui-button"></sui-prop-matrix>
       </div>
       <div class="variant-row">
-        <span class="variant-label">component-name=sui-alert</span>
-        <sui-prop-matrix component-name="sui-alert"></sui-prop-matrix>
+        <span class="variant-label">component-name=sui-field</span>
+        <sui-prop-matrix component-name="sui-field"></sui-prop-matrix>
       </div>
       <div class="variant-row">
         <span class="variant-label">component-name="" (empty state)</span>
@@ -120,8 +120,8 @@
         <sui-source-panel component-name="sui-button" lang="html"></sui-source-panel>
       </div>
       <div class="variant-row">
-        <span class="variant-label">component-name=sui-alert lang=html</span>
-        <sui-source-panel component-name="sui-alert" lang="html"></sui-source-panel>
+        <span class="variant-label">component-name=sui-field lang=html</span>
+        <sui-source-panel component-name="sui-field" lang="html"></sui-source-panel>
       </div>
       <div class="variant-row">
         <span class="variant-label">component-name=sui-code lang=html</span>

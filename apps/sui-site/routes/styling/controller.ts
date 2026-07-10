@@ -58,10 +58,10 @@ const code = {
   // Status tones, not palette colors.
   tone: [
     '<!-- Tone ramps are status surfaces, not brand colors. -->',
-    '<sui-alert tone="success">Saved.</sui-alert>',
-    '<sui-alert tone="warning">Quota at 80%.</sui-alert>',
-    '<sui-alert tone="destructive">Save failed.</sui-alert>',
-    '<sui-alert tone="info">Tip: press <kbd>⌘ K</kbd> for the palette.</sui-alert>',
+    '<alert tone="success">Saved.</alert>',
+    '<alert tone="warning">Quota at 80%.</alert>',
+    '<alert tone="destructive">Save failed.</alert>',
+    '<alert tone="info">Tip: press <kbd>⌘ K</kbd> for the palette.</alert>',
   ].join('\n'),
   // Layout primitives — keywords, never raw divs.
   layout: [

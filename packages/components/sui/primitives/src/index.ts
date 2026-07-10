@@ -9,7 +9,6 @@
 // sui-accordion + sui-accordion-item; etc.) are co-located under the
 // directory of the "primary" tag and listed together below.
 
-import './sui-alert/sui-alert.compiled.js'
 import './sui-alert-dialog/sui-alert-dialog.compiled.js'
 import './sui-autocomplete/sui-autocomplete.compiled.js'
 import './sui-calendar/sui-calendar.compiled.js'

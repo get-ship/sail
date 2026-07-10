@@ -105,7 +105,7 @@ const DRIVE_OVERLAY = {
 const TONE_TAGS = (() => {
   const candidates = ['sui-chip', 'sui-icon', 'sui-input',
     'sui-slider', 'sui-select', 'sui-combobox', 'sui-radio-group', 'sui-radio',
-    'sui-toggle-group', 'sui-spinner', 'sui-alert', 'sui-thinking-dots',
+    'sui-toggle-group', 'sui-spinner', 'sui-thinking-dots',
     'sui-toast', 'sui-tabs', 'sui-pagination', 'sui-bar-chart',
     'sui-line-chart', 'sui-area-chart', 'sui-sparkline', 'sui-donut',
     'sui-gauge', 'sui-heatmap', 'sui-autocomplete',

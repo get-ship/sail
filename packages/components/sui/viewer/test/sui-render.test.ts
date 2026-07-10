@@ -307,7 +307,7 @@ describe('<sui-render> — error surface (caught, never a white screen)', () => 
     // The engine catches the compile error — the host does not throw, and a
     // diagnostic surface (the folded compile-error branch) renders.
     const root = stageRoot(c.el)
-    const panel = root.querySelector('[data-test="compile-error"], sui-alert')
+    const panel = root.querySelector('[data-test="compile-error"], .sui-alert')
     expect(panel).not.toBeNull()
     // raw message text is surfaced (no truncation) so an agent can self-correct
     expect(root.textContent ?? '').toMatch(/error|expected|unexpected|compile/i)
@@ -412,13 +412,13 @@ describe('<sui-render> — reactive re-mount on source/tag change', () => {
     // last-good specimen survives...
     expect(specimen(c.el)).not.toBeNull()
     // ...and the compile-error surface is shown alongside it.
-    expect(stageRoot(c.el).querySelector('[data-test="compile-error"], sui-alert')).not.toBeNull()
+    expect(stageRoot(c.el).querySelector('[data-test="compile-error"], .sui-alert')).not.toBeNull()
   })
 
   it('a subsequent good compile CLEARS the error panel and restores a live specimen', async () => {
     const c = mountRender({ mode: 'source' }, { compile: makeBoundCompile(), source: BAD_VIEW })
     await c.flush()
-    expect(stageRoot(c.el).querySelector('[data-test="compile-error"], sui-alert')).not.toBeNull()
+    expect(stageRoot(c.el).querySelector('[data-test="compile-error"], .sui-alert')).not.toBeNull()
 
     ;(c.el as unknown as Record<string, unknown>).source = GOOD_VIEW
     await c.flush()

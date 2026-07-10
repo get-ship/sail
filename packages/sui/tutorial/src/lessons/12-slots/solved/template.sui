@@ -8,10 +8,10 @@
   </card>
 
   {#if count() > 5}
-    <sui-alert tone="warning">
+    <alert tone="warning">
       <span slot="title">notice</span>
       Count exceeded 5 — adjust threshold or reset.
-    </sui-alert>
+    </alert>
   {/if}
 
   <div class="row">
