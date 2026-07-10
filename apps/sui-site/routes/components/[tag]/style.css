@@ -127,8 +127,29 @@
 }
 .detail-stage > * { position: relative; z-index: 1; }
 
-/* ── Variant chips — a refined toolbar under the stage ─────────────────── */
-.detail-variants { margin-top: var(--space-4); flex-wrap: wrap; }
+/* ── Behavior demo controls — a trigger that PROVES the component's
+     defining behavior. Lives next to the stage (NOT inside it, so the
+     overflow:hidden on the stage doesn't clip the button) and is
+     removed on unmount by the detail controller. ─────────────────── */
+.detail-behavior-ctrl {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: color-mix(in oklch, var(--warning) 6%, var(--surface-1));
+  border: 1px solid color-mix(in oklch, var(--warning) 22%, var(--border));
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+}
+.detail-behavior-ctrl::before {
+  content: "▸ demo";
+  color: var(--warning);
+  font-weight: var(--font-weight-semibold);
+}
+.detail-behavior-btn { margin-left: auto; }
 .vchip {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
