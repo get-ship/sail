@@ -399,7 +399,13 @@ fn emit_authored_compose(w: &mut Writer, used: &[String], manifest: &AppManifest
     w.line(
         "type __AuthoredScope = typeof __authored.__def extends { scope?: infer F }",
     );
-    w.line("  ? F extends () => infer R ? R : object");
+    // Match the factory regardless of its parameter list. `ScopedControllerDef`
+    // types `scope` as `(init: Ctx, host?) => SC` — a REQUIRED `init` param — so
+    // the zero-arg pattern `() => infer R` failed to match (a fn requiring args
+    // isn't assignable to `() => R`), collapsing the recovered scope to `object`
+    // and false-erroring EVERY `scope.X` read. `(...a: never[]) => infer R`
+    // (the `ReturnType` idiom) matches any factory and recovers SC precisely.
+    w.line("  ? F extends (...a: never[]) => infer R ? R : object");
     w.line("  : object;");
     // Map the constructed manifest clients onto the resolver context: the
     // well-known ambient names become `ResolverContext` fields; the rest go

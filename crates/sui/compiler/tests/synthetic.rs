@@ -157,6 +157,21 @@ fn authored_controller_is_composed_via_setup_not_rewritten() {
         "recovers the scope-factory return type from __def.scope (slice 2 G4):\n{}",
         out.controller_ts
     );
+    // The recovery must match the factory REGARDLESS of its param list.
+    // `ScopedControllerDef.scope` is `(init, host?) => SC` (a required `init`),
+    // so a zero-arg pattern `() => infer R` fails to match and collapses the
+    // recovered scope to `object` — false-erroring every `scope.X` read under
+    // real runtime types. Pin the param-tolerant `(...a) => infer R` form.
+    assert!(
+        out.controller_ts.contains("F extends (...a: never[]) => infer R ? R : object"),
+        "recovery must tolerate the factory's `(init, host?)` params:\n{}",
+        out.controller_ts
+    );
+    assert!(
+        !out.controller_ts.contains("F extends () => infer R"),
+        "the zero-arg recovery pattern collapses scope to `object`; must not emit it:\n{}",
+        out.controller_ts
+    );
     assert!(
         out.controller_ts.contains("const __authoredScope = __authored.setup(__ctx) as __AuthoredScope;"),
         "runs the real resolveController via setup(ctx):\n{}",
