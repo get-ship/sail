@@ -104,24 +104,24 @@ const DRIVE_OVERLAY = {
 }
 
 const TONE_TAGS = (() => {
-  const candidates = ['sui-chip', 'sui-icon', 'sui-input', 'sui-switch',
+  const candidates = ['sui-chip', 'sui-icon', 'sui-input',
     'sui-slider', 'sui-select', 'sui-combobox', 'sui-radio-group', 'sui-radio',
     'sui-toggle-group', 'sui-spinner', 'sui-alert', 'sui-thinking-dots',
     'sui-toast', 'sui-tabs', 'sui-pagination', 'sui-bar-chart',
     'sui-line-chart', 'sui-area-chart', 'sui-sparkline', 'sui-donut',
-    'sui-gauge', 'sui-heatmap', 'sui-avatar', 'sui-autocomplete',
+    'sui-gauge', 'sui-heatmap', 'sui-autocomplete',
     'sui-color-picker', 'sui-date-picker', 'sui-annotation-marker']
   return candidates.filter(t => BY_TAG.has(t) && BY_TAG.get(t).props.some(p => p.name === 'tone' && /\|/.test(p.type)))
 })()
 
-const SIZE_TAGS = ['sui-input', 'sui-chip', 'sui-icon', 'sui-avatar',
-  'sui-switch', 'sui-slider', 'sui-select', 'sui-combobox', 'sui-radio',
+const SIZE_TAGS = ['sui-input', 'sui-chip', 'sui-icon',
+  'sui-slider', 'sui-select', 'sui-combobox', 'sui-radio',
   'sui-spinner', 'sui-thinking-dots', 'sui-tabs', 'sui-heatmap',
   'sui-color-picker', 'sui-date-picker', 'sui-autocomplete', 'sui-gauge',
   'sui-pagination']
   .filter(t => BY_TAG.has(t) && BY_TAG.get(t).props.some(p => p.name === 'size'))
 
-const DISABLED_TAGS = ['sui-input', 'sui-switch', 'sui-radio',
+const DISABLED_TAGS = ['sui-input', 'sui-radio',
   'sui-select', 'sui-combobox', 'sui-toggle', 'sui-slider', 'sui-tabs',
   'sui-tab', 'sui-tab-panel', 'sui-pagination', 'sui-accordion']
   .filter(t => BY_TAG.has(t) && BY_TAG.get(t).props.some(p => p.name === 'disabled'))

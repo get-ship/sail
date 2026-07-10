@@ -276,7 +276,17 @@ pub fn compile_element(
     emit::element::emit_element(&program, name)
 }
 
-pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, CompileError> {
+pub fn compile(source: &str, mut opts: CompileOpts) -> Result<CompileOutput, CompileError> {
+    // Light-DOM opt-in: a `<component>{ light: true, … }` declaration flips the
+    // component to the target light-DOM architecture (no shadow root) for EVERY
+    // caller — bundler, napi harness, CLI — from its own source, so native
+    // events from composed L1 controls bubble to the host with no boundary. The
+    // per-invocation CLI `--light` flag stays for one-off bakes.
+    if parse::preprocess::declares_light_dom(source)
+        && let Some(meta) = opts.component_meta.as_mut()
+    {
+        meta.shadow = false;
+    }
     // A tagged component registers via `customElements.define(name, …)`, which
     // throws at runtime unless `name` is a valid custom-element name. Reject it
     // at compile time (fail-loud) rather than emit code that explodes on load.

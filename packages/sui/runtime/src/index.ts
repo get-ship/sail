@@ -116,7 +116,7 @@ export type { Action, ActionResult } from './action'
 
 // Built-in `use:` actions — reusable element behaviors (autosize, clickOutside…)
 // the L1 components lean on. `use:<name>` attaches them; no hand-wired refs/effects.
-export { autosize, clickOutside, anchor, dropzone } from './actions'
+export { autosize, clickOutside, anchor, dropzone, avatar } from './actions'
 export type { AnchorPlacement } from './actions'
 
 // Native <dialog> behavior — the compiler emits bindOpen for

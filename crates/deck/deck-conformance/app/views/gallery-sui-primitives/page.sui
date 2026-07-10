@@ -55,15 +55,15 @@
 
   <!-- Avatar -->
   <section class="gsp-section">
-    <h2 class="gsp-label">sui-avatar</h2>
+    <h2 class="gsp-label">avatar</h2>
     <div class="gsp-row gsp-wrap">
-      <sui-avatar name="Alice Hart" size="xs"></sui-avatar>
-      <sui-avatar name="Bob Ray" size="sm" tone="primary"></sui-avatar>
-      <sui-avatar name="Carol Wei" size="md" tone="success"></sui-avatar>
-      <sui-avatar name="David Ko" size="lg" tone="warning"></sui-avatar>
-      <sui-avatar name="Eva Moor" size="xl" tone="destructive"></sui-avatar>
-      <sui-avatar initials="ZP" size="md" shape="square" tone="accent"></sui-avatar>
-      <sui-avatar icon-slug="user" size="md" tone="muted"></sui-avatar>
+      <avatar name="Alice Hart" size="xs"></avatar>
+      <avatar name="Bob Ray" size="sm" tone="primary"></avatar>
+      <avatar name="Carol Wei" size="md" tone="success"></avatar>
+      <avatar name="David Ko" size="lg" tone="warning"></avatar>
+      <avatar name="Eva Moor" size="xl" tone="destructive"></avatar>
+      <avatar initials="ZP" size="md" shape="square" tone="accent"></avatar>
+      <avatar icon-slug="user" size="md" tone="muted"></avatar>
     </div>
   </section>
 
@@ -347,11 +347,11 @@
   <section class="gsp-section">
     <h2 class="gsp-label">sui-switch</h2>
     <div class="gsp-row gsp-wrap">
-      <sui-switch name="demo-sw1" label="Default"></sui-switch>
-      <sui-switch name="demo-sw2" checked label="Checked"></sui-switch>
-      <sui-switch name="demo-sw3" tone="primary" checked label="Primary"></sui-switch>
-      <sui-switch name="demo-sw4" tone="success" checked size="lg" label="Success lg"></sui-switch>
-      <sui-switch name="demo-sw5" disabled label="Disabled"></sui-switch>
+      <label class="gsp-swrow"><switch name="demo-sw1"></switch> Default</label>
+      <label class="gsp-swrow"><switch name="demo-sw2" checked></switch> Checked</label>
+      <label class="gsp-swrow"><switch name="demo-sw3" tone="primary" checked></switch> Primary</label>
+      <label class="gsp-swrow"><switch name="demo-sw4" tone="success" checked size="lg"></switch> Success lg</label>
+      <label class="gsp-swrow"><switch name="demo-sw5" disabled></switch> Disabled</label>
     </div>
   </section>
 
@@ -674,12 +674,12 @@
         <p class="gsp-card-desc">Hover-triggered rich content overlay — placement=bottom, delay=300ms</p>
         <sui-hover-card placement="bottom" show-delay="300" hide-delay="150">
           <sui-button slot="trigger" variant="ghost" size="sm">
-            <sui-avatar name="Alice Hart" size="sm" tone="primary"></sui-avatar>
+            <avatar name="Alice Hart" size="sm" tone="primary"></avatar>
             Alice Hart
           </sui-button>
           <div>
             <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)">
-              <sui-avatar name="Alice Hart" size="md" tone="primary"></sui-avatar>
+              <avatar name="Alice Hart" size="md" tone="primary"></avatar>
               <div>
                 <div style="font-weight:var(--font-weight-semibold);font-size:var(--text-sm)">Alice Hart</div>
                 <div style="font-size:var(--text-xs);color:var(--muted-foreground)">Senior Engineer</div>
@@ -900,7 +900,7 @@
           the boundary catches it and shows the fallback. Click Retry to recover.
         </p>
         <div class="gsp-row" style="margin-bottom:var(--space-3)">
-          <sui-switch name="demo-eb-trigger" prop:checked={triggerError()} on:change={(e) => triggerError.set(e.detail.checked)} label="Trigger subtree error"></sui-switch>
+          <label class="gsp-swrow"><switch name="demo-eb-trigger" prop:checked={triggerError()} on:change={(e) => triggerError.set(e.target.checked)}></switch> Trigger subtree error</label>
         </div>
         <sui-error-boundary fallback-text="The widget threw an error — click Retry to recover.">
           {#if triggerError()}

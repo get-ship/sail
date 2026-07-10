@@ -35,7 +35,6 @@ interface PortCase {
 
 const ports: PortCase[] = [
   { tag: 'sui-chip',       attr: 'tone',  value: 'primary', shadowPart: '.chip' },
-  { tag: 'sui-avatar',     attr: 'size',  value: 'lg',      shadowPart: '.root' },
   // sui-button, sui-separator, sui-status-dot, sui-skeleton, sui-card
   // dissolved to bare <button>/<hr>/<span dot>/<span skeleton>/<card>
   // (L1 contract) — no longer custom elements, so they drop out of this

@@ -165,7 +165,6 @@ const TOAST_ITEMS = JSON.stringify([
 export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   // ── Actions & identity ──────────────────────────────────────────────
   'sui-icon':            { props: { name: 'sparkles', variant: 'tile', tone: 'primary', size: 'lg' } },
-  'sui-avatar':          { props: { name: 'Ada Lovelace', size: 'lg' } },
   // catalog (brand chrome, not a public component) and is composed
   'sui-chip':            { props: { removable: 'true', tone: 'primary' }, innerHTML: 'TypeScript' },
   // sui-error-boundary: the gallery card shows a staticHTML poster of the
@@ -219,7 +218,6 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
 
   // ── Forms ───────────────────────────────────────────────────────────
   'sui-input':           { props: { value: 'Ada Lovelace', label: 'Full name', placeholder: 'Enter your name' } },
-  'sui-switch':          { props: { checked: 'true' }, innerHTML: 'Dark mode' },
   'sui-slider':          {
     props: { value: '64', min: '0', max: '100', label: 'Volume' },
     // The live slider is height:6px which gets lost in the gallery card. A

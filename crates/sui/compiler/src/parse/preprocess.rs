@@ -1311,6 +1311,20 @@ pub(crate) fn extract_component_body(source: &str) -> Option<String> {
     Some(source[body_start..body_start + rel].trim().to_string())
 }
 
+/// Whether the `<component>` block opts into light DOM (`light: true`). This is
+/// the per-source Light-DOM opt-in: a component moves to the target light-DOM
+/// architecture from its own source, so every compile path (bundler, napi
+/// harness, CLI) renders it without a shadow root — no per-invocation flag.
+pub(crate) fn declares_light_dom(source: &str) -> bool {
+    extract_component_body(source)
+        .map(|body| {
+            parse_object_fields(&body)
+                .iter()
+                .any(|(k, v)| k == "light" && v.trim() == "true")
+        })
+        .unwrap_or(false)
+}
+
 fn lower_component(source: &str) -> String {
     let Some(start) = source.find("<component") else {
         return source.to_string();
