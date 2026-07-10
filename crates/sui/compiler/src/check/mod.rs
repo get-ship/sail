@@ -67,12 +67,15 @@ pub fn run(
         closed_sections::check(c)?;
         pure_derived::check(c)?;
     }
-    // The scope-bound check needs to know about controller-declared
-    // names (`derived` / `use`) — and we can only locate the paired
-    // controller via `source_path`. When the caller hasn't supplied
-    // one (synthetic fragments in unit tests), skip the check rather
-    // than reject every reference as undeclared.
-    if source_path.is_some() {
+    // Scope-bound checks need the controller's declared names (`scope` /
+    // `derived` / `use`). We have them whenever a controller is resolved —
+    // the inline `<controller>` block (SFC) OR the paired file — so these run
+    // regardless of `source_path` (the checks read the passed `controller`,
+    // never the path). Only a bare fragment with NEITHER a controller nor a
+    // source_path is skipped: nothing defines its scope to check against, so
+    // every free name would false-positive as undeclared.
+    let has_scope_context = source_path.is_some() || controller.is_some();
+    if has_scope_context {
         scope_bound::check(program, controller)?;
     }
     // Type-strengthening passes — see crates/sui/compiler/EXPRESSIONS.md.
@@ -81,7 +84,7 @@ pub fn run(
     // shape mismatches surface.
     key_identity::check(program)?;
     for_iterable::check(program)?;
-    if source_path.is_some() {
+    if has_scope_context {
         scope_member::check(program, controller)?;
         bind_this_target::check(program, controller)?;
         on_callable::check(program, controller)?;
@@ -190,14 +193,18 @@ pub fn collect(
         push(closed_sections::check(c), source, &mut diags);
         push(pure_derived::check(c), source, &mut diags);
     }
-    if source_path.is_some() {
+    // Scope checks run whenever a controller is resolved (inline SFC OR paired
+    // file) — not only when a `source_path` is present. See `run` above: the
+    // checks read the passed `controller`, never the path.
+    let has_scope_context = source_path.is_some() || controller.is_some();
+    if has_scope_context {
         // Collect ALL out-of-scope references (one per expression), not just the
         // first — the common "I have three typos" case.
         push_all(scope_bound::collect(program, controller), source, &mut diags);
     }
     push(key_identity::check(program), source, &mut diags);
     push(for_iterable::check(program), source, &mut diags);
-    if source_path.is_some() {
+    if has_scope_context {
         push_all(scope_member::collect(program, controller), source, &mut diags);
         push(bind_this_target::check(program, controller), source, &mut diags);
         push(on_callable::check(program, controller), source, &mut diags);
