@@ -52,54 +52,48 @@
 <prop name="shape" values="round|square" default="round" reflect />
 <prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="muted" reflect />
 
-<theme prop="size" channels="sz, fs">
-  xs: space-5, text-xs
-  sm: control-h-sm, text-xs
-  md: space-7, text-base
-  lg: control-h-lg, text-lg
-  xl: control-h-xl, text-2xl
-</theme>
-<theme prop="tone" channels="av-bg, av-fg">
-  primary:     primary, primary-foreground
-  accent:      accent, accent-foreground
-  info:        tone-info-bg, info
-  success:     tone-success-bg, success
-  warning:     tone-warning-bg, warning
-  destructive: tone-destructive-bg, destructive
-</theme>
 <variants part="root">
-  shape=round:  radius:full
   shape=square: radius:sm
+  size=xs: w:5 h:5 text:xs
+  size=sm: w:control-h-sm h:control-h-sm text:xs
+  size=md: w:7 h:7 text:base
+  size=lg: w:control-h-lg h:control-h-lg text:lg
+  size=xl: w:control-h-xl h:control-h-xl text:2xl
+  tone=primary:     bg:primary fg:primary-foreground
+  tone=accent:      bg:accent fg:accent-foreground
+  tone=info:        bg:tone-info-bg fg:info
+  tone=success:     bg:tone-success-bg fg:success
+  tone=warning:     bg:tone-warning-bg fg:warning
+  tone=destructive: bg:tone-destructive-bg fg:destructive
 </variants>
 
 <style>
   :host {
     display: inline-flex;
     vertical-align: middle;
-    --sz: 32px;
-    --fs: var(--text-base);
-    --av-bg: linear-gradient(
-      135deg,
-      var(--primary),
-      var(--accent)
-    );
+    /* Default (no [tone]) fill: the brand gradient — no sx/token equivalent.
+       Per-tone SOLID fills come from <variants part="root"> (bg:…), which
+       override this. Size + font-size also come from <variants> now. */
+    --av-bg: linear-gradient(135deg, var(--primary), var(--accent));
     --av-fg: var(--foreground);
   }
   :host([hidden]) { display: none; }
 
   .root {
+    /* Round (the DEFAULT) = a perfect circle. Base rule, not
+       `:host([shape='round'])`, because a defaulted `shape` isn't reflected to
+       the attribute — so the selector wouldn't match. `shape=square` overrides
+       via <variants> (radius:sm). sx has no 50% utility, so this is irreducible. */
+    border-radius: 50%;
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: var(--sz);
-    height: var(--sz);
     flex: none;
     background: var(--av-bg);
     color: var(--av-fg);
     font-family: var(--font-body);
     font-weight: var(--font-weight-bold);
-    font-size: var(--fs);
     letter-spacing: 0.02em;
     text-transform: uppercase;
     line-height: 1;
