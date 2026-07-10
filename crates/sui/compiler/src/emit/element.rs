@@ -147,6 +147,26 @@ fn serialize_static(
                     out.push('"');
                 }
             }
+            // `use:action` — a reusable BEHAVIOR (a toolchain action) bundled
+            // with the element. It is NOT per-instance authored state, so it
+            // doesn't break the compiles-away seam: the action is written once
+            // in the toolchain, and here it rides back into the static structure
+            // string as a `use:` attribute. When the element splices at a
+            // use-site, the normal pipeline lowers that `use:` to a
+            // `runAction(el, action)` call — behavior attaches where the runtime
+            // already lives, the structure still inlines with zero registration.
+            AttrInstr::Use { action, param, .. } => {
+                if param.is_some() {
+                    return Err(CompileError::new(format!(
+                        "element mode: use:{action}={{param}} — a reactive action \
+                         parameter is per-instance state and can't ride the static \
+                         splice yet; use a param-less action (its config lives in \
+                         the action) or author the element as a component",
+                    )));
+                }
+                out.push_str(" use:");
+                out.push_str(action);
+            }
             _ => {
                 return Err(CompileError::new(format!(
                     "element mode: dynamic attribute on <{}> — elements are static \
