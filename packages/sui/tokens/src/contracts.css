@@ -12,6 +12,13 @@
 [tone='destructive'] { --tone: var(--destructive);      --tone-fg: var(--destructive);      --tone-contrast: var(--destructive-foreground); --tone-bg: var(--tone-destructive-bg); --tone-border: var(--tone-destructive-border); --tone-ring: var(--tone-destructive-ring); }
 [tone='accent']      { --tone: var(--accent);           --tone-fg: var(--accent);           --tone-contrast: var(--accent-foreground);      --tone-bg: var(--tone-accent-bg);      --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring); }
 [tone='muted']       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-contrast: var(--background);              --tone-bg: var(--tone-muted-bg);       --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring); }
+:where(input, select, textarea)[tone='primary']     { --tone-border: var(--tone-primary-border);     --tone-ring: var(--tone-primary-ring); }
+:where(input, select, textarea)[tone='info']        { --tone-border: var(--tone-info-border);        --tone-ring: var(--tone-info-ring); }
+:where(input, select, textarea)[tone='success']     { --tone-border: var(--tone-success-border);     --tone-ring: var(--tone-success-ring); }
+:where(input, select, textarea)[tone='warning']     { --tone-border: var(--tone-warning-border);     --tone-ring: var(--tone-warning-ring); }
+:where(input, select, textarea)[tone='accent']      { --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring); }
+:where(input, select, textarea)[tone='muted']       { --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring); }
+:where(input[invalid], input[aria-invalid='true'], select[aria-invalid='true'], textarea[aria-invalid='true']) { --tone-border: var(--destructive); --tone-ring: var(--tone-destructive-ring); }
 [size='xs'] { --size-h: var(--control-h-2xs); --size-px: var(--space-2);   --size-fs: var(--text-xs);   --size-gap: var(--space-1); }
 [size='sm'] { --size-h: var(--control-h-sm);  --size-px: var(--space-2_5); --size-fs: var(--text-sm);   --size-gap: var(--space-1_5); }
 [size='md'] { --size-h: var(--control-h-md);  --size-px: var(--space-3);   --size-fs: var(--text-base); --size-gap: var(--space-2); }
@@ -80,8 +87,8 @@ iframe { max-width: 100%; border: 0; }
 :where(button):hover:not(:disabled) { transform: translateY(-1px); }
 :where(button):active:not(:disabled) { transform: translateY(1px) scale(0.98); }
 :where(button[variant='ghost'], button[variant='outline']):disabled { background: transparent; }
-:where(input:not([type='checkbox'], [type='radio'], [type='range'], [type='color']), textarea, select) { display: block; min-height: var(--size-h, var(--control-h-md)); padding: var(--space-1_5) var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-xs); }
-:where(input:not([type='checkbox'], [type='radio'], [type='range'], [type='color']), textarea, select):hover:not(:disabled) { border-color: var(--border-strong); }
+:where(input:not([type='checkbox'], [type='radio'], [type='range'], [type='color']), textarea, select) { display: block; min-height: var(--size-h, var(--control-h-md)); padding: var(--space-1_5) var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); color: var(--foreground); background: var(--background); border: 1px solid var(--tone-border, var(--border)); border-radius: var(--radius-md); box-shadow: var(--shadow-xs); }
+:where(input:not([type='checkbox'], [type='radio'], [type='range'], [type='color']), textarea, select):hover:not(:disabled):not([tone]):not([invalid]):not([aria-invalid='true']) { border-color: var(--border-strong); }
 :where(input:not([type='checkbox'], [type='radio'], [type='range'], [type='color']), textarea, select)::placeholder { color: var(--muted-foreground); }
 :where(textarea) { min-height: calc(var(--control-h-md) * 2); resize: vertical; }
 :where(select) { padding-right: var(--space-8); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%23888888' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right var(--space-3) center; background-size: 1rem; }

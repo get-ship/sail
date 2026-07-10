@@ -9,7 +9,17 @@ const TONES_CSS =
   ":host([tone='warning'])     { --tone: var(--warning);          --tone-fg: var(--tone-warning-fg);  --tone-contrast: var(--warning-foreground);     --tone-bg: var(--tone-warning-bg);     --tone-border: var(--tone-warning-border);     --tone-ring: var(--tone-warning-ring); }\n" +
   ":host([tone='destructive']) { --tone: var(--destructive);      --tone-fg: var(--destructive);      --tone-contrast: var(--destructive-foreground); --tone-bg: var(--tone-destructive-bg); --tone-border: var(--tone-destructive-border); --tone-ring: var(--tone-destructive-ring); }\n" +
   ":host([tone='accent'])      { --tone: var(--accent);           --tone-fg: var(--accent);           --tone-contrast: var(--accent-foreground);      --tone-bg: var(--tone-accent-bg);      --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring); }\n" +
-  ":host([tone='muted'])       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-contrast: var(--background);              --tone-bg: var(--tone-muted-bg);       --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring); }\n"
+  ":host([tone='muted'])       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-contrast: var(--background);              --tone-bg: var(--tone-muted-bg);       --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring); }\n" +
+  // Light-DOM mirror for bare L1 field controls — <input tone=primary>/[invalid]
+  // set the border+ring channels the field skin reads (`:host()` never matches a
+  // light-DOM element). Border+ring only (what a field tints); parity w/ sui-input.
+  ":where(input, select, textarea)[tone='primary']     { --tone-border: var(--tone-primary-border);     --tone-ring: var(--tone-primary-ring); }\n" +
+  ":where(input, select, textarea)[tone='info']        { --tone-border: var(--tone-info-border);        --tone-ring: var(--tone-info-ring); }\n" +
+  ":where(input, select, textarea)[tone='success']     { --tone-border: var(--tone-success-border);     --tone-ring: var(--tone-success-ring); }\n" +
+  ":where(input, select, textarea)[tone='warning']     { --tone-border: var(--tone-warning-border);     --tone-ring: var(--tone-warning-ring); }\n" +
+  ":where(input, select, textarea)[tone='accent']      { --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring); }\n" +
+  ":where(input, select, textarea)[tone='muted']       { --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring); }\n" +
+  ":where(input[invalid], input[aria-invalid='true'], select[aria-invalid='true'], textarea[aria-invalid='true']) { --tone-border: var(--destructive); --tone-ring: var(--tone-destructive-ring); }\n"
 
 const SIZES_CSS =
   // The FULL size contract, framework-owned — the exact analogue of tone. A
@@ -227,8 +237,10 @@ const CONTROL_CONTRACTS_CSS =
 const TEXT_FIELD =
   "input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'])"
 const INPUT_SKIN_CSS =
-  `:where(${TEXT_FIELD}, textarea, select) { display: block; min-height: var(--size-h, var(--control-h-md)); padding: var(--space-1_5) var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-xs); }\n` +
-  `:where(${TEXT_FIELD}, textarea, select):hover:not(:disabled) { border-color: var(--border-strong); }\n` +
+  `:where(${TEXT_FIELD}, textarea, select) { display: block; min-height: var(--size-h, var(--control-h-md)); padding: var(--space-1_5) var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); color: var(--foreground); background: var(--background); border: 1px solid var(--tone-border, var(--border)); border-radius: var(--radius-md); box-shadow: var(--shadow-xs); }\n` +
+  // Hover strengthens the border only when the field is NOT toned/invalid
+  // (a toned border already reads); otherwise it keeps its tone.
+  `:where(${TEXT_FIELD}, textarea, select):hover:not(:disabled):not([tone]):not([invalid]):not([aria-invalid='true']) { border-color: var(--border-strong); }\n` +
   `:where(${TEXT_FIELD}, textarea, select)::placeholder { color: var(--muted-foreground); }\n` +
   ':where(textarea) { min-height: calc(var(--control-h-md) * 2); resize: vertical; }\n' +
   // <select> — appearance:none dropped the native arrow, so draw a chevron.
