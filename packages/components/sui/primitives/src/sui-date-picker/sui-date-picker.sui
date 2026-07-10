@@ -83,12 +83,6 @@
 <prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
 <prop name="size" values="sm|md|lg" default="md" reflect />
 
-<theme prop="size" channels="dp-h, dp-fs, dp-px">
-  sm: control-h-sm, text-sm, space-2
-  md: control-h-md, text-base, space-2_5
-  lg: control-h-lg, text-md, space-3
-</theme>
-
 <variants part="wrap">
   disabled: bg:muted fg:muted-foreground cursor:not-allowed
 </variants>
@@ -123,8 +117,11 @@
     the sx ring: model.
 -->
 <style>
-  --dp-h: ; --dp-fs: ; --dp-px: ;
+  /* Size channels: md base; sm/lg override (was <theme prop=size>). */
+  :host([size='sm']) { --dp-h: var(--control-h-sm); --dp-fs: var(--text-sm);  --dp-px: var(--space-2); }
+  :host([size='lg']) { --dp-h: var(--control-h-lg); --dp-fs: var(--text-md);   --dp-px: var(--space-3); }
   :host {
+    --dp-h: var(--control-h-md); --dp-fs: var(--text-base); --dp-px: var(--space-2_5);
     position: relative;
     display: inline-flex;
     width: 100%;
