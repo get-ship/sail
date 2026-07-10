@@ -105,7 +105,7 @@ describe('<sui-sparkline>', () => {
     // full-size sui-skeleton would be too heavy inline.
     const { el } = mount(reg, 'sui-sparkline', { data: '1,2,3', loading: true })
     await flush()
-    expect(shadow(el).querySelector('sui-spinner')).not.toBeNull()
+    expect(shadow(el).querySelector('.sui-spinner')).not.toBeNull()
     expect(shadow(el).querySelector('[skeleton]')).toBeNull()
   })
 

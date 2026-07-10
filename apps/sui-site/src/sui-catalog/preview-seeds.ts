@@ -184,7 +184,6 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   // rather than just the closed trigger.
   'sui-context-menu':    { innerHTML: '<button slot="trigger" variant="outline">Right-click me</button><button>Cut</button><button>Copy</button><button>Paste</button>', drive: { click: '[slot="trigger"]' } },
   'sui-toast-host':      { staticHTML: '<div style="position:relative;display:flex;align-items:flex-end;justify-content:flex-end;width:100%;height:100%;min-height:7rem"><div style="background:var(--background);border:1px solid var(--border);border-left:3px solid var(--success);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);padding:var(--space-3) var(--space-4);font:inherit;font-size:var(--text-sm);max-width:18rem"><strong style="display:block;margin-bottom:var(--space-1)">Deployed</strong><span style="color:var(--muted-foreground)">job/site-demos → production</span></div></div>' },
-  'sui-spinner':         { props: { label: 'Loading…' } },
 
   // ── Modal overlays ──────────────────────────────────────────────────
   // DETAIL: real component, props open the panel, drive as backup.
@@ -232,8 +231,7 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   'sui-select':          { props: { value: 'prod', label: 'Environment' }, innerHTML: '<option value="dev">Development</option><option value="staging">Staging</option><option value="prod">Production</option>' },
   'sui-combobox':        { props: { placeholder: 'Choose a framework', options: '[{"value":"react","label":"React"},{"value":"vue","label":"Vue"},{"value":"svelte","label":"Svelte"},{"value":"solid","label":"SolidJS"},{"value":"qwik","label":"Qwik"}]' } },
   'sui-autocomplete':    { props: { placeholder: 'Search commands…', suggestions: '["deploy","deploy --prod","deploy --preview","rollback","rollback --to"]' } },
-  'sui-field':           { innerHTML: '<sui-label slot="label">Email address</sui-label><sui-input type="email" value="ada@ship.dev"></sui-input><span slot="hint">We\'ll never share your email.</span>' },
-  'sui-label':           { props: { required: 'true' }, innerHTML: 'Email address' },
+  'sui-field':           { innerHTML: '<label slot="label">Email address</label><sui-input type="email" value="ada@ship.dev"></sui-input><span slot="hint">We\'ll never share your email.</span>' },
   'sui-date-picker':     { props: { value: '2026-07-15', label: 'Ship date' } },
   'sui-color-picker':    { props: { value: '#4f46e5' }, drive: { click: '[part="input"]' } },
   'sui-file-upload':     { props: { accept: '.png,.jpg,.pdf', multiple: 'true' }, innerHTML: 'Drag files here or click to browse' },

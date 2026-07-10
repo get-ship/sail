@@ -101,7 +101,7 @@ export default controller({
 
 </controller>
 {#if loading()}
-  <sui-spinner part="loading"></sui-spinner>
+  <spinner part="loading"></spinner>
 {:else if chart.isEmpty()}
   <svg
     viewBox={'0 0 ' + viewport.width() + ' ' + viewport.height()}
