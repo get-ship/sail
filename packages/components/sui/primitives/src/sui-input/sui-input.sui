@@ -80,22 +80,6 @@
 <prop name="described-by" type="string" default="" />
 <prop name="error-message" type="string" default="" />
 
-<theme prop="tone" channels="tone-border, tone-ring, tone-ring-soft">
-  default:     border,                primary,        border-subtle
-  primary:     primary,               primary,        tone-primary-border
-  info:        info,                  info,           tone-info-border
-  success:     success,               success,        tone-success-border
-  warning:     warning,               warning,        tone-warning-border
-  destructive: destructive,           destructive,    tone-destructive-border
-  accent:      accent,                accent,         tone-accent-border
-  muted:       muted-foreground,      muted-foreground, border-subtle
-</theme>
-<theme prop="size" channels="input-h, input-fs, input-px, input-icon">
-  default: control-h-md, density-text, density-row-px, icon-size-sm
-  sm:      control-h-sm, text-xs,     space-2,        icon-size-xs
-  md:      control-h-md, density-text, density-row-px, icon-size-sm
-  lg:      control-h-lg, text-sm,     space-3,        icon-size-md
-</theme>
 <variants>
   [hidden]:  display:none
 </variants>
@@ -121,12 +105,31 @@
     gap: var(--space-1);
     vertical-align: middle;
     width: 100%;
+    /* Tone: `default` is the base row (below); per-tone overrides follow.
+       These read RAW tone colors (--primary/--info/…), NOT the global
+       --tone-*-ring tokens, so the input owns them instead of deferring
+       to the framework tone channel (was a <theme prop="tone"> block). */
+    --tone-border: var(--border);
+    --tone-ring: var(--primary);
     --tone-ring-soft: var(--border-subtle);
+    /* Size: md is the base; sm/lg override below (was <theme prop="size">). */
     --input-h: var(--control-h-md);
     --input-fs: var(--density-text);
     --input-px: var(--density-row-px);
     --input-icon: var(--icon-size-sm);
   }
+  :host([tone='primary'])     { --tone-border: var(--primary);          --tone-ring: var(--primary);          --tone-ring-soft: var(--tone-primary-border); }
+  :host([tone='info'])        { --tone-border: var(--info);             --tone-ring: var(--info);             --tone-ring-soft: var(--tone-info-border); }
+  :host([tone='success'])     { --tone-border: var(--success);          --tone-ring: var(--success);          --tone-ring-soft: var(--tone-success-border); }
+  :host([tone='warning'])     { --tone-border: var(--warning);          --tone-ring: var(--warning);          --tone-ring-soft: var(--tone-warning-border); }
+  :host([tone='destructive']) { --tone-border: var(--destructive);      --tone-ring: var(--destructive);      --tone-ring-soft: var(--tone-destructive-border); }
+  :host([tone='accent'])      { --tone-border: var(--accent);           --tone-ring: var(--accent);           --tone-ring-soft: var(--tone-accent-border); }
+  :host([tone='muted'])       { --tone-border: var(--muted-foreground); --tone-ring: var(--muted-foreground); --tone-ring-soft: var(--border-subtle); }
+  /* Invalid overrides tone: a destructive border/ring regardless of [tone]
+     (parity with feat/next — restores the error affordance dropped in port). */
+  :host([invalid])            { --tone-border: var(--destructive);      --tone-ring: var(--destructive);      --tone-ring-soft: var(--tone-destructive-border); }
+  :host([size='sm']) { --input-h: var(--control-h-sm); --input-fs: var(--text-xs); --input-px: var(--space-2); --input-icon: var(--icon-size-xs); }
+  :host([size='lg']) { --input-h: var(--control-h-lg); --input-fs: var(--text-sm); --input-px: var(--space-3); --input-icon: var(--icon-size-md); }
   :host([variant='ghost']) { --tone-border: transparent; }
   :host([variant='default']:not([disabled])) [part~='wrap']:hover:not(:focus-within) {
     border-color: var(--border-strong);
