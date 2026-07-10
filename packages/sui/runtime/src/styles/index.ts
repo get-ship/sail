@@ -498,6 +498,12 @@ const CHEVRON_DOWN = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/20
 const DETAILS_SKIN_CSS =
   // interpolate-size lets ::details-content animate block-size to `auto`.
   ":where(details) { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-1, var(--background)); interpolate-size: allow-keywords; }\n" +
+  // Stacked adjacent <details> MERGE into one accordion container (the baseline
+  // sui-accordion look): the shared 1px border becomes the row divider, and only
+  // the group's outer corners round. :has()/adjacent-sibling — no wrapper element.
+  ":where(details:has(+ details)) { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }\n" +
+  ":where(details + details) { border-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; }\n" +
+  ":where(details + details) > summary { border-radius: 0; }\n" +
   ":where(summary) { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-4); font-size: var(--text-sm); font-weight: var(--font-weight-semibold); color: var(--foreground); cursor: pointer; list-style: none; user-select: none; -webkit-user-select: none; border-radius: var(--radius-lg); transition: background var(--duration-fast) var(--ease-out); }\n" +
   // Hide the platform marker (standard + WebKit) — the chevron replaces it.
   ":where(summary)::-webkit-details-marker { display: none; }\n" +
