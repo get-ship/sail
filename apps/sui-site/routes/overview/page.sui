@@ -11,7 +11,7 @@
   <ul>
     <li><strong>Compiler-first</strong> — templates lower to direct DOM operations; the output is a plain custom element.</li>
     <li><strong>Signals</strong> — fine-grained reactivity; only the readers of a changed signal re-run, no diffing.</li>
-    <li><strong>Two files</strong> — a <code>.sui</code> template (markup + bindings) and a paired <code>.controller.ts</code> (state + logic).</li>
+    <li><strong>One file</strong> — a <code>.sui</code> holds the markup + bindings and, when there's state, an inline <code>&lt;controller&gt;</code> block (state + logic). Single-file components.</li>
     <li><strong>Strict by design</strong> — the lint turns design-system violations into build errors, so on-brand is the default.</li>
   </ul>
 
