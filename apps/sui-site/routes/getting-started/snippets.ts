@@ -1,7 +1,7 @@
 // Code snippets for the getting-started page. Kept OUT of the controller so the
 // compiler's scope scan isn't fooled by `return {…}` / `signal(…)` patterns.
 // The .sui samples are compile-checked against the in-repo sui-compiler: the
-// component compiles on its own; the interactive template compiles paired with
+// component compiles on its own; the interactive sample is a full SFC — it compiles on its own (inline <controller>). Was: paired with
 // its controller. Re-run the compiler before editing a sample.
 export const code = {
   install: `# npm, pnpm, yarn, or bun — SUI is just packages
@@ -26,17 +26,19 @@ sui-compiler build greeting.sui --component-name sui-greeting
 <!-- then it's a first-class HTML element — use it anywhere -->
 <sui-greeting who="Ada"></sui-greeting>`,
 
-  interactive: `<!-- counter.sui — when there's state, add a controller -->
-<button on:click={() => count.set((n) => n - 1)}>−</button>
-<output>{count()}</output>
-<button on:click={() => count.set((n) => n + 1)}>+</button>`,
-
-  controller: `// counter.controller.ts
+  interactive: `<!-- counter.sui — when there's state, add an inline <controller>
+     block. One file: logic and markup live together (SFC). -->
+<controller>
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
   scope: () => ({ count: signal(0) }),
-})`,
+})
+</controller>
+
+<button on:click={() => count.set((n) => n - 1)}>−</button>
+<output>{count()}</output>
+<button on:click={() => count.set((n) => n + 1)}>+</button>`,
 
   deck: `# deck is optional — an app framework that drives the compiler
 # for a whole app: bundling, a dev loop, routing, server rendering.

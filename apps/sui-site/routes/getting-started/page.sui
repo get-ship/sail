@@ -3,8 +3,8 @@
   <h1>Getting started</h1>
   <p class="lead">
     A SUI component is a <code>.sui</code> file — markup, styling as
-    <code>sx</code> token utilities, and optional state in a paired
-    <code>.controller.ts</code>. The compiler turns it into a <strong>standard
+    <code>sx</code> token utilities, and optional state in an inline
+    <code>&lt;controller&gt;</code> block. The compiler turns it into a <strong>standard
     custom element</strong> — a real web component you can use in any page, any
     framework, or none. No virtual DOM, no framework runtime wrapped around it.
   </p>
@@ -40,26 +40,26 @@
 
   <h2>Add state</h2>
   <p>
-    When a component needs state, a paired <code>.controller.ts</code> owns it.
-    The template reads what the controller's <code>scope()</code> returns.
+    When a component needs state, add a <code>&lt;controller&gt;</code> block to
+    the same file. The markup reads what the controller's <code>scope()</code>
+    returns — one file, logic and template together.
   </p>
   <sui-codeblock code={code.interactive}></sui-codeblock>
-  <sui-codeblock code={code.controller}></sui-codeblock>
 
-  <h2>The two-file model</h2>
-  <p>The split is the whole mental model, and it's rigid on purpose:</p>
+  <h2>The single-file model</h2>
+  <p>One file, two roles — the separation is the whole mental model:</p>
   <ul>
     <li>
-      <strong>The <code>.sui</code> template</strong> is markup and bindings — a
-      pure read of state. It reads signals (<code>&#123;count()&#125;</code>),
+      <strong>The template</strong> (the markup outside the block) is bindings —
+      a pure read of state. It reads signals (<code>&#123;count()&#125;</code>),
       wires events (<code>on:click</code>), and binds inputs
       (<code>bind:value</code>). It holds no logic.
     </li>
     <li>
-      <strong>The <code>.controller.ts</code></strong> owns the state and the
-      logic. Its <code>scope()</code> returns the signals, derived values, and
-      handlers the template binds to; <code>mount(state, host)</code> runs side
-      effects once the element is in the DOM.
+      <strong>The <code>&lt;controller&gt;</code> block</strong> owns the state
+      and the logic. Its <code>scope()</code> returns the signals, derived
+      values, and handlers the template binds to; <code>mount(state, host)</code>
+      runs side effects once the element is in the DOM.
     </li>
   </ul>
   <p>
