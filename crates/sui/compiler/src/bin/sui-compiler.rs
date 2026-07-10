@@ -322,6 +322,21 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
 }
 
 /// Synthesize one `.sui` into a synthetic controller + render pair.
+/// Walk up from a `.sui` source file to the monorepo root — the nearest
+/// ancestor that contains `packages/sui/runtime/src/index.ts`. Resolves the
+/// real `@ship/sui-runtime` types for the synthetic-controller tsgo gate.
+/// `None` when the file isn't inside the workspace (nothing to resolve against).
+fn workspace_root_for(path: &Path) -> Option<PathBuf> {
+    let mut cur = path.parent();
+    while let Some(dir) = cur {
+        if dir.join("packages/sui/runtime/src/index.ts").is_file() {
+            return Some(dir.to_path_buf());
+        }
+        cur = dir.parent();
+    }
+    None
+}
+
 fn synthesize(
     input: PathBuf,
     manifest_path: PathBuf,
@@ -624,14 +639,17 @@ fn compile_one(
     component_meta: Option<ComponentMeta>,
     emit_component_imports: bool,
 ) -> Result<()> {
-    let source = fs::read_to_string(path)
+    // The ORIGINAL, unstripped source — kept so the synthetic-controller tsgo
+    // gate below can re-extract the inline `<controller>` block (the stripped
+    // `source` no longer has it).
+    let orig_source = fs::read_to_string(path)
         .with_context(|| format!("read {}", path.display()))?;
     // SFC: an inline `<controller>` block is extracted and written to the
     // generated `<stem>.controller.ts` module that `paired_setup` + the emit
     // already consume — so authoring is one file, with no emit change. (A
     // paired `.controller.ts` on disk stays valid; the inline block wins.)
     let (source, inline_controller) =
-        sui_compiler::parse::preprocess::extract_controller_block(&source);
+        sui_compiler::parse::preprocess::extract_controller_block(&orig_source);
     if let Some(body) = &inline_controller {
         if let (Some(parent), Some(file_name)) =
             (path.parent(), path.file_name().and_then(|s| s.to_str()))
@@ -702,6 +720,29 @@ fn compile_one(
                 d.code,
                 d.message
             );
+        }
+        // The template↔controller contract: emit the synthetic controller +
+        // render pair and tsgo-check the template's `scope.X` reads against the
+        // inline `<controller>`'s typed scope. A typo (`scope.dragVisible` with
+        // no such scope member) is a hard type error — the `$scope.X is not a
+        // function` runtime crash class, caught at compile time. Needs the
+        // workspace root to resolve `@ship/sui-runtime` real types; skipped when
+        // this file isn't inside the monorepo (nothing to resolve against).
+        if let Some(ws) = workspace_root_for(path) {
+            let sdir = std::env::temp_dir().join("sui-tsgo-synthetic");
+            let diags = sui_compiler::check::tscheck::check_synthetic_controller(
+                &orig_source, &sdir, &node, &tsgo_js, &ws,
+            )
+            .unwrap_or_default();
+            if let Some(d) = diags.first() {
+                anyhow::bail!(
+                    "{}: template references a name the <controller> scope does not \
+                     provide [{}]: {}",
+                    path.display(),
+                    d.code,
+                    d.message
+                );
+            }
         }
     }
     let result = compile(&source, opts).map_err(|e| {
