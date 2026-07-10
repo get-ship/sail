@@ -173,8 +173,7 @@ function mountPanel(
 const root = (el: HTMLElement) => el
 
 describe('<sui-source-panel> — registration + composition', () => {
-
-
+  it('composes the dissolved code display (bare pre) + button (copy action)', async () => {
     const c = mountPanel(
       { 'component-name': 'button' },
       { source: '<button>hi</button>', props: BUTTON_CEM, value: {} },
