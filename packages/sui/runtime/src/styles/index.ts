@@ -458,23 +458,35 @@ const METER_SKIN_CSS =
 
 // L1 <details>/<summary> — the native disclosure / accordion. Zero JS: the
 // platform owns the open/close toggle and the a11y. The skin frames it, hides
-// the OS triangle, and draws a rotating chevron; `[open]` divides the header
-// from the body. Group several with a wrapper to build an accordion.
+// the OS triangle, draws a rotating chevron, tints the open header, and animates
+// open/close natively. Parity target: the feat/next sui-accordion-item (semibold
+// text-sm trigger, --muted open tint, down-chevron rotating 180°, medium-duration
+// height animation). Group several with a wrapper to build an accordion.
+// Down-chevron (matches sui-accordion-item's M4 6l4 4 4-4), masked so it recolors
+// with the theme via `background`. Backtick avoids escaping the url("…") quotes.
+const CHEVRON_DOWN = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E")`
 const DETAILS_SKIN_CSS =
-  ":where(details) { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-1, var(--background)); }\n" +
-  ":where(summary) { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-4); font-weight: var(--font-weight-medium); color: var(--foreground); cursor: pointer; list-style: none; user-select: none; -webkit-user-select: none; border-radius: var(--radius-md); }\n" +
+  // interpolate-size lets ::details-content animate block-size to `auto`.
+  ":where(details) { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-1, var(--background)); interpolate-size: allow-keywords; }\n" +
+  ":where(summary) { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-4); font-size: var(--text-sm); font-weight: var(--font-weight-semibold); color: var(--foreground); cursor: pointer; list-style: none; user-select: none; -webkit-user-select: none; border-radius: var(--radius-lg); transition: background var(--duration-fast) var(--ease-out); }\n" +
   // Hide the platform marker (standard + WebKit) — the chevron replaces it.
   ":where(summary)::-webkit-details-marker { display: none; }\n" +
   ":where(summary)::marker { content: ''; }\n" +
-  // Chevron — a pure-CSS caret that rotates from ▶ to ▼ on open.
-  ":where(summary)::before { content: ''; flex: 0 0 auto; width: 0; height: 0; border-left: 5px solid currentColor; border-top: 4px solid transparent; border-bottom: 4px solid transparent; margin-right: var(--space-1); color: var(--muted-foreground); transition: transform var(--duration-fast) var(--ease-out); }\n" +
-  ":where(details[open]) > summary::before { transform: rotate(90deg); }\n" +
+  // Chevron at the trailing edge; rotates 180° and brightens to --foreground on open.
+  ":where(summary)::after { content: ''; margin-inline-start: auto; flex: 0 0 auto; width: 16px; height: 16px; background: var(--muted-foreground); -webkit-mask: " + CHEVRON_DOWN + " center / 16px no-repeat; mask: " + CHEVRON_DOWN + " center / 16px no-repeat; transition: transform var(--duration-medium) var(--ease-out), background var(--duration-fast) var(--ease-out); }\n" +
+  ":where(details[open]) > summary::after { transform: rotate(180deg); background: var(--foreground); }\n" +
   ":where(summary:hover) { background: var(--hover-bg); }\n" +
-  ":where(details[open]) > summary { border-bottom: 1px solid var(--border-subtle); border-radius: var(--radius-md) var(--radius-md) 0 0; }\n" +
+  ":where(summary:focus-visible) { outline: var(--focus-ring); outline-offset: calc(-1 * var(--focus-ring-offset, 2px)); }\n" +
+  // Open row header tints with --muted so the active section reads at a glance.
+  ":where(details[open]) > summary { background: var(--muted); border-bottom: 1px solid var(--border-subtle); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }\n" +
+  // Native open/close height animation (progressive enhancement: Chrome 129+;
+  // engines without ::details-content simply snap — content still shows).
+  ":where(details)::details-content { block-size: 0; overflow: hidden; transition: block-size var(--duration-medium) var(--ease-out), content-visibility var(--duration-medium) allow-discrete; }\n" +
+  ":where(details[open])::details-content { block-size: auto; }\n" +
   // Body — the content after <summary>. Margin (not padding) so stacked blocks
   // collapse to a single inter-gap instead of doubling.
   ":where(details) > summary ~ * { margin: var(--space-3) var(--space-4); }\n" +
-  "@media (prefers-reduced-motion: reduce) { :where(summary)::before { transition: none; } }\n"
+  "@media (prefers-reduced-motion: reduce) { :where(summary)::after, :where(details)::details-content { transition: none; } }\n"
 
 // L1 <dialog> — the modal surface. A bare native <dialog> IS the design
 // system's modal ("the web with default styles"): showModal() puts it in the
