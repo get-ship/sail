@@ -1,0 +1,147 @@
+<!--
+  <alert> — L1 language element (element mode). An inline status banner: a
+  tone-colored surface with an optional leading icon, a title, body copy,
+  action buttons, and an optional dismiss control. Bare tag lowers to
+  <div class="sui-alert">; the skin routes to the framework @layer.
+
+  This is the first L1 element to use COMPILE-TIME NAMED-SLOT PROJECTION: the
+  icon / title / actions regions are named slots (`slot="icon"` etc.), and the
+  default slot is the body. A use site distributes its slotted children into
+  the matching region at compile time — zero runtime, still compiles away.
+
+  Behavior rides use:alert (packages/sui/runtime/src/actions/alert.ts):
+  - role/aria-live upgrade to assertive alert for warning/destructive tones
+    (sensible static defaults — status/polite — mean it announces correctly
+    even before the action hydrates);
+  - the dismiss button (shown only under [dismissible]) fires `sui-dismiss` and
+    removes the banner.
+
+  Faithful to the feat/next sui-alert baseline. Two shadow-isms dissolve at L1:
+  the reactive role/aria-live (a controller effect) becomes the use:alert
+  action, and the bare `<button ghost xs>` (which rendered unskinned across the
+  shadow boundary — the baseline's LANG-GAP) becomes a self-contained close
+  skin authored here, where L1 is allowed to own CSS.
+-->
+
+<component>{
+  props: {
+    tone: 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'muted',
+    dismissible: false,
+  },
+}</component>
+
+<style>
+  :host {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
+    gap: var(--space-3);
+    position: relative;
+    overflow: hidden;
+    padding: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface-1);
+    color: var(--foreground);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    box-shadow: var(--shadow-xs);
+  }
+  :host([hidden]) { display: none; }
+
+  /* Tone: muted default (specificity 0,2,0) so the GLOBAL [tone='X'] channel
+     fills every branded tone. --tone drives the leading stripe; --tone-bg/-fg
+     the icon chip. */
+  :host(:not([tone])),
+  :host([tone='default']) {
+    --tone: var(--muted-foreground);
+    --tone-fg: var(--muted-foreground);
+    --tone-bg: var(--tone-muted-bg);
+  }
+
+  /* Leading tone stripe (anchored to the relative root). */
+  :host::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: var(--space-1);
+    background: var(--tone);
+  }
+
+  :host .ico {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-h-xs);
+    height: var(--control-h-xs);
+    border-radius: var(--radius-md);
+    background: var(--tone-bg);
+    color: var(--tone-fg);
+  }
+  :host .ico:empty { display: none; }
+  :host .ico svg,
+  :host .ico ::slotted(*) { width: var(--icon-size-sm); height: var(--icon-size-sm); }
+
+  :host .content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+  :host .title { font-weight: var(--font-weight-semibold); }
+  :host .title:empty { display: none; }
+  :host .body { color: var(--muted-foreground); }
+  :host .actions {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+  }
+  :host .actions:empty { display: none; }
+
+  /* Self-contained dismiss control — hidden until [dismissible]. */
+  :host .close {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    align-self: start;
+    width: var(--control-h-xs);
+    height: var(--control-h-xs);
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      color var(--duration-fast) var(--ease-out);
+  }
+  :host([dismissible]) .close { display: inline-flex; }
+  :host .close:hover { background: var(--hover-bg); color: var(--foreground); }
+  :host .close:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+  :host .close svg { width: var(--icon-size-sm); height: var(--icon-size-sm); }
+
+  @media (forced-colors: active) {
+    :host { border-color: CanvasText; }
+    :host::before { background: CanvasText; }
+  }
+</style>
+
+<div use:alert role="status" aria-live="polite" aria-atomic="true">
+  <span class="ico" part="ico"><slot name="icon"></slot></span>
+  <div class="content" part="content">
+    <div class="title" part="title"><slot name="title"></slot></div>
+    <div class="body" part="body"><slot></slot></div>
+    <div class="actions" part="actions"><slot name="actions"></slot></div>
+  </div>
+  <button class="close" part="close" type="button" aria-label="Dismiss">
+    <svg viewBox="0 0 10 10" aria-hidden="true">
+      <path d="M2 2 L8 8 M8 2 L2 8" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" fill="none"></path>
+    </svg>
+  </button>
+</div>

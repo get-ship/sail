@@ -413,15 +413,179 @@ fn splice_element(
             outb.push_str(v);
         }
     }
-    // Children into the default slot; no slot → children dropped (shadow
-    // parity, same as the runtime projection).
-    let body = if rest.contains("<slot></slot>") {
-        rest.replacen("<slot></slot>", children, 1)
-    } else {
-        rest.to_string()
-    };
+    // COMPILE-TIME SLOT PROJECTION. Partition the use-site children by their
+    // `slot="name"` attribute (un-slotted nodes → the default slot), then fill
+    // each `<slot [name=…]>fallback</slot>` region of the structure. A slot
+    // with no matching projected content keeps its fallback; children with no
+    // matching slot are dropped (shadow parity, same as the runtime).
+    let (default_children, named_children) = project_children(children);
+    let body = fill_slots(rest, &default_children, &named_children);
     outb.push_str(&body);
     outb
+}
+
+/// Partition use-site children into the default bucket (un-slotted nodes, in
+/// source order) and named buckets keyed by each top-level node's `slot=`
+/// attribute. A node's slot assigns its WHOLE subtree — a `slot=` deeper in
+/// the tree belongs to that descendant, not to us. Quote/void/comment aware,
+/// depth-aware on the matching close (mirrors `lower_into`).
+fn project_children(children: &str) -> (String, std::collections::HashMap<String, String>) {
+    let mut default = String::new();
+    let mut named: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+    let bytes = children.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if children[i..].starts_with("<!--") {
+            let end = children[i..].find("-->").map(|e| i + e + 3).unwrap_or(bytes.len());
+            default.push_str(&children[i..end]);
+            i = end;
+            continue;
+        }
+        if bytes[i] == b'<' && i + 1 < bytes.len() && bytes[i + 1].is_ascii_alphabetic() {
+            let tag_start = i + 1;
+            let mut te = tag_start;
+            while te < bytes.len() && (bytes[te].is_ascii_alphanumeric() || bytes[te] == b'-') {
+                te += 1;
+            }
+            let tag = &children[tag_start..te];
+            // Open-tag end, quote-aware.
+            let mut k = te;
+            let mut quote: Option<u8> = None;
+            while k < bytes.len() {
+                match (quote, bytes[k]) {
+                    (Some(q), b) if b == q => quote = None,
+                    (None, b'"') | (None, b'\'') => quote = Some(bytes[k]),
+                    (None, b'>') => break,
+                    _ => {}
+                }
+                k += 1;
+            }
+            if k >= bytes.len() {
+                default.push_str(&children[i..]);
+                break;
+            }
+            let open_tag = &children[i..=k];
+            let self_closed = bytes[k.saturating_sub(1)] == b'/';
+            let node_end = if self_closed || crate::emit::element::is_void_element(tag) {
+                k + 1
+            } else {
+                let open_prefix = format!("<{tag}");
+                let close = format!("</{tag}>");
+                let mut depth = 1usize;
+                let mut scan = k + 1;
+                loop {
+                    if scan >= bytes.len() {
+                        break bytes.len();
+                    }
+                    if bytes[scan..].starts_with(close.as_bytes()) {
+                        depth -= 1;
+                        if depth == 0 {
+                            break scan + close.len();
+                        }
+                        scan += close.len();
+                    } else if bytes[scan..].starts_with(open_prefix.as_bytes())
+                        && bytes
+                            .get(scan + open_prefix.len())
+                            .is_some_and(|&b| b.is_ascii_whitespace() || b == b'>')
+                    {
+                        depth += 1;
+                        scan += open_prefix.len();
+                    } else {
+                        scan += 1;
+                    }
+                }
+            };
+            let node = &children[i..node_end];
+            match open_tag_attr(open_tag, "slot") {
+                Some(name) => named.entry(name).or_default().push_str(node),
+                None => default.push_str(node),
+            }
+            i = node_end;
+            continue;
+        }
+        let next = bytes[i + 1..]
+            .iter()
+            .position(|&b| b == b'<')
+            .map(|n| i + 1 + n)
+            .unwrap_or(bytes.len());
+        default.push_str(&children[i..next]);
+        i = next;
+    }
+    (default, named)
+}
+
+/// Fill each `<slot [name=…]>fallback</slot>` in a structure snippet with the
+/// projected content for that slot name (default slot = no `name`). An empty
+/// or absent bucket falls back to the slot's own inner content.
+fn fill_slots(
+    rest: &str,
+    default: &str,
+    named: &std::collections::HashMap<String, String>,
+) -> String {
+    let bytes = rest.as_bytes();
+    let mut out = String::with_capacity(rest.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if rest[i..].starts_with("<slot")
+            && bytes
+                .get(i + 5)
+                .is_some_and(|&b| b.is_ascii_whitespace() || b == b'>')
+        {
+            let mut k = i + 5;
+            let mut quote: Option<u8> = None;
+            while k < bytes.len() {
+                match (quote, bytes[k]) {
+                    (Some(q), b) if b == q => quote = None,
+                    (None, b'"') | (None, b'\'') => quote = Some(bytes[k]),
+                    (None, b'>') => break,
+                    _ => {}
+                }
+                k += 1;
+            }
+            if k >= bytes.len() {
+                out.push_str(&rest[i..]);
+                break;
+            }
+            let open_tag = &rest[i..=k];
+            let close_at = rest[k..].find("</slot>").map(|p| k + p);
+            let (fallback, end) = match close_at {
+                Some(c) => (&rest[k + 1..c], c + "</slot>".len()),
+                None => ("", k + 1),
+            };
+            let projected = match open_tag_attr(open_tag, "name") {
+                Some(n) => named.get(&n).map(String::as_str).filter(|s| !s.is_empty()),
+                None => Some(default).filter(|s| !s.is_empty()),
+            };
+            out.push_str(projected.unwrap_or(fallback));
+            i = end;
+            continue;
+        }
+        let next = bytes[i + 1..]
+            .iter()
+            .position(|&b| b == b'<')
+            .map(|n| i + 1 + n)
+            .unwrap_or(bytes.len());
+        out.push_str(&rest[i..next]);
+        i = next;
+    }
+    out
+}
+
+/// Read a single attribute's value off an element's open tag (`<tag a="1" …>`),
+/// quotes stripped. Returns None if the attribute is absent.
+fn open_tag_attr(open_tag: &str, attr: &str) -> Option<String> {
+    let inner = open_tag
+        .trim_start_matches('<')
+        .trim_end_matches('>')
+        .trim_end_matches('/');
+    let after_tag = inner
+        .find(char::is_whitespace)
+        .map(|p| &inner[p + 1..])
+        .unwrap_or("");
+    parse_attr_list(after_tag)
+        .into_iter()
+        .find(|(n, _)| n == attr)
+        .map(|(_, v)| v.trim_matches(['"', '\'']).to_string())
 }
 
 /// Parse a flat attribute list `a="1" b c={x}` into (name, raw-value) pairs
@@ -2141,6 +2305,73 @@ mod tests {
         // spinner has no default slot — children drop (shadow parity).
         let out = preprocess("<spinner><b>x</b></spinner>");
         assert!(!out.contains("<b>x</b>"), "slotless children drop: {out}");
+    }
+
+    #[test]
+    fn stdlib_alert_projects_named_slots_end_to_end() {
+        // The first registry element with named slots — proves compile-time
+        // projection distributes use-site slotted children into the matching
+        // regions (icon / title / actions) and the un-slotted node into body.
+        let out = preprocess(
+            r#"<alert tone="success" dismissible><svg slot="icon" class="i"></svg><span slot="title">Saved</span>All changes saved.<button slot="actions">Undo</button></alert>"#,
+        );
+        // root merges use-site attrs
+        assert!(out.contains("sui-alert"), "root class stamped: {out}");
+        assert!(out.contains(r#"tone="success""#), "tone merged: {out}");
+        assert!(out.contains("dismissible"), "dismissible merged: {out}");
+        assert!(out.contains("use:alert"), "behavior action rides the splice: {out}");
+        // each slot region receives its projected child, none survive as <slot>
+        assert!(!out.contains("<slot"), "no slot tags survive projection: {out}");
+        assert!(
+            out.contains(r#"class="ico" part="ico"><svg slot="icon" class="i"></svg>"#),
+            "icon → .ico: {out}"
+        );
+        assert!(
+            out.contains(r#"class="title" part="title"><span slot="title">Saved</span>"#),
+            "title → .title: {out}"
+        );
+        assert!(
+            out.contains(r#"class="body" part="body">All changes saved."#),
+            "un-slotted → body: {out}"
+        );
+        assert!(
+            out.contains(r#"class="actions" part="actions"><button slot="actions">Undo</button>"#),
+            "actions → .actions: {out}"
+        );
+    }
+
+    #[test]
+    fn project_children_partitions_by_slot_attr() {
+        let (def, named) =
+            project_children(r#"<i slot="leading">L</i>Body<b slot="actions">A</b>more"#);
+        assert_eq!(def, "Bodymore", "un-slotted nodes → default, in order");
+        assert_eq!(named.get("leading").map(String::as_str), Some(r#"<i slot="leading">L</i>"#));
+        assert_eq!(named.get("actions").map(String::as_str), Some(r#"<b slot="actions">A</b>"#));
+    }
+
+    #[test]
+    fn project_children_assigns_whole_subtree_not_nested_slot() {
+        // a `slot=` deeper in the tree belongs to that descendant, not hoisted.
+        let (def, named) =
+            project_children(r#"<div slot="a"><span slot="b">in</span></div>tail"#);
+        assert_eq!(
+            named.get("a").map(String::as_str),
+            Some(r#"<div slot="a"><span slot="b">in</span></div>"#)
+        );
+        assert!(named.get("b").is_none(), "nested slot not hoisted");
+        assert_eq!(def, "tail");
+    }
+
+    #[test]
+    fn fill_slots_projects_named_default_and_keeps_fallback() {
+        let mut named = std::collections::HashMap::new();
+        named.insert("leading".to_string(), "<svg></svg>".to_string());
+        let rest = r#">.<span class="lead"><slot name="leading"></slot></span><slot></slot><span><slot name="empty">FB</slot></span></div>"#;
+        let out = fill_slots(rest, "DEFAULT", &named);
+        assert!(out.contains(r#"<span class="lead"><svg></svg></span>"#), "named slot filled: {out}");
+        assert!(out.contains(">DEFAULT<"), "default slot filled: {out}");
+        assert!(out.contains(">FB<"), "unmatched named slot keeps fallback: {out}");
+        assert!(!out.contains("<slot"), "no slot tags survive: {out}");
     }
 
     #[test]

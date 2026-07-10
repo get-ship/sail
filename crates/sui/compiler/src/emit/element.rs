@@ -272,7 +272,7 @@ fn element_skin_selectors(css: &str, root_selector: &str) -> String {
 }
 
 /// The HTML void elements — self-closing, no end tag.
-fn is_void_element(tag: &str) -> bool {
+pub(crate) fn is_void_element(tag: &str) -> bool {
     matches!(
         tag,
         "area" | "base" | "br" | "col" | "embed" | "hr" | "img" | "input"
