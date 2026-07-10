@@ -76,8 +76,6 @@ export const PACK_ORDER: readonly PackId[] = [
  *  `<sui-tab-panel>` into `<sui-tabs>`) is the public API. Review/edit
  *  this list in one place. */
 export const HIDDEN_TAGS: Record<string, true> = {
-  // accordion — the item is internal; the parent is the API
-  'sui-accordion-item': true,
   // tabs — tab + panel are slots of `<sui-tabs>`
   'sui-tab': true,
   'sui-tab-panel': true,
@@ -118,7 +116,7 @@ export const HIDDEN_TAGS: Record<string, true> = {
  *  for review. Tags not in the map fall to `PackId.Primitives`. */
 export const TAG_PACK: Record<string, PackId> = {
   // ── @ship/sui-primitives ─────────────────────────────────────────────
-  'sui-accordion':          'primitives',
+  // (accordion deduped → native <details> L1, see L1_LANGUAGE_ELEMENTS)
   'sui-alert':              'primitives',
   'sui-alert-dialog':       'primitives',
   'sui-autocomplete':       'primitives',

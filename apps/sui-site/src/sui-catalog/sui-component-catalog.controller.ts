@@ -91,7 +91,6 @@ const BENTO_SIZE: Record<string, BentoSize> = {
   'sui-nav-top': 'wide',
   'sui-navigation-menu': 'wide',
   'sui-pagination': 'wide',
-  'sui-accordion': 'wide',
   'sui-collapsible': 'wide',
   'sui-toast-host': 'wide',
   'sui-scroll-area': 'wide',
