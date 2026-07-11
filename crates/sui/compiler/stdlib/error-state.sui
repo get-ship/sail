@@ -1,0 +1,195 @@
+<!--
+  <error-state> — L1 language element (element mode). The "something broke"
+  sibling of <empty-state>: an always-destructive placeholder with a fixed
+  alert-circle icon tile, a title, description, an optional error code chip, an
+  optional collapsible technical-details section, and a retry action.
+
+  Named slots project at compile time (title / details / action + the default
+  description slot). Behavior rides use:errorState: fill the code chip from the
+  `code` attribute, gate + drive the details toggle (Show/Hide, aria-expanded),
+  and auto-focus the retry action. Bare tag lowers to <div class=sui-error-state>.
+
+  Faithful to the feat/next sui-error-state baseline. L1 divergences: the icon is
+  a fixed alert-circle (error states are always destructive) rather than a
+  name-lookup prop; title/description come from slots (static fallback "Something
+  went wrong"); the code chip is a `code` string attribute filled by the action.
+-->
+
+<component>{
+  props: {
+    variant: 'default' | 'inline',
+    size: 'sm' | 'md' | 'lg',
+    code: '',
+  },
+}</component>
+
+<style>
+  :host {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--es-gap);
+    padding: var(--es-pad-y) var(--es-pad-x);
+    text-align: center;
+    font-family: var(--font-body);
+    color: var(--muted-foreground);
+    background: var(--tone-muted-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+    --es-pad-y: var(--space-8);
+    --es-pad-x: var(--space-4);
+    --es-gap: var(--space-3);
+    --es-icon: 22px;
+    --es-tile: var(--control-h-xl);
+    --es-title-fs: var(--text-md);
+    --es-desc-fs: var(--text-sm);
+  }
+  :host([hidden]) { display: none; }
+
+  :host([size='sm']) {
+    --es-pad-y: var(--space-7); --es-gap: var(--space-2);
+    --es-icon: 16px; --es-tile: var(--space-9); --es-title-fs: var(--text-base);
+  }
+  :host([size='lg']) {
+    --es-pad-y: var(--space-8); --es-pad-x: var(--space-6); --es-gap: var(--space-4);
+    --es-icon: 28px; --es-tile: var(--control-h-xl); --es-title-fs: var(--text-lg); --es-desc-fs: var(--text-base);
+  }
+
+  :host([variant='inline']) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: start;
+    border-radius: var(--radius-md);
+    box-shadow: none;
+    padding: var(--space-3) var(--space-4);
+    background: var(--tone-destructive-bg);
+    border-color: var(--tone-destructive-border);
+  }
+
+  :host .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: var(--es-tile);
+    height: var(--es-tile);
+    border-radius: var(--radius-lg);
+    background: var(--tone-destructive-bg);
+    color: var(--destructive);
+    box-shadow: inset 0 0 0 1px var(--tone-destructive-ring);
+  }
+  :host([variant='inline']) .icon {
+    width: var(--es-icon); height: var(--es-icon);
+    background: transparent; box-shadow: none;
+  }
+  :host .icon svg { width: var(--es-icon); height: var(--es-icon); }
+
+  :host .copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    align-items: center;
+    min-width: 0;
+  }
+  :host([variant='inline']) .copy { align-items: start; }
+
+  :host .title {
+    font-family: var(--heading-font);
+    font-size: var(--es-title-fs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--foreground);
+    line-height: var(--leading-tight);
+  }
+  :host .desc {
+    font-size: var(--es-desc-fs);
+    max-width: 38ch;
+    line-height: 1.55;
+    color: var(--muted-foreground);
+  }
+  :host .desc:empty { display: none; }
+
+  :host .code {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+    background: var(--muted);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: var(--space-1) var(--space-2);
+    margin-top: var(--space-1);
+  }
+  :host .code:empty { display: none; }
+
+  /* Details toggle — hidden until the action marks the element [data-has-details]. */
+  :host .details-toggle {
+    display: none;
+    margin-top: var(--space-1);
+    padding: var(--space-1) var(--space-2);
+    border: 0;
+    background: transparent;
+    color: var(--muted-foreground);
+    font: inherit;
+    font-size: var(--text-xs);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+  :host([data-has-details]) .details-toggle { display: inline-block; }
+  :host .details-toggle:hover { color: var(--foreground); background: var(--hover-bg); }
+  :host .details-toggle:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+
+  :host .details {
+    display: none;
+    margin-top: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: var(--tone-destructive-bg);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+    max-width: 60ch;
+    white-space: pre-wrap;
+    word-break: break-word;
+    text-align: start;
+  }
+  :host([data-details-open]) .details { display: block; }
+
+  :host .actions {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: center;
+    margin-top: var(--space-1);
+    flex-wrap: wrap;
+  }
+  :host([variant='inline']) .actions {
+    margin-top: 0;
+    margin-inline-start: auto;
+    justify-content: flex-end;
+  }
+  :host .actions:empty { display: none; }
+
+  @media (forced-colors: active) {
+    :host { border-color: CanvasText; }
+    :host .icon { background: Canvas; color: CanvasText; }
+  }
+</style>
+
+<div use:errorState role="alert">
+  <div class="icon" part="icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"></circle>
+      <path d="M12 8v5"></path>
+      <path d="M12 16h.01"></path>
+    </svg>
+  </div>
+  <div class="copy" part="copy">
+    <div class="title" part="title"><slot name="title">Something went wrong</slot></div>
+    <div class="desc" part="desc"><slot></slot></div>
+    <div class="code" part="code"></div>
+    <button class="details-toggle" part="details-toggle" type="button" aria-expanded="false">Show details</button>
+    <div class="details" part="details"><slot name="details"></slot></div>
+  </div>
+  <div class="actions" part="actions"><slot name="action"></slot></div>
+</div>

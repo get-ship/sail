@@ -93,9 +93,6 @@
     "sui-error-boundary": {
       "fallback-text": { "type": "string", "default": "" }
     },
-    "sui-error-state": {
-      "code": { "type": "string", "default": "" }
-    },
     "sui-field": {
       "invalid": { "type": "bool", "default": "false" }
     },

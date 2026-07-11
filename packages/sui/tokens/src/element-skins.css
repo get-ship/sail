@@ -788,4 +788,157 @@ label { display: inline-block; }
     .sui-empty-state { border-color: CanvasText; }
     .sui-empty-state .icon { background: Canvas; color: CanvasText; }
   }
+
+/* error-state */
+
+  .sui-error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--es-gap);
+    padding: var(--es-pad-y) var(--es-pad-x);
+    text-align: center;
+    font-family: var(--font-body);
+    color: var(--muted-foreground);
+    background: var(--tone-muted-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+    --es-pad-y: var(--space-8);
+    --es-pad-x: var(--space-4);
+    --es-gap: var(--space-3);
+    --es-icon: 22px;
+    --es-tile: var(--control-h-xl);
+    --es-title-fs: var(--text-md);
+    --es-desc-fs: var(--text-sm);
+  }
+  .sui-error-state[hidden] { display: none; }
+
+  .sui-error-state[size='sm'] {
+    --es-pad-y: var(--space-7); --es-gap: var(--space-2);
+    --es-icon: 16px; --es-tile: var(--space-9); --es-title-fs: var(--text-base);
+  }
+  .sui-error-state[size='lg'] {
+    --es-pad-y: var(--space-8); --es-pad-x: var(--space-6); --es-gap: var(--space-4);
+    --es-icon: 28px; --es-tile: var(--control-h-xl); --es-title-fs: var(--text-lg); --es-desc-fs: var(--text-base);
+  }
+
+  .sui-error-state[variant='inline'] {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: start;
+    border-radius: var(--radius-md);
+    box-shadow: none;
+    padding: var(--space-3) var(--space-4);
+    background: var(--tone-destructive-bg);
+    border-color: var(--tone-destructive-border);
+  }
+
+  .sui-error-state .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: var(--es-tile);
+    height: var(--es-tile);
+    border-radius: var(--radius-lg);
+    background: var(--tone-destructive-bg);
+    color: var(--destructive);
+    box-shadow: inset 0 0 0 1px var(--tone-destructive-ring);
+  }
+  .sui-error-state[variant='inline'] .icon {
+    width: var(--es-icon); height: var(--es-icon);
+    background: transparent; box-shadow: none;
+  }
+  .sui-error-state .icon svg { width: var(--es-icon); height: var(--es-icon); }
+
+  .sui-error-state .copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    align-items: center;
+    min-width: 0;
+  }
+  .sui-error-state[variant='inline'] .copy { align-items: start; }
+
+  .sui-error-state .title {
+    font-family: var(--heading-font);
+    font-size: var(--es-title-fs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--foreground);
+    line-height: var(--leading-tight);
+  }
+  .sui-error-state .desc {
+    font-size: var(--es-desc-fs);
+    max-width: 38ch;
+    line-height: 1.55;
+    color: var(--muted-foreground);
+  }
+  .sui-error-state .desc:empty { display: none; }
+
+  .sui-error-state .code {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+    background: var(--muted);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: var(--space-1) var(--space-2);
+    margin-top: var(--space-1);
+  }
+  .sui-error-state .code:empty { display: none; }
+
+  /* Details toggle — hidden until the action marks the element [data-has-details]. */
+  .sui-error-state .details-toggle {
+    display: none;
+    margin-top: var(--space-1);
+    padding: var(--space-1) var(--space-2);
+    border: 0;
+    background: transparent;
+    color: var(--muted-foreground);
+    font: inherit;
+    font-size: var(--text-xs);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+  .sui-error-state[data-has-details] .details-toggle { display: inline-block; }
+  .sui-error-state .details-toggle:hover { color: var(--foreground); background: var(--hover-bg); }
+  .sui-error-state .details-toggle:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+
+  .sui-error-state .details {
+    display: none;
+    margin-top: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: var(--tone-destructive-bg);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+    max-width: 60ch;
+    white-space: pre-wrap;
+    word-break: break-word;
+    text-align: start;
+  }
+  .sui-error-state[data-details-open] .details { display: block; }
+
+  .sui-error-state .actions {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: center;
+    margin-top: var(--space-1);
+    flex-wrap: wrap;
+  }
+  .sui-error-state[variant='inline'] .actions {
+    margin-top: 0;
+    margin-inline-start: auto;
+    justify-content: flex-end;
+  }
+  .sui-error-state .actions:empty { display: none; }
+
+  @media (forced-colors: active) {
+    .sui-error-state { border-color: CanvasText; }
+    .sui-error-state .icon { background: Canvas; color: CanvasText; }
+  }
 }

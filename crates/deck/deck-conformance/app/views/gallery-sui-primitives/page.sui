@@ -182,10 +182,10 @@
         <span slot="title">No results</span>
         Adjust your filters.
       </empty-state>
-      <sui-error-state title="Load failed" size="sm" icon="alert-circle">
+      <error-state size="sm"><span slot="title">Load failed</span>
         Connection timed out.
         <sui-button slot="action" variant="outline" size="sm">Retry</sui-button>
-      </sui-error-state>
+      </error-state>
     </div>
   </section>
 

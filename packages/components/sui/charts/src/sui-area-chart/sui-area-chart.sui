@@ -128,7 +128,7 @@ export default controller({
   {#if loading()}
     <span skeleton shape="block" size="lg" part="loading" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
   {:else if chart.error()}
-    <sui-error-state part="error"></sui-error-state>
+    <error-state part="error"></error-state>
   {:else if chart.isEmpty()}
     <empty-state part="empty"></empty-state>
   {:else}

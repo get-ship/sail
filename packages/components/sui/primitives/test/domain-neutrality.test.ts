@@ -32,7 +32,6 @@ const SRC_ROOT = resolve(PACK_SRC, '..', 'src')
 const COMPOSITIONS = [
   'sui-nav-top',
   'sui-theme-picker',
-  'sui-error-state',
 ] as const
 
 // Every file under the composition's directory (recursively). Both the

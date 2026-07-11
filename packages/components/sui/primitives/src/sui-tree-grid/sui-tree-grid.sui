@@ -384,7 +384,7 @@ export default controller({
 </controller>
 {#if error() !== ''}
 <div class="tree-error" part="error" role="alert">
-  <sui-error-state prop:message={error()}></sui-error-state>
+  <error-state>{error()}</error-state>
 </div>
 {:else if isEmptyInitial()}
 <div class="tree-empty" part="empty" role="status">
