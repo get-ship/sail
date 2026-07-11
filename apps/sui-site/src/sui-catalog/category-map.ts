@@ -119,7 +119,6 @@ export const TAG_PACK: Record<string, PackId> = {
   // (accordion deduped → native <details> L1, see L1_LANGUAGE_ELEMENTS)
   'sui-alert-dialog':       'primitives',
   'sui-autocomplete':       'primitives',
-  'sui-chip':               'primitives',
   'sui-cmdk':               'primitives',
   'sui-collapsible':        'primitives',
   'sui-color-picker':       'primitives',

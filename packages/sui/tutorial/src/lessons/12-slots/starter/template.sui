@@ -2,7 +2,7 @@
 
 <div class="slots-demo">
   <card>
-    <sui-chip slot="header" tone="primary">{label()}</sui-chip>
+    <chip slot="header" tone="primary">{label()}</chip>
     <p>count: <strong>{count()}</strong></p>
     <!-- TODO 1: slot a button into "footer" that calls bump() -->
   </card>

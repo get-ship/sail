@@ -12,7 +12,6 @@
 import './sui-alert-dialog/sui-alert-dialog.compiled.js'
 import './sui-autocomplete/sui-autocomplete.compiled.js'
 import './sui-calendar/sui-calendar.compiled.js'
-import './sui-chip/sui-chip.compiled.js'
 import './sui-cmdk/sui-cmdk.compiled.js'
 import './sui-collapsible/sui-collapsible.compiled.js'
 import './sui-color-picker/sui-color-picker.compiled.js'

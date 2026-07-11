@@ -127,14 +127,14 @@
 
   <!-- Chip -->
   <section class="gsp-section">
-    <h2 class="gsp-label">sui-chip</h2>
+    <h2 class="gsp-label">chip</h2>
     <div class="gsp-row gsp-wrap">
-      <sui-chip>Default</sui-chip>
-      <sui-chip tone="primary" variant="solid">Solid</sui-chip>
-      <sui-chip tone="success" variant="outline">Outline</sui-chip>
-      <sui-chip tone="accent" selected>Selected</sui-chip>
-      <sui-chip tone="muted" removable>Removable</sui-chip>
-      <sui-chip tone="warning" disabled>Disabled</sui-chip>
+      <chip>Default</chip>
+      <chip tone="primary" variant="solid">Solid</chip>
+      <chip tone="success" variant="outline">Outline</chip>
+      <chip tone="accent" selected>Selected</chip>
+      <chip tone="muted" removable>Removable</chip>
+      <chip tone="warning" disabled>Disabled</chip>
     </div>
   </section>
 

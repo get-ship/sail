@@ -28,14 +28,6 @@
       "view": { "values": ["month", "week", "day"], "default": "month" },
       "week-starts-on": { "type": "number", "default": "0" }
     },
-    "sui-chip": {
-      "disabled": { "type": "bool", "default": "false" },
-      "removable": { "type": "bool", "default": "false" },
-      "selected": { "type": "bool", "default": "false" },
-      "size": { "values": ["sm", "md", "lg"], "default": "md" },
-      "tone": { "values": ["default", "primary", "info", "success", "warning", "destructive", "accent", "muted"], "default": "default" },
-      "variant": { "values": ["solid", "soft", "outline", "ghost"], "default": "soft" }
-    },
     "sui-cmdk": {
       "empty-label": { "type": "string", "default": "No results found." },
       "label": { "type": "string", "default": "Command palette" },

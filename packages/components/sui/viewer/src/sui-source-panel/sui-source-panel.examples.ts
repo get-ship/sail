@@ -16,7 +16,7 @@ import type { ComponentExample } from '@ship/sui-runtime'
 export const sources: Record<string, string> = {
   'Button — solid primary': `<button variant="solid" tone="primary">Dispatch lane</button>`,
   'Alert — destructive': `<alert tone="destructive">Gate failed: 3 findings block the merge.</alert>`,
-  'Chip — removable': `<sui-chip removable tone="primary">TypeScript</sui-chip>`,
+  'Chip — removable': `<chip removable tone="primary">TypeScript</chip>`,
 }
 
 /** Current knob `value` snapshots the snippet diffs against the CEM default. */
