@@ -66,12 +66,31 @@ export interface DialogHandle extends Action<void> {
  * </dialog>
  * ```
  */
+let _ariaSeq = 0
+
 export function useDialog(opts: DialogOptions = {}): DialogHandle {
   const isOpen = signal(false)
   // The handle IS the action: `use:confirm` calls it with the <dialog> node,
   // it wires the native behavior and returns the teardown.
   const handle = ((node: Element) => {
-    const dispose = bindOpen(node as HTMLDialogElement, isOpen, opts)
+    const el = node as HTMLDialogElement
+    // A11y wiring the platform leaves to the author: name the dialog from its
+    // <header> and describe it from its <section> (unless already set). Assign
+    // stable ids so screen readers announce the title on open. This is the one
+    // thing the sui-dialog controller did that bindOpen doesn't — kept here so
+    // there is a single dialog implementation, not a second one.
+    const n = ++_ariaSeq
+    const header = el.querySelector(':scope > header')
+    const section = el.querySelector(':scope > section')
+    if (header && !el.getAttribute('aria-labelledby')) {
+      if (!header.id) header.id = `sui-dialog-title-${n}`
+      el.setAttribute('aria-labelledby', header.id)
+    }
+    if (section && !el.getAttribute('aria-describedby')) {
+      if (!section.id) section.id = `sui-dialog-desc-${n}`
+      el.setAttribute('aria-describedby', section.id)
+    }
+    const dispose = bindOpen(el, isOpen, opts)
     return { destroy: dispose }
   }) as DialogHandle
   handle.isOpen = () => isOpen()
