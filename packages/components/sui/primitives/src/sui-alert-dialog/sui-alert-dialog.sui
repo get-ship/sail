@@ -4,43 +4,17 @@
 <prop name="cancel-label" type="string" default="Cancel" />
 
 <!--
-  Residual <style> — bits the closed-vocabulary contract cannot
-  express:
+  <sui-alert-dialog> — a confirm dialog on the native <dialog>. Composes the ONE
+  dialog implementation: a native <dialog role="alertdialog"> skinned by
+  DIALOG_SKIN_CSS, with its behavior via the useDialog handle (use:confirm) —
+  no sui-dialog custom element, no dialogRef/show()/sui-close plumbing. The
+  platform + DIALOG_SKIN_CSS give the modal top layer, backdrop, focus trap,
+  ESC, focus-return, scroll-lock, and size; useDialog gives the open handle +
+  aria wiring. Only the alert-icon badge + head grid stay local (the one thing
+  the skin doesn't cover).
 
-  - `:host` for the host element (no sx prop for display: contents)
-    AND the per-tone channel defaults (--ad-fg/--ad-bg). The
-    framework's global tone contract fills --tone / --tone-bg /
-    --tone-fg, but this component's alert-icon semantics map the
-    default tone to the brand primary (--primary / --selected-bg),
-    not to the framework's neutral foreground (--foreground /
-    --hover-bg) — so a per-component override is the right tool.
-    Switching to the global channel would CHANGE the default
-    badge from primary-tinted to neutral-tinted, a visible
-    regression. Keep the local overrides.
-  - `.head` grid layout — display: grid + grid-template-columns:
-    auto 1fr (icon | title) + gap + align. <row> would approximate
-    but the grid's explicit 1fr title-column reserves space
-    cleanly when the projected title is wrapped or absent. Real
-    grid wins.
-  - `.badge` inline-flex + flex: none + the 50%-no-rounding-tokens
-    size + the per-tone background/fill. sx would lose either
-    the icon size or the fill (inline-flex + flex:none aren't
-    a single prop; the radius token is the closest match but the
-    size is control-h-md which is a token). All in <style>.
-  - <button outline> for Cancel and <button solid
-    tone={confirmTone()}> for Confirm — bare L1 controls (dissolved
-    from <sui-button> — the L1 skin already covers this surface); the
-    global skin handles their hover/focus/disabled colors.
-  - The local `--ad-fg` and `--ad-bg` references in `.badge` below
-    satisfy the css-token lint via the :host declarations on lines
-    47-48 (same <style> block, same scope). No empty `--ad-fg: ;`
-    placeholder declarations are needed: the :host assignments
-    below ARE the local definitions.
-
-  The host element itself has no <theme prop="tone"> block —
-  tone is a global contract. Only the localized icon-badge
-  colors live here, and they reference tokens (var(--primary),
-  var(--selected-bg), var(--destructive), var(--tone-destructive-bg)).
+  The `open` prop (external API) bridges to the handle: opening the component
+  shows the modal; a native close (ESC/backdrop) mirrors back to open=false.
 -->
 <style>
   :host { display: contents; --ad-fg: var(--primary); --ad-bg: var(--selected-bg); }
@@ -66,96 +40,69 @@
 
 
 <controller>
-import { controller, derived, effect, ref, signal } from '@ship/sui-runtime'
+import { controller, derived, effect, signal, useDialog } from '@ship/sui-runtime'
 import type { ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './sui-alert-dialog.sui'
 
-type DialogEl = HTMLElement & { show(): void; close(): void }
-
 export default controller({
-  scope: ({ open, tone }: ViewScope<Scope>, _host?: Element) => {
-    const dialogRef = ref<HTMLElement>(null)
+  scope: ({ open, tone }: ViewScope<Scope>) => {
+    // The ONE dialog behavior — the handle IS the `use:confirm` action.
+    const confirm = useDialog()
 
     const confirmTone = derived<'default' | 'destructive'>(() =>
       tone() === 'destructive' ? 'destructive' : 'default',
     )
 
-    // The host element is not present in the scope factory (the post-
-    // convergence "SUI names no host" compile stops passing it as the 2nd
-    // arg), so read it through this signal — set in `mount` once the
-    // runtime hands over the real element. The template wires
-    // `on:click={onConfirm}`/`{onCancel}` so the emit must read the host
-    // from a signal, not the dead scope `host` arg.
     const hostEl = signal<HTMLElement | null>(null)
 
     function emit(name: 'sui-confirm' | 'sui-cancel'): void {
       hostEl()?.dispatchEvent(new CustomEvent(name, { bubbles: true, composed: true }))
       open.set(false)
     }
-
     function onConfirm(): void { emit('sui-confirm') }
     function onCancel(): void { emit('sui-cancel') }
 
-    return { dialogRef, confirmTone, onConfirm, onCancel, hostEl }
+    return { open, confirm, confirmTone, onConfirm, onCancel, hostEl }
   },
 
   mount(state, host) {
-    // The runtime hands the real host element here. The scope's `emit`
-    // closure reads through `hostEl` (the dead-`host` workaround) — publish
-    // the element now that it exists, before any user click can fire.
     state.hostEl = host as HTMLElement
-    // Drive inner sui-dialog open state from our own.
-    const stopOpenSync = effect(() => {
-      const wantOpen = state.open
-      const dlg = state.dialogRef as DialogEl | null
-      if (!dlg) return
-      if (wantOpen && typeof dlg.show === 'function') dlg.show()
-      else if (!wantOpen && typeof dlg.close === 'function') dlg.close()
+
+    // Bridge the external `open` prop to the dialog handle (guarded: bindOpen
+    // itself no-ops showModal/close in the wrong state, so this never loops).
+    const stopOpenIn = effect(() => {
+      if (state.open) state.confirm.open()
+      else state.confirm.close()
+    })
+    // Native close (ESC / backdrop) mirrors back into `open`.
+    const stopOpenOut = effect(() => {
+      if (!state.confirm.isOpen() && state.open) state.open = false
     })
 
-    // When the inner sui-dialog closes (ESC, backdrop, programmatic),
-    // mirror that into our own open=false. The event bubbles through
-    // composition to our host.
-    const onDialogClose = () => {
-      if (state.open) state.open = false
-    }
-    host.addEventListener('sui-close', onDialogClose)
-
     return () => {
-      stopOpenSync()
-      host.removeEventListener('sui-close', onDialogClose)
+      stopOpenIn()
+      stopOpenOut()
     }
   },
 })
 
 </controller>
-<sui-dialog
-  role-override="alertdialog"
-  size="sm"
-  no-close-button
-  bind:this={dialogRef}
->
-  <span slot="header" class="head">
-    <span class="badge" part="badge" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round">
-        <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
-        <path d="M12 9v4M12 17h.01"/>
-      </svg>
+<dialog use:confirm role="alertdialog" size="sm">
+  <header>
+    <span class="head">
+      <span class="badge" part="badge" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
+          <path d="M12 9v4M12 17h.01"/>
+        </svg>
+      </span>
+      <slot name="title"></slot>
     </span>
-    <slot name="title"></slot>
-  </span>
-  <slot></slot>
-  <span slot="footer">
-    <button outline on:click={onCancel}>
-      {cancelLabel()}
-    </button>
-    <button
-      solid
-      tone={confirmTone()}
-      on:click={onConfirm}
-    >
-      {confirmLabel()}
-    </button>
-  </span>
-</sui-dialog>
+  </header>
+  <section><slot></slot></section>
+  <footer>
+    <button outline on:click={onCancel}>{cancelLabel()}</button>
+    <button solid tone={confirmTone()} on:click={onConfirm}>{confirmLabel()}</button>
+  </footer>
+</dialog>

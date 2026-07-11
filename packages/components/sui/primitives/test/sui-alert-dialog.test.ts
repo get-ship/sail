@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import '../src/sui-dialog/sui-dialog.compiled.js'
 import '../src/sui-alert-dialog/sui-alert-dialog.compiled.js'
 import { createContainerRegistry, flush, mount } from '../src/test-utils'
 
@@ -8,7 +7,7 @@ afterEach(() => reg.cleanup())
 
 const shadow = (el: HTMLElement) => el.shadowRoot!
 const innerDialog = (el: HTMLElement) =>
-  shadow(el).querySelector('sui-dialog') as HTMLElement | null
+  shadow(el).querySelector('dialog') as HTMLElement | null
 // Cancel/Confirm are bare <button>s (dissolved from <sui-button>) — sui-dialog
 // itself is a nested custom element with its own shadow root, so this
 // querySelectorAll never crosses into it; only the two footer buttons match.
@@ -25,13 +24,12 @@ function makeAlert(attrs: Record<string, string | boolean> = {}, inner = '') {
 
 describe('<sui-alert-dialog>', () => {
 
-  it('renders an inner sui-dialog with alertdialog role', () => {
+  it('renders a native <dialog> with alertdialog role', () => {
     const { el } = makeAlert()
     const dlg = innerDialog(el)
     expect(dlg).not.toBeNull()
-    expect(dlg!.getAttribute('role-override')).toBe('alertdialog')
+    expect(dlg!.getAttribute('role')).toBe('alertdialog')
     expect(dlg!.getAttribute('size')).toBe('sm')
-    expect(dlg!.hasAttribute('no-close-button')).toBe(true)
   })
 
   it('open attribute reflects on host', () => {
