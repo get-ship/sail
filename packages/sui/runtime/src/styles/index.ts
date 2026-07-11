@@ -552,6 +552,10 @@ const DIALOG_SKIN_CSS =
   ':where(dialog) > header { flex: 0 0 auto; padding: var(--space-4_5) var(--space-6); border-bottom: 1px solid var(--border-subtle); font-size: var(--text-lg); font-weight: var(--font-weight-semibold); color: var(--foreground); }\n' +
   ':where(dialog) > section { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--space-4) var(--space-6); font-size: var(--text-base); line-height: var(--leading-normal); }\n' +
   ':where(dialog) > footer { flex: 0 0 auto; display: flex; gap: var(--space-2); align-items: center; justify-content: flex-end; padding: var(--space-4) var(--space-6); border-top: 1px solid var(--border-subtle); background: var(--tone-muted-border); }\n' +
+  ":where(dialog) > .sui-dialog-close { position: absolute; top: var(--space-3); inset-inline-end: var(--space-3); display: inline-flex; align-items: center; justify-content: center; width: var(--control-h-sm); height: var(--control-h-sm); padding: 0; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--muted-foreground); cursor: pointer; }\n" +
+  ":where(dialog) > .sui-dialog-close:hover { background: var(--hover-bg); color: var(--foreground); }\n" +
+  ":where(dialog) > .sui-dialog-close:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }\n" +
+  ":where(dialog) > .sui-dialog-close svg { width: var(--icon-size-sm); height: var(--icon-size-sm); }\n" +
   '@media (prefers-reduced-motion: reduce) { :where(dialog)::backdrop { transition: none; } }\n' +
   // Scroll-lock — pure CSS, no JS. showModal() sets the [open] attribute, so an
   // open modal anywhere freezes the page behind it.
