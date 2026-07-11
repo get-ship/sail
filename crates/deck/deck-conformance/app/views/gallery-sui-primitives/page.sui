@@ -191,22 +191,22 @@
 
   <!-- Field + Label -->
   <section class="gsp-section">
-    <h2 class="gsp-label">sui-field / sui-label / sui-input / sui-textarea</h2>
+    <h2 class="gsp-label">field / sui-label / sui-input / sui-textarea</h2>
     <div class="gsp-col" style="max-width:360px">
-      <sui-field>
+      <field>
         <sui-label slot="label" required>Name</sui-label>
         <sui-input type="text" placeholder="Enter your name" name="demo-name"></sui-input>
         <span slot="hint">Used for display only.</span>
-      </sui-field>
-      <sui-field invalid>
+      </field>
+      <field invalid>
         <sui-label slot="label">Email</sui-label>
         <sui-input type="email" placeholder="user@example.com" invalid name="demo-email"></sui-input>
         <span slot="error">Enter a valid email address.</span>
-      </sui-field>
-      <sui-field>
+      </field>
+      <field>
         <sui-label slot="label">Notes</sui-label>
         <sui-textarea placeholder="Add notes…" rows="3" name="demo-notes"></sui-textarea>
-      </sui-field>
+      </field>
     </div>
   </section>
 
@@ -606,14 +606,14 @@
           <span slot="title">Settings</span>
           <span slot="description">Adjust your workspace preferences.</span>
           <div style="display:flex;flex-direction:column;gap:var(--space-3)">
-            <sui-field>
+            <field>
               <sui-label slot="label">Theme</sui-label>
               <sui-select name="drawer-theme"><option value="light">Light</option><option value="dark">Dark</option></sui-select>
-            </sui-field>
-            <sui-field>
+            </field>
+            <field>
               <sui-label slot="label">Language</sui-label>
               <sui-select name="drawer-lang"><option value="en">English</option><option value="es">Español</option></sui-select>
-            </sui-field>
+            </field>
           </div>
           <span slot="footer">
             <sui-button variant="outline" size="sm" on:click={() => drawerOpen.set(false)}>Cancel</sui-button>

@@ -1128,4 +1128,35 @@ label { display: inline-block; }
     .sui-chip[selected] { background: Highlight; color: HighlightText; border-color: Highlight; }
     .sui-chip:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
   }
+
+/* field */
+
+  .sui-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    font-family: var(--font-body);
+  }
+  .sui-field[hidden] { display: none; }
+
+  .sui-field .msg { margin-top: var(--space-1); }
+  .sui-field .hint,
+  .sui-field .error {
+    font-size: var(--text-xs);
+    line-height: var(--leading-snug);
+  }
+  .sui-field .hint { color: var(--muted-foreground); }
+  .sui-field .hint:empty { display: none; }
+  .sui-field .error {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-1);
+    color: var(--destructive);
+    font-weight: var(--font-weight-medium);
+  }
+  .sui-field .error svg { width: var(--icon-size-sm); height: var(--icon-size-sm); flex-shrink: 0; }
+
+  /* hint shows when valid, error shows when [invalid] — pure CSS swap. */
+  .sui-field:not([invalid]) .error { display: none; }
+  .sui-field[invalid] .hint { display: none; }
 }

@@ -7,15 +7,15 @@ export const examples: ComponentExample[] = [
     props: { open: true, size: 'lg' },
     slots: `
       <span slot="header">Dispatch <code>ship-it</code> 🚀</span>
-      <sui-field label="Spec" hint="What should this run do?">
+      <field label="Spec" hint="What should this run do?">
         <textarea rows="3" placeholder="Wire the components explorer to live examples…"></textarea>
-      </sui-field>
-      <sui-field label="Provider">
+      </field>
+      <field label="Provider">
         <sui-select>
           <option>claude-opus-4-7</option>
           <option>claude-sonnet-4-6</option>
         </sui-select>
-      </sui-field>
+      </field>
       <div class="toolbar toolbar--footer" slot="footer">
         <button variant="outline">Cancel</button>
         <button variant="solid" tone="primary">Dispatch</button>
