@@ -421,7 +421,7 @@ const RANGE_SKIN_CSS =
   ":where(input[type='range'][size='sm']) { --rng-track: var(--space-1); --rng-thumb: var(--space-3); }\n" +
   ":where(input[type='range'][size='lg']) { --rng-track: var(--space-2); --rng-thumb: var(--space-5); }\n" +
   // Track — muted rail with a subtle inset border (matches sui-slider .track).
-  ":where(input[type='range'])::-webkit-slider-runnable-track { height: var(--rng-track); border-radius: var(--radius-full); background: var(--muted); box-shadow: inset 0 0 0 1px var(--border); }\n" +
+  ":where(input[type='range'])::-webkit-slider-runnable-track { height: var(--rng-track); border-radius: var(--radius-full); background: linear-gradient(to right, var(--tone-fg, var(--primary)) 0 var(--rng-pct, 0%), var(--muted) var(--rng-pct, 0%) 100%); box-shadow: inset 0 0 0 1px var(--border); }\n" +
   ":where(input[type='range'])::-moz-range-track { height: var(--rng-track); border-radius: var(--radius-full); background: var(--muted); box-shadow: inset 0 0 0 1px var(--border); }\n" +
   // Fill (Firefox) — tone with a top highlight (matches sui-slider .fill).
   ":where(input[type='range'])::-moz-range-progress { height: var(--rng-track); border-radius: var(--radius-full); background: var(--tone-fg, var(--primary)); box-shadow: inset 0 1px 0 var(--surface-2); }\n" +
