@@ -595,6 +595,17 @@ body::after {
   --secondary-foreground: oklch(0.9 0.02 300);
   --muted: oklch(0.2 0.01 50);
   --muted-foreground: oklch(0.75 0.015 50);
+  /* Rebuild the neutral (default/muted) tone washes from the DARK --muted.
+     The :root ramps derive these via var()/color-mix() at :root computed-value
+     time, which freezes var(--muted) at the LIGHT value — so overriding --muted
+     alone leaves the washes near-white (unreadable) in dark themes, contra the
+     "ramps rebuild automatically" promise above. Re-derive here so every .dark
+     theme (ship-dark/console/contrast) gets adaptive neutral surfaces. */
+  --tone-default-bg: var(--muted);
+  --tone-default-bg-solid: var(--muted);
+  --tone-muted-bg: color-mix(in oklch, var(--muted) 60%, transparent);
+  --tone-muted-bg-solid: var(--muted);
+  --tone-muted-ring: color-mix(in oklch, var(--muted-foreground) 20%, transparent);
   /*
    * --accent in dark mode must be readable AS A FOREGROUND COLOR — it's
    * used as text in syntax highlighting (attribute names, type names,

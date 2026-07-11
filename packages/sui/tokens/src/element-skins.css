@@ -681,9 +681,7 @@ label { display: inline-block; }
     --es-desc-fs: var(--text-sm);
     --es-radius: var(--radius-lg);
     --es-border: 1px solid var(--border);
-    /* card surface — theme-adaptive (--card resolves dark in dark themes;
-       --tone-muted-bg does NOT and would render near-white, unreadable). */
-    --es-bg: var(--card);
+    --es-bg: var(--tone-muted-bg);
     --es-shadow: var(--shadow-xs);
   }
 
