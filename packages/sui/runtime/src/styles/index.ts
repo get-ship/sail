@@ -44,7 +44,18 @@ const SIZES_CSS =
 // them lets the sui-compiler strip the per-component copies (see
 // `crates/sui-compiler/src/emit/styles.rs`). Keep this list strictly to
 // rules whose author-form text the compiler can recognize and remove.
+// The box model EVERYTHING in this file is authored against. Every --control-h-*
+// token, every min-height, every padding measures the BORDER box: the size you
+// ask for is the size you get. Without it the framework silently inherits
+// whatever box model the host page happens to have — a [size=md] input stops
+// being --control-h-md, and a <textarea rows=4> stops honoring `rows` (the
+// min-height floor swallows the rows whole). Specificity 0 and inside @layer sui,
+// so an author still wins. Shared by BOTH surfaces below: shadow components adopt
+// it via BASE_CSS, light-DOM pages get it via LIGHT_CONTRACTS_CSS. One definition.
+const BOX_MODEL_CSS = '*, *::before, *::after { box-sizing: border-box; }\n'
+
 const BASE_CSS =
+  BOX_MODEL_CSS +
   // Framework-owned host defaults. Custom elements default to `display:inline`
   // (almost never wanted) and every component wants the foreground color — so
   // the framework decides both. A component needing a different display (inline
@@ -95,17 +106,7 @@ const SEMANTIC_ELEMENTS_CSS =
   'dd { margin: 0 0 var(--space-2) 0; color: var(--muted-foreground); }\n' +
   // Quotes.
   'blockquote { margin: 0; padding-left: var(--space-4); border-left: 2px solid var(--border-strong); color: var(--muted-foreground); }\n' +
-  // Tables.
-  'table { border-collapse: collapse; width: 100%; font-size: var(--text-sm); }\n' +
-  'th, td { padding: var(--space-2) var(--space-3); text-align: left; border-bottom: 1px solid var(--border); }\n' +
-  'th { font-weight: var(--font-weight-semibold, 600); color: var(--foreground); }\n' +
-  'td { color: var(--muted-foreground); }\n' +
-  // Row hover aids scanning (default); zebra is opt-in via `<table zebra>`.
-  'tbody tr { transition: background-color var(--duration-fast) var(--ease-out); }\n' +
-  'tbody tr:hover { background: var(--hover-bg); }\n' +
-  'table[zebra] tbody tr:nth-child(even) { background: var(--muted); }\n' +
-  'table[zebra] tbody tr:nth-child(even):hover { background: var(--hover-bg); }\n' +
-  'caption { padding: var(--space-2); font-size: var(--text-sm); color: var(--muted-foreground); text-align: left; }\n' +
+  // Tables live in TABLE_SKIN_CSS — they're a control surface, not prose.
   // Inline emphasis.
   'mark { background: var(--tone-warning-bg, var(--hover-bg)); color: inherit; padding: 0 0.2em; border-radius: var(--radius-sm); }\n' +
   'kbd { font-family: var(--mono-font, monospace); font-size: 0.85em; padding: 0.1em 0.4em; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: var(--radius-sm); background: var(--muted); color: var(--foreground); }\n' +
@@ -555,7 +556,48 @@ const DIALOG_SKIN_CSS =
   '@media (prefers-reduced-motion: reduce) { :where(dialog)::backdrop { transition: none; } }\n' +
   // Scroll-lock — pure CSS, no JS. showModal() sets the [open] attribute, so an
   // open modal anywhere freezes the page behind it.
-  ':where(html):has(dialog[open]) { overflow: hidden; }\n'
+  ':where(html):has(dialog[open]) { overflow: hidden; }\n' +
+  // SHEET / DRAWER. A sheet IS a <dialog>, docked to an edge — same invoker
+  // (command="show-modal"), same Escape, same backdrop, same top layer. Only the
+  // geometry changes, so it's a VARIANT, not a second overlay element to learn.
+  // `size` keeps its meaning: the cross-axis extent.
+  ":where(dialog[side]) { inset: 0; width: auto; height: auto; max-width: none; max-height: none; border-radius: 0; }\n" +
+  ":where(dialog[side='start']), :where(dialog[side='end']) { width: min(calc(100vw - var(--space-7)), var(--sheet-size, var(--panel-max-w-sm))); height: 100vh; }\n" +
+  ":where(dialog[side='start']) { margin: 0 auto 0 0; border-left: 0; }\n" +
+  ":where(dialog[side='end']) { margin: 0 0 0 auto; border-right: 0; }\n" +
+  ":where(dialog[side='top']), :where(dialog[side='bottom']) { width: 100vw; max-height: min(calc(100vh - var(--space-7)), var(--panel-vh-md)); }\n" +
+  ":where(dialog[side='top']) { margin: 0 0 auto 0; border-top: 0; }\n" +
+  ":where(dialog[side='bottom']) { margin: auto 0 0 0; border-bottom: 0; }\n" +
+  ":where(dialog[side][size='md']) { --sheet-size: var(--panel-max-w-md); }\n" +
+  ":where(dialog[side][size='lg']) { --sheet-size: var(--panel-max-w-lg); }\n"
+
+// L1 <table> — the STRUCTURAL primitive, zero JS. Sorting, selection and
+// virtualization make a data grid; that's L2, built on this. Variants ride on the
+// table itself ([dense] [striped] [hoverable] [bordered]), plus <thead sticky> and
+// [numeric] columns that right-align on tabular figures. Header is de-emphasized
+// and the body carries the text, which is the prior art (shadcn, Mantine) and the
+// inverse of what the old prose-block table did.
+const TABLE_SKIN_CSS =
+  // Row rules are DATA separators, not control chrome. The borderless themes
+  // (halo) set --border and --border-subtle to `transparent` on purpose — right
+  // for a field, fatal for a table: with no rules you cannot track a row across
+  // columns, which is a legibility floor rather than a matter of taste. So the
+  // rules derive from --foreground (always contrasting, in every theme) and stay
+  // themeable via --table-rule / --table-rule-subtle.
+  ':where(table) { width: 100%; border-collapse: collapse; font-family: var(--font-body); font-size: var(--text-sm); line-height: var(--leading-normal); color: var(--foreground); text-align: left; --table-rule: color-mix(in srgb, var(--foreground) 16%, transparent); --table-rule-subtle: color-mix(in srgb, var(--foreground) 9%, transparent); }\n' +
+  ':where(table) > caption { padding: var(--space-2) var(--space-3); color: var(--muted-foreground); text-align: left; }\n' +
+  ':where(th) { padding: var(--space-2_5) var(--space-3); font-weight: var(--font-weight-semibold); color: var(--muted-foreground); border-bottom: 1px solid var(--table-rule); white-space: nowrap; }\n' +
+  ':where(td) { padding: var(--space-2_5) var(--space-3); border-bottom: 1px solid var(--table-rule-subtle); }\n' +
+  ':where(tbody) > tr:last-child > td { border-bottom: 0; }\n' +
+  ':where(table[dense]) :is(th, td) { padding: var(--space-1_5) var(--space-2); }\n' +
+  ':where(table[striped]) > tbody > tr:nth-child(even) { background: var(--surface-2); }\n' +
+  // Hover is an AFFORDANCE — it says "this row does something". Opt-in, so a
+  // static table doesn't lie about being interactive.
+  ':where(table[hoverable]) > tbody > tr { transition: background-color var(--duration-fast) var(--ease-out); }\n' +
+  ':where(table[hoverable]) > tbody > tr:hover { background: var(--surface-2); }\n' +
+  ':where(table[bordered]) :is(th, td) { border: 1px solid var(--table-rule-subtle); }\n' +
+  ':where(thead[sticky]) th { position: sticky; top: 0; z-index: 1; background: var(--background); }\n' +
+  ':where(th[numeric]), :where(td[numeric]) { text-align: right; font-variant-numeric: tabular-nums; }\n'
 
 // L1 [popover] — the floating surface for the menu / dropdown / tooltip family.
 // A native popover in the top layer (platform owns light-dismiss + ESC); the
@@ -601,6 +643,7 @@ export const CONTROL_SKINS_CSS =
   DETAILS_SKIN_CSS
 
 export const LIGHT_CONTRACTS_CSS =
+  BOX_MODEL_CSS +
   hostAttrs(TONES_CSS) +
   hostAttrs(SIZES_CSS) +
   // Semantic-element + typography defaults reach light-DOM pages here (they
@@ -622,6 +665,7 @@ export const LIGHT_CONTRACTS_CSS =
   DROPZONE_SKIN_CSS +
   DETAILS_SKIN_CSS +
   DIALOG_SKIN_CSS +
+  TABLE_SKIN_CSS +
   POPOVER_SKIN_CSS +
   // Host defaults for light components (the :host base rules, element-keyed).
   '[data-component] { display: block; color: var(--foreground); }\n' +
