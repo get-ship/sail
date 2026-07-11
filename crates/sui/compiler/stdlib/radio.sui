@@ -1,0 +1,36 @@
+<!--
+  <radio> — L1 language element (element mode). A single radio option: a native
+  <input type="radio"> (skinned by the framework's control contracts) + a label.
+  Bare tag lowers to <label class="sui-radio">. Used inside <radio-group>, which
+  wires the shared name, checked state, and value via use:radioGroup — so single
+  selection, arrow-key roving, focus, and form participation are the browser's.
+
+  The `value` and `disabled` attributes ride the label root; use:radioGroup
+  forwards them onto the inner <input>. Faithful to the sui-radio twin, rebuilt
+  on the native input.
+-->
+
+<component>{
+  props: {
+    value: '',
+    disabled: false,
+  },
+}</component>
+
+<style>
+  :host {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--foreground);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  :host([disabled]) { cursor: not-allowed; opacity: 0.55; }
+  :host input { flex-shrink: 0; margin: 0; }
+</style>
+
+<label><input type="radio" /><span class="rlabel" part="label"><slot></slot></span></label>

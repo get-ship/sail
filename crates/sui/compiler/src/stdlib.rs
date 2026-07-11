@@ -30,6 +30,8 @@ const SOURCES: &[(&str, &str)] = &[
     ("field", include_str!("../stdlib/field.sui")),
     ("collapsible", include_str!("../stdlib/collapsible.sui")),
     ("slider", include_str!("../stdlib/slider.sui")),
+    ("radio", include_str!("../stdlib/radio.sui")),
+    ("radio-group", include_str!("../stdlib/radio-group.sui")),
 ];
 
 /// Compiled stdlib elements, memoized for the process lifetime. A stdlib

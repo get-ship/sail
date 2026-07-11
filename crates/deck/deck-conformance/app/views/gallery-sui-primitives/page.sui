@@ -252,18 +252,18 @@
 
   <!-- Radio group -->
   <section class="gsp-section">
-    <h2 class="gsp-label">sui-radio-group / sui-radio</h2>
+    <h2 class="gsp-label">radio-group / radio</h2>
     <div class="gsp-row gsp-wrap">
-      <sui-radio-group name="demo-radio" value="b" label="Size">
-        <sui-radio value="a">Small</sui-radio>
-        <sui-radio value="b">Medium</sui-radio>
-        <sui-radio value="c">Large</sui-radio>
-      </sui-radio-group>
-      <sui-radio-group name="demo-radio2" value="x" label="Tones" tone="primary">
-        <sui-radio value="x" tone="primary">Primary</sui-radio>
-        <sui-radio value="y" tone="success">Success</sui-radio>
-        <sui-radio value="z" disabled>Disabled</sui-radio>
-      </sui-radio-group>
+      <radio-group name="demo-radio" value="b" label="Size">
+        <radio value="a">Small</radio>
+        <radio value="b">Medium</radio>
+        <radio value="c">Large</radio>
+      </radio-group>
+      <radio-group name="demo-radio2" value="x" label="Tones" tone="primary">
+        <radio value="x" tone="primary">Primary</radio>
+        <radio value="y" tone="success">Success</radio>
+        <radio value="z" disabled>Disabled</radio>
+      </radio-group>
     </div>
   </section>
 

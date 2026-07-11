@@ -85,7 +85,6 @@ export const HIDDEN_TAGS: Record<string, true> = {
   'sui-timeline-item': true,
   // toggle-group — toggle is a slot of `<sui-toggle-group>`
   'sui-toggle': true,
-  // radio-group — radio is a slot of `<sui-radio-group>`
   'sui-radio': true,
   // navigation-menu — item is a slot of `<sui-navigation-menu>`
   'sui-navigation-item': true,
@@ -138,7 +137,6 @@ export const TAG_PACK: Record<string, PackId> = {
   'sui-pagination':         'primitives',
   'sui-popover':            'primitives',
   'sui-portal':             'primitives',
-  'sui-radio-group':        'primitives',
   'sui-scroll-area':        'primitives',
   'sui-select':             'primitives',
   'sui-sheet':              'primitives',

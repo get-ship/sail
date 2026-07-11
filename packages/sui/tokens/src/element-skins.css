@@ -1244,4 +1244,31 @@ label { display: inline-block; }
   @media (prefers-reduced-motion: reduce) {
     .sui-slider .thumb { transition: none; }
   }
+
+/* radio */
+.sui-radio { display: inline-block; }
+
+
+  .sui-radio {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--foreground);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .sui-radio[disabled] { cursor: not-allowed; opacity: 0.55; }
+  .sui-radio input { flex-shrink: 0; margin: 0; }
+
+/* radio-group */
+
+  .sui-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    font-family: var(--font-body);
+  }
 }

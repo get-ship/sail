@@ -157,9 +157,6 @@
     "sui-portal": {
       "target": { "type": "string", "default": "body" }
     },
-    "sui-radio-group": {
-      "value": { "type": "string", "default": "" }
-    },
     "sui-select": {
       "described-by": { "type": "string", "default": "" },
       "disabled": { "type": "bool", "default": "false" },
