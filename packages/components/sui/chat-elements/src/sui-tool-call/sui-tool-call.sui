@@ -1,7 +1,7 @@
 <!--
   <sui-tool-call> — a collapsible record of one tool invocation. The
   header shows the tool name + a status dot; the body (args + result)
-  collapses behind it. Composes <sui-collapsible> for the disclosure
+  collapses behind it. Composes <collapsible> for the disclosure
   behavior (click / Enter / Space, animated height) rather than
   reimplementing it.
 
@@ -114,7 +114,7 @@
 </style>
 
 <div class="frame" part="frame">
-  <sui-collapsible open={open()}>
+  <collapsible open={open()}>
     <div slot="trigger" class="header" part="header">
       <span class="status-dot" part="status-dot" aria-hidden="true"></span>
       <span class="name" part="name">{name()}</span>
@@ -133,5 +133,5 @@
         <slot name="result"></slot>
       </div>
     </div>
-  </sui-collapsible>
+  </collapsible>
 </div>

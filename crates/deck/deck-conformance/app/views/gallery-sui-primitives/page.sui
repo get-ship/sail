@@ -161,10 +161,10 @@
   <section class="gsp-section">
     <h2 class="gsp-label">sui-collapsible</h2>
     <div class="gsp-row">
-      <sui-collapsible>
+      <collapsible>
         <sui-button slot="trigger" variant="outline" size="sm">Toggle details</sui-button>
         <div style="padding:8px 0">Revealed content when expanded.</div>
-      </sui-collapsible>
+      </collapsible>
     </div>
   </section>
 

@@ -120,7 +120,6 @@ export const TAG_PACK: Record<string, PackId> = {
   'sui-alert-dialog':       'primitives',
   'sui-autocomplete':       'primitives',
   'sui-cmdk':               'primitives',
-  'sui-collapsible':        'primitives',
   'sui-color-picker':       'primitives',
   'sui-combobox':           'primitives',
   'sui-context-menu':       'primitives',

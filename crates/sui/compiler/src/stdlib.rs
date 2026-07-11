@@ -28,6 +28,7 @@ const SOURCES: &[(&str, &str)] = &[
     ("error-state", include_str!("../stdlib/error-state.sui")),
     ("chip", include_str!("../stdlib/chip.sui")),
     ("field", include_str!("../stdlib/field.sui")),
+    ("collapsible", include_str!("../stdlib/collapsible.sui")),
 ];
 
 /// Compiled stdlib elements, memoized for the process lifetime. A stdlib

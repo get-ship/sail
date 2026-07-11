@@ -1159,4 +1159,19 @@ label { display: inline-block; }
   /* hint shows when valid, error shows when [invalid] — pure CSS swap. */
   .sui-field:not([invalid]) .error { display: none; }
   .sui-field[invalid] .hint { display: none; }
+
+/* collapsible */
+
+  /* The framework's global :where(summary) / :where(details) treatment in
+     contracts.css already supplies the flex summary, the rotating chevron
+     (::after), the open-state header, and the ::details-content open/close
+     animation — collapsible inherits all of it. This skin adds only what is
+     element-specific: identity + the disabled state (native <details> has no
+     disabled concept) + the content padding hook. */
+  .sui-collapsible {
+    display: block;
+    font-family: var(--font-body);
+  }
+  .sui-collapsible[disabled] summary { cursor: not-allowed; opacity: 0.5; }
+  .sui-collapsible .content-inner { padding: var(--space-3) var(--space-4); }
 }
