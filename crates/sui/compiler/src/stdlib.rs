@@ -29,6 +29,7 @@ const SOURCES: &[(&str, &str)] = &[
     ("chip", include_str!("../stdlib/chip.sui")),
     ("field", include_str!("../stdlib/field.sui")),
     ("collapsible", include_str!("../stdlib/collapsible.sui")),
+    ("slider", include_str!("../stdlib/slider.sui")),
 ];
 
 /// Compiled stdlib elements, memoized for the process lifetime. A stdlib

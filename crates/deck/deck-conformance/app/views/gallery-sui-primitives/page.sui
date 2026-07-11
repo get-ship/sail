@@ -314,9 +314,9 @@
   <section class="gsp-section">
     <h2 class="gsp-label">sui-slider</h2>
     <div class="gsp-col" style="max-width:320px">
-      <sui-slider name="demo-slider" value="40" min="0" max="100" label="Volume"></sui-slider>
-      <sui-slider name="demo-slider2" value="60" tone="primary" size="lg" label="Primary large"></sui-slider>
-      <sui-slider name="demo-slider3" value="20" disabled label="Disabled"></sui-slider>
+      <slider name="demo-slider" value="40" min="0" max="100" label="Volume"></slider>
+      <slider name="demo-slider2" value="60" tone="primary" size="lg" label="Primary large"></slider>
+      <slider name="demo-slider3" value="20" disabled label="Disabled"></slider>
     </div>
   </section>
 

@@ -1,0 +1,103 @@
+<!--
+  <slider> — L1 language element (element mode). A horizontal range slider with
+  a filled track and a draggable thumb: pointer drag, click-on-track, and the
+  full keyboard suite (arrows / Home / End / PageUp / PageDown). Bare tag lowers
+  to <div class="sui-slider">.
+
+  The surface (track / fill / thumb, size + tone) is pure CSS; all interaction
+  is the use:slider action — it owns the value (reflected on the `value`
+  attribute), positions the fill + thumb, keeps aria-valuenow/min/max in sync,
+  writes a hidden <input> for form participation, and dispatches sui-change.
+  A reactive `value={sig()}` at the use-site re-syncs the thumb via the action's
+  attribute observer. Faithful to the sui-slider twin (its controller, as an
+  action).
+-->
+
+<component>{
+  props: {
+    value: 0,
+    min: 0,
+    max: 100,
+    step: 1,
+    disabled: false,
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
+    size: 'sm' | 'md' | 'lg',
+    name: '',
+    label: 'slider',
+  },
+}</component>
+
+<style>
+  :host {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    cursor: pointer;
+    touch-action: none;
+    font-family: var(--font-body);
+    -webkit-tap-highlight-color: transparent;
+    --sl-h: var(--space-1_5);
+    --sl-thumb: var(--icon-size-sm);
+  }
+  :host([size='sm']) { --sl-h: var(--space-1); --sl-thumb: var(--icon-size-xs); }
+  :host([size='lg']) { --sl-h: var(--space-2); --sl-thumb: var(--icon-size-md); }
+  /* default tone → primary (the slider reads visually primary-tinted). */
+  :host(:not([tone])),
+  :host([tone='default']) { --tone: var(--primary); }
+  :host([disabled]) { filter: saturate(0.6); cursor: not-allowed; }
+
+  :host .track {
+    position: relative;
+    width: 100%;
+    height: var(--sl-h);
+    background: var(--muted);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px var(--border);
+  }
+  :host .fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: var(--tone);
+    border-radius: inherit;
+    box-shadow: inset 0 1px 0 var(--surface-2);
+  }
+  :host .thumb {
+    position: absolute;
+    top: 50%;
+    width: var(--sl-thumb);
+    height: var(--sl-thumb);
+    background: var(--surface-1);
+    border: var(--ring-width) solid var(--tone);
+    border-radius: 50%;
+    box-shadow: var(--shadow-sm);
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+    outline: none;
+    transition:
+      box-shadow var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+  :host .thumb:hover { box-shadow: var(--shadow-md); transform: translate(-50%, -50%) scale(1.05); }
+  :host .thumb:active { transform: translate(-50%, -50%) scale(0.95); }
+  :host(:not([disabled])) .thumb:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+  @media (forced-colors: active) {
+    :host .thumb { border-color: CanvasText; }
+    :host .fill { background: Highlight; }
+    :host .thumb:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :host .thumb { transition: none; }
+  }
+</style>
+
+<div class="container" part="container" use:slider>
+  <div class="track" part="track"><div class="fill" part="fill"></div></div>
+  <div class="thumb" part="thumb" role="slider" tabindex="0" aria-valuenow="0"></div>
+</div>

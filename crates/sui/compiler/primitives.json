@@ -171,17 +171,6 @@
       "tone": { "values": ["default", "info", "success", "warning", "destructive", "accent", "muted"], "default": "default" },
       "value": { "type": "string", "default": "" }
     },
-    "sui-slider": {
-      "disabled": { "type": "bool", "default": "false" },
-      "label": { "type": "string", "default": "slider" },
-      "max": { "type": "number", "default": "100" },
-      "min": { "type": "number", "default": "0" },
-      "name": { "type": "string", "default": "" },
-      "size": { "values": ["sm", "md", "lg"], "default": "md" },
-      "step": { "type": "number", "default": "1" },
-      "tone": { "values": ["default", "primary", "info", "success", "warning", "destructive", "accent", "muted"], "default": "default" },
-      "value": { "type": "number", "default": "0" }
-    },
     "sui-tab": {
       "count": { "type": "string", "default": "" },
       "label": { "type": "string", "default": "" },

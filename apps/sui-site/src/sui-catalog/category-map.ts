@@ -142,7 +142,6 @@ export const TAG_PACK: Record<string, PackId> = {
   'sui-scroll-area':        'primitives',
   'sui-select':             'primitives',
   'sui-sheet':              'primitives',
-  'sui-slider':             'primitives',
   'sui-table':              'primitives',
   'sui-tabs':               'primitives',
   'sui-theme-picker':       'primitives',

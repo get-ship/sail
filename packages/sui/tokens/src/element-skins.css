@@ -1174,4 +1174,74 @@ label { display: inline-block; }
   }
   .sui-collapsible[disabled] summary { cursor: not-allowed; opacity: 0.5; }
   .sui-collapsible .content-inner { padding: var(--space-3) var(--space-4); }
+
+/* slider */
+
+  .sui-slider {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    cursor: pointer;
+    touch-action: none;
+    font-family: var(--font-body);
+    -webkit-tap-highlight-color: transparent;
+    --sl-h: var(--space-1_5);
+    --sl-thumb: var(--icon-size-sm);
+  }
+  .sui-slider[size='sm'] { --sl-h: var(--space-1); --sl-thumb: var(--icon-size-xs); }
+  .sui-slider[size='lg'] { --sl-h: var(--space-2); --sl-thumb: var(--icon-size-md); }
+  /* default tone → primary (the slider reads visually primary-tinted). */
+  .sui-slider:not([tone]),
+  .sui-slider[tone='default'] { --tone: var(--primary); }
+  .sui-slider[disabled] { filter: saturate(0.6); cursor: not-allowed; }
+
+  .sui-slider .track {
+    position: relative;
+    width: 100%;
+    height: var(--sl-h);
+    background: var(--muted);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px var(--border);
+  }
+  .sui-slider .fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: var(--tone);
+    border-radius: inherit;
+    box-shadow: inset 0 1px 0 var(--surface-2);
+  }
+  .sui-slider .thumb {
+    position: absolute;
+    top: 50%;
+    width: var(--sl-thumb);
+    height: var(--sl-thumb);
+    background: var(--surface-1);
+    border: var(--ring-width) solid var(--tone);
+    border-radius: 50%;
+    box-shadow: var(--shadow-sm);
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+    outline: none;
+    transition:
+      box-shadow var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+  .sui-slider .thumb:hover { box-shadow: var(--shadow-md); transform: translate(-50%, -50%) scale(1.05); }
+  .sui-slider .thumb:active { transform: translate(-50%, -50%) scale(0.95); }
+  .sui-slider:not([disabled]) .thumb:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+  @media (forced-colors: active) {
+    .sui-slider .thumb { border-color: CanvasText; }
+    .sui-slider .fill { background: Highlight; }
+    .sui-slider .thumb:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sui-slider .thumb { transition: none; }
+  }
 }
