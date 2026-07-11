@@ -60,14 +60,19 @@ describe('<sui-hover-card>', () => {
     expect(showed).toBe(1)
   })
 
-  it('hide() calls hidePopover', async () => {
+  it('hide() calls hidePopover (when open)', async () => {
     const { el } = makeCard()
     await flush()
     const p = panelEl(el)!
+    // Open first — hidePopover only fires on a real shown→hidden transition
+    // (calling it on a closed popover throws InvalidStateError in the platform).
+    ;(el as SuiHoverCard).show()
+    await flush()
     let hid = 0
     const orig = p.hidePopover
     p.hidePopover = () => { hid++; orig?.call(p) }
     ;(el as SuiHoverCard).hide()
+    await flush()
     expect(hid).toBe(1)
   })
 

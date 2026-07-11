@@ -200,11 +200,12 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_view: bool, depth: &mut usize
                 // factory up in the registry at mount time.
                 out.runtime_imports.insert("getTemplateHook");
             }
+            let is_custom_element = el.tag.contains('-');
             for a in &el.attrs {
                 if is_view {
                     check_attr_for_route(a, out);
                 }
-                bindings::collect_attr_imports(a, out, is_view, *depth)?;
+                bindings::collect_attr_imports(a, out, is_view, *depth, is_custom_element)?;
             }
             walk_instrs(&el.children, out, is_view, depth)?;
         }

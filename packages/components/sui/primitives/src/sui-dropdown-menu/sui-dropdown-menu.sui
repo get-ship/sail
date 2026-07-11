@@ -28,10 +28,10 @@
 
 <!-- Residual: .panel popover visuals (inset/margin/min-width/padding/
      background/color/border/border-radius/box-shadow) — popover panels
-     have a specific visual recipe; CSS Anchor Positioning (position-
-     anchor + calc(anchor(...)) + position-try-fallbacks) — raw CSS;
-     ::slotted anchor-name (controller sets --sui-dd-anchor per
-     instance); the open-state transform/opacity transition (multi-
+     have a specific visual recipe. Positioning is delegated to the shared
+     use:anchor action (the family's one positioner); open-sync to the
+     shared bindPopover via usePopover. The open-state transform/opacity
+     transition stays here (multi-
      property motion — no construct); ::slotted(button) and ::slotted(
      [role=menuitem]) styling (descendant pseudo selectors — variants
      only match :host attrs); ::slotted(hr) / ::slotted([data-section])
@@ -40,6 +40,7 @@
 <style>
   :host { display: inline-flex; }
   [part~='panel'] {
+    position: fixed;
     inset: auto;
     margin: 0;
     min-width: var(--panel-min-w-md);
@@ -57,18 +58,6 @@
     transition:
       opacity var(--duration-medium) var(--ease-out),
       transform var(--duration-medium) var(--ease-out);
-  }
-  @supports (anchor-name: --x) {
-    ::slotted([slot='trigger']) {
-      anchor-name: var(--sui-dd-anchor);
-    }
-    [part~='panel'] {
-      position-anchor: var(--sui-dd-anchor);
-      top: calc(anchor(bottom) + 4px);
-      left: anchor(left);
-      position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
-      position-try-order: most-block-size;
-    }
   }
   [part~='panel']:popover-open {
     opacity: 1;
@@ -104,18 +93,10 @@
 
 
 <controller>
-import { controller, effect, bindNativeEvent } from '@ship/sui-runtime'
+import { controller, effect, bindNativeEvent, usePopover } from '@ship/sui-runtime'
 import type { Scope } from './sui-dropdown-menu.sui'
 
 let _seq = 0
-
-// Browsers without CSS Anchor Positioning fall back to JS rect math.
-// Cached at module load — there's no platform path that toggles this
-// at runtime, so re-checking per mount is wasted work.
-const anchorSupported =
-  typeof CSS !== 'undefined' &&
-  typeof CSS.supports === 'function' &&
-  CSS.supports('anchor-name', '--x')
 
 type PopoverEl = HTMLElement & {
   showPopover?: () => void
@@ -126,13 +107,6 @@ export default controller<Scope>({
   mount(state, host) {
     const seq = ++_seq
     const panelId = `sui-dropdown-menu-panel-${seq}`
-    const anchorName = `--sui-dd-${seq}`
-
-    // Per-instance anchor so multiple dropdowns on a page don't collide.
-    // CSS reads `--sui-dd-anchor` from the host; the @supports block in
-    // the .sui forwards that to the slotted trigger's anchor-name and
-    // the panel's position-anchor.
-    host.style.setProperty('--sui-dd-anchor', anchorName)
 
     const triggerWrap = state.$signals.triggerWrap() as HTMLElement | null
     const triggerSlot = state.$signals.triggerSlot() as HTMLSlotElement | null
@@ -189,50 +163,51 @@ export default controller<Scope>({
     function setupTrigger() {
       const els = triggerSlot?.assignedElements({ flatten: true }) as HTMLElement[] ?? []
       for (const el of els) {
+        // popovertarget marks the trigger for use:anchor's positioning lookup.
+        // (It can't ACTIVATE across the shadow boundary — onTriggerClick owns
+        // that — but anchor.ts resolves the trigger through it.)
+        el.setAttribute('popovertarget', panelId)
         el.setAttribute('aria-haspopup', 'menu')
         el.setAttribute('aria-controls', panelId)
         el.setAttribute('aria-expanded', state.$signals.open() ? 'true' : 'false')
       }
     }
 
-    // ── Open/close ───────────────────────────────────────────────────────
-    function openPanel() {
-      const trigger = (triggerSlot?.assignedElements({ flatten: true }) as HTMLElement[])?.[0]
-      // CSS Anchor Positioning owns the placement when the browser
-      // supports it (Chromium 125+, Safari 26+, Firefox 145+). Only
-      // fall back to inline-style positioning on older engines.
-      if (trigger && panelEl && !anchorSupported) {
-        const r = trigger.getBoundingClientRect()
-        panelEl.style.top = `${r.bottom + 4}px`
-        panelEl.style.left = `${r.left}px`
-      }
-      panelEl?.showPopover?.()
-    }
+    // ── Open state: the ONE implementation ─────────────────────────────────
+    // usePopover's handle IS bindPopover — attaching it wires native
+    // showPopover/hidePopover <-> signal + light-dismiss sync. Placement is the
+    // shared use:anchor action (template). The `open` prop bridges to the
+    // handle; menu reactions (data-state, aria, focus) follow the open state.
+    const pop = usePopover()
+    const detach = pop(panelEl) as { destroy?: () => void }
 
-    function closePanel() {
-      panelEl?.hidePopover?.()
-    }
-
-    // ── Events ───────────────────────────────────────────────────────────
+    // JS activation — native popovertarget is inert across the shadow boundary.
     const onTriggerClick = () => {
-      if (state.$signals.open()) closePanel()
-      else openPanel()
+      if (state.$signals.open()) host.removeAttribute('open')
+      else host.setAttribute('open', '')
     }
 
-    const onToggle = (ev: Event) => {
-      const te = ev as ToggleEvent
-      const nowOpen = te.newState === 'open'
-      if (nowOpen !== state.$signals.open()) state.$signals.open.set(nowOpen)
-      host.setAttribute('data-state', nowOpen ? 'open' : 'closed')
+    // open prop → handle
+    const stopIn = effect(() => {
+      if (state.$signals.open()) pop.open()
+      else pop.close()
+    })
+    // handle → open prop + menu reactions (light-dismiss/ESC land here too).
+    const stopReact = effect(() => {
+      const o = pop.isOpen()
+      const has = host.hasAttribute('open')
+      if (o && !has) host.setAttribute('open', '')
+      else if (!o && has) host.removeAttribute('open')
+      host.setAttribute('data-state', o ? 'open' : 'closed')
       setupTrigger()
-      if (nowOpen) queueMicrotask(() => { setupItems(); focusItem(0) })
-    }
+      if (o) queueMicrotask(() => { setupItems(); focusItem(0) })
+    })
 
     const onItemClick = (e: Event) => {
       const target = (e.target as HTMLElement).closest('[data-value]') as HTMLElement | null
       if (!target) return
       host.emit!('sui-select', { value: target.dataset.value ?? '' })
-      closePanel()
+      host.removeAttribute('open')
     }
 
     const onKeydown = (e: KeyboardEvent) => {
@@ -244,8 +219,8 @@ export default controller<Scope>({
       else if (e.key === 'ArrowUp') { e.preventDefault(); focusItem(i - 1) }
       else if (e.key === 'Home') { e.preventDefault(); focusItem(0) }
       else if (e.key === 'End') { e.preventDefault(); focusItem(items.length - 1) }
-      else if (e.key === 'Escape') { e.preventDefault(); closePanel() }
-      else if (e.key === 'Tab') { closePanel() }
+      else if (e.key === 'Escape') { e.preventDefault(); host.removeAttribute('open') }
+      else if (e.key === 'Tab') { host.removeAttribute('open') }
       else if ((e.key === 'Enter' || e.key === ' ') && i >= 0) { e.preventDefault(); items[i]!.click() }
       else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
         const next = pushTypeahead(e.key)
@@ -254,21 +229,16 @@ export default controller<Scope>({
     }
 
     if (triggerWrap) bindNativeEvent(triggerWrap, 'click', onTriggerClick)
-    bindNativeEvent(panelEl, 'toggle', onToggle as EventListener)
     bindNativeEvent(panelEl, 'click', onItemClick)
     bindNativeEvent(host, 'keydown', onKeydown as EventListener)
     if (triggerSlot) bindNativeEvent(triggerSlot, 'slotchange', setupTrigger)
     bindNativeEvent(panelEl, 'slotchange', setupItems)
 
-    const stopSync = effect(() => {
-      const wantOpen = state.$signals.open()
-      host.setAttribute('data-state', wantOpen ? 'open' : 'closed')
-      setupTrigger()
-    })
-
     return () => {
       if (typeaheadTimer) clearTimeout(typeaheadTimer)
-      stopSync()
+      stopIn()
+      stopReact()
+      detach.destroy?.()
     }
   },
 })
@@ -277,6 +247,6 @@ export default controller<Scope>({
 <span class="trigger-wrap" bind:this={triggerWrap}>
   <slot name="trigger" bind:this={triggerSlot}></slot>
 </span>
-<div class="panel" part="panel" popover="auto" role="menu" bind:this={panelEl}>
+<div class="panel" part="panel" popover="auto" role="menu" use:anchor bind:this={panelEl}>
   <slot bind:this={itemSlot}></slot>
 </div>

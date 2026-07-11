@@ -32,6 +32,7 @@
     emptyState: () => emptyState,
     dropzone: () => dropzone,
     contextMenu: () => contextMenu,
+    combobox: () => combobox,
     collapsible: () => collapsible,
     clickOutside: () => clickOutside,
     chip: () => chip,
@@ -1118,6 +1119,184 @@
         el.removeEventListener("pointerleave", start);
         el.removeEventListener("focusin", pause);
         el.removeEventListener("focusout", start);
+      }
+    };
+  };
+  // ../runtime/src/actions/combobox.ts
+  var uid = 0;
+  var combobox = (node) => {
+    const root = node;
+    const input = root.querySelector("input");
+    const list = root.querySelector("[popover]");
+    if (!input || !list)
+      return;
+    const ph = root.getAttribute("placeholder");
+    if (ph)
+      input.placeholder = ph;
+    const val = root.getAttribute("value");
+    if (val) {
+      const match = [...root.querySelectorAll("option")].find((o) => o.getAttribute("value") === val);
+      if (match)
+        input.value = match.textContent?.trim() ?? "";
+    }
+    const id = `sui-cb-${++uid}`;
+    list.id ||= `${id}-list`;
+    input.id ||= `${id}-input`;
+    input.setAttribute("popovertarget", list.id);
+    input.setAttribute("role", "combobox");
+    input.setAttribute("aria-controls", list.id);
+    input.setAttribute("aria-autocomplete", "list");
+    input.setAttribute("aria-expanded", "false");
+    if (!input.hasAttribute("autocomplete"))
+      input.setAttribute("autocomplete", "off");
+    list.setAttribute("role", "listbox");
+    const options = () => [...list.querySelectorAll("option")];
+    const shown = () => options().filter((o) => !o.hidden && !o.hasAttribute("disabled"));
+    options().forEach((o, i) => {
+      o.id ||= `${id}-opt-${i}`;
+      o.setAttribute("role", "option");
+      o.setAttribute("aria-selected", "false");
+    });
+    let active = null;
+    const setActive = (o) => {
+      if (active) {
+        active.removeAttribute("data-active");
+        active.setAttribute("aria-selected", "false");
+      }
+      active = o;
+      if (o) {
+        o.setAttribute("data-active", "");
+        o.setAttribute("aria-selected", "true");
+        input.setAttribute("aria-activedescendant", o.id);
+        o.scrollIntoView({ block: "nearest" });
+      } else {
+        input.removeAttribute("aria-activedescendant");
+      }
+    };
+    const isOpen2 = () => list.matches(":popover-open");
+    const open = () => {
+      if (isOpen2())
+        return;
+      try {
+        list.showPopover?.();
+      } catch {}
+    };
+    const close = () => {
+      if (!isOpen2())
+        return;
+      try {
+        list.hidePopover?.();
+      } catch {}
+    };
+    const filter = () => {
+      const q = input.value.trim().toLowerCase();
+      for (const o of options()) {
+        const text = (o.textContent ?? "").toLowerCase();
+        o.hidden = q !== "" && !text.includes(q);
+      }
+      const vis = shown();
+      if (!vis.length) {
+        close();
+        setActive(null);
+        return;
+      }
+      if (!active || active.hidden)
+        setActive(vis[0]);
+      open();
+    };
+    const commit = (o) => {
+      if (!o)
+        return;
+      const value = o.getAttribute("value") ?? o.textContent ?? "";
+      input.value = o.textContent?.trim() ?? "";
+      root.setAttribute("value", value);
+      for (const opt of options())
+        opt.hidden = false;
+      close();
+      root.dispatchEvent(new CustomEvent("sui-combobox-select", {
+        detail: { value, label: input.value },
+        bubbles: true,
+        composed: true
+      }));
+    };
+    const move = (delta) => {
+      const vis = shown();
+      if (!vis.length)
+        return;
+      if (!isOpen2())
+        open();
+      const i = active ? vis.indexOf(active) : -1;
+      const next = (i + delta + vis.length) % vis.length;
+      setActive(vis[next]);
+    };
+    const onInput = () => filter();
+    const onKeydown = (e) => {
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          isOpen2() ? move(1) : (open(), setActive(shown()[0] ?? null));
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          move(-1);
+          break;
+        case "Home":
+          if (isOpen2()) {
+            e.preventDefault();
+            setActive(shown()[0] ?? null);
+          }
+          break;
+        case "End":
+          if (isOpen2()) {
+            e.preventDefault();
+            const vis = shown();
+            setActive(vis[vis.length - 1] ?? null);
+          }
+          break;
+        case "Enter":
+          if (isOpen2() && active) {
+            e.preventDefault();
+            commit(active);
+          }
+          break;
+        case "Escape":
+          if (isOpen2()) {
+            e.preventDefault();
+            close();
+          }
+          break;
+        default:
+          break;
+      }
+    };
+    const onPointerdown = (e) => {
+      const o = e.target?.closest("option");
+      if (o && !o.hasAttribute("disabled")) {
+        e.preventDefault();
+        commit(o);
+      }
+    };
+    const onToggle = (e) => {
+      const open_ = e.newState === "open";
+      input.setAttribute("aria-expanded", String(open_));
+      if (!open_)
+        return setActive(null);
+      if (active)
+        return;
+      const sel = root.getAttribute("value");
+      const cur = sel ? options().find((o) => o.getAttribute("value") === sel) ?? null : null;
+      setActive(cur && !cur.hidden ? cur : shown()[0] ?? null);
+    };
+    input.addEventListener("input", onInput);
+    input.addEventListener("keydown", onKeydown);
+    list.addEventListener("pointerdown", onPointerdown);
+    list.addEventListener("toggle", onToggle);
+    return {
+      destroy: () => {
+        input.removeEventListener("input", onInput);
+        input.removeEventListener("keydown", onKeydown);
+        list.removeEventListener("pointerdown", onPointerdown);
+        list.removeEventListener("toggle", onToggle);
       }
     };
   };

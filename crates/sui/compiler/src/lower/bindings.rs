@@ -10,13 +10,15 @@ use crate::lower::Lowered;
 /// `@ship/sui-runtime` so it resolves as an ESM binding — no controller
 /// import, no `$scope.` lookup. Kept in sync with the `BUILTINS` lists in
 /// `emit::expr_rewrite` and `check::scope_bound`, which leave these bare.
-pub const BUILTIN_ACTIONS: &[&str] = &["alert", "anchor", "autosize", "avatar", "chip", "clickOutside", "collapsible", "dropzone", "emptyState", "field", "errorState", "radioGroup", "rangeFill", "tooltip"];
+pub const BUILTIN_ACTIONS: &[&str] = &["alert", "anchor", "autosize", "avatar", "chip", "clickOutside", "collapsible",
+    "combobox", "dropzone", "emptyState", "field", "errorState", "contextMenu", "hoverCard", "menu", "pagination", "radioGroup", "rangeFill", "tabs", "themePicker", "toast", "toggleGroup", "tooltip"];
 
 pub fn collect_attr_imports(
     a: &AttrInstr,
     out: &mut Lowered,
     is_view: bool,
     depth: usize,
+    is_custom_element: bool,
 ) -> Result<(), CompileError> {
     // Phase 3b.4: depth-0 element bindings in views are direct-emit.
     // The hydrate(root, ctx) closure walks SSR'd elements once via
@@ -28,7 +30,10 @@ pub fn collect_attr_imports(
     match a {
         AttrInstr::Static { .. } => {}
         AttrInstr::Expr { .. } => {
-            out.runtime_imports.insert("bindAttr");
+            // Native elements are attribute-only (`bindAttr`). Custom elements
+            // get `bindDynamic`, which routes attribute-vs-property at runtime
+            // so the author writes one plain binding either way.
+            out.runtime_imports.insert(if is_custom_element { "bindDynamic" } else { "bindAttr" });
             if direct_emit {
                 out.dom_imports.insert("collectElementMarkers");
                 out.dom_imports.insert("hydrateAttr");

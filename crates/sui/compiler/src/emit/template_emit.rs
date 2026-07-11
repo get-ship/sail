@@ -150,6 +150,12 @@ pub struct TemplateEmitter {
     /// the stack handles nesting. In production (`expr_prefix == "$scope."`)
     /// this changes nothing — see `expr_rewrite::rewrite_scoped`.
     pub(super) machinery_locals: Vec<String>,
+    /// Model-A root: the component's top template element is THE root (the host
+    /// is a transparent pass-through). Set true at the start of a component's
+    /// top-level walk; the first element emitted claims the `sui-root` class and
+    /// clears it, so root-styling CSS (`.sui-root`, `:host(X)` → `.sui-root`)
+    /// targets that element. Views never set it.
+    pub(super) root_pending: bool,
 }
 
 impl TemplateEmitter {
@@ -174,6 +180,7 @@ impl TemplateEmitter {
             svg_depth: 0,
             expr_prefix: "$scope.".to_string(),
             machinery_locals: Vec::new(),
+            root_pending: false,
         }
     }
 
@@ -389,8 +396,14 @@ impl TemplateEmitter {
         instrs: &[Instr],
         parent_var: &str,
         cleanups_var: &str,
+        mark_root: bool,
     ) {
+        // `mark_root` is set only for a LIGHT registered component: its top
+        // template element is the model-A root and claims the `sui-root` class.
+        // Pages and shadow components have no such element-level root identity.
+        self.root_pending = mark_root;
         self.emit_children(w, instrs, parent_var, cleanups_var);
+        self.root_pending = false;
     }
 
     pub(super) fn emit_children(

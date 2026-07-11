@@ -303,10 +303,11 @@ fn skip_ws_nl(bytes: &[u8], i: usize) -> Option<usize> {
 
 /// Rewrite shadow-idiom selectors for LIGHT-DOM emission. The runtime wraps a
 /// light component's styles in `@scope ([data-component="tag"]) to
-/// ([data-component])` — a donut that stops at nested component boundaries —
-/// so inside the sheet:
-///   `:host`        → `:scope`            (the host IS the element)
-///   `:host(<sel>)` → `:scope<sel>`       (compound, parens unwrapped)
+/// ([data-component])` — a donut that stops at nested component boundaries.
+/// Model A: the component's top template element is the root (class `sui-root`),
+/// the host a transparent pass-through, so inside the sheet:
+///   `:host`        → `.sui-root`             (the root IS that element)
+///   `:host(<sel>)` → `:scope<sel> .sui-root` (host state → the root element)
 ///   `::slotted(<sel>)` → `slot > <sel>`  (projected children stay real
 ///                                         children inside the <slot> wrapper,
 ///                                         which renders display:contents)
@@ -321,13 +322,19 @@ pub fn light_dom_selectors(css: &str) -> String {
             let after = i + ":host".len();
             if bytes.get(after) == Some(&b'(') {
                 if let Some(close) = balanced_paren_end(bytes, after) {
+                    // `:host(<state>)` — the state (a reflected prop like
+                    // `[variant='solid']`) lives on the host; it styles the
+                    // root element (`.sui-root`), a descendant of the host.
                     out.push_str(":scope");
                     out.push_str(&css[after + 1..close]);
+                    out.push_str(" .sui-root");
                     i = close + 1;
                     continue;
                 }
             }
-            out.push_str(":scope");
+            // Bare `:host` — the model-A root IS the component's top template
+            // element, carrying the `sui-root` class.
+            out.push_str(".sui-root");
             i = after;
             continue;
         }
@@ -422,11 +429,13 @@ mod tests {
 
     #[test]
     fn light_dom_rewrites_host_and_slotted() {
+        // Model A: `:host` → the root element `.sui-root`; a host state
+        // `:host(<sel>)` reads the host attr and styles the root element.
         let css = ":host { display: inline-flex; }\n:host([tone='primary']) .badge { color: red; }\n:host(:not([size])) { --h: 1px; }\n::slotted([slot='leading']) { flex: none; }\n.badge { border: 0; }";
         let out = light_dom_selectors(css);
-        assert!(out.contains(":scope { display: inline-flex; }"), "{out}");
-        assert!(out.contains(":scope[tone='primary'] .badge"), "{out}");
-        assert!(out.contains(":scope:not([size])"), "{out}");
+        assert!(out.contains(".sui-root { display: inline-flex; }"), "{out}");
+        assert!(out.contains(":scope[tone='primary'] .sui-root .badge"), "{out}");
+        assert!(out.contains(":scope:not([size]) .sui-root"), "{out}");
         assert!(out.contains("slot > [slot='leading'] { flex: none; }"), "{out}");
         assert!(out.contains(".badge { border: 0; }"), "{out}");
         assert!(!out.contains(":host"), "no :host survives: {out}");

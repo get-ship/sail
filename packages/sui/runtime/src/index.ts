@@ -98,6 +98,7 @@ export {
   bindAttr,
   bindClass,
   bindProp,
+  bindDynamic,
   bindValue,
   bindChecked,
   bindHtml,

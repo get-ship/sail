@@ -108,6 +108,13 @@ impl TemplateEmitter {
                 js_string(&el.tag)
             ));
         }
+        // Model-A root: a component's first template element IS the styled root
+        // (the host is a transparent pass-through). It claims the `sui-root`
+        // class so root CSS (`.sui-root`, `:host(X)` → `.sui-root`) targets it.
+        if self.root_pending {
+            self.root_pending = false;
+            w.line(&format!("{v}.classList.add(\"sui-root\");"));
+        }
         // Bump svg_depth BEFORE emitting attrs so that the <svg> root's
         // own attrs (viewBox, preserveAspectRatio, etc.) get camelCase
         // canonicalization. attr_name_for_emit guards on svg_depth > 0.
@@ -115,7 +122,7 @@ impl TemplateEmitter {
             self.svg_depth += 1;
         }
         for a in &el.attrs {
-            self.emit_attr(w, a, &v, cleanups_var);
+            self.emit_attr(w, a, &v, cleanups_var, &el.tag);
         }
         self.emit_children(w, &el.children, &v, cleanups_var);
         if is_svg_root {
@@ -137,6 +144,7 @@ impl TemplateEmitter {
         a: &AttrInstr,
         el_var: &str,
         cleanups_var: &str,
+        tag: &str,
     ) {
         match a {
             AttrInstr::Static { name, value, .. } => {
@@ -168,8 +176,13 @@ impl TemplateEmitter {
                 } else {
                     let fv = self.for_version_comma(&expr.source);
                     let emit_name = self.attr_name_for_emit(name);
+                    // Native elements are attribute-only (`bindAttr`). Custom
+                    // elements get `bindDynamic`, which the toolchain uses to
+                    // route attribute-vs-property at runtime — so the author
+                    // writes one plain binding and never picks the channel.
+                    let binder = if tag.contains('-') { "bindDynamic" } else { "bindAttr" };
                     w.line(&format!(
-                        "{cleanups_var}.push(bindAttr({el_var}, {n}, () => ({fv}{rw})));",
+                        "{cleanups_var}.push({binder}({el_var}, {n}, () => ({fv}{rw})));",
                         n = js_string(&emit_name)
                     ));
                 }

@@ -103,7 +103,13 @@ pub(super) fn emit_setup_body(
             mount_w.push_str(&styles_install);
         }
     }
-    emitter.emit_top_level(&mut mount_w, &program.template, "__root", "__cleanups");
+    emitter.emit_top_level(
+        &mut mount_w,
+        &program.template,
+        "__root",
+        "__cleanups",
+        is_component && !is_shadow,
+    );
     mount_w.line("return () => { for (const c of __cleanups) try { c(); } catch (e) {} };");
 
     let hoists = emitter.take_boundary_hoists();

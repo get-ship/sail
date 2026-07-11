@@ -11,6 +11,9 @@
 //!  4. Lower the layout keywords (`<column>`/`<row>`/…) → `<div>` + atomic classes.
 //! Steps 3–4 emit deduped CSS that `preprocess` injects as one `<style>`.
 
+use crate::diagnostics::Span;
+use crate::ir::directive::{PropDecl, PropKind};
+
 const VOID_TAGS: &[&str] = &[
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta",
     "source", "track", "wbr",
@@ -46,17 +49,16 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> String {
     } else {
         (s, String::new())
     };
-    // Desugar the SFC `<component>` block into the `<prop>` tags + object
-    // `<variants>` the rest of the chain already lowers.
-    let s = lower_component(&s);
+    // The `<component>` block is parsed directly in `parse` — props → PropDecl,
+    // `variant` props → CSS. No desugar to `<prop>`/`<variants>` (both retired).
     // Framework-owned host display: the component presents as its root element
     // naturally would (inheriting the standard, not a per-component knob). Block
     // is the default, so this only emits an override for inline-natured roots.
     // Computed now, before lower_layout rewrites <row>/<column> into <div>.
     let host_display_css = derive_host_display(&s);
-    // `<host>` first: it consumes its own `sx` into a `:host{…}` rule before
-    // `lower_sx` would otherwise fold that sx into a class on the (non-)element.
-    let (s, host_css) = lower_host(&s);
+    // The `<host>` tag is retired — root styling is `sx` on the component's root
+    // element (which lowers to a class), not a magic host declaration. A stale
+    // `<host>` now survives to `parse` and is rejected as an unknown element.
     let (s, sx_css) = lower_sx(&s);
     // An element that already carried `class="…"` now has a SECOND class attr
     // from the sx lowering; downstream the DOM emitter would issue two
@@ -64,13 +66,15 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> String {
     // Merge them into one attribute here, while the tag text is still flat.
     let s = merge_duplicate_class_attrs(&s);
     let (s, layout_css) = lower_layout(&s);
-    let (s, variants_css) = lower_variants(&s);
-    let (s, theme_css) = lower_theme(&s);
+    // The `<theme>` tag is retired — tone/size are the framework channel
+    // contract (union props reflected to attributes, mapped to tokens by the
+    // skin), not a per-component channel declaration. A stale `<theme>` now
+    // survives to `parse` and is rejected as an unknown element.
     // NOTE elements_css rides the per-component injected style for now —
     // duplicated across components that use the same element. It moves to
     // the framework sheet with the deck style-delivery work.
     let css = format!(
-        "{host_display_css}{host_css}{theme_css}{sx_css}{layout_css}{variants_css}{elements_css}"
+        "{host_display_css}{sx_css}{layout_css}{elements_css}"
     );
     if css.is_empty() {
         s
@@ -1091,100 +1095,6 @@ fn lower_layout(source: &str) -> (String, String) {
     (out, css)
 }
 
-/// Lower a `<variants>` block — the component's declarative variant table — into
-/// `:host([prop='value']){…}` CSS. Each line is `<selector>: <sx-list>`:
-/// ```text
-///   tone=success:            bg:success-bg fg:success   → :host([tone='success'])
-///   size=lg:                 text:lg min-h:12
-///   [disabled]:              opacity:50 cursor:not-allowed → :host([disabled])
-///   (tone=primary, size=lg): shadow:md                  → :host([tone='primary'][size='lg'])
-/// ```
-/// Values lower through the SAME `sui_lint::rules::sx::lower` vocabulary — the
-/// author writes the closed sx grammar, never CSS. The block is stripped from the
-/// template (the parser never sees it); its CSS joins the injected `<style>`.
-fn lower_variants(source: &str) -> (String, String) {
-    let mut out = source.to_string();
-    let mut css = String::new();
-    // Multiple blocks: a bare `<variants>` (styles `:host`) and any number of
-    // `<variants part="field">` (Panda slot recipe — styles a shadow part).
-    loop {
-        let Some(start) = out.find("<variants") else { break };
-        let Some(tag_rel) = out[start..].find('>') else { break };
-        let tag_end = start + tag_rel + 1;
-        let open_tag = out[start..tag_end].to_string();
-        let Some(rel) = out[tag_end..].find("</variants>") else { break };
-        let body = out[tag_end..tag_end + rel].to_string();
-        let block_end = tag_end + rel + "</variants>".len();
-
-        // Targeting (variants v2): `class="field"` re-targets the rule from
-        // `:host` to the anatomy class `.field` — classes ARE the anatomy in
-        // the light-DOM architecture. `part="field"` remains as the
-        // TRANSITIONAL shadow-era spelling ([part='field']); it dies with the
-        // part idiom.
-        let class_target = attr_value(&open_tag, "class");
-        let part = attr_value(&open_tag, "part");
-
-        // Two body forms, ONE emission. A body starting with `{` is the
-        // TS-object form (CVA-shaped: `variant: { solid: 'sx…' }` + `compound`);
-        // otherwise it's the legacy `selector: sx` line DSL. Both lower to the
-        // same `(selector-dsl, sx)` pairs the existing helpers consume.
-        let pairs: Vec<(String, String)> = if body.trim_start().starts_with('{') {
-            parse_variants_object(&body)
-        } else {
-            body.lines()
-                .filter_map(|line| {
-                    let line = line.trim();
-                    if line.is_empty() {
-                        return None;
-                    }
-                    let (sel, sx) = line.split_once(':')?;
-                    Some((sel.trim().to_string(), sx.trim().to_string()))
-                })
-                .collect()
-        };
-        let target: Option<String> = match (&class_target, &part) {
-            (Some(c), _) => Some(format!(".{c}")),
-            (None, Some(p)) => Some(format!("[part='{p}']")),
-            (None, None) => None,
-        };
-        for (sel, sx) in pairs {
-            let Some(selector) = variant_selector(&sel) else { continue };
-            for (state, decls) in lower_variant_sx(&sx) {
-                if decls.is_empty() {
-                    continue;
-                }
-                // Where a state attaches (v2):
-                //   host-level     → :host(SEL):hover           (state on host)
-                //   targeted       → :host(SEL) .box:hover      (state on target)
-                //   group-<s> +
-                //   targeted       → :host(SEL):hover .box      (host state drives
-                //                                                the target — the
-                //                                                label:hover .box
-                //                                                pattern)
-                //   condition      → @media (…) { rule }
-                let (media, host_pseudo, target_pseudo) =
-                    classify_variant_state(&state, target.is_some());
-                let rule = match &target {
-                    Some(t) => {
-                        format!(":host({selector}{host_pseudo}) {t}{target_pseudo}{{{decls}}}")
-                    }
-                    None => format!(":host({selector}{host_pseudo}){{{decls}}}"),
-                };
-                match media {
-                    Some(q) => css.push_str(&format!("@media {q}{{{rule}}}")),
-                    None => css.push_str(&rule),
-                }
-            }
-        }
-
-        let mut next = String::with_capacity(out.len());
-        next.push_str(&out[..start]);
-        next.push_str(&out[block_end..]);
-        out = next;
-    }
-    (out, css)
-}
-
 /// Split `s` on top-level `delim`, ignoring delimiters nested inside `{}`/`[]`
 /// or string literals. The primitive under the `<variants>` object parser.
 fn split_top_level(s: &str, delim: char) -> Vec<String> {
@@ -1475,95 +1385,26 @@ pub(crate) fn extract_component_body(source: &str) -> Option<String> {
     Some(source[body_start..body_start + rel].trim().to_string())
 }
 
-/// Whether the `<component>` block opts into light DOM (`light: true`). This is
-/// the per-source Light-DOM opt-in: a component moves to the target light-DOM
-/// architecture from its own source, so every compile path (bundler, napi
-/// harness, CLI) renders it without a shadow root — no per-invocation flag.
-pub(crate) fn declares_light_dom(source: &str) -> bool {
+/// Whether the `<component>` block opts INTO shadow DOM (`shadow: true`).
+///
+/// Light DOM is the default for every layer (invariant 9). Shadow DOM is a
+/// per-component containment FEATURE declared in the component's own manifest —
+/// used only for wrapping foreign content (tiptap-class editors, FFI). The
+/// SOURCE is authoritative for every compile path (bundler, napi, CLI); no
+/// per-invocation flag decides it.
+pub(crate) fn declares_shadow_dom(source: &str) -> bool {
     extract_component_body(source)
         .map(|body| {
             parse_object_fields(&body)
                 .iter()
-                .any(|(k, v)| k == "light" && v.trim() == "true")
+                .any(|(k, v)| k == "shadow" && v.trim() == "true")
         })
         .unwrap_or(false)
 }
 
-fn lower_component(source: &str) -> String {
-    let Some(start) = source.find("<component") else {
-        return source.to_string();
-    };
-    let Some(open_rel) = source[start..].find('>') else {
-        return source.to_string();
-    };
-    let body_start = start + open_rel + 1;
-    let Some(rel) = source[body_start..].find("</component>") else {
-        return source.to_string();
-    };
-    let body_end = body_start + rel;
-    let block_end = body_end + "</component>".len();
-
-    let fields = parse_object_fields(&source[body_start..body_end]);
-    // `form: { value: 'checked', disabled: 'disabled' }` — names the props that
-    // carry ElementInternals form association. Parsed BEFORE the props expansion
-    // so the named props' tags gain `form-value` / `form-disabled` flags
-    // regardless of field order in the block.
-    let (form_value, form_disabled) = fields
-        .iter()
-        .find(|(k, _)| k == "form")
-        .map(|(_, v)| parse_form_field(v))
-        .unwrap_or((None, None));
-    let mut generated = String::new();
-    for (key, val) in fields {
-        match key.as_str() {
-            "props" => generated.push_str(&expand_props(
-                &val,
-                form_value.as_deref(),
-                form_disabled.as_deref(),
-            )),
-            "variants" => generated.push_str(&expand_variants(&val)),
-            // `form` was consumed above; meta.tag is filename-derived today.
-            _ => {}
-        }
-    }
-    let mut out = String::with_capacity(source.len());
-    out.push_str(&source[..start]);
-    out.push_str(&generated);
-    out.push_str(&source[block_end..]);
-    out
-}
-
-/// Expand the component block's `variants:` object (variants v2). A top-level
-/// key starting with `.` is an ANATOMY-CLASS TARGET whose value is its own
-/// variants object — it desugars to a `<variants class="…">` block; everything
-/// else stays in the bare (host-level) block:
-/// ```text
-///   variants: {
-///     variant: { solid: 'bg:tone' },            → <variants>{variant:{…}}</variants>
-///     '.box':  { variant: { solid: 'bg:tone' } } → <variants class="box">{…}</variants>
-///   }
-/// ```
-fn expand_variants(obj: &str) -> String {
-    let inner = obj.trim().trim_start_matches('{').trim_end_matches('}');
-    let mut host_fields: Vec<String> = Vec::new();
-    let mut out = String::new();
-    for (k, v) in parse_object_fields(inner) {
-        let key = k.trim().trim_matches('\'').trim_matches('"');
-        if let Some(class) = key.strip_prefix('.') {
-            out.push_str(&format!("<variants class=\"{class}\">{v}</variants>\n"));
-        } else {
-            host_fields.push(format!("{k}: {v}"));
-        }
-    }
-    if !host_fields.is_empty() {
-        out.push_str(&format!("<variants>{{ {} }}</variants>\n", host_fields.join(", ")));
-    }
-    out
-}
-
 /// Parse the `form: { value: '…', disabled: '…' }` object into the two prop
 /// names. Unknown keys are ignored (tsgo owns shape validation of the block).
-fn parse_form_field(obj: &str) -> (Option<String>, Option<String>) {
+pub(crate) fn parse_form_field(obj: &str) -> (Option<String>, Option<String>) {
     let mut value = None;
     let mut disabled = None;
     let inner = obj.trim().trim_start_matches('{').trim_end_matches('}');
@@ -1577,114 +1418,178 @@ fn parse_form_field(obj: &str) -> (Option<String>, Option<String>) {
     (value, disabled)
 }
 
-/// Expand a props object `{ tone, size, variant: ['solid','soft'], disabled: bool }`
-/// into `<prop …/>` tags. `form_value` / `form_disabled` name the props that
-/// gain the `form-value` / `form-disabled` association flags (from the
-/// component block's `form:` field).
-fn expand_props(obj: &str, form_value: Option<&str>, form_disabled: Option<&str>) -> String {
-    let mut out = String::new();
+/// Build `PropDecl`s directly from the `<component>` block's `props` object.
+/// `<prop>` was our own tag; the component block replaces it with props-as-ts,
+/// so props lower straight to `PropDecl` — no `<prop>` tag, no desugar, no IR.
+pub(crate) fn component_props_to_decls(
+    obj: &str,
+    form_value: Option<&str>,
+    form_disabled: Option<&str>,
+) -> Vec<PropDecl> {
+    let mut out = Vec::new();
     for (name, val) in parse_object_fields(obj) {
         let n = name.as_str();
         let val = val.trim();
-        // Built-in framework props: `tone`/`size` — bare or annotated `: Tone`/
-        // `: Size`. Naming them IS the contract opt-in (the tone-*/size-*
-        // channels come for free). The DEFAULT vocabulary applies to a bare
-        // prop; an EXPLICIT union widens/narrows it (e.g. <icon> adding `xl`)
-        // — the enum values are the attribute contract, independent of the sx
-        // channel vocabulary, so this never touches lint. The built-in
-        // default (md/default) is kept when it's a member, else the union's
-        // first member wins.
-        let tag = if (n == "tone" || n == "size") && !val.contains('|') {
-            let (vocab, builtin_default) = if n == "tone" {
-                ("default|primary|info|success|warning|destructive|accent|muted", "default")
-            } else {
-                ("xs|sm|md|lg", "md")
-            };
-            format!("<prop name=\"{n}\" values=\"{vocab}\" default=\"{builtin_default}\" reflect />")
-        } else if n == "tone" || n == "size" {
-            // Explicit union on a framework prop: honor the author's
-            // vocabulary, keep the contract (reflect), prefer the built-in
-            // default when present.
-            let builtin_default = if n == "tone" { "default" } else { "md" };
-            let vals: Vec<String> = val
-                .split('|')
-                .map(|s| unquote(s.trim()))
-                .filter(|s| !s.is_empty())
-                .collect();
-            let default = if vals.iter().any(|v| v == builtin_default) {
-                builtin_default.to_string()
-            } else {
-                vals.first().cloned().unwrap_or_default()
-            };
-            format!(
-                "<prop name=\"{n}\" values=\"{}\" default=\"{default}\" reflect />",
-                vals.join("|")
+        // Variant prop: reserved `variant` key with an object, or any key via
+        // `variant({…})`. The prop is a union of the map's keys (first =
+        // default), reflected. Styles emit separately (variant CSS).
+        if let Some(map) = variant_map(n, val) {
+            let keys: Vec<String> = parse_object_fields(
+                map.trim().trim_start_matches('{').trim_end_matches('}'),
             )
-        } else if val.contains('|') {
-            // Real-TS union: `variant: 'default' | 'solid' | 'outline'`. The
-            // default is the first member — order the union with it first.
-            let vals: Vec<String> = val
-                .split('|')
-                .map(|s| unquote(s.trim()))
-                .filter(|s| !s.is_empty())
-                .collect();
-            let default = vals.first().cloned().unwrap_or_default();
-            format!(
-                "<prop name=\"{n}\" values=\"{}\" default=\"{default}\" reflect />",
-                vals.join("|")
-            )
-        } else if val.starts_with('[') {
-            // Transitional array form: `['solid','soft']`.
-            let inner = val.trim_start_matches('[').trim_end_matches(']');
-            let vals: Vec<String> = split_top_level(inner, ',')
-                .into_iter()
-                .map(|s| unquote(&s))
-                .collect();
-            let default = vals.first().cloned().unwrap_or_default();
-            format!(
-                "<prop name=\"{n}\" values=\"{}\" default=\"{default}\" reflect />",
-                vals.join("|")
-            )
-        } else if val == "boolean" || val == "bool" {
-            format!("<prop name=\"{n}\" type=\"bool\" default=\"false\" reflect />")
-        } else if val == "true" || val == "false" {
-            // DEFAULT LITERAL, bool: `centered: false`. Without this arm the
-            // literal fell through to the string branch — a silently mistyped
-            // prop (the re-port pilot's find).
-            format!("<prop name=\"{n}\" type=\"bool\" default=\"{val}\" reflect />")
-        } else if val == "number" {
-            format!("<prop name=\"{n}\" type=\"number\" default=\"0\" />")
-        } else if val.parse::<f64>().is_ok() {
-            // DEFAULT LITERAL, number: `count: 3`.
-            format!("<prop name=\"{n}\" type=\"number\" default=\"{val}\" />")
-        } else if (val.starts_with('\'') && val.ends_with('\'') && val.len() >= 2)
-            || (val.starts_with('"') && val.ends_with('"') && val.len() >= 2)
-        {
-            // DEFAULT LITERAL, string: `label: 'Loading'`. Previously the
-            // literal was DISCARDED (default="") — spinner silently lost its
-            // aria-label default. Single-member unions don't reach here: a
-            // union requires `|`.
-            let default = unquote(val);
-            format!("<prop name=\"{n}\" type=\"string\" default=\"{default}\" />")
-        } else {
-            // `string`, `String`, or a bare shorthand → a string prop.
-            format!("<prop name=\"{n}\" type=\"string\" default=\"\" />")
-        };
-        // Form association: the prop named by `form.value` syncs
-        // ElementInternals.setFormValue; `form.disabled` receives the
-        // fieldset-disabled callback. Flags append to whatever tag shape the
-        // prop expanded to.
-        let mut tag = tag;
-        if form_value == Some(n) {
-            tag = tag.replace(" />", " form-value />");
+            .into_iter()
+            .map(|(k, _)| k)
+            .collect();
+            out.push(PropDecl {
+                name: n.to_string(),
+                kind: PropKind::Union(keys.clone()),
+                default: keys.first().cloned(),
+                reflect: true,
+                bindable: false,
+                form_value: form_value == Some(n),
+                form_disabled: form_disabled == Some(n),
+                description: None,
+                span: Span::new(0, 0),
+            });
+            continue;
         }
-        if form_disabled == Some(n) {
-            tag = tag.replace(" />", " form-disabled />");
+        // Object / array type (`config: { … }`, `columns: Column[]`) — caught
+        // before the union/`|` logic so a `{ a: 'x' | 'y' }` isn't misread as a
+        // union. Its type is authored TypeScript, preserved verbatim; a plain
+        // reactive property, never an attribute.
+        if val.starts_with('{') || val.ends_with("[]") {
+            out.push(PropDecl {
+                name: n.to_string(),
+                kind: PropKind::Identity(val.to_string()),
+                default: None,
+                reflect: false,
+                bindable: false,
+                form_value: form_value == Some(n),
+                form_disabled: form_disabled == Some(n),
+                description: None,
+                span: Span::new(0, 0),
+            });
+            continue;
         }
-        out.push_str(&tag);
-        out.push('\n');
+        let (kind, default, reflect): (PropKind, Option<String>, bool) =
+            if (n == "tone" || n == "size") && !val.contains('|') {
+                let (vocab, builtin) = if n == "tone" {
+                    ("default|primary|info|success|warning|destructive|accent|muted", "default")
+                } else {
+                    ("xs|sm|md|lg", "md")
+                };
+                let vals = vocab.split('|').map(str::to_string).collect();
+                (PropKind::Union(vals), Some(builtin.to_string()), true)
+            } else if n == "tone" || n == "size" {
+                let builtin = if n == "tone" { "default" } else { "md" };
+                let vals: Vec<String> =
+                    val.split('|').map(|s| unquote(s.trim())).filter(|s| !s.is_empty()).collect();
+                let default = if vals.iter().any(|v| v == builtin) {
+                    builtin.to_string()
+                } else {
+                    vals.first().cloned().unwrap_or_default()
+                };
+                (PropKind::Union(vals), Some(default), true)
+            } else if val.contains('|') {
+                let vals: Vec<String> =
+                    val.split('|').map(|s| unquote(s.trim())).filter(|s| !s.is_empty()).collect();
+                let default = vals.first().cloned().unwrap_or_default();
+                (PropKind::Union(vals), Some(default), true)
+            } else if val.starts_with('[') {
+                let inner = val.trim_start_matches('[').trim_end_matches(']');
+                let vals: Vec<String> =
+                    split_top_level(inner, ',').into_iter().map(|s| unquote(&s)).collect();
+                let default = vals.first().cloned().unwrap_or_default();
+                (PropKind::Union(vals), Some(default), true)
+            } else if val == "boolean" || val == "bool" {
+                (PropKind::Bool, Some("false".to_string()), true)
+            } else if val == "true" || val == "false" {
+                (PropKind::Bool, Some(val.to_string()), true)
+            } else if val == "number" {
+                (PropKind::Number, Some("0".to_string()), false)
+            } else if val.parse::<f64>().is_ok() {
+                (PropKind::Number, Some(val.to_string()), false)
+            } else if (val.starts_with('\'') && val.ends_with('\'') && val.len() >= 2)
+                || (val.starts_with('"') && val.ends_with('"') && val.len() >= 2)
+            {
+                (PropKind::String, Some(unquote(val)), false)
+            } else if val == "string" || val == "String" {
+                (PropKind::String, Some(String::new()), false)
+            } else {
+                // Any other RHS is authored TypeScript — a custom-typed reactive
+                // property, preserved verbatim. Not attribute-backed, no default.
+                (PropKind::Identity(val.to_string()), None, false)
+            };
+        out.push(PropDecl {
+            name: n.to_string(),
+            kind,
+            default,
+            reflect,
+            bindable: false,
+            form_value: form_value == Some(n),
+            form_disabled: form_disabled == Some(n),
+            description: None,
+            span: Span::new(0, 0),
+        });
     }
     out
+}
+
+/// Recognise a variant prop's map. The reserved `variant` key with an object
+/// value IS the map (no wrapper); any key wrapped in `variant({…})` is an
+/// explicit variant axis. Returns the map body (`{ solid: 'sx', … }`).
+fn variant_map<'a>(name: &str, val: &'a str) -> Option<&'a str> {
+    if let Some(inner) = val.strip_prefix("variant(") {
+        Some(inner.strip_suffix(')').unwrap_or(inner).trim())
+    } else if name == "variant" && val.starts_with('{') {
+        Some(val)
+    } else {
+        None
+    }
+}
+
+/// Emit variant CSS for a component: collect the `variant` props from the `props`
+/// object plus a sibling `compound` list into the CVA-shaped object the CSS core
+/// consumes, then lower it. No `<variants>` block, no desugar.
+pub(crate) fn component_variants_to_css(props_obj: &str, compound: Option<&str>) -> String {
+    let mut parts: Vec<String> = Vec::new();
+    for (name, val) in parse_object_fields(props_obj) {
+        if let Some(map) = variant_map(name.as_str(), val.trim()) {
+            parts.push(format!("{name}: {map}"));
+        }
+    }
+    if let Some(c) = compound {
+        parts.push(format!("compound: {}", c.trim()));
+    }
+    if parts.is_empty() {
+        return String::new();
+    }
+    variants_object_to_css(&format!("{{ {} }}", parts.join(", ")))
+}
+
+/// Emit CSS from `(selector-dsl, sx)` variant pairs — the one variant→CSS core.
+fn variant_pairs_to_css(pairs: &[(String, String)]) -> String {
+    let mut css = String::new();
+    for (sel, sx) in pairs {
+        let Some(selector) = variant_selector(sel) else { continue };
+        for (state, decls) in lower_variant_sx(sx) {
+            if decls.is_empty() {
+                continue;
+            }
+            let (media, host_pseudo, _) = classify_variant_state(&state, false);
+            let rule = format!(":host({selector}{host_pseudo}){{{decls}}}");
+            match media {
+                Some(q) => css.push_str(&format!("@media {q}{{{rule}}}")),
+                None => css.push_str(&rule),
+            }
+        }
+    }
+    css
+}
+
+/// Lower a CVA-shaped variants-object body into `:host([prop='value'])` CSS.
+pub(crate) fn variants_object_to_css(body: &str) -> String {
+    variant_pairs_to_css(&parse_variants_object(body))
 }
 
 /// Lower every `<theme prop="…" channels="…">` block to `:host` custom-property
@@ -1700,117 +1605,6 @@ fn expand_props(obj: &str, form_value: Option<&str>, form_disabled: Option<&str>
 ///
 /// →  :host{--tone-fg:var(--foreground);--tone-border:var(--border);}
 ///    :host([tone='info']){--tone-fg:var(--info);--tone-border:var(--tone-info-border);}
-fn lower_theme(source: &str) -> (String, String) {
-    let mut out = source.to_string();
-    let mut css = String::new();
-    // Multiple blocks (e.g. a `tone` theme and a `size` theme).
-    loop {
-        let Some(start) = out.find("<theme") else { break };
-        let Some(tag_rel) = out[start..].find('>') else { break };
-        let tag_end = start + tag_rel + 1;
-        let open_tag = out[start..tag_end].to_string();
-        let Some(close_rel) = out[tag_end..].find("</theme>") else { break };
-        let body = out[tag_end..tag_end + close_rel].to_string();
-        let block_end = tag_end + close_rel + "</theme>".len();
-
-        let prop = attr_value(&open_tag, "prop");
-        let channels: Vec<String> = attr_value(&open_tag, "channels")
-            .map(|c| c.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect())
-            .unwrap_or_default();
-
-        if let Some(prop) = prop {
-            for line in body.lines() {
-                let line = line.trim();
-                if line.is_empty() {
-                    continue;
-                }
-                let Some((value, fills_part)) = line.split_once(':') else { continue };
-                let value = value.trim();
-                let mut decls = String::new();
-                for (chan, fill) in channels.iter().zip(fills_part.split(',').map(str::trim)) {
-                    if fill.is_empty() {
-                        continue;
-                    }
-                    decls.push_str(&format!("--{chan}:var(--{fill});"));
-                }
-                if decls.is_empty() {
-                    continue;
-                }
-                if value == "default" {
-                    css.push_str(&format!(":host{{{decls}}}"));
-                } else {
-                    css.push_str(&format!(":host([{prop}='{value}']){{{decls}}}"));
-                }
-            }
-        }
-        let mut next = String::with_capacity(out.len());
-        next.push_str(&out[..start]);
-        next.push_str(&out[block_end..]);
-        out = next;
-    }
-    (out, css)
-}
-
-/// Lower `<host sx="…">` — an element-less directive that styles the component
-/// host itself. Its sx lowers to a `:host { … }` rule (not a class), then the tag
-/// is removed. Closes the ubiquitous bare-`:host` base-styling residual (display,
-/// vertical-align via `align`, surface props) that no other construct reaches —
-/// the host is not a real element, so it cannot carry a class.
-fn lower_host(source: &str) -> (String, String) {
-    let mut out = source.to_string();
-    let mut css = String::new();
-    let mut from = 0;
-    loop {
-        let Some(rel) = out[from..].find("<host") else { break };
-        let start = from + rel;
-        // Must be a real `<host>` tag: the char after the name ends it.
-        let after = out.as_bytes().get(start + 5).copied();
-        if !matches!(after, Some(b) if b == b'>' || b == b'/' || b.is_ascii_whitespace()) {
-            from = start + 5; // e.g. `<hostname>` — skip, keep searching
-            continue;
-        }
-        let Some(tag_rel) = out[start..].find('>') else { break };
-        let mut tag_end = start + tag_rel + 1;
-        let open_tag = out[start..tag_end].to_string();
-        // Consume a matching `</host>` for the non-self-closing form.
-        if !open_tag.trim_end().ends_with("/>") {
-            if let Some(close_rel) = out[tag_end..].find("</host>") {
-                tag_end += close_rel + "</host>".len();
-            }
-        }
-        if let Some(sx) = attr_value(&open_tag, "sx") {
-            // <host sx> supports the same per-state groups as variants v2:
-            // base decls on :host, states as :host:hover etc., conditions in
-            // their media query.
-            for (state, decls) in lower_variant_sx(&sx) {
-                if decls.is_empty() {
-                    continue;
-                }
-                let (media, host_pseudo, _) = classify_variant_state(&state, false);
-                let rule = format!(":host{host_pseudo}{{{decls}}}");
-                match media {
-                    Some(q) => css.push_str(&format!("@media {q}{{{rule}}}")),
-                    None => css.push_str(&rule),
-                }
-            }
-        }
-        let mut next = String::with_capacity(out.len());
-        next.push_str(&out[..start]);
-        next.push_str(&out[tag_end..]);
-        out = next;
-        from = start;
-    }
-    (out, css)
-}
-
-/// Extract `name="value"` from an opening tag. `None` if absent.
-fn attr_value(tag: &str, name: &str) -> Option<String> {
-    let key = format!("{name}=\"");
-    let start = tag.find(&key)? + key.len();
-    let rel = tag[start..].find('"')?;
-    Some(tag[start..start + rel].to_string())
-}
-
 /// A variant selector → a `:host(...)` attribute-match. `tone=success` →
 /// `[tone='success']`; `[disabled]` → `[disabled]`; `(a=x, b=y)` →
 /// `[a='x'][b='y']` (compound).
@@ -2176,9 +1970,9 @@ mod tests {
         // class attributes; the emitted setAttribute("class") pair let the sx
         // one clobber "badge" at runtime (sui-badge `.badge` querySelector
         // returned null — 82 primitive-suite failures).
-        let out = preprocess(r#"<span class="badge" part="badge" sx="p:4">x</span>"#);
+        let out = preprocess(r#"<span class="badge" sx="p:4">x</span>"#);
         assert!(
-            out.contains(r#"class="badge sx-p-4" part="badge""#),
+            out.contains(r#"class="badge sx-p-4""#),
             "author class + sx classes must merge into one attribute, got:\n{out}"
         );
         assert_eq!(out.matches("class=").count(), 1, "exactly one class attr:\n{out}");
@@ -2210,64 +2004,6 @@ mod tests {
     fn quoted_gt_inside_attr_does_not_break_class_merge() {
         let out = preprocess(r#"<span title="a > b" class="x" sx="p:4">y</span>"#);
         assert!(out.contains(r#"class="x sx-p-4""#), "got:\n{out}");
-    }
-
-    #[test]
-    fn variants_v2_class_target_and_states() {
-        // Class-targeted block + per-variant state — the grammar the re-ports
-        // need (per-variant hover was translation-wave loss #5).
-        let src = "<variants class=\"box\">\nvariant=solid: bg:primary hover:bg:muted\n</variants>\n<div>x</div>";
-        let out = preprocess(src);
-        assert!(
-            out.contains(":host([variant='solid']) .box{background:var(--primary);}"),
-            "base rule targets the anatomy class:\n{out}"
-        );
-        assert!(
-            out.contains(":host([variant='solid']) .box:hover{background:var(--muted);}"),
-            "state attaches to the target:\n{out}"
-        );
-    }
-
-    #[test]
-    fn variants_v2_host_state_and_group_propagation() {
-        let src = "<variants>\ndisabled: opacity:50 hover:opacity:75\n</variants>\n<variants class=\"glyph\">\nchecked: group-hover:opacity:100\n</variants>\n<div>x</div>";
-        let out = preprocess(src);
-        assert!(
-            out.contains(":host([disabled]){opacity:0.5;}"),
-            "host base:\n{out}"
-        );
-        assert!(
-            out.contains(":host([disabled]:hover){opacity:0.75;}"),
-            "host-level state lands on the host:\n{out}"
-        );
-        assert!(
-            out.contains(":host([checked]:hover) .glyph{opacity:1;}"),
-            "group state on host drives the target:\n{out}"
-        );
-    }
-
-    #[test]
-    fn variants_v2_condition_wraps_media() {
-        let src = "<variants class=\"spin\">\nloading: motion-reduce:visibility:hidden\n</variants>\n<div>x</div>";
-        let out = preprocess(src);
-        assert!(
-            out.contains("@media (prefers-reduced-motion: reduce){:host([loading]) .spin{visibility:hidden;}}"),
-            "condition wraps the rule in its media query:\n{out}"
-        );
-    }
-
-    #[test]
-    fn component_variants_dotted_keys_desugar_to_class_blocks() {
-        let src = "<component>{\n  props: { variant: 'solid' | 'soft' },\n  variants: {\n    variant: { solid: 'shadow:xs' },\n    '.box': { variant: { solid: 'bg:primary' } },\n  },\n}</component>\n<div>x</div>";
-        let out = preprocess(src);
-        assert!(
-            out.contains(":host([variant='solid']){box-shadow:var(--shadow-xs);}"),
-            "host-level group survives:\n{out}"
-        );
-        assert!(
-            out.contains(":host([variant='solid']) .box{background:var(--primary);}"),
-            "dotted key becomes a class-targeted block:\n{out}"
-        );
     }
 
     #[test]
@@ -2323,19 +2059,19 @@ mod tests {
         // each slot region receives its projected child, none survive as <slot>
         assert!(!out.contains("<slot"), "no slot tags survive projection: {out}");
         assert!(
-            out.contains(r#"class="ico" part="ico"><svg slot="icon" class="i"></svg>"#),
+            out.contains(r#"class="ico"><svg slot="icon" class="i"></svg>"#),
             "icon → .ico: {out}"
         );
         assert!(
-            out.contains(r#"class="title" part="title"><span slot="title">Saved</span>"#),
+            out.contains(r#"class="title"><span slot="title">Saved</span>"#),
             "title → .title: {out}"
         );
         assert!(
-            out.contains(r#"class="body" part="body">All changes saved."#),
+            out.contains(r#"class="body">All changes saved."#),
             "un-slotted → body: {out}"
         );
         assert!(
-            out.contains(r#"class="actions" part="actions"><button slot="actions">Undo</button>"#),
+            out.contains(r#"class="actions"><button slot="actions">Undo</button>"#),
             "actions → .actions: {out}"
         );
     }
@@ -2352,10 +2088,10 @@ mod tests {
         assert!(out.contains(r#"variant="placeholder""#), "attr merged: {out}");
         assert!(out.contains("use:emptyState"), "action rides the splice: {out}");
         assert!(!out.contains("<slot"), "no slot survives: {out}");
-        assert!(out.contains(r#"class="icon" part="icon" aria-hidden="true"><svg slot="icon"></svg>"#), "icon slot: {out}");
-        assert!(out.contains(r#"class="title" part="title"><span slot="title">No results</span>"#), "title slot: {out}");
-        assert!(out.contains(r#"class="desc" part="desc">Try a different search."#), "default → desc: {out}");
-        assert!(out.contains(r#"class="actions" part="actions"><button slot="action">Reset</button>"#), "action slot: {out}");
+        assert!(out.contains(r#"class="icon" aria-hidden="true"><svg slot="icon"></svg>"#), "icon slot: {out}");
+        assert!(out.contains(r#"class="title"><span slot="title">No results</span>"#), "title slot: {out}");
+        assert!(out.contains(r#"class="desc">Try a different search."#), "default → desc: {out}");
+        assert!(out.contains(r#"class="actions"><button slot="action">Reset</button>"#), "action slot: {out}");
     }
 
     #[test]
@@ -2466,54 +2202,95 @@ mod tests {
 
     #[test]
     fn props_default_literals_are_honored() {
-        // The re-port pilot's find: default literals were silently discarded
-        // (`label: 'Loading'` → default="", killing spinner's aria-label;
-        // `centered: false` even mistyped as string).
-        let src = "<component>{\n  props: { label: 'Loading', centered: false, count: 3 },\n}</component>\n<div>x</div>";
-        let out = preprocess(src);
+        let decls = component_props_to_decls("{ label: 'Loading', centered: false, count: 3 }", None, None);
+        let get = |n: &str| decls.iter().find(|p| p.name == n).unwrap();
+        assert_eq!(get("label").kind, PropKind::String);
+        assert_eq!(get("label").default.as_deref(), Some("Loading"));
+        assert_eq!(get("centered").kind, PropKind::Bool);
+        assert_eq!(get("centered").default.as_deref(), Some("false"));
+        assert!(get("centered").reflect);
+        assert_eq!(get("count").kind, PropKind::Number);
+        assert_eq!(get("count").default.as_deref(), Some("3"));
+    }
+
+    #[test]
+    fn object_array_and_custom_typed_props_are_identity_props() {
+        // Object/array/custom-typed props are plain reactive properties: the
+        // authored TS type is preserved verbatim, nothing reflects to an
+        // attribute, nothing is mistyped as a stringly prop. A recognized
+        // primitive (`label: string`) is unaffected.
+        let props = "{ label: string, config: { a: 'x' | 'y' }, columns: Column[], data: DataPoint }";
+        let decls = component_props_to_decls(props, None, None);
+        let get = |n: &str| decls.iter().find(|p| p.name == n).unwrap();
+        // `{ a: 'x' | 'y' }` keeps its `|` — it's an object type, not a union.
+        assert_eq!(get("config").kind, PropKind::Identity("{ a: 'x' | 'y' }".into()));
+        assert_eq!(get("columns").kind, PropKind::Identity("Column[]".into()));
+        // A bare custom type is preserved, not stringly-typed as before.
+        assert_eq!(get("data").kind, PropKind::Identity("DataPoint".into()));
+        for n in ["config", "columns", "data"] {
+            assert!(!get(n).reflect, "{n} must not reflect");
+            assert!(get(n).default.is_none(), "{n} has no scalar default");
+        }
+        assert_eq!(get("label").kind, PropKind::String);
+    }
+
+    #[test]
+    fn shadow_is_opt_in_light_is_the_default() {
+        // Light DOM is the default (invariant 9): no declaration ⇒ not shadow.
+        assert!(!declares_shadow_dom("<component>{ props: { tone: union } }</component>"));
+        // `shadow: true` is the per-component opt-in (foreign-content wrapping).
+        assert!(declares_shadow_dom("<component>{ shadow: true, props: {} }</component>"));
+    }
+
+    #[test]
+    fn unknown_component_field_is_rejected_generically() {
+        // Retired constructs (`light`, `variants`) and typos are rejected by a
+        // generic unknown-field error — the compiler names the valid set, not
+        // the old forms (no fossilization).
+        let err = crate::parse::parse(
+            "<component>{ light: true, props: {} }</component><div>x</div>",
+        )
+        .unwrap_err();
+        assert!(err.message.contains("unknown `<component>` field `light`"), "{}", err.message);
+        // The valid fields all parse cleanly.
+        assert!(crate::parse::parse("<component>{ props: {} }</component><div>x</div>").is_ok());
         assert!(
-            out.contains(r#"<prop name="label" type="string" default="Loading" />"#),
-            "string default literal honored:\n{out}"
-        );
-        assert!(
-            out.contains(r#"<prop name="centered" type="bool" default="false" reflect />"#),
-            "bool default literal typed as bool:\n{out}"
-        );
-        assert!(
-            out.contains(r#"<prop name="count" type="number" default="3" />"#),
-            "number default literal honored:\n{out}"
+            crate::parse::parse("<component>{ shadow: true, props: {} }</component><div>x</div>")
+                .is_ok()
         );
     }
 
     #[test]
     fn component_form_field_flags_the_named_props() {
-        // `form: { value, disabled }` → the named props' tags gain the
-        // ElementInternals association flags, independent of field order.
-        let src = "<component>{\n  props: { checked: bool, disabled: bool, name: string },\n  form: { value: 'checked', disabled: 'disabled' },\n}</component>\n<div>x</div>";
-        let out = preprocess(src);
-        assert!(
-            out.contains(r#"<prop name="checked" type="bool" default="false" reflect form-value />"#),
-            "checked carries form-value, got:\n{out}"
+        let decls = component_props_to_decls(
+            "{ checked: bool, disabled: bool, name: string }",
+            Some("checked"),
+            Some("disabled"),
         );
-        assert!(
-            out.contains(r#"<prop name="disabled" type="bool" default="false" reflect form-disabled />"#),
-            "disabled carries form-disabled, got:\n{out}"
-        );
-        assert!(
-            out.contains(r#"<prop name="name" type="string" default="" />"#),
-            "unnamed props unchanged, got:\n{out}"
-        );
-        assert!(!out.contains("<form"), "the form field itself emits nothing:\n{out}");
+        let get = |n: &str| decls.iter().find(|p| p.name == n).unwrap();
+        assert_eq!(get("checked").kind, PropKind::Bool);
+        assert!(get("checked").form_value);
+        assert!(get("disabled").form_disabled);
+        assert!(!get("name").form_value && !get("name").form_disabled);
     }
 
     #[test]
     fn component_form_field_before_props_also_flags() {
-        let src = "<component>{\n  form: { value: 'value' },\n  props: { value: string },\n}</component>\n<div>x</div>";
-        let out = preprocess(src);
-        assert!(
-            out.contains(r#"<prop name="value" type="string" default="" form-value />"#),
-            "form before props still flags, got:\n{out}"
-        );
+        let decls = component_props_to_decls("{ value: string }", Some("value"), None);
+        assert!(decls.iter().find(|p| p.name == "value").unwrap().form_value);
+    }
+
+    #[test]
+    fn variant_prop_is_union_and_emits_css() {
+        let props = "{ variant: { solid: 'bg:primary', outline: 'border:primary' }, loading: false }";
+        let decls = component_props_to_decls(props, None, None);
+        let variant = decls.iter().find(|p| p.name == "variant").unwrap();
+        assert_eq!(variant.kind, PropKind::Union(vec!["solid".into(), "outline".into()]));
+        assert_eq!(variant.default.as_deref(), Some("solid"));
+        assert!(variant.reflect);
+        let css = component_variants_to_css(props, None);
+        assert!(css.contains("[variant='solid']"), "got: {css}");
+        assert!(css.contains("[variant='outline']"), "got: {css}");
     }
 
     #[test]
@@ -2745,80 +2522,6 @@ mod tests {
     }
 
     #[test]
-    fn host_directive_lowers_to_host_rule() {
-        let out = preprocess(r#"<host sx="display:inline-flex p:2" /><button>x</button>"#);
-        assert!(out.contains(":host{display:inline-flex;padding:var(--space-2);}"), "{out}");
-        assert!(!out.contains("<host"), "tag removed: {out}");
-    }
-
-    #[test]
-    fn theme_block_lowers_channels_and_sx_consumes_them() {
-        let out = preprocess(
-            "<theme prop=\"tone\" channels=\"tone-fg, tone-border\">\n  default: foreground, border\n  info: info, tone-info-border\n</theme>\n<div sx=\"fg:tone-fg border:tone-border\">x</div>",
-        );
-        assert!(!out.contains("<theme"), "block stripped: {out}");
-        assert!(
-            out.contains(":host{--tone-fg:var(--foreground);--tone-border:var(--border);}"),
-            "default channel row: {out}"
-        );
-        assert!(
-            out.contains(":host([tone='info']){--tone-fg:var(--info);--tone-border:var(--tone-info-border);}"),
-            "info channel row: {out}"
-        );
-        assert!(out.contains(".sx-fg-tonefg{color:var(--tone-fg)}"), "channel as color: {out}");
-        assert!(
-            out.contains(".sx-border-toneborder{border:1px solid var(--tone-border)}"),
-            "channel as full border: {out}"
-        );
-    }
-
-    #[test]
-    fn variants_part_attr_targets_a_slot() {
-        let out = preprocess("<variants part=\"field\">\n  invalid: border:destructive\n  disabled: cursor:not-allowed\n</variants>\n<div part=\"field\">x</div>");
-        assert!(out.contains(":host([invalid]) [part='field']{border:1px solid var(--destructive);}"), "slot variant: {out}");
-        assert!(out.contains(":host([disabled]) [part='field']{cursor:not-allowed;}"), "bare boolean → slot: {out}");
-    }
-
-    #[test]
-    fn variants_object_form_matches_line_dsl() {
-        // The CVA-shaped TS-object body lowers to the same CSS as the line DSL:
-        // prop groups → `[prop='value']`, `compound` → AND-ed conditions.
-        let obj = preprocess(
-            "<variants part=\"button\">{\n  variant: { solid: 'bg:primary fg:background', outline: 'border:strong fg:foreground' },\n  size: { sm: 'min-h:control-h-sm', lg: 'min-h:control-h-lg' },\n  compound: [ { when: { variant: 'solid', size: 'lg' }, sx: 'shadow:md' } ],\n}</variants>\n<button part=\"button\">x</button>",
-        );
-        assert!(!obj.contains("<variants"), "object block stripped: {obj}");
-        assert!(
-            obj.contains(":host([variant='solid']) [part='button']{background:var(--primary);color:var(--background);}"),
-            "prop-group variant from object form: {obj}"
-        );
-        assert!(
-            obj.contains(":host([size='lg']) [part='button']{min-height:var(--control-h-lg);}"),
-            "prop-group size from object form: {obj}"
-        );
-        assert!(
-            obj.contains(":host([variant='solid'][size='lg']) [part='button']{box-shadow:var(--shadow-md);}"),
-            "compound AND-ed selector from object form: {obj}"
-        );
-    }
-
-    #[test]
-    fn variants_block_lowers_to_host_css() {
-        let out = preprocess(
-            "<variants>\n  tone=success: bg:tone-success-bg fg:tone-success-fg\n  [disabled]: opacity:50 cursor:not-allowed\n  (tone=primary, size=lg): shadow:md\n</variants>\n<button>x</button>",
-        );
-        assert!(!out.contains("<variants>"), "block stripped from template: {out}");
-        assert!(
-            out.contains(":host([tone='success']){background:var(--tone-success-bg);color:var(--tone-success-fg);}"),
-            "attr variant: {out}"
-        );
-        assert!(out.contains(":host([disabled]){opacity:0.5;cursor:not-allowed;}"), "boolean variant: {out}");
-        assert!(
-            out.contains(":host([tone='primary'][size='lg']){box-shadow:var(--shadow-md);}"),
-            "compound variant: {out}"
-        );
-    }
-
-    #[test]
     fn unterminated_comment_copies_to_eof() {
         // Defensive: a malformed file with no closing `-->` shouldn't
         // panic or read past end-of-file. Copy the rest verbatim and
@@ -2828,31 +2531,4 @@ mod tests {
         assert_eq!(out, src);
     }
 
-    #[test]
-    fn bare_size_prop_gets_the_default_vocabulary() {
-        let out = expand_props("{ size }", None, None);
-        assert!(out.contains(r#"name="size""#));
-        assert!(out.contains(r#"values="xs|sm|md|lg""#), "{out}");
-        assert!(out.contains(r#"default="md""#), "{out}");
-        assert!(out.contains("reflect"), "framework contract kept: {out}");
-    }
-
-    #[test]
-    fn explicit_size_union_widens_the_vocabulary() {
-        // The sonnet-agent LANG-GAP: a framework prop with an explicit union
-        // (icon adding `xl`) must honor the author's vocabulary, not be
-        // clobbered back to xs|sm|md|lg. The contract (reflect) and the `md`
-        // default are kept.
-        let out = expand_props("{ size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' }", None, None);
-        assert!(out.contains(r#"values="xs|sm|md|lg|xl""#), "{out}");
-        assert!(out.contains(r#"default="md""#), "md preferred as default: {out}");
-        assert!(out.contains("reflect"), "{out}");
-    }
-
-    #[test]
-    fn explicit_tone_union_narrows_and_keeps_default() {
-        let out = expand_props("{ tone: 'default' | 'primary' | 'destructive' }", None, None);
-        assert!(out.contains(r#"values="default|primary|destructive""#), "{out}");
-        assert!(out.contains(r#"default="default""#), "{out}");
-    }
 }

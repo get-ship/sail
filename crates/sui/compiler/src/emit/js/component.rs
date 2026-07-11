@@ -92,6 +92,9 @@ fn prop_call(p: &PropDecl) -> String {
                 format!("prop.union([{values_js}], {opts_str})")
             }
         }
+        // A plain reactive property — signal + accessor, no attribute. Its TS
+        // type lives in the `.d.ts`, not in the runtime registration.
+        PropKind::Identity(_) => format!("prop.property({opts_str})"),
     }
 }
 

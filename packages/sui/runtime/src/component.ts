@@ -427,7 +427,10 @@ export function installPropAccessors(
   prototype: object,
   schema: ComponentSchema,
 ): void {
-  for (const attr of schema.observedAttrs) {
+  // Every prop gets an accessor — attribute-backed AND property-only props
+  // alike — so `el.prop = …` bridges to the signal in all cases. Attribute
+  // observation (observedAttrs) is the narrower, attribute-only subset.
+  for (const attr of Object.keys(schema.props)) {
     const meta = schema.props[attr]
     if (!meta) continue
     const camel = meta.camel

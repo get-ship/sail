@@ -1,7 +1,7 @@
 <!--
   <label> — L1 language element (element mode). Bare tag: it lowers away at
   compile time to a native `<label>`; the skin routes to the framework layer
-  keyed on .sui-label; the contract feeds the element manifest.
+  keyed on label; the contract feeds the element manifest.
 
   Faithful to the feat/next sui-label baseline for `size` and `required`.
   `for` is deliberately NOT a declared prop: the baseline forwards it to an
@@ -34,7 +34,7 @@
 }</component>
 
 <style>
-  :host {
+  label {
     display: inline-block;
     font-family: var(--font-body);
     font-weight: 600;
@@ -42,12 +42,12 @@
     color: var(--foreground);
     cursor: pointer;
   }
-  :host([hidden]) { display: none; }
+  label[hidden] { display: none; }
 
-  :host(:not([size])),
-  :host([size='md']) { font-size: var(--text-base); }
-  :host([size='sm']),
-  :host([size='lg']) { font-size: var(--text-sm); }
+  label:not([size]),
+  label[size='md'] { font-size: var(--text-base); }
+  label[size='sm'],
+  label[size='lg'] { font-size: var(--text-sm); }
 
   .req {
     display: none;
@@ -55,7 +55,7 @@
     margin-left: var(--space-1);
     font-weight: 700;
   }
-  :host([required]) .req { display: inline; }
+  label[required] .req { display: inline; }
 </style>
 
 <label>

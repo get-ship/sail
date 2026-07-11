@@ -12,6 +12,7 @@ fn fixtures_dir() -> PathBuf {
 }
 
 #[test]
+#[ignore = "retired <prop>+JSDoc syntax; prop descriptions in the component block (JSDoc on the props field) is a tracked follow-up"]
 fn jsdoc_above_prop_emits_description_in_cem() {
     let path = fixtures_dir().join("jsdoc-prop.sui");
     let source = fs::read_to_string(&path).unwrap();

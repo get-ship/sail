@@ -29,7 +29,7 @@
 }</component>
 
 <style>
-  :host {
+  .sui-avatar {
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -56,21 +56,21 @@
     height: var(--space-7);
     font-size: var(--text-base);
   }
-  :host([hidden]) { display: none; }
-  :host([shape='square']) { border-radius: var(--radius-sm); }
+  .sui-avatar[hidden] { display: none; }
+  .sui-avatar[shape='square'] { border-radius: var(--radius-sm); }
 
-  :host([size='xs']) { width: 1.25rem;             height: 1.25rem;             font-size: var(--text-xs); }
-  :host([size='sm']) { width: var(--control-h-sm); height: var(--control-h-sm); font-size: var(--text-xs); }
-  :host([size='md']) { width: var(--space-7);      height: var(--space-7);      font-size: var(--text-base); }
-  :host([size='lg']) { width: var(--control-h-lg); height: var(--control-h-lg); font-size: var(--text-lg); }
-  :host([size='xl']) { width: var(--control-h-xl); height: var(--control-h-xl); font-size: var(--text-2xl); }
+  .sui-avatar[size='xs'] { width: 1.25rem;             height: 1.25rem;             font-size: var(--text-xs); }
+  .sui-avatar[size='sm'] { width: var(--control-h-sm); height: var(--control-h-sm); font-size: var(--text-xs); }
+  .sui-avatar[size='md'] { width: var(--space-7);      height: var(--space-7);      font-size: var(--text-base); }
+  .sui-avatar[size='lg'] { width: var(--control-h-lg); height: var(--control-h-lg); font-size: var(--text-lg); }
+  .sui-avatar[size='xl'] { width: var(--control-h-xl); height: var(--control-h-xl); font-size: var(--text-2xl); }
 
-  :host([tone='primary'])     { background: var(--primary);           color: var(--primary-foreground); }
-  :host([tone='accent'])      { background: var(--accent);            color: var(--accent-foreground); }
-  :host([tone='info'])        { background: var(--tone-info-bg);      color: var(--info); }
-  :host([tone='success'])     { background: var(--tone-success-bg);   color: var(--success); }
-  :host([tone='warning'])     { background: var(--tone-warning-bg);   color: var(--warning); }
-  :host([tone='destructive']) { background: var(--tone-destructive-bg); color: var(--destructive); }
+  .sui-avatar[tone='primary']     { background: var(--primary);           color: var(--primary-foreground); }
+  .sui-avatar[tone='accent']      { background: var(--accent);            color: var(--accent-foreground); }
+  .sui-avatar[tone='info']        { background: var(--tone-info-bg);      color: var(--info); }
+  .sui-avatar[tone='success']     { background: var(--tone-success-bg);   color: var(--success); }
+  .sui-avatar[tone='warning']     { background: var(--tone-warning-bg);   color: var(--warning); }
+  .sui-avatar[tone='destructive'] { background: var(--tone-destructive-bg); color: var(--destructive); }
 
   img {
     width: 100%;

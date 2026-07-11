@@ -224,6 +224,9 @@ fn prop_ts_type(p: &PropDecl) -> String {
             .map(|v| format!("'{v}'"))
             .collect::<Vec<_>>()
             .join(" | "),
+        // props-as-ts: the prop's type IS the TypeScript you wrote — preserved
+        // verbatim (`Signal<Column[]>`), resolved through your own imports.
+        PropKind::Identity(t) => t.clone(),
     };
     format!("Signal<{inner}>")
 }

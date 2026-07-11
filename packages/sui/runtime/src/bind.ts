@@ -198,6 +198,37 @@ export function bindProp<T extends Element>(
   })
 }
 
+const camelize = (s: string): string =>
+  s.includes('-') ? s.replace(/-([a-z])/g, (_m, c: string) => c.toUpperCase()) : s
+
+/**
+ * Route a dynamic binding to the right channel so the AUTHOR never has to.
+ * This is the toolchain owning the DOM's attribute/property split: for a custom
+ * element, a value that can't be an attribute (object / array / function), or a
+ * name the element exposes as a property (a declared prop → accessor), is
+ * assigned as a PROPERTY — identity preserved; the component reflects it to an
+ * attribute itself if it wants (e.g. `variant`, `tone`). Everything else is a
+ * plain HTML attribute (aria-*, data-*, native).
+ *
+ * The compiler emits this for a plain `name={expr}` binding on a custom element
+ * (`<sui-table columns={cols} tone={t}>`). `attr:`/`prop:` remain as explicit
+ * escape hatches for the rare case the author wants to force a channel.
+ *
+ * The channel is decided once, at bind time, from the element + first value —
+ * stable for the life of the binding.
+ */
+export function bindDynamic(el: Element, name: string, get: () => unknown): Disposer {
+  const camel = camelize(name)
+  const first = get()
+  // Only custom elements have a property/attribute duality worth routing.
+  // Native elements keep pure-attribute semantics — identical to bindAttr.
+  const asProp =
+    el.tagName.includes('-') &&
+    (camel in el ||
+      (first !== null && (typeof first === 'object' || typeof first === 'function')))
+  return asProp ? bindProp(el, camel, get) : bindAttr(el, name, get)
+}
+
 /**
  * Two-way bind a string signal to an `<input>` / `<textarea>` /
  * `<select>` element. Initial render and signal-driven updates flow

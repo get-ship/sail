@@ -27,15 +27,15 @@
      animation — collapsible inherits all of it. This skin adds only what is
      element-specific: identity + the disabled state (native <details> has no
      disabled concept) + the content padding hook. */
-  :host {
+  .sui-collapsible {
     display: block;
     font-family: var(--font-body);
   }
-  :host([disabled]) summary { cursor: not-allowed; opacity: 0.5; }
-  :host .content-inner { padding: var(--space-3) var(--space-4); }
+  .sui-collapsible[disabled] summary { cursor: not-allowed; opacity: 0.5; }
+  .sui-collapsible .content-inner { padding: var(--space-3) var(--space-4); }
 </style>
 
 <details use:collapsible>
-  <summary class="trigger-wrap" part="trigger"><slot name="trigger"></slot></summary>
-  <div class="content-wrap" part="content"><div class="content-inner"><slot></slot></div></div>
+  <summary class="trigger-wrap"><slot name="trigger"></slot></summary>
+  <div class="content-wrap"><div class="content-inner"><slot></slot></div></div>
 </details>

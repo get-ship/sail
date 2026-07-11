@@ -1,71 +1,23 @@
 <!--
-  <sui-popover> — SUI port of <ship-popover>, backed by the native HTML
-  popover API. Thin wrapper over `popover="auto"` + `popovertarget` —
-  the platform handles open/close, light-dismiss, Escape, focus return,
-  and top-layer rendering. We only contribute placement (anchor-positioned),
-  ARIA reflection, and a unified `sui-toggle` event.
+  <sui-popover> — a floating surface anchored to a trigger, backed by the
+  native HTML popover API. `popover="auto"` gives the platform's top-layer
+  render, light-dismiss, ESC, and focus-return; we contribute only the three
+  things the platform leaves open — and each via the ONE shared implementation,
+  not a hand-rolled copy:
 
-  Prop / event / method parity vs <ship-popover>
-  ────────────────────────────────────────────────────────────────────────────
-  Lit                          SUI                          Notes
-  ────────────────────────────────────────────────────────────────────────────
-  open (bool, false)           open (bool, false, reflect)  ✓
-  placement                    placement (union, 'bottom',  ✓ adds bottom-end,
-    'top'|'bottom'|'left'|       reflect)                     top-end, right-end,
-    'right'                                                    left-end
-  ────────────────────────────────────────────────────────────────────────────
-  Events: ship-open,           sui-toggle                   { detail: { open } }
-    ship-close                                                — single event
-                                                               replaces pair
-  ────────────────────────────────────────────────────────────────────────────
-  show(), hide(), toggle()     show(), hide(), toggle()     ✓ delegate to
-                                                               showPopover /
-                                                               hidePopover /
-                                                               togglePopover
-  ────────────────────────────────────────────────────────────────────────────
-  Slots: trigger, (default)    trigger, (default)           ✓
-  Parts: (none)                panel, surface               ✓
-  ────────────────────────────────────────────────────────────────────────────
-  Click-outside / Esc /        DELEGATED to native          ✓ less code,
-  focus-return:                  popover="auto"              ✓ better a11y,
-    hand-rolled in JS                                         ✓ top-layer
-  ────────────────────────────────────────────────────────────────────────────
-  Trigger ARIA:                Same — controller sets       ✓
-    aria-haspopup="dialog",      aria-haspopup,
-    aria-expanded,               aria-expanded,
-    aria-controls=panelId        aria-controls + the
-                                  popovertarget attribute that
-                                  wires native open/close
-  ────────────────────────────────────────────────────────────────────────────
-  Position:                    CSS Anchor Positioning       ✓ Chrome/Safari;
-    pure CSS top/left            (anchor-name +              ✓ getBoundingClientRect
-    selectors keyed off           position-anchor +           fallback for FF +
-    [placement]                   anchor())                   older Safari
-  ────────────────────────────────────────────────────────────────────────────
+    • open state  → usePopover() (the handle IS bindPopover: showPopover /
+                    hidePopover <-> signal, toggle-sync). The `open` prop
+                    bridges to it.
+    • placement   → use:anchor={placement} (the family's single positioner:
+                    getBoundingClientRect + fixed, with block/inline flip;
+                    CSS position-area is a later progressive enhancement).
+    • ARIA + event → aria-haspopup/controls/expanded on the trigger, and a
+                    unified `sui-toggle` event.
 
-  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
-  ────────────────────────────────────────────────────────────────────────
-  - The component block uses the new props: object form (matching
-    the alert pilot's house style) — no more flat `<prop>` tags.
-  - The .surface's surface treatment (min-width / padding / background
-    / foreground / border / radius / text size) moves onto `sx=`.
-    The remaining <style> rules are all genuinely irreducible to sx:
-    backdrop-filter (with vendor prefix), isolation, multi-shadow
-    (the inset 1px highlight), font-family, the entire @supports
-    CSS Anchor Positioning block (anchor-name, position-anchor,
-    position-try-fallbacks, position-try-order, anchor() math),
-    and ::slotted([slot='trigger']) anchor-name wiring.
-  - The :host base still carries `--sui-popover-anchor` setup — the
-    controller sets the per-instance var that the @supports block
-    reads, so the var lives on the host (not on .panel) and the
-    rules can resolve it once for all elements.
-  - The @media (prefers-reduced-motion) rule still lives in <style>
-    because the .surface gets `transition:scale` from the runtime
-    {#if open()} binding, not from sx (sx has no transition
-    shorthand for "scale around center").
-  - No new LANG-GAP: the surface drop-shadows + backdrop-filter +
-    anchor positioning sit naturally in <style>. The cell-editor
-    gap (sui-sheet) is a different story — that one is genuine.
+  The surface chrome (glass backdrop-filter, the --shadow-lg drop shadow, the
+  isolation stacking context, font-family) is the one thing the platform +
+  skin don't cover, so it lives on `.surface`. Slots: `trigger`, default.
+  Parts: `panel`, `surface`.
 -->
 
 <component>{
@@ -82,21 +34,14 @@
   --panel-min-w-sm: ; --radius-lg: ; --shadow-lg: ;
   --popover: ; --popover-foreground: ; --card-backdrop-filter: ;
 
-  /* The host is an inline-flex positioning context that owns the
-   * per-instance --sui-popover-anchor var the @supports block reads. */
-  :host {
-    position: relative;
-    display: inline-flex;
-    --sui-popover-anchor: --sui-popover-default;
-  }
+  :host { display: inline-flex; }
   :host([hidden]) { display: none; }
 
-  /* Native popover defaults are aggressive (position:fixed, inset:0,
-     huge default margins). Reset to a layout-neutral container so our
-     surface div carries the chrome and anchor positioning drives the
-     placement. */
+  /* Native popover defaults are aggressive (position:fixed, inset:0, big
+     margins). Reset to a layout-neutral container; use:anchor sets the real
+     position:fixed + top/left from the trigger rect. */
   .panel {
-    position: absolute;
+    position: fixed;
     margin: 0;
     border: 0;
     padding: 0;
@@ -106,78 +51,17 @@
   }
   .panel::backdrop { background: transparent; }
 
-  /* The surface surface treatment lives in sx; the irreducible remainder
-   * (backdrop-filter with vendor prefix, isolation, multi-shadow inset
-   * highlight, font-family) stays here. */
+  /* Surface chrome — the irreducible remainder the skin can't express as one
+     preset: glass backdrop-filter (vendor-prefixed), the floating drop shadow,
+     the isolation stacking context that clips the glass to the radius while
+     letting the shadow paint outside, and font-family. The rest of the
+     treatment (bg/fg/border/radius/padding/min-width/text) is on sx below. */
   .panel > .surface {
     backdrop-filter: var(--card-backdrop-filter);
     -webkit-backdrop-filter: var(--card-backdrop-filter);
-    /* The floating-overlay drop shadow — the canonical `--shadow-lg` the rest
-       of the family (dropdown-menu, select, combobox…) carries. It was dropped
-       in the sx migration (sx has no multi-shadow vocabulary), leaving the
-       panel flat; the harness caught it as shadow:none. This is the
-       "irreducible remainder" the comment below sanctions living in CSS. */
     box-shadow: var(--shadow-lg);
-    /* Establish a stacking context so the glass backdrop-filter clips to
-       the surface radius. isolation (not overflow:hidden) because --shadow-lg
-       must paint OUTSIDE the surface; an overflow clip would crop it. */
     isolation: isolate;
     font-family: var(--font-body);
-  }
-
-  /* CSS Anchor Positioning. Controller sets a unique anchor-name on the
-   * SLOTTED trigger element via `--sui-popover-anchor`, so each instance
-   * anchors to its own trigger without any inline-style juggling. */
-  @supports (anchor-name: --x) {
-    ::slotted([slot='trigger']) {
-      anchor-name: var(--sui-popover-anchor);
-    }
-    .panel {
-      position-anchor: var(--sui-popover-anchor);
-      /* When the chosen placement would clip the panel against the
-         viewport edge, fall back automatically. `flip-block` swaps
-         top↔bottom, `flip-inline` swaps left↔right, and the combined
-         entry covers diagonal cases. The browser picks the first
-         fallback that fits; if none do, the original placement wins
-         (clipped but visible). Modern Chromium/Safari/Firefox all
-         honor this — older browsers ignore the property and degrade
-         to the chosen placement (the same behavior as today). */
-      position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
-      position-try-order: most-block-size;
-    }
-    :host(:not([placement])) .panel,
-    :host([placement='bottom']) .panel {
-      top: calc(anchor(bottom) + 6px);
-      left: anchor(left);
-    }
-    :host([placement='bottom-end']) .panel {
-      top: calc(anchor(bottom) + 6px);
-      right: calc(100vw - anchor(right));
-    }
-    :host([placement='top']) .panel {
-      bottom: calc(100vh - anchor(top) + 6px);
-      left: anchor(left);
-    }
-    :host([placement='top-end']) .panel {
-      bottom: calc(100vh - anchor(top) + 6px);
-      right: calc(100vw - anchor(right));
-    }
-    :host([placement='right']) .panel {
-      left: calc(anchor(right) + 6px);
-      top: anchor(top);
-    }
-    :host([placement='right-end']) .panel {
-      left: calc(anchor(right) + 6px);
-      bottom: calc(100vh - anchor(bottom));
-    }
-    :host([placement='left']) .panel {
-      right: calc(100vw - anchor(left) + 6px);
-      top: anchor(top);
-    }
-    :host([placement='left-end']) .panel {
-      right: calc(100vw - anchor(left) + 6px);
-      bottom: calc(100vh - anchor(bottom));
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -187,205 +71,105 @@
 
 
 <controller>
-import { controller, effect, bindNativeEvent, slotted } from '@ship/sui-runtime'
+import { controller, effect, bindNativeEvent, slotted, usePopover } from '@ship/sui-runtime'
 import type { Scope } from './sui-popover.sui'
 
-// Per-instance anchor-name so multiple popovers on a page each address
-// their own trigger via CSS Anchor Positioning.
-let anchorSeq = 0
-
-const anchorSupported =
-  typeof CSS !== 'undefined' &&
-  typeof CSS.supports === 'function' &&
-  CSS.supports('anchor-name', '--x')
-
-type Placement =
-  | 'top' | 'top-end'
-  | 'bottom' | 'bottom-end'
-  | 'left' | 'left-end'
-  | 'right' | 'right-end'
-
-// Popover method surface (showPopover / hidePopover / togglePopover) is
-// available on HTMLElement in the Popover-API-aware DOM. Cast at the
-// call sites (`as PopoverApi`) where the controller invokes them,
-// since the existence is feature-detected via `typeof el.showPopover`.
-interface PopoverApi {
-  showPopover?: () => void
-  hidePopover?: () => void
-  togglePopover?: () => boolean
-}
+// Per-instance panel id so multiple popovers each address their own trigger
+// via the native popovertarget link (which use:anchor reads to position).
+let seq = 0
 
 export default controller<Scope>({
   mount(state, host) {
-    const id = ++anchorSeq
-    const anchorName = `--sui-popover-${id}`
-    const panelId = `sui-popover-panel-${id}`
-
-    host.style.setProperty('--sui-popover-anchor', anchorName)
-
-    const triggerSlot = state.$signals.triggerSlot()
-    const panelEl = state.$signals.panelEl() as (HTMLElement & PopoverApi) | null
+    const panelId = `sui-popover-panel-${++seq}`
+    const panelEl = state.$signals.panelEl() as HTMLElement | null
     if (!panelEl) return
-
     panelEl.id = panelId
 
-    // ── Trigger wiring ──────────────────────────────────────────────────
-    // The platform handles open/close: setting popovertarget on the
-    // slotted button wires its click + keyboard activation directly to
-    // the popover. We do NOT add a manual click handler — that would
-    // double-toggle and steal focus management from the browser.
-    // We DO set the ARIA attributes the popover attribute doesn't infer
-    // (haspopup) and reflect aria-expanded from the toggle event.
+    // ── Trigger wiring ─────────────────────────────────────────────────
+    // popovertarget hands the platform the open/close + keyboard activation;
+    // we never add a manual click handler (that would double-toggle and steal
+    // the browser's focus management). We only add the ARIA the popover
+    // attribute doesn't infer.
     slotted(state.$signals.triggerSlot as () => HTMLSlotElement | null, (els) => {
       for (const el of els as HTMLElement[]) {
         el.setAttribute('popovertarget', panelId)
         el.setAttribute('aria-haspopup', 'dialog')
         el.setAttribute('aria-controls', panelId)
-        el.setAttribute('aria-expanded', state.$signals.open() ? 'true' : 'false')
       }
     })
-
-    // Track open state locally. `:popover-open` is the authoritative source in
-    // browsers, but some environments (and selector engines without that
-    // pseudo) throw on `matches(':popover-open')` — fall back to this mirror.
-    let popoverOpen = false
-    const isPopoverOpen = (): boolean => {
-      try {
-        return panelEl.matches?.(':popover-open') ?? popoverOpen
-      } catch {
-        return popoverOpen
-      }
+    const triggerEls = (): HTMLElement[] => {
+      const slot = state.$signals.triggerSlot() as HTMLSlotElement | null
+      return (slot?.assignedElements({ flatten: true }) ?? []) as HTMLElement[]
     }
 
-    // ── Native toggle event → reflect into state.$signals.open + emit sui-toggle
+    // ── Open state: the ONE implementation ─────────────────────────────
+    // usePopover's handle IS bindPopover — attaching it wires native
+    // showPopover/hidePopover <-> signal + the light-dismiss/toggle sync. No
+    // hand-rolled effect. The `open` prop (public API, reflected) bridges to it.
+    const pop = usePopover()
+    const detach = pop(panelEl) as { destroy?: () => void }
+
+    // prop.open → handle
+    const stopIn = effect(() => {
+      if (state.$signals.open()) pop.open()
+      else pop.close()
+    })
+    // handle → prop (native light-dismiss / popovertarget / ESC / programmatic).
+    // Write-back through the attribute so the reflected `open` prop stays
+    // authoritative; guarded so it never fights stopIn.
+    const stopOut = effect(() => {
+      const o = pop.isOpen()
+      const has = host.hasAttribute('open')
+      if (o && !has) host.setAttribute('open', '')
+      else if (!o && has) host.removeAttribute('open')
+    })
+    // aria-expanded on the trigger(s) follows the open state.
+    const stopAria = effect(() => {
+      const o = pop.isOpen()
+      for (const el of triggerEls()) el.setAttribute('aria-expanded', o ? 'true' : 'false')
+    })
+
+    // Unified public event on real toggles (not the initial state).
     function onToggle(ev: Event) {
-      const newState = (ev as ToggleEvent).newState
-      const nowOpen = newState === 'open'
-      popoverOpen = nowOpen
-      // Reflect attribute so consumer-observable state.$signals.open() flips.
-      // Guard against feedback: we only act if the attribute disagrees.
-      const hasAttr = host.hasAttribute('open')
-      if (nowOpen && !hasAttr) host.setAttribute('open', '')
-      else if (!nowOpen && hasAttr) host.removeAttribute('open')
-
-      // Update aria-expanded on each trigger.
-      const slot = triggerSlot as HTMLSlotElement | null
-      const els = (slot?.assignedElements({ flatten: true }) ?? []) as HTMLElement[]
-      for (const el of els) {
-        el.setAttribute('aria-expanded', nowOpen ? 'true' : 'false')
-      }
-
-      host.emit!('sui-toggle', { open: nowOpen })
-
-      if (nowOpen && !anchorSupported) positionFallback()
+      host.emit!('sui-toggle', { open: (ev as ToggleEvent).newState === 'open' })
     }
     bindNativeEvent(panelEl, 'toggle', onToggle as EventListener)
 
-    // ── Public methods (delegate to native) ────────────────────────────
+    // ── Public methods — flip the reflected prop; the bridge drives native ──
     host.expose!({
-      show: () => panelEl.showPopover?.(),
-      hide: () => panelEl.hidePopover?.(),
+      show: () => host.setAttribute('open', ''),
+      hide: () => host.removeAttribute('open'),
       toggle: () =>
-        typeof panelEl.togglePopover === 'function'
-          ? void panelEl.togglePopover()
-          : (isPopoverOpen()
-              ? panelEl.hidePopover?.()
-              : panelEl.showPopover?.()),
+        host.hasAttribute('open')
+          ? host.removeAttribute('open')
+          : host.setAttribute('open', ''),
     })
-
-    // ── Drive native popover from `open` prop ──────────────────────────
-    // Consumer flips the attribute → effect calls show/hide. Native
-    // light-dismiss flips the attribute via onToggle → effect sees the
-    // values agree and no-ops. No feedback loop.
-    const stopOpenSync = effect(() => {
-      const wantOpen = state.$signals.open()
-      const isOpen = isPopoverOpen()
-      if (wantOpen && !isOpen) panelEl.showPopover?.()
-      else if (!wantOpen && isOpen) panelEl.hidePopover?.()
-    })
-
-    // ── Position fallback for browsers without anchor-positioning ──────
-    function positionFallback() {
-      const slot = triggerSlot as HTMLSlotElement | null
-      const els = (slot?.assignedElements({ flatten: true }) ?? []) as HTMLElement[]
-      const trigger = els[0]
-      if (!trigger || !panelEl) return
-      const r = trigger.getBoundingClientRect()
-      const placement = state.$signals.placement() as Placement
-      panelEl.style.top = ''
-      panelEl.style.left = ''
-      panelEl.style.right = ''
-      panelEl.style.bottom = ''
-      const gap = 6
-      switch (placement) {
-        case 'top':
-          panelEl.style.bottom = `${window.innerHeight - r.top + gap}px`
-          panelEl.style.left = `${r.left}px`
-          break
-        case 'top-end':
-          panelEl.style.bottom = `${window.innerHeight - r.top + gap}px`
-          panelEl.style.right = `${window.innerWidth - r.right}px`
-          break
-        case 'bottom-end':
-          panelEl.style.top = `${r.bottom + gap}px`
-          panelEl.style.right = `${window.innerWidth - r.right}px`
-          break
-        case 'left':
-          panelEl.style.right = `${window.innerWidth - r.left + gap}px`
-          panelEl.style.top = `${r.top}px`
-          break
-        case 'left-end':
-          panelEl.style.right = `${window.innerWidth - r.left + gap}px`
-          panelEl.style.bottom = `${window.innerHeight - r.bottom}px`
-          break
-        case 'right':
-          panelEl.style.left = `${r.right + gap}px`
-          panelEl.style.top = `${r.top}px`
-          break
-        case 'right-end':
-          panelEl.style.left = `${r.right + gap}px`
-          panelEl.style.bottom = `${window.innerHeight - r.bottom}px`
-          break
-        case 'bottom':
-        default:
-          panelEl.style.top = `${r.bottom + gap}px`
-          panelEl.style.left = `${r.left}px`
-      }
-    }
-
-    function onWindowChange() {
-      if (!state.$signals.open()) return
-      positionFallback()
-    }
-    if (!anchorSupported) {
-      bindNativeEvent(window, 'resize', onWindowChange)
-      bindNativeEvent(window, 'scroll', onWindowChange, { capture: true, passive: true })
-    }
 
     return () => {
-      stopOpenSync()
+      stopIn()
+      stopOut()
+      stopAria()
+      detach.destroy?.()
     }
   },
 })
 
 </controller>
 <!--
-  Why `{#if open()}` + `transition:scale` here? The native popover
-  element (`.panel`) must stay mounted so `popovertarget` on the
-  trigger can keep wiring it; what fades/scales is the *.surface*.
-  Slots inside .surface re-enter the shadow tree on each open so
-  projection survives every toggle.
+  Why `{#if open()}` + `transition:scale`? The native popover element
+  (`.panel`) must stay mounted so the trigger's `popovertarget` keeps wiring
+  it; what fades/scales on each toggle is the *.surface*. Slots inside re-enter
+  the shadow tree on open so projection survives every toggle.
 
-  Why the `<sui-portal>` below? Native `popover="auto"` already
-  escapes parent stacking context via the browser top layer — the
-  panel doesn't NEED to be teleported. The portal supplies a
-  document-level `[data-sui-popover-open]` marker that page-level
-  styles (e.g. trigger highlight, scrim) can target via `:has`
-  selectors without poking into shadow DOM.
+  Why the `<sui-portal>`? Native `popover="auto"` already escapes stacking via
+  the top layer, so the panel needs no teleport — the portal only supplies a
+  document-level `[data-sui-popover-open]` marker that page-level styles can
+  target via `:has` without poking into shadow DOM.
 -->
 
 <slot name="trigger" bind:this={triggerSlot}></slot>
-<div class="panel" part="panel" popover="auto" bind:this={panelEl} role="dialog" aria-modal="false">
+<div class="panel" part="panel" popover="auto" bind:this={panelEl}
+  use:anchor={placement()} role="dialog" aria-modal="false">
   {#if open()}
     <div class="surface" part="surface" transition:scale={{ duration: 120 }}
       sx="min-w:panel-min-w-sm p:2 bg:popover fg:popover-foreground border:border radius:md text:base">

@@ -42,6 +42,7 @@ fn prop_value(p: &PropDecl) -> Value {
         PropKind::Bool => json!({ "type": "bool" }),
         PropKind::Number => json!({ "type": "number" }),
         PropKind::Union(values) => json!({ "type": "union", "values": values }),
+        PropKind::Identity(_) => json!({ "type": "property" }),
     };
     let mut entry = json!({
         "name": p.name,

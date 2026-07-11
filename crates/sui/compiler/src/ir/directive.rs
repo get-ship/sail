@@ -66,5 +66,11 @@ pub enum PropKind {
     Number,
     /// `values="default|primary"` — kept in source order.
     Union(Vec<String>),
+    /// A prop whose type is arbitrary authored TypeScript (`config: { … }`,
+    /// `columns: Column[]`, `data: DataPoint`). NOT an attribute — a plain
+    /// reactive property (signal + `el.prop` accessor), set via `el.prop = …`
+    /// or `prop:`. The string is the verbatim TS type, carried to the `.d.ts`
+    /// as `Signal<T>`. No reflection, no coercion — TypeScript stays TypeScript.
+    Identity(String),
 }
 

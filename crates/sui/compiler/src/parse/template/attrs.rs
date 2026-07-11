@@ -31,6 +31,15 @@ fn compile_attr(
     loc: &str,
     on_slot: bool,
 ) -> Result<AttrInstr, CompileError> {
+    if name == "part" {
+        return Err(CompileError::new(
+            "the `part` attribute is retired — light DOM has no shadow parts. \
+             Anatomy is classes + attributes; the element's `class` is the \
+             styling hook (published as CEM).",
+        )
+        .with_span(value_span)
+        .with_category(loc.to_string()));
+    }
     if name == "reflect-empty" {
         return compile_reflect_empty(value, value_span, loc, on_slot);
     }

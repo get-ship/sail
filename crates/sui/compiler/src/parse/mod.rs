@@ -36,6 +36,11 @@ pub(crate) fn parse_element_source(source: &str) -> Result<Program, CompileError
 }
 
 fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileError> {
+    // Reject retired shadow-DOM CSS idioms in author `<style>` BEFORE preprocess
+    // injects the compiler's own scoped CSS (which uses `:host`/`:scope` as
+    // internal dual-target plumbing). Only author `<style>` is inspected.
+    reject_retired_host_selector(source)?;
+    reject_part_selector(source)?;
     let prepared = preprocess::preprocess_impl(source, expand_elements);
     let nodes = html::parse_fragment(&prepared)?;
 
@@ -76,18 +81,71 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
                 "state" => {
                     return Err(state_directive_retired(el));
                 }
-                "prop" => {
-                    let mut decl = parse_prop(el)?;
-                    decl.description = pending_jsdoc.take();
-                    if decl.form_value && props.iter().any(|p| p.form_value) {
+                "component" => {
+                    // The single declaration surface. Props are props-as-ts in
+                    // this block → `PropDecl` directly (no `<prop>` tag, no
+                    // desugar). `form:` names the form-associated props. The
+                    // `variants` field is lowered in preprocess; ignore it here.
+                    let body: String = el
+                        .children
+                        .iter()
+                        .filter_map(|c| match c {
+                            Node::Text(t) => Some(t.data.clone()),
+                            _ => None,
+                        })
+                        .collect();
+                    let fields = crate::parse::preprocess::parse_object_fields(&body);
+                    // The block holds a fixed, small field set. Anything else —
+                    // a retired construct (`light`, `variants`), a typo — is
+                    // rejected generically: the compiler names what IS valid and
+                    // carries no memory of the old forms (no fossilization).
+                    const COMPONENT_FIELDS: &[&str] = &["props", "form", "compound", "shadow"];
+                    if let Some((k, _)) =
+                        fields.iter().find(|(k, _)| !COMPONENT_FIELDS.contains(&k.as_str()))
+                    {
                         return Err(CompileError::new(format!(
-                            "<prop name=\"{}\"> form-value: a component may declare \
-                             at most one form-value prop (another already exists)",
-                            decl.name,
+                            "unknown `<component>` field `{k}` \u{2014} the block holds \
+                             `props`, `form`, `compound`, and `shadow` only."
                         ))
                         .with_span(el.span));
                     }
-                    props.push(decl);
+                    let (form_value, form_disabled) = fields
+                        .iter()
+                        .find(|(k, _)| k == "form")
+                        .map(|(_, v)| crate::parse::preprocess::parse_form_field(v))
+                        .unwrap_or((None, None));
+                    let props_obj = fields
+                        .iter()
+                        .find(|(k, _)| k == "props")
+                        .map(|(_, v)| v.clone())
+                        .unwrap_or_default();
+                    let compound = fields.iter().find(|(k, _)| k == "compound").map(|(_, v)| v.clone());
+                    // Strict, one-way variant syntax — no parallel paths, teaching
+                    // errors so a fresh agent is corrected rather than left to guess.
+                    for (k, v) in crate::parse::preprocess::parse_object_fields(&props_obj) {
+                        let v = v.trim();
+                        if k == "variant" && v.starts_with("variant(") {
+                            return Err(CompileError::new(
+                                "`variant` is the reserved variant key \u{2014} drop the `variant()` wrapper (write `variant: { \u{2026} }`)",
+                            )
+                            .with_span(el.span));
+                        }
+                    }
+                    props.extend(crate::parse::preprocess::component_props_to_decls(
+                        &props_obj,
+                        form_value.as_deref(),
+                        form_disabled.as_deref(),
+                    ));
+                    // Variant styles (from the `variant` props + a sibling
+                    // `compound`) lower straight to CSS — no `<variants>` block.
+                    let variant_css = crate::parse::preprocess::component_variants_to_css(
+                        &props_obj,
+                        compound.as_deref(),
+                    );
+                    if !variant_css.is_empty() {
+                        style_parts.push(variant_css);
+                    }
+                    pending_jsdoc = None;
                     continue;
                 }
                 "style" => {
@@ -119,6 +177,63 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
         source_len: source.len(),
         span: Span::new(0, source.len()),
     })
+}
+
+/// Reject author-written `:host` in a light component's `<style>` block. Model
+/// A: an element styles its own template nodes by class — a spliced element's
+/// root is `.sui-<name>`, a native-kind element's is the bare tag; variants are
+/// attribute-keyed. Shadow components (the `shadow: true` opt-in) keep `:host` —
+/// shadow DOM has a real host. Scans the RAW source, before preprocess prepends
+/// the compiler's own scoped CSS.
+fn reject_retired_host_selector(source: &str) -> Result<(), CompileError> {
+    if preprocess::declares_shadow_dom(source) {
+        return Ok(());
+    }
+    let mut i = 0;
+    while let Some(rel) = source[i..].find("<style") {
+        let open = i + rel;
+        let Some(gt) = source[open..].find('>') else { break };
+        let cs = open + gt + 1;
+        let Some(close) = source[cs..].find("</style>") else { break };
+        let content = &source[cs..cs + close];
+        if let Some(pos) = content.find(":host") {
+            let at = cs + pos;
+            return Err(CompileError::new(
+                "`:host` is a shadow-DOM idiom — light DOM has no host to select. \
+                 Style the element's root by its class (`.sui-<name>`, or the bare \
+                 tag for a native-kind element); variants are attribute-keyed.",
+            )
+            .with_span(Span::new(at, at + ":host".len())));
+        }
+        i = cs + close + "</style>".len();
+    }
+    Ok(())
+}
+
+/// Reject a `::part()` selector in an author `<style>` block. Light DOM has no
+/// shadow parts — the target element's class is the styling hook (anatomy =
+/// classes + attributes). Scans the RAW source, before preprocess prepends the
+/// compiler's own scoped CSS (which never uses `::part`).
+fn reject_part_selector(source: &str) -> Result<(), CompileError> {
+    let mut i = 0;
+    while let Some(rel) = source[i..].find("<style") {
+        let open = i + rel;
+        let Some(gt) = source[open..].find('>') else { break };
+        let cs = open + gt + 1;
+        let Some(close) = source[cs..].find("</style>") else { break };
+        let content = &source[cs..cs + close];
+        if let Some(pos) = content.find("::part") {
+            let at = cs + pos;
+            return Err(CompileError::new(
+                "the `::part()` selector is retired — light DOM has no shadow \
+                 parts. Style the target's class directly (`.name`); anatomy is \
+                 classes + attributes.",
+            )
+            .with_span(Span::new(at, at + "::part".len())));
+        }
+        i = cs + close + "</style>".len();
+    }
+    Ok(())
 }
 
 /// Build the parse error returned when an author writes a top-level
@@ -206,66 +321,6 @@ fn is_js_identifier(s: &str) -> bool {
     chars.all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '$')
 }
 
-fn parse_prop(el: &html::Element) -> Result<PropDecl, CompileError> {
-    let name = required_attr(el, "name", "<prop>")?;
-    let values_attr = el.get_attribute("values");
-    let type_attr = el.get_attribute("type");
-    let default = el.get_attribute("default");
-    let reflect = el.has_attribute("reflect");
-    let bindable = el.has_attribute("bindable");
-    let form_value = el.has_attribute("form-value");
-    let form_disabled = el.has_attribute("form-disabled");
-
-    let kind = if let Some(values_raw) = values_attr {
-        let values = values_raw
-            .split('|')
-            .map(|v| v.trim().to_string())
-            .filter(|v| !v.is_empty())
-            .collect::<Vec<_>>();
-        PropKind::Union(values)
-    } else {
-        match type_attr.as_deref() {
-            Some("bool") => PropKind::Bool,
-            Some("number") => PropKind::Number,
-            None | Some("string") => PropKind::String,
-            Some(t @ ("object" | "array")) if form_value => {
-                // form-value only supports primitive-coercible kinds.
-                return Err(CompileError::new(format!(
-                    "<prop name=\"{name}\"> form-value cannot be used on \
-                     type=\"{t}\" (only string, number, bool, or union props \
-                     can participate in form value)"
-                ))
-                .with_span(el.span));
-            }
-            Some(other) => {
-                return Err(CompileError::new(format!(
-                    "<prop name=\"{name}\"> unknown type: {other}"
-                ))
-                .with_span(el.span));
-            }
-        }
-    };
-
-    if form_disabled && kind != PropKind::Bool {
-        return Err(CompileError::new(format!(
-            "<prop name=\"{name}\"> form-disabled requires type=\"bool\" \
-             (the browser passes a boolean to formDisabledCallback)"
-        ))
-        .with_span(el.span));
-    }
-
-    Ok(PropDecl {
-        name,
-        kind,
-        default,
-        reflect,
-        bindable,
-        form_value,
-        form_disabled,
-        description: None,
-        span: el.span,
-    })
-}
 
 /// Recognise an HTML comment whose body is a JSDoc block (`/** ... */`)
 /// and return the description text. Per-line `*` margins are stripped

@@ -1204,4 +1204,587 @@ label { display: inline-block; }
     gap: var(--space-2);
     font-family: var(--font-body);
   }
+
+/* tabs */
+
+  .sui-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+    /* size vocabulary (md base) — read by <tab> */
+    --tab-fs: var(--text-sm);
+    --tab-py: var(--space-2);
+    --tab-px: var(--space-3);
+  }
+  .sui-tabs[size='sm'] { --tab-fs: var(--text-xs); --tab-py: var(--space-1_5); --tab-px: var(--space-2_5); }
+  .sui-tabs[size='lg'] { --tab-fs: var(--text-base); --tab-py: var(--space-2_5); --tab-px: var(--space-4); }
+
+  .sui-tabs[orientation='vertical'] { flex-direction: row; align-items: flex-start; }
+
+  .sui-tabs[sticky] .sui-tab-list {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky, 100);
+    background: var(--background);
+  }
+
+  /* pill: the strip is a muted track, the active tab a raised chip */
+  .sui-tabs[variant='pill'] .sui-tab-list {
+    gap: var(--space-1);
+    padding: var(--space-1);
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--muted);
+  }
+  .sui-tabs[variant='pill'] .sui-tab {
+    border-bottom: 0;
+    border-radius: var(--radius-sm);
+  }
+  .sui-tabs[variant='pill'] .sui-tab[aria-selected='true'] {
+    color: var(--foreground);
+    background: var(--background);
+    box-shadow: var(--shadow-xs);
+  }
+
+  /* enclosed: bordered folder tabs joined to the panel */
+  .sui-tabs[variant='enclosed'] .sui-tab-list { gap: 0; }
+  .sui-tabs[variant='enclosed'] .sui-tab {
+    border: 1px solid transparent;
+    border-bottom: 0;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+  }
+  .sui-tabs[variant='enclosed'] .sui-tab[aria-selected='true'] {
+    color: var(--foreground);
+    border-color: var(--border);
+    background: var(--background);
+    margin-bottom: -1px;
+  }
+
+/* tab-list */
+
+  .sui-tab-list {
+    display: flex;
+    align-items: stretch;
+    gap: var(--space-1);
+    border-bottom: 1px solid var(--border);
+  }
+  .sui-tabs[orientation='vertical'] .sui-tab-list {
+    flex-direction: column;
+    align-items: stretch;
+    border-bottom: 0;
+    border-right: 1px solid var(--border);
+  }
+
+/* tab */
+.sui-tab { display: inline-flex; }
+
+
+  .sui-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--tab-py, var(--space-2)) var(--tab-px, var(--space-3));
+    font-family: var(--font-body);
+    font-size: var(--tab-fs, var(--text-sm));
+    font-weight: var(--font-weight-medium);
+    line-height: 1;
+    color: var(--muted-foreground);
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
+  }
+  .sui-tab:hover:not([disabled]) { color: var(--foreground); }
+  .sui-tab[aria-selected='true'] {
+    color: var(--foreground);
+    font-weight: var(--font-weight-semibold);
+    border-bottom-color: var(--tone, var(--primary));
+  }
+  .sui-tab[disabled] { opacity: 0.5; cursor: not-allowed; }
+  .sui-tab:focus-visible {
+    outline: var(--ring-width) solid var(--tone-ring, var(--ring));
+    outline-offset: calc(-1 * var(--ring-width));
+  }
+
+/* tab-panel */
+
+  .sui-tab-panel { padding: var(--space-4) 0 0; min-width: 0; }
+  .sui-tabs[orientation='vertical'] .sui-tab-panel { padding: 0 0 0 var(--space-4); }
+
+/* toggle-group */
+
+  .sui-toggle-group {
+    display: inline-flex;
+    gap: 0;
+    /* size vocabulary (md base) — read by <toggle> */
+    --tg-fs: var(--text-sm);
+    --tg-h: var(--control-h-md);
+    --tg-px: var(--space-3);
+  }
+  .sui-toggle-group[size='sm'] { --tg-fs: var(--text-xs); --tg-h: var(--control-h-sm); --tg-px: var(--space-2_5); }
+  .sui-toggle-group[size='lg'] { --tg-fs: var(--text-base); --tg-h: var(--control-h-lg); --tg-px: var(--space-4); }
+  .sui-toggle-group[orientation='vertical'] { flex-direction: column; }
+
+  /* outline (default): joined bordered cells, radius on the ends */
+  .sui-toggle-group > .sui-toggle:not(:first-child) { margin-inline-start: -1px; }
+  .sui-toggle-group > .sui-toggle:first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); }
+  .sui-toggle-group > .sui-toggle:last-child { border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+  .sui-toggle-group > .sui-toggle:not(:first-child):not(:last-child) { border-radius: 0; }
+  .sui-toggle-group[orientation='vertical'] > .sui-toggle:not(:first-child) { margin-inline-start: 0; margin-top: -1px; }
+  .sui-toggle-group[orientation='vertical'] > .sui-toggle:first-child { border-radius: var(--radius-md) var(--radius-md) 0 0; }
+  .sui-toggle-group[orientation='vertical'] > .sui-toggle:last-child { border-radius: 0 0 var(--radius-md) var(--radius-md); }
+
+  /* ghost: no frame, spaced pills */
+  .sui-toggle-group[variant='ghost'] { gap: var(--space-1); }
+  .sui-toggle-group[variant='ghost'] > .sui-toggle { margin: 0; border-color: transparent; border-radius: var(--radius-md); }
+
+  /* segmented: muted track, radiused cells */
+  .sui-toggle-group[variant='segmented'] {
+    padding: var(--space-1);
+    background: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    gap: var(--space-1);
+  }
+  .sui-toggle-group[variant='segmented'] > .sui-toggle { margin: 0; border-color: transparent; border-radius: var(--radius-sm); }
+
+/* toggle */
+.sui-toggle { display: inline-flex; }
+
+
+  .sui-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    height: var(--tg-h, var(--control-h-md));
+    padding: 0 var(--tg-px, var(--space-3));
+    font-family: var(--font-body);
+    font-size: var(--tg-fs, var(--text-sm));
+    font-weight: var(--font-weight-medium);
+    line-height: 1;
+    color: var(--foreground);
+    background: var(--background);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+  }
+  .sui-toggle:hover:not([disabled]):not([aria-pressed='true']) { background: var(--muted); }
+  .sui-toggle[aria-pressed='true'] {
+    color: var(--background);
+    background: var(--foreground);
+    border-color: var(--foreground);
+    position: relative;
+    z-index: 1;
+  }
+  .sui-toggle[disabled] { opacity: 0.5; cursor: not-allowed; }
+  .sui-toggle:focus-visible {
+    outline: var(--ring-width) solid var(--ring);
+    outline-offset: 1px;
+    position: relative;
+    z-index: 2;
+  }
+
+/* scroll-area */
+
+  .sui-scroll-area {
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .sui-scroll-area[orientation='vertical'] { overflow-x: hidden; overflow-y: auto; }
+  .sui-scroll-area[orientation='horizontal'] { overflow-x: auto; overflow-y: hidden; }
+  .sui-scroll-area[orientation='both'] { overflow: auto; }
+
+  .sui-scroll-area::-webkit-scrollbar { width: var(--space-2_5); height: var(--space-2_5); }
+  .sui-scroll-area::-webkit-scrollbar-track { background: transparent; }
+  .sui-scroll-area::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: var(--radius-full);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+  .sui-scroll-area:hover::-webkit-scrollbar-thumb { background: var(--muted-foreground); background-clip: padding-box; }
+  .sui-scroll-area::-webkit-scrollbar-thumb:hover { background: var(--foreground); background-clip: padding-box; }
+
+/* theme-picker */
+
+  .sui-theme-picker {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    background: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+  .sui-theme-option {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1_5);
+    height: var(--control-h-sm);
+    padding: 0 var(--space-2_5);
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--muted-foreground);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out);
+  }
+  .sui-theme-option:hover { color: var(--foreground); background: var(--background); }
+  .sui-theme-option[aria-checked='true'] {
+    color: var(--foreground);
+    background: var(--background);
+    box-shadow: var(--shadow-xs);
+  }
+  .sui-theme-swatch {
+    width: var(--space-3);
+    height: var(--space-3);
+    border-radius: var(--radius-full);
+    background: var(--primary);
+    border: 1px solid var(--border);
+  }
+  .sui-theme-option:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: 1px; }
+
+/* nav-top */
+
+  .sui-nav-top {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-height: 3.5rem;
+    padding: var(--space-2) var(--space-4);
+    background: var(--background);
+    color: var(--foreground);
+  }
+  .sui-nav-top[bordered] { border-bottom: 1px solid var(--border); }
+  .sui-nav-top[sticky] { position: sticky; top: 0; z-index: var(--z-sticky, 100); }
+
+  .sui-nav-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 0 0 auto;
+    font-weight: var(--font-weight-semibold);
+  }
+  .sui-nav-links {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .sui-nav-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 0 0 auto;
+    margin-inline-start: auto;
+  }
+
+/* pagination */
+
+  .sui-pagination {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    --pg-h: var(--control-h-md);
+    --pg-fs: var(--text-sm);
+  }
+  .sui-pagination[size='sm'] { --pg-h: var(--control-h-sm); --pg-fs: var(--text-xs); }
+  .sui-pagination[size='lg'] { --pg-h: var(--control-h-lg); --pg-fs: var(--text-base); }
+
+/* page */
+.sui-page { display: inline-flex; }
+
+
+  .sui-page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--pg-h, var(--control-h-md));
+    height: var(--pg-h, var(--control-h-md));
+    padding: 0 var(--space-2);
+    font-family: var(--font-body);
+    font-size: var(--pg-fs, var(--text-sm));
+    font-weight: var(--font-weight-medium);
+    color: var(--foreground);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    user-select: none;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      color var(--duration-fast) var(--ease-out);
+  }
+  .sui-page:hover:not([disabled]):not([aria-current='page']) { background: var(--muted); }
+  .sui-page[aria-current='page'] {
+    color: var(--tone-fg, var(--primary-foreground));
+    background: var(--tone, var(--primary));
+    border-color: var(--tone, var(--primary));
+  }
+  .sui-page[disabled] { opacity: 0.5; cursor: not-allowed; }
+  .sui-page:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: 1px; }
+
+/* breadcrumb */
+
+  .sui-breadcrumb ol {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+  }
+  .sui-breadcrumb li { display: inline-flex; align-items: center; gap: var(--space-2); }
+  .sui-breadcrumb li:not(:first-child)::before {
+    content: '/';
+    color: var(--muted-foreground);
+    user-select: none;
+  }
+  .sui-breadcrumb a {
+    color: var(--muted-foreground);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+  .sui-breadcrumb a:hover { color: var(--foreground); }
+  .sui-breadcrumb a:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: 2px; }
+  .sui-breadcrumb [aria-current='page'] { color: var(--foreground); font-weight: var(--font-weight-medium); }
+
+/* popover */
+
+  .sui-popover {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    min-width: 12rem;
+    max-width: 22rem;
+    padding: var(--space-3);
+    color: var(--foreground);
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: var(--z-popover, 1000);
+  }
+  .sui-popover::backdrop { background: transparent; }
+
+/* combobox */
+
+  .sui-combobox {
+    display: block;
+    position: relative;
+    font-family: var(--font-body);
+  }
+
+  .sui-combobox .input {
+    width: 100%;
+  }
+
+  .sui-combobox .listbox {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    /* The listbox tracks the field it filters — narrower is a lie about the
+       content, wider is a second box floating over the page. */
+    min-width: anchor-size(width, 12rem);
+    max-height: 16rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--space-1);
+    color: var(--popover-foreground);
+    background: var(--popover);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: var(--z-popover, 1000);
+  }
+  .sui-combobox .listbox::backdrop { background: transparent; }
+
+  .sui-combobox .listbox option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1_5) var(--space-2);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    color: inherit;
+    cursor: pointer;
+  }
+  /* The ACTIVE option is the keyboard's cursor. It is not :hover and it is not
+     focus — focus never leaves the input in this pattern (that's the whole point
+     of aria-activedescendant), so the highlight has to be ours to draw. */
+  .sui-combobox .listbox option[data-active] {
+    background: var(--hover-bg);
+  }
+  .sui-combobox .listbox option[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .sui-combobox .listbox option:hover:not([disabled]) {
+    background: var(--hover-bg);
+  }
+  /* Filtered-out options are `hidden`, which <option> ignores by default in
+     some UAs — say it outright. */
+  .sui-combobox .listbox option[hidden] { display: none; }
+
+  .sui-combobox .empty {
+    padding: var(--space-2);
+    color: var(--muted-foreground);
+    font-size: var(--text-sm);
+  }
+
+/* dropdown */
+
+  .sui-dropdown {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    min-width: 12rem;
+    padding: var(--space-1);
+    color: var(--foreground);
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: var(--z-popover, 1000);
+  }
+  .sui-dropdown::backdrop { background: transparent; }
+
+/* menu-item */
+.sui-menu-item { display: inline-flex; }
+
+
+  .sui-menu-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    padding: var(--space-2) var(--space-2_5);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    line-height: 1.2;
+    color: var(--foreground);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-sm);
+    text-align: start;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .sui-menu-item:hover:not([disabled]) { background: var(--muted); }
+  .sui-menu-item:focus-visible { background: var(--muted); outline: var(--ring-width) solid var(--ring); outline-offset: -1px; }
+  .sui-menu-item[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+/* context-menu */
+
+  .sui-context-menu {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    min-width: 12rem;
+    padding: var(--space-1);
+    color: var(--foreground);
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: var(--z-popover, 1000);
+  }
+  .sui-context-menu::backdrop { background: transparent; }
+
+/* hover-card */
+
+  .sui-hover-card {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    min-width: 14rem;
+    max-width: 20rem;
+    padding: var(--space-3);
+    color: var(--foreground);
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: var(--z-popover, 1000);
+  }
+  .sui-hover-card::backdrop { background: transparent; }
+
+/* toast-region */
+
+  .sui-toast-region {
+    position: fixed;
+    z-index: var(--z-toast, 1100);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    width: min(24rem, calc(100vw - var(--space-8)));
+    padding: var(--space-4);
+    pointer-events: none;
+    inset-block-end: 0;
+    inset-inline-end: 0;
+  }
+  .sui-toast-region[position='top-start'] { inset: 0 auto auto 0; }
+  .sui-toast-region[position='top-end'] { inset: 0 0 auto auto; }
+  .sui-toast-region[position='bottom-start'] { inset: auto auto 0 0; }
+  .sui-toast-region[position='bottom-end'] { inset: auto 0 0 auto; }
+  .sui-toast-region[position^='bottom'] { flex-direction: column-reverse; }
+  .sui-toast-region > * { pointer-events: auto; }
+
+/* toast */
+
+  .sui-toast {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--foreground);
+    background: var(--background);
+    border: 1px solid var(--tone-border, var(--border));
+    border-inline-start: 3px solid var(--tone-fg, var(--border));
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+  }
+  .sui-toast [data-toast-close] {
+    margin-inline-start: auto;
+    flex: 0 0 auto;
+    color: var(--muted-foreground);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+  .sui-toast [data-toast-close]:hover { color: var(--foreground); background: var(--muted); }
 }

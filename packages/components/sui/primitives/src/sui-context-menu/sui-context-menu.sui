@@ -31,6 +31,7 @@
      (no sx font: prop), opacity/transform + multi-prop transition
      (motion), the :popover-open pseudo, ::backdrop transparent. */
   .panel {
+    position: fixed;
     inset: auto;
     margin: 0;
     min-width: var(--panel-min-w-md);
@@ -82,7 +83,7 @@
 
 
 <controller>
-import { controller, effect, bindNativeEvent } from '@ship/sui-runtime'
+import { controller, effect, bindNativeEvent, usePopover } from '@ship/sui-runtime'
 import type { Scope } from './sui-context-menu.sui'
 
 let _seq = 0
@@ -147,17 +148,25 @@ export default controller<Scope>({
       })
     }
 
+    // ── Open state: the ONE implementation ─────────────────────────────────
+    // usePopover's handle IS bindPopover (native showPopover/hidePopover <->
+    // signal + light-dismiss sync). This menu positions at the CURSOR, not a
+    // trigger, so it keeps pointer coords (use:anchor is for trigger-anchored
+    // popovers). The `open` prop bridges to the handle.
+    const pop = usePopover()
+    const detach = pop(panelEl) as { destroy?: () => void }
+
     // ── Public API ───────────────────────────────────────────────────────
     function doShow(x: number, y: number) {
       if (panelEl) {
         panelEl.style.top = `${y}px`
         panelEl.style.left = `${x}px`
       }
-      panelEl?.showPopover?.()
+      host.setAttribute('open', '')
     }
 
     function doClose() {
-      panelEl?.hidePopover?.()
+      host.removeAttribute('open')
     }
 
     host.expose!({ show: doShow as never, close: doClose })
@@ -168,11 +177,18 @@ export default controller<Scope>({
       doShow(e.clientX, e.clientY)
     }
 
+    // open prop → handle
+    const stopIn = effect(() => {
+      if (state.$signals.open()) pop.open()
+      else pop.close()
+    })
+
+    // real toggles (native show/hide/light-dismiss) → prop sync + menu reactions
     const onToggle = (ev: Event) => {
-      const te = ev as ToggleEvent
-      const nowOpen = te.newState === 'open'
-      if (nowOpen !== state.$signals.open()) state.$signals.open.set(nowOpen)
-      host.setAttribute('data-state', nowOpen ? 'open' : 'closed')
+      const nowOpen = (ev as ToggleEvent).newState === 'open'
+      const has = host.hasAttribute('open')
+      if (nowOpen && !has) host.setAttribute('open', '')
+      else if (!nowOpen && has) host.removeAttribute('open')
       if (nowOpen) {
         host.emit!('sui-open')
         queueMicrotask(() => { setupItems(); focusItem(0) })
@@ -227,7 +243,9 @@ export default controller<Scope>({
       const els = triggerSlot?.assignedElements({ flatten: true }) as HTMLElement[] ?? []
       for (const el of els) el.removeEventListener('contextmenu', onContextMenu)
       if (typeaheadTimer) clearTimeout(typeaheadTimer)
+      stopIn()
       stopSync()
+      detach.destroy?.()
     }
   },
 })

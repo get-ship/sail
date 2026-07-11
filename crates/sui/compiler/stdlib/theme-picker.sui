@@ -1,0 +1,65 @@
+<!--
+  <theme-picker> — L1 theme switcher (element mode). A radiogroup of the
+  framework's built-in themes; use:themePicker sets `data-theme` on <html> on
+  select and reflects the current theme. Dogfoods the theming system. Bare tag
+  lowers to <div class="sui-theme-picker">.
+
+    <theme-picker value="ship-dark"></theme-picker>
+-->
+
+<component>{ props: { value: string } }</component>
+
+<style>
+  .sui-theme-picker {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    background: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+  .sui-theme-option {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1_5);
+    height: var(--control-h-sm);
+    padding: 0 var(--space-2_5);
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--muted-foreground);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out);
+  }
+  .sui-theme-option:hover { color: var(--foreground); background: var(--background); }
+  .sui-theme-option[aria-checked='true'] {
+    color: var(--foreground);
+    background: var(--background);
+    box-shadow: var(--shadow-xs);
+  }
+  .sui-theme-swatch {
+    width: var(--space-3);
+    height: var(--space-3);
+    border-radius: var(--radius-full);
+    background: var(--primary);
+    border: 1px solid var(--border);
+  }
+  .sui-theme-option:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: 1px; }
+</style>
+
+<div use:themePicker>
+  <button type="button" class="sui-theme-option" value="ship-light"><span class="sui-theme-swatch"></span>Light</button>
+  <button type="button" class="sui-theme-option" value="ship-dark"><span class="sui-theme-swatch"></span>Dark</button>
+  <button type="button" class="sui-theme-option" value="paper"><span class="sui-theme-swatch"></span>Paper</button>
+  <button type="button" class="sui-theme-option" value="halo"><span class="sui-theme-swatch"></span>Halo</button>
+  <button type="button" class="sui-theme-option" value="console"><span class="sui-theme-swatch"></span>Console</button>
+  <button type="button" class="sui-theme-option" value="contrast"><span class="sui-theme-swatch"></span>Contrast</button>
+  <button type="button" class="sui-theme-option" value="glass"><span class="sui-theme-swatch"></span>Glass</button>
+</div>

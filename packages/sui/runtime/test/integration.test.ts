@@ -66,13 +66,14 @@ async function loadCompiled(file: string): Promise<string> {
   return file.replace(/\.sui$/, '')
 }
 
-/** Shadow-DOM-aware query helper — components mount into the shadow root. */
+/** Query helper — light DOM (the default) renders into the host itself;
+ *  shadow components (the `shadow: true` opt-in) render into the shadow root. */
 function q(el: Element, selector: string): Element | null {
-  return el.shadowRoot?.querySelector(selector) ?? null
+  return (el.shadowRoot ?? el).querySelector(selector)
 }
 
 function qAll(el: Element, selector: string): NodeListOf<Element> {
-  return el.shadowRoot?.querySelectorAll(selector) ?? document.querySelectorAll('.does-not-exist')
+  return (el.shadowRoot ?? el).querySelectorAll(selector)
 }
 
 describe('integration: real compile → run', () => {

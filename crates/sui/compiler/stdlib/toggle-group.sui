@@ -1,0 +1,66 @@
+<!--
+  <toggle-group> — L1 segmented toggle group (element mode). A row/column of
+  joined <toggle> cells; behavior rides use:toggleGroup (role=group, roving
+  tabindex, arrow-key nav, single/multiple selection, `value` sync,
+  `sui-toggle-change`). Bare tag lowers to <div class="sui-toggle-group">.
+
+    <toggle-group type="single" value="grid">
+      <toggle value="grid">Grid</toggle>
+      <toggle value="list">List</toggle>
+    </toggle-group>
+
+  type single (deselectable, one value) / multiple (space-separated set).
+  variant outline (joined bordered cells) / ghost (spaced, no frame) /
+  segmented (muted track). size sm/md/lg. orientation horizontal/vertical.
+-->
+
+<component>{
+  props: {
+    type: 'single' | 'multiple',
+    value: string,
+    variant: 'outline' | 'ghost' | 'segmented',
+    size: 'sm' | 'md' | 'lg',
+    orientation: 'horizontal' | 'vertical',
+  },
+}</component>
+
+<style>
+  .sui-toggle-group {
+    display: inline-flex;
+    gap: 0;
+    /* size vocabulary (md base) — read by <toggle> */
+    --tg-fs: var(--text-sm);
+    --tg-h: var(--control-h-md);
+    --tg-px: var(--space-3);
+  }
+  .sui-toggle-group[size='sm'] { --tg-fs: var(--text-xs); --tg-h: var(--control-h-sm); --tg-px: var(--space-2_5); }
+  .sui-toggle-group[size='lg'] { --tg-fs: var(--text-base); --tg-h: var(--control-h-lg); --tg-px: var(--space-4); }
+  .sui-toggle-group[orientation='vertical'] { flex-direction: column; }
+
+  /* outline (default): joined bordered cells, radius on the ends */
+  .sui-toggle-group > .sui-toggle:not(:first-child) { margin-inline-start: -1px; }
+  .sui-toggle-group > .sui-toggle:first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); }
+  .sui-toggle-group > .sui-toggle:last-child { border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+  .sui-toggle-group > .sui-toggle:not(:first-child):not(:last-child) { border-radius: 0; }
+  .sui-toggle-group[orientation='vertical'] > .sui-toggle:not(:first-child) { margin-inline-start: 0; margin-top: -1px; }
+  .sui-toggle-group[orientation='vertical'] > .sui-toggle:first-child { border-radius: var(--radius-md) var(--radius-md) 0 0; }
+  .sui-toggle-group[orientation='vertical'] > .sui-toggle:last-child { border-radius: 0 0 var(--radius-md) var(--radius-md); }
+
+  /* ghost: no frame, spaced pills */
+  .sui-toggle-group[variant='ghost'] { gap: var(--space-1); }
+  .sui-toggle-group[variant='ghost'] > .sui-toggle { margin: 0; border-color: transparent; border-radius: var(--radius-md); }
+
+  /* segmented: muted track, radiused cells */
+  .sui-toggle-group[variant='segmented'] {
+    padding: var(--space-1);
+    background: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    gap: var(--space-1);
+  }
+  .sui-toggle-group[variant='segmented'] > .sui-toggle { margin: 0; border-color: transparent; border-radius: var(--radius-sm); }
+</style>
+
+<div use:toggleGroup>
+  <slot></slot>
+</div>

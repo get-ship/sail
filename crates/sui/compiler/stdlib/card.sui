@@ -53,7 +53,7 @@
 }</component>
 
 <style>
-  :host {
+  .sui-card {
     display: block;
     position: relative;
     background: var(--surface-1);
@@ -83,16 +83,16 @@
 
   /* variant=outline: background:transparent is a raw CSS keyword, not a
      token — belongs in <style>, not the sx vocabulary. */
-  :host([variant='outline']) { background: transparent; }
+  .sui-card[variant='outline'] { background: transparent; }
 
   /* Tone-bound border. Default tone resolves --tone-border to --border (the
      same as the host baseline), so the override is a no-op for it. */
-  :host([tone]:not([tone='default'])) { border-color: var(--tone-border); }
+  .sui-card[tone]:not([tone='default']) { border-color: var(--tone-border); }
 
   /* Accent bar. hover fades in on hover; static stays at full opacity
    * (hero cards, print exports, touch contexts where hover never fires). */
-  :host([accent-bar='hover'])::before,
-  :host([accent-bar='static'])::before {
+  .sui-card[accent-bar='hover']::before,
+  .sui-card[accent-bar='static']::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
@@ -103,24 +103,24 @@
     transition: opacity var(--duration-medium) var(--ease-out);
     pointer-events: none;
   }
-  :host([accent-bar='hover']:hover)::before { opacity: 1; }
-  :host([accent-bar='static'])::before { opacity: 1; }
+  .sui-card[accent-bar='hover']:hover::before { opacity: 1; }
+  .sui-card[accent-bar='static']::before { opacity: 1; }
 
-  :host([interactive]) { cursor: pointer; -webkit-tap-highlight-color: transparent; }
-  :host([interactive]:hover) {
+  .sui-card[interactive] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .sui-card[interactive]:hover {
     border-color: var(--border-strong);
     box-shadow: var(--shadow-hover);
     transform: translateY(-1px);
   }
   @media (prefers-reduced-motion: reduce) {
-    :host([interactive]:hover) { transform: none; }
+    .sui-card[interactive]:hover { transform: none; }
   }
-  :host([interactive]:active) {
+  .sui-card[interactive]:active {
     box-shadow: var(--shadow-card-rest);
     transform: translateY(0);
     transition-duration: 60ms;
   }
-  :host([interactive]:focus-visible) {
+  .sui-card[interactive]:focus-visible {
     outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
   }
@@ -128,27 +128,27 @@
   /* Tone-rail. Only meaningful once a tone is set — otherwise --tone-fg
    * resolves to --foreground and the rail would read as body-text-colored
    * decoration with the weight of an emphasis cue. */
-  :host([status-rail]) {
+  .sui-card[status-rail] {
     border-left: 3px solid var(--tone-fg);
     padding-inline-start: calc(var(--card-px) - var(--space-1));
   }
-  :host([status-rail]:not([tone])),
-  :host([status-rail][tone='default']) {
+  .sui-card[status-rail]:not([tone]),
+  .sui-card[status-rail][tone='default'] {
     border-left-color: var(--border-strong);
   }
 
-  :host([fill]) { background: var(--tone-bg); border-color: var(--tone-border); }
+  .sui-card[fill] { background: var(--tone-bg); border-color: var(--tone-border); }
 
   /* Per-padding local-var recompute + fallback padding. */
-  :host([padding='none']) { --card-px: 0px; --card-py: 0px; --card-gap: 0px; padding: 0; }
-  :host([padding='sm'])   { --card-px: var(--space-3); --card-py: var(--space-2); --card-gap: var(--space-2); padding: var(--space-2) var(--space-3); }
-  :host([padding='md'])   { --card-px: var(--space-5); --card-py: var(--space-4); padding: var(--space-4) var(--space-5); }
-  :host([padding='lg'])   { --card-px: var(--space-6); --card-py: var(--space-5); --card-gap: var(--space-4); padding: var(--space-5) var(--space-6); }
+  .sui-card[padding='none'] { --card-px: 0px; --card-py: 0px; --card-gap: 0px; padding: 0; }
+  .sui-card[padding='sm']   { --card-px: var(--space-3); --card-py: var(--space-2); --card-gap: var(--space-2); padding: var(--space-2) var(--space-3); }
+  .sui-card[padding='md']   { --card-px: var(--space-5); --card-py: var(--space-4); padding: var(--space-4) var(--space-5); }
+  .sui-card[padding='lg']   { --card-px: var(--space-6); --card-py: var(--space-5); --card-gap: var(--space-4); padding: var(--space-5) var(--space-6); }
 
   /* Header/footer — presence-selected direct children (see the structural
      divergence note above), edge-to-edge via negative margins that cancel
      the host's own padding, separated by a hairline. */
-  :host > [slot='header'] {
+  .sui-card > [slot='header'] {
     display: block;
     margin: calc(var(--card-py) * -1) calc(var(--card-px) * -1) var(--card-gap);
     padding: var(--card-py) var(--card-px);
@@ -156,23 +156,23 @@
     font-family: var(--heading-font);
     font-weight: var(--heading-weight);
   }
-  :host > [slot='footer'] {
+  .sui-card > [slot='footer'] {
     display: block;
     margin: var(--card-gap) calc(var(--card-px) * -1) calc(var(--card-py) * -1);
     padding: var(--card-py) var(--card-px);
     border-top: 1px solid var(--border-subtle);
   }
-  :host([padding='none']) > [slot='header'] {
+  .sui-card[padding='none'] > [slot='header'] {
     margin: 0 0 var(--space-3);
     padding: 0 0 var(--space-3);
   }
-  :host([padding='none']) > [slot='footer'] {
+  .sui-card[padding='none'] > [slot='footer'] {
     margin: var(--space-3) 0 0;
     padding: var(--space-3) 0 0;
   }
 
   @media (forced-colors: active) {
-    :host([interactive]:focus-visible) { outline: 2px solid CanvasText; outline-offset: 2px; }
+    .sui-card[interactive]:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
   }
 </style>
 

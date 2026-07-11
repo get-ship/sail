@@ -115,7 +115,7 @@
 
 
 <controller>
-import { controller, effect } from '@ship/sui-runtime'
+import { controller, effect, usePopover } from '@ship/sui-runtime'
 import type { Scope } from './sui-hover-card.sui'
 
 let _seq = 0
@@ -181,6 +181,15 @@ export default controller<Scope>({
     if (!panelEl) return
     panelEl.id = cardId
 
+    // ── Open state: the ONE implementation ─────────────────────────────────
+    // usePopover's handle IS bindPopover (native showPopover/hidePopover <->
+    // signal + light-dismiss sync). doShow/doHide flip the `open` prop, which
+    // bridges to the handle; the show/hide DELAYS + centered positioning stay
+    // this component's own concern. (Centered placement isn't in use:anchor's
+    // vocabulary yet, so positioning is not consolidated here — see task #28.)
+    const pop = usePopover()
+    const detach = pop(panelEl) as { destroy?: () => void }
+
     let showTimer: ReturnType<typeof setTimeout> | null = null
     let hideTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -204,21 +213,29 @@ export default controller<Scope>({
       if (trigger && panelEl && !anchorSupported) {
         positionPanel(trigger, panelEl as HTMLElement, (state.$signals.placement() || 'bottom') as Placement)
       }
-      panelEl?.showPopover?.()
+      host.setAttribute('open', '')
     }
 
     function doHide() {
       clearTimers()
-      panelEl?.hidePopover?.()
+      host.removeAttribute('open')
     }
 
     ;(host as HTMLElement & { show(): void; hide(): void }).show = doShow
     ;(host as HTMLElement & { hide(): void }).hide = doHide
 
+    // open prop → handle
+    const stopIn = effect(() => {
+      if (state.$signals.open()) pop.open()
+      else pop.close()
+    })
+
+    // real toggles (native show/hide/light-dismiss) → prop sync + events
     const onToggle = (ev: Event) => {
-      const te = ev as ToggleEvent
-      const nowOpen = te.newState === 'open'
-      if (nowOpen !== state.$signals.open()) state.$signals.open.set(nowOpen)
+      const nowOpen = (ev as ToggleEvent).newState === 'open'
+      const has = host.hasAttribute('open')
+      if (nowOpen && !has) host.setAttribute('open', '')
+      else if (!nowOpen && has) host.removeAttribute('open')
       host.setAttribute('data-state', nowOpen ? 'open' : 'closed')
       host.dispatchEvent(new CustomEvent(nowOpen ? 'sui-open' : 'sui-close', {
         bubbles: true, composed: true,
@@ -262,7 +279,9 @@ export default controller<Scope>({
       host.removeEventListener('pointerleave', onPointerLeave)
       host.removeEventListener('focusin', onFocusIn)
       host.removeEventListener('focusout', onFocusOut)
+      stopIn()
       stopSync()
+      detach.destroy?.()
     }
   },
 })

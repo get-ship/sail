@@ -1,9 +1,10 @@
 <!--
   <sui-cmdk> — generic command palette (dialog + filterable list + keyboard nav).
 
-  Composes <sui-dialog> for the modal shell (top-layer, focus trap, scroll
-  lock, ::backdrop, ESC) — it does NOT reinvent any of that. On top of the
-  dialog body it lays a search input pinned to the top and a scrollable,
+  Composes a native <dialog> for the modal shell (top-layer, focus trap, scroll
+  lock, ::backdrop, ESC) via the useDialog handle — it does NOT reinvent any of
+  that. On top of the dialog body it lays a search input pinned to the top and a
+  scrollable,
   type-to-filter, keyboard-navigable listbox of items, optionally grouped.
 
   RUNTIME-FREE / SDK-FREE. Items + handlers arrive as data/events:
@@ -62,10 +63,10 @@
     channels aren't relevant — this component never reads var(--tone)
     or var(--size-h). No <theme> block, no per-component tone/size
     redeclaration in :host.
-  - Closes its dialog through the <sui-dialog> it composes. The dialog
-    owns tone (its own prop), so cmdk's `size={size()}` is forwarded
-    into the dialog's tone/size contract — and the dialog renders
-    inside the same global channel system.
+  - Closes its dialog through the useDialog handle it composes. cmdk's
+    `size={size()}` is forwarded onto the native <dialog>'s size
+    contract (DIALOG_SKIN_CSS) — and the dialog renders inside the
+    same global channel system.
   - sx is the closed-vocab surface for everything reachable via a
     token + a layout keyword (column/row/gap/align/padding/radius/
     color/text). The <row>/<column> primitives in the template carry
@@ -185,7 +186,7 @@
 <controller>
 // <sui-cmdk> controller — generic command palette.
 //
-// Composes <sui-dialog> (modal shell + focus trap + scroll lock + ESC) and
+// Composes a native <dialog> via useDialog (modal shell + focus trap + scroll lock + ESC) and
 // owns the search/filter/keyboard-nav layer on top of it. RUNTIME-FREE: data
 // arrives via the `items` IDENTITY property (a live CmdkItem[]) or the `items`
 // JSON attribute (SSR fallback), and selections leave as `sui-cmdk-*` events.
@@ -195,7 +196,7 @@
 // derived here; mutations (highlight, select, open/close sync) + emission live
 // in mount's listeners.
 
-import { controller, signal, derived, effect, ref } from '@ship/sui-runtime'
+import { controller, signal, derived, effect, ref, useDialog } from '@ship/sui-runtime'
 import type { ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './sui-cmdk.sui'
 import { type CmdkItem, str, parseJsonItems } from './decode'
@@ -239,7 +240,7 @@ export default controller({
     const highlight = signal(0)
     const listId = signal(`sui-cmdk-list-${seq}`)
 
-    const dialogEl = ref<HTMLElement>(null)
+    const dlg = useDialog()
     const inputEl = ref<HTMLInputElement>(null)
     const listEl = ref<HTMLUListElement>(null)
 
@@ -318,7 +319,7 @@ export default controller({
 
     return {
       itemsSig, query, highlight, listId,
-      dialogEl, inputEl, listEl,
+      dlg, inputEl, listEl,
       visible, navigable, safeHighlight, highlightId, activeId, rows,
     }
   },
@@ -378,13 +379,16 @@ export default controller({
       }
     })
 
-    // The dialog closes itself on ESC / backdrop click; mirror that back into
-    // our `open` prop so the two never drift.
-    const dialog = state.dialogEl as HTMLElement | null
-    const onDialogClose = () => {
-      if (state.open) state.open = false
-    }
-    dialog?.addEventListener('sui-close', onDialogClose)
+    // Bridge the `open` prop to the useDialog handle: the handle owns
+    // showModal()/close(); a native close (ESC / backdrop) mirrors back into
+    // `open` so the two never drift. bindOpen guards both directions.
+    const stopOpenBridge = effect(() => {
+      if (state.open) state.dlg.open()
+      else state.dlg.close()
+    })
+    const stopCloseMirror = effect(() => {
+      if (!state.dlg.isOpen() && state.open) state.open = false
+    })
 
     const input = state.inputEl as HTMLInputElement | null
 
@@ -464,7 +468,8 @@ export default controller({
 
     return () => {
       stopOpenSync()
-      dialog?.removeEventListener('sui-close', onDialogClose)
+      stopOpenBridge()
+      stopCloseMirror()
       input?.removeEventListener('input', onInput)
       input?.removeEventListener('keydown', onKeydown)
       list?.removeEventListener('mousedown', onListMousedown)
@@ -473,15 +478,11 @@ export default controller({
 })
 
 </controller>
-<sui-dialog
+<dialog
+  use:dlg
   part="dialog"
   size={size()}
   backdrop="blur"
-  no-header
-  no-footer
-  no-close-button
-  prop:open={open()}
-  bind:this={dialogEl}
 >
   <column class="cmdk" part="panel" gap="0"
     sx="min-h:0 fg:foreground">
@@ -548,4 +549,4 @@ export default controller({
       {/if}
     </ul>
   </column>
-</sui-dialog>
+</dialog>

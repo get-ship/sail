@@ -15,6 +15,7 @@ pub fn prop_builder(kind: &PropKind) -> &'static str {
         PropKind::Bool => "bool",
         PropKind::Number => "number",
         PropKind::Union(_) => "union",
+        PropKind::Identity(_) => "property",
     }
 }
 
@@ -31,6 +32,9 @@ pub fn prop_default_literal(p: &PropDecl) -> Option<String> {
         }
         PropKind::Number => raw.to_string(),
         PropKind::String | PropKind::Union(_) => format!("\"{}\"", escape_string(raw)),
+        // Identity props carry no scalar default (`default` is None), so this
+        // arm is unreachable via the `?` above — kept for exhaustiveness.
+        PropKind::Identity(_) => return None,
     })
 }
 

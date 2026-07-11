@@ -42,16 +42,35 @@ export function bindPopover(
     el.setAttribute('popover', opts.manual ? 'manual' : 'auto')
   }
 
+  // `:popover-open` is the authoritative shown-state in modern browsers, but
+  // selector engines without that pseudo (older Safari, jsdom) THROW on it.
+  // Keep a mirror updated from the native `toggle` event and fall back to it,
+  // so the binding degrades instead of throwing out of the effect.
+  let shownMirror = false
+  const isShown = (): boolean => {
+    try {
+      return el.matches(':popover-open')
+    } catch {
+      return shownMirror
+    }
+  }
+
   const dispose = effect(() => {
     const want = sig()
-    const shown = el.matches(':popover-open')
-    if (want && !shown) el.showPopover()
-    else if (!want && shown) el.hidePopover()
+    const shown = isShown()
+    if (want && !shown) {
+      el.showPopover()
+      shownMirror = true
+    } else if (!want && shown) {
+      el.hidePopover()
+      shownMirror = false
+    }
   })
 
   // native toggle (light-dismiss / ESC / popovertarget / programmatic) → signal
   const onToggle = (e: Event) => {
     const open = (e as unknown as { newState?: string }).newState === 'open'
+    shownMirror = open
     if (sig() !== open) sig.set(open)
   }
   el.addEventListener('toggle', onToggle)

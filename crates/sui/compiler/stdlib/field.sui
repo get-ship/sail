@@ -18,41 +18,41 @@
 }</component>
 
 <style>
-  :host {
+  .sui-field {
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
     font-family: var(--font-body);
   }
-  :host([hidden]) { display: none; }
+  .sui-field[hidden] { display: none; }
 
-  :host .msg { margin-top: var(--space-1); }
-  :host .hint,
-  :host .error {
+  .sui-field .msg { margin-top: var(--space-1); }
+  .sui-field .hint,
+  .sui-field .error {
     font-size: var(--text-xs);
     line-height: var(--leading-snug);
   }
-  :host .hint { color: var(--muted-foreground); }
-  :host .hint:empty { display: none; }
-  :host .error {
+  .sui-field .hint { color: var(--muted-foreground); }
+  .sui-field .hint:empty { display: none; }
+  .sui-field .error {
     display: flex;
     align-items: flex-start;
     gap: var(--space-1);
     color: var(--destructive);
     font-weight: var(--font-weight-medium);
   }
-  :host .error svg { width: var(--icon-size-sm); height: var(--icon-size-sm); flex-shrink: 0; }
+  .sui-field .error svg { width: var(--icon-size-sm); height: var(--icon-size-sm); flex-shrink: 0; }
 
   /* hint shows when valid, error shows when [invalid] — pure CSS swap. */
-  :host(:not([invalid])) .error { display: none; }
-  :host([invalid]) .hint { display: none; }
+  .sui-field:not([invalid]) .error { display: none; }
+  .sui-field[invalid] .hint { display: none; }
 </style>
 
 <div use:field>
-  <div class="label" part="label"><slot name="label"></slot></div>
-  <div class="control" part="control"><slot></slot></div>
-  <div class="hint msg" part="hint"><slot name="hint"></slot></div>
-  <div class="error msg" part="error" role="alert" aria-live="polite">
+  <div class="label"><slot name="label"></slot></div>
+  <div class="control"><slot></slot></div>
+  <div class="hint msg"><slot name="hint"></slot></div>
+  <div class="error msg" role="alert" aria-live="polite">
     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path><path d="M12 9v4M12 17h.01"></path></svg>
     <span><slot name="error"></slot></span>
   </div>

@@ -21,7 +21,7 @@ import { ensureLightContracts } from './styles/index'
 
 /** Declarative description of a component prop. */
 export interface PropDef<T> {
-  type: 'string' | 'bool' | 'number' | 'union' | 'object' | 'array'
+  type: 'string' | 'bool' | 'number' | 'union' | 'property'
   default?: T
   reflect?: boolean
   bindable?: boolean
@@ -75,13 +75,14 @@ export const prop = {
   ): PropDef<V[number]> {
     return { type: 'union', values, ...opts }
   },
-  /** JSON-parsed object prop. Bad/missing input falls back to `default`. */
-  object<T>(opts: PropOpts<T> = {}): PropDef<T> {
-    return { type: 'object', ...opts }
-  },
-  /** JSON-parsed array prop. Bad/missing input falls back to `default ?? []`. */
-  array<T>(opts: PropOpts<T[]> = {}): PropDef<T[]> {
-    return { type: 'array', ...opts }
+  /**
+   * A plain reactive property — any TypeScript type. NOT an attribute: it's a
+   * signal + `el.prop` accessor, set via `el.prop = …` or `prop:` binding.
+   * This is where object/array/custom-typed props live (identity preserved, no
+   * JSON, no attribute). The compiler emits this for any non-primitive prop.
+   */
+  property<T>(opts: PropOpts<T> = {}): PropDef<T> {
+    return { type: 'property', ...opts }
   },
 }
 
@@ -143,9 +144,9 @@ const encodeAttr = (def: PropDef<unknown>, value: unknown): string | null => {
       return value ? '' : null
     case 'union':
       return String(value)
-    case 'object':
-    case 'array':
-      try { return JSON.stringify(value) } catch { return null }
+    case 'property':
+      // Never reflected — a property prop is not an attribute.
+      return null
   }
 }
 
@@ -179,7 +180,10 @@ const buildSchema = (def: ComponentDef): ComponentSchema => {
   const observedAttrs: string[] = []
   const props: ComponentSchema['props'] = {}
   for (const [attr, propDef] of Object.entries(def.props ?? {})) {
-    observedAttrs.push(attr)
+    // Property props are plain reactive properties, not attributes: they get a
+    // signal + accessor (below / in installPropAccessors) but are never
+    // observed or decoded from an attribute.
+    if (propDef.type !== 'property') observedAttrs.push(attr)
     props[attr] = { camel: camelOf(attr), decode: decoderFor(propDef) }
   }
   // `formValue` / `formDisabled` imply form-associated even if the
@@ -276,6 +280,14 @@ export function component<Bindings>(
       }
     } else {
       lightChildren = Array.from(host.childNodes)
+      // Model A: the host is a transparent pass-through — its `.sui-root`
+      // template child is the visual root. `display: contents` removes the
+      // host's own box so a block-rooted component lays out correctly (an
+      // inline custom-element host would otherwise fail to contain a block
+      // child). The host stays in the DOM — and, in modern engines, in the a11y
+      // tree — carrying `data-component` + reflected attrs for the `@scope`
+      // donut and `:scope[state] .sui-root` selectors.
+      host.style.display = 'contents'
       ensureLightContracts()
       if (def.styles) injectScopedStyles(tag, def.styles)
     }

@@ -31,7 +31,7 @@
 }</component>
 
 <style>
-  :host {
+  .sui-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -40,11 +40,11 @@
     color: currentColor;
     --sz: var(--icon-size-md);
   }
-  :host([hidden]) { display: none; }
-  :host([size='xs']) { --sz: var(--icon-size-2xs); }
-  :host([size='sm']) { --sz: var(--icon-size-sm); }
-  :host([size='lg']) { --sz: var(--icon-size-xl); }
-  :host([size='xl']) { --sz: var(--icon-size-2xl); }
+  .sui-icon[hidden] { display: none; }
+  .sui-icon[size='xs'] { --sz: var(--icon-size-2xs); }
+  .sui-icon[size='sm'] { --sz: var(--icon-size-sm); }
+  .sui-icon[size='lg'] { --sz: var(--icon-size-xl); }
+  .sui-icon[size='xl'] { --sz: var(--icon-size-2xl); }
 
   ::slotted(svg) {
     display: block;
@@ -53,7 +53,7 @@
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    :host([spin]) ::slotted(svg) { animation: sui-spin 0.8s linear infinite; }
+    .sui-icon[spin] ::slotted(svg) { animation: sui-spin 0.8s linear infinite; }
   }
 </style>
 

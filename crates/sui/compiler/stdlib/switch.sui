@@ -23,7 +23,7 @@
 }</component>
 
 <style>
-  :host {
+  .sui-switch {
     appearance: none;
     -webkit-appearance: none;
     position: relative;
@@ -51,19 +51,19 @@
       border-color var(--duration-fast) var(--ease-out),
       box-shadow var(--duration-fast) var(--ease-out);
   }
-  :host([size='sm']) { --sw-w: var(--control-h-xs); --sw-h: var(--icon-size-sm); --sw-thumb: var(--space-2_5); }
-  :host([size='lg']) { --sw-w: var(--space-7);      --sw-h: var(--icon-size-lg); --sw-thumb: var(--icon-size-sm); }
+  .sui-switch[size='sm'] { --sw-w: var(--control-h-xs); --sw-h: var(--icon-size-sm); --sw-thumb: var(--space-2_5); }
+  .sui-switch[size='lg'] { --sw-w: var(--space-7);      --sw-h: var(--icon-size-lg); --sw-thumb: var(--icon-size-sm); }
 
-  :host([tone='primary'])     { --tone: var(--primary);          --tone-on-fg: var(--primary-foreground); }
-  :host([tone='info'])        { --tone: var(--info);             --tone-on-fg: var(--info-foreground); }
-  :host([tone='success'])     { --tone: var(--success);          --tone-on-fg: var(--success-foreground); }
-  :host([tone='warning'])     { --tone: var(--warning);          --tone-on-fg: var(--warning-foreground); }
-  :host([tone='destructive']) { --tone: var(--destructive);      --tone-on-fg: var(--destructive-foreground); }
-  :host([tone='accent'])      { --tone: var(--accent);           --tone-on-fg: var(--accent-foreground); }
-  :host([tone='muted'])       { --tone: var(--muted-foreground); --tone-on-fg: var(--background); }
+  .sui-switch[tone='primary']     { --tone: var(--primary);          --tone-on-fg: var(--primary-foreground); }
+  .sui-switch[tone='info']        { --tone: var(--info);             --tone-on-fg: var(--info-foreground); }
+  .sui-switch[tone='success']     { --tone: var(--success);          --tone-on-fg: var(--success-foreground); }
+  .sui-switch[tone='warning']     { --tone: var(--warning);          --tone-on-fg: var(--warning-foreground); }
+  .sui-switch[tone='destructive'] { --tone: var(--destructive);      --tone-on-fg: var(--destructive-foreground); }
+  .sui-switch[tone='accent']      { --tone: var(--accent);           --tone-on-fg: var(--accent-foreground); }
+  .sui-switch[tone='muted']       { --tone: var(--muted-foreground); --tone-on-fg: var(--background); }
 
   /* Thumb — a pseudo-element (works because appearance:none un-replaces the box). */
-  :host::before {
+  .sui-switch::before {
     content: '';
     position: absolute;
     top: 50%;
@@ -79,40 +79,40 @@
       background-color var(--duration-fast) var(--ease-out);
   }
 
-  :host(:not(:disabled):not(:checked)):hover { background: var(--hover-bg); }
+  .sui-switch:not(:disabled):not(:checked):hover { background: var(--hover-bg); }
 
-  :host(:checked) {
+  .sui-switch:checked {
     background: var(--tone);
     border-color: var(--selected-border);
     box-shadow: var(--shadow-xs);
   }
-  :host(:checked)::before {
+  .sui-switch:checked::before {
     left: calc(100% - var(--sw-thumb) - 1px);
     background: var(--tone-on-fg);
   }
 
-  :host(:focus-visible) {
+  .sui-switch:focus-visible {
     --ring-color: var(--tone);
     outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
   }
 
-  :host(:disabled) {
+  .sui-switch:disabled {
     cursor: not-allowed;
     background: var(--muted);
     border-color: var(--border);
     filter: saturate(0.6);
     box-shadow: none;
   }
-  :host(:disabled)::before { box-shadow: var(--shadow-xs); }
+  .sui-switch:disabled::before { box-shadow: var(--shadow-xs); }
 
   @media (forced-colors: active) {
-    :host { border-color: CanvasText; }
-    :host(:checked) { background: Highlight; }
-    :host(:focus-visible) { outline: 2px solid CanvasText; outline-offset: 2px; }
+    .sui-switch { border-color: CanvasText; }
+    .sui-switch:checked { background: Highlight; }
+    .sui-switch:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    :host, :host::before { transition: none; }
+    .sui-switch, .sui-switch::before { transition: none; }
   }
 </style>
 

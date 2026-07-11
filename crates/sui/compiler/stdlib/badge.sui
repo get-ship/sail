@@ -27,7 +27,7 @@
 }</component>
 
 <style>
-  :host {
+  .sui-badge {
     display: inline-flex;
     align-items: center;
     vertical-align: middle;
@@ -48,18 +48,18 @@
     border-radius: var(--bdg-radius);
     -webkit-font-smoothing: antialiased;
     font-variant-numeric: tabular-nums;
-    /* soft is the default variant — base :host renders soft. */
+    /* soft is the default variant — base .sui-badge renders soft. */
     background: var(--tone-bg);
     border: 1px solid var(--tone-border);
     color: var(--tone-fg);
   }
-  :host([hidden]) { display: none; }
+  .sui-badge[hidden] { display: none; }
 
   /* Tone: muted is the default. Scoped to no-tone/default (specificity 0,2,0)
      so the GLOBAL [tone='X'] channel (contracts.css, 0,1,0) fills every branded
      tone without a per-tone rule here and without an order-dependent clash. */
-  :host(:not([tone])),
-  :host([tone='default']) {
+  .sui-badge:not([tone]),
+  .sui-badge[tone='default'] {
     --tone: var(--muted-foreground);
     --tone-fg: var(--muted-foreground);
     --tone-contrast: var(--background);
@@ -67,28 +67,28 @@
     --tone-border: var(--tone-muted-border);
   }
 
-  :host([size='sm']) { --bdg-h: 18px; --bdg-px: 6px;  --bdg-fs: 9.5px;  --bdg-gap: 3px; }
-  :host([size='lg']) { --bdg-h: 26px; --bdg-px: 10px; --bdg-fs: 11.5px; --bdg-gap: 5px; }
+  .sui-badge[size='sm'] { --bdg-h: 18px; --bdg-px: 6px;  --bdg-fs: 9.5px;  --bdg-gap: 3px; }
+  .sui-badge[size='lg'] { --bdg-h: 26px; --bdg-px: 10px; --bdg-fs: 11.5px; --bdg-gap: 5px; }
 
   /* Shape — square (radius-sm) default; pill opts into the full radius. */
-  :host([pill]) { --bdg-radius: var(--radius-full); }
+  .sui-badge[pill] { --bdg-radius: var(--radius-full); }
 
   /* Variant matrix (soft is the base above). */
-  :host([variant='solid']) {
+  .sui-badge[variant='solid'] {
     background: var(--tone);
     border-color: var(--tone);
     color: var(--tone-contrast);
     box-shadow: inset 0 1px 0 0 var(--hover-bg);
   }
-  :host([variant='outline']) {
+  .sui-badge[variant='outline'] {
     background: transparent;
     border-color: var(--tone-border);
     color: var(--tone-fg);
   }
 
   @media (forced-colors: active) {
-    :host { border-color: CanvasText; color: CanvasText; }
-    :host([variant='solid']) { background: Highlight; color: HighlightText; border-color: Highlight; }
+    .sui-badge { border-color: CanvasText; color: CanvasText; }
+    .sui-badge[variant='solid'] { background: Highlight; color: HighlightText; border-color: Highlight; }
   }
 </style>
 

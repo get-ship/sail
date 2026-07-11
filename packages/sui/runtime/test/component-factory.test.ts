@@ -182,22 +182,27 @@ describe('component() — number and object props', () => {
     el.remove()
   })
 
-  it('decodes object prop with fallback on bad json', () => {
+  it('property prop: set via el.prop (identity), never observed as an attribute', () => {
     const tag = nextTag()
     let captured: Signal<{ a: number }> | undefined
     component(
       tag,
-      { props: { data: prop.object<{ a: number }>({ default: { a: 0 } }) } },
+      { props: { data: prop.property<{ a: number }>({ default: { a: 0 } }) } },
       capturing((ctx) => {
         captured = ctx.props.data as Signal<{ a: number }>
       }),
     )
     const el = document.createElement(tag)
-    el.setAttribute('data', 'not-json')
     document.body.appendChild(el)
+    // Seeds from the declared default.
     expect(captured!()).toEqual({ a: 0 })
-    el.setAttribute('data', '{"a":3}')
-    expect(captured!()).toEqual({ a: 3 })
+    // Property assignment bridges to the signal — identity preserved, no JSON.
+    const next = { a: 3 }
+    ;(el as unknown as { data: { a: number } }).data = next
+    expect(captured!()).toBe(next)
+    // Property-only: not an observed attribute, so setAttribute is inert.
+    el.setAttribute('data', '{"a":9}')
+    expect(captured!()).toBe(next)
     el.remove()
   })
 })

@@ -16,7 +16,14 @@ pub fn emit_cem(program: &Program, opts: &CompileOpts) -> Value {
         .map(|f| f.to_string_lossy().to_string())
         .unwrap_or_else(|| format!("{tag}.sui"));
 
-    let attributes: Vec<Value> = program.props.iter().map(attr_entry).collect();
+    // Identity props are plain properties, not attributes — they never appear
+    // in the element's attribute surface (only as fields/members below).
+    let attributes: Vec<Value> = program
+        .props
+        .iter()
+        .filter(|p| !matches!(p.kind, PropKind::Identity(_)))
+        .map(attr_entry)
+        .collect();
     let members: Vec<Value> = program.props.iter().map(member_entry).collect();
     let form_associated = program
         .props
@@ -167,8 +174,12 @@ fn member_entry(p: &PropDecl) -> Value {
         "kind": "field",
         "name": camel,
         "type": { "text": prop_type_text(&p.kind) },
-        "attribute": p.name,
     });
+    // Only attribute-backed props carry an `attribute`; Identity props are
+    // property-only and must not advertise one.
+    if !matches!(p.kind, PropKind::Identity(_)) {
+        m.as_object_mut().unwrap().insert("attribute".into(), Value::String(p.name.clone()));
+    }
     if let Some(d) = p.default.as_ref() {
         m.as_object_mut().unwrap().insert("default".into(), Value::String(d.clone()));
     }
@@ -191,6 +202,7 @@ fn prop_type_text(k: &PropKind) -> String {
             .map(|v| format!("'{v}'"))
             .collect::<Vec<_>>()
             .join(" | "),
+        PropKind::Identity(t) => t.clone(),
     }
 }
 

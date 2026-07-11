@@ -1,4 +1,4 @@
-import { controller, signal } from '@ship/sui-runtime'
+import { controller, signal, useDialog } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 
 function notify(message: string, tone: string, description?: string) {
@@ -13,7 +13,7 @@ function notify(message: string, tone: string, description?: string) {
 export default controller<Scope>({
   scope: () => ({
     // Overlays
-    dialogOpen: signal(false),
+    dialogDemo: useDialog(),
     alertDialogOpen: signal(false),
     drawerOpen: signal(false),
     popoverOpen: signal(false),

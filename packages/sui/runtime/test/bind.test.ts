@@ -6,6 +6,7 @@ import {
   bindAttr,
   bindClass,
   bindProp,
+  bindDynamic,
   bindValue,
   bindChecked,
   bindHtml,
@@ -139,6 +140,53 @@ describe('bindAttr', () => {
     const $label = signal<string | undefined>(undefined)
     bindAttr(el, 'aria-label', () => $label())
     expect(el.hasAttribute('aria-label')).toBe(false)
+  })
+})
+
+describe('bindDynamic — toolchain owns the attribute/property split', () => {
+  const define = (tag: string, cls: CustomElementConstructor) => {
+    if (!customElements.get(tag)) customElements.define(tag, cls)
+  }
+
+  it('native element: attribute-only, never property-routed', () => {
+    const el = document.createElement('div')
+    const $t = signal('hi')
+    bindDynamic(el, 'title', () => $t())
+    // `title` has a property mirror, but native elements stay attribute-only.
+    expect(el.getAttribute('title')).toBe('hi')
+  })
+
+  it('custom element + object value: property, identity preserved, no attribute', () => {
+    define('x-dyn-obj', class extends HTMLElement {})
+    const el = document.createElement('x-dyn-obj')
+    const cols = [{ id: 1 }]
+    bindDynamic(el, 'columns', () => cols)
+    expect((el as unknown as { columns: unknown }).columns).toBe(cols) // same ref
+    expect(el.hasAttribute('columns')).toBe(false) // not stringified onto an attribute
+  })
+
+  it('custom element + declared property: routes to the property (reactive)', () => {
+    define(
+      'x-dyn-prop',
+      class extends HTMLElement {
+        _v: unknown
+        get value() { return this._v }
+        set value(v: unknown) { this._v = v }
+      },
+    )
+    const el = document.createElement('x-dyn-prop')
+    const $v = signal('a')
+    bindDynamic(el, 'value', () => $v())
+    expect((el as unknown as { value: unknown }).value).toBe('a')
+    $v.set('b')
+    expect((el as unknown as { value: unknown }).value).toBe('b')
+  })
+
+  it('custom element + undeclared primitive (data-*): falls through to attribute', () => {
+    define('x-dyn-data', class extends HTMLElement {})
+    const el = document.createElement('x-dyn-data')
+    bindDynamic(el, 'data-count', () => 3)
+    expect(el.getAttribute('data-count')).toBe('3')
   })
 })
 

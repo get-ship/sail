@@ -31,7 +31,7 @@
 }</component>
 
 <style>
-  :host {
+  .sui-alert {
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: start;
@@ -48,20 +48,20 @@
     line-height: var(--leading-normal);
     box-shadow: var(--shadow-xs);
   }
-  :host([hidden]) { display: none; }
+  .sui-alert[hidden] { display: none; }
 
   /* Tone: muted default (specificity 0,2,0) so the GLOBAL [tone='X'] channel
      fills every branded tone. --tone drives the leading stripe; --tone-bg/-fg
      the icon chip. */
-  :host(:not([tone])),
-  :host([tone='default']) {
+  .sui-alert:not([tone]),
+  .sui-alert[tone='default'] {
     --tone: var(--muted-foreground);
     --tone-fg: var(--muted-foreground);
     --tone-bg: var(--tone-muted-bg);
   }
 
   /* Leading tone stripe (anchored to the relative root). */
-  :host::before {
+  .sui-alert::before {
     content: '';
     position: absolute;
     left: 0; top: 0; bottom: 0;
@@ -69,7 +69,7 @@
     background: var(--tone);
   }
 
-  :host .ico {
+  .sui-alert .ico {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -79,29 +79,29 @@
     background: var(--tone-bg);
     color: var(--tone-fg);
   }
-  :host .ico:empty { display: none; }
-  :host .ico svg,
-  :host .ico ::slotted(*) { width: var(--icon-size-sm); height: var(--icon-size-sm); }
+  .sui-alert .ico:empty { display: none; }
+  .sui-alert .ico svg,
+  .sui-alert .ico ::slotted(*) { width: var(--icon-size-sm); height: var(--icon-size-sm); }
 
-  :host .content {
+  .sui-alert .content {
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
     min-width: 0;
   }
-  :host .title { font-weight: var(--font-weight-semibold); }
-  :host .title:empty { display: none; }
-  :host .body { color: var(--muted-foreground); }
-  :host .actions {
+  .sui-alert .title { font-weight: var(--font-weight-semibold); }
+  .sui-alert .title:empty { display: none; }
+  .sui-alert .body { color: var(--muted-foreground); }
+  .sui-alert .actions {
     display: flex;
     flex-direction: row;
     gap: var(--space-2);
     margin-top: var(--space-2);
   }
-  :host .actions:empty { display: none; }
+  .sui-alert .actions:empty { display: none; }
 
   /* Self-contained dismiss control — hidden until [dismissible]. */
-  :host .close {
+  .sui-alert .close {
     display: none;
     align-items: center;
     justify-content: center;
@@ -118,28 +118,28 @@
       background-color var(--duration-fast) var(--ease-out),
       color var(--duration-fast) var(--ease-out);
   }
-  :host([dismissible]) .close { display: inline-flex; }
-  :host .close:hover { background: var(--hover-bg); color: var(--foreground); }
-  :host .close:focus-visible {
+  .sui-alert[dismissible] .close { display: inline-flex; }
+  .sui-alert .close:hover { background: var(--hover-bg); color: var(--foreground); }
+  .sui-alert .close:focus-visible {
     outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
   }
-  :host .close svg { width: var(--icon-size-sm); height: var(--icon-size-sm); }
+  .sui-alert .close svg { width: var(--icon-size-sm); height: var(--icon-size-sm); }
 
   @media (forced-colors: active) {
-    :host { border-color: CanvasText; }
-    :host::before { background: CanvasText; }
+    .sui-alert { border-color: CanvasText; }
+    .sui-alert::before { background: CanvasText; }
   }
 </style>
 
 <div use:alert role="status" aria-live="polite" aria-atomic="true">
-  <span class="ico" part="ico"><slot name="icon"></slot></span>
-  <div class="content" part="content">
-    <div class="title" part="title"><slot name="title"></slot></div>
-    <div class="body" part="body"><slot></slot></div>
-    <div class="actions" part="actions"><slot name="actions"></slot></div>
+  <span class="ico"><slot name="icon"></slot></span>
+  <div class="content">
+    <div class="title"><slot name="title"></slot></div>
+    <div class="body"><slot></slot></div>
+    <div class="actions"><slot name="actions"></slot></div>
   </div>
-  <button class="close" part="close" type="button" aria-label="Dismiss">
+  <button class="close" type="button" aria-label="Dismiss">
     <svg viewBox="0 0 10 10" aria-hidden="true">
       <path d="M2 2 L8 8 M8 2 L2 8" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" fill="none"></path>
     </svg>

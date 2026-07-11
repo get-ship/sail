@@ -7,7 +7,6 @@
 import {
   decodeBoolean,
   decodeEnum,
-  decodeJson,
   decodeNumber,
   decodeString,
   type Decoder,
@@ -30,9 +29,9 @@ export const decoderFor = (def: PropDef<unknown>): Decoder<unknown> => {
         ''
       return decodeEnum(values, fallback) as Decoder<unknown>
     }
-    case 'object':
-      return decodeJson(def.default)
-    case 'array':
-      return decodeJson(def.default ?? [])
+    case 'property':
+      // Property props are never observed as attributes, so this decoder is
+      // never invoked; identity keeps the switch exhaustive and safe.
+      return (v) => v
   }
 }

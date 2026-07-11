@@ -72,9 +72,13 @@ describe('<sui-context-menu>', () => {
     expect(parseFloat(p.style.top)).toBeGreaterThan(top1)
   })
 
-  it('close() calls hidePopover', async () => {
+  it('close() calls hidePopover (when open)', async () => {
     const { el } = makeMenuWithItems()
     const p = panelEl(el)!
+    // Open first — hidePopover only fires on a real shown→hidden transition
+    // (calling it on a closed popover throws InvalidStateError in the platform).
+    ;(el as SuiContextMenu).show(10, 10)
+    await flush()
     let hid = 0
     const orig = p.hidePopover
     p.hidePopover = () => { hid++; orig?.call(p) }

@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sui-cmdk/sui-cmdk.compiled.js'
-import '../src/sui-dialog/sui-dialog.compiled.js'
 import '../src/sui-icon/sui-icon.compiled.js'
 import { createContainerRegistry, flush, mount } from '../src/test-utils'
 import type { CmdkItem } from '../src/sui-cmdk/sui-cmdk.controller'
@@ -48,7 +47,7 @@ describe('<sui-cmdk> — structure', () => {
     const { el } = mount(reg, 'sui-cmdk')
     await flush()
     expect(customElements.get('sui-cmdk')).toBeDefined()
-    expect(shadow(el).querySelector('sui-dialog')).not.toBeNull()
+    expect(shadow(el).querySelector('dialog')).not.toBeNull()
     const inp = inputOf(el)
     expect(inp).not.toBeNull()
     expect(inp.getAttribute('aria-autocomplete')).toBe('list')

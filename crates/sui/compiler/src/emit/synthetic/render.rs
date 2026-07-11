@@ -79,7 +79,8 @@ fn walk(program: &Program, is_view: bool) -> Walked {
     let mut emitter = TemplateEmitter::new(&registry, is_view).with_expr_prefix(SCOPE_PREFIX);
 
     let mut body_w = Writer::new();
-    emitter.emit_top_level(&mut body_w, &program.template, "container", "__cleanups");
+    // Synthetic render is for tsgo type-checking, not runtime DOM — no root class.
+    emitter.emit_top_level(&mut body_w, &program.template, "container", "__cleanups", false);
 
     let hoists = emitter.take_boundary_hoists();
     let uses_text = emitter.hydrate_uses_text();

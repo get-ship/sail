@@ -20,7 +20,7 @@
 }</component>
 
 <style>
-  :host {
+  .sui-tooltip {
     display: inline-flex;
     anchor-name: var(--sui-tooltip-anchor);
   }
@@ -45,8 +45,8 @@
     position-try-fallbacks: flip-block, flip-inline;
   }
 
-  :host(:hover) .bubble,
-  :host(:focus-within) .bubble { opacity: 1; }
+  .sui-tooltip:hover .bubble,
+  .sui-tooltip:focus-within .bubble { opacity: 1; }
 
   .bubble::after {
     content: '';
@@ -64,32 +64,32 @@
        viewport clip (we do NOT reorder by most-room, which would ignore the
        author's chosen side). */
     .bubble { margin: var(--space-2); }
-    :host(:not([placement])) .bubble,
-    :host([placement='top']) .bubble { position-area: top; }
-    :host([placement='bottom']) .bubble { position-area: bottom; }
-    :host([placement='left']) .bubble { position-area: left; }
-    :host([placement='right']) .bubble { position-area: right; }
+    .sui-tooltip:not([placement]) .bubble,
+    .sui-tooltip[placement='top'] .bubble { position-area: top; }
+    .sui-tooltip[placement='bottom'] .bubble { position-area: bottom; }
+    .sui-tooltip[placement='left'] .bubble { position-area: left; }
+    .sui-tooltip[placement='right'] .bubble { position-area: right; }
 
-    :host(:not([placement])) .bubble::after,
-    :host([placement='top']) .bubble::after { bottom: calc(-1 * var(--space-1)); left: 50%; margin-left: var(--tt-arrow-shift); }
-    :host([placement='bottom']) .bubble::after { top: calc(-1 * var(--space-1)); left: 50%; margin-left: var(--tt-arrow-shift); }
-    :host([placement='left']) .bubble::after { right: calc(-1 * var(--space-1)); top: 50%; margin-top: var(--tt-arrow-shift); }
-    :host([placement='right']) .bubble::after { left: calc(-1 * var(--space-1)); top: 50%; margin-top: var(--tt-arrow-shift); }
+    .sui-tooltip:not([placement]) .bubble::after,
+    .sui-tooltip[placement='top'] .bubble::after { bottom: calc(-1 * var(--space-1)); left: 50%; margin-left: var(--tt-arrow-shift); }
+    .sui-tooltip[placement='bottom'] .bubble::after { top: calc(-1 * var(--space-1)); left: 50%; margin-left: var(--tt-arrow-shift); }
+    .sui-tooltip[placement='left'] .bubble::after { right: calc(-1 * var(--space-1)); top: 50%; margin-top: var(--tt-arrow-shift); }
+    .sui-tooltip[placement='right'] .bubble::after { left: calc(-1 * var(--space-1)); top: 50%; margin-top: var(--tt-arrow-shift); }
   }
 
   @supports not (anchor-name: --x) {
-    :host { position: relative; }
+    .sui-tooltip { position: relative; }
     .bubble { position: absolute; }
-    :host(:not([placement])) .bubble,
-    :host([placement='top']) .bubble { bottom: calc(100% + var(--space-2)); left: 50%; transform: translateX(-50%); }
-    :host(:not([placement])) .bubble::after,
-    :host([placement='top']) .bubble::after { bottom: calc(-1 * var(--space-1)); left: 50%; margin-left: var(--tt-arrow-shift); }
-    :host([placement='bottom']) .bubble { top: calc(100% + var(--space-2)); left: 50%; transform: translateX(-50%); }
-    :host([placement='bottom']) .bubble::after { top: calc(-1 * var(--space-1)); left: 50%; margin-left: var(--tt-arrow-shift); }
-    :host([placement='left']) .bubble { right: calc(100% + var(--space-2)); top: 50%; transform: translateY(-50%); }
-    :host([placement='left']) .bubble::after { right: calc(-1 * var(--space-1)); top: 50%; margin-top: var(--tt-arrow-shift); }
-    :host([placement='right']) .bubble { left: calc(100% + var(--space-2)); top: 50%; transform: translateY(-50%); }
-    :host([placement='right']) .bubble::after { left: calc(-1 * var(--space-1)); top: 50%; margin-top: var(--tt-arrow-shift); }
+    .sui-tooltip:not([placement]) .bubble,
+    .sui-tooltip[placement='top'] .bubble { bottom: calc(100% + var(--space-2)); left: 50%; transform: translateX(-50%); }
+    .sui-tooltip:not([placement]) .bubble::after,
+    .sui-tooltip[placement='top'] .bubble::after { bottom: calc(-1 * var(--space-1)); left: 50%; margin-left: var(--tt-arrow-shift); }
+    .sui-tooltip[placement='bottom'] .bubble { top: calc(100% + var(--space-2)); left: 50%; transform: translateX(-50%); }
+    .sui-tooltip[placement='bottom'] .bubble::after { top: calc(-1 * var(--space-1)); left: 50%; margin-left: var(--tt-arrow-shift); }
+    .sui-tooltip[placement='left'] .bubble { right: calc(100% + var(--space-2)); top: 50%; transform: translateY(-50%); }
+    .sui-tooltip[placement='left'] .bubble::after { right: calc(-1 * var(--space-1)); top: 50%; margin-top: var(--tt-arrow-shift); }
+    .sui-tooltip[placement='right'] .bubble { left: calc(100% + var(--space-2)); top: 50%; transform: translateY(-50%); }
+    .sui-tooltip[placement='right'] .bubble::after { left: calc(-1 * var(--space-1)); top: 50%; margin-top: var(--tt-arrow-shift); }
   }
 </style>
 

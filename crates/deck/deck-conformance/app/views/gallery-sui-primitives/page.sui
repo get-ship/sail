@@ -562,15 +562,15 @@
     <div class="gsp-row gsp-wrap">
       <div class="gsp-card">
         <p class="gsp-card-desc">Modal dialog — size=md, backdrop=default</p>
-        <sui-button variant="outline" size="sm" on:click={() => dialogOpen.set(true)}>Open dialog</sui-button>
-        <sui-dialog prop:open={dialogOpen()}>
-          <span slot="header">Confirm action</span>
-          Are you sure you want to proceed? This cannot be undone.
-          <span slot="footer">
-            <sui-button variant="outline" size="sm" on:click={() => dialogOpen.set(false)}>Cancel</sui-button>
-            <sui-button variant="solid" tone="primary" size="sm" on:click={() => dialogOpen.set(false)}>Confirm</sui-button>
-          </span>
-        </sui-dialog>
+        <sui-button variant="outline" size="sm" on:click={dialogDemo.open}>Open dialog</sui-button>
+        <dialog use:dialogDemo>
+          <header>Confirm action</header>
+          <section>Are you sure you want to proceed? This cannot be undone.</section>
+          <footer>
+            <sui-button variant="outline" size="sm" on:click={dialogDemo.close}>Cancel</sui-button>
+            <sui-button variant="solid" tone="primary" size="sm" on:click={dialogDemo.close}>Confirm</sui-button>
+          </footer>
+        </dialog>
       </div>
     </div>
   </section>
