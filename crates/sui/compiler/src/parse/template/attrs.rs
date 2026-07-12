@@ -591,6 +591,15 @@ fn compile_motion(
             "motion trigger \"{trigger}\" must be a bare identifier"
         )));
     }
+    // An unknown trigger used to COMPILE and then silently do nothing — the runtime
+    // no-ops a trigger it has no dispatch for, so `motion:hovr={...}` was a typo you
+    // could ship. Name the set instead.
+    if !MOTION_TRIGGERS.contains(&trigger) {
+        return Err(err(format!(
+            "motion trigger `{trigger}` is not supported. Triggers: {}.",
+            MOTION_TRIGGERS.join(", ")
+        )));
+    }
     if value.is_empty() {
         return Err(err("motion: requires a config object".into()));
     }
@@ -636,7 +645,7 @@ fn compile_motion(
 
 // The property vocabulary lives in sui-lint — ONE list, two readers. The compiler
 // kept its own copy, and the copies drifted the first time a key was added.
-use sui_lint::rules::animate_token_only::{MOTION_PROPERTIES, MOTION_STAGGER_KEY};
+use sui_lint::rules::animate_token_only::{MOTION_PROPERTIES, MOTION_STAGGER_KEY, MOTION_TRIGGERS};
 
 /// Parse the static object body of a `motion:trigger="…"` directive.
 /// Accepted shape: `{ <bare-identifier>: '<string-literal>' (, …) }`.

@@ -29,6 +29,29 @@ pub const MOTION_PROPERTIES: &[&str] = &[
 /// sibling elements (the delay step), not anything about any one of them.
 pub const MOTION_STAGGER_KEY: &str = "stagger";
 
+/// THE trigger vocabulary — what can drive a `motion:` directive. One list, read by
+/// the parser (which rejects anything off it), by the runtime (which dispatches on
+/// it), and by the generated agent skill (which teaches it).
+///
+/// Three kinds, and the difference matters:
+///   INTERACTION  hover, press, focus, focus-visible — rest <-> active, event-driven
+///   LIFECYCLE    enter, exit — the element joining or leaving the DOM. `exit` is the
+///                one thing CSS cannot do alone: it needs the framework to HOLD the
+///                element in the tree until the animation finishes.
+///   TIMELINE     view, scroll — PROGRESS-driven, not time-driven. Reveal-on-scroll
+///                and parallax, at zero JS runtime cost (the platform drives them off
+///                the main thread — no listener, no rAF, no IntersectionObserver).
+pub const MOTION_TRIGGERS: &[&str] = &[
+    "hover",
+    "press",
+    "focus",
+    "focus-visible",
+    "enter",
+    "exit",
+    "view",
+    "scroll",
+];
+
 /// The preset catalog is `animation-presets.json` — the SAME file the compiler
 /// bakes from. It used to be hand-copied into a `KNOWN_PRESETS` array here: a second
 /// source of truth for a vocabulary that must not drift. A preset the compiler knows

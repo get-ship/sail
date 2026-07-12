@@ -284,10 +284,16 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         );
     }
     if effective.variants {
-        let _ = writeln!(md, "## variants — prop/state → sx tables\n");
+        // This section used to teach a top-level `variants: { … }` field in the
+        // component block. That field is RETIRED — the compiler rejects it outright
+        // ("unknown `<component>` field `variants`") — so the skill was instructing
+        // agents to write code that cannot compile. It was hardcoded prose rather
+        // than generated from a table, which is exactly how it rotted while the rest
+        // of this file stayed honest.
+        let _ = writeln!(md, "## variants — a prop whose values are sx tables\n");
         let _ = writeln!(
             md,
-            "In the component block: `variants: {{ variant: {{ solid: 'bg:tone …' }} }}`\n(host-level) and `'.class': {{ … }}` (anatomy-class-targeted). Values are sx\nlists and take the same state prefixes (`solid: 'bg:tone hover:bg:muted'`);\n`group-<state>:` keys the state on the HOST driving the target.\n"
+            "A variant IS A PROP. Declare it inside `props`, with the value being the\nvariant->sx table; the prop's type is the union of the keys (first = default),\nand it reflects to an attribute so CSS can key on it:\n\n```\n<component>{{\n  props: {{\n    variant: {{ solid: 'bg:tone fg:tone-fg', soft: 'bg:tone-bg', outline: 'border:tone' }},\n    tone: 'default' | 'primary' | 'destructive',\n  }},\n}}</component>\n```\n\nValues are sx lists and take the same state prefixes\n(`solid: 'bg:tone hover:bg:muted'`). `compound` (a sibling field of `props`)\nkeys rules on COMBINATIONS of variant values.\n\nThere is no separate `variants:` block. One declaration surface: `props`.\n"
         );
     }
     if !effective.raw_containers {
@@ -296,16 +302,77 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
             "## Raw containers are banned\n\nNo bare `<div>`/`<span>` — use the layout elements or a component.\n"
         );
     }
-    let _ = writeln!(md, "## Motion\n");
+    // Motion is ONE system. The triggers, properties and presets below are read from
+    // the same tables the compiler enforces and the runtime dispatches on — not
+    // retyped here, because the last time a motion vocabulary was retyped by hand the
+    // copies drifted and a valid key failed the lint.
+    use sui_lint::rules::animate_token_only::{
+        MOTION_PROPERTIES, MOTION_STAGGER_KEY, MOTION_TRIGGERS,
+    };
+    let _ = writeln!(md, "## Motion — one system\n");
     let _ = writeln!(
         md,
-        "`motion:<trigger>={{{{ prop: 'preset' }}}}` — triggers `hover` `press` `focus`\n`focus-visible`; properties `scale` `opacity` `translate-x` `translate-y`\n`rotate`. Presets (closed set):\n"
+        "`motion:<trigger>={{{{ <property>: '<preset>' }}}}`. There is exactly one animation\ndirective; `transition:` / `in:` / `out:` are retired.\n"
     );
+    let _ = writeln!(
+        md,
+        "TRIGGERS ({}) come in three kinds:\n\n\
+         - INTERACTION — `hover` `press` `focus` `focus-visible`: rest <-> active, driven by events.\n\
+         - LIFECYCLE — `enter` `exit`: the element joining or leaving the DOM. `exit` is the one\n  \
+           thing CSS cannot do alone (the framework holds the element in the tree until it finishes).\n\
+         - TIMELINE — `view` `scroll`: PROGRESS-driven, not time-driven. Reveal-on-scroll and\n  \
+           parallax, at zero JS runtime cost. `view` = this element's passage through the viewport;\n  \
+           `scroll` = the scroll container's total progress.\n",
+        MOTION_TRIGGERS.join(", ")
+    );
+    let _ = writeln!(
+        md,
+        "PROPERTIES: {}. Plus the reserved key `{}` — a DURATION (`'40ms'`), not a preset:\nit is the delay STEP between siblings arriving together, which is what turns a list\nthat appears into a list that arrives.\n",
+        MOTION_PROPERTIES.join(", "),
+        MOTION_STAGGER_KEY
+    );
+    let _ = writeln!(
+        md,
+        "```\n<card motion:view={{{{ opacity: 'fade', translate-y: 'spring:gentle' }}}}>reveal on scroll</card>\n<row motion:enter={{{{ opacity: 'fade', stagger: '40ms' }}}}>cascades in</row>\n<button motion:press={{{{ scale: 'press' }}}}>tactile</button>\n```\n"
+    );
+    let _ = writeln!(md, "PRESETS (closed set — an unknown one fails the build):\n");
     if let Ok(db) = sui_compiler::lower::presets::load() {
         let mut names = db.known_preset_names();
         names.sort_unstable();
         let _ = writeln!(md, "{}\n", names.join(", "));
     }
+    // The three things an author reaches for that the skill never mentioned: how
+    // behavior attaches, where state comes from, and which door to import through.
+    let _ = writeln!(md, "## Behavior — `use:` attaches, functions compose\n");
+    let _ = writeln!(
+        md,
+        "ONE RULE: **if it touches the DOM it is an action; if it returns state it is a\nfunction.** \"use\" means exactly one thing in this language — the `use:` directive.\n\n\
+         - `use:action` (template) — behavior bound to an element. `Action<P>`: takes the node\n  \
+           (+ an optional reactive param), returns `{{ update?, destroy? }}`. It replaces the\n  \
+           ref + effect + cleanup triad entirely. Yours work exactly like the built-ins:\n  \
+           `import {{ myAction }} from './my-action'` then `use:myAction={{param}}`.\n\
+         - COMPOSITIONS (`@ship/sui-std`) — plain functions that combine the reactive\n  \
+           primitives and return signals. `form()`, `selection()`, `filteredList()`. There is\n  \
+           no type, no registration, no lifecycle contract — nothing to author against, which\n  \
+           is why anyone can write one. Call it in the `<controller>`, and the signals it\n  \
+           returns are ordinary scope members the template binds to.\n"
+    );
+    let _ = writeln!(md, "## State + imports\n");
+    let _ = writeln!(
+        md,
+        "State lives in the `<controller>` — a raw `<script>` is banned, and the `<state>`\ndirective is retired. Whatever the controller EXPORTS is the template's scope.\n\n\
+         ```\n\
+         <controller>\n  \
+           import {{ signal, derived }} from '@ship/sui-runtime'\n  \
+           import {{ selection }} from '@ship/sui-std'\n\n  \
+           export const rows = signal([])\n  \
+           export const sel = selection(rows, (r) => r.id)\n\
+         </controller>\n\
+         ```\n\n\
+         Import primitives from `@ship/sui-runtime` — the front door. Never from\n`@ship/sui-runtime/internal`: that is the COMPILER's ABI (`bindFor`, `attachRef`,\n`runAction`, …). If you are typing a symbol from there, you are hand-writing something\nthe compiler emits.\n\n\
+         Reactivity: `signal` `derived` `effect` `batch` `untrack` `shared`. Reach for\n`effect` rarely — it is the escape hatch, not the pattern. Cleanup is automatic: an\neffect created during setup dies with the component.\n\n\
+         Control flow: `{{#if cond}}…{{/if}}`, `{{#for item of items key={{item.id}}}}…{{/for}}`\n(the `key=` is required — without it the reconciler falls back to positional matching\nand loses DOM identity on reorder).\n"
+    );
     let _ = writeln!(md, "## When the compiler rejects you\n");
     let _ = writeln!(
         md,
