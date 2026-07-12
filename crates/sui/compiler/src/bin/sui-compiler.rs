@@ -766,7 +766,7 @@ fn compile_one(
         component_meta,
         emit_dts: !no_dts,
         emit_component_imports,
-        lint_overrides: Policy::resolve_opt(path).map(|p| p.overrides()).unwrap_or_default(),
+        lint_overrides: Policy::overrides_for(path),
     };
     // Optional real-TypeScript validation of the `<component>` variants against
     // the declared props. Env-gated so the fast inner-loop build stays fast; the

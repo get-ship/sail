@@ -74,6 +74,48 @@ impl Policy {
         }
     }
 
+    /// THE FLOOR. Authored `<style>` and inline `style=` are an error in every
+    /// SUI file, with or without a `sui.config.json`. This is not a policy tier
+    /// and not opt-in: it is a property of the language. The ONLY exception is
+    /// the L1 element sources inside this compiler, which do not take this path —
+    /// they compile through `compile_element`, because they ARE the styling layer.
+    ///
+    /// It used to be emitted only as part of a `Policy`, so a package with no
+    /// config got no policy and therefore no floor. An opt-in floor is not a
+    /// floor: every unconfigured tree — which was all of them — had a silent
+    /// escape hatch, and authors (including this one) walked straight through it.
+    ///
+    /// When the floor bites something real — syntax highlighting, say — the
+    /// answer is a missing L1 element, not a hole in the floor.
+    pub fn floor() -> Vec<LintOverride> {
+        use OverrideSeverity::Error;
+        vec![
+            LintOverride { rule: "sui-no-style-block".to_string(), severity: Error },
+            LintOverride { rule: "sui-no-inline-style".to_string(), severity: Error },
+        ]
+    }
+
+    /// What the compiler should enforce for `path`: the floor (always) plus
+    /// whatever capability keys the package declared (if any).
+    pub fn overrides_for(path: &Path) -> Vec<LintOverride> {
+        let mut out = Policy::floor();
+        if let Some(p) = Policy::resolve_opt(path) {
+            out.extend(p.capabilities());
+        }
+        out
+    }
+
+    /// The capability keys only — the floor is added separately by `overrides_for`.
+    pub fn capabilities(self) -> Vec<LintOverride> {
+        use OverrideSeverity::{Error, Off};
+        let cap = |on: bool| if on { Off } else { Error };
+        vec![
+            LintOverride { rule: "sui-no-sx".to_string(), severity: cap(self.sx) },
+            LintOverride { rule: "sui-no-variants".to_string(), severity: cap(self.variants) },
+            LintOverride { rule: "sui-no-raw-container".to_string(), severity: cap(self.raw_containers) },
+        ]
+    }
+
     /// The `LintOverride` bundle this policy implies. The **floor** is always
     /// `Error` and is emitted regardless of the keys — no configuration can bring
     /// authored `<style>` / `style=` back. The three capability keys toggle their

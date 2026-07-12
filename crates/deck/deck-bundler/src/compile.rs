@@ -55,15 +55,12 @@ pub fn compile_sui(
     }
     let source = std::fs::read_to_string(sui_file)
         .map_err(|e| CompileError::Read(sui_file.to_path_buf(), e))?;
-    // The styling floor is resolved per-package from the nearest `sui.config.json`
-    // walking up from this file, and applied in-process exactly as the CLI does —
-    // otherwise the policy is a lie in real deck builds. OPT-IN: `resolve_opt`
-    // returns None (→ no overrides) when a package has no `sui.config.json`, so
-    // the floor rolls out package-by-package and every unconfigured tree compiles
-    // exactly as before. A package opts in by declaring `{"policy":"…"}`.
-    let policy_overrides = Policy::resolve_opt(sui_file)
-        .map(|p| p.overrides())
-        .unwrap_or_default();
+    // The FLOOR is unconditional — no <style>, no style=, in any SUI file, with
+    // or without a config. A deck project does not opt into the language. The
+    // capability keys (sx / variants / raw containers) still come from the
+    // nearest `sui.config.json` walking up, which is how a project dials the
+    // surface ABOVE the floor.
+    let policy_overrides = Policy::overrides_for(sui_file);
     let opts = CompileOpts {
         setup_url: paired_controller(sui_file, stem),
         mode: match mode {
