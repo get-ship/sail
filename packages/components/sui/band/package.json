@@ -1,0 +1,25 @@
+{
+  "name": "@ship/sui-band",
+  "version": "0.1.0",
+  "description": "SUI band pack — <sui-band>, a seamless marquee band: duplicates its light-DOM content until the -50% loop can never show a seam at any viewport, honors prefers-reduced-motion, and rides the tone contract.",
+  "type": "module",
+  "license": "MIT",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "customElements": "dist/custom-elements.json",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "prepublishOnly": "test -f dist/custom-elements.json || (cd ../../../.. && cargo run -p deck-cli -- build-assets)",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ship/sui-runtime": "workspace:*",
+    "@ship/sui-dom": "workspace:*"
+  },
+  "devDependencies": {
+    "@ship/test-setup": "workspace:*",
+    "vitest": "^4.1.5"
+  }
+}

@@ -222,6 +222,7 @@ const SUI_ALIAS_SPECS = [
   '@ship/deck-router',
   '@ship/sui-runtime/route',
   '@ship/sui-runtime/virtual',
+  '@ship/sui-runtime/internal',
   '@ship/sui-runtime',
   '@ship/sui-dom',
 ] as const
