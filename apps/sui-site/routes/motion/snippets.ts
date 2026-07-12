@@ -32,9 +32,9 @@ export const code = {
   </card>
 {/if}`,
 
-  timeline: `<!-- TIMELINE — driven by scroll position, not by time. These compile to
-     native CSS animation-timeline: the main thread is not involved, and there is
-     no JavaScript in the frame loop at all. -->
+  timeline: `<!-- TIMELINE — driven by scroll POSITION, not by time. These attach a
+     native ViewTimeline, which the browser drives on the compositor: no
+     JavaScript runs while you scroll, only once at mount to set it up. -->
 <section motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
   Fades up as it scrolls into view.
 </section>
@@ -45,11 +45,9 @@ export const code = {
 
   stagger: `<!-- stagger is RESERVED, not a property: it describes the relationship
      BETWEEN siblings (the delay step), not anything about any one of them. -->
-<ul>
-  {#for item of items() key={item.id}}
-    <li motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy', stagger: '0.04s' }}>
-      {item.label}
-    </li>
-  {/for}
-</ul>`,
+{#for n of items() key={n}}
+  <card motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy', stagger: '0.05s' }}>
+    {n}
+  </card>
+{/for}`,
 }
