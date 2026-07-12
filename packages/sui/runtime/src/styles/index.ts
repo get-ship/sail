@@ -681,28 +681,8 @@ export const LIGHT_CONTRACTS_CSS =
   // globally-styled controls (their lift/press/transition are document-wide now).
   '@media (prefers-reduced-motion: reduce) { [data-component], [data-component] *, :where(button, input, textarea, select, a, [tabindex]) { transition: none !important; animation: none !important; } }\n'
 
-let lightContractsInstalled = false
-
-/**
- * Install the framework contracts once at document level for light-DOM
- * components. Injected EARLY (head, before per-component scoped styles) so
- * a component's own rules win ties by source order.
- */
-export function ensureLightContracts(): void {
-  if (lightContractsInstalled) return
-  if (typeof document === 'undefined') return
-  lightContractsInstalled = true
-  const id = 'sui-light-contracts'
-  if (document.getElementById(id)) return
-  // A host that SERVES the contracts asset (deck links
-  // /api/assets/sui.css, marked data-sui-contracts) wins — injection is
-  // the migration-window fallback for JS-only hosts and dies when the
-  // last one converts.
-  if (document.querySelector('link[data-sui-contracts], style[data-sui-contracts]')) {
-    return
-  }
-  const style = document.createElement('style')
-  style.id = id
-  style.textContent = layered(LIGHT_CONTRACTS_CSS)
-  document.head.prepend(style)
-}
+// `ensureLightContracts()` used to live here and inject the contracts from a string
+// constant at every component mount — which meant no bundler could drop the 30KB,
+// because the code demonstrably read it. It moved behind a seam
+// (./contracts-seam) and the injection itself is opt-in (@ship/sui-runtime/contracts).
+// Nothing in the default path references LIGHT_CONTRACTS_CSS now, so it shakes out.

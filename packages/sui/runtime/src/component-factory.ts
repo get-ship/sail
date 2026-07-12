@@ -17,7 +17,7 @@ import { effect, signal, type Signal } from './signal'
 import type { MountSetup, MountModule } from './component-mount'
 import { mountComponent } from './compose'
 import { projectSlots } from './slot-project'
-import { ensureLightContracts } from './styles/index'
+import { ensureLightContracts } from './styles/contracts-seam'
 
 /** Declarative description of a component prop. */
 export interface PropDef<T> {

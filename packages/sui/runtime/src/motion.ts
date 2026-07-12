@@ -73,8 +73,19 @@ function isFocusVisible(ev: FocusEvent): boolean {
   return focusSource === 'keyboard'
 }
 
+// The focus-source tracker used to install two global listeners AT IMPORT TIME —
+// a module-level side effect, which means (a) every app that so much as touches this
+// module pays for two listeners it may never use, and (b) NO bundler can drop the
+// module, because it cannot prove the import is pure. That is how `motion` ended up
+// in a benchmark bundle that has no animations in it.
+//
+// It installs on first use instead: only `focus-visible` needs it.
 let focusSource: 'keyboard' | 'mouse' | 'unknown' = 'unknown'
-if (typeof window !== 'undefined') {
+let focusTrackerInstalled = false
+
+function trackFocusSource(): void {
+  if (focusTrackerInstalled || typeof window === 'undefined') return
+  focusTrackerInstalled = true
   window.addEventListener('keydown', () => {
     focusSource = 'keyboard'
   }, { capture: true })
@@ -211,6 +222,7 @@ export function __sui_motion_attach(
       for (const a of enter) a.cancel()
     }
   }
+  if (trigger === 'focus-visible') trackFocusSource()
   const [enterEvent, leaveEvent, cancelEvent] = events
   const onEnter = (ev: Event) => {
     if (prefersReducedMotion()) return
