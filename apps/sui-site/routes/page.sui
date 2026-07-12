@@ -1,30 +1,17 @@
 <!--
-  Ship UI landing — designer direction 1c "Kinetic": giant rotating type,
-  angled marquee bands, live proof, giant wordmark. The headline rotation is
-  a signal-driven keyed swap through motion: — the product doing the trick,
-  not a CSS keyframe imitating it. Loops the language deliberately lacks
+  Ship UI landing — kinetic direction (designer option 1c), with a static
+  batteries-included headline. Loops the language deliberately lacks
   (marquee, wordmark gradient) live in base.css with reduced-motion guards.
 -->
 <column class="landing-wrap">
   <column class="hero kinetic-hero" gap="4">
     <center><p class="eyebrow">SHIP UI · 0.2.0</p></center>
-    <h1>
-      Agents
-      <br />
-      <strong class="rotator-slot">
-        {#for w of word() key={w}}
-          <b class="rotator"
-            motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}
-            motion:exit={{ opacity: 'fade-out' }}>{w}</b>
-        {/for}
-      </strong>
-      You review.
-    </h1>
+    <h1>Batteries included.<br /><b class="accent">Actually.</b></h1>
     <center>
       <p class="lead">
-        One language for the whole interface — components, styling, state and
-        motion inside it — so what an agent writes is what your users safely
-        get.
+        Components, styling, state, data and motion live inside one language —
+        nothing to assemble, nothing to pick, and no way to drift off the
+        design system.
       </p>
     </center>
     <row class="hero-cta" gap="2">
