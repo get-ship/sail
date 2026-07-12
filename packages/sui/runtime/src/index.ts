@@ -112,6 +112,11 @@ export type { OnOptions, Modifier } from './on'
 // behavior + teardown) to an element. The compiler emits `runAction` for
 // `use:action` / `use:action={param}`. The primitive that removes
 // author-facing ref + effect for element behavior.
+// Compositions — plain functions over the primitives. Part of the LANGUAGE, not a
+// package you install: `form()` is no more optional than `signal()`.
+export { form, selection, filteredList } from './compositions'
+export type { FormOptions, ListSource } from './compositions'
+
 export { runAction } from './action'
 export type { Action, ActionResult } from './action'
 

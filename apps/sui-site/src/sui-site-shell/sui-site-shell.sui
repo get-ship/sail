@@ -68,6 +68,7 @@
 
       <label>What's given</label>
       <a href="/elements">Elements</a>
+      <a href="/layout">Layout</a>
       <a href="/styling">Styling</a>
       <a href="/theming">Theming</a>
       <a href="/motion">Motion</a>

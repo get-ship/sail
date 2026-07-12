@@ -1,0 +1,83 @@
+<!--
+  /layout — the page that did not exist. <row>/<column>/<grid> are used on
+  eighteen pages of this site and were taught on none of them.
+-->
+<column class="doc" gap="5">
+  <p class="eyebrow">What's given</p>
+  <h1>Layout</h1>
+  <p class="lead">
+    Five keywords, and <strong>the axis is the name</strong>. There is no
+    <code>flex-direction</code> to get backwards, no debate about whether a stack
+    is vertical, and no CSS to write.
+  </p>
+
+  <code-block code={code.axes}></code-block>
+
+  <h2>Why this is a keyword and not a style</h2>
+  <p>
+    Flexbox is four decisions before you have laid anything out: which axis, how
+    the main axis distributes, how the cross axis aligns, whether it wraps. Every
+    one is a place two authors diverge — and an agent that isn't sure will guess
+    <code>align-items</code> when it meant <code>justify-content</code>, produce
+    something that looks nearly right, and ship it.
+  </p>
+  <p>
+    So <code>sx</code> has no <code>flex-direction</code>, no
+    <code>align-items</code>, no <code>grid-template-columns</code>. Not a gap —
+    a refusal. Structure is a <em>keyword</em>, and the keyword names the axis.
+  </p>
+  <code-block code={code.notSx}></code-block>
+
+  <h2><code>&lt;row&gt;</code> — the x axis</h2>
+  <p>
+    <code>gap</code> · <code>align</code> (cross axis) · <code>justify</code>
+    (main axis).
+  </p>
+  <row gap="3" align="center" justify="between" sx="p:4 bg:muted radius:md">
+    <strong>Ada Lovelace</strong>
+    <badge tone="success">Active</badge>
+  </row>
+  <code-block code={code.row}></code-block>
+
+  <h2><code>&lt;column&gt;</code> — the y axis</h2>
+  <p><code>gap</code> · <code>align</code>.</p>
+  <code-block code={code.column}></code-block>
+
+  <h2><code>&lt;grid&gt;</code> — two dimensions</h2>
+  <p>
+    <code>cols</code> for a fixed count; <code>min</code> for a responsive track
+    that fills as many columns of at least that width as will fit. You do not
+    write a media query.
+  </p>
+  <grid cols="3" gap="3">
+    <card sx="p:4"><strong>One</strong></card>
+    <card sx="p:4"><strong>Two</strong></card>
+    <card sx="p:4"><strong>Three</strong></card>
+  </grid>
+  <code-block code={code.grid}></code-block>
+
+  <h2><code>&lt;stack&gt;</code> — the z axis</h2>
+  <p>
+    Children occupy the same cell, one over another. For a badge on an avatar, an
+    overlay on an image. It is the third axis, and it has a name for the same
+    reason the other two do.
+  </p>
+
+  <h2><code>&lt;center&gt;</code></h2>
+  <p>
+    Centres its child on both axes. The single most-Googled question in CSS is a
+    keyword here.
+  </p>
+
+  <h2>That is the whole vocabulary</h2>
+  <p>
+    Rows of columns of rows. Every layout you have ever built is those three,
+    nested — and because they are keywords, two agents nest them the same way.
+  </p>
+  <code-block code={code.nesting}></code-block>
+
+  <row class="page-nav" gap="2">
+    <a class="btn" href="/elements">← Elements</a>
+    <a class="btn btn-primary" href="/styling">Styling →</a>
+  </row>
+</column>

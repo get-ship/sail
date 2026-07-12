@@ -124,7 +124,7 @@ const users = data(() => ship.users.list())   // { kind: 'loading' | 'error' | '
 
   compositions: `// A composition is a plain function over the primitives. No type, no
 // registration, no rules — if it returns state, it is a composition.
-import { selection } from '@ship/sui-std'
+import { selection } from '@ship/sui-runtime'
 
 const { selected, isSelected, toggle } = selection(() => rows())`,
 
