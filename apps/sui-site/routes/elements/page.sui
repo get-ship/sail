@@ -6,7 +6,7 @@
   three of them compile away) and puts the elements on the page.
 -->
 <column class="doc" gap="5">
-  <p class="eyebrow">The system</p>
+  <p class="eyebrow">Components</p>
   <h1>Elements</h1>
   <p class="lead">
     Forty-eight elements, and you already know most of them. That is deliberate:

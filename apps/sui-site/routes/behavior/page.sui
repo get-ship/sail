@@ -1,5 +1,5 @@
 <column class="doc">
-  <p class="eyebrow">The system</p>
+  <p class="eyebrow">Components</p>
   <h1>Behavior</h1>
   <p class="lead">
     An <strong>action</strong> is a plain function that receives an element,

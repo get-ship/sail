@@ -1,82 +1,111 @@
 <!--
-  /overview — the SUI landing. Short, and it SHOWS. The argument lives on /why;
-  this page must not restate it.
+  /overview — the introduction. What SUI IS, in plain words, and a page you can
+  look at.
 
-  Authored under `sui.config.json { preset: strict, sx: true }`: no <style>, no
-  style=, no raw <column>/<small>. Layout is the keywords, surface is the primitives,
-  everything else is sx. If a page cannot be built this way, that is a hole in the
-  vocabulary — and this page is where we find out.
+  This page used to open with "The UI framework agents write" and then explain
+  element mode, compile-away tags, and four mechanisms. On the FIRST page. It
+  never once mentioned that we ship a component library.
 -->
-<column class="doc landing" gap="5">
-  <p class="eyebrow">SUI</p>
-  <h1>The UI framework agents write</h1>
+<column class="doc" gap="5">
+  <p class="eyebrow">Introduction</p>
+  <h1>SUI</h1>
   <p class="lead">
-    Every decision a language leaves open is variance — and variance is where
-    one-shot beauty dies. So the decisions are gone. What's left is 95% of the
-    expression, with 10% of the choices. <a href="/why">The full argument →</a>
+    A batteries-included framework for building web pages. It ships a component
+    library, a design system, layout, theming, animation, and state — so a page
+    is markup, and nothing else has to be assembled first.
   </p>
 
-  <h2>This is a component</h2>
+  <h2>Install it</h2>
+  <code-block code={code.install}></code-block>
   <p>
-    No build config, no styling library, no component library to install. The
-    tags below <em>are</em> the standard library, and they are already in your
-    HTML vocabulary.
+    That is the whole setup. No config file, no CSS framework to pick, no
+    component library to install on top — the components are part of it.
   </p>
 
-  <center sx="py:8 px:4 bg:muted border:border radius:lg">
-    <card motion:hover={{ scale: 'spring:gentle' }} sx="p:4 max-w:panel-max-w-md">
+  <h2>Write a page</h2>
+  <p>
+    The tags below are the component library. They are the ones you already know
+    from HTML, plus the ones HTML is missing.
+  </p>
+  <code-block code={code.page}></code-block>
+
+  <h2>Here it is</h2>
+  <p>Same markup, running:</p>
+
+  <column gap="4" sx="p:6 bg:muted border:border radius:lg">
+    <h3>Team</h3>
+
+    <combobox placeholder="Filter by role">
+      <option value="eng">Engineering</option>
+      <option value="design">Design</option>
+    </combobox>
+
+    <card sx="p:4" motion:hover={{ scale: 'spring:gentle' }}>
       <row gap="3" align="center">
         <avatar></avatar>
         <column gap="1">
           <strong>Ada Lovelace</strong>
-          <p sx="fg:muted-foreground text:sm">Deploys on Fridays</p>
+          <p sx="fg:muted-foreground text:sm">Engineering</p>
         </column>
         <badge tone="success">Active</badge>
       </row>
-      <row gap="2" sx="mt:3">
-        <button motion:press={{ scale: 'press' }}>Approve</button>
-        <button variant="ghost">Dismiss</button>
+    </card>
+
+    <card sx="p:4" motion:hover={{ scale: 'spring:gentle' }}>
+      <row gap="3" align="center">
+        <avatar></avatar>
+        <column gap="1">
+          <strong>Grace Hopper</strong>
+          <p sx="fg:muted-foreground text:sm">Engineering</p>
+        </column>
+        <badge tone="muted">Away</badge>
       </row>
     </card>
-  </center>
+
+    <row gap="2">
+      <button motion:press={{ scale: 'press' }}>Invite</button>
+      <button variant="ghost">Export</button>
+    </row>
+  </column>
+
   <p sx="text:sm fg:muted-foreground">
-    Hover the card. Press the button. That motion is one directive —
-    <code>motion:hover</code> — not a library.
+    Hover a card. Change the theme in the top right — every colour, shadow and
+    radius above moves with it, because they all come from the same system.
   </p>
 
-  <h2>What's given</h2>
-  <p>Not recommended. Not linted with a warning. <em>Absent</em>.</p>
+  <h2>What comes with it</h2>
+  <ul>
+    <li>
+      <strong>48 components.</strong> Buttons, dialogs, combobox, tabs, toasts,
+      tables — accessible, keyboard-complete, and themed.
+      <a href="/elements">The library →</a>
+    </li>
+    <li>
+      <strong>Layout.</strong> <code>&lt;row&gt;</code>,
+      <code>&lt;column&gt;</code>, <code>&lt;grid&gt;</code>. No flexbox to
+      remember. <a href="/layout">Layout →</a>
+    </li>
+    <li>
+      <strong>Styling and themes.</strong> A token system and nine themes, with
+      no CSS to write. <a href="/styling">Styling →</a>
+    </li>
+    <li>
+      <strong>Animation.</strong> One directive, springs included, respects
+      reduced-motion. <a href="/motion">Animation →</a>
+    </li>
+    <li>
+      <strong>State.</strong> Signals — fine-grained, no virtual DOM.
+      <a href="/reactivity">State →</a>
+    </li>
+  </ul>
 
-  <grid cols="2" gap="3">
-    <card interactive="true" sx="p:4">
-      <a href="/elements"><strong>48 elements</strong></a>
-      <p sx="text:sm fg:muted-foreground mt:1">
-        A dialog is <code>&lt;dialog&gt;</code>. Half ship zero JavaScript; the
-        rest compile away.
-      </p>
-    </card>
-    <card interactive="true" sx="p:4">
-      <a href="/styling"><strong>One way to style</strong></a>
-      <p sx="text:sm fg:muted-foreground mt:1">
-        An off-system color is a build error, not a review note.
-      </p>
-    </card>
-    <card interactive="true" sx="p:4">
-      <a href="/motion"><strong>One animation system</strong></a>
-      <p sx="text:sm fg:muted-foreground mt:1">
-        Eight triggers, nine presets. You cannot reach for a different library.
-      </p>
-    </card>
-    <card interactive="true" sx="p:4">
-      <a href="/behavior"><strong>One way to reach an element</strong></a>
-      <p sx="text:sm fg:muted-foreground mt:1">
-        <code>use:</code>. No ref to thread, no escape hatch to be tempted by.
-      </p>
-    </card>
-  </grid>
+  <p>
+    And it is small: <strong>9.4&nbsp;kB gzipped</strong>, with performance in
+    the same class as Solid.
+  </p>
 
   <row class="page-nav" gap="2">
-    <a class="btn btn-primary" href="/getting-started">Getting started →</a>
+    <a class="btn btn-primary" href="/getting-started">Installation →</a>
     <a class="btn" href="/why">Why SUI</a>
   </row>
 </column>

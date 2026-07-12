@@ -1,5 +1,5 @@
 <column class="doc">
-  <p class="eyebrow">The program</p>
+  <p class="eyebrow">Building</p>
   <h1>Live data</h1>
   <p class="lead">
     Asynchronous data has three states — loading, error, and loaded — and

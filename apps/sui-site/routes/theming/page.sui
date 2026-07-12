@@ -4,7 +4,7 @@
   categories a SUI app reads.
 -->
 <column class="doc theming-doc">
-  <p class="eyebrow">The system</p>
+  <p class="eyebrow">Components</p>
   <h1>Theming</h1>
   <p class="lead">
     SUI ships every surface through <code>@ship/tokens</code>: a single CSS

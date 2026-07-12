@@ -3,7 +3,7 @@
   one idea: how the markup reads and writes state.
 -->
 <column class="doc" gap="5">
-  <p class="eyebrow">The program</p>
+  <p class="eyebrow">Building</p>
   <h1>Templates</h1>
   <p class="lead">
     A template <strong>reads</strong> state; handlers <strong>write</strong> it.

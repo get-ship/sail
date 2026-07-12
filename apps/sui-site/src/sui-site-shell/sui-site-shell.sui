@@ -62,25 +62,25 @@
   {:else}
     <navbar placement="rail" bordered sticky>
       <label>Start here</label>
-      <a href="/overview">Overview</a>
+      <a href="/overview">Introduction</a>
+      <a href="/getting-started">Installation</a>
       <a href="/why">Why SUI</a>
-      <a href="/getting-started">Getting started</a>
 
-      <label>The system</label>
-      <a href="/elements">Elements</a>
+      <label>Components</label>
+      <a href="/elements">Component library</a>
       <a href="/layout">Layout</a>
       <a href="/styling">Styling</a>
       <a href="/theming">Theming</a>
-      <a href="/motion">Motion</a>
-      <a href="/behavior">Behavior</a>
+      <a href="/motion">Animation</a>
+      <a href="/behavior">Actions</a>
 
-      <label>The program</label>
+      <label>Building</label>
       <a href="/reactivity">State</a>
       <a href="/templates">Templates</a>
-      <a href="/data">Data</a>
+      <a href="/data">Data &amp; forms</a>
 
       <label>Reference</label>
-      <a href="/reference">Reference</a>
+      <a href="/reference">API reference</a>
     </navbar>
   {/if}
 

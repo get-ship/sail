@@ -28,43 +28,51 @@
 }</component>
 
 <style>
+  /* The DEFAULT placement lives in the BASE rule, not behind [placement='top'].
+     An element-mode prop default is not stamped as an attribute, so a bare
+     <navbar> carries no placement= at all — and a rule gated on it never
+     matches. The bar rendered 34px tall with no padding and no border. Defaults
+     belong in the base selector; the other placements override it. */
   .sui-navbar {
     display: flex;
-    background: var(--background);
-    color: var(--foreground);
-    gap: var(--space-4);
-  }
-
-  /* ── top / bottom: a horizontal bar ─────────────────────────────────── */
-  .sui-navbar[placement='top'],
-  .sui-navbar[placement='bottom'] {
     flex-direction: row;
     align-items: center;
     min-height: 3.5rem;
     padding: var(--space-2) var(--space-4);
+    background: var(--background);
+    color: var(--foreground);
+    gap: var(--space-4);
   }
-  .sui-navbar[placement='top'][bordered]    { border-block-end: 1px solid var(--border); }
-  .sui-navbar[placement='bottom'][bordered] { border-block-start: 1px solid var(--border); }
-  .sui-navbar[placement='top'][sticky] {
+  .sui-navbar[bordered]         { border-block-end: 1px solid var(--border); }
+  .sui-navbar[sticky] {
     position: sticky;
     top: 0;
     z-index: var(--z-sticky, 100);
   }
+
+  /* ── bottom: the same bar, pinned to the other edge ──────────────────── */
+  .sui-navbar[placement='bottom'][bordered] {
+    border-block-end: 0;
+    border-block-start: 1px solid var(--border);
+  }
   .sui-navbar[placement='bottom'][sticky] {
-    position: sticky;
+    top: auto;
     bottom: 0;
-    z-index: var(--z-sticky, 100);
   }
 
   /* ── rail: the same bar, on its side ────────────────────────────────── */
   .sui-navbar[placement='rail'] {
     flex-direction: column;
+    min-height: 0;
     align-items: stretch;
     gap: var(--space-5);
     padding: var(--space-5) var(--space-4);
     min-width: 14rem;
   }
-  .sui-navbar[placement='rail'][bordered] { border-inline-end: 1px solid var(--border); }
+  .sui-navbar[placement='rail'][bordered] {
+    border-block-end: 0;
+    border-inline-end: 1px solid var(--border);
+  }
   .sui-navbar[placement='rail'][sticky] {
     position: sticky;
     top: 0;

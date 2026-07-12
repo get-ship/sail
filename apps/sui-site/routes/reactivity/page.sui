@@ -1,5 +1,5 @@
 <column class="doc">
-  <p class="eyebrow">The program</p>
+  <p class="eyebrow">Building</p>
   <h1>Reactivity</h1>
   <p class="lead">
     SUI's reactivity is three small primitives: a <strong>signal</strong> holds a

@@ -1,8 +1,9 @@
-// /overview — the SUI product's overview (its own landing, distinct from the
-// Ship umbrella at /). Theme owned by the shell (sui red).
-import { controller } from '@ship/sui-runtime'
+import { controller, type ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
+import { code } from './snippets'
 
 export default controller({
-  scope: () => ({}),
+  scope: (_ctx: ViewScope<Scope>) => {
+    return { code }
+  },
 })

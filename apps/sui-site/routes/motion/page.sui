@@ -9,7 +9,7 @@
   Authored under the floor: no <style>, no raw <div>, no inline style.
 -->
 <column class="doc" gap="5">
-  <p class="eyebrow">The system</p>
+  <p class="eyebrow">Components</p>
   <h1>Motion</h1>
   <p class="lead">
     One directive. <code>motion:</code> takes a <strong>trigger</strong> — when —
