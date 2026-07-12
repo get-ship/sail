@@ -1,40 +1,66 @@
 <!--
-  Ship UI landing — the umbrella front door. Generic across the four products
-  (SUI · Deck · Components · AI), not a SUI-only pitch. Renders full-width (no
-  sidebar) like the SolidJS/Svelte landings; the docs sections carry the sidebar.
+  Ship UI landing — the front door. Umbrella across the four products, so it must
+  say what each one IS in a sentence, not describe compilers.
+
+  It was stale: it linked to a tutorial that no longer exists, claimed "around 74
+  primitives" (it is 48), and opened with "A compiler-first component framework,
+  an app framework, a batteries-included component library, and agent tooling" —
+  four nouns and no idea.
 -->
 <column class="landing-wrap">
-  <section class="hero">
+  <column class="hero" gap="4">
     <p class="eyebrow">SHIP UI · 0.2.0</p>
-    <h1>The UI stack for <small class="grad">agent-built apps</small>.</h1>
+    <h1>Everything you need to build a web app.</h1>
     <p class="lead">
-      A compiler-first component framework, an app framework, a batteries-included
-      component library, and agent tooling — built to produce correct, on-brand
-      custom UI fast. Author close to HTML, TS, and CSS; the compiler enforces the
-      design system and emits standard web components.
+      A component library, a design system, a framework, and the app layer around
+      it — so a page is markup, and nothing has to be assembled first.
     </p>
-    <column class="hero-cta">
-      <a class="btn btn-primary" href="/getting-started">Get started</a>
-      <a class="btn" href="/tutorial">Try the tutorial</a>
-    </column>
-  </section>
+    <row class="hero-cta" gap="2">
+      <a class="btn btn-primary" href="/overview">Get started</a>
+      <a class="btn" href="/components">See the components</a>
+    </row>
+  </column>
 
-  <section class="products">
+  <center sx="py:8 px:4">
+    <card sx="p:5 max-w:panel-max-w-md" motion:hover={{ scale: 'spring:gentle' }}>
+      <column gap="3">
+        <row gap="3" align="center">
+          <avatar></avatar>
+          <column gap="1">
+            <strong>Ada Lovelace</strong>
+            <p sx="fg:muted-foreground text:sm">Engineering</p>
+          </column>
+          <badge tone="success">Active</badge>
+        </row>
+        <row gap="2">
+          <button variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Invite</button>
+          <button variant="ghost">Export</button>
+        </row>
+      </column>
+    </card>
+  </center>
+  <center>
+    <p sx="text:sm fg:muted-foreground">
+      That is real, and it is running. Change the theme in the top right.
+    </p>
+  </center>
+
+  <column class="products" gap="3">
     <a class="product-card" href="/overview">
       <h3>SUI <small class="tag">framework</small></h3>
-      <p>The reactive component framework. Signals and a strict lint, compiled ahead-of-time to standard web components.</p>
+      <p>Components, layout, styling, theming, animation and state. Write a page in markup; the framework already has the rest.</p>
+    </a>
+    <a class="product-card" href="/components">
+      <h3>Components <small class="tag">48, included</small></h3>
+      <p>Buttons, dialogs, combobox, tabs, tables, toasts — accessible, keyboard-complete, and themed. Nothing to install.</p>
     </a>
     <a class="product-card" href="/deck">
       <h3>Deck <small class="tag">app framework</small></h3>
-      <p>Routing, server rendering with hydration, bundling, live data, and a hot-reloading dev loop — driving the compiler for you.</p>
-    </a>
-    <a class="product-card" href="/components">
-      <h3>Components <small class="tag">library</small></h3>
-      <p>Around 74 accessible, on-brand primitives — the batteries the framework composes from.</p>
+      <p>Routing, server rendering, bundling, live data, and a hot-reloading dev loop. The application layer.</p>
     </a>
     <a class="product-card" href="/ai">
-      <h3>AI <small class="tag">agent-first</small></h3>
-      <p>Built to be authored by agents: strict compile-time guardrails, MCP tooling, and a scored authoring eval.</p>
+      <h3>AI <small class="tag">agent tooling</small></h3>
+      <p>Built to be written by agents: the compiler is the guardrail, plus MCP tooling and a scored authoring eval.</p>
     </a>
-  </section>
+  </column>
 </column>
