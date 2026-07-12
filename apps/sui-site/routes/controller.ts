@@ -4,7 +4,7 @@
 
 import { controller, signal, effect, live, filteredList, type ViewScope } from '@ship/sui-runtime'
 import { applyTheme, persistTheme, type ThemeId } from '@ship/tokens/themes'
-import { targetCursor } from '@ship/sui-fx'
+import { targetCursor, dotGrid } from '@ship/sui-fx'
 import type { Scope } from './page.sui'
 
 const WORDS = ['Batteries', 'Components', 'Styling', 'State', 'Motion', 'Themes']
@@ -64,6 +64,7 @@ export default controller({
     return {
       word: () => [WORDS[i()]],
       targetCursor,
+      dotGrid,
       dealt, replay,
       theme, pick,
       people, query, filtered, invite, users, reload,
