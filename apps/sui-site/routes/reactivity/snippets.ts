@@ -73,4 +73,14 @@ export default controller({
     onCleanup(() => ro.disconnect())
   },
 })`,
+
+  composition: `// A COMPOSITION is a plain function over the primitives. No type, no
+// registration, no base class. If it touches the DOM it is an ACTION; if it
+// returns state it is a composition — that is the whole rule.
+import { selection } from '@ship/sui-runtime'
+
+export function useSelection(rows) {
+  const { selected, isSelected, toggle } = selection(rows)
+  return { selected, isSelected, toggle }
+}`,
 }

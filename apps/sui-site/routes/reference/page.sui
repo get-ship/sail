@@ -159,7 +159,7 @@
   <p>
     A plain function over the primitives. No type, no registration, no rules — if
     it touches the DOM it is an <a href="/behavior">action</a>; if it returns
-    state it is a composition. <a href="/composition">Compositions →</a>
+    state it is a composition. <a href="/reactivity">Compositions →</a>
   </p>
   <code-block code={code.compositions}></code-block>
 
@@ -172,7 +172,7 @@
   <code-block code={code.action}></code-block>
 
   <row class="page-nav" gap="2">
-    <a class="btn" href="/tooling">← Tooling</a>
+    <a class="btn" href="/reference">← Tooling</a>
     <a class="btn btn-primary" href="/why">Why SUI →</a>
   </row>
 </column>

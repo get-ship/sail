@@ -162,3 +162,53 @@ fn every_sui_snippet_on_the_site_compiles() {
         broken.join("\n")
     );
 }
+
+/// EVERY snippets.ts must PARSE.
+///
+/// Twice now a backtick inside a template literal — ``…at least `min` as fit…`` —
+/// silently closed the string, turning the rest of the file into garbage. The
+/// snippet compile guard never sees it (the extractor just finds fewer
+/// literals), so it surfaces at BUNDLE time as a wall of oxc noise, minutes
+/// later, with the dev server dead.
+///
+/// A balanced-backtick check is not enough (an escaped \` is legal), so this
+/// asks the question that actually matters: does the file's template-literal
+/// structure make sense? An odd number of unescaped backticks cannot.
+#[test]
+fn every_snippets_file_has_balanced_template_literals() {
+    let routes = site_routes();
+    if !routes.exists() {
+        return;
+    }
+    let mut files = Vec::new();
+    snippet_files(&routes, &mut files);
+
+    let mut broken = Vec::new();
+    for f in &files {
+        let Ok(src) = fs::read_to_string(f) else { continue };
+        // Count backticks that are neither escaped nor inside a line comment.
+        let mut ticks = 0usize;
+        let mut chars = src.chars().peekable();
+        while let Some(c) = chars.next() {
+            match c {
+                '\\' => {
+                    chars.next();
+                }
+                '`' => ticks += 1,
+                _ => {}
+            }
+        }
+        if ticks % 2 != 0 {
+            broken.push(format!(
+                "  {}: {ticks} unescaped backticks — a template literal is left open",
+                f.display()
+            ));
+        }
+    }
+    assert!(
+        broken.is_empty(),
+        "a backtick inside a template literal closes it. The build dies at BUNDLE time \
+         with an unreadable parser error, minutes after you typed it:\n\n{}",
+        broken.join("\n")
+    );
+}

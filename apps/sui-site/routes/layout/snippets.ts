@@ -21,7 +21,7 @@ export const code = {
   grid: `<!-- a fixed count… -->
 <grid cols="3" gap="4">…</grid>
 
-<!-- …or a responsive track: fill as many columns of at least `min` as fit -->
+<!-- …or a responsive track: fill as many columns of at least min as fit -->
 <grid min="16rem" gap="4">…</grid>`,
 
   nesting: `<!-- rows of columns of rows. That is every layout you have ever built. -->

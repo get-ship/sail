@@ -1,0 +1,75 @@
+<!--
+  /templates — control flow + bindings + events, which were three pages and are
+  one idea: how the markup reads and writes state.
+-->
+<column class="doc" gap="5">
+  <p class="eyebrow">What you write</p>
+  <h1>Templates</h1>
+  <p class="lead">
+    A template <strong>reads</strong> state; handlers <strong>write</strong> it.
+    That separation is the whole mental model — and it is why you never have to
+    wonder where a value changed.
+  </p>
+
+  <h2>Reading</h2>
+  <p>Call a signal anywhere an expression goes. That is the entire binding syntax.</p>
+  <code-block code={code.read}></code-block>
+  <p>
+    A text binding is a compiled effect: when the signal changes, the compiler
+    updates <em>the one text node that read it</em>. Nothing else in the tree
+    re-runs. There is no virtual DOM because there is nothing to diff.
+  </p>
+
+  <h2>Writing</h2>
+  <p>Handlers write. <code>on:</code> takes any DOM event.</p>
+  <code-block code={code.write}></code-block>
+  <p>
+    Modifiers declare intent instead of boilerplate — <code>|prevent</code>,
+    <code>|stop</code>, <code>|self</code>, <code>|key:Escape</code>,
+    <code>|debounce:200</code>. You never write
+    <code>e.preventDefault()</code> again, and you never forget it either.
+  </p>
+  <code-block code={code.modifiers}></code-block>
+
+  <h2>Both at once</h2>
+  <p>
+    <code>bind:</code> is the one place a read and a write happen together — and
+    it is exactly sugar for the read plus an <code>on:input</code> write. Two
+    directives, because there are two kinds of control.
+  </p>
+  <code-block code={code.twoWay}></code-block>
+
+  <h2>Shape</h2>
+  <p>
+    Four blocks. Each is a <em>partial</em> — it splices into the surrounding
+    markup with no wrapper element, so control flow never shows up in your DOM.
+  </p>
+
+  <h3><code>&#123;#if&#125;</code></h3>
+  <code-block code={code.ifBlock}></code-block>
+
+  <h3><code>&#123;#for&#125;</code></h3>
+  <p>
+    <code>key</code> is <strong>required</strong>, and that is not pedantry:
+    without it a reorder is a re-render, and the input you were typing in loses
+    its cursor. Every framework has this bug. Here it will not compile.
+  </p>
+  <code-block code={code.forBlock}></code-block>
+
+  <h3><code>&#123;#match&#125;</code></h3>
+  <p>A discriminated match that reads like the data it is matching on.</p>
+  <code-block code={code.matchBlock}></code-block>
+
+  <h3><code>&#123;#async&#125;</code></h3>
+  <p>
+    A live handle's three states in one block. The value is only reachable inside
+    <code>:ok</code> — <strong>a template cannot render data it has not confirmed
+    arrived.</strong> The loading spinner you forgot is now a compile error.
+  </p>
+  <code-block code={code.asyncBlock}></code-block>
+
+  <row class="page-nav" gap="2">
+    <a class="btn" href="/reactivity">← State</a>
+    <a class="btn btn-primary" href="/data">Data →</a>
+  </row>
+</column>
