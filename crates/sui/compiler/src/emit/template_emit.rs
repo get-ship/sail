@@ -533,7 +533,9 @@ impl TemplateEmitter {
                 w.line(&format!("{parent_var}.appendChild({v});"));
                 self.emit_text_binding(w, &v, expr, cleanups_var, &key);
             }
-            Instr::Element(el) => self.emit_element(w, el, parent_var, cleanups_var),
+            Instr::Element(el) => {
+                self.emit_element(w, el, parent_var, cleanups_var);
+            }
             Instr::If(if_instr) => self.emit_if(w, if_instr, parent_var, cleanups_var),
             Instr::For(for_instr) => self.emit_for(w, for_instr, parent_var, cleanups_var),
             Instr::Match(match_instr) => {

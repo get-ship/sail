@@ -74,18 +74,25 @@ impl TemplateEmitter {
         name.to_string()
     }
 
+    /// Emit an element. Returns the variable holding it.
+    ///
+    /// An EMPTY `parent_var` means DETACHED: build the element but do not append it
+    /// anywhere. That is what lets a single-root `{#for}` body skip the
+    /// DocumentFragment (and the `Array.from(frag.childNodes)` that reads it back
+    /// out) — a row is one <tr>, and allocating a fragment plus an array to carry one
+    /// element, once per row, is 2 objects x 10,000 rows of pure garbage.
     pub(in crate::emit) fn emit_element(
         &mut self,
         w: &mut Writer,
         el: &ElementInstr,
         parent_var: &str,
         cleanups_var: &str,
-    ) {
+    ) -> String {
         let lower = el.tag.to_ascii_lowercase();
         // Mirror `bindings::Builder::walk_element`: skip `<data>`
         // entirely (no children walked, no keys allocated).
         if lower == "data" {
-            return;
+            return String::new();
         }
         // ── TEMPLATE CLONE (the fast path) ──────────────────────────────────
         // If this subtree is static structure, clone it instead of building it.
@@ -103,8 +110,10 @@ impl TemplateEmitter {
             let v = self.fresh("e");
             w.line(&format!("const {v} = {tpl}();"));
             self.wire_template(w, el, &v, cleanups_var);
-            w.line(&format!("{parent_var}.appendChild({v});"));
-            return;
+            if !parent_var.is_empty() {
+                w.line(&format!("{parent_var}.appendChild({v});"));
+            }
+            return v;
         }
 
         let v = self.fresh("e");
@@ -148,7 +157,9 @@ impl TemplateEmitter {
         if is_svg_root {
             self.svg_depth -= 1;
         }
-        w.line(&format!("{parent_var}.appendChild({v});"));
+        if !parent_var.is_empty() {
+            w.line(&format!("{parent_var}.appendChild({v});"));
+        }
         // `<use-*>` elements aren't visible UI — they're behavior
         // markers. After the DOM is built, look the hook up in the
         // template-hook registry and invoke its factory so listeners
@@ -156,6 +167,7 @@ impl TemplateEmitter {
         if let Some(hook_name) = lower.strip_prefix("use-") {
             emit_hook_activation(w, &v, hook_name, el, cleanups_var);
         }
+        v
     }
 
     pub(super) fn emit_attr(

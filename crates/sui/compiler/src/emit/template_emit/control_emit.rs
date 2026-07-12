@@ -351,10 +351,28 @@ impl TemplateEmitter {
         // closing over the outer `$scope` instead of the iteration's
         // IIFE-bound one. References like `$scope.item` would then
         // resolve to undefined inside nested test/render closures.
+        // A row is almost always ONE element (`<tr>`, `<li>`, a card). Building it into
+        // a DocumentFragment and then reading it back out with
+        // `Array.from(frag.childNodes)` allocates two objects per row to carry one
+        // element — 20,000 pieces of garbage for a 10,000-row list, and GC was already
+        // eating 23.8% of our JS time on that benchmark. When the body is a single
+        // root element we emit it DETACHED and hand `bindFor` the element directly.
+        let node_producing: Vec<&Instr> = instr
+            .body
+            .iter()
+            .filter(|i| !matches!(i, Instr::Comment { .. }))
+            .collect();
+        let single_root: Option<&ElementInstr> = match node_producing[..] {
+            [Instr::Element(el)] => Some(el),
+            _ => None,
+        };
+
         let mut body_w = Writer::new();
-        body_w.line(&format!(
-            "const {frag} = document.createDocumentFragment();"
-        ));
+        if single_root.is_none() {
+            body_w.line(&format!(
+                "const {frag} = document.createDocumentFragment();"
+            ));
+        }
         body_w.line(&self.decl_cleanups(&cl));
         let hoist_snapshot = self.boundary_hoists.len();
         self.boundary_depth += 1;
@@ -379,7 +397,13 @@ impl TemplateEmitter {
         let machinery_mark = self.machinery_locals.len();
         self.machinery_locals.push(var.clone());
         self.machinery_locals.push(idx_name.to_string());
-        self.emit_children(&mut body_w, &instr.body, &frag, &cl);
+        let root_var = if let Some(el) = single_root {
+            // Detached: no fragment, no appendChild — the element IS the row.
+            self.emit_element(&mut body_w, el, "", &cl)
+        } else {
+            self.emit_children(&mut body_w, &instr.body, &frag, &cl);
+            String::new()
+        };
         self.machinery_locals.truncate(machinery_mark);
         self.for_in_scope = outer_for;
         self.for_var_name = outer_var;
@@ -489,15 +513,25 @@ impl TemplateEmitter {
             } else {
                 String::new()
             };
+            let nodes = if root_var.is_empty() {
+                format!("Array.from({frag}.childNodes)")
+            } else {
+                format!("[{root_var}]")
+            };
             h.line(&format!(
-                "return {{ nodes: Array.from({frag}.childNodes), cleanup: () => {{ for (const c of {cl}) try {{ c(); }} catch (e) {{}} }}, update: ({new_var}, {new_idx}) => {{ {old_capture}$scope.{var} = {new_var}; $scope.{idx_name} = {new_idx}; {inline_run}{v_bump} }} }};"
+                "return {{ nodes: {nodes}, cleanup: () => {{ for (const c of {cl}) try {{ c(); }} catch (e) {{}} }}, update: ({new_var}, {new_idx}) => {{ {old_capture}$scope.{var} = {new_var}; $scope.{idx_name} = {new_idx}; {inline_run}{v_bump} }} }};"
             ));
         } else {
             // No body expression reads the row/index — bindFor's
             // optional `update` hook would have nothing to refresh.
             // Omit it entirely so key-reuse skips a no-op call too.
+            let nodes = if root_var.is_empty() {
+                format!("Array.from({frag}.childNodes)")
+            } else {
+                format!("[{root_var}]")
+            };
             h.line(&format!(
-                "return {{ nodes: Array.from({frag}.childNodes), cleanup: () => {{ for (const c of {cl}) try {{ c(); }} catch (e) {{}} }} }};"
+                "return {{ nodes: {nodes}, cleanup: () => {{ for (const c of {cl}) try {{ c(); }} catch (e) {{}} }} }};"
             ));
         }
         h.leave();
@@ -516,8 +550,13 @@ impl TemplateEmitter {
             self.boundary_depth += 1;
             self.emit_children(&mut h, eb, &frag, &cl);
             self.boundary_depth -= 1;
+            let nodes = if root_var.is_empty() {
+                format!("Array.from({frag}.childNodes)")
+            } else {
+                format!("[{root_var}]")
+            };
             h.line(&format!(
-                "return {{ nodes: Array.from({frag}.childNodes), cleanup: () => {{ for (const c of {cl}) try {{ c(); }} catch (e) {{}} }} }};"
+                "return {{ nodes: {nodes}, cleanup: () => {{ for (const c of {cl}) try {{ c(); }} catch (e) {{}} }} }};"
             ));
             h.leave();
             h.line("},");
