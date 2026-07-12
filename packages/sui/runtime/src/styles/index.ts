@@ -79,7 +79,10 @@ const TYPOGRAPHY_CSS =
   'h4 { font-size: var(--text-lg); }\n' +
   'h5 { font-size: var(--text-md); }\n' +
   'h6 { font-size: var(--text-sm); }\n' +
-  'p  { margin: 0; font-size: var(--text-md); line-height: 1.55; color: var(--foreground); }\n' +
+  // No `color` here: body already hands paragraphs the foreground through
+  // inheritance, and an explicit p ink rule beats inheritance in EVERY
+  // ink-scoped container (a filled band, a terminal panel) — dark-on-dark.
+  'p  { margin: 0; font-size: var(--text-md); line-height: 1.55; }\n' +
   'small { font-size: var(--text-sm); color: var(--muted-foreground); }\n' +
   // A link that declares a variant is a button link — the button skin owns
   // its ink; the global link colour must not outrank it (bare `a` beats the

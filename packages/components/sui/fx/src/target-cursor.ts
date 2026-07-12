@@ -94,6 +94,13 @@ export const targetCursor: Action<void> = (node) => {
   let raf = 0
   const ease = snap ? 1 : 0.22
   const tick = () => {
+    // Containment by geometry, not events: scrolling moves the host out from
+    // under a motionless pointer and no pointerleave ever fires — the
+    // viewfinder lingered mid-page. The rect is the truth.
+    const hr = host.getBoundingClientRect()
+    const inside = mx >= hr.left && mx <= hr.right && my >= hr.top && my <= hr.bottom
+    layer.style.opacity = inside ? '1' : '0'
+    if (!inside) target = null
     const g = goals()
     corners.forEach((c, i) => {
       cur[i].x += (g[i].x - cur[i].x) * ease
@@ -118,6 +125,9 @@ export const targetCursor: Action<void> = (node) => {
   const onHostLeave = () => {
     layer.style.opacity = '0'
     target = null
+    // park the pointer far away so the geometry check agrees with the event
+    mx = -9999
+    my = -9999
   }
   const onOver = (e: PointerEvent) => {
     const t = (e.target as Element | null)?.closest?.(TARGETS)

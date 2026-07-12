@@ -35,7 +35,7 @@ h3 { font-size: var(--text-xl); }
 h4 { font-size: var(--text-lg); }
 h5 { font-size: var(--text-md); }
 h6 { font-size: var(--text-sm); }
-p  { margin: 0; font-size: var(--text-md); line-height: 1.55; color: var(--foreground); }
+p  { margin: 0; font-size: var(--text-md); line-height: 1.55; }
 small { font-size: var(--text-sm); color: var(--muted-foreground); }
 a:not([variant]) { color: var(--primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
