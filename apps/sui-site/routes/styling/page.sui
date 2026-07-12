@@ -7,7 +7,7 @@
   and there is no shadow root. The page taught the reader to defeat the language.
 -->
 <column class="doc" gap="5">
-  <p class="eyebrow">What's given</p>
+  <p class="eyebrow">The system</p>
   <h1>Styling</h1>
   <p class="lead">
     <code>sx</code> is a closed vocabulary of design-system atoms. Not a

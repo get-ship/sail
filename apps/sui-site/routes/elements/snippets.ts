@@ -1,30 +1,46 @@
-// Code snippets for the elements page. Kept out of the controller so the
-// compiler's scope scan isn't fooled by `return {…}` / `signal(…)` patterns.
-// Every SUI sample is compiled by the build
-// (crates/sui/compiler/tests/site_snippets_compile.rs).
+// Snippets for the elements page. Every SUI sample is compiled by the build.
 export const code = {
-  native: `<!-- a dialog is <dialog>. The browser already has one. -->
-<button popovertarget="menu">Open</button>
-<dialog id="confirm">
+  native: `<!-- MECHANISM 1 — native + skin. Zero JavaScript.
+     The browser owns the behavior; we own the surface. -->
+<dialog>
   <h2>Delete this?</h2>
   <button value="cancel">Cancel</button>
   <button value="ok" tone="destructive">Delete</button>
-</dialog>`,
+</dialog>
 
-  language: `<!-- <combobox> is a language element: it compiles to markup + a
-     use: action, and the custom element disappears. -->
-<combobox placeholder="Pick a fruit">
-  <option value="apple">Apple</option>
-  <option value="banana">Banana</option>
+<details>
+  <summary>Advanced</summary>
+  <p>…</p>
+</details>`,
+
+  elementMode: `<!-- MECHANISM 2 — element mode. The tag COMPILES AWAY.
+     <combobox> lowers to a <div class="sui-combobox"> plus use:combobox.
+     No custom element is registered. There is no runtime cost to the tag. -->
+<combobox placeholder="Pick a team">
+  <option value="a">Alpha</option>
+  <option value="b">Beta</option>
 </combobox>`,
 
-  variant: `<!-- a variant is a PROP, not a component. A sheet is a dialog
-     that comes in from the side; an alert is a dialog with a role. -->
-<dialog side="end">…</dialog>
-<dialog role="alertdialog">…</dialog>`,
+  action: `<!-- MECHANISM 3 — use:. Behavior is a function over an element.
+     This is how every element above gets its keyboard handling. -->
+<textarea use:autosize></textarea>`,
 
-  layout: `<!-- the axis IS the name. No flex-direction to get backwards. -->
-<row gap="3" align="center">…</row>
-<column gap="2">…</column>
-<grid cols="3" gap="4">…</grid>`,
+  keyword: `<!-- MECHANISM 4 — layout keywords. Lowered by the preprocessor,
+     because they take DYNAMIC values that element mode forbids. -->
+<row gap="3" align="center">…</row>`,
+
+  variant: `<!-- A VARIANT IS A PROP, not a component.
+     A sheet is a dialog that arrives from the side.
+     An alert dialog is a dialog with a role. -->
+<dialog side="end">…</dialog>
+<dialog role="alertdialog">…</dialog>
+
+<!-- which is why the surface is 48 and not 90 -->
+<button tone="destructive" size="sm">Delete</button>`,
+
+  anatomy: `<!-- ANATOMY IS CLASSES. Light DOM, so every internal is reachable and
+     documented — no ::part(), no shadow boundary to fight. -->
+<card>
+  <!-- .sui-card > .header · .body · .footer -->
+</card>`,
 }

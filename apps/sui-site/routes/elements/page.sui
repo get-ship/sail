@@ -1,71 +1,121 @@
-<column class="doc">
-  <p class="eyebrow">What's given</p>
+<!--
+  /elements — the standard library, in depth.
+
+  The old page CLAIMED 48 elements and showed none of them, then listed the tags
+  as prose. This one teaches the four mechanisms (which is the interesting part —
+  three of them compile away) and puts the elements on the page.
+-->
+<column class="doc" gap="5">
+  <p class="eyebrow">The system</p>
   <h1>Elements</h1>
   <p class="lead">
-    There are 48 elements and you already know most of them. That is the whole
-    design: a model reaches for a <code>&lt;div&gt;</code> when it isn't sure,
-    so the component library is made of tags it is already fluent in. There is
-    no library to import, no library to choose, and nothing to route around.
+    Forty-eight elements, and you already know most of them. That is deliberate:
+    a model that isn't sure reaches for a <code>&lt;div&gt;</code>, so the
+    standard library is made of tags it is already fluent in. There is nothing to
+    install and nothing to choose.
+  </p>
+  <p>
+    What is worth understanding is <em>how</em> they exist, because three of the
+    four mechanisms leave no trace at runtime.
   </p>
 
-  <h2>Half of them are the browser's</h2>
+  <h2>1 — Native, plus a skin</h2>
   <p>
-    A dialog is <code>&lt;dialog&gt;</code>. A disclosure is
-    <code>&lt;details&gt;</code>. A menu rides <code>[popover]</code> and the
-    top layer. These ship <strong>zero JavaScript</strong> — they're the native
-    element plus a stylesheet, so you get the keyboard handling, the focus trap,
-    the ARIA, and the top-layer stacking from the platform, correct by default.
+    Seventeen of them are the browser's own. A dialog is
+    <code>&lt;dialog&gt;</code>; a disclosure is <code>&lt;details&gt;</code>; a
+    menu rides <code>[popover]</code> and the top layer. We add a stylesheet and
+    nothing else.
+  </p>
+  <p>
+    <strong>These ship zero JavaScript.</strong> The focus trap, the ESC key, the
+    top-layer stacking, the ARIA — the platform already implements all of it,
+    correctly, and has for years. Most libraries reimplement it in 40&nbsp;kB and
+    get the edge cases wrong.
   </p>
   <code-block code={code.native}></code-block>
-  <p class="mono small">
+  <p sx="text:sm fg:muted-foreground">
     button · checkbox · details · dialog · dropzone · fieldset · hr · input ·
-    meter · progress · prose · select · skeleton · status-dot · table · textarea
+    layout · meter · progress · prose · select · skeleton · status-dot · table ·
+    textarea
   </p>
 
-  <h2>The rest compile away</h2>
+  <h2>2 — Element mode: the tag compiles away</h2>
   <p>
-    Where the platform has no element — a combobox, a toast region, a
-    breadcrumb — SUI defines one. These are written in <code>.sui</code> like
-    anything else, and the compiler <em>inlines them</em>: the tag becomes plain
-    markup plus a <code>use:</code> action, and no custom element is registered
-    at runtime. You write a component; you ship markup.
+    Where the platform has no element — a combobox, a toast region, a breadcrumb
+    — we define one. It is authored in <code>.sui</code> like anything else, and
+    then the compiler <strong>inlines it</strong>: the tag becomes plain markup
+    plus a <code>use:</code> action, and <em>no custom element is registered.</em>
   </p>
-  <code-block code={code.language}></code-block>
-  <p class="mono small">
-    alert · avatar · badge · breadcrumb · card · chip · collapsible · combobox ·
-    context-menu · dropdown · empty-state · error-boundary · error-state · field ·
-    hover-card · icon · label · menu-item · navbar · page · pagination · popover ·
-    radio · radio-group · scroll-area · separator · slider · spinner · switch ·
-    tab · tab-list · tab-panel · tabs · theme-picker · toast · toast-region ·
-    toggle · toggle-group · tooltip
+  <p>
+    So <code>&lt;combobox&gt;</code> costs you a <code>&lt;div&gt;</code> and one
+    action. Not a class, not a registry entry, not a definition in the custom
+    element registry, not a microtask on upgrade. You write a component; you ship
+    markup.
   </p>
+  <code-block code={code.elementMode}></code-block>
+
+  <p sx="text:sm fg:muted-foreground">
+      alert · avatar · badge · breadcrumb · card · chip · code-block ·
+      collapsible · combobox · context-menu · dropdown · empty-state ·
+      error-boundary · error-state · field · hover-card · icon · label ·
+      menu-item · navbar · page · pagination · popover · radio · radio-group ·
+      scroll-area · separator · slider · spinner · switch · tab · tab-list ·
+      tab-panel · tabs · theme-picker · toast · toast-region · toggle ·
+      toggle-group · tooltip
+  </p>
+
+  <h2>3 — <code>use:</code> is where the behavior lives</h2>
+  <p>
+    Every element above gets its keyboard handling, its roving focus, its ARIA
+    sync from an action — a plain function over the element. It is not a
+    privileged internal mechanism: <a href="/behavior">the action you write looks
+    exactly like the ones we write</a>, because they are the same thing.
+  </p>
+  <code-block code={code.action}></code-block>
+
+  <h2>4 — Layout keywords</h2>
+  <p>
+    <a href="/layout"><code>&lt;row&gt;</code>, <code>&lt;column&gt;</code>,
+    <code>&lt;grid&gt;</code>, <code>&lt;stack&gt;</code>,
+    <code>&lt;center&gt;</code></a> are lowered by the preprocessor rather than
+    element mode, for one reason: they take <em>dynamic</em> values, and element
+    mode forbids those. It is the only mechanism that exists because of a
+    constraint rather than a preference.
+  </p>
+  <code-block code={code.keyword}></code-block>
 
   <h2>A variant is a prop, not a component</h2>
   <p>
-    This is where most libraries leak decisions. A sheet is not a new component;
-    it is a dialog that arrives from the side. An alert dialog is not a new
-    component; it is a dialog with a role. Collapsing those into props is what
-    keeps the surface at 48 instead of 90 — and it means the model cannot pick
-    the wrong one, because there is only one.
+    This is where most libraries leak. A sheet is not a new component — it is a
+    dialog that arrives from the side. An alert dialog is not a new component —
+    it is a dialog with a role. A rail is not a new component — it is a
+    <code>&lt;navbar&gt;</code> on its side.
+  </p>
+  <p>
+    Collapsing those into props is what keeps the surface at forty-eight instead
+    of ninety, and it means <strong>the model cannot pick the wrong one, because
+    there is not a wrong one to pick.</strong>
   </p>
   <code-block code={code.variant}></code-block>
 
-  <h2>Layout: the axis is the name</h2>
+  <h2>Anatomy is classes</h2>
   <p>
-    <code>&lt;row&gt;</code> is the x-axis, <code>&lt;column&gt;</code> is the
-    y-axis, <code>&lt;stack&gt;</code> is the z-axis, <code>&lt;grid&gt;</code>
-    is two dimensions. There is no <code>flex-direction</code> to get backwards
-    and no debate about whether a stack is vertical.
+    Light DOM, so every internal is reachable, inspectable, and documented. There
+    is no <code>::part()</code> to expose, no shadow boundary to fight, and no
+    "how do I style the inner span" issue thread. The element's classes
+    <em>are</em> its API, published as CEM.
   </p>
-  <code-block code={code.layout}></code-block>
+  <code-block code={code.anatomy}></code-block>
 
-  <p class="callout">
-    <strong>The library is very nearly free.</strong> A screen built from twelve
-    of these — combobox, tabs, field, tooltip, the lot, with the keyboard
-    handling and the ARIA — bundles to <strong>8.5&nbsp;kB gzipped</strong>. The
-    same markup written as inert <code>&lt;div&gt;</code>s, with no behavior at
-    all, is 7.2&nbsp;kB. Twelve working components cost
-    <strong>1.3&nbsp;kB</strong>, because the skins are CSS and the elements
-    compile away.
-  </p>
+  <alert tone="info">
+    <strong>Every element, every state, every theme — verified on every commit.</strong>
+    Forty-eight conformance specs render each element across all nine themes and
+    drive the interactive ones in a real browser. The consistency claim is not a
+    promise; it is a test that fails.
+  </alert>
+
+  <row class="page-nav" gap="2">
+    <a class="btn" href="/getting-started">← Getting started</a>
+    <a class="btn btn-primary" href="/layout">Layout →</a>
+  </row>
 </column>
