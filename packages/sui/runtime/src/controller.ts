@@ -1,16 +1,24 @@
 // controller.ts — typed contract for the five-section controller shape.
 //
-// Per the "state is declarative-only" ADR, controllers no longer have
-// a `state:` section — state is declared exclusively in the template
-// via `<state name="X" value="..." />`. A controller has five
-// sections: `derived`, `on`, `use`, `mount`, `unmount`. The state-
-// shape generic is gone; mutation/read views are derived from the
-// `Scope` generic, which is what the template declares.
+// A controller has four sections: `derived`, `on`, `mount`, `unmount`. State is
+// declared in the `scope:` factory (`scope: () => ({ n: signal(0) })`). The
+// `<state>` directive this comment used to describe is RETIRED — and the comment
+// outlived it by long enough to start lying, which is how docs rot.
 //
-// Hooks (`ControllerHook`) keep an internal state-bearing shape — they
-// declare their own writable signals as part of their composition
-// surface. Hook state is namespaced under the `use:` key and never
-// flat-merges into the host scope.
+// The fifth section, `use:`, is gone too, with `ControllerHook`/`UseSection`. It
+// was a mini-DSL: a hook declared `{ state, derived, on }` and a resolver inflated
+// it into signals namespaced under a `use:` key. That made COMPOSITIONS a framework
+// feature — with a type, a resolver, and rules to learn.
+//
+// They are plain functions now (`@ship/sui-std`): call one in the controller and the
+// signals it returns are ordinary scope members the template binds to like anything
+// else you declared. No registration, no namespace, no privileged type. The only
+// language type a composition touches is `Signal<T>` — the lingua franca. That is
+// what makes them user-authorable AND unprivileged; a bespoke type is exactly what
+// would turn them back into a framework feature.
+//
+// It also retires the third meaning of "use". `use:` now means one thing: the
+// template directive that attaches an Action to a DOM node.
 
 import type { Signal } from './signal'
 import type { ShipHost, Clients } from './ship'
@@ -155,12 +163,6 @@ export type OnSection<Scope> = Record<
   (state: MutableState<Scope>, ...args: any[]) => void | Promise<void>
 >
 
-/**
- * `use` section signature. Each entry is a controller hook (see
- * `ControllerHook`). Results are namespaced by key in the resolved
- * view scope.
- */
-export type UseSection = Record<string, ControllerHook<any, any>>
 
 /**
  * `mount` lifecycle. Runs once after the rendered DOM is attached and
@@ -236,11 +238,6 @@ export interface ControllerShape<Scope = object> {
    */
   on?: OnSection<Scope>
 
-  /**
-   * Composition of controller hooks. Static or factory form; factory
-   * form receives the merged scope.
-   */
-  use?: SectionInit<UseSection, ViewScope<Scope>>
 
   /** Runs once after mount; receives writable state. */
   mount?: MountSection<Scope>
@@ -270,7 +267,6 @@ export interface ScopedControllerDef<Ctx, SC extends Record<string, unknown>> {
   scope: (init: Ctx, host?: Element) => SC
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   on?: Record<string, (state: MutableState<Ctx & SC>, ...args: any[]) => void | Promise<void>>
-  use?: SectionInit<UseSection, Ctx & SC>
   mount?: (state: MutableState<Ctx & SC>, el: HTMLElement) => (() => void) | void | Promise<void>
   unmount?: (state: MutableState<Ctx & SC>) => void
 }
@@ -291,43 +287,6 @@ export type ControllerDef<Scope = object> =
 // Controller hooks
 // ---------------------------------------------------------------------------
 
-/**
- * Authoring contract for a controller hook.
- *
- * Hooks are composable bundles; unlike controllers, they **do** declare
- * their own `state:` section because hook-local state is what makes
- * them coherent slices (`useFilteredList` owns its `query`,
- * `useSelection` owns its `selectedId`). Hook state is namespaced
- * under the `use:` key in the consuming controller — there is no
- * automatic flat-merge — so two hooks both declaring `state.query`
- * coexist as `<keyA>.query` and `<keyB>.query`.
- *
- * @typeParam S Hook-internal state shape.
- * @typeParam Scope Extra scope (usually `object` for hooks).
- */
-export interface ControllerHook<
-  S extends object = object,
-  Scope = object,
-> {
-  /**
-   * Hook-internal state. Static initial values; the runtime constructs
-   * a `Signal<T>` per key.
-   */
-  state?: S | ((scope: { ship: ShipHost; clients: Clients } & Scope) => S)
-  /** Pure memos over the merged hook scope (state + outer scope). */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  derived?: Record<string, (scope: any) => unknown>
-  /** Event handlers; only section that mutates hook state. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  on?: Record<string, (state: any, ...args: any[]) => void | Promise<void>>
-  /** Hook composition (a hook may itself compose other hooks). */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  use?: Record<string, ControllerHook> | ((scope: any) => Record<string, ControllerHook>)
-  /** Runs once after mount; receives writable hook state. */
-  mount?: (state: S, el: HTMLElement) => void
-  /** Runs once on disconnect; receives writable hook state. */
-  unmount?: (state: S) => void
-}
 
 // Template-hook contracts (`TemplateHook`, `TemplateHookContext`,
 // `TemplateHookAttrKind`) live in `./template-hook.ts`.

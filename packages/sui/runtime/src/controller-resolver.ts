@@ -3,7 +3,7 @@
 // Takes a `ControllerDef`, walks its sections, and returns a flat
 // bindings record the existing `hydrate()` setup-merge path can
 // consume. The resolver does no DOM work — it builds the read-only /
-// writable scope proxies, memoizes deriveds, composes `use:` hooks,
+// writable scope proxies and memoizes deriveds.
 // and wraps `on` handlers.
 //
 // Per the "state is declarative-only" ADR, the resolver no longer
@@ -12,19 +12,17 @@
 // directives) and the resolver consumes them as-is. The writable proxy
 // allows assignments to fall through to those signals' `.set()`.
 //
-// `ControllerHook` (composed via `use:`) still owns its own state-
+
 // bearing shape — hook resolution lives in `./controller-hook-resolver`.
 
 import type { Signal } from './signal'
 import { isSignal } from './signal'
 import type {
   ControllerDef,
-  ControllerHook,
   ControllerShape,
   MutableState,
   ScopedControllerDef,
 } from './controller'
-import { resolveHook } from './controller-hook-resolver'
 import { createMountState } from './state-proxy'
 import { pickShared, provide } from './context'
 import type {
@@ -89,19 +87,15 @@ export function resolveController(
     stateSignals,
   ) as MutableState<Record<string, Signal<unknown>>>
 
-  const declScope: Record<string, unknown> = { ...baseScope }
-
-  const useResults = buildUseResults(shape, declScope, ctx)
-  for (const [k, v] of Object.entries(useResults)) {
-    declScope[k] = v
-  }
-
+  // Hook results used to be merged in here, namespaced under their `use:` key.
+  // Compositions are plain functions now: whatever a controller declares — signals
+  // from `signal()`, or signals a composition handed back — is already in scope.
+  // Nothing to merge, which is the point.
   const onHandlers = buildOnHandlers(shape, writableProxy)
 
   const bindings: ResolvedBindings = {
     ...scopeAdds,
     ...onHandlers,
-    ...useResults,
   }
 
   // Auto-publish any signals marked with `shared(...)` to the host so
@@ -202,22 +196,6 @@ function buildOnHandlers(
   return out
 }
 
-function buildUseResults(
-  shape: ControllerShape<object>,
-  declScope: Record<string, unknown>,
-  ctx: ResolverContext,
-): Record<string, ResolvedBindings> {
-  if (shape.use === undefined) return {}
-  const useSection =
-    typeof shape.use === 'function'
-      ? (shape.use as (s: unknown) => Record<string, ControllerHook>)(declScope)
-      : (shape.use as Record<string, ControllerHook>)
-  const out: Record<string, ResolvedBindings> = {}
-  for (const [k, hookShape] of Object.entries(useSection)) {
-    out[k] = resolveHook(hookShape, ctx, declScope)
-  }
-  return out
-}
 
 // ---------------------------------------------------------------------------
 // `controller(def)` — author-facing entry point

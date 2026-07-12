@@ -175,7 +175,7 @@
       if (summaryDefault === null)
         summaryDefault = summary.textContent ?? "";
       const n = input.files?.length ?? 0;
-      summary.textContent = n === 0 ? summaryDefault : n === 1 ? input.files[0].name : `${n} files selected`;
+      summary.textContent = n === 0 ? summaryDefault : n === 1 ? input.files?.[0]?.name ?? "1 file" : `${n} files selected`;
     };
     const onClick = (e) => {
       const input = getInput();

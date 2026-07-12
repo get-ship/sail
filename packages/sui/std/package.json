@@ -1,0 +1,13 @@
+{
+  "name": "@ship/sui-std",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "SUI compositions \u2014 plain functions over the reactive primitives. Unprivileged: yours would look exactly like these.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@ship/sui-runtime": "workspace:*"
+  }
+}
