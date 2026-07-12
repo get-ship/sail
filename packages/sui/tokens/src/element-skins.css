@@ -1526,7 +1526,8 @@ label { display: inline-block; }
     margin: 0;
     position: fixed;
     padding: var(--space-1_5);
-    width: 264px;
+    width: 380px;
+    max-width: calc(100vw - var(--space-4));
     background: var(--popover);
     color: var(--popover-foreground);
     border: 1px solid var(--border);
@@ -1543,6 +1544,9 @@ label { display: inline-block; }
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
+    /* Grid items default to min-width:auto, so a button refuses to shrink below
+       its label and blows the track out past the panel. */
+    min-width: 0;
     padding: var(--space-1_5);
     background: transparent;
     border: 1px solid transparent;
@@ -1564,22 +1568,115 @@ label { display: inline-block; }
     font-weight: var(--font-weight-medium);
   }
 
-  /* The preview IS the theme: the swatch sets data-theme on itself, so these
-     colors are rendered by the real stylesheet, not copied out of it. */
+  /* The preview IS the theme: a miniature UI rendered under
+     [data-theme-preview], so the surface, the card, the type scale, the accent
+     and the shadows are all painted by the real stylesheet. Three colored bars
+     tell you nothing; this tells you what the theme looks like. */
   .sui-theme-swatch {
+    position: relative;
     display: flex;
-    gap: 3px;
-    height: 34px;
-    padding: var(--space-1_5);
-    border-radius: var(--radius-sm);
-    background: var(--background);
-    border: 1px solid var(--border);
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 96px;
+    border-radius: var(--radius-md);
     overflow: hidden;
+    isolation: isolate;
+    background: var(--background);
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, currentColor 14%, transparent);
   }
-  .sui-theme-swatch i { display: block; height: 100%; border-radius: 2px; }
-  .sui-theme-swatch .sw-surface { flex: 1 1 auto; background: var(--card); border: 1px solid var(--border); }
-  .sui-theme-swatch .sw-accent { flex: 0 0 6px; background: var(--primary); }
-  .sui-theme-swatch .sw-muted { flex: 0 0 6px; background: var(--muted-foreground); opacity: 0.6; }
+  .sui-theme-swatch .tc-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: var(--surface-overlay);
+    mix-blend-mode: var(--surface-overlay-blend);
+    opacity: var(--surface-overlay-opacity);
+  }
+  .sui-theme-swatch .tc-card {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: calc(100% - 18px);
+    padding: 7px 9px 8px;
+    background: var(--card);
+    color: var(--card-foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card-rest, var(--shadow-sm));
+  }
+  .sui-theme-swatch .tc-eyebrow {
+    font-family: var(--label-font);
+    font-weight: var(--label-weight);
+    letter-spacing: var(--label-tracking);
+    font-size: 7px;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .sui-theme-swatch .tc-heading {
+    font-family: var(--heading-font);
+    font-weight: var(--heading-weight);
+    font-size: var(--text-sm);
+    line-height: 1.05;
+    color: var(--card-foreground);
+  }
+  .sui-theme-swatch .tc-typo {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+  }
+  .sui-theme-swatch .tc-body {
+    font-family: var(--body-font);
+    font-size: 8px;
+    line-height: 1;
+    color: var(--card-foreground);
+    opacity: 0.85;
+  }
+  .sui-theme-swatch .tc-mono {
+    font-family: var(--font-mono);
+    font-size: 7.5px;
+    padding: 1px 3px;
+    border-radius: 3px;
+    background: var(--hover-bg);
+    color: var(--muted-foreground);
+  }
+  .sui-theme-swatch .tc-controls { display: flex; align-items: center; gap: 4px; }
+  .sui-theme-swatch .tc-cta {
+    display: inline-flex;
+    font-weight: var(--font-weight-medium);
+    font-size: 8px;
+    line-height: 1;
+    padding: 3px 6px;
+    border-radius: var(--radius-sm);
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+  .sui-theme-swatch .tc-ghost {
+    display: inline-flex;
+    font-weight: var(--font-weight-medium);
+    font-size: 8px;
+    line-height: 1;
+    padding: 3px 6px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--muted-foreground);
+    border: 1px solid var(--border);
+  }
+  .sui-theme-swatch .tc-chip {
+    display: inline-flex;
+    font-weight: 600;
+    font-size: 7.5px;
+    line-height: 1;
+    padding: 2px 5px;
+    border-radius: var(--radius-full);
+    background: color-mix(in oklch, var(--accent) 18%, transparent);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--accent) 30%, transparent);
+  }
 
   @media (forced-colors: active) {
     .sui-theme-option[aria-selected='true'] { border-color: CanvasText; }

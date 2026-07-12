@@ -15,6 +15,12 @@
 
 import { mount, type MountHandle, type ViewPayload } from '@ship/sui-runtime'
 import {
+  installScrollRestoration,
+  onNavigate,
+  onPopState,
+  applyScroll,
+} from './scroll-restoration'
+import {
   matchRoute,
   navigate,
   route as createRoute,
@@ -182,10 +188,16 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
   }
 
   function go(to: string, navOpts?: { replace?: boolean }): void {
-    if (navOpts?.replace) history.replaceState({}, '', to)
-    else history.pushState({}, '', to)
+    // Scroll is part of navigating. This router had its own history calls and
+    // never told scroll-restoration about them, so a push kept the previous
+    // page's offset — you landed halfway down a doc you had never seen.
+    // `onNavigate` saves the outgoing offset and marks the entry; `applyScroll`
+    // must run AFTER the route renders, or it scrolls the OLD tree.
+    const state = onNavigate(navOpts?.replace ?? false)
+    if (navOpts?.replace) history.replaceState(state, '', to)
+    else history.pushState(state, '', to)
     globalThis.__shipSetRouteUpdate?.()
-    void mountCurrent()
+    void mountCurrent().then(() => applyScroll())
   }
 
   function onClick(e: MouseEvent): void {
@@ -209,8 +221,12 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
     go(url.pathname + url.search + url.hash)
   }
 
-  const onPop = (): void => { void mountCurrent() }
+  const onPop = (): void => {
+    onPopState()
+    void mountCurrent().then(() => applyScroll())
+  }
 
+  installScrollRestoration()
   setRouterPort({ navigate: (to, navOpts) => go(to, navOpts), back: () => history.back() })
   document.addEventListener('click', onClick)
   window.addEventListener('popstate', onPop)
