@@ -6,6 +6,7 @@
   motion, not a blink.
 -->
 <column class="landing-wrap">
+  <div use:spotlight>
   <column class="hero kinetic-hero" gap="4">
     <center><p class="eyebrow">SHIP UI · 0.2.0</p></center>
     <h1 sx="text:display weight:bold tracking:tight">
@@ -27,6 +28,7 @@
       <a variant="default" href="/why">Why a language?</a>
     </row>
   </column>
+  </div>
 </column>
 
 <column class="marquee-band">
@@ -78,9 +80,9 @@
         <card sx="p:4">
           <column gap="3" align="center">
             <p class="eyebrow">FIG. 03 · DRIFT</p>
-            <div sx="w:7 h:7 radius:md bg:tone-primary-bg border:primary" motion:loop={{ rotate: 'spring:deliberate' }}></div>
-            <p sx="text:sm fg:muted-foreground">ambient rotation, compositor-driven — off under reduced motion</p>
-            <code>motion:loop · rotate</code>
+            <div sx="w:7 h:7 radius:md bg:tone-primary-bg border:primary" motion:loop={{ translate-x: 'spring:gentle' }}></div>
+            <p sx="text:sm fg:muted-foreground">ambient side-to-side, compositor-driven — off under reduced motion</p>
+            <code>motion:loop · translate-x</code>
           </column>
         </card>
         <card sx="p:4">
