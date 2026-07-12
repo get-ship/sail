@@ -5,7 +5,7 @@
             STEPPER (one segment per lesson), the h1 / lead / prose, and a
             bottom-pinned nav bar (All lessons ← | → next lesson).
     RIGHT = the playground: a matched header row (eyebrow + Reset + Show
-            solution), an EDITOR CARD (<sui-tabs> template.sui / controller.ts /
+            solution), an EDITOR CARD (<tabs> template.sui / controller.ts /
             diff over <sui-code-editor>), and a PREVIEW CARD (live status dot +
             Run, the sandboxed <iframe src="/tut-host.html">, and an OUTPUT
             CONSOLE that logs real compile / run / preview-console events).
@@ -60,30 +60,30 @@
 
     <section class="tut-pane tut-pane--editor">
       <div class="tut-pane-bar">
-        <sui-tabs active="template" variant="pill" size="sm" class="tut-tabs">
+        <tabs active="template" variant="pill" size="sm" class="tut-tabs">
           <sui-tab name="template">template.sui</sui-tab>
           <sui-tab name="controller">controller.ts</sui-tab>
           <sui-tab name="diff">diff</sui-tab>
-        </sui-tabs>
+        </tabs>
       </div>
       <div class="tut-editor-host">
-        <sui-tab-panel name="template" active>
+        <tab-panel name="template" active>
           <sui-code-editor
             class="tut-editor"
             data-pane="template"
             language="sui"
             size="md"
           ></sui-code-editor>
-        </sui-tab-panel>
-        <sui-tab-panel name="controller" hidden>
+        </tab-panel>
+        <tab-panel name="controller" hidden>
           <sui-code-editor
             class="tut-editor"
             data-pane="controller"
             language="typescript"
             size="md"
           ></sui-code-editor>
-        </sui-tab-panel>
-        <sui-tab-panel name="diff" hidden>
+        </tab-panel>
+        <tab-panel name="diff" hidden>
           <div class="tut-diff-wrap">
             <div class="tut-diff-row">
               <div class="tut-diff-label">template.sui</div>
@@ -94,7 +94,7 @@
               <sui-diff data-pane="controller"></sui-diff>
             </div>
           </div>
-        </sui-tab-panel>
+        </tab-panel>
       </div>
     </section>
 

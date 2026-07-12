@@ -10,8 +10,8 @@
     - <sui-prop-matrix>   the Storybook-style state sweep
     - <sui-source-panel>  source + paste-able snippet
     - the folded props/slots loop  (name/type/default from the CEM)
-  flipped between via <sui-tabs>/<sui-tab-panel>, the whole subtree wrapped in
-  an internal <sui-error-boundary>.
+  flipped between via <tabs>/<tab-panel>, the whole subtree wrapped in
+  an internal <error-boundary>.
 
   Thin shell. The shared 'viewer:propValues' store + the cross-child lockstep
   (knob/matrix/reset → the shared store → stage render + matrix highlight +
@@ -256,7 +256,7 @@ export default controller({
 })
 
 </controller>
-<sui-error-boundary fallback-text="The viewer threw while composing.">
+<error-boundary fallback-text="The viewer threw while composing.">
   <column gap="4" class="layout">
 
     <!-- The live render stage (view-mode over the source signal). A flip of the
@@ -273,14 +273,14 @@ export default controller({
     <sui-prop-knobs class="knobs" hidden={showInspector() ? null : true} prop:props={cem()} prop:value={propValues()}></sui-prop-knobs>
 
     <!-- The inspector tabs: flip the state-matrix / props-table / source. -->
-    <sui-tabs class="tabs" active="source" variant="underline" size="sm">
+    <tabs class="tabs" active="source" variant="underline" size="sm">
       <sui-tab name="source">Source</sui-tab>
       {#if showInspector()}
         <sui-tab name="matrix">States</sui-tab>
         <sui-tab name="props">Props</sui-tab>
       {/if}
 
-      <sui-tab-panel class="source-panel" name="source">
+      <tab-panel class="source-panel" name="source">
         <sui-source-panel
           component-name={componentName()}
           prop:source={sourceText()}
@@ -288,9 +288,9 @@ export default controller({
           prop:value={propValues()}
           prop:slot-content={slots()}
         ></sui-source-panel>
-      </sui-tab-panel>
+      </tab-panel>
 
-      <sui-tab-panel class="matrix-panel" name="matrix">
+      <tab-panel class="matrix-panel" name="matrix">
         <sui-prop-matrix
           hidden={showInspector() ? null : true}
           component-name={componentName()}
@@ -300,9 +300,9 @@ export default controller({
           prop:active={propValues()}
           prop:slot-content={slots()}
         ></sui-prop-matrix>
-      </sui-tab-panel>
+      </tab-panel>
 
-      <sui-tab-panel class="props-panel" name="props">
+      <tab-panel class="props-panel" name="props">
         <div class="panel props-table-shell" data-props-table hidden={showInspector() ? null : true}>
           <div class="section-head props-head">
             <span class="meta-label">{meta()}</span>
@@ -332,7 +332,7 @@ export default controller({
             {/if}
           </div>
         </div>
-      </sui-tab-panel>
-    </sui-tabs>
+      </tab-panel>
+    </tabs>
   </column>
-</sui-error-boundary>
+</error-boundary>

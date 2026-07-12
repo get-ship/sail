@@ -8,7 +8,7 @@
     - declares the scalar control props (mode / component-name / viewport-width)
     - hosts the stage container via `bind:this={stageEl}` (ref in scope) —
       NEVER a post-mount querySelector
-    - wraps the fault-prone subtree in <sui-error-boundary> so an agent's `.sui`
+    - wraps the fault-prone subtree in <error-boundary> so an agent's `.sui`
       that throws in setup/mount/render is CAUGHT, not a white screen
     - folds the compile-error display (the culled sui-compile-error) and the
       runtime-error panel, plus a <sui-spinner> while compiling
@@ -319,7 +319,7 @@ export default controller({
 })
 
 </controller>
-<sui-error-boundary fallback-text="The specimen threw while rendering.">
+<error-boundary fallback-text="The specimen threw while rendering.">
   <column gap="2" class="frame">
     {#if compiling()}
       <div class="compiling">
@@ -351,4 +351,4 @@ export default controller({
 
     <div class="stage" bind:this={stageEl}></div>
   </column>
-</sui-error-boundary>
+</error-boundary>

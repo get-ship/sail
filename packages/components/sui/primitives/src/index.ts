@@ -9,49 +9,19 @@
 // sui-accordion + sui-accordion-item; etc.) are co-located under the
 // directory of the "primary" tag and listed together below.
 
-import './sui-alert-dialog/sui-alert-dialog.compiled.js'
-import './sui-autocomplete/sui-autocomplete.compiled.js'
 import './sui-calendar/sui-calendar.compiled.js'
 import './sui-cmdk/sui-cmdk.compiled.js'
 import './sui-color-picker/sui-color-picker.compiled.js'
-import './sui-combobox/sui-combobox.compiled.js'
-import './sui-context-menu/sui-context-menu.compiled.js'
 import './sui-date-picker/sui-date-picker.compiled.js'
 import './sui-diff/sui-diff.compiled.js'
-import './sui-drawer/sui-drawer.compiled.js'
-import './sui-dropdown-menu/sui-dropdown-menu.compiled.js'
 import './sui-error-boundary/sui-error-boundary.compiled.js'
 import './sui-file-upload/sui-file-upload.compiled.js'
-import './sui-hover-card/sui-hover-card.compiled.js'
-import './sui-icon/sui-icon.compiled.js'
-import './sui-input/sui-input.compiled.js'
 import './sui-json-view/sui-json-view.compiled.js'
 import './sui-markdown/sui-markdown.compiled.js'
-import './sui-nav-top/sui-nav-top.compiled.js'
-import './sui-navigation-menu/sui-navigation-menu.compiled.js'
-import './sui-navigation-menu/sui-navigation-item.compiled.js'
-import './sui-pagination/sui-pagination.compiled.js'
-import './sui-popover/sui-popover.compiled.js'
-import './sui-portal/sui-portal.compiled.js'
-import './sui-scroll-area/sui-scroll-area.compiled.js'
-import './sui-select/sui-select.compiled.js'
-import './sui-sheet/sui-sheet.compiled.js'
-import './sui-tab-panel/sui-tab-panel.compiled.js'
-import './sui-table/sui-table.compiled.js'
-import './sui-tabs/sui-tabs.compiled.js'
-import './sui-tabs/sui-tab.compiled.js'
-import './sui-theme-picker/sui-theme-picker.compiled.js'
 import './sui-timeline/sui-timeline.compiled.js'
 import './sui-timeline/sui-timeline-item.compiled.js'
-import './sui-toast/sui-toast.compiled.js'
-import './sui-toast/sui-toast-container.compiled.js'
-import './sui-toast-host/sui-toast-host.compiled.js'
-import './sui-toggle-group/sui-toggle.compiled.js'
-import './sui-toggle-group/sui-toggle-group.compiled.js'
 import './sui-tree/sui-tree.compiled.js'
 import './sui-tree-grid/sui-tree-grid.compiled.js'
-import './sui-tree-view/sui-tree-view.compiled.js'
-import './sui-tree-view/sui-tree-item.compiled.js'
 
 // ── Canonical type unions ────────────────────────────────────────────
 //
@@ -88,7 +58,6 @@ export type Tone =
 // the engine via the public package entry instead of reaching into
 // `primitives/src/sui-table/engine/*` (a path that breaks `rootDir`
 // isolation and the sui ⊥ sui pack boundary).
-export { createTable, type Table, type TableOptions } from './sui-table/engine/create-table'
 // Re-export the public type catalog from `types.ts` so consumers can
 // name `ColumnDef`, `Row`, `Cell`, `SortState`, etc. without reaching
 // into the engine directory.
@@ -113,7 +82,6 @@ export type {
   SortState,
   TableState,
   VisibilityState,
-} from './sui-table/engine/types'
 /** The canonical size union. `md` is always the default. Primitives
  *  needing finer granularity declare additional values explicitly with
  *  rationale — sui-avatar (xs|sm|md|xl), sui-dialog (sm|md|full). */

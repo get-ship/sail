@@ -62,14 +62,6 @@
   - L1 <input type="file"> is hidden via the existing input[type='file']
     rule (no L1 file-input control in the framework).
 -->
-<variants>
-  [hidden]:  display:none
-  [disabled]: opacity:75 cursor:not-allowed
-</variants>
-<variants class="dropzone">
-  over: border:tone-ring bg:tone-bg
-</variants>
-
 <style>
   .sui-file-upload {
     display: block;
@@ -170,6 +162,12 @@
   }
   @media (prefers-reduced-motion: reduce) {
     [part~='dropzone'] { transition: none; }
+  }
+  .sui-file-upload[hidden] { display: none; }
+  .sui-file-upload[disabled] { opacity: 0.75; cursor: not-allowed; }
+  .sui-file-upload[over] .dropzone {
+    border-color: var(--tone-ring);
+    background: var(--tone-bg);
   }
 </style>
 

@@ -29,8 +29,6 @@
 <!-- Host baseline: surface-only sx props (display + text + line-height
      + foreground). font-family has no sx token, so it stays in the
      residual <style> below. -->
-<host sx="display:block text:base leading:normal fg:foreground"></host>
-
 <style>
   /* Local markers so the css-token lint recognizes the tokens
    * referenced from this residual block. */
@@ -214,4 +212,4 @@ export default controller<Scope>({
 })
 
 </controller>
-<div class="md-root" bind:this={contentEl}></div>
+<div sx="display:block text:base leading:normal fg:foreground" class="md-root" bind:this={contentEl}></div>

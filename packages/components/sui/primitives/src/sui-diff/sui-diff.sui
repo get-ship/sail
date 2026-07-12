@@ -75,9 +75,6 @@
     value: '',
   },
 }</component>
-<host sx="display:block bg:muted border:border radius:md overflow:hidden" />
-<variants>[hidden]: display:none</variants>
-
 <style>
   .sui-diff {
     font-family: var(--font-mono);
@@ -101,6 +98,8 @@
   .sign { color: var(--muted-foreground); user-select: none; }
   .line.add .sign { color: var(--success); }
   .line.del .sign { color: var(--destructive); }
+
+  .sui-diff[hidden] { display: none; }
 </style>
 
 
@@ -188,4 +187,4 @@ export default controller<Scope>({
 })
 
 </controller>
-<div class="diff-root" bind:this={contentEl}></div>
+<div sx="display:block bg:muted border:border radius:md overflow:hidden" class="diff-root" bind:this={contentEl}></div>

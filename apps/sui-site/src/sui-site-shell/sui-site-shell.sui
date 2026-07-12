@@ -203,7 +203,7 @@
   </nav>
   <span class="spacer"></span>
   <a class="toplink" href="/tutorial" class:active={product() === 'tutorial'}>Tutorial</a>
-  <sui-theme-picker></sui-theme-picker>
+  <theme-picker></theme-picker>
 </header>
 
 <div class="body" class:fullscreen={fullscreen()}>

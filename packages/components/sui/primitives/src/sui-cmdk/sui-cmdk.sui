@@ -20,7 +20,7 @@
 
   CmdkItem shape (all but id/label optional):
     { id, label, value?, icon?, hint?, group?, keywords?, disabled? }
-  `value` defaults to `id`; `icon` is a <sui-icon> name; `keywords` widens
+  `value` defaults to `id`; `icon` is a <icon> name; `keywords` widens
   the substring match beyond the visible label; `group` inserts a heading
   when it changes between consecutive items.
 
@@ -85,7 +85,7 @@
 -->
 
 <!-- Residual: `.sui-cmdk { display:contents }` baseline (host doesn't
-     take sx); `sui-dialog::part(body) { padding:0 }` — restyling a
+     take sx); `dialog .body { padding:0 }` — restyling a
      downstream shadow part can't reach via variants/sx; the
      `.cmdk` font-family (font: isn't an sx prop); `.search`
      border-bottom (no border-side sx prop) + flex:0 0 auto (no flex
@@ -111,7 +111,7 @@
      body padding via the documented part so the search bar sits flush to the
      panel edges and cmdk owns all interior spacing — no reaching into the
      dialog's private shadow vars. */
-  sui-dialog::part(body) { padding: 0; }
+  dialog .body { padding: 0; }
 
   .cmdk { font-family: var(--font-body); }
 
@@ -484,7 +484,7 @@ export default controller({
 <dialog class="dialog" use:dlg size={size()} backdrop="blur">
   <column class="cmdk panel" gap="0" sx="min-h:0 fg:foreground">
     <row class="search" align="center" gap="2" sx="p:3 px:4">
-      <sui-icon class="search-icon" name="search" size="sm"></sui-icon>
+      <icon class="search-icon" name="search" size="sm"></icon>
       <input class="entry input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId()} aria-activedescendant={activeId()} aria-label={label()} placeholder={placeholder()} bind:value={query} bind:this={inputEl} />
     </row>
     <ul class="list" sx="max-h:panel-vh-sm p:1" role="listbox" id={listId()} aria-label={label()} bind:this={listEl}>
@@ -494,7 +494,7 @@ export default controller({
         {:else}
           <li class="item" sx="p:2 radius:sm text:sm fg:foreground cursor:pointer" role="option" id={row.optId} data-id={row.id} data-value={row.value} class:hl={!row.disabled && row.id === highlightId()} class:disabled={row.disabled} aria-selected={!row.disabled && row.id === highlightId() ? 'true' : 'false'} aria-disabled={row.disabled ? 'true' : 'false'}>
             {#if row.icon !== ''}
-              <sui-icon class="item-icon" name={row.icon} size="sm" sx="fg:muted-foreground"></sui-icon>
+              <icon class="item-icon" name={row.icon} size="sm" sx="fg:muted-foreground"></icon>
             {/if}
             <span class="item-label" sx="overflow:hidden">{row.label}</span>
             {#if row.hint !== ''}

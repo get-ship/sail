@@ -100,9 +100,6 @@
     error: '',
   },
 }</component>
-<host sx="display:block w:full fg:foreground" />
-<variants>[hidden]: display:none</variants>
-
 <style>
   /* The dynamic grid-template track string is set per-render by the
    * controller via style:--sui-grid-template={…} (an inline custom-
@@ -238,6 +235,8 @@
   @media (forced-colors: active) {
     .row:focus-visible { outline: 2px solid CanvasText; outline-offset: -2px; }
   }
+
+  .sui-tree-grid[hidden] { display: none; }
 </style>
 
 
@@ -386,7 +385,7 @@ export default controller({
 
 </controller>
 {#if error() !== ''}
-<div class="tree-error error" role="alert">
+<div sx="display:block w:full fg:foreground" class="tree-error error" role="alert">
   <error-state>{error()}</error-state>
 </div>
 {:else if isEmptyInitial()}
@@ -408,13 +407,13 @@ export default controller({
       <div class="col-head columnheader" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null}>
         <span class="col-label">{h.label}</span>
         {#if h.sorted === 'asc'}
-          <span class="sort-glyph" aria-hidden="true"><sui-icon name="chevron-up" size="xs"></sui-icon></span>
+          <span class="sort-glyph" aria-hidden="true"><icon name="chevron-up" size="xs"></icon></span>
         {:else if h.sorted === 'desc'}
-          <span class="sort-glyph" aria-hidden="true"><sui-icon name="chevron-down" size="xs"></sui-icon></span>
+          <span class="sort-glyph" aria-hidden="true"><icon name="chevron-down" size="xs"></icon></span>
         {/if}
         {#if h.canHide}
           <button class="column-menu" ghost xs type="button" data-action="column-menu" data-col-id={h.id} aria-label="Column options">
-            <sui-icon name="more-vertical" size="xs"></sui-icon>
+            <icon name="more-vertical" size="xs"></icon>
           </button>
         {/if}
         {#if h.canResize}
@@ -431,7 +430,7 @@ export default controller({
             <div class="cell" role="gridcell" style:padding-inline-start={c.first ? `calc(var(--density-row-px) + ${w.indent}px)` : null}>
               {#if c.first && w.canExpand}
                 <span class="caret" aria-hidden="true">
-                  <sui-icon name="chevron-right" size="xs"></sui-icon>
+                  <icon name="chevron-right" size="xs"></icon>
                 </span>
               {/if}
               <span class="cell-label">{c.value}</span>

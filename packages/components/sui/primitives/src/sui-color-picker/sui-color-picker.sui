@@ -45,10 +45,10 @@
     mono override is kept in <style> (a closed-vocab exception, not
     a sx atom — the global input contract sets font-family to the
     body font, but the color-picker's hex is intentionally mono).
-  - The popover panel is a plain div, not <sui-popover> — the picker
+  - The popover panel is a plain div, not <popover> — the picker
     owns its open/close behavior (input click, doc-pointer dismissal,
     Escape) and renders into the picker's own shadow tree; reusing
-    <sui-popover> would require lifting those handlers out.
+    <popover> would require lifting those handlers out.
   - sx is closed-vocabulary; <style> keeps only what sx structurally
     cannot express: the native <input type=range> accent-color
     (a raw form control, not in the framework skin set), the

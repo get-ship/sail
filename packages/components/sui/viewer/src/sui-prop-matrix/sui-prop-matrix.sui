@@ -5,7 +5,7 @@
   secondary, else sole axis) and builds the full cartesian grid (`buildCells`).
   EACH cell is its OWN <sui-render> in component-mode — so the matrix COMPOSES
   the committed engine (it does not rebuild it). One bad combination cannot
-  blank the grid: every <sui-render> brings its own <sui-error-boundary>.
+  blank the grid: every <sui-render> brings its own <error-boundary>.
 
   Thin shell. ALL derivation + the cell store + the active-match + the click
   emit live in the paired controller + `matrix.ts`. The template only:

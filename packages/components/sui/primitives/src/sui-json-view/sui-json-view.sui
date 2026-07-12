@@ -53,7 +53,7 @@
     variants, which is where the hidden attr belongs).
   - The .caret is a UNICODE glyph (▶) inside a <span> emitted by the
     controller — it is NOT a framework <icon> control and never was. A
-    `<sui-icon name=chevron-right size=xs>` would be a different shape
+    `<icon name=chevron-right size=xs>` would be a different shape
     AND wouldn't render with the same color/text-transform as a
     text-resident marker; substituting it would be a regression on the
     JSON-view look. Kept verbatim.
@@ -91,9 +91,6 @@
     depth: 1,
   },
 }</component>
-<host sx="display:block fg:foreground" />
-<variants>[hidden]: display:none</variants>
-
 <style>
   .sui-json-view {
     font-family: var(--font-mono);
@@ -143,6 +140,8 @@
     margin-left: var(--space-1);
   }
   .error { color: var(--destructive); }
+
+  .sui-json-view[hidden] { display: none; }
 </style>
 
 
@@ -179,7 +178,7 @@ function renderValue(v: JsonValue, key: string | null, level: number, expanded: 
     .map(([k, val]) => `<div class="node">${renderValue(val, isArr ? null : k, level + 1, expanded, depth)}</div>`)
     .join('')
   return `<details${open ? ' open' : ''}>
-<summary><span class="caret">▶</span>${keyPrefix}${open1}<span class="meta">${count} ${isArr ? 'items' : 'keys'}</span></summary>
+<summary sx="display:block fg:foreground"><span class="caret">▶</span>${keyPrefix}${open1}<span class="meta">${count} ${isArr ? 'items' : 'keys'}</span></summary>
 <div class="branch">${children}</div>
 ${close1}</details>`
 }

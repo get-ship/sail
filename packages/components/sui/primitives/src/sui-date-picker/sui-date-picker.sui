@@ -5,9 +5,9 @@
   month grid; arrow keys move day focus, Enter selects, Escape closes.
 
   Compose-points:
-  - The trigger surface mirrors the <sui-input> chrome (border, focus
+  - The trigger surface mirrors the <input> chrome (border, focus
     ring, height matrix) so the picker drops into the same form rows.
-  - The popover panel is hand-rolled (no <sui-popover>): the trigger
+  - The popover panel is hand-rolled (no <popover>): the trigger
     isn't a <button>, so the native popovertarget wiring sui-popover
     relies on wouldn't apply. The panel uses absolute positioning
     relative to the host.
@@ -86,10 +86,6 @@
     size: 'md' | 'sm' | 'lg',
   },
 }</component>
-<variants class="wrap">
-  disabled: bg:muted fg:muted-foreground cursor:not-allowed
-</variants>
-
 <!--
   Residual <style> — what sx/variants/theme can't express in this primitive:
   - .sui-date-picker base (the new <host sx="..."> directive is position/display-able,
@@ -206,6 +202,11 @@
        sx vocabulary. */
     min-height: var(--dp-h);
     padding-inline: var(--dp-px);
+  }
+  .sui-date-picker[disabled] .wrap {
+    background: var(--muted);
+    color: var(--muted-foreground);
+    cursor: not-allowed;
   }
 </style>
 

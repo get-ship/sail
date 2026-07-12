@@ -1,5 +1,5 @@
 <!--
-  <sui-error-boundary> — render-fault isolation.
+  <error-boundary> — render-fault isolation.
 
   Wraps a subtree. If any rendering, controller `mount()`, or reactive
   effect inside throws, the subtree is unmounted and the boundary

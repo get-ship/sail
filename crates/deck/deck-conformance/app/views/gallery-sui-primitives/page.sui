@@ -84,7 +84,7 @@
       <sui-button variant="solid" tone="primary" disabled>Disabled</sui-button>
       <sui-button variant="solid" tone="primary" loading>Loading</sui-button>
       <sui-button variant="default">
-        <sui-icon slot="leading" name="star"></sui-icon>With icon
+        <icon slot="leading" name="star"></icon>With icon
       </sui-button>
     </div>
   </section>
@@ -173,7 +173,7 @@
     <h2 class="gsp-label">sui-empty-state / sui-error-state</h2>
     <div class="gsp-row gsp-wrap">
       <empty-state variant="default" size="sm">
-        <sui-icon slot="icon" name="inbox"></sui-icon>
+        <icon slot="icon" name="inbox"></icon>
         <span slot="title">Nothing here yet</span>
         Start by creating a new item.
         <sui-button slot="action" tone="primary" variant="solid" size="sm">Create</sui-button>
@@ -195,12 +195,12 @@
     <div class="gsp-col" style="max-width:360px">
       <field>
         <sui-label slot="label" required>Name</sui-label>
-        <sui-input type="text" placeholder="Enter your name" name="demo-name"></sui-input>
+        <input type="text" placeholder="Enter your name" name="demo-name">
         <span slot="hint">Used for display only.</span>
       </field>
       <field invalid>
         <sui-label slot="label">Email</sui-label>
-        <sui-input type="email" placeholder="user@example.com" invalid name="demo-email"></sui-input>
+        <input type="email" placeholder="user@example.com" invalid name="demo-email">
         <span slot="error">Enter a valid email address.</span>
       </field>
       <field>
@@ -214,15 +214,15 @@
   <section class="gsp-section">
     <h2 class="gsp-label">sui-icon</h2>
     <div class="gsp-row gsp-wrap">
-      <sui-icon name="star" size="xs"></sui-icon>
-      <sui-icon name="star" size="sm"></sui-icon>
-      <sui-icon name="star" size="md"></sui-icon>
-      <sui-icon name="star" size="lg"></sui-icon>
-      <sui-icon name="star" size="xl"></sui-icon>
-      <sui-icon name="check-circle" tone="success" size="md"></sui-icon>
-      <sui-icon name="alert-triangle" tone="warning" size="md"></sui-icon>
-      <sui-icon name="x-circle" tone="destructive" size="md"></sui-icon>
-      <sui-icon name="info" tone="info" size="md"></sui-icon>
+      <icon name="star" size="xs"></icon>
+      <icon name="star" size="sm"></icon>
+      <icon name="star" size="md"></icon>
+      <icon name="star" size="lg"></icon>
+      <icon name="star" size="xl"></icon>
+      <icon name="check-circle" tone="success" size="md"></icon>
+      <icon name="alert-triangle" tone="warning" size="md"></icon>
+      <icon name="x-circle" tone="destructive" size="md"></icon>
+      <icon name="info" tone="info" size="md"></icon>
     </div>
   </section>
 
@@ -232,12 +232,12 @@
   <section class="gsp-section">
     <h2 class="gsp-label">sui-navigation-menu</h2>
     <div class="gsp-row">
-      <sui-navigation-menu value="home">
+      <nav-top value="home">
         <sui-navigation-item value="home" active>Home</sui-navigation-item>
         <sui-navigation-item value="docs">Docs</sui-navigation-item>
         <sui-navigation-item value="api">API</sui-navigation-item>
         <sui-navigation-item value="disabled" disabled>Disabled</sui-navigation-item>
-      </sui-navigation-menu>
+      </nav-top>
     </div>
   </section>
 
@@ -245,8 +245,8 @@
   <section class="gsp-section">
     <h2 class="gsp-label">sui-pagination</h2>
     <div class="gsp-col">
-      <sui-pagination page="1" total="150" page-size="10"></sui-pagination>
-      <sui-pagination page="3" total="150" page-size="25" page-size-options="10,25,50"></sui-pagination>
+      <pagination page="1" total="150" page-size="10"></pagination>
+      <pagination page="3" total="150" page-size="25" page-size-options="10,25,50"></pagination>
     </div>
   </section>
 
@@ -271,21 +271,21 @@
   <section class="gsp-section">
     <h2 class="gsp-label">sui-select</h2>
     <div class="gsp-row gsp-wrap">
-      <sui-select name="demo-select" size="sm">
+      <select name="demo-select" size="sm">
         <option value="">Pick one…</option>
         <option value="a">Alpha</option>
         <option value="b">Beta</option>
-      </sui-select>
-      <sui-select name="demo-select2" size="md" tone="info">
+      </select>
+      <select name="demo-select2" size="md" tone="info">
         <option value="">Info tone</option>
         <option value="a">Option A</option>
-      </sui-select>
-      <sui-select name="demo-select3" size="lg" invalid>
+      </select>
+      <select name="demo-select3" size="lg" invalid>
         <option value="">Invalid state</option>
-      </sui-select>
-      <sui-select name="demo-select4" disabled>
+      </select>
+      <select name="demo-select4" disabled>
         <option value="">Disabled</option>
-      </sui-select>
+      </select>
     </div>
   </section>
 
@@ -359,20 +359,20 @@
   <section class="gsp-section">
     <h2 class="gsp-label">sui-tabs</h2>
     <div class="gsp-col">
-      <sui-tabs active="tab1" variant="underline">
+      <tabs active="tab1" variant="underline">
         <sui-tab name="tab1" label="Overview"></sui-tab>
         <sui-tab name="tab2" label="Settings"></sui-tab>
         <sui-tab name="tab3" label="Logs" count="12"></sui-tab>
         <sui-tab name="tab4" label="Disabled" disabled></sui-tab>
-      </sui-tabs>
-      <sui-tabs active="p1" variant="pill" tone="primary">
+      </tabs>
+      <tabs active="p1" variant="pill" tone="primary">
         <sui-tab name="p1" label="Alpha"></sui-tab>
         <sui-tab name="p2" label="Beta"></sui-tab>
-      </sui-tabs>
-      <sui-tabs active="e1" variant="enclosed" size="sm">
+      </tabs>
+      <tabs active="e1" variant="enclosed" size="sm">
         <sui-tab name="e1" label="Code"></sui-tab>
         <sui-tab name="e2" label="Preview"></sui-tab>
-      </sui-tabs>
+      </tabs>
     </div>
   </section>
 
@@ -401,18 +401,18 @@
   <section class="gsp-section">
     <h2 class="gsp-label">sui-toast (static preview)</h2>
     <div class="gsp-col" style="max-width:380px">
-      <sui-toast tone="info">
+      <toast tone="info">
         <span slot="title">Info toast</span>
         Something happened you should know about.
-      </sui-toast>
-      <sui-toast tone="success" show-progress>
+      </toast>
+      <toast tone="success" show-progress>
         <span slot="title">Success</span>
         File uploaded successfully.
-      </sui-toast>
-      <sui-toast tone="destructive" dismissible>
+      </toast>
+      <toast tone="destructive" dismissible>
         <span slot="title">Error</span>
         Upload failed — try again.
-      </sui-toast>
+      </toast>
     </div>
   </section>
 
@@ -420,16 +420,16 @@
   <section class="gsp-section">
     <h2 class="gsp-label">sui-toggle-group</h2>
     <div class="gsp-col">
-      <sui-toggle-group type="single" value="b" variant="outline" name="demo-tg1">
+      <toggle-group type="single" value="b" variant="outline" name="demo-tg1">
         <sui-toggle value="a">Left</sui-toggle>
         <sui-toggle value="b">Center</sui-toggle>
         <sui-toggle value="c">Right</sui-toggle>
-      </sui-toggle-group>
-      <sui-toggle-group type="multiple" variant="segmented" name="demo-tg2">
+      </toggle-group>
+      <toggle-group type="multiple" variant="segmented" name="demo-tg2">
         <sui-toggle value="bold" variant="segmented">Bold</sui-toggle>
         <sui-toggle value="italic" variant="segmented">Italic</sui-toggle>
         <sui-toggle value="under" variant="segmented">Underline</sui-toggle>
-      </sui-toggle-group>
+      </toggle-group>
     </div>
   </section>
 
@@ -453,10 +453,10 @@
   <section class="gsp-section">
     <h2 class="gsp-label">sui-tree-view</h2>
     <div class="gsp-row">
-      <sui-tree-view>
+      <sui-tree>
         <sui-tree-item label="src" expanded>
           <sui-tree-item label="components" leaf>
-            <sui-icon slot="icon" name="folder" size="sm"></sui-icon>
+            <icon slot="icon" name="folder" size="sm"></icon>
           </sui-tree-item>
           <sui-tree-item label="views" expanded>
             <sui-tree-item label="page.sui" leaf></sui-tree-item>
@@ -464,7 +464,7 @@
           </sui-tree-item>
         </sui-tree-item>
         <sui-tree-item label="tests" leaf></sui-tree-item>
-      </sui-tree-view>
+      </sui-tree>
     </div>
   </section>
 
@@ -472,12 +472,12 @@
   <section class="gsp-section">
     <h2 class="gsp-label">sui-scroll-area</h2>
     <div class="gsp-row">
-      <sui-scroll-area orientation="vertical" style="height:120px;width:300px;border:1px solid var(--border);border-radius:var(--radius-md)">
+      <scroll-area orientation="vertical" style="height:120px;width:300px;border:1px solid var(--border);border-radius:var(--radius-md)">
         <div style="padding:8px">
           <p>Line 1</p><p>Line 2</p><p>Line 3</p><p>Line 4</p>
           <p>Line 5</p><p>Line 6</p><p>Line 7</p><p>Line 8</p>
         </div>
-      </sui-scroll-area>
+      </scroll-area>
     </div>
   </section>
 
@@ -509,12 +509,12 @@
   <section class="gsp-section">
     <h2 class="gsp-label">sui-table (slot mode)</h2>
     <div class="gsp-row">
-      <sui-table variant="slot" label="Demo table" hoverable>
+      <table variant="slot" label="Demo table" hoverable>
         <tr slot="head"><th>Name</th><th>Role</th><th>Status</th></tr>
         <tr><td>Alice</td><td>Engineer</td><td><span tone="success" sx="display:inline-flex min-h:control-h-2xs px:1_5 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Active</span></td></tr>
         <tr><td>Bob</td><td>Designer</td><td><span tone="warning" sx="display:inline-flex min-h:control-h-2xs px:1_5 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Away</span></td></tr>
         <tr><td>Carol</td><td>PM</td><td><span tone="muted" sx="display:inline-flex min-h:control-h-2xs px:1_5 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Offline</span></td></tr>
-      </sui-table>
+      </table>
     </div>
   </section>
 
@@ -550,7 +550,7 @@
   <section class="gsp-section">
     <h2 class="gsp-label">sui-autocomplete</h2>
     <div class="gsp-row gsp-wrap">
-      <sui-autocomplete name="demo-ac" placeholder="Search fruits…" suggestions='["Apple","Apricot","Banana","Blueberry","Cherry","Date"]' size="md"></sui-autocomplete>
+      <combobox name="demo-ac" placeholder="Search fruits…" suggestions='["Apple","Apricot","Banana","Blueberry","Cherry","Date"]' size="md"></combobox>
     </div>
   </section>
 
@@ -582,7 +582,7 @@
       <div class="gsp-card">
         <p class="gsp-card-desc">Destructive confirm dialog with built-in cancel/confirm footer</p>
         <sui-button variant="outline" tone="destructive" size="sm" on:click={() => alertDialogOpen.set(true)}>Delete item</sui-button>
-        <sui-alert-dialog
+        <dialog role="alertdialog"
           prop:open={alertDialogOpen()}
           tone="destructive"
           confirm-label="Delete"
@@ -590,7 +590,7 @@
         >
           <span slot="title">Delete this item?</span>
           This action is permanent and cannot be reversed. All associated data will be removed.
-        </sui-alert-dialog>
+        </dialog>
       </div>
     </div>
   </section>
@@ -602,24 +602,24 @@
       <div class="gsp-card">
         <p class="gsp-card-desc">Side-sheet panel — side=right, size=md</p>
         <sui-button variant="outline" size="sm" on:click={() => drawerOpen.set(true)}>Open drawer</sui-button>
-        <sui-drawer prop:open={drawerOpen()} side="right" size="md">
+        <dialog side="end" prop:open={drawerOpen()} side="right" size="md">
           <span slot="title">Settings</span>
           <span slot="description">Adjust your workspace preferences.</span>
           <div style="display:flex;flex-direction:column;gap:var(--space-3)">
             <field>
               <sui-label slot="label">Theme</sui-label>
-              <sui-select name="drawer-theme"><option value="light">Light</option><option value="dark">Dark</option></sui-select>
+              <select name="drawer-theme"><option value="light">Light</option><option value="dark">Dark</option></select>
             </field>
             <field>
               <sui-label slot="label">Language</sui-label>
-              <sui-select name="drawer-lang"><option value="en">English</option><option value="es">Español</option></sui-select>
+              <select name="drawer-lang"><option value="en">English</option><option value="es">Español</option></select>
             </field>
           </div>
           <span slot="footer">
             <sui-button variant="outline" size="sm" on:click={() => drawerOpen.set(false)}>Cancel</sui-button>
             <sui-button variant="solid" tone="primary" size="sm" on:click={() => drawerOpen.set(false)}>Save</sui-button>
           </span>
-        </sui-drawer>
+        </dialog>
       </div>
     </div>
   </section>
@@ -630,7 +630,7 @@
     <div class="gsp-row gsp-wrap">
       <div class="gsp-card">
         <p class="gsp-card-desc">Anchor-positioned popover — placement=bottom</p>
-        <sui-popover placement="bottom">
+        <popover placement="bottom">
           <sui-button slot="trigger" variant="outline" size="sm">Open popover</sui-button>
           <div style="padding:var(--space-3);max-width:220px">
             <strong style="font-size:var(--text-sm)">Popover content</strong>
@@ -638,7 +638,7 @@
               Click outside or press Escape to dismiss. Uses native popover API for top-layer rendering.
             </p>
           </div>
-        </sui-popover>
+        </popover>
       </div>
     </div>
   </section>
@@ -649,16 +649,16 @@
     <div class="gsp-row gsp-wrap">
       <div class="gsp-card">
         <p class="gsp-card-desc">Trigger-anchored menu with ARIA role=menu + keyboard navigation</p>
-        <sui-dropdown-menu>
+        <dropdown>
           <sui-button slot="trigger" variant="outline" size="sm">
             Actions
-            <sui-icon slot="trailing" name="chevron-down" size="xs"></sui-icon>
+            <icon slot="trailing" name="chevron-down" size="xs"></icon>
           </sui-button>
           <sui-menu-item value="edit">Edit</sui-menu-item>
           <sui-menu-item value="duplicate">Duplicate</sui-menu-item>
           <sui-menu-separator></sui-menu-separator>
           <sui-menu-item value="delete" tone="destructive">Delete</sui-menu-item>
-        </sui-dropdown-menu>
+        </dropdown>
       </div>
     </div>
   </section>
@@ -669,7 +669,7 @@
     <div class="gsp-row gsp-wrap">
       <div class="gsp-card">
         <p class="gsp-card-desc">Hover-triggered rich content overlay — placement=bottom, delay=300ms</p>
-        <sui-hover-card placement="bottom" show-delay="300" hide-delay="150">
+        <hover-card placement="bottom" show-delay="300" hide-delay="150">
           <sui-button slot="trigger" variant="ghost" size="sm">
             <avatar name="Alice Hart" size="sm" tone="primary"></avatar>
             Alice Hart
@@ -686,7 +686,7 @@
               Joined 2023 · 142 contributions · Rust, TypeScript
             </p>
           </div>
-        </sui-hover-card>
+        </hover-card>
       </div>
     </div>
   </section>
@@ -697,7 +697,7 @@
     <div class="gsp-row gsp-wrap">
       <div class="gsp-card">
         <p class="gsp-card-desc">Right-click triggered overlay menu — positioned at cursor via show(x,y)</p>
-        <sui-context-menu>
+        <context-menu>
           <div slot="trigger" class="gsp-context-zone">Right-click this area</div>
           <sui-menu-item value="open">Open</sui-menu-item>
           <sui-menu-item value="rename">Rename</sui-menu-item>
@@ -705,7 +705,7 @@
           <sui-menu-item value="copy">Copy path</sui-menu-item>
           <sui-menu-separator></sui-menu-separator>
           <sui-menu-item value="delete" tone="destructive">Move to trash</sui-menu-item>
-        </sui-context-menu>
+        </context-menu>
       </div>
     </div>
   </section>
@@ -718,22 +718,22 @@
     <div class="gsp-row gsp-wrap">
       <div class="gsp-card" style="max-width:320px">
         <p class="gsp-card-desc">Single-select with type-to-filter — options via JSON</p>
-        <sui-combobox
+        <combobox
           name="demo-combo"
           placeholder="Search framework…"
           options='[{"value":"react","label":"React"},{"value":"vue","label":"Vue"},{"value":"svelte","label":"Svelte"},{"value":"solid","label":"SolidJS"},{"value":"sui","label":"SUI (Ship)"}]'
           size="md"
-        ></sui-combobox>
+        ></combobox>
       </div>
       <div class="gsp-card" style="max-width:280px">
         <p class="gsp-card-desc">Pre-selected value · size=sm</p>
-        <sui-combobox
+        <combobox
           name="demo-combo2"
           value="sui"
           options='[{"value":"react","label":"React"},{"value":"vue","label":"Vue"},{"value":"sui","label":"SUI (Ship)"}]'
           size="sm"
           tone="primary"
-        ></sui-combobox>
+        ></combobox>
       </div>
     </div>
   </section>
@@ -792,14 +792,14 @@
     <div class="gsp-col">
       <div class="gsp-card">
         <p class="gsp-card-desc">Spreadsheet primitive — 2-D cell space with A1 addressing and formula bar</p>
-        <sui-sheet
+        <dialog side="end"
           label="Budget sheet"
           show-headers
           show-gridlines
           show-formula-bar
           workbook='{"sheets":[{"id":"sheet1","name":"Q2 Budget","cells":{"A1":{"v":"Category"},"B1":{"v":"Budget"},"C1":{"v":"Spent"},"A2":{"v":"Engineering"},"B2":{"v":50000},"C2":{"v":42300},"A3":{"v":"Design"},"B3":{"v":20000},"C3":{"v":18750},"A4":{"v":"Marketing"},"B4":{"v":15000},"C4":{"v":9200}}}]}'
           style="height:220px"
-        ></sui-sheet>
+        ></dialog>
       </div>
     </div>
   </section>
@@ -816,12 +816,10 @@
           The portal below appends a labelled marker to <code>body</code> — inspect the
           DOM to confirm it lives outside this view's mount point.
         </p>
-        <sui-portal target="body">
-          <div class="gsp-portal-marker" data-portal-demo aria-hidden="true">
+                  <div class="gsp-portal-marker" data-portal-demo aria-hidden="true">
             [sui-portal demo — this node lives in &lt;body&gt;, not in the gallery mount]
           </div>
-        </sui-portal>
-        <p class="gsp-card-note">Portal active — check DevTools &gt; Elements for the marker in &lt;body&gt;.</p>
+                <p class="gsp-card-note">Portal active — check DevTools &gt; Elements for the marker in &lt;body&gt;.</p>
       </div>
     </div>
   </section>
@@ -836,7 +834,7 @@
           <code>sui-toast-host</code> wraps it and listens for <code>ship:notify</code> events.
           Click the button to dispatch a notify event — the host shows the toast.
         </p>
-        <sui-toast-host position="bottom-right"></sui-toast-host>
+        <toast-region position="bottom-right"></toast-region>
         <div class="gsp-row gsp-wrap">
           <sui-button variant="outline" size="sm" on:click={() => showSuccessToast()}>
             Show success toast
@@ -862,27 +860,27 @@
           <code>sui-tabs</code> controller. Each panel shows when its <code>name</code>
           matches the active tab.
         </p>
-        <sui-tabs active="tp1" variant="underline">
+        <tabs active="tp1" variant="underline">
           <sui-tab name="tp1" label="Overview"></sui-tab>
           <sui-tab name="tp2" label="Details"></sui-tab>
           <sui-tab name="tp3" label="History"></sui-tab>
-          <sui-tab-panel name="tp1">
+          <tab-panel name="tp1">
             <div class="gsp-panel-content">
               Overview panel — rendered when the Overview tab is active.
               Uses <code>animation: sui-tab-panel-fade</code> on transition.
             </div>
-          </sui-tab-panel>
-          <sui-tab-panel name="tp2">
+          </tab-panel>
+          <tab-panel name="tp2">
             <div class="gsp-panel-content">
               Details panel — secondary content rendered on demand.
             </div>
-          </sui-tab-panel>
-          <sui-tab-panel name="tp3">
+          </tab-panel>
+          <tab-panel name="tp3">
             <div class="gsp-panel-content">
               History panel — lazy content until the user navigates here.
             </div>
-          </sui-tab-panel>
-        </sui-tabs>
+          </tab-panel>
+        </tabs>
       </div>
     </div>
   </section>
@@ -899,7 +897,7 @@
         <div class="gsp-row" style="margin-bottom:var(--space-3)">
           <label class="gsp-swrow"><switch name="demo-eb-trigger" prop:checked={triggerError()} on:change={(e) => triggerError.set(e.target.checked)}></switch> Trigger subtree error</label>
         </div>
-        <sui-error-boundary fallback-text="The widget threw an error — click Retry to recover.">
+        <error-boundary fallback-text="The widget threw an error — click Retry to recover.">
           {#if triggerError()}
             <div class="gsp-error-thrower">This subtree is broken (error boundary will catch)</div>
           {:else}
@@ -907,7 +905,7 @@
               Subtree is healthy. Toggle the switch above to simulate a fault.
             </div>
           {/if}
-        </sui-error-boundary>
+        </error-boundary>
       </div>
     </div>
   </section>

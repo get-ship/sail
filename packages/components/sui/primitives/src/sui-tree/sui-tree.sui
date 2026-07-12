@@ -333,7 +333,7 @@ export default controller({
       {#for w of windowItems() key={w.key}}
         <row class="row" align="center" role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} style:transform={`translateY(${w.start}px)`} style:padding-inline-start={`calc(var(--density-row-px) + ${w.indent}px)`} sx="radius:sm cursor:pointer fg:foreground hover:bg:hover-bg">
           <row class="caret" aria-hidden="true" align="center" justify="center" sx="fg:muted-foreground">
-            <sui-icon name="chevron-right" size="xs"></sui-icon>
+            <icon name="chevron-right" size="xs"></icon>
           </row>
 
           {#if selectable() === 'multi'}
@@ -348,7 +348,7 @@ export default controller({
             </span>
           {/if}
           {#if w.icon !== ''}
-            <sui-icon class="node-icon" name={w.icon} size="sm"></sui-icon>
+            <icon class="node-icon" name={w.icon} size="sm"></icon>
           {:else}
             <slot name="node-icon"></slot>
           {/if}

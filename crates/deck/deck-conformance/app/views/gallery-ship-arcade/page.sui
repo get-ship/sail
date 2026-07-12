@@ -190,7 +190,7 @@
         <span class="arcade-label">kind=explosion on=fire (burst on action)</span>
         <sui-stage width="320" height="200" background="surface">
           <sui-emitter kind="explosion" x="160" y="100" rate="0" burst="32" lifetime="500" spread="360" speed="160" speed-jitter="0.5" gravity="80" color="tone-warning-bg" size="6..0" max="64" on="fire"></sui-emitter>
-          <sui-input map="Space" action="fire"></sui-input>
+          <input map="Space" action="fire">
         </sui-stage>
       </div>
 
@@ -271,10 +271,10 @@
       <div class="arcade-card">
         <span class="arcade-label">WASD + arrow keys → move actions</span>
         <sui-stage width="320" height="200" background="surface">
-          <sui-input map="ArrowLeft,A" action="move-left"></sui-input>
-          <sui-input map="ArrowRight,D" action="move-right"></sui-input>
-          <sui-input map="ArrowUp,W" action="move-up"></sui-input>
-          <sui-input map="ArrowDown,S" action="move-down"></sui-input>
+          <input map="ArrowLeft,A" action="move-left">
+          <input map="ArrowRight,D" action="move-right">
+          <input map="ArrowUp,W" action="move-up">
+          <input map="ArrowDown,S" action="move-down">
           <sui-hud align="center">
             <span class="hud-label">WASD / Arrows → move</span>
           </sui-hud>
@@ -284,8 +284,8 @@
       <div class="arcade-card">
         <span class="arcade-label">Space → fire, Escape → pause (repeat=false)</span>
         <sui-stage width="320" height="200" background="surface">
-          <sui-input map="Space" action="fire" repeat="false"></sui-input>
-          <sui-input map="Escape" action="pause" repeat="false"></sui-input>
+          <input map="Space" action="fire" repeat="false">
+          <input map="Escape" action="pause" repeat="false">
           <sui-hud align="center">
             <span class="hud-label">Space=fire  Esc=pause</span>
           </sui-hud>
@@ -311,7 +311,7 @@
         <span class="arcade-label">bus=sfx pitch-range=0.9..1.1 (randomised)</span>
         <sui-stage width="320" height="200" background="surface">
           <sui-sfx src="/sounds/laser.wav" on="fire" volume="0.8" pitch-range="0.9..1.1" bus="sfx"></sui-sfx>
-          <sui-input map="Space" action="fire" repeat="false"></sui-input>
+          <input map="Space" action="fire" repeat="false">
           <sui-hud align="center">
             <span class="hud-label">Space → laser (bus=sfx)</span>
           </sui-hud>
@@ -365,11 +365,11 @@
           <sui-emitter kind="explosion" x="500" y="80" rate="0" burst="24" lifetime="400" spread="360" speed="140" speed-jitter="0.5" gravity="60" color="tone-danger-bg" size="5..0" max="64" on="enemy-hit"></sui-emitter>
 
           <!-- inputs -->
-          <sui-input map="ArrowLeft,A" action="move-left"></sui-input>
-          <sui-input map="ArrowRight,D" action="move-right"></sui-input>
-          <sui-input map="ArrowUp,W" action="move-up"></sui-input>
-          <sui-input map="ArrowDown,S" action="move-down"></sui-input>
-          <sui-input map="Space" action="fire" repeat="false"></sui-input>
+          <input map="ArrowLeft,A" action="move-left">
+          <input map="ArrowRight,D" action="move-right">
+          <input map="ArrowUp,W" action="move-up">
+          <input map="ArrowDown,S" action="move-down">
+          <input map="Space" action="fire" repeat="false">
 
           <!-- sfx -->
           <sui-sfx src="/sounds/laser.wav" on="fire" volume="0.7" pitch-range="0.9..1.1" bus="sfx"></sui-sfx>

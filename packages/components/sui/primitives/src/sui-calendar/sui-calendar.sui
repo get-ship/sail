@@ -34,17 +34,6 @@
     label: '',
   },
 }</component>
-<variants>
-  [hidden]: display:none
-</variants>
-<variants class="grid">
-  view=month: display:block
-</variants>
-<variants class="time-grid">
-  view=week: display:grid
-  view=day:  display:grid
-</variants>
-
 <!-- Residual style (small) — see commit body. The HTML comment above does
      NOT use the literal `<style>` tag, so the css-token lint's
      scan_style_blocks doesn't pick this comment up as a style block. -->
@@ -204,6 +193,10 @@
     padding: var(--cal-chip-py) var(--space-1);
     overflow: hidden;
   }
+  .sui-calendar[hidden] { display: none; }
+  .sui-calendar[view='month'] .grid { display: block; }
+  .sui-calendar[view='week'] .time-grid { display: grid; }
+  .sui-calendar[view='day'] .time-grid { display: grid; }
 </style>
 
 

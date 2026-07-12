@@ -27,7 +27,7 @@
                    gap="4")
 
   Filtering is reactive without re-rendering: the controller exposes a
-  `query` signal (bound to <sui-input>) and an `activePack` signal;
+  `query` signal (bound to <input>) and an `activePack` signal;
   a card's `visible(entry)` derives from both and drives `attr:hidden`, so
   the one-shot live-preview mount (in the controller) is never disturbed.
 
@@ -642,7 +642,7 @@
   </div>
 
   <row class="search-row" justify="center">
-    <sui-input
+    <input
       class="search"
       type="search"
       tone="primary"
@@ -652,7 +652,7 @@
       data-test="catalog-search"
     >
       <span slot="leading" class="search-glyph" aria-hidden="true">⌕</span>
-    </sui-input>
+    
   </row>
 
   <row class="chips-wrap" justify="center" gap="2" data-test="catalog-chips">
