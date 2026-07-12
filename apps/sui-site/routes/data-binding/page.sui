@@ -28,12 +28,27 @@
   </p>
   <sui-codeblock code={code.events}></sui-codeblock>
 
-  <h2>Refs</h2>
+  <h2>Reaching the element: <code>use:</code></h2>
   <p>
     Sometimes you need the element itself — to focus it, measure it, or hand it
-    to a library. <code>ref()</code> in the controller plus
-    <code>bind:this</code> in the template gives you a handle you read like a
-    signal.
+    to a library. SUI has no <code>ref</code>. An <strong>action</strong> is a
+    plain function that receives the element, does its work, and returns a
+    <code>destroy</code> to undo it; <code>use:</code> attaches one. The element
+    never becomes a value you have to store in scope, thread through the
+    template, and remember to release.
+  </p>
+  <sui-codeblock code={code.actions}></sui-codeblock>
+  <p>
+    Authoring one is the whole API — there is no registry and no base class.
+    Actions are how every L1 element gets its behavior, so the thing you write is
+    the thing the standard library writes.
+  </p>
+  <sui-codeblock code={code.authoring}></sui-codeblock>
+  <p>
+    When you genuinely need the node as a <em>value</em> — to hand to a charting
+    library, say — <code>bind:this</code> fills a <code>ref()</code> declared in
+    the controller, and you read it like a signal. Reach for an action first: it
+    cleans up after itself, and it's reusable.
   </p>
   <sui-codeblock code={code.refs}></sui-codeblock>
 

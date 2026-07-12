@@ -251,7 +251,7 @@
         <a href="/data-binding" class:active={path() === '/data-binding'}>Data binding</a>
         <a href="/data" class:active={path() === '/data'}>Live data</a>
         <a href="/ssr" class:active={path() === '/ssr'}>SSR &amp; hydration</a>
-        <a href="/transitions" class:active={path() === '/transitions'}>Transitions</a>
+        <a href="/motion" class:active={path() === '/motion'}>Motion</a>
       </div>
       <div class="group">
         <h4>Guides</h4>

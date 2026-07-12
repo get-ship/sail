@@ -73,19 +73,24 @@ defineComponent('sui-widget', schema, factory)  // register a custom element
 //   the compiler emits this — you rarely call it by hand
 morph(targetEl, htmlOrElement)   // patch the DOM in place to match a new tree`,
 
-  declarations: `<!-- component props: <prop> directive, or <component>{} object form -->
-<prop name="tone" values="default|primary|accent" default="default" reflect />
-<prop name="count" type="number" default="0" />
+  declarations: `<!-- one declarative block: what comes in, and what it may be -->
+<component>{
+  props: {
+    tone: 'default' | 'primary' | 'accent',
+    count: 0,
+  },
+}</component>
 
-<!-- styling: sx token utilities on elements; <host sx> for the host;
-     <variants> for state (keys off the host's attributes) -->
-<host sx="radius:md bg:surface-1 border:border" />
-<variants class="label">
-  [tone=primary]: fg:primary
-</variants>
+<!-- a VARIANT is just a prop with a union type. Key its CSS off the
+     attribute — there is no separate <variants> block. -->
+<style>
+  .card[tone='primary'] .label { color: var(--primary); }
+</style>
 
-<!-- live server data (compiles to the runtime data() SSE handle) -->
-data live users = ship.users.list()`,
+<!-- the top element IS the root: style it directly. No <host>. -->
+<div class="card" sx="radius:md bg:surface-1 border:border">
+  <span class="label">{count()}</span>
+</div>`,
 
   slots: `<!-- component: declare named + default slots -->
 <slot name="title"></slot>

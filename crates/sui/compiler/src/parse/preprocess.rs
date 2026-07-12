@@ -1389,6 +1389,37 @@ pub fn wrap_controller_body(body: &str) -> String {
     )
 }
 
+/// First occurrence of `needle` that is NOT inside an HTML comment.
+///
+/// The template-level extractors scan raw text (they run before there is a tree
+/// to walk), which is fine until the text mentions the very thing being scanned
+/// for. Comments are where people EXPLAIN the language, so they are exactly where
+/// the language's own tokens show up as prose.
+fn find_outside_comments(source: &str, needle: &str) -> Option<usize> {
+    let mut i = 0usize;
+    while i < source.len() {
+        // `i` is always on a char boundary — see the advance at the bottom. Walking
+        // by BYTE and slicing would panic the compiler on the first non-ASCII
+        // character in the file (`…`, `é`, an em dash), which is to say: on most
+        // prose written by a human.
+        let rest = &source[i..];
+        if rest.starts_with("<!--") {
+            // Skip the whole comment. An unterminated one is the parser's error to
+            // report, not ours — treat the rest of the file as commented out.
+            match rest[4..].find("-->") {
+                Some(rel) => i += 4 + rel + 3, // "-->" is ASCII, so this stays aligned
+                None => return None,
+            }
+            continue;
+        }
+        if rest.starts_with(needle) {
+            return Some(i);
+        }
+        i += rest.chars().next().map_or(1, char::len_utf8);
+    }
+    None
+}
+
 /// Extract an inline `<controller>` block for the single-file-component model.
 /// Returns the template with the block removed + the block's raw TS body (the
 /// one locked-down `controller({…})` function). `None` if there's no block.
@@ -1399,7 +1430,19 @@ pub fn wrap_controller_body(body: &str) -> String {
 /// author writes ONE file. The body is type-checked by the tsgo bridge and the
 /// existing `controller_*` lockdown lints, exactly as a paired file is today.
 pub fn extract_controller_block(source: &str) -> (String, Option<String>) {
-    let Some(start) = source.find("<controller") else {
+    // A COMMENT IS OPAQUE. A raw `find("<controller")` matches the mention inside
+    //
+    //     <!-- when there's state, add an inline <controller> block -->
+    //     <controller> … </controller>
+    //
+    // so the extractor took `start` INSIDE the comment and spliced out everything
+    // from there through `</controller>` — carrying the comment's `-->` away with
+    // it. The file then failed to parse with "unterminated <!-- comment", pointing
+    // at a comment that was perfectly well formed. Net effect: you could not write
+    // a comment that mentioned the `<controller>` block above your `<controller>`
+    // block — which is the single most natural comment to write, and exactly what
+    // the getting-started page did.
+    let Some(start) = find_outside_comments(source, "<controller") else {
         return (source.to_string(), None);
     };
     let Some(open_rel) = source[start..].find('>') else {
@@ -2044,6 +2087,54 @@ fn expand_self_close(source: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A COMMENT IS OPAQUE — you must be able to name `<controller>` in the
+    /// comment that explains your `<controller>` block.
+    ///
+    /// The extractor's raw `find("<controller")` matched the mention inside the
+    /// comment, spliced from there through `</controller>`, and carried the
+    /// comment's `-->` away — so the file died with "unterminated <!-- comment",
+    /// pointing at a comment that was perfectly well formed. The getting-started
+    /// page hit it, which means the FIRST SFC a reader ever sees did not compile.
+    #[test]
+    fn a_comment_may_name_the_controller_block_it_describes() {
+        let src = "<!-- counter.sui — when there's state, add an inline <controller> block. -->\n\
+                   <controller>\nexport default controller({})\n</controller>\n<p>hi</p>";
+        let (stripped, body) = extract_controller_block(src);
+        assert!(body.is_some(), "the REAL block is the one extracted");
+        assert!(
+            stripped.contains("-->"),
+            "and the comment survives intact — it was not spliced through:\n{stripped}"
+        );
+        assert!(
+            !stripped.contains("</controller>"),
+            "while the real block is gone from the template:\n{stripped}"
+        );
+    }
+
+    /// ...and a comment with no real block after it must not invent one.
+    #[test]
+    fn a_controller_named_only_in_a_comment_is_not_a_block() {
+        let src = "<!-- state goes in a <controller> block -->\n<p>hi</p>";
+        let (stripped, body) = extract_controller_block(src);
+        assert!(body.is_none(), "there is no controller here — only prose about one");
+        assert_eq!(stripped, src, "and the source is untouched");
+    }
+
+    /// NON-ASCII MUST NOT PANIC. The comment-skipping scan walks the source looking
+    /// for the block; if it advances by BYTE and then slices, the first `…` or `é`
+    /// lands mid-codepoint and the compiler aborts with "not a char boundary" —
+    /// i.e. writing an ellipsis in your markup crashes the build. Advance by CHAR.
+    #[test]
+    fn prose_with_non_ascii_does_not_panic_the_scan() {
+        let src = "<aside>…</aside>\n<p>naïve — “curly” ✓</p>\n<controller>\nexport default controller({})\n</controller>";
+        let (_, body) = extract_controller_block(src);
+        assert!(body.is_some(), "the block is still found past the non-ASCII text");
+        // And with no block at all, the scan must still walk off the end cleanly.
+        let (s2, b2) = extract_controller_block("<p>… é — ✓</p>");
+        assert!(b2.is_none());
+        assert_eq!(s2, "<p>… é — ✓</p>");
+    }
 
     #[test]
     fn quotes_unquoted_brace_attr() {

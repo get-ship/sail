@@ -1,14 +1,22 @@
 // Code snippets for the getting-started page. Kept OUT of the controller so the
 // compiler's scope scan isn't fooled by `return {…}` / `signal(…)` patterns.
-// The .sui samples are compile-checked against the in-repo sui-compiler: the
-// component compiles on its own; the interactive sample is a full SFC — it compiles on its own (inline <controller>). Was: paired with
-// its controller. Re-run the compiler before editing a sample.
+//
+// Every SUI sample here is COMPILED BY THE BUILD — see
+// crates/sui/compiler/tests/site_snippets_compile.rs. That guard exists because
+// this file used to open with `<prop name="who" …>`, a form the compiler had
+// stopped accepting: the first SUI a reader ever saw did not compile. Docs prose
+// can be wrong and a reader shrugs; docs CODE that does not compile is worse than
+// no docs, because the reader assumes they made the mistake.
 export const code = {
   install: `# npm, pnpm, yarn, or bun — SUI is just packages
 npm install @ship/sui-runtime @ship/sui-primitives`,
 
-  component: `<!-- greeting.sui — a component is a <prop> + markup -->
-<prop name="who" type="string" default="world" />
+  component: `<!-- greeting.sui — a component is a <component> block + markup -->
+<component>{
+  props: {
+    who: 'world',
+  },
+}</component>
 
 <!-- no <style> needed: text is styled from the type scale,
      and layout/surface come from sx + the layout keywords -->

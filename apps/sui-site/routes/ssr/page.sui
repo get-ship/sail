@@ -76,6 +76,6 @@
 
   <div class="page-nav">
     <a class="btn" href="/data">← Live data</a>
-    <a class="btn btn-primary" href="/transitions">Transitions →</a>
+    <a class="btn btn-primary" href="/motion">Motion →</a>
   </div>
 </div>

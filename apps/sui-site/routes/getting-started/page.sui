@@ -15,9 +15,10 @@
 
   <h2>Write a component</h2>
   <p>
-    A <code>&lt;prop&gt;</code> and markup that reads it. Text takes the type
-    scale automatically; reach for <code>sx</code> when you need surface or
-    spacing. No controller needed until there's state to own.
+    A <code>&lt;component&gt;</code> block declaring what comes in, and markup
+    that reads it. Text takes the type scale automatically; reach for
+    <code>sx</code> when you need surface or spacing. No controller needed until
+    there's state to own.
   </p>
   <sui-codeblock code={code.component}></sui-codeblock>
 

@@ -1,0 +1,105 @@
+<div class="doc">
+  <p class="eyebrow">Core concepts</p>
+  <h1>Motion</h1>
+  <p class="lead">
+    One directive, one system. <code>motion:</code> takes a
+    <strong>trigger</strong> — when it happens — and a <strong>config</strong> —
+    what moves. There is no second animation API to learn, no transition
+    directive, and no imperative escape hatch you're expected to graduate to.
+  </p>
+
+  <sui-codeblock code={code.intro}></sui-codeblock>
+
+  <p>
+    The values are <strong>presets</strong>, not numbers. A preset is a physical
+    description — <code>spring:gentle</code>, <code>fade</code> — and the compiler
+    bakes it into the animation at build time. You don't tune a duration; you say
+    what kind of movement it is, and the whole app moves the same way.
+  </p>
+
+  <h2>Triggers come in three kinds</h2>
+  <p>
+    The kind matters, because it decides how much JavaScript ends up in your
+    frame loop. Two of the three kinds need <em>none</em>.
+  </p>
+
+  <h3>Interaction</h3>
+  <p>
+    <code>hover</code>, <code>press</code>, <code>focus</code>,
+    <code>focus-visible</code>. The browser already knows when these happen, so
+    the work is deciding what they should look like.
+  </p>
+  <sui-codeblock code={code.interaction}></sui-codeblock>
+
+  <h3>Lifecycle</h3>
+  <p>
+    <code>enter</code> and <code>exit</code>. These are the ones a framework
+    genuinely has to be involved in: <code>exit</code> holds the element in the
+    DOM until its animation finishes, which nothing but the renderer can do — the
+    moment you remove a node yourself, its exit animation has nowhere to play.
+  </p>
+  <sui-codeblock code={code.lifecycle}></sui-codeblock>
+
+  <h3>Timeline</h3>
+  <p>
+    <code>view</code> and <code>scroll</code> are driven by scroll
+    <em>position</em>, not by time. They compile to native CSS
+    <code>animation-timeline</code>, which means they run off the main thread:
+    <strong>no JavaScript executes while you scroll</strong>. The effect people
+    reach for a 30&nbsp;kB animation library to get is a directive with a preset.
+  </p>
+  <sui-codeblock code={code.timeline}></sui-codeblock>
+
+  <h2>Stagger</h2>
+  <p>
+    <code>stagger</code> is reserved, not a property: it describes the
+    relationship <em>between</em> siblings — the delay step — rather than
+    anything about any one of them. It's what makes a list arrive as a list
+    instead of a flash.
+  </p>
+  <sui-codeblock code={code.stagger}></sui-codeblock>
+
+  <h2>The vocabulary</h2>
+  <p>
+    Small on purpose, and enforced: an unknown trigger or property is a compile
+    error, not a silent no-op. A typo used to be something you could ship.
+  </p>
+  <div class="grid-2">
+    <div>
+      <h3>Triggers</h3>
+      <p class="mono">
+        hover · press · focus · focus-visible<br />
+        enter · exit<br />
+        view · scroll
+      </p>
+    </div>
+    <div>
+      <h3>Properties</h3>
+      <p class="mono">
+        scale · opacity<br />
+        translate-x · translate-y<br />
+        rotate
+      </p>
+    </div>
+    <div>
+      <h3>Springs</h3>
+      <p class="mono">
+        spring:snappy · spring:gentle<br />
+        spring:bouncy · spring:deliberate
+      </p>
+    </div>
+    <div>
+      <h3>Tweens</h3>
+      <p class="mono">
+        fade · fade-out<br />
+        press · release · pulse
+      </p>
+    </div>
+  </div>
+
+  <p class="callout">
+    <strong>Reduced motion is not your problem.</strong> Every
+    <code>motion:</code> respects <code>prefers-reduced-motion</code> at the
+    runtime, so honouring it isn't a thing you can forget to do.
+  </p>
+</div>

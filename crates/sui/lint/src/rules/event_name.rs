@@ -80,12 +80,41 @@ const KNOWN_EVENTS: &[&str] = &[
 /// escape hatch for bare custom events the framework genuinely fires.
 const SUI_CUSTOM_EVENTS: &[&str] = &["success", "failure"];
 
+/// First index at or after `from` where `needle` occurs.
+fn find(haystack: &[u8], from: usize, needle: &[u8]) -> Option<usize> {
+    if from >= haystack.len() {
+        return None;
+    }
+    haystack[from..]
+        .windows(needle.len())
+        .position(|w| w == needle)
+        .map(|p| p + from)
+}
+
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
     let bytes = source.as_bytes();
     let mut i = 0;
 
     while i + 3 < bytes.len() {
+        // A COMMENT IS OPAQUE. This rule is a raw byte scan, which is fine for
+        // finding attributes but knows nothing about syntax — so without this it
+        // reads straight through `<!-- … -->` and lints the PROSE inside. That is
+        // not hypothetical: documenting the feature broke the build. A comment
+        // reading
+        //
+        //     <!-- on:<event> takes modifiers: |prevent, |stop -->
+        //
+        // made the compiler reject the file for the "unknown event `<event`",
+        // which means you could not describe `on:` in a comment above the very
+        // handler you were describing. Skip to the end of the comment.
+        if bytes[i] == b'<' && bytes[i..].starts_with(b"<!--") {
+            i = match find(bytes, i + 4, b"-->") {
+                Some(end) => end + 3,
+                None => break, // unterminated — the parser will say so, not us
+            };
+            continue;
+        }
         // Find ` on:` (whitespace then `on:`) — the attribute boundary.
         if !(bytes[i].is_ascii_whitespace() && &bytes[i + 1..i + 4] == b"on:") {
             i += 1;
@@ -291,5 +320,31 @@ mod tests {
         let findings = lint(src);
         assert_eq!(findings.len(), 1);
         assert_eq!(findings[0].severity, Severity::Error);
+    }
+
+    /// A COMMENT IS OPAQUE.
+    ///
+    /// This rule is a raw byte scan — fast, and syntax-blind. Without an explicit
+    /// skip it reads straight into `<!-- … -->` and lints the PROSE. That is how
+    /// the website broke: the composition page documented the feature with
+    ///
+    ///     <!-- on:<event> takes modifiers: |prevent, |stop -->
+    ///
+    /// and the compiler rejected the file for the "unknown event `<event`". You
+    /// could not describe `on:` in a comment above the handler you were
+    /// describing — the rule punished the documentation of itself.
+    #[test]
+    fn a_comment_is_not_code() {
+        let src = "<!-- on:<event> takes modifiers: |prevent, |stop -->\n<button on:click={go}>go</button>";
+        assert_eq!(lint(src).len(), 0, "prose inside a comment is not an attribute: {:?}", lint(src));
+    }
+
+    /// ...but the skip must not swallow the code AFTER the comment.
+    #[test]
+    fn a_real_typo_after_a_comment_is_still_caught() {
+        let src = "<!-- on:whatever -->\n<button on:Click={go}>go</button>";
+        let findings = lint(src);
+        assert_eq!(findings.len(), 1, "the real typo still fires: {findings:?}");
+        assert!(findings[0].message.contains("on:click"));
     }
 }
