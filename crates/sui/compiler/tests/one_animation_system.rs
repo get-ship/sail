@@ -137,3 +137,38 @@ fn the_animation_vocabulary_has_exactly_one_source() {
     assert!(msg.contains("not supported"), "{msg}");
     assert!(msg.contains("stagger"), "the error must mention the reserved key: {msg}");
 }
+
+
+// ── TIMELINE TRIGGERS ───────────────────────────────────────────────────────
+// `motion:view` / `motion:scroll` are PROGRESS-driven, not time-driven: position is
+// a function of scroll, not of the clock. Reveal-on-scroll and parallax, at ZERO JS
+// runtime cost — no scroll listener, no rAF loop, no IntersectionObserver. The
+// platform drives them off the main thread, which is why a scroll effect built this
+// way stays smooth under load and one built on a scroll handler does not.
+//
+// And they are NOT a second emit path: the compiler bakes the same `el.animate(...)`
+// it bakes for every other trigger, and the runtime hands the Animation a different
+// timeline. One directive, one catalog, one code path — verified against a real
+// chromium (opacity 0 -> 0.93 on scroll, driven through the actual runtime).
+
+#[test]
+fn view_and_scroll_are_triggers_like_any_other() {
+    for trigger in ["view", "scroll"] {
+        let src = format!(r#"<card motion:{trigger}={{{{ opacity: 'fade' }}}}>x</card>"#);
+        let js = compile(&src, opts()).expect("compiles").js;
+        assert!(js.contains(&format!(r#"trigger: "{trigger}""#)), "{js}");
+        // baked exactly like the others — no separate CSS emit, no second path
+        assert!(js.contains(".animate("), "still AOT-baked:\n{js}");
+        assert!(js.contains("__sui_motion_attach"), "still the one attach:\n{js}");
+    }
+}
+
+/// Parallax is `translate-y` on a view timeline. The point of the whole exercise:
+/// the thing people reach for GSAP to do is a directive with a preset.
+#[test]
+fn parallax_is_one_directive() {
+    let src = r#"<card motion:view={{ translate-y: 'spring:gentle', opacity: 'fade' }}>x</card>"#;
+    let js = compile(src, opts()).expect("compiles").js;
+    assert!(js.contains(r#"trigger: "view""#), "{js}");
+    assert_eq!(js.matches(".animate(").count(), 2, "one baked animation per property:\n{js}");
+}

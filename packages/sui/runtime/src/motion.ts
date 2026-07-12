@@ -124,6 +124,41 @@ export function __sui_motion_attach(
       b.play()
     })
   }
+  // TIMELINE triggers — `motion:view` / `motion:scroll`. Progress-driven, not
+  // time-driven: the animation's position is a function of SCROLL, not of the clock.
+  // This is reveal-on-scroll and parallax, and it costs ZERO JavaScript at runtime —
+  // no scroll listener, no rAF loop, no IntersectionObserver. The platform drives it
+  // off the main thread, which is exactly why a scroll effect built this way stays
+  // smooth under load and one built on a scroll handler does not.
+  //
+  // Note what this is NOT: a second emit path. The compiler bakes the same
+  // `el.animate(...)` it bakes for every other trigger; we simply hand the resulting
+  // Animation a different timeline. One directive, one catalog, one code path.
+  if (trigger === 'view' || trigger === 'scroll') {
+    if (prefersReducedMotion()) {
+      for (const a of enter) a.finish()
+      return () => {
+        for (const a of enter) a.cancel()
+      }
+    }
+    const timeline = makeTimeline(trigger, el)
+    if (!timeline) {
+      // No scroll-timeline support: land on the END state rather than the start,
+      // so a reveal-on-scroll degrades to "visible" instead of "invisible forever".
+      for (const a of enter) a.finish()
+      return () => {
+        for (const a of enter) a.cancel()
+      }
+    }
+    for (const a of enter) {
+      a.timeline = timeline
+      a.play()
+    }
+    return () => {
+      for (const a of enter) a.cancel()
+    }
+  }
+
   // LIFECYCLE triggers — `motion:enter` / `motion:exit`. These are not event
   // pairs: they fire when the element ENTERS or LEAVES the DOM, which is the one
   // thing CSS cannot do alone, because leaving requires the framework to HOLD the
@@ -283,4 +318,31 @@ function staggerOffset(): number {
     })
   }
   return i
+}
+
+
+// ── TIMELINES ────────────────────────────────────────────────────────────────
+// `view()` — progress is the element's own passage through the viewport. This is
+// the one you want almost always: reveals, parallax, anything that should respond
+// to "how far into view am I".
+//
+// `scroll()` — progress is the nearest scroll container's total progress. For the
+// things that track the DOCUMENT rather than themselves: reading-progress bars, a
+// header that shrinks, a scrubbing timeline.
+
+interface TimelineCtors {
+  ViewTimeline?: new (opts: { subject: Element }) => AnimationTimeline
+  ScrollTimeline?: new (opts: { source: Element | null }) => AnimationTimeline
+}
+
+function makeTimeline(kind: 'view' | 'scroll', el: Element): AnimationTimeline | null {
+  const g = globalThis as unknown as TimelineCtors
+  try {
+    if (kind === 'view') {
+      return g.ViewTimeline ? new g.ViewTimeline({ subject: el }) : null
+    }
+    return g.ScrollTimeline ? new g.ScrollTimeline({ source: document.scrollingElement }) : null
+  } catch {
+    return null
+  }
 }
