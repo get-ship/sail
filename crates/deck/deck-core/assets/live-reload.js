@@ -137,6 +137,35 @@ async function softReloadSpa() {
   }
 }
 
+/**
+ * Pull the diagnostic OUT of the bundler's wrapper.
+ *
+ * A failing route table produced an overlay that was thousands of characters of
+ * generated module text — the bundler embeds the whole importing source in its
+ * error — with the one line that matters lost inside it. Filtering that down is
+ * not enough; the wrapper itself is noise. Extract the fields a human acts on and
+ * throw the rest away.
+ */
+function summarize(msg) {
+  const raw = String(msg).replace(/\\n/g, '\n')
+  const grab = (key) => {
+    const m = raw.match(new RegExp(key + '\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"'))
+    return m ? m[1].replace(/\\"/g, '"').replace(/\\n/g, '\n').trim() : ''
+  }
+
+  const file = grab('resolved') || grab('stable_importer') || grab('id')
+  const detail = grab('error_message') || grab('reason')
+
+  // Not a bundler wrapper — it's already the compiler talking. Show it.
+  if (!file && !detail) return raw.length > 4000 ? raw.slice(0, 4000) + '\n…' : raw
+
+  const parts = []
+  if (file) parts.push(file)
+  if (detail) parts.push('', detail)
+  const out = parts.join('\n')
+  return out.length > 4000 ? out.slice(0, 4000) + '\n…' : out
+}
+
 function showOverlay(e) {
   if (typeof document === 'undefined') return
   clearOverlay()
@@ -145,38 +174,52 @@ function showOverlay(e) {
   const el = document.createElement('div')
   el.id = OVERLAY_ID
   el.setAttribute('role', 'alert')
+  // FIXED COLORS, not theme tokens. This overlay renders on top of an app whose
+  // stylesheet may have failed to build — and it inherits from that app: the
+  // container set `color: var(--destructive-foreground)` (white) and the <pre>
+  // picked up the app's own light `pre` background, giving white-on-white. A dev
+  // overlay must be legible when everything else is broken, which is exactly when
+  // it appears.
   el.style.cssText = [
     'position:fixed', 'inset:0', 'z-index:2147483647',
-    'background:var(--destructive,#7f1d1d)', 'color:var(--destructive-foreground,#fff)',
-    'font:13px/1.6 var(--font-mono,ui-monospace,monospace)',
+    'background:#1a0d0f', 'color:#fde8e8',
+    'font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace',
     'padding:2rem', 'overflow:auto',
   ].join(';')
 
   // Heading — names the failure as a compile error and points at the target,
   // so it can't be mistaken for a runtime crash.
   const heading = document.createElement('div')
-  heading.style.cssText = 'font-weight:700;font-size:15px;margin-bottom:.25rem'
+  heading.style.cssText = 'font-weight:700;font-size:15px;margin-bottom:.25rem;color:#ff6b6b'
   heading.textContent = `Compile error — ${e.target || 'unknown target'}`
   el.appendChild(heading)
 
   if (loc) {
     const where = document.createElement('div')
-    where.style.cssText = 'opacity:.85;margin-bottom:1rem'
+    where.style.cssText = 'margin-bottom:1rem;color:#ffb3b3'
     where.textContent = loc
     el.appendChild(where)
   }
 
   // Diagnostic body — the compiler's rendered message. `textContent` (not
   // innerHTML) keeps compiler output from being interpreted as markup.
+  //
+  // The bundler wraps our diagnostic in its own, and its wrapper embeds the FULL
+  // GENERATED SOURCE of the importing module (`importer_source`, `source`). For a
+  // route table that is thousands of characters of noise burying the one line
+  // that matters. Cut the payloads and keep the error.
   const body = document.createElement('pre')
-  body.style.cssText = 'margin:0;white-space:pre-wrap;word-break:break-word'
-  body.textContent = e.message || '(no message)'
+  body.style.cssText =
+    'margin:0;white-space:pre-wrap;word-break:break-word;' +
+    'background:#2a1416;color:#fde8e8;border:1px solid #5a2a2e;' +
+    'border-radius:6px;padding:1rem'
+  body.textContent = summarize(e.message || '(no message)')
   el.appendChild(body)
 
   // Recovery hint — this overlay is dev-only and self-clears, so make that
   // explicit rather than leaving the user wondering how to dismiss it.
   const hint = document.createElement('div')
-  hint.style.cssText = 'opacity:.7;margin-top:1.5rem;font-size:12px'
+  hint.style.cssText = 'margin-top:1.5rem;font-size:12px;color:#c98f8f'
   hint.textContent = 'Fix the file and save — this overlay clears on the next successful compile.'
   el.appendChild(hint)
 
