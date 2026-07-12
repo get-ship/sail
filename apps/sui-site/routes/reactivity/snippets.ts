@@ -4,6 +4,21 @@
 // (signal/derived/effect/batch/untrack); the .sui template compiles paired
 // with a controller declaring `count`.
 export const code = {
+  graph: `<controller>
+import { controller, signal, derived, effect } from '@ship/sui-runtime'
+export default controller({
+  scope: () => {
+    const count = signal(0)
+    const doubled = derived(() => count() * 2)
+    effect(() => console.log('count is', count()))
+    return { count, doubled }
+  },
+})
+</controller>
+
+<button on:click={() => count.set(count() + 1)}>+1</button>
+<p>{count()} · doubled: {doubled()}</p>`,
+
   signal: `import { signal } from '@ship/sui-runtime'
 
 const count = signal(0)

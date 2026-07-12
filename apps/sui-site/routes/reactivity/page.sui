@@ -1,4 +1,4 @@
-<column class="doc">
+<column class="doc-wide" gap="5">
   <p class="eyebrow">Building</p>
   <h1>Reactivity</h1>
   <p class="lead">
@@ -7,6 +7,29 @@
     <strong>effect</strong> runs a side-effect when its inputs change. No
     proxies, no dependency arrays — you read the graph.
   </p>
+
+  <h2>The graph, live</h2>
+  <row class="split" align="stretch">
+    <column>
+      <p class="pane-label">Live</p>
+      <column class="live" gap="3">
+        <row gap="3" align="center">
+          <button on:click={() => count.set(count() + 1)}>count.set({count() + 1})</button>
+          <p><strong>{count()}</strong> <small sx="fg:muted-foreground">signal</small></p>
+          <p><strong>{doubled()}</strong> <small sx="fg:muted-foreground">derived</small></p>
+        </row>
+        <column gap="1">
+          {#for line of log() key={line}}
+            <p sx="text:sm fg:muted-foreground">{line}</p>
+          {/for}
+        </column>
+      </column>
+    </column>
+    <column>
+      <p class="pane-label">Source</p>
+      <code-block code={code.graph}></code-block>
+    </column>
+  </row>
 
   <h2>Signals</h2>
   <p>
