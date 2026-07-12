@@ -13,7 +13,10 @@ import type { Action } from '../action'
  */
 export const tabs: Action<void> = (node) => {
   const root = node as HTMLElement
-  const nameOf = (el: Element): string => el.getAttribute('name') ?? ''
+  // A tab without a name pairs with its panel BY POSITION — `<tab>Profile</tab>`
+  // is the common authoring shape. All-empty names used to compare equal to the
+  // (empty) active name, so every tab was selected and no panel ever hid.
+  const keyOf = (el: Element, i: number): string => el.getAttribute('name') || String(i)
   const tabsOf = (): HTMLElement[] =>
     Array.from(root.querySelectorAll<HTMLElement>('.sui-tab'))
   const panelsOf = (): HTMLElement[] =>
@@ -24,11 +27,11 @@ export const tabs: Action<void> = (node) => {
     const tabs = tabsOf()
     let active = activeName()
     if (!active && tabs.length) {
-      active = nameOf(tabs[0]!)
-      if (active) root.setAttribute('active', active)
+      active = keyOf(tabs[0]!, 0)
+      root.setAttribute('active', active)
     }
-    for (const t of tabs) {
-      const name = nameOf(t)
+    for (const [i, t] of tabs.entries()) {
+      const name = keyOf(t, i)
       const on = name === active
       t.setAttribute('role', 'tab')
       t.setAttribute('aria-selected', on ? 'true' : 'false')
@@ -39,8 +42,8 @@ export const tabs: Action<void> = (node) => {
         t.setAttribute('aria-controls', `sui-tabpanel-${name}`)
       }
     }
-    for (const p of panelsOf()) {
-      const name = nameOf(p)
+    for (const [i, p] of panelsOf().entries()) {
+      const name = keyOf(p, i)
       const on = name === active
       p.setAttribute('role', 'tabpanel')
       p.hidden = !on
@@ -53,7 +56,7 @@ export const tabs: Action<void> = (node) => {
   }
 
   const focusTab = (name: string): void => {
-    tabsOf().find((t) => nameOf(t) === name)?.focus()
+    tabsOf().find((t, i) => keyOf(t, i) === name)?.focus()
   }
 
   const activate = (name: string): void => {
@@ -79,7 +82,7 @@ export const tabs: Action<void> = (node) => {
 
   const onClick = (e: MouseEvent): void => {
     const t = tabFrom(e)
-    if (t && !t.hasAttribute('disabled')) activate(nameOf(t))
+    if (t && !t.hasAttribute('disabled')) activate(keyOf(t, tabsOf().indexOf(t)))
   }
 
   const onKeydown = (e: KeyboardEvent): void => {
@@ -97,12 +100,12 @@ export const tabs: Action<void> = (node) => {
     else if (e.key === 'End') j = enabled.length - 1
     else if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
-      if (!t.hasAttribute('disabled')) activate(nameOf(t))
+      if (!t.hasAttribute('disabled')) activate(keyOf(t, tabsOf().indexOf(t)))
       return
     }
     if (j >= 0) {
       e.preventDefault()
-      activate(nameOf(enabled[j]!))
+      activate(keyOf(enabled[j]!, tabsOf().indexOf(enabled[j]!)))
     }
   }
 
