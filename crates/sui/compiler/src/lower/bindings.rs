@@ -123,7 +123,7 @@ AttrInstr::Use { action, .. } => {
                 out.runtime_imports.insert(builtin);
             }
         }
-        AttrInstr::Motion { trigger, props, span } => {
+        AttrInstr::Motion { trigger, props, stagger_ms: _, span } => {
             // `motion:` directives bake to literal `el.animate(...)`
             // calls plus a `__sui_motion_attach(...)` wrapper. The
             // attach wrapper and any animation-side runtime helpers

@@ -100,6 +100,12 @@ pub enum AttrInstr {
     Motion {
         trigger: String,
         props: Vec<MotionProp>,
+        /// `stagger: '40ms'` — the per-sibling delay STEP, in milliseconds.
+        /// Orchestration is what separates a list that appears from a list that
+        /// arrives. It is a reserved key in the motion config, not a CSS property,
+        /// because it describes the relationship BETWEEN elements rather than
+        /// anything about one of them.
+        stagger_ms: Option<u32>,
         span: Span,
     },
     /// `use:action` or `use:action={param}` — attach a reusable behavior

@@ -412,7 +412,7 @@ AttrInstr::Use { action, param, .. } => {
                     "runAction({el_var}, {action_rw}, {param_thunk});",
                 ));
             }
-             AttrInstr::Motion { trigger, props, span: _ } => {
+             AttrInstr::Motion { trigger, props, stagger_ms, span: _ } => {
                 // AOT-baked `motion:` directive. Each `MotionProp` produces
                 // one pre-baked `el.animate(...)` call; all are wired to
                 // the same trigger via `__sui_motion_attach`. The runtime
@@ -535,9 +535,14 @@ AttrInstr::Use { action, param, .. } => {
                     anim_vars.push(anim_var);
                  }
                 w.line(&format!(
-                    "__sui_motion_attach({el_var}, {{ trigger: {trigger}, enter: [{anims}], leave: [{anims}] }});",
+                    "__sui_motion_attach({el_var}, {{ trigger: {trigger}, enter: [{anims}], leave: [{anims}]{stagger} }});",
                     trigger = js_string(trigger),
                     anims = anim_vars.join(", "),
+                    // Emitted only when authored — an app that never staggers pays
+                    // nothing, not even a `stagger: undefined` in its output.
+                    stagger = stagger_ms
+                        .map(|ms| format!(", stagger: {ms}"))
+                        .unwrap_or_default(),
                 ));
             }
         }

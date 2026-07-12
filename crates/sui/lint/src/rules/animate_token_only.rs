@@ -12,7 +12,12 @@ use crate::report::{Finding, Severity};
 
 pub const RULE_ID: &str = "sui-animate-token-only";
 
-const MOTION_PROPERTIES: &[&str] = &[
+/// THE property vocabulary — one list, two readers. The compiler's parser imports
+/// this rather than keeping its own copy, because it kept its own copy and the two
+/// drifted the first time a key was added (`stagger` compiled fine, then failed the
+/// lint). A comment claiming "the same closed set the parser enforces" is not a
+/// mechanism; this is.
+pub const MOTION_PROPERTIES: &[&str] = &[
     "scale",
     "opacity",
     "translate-y",
@@ -20,17 +25,27 @@ const MOTION_PROPERTIES: &[&str] = &[
     "rotate",
 ];
 
-const KNOWN_PRESETS: &[&str] = &[
-    "spring:snappy",
-    "spring:gentle",
-    "spring:bouncy",
-    "spring:deliberate",
-    "press",
-    "release",
-    "pulse",
-    "fade",
-    "fade-out",
-];
+/// `stagger` is RESERVED, not a property: it describes the relationship BETWEEN
+/// sibling elements (the delay step), not anything about any one of them.
+pub const MOTION_STAGGER_KEY: &str = "stagger";
+
+/// The preset catalog is `animation-presets.json` — the SAME file the compiler
+/// bakes from. It used to be hand-copied into a `KNOWN_PRESETS` array here: a second
+/// source of truth for a vocabulary that must not drift. A preset the compiler knows
+/// and the lint does not is a build that passes one gate and fails the other for no
+/// reason the author can see.
+const PRESETS_JSON: &str = include_str!("../../animation-presets.json");
+
+fn known_presets() -> Vec<String> {
+    let v: serde_json::Value = match serde_json::from_str(PRESETS_JSON) {
+        Ok(v) => v,
+        Err(_) => return Vec::new(),
+    };
+    match v.get("presets").and_then(|p| p.as_object()) {
+        Some(o) => o.keys().cloned().collect(),
+        None => Vec::new(),
+    }
+}
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
@@ -189,6 +204,9 @@ fn validate_static_body(
             continue;
         };
         let key = key_raw.trim();
+        if key == MOTION_STAGGER_KEY {
+            continue; // a duration, not a preset — `stagger: '40ms'`
+        }
         if !MOTION_PROPERTIES.contains(&key) {
             findings.push(Finding {
                 file: path.to_path_buf(),
@@ -208,7 +226,8 @@ fn validate_static_body(
             });
         }
         let val = val_raw.trim().trim_matches('\'').trim_matches('"');
-        if !KNOWN_PRESETS.contains(&val) {
+        let presets = known_presets();
+        if !presets.iter().any(|p| p == val) {
             findings.push(Finding {
                 file: path.to_path_buf(),
                 line,
@@ -218,7 +237,7 @@ fn validate_static_body(
                 message: format!(
                     "motion preset `{}` is not in the closed vocabulary. Known presets: {}",
                     val,
-                    KNOWN_PRESETS.join(", ")
+                    presets.join(", ")
                 ),
                 suggest: Some(
                     "Use a registered preset (spring:snappy, fade, …) or extend animation-presets.json."

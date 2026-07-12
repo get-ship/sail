@@ -615,8 +615,8 @@ fn compile_motion(
     let stripped = value.trim();
     let stripped = stripped.strip_prefix('{').unwrap_or(stripped);
     let stripped = stripped.strip_suffix('}').unwrap_or(stripped);
-    let props = match parse_motion_static_config(stripped, value_span, loc) {
-        Ok(props) => props,
+    let (props, stagger_ms) = match parse_motion_static_config(stripped, value_span, loc) {
+        Ok(pair) => pair,
         Err(_) if !has_static_shape(value) => {
             return Err(err(format!(
                 "motion:{trigger}={{...}} — dynamic configs are not yet supported; \
@@ -629,21 +629,14 @@ fn compile_motion(
     Ok(AttrInstr::Motion {
         trigger: trigger.to_string(),
         props,
+        stagger_ms,
         span: value_span,
     })
 }
 
-/// Closed set of CSS-property names a `motion:` directive accepts as
-/// keys. Mirrors the design-system rule that motion is *only* applied
-/// to a known set of animatable properties — anything else would be a
-/// typo, not an authoring choice. Kept small on purpose.
-const MOTION_PROPERTIES: &[&str] = &[
-    "scale",
-    "opacity",
-    "translate-y",
-    "translate-x",
-    "rotate",
-];
+// The property vocabulary lives in sui-lint — ONE list, two readers. The compiler
+// kept its own copy, and the copies drifted the first time a key was added.
+use sui_lint::rules::animate_token_only::{MOTION_PROPERTIES, MOTION_STAGGER_KEY};
 
 /// Parse the static object body of a `motion:trigger="…"` directive.
 /// Accepted shape: `{ <bare-identifier>: '<string-literal>' (, …) }`.
@@ -658,7 +651,7 @@ fn parse_motion_static_config(
     raw: &str,
     value_span: Span,
     loc: &str,
-) -> Result<Vec<MotionProp>, CompileError> {
+) -> Result<(Vec<MotionProp>, Option<u32>), CompileError> {
     let err = |msg: String| -> CompileError {
         CompileError::new(msg).with_span(value_span).with_category(loc.to_string())
     };
@@ -676,6 +669,7 @@ fn parse_motion_static_config(
     // Span pointing at the offending byte. We don't render that
     // today — the directive's `value_span` is precise enough.
     let mut props: Vec<MotionProp> = Vec::new();
+    let mut stagger_ms: Option<u32> = None;
     loop {
         i = skip_ws(bytes, i);
         if i >= bytes.len() {
@@ -706,9 +700,15 @@ fn parse_motion_static_config(
             ))
         })?;
         let property = &s[key_start..key_end];
-        if !MOTION_PROPERTIES.contains(&property) {
+        // `stagger` is a RESERVED key, not a CSS property: it describes the
+        // relationship BETWEEN sibling elements (the delay step between them), not
+        // anything about any one of them. This is the orchestration primitive — the
+        // difference between a list that appears and a list that arrives.
+        let is_stagger = property == MOTION_STAGGER_KEY;
+        if !is_stagger && !MOTION_PROPERTIES.contains(&property) {
             return Err(err(format!(
-                "motion property `{property}` is not supported. Supported properties: {}",
+                "motion property `{property}` is not supported. Supported properties: {}, \
+                 plus the reserved `stagger` (e.g. `stagger: '40ms'`).",
                 MOTION_PROPERTIES.join(", ")
             )));
         }
@@ -750,10 +750,18 @@ fn parse_motion_static_config(
         }
         let preset = &s[val_start..i];
         i += 1; // consume the closing quote
-        props.push(MotionProp {
-            property: property.to_string(),
-            preset: preset.to_string(),
-        });
+        if is_stagger {
+            stagger_ms = Some(parse_duration_ms(preset).ok_or_else(|| {
+                err(format!(
+                    "stagger must be a duration like '40ms' or '0.04s', got `{preset}`"
+                ))
+            })?);
+        } else {
+            props.push(MotionProp {
+                property: property.to_string(),
+                preset: preset.to_string(),
+            });
+        }
         i = skip_ws(bytes, i);
         // Expect `,` or `}`.
         if i < bytes.len() && bytes[i] == b',' {
@@ -772,7 +780,26 @@ fn parse_motion_static_config(
     if props.is_empty() {
         return Err(err("motion config must declare at least one property".into()));
     }
-    Ok(props)
+    Ok((props, stagger_ms))
+}
+
+/// `'40ms'` / `'0.04s'` → milliseconds. The only two units that mean anything for a
+/// stagger step; anything else is a typo, so it fails rather than guessing.
+fn parse_duration_ms(raw: &str) -> Option<u32> {
+    let t = raw.trim();
+    let (num, mult) = if let Some(n) = t.strip_suffix("ms") {
+        (n, 1.0)
+    } else if let Some(n) = t.strip_suffix('s') {
+        (n, 1000.0)
+    } else {
+        return None;
+    };
+    let v: f64 = num.trim().parse().ok()?;
+    let ms = v * mult;
+    if !(0.0..=10_000.0).contains(&ms) {
+        return None;
+    }
+    Some(ms.round() as u32)
 }
 
 fn skip_ws(bytes: &[u8], mut i: usize) -> usize {

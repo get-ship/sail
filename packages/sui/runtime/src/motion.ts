@@ -28,6 +28,8 @@ export type BakedAnimation = Animation
  * mount cleanly instead of crashing component setup. */
 export interface MotionAttachConfig {
   trigger: string
+  /** `stagger: '40ms'` — the delay STEP between siblings arriving together. */
+  stagger?: number
   enter: Array<BakedAnimation | null>
   leave: Array<BakedAnimation | null>
 }
@@ -133,8 +135,26 @@ export function __sui_motion_attach(
     installLifecycleRunner()
     if (trigger === 'enter') {
       // An entering element plays immediately: it is already in the DOM.
-      if (!prefersReducedMotion()) playForward()
-      else for (const a of enter) a.finish()
+      if (prefersReducedMotion()) {
+        for (const a of enter) a.finish()
+        return () => {
+          for (const a of enter) a.cancel()
+        }
+      }
+      // ORCHESTRATION. The offset is the element's ARRIVAL ORDER among the
+      // siblings entering in this same synchronous run — not its DOM index.
+      // That distinction is the whole design: a list rendering for the first time
+      // arrives together, so its rows cascade 0/1/2/3; a single row appended later
+      // arrives ALONE, so it gets offset 0 and plays immediately instead of waiting
+      // out a delay computed from a position it happens to occupy. Index-based
+      // stagger gets that second case wrong, and the wrongness grows with the list.
+      if (config.stagger) {
+        const delay = staggerOffset() * config.stagger
+        for (const a of enter) {
+          a.effect?.updateTiming({ delay })
+        }
+      }
+      playForward()
       return () => {
         for (const a of enter) a.cancel()
       }
@@ -238,4 +258,29 @@ function installLifecycleRunner(): void {
       if (anims) for (const a of anims) a.cancel()
     },
   })
+}
+
+
+// ── ORCHESTRATION ────────────────────────────────────────────────────────────
+// Everything that enters within one synchronous run is one wave. The counter
+// resets on the microtask that follows, so the NEXT wave starts from zero.
+//
+// Stagger is compile-time arithmetic wearing a runtime hat: there is no timeline,
+// no scheduler, no engine — each element simply gets `delay = arrivalIndex * step`
+// pushed into its already-baked WAAPI animation. The cascade runs on the
+// compositor like every other motion here.
+
+let waveCount = 0
+let waveScheduled = false
+
+function staggerOffset(): number {
+  const i = waveCount++
+  if (!waveScheduled) {
+    waveScheduled = true
+    queueMicrotask(() => {
+      waveCount = 0
+      waveScheduled = false
+    })
+  }
+  return i
 }

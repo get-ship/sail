@@ -75,3 +75,65 @@ fn the_second_animation_system_is_retired_with_a_teaching_error() {
         assert!(msg.contains(expect), "must name the replacement `{expect}`: {msg}");
     }
 }
+
+
+// ── ORCHESTRATION ───────────────────────────────────────────────────────────
+// Stagger is the difference between a list that APPEARS and a list that ARRIVES,
+// and it is the thing you cannot get from a preset catalog or from CSS. It is also
+// not a runtime engine: it is `delay = arrivalIndex * step` pushed into an
+// already-baked WAAPI animation, so the cascade runs on the compositor like
+// everything else here.
+
+/// `stagger` reaches the emitted config as a plain number of milliseconds.
+#[test]
+fn stagger_bakes_a_delay_step_into_the_attach_config() {
+    let src = r#"<card motion:enter={{ opacity: 'fade', stagger: '40ms' }}>x</card>"#;
+    let js = compile(src, opts()).expect("compiles").js;
+    assert!(js.contains("stagger: 40"), "stagger step emitted in ms:\n{js}");
+    assert!(js.contains(r#"trigger: "enter""#), "{js}");
+}
+
+/// Seconds work too, and resolve to the same unit.
+#[test]
+fn stagger_accepts_seconds() {
+    let src = r#"<card motion:enter={{ opacity: 'fade', stagger: '0.04s' }}>x</card>"#;
+    let js = compile(src, opts()).expect("compiles").js;
+    assert!(js.contains("stagger: 40"), "0.04s == 40ms:\n{js}");
+}
+
+/// An app that never staggers pays nothing — not even a `stagger: undefined`.
+#[test]
+fn no_stagger_emits_no_stagger() {
+    let src = r#"<card motion:enter={{ opacity: 'fade' }}>x</card>"#;
+    let js = compile(src, opts()).expect("compiles").js;
+    assert!(!js.contains("stagger"), "unauthored stagger must not appear:\n{js}");
+}
+
+/// A garbled duration fails the build rather than silently becoming zero.
+#[test]
+fn a_bad_stagger_duration_fails_the_build() {
+    let msg = err_for(r#"<card motion:enter={{ opacity: 'fade', stagger: 'soon' }}>x</card>"#);
+    assert!(msg.contains("duration"), "must name the problem: {msg}");
+}
+
+/// THE DRIFT GUARD. The property vocabulary lived in TWO places — the compiler's
+/// parser and the `sui-animate-token-only` lint — each with its own hand-copied
+/// array, and a comment in the lint asserting they were the same set. They were not:
+/// adding `stagger` to the parser compiled fine and then failed the lint, because a
+/// comment is not a mechanism. They are one list in sui-lint now, and the preset
+/// catalog is one JSON that both read. This test fails if anyone re-copies either.
+#[test]
+fn the_animation_vocabulary_has_exactly_one_source() {
+    // Every property the lint publishes must be accepted by the parser...
+    for prop in sui_lint::rules::animate_token_only::MOTION_PROPERTIES {
+        let src = format!(r#"<card motion:hover={{{{ {prop}: 'spring:snappy' }}}}>x</card>"#);
+        assert!(
+            compile(&src, opts()).is_ok(),
+            "lint publishes `{prop}` but the parser rejects it — the lists have drifted"
+        );
+    }
+    // ...and a property NEITHER knows is rejected by the parser, naming the set.
+    let msg = err_for(r#"<card motion:hover={{ blur: 'spring:snappy' }}>x</card>"#);
+    assert!(msg.contains("not supported"), "{msg}");
+    assert!(msg.contains("stagger"), "the error must mention the reserved key: {msg}");
+}

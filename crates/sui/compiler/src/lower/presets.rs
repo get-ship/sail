@@ -11,7 +11,7 @@
 
 use std::collections::BTreeMap;
 
-const PRESETS_JSON: &str = include_str!("../../animation-presets.json");
+const PRESETS_JSON: &str = include_str!("../../../lint/animation-presets.json");
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PresetKind {
