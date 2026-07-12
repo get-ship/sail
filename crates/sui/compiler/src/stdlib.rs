@@ -42,7 +42,7 @@ const SOURCES: &[(&str, &str)] = &[
     ("toggle", include_str!("../stdlib/toggle.sui")),
     ("scroll-area", include_str!("../stdlib/scroll-area.sui")),
     ("theme-picker", include_str!("../stdlib/theme-picker.sui")),
-    ("nav-top", include_str!("../stdlib/nav-top.sui")),
+    ("navbar", include_str!("../stdlib/navbar.sui")),
     ("pagination", include_str!("../stdlib/pagination.sui")),
     ("page", include_str!("../stdlib/page.sui")),
     ("breadcrumb", include_str!("../stdlib/breadcrumb.sui")),

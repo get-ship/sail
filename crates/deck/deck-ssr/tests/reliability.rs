@@ -392,7 +392,7 @@ fn slice1_hub_closure_component_catalog() {
     let repo = repo_root().expect("repo root");
     let manifest = AppManifest::parse("{}").expect("empty manifest");
     let closure = [
-        "packages/components/sui/primitives/src/sui-nav-top/sui-nav-top.sui",
+        "packages/components/sui/primitives/src/sui-navbar/sui-navbar.sui",
         "packages/components/sui/primitives/src/sui-brand-mark/sui-brand-mark.sui",
         "packages/components/sui/primitives/src/sui-theme-picker/sui-theme-picker.sui",
         "packages/components/sui/primitives/src/sui-account-chip/sui-account-chip.sui",

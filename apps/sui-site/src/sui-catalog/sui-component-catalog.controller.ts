@@ -87,7 +87,7 @@ const BENTO_SIZE: Record<string, BentoSize> = {
   // 2×1 — horizontal / list-shaped components.
   'sui-timeline': 'wide',
   'sui-tabs': 'wide',
-  'sui-nav-top': 'wide',
+  'sui-navbar': 'wide',
   'sui-navigation-menu': 'wide',
   'sui-pagination': 'wide',
   'sui-collapsible': 'wide',

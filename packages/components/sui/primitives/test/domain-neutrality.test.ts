@@ -2,7 +2,7 @@
 //
 // This is the TEST-asserted half of `inv-domain-neutral`. The job spec
 // (m-sui-stdlib / job2-domain-neutral) names 4 product compositions
-// (`sui-nav-top`, `sui-theme-picker`, `sui-empty-state`, `sui-error-state`)
+// (`sui-navbar`, `sui-theme-picker`, `sui-empty-state`, `sui-error-state`)
 // that the sux audit flagged. After this job they MUST be ship-free: zero
 // `@ship/sdk-client` imports, zero `ship.<theme|account|project|billing>.`
 // reads, zero mentions of the product domain nouns (`account`, `billing`,
@@ -30,7 +30,7 @@ const SRC_ROOT = resolve(PACK_SRC, '..', 'src')
 // the template AND the controller — the gate is the union, and either
 // half can regress.
 const COMPOSITIONS = [
-  'sui-nav-top',
+  'sui-navbar',
   'sui-theme-picker',
 ] as const
 
@@ -134,9 +134,9 @@ describe('domain-neutrality (job-lock) — 4 product compositions are ship-free'
         for (const noun of ['account', 'billing', 'project']) {
           // Word-boundary match — catches "account" but not "accountant".
           // The `brand` noun is intentionally NOT in this list — `brand`
-          // is a generic layout slot name in <sui-nav-top>, not a product
+          // is a generic layout slot name in <sui-navbar>, not a product
           // domain reference. Verifying the slot neutrality is a separate
-          // test in test/sui-nav-top.test.ts.
+          // test in test/sui-navbar.test.ts.
           const re = new RegExp(`\\b${noun}\\b`, 'i')
           expect(
             re.test(code),

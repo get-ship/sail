@@ -125,7 +125,7 @@ function primaryEnumProp(entry: Entry): PropMeta | null {
 
 /** Full-bleed surfaces: width:100% with no intrinsic content width, so they
  *  collapse in the centered stage and must stretch to fill it. */
-const FILL_TAGS = new Set(['sui-canvas', 'sui-draw', 'sui-board', 'sui-graph-canvas', 'sui-code-editor', 'sui-mermaid', 'sui-nav-top'])
+const FILL_TAGS = new Set(['sui-canvas', 'sui-draw', 'sui-board', 'sui-graph-canvas', 'sui-code-editor', 'sui-mermaid', 'sui-navbar'])
 
 /** Components that open a panel BELOW their trigger — align to the top of the
  *  stage so the dropdown has room to drop into view instead of overflowing. */

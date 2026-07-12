@@ -131,7 +131,7 @@ export const TAG_PACK: Record<string, PackId> = {
   'sui-input':              'primitives',
   'sui-json-view':          'primitives',
   'sui-markdown':           'primitives',
-  'sui-nav-top':            'primitives',
+  'sui-navbar':            'primitives',
   'sui-navigation-menu':    'primitives',
   'sui-pagination':         'primitives',
   'sui-popover':            'primitives',

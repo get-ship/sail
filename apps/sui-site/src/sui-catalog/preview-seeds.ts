@@ -234,7 +234,7 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   'sui-scroll-area':     { props: { size: 'sm' }, innerHTML: '<div>sui-button</div><div>sui-card</div><div>sui-input</div><div>sui-select</div><div>sui-table</div><div>sui-tree</div><div>sui-calendar</div><div>sui-dialog</div><div>sui-tabs</div><div>sui-timeline</div><div>sui-tooltip</div>' },
 
   // ── Navigation ──────────────────────────────────────────────────────
-  'sui-nav-top':         { innerHTML: '<span slot="brand"><strong>SHIP</strong></span><a href="#">Docs</a><a href="#">Components</a><a href="#">Guides</a><button slot="actions" tone="primary">Sign in</button>' },
+  'sui-navbar':         { innerHTML: '<span slot="brand"><strong>SHIP</strong></span><a href="#">Docs</a><a href="#">Components</a><a href="#">Guides</a><button slot="actions" tone="primary">Sign in</button>' },
   'sui-navigation-menu': { props: { value: 'components' }, innerHTML: '<sui-navigation-item value="docs">Docs</sui-navigation-item><sui-navigation-item value="components">Components</sui-navigation-item><sui-navigation-item value="guides">Guides</sui-navigation-item>' },
   'sui-pagination':      { props: { page: '3', total: '248', 'page-size': '20' } },
 

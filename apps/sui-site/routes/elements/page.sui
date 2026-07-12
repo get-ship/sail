@@ -34,7 +34,7 @@
   <p class="mono small">
     alert · avatar · badge · breadcrumb · card · chip · collapsible · combobox ·
     context-menu · dropdown · empty-state · error-boundary · error-state · field ·
-    hover-card · icon · label · menu-item · nav-top · page · pagination · popover ·
+    hover-card · icon · label · menu-item · navbar · page · pagination · popover ·
     radio · radio-group · scroll-area · separator · slider · spinner · switch ·
     tab · tab-list · tab-panel · tabs · theme-picker · toast · toast-region ·
     toggle · toggle-group · tooltip
