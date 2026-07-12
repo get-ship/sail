@@ -201,7 +201,11 @@ export function setThemeTransport(t: ThemeTransport | null): void {
  * correct and `syncThemeFromSettings()` reconciles on next load.
  */
 export function persistTheme(id: ThemeId): void {
-  if (typeof localStorage === 'undefined') return
+  // `typeof localStorage` is NOT a sufficient guard: in an opaque-origin
+  // document (sandboxed iframe, data: URL) the property GETTER itself throws
+  // SecurityError, and `typeof` does not swallow a throwing accessor. The try
+  // must cover the ACCESS, not just the write — and the transport write-through
+  // stays outside it, so a storage-denied context still persists via the host.
   try {
     localStorage.setItem(THEME_STORAGE_KEY, id)
   } catch {}
