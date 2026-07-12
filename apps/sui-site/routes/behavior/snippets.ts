@@ -18,7 +18,7 @@ export const autofocus: Action<void> = (node) => {
   return { destroy: () => cancelAnimationFrame(id) }
 }`,
 
-  param: `<!-- an action takes a reactive param; `update` runs when it changes -->
+  param: `<!-- an action takes a reactive param: its update() runs on change -->
 <div use:anchor={{ to: trigger, placement: 'bottom-start' }}>…</div>`,
 
   stdlib: `<!-- this is not a special mechanism for you: it is how the standard
