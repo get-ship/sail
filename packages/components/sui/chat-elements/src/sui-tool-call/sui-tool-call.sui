@@ -20,21 +20,24 @@
   ─────────────────────────────────────────────────────────────────────
 -->
 
-<prop name="name" type="string" default="" />
-<prop name="status" values="running|ok|error" default="running" reflect />
-<prop name="open" type="bool" default="false" reflect />
-
+<component>{
+  props: {
+    name: '',
+    status: 'running' | 'ok' | 'error',
+    open: false,
+  },
+}</component>
 <style>
-  :host {
+  .sui-tool-call {
     display: block;
     font-family: var(--font-body);
     color: var(--foreground);
     --status-color: var(--muted-foreground);
   }
-  :host([hidden]) { display: none; }
-  :host([status='running']) { --status-color: var(--info); }
-  :host([status='ok'])      { --status-color: var(--success); }
-  :host([status='error'])   { --status-color: var(--destructive); }
+  .sui-tool-call[hidden] { display: none; }
+  .sui-tool-call[status='running'] { --status-color: var(--info); }
+  .sui-tool-call[status='ok']      { --status-color: var(--success); }
+  .sui-tool-call[status='error']   { --status-color: var(--destructive); }
 
   .frame {
     border: 1px solid var(--border);
@@ -58,7 +61,7 @@
     background: var(--status-color);
     flex: 0 0 auto;
   }
-  :host([status='running']) .status-dot {
+  .sui-tool-call[status='running'] .status-dot {
     animation: sui-tool-call-pulse 1.4s var(--ease-in-out) infinite;
   }
   @keyframes sui-tool-call-pulse {
@@ -66,7 +69,7 @@
     50%      { opacity: 0.4; }
   }
   @media (prefers-reduced-motion: reduce) {
-    :host([status='running']) .status-dot { animation: none; }
+    .sui-tool-call[status='running'] .status-dot { animation: none; }
   }
 
   .name {
@@ -90,7 +93,7 @@
     transition: transform var(--duration-fast) var(--ease-out);
     color: var(--muted-foreground);
   }
-  :host([open]) .chevron { transform: rotate(90deg); }
+  .sui-tool-call[open] .chevron { transform: rotate(90deg); }
 
   .body {
     border-top: 1px solid var(--border);
@@ -113,19 +116,19 @@
   ::slotted([slot='result']) { white-space: pre-wrap; overflow-wrap: anywhere; }
 </style>
 
-<div class="frame" part="frame">
+<div class="frame">
   <collapsible open={open()}>
-    <div slot="trigger" class="header" part="header">
-      <span class="status-dot" part="status-dot" aria-hidden="true"></span>
-      <span class="name" part="name">{name()}</span>
-      <span class="status-text" part="status">{status()}</span>
+    <div slot="trigger" class="header">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span class="name">{name()}</span>
+      <span class="status-text status">{status()}</span>
       <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"
         stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
         stroke-linejoin="round" aria-hidden="true">
         <path d="M4 2l4 4-4 4" />
       </svg>
     </div>
-    <div class="body" part="body">
+    <div class="body">
       <span class="body-label">Arguments</span>
       <div class="args"><slot></slot></div>
       <div class="result-block">

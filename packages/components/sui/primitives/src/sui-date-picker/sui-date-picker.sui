@@ -74,25 +74,28 @@
     re-port convention, and gives the 7-column day grid comfortable room).
 -->
 
-<prop name="name" type="string" default="" />
-<prop name="value" type="string" default="" form-value />
-<prop name="min" type="string" default="" />
-<prop name="max" type="string" default="" />
-<prop name="placeholder" type="string" default="YYYY-MM-DD" />
-<prop name="disabled" type="bool" default="false" reflect form-disabled />
-<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
-
-<variants part="wrap">
+<component>{
+  props: {
+    name: '',
+    value: '',
+    min: '',
+    max: '',
+    placeholder: 'YYYY-MM-DD',
+    disabled: false,
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
+    size: 'md' | 'sm' | 'lg',
+  },
+}</component>
+<variants class="wrap">
   disabled: bg:muted fg:muted-foreground cursor:not-allowed
 </variants>
 
 <!--
   Residual <style> — what sx/variants/theme can't express in this primitive:
-  - :host base (the new <host sx="..."> directive is position/display-able,
+  - .sui-date-picker base (the new <host sx="..."> directive is position/display-able,
     but vertical-align:middle isn't tokenized).
   - [part='wrap'] multi-property transition (border-color + box-shadow).
-  - :host([disabled]) [part='wrap'] `filter: saturate(0.4)` (filter has no sx kw).
+  - .sui-date-picker[disabled] [part='wrap'] `filter: saturate(0.4)` (filter has no sx kw).
   - input.entry: flex:1 + min-width:0 (the <row>'s child needs flex shorthand,
     not in sx), border:0 / outline:0 / background:transparent / padding:0 (raw
     resets; sx has no `none`/`transparent`); font: inherit + font-family /
@@ -118,9 +121,9 @@
 -->
 <style>
   /* Size channels: md base; sm/lg override (was <theme prop=size>). */
-  :host([size='sm']) { --dp-h: var(--control-h-sm); --dp-fs: var(--text-sm);  --dp-px: var(--space-2); }
-  :host([size='lg']) { --dp-h: var(--control-h-lg); --dp-fs: var(--text-md);   --dp-px: var(--space-3); }
-  :host {
+  .sui-date-picker[size='sm'] { --dp-h: var(--control-h-sm); --dp-fs: var(--text-sm);  --dp-px: var(--space-2); }
+  .sui-date-picker[size='lg'] { --dp-h: var(--control-h-lg); --dp-fs: var(--text-md);   --dp-px: var(--space-3); }
+  .sui-date-picker {
     --dp-h: var(--control-h-md); --dp-fs: var(--text-base); --dp-px: var(--space-2_5);
     position: relative;
     display: inline-flex;
@@ -132,7 +135,7 @@
       border-color var(--duration-fast) var(--ease-out),
       box-shadow var(--duration-fast) var(--ease-out);
   }
-  :host([disabled]) [part='wrap'] { filter: saturate(0.4); }
+  .sui-date-picker[disabled] [part='wrap'] { filter: saturate(0.4); }
   input.entry {
     flex: 1;
     min-width: 0;
@@ -480,58 +483,26 @@ export default controller({
 })
 
 </controller>
-<row class="wrap" part="wrap" gap="2" align="center"
-  sx="w:full bg:background fg:foreground border:tone-border radius:md focus-within:ring:tone-ring">
-  <input
-    class="entry"
-    part="input"
-    type="text"
-    name={name()}
-    placeholder={placeholder()}
-    disabled={disabled()}
-    autocomplete="off"
-    inputmode="numeric"
-    aria-haspopup="dialog"
-    aria-expanded={open() ? 'true' : 'false'}
-    bind:value={value}
-    bind:this={inputEl}
-  />
-  <svg class="cal-icon" part="cal-icon" viewBox="0 0 16 16" aria-hidden="true"
-       fill="none" stroke="currentColor" stroke-width="1.5"
-       stroke-linecap="round" stroke-linejoin="round"
-       sx="w:icon-size-sm h:icon-size-sm fg:muted-foreground">
+<row class="wrap" gap="2" align="center" sx="w:full bg:background fg:foreground border:tone-border radius:md focus-within:ring:tone-ring">
+  <input class="entry input" type="text" name={name()} placeholder={placeholder()} disabled={disabled()} autocomplete="off" inputmode="numeric" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
+  <svg class="cal-icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" sx="w:icon-size-sm h:icon-size-sm fg:muted-foreground">
     <rect x="2" y="3" width="12" height="11" rx="1.5"></rect>
     <path d="M2 6h12 M5 1.5v3 M11 1.5v3"></path>
   </svg>
 </row>
 {#if open() && !disabled()}
-  <div class="panel" part="panel" role="dialog" aria-label="Choose date"
-       bind:this={panelEl}
-       sx="position:absolute z:popover w:panel-max-w-sm p:2 bg:popover fg:popover-foreground border:border radius:md shadow:md">
-    <row class="nav" part="nav" align="center" justify="between">
-      <button type="button" data-act="prev" aria-label="Previous month" part="nav-btn"
-        sx="w:icon-size-2xl h:icon-size-2xl radius:sm fg:muted-foreground cursor:pointer hover:bg:muted hover:fg:foreground">‹</button>
-      <span class="label" part="label"
-        sx="weight:semibold">{monthLabel()}</span>
-      <button type="button" data-act="next" aria-label="Next month" part="nav-btn"
-        sx="w:icon-size-2xl h:icon-size-2xl radius:sm fg:muted-foreground cursor:pointer hover:bg:muted hover:fg:foreground">›</button>
+  <div class="panel" role="dialog" aria-label="Choose date" bind:this={panelEl} sx="position:absolute z:popover w:panel-max-w-sm p:2 bg:popover fg:popover-foreground border:border radius:md shadow:md">
+    <row class="nav" align="center" justify="between">
+      <button class="nav-btn" type="button" data-act="prev" aria-label="Previous month" sx="w:icon-size-2xl h:icon-size-2xl radius:sm fg:muted-foreground cursor:pointer hover:bg:muted hover:fg:foreground">‹</button>
+      <span class="label" sx="weight:semibold">{monthLabel()}</span>
+      <button class="nav-btn" type="button" data-act="next" aria-label="Next month" sx="w:icon-size-2xl h:icon-size-2xl radius:sm fg:muted-foreground cursor:pointer hover:bg:muted hover:fg:foreground">›</button>
     </row>
-    <grid class="grid" part="grid" role="grid" cols="7" gap="1">
+    <grid class="grid" role="grid" cols="7" gap="1">
       {#for d of dayHeaders() key={d.key}}
-        <span class="dow" role="columnheader" part="dow"
-          sx="text:sm fg:muted-foreground py:1 weight:medium">{d.label}</span>
+        <span class="dow" role="columnheader" sx="text:sm fg:muted-foreground py:1 weight:medium">{d.label}</span>
       {/for}
       {#for cell of monthCells() key={cell.key}}
-        <button
-          type="button"
-          part="day"
-          disabled={cell.disabled}
-          aria-label={cell.label}
-          aria-selected={cell.selected ? 'true' : 'false'}
-          tabindex={cell.focused ? '0' : '-1'}
-          class="day {cell.empty ? 'empty' : ''} {cell.selected ? 'selected' : ''} {cell.focused ? 'focused' : ''} {cell.today ? 'today' : ''}"
-          data-iso={cell.iso}
-        >{cell.empty ? '' : cell.day}</button>
+        <button type="button" disabled={cell.disabled} aria-label={cell.label} aria-selected={cell.selected ? 'true' : 'false'} tabindex={cell.focused ? '0' : '-1'} class="day {cell.empty ? 'empty' : ''} {cell.selected ? 'selected' : ''} {cell.focused ? 'focused' : ''} {cell.today ? 'today' : ''}" data-iso={cell.iso}>{cell.empty ? '' : cell.day}</button>
       {/for}
     </grid>
   </div>

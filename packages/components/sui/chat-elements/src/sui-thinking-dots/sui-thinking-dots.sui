@@ -14,28 +14,31 @@
   ─────────────────────────────────────────────────────────────────────
 -->
 
-<prop name="label" type="string" default="Assistant is thinking" />
-<prop name="size" values="sm|md|lg" default="md" reflect />
-<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
-
+<component>{
+  props: {
+    label: 'Assistant is thinking',
+    size: 'md' | 'sm' | 'lg',
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
+  },
+}</component>
 <style>
-  :host {
+  .sui-thinking-dots {
     display: inline-flex;
     vertical-align: middle;
     --dot-size: 7px;
     --dot-gap: 5px;
     --dot-color: var(--muted-foreground);
   }
-  :host([size='sm']) { --dot-size: 5px; --dot-gap: 4px; }
-  :host([size='lg']) { --dot-size: 9px; --dot-gap: 7px; }
+  .sui-thinking-dots[size='sm'] { --dot-size: 5px; --dot-gap: 4px; }
+  .sui-thinking-dots[size='lg'] { --dot-size: 9px; --dot-gap: 7px; }
 
-  :host([tone='primary'])     { --dot-color: var(--primary); }
-  :host([tone='info'])        { --dot-color: var(--info); }
-  :host([tone='success'])     { --dot-color: var(--success); }
-  :host([tone='warning'])     { --dot-color: var(--warning); }
-  :host([tone='destructive']) { --dot-color: var(--destructive); }
-  :host([tone='accent'])      { --dot-color: var(--accent); }
-  :host([tone='muted'])       { --dot-color: var(--muted-foreground); }
+  .sui-thinking-dots[tone='primary']     { --dot-color: var(--primary); }
+  .sui-thinking-dots[tone='info']        { --dot-color: var(--info); }
+  .sui-thinking-dots[tone='success']     { --dot-color: var(--success); }
+  .sui-thinking-dots[tone='warning']     { --dot-color: var(--warning); }
+  .sui-thinking-dots[tone='destructive'] { --dot-color: var(--destructive); }
+  .sui-thinking-dots[tone='accent']      { --dot-color: var(--accent); }
+  .sui-thinking-dots[tone='muted']       { --dot-color: var(--muted-foreground); }
 
   .dots {
     display: inline-flex;
@@ -62,14 +65,8 @@
   }
 </style>
 
-<span
-  class="dots"
-  part="dots"
-  role="status"
-  aria-live="polite"
-  aria-label={label()}
->
-  <span class="dot" part="dot" aria-hidden="true"></span>
-  <span class="dot" part="dot" aria-hidden="true"></span>
-  <span class="dot" part="dot" aria-hidden="true"></span>
+<span class="dots" role="status" aria-live="polite" aria-label={label()}>
+  <span class="dot" aria-hidden="true"></span>
+  <span class="dot" aria-hidden="true"></span>
+  <span class="dot" aria-hidden="true"></span>
 </span>

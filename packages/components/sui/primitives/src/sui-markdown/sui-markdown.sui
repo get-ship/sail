@@ -1,10 +1,13 @@
-<prop name="value" type="string" default="" reflect />
-
+<component>{
+  props: {
+    value: '',
+  },
+}</component>
 <!--
   NEW SURFACE (re-port from feat/next, parity-gate pass)
   ─────────────────────────────────────────────────────────────────────
   - markdown has no tone/size of its own. No theme block, no
-    per-component :host([tone='…']) or :host([size='…']) redeclaration
+    per-component .sui-markdown[tone='…'] or .sui-markdown[size='…'] redeclaration
     in this style. The framework's global tone/size channels are
     irrelevant — markdown renders prose, not control chrome.
   - The host's surface baseline moves to a host sx attribute: display,
@@ -43,7 +46,7 @@
    * (the parser writes HTML into .md-root, not via SUI elements),
    * so sx can't apply. The host's [hidden] display:none is provided
    * by the runtime's BASE_CSS and would be deduped at emit. */
-  :host {
+  .sui-markdown {
     font-family: var(--font-body);
   }
 

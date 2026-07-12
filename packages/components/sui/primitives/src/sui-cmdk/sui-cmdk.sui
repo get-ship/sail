@@ -50,19 +50,22 @@
         highlight and aria-disabled on disabled rows.
 -->
 
-<prop name="open" type="bool" default="false" reflect />
-<prop name="placeholder" type="string" default="Type a command or search…" />
-<prop name="label" type="string" default="Command palette" />
-<prop name="empty-label" type="string" default="No results found." />
-<prop name="size" values="sm|md|lg" default="md" reflect />
-
+<component>{
+  props: {
+    open: false,
+    placeholder: 'Type a command or search…',
+    label: 'Command palette',
+    'empty-label': 'No results found.',
+    size: 'md' | 'sm' | 'lg',
+  },
+}</component>
 <!--
   NEW SURFACE (re-port from feat/next, parity-gate pass)
   ─────────────────────────────────────────────────────────────────────
   - cmdk has no tone/size of its own. The framework's global tone/size
     channels aren't relevant — this component never reads var(--tone)
     or var(--size-h). No <theme> block, no per-component tone/size
-    redeclaration in :host.
+    redeclaration in .sui-cmdk.
   - Closes its dialog through the useDialog handle it composes. cmdk's
     `size={size()}` is forwarded onto the native <dialog>'s size
     contract (DIALOG_SKIN_CSS) — and the dialog renders inside the
@@ -81,7 +84,7 @@
     background, font-size) so the search bar is flush to its chrome.
 -->
 
-<!-- Residual: `:host { display:contents }` baseline (host doesn't
+<!-- Residual: `.sui-cmdk { display:contents }` baseline (host doesn't
      take sx); `sui-dialog::part(body) { padding:0 }` — restyling a
      downstream shadow part can't reach via variants/sx; the
      `.cmdk` font-family (font: isn't an sx prop); `.search`
@@ -101,8 +104,8 @@
      (cannot swap to <row>) — the .item .item.hl .item.disabled
      class rules therefore stay. -->
 <style>
-  :host { display: contents; }
-  :host([hidden]) { display: none; }
+  .sui-cmdk { display: contents; }
+  .sui-cmdk[hidden] { display: none; }
 
   /* The dialog owns the chrome (top-layer, focus trap, ::backdrop). Zero its
      body padding via the documented part so the search bar sits flush to the
@@ -478,74 +481,30 @@ export default controller({
 })
 
 </controller>
-<dialog
-  use:dlg
-  part="dialog"
-  size={size()}
-  backdrop="blur"
->
-  <column class="cmdk" part="panel" gap="0"
-    sx="min-h:0 fg:foreground">
-    <row class="search" part="search" align="center" gap="2"
-      sx="p:3 px:4">
+<dialog class="dialog" use:dlg size={size()} backdrop="blur">
+  <column class="cmdk panel" gap="0" sx="min-h:0 fg:foreground">
+    <row class="search" align="center" gap="2" sx="p:3 px:4">
       <sui-icon class="search-icon" name="search" size="sm"></sui-icon>
-      <input
-        class="entry"
-        part="input"
-        type="text"
-        autocomplete="off"
-        autocapitalize="off"
-        autocorrect="off"
-        spellcheck="false"
-        role="combobox"
-        aria-expanded="true"
-        aria-autocomplete="list"
-        aria-controls={listId()}
-        aria-activedescendant={activeId()}
-        aria-label={label()}
-        placeholder={placeholder()}
-        bind:value={query}
-        bind:this={inputEl}
-      />
+      <input class="entry input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId()} aria-activedescendant={activeId()} aria-label={label()} placeholder={placeholder()} bind:value={query} bind:this={inputEl} />
     </row>
-    <ul
-      class="list"
-      part="list"
-      sx="max-h:panel-vh-sm p:1"
-      role="listbox"
-      id={listId()}
-      aria-label={label()}
-      bind:this={listEl}
-    >
+    <ul class="list" sx="max-h:panel-vh-sm p:1" role="listbox" id={listId()} aria-label={label()} bind:this={listEl}>
       {#for row of rows() key={row.key}}
         {#if row.isHeading}
-          <li class="group" part="group" role="presentation" sx="py:2 pb:1 text:xs weight:semibold tracking:wide fg:muted-foreground">{row.heading}</li>
+          <li class="group" role="presentation" sx="py:2 pb:1 text:xs weight:semibold tracking:wide fg:muted-foreground">{row.heading}</li>
         {:else}
-          <li
-            class="item"
-            part="item"
-            sx="p:2 radius:sm text:sm fg:foreground cursor:pointer"
-            role="option"
-            id={row.optId}
-            data-id={row.id}
-            data-value={row.value}
-            class:hl={!row.disabled && row.id === highlightId()}
-            class:disabled={row.disabled}
-            aria-selected={!row.disabled && row.id === highlightId() ? 'true' : 'false'}
-            aria-disabled={row.disabled ? 'true' : 'false'}
-          >
+          <li class="item" sx="p:2 radius:sm text:sm fg:foreground cursor:pointer" role="option" id={row.optId} data-id={row.id} data-value={row.value} class:hl={!row.disabled && row.id === highlightId()} class:disabled={row.disabled} aria-selected={!row.disabled && row.id === highlightId() ? 'true' : 'false'} aria-disabled={row.disabled ? 'true' : 'false'}>
             {#if row.icon !== ''}
-              <sui-icon class="item-icon" part="item-icon" name={row.icon} size="sm" sx="fg:muted-foreground"></sui-icon>
+              <sui-icon class="item-icon" name={row.icon} size="sm" sx="fg:muted-foreground"></sui-icon>
             {/if}
-            <span class="item-label" part="item-label" sx="overflow:hidden">{row.label}</span>
+            <span class="item-label" sx="overflow:hidden">{row.label}</span>
             {#if row.hint !== ''}
-              <span class="item-hint" part="item-hint" sx="text:xs fg:muted-foreground">{row.hint}</span>
+              <span class="item-hint" sx="text:xs fg:muted-foreground">{row.hint}</span>
             {/if}
           </li>
         {/if}
       {/for}
       {#if rows().length === 0}
-        <li class="empty" part="empty" role="presentation" sx="p:6 px:4 text:sm fg:muted-foreground">{emptyLabel()}</li>
+        <li class="empty" role="presentation" sx="p:6 px:4 text:sm fg:muted-foreground">{emptyLabel()}</li>
       {/if}
     </ul>
   </column>

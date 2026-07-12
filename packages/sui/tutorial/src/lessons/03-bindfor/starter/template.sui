@@ -1,5 +1,8 @@
-<prop name="shadow" type="bool" default="false" />
-
+<component>{
+  props: {
+    shadow: false,
+  },
+}</component>
 <div class="todo">
   <form on:submit|preventDefault={() => add()}>
     <input bind:value={draft} placeholder="What needs doing?" />

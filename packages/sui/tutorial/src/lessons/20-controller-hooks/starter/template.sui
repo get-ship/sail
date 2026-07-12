@@ -1,5 +1,8 @@
-<prop name="shadow" type="bool" default="false" />
-
+<component>{
+  props: {
+    shadow: false,
+  },
+}</component>
 <div class="catalog">
   <input bind:value={list.query} placeholder="filter agents…" />
 

@@ -26,15 +26,18 @@
   ─────────────────────────────────────────────────────────────────────────────
 -->
 
-<prop name="nodes" type="string" default="" />
-<prop name="edges" type="string" default="" />
-<prop name="width" type="number" default="1000" reflect />
-<prop name="height" type="number" default="600" reflect />
-<prop name="layout" values="positioned|radial" default="positioned" reflect />
-<prop name="selected-id" type="string" default="" reflect />
-
+<component>{
+  props: {
+    nodes: '',
+    edges: '',
+    width: 1000,
+    height: 600,
+    layout: 'positioned' | 'radial',
+    'selected-id': '',
+  },
+}</component>
 <style>
-  :host {
+  .sui-graph-canvas {
     display: block;
     position: relative;
     width: 100%;
@@ -53,7 +56,7 @@
     --edge-perm: var(--tone-destructive-fg);
     --edge-harness: var(--tone-accent-fg);
   }
-  :host([hidden]) { display: none; }
+  .sui-graph-canvas[hidden] { display: none; }
 
   .canvas {
     position: relative;
@@ -289,12 +292,12 @@ function renderGraphHtml(
       const wStyle = n.w ? `--node-w: ${n.w}px;` : ''
       const label = esc(`${n.kind}: ${n.title ?? n.id}`)
       const body = nodeBodyHtml(host, n)
-      return `<div class="node" part="node" data-kind="${esc(n.kind)}" data-id="${esc(n.id)}"${sel} tabindex="0" role="button" aria-label="${label}" style="left: ${left}%; top: ${top}%;${wStyle}">${body}</div>`
+      return `<div class="node" data-kind="${esc(n.kind)}" data-id="${esc(n.id)}"${sel} tabindex="0" role="button" aria-label="${label}" style="left: ${left}%; top: ${top}%;${wStyle}">${body}</div>`
     })
     .join('')
 
   return (
-    `<svg class="edges" part="edges" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">${edgePaths}</svg>` +
+    `<svg class="edges" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">${edgePaths}</svg>` +
     nodeDivs
   )
 }
@@ -384,5 +387,5 @@ export default controller<Scope>({
 })
 
 </controller>
-<div class="canvas" part="canvas" bind:this={canvasEl}></div>
+<div class="canvas" bind:this={canvasEl}></div>
 <slot name="node" hidden></slot>

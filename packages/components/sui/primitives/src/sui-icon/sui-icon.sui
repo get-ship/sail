@@ -45,24 +45,27 @@
   ────────────────────────────────────────────────────────────────────────────
 -->
 
-<prop name="name" type="string" default="" reflect />
-<prop name="src" type="string" default="" />
-<prop name="size" values="xs|sm|md|lg|xl" default="md" reflect />
-<prop name="tone" values="default|info|success|warning|destructive|accent|muted|primary" default="default" reflect />
-<prop name="label" type="string" default="" reflect />
-<prop name="set" values="lucide|app" default="lucide" reflect />
-<prop name="variant" values="glyph|tile|solid" default="glyph" reflect />
-<prop name="radius" type="string" default="" reflect />
-<prop name="spin" type="bool" default="false" reflect />
-
-<variants part="svg">
+<component>{
+  props: {
+    name: '',
+    src: '',
+    size: 'md' | 'xs' | 'sm' | 'lg' | 'xl',
+    tone: 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' | 'primary',
+    label: '',
+    set: 'lucide' | 'app',
+    variant: 'glyph' | 'tile' | 'solid',
+    radius: '',
+    spin: false,
+  },
+}</component>
+<variants class="svg">
   size=xs: w:icon-size-2xs h:icon-size-2xs
   size=sm: w:icon-size-sm h:icon-size-sm
   size=lg: w:icon-size-xl h:icon-size-xl
   size=xl: w:icon-size-2xl h:icon-size-2xl
 </variants>
 <style>
-  :host {
+  .sui-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -71,10 +74,10 @@
     --tone-fg: var(--foreground);
     color: var(--tone-fg);
   }
-  :host([hidden]) { display: none; }
+  .sui-icon[hidden] { display: none; }
 
   /* lucide (default) hides the frame wrapper */
-  :host:not([set='app']) .frame {
+  .sui-icon:not([set='app']) .frame {
     all: unset;
     display: contents;
   }
@@ -89,8 +92,8 @@
 
   /* Spin — opt-in rotation, gated on reduced-motion */
   @media (prefers-reduced-motion: no-preference) {
-    :host([spin]) svg.sui-icon-svg,
-    :host([spin]) ::slotted(svg) { animation: sui-icon-spin 0.8s linear infinite; }
+    .sui-icon[spin] svg.sui-icon-svg,
+    .sui-icon[spin] ::slotted(svg) { animation: sui-icon-spin 0.8s linear infinite; }
   }
   @keyframes sui-icon-spin { to { transform: rotate(360deg); } }
 
@@ -98,7 +101,7 @@
   ::slotted(svg) { width: 100%; height: 100%; }
 
   /* App set: frame styling */
-  :host([set='app']) {
+  .sui-icon[set='app'] {
     --app-accent: var(--foreground);
     --tile-size: var(--space-5);
     --tile-radius: var(--radius-md);
@@ -112,33 +115,33 @@
      to --foreground where the token is absent (e.g. this catalog), which
      keeps a bare framework build identical to before. theme-studio aliases
      the theme accent, mirroring APP_ALIASES in the controller. */
-  :host([set='app'][name='dashboard'])    { --app-accent: var(--app-accent-dashboard, var(--foreground)); }
-  :host([set='app'][name='pipelines'])    { --app-accent: var(--app-accent-pipelines, var(--foreground)); }
-  :host([set='app'][name='agents'])       { --app-accent: var(--app-accent-agents, var(--foreground)); }
-  :host([set='app'][name='skills'])       { --app-accent: var(--app-accent-skills, var(--foreground)); }
-  :host([set='app'][name='git'])          { --app-accent: var(--app-accent-git, var(--foreground)); }
-  :host([set='app'][name='collections'])  { --app-accent: var(--app-accent-collections, var(--foreground)); }
-  :host([set='app'][name='canvas'])       { --app-accent: var(--app-accent-canvas, var(--foreground)); }
-  :host([set='app'][name='settings'])     { --app-accent: var(--app-accent-settings, var(--foreground)); }
-  :host([set='app'][name='chat'])         { --app-accent: var(--app-accent-chat, var(--foreground)); }
-  :host([set='app'][name='events'])       { --app-accent: var(--app-accent-events, var(--foreground)); }
-  :host([set='app'][name='specs'])        { --app-accent: var(--app-accent-specs, var(--foreground)); }
-  :host([set='app'][name='theme'])        { --app-accent: var(--app-accent-theme, var(--foreground)); }
-  :host([set='app'][name='setup'])        { --app-accent: var(--app-accent-setup, var(--foreground)); }
-  :host([set='app'][name='overview'])     { --app-accent: var(--app-accent-overview, var(--foreground)); }
-  :host([set='app'][name='mesh'])         { --app-accent: var(--app-accent-mesh, var(--foreground)); }
-  :host([set='app'][name='theme-studio']) { --app-accent: var(--app-accent-theme, var(--foreground)); }
+  .sui-icon[set='app'][name='dashboard']    { --app-accent: var(--app-accent-dashboard, var(--foreground)); }
+  .sui-icon[set='app'][name='pipelines']    { --app-accent: var(--app-accent-pipelines, var(--foreground)); }
+  .sui-icon[set='app'][name='agents']       { --app-accent: var(--app-accent-agents, var(--foreground)); }
+  .sui-icon[set='app'][name='skills']       { --app-accent: var(--app-accent-skills, var(--foreground)); }
+  .sui-icon[set='app'][name='git']          { --app-accent: var(--app-accent-git, var(--foreground)); }
+  .sui-icon[set='app'][name='collections']  { --app-accent: var(--app-accent-collections, var(--foreground)); }
+  .sui-icon[set='app'][name='canvas']       { --app-accent: var(--app-accent-canvas, var(--foreground)); }
+  .sui-icon[set='app'][name='settings']     { --app-accent: var(--app-accent-settings, var(--foreground)); }
+  .sui-icon[set='app'][name='chat']         { --app-accent: var(--app-accent-chat, var(--foreground)); }
+  .sui-icon[set='app'][name='events']       { --app-accent: var(--app-accent-events, var(--foreground)); }
+  .sui-icon[set='app'][name='specs']        { --app-accent: var(--app-accent-specs, var(--foreground)); }
+  .sui-icon[set='app'][name='theme']        { --app-accent: var(--app-accent-theme, var(--foreground)); }
+  .sui-icon[set='app'][name='setup']        { --app-accent: var(--app-accent-setup, var(--foreground)); }
+  .sui-icon[set='app'][name='overview']     { --app-accent: var(--app-accent-overview, var(--foreground)); }
+  .sui-icon[set='app'][name='mesh']         { --app-accent: var(--app-accent-mesh, var(--foreground)); }
+  .sui-icon[set='app'][name='theme-studio'] { --app-accent: var(--app-accent-theme, var(--foreground)); }
 
-  :host([set='app'][size='sm']) { --tile-size: var(--icon-size-md); --glyph-size: var(--icon-size-xs); --tile-radius: var(--radius-sm); }
-  :host([set='app'][size='md']) { --tile-size: var(--space-5); --glyph-size: var(--icon-size-sm); --tile-radius: var(--radius-md); }
-  :host([set='app'][size='lg']) { --tile-size: var(--control-h-sm); --glyph-size: var(--icon-size-lg); --tile-radius: var(--radius-lg); }
+  .sui-icon[set='app'][size='sm'] { --tile-size: var(--icon-size-md); --glyph-size: var(--icon-size-xs); --tile-radius: var(--radius-sm); }
+  .sui-icon[set='app'][size='md'] { --tile-size: var(--space-5); --glyph-size: var(--icon-size-sm); --tile-radius: var(--radius-md); }
+  .sui-icon[set='app'][size='lg'] { --tile-size: var(--control-h-sm); --glyph-size: var(--icon-size-lg); --tile-radius: var(--radius-lg); }
 
-  :host([set='app'][radius='sm'])   { --tile-radius: var(--radius-sm); }
-  :host([set='app'][radius='md'])   { --tile-radius: var(--radius-md); }
-  :host([set='app'][radius='lg'])   { --tile-radius: var(--radius-lg); }
-  :host([set='app'][radius='full']) { --tile-radius: var(--radius-full); }
+  .sui-icon[set='app'][radius='sm']   { --tile-radius: var(--radius-sm); }
+  .sui-icon[set='app'][radius='md']   { --tile-radius: var(--radius-md); }
+  .sui-icon[set='app'][radius='lg']   { --tile-radius: var(--radius-lg); }
+  .sui-icon[set='app'][radius='full'] { --tile-radius: var(--radius-full); }
 
-  :host([set='app']) .frame {
+  .sui-icon[set='app'] .frame {
     width: 100%;
     height: 100%;
     display: inline-flex;
@@ -150,20 +153,20 @@
                 box-shadow var(--duration-fast) var(--ease-out);
   }
 
-  :host([set='app']:not([variant])) .frame,
-  :host([set='app'][variant='glyph']) .frame {
+  .sui-icon[set='app']:not([variant]) .frame,
+  .sui-icon[set='app'][variant='glyph'] .frame {
     background: transparent;
     color: var(--app-accent);
   }
 
-  :host([set='app'][variant='tile']) .frame {
+  .sui-icon[set='app'][variant='tile'] .frame {
     position: relative;
     overflow: hidden;
   }
   /* Soft tint of the app accent — rendered as an underlay pseudo-element
    * so we don't have to write a color-mix in component CSS (the design
    * system owns that formula in tokens.css, not here). */
-  :host([set='app'][variant='tile']) .frame::before {
+  .sui-icon[set='app'][variant='tile'] .frame::before {
     content: '';
     position: absolute;
     inset: 0;
@@ -171,17 +174,17 @@
     opacity: 0.16;
   }
 
-  :host([set='app'][variant='solid']) .frame {
+  .sui-icon[set='app'][variant='solid'] .frame {
     background: var(--app-accent);
     color: var(--background);
     box-shadow: var(--shadow-xs);
   }
 
-  :host([set='app']) svg.sui-icon-svg {
+  .sui-icon[set='app'] svg.sui-icon-svg {
     width: var(--glyph-size);
     height: var(--glyph-size);
   }
-  :host([set='app']) ::slotted(*) {
+  .sui-icon[set='app'] ::slotted(*) {
     width: var(--glyph-size);
     height: var(--glyph-size);
     display: block;
@@ -394,6 +397,6 @@ void SVG_NS
   For set="app", the SVG is created inside a frame div. For lucide,
   it's created directly in the slot.
 -->
-<span class="frame" part="frame">
+<span class="frame">
   <slot></slot>
 </span>

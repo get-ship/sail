@@ -14,11 +14,14 @@
   ─────────────────────────────────────────────────────────────────────
 -->
 
-<prop name="source" type="string" default="" />
-<prop name="index" type="number" default="0" />
-
+<component>{
+  props: {
+    source: '',
+    index: 0,
+  },
+}</component>
 <style>
-  :host {
+  .sui-citation {
     display: inline-flex;
     vertical-align: baseline;
   }
@@ -99,13 +102,7 @@ export default controller({
 })
 
 </controller>
-<button
-  type="button"
-  class="pill"
-  part="pill"
-  bind:this={pillEl}
-  aria-label={'Open citation ' + index() + ': ' + source()}
->
-  <span class="index" part="index" aria-hidden="true">{index()}</span>
-  <span class="label" part="label">{source()}</span>
+<button type="button" class="pill" bind:this={pillEl} aria-label={'Open citation ' + index() + ': ' + source()}>
+  <span class="index" aria-hidden="true">{index()}</span>
+  <span class="label">{source()}</span>
 </button>

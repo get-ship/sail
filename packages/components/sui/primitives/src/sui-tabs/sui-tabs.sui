@@ -71,7 +71,7 @@
   NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
   ──────────────────────────────────────────────────────────────────────────────
   - `tone` is a GLOBAL framework channel now. feat/next's per-component
-    `:host{--tone:var(--primary)} :host([tone='info']){--tone:var(--info)}…`
+    `.sui-tabs{--tone:var(--primary)} .sui-tabs[tone='info']{--tone:var(--info)}…`
     block is DELETED — the framework ships all 8 catalog tones globally
     (suiTonesSheet). One real behavior shift this causes: feat/next's
     unconditional `--tone: var(--primary)` fired regardless of the
@@ -96,7 +96,7 @@
     alignment) instead of a hand-rolled flex div — sx doesn't own
     gap/align (that's the layout primitives' job), so this is the
     correct new-surface home for it, not a workaround.
-  - `display:block` and `[hidden]` dropped from :host — framework-owned
+  - `display:block` and `[hidden]` dropped from .sui-tabs — framework-owned
     now (BASE_CSS).
   - Residual <style> (verbatim feat/next, tokens only): `.strip`'s
     `border-bottom` (sx `border:` is a 4-side shorthand, no single-side
@@ -108,7 +108,11 @@
     padding are all valid sx tokens).
 -->
 
-<prop name="active" type="string" default="" reflect />
+<component>{
+  props: {
+    active: '',
+  },
+}</component>
 <component>{
   props: {
     variant: 'underline' | 'pill' | 'enclosed',
@@ -128,13 +132,13 @@
 </variants>
 
 <style>
-  :host([sticky]) { top: 0; }
+  .sui-tabs[sticky] { top: 0; }
 
   .strip {
     border-bottom: 1px solid var(--border);
   }
-  :host([variant='enclosed']) .strip { gap: 0; }
-  :host([orientation='vertical']) .strip {
+  .sui-tabs[variant='enclosed'] .strip { gap: 0; }
+  .sui-tabs[orientation='vertical'] .strip {
     flex-direction: column;
     align-items: flex-start;
     border-bottom: 0;
@@ -306,9 +310,6 @@ export default controller<Scope>({
 })
 
 </controller>
-<row class="strip" part="strip" role="tablist"
-     aria-orientation={orientation()}
-     bind:this={strip}
-     gap="1" align="center">
+<row class="strip" role="tablist" aria-orientation={orientation()} bind:this={strip} gap="1" align="center">
   <slot bind:this={tabSlot}></slot>
 </row>

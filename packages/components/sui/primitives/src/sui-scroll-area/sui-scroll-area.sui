@@ -21,7 +21,7 @@
     per-size --sb-size fill in <style> (gate forbids the legacy
     theme block); per-orientation overflow + scrollbar visibility
     via part-targeted variants blocks.
-    :host(:not([orientation])) rule for the default vertical case
+    .sui-scroll-area:not([orientation]) rule for the default vertical case
     (variants only match EXPLICIT attrs) and to hide the horizontal
     scrollbar in default mode. Restored the .scrollbar-h block
     the pre-port spike lost (visual regression).
@@ -34,20 +34,20 @@
   },
 }</component>
 
-<variants part="viewport">
+<variants class="viewport">
   (orientation=vertical): overflow-y:auto
   (orientation=horizontal): overflow-x:auto
   (orientation=both): overflow:auto
 </variants>
-<variants part="scrollbar-v">
+<variants class="scrollbar-v">
   (orientation=horizontal): display:none
 </variants>
-<variants part="scrollbar-h">
+<variants class="scrollbar-h">
   (orientation=vertical): display:none
 </variants>
 
 <style>
-  :host {
+  .sui-scroll-area {
     display: block;
     position: relative;
     overflow: hidden;
@@ -57,9 +57,9 @@
      block to fill --sb-size — gate-forbidden, so explicit per-attribute
      rules now. Token values match the catalog scale (sm=space-1_5,
      md=space-2, lg=space-2_5); feat/next used raw 6/8/10px equivalents. */
-  :host(:not([size])), :host([size='md']) { --sb-size: var(--space-2); }
-  :host([size='sm']) { --sb-size: var(--space-1_5); }
-  :host([size='lg']) { --sb-size: var(--space-2_5); }
+  .sui-scroll-area:not([size]), .sui-scroll-area[size='md'] { --sb-size: var(--space-2); }
+  .sui-scroll-area[size='sm'] { --sb-size: var(--space-1_5); }
+  .sui-scroll-area[size='lg'] { --sb-size: var(--space-2_5); }
 
   .viewport {
     width: 100%;
@@ -73,8 +73,8 @@
   /* The default (no [orientation] attr set) acts as vertical. Variants
      above cover the EXPLICIT cases; this rule covers the unset case
      the variants table can't reach. */
-  :host(:not([orientation])) .viewport { overflow-y: auto; }
-  :host(:not([orientation])) .scrollbar-h { display: none; }
+  .sui-scroll-area:not([orientation]) .viewport { overflow-y: auto; }
+  .sui-scroll-area:not([orientation]) .scrollbar-h { display: none; }
 
   /* Overlay scrollbar tracks — absolute-positioned, opacity-fade on hover/scroll */
   .scrollbar {
@@ -83,8 +83,8 @@
     transition: opacity var(--duration-medium) var(--ease-out);
     z-index: var(--z-elevated);
   }
-  :host(:hover) .scrollbar,
-  :host(:focus-within) .scrollbar,
+  .sui-scroll-area:hover .scrollbar,
+  .sui-scroll-area:focus-within .scrollbar,
   .scrollbar.active { opacity: 1; }
 
   .scrollbar-v {
@@ -199,12 +199,12 @@ export default controller<Scope>({
 })
 
 </controller>
-<div class="viewport" part="viewport" tabindex="0" bind:this={viewportEl}>
+<div class="viewport" tabindex="0" bind:this={viewportEl}>
   <slot></slot>
 </div>
-<div class="scrollbar scrollbar-v" part="scrollbar-v" aria-hidden="true" bind:this={vScrollbar}>
+<div class="scrollbar scrollbar-v" aria-hidden="true" bind:this={vScrollbar}>
   <div class="thumb" bind:this={vThumb}></div>
 </div>
-<div class="scrollbar scrollbar-h" part="scrollbar-h" aria-hidden="true" bind:this={hScrollbar}>
+<div class="scrollbar scrollbar-h" aria-hidden="true" bind:this={hScrollbar}>
   <div class="thumb" bind:this={hThumb}></div>
 </div>

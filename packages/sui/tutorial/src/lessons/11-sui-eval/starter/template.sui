@@ -1,5 +1,8 @@
-<prop name="shadow" type="bool" default="false" />
-
+<component>{
+  props: {
+    shadow: false,
+  },
+}</component>
 <!-- The data-test attributes are what a sui-eval spec would target.
      They survive minification + keep the eval selectors stable
      against className / DOM shape churn. -->

@@ -25,24 +25,27 @@
   Parts: series
 -->
 
-<prop name="data" type="string" default="" reflect />
-<prop name="labels" type="string" default="" />
-<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="primary" reflect />
-<prop name="orientation" values="vertical|horizontal" default="vertical" reflect />
-<prop name="width" type="number" default="300" />
-<prop name="height" type="number" default="200" />
-<prop name="max" type="number" default="0" />
-<prop name="label" type="string" default="bar chart" />
-<prop name="loading" type="bool" default="false" reflect />
-
+<component>{
+  props: {
+    data: '',
+    labels: '',
+    tone: 'primary' | 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
+    orientation: 'vertical' | 'horizontal',
+    width: 300,
+    height: 200,
+    max: 0,
+    label: 'bar chart',
+    loading: false,
+  },
+}</component>
 <style>
-  :host {
+  .sui-bar-chart {
     display: block;
     width: 100%;
     height: 200px;
     transition: opacity var(--duration-fast) var(--ease-out);
   }
-  :host([hidden]) { display: none; }
+  .sui-bar-chart[hidden] { display: none; }
   svg { display: block; width: 100%; height: 100%; overflow: hidden; }
   /* Hover-brighten: bars rest slightly dimmed and lift to full on hover
      for at-a-glance focus, matching the elevated bar treatment. */
@@ -61,7 +64,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    :host { transition: none; }
+    .sui-bar-chart { transition: none; }
     .bar { transition: none; }
   }
 </style>
@@ -120,11 +123,11 @@ export default controller({
 
 </controller>
 {#if loading()}
-  <span skeleton shape="block" size="lg" part="loading" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
+  <span class="loading" skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
 {:else if chart.error()}
-  <error-state part="error"></error-state>
+  <error-state class="error"></error-state>
 {:else if chart.isEmpty()}
-  <empty-state part="empty"></empty-state>
+  <empty-state class="empty"></empty-state>
 {:else}
   <svg
     viewBox={'0 0 ' + viewport.width() + ' ' + viewport.height()}
@@ -133,7 +136,7 @@ export default controller({
     aria-describedby="chart-data"
     bind:this={svgEl}>
     {#for b of bars() key={b.id}}
-      <rect class="bar" part="series" x={b.x} y={b.y} width={b.w} height={b.h} rx={b.rx} ry={b.ry} fill={b.color}>
+      <rect class="bar series" x={b.x} y={b.y} width={b.w} height={b.h} rx={b.rx} ry={b.ry} fill={b.color}>
         <title>{b.title}</title>
       </rect>
     {/for}

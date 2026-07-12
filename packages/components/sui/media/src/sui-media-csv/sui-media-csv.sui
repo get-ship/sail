@@ -27,17 +27,20 @@
   Parts: delegates to sui-table parts.
 -->
 
-<prop name="delimiter" values="comma|tab|auto" default="auto" reflect />
-<prop name="header" type="bool" default="true" reflect />
-<prop name="text" type="string" default="" />
-
+<component>{
+  props: {
+    delimiter: 'auto' | 'comma' | 'tab',
+    header: true,
+    text: '',
+  },
+}</component>
 <style>
-  :host {
+  .sui-media-csv {
     display: block;
     width: 100%;
     color: var(--foreground);
   }
-  :host([hidden]) { display: none; }
+  .sui-media-csv[hidden] { display: none; }
 
   .error {
     display: block;
@@ -156,7 +159,7 @@ export default controller({
 
 </controller>
 {#if errorMsg()}
-  <div class="error" part="error" role="alert">{errorMsg()}</div>
+  <div class="error" role="alert">{errorMsg()}</div>
 {:else}
-  <sui-table variant="data" part="grid" hoverable prop:table={tableEngine()}></sui-table>
+  <sui-table class="grid" variant="data" hoverable prop:table={tableEngine()}></sui-table>
 {/if}

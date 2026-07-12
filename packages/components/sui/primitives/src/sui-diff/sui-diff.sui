@@ -45,7 +45,7 @@
     moves to the closed-sx host block: bg:muted/border:border/
     radius:md/overflow:hidden. font-family stays in the style block
     (no sx prop for it); font-size/line-height likewise.
-  - The :host --diff-line-pad-y local var (a 1px hairline) stays
+  - The .sui-diff --diff-line-pad-y local var (a 1px hairline) stays
     in the style block as a real local declaration. The lint sees
     it as locally-defined so the .line padding reference resolves.
     Kept as a named local (with a comment explaining the off-scale
@@ -58,7 +58,7 @@
     non-sx), .line padding (the off-scale hairline var), the .line
     white-space/word-break (no sx prop), the .line.add/.line.del/
     .line.hunk per-line background+color (the .add/.del/.hunk
-    class on a controller-emitted element is not an :host
+    class on a controller-emitted element is not an .sui-diff
     attribute, so it cannot be a per-host variant target either;
     stays in the style block as descendant-class rules), and the
     .sign + .line.X .sign per-kind sign colors.
@@ -68,15 +68,18 @@
   No new LANG-GAP.
 -->
 
-<prop name="from" type="string" default="" reflect />
-<prop name="to" type="string" default="" reflect />
-<prop name="value" type="string" default="" reflect />
-
+<component>{
+  props: {
+    from: '',
+    to: '',
+    value: '',
+  },
+}</component>
 <host sx="display:block bg:muted border:border radius:md overflow:hidden" />
 <variants>[hidden]: display:none</variants>
 
 <style>
-  :host {
+  .sui-diff {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     line-height: var(--leading-normal);
@@ -153,7 +156,7 @@ function renderLines(lines: Line[]): string {
     .map((l) => {
       const sign = l.kind === 'add' ? '+' : l.kind === 'del' ? '-' : l.kind === 'hunk' ? '@' : ' '
       const kindLabel = l.kind === 'add' ? 'added' : l.kind === 'del' ? 'removed' : l.kind === 'hunk' ? 'hunk' : 'context'
-      return `<div class="line ${l.kind}" part="line" data-line-kind="${l.kind}" role="listitem" aria-label="${kindLabel}: ${escape(l.text)}"><span class="sign" aria-hidden="true">${sign}</span><span>${escape(l.text)}</span></div>`
+      return `<div class="line ${l.kind}" data-line-kind="${l.kind}" role="listitem" aria-label="${kindLabel}: ${escape(l.text)}"><span class="sign" aria-hidden="true">${sign}</span><span>${escape(l.text)}</span></div>`
     })
     .join('')
 }

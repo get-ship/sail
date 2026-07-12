@@ -32,7 +32,7 @@
     opacity+transform transition, `::backdrop`, CSS Anchor Positioning
     (`@supports`, `position-try-*`, `anchor()`, `::slotted` anchor-name),
     prefers-reduced-motion, and forced-colors.
-  - `:host { display: inline-flex }` moved to the host-sx directive below.
+  - `.sui-hover-card { display: inline-flex }` moved to the host-sx directive below.
   - The two raw `8px` anchor-gap literals became `var(--space-2)` (exact
     same computed value, now token-backed); `translateY(-4px)` became
     `translateY(calc(-1 * var(--space-1)))` (same reasoning).
@@ -41,11 +41,14 @@
     20px difference, not a functional change.
 -->
 
-<prop name="open" type="bool" default="false" reflect />
-<prop name="placement" values="top|bottom|left|right" default="bottom" reflect />
-<prop name="show-delay" type="number" default="300" />
-<prop name="hide-delay" type="number" default="100" />
-
+<component>{
+  props: {
+    open: false,
+    placement: 'bottom' | 'top' | 'left' | 'right',
+    'show-delay': 300,
+    'hide-delay': 100,
+  },
+}</component>
 <host sx="display:inline-flex"></host>
 
 <!--
@@ -86,20 +89,20 @@
       position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
       position-try-order: most-block-size;
     }
-    :host(:not([placement])) .panel,
-    :host([placement='bottom']) .panel {
+    .sui-hover-card:not([placement]) .panel,
+    .sui-hover-card[placement='bottom'] .panel {
       top: calc(anchor(bottom) + var(--space-2));
       justify-self: anchor-center;
     }
-    :host([placement='top']) .panel {
+    .sui-hover-card[placement='top'] .panel {
       bottom: calc(anchor(top) + var(--space-2));
       justify-self: anchor-center;
     }
-    :host([placement='left']) .panel {
+    .sui-hover-card[placement='left'] .panel {
       right: calc(anchor(left) + var(--space-2));
       align-self: anchor-center;
     }
-    :host([placement='right']) .panel {
+    .sui-hover-card[placement='right'] .panel {
       left: calc(anchor(right) + var(--space-2));
       align-self: anchor-center;
     }
@@ -288,7 +291,6 @@ export default controller<Scope>({
 
 </controller>
 <slot name="trigger" bind:this={triggerSlot}></slot>
-<div class="panel" part="panel" popover="auto" bind:this={panelEl}
-  sx="min-w:panel-min-w-md max-w:panel-max-w-sm p:4 bg:popover fg:popover-foreground border:border radius:xl text:base leading:normal">
+<div class="panel" popover="auto" bind:this={panelEl} sx="min-w:panel-min-w-md max-w:panel-max-w-sm p:4 bg:popover fg:popover-foreground border:border radius:xl text:base leading:normal">
   <slot></slot>
 </div>

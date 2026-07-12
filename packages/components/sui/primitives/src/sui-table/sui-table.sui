@@ -30,8 +30,8 @@
     cannot express (CSS grid template/auto-columns, position:sticky/absolute,
     pseudo-selectors, @media forced-colors).
   - The variants blocks targeting part=wrap / part=empty (below the props)
-    replace the old :host([sticky-header]) display:block-on-.wrap and
-    :host([data-empty]) display-toggle raw selectors.
+    replace the old .sui-table[sticky-header] display:block-on-.wrap and
+    .sui-table[data-empty] display-toggle raw selectors.
   - Anatomy (light DOM, class-based — part= left on per the wave sweep note):
     .wrap (root frame) > table/.grid (variant switch) > thead/.grid-head,
     tbody/.viewport > .spacer > .grid-row > .grid-cell; .empty (slot/native
@@ -97,28 +97,30 @@
   reported, not routed around.
 -->
 
-<prop name="variant" values="slot|native|data" default="slot" reflect />
-<prop name="rows" type="string" default="" />
-<prop name="columns" type="string" default="" />
-<prop name="hoverable" type="bool" default="true" reflect />
-<prop name="striped" type="bool" default="false" reflect />
-<prop name="sticky-header" type="bool" default="false" reflect />
-<prop name="sticky-first-col" type="bool" default="false" reflect />
-<prop name="gutter" type="bool" default="false" reflect />
-<prop name="selectable" values="none|single|multi" default="none" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
-<prop name="label" type="string" default="" />
-
-
-<variants part="wrap">
+<component>{
+  props: {
+    variant: 'slot' | 'native' | 'data',
+    rows: '',
+    columns: '',
+    hoverable: true,
+    striped: false,
+    'sticky-header': false,
+    'sticky-first-col': false,
+    gutter: false,
+    selectable: 'none' | 'single' | 'multi',
+    size: 'md' | 'sm' | 'lg',
+    label: '',
+  },
+}</component>
+<variants class="wrap">
   sticky-header: overflow-y:auto
 </variants>
-<variants part="empty">
+<variants class="empty">
   data-empty: display:block
 </variants>
 
 <style>
-  :host {
+  .sui-table {
     display: block;
     width: 100%;
     font-family: var(--font-body);
@@ -129,7 +131,7 @@
        from colCount(). Declared here so the value resolves without a fallback. */
     --sui-col-count: 1;
   }
-  :host([hidden]) { display: none; }
+  .sui-table[hidden] { display: none; }
 
   .wrap {
     position: relative;
@@ -158,7 +160,7 @@
     font-variant-numeric: tabular-nums;
   }
 
-  :host([sticky-header]) .wrap { max-height: inherit; }
+  .sui-table[sticky-header] .wrap { max-height: inherit; }
 
   .empty {
     display: none;
@@ -182,8 +184,8 @@
     background: var(--surface-2);
     box-shadow: 0 1px 0 0 var(--border);
   }
-  :host([gutter]) .grid-head,
-  :host([gutter]) .grid-row {
+  .sui-table[gutter] .grid-head,
+  .sui-table[gutter] .grid-row {
     grid-template-columns: var(--space-8) repeat(var(--sui-col-count), minmax(var(--space-8), 1fr));
     grid-auto-flow: row;
     grid-auto-columns: auto;
@@ -238,7 +240,7 @@
     box-sizing: border-box;
     transition: background-color var(--duration-fast) var(--ease-out);
   }
-  :host([hoverable]) .grid-row:hover > .grid-cell { background: var(--hover-bg); }
+  .sui-table[hoverable] .grid-row:hover > .grid-cell { background: var(--hover-bg); }
   .grid-row[data-selected] > .grid-cell { background: var(--selected-bg); }
   .grid-row[data-selected] > .grid-cell:first-child { box-shadow: inset var(--space-half) 0 0 0 var(--primary); }
   .grid-row:focus-visible {
@@ -493,28 +495,20 @@ export { SUI_TABLE_LIGHT_DOM_CSS }
 
 </controller>
 {#if variant() === 'data'}
-<div class="wrap" part="wrap">
+<div class="wrap">
   {#if isEmptyInitial()}
-    <div class="grid-empty" part="empty" role="status">
+    <div class="grid-empty empty" role="status">
       <empty-state data-empty-initial></empty-state>
     </div>
   {:else if isEmptyFiltered()}
-    <div class="grid-empty" part="empty" role="status">
+    <div class="grid-empty empty" role="status">
       <empty-state>
         <button slot="action" type="button" data-action="clear-filters">Clear filters</button>
       </empty-state>
     </div>
   {:else}
-    <div
-      class="grid"
-      part="table"
-      role="grid"
-      aria-label={label() || null}
-      aria-rowcount={rowCount()}
-      aria-colcount={colCount()}
-      aria-multiselectable={selectable() === 'multi' ? 'true' : null}
-    >
-      <thead class="grid-head" part="thead" role="row" style:--sui-col-count={colCount()}>
+    <div class="grid table" role="grid" aria-label={label() || null} aria-rowcount={rowCount()} aria-colcount={colCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
+      <thead class="grid-head thead" role="row" style:--sui-col-count={colCount()}>
         {#if gutter()}
           <div class="gutter-cell" role="columnheader">
             <input type="checkbox" data-select-all size="sm" aria-label="Select all rows" />
@@ -547,7 +541,7 @@ export { SUI_TABLE_LIGHT_DOM_CSS }
         {/for}
       </thead>
 
-      <div class="viewport" part="tbody" role="rowgroup" bind:this={viewportEl}>
+      <div class="viewport tbody" role="rowgroup" bind:this={viewportEl}>
         <div class="spacer" style:height={`${totalSize()}px`}>
           {#for w of windowItems() key={w.key}}
             <div
@@ -581,31 +575,26 @@ export { SUI_TABLE_LIGHT_DOM_CSS }
       </div>
     </div>
     {#if hasPagination()}
-      <div class="grid-foot" part="foot">
-        <sui-pagination
-          part="pagination"
-          prop:page={pageIndex1()}
-          prop:total={rowCount()}
-          prop:page-size={pageSize()}
-        ></sui-pagination>
+      <div class="grid-foot foot">
+        <sui-pagination class="pagination" prop:page={pageIndex1()} prop:total={rowCount()} prop:page-size={pageSize()}></sui-pagination>
       </div>
     {/if}
   {/if}
 </div>
 {:else if variant() !== 'native'}
-<div class="wrap" part="wrap">
-  <table part="table" aria-label={label() || null}>
-    <thead part="thead"><slot name="head"></slot></thead>
-    <tbody part="tbody"><slot></slot></tbody>
+<div class="wrap">
+  <table class="table" aria-label={label() || null}>
+    <thead class="thead"><slot name="head"></slot></thead>
+    <tbody class="tbody"><slot></slot></tbody>
   </table>
-  <div class="empty" part="empty" role="status" sx="p:7 px:5 text:sm bg:surface-1 fg:muted-foreground">
+  <div class="empty" role="status" sx="p:7 px:5 text:sm bg:surface-1 fg:muted-foreground">
     <slot name="empty"></slot>
   </div>
 </div>
 {:else}
-<div class="wrap" part="wrap">
+<div class="wrap">
   <slot></slot>
-  <div class="empty" part="empty" role="status" sx="p:7 px:5 text:sm bg:surface-1 fg:muted-foreground">
+  <div class="empty" role="status" sx="p:7 px:5 text:sm bg:surface-1 fg:muted-foreground">
     <slot name="empty"></slot>
   </div>
 </div>

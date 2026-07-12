@@ -59,13 +59,16 @@
     size=sm; no visual change, one less registration.
 -->
 
-<prop name="page" type="number" default="1" reflect />
-<prop name="total" type="number" default="0" reflect />
-<prop name="page-size" type="number" default="10" reflect />
-<prop name="page-size-options" type="string" default="" />
-<prop name="label" type="string" default="Pagination" />
-<prop name="size-label" type="string" default="Rows per page" />
-
+<component>{
+  props: {
+    page: 1,
+    total: 0,
+    'page-size': 10,
+    'page-size-options': '',
+    label: 'Pagination',
+    'size-label': 'Rows per page',
+  },
+}</component>
 <style>
   /* Residual: `font-family: var(--font-body)` (no `font-family` prop in sx),
      `flex: 1 1 auto` on .spacer (no `flex` prop), the
@@ -73,13 +76,13 @@
      vocabulary doesn't expose (`white-space`, `user-select`,
      `font-variant-numeric`). The forced-colors `CanvasText` system color is
      also residual — not a token. */
-  :host {
+  .sui-pagination {
     display: block;
     font-family: var(--font-body);
     font-size: var(--text-sm);
     color: var(--foreground);
   }
-  :host([hidden]) { display: none; }
+  .sui-pagination[hidden] { display: none; }
   .spacer { flex: 1 1 auto; }
   .range {
     white-space: nowrap;
@@ -262,75 +265,37 @@ export default controller({
 })
 
 </controller>
-<row class="nav" part="nav" gap="3" align="center" aria-label={label()} bind:this={navEl}>
-  <row class="edges" part="edges" gap="1" align="center">
-    <button
-      ghost
-      sm
-      part="first"
-      data-page-action="first"
-      aria-label="First page"
-      disabled={atStart()}
-    >
+<row class="nav" gap="3" align="center" aria-label={label()} bind:this={navEl}>
+  <row class="edges" gap="1" align="center">
+    <button class="first" ghost sm data-page-action="first" aria-label="First page" disabled={atStart()}>
       <sui-icon name="chevrons-left" size="sm" aria-hidden="true"></sui-icon>
     </button>
-    <button
-      ghost
-      sm
-      part="prev"
-      data-page-action="prev"
-      aria-label="Previous page"
-      disabled={atStart()}
-    >
+    <button class="prev" ghost sm data-page-action="prev" aria-label="Previous page" disabled={atStart()}>
       <sui-icon name="chevron-left" size="sm" aria-hidden="true"></sui-icon>
     </button>
   </row>
 
-  <row class="pages" part="pages" gap="1" align="center">
+  <row class="pages" gap="1" align="center">
     {#for p of pageNumbers() key={p.page}}
-      <button
-        sm
-        part="page"
-        variant={p.current ? 'soft' : 'ghost'}
-        tone={p.current ? 'primary' : 'default'}
-        data-page={p.page}
-        aria-current={p.current ? 'page' : null}
-        aria-label={p.label}
-      >{p.page}</button>
+      <button class="page" sm variant={p.current ? 'soft' : 'ghost'} tone={p.current ? 'primary' : 'default'} data-page={p.page} aria-current={p.current ? 'page' : null} aria-label={p.label}>{p.page}</button>
     {/for}
   </row>
 
-  <row class="edges" part="edges" gap="1" align="center">
-    <button
-      ghost
-      sm
-      part="next"
-      data-page-action="next"
-      aria-label="Next page"
-      disabled={atEnd()}
-    >
+  <row class="edges" gap="1" align="center">
+    <button class="next" ghost sm data-page-action="next" aria-label="Next page" disabled={atEnd()}>
       <sui-icon name="chevron-right" size="sm" aria-hidden="true"></sui-icon>
     </button>
-    <button
-      ghost
-      sm
-      part="last"
-      data-page-action="last"
-      aria-label="Last page"
-      disabled={atEnd()}
-    >
+    <button class="last" ghost sm data-page-action="last" aria-label="Last page" disabled={atEnd()}>
       <sui-icon name="chevrons-right" size="sm" aria-hidden="true"></sui-icon>
     </button>
   </row>
 
-  <span class="spacer" part="spacer"></span>
+  <span class="spacer"></span>
 
-  <span class="range" part="range" role="status" aria-live="polite"
-    sx="fg:muted-foreground">{rangeLabel()}</span>
+  <span class="range" role="status" aria-live="polite" sx="fg:muted-foreground">{rangeLabel()}</span>
 
   {#if sizeOptions().length > 0}
-    <row class="size" part="size" gap="2" align="center"
-      sx="fg:muted-foreground">
+    <row class="size" gap="2" align="center" sx="fg:muted-foreground">
       <span>{sizeLabel()}</span>
       <sui-select size="sm" label={sizeLabel()} prop:value={pageSizeStr()} bind:this={sizeSelectEl}>
         {#for opt of sizeOptions() key={opt}}

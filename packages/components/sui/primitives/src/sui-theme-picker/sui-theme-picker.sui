@@ -36,28 +36,32 @@
   ────────────────────────────────────────────────────────────────────────
 -->
 
-<prop name="placement" values="top|top-end|bottom|bottom-end|left|left-end|right|right-end" default="bottom-end" reflect />
-<prop name="label-style" values="text|compact" default="compact" reflect />
-<prop name="persist" type="bool" default="true" reflect />
+<component>{
+  props: {
+    placement: 'bottom-end' | 'top' | 'top-end' | 'bottom' | 'left' | 'left-end' | 'right' | 'right-end',
+    'label-style': 'compact' | 'text',
+    persist: true,
+    surface: 'app' | 'marketing',
+    'tokens-href': '/api/assets/view-tokens.css',
+    scope: '',
+  },
+}</component>
 <!-- `app` (default) is the shell: trigger shows the active theme's accent
      swatch and the footer routes to /theme-studio. `marketing` is the static
      site: the trigger inherits surrounding text color (legible on the
      translucent menubar) and the Customize footer is hidden because the static
      site has no /theme-studio route. -->
-<prop name="surface" values="app|marketing" default="app" reflect />
 <!-- Ship-free seam: the host names where the preview stylesheet
      ([data-theme-preview] rules) is served; injected into the shadow root so
      previews reach shadow children. Default is deck's canonical asset route
      (deck serves the sheet at /api/assets/view-tokens.css, not the root);
      host-overridable for non-deck hosts. -->
-<prop name="tokens-href" type="string" default="/api/assets/view-tokens.css" />
 <!-- `scope` isolates the picker's theme application to the host element's
      subtree (a catalog preview, an isolated panel). Empty (default) preserves
      the document-level behavior the shell + marketing site depend on;
      a non-empty value disables `applyTheme(documentElement)` on mount and
      routes any selection to the host's own `data-theme` + `.dark` class so
      the document root is never mutated. -->
-<prop name="scope" type="string" default="" />
 
 <!--
   Theme channel: --tp-trigger-gap drives the inner gap of the trigger, and
@@ -66,12 +70,12 @@
   symmetric padding). `text` adds the label + caret with the canonical 6/8 px
   rhythm. `default` and `compact` land on the same values because the runtime's
   reflect=true only writes the attribute when the prop actually changes — an
-  unset prop leaves the host attribute absent, so the bare `:host` rule has to
+  unset prop leaves the host attribute absent, so the bare `.sui-theme-picker` rule has to
   already be the compact values.
 -->
 <!--
   Residual <style> — the bulk of this component's surface styling:
-  - :host bare baseline + the .trigger surface (transition / appearance /
+  - .sui-theme-picker bare baseline + the .trigger surface (transition / appearance /
     background:transparent / border:1px solid transparent / font:inherit /
     display:inline-flex + align-items — gap is a flex prop, no sx).
   - .trigger :hover / :focus-visible :hover stays in residual because the
@@ -79,7 +83,7 @@
     sx `ring:` is the 2-layer offset ring, different geometry.
   - .label :white-space / text-overflow:ellipsis (no sx).
   - .label / .caret display:none under :not(text) — variants don't support
-    :not() selectors, so the :host(:not([label-style='text'])) .label /
+    :not() selectors, so the .sui-theme-picker:not([label-style='text']) .label /
     .caret / .trigger rules stay inline.
   - .panel popover surface: position:fixed + inset:auto + multi-prop
     transition + transform/opacity motion; .panel:popover-open state;
@@ -113,13 +117,13 @@
   --panel-vh-md: ; --space-half: ;
   /* label-style channels: compact (default) base; text overrides (was
      <theme prop=label-style>). */
-  :host([label-style='text']) { --tp-trigger-gap: var(--space-1_5); --tp-trigger-px: var(--space-2); --tp-trigger-py: var(--space-1); }
-  :host {
+  .sui-theme-picker[label-style='text'] { --tp-trigger-gap: var(--space-1_5); --tp-trigger-px: var(--space-2); --tp-trigger-py: var(--space-1); }
+  .sui-theme-picker {
     --tp-trigger-gap: 0; --tp-trigger-px: var(--space-1); --tp-trigger-py: var(--space-1);
     position: relative;
     display: inline-flex;
   }
-  :host([hidden]) { display: none; }
+  .sui-theme-picker[hidden] { display: none; }
 
   .trigger {
     appearance: none;
@@ -158,8 +162,8 @@
     text-overflow: ellipsis;
   }
 
-  :host(:not([label-style='text'])) .label { display: none; }
-  :host(:not([label-style='text'])) .caret { display: none; }
+  .sui-theme-picker:not([label-style='text']) .label { display: none; }
+  .sui-theme-picker:not([label-style='text']) .caret { display: none; }
 
   .caret {
     flex: 0 0 auto;
@@ -665,35 +669,22 @@ export default controller({
 })
 
 </controller>
-<button class="trigger" part="trigger" type="button" bind:this={triggerBtn}
-  aria-label="Choose theme"
-  aria-haspopup="dialog"
-  aria-expanded={panelOpen() ? 'true' : 'false'}
-  sx="radius:sm text:base fg:foreground cursor:pointer"
-  on:click={() => togglePanel()}>
-  <sui-icon class="tp-icon" part="dot" name="palette" size="lg" style:color={triggerIconColor()} aria-hidden="true"></sui-icon>
-  <span class="label" part="label"
-    sx="weight:medium overflow:hidden max-w:panel-ch-w-md">{triggerLabel()}</span>
-  <svg class="caret" part="caret" viewBox="0 0 10 6" aria-hidden="true" sx="w:2_5 h:1_5 fg:muted-foreground">
+<button class="trigger" type="button" bind:this={triggerBtn} aria-label="Choose theme" aria-haspopup="dialog" aria-expanded={panelOpen() ? 'true' : 'false'} sx="radius:sm text:base fg:foreground cursor:pointer" on:click={() => togglePanel()}>
+  <sui-icon class="tp-icon dot" name="palette" size="lg" style:color={triggerIconColor()} aria-hidden="true"></sui-icon>
+  <span class="label" sx="weight:medium overflow:hidden max-w:panel-ch-w-md">{triggerLabel()}</span>
+  <svg class="caret" viewBox="0 0 10 6" aria-hidden="true" sx="w:2_5 h:1_5 fg:muted-foreground">
     <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
   </svg>
 </button>
 
-<div class="panel" part="panel" popover="auto" bind:this={panelEl}
-  sx="p:1 bg:popover fg:popover-foreground border:border radius:md shadow:lg">
-  <column class="grid" part="grid" role="listbox" aria-label="Theme" sx="max-h:panel-vh-md">
+<div class="panel" popover="auto" bind:this={panelEl} sx="p:1 bg:popover fg:popover-foreground border:border radius:md shadow:lg">
+  <column class="grid" role="listbox" aria-label="Theme" sx="max-h:panel-vh-md">
     {#for g of groups() key={g.label}}
       <section class="group" aria-label={g.label}>
         <div class="group-h">{g.label}</div>
         <div class="group-rows">
           {#for t of g.themes key={t.id}}
-            <button class="card" part="card" role="option" type="button"
-              data-theme-card={t.id}
-              aria-label={t.label}
-              aria-selected={activeTheme() === t.id ? 'true' : 'false'}
-              tabindex={activeTheme() === t.id ? '0' : '-1'}
-              sx="radius:lg p:1_5 cursor:pointer hover:bg:hover-bg"
-              on:click={() => selectTheme(t.id)}>
+            <button class="card" role="option" type="button" data-theme-card={t.id} aria-label={t.label} aria-selected={activeTheme() === t.id ? 'true' : 'false'} tabindex={activeTheme() === t.id ? '0' : '-1'} sx="radius:lg p:1_5 cursor:pointer hover:bg:hover-bg" on:click={() => selectTheme(t.id)}>
               <span class="tc-bg" data-theme-preview={t.id} aria-hidden="true">
                 <span class="tc-overlay" sx="z:elevated"></span>
                 <span class="tc-card" sx="position:relative bg:card fg:card-foreground border:border radius:md">

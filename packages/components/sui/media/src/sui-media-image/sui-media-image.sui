@@ -5,7 +5,7 @@
   Read-only, source-in-never-fetch. A resolved source arrives via `prop:src`
   identity (a raster object-url/bytes, or SVG text the consumer already fetched)
   — NEVER an attribute, NEVER a fetch. A raster source paints into the native
-  <img part="img"> (whose `load`/`error` drive the lifecycle events) inside a
+  <img class="img"> (whose `load`/`error` drive the lifecycle events) inside a
   `part="stage"` zoom/pan surface. An SVG TEXT source inlines through `bindHtml`
   into a sandboxed `role="img"` container (no raster <img>, no innerHTML in the
   controller). A `gallery` source array renders a `role="listbox"` thumbnail
@@ -29,20 +29,23 @@
   Parts: img · stage · thumb.
 -->
 
-<prop name="alt" type="string" default="" reflect />
-<prop name="fit" values="contain|cover|actual" default="contain" reflect />
-<prop name="zoomable" type="bool" default="true" reflect />
-<prop name="gallery" type="bool" default="false" reflect />
-
+<component>{
+  props: {
+    alt: '',
+    fit: 'contain' | 'cover' | 'actual',
+    zoomable: true,
+    gallery: false,
+  },
+}</component>
 <style>
-  :host {
+  .sui-media-image {
     display: block;
     width: 100%;
     color: var(--foreground);
     /* Thumbnail edge — a fixed gallery-strip dimension (not a row metric). */
     --sui-thumb-size: 3rem;
   }
-  :host([hidden]) { display: none; }
+  .sui-media-image[hidden] { display: none; }
 
   .stage {
     position: relative;
@@ -69,8 +72,8 @@
     object-fit: contain;
     transition: transform var(--duration-fast) var(--ease-out);
   }
-  :host([fit='cover']) img { object-fit: cover; }
-  :host([fit='actual']) img { object-fit: none; }
+  .sui-media-image[fit='cover'] img { object-fit: cover; }
+  .sui-media-image[fit='actual'] img { object-fit: none; }
 
   .svg-stage {
     display: flex;
@@ -214,7 +217,7 @@ export default controller({
   },
 
   mount(state, host) {
-    // `zoomable` defaults to true; reflect the default so `:host([zoomable])`
+    // `zoomable` defaults to true; reflect the default so `.sui-media-image[zoomable]`
     // CSS + the affordance check see it when the consumer left it unset.
     if (!host.hasAttribute('zoomable')) host.setAttribute('zoomable', '')
 
@@ -358,22 +361,17 @@ export default controller({
 
 </controller>
 {#if isSvg()}
-  <div class="svg-stage" part="stage" role="img" aria-label={alt()}>
+  <div class="svg-stage stage" role="img" aria-label={alt()}>
     <span bind:this={svgEl}></span>
   </div>
 {:else}
-  <div class="stage" part="stage" tabindex="0" bind:this={stageEl}>
-    <img part="img" alt={alt()} bind:this={imgEl} />
+  <div class="stage" tabindex="0" bind:this={stageEl}>
+    <img class="img" alt={alt()} bind:this={imgEl} />
   </div>
   {#if isGallery()}
-    <ul class="strip" part="strip" role="listbox" aria-label="Image gallery" bind:this={stripEl}>
+    <ul class="strip" role="listbox" aria-label="Image gallery" bind:this={stripEl}>
       {#for item of galleryItems() key={item.id}}
-        <li
-          class="thumb"
-          part="thumb"
-          role="option"
-          aria-selected={item.selected ? 'true' : 'false'}
-        ><img src={item.url} alt="" /></li>
+        <li class="thumb" role="option" aria-selected={item.selected ? 'true' : 'false'}><img src={item.url} alt="" /></li>
       {/for}
     </ul>
   {/if}

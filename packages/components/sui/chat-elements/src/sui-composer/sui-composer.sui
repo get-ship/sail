@@ -24,17 +24,20 @@
   ─────────────────────────────────────────────────────────────────────
 -->
 
-<prop name="placeholder" type="string" default="" />
-<prop name="disabled" type="bool" default="false" reflect />
-<prop name="multiline" type="bool" default="false" reflect />
-
+<component>{
+  props: {
+    placeholder: '',
+    disabled: false,
+    multiline: false,
+  },
+}</component>
 <style>
-  :host {
+  .sui-composer {
     display: block;
     font-family: var(--font-body);
     color: var(--foreground);
   }
-  :host([hidden]) { display: none; }
+  .sui-composer[hidden] { display: none; }
 
   .frame {
     display: flex;
@@ -52,7 +55,7 @@
     border-color: var(--primary);
     box-shadow: 0 0 0 3px var(--tone-primary-ring);
   }
-  :host([disabled]) .frame {
+  .sui-composer[disabled] .frame {
     background: var(--muted);
     opacity: 0.7;
   }
@@ -177,32 +180,16 @@ export default controller({
 })
 
 </controller>
-<div class="frame" part="frame">
+<div class="frame">
   <div class="attachments">
     <slot name="attachments"></slot>
   </div>
-  <div class="row" part="row">
+  <div class="row">
     {#if multiline()}
-      <textarea
-        class="field"
-        part="field"
-        rows="1"
-        placeholder={placeholder()}
-        disabled={disabled()}
-        bind:value={text}
-        bind:this={fieldEl}
-      ></textarea>
+      <textarea class="field" rows="1" placeholder={placeholder()} disabled={disabled()} bind:value={text} bind:this={fieldEl}></textarea>
     {/if}
     {#if !multiline()}
-      <input
-        class="field"
-        part="field"
-        type="text"
-        placeholder={placeholder()}
-        disabled={disabled()}
-        bind:value={text}
-        bind:this={fieldEl}
-      />
+      <input class="field" type="text" placeholder={placeholder()} disabled={disabled()} bind:value={text} bind:this={fieldEl} />
     {/if}
     <div class="actions">
       <slot name="trailing"></slot>

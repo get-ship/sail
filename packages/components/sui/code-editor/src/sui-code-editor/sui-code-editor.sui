@@ -24,18 +24,21 @@
   ───────────────────────────────────────────────────────────────────────────
 -->
 
-<prop name="value" type="string" default="" form-value />
-<prop name="language" type="string" default="" />
-<prop name="placeholder" type="string" default="" />
-<prop name="readonly" type="bool" default="false" reflect />
-<prop name="line-numbers" type="bool" default="true" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
-<prop name="tone" values="default|info|success|warning|destructive" default="default" reflect />
-<prop name="theme" values="light|dark|auto" default="auto" reflect />
-<prop name="wasm-url" type="string" default="/sui_compiler_bg.wasm" />
-
+<component>{
+  props: {
+    value: '',
+    language: '',
+    placeholder: '',
+    readonly: false,
+    'line-numbers': true,
+    size: 'md' | 'sm' | 'lg',
+    tone: 'default' | 'info' | 'success' | 'warning' | 'destructive',
+    theme: 'auto' | 'light' | 'dark',
+    'wasm-url': '/sui_compiler_bg.wasm',
+  },
+}</component>
 <style>
-  :host {
+  .sui-code-editor {
     display: block;
     position: relative;
     overflow: hidden;
@@ -47,16 +50,16 @@
     font-size: var(--text-sm);
     line-height: 1.6;
   }
-  :host([hidden]) { display: none; }
-  :host([size="sm"]) { font-size: var(--text-xs); line-height: 1.5; }
-  :host([size="lg"]) { font-size: var(--text-base); line-height: 1.7; }
+  .sui-code-editor[hidden] { display: none; }
+  .sui-code-editor[size="sm"] { font-size: var(--text-xs); line-height: 1.5; }
+  .sui-code-editor[size="lg"] { font-size: var(--text-base); line-height: 1.7; }
 
-  :host([tone="info"])        { --ring-color: var(--tone-info-border); }
-  :host([tone="success"])     { --ring-color: var(--tone-success-border); }
-  :host([tone="warning"])     { --ring-color: var(--tone-warning-border); }
-  :host([tone="destructive"]) { --ring-color: var(--tone-destructive-border); }
+  .sui-code-editor[tone="info"]        { --ring-color: var(--tone-info-border); }
+  .sui-code-editor[tone="success"]     { --ring-color: var(--tone-success-border); }
+  .sui-code-editor[tone="warning"]     { --ring-color: var(--tone-warning-border); }
+  .sui-code-editor[tone="destructive"] { --ring-color: var(--tone-destructive-border); }
 
-  :host(:focus-within) {
+  .sui-code-editor:focus-within {
     outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
   }
@@ -71,7 +74,7 @@
   .editor-root .cm-scroller { overflow: auto; }
 
   @media (forced-colors: active) {
-    :host { outline: 1px solid CanvasText; }
+    .sui-code-editor { outline: 1px solid CanvasText; }
   }
 </style>
 
@@ -450,8 +453,4 @@ function makeCompletionSource(src: SuiCompletionSource) {
 }
 
 </controller>
-<div
-  class="editor-root"
-  part="editor"
-  bind:this={editorHost}
-></div>
+<div class="editor-root editor" bind:this={editorHost}></div>

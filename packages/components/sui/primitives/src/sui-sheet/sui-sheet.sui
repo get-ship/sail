@@ -30,8 +30,8 @@
     the fill-handle stay raw — sx has no grid-template, no
     position:absolute + box-sizing composition that fits this layout,
     and the editor needs single-side box-shadows with raw values.
-  - The `<variants part="cell" show-gridlines: …>` block is GONE — the
-    show-gridlines cell borders live as a plain :host([show-gridlines])
+  - The `<variants class="cell" show-gridlines: …>` block is GONE — the
+    show-gridlines cell borders live as a plain .sui-sheet[show-gridlines]
     rule in <style>. The conditional is on the host attribute, not on
     a per-element part, so a host-scoped rule is the natural home.
   - The cell editor remains a hand-styled `<input class="cell-editor">`.
@@ -78,7 +78,7 @@
   --panel-max-h-md: ; --card: ; --text-base: ; --font-body: ;
 
   /* The host is a block-level surface that owns the density channel. */
-  :host {
+  .sui-sheet {
     display: block;
     width: 100%;
     font-family: var(--font-body);
@@ -87,7 +87,7 @@
     --sheet-radius: var(--radius-lg);
     --sheet-header-w: var(--space-8);
   }
-  :host([hidden]) { display: none; }
+  .sui-sheet[hidden] { display: none; }
 
   /* Grid — the 2×2 quadrant surface. Background, border, radius, and
    * shadow are sx; the grid-template + overflow + position context
@@ -171,7 +171,7 @@
     overflow: hidden;
     white-space: nowrap;
   }
-  :host([show-gridlines]) .cell {
+  .sui-sheet[show-gridlines] .cell {
     border-right-color: var(--divider);
     border-bottom-color: var(--divider);
   }
@@ -474,21 +474,10 @@ export default controller({
 })
 
 </controller>
-<div
-  class="grid"
-  part="grid"
-  role="grid"
-  tabindex="0"
-  bind:this={gridEl}
-  sx="bg:surface-1 border:border radius:lg shadow:xs"
-  aria-label={label() || null}
-  aria-rowcount={rowCount()}
-  aria-colcount={colCount()}
-  aria-multiselectable={selectionMode() === 'multi' ? 'true' : null}
->
-  <div class="corner" part="corner" sx="bg:surface-2" role="presentation"></div>
+<div class="grid" role="grid" tabindex="0" bind:this={gridEl} sx="bg:surface-1 border:border radius:lg shadow:xs" aria-label={label() || null} aria-rowcount={rowCount()} aria-colcount={colCount()} aria-multiselectable={selectionMode() === 'multi' ? 'true' : null}>
+  <div class="corner" sx="bg:surface-2" role="presentation"></div>
 
-  <div class="col-headers" part="col-headers" sx="bg:surface-2" role="rowgroup">
+  <div class="col-headers" sx="bg:surface-2" role="rowgroup">
     {#if showHeaders()}
       {#for h of cols() key={h.index}}
         <div
@@ -502,7 +491,7 @@ export default controller({
     {/if}
   </div>
 
-  <div class="row-headers" part="row-headers" sx="bg:surface-2" role="rowgroup">
+  <div class="row-headers" sx="bg:surface-2" role="rowgroup">
     {#if showHeaders()}
       {#for r of rows() key={r.index}}
         <div
@@ -517,49 +506,18 @@ export default controller({
     {/if}
   </div>
 
-  <div class="viewport" part="viewport" role="rowgroup" bind:this={viewportEl}>
+  <div class="viewport" role="rowgroup" bind:this={viewportEl}>
     <div class="spacer" style:height={`${totalHeight()}px`} style:width={`${totalWidth()}px`}>
       {#for c of cells() key={c.key}}
-        <div
-          class="cell"
-          part="cell"
-          role="gridcell"
-          data-a1={c.a1}
-          aria-rowindex={c.row + 1}
-          aria-colindex={c.col + 1}
-          aria-selected={c.cell().isInSelection ? 'true' : null}
-          data-active={c.cell().isActive ? true : null}
-          data-selected={c.cell().isInSelection ? true : null}
-          class:align-end={c.cell().format.align === 'end'}
-          class:align-center={c.cell().format.align === 'center'}
-          style:top={`${c.top}px`}
-          style:left={`${c.left}px`}
-          style:width={`${c.width}px`}
-          style:height={`${c.height}px`}
-        >{c.cell().display}</div>
+        <div class="cell" role="gridcell" data-a1={c.a1} aria-rowindex={c.row + 1} aria-colindex={c.col + 1} aria-selected={c.cell().isInSelection ? 'true' : null} data-active={c.cell().isActive ? true : null} data-selected={c.cell().isInSelection ? true : null} class:align-end={c.cell().format.align === 'end'} class:align-center={c.cell().format.align === 'center'} style:top={`${c.top}px`} style:left={`${c.left}px`} style:width={`${c.width}px`} style:height={`${c.height}px`}>{c.cell().display}</div>
       {/for}
 
       {#if editor()}
-        <input
-          class="cell-editor"
-          part="cell-editor"
-          aria-label="Cell editor"
-          bind:this={editorEl}
-          style:top={`${editor().top}px`}
-          style:left={`${editor().left}px`}
-          style:width={`${editor().width}px`}
-          style:height={`${editor().height}px`}
-        />
+        <input class="cell-editor" aria-label="Cell editor" bind:this={editorEl} style:top={`${editor().top}px`} style:left={`${editor().left}px`} style:width={`${editor().width}px`} style:height={`${editor().height}px`} />
       {/if}
 
       {#if fillHandle()}
-        <div
-          class="fill-handle"
-          part="fill-handle"
-          role="presentation"
-          style:top={`${fillHandle().top}px`}
-          style:left={`${fillHandle().left}px`}
-        ></div>
+        <div class="fill-handle" role="presentation" style:top={`${fillHandle().top}px`} style:left={`${fillHandle().left}px`}></div>
       {/if}
     </div>
   </div>

@@ -25,24 +25,27 @@
   Parts: track · fill
 -->
 
-<prop name="value" type="number" default="0" reflect />
-<prop name="min" type="number" default="0" />
-<prop name="max" type="number" default="100" />
-<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="" reflect />
-<prop name="low-threshold" type="number" default="0" />
-<prop name="high-threshold" type="number" default="0" />
-<prop name="size" type="number" default="140" />
-<prop name="thickness" type="number" default="12" />
-<prop name="label" type="string" default="gauge" />
-<prop name="loading" type="bool" default="false" reflect />
-
+<component>{
+  props: {
+    value: 0,
+    min: 0,
+    max: 100,
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
+    'low-threshold': 0,
+    'high-threshold': 0,
+    size: 140,
+    thickness: 12,
+    label: 'gauge',
+    loading: false,
+  },
+}</component>
 <style>
-  :host {
+  .sui-gauge {
     display: inline-block;
     position: relative;
     transition: opacity var(--duration-fast) var(--ease-out);
   }
-  :host([hidden]) { display: none; }
+  .sui-gauge[hidden] { display: none; }
   svg { display: block; }
   .track { stroke: var(--muted); }
   .gauge-label {
@@ -58,7 +61,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    :host { transition: none; }
+    .sui-gauge { transition: none; }
   }
 </style>
 
@@ -118,31 +121,19 @@ export default controller({
 
 </controller>
 {#if loading()}
-  <span skeleton shape="circle" size="lg" part="loading" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
+  <span class="loading" skeleton shape="circle" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
 {:else if chart.error()}
-  <error-state part="error"></error-state>
+  <error-state class="error"></error-state>
 {:else}
   <svg
     viewBox={'0 0 ' + size() + ' ' + size()}
     role="img"
     aria-label={ariaLabel()}
     style={'width:' + size() + 'px;height:' + size() + 'px'}>
-    <path
-      class="track"
-      part="track"
-      d={arc().trackD}
-      fill="none"
-      stroke-width={thickness()}
-      stroke-linecap="round">
+    <path class="track" d={arc().trackD} fill="none" stroke-width={thickness()} stroke-linecap="round">
     </path>
     {#if arc().fillD}
-      <path
-        part="fill"
-        d={arc().fillD}
-        fill="none"
-        stroke={arc().color}
-        stroke-width={thickness()}
-        stroke-linecap="round">
+      <path class="fill" d={arc().fillD} fill="none" stroke={arc().color} stroke-width={thickness()} stroke-linecap="round">
       </path>
     {/if}
   </svg>

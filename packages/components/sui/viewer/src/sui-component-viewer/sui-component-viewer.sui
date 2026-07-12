@@ -31,16 +31,19 @@
   viewer is read-only over an injected source (the no-IDE fence).
 -->
 
-<prop name="component-name" type="string" default="" reflect />
-<prop name="viewport-width" values="full|desktop|tablet|mobile" default="full" reflect />
-
+<component>{
+  props: {
+    'component-name': '',
+    'viewport-width': 'full' | 'desktop' | 'tablet' | 'mobile',
+  },
+}</component>
 <style>
-  :host {
+  .sui-component-viewer {
     display: block;
     font-family: var(--font-body);
     color: var(--foreground);
   }
-  :host([hidden]) { display: none; }
+  .sui-component-viewer[hidden] { display: none; }
 
   .layout {
     display: grid;
@@ -254,44 +257,30 @@ export default controller({
 
 </controller>
 <sui-error-boundary fallback-text="The viewer threw while composing.">
-  <column gap="4" class="layout" part="layout">
+  <column gap="4" class="layout">
 
     <!-- The live render stage (view-mode over the source signal). A flip of the
          host's source signal re-derives sourceText() → the stage re-mounts. The
          stage also receives propValues so a host mounting by tag patches in
          place; in source-mode they are simply unused. -->
-    <div class="stage-shell" part="stage-shell">
-      <sui-render
-        part="stage"
-        mode={componentName() !== '' ? 'tag' : 'source'}
-        component-name={componentName()}
-        viewport-width={viewportWidth()}
-        prop:compile={compile()}
-        prop:source={sourceText()}
-        prop:prop-values={propValues()}
-        prop:slots={slots()}
-      ></sui-render>
+    <div class="stage-shell">
+      <sui-render class="stage" mode={componentName() !== '' ? 'tag' : 'source'} component-name={componentName()} viewport-width={viewportWidth()} prop:compile={compile()} prop:source={sourceText()} prop:prop-values={propValues()} prop:slots={slots()}></sui-render>
     </div>
 
     <!-- The CEM-driven playground. HIDDEN (not errored) in no-CEM degraded mode.
          Reads the shared 'viewer:propValues' via useShared; falls back to
          prop:value when detached. -->
-    <sui-prop-knobs
-      part="knobs"
-      hidden={showInspector() ? null : true}
-      prop:props={cem()}
-      prop:value={propValues()}
-    ></sui-prop-knobs>
+    <sui-prop-knobs class="knobs" hidden={showInspector() ? null : true} prop:props={cem()} prop:value={propValues()}></sui-prop-knobs>
 
     <!-- The inspector tabs: flip the state-matrix / props-table / source. -->
-    <sui-tabs active="source" variant="underline" size="sm" part="tabs">
+    <sui-tabs class="tabs" active="source" variant="underline" size="sm">
       <sui-tab name="source">Source</sui-tab>
       {#if showInspector()}
         <sui-tab name="matrix">States</sui-tab>
         <sui-tab name="props">Props</sui-tab>
       {/if}
 
-      <sui-tab-panel name="source" part="source-panel">
+      <sui-tab-panel class="source-panel" name="source">
         <sui-source-panel
           component-name={componentName()}
           prop:source={sourceText()}
@@ -301,7 +290,7 @@ export default controller({
         ></sui-source-panel>
       </sui-tab-panel>
 
-      <sui-tab-panel name="matrix" part="matrix-panel">
+      <sui-tab-panel class="matrix-panel" name="matrix">
         <sui-prop-matrix
           hidden={showInspector() ? null : true}
           component-name={componentName()}
@@ -313,38 +302,33 @@ export default controller({
         ></sui-prop-matrix>
       </sui-tab-panel>
 
-      <sui-tab-panel name="props" part="props-panel">
-        <div
-          class="panel"
-          part="props-table-shell"
-          data-props-table
-          hidden={showInspector() ? null : true}
-        >
-          <div class="section-head" part="props-head">
-            <span class="meta-label" part="meta-label">{meta()}</span>
+      <sui-tab-panel class="props-panel" name="props">
+        <div class="panel props-table-shell" data-props-table hidden={showInspector() ? null : true}>
+          <div class="section-head props-head">
+            <span class="meta-label">{meta()}</span>
           </div>
 
           {#if propRows().length === 0}
-            <empty-state part="props-empty"></empty-state>
+            <empty-state class="props-empty"></empty-state>
           {:else}
-            <div class="props-table" part="props-table" role="table">
+            <div class="props-table" role="table">
               {#for row of propRows() key={row.name}}
-                <div class="prop-row" part="prop-row" data-prop-row role="row">
-                  <span class="prop-name" part="prop-name" role="cell">{row.name}</span>
-                  <span class="prop-type" part="prop-type" role="cell">
+                <div class="prop-row" data-prop-row role="row">
+                  <span class="prop-name" role="cell">{row.name}</span>
+                  <span class="prop-type" role="cell">
                     <code sx="py:1 px:2 radius:sm bg:surface-2 fg:foreground border:subtle text:sm">{row.type}</code>
                   </span>
-                  <span class="prop-default" part="prop-default" role="cell">{row.def}</span>
+                  <span class="prop-default" role="cell">{row.def}</span>
                 </div>
               {/for}
             </div>
           {/if}
 
-          <div class="section" part="slots-section" data-slots-section>
+          <div class="section slots-section" data-slots-section>
             {#if hasSlots()}
-              <span class="meta-label" part="slots-label">Slots</span>
+              <span class="meta-label slots-label">Slots</span>
             {:else}
-              <empty-state part="slots-empty"></empty-state>
+              <empty-state class="slots-empty"></empty-state>
             {/if}
           </div>
         </div>

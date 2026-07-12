@@ -91,7 +91,7 @@
     not a host custom property). Confirmed by grep across the feat/next tree
     before dropping; no behavior lost.
   - Stripe visibility simplified from 7 enumerated tone selectors to
-    `:host(:not([tone='default']))` — behaviorally identical (tone is always
+    `.sui-toast:not([tone='default'])` — behaviorally identical (tone is always
     one of the 8 reflected values; "not default" ≡ "one of the other 7").
 
   No new LANG-GAP. The control-skin gap the alert pilot surfaced (framework
@@ -132,12 +132,12 @@
 </variants>
 
 <style>
-  :host {
+  .sui-toast {
     display: block;
     pointer-events: auto;
     will-change: transform, opacity;
   }
-  :host([hidden]) { display: none; }
+  .sui-toast[hidden] { display: none; }
 
   .toast {
     display: grid;
@@ -148,9 +148,9 @@
     font-family: var(--font-body);
     padding-right: calc(var(--space-3_5) + var(--icon-size-2xl));
   }
-  :host([size='sm']) .toast { column-gap: var(--space-2); padding-right: calc(var(--space-3) + var(--icon-size-2xl)); }
-  :host([size='lg']) .toast { column-gap: var(--space-3); padding-right: calc(var(--space-4) + var(--icon-size-2xl)); }
-  :host([data-no-icon]) .toast { grid-template-columns: 1fr auto; }
+  .sui-toast[size='sm'] .toast { column-gap: var(--space-2); padding-right: calc(var(--space-3) + var(--icon-size-2xl)); }
+  .sui-toast[size='lg'] .toast { column-gap: var(--space-3); padding-right: calc(var(--space-4) + var(--icon-size-2xl)); }
+  .sui-toast[data-no-icon] .toast { grid-template-columns: 1fr auto; }
 
   .toast::before {
     content: '';
@@ -162,7 +162,7 @@
     opacity: 0;
     transition: opacity var(--duration-fast) var(--ease-out);
   }
-  :host(:not([tone='default'])) .toast::before { opacity: 1; }
+  .sui-toast:not([tone='default']) .toast::before { opacity: 1; }
 
   .icon {
     display: inline-flex;
@@ -171,12 +171,12 @@
     flex-shrink: 0;
   }
   .icon svg { display: block; width: var(--icon-size-sm); height: var(--icon-size-sm); }
-  :host([size='sm']) .icon svg { width: var(--icon-size-xs); height: var(--icon-size-xs); }
-  :host([size='lg']) .icon svg { width: var(--icon-size-lg); height: var(--icon-size-lg); }
-  :host([data-no-icon]) .icon { display: none; }
+  .sui-toast[size='sm'] .icon svg { width: var(--icon-size-xs); height: var(--icon-size-xs); }
+  .sui-toast[size='lg'] .icon svg { width: var(--icon-size-lg); height: var(--icon-size-lg); }
+  .sui-toast[data-no-icon] .icon { display: none; }
 
   .body { word-break: break-word; }
-  :host([data-no-title]) .title { display: none; }
+  .sui-toast[data-no-title] .title { display: none; }
 
   .actions { grid-column: 2; }
 
@@ -193,8 +193,8 @@
     transform-origin: left center;
     animation: sui-toast-progress var(--toast-duration) linear forwards;
   }
-  :host(:hover) .progress,
-  :host([data-paused]) .progress { animation-play-state: paused; }
+  .sui-toast:hover .progress,
+  .sui-toast[data-paused] .progress { animation-play-state: paused; }
   @keyframes sui-toast-progress {
     from { transform: scaleX(1); }
     to   { transform: scaleX(0); }
@@ -388,14 +388,7 @@ export default controller({
   `dismiss()` to remove the host).
 -->
 {#if visible()}
-<div class="toast"
-  in:slide={{ axis: 'y', duration: 200 }}
-  out:fade={{ duration: 180 }}
-  role={tone() === 'destructive' || tone() === 'warning' ? 'alert' : 'status'}
-  aria-live={tone() === 'destructive' || tone() === 'warning' ? 'assertive' : 'polite'}
-  aria-atomic="true"
-  part="toast"
-  sx="position:relative overflow:hidden radius:lg shadow:lg text:base leading:normal py:3 px:3_5 min-w:panel-min-w-md max-w:panel-max-w-md bg:tone-bg border:tone-border fg:card-foreground">
+<div class="toast" in:slide={{ axis: 'y', duration: 200 }} out:fade={{ duration: 180 }} role={tone() === 'destructive' || tone() === 'warning' ? 'alert' : 'status'} aria-live={tone() === 'destructive' || tone() === 'warning' ? 'assertive' : 'polite'} aria-atomic="true" sx="position:relative overflow:hidden radius:lg shadow:lg text:base leading:normal py:3 px:3_5 min-w:panel-min-w-md max-w:panel-max-w-md bg:tone-bg border:tone-border fg:card-foreground">
   <span class="icon"
     sx="w:control-h-xs h:control-h-xs radius:md bg:tone-bg fg:tone-fg">
     <slot name="icon" bind:this={iconSlotEl}></slot>
@@ -443,8 +436,7 @@ export default controller({
     </row>
   </column>
   {#if dismissible()}
-    <button ghost xs class="close" part="close" type="button" aria-label="Dismiss notification" bind:this={closeBtn}
-      sx="position:absolute z:elevated">
+    <button ghost xs class="close" type="button" aria-label="Dismiss notification" bind:this={closeBtn} sx="position:absolute z:elevated">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" sx="w:icon-size-xs h:icon-size-xs">
         <line x1="18" y1="6" x2="6" y2="18"></line>
         <line x1="6" y1="6" x2="18" y2="18"></line>

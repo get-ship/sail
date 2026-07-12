@@ -1,7 +1,10 @@
-<prop name="title" type="string" default="" />
-<prop name="body" type="string" default="" />
-<prop name="tags" type="string" default="[]" />
-
+<component>{
+  props: {
+    title: '',
+    body: '',
+    tags: '[]',
+  },
+}</component>
 <div>
   <span data-testid="title">{title()}</span>
   <button data-testid="toggle" on:click={() => expanded.set(!expanded())}>toggle</button>

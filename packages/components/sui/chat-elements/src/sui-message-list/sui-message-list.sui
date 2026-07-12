@@ -23,15 +23,18 @@
   ─────────────────────────────────────────────────────────────────────
 -->
 
-<prop name="sticky-bottom" type="bool" default="true" reflect />
-
+<component>{
+  props: {
+    'sticky-bottom': true,
+  },
+}</component>
 <style>
-  :host {
+  .sui-message-list {
     display: block;
     min-height: 0;
     font-family: var(--font-body);
   }
-  :host([hidden]) { display: none; }
+  .sui-message-list[hidden] { display: none; }
 
   .scroll {
     position: relative;
@@ -189,10 +192,10 @@ export default controller({
 })
 
 </controller>
-<div class="scroll" part="scroll" bind:this={scrollEl}>
-  <div class="spacer" part="spacer" style:height={`${totalSize()}px`}>
+<div class="scroll" bind:this={scrollEl}>
+  <div class="spacer" style:height={`${totalSize()}px`}>
     {#for w of windowItems() key={w.key}}
-      <div class="row" part="row" style:transform={`translateY(${w.start}px)`}>
+      <div class="row" style:transform={`translateY(${w.start}px)`}>
         <sui-message
           role={w.item.role || 'assistant'}
           content-type={w.item.contentType || 'text'}

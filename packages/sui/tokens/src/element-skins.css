@@ -944,12 +944,10 @@ label { display: inline-block; }
 
 /* error-boundary */
 
-  /* A healthy boundary is INVISIBLE to layout: `display: contents` on both the
-     root and the content wrapper means the protected children lay out against
-     the boundary's parent exactly as if the boundary were not in the tree. That
-     matters — a boundary is something you wrap around things you already laid
-     out, and it must not disturb them. `display: none` beats `contents` on the
-     caught branch, so the swap is a pure CSS gate on [data-caught]. */
+  /* A healthy boundary is invisible to layout: `display: contents` on both the
+     root and the content wrapper lays the protected children out against the
+     boundary's parent, as if the boundary were not in the tree. You wrap one
+     around markup you have already laid out; it must not disturb it. */
   .sui-error-boundary { display: contents; }
   .sui-error-boundary > .content { display: contents; }
   .sui-error-boundary[data-caught] > .content { display: none; }

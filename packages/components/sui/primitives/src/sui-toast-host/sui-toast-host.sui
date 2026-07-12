@@ -37,19 +37,22 @@
   ──────────────────────────────────────────────────────────────────────────────
 -->
 
-<prop name="position" values="top-left|top-center|top-right|bottom-left|bottom-center|bottom-right" default="bottom-right" reflect />
-
+<component>{
+  props: {
+    position: 'bottom-right' | 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center',
+  },
+}</component>
 <variants>
   [hidden]: display:none
 </variants>
 
-<!-- Residual: the :host { display: contents } declaration — a passthrough
+<!-- Residual: the .sui-toast-host { display: contents } declaration — a passthrough
      display value the layout keywords don't express (it's a CSS
      keyword that makes the element's box disappear from layout flow
      while its children participate normally). Sx has no `contents`
      keyword and the varianted [hidden] doesn't cover it. -->
 <style>
-  :host { display: contents; }
+  .sui-toast-host { display: contents; }
 </style>
 
 

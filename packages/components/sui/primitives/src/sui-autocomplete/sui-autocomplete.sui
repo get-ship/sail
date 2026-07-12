@@ -24,8 +24,8 @@
   NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
   ─────────────────────────────────────────────────────────────────────
   - tone/size are GLOBAL framework channels now (contracts.css). feat/next
-    hand-rolled `:host([tone='x']) { --tone-border: …; --tone-ring: … }`
-    and `:host([size='x']) { --h: …; --fs: …; --px: … }` directly in its
+    hand-rolled `.sui-autocomplete[tone='x'] { --tone-border: …; --tone-ring: … }`
+    and `.sui-autocomplete[size='x'] { --h: …; --fs: …; --px: … }` directly in its
     own residual style block (no theme directive even there — an older
     pattern still, same as sui-combobox). Both are DELETED; this skin
     reads var(--tone-border)/var(--tone-ring) and var(--size-h)/
@@ -64,22 +64,25 @@
   residual rule, same shape as feat/next.
 -->
 
-<prop name="name" type="string" default="" />
-<prop name="value" type="string" default="" form-value />
-<prop name="placeholder" type="string" default="" />
-<prop name="suggestions" type="string" default="" />
-<prop name="disabled" type="bool" default="false" reflect form-disabled />
-<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
-
+<component>{
+  props: {
+    name: '',
+    value: '',
+    placeholder: '',
+    suggestions: '',
+    disabled: false,
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
+    size: 'md' | 'sm' | 'lg',
+  },
+}</component>
 <host sx="position:relative display:inline-flex w:full"></host>
 
-<variants part="wrap">
+<variants class="wrap">
   [disabled]: bg:muted cursor:not-allowed opacity:50
 </variants>
 
 <style>
-  :host {
+  .sui-autocomplete {
     flex-direction: column;
     vertical-align: middle;
   }
@@ -330,26 +333,11 @@ export default controller({
 })
 
 </controller>
-<div class="wrap" part="wrap"
-  sx="display:inline-flex w:full min-h:size-h px:size-px bg:surface-1 border:tone-border radius:md shadow:xs">
-  <svg class="search-icon" part="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
-    sx="w:icon-size-sm h:icon-size-sm fg:muted-foreground">
+<div class="wrap" sx="display:inline-flex w:full min-h:size-h px:size-px bg:surface-1 border:tone-border radius:md shadow:xs">
+  <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" sx="w:icon-size-sm h:icon-size-sm fg:muted-foreground">
     <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
   </svg>
-  <input
-    class="entry"
-    part="input"
-    type="text"
-    name={name()}
-    placeholder={placeholder()}
-    disabled={disabled()}
-    autocomplete="off"
-    autocapitalize="off"
-    spellcheck="false"
-    role="combobox"
-    aria-autocomplete="list"
-    aria-expanded={open() && filtered().length > 0 ? 'true' : 'false'}
+  <input class="entry input" type="text" name={name()} placeholder={placeholder()} disabled={disabled()} autocomplete="off" autocapitalize="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded={open() && filtered().length> 0 ? 'true' : 'false'}
     aria-controls={listId()}
     aria-activedescendant={activeId()}
     bind:value={value}
@@ -358,9 +346,7 @@ export default controller({
   />
 </div>
 {#if open() && filtered().length > 0 && !disabled()}
-  <ul class="listbox" part="listbox" role="listbox" id={listId()}
-      bind:this={listEl}
-      sx="position:absolute m:0 p:1 max-h:panel-max-h-sm overflow-y:auto bg:popover fg:popover-foreground border:border radius:md shadow:md z:popover">
+  <ul class="listbox" role="listbox" id={listId()} bind:this={listEl} sx="position:absolute m:0 p:1 max-h:panel-max-h-sm overflow-y:auto bg:popover fg:popover-foreground border:border radius:md shadow:md z:popover">
     {#for s of filtered() key={s.id}}
       <li
         class="opt"

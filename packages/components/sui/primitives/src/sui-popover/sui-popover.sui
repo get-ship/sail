@@ -34,8 +34,8 @@
   --panel-min-w-sm: ; --radius-lg: ; --shadow-lg: ;
   --popover: ; --popover-foreground: ; --card-backdrop-filter: ;
 
-  :host { display: inline-flex; }
-  :host([hidden]) { display: none; }
+  .sui-popover { display: inline-flex; }
+  .sui-popover[hidden] { display: none; }
 
   /* Native popover defaults are aggressive (position:fixed, inset:0, big
      margins). Reset to a layout-neutral container; use:anchor sets the real
@@ -168,11 +168,9 @@ export default controller<Scope>({
 -->
 
 <slot name="trigger" bind:this={triggerSlot}></slot>
-<div class="panel" part="panel" popover="auto" bind:this={panelEl}
-  use:anchor={placement()} role="dialog" aria-modal="false">
+<div class="panel" popover="auto" bind:this={panelEl} use:anchor={placement()} role="dialog" aria-modal="false">
   {#if open()}
-    <div class="surface" part="surface" transition:scale={{ duration: 120 }}
-      sx="min-w:panel-min-w-sm p:2 bg:popover fg:popover-foreground border:border radius:md text:base">
+    <div class="surface" transition:scale={{ duration: 120 }} sx="min-w:panel-min-w-sm p:2 bg:popover fg:popover-foreground border:border radius:md text:base">
       <slot></slot>
     </div>
   {/if}

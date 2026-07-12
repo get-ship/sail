@@ -63,34 +63,37 @@
   ──────────────────────────────────────────────────────────────────────────────
 -->
 
-<prop name="type" values="text|search|email|url|tel|password|number" default="text" reflect />
-<prop name="value" type="string" default="" form-value />
-<prop name="placeholder" type="string" default="" />
-<prop name="name" type="string" default="" />
-<prop name="autocomplete" type="string" default="" />
-<prop name="required" type="bool" default="false" reflect />
-<prop name="disabled" type="bool" default="false" reflect form-disabled />
-<prop name="readonly" type="bool" default="false" reflect />
-<prop name="invalid" type="bool" default="false" reflect />
-<prop name="loading" type="bool" default="false" reflect />
-<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
-<prop name="variant" values="default|ghost" default="default" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
-<prop name="label" type="string" default="" />
-<prop name="described-by" type="string" default="" />
-<prop name="error-message" type="string" default="" />
-
+<component>{
+  props: {
+    type: 'text' | 'search' | 'email' | 'url' | 'tel' | 'password' | 'number',
+    value: '',
+    placeholder: '',
+    name: '',
+    autocomplete: '',
+    required: false,
+    disabled: false,
+    readonly: false,
+    invalid: false,
+    loading: false,
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
+    variant: 'default' | 'ghost',
+    size: 'md' | 'sm' | 'lg',
+    label: '',
+    'described-by': '',
+    'error-message': '',
+  },
+}</component>
 <variants>
   [hidden]:  display:none
 </variants>
-<variants part="wrap">
+<variants class="wrap">
   focus-within: border:tone-ring
 </variants>
 
 <!-- Residual: host column layout (flex column + gap + width — no layout
      primitive for the input+error vertical stack); compound descendant
      state selectors (`.wrap:hover:not(:focus-within)`) — variants only
-     target :host attrs; the inner <input> element styling (no sx, no
+     target .sui-input attrs; the inner <input> element styling (no sx, no
      shadow part, native form control); ::placeholder/::slotted pseudo-
      elements (no sx story); multi-property transition (motion);
      @keyframes (animation); forced-colors CanvasText focus outline
@@ -99,7 +102,7 @@
      (no sx prop for per-side color); the .error/--input-icon local vars
      + .wrap layout detail. -->
 <style>
-  :host {
+  .sui-input {
     display: inline-flex;
     flex-direction: column;
     gap: var(--space-1);
@@ -118,24 +121,24 @@
     --input-px: var(--density-row-px);
     --input-icon: var(--icon-size-sm);
   }
-  :host([tone='primary'])     { --tone-border: var(--primary);          --tone-ring: var(--primary);          --tone-ring-soft: var(--tone-primary-border); }
-  :host([tone='info'])        { --tone-border: var(--info);             --tone-ring: var(--info);             --tone-ring-soft: var(--tone-info-border); }
-  :host([tone='success'])     { --tone-border: var(--success);          --tone-ring: var(--success);          --tone-ring-soft: var(--tone-success-border); }
-  :host([tone='warning'])     { --tone-border: var(--warning);          --tone-ring: var(--warning);          --tone-ring-soft: var(--tone-warning-border); }
-  :host([tone='destructive']) { --tone-border: var(--destructive);      --tone-ring: var(--destructive);      --tone-ring-soft: var(--tone-destructive-border); }
-  :host([tone='accent'])      { --tone-border: var(--accent);           --tone-ring: var(--accent);           --tone-ring-soft: var(--tone-accent-border); }
-  :host([tone='muted'])       { --tone-border: var(--muted-foreground); --tone-ring: var(--muted-foreground); --tone-ring-soft: var(--border-subtle); }
+  .sui-input[tone='primary']     { --tone-border: var(--primary);          --tone-ring: var(--primary);          --tone-ring-soft: var(--tone-primary-border); }
+  .sui-input[tone='info']        { --tone-border: var(--info);             --tone-ring: var(--info);             --tone-ring-soft: var(--tone-info-border); }
+  .sui-input[tone='success']     { --tone-border: var(--success);          --tone-ring: var(--success);          --tone-ring-soft: var(--tone-success-border); }
+  .sui-input[tone='warning']     { --tone-border: var(--warning);          --tone-ring: var(--warning);          --tone-ring-soft: var(--tone-warning-border); }
+  .sui-input[tone='destructive'] { --tone-border: var(--destructive);      --tone-ring: var(--destructive);      --tone-ring-soft: var(--tone-destructive-border); }
+  .sui-input[tone='accent']      { --tone-border: var(--accent);           --tone-ring: var(--accent);           --tone-ring-soft: var(--tone-accent-border); }
+  .sui-input[tone='muted']       { --tone-border: var(--muted-foreground); --tone-ring: var(--muted-foreground); --tone-ring-soft: var(--border-subtle); }
   /* Invalid overrides tone: a destructive border/ring regardless of [tone]
      (parity with feat/next — restores the error affordance dropped in port). */
-  :host([invalid])            { --tone-border: var(--destructive);      --tone-ring: var(--destructive);      --tone-ring-soft: var(--tone-destructive-border); }
-  :host([size='sm']) { --input-h: var(--control-h-sm); --input-fs: var(--text-xs); --input-px: var(--space-2); --input-icon: var(--icon-size-xs); }
-  :host([size='lg']) { --input-h: var(--control-h-lg); --input-fs: var(--text-sm); --input-px: var(--space-3); --input-icon: var(--icon-size-md); }
-  :host([variant='ghost']) { --tone-border: transparent; }
-  :host([variant='default']:not([disabled])) [part~='wrap']:hover:not(:focus-within) {
+  .sui-input[invalid]            { --tone-border: var(--destructive);      --tone-ring: var(--destructive);      --tone-ring-soft: var(--tone-destructive-border); }
+  .sui-input[size='sm'] { --input-h: var(--control-h-sm); --input-fs: var(--text-xs); --input-px: var(--space-2); --input-icon: var(--icon-size-xs); }
+  .sui-input[size='lg'] { --input-h: var(--control-h-lg); --input-fs: var(--text-sm); --input-px: var(--space-3); --input-icon: var(--icon-size-md); }
+  .sui-input[variant='ghost'] { --tone-border: transparent; }
+  .sui-input[variant='default']:not([disabled]) [part~='wrap']:hover:not(:focus-within) {
     border-color: var(--border-strong);
     box-shadow: var(--shadow-sm);
   }
-  :host([variant='ghost']:not([disabled])) [part~='wrap']:hover:not(:focus-within) {
+  .sui-input[variant='ghost']:not([disabled]) [part~='wrap']:hover:not(:focus-within) {
     background: var(--tone-muted-bg);
     border-color: transparent;
     box-shadow: none;
@@ -156,13 +159,13 @@
       border-color var(--duration-fast) var(--ease-out),
       box-shadow var(--duration-fast) var(--ease-out);
   }
-  [part~='wrap']:host([variant='ghost']) { border-color: transparent; }
-  :host([variant='ghost']) [part~='wrap'] {
+  [part~='wrap'].sui-input[variant='ghost'] { border-color: transparent; }
+  .sui-input[variant='ghost'] [part~='wrap'] {
     border-color: transparent;
     background: transparent;
     box-shadow: none;
   }
-  :host([disabled]) [part~='wrap'] {
+  .sui-input[disabled] [part~='wrap'] {
     background: var(--muted);
     border-color: var(--border-subtle);
     box-shadow: none;
@@ -256,24 +259,9 @@ export default controller<Scope>({
 })
 
 </controller>
-<row class="wrap" part="wrap" align="center" gap="2">
+<row class="wrap" align="center" gap="2">
   <slot name="leading" reflect-empty="data-no-leading"></slot>
-  <input
-    part="input"
-    type={type()}
-    placeholder={placeholder()}
-    name={name()}
-    autocomplete={autocomplete() || 'off'}
-    disabled={disabled()}
-    readonly={readonly()}
-    required={required()}
-    aria-label={label()}
-    aria-invalid={invalid() ? 'true' : 'false'}
-    aria-required={required() ? 'true' : 'false'}
-    aria-busy={loading() ? 'true' : 'false'}
-    bind:value={value}
-    bind:this={inputEl}
-  />
+  <input class="input" type={type()} placeholder={placeholder()} name={name()} autocomplete={autocomplete() || 'off'} disabled={disabled()} readonly={readonly()} required={required()} aria-label={label()} aria-invalid={invalid() ? 'true' : 'false'} aria-required={required() ? 'true' : 'false'} aria-busy={loading() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
   {#if loading()}
     <span class="spinner" aria-hidden="true"></span>
   {:else}

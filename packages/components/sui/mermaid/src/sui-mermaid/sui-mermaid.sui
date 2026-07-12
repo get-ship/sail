@@ -17,16 +17,19 @@
   <div> — the sanctioned, purity-lint-clean path for reactive innerHTML.
 -->
 
-<prop name="value" type="string" default="" reflect />
-
+<component>{
+  props: {
+    value: '',
+  },
+}</component>
 <style>
-  :host {
+  .sui-mermaid {
     display: block;
     min-width: 0;
     font-family: var(--font-body);
     color: var(--foreground);
   }
-  :host([hidden]) { display: none; }
+  .sui-mermaid[hidden] { display: none; }
 
   /* The rendered SVG fills the host width; mermaid's useMaxWidth keeps it
      responsive. Centered so smaller diagrams sit nicely in a card frame. */

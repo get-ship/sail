@@ -27,12 +27,12 @@
 <component>{ light: true }</component>
 
 <style>
-  :host {
+  .sui-prop-knobs {
     display: block;
     font-family: var(--font-body);
     color: var(--foreground);
   }
-  :host([hidden]) { display: none; }
+  .sui-prop-knobs[hidden] { display: none; }
 </style>
 
 
@@ -265,9 +265,9 @@ export default controller({
 })
 
 </controller>
-<column gap="4" part="knobs">
+<column class="knobs" gap="4">
   {#for knob of knobs() key={knob.name}}
-    <column gap="2" part="knob" data-knob={knob.name}>
+    <column class="knob" gap="2" data-knob={knob.name}>
       <sui-label size="sm">{knob.name}</sui-label>
 
       {#match knob.kind}

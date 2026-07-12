@@ -18,12 +18,15 @@
   object/json attribute props (Cardinal: `<prop type=json>` does not exist).
 -->
 
-<prop name="mode" values="source|tag" default="source" reflect />
-<prop name="component-name" type="string" default="" reflect />
-<prop name="viewport-width" values="full|desktop|tablet|mobile" default="full" reflect />
-
+<component>{
+  props: {
+    mode: 'source' | 'tag',
+    'component-name': '',
+    'viewport-width': 'full' | 'desktop' | 'tablet' | 'mobile',
+  },
+}</component>
 <style>
-  :host {
+  .sui-render {
     display: block;
     font-family: var(--font-body);
     color: var(--foreground);
@@ -33,7 +36,7 @@
     --viewport-tablet: 768px;
     --viewport-mobile: 390px;
   }
-  :host([hidden]) { display: none; }
+  .sui-render[hidden] { display: none; }
 
   .frame {
     position: relative;
@@ -47,9 +50,9 @@
     margin-inline: auto;
     box-sizing: border-box;
   }
-  :host([viewport-width='desktop']) .stage { max-width: var(--viewport-desktop); }
-  :host([viewport-width='tablet']) .stage { max-width: var(--viewport-tablet); }
-  :host([viewport-width='mobile']) .stage { max-width: var(--viewport-mobile); }
+  .sui-render[viewport-width='desktop'] .stage { max-width: var(--viewport-desktop); }
+  .sui-render[viewport-width='tablet'] .stage { max-width: var(--viewport-tablet); }
+  .sui-render[viewport-width='mobile'] .stage { max-width: var(--viewport-mobile); }
 
   .compiling {
     display: flex;
@@ -317,15 +320,15 @@ export default controller({
 
 </controller>
 <sui-error-boundary fallback-text="The specimen threw while rendering.">
-  <column gap="2" class="frame" part="frame">
+  <column gap="2" class="frame">
     {#if compiling()}
-      <div class="compiling" part="compiling">
+      <div class="compiling">
         <sui-spinner size="sm" label="Compiling"></sui-spinner>
       </div>
     {/if}
 
     {#if compileError() !== null}
-      <column gap="2" part="compile-error" data-test="compile-error">
+      <column class="compile-error" gap="2" data-test="compile-error">
         <alert tone="destructive">{compileErrorSummary()}</alert>
         <div role="region" aria-label="text code block" sx="bg:surface-2 fg:foreground border:subtle radius:md overflow:hidden">
           <header sx="p:2 px:3 text:xs fg:muted-foreground bg:muted weight:medium tracking:wide">TEXT</header>
@@ -336,7 +339,7 @@ export default controller({
     {/if}
 
     {#if runtimeError() !== null}
-      <column gap="2" part="runtime-error" data-test="runtime-error">
+      <column class="runtime-error" gap="2" data-test="runtime-error">
         <alert tone="destructive">The specimen threw at runtime.</alert>
         <div role="region" aria-label="text code block" sx="bg:surface-2 fg:foreground border:subtle radius:md overflow:hidden">
           <header sx="p:2 px:3 text:xs fg:muted-foreground bg:muted weight:medium tracking:wide">TEXT</header>
@@ -346,6 +349,6 @@ export default controller({
       </column>
     {/if}
 
-    <div class="stage" part="stage" bind:this={stageEl}></div>
+    <div class="stage" bind:this={stageEl}></div>
   </column>
 </sui-error-boundary>

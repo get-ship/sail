@@ -1,5 +1,8 @@
-<prop name="shadow" type="bool" default="false" />
-
+<component>{
+  props: {
+    shadow: false,
+  },
+}</component>
 <div class="fetcher">
   <label>endpoint
     <select bind:value={endpoint}>

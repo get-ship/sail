@@ -53,15 +53,18 @@
   this residual correctly.
 -->
 
-<prop name="nodes" type="string" default="" />
-<prop name="label" type="string" default="" />
-<prop name="selectable" values="none|single|multi" default="none" reflect />
-<prop name="expand-on-select" type="bool" default="false" reflect />
-<prop name="show-guides" type="bool" default="true" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
-<prop name="loading" type="bool" default="false" reflect />
-<prop name="error" type="string" default="" />
-
+<component>{
+  props: {
+    nodes: '',
+    label: '',
+    selectable: 'none' | 'single' | 'multi',
+    'expand-on-select': false,
+    'show-guides': true,
+    size: 'md' | 'sm' | 'lg',
+    loading: false,
+    error: '',
+  },
+}</component>
 <!--
   Residual <style> — sui-tree is largely irreducible: there is no prop here
   that channels per-value styling (size/selectable don't drive CSS rules),
@@ -72,7 +75,7 @@
   selectors only match host attrs.
 
   Rules:
-  - :host base (display + width + font-family + density-driven font-size +
+  - .sui-tree base (display + width + font-family + density-driven font-size +
     --sui-tree-indent indirection).
   - .viewport / .spacer layout (position + width:100% + overflow-y:auto +
     max-height panel token).
@@ -87,11 +90,11 @@
     reacts to row[data-selected]).
   - .label raw `flex:1` + min-width + white-space + overflow + text-overflow.
   - .trailing margin-inline-start:auto (the `auto` margin is not in sx).
-  - :host([show-guides]) .row::before pseudo-element.
+  - .sui-tree[show-guides] .row::before pseudo-element.
   - @media (forced-colors: active) CanvasText outline.
 -->
 <style>
-  :host {
+  .sui-tree {
     display: block;
     width: 100%;
     font-family: var(--font-body);
@@ -99,7 +102,7 @@
     color: var(--foreground);
     --sui-tree-indent: var(--density-row-px);
   }
-  :host([hidden]) { display: none; }
+  .sui-tree[hidden] { display: none; }
 
   .viewport {
     position: relative;
@@ -156,7 +159,7 @@
   }
   .trailing { margin-inline-start: auto; color: var(--muted-foreground); font-size: var(--text-xs); }
 
-  :host([show-guides]) .row::before {
+  .sui-tree[show-guides] .row::before {
     content: '';
     position: absolute;
     inset-block: 0;
@@ -308,15 +311,15 @@ export default controller({
 
 </controller>
 {#if error() !== ''}
-<div class="tree-error" part="error" role="alert">
+<div class="tree-error error" role="alert">
   <error-state>{error()}</error-state>
 </div>
 {:else if isEmptyInitial()}
-<div class="tree-empty" part="empty" role="status">
+<div class="tree-empty empty" role="status">
   <slot name="empty"><empty-state></empty-state></slot>
 </div>
 {:else if isEmptyFiltered()}
-<div class="tree-empty" part="empty" role="status">
+<div class="tree-empty empty" role="status">
   <slot name="empty">
     <empty-state>
       <button slot="action" type="button" data-action="clear-filters">Clear filters</button>
@@ -324,44 +327,17 @@ export default controller({
   </slot>
 </div>
 {:else}
-<div
-  class="tree"
-  part="tree"
-  role="tree"
-  aria-label={label() || null}
-  aria-multiselectable={selectable() === 'multi' ? 'true' : null}
->
-  <div class="viewport" part="viewport" bind:this={viewportEl}>
-    <div class="spacer" part="spacer" style:height={`${totalSize()}px`}>
+<div class="tree" role="tree" aria-label={label() || null} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
+  <div class="viewport" bind:this={viewportEl}>
+    <div class="spacer" style:height={`${totalSize()}px`}>
       {#for w of windowItems() key={w.key}}
-        <row
-          class="row"
-          part="row"
-          align="center"
-          role="treeitem"
-          data-node-id={w.id}
-          aria-level={w.level}
-          aria-posinset={w.posInSet}
-          aria-setsize={w.setSize}
-          aria-rowindex={w.index + 1}
-          aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null}
-          aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null}
-          data-can-expand={w.canExpand ? 'true' : null}
-          data-expanded={w.expanded ? 'true' : null}
-          data-selected={w.selected ? 'true' : null}
-          data-pending={w.pending ? 'true' : null}
-          tabindex={w.id === activeRowId() ? '0' : '-1'}
-          style:transform={`translateY(${w.start}px)`}
-          style:padding-inline-start={`calc(var(--density-row-px) + ${w.indent}px)`}
-          sx="radius:sm cursor:pointer fg:foreground hover:bg:hover-bg"
-        >
-          <row class="caret" part="caret" aria-hidden="true" align="center" justify="center"
-            sx="fg:muted-foreground">
+        <row class="row" align="center" role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} style:transform={`translateY(${w.start}px)`} style:padding-inline-start={`calc(var(--density-row-px) + ${w.indent}px)`} sx="radius:sm cursor:pointer fg:foreground hover:bg:hover-bg">
+          <row class="caret" aria-hidden="true" align="center" justify="center" sx="fg:muted-foreground">
             <sui-icon name="chevron-right" size="xs"></sui-icon>
           </row>
 
           {#if selectable() === 'multi'}
-            <span class="gutter" part="gutter">
+            <span class="gutter">
               <input
                 type="checkbox"
                 size="sm"
@@ -372,11 +348,11 @@ export default controller({
             </span>
           {/if}
           {#if w.icon !== ''}
-            <sui-icon class="node-icon" part="node-icon" name={w.icon} size="sm"></sui-icon>
+            <sui-icon class="node-icon" name={w.icon} size="sm"></sui-icon>
           {:else}
             <slot name="node-icon"></slot>
           {/if}
-          <span class="label" part="label">{w.label}</span>
+          <span class="label">{w.label}</span>
           <span class="trailing"><slot name="node-trailing"></slot></span>
         </row>
       {/for}

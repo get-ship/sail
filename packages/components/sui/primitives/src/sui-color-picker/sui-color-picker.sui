@@ -59,24 +59,27 @@
     story), the `text-transform: lowercase` (no sx prop), the
     panel's `position: absolute` + `top` + `left` (sx has
     `position:absolute` but no `top`/`left` props), the host-driven
-    `:host([disabled]) .wrap { filter: saturate(0.4) }` saturate
+    `.sui-color-picker[disabled] .wrap { filter: saturate(0.4) }` saturate
     (compound host-attr → descendant selector — variants only
     target the class element itself), and the input's font-mono +
     min-width + flex (no `flex`/`min-width` in sx). See the
     residual-rationale comment in <style> below for the full list.
 -->
-<prop name="name" type="string" default="" />
-<prop name="value" type="string" default="#000000" form-value />
-<prop name="disabled" type="bool" default="false" reflect form-disabled />
-<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
-
+<component>{
+  props: {
+    name: '',
+    value: '#000000',
+    disabled: false,
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
+    size: 'md' | 'sm' | 'lg',
+  },
+}</component>
 <!--
   Residual <style>:
-  - :host baseline (display:inline-flex / width:100% / vertical-align)
+  - .sui-color-picker baseline (display:inline-flex / width:100% / vertical-align)
   - The host-driven disabled saturate (host-attr → descendant compound
     selector — variants only target the class element itself, not
-    descendants of :host attrs)
+    descendants of .sui-color-picker attrs)
   - entry input: text-transform:lowercase + font-family:mono
     (text-transform has no sx prop; font-family-override keeps the
     hex readable as code while the L1 contract sets the body font)
@@ -99,7 +102,7 @@
 -->
 <style>
   --size-h: ; --size-px: ; --size-fs: ;
-  :host {
+  .sui-color-picker {
     display: inline-flex;
     width: 100%;
     vertical-align: middle;
@@ -107,8 +110,8 @@
        to the nearest positioned ancestor (page) and renders off-screen. */
     position: relative;
   }
-  :host([hidden]) { display: none; }
-  :host([disabled]) .wrap { filter: saturate(0.4); }
+  .sui-color-picker[hidden] { display: none; }
+  .sui-color-picker[disabled] .wrap { filter: saturate(0.4); }
 
   input.entry {
     flex: 1;
@@ -384,29 +387,13 @@ export default controller({
 })
 
 </controller>
-<row class="wrap" part="wrap" align="center" gap="2"
-  sx="min-h:size-h py:0 px:size-px bg:background fg:foreground border:tone-border radius:md">
-  <span class="preview" part="preview" aria-hidden="true"
-    style:background-color={value() || '#000000'}></span>
-  <input
-    class="entry"
-    part="input"
-    type="text"
-    name={name()}
-    placeholder="#000000"
-    disabled={disabled()}
-    autocomplete="off"
-    aria-haspopup="dialog"
-    aria-expanded={open() ? 'true' : 'false'}
-    bind:value={value}
-    bind:this={inputEl}
-  />
+<row class="wrap" align="center" gap="2" sx="min-h:size-h py:0 px:size-px bg:background fg:foreground border:tone-border radius:md">
+  <span class="preview" aria-hidden="true" style:background-color={value() || '#000000'}></span>
+  <input class="entry input" type="text" name={name()} placeholder="#000000" disabled={disabled()} autocomplete="off" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
 </row>
 {#if open() && !disabled()}
-  <column class="panel" part="panel" gap="2" role="dialog" aria-label="Choose color"
-       bind:this={panelEl}
-       sx="position:absolute z:popover w:panel-max-w-md p:3 bg:popover fg:popover-foreground border:border radius:md shadow:md text:size-fs">
-    <div class="swatches" part="swatches">
+  <column class="panel" gap="2" role="dialog" aria-label="Choose color" bind:this={panelEl} sx="position:absolute z:popover w:panel-max-w-md p:3 bg:popover fg:popover-foreground border:border radius:md shadow:md text:size-fs">
+    <div class="swatches">
       {#for sw of swatches() key={sw.hex}}
         <button
           type="button"

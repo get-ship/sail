@@ -1,5 +1,8 @@
-<prop name="shadow" type="bool" default="false" />
-
+<component>{
+  props: {
+    shadow: false,
+  },
+}</component>
 <div class="clock">
   <p>seconds since mount: <strong>{elapsed()}</strong></p>
   <p class="hint">open the browser console — onCleanup logs the total when you navigate away.</p>

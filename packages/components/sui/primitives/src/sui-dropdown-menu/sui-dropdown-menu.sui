@@ -20,8 +20,11 @@
   ────────────────────────────────────────────────────────────────────────
 -->
 
-<prop name="open" type="bool" default="false" reflect />
-
+<component>{
+  props: {
+    open: false,
+  },
+}</component>
 <variants>
   [hidden]: display:none
 </variants>
@@ -34,11 +37,11 @@
      transition stays here (multi-
      property motion — no construct); ::slotted(button) and ::slotted(
      [role=menuitem]) styling (descendant pseudo selectors — variants
-     only match :host attrs); ::slotted(hr) / ::slotted([data-section])
+     only match .sui-dropdown-menu attrs); ::slotted(hr) / ::slotted([data-section])
      styling; forced-colors CanvasText panel border; the .panel::backdrop
      transparent background. -->
 <style>
-  :host { display: inline-flex; }
+  .sui-dropdown-menu { display: inline-flex; }
   [part~='panel'] {
     position: fixed;
     inset: auto;
@@ -247,6 +250,6 @@ export default controller<Scope>({
 <span class="trigger-wrap" bind:this={triggerWrap}>
   <slot name="trigger" bind:this={triggerSlot}></slot>
 </span>
-<div class="panel" part="panel" popover="auto" role="menu" use:anchor bind:this={panelEl}>
+<div class="panel" popover="auto" role="menu" use:anchor bind:this={panelEl}>
   <slot bind:this={itemSlot}></slot>
 </div>

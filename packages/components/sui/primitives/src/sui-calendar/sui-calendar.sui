@@ -20,24 +20,27 @@
   The virtualized agenda remains an explicit GAP.
 -->
 
-<prop name="view" values="month|week|day" default="month" reflect />
-<prop name="events" type="string" default="" />
-<prop name="focus-date" type="string" default="" />
-<prop name="week-starts-on" type="number" default="0" />
-<prop name="slot-minutes" type="number" default="30" />
-<prop name="day-start-hour" type="number" default="0" reflect />
-<prop name="day-end-hour" type="number" default="24" reflect />
-<prop name="range-mode" values="none|date|datetime" default="none" reflect />
-<prop name="editable" type="bool" default="false" reflect />
-<prop name="label" type="string" default="" />
-
+<component>{
+  props: {
+    view: 'month' | 'week' | 'day',
+    events: '',
+    'focus-date': '',
+    'week-starts-on': 0,
+    'slot-minutes': 30,
+    'day-start-hour': 0,
+    'day-end-hour': 24,
+    'range-mode': 'none' | 'date' | 'datetime',
+    editable: false,
+    label: '',
+  },
+}</component>
 <variants>
   [hidden]: display:none
 </variants>
-<variants part="grid">
+<variants class="grid">
   view=month: display:block
 </variants>
-<variants part="time-grid">
+<variants class="time-grid">
   view=week: display:grid
   view=day:  display:grid
 </variants>
@@ -57,7 +60,7 @@
    — bespoke calendar-grid measurements, not on the --space-N scale (min-height
    isn't lint-policed the way padding/margin/gap are), so kept as literal px,
    matching feat/next exactly. */
-  :host {
+  .sui-calendar {
     --cal-gap-xs: var(--space-half);
     --cal-chip-py: var(--space-half);
     --cal-chip-px: var(--space-1_5);
@@ -504,17 +507,15 @@ export default controller({
 })
 
 </controller>
-<div class="cal" part="wrap"
-     sx="display:block bg:background fg:foreground border:border radius:lg shadow:xs overflow:hidden"
->
-  <row class="toolbar" part="toolbar" align="center">
-    <row class="nav-group" part="nav-group" gap="1" align="center">
+<div class="cal wrap" sx="display:block bg:background fg:foreground border:border radius:lg shadow:xs overflow:hidden">
+  <row class="toolbar" align="center">
+    <row class="nav-group" gap="1" align="center">
       <button type="button" class="tb" data-nav="prev" aria-label="Previous">‹</button>
       <button type="button" class="tb" data-nav="today">Today</button>
       <button type="button" class="tb" data-nav="next" aria-label="Next">›</button>
     </row>
-    <span class="title" part="title" sx="weight:semibold">{title()}</span>
-    <row class="view-switch" part="view-switch" role="group" aria-label="Calendar view" gap="1" align="center">
+    <span class="title" sx="weight:semibold">{title()}</span>
+    <row class="view-switch" role="group" aria-label="Calendar view" gap="1" align="center">
       <button type="button" class="tb" data-view="month" aria-pressed={isMonth() ? 'true' : 'false'}>Month</button>
       <button type="button" class="tb" data-view="week" aria-pressed={isWeek() ? 'true' : 'false'}>Week</button>
       <button type="button" class="tb" data-view="day" aria-pressed={isDay() ? 'true' : 'false'}>Day</button>
@@ -522,17 +523,15 @@ export default controller({
   </row>
 
   {#if isEmpty()}
-    <div class="empty" part="empty" role="status" sx="fg:muted-foreground">
+    <div class="empty" role="status" sx="fg:muted-foreground">
       <slot name="empty">No events</slot>
     </div>
   {/if}
 
-  <div class="grid" part="grid" role="grid" aria-label={label() || 'Calendar month'}
-       sx="display:none"
-  >
+  <div class="grid" role="grid" aria-label={label() || 'Calendar month'} sx="display:none">
     <div class="dow-row" role="presentation">
       {#for d of weekdays() key={d.key}}
-        <span class="dow" part="dow" role="columnheader" sx="fg:muted-foreground weight:medium">{d.label}</span>
+        <span class="dow" role="columnheader" sx="fg:muted-foreground weight:medium">{d.label}</span>
       {/for}
     </div>
     {#for wk of weekRows() key={wk.key}}
@@ -571,18 +570,16 @@ export default controller({
     {/for}
   </div>
 
-  <div class="timegrid" part="time-grid" role="grid" aria-label={label() || 'Calendar time grid'}
-       sx="display:none"
-  >
-    <column class="time-axis" part="time-axis" role="rowgroup" gap="0">
+  <div class="timegrid time-grid" role="grid" aria-label={label() || 'Calendar time grid'} sx="display:none">
+    <column class="time-axis" role="rowgroup" gap="0">
       {#for slot of timeSlots() key={slot.key}}
         <div class="slot" data-slot={slot.minutes} role="rowheader" sx="h:control-h-md fg:muted-foreground">{slot.label}</div>
       {/for}
     </column>
-    <div class="day-cols" part="day-col">
+    <div class="day-cols day-col">
       {#for dc of dayColumns() key={dc.key}}
         <div class="day-col" class:today={dc.col.today} data-iso={dc.col.iso} sx="position:relative">
-          <column class="slot-layer" part="slot-layer" gap="0" sx="position:absolute">
+          <column class="slot-layer" gap="0" sx="position:absolute">
             {#for slot of timeSlots() key={slot.key}}
               <div class="slot-bg" data-iso={dc.col.iso} data-minutes={slot.minutes} sx="cursor:cell hover:bg:hover-bg"></div>
             {/for}

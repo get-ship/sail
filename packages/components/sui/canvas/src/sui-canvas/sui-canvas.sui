@@ -21,16 +21,19 @@
   Event: sui-canvas-viewport { transform } — debounced, on pan/zoom change.
 -->
 
-<prop name="value" type="string" default="" />
-<prop name="readonly" type="bool" default="false" reflect />
-<prop name="theme" values="light|dark" default="light" reflect />
-<prop name="grid" values="none|dots|lines" default="none" reflect />
-<prop name="min-scale" type="number" />
-<prop name="max-scale" type="number" />
-<prop name="label" type="string" default="" />
-
+<component>{
+  props: {
+    value: '',
+    readonly: false,
+    theme: 'light' | 'dark',
+    grid: 'none' | 'dots' | 'lines',
+    'min-scale': number,
+    'max-scale': number,
+    label: '',
+  },
+}</component>
 <style>
-  :host {
+  .sui-canvas {
     display: block;
     position: relative;
     width: 100%;
@@ -43,7 +46,7 @@
     overflow: hidden;
     touch-action: none;
   }
-  :host([hidden]) { display: none; }
+  .sui-canvas[hidden] { display: none; }
 
   .viewport {
     position: absolute;
@@ -169,18 +172,8 @@ export default controller({
 })
 
 </controller>
-<div
-  class="viewport"
-  part="viewport"
-  role="application"
-  aria-label={label()}
-  bind:this={viewportEl}
-  on:pointerdown={pointerDown}
-  on:pointermove={pointerMove}
-  on:pointerup={pointerUp}
-  on:wheel={wheel}
->
-  <div class="world" part="world" style={transformCss()}>
+<div class="viewport" role="application" aria-label={label()} bind:this={viewportEl} on:pointerdown={pointerDown} on:pointermove={pointerMove} on:pointerup={pointerUp} on:wheel={wheel}>
+  <div class="world" style={transformCss()}>
     <slot></slot>
   </div>
 </div>

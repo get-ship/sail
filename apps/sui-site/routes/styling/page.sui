@@ -32,7 +32,7 @@
   <h2>Styling the host</h2>
   <p>
     To style the component's own element — its border, radius, background —
-    use <code>&lt;host sx&gt;</code>. It is the <code>:host</code> rule,
+    use <code>&lt;host sx&gt;</code>. It is the <code>.sui-page</code> rule,
     expressed in the same token vocabulary as everything else.
   </p>
   <sui-codeblock code={code.host}></sui-codeblock>

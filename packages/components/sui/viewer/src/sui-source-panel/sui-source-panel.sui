@@ -15,16 +15,19 @@
   declared here.
 -->
 
-<prop name="component-name" type="string" default="" reflect />
-<prop name="lang" type="string" default="html" reflect />
-
+<component>{
+  props: {
+    'component-name': '',
+    lang: 'html',
+  },
+}</component>
 <style>
-  :host {
+  .sui-source-panel {
     display: block;
     font-family: var(--font-body);
     color: var(--foreground);
   }
-  :host([hidden]) { display: none; }
+  .sui-source-panel[hidden] { display: none; }
 
   .section-label {
     font-size: var(--text-xs);
@@ -166,10 +169,10 @@ export default controller({
 })
 
 </controller>
-<column gap="3" class="panel" part="panel">
-  <column gap="2" class="section" part="source-section">
-    <span class="section-label" part="source-label">Source</span>
-    <div part="source-code" role="region" aria-label={lang() ? lang() + ' code block' : 'code block'} sx="bg:surface-2 fg:foreground border:subtle radius:md overflow:hidden">
+<column gap="3" class="panel">
+  <column gap="2" class="section source-section">
+    <span class="section-label source-label">Source</span>
+    <div class="source-code" role="region" aria-label={lang() ? lang() + ' code block' : 'code block'} sx="bg:surface-2 fg:foreground border:subtle radius:md overflow:hidden">
       {#if lang()}
         <header sx="p:2 px:3 text:xs fg:muted-foreground bg:muted weight:medium tracking:wide">{lang().toUpperCase()}</header>
         <separator sx="m:0"></separator>
@@ -178,17 +181,17 @@ export default controller({
     </div>
   </column>
 
-  <column gap="2" class="section" part="snippet-section">
-    <div class="snippet-head" part="snippet-head">
-      <span class="section-label" part="snippet-label">Snippet</span>
+  <column gap="2" class="section snippet-section">
+    <div class="snippet-head">
+      <span class="section-label snippet-label">Snippet</span>
       <column direction="row" gap="2" align="center">
         {#if copied()}
-          <span class="copied" part="copied" aria-live="polite">Copied</span>
+          <span class="copied" aria-live="polite">Copied</span>
         {/if}
-        <button soft xs on:click={copy} part="copy-button">Copy</button>
+        <button class="copy-button" soft xs on:click={copy}>Copy</button>
       </column>
     </div>
-    <div part="snippet-code" role="region" aria-label={lang() ? lang() + ' code block' : 'code block'} sx="bg:surface-2 fg:foreground border:subtle radius:md overflow:hidden">
+    <div class="snippet-code" role="region" aria-label={lang() ? lang() + ' code block' : 'code block'} sx="bg:surface-2 fg:foreground border:subtle radius:md overflow:hidden">
       {#if lang()}
         <header sx="p:2 px:3 text:xs fg:muted-foreground bg:muted weight:medium tracking:wide">{lang().toUpperCase()}</header>
         <separator sx="m:0"></separator>

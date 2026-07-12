@@ -18,11 +18,14 @@
   ────────────────────────────────────────────────────────────────────────
 -->
 
-<prop name="open" type="bool" default="false" reflect />
-
+<component>{
+  props: {
+    open: false,
+  },
+}</component>
 <style>
-  :host { display: contents; }
-  :host([hidden]) { display: none; }
+  .sui-context-menu { display: contents; }
+  .sui-context-menu[hidden] { display: none; }
 
   /* The <column> primitive absorbs display:flex + flex-direction:column
      (the lowered .sui-col class). The remaining .panel rules are raw
@@ -252,7 +255,6 @@ export default controller<Scope>({
 
 </controller>
 <slot name="trigger" bind:this={triggerSlot}></slot>
-<column class="panel" part="panel" gap="0" popover="auto" role="menu" aria-label="Context menu" bind:this={panelEl}
-  sx="p:1 bg:popover fg:popover-foreground border:border radius:md shadow:lg text:sm">
+<column class="panel" gap="0" popover="auto" role="menu" aria-label="Context menu" bind:this={panelEl} sx="p:1 bg:popover fg:popover-foreground border:border radius:md shadow:lg text:sm">
   <slot bind:this={itemSlot}></slot>
 </column>

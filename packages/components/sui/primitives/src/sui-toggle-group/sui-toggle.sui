@@ -10,7 +10,7 @@
   - The theme prop="size" block DELETED (ad-hoc per-component channels
     "closed sx" back door the new surface forbids). The three local CSS
     vars (button height, inline padding, font size per size) are declared
-    directly in the style block on :host with the same token values
+    directly in the style block on .sui-toggle with the same token values
     (control-h-md / space-3 / text-base for default+md, etc.) — kept as a
     component-internal ladder; the global size-h channel is for the size
     prop's L1 contract and the toggle is its own visual unit, not a form
@@ -43,7 +43,7 @@
   [disabled]: cursor:not-allowed
 </variants>
 
-<variants part="button">
+<variants class="button">
   [pressed]:                 bg:selected       fg:foreground       weight:semibold       border:selected-border
   (variant=segmented, [pressed]):  bg:surface-1  fg:foreground  shadow:xs
   (variant=segmented):       border:none        radius:sm           bg:transparent        fg:muted-foreground
@@ -61,20 +61,20 @@
   CanvasText outline (system color); reduce-motion kill.
 -->
 <style>
-  :host { display: inline-flex; }
+  .sui-toggle { display: inline-flex; }
 
   /* size channel — local CSS vars */
-  :host(:not([size])), :host([size='md']) {
+  .sui-toggle:not([size]), .sui-toggle[size='md'] {
     --tgl-h: var(--control-h-md);
     --tgl-px: var(--space-3);
     --tgl-fs: var(--text-base);
   }
-  :host([size='sm']) {
+  .sui-toggle[size='sm'] {
     --tgl-h: var(--control-h-sm);
     --tgl-px: var(--space-2);
     --tgl-fs: var(--text-sm);
   }
-  :host([size='lg']) {
+  .sui-toggle[size='lg'] {
     --tgl-h: var(--control-h-xl);
     --tgl-px: var(--space-4);
     --tgl-fs: var(--text-base);
@@ -102,40 +102,40 @@
   }
   /* Disabled: cursor/opacity on variants; saturate + pointer-events
      stay in <style> (compound descendant-state, no variants channel). */
-  :host([disabled]) button {
+  .sui-toggle[disabled] button {
     filter: saturate(0.6);
     pointer-events: none;
   }
   /* Segmented size ladder. Reset (border:0, transparent bg, sm radius)
      is on variants; what's left is per-size dimensional composition. */
-  :host([variant='segmented']:not([size])) button,
-  :host([variant='segmented'][size='md']) button {
+  .sui-toggle[variant='segmented']:not([size]) button,
+  .sui-toggle[variant='segmented'][size='md'] button {
     height: auto;
     padding: var(--space-1) var(--space-3);
     font-size: var(--text-sm);
   }
-  :host([variant='segmented'][size='sm']) button {
+  .sui-toggle[variant='segmented'][size='sm'] button {
     height: auto;
     padding: var(--space-1) var(--space-2);
     font-size: var(--text-xs);
   }
-  :host([variant='segmented'][size='lg']) button {
+  .sui-toggle[variant='segmented'][size='lg'] button {
     height: auto;
     padding: var(--space-2) var(--space-4);
     font-size: var(--text-md);
   }
   /* Segmented hover: descendant state. */
-  :host([variant='segmented']) button:hover {
+  .sui-toggle[variant='segmented'] button:hover {
     background: var(--hover-bg);
     color: var(--foreground);
   }
   /* Segmented pressed: variants paint bg:surface-1 + shadow:xs; the
      border:0 here belt-and-suspenders against a parent cascade. */
-  :host([variant='segmented'][pressed]) button { border: 0; }
+  .sui-toggle[variant='segmented'][pressed] button { border: 0; }
 
   @media (forced-colors: active) {
     button:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
-    :host([pressed]) button { outline: 2px solid CanvasText; }
+    .sui-toggle[pressed] button { outline: 2px solid CanvasText; }
   }
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
@@ -177,12 +177,6 @@ export default controller<Scope>({
 })
 
 </controller>
-<button
-  part="button"
-  type="button"
-  aria-pressed={pressed() ? 'true' : 'false'}
-  disabled={disabled()}
-  bind:this={buttonEl}
->
+<button class="button" type="button" aria-pressed={pressed() ? 'true' : 'false'} disabled={disabled()} bind:this={buttonEl}>
   <slot></slot>
 </button>

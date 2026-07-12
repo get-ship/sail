@@ -31,18 +31,21 @@
     send(), clear()                         → identical
 -->
 
-<prop name="view-id" type="string" default="" />
-<prop name="mode" values="off|point|region" default="off" reflect />
-<prop name="endpoint" type="string" default="/api/feedback" />
-<prop name="staging" type="bool" default="false" reflect />
-
+<component>{
+  props: {
+    'view-id': '',
+    mode: 'off' | 'point' | 'region',
+    endpoint: '/api/feedback',
+    staging: false,
+  },
+}</component>
 <style>
-  :host {
+  .sui-annotation-layer {
     position: relative;
     display: block;
     font-family: var(--font-body);
   }
-  :host([hidden]) { display: none; }
+  .sui-annotation-layer[hidden] { display: none; }
 
   .surface {
     position: relative;
@@ -56,8 +59,8 @@
     z-index: var(--z-dropdown);
     pointer-events: none;
   }
-  :host([mode='point']) .overlay,
-  :host([mode='region']) .overlay {
+  .sui-annotation-layer[mode='point'] .overlay,
+  .sui-annotation-layer[mode='region'] .overlay {
     pointer-events: auto;
     cursor: crosshair;
   }
@@ -414,9 +417,9 @@ export default controller({
 })
 
 </controller>
-<div class="surface" part="surface">
+<div class="surface">
   <slot></slot>
-  <div class="overlay" part="overlay" bind:this={overlayEl}>
+  <div class="overlay" bind:this={overlayEl}>
     {#if dragVisible()}
       <div class="drag-rect" style={dragRectStyle()}></div>
     {/if}
@@ -431,7 +434,7 @@ export default controller({
     {/for}
     {#if pending()}
       <div class="popover" data-annotation-popover style={popoverStyle()} on:pointerdown={(e) => e.stopPropagation()}>
-        <textarea part="note-input" placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown}></textarea>
+        <textarea class="note-input" placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown}></textarea>
         <div class="popover-actions">
           <button type="button" on:click={cancelPending}>Cancel</button>
           <button type="button" data-primary on:click={sendNote}>Send</button>

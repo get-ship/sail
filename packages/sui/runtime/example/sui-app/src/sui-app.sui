@@ -19,8 +19,11 @@
       gating + monotone fast-path optimize.
 -->
 
-<prop name="shadow" type="bool" default="false" />
-
+<component>{
+  props: {
+    shadow: false,
+  },
+}</component>
 <div class="wrap">
   <header>
     <div>

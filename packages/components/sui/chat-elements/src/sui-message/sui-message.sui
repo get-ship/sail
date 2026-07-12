@@ -23,13 +23,16 @@
   ─────────────────────────────────────────────────────────────────────
 -->
 
-<prop name="role" values="user|assistant|system|tool" default="assistant" reflect />
-<prop name="content-type" values="text|code|drawing|terminal-snapshot|tool-call|citation|image" default="text" reflect />
-<prop name="timestamp" type="string" default="" />
-<prop name="status" values="sending|sent|error" default="sent" reflect />
-
+<component>{
+  props: {
+    role: 'assistant' | 'user' | 'system' | 'tool',
+    'content-type': 'text' | 'code' | 'drawing' | 'terminal-snapshot' | 'tool-call' | 'citation' | 'image',
+    timestamp: '',
+    status: 'sent' | 'sending' | 'error',
+  },
+}</component>
 <style>
-  :host {
+  .sui-message {
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
@@ -40,30 +43,30 @@
     --bubble-border: var(--border);
     --bubble-fg: var(--foreground);
   }
-  :host([hidden]) { display: none; }
+  .sui-message[hidden] { display: none; }
 
   /* Role tones the bubble surface + aligns user turns to the end. */
-  :host([role='user']) {
+  .sui-message[role='user'] {
     align-items: flex-end;
     --bubble-bg: var(--tone-primary-bg);
     --bubble-border: var(--tone-primary-border);
   }
-  :host([role='system']) {
+  .sui-message[role='system'] {
     --bubble-bg: var(--tone-muted-bg);
     --bubble-border: var(--border);
     --bubble-fg: var(--muted-foreground);
   }
-  :host([role='tool']) {
+  .sui-message[role='tool'] {
     --bubble-bg: var(--tone-accent-bg);
     --bubble-border: var(--tone-accent-border);
   }
 
   /* Status tints the leading edge of the bubble. */
-  :host([status='error']) {
+  .sui-message[status='error'] {
     --bubble-border: var(--tone-destructive-border);
     --bubble-fg: var(--foreground);
   }
-  :host([status='sending']) .bubble { opacity: 0.7; }
+  .sui-message[status='sending'] .bubble { opacity: 0.7; }
 
   .meta {
     display: flex;
@@ -89,25 +92,25 @@
   }
 
   /* Monospace surfaces for code-shaped content. */
-  :host([content-type='code']) .content,
-  :host([content-type='terminal-snapshot']) .content,
-  :host([content-type='tool-call']) .content {
+  .sui-message[content-type='code'] .content,
+  .sui-message[content-type='terminal-snapshot'] .content,
+  .sui-message[content-type='tool-call'] .content {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     white-space: pre-wrap;
   }
-  :host([content-type='terminal-snapshot']) .bubble {
+  .sui-message[content-type='terminal-snapshot'] .bubble {
     background: var(--surface-inverse);
     color: var(--background);
     border-color: var(--border-subtle);
   }
   /* Framed media for visual content. */
-  :host([content-type='drawing']) .content,
-  :host([content-type='image']) .content {
+  .sui-message[content-type='drawing'] .content,
+  .sui-message[content-type='image'] .content {
     display: block;
   }
-  :host([content-type='drawing']) ::slotted(*),
-  :host([content-type='image']) ::slotted(*) {
+  .sui-message[content-type='drawing'] ::slotted(*),
+  .sui-message[content-type='image'] ::slotted(*) {
     max-width: 100%;
     border-radius: var(--radius-md);
   }
@@ -116,15 +119,15 @@
   ::slotted([slot='trailing']) { margin-top: var(--space-1); }
 </style>
 
-<div class="meta" part="meta">
-  <span class="role-label" part="role">{role()}</span>
+<div class="meta">
+  <span class="role-label role">{role()}</span>
   {#if timestamp()}
-    <time class="time" part="time" datetime={timestamp()}>{timestamp()}</time>
+    <time class="time" datetime={timestamp()}>{timestamp()}</time>
   {/if}
 </div>
 
-<div class="bubble" part="bubble">
-  <div class="content" part="content">
+<div class="bubble">
+  <div class="content">
     <slot></slot>
   </div>
 </div>

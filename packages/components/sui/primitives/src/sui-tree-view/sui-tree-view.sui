@@ -17,7 +17,7 @@
   NEW SURFACE (re-port from feat/next, parity-gate pass)
   ─────────────────────────────────────────────────────────────────────────────
   - No props at all, so no tone/L1-control/closed-sx surface to touch here.
-  - The old :host([hidden]) { display: none; } raw selector becomes a real
+  - The old .sui-tree-view[hidden] { display: none; } raw selector becomes a real
     variants block (below), targeting the host's own [hidden] attribute —
     exactly what variants blocks are for. The typography + child <ul> reset
     stay raw (see the residual note below); nothing else in this file changed.
@@ -29,14 +29,14 @@
   [hidden]: display:none
 </variants>
 
-<!-- Residual: the :host font/typography (no sx prop for font-family
-     or font-size — and the :host-level typography only matters for
+<!-- Residual: the .sui-tree-view font/typography (no sx prop for font-family
+     or font-size — and the .sui-tree-view-level typography only matters for
      inheritance since the host element itself doesn't render text);
      the `ul { list-style: none; margin: 0; padding: 0; }` reset for
-     the child <ul> descendant (variants only target :host's own
+     the child <ul> descendant (variants only target .sui-tree-view's own
      attrs). -->
 <style>
-  :host {
+  .sui-tree-view {
     display: block;
     font-family: var(--font-body);
     font-size: var(--text-sm);

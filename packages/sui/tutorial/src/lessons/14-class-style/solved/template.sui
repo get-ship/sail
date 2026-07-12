@@ -1,10 +1,13 @@
-<prop name="shadow" type="bool" default="false" />
-
+<component>{
+  props: {
+    shadow: false,
+  },
+}</component>
 <!-- <style> is the escape hatch for the dynamic STATE classes that class:
      toggles (done/overdue/selected) and the progress-bar fill width. Layout,
      spacing, and text come from sx + the layout keywords below. -->
 <style>
-  :host { --pct: 0%; }
+  .sui-template { --pct: 0%; }
   .todo-row.done { opacity: 0.5; text-decoration: line-through; }
   .todo-row.overdue { border-color: var(--destructive); color: var(--destructive); }
   .todo-row.selected { background: var(--surface-2); }

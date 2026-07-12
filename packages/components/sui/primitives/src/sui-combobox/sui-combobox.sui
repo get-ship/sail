@@ -25,8 +25,8 @@
   NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
   ─────────────────────────────────────────────────────────────────────
   - tone/size are GLOBAL framework channels now (contracts.css). feat/next
-    hand-rolled `:host([tone='x']) { --tone-border: …; --tone-ring: … }`
-    and `:host([size='x']) { --h: …; --fs: …; --px: … }` directly in its
+    hand-rolled `.sui-combobox[tone='x'] { --tone-border: …; --tone-ring: … }`
+    and `.sui-combobox[size='x'] { --h: …; --fs: …; --px: … }` directly in its
     own residual style block (no theme directive even there — an older
     pattern still).
     Both are DELETED; this skin reads var(--tone-border)/var(--tone-ring)
@@ -73,22 +73,25 @@
   same wall.
 -->
 
-<prop name="name" type="string" default="" />
-<prop name="value" type="string" default="" form-value />
-<prop name="placeholder" type="string" default="" />
-<prop name="options" type="string" default="" />
-<prop name="disabled" type="bool" default="false" reflect form-disabled />
-<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="default" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
-
+<component>{
+  props: {
+    name: '',
+    value: '',
+    placeholder: '',
+    options: '',
+    disabled: false,
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
+    size: 'md' | 'sm' | 'lg',
+  },
+}</component>
 <host sx="position:relative display:inline-flex w:full"></host>
 
-<variants part="wrap">
+<variants class="wrap">
   [disabled]: bg:muted border:border shadow:none cursor:not-allowed opacity:50
 </variants>
 
 <style>
-  :host {
+  .sui-combobox {
     flex-direction: column;
     vertical-align: middle;
   }
@@ -105,12 +108,12 @@
       border-color var(--duration-fast) var(--ease-out),
       box-shadow var(--duration-fast) var(--ease-out);
   }
-  :host(:not([disabled])) .wrap:hover:not(:focus-within):not([data-open]) {
+  .sui-combobox:not([disabled]) .wrap:hover:not(:focus-within):not([data-open]) {
     border-color: var(--border-strong);
     box-shadow: var(--shadow-sm);
   }
   .wrap:focus-within,
-  :host([data-open]) .wrap {
+  .sui-combobox[data-open] .wrap {
     border-color: var(--tone-ring);
     box-shadow: 0 0 0 var(--ring-width) var(--tone-ring);
   }
@@ -124,7 +127,7 @@
     pointer-events: none;
     transition: transform var(--duration-fast) var(--ease-out);
   }
-  :host([data-open]) .chevron { transform: rotate(180deg); }
+  .sui-combobox[data-open] .chevron { transform: rotate(180deg); }
   .listbox {
     top: calc(100% + var(--space-1));
     left: 0;
@@ -370,38 +373,14 @@ export default controller({
 })
 
 </controller>
-<div class="wrap" part="wrap"
-  sx="display:inline-flex w:full min-h:size-h px:size-px bg:background border:tone-border radius:md shadow:xs">
-  <input
-    class="entry"
-    part="input"
-    type="text"
-    name={name()}
-    placeholder={placeholder()}
-    disabled={disabled()}
-    autocomplete="off"
-    autocapitalize="off"
-    spellcheck="false"
-    role="combobox"
-    aria-expanded={open() ? 'true' : 'false'}
-    aria-controls={listId()}
-    aria-autocomplete="list"
-    aria-activedescendant={activeId()}
-    bind:value={filterText}
-    bind:this={inputEl}
-    sx="text:size-fs fg:foreground border:none shadow:none p:0"
-  />
-  <svg class="chevron" part="chevron" viewBox="0 0 16 16" aria-hidden="true"
-       fill="none" stroke="currentColor" stroke-width="1.75"
-       stroke-linecap="round" stroke-linejoin="round"
-       sx="w:icon-size-sm h:icon-size-sm fg:muted-foreground">
+<div class="wrap" sx="display:inline-flex w:full min-h:size-h px:size-px bg:background border:tone-border radius:md shadow:xs">
+  <input class="entry input" type="text" name={name()} placeholder={placeholder()} disabled={disabled()} autocomplete="off" autocapitalize="off" spellcheck="false" role="combobox" aria-expanded={open() ? 'true' : 'false'} aria-controls={listId()} aria-autocomplete="list" aria-activedescendant={activeId()} bind:value={filterText} bind:this={inputEl} sx="text:size-fs fg:foreground border:none shadow:none p:0" />
+  <svg class="chevron" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" sx="w:icon-size-sm h:icon-size-sm fg:muted-foreground">
     <path d="M4 6l4 4 4-4"></path>
   </svg>
 </div>
 {#if open() && !disabled()}
-  <ul class="listbox" part="listbox" role="listbox" id={listId()}
-      bind:this={listEl}
-      sx="position:absolute m:0 p:1 max-h:panel-max-h-sm overflow-y:auto bg:popover fg:popover-foreground border:border radius:md shadow:md z:popover">
+  <ul class="listbox" role="listbox" id={listId()} bind:this={listEl} sx="position:absolute m:0 p:1 max-h:panel-max-h-sm overflow-y:auto bg:popover fg:popover-foreground border:border radius:md shadow:md z:popover">
     {#for o of visibleOptions() key={o.id}}
       <li
         class="opt"
@@ -414,8 +393,7 @@ export default controller({
       >{o.label}</li>
     {/for}
     {#if visibleOptions().length === 0}
-      <li class="empty" part="empty" role="presentation"
-        sx="p:2 text:size-fs fg:muted-foreground">No matches</li>
+      <li class="empty" role="presentation" sx="p:2 text:size-fs fg:muted-foreground">No matches</li>
     {/if}
   </ul>
 {/if}

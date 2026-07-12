@@ -42,7 +42,7 @@
               ├─ <span class="n">123</span>     number literals
               ├─ <span class="b">true/false</span>   boolean literals
               ├─ <span class="null">null</span>  null literals
-              └─ <span class="error" part="error" role="alert">  invalid JSON
+              └─ <span class="error" role="alert">  invalid JSON
                   Invalid JSON: …
 
   NEW SURFACE (re-port from feat/next, parity-gate pass)
@@ -68,7 +68,7 @@
     reset, and details[open] > summary .caret { transform: rotate } are
     also non-sx (transition shorthand, vendor pseudo, attribute
     descendant).
-  - The :host line-height was `1.65` in feat/next (raw number). The
+  - The .sui-json-view line-height was `1.65` in feat/next (raw number). The
     prior worktree snap was --leading-normal-plus (the prior existing
     token); kept that — `1.65` is a non-token value the css-token lint
     would not block (it's not a font-size/radius/z-index), but the
@@ -84,15 +84,18 @@
   No new LANG-GAP.
 -->
 
-<prop name="data" type="string" default="" reflect />
-<prop name="expanded" type="bool" default="false" reflect />
-<prop name="depth" type="number" default="1" reflect />
-
+<component>{
+  props: {
+    data: '',
+    expanded: false,
+    depth: 1,
+  },
+}</component>
 <host sx="display:block fg:foreground" />
 <variants>[hidden]: display:none</variants>
 
 <style>
-  :host {
+  .sui-json-view {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     line-height: var(--leading-normal-plus);
@@ -201,10 +204,10 @@ export default controller<Scope>({
       try {
         parsed = JSON.parse(data) as JsonValue
       } catch (e) {
-        return `<span class="error" part="error" role="alert">Invalid JSON: ${escape((e as Error).message)}</span>`
+        return `<span class="error" role="alert">Invalid JSON: ${escape((e as Error).message)}</span>`
       }
 
-      return `<div part="root">${renderValue(parsed, null, 0, expanded, depth)}</div>`
+      return `<div class="root">${renderValue(parsed, null, 0, expanded, depth)}</div>`
     })
   },
 })

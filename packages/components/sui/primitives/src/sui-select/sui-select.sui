@@ -59,16 +59,19 @@
   untested, ungatable change. Left on shadow, matching the alert precedent.
 -->
 
-<prop name="value" type="string" default="" form-value />
-<prop name="name" type="string" default="" />
-<prop name="required" type="bool" default="false" reflect />
-<prop name="disabled" type="bool" default="false" reflect form-disabled />
-<prop name="invalid" type="bool" default="false" reflect />
-<prop name="tone" values="default|info|success|warning|destructive|accent|muted" default="default" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
-<prop name="label" type="string" default="" />
-<prop name="described-by" type="string" default="" />
-
+<component>{
+  props: {
+    value: '',
+    name: '',
+    required: false,
+    disabled: false,
+    invalid: false,
+    tone: 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
+    size: 'md' | 'sm' | 'lg',
+    label: '',
+    'described-by': '',
+  },
+}</component>
 <variants class="field">
   invalid:  border:destructive
   disabled: bg:muted border:subtle shadow:none cursor:not-allowed
@@ -90,8 +93,8 @@
    * filter: saturate() on disabled, the select option cloned-child
    * override, the forced-colors system-color outline, the
    * prefers-reduced-motion opt-out, and the placeholder-color cue. */
-  :host { display: inline-flex; vertical-align: middle; }
-  :host([disabled]) { color: var(--muted-foreground); filter: saturate(0.6); }
+  .sui-select { display: inline-flex; vertical-align: middle; }
+  .sui-select[disabled] { color: var(--muted-foreground); filter: saturate(0.6); }
 
   .field {
     gap: var(--size-gap);
@@ -108,20 +111,20 @@
       box-shadow var(--duration-fast) var(--ease-out),
       color var(--duration-fast) var(--ease-out);
   }
-  :host(:not([disabled])) .field:hover {
+  .sui-select:not([disabled]) .field:hover {
     background: var(--hover-bg);
     border-color: var(--border-strong);
     box-shadow: var(--shadow-sm);
   }
-  :host([tone]:not([tone='default'])) .field {
+  .sui-select[tone]:not([tone='default']) .field {
     border-color: var(--tone-border);
   }
-  :host([tone]:not([tone='default']):not([disabled])) .field:hover {
+  .sui-select[tone]:not([tone='default']:not([disabled])) .field:hover {
     background: var(--tone-bg);
     border-color: var(--tone-border);
   }
-  :host([size='sm']) { --chev: var(--icon-size-xs); }
-  :host([size='lg']) { --chev: var(--icon-size-md); }
+  .sui-select[size='sm'] { --chev: var(--icon-size-xs); }
+  .sui-select[size='lg'] { --chev: var(--icon-size-md); }
 
   /* The native select overlay — position absolute, font/color inherited,
    * appearance:none, the chevron gutter. */
@@ -135,14 +138,14 @@
   }
   select option { color: var(--foreground); background: var(--background); }
   select:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
-  :host([invalid]) select:focus-visible { --ring-color: var(--destructive); }
-  :host([disabled]) select { cursor: not-allowed; }
+  .sui-select[invalid] select:focus-visible { --ring-color: var(--destructive); }
+  .sui-select[disabled] select { cursor: not-allowed; }
 
   .value {
     display: inline-block; max-width: 100%; white-space: nowrap;
     overflow: hidden; text-overflow: ellipsis; pointer-events: none;
   }
-  :host([data-placeholder]) .value { color: var(--muted-foreground); }
+  .sui-select[data-placeholder] .value { color: var(--muted-foreground); }
 
   .chevron {
     position: absolute; inset-block: 0; inset-inline-end: var(--size-px);
@@ -153,37 +156,37 @@
       color var(--duration-fast) var(--ease-out),
       transform var(--duration-medium) var(--ease-out);
   }
-  :host(:not([disabled])) .field:hover .chevron { color: var(--foreground); }
-  :host([tone]:not([tone='default'])) .chevron { color: var(--tone-fg); }
+  .sui-select:not([disabled]) .field:hover .chevron { color: var(--foreground); }
+  .sui-select[tone]:not([tone='default']) .chevron { color: var(--tone-fg); }
 
   /* Stacked focus ring — two box-shadows of different widths/colors
    * (a Tailwind-style offset ring). The no-tone case uses the local
    * --ring-color override set by select:focus-visible. */
-  :host(:focus-within) .field {
+  .sui-select:focus-within .field {
     outline: none;
     border-color: var(--tone-border);
     box-shadow:
       0 0 0 var(--ring-offset) var(--background),
       0 0 0 calc(var(--ring-offset) + var(--ring-width)) var(--tone-ring);
   }
-  :host(:not([tone]):focus-within) .field,
-  :host([tone='default']:focus-within) .field {
+  .sui-select:not([tone]:focus-within) .field,
+  .sui-select[tone='default']:focus-within .field {
     border-color: var(--ring-color);
     box-shadow:
       0 0 0 var(--ring-offset) var(--background),
       var(--shadow-accent);
   }
-  :host([invalid]:focus-within) .field {
+  .sui-select[invalid]:focus-within .field {
     border-color: var(--destructive);
     box-shadow:
       0 0 0 var(--ring-offset) var(--background),
       var(--shadow-accent);
   }
 
-  :host([disabled]) .field { filter: saturate(0.6); }
+  .sui-select[disabled] .field { filter: saturate(0.6); }
 
   @media (forced-colors: active) {
-    :host(:focus-within) .field { outline: 2px solid CanvasText; outline-offset: 2px; }
+    .sui-select:focus-within .field { outline: 2px solid CanvasText; outline-offset: 2px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .field, .chevron { transition: none; }
@@ -310,36 +313,11 @@ export default controller<Scope>({
 })
 
 </controller>
-  <row class="field" part="field" gap="2" align="center"
-    sx="
-      position:relative
-      weight:medium
-      leading:tight
-      tracking:tight
-      bg:background
-      fg:foreground
-      border:border
-      radius:md
-      shadow:xs
-      cursor:pointer
-      group
-    "
-  >
+  <row class="field" gap="2" align="center" sx=" position:relative weight:medium leading:tight tracking:tight bg:background fg:foreground border:border radius:md shadow:xs cursor:pointer group ">
   <span class="value" aria-hidden="true" bind:this={valueLabel}></span>
-  <svg class="chevron" part="chevron" viewBox="0 0 16 16"
-    aria-hidden="true" focusable="false" fill="none"
-    stroke="currentColor" stroke-width="1.75"
-    stroke-linecap="round" stroke-linejoin="round">
+  <svg class="chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
     <path d="M4 6l4 4 4-4"></path>
   </svg>
-  <select part="select"
-    name={name()}
-    disabled={disabled()}
-    required={required()}
-    aria-invalid={invalid() ? 'true' : 'false'}
-    aria-label={label()}
-    aria-describedby={describedBy()}
-    bind:this={selectEl}
-  ></select>
+  <select class="select" name={name()} disabled={disabled()} required={required()} aria-invalid={invalid() ? 'true' : 'false'} aria-label={label()} aria-describedby={describedBy()} bind:this={selectEl}></select>
   </row>
 <span hidden><slot bind:this={optionsSlot}></slot></span>

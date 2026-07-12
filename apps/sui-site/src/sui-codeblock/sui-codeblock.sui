@@ -5,11 +5,14 @@
   in shadow (the document `.code` rules don't reach here), using the
   --syntax-* theme tokens so colours follow light/dark.
 -->
-<prop name="code" type="string" default="" />
-<prop name="lang" type="string" default="sui" reflect />
-
+<component>{
+  props: {
+    code: '',
+    lang: 'sui',
+  },
+}</component>
 <style>
-  :host { display: block; }
+  .sui-codeblock { display: block; }
   pre {
     margin: 0;
     font-family: var(--font-mono);
@@ -34,4 +37,4 @@
   .tok-bind { color: var(--syntax-function); }
 </style>
 
-<pre part="pre" bind:this={preEl}></pre>
+<pre class="pre" bind:this={preEl}></pre>

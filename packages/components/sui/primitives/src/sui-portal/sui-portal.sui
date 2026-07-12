@@ -23,18 +23,21 @@
       Z-index management is the author's responsibility.
 -->
 
-<prop name="target" type="string" default="body" />
-
+<component>{
+  props: {
+    target: 'body',
+  },
+}</component>
 <!--
   NEW SURFACE (re-port from feat/next, parity-gate pass)
   ─────────────────────────────────────────────────────────────────────
   - portal has no tone/size. No <theme> block, no per-component
-    :host([tone='…']) or :host([size='…']) redeclaration. The
+    .sui-portal[tone='…'] or .sui-portal[size='…'] redeclaration. The
     framework's global tone/size channels are irrelevant — the
     portal element renders nothing in its own box.
-  - The :host display:none is the only surface authoring, and it
+  - The .sui-portal display:none is the only surface authoring, and it
     stays in <style> because sx/theme/variants can't reach a bare
-    :host display rule. The comment block in <style> above the
+    .sui-portal display rule. The comment block in <style> above the
     rule already documents the irreducible case.
   - The teleportation is in the controller (mount/cleanup), not in
     the template — this is a behavioral primitive, not a styled one.
@@ -49,10 +52,10 @@
 <style>
   /* Host is invisible — slotted children are physically teleported under
      `target`; rendering them in the host's own box would double-render in
-     the original location. Bare `:host { display: none }` cannot be
+     the original location. Bare `.sui-portal { display: none }` cannot be
      expressed via the sx/theme/variants constructs (those emit a class on
-     a real element or a `:host([prop])` channel). */
-  :host { display: none; }
+     a real element or a `.sui-portal[prop]` channel). */
+  .sui-portal { display: none; }
 </style>
 
 

@@ -37,10 +37,10 @@
     consolidation the global tone rollout intends, not a LANG-GAP.
   - Fixed two defects inherited from the prior automated token-routing pass
     (not introduced here, but this component's gate to fix): (1) a corrupted
-    `:host { --dot-tone: … }` rule had been spliced INSIDE the `.dot`
+    `.sui-timeline-item { --dot-tone: … }` rule had been spliced INSIDE the `.dot`
     declaration block (invalid nesting); (2) the `interactive` cursor
-    affordance had been narrowed to a `<variants part="dot">` rule (cursor
-    on the 10px dot only) — restored to `:host([interactive]) { cursor:
+    affordance had been narrowed to a `<variants class="dot">` rule (cursor
+    on the 10px dot only) — restored to `.sui-timeline-item[interactive] { cursor:
     pointer; … }` (the whole row is the click target, per the controller's
     click/keydown handlers and feat/next).
   - `.gutter`/`.body`/`.content` were NOT flex containers in the baseline
@@ -70,12 +70,15 @@
     expressible on this surface.
 -->
 
-<prop name="tone" type="string" default="default" reflect />
-<prop name="at" type="string" default="" reflect />
-<prop name="interactive" type="bool" default="false" reflect />
-
+<component>{
+  props: {
+    tone: 'default',
+    at: '',
+    interactive: false,
+  },
+}</component>
 <style>
-  :host {
+  .sui-timeline-item {
     display: grid;
     grid-template-columns: var(--space-5) 1fr;
     column-gap: var(--space-2);
@@ -91,8 +94,8 @@
     width: var(--space-half);
     background: var(--border-subtle);
   }
-  :host(:first-of-type) .gutter::before { top: var(--space-2_5); }
-  :host(:last-of-type) .gutter::before { bottom: calc(100% - var(--space-2_5)); }
+  .sui-timeline-item:first-of-type .gutter::before { top: var(--space-2_5); }
+  .sui-timeline-item:last-of-type .gutter::before { bottom: calc(100% - var(--space-2_5)); }
 
   .body { min-width: 0; }
 
@@ -114,20 +117,20 @@
     margin-top: var(--space-1);
   }
 
-  :host([interactive]) {
+  .sui-timeline-item[interactive] {
     cursor: pointer;
     border-radius: var(--radius-sm);
     outline: none;
   }
-  :host([interactive]:hover) { background: var(--muted); }
-  :host([interactive]:focus-visible) {
+  .sui-timeline-item[interactive]:hover { background: var(--muted); }
+  .sui-timeline-item[interactive]:focus-visible {
     box-shadow:
       0 0 0 var(--ring-offset) var(--background),
       0 0 0 calc(var(--ring-offset) + var(--ring-width))
         var(--ring);
   }
   @media (forced-colors: active) {
-    :host([interactive]:focus-visible) { outline: 2px solid CanvasText; outline-offset: 2px; }
+    .sui-timeline-item[interactive]:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
   }
 </style>
 
@@ -180,13 +183,13 @@ export default controller<Scope>({
 
 </controller>
 <row class="gutter" gap="0" justify="center" sx="position:relative">
-  <span class="dot" part="dot" sx="position:relative z:elevated bg:tone-fg mt:1"></span>
+  <span class="dot" sx="position:relative z:elevated bg:tone-fg mt:1"></span>
 </row>
-<div class="body" part="body">
+<div class="body">
   <row class="head" align="baseline" gap="2" sx="text:sm weight:medium fg:foreground">
     <slot name="title"></slot>
     {#if at()}
-      <span class="at" part="at" sx="fg:muted-foreground text:xs tracking:wide">{at()}</span>
+      <span class="at" sx="fg:muted-foreground text:xs tracking:wide">{at()}</span>
     {/if}
   </row>
   <div class="content"><slot></slot></div>

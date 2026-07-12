@@ -30,22 +30,25 @@
   Parts: cell
 -->
 
-<prop name="data" type="string" default="" reflect />
-<prop name="rows" type="string" default="" />
-<prop name="cols" type="string" default="" />
-<prop name="tone" values="default|primary|info|success|warning|destructive|accent|muted" default="primary" reflect />
-<prop name="cell-size" type="number" default="20" />
-<prop name="gap" type="number" default="3" />
-<prop name="label" type="string" default="heatmap" />
-<prop name="loading" type="bool" default="false" reflect />
-
+<component>{
+  props: {
+    data: '',
+    rows: '',
+    cols: '',
+    tone: 'primary' | 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
+    'cell-size': 20,
+    gap: 3,
+    label: 'heatmap',
+    loading: false,
+  },
+}</component>
 <style>
-  :host {
+  .sui-heatmap {
     display: inline-block;
     font-family: var(--font-body);
     transition: opacity var(--duration-fast) var(--ease-out);
   }
-  :host([hidden]) { display: none; }
+  .sui-heatmap[hidden] { display: none; }
   svg { display: block; overflow: visible; }
   .a11y-table {
     position: absolute;
@@ -60,7 +63,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    :host { transition: none; }
+    .sui-heatmap { transition: none; }
   }
 </style>
 
@@ -151,11 +154,11 @@ export default controller({
 
 </controller>
 {#if loading()}
-  <span skeleton shape="block" size="lg" part="loading" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
+  <span class="loading" skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
 {:else if chart.error()}
-  <error-state part="error"></error-state>
+  <error-state class="error"></error-state>
 {:else if chart.isEmpty()}
-  <empty-state part="empty"></empty-state>
+  <empty-state class="empty"></empty-state>
 {:else}
   <svg
     viewBox={'0 0 ' + svgW() + ' ' + svgH()}
@@ -165,15 +168,7 @@ export default controller({
     aria-label={ariaLabel()}
     aria-describedby="chart-data">
     {#for cell of cells() key={cell.id}}
-      <rect
-        part="cell"
-        x={cell.x}
-        y={cell.y}
-        width={cell.w}
-        height={cell.h}
-        rx="2"
-        fill={cell.color}
-        fill-opacity={cell.intensity}>
+      <rect class="cell" x={cell.x} y={cell.y} width={cell.w} height={cell.h} rx="2" fill={cell.color} fill-opacity={cell.intensity}>
       </rect>
     {/for}
   </svg>

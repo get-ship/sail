@@ -1,5 +1,8 @@
-<prop name="shadow" type="bool" default="false" />
-
+<component>{
+  props: {
+    shadow: false,
+  },
+}</component>
 <div class="effect">
   <p>count: <strong>{count()}</strong> — look at the document title in your browser tab.</p>
   <div class="row">

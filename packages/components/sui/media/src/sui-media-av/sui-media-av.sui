@@ -7,7 +7,7 @@
   — NEVER an attribute, NEVER a fetch. The renderer auto-detects video-vs-audio
   from the descriptor (overridable via `kind`) and plays it through the NATIVE
   <video>/<audio controls> element, which carries built-in assistive-tech
-  semantics. An optional decorative <canvas part="waveform" aria-hidden> draws
+  semantics. An optional decorative <canvas class="waveform" aria-hidden> draws
   decoded audio peaks beside the real <audio>, which stays the accessible
   control.
 
@@ -28,20 +28,23 @@
   Parts: media · controls · waveform.
 -->
 
-<prop name="kind" values="video|audio|auto" default="auto" reflect />
-<prop name="autoplay" type="bool" default="false" reflect />
-<prop name="controls" type="bool" default="true" reflect />
-<prop name="waveform" type="bool" default="false" reflect />
-
+<component>{
+  props: {
+    kind: 'auto' | 'video' | 'audio',
+    autoplay: false,
+    controls: true,
+    waveform: false,
+  },
+}</component>
 <style>
-  :host {
+  .sui-media-av {
     display: block;
     width: 100%;
     color: var(--foreground);
     /* Waveform canvas height — a fixed decorative strip dimension. */
     --sui-waveform-height: 3rem;
   }
-  :host([hidden]) { display: none; }
+  .sui-media-av[hidden] { display: none; }
 
   video,
   audio {
@@ -248,10 +251,10 @@ export default controller({
 
 </controller>
 {#if isVideo()}
-  <video part="media" bind:this={mediaEl}></video>
+  <video class="media" bind:this={mediaEl}></video>
 {:else}
-  <audio part="media" bind:this={mediaEl}></audio>
+  <audio class="media" bind:this={mediaEl}></audio>
   {#if showWaveform()}
-    <canvas part="waveform" aria-hidden="true" bind:this={waveEl}></canvas>
+    <canvas class="waveform" aria-hidden="true" bind:this={waveEl}></canvas>
   {/if}
 {/if}

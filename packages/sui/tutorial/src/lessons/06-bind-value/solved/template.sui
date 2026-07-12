@@ -1,5 +1,8 @@
-<prop name="shadow" type="bool" default="false" />
-
+<component>{
+  props: {
+    shadow: false,
+  },
+}</component>
 <div class="form">
   <label>name <input bind:value={name} placeholder="your name" /></label>
   <label>qty  <input bind:value={quantity} type="number" min="0" /></label>

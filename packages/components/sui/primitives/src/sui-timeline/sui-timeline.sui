@@ -21,8 +21,8 @@
 -->
 
 <style>
-  :host { display: block; position: relative; }
-  :host([hidden]) { display: none; }
+  .sui-timeline { display: block; position: relative; }
+  .sui-timeline[hidden] { display: none; }
 
 </style>
 
@@ -38,5 +38,5 @@ export default controller<Scope>({
 })
 
 </controller>
-<column class="list" part="list" gap="1"><slot></slot></column>
+<column class="list" gap="1"><slot></slot></column>
 

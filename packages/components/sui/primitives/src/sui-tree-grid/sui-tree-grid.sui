@@ -68,13 +68,13 @@
     translateY transform (the virtualizer's offset bookkeeping), the
     sticky .head with z-index, the .row[data-expanded] .caret rotate
     + .row:not([data-can-expand]) .caret visibility-hidden (descendant
-    attribute selectors — variants only target :host attrs), the
+    attribute selectors — variants only target .sui-tree-grid attrs), the
     .col-head[data-sortable] cursor/hover, the .row[data-selected]
     ::before primary marker, the .row:focus-visible inset box-shadow
     ring, the multi-property transitions, the cell/head color/border/
     text-transform/white-space/user-select, and the @media (forced-
     colors) CanvasText outline.
-  - The feat/next baseline's :host { font-family: var(--font-body);
+  - The feat/next baseline's .sui-tree-grid { font-family: var(--font-body);
     font-size: var(--density-text) } lives in <style> — no sx prop for
     font-family, and --density-text is a runtime density variable,
     not a token (it's set by the platform density axis at <html>).
@@ -88,15 +88,18 @@
   place; <button ghost xs> here paints correctly inside this shadow L2.
 -->
 
-<prop name="nodes" type="string" default="" />
-<prop name="columns" type="string" default="" />
-<prop name="label" type="string" default="" />
-<prop name="selectable" values="none|single|multi" default="none" reflect />
-<prop name="expand-on-select" type="bool" default="false" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
-<prop name="loading" type="bool" default="false" reflect />
-<prop name="error" type="string" default="" />
-
+<component>{
+  props: {
+    nodes: '',
+    columns: '',
+    label: '',
+    selectable: 'none' | 'single' | 'multi',
+    'expand-on-select': false,
+    size: 'md' | 'sm' | 'lg',
+    loading: false,
+    error: '',
+  },
+}</component>
 <host sx="display:block w:full fg:foreground" />
 <variants>[hidden]: display:none</variants>
 
@@ -108,9 +111,9 @@
    * matches the per-render expression's first-frame value. Same for
    * --sui-col-count, which the controller sets on the same element
    * and the .head/.row reference directly. */
-  :host { --sui-grid-template: repeat(1, minmax(80px, 1fr)); }
+  .sui-tree-grid { --sui-grid-template: repeat(1, minmax(80px, 1fr)); }
 
-  :host {
+  .sui-tree-grid {
     font-family: var(--font-body);
     font-size: var(--density-text);
     --sui-tree-indent: var(--density-row-px);
@@ -383,15 +386,15 @@ export default controller({
 
 </controller>
 {#if error() !== ''}
-<div class="tree-error" part="error" role="alert">
+<div class="tree-error error" role="alert">
   <error-state>{error()}</error-state>
 </div>
 {:else if isEmptyInitial()}
-<div class="tree-empty" part="empty" role="status">
+<div class="tree-empty empty" role="status">
   <slot name="empty"><empty-state></empty-state></slot>
 </div>
 {:else if isEmptyFiltered()}
-<div class="tree-empty" part="empty" role="status">
+<div class="tree-empty empty" role="status">
   <slot name="empty">
     <empty-state>
       <button slot="action" type="button" data-action="clear-filters">Clear filters</button>
@@ -399,29 +402,10 @@ export default controller({
   </slot>
 </div>
 {:else}
-<column
-  class="grid"
-  part="grid"
-  role="treegrid"
-  gap="0"
-  aria-label={label() || null}
-  aria-rowcount={rowCount()}
-  aria-multiselectable={selectable() === 'multi' ? 'true' : null}
-  style:--sui-col-count={headers().length}
-  style:--sui-grid-template={gridTemplate()}
-  sx="w:full overflow:hidden bg:surface-1 border:border radius:lg"
->
-  <div class="head" part="thead" role="row">
+<column class="grid" role="treegrid" gap="0" aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null} style:--sui-col-count={headers().length} style:--sui-grid-template={gridTemplate()} sx="w:full overflow:hidden bg:surface-1 border:border radius:lg">
+  <div class="head thead" role="row">
     {#for h of headers() key={h.id}}
-      <div
-        class="col-head"
-        part="columnheader"
-        role="columnheader"
-        data-col-id={h.id}
-        data-sortable={h.canSort ? 'true' : null}
-        data-sorted={h.sorted || null}
-        aria-sort={h.canSort ? h.ariaSort : null}
-      >
+      <div class="col-head columnheader" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null}>
         <span class="col-label">{h.label}</span>
         {#if h.sorted === 'asc'}
           <span class="sort-glyph" aria-hidden="true"><sui-icon name="chevron-up" size="xs"></sui-icon></span>
@@ -429,53 +413,24 @@ export default controller({
           <span class="sort-glyph" aria-hidden="true"><sui-icon name="chevron-down" size="xs"></sui-icon></span>
         {/if}
         {#if h.canHide}
-          <button
-            ghost
-            xs
-            type="button"
-            part="column-menu"
-            data-action="column-menu"
-            data-col-id={h.id}
-            aria-label="Column options"
-          >
+          <button class="column-menu" ghost xs type="button" data-action="column-menu" data-col-id={h.id} aria-label="Column options">
             <sui-icon name="more-vertical" size="xs"></sui-icon>
           </button>
         {/if}
         {#if h.canResize}
-          <span class="resize-handle" part="resize-handle" data-col-id={h.id} aria-hidden="true"></span>
+          <span class="resize-handle" data-col-id={h.id} aria-hidden="true"></span>
         {/if}
       </div>
     {/for}
   </div>
-  <div class="viewport" part="viewport" bind:this={viewportEl}>
-    <div class="spacer" part="spacer" style:height={`${totalSize()}px`}>
+  <div class="viewport" bind:this={viewportEl}>
+    <div class="spacer" style:height={`${totalSize()}px`}>
       {#for w of windowItems() key={`${w.key}|${w.cellsKey}`}}
-        <div
-          class="row"
-          part="row"
-          role="row"
-          data-node-id={w.id}
-          aria-level={w.level}
-          aria-posinset={w.posInSet}
-          aria-setsize={w.setSize}
-          aria-rowindex={w.index + 1}
-          aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null}
-          aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null}
-          data-can-expand={w.canExpand ? 'true' : null}
-          data-expanded={w.expanded ? 'true' : null}
-          data-selected={w.selected ? 'true' : null}
-          tabindex={w.id === activeRowId() ? '0' : '-1'}
-          style:transform={`translateY(${w.start}px)`}
-        >
+        <div class="row" role="row" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} style:transform={`translateY(${w.start}px)`}>
           {#for c of w.cells key={c.columnId}}
-            <div
-              class="cell"
-              part="cell"
-              role="gridcell"
-              style:padding-inline-start={c.first ? `calc(var(--density-row-px) + ${w.indent}px)` : null}
-            >
+            <div class="cell" role="gridcell" style:padding-inline-start={c.first ? `calc(var(--density-row-px) + ${w.indent}px)` : null}>
               {#if c.first && w.canExpand}
-                <span class="caret" part="caret" aria-hidden="true">
+                <span class="caret" aria-hidden="true">
                   <sui-icon name="chevron-right" size="xs"></sui-icon>
                 </span>
               {/if}

@@ -5,10 +5,13 @@
   doc typography survives the shadow boundary; uses the same tokens as base.css's
   `.doc` rules so it matches the surrounding page.
 -->
-<prop name="html" type="string" default="" />
-
+<component>{
+  props: {
+    html: '',
+  },
+}</component>
 <style>
-  :host { display: block; }
+  .sui-prose { display: block; }
   .prose > * + * { margin-top: var(--space-4); }
   .prose > :first-child { margin-top: 0; }
 

@@ -24,13 +24,16 @@
     sui-edge-create  { source, target } — drag-from-port created an edge.
 -->
 
-<prop name="value" type="string" default="" />
-<prop name="readonly" type="bool" default="false" reflect />
-<prop name="theme" values="light|dark" default="light" reflect />
-<prop name="grid" values="none|dots|lines" default="none" reflect />
-<prop name="layout" values="none|layered|force" default="none" reflect />
-<prop name="label" type="string" default="" />
-
+<component>{
+  props: {
+    value: '',
+    readonly: false,
+    theme: 'light' | 'dark',
+    grid: 'none' | 'dots' | 'lines',
+    layout: 'none' | 'layered' | 'force',
+    label: '',
+  },
+}</component>
 <controller>
 import { controller, signal, derived, effect, debounce } from '@ship/sui-runtime'
 import type { Scope } from './sui-board.sui'
@@ -227,49 +230,21 @@ export default controller({
 </controller>
 
 
-<sui-canvas
-  part="canvas"
-  role="application"
-  aria-label={label()}
-  prop:canvas={canvas}
-  prop:readonly={readonly()}
->
-  <svg class="edges" part="edges" aria-hidden="true">
+<sui-canvas class="canvas" role="application" aria-label={label()} prop:canvas={canvas} prop:readonly={readonly()}>
+  <svg class="edges" aria-hidden="true">
     {#for r of routes() key={r.id}}
-      <path
-        class="edge"
-        part="edge"
-        d={r.path}
-        data-edge-id={r.id}
-        data-incident={incidentSet().has(r.id)}
-      ></path>
+      <path class="edge" d={r.path} data-edge-id={r.id} data-incident={incidentSet().has(r.id)}></path>
     {/for}
     {#if pendingPath()}
-      <path class="edge edge-pending" part="edge-pending" d={pendingPath()}></path>
+      <path class="edge edge-pending" d={pendingPath()}></path>
     {/if}
   </svg>
 
   {#for n of nodes() key={n.id}}
-    <div
-      class="node"
-      part="node"
-      role="group"
-      tabindex="0"
-      aria-label={n.id}
-      data-node-id={n.id}
-      data-selected={selectedSet().has(n.id)}
-      style={`transform: translate(${n.rect.x}px, ${n.rect.y}px); width: ${n.rect.w}px; height: ${n.rect.h}px;`}
-      on:pointerdown={nodePointerDown}
-    >
+    <div class="node" role="group" tabindex="0" aria-label={n.id} data-node-id={n.id} data-selected={selectedSet().has(n.id)} style={`transform: translate(${n.rect.x}px, ${n.rect.y}px); width: ${n.rect.w}px; height: ${n.rect.h}px;`} on:pointerdown={nodePointerDown}>
       <slot name={n.id}></slot>
       {#for p of n.ports key={p.id}}
-        <span
-          class="port"
-          part="port"
-          data-port-id={p.id}
-          data-side={p.side}
-          on:pointerdown={portPointerDown}
-        ></span>
+        <span class="port" data-port-id={p.id} data-side={p.side} on:pointerdown={portPointerDown}></span>
       {/for}
     </div>
   {/for}

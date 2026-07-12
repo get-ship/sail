@@ -25,23 +25,26 @@
   Parts: series · grid
 -->
 
-<prop name="series" type="string" default="" reflect />
-<prop name="labels" type="string" default="" />
-<prop name="width" type="number" default="300" />
-<prop name="height" type="number" default="200" />
-<prop name="points" type="bool" default="false" reflect />
-<prop name="grid" type="bool" default="false" reflect />
-<prop name="label" type="string" default="area chart" />
-<prop name="loading" type="bool" default="false" reflect />
-
+<component>{
+  props: {
+    series: '',
+    labels: '',
+    width: 300,
+    height: 200,
+    points: false,
+    grid: false,
+    label: 'area chart',
+    loading: false,
+  },
+}</component>
 <style>
-  :host {
+  .sui-area-chart {
     display: block;
     width: 100%;
     height: 200px;
     transition: opacity var(--duration-fast) var(--ease-out);
   }
-  :host([hidden]) { display: none; }
+  .sui-area-chart[hidden] { display: none; }
   .wrap { display: flex; flex-direction: column; gap: 6px; width: 100%; height: 100%; }
   svg { display: block; width: 100%; flex: 1; overflow: hidden; }
   .legend {
@@ -67,7 +70,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    :host { transition: none; }
+    .sui-area-chart { transition: none; }
   }
 </style>
 
@@ -124,13 +127,13 @@ export default controller({
 })
 
 </controller>
-<div class="wrap" part="wrap">
+<div class="wrap">
   {#if loading()}
-    <span skeleton shape="block" size="lg" part="loading" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
+    <span class="loading" skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
   {:else if chart.error()}
-    <error-state part="error"></error-state>
+    <error-state class="error"></error-state>
   {:else if chart.isEmpty()}
-    <empty-state part="empty"></empty-state>
+    <empty-state class="empty"></empty-state>
   {:else}
     <svg
       viewBox={'0 0 ' + viewport.width() + ' ' + viewport.height()}
@@ -139,11 +142,11 @@ export default controller({
       aria-describedby="chart-data"
       bind:this={svgEl}>
       {#for g of gridLines() key={g.id}}
-        <line class="grid-line" part="grid" x1="0" x2={viewport.width()} y1={g.y} y2={g.y}></line>
+        <line class="grid-line grid" x1="0" x2={viewport.width()} y1={g.y} y2={g.y}></line>
       {/for}
       {#for s of seriesPaths() key={s.name}}
         <path d={s.fillD} fill={s.color} fill-opacity="0.3" stroke="none"></path>
-        <path part="series" d={s.strokeD} fill="none" stroke={s.color} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+        <path class="series" d={s.strokeD} fill="none" stroke={s.color} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
         {#if points()}
           {#for p of s.pts key={p.id}}
             <circle cx={p.cx} cy={p.cy} r="2.5" fill={s.color}></circle>

@@ -1,5 +1,8 @@
-<prop name="shadow" type="bool" default="false" />
-
+<component>{
+  props: {
+    shadow: false,
+  },
+}</component>
 <div class="clock">
   <p>seconds since mount: <strong>{elapsed()}</strong></p>
   <p class="hint">paused: <strong>{paused() ? 'yes' : 'no'}</strong></p>

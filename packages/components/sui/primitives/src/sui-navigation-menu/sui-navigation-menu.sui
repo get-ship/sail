@@ -12,17 +12,20 @@
   Slots: (default) — <sui-navigation-item> children
 -->
 
-<prop name="value" type="string" default="" reflect />
-
+<component>{
+  props: {
+    value: '',
+  },
+}</component>
 <style>
-  :host {
+  .sui-navigation-menu {
     display: flex;
     align-items: stretch;
     gap: 0;
     border-bottom: 1px solid var(--border);
     font-family: var(--font-body);
   }
-  :host([hidden]) { display: none; }
+  .sui-navigation-menu[hidden] { display: none; }
 </style>
 
 

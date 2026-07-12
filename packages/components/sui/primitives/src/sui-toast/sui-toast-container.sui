@@ -22,16 +22,19 @@
   ────────────────────────────────────────────────────────────────────────────
 -->
 
-<prop name="position" values="top-left|top-center|top-right|bottom-left|bottom-center|bottom-right" default="bottom-right" reflect />
-<prop name="max-visible" type="number" default="5" reflect />
-
+<component>{
+  props: {
+    position: 'bottom-right' | 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center',
+    'max-visible': 5,
+  },
+}</component>
 <style>
-  /* Residual: `:host` (host element, no sx) — the host collapses
+  /* Residual: `.sui-toast-container` (host element, no sx) — the host collapses
    * (display:contents) because the visible stack lives in body via
    * <sui-portal>. The host stays minimal so it can sit anywhere in
    * the document without taking layout space. */
-  :host { display: contents; }
-  :host([hidden]) { display: none; }
+  .sui-toast-container { display: contents; }
+  .sui-toast-container[hidden] { display: none; }
 </style>
 
 

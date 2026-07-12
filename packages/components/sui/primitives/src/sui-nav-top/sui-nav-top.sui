@@ -39,7 +39,7 @@
   - This component has THREE sibling root elements (brand/primary/actions
     spans+div) — no single wrapping element to hang sx on for the host's
     own chrome. `<host sx="…" />` is the compiler's directive for exactly
-    this: an element-less tag that lowers to a `:host{…}` rule (see
+    this: an element-less tag that lowers to a `.sui-nav-top{…}` rule (see
     crates/sui/compiler/src/parse/preprocess.rs `lower_host_sx`). Used here
     for the two closed-sx-expressible host declarations, `bg:muted` and
     `fg:foreground`; `display:flex`, height, gap, padding, border,
@@ -50,7 +50,7 @@
   - Fixed a real bug inherited from the prior automated sx-hoisting pass:
     the residual-block explainer comment was left UNCLOSED (`/* Residual:
     …` with no matching `*/`), which swallowed every rule after it —
-    `:host`, `.brand`, `.primary`, `.actions` — into one giant CSS comment.
+    `.sui-nav-top`, `.brand`, `.primary`, `.actions` — into one giant CSS comment.
     The compiled stylesheet shipped with NO bar layout at all (just the
     two hoisted host-sx declarations); this had no test coverage (feat/next
     never had a sui-nav-top.test.ts either) so it would have shipped silently
@@ -58,25 +58,28 @@
   - The empty `--token: ;` marker declarations above the residual block are
     kept (harmless) — they exist so the css-token lint resolves the `var()`
     references inside the residual block even though the block's own
-    selectors aren't literally `:host`/`.class` at parse time; same pattern
+    selectors aren't literally `.sui-nav-top`/`.class` at parse time; same pattern
     already used elsewhere on this surface (e.g. sui-select).
   - No LANG-GAP: every prop/slot/event from the baseline is fully
     expressible on this surface. No component test exists for this
     primitive in feat/next either, so there is no vitest file to gate here.
 -->
 
-<prop name="sticky" type="bool" default="false" reflect />
-
+<component>{
+  props: {
+    sticky: false,
+  },
+}</component>
 <host sx="bg:muted fg:foreground" />
 
 <style>
   --font-body: ; --foreground: ; --muted: ; --border: ; --ship-top-bar-h: ; --space-1: ; --space-2: ; --space-3: ; --text-sm: ; --z-sticky: ;
-  /* Residual: `:host` flex layout (align-items + gap), height + padding +
+  /* Residual: `.sui-nav-top` flex layout (align-items + gap), height + padding +
    * border-bottom + user-select + box-sizing + flex-shrink (none in sx),
    * the [sticky] position/z-index + backdrop-filter, and the .brand /
    * .primary / .actions child-zone flex shorthand (flex 1 1 auto,
    * flex-shrink 0, min-width 0, overflow hidden) — no sx equivalent. */
-  :host {
+  .sui-nav-top {
     display: flex;
     align-items: center;
     gap: var(--space-2);
@@ -90,7 +93,7 @@
     flex-shrink: 0;
     overflow: hidden;
   }
-  :host([sticky]) {
+  .sui-nav-top[sticky] {
     position: sticky;
     top: 0;
     z-index: var(--z-sticky);
@@ -132,6 +135,6 @@ export default controller<Scope>({
 })
 
 </controller>
-<span class="brand" part="brand"><slot name="brand"></slot></span>
-<div class="primary" part="primary"><slot></slot></div>
-<span class="actions" part="actions"><slot name="actions"></slot></span>
+<span class="brand"><slot name="brand"></slot></span>
+<div class="primary"><slot></slot></div>
+<span class="actions"><slot name="actions"></slot></span>

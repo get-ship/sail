@@ -19,15 +19,18 @@
   Slots: (default) — sui-toggle children
 -->
 
-<prop name="type" values="single|multiple" default="single" reflect />
-<prop name="value" type="string" default="" reflect />
-<prop name="size" values="sm|md|lg" default="md" reflect />
-<prop name="variant" values="outline|ghost|segmented" default="outline" reflect />
-<prop name="name" type="string" default="" />
-<prop name="orientation" values="horizontal|vertical" default="horizontal" reflect />
-
+<component>{
+  props: {
+    type: 'single' | 'multiple',
+    value: '',
+    size: 'md' | 'sm' | 'lg',
+    variant: 'outline' | 'ghost' | 'segmented',
+    name: '',
+    orientation: 'horizontal' | 'vertical',
+  },
+}</component>
 <style>
-  :host {
+  .sui-toggle-group {
     /* Segmented variant: 2px frame, 1px cell separator. Off the spacing
      * scale — exposed as local tokens so component CSS stays scale-free. */
     --tg-seg-pad: var(--space-half);
@@ -35,30 +38,30 @@
     display: inline-flex;
     gap: 0;
   }
-  :host([hidden]) { display: none; }
-  :host([orientation='vertical']) { flex-direction: column; }
+  .sui-toggle-group[hidden] { display: none; }
+  .sui-toggle-group[orientation='vertical'] { flex-direction: column; }
 
   ::slotted(sui-toggle:not(:first-child)) { margin-inline-start: -1px; }
   ::slotted(sui-toggle:first-child) { border-radius: var(--radius) 0 0 var(--radius); }
   ::slotted(sui-toggle:last-child) { border-radius: 0 var(--radius) var(--radius) 0; }
   ::slotted(sui-toggle:not(:first-child):not(:last-child)) { border-radius: 0; }
 
-  :host([orientation='vertical']) ::slotted(sui-toggle:not(:first-child)) { margin-inline-start: 0; margin-top: -1px; }
-  :host([orientation='vertical']) ::slotted(sui-toggle:first-child) { border-radius: var(--radius) var(--radius) 0 0; }
-  :host([orientation='vertical']) ::slotted(sui-toggle:last-child) { border-radius: 0 0 var(--radius) var(--radius); }
-  :host([orientation='vertical']) ::slotted(sui-toggle:not(:first-child):not(:last-child)) { border-radius: 0; }
+  .sui-toggle-group[orientation='vertical'] ::slotted(sui-toggle:not(:first-child)) { margin-inline-start: 0; margin-top: -1px; }
+  .sui-toggle-group[orientation='vertical'] ::slotted(sui-toggle:first-child) { border-radius: var(--radius) var(--radius) 0 0; }
+  .sui-toggle-group[orientation='vertical'] ::slotted(sui-toggle:last-child) { border-radius: 0 0 var(--radius) var(--radius); }
+  .sui-toggle-group[orientation='vertical'] ::slotted(sui-toggle:not(:first-child):not(:last-child)) { border-radius: 0; }
 
-  :host([variant='segmented']) {
+  .sui-toggle-group[variant='segmented'] {
     padding: var(--tg-seg-pad);
     background: var(--muted);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     gap: var(--tg-seg-gap);
   }
-  :host([variant='segmented']) ::slotted(sui-toggle:not(:first-child)) { margin-inline-start: 0; }
-  :host([variant='segmented']) ::slotted(sui-toggle:first-child) { border-radius: var(--radius-sm); }
-  :host([variant='segmented']) ::slotted(sui-toggle:last-child) { border-radius: var(--radius-sm); }
-  :host([variant='segmented']) ::slotted(sui-toggle:not(:first-child):not(:last-child)) { border-radius: var(--radius-sm); }
+  .sui-toggle-group[variant='segmented'] ::slotted(sui-toggle:not(:first-child)) { margin-inline-start: 0; }
+  .sui-toggle-group[variant='segmented'] ::slotted(sui-toggle:first-child) { border-radius: var(--radius-sm); }
+  .sui-toggle-group[variant='segmented'] ::slotted(sui-toggle:last-child) { border-radius: var(--radius-sm); }
+  .sui-toggle-group[variant='segmented'] ::slotted(sui-toggle:not(:first-child):not(:last-child)) { border-radius: var(--radius-sm); }
 </style>
 
 

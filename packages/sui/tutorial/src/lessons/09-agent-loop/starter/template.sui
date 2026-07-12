@@ -1,5 +1,8 @@
-<prop name="shadow" type="bool" default="false" />
-
+<component>{
+  props: {
+    shadow: false,
+  },
+}</component>
 <!-- Deliberate diagnostics for the agent to discover and fix.
      See the prose pane for what an agent would do with sui_diagnostics. -->
 <div class="dash">

@@ -1,5 +1,8 @@
-<prop name="shadow" type="bool" default="false" />
-
+<component>{
+  props: {
+    shadow: false,
+  },
+}</component>
 <div class="chat" on:click|self={() => dismiss()}>
   <ul class="log">
     {#for m of messages() key={m.id}}

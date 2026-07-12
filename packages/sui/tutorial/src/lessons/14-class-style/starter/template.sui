@@ -1,5 +1,8 @@
-<prop name="shadow" type="bool" default="false" />
-
+<component>{
+  props: {
+    shadow: false,
+  },
+}</component>
 <!-- <style> is the escape hatch for the dynamic STATE classes class: toggles
      (done/overdue/selected). Layout + spacing + text come from sx below. -->
 <style>

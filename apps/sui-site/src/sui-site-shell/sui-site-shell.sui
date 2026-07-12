@@ -9,7 +9,7 @@
 -->
 
 <style>
-  :host {
+  .sui-site-shell {
     display: block;
     min-height: 100vh;
     background: var(--background);
@@ -183,7 +183,7 @@
   }
 </style>
 
-<header class="topbar" part="topbar">
+<header class="topbar">
   <a class="brand" href="/" aria-label="Ship UI home">
     <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
       <circle cx="6" cy="6" r="3.4" fill="var(--primary)" />
@@ -207,7 +207,7 @@
 </header>
 
 <div class="body" class:fullscreen={fullscreen()}>
-  <nav class="sidebar" part="sidebar">
+  <nav class="sidebar">
     {#if product() === 'deck'}
       <div class="group">
         <h4>Introduction</h4>
@@ -266,7 +266,7 @@
       </div>
     {/if}
    </nav>
-  <main class="content" part="content">
+  <main class="content">
     <slot name="route"></slot>
   </main>
 </div>

@@ -82,14 +82,18 @@
     reading `sui-tabs.controller.ts`: no `setAttribute('variant', …)`
     call exists. Not preserving unreachable CSS is not a functionality
     drop; flagged here for visibility rather than silently dropped.
-  - `display:inline-flex` on :host is kept — genuinely different from
+  - `display:inline-flex` on .sui-tab is kept — genuinely different from
     the framework's block default (BASE_CSS), needed so tabs lay out
     inline in the strip.
 -->
 
-<prop name="name" type="string" default="" reflect />
-<prop name="label" type="string" default="" reflect />
-<prop name="count" type="string" default="" reflect />
+<component>{
+  props: {
+    name: '',
+    label: '',
+    count: '',
+  },
+}</component>
 <component>{
   props: {
     disabled: bool,
@@ -102,19 +106,19 @@
 </variants>
 
 <style>
-  :host { display: inline-flex; }
+  .sui-tab { display: inline-flex; }
 
   button {
     border-bottom: var(--space-1_25) solid transparent;
     border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   }
   button:hover:not(:disabled) { color: var(--foreground); }
-  :host([active]) button {
+  .sui-tab[active] button {
     color: var(--foreground);
     font-weight: var(--font-weight-semibold);
     border-bottom-color: var(--tone);
   }
-  :host([active]) button:hover:not(:disabled) { background: transparent; }
+  .sui-tab[active] button:hover:not(:disabled) { background: transparent; }
   button:focus-visible {
     outline: var(--ring-width) solid var(--tone-ring);
     outline-offset: calc(-1 * var(--ring-width));
@@ -153,20 +157,9 @@ export default controller<Scope>({
 })
 
 </controller>
-<button
-  ghost
-  part="button"
-  type="button"
-  role="tab"
-  data-name={name()}
-  aria-selected={active() ? 'true' : 'false'}
-  aria-disabled={disabled() ? 'true' : 'false'}
-  disabled={disabled()}
-  bind:this={btn}
-  sx="py:2 px:3 text:sm"
->
+<button class="button" ghost type="button" role="tab" data-name={name()} aria-selected={active() ? 'true' : 'false'} aria-disabled={disabled() ? 'true' : 'false'} disabled={disabled()} bind:this={btn} sx="py:2 px:3 text:sm">
   <row align="center" gap="2">
-    <span class="leading" part="leading"><slot name="leading"></slot></span>
+    <span class="leading"><slot name="leading"></slot></span>
     <slot></slot>
     {#if count() !== ''}
       <span class="count" aria-hidden="true"

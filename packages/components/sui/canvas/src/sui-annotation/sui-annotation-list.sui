@@ -21,13 +21,13 @@
 -->
 
 <style>
-  :host {
+  .sui-annotation-list {
     display: block;
     font-family: var(--font-body);
     font-size: var(--text-sm);
     color: var(--foreground);
   }
-  :host([hidden]) { display: none; }
+  .sui-annotation-list[hidden] { display: none; }
 
   ol {
     list-style: none;
@@ -136,11 +136,11 @@ export default controller({
 
 </controller>
 {#if staged().length === 0}
-  <div class="empty" part="empty">No staged annotations.</div>
+  <div class="empty">No staged annotations.</div>
 {:else}
-  <ol part="list">
+  <ol class="list">
     {#for a of staged() key={a.id}}
-      <li part="item" data-id={a.id}>
+      <li class="item" data-id={a.id}>
         <span class="kind">{a.kind}</span>
         <span class="note" title={a.note ?? ''}>{a.note ?? '(no note)'}</span>
         <button type="button" aria-label="Remove annotation" on:click={() => emitRemove(a.id)}>Remove</button>

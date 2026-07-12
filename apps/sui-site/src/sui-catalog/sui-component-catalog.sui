@@ -49,7 +49,7 @@
   every value is a design token — no literal colours, no ad-hoc grid/flex.
 -->
 <style>
-  :host {
+  .sui-component-catalog {
     display: block;
     max-width: 74rem;
     margin: 0 auto;
@@ -674,8 +674,8 @@
   <!-- ── LANGUAGE ELEMENTS — the headline section. Composed showcases for
        each L1 sub-group (layout / typography / stdlib), then a per-tag
        chip row as a quick reference. "These are in the language." ── -->
-  <div class="lang-frame" data-test="lang-section" part="lang-frame">
-    <div class="lang-head" part="lang-head">
+  <div class="lang-frame" data-test="lang-section">
+    <div class="lang-head">
       <span class="lang-eyebrow" data-test="lang-eyebrow">Language · the headline</span>
       <h2 class="lang-title" data-test="lang-title">Layout, typography, and surfaces are tags in the language.</h2>
       <p class="lang-lead" data-test="lang-lead">
@@ -689,43 +689,43 @@
     <!-- Layout showcase — a row, a column, and a grid rendered live,
          each composed of real <card> surfaces. Proves the layout keywords
          are not abstract: they build the page. -->
-    <section class="lang-panel" data-lang-panel="layout" data-test="lang-panel-layout" part="lang-panel">
-      <header class="lang-panel-head" part="lang-panel-head">
+    <section class="lang-panel" data-lang-panel="layout" data-test="lang-panel-layout">
+      <header class="lang-panel-head">
         <span class="lang-panel-id">01 · layout</span>
         <h3 class="lang-panel-title">Flex and grid, lowered at compile time</h3>
         <p class="lang-panel-blurb">Three keywords that replace the deleted layout components. Compose them with <code>&lt;card&gt;</code> and any other tag.</p>
       </header>
-      <div class="lang-panel-grid" part="lang-panel-grid">
-        <figure class="lang-showcase" data-test="lang-show-row" part="lang-showcase">
+      <div class="lang-panel-grid">
+        <figure class="lang-showcase" data-test="lang-show-row">
           <figcaption class="lang-showcase-cap"><code>&lt;row&gt;</code> &mdash; horizontal flow</figcaption>
-          <center class="lang-showcase-stage" data-test="lang-show-row-stage" part="lang-showcase-stage">
-            <row class="lang-row" part="lang-showcase-row" data-test="lang-show-row-demo">
-              <card class="lang-cell" tone="primary" padding="sm" part="lang-cell">Author</card>
-              <card class="lang-cell" tone="info" padding="sm" part="lang-cell">Compile</card>
-              <card class="lang-cell" tone="success" padding="sm" part="lang-cell">Ship</card>
+          <center class="lang-showcase-stage" data-test="lang-show-row-stage">
+            <row class="lang-row lang-showcase-row" data-test="lang-show-row-demo">
+              <card class="lang-cell" tone="primary" padding="sm">Author</card>
+              <card class="lang-cell" tone="info" padding="sm">Compile</card>
+              <card class="lang-cell" tone="success" padding="sm">Ship</card>
             </row>
           </center>
         </figure>
-        <figure class="lang-showcase" data-test="lang-show-column" part="lang-showcase">
+        <figure class="lang-showcase" data-test="lang-show-column">
           <figcaption class="lang-showcase-cap"><code>&lt;column&gt;</code> &mdash; vertical flow</figcaption>
-          <center class="lang-showcase-stage" data-test="lang-show-column-stage" part="lang-showcase-stage">
-            <column class="lang-column" part="lang-showcase-column" data-test="lang-show-column-demo">
-              <card class="lang-cell" tone="primary" padding="sm" part="lang-cell">Author</card>
-              <card class="lang-cell" tone="info" padding="sm" part="lang-cell">Compile</card>
-              <card class="lang-cell" tone="success" padding="sm" part="lang-cell">Ship</card>
+          <center class="lang-showcase-stage" data-test="lang-show-column-stage">
+            <column class="lang-column lang-showcase-column" data-test="lang-show-column-demo">
+              <card class="lang-cell" tone="primary" padding="sm">Author</card>
+              <card class="lang-cell" tone="info" padding="sm">Compile</card>
+              <card class="lang-cell" tone="success" padding="sm">Ship</card>
             </column>
           </center>
         </figure>
-        <figure class="lang-showcase" data-test="lang-show-grid" part="lang-showcase">
+        <figure class="lang-showcase" data-test="lang-show-grid">
           <figcaption class="lang-showcase-cap"><code>&lt;grid cols="3"&gt;</code> &mdash; auto-fill grid</figcaption>
-          <center class="lang-showcase-stage" data-test="lang-show-grid-stage" part="lang-showcase-stage">
-            <grid class="lang-grid" cols="3" gap="3" part="lang-showcase-grid" data-test="lang-show-grid-demo">
-              <card class="lang-cell" padding="sm" part="lang-cell">A</card>
-              <card class="lang-cell" padding="sm" part="lang-cell">B</card>
-              <card class="lang-cell" padding="sm" part="lang-cell">C</card>
-              <card class="lang-cell" padding="sm" part="lang-cell">D</card>
-              <card class="lang-cell" padding="sm" part="lang-cell">E</card>
-              <card class="lang-cell" padding="sm" part="lang-cell">F</card>
+          <center class="lang-showcase-stage" data-test="lang-show-grid-stage">
+            <grid class="lang-grid lang-showcase-grid" cols="3" gap="3" data-test="lang-show-grid-demo">
+              <card class="lang-cell" padding="sm">A</card>
+              <card class="lang-cell" padding="sm">B</card>
+              <card class="lang-cell" padding="sm">C</card>
+              <card class="lang-cell" padding="sm">D</card>
+              <card class="lang-cell" padding="sm">E</card>
+              <card class="lang-cell" padding="sm">F</card>
             </grid>
           </center>
         </figure>
@@ -735,13 +735,13 @@
     <!-- Typography showcase — the full type scale, rendered live as the
          same tags lower to in real markup. One element per row, the chip
          shows the tag and the result. -->
-    <section class="lang-panel" data-lang-panel="typography" data-test="lang-panel-typography" part="lang-panel">
-      <header class="lang-panel-head" part="lang-panel-head">
+    <section class="lang-panel" data-lang-panel="typography" data-test="lang-panel-typography">
+      <header class="lang-panel-head">
         <span class="lang-panel-id">02 · typography</span>
         <h3 class="lang-panel-title">The type scale, themed by tokens</h3>
         <p class="lang-panel-blurb">Headings, body, marks, and lists — the text rhythm ships with the framework. Use plain tags; the type is already correct.</p>
       </header>
-      <column class="lang-type" gap="2" part="lang-type" data-test="lang-type">
+      <column class="lang-type" gap="2" data-test="lang-type">
         <row class="lang-type-row" align="baseline" gap="3" data-test="lang-type-h1">
           <code class="lang-type-tag">&lt;h1&gt;</code>
           <h1 class="lang-type-spec">Display heading</h1>
@@ -777,35 +777,35 @@
 
     <!-- Stdlib L1 showcase — the framework's foundational surfaces.
          Each is a bare tag, not a custom element. -->
-    <section class="lang-panel" data-lang-panel="primitives" data-test="lang-panel-primitives" part="lang-panel">
-      <header class="lang-panel-head" part="lang-panel-head">
+    <section class="lang-panel" data-lang-panel="primitives" data-test="lang-panel-primitives">
+      <header class="lang-panel-head">
         <span class="lang-panel-id">03 · stdlib L1</span>
         <h3 class="lang-panel-title">Surfaces the framework ships</h3>
         <p class="lang-panel-blurb">The five foundational L1 surfaces — same author experience as a custom element, with a lighter runtime cost.</p>
       </header>
-      <grid class="lang-stdlib" cols="2" gap="3" part="lang-stdlib" data-test="lang-stdlib">
-        <card class="lang-stdlib-cell" tone="primary" padding="md" part="lang-stdlib-cell" data-test="lang-stdlib-card">
+      <grid class="lang-stdlib" cols="2" gap="3" data-test="lang-stdlib">
+        <card class="lang-stdlib-cell" tone="primary" padding="md" data-test="lang-stdlib-card">
           <span class="lang-stdlib-tag">&lt;card&gt;</span>
           <strong>The content surface</strong>
           <p class="lang-stdlib-desc">A tone-tinted container with optional accent bar, status rail, and hover lift.</p>
         </card>
-        <card class="lang-stdlib-cell" tone="info" padding="md" part="lang-stdlib-cell" data-test="lang-stdlib-icon">
+        <card class="lang-stdlib-cell" tone="info" padding="md" data-test="lang-stdlib-icon">
           <span class="lang-stdlib-tag">&lt;icon&gt;</span>
-          <icon name="sparkles" size="lg" part="lang-stdlib-icon-glyph" data-test="lang-stdlib-icon-glyph"></icon>
+          <icon class="lang-stdlib-icon-glyph" name="sparkles" size="lg" data-test="lang-stdlib-icon-glyph"></icon>
           <strong>Iconographic mark</strong>
           <p class="lang-stdlib-desc">Sizes and inks any SVG. Tones inherit from the design system.</p>
         </card>
-        <card class="lang-stdlib-cell" tone="muted" padding="md" part="lang-stdlib-cell" data-test="lang-stdlib-label">
+        <card class="lang-stdlib-cell" tone="muted" padding="md" data-test="lang-stdlib-label">
           <span class="lang-stdlib-tag">&lt;label&gt;</span>
-          <label required part="lang-stdlib-label-glyph" data-test="lang-stdlib-label-glyph">Field label</label>
+          <label class="lang-stdlib-label-glyph" required data-test="lang-stdlib-label-glyph">Field label</label>
           <strong>The form caption</strong>
           <p class="lang-stdlib-desc">A required field caption that lowers to a native <code>&lt;label&gt;</code>.</p>
         </card>
-        <card class="lang-stdlib-cell" tone="default" padding="md" part="lang-stdlib-cell" data-test="lang-stdlib-separator">
+        <card class="lang-stdlib-cell" tone="default" padding="md" data-test="lang-stdlib-separator">
           <span class="lang-stdlib-tag">&lt;separator&gt;</span>
           <strong>The rule between things</strong>
-          <separator part="lang-stdlib-separator-glyph" data-test="lang-stdlib-separator-glyph"></separator>
-          <spinner part="lang-stdlib-spinner-glyph" data-test="lang-stdlib-spinner-glyph"></spinner>
+          <separator class="lang-stdlib-separator-glyph" data-test="lang-stdlib-separator-glyph"></separator>
+          <spinner class="lang-stdlib-spinner-glyph" data-test="lang-stdlib-spinner-glyph"></spinner>
           <p class="lang-stdlib-desc">A semantic rule, plus the loading mark — both bare tags.</p>
         </card>
       </grid>
@@ -814,13 +814,13 @@
     <!-- Per-tag quick reference — every L1 keyword as a chip, with a
          live mini-mount of the keyword itself. Lower-importance than the
          composed showcases above (which is the HERO). -->
-    <section class="lang-reference" data-test="lang-reference" part="lang-reference">
-      <header class="lang-reference-head" part="lang-reference-head">
+    <section class="lang-reference" data-test="lang-reference">
+      <header class="lang-reference-head">
         <span class="lang-reference-id">all keywords</span>
         <span class="lang-reference-meta" data-test="lang-meta">{visibleL1Count()} of {totalL1()} visible</span>
       </header>
       {#for g of l1Groups() key={g.id}}
-        <div class="lang-group" attr:data-lang-group={g.id} part="lang-group">
+        <div class="lang-group" attr:data-lang-group={g.id}>
           <div class="lang-group-head">
             <span class="lang-group-title">{g.label}</span>
             <span class="lang-group-blurb">{g.blurb}</span>

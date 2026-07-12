@@ -1,5 +1,8 @@
-<prop name="shadow" type="bool" default="false" />
-
+<component>{
+  props: {
+    shadow: false,
+  },
+}</component>
 <!-- <style> is the escape hatch for: the per-label stack layout (sx
      can't reach descendants), the `:disabled` pseudo on the submit
      button, and `font-family` / `font-weight` (no sx props). -->

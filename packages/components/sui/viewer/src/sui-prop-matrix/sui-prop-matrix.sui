@@ -24,16 +24,19 @@
   (`<html data-density>`), NOT the base `--space-*` scale.
 -->
 
-<prop name="component-name" type="string" default="" reflect />
-
+<component>{
+  props: {
+    'component-name': '',
+  },
+}</component>
 <style>
-  :host {
+  .sui-prop-matrix {
     display: block;
     font-family: var(--font-body);
     font-size: var(--density-text);
     color: var(--foreground);
   }
-  :host([hidden]) { display: none; }
+  .sui-prop-matrix[hidden] { display: none; }
 
   .grid {
     display: grid;
@@ -180,22 +183,14 @@ export default controller({
 
 </controller>
 {#if cells().length === 0}
-  <empty-state part="empty"></empty-state>
+  <empty-state class="empty"></empty-state>
 {:else}
-  <div class="grid" part="grid" role="group" aria-label={gridLabel()}>
+  <div class="grid" role="group" aria-label={gridLabel()}>
     {#for cell of cells() key={cell.id}}
-      <button
-        type="button"
-        class="cell"
-        part="cell"
-        data-matrix-cell
-        data-cell-id={cell.id}
-        data-active={activeId() === cell.id ? true : null}
-        aria-pressed={activeId() === cell.id ? 'true' : 'false'}
-      >
+      <button type="button" class="cell" data-matrix-cell data-cell-id={cell.id} data-active={activeId() === cell.id ? true : null} aria-pressed={activeId() === cell.id ? 'true' : 'false'}>
         <column gap="1">
-          <span class="cell-label" part="cell-label">{cell.label}</span>
-          <span class="cell-stage" part="cell-stage">
+          <span class="cell-label">{cell.label}</span>
+          <span class="cell-stage">
             <sui-render
               mode="tag"
               component-name={componentName()}

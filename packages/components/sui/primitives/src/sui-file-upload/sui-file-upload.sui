@@ -26,15 +26,19 @@
   ────────────────────────────────────────────────────────────────────────
 -->
 
-<prop name="accept" type="string" default="" />
-<prop name="multiple" type="bool" default="false" />
-<prop name="max-size" type="number" default="10485760" />
-<prop name="disabled" type="bool" default="false" reflect />
+<component>{
+  props: {
+    accept: '',
+    multiple: false,
+    'max-size': 10485760,
+    disabled: false,
+  },
+}</component>
 <!--
   NEW SURFACE (re-port from feat/next, parity-gate pass)
   ─────────────────────────────────────────────────────────────────────
   - tone is a GLOBAL framework channel now (contracts.css / suiTonesSheet).
-    No <theme> block, no per-component :host([tone='…']) redeclaration.
+    No <theme> block, no per-component .sui-file-upload[tone='…'] redeclaration.
     The tone prop still reflects on the host (so the catalog contract
     is intact) and the dropzone's `over` variant reads var(--tone-ring)
     / var(--tone-bg) directly — the framework fills them from whichever
@@ -49,7 +53,7 @@
     icon, file-name/file-size, and error all live in sx; <style> keeps
     only what sx/variants cannot express (dashed border + multi-prop
     transition + saturate filter / pointer-events for the compound
-    :host([disabled]) + the host font defaults + the file-list top
+    .sui-file-upload[disabled] + the host font defaults + the file-list top
     margin that lives on a class and is target-able through a single
     class rule + the dropzone focus ring that pairs an outline with
     the variant tint).
@@ -62,17 +66,17 @@
   [hidden]:  display:none
   [disabled]: opacity:75 cursor:not-allowed
 </variants>
-<variants part="dropzone">
+<variants class="dropzone">
   over: border:tone-ring bg:tone-bg
 </variants>
 
 <style>
-  :host {
+  .sui-file-upload {
     display: block;
     font-family: var(--font-body);
     font-size: var(--text-sm);
   }
-  :host([disabled]) {
+  .sui-file-upload[disabled] {
     color: var(--muted-foreground);
     filter: saturate(0.6);
     pointer-events: none;
@@ -329,53 +333,28 @@ export default controller({
 })
 
 </controller>
-<div
-  class="dropzone"
-  class:over={over()}
-  part="dropzone"
-  role="button"
-  tabindex={disabled() ? '-1' : '0'}
-  aria-label={accept() ? 'Upload files (' + accept() + ')' : 'Upload files'}
-  aria-disabled={disabled() ? 'true' : 'false'}
-  bind:this={dropzoneEl}
->
+<div class="dropzone" class:over={over()} role="button" tabindex={disabled() ? '-1' : '0'} aria-label={accept() ? 'Upload files (' + accept() + ')' : 'Upload files'} aria-disabled={disabled() ? 'true' : 'false'} bind:this={dropzoneEl}>
   <span class="icon" aria-hidden="true">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
   </span>
   <span>Drag &amp; drop or <span style="color:var(--primary);text-decoration:underline;text-underline-offset:2px">browse</span></span>
 </div>
-<input
-  type="file"
-  part="input"
-  accept={accept()}
-  multiple={multiple()}
-  aria-hidden="true"
-  tabindex="-1"
-  bind:this={inputEl}
-/>
+<input class="input" type="file" accept={accept()} multiple={multiple()} aria-hidden="true" tabindex="-1" bind:this={inputEl} />
 {#if errorMsg()}
-  <div class="error" role="alert" part="error" sx="text:sm fg:destructive">{errorMsg()}</div>
+  <div class="error" role="alert" sx="text:sm fg:destructive">{errorMsg()}</div>
 {/if}
 {#if displayFiles().length > 0}
-  <column class="file-list" part="file-list" gap="1" aria-live="polite" bind:this={fileListEl}>
+  <column class="file-list" gap="1" aria-live="polite" bind:this={fileListEl}>
     {#for f of displayFiles() key={f.key}}
-      <div class="file-item" part="file-item">
+      <div class="file-item">
         <span class="file-doc-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2 2V8z"/><path d="M14 2v6h6"/></svg>
         </span>
-        <column class="file-meta" part="file-meta" gap="1">
+        <column class="file-meta" gap="1">
           <span class="file-name">{f.name}</span>
           <span class="file-size">{f.sizeStr}</span>
         </column>
-        <button
-          ghost
-          sm
-          class="remove"
-          part="remove"
-          type="button"
-          data-idx={f.idx}
-          aria-label={'Remove ' + f.name}
-        >×</button>
+        <button ghost sm class="remove" type="button" data-idx={f.idx} aria-label={'Remove ' + f.name}>×</button>
       </div>
     {/for}
   </column>

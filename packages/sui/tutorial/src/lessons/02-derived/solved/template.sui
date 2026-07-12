@@ -1,5 +1,8 @@
-<prop name="shadow" type="bool" default="false" />
-
+<component>{
+  props: {
+    shadow: false,
+  },
+}</component>
 <div class="card">
   <p>count: <strong>{count()}</strong> · ×2: <strong>{doubled()}</strong></p>
   <p>greeting: <em>{greeting()}</em></p>

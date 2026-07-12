@@ -1,8 +1,11 @@
-<prop name="open" type="bool" default="false" reflect />
-<prop name="tone" values="default|destructive" default="default" reflect />
-<prop name="confirm-label" type="string" default="Confirm" />
-<prop name="cancel-label" type="string" default="Cancel" />
-
+<component>{
+  props: {
+    open: false,
+    tone: 'default' | 'destructive',
+    'confirm-label': 'Confirm',
+    'cancel-label': 'Cancel',
+  },
+}</component>
 <!--
   <sui-alert-dialog> — a confirm dialog on the native <dialog>. Composes the ONE
   dialog implementation: a native <dialog role="alertdialog"> skinned by
@@ -17,9 +20,9 @@
   shows the modal; a native close (ESC/backdrop) mirrors back to open=false.
 -->
 <style>
-  :host { display: contents; --ad-fg: var(--primary); --ad-bg: var(--selected-bg); }
-  :host([tone='destructive']) { --ad-fg: var(--destructive); --ad-bg: var(--tone-destructive-bg); }
-  :host([hidden]) { display: none; }
+  .sui-alert-dialog { display: contents; --ad-fg: var(--primary); --ad-bg: var(--selected-bg); }
+  .sui-alert-dialog[tone='destructive'] { --ad-fg: var(--destructive); --ad-bg: var(--tone-destructive-bg); }
+  .sui-alert-dialog[hidden] { display: none; }
 
   .head {
     display: grid;
@@ -90,7 +93,7 @@ export default controller({
 <dialog use:confirm role="alertdialog" size="sm">
   <header>
     <span class="head">
-      <span class="badge" part="badge" aria-hidden="true">
+      <span class="badge" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>

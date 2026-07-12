@@ -15,11 +15,14 @@
   Parts: link, indicator
 -->
 
-<prop name="value" type="string" default="" reflect />
-<prop name="active" type="bool" default="false" reflect />
-<prop name="disabled" type="bool" default="false" reflect />
-<prop name="href" type="string" default="" />
-
+<component>{
+  props: {
+    value: '',
+    active: false,
+    disabled: false,
+    href: '',
+  },
+}</component>
 <variants>
   active:   fg:foreground weight:semibold
   disabled: cursor:not-allowed opacity:50
@@ -30,11 +33,11 @@
      multi-property transitions + the three-part focus-ring box-shadow
      (sx ring is a single two-layer composition, not this hand-rolled
      combo); .indicator box model + transition; [disabled] .link
-     pointer-events (variants don't reach descendants, only :host);
+     pointer-events (variants don't reach descendants, only .sui-navigation-item);
      [active] .indicator fill; forced-colors + reduce-motion overrides
      (system color + reduced-motion media query). */
-  :host { display: inline-flex; position: relative; }
-  :host([hidden]) { display: none; }
+  .sui-navigation-item { display: inline-flex; position: relative; }
+  .sui-navigation-item[hidden] { display: none; }
   .link {
     display: inline-flex;
     align-items: center;
@@ -79,14 +82,14 @@
       opacity var(--duration-fast) var(--ease-out),
       transform var(--duration-fast) var(--ease-out);
   }
-  :host([active]) .indicator {
+  .sui-navigation-item[active] .indicator {
     opacity: 1;
     transform: scaleX(1);
   }
-  :host([disabled]) .link { pointer-events: none; }
+  .sui-navigation-item[disabled] .link { pointer-events: none; }
   @media (forced-colors: active) {
     .link:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
-    :host([active]) .indicator { background: CanvasText; }
+    .sui-navigation-item[active] .indicator { background: CanvasText; }
   }
   @media (prefers-reduced-motion: reduce) {
     .link, .indicator { transition: none !important; animation: none !important; }
@@ -123,19 +126,8 @@ export default controller<Scope>({
 
 </controller>
 {#if href()}
-  <a
-    class="link"
-    part="link"
-    href={href()}
-    aria-current={active() ? 'page' : 'false'}
-  ><slot></slot></a>
+  <a class="link" href={href()} aria-current={active() ? 'page' : 'false'}><slot></slot></a>
 {:else}
-  <button
-    class="link"
-    part="link"
-    type="button"
-    aria-current={active() ? 'true' : 'false'}
-    disabled={disabled()}
-  ><slot></slot></button>
+  <button class="link" type="button" aria-current={active() ? 'true' : 'false'} disabled={disabled()}><slot></slot></button>
 {/if}
-<div class="indicator" part="indicator" aria-hidden="true"></div>
+<div class="indicator" aria-hidden="true"></div>
