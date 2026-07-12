@@ -7,6 +7,17 @@ import * as actions from '../runtime/src/actions/index'
 // looking for a registered handle. Asserting that from static markup would only
 // re-test the CSS gate; to prove the routing, the spec has to throw for real.
 import * as boundary from '../runtime/src/error-boundary'
+// Motion's contract is COMPUTED PIXELS over time. The spec reproduces the
+// compiler's exact construction order — `el.animate(...)` baked on a
+// <template> clone (owned by the inert contents document) BEFORE insertion —
+// because that ordering is where a whole bug class lives: an Animation minted
+// there is bound to a timeline that never advances. `runLeave` is the seam
+// `if.ts`/`for.ts` use to hold departing nodes until their exit settles.
+import { __sui_motion_attach } from '../runtime/src/motion'
+import { runLeave } from '../runtime/src/transition-runner'
+
+const motion = { attach: __sui_motion_attach, runLeave }
 
 ;(globalThis as unknown as { SuiActions: typeof actions }).SuiActions = actions
 ;(globalThis as unknown as { SuiBoundary: typeof boundary }).SuiBoundary = boundary
+;(globalThis as unknown as { SuiMotion: typeof motion }).SuiMotion = motion

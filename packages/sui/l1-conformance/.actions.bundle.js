@@ -35,6 +35,7 @@
     contextMenu: () => contextMenu,
     combobox: () => combobox,
     collapsible: () => collapsible,
+    codeBlock: () => codeBlock,
     clickOutside: () => clickOutside,
     chip: () => chip,
     avatar: () => avatar,
@@ -470,6 +471,102 @@
         delete el.reset;
       }
     };
+  };
+  // ../runtime/src/actions/highlight.ts
+  var KEYWORDS = new Set([
+    "import",
+    "export",
+    "from",
+    "const",
+    "let",
+    "var",
+    "return",
+    "function",
+    "default",
+    "if",
+    "else",
+    "for",
+    "of",
+    "in",
+    "new",
+    "await",
+    "async",
+    "type",
+    "interface",
+    "class",
+    "extends",
+    "as"
+  ]);
+  var VERBS = new Set([
+    "signal",
+    "derived",
+    "effect",
+    "controller",
+    "scope",
+    "mount",
+    "untrack",
+    "prop",
+    "data",
+    "client",
+    "npm",
+    "install"
+  ]);
+  function esc(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  var RE = new RegExp([
+    String.raw`(?<comment><!--[\s\S]*?-->|\/\/[^\n]*|\/\*[\s\S]*?\*\/|#[^\n]*)`,
+    String.raw`(?<string>\`(?:\\.|[^\`\\])*\`|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')`,
+    String.raw`(?<bind>\{[^{}]*\})`,
+    String.raw`(?<tag><\/?[a-zA-Z][\w-]*|\/?>)`,
+    String.raw`(?<num>\b\d+(?:\.\d+)?\b)`,
+    String.raw`(?<word>[A-Za-z_$][\w$]*)`
+  ].join("|"), "g");
+  function highlight(code) {
+    let out = "";
+    let last = 0;
+    for (const m of code.matchAll(RE)) {
+      const i = m.index ?? 0;
+      out += esc(code.slice(last, i));
+      const g = m.groups ?? {};
+      const text = m[0];
+      if (g.comment != null)
+        out += `<span class="tok-comment">${esc(text)}</span>`;
+      else if (g.string != null)
+        out += `<span class="tok-string">${esc(text)}</span>`;
+      else if (g.bind != null)
+        out += `<span class="tok-bind">${esc(text)}</span>`;
+      else if (g.tag != null)
+        out += `<span class="tok-tag">${esc(text)}</span>`;
+      else if (g.num != null)
+        out += `<span class="tok-number">${esc(text)}</span>`;
+      else if (g.word != null) {
+        if (KEYWORDS.has(text))
+          out += `<span class="tok-keyword">${esc(text)}</span>`;
+        else if (VERBS.has(text))
+          out += `<span class="tok-fn">${esc(text)}</span>`;
+        else
+          out += esc(text);
+      } else
+        out += esc(text);
+      last = i + text.length;
+    }
+    out += esc(code.slice(last));
+    return out;
+  }
+
+  // ../runtime/src/actions/code-block.ts
+  var codeBlock = (node) => {
+    const el = node;
+    const pre = el.querySelector("pre") ?? el;
+    const render = () => {
+      const src = el.getAttribute("code") ?? el.textContent ?? "";
+      pre.innerHTML = highlight(src);
+    };
+    render();
+    const mo = new MutationObserver(render);
+    mo.observe(el, { attributes: true, attributeFilter: ["code"] });
+    return { destroy: () => mo.disconnect() };
   };
   // ../runtime/src/actions/chip.ts
   var chip = (node) => {
@@ -976,6 +1073,7 @@
   ];
   var THEME_BY_ID = Object.fromEntries(THEMES.map((t) => [t.id, t]));
   var DEFAULT_THEME = "ship-light";
+  var THEME_STORAGE_KEY = "ship-site-theme";
   var isValidTheme = (value) => typeof value === "string" && (value in THEME_BY_ID);
   var isDarkTheme = (id) => THEME_BY_ID[id]?.dark ?? false;
   function applyTheme(id, root = document.documentElement) {
@@ -988,13 +1086,19 @@
     }
     return next;
   }
+  var themeTransport = null;
+  function persistTheme(id) {
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, id);
+    } catch {}
+    themeTransport?.save(id);
+  }
 
   // ../runtime/src/actions/theme-picker.ts
   var themePicker = (node) => {
     const root = node;
     const trigger = root.querySelector(".sui-theme-trigger");
     const panel = root.querySelector(".sui-theme-panel");
-    const label = root.querySelector(".sui-theme-label");
     const options = () => Array.from(root.querySelectorAll(".sui-theme-option"));
     const valueOf = (el) => el.getAttribute("value") ?? "";
     const current = () => {
@@ -1003,8 +1107,11 @@
     };
     const sync = () => {
       const cur = current();
-      if (label)
-        label.textContent = THEMES.find((t) => t.id === cur)?.label ?? cur;
+      const name = THEMES.find((t) => t.id === cur)?.label ?? cur;
+      if (trigger) {
+        trigger.setAttribute("aria-label", `Theme: ${name}`);
+        trigger.title = `Theme: ${name}`;
+      }
       for (const o of options()) {
         const on = valueOf(o) === cur;
         o.setAttribute("aria-selected", on ? "true" : "false");
@@ -1016,6 +1123,7 @@
         return;
       root.setAttribute("value", v);
       applyTheme(v);
+      persistTheme(v);
       sync();
       root.dispatchEvent(new CustomEvent("sui-theme-change", { detail: { theme: v }, bubbles: true, composed: true }));
       panel?.hidePopover?.();
@@ -1523,7 +1631,281 @@
       }
     };
   };
+  // ../runtime/src/transition-runner.ts
+  var _runEnter = () => {};
+  var _runLeave = () => null;
+  var _cancelTransitions = () => {};
+  var runLeave = (nodes) => _runLeave(nodes);
+  function setTransitionRunner(impl) {
+    _runEnter = impl.runEnter;
+    _runLeave = impl.runLeave;
+    _cancelTransitions = impl.cancelTransitions;
+  }
+
+  // ../runtime/src/motion.ts
+  function prefersReducedMotion() {
+    return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+  var TRIGGER_EVENTS = {
+    hover: ["mouseenter", "mouseleave"],
+    press: ["pointerdown", "pointerup", "pointercancel"],
+    focus: ["focus", "blur"],
+    "focus-visible": ["focusin", "focusout"]
+  };
+  function isFocusVisible(ev) {
+    const target = ev.target;
+    if (target && typeof target.matches === "function") {
+      try {
+        return target.matches(":focus-visible");
+      } catch {}
+    }
+    return focusSource === "keyboard";
+  }
+  var focusSource = "unknown";
+  var focusTrackerInstalled = false;
+  function trackFocusSource() {
+    if (focusTrackerInstalled || typeof window === "undefined")
+      return;
+    focusTrackerInstalled = true;
+    window.addEventListener("keydown", () => {
+      focusSource = "keyboard";
+    }, { capture: true });
+    window.addEventListener("mousedown", () => {
+      focusSource = "mouse";
+    }, { capture: true });
+  }
+  function rehome(a) {
+    if (typeof document === "undefined" || typeof Animation !== "function") {
+      return a;
+    }
+    const timeline = document.timeline;
+    if (!timeline || a.timeline === timeline)
+      return a;
+    const effect = a.effect;
+    if (!effect)
+      return a;
+    a.cancel();
+    return new Animation(effect, timeline);
+  }
+  function __sui_motion_attach(el, config) {
+    const { trigger } = config;
+    const rehomed = new Map;
+    const fix = (a) => {
+      if (a == null)
+        return null;
+      let r = rehomed.get(a);
+      if (!r) {
+        r = rehome(a);
+        rehomed.set(a, r);
+      }
+      return r;
+    };
+    const enter = config.enter.map(fix).filter((a) => a != null);
+    const leave = config.leave.map(fix).filter((a) => a != null);
+    if (enter.length === 0)
+      return () => {};
+    for (const a of enter) {
+      a.cancel();
+    }
+    const playForward = () => {
+      for (const a of enter) {
+        a.play();
+      }
+    };
+    const playReverse = () => {
+      enter.forEach((a, i) => {
+        const b = leave[i] ?? a;
+        try {
+          a.cancel();
+        } catch {}
+        b.currentTime = 0;
+        b.play();
+      });
+    };
+    if (trigger === "view" || trigger === "scroll") {
+      if (prefersReducedMotion()) {
+        for (const a of enter)
+          a.finish();
+        return () => {
+          for (const a of enter)
+            a.cancel();
+        };
+      }
+      const timeline = makeTimeline(trigger, el);
+      if (!timeline) {
+        if (trigger === "view" && typeof IntersectionObserver !== "undefined") {
+          const io = new IntersectionObserver((entries) => {
+            if (entries.some((e) => e.isIntersecting)) {
+              io.disconnect();
+              for (const a of enter)
+                a.play();
+            }
+          }, { threshold: 0.15 });
+          io.observe(el);
+          return () => {
+            io.disconnect();
+            for (const a of enter)
+              a.cancel();
+          };
+        }
+        for (const a of enter)
+          a.finish();
+        return () => {
+          for (const a of enter)
+            a.cancel();
+        };
+      }
+      for (const a of enter) {
+        a.timeline = timeline;
+        a.play();
+      }
+      return () => {
+        for (const a of enter)
+          a.cancel();
+      };
+    }
+    if (trigger === "enter" || trigger === "exit") {
+      installLifecycleRunner();
+      if (trigger === "enter") {
+        if (prefersReducedMotion()) {
+          for (const a of enter)
+            a.finish();
+          return () => {
+            for (const a of enter)
+              a.cancel();
+          };
+        }
+        if (config.stagger) {
+          const delay = staggerOffset() * config.stagger;
+          for (const a of enter) {
+            a.effect?.updateTiming({ delay });
+          }
+        }
+        playForward();
+        return () => {
+          for (const a of enter)
+            a.cancel();
+        };
+      }
+      for (const a of enter)
+        a.cancel();
+      EXITS.set(el, enter);
+      return () => {
+        EXITS.delete(el);
+        for (const a of enter)
+          a.cancel();
+      };
+    }
+    const events = TRIGGER_EVENTS[trigger];
+    if (!events) {
+      return () => {
+        for (const a of enter)
+          a.cancel();
+      };
+    }
+    if (trigger === "focus-visible")
+      trackFocusSource();
+    const [enterEvent, leaveEvent, cancelEvent] = events;
+    const onEnter = (ev) => {
+      if (prefersReducedMotion())
+        return;
+      if (trigger === "focus-visible" && !isFocusVisible(ev)) {
+        return;
+      }
+      playForward();
+    };
+    const onLeave = () => {
+      if (prefersReducedMotion())
+        return;
+      playReverse();
+    };
+    el.addEventListener(enterEvent, onEnter);
+    el.addEventListener(leaveEvent, onLeave);
+    if (cancelEvent) {
+      el.addEventListener(cancelEvent, onLeave);
+    }
+    return () => {
+      el.removeEventListener(enterEvent, onEnter);
+      el.removeEventListener(leaveEvent, onLeave);
+      if (cancelEvent) {
+        el.removeEventListener(cancelEvent, onLeave);
+      }
+      for (const a of enter) {
+        try {
+          a.cancel();
+        } catch {}
+      }
+    };
+  }
+  var EXITS = new WeakMap;
+  var runnerInstalled = false;
+  function installLifecycleRunner() {
+    if (runnerInstalled)
+      return;
+    runnerInstalled = true;
+    setTransitionRunner({
+      runEnter: () => null,
+      runLeave: (nodes) => {
+        const playing = [];
+        for (const n of nodes) {
+          if (!(n instanceof Element))
+            continue;
+          const targets = EXITS.has(n) ? [n] : [...n.querySelectorAll("*")].filter((e) => EXITS.has(e));
+          for (const t of targets) {
+            const anims = EXITS.get(t);
+            if (!anims)
+              continue;
+            for (const a of anims) {
+              a.currentTime = 0;
+              a.play();
+              playing.push(a.finished.catch(() => {}));
+            }
+          }
+        }
+        if (playing.length === 0)
+          return null;
+        if (prefersReducedMotion())
+          return null;
+        return Promise.all(playing).then(() => {});
+      },
+      cancelTransitions: (node) => {
+        if (!(node instanceof Element))
+          return;
+        const anims = EXITS.get(node);
+        if (anims)
+          for (const a of anims)
+            a.cancel();
+      }
+    });
+  }
+  var waveCount = 0;
+  var waveScheduled = false;
+  function staggerOffset() {
+    const i = waveCount++;
+    if (!waveScheduled) {
+      waveScheduled = true;
+      queueMicrotask(() => {
+        waveCount = 0;
+        waveScheduled = false;
+      });
+    }
+    return i;
+  }
+  function makeTimeline(kind, el) {
+    const g = globalThis;
+    try {
+      if (kind === "view") {
+        return g.ViewTimeline ? new g.ViewTimeline({ subject: el }) : null;
+      }
+      return g.ScrollTimeline ? new g.ScrollTimeline({ source: document.scrollingElement }) : null;
+    } catch {
+      return null;
+    }
+  }
+
   // behavior-entry.ts
+  var motion = { attach: __sui_motion_attach, runLeave };
   globalThis.SuiActions = exports_actions;
   globalThis.SuiBoundary = exports_error_boundary;
+  globalThis.SuiMotion = motion;
 })();
