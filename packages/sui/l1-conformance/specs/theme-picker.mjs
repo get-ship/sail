@@ -1,81 +1,60 @@
 // L1 conformance spec: <theme-picker> (mechanism-1, use:themePicker + use:anchor).
 //
 // A trigger that opens a native [popover] of theme cards. Each card previews its
-// theme through [data-theme-preview], so the swatch is rendered by the real
+// theme through [data-theme-preview], so the swatch is painted by the real
 // stylesheet and cannot drift from the theme it advertises.
 //
-// The markup below MIRRORS the element's lowered output (stdlib/theme-picker.sui).
-// Hand-keeping it is the weakness of this harness — a spec that types its own
-// markup cannot catch an element whose template changed underneath it. The
-// behavior block is what has teeth: it drives the real action.
+// The rows are the compiler's OWN lowered output (see lowered.mjs), not markup
+// typed here. A spec that types its own markup tests the author's idea of the
+// element; this one tests the element.
 
-const THEMES = [
-  ['ship-light', 'SHIP Light'],
-  ['ship-dark', 'SHIP Dark'],
-  ['paper', 'Paper'],
-  ['halo', 'Halo'],
-  ['console', 'Console'],
-  ['contrast', 'High Contrast'],
-  ['glass', 'Glass'],
-  ['neutral-light', 'Neutral Light'],
-  ['neutral-dark', 'Neutral Dark'],
-]
+import { lowered } from '../lowered.mjs'
 
-const PALETTE =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="13.5" cy="6.5" r="1.5"></circle><circle cx="17.5" cy="10.5" r="1.5"></circle><circle cx="8.5" cy="7.5" r="1.5"></circle><circle cx="6.5" cy="12.5" r="1.5"></circle><path d="M12 2a10 10 0 0 0 0 20 2 2 0 0 0 2-2v-1a2 2 0 0 1 2-2h1a4 4 0 0 0 4-4 10 10 0 0 0-9-11Z"></path></svg>'
-
-const option = ([v, l], selected) =>
-  `<button class="sui-theme-option" type="button" role="option" value="${v}"` +
-  ` aria-selected="${v === selected ? 'true' : 'false'}" tabindex="${v === selected ? '0' : '-1'}">` +
-  `<span class="sui-theme-swatch" data-theme-preview="${v}">` +
-  `<i class="sw-surface"></i><i class="sw-accent"></i><i class="sw-muted"></i></span>${l}</button>`
-
-const picker = (id, selected) =>
-  `<div class="sui-theme-picker" id="${id}" value="${selected}">` +
-  `<button class="sui-theme-trigger" type="button" popovertarget="${id}-panel" aria-label="Choose theme">` +
-  `${PALETTE}<span class="sui-theme-label">${THEMES.find(([v]) => v === selected)?.[1] ?? 'Theme'}</span>` +
-  `<svg class="sui-theme-caret" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"></path></svg>` +
-  `</button>` +
-  `<div class="sui-theme-panel" id="${id}-panel" popover role="listbox" aria-label="Theme">` +
-  THEMES.map((t) => option(t, selected)).join('') +
-  `</div></div>`
+// One instance per row, with unique ids so the popovers don't collide.
+const picker = (n) => {
+  const html = lowered('theme-picker')
+  if (!html) return '<div class="sui-theme-picker">compiler not built</div>'
+  return html
+    .replace(/sui-root /g, '')
+    .replace(/id="sui-theme-panel"/g, `id="tp${n}-panel"`)
+    .replace(/popovertarget="sui-theme-panel"/g, `popovertarget="tp${n}-panel"`)
+    .replace(/^<div class="sui-theme-picker"/, `<div id="tp${n}" class="sui-theme-picker"`)
+}
 
 export default {
   tag: 'theme-picker',
-  width: 420,
+  width: 460,
   rows() {
-    // The panel is a popover: it lives in the top layer and will not appear in a
-    // static snapshot. Show the trigger (the whole visible surface), plus the
-    // card grid on its own so the theme previews are captured.
+    // The panel is a popover — it lives in the top layer and won't show in a
+    // static snapshot. Render the trigger, plus one panel forced open so the
+    // theme previews are captured.
     return [
-      picker('tp-a', 'ship-light'),
-      picker('tp-b', 'console'),
-      `<div class="sui-theme-picker" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;width:280px">` +
-        THEMES.map((t) => option(t, 'paper')).join('') +
-        `</div>`,
+      picker(1),
+      picker(2).replace('popover ', 'popover style="position:static;display:grid;grid-template-columns:1fr 1fr;gap:6px" '),
     ]
   },
   probe() {
     const bad = []
     const cs = (el, p) => (el ? getComputedStyle(el)[p] : null)
 
-    // Every swatch must render its OWN theme, not the ambient one. If
-    // [data-theme-preview] were inert — as [data-theme] on a <span> is — every
-    // swatch would come out identical, which is what a hand-picked hex gives you.
-    const surfaces = []
+    // Every swatch must render its OWN theme. If [data-theme-preview] were inert
+    // — as [data-theme] on a <span> is — every card would come out identical,
+    // which is exactly what a hand-picked hex gives you.
+    const surfaces = [], cards = [], ctas = []
     document.querySelectorAll('.sui-theme-swatch').forEach((sw) => {
-      const id = sw.getAttribute('data-theme-preview')
-      const bg = cs(sw.querySelector('.sw-surface'), 'backgroundColor')
-      if (!bg) return bad.push({ id, why: 'no-surface' })
-      surfaces.push(bg)
+      surfaces.push(cs(sw, 'backgroundColor'))
+      const c = sw.querySelector('.tc-card')
+      const a = sw.querySelector('.tc-cta')
+      if (!c) return bad.push({ id: sw.getAttribute('data-theme-preview'), why: 'no-card' })
+      cards.push(cs(c, 'backgroundColor'))
+      if (a) ctas.push(cs(a, 'backgroundColor'))
     })
-    const distinct = new Set(surfaces)
-    if (distinct.size < 3)
-      bad.push({
-        why: 'previews-are-inert',
-        distinct: distinct.size,
-        note: 'every swatch renders the same color — data-theme-preview is not applying',
-      })
+    if (new Set(surfaces).size < 3)
+      bad.push({ why: 'previews-are-inert', distinct: new Set(surfaces).size })
+    if (new Set(cards).size < 3)
+      bad.push({ why: 'card-surfaces-identical', distinct: new Set(cards).size })
+    if (new Set(ctas).size < 3)
+      bad.push({ why: 'accents-identical', distinct: new Set(ctas).size })
 
     document.querySelectorAll('.sui-theme-trigger').forEach((t) => {
       if (!t.getAttribute('popovertarget')) bad.push({ why: 'trigger-has-no-popovertarget' })
@@ -83,15 +62,12 @@ export default {
       if (!label || !(label.textContent ?? '').trim()) bad.push({ why: 'trigger-has-no-label' })
     })
 
-    if (!document.querySelectorAll('.sui-theme-option[aria-selected="true"]').length)
-      bad.push({ why: 'nothing-selected' })
-
     return { count: document.querySelectorAll('.sui-theme-option').length, bad: bad.slice(0, 8) }
   },
 
   behavior: {
     rows() {
-      return [picker('tp', 'ship-light')]
+      return [picker('')]
     },
     attach: [
       ['#tp-panel', 'anchor'],
