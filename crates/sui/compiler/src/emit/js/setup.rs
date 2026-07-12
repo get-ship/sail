@@ -7,13 +7,16 @@ use crate::lower::Lowered;
 use crate::CompileOpts;
 use std::collections::BTreeSet;
 
+/// Returns the MODULE-scope hoists (the `__tpl(...)` cloners). They cannot live in
+/// the setup body: a template parsed there would be re-parsed for every component
+/// instance, when the whole point is to parse it once per program.
 pub(super) fn emit_setup_body(
     w: &mut Writer,
     program: &Program,
     bindings: &BindingRegistry,
     opts: &CompileOpts,
     _lowered: &Lowered,
-) {
+) -> Writer {
     // A source is a COMPONENT (custom element) iff it carries a tag
     // (`component_meta`); otherwise it's a tagless mount-form ("view"/page).
     // This is the sole view/component distinction now that `CompileMode::View`
@@ -112,6 +115,7 @@ pub(super) fn emit_setup_body(
     );
     mount_w.line("return () => { for (const c of __cleanups) try { c(); } catch (e) {} };");
 
+    let module_hoists = emitter.take_module_hoists();
     let hoists = emitter.take_boundary_hoists();
     let callbacks = emitter.take_render_callbacks();
     let hydrate_uses_text = emitter.hydrate_uses_text();
@@ -136,6 +140,7 @@ pub(super) fn emit_setup_body(
     }
     w.leave();
     w.line("});");
+    module_hoists
 }
 
 /// Emit the `hydrate(root, ctx)` named property on a view's setup

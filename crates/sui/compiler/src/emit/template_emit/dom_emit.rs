@@ -87,6 +87,26 @@ impl TemplateEmitter {
         if lower == "data" {
             return;
         }
+        // ── TEMPLATE CLONE (the fast path) ──────────────────────────────────
+        // If this subtree is static structure, clone it instead of building it.
+        // One DOM call instead of one per node AND one per attribute — 2.1x on the
+        // benchmark row, which is the whole creation gap against Svelte/Solid.
+        //
+        // The `root_pending` flag must be consumed BEFORE serializing, because the
+        // `sui-root` class is baked into the markup rather than added at runtime.
+        let is_root = self.root_pending;
+        if self.svg_depth == 0
+            && let Some(html) = self.static_skeleton(el, is_root)
+        {
+            self.root_pending = false;
+            let tpl = self.hoist_template(&html);
+            let v = self.fresh("e");
+            w.line(&format!("const {v} = {tpl}();"));
+            self.wire_template(w, el, &v, cleanups_var);
+            w.line(&format!("{parent_var}.appendChild({v});"));
+            return;
+        }
+
         let v = self.fresh("e");
         // SVG-namespace elements must be created via createElementNS;
         // otherwise the browser parses them as HTML and they render
@@ -737,5 +757,238 @@ fn duration_token_to_ms(token: &str) -> f64 {
         "slow" => 280.0,
         "deliberate" => 420.0,
         _ => 180.0,
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TEMPLATE CLONING
+//
+// The compiler's biggest lever on DOM creation. A `createElement` chain costs one
+// JS->DOM round-trip per node AND per attribute; a `cloneNode` costs one, total,
+// with the browser copying an already-parsed structure in C++. Measured at 2.1x on
+// the js-framework-benchmark row — which is exactly the gap between us and
+// Svelte/Solid on every CREATION benchmark, both of whom do this.
+//
+// So: serialize each element's STATIC SKELETON to HTML at compile time, hoist it to
+// module scope as a lazily-parsed `<template>`, clone it per instance, and NAVIGATE
+// to the nodes that need dynamic bindings.
+//
+// TWO HAZARDS, both respected below.
+//
+//  1. BINDING KEYS are allocated in source order and must match the bindings pass.
+//     The navigation walk therefore visits instructions in exactly the order
+//     `emit_children` does, calling `next_key()` at the same points.
+//
+//  2. ADJACENT TEXT MERGES. `<td>Hello {name}</td>` serializes to `<td>Hello  </td>`,
+//     which the HTML parser collapses into ONE text node — so the binding would have
+//     no node of its own and every index after it would shift. We refuse to template
+//     an element whose children contain two adjacent text-producing instructions,
+//     and fall back to the createElement path for it. (Svelte solves this with `<!>`
+//     comment separators; that is a later refinement, not a correctness gap.)
+
+/// HTML void elements — serialized without a closing tag.
+const VOID_ELEMENTS: &[&str] = &[
+    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta",
+    "param", "source", "track", "wbr",
+];
+
+fn escape_text(s: &str) -> String {
+    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+}
+
+fn escape_attr(s: &str) -> String {
+    s.replace('&', "&amp;").replace('"', "&quot;")
+}
+
+/// Does this instruction produce a TEXT node in the clone?
+fn is_text_node(i: &Instr) -> bool {
+    matches!(i, Instr::StaticText { .. } | Instr::DynamicText { .. })
+}
+
+impl super::TemplateEmitter {
+    /// Serialize an element's static skeleton to HTML, or `None` if the subtree
+    /// cannot be templated (control flow inside, or adjacent text that would merge).
+    pub(super) fn static_skeleton(&self, el: &ElementInstr, is_root: bool) -> Option<String> {
+        let mut out = String::new();
+        self.write_skeleton(el, is_root, &mut out)?;
+        Some(out)
+    }
+
+    fn write_skeleton(&self, el: &ElementInstr, is_root: bool, out: &mut String) -> Option<()> {
+        let lower = el.tag.to_ascii_lowercase();
+        // `<data>` is a directive, not markup; `<use-*>` needs a runtime activation
+        // hook. Neither belongs in a cloned skeleton.
+        if lower == "data" || lower.starts_with("use-") {
+            return None;
+        }
+
+        out.push('<');
+        out.push_str(&el.tag);
+
+        // Static attributes bake into the markup — which is half the win, because it
+        // also deletes every `setAttribute` call from the emitted JS.
+        let mut classes: Vec<String> = Vec::new();
+        if is_root {
+            // Model-A: the component's first template element IS the styled root.
+            classes.push("sui-root".into());
+        }
+        for a in &el.attrs {
+            match a {
+                AttrInstr::Static { name, value, .. } => {
+                    if name.eq_ignore_ascii_case("class") {
+                        classes.push(value.clone());
+                    } else {
+                        out.push(' ');
+                        out.push_str(name);
+                        out.push_str("=\"");
+                        out.push_str(&escape_attr(value));
+                        out.push('"');
+                    }
+                }
+                // Everything else is applied at runtime after the clone.
+                _ => {}
+            }
+        }
+        if !classes.is_empty() {
+            out.push_str(" class=\"");
+            out.push_str(&escape_attr(&classes.join(" ")));
+            out.push('"');
+        }
+        out.push('>');
+
+        if VOID_ELEMENTS.contains(&lower.as_str()) {
+            return Some(());
+        }
+
+        // Children. Refuse adjacent text (it would merge on parse — see hazard 2).
+        let mut prev_was_text = false;
+        for c in &el.children {
+            let this_is_text = is_text_node(c);
+            if this_is_text && prev_was_text {
+                return None;
+            }
+            prev_was_text = this_is_text;
+
+            match c {
+                Instr::StaticText { text, .. } => out.push_str(&escape_text(text)),
+                // A single space, exactly as Svelte does: it forces the parser to
+                // create a text node for the binding to own. `bindText` overwrites it
+                // synchronously on mount, so it is never seen.
+                Instr::DynamicText { .. } => out.push(' '),
+                // Comments are dropped by the createElement path too — keep parity or
+                // the node indices diverge.
+                Instr::Comment { .. } => {}
+                Instr::Element(child) => self.write_skeleton(child, false, out)?,
+                // Control flow needs a runtime anchor. Not templated (yet).
+                _ => return None,
+            }
+        }
+
+        out.push_str("</");
+        out.push_str(&el.tag);
+        out.push('>');
+        Some(())
+    }
+}
+
+impl super::TemplateEmitter {
+    /// Does this subtree need any runtime work after cloning? (A fully-static
+    /// subtree gets no variable at all — we clone it and never look at it again,
+    /// which is the whole point.)
+    fn needs_wiring(&self, el: &ElementInstr) -> bool {
+        if el.attrs.iter().any(|a| !matches!(a, AttrInstr::Static { .. })) {
+            return true;
+        }
+        el.children.iter().any(|c| match c {
+            Instr::DynamicText { .. } => true,
+            Instr::Element(child) => self.needs_wiring(child),
+            _ => false,
+        })
+    }
+
+    /// Walk the cloned tree and attach every dynamic binding.
+    ///
+    /// Order matters: `next_key()` is consumed here in exactly the sequence
+    /// `emit_children` would consume it, so the binding registry and the hydrate
+    /// keys line up whichever path an element took.
+    pub(super) fn wire_template(
+        &mut self,
+        w: &mut Writer,
+        el: &ElementInstr,
+        el_var: &str,
+        cleanups_var: &str,
+    ) {
+        for a in &el.attrs {
+            if !matches!(a, AttrInstr::Static { .. }) {
+                self.emit_attr(w, a, el_var, cleanups_var, &el.tag);
+            }
+        }
+
+        // Navigate with firstChild / nextSibling — NOT `childNodes[i]`.
+        //
+        // `childNodes` is a LIVE NodeList: every access goes through the collection
+        // machinery, and at ~6 lookups per row x 10,000 rows that overhead ate the
+        // entire cloning win (create10k script went UP, 165ms -> 194ms, with the
+        // clone in place). `firstChild` and `nextSibling` are direct pointers on the
+        // node. Svelte navigates this way for exactly this reason.
+        //
+        // Indices are exact: the skeleton emits one node per StaticText /
+        // DynamicText / Element and nothing for a Comment — precisely what the
+        // createElement path produces.
+        let mut cursor: Option<String> = None; // last materialized node var
+        let mut cursor_idx = 0usize;
+        let mut idx = 0usize;
+
+        // Emit the chain that walks from the cursor (or the parent's first child) to
+        // `target`, and bind it to a fresh var.
+        macro_rules! nav {
+            ($self:expr, $w:expr, $target:expr, $prefix:expr) => {{
+                let v = $self.fresh($prefix);
+                let expr = match &cursor {
+                    None => {
+                        let mut e = format!("{el_var}.firstChild");
+                        for _ in 0..$target {
+                            e.push_str(".nextSibling");
+                        }
+                        e
+                    }
+                    Some(c) => {
+                        let mut e = c.clone();
+                        for _ in 0..($target - cursor_idx) {
+                            e.push_str(".nextSibling");
+                        }
+                        e
+                    }
+                };
+                $w.line(&format!("const {v} = {expr};"));
+                cursor = Some(v.clone());
+                cursor_idx = $target;
+                v
+            }};
+        }
+
+        for c in &el.children {
+            match c {
+                Instr::Comment { .. } => continue,
+                Instr::StaticText { .. } => {
+                    idx += 1;
+                }
+                Instr::DynamicText { expr } => {
+                    let key = self.next_key();
+                    let v = nav!(self, w, idx, "t");
+                    w.line(&format!("markHydrateText({v}, {k});", k = js_string(&key)));
+                    self.emit_text_binding(w, &v, expr, cleanups_var, &key);
+                    idx += 1;
+                }
+                Instr::Element(child) => {
+                    if self.needs_wiring(child) {
+                        let v = nav!(self, w, idx, "e");
+                        self.wire_template(w, child, &v, cleanups_var);
+                    }
+                    idx += 1;
+                }
+                _ => unreachable!("static_skeleton() rejects control flow"),
+            }
+        }
     }
 }

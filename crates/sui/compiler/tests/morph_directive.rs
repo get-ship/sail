@@ -40,12 +40,15 @@ fn morph_directive_compiles_without_error() {
 #[test]
 fn morph_directive_emits_setattribute() {
     let js = compile_sui("morph-directive");
-    // The directive lowers to a plain Static attribute — the marker
-    // ships to the DOM as `morph=""` for `bindRawHtml` (and other
-    // HTML-producing bindings) to detect at runtime.
+    // The directive lowers to a plain Static attribute — the marker ships to the DOM
+    // as `morph=""` for `bindRawHtml` (and other HTML-producing bindings) to detect
+    // at runtime. HOW it gets there is the compiler's business and it changed: a
+    // static attribute is now baked into the hoisted template markup rather than
+    // replayed as a `setAttribute` call, which is the whole point of template
+    // cloning. The invariant is that the marker reaches the DOM.
     assert!(
-        js.contains("setAttribute(\"morph\", \"\")"),
-        "expected setAttribute(\"morph\", \"\") in emit; got:\n{js}"
+        js.contains(r#"morph=\"\""#) || js.contains("setAttribute(\"morph\", \"\")"),
+        "the `morph` marker must reach the DOM — baked into the template or set at runtime; got:\n{js}"
     );
 }
 

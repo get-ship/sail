@@ -31,14 +31,21 @@ fn component_opts(setup_url: Option<&str>, component_imports: bool) -> CompileOp
     }
 }
 
+/// The static attribute must SURVIVE. How it survives is the compiler's business,
+/// and it changed: a static class is now baked into the hoisted template markup
+/// (`<div class="sui-root rows">`) rather than replayed as a `setAttribute` call at
+/// runtime — which is both correct and strictly faster (it deletes a DOM round-trip
+/// per element per instance). Asserting on `setAttribute` was asserting the
+/// MECHANISM; the invariant is that the class reaches the DOM.
 #[test]
 fn static_attrs_survive_bind_this_in_component_csr() {
     let out = compile(REF_WITH_STATIC, component_opts(None, false)).expect("compile");
     assert!(
-        out.js.contains(r#"setAttribute("class", "rows")"#),
-        "class must be emitted alongside bind:this:\n{}",
+        out.js.contains(r#"class=\"sui-root rows\""#) || out.js.contains(r#"setAttribute("class", "rows")"#),
+        "class must reach the DOM alongside bind:this — baked into the template or set at runtime:\n{}",
         out.js
     );
+    assert!(out.js.contains("attachRef"), "bind:this still wires its ref:\n{}", out.js);
 }
 
 #[test]
@@ -47,9 +54,13 @@ fn static_attrs_survive_bind_this_with_production_component_opts() {
     // through: shadow component, a controller (setup_url), component-imports on.
     let src = r#"<div class="dag" bind:this={contentEl}></div>"#;
     let out = compile(src, component_opts(Some("./x.controller.ts"), true)).expect("compile");
+    // Model-A stamps `sui-root` on the component's root element (the source does not
+    // declare shadow, and the SOURCE is authoritative), so the baked class list is
+    // "sui-root dag" — the author's class survives alongside it.
     assert!(
-        out.js.contains(r#"setAttribute("class", "dag")"#),
+        out.js.contains("sui-root dag") || out.js.contains(r#"setAttribute("class", "dag")"#),
         "class must survive in production component compile:\n{}",
         out.js
     );
+    assert!(out.js.contains("attachRef"), "bind:this still wires its ref:\n{}", out.js);
 }

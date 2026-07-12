@@ -44,6 +44,13 @@ mod dom_emit;
 
 pub struct TemplateEmitter {
     next_id: usize,
+    /// Hoisted `const __tplN = __tpl("<tr>…</tr>");` cloners — one per static
+    /// subtree. These go to MODULE scope (not the setup body) so the browser
+    /// parses each template once per program, rather than once per component
+    /// instance. Drained by `emit_module` and written above the component.
+    pub(super) module_hoists: Writer,
+    /// Counter for the hoisted cloners.
+    pub(super) tpl_id: usize,
     /// Sequential counters for while-loading/while-error render-callback names.
     /// Both the bindings pass and this emit pass walk the IR in the same source
     /// order, so the N-th while-loading gets the same `__renderWhileLoading_<N>`
@@ -162,6 +169,8 @@ impl TemplateEmitter {
     pub fn new(_registry: &BindingRegistry, is_view: bool) -> Self {
         Self {
             next_id: 0,
+            module_hoists: Writer::new(),
+            tpl_id: 0,
             while_loading_idx: 0,
             while_error_idx: 0,
             render_callbacks: Writer::new(),
@@ -378,6 +387,20 @@ impl TemplateEmitter {
             && !source.contains("??")
     }
 
+    /// Hoist one static-subtree cloner to module scope; returns its const name.
+    pub(super) fn hoist_template(&mut self, html: &str) -> String {
+        let name = format!("__tpl{}", self.tpl_id);
+        self.tpl_id += 1;
+        self.module_hoists
+            .line(&format!("const {name} = /*@__PURE__*/ __tpl({});", js_string(html)));
+        name
+    }
+
+    /// Drain the module-scope cloner declarations.
+    pub fn take_module_hoists(&mut self) -> Writer {
+        std::mem::replace(&mut self.module_hoists, Writer::new())
+    }
+
     pub(super) fn fresh(&mut self, prefix: &str) -> String {
         let id = self.next_id;
         self.next_id += 1;
@@ -404,6 +427,53 @@ impl TemplateEmitter {
         self.root_pending = mark_root;
         self.emit_children(w, instrs, parent_var, cleanups_var);
         self.root_pending = false;
+    }
+
+
+    /// Attach the reactive text binding to an ALREADY-EXISTING text node.
+    ///
+    /// Extracted so the createElement path and the template-clone path share ONE
+    /// routine — the two differ only in how the node comes into being (created vs
+    /// navigated to), and duplicating the binding logic is how the two would drift.
+    pub(super) fn emit_text_binding(
+        &mut self,
+        w: &mut Writer,
+        v: &str,
+        expr: &crate::ir::Expr,
+        cleanups_var: &str,
+        key: &str,
+    ) {
+        let rw = self.rw(&expr.source, &[]);
+                if self.is_static_row_expr(&expr.source) {
+                    // D5: row-scope static read — skip the bindText
+                    // effect and write textContent directly. Saves a
+                    // closure + cleanup slot per row per binding. The
+                    // assignment is also re-run by the for's
+                    // `update()` callback so keyed-row reuse refreshes
+                    // the DOM when the row instance changes.
+                    let stmt = format!("{v}.textContent = ({rw});");
+                    w.line(&stmt);
+                    let use_ = self.row_use_for_source(&expr.source);
+                    self.inline_update_stmts.push((stmt, use_));
+                } else {
+                    let fv = self.for_version_comma(&expr.source);
+                    w.line(&format!(
+                        "{cleanups_var}.push(bindText({v}, () => ({fv}{rw})));"
+                    ));
+                }
+                // Phase 3b.3: at depth 0 in views, also emit a direct
+                // hydrate call so SSR'd `<!--sui:text:bN-->…<!--/sui-->`
+                // markers wire up without going through the runtime
+                // walker / `bindings` manifest. The matching `text`
+                // manifest entry is suppressed in `js.rs::emit_bindings`.
+                if self.is_view && self.boundary_depth == 0 {
+                    self.hydrate_uses_text = true;
+                    self.hydrate_calls.line(&format!(
+                        "if (__t[{k}]) __cleanups.push(hydrateText(__t[{k}], () => ({rw})));",
+                        k = js_string(&key),
+                    ));
+                }
+            
     }
 
     pub(super) fn emit_children(
@@ -440,7 +510,6 @@ impl TemplateEmitter {
                 // Registry parity: text bindings consume one b<N>.
                 let key = self.next_key();
                 let v = self.fresh("t");
-                let rw = self.rw(&expr.source, &[]);
                 w.line(&format!("const {v} = document.createTextNode(\"\");"));
                 // Slice 2 — record the hydration key on the text node so
                 // the ship-js SSR path's serialization wraps it in
@@ -452,35 +521,7 @@ impl TemplateEmitter {
                     k = js_string(&key),
                 ));
                 w.line(&format!("{parent_var}.appendChild({v});"));
-                if self.is_static_row_expr(&expr.source) {
-                    // D5: row-scope static read — skip the bindText
-                    // effect and write textContent directly. Saves a
-                    // closure + cleanup slot per row per binding. The
-                    // assignment is also re-run by the for's
-                    // `update()` callback so keyed-row reuse refreshes
-                    // the DOM when the row instance changes.
-                    let stmt = format!("{v}.textContent = ({rw});");
-                    w.line(&stmt);
-                    let use_ = self.row_use_for_source(&expr.source);
-                    self.inline_update_stmts.push((stmt, use_));
-                } else {
-                    let fv = self.for_version_comma(&expr.source);
-                    w.line(&format!(
-                        "{cleanups_var}.push(bindText({v}, () => ({fv}{rw})));"
-                    ));
-                }
-                // Phase 3b.3: at depth 0 in views, also emit a direct
-                // hydrate call so SSR'd `<!--sui:text:bN-->…<!--/sui-->`
-                // markers wire up without going through the runtime
-                // walker / `bindings` manifest. The matching `text`
-                // manifest entry is suppressed in `js.rs::emit_bindings`.
-                if self.is_view && self.boundary_depth == 0 {
-                    self.hydrate_uses_text = true;
-                    self.hydrate_calls.line(&format!(
-                        "if (__t[{k}]) __cleanups.push(hydrateText(__t[{k}], () => ({rw})));",
-                        k = js_string(&key),
-                    ));
-                }
+                self.emit_text_binding(w, &v, expr, cleanups_var, &key);
             }
             Instr::Element(el) => self.emit_element(w, el, parent_var, cleanups_var),
             Instr::If(if_instr) => self.emit_if(w, if_instr, parent_var, cleanups_var),

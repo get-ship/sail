@@ -78,12 +78,24 @@ pub fn emit_module(
         cv.cargo, cv.git, cv.dirty, cv.built_at,
     );
     w.line(&format!("/*! _compilerVersion {stamp_json} */"));
-    imports::emit_imports(&mut w, lowered, opts);
 
+    // The BODY is emitted first, because only the emitter knows which subtrees it
+    // chose to template — `Lowered` is computed by the lower pass and cannot. The
+    // import list then reflects what the body actually used, rather than guessing.
     let mut body = Writer::new();
     body.enter();
-    setup::emit_setup_body(&mut body, program, bindings, opts, lowered);
+    let module_hoists = setup::emit_setup_body(&mut body, program, bindings, opts, lowered);
     body.leave();
+    let uses_templates = !module_hoists.is_empty();
+
+    imports::emit_imports(&mut w, lowered, opts, uses_templates);
+
+    // The `__tpl(...)` cloners go at MODULE scope, above the component: each static
+    // subtree's markup is parsed once per program (lazily, on first render) — not
+    // once per component instance, and certainly not once per row.
+    if uses_templates {
+        w.push_str(&module_hoists.into_string());
+    }
 
     // The mount/register split is keyed on the tag (`component_meta`), not a
     // mode flag: a tagged source registers a custom element (`component(tag,

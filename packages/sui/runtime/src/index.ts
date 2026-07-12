@@ -169,6 +169,8 @@ export type { BindIfOptions, BranchRender } from './if'
 // long enough to animate out — the one thing CSS cannot do alone. It is backed by
 // motion.ts now (installed lazily, the first time a `motion:exit` attaches), so an
 // app with no exit animations still tree-shakes the whole thing away.
+// Template cloning — the compiler hoists one `__tpl(html)` per static subtree.
+export { __tpl } from './tpl'
 export { runEnter, runLeave, cancelTransitions, setTransitionRunner } from './transition-runner'
 export { bindAwait } from './await'
 export type { BindAwaitOptions } from './await'
