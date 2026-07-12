@@ -44,44 +44,58 @@
 <column class="pillar">
   <column class="inner" gap="4">
     <p class="eyebrow" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>MOTION</p>
-    <h2 class="big" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>One directive.<br />The browser does the physics.</h2>
+    <h2 class="big" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>Real physics.<br />Zero choreography code.</h2>
     <p class="blurb" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
-      Eight triggers, nine presets, springs on the compositor. Exit holds the
-      element until its animation finishes; stagger makes a list arrive as a
-      list. These cards dealt themselves — deal them again.
+      Springs solved at compile time and driven by the browser. The runtime
+      holds exiting elements until their animation finishes, staggers siblings
+      into a sequence, and ties motion to scroll — each one a directive, not a
+      library you wire up.
     </p>
     {#if dealt()}
-      <grid cols="5" gap="3">
-        <card motion:enter={{ rotate: 'spring:bouncy', stagger: '0.08s' }} motion:exit={{ opacity: 'fade-out' }}
-              motion:hover={{ rotate: 'spring:gentle' }} sx="p:4">
-          <strong>rotate</strong>
-          <p sx="text:sm fg:muted-foreground">spring:bouncy</p>
+      <grid cols="4" gap="3">
+        <card sx="p:4 min-h:panel-min-w-sm">
+          <column gap="3" align="center">
+            <p class="eyebrow">FIG. 01 · SPRING PHYSICS</p>
+            <avatar size="lg" motion:enter={{ translate-y: 'spring:bouncy' }}></avatar>
+            <p sx="text:sm fg:muted-foreground">a mass on a spring — overshoot and settle, no easing curve faked</p>
+            <code>translate-y: 'spring:bouncy'</code>
+          </column>
         </card>
-        <card motion:enter={{ scale: 'spring:gentle', stagger: '0.08s' }} motion:exit={{ opacity: 'fade-out' }}
-              motion:hover={{ scale: 'spring:bouncy' }} sx="p:4">
-          <strong>scale</strong>
-          <p sx="text:sm fg:muted-foreground">spring:gentle</p>
+        <card sx="p:4">
+          <column gap="3">
+            <p class="eyebrow">FIG. 02 · STAGGER</p>
+            <progress value="82" max="100" motion:enter={{ translate-x: 'spring:snappy', stagger: '0.09s' }}></progress>
+            <progress value="55" max="100" motion:enter={{ translate-x: 'spring:snappy', stagger: '0.09s' }}></progress>
+            <progress value="93" max="100" motion:enter={{ translate-x: 'spring:snappy', stagger: '0.09s' }}></progress>
+            <progress value="38" max="100" motion:enter={{ translate-x: 'spring:snappy', stagger: '0.09s' }}></progress>
+            <p sx="text:sm fg:muted-foreground">the relationship BETWEEN siblings — a sequence, not a flash</p>
+            <code>stagger: '0.09s'</code>
+          </column>
         </card>
-        <card motion:enter={{ translate-x: 'spring:deliberate', stagger: '0.08s' }} motion:exit={{ opacity: 'fade-out' }}
-              motion:hover={{ translate-x: 'spring:snappy' }} sx="p:4">
-          <strong>slide</strong>
-          <p sx="text:sm fg:muted-foreground">spring:deliberate</p>
+        <card sx="p:4">
+          <column gap="3">
+            <p class="eyebrow">FIG. 03 · EXIT HOLD</p>
+            <row gap="2">
+              <badge tone="primary" motion:enter={{ scale: 'spring:gentle' }} motion:exit={{ opacity: 'fade-out' }}>a</badge>
+              <badge tone="primary" motion:enter={{ scale: 'spring:gentle', stagger: '0.1s' }} motion:exit={{ opacity: 'fade-out' }}>b</badge>
+              <badge tone="primary" motion:enter={{ scale: 'spring:gentle', stagger: '0.1s' }} motion:exit={{ opacity: 'fade-out' }}>c</badge>
+            </row>
+            <p sx="text:sm fg:muted-foreground">removed elements stay mounted until their exit finishes — the one thing CSS can't do</p>
+            <code>motion:exit</code>
+          </column>
         </card>
-        <card motion:enter={{ translate-y: 'spring:snappy', stagger: '0.08s' }} motion:exit={{ opacity: 'fade-out' }}
-              motion:hover={{ translate-y: 'spring:gentle' }} sx="p:4">
-          <strong>rise</strong>
-          <p sx="text:sm fg:muted-foreground">spring:snappy</p>
-        </card>
-        <card motion:enter={{ opacity: 'fade', stagger: '0.08s' }} motion:exit={{ opacity: 'fade-out' }}
-              motion:hover={{ opacity: 'pulse' }} sx="p:4">
-          <strong>fade</strong>
-          <p sx="text:sm fg:muted-foreground">tween · pulse on hover</p>
+        <card sx="p:4">
+          <column gap="3">
+            <p class="eyebrow">FIG. 04 · SCROLL TIMELINE</p>
+            <p sx="text:sm fg:muted-foreground">progress as a function of scroll position, driven on the compositor — the SHIP wordmark at the end of this page runs on it. No JavaScript executes while you scroll.</p>
+            <code>motion:scroll · motion:view</code>
+          </column>
         </card>
       </grid>
     {/if}
     <row gap="2">
-      <button on:click={replay} variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Deal again</button>
-      <a variant="ghost" href="/motion">Animation →</a>
+      <button on:click={replay} variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Run the figures again</button>
+      <a variant="ghost" href="/motion">The whole system →</a>
     </row>
   </column>
 </column>
@@ -218,26 +232,28 @@
 <column class="pillar">
   <column class="inner" gap="4">
     <p class="eyebrow" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>COMPONENTS</p>
-    <h2 class="big" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>Forty-eight, in the language.</h2>
+    <h2 class="big" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>The hard parts are<br />already correct.</h2>
     <p class="blurb" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
-      Not a library you install — tags you already know, keyboard-complete and
-      themed, compiled to native markup. A dialog is <code>&lt;dialog&gt;</code>.
+      Keyboard traversal, focus trapping, ARIA wiring, touch targets, theming —
+      the things every team gets subtly wrong are built into the elements, and
+      they compile away to native markup: your DOM ships a real
+      <code>&lt;dialog&gt;</code> with the behavior attached, not a div
+      pretending. Which is why an agent using them can't produce an
+      inaccessible screen.
     </p>
     <row gap="3" align="center" motion:view={{ opacity: 'fade', translate-y: 'spring:bouncy' }}>
       <switch checked></switch>
       <slider sx="w:half"></slider>
       <badge tone="success">live</badge>
-      <badge tone="warning">rolling</badge>
       <spinner></spinner>
       <button variant="soft" tone="primary">soft</button>
       <button variant="outline" tone="destructive">outline</button>
       <chip>chip</chip>
-    </row>
-    <row gap="3" align="center" motion:view={{ opacity: 'fade', translate-y: 'spring:bouncy' }}>
-      <progress value="64" max="100" sx="w:half"></progress>
       <avatar></avatar>
-      <badge>48 total</badge>
-      <a variant="ghost" href="/components">The whole library →</a>
+    </row>
+    <row gap="2">
+      <a variant="ghost" href="/components">All forty-eight, running →</a>
+      <a variant="ghost" href="/elements">How they compile away →</a>
     </row>
   </column>
 </column>
