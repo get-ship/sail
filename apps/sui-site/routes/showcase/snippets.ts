@@ -76,4 +76,42 @@ export default controller({
     <p sx="text:sm fg:muted-foreground">p99 {s.p99} ms</p>
   </card>
 {/for}`,
+
+  player: `<controller>
+import { controller, signal, effect } from '@ship/sui-runtime'
+
+export default controller({
+  scope: () => {
+    const playing = signal(true)
+    const position = signal(23)
+    // The interval lives in an effect: it tracks playing(), so pausing
+    // re-runs it, and its cleanup stops the timer on pause and unmount.
+    effect(() => {
+      if (!playing()) return
+      const t = setInterval(() => position.set((p) => (p + 1) % 100), 150)
+      return () => clearInterval(t)
+    })
+    return { playing, position, toggle: () => playing.set((p) => !p) }
+  },
+})
+</controller>
+
+<card sx="p:4">
+  <row gap="4" align="center">
+    <column gap="1" sx="grow:1">
+      <strong>Signals in the Rain</strong>
+      <progress value={position()} max="100"></progress>
+    </column>
+    {#if playing()}
+      <row gap="1" align="center">
+        <div sx="w:1 h:5 radius:full bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>
+        <div sx="w:1 h:5 radius:full bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>
+        <div sx="w:1 h:5 radius:full bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>
+      </row>
+    {/if}
+    <button on:click={toggle} variant="solid" tone="primary" motion:press={{ scale: 'press' }}>
+      {playing() ? 'Pause' : 'Play'}
+    </button>
+  </row>
+</card>`,
 }

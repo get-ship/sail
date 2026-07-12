@@ -82,6 +82,23 @@ export default controller({
       return () => clearInterval(t)
     })
 
-    return { code, people, query, filtered, selected, toggle, flipStatus, remove, services, deploys, deploy }
+    // The player. Position drifts on an effect interval that TRACKS playing():
+    // pause re-runs the effect, whose cleanup stops the timer — the same idiom
+    // that stops it on unmount. The equalizer is not simulated: the bars only
+    // exist (and loop) while playing() holds them in the DOM.
+    const playing = signal(true)
+    const position = signal(23)
+    effect(() => {
+      if (!playing()) return
+      const t = setInterval(() => position.set((p) => (p + 1) % 100), 150)
+      return () => clearInterval(t)
+    })
+    const togglePlay = (): void => playing.set((p) => !p)
+
+    return {
+      code, people, query, filtered, selected, toggle, flipStatus, remove,
+      services, deploys, deploy,
+      playing, position, togglePlay,
+    }
   },
 })

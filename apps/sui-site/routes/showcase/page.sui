@@ -1,24 +1,33 @@
 <!--
-  /showcase — screens that WORK. A mockup is a component page in disguise;
-  these have state: the team list filters as you type, rows select, the
-  detail card mutates the list; the fleet deploys walk through their states
-  while latency drifts on a timer. Each screen wears a different theme.
+  /showcase — three complete programs, the code beside the living UI (design
+  3a). A mockup is a component page in disguise; these have state: the team
+  list filters as you type and mutates; the fleet walks deploys through their
+  states while latency drifts; the player's clock is an effect whose cleanup
+  IS the pause button. Each screen wears a different theme on purpose: the
+  markup says what the screen is, never what it looks like.
 -->
 <column class="doc-wide" gap="5">
-  <p class="eyebrow">Start here</p>
-  <h1>Showcase</h1>
-  <p class="lead">
-    Two working screens. Type in the filter, click a row, remove someone,
-    trigger a deploy — everything mutates real state, and the source beside
-    each screen is the whole program. Different themes on purpose: the markup
-    says what the screen is, never what it looks like.
-  </p>
+  <center>
+    <column gap="3" align="center" sx="py:6">
+      <p class="eyebrow" motion:enter={{ opacity: 'fade' }}>Showcase</p>
+      <h1 motion:enter={{ opacity: 'fade', translate-y: 'spring:gentle' }}>Show, don't tell.</h1>
+      <p class="lead" sx="max-w:panel-max-w-md" motion:enter={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
+        Each example is the complete program on the left, running on the
+        right. Type in it, press it, pause it — nothing is a screenshot.
+      </p>
+    </column>
+  </center>
 
-  <h2>Team — filter, select, mutate <small sx="fg:muted-foreground">· theme: paper</small></h2>
+  <!-- ── 01 · TEAM ─────────────────────────────────────────────────────── -->
+  <h2><span class="mono" sx="fg:primary">01</span> Team — filter, select, mutate <small sx="fg:muted-foreground">· theme: paper</small></h2>
   <row class="split" align="stretch">
     <column>
-      <p class="pane-label">Live — type, click rows, remove someone</p>
-      <column data-theme-preview="paper" gap="3" sx="p:5 radius:lg border:border bg:background fg:foreground">
+      <p class="pane-label">The whole program</p>
+      <code-block code={code.team}></code-block>
+    </column>
+    <column>
+      <p class="pane-label">Running — type, click rows, remove someone</p>
+      <column data-theme-preview="paper" gap="3" sx="p:5 radius:lg border:border bg:background fg:foreground h:full">
         <input placeholder="Filter people" bind:value={query} />
         <column gap="1">
           {#for p of filtered() key={p.id}}
@@ -50,10 +59,6 @@
         {/if}
       </column>
     </column>
-    <column>
-      <p class="pane-label">Source — the whole program</p>
-      <code-block code={code.team}></code-block>
-    </column>
   </row>
   <p>
     <code>filteredList</code> and <code>selection</code> are compositions —
@@ -63,11 +68,16 @@
     derived view: none of it is wiring you wrote.
   </p>
 
-  <h2>Fleet — deploys with states <small sx="fg:muted-foreground">· theme: console</small></h2>
+  <!-- ── 02 · FLEET ────────────────────────────────────────────────────── -->
+  <h2><span class="mono" sx="fg:primary">02</span> Fleet — deploys with states <small sx="fg:muted-foreground">· theme: console</small></h2>
   <row class="split" align="stretch">
     <column>
-      <p class="pane-label">Live — latency drifts; press Deploy</p>
-      <column data-theme-preview="console" gap="3" sx="p:5 radius:lg border:border bg:background fg:foreground">
+      <p class="pane-label">The whole program</p>
+      <code-block code={code.fleet}></code-block>
+    </column>
+    <column>
+      <p class="pane-label">Running — latency drifts; press Deploy</p>
+      <column data-theme-preview="console" gap="3" sx="p:5 radius:lg border:border bg:background fg:foreground h:full">
         {#for s of services() key={s.id}}
           <card sx="p:4">
             <column gap="2">
@@ -91,10 +101,6 @@
         </column>
       </column>
     </column>
-    <column>
-      <p class="pane-label">Source — the whole program</p>
-      <code-block code={code.fleet}></code-block>
-    </column>
   </row>
   <p>
     The deploy walks <code>live → rolling → live</code> through two signal
@@ -102,6 +108,66 @@
     deploy prepends to the log. The drifting latency is one effect with an
     interval — its cleanup runs when you navigate away, which is why the
     idiom is an effect and not a bare <code>setInterval</code>.
+  </p>
+
+  <!-- ── 03 · PLAYER ───────────────────────────────────────────────────── -->
+  <h2><span class="mono" sx="fg:primary">03</span> Player — motion is one attribute per gesture <small sx="fg:muted-foreground">· theme: glass</small></h2>
+  <row class="split" align="stretch">
+    <column>
+      <p class="pane-label">The whole program</p>
+      <code-block code={code.player}></code-block>
+    </column>
+    <column>
+      <p class="pane-label">Running — pause it, watch the equalizer stop</p>
+      <column data-theme-preview="glass" gap="3" sx="p:5 radius:lg border:border bg:background fg:foreground h:full">
+        <center sx="h:full">
+        <column gap="3" sx="w:full">
+        <card sx="p:4">
+          <row gap="4" align="center">
+            <div sx="w:9 h:9 radius:lg bg:tone-primary-bg border:primary">
+              <center sx="h:full"><strong sx="text:xl fg:primary">♪</strong></center>
+            </div>
+            <column gap="1" sx="grow:1 min-w:0">
+              <strong>Signals in the Rain</strong>
+              <p sx="text:sm fg:muted-foreground">The Reactive Quartet</p>
+              <progress value={position()} max="100"></progress>
+            </column>
+            {#if playing()}
+              <row gap="1" align="center" sx="min-h:7">
+                <div sx="w:1 h:5 radius:full bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>
+                <div sx="w:1 h:7 radius:full bg:primary opacity:75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>
+                <div sx="w:1 h:4 radius:full bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>
+                <div sx="w:1 h:6 radius:full bg:primary opacity:75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>
+                <div sx="w:1 h:5 radius:full bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>
+              </row>
+            {:else}
+              <row gap="1" align="center" sx="min-h:7">
+                <div sx="w:1 h:2 radius:full bg:muted-foreground opacity:50"></div>
+                <div sx="w:1 h:2 radius:full bg:muted-foreground opacity:50"></div>
+                <div sx="w:1 h:2 radius:full bg:muted-foreground opacity:50"></div>
+                <div sx="w:1 h:2 radius:full bg:muted-foreground opacity:50"></div>
+                <div sx="w:1 h:2 radius:full bg:muted-foreground opacity:50"></div>
+              </row>
+            {/if}
+            <button on:click={togglePlay} variant="solid" tone="primary" motion:press={{ scale: 'press' }}>
+              {playing() ? 'Pause' : 'Play'}
+            </button>
+          </row>
+        </card>
+        <p class="mono" sx="text:xs fg:muted-foreground">
+          {playing() ? 'playing · the clock is an effect interval' : 'paused — the effect’s cleanup stopped the clock'}
+        </p>
+        </column>
+        </center>
+      </column>
+    </column>
+  </row>
+  <p>
+    The position clock is an effect that <em>tracks</em> <code>playing()</code>:
+    pausing re-runs it, and its cleanup stops the interval — the same cleanup
+    that runs on unmount. The equalizer isn't choreographed either way: the
+    bars only exist while <code>playing()</code> keeps them in the DOM, and
+    <code>motion:loop</code> is the entire animation.
   </p>
 
   <row class="page-nav" gap="2">
