@@ -3,8 +3,9 @@
 // SUI sample here is compiled by the build
 // (crates/sui/compiler/tests/site_snippets_compile.rs).
 export const code = {
-  install: `# npm, pnpm, yarn, or bun — SUI is just packages
-npm install @ship/sui-runtime @ship/sui-primitives`,
+  install: `# one package. The 48 elements are in the LANGUAGE —
+# there is no component library to install, and none to choose.
+npm install @ship/sui-runtime`,
 
   component: `<!-- greeting.sui — a component is a <component> block + markup -->
 <component>{

@@ -75,26 +75,6 @@
     </card>
   </grid>
 
-  <h2>And it costs you nothing</h2>
-  <grid cols="3" gap="4">
-    <column gap="1">
-      <strong sx="text:2xl fg:primary">9.4 kB</strong>
-      <p sx="text:sm fg:muted-foreground">gzipped. React is 59.8.</p>
-    </column>
-    <column gap="1">
-      <strong sx="text:2xl fg:primary">1.3 kB</strong>
-      <p sx="text:sm fg:muted-foreground">
-        for twelve components — keyboard handling and ARIA included.
-      </p>
-    </column>
-    <column gap="1">
-      <strong sx="text:2xl fg:primary">Solid-class</strong>
-      <p sx="text:sm fg:muted-foreground">
-        parity across the benchmark suite; faster on two of nine.
-      </p>
-    </column>
-  </grid>
-
   <row class="page-nav" gap="2">
     <a class="btn btn-primary" href="/getting-started">Getting started →</a>
     <a class="btn" href="/why">Why SUI</a>
