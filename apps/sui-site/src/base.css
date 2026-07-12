@@ -249,11 +249,10 @@ h1, h2, h3 {
 .kinetic-hero .rotator-slot { display: inline-grid; text-align: right; vertical-align: bottom; }
 .kinetic-hero .rotator-slot > * { grid-area: 1 / 1; }
 .kinetic-hero .rotator { color: var(--primary); font-weight: inherit; }
+/* Size/weight/tracking come from sx (text:display) — only what sx cannot
+   say yet stays here. */
 .kinetic-hero h1 {
-  font-size: clamp(3.2rem, 8.5vw, 6.4rem);
   line-height: 1.02;
-  letter-spacing: -0.03em;
-  font-weight: 700;
   margin: 0;
   text-align: center;
 }

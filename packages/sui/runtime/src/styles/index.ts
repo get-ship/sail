@@ -81,7 +81,10 @@ const TYPOGRAPHY_CSS =
   'h6 { font-size: var(--text-sm); }\n' +
   'p  { margin: 0; font-size: var(--text-md); line-height: 1.55; color: var(--foreground); }\n' +
   'small { font-size: var(--text-sm); color: var(--muted-foreground); }\n' +
-  'a { color: var(--primary); text-decoration: none; }\n' +
+  // A link that declares a variant is a button link — the button skin owns
+  // its ink; the global link colour must not outrank it (bare `a` beats the
+  // skin's :where(0) inside the same layer).
+  'a:not([variant]) { color: var(--primary); text-decoration: none; }\n' +
   'a:hover { text-decoration: underline; }\n' +
   'strong { font-weight: var(--heading-weight, 700); }\n' +
   'code { font-family: var(--mono-font, monospace); font-size: 0.9em; }\n' +
@@ -221,7 +224,7 @@ const hostAttrs = (css: string): string =>
 const CONTROL_CONTRACTS_CSS =
   // Control baseline: what a control IS before any skin.
   ':where(button, input, textarea, select) { font: inherit; font-family: var(--font-body); letter-spacing: inherit; color: inherit; }\n' +
-  ':where(button) { line-height: 1; user-select: none; white-space: nowrap; cursor: pointer; }\n' +
+  ':where(button, a[variant]) { line-height: 1; user-select: none; white-space: nowrap; cursor: pointer; }\n' +
   ':where(input, textarea, select) { appearance: none; }\n' +
   // Focus: one ring, everywhere, token-driven — never re-authored.
   ':where(button, input, textarea, select, a, [tabindex]):focus-visible { outline: var(--ring-width, 2px) solid var(--ring); outline-offset: var(--ring-offset, 2px); }\n' +
@@ -319,30 +322,31 @@ const TOGGLE_CONTROLS_CSS =
 // :where() zero specificity so sx atomics and component variants win ties.
 // Fallbacks carry the no-attribute defaults (tone=default, size=md).
 const BUTTON_SKIN_CSS =
-  ':where(button) { display: inline-flex; align-items: center; justify-content: center; gap: var(--size-gap, var(--space-2)); min-height: var(--size-h, var(--control-h-md)); padding: 0 var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); font-weight: var(--font-weight-medium); border-radius: var(--radius-md); border: 1px solid transparent; background: transparent; isolation: isolate; position: relative; }\n' +
+  ':where(a[variant]) { text-decoration: none; }\n' +
+  ':where(button, a[variant]) { display: inline-flex; align-items: center; justify-content: center; gap: var(--size-gap, var(--space-2)); min-height: var(--size-h, var(--control-h-md)); padding: 0 var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); font-weight: var(--font-weight-medium); border-radius: var(--radius-md); border: 1px solid transparent; background: transparent; isolation: isolate; position: relative; }\n' +
   // default / no-variant: neutral bordered surface.
-  ":where(button:not([variant]), button[variant='default']) { background: var(--background); border-color: var(--border); color: var(--foreground); box-shadow: var(--shadow-xs); }\n" +
-  ":where(button:not([variant]), button[variant='default']):hover:not(:disabled) { background: var(--muted); border-color: var(--border-strong); }\n" +
+  ":where(button:not([variant]), button[variant='default'], a[variant='default']) { background: var(--background); border-color: var(--border); color: var(--foreground); box-shadow: var(--shadow-xs); }\n" +
+  ":where(button:not([variant]), button[variant='default'], a[variant='default']):hover:not(:disabled) { background: var(--muted); border-color: var(--border-strong); }\n" +
   // solid: the tone fill. Hover shifts the fill TOWARD the foreground —
   // color-mix makes this mode-aware for free (foreground is dark in light
   // mode → darker; light in dark mode → lighter), so the button stays its
   // own tone instead of collapsing to a neutral grey, and --tone-contrast
   // text stays readable.
-  ":where(button[variant='solid']) { background: var(--tone, var(--foreground)); border-color: var(--tone, var(--foreground)); color: var(--tone-contrast, var(--background)); box-shadow: var(--shadow-xs); }\n" +
-  ":where(button[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); border-color: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); box-shadow: var(--shadow-sm); }\n" +
+  ":where(button[variant='solid'], a[variant='solid']) { background: var(--tone, var(--foreground)); border-color: var(--tone, var(--foreground)); color: var(--tone-contrast, var(--background)); box-shadow: var(--shadow-xs); }\n" +
+  ":where(button[variant='solid'], a[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); border-color: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); box-shadow: var(--shadow-sm); }\n" +
   // soft: the tinted surface. Hover deepens the tint by mixing in more of
   // the pure tone (stays in the tone family; --tone-fg text stays readable).
-  ":where(button[variant='soft']) { background: var(--tone-bg, var(--hover-bg)); border-color: var(--tone-border, var(--border)); color: var(--tone-fg, var(--foreground)); }\n" +
-  ":where(button[variant='soft']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone-bg, var(--hover-bg)), var(--tone, var(--foreground)) 18%); border-color: var(--tone, var(--tone-border)); }\n" +
+  ":where(button[variant='soft'], a[variant='soft']) { background: var(--tone-bg, var(--hover-bg)); border-color: var(--tone-border, var(--border)); color: var(--tone-fg, var(--foreground)); }\n" +
+  ":where(button[variant='soft'], a[variant='soft']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone-bg, var(--hover-bg)), var(--tone, var(--foreground)) 18%); border-color: var(--tone, var(--tone-border)); }\n" +
   // outline / ghost. Hover is a low-alpha wash of the TONE (not a neutral
   // grey), so it reads as the control's own colour in both modes.
-  ":where(button[variant='outline']) { border-color: var(--tone, var(--foreground)); color: var(--tone-fg, var(--foreground)); }\n" +
-  ":where(button[variant='outline'], button[variant='ghost']):hover:not(:disabled) { background: color-mix(in srgb, var(--tone, var(--foreground)) 10%, transparent); }\n" +
-  ":where(button[variant='ghost']) { color: var(--tone-fg, var(--foreground)); }\n" +
+  ":where(button[variant='outline'], a[variant='outline']) { border-color: var(--tone, var(--foreground)); color: var(--tone-fg, var(--foreground)); }\n" +
+  ":where(button[variant='outline'], button[variant='ghost'], a[variant='outline'], a[variant='ghost']):hover:not(:disabled) { background: color-mix(in srgb, var(--tone, var(--foreground)) 10%, transparent); }\n" +
+  ":where(button[variant='ghost'], a[variant='ghost']) { color: var(--tone-fg, var(--foreground)); }\n" +
   // Interaction motion (the baseline lift/press — reduced-motion kills it
   // via the global media rule).
-  ':where(button):hover:not(:disabled) { transform: translateY(-1px); }\n' +
-  ':where(button):active:not(:disabled) { transform: translateY(1px) scale(0.98); }\n' +
+  ':where(button, a[variant]):hover:not(:disabled) { transform: translateY(-1px); }\n' +
+  ':where(button, a[variant]):active:not(:disabled) { transform: translateY(1px) scale(0.98); }\n' +
   // Disabled surface (the contract handles cursor/opacity; ghost/outline go
   // transparent like the baseline).
   ":where(button[variant='ghost'], button[variant='outline']):disabled { background: transparent; }\n"

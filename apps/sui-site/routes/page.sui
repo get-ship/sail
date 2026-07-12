@@ -6,7 +6,7 @@
 <column class="landing-wrap">
   <column class="hero kinetic-hero" gap="4">
     <center><p class="eyebrow">SHIP UI · 0.2.0</p></center>
-    <h1>
+    <h1 sx="text:display weight:bold tracking:tight">
       <strong class="rotator-slot">
         {#for w of word() key={w}}
           <b class="rotator" motion:enter={{ opacity: 'fade' }}>{w}</b>
@@ -21,8 +21,8 @@
       </p>
     </center>
     <row class="hero-cta" gap="2">
-      <a class="btn btn-primary" href="/getting-started" motion:press={{ scale: 'press' }}>Get started</a>
-      <a class="btn" href="/why">Why a language?</a>
+      <a variant="solid" tone="primary" href="/getting-started" motion:press={{ scale: 'press' }}>Get started</a>
+      <a variant="default" href="/why">Why a language?</a>
     </row>
   </column>
 </column>
@@ -55,23 +55,94 @@
     </center>
   </column>
 
-  <column class="products" gap="3">
-    <a class="product-card" href="/overview">
-      <h3>SUI <small class="tag">framework</small></h3>
-      <p>Components, layout, styling, theming, animation and state. Write a page in markup; the framework already has the rest.</p>
-    </a>
-    <a class="product-card" href="/components">
-      <h3>Components <small class="tag">48, included</small></h3>
-      <p>Buttons, dialogs, combobox, tabs, tables, toasts — accessible, keyboard-complete, and themed. Nothing to install.</p>
-    </a>
-    <a class="product-card" href="/deck">
-      <h3>Deck <small class="tag">app framework</small></h3>
-      <p>Routing, server rendering, bundling, live data, and a hot-reloading dev loop. The application layer.</p>
-    </a>
-    <a class="product-card" href="/ai">
-      <h3>AI <small class="tag">agent tooling</small></h3>
-      <p>Built to be written by agents: the compiler is the guardrail, plus MCP tooling and a scored authoring eval.</p>
-    </a>
+  <column gap="3" sx="py:8">
+    <center><h2>The full stack, one language.</h2></center>
+    <center>
+      <p sx="fg:muted-foreground max-w:panel-max-w-md">
+        SUI is the interface language; <a href="/deck">Deck</a> runs it —
+        server rendering, routing, bundling, live data. Every panel below is
+        real and running.
+      </p>
+    </center>
+    <grid cols="2" gap="4">
+      <card sx="p:5">
+        <column gap="3">
+          <row gap="2" align="center">
+            <badge tone="primary">state</badge>
+            <p sx="text:sm fg:muted-foreground">signals + compositions — type, then Invite</p>
+          </row>
+          <input placeholder="Filter people" bind:value={query} />
+          <column gap="1">
+            {#for pn of filtered() key={pn.id}}
+              <row gap="2" align="center" motion:enter={{ opacity: 'fade' }}>
+                <avatar></avatar>
+                <strong sx="grow:1">{pn.name}</strong>
+                <badge tone={pn.status === 'active' ? 'success' : 'muted'}>{pn.status}</badge>
+              </row>
+            {/for}
+          </column>
+          <row gap="2">
+            <button on:click={invite} variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Invite</button>
+            <a variant="ghost" href="/reactivity">State →</a>
+          </row>
+        </column>
+      </card>
+
+      <card sx="p:5">
+        <column gap="3">
+          <row gap="2" align="center">
+            <badge tone="primary">data</badge>
+            <p sx="text:sm fg:muted-foreground">async is three explicit states — press Reload</p>
+          </row>
+          {#while-loading of users}
+            <row gap="2" align="center"><spinner></spinner> <p sx="text:sm fg:muted-foreground">loading…</p></row>
+          {/while-loading}
+          {#if users().kind === 'ok'}
+            <row gap="2">
+              {#for name of users().value key={name}}
+                <badge motion:enter={{ opacity: 'fade' }}>{name}</badge>
+              {/for}
+            </row>
+          {/if}
+          <row gap="2">
+            <button on:click={reload} motion:press={{ scale: 'press' }}>Reload</button>
+            <a variant="ghost" href="/data">Data →</a>
+          </row>
+        </column>
+      </card>
+
+      <card sx="p:5" motion:hover={{ scale: 'spring:gentle' }}>
+        <column gap="3">
+          <row gap="2" align="center">
+            <badge tone="primary">motion</badge>
+            <p sx="text:sm fg:muted-foreground">one directive — hover this card, press the button</p>
+          </row>
+          <row gap="2">
+            <button motion:press={{ scale: 'press' }} motion:hover={{ scale: 'spring:bouncy' }}>Press me</button>
+            <a variant="ghost" href="/motion">Animation →</a>
+          </row>
+        </column>
+      </card>
+
+      <card sx="p:5">
+        <column gap="3">
+          <row gap="2" align="center">
+            <badge tone="primary">full-stack</badge>
+            <p sx="text:sm fg:muted-foreground">Deck owns the server half — deploy something</p>
+          </row>
+          <row gap="2" align="center">
+            <badge tone={status() === 'live' ? 'success' : 'warning'}>{status()}</badge>
+            <strong sx="grow:1">api-gateway · build {buildNo()}</strong>
+            <button on:click={deploy} disabled={status() === 'rolling'} motion:press={{ scale: 'press' }}>
+              {status() === 'rolling' ? 'Rolling…' : 'Deploy'}
+            </button>
+          </row>
+          <row gap="2">
+            <a variant="ghost" href="/deck">Deck →</a>
+          </row>
+        </column>
+      </card>
+    </grid>
   </column>
 
   <p class="wordmark" motion:view={{ opacity: 'fade', translate-y: 'spring:deliberate' }}>SHIP</p>

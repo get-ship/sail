@@ -141,6 +141,9 @@
   --text-2xl: 24px;
   --text-3xl: 28px;
   --text-4xl: 36px;
+  /* Display type: ONE fluid semantic size for hero/landing headlines, not a
+     ladder of ever-bigger steps. Themes may retune the clamp. */
+  --text-display: clamp(2.75rem, 7.5vw, 5.5rem);
 
   --leading-none: 1;
   --leading-tight: 1.2;
