@@ -1,94 +1,94 @@
+<!--
+  /getting-started — the real workflow, end to end: toolchain, first app,
+  the edit loop with the compiler as feedback, state, routes, production
+  build, and the standalone component path. Honest about what SUI is — a
+  Rust toolchain plus JS packages — not a fake one-liner.
+-->
 <column class="doc" gap="5">
   <p class="eyebrow">Introduction</p>
   <h1>Getting started</h1>
   <p class="lead">
-    Two ways in. Building an app: <a href="/deck">deck</a> serves file-routed
-    SUI pages with everything wired — start there. Adding components to an
-    existing stack: the compiler emits standard web components that work
-    anywhere HTML does.
+    SUI is a toolchain: a Rust compiler that turns <code>.sui</code> files into
+    standard web components, JS packages the output binds to, and
+    <a href="/deck">deck</a> — the CLI that serves, bundles, and hot-reloads a
+    whole app. This page walks the real workflow, start to finish.
   </p>
 
-  <h2>Start an app</h2>
+  <h2>1 · Install the toolchain</h2>
+  <code-block code={code.toolchain}></code-block>
   <p>
-    A deck app is a <code>routes/</code> folder and a dev server. No config
+    Two runtimes because there are two jobs: Rust owns compiling and serving,
+    JS owns what ships to the browser. The build takes a few minutes the first
+    time; after that <code>deck</code> and <code>sui-compiler</code> are
+    ordinary binaries on your path.
+  </p>
+
+  <h2>2 · Start an app</h2>
+  <p>
+    A deck app is a <code>routes/</code> folder and a dev server — no config
     file, no scaffold step.
   </p>
   <code-block code={code.app}></code-block>
-  <p>
-    The first page is markup. Every component on it — the input, the button,
-    the card, the avatar, the badge — is already in the language; there is
-    nothing to install or import, and the compiler rejects what is off the
-    system instead of letting it drift.
-  </p>
+  <p>The first page is markup. Nothing is imported; the components are part of the language.</p>
   <code-block code={code.firstPage}></code-block>
+
+  <h2>3 · The edit loop</h2>
   <p>
-    Save and the browser reloads with state preserved. Routing, server
-    rendering, bundling, and live data are <a href="/deck">deck</a>'s half —
-    the view stays a <code>.sui</code> file throughout.
+    Save and the browser reloads with state preserved. The part that changes
+    how you work: <strong>the compiler answers back.</strong> Write a color
+    that is not on the design system, a motion preset that does not exist, a
+    prop off the component's type — and the build fails with the vocabulary
+    of the fix, at the line that caused it:
+  </p>
+  <code-block code={code.feedback}></code-block>
+  <p>
+    This is deliberate. There is no class soup to drift into and no silent
+    no-op to ship — the system either accepts the page or tells you exactly
+    what it would take. Reviews stop being about spacing.
   </p>
 
-  <h2>Or: compile components into any stack</h2>
-  <p>SUI is a set of packages. Use whatever package manager you like.</p>
+  <h2>4 · Add state</h2>
+  <p>
+    State lives in a <code>&lt;controller&gt;</code> block in the same file.
+    The template can bind only what <code>scope()</code> returns — the
+    compiler enforces the boundary.
+  </p>
+  <code-block code={code.state}></code-block>
+  <p>
+    Signals are the whole model: <code>signal()</code> holds a value,
+    <code>derived()</code> computes from others, <code>effect()</code> runs
+    side effects and cleans up on unmount. <a href="/reactivity">State →</a>
+  </p>
+
+  <h2>5 · Add routes</h2>
+  <p>Directories are the router. A folder is a segment; brackets are params.</p>
+  <code-block code={code.routesTree}></code-block>
+
+  <h2>6 · Ship it</h2>
+  <code-block code={code.build}></code-block>
+  <p>
+    Server rendering, hydration, and code-splitting per route come with the
+    build — they are deck's job, not configuration. <a href="/deck">Deck →</a>
+  </p>
+
+  <h2>Without deck: components in an existing stack</h2>
+  <p>
+    The compiler's output is a standard custom element, so SUI components can
+    live inside any page — a React app, a CMS template, plain HTML. You lose
+    the app half (routing, SSR, the dev loop) and keep the language.
+  </p>
   <code-block code={code.install}></code-block>
-
-  <h2>Write a component</h2>
-  <p>
-    A <code>&lt;component&gt;</code> block declaring what comes in, and markup
-    that reads it. Text takes the type scale automatically; reach for
-    <code>sx</code> when you need surface or spacing. No controller needed until
-    there's state to own.
-  </p>
   <code-block code={code.component}></code-block>
-
-  <h2>Compile it</h2>
-  <p>
-    The <code>sui-compiler</code> lowers the <code>.sui</code> into a small JS
-    module that defines the custom element. That module is the whole output —
-    it imports only <code>@ship/sui-runtime</code>.
-  </p>
   <code-block code={code.compile}></code-block>
-
-  <h2>Use it anywhere</h2>
-  <p>
-    Importing the compiled module registers the element with the browser. From
-    then on <code>&lt;sui-greeting&gt;</code> is a first-class HTML element —
-    drop it into a static page, a React app, a Svelte app, or plain HTML. It's
-    a web component; nothing about SUI has to be present in the host.
-  </p>
   <code-block code={code.use}></code-block>
-
-  <h2>Add state</h2>
   <p>
-    When a component needs state, add a <code>&lt;controller&gt;</code> block to
-    the same file. The markup reads what the controller's <code>scope()</code>
-    returns — one file, logic and template together.
+    Interactivity works the same way in both worlds — one file, template and
+    controller together:
   </p>
   <code-block code={code.interactive}></code-block>
 
-  <h2>The single-file model</h2>
-  <p>One file, two roles — the separation is the whole mental model:</p>
-  <ul>
-    <li>
-      <strong>The template</strong> (the markup outside the block) is bindings —
-      a pure read of state. It reads signals (<code>&#123;count()&#125;</code>),
-      wires events (<code>on:click</code>), and binds inputs
-      (<code>bind:value</code>). It holds no logic.
-    </li>
-    <li>
-      <strong>The <code>&lt;controller&gt;</code> block</strong> owns the state
-      and the logic. Its <code>scope()</code> returns the signals, derived
-      values, and handlers the template binds to; <code>mount(state, host)</code>
-      runs side effects once the element is in the DOM.
-    </li>
-  </ul>
-  <p>
-    The template can only bind names the controller's <code>scope()</code> hands
-    it — the compiler enforces it. Markup on one side, state on the other,
-    nothing tangled between them.
-  </p>
-
-  <row class="page-nav">
-    <a class="btn" href="/">← Overview</a>
-    <a class="btn" href="/reactivity">Reactivity →</a>
+  <row class="page-nav" gap="2">
+    <a class="btn" href="/overview">← Introduction</a>
+    <a class="btn btn-primary" href="/reactivity">State →</a>
   </row>
 </column>

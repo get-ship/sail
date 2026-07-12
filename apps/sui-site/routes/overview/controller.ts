@@ -11,17 +11,17 @@ const BENCH = ['Katherine Johnson', 'Annie Easley', 'Margaret Hamilton', 'Radia 
 export default controller({
   scope: (_ctx: ViewScope<Scope>) => {
     const people = signal([
-      { id: 1, name: 'Ada Lovelace', team: 'Engineering', status: 'active' },
-      { id: 2, name: 'Grace Hopper', team: 'Engineering', status: 'away' },
-      { id: 3, name: 'Alan Turing', team: 'Research', status: 'active' },
+      { id: 1, name: 'Ada Lovelace', status: 'active' },
+      { id: 2, name: 'Grace Hopper', status: 'away' },
+      { id: 3, name: 'Alan Turing', status: 'active' },
     ])
     const { query, filtered } = filteredList(() => people(), (p, q) =>
-      (p.name + ' ' + p.team).toLowerCase().includes(q),
+      p.name.toLowerCase().includes(q),
     )
     const invite = (): void => {
       people.set((l) => [
         ...l,
-        { id: l.length + 1, name: BENCH[(l.length - 3) % BENCH.length] ?? `Member ${l.length + 1}`, team: 'New', status: 'active' },
+        { id: l.length + 1, name: BENCH[(l.length - 3) % BENCH.length] ?? `Member ${l.length + 1}`, status: 'active' },
       ])
     }
     return { code, query, filtered, invite }

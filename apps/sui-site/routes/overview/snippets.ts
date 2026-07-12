@@ -1,45 +1,58 @@
-// Snippets for the introduction. Every SUI sample is compiled by the build.
+// Code snippets for the introduction. The `page` snippet IS the live demo's
+// program; the tour snippets are deliberately tiny. All compiled by the build.
 export const code = {
-  install: `npm install @ship/sui-runtime`,
-
   page: `<controller>
 import { controller, signal, filteredList } from '@ship/sui-runtime'
 
 export default controller({
   scope: () => {
     const people = signal([
-      { id: 1, name: 'Ada Lovelace', team: 'Engineering', status: 'active' },
-      { id: 2, name: 'Grace Hopper', team: 'Engineering', status: 'away' },
+      { id: 1, name: 'Ada Lovelace', status: 'active' },
+      { id: 2, name: 'Grace Hopper', status: 'away' },
     ])
     const { query, filtered } = filteredList(() => people())
     const invite = () =>
-      people.set((l) => [...l, { id: l.length + 1, name: 'New member', team: 'New', status: 'active' }])
+      people.set((l) => [...l, { id: l.length + 1, name: 'New member', status: 'active' }])
     return { query, filtered, invite }
   },
 })
 </controller>
 
-<column gap="4" sx="p:6">
-  <h3>Team</h3>
-  <input placeholder="Filter people" bind:value={query} />
+<input placeholder="Filter people" bind:value={query} />
+{#for p of filtered() key={p.id}}
+  <card sx="p:4" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
+    <row gap="3" align="center">
+      <avatar></avatar>
+      <strong sx="grow:1">{p.name}</strong>
+      <badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge>
+    </row>
+  </card>
+{/for}
+<button on:click={invite} variant="solid" tone="primary">Invite</button>`,
 
-  {#for p of filtered() key={p.id}}
-    <card sx="p:4" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}
-          motion:hover={{ scale: 'spring:gentle' }}>
-      <row gap="3" align="center">
-        <avatar></avatar>
-        <column gap="1" sx="grow:1">
-          <strong>{p.name}</strong>
-          <p sx="fg:muted-foreground text:sm">{p.team}</p>
-        </column>
-        <badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge>
-      </row>
-    </card>
-  {/for}
+  layout: `<row gap="3" align="center">…</row>     <!-- x axis -->
+<column gap="4">…</column>              <!-- y axis -->
+<grid cols="3" gap="3">…</grid>         <!-- 2D -->`,
 
-  <row gap="2">
-    <button on:click={invite} variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Invite</button>
-    <button variant="ghost">Export</button>
-  </row>
-</column>`,
+  components: `<button variant="solid" tone="primary">Save</button>
+<button variant="outline" tone="destructive">Delete</button>
+<badge tone="success">Active</badge>
+<alert tone="info">Saved.</alert>`,
+
+  styling: `<card sx="p:5 bg:surface-1 radius:lg shadow:sm hover:shadow:md">
+  <p sx="fg:muted-foreground text:sm">On the system, or it does not compile.</p>
+</card>`,
+
+  state: `const count = signal(0)
+const doubled = derived(() => count() * 2)
+effect(() => console.log(count()))   // re-runs on change`,
+
+  data: `const users = live(() => fetchUsers())
+// users() is { kind: 'loading' } | { kind: 'ok', value } | { kind: 'error', error }`,
+
+  motion: `<card motion:hover={{ scale: 'spring:gentle' }}
+      motion:enter={{ opacity: 'fade' }}>…</card>`,
+
+  theming: `import { applyTheme } from '@ship/tokens/themes'
+applyTheme('console')   // one attribute; every component follows`,
 }

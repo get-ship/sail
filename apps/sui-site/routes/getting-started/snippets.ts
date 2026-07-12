@@ -1,13 +1,19 @@
-// Code snippets for the getting-started page. Kept out of the controller so the
-// compiler's scope scan isn't fooled by `return {…}` / `signal(…)` patterns. Every
-// SUI sample here is compiled by the build
+// Code snippets for getting-started. SUI samples are compiled by the build
 // (crates/sui/compiler/tests/site_snippets_compile.rs).
 export const code = {
+  toolchain: `# Prerequisites: Bun and Rust. SUI's compiler and deck's server are
+# Rust binaries; the runtime and tokens are JS packages. Prebuilt
+# binaries are planned; today you build the toolchain from the repo:
+git clone <the sui repo> && cd sui
+bun install                              # JS workspace
+cargo run -p deck-cli -- build-assets    # bake the framework bundles
+cargo build                              # deck CLI + compiler`,
+
   app: `my-app/
 └─ routes/
-   └─ page.sui        # the / route — markup, nothing else
+   └─ page.sui        # the / route
 
-$ deck dev
+$ deck dev --project my-app
   ▸ serving http://127.0.0.1:7878`,
 
   firstPage: `<!-- routes/page.sui — a page is markup. The components are
@@ -27,48 +33,74 @@ $ deck dev
   </card>
 </column>`,
 
-  install: `# one package. The 48 elements are in the LANGUAGE —
-# there is no component library to install, and none to choose.
-npm install @ship/sui-runtime`,
+  feedback: `# Write something off the system and the build says no — precisely.
+$ deck dev
+Error: routes/page.sui: line 4 col 13: [sui-sx]
+  sx \`bg:blurple\` — \`blurple\` is not a token.
+  allowed: accent, background, border, muted, primary, … (the token list)
+  suggest: sx is surface-only: spacing 0-8 (p/m…), colors (bg/fg),
+  radius, text. Raw px/hex are not expressible.`,
 
-  component: `<!-- greeting.sui — a component is a <component> block + markup -->
-<component>{
-  props: {
-    who: 'world',
-  },
-}</component>
-
-<!-- no <style> needed: text is styled from the type scale,
-     and layout/surface come from sx + the layout keywords -->
-<p>Hello, {who()}.</p>`,
-
-  compile: `# lower the .sui to a standard custom-element module
-sui-compiler build greeting.sui --component-name sui-greeting
-# → greeting.js (imports @ship/sui-runtime, registers <sui-greeting>)`,
-
-  use: `<!-- importing the compiled module registers the element -->
-<script type="module">
-  import './greeting.js'
-</script>
-
-<!-- then it's a first-class HTML element — use it anywhere -->
-<sui-greeting who="Ada"></sui-greeting>`,
-
-  interactive: `<!-- counter.sui — when there's state, add an inline <controller>
-     block. One file: logic and markup live together (SFC). -->
+  state: `<!-- routes/page.sui — state lives in a <controller> block in the
+     same file. The template binds ONLY what scope() returns. -->
 <controller>
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => ({ count: signal(0) }),
+  scope: () => {
+    const count = signal(0)
+    return { count }
+  },
 })
 </controller>
 
-<button on:click={() => count.set((n) => n - 1)}>−</button>
-<output>{count()}</output>
-<button on:click={() => count.set((n) => n + 1)}>+</button>`,
+<button on:click={() => count.set(count() + 1)}>
+  Clicked {count()} times
+</button>`,
 
-  deck: `# deck is optional — an app framework that drives the compiler
-# for a whole app: bundling, a dev loop, routing, server rendering.
-deck dev --project .`,
+  routesTree: `routes/
+├─ page.sui               → /
+├─ settings/
+│  └─ page.sui            → /settings
+└─ users/
+   └─ [id]/
+      └─ page.sui         → /users/:id   (read it: route.params.id())`,
+
+  build: `$ deck build --project my-app
+# static output: SSR'd HTML per route + hydrating bundles.
+# Deploy the directory anywhere that serves files.`,
+
+  install: `# one package. The 48 elements are in the LANGUAGE —
+# there is no component library to add on top.
+npm install @ship/sui-runtime`,
+
+  component: `<!-- greeting.sui — a component is a <component> block + markup -->
+<component>{
+  props: { name: '' },
+}</component>
+
+<p>Hello, {name()}.</p>`,
+
+  compile: `# lower the .sui to a standard custom-element module
+sui-compiler build greeting/greeting.sui`,
+
+  use: `<!-- importing the compiled module registers the element -->
+<script type="module" src="/greeting.js"></script>
+<my-greeting name="Ada"></my-greeting>`,
+
+  interactive: `<controller>
+import { controller, signal } from '@ship/sui-runtime'
+
+export default controller({
+  scope: () => {
+    const open = signal(false)
+    return { open }
+  },
+})
+</controller>
+
+<button on:click={() => open.set(!open())}>Toggle</button>
+{#if open()}
+  <card motion:enter={{ opacity: 'fade' }} sx="p:4">Hello.</card>
+{/if}`,
 }

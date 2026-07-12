@@ -1,10 +1,7 @@
 <!--
-  /overview — the introduction. What SUI IS, in plain words, and a page you can
-  look at.
-
-  This page used to open with "The UI framework agents write" and then explain
-  element mode, compile-away tags, and four mechanisms. On the FIRST page. It
-  never once mentioned that we ship a component library.
+  /overview — the introduction: what SUI is, a small working program, and a
+  tour that actually teaches usage. The demo below is live and its source is
+  the snippet above it — same program.
 -->
 <column class="doc" gap="5">
   <p class="eyebrow">Introduction</p>
@@ -14,83 +11,101 @@
     library, a design system, layout, theming, animation, and state — so a page
     is markup, and nothing else has to be assembled first.
   </p>
-
-  <h2>Install it</h2>
-  <code-block code={code.install}></code-block>
   <p>
-    That is the whole setup. No config file, no CSS framework to pick, no
-    component library to install on top — the components are part of it.
+    It is a toolchain, not just a package: a Rust compiler turns
+    <code>.sui</code> files into standard web components, and
+    <a href="/deck">deck</a> serves, bundles, and hot-reloads the app around
+    them. <a href="/getting-started">Installation</a> walks the real setup.
   </p>
 
-  <h2>Write a page</h2>
+  <h2>A page is a program</h2>
   <p>
-    This is a complete program — state, filtering, animation, and the
-    components, which are the tags you already know from HTML plus the ones
-    HTML is missing. There is no import list and no stylesheet.
+    Here is a complete one — state, a filtered list, an animation, and the
+    components, with no import list and no stylesheet:
   </p>
   <code-block code={code.page}></code-block>
 
-  <h2>Here it is, running</h2>
-  <p>Type in the filter. Press Invite. Hover a card.</p>
-
-  <column gap="4" sx="p:6 bg:muted border:border radius:lg">
-    <h3>Team</h3>
+  <p><strong>Running:</strong> type in the filter, press Invite.</p>
+  <column gap="3" sx="p:6 bg:muted border:border radius:lg">
     <input placeholder="Filter people" bind:value={query} />
-
     {#for p of filtered() key={p.id}}
       <card sx="p:4" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}
             motion:hover={{ scale: 'spring:gentle' }}>
         <row gap="3" align="center">
           <avatar></avatar>
-          <column gap="1" sx="grow:1">
-            <strong>{p.name}</strong>
-            <p sx="fg:muted-foreground text:sm">{p.team}</p>
-          </column>
+          <strong sx="grow:1">{p.name}</strong>
           <badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge>
         </row>
       </card>
     {/for}
-
     <row gap="2">
       <button on:click={invite} variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Invite</button>
-      <button variant="ghost">Export</button>
     </row>
   </column>
 
-  <p sx="text:sm fg:muted-foreground">
-    Change the theme in the top right — every colour, shadow and radius above
-    moves with it, because they all come from the same system.
+  <h2>How you use it</h2>
+  <p>
+    <strong>Layout is three words.</strong> <code>row</code>, <code>column</code>
+    and <code>grid</code> take <code>gap</code>, <code>align</code> and
+    <code>justify</code> — there is no flexbox incantation to remember, and no
+    raw <code>&lt;div&gt;</code> to fall back on. <a href="/layout">Layout →</a>
   </p>
-
-  <h2>What comes with it</h2>
-  <ul>
-    <li>
-      <strong>48 components.</strong> Buttons, dialogs, combobox, tabs, toasts,
-      tables — accessible, keyboard-complete, and themed.
-      <a href="/elements">The library →</a>
-    </li>
-    <li>
-      <strong>Layout.</strong> <code>&lt;row&gt;</code>,
-      <code>&lt;column&gt;</code>, <code>&lt;grid&gt;</code>. No flexbox to
-      remember. <a href="/layout">Layout →</a>
-    </li>
-    <li>
-      <strong>Styling and themes.</strong> A token system and nine themes, with
-      no CSS to write. <a href="/styling">Styling →</a>
-    </li>
-    <li>
-      <strong>Animation.</strong> One directive, springs included, respects
-      reduced-motion. <a href="/motion">Animation →</a>
-    </li>
-    <li>
-      <strong>State.</strong> Signals — fine-grained, no virtual DOM.
-      <a href="/reactivity">State →</a>
-    </li>
-  </ul>
+  <code-block code={code.layout}></code-block>
 
   <p>
-    And it is small: <strong>9.4&nbsp;kB gzipped</strong>, with performance in
-    the same class as Solid.
+    <strong>Components are tags with props.</strong> Forty-eight of them —
+    buttons, dialogs, combobox, tabs, tables, toasts — accessible and
+    keyboard-complete. <code>tone</code> picks the colour from the design
+    system; <code>variant</code> picks how much of it you get.
+    <a href="/components">The library →</a>
+  </p>
+  <code-block code={code.components}></code-block>
+
+  <p>
+    <strong>Styling is a closed vocabulary.</strong> <code>sx</code> speaks
+    design-system atoms — spacing, colour, radius, shadow, with states as
+    prefixes. A value off the system is a build error, not a review comment.
+    <a href="/styling">Styling →</a>
+  </p>
+  <code-block code={code.styling}></code-block>
+
+  <p>
+    <strong>State is signals.</strong> Read by calling, write with
+    <code>.set()</code>; <code>derived</code> computes, <code>effect</code>
+    reacts and cleans up on unmount. The template binds them directly — no
+    virtual DOM in between. <a href="/reactivity">State →</a>
+  </p>
+  <code-block code={code.state}></code-block>
+
+  <p>
+    <strong>Async data is three explicit states.</strong> <code>live()</code>
+    wraps any promise-returning source; the template physically cannot render
+    the value without having handled loading and error.
+    <a href="/data">Data →</a>
+  </p>
+  <code-block code={code.data}></code-block>
+
+  <p>
+    <strong>Animation is one directive.</strong> Eight triggers, nine presets,
+    reduced-motion respected everywhere. The framework holds exiting elements
+    in the DOM until their animation finishes. <a href="/motion">Animation →</a>
+  </p>
+  <code-block code={code.motion}></code-block>
+
+  <p>
+    <strong>Themes are complete aesthetics.</strong> Nine ship with the
+    framework; one attribute swaps everything, because components read tokens
+    and never name colours. Try the picker in the top right of this page.
+    <a href="/theming">Theming →</a>
+  </p>
+  <code-block code={code.theming}></code-block>
+
+  <h2>Performance</h2>
+  <p>
+    Fast in the boring way: templates compile ahead of time, updates are
+    fine-grained signal writes, and there is no virtual DOM to diff. The
+    runtime is 9.4&nbsp;kB gzipped, and the js-framework-benchmark harness we
+    measure with lives in the repo — run it rather than take our word.
   </p>
 
   <row class="page-nav" gap="2">

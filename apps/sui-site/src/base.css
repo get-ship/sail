@@ -172,13 +172,19 @@ h1, h2, h3 {
 .feature-grid .card p { margin: 0; font-size: var(--text-sm); color: var(--muted-foreground); line-height: 1.6; }
 
 /* ── Split demo (code → live) ─────────────────────────────────────────── */
-.split {
+/* Doubled selector on purpose: .split rides on <row>, and .sui-row (flex,
+   wrapping) has the same single-class specificity — stylesheet order decided
+   which won, so panes wrapped below each other depending on content width.
+   (0,2,0) beats any layout atom deterministically. minmax(0,1fr) keeps a wide
+   code block from pushing its sibling out of the row. */
+.split.split {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-4);
   align-items: stretch;
   margin-top: var(--space-5);
 }
+.split.split > * { min-width: 0; }
 .split .pane-label {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
@@ -196,7 +202,7 @@ h1, h2, h3 {
   padding: var(--space-6);
   min-height: 8rem;
 }
-@media (max-width: 720px) { .split { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .split.split { grid-template-columns: minmax(0, 1fr); } }
 
 /* ── Ship UI umbrella landing ─────────────────────────────────────────── */
 .landing-wrap { max-width: 64rem; margin: 0 auto; padding: var(--space-8) var(--space-6); }
