@@ -1,101 +1,142 @@
-// Reference cheat-sheets. Every construct here is verified against the in-repo
-// sui-compiler (the directives/bindings compile; the runtime signatures match
-// @ship/sui-runtime). Rendered as codeblocks so the braces read as text.
+// Reference snippets. ONE construct per snippet — a code block that contains six
+// unrelated things, each "named" by a comment inside it, is not a reference. Every
+// sample is compiled by the build (crates/sui/compiler/tests/site_snippets_compile.rs).
 export const code = {
-  text: `{expr}                        read a signal or any expression
-{name() || 'fallback'}        expressions are plain JS`,
+  // ── template directives ────────────────────────────────────────────────
+  text: `<p>Signed in as {user().name}.</p>
+<p>{count()} item{count() === 1 ? '' : 's'}</p>`,
 
-  events: `on:click={handler}            attach a DOM event
-on:input={(e) => …}           the event is the argument
-on:submit|prevent={save}      modifier: preventDefault first
-on:click|stop={fn}            modifier: stopPropagation
-on:click|self={fn}            fire only when target === currentTarget
-on:input|debounce:200={fn}    modifier: debounce by N ms`,
+  attr: `<img src={avatarUrl()} alt={name()} />
+<button disabled={saving()}>Save</button>`,
 
-  bind: `bind:value={sig}              two-way: text input <-> signal
-bind:checked={sig}            two-way: checkbox <-> signal
-bind:this={ref}               element handle (ref() in the controller)`,
+  on: `<button on:click={save}>Save</button>
+<form on:submit|prevent={save}>…</form>
+<input on:input|debounce:200={search} />
+<div on:keydown|key:Escape={close}>…</div>`,
 
-  attrs: `class:active={cond}           toggle a class when cond is truthy
-style:--gap={value}           set a CSS custom property
-prop:name={value}             pass a prop down to a child component`,
+  bindValue: `<input bind:value={draft} />
+<textarea bind:value={body}></textarea>
+<select bind:value={team}>…</select>`,
 
-  controlFlow: `{#if cond} … {:else if cond} … {:else} … {/if}
+  bindChecked: `<input type="checkbox" bind:checked={agreed} />`,
 
-{#for item of list() key={item.id}} … {/for}
+  bindThis: `<canvas bind:this={canvasEl}></canvas>`,
 
-{#match expr()}
-  {:case 'a'} …
-  {:case 'b'} …
-  {:default} …
+  classDir: `<a class:active={path() === '/'}>Home</a>`,
+
+  styleDir: `<column style:--gap={density()}>…</column>`,
+
+  propDir: `<risk-meter prop:reading={sensor()}></risk-meter>`,
+
+  useDir: `<textarea use:autosize></textarea>
+<div use:clickOutside={close}>…</div>`,
+
+  motionDir: `<card motion:hover={{ scale: 'spring:gentle' }}>…</card>
+<card motion:enter={{ opacity: 'fade' }} motion:exit={{ opacity: 'fade-out' }}>…</card>`,
+
+  // ── control flow ───────────────────────────────────────────────────────
+  ifBlock: `{#if ok()}
+  <p>Ready.</p>
+{:else if pending()}
+  <spinner></spinner>
+{:else}
+  <error-state></error-state>
+{/if}`,
+
+  forBlock: `{#for item of items() key={item.id}}
+  <li>{item.label}</li>
+{/for}`,
+
+  matchBlock: `{#match status()}
+  {:case 'draft'}   <badge tone="muted">Draft</badge>
+  {:case 'live'}    <badge tone="success">Live</badge>
+  {:default}        <badge>Unknown</badge>
 {/match}`,
 
-  asyncData: `<!-- render the three states of a live() / data-live handle -->
-{#while-loading of users} … {/while-loading}
-{#while-error err of users} {err.message} {/while-error}
-{#if users().kind === 'ok'} … users().value … {/if}`,
+  asyncBlock: `{#async users as list}
+  {:loading}
+    <spinner></spinner>
+  {:error err}
+    <alert tone="destructive">{err.message}</alert>
+  {:ok}
+    <p>{list.length} users</p>
+{/async}`,
 
-  runtime: `import { signal, derived, effect, batch, untrack, onCleanup, selector, debounce } from '@ship/sui-runtime'
+  whileBlocks: `<!-- what {#async} desugars into. Reach for these when you want
+     only one of the three branches. -->
+{#while-loading of users}
+  <spinner></spinner>
+{/while-loading}
 
-const count = signal(0)              // () to read, .set(v) / .set(fn) to write
-const doubled = derived(() => count() * 2)   // auto-tracked, lazy, cached
-const dispose = effect(() => { … return cleanup })  // runs on dep change
+{#while-error err of users}
+  <alert tone="destructive">{err.message}</alert>
+{/while-error}`,
 
-batch(() => { … })                   // coalesce writes into one update pass
-untrack(() => sig())                 // read without subscribing
-onCleanup(() => …)                   // teardown on unmount
-const isActive = selector(activeId)  // isActive(id): O(1) membership, no over-notify
-const q = debounce(query, 200)       // a derived signal that lags by N ms`,
-
-  liveHelpers: `import { live, unwrap, unwrapOr } from '@ship/sui-runtime'
-
-const users = live(() => fetch('/api/users').then((r) => r.json()))
-// users() -> { kind: 'loading' | 'error' | 'ok', value?, error? }
-unwrap(users)              // the value, or undefined until 'ok'
-unwrapOr(users, [])        // the value, or a fallback`,
-
-  hooks: `import { useForm, useFilteredList, useSelection } from '@ship/sui-runtime'
-
-// controller hooks — composable state bundles, spread into scope()
-useForm({ initial: { name: '', email: '' }, submit })  // + pending + lastError
-useFilteredList(items, (item, q) => item.name.includes(q))  // + { query }
-useSelection(items, (item) => item.id)                      // + { selectedId }`,
-
-  context: `import { shared, provide, useShared } from '@ship/sui-runtime'
-
-// share a signal down a subtree, no prop drilling
-provide(host, 'theme', shared(themeSignal))   // in a parent's mount(state, host)
-const theme = useShared(host, 'theme')        // in a descendant's mount`,
-
-  advanced: `import { defineComponent, morph } from '@ship/sui-runtime'
-
-defineComponent('sui-widget', schema, factory)  // register a custom element
-//   the compiler emits this — you rarely call it by hand
-morph(targetEl, htmlOrElement)   // patch the DOM in place to match a new tree`,
-
-  declarations: `<!-- one declarative block: what comes in, and what it may be -->
-<component>{
+  // ── declarations ───────────────────────────────────────────────────────
+  componentBlock: `<component>{
   props: {
-    tone: 'default' | 'primary' | 'accent',
+    tone: 'default' | 'primary' | 'destructive',
     count: 0,
+    label: '',
   },
-}</component>
+}</component>`,
 
-<!-- a VARIANT is just a prop with a union type. Key its CSS off the
-     attribute — there is no separate <variants> block. -->
-<style>
-  .card[tone='primary'] .label { color: var(--primary); }
-</style>
+  controllerBlock: `<controller>
+import { controller, signal, derived } from '@ship/sui-runtime'
 
-<!-- the top element IS the root: style it directly. No <host>. -->
-<div class="card" sx="radius:md bg:surface-1 border:border">
-  <span class="label">{count()}</span>
-</div>`,
+export default controller({
+  scope: () => {
+    const count = signal(0)
+    return { count, doubled: derived(() => count() * 2) }
+  },
+  mount(state, host) {
+    // runs once, after the element is in the DOM
+  },
+})
+</controller>`,
 
-  slots: `<!-- component: declare named + default slots -->
-<slot name="title"></slot>
-<slot></slot>
+  slots: `<!-- the element -->
+<card>
+  <slot name="header"></slot>
+  <slot></slot>
+</card>
 
-<!-- consumer: fill by name; loose children -> default -->
-<h2 slot="title">…</h2>`,
+<!-- the caller -->
+<card>
+  <h2 slot="header">Title</h2>
+  <p>Body.</p>
+</card>`,
+
+  // ── runtime ────────────────────────────────────────────────────────────
+  signals: `import { signal, derived, effect, batch, untrack } from '@ship/sui-runtime'
+
+const count = signal(0)
+count()                    // read
+count.set(5)               // write
+count.set((n) => n + 1)    // functional write
+
+const doubled = derived(() => count() * 2)   // lazy, cached
+effect(() => console.log(count()))           // re-runs on change; return a cleanup`,
+
+  liveData: `import { data } from '@ship/sui-runtime'
+
+const users = data(() => ship.users.list())   // { kind: 'loading' | 'error' | 'ok' }`,
+
+  compositions: `// A composition is a plain function over the primitives. No type, no
+// registration, no rules — if it returns state, it is a composition.
+import { selection } from '@ship/sui-std'
+
+const { selected, isSelected, toggle } = selection(() => rows())`,
+
+  context: `import { provide, useShared } from '@ship/sui-runtime'
+
+provide('theme', theme)          // in the parent
+const theme = useShared('theme') // anywhere below`,
+
+  action: `import type { Action } from '@ship/sui-runtime'
+
+export const autofocus: Action<void> = (node) => {
+  const id = requestAnimationFrame(() => (node as HTMLElement).focus())
+  return { destroy: () => cancelAnimationFrame(id) }
+}`,
 }
