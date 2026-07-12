@@ -4,6 +4,34 @@
 // compile-checked against the in-repo sui-compiler; data() matches the real
 // @ship/sui-runtime DataOpts signature.
 export const code = {
+  demo: `<controller>
+import { controller, live, signal } from '@ship/sui-runtime'
+export default controller({
+  scope: () => {
+    const attempt = signal(1)
+    const users = live(() => {
+      attempt() // tracked: bump it and the source re-runs
+      return fetchUsers()
+    })
+    return { users, reload: () => attempt.set((a) => a + 1) }
+  },
+})
+</controller>
+
+<button on:click={reload}>Reload</button>
+
+{#while-loading of users}
+  <spinner></spinner>
+{/while-loading}
+{#while-error err of users}
+  <alert tone="destructive">{err.message}</alert>
+{/while-error}
+{#if users().kind === 'ok'}
+  {#for name of users().value key={name}}
+    <badge>{name}</badge>
+  {/for}
+{/if}`,
+
   source: `// users.controller.ts
 import { controller, live } from '@ship/sui-runtime'
 
