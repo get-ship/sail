@@ -1,98 +1,39 @@
 <!--
-  /motion — the page must MOVE. An argument about animation made in prose is
-  self-refuting, and this page was exactly that.
+  /motion — the page must MOVE, unprompted. The hand deals itself the moment
+  you arrive; every section is the live thing beside the code that made it.
 
-  Everything below is live. The timeline section animates as you scroll it: `view`
-  attaches a native ViewTimeline, which the browser drives on the compositor —
-  no JS in the frame loop.
-
-  Authored under the floor: no <style>, no raw <div>, no inline style.
+  Authored under the floor: no style blocks, no raw containers, no inline
+  style attributes.
 -->
-<column class="doc" gap="5">
+<column class="doc-wide" gap="5">
   <p class="eyebrow">Components</p>
   <h1>Motion</h1>
   <p class="lead">
     One directive. <code>motion:</code> takes a <strong>trigger</strong> — when —
-    and a <strong>config</strong> — what moves. There is no second animation API,
-    no transition directive, and no imperative escape hatch you are meant to
-    graduate to. Everything on this page is running right now.
-  </p>
-
-  <h2>Interaction</h2>
-  <p>
-    The browser already knows when these happen, so the only question left is what
-    they should look like. Hover the cards. Press them.
-  </p>
-
-  <grid cols="3" gap="3">
-    <card motion:hover={{ scale: 'spring:gentle' }} sx="p:4">
-      <strong>hover</strong>
-      <p sx="text:sm fg:muted-foreground">spring:gentle</p>
-    </card>
-    <card motion:hover={{ scale: 'spring:bouncy' }} sx="p:4">
-      <strong>hover</strong>
-      <p sx="text:sm fg:muted-foreground">spring:bouncy</p>
-    </card>
-    <card motion:press={{ scale: 'press' }} sx="p:4">
-      <strong>press</strong>
-      <p sx="text:sm fg:muted-foreground">press</p>
-    </card>
-  </grid>
-
-  <code-block code={code.interaction}></code-block>
-
-  <h2>Lifecycle</h2>
-  <p>
-    <code>enter</code> and <code>exit</code>. These are the ones a framework has
-    to be involved in: <strong>exit holds the element in the DOM until its
-    animation finishes.</strong> Remove a node yourself and its exit animation has
-    nowhere to play.
+    and a <strong>config</strong> — what moves. No second animation API, no
+    imperative escape hatch you are meant to graduate to. The cards below dealt
+    themselves when you arrived.
   </p>
 
   <row gap="3" align="center">
-    <button on:click={() => open.set(!open())}>
-      {open() ? 'Remove' : 'Add'} the panel
-    </button>
-    <p sx="text:sm fg:muted-foreground">It finishes leaving before it goes.</p>
+    <button on:click={replay} motion:press={{ scale: 'press' }}>Deal again</button>
+    <p sx="text:sm fg:muted-foreground">
+      <code>stagger</code> is the delay <em>between</em> siblings — a list
+      arrives as a list, not a flash.
+    </p>
   </row>
 
-  {#if open()}
-    <card
-      motion:enter={{ opacity: 'fade', scale: 'spring:snappy' }}
-      motion:exit={{ opacity: 'fade-out' }}
-      sx="p:5"
-    >
-      <strong>I animate in, and I animate out.</strong>
-      <p sx="text:sm fg:muted-foreground">
-        The exit is the part you cannot do by hand — the runtime keeps me mounted
-        until I am done.
-      </p>
-    </card>
-  {/if}
-
-  <code-block code={code.lifecycle}></code-block>
-
-  <h2>Stagger</h2>
-  <p>
-    <code>stagger</code> is reserved, not a property: it describes the
-    relationship <em>between</em> siblings, not anything about any one of them.
-    It is what makes a list arrive as a list instead of a flash.
-  </p>
-
-  <row gap="3" align="center">
-    <button on:click={() => shown.set(!shown())}>
-      {shown() ? 'Clear' : 'Deal'} the cards
-    </button>
-  </row>
-
-  {#if shown()}
-    <grid cols="4" gap="2">
-      {#for n of items() key={n}}
+  {#if dealt()}
+    <grid cols="5" gap="3">
+      {#for n of hand() key={n}}
         <card
-          motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy', stagger: '0.05s' }}
-          sx="p:4"
+          motion:enter={{ opacity: 'fade', translate-y: 'spring:bouncy', stagger: '0.07s' }}
+          motion:exit={{ opacity: 'fade-out' }}
+          motion:hover={{ scale: 'spring:gentle' }}
+          sx="p:5"
         >
-          <strong>{n}</strong>
+          <h3>{n}</h3>
+          <p sx="text:sm fg:muted-foreground">spring:bouncy</p>
         </card>
       {/for}
     </grid>
@@ -100,37 +41,95 @@
 
   <code-block code={code.stagger}></code-block>
 
+  <h2>Interaction</h2>
+  <row class="split" align="stretch">
+    <column>
+      <p class="pane-label">Live — hover, press, tab to it</p>
+      <column class="live" gap="3">
+        <row gap="3">
+          <card motion:hover={{ scale: 'spring:gentle' }} sx="p:4">
+            <strong>hover</strong>
+            <p sx="text:sm fg:muted-foreground">spring:gentle</p>
+          </card>
+          <card motion:hover={{ scale: 'spring:bouncy' }} sx="p:4">
+            <strong>hover</strong>
+            <p sx="text:sm fg:muted-foreground">spring:bouncy</p>
+          </card>
+        </row>
+        <button
+          motion:hover={{ scale: 'spring:gentle' }}
+          motion:press={{ scale: 'press' }}
+          motion:focus-visible={{ scale: 'spring:snappy' }}
+        >Press me</button>
+      </column>
+    </column>
+    <column>
+      <p class="pane-label">Source</p>
+      <code-block code={code.interaction}></code-block>
+    </column>
+  </row>
+  <p>
+    The browser already knows when these happen. The only question a trigger
+    leaves open is what it should look like — and the answer is a preset, so a
+    typo is a compile error instead of something you ship.
+  </p>
+
+  <h2>Lifecycle</h2>
+  <row class="split" align="stretch">
+    <column>
+      <p class="pane-label">Live</p>
+      <column class="live" gap="3">
+        <button on:click={() => open.set(!open())} motion:press={{ scale: 'press' }}>
+          {open() ? 'Remove' : 'Add'} the panel
+        </button>
+        {#if open()}
+          <card
+            motion:enter={{ opacity: 'fade', scale: 'spring:snappy' }}
+            motion:exit={{ opacity: 'fade-out' }}
+            sx="p:4"
+          >
+            <strong>I animate in, and I animate out.</strong>
+            <p sx="text:sm fg:muted-foreground">
+              The runtime holds me in the DOM until my exit finishes.
+            </p>
+          </card>
+        {/if}
+      </column>
+    </column>
+    <column>
+      <p class="pane-label">Source</p>
+      <code-block code={code.lifecycle}></code-block>
+    </column>
+  </row>
+  <p>
+    <code>exit</code> is the one a framework must be involved in: remove a node
+    yourself and its exit animation has nowhere to play. The runtime keeps the
+    element mounted until the animation finishes — watch the panel leave before
+    it goes.
+  </p>
+
   <h2>Timeline — scroll, not time</h2>
   <p>
     <code>view</code> and <code>scroll</code> are driven by scroll
-    <em>position</em>, not by time. They attach a native
-    <code>ViewTimeline</code>, which the browser drives on the compositor —
-    <strong>no JavaScript runs while you scroll</strong>, only once at mount to
-    set it up. The effect people install a 30&nbsp;kB library for is a directive
-    with a preset.
+    <em>position</em>. Where the platform supports scroll timelines the browser
+    drives them on the compositor — <strong>no JavaScript runs while you
+    scroll</strong>. Elsewhere they play once on reveal. The effect people
+    install a 30&nbsp;kB library for is a directive with a preset.
   </p>
   <p sx="fg:muted-foreground">Keep scrolling. Each of these arrives on its own.</p>
 
   <column gap="4">
     <card motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }} sx="p:6">
       <h3>This one fades up as it enters the viewport.</h3>
-      <p sx="fg:muted-foreground">
-        <code>motion:view</code> — nothing in the frame loop.
-      </p>
+      <p sx="fg:muted-foreground"><code>motion:view</code> — nothing in the frame loop.</p>
     </card>
-
     <card motion:view={{ opacity: 'fade', translate-x: 'spring:deliberate' }} sx="p:6">
       <h3>This one slides in, slowly.</h3>
-      <p sx="fg:muted-foreground">
-        The same directive, a different preset — <code>spring:deliberate</code>.
-      </p>
+      <p sx="fg:muted-foreground">Same directive, different preset — <code>spring:deliberate</code>.</p>
     </card>
-
     <card motion:view={{ scale: 'spring:bouncy', opacity: 'fade' }} sx="p:6">
       <h3>And this one springs.</h3>
-      <p sx="fg:muted-foreground">
-        Nine presets. Four springs, five tweens. That is the whole catalogue.
-      </p>
+      <p sx="fg:muted-foreground">Nine presets. Four springs, five tweens. That is the whole catalogue.</p>
     </card>
   </column>
 

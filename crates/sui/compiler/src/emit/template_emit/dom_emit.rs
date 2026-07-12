@@ -484,6 +484,19 @@ AttrInstr::Use { action, param, .. } => {
                         "rotate" => 0.0,
                         _ => unreachable!("MOTION_PROPERTIES enforced by parser"),
                     };
+                    // The DEPARTED value — where the property starts when the
+                    // preset doesn't encode its own from/to. This used to be
+                    // the identity value, i.e. equal to the target: every
+                    // baked animation interpolated 1→1 / 0px→0px and the
+                    // whole motion system was a visual no-op that still
+                    // "ran" (animations existed, played, and changed nothing).
+                    let rest = match prop.property.as_str() {
+                        "opacity" => 0.0,
+                        "scale" => 0.96,
+                        "translate-y" | "translate-x" => 16.0,
+                        "rotate" => -6.0,
+                        _ => unreachable!("MOTION_PROPERTIES enforced by parser"),
+                    };
                     let spec = db
                         .preset(&prop.preset)
                         .expect("preset already validated in lower/bindings");
@@ -493,8 +506,8 @@ AttrInstr::Use { action, param, .. } => {
                                 stiffness: spec.stiffness.unwrap_or(170.0),
                                 damping: spec.damping.unwrap_or(26.0),
                                 mass: spec.mass.unwrap_or(1.0),
-                                from: Some(0.0),
-                                to: Some(target),
+                                from: Some(spec.from.unwrap_or(rest)),
+                                to: Some(spec.to.unwrap_or(target)),
                                 rest_speed: spec.rest_speed.unwrap_or(0.01),
                                 ..Default::default()
                             }),
@@ -506,7 +519,7 @@ AttrInstr::Use { action, param, .. } => {
                                 .unwrap_or("duration-medium");
                             animation::bake(&animation::AnimationConfig::Tween(
                                 animation::keyframes::TweenConfig {
-                                    from: spec.from.unwrap_or(0.0),
+                                    from: spec.from.unwrap_or(rest),
                                     to: spec.to.unwrap_or(target),
                                     duration_ms: duration_token_to_ms(token),
                                     easing: spec.easing.clone().unwrap_or_else(|| "linear".into()),
@@ -518,57 +531,40 @@ AttrInstr::Use { action, param, .. } => {
                     .unwrap_or_else(|e| {
                         panic!("motion: bake failed for {}/{}: {e:?}", prop.property, prop.preset)
                     });
-                    let (css_key, value_at_zero, value_at_one) = match prop.property.as_str() {
-                        "scale" => (
-                            "transform",
-                            "scale(1)".to_string(),
-                            format!("scale({target})"),
-                        ),
-                        "opacity" => ("opacity", "1".to_string(), format!("{target}")),
-                        "translate-y" => (
-                            "transform",
-                            "translateY(0px)".to_string(),
-                            format!("translateY({target}px)"),
-                        ),
-                        "translate-x" => (
-                            "transform",
-                            "translateX(0px)".to_string(),
-                            format!("translateX({target}px)"),
-                        ),
-                        "rotate" => (
-                            "transform",
-                            "rotate(0deg)".to_string(),
-                            format!("rotate({target}deg)"),
-                        ),
-                        _ => unreachable!("MOTION_PROPERTIES enforced by parser"),
+                    // Each baked keyframe carries its interpolated value (in
+                    // from..to space); wrap it in the property's CSS syntax.
+                    let css_key = match prop.property.as_str() {
+                        "opacity" => "opacity",
+                        _ => "transform",
+                    };
+                    let css_of = |v: &str| -> String {
+                        match prop.property.as_str() {
+                            "opacity" => v.to_string(),
+                            "scale" => format!("scale({v})"),
+                            "translate-y" => format!("translateY({v}px)"),
+                            "translate-x" => format!("translateX({v}px)"),
+                            "rotate" => format!("rotate({v}deg)"),
+                            _ => unreachable!("MOTION_PROPERTIES enforced by parser"),
+                        }
                     };
                     let kf_var = self.fresh("kf");
                     let anim_var = self.fresh("anim");
-                    if baked.keyframes.len() == 2 {
-                        w.line(&format!(
-                            "const {kf_var} = [ {{ {k}: {v0} }}, {{ {k}: {v1} }} ];",
-                            k = js_string(css_key),
-                            v0 = js_string(&value_at_zero),
-                            v1 = js_string(&value_at_one),
-                        ));
-                    } else {
-                        let kf_items: Vec<String> = baked
-                            .keyframes
-                            .iter()
-                            .map(|kf| {
-                                format!(
-                                    "{{ offset: {off}, {k}: {v} }}",
-                                    off = kf.offset,
-                                    k = js_string(css_key),
-                                    v = js_string(&value_at_one)
-                                )
-                            })
-                            .collect();
-                        w.line(&format!(
-                            "const {kf_var} = [ {} ];",
-                            kf_items.join(", ")
-                        ));
-                    }
+                    let kf_items: Vec<String> = baked
+                        .keyframes
+                        .iter()
+                        .map(|kf| {
+                            format!(
+                                "{{ offset: {off}, {k}: {v} }}",
+                                off = kf.offset,
+                                k = js_string(css_key),
+                                v = js_string(&css_of(&kf.value))
+                            )
+                        })
+                        .collect();
+                    w.line(&format!(
+                        "const {kf_var} = [ {} ];",
+                        kf_items.join(", ")
+                    ));
                     // Guarded: WAAPI is absent under jsdom/SSR — a bare
                     // `.animate()` call crashes the whole component setup
                     // there. `__sui_motion_attach` drops the nulls.

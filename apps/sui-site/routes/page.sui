@@ -21,29 +21,68 @@
     </row>
   </column>
 
-  <center sx="py:8 px:4">
-    <card sx="p:5 max-w:panel-max-w-md" motion:hover={{ scale: 'spring:gentle' }}>
-      <column gap="3">
-        <row gap="3" align="center">
-          <avatar></avatar>
-          <column gap="1">
-            <strong>Ada Lovelace</strong>
-            <p sx="fg:muted-foreground text:sm">Engineering</p>
-          </column>
-          <badge tone="success">Active</badge>
+  <column gap="3" sx="py:8">
+    <center><h2>The same markup is not the same site.</h2></center>
+    <center>
+      <p sx="fg:muted-foreground max-w:panel-max-w-md">
+        Components read tokens, never colors. These three panels are the same
+        twelve lines of markup — only the theme differs. Press the buttons;
+        they work.
+      </p>
+    </center>
+    <grid cols="3" gap="4">
+      <column data-theme-preview="paper" gap="3" sx="p:5 radius:lg border:border bg:background fg:foreground"
+        motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
+        <row gap="2" align="center">
+          <badge tone="success">live</badge>
+          <strong>api-gateway</strong>
         </row>
+        <p sx="text:sm fg:muted-foreground">Build 214 deployed 2 min ago · p99 41 ms</p>
+        <progress value="72" max="100"></progress>
         <row gap="2">
-          <button variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Invite</button>
-          <button variant="ghost">Export</button>
+          <button variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Deploy</button>
+          <button variant="ghost">Logs</button>
         </row>
+        <small sx="fg:muted-foreground">theme: paper</small>
       </column>
-    </card>
-  </center>
-  <center>
-    <p sx="text:sm fg:muted-foreground">
-      That is real, and it is running. Change the theme in the top right.
-    </p>
-  </center>
+
+      <column data-theme-preview="console" gap="3" sx="p:5 radius:lg border:border bg:background fg:foreground"
+        motion:view={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
+        <row gap="2" align="center">
+          <badge tone="success">live</badge>
+          <strong>api-gateway</strong>
+        </row>
+        <p sx="text:sm fg:muted-foreground">Build 214 deployed 2 min ago · p99 41 ms</p>
+        <progress value="72" max="100"></progress>
+        <row gap="2">
+          <button variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Deploy</button>
+          <button variant="ghost">Logs</button>
+        </row>
+        <small sx="fg:muted-foreground">theme: console</small>
+      </column>
+
+      <column data-theme-preview="glass" gap="3" sx="p:5 radius:lg border:border bg:background fg:foreground"
+        motion:view={{ opacity: 'fade', translate-y: 'spring:bouncy' }}>
+        <row gap="2" align="center">
+          <badge tone="success">live</badge>
+          <strong>api-gateway</strong>
+        </row>
+        <p sx="text:sm fg:muted-foreground">Build 214 deployed 2 min ago · p99 41 ms</p>
+        <progress value="72" max="100"></progress>
+        <row gap="2">
+          <button variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Deploy</button>
+          <button variant="ghost">Logs</button>
+        </row>
+        <small sx="fg:muted-foreground">theme: glass</small>
+      </column>
+    </grid>
+    <center>
+      <p sx="text:sm fg:muted-foreground">
+        The whole site works this way — pick a theme in the top right and every
+        page follows.
+      </p>
+    </center>
+  </column>
 
   <column class="products" gap="3">
     <a class="product-card" href="/overview">

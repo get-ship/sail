@@ -107,10 +107,12 @@ export function __sui_motion_attach(
   const enter = config.enter.filter((a): a is BakedAnimation => a != null)
   const leave = config.leave.filter((a): a is BakedAnimation => a != null)
   if (enter.length === 0) return () => {}
-  // Pause the enter animations so the initial state matches the
-  // "rest" pose until the first trigger event.
+  // CANCEL the enter animations until the first trigger event. Cancelled
+  // means "no effect": the element rests in its authored pose. Paused would
+  // apply the first keyframe (the departed pose — opacity 0, scale 0.96),
+  // leaving every motion-decorated element half-vanished at rest.
   for (const a of enter) {
-    a.pause()
+    a.cancel()
   }
   // Build the play/reverse actions. We play `enter` forward on the
   // enter event and reverse on the leave event.
@@ -137,10 +139,12 @@ export function __sui_motion_attach(
   }
   // TIMELINE triggers — `motion:view` / `motion:scroll`. Progress-driven, not
   // time-driven: the animation's position is a function of SCROLL, not of the clock.
-  // This is reveal-on-scroll and parallax, and it costs ZERO JavaScript at runtime —
-  // no scroll listener, no rAF loop, no IntersectionObserver. The platform drives it
-  // off the main thread, which is exactly why a scroll effect built this way stays
-  // smooth under load and one built on a scroll handler does not.
+  // This is reveal-on-scroll and parallax, and where the platform supports scroll
+  // timelines it costs ZERO JavaScript at runtime — no scroll listener, no rAF
+  // loop. The platform drives it off the main thread, which is exactly why a
+  // scroll effect built this way stays smooth under load and one built on a
+  // scroll handler does not. (Browsers without timelines get the one-shot
+  // IntersectionObserver fallback below — set up once, then out of the way.)
   //
   // Note what this is NOT: a second emit path. The compiler bakes the same
   // `el.animate(...)` it bakes for every other trigger; we simply hand the resulting
@@ -154,8 +158,29 @@ export function __sui_motion_attach(
     }
     const timeline = makeTimeline(trigger, el)
     if (!timeline) {
-      // No scroll-timeline support: land on the END state rather than the start,
-      // so a reveal-on-scroll degrades to "visible" instead of "invisible forever".
+      // No scroll-timeline support (today: Firefox). `view` degrades from
+      // scrub-by-scroll to play-once-on-reveal: the SAME baked animation,
+      // time-driven from the element's first intersection. A static end
+      // state is not a fallback for "animate as it enters the viewport" —
+      // it reads as the feature being broken.
+      if (trigger === 'view' && typeof IntersectionObserver !== 'undefined') {
+        const io = new IntersectionObserver(
+          (entries) => {
+            if (entries.some((e) => e.isIntersecting)) {
+              io.disconnect()
+              for (const a of enter) a.play()
+            }
+          },
+          { threshold: 0.15 },
+        )
+        io.observe(el)
+        return () => {
+          io.disconnect()
+          for (const a of enter) a.cancel()
+        }
+      }
+      // `scroll` (progress = container scroll) has no time-driven equivalent:
+      // land on the END state, so it degrades to "visible" not "invisible".
       for (const a of enter) a.finish()
       return () => {
         for (const a of enter) a.cancel()
