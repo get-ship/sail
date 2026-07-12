@@ -1,23 +1,23 @@
 <!--
-  /elements — the standard library, in depth.
-
-  The old page CLAIMED 48 elements and showed none of them, then listed the tags
-  as prose. This one teaches the four mechanisms (which is the interesting part —
-  three of them compile away) and puts the elements on the page.
+  /elements — the built-in component library: what it is and what it costs,
+  in that order. Internals live at the bottom for the curious.
 -->
 <column class="doc" gap="5">
   <p class="eyebrow">Components</p>
   <h1>Elements</h1>
   <p class="lead">
-    Forty-eight elements, and you already know most of them. That is deliberate:
-    a model that isn't sure reaches for a <code>&lt;div&gt;</code>, so the
-    standard library is made of tags it is already fluent in. There is nothing to
-    install and nothing to choose.
+    SUI's component library is built into the language. A dialog, a combobox,
+    a table, a tab strip — they are tags, written the way you write HTML, with
+    the keyboard handling, focus management, ARIA and theming already correct.
+    Nothing to install, import, or register.
   </p>
   <p>
-    What is worth understanding is <em>how</em> they exist, because three of the
-    four mechanisms leave no trace at runtime.
+    Use them like HTML and you are done — <a href="/components">the browser</a>
+    shows every one running. The rest of this page is for when you want to know
+    what they cost: almost nothing, because most of them stop existing at
+    compile time.
   </p>
+  <h2>Under the hood: four mechanisms</h2>
 
   <h2>1 — Native, plus a skin</h2>
   <p>

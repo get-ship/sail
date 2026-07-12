@@ -11,13 +11,6 @@
     library, a design system, layout, theming, animation, and state — so a page
     is markup, and nothing else has to be assembled first.
   </p>
-  <p>
-    It is a toolchain, not just a package: a Rust compiler turns
-    <code>.sui</code> files into standard web components, and
-    <a href="/deck">deck</a> serves, bundles, and hot-reloads the app around
-    them. <a href="/getting-started">Installation</a> walks the real setup.
-  </p>
-
   <h2>A page is a program</h2>
   <p>
     Here is a complete one — state, a filtered list, an animation, and the

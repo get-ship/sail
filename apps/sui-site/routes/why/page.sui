@@ -82,31 +82,26 @@
 
   <h2>What the constraint bought</h2>
   <p>
-    The point of giving things up is getting something back. All of this is
-    measured, and reproducible:
+    The point of giving things up is getting something back — and what comes
+    back is the ability to <em>trust</em> the output without reading every
+    line:
   </p>
   <ul class="why-list">
     <li>
-      <strong>Performance.</strong> Parity with Solid across every benchmark in
-      the js-framework-benchmark suite — faster on two of them — at 9.4&nbsp;kB
-      gzipped. React is 59.8.
+      <strong>Consistency you can check.</strong> Every element renders in
+      every state across every theme on every commit, driven in a real
+      browser — the design system is enforced by machinery, not memory.
     </li>
     <li>
-      <strong>The components are nearly free.</strong> A screen built from
-      twelve of them — combobox, tabs, field, tooltip, with the keyboard
-      handling and the ARIA — bundles to 8.5&nbsp;kB gzipped. The same markup as
-      inert <code>&lt;div&gt;</code>s, with no behavior at all, is 7.2&nbsp;kB.
-      Twelve working components cost <strong>1.3&nbsp;kB</strong>: the skins are
-      CSS, and the elements compile away.
+      <strong>Accessibility by construction.</strong> Not because the author
+      was careful; because the element already was, and the language offers
+      no inaccessible way to write the screen.
     </li>
     <li>
-      <strong>Consistency you can check.</strong> Every L1 element is rendered
-      in every state across all nine themes on every commit, and the behavior
-      is driven in a real browser. Not a screenshot someone remembered to take.
-    </li>
-    <li>
-      <strong>Accessibility by construction.</strong> Not because the model was
-      careful. Because the element already was.
+      <strong>Performance by architecture.</strong> Templates compile ahead
+      of time, updates are fine-grained signal writes, and components
+      compile away to native markup — there is no virtual DOM and no
+      framework wrapper in the output to pay for.
     </li>
   </ul>
 
