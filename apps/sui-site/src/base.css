@@ -45,12 +45,13 @@ h1, h2, h3 {
   margin: 0 0 var(--space-2);
 }
 
-code, .mono {
+/* `code` is the FRAMEWORK's: `:not(pre) > code` already gives inline code the
+   mono font and a muted chip. This file used to redeclare it with different
+   values (surface-2 not muted, 0.88em not 0.9em) — a near-miss override of the
+   design system, which is the drift the floor exists to stop. Only `.mono`
+   remains, and only because it is a utility class, not an element. */
+.mono {
   font-family: var(--font-mono);
-  font-size: 0.88em;
-  background: var(--surface-2);
-  padding: 0.12em 0.4em;
-  border-radius: var(--radius-sm);
 }
 
 /* ── Code blocks + syntax tokens ──────────────────────────────────────── */
