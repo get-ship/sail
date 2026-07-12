@@ -76,6 +76,6 @@
 
   <div class="page-nav">
     <a class="btn" href="/composition">← Composition</a>
-    <a class="btn btn-primary" href="/compare">Compare →</a>
+    <a class="btn btn-primary" href="/components">Component catalog →</a>
   </div>
 </div>

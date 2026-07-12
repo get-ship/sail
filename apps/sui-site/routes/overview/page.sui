@@ -1,69 +1,103 @@
-<div class="doc">
+<!--
+  /overview — the SUI landing. Short, and it SHOWS. The argument lives on /why;
+  this page must not restate it.
+
+  Authored under `sui.config.json { preset: strict, sx: true }`: no <style>, no
+  style=, no raw <div>/<span>. Layout is the keywords, surface is the primitives,
+  everything else is sx. If a page cannot be built this way, that is a hole in the
+  vocabulary — and this page is where we find out.
+-->
+<column class="doc landing" gap="5">
   <p class="eyebrow">SUI</p>
   <h1>The UI framework agents write</h1>
   <p class="lead">
-    SUI assumes the author is a machine. Every decision a language leaves open
-    is variance — a place where two agents diverge, or the same agent diverges
-    from itself on Tuesday. So the decisions are gone. What's left is 95% of the
-    expression code offers, with 10% of the choices.
+    Every decision a language leaves open is variance — and variance is where
+    one-shot beauty dies. So the decisions are gone. What's left is 95% of the
+    expression, with 10% of the choices. <a href="/why">The full argument →</a>
+  </p>
+
+  <h2>This is a component</h2>
+  <p>
+    No build config, no styling library, no component library to install. The
+    tags below <em>are</em> the standard library, and they are already in your
+    HTML vocabulary.
+  </p>
+
+  <center sx="py:8 px:4 bg:muted border:border radius:lg">
+    <card motion:hover={{ scale: 'spring:gentle' }} sx="p:4 max-w:panel-max-w-md">
+      <row gap="3" align="center">
+        <avatar></avatar>
+        <column gap="1">
+          <strong>Ada Lovelace</strong>
+          <p sx="fg:muted-foreground text:sm">Deploys on Fridays</p>
+        </column>
+        <badge tone="success">Active</badge>
+      </row>
+      <row gap="2" sx="mt:3">
+        <button motion:press={{ scale: 'press' }}>Approve</button>
+        <button variant="ghost">Dismiss</button>
+      </row>
+    </card>
+  </center>
+  <p sx="text:sm fg:muted-foreground">
+    Hover the card. Press the button. That motion is one directive —
+    <code>motion:hover</code> — not a library.
   </p>
 
   <h2>What's given</h2>
-  <p>
-    Not recommended. Not linted with a warning. <em>Absent</em> — there is no
-    second option to pick.
-  </p>
-  <ul>
-    <li>
-      <strong><a href="/elements">48 elements</a>, and you already know them.</strong>
-      A dialog is <code>&lt;dialog&gt;</code>. A menu is <code>[popover]</code>.
-      Half ship zero JavaScript; the rest compile away. A model that falls back
-      on HTML lands on the standard library by accident.
-    </li>
-    <li>
-      <strong><a href="/styling">One way to style.</a></strong> <code>sx</code>
-      is a deliberate subset of CSS, keyed to the design system. An off-system
-      color is a build error, not a review note.
-    </li>
-    <li>
-      <strong><a href="/motion">One animation system.</a></strong>
-      <code>motion:</code> — eight triggers, nine presets. You can't reach for a
-      different library, so no two screens move differently.
-    </li>
-    <li>
-      <strong><a href="/behavior">One way to reach an element.</a></strong>
-      <code>use:</code>. No ref to thread, no imperative escape hatch to be
-      tempted by.
-    </li>
-  </ul>
+  <p>Not recommended. Not linted with a warning. <em>Absent</em>.</p>
 
-  <h2>What you write</h2>
-  <p>
-    Composition and logic — the part that actually needs intelligence.
-    <a href="/reactivity">Signals</a> for state,
-    <a href="/control-flow">control flow</a> for shape,
-    <a href="/data">live data</a> and forms with the plumbing already done.
-  </p>
+  <grid cols="2" gap="3">
+    <card interactive="true" sx="p:4">
+      <a href="/elements"><strong>48 elements</strong></a>
+      <p sx="text:sm fg:muted-foreground mt:1">
+        A dialog is <code>&lt;dialog&gt;</code>. Half ship zero JavaScript; the
+        rest compile away.
+      </p>
+    </card>
+    <card interactive="true" sx="p:4">
+      <a href="/styling"><strong>One way to style</strong></a>
+      <p sx="text:sm fg:muted-foreground mt:1">
+        An off-system color is a build error, not a review note.
+      </p>
+    </card>
+    <card interactive="true" sx="p:4">
+      <a href="/motion"><strong>One animation system</strong></a>
+      <p sx="text:sm fg:muted-foreground mt:1">
+        Eight triggers, nine presets. You cannot reach for a different library.
+      </p>
+    </card>
+    <card interactive="true" sx="p:4">
+      <a href="/behavior"><strong>One way to reach an element</strong></a>
+      <p sx="text:sm fg:muted-foreground mt:1">
+        <code>use:</code>. No ref to thread, no escape hatch to be tempted by.
+      </p>
+    </card>
+  </grid>
 
-  <h2>And the compiler answers back</h2>
-  <p>
-    An agent writing React gets no oracle: a wrong program renders, plausibly,
-    and ships. Here, a wrong program is <em>told what is wrong</em>, in the
-    language's own vocabulary, the moment it is written. Agents run in a loop —
-    a language that can correct them in one turn beats one they happen to have
-    memorized.
-  </p>
+  <h2>And it costs you nothing</h2>
+  <grid cols="3" gap="4">
+    <column gap="1">
+      <strong sx="text:2xl fg:primary">9.4 kB</strong>
+      <p sx="text:sm fg:muted-foreground">gzipped. React is 59.8.</p>
+    </column>
+    <column gap="1">
+      <strong sx="text:2xl fg:primary">1.3 kB</strong>
+      <p sx="text:sm fg:muted-foreground">
+        for twelve components — keyboard handling and ARIA included.
+      </p>
+    </column>
+    <column gap="1">
+      <strong sx="text:2xl fg:primary">Solid-class</strong>
+      <p sx="text:sm fg:muted-foreground">
+        parity across the benchmark suite; faster on two of nine.
+      </p>
+    </column>
+  </grid>
 
-  <h2>None of which costs you performance</h2>
-  <ul>
-    <li>Parity with Solid across the js-framework-benchmark suite — faster on two of nine.</li>
-    <li><strong>9.4&nbsp;kB</strong> gzipped. React is 59.8.</li>
-    <li>Every element rendered in every state across all seven themes, on every commit.</li>
-  </ul>
-
-  <div class="page-nav">
-    <a class="btn btn-primary" href="/why">Why SUI →</a>
-    <a class="btn" href="/getting-started">Getting started</a>
+  <row class="page-nav" gap="2">
+    <a class="btn btn-primary" href="/getting-started">Getting started →</a>
+    <a class="btn" href="/why">Why SUI</a>
     <a class="btn" href="/tutorial">Try the tutorial</a>
-  </div>
-</div>
+  </row>
+</column>

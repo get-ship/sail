@@ -40,6 +40,6 @@
 
   <div class="page-nav">
     <a class="btn" href="/reactivity">← Reactivity</a>
-    <a class="btn btn-primary" href="/lifecycle-hooks">Lifecycle →</a>
+    <a class="btn btn-primary" href="/data-binding">Events &amp; binding →</a>
   </div>
 </div>

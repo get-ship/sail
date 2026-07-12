@@ -57,4 +57,20 @@ effect(() => {
 <button on:click={() => count.set((n) => n - 1)}>−</button>
 <output>{count()}</output>
 <button on:click={() => count.set((n) => n + 1)}>+</button>`,
+
+  lifecycle: `import { controller, signal, onCleanup } from '@ship/sui-runtime'
+
+export default controller({
+  scope: () => ({ size: signal({ w: 0, h: 0 }) }),
+
+  // mount runs once, after the element is in the DOM. host IS the element.
+  mount(state, host) {
+    const ro = new ResizeObserver(([e]) => {
+      // plain assignment — the scope proxy routes it through signal.set
+      state.size = { w: e.contentRect.width, h: e.contentRect.height }
+    })
+    ro.observe(host)
+    onCleanup(() => ro.disconnect())
+  },
+})`,
 }

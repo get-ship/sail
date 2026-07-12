@@ -56,8 +56,23 @@
     — nothing else in the tree re-runs. That is the whole runtime.
   </p>
 
+  <h2>Lifecycle: <code>mount</code> and cleanup</h2>
+  <p>
+    Some state has to reach outside the component — a
+    <code>ResizeObserver</code>, a socket, a timer. That is what
+    <code>mount</code> is for: it runs once, after the element is in the DOM, and
+    receives the scope plus the element itself. Register the undo with
+    <code>onCleanup</code>, and the runtime calls it when the component goes away.
+  </p>
+  <sui-codeblock code={code.lifecycle}></sui-codeblock>
+  <p class="callout">
+    <strong>There is no dependency array.</strong> An effect subscribes to
+    whatever it reads, and <code>onCleanup</code> is the only teardown there is —
+    so a listener cannot be left dangling because someone forgot to list it.
+  </p>
+
   <div class="page-nav">
     <a class="btn" href="/getting-started">← Getting started</a>
-    <a class="btn" href="/data">The data seam →</a>
+    <a class="btn" href="/control-flow">Control flow →</a>
   </div>
 </div>
