@@ -67,7 +67,11 @@ fn prop_kind(prop: &str) -> Option<Kind> {
         "leading" => Leading,
         "tracking" => Tracking,
         "ring" => Ring,
-        "border" => Border,
+        // A border on ONE side. Same value vocabulary as `border` — this adds a
+        // DIRECTION, not a new styling surface. A topbar with a bottom rule and a
+        // sidebar with a right rule are the two commonest pieces of app chrome
+        // there are, and neither was expressible.
+        "border" | "border-t" | "border-r" | "border-b" | "border-l" => Border,
         "w" | "h" | "min-w" | "min-h" | "max-w" | "max-h" => Size,
         "opacity" => Opacity,
         "display" => Display,
@@ -87,7 +91,8 @@ fn prop_kind(prop: &str) -> Option<Kind> {
 const ALL_PROPS: &[&str] = &[
     "p", "px", "py", "pt", "pr", "pb", "pl", "m", "mt", "mr", "mb", "ml",
     "bg", "fg", "radius", "text", "shadow", "z", "weight", "leading", "tracking",
-    "ring", "border", "w", "h", "min-w", "min-h", "max-w", "max-h", "opacity",
+    "ring", "border", "border-t", "border-r", "border-b", "border-l",
+    "w", "h", "min-w", "min-h", "max-w", "max-h", "opacity",
     "display", "overflow", "overflow-x", "overflow-y", "position", "cursor", "visibility",
 ];
 
@@ -172,6 +177,13 @@ fn css_props(prop: &str) -> &'static [&'static str] {
         "tracking" => &["letter-spacing"],
         "ring" => &["box-shadow"],
         "border" => &["border"],
+        // Logical properties, so a border follows writing direction — `border-l`
+        // is the leading edge in LTR and the trailing edge in RTL, which is what
+        // an author means and what hand-written CSS almost never gets right.
+        "border-t" => &["border-block-start"],
+        "border-b" => &["border-block-end"],
+        "border-l" => &["border-inline-start"],
+        "border-r" => &["border-inline-end"],
         "w" => &["width"],
         "h" => &["height"],
         "min-w" => &["min-width"],
