@@ -58,8 +58,8 @@ export default {
 
     document.querySelectorAll('.sui-theme-trigger').forEach((t) => {
       if (!t.getAttribute('popovertarget')) bad.push({ why: 'trigger-has-no-popovertarget' })
-      const label = t.querySelector('.sui-theme-label')
-      if (!label || !(label.textContent ?? '').trim()) bad.push({ why: 'trigger-has-no-label' })
+      // Icon-only trigger: the accessible name is the label.
+      if (!(t.getAttribute('aria-label') ?? '').trim()) bad.push({ why: 'trigger-has-no-accessible-name' })
     })
 
     return { count: document.querySelectorAll('.sui-theme-option').length, bad: bad.slice(0, 8) }
@@ -95,8 +95,11 @@ export default {
         bad.push({ why: 'dark-class-not-toggled', note: 'console is dark; applyTheme owns this' })
       if (await panelOpen()) bad.push({ why: 'panel-did-not-close-on-select' })
 
-      const label = await page.locator('.sui-theme-label').innerText()
-      if (!/console/i.test(label)) bad.push({ why: 'trigger-label-not-updated', got: label })
+      // The icon trigger's accessible name must track the selection.
+      const name = await page.evaluate(
+        () => document.querySelector('.sui-theme-trigger')?.getAttribute('aria-label') ?? '',
+      )
+      if (!/console/i.test(name)) bad.push({ why: 'trigger-name-not-updated', got: name })
 
       const checked = await page.evaluate(() =>
         document.querySelector('.sui-theme-option[aria-selected="true"]')?.getAttribute('value'),

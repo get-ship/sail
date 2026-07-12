@@ -17,7 +17,6 @@ export const themePicker: Action<void> = (node) => {
   const root = node as HTMLElement
   const trigger = root.querySelector<HTMLButtonElement>('.sui-theme-trigger')
   const panel = root.querySelector<HTMLElement>('.sui-theme-panel')
-  const label = root.querySelector<HTMLElement>('.sui-theme-label')
 
   const options = (): HTMLElement[] =>
     Array.from(root.querySelectorAll<HTMLElement>('.sui-theme-option'))
@@ -30,7 +29,13 @@ export const themePicker: Action<void> = (node) => {
 
   const sync = (): void => {
     const cur = current()
-    if (label) label.textContent = THEMES.find((t) => t.id === cur)?.label ?? cur
+    // The trigger is an icon button; the CURRENT theme rides its accessible
+    // name (and the hover tooltip), not a visible label.
+    const name = THEMES.find((t) => t.id === cur)?.label ?? cur
+    if (trigger) {
+      trigger.setAttribute('aria-label', `Theme: ${name}`)
+      trigger.title = `Theme: ${name}`
+    }
     for (const o of options()) {
       const on = valueOf(o) === cur
       o.setAttribute('aria-selected', on ? 'true' : 'false')

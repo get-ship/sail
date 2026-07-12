@@ -20,10 +20,19 @@
   <h2>States are a prefix</h2>
   <p>
     <code>hover:</code>, <code>focus:</code>, <code>focus-within:</code>,
-    <code>active:</code>, <code>forced-colors:</code>. A state is a prefix on an
-    atom, not a rule in a stylesheet somewhere else.
+    <code>active:</code>, <code>disabled:</code>, <code>current:</code>,
+    <code>forced-colors:</code>. A state is a prefix on an atom, not a rule in a
+    stylesheet somewhere else.
   </p>
   <code-block code={code.states}></code-block>
+  <p>
+    <code>current:</code> keys off <code>aria-current</code> — the attribute you
+    set for assistive tech anyway, doing double duty as the style hook. The
+    product switcher at the top of this page is four links in a
+    <code>row</code>; the filled pill is
+    <code>current:bg:primary current:fg:primary-foreground</code>.
+  </p>
+  <code-block code={code.current}></code-block>
 
   <h2>Tones, not colors</h2>
   <p>

@@ -1,16 +1,16 @@
 <!--
   <sui-site-shell> — the docs chrome, written in the language, with no CSS.
 
-  The bar and the sidebar are the SAME element — <navbar> — in two placements.
-  That is what a rail is. Everything else is layout keywords, sx, and the tone
-  contract.
+  The product switcher (SUI · Deck · Components · AI) is the navbar's center
+  slot with the pill written in sx — container atoms on the <row>, link atoms
+  plus `current:` on each segment. The navbar contributes placement and
+  regions; the look is authored here, where it belongs. The sidebar is the
+  same element in the rail placement.
 
   This file used to be 100 lines of markup over 4.8 kB of hand-rolled CSS that
-  reimplemented <navbar> badly: a flex header, a sticky offset, a bottom
-  hairline, undecorated links, hover and active states. All of it already lived
-  in the standard library. That is precisely the failure the language exists to
-  prevent — an author who does not know the element exists rebuilds it — and the
-  docs site was doing it on the very page that argues you should not.
+  reimplemented <navbar> badly. Now the structure lives in the standard
+  library and the styling is sx — which is the argument the site makes,
+  running in its own chrome.
 -->
 
 <navbar sticky bordered>
@@ -23,13 +23,16 @@
         <circle cx="20" cy="20" r="3.4" fill="var(--primary)" opacity="0.7" />
         <path d="M6 6 L20 20 M6 6 L20 6 M6 6 L6 20" stroke="var(--primary)" stroke-width="1.4" opacity="0.5" stroke-linecap="round" />
       </svg>
-      <strong>SHIP UI</strong>
+      <span sx="text:lg tracking:tight"><span sx="fg:primary">SHIP</span> UI</span>
     </row>
   </a>
 
-  <a href="/overview">SUI</a>
-  <a href="/deck">Deck</a>
-  <a href="/ai">AI</a>
+  <row slot="center" gap="1" align="center" sx="p:1 bg:surface-2 border:border radius:full" aria-label="Products">
+    <a href="/overview" sx="px:3 py:1 radius:full text:sm weight:semibold fg:muted-foreground hover:fg:foreground current:bg:primary current:fg:primary-foreground" aria-current={product() === 'sui' ? 'page' : null}>SUI</a>
+    <a href="/deck" sx="px:3 py:1 radius:full text:sm weight:semibold fg:muted-foreground hover:fg:foreground current:bg:primary current:fg:primary-foreground" aria-current={product() === 'deck' ? 'page' : null}>Deck</a>
+    <a href="/components" sx="px:3 py:1 radius:full text:sm weight:semibold fg:muted-foreground hover:fg:foreground current:bg:primary current:fg:primary-foreground" aria-current={product() === 'components' ? 'page' : null}>Components</a>
+    <a href="/ai" sx="px:3 py:1 radius:full text:sm weight:semibold fg:muted-foreground hover:fg:foreground current:bg:primary current:fg:primary-foreground" aria-current={product() === 'ai' ? 'page' : null}>AI</a>
+  </row>
 
   <theme-picker slot="actions"></theme-picker>
 </navbar>
@@ -38,54 +41,53 @@
   {#if product() === 'deck'}
     <navbar placement="rail" bordered sticky>
       <label>Introduction</label>
-      <a href="/deck">Overview</a>
-      <a href="/deck/getting-started">Getting started</a>
+      <a href="/deck" aria-current={path() === '/deck' ? 'page' : null}>Overview</a>
+      <a href="/deck/getting-started" aria-current={path() === '/deck/getting-started' ? 'page' : null}>Getting started</a>
       <label>Concepts</label>
-      <a href="/deck/routing">Routing</a>
-      <a href="/deck/dynamic-routes">Dynamic routes</a>
-      <a href="/deck/layouts">Layouts</a>
-      <a href="/deck/rendering">Rendering</a>
-      <a href="/deck/reactivity">Reactivity</a>
-      <a href="/deck/data">Live data</a>
+      <a href="/deck/routing" aria-current={path() === '/deck/routing' ? 'page' : null}>Routing</a>
+      <a href="/deck/dynamic-routes" aria-current={path() === '/deck/dynamic-routes' ? 'page' : null}>Dynamic routes</a>
+      <a href="/deck/layouts" aria-current={path() === '/deck/layouts' ? 'page' : null}>Layouts</a>
+      <a href="/deck/rendering" aria-current={path() === '/deck/rendering' ? 'page' : null}>Rendering</a>
+      <a href="/deck/reactivity" aria-current={path() === '/deck/reactivity' ? 'page' : null}>Reactivity</a>
+      <a href="/deck/data" aria-current={path() === '/deck/data' ? 'page' : null}>Live data</a>
       <label>Tooling</label>
-      <a href="/deck/hmr">HMR</a>
-      <a href="/deck/build">Build</a>
+      <a href="/deck/hmr" aria-current={path() === '/deck/hmr' ? 'page' : null}>HMR</a>
+      <a href="/deck/build" aria-current={path() === '/deck/build' ? 'page' : null}>Build</a>
     </navbar>
   {:else if product() === 'ai'}
     <navbar placement="rail" bordered sticky>
       <label>AI</label>
-      <a href="/ai">Overview</a>
-      <a href="/ai/authoring">Authoring</a>
-      <a href="/ai/tooling">Tooling</a>
-      <a href="/ai/eval">Eval</a>
+      <a href="/ai" aria-current={path() === '/ai' ? 'page' : null}>Overview</a>
+      <a href="/ai/authoring" aria-current={path() === '/ai/authoring' ? 'page' : null}>Authoring</a>
+      <a href="/ai/tooling" aria-current={path() === '/ai/tooling' ? 'page' : null}>Tooling</a>
+      <a href="/ai/eval" aria-current={path() === '/ai/eval' ? 'page' : null}>Eval</a>
     </navbar>
-  {:else}
+  {:else if !fullscreen()}
     <navbar placement="rail" bordered sticky>
       <label>Start here</label>
-      <a href="/overview">Introduction</a>
-      <a href="/getting-started">Installation</a>
-      <a href="/why">Why SUI</a>
+      <a href="/overview" aria-current={path() === '/overview' ? 'page' : null}>Introduction</a>
+      <a href="/getting-started" aria-current={path() === '/getting-started' ? 'page' : null}>Installation</a>
+      <a href="/why" aria-current={path() === '/why' ? 'page' : null}>Why SUI</a>
 
       <label>Components</label>
-      <a href="/components">Component library</a>
-      <a href="/elements">How they work</a>
-      <a href="/layout">Layout</a>
-      <a href="/styling">Styling</a>
-      <a href="/theming">Theming</a>
-      <a href="/motion">Animation</a>
-      <a href="/behavior">Actions</a>
+      <a href="/elements" aria-current={path() === '/elements' ? 'page' : null}>How they work</a>
+      <a href="/layout" aria-current={path() === '/layout' ? 'page' : null}>Layout</a>
+      <a href="/styling" aria-current={path() === '/styling' ? 'page' : null}>Styling</a>
+      <a href="/theming" aria-current={path() === '/theming' ? 'page' : null}>Theming</a>
+      <a href="/motion" aria-current={path() === '/motion' ? 'page' : null}>Animation</a>
+      <a href="/behavior" aria-current={path() === '/behavior' ? 'page' : null}>Actions</a>
 
       <label>Building</label>
-      <a href="/reactivity">State</a>
-      <a href="/templates">Templates</a>
-      <a href="/data">Data &amp; forms</a>
+      <a href="/reactivity" aria-current={path() === '/reactivity' ? 'page' : null}>State</a>
+      <a href="/templates" aria-current={path() === '/templates' ? 'page' : null}>Templates</a>
+      <a href="/data" aria-current={path() === '/data' ? 'page' : null}>Data &amp; forms</a>
 
       <label>Reference</label>
-      <a href="/reference">API reference</a>
+      <a href="/reference" aria-current={path() === '/reference' ? 'page' : null}>API reference</a>
     </navbar>
   {/if}
 
-  <main sx="p:6 min-w:0">
+  <main sx="p:6 grow:1 min-w:0">
     <slot name="route"></slot>
   </main>
 </row>

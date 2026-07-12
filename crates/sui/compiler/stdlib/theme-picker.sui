@@ -18,30 +18,27 @@
 <style>
   .sui-theme-picker { display: inline-flex; }
 
+  /* The trigger is chrome, not content: a compact icon button. The panel does
+     the explaining. */
   .sui-theme-trigger {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-1_5);
+    justify-content: center;
+    width: var(--control-h-sm);
     height: var(--control-h-sm);
-    padding: 0 var(--space-2_5);
-    font-family: var(--font-body);
-    font-size: var(--text-xs);
-    font-weight: var(--font-weight-medium);
+    padding: 0;
     color: var(--foreground);
     background: transparent;
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-full);
     cursor: pointer;
-    white-space: nowrap;
   }
   .sui-theme-trigger:hover { background: var(--hover-bg); }
   .sui-theme-trigger:focus-visible {
     outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
   }
-  .sui-theme-trigger svg { width: 14px; height: 14px; flex: 0 0 auto; }
-  .sui-theme-trigger .sui-theme-caret { width: 10px; height: 10px; color: var(--muted-foreground); }
-  .sui-theme-label { overflow: hidden; text-overflow: ellipsis; max-width: 12ch; }
+  .sui-theme-trigger svg { width: 16px; height: 16px; flex: 0 0 auto; }
 
   .sui-theme-panel {
     margin: 0;
@@ -212,10 +209,6 @@
       <circle cx="8.5" cy="7.5" r="1.5"></circle>
       <circle cx="6.5" cy="12.5" r="1.5"></circle>
       <path d="M12 2a10 10 0 0 0 0 20 2 2 0 0 0 2-2v-1a2 2 0 0 1 2-2h1a4 4 0 0 0 4-4 10 10 0 0 0-9-11Z"></path>
-    </svg>
-    <span class="sui-theme-label">Theme</span>
-    <svg class="sui-theme-caret" viewBox="0 0 10 6" aria-hidden="true">
-      <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
     </svg>
   </button>
 

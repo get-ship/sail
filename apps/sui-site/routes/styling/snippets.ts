@@ -10,6 +10,13 @@ export const code = {
   states: `<!-- states are a prefix, not a stylesheet -->
 <button sx="bg:surface-1 hover:bg:muted focus-visible:ring:ring">Save</button>`,
 
+  current: `<!-- this site's product switcher, in full: a row, four links,
+     and the accessibility attribute is the style hook -->
+<row gap="1" align="center" sx="p:1 bg:surface-2 border:border radius:full">
+  <a href="/docs" sx="px:3 py:1 radius:full text:sm weight:semibold fg:muted-foreground hover:fg:foreground current:bg:primary current:fg:primary-foreground" aria-current={onDocs() ? 'page' : null}>Docs</a>
+  <a href="/blog" sx="px:3 py:1 radius:full text:sm weight:semibold fg:muted-foreground hover:fg:foreground current:bg:primary current:fg:primary-foreground" aria-current={onDocs() ? null : 'page'}>Blog</a>
+</row>`,
+
   tones: `<!-- a TONE is a contract. tone="destructive" resolves --tone-bg,
      --tone-fg, --tone-border and --tone-ring for the whole subtree — so a
      component reads the tokens instead of choosing a red. -->

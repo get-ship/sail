@@ -42,6 +42,7 @@ enum Kind {
     Ring,
     Border,
     Size,
+    Grow,
     Opacity,
     // enum-keyword: value is one of a closed keyword set → the CSS keyword itself
     Display,
@@ -73,6 +74,11 @@ fn prop_kind(prop: &str) -> Option<Kind> {
         // there are, and neither was expressible.
         "border" | "border-t" | "border-r" | "border-b" | "border-l" => Border,
         "w" | "h" | "min-w" | "min-h" | "max-w" | "max-h" => Size,
+        // How much of the parent's spare space this element claims — the pane
+        // atom (sidebar + content, list + detail, toolbar spacers). Self-sizing
+        // like `w`/`h`, NOT structure: the parent still owns direction and
+        // alignment. Without it no fixed-plus-fluid layout is expressible.
+        "grow" => Grow,
         "opacity" => Opacity,
         "display" => Display,
         "overflow" | "overflow-x" | "overflow-y" => Overflow,
@@ -92,7 +98,7 @@ const ALL_PROPS: &[&str] = &[
     "p", "px", "py", "pt", "pr", "pb", "pl", "m", "mt", "mr", "mb", "ml",
     "bg", "fg", "radius", "text", "shadow", "z", "weight", "leading", "tracking",
     "ring", "border", "border-t", "border-r", "border-b", "border-l",
-    "w", "h", "min-w", "min-h", "max-w", "max-h", "opacity",
+    "w", "h", "min-w", "min-h", "max-w", "max-h", "grow", "opacity",
     "display", "overflow", "overflow-x", "overflow-y", "position", "cursor", "visibility",
 ];
 
@@ -139,6 +145,8 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
             v.extend(crate::tokens::size_values());
             v
         }
+        // 1 is "fill the rest"; 2/3 buy proportional splits (a 2:1 list+detail).
+        Grow => vec!["1", "2", "3"],
         Opacity => vec!["0", "25", "50", "75", "100"],
         Display => vec!["block", "inline", "inline-block", "inline-flex", "none"],
         Overflow => vec!["visible", "hidden", "scroll", "auto", "clip"],
@@ -190,6 +198,7 @@ fn css_props(prop: &str) -> &'static [&'static str] {
         "min-h" => &["min-height"],
         "max-w" => &["max-width"],
         "max-h" => &["max-height"],
+        "grow" => &["flex"],
         "opacity" => &["opacity"],
         "display" => &["display"],
         "overflow" => &["overflow"],
@@ -284,6 +293,10 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
             }
             _ => format!("var(--space-{token})"),
         },
+        // Basis 0, not auto: panes split the CONTAINER proportionally instead of
+        // splitting the leftovers after content sizing, and a zero basis can
+        // never trip a wrapping row.
+        Grow => format!("{token} 1 0%"),
         Opacity => match token {
             "0" => "0",
             "25" => "0.25",
@@ -324,6 +337,10 @@ pub fn state_pseudo(state: &str) -> Option<&'static str> {
         "focus-within" => ":focus-within",
         "active" => ":active",
         "disabled" => ":disabled",
+        // The platform's "you are here" state (aria-current="page"/"step"/…).
+        // Nav links, pagination, wizards — the author stamps the attribute for
+        // assistive tech anyway; the style keys off the same source of truth.
+        "current" => "[aria-current]:not([aria-current='false'])",
         _ => return None,
     })
 }
@@ -374,7 +391,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                             path,
                             line,
                             col,
-                            format!("sx unknown state `{state}:` — use hover:/focus:/focus-within:/active:/disabled: (or group-hover: to react to an ancestor)"),
+                            format!("sx unknown state `{state}:` — use hover:/focus:/focus-within:/active:/disabled:/current: (or group-hover: to react to an ancestor)"),
                         ));
                         continue;
                     }
