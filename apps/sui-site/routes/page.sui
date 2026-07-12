@@ -6,12 +6,18 @@
 <column class="landing-wrap">
   <column class="hero kinetic-hero" gap="4">
     <center><p class="eyebrow">SHIP UI · 0.2.0</p></center>
-    <h1>Batteries included.<br /><b class="accent">Actually.</b></h1>
+    <h1>
+      <strong class="rotator-slot">
+        {#for w of word() key={w}}
+          <b class="rotator" motion:enter={{ opacity: 'fade' }}>{w}</b>
+        {/for}
+      </strong>
+      included.<br /><b class="accent">Actually.</b>
+    </h1>
     <center>
       <p class="lead">
-        Components, styling, state, data and motion live inside one language —
-        nothing to assemble, nothing to pick, and no way to drift off the
-        design system.
+        One language with the whole interface inside it — built for agents to
+        write and humans to review, with no way to drift off the design system.
       </p>
     </center>
     <row class="hero-cta" gap="2">
@@ -23,76 +29,29 @@
 
 <column class="marquee-band">
   <row class="track" gap="0">
-    <p>NO RAW CSS ◆ SIGNALS BUILT IN ◆ 48 COMPONENTS ◆ 9 THEMES ◆ A11Y BY CONSTRUCTION ◆ NO RAW CSS ◆ SIGNALS BUILT IN ◆ 48 COMPONENTS ◆ 9 THEMES ◆ A11Y BY CONSTRUCTION ◆&nbsp;</p>
+    <p>NO RAW CSS ◆ SIGNALS BUILT IN ◆ 48 COMPONENTS ◆ 9 THEMES ◆ A11Y BY CONSTRUCTION ◆ NO RAW CSS ◆ SIGNALS BUILT IN ◆ 48 COMPONENTS ◆ 9 THEMES ◆ A11Y BY CONSTRUCTION ◆ NO RAW CSS ◆ SIGNALS BUILT IN ◆ 48 COMPONENTS ◆ 9 THEMES ◆ A11Y BY CONSTRUCTION ◆ NO RAW CSS ◆ SIGNALS BUILT IN ◆ 48 COMPONENTS ◆ 9 THEMES ◆ A11Y BY CONSTRUCTION ◆&nbsp;</p>
   </row>
 </column>
 <column class="marquee-band alt">
   <row class="track" gap="0">
-    <p>forms + validation · live data · one motion directive · ssr · hot reload · design tokens · forms + validation · live data · one motion directive · ssr · hot reload · design tokens ·&nbsp;</p>
+    <p>forms + validation · live data · springs + tweens · ssr · hot reload · design tokens · forms + validation · live data · springs + tweens · ssr · hot reload · design tokens · forms + validation · live data · springs + tweens · ssr · hot reload · design tokens · forms + validation · live data · springs + tweens · ssr · hot reload · design tokens ·&nbsp;</p>
   </row>
 </column>
 
 <column class="landing-wrap">
   <column gap="3" sx="py:8">
-    <center><h2>The same markup is not the same site.</h2></center>
+    <center><h2>Nine themes. One attribute.</h2></center>
     <center>
       <p sx="fg:muted-foreground max-w:panel-max-w-md">
-        Components read tokens, never colors. These three panels are the same
-        twelve lines of markup — only the theme differs. Press the buttons;
-        they work.
+        Components read tokens, never colors — so a theme is a complete
+        aesthetic, applied in one move. Don't take the word for it; this site
+        runs on it.
       </p>
     </center>
-    <grid cols="3" gap="4">
-      <column data-theme-preview="paper" gap="3" sx="p:5 radius:lg border:border bg:background fg:foreground"
-        motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
-        <row gap="2" align="center">
-          <badge tone="success">live</badge>
-          <strong>api-gateway</strong>
-        </row>
-        <p sx="text:sm fg:muted-foreground">Build 214 deployed 2 min ago · p99 41 ms</p>
-        <progress value="72" max="100"></progress>
-        <row gap="2">
-          <button variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Deploy</button>
-          <button variant="ghost">Logs</button>
-        </row>
-        <small sx="fg:muted-foreground">theme: paper</small>
-      </column>
-
-      <column data-theme-preview="console" gap="3" sx="p:5 radius:lg border:border bg:background fg:foreground"
-        motion:view={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
-        <row gap="2" align="center">
-          <badge tone="success">live</badge>
-          <strong>api-gateway</strong>
-        </row>
-        <p sx="text:sm fg:muted-foreground">Build 214 deployed 2 min ago · p99 41 ms</p>
-        <progress value="72" max="100"></progress>
-        <row gap="2">
-          <button variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Deploy</button>
-          <button variant="ghost">Logs</button>
-        </row>
-        <small sx="fg:muted-foreground">theme: console</small>
-      </column>
-
-      <column data-theme-preview="glass" gap="3" sx="p:5 radius:lg border:border bg:background fg:foreground"
-        motion:view={{ opacity: 'fade', translate-y: 'spring:bouncy' }}>
-        <row gap="2" align="center">
-          <badge tone="success">live</badge>
-          <strong>api-gateway</strong>
-        </row>
-        <p sx="text:sm fg:muted-foreground">Build 214 deployed 2 min ago · p99 41 ms</p>
-        <progress value="72" max="100"></progress>
-        <row gap="2">
-          <button variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Deploy</button>
-          <button variant="ghost">Logs</button>
-        </row>
-        <small sx="fg:muted-foreground">theme: glass</small>
-      </column>
-    </grid>
     <center>
-      <p sx="text:sm fg:muted-foreground">
-        The whole site works this way — pick a theme in the top right and every
-        page follows.
-      </p>
+      <button on:click={openThemes} variant="solid" tone="primary" motion:press={{ scale: 'press' }}>
+        Open the theme picker
+      </button>
     </center>
   </column>
 

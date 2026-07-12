@@ -244,6 +244,11 @@ h1, h2, h3 {
    (marquee, gradient wordmark). Everything here reads tokens, so it rides
    the theme like the rest of the site. */
 .kinetic-hero h1 .accent { color: var(--primary); font-weight: inherit; }
+/* Rotating battery: entering and (instantly removed) old word share one grid
+   cell; enter-only fade means no exit ghost, no line shove. */
+.kinetic-hero .rotator-slot { display: inline-grid; text-align: right; vertical-align: bottom; }
+.kinetic-hero .rotator-slot > * { grid-area: 1 / 1; }
+.kinetic-hero .rotator { color: var(--primary); font-weight: inherit; }
 .kinetic-hero h1 {
   font-size: clamp(3.2rem, 8.5vw, 6.4rem);
   line-height: 1.02;
@@ -260,7 +265,7 @@ h1, h2, h3 {
   left: 50%; top: -14rem;
   transform: translateX(-50%);
   border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in oklch, var(--primary) 14%, transparent), transparent 62%);
+  background: radial-gradient(circle, color-mix(in oklch, var(--primary) 8%, transparent), transparent 60%);
   pointer-events: none;
 }
 .marquee-band.marquee-band {
@@ -268,11 +273,12 @@ h1, h2, h3 {
   padding: 0.7rem 0;
   background: var(--primary);
   color: var(--primary-foreground);
-  transform: rotate(-2deg);
-  margin: 2.5rem -3rem 1rem;
+  transform: rotate(-1.1deg);
+  margin: 3.5rem -3rem 2.2rem;
 }
 .marquee-band.marquee-band.alt {
-  transform: rotate(1.4deg);
+  margin-top: -1.2rem;
+  transform: rotate(0.8deg);
   background: var(--surface-2);
   color: var(--muted-foreground);
   border-block: 1px solid var(--border);
