@@ -138,3 +138,30 @@ export function renderInScope<T>(body: () => T): [T, () => void] {
   return [value, () => scope.dispose()]
 }
 
+/**
+ * `withScope`, but the arguments are PASSED rather than closed over.
+ *
+ * `withScope(scope, () => fn(a, b))` allocates an arrow every call. That is fine once;
+ * it is not fine once per row. `bindFor` was reaching the row render through
+ *
+ *     renderInScope(() => runProtected(anchor, 'render', () => render(item, i)))
+ *
+ * which costs FIVE allocations before the render body runs: two call-site arrows, the
+ * scope, the returned tuple, and the disposer closure inside `renderInScope`. Threading
+ * the args through removes four of the five; the scope is the only one that is real.
+ */
+export function withScopeArgs<A, B, R>(
+  scope: EffectScope,
+  fn: (a: A, b: B) => R,
+  a: A,
+  b: B,
+): R {
+  const prev = CURRENT_SCOPE
+  CURRENT_SCOPE = scope
+  try {
+    return fn(a, b)
+  } finally {
+    CURRENT_SCOPE = prev
+  }
+}
+

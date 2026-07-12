@@ -8,9 +8,9 @@
 // See .artifacts/specs/ship-set/03-runtime-architecture.md § Keyed list reconciliation.
 
 import { effect, type Signal } from './signal'
-import { renderInScope } from './effect-scope'
+import { createScope, withScopeArgs, type EffectScope } from './effect-scope'
 import type { Disposer } from './bind'
-import { runProtected } from './error-boundary'
+import { findNearestBoundary } from './error-boundary'
 import { runEnter, runLeave } from './transition-runner'
 
 /**
@@ -52,12 +52,12 @@ interface ItemRecord<T> {
    *  identity-skip in step 2 only fires when both are unchanged. */
   __i: number
   nodes: Node[]
-  cleanup?: () => void
-  update?: (item: unknown, index: number) => void
+  cleanup?: (() => void) | undefined
+  update?: ((item: unknown, index: number) => void) | undefined
   /** Disposes the effects (bindings) created while rendering THIS row. The
    *  row is rendered inside its own scope so its effects tear down when the
    *  row is removed — not when the reconciler's list effect re-runs. */
-  scope?: () => void
+  scope?: EffectScope | undefined
 }
 
 // `matched` packs each matched record's (newIndex, prevIndex) pair into
@@ -149,7 +149,7 @@ export function bindFor<T>(opts: BindForOptions<T>): Disposer {
       }
     }
     r.cleanup?.()
-    r.scope?.()
+    r.scope?.dispose()
   }
 
   // Last-seen items array, retained so we can short-circuit when the
@@ -239,18 +239,45 @@ export function bindFor<T>(opts: BindForOptions<T>): Disposer {
         if (existing.item !== item || existing.__i !== i) {
           existing.item = item
           existing.__i = i
-          runProtected(anchor, 'render', () => existing.update?.(item, i))
+          try {
+            existing.update?.(item, i)
+          } catch (err) {
+            const handle = findNearestBoundary(anchor)
+            if (handle) {
+              handle.catch(err, 'render')
+            } else {
+              console.error('[sui] uncaught throw (no error boundary):', err)
+            }
+          }
         }
         record = existing
       } else {
-        const [r, disposeScope] = renderInScope(() =>
-          runProtected(anchor, 'render', () => render(item, i)),
-        )
+        // Reaching the row render used to cost FIVE allocations before the body ran:
+        //
+        //   renderInScope(() => runProtected(anchor, 'render', () => render(item, i)))
+        //
+        // two call-site arrows, the scope, the tuple `renderInScope` returns, and the
+        // disposer closure inside it — then two more from the conditional spreads
+        // below. On a 1,000-row list that is 7,000 objects to call one function 1,000
+        // times. Only the scope is real; the rest was ceremony. Threading the args
+        // through `withScopeArgs` and inlining the boundary catch removes the rest.
+        const scope = createScope()
+        let r: RenderedItem | undefined
+        try {
+          r = withScopeArgs(scope, render, item, i)
+        } catch (err) {
+          const handle = findNearestBoundary(anchor)
+          if (handle) {
+            handle.catch(err, 'render')
+          } else {
+            console.error('[sui] uncaught throw (no error boundary):', err)
+          }
+        }
         if (!r) {
-          // Render threw and was caught by a boundary (or logged when
-          // no boundary is in scope). Dispose the (empty) row scope and
-          // skip this item: the boundary will unmount the subtree shortly.
-          disposeScope()
+          // Render threw and was caught by a boundary (or logged when no boundary is
+          // in scope). Dispose the (empty) row scope and skip this item: the boundary
+          // will unmount the subtree shortly.
+          scope.dispose()
           continue
         }
         record = {
@@ -258,11 +285,12 @@ export function bindFor<T>(opts: BindForOptions<T>): Disposer {
           item,
           __i: i,
           nodes: r.nodes,
-          scope: disposeScope,
-          ...(r.cleanup && { cleanup: r.cleanup }),
-          ...(r.update && { update: r.update }),
+          scope,
+          cleanup: r.cleanup,
+          update: r.update,
         }
-        freshNodes.push(...r.nodes)
+        const rn = r.nodes
+        for (let j = 0; j < rn.length; j++) freshNodes.push(rn[j]!)
       }
       nextRecords.push(record)
     }
