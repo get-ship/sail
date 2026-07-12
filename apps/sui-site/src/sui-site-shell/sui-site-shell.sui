@@ -67,7 +67,8 @@
       <a href="/why">Why SUI</a>
 
       <label>Components</label>
-      <a href="/elements">Component library</a>
+      <a href="/components">Component library</a>
+      <a href="/elements">How they work</a>
       <a href="/layout">Layout</a>
       <a href="/styling">Styling</a>
       <a href="/theming">Theming</a>

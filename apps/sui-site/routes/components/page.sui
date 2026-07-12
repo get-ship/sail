@@ -1,0 +1,245 @@
+<!--
+  /components — the component library. Every component, live, on one page.
+
+  Nothing is imported: the components are in the language. This page is the
+  proof of "batteries included" — you should be able to scroll it and see what
+  you get.
+-->
+<column class="doc" gap="6">
+  <p class="eyebrow">Components</p>
+  <h1>Component library</h1>
+  <p class="lead">
+    Forty-eight components, all of them below, all of them live. Accessible,
+    keyboard-complete, and themed — change the theme in the top right and watch
+    every one of them follow.
+  </p>
+  <p>Nothing on this page is imported. The components are part of the framework.</p>
+
+  <!-- ── FORMS ──────────────────────────────────────────────────────── -->
+  <h2>Forms</h2>
+
+  <h3>Button</h3>
+  <p sx="fg:muted-foreground text:sm">
+    <code>tone</code> picks the colour; <code>variant</code> picks how much of it
+    you get. Five variants, eight tones.
+  </p>
+  <row gap="2" align="center">
+    <button variant="solid" tone="primary">Solid</button>
+    <button variant="soft" tone="primary">Soft</button>
+    <button variant="outline" tone="primary">Outline</button>
+    <button variant="ghost" tone="primary">Ghost</button>
+    <button>Default</button>
+  </row>
+  <row gap="2" align="center">
+    <button variant="solid">Default</button>
+    <button variant="solid" tone="primary">Primary</button>
+    <button variant="solid" tone="success">Success</button>
+    <button variant="solid" tone="warning">Warning</button>
+    <button variant="solid" tone="destructive">Destructive</button>
+    <button variant="solid" disabled>Disabled</button>
+  </row>
+
+  <h3>Input, textarea, select</h3>
+  <column gap="3" sx="max-w:panel-max-w-md">
+    <field>
+      <label for="c-name">Name</label>
+      <input id="c-name" bind:value={name} placeholder="Ada Lovelace" />
+    </field>
+    <field>
+      <label for="c-bio">Bio</label>
+      <textarea id="c-bio" placeholder="Tell us about yourself"></textarea>
+    </field>
+    <field>
+      <label for="c-team">Team</label>
+      <select id="c-team">
+        <option>Engineering</option>
+        <option>Design</option>
+      </select>
+    </field>
+  </column>
+
+  <h3>Combobox</h3>
+  <combobox placeholder="Search fruit" sx="max-w:panel-max-w-sm">
+    <option value="apple">Apple</option>
+    <option value="banana">Banana</option>
+    <option value="cherry">Cherry</option>
+  </combobox>
+
+  <h3>Checkbox, radio, switch</h3>
+  <column gap="2">
+    <label><input type="checkbox" bind:checked={agreed} /> I agree to the terms</label>
+    <radio-group>
+      <label><input type="radio" name="plan" checked /> Monthly</label>
+      <label><input type="radio" name="plan" /> Yearly</label>
+    </radio-group>
+    <switch bind:checked={notify}></switch>
+  </column>
+
+  <h3>Slider</h3>
+  <slider sx="max-w:panel-max-w-sm"></slider>
+
+  <h3>Toggle group</h3>
+  <toggle-group>
+    <toggle value="left">Left</toggle>
+    <toggle value="center">Center</toggle>
+    <toggle value="right">Right</toggle>
+  </toggle-group>
+
+  <h3>Dropzone</h3>
+  <card dropzone sx="p:6 max-w:panel-max-w-md">Drop a file, or click to browse</card>
+
+  <!-- ── FEEDBACK ───────────────────────────────────────────────────── -->
+  <h2>Feedback</h2>
+
+  <h3>Alert</h3>
+  <column gap="2">
+    <alert tone="info"><strong>Heads up.</strong> This is an informational alert.</alert>
+    <alert tone="success"><strong>Saved.</strong> Your changes are live.</alert>
+    <alert tone="warning"><strong>Careful.</strong> This cannot be undone.</alert>
+    <alert tone="destructive"><strong>Failed.</strong> The request did not complete.</alert>
+  </column>
+
+  <h3>Badge, chip, status</h3>
+  <row gap="2" align="center">
+    <badge>Default</badge>
+    <badge tone="primary">Primary</badge>
+    <badge tone="success">Active</badge>
+    <badge tone="warning">Pending</badge>
+    <badge tone="destructive">Failed</badge>
+    <chip>Removable</chip>
+    <status-dot tone="success"></status-dot>
+  </row>
+
+  <h3>Progress, meter, spinner</h3>
+  <column gap="3" sx="max-w:panel-max-w-md">
+    <progress value="60" max="100"></progress>
+    <meter value="0.7"></meter>
+    <row gap="3" align="center">
+      <spinner></spinner>
+      <spinner tone="primary"></spinner>
+      <spinner size="lg"></spinner>
+    </row>
+  </column>
+
+  <h3>Skeleton</h3>
+  <column gap="2" sx="max-w:panel-max-w-md">
+    <p skeleton></p>
+    <p skeleton></p>
+  </column>
+
+  <h3>Empty and error states</h3>
+  <grid cols="2" gap="3">
+    <empty-state>
+      <strong slot="title">No results</strong>
+      Try a different search.
+    </empty-state>
+    <error-state code="ERR_TIMEOUT">
+      The request timed out.
+    </error-state>
+  </grid>
+
+  <!-- ── OVERLAYS ───────────────────────────────────────────────────── -->
+  <h2>Overlays</h2>
+  <p sx="fg:muted-foreground">
+    All of these ride the platform's top layer — <code>&lt;dialog&gt;</code> and
+    <code>[popover]</code> — so they stack correctly with no z-index war.
+  </p>
+
+  <h3>Tooltip and hover card</h3>
+  <row gap="4" align="center">
+    <tooltip>Hover me<small slot="content">A tooltip</small></tooltip>
+    <hover-card>
+      <button>Hover for a card</button>
+      <card slot="content" sx="p:3">Richer content, on hover.</card>
+    </hover-card>
+  </row>
+
+  <h3>Popover and dropdown</h3>
+  <row gap="3" align="center">
+    <popover>
+      <button>Open popover</button>
+      <card slot="content" sx="p:4">Anything can go in here.</card>
+    </popover>
+    <dropdown>
+      <button>Menu</button>
+      <menu-item>Edit</menu-item>
+      <menu-item>Duplicate</menu-item>
+      <menu-item tone="destructive">Delete</menu-item>
+    </dropdown>
+  </row>
+
+  <!-- ── NAVIGATION ─────────────────────────────────────────────────── -->
+  <h2>Navigation</h2>
+
+  <h3>Tabs</h3>
+  <tabs>
+    <tab-list>
+      <tab>Profile</tab>
+      <tab>Billing</tab>
+      <tab>Team</tab>
+    </tab-list>
+    <tab-panel><p>Profile settings.</p></tab-panel>
+    <tab-panel><p>Billing settings.</p></tab-panel>
+    <tab-panel><p>Team settings.</p></tab-panel>
+  </tabs>
+
+  <h3>Breadcrumb and pagination</h3>
+  <column gap="3">
+    <breadcrumb>
+      <a href="/">Home</a>
+      <a href="/components">Components</a>
+      <small>Breadcrumb</small>
+    </breadcrumb>
+    <pagination></pagination>
+  </column>
+
+  <!-- ── DATA DISPLAY ───────────────────────────────────────────────── -->
+  <h2>Data display</h2>
+
+  <h3>Card</h3>
+  <grid cols="3" gap="3">
+    <card sx="p:4"><strong>Plain</strong><p sx="fg:muted-foreground text:sm">A surface.</p></card>
+    <card tone="primary" sx="p:4"><strong>Toned</strong><p sx="fg:muted-foreground text:sm">Tone is a prop.</p></card>
+    <card sx="p:4" motion:hover={{ scale: 'spring:gentle' }}><strong>Interactive</strong><p sx="fg:muted-foreground text:sm">Hover me.</p></card>
+  </grid>
+
+  <h3>Avatar and icon</h3>
+  <row gap="3" align="center">
+    <avatar></avatar>
+    <avatar size="lg"></avatar>
+    <icon name="check"></icon>
+    <icon name="search"></icon>
+  </row>
+
+  <h3>Table</h3>
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Team</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Ada Lovelace</td><td>Engineering</td><td><badge tone="success">Active</badge></td></tr>
+      <tr><td>Grace Hopper</td><td>Engineering</td><td><badge tone="muted">Away</badge></td></tr>
+      <tr><td>Alan Turing</td><td>Research</td><td><badge tone="warning">Pending</badge></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Collapsible and details</h3>
+  <column gap="2">
+    <details>
+      <summary>Advanced options</summary>
+      <p>Native disclosure. Zero JavaScript.</p>
+    </details>
+    <collapsible>
+      <summary>Collapsible</summary>
+      <p>Animated, and it remembers.</p>
+    </collapsible>
+  </column>
+
+  <h3>Separator</h3>
+  <separator></separator>
+
+  <row class="page-nav" gap="2">
+    <a class="btn" href="/overview">← Introduction</a>
+    <a class="btn btn-primary" href="/layout">Layout →</a>
+  </row>
+</column>
