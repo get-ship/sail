@@ -1103,8 +1103,48 @@ fn split_top_level(s: &str, delim: char) -> Vec<String> {
     let mut parts = Vec::new();
     let mut depth = 0i32;
     let mut in_str: Option<char> = None;
+    // COMMENTS ARE OPAQUE to the split. A delimiter inside one is not a delimiter:
+    //
+    //     /** The tone, e.g. primary */
+    //     tone: 'default' | 'primary',
+    //
+    // Without this, that comma split the field mid-comment and everything after it
+    // became the prop's NAME — a perfectly ordinary JSDoc silently destroyed the prop
+    // it was documenting. (Found by a test written for the OTHER half of this bug.)
+    let mut in_line_comment = false;
+    let mut in_block_comment = false;
+    let mut prev = '\0';
     let mut cur = String::new();
     for c in s.chars() {
+        if in_line_comment {
+            cur.push(c);
+            if c == '\n' {
+                in_line_comment = false;
+            }
+            prev = c;
+            continue;
+        }
+        if in_block_comment {
+            cur.push(c);
+            if prev == '*' && c == '/' {
+                in_block_comment = false;
+                prev = '\0';
+                continue;
+            }
+            prev = c;
+            continue;
+        }
+        if in_str.is_none() && prev == '/' && (c == '/' || c == '*') {
+            if c == '/' {
+                in_line_comment = true;
+            } else {
+                in_block_comment = true;
+            }
+            cur.push(c);
+            prev = c;
+            continue;
+        }
+        prev = c;
         match in_str {
             Some(q) => {
                 cur.push(c);
@@ -1176,6 +1216,79 @@ fn unquote(s: &str) -> String {
 
 /// Parse `{ key: value, … }` into `(key, raw-value)` pairs. Values keep their
 /// raw text (a quoted string, a nested `{…}`, or an `[…]`) for the caller.
+/// Strip a leading comment run (`/** … */`, `/* … */`, `// …`) off an object-field
+/// entry, returning `(doc, rest)` where `doc` is the JSDoc text if there was one.
+///
+/// WHY THIS EXISTS. `split_top_level(inner, ',')` splits on commas, and a comment has
+/// none — so a documented prop arrived here as
+///
+///     "/** The visual tone. */\n    tone: 'default' | 'primary'"
+///
+/// and everything before the colon became the prop NAME. The compiler happily emitted
+/// `__props.____The_visual_tone_______` and the prop `tone` simply did not exist. It
+/// compiled clean and shipped a component whose props were gone. Documenting a prop —
+/// the first thing anyone writing a real component does — silently broke it.
+fn strip_leading_doc(entry: &str) -> (Option<String>, &str) {
+    let mut rest = entry.trim_start();
+    let mut doc: Option<String> = None;
+    loop {
+        if let Some(after) = rest.strip_prefix("/*") {
+            let is_jsdoc = after.starts_with('*');
+            let Some(end) = after.find("*/") else { break };
+            if is_jsdoc && doc.is_none() {
+                // `/** text */` → "text": drop the leading `*`s and the per-line `*`.
+                let body = &after[1..end];
+                let text = body
+                    .lines()
+                    .map(|l| l.trim().trim_start_matches('*').trim())
+                    .filter(|l| !l.is_empty())
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                if !text.is_empty() {
+                    doc = Some(text);
+                }
+            }
+            rest = after[end + 2..].trim_start();
+            continue;
+        }
+        if let Some(after) = rest.strip_prefix("//") {
+            let end = after.find('\n').unwrap_or(after.len());
+            rest = after[end..].trim_start();
+            continue;
+        }
+        break;
+    }
+    (doc, rest)
+}
+
+/// Object fields WITH their JSDoc, when the caller wants the descriptions (props →
+/// CEM → editor autocomplete, the component showcase, agent tooling).
+pub(crate) fn parse_object_fields_with_docs(obj: &str) -> Vec<(String, String, Option<String>)> {
+    let inner = obj
+        .trim()
+        .trim_start_matches('{')
+        .trim_end_matches('}')
+        .trim();
+    split_top_level(inner, ',')
+        .into_iter()
+        .filter_map(|entry| {
+            let (doc, entry) = strip_leading_doc(entry.trim());
+            let entry = entry.trim();
+            if entry.is_empty() {
+                return None;
+            }
+            match top_level_colon(entry) {
+                Some(idx) => Some((
+                    unquote(entry[..idx].trim()),
+                    entry[idx + 1..].trim().to_string(),
+                    doc,
+                )),
+                None => Some((unquote(entry), String::new(), doc)),
+            }
+        })
+        .collect()
+}
+
 pub(crate) fn parse_object_fields(obj: &str) -> Vec<(String, String)> {
     let inner = obj
         .trim()
@@ -1185,6 +1298,9 @@ pub(crate) fn parse_object_fields(obj: &str) -> Vec<(String, String)> {
     split_top_level(inner, ',')
         .into_iter()
         .filter_map(|entry| {
+            // Comments are stripped here too: EVERY caller reading a field name needs
+            // the name, not the documentation glued to the front of it.
+            let (_, entry) = strip_leading_doc(entry.trim());
             let entry = entry.trim();
             if entry.is_empty() {
                 return None;
@@ -1429,7 +1545,11 @@ pub(crate) fn component_props_to_decls(
     form_disabled: Option<&str>,
 ) -> Vec<PropDecl> {
     let mut out = Vec::new();
-    for (name, val) in parse_object_fields(obj) {
+    // WITH_DOCS: a `/** … */` above a prop is its DESCRIPTION — it reaches the CEM,
+    // which is what feeds editor autocomplete, the component showcase's prop tables,
+    // and agent tooling. (It also used to be silently parsed as part of the prop's
+    // NAME; see `strip_leading_doc`.)
+    for (name, val, doc) in parse_object_fields_with_docs(obj) {
         let n = name.as_str();
         let val = val.trim();
         // Variant prop: reserved `variant` key with an object, or any key via
@@ -1450,7 +1570,7 @@ pub(crate) fn component_props_to_decls(
                 bindable: false,
                 form_value: form_value == Some(n),
                 form_disabled: form_disabled == Some(n),
-                description: None,
+                description: doc.clone(),
                 span: Span::new(0, 0),
             });
             continue;
@@ -1468,7 +1588,7 @@ pub(crate) fn component_props_to_decls(
                 bindable: false,
                 form_value: form_value == Some(n),
                 form_disabled: form_disabled == Some(n),
-                description: None,
+                description: doc.clone(),
                 span: Span::new(0, 0),
             });
             continue;
@@ -1530,7 +1650,7 @@ pub(crate) fn component_props_to_decls(
             bindable: false,
             form_value: form_value == Some(n),
             form_disabled: form_disabled == Some(n),
-            description: None,
+            description: doc.clone(),
             span: Span::new(0, 0),
         });
     }

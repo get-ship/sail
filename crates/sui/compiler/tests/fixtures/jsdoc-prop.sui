@@ -1,3 +1,8 @@
-<!-- /** Picks the active tone */ -->
-<component>{ props: { tone: 'default' | 'primary', label: string } }</component>
+<component>{
+  props: {
+    /** Picks the active tone */
+    tone: 'default' | 'primary',
+    label: string,
+  },
+}</component>
 <button>{label()}</button>

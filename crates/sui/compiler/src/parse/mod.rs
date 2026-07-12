@@ -49,17 +49,10 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
     let mut clients: Vec<ClientDecl> = Vec::new();
     let mut style_parts: Vec<String> = Vec::new();
     let mut template_nodes: Vec<Node> = Vec::with_capacity(nodes.len());
-    // Holds the most-recent JSDoc-style HTML comment so the next
-    // `<prop>` can adopt it as its `description`. Reset by any
-    // intervening non-whitespace node.
-    let mut pending_jsdoc: Option<String> = None;
 
     for node in nodes {
         match &node {
             Node::Comment(c) => {
-                if let Some(text) = extract_jsdoc(&c.data) {
-                    pending_jsdoc = Some(text);
-                }
                 template_nodes.push(node);
                 continue;
             }
@@ -70,12 +63,10 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
             Node::Element(el) => match el.tag.as_str() {
                 "data" => {
                     data.push(parse_data(el)?);
-                    pending_jsdoc = None;
                     continue;
                 }
                 "client" => {
                     clients.push(parse_client(el, &clients)?);
-                    pending_jsdoc = None;
                     continue;
                 }
                 "state" => {
@@ -204,7 +195,6 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
                     if !variant_css.is_empty() {
                         style_parts.push(variant_css);
                     }
-                    pending_jsdoc = None;
                     continue;
                 }
                 "style" => {
@@ -213,14 +203,12 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
                             style_parts.push(t.data.clone());
                         }
                     }
-                    pending_jsdoc = None;
                     continue;
                 }
                 _ => {}
             },
             _ => {}
         }
-        pending_jsdoc = None;
         template_nodes.push(node);
     }
 
@@ -381,27 +369,6 @@ fn is_js_identifier(s: &str) -> bool {
 }
 
 
-/// Recognise an HTML comment whose body is a JSDoc block (`/** ... */`)
-/// and return the description text. Per-line `*` margins are stripped
-/// the way TypeScript / VS Code render JSDoc, so multi-line comments
-/// produce clean, contiguous text.
-fn extract_jsdoc(comment_data: &str) -> Option<String> {
-    let trimmed = comment_data.trim();
-    let body = trimmed.strip_prefix("/**")?.strip_suffix("*/")?;
-    let mut out_lines: Vec<String> = Vec::new();
-    for line in body.lines() {
-        let l = line.trim();
-        let cleaned = l
-            .strip_prefix("* ")
-            .or_else(|| l.strip_prefix('*'))
-            .unwrap_or(l)
-            .trim_end()
-            .to_string();
-        out_lines.push(cleaned);
-    }
-    let joined = out_lines.join("\n").trim().to_string();
-    if joined.is_empty() { None } else { Some(joined) }
-}
 
 fn required_attr(
     el: &html::Element,
