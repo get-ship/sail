@@ -1,6 +1,8 @@
 // /components — the catalog the browser filters over.
 //
-// Hand-curated on purpose: each row names a tile that page.sui renders LIVE
+// The `lang` rows are the FULL L1 surface — the same 48 elements the
+// conformance gate (packages/sui/l1-conformance/specs, minus the motion spec)
+// renders on every commit. Each row names a tile that page.sui renders LIVE
 // (the tile markup is the component, not a picture of it). The pack rail and
 // the category chips both key off this list, so a new tile is one row here
 // plus its markup in page.sui — and the counts stay honest by construction.
@@ -34,10 +36,18 @@ export interface CatalogEntry {
   tag: string
   /** The scope key page.sui reads visibility through (`show.<key>()`). */
   key: string
+  /** The /components/<slug> detail route. Every tile has one. */
+  slug: string
   pack: PackId
-  cat: 'inputs' | 'display' | 'feedback' | 'overlay' | 'navigation' | 'data' | 'effects'
-  /** Has a curated /components/[tag] detail page. */
-  detail?: boolean
+  cat:
+    | 'inputs'
+    | 'display'
+    | 'feedback'
+    | 'overlay'
+    | 'navigation'
+    | 'data'
+    | 'layout'
+    | 'effects'
 }
 
 export const PACKS: Pack[] = [
@@ -52,50 +62,68 @@ export const PACKS: Pack[] = [
   { id: 'fx', label: 'FX', sub: '@ship/sui-fx' },
 ]
 
+const L = (tag: string, key: string, cat: CatalogEntry['cat']): CatalogEntry => ({
+  tag,
+  key,
+  slug: tag,
+  pack: 'lang',
+  cat,
+})
+
 export const CATALOG: CatalogEntry[] = [
-  // ── In the language ────────────────────────────────────────────────
-  { tag: 'button', key: 'button', pack: 'lang', cat: 'inputs', detail: true },
-  { tag: 'input', key: 'input', pack: 'lang', cat: 'inputs' },
-  { tag: 'textarea', key: 'textarea', pack: 'lang', cat: 'inputs' },
-  { tag: 'select', key: 'select', pack: 'lang', cat: 'inputs' },
-  { tag: 'combobox', key: 'combobox', pack: 'lang', cat: 'inputs', detail: true },
-  { tag: 'checkbox', key: 'checkbox', pack: 'lang', cat: 'inputs' },
-  { tag: 'radio-group', key: 'radioGroup', pack: 'lang', cat: 'inputs' },
-  { tag: 'switch', key: 'switchToggle', pack: 'lang', cat: 'inputs', detail: true },
-  { tag: 'slider', key: 'slider', pack: 'lang', cat: 'inputs', detail: true },
-  { tag: 'toggle-group', key: 'toggleGroup', pack: 'lang', cat: 'inputs' },
-  { tag: 'field', key: 'field', pack: 'lang', cat: 'inputs' },
-  { tag: 'dropzone', key: 'dropzone', pack: 'lang', cat: 'inputs' },
-  { tag: 'alert', key: 'alert', pack: 'lang', cat: 'feedback', detail: true },
-  { tag: 'progress', key: 'progressBar', pack: 'lang', cat: 'feedback' },
-  { tag: 'meter', key: 'meter', pack: 'lang', cat: 'feedback' },
-  { tag: 'spinner', key: 'spinner', pack: 'lang', cat: 'feedback' },
-  { tag: 'skeleton', key: 'skeleton', pack: 'lang', cat: 'feedback' },
-  { tag: 'empty-state', key: 'emptyState', pack: 'lang', cat: 'feedback' },
-  { tag: 'error-state', key: 'errorState', pack: 'lang', cat: 'feedback' },
-  { tag: 'badge', key: 'badge', pack: 'lang', cat: 'display', detail: true },
-  { tag: 'chip', key: 'chip', pack: 'lang', cat: 'display' },
-  { tag: 'status-dot', key: 'statusDot', pack: 'lang', cat: 'display' },
-  { tag: 'card', key: 'card', pack: 'lang', cat: 'display', detail: true },
-  { tag: 'avatar', key: 'avatar', pack: 'lang', cat: 'display' },
-  { tag: 'icon', key: 'icon', pack: 'lang', cat: 'display' },
-  { tag: 'separator', key: 'separator', pack: 'lang', cat: 'display' },
-  { tag: 'details', key: 'detailsEl', pack: 'lang', cat: 'display' },
-  { tag: 'collapsible', key: 'collapsible', pack: 'lang', cat: 'display' },
-  { tag: 'tooltip', key: 'tooltip', pack: 'lang', cat: 'overlay' },
-  { tag: 'hover-card', key: 'hoverCard', pack: 'lang', cat: 'overlay' },
-  { tag: 'popover', key: 'popover', pack: 'lang', cat: 'overlay' },
-  { tag: 'dropdown', key: 'dropdown', pack: 'lang', cat: 'overlay' },
-  { tag: 'dialog', key: 'dialog', pack: 'lang', cat: 'overlay', detail: true },
-  { tag: 'tabs', key: 'tabs', pack: 'lang', cat: 'navigation', detail: true },
-  { tag: 'breadcrumb', key: 'breadcrumb', pack: 'lang', cat: 'navigation' },
-  { tag: 'pagination', key: 'pagination', pack: 'lang', cat: 'navigation' },
-  { tag: 'table', key: 'table', pack: 'lang', cat: 'data', detail: true },
-  { tag: 'code-block', key: 'codeBlock', pack: 'lang', cat: 'data' },
+  // ── In the language: the 48-element L1 surface ─────────────────────
+  L('button', 'button', 'inputs'),
+  L('input', 'input', 'inputs'),
+  L('textarea', 'textarea', 'inputs'),
+  L('select', 'select', 'inputs'),
+  L('combobox', 'combobox', 'inputs'),
+  L('checkbox', 'checkbox', 'inputs'),
+  L('radio-group', 'radioGroup', 'inputs'),
+  L('switch', 'switchToggle', 'inputs'),
+  L('slider', 'slider', 'inputs'),
+  L('toggle-group', 'toggleGroup', 'inputs'),
+  L('field', 'field', 'inputs'),
+  L('label', 'label', 'inputs'),
+  L('fieldset', 'fieldset', 'inputs'),
+  L('dropzone', 'dropzone', 'inputs'),
+  L('theme-picker', 'themePicker', 'inputs'),
+  L('alert', 'alert', 'feedback'),
+  L('progress', 'progressBar', 'feedback'),
+  L('meter', 'meter', 'feedback'),
+  L('spinner', 'spinner', 'feedback'),
+  L('skeleton', 'skeleton', 'feedback'),
+  L('empty-state', 'emptyState', 'feedback'),
+  L('error-state', 'errorState', 'feedback'),
+  L('error-boundary', 'errorBoundary', 'feedback'),
+  L('toast', 'toast', 'feedback'),
+  L('badge', 'badge', 'display'),
+  L('chip', 'chip', 'display'),
+  L('status-dot', 'statusDot', 'display'),
+  L('card', 'card', 'display'),
+  L('avatar', 'avatar', 'display'),
+  L('icon', 'icon', 'display'),
+  L('separator', 'separator', 'display'),
+  L('hr', 'hrRule', 'display'),
+  L('details', 'detailsEl', 'display'),
+  L('collapsible', 'collapsible', 'display'),
+  L('prose', 'prose', 'display'),
+  L('tooltip', 'tooltip', 'overlay'),
+  L('hover-card', 'hoverCard', 'overlay'),
+  L('popover', 'popover', 'overlay'),
+  L('dropdown', 'dropdown', 'overlay'),
+  L('context-menu', 'contextMenu', 'overlay'),
+  L('dialog', 'dialog', 'overlay'),
+  L('tabs', 'tabs', 'navigation'),
+  L('breadcrumb', 'breadcrumb', 'navigation'),
+  L('pagination', 'pagination', 'navigation'),
+  L('navbar', 'navbar', 'navigation'),
+  L('table', 'table', 'data'),
+  L('layout', 'layout', 'layout'),
+  L('scroll-area', 'scrollArea', 'layout'),
   // ── @ship/sui-fx (actions, not elements — pure TS, so they clear the
   //    floor and run live; the .sui packs above are gated, see PACKS) ──
-  { tag: 'use:spotlight', key: 'fxSpotlight', pack: 'fx', cat: 'effects' },
-  { tag: 'use:dotGrid', key: 'fxDotGrid', pack: 'fx', cat: 'effects' },
+  { tag: 'use:spotlight', key: 'fxSpotlight', slug: 'spotlight', pack: 'fx', cat: 'effects' },
+  { tag: 'use:dotGrid', key: 'fxDotGrid', slug: 'dot-grid', pack: 'fx', cat: 'effects' },
 ]
 
 export const CATEGORIES = [
@@ -106,6 +134,7 @@ export const CATEGORIES = [
   'overlay',
   'navigation',
   'data',
+  'layout',
   'effects',
 ] as const
 

@@ -1,9 +1,9 @@
-// /components — the browser. Three filters compose over one hand-curated
-// catalog: the pack rail, the category chips, and the search box (the
-// runtime's filteredList composition). Their intersection is a set of
-// visible tile keys; every tile in page.sui gates itself on `show.<key>()`,
-// so the markup for each live component stays hand-written while the
-// filtering stays data-driven.
+// /components — the browser. Three filters compose over one catalog (the
+// full 48-element L1 surface plus the fx actions): the pack rail, the
+// category chips, and the search box (the runtime's filteredList
+// composition). Their intersection is a set of visible tile keys; every
+// tile in page.sui gates itself on `show.<key>()`, so the markup for each
+// live component stays hand-written while the filtering stays data-driven.
 //
 // Every rendered tile is the REAL component. The .sui packs (charts, media,
 // canvas, chat, mermaid, code-editor) still carry raw <style> blocks, which
@@ -46,9 +46,21 @@ export default controller({
 
     const packs = () => PACKS.map((p) => ({ ...p, count: packCount(p.id) }))
     const cats = () => CATEGORIES.map((c) => c as string)
+    // Split the count by pack so the headline number is the L1 surface
+    // ("48 elements") and the fx actions are counted apart, never inflating it.
     const countLabel = derived(() => {
-      const n = visible().size
-      return n === 1 ? '1 live component' : `${n} live components`
+      const v = visible()
+      let lang = 0
+      let fx = 0
+      for (const e of CATALOG) {
+        if (!v.has(e.key)) continue
+        if (e.pack === 'fx') fx += 1
+        else lang += 1
+      }
+      const parts: string[] = []
+      if (lang > 0) parts.push(`${lang} element${lang === 1 ? '' : 's'}`)
+      if (fx > 0) parts.push(`${fx} fx action${fx === 1 ? '' : 's'}`)
+      return parts.length > 0 ? `${parts.join(' · ')} — all live` : ''
     })
 
     // The selected pack, when it is floor-gated — drives the honest
@@ -68,13 +80,12 @@ export default controller({
     const agreed = signal(true)
     const notify = signal(true)
     const volume = signal(60)
-    const usageSeed = '<combobox placeholder="Search fruit">\n  <option value="kiwi">Kiwi</option>\n</combobox>'
 
     return {
       query, packSel, catSel, pickPack, pickCat,
       packs, cats, show, countLabel, none,
       gatedSel, gatedLabel, gatedSub, gatedWaiting,
-      name, agreed, notify, volume, usageSeed,
+      name, agreed, notify, volume,
       spotlight, dotGrid,
     }
   },
