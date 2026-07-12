@@ -5,7 +5,7 @@
   render entry; hydrate-mark.ts stamps the marker contract; mount.ts adopts
   the SSR markup (morph) and runs the compiled module's hydrate().
 -->
-<div class="doc">
+<column class="doc">
   <p class="eyebrow">Core concepts</p>
   <h1>SSR &amp; hydration</h1>
   <p class="lead">
@@ -74,8 +74,8 @@
     the split falls out for free. The server never runs <code>mount()</code>.
   </p>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a class="btn" href="/data">← Live data</a>
     <a class="btn btn-primary" href="/motion">Motion →</a>
-  </div>
-</div>
+  </row>
+</column>

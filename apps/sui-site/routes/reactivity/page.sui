@@ -1,4 +1,4 @@
-<div class="doc">
+<column class="doc">
   <p class="eyebrow">Core concepts</p>
   <h1>Reactivity</h1>
   <p class="lead">
@@ -71,8 +71,8 @@
     so a listener cannot be left dangling because someone forgot to list it.
   </p>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a class="btn" href="/getting-started">← Getting started</a>
     <a class="btn" href="/control-flow">Control flow →</a>
-  </div>
-</div>
+  </row>
+</column>

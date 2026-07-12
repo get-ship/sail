@@ -1,4 +1,4 @@
-<div class="doc ai-doc">
+<column class="doc ai-doc">
   <p class="eyebrow">AI</p>
   <h1>SUI is built for agents</h1>
   <p class="lead">
@@ -35,7 +35,7 @@
     concrete. Instructions, MCP setup, Skills, and the eval harness land here.
   </p>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a class="btn" href="/">← SHIP UI</a>
-  </div>
-</div>
+  </row>
+</column>

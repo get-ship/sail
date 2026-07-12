@@ -61,8 +61,8 @@
     shape, the right places to put <code>&lt;style&gt;</code>).
   </p>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a href="/ai">← Overview</a>
     <a href="/ai/tooling">Tooling →</a>
-  </div>
+  </row>
 </article>

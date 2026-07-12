@@ -1,4 +1,4 @@
-<div class="doc">
+<column class="doc">
   <p class="eyebrow">Core concepts</p>
   <h1>Live data</h1>
   <p class="lead">
@@ -46,8 +46,8 @@
     error message aren't good manners — they're the only way through.
   </p>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a class="btn" href="/reactivity">← Reactivity</a>
     <a class="btn" href="/components">Component library →</a>
-  </div>
-</div>
+  </row>
+</column>

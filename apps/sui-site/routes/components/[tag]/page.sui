@@ -35,22 +35,22 @@
 
     <!-- HERO — editorial, left-aligned, strong hierarchy. -->
     <header class="detail-hero">
-      <span class="detail-pack" data-test="detail-pack">{entry().pack}</span>
+      <small class="detail-pack" data-test="detail-pack">{entry().pack}</small>
       <h1 class="detail-title" data-test="detail-title">{entry().tag}</h1>
       {#if entry().description}
         <p class="detail-desc" data-test="detail-desc">{entry().description}</p>
       {/if}
-      <div class="detail-meta">
-        <span class="meta-stat"><strong>{entry().props.length}</strong> props</span>
-        <span class="meta-dot"></span>
-        <span class="meta-stat"><strong>{entry().slots.length}</strong> slots</span>
-        <span class="meta-dot"></span>
-        <span class="meta-stat"><strong>{entry().events.length}</strong> events</span>
-      </div>
+      <column class="detail-meta">
+        <small class="meta-stat"><strong>{entry().props.length}</strong> props</small>
+        <small class="meta-dot"></small>
+        <small class="meta-stat"><strong>{entry().slots.length}</strong> slots</small>
+        <small class="meta-dot"></small>
+        <small class="meta-stat"><strong>{entry().events.length}</strong> events</small>
+      </column>
     </header>
 
     <!-- PREVIEW — the centerpiece: designed backdrop, elevated specimen. -->
-    <div class="detail-preview">
+    <column class="detail-preview">
       <center class="detail-stage" bind:this={stageEl} data-test="detail-stage"></center>
       {#if variants().length}
         <row class="detail-variants" gap="2" data-test="detail-variants">
@@ -66,27 +66,27 @@
           {/for}
         </row>
       {/if}
-    </div>
+    </column>
 
     <!-- API — compact, demoted reference (no longer half the page). -->
     <section class="detail-api" data-test="detail-api">
-      <div class="api-headrow">
-        <span class="detail-api-eyebrow">Props</span>
-        <span class="api-count">{entry().props.length}</span>
-      </div>
-      <div class="api-table" role="table" data-test="api-table">
+      <row class="api-headrow">
+        <small class="detail-api-eyebrow">Props</small>
+        <small class="api-count">{entry().props.length}</small>
+      </row>
+      <column class="api-table" role="table" data-test="api-table">
         {#for p of entry().props key={p.name}}
-          <div class="api-row" role="row" data-test="api-prop-row">
+          <row class="api-row" role="row" data-test="api-prop-row">
             <code class="api-prop" role="cell">{p.name}</code>
             <code class="api-type" role="cell">{p.type}</code>
-            <span class="api-def" role="cell">{p.default ?? '—'}</span>
-            <span class="api-desc" role="cell">{p.description ?? ''}</span>
-          </div>
+            <small class="api-def" role="cell">{p.default ?? '—'}</small>
+            <small class="api-desc" role="cell">{p.description ?? ''}</small>
+          </row>
         {/for}
         {#if entry().props.length === 0}
           <p class="api-empty">No documented props in the CEM yet.</p>
         {/if}
-      </div>
+      </column>
     </section>
   </column>
 {/if}

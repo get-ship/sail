@@ -4,7 +4,7 @@
   compiler. Agents and IDEs land on the LSP; humans land on the
   in-editor wiring.
 -->
-<div class="doc tooling-doc">
+<column class="doc tooling-doc">
   <p class="eyebrow">Guides</p>
   <h1>Tooling</h1>
   <p class="lead">
@@ -74,8 +74,8 @@
   </p>
   <sui-codeblock code={code.agent}></sui-codeblock>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a class="btn" href="/composition">← Composition</a>
     <a class="btn btn-primary" href="/components">Component catalog →</a>
-  </div>
-</div>
+  </row>
+</column>

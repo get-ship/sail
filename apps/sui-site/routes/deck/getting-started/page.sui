@@ -17,12 +17,12 @@
 
   <h2>3. Run the dev server</h2>
   <sui-codeblock code={devCmd} lang="bash"></sui-codeblock>
-  <div class="callout">
+  <alert class="callout">
     <strong>No build step to develop.</strong> deck compiles <code>.sui</code> in-process and serves the SPA with HMR — edit a route and it soft-reloads with state preserved.
-  </div>
+  </alert>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a href="/deck">← Overview</a>
     <a href="/deck/routing">File routing →</a>
-  </div>
+  </row>
 </article>

@@ -3,7 +3,7 @@
   verified against the in-repo sui-compiler. Syntax lives in codeblocks (strings)
   so braces read as text, not template expressions.
 -->
-<div class="doc">
+<column class="doc">
   <p class="eyebrow">Reference</p>
   <h1>Reference</h1>
   <p class="lead">
@@ -93,8 +93,8 @@
   <p>Named and default content wells — the composition seam.</p>
   <sui-codeblock code={code.slots}></sui-codeblock>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a class="btn" href="/tooling">← Tooling</a>
     <a class="btn btn-primary" href="/components">Component library →</a>
-  </div>
-</div>
+  </row>
+</column>

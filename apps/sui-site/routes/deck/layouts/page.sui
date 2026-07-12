@@ -18,8 +18,8 @@
   <p>Nested <code>_layout.sui</code> files form a layout chain: a route is wrapped by every layout above it, outermost first.</p>
   <pre class="code">{layoutChain}</pre>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a href="/deck/dynamic-routes">← Dynamic routes</a>
     <a href="/deck/reactivity">Reactivity →</a>
-  </div>
+  </row>
 </article>

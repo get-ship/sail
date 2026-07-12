@@ -3,38 +3,38 @@
   (SUI · Deck · Components · AI), not a SUI-only pitch. Renders full-width (no
   sidebar) like the SolidJS/Svelte landings; the docs sections carry the sidebar.
 -->
-<div class="landing-wrap">
+<column class="landing-wrap">
   <section class="hero">
     <p class="eyebrow">SHIP UI · 0.2.0</p>
-    <h1>The UI stack for <span class="grad">agent-built apps</span>.</h1>
+    <h1>The UI stack for <small class="grad">agent-built apps</small>.</h1>
     <p class="lead">
       A compiler-first component framework, an app framework, a batteries-included
       component library, and agent tooling — built to produce correct, on-brand
       custom UI fast. Author close to HTML, TS, and CSS; the compiler enforces the
       design system and emits standard web components.
     </p>
-    <div class="hero-cta">
+    <column class="hero-cta">
       <a class="btn btn-primary" href="/getting-started">Get started</a>
       <a class="btn" href="/tutorial">Try the tutorial</a>
-    </div>
+    </column>
   </section>
 
   <section class="products">
     <a class="product-card" href="/overview">
-      <h3>SUI <span class="tag">framework</span></h3>
+      <h3>SUI <small class="tag">framework</small></h3>
       <p>The reactive component framework. Signals and a strict lint, compiled ahead-of-time to standard web components.</p>
     </a>
     <a class="product-card" href="/deck">
-      <h3>Deck <span class="tag">app framework</span></h3>
+      <h3>Deck <small class="tag">app framework</small></h3>
       <p>Routing, server rendering with hydration, bundling, live data, and a hot-reloading dev loop — driving the compiler for you.</p>
     </a>
     <a class="product-card" href="/components">
-      <h3>Components <span class="tag">library</span></h3>
+      <h3>Components <small class="tag">library</small></h3>
       <p>Around 74 accessible, on-brand primitives — the batteries the framework composes from.</p>
     </a>
     <a class="product-card" href="/ai">
-      <h3>AI <span class="tag">agent-first</span></h3>
+      <h3>AI <small class="tag">agent-first</small></h3>
       <p>Built to be authored by agents: strict compile-time guardrails, MCP tooling, and a scored authoring eval.</p>
     </a>
   </section>
-</div>
+</column>

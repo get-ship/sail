@@ -3,7 +3,7 @@
   data-theme + data-mode, defining a custom theme, and the four token
   categories a SUI app reads.
 -->
-<div class="doc theming-doc">
+<column class="doc theming-doc">
   <p class="eyebrow">Guides</p>
   <h1>Theming</h1>
   <p class="lead">
@@ -23,11 +23,11 @@
     prose, the tutorial editor, the live demos on the home page — so the
     switch is instant and lossless.
   </p>
-  <div class="theme-toggle-row">
+  <row class="theme-toggle-row">
     <button primary on:click={() => mode.set('light')}>Light</button>
     <button primary outline on:click={() => mode.set('dark')}>Dark</button>
-    <span class="muted">active: <code>data-mode="&#123;mode()&#125;"</code> on <code>&lt;html&gt;</code></span>
-  </div>
+    <small class="muted">active: <code>data-mode="&#123;mode()&#125;"</code> on <code>&lt;html&gt;</code></small>
+  </row>
   <sui-codeblock code={code.toggleExample}></sui-codeblock>
 
   <h2>Token categories</h2>
@@ -87,12 +87,12 @@
     the surface ramp — exactly the tokens a card normally reads. Press the
     button to register the theme; press again to revert.
   </p>
-  <div class="theme-card-row">
+  <row class="theme-card-row">
     <button primary on:click={toggleCrimson}>
       {crimson() ? 'Revert to SHIP Light' : 'Apply crimson-red theme'}
     </button>
-    <span class="muted">active: <code>data-theme="&#123;crimson() ? 'crimson-red' : 'ship-light'&#125;"</code></span>
-  </div>
+    <small class="muted">active: <code>data-theme="&#123;crimson() ? 'crimson-red' : 'ship-light'&#125;"</code></small>
+  </row>
   <card class="custom-theme-card">
     <h3 slot="title">A SUI card, themed</h3>
     <column gap="3">
@@ -101,8 +101,8 @@
         <code>--muted-foreground</code>. The primary button below uses the
         brand <code>--primary</code>. Nothing hardcoded.</p>
       <row>
-        <span tone="info" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Info badge</span>
-        <span tone="success" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Success badge</span>
+        <small tone="info" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Info badge</small>
+        <small tone="success" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Success badge</small>
         <button primary>Primary action</button>
         <button outline>Secondary</button>
       </row>
@@ -120,8 +120,8 @@
     keeps the same brand voice at every opacity.
   </p>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a class="btn" href="/">← Overview</a>
     <a class="btn btn-primary" href="/styling">Styling →</a>
-  </div>
-</div>
+  </row>
+</column>

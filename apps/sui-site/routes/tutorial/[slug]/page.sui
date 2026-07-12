@@ -17,14 +17,14 @@
   Sibling style.css carries the visual rules (the bundler drops inline
   `<style>` in a `page.sui`).
 -->
-<div class="tut-page tut-split">
-  <div class="tut-lesson">
-    <div class="tut-lesson-scroll">
+<row class="tut-page tut-split">
+  <column class="tut-lesson">
+    <column class="tut-lesson-scroll">
       <header class="tut-lesson-head">
-        <div class="tut-head-row">
+        <row class="tut-head-row">
           <p class="tut-eyebrow">— Tutorial</p>
-          <span class="tut-lesson-count">Lesson {lessonNumLabel()} / {totalLessons()}</span>
-        </div>
+          <small class="tut-lesson-count">Lesson {lessonNumLabel()} / {totalLessons()}</small>
+        </row>
 
         <nav class="tut-stepper" aria-label="Lesson progress">
           {#for step of steps() key={step.slug}}
@@ -36,10 +36,10 @@
         <p class="tut-lead">{description()}</p>
       </header>
 
-      <div class="prose-wrap">
+      <column class="prose-wrap">
         <sui-prose html={proseHtml()}></sui-prose>
-      </div>
-    </div>
+      </column>
+    </column>
 
     <nav class="tut-bottom-nav">
       <a class="tut-navbtn tut-navbtn--ghost" href="/tutorial">← All lessons</a>
@@ -47,26 +47,26 @@
         <a class="tut-navbtn tut-navbtn--primary" href={nextHref()}>{nextTitle()}</a>
       {/if}
     </nav>
-  </div>
+  </column>
 
-  <div class="tut-app-root" bind:this={rootEl}>
-    <div class="tut-play-head">
+  <column class="tut-app-root" bind:this={rootEl}>
+    <column class="tut-play-head">
       <p class="tut-eyebrow tut-eyebrow--muted">— Playground</p>
-      <div class="tut-actions">
+      <row class="tut-actions">
         <button data-action="reset" ghost sm>↺ Reset</button>
         <button data-action="solution" outline primary sm>Show solution</button>
-      </div>
-    </div>
+      </row>
+    </column>
 
     <section class="tut-pane tut-pane--editor">
-      <div class="tut-pane-bar">
+      <row class="tut-pane-bar">
         <tabs active="template" variant="pill" size="sm" class="tut-tabs">
           <sui-tab name="template">template.sui</sui-tab>
           <sui-tab name="controller">controller.ts</sui-tab>
           <sui-tab name="diff">diff</sui-tab>
         </tabs>
-      </div>
-      <div class="tut-editor-host">
+      </row>
+      <column class="tut-editor-host">
         <tab-panel name="template" active>
           <sui-code-editor
             class="tut-editor"
@@ -84,34 +84,34 @@
           ></sui-code-editor>
         </tab-panel>
         <tab-panel name="diff" hidden>
-          <div class="tut-diff-wrap">
-            <div class="tut-diff-row">
-              <div class="tut-diff-label">template.sui</div>
+          <column class="tut-diff-wrap">
+            <row class="tut-diff-row">
+              <column class="tut-diff-label">template.sui</column>
               <sui-diff data-pane="template"></sui-diff>
-            </div>
-            <div class="tut-diff-row">
-              <div class="tut-diff-label">controller.ts</div>
+            </row>
+            <row class="tut-diff-row">
+              <column class="tut-diff-label">controller.ts</column>
               <sui-diff data-pane="controller"></sui-diff>
-            </div>
-          </div>
+            </row>
+          </column>
         </tab-panel>
-      </div>
+      </column>
     </section>
 
     <section class="tut-pane tut-pane--preview">
-      <div class="tut-pane-bar tut-preview-bar">
-        <div class="tut-live">
-          <span dot class="tut-status-dot" tone="success" pulse size="sm" role="img" aria-label="ready"></span>
-          <span class="tut-live-label">Preview · live</span>
-        </div>
+      <row class="tut-pane-bar tut-preview-bar">
+        <column class="tut-live">
+          <small dot class="tut-status-dot" tone="success" pulse size="sm" role="img" aria-label="ready"></small>
+          <small class="tut-live-label">Preview · live</small>
+        </column>
         <button data-action="run" outline primary sm>▶ Run</button>
-      </div>
-      <div class="tut-preview-host">
+      </row>
+      <column class="tut-preview-host">
         <iframe class="tut-preview" data-base-src="/tut-host.html" title="Tutorial preview" sandbox="allow-scripts allow-same-origin"></iframe>
-      </div>
-      <div class="tut-console" role="log" aria-live="polite" aria-label="Preview console">
-        <div class="tut-console-lines"></div>
-      </div>
+      </column>
+      <column class="tut-console" role="log" aria-live="polite" aria-label="Preview console">
+        <column class="tut-console-lines"></column>
+      </column>
     </section>
-  </div>
-</div>
+  </column>
+</row>

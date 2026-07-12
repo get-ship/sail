@@ -18,8 +18,8 @@
   <p>Whichever mode you pick, <code>deck build</code> produces a self-contained static directory.</p>
   <sui-codeblock code={buildCmd} lang="bash"></sui-codeblock>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a href="/deck/data">← The data seam</a>
     <a href="/deck/hmr">HMR →</a>
-  </div>
+  </row>
 </article>

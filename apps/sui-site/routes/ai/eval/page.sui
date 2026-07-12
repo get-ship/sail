@@ -70,8 +70,7 @@
     the full API surface.
   </p>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a href="/ai/tooling">← Tooling</a>
-    <span></span>
-  </div>
+  </row>
 </article>

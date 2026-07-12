@@ -15,8 +15,8 @@
   <p>This site has a live <code>[name]</code> route at <code>routes/examples/greet/[name]/</code>:</p>
   <p><a class="btn btn-primary" href="/deck/examples/greet/ada">Open /deck/examples/greet/ada →</a></p>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a href="/deck/routing">← File routing</a>
     <a href="/deck/layouts">Layouts →</a>
-  </div>
+  </row>
 </article>

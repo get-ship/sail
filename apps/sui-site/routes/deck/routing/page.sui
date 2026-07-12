@@ -17,8 +17,8 @@
   <h2>Generated tables</h2>
   <p>Walking <code>routes/</code>, deck generates <code>routes.gen.ts</code> (the typed route table) and <code>entry.gen.ts</code> (the SPA bootstrap that calls <code>mountRouter</code>). You never edit them — they regenerate on every build and every dev run. The filesystem is the only config.</p>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a href="/deck/getting-started">← Getting started</a>
     <a href="/deck/dynamic-routes">Dynamic routes →</a>
-  </div>
+  </row>
 </article>

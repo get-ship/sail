@@ -12,11 +12,11 @@
     state-preserving HMR. It is to SUI what Next is to React.
   </p>
 
-  <div class="callout">
+  <alert class="callout">
     <strong>This site is a deck app.</strong> Every page you read is a file-routed
     deck route, server-rendered and hydrated. The docs are deck's own canonical
     example — and its release test.
-  </div>
+  </alert>
 
   <h2>The 30-second app</h2>
   <p>A deck app is a <code>routes/</code> folder and a dev server. No config file, no scaffold step.</p>
@@ -31,8 +31,7 @@
     you write under <code>routes/</code>.
   </p>
 
-  <div class="page-nav">
-    <span></span>
+  <row class="page-nav">
     <a class="btn btn-primary" href="/deck/getting-started">Getting started →</a>
-  </div>
+  </row>
 </article>

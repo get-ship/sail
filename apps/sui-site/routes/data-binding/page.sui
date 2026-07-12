@@ -2,7 +2,7 @@
   /data-binding — bind:value / bind:checked (two-way), on: events, bind:this refs.
   Binding connects the DOM to signals; live server data lives on /data.
 -->
-<div class="doc">
+<column class="doc">
   <p class="eyebrow">Core concepts</p>
   <h1>Data binding</h1>
   <p class="lead">
@@ -59,8 +59,8 @@
     write.
   </p>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a class="btn" href="/control-flow">← Control flow</a>
     <a class="btn btn-primary" href="/data">Live data →</a>
-  </div>
-</div>
+  </row>
+</column>

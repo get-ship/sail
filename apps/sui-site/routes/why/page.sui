@@ -5,7 +5,7 @@
   assertion — every claim on this page is a number we can produce on demand.
   Do not dunk on competitors; the honest section is load-bearing for trust.
 -->
-<div class="doc why-doc">
+<column class="doc why-doc">
   <p class="eyebrow">Introduction</p>
   <h1>Why SUI</h1>
   <p class="lead">
@@ -125,4 +125,4 @@
     product. It is what turns "an agent built this" from a warning into a
     guarantee.
   </p>
-</div>
+</column>

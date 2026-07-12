@@ -19,8 +19,7 @@
   <h2>No dev cruft</h2>
   <p>A shipped build carries nothing from dev: no live-reload client, no dev-only metas. Just the markup, the framework singletons, and the route chunks.</p>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a href="/deck/hmr">← HMR</a>
-    <span></span>
-  </div>
+  </row>
 </article>

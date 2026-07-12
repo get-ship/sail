@@ -3,7 +3,7 @@
   directives. They are partials; they splice a branch into the surrounding
   template without a wrapper element.
 -->
-<div class="doc">
+<column class="doc">
   <p class="eyebrow">Concepts</p>
   <h1>Control flow</h1>
   <p class="lead">
@@ -38,8 +38,8 @@
     every branch appears in the tree exactly the way you wrote it.
   </p>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a class="btn" href="/reactivity">← Reactivity</a>
     <a class="btn btn-primary" href="/data-binding">Events &amp; binding →</a>
-  </div>
-</div>
+  </row>
+</column>

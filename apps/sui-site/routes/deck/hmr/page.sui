@@ -16,8 +16,8 @@
   <h2>Pushed over SSE</h2>
   <p>The dev server pushes changes to the browser over an <code>SSE</code> stream. HMR is a dev-only convenience; it ships in no build.</p>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a href="/deck/rendering">← Rendering modes</a>
     <a href="/deck/build">Build &amp; deploy →</a>
-  </div>
+  </row>
 </article>

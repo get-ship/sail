@@ -1,4 +1,4 @@
-<div class="doc">
+<column class="doc">
   <p class="eyebrow">Core concepts</p>
   <h1>Motion</h1>
   <p class="lead">
@@ -64,42 +64,42 @@
     Small on purpose, and enforced: an unknown trigger or property is a compile
     error, not a silent no-op. A typo used to be something you could ship.
   </p>
-  <div class="grid-2">
-    <div>
+  <grid class="grid-2" cols="2">
+    <column>
       <h3>Triggers</h3>
       <p class="mono">
         hover · press · focus · focus-visible<br />
         enter · exit<br />
         view · scroll
       </p>
-    </div>
-    <div>
+    </column>
+    <column>
       <h3>Properties</h3>
       <p class="mono">
         scale · opacity<br />
         translate-x · translate-y<br />
         rotate
       </p>
-    </div>
-    <div>
+    </column>
+    <column>
       <h3>Springs</h3>
       <p class="mono">
         spring:snappy · spring:gentle<br />
         spring:bouncy · spring:deliberate
       </p>
-    </div>
-    <div>
+    </column>
+    <column>
       <h3>Tweens</h3>
       <p class="mono">
         fade · fade-out<br />
         press · release · pulse
       </p>
-    </div>
-  </div>
+    </column>
+  </grid>
 
   <p class="callout">
     <strong>Reduced motion is not your problem.</strong> Every
     <code>motion:</code> respects <code>prefers-reduced-motion</code> at the
     runtime, so honouring it isn't a thing you can forget to do.
   </p>
-</div>
+</column>

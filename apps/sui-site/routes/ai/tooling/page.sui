@@ -70,8 +70,8 @@
     sync.
   </p>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a href="/ai/authoring">← Authoring</a>
     <a href="/ai/eval">Eval →</a>
-  </div>
+  </row>
 </article>

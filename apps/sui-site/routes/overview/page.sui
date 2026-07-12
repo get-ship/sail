@@ -3,7 +3,7 @@
   this page must not restate it.
 
   Authored under `sui.config.json { preset: strict, sx: true }`: no <style>, no
-  style=, no raw <div>/<span>. Layout is the keywords, surface is the primitives,
+  style=, no raw <column>/<small>. Layout is the keywords, surface is the primitives,
   everything else is sx. If a page cannot be built this way, that is a hole in the
   vocabulary — and this page is where we find out.
 -->

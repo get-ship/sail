@@ -2,7 +2,7 @@
   /composition — named slots (component <slot name> + consumer slot="x"),
   passing props to children, and event modifiers. Refs live on /data-binding.
 -->
-<div class="doc composition-doc">
+<column class="doc composition-doc">
   <p class="eyebrow">Guides</p>
   <h1>Composition</h1>
   <p class="lead">
@@ -49,8 +49,8 @@
     seams, all standard, all in the template.
   </p>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a class="btn" href="/styling">← Styling</a>
     <a class="btn btn-primary" href="/tooling">Tooling →</a>
-  </div>
-</div>
+  </row>
+</column>

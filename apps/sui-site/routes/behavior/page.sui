@@ -1,4 +1,4 @@
-<div class="doc">
+<column class="doc">
   <p class="eyebrow">What's given</p>
   <h1>Behavior</h1>
   <p class="lead">
@@ -44,4 +44,4 @@
     reach.
   </p>
   <sui-codeblock code={code.stdlib}></sui-codeblock>
-</div>
+</column>

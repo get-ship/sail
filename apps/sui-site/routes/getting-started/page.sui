@@ -1,4 +1,4 @@
-<div class="doc">
+<column class="doc">
   <p class="eyebrow">Introduction</p>
   <h1>Getting started</h1>
   <p class="lead">
@@ -79,8 +79,8 @@
   </p>
   <sui-codeblock code={code.deck}></sui-codeblock>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a class="btn" href="/">← Overview</a>
     <a class="btn" href="/reactivity">Reactivity →</a>
-  </div>
-</div>
+  </row>
+</column>

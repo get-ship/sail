@@ -18,8 +18,7 @@
     <a href="/deck/examples/greet/ada">/deck/examples/greet/ada</a> or
     <a href="/deck/examples/greet/deck">/deck/examples/greet/deck</a>.
   </p>
-  <div class="page-nav">
+  <row class="page-nav">
     <a href="/deck/dynamic-routes">← Dynamic routes</a>
-    <span></span>
-  </div>
+  </row>
 </article>

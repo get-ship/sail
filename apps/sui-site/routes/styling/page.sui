@@ -3,7 +3,7 @@
   convention. Styling lives on the element as sx utilities; raw <style> is
   the escape hatch for what sx structurally can't express.
 -->
-<div class="doc styling-doc">
+<column class="doc styling-doc">
   <p class="eyebrow">Guides</p>
   <h1>Styling</h1>
   <p class="lead">
@@ -91,8 +91,8 @@
   </p>
   <sui-codeblock code={code.escape}></sui-codeblock>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a class="btn" href="/theming">← Theming</a>
     <a class="btn btn-primary" href="/composition">Composition →</a>
-  </div>
-</div>
+  </row>
+</column>

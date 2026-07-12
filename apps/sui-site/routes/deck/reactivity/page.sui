@@ -16,12 +16,12 @@
     outlives a route.
   </p>
 
-  <div class="callout">
+  <alert class="callout">
     <strong>The signal model lives in SUI.</strong> Signals, <code>derived</code>,
     <code>effect</code>, batching, and the glitch-free update pass are all the SUI
     runtime — deck adds no reactive primitive of its own. For how the graph
     recomputes, see <a href="/reactivity">SUI · Reactivity</a>.
-  </div>
+  </alert>
 
   <h2>The URL is reactive</h2>
   <p>
@@ -72,8 +72,8 @@
     never torn down.
   </p>
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a href="/deck/layouts">← Layouts</a>
     <a href="/deck/data">The data seam →</a>
-  </div>
+  </row>
 </article>

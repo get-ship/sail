@@ -1,4 +1,4 @@
-<div class="doc">
+<column class="doc">
   <p class="eyebrow">Tutorial</p>
   <h1>Learn SUI</h1>
   <p class="lead">
@@ -14,15 +14,15 @@
       {#for lesson of group.lessons key={lesson.slug}}
       <li>
         <a href={lesson.href}>{lesson.order}. {lesson.title}</a>
-        <span class="muted"> — {lesson.description}</span>
+        <small class="muted"> — {lesson.description}</small>
       </li>
       {/for}
     </ul>
   </section>
   {/for}
 
-  <div class="page-nav">
+  <row class="page-nav">
     <a class="btn" href="/reactivity">← Reactivity</a>
     <a class="btn btn-primary" href="/tutorial/01-hello-signal">Start lesson 1 →</a>
-  </div>
-</div>
+  </row>
+</column>
