@@ -1,5 +1,24 @@
 // Snippets for the templates page. Every SUI sample is compiled by the build.
 export const code = {
+  anatomy: `<!-- one file, three parts. -->
+<component>{
+  props: { name: '' },        /* what comes IN (attributes/props)      */
+}</component>
+
+<controller>
+import { controller, signal } from '@ship/sui-runtime'
+export default controller({
+  scope: () => {              /* what the template may BIND            */
+    const count = signal(0)
+    return { count }
+  },
+})
+</controller>
+
+<button on:click={() => count.set(count() + 1)}>
+  {name()} clicked {count()} times   <!-- the template: a pure read -->
+</button>`,
+
   read: `<!-- a signal, read straight into the markup -->
 <p>Signed in as {user().name}.</p>
 <button disabled={saving()}>Save</button>`,

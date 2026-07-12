@@ -11,6 +11,30 @@
     wonder where a value changed.
   </p>
 
+  <h2>One file, three parts</h2>
+  <p>
+    A <code>.sui</code> file has up to three sections, and each answers one
+    question. <code>&lt;component&gt;</code> declares what comes <em>in</em> —
+    the props, with types and defaults; using a prop off the declaration is a
+    compile error. <code>&lt;controller&gt;</code> owns state and logic — its
+    <code>scope()</code> returns exactly the names the template may bind, and
+    nothing else is reachable. Everything outside those blocks is the
+    <strong>template</strong>: markup that reads state and never computes it.
+  </p>
+  <code-block code={code.anatomy}></code-block>
+
+  <h2>How a template renders</h2>
+  <p>
+    Once, into real DOM — then never again. The compiler turns the markup
+    into a template the browser clones at mount, and every dynamic part —
+    <code>{'{count()}'}</code>, an attribute binding, an <code>{'{#if}'}</code>
+    branch — becomes a subscription to the signals it reads. When a signal
+    changes, only its subscribers run: the text node updates, the branch
+    swaps. There is no re-render, no virtual DOM to diff, and no component
+    function that runs twice. What you wrote is what is in the page.
+  </p>
+
+
   <h2>Reading</h2>
   <p>Call a signal anywhere an expression goes. That is the entire binding syntax.</p>
   <code-block code={code.read}></code-block>

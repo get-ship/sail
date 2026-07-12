@@ -78,25 +78,23 @@
     </li>
   </ol>
 
-  <h2>Define a theme</h2>
+  <h2>Where themes come from</h2>
   <p>
-    A theme is a CSS block keyed on <code>data-theme</code>, overriding any
-    subset of the ladder. Every component follows automatically — there is
-    nothing to opt into.
+    A theme is a <strong>token file</strong> — the nine built-ins are exactly
+    that, checked into <code>@ship/tokens</code>. You author one with the
+    theme editor, which generates the file: pick a palette, a radius scale, a
+    shadow voice, preview every component live, export. You never hand-write
+    global CSS — that is precisely the escape hatch this system closes, and a
+    theme written as loose CSS is a theme the tooling can't check, preview,
+    or migrate.
   </p>
-  <code-block code={code.defineTheme}></code-block>
-
-  <h2>Composition: a second channel</h2>
   <p>
-    Because the theme is tokens, other attributes can override a
-    <em>slice</em> of them and compose. This site does exactly that: the
-    active product (SUI, Deck, Components, AI) sets
-    <code>data-product</code>, which overrides only the brand channel —
-    cross into Deck and the accent turns violet, while the theme you picked
-    above keeps owning every surface. Two attributes, two owners, no
-    conflict.
+    The same discipline is why themes compose: the product accents on this
+    site (the switch to violet on Deck pages) are a second, smaller token
+    slice riding alongside the theme — tokens layering on tokens, with the
+    theme owning surfaces and the accent owning brand. No rule ever fights
+    another rule.
   </p>
-  <code-block code={code.accentChannel}></code-block>
 
   <row class="page-nav" gap="2">
     <a class="btn" href="/styling">← Styling</a>
