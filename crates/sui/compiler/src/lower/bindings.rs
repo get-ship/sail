@@ -11,7 +11,7 @@ use crate::lower::Lowered;
 /// import, no `$scope.` lookup. Kept in sync with the `BUILTINS` lists in
 /// `emit::expr_rewrite` and `check::scope_bound`, which leave these bare.
 pub const BUILTIN_ACTIONS: &[&str] = &["alert", "anchor", "autosize", "avatar", "chip", "clickOutside", "collapsible",
-    "combobox", "dropzone", "emptyState", "field", "errorState", "contextMenu", "hoverCard", "menu", "pagination", "radioGroup", "rangeFill", "tabs", "themePicker", "toast", "toggleGroup", "tooltip"];
+    "combobox", "dropzone", "emptyState", "field", "errorBoundary", "errorState", "contextMenu", "hoverCard", "menu", "pagination", "radioGroup", "rangeFill", "tabs", "themePicker", "toast", "toggleGroup", "tooltip"];
 
 pub fn collect_attr_imports(
     a: &AttrInstr,

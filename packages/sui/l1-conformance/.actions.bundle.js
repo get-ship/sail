@@ -29,6 +29,7 @@
     hoverCard: () => hoverCard,
     field: () => field,
     errorState: () => errorState,
+    errorBoundary: () => errorBoundary,
     emptyState: () => emptyState,
     dropzone: () => dropzone,
     contextMenu: () => contextMenu,
@@ -377,6 +378,96 @@
       destroy: () => {
         obs.disconnect();
         toggle?.removeEventListener("click", onToggle);
+      }
+    };
+  };
+  // ../runtime/src/error-boundary.ts
+  var exports_error_boundary = {};
+  __export(exports_error_boundary, {
+    runProtected: () => runProtected,
+    findNearestBoundary: () => findNearestBoundary,
+    detachBoundary: () => detachBoundary,
+    attachBoundary: () => attachBoundary
+  });
+  var BOUNDARY_KEY = Symbol.for("sui:error-boundary");
+  function attachBoundary(host, handle) {
+    host[BOUNDARY_KEY] = handle;
+  }
+  function detachBoundary(host) {
+    delete host[BOUNDARY_KEY];
+  }
+  function findNearestBoundary(node) {
+    let cur = node;
+    while (cur) {
+      if (cur instanceof Element) {
+        const handle = cur[BOUNDARY_KEY];
+        if (handle)
+          return handle;
+      }
+      const parent = cur.parentNode;
+      if (parent) {
+        cur = parent;
+        continue;
+      }
+      const root = cur;
+      if (root.host) {
+        cur = root.host;
+        continue;
+      }
+      cur = null;
+    }
+    return null;
+  }
+  function runProtected(node, source, fn) {
+    try {
+      return fn();
+    } catch (err) {
+      const handle = findNearestBoundary(node);
+      if (handle) {
+        handle.catch(err, source);
+        return;
+      }
+      console.error("[sui] uncaught throw (no error boundary):", err);
+      return;
+    }
+  }
+
+  // ../runtime/src/actions/error-boundary.ts
+  var errorBoundary = (node) => {
+    const el = node;
+    const message = el.querySelector(".message");
+    const retry = el.querySelector(".retry");
+    const reset = () => {
+      if (!el.hasAttribute("data-caught"))
+        return;
+      el.removeAttribute("data-caught");
+      el.removeAttribute("data-error-message");
+      el.dispatchEvent(new CustomEvent("sui-error-reset", { bubbles: true, composed: true }));
+    };
+    attachBoundary(el, {
+      catch(err, source) {
+        if (el.hasAttribute("data-caught"))
+          return;
+        const error = err instanceof Error ? err : new Error(String(err));
+        el.setAttribute("data-caught", "");
+        el.setAttribute("data-error-message", error.message);
+        if (message)
+          message.textContent = el.getAttribute("message") || "Something went wrong";
+        el.dispatchEvent(new CustomEvent("sui-error-caught", {
+          bubbles: true,
+          composed: true,
+          detail: { error, source }
+        }));
+      },
+      reset
+    });
+    retry?.addEventListener("click", reset);
+    el.reset = reset;
+    return {
+      destroy: () => {
+        detachBoundary(el);
+        retry?.removeEventListener("click", reset);
+        delete el.reset;
       }
     };
   };
@@ -1302,4 +1393,5 @@
   };
   // behavior-entry.ts
   globalThis.SuiActions = exports_actions;
+  globalThis.SuiBoundary = exports_error_boundary;
 })();
