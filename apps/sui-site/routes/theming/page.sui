@@ -1,127 +1,105 @@
 <!--
-  /theming — the @ship/tokens design-system surface. Light/dark via
-  data-theme + data-mode, defining a custom theme, and the four token
-  categories a SUI app reads.
+  /theming — themes are the argument made visible: components read tokens,
+  never colors, so one attribute repaints the world. The page is its own
+  demo — every switch below restyles the page you are reading.
 -->
-<column class="doc theming-doc">
+<column class="doc">
   <p class="eyebrow">Components</p>
   <h1>Theming</h1>
   <p class="lead">
-    SUI ships every surface through <code>@ship/tokens</code>: a single CSS
-    + TS layer that owns the palette, the surface ramp, the type scale, and
-    the motion vocabulary. Every primitive reads from it; nothing in a SUI
-    app hardcodes a color, a spacing value, or a radius. Switch the theme on
-    the document root and the whole app re-skins in place.
+    A theme is a complete aesthetic — palette, surfaces, radii, shadows,
+    typography, motion — applied as one attribute. Nine ship with the
+    framework. There is no light/dark switch; dark is a property a theme
+    has, not a mode you manage.
   </p>
 
-  <h2>Light and dark in one attribute</h2>
+  <h2>Try it here</h2>
   <p>
-    The shell owns the theme. <code>data-mode="dark"</code> on
-    <code>&lt;html&gt;</code> flips the canonical SHIP dark palette; the
-    topbar's <strong>Light / Dark</strong> button toggles it. Everything
-    theme-driven is keyed off a single CSS custom property — primitives,
-    prose, the tutorial editor, the live demos on the home page — so the
-    switch is instant and lossless.
+    Every button below makes the same two calls the theme picker in the top
+    bar makes. This page — the code blocks, the sidebar, the buttons
+    themselves — is the preview.
   </p>
-  <row class="theme-toggle-row">
-    <button primary on:click={() => mode.set('light')}>Light</button>
-    <button primary outline on:click={() => mode.set('dark')}>Dark</button>
-    <small class="muted">active: <code>data-mode="&#123;mode()&#125;"</code> on <code>&lt;html&gt;</code></small>
+  <row gap="2">
+    {#for t of themes() key={t.id}}
+      <button
+        on:click={() => pick(t.id)}
+        variant={active() === t.id ? 'solid' : 'outline'}
+        tone={active() === t.id ? 'primary' : 'default'}
+        aria-pressed={active() === t.id ? 'true' : 'false'}
+      >{t.label}</button>
+    {/for}
   </row>
-  <code-block code={code.toggleExample}></code-block>
-
-  <h2>Token categories</h2>
+  <code-block code={code.apply}></code-block>
   <p>
-    Tokens stack in four layers, highest abstraction first. Read the
-    highest layer that captures intent; reach for primitives only when
-    no semantic token fits.
+    The UI for this is one tag — it is the control in the top-right of every
+    page on this site:
+  </p>
+  <code-block code={code.picker}></code-block>
+
+  <h2>Why the whole page follows</h2>
+  <p>
+    No component in the framework names a color. A card reads
+    <code>--surface-1</code>; a primary button reads <code>--primary</code>;
+    a destructive alert reads the tone contract. The theme defines those
+    tokens, so applying one repaints every component at once — including
+    components written long before the theme existed. That is the deal:
+    components read tokens, themes write them, and neither knows the
+    other's name.
+  </p>
+
+  <h2>The token ladder</h2>
+  <p>
+    Tokens stack in four layers, highest abstraction first. Read the highest
+    layer that captures intent; reach for primitives only when no semantic
+    token fits.
   </p>
   <ol class="token-ladder">
     <li>
       <strong>Semantic surfaces</strong> — <code>--surface-0..3</code>,
-      <code>--backdrop</code>, <code>--card</code>, <code>--popover</code>.
-      The card surface is <code>--surface-1</code>; the page ground is
-      <code>--surface-0</code>.
+      <code>--card</code>, <code>--popover</code>, <code>--backdrop</code>.
+      The page ground is <code>--surface-0</code>; a card sits on
+      <code>--surface-1</code>.
     </li>
     <li>
-      <strong>Tone ramps</strong> — <code>--tone-&#123;name&#125;-&#123;fg|bg|bg-solid|border|ring&#125;</code>.
-      Five tones (<code>info</code>, <code>success</code>,
-      <code>warning</code>, <code>destructive</code>, <code>accent</code>) plus
-      the same shape for <code>primary</code>. Status badges, alerts, callouts
-      read the ramp; never compose the base color by hand.
+      <strong>Tone ramps</strong> —
+      <code>--tone-fg</code>, <code>--tone-bg</code>, <code>--tone-border</code>,
+      <code>--tone-ring</code>, resolved per subtree by
+      <code>tone="…"</code>. Status UI reads the ramp; nothing composes a
+      red by hand.
     </li>
     <li>
-      <strong>Brand palette</strong> — <code>--primary</code>,
-      <code>--accent</code>, <code>--foreground</code>,
-      <code>--background</code>, <code>--muted-foreground</code>. The
-      five primitives that define a brand voice.
+      <strong>Brand</strong> — <code>--primary</code>, <code>--accent</code>,
+      <code>--foreground</code>, <code>--background</code>,
+      <code>--muted-foreground</code>. The handful that define a voice.
     </li>
     <li>
-      <strong>Primitives</strong> — <code>--space-&#123;1..8&#125;</code>,
-      <code>--radius-&#123;sm,md,lg,xl,full&#125;</code>, <code>--text-&#123;xs,sm,base,lg,xl,2xl,3xl,4xl&#125;</code>,
-      <code>--font-&#123;body,display,mono&#125;</code>,
-      <code>--ease-&#123;in,out,inOut&#125;</code>. The raw scale the layers above
-      compose from.
+      <strong>Primitives</strong> — the spacing, radius, type, shadow and
+      easing scales everything above composes from.
     </li>
   </ol>
 
   <h2>Define a theme</h2>
   <p>
-    A custom theme is a CSS block on <code>:root[data-theme="…"]</code> that
-    overrides any subset of the four layers. Register an id via
-    <code>data-theme="crimson-red"</code> on the document root and the
-    whole app re-skins. The snippet below defines a third theme on top of
-    the canonical ship-light defaults.
+    A theme is a CSS block keyed on <code>data-theme</code>, overriding any
+    subset of the ladder. Every component follows automatically — there is
+    nothing to opt into.
   </p>
   <code-block code={code.defineTheme}></code-block>
-  <p>
-    Activate the theme: the host's theme helper (or a direct attribute
-    write) sets <code>document.documentElement.dataset.theme = "crimson-red"</code>.
-    The shell reads it on the next paint.
-  </p>
-  <code-block code={code.activate}></code-block>
 
-  <h2>The custom theme, live</h2>
+  <h2>Composition: a second channel</h2>
   <p>
-    The block below uses <code>--primary</code>, <code>--accent</code>, and
-    the surface ramp — exactly the tokens a card normally reads. Press the
-    button to register the theme; press again to revert.
+    Because the theme is tokens, other attributes can override a
+    <em>slice</em> of them and compose. This site does exactly that: the
+    active product (SUI, Deck, Components, AI) sets
+    <code>data-product</code>, which overrides only the brand channel —
+    cross into Deck and the accent turns violet, while the theme you picked
+    above keeps owning every surface. Two attributes, two owners, no
+    conflict.
   </p>
-  <row class="theme-card-row">
-    <button primary on:click={toggleCrimson}>
-      {crimson() ? 'Revert to SHIP Light' : 'Apply crimson-red theme'}
-    </button>
-    <small class="muted">active: <code>data-theme="&#123;crimson() ? 'crimson-red' : 'ship-light'&#125;"</code></small>
-  </row>
-  <card class="custom-theme-card">
-    <h3 slot="title">A SUI card, themed</h3>
-    <column gap="3">
-      <p>The card surface is <code>--surface-1</code>; the heading uses
-        <code>--foreground</code>; the body uses
-        <code>--muted-foreground</code>. The primary button below uses the
-        brand <code>--primary</code>. Nothing hardcoded.</p>
-      <row>
-        <small tone="info" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Info badge</small>
-        <small tone="success" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Success badge</small>
-        <button primary>Primary action</button>
-        <button outline>Secondary</button>
-      </row>
-    </column>
-  </card>
+  <code-block code={code.accentChannel}></code-block>
 
-  <h2>Why tokens, not constants</h2>
-  <p>
-    Hardcoded colors, radii, and spacing values make themes impossible to
-    change at runtime and break every app that wants a dark mode, a
-    high-contrast variant, or a custom brand. Reading
-    <code>var(--primary)</code> instead of <code>#d63b2f</code> lets the
-    same component wear any theme the host applies, and the
-    <code>color-mix(in oklch, var(--primary) 12%, transparent)</code> pattern
-    keeps the same brand voice at every opacity.
-  </p>
-
-  <row class="page-nav">
-    <a class="btn" href="/">← Overview</a>
-    <a class="btn btn-primary" href="/styling">Styling →</a>
+  <row class="page-nav" gap="2">
+    <a class="btn" href="/styling">← Styling</a>
+    <a class="btn btn-primary" href="/motion">Animation →</a>
   </row>
 </column>

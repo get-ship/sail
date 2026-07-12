@@ -172,13 +172,92 @@ fn importmap_externals_from_json(importmap_json: &str) -> Result<HashSet<String>
 /// "Bare" = the specifier does not start with `.` or `/` — a package specifier,
 /// not a relative/absolute path. Works on both minified (`from"x"`) and
 /// pretty-printed (`from "x"`) output.
+///
+/// STRING-AWARE: text inside string literals, template literals, and comments
+/// is not code. A docs site that renders `import … from '@ship/x'` inside a
+/// snippet string must not fail the build over its own teaching material —
+/// only a real import statement can blank a page.
 fn scan_bare_specifiers(js: &str) -> Vec<String> {
     let bytes = js.as_bytes();
     let is_ident = |b: u8| b.is_ascii_alphanumeric() || b == b'_' || b == b'$';
     let at = |i: usize, kw: &[u8]| bytes.len() >= i + kw.len() && &bytes[i..i + kw.len()] == kw;
+
+    /// Advance past a `'…'`/`"…"` literal (i at the opening quote).
+    fn skip_string(bytes: &[u8], mut i: usize) -> usize {
+        let quote = bytes[i];
+        i += 1;
+        while i < bytes.len() {
+            match bytes[i] {
+                b'\\' => i += 2,
+                b if b == quote => return i + 1,
+                _ => i += 1,
+            }
+        }
+        i
+    }
+
+    /// Advance past a template literal (i at the opening backtick). `${…}`
+    /// interpolations can nest strings and further templates; track brace
+    /// depth per interpolation so an inner `}` doesn't end it early.
+    fn skip_template(bytes: &[u8], mut i: usize) -> usize {
+        i += 1;
+        while i < bytes.len() {
+            match bytes[i] {
+                b'\\' => i += 2,
+                b'`' => return i + 1,
+                b'$' if i + 1 < bytes.len() && bytes[i + 1] == b'{' => {
+                    i += 2;
+                    let mut depth = 1usize;
+                    while i < bytes.len() && depth > 0 {
+                        match bytes[i] {
+                            b'\'' | b'"' => i = skip_string(bytes, i),
+                            b'`' => i = skip_template(bytes, i),
+                            b'{' => {
+                                depth += 1;
+                                i += 1;
+                            }
+                            b'}' => {
+                                depth -= 1;
+                                i += 1;
+                            }
+                            _ => i += 1,
+                        }
+                    }
+                }
+                _ => i += 1,
+            }
+        }
+        i
+    }
+
     let mut out = Vec::new();
     let mut i = 0;
     while i < bytes.len() {
+        match bytes[i] {
+            b'\'' | b'"' => {
+                i = skip_string(bytes, i);
+                continue;
+            }
+            b'`' => {
+                i = skip_template(bytes, i);
+                continue;
+            }
+            b'/' if i + 1 < bytes.len() && bytes[i + 1] == b'/' => {
+                while i < bytes.len() && bytes[i] != b'\n' {
+                    i += 1;
+                }
+                continue;
+            }
+            b'/' if i + 1 < bytes.len() && bytes[i + 1] == b'*' => {
+                i += 2;
+                while i + 1 < bytes.len() && !(bytes[i] == b'*' && bytes[i + 1] == b'/') {
+                    i += 1;
+                }
+                i = (i + 2).min(bytes.len());
+                continue;
+            }
+            _ => {}
+        }
         let kw_len = if at(i, b"import") {
             Some(6)
         } else if at(i, b"from") {
@@ -1519,6 +1598,26 @@ import "./local.js";import"/abs.js";const s="@ship/not-an-import";"#;
                 "@ship/sui-runtime".to_string(),
             ],
             "bare import specifiers only — no `./local.js`, `/abs.js`, or the plain string"
+        );
+    }
+
+    /// Import statements INSIDE strings, template literals, and comments are
+    /// text, not code. A docs site whose snippet strings show real imports
+    /// (`const code = \`import … from '@ship/tokens/themes'\``) must not fail
+    /// the blank-page guard over its own teaching material.
+    #[test]
+    fn scan_bare_specifiers_ignores_string_and_comment_contexts() {
+        let js = r#"const snippet = `import { applyTheme } from '@ship/tokens/themes'
+import x from "@ship/inside-template";`;
+const s = 'import y from "@ship/inside-string"';
+// import z from "@ship/inside-line-comment"
+/* import w from "@ship/inside-block-comment" */
+const t = `${nested(`import q from "@ship/inside-nested"`)}`;
+import real from "@ship/real-import";"#;
+        assert_eq!(
+            scan_bare_specifiers(js),
+            vec!["@ship/real-import".to_string()],
+            "only the real import statement counts"
         );
     }
 

@@ -76,12 +76,16 @@
     border-block-end: 0;
     border-inline-end: 1px solid var(--border);
   }
+  /* A sticky rail under a sticky top bar: the rail yields — one z below, and
+     `--rail-offset` (the bar's height, set by the app via style:--rail-offset)
+     keeps it from sliding beneath the bar while scrolled. */
   .sui-navbar[placement='rail'][sticky] {
     position: sticky;
-    top: 0;
+    top: var(--rail-offset, 0px);
     align-self: start;
-    height: 100vh;
+    height: calc(100vh - var(--rail-offset, 0px));
     overflow-y: auto;
+    z-index: calc(var(--z-sticky, 100) - 1);
   }
 
   /* ── the four regions ───────────────────────────────────────────────── */

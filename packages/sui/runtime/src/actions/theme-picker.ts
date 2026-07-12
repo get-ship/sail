@@ -1,4 +1,4 @@
-import { applyTheme, THEMES, isValidTheme, type ThemeId } from '@ship/tokens/themes'
+import { applyTheme, persistTheme, THEMES, isValidTheme, type ThemeId } from '@ship/tokens/themes'
 import type { Action } from '../action'
 
 /**
@@ -47,6 +47,7 @@ export const themePicker: Action<void> = (node) => {
     if (!isValidTheme(v)) return
     root.setAttribute('value', v)
     applyTheme(v)
+    persistTheme(v) // a pick that resets on the next navigation is a bug, not a choice
     sync()
     root.dispatchEvent(
       new CustomEvent('sui-theme-change', { detail: { theme: v }, bubbles: true, composed: true }),

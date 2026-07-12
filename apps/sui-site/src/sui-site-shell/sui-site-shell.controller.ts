@@ -1,21 +1,21 @@
 // Controller for <sui-site-shell> — the docs chrome (top bar + sidebar +
 // content).
 //
-// Owns the theme (brands <html data-theme="sui">, LIGHT-first, persisted) and
-// the current path for sidebar active-state. The router rebuilds the chrome on
-// every client-side navigation, so reading location.pathname at scope time
-// always reflects the active route.
+// THEME and PRODUCT are separate channels with separate owners. The theme —
+// one of @ship/tokens' nine — owns every surface and ink on the page;
+// `applyTheme` is its only writer (data-theme + the canonical .dark class),
+// and the picker persists the choice. The product — derived from the path —
+// owns only the accent hue, on its own attribute (data-product), so crossing
+// into Deck turns the brand violet without repainting the reader's theme.
 //
 // The SUI theme + doc base styles are imported HERE (not the clients seam): the
 // shell is in every route's module graph, so these side-effect imports can't be
 // tree-shaken — whereas an export-less clients module gets dropped.
-import '../sui-theme.css'
-import '../deck-theme.css' // deck (violet) product theme; SUI red is the default
+import '../product-accents.css'
 import '@ship/tokens/themes.css' // the swappable theme library (paper/halo/glass/console/contrast)
 import '../base.css' // doc typography + .doc reading column (the comment above promised this; it was missing)
+import { applyTheme, readStoredTheme } from '@ship/tokens/themes'
 import { controller, signal, derived } from '@ship/sui-runtime'
-
-const MODE_KEY = 'sui-mode'
 
 // Ship UI is ONE site with a top product switcher (SUI · Deck · Components · AI),
 // SolidJS-style. The active product is derived from the path; each drives its own
@@ -29,16 +29,17 @@ function productFor(p: string): string {
   if (p.startsWith('/tutorial')) return 'tutorial'
   return 'sui'
 }
-// Each product has its own accent (data-theme). The umbrella landing is ship
-// (teal); SUI red; Deck violet; Components green; AI blue. Tutorial rides SUI's.
-// data-theme is the single source of truth — set here so no route manages it.
-function themeFor(product: string): string {
+// The umbrella landing is ship (teal); SUI red; Deck violet; Components
+// green; AI blue. `product-accents.css` keys on this attribute.
+function productAttr(product: string): string {
   switch (product) {
-    case 'ship': return 'ship'
-    case 'deck': return 'deck'
-    case 'components': return 'components'
-    case 'ai': return 'ai'
-    default: return 'sui'
+    case 'ship':
+    case 'deck':
+    case 'components':
+    case 'ai':
+      return product
+    default:
+      return 'sui'
   }
 }
 
@@ -47,43 +48,19 @@ export default controller({
     const root = document.documentElement
     const path = signal<string>(typeof location !== 'undefined' ? location.pathname : '/')
     const product = derived(() => productFor(path()))
-    root.setAttribute('data-theme', themeFor(product()))
+    root.setAttribute('data-product', productAttr(product()))
 
-    const stored = (() => {
-      try {
-        return localStorage.getItem(MODE_KEY)
-      } catch {
-        return null
-      }
-    })()
-    const dark = signal<boolean>(stored === 'dark') // light-first
-    const apply = (isDark: boolean): void => {
-      if (isDark) root.setAttribute('data-mode', 'dark')
-      else root.removeAttribute('data-mode')
-    }
-    apply(dark())
+    // Restore the reader's theme. applyTheme is the ONLY writer of
+    // data-theme/.dark; idempotent, so re-running per navigation is free.
+    applyTheme(readStoredTheme())
 
-    const toggleTheme = (): void => {
-      const next = !dark()
-      dark.set(next)
-      apply(next)
-      try {
-        localStorage.setItem(MODE_KEY, next ? 'dark' : 'light')
-      } catch {
-        /* no storage — still toggles in-session */
-      }
-    }
-
-    // Component viewer + individual tutorial LESSONS render full-screen (no docs
-    // sidebar, full width). The /tutorial index (the TOC) keeps the normal
-    // padded sidebar layout — full-screen padding:0 pushed its list flush-left.
+    // The umbrella landing and the component catalog own the full width
+    // (no sidebar). Docs pages keep the per-product sidebar.
     const fullscreen = derived(() => {
       const p = path()
-      // The umbrella landing, the component catalog, and tutorial lessons own the
-      // full width (no sidebar). Docs pages keep the per-product sidebar.
-      return p === '/' || p === '/components' || p.startsWith('/components/') || p.startsWith('/tutorial/')
+      return p === '/' || p === '/components' || p.startsWith('/components/')
     })
 
-    return { dark, toggleTheme, path, product, fullscreen }
+    return { path, product, fullscreen }
   },
 })
