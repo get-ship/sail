@@ -1,25 +1,24 @@
 <!--
-  <theme-picker> — L1 theme switcher (element mode). A radiogroup of the
-  framework's built-in themes; use:themePicker sets `data-theme` on <html> on
-  select and reflects the current theme. Dogfoods the theming system. Bare tag
-  lowers to <div class="sui-theme-picker">.
+  <theme-picker> — the theme switcher: a trigger that opens a panel of theme
+  cards, each previewing the surface it selects.
 
-    <theme-picker value="ship-dark"></theme-picker>
+    <theme-picker></theme-picker>
+
+  The whole control is STATIC MARKUP plus one action. The panel is a native
+  `[popover]` — top layer, Escape and outside-click close, no positioning code —
+  and each card previews its theme by setting `data-theme` on the swatch itself,
+  so the colors come from the real stylesheet rather than a hand-copied hex.
+
+  Selection routes through `applyTheme` (see use:themePicker), which sets
+  `data-theme`, toggles `.dark`, and announces `ship:theme:change`.
 -->
 
 <component>{ props: { value: string } }</component>
 
 <style>
-  .sui-theme-picker {
-    display: inline-flex;
-    flex-wrap: wrap;
-    gap: var(--space-1);
-    padding: var(--space-1);
-    background: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-  }
-  .sui-theme-option {
+  .sui-theme-picker { display: inline-flex; }
+
+  .sui-theme-trigger {
     display: inline-flex;
     align-items: center;
     gap: var(--space-1_5);
@@ -28,38 +27,137 @@
     font-family: var(--font-body);
     font-size: var(--text-xs);
     font-weight: var(--font-weight-medium);
-    color: var(--muted-foreground);
+    color: var(--foreground);
     background: transparent;
-    border: 0;
+    border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     cursor: pointer;
     white-space: nowrap;
-    transition:
-      color var(--duration-fast) var(--ease-out),
-      background-color var(--duration-fast) var(--ease-out);
   }
-  .sui-theme-option:hover { color: var(--foreground); background: var(--background); }
-  .sui-theme-option[aria-checked='true'] {
-    color: var(--foreground);
-    background: var(--background);
-    box-shadow: var(--shadow-xs);
+  .sui-theme-trigger:hover { background: var(--hover-bg); }
+  .sui-theme-trigger:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
   }
-  .sui-theme-swatch {
-    width: var(--space-3);
-    height: var(--space-3);
-    border-radius: var(--radius-full);
-    background: var(--primary);
+  .sui-theme-trigger svg { width: 14px; height: 14px; flex: 0 0 auto; }
+  .sui-theme-trigger .sui-theme-caret { width: 10px; height: 10px; color: var(--muted-foreground); }
+  .sui-theme-label { overflow: hidden; text-overflow: ellipsis; max-width: 12ch; }
+
+  .sui-theme-panel {
+    margin: 0;
+    position: fixed;
+    padding: var(--space-1_5);
+    width: 264px;
+    background: var(--popover);
+    color: var(--popover-foreground);
     border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
   }
-  .sui-theme-option:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: 1px; }
+  .sui-theme-panel:popover-open {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-1_5);
+  }
+
+  .sui-theme-option {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-1_5);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+    text-align: start;
+  }
+  .sui-theme-option:hover { background: var(--hover-bg); }
+  .sui-theme-option:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+  .sui-theme-option[aria-selected='true'] {
+    border-color: var(--primary);
+    color: var(--foreground);
+    font-weight: var(--font-weight-medium);
+  }
+
+  /* The preview IS the theme: the swatch sets data-theme on itself, so these
+     colors are rendered by the real stylesheet, not copied out of it. */
+  .sui-theme-swatch {
+    display: flex;
+    gap: 3px;
+    height: 34px;
+    padding: var(--space-1_5);
+    border-radius: var(--radius-sm);
+    background: var(--background);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .sui-theme-swatch i { display: block; height: 100%; border-radius: 2px; }
+  .sui-theme-swatch .sw-surface { flex: 1 1 auto; background: var(--card); border: 1px solid var(--border); }
+  .sui-theme-swatch .sw-accent { flex: 0 0 6px; background: var(--primary); }
+  .sui-theme-swatch .sw-muted { flex: 0 0 6px; background: var(--muted-foreground); opacity: 0.6; }
+
+  @media (forced-colors: active) {
+    .sui-theme-option[aria-selected='true'] { border-color: CanvasText; }
+  }
 </style>
 
 <div use:themePicker>
-  <button type="button" class="sui-theme-option" value="ship-light"><span class="sui-theme-swatch"></span>Light</button>
-  <button type="button" class="sui-theme-option" value="ship-dark"><span class="sui-theme-swatch"></span>Dark</button>
-  <button type="button" class="sui-theme-option" value="paper"><span class="sui-theme-swatch"></span>Paper</button>
-  <button type="button" class="sui-theme-option" value="halo"><span class="sui-theme-swatch"></span>Halo</button>
-  <button type="button" class="sui-theme-option" value="console"><span class="sui-theme-swatch"></span>Console</button>
-  <button type="button" class="sui-theme-option" value="contrast"><span class="sui-theme-swatch"></span>Contrast</button>
-  <button type="button" class="sui-theme-option" value="glass"><span class="sui-theme-swatch"></span>Glass</button>
+  <button class="sui-theme-trigger" type="button" popovertarget="sui-theme-panel" aria-label="Choose theme">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="13.5" cy="6.5" r="1.5"></circle>
+      <circle cx="17.5" cy="10.5" r="1.5"></circle>
+      <circle cx="8.5" cy="7.5" r="1.5"></circle>
+      <circle cx="6.5" cy="12.5" r="1.5"></circle>
+      <path d="M12 2a10 10 0 0 0 0 20 2 2 0 0 0 2-2v-1a2 2 0 0 1 2-2h1a4 4 0 0 0 4-4 10 10 0 0 0-9-11Z"></path>
+    </svg>
+    <span class="sui-theme-label">Theme</span>
+    <svg class="sui-theme-caret" viewBox="0 0 10 6" aria-hidden="true">
+      <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </button>
+
+  <div class="sui-theme-panel" id="sui-theme-panel" popover use:anchor placement="bottom-end" role="listbox" aria-label="Theme">
+    <button class="sui-theme-option" type="button" role="option" value="ship-light">
+      <span class="sui-theme-swatch" data-theme-preview="ship-light"><i class="sw-surface"></i><i class="sw-accent"></i><i class="sw-muted"></i></span>
+      SHIP Light
+    </button>
+    <button class="sui-theme-option" type="button" role="option" value="ship-dark">
+      <span class="sui-theme-swatch" data-theme-preview="ship-dark"><i class="sw-surface"></i><i class="sw-accent"></i><i class="sw-muted"></i></span>
+      SHIP Dark
+    </button>
+    <button class="sui-theme-option" type="button" role="option" value="paper">
+      <span class="sui-theme-swatch" data-theme-preview="paper"><i class="sw-surface"></i><i class="sw-accent"></i><i class="sw-muted"></i></span>
+      Paper
+    </button>
+    <button class="sui-theme-option" type="button" role="option" value="halo">
+      <span class="sui-theme-swatch" data-theme-preview="halo"><i class="sw-surface"></i><i class="sw-accent"></i><i class="sw-muted"></i></span>
+      Halo
+    </button>
+    <button class="sui-theme-option" type="button" role="option" value="console">
+      <span class="sui-theme-swatch" data-theme-preview="console"><i class="sw-surface"></i><i class="sw-accent"></i><i class="sw-muted"></i></span>
+      Console
+    </button>
+    <button class="sui-theme-option" type="button" role="option" value="contrast">
+      <span class="sui-theme-swatch" data-theme-preview="contrast"><i class="sw-surface"></i><i class="sw-accent"></i><i class="sw-muted"></i></span>
+      High Contrast
+    </button>
+    <button class="sui-theme-option" type="button" role="option" value="glass">
+      <span class="sui-theme-swatch" data-theme-preview="glass"><i class="sw-surface"></i><i class="sw-accent"></i><i class="sw-muted"></i></span>
+      Glass
+    </button>
+    <button class="sui-theme-option" type="button" role="option" value="neutral-light">
+      <span class="sui-theme-swatch" data-theme-preview="neutral-light"><i class="sw-surface"></i><i class="sw-accent"></i><i class="sw-muted"></i></span>
+      Neutral Light
+    </button>
+    <button class="sui-theme-option" type="button" role="option" value="neutral-dark">
+      <span class="sui-theme-swatch" data-theme-preview="neutral-dark"><i class="sw-surface"></i><i class="sw-accent"></i><i class="sw-muted"></i></span>
+      Neutral Dark
+    </button>
+  </div>
 </div>

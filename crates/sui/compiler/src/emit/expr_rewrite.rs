@@ -258,7 +258,14 @@ pub fn rewrite_scoped(
             prev_dot = false;
             continue;
         }
-        if BUILTINS.contains(&word) || locals.iter().any(|s| s == word) {
+        // BUILTIN_ACTIONS is read from `lower::bindings` rather than copied here.
+        // A `use:` action the lowering auto-imports must be left BARE — qualifying
+        // it produces `runAction(el, $scope.tabs)`, which is `undefined`, so the
+        // element renders and does nothing at all. Silently.
+        if BUILTINS.contains(&word)
+            || crate::lower::bindings::BUILTIN_ACTIONS.contains(&word)
+            || locals.iter().any(|s| s == word)
+        {
             out.push_str(word);
             prev_dot = false;
             continue;

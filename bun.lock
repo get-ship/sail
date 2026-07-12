@@ -270,6 +270,9 @@
     "packages/sui/runtime": {
       "name": "@ship/sui-runtime",
       "version": "0.2.0",
+      "dependencies": {
+        "@ship/tokens": "workspace:*",
+      },
       "devDependencies": {
         "@ship/test-setup": "workspace:*",
         "@tanstack/virtual-core": "^3.16.1",

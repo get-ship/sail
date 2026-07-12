@@ -872,52 +872,179 @@
       }
     };
   };
+  // ../tokens/src/themes.ts
+  var THEMES = [
+    {
+      id: "ship-light",
+      label: "SHIP Light",
+      dark: false,
+      swatches: [
+        "oklch(0.99 0.001 106.423)",
+        "oklch(1 0 0)",
+        "oklch(0.67 0.16 58)",
+        "oklch(0.61 0.23 303)"
+      ]
+    },
+    {
+      id: "ship-dark",
+      label: "SHIP Dark",
+      dark: true,
+      swatches: [
+        "oklch(0.18 0.01 250)",
+        "oklch(0.18 0.01 50)",
+        "oklch(0.77 0.16 70)",
+        "oklch(0.3 0.05 300)"
+      ]
+    },
+    {
+      id: "paper",
+      label: "Paper",
+      dark: false,
+      swatches: [
+        "oklch(0.97 0.014 80)",
+        "oklch(0.99 0.010 80)",
+        "oklch(0.55 0.14 35)",
+        "oklch(0.48 0.09 55)"
+      ]
+    },
+    {
+      id: "halo",
+      label: "Halo (Soft)",
+      dark: false,
+      swatches: [
+        "oklch(0.92 0.008 230)",
+        "oklch(0.92 0.008 230)",
+        "oklch(0.62 0.14 50)",
+        "oklch(0.55 0.05 230)"
+      ]
+    },
+    {
+      id: "console",
+      label: "Console",
+      dark: true,
+      swatches: [
+        "oklch(0.13 0.008 220)",
+        "oklch(0.16 0.010 220)",
+        "oklch(0.78 0.20 145)",
+        "oklch(0.78 0.16 195)"
+      ]
+    },
+    {
+      id: "contrast",
+      label: "High Contrast",
+      dark: true,
+      swatches: [
+        "oklch(0.09 0 0)",
+        "oklch(0.15 0 0)",
+        "oklch(0.87 0.18 85)",
+        "oklch(0.99 0 0)"
+      ]
+    },
+    {
+      id: "glass",
+      label: "Glass",
+      dark: false,
+      swatches: [
+        "oklch(0.95 0.04 230)",
+        "oklch(0.99 0.005 240)",
+        "oklch(0.62 0.16 50)",
+        "oklch(0.62 0.14 280)"
+      ]
+    },
+    {
+      id: "neutral-light",
+      label: "Neutral Light",
+      dark: false,
+      swatches: [
+        "oklch(0.985 0.002 264)",
+        "oklch(1 0 0)",
+        "oklch(0.27 0.020 264)",
+        "oklch(0.55 0.090 255)"
+      ]
+    },
+    {
+      id: "neutral-dark",
+      label: "Neutral Dark",
+      dark: true,
+      swatches: [
+        "oklch(0.18 0.008 264)",
+        "oklch(0.22 0.010 264)",
+        "oklch(0.92 0.008 264)",
+        "oklch(0.70 0.100 255)"
+      ]
+    }
+  ];
+  var THEME_BY_ID = Object.fromEntries(THEMES.map((t) => [t.id, t]));
+  var DEFAULT_THEME = "ship-light";
+  var isValidTheme = (value) => typeof value === "string" && (value in THEME_BY_ID);
+  var isDarkTheme = (id) => THEME_BY_ID[id]?.dark ?? false;
+  function applyTheme(id, root = document.documentElement) {
+    const next = isValidTheme(id) ? id : DEFAULT_THEME;
+    const dark = isDarkTheme(next);
+    root.dataset.theme = next;
+    root.classList.toggle("dark", dark);
+    if (typeof document !== "undefined" && typeof CustomEvent !== "undefined") {
+      document.dispatchEvent(new CustomEvent("ship:theme:change", { detail: { id: next, dark } }));
+    }
+    return next;
+  }
+
   // ../runtime/src/actions/theme-picker.ts
   var themePicker = (node) => {
     const root = node;
-    const target = () => document.documentElement;
-    const optionsOf = () => Array.from(root.querySelectorAll(".sui-theme-option"));
+    const trigger = root.querySelector(".sui-theme-trigger");
+    const panel = root.querySelector(".sui-theme-panel");
+    const label = root.querySelector(".sui-theme-label");
+    const options = () => Array.from(root.querySelectorAll(".sui-theme-option"));
     const valueOf = (el) => el.getAttribute("value") ?? "";
-    const current = () => root.getAttribute("value") || target().getAttribute("data-theme") || "";
-    if (!root.hasAttribute("role"))
-      root.setAttribute("role", "radiogroup");
+    const current = () => {
+      const attr = root.getAttribute("value") || document.documentElement.dataset.theme;
+      return isValidTheme(attr) ? attr : "ship-light";
+    };
     const sync = () => {
       const cur = current();
-      const opts = optionsOf();
-      const focusable = opts.find((o) => valueOf(o) === cur) ?? opts[0];
-      for (const o of opts) {
-        o.setAttribute("role", "radio");
-        o.setAttribute("aria-checked", valueOf(o) === cur ? "true" : "false");
-        o.setAttribute("tabindex", o === focusable ? "0" : "-1");
+      if (label)
+        label.textContent = THEMES.find((t) => t.id === cur)?.label ?? cur;
+      for (const o of options()) {
+        const on = valueOf(o) === cur;
+        o.setAttribute("aria-selected", on ? "true" : "false");
+        o.setAttribute("tabindex", on ? "0" : "-1");
       }
     };
-    const setTheme = (v) => {
-      if (!v)
+    const select = (v) => {
+      if (!isValidTheme(v))
         return;
       root.setAttribute("value", v);
-      target().setAttribute("data-theme", v);
+      applyTheme(v);
       sync();
       root.dispatchEvent(new CustomEvent("sui-theme-change", { detail: { theme: v }, bubbles: true, composed: true }));
+      panel?.hidePopover?.();
+      trigger?.focus();
     };
-    const optFrom = (e) => {
+    const optionFrom = (e) => {
       const o = e.target?.closest(".sui-theme-option") ?? null;
       return o && root.contains(o) ? o : null;
     };
     const onClick = (e) => {
-      const o = optFrom(e);
+      const o = optionFrom(e);
       if (o)
-        setTheme(valueOf(o));
+        select(valueOf(o));
     };
     const onKeydown = (e) => {
-      const o = optFrom(e);
+      const o = optionFrom(e);
       if (!o)
         return;
-      const opts = optionsOf();
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        select(valueOf(o));
+        return;
+      }
+      const opts = options();
       const i = opts.indexOf(o);
       let j = -1;
-      if (e.key === "ArrowRight" || e.key === "ArrowDown")
+      if (e.key === "ArrowDown" || e.key === "ArrowRight")
         j = (i + 1) % opts.length;
-      else if (e.key === "ArrowLeft" || e.key === "ArrowUp")
+      else if (e.key === "ArrowUp" || e.key === "ArrowLeft")
         j = (i - 1 + opts.length) % opts.length;
       else if (e.key === "Home")
         j = 0;
@@ -925,20 +1052,25 @@
         j = opts.length - 1;
       if (j >= 0) {
         e.preventDefault();
-        setTheme(valueOf(opts[j]));
         opts[j].focus();
       }
     };
+    const onToggle = (e) => {
+      if (e.newState !== "open")
+        return;
+      sync();
+      const cur = current();
+      (options().find((o) => valueOf(o) === cur) ?? options()[0])?.focus();
+    };
     root.addEventListener("click", onClick);
     root.addEventListener("keydown", onKeydown);
-    const mo = new MutationObserver(() => sync());
-    mo.observe(root, { childList: true, subtree: true });
+    panel?.addEventListener("toggle", onToggle);
     sync();
     return {
       destroy: () => {
         root.removeEventListener("click", onClick);
         root.removeEventListener("keydown", onKeydown);
-        mo.disconnect();
+        panel?.removeEventListener("toggle", onToggle);
       }
     };
   };

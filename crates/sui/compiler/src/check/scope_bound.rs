@@ -93,7 +93,11 @@ pub(super) struct Scope {
 
 impl Scope {
     pub(super) fn contains(&self, name: &str) -> bool {
-        self.names.contains(name) || BUILTINS.contains(&name)
+        self.names.contains(name)
+            || BUILTINS.contains(&name)
+            // Read from `lower::bindings`, not copied: an auto-imported `use:`
+            // action resolves as an ESM binding, so it is in scope by definition.
+            || crate::lower::bindings::BUILTIN_ACTIONS.contains(&name)
     }
 
     pub(super) fn list_for_diagnostic(&self) -> String {

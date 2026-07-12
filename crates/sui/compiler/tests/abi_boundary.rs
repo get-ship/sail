@@ -122,3 +122,40 @@ fn builtin_actions_are_exported_by_the_runtime() {
         missing.join("\n  ")
     );
 }
+
+/// A `use:` action must emit BARE, not `$scope.<name>`.
+///
+/// The lowering auto-imports built-in actions as ESM bindings, but the expression
+/// rewriter qualifies unknown identifiers with `$scope.`. Its builtin list held
+/// four names while `BUILTIN_ACTIONS` held twenty-three, so every other action
+/// compiled to `runAction(el, $scope.tabs)` — and `$scope.tabs` is `undefined`.
+/// The element rendered, and did nothing. No error, no warning.
+///
+/// This bites only when an element is INLINED INTO A HOST COMPONENT, which is the
+/// only way anyone actually uses one — and never in the element's own source,
+/// which is why the stdlib looked fine.
+#[test]
+fn builtin_actions_emit_bare_not_scope_qualified() {
+    let mut broken = Vec::new();
+    for a in sui_compiler::lower::bindings::BUILTIN_ACTIONS {
+        let src = format!(r#"<div use:{a}></div>"#);
+        let out = sui_compiler::compile(
+            &src,
+            sui_compiler::CompileOpts {
+                mode: sui_compiler::CompileMode::Component,
+                ..Default::default()
+            },
+        )
+        .expect("compiles")
+        .js;
+        if out.contains(&format!("$scope.{a}")) {
+            broken.push(*a);
+        }
+    }
+    assert!(
+        broken.is_empty(),
+        "these actions compile to `$scope.<name>`, which is undefined at runtime — \
+         the element renders and does nothing:\n  {}",
+        broken.join("\n  ")
+    );
+}

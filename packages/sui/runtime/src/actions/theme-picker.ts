@@ -1,79 +1,104 @@
+import { applyTheme, THEMES, isValidTheme, type ThemeId } from '@ship/tokens/themes'
 import type { Action } from '../action'
 
 /**
- * `use:themePicker` — the L1 `<theme-picker>` behavior. A radiogroup of the
- * framework's themes; selecting one sets `data-theme` on `<html>` (the theming
- * root), reflects `value`, wires role=radio + aria-checked + roving tabindex,
- * and emits `sui-theme-change`.
+ * `use:themePicker` — the `<theme-picker>` behavior: a trigger that opens a
+ * panel of theme cards.
+ *
+ * Selection goes through `applyTheme`, the framework's own function: it sets
+ * `data-theme`, toggles the `.dark` class, and announces `ship:theme:change` so
+ * chrome can repaint. Setting `data-theme` by hand — as this action used to —
+ * does the first and skips the other two, which leaves the page half-switched.
+ *
+ * The panel is a native `[popover]`: top layer, Escape and outside-click close
+ * for free, no positioning code.
  */
 export const themePicker: Action<void> = (node) => {
   const root = node as HTMLElement
-  const target = (): HTMLElement => document.documentElement
-  const optionsOf = (): HTMLElement[] =>
+  const trigger = root.querySelector<HTMLButtonElement>('.sui-theme-trigger')
+  const panel = root.querySelector<HTMLElement>('.sui-theme-panel')
+  const label = root.querySelector<HTMLElement>('.sui-theme-label')
+
+  const options = (): HTMLElement[] =>
     Array.from(root.querySelectorAll<HTMLElement>('.sui-theme-option'))
   const valueOf = (el: Element): string => el.getAttribute('value') ?? ''
-  const current = (): string => root.getAttribute('value') || target().getAttribute('data-theme') || ''
 
-  if (!root.hasAttribute('role')) root.setAttribute('role', 'radiogroup')
+  const current = (): ThemeId => {
+    const attr = root.getAttribute('value') || document.documentElement.dataset.theme
+    return isValidTheme(attr) ? attr : 'ship-light'
+  }
 
   const sync = (): void => {
     const cur = current()
-    const opts = optionsOf()
-    const focusable = opts.find((o) => valueOf(o) === cur) ?? opts[0]
-    for (const o of opts) {
-      o.setAttribute('role', 'radio')
-      o.setAttribute('aria-checked', valueOf(o) === cur ? 'true' : 'false')
-      o.setAttribute('tabindex', o === focusable ? '0' : '-1')
+    if (label) label.textContent = THEMES.find((t) => t.id === cur)?.label ?? cur
+    for (const o of options()) {
+      const on = valueOf(o) === cur
+      o.setAttribute('aria-selected', on ? 'true' : 'false')
+      o.setAttribute('tabindex', on ? '0' : '-1')
     }
   }
 
-  const setTheme = (v: string): void => {
-    if (!v) return
+  const select = (v: string): void => {
+    if (!isValidTheme(v)) return
     root.setAttribute('value', v)
-    target().setAttribute('data-theme', v)
+    applyTheme(v)
     sync()
     root.dispatchEvent(
       new CustomEvent('sui-theme-change', { detail: { theme: v }, bubbles: true, composed: true }),
     )
+    panel?.hidePopover?.()
+    trigger?.focus()
   }
 
-  const optFrom = (e: Event): HTMLElement | null => {
+  const optionFrom = (e: Event): HTMLElement | null => {
     const o = (e.target as Element | null)?.closest<HTMLElement>('.sui-theme-option') ?? null
     return o && root.contains(o) ? o : null
   }
 
   const onClick = (e: MouseEvent): void => {
-    const o = optFrom(e)
-    if (o) setTheme(valueOf(o))
+    const o = optionFrom(e)
+    if (o) select(valueOf(o))
   }
+
   const onKeydown = (e: KeyboardEvent): void => {
-    const o = optFrom(e)
+    const o = optionFrom(e)
     if (!o) return
-    const opts = optionsOf()
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      select(valueOf(o))
+      return
+    }
+    const opts = options()
     const i = opts.indexOf(o)
     let j = -1
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') j = (i + 1) % opts.length
-    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') j = (i - 1 + opts.length) % opts.length
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') j = (i + 1) % opts.length
+    else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') j = (i - 1 + opts.length) % opts.length
     else if (e.key === 'Home') j = 0
     else if (e.key === 'End') j = opts.length - 1
     if (j >= 0) {
       e.preventDefault()
-      setTheme(valueOf(opts[j]!))
       opts[j]!.focus()
     }
   }
 
+  // Land the keyboard on the active card when the panel opens.
+  const onToggle = (e: Event): void => {
+    if ((e as ToggleEvent).newState !== 'open') return
+    sync()
+    const cur = current()
+    ;(options().find((o) => valueOf(o) === cur) ?? options()[0])?.focus()
+  }
+
   root.addEventListener('click', onClick)
   root.addEventListener('keydown', onKeydown)
-  const mo = new MutationObserver(() => sync())
-  mo.observe(root, { childList: true, subtree: true })
+  panel?.addEventListener('toggle', onToggle)
   sync()
 
   return {
     destroy: () => {
       root.removeEventListener('click', onClick)
       root.removeEventListener('keydown', onKeydown)
-      mo.disconnect()
+      panel?.removeEventListener('toggle', onToggle)
     },
   }
 }
