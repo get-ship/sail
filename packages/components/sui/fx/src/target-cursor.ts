@@ -59,8 +59,13 @@ export const targetCursor: Action<void> = (node) => {
   })
   layer.appendChild(dot)
   document.body.appendChild(layer)
-  const prevCursor = document.body.style.cursor
-  document.body.style.cursor = 'none'
+  // Scoped to the HOST: the viewfinder exists only while the pointer is
+  // inside it; everywhere else keeps the native cursor. A full-site custom
+  // cursor is a costume — scoped, it reads as an instrument.
+  const prevCursor = host.style.cursor
+  host.style.cursor = 'none'
+  layer.style.opacity = '0'
+  layer.style.transition = 'opacity 200ms ease'
 
   let mx = innerWidth / 2
   let my = innerHeight / 2
@@ -107,6 +112,13 @@ export const targetCursor: Action<void> = (node) => {
     mx = e.clientX
     my = e.clientY
   }
+  const onEnter = () => {
+    layer.style.opacity = '1'
+  }
+  const onHostLeave = () => {
+    layer.style.opacity = '0'
+    target = null
+  }
   const onOver = (e: PointerEvent) => {
     const t = (e.target as Element | null)?.closest?.(TARGETS)
     if (t) target = t
@@ -114,19 +126,21 @@ export const targetCursor: Action<void> = (node) => {
   const onOut = (e: PointerEvent) => {
     if (target && e.target instanceof Element && e.target.closest(TARGETS) === target) target = null
   }
-  document.addEventListener('pointermove', onMove, { passive: true })
-  document.addEventListener('pointerover', onOver, { passive: true })
-  document.addEventListener('pointerout', onOut, { passive: true })
-  // Keep host referenced for lifetime semantics (the action dies with it).
-  void host
+  host.addEventListener('pointermove', onMove, { passive: true })
+  host.addEventListener('pointerover', onOver, { passive: true })
+  host.addEventListener('pointerout', onOut, { passive: true })
+  host.addEventListener('pointerenter', onEnter)
+  host.addEventListener('pointerleave', onHostLeave)
 
   return {
     destroy: () => {
       cancelAnimationFrame(raf)
-      document.removeEventListener('pointermove', onMove)
-      document.removeEventListener('pointerover', onOver)
-      document.removeEventListener('pointerout', onOut)
-      document.body.style.cursor = prevCursor
+      host.removeEventListener('pointermove', onMove)
+      host.removeEventListener('pointerover', onOver)
+      host.removeEventListener('pointerout', onOut)
+      host.removeEventListener('pointerenter', onEnter)
+      host.removeEventListener('pointerleave', onHostLeave)
+      host.style.cursor = prevCursor
       layer.remove()
     },
   }
