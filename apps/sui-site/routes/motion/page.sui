@@ -25,17 +25,31 @@
 
   {#if dealt()}
     <grid cols="5" gap="3">
-      {#for n of hand() key={n}}
-        <card
-          motion:enter={{ opacity: 'fade', translate-y: 'spring:bouncy', stagger: '0.07s' }}
-          motion:exit={{ opacity: 'fade-out' }}
-          motion:hover={{ scale: 'spring:gentle' }}
-          sx="p:5"
-        >
-          <h3>{n}</h3>
-          <p sx="text:sm fg:muted-foreground">spring:bouncy</p>
-        </card>
-      {/for}
+      <card motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
+            motion:hover={{ scale: 'spring:snappy' }} sx="p:5">
+        <h3>snappy</h3>
+        <p sx="text:sm fg:muted-foreground">translate-y</p>
+      </card>
+      <card motion:enter={{ opacity: 'fade', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
+            motion:hover={{ translate-y: 'spring:gentle' }} sx="p:5">
+        <h3>fade</h3>
+        <p sx="text:sm fg:muted-foreground">opacity only</p>
+      </card>
+      <card motion:enter={{ rotate: 'spring:bouncy', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
+            motion:hover={{ rotate: 'spring:bouncy' }} sx="p:5">
+        <h3>bouncy</h3>
+        <p sx="text:sm fg:muted-foreground">rotate</p>
+      </card>
+      <card motion:enter={{ translate-x: 'spring:deliberate', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
+            motion:hover={{ translate-x: 'spring:deliberate' }} sx="p:5">
+        <h3>deliberate</h3>
+        <p sx="text:sm fg:muted-foreground">translate-x</p>
+      </card>
+      <card motion:enter={{ scale: 'spring:gentle', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
+            motion:hover={{ opacity: 'pulse' }} sx="p:5">
+        <h3>gentle</h3>
+        <p sx="text:sm fg:muted-foreground">scale</p>
+      </card>
     </grid>
   {/if}
 
@@ -48,19 +62,24 @@
       <column class="live" gap="3">
         <row gap="3">
           <card motion:hover={{ scale: 'spring:gentle' }} sx="p:4">
-            <strong>hover</strong>
-            <p sx="text:sm fg:muted-foreground">spring:gentle</p>
+            <strong>lift</strong>
+            <p sx="text:sm fg:muted-foreground">hover · scale</p>
           </card>
-          <card motion:hover={{ scale: 'spring:bouncy' }} sx="p:4">
-            <strong>hover</strong>
-            <p sx="text:sm fg:muted-foreground">spring:bouncy</p>
+          <card motion:hover={{ rotate: 'spring:bouncy' }} sx="p:4">
+            <strong>tilt</strong>
+            <p sx="text:sm fg:muted-foreground">hover · rotate</p>
+          </card>
+          <card motion:hover={{ translate-x: 'spring:snappy' }} sx="p:4">
+            <strong>nudge</strong>
+            <p sx="text:sm fg:muted-foreground">hover · translate-x</p>
           </card>
         </row>
-        <button
-          motion:hover={{ scale: 'spring:gentle' }}
-          motion:press={{ scale: 'press' }}
-          motion:focus-visible={{ scale: 'spring:snappy' }}
-        >Press me</button>
+        <row gap="3" align="center">
+          <button motion:press={{ scale: 'press' }}>press</button>
+          <button motion:press={{ rotate: 'spring:snappy' }}>press · rotate</button>
+          <button motion:focus-visible={{ scale: 'spring:snappy' }}>tab to me</button>
+          <badge tone="primary" motion:hover={{ opacity: 'pulse' }}>hover · pulse</badge>
+        </row>
       </column>
     </column>
     <column>

@@ -1,9 +1,9 @@
-// Landing: every panel below the fold WORKS — the headline rotates its
-// battery, the state cell filters and grows a real list, the data cell walks
-// loading/ok, the deploy cell walks live→rolling→live, and the themes button
-// opens the site's actual picker.
+// Landing — the long-scroll pillar page. Every section owns a working
+// centerpiece: the motion section deals, the theme section repaints the whole
+// site, the data section filters and refetches, deck deploys, AI compiles.
 
 import { controller, signal, effect, live, filteredList, type ViewScope } from '@ship/sui-runtime'
+import { applyTheme, persistTheme, type ThemeId } from '@ship/tokens/themes'
 import type { Scope } from './page.sui'
 
 const WORDS = ['Batteries', 'Components', 'Styling', 'State', 'Motion', 'Themes']
@@ -12,20 +12,26 @@ export default controller({
   scope: (_ctx: ViewScope<Scope>) => {
     const i = signal(0)
     effect(() => {
-      const t = setInterval(() => i.set((n) => (n + 1) % WORDS.length), 2800)
+      const t = setInterval(() => i.set((n) => (n + 1) % WORDS.length), 2600)
       return () => clearInterval(t)
     })
 
-    const openThemes = (): void => {
-      const panel = document.getElementById('sui-theme-panel') as HTMLElement & { showPopover?: () => void }
-      try {
-        panel?.showPopover?.()
-      } catch {
-        /* already open */
-      }
+    // MOTION — the deal.
+    const dealt = signal(true)
+    const replay = (): void => {
+      dealt.set(false)
+      setTimeout(() => dealt.set(true), 420)
     }
 
-    // State cell — a real list behind the compositions.
+    // THEMES — repaint the world, inline.
+    const theme = signal<string>('ship-light')
+    const pick = (id: ThemeId): void => {
+      applyTheme(id)
+      persistTheme(id)
+      theme.set(id)
+    }
+
+    // DATA — filter + refetch.
     const people = signal([
       { id: 1, name: 'Ada Lovelace', status: 'active' },
       { id: 2, name: 'Grace Hopper', status: 'away' },
@@ -36,16 +42,14 @@ export default controller({
       const bench = ['Katherine Johnson', 'Annie Easley', 'Margaret Hamilton', 'Radia Perlman']
       people.set((l) => [...l, { id: l.length + 1, name: bench[(l.length - 3) % bench.length] ?? `Member ${l.length + 1}`, status: 'active' }])
     }
-
-    // Data cell — a fake API with a visible delay; reload re-runs the source.
     const attempt = signal(1)
     const users = live(() => {
       attempt()
-      return new Promise<string[]>((resolve) => setTimeout(() => resolve(['Ada', 'Grace', 'Edsger']), 800))
+      return new Promise<string[]>((resolve) => setTimeout(() => resolve(['Ada', 'Grace', 'Edsger', 'Barbara']), 800))
     })
     const reload = (): void => attempt.set((a) => a + 1)
 
-    // Deploy cell — server-ish state walking through its phases.
+    // DECK — the deploy walk.
     const status = signal<'live' | 'rolling'>('live')
     const buildNo = signal(214)
     const deploy = (): void => {
@@ -58,9 +62,9 @@ export default controller({
 
     return {
       word: () => [WORDS[i()]],
-      openThemes,
-      people, query, filtered, invite,
-      users, reload,
+      dealt, replay,
+      theme, pick,
+      people, query, filtered, invite, users, reload,
       status, buildNo, deploy,
     }
   },
