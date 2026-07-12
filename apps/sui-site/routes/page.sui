@@ -6,7 +6,7 @@
   motion, not a blink.
 -->
 <column class="landing-wrap">
-  <div use:spotlight>
+  <div use:targetCursor>
   <column class="hero kinetic-hero" gap="4">
     <center><p class="eyebrow">SHIP UI · 0.2.0</p></center>
     <h1 sx="text:display weight:bold tracking:tight">
