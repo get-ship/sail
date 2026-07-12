@@ -60,9 +60,12 @@
   <sui-codeblock code={code.layout}></sui-codeblock>
 
   <p class="callout">
-    <strong>The library makes your bundle smaller.</strong> Because the elements
-    are native markup and a cached stylesheet, the skins are not JavaScript —
-    they never enter your bundle. Reaching for the standard library costs less
-    JS than hand-rolling the same screen out of <code>&lt;div&gt;</code>s.
+    <strong>The library is very nearly free.</strong> A screen built from twelve
+    of these — combobox, tabs, field, tooltip, the lot, with the keyboard
+    handling and the ARIA — bundles to <strong>8.5&nbsp;kB gzipped</strong>. The
+    same markup written as inert <code>&lt;div&gt;</code>s, with no behavior at
+    all, is 7.2&nbsp;kB. Twelve working components cost
+    <strong>1.3&nbsp;kB</strong>, because the skins are CSS and the elements
+    compile away.
   </p>
 </div>

@@ -92,10 +92,12 @@
       gzipped. React is 59.8.
     </li>
     <li>
-      <strong>The components make your bundle smaller, not bigger.</strong> L1
-      elements are native markup and a cached stylesheet. They compile away.
-      Using the standard library costs less JavaScript than hand-rolling the
-      same screen out of <code>&lt;div&gt;</code>s.
+      <strong>The components are nearly free.</strong> A screen built from
+      twelve of them — combobox, tabs, field, tooltip, with the keyboard
+      handling and the ARIA — bundles to 8.5&nbsp;kB gzipped. The same markup as
+      inert <code>&lt;div&gt;</code>s, with no behavior at all, is 7.2&nbsp;kB.
+      Twelve working components cost <strong>1.3&nbsp;kB</strong>: the skins are
+      CSS, and the elements compile away.
     </li>
     <li>
       <strong>Consistency you can check.</strong> Every L1 element is rendered

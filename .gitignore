@@ -67,3 +67,6 @@ GEMINI.md
 .gemini/
 .agents/
 skills-lock.json
+
+# bundle-cost.mjs scratch
+apps/sui-site/.bundle-cost/
