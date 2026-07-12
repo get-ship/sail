@@ -38,6 +38,18 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         let tag_start = i + rel;
         let after_tag = tag_start + b"<style".len();
 
+        // A `<style>` quoted inside an HTML comment is prose, not a block —
+        // a page whose comment says "no <style>" must not warn about one.
+        if let Some(c) = find_subslice(&bytes[i..], b"<!--").map(|r| i + r)
+            && c < tag_start
+        {
+            i = match find_subslice(&bytes[c + 4..], b"-->") {
+                Some(r) => c + 4 + r + 3,
+                None => bytes.len(),
+            };
+            continue;
+        }
+
         // Must be followed by whitespace, `>`, or `/` — not part of a longer
         // identifier like `<style-provider>`.
         if !matches!(
@@ -157,6 +169,16 @@ mod tests {
         assert_eq!(findings.len(), 1);
         assert_eq!(findings[0].line, 2, "finding should be on line 2");
         assert_eq!(findings[0].col, 1, "finding should start at col 1");
+    }
+
+    #[test]
+    fn style_mentioned_in_html_comment_passes() {
+        let src = "<!-- authored under the floor: no <style>, no raw <div> -->\n<p>x</p>";
+        let findings = check(&page_path(), src);
+        assert!(findings.is_empty(), "a comment is prose: {findings:?}");
+        // …and a REAL block after a comment still warns.
+        let src2 = "<!-- no <style> here --><style>.a{}</style>";
+        assert_eq!(check(&page_path(), src2).len(), 1);
     }
 
     #[test]
