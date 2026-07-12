@@ -129,6 +129,7 @@ export {
   avatar,
   chip,
   clickOutside,
+  codeBlock,
   collapsible,
   combobox,
   contextMenu,

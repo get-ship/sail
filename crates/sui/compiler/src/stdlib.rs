@@ -27,6 +27,7 @@ const SOURCES: &[(&str, &str)] = &[
     ("empty-state", include_str!("../stdlib/empty-state.sui")),
     ("error-state", include_str!("../stdlib/error-state.sui")),
     ("error-boundary", include_str!("../stdlib/error-boundary.sui")),
+    ("code-block", include_str!("../stdlib/code-block.sui")),
     ("chip", include_str!("../stdlib/chip.sui")),
     ("field", include_str!("../stdlib/field.sui")),
     ("collapsible", include_str!("../stdlib/collapsible.sui")),
