@@ -5,7 +5,11 @@
     An <strong>action</strong> is a plain function that receives an element,
     does something to it, and returns a <code>destroy</code> to undo it.
     <code>use:</code> attaches one. That is the entire mechanism, and it is the
-    only way to reach an element.
+    only way to reach an element. Actions come from the runtime's built-ins,
+    from your controllers, and from packs — <code>@ship/sui-fx</code> ships
+    visual effects (a target cursor, an interactive dot grid) as actions,
+    because an effect decorates an existing element and <code>use:</code> is
+    exactly that grammar.
   </p>
   <code-block code={code.attach}></code-block>
 

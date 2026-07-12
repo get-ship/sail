@@ -47,8 +47,10 @@
   <p>
     <strong>Layout is three words.</strong> <code>row</code>, <code>column</code>
     and <code>grid</code> take <code>gap</code>, <code>align</code> and
-    <code>justify</code> — there is no flexbox incantation to remember, and no
-    raw <code>&lt;div&gt;</code> to fall back on. <a href="/layout">Layout →</a>
+    <code>justify</code> — there is no flexbox incantation to remember. A raw
+    <code>&lt;div&gt;</code> is legal but mute: it can only speak
+    <code>sx</code> tokens, so it is a shape, not an escape.
+    <a href="/layout">Layout →</a>
   </p>
   <code-block code={code.layout}></code-block>
 

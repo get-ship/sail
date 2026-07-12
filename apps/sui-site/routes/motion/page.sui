@@ -154,6 +154,21 @@
 
   <code-block code={code.timeline}></code-block>
 
+  <h2>Ambient — loop</h2>
+  <p>
+    <code>loop</code> is the idle life of a page: the baked animation
+    alternates forever, <code>stagger</code> becomes a phase offset so
+    siblings read as a wave, and <code>prefers-reduced-motion</code> switches
+    it off entirely — ambient motion is decoration.
+  </p>
+  <row gap="3" align="center" sx="min-h:9">
+    <div sx="w:4 h:4 radius:full bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+    <div sx="w:4 h:4 radius:full bg:primary opacity:75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+    <div sx="w:4 h:4 radius:full bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+    <div sx="w:4 h:4 radius:full bg:primary opacity:75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+  </row>
+  <code-block code={code.loop}></code-block>
+
   <h2>The vocabulary</h2>
   <p>
     Small on purpose, and enforced: an unknown trigger or preset is a compile
@@ -163,7 +178,7 @@
   <grid cols="2" gap="4">
     <column gap="1">
       <label>Triggers</label>
-      <p sx="text:sm fg:muted-foreground">hover · press · focus · focus-visible · enter · exit · view · scroll</p>
+      <p sx="text:sm fg:muted-foreground">hover · press · focus · focus-visible · enter · exit · view · scroll · loop</p>
     </column>
     <column gap="1">
       <label>Properties</label>

@@ -49,7 +49,16 @@
     <code>sx</code> has no <code>flex-direction</code>, no
     <code>align-items</code>, no <code>grid-template-columns</code> — and that is
     not a gap. Structure belongs to the layout keywords, where the axis is the
-    name and there is nothing to get backwards.
+    name and there is nothing to get backwards. Self-sizing is different:
+    <code>grow</code> says how much of the parent's spare space an element
+    claims — the pane atom behind every sidebar-plus-content layout — and it
+    is sx because it describes the element, not its children.
+  </p>
+  <p>
+    Raw <code>&lt;div&gt;</code> and <code>&lt;span&gt;</code> are permitted
+    for the same reason: with classes and CSS closed, a box can only say what
+    <code>sx</code> can say — which makes it a shape on the system, not a hole
+    in it.
   </p>
   <code-block code={code.layout}></code-block>
   <p>

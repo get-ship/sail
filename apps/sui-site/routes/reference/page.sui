@@ -78,7 +78,7 @@
 
   <h3><code>motion:trigger</code> — animation</h3>
   <p>
-    Eight triggers, nine presets, one system. <a href="/motion">Motion →</a>
+    Nine triggers (including ambient <code>loop</code>), nine presets, one system. <a href="/motion">Motion →</a>
   </p>
   <code-block code={code.motionDir}></code-block>
 
