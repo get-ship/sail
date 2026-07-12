@@ -3,6 +3,30 @@
 // SUI sample here is compiled by the build
 // (crates/sui/compiler/tests/site_snippets_compile.rs).
 export const code = {
+  app: `my-app/
+└─ routes/
+   └─ page.sui        # the / route — markup, nothing else
+
+$ deck dev
+  ▸ serving http://127.0.0.1:7878`,
+
+  firstPage: `<!-- routes/page.sui — a page is markup. The components are
+     already in the language; there is nothing to import. -->
+<column gap="4" sx="p:6 max-w:panel-max-w-lg">
+  <h1>Team</h1>
+  <row gap="2">
+    <input placeholder="Filter people" />
+    <button variant="solid" tone="primary">Invite</button>
+  </row>
+  <card sx="p:4">
+    <row gap="3" align="center">
+      <avatar></avatar>
+      <strong>Ada Lovelace</strong>
+      <badge tone="success">Active</badge>
+    </row>
+  </card>
+</column>`,
+
   install: `# one package. The 48 elements are in the LANGUAGE —
 # there is no component library to install, and none to choose.
 npm install @ship/sui-runtime`,

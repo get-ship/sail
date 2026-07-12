@@ -1,15 +1,33 @@
-<column class="doc">
+<column class="doc" gap="5">
   <p class="eyebrow">Introduction</p>
   <h1>Getting started</h1>
   <p class="lead">
-    A SUI component is a <code>.sui</code> file — markup, styling as
-    <code>sx</code> token utilities, and optional state in an inline
-    <code>&lt;controller&gt;</code> block. The compiler turns it into a <strong>standard
-    custom element</strong> — a real web component you can use in any page, any
-    framework, or none. No virtual DOM, no framework runtime wrapped around it.
+    Two ways in. Building an app: <a href="/deck">deck</a> serves file-routed
+    SUI pages with everything wired — start there. Adding components to an
+    existing stack: the compiler emits standard web components that work
+    anywhere HTML does.
   </p>
 
-  <h2>Install</h2>
+  <h2>Start an app</h2>
+  <p>
+    A deck app is a <code>routes/</code> folder and a dev server. No config
+    file, no scaffold step.
+  </p>
+  <code-block code={code.app}></code-block>
+  <p>
+    The first page is markup. Every component on it — the input, the button,
+    the card, the avatar, the badge — is already in the language; there is
+    nothing to install or import, and the compiler rejects what is off the
+    system instead of letting it drift.
+  </p>
+  <code-block code={code.firstPage}></code-block>
+  <p>
+    Save and the browser reloads with state preserved. Routing, server
+    rendering, bundling, and live data are <a href="/deck">deck</a>'s half —
+    the view stays a <code>.sui</code> file throughout.
+  </p>
+
+  <h2>Or: compile components into any stack</h2>
   <p>SUI is a set of packages. Use whatever package manager you like.</p>
   <code-block code={code.install}></code-block>
 
@@ -68,16 +86,6 @@
     it — the compiler enforces it. Markup on one side, state on the other,
     nothing tangled between them.
   </p>
-
-  <h2>deck — optional</h2>
-  <p>
-    Everything above is standalone: the compiler produces web components, and
-    that's the whole story. For a full <em>application</em> — bundling, a
-    hot-reloading dev loop, routing, server rendering — <a href="/deck">deck</a>
-    is the optional app framework that drives the compiler for you. SUI works
-    with it or without it.
-  </p>
-  <code-block code={code.deck}></code-block>
 
   <row class="page-nav">
     <a class="btn" href="/">← Overview</a>
