@@ -86,15 +86,17 @@ pub fn emit_module(
     body.enter();
     let module_hoists = setup::emit_setup_body(&mut body, program, bindings, opts, lowered);
     body.leave();
-    let uses_templates = !module_hoists.is_empty();
+    let hoisted = module_hoists.into_string();
+    let uses_templates = hoisted.contains("__tpl(");
+    let uses_delegation = hoisted.contains("delegateEvents(");
 
-    imports::emit_imports(&mut w, lowered, opts, uses_templates);
+    imports::emit_imports(&mut w, lowered, opts, uses_templates, uses_delegation);
 
     // The `__tpl(...)` cloners go at MODULE scope, above the component: each static
     // subtree's markup is parsed once per program (lazily, on first render) — not
     // once per component instance, and certainly not once per row.
-    if uses_templates {
-        w.push_str(&module_hoists.into_string());
+    if !hoisted.is_empty() {
+        w.push_str(&hoisted);
     }
 
     // The mount/register split is keyed on the tag (`component_meta`), not a

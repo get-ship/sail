@@ -171,6 +171,8 @@ export type { BindIfOptions, BranchRender } from './if'
 // app with no exit animations still tree-shakes the whole thing away.
 // Template cloning — the compiler hoists one `__tpl(html)` per static subtree.
 export { __tpl } from './tpl'
+// Event delegation — one root listener per event type; handlers live on the node.
+export { delegateEvents } from './delegate'
 export { runEnter, runLeave, cancelTransitions, setTransitionRunner } from './transition-runner'
 export { bindAwait } from './await'
 export type { BindAwaitOptions } from './await'

@@ -115,7 +115,14 @@ pub(super) fn emit_setup_body(
     );
     mount_w.line("return () => { for (const c of __cleanups) try { c(); } catch (e) {} };");
 
-    let module_hoists = emitter.take_module_hoists();
+    let mut module_hoists = emitter.take_module_hoists();
+    // One root listener per event TYPE, installed once at module scope — instead of
+    // one addEventListener per element (2,000 of them for a 1,000-row table).
+    let delegated = emitter.take_delegated_events();
+    if !delegated.is_empty() {
+        let names: Vec<String> = delegated.iter().map(|e| js_string(e)).collect();
+        module_hoists.line(&format!("delegateEvents([{}]);", names.join(", ")));
+    }
     let hoists = emitter.take_boundary_hoists();
     let callbacks = emitter.take_render_callbacks();
     let hydrate_uses_text = emitter.hydrate_uses_text();

@@ -51,6 +51,10 @@ pub struct TemplateEmitter {
     pub(super) module_hoists: Writer,
     /// Counter for the hoisted cloners.
     pub(super) tpl_id: usize,
+    /// Every event type wired through DELEGATION. One root listener is installed per
+    /// type (`delegateEvents([...])`, emitted once at module scope) instead of one
+    /// `addEventListener` per element.
+    pub(super) delegated_events: std::collections::BTreeSet<String>,
     /// Sequential counters for while-loading/while-error render-callback names.
     /// Both the bindings pass and this emit pass walk the IR in the same source
     /// order, so the N-th while-loading gets the same `__renderWhileLoading_<N>`
@@ -171,6 +175,7 @@ impl TemplateEmitter {
             next_id: 0,
             module_hoists: Writer::new(),
             tpl_id: 0,
+            delegated_events: std::collections::BTreeSet::new(),
             while_loading_idx: 0,
             while_error_idx: 0,
             render_callbacks: Writer::new(),
@@ -399,6 +404,11 @@ impl TemplateEmitter {
     /// Drain the module-scope cloner declarations.
     pub fn take_module_hoists(&mut self) -> Writer {
         std::mem::replace(&mut self.module_hoists, Writer::new())
+    }
+
+    /// The event types that need a root listener.
+    pub fn take_delegated_events(&mut self) -> std::collections::BTreeSet<String> {
+        std::mem::take(&mut self.delegated_events)
     }
 
     pub(super) fn fresh(&mut self, prefix: &str) -> String {

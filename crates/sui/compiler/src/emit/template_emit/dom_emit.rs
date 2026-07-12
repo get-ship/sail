@@ -286,10 +286,24 @@ impl TemplateEmitter {
                 let key = self.next_key();
                 let rw = self.rw(&handler.source, &[]);
                 let mods_js = serialize_modifiers(modifiers);
-                w.line(&format!(
-                    "{cleanups_var}.push(on({el_var}, {ev}, (function () {{ const __h = ({rw}); return (typeof __h === \"function\") ? __h.bind(undefined) : (() => {{}}); }})(), {{ modifiers: {mods_js} }}));",
-                    ev = js_string(event)
-                ));
+
+                // DELEGATE when we can. `addEventListener` allocates a listener record
+                // per element AND a cleanup closure to remove it again — 2,000 of each
+                // for a 1,000-row table with two handlers a row. A delegated handler is
+                // one property assignment, and removing the row costs nothing at all
+                // because the property dies with the node.
+                if modifiers.is_empty() && DELEGATABLE_EVENTS.contains(&event.as_str()) {
+                    self.delegated_events.insert(event.clone());
+                    w.line(&format!(
+                        "{el_var}.$${ev} = (function () {{ const __h = ({rw}); return (typeof __h === \"function\") ? __h.bind(undefined) : (() => {{}}); }})();",
+                        ev = event
+                    ));
+                } else {
+                    w.line(&format!(
+                        "{cleanups_var}.push(on({el_var}, {ev}, (function () {{ const __h = ({rw}); return (typeof __h === \"function\") ? __h.bind(undefined) : (() => {{}}); }})(), {{ modifiers: {mods_js} }}));",
+                        ev = js_string(event)
+                    ));
+                }
                 // Phase 3b.4: at depth 0 in views, also emit a direct
                 // hydrate call so SSR'd `on:{event}="bN"` markers wire
                 // up without going through the runtime walker /
@@ -785,6 +799,23 @@ fn duration_token_to_ms(token: &str) -> f64 {
 //     an element whose children contain two adjacent text-producing instructions,
 //     and fall back to the createElement path for it. (Svelte solves this with `<!>`
 //     comment separators; that is a later refinement, not a correctness gap.)
+
+/// Events that BUBBLE, and can therefore be caught by a single root listener.
+///
+/// `focus`/`blur` are deliberately absent — they do not bubble, so there would be
+/// nothing at the root to catch (`focusin`/`focusout` are their bubbling twins and
+/// are here). Same for `mouseenter`/`mouseleave`, `load`, `scroll`.
+///
+/// An event off this list, or any handler with modifiers (`once`/`capture` are
+/// properties of a real listener registration and mean nothing to a delegated
+/// dispatch), falls back to `addEventListener`. The author writes `on:click` either
+/// way and never sees the seam.
+const DELEGATABLE_EVENTS: &[&str] = &[
+    "beforeinput", "click", "dblclick", "contextmenu", "focusin", "focusout", "input",
+    "change", "keydown", "keypress", "keyup", "mousedown", "mousemove", "mouseout",
+    "mouseover", "mouseup", "pointerdown", "pointermove", "pointerout", "pointerover",
+    "pointerup", "touchend", "touchmove", "touchstart", "submit", "reset",
+];
 
 /// HTML void elements — serialized without a closing tag.
 const VOID_ELEMENTS: &[&str] = &[
