@@ -28,6 +28,8 @@
       {#for n of hand() key={n}}
         <card
           motion:enter={{ opacity: 'fade', translate-y: 'spring:bouncy', stagger: '0.07s' }}
+          motion:exit={{ opacity: 'fade-out' }}
+          motion:hover={{ scale: 'spring:gentle' }}
           sx="p:5"
         >
           <h3>{n}</h3>
