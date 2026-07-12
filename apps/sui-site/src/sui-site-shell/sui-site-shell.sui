@@ -68,6 +68,7 @@
       <a href="/overview" aria-current={path() === '/overview' ? 'page' : null}>Introduction</a>
       <a href="/getting-started" aria-current={path() === '/getting-started' ? 'page' : null}>Installation</a>
       <a href="/why" aria-current={path() === '/why' ? 'page' : null}>Why SUI</a>
+      <a href="/showcase" aria-current={path() === '/showcase' ? 'page' : null}>Showcase</a>
 
       <label>Components</label>
       <a href="/elements" aria-current={path() === '/elements' ? 'page' : null}>How they work</a>
