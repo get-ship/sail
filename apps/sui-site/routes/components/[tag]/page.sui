@@ -1,0 +1,189 @@
+<!--
+  /components/[tag] — the detail view. The live component holds center stage
+  (press it, type in it, pick from it); the variant chips drive a REAL
+  attribute on it; usage is a complete compiling program; props are the
+  curated truth from the stdlib declarations.
+
+  route.params.tag() picks the entry; ten flagship components are curated in
+  ./registry.ts. Anything else gets the honest empty state below.
+-->
+<column class="doc-wide" gap="4">
+  {#if known()}
+    <breadcrumb>
+      <a href="/components">components</a>
+      <a href="/components">in the language</a>
+      <small>{tag()}</small>
+    </breadcrumb>
+
+    <row gap="3" align="center">
+      <h1 class="mono" sx="tracking:tight">&lt;{tag()}&gt;</h1>
+      <badge tone="primary" variant="soft">In the language</badge>
+      <badge tone="muted" variant="outline">a11y ✓ · keyboard ✓</badge>
+    </row>
+    <p class="lead">{blurb()}</p>
+
+    <row class="split" align="stretch">
+      <!-- ── Live stage ────────────────────────────────────────────────── -->
+      <column>
+        <p class="pane-label">Live — this is the real component</p>
+        <column gap="4" sx="p:5 radius:lg border:border bg:surface-0 h:full">
+          <row gap="2" align="center" justify="between">
+            <row gap="2" align="center">
+              {#if hasVariants()}
+                <span class="mono" sx="text:xs fg:muted-foreground">{variantAttr()}:</span>
+                {#for v of variants() key={v}}
+                  <button size="sm" tone="primary" variant={variant() === v ? 'solid' : 'ghost'} on:click={() => pick(v)}>{v}</button>
+                {/for}
+              {/if}
+            </row>
+            <row gap="2" align="center">
+              <status-dot tone="success"></status-dot>
+              <span class="mono" sx="text:xs fg:muted-foreground">live</span>
+            </row>
+          </row>
+
+          <center sx="p:6 min-h:9 grow:1">
+            {#if isButton()}
+              <column gap="3" align="center">
+                <button variant={variant()} tone="primary" size="lg" on:click={press} motion:press={{ scale: 'press' }}>
+                  Press me
+                </button>
+                <p class="mono" sx="text:xs fg:muted-foreground">motion:press fired ×{presses()}</p>
+              </column>
+            {/if}
+            {#if isCombobox()}
+              <column gap="3" sx="w:full max-w:panel-max-w-sm">
+                <combobox placeholder="Pick a framework — type to filter" on:sui-combobox-select={(e) => pickFw(e)}>
+                  <option value="sui">SUI</option>
+                  <option value="react">React</option>
+                  <option value="svelte">Svelte</option>
+                  <option value="solid">Solid</option>
+                  <option value="vue">Vue</option>
+                  <option value="qwik">Qwik</option>
+                </combobox>
+                <p class="mono" sx="text:xs fg:muted-foreground">picked: {fw() || 'nothing yet'}</p>
+              </column>
+            {/if}
+            {#if isTabs()}
+              <tabs variant={variant()} tone="primary" sx="w:full">
+                <tab-list>
+                  <tab>Overview</tab>
+                  <tab>Activity</tab>
+                  <tab>Settings</tab>
+                </tab-list>
+                <tab-panel><p sx="text:sm fg:muted-foreground">Arrows rove, Home and End jump — wired for you.</p></tab-panel>
+                <tab-panel><p sx="text:sm fg:muted-foreground">The activity feed panel.</p></tab-panel>
+                <tab-panel><p sx="text:sm fg:muted-foreground">The settings panel.</p></tab-panel>
+              </tabs>
+            {/if}
+            {#if isDialog()}
+              <column gap="3" align="center">
+                <button command="show-modal" commandfor="stage-dialog" motion:press={{ scale: 'press' }}>
+                  Open the {variant()}
+                </button>
+                <p class="mono" sx="text:xs fg:muted-foreground">Escape and the backdrop close it — that's the platform</p>
+                <dialog id="stage-dialog" side={sheetSide()}>
+                  <header>Delete project</header>
+                  <section>This cannot be undone. Top layer, focus trap, Escape — zero JavaScript.</section>
+                  <footer>
+                    <button command="close" commandfor="stage-dialog" variant="ghost">Cancel</button>
+                    <button command="close" commandfor="stage-dialog" tone="destructive" variant="solid">Delete</button>
+                  </footer>
+                </dialog>
+              </column>
+            {/if}
+            {#if isTable()}
+              <table sx="w:full">
+                <thead>
+                  <tr><th>Name</th><th>Team</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                  {#for p of people() key={p.id}}
+                    <tr>
+                      <td>{p.name}</td>
+                      <td>{p.team}</td>
+                      <td><badge tone={p.status === 'active' ? 'success' : 'muted'} size="sm">{p.status}</badge></td>
+                    </tr>
+                  {/for}
+                </tbody>
+              </table>
+            {/if}
+            {#if isSwitch()}
+              <row gap="3" align="center">
+                <switch bind:checked={notify} size={variant()} tone="primary"></switch>
+                <p class="mono" sx="text:xs fg:muted-foreground">{notify() ? 'on' : 'off'} · size {variant()}</p>
+              </row>
+            {/if}
+            {#if isSlider()}
+              <column gap="3" sx="w:full max-w:panel-max-w-sm">
+                <slider bind:value={load} min="0" max="100" tone={variant()}></slider>
+                <progress value={load()} max="100"></progress>
+                <p class="mono" sx="text:xs fg:muted-foreground">one signal, two components — {load()}%</p>
+              </column>
+            {/if}
+            {#if isBadge()}
+              <row gap="2" align="center">
+                <badge variant={variant()} tone="primary">primary</badge>
+                <badge variant={variant()} tone="success">success</badge>
+                <badge variant={variant()} tone="warning">warning</badge>
+                <badge variant={variant()} tone="destructive">destructive</badge>
+                <badge variant={variant()} tone="muted">muted</badge>
+              </row>
+            {/if}
+            {#if isCard()}
+              <card variant={variant()} sx="p:5" motion:hover={{ scale: 'spring:gentle' }}>
+                <strong>A surface</strong>
+                <p sx="text:sm fg:muted-foreground">hover me — the lift is one attribute</p>
+              </card>
+            {/if}
+            {#if isAlert()}
+              <alert tone={variant()} sx="w:full">
+                <strong>Heads up.</strong> The tone chips above restyle me — colour and icon both.
+              </alert>
+            {/if}
+          </center>
+
+          <center>
+            <p class="mono" sx="text:xs fg:muted-foreground">click it · type in it · pick from it — nothing here is a screenshot</p>
+          </center>
+        </column>
+      </column>
+
+      <!-- ── Usage + props ─────────────────────────────────────────────── -->
+      <column gap="3">
+        <p class="pane-label">Usage — a complete program, compiled on every commit</p>
+        <code-block code={usageCode()}></code-block>
+        <card sx="p:4">
+          <column gap="3">
+            <p class="eyebrow">Props</p>
+            {#for r of props() key={r.name}}
+              <column gap="1" motion:enter={{ opacity: 'fade', stagger: '0.05s' }}>
+                <row gap="3" align="baseline">
+                  <code>{r.name}</code>
+                  <span class="mono" sx="text:xs fg:muted-foreground grow:1">{r.type}</span>
+                </row>
+                <p sx="text:sm fg:muted-foreground">{r.desc}</p>
+              </column>
+            {/for}
+          </column>
+        </card>
+        <row gap="2">
+          <a class="btn" href="/components">← All components</a>
+          <a class="btn btn-primary" href="/reference">API reference</a>
+        </row>
+      </column>
+    </row>
+  {:else}
+    <breadcrumb>
+      <a href="/components">components</a>
+      <small>{tag()}</small>
+    </breadcrumb>
+    <empty-state motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
+      <strong slot="title">No curated page for “{tag()}” yet</strong>
+      Ten flagship components have detail pages so far — the rest are live in the browser.
+    </empty-state>
+    <row gap="2">
+      <a class="btn btn-primary" href="/components">← All components</a>
+    </row>
+  {/if}
+</column>
