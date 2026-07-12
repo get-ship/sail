@@ -173,17 +173,9 @@ fn parallax_is_one_directive() {
     assert_eq!(js.matches(".animate(").count(), 2, "one baked animation per property:\n{js}");
 }
 
-/// NO DEAD VOCABULARY: every trigger the compiler ADVERTISES must be writable.
-///
-/// `focus-visible` was not. It is one of the eight in `MOTION_TRIGGERS`, and the
-/// parser's own "requires a trigger name (hover, press, focus, focus-visible, …)"
-/// message names it — but the check ahead of the allowlist was
-/// `is_bare_identifier`, a JAVASCRIPT identifier test, which forbids the hyphen.
-/// So the compiler rejected `motion:focus-visible` as "must be a bare identifier"
-/// while telling you, in the adjacent diagnostic, to write exactly that.
-///
-/// Enumerating the real list is the only way this stays honest: a trigger added to
-/// `MOTION_TRIGGERS` and nowhere else fails HERE rather than in someone's editor.
+/// Every trigger the compiler advertises must be writable. Enumerating the real
+/// list is what keeps that honest: a trigger added to `MOTION_TRIGGERS` and
+/// nowhere else fails here rather than in someone's editor.
 #[test]
 fn every_advertised_trigger_can_actually_be_written() {
     let mut unwritable = Vec::new();

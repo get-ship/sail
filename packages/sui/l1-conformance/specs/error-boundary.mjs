@@ -1,15 +1,11 @@
 // L1 conformance spec: <error-boundary> (mechanism-1, use:errorBoundary).
 //
-// The render surface is nearly all state, so the SNAPSHOT rows show the two
-// states side by side: healthy (the boundary is invisible — you should see only
-// the content) and caught (the fallback, destructive tone).
+// Snapshot rows show the two states: healthy (the boundary is invisible — only the
+// content shows) and caught (the fallback).
 //
-// The BEHAVIOR test is the one that matters. A boundary's whole contract is that
-// a throw ANYWHERE in the protected subtree finds it: `runProtected` walks up the
-// DOM from the fault site looking for a registered handle. Asserting `[data-caught]`
-// from hand-written markup would only re-test the CSS gate — so this throws for
-// real, through the runtime's own routing, and checks that the right boundary
-// catches it.
+// The behavior test throws for real through `runProtected`, so it exercises the
+// runtime's own DOM walk rather than re-testing the CSS gate against hand-written
+// markup.
 
 const ICON =
   '<svg class="fallback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>'
@@ -68,9 +64,8 @@ export default {
 
   behavior: {
     rows() {
-      // NESTED, deliberately: the innermost boundary must win. A boundary that
-      // catches errors from a subtree already protected by a nearer one would
-      // blow away a whole page for a fault in one widget.
+      // Nested: the innermost boundary must win, or a fault in one widget takes
+      // out the whole page.
       return [
         eb('outer', {
           content: eb('inner', { content: '<p id="fault">inner content</p>' }),
@@ -95,7 +90,7 @@ export default {
       if (!(await shown('#inner > .content'))) bad.push({ why: 'healthy-content-hidden' })
       if (await shown('#inner > .fallback')) bad.push({ why: 'healthy-fallback-shown' })
 
-      // ---- a REAL throw, routed by the real runtime -----------------------
+      // ---- a real throw, routed by the runtime ----------------------------
       const evt = await page.evaluate(() => {
         globalThis.__caught = null
         document
@@ -103,8 +98,8 @@ export default {
           .addEventListener('sui-error-caught', (e) => {
             globalThis.__caught = { message: e.detail.error.message, source: e.detail.source }
           })
-        // Throw from a node DEEP inside the protected subtree and let the
-        // runtime's own walk find the boundary. This is the contract.
+        // Throw from a node deep inside the protected subtree and let the
+        // runtime's walk find the boundary. That is the contract.
         globalThis.SuiBoundary.runProtected(document.getElementById('fault'), 'render', () => {
           throw new Error('boom')
         })
@@ -117,7 +112,7 @@ export default {
         if (evt.source !== 'render') bad.push({ why: 'source-not-classified', got: evt.source })
       }
 
-      // INNERMOST WINS.
+      // Innermost wins.
       if (!(await caughtOn('inner'))) bad.push({ why: 'inner-boundary-did-not-catch' })
       if (await caughtOn('outer')) bad.push({ why: 'outer-boundary-caught-too' })
 
@@ -125,17 +120,15 @@ export default {
       if (await shown('#inner > .content')) bad.push({ why: 'content-still-visible-after-catch' })
       if (!(await shown('#inner > .fallback'))) bad.push({ why: 'fallback-not-visible-after-catch' })
 
-      // The RAW ERROR IS NOT RENDERED. An exception string is written for a
-      // developer, not for the person using the app. It rides the event and the
-      // data attribute instead.
+      // The raw error is never rendered: that string is written for a developer,
+      // not for the person using the app. It rides the event and the attribute.
       const visible = await page.locator('#inner > .fallback .message').innerText()
       if (visible.includes('boom')) bad.push({ why: 'raw-error-text-rendered-to-the-user', visible })
       const attr = await page.evaluate(() => document.getElementById('inner').getAttribute('data-error-message'))
       if (attr !== 'boom') bad.push({ why: 'error-not-published-out-of-band', attr })
 
-      // A SECOND throw must not overwrite the first. Effects inside the subtree
-      // are owned by the enclosing component, survive the catch, and may throw
-      // again — the first error is the true one; the rest are echoes.
+      // A second throw must not overwrite the first. Effects in the subtree are
+      // owned by the enclosing component, survive the catch, and may throw again.
       await page.evaluate(() => {
         globalThis.SuiBoundary.runProtected(document.getElementById('fault'), 'effect', () => {
           throw new Error('echo')
@@ -145,10 +138,9 @@ export default {
       if (still !== 'boom') bad.push({ why: 're-entrancy-guard-failed', got: still })
 
       // ---- recovery ------------------------------------------------------
-      // Only drive the button if the fallback actually rendered. Clicking a
-      // control that isn't there costs a 30s Playwright timeout, and the throw
-      // takes every diagnostic gathered above down with it — so a broken
-      // boundary would report "TimeoutError" instead of the reason it broke.
+      // Only drive the button if the fallback rendered: clicking a control that
+      // isn't there costs a 30s timeout, and the throw would take every
+      // diagnostic gathered above down with it.
       if (await shown('#inner > .fallback')) {
         await page.locator('#inner > .fallback .retry').click()
         if (await caughtOn('inner')) bad.push({ why: 'retry-did-not-reset' })

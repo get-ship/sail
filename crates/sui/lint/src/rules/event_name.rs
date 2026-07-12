@@ -97,17 +97,9 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut i = 0;
 
     while i + 3 < bytes.len() {
-        // A COMMENT IS OPAQUE. This rule is a raw byte scan, which is fine for
-        // finding attributes but knows nothing about syntax — so without this it
-        // reads straight through `<!-- … -->` and lints the PROSE inside. That is
-        // not hypothetical: documenting the feature broke the build. A comment
-        // reading
-        //
-        //     <!-- on:<event> takes modifiers: |prevent, |stop -->
-        //
-        // made the compiler reject the file for the "unknown event `<event`",
-        // which means you could not describe `on:` in a comment above the very
-        // handler you were describing. Skip to the end of the comment.
+        // A comment is not code. This rule is a raw byte scan and knows nothing of
+        // syntax, so it must skip `<!-- … -->` explicitly or it lints the prose
+        // inside — including a comment that merely mentions `on:`.
         if bytes[i] == b'<' && bytes[i..].starts_with(b"<!--") {
             i = match find(bytes, i + 4, b"-->") {
                 Some(end) => end + 3,
@@ -322,24 +314,14 @@ mod tests {
         assert_eq!(findings[0].severity, Severity::Error);
     }
 
-    /// A COMMENT IS OPAQUE.
-    ///
-    /// This rule is a raw byte scan — fast, and syntax-blind. Without an explicit
-    /// skip it reads straight into `<!-- … -->` and lints the PROSE. That is how
-    /// the website broke: the composition page documented the feature with
-    ///
-    ///     <!-- on:<event> takes modifiers: |prevent, |stop -->
-    ///
-    /// and the compiler rejected the file for the "unknown event `<event`". You
-    /// could not describe `on:` in a comment above the handler you were
-    /// describing — the rule punished the documentation of itself.
+    /// A comment that mentions `on:` is prose, not an attribute.
     #[test]
     fn a_comment_is_not_code() {
         let src = "<!-- on:<event> takes modifiers: |prevent, |stop -->\n<button on:click={go}>go</button>";
         assert_eq!(lint(src).len(), 0, "prose inside a comment is not an attribute: {:?}", lint(src));
     }
 
-    /// ...but the skip must not swallow the code AFTER the comment.
+    /// ...but the skip must not swallow the code after the comment.
     #[test]
     fn a_real_typo_after_a_comment_is_still_caught() {
         let src = "<!-- on:whatever -->\n<button on:Click={go}>go</button>";

@@ -22,23 +22,14 @@
   Recovery: the built-in Retry button resets the boundary, as does `el.reset()`.
   A reset clears the caught state and the content returns.
 
-  WHY THIS IS AN ELEMENT AND NOT A COMPONENT. It was a component (a controller
-  holding a `caughtError` signal, with `{#if caught}fallback{:else}<slot/>{/if}`).
-  The reason to keep it one would be REAL unmount — disposing the broken subtree's
-  reactive scope. But the protected content arrives through a `<slot>`, which means
-  it belongs to the PARENT's scope, not the boundary's; swapping the branch merely
-  stopped projecting it. Nothing was ever disposed. So the controller bought a
-  custom element, a signal, and a scope in exchange for nothing an action cannot
-  do, and this element does the same job with no component overhead at all.
+  SCOPE. The protected content arrives through a `<slot>`, so it belongs to the
+  enclosing component's reactive scope, not the boundary's — a boundary hides a
+  broken subtree, it does not dispose one. Effects inside it stay alive and may
+  throw again; the re-entrancy guard makes that a no-op, so the first error is the
+  one reported. Disposal would require locating the boundary by owner chain rather
+  than by DOM walk.
 
-  What that costs, stated plainly: effects inside the protected subtree are NOT
-  disposed — they belong to the enclosing component and keep their scope. If one
-  throws again it re-enters `catch`, where the re-entrancy guard makes it a no-op
-  (the first error is the one that is reported). True disposal would require
-  locating the boundary by OWNER CHAIN rather than by DOM walk — Solid's model —
-  which is a runtime change, not an element change.
-
-  The visible message is the `message` prop (default "Something went wrong"), NOT
+  The visible message is the `message` prop (default "Something went wrong"), not
   the raw error text: an exception string is for a developer, not a user. The real
   error rides the `sui-error-caught` event detail and the `data-error-message`
   attribute.
@@ -51,12 +42,10 @@
 }</component>
 
 <style>
-  /* A healthy boundary is INVISIBLE to layout: `display: contents` on both the
-     root and the content wrapper means the protected children lay out against
-     the boundary's parent exactly as if the boundary were not in the tree. That
-     matters — a boundary is something you wrap around things you already laid
-     out, and it must not disturb them. `display: none` beats `contents` on the
-     caught branch, so the swap is a pure CSS gate on [data-caught]. */
+  /* A healthy boundary is invisible to layout: `display: contents` on both the
+     root and the content wrapper lays the protected children out against the
+     boundary's parent, as if the boundary were not in the tree. You wrap one
+     around markup you have already laid out; it must not disturb it. */
   .sui-error-boundary { display: contents; }
   .sui-error-boundary > .content { display: contents; }
   .sui-error-boundary[data-caught] > .content { display: none; }

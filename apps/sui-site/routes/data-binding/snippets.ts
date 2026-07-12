@@ -15,14 +15,10 @@ export const code = {
   clicked {count()} times
 </button>`,
 
-  // An ACTION is the element handle. It receives the node, does its work, and
-  // returns a `destroy` — so the element never becomes a value you have to store
-  // in scope, thread through a template, and remember to release.
   actions: `<!-- use: hands the element to a function. Nothing to store. -->
 <textarea use:autosize></textarea>
 <div use:clickOutside={close}>…</div>`,
 
-  // Authoring one is the whole API: a function over an element.
   authoring: `// autofocus.ts — an action is a plain function over an element
 import type { Action } from '@ship/sui-runtime'
 
@@ -33,7 +29,6 @@ export const autofocus: Action<void> = (node) => {
   return { destroy: () => cancelAnimationFrame(id) }
 }`,
 
-  // The escape hatch, for when you genuinely need the node as a VALUE.
   refs: `<!-- bind:this fills a ref() from the controller; read it like a signal -->
 <input bind:this={field} />
 <button on:click={() => field().focus()}>Focus the input</button>`,

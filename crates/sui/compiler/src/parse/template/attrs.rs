@@ -586,21 +586,12 @@ fn compile_motion(
             "motion: requires a trigger name (hover, press, focus, focus-visible, …)".into(),
         ));
     }
-    // NO `is_bare_identifier` GATE HERE. That is a JAVASCRIPT identifier check, and
-    // it forbids hyphens — so `motion:focus-visible` was rejected as "must be a bare
-    // identifier" even though `focus-visible` is one of the eight triggers, is named
-    // in MOTION_TRIGGERS, and is advertised by the error message four lines above.
-    // One of the language's own triggers could not be written, and the diagnostic
-    // told you to write the exact thing it refused.
+    // The allowlist IS the validation — no shape check ahead of it. A trigger is a
+    // kebab-case name mirroring the CSS pseudo-class (`focus-visible`), not a JS
+    // identifier, and an allowlist is strictly stronger than any shape test anyway.
     //
-    // A trigger is not a JS identifier; it is a kebab-case name mirroring the CSS
-    // pseudo-class. The allowlist below is strictly stronger than any shape check
-    // could be — an unknown trigger fails it, garbage fails it — so the shape check
-    // was only ever able to reject things the allowlist would have accepted.
-    //
-    // (An unknown trigger used to COMPILE and then silently do nothing — the runtime
-    // no-ops a trigger it has no dispatch for, so `motion:hovr={…}` was a typo you
-    // could ship. Naming the set is what fixed that; keep it.)
+    // An unknown trigger must be an error, not a silent no-op: the runtime has no
+    // dispatch for `motion:hovr={…}`, so it would do nothing and ship.
     if !MOTION_TRIGGERS.contains(&trigger) {
         return Err(err(format!(
             "motion trigger `{trigger}` is not supported. Triggers: {}.",

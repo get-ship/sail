@@ -8,24 +8,15 @@ interface HostWithReset extends HTMLElement {
 }
 
 /**
- * `use:errorBoundary` — the L1 `<error-boundary>` element's behavior.
+ * `use:errorBoundary` — the `<error-boundary>` element's behavior.
  *
- * The catch machinery already exists in the runtime (`attachBoundary` /
- * `findNearestBoundary` / `runProtected`, called from component mount, `bindIf`,
- * and the `{#each}` row renderer). What was missing was the ELEMENT that
- * registers a handle for the DOM walk to find — without one,
- * `findNearestBoundary` always returns null and every caught error degrades to a
- * `console.error`. This is that element's half of the contract.
+ * `runProtected` routes a throw by walking up the DOM for an element carrying a
+ * boundary handle; this registers that handle. Without it `findNearestBoundary`
+ * finds nothing and a caught error degrades to a `console.error`.
  *
- * The branch swap is PURE CSS, gated on `[data-caught]` — no signal, no `{#if}`,
- * no re-render. This action supplies only what CSS cannot:
- *  - register the boundary handle for the runtime's DOM walk;
- *  - mark `[data-caught]` on the first throw, with a re-entrancy guard so a
- *    second inner throw cannot overwrite the original error;
- *  - publish the error out of band (`data-error-message` + a `sui-error-caught`
- *    event) WITHOUT rendering it — an exception string is written for a
- *    developer, not for the person using the app;
- *  - wire Retry, and expose the same path as `host.reset()`.
+ * The branch swap is pure CSS, gated on `[data-caught]` — no signal, no `{#if}`.
+ * This supplies what CSS cannot: the handle, the caught mark, the error published
+ * out of band, and Retry.
  */
 export const errorBoundary: Action<void> = (node) => {
   const el = node as HostWithReset
@@ -35,7 +26,7 @@ export const errorBoundary: Action<void> = (node) => {
   const retry = el.querySelector('.retry') as HTMLButtonElement | null
 
   const reset = (): void => {
-    if (!el.hasAttribute('data-caught')) return // already healthy — idempotent
+    if (!el.hasAttribute('data-caught')) return
     el.removeAttribute('data-caught')
     el.removeAttribute('data-error-message')
     el.dispatchEvent(new CustomEvent('sui-error-reset', { bubbles: true, composed: true }))
@@ -43,14 +34,16 @@ export const errorBoundary: Action<void> = (node) => {
 
   attachBoundary(el, {
     catch(err, source) {
-      // Re-entrancy guard. Effects inside the protected subtree are owned by the
-      // ENCLOSING component, not by this element, so they survive the catch and
-      // may throw again. The first error is the true one; later ones are echoes.
+      // Effects in the protected subtree are owned by the enclosing component, so
+      // they survive the catch and may throw again. The first error is the real
+      // one; later ones are echoes of it.
       if (el.hasAttribute('data-caught')) return
       const error = err instanceof Error ? err : new Error(String(err))
 
       el.setAttribute('data-caught', '')
       el.setAttribute('data-error-message', error.message)
+      // The message shown is the prop, never the exception text: that string is
+      // written for a developer, not for the person using the app.
       if (message) message.textContent = el.getAttribute('message') || 'Something went wrong'
 
       el.dispatchEvent(

@@ -1,18 +1,11 @@
-// Code snippets for the motion page. Kept OUT of the controller so the compiler's
-// scope scan isn't fooled by `return {…}` / `signal(…)` patterns.
+// Code snippets for the motion page. Kept out of the controller so the compiler's
+// scope scan isn't fooled by `return {…}` / `signal(…)` patterns. Every SUI sample
+// here is compiled by the build (crates/sui/compiler/tests/site_snippets_compile.rs).
 //
-// Every SUI sample here is COMPILED BY THE BUILD (see
-// crates/sui/compiler/tests/site_snippets_compile.rs). This page replaced
-// /transitions, which taught `transition:` / `in:` / `out:` — three directives and
-// a second animation system — for months after the compiler stopped accepting any
-// of them. The guard exists so that cannot happen twice.
-//
-// The vocabulary below is the compiler's: 8 triggers (crates/sui/lint —
-// MOTION_TRIGGERS), 5 properties (MOTION_PROPERTIES), the reserved `stagger` key,
-// and 9 presets (crates/sui/lint/animation-presets.json). If you are adding to this
-// page, read those, not this comment.
+// The vocabulary is the compiler's: MOTION_TRIGGERS and MOTION_PROPERTIES in
+// crates/sui/lint, presets in crates/sui/lint/animation-presets.json. Read those
+// when adding to this page.
 export const code = {
-  // The whole idea, in one directive.
   intro: `<!-- one directive, one system. The trigger says WHEN; the body says WHAT. -->
 <card motion:hover={{ scale: 'spring:gentle' }}>
   Lift on hover.

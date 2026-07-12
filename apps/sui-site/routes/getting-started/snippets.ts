@@ -1,12 +1,7 @@
-// Code snippets for the getting-started page. Kept OUT of the controller so the
-// compiler's scope scan isn't fooled by `return {…}` / `signal(…)` patterns.
-//
-// Every SUI sample here is COMPILED BY THE BUILD — see
-// crates/sui/compiler/tests/site_snippets_compile.rs. That guard exists because
-// this file used to open with `<prop name="who" …>`, a form the compiler had
-// stopped accepting: the first SUI a reader ever saw did not compile. Docs prose
-// can be wrong and a reader shrugs; docs CODE that does not compile is worse than
-// no docs, because the reader assumes they made the mistake.
+// Code snippets for the getting-started page. Kept out of the controller so the
+// compiler's scope scan isn't fooled by `return {…}` / `signal(…)` patterns. Every
+// SUI sample here is compiled by the build
+// (crates/sui/compiler/tests/site_snippets_compile.rs).
 export const code = {
   install: `# npm, pnpm, yarn, or bun — SUI is just packages
 npm install @ship/sui-runtime @ship/sui-primitives`,

@@ -1,21 +1,9 @@
-//! `<error-boundary>` — RENDER-FAULT ISOLATION, as an L1 element.
+//! `<error-boundary>` — render-fault isolation, as an element + `use:` action.
 //!
-//! The runtime has always had the catch machinery: `attachBoundary` /
-//! `findNearestBoundary` / `runProtected`, called from component mount, `bindIf`,
-//! and the `{#each}` row renderer. What it did NOT have was an element to find.
-//! `findNearestBoundary` walks up the DOM looking for a host carrying a handle;
-//! with no such host in the tree it returns null and every caught error degrades
-//! to a `console.error`. The mechanism was live and unreachable.
-//!
-//! It used to be reachable through a COMPONENT — a controller holding a
-//! `caughtError` signal with `{#if caught}fallback{:else}<slot/>{/if}`. The only
-//! reason to pay for a controller would be REAL unmount: disposing the broken
-//! subtree's reactive scope. It never did that. The protected content arrives
-//! through a `<slot>`, so it belongs to the PARENT's scope; swapping the branch
-//! merely stopped projecting it. Nothing was disposed, and the custom element,
-//! the signal, and the scope bought nothing an action cannot do.
-//!
-//! So it is an element, and this file pins the three things that makes true.
+//! `runProtected` routes a throw by walking up the DOM for a registered boundary
+//! handle. A boundary hides a broken subtree rather than disposing one (the
+//! protected content comes in through a `<slot>`, so it belongs to the enclosing
+//! component's scope), which is why it needs no controller and no scope of its own.
 
 use sui_compiler::{compile, compile_element, CompileMode, CompileOpts};
 
@@ -25,14 +13,9 @@ fn js(src: &str) -> String {
         .js
 }
 
-/// A HEALTHY boundary must be INVISIBLE TO LAYOUT.
-///
-/// This is the invariant that makes the element usable at all: you wrap a
-/// boundary around markup you have ALREADY laid out, and it must not disturb it.
-/// `display: contents` on both the root and the content wrapper means the
-/// protected children lay out against the boundary's parent exactly as if the
-/// boundary were not in the tree. Get this wrong and every boundary silently
-/// breaks a flex row.
+/// A healthy boundary must be invisible to layout. You wrap one around markup you
+/// have already laid out, and it must not disturb it — get this wrong and every
+/// boundary silently breaks a flex row.
 #[test]
 fn a_healthy_boundary_does_not_participate_in_layout() {
     let el = compile_element(
@@ -55,10 +38,7 @@ fn a_healthy_boundary_does_not_participate_in_layout() {
     );
 }
 
-/// The BRANCH SWAP is pure CSS, gated on `[data-caught]` — there is no signal and
-/// no `{#if}`. That is the whole argument for demoting this from a component: the
-/// reactive branch was never buying disposal, so a CSS gate does the same job for
-/// no JS at all.
+/// The branch swap is pure CSS, gated on `[data-caught]` — no signal, no `{#if}`.
 #[test]
 fn the_swap_is_a_css_gate_not_a_reactive_branch() {
     let el = compile_element(
@@ -81,9 +61,8 @@ fn the_swap_is_a_css_gate_not_a_reactive_branch() {
     );
 }
 
-/// The fallback is REPLACEABLE. An author who supplies `slot="fallback"` gets
-/// their markup instead of the built-in one — otherwise a boundary is only ever
-/// as good as our default, and nobody would use it in a real design.
+/// The fallback is replaceable: `slot="fallback"` overrides the built-in one.
+/// Otherwise a boundary is only ever as good as our default.
 #[test]
 fn the_fallback_is_a_slot_with_a_built_in_default() {
     let el = compile_element(
@@ -109,9 +88,8 @@ fn the_fallback_is_a_slot_with_a_built_in_default() {
     );
 }
 
-/// Using the tag from a component lowers it away — the element is REACHABLE
-/// through the stdlib registry (the thing that was missing) and costs no custom
-/// element, only the action import.
+/// The tag lowers away: it is reachable through the stdlib registry and costs no
+/// custom element, only the action import.
 #[test]
 fn the_tag_lowers_and_auto_imports_its_action() {
     let out = js(r#"<error-boundary message="Panel failed."><p>content</p></error-boundary>"#);
