@@ -17,8 +17,8 @@ export const code = {
   <button slot="actions" primary>Save</button>
 </app-card>`,
 
-  props: `<!-- pass props down; the child declares them with <prop> and reads
-     them as signals -->
+  props: `<!-- pass props down; the child declares them in its <component> block
+     and reads them as signals -->
 <chip tone="primary" count={unread()}></chip>`,
 
   events: `<!-- on:<event> takes modifiers: |prevent, |stop, |self, |debounce:<ms> -->

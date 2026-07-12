@@ -1,98 +1,81 @@
 <!--
-  /styling — sx token utilities, host + variant styling, and the token
-  convention. Styling lives on the element as sx utilities; raw <style> is
-  the escape hatch for what sx structurally can't express.
+  /styling — one way to style, and no way out.
+
+  This page used to end with a section called "The escape hatch" that taught a
+  raw <style> block "scoped to the shadow root". All three of those are gone:
+  <style> is a compile error everywhere outside the compiler's own L1 elements,
+  and there is no shadow root. The page taught the reader to defeat the language.
 -->
-<column class="doc styling-doc">
-  <p class="eyebrow">Guides</p>
+<column class="doc" gap="5">
+  <p class="eyebrow">What's given</p>
   <h1>Styling</h1>
   <p class="lead">
-    SUI components style themselves with <code>sx</code> — token utilities
-    written right on the element. No stylesheet to coordinate, no CSS-in-JS
-    runtime, no class names to invent. <code>sx</code> is a closed
-    vocabulary: every value is a design token, so a component is themed by
-    construction.
+    <code>sx</code> is a closed vocabulary of design-system atoms. Not a
+    shorthand for CSS — a <em>subset</em>, on purpose. A value that is not on the
+    system does not compile.
   </p>
 
-  <h2>The <code>sx</code> attribute</h2>
-  <p>
-    Put styling on the element as an <code>sx</code> attribute — space-separated
-    <code>property:token</code> pairs. The compiler lowers each pair to an
-    atomic rule at build time; nothing is computed at runtime. Because the
-    vocabulary is closed, there is no pixel value like <code>p:16px</code> and
-    no hex like <code>bg:#fff</code> — only tokens resolve.
-  </p>
   <code-block code={code.sx}></code-block>
-  <p>
-    Text is already styled: write <code>&lt;h1&gt;</code>–<code>&lt;h6&gt;</code>
-    and <code>&lt;p&gt;</code> plain and they take the type scale. Reach for
-    <code>sx</code> when you need surface, spacing, or tone.
-  </p>
 
-  <h2>Styling the host</h2>
+  <h2>States are a prefix</h2>
   <p>
-    To style the component's own element — its border, radius, background —
-    use <code>&lt;host sx&gt;</code>. It is the <code>.sui-page</code> rule,
-    expressed in the same token vocabulary as everything else.
+    <code>hover:</code>, <code>focus:</code>, <code>focus-within:</code>,
+    <code>active:</code>, <code>forced-colors:</code>. A state is a prefix on an
+    atom, not a rule in a stylesheet somewhere else.
   </p>
-  <code-block code={code.host}></code-block>
+  <code-block code={code.states}></code-block>
 
-  <h2>State with <code>&lt;variants&gt;</code></h2>
+  <h2>Tones, not colors</h2>
   <p>
-    State-driven styling keys off the host's attributes. A
-    <code>&lt;variants&gt;</code> block repaints a class when the host
-    carries an attribute — <code>[open]</code>, <code>[disabled]</code>,
-    a <code>tone</code> value — without a controller writing styles by hand.
+    You do not pick a red. You declare a <strong>tone</strong>, and the framework
+    resolves <code>--tone-fg</code>, <code>--tone-bg</code>,
+    <code>--tone-border</code> and <code>--tone-ring</code> for the subtree. That
+    is why a destructive button in one app matches a destructive alert in
+    another — and why swapping the theme repaints both.
   </p>
-  <code-block code={code.variants}></code-block>
+  <code-block code={code.tones}></code-block>
 
-  <h2>Tokens, not literals</h2>
+  <h2>Structure is not styling</h2>
   <p>
-    Because <code>sx</code> only speaks tokens, theming is automatic and dark
-    mode is free. A literal — a hex color, a pixel size, a fixed font — would
-    defeat theming and lock the component to one brand voice. Pick the token
-    by intent across the four layers: semantic surfaces, tone ramps, the
-    brand palette, and the primitive scale. A card sits on
-    <code>bg:surface-1</code>; a status alert reads
-    <code>bg:tone-warning-bg</code>; a headline reads
-    <code>text:xl</code>.
-  </p>
-  <code-block code={code.tokens}></code-block>
-
-  <h2>Status tones, not palette colors</h2>
-  <p>
-    Tone ramps are status surfaces, not brand colors. <code>success</code>
-    is the right token for a positive confirmation; <code>primary</code> is a
-    brand action. Mixing the two breaks every theme that ships its own
-    success color.
-  </p>
-  <code-block code={code.tone}></code-block>
-
-  <h2>Layout is keywords</h2>
-  <p>
-    Structure comes from <code>&lt;column&gt;</code>,
-    <code>&lt;row&gt;</code>, <code>&lt;grid&gt;</code>, and
-    <code>&lt;center&gt;</code> — never a raw <code>&lt;div&gt;</code> or a
-    hand-rolled flexbox. The layout keywords encode the spacing scale, the
-    breakpoints, and the responsive defaults, so <code>gap="3"</code> looks
-    the same wherever it's reused. Raw containers are a lint error, not a
-    style choice.
+    <code>sx</code> has no <code>flex-direction</code>, no
+    <code>align-items</code>, no <code>grid-template-columns</code> — and that is
+    not a gap. Structure belongs to the layout keywords, where the axis is the
+    name and there is nothing to get backwards.
   </p>
   <code-block code={code.layout}></code-block>
-
-  <h2>The escape hatch</h2>
   <p>
-    Some things <code>sx</code> structurally can't express: pseudo-elements,
-    <code>::slotted</code>, <code>grid-template-columns</code>,
-    <code>top</code>/<code>left</code>, <code>accent-color</code>. For those,
-    a raw <code>&lt;style&gt;</code> block is the honest escape hatch — still
-    scoped to the shadow root, still reading tokens. Keep it small: if a rule
-    <em>can</em> be an <code>sx</code> atom, it should be.
+    Borders can name a side, because a topbar's rule and a rail's edge are the
+    two commonest pieces of chrome there are:
   </p>
-  <code-block code={code.escape}></code-block>
+  <code-block code={code.sides}></code-block>
 
-  <row class="page-nav">
-    <a class="btn" href="/theming">← Theming</a>
-    <a class="btn btn-primary" href="/composition">Composition →</a>
+  <h2>There is no escape hatch</h2>
+  <p>
+    This is the part that matters, and it is the part every other system gets
+    wrong. <strong>Authored CSS is a compile error.</strong> Not discouraged, not
+    linted with a warning — an error, in every SUI file, with or without a config.
+    The only exception is the ~40 L1 elements inside the compiler, because they
+    <em>are</em> the styling layer.
+  </p>
+  <p>
+    An escape hatch is not a safety valve; it is where the design system goes to
+    die. One component reaches for a raw rule, then ten do, and now the
+    "system" is a suggestion. Every project that has ever shipped a
+    <code>&lt;style&gt;</code> escape has this story.
+  </p>
+  <alert tone="warning">
+    <strong>If you cannot express something, that is a conversation — not a
+    hatch.</strong> Three times while writing these docs we hit something
+    <code>sx</code> "could not do", and every time the answer was that the
+    element already existed (<code>&lt;navbar&gt;</code>), or the contract
+    already existed (<code>tone</code>), or the rule already existed
+    (<code>code</code>). The reflex to reach for CSS is almost always a failure
+    to read the standard library. When it genuinely is a gap — per-side borders
+    were one — the language grows a token, not a hole.
+  </alert>
+
+  <row class="page-nav" gap="2">
+    <a class="btn" href="/elements">← Elements</a>
+    <a class="btn btn-primary" href="/theming">Theming →</a>
   </row>
 </column>
