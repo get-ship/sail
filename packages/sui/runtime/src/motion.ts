@@ -14,8 +14,12 @@
 //                       source for the future signal-triggers milestone.
 //
 // The `enter` and `leave` arrays are AOT-baked `Animation` objects
-// — the per-property `el.animate(...)` results. We pause them all
-// on first attach (the initial state is the "rest" pose), then
+// — the per-property `el.animate(...)` results. Attach re-homes them
+// onto the live document timeline (they are baked on template clones,
+// whose node document is the <template>'s inert one — see `rehome`),
+// cancels them so the element rests in its authored pose, then wires
+// them to the trigger. The full per-trigger contract is the table in
+// `__sui_motion_attach`.
 import { setTransitionRunner } from './transition-runner'
 import type { Disposer } from './bind'
 
@@ -94,6 +98,32 @@ function trackFocusSource(): void {
   }, { capture: true })
 }
 
+// The compiler bakes `el.animate(...)` during element CONSTRUCTION — before
+// the node is inserted. Template clones (`__tpl`) are owned by the
+// <template>'s inert contents document until insertion adopts them, and
+// `Element.animate()` binds the Animation to the NODE DOCUMENT's default
+// timeline at call time. An inert document's timeline never advances — its
+// currentTime is permanently unresolved — so an animation minted there is a
+// zombie: `play()` leaves it play-pending forever, holding the element at its
+// FIRST keyframe (a resolved hold time beats inline styles in the animation
+// cascade), while the rendering document's `getAnimations()` never lists it.
+// Re-associate the effect with the rendering document's timeline before
+// wiring any trigger. The Level-1 `new Animation(effect, timeline)`
+// constructor re-parents the effect (the old animation is left effect-less);
+// the Level-2 `animation.timeline` setter is NOT used here because engines
+// without scroll-timeline support keep the attribute readonly.
+function rehome(a: BakedAnimation): BakedAnimation {
+  if (typeof document === 'undefined' || typeof Animation !== 'function') {
+    return a
+  }
+  const timeline = document.timeline
+  if (!timeline || a.timeline === timeline) return a
+  const effect = a.effect
+  if (!effect) return a
+  a.cancel()
+  return new Animation(effect, timeline)
+}
+
 /** Public: called by the compiler's emitted JS for every
  * `motion:` directive. Returns a disposer that cancels all
  * attached animations and removes the event listeners. */
@@ -102,10 +132,25 @@ export function __sui_motion_attach(
   config: MotionAttachConfig,
 ): Disposer {
   const { trigger } = config
+  // Re-home each animation onto the live document timeline exactly once.
+  // `config.enter` and `config.leave` carry the SAME Animation objects
+  // (the emit passes one baked array to both), and an effect can belong to
+  // only one Animation — so the mapping must be memoized, or the second
+  // array would strip the effect the first re-homing just claimed.
+  const rehomed = new Map<BakedAnimation, BakedAnimation>()
+  const fix = (a: BakedAnimation | null): BakedAnimation | null => {
+    if (a == null) return null
+    let r = rehomed.get(a)
+    if (!r) {
+      r = rehome(a)
+      rehomed.set(a, r)
+    }
+    return r
+  }
   // Drop the null holes from WAAPI-less environments; with nothing to
   // play, attach nothing (a disposer no-op keeps the call site uniform).
-  const enter = config.enter.filter((a): a is BakedAnimation => a != null)
-  const leave = config.leave.filter((a): a is BakedAnimation => a != null)
+  const enter = config.enter.map(fix).filter((a): a is BakedAnimation => a != null)
+  const leave = config.leave.map(fix).filter((a): a is BakedAnimation => a != null)
   if (enter.length === 0) return () => {}
   // CANCEL the enter animations until the first trigger event. Cancelled
   // means "no effect": the element rests in its authored pose. Paused would
@@ -137,6 +182,35 @@ export function __sui_motion_attach(
       b.play()
     })
   }
+  // TRIGGER SEMANTICS — the contract each dispatch arm below implements.
+  // "idle" = cancelled: no effect applied, the element rests in its authored
+  // pose. Every animation is on the live document timeline by now (rehome).
+  //
+  //   trigger        at attach              plays when                       holds after
+  //   ─────────────  ─────────────────────  ───────────────────────────────  ─────────────────────────
+  //   hover          idle                   enter fwd on mouseenter;         active pose while
+  //                                         leave from 0 on mouseleave       hovered; rest after
+  //   press          idle                   enter fwd on pointerdown;        pressed pose while held;
+  //                                         leave on pointerup/cancel        rest after release
+  //   focus          idle                   enter fwd on focus;              focused pose while
+  //                                         leave on blur                    focused; rest after
+  //   focus-visible  idle                   enter fwd on keyboard focusin;   as focus (mouse focus
+  //                                         leave on focusout                never triggers)
+  //   enter          playing (immediately;  once, at attach — the element    arrived pose (the
+  //                  stagger delays by      is already in the tree           animation's fill)
+  //                  arrival order)
+  //   exit           idle, parked in        when if/for hand the departing   element stays mounted
+  //                  EXITS                  node to runLeave                 until settled, then gone
+  //   view           driven by its          scrubbed by the element's own    whatever scroll position
+  //                  ViewTimeline           viewport progress (no support:   dictates (fallback: ends
+  //                                         play once on first reveal)       at arrived pose)
+  //   scroll         driven by its          scrubbed by the container's      scroll position dictates
+  //                  ScrollTimeline         scroll progress                  (no support: end state)
+  //   unknown        idle                   never                            authored pose
+  //
+  //   prefers-reduced-motion: enter/view/scroll jump to the END state; the
+  //   event triggers become no-ops; exit tears down synchronously.
+  //
   // TIMELINE triggers — `motion:view` / `motion:scroll`. Progress-driven, not
   // time-driven: the animation's position is a function of SCROLL, not of the clock.
   // This is reveal-on-scroll and parallax, and where the platform supports scroll

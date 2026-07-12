@@ -2,11 +2,12 @@
 // the AOT-baked `__sui_motion_attach` seam.
 //
 // The motion runtime is a thin wrapper the compiler emits around every
-// `motion:` directive: it pauses the WAAPI animations on attach, then
-// plays/reverses them on the DOM event the trigger names (hover / press /
-// focus / focus-visible). The reduced-motion guard consults
-// `matchMedia('(prefers-reduced-motion: reduce)')` per event so a
-// mid-session preference change is honored.
+// `motion:` directive: it cancels the WAAPI animations on attach (cancelled
+// = no effect = the element rests in its AUTHORED pose; paused would hold
+// the first keyframe), then plays/reverses them on the DOM event the
+// trigger names (hover / press / focus / focus-visible). The reduced-motion
+// guard consults `matchMedia('(prefers-reduced-motion: reduce)')` per event
+// so a mid-session preference change is honored.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { __sui_motion_attach } from '../src/motion'
@@ -95,10 +96,14 @@ afterEach(() => {
 })
 
 describe('motion runtime — __sui_motion_attach', () => {
-  it('pauses the enter animations on attach (initial pose is the rest state)', () => {
+  it('cancels the enter animations on attach (initial pose is the authored rest state)', () => {
     setReducedMotion(false)
     const { enter } = hostWithMotion()
-    expect(enter.pauseCalls).toBeGreaterThanOrEqual(1)
+    // Cancelled, NOT paused: a paused animation applies its first keyframe
+    // (the departed pose — opacity 0, scale 0.96), which would leave every
+    // motion-decorated element half-vanished at rest.
+    expect(enter.cancelCalls).toBeGreaterThanOrEqual(1)
+    expect(enter.pauseCalls).toBe(0)
   })
 
   it('plays the enter animation on the trigger event (mouseenter)', () => {
