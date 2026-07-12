@@ -1265,7 +1265,7 @@ pub fn wrap_controller_body(body: &str) -> String {
         }
     }
     format!(
-        "import {{ controller }} from '@ship/sui-runtime';\n{}\nexport default controller({{ scope: () => ({{ {} }}) }});\n",
+        "import {{ controller }} from '@ship/sui-runtime/internal';\n{}\nexport default controller({{ scope: () => ({{ {} }}) }});\n",
         lines.join("\n"),
         names.join(", ")
     )

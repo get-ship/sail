@@ -1,1 +1,1 @@
-<button bind:this={btnEl} part="button">click</button>
+<button bind:this={btnEl}>click</button>

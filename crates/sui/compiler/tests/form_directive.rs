@@ -25,7 +25,7 @@ fn expect_err(src: &str) -> sui_compiler::CompileError {
 
 #[test]
 fn parses_form_value_flag() {
-    let src = r#"<prop name="value" type="string" default="" form-value /><span>x</span>"#;
+    let src = r#"<component>{ props: { value: string }, form: { value: 'value' } }</component><span>x</span>"#;
     let program = parse(src).expect("parse");
     let p = program.props.iter().find(|p| p.name == "value").expect("prop");
     assert!(p.form_value);
@@ -35,7 +35,7 @@ fn parses_form_value_flag() {
 #[test]
 fn parses_form_disabled_flag() {
     let src =
-        r#"<prop name="disabled" type="bool" default="false" form-disabled /><span>x</span>"#;
+        r#"<component>{ props: { disabled: false }, form: { disabled: 'disabled' } }</component><span>x</span>"#;
     let program = parse(src).expect("parse");
     let p = program.props.iter().find(|p| p.name == "disabled").expect("prop");
     assert!(p.form_disabled);
@@ -44,7 +44,7 @@ fn parses_form_disabled_flag() {
 
 #[test]
 fn absent_flags_parse_unflagged() {
-    let src = r#"<prop name="v" type="string" /><span>x</span>"#;
+    let src = r#"<component>{ props: { v: string } }</component><span>x</span>"#;
     let program = parse(src).expect("parse");
     let p = &program.props[0];
     assert!(!p.form_value);
@@ -52,23 +52,25 @@ fn absent_flags_parse_unflagged() {
 }
 
 #[test]
-fn two_form_value_props_is_error() {
+fn form_value_naming_no_prop_is_error() {
+    // The old test here was `two_form_value_props_is_error`. Two form-values are now
+    // UNREPRESENTABLE — `form: { value: '…' }` is a single key in an object, so the
+    // invalid state cannot be written down. That check retired with the syntax that
+    // allowed the mistake. What still needs guarding is a form key naming nothing.
     let src = r#"
-        <prop name="a" type="string" form-value />
-        <prop name="b" type="string" form-value />
-        <span>x</span>
+        <component>{ props: { a: string }, form: { value: 'nope' } }</component><span>x</span>
     "#;
     let err = expect_err(src);
     assert!(
-        err.message.contains("at most one form-value"),
+        err.message.contains("names no prop"),
         "msg: {}",
         err.message,
     );
 }
 
 #[test]
-fn form_value_on_array_is_error() {
-    let src = r#"<prop name="v" type="array" form-value /><span>x</span>"#;
+fn form_value_on_an_array_prop_is_error() {
+    let src = r#"<component>{ props: { v: string[] }, form: { value: 'v' } }</component><span>x</span>"#;
     let err = expect_err(src);
     assert!(
         err.message.contains("form-value"),
@@ -78,8 +80,10 @@ fn form_value_on_array_is_error() {
 }
 
 #[test]
-fn form_value_on_object_is_error() {
-    let src = r#"<prop name="v" type="object" form-value /><span>x</span>"#;
+fn form_value_on_a_non_serializable_prop_is_error() {
+    // props-as-ts: a non-primitive TS type is a `PropKind::Identity` — an identity
+    // property, never reflected. `setFormValue` cannot submit one.
+    let src = r#"<component>{ props: { v: { a: string } }, form: { value: 'v' } }</component><span>x</span>"#;
     let err = expect_err(src);
     assert!(
         err.message.contains("form-value"),
@@ -89,8 +93,8 @@ fn form_value_on_object_is_error() {
 }
 
 #[test]
-fn form_disabled_on_string_is_error() {
-    let src = r#"<prop name="d" type="string" form-disabled /><span>x</span>"#;
+fn form_disabled_on_a_non_bool_prop_is_error() {
+    let src = r#"<component>{ props: { d: string }, form: { disabled: 'd' } }</component><span>x</span>"#;
     let err = expect_err(src);
     assert!(
         err.message.contains("form-disabled"),
@@ -102,7 +106,7 @@ fn form_disabled_on_string_is_error() {
 
 #[test]
 fn js_emits_form_associated_for_form_value() {
-    let src = r#"<prop name="value" type="string" default="" form-value /><span>x</span>"#;
+    let src = r#"<component>{ props: { value: string }, form: { value: 'value' } }</component><span>x</span>"#;
     let out = compile(src, component_opts("x-el")).expect("compile");
     assert!(
         out.js.contains("formAssociated: true"),
@@ -119,7 +123,7 @@ fn js_emits_form_associated_for_form_value() {
 #[test]
 fn js_emits_form_disabled_propname() {
     let src =
-        r#"<prop name="disabled" type="bool" default="false" form-disabled /><span>x</span>"#;
+        r#"<component>{ props: { disabled: false }, form: { disabled: 'disabled' } }</component><span>x</span>"#;
     let out = compile(src, component_opts("x-el")).expect("compile");
     assert!(out.js.contains("formAssociated: true"), "{}", out.js);
     assert!(out.js.contains("formDisabled: \"disabled\""), "{}", out.js);
@@ -127,7 +131,7 @@ fn js_emits_form_disabled_propname() {
 
 #[test]
 fn js_omits_form_fields_when_no_flags() {
-    let src = r#"<prop name="x" type="string" /><span>x</span>"#;
+    let src = r#"<component>{ props: { x: string } }</component><span>x</span>"#;
     let out = compile(src, component_opts("x-el")).expect("compile");
     assert!(!out.js.contains("formAssociated"), "{}", out.js);
     assert!(!out.js.contains("formValue"), "{}", out.js);
@@ -136,7 +140,7 @@ fn js_omits_form_fields_when_no_flags() {
 
 #[test]
 fn cem_marks_form_associated() {
-    let src = r#"<prop name="value" type="string" form-value /><span>x</span>"#;
+    let src = r#"<component>{ props: { value: string }, form: { value: 'value' } }</component><span>x</span>"#;
     let out = compile(src, component_opts("x-el")).expect("compile");
     let cem = out.cem.expect("cem");
     let decl = &cem["modules"][0]["declarations"][0];
@@ -148,7 +152,7 @@ fn cem_marks_form_associated() {
 
 #[test]
 fn schema_marks_form_associated() {
-    let src = r#"<prop name="value" type="string" form-value /><span>x</span>"#;
+    let src = r#"<component>{ props: { value: string }, form: { value: 'value' } }</component><span>x</span>"#;
     let out = compile(src, component_opts("x-el")).expect("compile");
     let schema = out.schema.expect("schema");
     let component = &schema["component"];
@@ -164,7 +168,7 @@ fn schema_marks_form_associated() {
 #[test]
 fn dts_exports_form_associated_when_flagged() {
     let src =
-        r#"<prop name="value" type="string" default="" form-value /><span>x</span>"#;
+        r#"<component>{ props: { value: string }, form: { value: 'value' } }</component><span>x</span>"#;
     let out = compile(src, component_opts("x-el")).expect("compile");
     let dts = out.dts.expect("dts");
     assert!(
@@ -175,7 +179,7 @@ fn dts_exports_form_associated_when_flagged() {
 
 #[test]
 fn dts_omits_form_associated_when_unflagged() {
-    let src = r#"<prop name="value" type="string" default="" /><span>x</span>"#;
+    let src = r#"<component>{ props: { value: string } }</component><span>x</span>"#;
     let out = compile(src, component_opts("x-el")).expect("compile");
     let dts = out.dts.expect("dts");
     assert!(

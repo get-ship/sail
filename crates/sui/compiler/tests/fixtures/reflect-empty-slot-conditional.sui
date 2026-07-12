@@ -1,6 +1,5 @@
-<prop name="busy" type="bool" default="false" />
-
-<button part="button">
+<component>{ props: { busy: false } }</component>
+<button>
   {#if busy()}
     <span class="spinner" aria-hidden="true"></span>
   {:else}

@@ -122,7 +122,7 @@ pub(super) fn emit_render(
     w.line(HEADER);
     if !imports.is_empty() {
         w.line(&format!(
-            "import {{ {} }} from \"@ship/sui-runtime\";",
+            "import {{ {} }} from \"@ship/sui-runtime/internal\";",
             imports.join(", ")
         ));
     }
@@ -198,7 +198,7 @@ pub(super) fn emit_render_client(
     w.line(CLIENT_HEADER);
     if !runtime_imports.is_empty() {
         w.line(&format!(
-            "import {{ {} }} from \"@ship/sui-runtime\";",
+            "import {{ {} }} from \"@ship/sui-runtime/internal\";",
             runtime_imports.join(", ")
         ));
     }

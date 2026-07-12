@@ -1,5 +1,4 @@
-<prop name="label" type="string" default="" />
-
-<button part="button">
+<component>{ props: { label: string } }</component>
+<button>
   <slot reflect-empty="data-icon-only"></slot>
 </button>

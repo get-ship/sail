@@ -1,3 +1,2 @@
-<prop name="tone" values="default|primary" default="default" reflect />
-
-<button part="button">styled</button>
+<component>{ props: { tone: 'default' | 'primary' } }</component>
+<button>styled</button>

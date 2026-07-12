@@ -230,7 +230,7 @@ fn propless_component_synthesizes_like_a_view() {
 
 #[test]
 fn component_props_are_rejected_for_now() {
-    let program = parse("<prop name=\"label\" type=\"string\" />\n<span>{label}</span>").expect("parse");
+    let program = parse("<component>{ props: { label: string } }</component>\n<span>{label}</span>").expect("parse");
     let manifest = AppManifest::parse("{}").expect("manifest");
     let err = emit_synthetic(&program, &manifest, None, "./c.ts", CompileMode::Component, None)
         .expect_err("component props must be rejected in Phase 1");

@@ -1,5 +1,4 @@
-<prop name="tone" values="default|primary|success" default="default" reflect />
-
+<component>{ props: { tone: 'default' | 'primary' | 'success' } }</component>
 <style>
   :host {
     display: inline-flex;

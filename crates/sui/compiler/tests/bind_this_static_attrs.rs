@@ -1,4 +1,4 @@
-//! Regression guard (#285): a static `class` / `part` attribute authored
+//! Regression guard (#285): a static `class` attribute authored
 //! on an element that ALSO carries `bind:this` must survive compilation
 //! in every emit path. The ref binding must not claim — or suppress —
 //! the element's static attribute slot.
@@ -11,8 +11,13 @@
 
 use sui_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
 
+// `part=` was RETIRED with shadow parts (light DOM has none — anatomy is classes
+// + attributes, and `class` is the published styling hook). The regression this
+// guards is unchanged and still real: a static attribute on an element that also
+// carries `bind:this` must survive every emit path — the ref binding must not
+// claim or suppress the element's static attribute slot.
 const REF_WITH_STATIC: &str =
-    r#"<div class="rows" part="rows" bind:this={rowsEl}><span>x</span></div>"#;
+    r#"<div class="rows" bind:this={rowsEl}><span>x</span></div>"#;
 
 fn component_opts(setup_url: Option<&str>, component_imports: bool) -> CompileOpts {
     CompileOpts {
@@ -34,27 +39,17 @@ fn static_attrs_survive_bind_this_in_component_csr() {
         "class must be emitted alongside bind:this:\n{}",
         out.js
     );
-    assert!(
-        out.js.contains(r#"setAttribute("part", "rows")"#),
-        "part must be emitted alongside bind:this:\n{}",
-        out.js
-    );
 }
 
 #[test]
 fn static_attrs_survive_bind_this_with_production_component_opts() {
     // Exact path the @ship/pipelines packs (dag/graph/run-history) compile
     // through: shadow component, a controller (setup_url), component-imports on.
-    let src = r#"<div class="dag" part="dag" bind:this={contentEl}></div>"#;
+    let src = r#"<div class="dag" bind:this={contentEl}></div>"#;
     let out = compile(src, component_opts(Some("./x.controller.ts"), true)).expect("compile");
     assert!(
         out.js.contains(r#"setAttribute("class", "dag")"#),
         "class must survive in production component compile:\n{}",
-        out.js
-    );
-    assert!(
-        out.js.contains(r#"setAttribute("part", "dag")"#),
-        "part must survive in production component compile:\n{}",
         out.js
     );
 }

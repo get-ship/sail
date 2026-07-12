@@ -1,6 +1,11 @@
 //! ELEMENT MODE — the L1 compile path. One authoring technology per layer:
-//! element sources are normal `.sui` (component block, template, variants/sx
-//! skin); the mode changes the outputs and enforces the seam test.
+//! element sources are normal `.sui` (a `<component>` block, a template, and a
+//! `<style>` skin); the mode changes the outputs and enforces the seam test.
+//!
+//! Both retired idioms this file used to exercise are gone: the `variants:` field
+//! (variants are PROPS now — a union type — and their CSS is attribute-keyed in
+//! `<style>`), and author `:host` (element mode keys the skin on `.sui-<name>`
+//! directly; `:host` is a shadow idiom and light DOM has no host to select).
 
 use sui_compiler::compile_element;
 
@@ -10,10 +15,12 @@ const SPINNER: &str = r#"
     tone: 'default' | 'primary' | 'destructive',
     label: 'Loading',
   },
-  variants: {
-    tone: { primary: 'fg:primary', destructive: 'fg:destructive' },
-  },
 }</component>
+
+<style>
+  .sui-spinner[tone='primary']{color:var(--primary);}
+  .sui-spinner[tone='destructive']{color:var(--destructive);}
+</style>
 
 <span class="spin" role="status" aria-label="Loading">
   <span class="ring" aria-hidden="true"></span>
@@ -33,7 +40,7 @@ fn element_emits_structure_skin_and_manifest() {
     );
     assert!(el.structure_html.contains("<slot></slot>"), "{}", el.structure_html);
     assert!(el.structure_html.contains("class=\"ring\""), "{}", el.structure_html);
-    // Skin: variants lowered and re-keyed from :host to the root class.
+    // Skin: the variant rules survive, keyed on the root class.
     assert!(
         el.skin_css.contains(".sui-spinner[tone='primary']{color:var(--primary);}"),
         "skin keyed on root class: {}",
@@ -71,12 +78,18 @@ fn element_rejects_dynamic_attributes() {
 }
 
 #[test]
-fn element_rejects_hyphenated_names() {
+fn element_rejects_the_sui_component_namespace() {
+    // Hyphens are FINE — `tab-list`, `menu-item` and `context-menu` are all L1
+    // elements. What is not fine is the `sui-` prefix: that is the legacy component
+    // namespace L1 replaces, and the compiler stamps its own `sui-` onto the root
+    // class, so letting one through produced `.sui-sui-spinner`.
     let err = compile_element("<span class=\"x\">y</span>", "sui-spinner").unwrap_err();
     assert!(
-        format!("{err:?}").contains("bare lowercase"),
-        "hyphenated tag = custom element = component: {err:?}"
+        format!("{err:?}").contains("component namespace"),
+        "a sui-prefixed name is a component, not an element: {err:?}"
     );
+    // ...and a hyphenated language element still compiles.
+    compile_element("<span class=\"x\">y</span>", "tab-list").expect("hyphenated L1 name is legal");
 }
 
 #[test]

@@ -131,11 +131,70 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
                             .with_span(el.span));
                         }
                     }
-                    props.extend(crate::parse::preprocess::component_props_to_decls(
+                    let decls = crate::parse::preprocess::component_props_to_decls(
                         &props_obj,
                         form_value.as_deref(),
                         form_disabled.as_deref(),
-                    ));
+                    );
+
+                    // `form: { value, disabled }` names props that get wired to the
+                    // PLATFORM's form APIs, so their types are not ours to choose:
+                    // `ElementInternals.setFormValue` takes a serializable value, and
+                    // `formDisabledCallback` takes a bool. The old `<prop type="…">`
+                    // tag checked this; props-as-ts dropped the check with the tag,
+                    // and nothing replaced it — so `form: { disabled: 'label' }` on a
+                    // string silently produced a component that lies to the browser.
+                    // (`form` naming a prop that doesn't exist is caught here too;
+                    // "at most one form-value" is gone because the object shape makes
+                    // it unrepresentable — one key, one value.)
+                    let find = |n: &str| decls.iter().find(|p| p.name == n);
+                    if let Some(name) = form_value.as_deref() {
+                        match find(name).map(|p| &p.kind) {
+                            None => {
+                                return Err(CompileError::new(format!(
+                                    "`form: {{ value: '{name}' }}` names no prop — form-value must \
+                                     name a prop declared in the same block."
+                                ))
+                                .with_span(el.span));
+                            }
+                            // A bool IS a legitimate form value — that is a checkbox
+                            // (`checked`). What cannot be submitted is an arbitrary TS
+                            // type: `Identity` is an identity property, never reflected
+                            // and never serialized.
+                            Some(PropKind::Identity(_)) => {
+                                return Err(CompileError::new(format!(
+                                    "prop `{name}` cannot be the form-value — the platform submits it \
+                                     via `setFormValue`, which takes a serializable value, and `{name}` \
+                                     is a non-primitive type (an identity property, never reflected). \
+                                     Declare it as a string, number, bool, or union."
+                                ))
+                                .with_span(el.span));
+                            }
+                            _ => {}
+                        }
+                    }
+                    if let Some(name) = form_disabled.as_deref() {
+                        match find(name).map(|p| &p.kind) {
+                            None => {
+                                return Err(CompileError::new(format!(
+                                    "`form: {{ disabled: '{name}' }}` names no prop — form-disabled \
+                                     must name a prop declared in the same block."
+                                ))
+                                .with_span(el.span));
+                            }
+                            Some(PropKind::Bool) => {}
+                            Some(_) => {
+                                return Err(CompileError::new(format!(
+                                    "prop `{name}` cannot be the form-disabled flag — the platform \
+                                     calls `formDisabledCallback(disabled)` with a boolean. Declare \
+                                     it as `{name}: false`."
+                                ))
+                                .with_span(el.span));
+                            }
+                        }
+                    }
+
+                    props.extend(decls);
                     // Variant styles (from the `variant` props + a sibling
                     // `compound`) lower straight to CSS — no `<variants>` block.
                     let variant_css = crate::parse::preprocess::component_variants_to_css(

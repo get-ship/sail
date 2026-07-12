@@ -64,7 +64,7 @@ fn css_token_findings(source: &str, overrides: &[LintOverride]) -> Vec<(DiagSeve
 fn known_theme_token_is_silent() {
     // `--foreground` is declared in `tokens.css`. The lint must NOT surface a
     // finding for it.
-    let src = r#"<prop name="title" type="string" default="" />
+    let src = r#"<component>{ props: { title: string } }</component>
 <style>
   .card { color: var(--foreground); }
 </style>
@@ -79,7 +79,7 @@ fn known_theme_token_is_silent() {
 #[test]
 fn locally_defined_token_is_silent() {
     // `--btn-h` is defined in the same `<style>` block. No finding.
-    let src = r#"<prop name="title" type="string" default="" />
+    let src = r#"<component>{ props: { title: string } }</component>
 <style>
   :host { --btn-h: 34px; height: var(--btn-h); }
 </style>
@@ -99,7 +99,7 @@ fn font_sans_convention_token_is_silent() {
     // `packages/sui/tokens/src/themes.css`. It is listed in
     // `sui_lint::tokens::CONVENTION_TOKENS` so the lint recognizes it
     // without an Error.
-    let src = r#"<prop name="title" type="string" default="" />
+    let src = r#"<component>{ props: { title: string } }</component>
 <style>
   .kind { font-family: var(--font-sans, sans-serif); }
 </style>
@@ -123,7 +123,7 @@ fn font_sans_convention_token_is_silent() {
 fn font_sans_convention_token_compiles_without_fallback() {
     // The reference can stand without a fallback — `--font-sans` is
     // still a real, recognized name.
-    let src = r#"<prop name="title" type="string" default="" />
+    let src = r#"<component>{ props: { title: string } }</component>
 <style>
   .card { font-family: var(--font-sans); }
 </style>
@@ -148,7 +148,7 @@ fn truly_unknown_token_strict_default_blocks_build() {
     // nor a local convention is Error. `compile()` rejects; the build
     // hard-fails. This is the internal monorepo's contract — it catches
     // typos at the build line, not three weeks later in the browser.
-    let src = r#"<prop name="title" type="string" default="" />
+    let src = r#"<component>{ props: { title: string } }</component>
 <style>
   .card { color: var(--definitely-not-a-real-token); }
 </style>
@@ -181,7 +181,7 @@ fn truly_unknown_token_warn_override_lets_build_pass() {
     // override for `sui-css-token`. The build now succeeds; the
     // finding surfaces as a Warning so the LSP / agent can still show
     // the typo suggestion. The rule itself is unchanged.
-    let src = r#"<prop name="title" type="string" default="" />
+    let src = r#"<component>{ props: { title: string } }</component>
 <style>
   .card { color: var(--definitely-not-a-real-token); }
 </style>
@@ -219,7 +219,7 @@ fn truly_unknown_token_off_override_silences() {
     // the build gate. (The lint still emits it; `sui_lint::lint_path`
     // consumers like the LSP still see the raw Error finding — the
     // override only affects this build's gate.)
-    let src = r#"<prop name="title" type="string" default="" />
+    let src = r#"<component>{ props: { title: string } }</component>
 <style>
   .card { color: var(--definitely-not-a-real-token); }
 </style>

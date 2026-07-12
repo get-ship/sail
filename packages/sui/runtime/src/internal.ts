@@ -19,35 +19,10 @@
 // the only breaking part and is coupled to the legacy migration — the 66 files
 // still importing `ref` are all pre-cutover and don't compile anyway.
 
-// ── template control flow (each / if / await / html) ─────────────────────────
-export { bindFor, bindForSignal, bindIf, bindAwait, bindRawHtml } from './index'
-export { bindWhileError, bindWhileLoading } from './index'
-
-// ── element wiring the emitter generates ─────────────────────────────────────
-// `attachRef` is what `bind:this` COMPILES TO. `ref` is the same concept exposed
-// a second time as an author API — three names for one idea (bind:this / ref /
-// attachRef). `ref` leaves the root in step three; `bind:this` is the language.
-export { attachRef, ref } from './index'
-export { runAction, on, matchesKey } from './index'
-export { bindOpen, bindPopover, bindSlotEmpty, slotFilled } from './index'
-export { wireFormMutation } from './index'
-
-// ── mount / lifecycle plumbing ───────────────────────────────────────────────
-export { createMountState, componentMountState, pickSignals } from './index'
-export { SIGNALS_KEY, LIFECYCLE_KEY } from './index'
-export { resolveController, resolveSlots } from './index'
-export { setHostContext, hostContext } from './index'
-export { adoptSuiSheets } from './index'
-
-// ── list patching / morph ────────────────────────────────────────────────────
-export { applyPatch, applyPatches, snapshotChildren, morph } from './index'
-
-// ── animation ABI ────────────────────────────────────────────────────────────
-// NOTE: `runEnter`/`runLeave`/`cancelTransitions` belong to the LEGACY animation
-// system (transition:/in:/out: + registerTransition). They die when that folds
-// into `motion:` as motion:enter / motion:exit — one system, one catalog.
-export { runEnter, runLeave, cancelTransitions } from './index'
-export { __sui_motion_attach } from './index'
-
-// ── misc emitter helpers ─────────────────────────────────────────────────────
-export { camelOf, tokenizePath } from './index'
+// A TOTAL re-export, deliberately. A curated list would break silently the first
+// time the emitter reaches for a symbol nobody remembered to add here — and the
+// emitter reaches for ~37 of them (control flow, element wiring, mount plumbing,
+// list patching, the animation ABI, plus `component`/`controller` and every
+// auto-imported action and transition). The pruning happens on the ROOT, where it
+// is visible and testable, not here.
+export * from './index'

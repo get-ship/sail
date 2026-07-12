@@ -1,10 +1,5 @@
-<prop name="tone" values="default|primary" default="default" reflect />
-<prop name="disabled" type="bool" default="false" reflect />
-<prop name="loading" type="bool" default="false" reflect />
-<prop name="label" type="string" default="" />
-
+<component>{ props: { tone: 'default' | 'primary', disabled: false, loading: false, label: string } }</component>
 <button
-  part="button"
   data-test="root"
   disabled={disabled() || loading()}
   aria-busy={loading() ? 'true' : 'false'}

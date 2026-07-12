@@ -270,6 +270,23 @@ pub fn compile_element(
     source: &str,
     name: &str,
 ) -> Result<emit::element::ElementOutput, CompileError> {
+    // An L1 element name is lowercase, and it may be hyphenated — `tab-list`,
+    // `menu-item` and `context-menu` are all language elements. What it may NOT be
+    // is `sui-`-prefixed: that is the legacy COMPONENT namespace (the custom
+    // elements L1 replaces), and the compiler stamps its own `sui-` prefix onto the
+    // root class. Passing one through yields `.sui-sui-spinner` — nonsense CSS for a
+    // source that should never have compiled as an element. (Caught by a test the
+    // aborting suite had been hiding.)
+    if let Some(rest) = name.strip_prefix("sui-") {
+        return Err(CompileError::new(format!(
+            "element name `{name}` is in the `sui-` component namespace — an L1 element is a              bare lowercase name (`{rest}`), and the compiler adds the `sui-` prefix to its              root class itself. A `sui-`-prefixed tag is a custom element, i.e. a component."
+        )));
+    }
+    if name.is_empty() || !name.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-') {
+        return Err(CompileError::new(format!(
+            "element name `{name}` must be a bare lowercase name (hyphens allowed: `tab-list`)."
+        )));
+    }
     // parse_element_source: the pipeline minus the stdlib-element pass — an
     // element source may not use stdlib elements (no recursion).
     let program = parse::parse_element_source(source)?;

@@ -198,8 +198,20 @@ fn missing_close_tag_is_rejected() {
 }
 
 #[test]
-fn unknown_prop_type_is_rejected() {
+fn the_retired_prop_tag_is_rejected() {
+    // This used to assert `<prop type="custom">` -> "unknown type". Both halves are
+    // gone. `<prop>` itself is retired (props are declared as typed TS in the
+    // `<component>` block — ONE place, not N tags), and a custom TS type is now
+    // perfectly legal: `PropKind::Identity` carries it through verbatim rather than
+    // forcing everything into a closed primitive enum. So the invariant worth
+    // holding is the retirement, and that its error TEACHES rather than just refuses.
+    // NOTE: this literal must stay a `<prop>` tag. It is the specimen, not an
+    // authoring example — a migration sweep that "fixes" it silently guts the guard.
     let src = r#"<prop name="x" type="custom" default="" />"#;
     let err = compile_view(src);
-    assert!(err.message.contains("unknown type"), "msg: {}", err.message);
+    assert!(
+        err.message.contains("<prop>") || err.message.contains("unknown element"),
+        "the retired `<prop>` tag must be rejected by name: {}",
+        err.message
+    );
 }

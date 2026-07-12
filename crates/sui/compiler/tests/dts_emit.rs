@@ -77,7 +77,7 @@ fn data_once_emits_signal_unknown() {
 #[test]
 fn prop_union_emits_union_type() {
     let dts = compile_component_dts(
-        r#"<prop name="tone" values="primary|neutral" default="primary" /><span>x</span>"#,
+        r#"<component>{ props: { tone: 'primary' | 'neutral' } }</component><span>x</span>"#,
     );
     assert!(
         dts.contains("tone: Signal<'primary' | 'neutral'>"),
@@ -88,7 +88,7 @@ fn prop_union_emits_union_type() {
 #[test]
 fn prop_bool_emits_boolean() {
     let dts = compile_component_dts(
-        r#"<prop name="loading" type="bool" default="false" /><span>x</span>"#,
+        r#"<component>{ props: { loading: false } }</component><span>x</span>"#,
     );
     assert!(dts.contains("loading: Signal<boolean>"), "got: {dts}");
 }

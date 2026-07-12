@@ -243,7 +243,7 @@ pub(super) fn emit_controller(
     }
     if !runtime_imports.is_empty() {
         w.line(&format!(
-            "import {{ {} }} from \"@ship/sui-runtime\";",
+            "import {{ {} }} from \"@ship/sui-runtime/internal\";",
             runtime_imports.join(", ")
         ));
     }
@@ -254,7 +254,7 @@ pub(super) fn emit_controller(
     // type and shape the resolver context.
     if let Some(a) = authored {
         w.line(&format!("import __authored from {};", js_string(&a.specifier)));
-        w.line("import type { ControllerExport, ResolverContext } from \"@ship/sui-runtime\";");
+        w.line("import type { ControllerExport, ResolverContext } from \"@ship/sui-runtime/internal\";");
     }
     w.nl();
 
