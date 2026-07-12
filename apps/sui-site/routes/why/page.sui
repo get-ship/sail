@@ -1,84 +1,126 @@
 <!--
-  /why — the case for SUI, built from the architecture. Spine: Ship needs
-  correct custom UI fast from agents; the bottleneck is decisions and
-  correctness, not reactivity; so remove decisions (standard library +
-  enforced design system + narrow grammar) and tighten the loop. Competitive
-  machinery, agent-first priorities. Do not name competitors; do not dunk.
+  /why — the argument. Spine: the bottleneck in agent-authored UI is decisions,
+  not reactivity; every open decision is variance; variance is where one-shot
+  beauty dies. So remove the decisions and keep the expression. Evidence, not
+  assertion — every claim on this page is a number we can produce on demand.
+  Do not dunk on competitors; the honest section is load-bearing for trust.
 -->
 <div class="doc why-doc">
   <p class="eyebrow">Introduction</p>
   <h1>Why SUI</h1>
   <p class="lead">
-    Ship exists to build custom applications fast — and, increasingly, to
-    build them with agents. SUI is Ship's UI layer, and every decision in it
-    follows from that one requirement: an agent, handed a spec, should produce
-    a working, correct, on-brand interface without a person babysitting a
-    thousand small choices.
-  </p>
-  <p>
-    SUI is a compiler-based reactive UI framework. On syntax and performance it
-    sits with the modern compilers — signals, fine-grained updates, compilation
-    to standard custom elements with shadow-DOM-scoped styles. What's different
-    isn't the machinery; it's the priorities. SUI is built to be the most
-    ergonomic framework for an <em>agent</em> to write — not the most ergonomic
-    for a human to hand-author. Those aren't the same target, and nearly
-    everything else optimizes for the second.
+    SUI is built to be written by agents. Not "agent-friendly" as a feature —
+    agents are the assumed author, and every decision in the language follows
+    from that. The goal is to give a model 95% of the expression that code
+    offers with 10% of the decisions.
   </p>
 
-  <h2>What "ergonomic for an agent" means</h2>
+  <h2>The bottleneck was never reactivity</h2>
   <p>
-    <strong>Tight feedback loops.</strong> The compiler, the language server,
-    and a strict linter give instant, precise ground truth on every edit. An
-    unknown token, a hand-rolled layout that should be a primitive, a value off
-    the spacing scale — the model learns it's wrong the moment it writes it,
-    from the same analysis a human editor surfaces, not from a broken render
-    three steps later.
+    Hand a model a spec and it makes hundreds of small choices on the way to a
+    screen: a color, a spacing step, a focus ring, whether that dropdown is
+    genuinely reachable by keyboard. It gets them confidently, plausibly wrong.
+    And when it isn't sure, it falls back on what it knows best — a
+    <code>&lt;div&gt;</code> and a class name. Give it a library of a hundred
+    components and it will route around the library, because HTML is the surface
+    it is fluent in.
   </p>
   <p>
-    <strong>Batteries included.</strong> A large standard library — around sixty
-    designed, accessible primitives, plus packs for charts, media, code, and
-    canvas — means the component already exists. The agent composes a
-    <code>sui-combobox</code>; it doesn't rebuild one from <code>div</code>s and
-    get the keyboard handling subtly wrong. Data and server rendering come with
-    the stack — that's <a href="/deck">deck</a>'s half: <code>data live</code>
-    yields a server-rendered value that hydrates and updates over a live stream,
-    with no plumbing to author.
-  </p>
-  <p>
-    <strong>Strict opinions.</strong> The language is narrow on purpose — one way
-    to declare a prop, bind a value, loop — and the design system is enforced by
-    the compiler, where off-system styling is a build error, not a review note.
-    The smaller the space of valid programs, the less there is to get wrong and
-    the more the tooling can guarantee.
+    So <strong>every decision a language leaves open is variance</strong>, and
+    variance is where one-shot beauty dies. Two agents diverge. The same agent
+    diverges from itself on Tuesday. One team's animation library meets another
+    team's. Preference leaks into state management. None of that is a skill
+    problem you can prompt your way out of — it's a property of the language.
   </p>
 
-  <h2>Why this is the right shape</h2>
+  <h2>So the decisions are gone</h2>
   <p>
-    The hard part of agent-authored UI was never reactivity. It's decisions and
-    correctness. A model building a screen makes hundreds of small choices —
-    color, spacing, focus behavior, whether that dropdown is genuinely
-    accessible — and gets them confidently, plausibly wrong. Hand it more
-    freedom and more primitives and you only widen the surface to be wrong on.
-    SUI goes the other way: the standard library makes the components a given,
-    the design system makes the styling a given, the strict grammar makes the
-    shape a given. What's left for the model is the part that actually needs
-    intelligence — composition and logic.
+    Not discouraged, not linted with a warning — <em>absent</em>. There is one
+    way to hold state, one way to animate, one way to style, one component
+    library, and it is made of tags the model already knows.
+  </p>
+  <ul class="why-list">
+    <li>
+      <strong>The component library is the platform.</strong> A dialog is
+      <code>&lt;dialog&gt;</code>. A menu is <code>[popover]</code>. There are 48
+      L1 elements and they compile to native markup plus a stylesheet — so the
+      model writes the HTML it already knows, and gets the keyboard handling,
+      the ARIA, and the focus management for free.
+    </li>
+    <li>
+      <strong>Styling is a subset, on purpose.</strong> <code>sx</code> is a
+      deliberately small slice of CSS keyed to the design system. An off-system
+      color is a build error, not a review note. There is no second styling
+      system to choose, so there is nothing to choose.
+    </li>
+    <li>
+      <strong>One animation system.</strong> <code>motion:</code>, eight
+      triggers, nine presets. You cannot reach for GSAP instead, so no two
+      screens move differently.
+    </li>
+    <li>
+      <strong>One way to reach an element.</strong> Behavior attaches with
+      <code>use:</code>. There is no ref to thread, no imperative escape hatch
+      to be tempted by.
+    </li>
+  </ul>
+
+  <h2>The compiler is the feedback loop</h2>
+  <p>
+    This is the part that matters most, and it's the part that's easy to miss.
+    An agent writing React gets no oracle: a wrong program <em>renders</em>,
+    plausibly, and ships. An agent writing SUI gets told exactly what is wrong,
+    in the language's own vocabulary, the moment it writes it — an unknown
+    motion trigger, a color that isn't on the system, a layout that should have
+    been a primitive.
   </p>
   <p>
-    And it stays on the platform: html, ts, and css compiling to standard custom
-    elements, no parallel universe to learn for a person or a model.
-    <a href="/deck">deck</a> wraps it with routing, server rendering, bundling,
-    and live data, so an application is a full stack rather than a pile of view
-    components.
+    Agents run in a loop. A language that can <em>correct</em> them in one turn
+    beats a language they happen to have memorized. We don't need the model to
+    have read a million lines of SUI. We need it to be correctable.
   </p>
+
+  <h2>What the constraint bought</h2>
+  <p>
+    The point of giving things up is getting something back. All of this is
+    measured, and reproducible:
+  </p>
+  <ul class="why-list">
+    <li>
+      <strong>Performance.</strong> Parity with Solid across every benchmark in
+      the js-framework-benchmark suite — faster on two of them — at 9.4&nbsp;kB
+      gzipped. React is 59.8.
+    </li>
+    <li>
+      <strong>The components make your bundle smaller, not bigger.</strong> L1
+      elements are native markup and a cached stylesheet. They compile away.
+      Using the standard library costs less JavaScript than hand-rolling the
+      same screen out of <code>&lt;div&gt;</code>s.
+    </li>
+    <li>
+      <strong>Consistency you can check.</strong> Every L1 element is rendered
+      in every state across all seven themes on every commit, and the behavior
+      is driven in a real browser. Not a screenshot someone remembered to take.
+    </li>
+    <li>
+      <strong>Accessibility by construction.</strong> Not because the model was
+      careful. Because the element already was.
+    </li>
+  </ul>
 
   <h2>The honest version</h2>
   <p>
-    SUI is the same kind of tool as the compilers it's measured against, with a
-    different set of priorities. It optimizes for tight loops, batteries, and
-    strict opinions — for a machine writing UI and a human steering it — and it
-    will feel constrained if you came looking for a flexible toolkit to
-    hand-write. That constraint is the product. It's what turns "an agent built
-    this" from a warning into a guarantee.
+    Nobody can tell you what an agent-generated React app <em>is</em>. It might
+    be accessible. It might be on-brand. It might have invented four shades of
+    blue and three ways to open a modal. You find out in review, or in
+    production, or never. That is the trade the ecosystem made when it optimized
+    for human preference: a tool that is pleasant to hand-write and impossible
+    to guarantee.
+  </p>
+  <p>
+    SUI takes the other side. It will feel constrained if you came looking for a
+    flexible toolkit to hand-write — and it should. That constraint is the
+    product. It is what turns "an agent built this" from a warning into a
+    guarantee.
   </p>
 </div>

@@ -117,7 +117,37 @@ export type { Action, ActionResult } from './action'
 
 // Built-in `use:` actions — reusable element behaviors (autosize, clickOutside…)
 // the L1 components lean on. `use:<name>` attaches them; no hand-wired refs/effects.
-export { autosize, clickOutside, anchor, dropzone, avatar, tooltip, alert, emptyState, errorState, chip, field, collapsible, radioGroup, rangeFill } from './actions'
+// Every built-in `use:` action. The compiler AUTO-IMPORTS these by name when a
+// template uses one (see `BUILTIN_ACTIONS` in lower/bindings.rs), so an action
+// missing here is not a missing convenience — it is an L1 element that compiles,
+// passes conformance, and then fails to bundle. `builtin_actions_are_exported`
+// in the compiler's test suite holds the two lists together.
+export {
+  alert,
+  anchor,
+  autosize,
+  avatar,
+  chip,
+  clickOutside,
+  collapsible,
+  combobox,
+  contextMenu,
+  dropzone,
+  emptyState,
+  errorBoundary,
+  errorState,
+  field,
+  hoverCard,
+  menu,
+  pagination,
+  radioGroup,
+  rangeFill,
+  tabs,
+  themePicker,
+  toast,
+  toggleGroup,
+  tooltip,
+} from './actions'
 export type { AnchorPlacement } from './actions'
 
 // Native <dialog> behavior — the compiler emits bindOpen for

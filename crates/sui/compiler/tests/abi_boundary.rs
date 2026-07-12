@@ -92,3 +92,33 @@ fn sibling_subpaths_are_not_rewritten_into_the_abi_path() {
         out.js
     );
 }
+
+/// Every action the compiler AUTO-IMPORTS must be exported by the runtime.
+///
+/// `BUILTIN_ACTIONS` is the compiler's list; the runtime's `index.ts` is a second
+/// one. When they drift, the failure is invisible until bundle time: the element
+/// compiles, conformance passes (it attaches actions by hand), and the app dies
+/// with a MissingExport. Ten actions had drifted out this way.
+#[test]
+fn builtin_actions_are_exported_by_the_runtime() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
+    let index = root.join("packages/sui/runtime/src/index.ts");
+    let Ok(src) = std::fs::read_to_string(&index) else { return };
+
+    let missing: Vec<&str> = sui_compiler::lower::bindings::BUILTIN_ACTIONS
+        .iter()
+        .copied()
+        .filter(|a| {
+            // The export list is one `export { … } from './actions'` block.
+            !src.contains(&format!("\n  {a},")) && !src.contains(&format!("{a},"))
+        })
+        .collect();
+
+    assert!(
+        missing.is_empty(),
+        "the compiler auto-imports these actions and the runtime does not export them — \
+         every L1 element that uses one will compile, pass conformance, and then fail to \
+         bundle:\n  {}",
+        missing.join("\n  ")
+    );
+}

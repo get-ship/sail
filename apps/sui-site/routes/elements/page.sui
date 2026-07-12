@@ -1,0 +1,68 @@
+<div class="doc">
+  <p class="eyebrow">What's given</p>
+  <h1>Elements</h1>
+  <p class="lead">
+    There are 48 elements and you already know most of them. That is the whole
+    design: a model reaches for a <code>&lt;div&gt;</code> when it isn't sure,
+    so the component library is made of tags it is already fluent in. There is
+    no library to import, no library to choose, and nothing to route around.
+  </p>
+
+  <h2>Half of them are the browser's</h2>
+  <p>
+    A dialog is <code>&lt;dialog&gt;</code>. A disclosure is
+    <code>&lt;details&gt;</code>. A menu rides <code>[popover]</code> and the
+    top layer. These ship <strong>zero JavaScript</strong> — they're the native
+    element plus a stylesheet, so you get the keyboard handling, the focus trap,
+    the ARIA, and the top-layer stacking from the platform, correct by default.
+  </p>
+  <sui-codeblock code={code.native}></sui-codeblock>
+  <p class="mono small">
+    button · checkbox · details · dialog · dropzone · fieldset · hr · input ·
+    meter · progress · prose · select · skeleton · status-dot · table · textarea
+  </p>
+
+  <h2>The rest compile away</h2>
+  <p>
+    Where the platform has no element — a combobox, a toast region, a
+    breadcrumb — SUI defines one. These are written in <code>.sui</code> like
+    anything else, and the compiler <em>inlines them</em>: the tag becomes plain
+    markup plus a <code>use:</code> action, and no custom element is registered
+    at runtime. You write a component; you ship markup.
+  </p>
+  <sui-codeblock code={code.language}></sui-codeblock>
+  <p class="mono small">
+    alert · avatar · badge · breadcrumb · card · chip · collapsible · combobox ·
+    context-menu · dropdown · empty-state · error-boundary · error-state · field ·
+    hover-card · icon · label · menu-item · nav-top · page · pagination · popover ·
+    radio · radio-group · scroll-area · separator · slider · spinner · switch ·
+    tab · tab-list · tab-panel · tabs · theme-picker · toast · toast-region ·
+    toggle · toggle-group · tooltip
+  </p>
+
+  <h2>A variant is a prop, not a component</h2>
+  <p>
+    This is where most libraries leak decisions. A sheet is not a new component;
+    it is a dialog that arrives from the side. An alert dialog is not a new
+    component; it is a dialog with a role. Collapsing those into props is what
+    keeps the surface at 48 instead of 90 — and it means the model cannot pick
+    the wrong one, because there is only one.
+  </p>
+  <sui-codeblock code={code.variant}></sui-codeblock>
+
+  <h2>Layout: the axis is the name</h2>
+  <p>
+    <code>&lt;row&gt;</code> is the x-axis, <code>&lt;column&gt;</code> is the
+    y-axis, <code>&lt;stack&gt;</code> is the z-axis, <code>&lt;grid&gt;</code>
+    is two dimensions. There is no <code>flex-direction</code> to get backwards
+    and no debate about whether a stack is vertical.
+  </p>
+  <sui-codeblock code={code.layout}></sui-codeblock>
+
+  <p class="callout">
+    <strong>The library makes your bundle smaller.</strong> Because the elements
+    are native markup and a cached stylesheet, the skins are not JavaScript —
+    they never enter your bundle. Reaching for the standard library costs less
+    JS than hand-rolling the same screen out of <code>&lt;div&gt;</code>s.
+  </p>
+</div>

@@ -58,6 +58,7 @@ export type Tone =
 // the engine via the public package entry instead of reaching into
 // `primitives/src/sui-table/engine/*` (a path that breaks `rootDir`
 // isolation and the sui ⊥ sui pack boundary).
+export { createTable, type Table, type TableOptions } from './sui-table/engine/create-table'
 // Re-export the public type catalog from `types.ts` so consumers can
 // name `ColumnDef`, `Row`, `Cell`, `SortState`, etc. without reaching
 // into the engine directory.
@@ -82,6 +83,7 @@ export type {
   SortState,
   TableState,
   VisibilityState,
+} from './sui-table/engine/types'
 /** The canonical size union. `md` is always the default. Primitives
  *  needing finer granularity declare additional values explicitly with
  *  rationale — sui-avatar (xs|sm|md|xl), sui-dialog (sm|md|full). */

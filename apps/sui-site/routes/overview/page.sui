@@ -1,30 +1,69 @@
 <div class="doc">
   <p class="eyebrow">SUI</p>
-  <h1>The reactive component framework</h1>
+  <h1>The UI framework agents write</h1>
   <p class="lead">
-    SUI compiles <code>.sui</code> files ahead-of-time into standard web
-    components. Signals for reactivity, a strict lint for the design system, and
-    output you can drop into any page — no virtual DOM, no framework runtime tax.
+    SUI assumes the author is a machine. Every decision a language leaves open
+    is variance — a place where two agents diverge, or the same agent diverges
+    from itself on Tuesday. So the decisions are gone. What's left is 95% of the
+    expression code offers, with 10% of the choices.
   </p>
 
-  <h2>What makes it SUI</h2>
+  <h2>What's given</h2>
+  <p>
+    Not recommended. Not linted with a warning. <em>Absent</em> — there is no
+    second option to pick.
+  </p>
   <ul>
-    <li><strong>Compiler-first</strong> — templates lower to direct DOM operations; the output is a plain custom element.</li>
-    <li><strong>Signals</strong> — fine-grained reactivity; only the readers of a changed signal re-run, no diffing.</li>
-    <li><strong>One file</strong> — a <code>.sui</code> holds the markup + bindings and, when there's state, an inline <code>&lt;controller&gt;</code> block (state + logic). Single-file components.</li>
-    <li><strong>Strict by design</strong> — the lint turns design-system violations into build errors, so on-brand is the default.</li>
+    <li>
+      <strong><a href="/elements">48 elements</a>, and you already know them.</strong>
+      A dialog is <code>&lt;dialog&gt;</code>. A menu is <code>[popover]</code>.
+      Half ship zero JavaScript; the rest compile away. A model that falls back
+      on HTML lands on the standard library by accident.
+    </li>
+    <li>
+      <strong><a href="/styling">One way to style.</a></strong> <code>sx</code>
+      is a deliberate subset of CSS, keyed to the design system. An off-system
+      color is a build error, not a review note.
+    </li>
+    <li>
+      <strong><a href="/motion">One animation system.</a></strong>
+      <code>motion:</code> — eight triggers, nine presets. You can't reach for a
+      different library, so no two screens move differently.
+    </li>
+    <li>
+      <strong><a href="/behavior">One way to reach an element.</a></strong>
+      <code>use:</code>. No ref to thread, no imperative escape hatch to be
+      tempted by.
+    </li>
   </ul>
 
-  <h2>Start here</h2>
+  <h2>What you write</h2>
+  <p>
+    Composition and logic — the part that actually needs intelligence.
+    <a href="/reactivity">Signals</a> for state,
+    <a href="/control-flow">control flow</a> for shape,
+    <a href="/data">live data</a> and forms with the plumbing already done.
+  </p>
+
+  <h2>And the compiler answers back</h2>
+  <p>
+    An agent writing React gets no oracle: a wrong program renders, plausibly,
+    and ships. Here, a wrong program is <em>told what is wrong</em>, in the
+    language's own vocabulary, the moment it is written. Agents run in a loop —
+    a language that can correct them in one turn beats one they happen to have
+    memorized.
+  </p>
+
+  <h2>None of which costs you performance</h2>
   <ul>
-    <li><a href="/getting-started">Getting started</a> — install, write a component, use it anywhere.</li>
-    <li><a href="/reactivity">Reactivity</a> — signals, derived values, and effects.</li>
-    <li><a href="/tutorial">The tutorial</a> — 25 interactive lessons in the browser.</li>
-    <li><a href="/reference">Reference</a> — every directive and the runtime API.</li>
+    <li>Parity with Solid across the js-framework-benchmark suite — faster on two of nine.</li>
+    <li><strong>9.4&nbsp;kB</strong> gzipped. React is 59.8.</li>
+    <li>Every element rendered in every state across all seven themes, on every commit.</li>
   </ul>
 
   <div class="page-nav">
-    <a class="btn btn-primary" href="/getting-started">Getting started →</a>
+    <a class="btn btn-primary" href="/why">Why SUI →</a>
+    <a class="btn" href="/getting-started">Getting started</a>
     <a class="btn" href="/tutorial">Try the tutorial</a>
   </div>
 </div>

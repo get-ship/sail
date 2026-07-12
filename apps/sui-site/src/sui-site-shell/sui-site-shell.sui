@@ -238,31 +238,35 @@
       </div>
     {:else}
       <div class="group">
-        <h4>Introduction</h4>
+        <h4>Start here</h4>
         <a href="/overview" class:active={path() === '/overview'}>Overview</a>
         <a href="/why" class:active={path() === '/why'}>Why SUI</a>
         <a href="/getting-started" class:active={path() === '/getting-started'}>Getting started</a>
       </div>
       <div class="group">
-        <h4>Core concepts</h4>
-        <a href="/reactivity" class:active={path() === '/reactivity'}>Reactivity</a>
-        <a href="/control-flow" class:active={path() === '/control-flow'}>Control flow</a>
-        <a href="/lifecycle-hooks" class:active={path() === '/lifecycle-hooks'}>Lifecycle</a>
-        <a href="/data-binding" class:active={path() === '/data-binding'}>Data binding</a>
-        <a href="/data" class:active={path() === '/data'}>Live data</a>
-        <a href="/ssr" class:active={path() === '/ssr'}>SSR &amp; hydration</a>
+        <h4>What's given</h4>
+        <p class="group-note">Decisions the language already made.</p>
+        <a href="/elements" class:active={path() === '/elements'}>Elements</a>
+        <a href="/styling" class:active={path() === '/styling'}>Styling</a>
+        <a href="/theming" class:active={path() === '/theming'}>Theming</a>
         <a href="/motion" class:active={path() === '/motion'}>Motion</a>
+        <a href="/behavior" class:active={path() === '/behavior'}>Behavior</a>
       </div>
       <div class="group">
-        <h4>Guides</h4>
-        <a href="/theming" class:active={path() === '/theming'}>Theming</a>
-        <a href="/styling" class:active={path() === '/styling'}>Styling</a>
-        <a href="/composition" class:active={path() === '/composition'}>Composition</a>
-        <a href="/tooling" class:active={path() === '/tooling'}>Tooling</a>
+        <h4>What you write</h4>
+        <p class="group-note">Composition and logic — the part that needs you.</p>
+        <a href="/reactivity" class:active={path() === '/reactivity'}>State</a>
+        <a href="/control-flow" class:active={path() === '/control-flow'}>Control flow</a>
+        <a href="/data-binding" class:active={path() === '/data-binding'}>Events &amp; binding</a>
+        <a href="/composition" class:active={path() === '/composition'}>Compositions</a>
+        <a href="/data" class:active={path() === '/data'}>Live data</a>
+        <a href="/ssr" class:active={path() === '/ssr'}>SSR &amp; hydration</a>
       </div>
       <div class="group">
         <h4>Reference</h4>
         <a href="/reference" class:active={path() === '/reference'}>Directives &amp; API</a>
+        <a href="/components" class:active={path() === '/components'}>Component catalog</a>
+        <a href="/tooling" class:active={path() === '/tooling'}>Tooling</a>
       </div>
     {/if}
    </nav>

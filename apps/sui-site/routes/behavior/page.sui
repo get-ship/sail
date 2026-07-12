@@ -1,0 +1,47 @@
+<div class="doc">
+  <p class="eyebrow">What's given</p>
+  <h1>Behavior</h1>
+  <p class="lead">
+    An <strong>action</strong> is a plain function that receives an element,
+    does something to it, and returns a <code>destroy</code> to undo it.
+    <code>use:</code> attaches one. That is the entire mechanism, and it is the
+    only way to reach an element.
+  </p>
+  <sui-codeblock code={code.attach}></sui-codeblock>
+
+  <h2>There is no ref</h2>
+  <p>
+    Most frameworks give you two ways to touch the DOM: a ref you store, thread
+    through scope, and remember to release — and an effect that runs at the right
+    moment if you got the dependencies right. Two ways is one too many. It is a
+    decision, and a decision is variance.
+  </p>
+  <p>
+    An action <em>is</em> the handle. The element arrives as an argument, the
+    cleanup is the return value, and neither can be forgotten because neither is
+    optional. There is nothing to store, so there is nothing to leak.
+  </p>
+
+  <h2>Writing one</h2>
+  <p>
+    No registry. No base class. No lifecycle interface to implement. If you can
+    write a function, you can write an action.
+  </p>
+  <sui-codeblock code={code.author}></sui-codeblock>
+  <p>
+    Pass it a parameter and it becomes reactive: the action's <code>update</code>
+    runs whenever the value changes.
+  </p>
+  <sui-codeblock code={code.param}></sui-codeblock>
+
+  <h2>The standard library uses the same door</h2>
+  <p>
+    This isn't an escape hatch bolted on for you. It is how every element in the
+    standard library gets its behavior. <code>&lt;combobox&gt;</code> is markup
+    plus <code>use:combobox</code>. <code>&lt;tabs&gt;</code> is markup plus
+    <code>use:tabs</code>. The thing you write is the thing we write — which is
+    why there is no privileged internal API you'll eventually need and can't
+    reach.
+  </p>
+  <sui-codeblock code={code.stdlib}></sui-codeblock>
+</div>
