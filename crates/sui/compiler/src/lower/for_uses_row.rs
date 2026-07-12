@@ -93,9 +93,6 @@ fn attr_references(attr: &AttrInstr, var_name: &str, idx_name: Option<&str>) -> 
             expr_references(name_expr, var_name, idx_name)
                 || expr_references(expr, var_name, idx_name)
         }
-        AttrInstr::Transition { opts, .. } => opts
-            .as_ref()
-            .is_some_and(|e| expr_references(e, var_name, idx_name)),
         AttrInstr::Use { param, .. } => param
             .as_ref()
             .is_some_and(|e| expr_references(e, var_name, idx_name)),

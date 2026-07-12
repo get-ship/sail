@@ -112,16 +112,7 @@ pub fn collect_attr_imports(
                 out.dom_imports.insert("collectElementMarkers");
             }
         }
-        AttrInstr::Transition { name, .. } => {
-            out.runtime_imports.insert("registerTransition");
-            match name.as_str() {
-                "fade" => { out.transition_builtins.insert("fade"); }
-                "slide" => { out.transition_builtins.insert("slide"); }
-                "scale" => { out.transition_builtins.insert("scale"); }
-                _ => {}
-            }
-        }
-        AttrInstr::Use { action, .. } => {
+AttrInstr::Use { action, .. } => {
             out.runtime_imports.insert("runAction");
             // A bare built-in action name (`use:anchor`, `use:autosize`, …)
             // is auto-imported from the runtime so it resolves as an ESM

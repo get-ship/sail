@@ -90,6 +90,5 @@ export type { ServerRoot } from './server-dom'
 // ── slots / boundaries / transitions / hooks ────────────────────────────────
 export { bindSlotEmpty } from './slot-empty'
 export { resolveSlots, snapshotChildren, slotFilled } from './slot'
-export { registerTransition, runIn, runOut, fade, slide, scale } from './transition'
 export { getTemplateHook, registerTemplateHook } from './template-hooks/registry'
 export { adoptSuiSheets } from './styles/index'

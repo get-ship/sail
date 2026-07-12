@@ -396,23 +396,7 @@ impl TemplateEmitter {
                     ));
                 }
             }
-            AttrInstr::Transition { name, opts, dir, .. } => {
-                // Built-in names (fade/slide/scale) are auto-imported,
-                // so `rewrite_for_scope` leaves them bare; custom names
-                // resolve through `$scope`. Transitions register on
-                // element creation — no boundary key, no SSR marker,
-                // no manifest entry.
-                let name_rw = self.rw(name, &[]);
-                let opts_rw = opts
-                    .as_ref()
-                    .map(|e| self.rw(&e.source, &[]))
-                    .unwrap_or_else(|| "{}".to_string());
-                w.line(&format!(
-                    "registerTransition({el_var}, {name_rw}, ({opts_rw}), \"{d}\");",
-                    d = dir.as_str(),
-                ));
-            }
-            AttrInstr::Use { action, param, .. } => {
+AttrInstr::Use { action, param, .. } => {
                 // `use:action` / `use:action={param}`. The action resolves
                 // from scope (a use-able hook handle or an imported action
                 // fn); `runAction` invokes it with the element on mount,

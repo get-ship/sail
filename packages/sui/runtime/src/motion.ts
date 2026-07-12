@@ -16,6 +16,7 @@
 // The `enter` and `leave` arrays are AOT-baked `Animation` objects
 // — the per-property `el.animate(...)` results. We pause them all
 // on first attach (the initial state is the "rest" pose), then
+import { setTransitionRunner } from './transition-runner'
 import type { Disposer } from './bind'
 
 /** AOT-baked WAAPI animation. */
@@ -121,11 +122,36 @@ export function __sui_motion_attach(
       b.play()
     })
   }
+  // LIFECYCLE triggers — `motion:enter` / `motion:exit`. These are not event
+  // pairs: they fire when the element ENTERS or LEAVES the DOM, which is the one
+  // thing CSS cannot do alone, because leaving requires the framework to HOLD the
+  // element in the tree until its animation finishes. `if.ts` / `for.ts` already
+  // do that (they await `runLeave` before removing), so the exit animation just
+  // has to be findable from the node. This is what `transition:` / `in:` / `out:`
+  // used to be — same mechanism, one catalog, one directive.
+  if (trigger === 'enter' || trigger === 'exit') {
+    installLifecycleRunner()
+    if (trigger === 'enter') {
+      // An entering element plays immediately: it is already in the DOM.
+      if (!prefersReducedMotion()) playForward()
+      else for (const a of enter) a.finish()
+      return () => {
+        for (const a of enter) a.cancel()
+      }
+    }
+    // `exit`: park the baked animations on the node and stay out of the way until
+    // the element is actually being removed. Paused, so nothing plays on mount.
+    for (const a of enter) a.cancel()
+    EXITS.set(el, enter)
+    return () => {
+      EXITS.delete(el)
+      for (const a of enter) a.cancel()
+    }
+  }
+
   // Trigger dispatch.
   const events = TRIGGER_EVENTS[trigger]
   if (!events) {
-    // Unknown trigger — no-op. Future milestones will support
-    // signal-driven triggers (loading, error, etc.).
     return () => {
       for (const a of enter) a.cancel()
     }
@@ -164,3 +190,52 @@ export function __sui_motion_attach(
   }
 }
 
+
+
+// ── LIFECYCLE ────────────────────────────────────────────────────────────────
+// The seam `if.ts` / `for.ts` already call (`runLeave(nodes)`): return a promise
+// and they hold the nodes in the DOM until it settles; return null and they tear
+// down synchronously, exactly as before. It used to be backed by the `transition:`
+// catalog. It is backed by `motion:` now — same seam, one catalog.
+
+const EXITS = new WeakMap<Element, BakedAnimation[]>()
+let runnerInstalled = false
+
+function installLifecycleRunner(): void {
+  if (runnerInstalled) return
+  runnerInstalled = true
+  setTransitionRunner({
+    // Entry needs nothing here: `motion:enter` plays on attach, because by the
+    // time the action runs the element is in the tree.
+    runEnter: () => null,
+
+    runLeave: (nodes: Iterable<Node>): Promise<void> | null => {
+      const playing: Promise<unknown>[] = []
+      for (const n of nodes) {
+        if (!(n instanceof Element)) continue
+        // The leaving node may be a wrapper — the exit may be on a descendant.
+        const targets = EXITS.has(n) ? [n] : [...n.querySelectorAll('*')].filter((e) => EXITS.has(e))
+        for (const t of targets) {
+          const anims = EXITS.get(t)
+          if (!anims) continue
+          for (const a of anims) {
+            a.currentTime = 0
+            a.play()
+            playing.push(a.finished.catch(() => {}))
+          }
+        }
+      }
+      // Null (not an empty promise) when nothing is animating — that is the
+      // signal `if.ts` reads to keep the synchronous teardown path intact.
+      if (playing.length === 0) return null
+      if (prefersReducedMotion()) return null
+      return Promise.all(playing).then(() => {})
+    },
+
+    cancelTransitions: (node: Node): void => {
+      if (!(node instanceof Element)) return
+      const anims = EXITS.get(node)
+      if (anims) for (const a of anims) a.cancel()
+    },
+  })
+}

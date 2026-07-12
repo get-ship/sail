@@ -93,16 +93,6 @@ pub enum AttrInstr {
     Prop { name: String, expr: Expr, span: Span },
     /// `mutation="ship.X.Y"` on a `<form>` — the SDK call chain.
     Mutation { expr: Expr, span: Span },
-    /// `transition:NAME={cfg}`, `in:NAME={cfg}`, `out:NAME={cfg}`.
-    /// `name` is the directive identifier (resolved via the runtime
-    /// import set or `$scope`); `opts` is the optional `{cfg}`
-    /// expression; `dir` selects the enter / exit / both phases.
-    Transition {
-        name: String,
-        opts: Option<Expr>,
-        dir: TransitionDir,
-        span: Span,
-    },
     /// `motion:trigger={...}` — declarative state-triggered animation.
     /// The config is a static object literal mapping CSS-style property
     /// names to animation preset names. Compiles to a pre-baked
@@ -141,22 +131,7 @@ pub struct MotionProp {
 
 /// Which phase(s) a `transition:` directive applies to. `transition:`
 /// is both; `in:` is enter-only; `out:` is exit-only.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TransitionDir {
-    Both,
-    In,
-    Out,
-}
 
-impl TransitionDir {
-    pub fn as_str(self) -> &'static str {
-        match self {
-            TransitionDir::Both => "both",
-            TransitionDir::In => "in",
-            TransitionDir::Out => "out",
-        }
-    }
-}
 
 #[derive(Debug, Clone)]
 pub enum Modifier {

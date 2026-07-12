@@ -149,12 +149,7 @@ impl Builder {
             AttrInstr::Mutation { expr, .. } => {
                 self.push(BindingKind::Mutation, &expr.source);
             }
-            AttrInstr::Transition { .. } => {
-                // Transitions register on element construction (CSR /
-                // hydrate paths) — no SSR marker, no key allocation, no
-                // manifest entry.
-            }
-            AttrInstr::Use { .. } => {
+AttrInstr::Use { .. } => {
                 // Actions register on element construction, same as
                 // transitions — no SSR marker, no key, no manifest entry.
             }

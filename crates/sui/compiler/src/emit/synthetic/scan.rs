@@ -66,10 +66,7 @@ fn attr_references_ident(attr: &AttrInstr, name: &str) -> bool {
             expr_references_ident(&name_expr.source, name)
                 || expr_references_ident(&expr.source, name)
         }
-        AttrInstr::Transition { opts, .. } => {
-            opts.as_ref().is_some_and(|e| expr_references_ident(&e.source, name))
-        }
-        AttrInstr::Use { action, param, .. } => {
+AttrInstr::Use { action, param, .. } => {
             action == name
                 || param.as_ref().is_some_and(|e| expr_references_ident(&e.source, name))
         }

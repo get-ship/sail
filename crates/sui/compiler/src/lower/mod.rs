@@ -148,14 +148,7 @@ fn check_attr_for_route(a: &AttrInstr, out: &mut Lowered) {
         | AttrInstr::BindThis { .. }
         | AttrInstr::SlotReflectEmpty { .. }
         | AttrInstr::Motion { .. } => {}
-        AttrInstr::Transition { opts, .. } => {
-            if let Some(e) = opts
-                && expr_references_route(&e.source)
-            {
-                out.uses_route = true;
-            }
-        }
-        AttrInstr::Use { param, .. } => {
+AttrInstr::Use { param, .. } => {
             if let Some(e) = param
                 && expr_references_route(&e.source)
             {

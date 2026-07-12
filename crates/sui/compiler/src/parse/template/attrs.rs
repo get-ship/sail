@@ -72,14 +72,30 @@ fn compile_attr(
     if let Some(rest) = name.strip_prefix("prop:") {
         return compile_prop(rest, value, value_span, loc);
     }
-    if let Some(rest) = name.strip_prefix("transition:") {
-        return compile_transition(rest, value, value_span, loc, TransitionDir::Both);
-    }
-    if let Some(rest) = name.strip_prefix("in:") {
-        return compile_transition(rest, value, value_span, loc, TransitionDir::In);
-    }
-    if let Some(rest) = name.strip_prefix("out:") {
-        return compile_transition(rest, value, value_span, loc, TransitionDir::Out);
+    // `transition:` / `in:` / `out:` are RETIRED. They were a second animation
+    // system — a second preset catalog (fade/slide/scale), a second registry
+    // (`registerTransition`), a second runtime — sitting beside `motion:`, which
+    // already bakes to `el.animate()` with compile-time-validated spring presets and
+    // no runtime library at all. Two systems meant two vocabularies to learn, two
+    // things to teach an agent, and two places for a bug to live.
+    //
+    // The CAPABILITY survives intact: holding an element in the DOM until its exit
+    // animation finishes is real, and CSS cannot do it alone. It is `motion:exit`
+    // now, running on the same lifecycle seam, from the one catalog.
+    for (retired, hint) in [
+        ("transition:", "motion:enter + motion:exit"),
+        ("in:", "motion:enter"),
+        ("out:", "motion:exit"),
+    ] {
+        if let Some(rest) = name.strip_prefix(retired) {
+            return Err(CompileError::new(format!(
+                "`{retired}{rest}` is retired — there is one animation system. \
+                 Use `{hint}` with a preset from the motion catalog \
+                 (e.g. `motion:exit={{ opacity: 'fade-out' }}`)."
+            ))
+            .with_span(value_span)
+            .with_category(loc.to_string()));
+        }
     }
     if let Some(rest) = name.strip_prefix("motion:") {
         return compile_motion(rest, value, value_span, loc);
@@ -514,33 +530,6 @@ fn compile_prop(
     })
 }
 
-fn compile_transition(
-    name: &str,
-    value: &str,
-    value_span: Span,
-    loc: &str,
-    dir: TransitionDir,
-) -> Result<AttrInstr, CompileError> {
-    let err = |msg: String| {
-        CompileError::new(msg).with_span(value_span).with_category(loc.to_string())
-    };
-    if name.is_empty() {
-        return Err(err(format!("{}:requires a transition name", dir.as_str())));
-    }
-    if !is_bare_identifier(name) {
-        return Err(err(format!("transition name \"{name}\" must be a bare identifier")));
-    }
-    let opts = if value.is_empty() {
-        None
-    } else if is_expr_value(value) {
-        let inner = strip_braces(value).to_string();
-        expr::validate_at(&inner, false, loc, value_span)?;
-        Some(Expr::new(inner, value_span, false))
-    } else {
-        return Err(err("transition options must be an {expression}".into()));
-    };
-    Ok(AttrInstr::Transition { name: name.to_string(), opts, dir, span: value_span })
-}
 
 /// Compile a `use:action` / `use:action={param}` directive — attach a
 /// reusable behavior (an "action") to the rendered element. `action` is a

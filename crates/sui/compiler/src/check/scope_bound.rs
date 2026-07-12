@@ -401,12 +401,7 @@ fn visit_attr(attr: &AttrInstr, v: &mut Visitor) {
         }
         AttrInstr::On { handler, .. } => check_expr(handler, v, &[]),
         AttrInstr::Mutation { .. } => {}
-        AttrInstr::Transition { opts, .. } => {
-            if let Some(e) = opts {
-                check_expr(e, v, &[]);
-            }
-        }
-        AttrInstr::Use { param, .. } => {
+AttrInstr::Use { param, .. } => {
             if let Some(e) = param {
                 check_expr(e, v, &[]);
             }

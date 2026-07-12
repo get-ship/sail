@@ -151,14 +151,6 @@ export type { BindForOptions, RenderedItem } from './for'
 export { bindIf } from './if'
 export type { BindIfOptions, BranchRender } from './if'
 
-export {
-  registerTransition,
-  runIn,
-  runOut,
-  fade,
-  slide,
-  scale,
-} from './transition'
 // runEnter / runLeave / cancelTransitions go through the tiny
 // transition-runner indirection (stubs by default). Apps that don't
 // use `transition:` directives nor import the named transition
@@ -167,15 +159,17 @@ export {
 // bench bundle. When ANY transition export is consumed, transition.ts
 // loads + its top-level setTransitionRunner() swaps the stubs for
 // the real Web-Animations-API runner.
-export { runEnter, runLeave, cancelTransitions } from './transition-runner'
-export type {
-  Transition,
-  TransitionConfig,
-  TransitionDir,
-  SlideConfig,
-  ScaleConfig,
-} from './transition'
-
+// The `transition:` catalog (registerTransition / fade / slide / scale) is GONE —
+// it was a second animation system beside `motion:`, with its own presets, its own
+// registry and its own runtime. One system now: `motion:enter` / `motion:exit` bake
+// to `el.animate()` from the same spring catalog as every other motion trigger.
+//
+// The lifecycle SEAM survives, because the capability is real: `if.ts` / `for.ts`
+// await `runLeave` before removing nodes, which is how an element stays in the DOM
+// long enough to animate out — the one thing CSS cannot do alone. It is backed by
+// motion.ts now (installed lazily, the first time a `motion:exit` attaches), so an
+// app with no exit animations still tree-shakes the whole thing away.
+export { runEnter, runLeave, cancelTransitions, setTransitionRunner } from './transition-runner'
 export { bindAwait } from './await'
 export type { BindAwaitOptions } from './await'
 
