@@ -123,7 +123,6 @@ export const TAG_PACK: Record<string, PackId> = {
   'sui-combobox':           'primitives',
   'sui-context-menu':       'primitives',
   'sui-date-picker':        'primitives',
-  'sui-dialog':             'primitives',
   'sui-dropdown-menu':      'primitives',
   'sui-error-boundary':     'primitives',
   'sui-file-upload':        'primitives',

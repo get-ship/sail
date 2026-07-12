@@ -5551,3 +5551,7 @@ dependencies = [
  "resb",
  "serde",
 ]
+
+[[patch.unused]]
+name = "ship-proto"
+version = "0.1.0"

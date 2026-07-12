@@ -187,11 +187,6 @@ export const PREVIEW_SEEDS: Record<string, PreviewSeed> = {
   // ── Modal overlays ──────────────────────────────────────────────────
   // DETAIL: real component, props open the panel, drive as backup.
   // GALLERY: staticHTML poster (a 200px card can't hold a real modal).
-  'sui-dialog':          {
-    props: { open: 'true', size: 'sm' },
-    innerHTML: '<span slot="header">Confirm deployment</span><p>Deploy <code>job/site-demos</code> to production?</p><button slot="footer">Cancel</button><button slot="footer" tone="primary">Deploy</button>',
-    drive: { attrs: { open: 'true' } },
-    staticHTML: '<div style="width:100%;max-width:21rem;background:var(--background);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:1.25rem;display:flex;flex-direction:column;gap:0.6rem;font-size:var(--text-sm)"><strong style="font-size:var(--text-md)">Confirm deployment</strong><p style="margin:0;color:var(--muted-foreground)">Deploy <code>job/site-demos</code> to production?</p><div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.4rem"><button>Cancel</button><button style="background:var(--primary);color:var(--primary-foreground);border-color:var(--primary)">Deploy</button></div></div>' },
   'sui-alert-dialog':    {
     props: { open: 'true', tone: 'destructive', 'confirm-label': 'Delete', 'cancel-label': 'Keep' },
     innerHTML: '<span slot="title">Delete project?</span>This permanently removes the project and every deployment under it.',
