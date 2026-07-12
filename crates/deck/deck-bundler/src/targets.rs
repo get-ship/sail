@@ -296,6 +296,7 @@ impl BundleLayout {
                     entry: TargetEntry::Real(entry),
                     externals: vec![
                         "@ship/sui-runtime".into(),
+                        "@ship/sui-runtime/internal".into(),
                         "@ship/sui-runtime/template-hooks".into(),
                         "@ship/sui-dom".into(),
                         "@ship/sdk-client".into(),

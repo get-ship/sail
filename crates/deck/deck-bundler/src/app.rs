@@ -63,6 +63,13 @@ const FRAMEWORK_ASSETS: &[(&str, &str, &str)] = &[
     ("@ship/sui-runtime/route", "sui-runtime.js", "_deck/runtime.js"),
     ("@ship/sui-runtime/template-hooks", "sui-runtime.js", "_deck/runtime.js"),
     ("@ship/sui-runtime/patch", "sui-runtime.js", "_deck/runtime.js"),
+    // `/internal` is what COMPILED VIEWS import (__tpl, bind*, effect — the
+    // emitter's surface). Its absence here inlined a SECOND copy of the
+    // signal graph into every app bundle: view bindings subscribed in the
+    // copy, controller signals wrote in the real one, and no page reacted
+    // to anything. The resolve guard below makes this class of miss a
+    // build error instead of a silent fork.
+    ("@ship/sui-runtime/internal", "sui-runtime.js", "_deck/runtime.js"),
     ("@ship/sui-dom", "sui-dom.js", "_deck/dom.js"),
     // `@ship/deck/router` lives in the framework because the bundler
     // generates an entry that imports it. The runtime exports
@@ -308,6 +315,22 @@ impl Plugin for AppPlugin {
                 external: Some(ResolvedExternal::Bool(true)),
                 ..Default::default()
             }));
+        }
+        // A framework-singleton SUBPATH that is not in the importmap must not
+        // fall through to node resolution: the bundler would inline a second
+        // copy of the module — for the runtime that means a second signal
+        // graph, and every binding in the app goes quietly dead. Fail the
+        // build and name the fix.
+        for root in ["@ship/sui-runtime/", "@ship/sui-dom/", "@ship/deck/"] {
+            if args.specifier.starts_with(root) {
+                anyhow::bail!(
+                    "app build: `{}` is a framework-singleton subpath with no importmap \
+                     entry — bundling it inline would duplicate the singleton (for the \
+                     runtime: a second signal graph, and reactivity dies silently). Add it \
+                     to FRAMEWORK_ASSETS in deck-bundler/src/app.rs.",
+                    args.specifier
+                );
+            }
         }
         Ok(None)
     }
