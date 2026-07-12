@@ -1201,7 +1201,7 @@
         return;
       }
       if (!active || active.hidden)
-        setActive(vis[0]);
+        setActive(vis[0] ?? null);
       open();
     };
     const commit = (o) => {
@@ -1227,7 +1227,7 @@
         open();
       const i = active ? vis.indexOf(active) : -1;
       const next = (i + delta + vis.length) % vis.length;
-      setActive(vis[next]);
+      setActive(vis[next] ?? null);
     };
     const onInput = () => filter();
     const onKeydown = (e) => {

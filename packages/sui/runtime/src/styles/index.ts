@@ -84,7 +84,12 @@ const TYPOGRAPHY_CSS =
   'a { color: var(--primary); text-decoration: none; }\n' +
   'a:hover { text-decoration: underline; }\n' +
   'strong { font-weight: var(--heading-weight, 700); }\n' +
-  'code { font-family: var(--mono-font, monospace); font-size: 0.9em; }\n'
+  'code { font-family: var(--mono-font, monospace); font-size: 0.9em; }\n' +
+  // Inline code must READ as code, not merely be re-fonted: a muted chip sets it
+  // apart from the prose around it (which is what shadcn and Mantine both do, and
+  // what a bare font swap does not). Scoped away from `pre > code`, which would
+  // otherwise stack a chip inside a block that already carries its own surface.
+  ':not(pre) > code { padding: 0.15em 0.35em; background: var(--muted); border-radius: var(--radius-sm); }\n'
 
 // SEMANTIC HTML DEFAULTS — "the web, with default styles". Every semantic
 // element we own gets a token-based default so a plain <ul>/<table>/<img>/

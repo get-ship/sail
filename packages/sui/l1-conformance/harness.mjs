@@ -62,7 +62,8 @@ export async function renderSpec(spec, outDir) {
   const rows = spec.rows().map((r) => `<div class="l1-row">${r}</div>`).join('')
   const section = (t) =>
     `<section data-theme-preview="${t}" class="${DARK.has(t) ? 'dark' : ''}"><div class="l1-theme">${t}</div>${rows}</section>`
-  const html = `<!doctype html><html><head><meta charset="utf8"><style>${FRAMEWORK_CSS}\n${SHELL_CSS}</style></head><body>${THEMES.map(section).join('')}</body></html>`
+  const extra = spec.css ? `\n${spec.css}` : ''
+  const html = `<!doctype html><html><head><meta charset="utf8"><style>${FRAMEWORK_CSS}\n${SHELL_CSS}${extra}</style></head><body>${THEMES.map(section).join('')}</body></html>`
 
   const b = await browser()
   const ctx = await b.newContext({ viewport: { width: spec.width ?? 760, height: 900 }, deviceScaleFactor: 2 })
@@ -117,7 +118,8 @@ export async function behaveSpec(spec) {
   // popover + trigger to be DRIVEN — so behavior may supply its own markup.
   const rowSrc = spec.behavior.rows ?? spec.rows
   const rows = rowSrc().map((r) => `<div class="l1-row">${r}</div>`).join('')
-  const html = `<!doctype html><html><head><meta charset="utf8"><style>${FRAMEWORK_CSS}\n${SHELL_CSS}</style></head><body><section>${rows}</section></body></html>`
+  const extra = spec.css ? `\n${spec.css}` : ''
+  const html = `<!doctype html><html><head><meta charset="utf8"><style>${FRAMEWORK_CSS}\n${SHELL_CSS}${extra}</style></head><body><section>${rows}</section></body></html>`
 
   const b = await browser()
   const ctx = await b.newContext({ viewport: { width: spec.width ?? 760, height: 900 } })
