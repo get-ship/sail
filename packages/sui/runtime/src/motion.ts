@@ -223,6 +223,26 @@ export function __sui_motion_attach(
   // Note what this is NOT: a second emit path. The compiler bakes the same
   // `el.animate(...)` it bakes for every other trigger; we simply hand the resulting
   // Animation a different timeline. One directive, one catalog, one code path.
+  // AMBIENT — `motion:loop`. The baked animation alternates forever: the idle
+  // life of a page (a bouncing specimen, a drifting card). Stagger offsets the
+  // phase per sibling so a set of loops reads as a wave, not a metronome.
+  // Reduced motion disables it entirely — ambient motion is decoration.
+  if (trigger === 'loop') {
+    if (prefersReducedMotion()) {
+      return () => {
+        for (const a of enter) a.cancel()
+      }
+    }
+    const phase = config.stagger ? staggerOffset() * config.stagger : 0
+    for (const a of enter) {
+      a.effect?.updateTiming({ iterations: Infinity, direction: 'alternate', delay: phase })
+      a.play()
+    }
+    return () => {
+      for (const a of enter) a.cancel()
+    }
+  }
+
   if (trigger === 'view' || trigger === 'scroll') {
     if (prefersReducedMotion()) {
       for (const a of enter) a.finish()

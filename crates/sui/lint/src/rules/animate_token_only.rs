@@ -41,6 +41,10 @@ pub const MOTION_STAGGER_KEY: &str = "stagger";
 ///   TIMELINE     view, scroll — PROGRESS-driven, not time-driven. Reveal-on-scroll
 ///                and parallax, at zero JS runtime cost (the platform drives them off
 ///                the main thread — no listener, no rAF, no IntersectionObserver).
+///   AMBIENT      loop — continuous: the baked animation alternates forever
+///                (iterations: Infinity). The idle life of a page — a bouncing
+///                specimen, a drifting card, a pulsing dot. Fully disabled
+///                under prefers-reduced-motion.
 pub const MOTION_TRIGGERS: &[&str] = &[
     "hover",
     "press",
@@ -50,6 +54,7 @@ pub const MOTION_TRIGGERS: &[&str] = &[
     "exit",
     "view",
     "scroll",
+    "loop",
 ];
 
 /// The preset catalog is `animation-presets.json` — the SAME file the compiler

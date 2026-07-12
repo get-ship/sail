@@ -53,42 +53,46 @@
     </p>
     {#if dealt()}
       <grid cols="4" gap="3">
-        <card sx="p:4 min-h:panel-min-w-sm">
+        <card sx="p:4">
           <column gap="3" align="center">
             <p class="eyebrow">FIG. 01 · SPRING PHYSICS</p>
-            <avatar size="lg" motion:enter={{ translate-y: 'spring:bouncy' }}></avatar>
-            <p sx="text:sm fg:muted-foreground">a mass on a spring — overshoot and settle, no easing curve faked</p>
-            <code>translate-y: 'spring:bouncy'</code>
+            <div sx="w:6 h:6 radius:full bg:primary" motion:loop={{ translate-y: 'spring:bouncy' }}></div>
+            <p sx="text:sm fg:muted-foreground">a mass on a spring — overshoot, settle, forever</p>
+            <code>motion:loop · spring:bouncy</code>
           </column>
         </card>
         <card sx="p:4">
           <column gap="3">
-            <p class="eyebrow">FIG. 02 · STAGGER</p>
-            <progress value="82" max="100" motion:enter={{ translate-x: 'spring:snappy', stagger: '0.09s' }}></progress>
-            <progress value="55" max="100" motion:enter={{ translate-x: 'spring:snappy', stagger: '0.09s' }}></progress>
-            <progress value="93" max="100" motion:enter={{ translate-x: 'spring:snappy', stagger: '0.09s' }}></progress>
-            <progress value="38" max="100" motion:enter={{ translate-x: 'spring:snappy', stagger: '0.09s' }}></progress>
-            <p sx="text:sm fg:muted-foreground">the relationship BETWEEN siblings — a sequence, not a flash</p>
-            <code>stagger: '0.09s'</code>
+            <p class="eyebrow">FIG. 02 · STAGGER WAVE</p>
+            <row gap="2" align="center" sx="min-h:9">
+              <div sx="w:3 h:8 radius:sm bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+              <div sx="w:3 h:8 radius:sm bg:primary opacity:75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+              <div sx="w:3 h:8 radius:sm bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+              <div sx="w:3 h:8 radius:sm bg:primary opacity:75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+              <div sx="w:3 h:8 radius:sm bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+            </row>
+            <p sx="text:sm fg:muted-foreground">the delay BETWEEN siblings makes a wave</p>
+            <code>motion:loop · stagger: '0.12s'</code>
+          </column>
+        </card>
+        <card sx="p:4">
+          <column gap="3" align="center">
+            <p class="eyebrow">FIG. 03 · DRIFT</p>
+            <div sx="w:7 h:7 radius:md bg:tone-primary-bg border:primary" motion:loop={{ rotate: 'spring:deliberate' }}></div>
+            <p sx="text:sm fg:muted-foreground">ambient rotation, compositor-driven — off under reduced motion</p>
+            <code>motion:loop · rotate</code>
           </column>
         </card>
         <card sx="p:4">
           <column gap="3">
-            <p class="eyebrow">FIG. 03 · EXIT HOLD</p>
+            <p class="eyebrow">FIG. 04 · EXIT HOLD</p>
             <row gap="2">
               <badge tone="primary" motion:enter={{ scale: 'spring:gentle' }} motion:exit={{ opacity: 'fade-out' }}>a</badge>
               <badge tone="primary" motion:enter={{ scale: 'spring:gentle', stagger: '0.1s' }} motion:exit={{ opacity: 'fade-out' }}>b</badge>
               <badge tone="primary" motion:enter={{ scale: 'spring:gentle', stagger: '0.1s' }} motion:exit={{ opacity: 'fade-out' }}>c</badge>
             </row>
-            <p sx="text:sm fg:muted-foreground">removed elements stay mounted until their exit finishes — the one thing CSS can't do</p>
+            <p sx="text:sm fg:muted-foreground">removed elements stay mounted until their exit finishes — press replay to watch them leave and return</p>
             <code>motion:exit</code>
-          </column>
-        </card>
-        <card sx="p:4">
-          <column gap="3">
-            <p class="eyebrow">FIG. 04 · SCROLL TIMELINE</p>
-            <p sx="text:sm fg:muted-foreground">progress as a function of scroll position, driven on the compositor — the SHIP wordmark at the end of this page runs on it. No JavaScript executes while you scroll.</p>
-            <code>motion:scroll · motion:view</code>
           </column>
         </card>
       </grid>

@@ -1,4 +1,5 @@
 {
   "preset": "strict",
-  "sx": true
+  "sx": true,
+  "raw_containers": true
 }
