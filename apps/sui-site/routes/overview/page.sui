@@ -104,8 +104,7 @@
   <p>
     Fast in the boring way: templates compile ahead of time, updates are
     fine-grained signal writes, and there is no virtual DOM to diff. The
-    runtime is 9.4&nbsp;kB gzipped, and the js-framework-benchmark harness we
-    measure with lives in the repo — run it rather than take our word.
+    whole runtime is 9.4&nbsp;kB gzipped.
   </p>
 
   <row class="page-nav" gap="2">

@@ -1,26 +1,51 @@
 <!--
-  Ship UI landing — the front door. Umbrella across the four products, so it must
-  say what each one IS in a sentence, not describe compilers.
-
-  It was stale: it linked to a tutorial that no longer exists, claimed "around 74
-  primitives" (it is 48), and opened with "A compiler-first component framework,
-  an app framework, a batteries-included component library, and agent tooling" —
-  four nouns and no idea.
+  Ship UI landing — designer direction 1c "Kinetic": giant rotating type,
+  angled marquee bands, live proof, giant wordmark. The headline rotation is
+  a signal-driven keyed swap through motion: — the product doing the trick,
+  not a CSS keyframe imitating it. Loops the language deliberately lacks
+  (marquee, wordmark gradient) live in base.css with reduced-motion guards.
 -->
 <column class="landing-wrap">
-  <column class="hero" gap="4">
-    <p class="eyebrow">SHIP UI · 0.2.0</p>
-    <h1>Everything you need to build a web app.</h1>
-    <p class="lead">
-      A component library, a design system, a framework, and the app layer around
-      it — so a page is markup, and nothing has to be assembled first.
-    </p>
+  <column class="hero kinetic-hero" gap="4">
+    <center><p class="eyebrow">SHIP UI · 0.2.0</p></center>
+    <h1>
+      Agents
+      <br />
+      <strong class="rotator-slot">
+        {#for w of word() key={w}}
+          <b class="rotator"
+            motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}
+            motion:exit={{ opacity: 'fade-out' }}>{w}</b>
+        {/for}
+      </strong>
+      You review.
+    </h1>
+    <center>
+      <p class="lead">
+        One language for the whole interface — components, styling, state and
+        motion inside it — so what an agent writes is what your users safely
+        get.
+      </p>
+    </center>
     <row class="hero-cta" gap="2">
-      <a class="btn btn-primary" href="/overview">Get started</a>
-      <a class="btn" href="/components">See the components</a>
+      <a class="btn btn-primary" href="/getting-started" motion:press={{ scale: 'press' }}>Get started</a>
+      <a class="btn" href="/why">Why a language?</a>
     </row>
   </column>
+</column>
 
+<column class="marquee-band">
+  <row class="track" gap="0">
+    <p>NO RAW CSS ◆ SIGNALS BUILT IN ◆ 48 COMPONENTS ◆ 9 THEMES ◆ A11Y BY CONSTRUCTION ◆ NO RAW CSS ◆ SIGNALS BUILT IN ◆ 48 COMPONENTS ◆ 9 THEMES ◆ A11Y BY CONSTRUCTION ◆&nbsp;</p>
+  </row>
+</column>
+<column class="marquee-band alt">
+  <row class="track" gap="0">
+    <p>forms + validation · live data · one motion directive · ssr · hot reload · design tokens · forms + validation · live data · one motion directive · ssr · hot reload · design tokens ·&nbsp;</p>
+  </row>
+</column>
+
+<column class="landing-wrap">
   <column gap="3" sx="py:8">
     <center><h2>The same markup is not the same site.</h2></center>
     <center>
@@ -102,4 +127,6 @@
       <p>Built to be written by agents: the compiler is the guardrail, plus MCP tooling and a scored authoring eval.</p>
     </a>
   </column>
+
+  <p class="wordmark" motion:view={{ opacity: 'fade', translate-y: 'spring:deliberate' }}>SHIP</p>
 </column>
