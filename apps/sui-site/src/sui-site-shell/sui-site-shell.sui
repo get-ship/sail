@@ -71,7 +71,7 @@
       <a href="/showcase" aria-current={path() === '/showcase' ? 'page' : null}>Showcase</a>
 
       <label>Components</label>
-      <a href="/elements" aria-current={path() === '/elements' ? 'page' : null}>How they work</a>
+      <a href="/elements" aria-current={path() === '/elements' ? 'page' : null}>Using components</a>
       <a href="/layout" aria-current={path() === '/layout' ? 'page' : null}>Layout</a>
       <a href="/styling" aria-current={path() === '/styling' ? 'page' : null}>Styling</a>
       <a href="/theming" aria-current={path() === '/theming' ? 'page' : null}>Theming</a>

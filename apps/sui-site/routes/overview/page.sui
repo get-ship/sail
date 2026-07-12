@@ -11,10 +11,10 @@
     library, a design system, layout, theming, animation, and state — so a page
     is markup, and nothing else has to be assembled first.
   </p>
-  <h2>A page is a program</h2>
+  <h2>What a page looks like</h2>
   <p>
-    Here is a complete one — state, a filtered list, an animation, and the
-    components, with no import list and no stylesheet:
+    A small, complete one — a filtered list with state and animation. No
+    imports, no stylesheet; this is the entire file:
   </p>
   <code-block code={code.page}></code-block>
 

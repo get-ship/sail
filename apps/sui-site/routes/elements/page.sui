@@ -1,121 +1,92 @@
 <!--
-  /elements — the built-in component library: what it is and what it costs,
-  in that order. Internals live at the bottom for the curious.
+  /elements — the first detailed guide: USING the components. Props, tones,
+  composition, behavior — the reader's concerns, in the reader's order. The
+  compile-away story is one closing note, not the curriculum.
 -->
 <column class="doc" gap="5">
   <p class="eyebrow">Components</p>
-  <h1>Elements</h1>
+  <h1>Using components</h1>
   <p class="lead">
-    SUI's component library is built into the language. A dialog, a combobox,
-    a table, a tab strip — they are tags, written the way you write HTML, with
-    the keyboard handling, focus management, ARIA and theming already correct.
-    Nothing to install, import, or register.
+    The component library is part of the language: buttons, dialogs, tables,
+    comboboxes and the rest are tags, written the way you write HTML. Nothing
+    to install or import — put the tag on the page and it works, themed and
+    accessible.
   </p>
-  <p>
-    Use them like HTML and you are done — <a href="/components">the browser</a>
-    shows every one running. The rest of this page is for when you want to know
-    what they cost: almost nothing, because most of them stop existing at
-    compile time.
-  </p>
-  <h2>Under the hood: four mechanisms</h2>
 
-  <h2>1 — Native, plus a skin</h2>
+  <h2>Write them like HTML</h2>
+  <code-block code={code.useThem}></code-block>
+  <p>Which is exactly this:</p>
+  <card sx="p:4">
+    <row gap="3" align="center">
+      <avatar></avatar>
+      <strong sx="grow:1">Ada Lovelace</strong>
+      <badge tone="success">Active</badge>
+    </row>
+  </card>
+
+  <h2>Props are the whole API</h2>
   <p>
-    Seventeen of them are the browser's own. A dialog is
-    <code>&lt;dialog&gt;</code>; a disclosure is <code>&lt;details&gt;</code>; a
-    menu rides <code>[popover]</code> and the top layer. We add a stylesheet and
-    nothing else.
+    Three props cover most needs. <code>tone</code> picks the color from the
+    design system — <code>primary</code>, <code>destructive</code>,
+    <code>success</code>, <code>warning</code>, <code>info</code>,
+    <code>muted</code> — and means the same thing on every component.
+    <code>variant</code> picks how much of that color you get
+    (<code>solid</code>, <code>soft</code>, <code>outline</code>,
+    <code>ghost</code>). <code>size</code> scales controls.
   </p>
+  <code-block code={code.props}></code-block>
+  <row gap="2" align="center">
+    <button variant="solid" tone="primary">Save</button>
+    <button variant="outline" tone="destructive">Delete</button>
+    <button variant="ghost">Cancel</button>
+    <badge tone="warning">rolling</badge>
+  </row>
   <p>
-    <strong>These ship zero JavaScript.</strong> The focus trap, the ESC key, the
-    top-layer stacking, the ARIA — the platform already implements all of it,
-    correctly, and has for years. Most libraries reimplement it in 40&nbsp;kB and
-    get the edge cases wrong.
+    There is no <code>color=</code> anywhere. A tone is a promise the theme
+    keeps — restyle the site and every tone follows.
   </p>
-  <code-block code={code.native}></code-block>
+
+  <h2>Compose by nesting</h2>
+  <p>
+    Components contain whatever you put inside them; named slots place
+    children where the component expects them.
+  </p>
+  <code-block code={code.compose}></code-block>
+  <collapsible>
+    <strong slot="trigger">Advanced options (click me)</strong>
+    <p sx="pt:2">Hidden until asked for — and this one is running.</p>
+  </collapsible>
+
+  <h2>The behavior is already wired</h2>
+  <p>
+    Keyboard traversal, focus management, filtering, ARIA — the parts every
+    team gets subtly wrong ship inside the tag. You write the options; the
+    component does the rest. Try it:
+  </p>
+  <code-block code={code.behavior}></code-block>
+  <combobox placeholder="Pick a framework" sx="max-w:panel-max-w-sm">
+    <option value="sui">SUI</option>
+    <option value="svelte">Svelte</option>
+    <option value="solid">Solid</option>
+  </combobox>
+
+  <h2>Find the one you need</h2>
+  <p>
+    <a href="/components">The component browser</a> runs every element live —
+    search it, filter by category, and open any component for its variants,
+    usage and props.
+  </p>
+
   <p sx="text:sm fg:muted-foreground">
-    button · checkbox · details · dialog · dropzone · fieldset · hr · input ·
-    layout · meter · progress · prose · select · skeleton · status-dot · table ·
-    textarea
+    For the curious: most of these tags don't exist at runtime — the compiler
+    lowers them to native markup with the behavior attached, which is why the
+    library adds almost nothing to a page. A dialog ships as a real
+    <code>&lt;dialog&gt;</code>. If that interests you, the
+    <a href="/reference">reference</a> covers the mechanics.
   </p>
-
-  <h2>2 — Element mode: the tag compiles away</h2>
-  <p>
-    Where the platform has no element — a combobox, a toast region, a breadcrumb
-    — we define one. It is authored in <code>.sui</code> like anything else, and
-    then the compiler <strong>inlines it</strong>: the tag becomes plain markup
-    plus a <code>use:</code> action, and <em>no custom element is registered.</em>
-  </p>
-  <p>
-    So <code>&lt;combobox&gt;</code> costs you a <code>&lt;div&gt;</code> and one
-    action. Not a class, not a registry entry, not a definition in the custom
-    element registry, not a microtask on upgrade. You write a component; you ship
-    markup.
-  </p>
-  <code-block code={code.elementMode}></code-block>
-
-  <p sx="text:sm fg:muted-foreground">
-      alert · avatar · badge · breadcrumb · card · chip · code-block ·
-      collapsible · combobox · context-menu · dropdown · empty-state ·
-      error-boundary · error-state · field · hover-card · icon · label ·
-      menu-item · navbar · page · pagination · popover · radio · radio-group ·
-      scroll-area · separator · slider · spinner · switch · tab · tab-list ·
-      tab-panel · tabs · theme-picker · toast · toast-region · toggle ·
-      toggle-group · tooltip
-  </p>
-
-  <h2>3 — <code>use:</code> is where the behavior lives</h2>
-  <p>
-    Every element above gets its keyboard handling, its roving focus, its ARIA
-    sync from an action — a plain function over the element. It is not a
-    privileged internal mechanism: <a href="/behavior">the action you write looks
-    exactly like the ones we write</a>, because they are the same thing.
-  </p>
-  <code-block code={code.action}></code-block>
-
-  <h2>4 — Layout keywords</h2>
-  <p>
-    <a href="/layout"><code>&lt;row&gt;</code>, <code>&lt;column&gt;</code>,
-    <code>&lt;grid&gt;</code>, <code>&lt;stack&gt;</code>,
-    <code>&lt;center&gt;</code></a> are lowered by the preprocessor rather than
-    element mode, for one reason: they take <em>dynamic</em> values, and element
-    mode forbids those. It is the only mechanism that exists because of a
-    constraint rather than a preference.
-  </p>
-  <code-block code={code.keyword}></code-block>
-
-  <h2>A variant is a prop, not a component</h2>
-  <p>
-    This is where most libraries leak. A sheet is not a new component — it is a
-    dialog that arrives from the side. An alert dialog is not a new component —
-    it is a dialog with a role. A rail is not a new component — it is a
-    <code>&lt;navbar&gt;</code> on its side.
-  </p>
-  <p>
-    Collapsing those into props is what keeps the surface at forty-eight instead
-    of ninety, and it means <strong>the model cannot pick the wrong one, because
-    there is not a wrong one to pick.</strong>
-  </p>
-  <code-block code={code.variant}></code-block>
-
-  <h2>Anatomy is classes</h2>
-  <p>
-    Light DOM, so every internal is reachable, inspectable, and documented. There
-    is no <code>::part()</code> to expose, no shadow boundary to fight, and no
-    "how do I style the inner span" issue thread. The element's classes
-    <em>are</em> its API, published as CEM.
-  </p>
-  <code-block code={code.anatomy}></code-block>
-
-  <alert tone="info">
-    <strong>Every element, every state, every theme — verified on every commit.</strong>
-    Forty-eight conformance specs render each element across all nine themes and
-    drive the interactive ones in a real browser. The consistency claim is not a
-    promise; it is a test that fails.
-  </alert>
 
   <row class="page-nav" gap="2">
-    <a class="btn" href="/getting-started">← Getting started</a>
+    <a class="btn" href="/components">← Component library</a>
     <a class="btn btn-primary" href="/layout">Layout →</a>
   </row>
 </column>

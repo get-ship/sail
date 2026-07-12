@@ -1,46 +1,43 @@
-// Snippets for the elements page. Every SUI sample is compiled by the build.
+// Snippets for the using-components guide. Every SUI sample is compiled by
+// the build (crates/sui/compiler/tests/site_snippets_compile.rs).
 export const code = {
-  native: `<!-- MECHANISM 1 — native + skin. Zero JavaScript.
-     The browser owns the behavior; we own the surface. -->
+  useThem: `<!-- components are tags. Write them like HTML. -->
+<card sx="p:4">
+  <row gap="3" align="center">
+    <avatar></avatar>
+    <strong sx="grow:1">Ada Lovelace</strong>
+    <badge tone="success">Active</badge>
+  </row>
+</card>`,
+
+  props: `<!-- tone picks the color from the design system;
+     variant picks how much of it you get; size scales the control. -->
+<button variant="solid"   tone="primary">Save</button>
+<button variant="outline" tone="destructive">Delete</button>
+<button variant="ghost">Cancel</button>
+<badge tone="warning">rolling</badge>
+<alert tone="info">Saved just now.</alert>`,
+
+  compose: `<!-- components nest like HTML nests. Slots are named children. -->
 <dialog>
   <h2>Delete this?</h2>
-  <button value="cancel">Cancel</button>
-  <button value="ok" tone="destructive">Delete</button>
+  <p>This cannot be undone.</p>
+  <row gap="2">
+    <button value="cancel">Cancel</button>
+    <button value="ok" tone="destructive" variant="solid">Delete</button>
+  </row>
 </dialog>
 
-<details>
-  <summary>Advanced</summary>
-  <p>…</p>
-</details>`,
+<collapsible>
+  <strong slot="trigger">Advanced options</strong>
+  <p>Hidden until asked for.</p>
+</collapsible>`,
 
-  elementMode: `<!-- MECHANISM 2 — element mode. The tag COMPILES AWAY.
-     <combobox> lowers to a <div class="sui-combobox"> plus use:combobox.
-     No custom element is registered. There is no runtime cost to the tag. -->
-<combobox placeholder="Pick a team">
-  <option value="a">Alpha</option>
-  <option value="b">Beta</option>
+  behavior: `<!-- the behavior is already wired: this combobox filters as you
+     type and commits on Enter — you wrote only the options. -->
+<combobox placeholder="Pick a framework">
+  <option value="sui">SUI</option>
+  <option value="svelte">Svelte</option>
+  <option value="solid">Solid</option>
 </combobox>`,
-
-  action: `<!-- MECHANISM 3 — use:. Behavior is a function over an element.
-     This is how every element above gets its keyboard handling. -->
-<textarea use:autosize></textarea>`,
-
-  keyword: `<!-- MECHANISM 4 — layout keywords. Lowered by the preprocessor,
-     because they take DYNAMIC values that element mode forbids. -->
-<row gap="3" align="center">…</row>`,
-
-  variant: `<!-- A VARIANT IS A PROP, not a component.
-     A sheet is a dialog that arrives from the side.
-     An alert dialog is a dialog with a role. -->
-<dialog side="end">…</dialog>
-<dialog role="alertdialog">…</dialog>
-
-<!-- which is why the surface is 48 and not 90 -->
-<button tone="destructive" size="sm">Delete</button>`,
-
-  anatomy: `<!-- ANATOMY IS CLASSES. Light DOM, so every internal is reachable and
-     documented — no ::part(), no shadow boundary to fight. -->
-<card>
-  <!-- .sui-card > .header · .body · .footer -->
-</card>`,
 }
