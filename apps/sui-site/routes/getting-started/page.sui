@@ -11,7 +11,7 @@
 
   <h2>Install</h2>
   <p>SUI is a set of packages. Use whatever package manager you like.</p>
-  <sui-codeblock code={code.install}></sui-codeblock>
+  <code-block code={code.install}></code-block>
 
   <h2>Write a component</h2>
   <p>
@@ -20,7 +20,7 @@
     <code>sx</code> when you need surface or spacing. No controller needed until
     there's state to own.
   </p>
-  <sui-codeblock code={code.component}></sui-codeblock>
+  <code-block code={code.component}></code-block>
 
   <h2>Compile it</h2>
   <p>
@@ -28,7 +28,7 @@
     module that defines the custom element. That module is the whole output —
     it imports only <code>@ship/sui-runtime</code>.
   </p>
-  <sui-codeblock code={code.compile}></sui-codeblock>
+  <code-block code={code.compile}></code-block>
 
   <h2>Use it anywhere</h2>
   <p>
@@ -37,7 +37,7 @@
     drop it into a static page, a React app, a Svelte app, or plain HTML. It's
     a web component; nothing about SUI has to be present in the host.
   </p>
-  <sui-codeblock code={code.use}></sui-codeblock>
+  <code-block code={code.use}></code-block>
 
   <h2>Add state</h2>
   <p>
@@ -45,7 +45,7 @@
     the same file. The markup reads what the controller's <code>scope()</code>
     returns — one file, logic and template together.
   </p>
-  <sui-codeblock code={code.interactive}></sui-codeblock>
+  <code-block code={code.interactive}></code-block>
 
   <h2>The single-file model</h2>
   <p>One file, two roles — the separation is the whole mental model:</p>
@@ -77,7 +77,7 @@
     is the optional app framework that drives the compiler for you. SUI works
     with it or without it.
   </p>
-  <sui-codeblock code={code.deck}></sui-codeblock>
+  <code-block code={code.deck}></code-block>
 
   <row class="page-nav">
     <a class="btn" href="/">← Overview</a>

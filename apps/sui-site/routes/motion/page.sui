@@ -8,7 +8,7 @@
     directive, and no imperative escape hatch you're expected to graduate to.
   </p>
 
-  <sui-codeblock code={code.intro}></sui-codeblock>
+  <code-block code={code.intro}></code-block>
 
   <p>
     The values are <strong>presets</strong>, not numbers. A preset is a physical
@@ -29,7 +29,7 @@
     <code>focus-visible</code>. The browser already knows when these happen, so
     the work is deciding what they should look like.
   </p>
-  <sui-codeblock code={code.interaction}></sui-codeblock>
+  <code-block code={code.interaction}></code-block>
 
   <h3>Lifecycle</h3>
   <p>
@@ -38,7 +38,7 @@
     DOM until its animation finishes, which nothing but the renderer can do — the
     moment you remove a node yourself, its exit animation has nowhere to play.
   </p>
-  <sui-codeblock code={code.lifecycle}></sui-codeblock>
+  <code-block code={code.lifecycle}></code-block>
 
   <h3>Timeline</h3>
   <p>
@@ -48,7 +48,7 @@
     <strong>no JavaScript executes while you scroll</strong>. The effect people
     reach for a 30&nbsp;kB animation library to get is a directive with a preset.
   </p>
-  <sui-codeblock code={code.timeline}></sui-codeblock>
+  <code-block code={code.timeline}></code-block>
 
   <h2>Stagger</h2>
   <p>
@@ -57,7 +57,7 @@
     anything about any one of them. It's what makes a list arrive as a list
     instead of a flash.
   </p>
-  <sui-codeblock code={code.stagger}></sui-codeblock>
+  <code-block code={code.stagger}></code-block>
 
   <h2>The vocabulary</h2>
   <p>

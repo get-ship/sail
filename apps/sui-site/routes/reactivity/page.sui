@@ -14,14 +14,14 @@
     <code>.set()</code> to write. Reading a signal inside a derived or effect
     subscribes to it automatically.
   </p>
-  <sui-codeblock code={code.signal}></sui-codeblock>
+  <code-block code={code.signal}></code-block>
 
   <h2>Derived</h2>
   <p>
     A derived value recomputes from the signals it reads. It's lazy and cached —
     it only recomputes when you read it <em>and</em> an input actually changed.
   </p>
-  <sui-codeblock code={code.derived}></sui-codeblock>
+  <code-block code={code.derived}></code-block>
 
   <h2>Effects</h2>
   <p>
@@ -32,7 +32,7 @@
     never left dangling. <code>effect()</code> returns a disposer to stop it
     entirely.
   </p>
-  <sui-codeblock code={code.effect}></sui-codeblock>
+  <code-block code={code.effect}></code-block>
 
   <h2>Escape hatches</h2>
   <p>
@@ -42,14 +42,14 @@
     signal without subscribing to it — useful when an effect should react to one
     input but only sample another.
   </p>
-  <sui-codeblock code={code.escape}></sui-codeblock>
+  <code-block code={code.escape}></code-block>
 
   <h2>In a component</h2>
   <p>
     Templates bind to signals directly. When the signal changes, only the exact
     DOM that read it updates — no virtual DOM, no re-render of the component.
   </p>
-  <sui-codeblock code={code.template}></sui-codeblock>
+  <code-block code={code.template}></code-block>
   <p class="callout">
     A text binding <code>&#123;count()&#125;</code> is a compiled effect. When the
     signal changes, the compiler updates only the one text node that read it
@@ -64,7 +64,7 @@
     receives the scope plus the element itself. Register the undo with
     <code>onCleanup</code>, and the runtime calls it when the component goes away.
   </p>
-  <sui-codeblock code={code.lifecycle}></sui-codeblock>
+  <code-block code={code.lifecycle}></code-block>
   <p class="callout">
     <strong>There is no dependency array.</strong> An effect subscribes to
     whatever it reads, and <code>onCleanup</code> is the only teardown there is —

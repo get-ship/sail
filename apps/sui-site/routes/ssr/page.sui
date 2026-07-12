@@ -37,7 +37,7 @@
     <code>markHydrateBoundary</code> helpers stamp these onto the server DOM;
     on the browser DOM they are true no-ops.
   </p>
-  <sui-codeblock code={code.markers}></sui-codeblock>
+  <code-block code={code.markers}></code-block>
 
   <h2>What the client does</h2>
   <p>
@@ -65,7 +65,7 @@
     render isolate that has neither. Anything browser-only belongs in
     <code>mount()</code>, which runs only on the client, after the DOM exists.
   </p>
-  <sui-codeblock code={code.guard}></sui-codeblock>
+  <code-block code={code.guard}></code-block>
 
   <p class="callout">
     <strong>Guard by placement, not by feature-detection.</strong> You rarely

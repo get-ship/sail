@@ -22,7 +22,7 @@
     analyzer use. Use it from CI, from a pre-commit hook, or from an
     agent's tool loop. A non-zero exit is a build failure.
   </p>
-  <sui-codeblock code={code.cli}></sui-codeblock>
+  <code-block code={code.cli}></code-block>
 
   <h2>2. The LSP (IDE)</h2>
   <p>
@@ -34,7 +34,7 @@
   <p>
     <strong>Project config — <code>.lsp.json</code> at the workspace root:</strong>
   </p>
-  <sui-codeblock code={code.lspJson}></sui-codeblock>
+  <code-block code={code.lspJson}></code-block>
   <p>
     Most editors pick this up automatically. For VS Code: drop a
     <code>sui-lsp</code> extension reference. For Neovim:
@@ -52,7 +52,7 @@
     <code>host.setDiagnostics</code> + <code>host.setCompletions</code>
     on every debounced doc change.
   </p>
-  <sui-codeblock code={code.browser}></sui-codeblock>
+  <code-block code={code.browser}></code-block>
 
   <h2>How they relate</h2>
   <p>
@@ -72,7 +72,7 @@
     is what <code>compile</code> writes to stderr — a stable contract
     to grep on. Run it before declaring a SUI change done.
   </p>
-  <sui-codeblock code={code.agent}></sui-codeblock>
+  <code-block code={code.agent}></code-block>
 
   <row class="page-nav">
     <a class="btn" href="/composition">← Composition</a>

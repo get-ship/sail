@@ -22,7 +22,7 @@
     vocabulary is closed, there is no pixel value like <code>p:16px</code> and
     no hex like <code>bg:#fff</code> — only tokens resolve.
   </p>
-  <sui-codeblock code={code.sx}></sui-codeblock>
+  <code-block code={code.sx}></code-block>
   <p>
     Text is already styled: write <code>&lt;h1&gt;</code>–<code>&lt;h6&gt;</code>
     and <code>&lt;p&gt;</code> plain and they take the type scale. Reach for
@@ -35,7 +35,7 @@
     use <code>&lt;host sx&gt;</code>. It is the <code>.sui-page</code> rule,
     expressed in the same token vocabulary as everything else.
   </p>
-  <sui-codeblock code={code.host}></sui-codeblock>
+  <code-block code={code.host}></code-block>
 
   <h2>State with <code>&lt;variants&gt;</code></h2>
   <p>
@@ -44,7 +44,7 @@
     carries an attribute — <code>[open]</code>, <code>[disabled]</code>,
     a <code>tone</code> value — without a controller writing styles by hand.
   </p>
-  <sui-codeblock code={code.variants}></sui-codeblock>
+  <code-block code={code.variants}></code-block>
 
   <h2>Tokens, not literals</h2>
   <p>
@@ -57,7 +57,7 @@
     <code>bg:tone-warning-bg</code>; a headline reads
     <code>text:xl</code>.
   </p>
-  <sui-codeblock code={code.tokens}></sui-codeblock>
+  <code-block code={code.tokens}></code-block>
 
   <h2>Status tones, not palette colors</h2>
   <p>
@@ -66,7 +66,7 @@
     brand action. Mixing the two breaks every theme that ships its own
     success color.
   </p>
-  <sui-codeblock code={code.tone}></sui-codeblock>
+  <code-block code={code.tone}></code-block>
 
   <h2>Layout is keywords</h2>
   <p>
@@ -78,7 +78,7 @@
     the same wherever it's reused. Raw containers are a lint error, not a
     style choice.
   </p>
-  <sui-codeblock code={code.layout}></sui-codeblock>
+  <code-block code={code.layout}></code-block>
 
   <h2>The escape hatch</h2>
   <p>
@@ -89,7 +89,7 @@
     scoped to the shadow root, still reading tokens. Keep it small: if a rule
     <em>can</em> be an <code>sx</code> atom, it should be.
   </p>
-  <sui-codeblock code={code.escape}></sui-codeblock>
+  <code-block code={code.escape}></code-block>
 
   <row class="page-nav">
     <a class="btn" href="/theming">← Theming</a>

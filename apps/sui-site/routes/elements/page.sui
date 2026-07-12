@@ -16,7 +16,7 @@
     element plus a stylesheet, so you get the keyboard handling, the focus trap,
     the ARIA, and the top-layer stacking from the platform, correct by default.
   </p>
-  <sui-codeblock code={code.native}></sui-codeblock>
+  <code-block code={code.native}></code-block>
   <p class="mono small">
     button · checkbox · details · dialog · dropzone · fieldset · hr · input ·
     meter · progress · prose · select · skeleton · status-dot · table · textarea
@@ -30,7 +30,7 @@
     markup plus a <code>use:</code> action, and no custom element is registered
     at runtime. You write a component; you ship markup.
   </p>
-  <sui-codeblock code={code.language}></sui-codeblock>
+  <code-block code={code.language}></code-block>
   <p class="mono small">
     alert · avatar · badge · breadcrumb · card · chip · collapsible · combobox ·
     context-menu · dropdown · empty-state · error-boundary · error-state · field ·
@@ -48,7 +48,7 @@
     keeps the surface at 48 instead of 90 — and it means the model cannot pick
     the wrong one, because there is only one.
   </p>
-  <sui-codeblock code={code.variant}></sui-codeblock>
+  <code-block code={code.variant}></code-block>
 
   <h2>Layout: the axis is the name</h2>
   <p>
@@ -57,7 +57,7 @@
     is two dimensions. There is no <code>flex-direction</code> to get backwards
     and no debate about whether a stack is vertical.
   </p>
-  <sui-codeblock code={code.layout}></sui-codeblock>
+  <code-block code={code.layout}></code-block>
 
   <p class="callout">
     <strong>The library is very nearly free.</strong> A screen built from twelve

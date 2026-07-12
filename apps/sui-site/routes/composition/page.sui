@@ -19,8 +19,8 @@
     The consumer fills a named slot by putting <code>slot="…"</code> on a child;
     anything without a <code>slot</code> attribute lands in the default well.
   </p>
-  <sui-codeblock code={code.slots}></sui-codeblock>
-  <sui-codeblock code={code.consumer}></sui-codeblock>
+  <code-block code={code.slots}></code-block>
+  <code-block code={code.consumer}></code-block>
 
   <h2>Props down</h2>
   <p>
@@ -28,14 +28,14 @@
     <code>&lt;prop&gt;</code> and reads it as a signal — same syntax as any
     local signal. The parent owns the state; the child renders it.
   </p>
-  <sui-codeblock code={code.props}></sui-codeblock>
+  <code-block code={code.props}></code-block>
 
   <h2>Events + modifiers</h2>
   <p>
     Bind native events with <code>on:event</code>. Modifiers chain on the
     attribute to declare intent instead of writing the boilerplate by hand.
   </p>
-  <sui-codeblock code={code.events}></sui-codeblock>
+  <code-block code={code.events}></code-block>
   <ul class="mod-list">
     <li><code>prevent</code> — <code>event.preventDefault()</code> first</li>
     <li><code>stop</code> — <code>event.stopPropagation()</code> first</li>

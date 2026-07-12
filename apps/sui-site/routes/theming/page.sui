@@ -28,7 +28,7 @@
     <button primary outline on:click={() => mode.set('dark')}>Dark</button>
     <small class="muted">active: <code>data-mode="&#123;mode()&#125;"</code> on <code>&lt;html&gt;</code></small>
   </row>
-  <sui-codeblock code={code.toggleExample}></sui-codeblock>
+  <code-block code={code.toggleExample}></code-block>
 
   <h2>Token categories</h2>
   <p>
@@ -73,13 +73,13 @@
     whole app re-skins. The snippet below defines a third theme on top of
     the canonical ship-light defaults.
   </p>
-  <sui-codeblock code={code.defineTheme}></sui-codeblock>
+  <code-block code={code.defineTheme}></code-block>
   <p>
     Activate the theme: the host's theme helper (or a direct attribute
     write) sets <code>document.documentElement.dataset.theme = "crimson-red"</code>.
     The shell reads it on the next paint.
   </p>
-  <sui-codeblock code={code.activate}></sui-codeblock>
+  <code-block code={code.activate}></code-block>
 
   <h2>The custom theme, live</h2>
   <p>

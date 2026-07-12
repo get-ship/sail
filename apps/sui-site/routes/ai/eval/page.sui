@@ -16,7 +16,7 @@
   </p>
 
   <h2>The API, in one block</h2>
-  <sui-codeblock code={evalExample} lang="ts"></sui-codeblock>
+  <code-block code={evalExample} lang="ts"></code-block>
 
   <h2>Sub-scores</h2>
   <h3><code>compile</code></h3>
@@ -49,7 +49,7 @@
     <code>sniffEscapeHatches(output)</code> returns a separate array of policy
     violations — things that compile but shouldn't ship:
   </p>
-  <sui-codeblock code={hatchExample} lang="ts"></sui-codeblock>
+  <code-block code={hatchExample} lang="ts"></code-block>
   <p>Detected hatches today:</p>
   <ul>
     <li>raw <code>&lt;script&gt;</code> tags in templates</li>

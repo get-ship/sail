@@ -7,7 +7,7 @@
     <code>use:</code> attaches one. That is the entire mechanism, and it is the
     only way to reach an element.
   </p>
-  <sui-codeblock code={code.attach}></sui-codeblock>
+  <code-block code={code.attach}></code-block>
 
   <h2>There is no ref</h2>
   <p>
@@ -27,12 +27,12 @@
     No registry. No base class. No lifecycle interface to implement. If you can
     write a function, you can write an action.
   </p>
-  <sui-codeblock code={code.author}></sui-codeblock>
+  <code-block code={code.author}></code-block>
   <p>
     Pass it a parameter and it becomes reactive: the action's <code>update</code>
     runs whenever the value changes.
   </p>
-  <sui-codeblock code={code.param}></sui-codeblock>
+  <code-block code={code.param}></code-block>
 
   <h2>The standard library uses the same door</h2>
   <p>
@@ -43,5 +43,5 @@
     why there is no privileged internal API you'll eventually need and can't
     reach.
   </p>
-  <sui-codeblock code={code.stdlib}></sui-codeblock>
+  <code-block code={code.stdlib}></code-block>
 </column>

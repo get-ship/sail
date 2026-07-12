@@ -13,8 +13,8 @@
 
   <h2>The clients seam</h2>
   <p>Declare a clients module in <code>deck.jsonc</code>. deck wires its exports into the router, and every view reads them by name.</p>
-  <sui-codeblock code={configExample} lang="json"></sui-codeblock>
-  <sui-codeblock code={usageExample} lang="ts"></sui-codeblock>
+  <code-block code={configExample} lang="json"></code-block>
+  <code-block code={usageExample} lang="ts"></code-block>
 
   <h2>Durable state vs. route state</h2>
   <p>The store lives <em>above</em> the router, so it survives client-side navigation <strong>and</strong> a full reload — unlike a route signal, which resets when you navigate away. A persisted counter (an example) demonstrates the difference: bump it, navigate to another page, come back — the number holds.</p>

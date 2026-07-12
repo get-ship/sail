@@ -17,7 +17,7 @@
     <code>&#123; kind: 'error', error &#125;</code>.
     It starts loading immediately and settles when the source resolves.
   </p>
-  <sui-codeblock code={code.source}></sui-codeblock>
+  <code-block code={code.source}></code-block>
 
   <h2>Render the three states</h2>
   <p>
@@ -27,7 +27,7 @@
     where <code>x().value</code> holds the data. The three cases are structural —
     you can't render the list without having handled loading and error first.
   </p>
-  <sui-codeblock code={code.states}></sui-codeblock>
+  <code-block code={code.states}></code-block>
 
   <h2>Live server data</h2>
   <p>
@@ -37,7 +37,7 @@
     server half — the endpoint, the patch feed, SSR — is <a href="/deck">deck</a>'s
     job; the view just reads the signal.
   </p>
-  <sui-codeblock code={code.server}></sui-codeblock>
+  <code-block code={code.server}></code-block>
 
   <p class="callout">
     <strong>The state is the contract.</strong> Because the loaded value is only

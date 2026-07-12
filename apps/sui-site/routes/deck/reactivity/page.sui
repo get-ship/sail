@@ -4,7 +4,7 @@
   that model lives at /reactivity and is not re-taught here. This page is
   about the sources deck owns and feeds into the graph: the URL, live server
   data, durable app state, and dev edits. Code blocks are highlighted via
-  <sui-codeblock> (strings from ./snippets).
+  <code-block> (strings from ./snippets).
 -->
 <article class="doc">
   <p class="eyebrow">Reactivity</p>
@@ -31,7 +31,7 @@
     <code>route.hash()</code>. A client-side navigation updates them in place, so
     only the bindings that read the URL re-run: no document reload, no re-mount.
   </p>
-  <sui-codeblock code={code.routeSignals}></sui-codeblock>
+  <code-block code={code.routeSignals}></code-block>
   <p>
     See it live: the <a href="/deck/examples/greet/ada">greet</a> route reads
     <code>route.params.name()</code>, so its heading tracks the URL as you follow
@@ -46,7 +46,7 @@
     <strong>host-wired</strong> — a host (like shipd) mounts it and supplies the
     resolver.
   </p>
-  <sui-codeblock code={code.liveData}></sui-codeblock>
+  <code-block code={code.liveData}></code-block>
   <p>
     Standalone <code>deck dev</code> serves routing, assets, SSR and HMR, but not
     live server data yet — that's the server-functions work (#32). Until then,

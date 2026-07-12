@@ -17,7 +17,7 @@
     directions: type in the field and the signal updates; set the signal and the
     field follows. <code>bind:checked</code> does the same for a checkbox.
   </p>
-  <sui-codeblock code={code.twoway}></sui-codeblock>
+  <code-block code={code.twoway}></code-block>
 
   <h2>Events</h2>
   <p>
@@ -26,7 +26,7 @@
     where you write signals; the template's read side stays a pure function of
     state.
   </p>
-  <sui-codeblock code={code.events}></sui-codeblock>
+  <code-block code={code.events}></code-block>
 
   <h2>Reaching the element: <code>use:</code></h2>
   <p>
@@ -37,20 +37,20 @@
     never becomes a value you have to store in scope, thread through the
     template, and remember to release.
   </p>
-  <sui-codeblock code={code.actions}></sui-codeblock>
+  <code-block code={code.actions}></code-block>
   <p>
     Authoring one is the whole API — there is no registry and no base class.
     Actions are how every L1 element gets its behavior, so the thing you write is
     the thing the standard library writes.
   </p>
-  <sui-codeblock code={code.authoring}></sui-codeblock>
+  <code-block code={code.authoring}></code-block>
   <p>
     When you genuinely need the node as a <em>value</em> — to hand to a charting
     library, say — <code>bind:this</code> fills a <code>ref()</code> declared in
     the controller, and you read it like a signal. Reach for an action first: it
     cleans up after itself, and it's reusable.
   </p>
-  <sui-codeblock code={code.refs}></sui-codeblock>
+  <code-block code={code.refs}></code-block>
 
   <p class="callout">
     <strong>Reads and writes stay separate.</strong> The template reads signals;

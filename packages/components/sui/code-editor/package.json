@@ -39,7 +39,7 @@
     "@ship/test-setup": "workspace:*",
     "vitest": "^4.1.5"
   },
-  "deck_disabled_pending_floor": {
+  "deck": {
     "bundles": [
       {
         "name": "sui-code-editor",

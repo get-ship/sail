@@ -9,14 +9,14 @@
 
   <h2>1. A page is a file</h2>
   <p>Create <code>routes/page.sui</code>. Whatever markup it holds is your page.</p>
-  <sui-codeblock code={pageExample} lang="sui"></sui-codeblock>
+  <code-block code={pageExample} lang="sui"></code-block>
 
   <h2>2. Add a controller</h2>
   <p>Co-locate <code>routes/controller.ts</code> for reactive state. It returns a scope the template reads by name.</p>
-  <sui-codeblock code={controllerExample} lang="ts"></sui-codeblock>
+  <code-block code={controllerExample} lang="ts"></code-block>
 
   <h2>3. Run the dev server</h2>
-  <sui-codeblock code={devCmd} lang="bash"></sui-codeblock>
+  <code-block code={devCmd} lang="bash"></code-block>
   <alert class="callout">
     <strong>No build step to develop.</strong> deck compiles <code>.sui</code> in-process and serves the SPA with HMR — edit a route and it soft-reloads with state preserved.
   </alert>
