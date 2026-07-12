@@ -35,9 +35,57 @@
 </navbar>
 
 <row align="stretch">
-  <navbar placement="rail" bordered sticky>
+  {#if product() === 'deck'}
+    <navbar placement="rail" bordered sticky>
+      <label>Introduction</label>
+      <a href="/deck">Overview</a>
+      <a href="/deck/getting-started">Getting started</a>
+      <label>Concepts</label>
+      <a href="/deck/routing">Routing</a>
+      <a href="/deck/dynamic-routes">Dynamic routes</a>
+      <a href="/deck/layouts">Layouts</a>
+      <a href="/deck/rendering">Rendering</a>
+      <a href="/deck/reactivity">Reactivity</a>
+      <a href="/deck/data">Live data</a>
+      <label>Tooling</label>
+      <a href="/deck/hmr">HMR</a>
+      <a href="/deck/build">Build</a>
+    </navbar>
+  {:else if product() === 'ai'}
+    <navbar placement="rail" bordered sticky>
+      <label>AI</label>
+      <a href="/ai">Overview</a>
+      <a href="/ai/authoring">Authoring</a>
+      <a href="/ai/tooling">Tooling</a>
+      <a href="/ai/eval">Eval</a>
+    </navbar>
+  {:else}
+    <navbar placement="rail" bordered sticky>
+      <label>Start here</label>
+      <a href="/overview">Overview</a>
+      <a href="/why">Why SUI</a>
+      <a href="/getting-started">Getting started</a>
 
-  </navbar>
+      <label>What's given</label>
+      <a href="/elements">Elements</a>
+      <a href="/styling">Styling</a>
+      <a href="/theming">Theming</a>
+      <a href="/motion">Motion</a>
+      <a href="/behavior">Behavior</a>
+
+      <label>What you write</label>
+      <a href="/reactivity">State</a>
+      <a href="/control-flow">Control flow</a>
+      <a href="/data-binding">Events &amp; binding</a>
+      <a href="/composition">Compositions</a>
+      <a href="/data">Live data</a>
+      <a href="/ssr">SSR &amp; hydration</a>
+
+      <label>Reference</label>
+      <a href="/reference">Directives &amp; API</a>
+      <a href="/tooling">Tooling</a>
+    </navbar>
+  {/if}
 
   <main sx="p:6 min-w:0">
     <slot name="route"></slot>

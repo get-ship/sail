@@ -1,105 +1,175 @@
-<column class="doc">
-  <p class="eyebrow">Core concepts</p>
+<!--
+  /motion — the page must MOVE. An argument about animation made in prose is
+  self-refuting, and this page was exactly that.
+
+  Everything below is live. The timeline section animates as you scroll it: `view`
+  attaches a native ViewTimeline, which the browser drives on the compositor —
+  no JS in the frame loop.
+
+  Authored under the floor: no <style>, no raw <div>, no inline style.
+-->
+<column class="doc" gap="5">
+  <p class="eyebrow">What's given</p>
   <h1>Motion</h1>
   <p class="lead">
-    One directive, one system. <code>motion:</code> takes a
-    <strong>trigger</strong> — when it happens — and a <strong>config</strong> —
-    what moves. There is no second animation API to learn, no transition
-    directive, and no imperative escape hatch you're expected to graduate to.
+    One directive. <code>motion:</code> takes a <strong>trigger</strong> — when —
+    and a <strong>config</strong> — what moves. There is no second animation API,
+    no transition directive, and no imperative escape hatch you are meant to
+    graduate to. Everything on this page is running right now.
   </p>
 
-  <code-block code={code.intro}></code-block>
-
+  <h2>Interaction</h2>
   <p>
-    The values are <strong>presets</strong>, not numbers. A preset is a physical
-    description — <code>spring:gentle</code>, <code>fade</code> — and the compiler
-    bakes it into the animation at build time. You don't tune a duration; you say
-    what kind of movement it is, and the whole app moves the same way.
+    The browser already knows when these happen, so the only question left is what
+    they should look like. Hover the cards. Press them.
   </p>
 
-  <h2>Triggers come in three kinds</h2>
-  <p>
-    The kind matters, because it decides how much JavaScript ends up in your
-    frame loop. Two of the three kinds need <em>none</em>.
-  </p>
+  <grid cols="3" gap="3">
+    <card motion:hover={{ scale: 'spring:gentle' }} sx="p:4">
+      <strong>hover</strong>
+      <p sx="text:sm fg:muted-foreground">spring:gentle</p>
+    </card>
+    <card motion:hover={{ scale: 'spring:bouncy' }} sx="p:4">
+      <strong>hover</strong>
+      <p sx="text:sm fg:muted-foreground">spring:bouncy</p>
+    </card>
+    <card motion:press={{ scale: 'press' }} sx="p:4">
+      <strong>press</strong>
+      <p sx="text:sm fg:muted-foreground">press</p>
+    </card>
+  </grid>
 
-  <h3>Interaction</h3>
-  <p>
-    <code>hover</code>, <code>press</code>, <code>focus</code>,
-    <code>focus-visible</code>. The browser already knows when these happen, so
-    the work is deciding what they should look like.
-  </p>
   <code-block code={code.interaction}></code-block>
 
-  <h3>Lifecycle</h3>
+  <h2>Lifecycle</h2>
   <p>
-    <code>enter</code> and <code>exit</code>. These are the ones a framework
-    genuinely has to be involved in: <code>exit</code> holds the element in the
-    DOM until its animation finishes, which nothing but the renderer can do — the
-    moment you remove a node yourself, its exit animation has nowhere to play.
+    <code>enter</code> and <code>exit</code>. These are the ones a framework has
+    to be involved in: <strong>exit holds the element in the DOM until its
+    animation finishes.</strong> Remove a node yourself and its exit animation has
+    nowhere to play.
   </p>
-  <code-block code={code.lifecycle}></code-block>
 
-  <h3>Timeline</h3>
-  <p>
-    <code>view</code> and <code>scroll</code> are driven by scroll
-    <em>position</em>, not by time. They compile to native CSS
-    <code>animation-timeline</code>, which means they run off the main thread:
-    <strong>no JavaScript executes while you scroll</strong>. The effect people
-    reach for a 30&nbsp;kB animation library to get is a directive with a preset.
-  </p>
-  <code-block code={code.timeline}></code-block>
+  <row gap="3" align="center">
+    <button on:click={() => open.set(!open())}>
+      {open() ? 'Remove' : 'Add'} the panel
+    </button>
+    <p sx="text:sm fg:muted-foreground">It finishes leaving before it goes.</p>
+  </row>
+
+  {#if open()}
+    <card
+      motion:enter={{ opacity: 'fade', scale: 'spring:snappy' }}
+      motion:exit={{ opacity: 'fade-out' }}
+      sx="p:5"
+    >
+      <strong>I animate in, and I animate out.</strong>
+      <p sx="text:sm fg:muted-foreground">
+        The exit is the part you cannot do by hand — the runtime keeps me mounted
+        until I am done.
+      </p>
+    </card>
+  {/if}
+
+  <code-block code={code.lifecycle}></code-block>
 
   <h2>Stagger</h2>
   <p>
     <code>stagger</code> is reserved, not a property: it describes the
-    relationship <em>between</em> siblings — the delay step — rather than
-    anything about any one of them. It's what makes a list arrive as a list
-    instead of a flash.
+    relationship <em>between</em> siblings, not anything about any one of them.
+    It is what makes a list arrive as a list instead of a flash.
   </p>
+
+  <row gap="3" align="center">
+    <button on:click={() => shown.set(!shown())}>
+      {shown() ? 'Clear' : 'Deal'} the cards
+    </button>
+  </row>
+
+  {#if shown()}
+    <grid cols="4" gap="2">
+      {#for n of items() key={n}}
+        <card
+          motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy', stagger: '0.05s' }}
+          sx="p:4"
+        >
+          <strong>{n}</strong>
+        </card>
+      {/for}
+    </grid>
+  {/if}
+
   <code-block code={code.stagger}></code-block>
+
+  <h2>Timeline — scroll, not time</h2>
+  <p>
+    <code>view</code> and <code>scroll</code> are driven by scroll
+    <em>position</em>, not by time. They attach a native
+    <code>ViewTimeline</code>, which the browser drives on the compositor —
+    <strong>no JavaScript runs while you scroll</strong>, only once at mount to
+    set it up. The effect people install a 30&nbsp;kB library for is a directive
+    with a preset.
+  </p>
+  <p sx="fg:muted-foreground">Keep scrolling. Each of these arrives on its own.</p>
+
+  <column gap="4">
+    <card motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }} sx="p:6">
+      <h3>This one fades up as it enters the viewport.</h3>
+      <p sx="fg:muted-foreground">
+        <code>motion:view</code> — nothing in the frame loop.
+      </p>
+    </card>
+
+    <card motion:view={{ opacity: 'fade', translate-x: 'spring:deliberate' }} sx="p:6">
+      <h3>This one slides in, slowly.</h3>
+      <p sx="fg:muted-foreground">
+        The same directive, a different preset — <code>spring:deliberate</code>.
+      </p>
+    </card>
+
+    <card motion:view={{ scale: 'spring:bouncy', opacity: 'fade' }} sx="p:6">
+      <h3>And this one springs.</h3>
+      <p sx="fg:muted-foreground">
+        Nine presets. Four springs, five tweens. That is the whole catalogue.
+      </p>
+    </card>
+  </column>
+
+  <code-block code={code.timeline}></code-block>
 
   <h2>The vocabulary</h2>
   <p>
-    Small on purpose, and enforced: an unknown trigger or property is a compile
+    Small on purpose, and enforced: an unknown trigger or preset is a compile
     error, not a silent no-op. A typo used to be something you could ship.
   </p>
-  <grid class="grid-2" cols="2">
-    <column>
-      <h3>Triggers</h3>
-      <p class="mono">
-        hover · press · focus · focus-visible<br />
-        enter · exit<br />
-        view · scroll
-      </p>
+
+  <grid cols="2" gap="4">
+    <column gap="1">
+      <label>Triggers</label>
+      <p sx="text:sm fg:muted-foreground">hover · press · focus · focus-visible · enter · exit · view · scroll</p>
     </column>
-    <column>
-      <h3>Properties</h3>
-      <p class="mono">
-        scale · opacity<br />
-        translate-x · translate-y<br />
-        rotate
-      </p>
+    <column gap="1">
+      <label>Properties</label>
+      <p sx="text:sm fg:muted-foreground">scale · opacity · translate-x · translate-y · rotate · <em>stagger</em> (reserved)</p>
     </column>
-    <column>
-      <h3>Springs</h3>
-      <p class="mono">
-        spring:snappy · spring:gentle<br />
-        spring:bouncy · spring:deliberate
-      </p>
+    <column gap="1">
+      <label>Springs</label>
+      <p sx="text:sm fg:muted-foreground">spring:snappy · spring:gentle · spring:bouncy · spring:deliberate</p>
     </column>
-    <column>
-      <h3>Tweens</h3>
-      <p class="mono">
-        fade · fade-out<br />
-        press · release · pulse
-      </p>
+    <column gap="1">
+      <label>Tweens</label>
+      <p sx="text:sm fg:muted-foreground">fade · fade-out · press · release · pulse</p>
     </column>
   </grid>
 
-  <p class="callout">
+  <alert tone="info">
     <strong>Reduced motion is not your problem.</strong> Every
-    <code>motion:</code> respects <code>prefers-reduced-motion</code> at the
-    runtime, so honouring it isn't a thing you can forget to do.
-  </p>
+    <code>motion:</code> respects <code>prefers-reduced-motion</code> — the
+    JavaScript triggers check it, and the framework's global rule kills the CSS
+    timelines. Honouring it is not something you can forget to do.
+  </alert>
+
+  <row class="page-nav" gap="2">
+    <a class="btn" href="/theming">← Theming</a>
+    <a class="btn btn-primary" href="/behavior">Behavior →</a>
+  </row>
 </column>
