@@ -1,242 +1,854 @@
 <!--
-  /components — the component library. Every component, live, on one page.
+  /components — the component browser. A pack rail, category chips, and live
+  search compose over one catalog (registry.ts); every tile below renders the
+  REAL component — nothing on this page is a drawing of a component.
 
-  Nothing is imported: the components are in the language. This page is the
-  proof of "batteries included" — you should be able to scroll it and see what
-  you get.
+  Each tile gates itself on `show.<key>()` (the zero-arg visibility read the
+  controller derives from the three filters), so hiding a tile unmounts the
+  live component and the grid packs itself. Tiles for the curated flagship
+  set link to /components/<tag>.
+
+  The .sui packs in the rail are floor-gated on this branch (their sources
+  still carry raw style blocks this compiler rejects). This page will not
+  draw imitations of them — selecting a gated pack states the gap instead.
 -->
-<column class="doc" gap="6">
+<column class="doc-wide" gap="4">
   <p class="eyebrow">Components</p>
-  <h1>Component library</h1>
+  <row gap="3" align="center">
+    <h1 sx="grow:1">Components</h1>
+    <span class="mono" sx="text:xs fg:muted-foreground">{countLabel()}</span>
+    <input placeholder="Search — try 'tab' or 'overlay'" bind:value={query} sx="max-w:panel-max-w-sm" />
+  </row>
   <p class="lead">
-    Forty-eight components, all of them below, all of them live. Accessible,
-    keyboard-complete, and themed — change the theme in the top right and watch
-    every one of them follow.
-  </p>
-  <p>Nothing on this page is imported. The components are part of the framework.</p>
-
-  <!-- ── FORMS ──────────────────────────────────────────────────────── -->
-  <h2>Forms</h2>
-
-  <h3>Button</h3>
-  <p sx="fg:muted-foreground text:sm">
-    <code>tone</code> picks the colour; <code>variant</code> picks how much of it
-    you get. Five variants, eight tones.
-  </p>
-  <row gap="2" align="center">
-    <button variant="solid" tone="primary">Solid</button>
-    <button variant="soft" tone="primary">Soft</button>
-    <button variant="outline" tone="primary">Outline</button>
-    <button variant="ghost" tone="primary">Ghost</button>
-    <button>Default</button>
-  </row>
-  <row gap="2" align="center">
-    <button variant="solid">Default</button>
-    <button variant="solid" tone="primary">Primary</button>
-    <button variant="solid" tone="success">Success</button>
-    <button variant="solid" tone="warning">Warning</button>
-    <button variant="solid" tone="destructive">Destructive</button>
-    <button variant="solid" disabled>Disabled</button>
-  </row>
-
-  <h3>Input, textarea, select</h3>
-  <column gap="3" sx="max-w:panel-max-w-md">
-    <field>
-      <label for="c-name">Name</label>
-      <input id="c-name" bind:value={name} placeholder="Ada Lovelace" />
-    </field>
-    <field>
-      <label for="c-bio">Bio</label>
-      <textarea id="c-bio" placeholder="Tell us about yourself"></textarea>
-    </field>
-    <field>
-      <label for="c-team">Team</label>
-      <select id="c-team">
-        <option>Engineering</option>
-        <option>Design</option>
-      </select>
-    </field>
-  </column>
-
-  <h3>Combobox</h3>
-  <combobox placeholder="Search fruit" sx="max-w:panel-max-w-sm">
-    <option value="apple">Apple</option>
-    <option value="banana">Banana</option>
-    <option value="cherry">Cherry</option>
-  </combobox>
-
-  <h3>Checkbox, radio, switch</h3>
-  <column gap="2">
-    <label><input type="checkbox" bind:checked={agreed} /> I agree to the terms</label>
-    <radio-group>
-      <label><input type="radio" name="plan" checked /> Monthly</label>
-      <label><input type="radio" name="plan" /> Yearly</label>
-    </radio-group>
-    <switch bind:checked={notify}></switch>
-  </column>
-
-  <h3>Slider</h3>
-  <slider sx="max-w:panel-max-w-sm"></slider>
-
-  <h3>Toggle group</h3>
-  <toggle-group>
-    <toggle value="left">Left</toggle>
-    <toggle value="center">Center</toggle>
-    <toggle value="right">Right</toggle>
-  </toggle-group>
-
-  <h3>Dropzone</h3>
-  <card dropzone sx="p:6 max-w:panel-max-w-md">Drop a file, or click to browse</card>
-
-  <!-- ── FEEDBACK ───────────────────────────────────────────────────── -->
-  <h2>Feedback</h2>
-
-  <h3>Alert</h3>
-  <column gap="2">
-    <alert tone="info"><strong>Heads up.</strong> This is an informational alert.</alert>
-    <alert tone="success"><strong>Saved.</strong> Your changes are live.</alert>
-    <alert tone="warning"><strong>Careful.</strong> This cannot be undone.</alert>
-    <alert tone="destructive"><strong>Failed.</strong> The request did not complete.</alert>
-  </column>
-
-  <h3>Badge, chip, status</h3>
-  <row gap="2" align="center">
-    <badge>Default</badge>
-    <badge tone="primary">Primary</badge>
-    <badge tone="success">Active</badge>
-    <badge tone="warning">Pending</badge>
-    <badge tone="destructive">Failed</badge>
-    <chip>Removable</chip>
-    <status-dot tone="success"></status-dot>
-  </row>
-
-  <h3>Progress, meter, spinner</h3>
-  <column gap="3" sx="max-w:panel-max-w-md">
-    <progress value="60" max="100"></progress>
-    <meter value="0.7"></meter>
-    <row gap="3" align="center">
-      <spinner></spinner>
-      <spinner tone="primary"></spinner>
-      <spinner size="lg"></spinner>
-    </row>
-  </column>
-
-  <h3>Skeleton</h3>
-  <column gap="2" sx="max-w:panel-max-w-md">
-    <p skeleton></p>
-    <p skeleton></p>
-  </column>
-
-  <h3>Empty and error states</h3>
-  <grid cols="2" gap="3">
-    <empty-state>
-      <strong slot="title">No results</strong>
-      Try a different search.
-    </empty-state>
-    <error-state code="ERR_TIMEOUT">
-      The request timed out.
-    </error-state>
-  </grid>
-
-  <!-- ── OVERLAYS ───────────────────────────────────────────────────── -->
-  <h2>Overlays</h2>
-  <p sx="fg:muted-foreground">
-    All of these ride the platform's top layer — <code>&lt;dialog&gt;</code> and
-    <code>[popover]</code> — so they stack correctly with no z-index war.
+    Everything here is live. The language's own elements need no import; the
+    packs in the rail are themed by the same tokens. Type to search, pick a
+    pack, pick a category — every tile that remains is the running component,
+    not a preview of it.
   </p>
 
-  <h3>Tooltip and hover card</h3>
-  <row gap="4" align="center">
-    <tooltip>Hover me<small slot="content">A tooltip</small></tooltip>
-    <hover-card>
-      <button>Hover for a card</button>
-      <card slot="content" sx="p:3">Richer content, on hover.</card>
-    </hover-card>
+  <row align="stretch" gap="5">
+    <!-- ── Pack rail ─────────────────────────────────────────────────── -->
+    <column gap="2" sx="w:panel-w-side">
+      <p class="eyebrow">Packs</p>
+      {#for p of packs() key={p.id}}
+        <button class="theme-chip" on:click={() => pickPack(p.id)} aria-pressed={packSel() === p.id ? 'true' : 'false'}>
+          <column gap="1" sx="p:3">
+            <row gap="2" align="center">
+              <strong sx="text:sm grow:1">{p.label}</strong>
+              {#if p.gated}
+                <badge size="sm" tone="warning" variant="outline">gated</badge>
+              {:else}
+                <span class="mono" sx="text:xs fg:primary">{p.count}</span>
+              {/if}
+            </row>
+            {#if p.sub}
+              <p class="mono" sx="text:xs fg:muted-foreground">{p.sub}</p>
+            {/if}
+          </column>
+        </button>
+      {/for}
+      <card variant="outline" sx="p:3">
+        <p sx="text:xs fg:muted-foreground leading:relaxed">
+          Packs read the same tokens as the language — install one and it
+          already matches your theme.
+        </p>
+      </card>
+    </column>
+
+    <!-- ── Grid ──────────────────────────────────────────────────────── -->
+    <column gap="4" sx="grow:3 min-w:0">
+      <row gap="2">
+        {#for c of cats() key={c}}
+          <button size="sm" tone="primary" variant={catSel() === c ? 'solid' : 'ghost'} on:click={() => pickCat(c)}>{c}</button>
+        {/for}
+      </row>
+
+      <grid cols="3" gap="3">
+        <!-- ══ In the language ══════════════════════════════════════════ -->
+        {#if show.button()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', scale: 'spring:gentle' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <row gap="2" align="center">
+                  <button variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Solid</button>
+                  <button variant="outline" tone="primary">Outline</button>
+                </row>
+              </center>
+              <column gap="2" sx="p:3">
+                <a class="mono" href="/components/button" sx="text:sm weight:semibold">button</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">inputs</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.input()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', scale: 'spring:gentle' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <input placeholder="Type here — it's real" bind:value={name} />
+              </center>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">input</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">inputs</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.textarea()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', scale: 'spring:gentle' }}>
+            <column gap="0" sx="h:full">
+              <column sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <textarea placeholder="A few lines…"></textarea>
+              </column>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">textarea</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">inputs</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.select()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', scale: 'spring:gentle' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <select>
+                  <option>Engineering</option>
+                  <option>Design</option>
+                  <option>Research</option>
+                </select>
+              </center>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">select</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">inputs</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.combobox()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', scale: 'spring:gentle' }}>
+            <column gap="0" sx="h:full">
+              <column sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <combobox placeholder="Search fruit — type">
+                  <option value="apple">Apple</option>
+                  <option value="banana">Banana</option>
+                  <option value="cherry">Cherry</option>
+                  <option value="kiwi">Kiwi</option>
+                </combobox>
+              </column>
+              <column gap="2" sx="p:3">
+                <a class="mono" href="/components/combobox" sx="text:sm weight:semibold">combobox</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">inputs</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.checkbox()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', scale: 'spring:gentle' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <label><input type="checkbox" bind:checked={agreed} /> I agree to the terms</label>
+              </center>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">checkbox</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">inputs</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.radioGroup()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', scale: 'spring:gentle' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <radio-group>
+                  <label><input type="radio" name="plan" checked /> Monthly</label>
+                  <label><input type="radio" name="plan" /> Yearly</label>
+                </radio-group>
+              </center>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">radio-group</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">inputs</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.switchToggle()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', scale: 'spring:gentle' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <row gap="3" align="center">
+                  <switch bind:checked={notify}></switch>
+                  <p sx="text:sm fg:muted-foreground">{notify() ? 'notifying' : 'muted'}</p>
+                </row>
+              </center>
+              <column gap="2" sx="p:3">
+                <a class="mono" href="/components/switch" sx="text:sm weight:semibold">switch</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">inputs</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.slider()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', scale: 'spring:gentle' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <row gap="3" align="center" sx="w:full">
+                  <slider bind:value={volume} tone="primary" sx="grow:1"></slider>
+                  <span class="mono" sx="text:xs fg:muted-foreground">{volume()}</span>
+                </row>
+              </center>
+              <column gap="2" sx="p:3">
+                <a class="mono" href="/components/slider" sx="text:sm weight:semibold">slider</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">inputs</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.toggleGroup()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', scale: 'spring:gentle' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <toggle-group>
+                  <toggle value="left">Left</toggle>
+                  <toggle value="center">Center</toggle>
+                  <toggle value="right">Right</toggle>
+                </toggle-group>
+              </center>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">toggle-group</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">inputs</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.field()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', scale: 'spring:gentle' }}>
+            <column gap="0" sx="h:full">
+              <column sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <field>
+                  <label for="tile-name">Name</label>
+                  <input id="tile-name" placeholder="Ada Lovelace" />
+                </field>
+              </column>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">field</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">inputs</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.dropzone()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', scale: 'spring:gentle' }}>
+            <column gap="0" sx="h:full">
+              <column sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <card dropzone sx="p:4">Drop a file, or click to browse</card>
+              </column>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">dropzone</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">inputs</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+
+        {#if show.alert()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
+            <column gap="0" sx="h:full">
+              <column sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <alert tone="success"><strong>Saved.</strong> Your changes are live.</alert>
+              </column>
+              <column gap="2" sx="p:3">
+                <a class="mono" href="/components/alert" sx="text:sm weight:semibold">alert</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">feedback</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.progressBar()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
+            <column gap="0" sx="h:full">
+              <column sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0" gap="2">
+                <progress value={volume()} max="100"></progress>
+                <p sx="text:xs fg:muted-foreground">driven by the slider tile — one signal</p>
+              </column>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">progress</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">feedback</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.meter()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
+            <column gap="0" sx="h:full">
+              <column sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <meter value="0.7"></meter>
+              </column>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">meter</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">feedback</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.spinner()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <row gap="3" align="center">
+                  <spinner></spinner>
+                  <spinner tone="primary"></spinner>
+                  <spinner size="lg"></spinner>
+                </row>
+              </center>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">spinner</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">feedback</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.skeleton()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
+            <column gap="0" sx="h:full">
+              <column sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0" gap="2">
+                <row gap="3" align="center" sx="w:full">
+                  <span skeleton shape="circle" sx="w:7 h:7"></span>
+                  <column gap="2" sx="grow:1">
+                    <span skeleton shape="text" size="sm"></span>
+                    <span skeleton shape="text" size="sm"></span>
+                  </column>
+                </row>
+              </column>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">skeleton</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">feedback</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.emptyState()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
+            <column gap="0" sx="h:full">
+              <column sx="p:4 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <empty-state>
+                  <strong slot="title">No results</strong>
+                  Try a different search.
+                </empty-state>
+              </column>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">empty-state</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">feedback</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.errorState()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
+            <column gap="0" sx="h:full">
+              <column sx="p:4 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <error-state code="ERR_TIMEOUT">The request timed out.</error-state>
+              </column>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">error-state</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">feedback</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+
+        {#if show.badge()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <row gap="2" align="center">
+                  <badge tone="primary">Primary</badge>
+                  <badge tone="success">Active</badge>
+                  <badge tone="warning" variant="outline">Pending</badge>
+                </row>
+              </center>
+              <column gap="2" sx="p:3">
+                <a class="mono" href="/components/badge" sx="text:sm weight:semibold">badge</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">display</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.chip()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <row gap="2" align="center">
+                  <chip>Removable</chip>
+                  <chip>Keyboard</chip>
+                </row>
+              </center>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">chip</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">display</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.statusDot()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <row gap="2" align="center">
+                  <status-dot tone="success"></status-dot>
+                  <p sx="text:sm fg:muted-foreground">all systems live</p>
+                </row>
+              </center>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">status-dot</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">display</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.card()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h:full">
+              <column sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <card sx="p:4" motion:hover={{ scale: 'spring:gentle' }}>
+                  <strong>Interactive</strong>
+                  <p sx="text:sm fg:muted-foreground">hover me — motion is an attribute</p>
+                </card>
+              </column>
+              <column gap="2" sx="p:3">
+                <a class="mono" href="/components/card" sx="text:sm weight:semibold">card</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">display</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.avatar()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <row gap="2" align="center">
+                  <avatar></avatar>
+                  <avatar size="lg"></avatar>
+                </row>
+              </center>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">avatar</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">display</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.icon()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <row gap="3" align="center">
+                  <icon>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                  </icon>
+                  <icon size="lg">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+                  </icon>
+                  <icon spin>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.56" /></svg>
+                  </icon>
+                </row>
+              </center>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">icon</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">display</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.separator()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h:full">
+              <column sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0" gap="2">
+                <p sx="text:sm fg:muted-foreground">above</p>
+                <separator></separator>
+                <p sx="text:sm fg:muted-foreground">below</p>
+              </column>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">separator</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">display</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.detailsEl()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h:full">
+              <column sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <details>
+                  <summary>Advanced options</summary>
+                  <p>Native disclosure. Zero JavaScript.</p>
+                </details>
+              </column>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">details</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">display</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.collapsible()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h:full">
+              <column sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <collapsible>
+                  <strong slot="trigger">Collapsible</strong>
+                  <p>Animated, and it remembers.</p>
+                </collapsible>
+              </column>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">collapsible</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">display</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+
+        {#if show.tooltip()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ scale: 'spring:bouncy' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <tooltip>Hover me<small slot="content">A tooltip</small></tooltip>
+              </center>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">tooltip</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">overlay</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.hoverCard()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ scale: 'spring:bouncy' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <hover-card>
+                  <button variant="ghost">Hover for a card</button>
+                  <card slot="content" sx="p:3">Richer content, on hover.</card>
+                </hover-card>
+              </center>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">hover-card</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">overlay</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.popover()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ scale: 'spring:bouncy' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <popover>
+                  <button>Open popover</button>
+                  <card slot="content" sx="p:4">Rides the top layer — no z-index war.</card>
+                </popover>
+              </center>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">popover</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">overlay</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.dropdown()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ scale: 'spring:bouncy' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <dropdown>
+                  <button>Menu</button>
+                  <menu-item>Edit</menu-item>
+                  <menu-item>Duplicate</menu-item>
+                  <menu-item tone="destructive">Delete</menu-item>
+                </dropdown>
+              </center>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">dropdown</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">overlay</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.dialog()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ scale: 'spring:bouncy' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <button command="show-modal" commandfor="tile-dialog" motion:press={{ scale: 'press' }}>Open modal</button>
+                <dialog id="tile-dialog">
+                  <header>A real dialog</header>
+                  <section>Top layer, focus trap, Escape — all platform.</section>
+                  <footer><button command="close" commandfor="tile-dialog">Close</button></footer>
+                </dialog>
+              </center>
+              <column gap="2" sx="p:3">
+                <a class="mono" href="/components/dialog" sx="text:sm weight:semibold">dialog</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">overlay</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+
+        {#if show.tabs()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
+            <column gap="0" sx="h:full">
+              <column sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <tabs>
+                  <tab-list>
+                    <tab>Profile</tab>
+                    <tab>Billing</tab>
+                  </tab-list>
+                  <tab-panel><p sx="text:sm fg:muted-foreground">Profile settings.</p></tab-panel>
+                  <tab-panel><p sx="text:sm fg:muted-foreground">Billing settings.</p></tab-panel>
+                </tabs>
+              </column>
+              <column gap="2" sx="p:3">
+                <a class="mono" href="/components/tabs" sx="text:sm weight:semibold">tabs</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">navigation</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.breadcrumb()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <breadcrumb>
+                  <a href="/">Home</a>
+                  <a href="/components">Components</a>
+                  <small>Here</small>
+                </breadcrumb>
+              </center>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">breadcrumb</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">navigation</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.pagination()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
+            <column gap="0" sx="h:full">
+              <center sx="p:5 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <pagination></pagination>
+              </center>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">pagination</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">navigation</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+
+        {#if show.table()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
+            <column gap="0" sx="h:full">
+              <column sx="p:4 min-h:9 grow:1 border-b:subtle bg:surface-0 overflow-x:auto">
+                <table>
+                  <thead>
+                    <tr><th>Name</th><th>Status</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Ada Lovelace</td><td><badge tone="success" size="sm">Active</badge></td></tr>
+                    <tr><td>Grace Hopper</td><td><badge tone="muted" size="sm">Away</badge></td></tr>
+                  </tbody>
+                </table>
+              </column>
+              <column gap="2" sx="p:3">
+                <a class="mono" href="/components/table" sx="text:sm weight:semibold">table</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">data</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.codeBlock()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
+            <column gap="0" sx="h:full">
+              <column sx="p:4 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <code-block code={usageSeed}></code-block>
+              </column>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">code-block</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">language</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">data</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+
+        <!-- ══ @ship/sui-fx (actions) ═══════════════════════════════════ -->
+        {#if show.fxSpotlight()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ scale: 'spring:bouncy' }}>
+            <column gap="0" sx="h:full">
+              <div use:spotlight sx="p:6 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <p sx="text:sm fg:muted-foreground">move the pointer — a spotlight follows it</p>
+              </div>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">use:spotlight</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="muted" variant="soft">fx</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">effects</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.fxDotGrid()}
+          <card padding="none" sx="overflow:hidden" motion:enter={{ scale: 'spring:bouncy' }}>
+            <column gap="0" sx="h:full">
+              <div use:dotGrid sx="p:6 min-h:9 grow:1 border-b:subtle bg:surface-0">
+                <p sx="text:sm fg:muted-foreground">an interactive dot matrix, behind this text</p>
+              </div>
+              <column gap="2" sx="p:3">
+                <strong class="mono" sx="text:sm">use:dotGrid</strong>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="muted" variant="soft">fx</badge>
+                  <span class="mono" sx="text:xs fg:muted-foreground">effects</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+      </grid>
+
+      {#if gatedSel()}
+        <card variant="outline" sx="p:5" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
+          <column gap="2">
+            <row gap="2" align="center">
+              <badge tone="warning" variant="outline">floor-gated</badge>
+              <strong>{gatedLabel()} can't mount on this branch</strong>
+            </row>
+            <p sx="text:sm fg:muted-foreground leading:relaxed">
+              {gatedSub()} ships {gatedWaiting()} components, but their sources
+              still carry raw style blocks — and this compiler's floor rejects
+              raw CSS, in packs as much as in pages. This browser doesn't fake
+              tiles with drawings: the pack appears here the day it compiles.
+            </p>
+          </column>
+        </card>
+      {/if}
+      {#if none()}
+        <empty-state motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
+          <strong slot="title">Nothing matches</strong>
+          Clear a filter or two — or search for less.
+        </empty-state>
+      {/if}
+    </column>
   </row>
-
-  <h3>Popover and dropdown</h3>
-  <row gap="3" align="center">
-    <popover>
-      <button>Open popover</button>
-      <card slot="content" sx="p:4">Anything can go in here.</card>
-    </popover>
-    <dropdown>
-      <button>Menu</button>
-      <menu-item>Edit</menu-item>
-      <menu-item>Duplicate</menu-item>
-      <menu-item tone="destructive">Delete</menu-item>
-    </dropdown>
-  </row>
-
-  <!-- ── NAVIGATION ─────────────────────────────────────────────────── -->
-  <h2>Navigation</h2>
-
-  <h3>Tabs</h3>
-  <tabs>
-    <tab-list>
-      <tab>Profile</tab>
-      <tab>Billing</tab>
-      <tab>Team</tab>
-    </tab-list>
-    <tab-panel><p>Profile settings.</p></tab-panel>
-    <tab-panel><p>Billing settings.</p></tab-panel>
-    <tab-panel><p>Team settings.</p></tab-panel>
-  </tabs>
-
-  <h3>Breadcrumb and pagination</h3>
-  <column gap="3">
-    <breadcrumb>
-      <a href="/">Home</a>
-      <a href="/components">Components</a>
-      <small>Breadcrumb</small>
-    </breadcrumb>
-    <pagination></pagination>
-  </column>
-
-  <!-- ── DATA DISPLAY ───────────────────────────────────────────────── -->
-  <h2>Data display</h2>
-
-  <h3>Card</h3>
-  <grid cols="3" gap="3">
-    <card sx="p:4"><strong>Plain</strong><p sx="fg:muted-foreground text:sm">A surface.</p></card>
-    <card tone="primary" sx="p:4"><strong>Toned</strong><p sx="fg:muted-foreground text:sm">Tone is a prop.</p></card>
-    <card sx="p:4" motion:hover={{ scale: 'spring:gentle' }}><strong>Interactive</strong><p sx="fg:muted-foreground text:sm">Hover me.</p></card>
-  </grid>
-
-  <h3>Avatar and icon</h3>
-  <row gap="3" align="center">
-    <avatar></avatar>
-    <avatar size="lg"></avatar>
-    <icon name="check"></icon>
-    <icon name="search"></icon>
-  </row>
-
-  <h3>Table</h3>
-  <table>
-    <thead>
-      <tr><th>Name</th><th>Team</th><th>Status</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>Ada Lovelace</td><td>Engineering</td><td><badge tone="success">Active</badge></td></tr>
-      <tr><td>Grace Hopper</td><td>Engineering</td><td><badge tone="muted">Away</badge></td></tr>
-      <tr><td>Alan Turing</td><td>Research</td><td><badge tone="warning">Pending</badge></td></tr>
-    </tbody>
-  </table>
-
-  <h3>Collapsible and details</h3>
-  <column gap="2">
-    <details>
-      <summary>Advanced options</summary>
-      <p>Native disclosure. Zero JavaScript.</p>
-    </details>
-    <collapsible>
-      <summary>Collapsible</summary>
-      <p>Animated, and it remembers.</p>
-    </collapsible>
-  </column>
-
-  <h3>Separator</h3>
-  <separator></separator>
 
   <row class="page-nav" gap="2">
     <a class="btn" href="/overview">← Introduction</a>
