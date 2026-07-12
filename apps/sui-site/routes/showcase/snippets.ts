@@ -1,75 +1,79 @@
-// Code snippets for the showcase. Each is the COMPLETE source of the screen
-// rendered beside it — no hidden CSS, no imports, no elided parts. Compiled
-// by the build (crates/sui/compiler/tests/site_snippets_compile.rs).
+// Code snippets for the showcase. Each is the screen in its SINGLE-FILE form
+// (controller block + markup) and compiles as written — checked by
+// crates/sui/compiler/tests/site_snippets_compile.rs.
 export const code = {
-  settings: `<column gap="4" sx="p:6">
-  <h2>Workspace settings</h2>
-  <tabs>
-    <tab-list>
-      <tab>Profile</tab>
-      <tab>Billing</tab>
-      <tab>Team</tab>
-    </tab-list>
-    <tab-panel>
-      <column gap="3" sx="pt:4">
-        <label>Workspace name</label>
-        <input value="Acme Robotics" />
-        <label>Plan</label>
-        <radio-group>
-          <label><input type="radio" name="plan" checked /> Monthly — $12</label>
-          <label><input type="radio" name="plan" /> Yearly — $120</label>
-        </radio-group>
-        <row gap="3" align="center">
-          <switch></switch>
-          <p sx="text:sm">Email me when a deploy finishes</p>
-        </row>
-        <separator></separator>
-        <row gap="2">
-          <button variant="solid" tone="primary">Save changes</button>
-          <button variant="ghost">Cancel</button>
-        </row>
-      </column>
-    </tab-panel>
-    <tab-panel><p sx="pt:4">Billing settings.</p></tab-panel>
-    <tab-panel><p sx="pt:4">Team settings.</p></tab-panel>
-  </tabs>
-</column>`,
+  team: `<controller>
+import { controller, signal, filteredList, selection } from '@ship/sui-runtime'
 
-  fleet: `<column gap="4" sx="p:6">
-  <row gap="3" align="center">
-    <h2 sx="grow:1">Fleet</h2>
-    <button variant="outline">Export</button>
-    <button variant="solid" tone="primary">Deploy all</button>
+export default controller({
+  scope: () => {
+    const people = signal([
+      { id: 1, name: 'Ada Lovelace', team: 'Engines', status: 'active' },
+      { id: 2, name: 'Grace Hopper', team: 'Compilers', status: 'active' },
+    ])
+    const { query, filtered } = filteredList(() => people())
+    const { selected, toggle, clear } = selection(() => people(), (p) => p.id)
+    const remove = () => {
+      people.set((l) => l.filter((p) => p.id !== selected()?.id))
+      clear()
+    }
+    return { query, filtered, selected, toggle, remove }
+  },
+})
+</controller>
+
+<input placeholder="Filter people" bind:value={query} />
+
+{#for p of filtered() key={p.id}}
+  <row gap="3" align="center"
+       on:click={() => toggle(p.id)}
+       aria-current={selected()?.id === p.id ? 'true' : null}
+       sx="p:2 radius:md cursor:pointer hover:bg:muted current:bg:muted current:ring:primary">
+    <avatar></avatar>
+    <strong sx="grow:1">{p.name}</strong>
+    <badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge>
   </row>
-  <grid cols="3" gap="3">
-    <card sx="p:4">
-      <badge tone="success">healthy</badge>
-      <h3>api-gateway</h3>
-      <progress value="82" max="100"></progress>
-      <p sx="text:sm fg:muted-foreground">p99 41 ms · 3 replicas</p>
-    </card>
-    <card sx="p:4">
-      <badge tone="warning">degraded</badge>
-      <h3>search-index</h3>
-      <progress value="47" max="100"></progress>
-      <p sx="text:sm fg:muted-foreground">p99 310 ms · rebuilding</p>
-    </card>
-    <card sx="p:4">
-      <badge tone="success">healthy</badge>
-      <h3>billing-worker</h3>
-      <progress value="94" max="100"></progress>
-      <p sx="text:sm fg:muted-foreground">queue empty</p>
-    </card>
-  </grid>
-  <table>
-    <thead>
-      <tr><th>Deploy</th><th>Service</th><th>Status</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>#214</td><td>api-gateway</td><td><badge tone="success">live</badge></td></tr>
-      <tr><td>#213</td><td>search-index</td><td><badge tone="warning">rolling</badge></td></tr>
-      <tr><td>#212</td><td>billing-worker</td><td><badge tone="muted">superseded</badge></td></tr>
-    </tbody>
-  </table>
-</column>`,
+{/for}
+
+{#if selected()}
+  <card motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }} sx="p:4">
+    <strong>{selected().name}</strong>
+    <row gap="2">
+      <button on:click={remove} tone="destructive" variant="outline">Remove</button>
+    </row>
+  </card>
+{/if}`,
+
+  fleet: `<controller>
+import { controller, signal } from '@ship/sui-runtime'
+
+export default controller({
+  scope: () => {
+    const services = signal([
+      { id: 'api', name: 'api-gateway', status: 'live', p99: 41, load: 82 },
+    ])
+    const deploy = (id) => {
+      services.set((l) => l.map((s) => (s.id === id ? { ...s, status: 'rolling' } : s)))
+      setTimeout(() => {
+        services.set((l) => l.map((s) => (s.id === id ? { ...s, status: 'live' } : s)))
+      }, 1500)
+    }
+    return { services, deploy }
+  },
+})
+</controller>
+
+{#for s of services() key={s.id}}
+  <card sx="p:4">
+    <row gap="2" align="center">
+      <badge tone={s.status === 'live' ? 'success' : 'warning'}>{s.status}</badge>
+      <strong sx="grow:1">{s.name}</strong>
+      <button on:click={() => deploy(s.id)} disabled={s.status === 'rolling'}>
+        {s.status === 'rolling' ? 'Rolling…' : 'Deploy'}
+      </button>
+    </row>
+    <progress value={s.load} max="100"></progress>
+    <p sx="text:sm fg:muted-foreground">p99 {s.p99} ms</p>
+  </card>
+{/for}`,
 }

@@ -24,53 +24,42 @@
 
   <h2>Write a page</h2>
   <p>
-    The tags below are the component library. They are the ones you already know
-    from HTML, plus the ones HTML is missing.
+    This is a complete program — state, filtering, animation, and the
+    components, which are the tags you already know from HTML plus the ones
+    HTML is missing. There is no import list and no stylesheet.
   </p>
   <code-block code={code.page}></code-block>
 
-  <h2>Here it is</h2>
-  <p>Same markup, running:</p>
+  <h2>Here it is, running</h2>
+  <p>Type in the filter. Press Invite. Hover a card.</p>
 
   <column gap="4" sx="p:6 bg:muted border:border radius:lg">
     <h3>Team</h3>
+    <input placeholder="Filter people" bind:value={query} />
 
-    <combobox placeholder="Filter by role">
-      <option value="eng">Engineering</option>
-      <option value="design">Design</option>
-    </combobox>
-
-    <card sx="p:4" motion:hover={{ scale: 'spring:gentle' }}>
-      <row gap="3" align="center">
-        <avatar></avatar>
-        <column gap="1">
-          <strong>Ada Lovelace</strong>
-          <p sx="fg:muted-foreground text:sm">Engineering</p>
-        </column>
-        <badge tone="success">Active</badge>
-      </row>
-    </card>
-
-    <card sx="p:4" motion:hover={{ scale: 'spring:gentle' }}>
-      <row gap="3" align="center">
-        <avatar></avatar>
-        <column gap="1">
-          <strong>Grace Hopper</strong>
-          <p sx="fg:muted-foreground text:sm">Engineering</p>
-        </column>
-        <badge tone="muted">Away</badge>
-      </row>
-    </card>
+    {#for p of filtered() key={p.id}}
+      <card sx="p:4" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}
+            motion:hover={{ scale: 'spring:gentle' }}>
+        <row gap="3" align="center">
+          <avatar></avatar>
+          <column gap="1" sx="grow:1">
+            <strong>{p.name}</strong>
+            <p sx="fg:muted-foreground text:sm">{p.team}</p>
+          </column>
+          <badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge>
+        </row>
+      </card>
+    {/for}
 
     <row gap="2">
-      <button motion:press={{ scale: 'press' }}>Invite</button>
+      <button on:click={invite} variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Invite</button>
       <button variant="ghost">Export</button>
     </row>
   </column>
 
   <p sx="text:sm fg:muted-foreground">
-    Hover a card. Change the theme in the top right — every colour, shadow and
-    radius above moves with it, because they all come from the same system.
+    Change the theme in the top right — every colour, shadow and radius above
+    moves with it, because they all come from the same system.
   </p>
 
   <h2>What comes with it</h2>

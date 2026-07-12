@@ -1,123 +1,107 @@
 <!--
-  /showcase — whole screens, not component swatches. Each screen renders
-  live under a DIFFERENT theme scope, with its complete source beside it:
-  no hidden CSS, no imports, nothing elided. The screens are deliberately
-  unalike — the counter-argument to "every SUI site looks the same".
+  /showcase — screens that WORK. A mockup is a component page in disguise;
+  these have state: the team list filters as you type, rows select, the
+  detail card mutates the list; the fleet deploys walk through their states
+  while latency drifts on a timer. Each screen wears a different theme.
 -->
 <column class="doc-wide" gap="5">
   <p class="eyebrow">Start here</p>
   <h1>Showcase</h1>
   <p class="lead">
-    Two complete screens. What you see on the left is everything the source on
-    the right produces — there is no stylesheet behind it, no import list above
-    it, and each screen wears a different theme to make the point: the markup
-    does not own the look.
+    Two working screens. Type in the filter, click a row, remove someone,
+    trigger a deploy — everything mutates real state, and the source beside
+    each screen is the whole program. Different themes on purpose: the markup
+    says what the screen is, never what it looks like.
   </p>
 
-  <h2>A settings screen — theme: paper</h2>
+  <h2>Team — filter, select, mutate <small sx="fg:muted-foreground">· theme: paper</small></h2>
   <row class="split" align="stretch">
     <column>
-      <p class="pane-label">Live</p>
-      <column data-theme-preview="paper" sx="radius:lg border:border bg:background fg:foreground overflow:hidden">
-        <column gap="4" sx="p:6">
-          <h2>Workspace settings</h2>
-          <tabs>
-            <tab-list>
-              <tab>Profile</tab>
-              <tab>Billing</tab>
-              <tab>Team</tab>
-            </tab-list>
-            <tab-panel>
-              <column gap="3" sx="pt:4">
-                <label>Workspace name</label>
-                <input value="Acme Robotics" />
-                <label>Plan</label>
-                <radio-group>
-                  <label><input type="radio" name="plan" checked /> Monthly — $12</label>
-                  <label><input type="radio" name="plan" /> Yearly — $120</label>
-                </radio-group>
-                <row gap="3" align="center">
-                  <switch></switch>
-                  <p sx="text:sm">Email me when a deploy finishes</p>
-                </row>
-                <separator></separator>
-                <row gap="2">
-                  <button variant="solid" tone="primary">Save changes</button>
-                  <button variant="ghost">Cancel</button>
-                </row>
-              </column>
-            </tab-panel>
-            <tab-panel><p sx="pt:4">Billing settings.</p></tab-panel>
-            <tab-panel><p sx="pt:4">Team settings.</p></tab-panel>
-          </tabs>
+      <p class="pane-label">Live — type, click rows, remove someone</p>
+      <column data-theme-preview="paper" gap="3" sx="p:5 radius:lg border:border bg:background fg:foreground">
+        <input placeholder="Filter people" bind:value={query} />
+        <column gap="1">
+          {#for p of filtered() key={p.id}}
+            <row gap="3" align="center"
+                 on:click={() => toggle(p.id)}
+                 aria-current={selected()?.id === p.id ? 'true' : null}
+                 sx="p:2 radius:md cursor:pointer hover:bg:muted current:bg:muted current:ring:primary">
+              <avatar></avatar>
+              <strong sx="grow:1">{p.name}</strong>
+              <p sx="text:sm fg:muted-foreground">{p.team}</p>
+              <badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge>
+            </row>
+          {/for}
         </column>
+        {#if selected()}
+          <card motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}
+                motion:exit={{ opacity: 'fade-out' }} sx="p:4">
+            <row gap="3" align="center">
+              <column gap="1" sx="grow:1">
+                <strong>{selected().name}</strong>
+                <p sx="text:sm fg:muted-foreground">{selected().team} · {selected().status}</p>
+              </column>
+              <button on:click={flipStatus} variant="outline">
+                {selected().status === 'active' ? 'Set away' : 'Set active'}
+              </button>
+              <button on:click={remove} tone="destructive" variant="outline">Remove</button>
+            </row>
+          </card>
+        {/if}
       </column>
     </column>
     <column>
-      <p class="pane-label">Source — all of it</p>
-      <code-block code={code.settings}></code-block>
+      <p class="pane-label">Source — the whole program</p>
+      <code-block code={code.team}></code-block>
     </column>
   </row>
   <p>
-    The tabs are keyboard-complete, the radio group is a fieldset, the switch
-    is a real control — none of that is in the source because none of it is
-    the author's job. Thirty-five lines, and every line is about the settings.
+    <code>filteredList</code> and <code>selection</code> are compositions —
+    plain functions over signals, shipped with the runtime. The filter, the
+    row highlight (<code>current:</code> on <code>aria-current</code>), the
+    detail card animating in and out, the list mutations rippling through the
+    derived view: none of it is wiring you wrote.
   </p>
 
-  <h2>An ops dashboard — theme: console</h2>
+  <h2>Fleet — deploys with states <small sx="fg:muted-foreground">· theme: console</small></h2>
   <row class="split" align="stretch">
     <column>
-      <p class="pane-label">Live</p>
-      <column data-theme-preview="console" sx="radius:lg border:border bg:background fg:foreground overflow:hidden">
-        <column gap="4" sx="p:6">
-          <row gap="3" align="center">
-            <h2 sx="grow:1">Fleet</h2>
-            <button variant="outline">Export</button>
-            <button variant="solid" tone="primary">Deploy all</button>
-          </row>
-          <grid cols="3" gap="3">
-            <card sx="p:4">
-              <badge tone="success">healthy</badge>
-              <h3>api-gateway</h3>
-              <progress value="82" max="100"></progress>
-              <p sx="text:sm fg:muted-foreground">p99 41 ms · 3 replicas</p>
-            </card>
-            <card sx="p:4">
-              <badge tone="warning">degraded</badge>
-              <h3>search-index</h3>
-              <progress value="47" max="100"></progress>
-              <p sx="text:sm fg:muted-foreground">p99 310 ms · rebuilding</p>
-            </card>
-            <card sx="p:4">
-              <badge tone="success">healthy</badge>
-              <h3>billing-worker</h3>
-              <progress value="94" max="100"></progress>
-              <p sx="text:sm fg:muted-foreground">queue empty</p>
-            </card>
-          </grid>
-          <table>
-            <thead>
-              <tr><th>Deploy</th><th>Service</th><th>Status</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>#214</td><td>api-gateway</td><td><badge tone="success">live</badge></td></tr>
-              <tr><td>#213</td><td>search-index</td><td><badge tone="warning">rolling</badge></td></tr>
-              <tr><td>#212</td><td>billing-worker</td><td><badge tone="muted">superseded</badge></td></tr>
-            </tbody>
-          </table>
+      <p class="pane-label">Live — latency drifts; press Deploy</p>
+      <column data-theme-preview="console" gap="3" sx="p:5 radius:lg border:border bg:background fg:foreground">
+        {#for s of services() key={s.id}}
+          <card sx="p:4">
+            <column gap="2">
+              <row gap="2" align="center">
+                <badge tone={s.status === 'live' ? 'success' : 'warning'}>{s.status}</badge>
+                <strong sx="grow:1">{s.name}</strong>
+                <button on:click={() => deploy(s.id)} disabled={s.status === 'rolling'}>
+                  {s.status === 'rolling' ? 'Rolling…' : 'Deploy'}
+                </button>
+              </row>
+              <progress value={s.load} max="100"></progress>
+              <p sx="text:sm fg:muted-foreground">p99 {s.p99} ms · load {s.load}%</p>
+            </column>
+          </card>
+        {/for}
+        <separator></separator>
+        <column gap="1">
+          {#for d of deploys() key={d}}
+            <p sx="text:sm fg:muted-foreground" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>{d}</p>
+          {/for}
         </column>
       </column>
     </column>
     <column>
-      <p class="pane-label">Source — all of it</p>
+      <p class="pane-label">Source — the whole program</p>
       <code-block code={code.fleet}></code-block>
     </column>
   </row>
   <p>
-    Same language, same forty-eight components, and it reads as a different
-    product — because the theme owns the surfaces and the markup only says
-    what the screen <em>is</em>. That separation is the whole bet: agents
-    write the second column, and the first column is what everyone gets.
+    The deploy walks <code>live → rolling → live</code> through two signal
+    writes; the button disables itself off the same state, and the finished
+    deploy prepends to the log. The drifting latency is one effect with an
+    interval — its cleanup runs when you navigate away, which is why the
+    idiom is an effect and not a bare <code>setInterval</code>.
   </p>
 
   <row class="page-nav" gap="2">
