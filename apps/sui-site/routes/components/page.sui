@@ -1,6 +1,0 @@
-<!--
-  /components — the component library. A single gallery of the public
-  primitive surface, grouped by category, each card a live-but-frozen
-  preview linking to its /components/[tag] detail view.
--->
-<sui-component-catalog></sui-component-catalog>

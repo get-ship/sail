@@ -13,8 +13,6 @@ import '../sui-theme.css'
 import '../deck-theme.css' // deck (violet) product theme; SUI red is the default
 import '@ship/tokens/themes.css' // the swappable theme library (paper/halo/glass/console/contrast)
 import '../base.css' // doc typography + .doc reading column (the comment above promised this; it was missing)
-import '@ship/sui-code-editor' // side-effect: defines <sui-code-editor> for the tutorial + future live surfaces
-import '@ship/sui-viewer'       // side-effect: defines <sui-component-viewer> + children for /components
 import { controller, signal, derived } from '@ship/sui-runtime'
 
 const MODE_KEY = 'sui-mode'

@@ -1,276 +1,45 @@
 <!--
-  <sui-shell> — the docs chrome: top bar + left sidebar nav + content slot.
+  <sui-site-shell> — the docs chrome, written in the language, with no CSS.
 
-  routes/_layout.sui mounts this; deck finds the chrome by its first
-  custom-element tag, then mounts each route's content into <slot name="route">.
-  The chrome persists across client-side navigations; only the slot swaps. Nav
-  uses plain anchors — deck's router intercepts same-origin clicks, so links
-  navigate client-side from shadow DOM. Active state comes from `path`.
+  The bar and the sidebar are the SAME element — <navbar> — in two placements.
+  That is what a rail is. Everything else is layout keywords, sx, and the tone
+  contract.
+
+  This file used to be 100 lines of markup over 4.8 kB of hand-rolled CSS that
+  reimplemented <navbar> badly: a flex header, a sticky offset, a bottom
+  hairline, undecorated links, hover and active states. All of it already lived
+  in the standard library. That is precisely the failure the language exists to
+  prevent — an author who does not know the element exists rebuilds it — and the
+  docs site was doing it on the very page that argues you should not.
 -->
 
-<style>
-  .sui-site-shell {
-    display: block;
-    min-height: 100vh;
-    background: var(--background);
-    color: var(--foreground);
-    font-family: var(--font-body);
-  }
-
-  /* ── Top bar ──────────────────────────────────────────────────────────── */
-  .topbar {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    height: 3.5rem;
-    padding: 0 var(--space-5);
-    border-bottom: 1px solid var(--border);
-    background: color-mix(in oklch, var(--surface-1) 86%, transparent);
-    backdrop-filter: saturate(1.4) blur(8px);
-    position: sticky;
-    top: 0;
-    z-index: var(--z-sticky);
-  }
-  .brand {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    text-decoration: none;
-    color: var(--foreground);
-  }
-  .brand .word {
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: var(--text-lg);
-    letter-spacing: -0.03em;
-  }
-  .brand .word b { color: var(--primary); font-weight: 800; }
-  .ver {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--muted-foreground);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-full);
-    padding: 0.1rem var(--space-2);
-  }
-  .spacer { flex: 1; }
-  .toplink {
-    font-size: var(--text-sm);
-    color: var(--muted-foreground);
-    text-decoration: none;
-    padding: var(--space-1) var(--space-2);
-    border-radius: var(--radius-md);
-  }
-  .toplink:hover { color: var(--foreground); background: var(--surface-2); }
-  .theme-toggle {
-    font: inherit;
-    font-size: var(--text-sm);
-    cursor: pointer;
-    border: 1px solid var(--border);
-    background: var(--surface-2);
-    color: var(--foreground);
-    border-radius: var(--radius-full);
-    padding: var(--space-1) var(--space-3);
-  }
-  .theme-toggle:hover { border-color: var(--border-strong); }
-  .theme-select {
-    font: inherit;
-    font-size: var(--text-sm);
-    cursor: pointer;
-    border: 1px solid var(--border);
-    background: var(--surface-2);
-    color: var(--foreground);
-    border-radius: var(--radius-full);
-    padding: var(--space-1) var(--space-3);
-    min-height: 0;
-  }
-  .theme-select:hover { border-color: var(--border-strong); }
-
-  /* ── Product switcher (SolidJS-style: SUI · Deck · Components · AI) ────── */
-  .switcher {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    padding: 0.2rem;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-full);
-  }
-  .switcher a {
-    font-size: var(--text-sm);
-    font-weight: 600;
-    color: var(--muted-foreground);
-    text-decoration: none;
-    padding: var(--space-1) var(--space-3);
-    border-radius: var(--radius-full);
-    line-height: 1.4;
-  }
-  .switcher a:hover { color: var(--foreground); }
-  .switcher a.on {
-    color: var(--primary-foreground);
-    background: var(--primary);
-  }
-
-  .side-note {
-    font-size: var(--text-xs);
-    color: var(--muted-foreground);
-    line-height: 1.5;
-    margin: 0 var(--space-2);
-  }
-  .side-note code { font-size: 0.95em; }
-
-  /* ── Body grid ────────────────────────────────────────────────────────── */
-  .body {
-    display: grid;
-    grid-template-columns: 15rem minmax(0, 1fr);
-    max-width: 82rem;
-    margin: 0 auto;
-  }
-
-  .sidebar {
-    position: sticky;
-    top: 3.5rem;
-    align-self: start;
-    height: calc(100vh - 3.5rem);
-    overflow-y: auto;
-    padding: var(--space-5) var(--space-4);
-    border-right: 1px solid var(--border);
-  }
-  .group + .group { margin-top: var(--space-5); }
-  .group h4 {
-    font-size: var(--text-xs);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted-foreground);
-    margin: 0 0 var(--space-2) var(--space-2);
-    font-weight: 700;
-  }
-  .sidebar a {
-    display: block;
-    color: var(--muted-foreground);
-    text-decoration: none;
-    font-size: var(--text-sm);
-    padding: var(--space-1) var(--space-2);
-    border-radius: var(--radius-md);
-    border-left: 2px solid transparent;
-  }
-  .sidebar a:hover { color: var(--foreground); background: var(--surface-2); }
-  .sidebar a.active {
-    color: var(--foreground);
-    background: color-mix(in oklch, var(--primary) 12%, transparent);
-    border-left-color: var(--primary);
-    font-weight: 600;
-  }
-
-  .content {
-    padding: var(--space-7) var(--space-8);
-    min-width: 0;
-  }
-
-  /* Full-screen surfaces (tutorial + component viewer): no sidebar, full width,
-     no content padding — the page owns the whole viewport below the top bar. */
-  .body.fullscreen {
-    grid-template-columns: 1fr;
-    max-width: none;
-  }
-  .body.fullscreen .sidebar { display: none; }
-  .body.fullscreen .content { padding: 0; }
-
-  @media (max-width: 860px) {
-    .body { grid-template-columns: 1fr; }
-    .sidebar { display: none; }
-    .content { padding: var(--space-6) var(--space-5); }
-  }
-</style>
-
-<header class="topbar">
-  <a class="brand" href="/" aria-label="Ship UI home">
-    <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-      <circle cx="6" cy="6" r="3.4" fill="var(--primary)" />
-      <circle cx="20" cy="6" r="3.4" fill="var(--primary)" opacity="0.45" />
-      <circle cx="6" cy="20" r="3.4" fill="var(--primary)" opacity="0.45" />
-      <circle cx="20" cy="20" r="3.4" fill="var(--primary)" opacity="0.7" />
-      <path d="M6 6 L20 20 M6 6 L20 6 M6 6 L6 20" stroke="var(--primary)" stroke-width="1.4" opacity="0.5" stroke-linecap="round" />
-    </svg>
-    <span class="word"><b>SHIP</b> UI</span>
+<navbar sticky bordered>
+  <a slot="brand" href="/" aria-label="Ship UI home">
+    <row gap="2" align="center">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+        <circle cx="6" cy="6" r="3.4" fill="var(--primary)" />
+        <circle cx="20" cy="6" r="3.4" fill="var(--primary)" opacity="0.45" />
+        <circle cx="6" cy="20" r="3.4" fill="var(--primary)" opacity="0.45" />
+        <circle cx="20" cy="20" r="3.4" fill="var(--primary)" opacity="0.7" />
+        <path d="M6 6 L20 20 M6 6 L20 6 M6 6 L6 20" stroke="var(--primary)" stroke-width="1.4" opacity="0.5" stroke-linecap="round" />
+      </svg>
+      <strong>SHIP UI</strong>
+    </row>
   </a>
-  <span class="spacer"></span>
-  <nav class="switcher" aria-label="Products">
-    <a href="/overview" class:on={product() === 'sui'}>SUI</a>
-    <a href="/deck" class:on={product() === 'deck'}>Deck</a>
-    <a href="/components" class:on={product() === 'components'}>Components</a>
-    <a href="/ai" class:on={product() === 'ai'}>AI</a>
-  </nav>
-  <span class="spacer"></span>
-  <a class="toplink" href="/tutorial" class:active={product() === 'tutorial'}>Tutorial</a>
-  <theme-picker></theme-picker>
-</header>
 
-<div class="body" class:fullscreen={fullscreen()}>
-  <nav class="sidebar">
-    {#if product() === 'deck'}
-      <div class="group">
-        <h4>Introduction</h4>
-        <a href="/deck" class:active={path() === '/deck'}>Overview</a>
-        <a href="/deck/getting-started" class:active={path() === '/deck/getting-started'}>Getting started</a>
-      </div>
-      <div class="group">
-        <h4>Concepts</h4>
-        <a href="/deck/routing" class:active={path() === '/deck/routing'}>Routing</a>
-        <a href="/deck/dynamic-routes" class:active={path() === '/deck/dynamic-routes'}>Dynamic routes</a>
-        <a href="/deck/layouts" class:active={path() === '/deck/layouts'}>Layouts</a>
-        <a href="/deck/rendering" class:active={path() === '/deck/rendering'}>Rendering</a>
-        <a href="/deck/reactivity" class:active={path() === '/deck/reactivity'}>Reactivity</a>
-        <a href="/deck/data" class:active={path() === '/deck/data'}>Live data</a>
-      </div>
-      <div class="group">
-        <h4>Tooling</h4>
-        <a href="/deck/hmr" class:active={path() === '/deck/hmr'}>HMR</a>
-        <a href="/deck/build" class:active={path() === '/deck/build'}>Build</a>
-      </div>
-    {:else if product() === 'ai'}
-      <div class="group">
-        <h4>AI</h4>
-        <a href="/ai" class:active={path() === '/ai'}>Overview</a>
-        <a href="/ai/authoring" class:active={path() === '/ai/authoring'}>Authoring</a>
-        <a href="/ai/tooling" class:active={path() === '/ai/tooling'}>Tooling</a>
-        <a href="/ai/eval" class:active={path() === '/ai/eval'}>Eval</a>
-      </div>
-    {:else}
-      <div class="group">
-        <h4>Start here</h4>
-        <a href="/overview" class:active={path() === '/overview'}>Overview</a>
-        <a href="/why" class:active={path() === '/why'}>Why SUI</a>
-        <a href="/getting-started" class:active={path() === '/getting-started'}>Getting started</a>
-      </div>
-      <div class="group">
-        <h4>What's given</h4>
-        <p class="group-note">Decisions the language already made.</p>
-        <a href="/elements" class:active={path() === '/elements'}>Elements</a>
-        <a href="/styling" class:active={path() === '/styling'}>Styling</a>
-        <a href="/theming" class:active={path() === '/theming'}>Theming</a>
-        <a href="/motion" class:active={path() === '/motion'}>Motion</a>
-        <a href="/behavior" class:active={path() === '/behavior'}>Behavior</a>
-      </div>
-      <div class="group">
-        <h4>What you write</h4>
-        <p class="group-note">Composition and logic — the part that needs you.</p>
-        <a href="/reactivity" class:active={path() === '/reactivity'}>State</a>
-        <a href="/control-flow" class:active={path() === '/control-flow'}>Control flow</a>
-        <a href="/data-binding" class:active={path() === '/data-binding'}>Events &amp; binding</a>
-        <a href="/composition" class:active={path() === '/composition'}>Compositions</a>
-        <a href="/data" class:active={path() === '/data'}>Live data</a>
-        <a href="/ssr" class:active={path() === '/ssr'}>SSR &amp; hydration</a>
-      </div>
-      <div class="group">
-        <h4>Reference</h4>
-        <a href="/reference" class:active={path() === '/reference'}>Directives &amp; API</a>
-        <a href="/components" class:active={path() === '/components'}>Component catalog</a>
-        <a href="/tooling" class:active={path() === '/tooling'}>Tooling</a>
-      </div>
-    {/if}
-   </nav>
-  <main class="content">
+  <a href="/overview">SUI</a>
+  <a href="/deck">Deck</a>
+  <a href="/ai">AI</a>
+
+  <theme-picker slot="actions"></theme-picker>
+</navbar>
+
+<row align="stretch">
+  <navbar placement="rail" bordered sticky>
+
+  </navbar>
+
+  <main sx="p:6 min-w:0">
     <slot name="route"></slot>
   </main>
-</div>
+</row>

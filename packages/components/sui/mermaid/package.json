@@ -23,7 +23,7 @@
     "@ship/test-setup": "workspace:*",
     "vitest": "^4.1.5"
   },
-  "deck": {
+  "deck_pending_floor_migration": {
     "bundles": [
       {
         "name": "sui-mermaid",

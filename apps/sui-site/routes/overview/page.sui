@@ -78,6 +78,5 @@
   <row class="page-nav" gap="2">
     <a class="btn btn-primary" href="/getting-started">Getting started →</a>
     <a class="btn" href="/why">Why SUI</a>
-    <a class="btn" href="/tutorial">Try the tutorial</a>
   </row>
 </column>
