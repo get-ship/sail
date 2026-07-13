@@ -4,7 +4,7 @@ use std::path::Path;
 
 use crate::{
     is_controller_path, lint_controller_source,
-    rules::{controller_purity, controller_state_cast, dead_affordance},
+    rules::{controller_purity, controller_state_cast},
 };
 
 fn lint(source: &str) -> Vec<crate::Finding> {
@@ -282,85 +282,3 @@ fn static_bool_flag_passes() {
     assert!(f.is_empty(), "bare flag attr not flagged: {f:?}");
 }
 
-// ── sui-dead-affordance ────────────────────────────────────────────────────
-// Driven through the rule's `check` directly with a synthetic path (no paired
-// controller on disk), so unrelated css/space/dimension warnings don't muddy
-// the assertions.
-
-fn lint_dead(src: &str) -> Vec<crate::Finding> {
-    dead_affordance::check(Path::new("/fake/sui-x/sui-x.sui"), src)
-}
-
-#[test]
-fn dead_affordance_unread_prop_warns() {
-    let f = lint_dead("<prop name=\"ghost\" type=\"bool\" default=\"false\" />\n<div>hi</div>");
-    assert_eq!(f.len(), 1, "{f:?}");
-    assert_eq!(f[0].rule, dead_affordance::RULE_ID);
-    assert!(f[0].message.contains("`ghost`"));
-}
-
-#[test]
-fn dead_affordance_interpolated_prop_passes() {
-    let f = lint_dead("<prop name=\"label\" type=\"string\" default=\"\" />\n<span>{label()}</span>");
-    assert!(f.is_empty(), "{f:?}");
-}
-
-#[test]
-fn dead_affordance_directive_bound_prop_passes() {
-    let f = lint_dead(
-        "<prop name=\"disabled\" type=\"bool\" default=\"false\" />\n\
-         <button attr:disabled={disabled()}>go</button>",
-    );
-    assert!(f.is_empty(), "{f:?}");
-}
-
-#[test]
-fn dead_affordance_reflect_prop_styled_via_host_selector_passes() {
-    // sui-skeleton idiom: prop read purely through `:host([shape=…])` CSS, no
-    // interpolation, no controller. Must NOT be flagged.
-    let f = lint_dead(
-        "<prop name=\"shape\" values=\"text|line\" default=\"text\" reflect />\n\
-         <style>:host([shape='block']) { display: block; }</style>\n<div></div>",
-    );
-    assert!(f.is_empty(), "reflect-via-CSS is a real read: {f:?}");
-}
-
-#[test]
-fn dead_affordance_docblock_only_is_dead() {
-    // A comment mention must not count as a read.
-    let f = lint_dead(
-        "<!-- {size()} and attr:size= are described here -->\n\
-         <prop name=\"size\" values=\"sm|md\" default=\"md\" reflect />\n<div>x</div>",
-    );
-    assert_eq!(f.len(), 1, "comment mentions are not reads: {f:?}");
-}
-
-#[test]
-fn dead_affordance_substring_does_not_count() {
-    // `loading` must not satisfy a `load` prop.
-    let f = lint_dead("<prop name=\"load\" type=\"bool\" default=\"false\" />\n<span>{loading()}</span>");
-    assert_eq!(f.len(), 1, "{f:?}");
-}
-
-#[test]
-fn dead_affordance_accessor_in_handler_passes() {
-    let f = lint_dead(
-        "<prop name=\"open\" type=\"bool\" default=\"false\" />\n\
-         <button on:click={() => toggle(open())}>x</button>",
-    );
-    assert!(f.is_empty(), "{f:?}");
-}
-
-#[test]
-fn dead_affordance_event_declaration_unread_warns() {
-    let f = lint_dead("<event name=\"ping\" />\n<div>x</div>");
-    assert_eq!(f.len(), 1, "{f:?}");
-    assert!(f[0].message.contains("event `ping`"));
-}
-
-#[test]
-fn dead_affordance_severity_is_warn() {
-    let f = lint_dead("<prop name=\"ghost\" type=\"bool\" default=\"false\" />\n<div>hi</div>");
-    assert_eq!(f.len(), 1);
-    assert_eq!(f[0].severity, crate::Severity::Warn);
-}
