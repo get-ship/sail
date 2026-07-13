@@ -3,8 +3,7 @@
 export const routeExample = `routes/
 └─ posts/
    └─ [id]/
-      ├─ page.sui
-      └─ controller.ts      →  /posts/:id`
+      └─ page.sui      →  /posts/:id`
 
 export const readExample = `<!-- posts/[id]/page.sui -->
 <h1>Post {route.params.id()}</h1>`

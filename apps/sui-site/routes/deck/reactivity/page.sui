@@ -6,6 +6,16 @@
   data, durable app state, and dev edits. Code blocks are highlighted via
   <code-block> (strings from ./snippets).
 -->
+<controller>
+import { controller, type ViewScope } from '@ship/sui-runtime'
+import type { Scope } from './page.sui'
+import { code } from './snippets'
+
+export default controller({
+  scope: (_ctx: ViewScope<Scope>) => ({ code }),
+})
+</controller>
+
 <article class="doc">
   <p class="eyebrow">Reactivity</p>
   <h1>deck in the reactive path</h1>
@@ -56,7 +66,7 @@
 
   <h2>State that outlives a route</h2>
   <p>
-    A signal declared in a route's <code>controller.ts</code> is scoped to that
+    A signal declared in a route's <code>&lt;controller&gt;</code> block is scoped to that
     route — it resets when you navigate away. State that must survive navigation
     lives <em>above</em> the router, on deck's clients seam, where it persists
     across navigations and full reloads. The <a href="/deck/data">data seam</a>

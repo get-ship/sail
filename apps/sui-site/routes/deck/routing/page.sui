@@ -1,6 +1,16 @@
 <!--
   /deck/routing — adapted from packages/deck/docs/routes/routing/page.sui.
 -->
+<controller>
+import { controller, type ViewScope } from '@ship/sui-runtime'
+import type { Scope } from './page.sui'
+import { routeTree, colocated } from './snippets'
+
+export default controller({
+  scope: (_ctx: ViewScope<Scope>) => ({ routeTree, colocated }),
+})
+</controller>
+
 <article class="doc">
   <p class="eyebrow">Routing</p>
   <h1>File routing</h1>
@@ -10,8 +20,8 @@
   <p>Drop a <code>page.sui</code> anywhere under <code>routes/</code> and its folder path becomes the route. The tree on disk is the routing table.</p>
   <pre class="code">{routeTree}</pre>
 
-  <h2>Co-located files</h2>
-  <p>A route may sit beside a <code>controller.ts</code> for reactive state and a <code>style.css</code> for page styles. They belong to that route alone.</p>
+  <h2>One file is the route</h2>
+  <p>The <code>page.sui</code> carries everything: markup, and — when the page has state — a <code>&lt;controller&gt;</code> block in the same file. Nothing else to co-locate, nothing to keep in sync.</p>
   <pre class="code">{colocated}</pre>
 
   <h2>Generated tables</h2>

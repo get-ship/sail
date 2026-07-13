@@ -1,97 +1,424 @@
 <!--
-  /tutorial/[slug] — one lesson. Prose left, the SOLVED lesson running live
-  right, both sources below. The {#match} references each solved component
-  by its literal tag so the per-view resolver compiles exactly these nine
-  out of packages/sui/tutorial. Lesson 08's STARTER never mounts anywhere —
-  it does not compile, which is that lesson's entire point; its solved
-  version is what runs here.
+  /tutorial/[slug] — the interactive lesson. Two-pane split: the lesson (prose,
+  progress stepper, bottom nav) on the LEFT; the playground (editor card with
+  template/controller/diff tabs, live preview iframe, output console) on the
+  RIGHT.
+
+  Playground state — active tab, status badge, console lines, editor values —
+  is signals in the <controller>; the template is a pure read. tutorial-boot
+  owns the FFI seams only (wasm compile, iframe postMessage, theme observer);
+  the editor's imperative API is reached through bind:this refs. The shell
+  renders /tutorial/* lessons full-bleed (sui-site-shell `fullscreen`).
+
+  LANG-GAP (renders without these until the vocabulary grows):
+  - column clamp: the lesson pane wants exactly minmax(0, 30rem); it uses
+    grow:1 + max-w:panel-max-w-md;
+  - transform/gradient/text-transform atoms: stepper hover scaleY, the radial
+    preview tint, and uppercase-via-CSS (labels are written uppercase in text).
 -->
-<column class="doc-wide" gap="4">
-  {#if known()}
-    <breadcrumb>
-      <a href="/tutorial">tutorial</a>
-      <small>{slug()}</small>
-    </breadcrumb>
+<controller>
+import {
+  controller,
+  derived,
+  effect,
+  ref,
+  signal,
+  bindHtml,
+  type Action,
+  type ViewScope,
+} from '@ship/sui-runtime'
+import { ensureWasm, makeCompile } from '@ship/sui-viewer/wasm-bootstrap'
+import type { Scope } from './page.sui'
+import { TUTORIAL_LESSONS, type TutorialLesson } from '../../../src/tutorial-data'
+import {
+  createDebouncer,
+  listenPreview,
+  observeTheme,
+  pushScenario,
+  reloadPreview,
+  runInPreview,
+  type CodeEditorHost,
+  type CompileFn,
+} from '../../../src/tutorial-boot'
 
-    <p class="eyebrow">Tutorial · Lesson {orderLabel()}</p>
-    <h1>{title()}</h1>
-    <p class="lead">{description()}</p>
+const BY_SLUG: Record<string, TutorialLesson> = {}
+for (const l of TUTORIAL_LESSONS) BY_SLUG[l.slug] = l
+const ORDERED_LESSONS: TutorialLesson[] = [...TUTORIAL_LESSONS].sort((a, b) => a.order - b.order)
 
-    <row class="split" align="stretch">
-      <column>
-        <p class="pane-label">The lesson</p>
-        <div class="doc" use:prose={proseHtml()}></div>
-      </column>
-      <column>
-        <p class="pane-label">Live — the solved lesson, running</p>
-        <column gap="3" sx="p:5 radius:lg border:border bg:surface-0 h:full">
-          {#match slug()}
-            {:case '01-a-page-is-markup'} <tut-01-settings-page></tut-01-settings-page>
-            {:case '02-styling-is-sx'} <tut-02-usage-card></tut-02-usage-card>
-            {:case '03-state-is-a-controller'} <tut-03-stopwatch></tut-03-stopwatch>
-            {:case '04-templates-react'} <tut-04-release-console></tut-04-release-console>
-            {:case '05-data-and-forms'} <tut-05-team-directory></tut-05-team-directory>
-            {:case '06-motion-is-a-directive'} <tut-06-notification-tray></tut-06-notification-tray>
-            {:case '07-themes-are-one-attribute'} <tut-07-theme-lab></tut-07-theme-lab>
-            {:case '08-the-compiler-talks-back'} <tut-08-release-notes></tut-08-release-notes>
-            {:case '09-review-like-an-owner'} <tut-09-inbox></tut-09-inbox>
-            {:default} <p sx="fg:muted-foreground">No live example for this lesson.</p>
+interface StepSegment {
+  slug: string
+  href: string
+  state: 'done' | 'current' | 'todo'
+  title: string
+}
+
+interface LogLine {
+  id: number
+  ts: string
+  kind: 'info' | 'success' | 'warn' | 'error'
+  msg: string
+}
+
+// The prose is TRUSTED, pre-rendered HTML (gen-tutorial.mjs converts the
+// lesson markdown at build time); bindHtml is the runtime's one blob seam.
+const prose: Action<string> = (node, html) => {
+  const content = signal(html ?? '')
+  const dispose = bindHtml(node, () => content())
+  return {
+    update(next: string): void {
+      content.set(next ?? '')
+    },
+    destroy: dispose,
+  }
+}
+
+export default controller({
+  scope: (ctx: ViewScope<Scope>) => {
+    const lesson = derived(() => BY_SLUG[ctx.route.params.slug() ?? ''])
+    const nextSlug = derived(() => lesson()?.next ?? '')
+
+    // ── FFI refs: the editors, the preview iframe ────────────────────────
+    const tplEl = ref<CodeEditorHost>(null)
+    const ctrlEl = ref<CodeEditorHost>(null)
+    const iframeEl = ref<HTMLIFrameElement>(null)
+
+    // ── Playground state — signals the template reads ────────────────────
+    const tab = signal<string>('template')
+    const statusTone = signal<string>('muted')
+    const statusText = signal<string>('loading…')
+    const logs = signal<LogLine[]>([])
+    const solutionShown = signal(false)
+    const tplValue = signal('')
+    const ctrlValue = signal('')
+
+    const compile = signal<CompileFn | null>(null)
+    ensureWasm('/sui_compiler_bg.wasm')
+      .then(() => compile.set(() => makeCompile() as unknown as CompileFn))
+      .catch((err) => console.error('[sui-site] wasm compile seam failed:', err))
+
+    // ── Console log (elapsed-stamped, capped) ─────────────────────────────
+    const bootedAt = Date.now()
+    const pad2 = (n: number): string => (n < 10 ? '0' + n : String(n))
+    let logSeq = 0
+    const log = (msg: string, kind: LogLine['kind'] = 'info'): void => {
+      const s = Math.floor((Date.now() - bootedAt) / 1000)
+      const ts = pad2(Math.floor(s / 60)) + ':' + pad2(s % 60)
+      logs.set((cur) => [...cur, { id: ++logSeq, ts, kind, msg }].slice(-50))
+    }
+
+    const setStatus = (state: 'idle' | 'typing' | 'running' | 'ok' | 'error', text: string): void => {
+      const tones: Record<string, string> = {
+        idle: 'muted', typing: 'info', running: 'warning', ok: 'success', error: 'destructive',
+      }
+      statusTone.set(tones[state])
+      statusText.set(text)
+    }
+
+    // ── Run pipeline ──────────────────────────────────────────────────────
+    let tagSeq = 0
+    let iframeReady = false
+    const schedule = createDebouncer(200)
+
+    const runNow = (): void => {
+      const c = compile()
+      const iframe = iframeEl()
+      if (!c || !iframe || !iframeReady) return
+      setStatus('running', 'compiling…')
+      const safeSlug = (lesson()?.slug || 'lesson').replace(/[^a-z0-9-]/gi, '')
+      const result = runInPreview(c, iframe, {
+        tag: `tut-${safeSlug}-${++tagSeq}`,
+        template: tplValue(),
+        controllerTs: ctrlValue(),
+      })
+      if (result.kind === 'err') {
+        setStatus('error', 'compile error')
+        // The full compiler message lands in the console, destructive-toned.
+        log(result.message, 'error')
+        tplEl()?.setDiagnostics?.([{
+          line: result.line ?? 1,
+          column: result.col ?? 1,
+          severity: 'error',
+          message: result.message,
+          source: 'sui-compiler',
+        }])
+        return
+      }
+      tplEl()?.setDiagnostics?.([])
+      setStatus('ok', 'running')
+      log('▶ ran template.sui', 'success')
+    }
+
+    const applyCode = (template: string, controllerTs: string): void => {
+      tplValue.set(template)
+      ctrlValue.set(controllerTs)
+      const t = tplEl()
+      const c = ctrlEl()
+      if (t) t.value = template
+      if (c) c.value = controllerTs
+      runNow()
+    }
+
+    // ── Template handlers ────────────────────────────────────────────────
+    const onTplChange = (e: Event): void => {
+      const v = (e as CustomEvent<{ value: string }>).detail?.value
+      if (typeof v !== 'string') return
+      tplValue.set(v)
+      setStatus('typing', 'editing…')
+      schedule(runNow)
+    }
+    const onCtrlChange = (e: Event): void => {
+      const v = (e as CustomEvent<{ value: string }>).detail?.value
+      if (typeof v !== 'string') return
+      ctrlValue.set(v)
+      setStatus('typing', 'editing…')
+      schedule(runNow)
+    }
+    const onTabChange = (e: Event): void => {
+      const name = (e as CustomEvent<{ name: string }>).detail?.name
+      if (name) tab.set(name)
+    }
+    const reset = (): void => {
+      const l = lesson()
+      if (!l) return
+      solutionShown.set(false)
+      applyCode(l.starterTemplate, l.starterController)
+      log('↺ reset to starter', 'info')
+    }
+    const toggleSolution = (): void => {
+      const l = lesson()
+      if (!l) return
+      const next = !solutionShown()
+      solutionShown.set(next)
+      if (next) {
+        applyCode(l.solvedTemplate, l.solvedController)
+        log('shown solution', 'info')
+      } else {
+        applyCode(l.starterTemplate, l.starterController)
+        log('hid solution — back to your code', 'info')
+      }
+    }
+    const run = (): void => {
+      log('▶ run', 'info')
+      runNow()
+    }
+
+    // ── Lesson lifecycle ─────────────────────────────────────────────────
+    let lastSlug = ''
+    effect(() => {
+      const l = lesson()
+      const iframe = iframeEl()
+      if (!l || !iframe || !compile()) return
+      if (l.slug === lastSlug) return
+      lastSlug = l.slug
+      solutionShown.set(false)
+      tplValue.set(l.starterTemplate)
+      ctrlValue.set(l.starterController)
+      const t = tplEl()
+      const c = ctrlEl()
+      if (t) t.value = l.starterTemplate
+      if (c) c.value = l.starterController
+      logs.set([])
+      log(`loaded ${l.slug}`, 'info')
+      iframeReady = false
+      reloadPreview(iframe)
+    })
+
+    const disposePreview = listenPreview(iframeEl, {
+      onConsole: (level, text) => {
+        log(`[preview] ${text}`, level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'info')
+      },
+      onReady: () => {
+        const l = lesson()
+        const go = (): void => {
+          iframeReady = true
+          runNow()
+        }
+        if (l) void pushScenario(iframeEl()!, l.slug).then(go)
+        else go()
+      },
+    })
+    const disposeTheme = observeTheme(() => {
+      const iframe = iframeEl()
+      if (iframe) {
+        iframeReady = false
+        reloadPreview(iframe)
+      }
+    })
+    effect(() => () => {
+      disposePreview()
+      disposeTheme()
+    })
+
+    // ── Presentation reads ───────────────────────────────────────────────
+    const steps = derived((): StepSegment[] => {
+      const cur = lesson()?.order ?? 0
+      return ORDERED_LESSONS.map((l) => ({
+        slug: l.slug,
+        href: '/tutorial/' + l.slug,
+        state: l.order < cur ? 'done' : l.order === cur ? 'current' : 'todo',
+        title: 'Lesson ' + l.order + ' — ' + l.title,
+      }))
+    })
+
+    return {
+      tab,
+      statusTone,
+      statusText,
+      logs,
+      solutionShown,
+      tplValue,
+      ctrlValue,
+      tplEl,
+      ctrlEl,
+      iframeEl,
+      prose,
+      steps,
+      onTplChange,
+      onCtrlChange,
+      onTabChange,
+      reset,
+      toggleSolution,
+      run,
+      title: derived(() => lesson()?.title ?? 'Lesson not found'),
+      description: derived(() => lesson()?.description ?? ''),
+      proseHtml: derived(() => lesson()?.proseHtml ?? ''),
+      solvedTpl: derived(() => lesson()?.solvedTemplate ?? ''),
+      solvedCtrl: derived(() => lesson()?.solvedController ?? ''),
+      solutionLabel: derived(() => (solutionShown() ? 'Hide solution' : 'Show solution')),
+      lessonNumLabel: derived(() => pad2(lesson()?.order ?? 0)),
+      totalLessons: derived(() => ORDERED_LESSONS.length),
+      hasNext: derived(() => Boolean(nextSlug())),
+      nextHref: derived(() => (nextSlug() ? '/tutorial/' + nextSlug() : '/tutorial')),
+      nextTitle: derived(() => (BY_SLUG[nextSlug()]?.title ?? '') + ' →'),
+    }
+  },
+})
+</controller>
+
+<row sx="h:fill min-h:0 overflow:hidden" align="stretch">
+  <column sx="grow:1 max-w:panel-max-w-md h:fill min-h:0 bg:surface-1 border-r:border">
+    <column sx="grow:1 min-h:0 overflow-y:auto p:6" gap="4">
+      <row align="center" justify="between" gap="3">
+        <p sx="font:mono text:xs weight:medium tracking:wide fg:primary">— TUTORIAL</p>
+        <small sx="font:mono text:xs tracking:wide fg:muted-foreground">Lesson {lessonNumLabel()} / {totalLessons()}</small>
+      </row>
+
+      <row gap="1" aria-label="Lesson progress">
+        {#for step of steps() key={step.slug}}
+          {#match step.state}
+            {:case 'done'}
+              <a href={step.href} title={step.title} sx="grow:1 h:1 radius:full bg:primary"></a>
+            {:case 'current'}
+              <a href={step.href} title={step.title} aria-current="step" sx="grow:1 h:1 radius:full bg:primary opacity:50"></a>
+            {:default}
+              <a href={step.href} title={step.title} sx="grow:1 h:1 radius:full bg:surface-2"></a>
           {/match}
-        </column>
-      </column>
-    </row>
+        {/for}
+      </row>
 
-    <h2>The source</h2>
-    <p>
-      <strong>starter/</strong> is your working copy — edit it in
-      <code>packages/sui/tutorial/src/lessons/{slug()}</code> and compile with
-      <code>sui-compiler build --mode component</code>. <strong>solved/</strong>
-      is the reference above.
-    </p>
-    <row class="split" align="stretch">
-      <column gap="3">
-        <column gap="2">
-          <p class="pane-label">starter / {starterStem()}.sui</p>
-          <code-block code={starterTemplate()} lang="sui"></code-block>
-        </column>
-        {#if hasStarterController()}
-          <column gap="2">
-            <p class="pane-label">starter / {starterStem()}.controller.ts</p>
-            <code-block code={starterController()} lang="ts"></code-block>
-          </column>
-        {/if}
+      <column gap="2">
+        <h1>{title()}</h1>
+        <p sx="text:lg fg:muted-foreground">{description()}</p>
       </column>
-      <column gap="3">
-        <column gap="2">
-          <p class="pane-label">solved / {solvedStem()}.sui</p>
-          <code-block code={solvedTemplate()} lang="sui"></code-block>
-        </column>
-        {#if hasSolvedController()}
-          <column gap="2">
-            <p class="pane-label">solved / {solvedStem()}.controller.ts</p>
-            <code-block code={solvedController()} lang="ts"></code-block>
-          </column>
-        {/if}
-      </column>
-    </row>
 
-    <row class="page-nav">
-      {#if hasPrev()}
-        <a class="btn" href={prevHref()}>← {prevTitle()}</a>
-      {:else}
-        <a class="btn" href="/tutorial">← All lessons</a>
-      {/if}
+      <div class="doc" use:prose={proseHtml()}></div>
+    </column>
+
+    <row align="center" justify="between" gap="3" sx="p:3 px:6 border-t:border bg:surface-1">
+      <a href="/tutorial" sx="p:2 px:4 radius:md text:sm weight:semibold fg:muted-foreground hover:fg:foreground hover:bg:surface-2">← All lessons</a>
       {#if hasNext()}
-        <a class="btn btn-primary" href={nextHref()}>{nextTitle()} →</a>
-      {:else}
-        <a class="btn btn-primary" href="/tutorial">All lessons ✓</a>
+        <a href={nextHref()} sx="p:2 px:4 radius:md text:sm weight:semibold bg:primary fg:primary-foreground overflow:hidden">{nextTitle()}</a>
       {/if}
     </row>
-  {:else}
-    <empty-state variant="placeholder" tone="muted">
-      <span slot="title">No such lesson</span>
-      Nothing lives at this slug.
-      <a slot="action" class="btn" href="/tutorial">All lessons</a>
-    </empty-state>
-  {/if}
-</column>
+  </column>
+
+  <column sx="grow:2 h:fill min-h:0 p:4 bg:surface-0" gap="3">
+    <row align="center" justify="between" gap="3">
+      <p sx="font:mono text:xs weight:medium tracking:wide fg:muted-foreground">— PLAYGROUND</p>
+      <row gap="2" align="center">
+        <button variant="ghost" size="sm" on:click={reset}>↺ Reset</button>
+        <button variant="outline" tone="primary" size="sm" on:click={toggleSolution}>{solutionLabel()}</button>
+      </row>
+    </row>
+
+    <column sx="grow:2 min-h:0 border:border radius:lg bg:surface-1 overflow:hidden">
+      <row align="center" justify="between" gap="2" sx="p:2 px:3 border-b:border">
+        <tabs active="template" variant="pill" size="sm" on:sui-tab-change={onTabChange}>
+          <tab-list>
+            <tab name="template">template.sui</tab>
+            <tab name="controller">controller.ts</tab>
+            <tab name="diff">diff</tab>
+          </tab-list>
+        </tabs>
+      </row>
+      <column sx="grow:1 min-h:0 position:relative">
+        <tab-panel name="template" attr:hidden={tab() !== 'template'} sx="grow:1 min-h:0">
+          <sui-code-editor
+            data-pane="template"
+            language="sui"
+            size="md"
+            chrome="flush"
+            bind:this={tplEl}
+            on:sui-change={onTplChange}
+          ></sui-code-editor>
+        </tab-panel>
+        <tab-panel name="controller" attr:hidden={tab() !== 'controller'} sx="grow:1 min-h:0">
+          <sui-code-editor
+            data-pane="controller"
+            language="typescript"
+            size="md"
+            chrome="flush"
+            bind:this={ctrlEl}
+            on:sui-change={onCtrlChange}
+          ></sui-code-editor>
+        </tab-panel>
+        <tab-panel name="diff" attr:hidden={tab() !== 'diff'} sx="grow:1 min-h:0 overflow-y:auto">
+          <column gap="3" sx="p:3">
+            <column gap="1">
+              <small sx="font:mono text:xs tracking:wide fg:muted-foreground">TEMPLATE.SUI</small>
+              <sui-diff from={tplValue()} to={solvedTpl()}></sui-diff>
+            </column>
+            <column gap="1">
+              <small sx="font:mono text:xs tracking:wide fg:muted-foreground">CONTROLLER.TS</small>
+              <sui-diff from={ctrlValue()} to={solvedCtrl()}></sui-diff>
+            </column>
+          </column>
+        </tab-panel>
+      </column>
+    </column>
+
+    <column sx="grow:1 min-h:0 border:border radius:lg bg:surface-1 overflow:hidden">
+      <row align="center" justify="between" gap="2" sx="p:2 px:3 border-b:border">
+        <row gap="2" align="center">
+          <badge tone={statusTone()} variant="soft" size="sm">{statusText()}</badge>
+          <small sx="font:mono text:xs tracking:wide fg:muted-foreground">PREVIEW · LIVE</small>
+        </row>
+        <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
+      </row>
+      <column sx="grow:1 min-h:0">
+        <iframe
+          data-base-src="/tut-host.html"
+          title="Tutorial preview"
+          sandbox="allow-scripts allow-same-origin"
+          bind:this={iframeEl}
+          sx="w:full h:full border:none bg:surface-0"
+        ></iframe>
+      </column>
+      <column role="log" aria-live="polite" aria-label="Preview console" gap="0"
+              sx="border-t:border bg:surface-0 p:2 px:3 overflow-y:auto max-h:9 font:mono text:sm">
+        {#for line of logs() key={line.id}}
+          {#match line.kind}
+            {:case 'success'}
+              <row gap="2"><small sx="fg:muted-foreground opacity:50">{line.ts}</small><small sx="fg:success">{line.msg}</small></row>
+            {:case 'warn'}
+              <row gap="2"><small sx="fg:muted-foreground opacity:50">{line.ts}</small><small sx="fg:warning">{line.msg}</small></row>
+            {:case 'error'}
+              <row gap="2" sx="bg:tone-destructive-bg radius:sm p:1 px:2"><small sx="fg:muted-foreground opacity:50">{line.ts}</small><small sx="fg:destructive">{line.msg}</small></row>
+            {:default}
+              <row gap="2"><small sx="fg:muted-foreground opacity:50">{line.ts}</small><small sx="fg:muted-foreground">{line.msg}</small></row>
+          {/match}
+        {/for}
+      </column>
+    </column>
+  </column>
+</row>

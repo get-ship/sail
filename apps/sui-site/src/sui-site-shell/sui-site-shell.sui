@@ -37,7 +37,7 @@
   <theme-picker slot="actions"></theme-picker>
 </navbar>
 
-<row align="stretch">
+<row align="stretch" style:--chrome-offset={'3.5rem'}>
   {#if product() === 'deck'}
     <navbar placement="rail" bordered sticky style:--rail-offset={'3.5rem'}>
       <label>Introduction</label>
@@ -89,7 +89,13 @@
     </navbar>
   {/if}
 
-  <main sx="p:6 grow:1 min-w:0">
-    <slot name="route"></slot>
-  </main>
+  {#if workbench()}
+    <main sx="grow:1 min-w:0">
+      <slot name="route"></slot>
+    </main>
+  {:else}
+    <main sx="p:6 grow:1 min-w:0">
+      <slot name="route"></slot>
+    </main>
+  {/if}
 </row>

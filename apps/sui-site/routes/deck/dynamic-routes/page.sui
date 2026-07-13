@@ -1,6 +1,16 @@
 <!--
   /deck/dynamic-routes — adapted from packages/deck/docs/routes/dynamic-routes/page.sui.
 -->
+<controller>
+import { controller, type ViewScope } from '@ship/sui-runtime'
+import type { Scope } from './page.sui'
+import { routeExample, readExample } from './snippets'
+
+export default controller({
+  scope: (_ctx: ViewScope<Scope>) => ({ routeExample, readExample }),
+})
+</controller>
+
 <article class="doc">
   <p class="eyebrow">Routing</p>
   <h1>Dynamic routes</h1>

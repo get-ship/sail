@@ -2,6 +2,16 @@
   /deck/getting-started — adapted from packages/deck/docs/routes/getting-started/page.sui.
   Snippets live in ./snippets so literal braces in example code never get scope-scanned.
 -->
+<controller>
+import { controller, type ViewScope } from '@ship/sui-runtime'
+import type { Scope } from './page.sui'
+import { pageExample, controllerExample, devCmd } from './snippets'
+
+export default controller({
+  scope: (_ctx: ViewScope<Scope>) => ({ pageExample, controllerExample, devCmd }),
+})
+</controller>
+
 <article class="doc">
   <p class="eyebrow">Introduction</p>
   <h1>Getting started</h1>
@@ -12,8 +22,8 @@
   <code-block code={pageExample} lang="sui"></code-block>
 
   <h2>2. Add a controller</h2>
-  <p>Co-locate <code>routes/controller.ts</code> for reactive state. It returns a scope the template reads by name.</p>
-  <code-block code={controllerExample} lang="ts"></code-block>
+  <p>When the page needs state, add a <code>&lt;controller&gt;</code> block to the same file. It returns a scope the template reads by name — one file, template and state together.</p>
+  <code-block code={controllerExample} lang="sui"></code-block>
 
   <h2>3. Run the dev server</h2>
   <code-block code={devCmd} lang="bash"></code-block>

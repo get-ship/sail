@@ -6,7 +6,9 @@ export const routeTree = `routes/
   about/page.sui        → /about
   blog/posts/page.sui   → /blog/posts`
 
-export const colocated = `routes/blog/
-  page.sui          the /blog markup
-  controller.ts     reactive state for the page
-  style.css         styles for the page`
+export const colocated = `<!-- routes/blog/page.sui — the whole /blog route -->
+<controller>
+  …reactive state for the page…
+</controller>
+
+<article>…the /blog markup…</article>`
