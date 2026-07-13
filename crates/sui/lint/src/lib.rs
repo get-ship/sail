@@ -4,9 +4,11 @@
 //! Rule IDs are prefixed `sui-<descriptor>`.
 
 pub mod prop_registry;
+pub mod scales;
 pub mod report;
 pub mod rules;
 pub mod source;
+pub mod sx_vocab;
 pub mod tokens;
 
 #[cfg(test)]
