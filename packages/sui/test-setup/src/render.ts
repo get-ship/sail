@@ -45,9 +45,9 @@ export interface RenderOpts {
   navigate?: (path: string) => void
   /** On-disk path of the `.sui` source. Pass it when the source was read off
    *  disk (`readFileSync(new URL('./page.sui', import.meta.url))`) so the
-   *  compiler locates the paired `<stem>.controller.ts` and runs the four
+   *  compiler resolves the source's own styling policy and runs the four
    *  controller-aware passes — the harness then rejects exactly what the daemon
-   *  + CLI do (#263-A). Use `fileURLToPath(new URL('./page.sui', import.meta.url))`. */
+   *  + CLI do. Use `fileURLToPath(new URL('./page.sui', import.meta.url))`. */
   sourcePath?: string
 }
 
@@ -122,15 +122,17 @@ export function renderView(source: string, opts: RenderOpts = {}): Rendered {
 export interface RenderComponentOpts {
   /** Attribute props to set on the element before it connects. */
   attrs?: Record<string, string | boolean>
-  /** The component's paired controller — its default export, or a raw setup
-   *  function. Omit for templates with no controller. Without it, derived
-   *  scope, event emitters, and `{#if}` branches that read scope render empty. */
+  /** Override the controller the source declares — its default export, or a raw
+   *  setup function. An SFC's `<controller>` block is resolved automatically, so
+   *  pass this only to inject a fake, or when the block's imports need the real
+   *  module graph (a third-party dep the harness cannot eval): import the virtual
+   *  `<file>.sui.controller.ts` and hand it in. */
   controller?: ControllerInput
   /** On-disk path of the `.sui` source. Pass it when the source was read off
-   *  disk so the compiler locates the paired `<stem>.controller.ts` and runs
+   *  disk so the compiler resolves the source's own styling policy and runs
    *  the four controller-aware passes (scope_bound, scope_member,
    *  bind_this_target, on_callable) — the harness then rejects exactly what the
-   *  daemon + CLI do (#263-A). Use
+   *  daemon + CLI do. Use
    *  `fileURLToPath(new URL('./foo.sui', import.meta.url))`. */
   sourcePath?: string
 }
@@ -152,7 +154,7 @@ export function renderComponent(
   // (mirrors renderView); otherwise the template renders without scope.
   // An SFC carries its controller inline — the compile returns the body and
   // the emitted template imports it as `setup`. An explicit `opts.controller`
-  // (paired-file components, synthetic scopes) still wins.
+  // still wins, for a fake or a block whose imports need the real module graph.
   const probe = compileSui(source, {
     componentName: tag,
     mode: 'component',

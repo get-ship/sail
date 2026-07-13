@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sui-markdown/sui-markdown.compiled.js'
-import { renderMarkdown } from '../src/sui-markdown/sui-markdown.controller.ts'
+import { renderMarkdown } from '../src/sui-markdown/sui-markdown.sui.controller.ts'
 import { signal } from '@ship/sui-runtime'
 import { bindHtml } from '@ship/sui-runtime'
 import { createContainerRegistry, flush, mount } from '../src/test-utils'
