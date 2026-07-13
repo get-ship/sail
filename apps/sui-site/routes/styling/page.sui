@@ -6,6 +6,19 @@
   <style> is a compile error everywhere outside the compiler's own L1 elements,
   and there is no shadow root. The page taught the reader to defeat the language.
 -->
+
+<controller>
+import { controller, type ViewScope } from '@ship/sui-runtime'
+import type { Scope } from './page.sui'
+import { code } from './snippets'
+
+export default controller({
+  scope: (_ctx: ViewScope<Scope>) => {
+    return { code }
+  },
+})
+</controller>
+
 <column class="doc" gap="5">
   <p class="eyebrow">Components</p>
   <h1>Styling</h1>

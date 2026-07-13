@@ -4,6 +4,20 @@
   tutorial lesson (a step in the 25-lesson track); here it lands as a
   top-level AI section page grounded in that prose.
 -->
+
+<controller>
+// /ai/authoring — the agent authoring loop, adapted from the
+// 09-agent-loop tutorial lesson. Snippets live in ./snippets so the literal
+// loop-diagram ASCII never leaks into the inferred scope.
+import { controller, type ViewScope } from '@ship/sui-runtime'
+import type { Scope } from './page.sui'
+import { loopDiagram } from './snippets'
+
+export default controller({
+  scope: (_ctx: ViewScope<Scope>) => ({ loopDiagram }),
+})
+</controller>
+
 <article class="doc">
   <p class="eyebrow">AI</p>
   <h1>The agent authoring loop</h1>

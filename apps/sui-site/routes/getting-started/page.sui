@@ -4,6 +4,19 @@
   build, and the standalone component path. Honest about what SUI is — a
   Rust toolchain plus JS packages — not a fake one-liner.
 -->
+
+<controller>
+import { controller, type ViewScope } from '@ship/sui-runtime'
+import type { Scope } from './page.sui'
+import { code } from './snippets'
+
+export default controller({
+  scope: (_ctx: ViewScope<Scope>) => {
+    return { code }
+  },
+})
+</controller>
+
 <column class="doc" gap="5">
   <p class="eyebrow">Introduction</p>
   <h1>Getting started</h1>

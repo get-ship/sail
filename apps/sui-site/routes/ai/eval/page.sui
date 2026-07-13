@@ -5,6 +5,20 @@
   sub-score table is rendered as sub-headings under "Sub-scores" so the page
   stays prose-only and requires no co-located stylesheet.
 -->
+
+<controller>
+// /ai/eval — scoring with sui-eval, adapted from the 11-sui-eval tutorial
+// lesson. Snippets live in ./snippets so literal braces in the example block
+// and the sniffEscapeHatches output never leak into the inferred scope.
+import { controller, type ViewScope } from '@ship/sui-runtime'
+import type { Scope } from './page.sui'
+import { evalExample, hatchExample } from './snippets'
+
+export default controller({
+  scope: (_ctx: ViewScope<Scope>) => ({ evalExample, hatchExample }),
+})
+</controller>
+
 <article class="doc">
   <p class="eyebrow">AI</p>
   <h1>Scoring with sui-eval</h1>
