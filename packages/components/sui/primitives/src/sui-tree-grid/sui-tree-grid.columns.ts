@@ -34,7 +34,7 @@ function sortToken(dir: 'asc' | 'desc' | false): 'ascending' | 'descending' | 'n
  * live `tree.setColumnSizing` (onChange) over the drag. Returns a teardown.
  */
 export function wireGridColumns(host: HostEmit, getTree: () => Table<AnyTreeNode>): () => void {
-  const shadow = host.shadowRoot
+  const shadow = host.shadowRoot ?? host
 
   const emitSort = (id: string): void => {
     const dir = getTree().getColumn(id)?.getIsSorted() ?? false
@@ -57,7 +57,7 @@ export function wireGridColumns(host: HostEmit, getTree: () => Table<AnyTreeNode
   }
 
   const onPointerDown = (e: Event): void => {
-    const handle = (e.target as HTMLElement).closest('[part="resize-handle"]')
+    const handle = (e.target as HTMLElement).closest('.resize-handle')
     if (!handle) return
     const id = handle.getAttribute('data-col-id')
     if (!id) return
@@ -83,7 +83,7 @@ export function wireGridColumns(host: HostEmit, getTree: () => Table<AnyTreeNode
       return
     }
     // The resize handle never sorts.
-    if (target.closest('[part="resize-handle"]')) return
+    if (target.closest('.resize-handle')) return
     // A sortable header click cycles its sort none→asc→desc→none.
     const head = target.closest<HTMLElement>('[role="columnheader"][data-sortable]')
     if (head) {

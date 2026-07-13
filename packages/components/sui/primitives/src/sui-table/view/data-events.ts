@@ -45,7 +45,7 @@ export function wireDataVariant(
   getWindow: () => unknown,
 ): Disposer {
   const emit: Emit = (name, detail) => host.emit?.(name, detail)
-  const shadow = host.shadowRoot
+  const shadow = host.shadowRoot ?? host
 
   const emitSort = (tab: Table<AnyRow>): void => {
     const sorting = tab.state.sorting()

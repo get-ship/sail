@@ -2,7 +2,7 @@
 //
 // Kept off the controllers so both `sui-tree` and `sui-tree-grid` share ONE
 // interaction+emit path (one way to do things). The shadow body carries
-// `[part="caret"]` (disclosure) and `[data-node-id]` (row) markers; this module
+// `.caret` (disclosure) and `[data-node-id]` (row) markers; this module
 // delegates clicks/keydown on the SHADOW ROOT (composed:false events never
 // escape to the host) to `tree.toggleExpanded` / `tree.toggleRowSelected` /
 // `nav.onKeydown`, and emits the `sui-*` events via `host.emit!` (deduped, the
@@ -49,7 +49,7 @@ export function wireTreeInteractions(
   getTree: () => Table<AnyTreeNode>,
   opts: TreeInteractionOpts,
 ): () => void {
-  const shadow = host.shadowRoot
+  const shadow = host.shadowRoot ?? host
   let lastExpanded = ''
   let lastSelected = ''
 
@@ -96,7 +96,7 @@ export function wireTreeInteractions(
   const onClick = (e: Event): void => {
     const target = e.target as HTMLElement
     // Caret first (disclosure toggle, never a selection).
-    const caret = target.closest('[part="caret"]')
+    const caret = target.closest('.caret')
     if (caret) {
       const id = caret.closest('[data-node-id]')?.getAttribute('data-node-id')
       if (id) {

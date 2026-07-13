@@ -312,11 +312,11 @@ export default controller({
     const onShadowClick = (e: Event) => {
       const target = e.target as HTMLElement | null
       const btn = target?.closest?.('button.remove') as HTMLElement | null
-      if (!btn || !host.shadowRoot?.contains(btn)) return
+      if (!btn || !(host.shadowRoot ?? host).contains(btn)) return
       const idx = Number(btn.dataset.idx)
       if (Number.isInteger(idx)) removeAt(idx)
     }
-    host.shadowRoot?.addEventListener('click', onShadowClick)
+    (host.shadowRoot ?? host).addEventListener('click', onShadowClick)
 
     return () => {
       dropzoneEl?.removeEventListener('click', onClick)
@@ -325,7 +325,7 @@ export default controller({
       dropzoneEl?.removeEventListener('dragleave', onDragLeave)
       dropzoneEl?.removeEventListener('drop', onDrop)
       inputEl?.removeEventListener('change', onInputChange)
-      host.shadowRoot?.removeEventListener('click', onShadowClick)
+      (host.shadowRoot ?? host).removeEventListener('click', onShadowClick)
     }
   },
 })

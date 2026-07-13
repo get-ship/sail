@@ -460,8 +460,8 @@ export default controller({
       closePanel()
     }
 
-    host.shadowRoot?.addEventListener('click', onShadowClick)
-    host.shadowRoot?.addEventListener('keydown', onShadowKeydown as EventListener)
+    (host.shadowRoot ?? host).addEventListener('click', onShadowClick)
+    (host.shadowRoot ?? host).addEventListener('keydown', onShadowKeydown as EventListener)
     document.addEventListener('pointerdown', onDocPointer)
 
     host.expose!({
@@ -476,8 +476,8 @@ export default controller({
       inputEl.removeEventListener('focus', onInputFocus)
       inputEl.removeEventListener('change', onInputChange)
       inputEl.removeEventListener('keydown', onInputKeydown)
-      host.shadowRoot?.removeEventListener('click', onShadowClick)
-      host.shadowRoot?.removeEventListener('keydown', onShadowKeydown as EventListener)
+      (host.shadowRoot ?? host).removeEventListener('click', onShadowClick)
+      (host.shadowRoot ?? host).removeEventListener('keydown', onShadowKeydown as EventListener)
       document.removeEventListener('pointerdown', onDocPointer)
     }
   },

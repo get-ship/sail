@@ -70,7 +70,7 @@ function shiftArrowDelta(e: KeyboardEvent): number | null {
  *  handles Shift+Arrow range extension. Cleanups auto-enroll via
  *  `bindNativeEvent` against the active effect-scope. */
 export function wireCalendarInteractions(host: HTMLElement, ctx: CalendarInteractionContext): void {
-  const sr = host.shadowRoot
+  const sr = host.shadowRoot ?? host
   if (!sr) return
   const { calOf, slotMinutes } = ctx
 
