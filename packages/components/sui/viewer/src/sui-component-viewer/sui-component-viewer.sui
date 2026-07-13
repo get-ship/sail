@@ -273,7 +273,7 @@ export default controller({
     <sui-prop-knobs class="knobs" hidden={showInspector() ? null : true} prop:props={cem()} prop:value={propValues()}></sui-prop-knobs>
 
     <!-- The inspector tabs: flip the state-matrix / props-table / source. -->
-    <tabs class="tabs" active="source" variant="underline" size="sm">
+    <tabs class="tabs" active="source" variant="line" size="sm">
       <sui-tab name="source">Source</sui-tab>
       {#if showInspector()}
         <sui-tab name="matrix">States</sui-tab>
