@@ -774,7 +774,7 @@
   // ../runtime/src/actions/tabs.ts
   var tabs = (node) => {
     const root = node;
-    const nameOf = (el) => el.getAttribute("name") ?? "";
+    const keyOf = (el, i) => el.getAttribute("name") || String(i);
     const tabsOf = () => Array.from(root.querySelectorAll(".sui-tab"));
     const panelsOf = () => Array.from(root.querySelectorAll(".sui-tab-panel"));
     const activeName = () => root.getAttribute("active") ?? "";
@@ -782,12 +782,11 @@
       const tabs2 = tabsOf();
       let active = activeName();
       if (!active && tabs2.length) {
-        active = nameOf(tabs2[0]);
-        if (active)
-          root.setAttribute("active", active);
+        active = keyOf(tabs2[0], 0);
+        root.setAttribute("active", active);
       }
-      for (const t of tabs2) {
-        const name = nameOf(t);
+      for (const [i, t] of tabs2.entries()) {
+        const name = keyOf(t, i);
         const on = name === active;
         t.setAttribute("role", "tab");
         t.setAttribute("aria-selected", on ? "true" : "false");
@@ -799,8 +798,8 @@
           t.setAttribute("aria-controls", `sui-tabpanel-${name}`);
         }
       }
-      for (const p of panelsOf()) {
-        const name = nameOf(p);
+      for (const [i, p] of panelsOf().entries()) {
+        const name = keyOf(p, i);
         const on = name === active;
         p.setAttribute("role", "tabpanel");
         p.hidden = !on;
@@ -813,7 +812,7 @@
       }
     };
     const focusTab = (name) => {
-      tabsOf().find((t) => nameOf(t) === name)?.focus();
+      tabsOf().find((t, i) => keyOf(t, i) === name)?.focus();
     };
     const activate = (name) => {
       if (!name)
@@ -836,7 +835,7 @@
     const onClick = (e) => {
       const t = tabFrom(e);
       if (t && !t.hasAttribute("disabled"))
-        activate(nameOf(t));
+        activate(keyOf(t, tabsOf().indexOf(t)));
     };
     const onKeydown = (e) => {
       const t = tabFrom(e);
@@ -860,12 +859,12 @@
       else if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         if (!t.hasAttribute("disabled"))
-          activate(nameOf(t));
+          activate(keyOf(t, tabsOf().indexOf(t)));
         return;
       }
       if (j >= 0) {
         e.preventDefault();
-        activate(nameOf(enabled[j]));
+        activate(keyOf(enabled[j], tabsOf().indexOf(enabled[j])));
       }
     };
     root.addEventListener("click", onClick);
@@ -1722,6 +1721,23 @@
         b.play();
       });
     };
+    if (trigger === "loop") {
+      if (prefersReducedMotion()) {
+        return () => {
+          for (const a of enter)
+            a.cancel();
+        };
+      }
+      const phase = config.stagger ? staggerOffset() * config.stagger : 0;
+      for (const a of enter) {
+        a.effect?.updateTiming({ iterations: Infinity, direction: "alternate", delay: phase });
+        a.play();
+      }
+      return () => {
+        for (const a of enter)
+          a.cancel();
+      };
+    }
     if (trigger === "view" || trigger === "scroll") {
       if (prefersReducedMotion()) {
         for (const a of enter)
