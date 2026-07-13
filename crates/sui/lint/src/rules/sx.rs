@@ -207,7 +207,11 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
             "auto", "default", "pointer", "text", "wait", "move", "not-allowed", "help", "grab",
             "cell", "progress", "none", "col-resize", "row-resize",
         ],
-        Visibility => vec!["visible", "hidden"],
+        // Who can see this: everyone, nobody, or assistive tech only. The third
+        // is the accessible alternative every graphic owes its reader — a chart's
+        // data table, a canvas's node list. Pure mechanics: it takes the element
+        // out of the visual box model and leaves it in the a11y tree.
+        Visibility => vec!["visible", "hidden", "assistive"],
     }
 }
 
@@ -427,6 +431,23 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
         // enum-keyword kinds: the validated keyword IS the CSS value.
         Display | Overflow | Position | Cursor | Visibility => token.to_string(),
     };
+    // `visibility:assistive` is the one atom whose axis is not its CSS property:
+    // there is no single declaration that hides a box from sight while keeping it
+    // in the accessibility tree — `display:none` and `visibility:hidden` both
+    // remove it from BOTH. It is this exact block or nothing.
+    if prop == "visibility" && token == "assistive" {
+        return Some(vec![
+            ("position", "absolute".into()),
+            ("width", "1px".into()),
+            ("height", "1px".into()),
+            ("padding", "0".into()),
+            ("margin", "-1px".into()),
+            ("overflow", "hidden".into()),
+            ("clip-path", "inset(50%)".into()),
+            ("white-space", "nowrap".into()),
+            ("border", "0".into()),
+        ]);
+    }
     let decls = css_props(prop).iter().map(|p| (*p, value.clone())).collect();
     Some(decls)
 }
@@ -742,6 +763,19 @@ mod tests {
 
     fn run(src: &str) -> Vec<String> {
         check(Path::new("t.sui"), src).into_iter().map(|f| f.message).collect()
+    }
+
+    #[test]
+    fn visibility_assistive_hides_the_box_and_keeps_the_a11y_tree() {
+        assert!(run(r#"<table sx="visibility:assistive"><tr><td>1</td></tr></table>"#).is_empty());
+        let decls = lower("visibility", "assistive").expect("assistive lowers");
+        let map: std::collections::HashMap<_, _> = decls.into_iter().collect();
+        // Neither of the two declarations that would ALSO drop it from the
+        // accessibility tree — that is the whole point of the atom.
+        assert_ne!(map.get("display").map(String::as_str), Some("none"));
+        assert_ne!(map.get("visibility").map(String::as_str), Some("hidden"));
+        assert_eq!(map.get("clip-path").map(String::as_str), Some("inset(50%)"));
+        assert_eq!(map.get("position").map(String::as_str), Some("absolute"));
     }
 
     #[test]

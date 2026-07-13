@@ -80,3 +80,23 @@ Ruling key: OPEN (needs a decision) · SHIPPED (atom exists) · REJECTED.
   parked until the ship-app repo migration produces real consumers.
   Candidates then: an existing element absorbs it (avatar/chip),
   composition, or a dedicated element designed against the actual usage.
+
+## Minted this pass — rename freely, the spelling is yours
+
+- **`sx="visibility:assistive"`** — hides the box, keeps the element in the
+  accessibility tree. A third value on the existing `visibility:` axis
+  (`visible` / `hidden` / `assistive`): who can see this — everyone, nobody,
+  or assistive tech only.
+
+  It exists because every graphic owes its reader a text alternative, and the
+  25 unmigrated components are full of them: each chart carries a data table,
+  the canvas an annotation list. There is no single CSS declaration for it —
+  `display:none` and `visibility:hidden` both drop the element from the a11y
+  tree too — so it lowers to the nine-declaration block, the one atom whose
+  axis is not its CSS property.
+
+  Admitted under the ratified sx rule (2), theme-neutral mechanics: it is
+  physics with no design opinion. The NAME is the open question; the capability
+  is not. Alternatives: `visibility:sr-only` (Tailwind's), `visibility:a11y`,
+  or an L1 `<visually-hidden>` wrapper. One-line change in
+  `crates/sui/lint/src/rules/sx.rs`.
