@@ -1,0 +1,20 @@
+<!--
+  Lesson 03 starter — a stopwatch whose clock never moves.
+
+  The controller is the sibling tut-03-stopwatch-starter.controller.ts.
+  The template binds only what that controller's scope() returns.
+-->
+<column gap="4">
+  <center sx="p:6 bg:surface-1 border:border radius:lg">
+    <strong sx="text:4xl tracking:tight">{clock()}</strong>
+  </center>
+
+  <row gap="2" justify="center">
+    <button variant="solid" tone={running() ? 'warning' : 'primary'} on:click={() => toggle()}>
+      {running() ? 'Pause' : 'Start'}
+    </button>
+    <button variant="ghost" on:click={() => reset()}>Reset</button>
+    <!-- TODO 3: add a Lap button (disabled unless running()) and a keyed
+         {#for} list of laps below. -->
+  </row>
+</column>

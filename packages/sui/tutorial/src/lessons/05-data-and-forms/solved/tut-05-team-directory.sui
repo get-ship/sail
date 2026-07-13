@@ -1,0 +1,52 @@
+<!--
+  Lesson 05 solved — all three states of a live() handle are explicit.
+
+  {#while-loading} covers the first paint and every refetch;
+  {#while-error} covers rejection; the value is only reachable behind
+  kind === 'ok'. The form writes through bind:value / bind:checked and
+  refetches by bumping a tracked signal.
+-->
+<column gap="4">
+  <row align="center" justify="between">
+    <h3>Team</h3>
+    <row gap="3" align="center">
+      <label sx="text:sm fg:muted-foreground">
+        <input type="checkbox" bind:checked={breakApi} /> break the API
+      </label>
+      <button size="sm" variant="outline" on:click={() => reload()}>Reload</button>
+    </row>
+  </row>
+
+  {#while-loading of team}
+    <row gap="2" align="center" sx="p:4 bg:surface-1 radius:md">
+      <spinner size="sm"></spinner>
+      <small sx="fg:muted-foreground">loading the roster…</small>
+    </row>
+  {/while-loading}
+
+  {#while-error err of team}
+    <alert tone="destructive">{err.message}</alert>
+  {/while-error}
+
+  {#if team().kind === 'ok'}
+    <column gap="1">
+      {#for m of team().value key={m.id}}
+        <row gap="3" align="center" sx="px:3 py:2 bg:surface-1 radius:md">
+          <strong sx="grow:1 text:sm">{m.name}</strong>
+          {#if m.role === 'admin'}<badge tone="primary" variant="soft" size="sm">admin</badge>{/if}
+        </row>
+      {/for}
+    </column>
+  {/if}
+
+  <form on:submit|prevent={add}>
+    <row gap="2" align="center">
+      <input placeholder="Add a teammate" bind:value={name} size="sm" />
+      <select bind:value={role} size="sm">
+        <option value="member">member</option>
+        <option value="admin">admin</option>
+      </select>
+      <button type="submit" size="sm" variant="solid" tone="primary" disabled={!canAdd()}>Add</button>
+    </row>
+  </form>
+</column>

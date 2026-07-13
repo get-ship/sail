@@ -1,0 +1,68 @@
+<!--
+  Lesson 07 solved — the theme is one attribute.
+
+  pick() calls applyTheme + persistTheme; everything on the page repaints
+  because every surface reads tokens. The two panels below opt OUT: each
+  pins its own token table with data-theme-preview, which is how a picker
+  can show you a theme without applying it.
+-->
+<column gap="4">
+  <row align="center" justify="between">
+    <h3>Theme lab</h3>
+    <small sx="fg:muted-foreground">data-theme = {active()}</small>
+  </row>
+
+  <row gap="1" align="center">
+    {#for t of themes() key={t.id}}
+      <button size="sm" tone="primary" variant={active() === t.id ? 'solid' : 'ghost'} on:click={() => pick(t.id)}>
+        {t.label}
+      </button>
+    {/for}
+  </row>
+
+  <grid cols="2" gap="4">
+    <column data-theme-preview="paper" gap="2" sx="p:4 radius:lg border:border bg:background fg:foreground">
+      <small sx="fg:muted-foreground">pinned: paper</small>
+      <card padding="md">
+        <column gap="2">
+          <row gap="2" align="center">
+            <badge tone="success" variant="soft" size="sm">on track</badge>
+            <strong sx="text:sm">Q3 launch</strong>
+          </row>
+          <p sx="text:sm fg:muted-foreground">Same markup as the panel beside me — only the tokens differ.</p>
+          <row gap="2">
+            <button size="sm" variant="solid" tone="primary">Primary</button>
+            <button size="sm" variant="outline" tone="primary">Outline</button>
+          </row>
+        </column>
+      </card>
+    </column>
+
+    <column data-theme-preview="console" gap="2" sx="p:4 radius:lg border:border bg:background fg:foreground">
+      <small sx="fg:muted-foreground">pinned: console</small>
+      <card padding="md">
+        <column gap="2">
+          <row gap="2" align="center">
+            <badge tone="success" variant="soft" size="sm">on track</badge>
+            <strong sx="text:sm">Q3 launch</strong>
+          </row>
+          <p sx="text:sm fg:muted-foreground">Same markup as the panel beside me — only the tokens differ.</p>
+          <row gap="2">
+            <button size="sm" variant="solid" tone="primary">Primary</button>
+            <button size="sm" variant="outline" tone="primary">Outline</button>
+          </row>
+        </column>
+      </card>
+    </column>
+  </grid>
+
+  <row gap="2" align="center">
+    <small sx="fg:muted-foreground">the tone contract:</small>
+    <badge tone="default" variant="soft" size="sm">default</badge>
+    <badge tone="primary" variant="soft" size="sm">primary</badge>
+    <badge tone="info" variant="soft" size="sm">info</badge>
+    <badge tone="success" variant="soft" size="sm">success</badge>
+    <badge tone="warning" variant="soft" size="sm">warning</badge>
+    <badge tone="destructive" variant="soft" size="sm">destructive</badge>
+  </row>
+</column>

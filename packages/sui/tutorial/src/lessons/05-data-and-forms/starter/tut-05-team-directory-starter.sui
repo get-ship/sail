@@ -1,0 +1,45 @@
+<!--
+  Lesson 05 starter — the roster renders, but only in the happy path.
+
+  A live() handle has THREE states, and this template handles one. Add the
+  {#while-loading} and {#while-error} boundaries, then wire the form.
+-->
+<column gap="4">
+  <row align="center" justify="between">
+    <h3>Team</h3>
+    <row gap="3" align="center">
+      <label sx="text:sm fg:muted-foreground">
+        <input type="checkbox" bind:checked={breakApi} /> break the API
+      </label>
+      <button size="sm" variant="outline" on:click={() => reload()}>Reload</button>
+    </row>
+  </row>
+
+  <!-- TODO 4: {#while-loading of team} — a spinner row, so the first
+       paint isn't blank. -->
+
+  <!-- TODO 5: {#while-error err of team} — an <alert tone="destructive">
+       showing err.message. -->
+
+  {#if team().kind === 'ok'}
+    <column gap="1">
+      {#for m of team().value key={m.id}}
+        <row gap="3" align="center" sx="px:3 py:2 bg:surface-1 radius:md">
+          <strong sx="grow:1 text:sm">{m.name}</strong>
+          {#if m.role === 'admin'}<badge tone="primary" variant="soft" size="sm">admin</badge>{/if}
+        </row>
+      {/for}
+    </column>
+  {/if}
+
+  <form on:submit|prevent={add}>
+    <row gap="2" align="center">
+      <input placeholder="Add a teammate" bind:value={name} size="sm" />
+      <select bind:value={role} size="sm">
+        <option value="member">member</option>
+        <option value="admin">admin</option>
+      </select>
+      <button type="submit" size="sm" variant="solid" tone="primary">Add</button>
+    </row>
+  </form>
+</column>

@@ -1,7 +1,7 @@
 {
   "name": "@ship/sui-tutorial",
   "version": "0.2.0",
-  "description": "SUI tutorial — 25 lessons (paired starter + solved controller + template, plus prose). Droppable into the marketing site or any host.",
+  "description": "SUI tutorial — 9 lessons (paired starter + solved, template + controller, plus prose). Droppable into the docs site or any host.",
   "private": false,
   "type": "module",
   "license": "MIT",
@@ -22,7 +22,8 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@ship/sui-runtime": "workspace:*"
+    "@ship/sui-runtime": "workspace:*",
+    "@ship/tokens": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.5.0"

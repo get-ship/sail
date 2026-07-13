@@ -1,0 +1,43 @@
+<!--
+  Lesson 04 solved — the template is a read of state.
+
+  {expr} and attribute bindings hold zero-arg reads only; handlers write.
+  {#match} swaps the status badge (each branch enters with its own
+  motion), the keyed {#for} moves rows on promote() instead of
+  rebuilding them, and the event modifiers replace handler boilerplate.
+-->
+<column gap="4">
+  <row align="center" justify="between">
+    <h3>Release console</h3>
+    {#match phase()}
+      {:case 'idle'} <badge tone="muted" motion:enter={{ opacity: 'fade' }}>idle</badge>
+      {:case 'building'} <badge tone="warning" motion:enter={{ translate-x: 'spring:snappy' }}>building</badge>
+      {:case 'live'} <badge tone="success" motion:enter={{ scale: 'spring:bouncy' }}>live</badge>
+      {:default} <badge tone="destructive" motion:enter={{ opacity: 'fade' }}>failed</badge>
+    {/match}
+  </row>
+
+  <row gap="2">
+    <button variant="solid" tone="primary" disabled={phase() === 'building'} on:click={() => deploy()}>
+      {phase() === 'failed' ? 'Retry deploy' : 'Deploy'}
+    </button>
+    <button variant="ghost" on:click={() => reset()}>Reset</button>
+  </row>
+
+  <separator></separator>
+
+  <input placeholder="Filter environments — Esc clears"
+         on:input|debounce:300={search}
+         on:keydown|key:Escape={clear} />
+
+  <column gap="1">
+    {#for env of filtered() key={env.id}}
+      <row gap="3" align="center" sx="px:3 py:2 bg:surface-1 radius:md">
+        <badge tone={env.tier === 'prod' ? 'primary' : 'muted'} variant="outline" size="sm">{env.tier}</badge>
+        <strong sx="grow:1 text:sm">{env.name}</strong>
+        <small sx="fg:muted-foreground">{env.region}</small>
+        <button size="sm" variant="ghost" on:click={() => promote(env.id)}>Promote</button>
+      </row>
+    {/for}
+  </column>
+</column>

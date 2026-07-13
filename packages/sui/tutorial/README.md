@@ -2,73 +2,100 @@
 
 The SUI tutorial, co-located with the framework so it can't go stale.
 
-25 lessons, each a paired `starter/` (the reader's blank slate) and `solved/`
-(the reference implementation). Every lesson is a complete `@ship/sui-runtime`
-controller — a `controller.ts` paired with a `template.sui` — that the
-marketing site (or any host) can mount directly.
+Nine lessons, each a paired `starter/` (the reader's working copy) and
+`solved/` (the reference implementation). Every lesson is a real, small
+screen written on the current language surface — compiled by the in-repo
+`sui-compiler`, mounted live by the docs site.
 
-The original source lives in `ship-marketing/apps/site/tutorial-examples/` and
-is mirrored here. Edit the source there first, then re-mirror — or, better,
-edit here, since this is the canonical home.
+## Why nine
+
+One lesson per decision surface the language actually kept, plus the
+loop the language exists for:
+
+| # | lesson | decision surface |
+|---|--------|------------------|
+| 01 | a-page-is-markup | structure = layout keywords + component props (zero JS) |
+| 02 | styling-is-sx | the one styling attribute; closed token vocabulary; states as prefixes |
+| 03 | state-is-a-controller | signal / derived / effect; one owner for state |
+| 04 | templates-react | zero-arg reads, modifiers, `{#if}` / `{#for key}` / `{#match}` |
+| 05 | data-and-forms | `live()`'s three explicit states; `bind:`; refetch = bump a tracked signal |
+| 06 | motion-is-a-directive | triggers × presets; exit-hold; stagger; reduced motion |
+| 07 | themes-are-one-attribute | tokens + the tone contract; `applyTheme`; `data-theme-preview` |
+| 08 | the-compiler-talks-back | the agent loop: run, read the rejection, fix, run again |
+| 09 | review-like-an-owner | the human loop: five flaws that compile, and the checklist that catches them |
+
+08 and 09 are the north star spelled out: **agents author** (the
+compiler's closed vocabulary makes their output reviewable-by-build)
+and **humans review** (intent — the part no lint can gate).
 
 ## Layout
 
 ```
 src/lessons/
-  01-hello-signal/
-    starter/    # reader-facing scaffold
-      controller.ts
-      template.sui
-    solved/     # reference impl
-      controller.ts
-      template.sui
-  02-derived/
+  01-a-page-is-markup/
+    starter/    # the reader's working copy (lesson 08's starter fails the build on purpose)
+      tut-01-settings-page-starter.sui
+    solved/     # reference impl — mounted live by the docs site
+      tut-01-settings-page.sui
+  03-state-is-a-controller/
+    starter/
+      tut-03-stopwatch-starter.sui
+      tut-03-stopwatch-starter.controller.ts
+    solved/
+      tut-03-stopwatch.sui
+      tut-03-stopwatch.controller.ts
   …
-  25-going-further/
+src/prose/
+  01-a-page-is-markup.md    # flat files — frontmatter: title/description/order/slug/prev/next/chapter
+  …
+  09-review-like-an-owner.md
 ```
 
-Numbering matches the docs' lesson ordering; do not renumber without
-updating the marketing site too.
+Naming is the custom-element tag rule: a component `.sui`'s stem IS its
+tag (`tut-03-stopwatch` → `<tut-03-stopwatch>`), so stems are
+hyphenated, unique across the workspace, and prefixed `tut-`. Starter
+stems carry a `-starter` suffix — two files may not claim one tag. A
+lesson has a `<stem>.controller.ts` sibling only when it has state;
+lessons 01 and 02 are deliberately zero-JS. The compiler pairs the
+sibling automatically (and an inline `<controller>` block in a `.sui`
+is extracted to exactly that sibling — same model, two spellings).
+
+## Compile check
+
+Every template must compile standalone:
+
+```
+cargo build -q -p sui-compiler
+target/debug/sui-compiler build --mode component <lesson>.sui
+```
+
+The one exception is `08-the-compiler-talks-back/starter/` — that file
+FAILS the build by design (four planted defects); the lesson's prose
+walks the fix loop with the compiler's verbatim output. If compiler
+error text changes shape, re-run the loop and refresh the prose.
 
 ## Use
 
-A host (the marketing site, a docs page, an embedded playground) imports a
-lesson by path and mounts it. The `.sui` template is a static asset at
-runtime — only `controller.ts` runs through the host's bundler.
+The docs site (`apps/sui-site`) mounts each solved lesson as a custom
+element — the deck bundler resolves any `<tut-*>` tag used in a route
+to its source `.sui` here and compiles it into the view bundle. Prose +
+lesson sources are baked into the site by
+`apps/sui-site/scripts/gen-tutorial.mjs`, which emits
+`apps/sui-site/src/tutorial-data.ts`; regenerate after editing lessons
+or prose:
 
-```ts
-import controller from '@ship/sui-tutorial/lessons/01-hello-signal/solved/controller'
-// mount via the host's runtime — see @ship/sui-runtime `mount()`.
 ```
-
-The package does not ship a runtime of its own; it depends on
-`@ship/sui-runtime@0.1.0` (published sibling) and uses the same
-`controller({ scope, on, mount })` / `template.sui` contract as the
-rest of the framework. (See "Scope type companion" below for the one
-tutorial-specific deviation: the lesson `.ts` files parameterize
-`controller<Scope>({...})` explicitly because the tutorial does not
-run the sui-compiler and falls back to an ambient `*.sui` declaration
-for portability. The canonical no-arg form is taught in the prose.)
+cd apps/sui-site && node scripts/gen-tutorial.mjs
+```
 
 ## Scope type companion
 
-Each `controller.ts` does
-
-```ts
-import type { Scope } from './template.sui'
-```
-
-The sui-compiler normally emits a `<stem>.sui.d.ts` adjacent to every
-`.sui` (see `scripts/gen-component-types.mjs`). The tutorial is a docs
-asset, not a component pack, and the compiler binary isn't required for
-typecheck — `src/sui-ambient.d.ts` resolves `*.sui` to
-`Scope = Record<string, unknown>` instead, which is precise enough for
-the controllers' legacy `controller<Scope>(…)` parameterization — the
-ambient `*.sui` declaration is too loose to satisfy the no-arg
-`controller({…})` form's TS2742 portability requirement without
-compiler-emitted `<stem>.sui.d.ts` files. The
-`template.sui` is a SUI source file, not a TS module; it never executes
-on the host.
+Each controller does `import type { Scope } from './<stem>.sui'`,
+resolved by `src/sui-ambient.d.ts` (`Scope = Record<string, unknown>`)
+so `typecheck` needs no compiler run; the lesson controllers
+parameterize `controller<Scope>({…})` explicitly. The canonical no-arg
+`controller({…})` form (with compiler-emitted `.sui.d.ts`) is what the
+prose teaches for real projects.
 
 ## Scripts
 
@@ -76,7 +103,6 @@ on the host.
 
 ## Editing policy
 
-Mirror from the marketing site is the upstream source of truth for the
-tutorial's prose. The 25 lessons' `controller.ts` + `template.sui` pairs
-are the single source of truth for the code. Don't re-author lesson
-code in two places.
+The lesson `.sui` + `.controller.ts` pairs are the single source of
+truth for the code; `src/prose/*.md` for the words. The site's
+`tutorial-data.ts` is generated — never edit it by hand.

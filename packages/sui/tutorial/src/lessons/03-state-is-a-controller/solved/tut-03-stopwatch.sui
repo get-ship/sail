@@ -1,0 +1,31 @@
+<!--
+  Lesson 03 solved — a stopwatch.
+
+  The controller is the sibling tut-03-stopwatch.controller.ts. The
+  template binds only what that controller's scope() returns: clock,
+  running, laps, and three handlers.
+-->
+<column gap="4">
+  <center sx="p:6 bg:surface-1 border:border radius:lg">
+    <strong sx="text:4xl tracking:tight">{clock()}</strong>
+  </center>
+
+  <row gap="2" justify="center">
+    <button variant="solid" tone={running() ? 'warning' : 'primary'} on:click={() => toggle()}>
+      {running() ? 'Pause' : 'Start'}
+    </button>
+    <button variant="outline" tone="primary" disabled={!running()} on:click={() => lap()}>Lap</button>
+    <button variant="ghost" on:click={() => reset()}>Reset</button>
+  </row>
+
+  {#if laps().length > 0}
+    <column gap="1">
+      {#for lap of laps() key={lap.id}}
+        <row align="center" justify="between" sx="px:3 py:1 bg:surface-1 radius:md">
+          <small sx="fg:muted-foreground">lap {lap.id}</small>
+          <strong sx="text:sm">{lap.at}</strong>
+        </row>
+      {/for}
+    </column>
+  {/if}
+</column>

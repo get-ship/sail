@@ -1,0 +1,32 @@
+<!--
+  Lesson 08 starter — THIS FILE DOES NOT COMPILE, on purpose.
+
+  Four defects are planted below. Do not hunt for them by eye: run
+
+    sui-compiler build --mode component tut-08-release-notes-starter.sui
+
+  read the first rejection, fix exactly what it names, and run again.
+  The compiler reports one costed rejection at a time, and each message
+  carries the allowed vocabulary — the error IS the documentation.
+-->
+<column gap="4" sx="p:12px">
+  <row align="center" justify="between">
+    <h3>Release notes</h3>
+    <badge tone="primary" variant="soft" motion:enter={{ opacity: 'whoosh' }}>v2.4.0</badge>
+  </row>
+
+  <p sx="text:sm fg:muted-foreground">published {formatDate(publishedAt())}</p>
+
+  <column gap="1">
+    {#for note of notes() key={note.id}}
+      <row gap="3" align="center" sx="px:3 py:2 bg:surface-1 radius:md">
+        <badge tone="muted" variant="outline" size="sm">{note.tag}</badge>
+        <p sx="text:sm">{note.text}</p>
+      </row>
+    {/for}
+  </column>
+</column>
+
+<style>
+  .notes { color: #ff0000; }
+</style>

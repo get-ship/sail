@@ -1,0 +1,44 @@
+<!--
+  Lesson 04 starter — the console renders, but nothing reacts yet.
+
+  Fill in the three handlers in the sibling controller, then finish the
+  template: the {#match} needs its building/live branches, and the list
+  needs key= so promote() MOVES rows instead of rebuilding them.
+-->
+<column gap="4">
+  <row align="center" justify="between">
+    <h3>Release console</h3>
+    {#match phase()}
+      {:case 'idle'} <badge tone="muted">idle</badge>
+      <!-- TODO 4: {:case 'building'} and {:case 'live'} branches, each
+           with a motion:enter so the swapped-in badge announces itself. -->
+      {:default} <badge tone="destructive">failed</badge>
+    {/match}
+  </row>
+
+  <row gap="2">
+    <button variant="solid" tone="primary" disabled={phase() === 'building'} on:click={() => deploy()}>
+      {phase() === 'failed' ? 'Retry deploy' : 'Deploy'}
+    </button>
+    <button variant="ghost" on:click={() => reset()}>Reset</button>
+  </row>
+
+  <separator></separator>
+
+  <input placeholder="Filter environments — Esc clears"
+         on:input|debounce:300={search}
+         on:keydown|key:Escape={clear} />
+
+  <column gap="1">
+    <!-- TODO 5: this {#for} has no key. Add key={env.id} and compare what
+         promote() does to the DOM with and without it. -->
+    {#for env of filtered() key={env.id}}
+      <row gap="3" align="center" sx="px:3 py:2 bg:surface-1 radius:md">
+        <badge tone={env.tier === 'prod' ? 'primary' : 'muted'} variant="outline" size="sm">{env.tier}</badge>
+        <strong sx="grow:1 text:sm">{env.name}</strong>
+        <small sx="fg:muted-foreground">{env.region}</small>
+        <button size="sm" variant="ghost" on:click={() => promote(env.id)}>Promote</button>
+      </row>
+    {/for}
+  </column>
+</column>

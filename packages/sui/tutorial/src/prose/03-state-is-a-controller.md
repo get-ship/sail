@@ -1,0 +1,79 @@
+---
+title: "State is a controller"
+description: "signal, derived, and effect — one owner for state, and templates bind only what scope() returns."
+order: 3
+slug: "03-state-is-a-controller"
+prev: "02-styling-is-sx"
+next: "04-templates-react"
+chapter: "state"
+---
+
+Behavior lives in **one place**: the controller. Whatever its `scope()`
+returns is the template's entire world — a binding like `{clock()}`
+can only reach what the controller chose to expose.
+
+The example is a stopwatch, built from the three reactive primitives:
+
+```
+const elapsed = signal(0)          // a value that notifies on change
+const running = signal(false)
+
+const clock = derived(() =>       // computed, cached, lazy
+  format(elapsed()))
+
+effect(() => {                    // a side-effect that owns its cleanup
+  if (!running()) return
+  const id = setInterval(() => elapsed.set((ms) => ms + 100), 100)
+  return () => clearInterval(id)
+})
+```
+
+- A **signal** is a callable cell: `elapsed()` reads (and subscribes,
+  inside any tracked scope), `elapsed.set(v)` or `elapsed.set(fn)`
+  writes. Reading it in a template binding subscribes exactly that DOM
+  node — no virtual DOM, no re-render.
+- A **derived** recomputes from whatever it reads, only when read, and
+  only notifies downstream when its output actually changes. The clock
+  string is derived; nobody ever sets it.
+- An **effect** is the escape hatch to the outside world — timers,
+  storage, sockets. Return a function and the effect *owns its undo*:
+  the cleanup runs before every re-run and when the component unmounts.
+  There is no dependency array to forget; the effect subscribes to what
+  it read. Reach for `effect` rarely — if it does not touch the outside
+  world, you probably wanted a `derived`.
+
+## One model, two spellings
+
+This lesson keeps the controller in a sibling file
+(`tut-03-stopwatch.controller.ts`) that the compiler pairs with the
+template automatically. The same controller can live inline:
+
+```
+<controller>
+import { controller, signal } from '@ship/sui-runtime'
+export default controller({
+  scope: () => {
+    const elapsed = signal(0)
+    return { elapsed }
+  },
+})
+</controller>
+```
+
+These are literally the same thing — the compiler extracts an inline
+`<controller>` block to the sibling `<name>.controller.ts`. One model:
+the controller owns state, the template reads it.
+
+## Try it
+
+The starter's clock never ticks:
+
+1. **Write the interval effect** (TODO 1 in the controller). Gate it on
+   `running()`, bump `elapsed` every 100ms, and return the
+   `clearInterval` cleanup. Flip Start/Pause and convince yourself the
+   old timer dies each time the effect re-runs.
+2. **Add laps** (TODO 2 + 3). A `laps` signal of `{ id, at }` records
+   `clock()` at press time; render it with a keyed `{#for}`.
+3. **Persist across reloads.** Add an effect that writes `elapsed()` to
+   `localStorage`, and seed the signal from it. State that outlives the
+   page is still just a signal plus an effect at the edge.
