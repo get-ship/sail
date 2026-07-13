@@ -8,19 +8,18 @@
   <p class="eyebrow">Introduction</p>
   <h1>Getting started</h1>
   <p class="lead">
-    SUI is a toolchain: a Rust compiler that turns <code>.sui</code> files into
-    standard web components, JS packages the output binds to, and
-    <a href="/deck">deck</a> — the CLI that serves, bundles, and hot-reloads a
-    whole app. This page walks the real workflow, start to finish.
+    Your first page is a folder and a dev server away. This walks the whole
+    path — install once, make a page, feel the edit loop, add state and
+    routes, ship it.
   </p>
 
-  <h2>1 · Install the toolchain</h2>
+  <h2>1 · Install (once)</h2>
   <code-block code={code.toolchain}></code-block>
   <p>
-    Two runtimes because there are two jobs: Rust owns compiling and serving,
-    JS owns what ships to the browser. The build takes a few minutes the first
-    time; after that <code>deck</code> and <code>sui-compiler</code> are
-    ordinary binaries on your path.
+    SUI's compiler and dev server are Rust binaries; the runtime is a JS
+    package. Prebuilt binaries are planned — today the build takes a few
+    minutes once, and then <code>deck</code> and <code>sui-compiler</code>
+    are ordinary commands on your path.
   </p>
 
   <h2>2 · Start an app</h2>

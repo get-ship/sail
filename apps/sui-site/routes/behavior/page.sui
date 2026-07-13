@@ -13,6 +13,14 @@
   </p>
   <code-block code={code.attach}></code-block>
 
+  <h2>Feel one work</h2>
+  <p>
+    <code>use:autosize</code> is a built-in: type a few lines and watch the
+    box grow to fit. No wrapper element, no resize logic in your file — the
+    action owns it and cleans up when the element leaves.
+  </p>
+  <textarea use:autosize placeholder="Type a few lines here…" sx="max-w:panel-max-w-sm"></textarea>
+
   <h2>There is no ref</h2>
   <p>
     Most frameworks give you two ways to touch the DOM: a ref you store, thread
