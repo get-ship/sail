@@ -26,14 +26,7 @@
      knob-panel delegation must run with no boundary — the target architecture. -->
 
 
-<style>
-  .sui-prop-knobs {
-    display: block;
-    font-family: var(--font-body);
-    color: var(--foreground);
-  }
-  .sui-prop-knobs[hidden] { display: none; }
-</style>
+
 
 
 <controller>
@@ -265,7 +258,7 @@ export default controller({
 })
 
 </controller>
-<column class="knobs" gap="4">
+<column class="knobs" gap="4" sx="font:body fg:foreground">
   {#for knob of knobs() key={knob.name}}
     <column class="knob" gap="2" data-knob={knob.name}>
       <sui-label size="sm">{knob.name}</sui-label>

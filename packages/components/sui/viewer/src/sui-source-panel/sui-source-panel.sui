@@ -21,34 +21,7 @@
     lang: 'html',
   },
 }</component>
-<style>
-  .sui-source-panel {
-    display: block;
-    font-family: var(--font-body);
-    color: var(--foreground);
-  }
-  .sui-source-panel[hidden] { display: none; }
 
-  .section-label {
-    font-size: var(--text-xs);
-    font-weight: var(--font-weight-medium);
-    color: var(--muted-foreground);
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-  }
-
-  .snippet-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2);
-  }
-  .copied {
-    font-size: var(--text-xs);
-    color: var(--success);
-    font-weight: var(--font-weight-medium);
-  }
-</style>
 
 
 <controller>
@@ -169,9 +142,9 @@ export default controller({
 })
 
 </controller>
-<column gap="3" class="panel">
+<column gap="3" class="panel" sx="font:body fg:foreground">
   <column gap="2" class="section source-section">
-    <span class="section-label source-label">Source</span>
+    <span class="section-label source-label" sx="text:xs weight:medium fg:muted-foreground tracking:wide">SOURCE</span>
     <div class="source-code" role="region" aria-label={lang() ? lang() + ' code block' : 'code block'} sx="bg:surface-2 fg:foreground border:subtle radius:md overflow:hidden">
       {#if lang()}
         <header sx="p:2 px:3 text:xs fg:muted-foreground bg:muted weight:medium tracking:wide">{lang().toUpperCase()}</header>
@@ -182,15 +155,15 @@ export default controller({
   </column>
 
   <column gap="2" class="section snippet-section">
-    <div class="snippet-head">
-      <span class="section-label snippet-label">Snippet</span>
-      <column direction="row" gap="2" align="center">
+    <row gap="2" align="center" justify="between" class="snippet-head">
+      <span class="section-label snippet-label" sx="text:xs weight:medium fg:muted-foreground tracking:wide">SNIPPET</span>
+      <row gap="2" align="center">
         {#if copied()}
-          <span class="copied" aria-live="polite">Copied</span>
+          <span class="copied" aria-live="polite" sx="text:xs fg:success weight:medium">Copied</span>
         {/if}
-        <button class="copy-button" soft xs on:click={copy}>Copy</button>
-      </column>
-    </div>
+        <button class="copy-button" variant="soft" size="xs" on:click={copy}>Copy</button>
+      </row>
+    </row>
     <div class="snippet-code" role="region" aria-label={lang() ? lang() + ' code block' : 'code block'} sx="bg:surface-2 fg:foreground border:subtle radius:md overflow:hidden">
       {#if lang()}
         <header sx="p:2 px:3 text:xs fg:muted-foreground bg:muted weight:medium tracking:wide">{lang().toUpperCase()}</header>
