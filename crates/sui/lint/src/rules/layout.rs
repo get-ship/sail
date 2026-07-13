@@ -51,7 +51,7 @@ pub fn tag_props(tag: &str) -> &'static [&'static str] {
         // `cols` is a fixed column count (1..=12); it conflicts with `min`
         // (the responsive `auto-fill minmax` axis) — `cols` wins if both
         // are present.
-        "grid" => &["gap", "min", "flow", "cols"],
+        "grid" => &["gap", "min", "flow", "cols", "tracks"],
         "center" => &["gap"],
         "stack" => &["align", "justify"],
         _ => &[],
@@ -141,6 +141,8 @@ fn allowed(prop: &str) -> &'static [&'static str] {
         "align" => &["start", "center", "end", "stretch", "baseline"],
         "justify" => &["start", "center", "end", "between", "around"],
         "min" => &["xs", "sm", "md", "lg"],
+        // validated by shape, not enum — see is_tracks_var
+        "tracks" => &[],
         "flow" => &["auto", "dense"],
         "cols" => COLS_VALUES,
         // `direction` is a flex-direction suffix on row/column. Same shape
@@ -153,7 +155,27 @@ fn allowed(prop: &str) -> &'static [&'static str] {
 
 /// The atomic class + CSS rule for one resolved `prop:value`. `None` if the
 /// value is off-enum (the lint reports it; the lowering just skips it).
+/// A `tracks` value is a custom-property name (`--x`): the engine owns the
+/// template string and writes it via `style:--x`; the language consumes it.
+pub fn is_tracks_var(value: &str) -> bool {
+    value.starts_with("--")
+        && value.len() > 2
+        && value[2..]
+            .bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+}
+
 fn modifier(prop: &str, value: &str) -> Option<(String, String)> {
+    if prop == "tracks" {
+        if !is_tracks_var(value) {
+            return None;
+        }
+        let slug: String = value[2..].chars().filter(|c| c.is_ascii_alphanumeric()).collect();
+        return Some((
+            format!("sui-gt-{slug}"),
+            format!(".sui-gt-{slug}{{grid-template-columns:var({value})}}"),
+        ));
+    }
     if !allowed(prop).contains(&value) {
         return None;
     }
@@ -368,6 +390,9 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 // it here.
                 continue;
             }
+            if name == "tracks" && is_tracks_var(&value) {
+                continue;
+            }
             if !allowed(name).contains(&value.as_str()) {
                 let mut m = format!(
                     "<{} {name}=\"{value}\"> — `{value}` is not valid. allowed: {}",
@@ -394,7 +419,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
 fn is_known_axis_prop(name: &str) -> bool {
     matches!(
         name,
-        "gap" | "align" | "justify" | "min" | "flow" | "cols" | "direction"
+        "gap" | "align" | "justify" | "min" | "flow" | "cols" | "direction" | "tracks"
     )
 }
 

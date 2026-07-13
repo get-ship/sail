@@ -155,7 +155,11 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
         Wrap => vec!["normal", "nowrap", "pre", "pre-wrap", "truncate"],
         Case => vec!["upper", "lower", "none"],
         Rotate => vec!["0", "45", "90", "180", "270"],
-        Inset => vec!["0", "auto"],
+        Inset => {
+            let mut v = vec!["0", "auto"];
+            v.extend(crate::tokens::space_values().iter().copied().filter(|t| *t != "0"));
+            v
+        }
         TextStyle => vec!["italic", "normal"],
         Ring => {
             let mut v = vec!["none"];
@@ -185,7 +189,7 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
         Position => vec!["static", "relative", "absolute", "fixed", "sticky"],
         Cursor => vec![
             "auto", "default", "pointer", "text", "wait", "move", "not-allowed", "help", "grab",
-            "cell", "progress", "none",
+            "cell", "progress", "none", "col-resize", "row-resize",
         ],
         Visibility => vec!["visible", "hidden"],
     }
@@ -331,7 +335,10 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
             _ => "none".into(),
         },
         Rotate => format!("rotate({token}deg)"),
-        Inset => token.to_string(),
+        Inset => match token {
+            "0" | "auto" => token.to_string(),
+            _ => format!("var(--space-{token})"),
+        },
         TextStyle => token.to_string(),
         Tracking => format!("var(--tracking-{token})"),
         // a focus ring at the standard ring width in the chosen tone (or off).
@@ -433,6 +440,7 @@ pub const STATE_PREFIXES: &[(&str, &str)] = &[
     ("checked", "[aria-checked='true']"),
     ("pressed", "[aria-pressed='true']"),
     ("open", "[open]"),
+    ("sortable", "[aria-sort]"),
 ];
 
 pub fn state_pseudo(state: &str) -> Option<&'static str> {

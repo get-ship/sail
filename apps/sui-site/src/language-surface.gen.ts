@@ -2069,28 +2069,92 @@ export const SX_ATOMS: SxAtom[] = [
     "prop": "top",
     "values": [
       "0",
-      "auto"
+      "auto",
+      "0_75",
+      "1",
+      "1_25",
+      "1_5",
+      "2",
+      "2_5",
+      "3",
+      "3_5",
+      "4",
+      "4_5",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "half"
     ]
   },
   {
     "prop": "right",
     "values": [
       "0",
-      "auto"
+      "auto",
+      "0_75",
+      "1",
+      "1_25",
+      "1_5",
+      "2",
+      "2_5",
+      "3",
+      "3_5",
+      "4",
+      "4_5",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "half"
     ]
   },
   {
     "prop": "bottom",
     "values": [
       "0",
-      "auto"
+      "auto",
+      "0_75",
+      "1",
+      "1_25",
+      "1_5",
+      "2",
+      "2_5",
+      "3",
+      "3_5",
+      "4",
+      "4_5",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "half"
     ]
   },
   {
     "prop": "left",
     "values": [
       "0",
-      "auto"
+      "auto",
+      "0_75",
+      "1",
+      "1_25",
+      "1_5",
+      "2",
+      "2_5",
+      "3",
+      "3_5",
+      "4",
+      "4_5",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "half"
     ]
   },
   {
@@ -2164,7 +2228,9 @@ export const SX_ATOMS: SxAtom[] = [
       "grab",
       "cell",
       "progress",
-      "none"
+      "none",
+      "col-resize",
+      "row-resize"
     ]
   },
   {
@@ -2224,6 +2290,10 @@ export const SX_STATE_PREFIXES: Array<{ prefix: string; selector: string }> = [
   {
     "prefix": "open",
     "selector": "[open]"
+  },
+  {
+    "prefix": "sortable",
+    "selector": "[aria-sort]"
   }
 ]
 
@@ -2274,7 +2344,8 @@ export const LAYOUT_KEYWORDS: Array<{ tag: string; props: string[] }> = [
       "gap",
       "min",
       "flow",
-      "cols"
+      "cols",
+      "tracks"
     ]
   },
   {

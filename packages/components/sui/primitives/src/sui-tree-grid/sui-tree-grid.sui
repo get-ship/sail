@@ -100,144 +100,7 @@
     error: '',
   },
 }</component>
-<style>
-  /* The dynamic grid-template track string is set per-render by the
-   * controller via style:--sui-grid-template={…} (an inline custom-
-   * property attribute on the .grid element). The lint cannot see
-   * those, so we declare the var locally with a sane default that
-   * matches the per-render expression's first-frame value. Same for
-   * --sui-col-count, which the controller sets on the same element
-   * and the .head/.row reference directly. */
-  .sui-tree-grid { --sui-grid-template: repeat(1, minmax(80px, 1fr)); }
 
-  .sui-tree-grid {
-    font-family: var(--font-body);
-    font-size: var(--density-text);
-    --sui-tree-indent: var(--density-row-px);
-    --sui-col-count: 1;
-  }
-
-  .head {
-    display: grid;
-    grid-template-columns: var(--sui-grid-template);
-    position: sticky;
-    top: 0;
-    z-index: var(--z-sticky);
-    background: var(--surface-2);
-    box-shadow: 0 1px 0 0 var(--border);
-  }
-  .col-head {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    padding: var(--density-row-py) var(--density-row-px);
-    font-weight: var(--font-weight-semibold);
-    font-size: var(--text-xs);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--foreground);
-    border-bottom: 1px solid var(--border-subtle);
-    white-space: nowrap;
-    user-select: none;
-  }
-  .col-head[data-sortable] { cursor: pointer; }
-  .col-head[data-sortable]:hover { color: var(--foreground); }
-  .col-head .sort-glyph {
-    display: inline-flex;
-    color: var(--primary);
-  }
-  .col-head .col-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .col-head [data-action='column-menu'] {
-    width: var(--density-icon);
-    height: var(--density-icon);
-    padding: 0;
-    border-radius: var(--radius-sm);
-    /* The ghost button is already inline-flex centered; the size-channel
-     * min-height would otherwise override --density-icon. Force the
-     * density-icon to win so the menu trigger lines up with the sort
-     * glyph + caret. The control-skin fix carries the hover wash. */
-  }
-  .resize-handle {
-    position: absolute;
-    inset-block: 0;
-    inset-inline-end: 0;
-    width: var(--space-1);
-    cursor: col-resize;
-    touch-action: none;
-  }
-  .resize-handle:hover { background: var(--primary); }
-
-  .viewport {
-    position: relative;
-    width: 100%;
-    overflow-y: auto;
-    max-height: 480px;
-  }
-  .spacer { position: relative; width: 100%; }
-
-  .row {
-    display: grid;
-    grid-template-columns: var(--sui-grid-template);
-    position: absolute;
-    left: 0;
-    width: 100%;
-    box-sizing: border-box;
-    cursor: pointer;
-    outline: none;
-    transition: background-color var(--duration-fast) var(--ease-out);
-  }
-  .row:hover { background: var(--hover-bg); }
-  .row[data-selected] {
-    background: var(--selected-bg);
-  }
-  .row[data-selected]::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 4px; bottom: 4px;
-    width: 3px;
-    border-radius: var(--radius-full);
-    background: var(--primary);
-  }
-  .row:focus-visible { box-shadow: inset 0 0 0 var(--ring-width) var(--ring-color); }
-
-  .cell {
-    display: flex;
-    align-items: center;
-    gap: var(--density-row-gap);
-    padding: var(--density-row-py) var(--density-row-px);
-    border-bottom: 1px solid var(--border-subtle);
-    color: var(--foreground);
-    min-width: 0;
-  }
-
-  .caret {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: none;
-    width: var(--density-icon);
-    height: var(--density-icon);
-    color: var(--muted-foreground);
-    transition: transform var(--duration-fast) var(--ease-out);
-  }
-  .row[data-expanded] .caret { transform: rotate(90deg); }
-  .row:not([data-can-expand]) .caret { visibility: hidden; }
-
-  .cell-label {
-    flex: 1;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  @media (forced-colors: active) {
-    .row:focus-visible { outline: 2px solid CanvasText; outline-offset: -2px; }
-  }
-
-  .sui-tree-grid[hidden] { display: none; }
-</style>
 
 
 <controller>
@@ -401,42 +264,43 @@ export default controller({
   </slot>
 </div>
 {:else}
-<column class="grid" role="treegrid" gap="0" aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null} style:--sui-col-count={headers().length} style:--sui-grid-template={gridTemplate()} sx="w:full overflow:hidden bg:surface-1 border:border radius:lg">
-  <div class="head thead" role="row">
+<column class="grid" role="treegrid" gap="0" aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null} style:--sui-col-count={headers().length} style:--sui-grid-template={gridTemplate()} sx="w:full overflow:hidden bg:surface-1 border:border radius:lg font:body text:density">
+  <grid tracks="--sui-grid-template" gap="0" class="head thead" role="row" sx="position:sticky top:0 z:sticky bg:surface-2 border-b:border">
     {#for h of headers() key={h.id}}
-      <div class="col-head columnheader" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null}>
-        <span class="col-label">{h.label}</span>
+      <row gap="1" align="center" class="col-head columnheader" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null} sx="position:relative py:density-row-py px:density-row-px weight:semibold text:xs case:upper tracking:wide fg:foreground border-b:subtle wrap:nowrap sortable:cursor:pointer">
+        <span class="col-label" sx="grow:1 min-w:0 wrap:truncate">{h.label}</span>
         {#if h.sorted === 'asc'}
-          <span class="sort-glyph" aria-hidden="true"><icon name="chevron-up" size="xs"></icon></span>
+          <span class="sort-glyph" aria-hidden="true" sx="display:inline-flex fg:primary"><icon name="chevron-up" size="xs"></icon></span>
         {:else if h.sorted === 'desc'}
-          <span class="sort-glyph" aria-hidden="true"><icon name="chevron-down" size="xs"></icon></span>
+          <span class="sort-glyph" aria-hidden="true" sx="display:inline-flex fg:primary"><icon name="chevron-down" size="xs"></icon></span>
         {/if}
         {#if h.canHide}
-          <button class="column-menu" ghost xs type="button" data-action="column-menu" data-col-id={h.id} aria-label="Column options">
+          <button class="column-menu" variant="ghost" size="xs" type="button" data-action="column-menu" data-col-id={h.id} aria-label="Column options" sx="w:density-icon h:density-icon p:0 radius:sm">
             <icon name="more-vertical" size="xs"></icon>
           </button>
         {/if}
         {#if h.canResize}
-          <span class="resize-handle" data-col-id={h.id} aria-hidden="true"></span>
+          <span class="resize-handle" data-col-id={h.id} aria-hidden="true" sx="position:absolute top:0 bottom:0 right:0 w:1 cursor:col-resize hover:bg:primary"></span>
         {/if}
-      </div>
+      </row>
     {/for}
-  </div>
-  <div class="viewport" bind:this={viewportEl}>
-    <div class="spacer" style:height={`${totalSize()}px`}>
+  </grid>
+  <div class="viewport" bind:this={viewportEl} sx="position:relative w:full overflow-y:auto max-h:panel-max-h-md">
+    <div class="spacer" style:height={`${totalSize()}px`} sx="position:relative w:full">
       {#for w of windowItems() key={`${w.key}|${w.cellsKey}`}}
-        <div class="row" role="row" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} style:transform={`translateY(${w.start}px)`}>
+        <grid tracks="--sui-grid-template" gap="0" class="row" role="row" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} style:transform={`translateY(${w.start}px)`} sx="group position:absolute left:0 w:full cursor:pointer hover:bg:hover-bg selected:bg:selected-bg focus:ring:ring">
+          <span class="selected-marker" aria-hidden="true" sx="position:absolute left:0 top:1 bottom:1 w:half radius:full bg:primary visibility:hidden group-selected:visibility:visible"></span>
           {#for c of w.cells key={c.columnId}}
-            <div class="cell" role="gridcell" style:padding-inline-start={c.first ? `calc(var(--density-row-px) + ${w.indent}px)` : null}>
+            <row gap="density" align="center" class="cell" role="gridcell" sx="py:density-row-py px:density-row-px border-b:subtle fg:foreground min-w:0" style:padding-inline-start={c.first ? `calc(var(--density-row-px) + ${w.indent}px)` : null}>
               {#if c.first && w.canExpand}
-                <span class="caret" aria-hidden="true">
+                <span class="caret" aria-hidden="true" sx="display:inline-flex w:density-icon h:density-icon min-w:density-icon fg:muted-foreground group-expanded:rotate:90">
                   <icon name="chevron-right" size="xs"></icon>
                 </span>
               {/if}
-              <span class="cell-label">{c.value}</span>
-            </div>
+              <span class="cell-label" sx="grow:1 min-w:0 wrap:truncate">{c.value}</span>
+            </row>
           {/for}
-        </div>
+        </grid>
       {/for}
     </div>
   </div>

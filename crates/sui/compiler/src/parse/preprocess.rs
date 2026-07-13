@@ -1025,7 +1025,7 @@ fn lower_layout(source: &str) -> (String, String) {
                     // above; their classes/rules are folded into the div's
                     // `class` and the injected stylesheet, NEVER emitted as
                     // raw HTML attrs.
-                    "gap" | "align" | "justify" | "min" | "flow" | "cols" | "direction" => {}
+                    "gap" | "align" | "justify" | "min" | "flow" | "cols" | "direction" | "tracks" => {}
                     "class" if value.starts_with('{') => {
                         dyn_parts.push(format!("({})", &value[1..value.len() - 1]));
                     }
