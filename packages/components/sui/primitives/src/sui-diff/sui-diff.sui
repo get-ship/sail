@@ -1,71 +1,23 @@
 <!--
-  <sui-diff> — SUI port of <ship-diff>.
-  Unified diff renderer. Accepts from/to (LCS diff computed) or
-  a raw unified-diff string via value.
+  <sui-diff> — unified diff renderer. Accepts from/to (LCS diff computed) or a
+  raw unified-diff string via value.
 
-  Prop parity vs <ship-diff>
+  Prop parity
   ----------------------------------------------------------------
-  Lit                          SUI                      Notes
+  from  (string, reflect)   original text
+  to    (string, reflect)   revised text
+  value (string, reflect)   raw unified-diff (wins over from/to)
   ----------------------------------------------------------------
-  from (String, '')            from (string, reflect)   ✓ original text
-  to (String, '')              to (string, reflect)     ✓ revised text
-  value (String, '')           value (string, reflect)  ✓ raw unified-diff
-  ----------------------------------------------------------------
-  (no events)                  (no events)              ✓
-  (no slots)                   (no slots)               ✓
-  parts: line                  line                     ✓
-  ARIA: host role=region +     controller sets on       ✓
-    aria-label="diff"            host if absent
-  ----------------------------------------------------------------
+  (no events, no slots)
+  ARIA: host role=region + aria-label="diff" (controller sets if absent);
+        each line role=listitem + aria-label="added|removed|hunk|context: …"
 
-  Anatomy (the controller renders the lines into the .diff-root
-  projection target — every public hook has part= + data-line-kind +
-  role=listitem + aria-label, the test selectors pin to those, not
-  to .line.add/.line.del/.line.hunk styling classes):
+  The controller computes `lines()` as data; the template renders them with
+  {#for}/{#match}, one static sx read per line kind.
 
-    <sui-diff>                 shadow root, role=region, aria-label=diff
-      └── .diff-root           the projection target (bind:this)
-          └── div[part=line, data-line-kind=add|del|ctx|hunk,
-                          role=listitem, aria-label=…]  one per line
-              ├── span[aria-hidden=true] the gutter sign
-              └── span          the line text
-
-  NEW SURFACE (re-port from feat/next, parity-gate pass)
-  ----------------------------------------------------------------
-  - No tone prop on the host — each line carries its own tone-derived
-    background via the per-line .add/.del/.ctx/.hunk class which
-    reads the GLOBAL --tone-*-bg channels directly. The host itself
-    has no tone (it's a neutral muted surface, not a tone-tinted
-    card), so no per-host tone block was ever authored and none is
-    added. The .line.add/.line.del/.line.hunk color choices
-    (--tone-success-bg, --tone-destructive-bg, --tone-info-bg) are
-    the same six-channel contract every other tone-tinted surface
-    reads; this component is a pure consumer.
-  - The .diff-root surface (the rounded card the lines render into)
-    moves to the closed-sx host block: bg:muted/border:border/
-    radius:md/overflow:hidden. font-family stays in the style block
-    (no sx prop for it); font-size/line-height likewise.
-  - The .sui-diff --diff-line-pad-y local var (a 1px hairline) stays
-    in the style block as a real local declaration. The lint sees
-    it as locally-defined so the .line padding reference resolves.
-    Kept as a named local (with a comment explaining the off-scale
-    1px intent) — it's a one-component, one-purpose value, not a
-    candidate for a global token.
-  - sx is closed-vocabulary. The style block keeps: font-family,
-    font-size, line-height (no sx prop for any of these), the
-    --diff-line-pad-y local var, the .line display:grid +
-    grid-template-columns (grid + the column-track string is
-    non-sx), .line padding (the off-scale hairline var), the .line
-    white-space/word-break (no sx prop), the .line.add/.line.del/
-    .line.hunk per-line background+color (the .add/.del/.hunk
-    class on a controller-emitted element is not an .sui-diff
-    attribute, so it cannot be a per-host variant target either;
-    stays in the style block as descendant-class rules), and the
-    .sign + .line.X .sign per-kind sign colors.
-  - The .line grid template is 16px | 1fr. feat/next's raw 16px
-    snapped to --space-4 (also 16px) — exact match, no rounding.
-
-  No new LANG-GAP.
+  LANG-GAP: white-space control is not sx vocabulary — code lines must not
+  collapse space runs, so the text rides a <pre> (pre, not the pre-wrap +
+  break-word this component actually wants).
 -->
 
 <component>{
@@ -75,49 +27,21 @@
     value: '',
   },
 }</component>
-<style>
-  .sui-diff {
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    line-height: var(--leading-normal);
-    /* Off-scale: 1px hairline — line padding rounds the gutter markers
-     * without adding real vertical space. Local-only on purpose. */
-    --diff-line-pad-y: 1px;
-  }
-
-  .line {
-    display: grid;
-    grid-template-columns: var(--space-4) 1fr;
-    padding: var(--diff-line-pad-y) var(--space-2);
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  .line.add { background: var(--tone-success-bg); color: var(--foreground); }
-  .line.del { background: var(--tone-destructive-bg); color: var(--foreground); }
-  .line.hunk { background: var(--tone-info-bg); color: var(--info); }
-  .sign { color: var(--muted-foreground); user-select: none; }
-  .line.add .sign { color: var(--success); }
-  .line.del .sign { color: var(--destructive); }
-
-  .sui-diff[hidden] { display: none; }
-</style>
-
 
 <controller>
-import { controller, bindHtml } from '@ship/sui-runtime'
+import { controller, derived } from '@ship/sui-runtime'
 import type { Scope } from './sui-diff.sui'
 
-type Line = { kind: 'add' | 'del' | 'ctx' | 'hunk'; text: string }
-
-function escape(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+type Kind = 'add' | 'del' | 'ctx' | 'hunk'
+interface Line {
+  id: number
+  kind: Kind
+  text: string
+  sign: string
+  label: string
 }
 
-function diffLines(a: string, b: string): Line[] {
+function diffKinds(a: string, b: string): Array<{ kind: Kind; text: string }> {
   const A = a.split('\n')
   const B = b.split('\n')
   const n = A.length
@@ -128,7 +52,7 @@ function diffLines(a: string, b: string): Line[] {
       dp[i]![j] = A[i] === B[j] ? dp[i + 1]![j + 1]! + 1 : Math.max(dp[i + 1]![j]!, dp[i]![j + 1]!)
     }
   }
-  const out: Line[] = []
+  const out: Array<{ kind: Kind; text: string }> = []
   let i = 0
   let j = 0
   while (i < n && j < m) {
@@ -141,50 +65,65 @@ function diffLines(a: string, b: string): Line[] {
   return out
 }
 
-function parseUnified(value: string): Line[] {
+function parseUnified(value: string): Array<{ kind: Kind; text: string }> {
   return value.split('\n').map((line) => {
-    if (line.startsWith('@@')) return { kind: 'hunk', text: line }
-    if (line.startsWith('+')) return { kind: 'add', text: line.slice(1) }
-    if (line.startsWith('-')) return { kind: 'del', text: line.slice(1) }
-    return { kind: 'ctx', text: line.startsWith(' ') ? line.slice(1) : line }
+    if (line.startsWith('@@')) return { kind: 'hunk' as Kind, text: line }
+    if (line.startsWith('+')) return { kind: 'add' as Kind, text: line.slice(1) }
+    if (line.startsWith('-')) return { kind: 'del' as Kind, text: line.slice(1) }
+    return { kind: 'ctx' as Kind, text: line.startsWith(' ') ? line.slice(1) : line }
   })
 }
 
-function renderLines(lines: Line[]): string {
-  return lines
-    .map((l) => {
-      const sign = l.kind === 'add' ? '+' : l.kind === 'del' ? '-' : l.kind === 'hunk' ? '@' : ' '
-      const kindLabel = l.kind === 'add' ? 'added' : l.kind === 'del' ? 'removed' : l.kind === 'hunk' ? 'hunk' : 'context'
-      return `<div class="line ${l.kind}" data-line-kind="${l.kind}" role="listitem" aria-label="${kindLabel}: ${escape(l.text)}"><span class="sign" aria-hidden="true">${sign}</span><span>${escape(l.text)}</span></div>`
-    })
-    .join('')
-}
+const SIGNS: Record<Kind, string> = { add: '+', del: '-', hunk: '@', ctx: ' ' }
+const LABELS: Record<Kind, string> = { add: 'added', del: 'removed', hunk: 'hunk', ctx: 'context' }
 
 export default controller<Scope>({
-  mount(state, host) {
-
+  scope: ({ from, to, value }: Scope) => {
+    const lines = derived((): Line[] => {
+      const v = value()
+      const f = from()
+      const t = to()
+      const raw = v ? parseUnified(v) : f || t ? diffKinds(f, t) : []
+      return raw.map((l, i) => ({
+        id: i,
+        kind: l.kind,
+        text: l.text,
+        sign: SIGNS[l.kind],
+        label: `${LABELS[l.kind]}: ${l.text}`,
+      }))
+    })
+    return { lines }
+  },
+  mount(_state, host) {
     if (!host.hasAttribute('role')) host.setAttribute('role', 'region')
     if (!host.hasAttribute('aria-label')) host.setAttribute('aria-label', 'diff')
-
-    const el = state.$signals.contentEl() as HTMLElement | null
-    if (!el) return () => {}
-
-    return bindHtml(el, () => {
-      const value = state.$signals.value()
-      const from = state.$signals.from()
-      const to = state.$signals.to()
-      let lines: Line[]
-      if (value) {
-        lines = parseUnified(value)
-      } else if (from || to) {
-        lines = diffLines(from, to)
-      } else {
-        lines = []
-      }
-      return renderLines(lines)
-    })
   },
 })
-
 </controller>
-<div sx="display:block bg:muted border:border radius:md overflow:hidden" class="diff-root" bind:this={contentEl}></div>
+
+<column role="list" gap="0" sx="bg:muted border:border radius:md overflow:hidden font:mono text:sm leading:normal">
+  {#for line of lines() key={line.id}}
+    {#match line.kind}
+      {:case 'add'}
+        <row role="listitem" data-line-kind="add" aria-label={line.label} gap="0" sx="px:2 bg:tone-success-bg">
+          <small aria-hidden="true" sx="w:4 fg:success">{line.sign}</small>
+          <pre sx="grow:1 text:sm">{line.text}</pre>
+        </row>
+      {:case 'del'}
+        <row role="listitem" data-line-kind="del" aria-label={line.label} gap="0" sx="px:2 bg:tone-destructive-bg">
+          <small aria-hidden="true" sx="w:4 fg:destructive">{line.sign}</small>
+          <pre sx="grow:1 text:sm">{line.text}</pre>
+        </row>
+      {:case 'hunk'}
+        <row role="listitem" data-line-kind="hunk" aria-label={line.label} gap="0" sx="px:2 bg:tone-info-bg">
+          <small aria-hidden="true" sx="w:4 fg:info">{line.sign}</small>
+          <pre sx="grow:1 text:sm fg:info">{line.text}</pre>
+        </row>
+      {:default}
+        <row role="listitem" data-line-kind="ctx" aria-label={line.label} gap="0" sx="px:2">
+          <small aria-hidden="true" sx="w:4 fg:muted-foreground">{line.sign}</small>
+          <pre sx="grow:1 text:sm">{line.text}</pre>
+        </row>
+    {/match}
+  {/for}
+</column>
