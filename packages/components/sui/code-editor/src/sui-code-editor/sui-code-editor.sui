@@ -24,6 +24,13 @@
   ───────────────────────────────────────────────────────────────────────────
 -->
 
+<!--
+  Styling: structure + mono type ride sx on the template root; size and chrome
+  are variant() maps on the host (chrome: card = standalone box, flush =
+  embedded in a host-drawn pane). CodeMirror's own internals (.cm-*) are
+  themed in sui-code-editor.theme.ts — the FFI library's styling system.
+  [hidden] comes from the framework contracts sheet.
+-->
 <component>{
   props: {
     value: '',
@@ -31,52 +38,20 @@
     placeholder: '',
     readonly: false,
     'line-numbers': true,
-    size: 'md' | 'sm' | 'lg',
+    size: variant({
+      md: 'text:sm leading:normal-plus',
+      sm: 'text:xs leading:normal',
+      lg: 'text:base leading:loose',
+    }),
+    chrome: variant({
+      card: 'border:border bg:surface-1 radius:lg shadow:xs',
+      flush: '',
+    }),
     tone: 'default' | 'info' | 'success' | 'warning' | 'destructive',
     theme: 'auto' | 'light' | 'dark',
     'wasm-url': '/sui_compiler_bg.wasm',
   },
 }</component>
-<style>
-  .sui-code-editor {
-    display: block;
-    position: relative;
-    overflow: hidden;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
-    background: var(--surface-1);
-    box-shadow: var(--shadow-xs);
-    font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
-    font-size: var(--text-sm);
-    line-height: 1.6;
-  }
-  .sui-code-editor[hidden] { display: none; }
-  .sui-code-editor[size="sm"] { font-size: var(--text-xs); line-height: 1.5; }
-  .sui-code-editor[size="lg"] { font-size: var(--text-base); line-height: 1.7; }
-
-  .sui-code-editor[tone="info"]        { --ring-color: var(--tone-info-border); }
-  .sui-code-editor[tone="success"]     { --ring-color: var(--tone-success-border); }
-  .sui-code-editor[tone="warning"]     { --ring-color: var(--tone-warning-border); }
-  .sui-code-editor[tone="destructive"] { --ring-color: var(--tone-destructive-border); }
-
-  .sui-code-editor:focus-within {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-ring-offset);
-  }
-
-  .editor-root {
-    width: 100%;
-    height: 100%;
-    min-height: 0;
-  }
-
-  .editor-root .cm-editor { height: 100%; }
-  .editor-root .cm-scroller { overflow: auto; }
-
-  @media (forced-colors: active) {
-    .sui-code-editor { outline: 1px solid CanvasText; }
-  }
-</style>
 
 
 <controller>
@@ -453,4 +428,4 @@ function makeCompletionSource(src: SuiCompletionSource) {
 }
 
 </controller>
-<div class="editor-root editor" bind:this={editorHost}></div>
+<div class="editor-root editor" bind:this={editorHost} sx="position:relative overflow:hidden font:mono w:full h:full min-h:0 focus-within:ring:ring"></div>

@@ -15,6 +15,10 @@ export const suiEditorTheme = EditorView.theme({
     color: 'var(--foreground)',
     fontSize: 'inherit',
     fontFamily: 'inherit',
+    // The editor fills its mount box; the box's chrome (border/radius/size)
+    // is the component template's sx. CodeMirror internals are styled HERE —
+    // the FFI library's own theme system, not authored CSS.
+    height: '100%',
   },
   '.cm-content': {
     caretColor: 'var(--foreground)',
@@ -72,6 +76,7 @@ export const suiEditorTheme = EditorView.theme({
   '.cm-scroller': {
     fontFamily: 'inherit',
     lineHeight: 'inherit',
+    overflow: 'auto',
   },
 })
 
