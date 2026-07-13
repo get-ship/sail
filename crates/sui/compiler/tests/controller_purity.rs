@@ -38,10 +38,11 @@ fn impure_controller_fails_compile() {
 
     let err = compile(src, view_opts(Some(sui_path)))
         .expect_err("controller writing .innerHTML must fail compile");
-    assert!(
-        err.message.contains("sui-controller-purity"),
-        "expected rule id in message, got: {}",
-        err.message
+    assert_eq!(
+        err.category.as_deref(),
+        Some("sui-controller-purity"),
+        "expected rule id as the error category, got: {:?}",
+        err.category
     );
     assert!(
         err.message.contains("innerHTML"),

@@ -52,7 +52,9 @@ pub fn check(
         line_col_to_offset(&source, first.line, first.col),
         line_col_to_offset(&source, first.line, first.col + 1),
     );
-    let mut msg = format!("[{}] {}", first.rule, first.message);
+    // `with_category` below carries the rule tag; embedding it here too
+    // made `render()` print it twice.
+    let mut msg = first.message.clone();
     if let Some(s) = &first.suggest {
         msg.push_str("\n  suggest: ");
         msg.push_str(s);

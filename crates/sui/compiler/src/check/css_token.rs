@@ -61,7 +61,9 @@ pub fn check(
     let offset = line_col_to_offset(source, first.line, first.col);
     let span = Span::new(offset, offset + 2); // covers the `--` of the bad name
 
-    let mut msg = format!("[{}] {}", first.rule, first.message);
+    // `with_category` below carries the rule tag; embedding it here too
+    // made `render()` print it twice.
+    let mut msg = first.message.clone();
     if let Some(s) = &first.suggest {
         msg.push_str("\n  suggest: ");
         msg.push_str(s);
