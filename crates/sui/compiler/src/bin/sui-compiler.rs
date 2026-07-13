@@ -132,6 +132,22 @@ enum Command {
         #[arg(long)]
         out: Option<PathBuf>,
     },
+    /// Emit the typed-props registry from the stdlib `<component>` prop
+    /// declarations — the data `sui-prop-value` validates template attributes
+    /// against, and the SSOT for any props UI (docs detail pages). Replaces
+    /// the dead `<prop>`-tag scanner whose registry regenerated empty.
+    PropRegistry {
+        /// Output file. Default: `crates/sui/compiler/primitives.json`
+        /// relative to the workspace root.
+        #[arg(long)]
+        out: Option<PathBuf>,
+        /// Also emit a TypeScript module for the docs site (the generated
+        /// props tables on /components/[tag]). Default:
+        /// `apps/sui-site/src/prop-registry.gen.ts` relative to the
+        /// workspace root. Pass an explicit path to override.
+        #[arg(long)]
+        ts_out: Option<PathBuf>,
+    },
     /// Synthesize a single `.sui` into a manifest-driven, tsc-checkable
     /// pair — a **synthetic controller** (`<stem>.synthetic.controller.ts`)
     /// and a **render** (`<stem>.render.ts`). Each name in `--manifest`
@@ -186,6 +202,7 @@ fn main() -> Result<()> {
         ),
         Command::Skill { dir, out } => gen_skill(dir, out),
         Command::FrameworkCss { out } => gen_framework_css(out),
+        Command::PropRegistry { out, ts_out } => gen_prop_registry(out, ts_out),
         Command::Synthesize { input, manifest, out_dir } => {
             synthesize(input, manifest, out_dir)
         }
@@ -210,6 +227,99 @@ fn gen_framework_css(out: Option<PathBuf>) -> Result<()> {
     let body = format!("{banner}@layer sui {{\n{}}}\n", sui_compiler::stdlib::skins_css());
     std::fs::write(&path, body)?;
     println!("wrote {}", path.display());
+    Ok(())
+}
+
+fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()> {
+    use sui_compiler::ir::directive::PropKind;
+    let path = match out {
+        Some(p) => p,
+        None => workspace_root()?.join("crates/sui/compiler/primitives.json"),
+    };
+    let ts_path = match ts_out {
+        Some(p) => p,
+        None => workspace_root()?.join("apps/sui-site/src/prop-registry.gen.ts"),
+    };
+    // Two consumers, two shapes from one walk:
+    //  * primitives.json — the lint's validation registry: attribute-checkable
+    //    props only (Identity props are `prop:`-set JS values, nothing for
+    //    static-attribute validation to check).
+    //  * prop-registry.gen.ts — the docs site's props tables: the FULL surface
+    //    including Identity props (shown as their verbatim TS type), so the
+    //    detail pages are generated, never hand-authored.
+    let mut tags = std::collections::BTreeMap::new();
+    let mut ts_tags: std::collections::BTreeMap<String, Vec<serde_json::Value>> =
+        std::collections::BTreeMap::new();
+    for (tag, source) in sui_compiler::stdlib::sources() {
+        let program = sui_compiler::parse::parse(source)
+            .unwrap_or_else(|e| panic!("stdlib {tag} failed to parse: {e:?}"));
+        let mut props = std::collections::BTreeMap::new();
+        let mut ts_props: Vec<serde_json::Value> = Vec::new();
+        for p in &program.props {
+            let ts_type = match &p.kind {
+                PropKind::Union(vs) => vs.join(" · "),
+                PropKind::Bool => "bool".to_string(),
+                PropKind::Number => "number".to_string(),
+                PropKind::String => "string".to_string(),
+                PropKind::Identity(t) => t.clone(),
+            };
+            let mut ts_row = serde_json::Map::new();
+            ts_row.insert("name".into(), serde_json::json!(p.name));
+            ts_row.insert("type".into(), serde_json::json!(ts_type));
+            if let Some(d) = &p.default {
+                ts_row.insert("default".into(), serde_json::json!(d));
+            }
+            if let Some(desc) = &p.description {
+                ts_row.insert("desc".into(), serde_json::json!(desc));
+            }
+            ts_props.push(serde_json::Value::Object(ts_row));
+
+            let (values, ty) = match &p.kind {
+                PropKind::Union(vs) => (Some(vs.clone()), None),
+                PropKind::Bool => (None, Some("bool")),
+                PropKind::Number => (None, Some("number")),
+                PropKind::String => (None, Some("string")),
+                PropKind::Identity(_) => continue,
+            };
+            let mut rule = serde_json::Map::new();
+            if let Some(vs) = values {
+                rule.insert("values".into(), serde_json::json!(vs));
+            }
+            if let Some(t) = ty {
+                rule.insert("type".into(), serde_json::json!(t));
+            }
+            if let Some(d) = &p.default {
+                rule.insert("default".into(), serde_json::json!(d));
+            }
+            if let Some(desc) = &p.description {
+                rule.insert("description".into(), serde_json::json!(desc));
+            }
+            props.insert(p.name.clone(), serde_json::Value::Object(rule));
+        }
+        if !props.is_empty() {
+            tags.insert(tag.to_string(), props);
+        }
+        if !ts_props.is_empty() {
+            ts_tags.insert(tag.to_string(), ts_props);
+        }
+    }
+    let file = serde_json::json!({
+        "$comment": "Generated by `cargo run -p sui-compiler -- prop-registry`. Do not hand-edit. Source: <component>{ props } declarations in crates/sui/compiler/stdlib/*.sui.",
+        "primitives": tags,
+    });
+    std::fs::write(&path, serde_json::to_string_pretty(&file)? + "\n")?;
+    println!("wrote {} ({} elements)", path.display(), file["primitives"].as_object().map(|o| o.len()).unwrap_or(0));
+
+    let mut ts = String::new();
+    ts.push_str("// AUTO-GENERATED by `cargo run -p sui-compiler -- prop-registry`. Do not edit.\n");
+    ts.push_str("// Source: <component>{ props } declarations in crates/sui/compiler/stdlib/*.sui.\n");
+    ts.push_str("// The docs detail pages read THIS — props tables are generated, never hand-authored.\n\n");
+    ts.push_str("export interface GenProp {\n  name: string\n  /** Rendered type: unions as `a · b · c`, identity props verbatim TS. */\n  type: string\n  default?: string\n  /** JSDoc from the stdlib declaration, when the prop is documented. */\n  desc?: string\n}\n\n");
+    ts.push_str("export const PROP_REGISTRY: Record<string, GenProp[]> = ");
+    ts.push_str(&serde_json::to_string_pretty(&ts_tags)?);
+    ts.push_str("\n");
+    std::fs::write(&ts_path, ts)?;
+    println!("wrote {} ({} elements)", ts_path.display(), ts_tags.len());
     Ok(())
 }
 

@@ -59,6 +59,12 @@ const SOURCES: &[(&str, &str)] = &[
 /// Compiled stdlib elements, memoized for the process lifetime. A stdlib
 /// source that fails to compile is a TOOLCHAIN bug — panic with the error
 /// (the element_mode integration tests catch it long before a user can).
+/// The raw (tag, source) pairs — the prop-registry generator re-parses these
+/// to emit the typed-props registry the lint validates against.
+pub fn sources() -> &'static [(&'static str, &'static str)] {
+    SOURCES
+}
+
 pub fn elements() -> &'static [StdlibElement] {
     static REG: OnceLock<Vec<StdlibElement>> = OnceLock::new();
     REG.get_or_init(|| {

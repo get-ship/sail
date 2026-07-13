@@ -1222,7 +1222,9 @@ fn unquote(s: &str) -> String {
 /// WHY THIS EXISTS. `split_top_level(inner, ',')` splits on commas, and a comment has
 /// none — so a documented prop arrived here as
 ///
-///     "/** The visual tone. */\n    tone: 'default' | 'primary'"
+/// ```text
+/// "/** The visual tone. */\n    tone: 'default' | 'primary'"
+/// ```
 ///
 /// and everything before the colon became the prop NAME. The compiler happily emitted
 /// `__props.____The_visual_tone_______` and the prop `tone` simply did not exist. It
