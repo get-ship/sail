@@ -40,14 +40,6 @@ pub(crate) struct Route {
     pub(crate) pattern: String,
     pub(crate) params: Vec<String>,
     pub(crate) builder: String,
-    /// True when the route's directory has a sibling `style.css`. The
-    /// codegen statically imports it so Rolldown's CSS-asset path
-    /// (`module_types: { ".css" -> Asset }`) bundles it as a hashed
-    /// `assets/<name>-<hash>.css` and lifts a `<link rel="stylesheet">`
-    /// into `index.html` — same machinery as the design-token CSS, but
-    /// scoped to the route. A route without a `style.css` keeps
-    /// `has_style = false` and emits no import.
-    pub(crate) has_style: bool,
 }
 
 /// A `_layout.sui` discovered at the top level of a `routes/` dir. The
@@ -120,13 +112,7 @@ fn to_route(routes_dir: &Path, dir: &Path) -> Option<Route> {
             .join("-");
         camel_case(&joined)
     };
-    // Convention (deck-route-css): if a sibling `style.css` exists, the
-    // generated entry imports it so the bundler ships it as a hashed
-    // asset. A missing `style.css` is the common case and must not
-    // produce an import — the route renders unstyled-but-functional
-    // until the dev authors the file.
-    let has_style = dir.join("style.css").is_file();
-    Some(Route { pattern, params, builder, has_style })
+    Some(Route { pattern, params, builder })
 }
 
 /// Reconstruct a route's view-module import path from its URL pattern — the
@@ -148,27 +134,6 @@ fn module_import_path(pattern: &str) -> String {
     } else {
         format!("./routes/{}/page.sui", segs.join("/"))
     }
-}
-
-/// Inverse of `module_import_path` for the sibling `style.css` (deck-
-/// route-css convention): `/studio/skills` → `./routes/studio/skills/style.css`,
-/// `/` → `./routes/style.css`. The codegen imports it next to the
-/// `page.sui` so the bundler's CSS-asset path ships it as a hashed asset.
-/// `Route::has_style` gates emission; a missing file produces no import.
-fn style_module_path(pattern: &str) -> String {
-    // `module_import_path` always ends in `page.sui`; the convention
-    // here is a sibling `style.css` at the same on-disk location.
-    // Reconstructing from the pattern (rather than reading disk again)
-    // keeps the path mapping symmetric with `module_import_path` —
-    // both helpers invert the same `to_route` segment mapping.
-    let path = module_import_path(pattern);
-    path.strip_suffix("page.sui")
-        .map(|rest| format!("{rest}style.css"))
-        // Defensive fallback: `path` is `module_import_path`'s output
-        // and always ends in `page.sui`. If that invariant ever
-        // drifts, return the unmodified path rather than a broken
-        // import — Rolldown will surface a clean resolution error.
-        .unwrap_or(path)
 }
 
 /// Inverse of the layout discovery: `/` → `./routes/_layout.sui`
@@ -660,22 +625,6 @@ fn render_routes_gen_with(tree: &RouteTree, include_token_import: bool) -> Strin
     // router src, else the bake serves an eager mountRouter and the lazy thunks
     // arrive un-awaited (mount() sees a function, not a module).
     let route_imports = String::new();
-    // Per-route `style.css` (deck-route-css convention): a route whose dir
-    // holds a sibling `style.css` is statically imported next to its
-    // `page.sui` so the bundler's CSS-asset path (`module_types: { ".css"
-    // -> Asset }`) ships it as a hashed `assets/<name>-<hash>.css` and
-    // lifts a `<link rel="stylesheet">` into `index.html`. The same
-    // machinery that carries the design-token CSS for every per-app
-    // build now carries per-route CSS too — zero per-app config, zero
-    // hand-authored import. Routes without a `style.css` skip the
-    // emission; a missing file must not break the build.
-    let style_imports = tree
-        .routes
-        .iter()
-        .filter(|r| r.has_style)
-        .map(|r| format!("import '{}';", style_module_path(&r.pattern)))
-        .collect::<Vec<_>>()
-        .join("\n");
     // Each layout's `.sui` is imported as a named module (import * as layoutN)
     // so the bundler tracks it as a real use (no tree-shake removal) AND
     // `mountRouter` receives the module object to render the layout's authored
@@ -755,7 +704,6 @@ fn render_routes_gen_with(tree: &RouteTree, include_token_import: bool) -> Strin
 // `[param]` dir under `routes/`). This file is DATA ONLY when the host
 import {{ type RouteShape, type LayoutShape }} from '@ship/deck/router'
 {token_import_block}{route_imports}
-{style_imports}
 {layout_imports}
 export const DYNAMIC_ROUTE_PATTERNS: RouteShape[] = [
 {pattern_lines}
@@ -776,7 +724,6 @@ export const layoutModules: Record<string, unknown> = {{
         label = tree.label,
         layout_imports = layout_imports,
         route_imports = route_imports,
-        style_imports = style_imports,
         pattern_lines = pattern_lines,
         builder_lines = builder_lines,
         layout_lines = layout_lines,
@@ -1274,25 +1221,7 @@ mod tests {
         assert_eq!(layout_module_path("/a/b"), "./routes/a/b/_layout.sui");
     }
 
-    #[test]
-    fn style_module_path_inverts_to_sibling_style_css() {
-        // Mirrors `module_import_path` for the deck-route-css convention:
-        // the route's sibling `style.css` lives next to its `page.sui`
-        // and the import path is the same shape with `page.sui` swapped
-        // for `style.css`. A missing file gates emission upstream; the
-        // helper itself only does the path mapping.
-        assert_eq!(style_module_path("/"), "./routes/style.css");
-        assert_eq!(style_module_path("/x"), "./routes/x/style.css");
-        assert_eq!(
-            style_module_path("/x/:id"),
-            "./routes/x/[id]/style.css"
-        );
-        assert_eq!(
-            style_module_path("/a/:b/c/:d"),
-            "./routes/a/[b]/c/[d]/style.css"
-        );
-    }
-
+    
     /// `routes.gen.ts` is DATA ONLY after the entry-split — route table +
     /// layout table + typed path builders + the `modules` / `layoutModules`
     /// maps. The framework router call moved to `entry.gen.ts` (the
@@ -1313,13 +1242,11 @@ mod tests {
                     pattern: "/".to_string(),
                     params: vec![],
                     builder: "index".to_string(),
-                    has_style: false,
                 },
                 Route {
                     pattern: "/a/:id".to_string(),
                     params: vec!["id".to_string()],
                     builder: "aId".to_string(),
-                    has_style: false,
                 },
             ],
             layouts: vec![],
@@ -1362,7 +1289,6 @@ mod tests {
                     pattern: "/".to_string(),
                     params: vec![],
                     builder: "index".to_string(),
-                    has_style: false,
                 },
             ],
             layouts: vec![
@@ -1408,7 +1334,6 @@ mod tests {
                 pattern: "/".to_string(),
                 params: vec![],
                 builder: "index".to_string(),
-                has_style: false,
             }],
             layouts: vec![Layout {
                 path_prefix: "/".to_string(),
@@ -1469,7 +1394,6 @@ mod tests {
                 pattern: "/".to_string(),
                 params: vec![],
                 builder: "index".to_string(),
-                has_style: false,
             }],
             layouts: vec![],
         };
@@ -1483,101 +1407,6 @@ mod tests {
         assert!(!ts.contains("from './src/"), "default bootstrap imports no host clientsModule: {ts}");
     }
 
-    /// The per-route `style.css` convention (deck-route-css): during
-    /// route discovery, a route whose dir holds a sibling `style.css`
-    /// sets `has_style = true` so the emitter statically imports it.
-    /// A missing file must produce `has_style = false` — a route
-    /// without styling still builds, just unstyled.
-    #[test]
-    fn build_route_tree_records_has_style_for_sibling_style_css() {
-        let root = tempfile::tempdir().unwrap();
-        let r = root.path().join("routes");
-        // Styled route (sibling `style.css`).
-        std::fs::create_dir_all(r.join("styled")).unwrap();
-        std::fs::write(r.join("styled/page.sui"), "<div/>").unwrap();
-        std::fs::write(r.join("styled/style.css"), ".x { color: red; }\n").unwrap();
-        // Unstyled route (no `style.css`) — must still build.
-        std::fs::create_dir_all(r.join("plain")).unwrap();
-        std::fs::write(r.join("plain/page.sui"), "<div/>").unwrap();
-        // Styled dynamic route (param dir, sibling `style.css`).
-        std::fs::create_dir_all(r.join("agents/[id]")).unwrap();
-        std::fs::write(r.join("agents/[id]/page.sui"), "<div/>").unwrap();
-        std::fs::write(r.join("agents/[id]/style.css"), ".y { color: blue; }\n").unwrap();
-
-        let tree = build_route_tree(&r, "app").unwrap();
-        let by_pattern: std::collections::HashMap<&str, &Route> =
-            tree.routes.iter().map(|r| (r.pattern.as_str(), r)).collect();
-        assert!(
-            by_pattern["/styled"].has_style,
-            "static route with sibling style.css must set has_style"
-        );
-        assert!(
-            !by_pattern["/plain"].has_style,
-            "route without style.css must NOT set has_style (no spurious import)"
-        );
-        assert!(
-            by_pattern["/agents/:id"].has_style,
-            "dynamic route with sibling style.css must set has_style (param dir)"
-        );
-    }
-
-    /// The generated `routes.gen.ts` emits `import './routes/<…>/style.css';`
-    /// for each route whose `has_style` is true, alongside the
-    /// `page.sui` imports. A route without a `style.css` gets no
-    /// import — the build is byte-identical to pre-convention. The
-    /// per-route CSS rides Rolldown's CSS-asset path the same way the
-    /// design-token CSS does (see `ssot_tokens_import_pinned`); no
-    /// hand-authored import, no per-app config.
-    #[test]
-    fn render_emits_style_imports_for_styled_routes() {
-        let tree = RouteTree {
-            label: "x".to_string(),
-            routes: vec![
-                Route {
-                    pattern: "/".to_string(),
-                    params: vec![],
-                    builder: "index".to_string(),
-                    has_style: false,
-                },
-                Route {
-                    pattern: "/styled".to_string(),
-                    params: vec![],
-                    builder: "styled".to_string(),
-                    has_style: true,
-                },
-                Route {
-                    pattern: "/agents/:id".to_string(),
-                    params: vec!["id".to_string()],
-                    builder: "agentsId".to_string(),
-                    has_style: true,
-                },
-            ],
-            layouts: vec![],
-        };
-        let ts = render_routes_gen(&tree);
-        // No `style.css` at root → no import for `/`.
-        assert!(
-            !ts.contains("'./routes/style.css';"),
-            "no style.css at the route dir → no import (got: {ts})"
-        );
-        // Styled static route → import.
-        assert!(
-            ts.contains("import './routes/styled/style.css';"),
-            "styled static route must emit style import (got: {ts})"
-        );
-        // Styled dynamic route → import with `[id]` segment
-        // (the segment mapping is symmetric with `module_import_path`).
-        assert!(
-            ts.contains("import './routes/agents/[id]/style.css';"),
-            "styled dynamic route must emit style import with [id] segment (got: {ts})"
-        );
-        // Unstyled route → no `plain/style.css` import even if it had
-        // a sibling `page.sui`.
-        assert!(
-            !ts.contains("'./routes/plain/style.css';"),
-            "unstyled routes must not emit a style import (got: {ts})"
-        );
-    }
 
     // Regression: routes.gen.ts lives under the watched `apps/...` root and
     // the app build regenerates it every rebuild. An unconditional write
@@ -1638,7 +1467,6 @@ mod tests {
                 pattern: "/".to_string(),
                 params: vec![],
                 builder: "index".to_string(),
-                has_style: false,
             }],
             layouts: vec![],
         };

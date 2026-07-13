@@ -71,10 +71,9 @@ pub fn write_pack_cem(pack_root: &Path) -> Result<Option<PathBuf>> {
             }),
             emit_dts: false,
             emit_component_imports: false,
-            // The bundler compiles internal SUI at the strict default — no
-            // per-rule overrides. External consumers opt out via CompileOpts;
-            // the design system's own build never does.
-            lint_overrides: Vec::new(),
+            // Language policy comes from the component's own sui.config.json
+            // walk-up — deck never sets or relaxes it.
+            lint_overrides: sui_compiler::Policy::overrides_for(sui_file),
         };
         let out = sui_compiler::compile(&source, opts)
             .map_err(|e| anyhow::anyhow!("compile {}: {}", sui_file.display(), e.render(&source)))?;
