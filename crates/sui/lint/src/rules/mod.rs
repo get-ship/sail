@@ -45,6 +45,7 @@ pub mod no_style_block;
 pub mod no_sx;
 pub mod no_variants;
 pub mod no_class;
+pub mod no_imperative_style;
 pub mod no_inline_style;
 pub mod animate_token_only;
 pub type RuleFn = fn(&Path, &str) -> Vec<Finding>;
@@ -52,6 +53,7 @@ pub type RuleFn = fn(&Path, &str) -> Vec<Finding>;
 /// Rules that lint a paired `<stem>.controller.ts` source. The dispatcher
 /// in `lib.rs::lint_controller_source` walks this slice in order.
 pub const CONTROLLER_RULES: &[(&str, RuleFn)] = &[
+    (no_imperative_style::RULE_ID, no_imperative_style::check),
     (controller_purity::RULE_ID, controller_purity::check),
     (controller_set_value::RULE_ID, controller_set_value::check),
     (controller_state_cast::RULE_ID, controller_state_cast::check),

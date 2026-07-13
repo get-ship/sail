@@ -1,36 +1,27 @@
-//! Controller-purity check — compile-time hard wall.
+//! The controller lint gate — a compile-time hard wall.
 //!
-//! Defers the rule definition to `sui-lint`. The same walker that
-//! drives editor diagnostics drives this build-time check, so a
-//! violation looks identical to LSP and `cargo build`.
+//! Defers the rules to `sui-lint` (the same walker that drives the LSP), so a
+//! violation looks identical in the editor and in `cargo build`.
 //!
-//! Skipped when `source_path` is `None` (synthetic fragments in unit
-//! tests), and when no `*.controller.ts` is paired with the source.
+//! The source is the `<controller>` BLOCK. It used to hunt for a sibling
+//! `<stem>.controller.ts` on disk — a file that is a compile error now
+//! (`sui-paired-controller`) and therefore never exists. So this gate read
+//! nothing and returned Ok for every SFC in the repo, and the whole controller
+//! rule family — purity, ambient authority, set-value, state-cast, and the
+//! imperative-styling floor — was silently dead.
 
 use std::path::Path;
 
+use crate::check::controller_parse::ParsedController;
 use crate::diagnostics::{CompileError, Span};
 
 pub fn check(
-    source_path: Option<&Path>,
+    controller: Option<&ParsedController>,
     overrides: &[crate::check::lint_overrides::LintOverride],
 ) -> Result<(), CompileError> {
-    let Some(p) = source_path else { return Ok(()); };
-    let Some(stem) = p.file_stem().and_then(|s| s.to_str()) else { return Ok(()); };
-    let dir = p.parent().unwrap_or(Path::new("."));
-    let controller_path = if stem == "page" {
-        dir.join("controller.ts")
-    } else {
-        dir.join(format!("{stem}.controller.ts"))
-    };
-    if !controller_path.exists() {
-        return Ok(());
-    }
-
-    let source = match std::fs::read_to_string(&controller_path) {
-        Ok(s) => s,
-        Err(_) => return Ok(()), // unreadable — let other tooling surface it
-    };
+    let Some(c) = controller else { return Ok(()); };
+    let controller_path = c.path.clone();
+    let source = c.source.clone();
 
     // Apply the build host's lint overrides before the Error filter. The
     // rule's natural severity is preserved for everyone who consumes

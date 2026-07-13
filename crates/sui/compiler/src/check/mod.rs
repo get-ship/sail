@@ -61,7 +61,7 @@ pub fn run(
     // (typos / not-yet-language elements) so L1 growth is safe.
     reserved_names::check(program)?;
     handler_complexity::check(program, controller.is_some())?;
-    controller_purity::check(source_path, overrides)?;
+    controller_purity::check(controller, overrides)?;
     paired_controller::check(source, source_path)?;
     css_token::check(source, source_path, overrides)?;
     // `controller` is resolved by the caller: the inline `<controller>` block
