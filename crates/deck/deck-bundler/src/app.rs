@@ -1110,6 +1110,52 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
             .expect("bundle_app should compile the .sui entry in-process");
     }
 
+    /// SFC route pages: a `page.sui` with an inline `<controller>` block is the
+    /// single-file authoring model — no sibling `controller.ts` exists and none
+    /// may be required. The bundler must (1) build the app and (2) actually
+    /// carry the controller code into the emitted chunks; silently dropping the
+    /// controller (template renders, no state) is the failure mode this pins.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn app_build_bundles_inline_controller_sfc_page() {
+        let root = tempfile::tempdir().unwrap();
+        let r = root.path();
+        write(
+            &r.join("package.json"),
+            r#"{"name":"sfc-app","private":true,"type":"module"}"#,
+        );
+        write(
+            &r.join("routes/counter/page.sui"),
+            "<controller>\n\
+             import { controller, signal } from '@ship/sui-runtime'\n\
+             export default controller({ scope: () => ({ n: signal(41) }) })\n\
+             </controller>\n\
+             <main>\n  <p>{n()}</p>\n</main>\n",
+        );
+
+        let out = r.join("dist");
+        bundle_app(r, &[], r, &out, false, false)
+            .await
+            .expect("an inline-<controller> page.sui must bundle");
+
+        // The controller must be IN the output — walk every emitted JS chunk
+        // (route modules are code-split) for the scope literal.
+        let mut found = false;
+        let mut stack = vec![out.clone()];
+        while let Some(dir) = stack.pop() {
+            for entry in std::fs::read_dir(&dir).unwrap() {
+                let p = entry.unwrap().path();
+                if p.is_dir() {
+                    stack.push(p);
+                } else if p.extension().is_some_and(|e| e == "js")
+                    && std::fs::read_to_string(&p).unwrap().contains("signal(41)")
+                {
+                    found = true;
+                }
+            }
+        }
+        assert!(found, "the inline controller's code (signal(41)) must land in an emitted chunk");
+    }
+
     /// When a deck app's module graph imports a `.css` file, the per-app
     /// `bundle_app` builds it through Rolldown's NATIVE asset path
     /// (`module_types: { ".css" -> Asset }` → `AssetModulePlugin`), emits

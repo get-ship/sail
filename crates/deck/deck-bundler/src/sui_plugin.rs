@@ -193,6 +193,24 @@ impl Plugin for SuiPlugin {
                 }
             }));
         }
+        // `<file>.sui.controller.ts` → virtual id: the inline `<controller>`
+        // block of the named `.sui`, served by `load` (SFC — nothing on disk).
+        // Must be redirected here: the native resolver would fail on the
+        // nonexistent file. Relative (`./page.sui.controller.ts`, what the
+        // compiled `.sui` module imports) and absolute (the synthetic client
+        // emit) shapes both land on the normalized absolute id.
+        if spec.ends_with(".sui.controller.ts") {
+            if Path::new(spec).is_absolute() {
+                return Ok(Some(HookResolveIdOutput::from_id(
+                    normalize(Path::new(spec)).to_string_lossy().to_string(),
+                )));
+            }
+            if let Some(importer) = args.importer {
+                let dir = Path::new(importer).parent().unwrap_or(&self.repo_root);
+                let abs = normalize(&dir.join(spec));
+                return Ok(Some(HookResolveIdOutput::from_id(abs.to_string_lossy().to_string())));
+            }
+        }
         // `*.compiled.js` → virtual id; `load` compiles the sibling `.sui`. The
         // `.compiled.js` is synthetic (never on disk), so we must redirect here
         // rather than fall through to Rolldown's native resolver, which would
@@ -288,6 +306,32 @@ impl Plugin for SuiPlugin {
             return Ok(Some(HookLoadOutput {
                 code: String::new().into(),
                 module_type: Some(ModuleType::Js),
+                ..Default::default()
+            }));
+        }
+        // Virtual inline-controller module (`<file>.sui.controller.ts`): the
+        // `<controller>` block extracted from the named `.sui`, returned as TS
+        // so Rolldown's transform strips the types. Checked BEFORE the generic
+        // `.ts` read below — the file never exists on disk.
+        if let Some(base) = id.strip_suffix(".controller.ts")
+            && base.ends_with(".sui")
+        {
+            let sui = Path::new(base);
+            let source = std::fs::read_to_string(sui).map_err(|e| {
+                anyhow!("read {} for its inline <controller>: {e}", sui.display())
+            })?;
+            let body = sui_compiler::parse::preprocess::extract_controller_block(&source)
+                .1
+                .ok_or_else(|| {
+                    anyhow!(
+                        "`{id}` names the inline controller of `{}`, but that file has no \
+                         <controller> block",
+                        sui.display()
+                    )
+                })?;
+            return Ok(Some(HookLoadOutput {
+                code: body.into(),
+                module_type: Some(ModuleType::Ts),
                 ..Default::default()
             }));
         }

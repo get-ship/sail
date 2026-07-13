@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 
 use sui_compiler::emit::synthetic::{emit_synthetic_client_module, AppManifest, AuthoredController};
 use sui_compiler::parse::parse;
+use sui_compiler::parse::preprocess::extract_controller_block;
 use sui_compiler::{compile, CompileMode as SuiMode, CompileOpts, ComponentMeta, Policy};
 
 /// A `.sui` compiles as a custom-element (`component`) or a view. Component mode
@@ -62,7 +63,7 @@ pub fn compile_sui(
     // surface ABOVE the floor.
     let policy_overrides = Policy::overrides_for(sui_file);
     let opts = CompileOpts {
-        setup_url: paired_controller(sui_file, stem),
+        setup_url: controller_specifier(sui_file, stem, &source),
         mode: match mode {
             CompileMode::Component => SuiMode::Component,
             CompileMode::View => SuiMode::Component,
@@ -117,6 +118,22 @@ fn emit_build_warnings(sui_file: &Path, source: &str, overrides: &[sui_compiler:
     }
 }
 
+/// The setup-import specifier for a `.sui`'s controller — SFC first. An inline
+/// `<controller>` block IS the controller: the specifier is the VIRTUAL
+/// `./<file>.sui.controller.ts` sibling the plugin serves by extracting the
+/// block (nothing is materialized to disk — one authored file). Only a source
+/// without a block falls back to the paired-file model (a real sibling
+/// `controller.ts` / `<stem>.controller.ts` on disk). Inline-wins matches
+/// `compile()`'s own controller resolution for the scope-aware checks, so what
+/// the checks validate is exactly what the bundle runs.
+fn controller_specifier(sui_file: &Path, stem: &str, source: &str) -> Option<String> {
+    if extract_controller_block(source).1.is_some() {
+        let file = sui_file.file_name()?.to_string_lossy();
+        return Some(format!("./{file}.controller.ts"));
+    }
+    paired_controller(sui_file, stem)
+}
+
 /// `import setup from "./<controller>"` when a sibling controller exists next to
 /// the `.sui`. Mirrors the CLI's `paired_setup` for the bundler (`--out`/
 /// in-process) case: relative `./` import that Rolldown resolves to the sibling.
@@ -161,7 +178,12 @@ fn try_synthetic_client(sui_file: &Path) -> Result<Option<String>, CompileError>
     for (name, client) in deck_core::host_context::host_context_clients() {
         manifest.clients.entry(name).or_insert(client);
     }
-    let authored = sibling_controller_abs(sui_file)
+    // Inline `<controller>` wins here too: the authored controller is the
+    // virtual `.sui.controller.ts` module the plugin extracts from the source.
+    let authored = extract_controller_block(&source)
+        .1
+        .map(|_| format!("{}.controller.ts", sui_file.display()))
+        .or_else(|| sibling_controller_abs(sui_file))
         .map(|specifier| AuthoredController { specifier });
     let js = emit_synthetic_client_module(&program, &manifest, authored.as_ref(), SuiMode::Component, None)
         .map_err(|e| CompileError::Compile(e.render(&source)))?;
@@ -213,9 +235,11 @@ mod tests {
     }
 
     #[test]
-    fn view_inline_style_is_bundled_not_dropped() {
-        // The bundler must BUNDLE a route `page.sui`'s inline `<style>` as the
-        // route's stylesheet (installed at mount), not silently drop it.
+    fn view_raw_style_block_is_rejected_by_the_floor() {
+        // The FLOOR: authored <style> is a compile error in every SUI file,
+        // config or not — deck enforces it for route views like everything
+        // else. (This test used to pin the pre-floor behavior — inline
+        // <style> bundled into the view JS. That surface is gone.)
         let src = tempdir().unwrap();
         let sui = src.path().join("page.sui");
         std::fs::write(
@@ -223,14 +247,11 @@ mod tests {
             "<style>.hero { color: var(--foreground); }</style>\n<div class=\"hero\">hi</div>\n",
         )
         .unwrap();
-        let js = compile_sui(&sui, CompileMode::View, "page", false).expect("view compiles");
+        let err = compile_sui(&sui, CompileMode::View, "page", false)
+            .expect_err("raw <style> in a view must not compile");
         assert!(
-            js.contains(".hero { color: var(--foreground); }"),
-            "inline <style> must be bundled into the view JS, not dropped:\n{js}"
-        );
-        assert!(
-            js.contains("data-sui-style"),
-            "the runtime style install must be present:\n{js}"
+            format!("{err}").contains("sui-no-style-block"),
+            "the floor rule names itself: {err}"
         );
     }
 
