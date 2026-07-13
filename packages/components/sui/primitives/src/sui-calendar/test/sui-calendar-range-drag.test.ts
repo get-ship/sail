@@ -19,7 +19,7 @@ import type { Calendar, CalendarEvent } from '../engine'
 import calendarController from '../sui-calendar.controller'
 
 const SOURCE = readFileSync(new URL('../sui-calendar.sui', import.meta.url), 'utf8')
-const shadow = (el: HTMLElement): ShadowRoot => el.shadowRoot as ShadowRoot
+const shadow = (el: HTMLElement): ShadowRoot | HTMLElement => el.shadowRoot ?? el
 
 const live: Array<{ unmount(): void }> = []
 afterEach(() => {

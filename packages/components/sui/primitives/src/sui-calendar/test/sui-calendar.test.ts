@@ -27,7 +27,7 @@ import calendarController from '../sui-calendar.controller'
 
 const SOURCE = readFileSync(new URL('../sui-calendar.sui', import.meta.url), 'utf8')
 
-const shadow = (el: HTMLElement): ShadowRoot => el.shadowRoot as ShadowRoot
+const shadow = (el: HTMLElement): ShadowRoot | HTMLElement => el.shadowRoot ?? el
 
 /** Dispatch a bubbling click at the first shadow-DOM element matching `sel`. */
 function clickShadow(el: HTMLElement, sel: string): void {

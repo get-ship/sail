@@ -193,6 +193,12 @@ interface EvalDeps {
 
 function stripImports(js: string): string {
   return js
+    // import { …names… } from "@ship/sui-runtime/internal" (the compiler's
+    // emit specifier; internal re-exports the full runtime surface)
+    .replace(
+      /^\s*import\s*\{\s*([^}]+)\s*\}\s*from\s*["']@ship\/sui-runtime\/internal["']\s*;?\s*$/gm,
+      'const { $1 } = __runtime;',
+    )
     // import { …names… } from "@ship/sui-runtime"
     .replace(
       /^\s*import\s*\{\s*([^}]+)\s*\}\s*from\s*["']@ship\/sui-runtime["']\s*;?\s*$/gm,
