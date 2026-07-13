@@ -15,6 +15,19 @@
     offers with 10% of the decisions.
   </p>
 
+  <h2>The web, with default styles</h2>
+  <p>
+    Component libraries exist because nobody owns HTML: the platform's
+    vocabulary froze decades ago, so every team rebuilds the missing patterns
+    — dialogs, comboboxes, toasts — in userspace, forever, with constant
+    governance and constant drift. We own our platform: the compiler, the
+    lint, the LSP, the runtime. So the missing tier isn't a library on top —
+    it is the language. A combobox is a tag the way a paragraph is a tag,
+    with the behavior written once in the toolchain, its anatomy published as
+    a contract, and a default skin any theme can replace wholesale. Remove
+    the userspace tier and you remove its failure mode.
+  </p>
+
   <h2>The bottleneck was never reactivity</h2>
   <p>
     Hand a model a spec and it makes hundreds of small choices on the way to a
