@@ -419,9 +419,12 @@ export function suiComponentVitestConfig(opts: SuiComponentVitestOptions = {}) {
           const mirrorFile = mirrorArtifactFor(sourceDir, stem)
           const suiFile = resolve(sourceDir, `${stem}.sui`)
           // A mirror artifact is only valid while it's at least as new as its
-          // `.sui` source — a stale mirror silently tests yesterday's compile.
+          // `.sui` source AND the compiler that would rebuild it — a stale
+          // mirror silently tests yesterday's compile.
+          const compilerMtime = existsSync(compilerBin) ? statSync(compilerBin).mtimeMs : 0
           const mirrorFresh =
             existsSync(mirrorFile) &&
+            statSync(mirrorFile).mtimeMs >= compilerMtime &&
             (!existsSync(suiFile) || statSync(mirrorFile).mtimeMs >= statSync(suiFile).mtimeMs)
           if (mirrorFresh) return mirrorFile
           if (existsSync(suiFile)) {
@@ -429,7 +432,14 @@ export function suiComponentVitestConfig(opts: SuiComponentVitestOptions = {}) {
             // it where the Rust workspace exists. Elsewhere (JS-only consumers)
             // skip straight to the inline WASM fallback below.
             if (nativeCompileAvailable) {
-              compileSui(suiFile, stem)
+              // A CLI failure (e.g. the floor on a held component) falls
+              // through to the inline WASM compile — the harness tests
+              // behavior; build gates enforce policy.
+              try {
+                compileSui(suiFile, stem)
+              } catch {
+                return `\0compiled-js-shim:${suiFile}`
+              }
               if (existsSync(mirrorFile)) return mirrorFile
             }
             return `\0compiled-js-shim:${suiFile}`

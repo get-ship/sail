@@ -316,7 +316,7 @@ export default controller({
       const idx = Number(btn.dataset.idx)
       if (Number.isInteger(idx)) removeAt(idx)
     }
-    (host.shadowRoot ?? host).addEventListener('click', onShadowClick)
+    ;(host.shadowRoot ?? host).addEventListener('click', onShadowClick)
 
     return () => {
       dropzoneEl?.removeEventListener('click', onClick)
@@ -325,7 +325,7 @@ export default controller({
       dropzoneEl?.removeEventListener('dragleave', onDragLeave)
       dropzoneEl?.removeEventListener('drop', onDrop)
       inputEl?.removeEventListener('change', onInputChange)
-      (host.shadowRoot ?? host).removeEventListener('click', onShadowClick)
+      ;(host.shadowRoot ?? host).removeEventListener('click', onShadowClick)
     }
   },
 })

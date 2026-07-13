@@ -467,8 +467,8 @@ export default controller({
       })
     }
 
-    (host.shadowRoot ?? host).addEventListener('click', onShadowClick)
-    (host.shadowRoot ?? host).addEventListener('keydown', onShadowKey as EventListener)
+    ;(host.shadowRoot ?? host).addEventListener('click', onShadowClick)
+    ;(host.shadowRoot ?? host).addEventListener('keydown', onShadowKey as EventListener)
 
     // Range selection (month drag + Shift+Arrow) + drag-to-create/move (time-
     // grid slot drag). The DOM↔engine bridge lives in the interactions module;
@@ -492,8 +492,8 @@ export default controller({
     return () => {
       stopView()
       stopEmit()
-      (host.shadowRoot ?? host).removeEventListener('click', onShadowClick)
-      (host.shadowRoot ?? host).removeEventListener('keydown', onShadowKey as EventListener)
+      ;(host.shadowRoot ?? host).removeEventListener('click', onShadowClick)
+      ;(host.shadowRoot ?? host).removeEventListener('keydown', onShadowKey as EventListener)
       delete (host as { calendar?: unknown }).calendar
     }
   },
