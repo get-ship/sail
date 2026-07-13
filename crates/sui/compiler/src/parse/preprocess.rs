@@ -1424,14 +1424,15 @@ fn find_outside_comments(source: &str, needle: &str) -> Option<usize> {
 }
 
 /// Extract an inline `<controller>` block for the single-file-component model.
-/// Returns the template with the block removed + the block's raw TS body (the
-/// one locked-down `controller({…})` function). `None` if there's no block.
+/// Returns the template + the block's raw TS body (the one locked-down
+/// `controller({…})` function). `None` if there's no block.
 ///
-/// The SFC compile model (as Vue extracts its `<script>`): the compiler writes
-/// this body to the generated `<stem>.controller.ts` module that the emit
-/// already imports and the analysis already reads — so no emit surgery, and the
-/// author writes ONE file. The body is type-checked by the tsgo bridge and the
-/// existing `controller_*` lockdown lints, exactly as a paired file is today.
+/// The block is BLANKED, not deleted: its bytes are replaced with spaces, and
+/// its newlines kept. The returned template is therefore byte-for-byte the same
+/// LENGTH as the source, so a span into it is a span into the file the author
+/// wrote — every diagnostic's line and column land on the right row. Deleting
+/// the block instead shifts every template offset left by the block's size, and
+/// the compiler reports errors N lines above where they are.
 pub fn extract_controller_block(source: &str) -> (String, Option<String>) {
     // Skip comments: a comment above the block that mentions `<controller>` would
     // otherwise be taken as the block's opening tag, and everything from inside the
@@ -1452,6 +1453,11 @@ pub fn extract_controller_block(source: &str) -> (String, Option<String>) {
     let block_end = body_end + "</controller>".len();
     let mut stripped = String::with_capacity(source.len());
     stripped.push_str(&source[..start]);
+    // Replacing each byte of a multi-byte char with an ASCII space is safe: the
+    // whole char is covered, so the result stays valid UTF-8.
+    for b in source[start..block_end].bytes() {
+        stripped.push(if b == b'\n' { '\n' } else { ' ' });
+    }
     stripped.push_str(&source[block_end..]);
     (stripped, Some(body))
 }

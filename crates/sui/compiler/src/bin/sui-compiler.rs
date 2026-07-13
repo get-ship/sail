@@ -879,8 +879,14 @@ fn compile_one(
     // materialized next to the source — a sibling `<stem>.controller.ts` is a
     // compile error (`sui-paired-controller`), so writing one would author the
     // very thing the compiler rejects.
-    let (source, inline_controller) =
-        sui_compiler::parse::preprocess::extract_controller_block(&orig_source);
+    // `compile()` and `check_all()` are SFC-aware: they blank the `<controller>`
+    // block themselves and parse it into the scope the template is checked
+    // against. They must see the SOURCE — handing them a pre-stripped copy leaves
+    // them with no block, and every name the controller provides reads as
+    // undeclared. The extraction here decides one thing: whether there is a
+    // controller to import.
+    let inline_controller =
+        sui_compiler::parse::preprocess::extract_controller_block(&orig_source).1;
     let mode = mode.map(|m| m.into()).unwrap_or(CompileMode::Auto);
     // Resolve the emit dir for this file. Without --out, outputs land in
     // the project mirror tree at `<repo-root>/.sui-out/<src-rel>/`;
@@ -936,7 +942,7 @@ fn compile_one(
     {
         let tdir = std::env::temp_dir().join("sui-tsgo-check");
         let diags = sui_compiler::check::tscheck::check_component_variants(
-            &source, &tdir, &node, &tsgo_js,
+            &orig_source, &tdir, &node, &tsgo_js,
         )
         .unwrap_or_default();
         if let Some(d) = diags.first() {
@@ -972,12 +978,12 @@ fn compile_one(
             }
         }
     }
-    let result = compile(&source, opts).map_err(|e| {
-        let rendered = e.render(&source);
+    let result = compile(&orig_source, opts).map_err(|e| {
+        let rendered = e.render(&orig_source);
         anyhow!("{rendered}")
     })?;
 
-    fatal_diagnostics_gate(&source, path)?;
+    fatal_diagnostics_gate(&orig_source, path)?;
 
     let stem = path
         .file_name()
@@ -1083,6 +1089,8 @@ fn pathdiff(to_file: &Path, from_dir: &Path) -> String {
 }
 
 /// say.
+/// `source` is the SFC as authored: `check_all` resolves the `<controller>`
+/// block's scope from it, and reports spans in its coordinates.
 fn fatal_diagnostics_gate(source: &str, path: &Path) -> Result<()> {
     let fatal: Vec<_> = check_all(source, Some(path), &[])
         .into_iter()
