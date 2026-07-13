@@ -40,6 +40,11 @@ function readItems<T>(source: ListSource<T>): T[] {
  * Note what this is NOT: there is no registration, no `use:` section, no namespace.
  * The returned signals are ordinary scope members and the template binds to them
  * like anything else you declared. That is the entire integration story.
+ *
+ * `matches` receives the query TRIMMED AND LOWERCASED — normalizing it in one
+ * place is what stops every caller from shipping a different answer to "is search
+ * case-sensitive". Lowercase the item side to compare, as the example does. An
+ * empty query matches everything without calling `matches` at all.
  */
 export function filteredList<T>(
   source: ListSource<T>,

@@ -1,11 +1,16 @@
 // Light-DOM component registration — the default architecture's runtime
 // path: no shadow root, template renders into the element, original
-// children project into <slot> wrappers, styles inject as an @scope donut,
-// and the document-level contracts sheet installs once.
+// children project into <slot> wrappers, and styles inject as an @scope donut.
 
 import { afterEach, describe, expect, it } from 'vitest'
 import { component } from '../src/component-factory'
 import type { MountModule } from '../src/mount'
+
+// The contracts sheet is OPT-IN — a host normally links contracts.css, and the
+// framework does not put 30KB of CSS in a bundle that did not ask for it. This
+// side-effect import is what a JS-only host does instead, and it is the thing
+// under test below.
+import '../src/contracts'
 
 let n = 0
 const freshTag = (): string => `light-probe-${++n}`
@@ -85,7 +90,7 @@ describe('light-DOM component registration', () => {
     expect(style.textContent).toContain(':scope { color: red; }')
   })
 
-  it('installs the document-level light contracts exactly once', () => {
+  it('the opt-in contracts import installs the sheet exactly once', () => {
     const t1 = freshTag()
     const t2 = freshTag()
     component(t1, {}, moduleWithTemplate('<i>a</i>'))
@@ -104,7 +109,7 @@ describe('light-DOM component registration', () => {
     expect(css).toContain(':focus-visible')
     expect(css).toContain(':disabled')
     expect(css).toContain('forced-colors: active')
-    expect(css).toMatch(/:where\(button\)[^}]*user-select: none/)
+    expect(css).toMatch(/:where\(button[^)]*\)[^}]*user-select: none/)
     // The L1 <button> skin: variant surfaces at zero specificity, channels
     // with no-attribute fallbacks. Layer invisibility: the same [tone]/[size]
     // contracts drive a bare <button> and a light L2 component identically.

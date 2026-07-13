@@ -4,7 +4,7 @@
 // contract end-to-end. Substring assertions in the compiler's emit
 // tests can pass while the actual JS is broken; this can't.
 //
-// Fixtures live in test/fixtures/ — one .sui + one .controller.ts per
+// Fixtures live in test/fixtures/ — one .sui per
 // component under test. Components compile with shadow DOM (the CLI
 // default for component mode), so DOM queries go via el.shadowRoot.
 
@@ -42,13 +42,12 @@ function compileFixture(file: string): string {
   const stem = file.replace(/\.sui$/, '')
   const jsPath = join(COMPILE_OUT, `${stem}.js`)
 
-  // The compiled JS imports `./ship-set-counter.controller.ts` relative to the
-  // output dir. Copy the controller into COMPILE_OUT so the import resolves.
-  const ctrlSrc = join(FIXTURES, `${stem}.controller.ts`)
-  const ctrlDst = join(COMPILE_OUT, `${stem}.controller.ts`)
-  if (existsSync(ctrlSrc) && !existsSync(ctrlDst)) {
-    copyFileSync(ctrlSrc, ctrlDst)
-  }
+  // The compiled JS imports its controller as the virtual
+  // `./<stem>.sui.controller.ts`, resolved against the module's own directory.
+  // The harness serves that module by extracting the `<controller>` block from
+  // the sibling `.sui` — so the source has to sit next to the output.
+  const suiDst = join(COMPILE_OUT, file)
+  if (!existsSync(suiDst)) copyFileSync(join(FIXTURES, file), suiDst)
 
   // Copy as .mjs so vitest treats it as a module unambiguously.
   const js = readFileSync(jsPath, 'utf8')

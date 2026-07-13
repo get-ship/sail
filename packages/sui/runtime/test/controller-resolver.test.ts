@@ -14,7 +14,6 @@ import {
   resolveController,
   signal,
   derived,
-  type ControllerHook,
   type ResolvedBindings,
   type Signal,
 } from '../src/index'
@@ -170,75 +169,6 @@ describe('on — handlers receive a writable proxy', () => {
   })
 })
 
-describe('use — hooks compose under namespaced keys', () => {
-  const useFilteredList = <T>(
-    source: Signal<T[]>,
-    pred: (item: T, q: string) => boolean,
-  ): ControllerHook<{ query: string }> => ({
-    state: { query: '' },
-    derived: {
-      filtered: ({ query }: { query: () => string }) =>
-        source().filter((i) => pred(i, query())),
-    },
-    on: {
-      setQuery: (s: { query: string }, q: string) => {
-        s.query = q
-      },
-    },
-  })
-
-  it('hook bindings appear under the namespace key', () => {
-    const items: Signal<string[]> = signal(['apple', 'banana', 'cherry'])
-    const b = resolveController(
-      {
-        use: { list: useFilteredList(items, (s, q) => s.includes(q)) },
-      },
-      noShip,
-    ) as Record<string, Record<string, unknown>>
-
-    expect(b.list).toBeDefined()
-    expect(typeof (b.list!.query as () => string)).toBe('function')
-    expect(typeof (b.list!.filtered as () => string[])).toBe('function')
-    expect(typeof (b.list!.setQuery as (...a: unknown[]) => void)).toBe('function')
-  })
-
-  it('hook handlers mutate hook state, derived recomputes', () => {
-    const items: Signal<string[]> = signal(['apple', 'banana', 'cherry'])
-    const b = resolveController(
-      {
-        use: { list: useFilteredList(items, (s, q) => s.includes(q)) },
-      },
-      noShip,
-    ) as Record<string, Record<string, unknown>>
-
-    expect((b.list!.filtered as () => string[])()).toEqual([
-      'apple',
-      'banana',
-      'cherry',
-    ])
-    ;(b.list!.setQuery as (q: string) => void)('an')
-    expect((b.list!.query as () => string)()).toBe('an')
-    expect((b.list!.filtered as () => string[])()).toEqual(['banana'])
-  })
-
-  it('two hooks of the same shape namespace cleanly without collision', () => {
-    const items: Signal<string[]> = signal(['apple', 'banana'])
-    const b = resolveController(
-      {
-        use: {
-          a: useFilteredList(items, (s, q) => s.startsWith(q)),
-          b: useFilteredList(items, (s, q) => s.endsWith(q)),
-        },
-      },
-      noShip,
-    ) as Record<string, Record<string, unknown>>
-
-    ;(b.a!.setQuery as (q: string) => void)('a')
-    ;(b.b!.setQuery as (q: string) => void)('a')
-    expect((b.a!.filtered as () => string[])()).toEqual(['apple'])
-    expect((b.b!.filtered as () => string[])()).toEqual(['banana'])
-  })
-})
 
 describe('mount / unmount lifecycle — attached as non-enumerable LIFECYCLE_KEY', () => {
   const lifecycleOf = (b: ResolvedBindings) =>

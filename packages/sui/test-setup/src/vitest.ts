@@ -383,6 +383,72 @@ export interface SuiComponentVitestOptions {
  * export default suiComponentVitestConfig()
  * ```
  */
+/** The SUI source loader — deck-parity, one compiler, one controller path.
+ *
+ *  `.compiled.js` is the published-name convention for a sibling `.sui`; the
+ *  `.sui` compiles in-process through the linked addon with the source's own
+ *  policy (`sui.config.json` walk-up), so the floor applies here exactly as it
+ *  does in deck and the CLI, and an unmigrated component fails with the
+ *  compiler's own message. A source's `<controller>` block is served as the
+ *  virtual `<file>.sui.controller.ts` — the specifier deck and the CLI emit —
+ *  which vite transforms as TS and whose imports resolve like any module's.
+ *
+ *  Every suite that touches a `.sui` needs this, not just the component packs:
+ *  the runtime's integration tests compile real fixtures and import the result.
+ */
+export function suiSourceLoaderPlugin(): Plugin {
+  return {
+  name: 'sui-source-loader',
+  enforce: 'pre' as const,
+  resolveId(id: string, importer?: string) {
+    if (!importer) return null
+    if (id.endsWith('.sui.controller.ts')) {
+      return resolve(dirname(importer), id)
+    }
+    if (id.endsWith('.compiled.js')) {
+      const artifact = resolve(dirname(importer), id)
+      const sui = artifact.replace(/\.compiled\.js$/, '.sui')
+      if (existsSync(sui)) return sui
+    }
+    return null
+  },
+  load(id: string) {
+    if (id.endsWith('.sui.controller.ts')) {
+      const sui = id.slice(0, -'.controller.ts'.length)
+      const out = JSON.parse(
+        nativeCompileJson(readFileSync(sui, 'utf8'), JSON.stringify({ sourcePath: sui })),
+      ) as { kind: string; controller?: string | null; message?: string }
+      if (out.kind !== 'ok') throw new Error(`[sui] ${sui}: ${out.message}`)
+      if (!out.controller) throw new Error(`[sui] ${id}: no inline <controller> in ${sui}`)
+      return out.controller
+    }
+    if (!id.endsWith('.sui')) return null
+    const source = readFileSync(id, 'utf8')
+    const stem = basename(id, '.sui')
+    const isComponent = stem.includes('-') && stem !== 'page' && stem !== 'index'
+    // A source's controller is its `<controller>` block, served as the
+    // virtual `<file>.sui.controller.ts`. A sibling on disk is a compile
+    // error (`sui-paired-controller`), so there is nothing else to look for.
+    const hasInline = /<controller[\s>]/.test(source)
+    const setupUrl = hasInline ? `./${basename(id)}.controller.ts` : undefined
+    const out = JSON.parse(
+      nativeCompileJson(
+        source,
+        JSON.stringify({
+          componentName: isComponent ? stem : undefined,
+          sourcePath: id,
+          setupUrl,
+        }),
+      ),
+    ) as { kind: string; js?: string; message?: string; line?: number }
+    if (out.kind !== 'ok') {
+      throw new Error(`[sui] ${id}:${out.line ?? ''} ${out.message}`)
+    }
+    return out.js
+  },
+  }
+}
+
 export function suiComponentVitestConfig(opts: SuiComponentVitestOptions = {}) {
   return defineConfig({
     // The honesty-guard setup file lives in @ship/test-setup, outside each
@@ -406,65 +472,6 @@ export function suiComponentVitestConfig(opts: SuiComponentVitestOptions = {}) {
       setupFiles: [assertHonestySetup, ...(opts.setupFiles ?? ['./test/setup.ts'])],
       ...SHIP_VITEST_DEFAULTS,
     },
-    // SUI source loader — deck-parity, one compiler. `.compiled.js` is the
-    // published-name convention for a sibling `.sui`; the `.sui` compiles
-    // in-process through the linked addon with the source's own policy
-    // (sui.config.json walk-up — the floor applies here exactly as in deck
-    // and the CLI, so an unmigrated component fails with the compiler's
-    // message). An inline <controller> is served as the virtual
-    // `<file>.sui.controller.ts` sibling; vite transforms it as TS and
-    // resolves its imports like any module.
-    plugins: [
-      {
-        name: 'sui-source-loader',
-        enforce: 'pre' as const,
-        resolveId(id: string, importer?: string) {
-          if (!importer) return null
-          if (id.endsWith('.sui.controller.ts')) {
-            return resolve(dirname(importer), id)
-          }
-          if (id.endsWith('.compiled.js')) {
-            const artifact = resolve(dirname(importer), id)
-            const sui = artifact.replace(/\.compiled\.js$/, '.sui')
-            if (existsSync(sui)) return sui
-          }
-          return null
-        },
-        load(id: string) {
-          if (id.endsWith('.sui.controller.ts')) {
-            const sui = id.slice(0, -'.controller.ts'.length)
-            const out = JSON.parse(
-              nativeCompileJson(readFileSync(sui, 'utf8'), JSON.stringify({ sourcePath: sui })),
-            ) as { kind: string; controller?: string | null; message?: string }
-            if (out.kind !== 'ok') throw new Error(`[sui] ${sui}: ${out.message}`)
-            if (!out.controller) throw new Error(`[sui] ${id}: no inline <controller> in ${sui}`)
-            return out.controller
-          }
-          if (!id.endsWith('.sui')) return null
-          const source = readFileSync(id, 'utf8')
-          const stem = basename(id, '.sui')
-          const isComponent = stem.includes('-') && stem !== 'page' && stem !== 'index'
-          // A source's controller is its `<controller>` block, served as the
-          // virtual `<file>.sui.controller.ts`. A sibling on disk is a compile
-          // error (`sui-paired-controller`), so there is nothing else to look for.
-          const hasInline = /<controller[\s>]/.test(source)
-          const setupUrl = hasInline ? `./${basename(id)}.controller.ts` : undefined
-          const out = JSON.parse(
-            nativeCompileJson(
-              source,
-              JSON.stringify({
-                componentName: isComponent ? stem : undefined,
-                sourcePath: id,
-                setupUrl,
-              }),
-            ),
-          ) as { kind: string; js?: string; message?: string; line?: number }
-          if (out.kind !== 'ok') {
-            throw new Error(`[sui] ${id}:${out.line ?? ''} ${out.message}`)
-          }
-          return out.js
-        },
-      },
-    ],
+    plugins: [suiSourceLoaderPlugin()],
   })
 }
