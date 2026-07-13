@@ -33,7 +33,7 @@
   role="status"
   aria-live="polite"
   aria-label={label()}
-  sx="display:inline-flex"
+  sx=""
 >
 <row
   gap={size() === 'lg' ? '2' : '1'}
@@ -44,32 +44,17 @@
   <span
     aria-hidden="true"
     motion:loop={{ scale: 'pulse', stagger: '150ms' }}
-    sx="radius:full w:2 h:2 bg:muted-foreground
-        group-state-sm:w:1_25 group-state-sm:h:1_25
-        group-state-lg:w:2_5 group-state-lg:h:2_5
-        group-state-primary:bg:primary group-state-info:bg:info
-        group-state-success:bg:success group-state-warning:bg:warning
-        group-state-destructive:bg:destructive group-state-accent:bg:accent"
+    sx="rounded-full w-2 h-2 bg-muted-foreground group-state-sm:w-1_25 group-state-sm:h-1_25 group-state-lg:w-2_5 group-state-lg:h-2_5 group-state-primary:bg-primary group-state-info:bg-info group-state-success:bg-success group-state-warning:bg-warning group-state-destructive:bg-destructive group-state-accent:bg-accent"
   ></span>
   <span
     aria-hidden="true"
     motion:loop={{ scale: 'pulse', stagger: '150ms' }}
-    sx="radius:full w:2 h:2 bg:muted-foreground
-        group-state-sm:w:1_25 group-state-sm:h:1_25
-        group-state-lg:w:2_5 group-state-lg:h:2_5
-        group-state-primary:bg:primary group-state-info:bg:info
-        group-state-success:bg:success group-state-warning:bg:warning
-        group-state-destructive:bg:destructive group-state-accent:bg:accent"
+    sx="rounded-full w-2 h-2 bg-muted-foreground group-state-sm:w-1_25 group-state-sm:h-1_25 group-state-lg:w-2_5 group-state-lg:h-2_5 group-state-primary:bg-primary group-state-info:bg-info group-state-success:bg-success group-state-warning:bg-warning group-state-destructive:bg-destructive group-state-accent:bg-accent"
   ></span>
   <span
     aria-hidden="true"
     motion:loop={{ scale: 'pulse', stagger: '150ms' }}
-    sx="radius:full w:2 h:2 bg:muted-foreground
-        group-state-sm:w:1_25 group-state-sm:h:1_25
-        group-state-lg:w:2_5 group-state-lg:h:2_5
-        group-state-primary:bg:primary group-state-info:bg:info
-        group-state-success:bg:success group-state-warning:bg:warning
-        group-state-destructive:bg:destructive group-state-accent:bg:accent"
+    sx="rounded-full w-2 h-2 bg-muted-foreground group-state-sm:w-1_25 group-state-sm:h-1_25 group-state-lg:w-2_5 group-state-lg:h-2_5 group-state-primary:bg-primary group-state-info:bg-info group-state-success:bg-success group-state-warning:bg-warning group-state-destructive:bg-destructive group-state-accent:bg-accent"
   ></span>
 </row>
 </span>

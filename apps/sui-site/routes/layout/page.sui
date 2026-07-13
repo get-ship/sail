@@ -46,7 +46,7 @@ export default controller({
     <code>gap</code> · <code>align</code> (cross axis) · <code>justify</code>
     (main axis).
   </p>
-  <row gap="3" align="center" justify="between" sx="p:4 bg:muted radius:md">
+  <row gap="3" align="center" justify="between" sx="p-4 bg-muted rounded-md">
     <strong>Ada Lovelace</strong>
     <badge tone="success">Active</badge>
   </row>
@@ -63,9 +63,9 @@ export default controller({
     write a media query.
   </p>
   <grid cols="3" gap="3">
-    <card sx="p:4"><strong>One</strong></card>
-    <card sx="p:4"><strong>Two</strong></card>
-    <card sx="p:4"><strong>Three</strong></card>
+    <card sx="p-4"><strong>One</strong></card>
+    <card sx="p-4"><strong>Two</strong></card>
+    <card sx="p-4"><strong>Three</strong></card>
   </grid>
   <code-block code={code.grid}></code-block>
 

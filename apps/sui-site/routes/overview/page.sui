@@ -52,14 +52,14 @@ export default controller({
   <code-block code={code.page}></code-block>
 
   <p><strong>Running:</strong> type in the filter, press Invite.</p>
-  <column gap="3" sx="p:6 bg:muted border:border radius:lg">
+  <column gap="3" sx="p-6 bg-muted border border-border rounded-lg">
     <input placeholder="Filter people" bind:value={query} />
     {#for p of filtered() key={p.id}}
-      <card sx="p:4" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}
+      <card sx="p-4" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}
             motion:hover={{ scale: 'spring:gentle' }}>
         <row gap="3" align="center">
           <avatar></avatar>
-          <strong sx="grow:1">{p.name}</strong>
+          <strong sx="grow-1">{p.name}</strong>
           <badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge>
         </row>
       </card>

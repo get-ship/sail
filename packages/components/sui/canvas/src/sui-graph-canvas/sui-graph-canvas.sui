@@ -301,12 +301,12 @@ export default controller({
 })
 
 </controller>
-<div sx="position:relative w:full bg:card border:border radius:md overflow:hidden">
+<div sx="relative w-full bg-card border border-border rounded-md overflow-hidden">
   <svg
     viewBox={`0 0 ${width() || 1000} ${height() || 600}`}
     preserveAspectRatio="none"
     aria-hidden="true"
-    sx="display:block w:full h:auto pointer:none"
+    sx="block w-full h-auto pointer-events-none"
   >
     {#for e of edgeViews() key={e.key}}
       <path
@@ -323,8 +323,8 @@ export default controller({
   </svg>
 
   {#for n of nodeViews() key={n.id}}
-    <div sx="position:absolute w:0 h:0" style:left={n.left} style:top={n.top}>
-      <center sx="h:0">
+    <div sx="absolute w-0 h-0" style:left={n.left} style:top={n.top}>
+      <center sx="h-0">
         <column
           gap="0"
           role="button"
@@ -337,17 +337,17 @@ export default controller({
           on:click={() => select(n)}
           on:keydown={(e) => activate(n, e)}
           on:mouseover={() => hover(n)}
-          sx="w:panel-min-w-sm py:2 px:3 bg:card fg:foreground font:body text:sm border:border radius:md shadow:xs cursor:pointer hover:shadow:sm focus:ring:ring current:border:ring current:shadow:sm state-agent:border-l:tone-primary-fg state-skill:border-l:tone-success-fg state-mcp:border-l:tone-info-fg state-rule:border-l:tone-warning-fg state-perm:border-l:tone-destructive-fg state-harness:border-l:tone-accent-fg"
+          sx="w-panel-min-w-sm py-2 px-3 bg-card text-foreground font-body text-sm border border-border rounded-md shadow-xs cursor-pointer hover:shadow-sm focus:ring-ring current:border current:border-ring current:shadow-sm state-agent:border-l state-agent:border-l-tone-primary-fg state-skill:border-l state-skill:border-l-tone-success-fg state-mcp:border-l state-mcp:border-l-tone-info-fg state-rule:border-l state-rule:border-l-tone-warning-fg state-perm:border-l state-perm:border-l-tone-destructive-fg state-harness:border-l state-harness:border-l-tone-accent-fg"
         >
           {#if n.body !== ''}
             <div use:nodeBody={n.body}></div>
           {:else}
-            <row gap="2" align="center" sx="mb:1">
-              <span sx="text:xs weight:semibold tracking:wide case:upper fg:muted-foreground">{n.kind}</span>
+            <row gap="2" align="center" sx="mb-1">
+              <span sx="text-xs font-semibold tracking-wide uppercase text-muted-foreground">{n.kind}</span>
             </row>
-            <div sx="weight:semibold fg:foreground">{n.title}</div>
+            <div sx="font-semibold text-foreground">{n.title}</div>
             {#if n.sub !== ''}
-              <div sx="text:xs fg:muted-foreground">{n.sub}</div>
+              <div sx="text-xs text-muted-foreground">{n.sub}</div>
             {/if}
           {/if}
         </column>

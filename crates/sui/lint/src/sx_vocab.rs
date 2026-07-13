@@ -270,6 +270,37 @@ pub fn names() -> &'static [String] {
     &vocab().names
 }
 
+/// Every name with everything it accepts. The agent-skill generator, the
+/// /reference page and the LSP all render THIS — so what an author is told is
+/// what the lint enforces, by construction, and the docs can never drift.
+pub fn vocabulary() -> Vec<(String, Vec<String>)> {
+    let v = vocab();
+    let mut out: Vec<(String, Vec<String>)> = v
+        .by_name
+        .iter()
+        .map(|(name, candidates)| (name.clone(), values_of(candidates)))
+        .collect();
+    // Bare atoms take no value; they ARE the value.
+    for name in v.bare.keys() {
+        out.push((name.clone(), Vec::new()));
+    }
+    out.sort_by(|a, b| a.0.cmp(&b.0));
+    out
+}
+
+/// A refused atom and what to use instead — so a caller can render the whole
+/// "not sx, use this" table rather than discovering it one error at a time.
+pub fn refusals() -> Vec<(String, String)> {
+    let mut r: Vec<(String, String)> = vocab()
+        .refused
+        .iter()
+        .filter(|(k, _)| !k.starts_with('$'))
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect();
+    r.sort();
+    r
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -86,7 +86,7 @@ export default controller({
   <div use:targetCursor>
   <column class="hero kinetic-hero" gap="4">
     <center><p class="eyebrow">SHIP UI · 0.2.0</p></center>
-    <h1 sx="text:display weight:bold tracking:tight">
+    <h1 sx="text-display font-bold tracking-tight">
       <strong class="rotator-slot">
         {#for w of word() key={w}}
           <b class="rotator" motion:enter={{ opacity: 'fade' }}>{w}</b>
@@ -132,37 +132,37 @@ export default controller({
     </p>
     {#if dealt()}
       <grid cols="4" gap="3">
-        <card sx="p:4">
+        <card sx="p-4">
           <column gap="3" align="center">
             <p class="eyebrow">FIG. 01 · SPRING PHYSICS</p>
-            <div sx="w:6 h:6 radius:full bg:primary" motion:loop={{ translate-y: 'spring:bouncy' }}></div>
-            <p sx="text:sm fg:muted-foreground">a mass on a spring — overshoot, settle, forever</p>
+            <div sx="w-6 h-6 rounded-full bg-primary" motion:loop={{ translate-y: 'spring:bouncy' }}></div>
+            <p sx="text-sm text-muted-foreground">a mass on a spring — overshoot, settle, forever</p>
             <code>motion:loop · spring:bouncy</code>
           </column>
         </card>
-        <card sx="p:4">
+        <card sx="p-4">
           <column gap="3">
             <p class="eyebrow">FIG. 02 · STAGGER WAVE</p>
-            <row gap="2" align="center" sx="min-h:9">
-              <div sx="w:3 h:8 radius:sm bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
-              <div sx="w:3 h:8 radius:sm bg:primary opacity:75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
-              <div sx="w:3 h:8 radius:sm bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
-              <div sx="w:3 h:8 radius:sm bg:primary opacity:75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
-              <div sx="w:3 h:8 radius:sm bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+            <row gap="2" align="center" sx="min-h-9">
+              <div sx="w-3 h-8 rounded-sm bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+              <div sx="w-3 h-8 rounded-sm bg-primary opacity-75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+              <div sx="w-3 h-8 rounded-sm bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+              <div sx="w-3 h-8 rounded-sm bg-primary opacity-75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+              <div sx="w-3 h-8 rounded-sm bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
             </row>
-            <p sx="text:sm fg:muted-foreground">the delay BETWEEN siblings makes a wave</p>
+            <p sx="text-sm text-muted-foreground">the delay BETWEEN siblings makes a wave</p>
             <code>motion:loop · stagger: '0.12s'</code>
           </column>
         </card>
-        <card sx="p:4">
+        <card sx="p-4">
           <column gap="3" align="center">
             <p class="eyebrow">FIG. 03 · DRIFT</p>
-            <div sx="w:7 h:7 radius:md bg:tone-primary-bg border:primary" motion:loop={{ translate-x: 'spring:gentle' }}></div>
-            <p sx="text:sm fg:muted-foreground">ambient side-to-side, compositor-driven — off under reduced motion</p>
+            <div sx="w-7 h-7 rounded-md bg-tone-primary-bg border border-primary" motion:loop={{ translate-x: 'spring:gentle' }}></div>
+            <p sx="text-sm text-muted-foreground">ambient side-to-side, compositor-driven — off under reduced motion</p>
             <code>motion:loop · translate-x</code>
           </column>
         </card>
-        <card sx="p:4">
+        <card sx="p-4">
           <column gap="3">
             <p class="eyebrow">FIG. 04 · EXIT HOLD</p>
             <row gap="2">
@@ -170,7 +170,7 @@ export default controller({
               <badge tone="primary" motion:enter={{ scale: 'spring:gentle', stagger: '0.1s' }} motion:exit={{ opacity: 'fade-out' }}>b</badge>
               <badge tone="primary" motion:enter={{ scale: 'spring:gentle', stagger: '0.1s' }} motion:exit={{ opacity: 'fade-out' }}>c</badge>
             </row>
-            <p sx="text:sm fg:muted-foreground">removed elements stay mounted until their exit finishes — press replay to watch them leave and return</p>
+            <p sx="text-sm text-muted-foreground">removed elements stay mounted until their exit finishes — press replay to watch them leave and return</p>
             <code>motion:exit</code>
           </column>
         </card>
@@ -195,25 +195,25 @@ export default controller({
     </p>
     <grid cols="4" gap="3">
       <button class="theme-chip" on:click={() => pick('ship-light')} aria-pressed={theme() === 'ship-light' ? 'true' : 'false'}>
-        <column data-theme-preview="ship-light" gap="2" sx="p:4 bg:background fg:foreground">
+        <column data-theme-preview="ship-light" gap="2" sx="p-4 bg-background text-foreground">
           <strong>SHIP Light</strong>
           <row gap="2"><badge tone="primary">aa</badge><badge tone="success">bb</badge></row>
         </column>
       </button>
       <button class="theme-chip" on:click={() => pick('paper')} aria-pressed={theme() === 'paper' ? 'true' : 'false'}>
-        <column data-theme-preview="paper" gap="2" sx="p:4 bg:background fg:foreground">
+        <column data-theme-preview="paper" gap="2" sx="p-4 bg-background text-foreground">
           <strong>Paper</strong>
           <row gap="2"><badge tone="primary">aa</badge><badge tone="success">bb</badge></row>
         </column>
       </button>
       <button class="theme-chip" on:click={() => pick('console')} aria-pressed={theme() === 'console' ? 'true' : 'false'}>
-        <column data-theme-preview="console" gap="2" sx="p:4 bg:background fg:foreground">
+        <column data-theme-preview="console" gap="2" sx="p-4 bg-background text-foreground">
           <strong>Console</strong>
           <row gap="2"><badge tone="primary">aa</badge><badge tone="success">bb</badge></row>
         </column>
       </button>
       <button class="theme-chip" on:click={() => pick('glass')} aria-pressed={theme() === 'glass' ? 'true' : 'false'}>
-        <column data-theme-preview="glass" gap="2" sx="p:4 bg:background fg:foreground">
+        <column data-theme-preview="glass" gap="2" sx="p-4 bg-background text-foreground">
           <strong>Glass</strong>
           <row gap="2"><badge tone="primary">aa</badge><badge tone="success">bb</badge></row>
         </column>
@@ -238,12 +238,12 @@ export default controller({
     </p>
     <row class="split" align="stretch">
       <column>
-        <column class="live" gap="2" sx="p:5">
+        <column class="live" gap="2" sx="p-5">
           <input placeholder="Filter people" bind:value={query} />
           {#for pn of filtered() key={pn.id}}
             <row gap="2" align="center" motion:enter={{ opacity: 'fade' }}>
               <avatar></avatar>
-              <strong sx="grow:1">{pn.name}</strong>
+              <strong sx="grow-1">{pn.name}</strong>
               <badge tone={pn.status === 'active' ? 'success' : 'muted'}>{pn.status}</badge>
             </row>
           {/for}
@@ -254,9 +254,9 @@ export default controller({
         </column>
       </column>
       <column>
-        <column class="live" gap="2" sx="p:5">
+        <column class="live" gap="2" sx="p-5">
           {#while-loading of users}
-            <row gap="2" align="center"><spinner></spinner> <p sx="text:sm fg:muted-foreground">loading…</p></row>
+            <row gap="2" align="center"><spinner></spinner> <p sx="text-sm text-muted-foreground">loading…</p></row>
           {/while-loading}
           {#if users().kind === 'ok'}
             <row gap="2">
@@ -295,10 +295,10 @@ export default controller({
         </column>
       </column>
       <column>
-        <column class="live" gap="3" sx="p:5">
+        <column class="live" gap="3" sx="p-5">
           <row gap="2" align="center">
             <badge tone={status() === 'live' ? 'success' : 'warning'}>{status()}</badge>
-            <strong sx="grow:1">api-gateway · build {buildNo()}</strong>
+            <strong sx="grow-1">api-gateway · build {buildNo()}</strong>
             <button on:click={deploy} disabled={status() === 'rolling'} motion:press={{ scale: 'press' }}>
               {status() === 'rolling' ? 'Rolling…' : 'Deploy'}
             </button>
@@ -326,7 +326,7 @@ export default controller({
     </p>
     <row gap="3" align="center" motion:view={{ opacity: 'fade', translate-y: 'spring:bouncy' }}>
       <switch checked></switch>
-      <slider sx="w:half"></slider>
+      <slider sx="w-half"></slider>
       <badge tone="success">live</badge>
       <spinner></spinner>
       <button variant="soft" tone="primary">soft</button>
@@ -351,10 +351,10 @@ export default controller({
       not build, so agent output that compiles is UI you can trust. MCP
       tooling and a scored authoring eval close the loop.
     </p>
-    <column class="term" sx="max-w:panel-max-w-md" motion:view={{ opacity: 'fade', translate-y: 'spring:deliberate' }}>
+    <column class="term" sx="max-w-panel-max-w-md" motion:view={{ opacity: 'fade', translate-y: 'spring:deliberate' }}>
       <p><b class="bad">✕</b> <em class="dim">style="color:#ff0000"</em> <b class="bad">rejected</b></p>
       <p><b class="bad">✕</b> <em class="dim">&lt;div onClick=…&gt;</em> <b class="bad">rejected</b></p>
-      <p><b class="ok">✓</b> sx="bg:tone-bg fg:tone-fg" <b class="ok">themed · a11y</b></p>
+      <p><b class="ok">✓</b> sx="bg-tone-bg text-tone-fg" <b class="ok">themed · a11y</b></p>
     </column>
     <row gap="2">
       <a variant="ghost" href="/ai">Agent tooling →</a>

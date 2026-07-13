@@ -106,15 +106,15 @@ export default controller({
         <circle cx="20" cy="20" r="3.4" fill="var(--primary)" opacity="0.7" />
         <path d="M6 6 L20 20 M6 6 L20 6 M6 6 L6 20" stroke="var(--primary)" stroke-width="1.4" opacity="0.5" stroke-linecap="round" />
       </svg>
-      <strong sx="text:lg tracking:tight"><b sx="fg:primary">SHIP</b> UI</strong>
+      <strong sx="text-lg tracking-tight"><b sx="text-primary">SHIP</b> UI</strong>
     </row>
   </a>
 
-  <row slot="center" gap="1" align="center" sx="p:1 bg:surface-2 border:border radius:full" aria-label="Products">
-    <a href="/overview" sx="px:3 py:1 radius:full text:sm weight:semibold fg:muted-foreground hover:fg:foreground current:bg:primary current:fg:primary-foreground" aria-current={product() === 'sui' ? 'page' : null}>SUI</a>
-    <a href="/deck" sx="px:3 py:1 radius:full text:sm weight:semibold fg:muted-foreground hover:fg:foreground current:bg:primary current:fg:primary-foreground" aria-current={product() === 'deck' ? 'page' : null}>Deck</a>
-    <a href="/components" sx="px:3 py:1 radius:full text:sm weight:semibold fg:muted-foreground hover:fg:foreground current:bg:primary current:fg:primary-foreground" aria-current={product() === 'components' ? 'page' : null}>Components</a>
-    <a href="/ai" sx="px:3 py:1 radius:full text:sm weight:semibold fg:muted-foreground hover:fg:foreground current:bg:primary current:fg:primary-foreground" aria-current={product() === 'ai' ? 'page' : null}>AI</a>
+  <row slot="center" gap="1" align="center" sx="p-1 bg-surface-2 border border-border rounded-full" aria-label="Products">
+    <a href="/overview" sx="px-3 py-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground current:bg-primary current:text-primary-foreground" aria-current={product() === 'sui' ? 'page' : null}>SUI</a>
+    <a href="/deck" sx="px-3 py-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground current:bg-primary current:text-primary-foreground" aria-current={product() === 'deck' ? 'page' : null}>Deck</a>
+    <a href="/components" sx="px-3 py-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground current:bg-primary current:text-primary-foreground" aria-current={product() === 'components' ? 'page' : null}>Components</a>
+    <a href="/ai" sx="px-3 py-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground current:bg-primary current:text-primary-foreground" aria-current={product() === 'ai' ? 'page' : null}>AI</a>
   </row>
 
   <theme-picker slot="actions"></theme-picker>
@@ -173,11 +173,11 @@ export default controller({
   {/if}
 
   {#if workbench()}
-    <main sx="grow:1 min-w:0">
+    <main sx="grow-1 min-w-0">
       <slot name="route"></slot>
     </main>
   {:else}
-    <main sx="p:6 grow:1 min-w:0">
+    <main sx="p-6 grow-1 min-w-0">
       <slot name="route"></slot>
     </main>
   {/if}

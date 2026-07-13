@@ -47,8 +47,8 @@ export default controller<Scope>({
 </controller>
 
 <column gap="4">
-  <center sx="p:6 bg:surface-1 border:border radius:lg">
-    <strong sx="text:4xl tracking:tight">{clock()}</strong>
+  <center sx="p-6 bg-surface-1 border border-border rounded-lg">
+    <strong sx="text-4xl tracking-tight">{clock()}</strong>
   </center>
 
   <row gap="2" justify="center">

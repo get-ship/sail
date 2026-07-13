@@ -59,8 +59,8 @@ export default controller<Scope>({
 </controller>
 
 <column gap="4">
-  <center sx="p:6 bg:surface-1 border:border radius:lg">
-    <strong sx="text:4xl tracking:tight">{clock()}</strong>
+  <center sx="p-6 bg-surface-1 border border-border rounded-lg">
+    <strong sx="text-4xl tracking-tight">{clock()}</strong>
   </center>
 
   <row gap="2" justify="center">
@@ -74,9 +74,9 @@ export default controller<Scope>({
   {#if laps().length > 0}
     <column gap="1">
       {#for lap of laps() key={lap.id}}
-        <row align="center" justify="between" sx="px:3 py:1 bg:surface-1 radius:md">
-          <small sx="fg:muted-foreground">lap {lap.id}</small>
-          <strong sx="text:sm">{lap.at}</strong>
+        <row align="center" justify="between" sx="px-3 py-1 bg-surface-1 rounded-md">
+          <small sx="text-muted-foreground">lap {lap.id}</small>
+          <strong sx="text-sm">{lap.at}</strong>
         </row>
       {/for}
     </column>

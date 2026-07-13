@@ -206,13 +206,13 @@ export default controller({
 })
 
 </controller>
-<column gap="0" sx="position:relative display:inline-flex w:full">
-<row align="center" gap="2" sx="w:full min-h:size-h py:0 px:size-px bg:background fg:foreground border:tone-border radius:md focus-within:ring:tone-ring">
-  <span aria-hidden="true" style:background-color={value() || '#000000'} sx="w:4 h:4 min-w:4 radius:sm border:subtle"></span>
-  <input type="text" flush sx="grow:1 min-w:0 font:mono case:lower" name={name()} placeholder="#000000" disabled={disabled()} autocomplete="off" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
+<column gap="0" sx="relative w-full">
+<row align="center" gap="2" sx="w-full min-h-size-h py-0 px-size-px bg-background text-foreground border border-tone-border rounded-md focus-within:ring-tone-ring">
+  <span aria-hidden="true" style:background-color={value() || '#000000'} sx="w-4 h-4 min-w-4 rounded-sm border border-border-subtle"></span>
+  <input type="text" flush sx="grow-1 min-w-0 font-mono lowercase" name={name()} placeholder="#000000" disabled={disabled()} autocomplete="off" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
 </row>
 {#if open() && !disabled()}
-  <column gap="2" role="dialog" aria-label="Choose color" bind:this={panelEl} sx="position:absolute left:0 z:popover w:panel-max-w-md p:3 mt:1 bg:popover fg:popover-foreground border:border radius:md shadow:md text:size-fs">
+  <column gap="2" role="dialog" aria-label="Choose color" bind:this={panelEl} sx="absolute left-0 z-popover w-panel-max-w-md p-3 mt-1 bg-popover text-popover-foreground border border-border rounded-md shadow-md text-size-fs">
     <grid cols="6" gap="2">
       {#for sw of swatches() key={sw.hex}}
         <button
@@ -221,32 +221,32 @@ export default controller({
           data-hex={sw.hex}
           aria-label={sw.label}
           style:background-color={sw.hex}
-          sx="border:subtle radius:sm p:0 aspect:square cursor:pointer selected:ring:primary"
+          sx="border border-border-subtle rounded-sm p-0 aspect-square cursor-pointer selected:ring-primary"
         ></button>
       {/for}
     </grid>
     <column gap="1">
       <row align="center" gap="2">
-        <label for={hueId()} sx="w:4 fg:muted-foreground">H</label>
+        <label for={hueId()} sx="w-4 text-muted-foreground">H</label>
         <input id={hueId()} type="range" min="0" max="360" step="1"
-               bind:value={hueText} data-axis="h" sx="grow:1 min-w:0" />
-        <span sx="w:8 text-align:end fg:muted-foreground">{hue()}°</span>
+               bind:value={hueText} data-axis="h" sx="grow-1 min-w-0" />
+        <span sx="w-8 text-end text-muted-foreground">{hue()}°</span>
       </row>
       <row align="center" gap="2">
-        <label for={satId()} sx="w:4 fg:muted-foreground">S</label>
+        <label for={satId()} sx="w-4 text-muted-foreground">S</label>
         <input id={satId()} type="range" min="0" max="100" step="1"
-               bind:value={satText} data-axis="s" sx="grow:1 min-w:0" />
-        <span sx="w:8 text-align:end fg:muted-foreground">{sat()}%</span>
+               bind:value={satText} data-axis="s" sx="grow-1 min-w-0" />
+        <span sx="w-8 text-end text-muted-foreground">{sat()}%</span>
       </row>
       <row align="center" gap="2">
-        <label for={lightId()} sx="w:4 fg:muted-foreground">L</label>
+        <label for={lightId()} sx="w-4 text-muted-foreground">L</label>
         <input id={lightId()} type="range" min="0" max="100" step="1"
-               bind:value={lightText} data-axis="l" sx="grow:1 min-w:0" />
-        <span sx="w:8 text-align:end fg:muted-foreground">{light()}%</span>
+               bind:value={lightText} data-axis="l" sx="grow-1 min-w-0" />
+        <span sx="w-8 text-end text-muted-foreground">{light()}%</span>
       </row>
     </column>
     <row align="center" gap="2">
-      <span sx="fg:muted-foreground">Hex</span>
+      <span sx="text-muted-foreground">Hex</span>
       <input
         type="text"
         bind:value={hexDraft}
@@ -254,7 +254,7 @@ export default controller({
         spellcheck="false"
         autocomplete="off"
         aria-label="Hex color"
-        sx="grow:1 min-w:0 font:mono case:lower"
+        sx="grow-1 min-w-0 font-mono lowercase"
       />
     </row>
   </column>

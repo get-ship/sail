@@ -157,7 +157,7 @@ pub fn color_values() -> &'static [&'static str] {
         // `border:currentColor` (ink inheritance) are expressible without a
         // token. Single source with the lowering (which emits them verbatim,
         // not `var(--X)`), so vocabulary and emission can never drift.
-        for kw in crate::rules::sx::KEYWORD_COLORS {
+        for kw in crate::scales::KEYWORD_COLORS {
             colors.insert(kw);
         }
         let mut out: Vec<&'static str> = colors.into_iter().collect();

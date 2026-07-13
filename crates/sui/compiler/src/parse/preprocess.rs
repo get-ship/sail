@@ -154,13 +154,12 @@ fn lower_sx_value(
             classes.push("sui-grp".to_string());
             continue;
         }
-        // `prop:token`, or `state:prop:token` — a state prefix lowers to an atomic
-        // class carrying that pseudo-class (`hover:bg:surface-2` →
-        // `.sx-hover-bg-surface2:hover{background:var(--surface-2)}`).
-        let (state, prop, token) = match pair.splitn(3, ':').collect::<Vec<_>>().as_slice() {
-            [prop, token] => (None, *prop, *token),
-            [state, prop, token] => (Some(*state), *prop, *token),
-            _ => continue,
+        // `atom`, or `prefix:atom` — a prefix lowers to an atomic class carrying
+        // that pseudo-class (`hover:bg-surface-2` →
+        // `.sx-hover-bg-surface2:hover{background-color:var(--surface-2)}`).
+        let (state, atom) = match pair.rsplit_once(':') {
+            Some((prefix, atom)) => (Some(prefix), atom),
+            None => (None, pair),
         };
         // A `<state>` is a pseudo (`hover`) or a propagation (`group-hover` → the
         // rule keys on an ancestor `.sui-grp:hover`). `prefix` is a leading
@@ -189,17 +188,19 @@ fn lower_sx_value(
                 }
             }
         };
-        let sanitized: String = token.chars().filter(|c| c.is_ascii_alphanumeric()).collect();
+        let sanitized: String = atom.chars().filter(|c| c.is_ascii_alphanumeric()).collect();
         let class = match state {
-            None => format!("sx-{prop}-{sanitized}"),
-            Some(s) => format!("sx-{s}-{prop}-{sanitized}"),
+            None => format!("sx-{sanitized}"),
+            Some(s) => {
+                let sp: String = s.chars().filter(|c| c.is_ascii_alphanumeric()).collect();
+                format!("sx-{sp}-{sanitized}")
+            }
         };
-        // The token vocabulary + framework channels (tone-*/size-*) live in the
-        // registry `lower` consults. There is deliberately NO per-file channel
-        // path: a `<theme>`-declared channel is not sx vocabulary (the closed
-        // back door — ad-hoc channels were how translation snuck past the
-        // design system).
-        if let Some(decls) = sui_lint::rules::sx::lower(prop, token) {
+        // The vocabulary is the TABLE (`sx-vocabulary.json`). There is deliberately
+        // no per-file channel path: a `<theme>`-declared channel is not sx
+        // vocabulary — ad-hoc channels were how translation snuck past the design
+        // system, and that back door stays shut.
+        if let Some(decls) = sui_lint::rules::sx::lower_atom(atom) {
             if seen.insert(class.clone()) {
                 let body = decls
                     .iter()
@@ -1846,11 +1847,11 @@ fn attr_match(s: &str) -> Option<String> {
 /// first-appearance order; `state` is `""` for the base group, a pseudo state
 /// (`hover`, `focus`, …), a `group-<state>` propagation (host state →
 /// descendant target), or a condition (`motion-reduce`, …). This is what lets
-/// a variants table express `solid: 'bg:tone hover:bg:tone-bg-hover'` — the
+/// a variants table express `solid: 'bg-tone hover:bg-tone-bg-hover'` — the
 /// per-variant hover that translation waves had to drop.
 fn lower_variant_sx(list: &str) -> Vec<(String, String)> {
     let mut groups: Vec<(String, String)> = Vec::new();
-    let mut push = |state: &str, decls: Vec<(&'static str, String)>| {
+    let mut push = |state: &str, decls: Vec<(String, String)>| {
         let body: String = decls.iter().map(|(p, v)| format!("{p}:{v};")).collect();
         if let Some((_, existing)) = groups.iter_mut().find(|(s, _)| s == state) {
             existing.push_str(&body);
@@ -1859,23 +1860,19 @@ fn lower_variant_sx(list: &str) -> Vec<(String, String)> {
         }
     };
     for pair in list.split_whitespace() {
-        match pair.splitn(3, ':').collect::<Vec<_>>().as_slice() {
-            [prop, tok] => {
-                if let Some(decls) = sui_lint::rules::sx::lower(prop, tok) {
+        match pair.rsplit_once(':') {
+            None => {
+                if let Some(decls) = sui_lint::rules::sx::lower_atom(pair) {
                     push("", decls);
                 }
             }
-            [state, prop, tok] => {
-                let known = sui_lint::rules::sx::state_pseudo(state).is_some()
-                    || sui_lint::rules::sx::condition_media(state).is_some()
-                    || state
-                        .strip_prefix("group-")
-                        .is_some_and(|b| sui_lint::rules::sx::state_pseudo(b).is_some());
-                if known && let Some(decls) = sui_lint::rules::sx::lower(prop, tok) {
+            Some((state, atom)) => {
+                if sui_lint::rules::sx::is_prefix(state)
+                    && let Some(decls) = sui_lint::rules::sx::lower_atom(atom)
+                {
                     push(state, decls);
                 }
             }
-            _ => {}
         }
     }
     groups

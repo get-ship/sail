@@ -153,9 +153,9 @@ export default controller({
   on:pointermove={pointerMove}
   on:pointerup={pointerUp}
   on:wheel={wheel}
-  sx="position:relative w:full h:full min-h:panel-min-w-lg bg:background fg:foreground border:border radius:md overflow:hidden cursor:grab"
+  sx="relative w-full h-full min-h-panel-min-w-lg bg-background text-foreground border border-border rounded-md overflow-hidden cursor-grab"
 >
-  <div style:transform={worldTransform()} sx="position:absolute top:0 left:0">
+  <div style:transform={worldTransform()} sx="absolute top-0 left-0">
     <slot></slot>
   </div>
 </div>

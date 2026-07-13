@@ -38,12 +38,12 @@ export default controller({
       <column class="live" gap="3">
         <row gap="3" align="center">
           <button on:click={() => count.set(count() + 1)}>count.set({count() + 1})</button>
-          <p><strong>{count()}</strong> <small sx="fg:muted-foreground">signal</small></p>
-          <p><strong>{doubled()}</strong> <small sx="fg:muted-foreground">derived</small></p>
+          <p><strong>{count()}</strong> <small sx="text-muted-foreground">signal</small></p>
+          <p><strong>{doubled()}</strong> <small sx="text-muted-foreground">derived</small></p>
         </row>
         <column gap="1">
           {#for line of log() key={line}}
-            <p sx="text:sm fg:muted-foreground">{line}</p>
+            <p sx="text-sm text-muted-foreground">{line}</p>
           {/for}
         </column>
       </column>

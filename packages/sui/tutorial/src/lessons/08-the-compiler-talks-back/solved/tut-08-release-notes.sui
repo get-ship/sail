@@ -37,19 +37,19 @@ export default controller<Scope>({
 })
 </controller>
 
-<column gap="4" sx="p:4">
+<column gap="4" sx="p-4">
   <row align="center" justify="between">
     <h3>Release notes</h3>
     <badge tone="primary" variant="soft" motion:enter={{ opacity: 'fade' }}>v2.4.0</badge>
   </row>
 
-  <p sx="text:sm fg:muted-foreground">published {published()}</p>
+  <p sx="text-sm text-muted-foreground">published {published()}</p>
 
   <column gap="1">
     {#for note of notes() key={note.id}}
-      <row gap="3" align="center" sx="px:3 py:2 bg:surface-1 radius:md">
+      <row gap="3" align="center" sx="px-3 py-2 bg-surface-1 rounded-md">
         <badge tone="muted" variant="outline" size="sm">{note.tag}</badge>
-        <p sx="text:sm">{note.text}</p>
+        <p sx="text-sm">{note.text}</p>
       </row>
     {/for}
   </column>

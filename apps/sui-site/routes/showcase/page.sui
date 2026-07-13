@@ -116,10 +116,10 @@ export default controller({
 
 <column class="doc-wide" gap="5">
   <center>
-    <column gap="3" align="center" sx="py:6">
+    <column gap="3" align="center" sx="py-6">
       <p class="eyebrow" motion:enter={{ opacity: 'fade' }}>Showcase</p>
       <h1 motion:enter={{ opacity: 'fade', translate-y: 'spring:gentle' }}>Show, don't tell.</h1>
-      <p class="lead" sx="max-w:panel-max-w-md" motion:enter={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
+      <p class="lead" sx="max-w-panel-max-w-md" motion:enter={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
         Each example is the complete program on the left, running on the
         right. Type in it, press it, pause it — nothing is a screenshot.
       </p>
@@ -127,7 +127,7 @@ export default controller({
   </center>
 
   <!-- ── 01 · TEAM ─────────────────────────────────────────────────────── -->
-  <h2><span class="mono" sx="fg:primary">01</span> Team — filter, select, mutate <small sx="fg:muted-foreground">· theme: paper</small></h2>
+  <h2><span class="mono" sx="text-primary">01</span> Team — filter, select, mutate <small sx="text-muted-foreground">· theme: paper</small></h2>
   <row class="split" align="stretch">
     <column>
       <p class="pane-label">The whole program</p>
@@ -135,28 +135,28 @@ export default controller({
     </column>
     <column>
       <p class="pane-label">Running — type, click rows, remove someone</p>
-      <column data-theme-preview="paper" gap="3" sx="p:5 radius:lg border:border bg:background fg:foreground h:full">
+      <column data-theme-preview="paper" gap="3" sx="p-5 rounded-lg border border-border bg-background text-foreground h-full">
         <input placeholder="Filter people" bind:value={query} />
         <column gap="1">
           {#for p of filtered() key={p.id}}
             <row gap="3" align="center"
                  on:click={() => toggle(p.id)}
                  aria-current={selected()?.id === p.id ? 'true' : null}
-                 sx="p:2 radius:md cursor:pointer hover:bg:muted current:bg:muted current:ring:primary">
+                 sx="p-2 rounded-md cursor-pointer hover:bg-muted current:bg-muted current:ring-primary">
               <avatar></avatar>
-              <strong sx="grow:1">{p.name}</strong>
-              <p sx="text:sm fg:muted-foreground">{p.team}</p>
+              <strong sx="grow-1">{p.name}</strong>
+              <p sx="text-sm text-muted-foreground">{p.team}</p>
               <badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge>
             </row>
           {/for}
         </column>
         {#if selected()}
           <card motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}
-                motion:exit={{ opacity: 'fade-out' }} sx="p:4">
+                motion:exit={{ opacity: 'fade-out' }} sx="p-4">
             <row gap="3" align="center">
-              <column gap="1" sx="grow:1">
+              <column gap="1" sx="grow-1">
                 <strong>{selected().name}</strong>
-                <p sx="text:sm fg:muted-foreground">{selected().team} · {selected().status}</p>
+                <p sx="text-sm text-muted-foreground">{selected().team} · {selected().status}</p>
               </column>
               <button on:click={flipStatus} variant="outline">
                 {selected().status === 'active' ? 'Set away' : 'Set active'}
@@ -177,7 +177,7 @@ export default controller({
   </p>
 
   <!-- ── 02 · FLEET ────────────────────────────────────────────────────── -->
-  <h2><span class="mono" sx="fg:primary">02</span> Fleet — deploys with states <small sx="fg:muted-foreground">· theme: console</small></h2>
+  <h2><span class="mono" sx="text-primary">02</span> Fleet — deploys with states <small sx="text-muted-foreground">· theme: console</small></h2>
   <row class="split" align="stretch">
     <column>
       <p class="pane-label">The whole program</p>
@@ -185,26 +185,26 @@ export default controller({
     </column>
     <column>
       <p class="pane-label">Running — latency drifts; press Deploy</p>
-      <column data-theme-preview="console" gap="3" sx="p:5 radius:lg border:border bg:background fg:foreground h:full">
+      <column data-theme-preview="console" gap="3" sx="p-5 rounded-lg border border-border bg-background text-foreground h-full">
         {#for s of services() key={s.id}}
-          <card sx="p:4">
+          <card sx="p-4">
             <column gap="2">
               <row gap="2" align="center">
                 <badge tone={s.status === 'live' ? 'success' : 'warning'}>{s.status}</badge>
-                <strong sx="grow:1">{s.name}</strong>
+                <strong sx="grow-1">{s.name}</strong>
                 <button on:click={() => deploy(s.id)} disabled={s.status === 'rolling'}>
                   {s.status === 'rolling' ? 'Rolling…' : 'Deploy'}
                 </button>
               </row>
               <progress value={s.load} max="100"></progress>
-              <p sx="text:sm fg:muted-foreground">p99 {s.p99} ms · load {s.load}%</p>
+              <p sx="text-sm text-muted-foreground">p99 {s.p99} ms · load {s.load}%</p>
             </column>
           </card>
         {/for}
         <separator></separator>
         <column gap="1">
           {#for d of deploys() key={d}}
-            <p sx="text:sm fg:muted-foreground" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>{d}</p>
+            <p sx="text-sm text-muted-foreground" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>{d}</p>
           {/for}
         </column>
       </column>
@@ -219,7 +219,7 @@ export default controller({
   </p>
 
   <!-- ── 03 · PLAYER ───────────────────────────────────────────────────── -->
-  <h2><span class="mono" sx="fg:primary">03</span> Player — motion is one attribute per gesture <small sx="fg:muted-foreground">· theme: glass</small></h2>
+  <h2><span class="mono" sx="text-primary">03</span> Player — motion is one attribute per gesture <small sx="text-muted-foreground">· theme: glass</small></h2>
   <row class="split" align="stretch">
     <column>
       <p class="pane-label">The whole program</p>
@@ -227,34 +227,34 @@ export default controller({
     </column>
     <column>
       <p class="pane-label">Running — pause it, watch the equalizer stop</p>
-      <column data-theme-preview="glass" gap="3" sx="p:5 radius:lg border:border bg:background fg:foreground h:full">
-        <center sx="h:full">
-        <column gap="3" sx="w:full">
-        <card sx="p:4">
+      <column data-theme-preview="glass" gap="3" sx="p-5 rounded-lg border border-border bg-background text-foreground h-full">
+        <center sx="h-full">
+        <column gap="3" sx="w-full">
+        <card sx="p-4">
           <row gap="4" align="center">
-            <div sx="w:9 h:9 radius:lg bg:tone-primary-bg border:primary">
-              <center sx="h:full"><strong sx="text:xl fg:primary">♪</strong></center>
+            <div sx="w-9 h-9 rounded-lg bg-tone-primary-bg border border-primary">
+              <center sx="h-full"><strong sx="text-xl text-primary">♪</strong></center>
             </div>
-            <column gap="1" sx="grow:1 min-w:0">
+            <column gap="1" sx="grow-1 min-w-0">
               <strong>Signals in the Rain</strong>
-              <p sx="text:sm fg:muted-foreground">The Reactive Quartet</p>
+              <p sx="text-sm text-muted-foreground">The Reactive Quartet</p>
               <progress value={position()} max="100"></progress>
             </column>
             {#if playing()}
-              <row gap="1" align="center" sx="min-h:7">
-                <div sx="w:1 h:5 radius:full bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>
-                <div sx="w:1 h:7 radius:full bg:primary opacity:75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>
-                <div sx="w:1 h:4 radius:full bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>
-                <div sx="w:1 h:6 radius:full bg:primary opacity:75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>
-                <div sx="w:1 h:5 radius:full bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>
+              <row gap="1" align="center" sx="min-h-7">
+                <div sx="w-1 h-5 rounded-full bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>
+                <div sx="w-1 h-7 rounded-full bg-primary opacity-75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>
+                <div sx="w-1 h-4 rounded-full bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>
+                <div sx="w-1 h-6 rounded-full bg-primary opacity-75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>
+                <div sx="w-1 h-5 rounded-full bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>
               </row>
             {:else}
-              <row gap="1" align="center" sx="min-h:7">
-                <div sx="w:1 h:2 radius:full bg:muted-foreground opacity:50"></div>
-                <div sx="w:1 h:2 radius:full bg:muted-foreground opacity:50"></div>
-                <div sx="w:1 h:2 radius:full bg:muted-foreground opacity:50"></div>
-                <div sx="w:1 h:2 radius:full bg:muted-foreground opacity:50"></div>
-                <div sx="w:1 h:2 radius:full bg:muted-foreground opacity:50"></div>
+              <row gap="1" align="center" sx="min-h-7">
+                <div sx="w-1 h-2 rounded-full bg-muted-foreground opacity-50"></div>
+                <div sx="w-1 h-2 rounded-full bg-muted-foreground opacity-50"></div>
+                <div sx="w-1 h-2 rounded-full bg-muted-foreground opacity-50"></div>
+                <div sx="w-1 h-2 rounded-full bg-muted-foreground opacity-50"></div>
+                <div sx="w-1 h-2 rounded-full bg-muted-foreground opacity-50"></div>
               </row>
             {/if}
             <button on:click={togglePlay} variant="solid" tone="primary" motion:press={{ scale: 'press' }}>
@@ -262,7 +262,7 @@ export default controller({
             </button>
           </row>
         </card>
-        <p class="mono" sx="text:xs fg:muted-foreground">
+        <p class="mono" sx="text-xs text-muted-foreground">
           {playing() ? 'playing · the clock is an effect interval' : 'paused — the effect’s cleanup stopped the clock'}
         </p>
         </column>

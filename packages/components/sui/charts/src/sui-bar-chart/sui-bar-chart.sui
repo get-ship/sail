@@ -107,7 +107,7 @@ export default controller({
     role="img"
     aria-label={ariaLabel()}
     aria-describedby="chart-data"
-    sx="display:block w:full overflow:hidden"
+    sx="block w-full overflow-hidden"
     bind:this={svgEl}>
     {#for b of bars() key={b.id}}
       <rect x={b.x} y={b.y} width={b.w} height={b.h} rx={b.rx} ry={b.ry} fill={b.color} fill-opacity="0.85">
@@ -115,7 +115,7 @@ export default controller({
       </rect>
     {/for}
   </svg>
-  <column id="chart-data" sx="visibility:assistive">
+  <column id="chart-data" sx="sr-only">
     <slot name="description">
       <table>
         {#for row of chart.ariaTable() key={row[0].text}}

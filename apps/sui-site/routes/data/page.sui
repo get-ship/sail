@@ -58,7 +58,7 @@ export default controller({
           <button on:click={breakIt} tone="destructive" variant="outline">Fail the next one</button>
         </row>
         {#while-loading of users}
-          <row gap="2" align="center"><spinner></spinner> <p sx="text:sm fg:muted-foreground">loading…</p></row>
+          <row gap="2" align="center"><spinner></spinner> <p sx="text-sm text-muted-foreground">loading…</p></row>
         {/while-loading}
         {#while-error err of users}
           <alert tone="destructive">{err.message}</alert>

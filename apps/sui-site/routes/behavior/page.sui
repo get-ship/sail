@@ -31,7 +31,7 @@ export default controller({
     box grow to fit. No wrapper element, no resize logic in your file — the
     action owns it and cleans up when the element leaves.
   </p>
-  <textarea use:autosize placeholder="Type a few lines here…" sx="max-w:panel-max-w-sm"></textarea>
+  <textarea use:autosize placeholder="Type a few lines here…" sx="max-w-panel-max-w-sm"></textarea>
 
   <h2>There is no ref</h2>
   <p>

@@ -367,29 +367,29 @@ export default controller({
 
 </controller>
 <dialog bind:this={dialogEl} size={size()} backdrop="blur">
-  <column gap="0" sx="min-h:0 fg:foreground font:body">
-    <row align="center" gap="2" sx="p:3 px:4 grow:none border-b:subtle">
-      <icon name="search" size="sm" sx="grow:none"></icon>
-      <input type="text" flush sx="grow:1 min-w:0 font:body text:base leading:normal" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId()} aria-activedescendant={activeId()} aria-label={label()} placeholder={placeholder()} bind:value={query} bind:this={inputEl} />
+  <column gap="0" sx="min-h-0 text-foreground font-body">
+    <row align="center" gap="2" sx="p-3 px-4 grow-0 border-b border-b-border-subtle">
+      <icon name="search" size="sm" sx="grow-0"></icon>
+      <input type="text" flush sx="grow-1 min-w-0 font-body text-base leading-normal" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId()} aria-activedescendant={activeId()} aria-label={label()} placeholder={placeholder()} bind:value={query} bind:this={inputEl} />
     </row>
-    <ul sx="max-h:panel-vh-sm p:1 overflow-y:auto min-h:0 grow:1" role="listbox" id={listId()} aria-label={label()} bind:this={listEl}>
+    <ul sx="max-h-panel-vh-sm p-1 overflow-y-auto min-h-0 grow-1" role="listbox" id={listId()} aria-label={label()} bind:this={listEl}>
       {#for row of rows() key={row.key}}
         {#if row.isHeading}
-          <li role="presentation" sx="py:2 pb:1 text:xs weight:semibold tracking:wide fg:muted-foreground case:upper select:none">{row.heading}</li>
+          <li role="presentation" sx="py-2 pb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase select-none">{row.heading}</li>
         {:else}
-          <li sx="group display:flex p:2 radius:sm text:sm fg:foreground cursor:pointer select:none selected:bg:selected-bg disabled:fg:muted-foreground disabled:cursor:default disabled:opacity:50" role="option" id={row.optId} data-id={row.id} data-value={row.value} aria-selected={!row.disabled && row.id === highlightId() ? 'true' : 'false'} aria-disabled={row.disabled ? 'true' : 'false'}>
+          <li sx="group p-2 rounded-sm text-sm text-foreground cursor-pointer select-none selected:bg-selected-bg disabled:text-muted-foreground disabled:cursor-default disabled:opacity-50" role="option" id={row.optId} data-id={row.id} data-value={row.value} aria-selected={!row.disabled && row.id === highlightId() ? 'true' : 'false'} aria-disabled={row.disabled ? 'true' : 'false'}>
             {#if row.icon !== ''}
-              <icon name={row.icon} size="sm" sx="grow:none fg:muted-foreground group-selected:fg:foreground"></icon>
+              <icon name={row.icon} size="sm" sx="grow-0 text-muted-foreground group-selected:text-foreground"></icon>
             {/if}
-            <span sx="grow:1 min-w:0 wrap:truncate">{row.label}</span>
+            <span sx="grow-1 min-w-0 truncate">{row.label}</span>
             {#if row.hint !== ''}
-              <span sx="text:xs fg:muted-foreground ml:auto font:mono grow:none">{row.hint}</span>
+              <span sx="text-xs text-muted-foreground ml-auto font-mono grow-0">{row.hint}</span>
             {/if}
           </li>
         {/if}
       {/for}
       {#if rows().length === 0}
-        <li role="status" sx="p:6 px:4 text:sm fg:muted-foreground text-align:center">{emptyLabel()}</li>
+        <li role="status" sx="p-6 px-4 text-sm text-muted-foreground text-center">{emptyLabel()}</li>
       {/if}
     </ul>
   </column>

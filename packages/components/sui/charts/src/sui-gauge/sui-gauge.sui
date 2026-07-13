@@ -103,14 +103,14 @@ export default controller({
 {:else if chart.error()}
   <error-state></error-state>
 {:else}
-  <stack sx="w:fit">
+  <stack sx="w-fit">
     <svg
       viewBox={'0 0 ' + diameter() + ' ' + diameter()}
       width={diameter()}
       height={diameter()}
       role="img"
       aria-label={ariaLabel()}
-      sx="display:block">
+      sx="block">
       <path d={arc().trackD} fill="none" stroke="var(--muted)" stroke-width={thickness()} stroke-linecap="round">
       </path>
       {#if arc().fillD}
@@ -118,6 +118,6 @@ export default controller({
         </path>
       {/if}
     </svg>
-    <center sx="font:heading weight:semibold text:xl fg:foreground"><slot></slot></center>
+    <center sx="font-heading font-semibold text-xl text-foreground"><slot></slot></center>
   </stack>
 {/if}

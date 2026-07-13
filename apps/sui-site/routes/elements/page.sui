@@ -29,10 +29,10 @@ export default controller({
   <h2>Write them like HTML</h2>
   <code-block code={code.useThem}></code-block>
   <p>Which is exactly this:</p>
-  <card sx="p:4">
+  <card sx="p-4">
     <row gap="3" align="center">
       <avatar></avatar>
-      <strong sx="grow:1">Ada Lovelace</strong>
+      <strong sx="grow-1">Ada Lovelace</strong>
       <badge tone="success">Active</badge>
     </row>
   </card>
@@ -67,7 +67,7 @@ export default controller({
   <code-block code={code.compose}></code-block>
   <collapsible>
     <strong slot="trigger">Advanced options (click me)</strong>
-    <p sx="pt:2">Hidden until asked for — and this one is running.</p>
+    <p sx="pt-2">Hidden until asked for — and this one is running.</p>
   </collapsible>
 
   <h2>The behavior is already wired</h2>
@@ -77,7 +77,7 @@ export default controller({
     component does the rest. Try it:
   </p>
   <code-block code={code.behavior}></code-block>
-  <combobox placeholder="Pick a framework" sx="max-w:panel-max-w-sm">
+  <combobox placeholder="Pick a framework" sx="max-w-panel-max-w-sm">
     <option value="sui">SUI</option>
     <option value="svelte">Svelte</option>
     <option value="solid">Solid</option>
@@ -90,7 +90,7 @@ export default controller({
     usage and props.
   </p>
 
-  <p sx="text:sm fg:muted-foreground">
+  <p sx="text-sm text-muted-foreground">
     For the curious: most of these tags don't exist at runtime — the compiler
     lowers them to native markup with the behavior attached, which is why the
     library adds almost nothing to a page. A dialog ships as a real

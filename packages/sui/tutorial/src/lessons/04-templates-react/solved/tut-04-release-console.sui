@@ -87,10 +87,10 @@ export default controller<Scope>({
 
   <column gap="1">
     {#for env of filtered() key={env.id}}
-      <row gap="3" align="center" sx="px:3 py:2 bg:surface-1 radius:md">
+      <row gap="3" align="center" sx="px-3 py-2 bg-surface-1 rounded-md">
         <badge tone={env.tier === 'prod' ? 'primary' : 'muted'} variant="outline" size="sm">{env.tier}</badge>
-        <strong sx="grow:1 text:sm">{env.name}</strong>
-        <small sx="fg:muted-foreground">{env.region}</small>
+        <strong sx="grow-1 text-sm">{env.name}</strong>
+        <small sx="text-muted-foreground">{env.region}</small>
         <button size="sm" variant="ghost" on:click={() => promote(env.id)}>Promote</button>
       </row>
     {/for}

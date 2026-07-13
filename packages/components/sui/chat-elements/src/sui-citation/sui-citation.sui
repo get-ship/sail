@@ -60,9 +60,7 @@ export default controller({
   type="button"
   bind:this={pillEl}
   aria-label={'Open citation ' + index() + ': ' + source()}
-  sx="min-h:0 py:half pl:0_75 pr:2 radius:full text:xs leading:snug weight:normal
-      fg:foreground bg:muted border:border shadow:none cursor:pointer
-      hover:bg:tone-primary-bg hover:border:tone-primary-border"
+  sx="min-h-0 py-half pl-0_75 pr-2 rounded-full text-xs leading-snug font-normal text-foreground bg-muted border border-border shadow-none cursor-pointer hover:bg-tone-primary-bg hover:border hover:border-tone-primary-border"
 >
   <row gap="1" align="center">
     <row
@@ -70,8 +68,8 @@ export default controller({
       gap="0"
       align="center"
       justify="center"
-      sx="min-w:4 h:4 px:1 weight:semibold fg:primary-foreground bg:primary radius:full"
+      sx="min-w-4 h-4 px-1 font-semibold text-primary-foreground bg-primary rounded-full"
     >{index()}</row>
-    <span sx="wrap:truncate">{source()}</span>
+    <span sx="truncate">{source()}</span>
   </row>
 </button>

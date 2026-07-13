@@ -103,28 +103,28 @@ export default controller<Scope>({
 })
 </controller>
 
-<column role="list" gap="0" sx="bg:muted border:border radius:md overflow:hidden font:mono text:sm leading:normal">
+<column role="list" gap="0" sx="bg-muted border border-border rounded-md overflow-hidden font-mono text-sm leading-normal">
   {#for line of lines() key={line.key}}
     {#match line.kind}
       {:case 'add'}
-        <row role="listitem" data-line-kind="add" aria-label={line.label} gap="0" sx="px:2 bg:tone-success-bg">
-          <small aria-hidden="true" sx="w:4 fg:success">{line.sign}</small>
-          <pre sx="grow:1 text:sm">{line.text}</pre>
+        <row role="listitem" data-line-kind="add" aria-label={line.label} gap="0" sx="px-2 bg-tone-success-bg">
+          <small aria-hidden="true" sx="w-4 text-success">{line.sign}</small>
+          <pre sx="grow-1 text-sm">{line.text}</pre>
         </row>
       {:case 'del'}
-        <row role="listitem" data-line-kind="del" aria-label={line.label} gap="0" sx="px:2 bg:tone-destructive-bg">
-          <small aria-hidden="true" sx="w:4 fg:destructive">{line.sign}</small>
-          <pre sx="grow:1 text:sm">{line.text}</pre>
+        <row role="listitem" data-line-kind="del" aria-label={line.label} gap="0" sx="px-2 bg-tone-destructive-bg">
+          <small aria-hidden="true" sx="w-4 text-destructive">{line.sign}</small>
+          <pre sx="grow-1 text-sm">{line.text}</pre>
         </row>
       {:case 'hunk'}
-        <row role="listitem" data-line-kind="hunk" aria-label={line.label} gap="0" sx="px:2 bg:tone-info-bg">
-          <small aria-hidden="true" sx="w:4 fg:info">{line.sign}</small>
-          <pre sx="grow:1 text:sm fg:info">{line.text}</pre>
+        <row role="listitem" data-line-kind="hunk" aria-label={line.label} gap="0" sx="px-2 bg-tone-info-bg">
+          <small aria-hidden="true" sx="w-4 text-info">{line.sign}</small>
+          <pre sx="grow-1 text-sm text-info">{line.text}</pre>
         </row>
       {:default}
-        <row role="listitem" data-line-kind="ctx" aria-label={line.label} gap="0" sx="px:2">
-          <small aria-hidden="true" sx="w:4 fg:muted-foreground">{line.sign}</small>
-          <pre sx="grow:1 text:sm">{line.text}</pre>
+        <row role="listitem" data-line-kind="ctx" aria-label={line.label} gap="0" sx="px-2">
+          <small aria-hidden="true" sx="w-4 text-muted-foreground">{line.sign}</small>
+          <pre sx="grow-1 text-sm">{line.text}</pre>
         </row>
     {/match}
   {/for}

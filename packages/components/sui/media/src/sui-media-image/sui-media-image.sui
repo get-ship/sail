@@ -284,15 +284,15 @@ export default controller({
 
 </controller>
 {#if isSvg()}
-  <center role="img" aria-label={alt()} bind:this={svgEl} sx="position:relative overflow:hidden bg:surface-1 radius:md"></center>
+  <center role="img" aria-label={alt()} bind:this={svgEl} sx="relative overflow-hidden bg-surface-1 rounded-md"></center>
 {:else}
-  <center tabindex="0" bind:this={stageEl} sx="position:relative overflow:hidden bg:surface-1 radius:md">
-    <img alt={alt()} bind:this={imgEl} sx="display:block max-h:full" />
+  <center tabindex="0" bind:this={stageEl} sx="relative overflow-hidden bg-surface-1 rounded-md">
+    <img alt={alt()} bind:this={imgEl} sx="block max-h-full" />
   </center>
   {#if isGallery()}
-    <row role="listbox" aria-label="Image gallery" gap="2" bind:this={stripEl} sx="p:2 overflow-x:auto">
+    <row role="listbox" aria-label="Image gallery" gap="2" bind:this={stripEl} sx="p-2 overflow-x-auto">
       {#for item of galleryItems() key={item.id}}
-        <row role="option" gap="0" aria-selected={item.selected ? 'true' : 'false'} sx="grow:none p:0 overflow:hidden bg:surface-1 border:border radius:sm cursor:pointer selected:border:primary selected:shadow:accent">
+        <row role="option" gap="0" aria-selected={item.selected ? 'true' : 'false'} sx="grow-0 p-0 overflow-hidden bg-surface-1 border border-border rounded-sm cursor-pointer selected:border selected:border-primary selected:shadow-accent">
           <img src={item.url} alt="" />
         </row>
       {/for}

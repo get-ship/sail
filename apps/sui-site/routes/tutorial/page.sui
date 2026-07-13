@@ -35,12 +35,12 @@ export default controller({
       <column gap="2">
         {#for lesson of group.lessons key={lesson.slug}}
           <a href={lesson.href}
-             sx="p:4 radius:lg border:border bg:surface-1 hover:bg:surface-2 hover:border:border-strong">
+             sx="p-4 rounded-lg border border-border bg-surface-1 hover:bg-surface-2 hover:border hover:border-border-strong">
             <row gap="3" align="center">
               <badge tone="primary" variant="soft">{lesson.order}</badge>
-              <column gap="1" sx="grow:1">
+              <column gap="1" sx="grow-1">
                 <strong>{lesson.title}</strong>
-                <small sx="fg:muted-foreground">{lesson.description}</small>
+                <small sx="text-muted-foreground">{lesson.description}</small>
               </column>
             </row>
           </a>

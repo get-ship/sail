@@ -64,10 +64,10 @@ export default controller({
   <column gap="3">
     <h2>Elements — {elementCount()}</h2>
     <p>Every standard element, with its full prop table on its detail page.</p>
-    <row gap="2" sx="min-w:0">
+    <row gap="2" sx="min-w-0">
       {#for e of elements() key={e.tag}}
-        <a href={e.href} sx="px:3 py:1 radius:full border:border bg:surface-1 text:sm hover:bg:surface-2 hover:border:border-strong">
-          <code>{e.tag}</code> <small sx="fg:muted-foreground">{e.propCount}</small>
+        <a href={e.href} sx="px-3 py-1 rounded-full border border-border bg-surface-1 text-sm hover:bg-surface-2 hover:border hover:border-border-strong">
+          <code>{e.tag}</code> <small sx="text-muted-foreground">{e.propCount}</small>
         </a>
       {/for}
     </row>
@@ -78,9 +78,9 @@ export default controller({
     <p>Structure is elements, not CSS. Each keyword takes a closed set of axis props; anything else is a compile error.</p>
     <column gap="1">
       {#for k of layoutRows() key={k.tag}}
-        <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md" align="center">
-          <code sx="min-w:9">&lt;{k.tag}&gt;</code>
-          <small sx="fg:muted-foreground">{k.props}</small>
+        <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md" align="center">
+          <code sx="min-w-9">&lt;{k.tag}&gt;</code>
+          <small sx="text-muted-foreground">{k.props}</small>
         </row>
       {/for}
     </column>
@@ -95,9 +95,9 @@ export default controller({
     </p>
     <column gap="1">
       {#for a of sxRows() key={a.prop}}
-        <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md min-w:0">
-          <code sx="min-w:9">{a.prop}:</code>
-          <small sx="fg:muted-foreground grow:1 min-w:0">{a.values}</small>
+        <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md min-w-0">
+          <code sx="min-w-9">{a.prop}:</code>
+          <small sx="text-muted-foreground grow-1 min-w-0">{a.values}</small>
         </row>
       {/for}
     </column>
@@ -105,9 +105,9 @@ export default controller({
     <h3>State prefixes</h3>
     <column gap="1">
       {#for s of statePrefixes() key={s.prefix}}
-        <row gap="3" sx="px:3 py:1 radius:md" align="center">
-          <code sx="min-w:9">{s.prefix}:</code>
-          <small sx="fg:muted-foreground font:mono">{s.selector}</small>
+        <row gap="3" sx="px-3 py-1 rounded-md" align="center">
+          <code sx="min-w-9">{s.prefix}:</code>
+          <small sx="text-muted-foreground font-mono">{s.selector}</small>
         </row>
       {/for}
     </column>
@@ -119,9 +119,9 @@ export default controller({
     <h3>Condition prefixes</h3>
     <column gap="1">
       {#for c of conditionPrefixes() key={c.prefix}}
-        <row gap="3" sx="px:3 py:1 radius:md" align="center">
-          <code sx="min-w:9">{c.prefix}:</code>
-          <small sx="fg:muted-foreground font:mono">{c.media}</small>
+        <row gap="3" sx="px-3 py-1 rounded-md" align="center">
+          <code sx="min-w-9">{c.prefix}:</code>
+          <small sx="text-muted-foreground font-mono">{c.media}</small>
         </row>
       {/for}
     </column>
@@ -133,9 +133,9 @@ export default controller({
       <code>motion:&lt;trigger&gt;</code> is the only animation directive;
       <code>transition:</code> / <code>in:</code> / <code>out:</code> are retired.
     </p>
-    <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">triggers</code><small sx="fg:muted-foreground">{motionTriggers()}</small></row>
-    <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">properties</code><small sx="fg:muted-foreground">{motionProperties()} — plus {motionStagger()}: a duration step between siblings</small></row>
-    <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">presets</code><small sx="fg:muted-foreground">{motionPresets()}</small></row>
+    <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">triggers</code><small sx="text-muted-foreground">{motionTriggers()}</small></row>
+    <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">properties</code><small sx="text-muted-foreground">{motionProperties()} — plus {motionStagger()}: a duration step between siblings</small></row>
+    <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">presets</code><small sx="text-muted-foreground">{motionPresets()}</small></row>
   </column>
 
   <column gap="3">
@@ -145,13 +145,13 @@ export default controller({
       above — treat the compiler's errors as the authority.
     </p>
     <column gap="1">
-      <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">on:</code><small sx="fg:muted-foreground">events; modifiers |prevent |stop |self |once |debounce:ms |key:Name</small></row>
-      <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">bind:</code><small sx="fg:muted-foreground">two-way sugar — bind:value, bind:checked, bind:this (element ref)</small></row>
-      <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">prop:</code><small sx="fg:muted-foreground">set a JS property (identity values that are not attributes)</small></row>
-      <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">attr:</code><small sx="fg:muted-foreground">force attribute semantics for a dynamic value</small></row>
-      <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">use:</code><small sx="fg:muted-foreground">attach an action — behavior bound to an element with update/destroy</small></row>
-      <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">style:--x</code><small sx="fg:muted-foreground">custom-property channel — the only style: form; a component's declared knobs</small></row>
-      <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">blocks</code><small sx="fg:muted-foreground">#if/:else · #match/:case/:default · #for with required key= · #while-loading · #while-error</small></row>
+      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">on:</code><small sx="text-muted-foreground">events; modifiers |prevent |stop |self |once |debounce:ms |key:Name</small></row>
+      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">bind:</code><small sx="text-muted-foreground">two-way sugar — bind:value, bind:checked, bind:this (element ref)</small></row>
+      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">prop:</code><small sx="text-muted-foreground">set a JS property (identity values that are not attributes)</small></row>
+      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">attr:</code><small sx="text-muted-foreground">force attribute semantics for a dynamic value</small></row>
+      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">use:</code><small sx="text-muted-foreground">attach an action — behavior bound to an element with update/destroy</small></row>
+      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">style:--x</code><small sx="text-muted-foreground">custom-property channel — the only style: form; a component's declared knobs</small></row>
+      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">blocks</code><small sx="text-muted-foreground">#if/:else · #match/:case/:default · #for with required key= · #while-loading · #while-error</small></row>
     </column>
   </column>
 

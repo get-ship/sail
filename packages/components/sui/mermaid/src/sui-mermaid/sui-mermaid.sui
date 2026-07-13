@@ -172,18 +172,18 @@ export default controller<Scope>({
 });
 
 </controller>
-<center bind:this={container} sx="w:full min-h:8" attr:hidden={hasError()}></center>
+<center bind:this={container} sx="w-full min-h-8" attr:hidden={hasError()}></center>
 
 {#if error()}
-  <column gap="2" sx="w:full p:3 px:4 border:tone-destructive-border radius:md bg:tone-destructive-bg text:sm">
-    <row gap="2" align="center" sx="weight:semibold fg:destructive">
+  <column gap="2" sx="w-full p-3 px-4 border border-tone-destructive-border rounded-md bg-tone-destructive-bg text-sm">
+    <row gap="2" align="center" sx="font-semibold text-destructive">
       <icon name="alert-triangle" label="" size="sm"></icon>
       Diagram failed to render
     </row>
-    <pre sx="font:mono text:xs wrap:pre-wrap fg:muted-foreground">{error()}</pre>
+    <pre sx="font-mono text-xs whitespace-pre-wrap text-muted-foreground">{error()}</pre>
     <details>
-      <summary sx="cursor:pointer text:xs fg:muted-foreground">mermaid source</summary>
-      <pre sx="mt:2 p:2 px:3 bg:surface-2 border:border-subtle radius:sm font:mono text:xs wrap:pre-wrap overflow-x:auto">{value()}</pre>
+      <summary sx="cursor-pointer text-xs text-muted-foreground">mermaid source</summary>
+      <pre sx="mt-2 p-2 px-3 bg-surface-2 border border-border-subtle rounded-sm font-mono text-xs whitespace-pre-wrap overflow-x-auto">{value()}</pre>
     </details>
   </column>
 {/if}

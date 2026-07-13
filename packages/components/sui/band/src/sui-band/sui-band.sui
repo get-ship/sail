@@ -265,8 +265,8 @@ export default controller<Scope>({
 });
 </controller>
 
-<column gap="0" bind:this={band} sx="overflow:hidden py:2_5 bg:surface-2 fg:muted-foreground border-t:border border-b:border text:sm weight:semibold tracking:wide">
-  <row gap="0" align="center" bind:this={track} sx="w:max wrap:nowrap">
-    <row gap="8" align="center" bind:this={copy} sx="grow:none pr:8"><slot></slot></row>
+<column gap="0" bind:this={band} sx="overflow-hidden py-2_5 bg-surface-2 text-muted-foreground border-t border-t-border border-b border-b-border text-sm font-semibold tracking-wide">
+  <row gap="0" align="center" bind:this={track} sx="w-max whitespace-nowrap">
+    <row gap="8" align="center" bind:this={copy} sx="grow-0 pr-8"><slot></slot></row>
   </row>
 </column>

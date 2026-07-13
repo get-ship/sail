@@ -161,11 +161,11 @@ export default controller({
 <scroll-area
   orientation="vertical"
   bind:this={scrollEl}
-  sx="position:relative h:full min-h:0 p:3 font:body"
+  sx="relative h-full min-h-0 p-3 font-body"
 >
-  <div sx="position:relative w:full" style:height={`${totalSize()}px`}>
+  <div sx="relative w-full" style:height={`${totalSize()}px`}>
     {#for w of windowItems() key={w.key}}
-      <column gap="0" sx="position:absolute left:3 right:3" style:transform={`translateY(${w.start}px)`}>
+      <column gap="0" sx="absolute left-3 right-3" style:transform={`translateY(${w.start}px)`}>
         <sui-message
           role={w.item.role || 'assistant'}
           content-type={w.item.contentType || 'text'}

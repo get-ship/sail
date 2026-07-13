@@ -25,14 +25,20 @@ pub fn values(scale: &str) -> Vec<String> {
     let mut v: Vec<String> = match scale {
         "space" => {
             let mut s: Vec<String> = tokens::space_values().iter().map(|t| t.to_string()).collect();
+            s.extend(channels());
             s.push("0".into());
             s
         }
         "size" => {
-            // The space scale doubles as the small end of the size scale, plus the
-            // intrinsic keywords and the framework's dimensional families.
+            // The space ramp IS the small end of the size scale — an icon is 5
+            // steps tall the same way it is 5 steps from its neighbour. Plus the
+            // intrinsic keywords, the dimensional families (icon-size/control-h/
+            // panel/breakpoint), and the framework's own size + density channels,
+            // which a component spends to sit on the platform's density axis.
             let mut s: Vec<String> = tokens::size_values().iter().map(|t| t.to_string()).collect();
-            s.extend(["auto", "full", "screen", "fit", "min", "max", "0"].iter().map(|t| t.to_string()));
+            s.extend(tokens::space_values().iter().map(|t| t.to_string()));
+            s.extend(channels());
+            s.extend(["auto", "full", "screen", "fill", "fit", "min", "max", "0"].iter().map(|t| t.to_string()));
             s
         }
         "color" => tokens::color_values().iter().map(|t| t.to_string()).collect(),
@@ -41,7 +47,12 @@ pub fn values(scale: &str) -> Vec<String> {
             s.push("none".into());
             s
         }
-        "text" => tokens::text_values().iter().map(|t| t.to_string()).collect(),
+        "text" => {
+            let mut s: Vec<String> = tokens::text_values().iter().map(|t| t.to_string()).collect();
+            s.push("density".into()); // the platform density axis, not a size step
+            s.extend(channels());
+            s
+        }
         "weight" => tokens::suffixes("font-weight-").iter().map(|t| t.to_string()).collect(),
         "font" => vec!["body".into(), "heading".into(), "mono".into(), "display".into()],
         "leading" => tokens::suffixes("leading-").iter().map(|t| t.to_string()).collect(),
@@ -82,6 +93,7 @@ pub fn lower(scale: &str, token: &str) -> Option<String> {
         "space" => match token {
             "0" => "0".into(),
             "auto" => "auto".into(),
+            t if is_channel(t) => format!("var(--{t})"),
             _ => format!("var(--space-{token})"),
         },
         "size" => match token {
@@ -92,9 +104,13 @@ pub fn lower(scale: &str, token: &str) -> Option<String> {
             "min" => "min-content".into(),
             "max" => "max-content".into(),
             "screen" => "100dvh".into(),
+            // The viewport MINUS the chrome the app publishes. A fixed workbench
+            // (the tutorial's editor pane) is not expressible with `screen` — it
+            // overruns by the height of the navbar.
+            "fill" => "calc(100dvh - var(--chrome-offset, 0px))".into(),
             // A dimensional family token is used by its whole name; anything else
             // on this scale is a step of the space ramp.
-            t if t.starts_with("size-")
+            t if is_channel(t)
                 || t.starts_with("icon-size-")
                 || t.starts_with("control-h-")
                 || t.starts_with("panel-")
@@ -121,7 +137,13 @@ pub fn lower(scale: &str, token: &str) -> Option<String> {
             }
         }
         "radius" => if token == "none" { "0".into() } else { format!("var(--radius-{token})") },
-        "text" => format!("var(--text-{token})"),
+        "text" => match token {
+            // The platform's density axis (<html data-density>), not a step of the
+            // type scale — a component reads it, it does not re-decide it.
+            "density" => "var(--density-text)".into(),
+            t if is_channel(t) => format!("var(--{t})"),
+            _ => format!("var(--text-{token})"),
+        },
         "weight" => format!("var(--font-weight-{token})"),
         "font" => format!("var(--{token}-font)"),
         "leading" => format!("var(--leading-{token})"),
@@ -135,6 +157,21 @@ pub fn lower(scale: &str, token: &str) -> Option<String> {
         "angle" => format!("{token}deg"),
         _ => return None,
     })
+}
+
+/// The FRAMEWORK channels: the component-size channel (`size-px`/`size-fs`/`size-h`,
+/// filled by the size prop) and the platform density axis (`density-*`, set at
+/// <html>). They are already whole custom-property names, so they lower to their
+/// own var rather than a scale-prefixed one — a component SPENDS them; it never
+/// re-decides them.
+fn channels() -> Vec<String> {
+    let mut c: Vec<String> = tokens::suffixes("density-").iter().map(|t| format!("density-{t}")).collect();
+    c.extend(["size-px", "size-fs", "size-h"].iter().map(|t| t.to_string()));
+    c
+}
+
+fn is_channel(t: &str) -> bool {
+    t.starts_with("size-") || t.starts_with("density-")
 }
 
 /// Border widths. A closed ramp, because a 3px category stripe reads as a
@@ -154,7 +191,7 @@ const ANGLE: &[&str] = &["0", "1", "2", "3", "6", "12", "45", "90", "180", "270"
 
 /// The CSS colour keywords sx lets through unsanctioned — they name no design
 /// decision, so there is nothing to tokenize.
-const KEYWORD_COLORS: &[&str] = &["transparent", "currentColor", "inherit"];
+pub const KEYWORD_COLORS: &[&str] = &["transparent", "currentColor", "inherit"];
 
 pub fn is_keyword_color(token: &str) -> bool {
     KEYWORD_COLORS.contains(&token)

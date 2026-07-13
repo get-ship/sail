@@ -48,12 +48,12 @@
 
   <section>
     <h2>sui-badge (dissolved to bare span + sx)</h2>
-    <span tone="default" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">default</span>
-    <span tone="primary" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">primary</span>
-    <span tone="success" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">success</span>
-    <span tone="warning" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone border:tone fg:tone-contrast">warning solid</span>
-    <span tone="info" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:transparent border:tone-border fg:tone-fg">info outline</span>
-    <span tone="destructive" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone border:tone fg:tone-contrast">destructive</span>
+    <span tone="default" sx="min-h-control-h-2xs px-2 text-xs font-semibold rounded-sm bg-tone-bg border border-tone-border text-tone-fg">default</span>
+    <span tone="primary" sx="min-h-control-h-2xs px-2 text-xs font-semibold rounded-sm bg-tone-bg border border-tone-border text-tone-fg">primary</span>
+    <span tone="success" sx="min-h-control-h-2xs px-2 text-xs font-semibold rounded-sm bg-tone-bg border border-tone-border text-tone-fg">success</span>
+    <span tone="warning" sx="min-h-control-h-2xs px-2 text-xs font-semibold rounded-sm bg-tone border border-tone text-tone-contrast">warning solid</span>
+    <span tone="info" sx="min-h-control-h-2xs px-2 text-xs font-semibold rounded-sm bg-transparent border border-tone-border text-tone-fg">info outline</span>
+    <span tone="destructive" sx="min-h-control-h-2xs px-2 text-xs font-semibold rounded-sm bg-tone border border-tone text-tone-contrast">destructive</span>
   </section>
 
   <section>

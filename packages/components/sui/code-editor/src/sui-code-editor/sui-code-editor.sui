@@ -428,4 +428,4 @@ function makeCompletionSource(src: SuiCompletionSource) {
 }
 
 </controller>
-<div bind:this={editorHost} sx="position:relative overflow:hidden font:mono w:full h:full min-h:0 focus-within:ring:ring"></div>
+<div bind:this={editorHost} sx="relative overflow-hidden font-mono w-full h-full min-h-0 focus-within:ring-ring"></div>

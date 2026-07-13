@@ -77,18 +77,18 @@ export default controller({
 
 </controller>
 {#if staged().length === 0}
-  <p sx="font:body text:sm fg:muted-foreground py:1 px:2">No staged annotations.</p>
+  <p sx="font-body text-sm text-muted-foreground py-1 px-2">No staged annotations.</p>
 {:else}
-  <column role="list" gap="1" sx="font:body text:sm fg:foreground">
+  <column role="list" gap="1" sx="font-body text-sm text-foreground">
     {#for a of staged() key={a.id}}
-      <row role="listitem" data-id={a.id} gap="2" align="center" sx="py:1 px:2 bg:background border:border radius:sm">
-        <span sx="text:xs case:upper tracking:wide fg:muted-foreground">{a.kind}</span>
-        <span title={a.note ?? ''} sx="grow:1 wrap:truncate">{a.note ?? '(no note)'}</span>
+      <row role="listitem" data-id={a.id} gap="2" align="center" sx="py-1 px-2 bg-background border border-border rounded-sm">
+        <span sx="text-xs uppercase tracking-wide text-muted-foreground">{a.kind}</span>
+        <span title={a.note ?? ''} sx="grow-1 truncate">{a.note ?? '(no note)'}</span>
         <button
           type="button"
           aria-label="Remove annotation"
           on:click={() => emitRemove(a.id)}
-          sx="min-h:0 px:1_5 py:half text:xs radius:sm bg:transparent border:border fg:muted-foreground cursor:pointer hover:fg:destructive hover:border:destructive"
+          sx="min-h-0 px-1_5 py-half text-xs rounded-sm bg-transparent border border-border text-muted-foreground cursor-pointer hover:text-destructive hover:border hover:border-destructive"
         >Remove</button>
       </row>
     {/for}

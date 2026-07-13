@@ -34,5 +34,5 @@ export default controller<Scope>({
 })
 
 </controller>
-<column gap="1" sx="position:relative"><slot></slot></column>
+<column gap="1" sx="relative"><slot></slot></column>
 

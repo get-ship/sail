@@ -69,15 +69,15 @@ export default controller({
 
 </controller>
 {#if isPoint()}
-  <div sx="position:absolute w:0 h:0" style:left={`${x()}px`} style:top={`${y()}px`}>
-    <center sx="h:0">
+  <div sx="absolute w-0 h-0" style:left={`${x()}px`} style:top={`${y()}px`}>
+    <center sx="h-0">
       <row
         role="button"
         tabindex="0"
         gap="0"
         justify="center"
         data-state={state()}
-        sx="w:5 h:5 radius:full bg:primary fg:primary-foreground border:background text:xs weight:medium shadow:sm cursor:pointer pointer:auto font:body state-active:ring:ring-color"
+        sx="w-5 h-5 rounded-full bg-primary text-primary-foreground border border-background text-xs font-medium shadow-sm cursor-pointer pointer-events-auto font-body state-active:ring-ring-color"
       >{badge()}</row>
     </center>
   </div>
@@ -89,6 +89,6 @@ export default controller({
     style:top={`${box().y}px`}
     style:width={`${box().w}px`}
     style:height={`${box().h}px`}
-    sx="position:absolute bg:tone-primary-bg border:primary border-style:dashed radius:sm cursor:pointer pointer:auto"
+    sx="absolute bg-tone-primary-bg border border-primary border-dashed rounded-sm cursor-pointer pointer-events-auto"
   ></div>
 {/if}

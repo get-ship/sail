@@ -35,37 +35,37 @@
 
 <div
   tone={status() === 'ok' ? 'success' : status() === 'error' ? 'destructive' : 'info'}
-  sx="position:relative border:border radius:md bg:card overflow:hidden"
+  sx="relative border border-border rounded-md bg-card overflow-hidden"
 >
   <!-- The state-colored rail: at-a-glance status, echoing the dot + status text. -->
   <span
     aria-hidden="true"
-    sx="position:absolute left:0 top:0 bottom:0 w:0_75 bg:tone"
+    sx="absolute left-0 top-0 bottom-0 w-0_75 bg-tone"
   ></span>
 
   <collapsible open={open()} sx="group">
-    <row slot="trigger" gap="2" align="center" sx="py:2 px:3">
+    <row slot="trigger" gap="2" align="center" sx="py-2 px-3">
       <span
         dot
         aria-hidden="true"
         attr:pulse={status() === 'running'}
-        sx="bg:tone shadow:none"
+        sx="bg-tone shadow-none"
       ></span>
-      <span sx="font:mono text:sm weight:medium fg:foreground wrap:truncate">{name()}</span>
-      <span sx="ml:auto text:xs case:upper tracking:wide fg:tone">{status()}</span>
+      <span sx="font-mono text-sm font-medium text-foreground truncate">{name()}</span>
+      <span sx="ml-auto text-xs uppercase tracking-wide text-tone">{status()}</span>
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
         stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
         stroke-linejoin="round" aria-hidden="true"
-        sx="grow:none fg:muted-foreground group-open:rotate:90">
+        sx="grow-0 text-muted-foreground group-open:rotate-90">
         <path d="M4 2l4 4-4 4" />
       </svg>
     </row>
-    <div sx="border-t:border py:2 px:3 font:mono text:sm leading:normal">
-      <span sx="display:block font:body text:xs case:upper tracking:wide fg:muted-foreground mb:1">Arguments</span>
-      <div sx="wrap:pre-wrap"><slot></slot></div>
-      <div sx="mt:2">
-        <span sx="display:block font:body text:xs case:upper tracking:wide fg:muted-foreground mb:1">Result</span>
-        <div sx="wrap:pre-wrap"><slot name="result"></slot></div>
+    <div sx="border-t border-t-border py-2 px-3 font-mono text-sm leading-normal">
+      <span sx="block font-body text-xs uppercase tracking-wide text-muted-foreground mb-1">Arguments</span>
+      <div sx="whitespace-pre-wrap"><slot></slot></div>
+      <div sx="mt-2">
+        <span sx="block font-body text-xs uppercase tracking-wide text-muted-foreground mb-1">Result</span>
+        <div sx="whitespace-pre-wrap"><slot name="result"></slot></div>
       </div>
     </div>
   </collapsible>

@@ -46,7 +46,7 @@ export default controller({
 
   <row gap="3" align="center">
     <button on:click={replay} motion:press={{ scale: 'press' }}>Deal again</button>
-    <p sx="text:sm fg:muted-foreground">
+    <p sx="text-sm text-muted-foreground">
       <code>stagger</code> is the delay <em>between</em> siblings — a list
       arrives as a list, not a flash.
     </p>
@@ -55,29 +55,29 @@ export default controller({
   {#if dealt()}
     <grid cols="5" gap="3">
       <card motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
-            motion:hover={{ scale: 'spring:snappy' }} sx="p:5">
+            motion:hover={{ scale: 'spring:snappy' }} sx="p-5">
         <h3>snappy</h3>
-        <p sx="text:sm fg:muted-foreground">translate-y</p>
+        <p sx="text-sm text-muted-foreground">translate-y</p>
       </card>
       <card motion:enter={{ opacity: 'fade', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
-            motion:hover={{ translate-y: 'spring:gentle' }} sx="p:5">
+            motion:hover={{ translate-y: 'spring:gentle' }} sx="p-5">
         <h3>fade</h3>
-        <p sx="text:sm fg:muted-foreground">opacity only</p>
+        <p sx="text-sm text-muted-foreground">opacity only</p>
       </card>
       <card motion:enter={{ rotate: 'spring:bouncy', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
-            motion:hover={{ rotate: 'spring:bouncy' }} sx="p:5">
+            motion:hover={{ rotate: 'spring:bouncy' }} sx="p-5">
         <h3>bouncy</h3>
-        <p sx="text:sm fg:muted-foreground">rotate</p>
+        <p sx="text-sm text-muted-foreground">rotate</p>
       </card>
       <card motion:enter={{ translate-x: 'spring:deliberate', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
-            motion:hover={{ translate-x: 'spring:deliberate' }} sx="p:5">
+            motion:hover={{ translate-x: 'spring:deliberate' }} sx="p-5">
         <h3>deliberate</h3>
-        <p sx="text:sm fg:muted-foreground">translate-x</p>
+        <p sx="text-sm text-muted-foreground">translate-x</p>
       </card>
       <card motion:enter={{ scale: 'spring:gentle', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
-            motion:hover={{ opacity: 'pulse' }} sx="p:5">
+            motion:hover={{ opacity: 'pulse' }} sx="p-5">
         <h3>gentle</h3>
-        <p sx="text:sm fg:muted-foreground">scale</p>
+        <p sx="text-sm text-muted-foreground">scale</p>
       </card>
     </grid>
   {/if}
@@ -90,17 +90,17 @@ export default controller({
       <p class="pane-label">Live — hover, press, tab to it</p>
       <column class="live" gap="3">
         <row gap="3">
-          <card motion:hover={{ scale: 'spring:gentle' }} sx="p:4">
+          <card motion:hover={{ scale: 'spring:gentle' }} sx="p-4">
             <strong>lift</strong>
-            <p sx="text:sm fg:muted-foreground">hover · scale</p>
+            <p sx="text-sm text-muted-foreground">hover · scale</p>
           </card>
-          <card motion:hover={{ rotate: 'spring:bouncy' }} sx="p:4">
+          <card motion:hover={{ rotate: 'spring:bouncy' }} sx="p-4">
             <strong>tilt</strong>
-            <p sx="text:sm fg:muted-foreground">hover · rotate</p>
+            <p sx="text-sm text-muted-foreground">hover · rotate</p>
           </card>
-          <card motion:hover={{ translate-x: 'spring:snappy' }} sx="p:4">
+          <card motion:hover={{ translate-x: 'spring:snappy' }} sx="p-4">
             <strong>nudge</strong>
-            <p sx="text:sm fg:muted-foreground">hover · translate-x</p>
+            <p sx="text-sm text-muted-foreground">hover · translate-x</p>
           </card>
         </row>
         <row gap="3" align="center">
@@ -134,10 +134,10 @@ export default controller({
           <card
             motion:enter={{ opacity: 'fade', scale: 'spring:snappy' }}
             motion:exit={{ opacity: 'fade-out' }}
-            sx="p:4"
+            sx="p-4"
           >
             <strong>I animate in, and I animate out.</strong>
-            <p sx="text:sm fg:muted-foreground">
+            <p sx="text-sm text-muted-foreground">
               The runtime holds me in the DOM until my exit finishes.
             </p>
           </card>
@@ -164,20 +164,20 @@ export default controller({
     scroll</strong>. Elsewhere they play once on reveal. The effect people
     install a 30&nbsp;kB library for is a directive with a preset.
   </p>
-  <p sx="fg:muted-foreground">Keep scrolling. Each of these arrives on its own.</p>
+  <p sx="text-muted-foreground">Keep scrolling. Each of these arrives on its own.</p>
 
   <column gap="4">
-    <card motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }} sx="p:6">
+    <card motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }} sx="p-6">
       <h3>This one fades up as it enters the viewport.</h3>
-      <p sx="fg:muted-foreground"><code>motion:view</code> — nothing in the frame loop.</p>
+      <p sx="text-muted-foreground"><code>motion:view</code> — nothing in the frame loop.</p>
     </card>
-    <card motion:view={{ opacity: 'fade', translate-x: 'spring:deliberate' }} sx="p:6">
+    <card motion:view={{ opacity: 'fade', translate-x: 'spring:deliberate' }} sx="p-6">
       <h3>This one slides in, slowly.</h3>
-      <p sx="fg:muted-foreground">Same directive, different preset — <code>spring:deliberate</code>.</p>
+      <p sx="text-muted-foreground">Same directive, different preset — <code>spring:deliberate</code>.</p>
     </card>
-    <card motion:view={{ scale: 'spring:bouncy', opacity: 'fade' }} sx="p:6">
+    <card motion:view={{ scale: 'spring:bouncy', opacity: 'fade' }} sx="p-6">
       <h3>And this one springs.</h3>
-      <p sx="fg:muted-foreground">Nine presets. Four springs, five tweens. That is the whole catalogue.</p>
+      <p sx="text-muted-foreground">Nine presets. Four springs, five tweens. That is the whole catalogue.</p>
     </card>
   </column>
 
@@ -190,11 +190,11 @@ export default controller({
     siblings read as a wave, and <code>prefers-reduced-motion</code> switches
     it off entirely — ambient motion is decoration.
   </p>
-  <row gap="3" align="center" sx="min-h:9">
-    <div sx="w:4 h:4 radius:full bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
-    <div sx="w:4 h:4 radius:full bg:primary opacity:75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
-    <div sx="w:4 h:4 radius:full bg:primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
-    <div sx="w:4 h:4 radius:full bg:primary opacity:75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+  <row gap="3" align="center" sx="min-h-9">
+    <div sx="w-4 h-4 rounded-full bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+    <div sx="w-4 h-4 rounded-full bg-primary opacity-75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+    <div sx="w-4 h-4 rounded-full bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+    <div sx="w-4 h-4 rounded-full bg-primary opacity-75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
   </row>
   <code-block code={code.loop}></code-block>
 
@@ -207,19 +207,19 @@ export default controller({
   <grid cols="2" gap="4">
     <column gap="1">
       <label>Triggers</label>
-      <p sx="text:sm fg:muted-foreground">hover · press · focus · focus-visible · enter · exit · view · scroll · loop</p>
+      <p sx="text-sm text-muted-foreground">hover · press · focus · focus-visible · enter · exit · view · scroll · loop</p>
     </column>
     <column gap="1">
       <label>Properties</label>
-      <p sx="text:sm fg:muted-foreground">scale · opacity · translate-x · translate-y · rotate · <em>stagger</em> (reserved)</p>
+      <p sx="text-sm text-muted-foreground">scale · opacity · translate-x · translate-y · rotate · <em>stagger</em> (reserved)</p>
     </column>
     <column gap="1">
       <label>Springs</label>
-      <p sx="text:sm fg:muted-foreground">spring:snappy · spring:gentle · spring:bouncy · spring:deliberate</p>
+      <p sx="text-sm text-muted-foreground">spring:snappy · spring:gentle · spring:bouncy · spring:deliberate</p>
     </column>
     <column gap="1">
       <label>Tweens</label>
-      <p sx="text:sm fg:muted-foreground">fade · fade-out · press · release · pulse</p>
+      <p sx="text-sm text-muted-foreground">fade · fade-out · press · release · pulse</p>
     </column>
   </grid>
 
