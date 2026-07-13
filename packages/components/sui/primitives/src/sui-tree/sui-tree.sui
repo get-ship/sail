@@ -223,9 +223,9 @@ export default controller({
   <div class="viewport" bind:this={viewportEl} sx="position:relative w:full overflow-y:auto max-h:panel-max-h-md">
     <div class="spacer" style:height={`${totalSize()}px`} sx="position:relative w:full">
       {#for w of windowItems() key={w.key}}
-        <row class="row" align="center" gap="density" role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} style:transform={`translateY(${w.start}px)`} style:padding-inline-start={`calc(var(--density-row-px) + ${w.indent}px)`} sx="group position:absolute left:0 w:full py:density-row-py pr:density-row-px radius:sm cursor:pointer fg:foreground hover:bg:hover-bg data-selected:bg:selected-bg data-selected:weight:medium data-pending:fg:muted-foreground data-pending:text-style:italic data-pending:cursor:default focus:ring:ring">
+        <row class="row" align="center" gap="density" role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} aria-busy={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} style:transform={`translateY(${w.start}px)`} style:padding-inline-start={`calc(var(--density-row-px) + ${w.indent}px)`} sx="group position:absolute left:0 w:full py:density-row-py pr:density-row-px radius:sm cursor:pointer fg:foreground hover:bg:hover-bg selected:bg:selected-bg selected:weight:medium busy:fg:muted-foreground busy:text-style:italic busy:cursor:default focus:ring:ring">
           {#if w.canExpand}
-            <row class="caret" aria-hidden="true" align="center" justify="center" sx="w:density-icon h:density-icon min-w:density-icon fg:muted-foreground group-data-expanded:rotate:90">
+            <row class="caret" aria-hidden="true" align="center" justify="center" sx="w:density-icon h:density-icon min-w:density-icon fg:muted-foreground group-expanded:rotate:90">
               <icon name="chevron-right" size="xs"></icon>
             </row>
           {:else}
@@ -244,7 +244,7 @@ export default controller({
             </span>
           {/if}
           {#if w.icon !== ''}
-            <icon class="node-icon" name={w.icon} size="sm" sx="fg:muted-foreground group-data-selected:fg:foreground"></icon>
+            <icon class="node-icon" name={w.icon} size="sm" sx="fg:muted-foreground group-selected:fg:foreground"></icon>
           {:else}
             <slot name="node-icon"></slot>
           {/if}

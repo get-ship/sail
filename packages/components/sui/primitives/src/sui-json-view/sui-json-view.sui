@@ -141,11 +141,11 @@ export default controller<Scope>({
         <row class="node branch-row" role="treeitem" aria-level={row.ariaLevel} aria-expanded={row.open ? 'true' : 'false'} tabindex="0" gap="0" align="center"
              on:click={() => toggle(row.path, row.open)}
              on:keydown|key:Enter={() => toggle(row.path, row.open)}
-             sx="radius:sm cursor:pointer hover:bg:hover-bg">
+             sx="group radius:sm cursor:pointer hover:bg:hover-bg">
           {#for pad of row.pads key={pad.i}}
             <span class="guide" sx="w:3 border-l:subtle"></span>
           {/for}
-          <span class="caret" attr:data-open={row.open} aria-hidden="true" sx="fg:muted-foreground text:xs px:1 data-open:rotate:90">▶</span>
+          <span class="caret" aria-hidden="true" sx="fg:muted-foreground text:xs px:1 group-expanded:rotate:90">▶</span>
           {#if row.label !== ''}
             <span class="key" sx="weight:medium">"{row.label}"</span><span class="punc" sx="fg:muted-foreground">:&nbsp;</span>
           {/if}

@@ -171,19 +171,13 @@ fn lower_sx_value(
                 if let Some(m) = sui_lint::rules::sx::condition_media(s) {
                     (m, String::new(), String::new())
                 } else if let Some(base) = s.strip_prefix("group-") {
-                    match sui_lint::rules::sx::state_pseudo(base)
-                        .map(str::to_string)
-                        .or_else(|| sui_lint::rules::sx::state_attr(base))
-                    {
+                    match sui_lint::rules::sx::state_pseudo(base) {
                         Some(p) => ("", format!(".sui-grp{p} "), String::new()),
                         None => continue,
                     }
                 } else {
-                    match sui_lint::rules::sx::state_pseudo(s)
-                        .map(str::to_string)
-                        .or_else(|| sui_lint::rules::sx::state_attr(s))
-                    {
-                        Some(p) => ("", String::new(), p),
+                    match sui_lint::rules::sx::state_pseudo(s) {
+                        Some(p) => ("", String::new(), p.to_string()),
                         None => continue,
                     }
                 }
@@ -1788,17 +1782,12 @@ fn classify_variant_state(
     }
     if let Some(base) = state.strip_prefix("group-")
         && let Some(p) = sui_lint::rules::sx::state_pseudo(base)
-            .map(str::to_string)
-            .or_else(|| sui_lint::rules::sx::state_attr(base))
     {
-        return (None, p, String::new());
+        return (None, p.to_string(), String::new());
     }
-    match sui_lint::rules::sx::state_pseudo(state)
-        .map(str::to_string)
-        .or_else(|| sui_lint::rules::sx::state_attr(state))
-    {
-        Some(p) if has_target => (None, String::new(), p),
-        Some(p) => (None, p, String::new()),
+    match sui_lint::rules::sx::state_pseudo(state) {
+        Some(p) if has_target => (None, String::new(), p.to_string()),
+        Some(p) => (None, p.to_string(), String::new()),
         None => (None, String::new(), String::new()),
     }
 }

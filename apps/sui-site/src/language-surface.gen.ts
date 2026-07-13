@@ -2200,6 +2200,30 @@ export const SX_STATE_PREFIXES: Array<{ prefix: string; selector: string }> = [
   {
     "prefix": "current",
     "selector": "[aria-current]:not([aria-current='false'])"
+  },
+  {
+    "prefix": "selected",
+    "selector": "[aria-selected='true']"
+  },
+  {
+    "prefix": "expanded",
+    "selector": "[aria-expanded='true']"
+  },
+  {
+    "prefix": "busy",
+    "selector": "[aria-busy='true']"
+  },
+  {
+    "prefix": "checked",
+    "selector": "[aria-checked='true']"
+  },
+  {
+    "prefix": "pressed",
+    "selector": "[aria-pressed='true']"
+  },
+  {
+    "prefix": "open",
+    "selector": "[open]"
   }
 ]
 

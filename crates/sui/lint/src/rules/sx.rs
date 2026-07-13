@@ -424,19 +424,16 @@ pub const STATE_PREFIXES: &[(&str, &str)] = &[
     ("active", ":active"),
     ("disabled", ":disabled"),
     ("current", "[aria-current]:not([aria-current='false'])"),
+    // ARIA states — styling keys on the SAME attribute assistive tech reads,
+    // so the visual is only reachable by stamping the semantics. A closed
+    // set: new states are rulings, not a namespace.
+    ("selected", "[aria-selected='true']"),
+    ("expanded", "[aria-expanded='true']"),
+    ("busy", "[aria-busy='true']"),
+    ("checked", "[aria-checked='true']"),
+    ("pressed", "[aria-pressed='true']"),
+    ("open", "[open]"),
 ];
-
-/// Attribute-state prefix: a `data-*` boolean attribute on the element (or
-/// its `group` ancestor) — self state, same class as the pseudo table.
-pub fn state_attr(state: &str) -> Option<String> {
-    if state.starts_with("data-")
-        && state.len() > 5
-        && state.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
-    {
-        return Some(format!("[{state}]"));
-    }
-    None
-}
 
 pub fn state_pseudo(state: &str) -> Option<&'static str> {
     STATE_PREFIXES.iter().find(|(n, _)| *n == state).map(|(_, p)| *p)
@@ -482,16 +479,13 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 [state, prop, token] => {
                     let ok = state_pseudo(state).is_some()
                         || condition_media(state).is_some()
-                        || state_attr(state).is_some()
-                        || state.strip_prefix("group-").is_some_and(|b| {
-                            state_pseudo(b).is_some() || state_attr(b).is_some()
-                        });
+                        || state.strip_prefix("group-").is_some_and(|b| state_pseudo(b).is_some());
                     if !ok {
                         findings.push(mk(
                             path,
                             line,
                             col,
-                            format!("sx unknown state `{state}:` — use hover:/focus:/focus-within:/active:/disabled:/current:, a data-* attribute state, or group-<state>: to react to an ancestor"),
+                            format!("sx unknown state `{state}:` — the closed state set: hover:/focus:/focus-within:/active:/disabled:/current:/selected:/expanded:/busy:/checked:/pressed:/open: (group-<state>: reacts to an ancestor)"),
                         ));
                         continue;
                     }
