@@ -54,25 +54,38 @@ fn impure_controller_fails_compile() {
 #[test]
 fn clean_controller_compiles() {
     let dir = tempfile::tempdir().expect("tempdir");
+    let sui_path = dir.path().join("view.sui");
+    let src = r#"<controller>
+import { controller } from '@ship/sui-runtime'
+export default controller({
+  mount: (_state, host) => {
+    host.addEventListener('click', () => {})
+    return () => {}
+  },
+})
+</controller>
+<div></div>"#;
+    fs::write(&sui_path, src).unwrap();
+
+    compile(src, view_opts(Some(sui_path))).expect("a clean inline controller compiles");
+}
+
+/// The one spelling: a sibling `<stem>.controller.ts` is a compile error, not a
+/// second way to author a controller.
+#[test]
+fn paired_controller_file_is_rejected() {
+    let dir = tempfile::tempdir().expect("tempdir");
     fs::write(
         dir.path().join("view.controller.ts"),
-        r#"
-            import { controller } from '@ship/sui-runtime'
-            export default controller({
-              mount: (_state, host) => {
-                host.addEventListener('click', () => {})
-                return () => {}
-              },
-            })
-        "#,
+        "export default controller({ scope: () => ({}) })",
     )
     .unwrap();
     let sui_path = dir.path().join("view.sui");
     let src = r#"<div></div>"#;
     fs::write(&sui_path, src).unwrap();
 
-    compile(src, view_opts(Some(sui_path)))
-        .expect("clean controller pair should compile");
+    let err = compile(src, view_opts(Some(sui_path))).unwrap_err();
+    assert_eq!(err.category.as_deref(), Some("sui-paired-controller"), "{err:?}");
 }
 
 #[test]

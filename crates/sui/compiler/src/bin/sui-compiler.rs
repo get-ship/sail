@@ -875,26 +875,12 @@ fn compile_one(
     // `source` no longer has it).
     let orig_source = fs::read_to_string(path)
         .with_context(|| format!("read {}", path.display()))?;
-    // SFC: an inline `<controller>` block is extracted and written to the
-    // generated `<stem>.controller.ts` module that `paired_setup` + the emit
-    // already consume — so authoring is one file, with no emit change. (A
-    // paired `.controller.ts` on disk stays valid; the inline block wins.)
+    // SFC: the inline `<controller>` block IS the controller. Nothing is
+    // materialized next to the source — a sibling `<stem>.controller.ts` is a
+    // compile error (`sui-paired-controller`), so writing one would author the
+    // very thing the compiler rejects.
     let (source, inline_controller) =
         sui_compiler::parse::preprocess::extract_controller_block(&orig_source);
-    if let Some(body) = &inline_controller {
-        if let (Some(parent), Some(file_name)) =
-            (path.parent(), path.file_name().and_then(|s| s.to_str()))
-        {
-            let stem = file_name.strip_suffix(".sui").unwrap_or(file_name);
-            let ctl_file = if stem == "page" {
-                "controller.ts".to_string()
-            } else {
-                format!("{stem}.controller.ts")
-            };
-            fs::write(parent.join(&ctl_file), body)
-                .with_context(|| format!("write generated controller {ctl_file}"))?;
-        }
-    }
     let mode = mode.map(|m| m.into()).unwrap_or(CompileMode::Auto);
     // Resolve the emit dir for this file. Without --out, outputs land in
     // the project mirror tree at `<repo-root>/.sui-out/<src-rel>/`;
@@ -906,14 +892,23 @@ fn compile_one(
     };
     fs::create_dir_all(&out_dir)
         .with_context(|| format!("create out dir {}", out_dir.display()))?;
-    // Paired controller is auto-detected: if `<stem>.controller.ts`
-    // exists next to the source, the compiler emits
-    // `import setup from "<rel>"` where `<rel>` is the path from the
-    // emit dir back to the controller. In mirror mode that's an absolute
-    // path back to the source dir; in legacy --out=source-dir mode it's
-    // `./<stem>.controller.ts`. Authors who want template-only just
-    // don't write the .controller.ts file.
-    let setup_url = paired_setup(path, &out_dir, mirror_mode);
+    // The controller is the source's `<controller>` block. The emit imports it
+    // as the VIRTUAL `<file>.sui.controller.ts` sibling — the same specifier
+    // deck's bundler serves by extracting the block; nothing is on disk. A
+    // template with no block gets no setup import.
+    let setup_url = inline_controller.as_ref().map(|_| {
+        let file = path
+            .file_name()
+            .and_then(|f| f.to_str())
+            .unwrap_or("component.sui");
+        if mirror_mode {
+            // The mirror tree is far from the source: import by absolute path so
+            // the bundler resolves the virtual module against the real source.
+            format!("{}.controller.ts", path.display())
+        } else {
+            format!("./{file}.controller.ts")
+        }
+    });
     // Resolve the styling policy from the nearest `sui.config.json` walking up
     // from this file. OPT-IN (identical to the deck bundler): a package with no
     // config gets no overrides and compiles exactly as before, so the floor rolls
@@ -1050,54 +1045,6 @@ fn compile_one(
 /// 0 while the LSP/agent show a hard error — the dishonest-exit-code bug
 /// (#255). Re-run the full diagnostic pass and treat any Error-severity finding
 /// as fatal so batch OK-checks (`sui-compiler build <dir> && …`) mean what they
-/// say.
-fn fatal_diagnostics_gate(source: &str, path: &Path) -> Result<()> {
-    let fatal: Vec<_> = check_all(source, Some(path), &[])
-        .into_iter()
-        .filter(|d| d.severity == DiagSeverity::Error)
-        .collect();
-    if fatal.is_empty() {
-        return Ok(());
-    }
-    // `check_all` diagnostics are already self-describing — lint findings that
-    // flow through this path carry their `[rule]` tag inside the message, and
-    // structural check-pass errors carry a clear category. Render the message
-    // verbatim with just the file/line/col prefix; adding a separate `[rule]`
-    // tag here would double the one the message already embeds.
-    let rendered = fatal
-        .iter()
-        .map(|d| format!("{}: line {} col {}: {}", path.display(), d.line, d.col, d.message))
-        .collect::<Vec<_>>()
-        .join("\n");
-    Err(anyhow!("{rendered}"))
-}
-
-fn paired_setup(path: &Path, out_dir: &Path, mirror_mode: bool) -> Option<String> {
-    let file_name = path.file_name()?.to_str()?;
-    let stem = file_name
-        .strip_suffix(".html.set")
-        .or_else(|| file_name.strip_suffix(".sui"))?;
-    let parent = path.parent()?;
-    // page.sui pairs with controller.ts (no stem prefix); every other
-    // stem pairs with <stem>.controller.ts.
-    let filename = if stem == "page" {
-        "controller.ts".to_string()
-    } else {
-        format!("{stem}.controller.ts")
-    };
-    let candidate = parent.join(&filename);
-    if !candidate.exists() {
-        return None;
-    }
-    if mirror_mode {
-        // Mirror tree may be far from the source. Walk up from out_dir
-        // until we hit the source dir, then reuse that as the import path.
-        let rel = pathdiff(&candidate, out_dir);
-        Some(rel)
-    } else {
-        Some(format!("./{filename}"))
-    }
-}
 
 /// Compute a relative path from `from_dir` to `to_file` using `..`
 /// segments. Falls back to the absolute `to_file` path when the two have
@@ -1133,4 +1080,26 @@ fn pathdiff(to_file: &Path, from_dir: &Path) -> String {
     let remainder: PathBuf = to_parts[common..].iter().collect();
     out.push_str(&remainder.to_string_lossy());
     out
+}
+
+/// say.
+fn fatal_diagnostics_gate(source: &str, path: &Path) -> Result<()> {
+    let fatal: Vec<_> = check_all(source, Some(path), &[])
+        .into_iter()
+        .filter(|d| d.severity == DiagSeverity::Error)
+        .collect();
+    if fatal.is_empty() {
+        return Ok(());
+    }
+    // `check_all` diagnostics are already self-describing — lint findings that
+    // flow through this path carry their `[rule]` tag inside the message, and
+    // structural check-pass errors carry a clear category. Render the message
+    // verbatim with just the file/line/col prefix; adding a separate `[rule]`
+    // tag here would double the one the message already embeds.
+    let rendered = fatal
+        .iter()
+        .map(|d| format!("{}: line {} col {}: {}", path.display(), d.line, d.col, d.message))
+        .collect::<Vec<_>>()
+        .join("\n");
+    Err(anyhow!("{rendered}"))
 }

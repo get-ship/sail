@@ -1,3 +1,9 @@
+<controller>
+export default function setup() {
+  return {}
+}
+</controller>
+
 <data name="agents" source="ship.agents.summaries()" live />
 
 <section class="agents">

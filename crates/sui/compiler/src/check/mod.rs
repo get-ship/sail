@@ -11,6 +11,7 @@ pub mod controller_parse;
 mod controller_parse_tests;
 pub mod controller_purity;
 pub mod light_shadow_root;
+pub mod paired_controller;
 pub mod css_token;
 pub mod lint_overrides;
 pub mod policy;
@@ -61,6 +62,7 @@ pub fn run(
     reserved_names::check(program)?;
     handler_complexity::check(program, controller.is_some())?;
     controller_purity::check(source_path, overrides)?;
+    paired_controller::check(source, source_path)?;
     css_token::check(source, source_path, overrides)?;
     // `controller` is resolved by the caller: the inline `<controller>` block
     // (SFC) wins, else the paired `.controller.ts`.
@@ -190,6 +192,7 @@ pub fn collect(
     // `controller` is resolved by the caller from the inline `<controller>`
     // block (SFC) — the one source, no paired-file fallback.
     push(check_mutations(program), source, &mut diags);
+    push(paired_controller::check(source, source_path), source, &mut diags);
     push(handler_complexity::check(program, controller.is_some()), source, &mut diags);
     if let Some(c) = controller {
         push(closed_sections::check(c), source, &mut diags);

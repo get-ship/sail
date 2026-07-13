@@ -215,14 +215,15 @@ pub fn check_all(
     // and resolve the controller (inline body wins, else paired file) for the
     // scope-aware passes — mirrors `compile()`.
     let (stripped, inline_controller_src) = parse::preprocess::extract_controller_block(source);
-    let controller = inline_controller_src
-        .and_then(|body| {
-            check::controller_parse::parse(
-                source_path.map(|p| p.to_path_buf()).unwrap_or_default(),
-                body,
-            )
-        })
-        .or_else(|| check::controller_parse::read_paired_controller(source_path));
+    // ONE controller: the inline `<controller>` block. A sibling
+    // `<stem>.controller.ts` is a compile error (`sui-paired-controller`), not
+    // a fallback.
+    let controller = inline_controller_src.and_then(|body| {
+        check::controller_parse::parse(
+            source_path.map(|p| p.to_path_buf()).unwrap_or_default(),
+            body,
+        )
+    });
     match parse::parse(&stripped) {
         Ok(program) => {
             check::collect(&program, &stripped, source_path, controller.as_ref(), overrides)
@@ -331,14 +332,9 @@ pub fn compile(source: &str, mut opts: CompileOpts) -> Result<CompileOutput, Com
     // Resolve the controller for the scope-aware checks in-memory: the inline
     // `<controller>` block (SFC) wins; else the paired `.controller.ts` on disk
     // (views / not-yet-migrated). No filesystem round-trip for the inline case.
-    let controller = inline_controller_src
-        .and_then(|body| {
-            check::controller_parse::parse(
-                opts.source_path.clone().unwrap_or_default(),
-                body,
-            )
-        })
-        .or_else(|| check::controller_parse::read_paired_controller(opts.source_path.as_deref()));
+    let controller = inline_controller_src.and_then(|body| {
+        check::controller_parse::parse(opts.source_path.clone().unwrap_or_default(), body)
+    });
     let effective_overrides = opts.lint_overrides.clone();
 
     let program = parse::parse(effective_source).map_err(|e| attach_path(e, &opts))?;

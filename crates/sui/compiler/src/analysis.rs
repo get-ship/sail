@@ -11,10 +11,22 @@
 use std::collections::BTreeSet;
 use std::path::Path;
 
-use crate::check::controller_parse::{read_paired_controller, ParsedController};
+use crate::check::controller_parse::ParsedController;
 use crate::check::symbol_table::SymbolTable;
 use crate::diagnostics::{line_col, Diagnostic};
 use crate::ir::*;
+
+/// The source's controller: its inline `<controller>` block. There is no
+/// paired-file fallback — a sibling `<stem>.controller.ts` is a compile error
+/// (`sui-paired-controller`).
+fn inline_controller(source: &str, source_path: Option<&std::path::Path>) -> Option<ParsedController> {
+    let body = crate::parse::preprocess::extract_controller_block(source).1?;
+    crate::check::controller_parse::parse(
+        source_path.map(|p| p.to_path_buf()).unwrap_or_default(),
+        body,
+    )
+}
+
 
 /// A name in scope for a `.sui` template, with where it came from and (when
 /// controller-declared) where to jump to.
@@ -73,7 +85,7 @@ pub fn analyze(
             controller_path: None,
         };
     };
-    let controller = read_paired_controller(source_path);
+    let controller = inline_controller(source, source_path);
     let table = SymbolTable::build(&program, controller.as_ref());
     let symbols = symbols_from_table(&table, controller.as_ref());
     let (tags, events) = collect_tags_events(&program);
@@ -91,7 +103,7 @@ pub fn analyze(
 /// and looks it up in the scope table.
 pub fn hover_at(source: &str, source_path: Option<&Path>, line: usize, col: usize) -> Option<Hover> {
     let program = crate::parse::parse(source).ok()?;
-    let controller = read_paired_controller(source_path);
+    let controller = inline_controller(source, source_path);
     let table = SymbolTable::build(&program, controller.as_ref());
     let offset = offset_of(source, line, col);
     let root = root_ident_at(source.as_bytes(), offset)?;
@@ -106,7 +118,7 @@ pub fn completions_at(source: &str, source_path: Option<&Path>) -> Vec<Symbol> {
     let Ok(program) = crate::parse::parse(source) else {
         return Vec::new();
     };
-    let controller = read_paired_controller(source_path);
+    let controller = inline_controller(source, source_path);
     let table = SymbolTable::build(&program, controller.as_ref());
     symbols_from_table(&table, controller.as_ref())
 }

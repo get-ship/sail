@@ -1,3 +1,11 @@
+<controller>
+import { controller, signal } from '@ship/sui-runtime'
+
+export default controller({
+  scope: () => ({ n: signal(0) }),
+})
+</controller>
+
 <div>
   <input bind:this={n} />
 </div>
