@@ -18,6 +18,7 @@ import { resolve, dirname, basename, relative } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 // @ts-expect-error — JS module, no .d.ts.
 import { spawnBoundedOrThrow } from './spawn-bounded.mjs'
+import { nativeCompileJson } from '@ship/sui-dom/test-utils'
 
 const require = createRequire(import.meta.url)
 
@@ -405,53 +406,65 @@ export function suiComponentVitestConfig(opts: SuiComponentVitestOptions = {}) {
       setupFiles: [assertHonestySetup, ...(opts.setupFiles ?? ['./test/setup.ts'])],
       ...SHIP_VITEST_DEFAULTS,
     },
-    // `<tag>.compiled.js` shim — resolve to the mirror-tree artifact (produced
-    // by the `pretest` hook), CLI-compile on demand from a sibling `.sui` if
-    // missing, and wasm-compile inline as the final watch-mode fallback.
+    // SUI source loader — deck-parity, one compiler. `.compiled.js` is the
+    // published-name convention for a sibling `.sui`; the `.sui` compiles
+    // in-process through the linked addon with the source's own policy
+    // (sui.config.json walk-up — the floor applies here exactly as in deck
+    // and the CLI, so an unmigrated component fails with the compiler's
+    // message). An inline <controller> is served as the virtual
+    // `<file>.sui.controller.ts` sibling; vite transforms it as TS and
+    // resolves its imports like any module.
     plugins: [
       {
-        name: 'compiled-js-test-shim',
+        name: 'sui-source-loader',
+        enforce: 'pre' as const,
         resolveId(id: string, importer?: string) {
-          if (!id.endsWith('.compiled.js') || !importer) return null
-          const sourceArtifact = resolve(resolve(importer, '..'), id)
-          const sourceDir = dirname(sourceArtifact)
-          const stem = basename(sourceArtifact).replace(/\.compiled\.js$/, '')
-          const mirrorFile = mirrorArtifactFor(sourceDir, stem)
-          const suiFile = resolve(sourceDir, `${stem}.sui`)
-          // A mirror artifact is only valid while it's at least as new as its
-          // `.sui` source AND the compiler that would rebuild it — a stale
-          // mirror silently tests yesterday's compile.
-          const compilerMtime = existsSync(compilerBin) ? statSync(compilerBin).mtimeMs : 0
-          const mirrorFresh =
-            existsSync(mirrorFile) &&
-            statSync(mirrorFile).mtimeMs >= compilerMtime &&
-            (!existsSync(suiFile) || statSync(mirrorFile).mtimeMs >= statSync(suiFile).mtimeMs)
-          if (mirrorFresh) return mirrorFile
-          if (existsSync(suiFile)) {
-            // Native/CLI compile produces a cached mirror artifact; only attempt
-            // it where the Rust workspace exists. Elsewhere (JS-only consumers)
-            // skip straight to the inline WASM fallback below.
-            if (nativeCompileAvailable) {
-              // A CLI failure (e.g. the floor on a held component) falls
-              // through to the inline WASM compile — the harness tests
-              // behavior; build gates enforce policy.
-              try {
-                compileSui(suiFile, stem)
-              } catch {
-                return `\0compiled-js-shim:${suiFile}`
-              }
-              if (existsSync(mirrorFile)) return mirrorFile
-            }
-            return `\0compiled-js-shim:${suiFile}`
+          if (!importer) return null
+          if (id.endsWith('.sui.controller.ts')) {
+            return resolve(dirname(importer), id)
+          }
+          if (id.endsWith('.compiled.js')) {
+            const artifact = resolve(dirname(importer), id)
+            const sui = artifact.replace(/\.compiled\.js$/, '.sui')
+            if (existsSync(sui)) return sui
           }
           return null
         },
         load(id: string) {
-          const prefix = '\0compiled-js-shim:'
-          if (!id.startsWith(prefix)) return null
-          // Every `<tag>.compiled.js` artifact is a component — match the
-          // bin compiler's hardcoded shadow DOM so shadow-root queries resolve.
-          return compileSuiToJs(id.slice(prefix.length), { shadow: true })
+          if (id.endsWith('.sui.controller.ts')) {
+            const sui = id.slice(0, -'.controller.ts'.length)
+            const out = JSON.parse(
+              nativeCompileJson(readFileSync(sui, 'utf8'), JSON.stringify({ sourcePath: sui })),
+            ) as { kind: string; controller?: string | null; message?: string }
+            if (out.kind !== 'ok') throw new Error(`[sui] ${sui}: ${out.message}`)
+            if (!out.controller) throw new Error(`[sui] ${id}: no inline <controller> in ${sui}`)
+            return out.controller
+          }
+          if (!id.endsWith('.sui')) return null
+          const source = readFileSync(id, 'utf8')
+          const stem = basename(id, '.sui')
+          const isComponent = stem.includes('-') && stem !== 'page' && stem !== 'index'
+          const hasInline = /<controller[\s>]/.test(source)
+          const paired = resolve(dirname(id), `${stem}.controller.ts`)
+          const setupUrl = hasInline
+            ? `./${basename(id)}.controller.ts`
+            : existsSync(paired)
+              ? `./${stem}.controller.ts`
+              : undefined
+          const out = JSON.parse(
+            nativeCompileJson(
+              source,
+              JSON.stringify({
+                componentName: isComponent ? stem : undefined,
+                sourcePath: id,
+                setupUrl,
+              }),
+            ),
+          ) as { kind: string; js?: string; message?: string; line?: number }
+          if (out.kind !== 'ok') {
+            throw new Error(`[sui] ${id}:${out.line ?? ''} ${out.message}`)
+          }
+          return out.js
         },
       },
     ],

@@ -62,6 +62,9 @@ enum NapiResult {
         js: String,
         css: Option<String>,
         dts: Option<String>,
+        /// Inline `<controller>` body (SFC), for hosts that materialize it
+        /// as a sibling module the emitted `setupUrl` import resolves to.
+        controller: Option<String>,
     },
     Err {
         message: String,
@@ -112,6 +115,13 @@ fn compile_to_result(source: &str, opts_json: &str) -> Result<NapiResult, String
         shadow: parsed.shadow,
     });
 
+    // Language policy comes from the source's own sui.config.json walk-up —
+    // this seam enforces exactly what deck and the CLI enforce.
+    let lint_overrides = parsed
+        .source_path
+        .as_deref()
+        .map(|p| sui_compiler::Policy::overrides_for(std::path::Path::new(p)))
+        .unwrap_or_default();
     let opts = CompileOpts {
         setup_url: parsed.setup_url,
         mode,
@@ -119,14 +129,17 @@ fn compile_to_result(source: &str, opts_json: &str) -> Result<NapiResult, String
         component_meta,
         emit_dts: false,
         emit_component_imports: false,
-        lint_overrides: Vec::new(),
+        lint_overrides,
     };
 
+    let inline_controller =
+        sui_compiler::parse::preprocess::extract_controller_block(source).1;
     Ok(match native_compile(source, opts) {
         Ok(out) => NapiResult::Ok {
             js: out.js,
             css: out.css,
             dts: out.dts,
+            controller: inline_controller,
         },
         Err(err) => NapiResult::Err {
             message: err.message.clone(),

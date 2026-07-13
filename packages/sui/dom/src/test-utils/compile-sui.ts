@@ -223,6 +223,13 @@ function stripImports(js: string): string {
     .replace(/^\s*import\s+setup\s+from\s+["'][^"']+["']\s*;?\s*$/gm, 'const setup = __setup;')
 }
 
+/** Raw native compile — `(source, optsJson)` through the linked compiler
+ *  addon. The vitest source loader builds on this so tests compile exactly
+ *  what deck compiles. */
+export function nativeCompileJson(source: string, optsJson: string): string {
+  return ensureNative()(source, optsJson)
+}
+
 /** Evaluate a compiled JS module body and return its default export. */
 export function evalCompiledJs(
   js: string,
