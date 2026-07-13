@@ -1,10 +1,12 @@
 // /components/[tag] — detail data for the FULL L1 surface (the 48 elements
 // the l1-conformance gate renders, minus nothing) plus the two fx actions.
-// slug → { heading, blurb, variants, props, usage }. Props are curated from
-// the stdlib <component> declarations (crates/sui/compiler/stdlib/*.sui);
-// the usage strings live in ./snippets.ts so the site-wide snippet guard
-// compiles every one of them.
+// slug → { heading, blurb, variants, props, usage }. Props tables are
+// GENERATED from the compiler's prop registry (see genProps below); regen
+// with `cargo run -p sui-compiler -- prop-registry` after touching a stdlib
+// <component>{ props } declaration. The usage strings live in ./snippets.ts
+// so the site-wide snippet guard compiles every one of them.
 
+import { PROP_REGISTRY } from '../../../src/prop-registry.gen'
 import { usage } from './snippets'
 
 export interface PropRow {
@@ -32,6 +34,29 @@ export interface DetailEntry {
 
 const TONES = 'default · primary · info · success · warning · destructive · accent · muted'
 
+// The props table is GENERATED: names, types and defaults come from the
+// compiler's prop registry (the same <component>{ props } declarations the
+// build validates attributes against), so this page can never drift from the
+// stdlib. The curated rows below serve two narrower jobs:
+//   * a hand description for a generated prop the stdlib hasn't documented
+//     yet (matched by name; the stdlib JSDoc wins once it exists),
+//   * language-surface rows the registry can't know — bind:/on:/motion:
+//     directives, children contracts, announced events — appended after.
+const genProps = (tag: string, curated: PropRow[]): PropRow[] => {
+  const gen = PROP_REGISTRY[tag] ?? []
+  const curatedByName = new Map(curated.map((r) => [r.name, r]))
+  const rows: PropRow[] = gen.map((g) => ({
+    name: g.name,
+    type: g.type,
+    desc: g.desc ?? curatedByName.get(g.name)?.desc ?? (g.default ? `default: ${g.default}` : ''),
+  }))
+  const genNames = new Set(gen.map((g) => g.name))
+  for (const r of curated) {
+    if (!genNames.has(r.name)) rows.push(r)
+  }
+  return rows
+}
+
 const lang = (
   tag: string,
   key: string,
@@ -44,7 +69,7 @@ const lang = (
   blurb: rest.blurb,
   variants: rest.variants,
   variantAttr: rest.variantAttr,
-  props: rest.props,
+  props: genProps(tag, rest.props),
   usage: usage[tag] ?? '',
 })
 
