@@ -4,7 +4,7 @@
 // JSON path is resolved cwd-independently by `@ship/test-setup`.
 
 import { initJsdomPolyfills, primeLucideIcons } from '@ship/test-setup'
-import { primeIconCache } from '../../kit/src/sui-icon/registry'
+import { primeIconCache } from '../src/sui-icon/registry'
 
 primeLucideIcons(primeIconCache)
 initJsdomPolyfills()
