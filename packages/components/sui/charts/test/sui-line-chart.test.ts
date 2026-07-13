@@ -1,20 +1,29 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sui-line-chart/sui-line-chart.compiled.js'
-import { createContainerRegistry, flush, mount } from '../src/test-utils'
+import { createContainerRegistry, flush, mount, nonTokenPaints } from '../src/test-utils'
 
 const reg = createContainerRegistry()
 afterEach(() => reg.cleanup())
 
-const shadow = (el: HTMLElement) => el.shadowRoot!
+// Light DOM: the component renders into the host element, so the host IS the
+// query root — no shadow boundary, and no hand-authored classes to key on. The
+// queries below are the component's real semantics: tags, ARIA, SVG paint.
+const root = (el: HTMLElement): HTMLElement => el
+
+/** Y-grid reference lines — the only dashed elements in the plot. */
+const gridLines = (el: HTMLElement) => root(el).querySelectorAll('svg line[stroke-dasharray]')
 
 describe('<sui-line-chart>', () => {
   it('registers as a custom element', () => {
     expect(customElements.get('sui-line-chart')).toBeDefined()
   })
 
-  it('attaches a shadow root', () => {
-    const { el } = mount(reg, 'sui-line-chart')
-    expect(shadow(el)).not.toBeNull()
+  it('renders into the light DOM (no shadow boundary)', async () => {
+    const series = JSON.stringify([{ name: 'a', data: [1, 2] }])
+    const { el } = mount(reg, 'sui-line-chart', { series })
+    await flush()
+    expect(el.shadowRoot).toBeNull()
+    expect(el.querySelector('svg[role="img"]')).not.toBeNull()
   })
 
   it('renders one path per valid series', async () => {
@@ -24,14 +33,14 @@ describe('<sui-line-chart>', () => {
     ])
     const { el } = mount(reg, 'sui-line-chart', { series })
     await flush()
-    expect(shadow(el).querySelectorAll('path').length).toBe(2)
+    expect(root(el).querySelectorAll('path').length).toBe(2)
   })
 
   it('SVG has role=img', async () => {
     const series = JSON.stringify([{ name: 'a', data: [1, 2] }])
     const { el } = mount(reg, 'sui-line-chart', { series })
     await flush()
-    expect(shadow(el).querySelector('svg')?.getAttribute('role')).toBe('img')
+    expect(root(el).querySelector('svg')?.getAttribute('role')).toBe('img')
   })
 
   it('aria-label leads with the label prop (kind + data summary)', async () => {
@@ -40,7 +49,7 @@ describe('<sui-line-chart>', () => {
     const series = JSON.stringify([{ name: 'a', data: [1, 2] }])
     const { el } = mount(reg, 'sui-line-chart', { series, label: 'Activity' })
     await flush()
-    const aria = shadow(el).querySelector('svg')?.getAttribute('aria-label') ?? ''
+    const aria = root(el).querySelector('svg')?.getAttribute('aria-label') ?? ''
     expect(aria.startsWith('Activity')).toBe(true)
   })
 
@@ -50,7 +59,7 @@ describe('<sui-line-chart>', () => {
     const series = JSON.stringify([{ name: 'a', data: [1, 2] }])
     const { el } = mount(reg, 'sui-line-chart', { series })
     await flush()
-    const aria = shadow(el).querySelector('svg')?.getAttribute('aria-label') ?? ''
+    const aria = root(el).querySelector('svg')?.getAttribute('aria-label') ?? ''
     expect(aria.startsWith('line chart')).toBe(true)
   })
 
@@ -58,27 +67,27 @@ describe('<sui-line-chart>', () => {
     const series = JSON.stringify([{ name: 'a', data: [1, 2, 3] }])
     const { el } = mount(reg, 'sui-line-chart', { series, points: true })
     await flush()
-    expect(shadow(el).querySelectorAll('circle').length).toBe(3)
+    expect(root(el).querySelectorAll('circle').length).toBe(3)
   })
 
   it('renders 3 grid lines when grid attr is set', async () => {
     const series = JSON.stringify([{ name: 'a', data: [1, 2, 3] }])
     const { el } = mount(reg, 'sui-line-chart', { series, grid: true })
     await flush()
-    expect(shadow(el).querySelectorAll('line.grid-line').length).toBe(3)
+    expect(gridLines(el).length).toBe(3)
   })
 
   it('no grid lines rendered without grid attr', async () => {
     const series = JSON.stringify([{ name: 'a', data: [1, 2, 3] }])
     const { el } = mount(reg, 'sui-line-chart', { series })
     await flush()
-    expect(shadow(el).querySelectorAll('line.grid-line').length).toBe(0)
+    expect(gridLines(el).length).toBe(0)
   })
 
   it('tolerates bad JSON and renders no paths', async () => {
     const { el } = mount(reg, 'sui-line-chart', { series: 'not-json' })
     await flush()
-    expect(shadow(el).querySelectorAll('path').length).toBe(0)
+    expect(root(el).querySelectorAll('path').length).toBe(0)
   })
 
   it('renders a single-point series as one centered path', async () => {
@@ -88,7 +97,7 @@ describe('<sui-line-chart>', () => {
     const series = JSON.stringify([{ name: 'a', data: [5] }])
     const { el } = mount(reg, 'sui-line-chart', { series })
     await flush()
-    expect(shadow(el).querySelectorAll('path').length).toBe(1)
+    expect(root(el).querySelectorAll('path').length).toBe(1)
   })
 
   it('points reflects to host attribute', () => {
@@ -101,16 +110,36 @@ describe('<sui-line-chart>', () => {
     expect(el.hasAttribute('grid')).toBe(true)
   })
 
-  it('slot for legend is present in shadow DOM', async () => {
+  it('slot for legend is present', async () => {
     const { el } = mount(reg, 'sui-line-chart')
     await flush()
-    expect(shadow(el).querySelector('slot')).not.toBeNull()
+    expect(root(el).querySelector('slot')).not.toBeNull()
   })
 
-  it('shadow styles include prefers-reduced-motion rule', () => {
-    const { el } = mount(reg, 'sui-line-chart')
-    const styleEl = shadow(el).querySelector('style')
-    expect(styleEl?.textContent).toContain('prefers-reduced-motion')
+  it('paints every mark with a design token (no color literal)', async () => {
+    const series = JSON.stringify([
+      { name: 'a', data: [1, 2, 3], tone: 'info' },
+      { name: 'b', data: [3, 2, 1], tone: 'warning' },
+    ])
+    const { el } = mount(reg, 'sui-line-chart', { series, grid: true, points: true })
+    await flush()
+    expect(nonTokenPaints(root(el))).toEqual([])
+  })
+
+  it('carries no inline style attribute (styling is the language, not style=)', async () => {
+    const series = JSON.stringify([{ name: 'a', data: [1, 2, 3] }])
+    const { el } = mount(reg, 'sui-line-chart', { series })
+    await flush()
+    expect(root(el).querySelector('[style]')).toBeNull()
+  })
+
+  it('grid lines are hairline dashes in the border token', async () => {
+    const series = JSON.stringify([{ name: 'a', data: [1, 2, 3] }])
+    const { el } = mount(reg, 'sui-line-chart', { series, grid: true })
+    await flush()
+    const line = gridLines(el)[0]
+    expect(line?.getAttribute('stroke')).toBe('var(--border)')
+    expect(line?.getAttribute('stroke-width')).toBe('1')
   })
 
   it('reacts to series attribute change', async () => {
@@ -121,9 +150,9 @@ describe('<sui-line-chart>', () => {
     ])
     const { el } = mount(reg, 'sui-line-chart', { series: series1 })
     await flush()
-    expect(shadow(el).querySelectorAll('path').length).toBe(1)
+    expect(root(el).querySelectorAll('path').length).toBe(1)
     el.setAttribute('series', series2)
     await flush()
-    expect(shadow(el).querySelectorAll('path').length).toBe(2)
+    expect(root(el).querySelectorAll('path').length).toBe(2)
   })
 })

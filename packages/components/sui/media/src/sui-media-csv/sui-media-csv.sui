@@ -2,15 +2,15 @@
   <sui-media-csv> — the CSV/TSV renderer arm of the sui-media family.
 
   Read-only. Parses resolved csv/tsv text (via `prop:src` identity OR the
-  `type="string"` SSR fallback prop) into `{ rows, columns }` and composes the
-  COMMITTED `sui-table` (variant="data") through `prop:table` identity — it does
-  NOT re-invent a grid. The engine arrives as a live JS reference; the table
-  windows it.
+  `type="string"` SSR fallback prop) into `{ rows, columns }`, feeds the shared
+  `createTable` engine (Backbone #1 — it does NOT re-invent a row model), and
+  renders the engine's columns/rows as a plain `<table>`. The table skin is the
+  framework's (contracts sheet): a plain `<table>`/`<th>`/`<td>` is already
+  styled from tokens, so the renderer declares nothing.
 
-  Density is the platform axis (`<html data-density>`): rows read the
-  `--density-*` channel through `sui-table`. This renderer sets NEITHER
-  `density` NOR `dense` on the composed table (the pre-existing sui-table
-  density-prop conflict is not propagated here).
+  Density is the platform axis (`<html data-density>`): the framework's table
+  skin reads the `--density-*` channel. This renderer exposes NEITHER `density`
+  NOR `dense`.
 
   Source-in, never fetch. No `fetch`/`EventSource`/`ship.*` — bytes/text arrive
   already resolved.
@@ -23,8 +23,6 @@
   Events (ViewerRenderer contract, via emit):
     sui-viewer-load           — first successful parse
     sui-viewer-error {message} — malformed input
-
-  Parts: delegates to sui-table parts.
 -->
 
 <component>{
@@ -34,36 +32,20 @@
     text: '',
   },
 }</component>
-<style>
-  .sui-media-csv {
-    display: block;
-    width: 100%;
-    color: var(--foreground);
-  }
-  .sui-media-csv[hidden] { display: none; }
-
-  .error {
-    display: block;
-    padding: var(--space-3) var(--space-4);
-    color: var(--destructive);
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-  }
-</style>
-
-
 <controller>
 // sui-media-csv — the CSV/TSV renderer controller (tier-2, glue-only). Parses
-// resolved text (prop:src identity OR the `text` SSR prop) and composes the
-// committed `sui-table` via a `createTable` engine bound through `prop:table`.
-// Heavy parse logic lives in `../engine/csv-parse.ts` (the pre-committed split).
+// resolved text (prop:src identity OR the `text` SSR prop) into the shared
+// `createTable` engine, and exposes the engine's columns/rows as flat views the
+// template renders as a plain `<table>`. Heavy parse logic lives in
+// `../engine/csv-parse.ts` (the pre-committed split); the row model is the
+// committed engine — this renderer owns neither.
 //
 // Source-in, never fetch: no `fetch`/`EventSource`/`ship.*`. Lifecycle events
 // go through the sanctioned `emitViewer*` helpers (the free `emit`).
 //
 // Authority: build-spec Slice 4, §"Backbone #2 — ViewerRenderer contract".
 
-import { controller, effect, signal } from '@ship/sui-runtime'
+import { controller, derived, effect, signal } from '@ship/sui-runtime'
 import { createTable, type Table } from '@ship/sui-primitives'
 import type { ViewerSource } from '../engine/types'
 import { CsvParseError, parseCsv, type CsvDelimiter } from '../engine/csv-parse'
@@ -71,6 +53,18 @@ import { emitViewerError, emitViewerLoad } from '../engine/renderer-contract'
 import type { Scope } from './sui-media-csv.sui'
 
 type CsvRecord = Record<string, string> & { id: string }
+
+/** A rendered header cell — the engine's column, flattened for the template. */
+interface HeaderView {
+  id: string
+  label: string
+}
+
+/** A rendered row: the engine's row id + one cell per visible column. */
+interface RowView {
+  id: string
+  cells: Array<{ id: string; value: string }>
+}
 
 /** Pull the renderable text out of a live ViewerSource (prop:src identity). */
 function textOf(src: ViewerSource | string | null): string {
@@ -86,7 +80,32 @@ export default controller({
     const srcSig = signal<ViewerSource | string | null>(null)
     const tableEngine = signal<Table<CsvRecord> | null>(null)
     const errorMsg = signal<string>('')
-    return { srcSig, tableEngine, errorMsg }
+
+    // The template renders the ENGINE's view of the data (its column order and
+    // its row model), never the raw parse — one row model, no second grid.
+    const columns = derived<HeaderView[]>(() => {
+      const t = tableEngine()
+      if (!t) return []
+      return t.visibleLeafColumns().map((c) => ({
+        id: c.id,
+        label: typeof c.columnDef.header === 'string' ? c.columnDef.header : c.id,
+      }))
+    })
+
+    const rows = derived<RowView[]>(() => {
+      const t = tableEngine()
+      if (!t) return []
+      const cols = t.visibleLeafColumns()
+      return t.rows().map((r) => ({
+        id: r.id,
+        cells: cols.map((c) => ({
+          id: `${r.id}:${c.id}`,
+          value: String(r.getValue(c.id) ?? ''),
+        })),
+      }))
+    })
+
+    return { srcSig, tableEngine, errorMsg, columns, rows }
   },
 
   mount(state, host) {
@@ -121,17 +140,10 @@ export default controller({
           header: readHeader(),
           delimiter: readDelimiter(),
         })
+        // The renderer is read-only data-display: no filter/sort affordance is
+        // rendered, so the engine carries the row model and nothing else.
         const engine = createTable<CsvRecord>({
           data: rows,
-          // `enableColumnFilter: false` keeps the committed `sui-table`
-          // from rendering a per-column `<input>` in each header
-          // cell. Without this opt-out, the input's intrinsic
-          // min-width (~189px) overflows the column track at narrow
-          // stages and the QA probe flags OVERFLOW-X inside the
-          // CSV host's shadow. The CSV renderer is read-only /
-          // data-display; filter affordance isn't part of the
-          // contract — authors can opt back in by overriding the
-          // column defs.
           columns: columns.map((c) => ({
             id: c.field,
             accessorKey: c.field,
@@ -159,7 +171,24 @@ export default controller({
 
 </controller>
 {#if errorMsg()}
-  <div class="error" role="alert">{errorMsg()}</div>
+  <column role="alert" gap="0" sx="py:3 px:4 fg:destructive font:mono text:sm">{errorMsg()}</column>
 {:else}
-  <table class="grid" variant="data" hoverable prop:table={tableEngine()}></table>
+  <table hoverable>
+    <thead>
+      <tr>
+        {#for col of columns() key={col.id}}
+          <th>{col.label}</th>
+        {/for}
+      </tr>
+    </thead>
+    <tbody>
+      {#for row of rows() key={row.id}}
+        <tr data-row-id={row.id}>
+          {#for cell of row.cells key={cell.id}}
+            <td>{cell.value}</td>
+          {/for}
+        </tr>
+      {/for}
+    </tbody>
+  </table>
 {/if}

@@ -24,8 +24,12 @@ const mount = async (markup = '<sui-composer></sui-composer>'): Promise<HTMLElem
   await flush()
   return el
 }
+// The field is the composer's text control — an <input>, or a <textarea> in
+// multiline mode. Light DOM: query the real control off the host.
 const field = (el: HTMLElement): HTMLInputElement =>
-  el.shadowRoot!.querySelector<HTMLInputElement>('[part="field"]')!
+  el.querySelector<HTMLInputElement>('input, textarea')!
+const sendButton = (el: HTMLElement): HTMLElement =>
+  el.querySelector<HTMLElement>('button[aria-label="Send"]')!
 
 /** Drive the field as a user would: set the value + fire input so the
  *  controller's text signal tracks it, then return the captured submit
@@ -78,7 +82,7 @@ describe('<sui-composer>', () => {
     const rec = captureSubmit(el)
     type(el, 'via button')
     await flush()
-    el.shadowRoot!.querySelector<HTMLElement>('button')!.click()
+    sendButton(el).click()
     expect(rec.detail).toEqual({ text: 'via button', attachments: [] })
   })
 
@@ -116,7 +120,7 @@ describe('<sui-composer>', () => {
     expect(rec.detail!.attachments).not.toBe(attachments)
   })
 
-  it('the submit event crosses the shadow boundary (bubbles + composed)', async () => {
+  it('the submit event reaches the document (bubbles + composed)', async () => {
     const el = await mount()
     let seenAtDocument = false
     document.addEventListener('sui-composer-submit', () => { seenAtDocument = true }, {

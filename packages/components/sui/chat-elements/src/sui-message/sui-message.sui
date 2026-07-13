@@ -3,7 +3,12 @@
   participant in any modality. Pure declarative primitive: the consumer
   supplies the content via the default slot and any per-message actions
   via the `trailing` slot. No controller — role / content-type / status
-  drive presentation entirely through host-attribute CSS.
+  drive presentation entirely.
+
+  role / content-type / status ride the root's `data-state` token list, so
+  the bubble reads all three through `group-state-<value>:` sx. The three
+  vocabularies are disjoint, so one token list carries them without
+  collision.
 
   Props
   ─────────────────────────────────────────────────────────────────────
@@ -31,107 +36,43 @@
     status: 'sent' | 'sending' | 'error',
   },
 }</component>
-<style>
-  .sui-message {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    max-width: 100%;
-    font-family: var(--font-body);
-    color: var(--foreground);
-    --bubble-bg: var(--card);
-    --bubble-border: var(--border);
-    --bubble-fg: var(--foreground);
-  }
-  .sui-message[hidden] { display: none; }
 
-  /* Role tones the bubble surface + aligns user turns to the end. */
-  .sui-message[role='user'] {
-    align-items: flex-end;
-    --bubble-bg: var(--tone-primary-bg);
-    --bubble-border: var(--tone-primary-border);
-  }
-  .sui-message[role='system'] {
-    --bubble-bg: var(--tone-muted-bg);
-    --bubble-border: var(--border);
-    --bubble-fg: var(--muted-foreground);
-  }
-  .sui-message[role='tool'] {
-    --bubble-bg: var(--tone-accent-bg);
-    --bubble-border: var(--tone-accent-border);
-  }
+<column
+  gap="1"
+  align={role() === 'user' ? 'end' : 'stretch'}
+  data-state={role() + ' ' + contentType() + ' ' + status()}
+  sx="group max-w:full font:body fg:foreground"
+>
+  <row gap="2" align="baseline" sx="px:half text:xs fg:muted-foreground">
+    <span sx="weight:medium">{role()}</span>
+    {#if timestamp()}
+      <time datetime={timestamp()}>{timestamp()}</time>
+    {/if}
+  </row>
 
-  /* Status tints the leading edge of the bubble. */
-  .sui-message[status='error'] {
-    --bubble-border: var(--tone-destructive-border);
-    --bubble-fg: var(--foreground);
-  }
-  .sui-message[status='sending'] .bubble { opacity: 0.7; }
-
-  .meta {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-2);
-    font-size: var(--text-xs);
-    color: var(--muted-foreground);
-    padding-inline: 2px;
-  }
-  .role-label { text-transform: capitalize; font-weight: var(--font-weight-medium); }
-  .time { font-variant-numeric: tabular-nums; }
-
-  .bubble {
-    box-sizing: border-box;
-    padding: var(--space-2) var(--space-3);
-    background: var(--bubble-bg);
-    border: 1px solid var(--bubble-border);
-    border-radius: var(--radius-lg);
-    color: var(--bubble-fg);
-    font-size: var(--text-base);
-    line-height: 1.5;
-    overflow-wrap: anywhere;
-  }
-
-  /* Monospace surfaces for code-shaped content. */
-  .sui-message[content-type='code'] .content,
-  .sui-message[content-type='terminal-snapshot'] .content,
-  .sui-message[content-type='tool-call'] .content {
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    white-space: pre-wrap;
-  }
-  .sui-message[content-type='terminal-snapshot'] .bubble {
-    background: var(--surface-inverse);
-    color: var(--background);
-    border-color: var(--border-subtle);
-  }
-  /* Framed media for visual content. */
-  .sui-message[content-type='drawing'] .content,
-  .sui-message[content-type='image'] .content {
-    display: block;
-  }
-  .sui-message[content-type='drawing'] ::slotted(*),
-  .sui-message[content-type='image'] ::slotted(*) {
-    max-width: 100%;
-    border-radius: var(--radius-md);
-  }
-
-  .trailing { display: contents; }
-  ::slotted([slot='trailing']) { margin-top: var(--space-1); }
-</style>
-
-<div class="meta">
-  <span class="role-label role">{role()}</span>
-  {#if timestamp()}
-    <time class="time" datetime={timestamp()}>{timestamp()}</time>
-  {/if}
-</div>
-
-<div class="bubble">
-  <div class="content">
+  <div
+    sx="py:2 px:3 radius:lg text:base leading:normal bg:card border:border fg:foreground
+        group-state-user:bg:tone-primary-bg group-state-user:border:tone-primary-border
+        group-state-system:bg:tone-muted-bg group-state-system:fg:muted-foreground
+        group-state-tool:bg:tone-accent-bg group-state-tool:border:tone-accent-border
+        group-state-error:border:tone-destructive-border
+        group-state-sending:opacity:75
+        group-state-code:font:mono group-state-code:text:sm group-state-code:wrap:pre-wrap
+        group-state-tool-call:font:mono group-state-tool-call:text:sm
+        group-state-tool-call:wrap:pre-wrap
+        group-state-terminal-snapshot:font:mono group-state-terminal-snapshot:text:sm
+        group-state-terminal-snapshot:wrap:pre-wrap
+        group-state-terminal-snapshot:bg:surface-inverse
+        group-state-terminal-snapshot:fg:background
+        group-state-terminal-snapshot:border:border-subtle"
+  >
     <slot></slot>
   </div>
-</div>
 
-<div class="trailing">
-  <slot name="trailing"></slot>
-</div>
+  <!-- display:contents so a message with no actions has no trailing box (the
+       column's gap never opens under it) and slotted actions become items of
+       the message column, following its alignment. -->
+  <div sx="display:contents">
+    <slot name="trailing"></slot>
+  </div>
+</column>

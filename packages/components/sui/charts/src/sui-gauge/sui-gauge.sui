@@ -5,7 +5,6 @@
   value arc + threshold color are a pure `derived` over `gaugeGeometry` (present
   at first paint), and loading / error branch on the engine discriminators
   composing the full-size primitives (gauge is full-size despite being compact).
-  The value arc carries `part="fill"`; the track `part="track"`.
 
   Props
   ─────────────────────────────────────────────────────────────────────────────
@@ -15,14 +14,19 @@
   tone            union   reflect   explicit arc color; empty = resolve from thresholds.
   low-threshold   number  0         0 = unset (below → destructive).
   high-threshold  number  0         0 = unset (below → warning, above → success).
-  size            number  140       outer diameter.
+  diameter        number  140       outer diameter in px. NOT `size`: that name is
+                                    the framework's xs|sm|md|lg channel, which would
+                                    retype this number to a union.
   thickness       number  12        arc stroke width.
   label           string  "gauge"   aria-label kind (prefixes the data summary).
   loading         bool    reflect   loading branch (engine isLoading) → sui-skeleton.
   error           —       prop:error identity-only → sui-error-state.
   ─────────────────────────────────────────────────────────────────────────────
   Slots: (default) center label
-  Parts: track · fill
+
+  The arc and the center label are one <stack>: both children occupy the same
+  grid cell, so the slotted readout lands inside the arc with no positioning
+  math. The stack shrink-wraps to the `diameter` box.
 -->
 
 <component>{
@@ -33,38 +37,12 @@
     tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
     'low-threshold': 0,
     'high-threshold': 0,
-    size: 140,
+    diameter: 140,
     thickness: 12,
     label: 'gauge',
     loading: false,
   },
 }</component>
-<style>
-  .sui-gauge {
-    display: inline-block;
-    position: relative;
-    transition: opacity var(--duration-fast) var(--ease-out);
-  }
-  .sui-gauge[hidden] { display: none; }
-  svg { display: block; }
-  .track { stroke: var(--muted); }
-  .gauge-label {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--heading-font);
-    font-weight: var(--font-weight-semibold);
-    font-size: var(--text-xl);
-    color: var(--foreground);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .sui-gauge { transition: none; }
-  }
-</style>
-
 
 <controller>
 import { controller, derived } from '@ship/sui-runtime'
@@ -87,7 +65,7 @@ export default controller({
     tone,
     lowThreshold,
     highThreshold,
-    size,
+    diameter,
     thickness,
     label,
     loading,
@@ -100,7 +78,7 @@ export default controller({
     // GEOMETRY IS A PURE DERIVED — track + clamped value arc + threshold color.
     const arc = derived(() =>
       gaugeGeometry(value(), {
-        size: size(),
+        size: diameter(),
         thickness: thickness(),
         min: min(),
         max: max(),
@@ -121,21 +99,25 @@ export default controller({
 
 </controller>
 {#if loading()}
-  <span class="loading" skeleton shape="circle" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
+  <span skeleton shape="circle" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
 {:else if chart.error()}
-  <error-state class="error"></error-state>
+  <error-state></error-state>
 {:else}
-  <svg
-    viewBox={'0 0 ' + size() + ' ' + size()}
-    role="img"
-    aria-label={ariaLabel()}
-    style={'width:' + size() + 'px;height:' + size() + 'px'}>
-    <path class="track" d={arc().trackD} fill="none" stroke-width={thickness()} stroke-linecap="round">
-    </path>
-    {#if arc().fillD}
-      <path class="fill" d={arc().fillD} fill="none" stroke={arc().color} stroke-width={thickness()} stroke-linecap="round">
+  <stack sx="w:fit">
+    <svg
+      viewBox={'0 0 ' + diameter() + ' ' + diameter()}
+      width={diameter()}
+      height={diameter()}
+      role="img"
+      aria-label={ariaLabel()}
+      sx="display:block">
+      <path d={arc().trackD} fill="none" stroke="var(--muted)" stroke-width={thickness()} stroke-linecap="round">
       </path>
-    {/if}
-  </svg>
-  <div class="gauge-label"><slot></slot></div>
+      {#if arc().fillD}
+        <path d={arc().fillD} fill="none" stroke={arc().color} stroke-width={thickness()} stroke-linecap="round">
+        </path>
+      {/if}
+    </svg>
+    <center sx="font:heading weight:semibold text:xl fg:foreground"><slot></slot></center>
+  </stack>
 {/if}

@@ -19,9 +19,9 @@ const mount = (markup: string): HTMLElement => {
   c.innerHTML = markup
   return c.querySelector('sui-citation')!
 }
-// The pill is the public interactive surface (CSS part + the only button).
+// The pill is the public interactive surface — the component's only <button>.
 const pill = (el: HTMLElement): HTMLButtonElement =>
-  el.shadowRoot!.querySelector<HTMLButtonElement>('[part="pill"]')!
+  el.querySelector<HTMLButtonElement>('button')!
 
 describe('<sui-citation>', () => {
   it('registers with the global custom-element registry', () => {
@@ -30,8 +30,8 @@ describe('<sui-citation>', () => {
 
   it('renders the source label + numbered index for the reader', () => {
     const el = mount('<sui-citation source="docs/ship.md" index="2"></sui-citation>')
-    expect(el.shadowRoot!.textContent).toContain('docs/ship.md')
-    expect(el.shadowRoot!.textContent).toContain('2')
+    expect(el.textContent).toContain('docs/ship.md')
+    expect(el.textContent).toContain('2')
   })
 
   it('exposes an accessible label naming the source + index', () => {
@@ -52,7 +52,7 @@ describe('<sui-citation>', () => {
     expect(detail).toEqual({ source: 'docs/ship.md', index: 2 })
   })
 
-  it('the open event crosses the shadow boundary (bubbles + composed)', async () => {
+  it('the open event reaches the document (bubbles + composed)', async () => {
     const el = mount('<sui-citation source="s" index="1"></sui-citation>')
     await flush()
     let seenAtDocument = false

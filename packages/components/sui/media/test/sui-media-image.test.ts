@@ -1,12 +1,4 @@
-// TESTS-FIRST — the <sui-media-image> renderer (raster + SVG, zoom/pan,
-// gallery/lightbox).
-//
-// Status: RED. The renderer source + controller are greenfield:
-//   - `../src/sui-media-image/sui-media-image.sui`
-//   - `../src/sui-media-image/sui-media-image.controller.ts`
-//   - `../src/sui-media-image/engine/zoom-pan.ts`   (pre-committed split)
-// None exist yet, so `readFileSync`/the controller import throws and every spec
-// errors RED. DO NOT add the impl here. DO NOT weaken into passing stubs.
+// The <sui-media-image> renderer (raster + SVG, zoom/pan, gallery/lightbox).
 //
 // Harness: `renderComponent` from `@ship/test-setup` compiles the renderer
 // `.sui` under the `sui-media-image` tag and registers it as a custom element
@@ -17,19 +9,21 @@
 // dispatching the native `<img>` `load`/`error` events the renderer listens for
 // (the dispatcher-spec precedent: synthetic native events drive the emit seam).
 //
+// The component is LIGHT DOM and hand-authors no classes, so every query below
+// is a real semantic: the raster <img>, the focusable zoom/pan stage that holds
+// it, role=img for the inlined SVG, role=listbox/option for the gallery strip.
+//
 // Authority: build-spec §"Props" (sui-media-image), §"Backbone #2 —
 // ViewerRenderer contract" (read-only, source-in-never-fetch,
-// sui-viewer-load/-error via the free `emit`), §"Slots / parts / variants"
-// (img · stage · thumb), §"Accessibility" (<img alt>, SVG role=img, gallery
-// role=listbox/option + aria-selected, reduced-motion role-token easings), and
-// behavioral spec #4 (image zoom/pan/gallery).
+// sui-viewer-load/-error via the free `emit`), §"Accessibility" (<img alt>, SVG
+// role=img, gallery role=listbox/option + aria-selected), and behavioral spec
+// #4 (image zoom/pan/gallery).
 
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import { renderComponent } from '@ship/test-setup'
-// RED: greenfield image renderer controller.
-import imageRenderer from '../src/sui-media-image/sui-media-image.controller'
+import imageRenderer from '../src/sui-media-image/sui-media-image.sui.controller.ts'
 
 const SOURCE_URL = new URL('../src/sui-media-image/sui-media-image.sui', import.meta.url)
 const SOURCE = readFileSync(SOURCE_URL, 'utf8')
@@ -46,15 +40,12 @@ interface ViewerSource {
   url?: string
 }
 
-const shadow = (el: HTMLElement): ShadowRoot => el.shadowRoot as ShadowRoot
+/** The raster `<img>` the renderer paints into. */
+const imgEl = (el: HTMLElement): HTMLImageElement | null => el.querySelector('img')
 
-/** The raster `<img>` the renderer paints into (part="img"). */
-const imgEl = (el: HTMLElement): HTMLImageElement | null =>
-  shadow(el).querySelector('img')
-
-/** The zoom/pan surface (part="stage"). */
+/** The zoom/pan surface — the focusable box the raster <img> sits in. */
 const stageEl = (el: HTMLElement): HTMLElement | null =>
-  shadow(el).querySelector('[part~="stage"]')
+  el.querySelector('[tabindex="0"]')
 
 const live: Array<{ unmount(): void }> = []
 afterEach(() => {
@@ -83,13 +74,11 @@ const PNG_URL = 'blob:http://localhost/raster-fixture'
 
 describe('<sui-media-image> — registration + raster', () => {
 
-  it('renders a raster source into an <img> (part="img")', async () => {
+  it('renders a raster source into an <img>', async () => {
     const v = mountImage({ contentType: 'image/png', url: PNG_URL })
     live.push(v)
     await v.flush()
-    const img = imgEl(v.el)
-    expect(img).not.toBeNull()
-    expect(img!.getAttribute('part')).toContain('img')
+    expect(imgEl(v.el)).not.toBeNull()
   })
 
   it('points the <img> src at the resolved object-url (never fetched by the renderer)', async () => {
@@ -99,7 +88,7 @@ describe('<sui-media-image> — registration + raster', () => {
     expect(imgEl(v.el)!.getAttribute('src')).toBe(PNG_URL)
   })
 
-  it('mounts the <img> inside a part="stage" zoom/pan surface', async () => {
+  it('mounts the <img> inside a focusable zoom/pan stage (keyboard-operable)', async () => {
     const v = mountImage({ contentType: 'image/png', url: PNG_URL })
     live.push(v)
     await v.flush()
@@ -117,7 +106,7 @@ describe('<sui-media-image> — alt + fit props (#4 / a11y)', () => {
     expect(imgEl(v.el)!.getAttribute('alt')).toBe('A diagram')
   })
 
-  it('reflects the fit enum onto the host for CSS (:host([fit=…]))', async () => {
+  it('reflects the fit enum onto the host (the styling channel reads it there)', async () => {
     const v = mountImage({ contentType: 'image/png', url: PNG_URL }, { fit: 'cover' })
     live.push(v)
     await v.flush()
@@ -132,7 +121,7 @@ describe('<sui-media-image> — SVG text source (#4)', () => {
     const v = mountImage({ contentType: 'image/svg+xml', text: SVG })
     live.push(v)
     await v.flush()
-    const svgHost = shadow(v.el).querySelector('[role="img"]')
+    const svgHost = v.el.querySelector('[role="img"]')
     expect(svgHost).not.toBeNull()
   })
 
@@ -140,14 +129,14 @@ describe('<sui-media-image> — SVG text source (#4)', () => {
     const v = mountImage({ contentType: 'image/svg+xml', text: SVG })
     live.push(v)
     await v.flush()
-    expect(shadow(v.el).querySelector('svg')).not.toBeNull()
+    expect(v.el.querySelector('svg')).not.toBeNull()
   })
 
   it('names the SVG region with an aria-label', async () => {
     const v = mountImage({ contentType: 'image/svg+xml', text: SVG }, { alt: 'Logo mark' })
     live.push(v)
     await v.flush()
-    const svgHost = shadow(v.el).querySelector('[role="img"]')
+    const svgHost = v.el.querySelector('[role="img"]')
     expect(svgHost!.getAttribute('aria-label')).toBe('Logo mark')
   })
 })
@@ -222,7 +211,7 @@ describe('<sui-media-image> — gallery strip (#4)', () => {
     const v = mountGallery()
     live.push(v)
     await v.flush()
-    const strip = shadow(v.el).querySelector('[role="listbox"]')
+    const strip = v.el.querySelector('[role="listbox"]')
     expect(strip).not.toBeNull()
     expect(strip!.querySelectorAll('[role="option"]').length).toBe(GALLERY.length)
   })
@@ -231,7 +220,7 @@ describe('<sui-media-image> — gallery strip (#4)', () => {
     const v = mountGallery()
     live.push(v)
     await v.flush()
-    const selected = shadow(v.el).querySelectorAll('[role="option"][aria-selected="true"]')
+    const selected = v.el.querySelectorAll('[role="option"][aria-selected="true"]')
     expect(selected.length).toBe(1)
   })
 
@@ -243,7 +232,7 @@ describe('<sui-media-image> — gallery strip (#4)', () => {
     v.el.addEventListener('sui-viewer-index-change', (e) => {
       index = (e as CustomEvent<{ index: number }>).detail.index
     })
-    const strip = shadow(v.el).querySelector('[role="listbox"]') as HTMLElement
+    const strip = v.el.querySelector('[role="listbox"]') as HTMLElement
     strip.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
     await v.flush()
     expect(index).toBe(1)

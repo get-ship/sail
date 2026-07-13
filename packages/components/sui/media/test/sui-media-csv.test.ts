@@ -1,40 +1,26 @@
-// TESTS-FIRST — FOUNDATIONAL slice: the <sui-media-csv> renderer (the ONE
-// renderer that proves the seam — CSV parse → render via the committed
-// sui-table).
-//
-// Status: RED. The renderer source + controller are greenfield:
-//   - `../src/sui-media-csv/sui-media-csv.sui`
-//   - `../src/sui-media-csv/sui-media-csv.controller.ts`
-// Neither exists yet, so `readFileSync`/the controller import throws and every
-// spec errors RED. DO NOT add the impl here. DO NOT weaken into passing stubs.
+// The <sui-media-csv> renderer — CSV parse → the shared table engine → a plain
+// <table>.
 //
 // Harness: `renderComponent` compiles the renderer `.sui` under the
-// `sui-media-csv` tag; the composed committed `sui-table` (+ its footer's
-// sui-pagination, + sui-empty-state) are registered via their primitives
-// `.compiled.js` (sui-pagination's nav buttons are bare <button>s, dissolved
-// from <sui-button> — no separate registration needed). The CSV renderer
-// parses text and feeds the committed engine — the rendered grid is the proof
-// the composition seam holds.
+// `sui-media-csv` tag. The renderer parses text into the committed
+// `createTable` engine (Backbone #1) and renders that engine's columns/rows as
+// a native <table>, which the framework's contracts sheet already styles — so
+// the rendered grid is the proof the engine seam holds, and there is no grid
+// component to register.
 //
-// Authority: build-spec Slice 4 (sui-media-csv composes sui-table; NO
-// density/dense on the composed table), §"Backbone #2 — ViewerRenderer
+// The component is LIGHT DOM and hand-authors no classes: the queries are the
+// <table> tag and the row's `data-row-id` (the engine's row identity).
+//
+// Authority: build-spec Slice 4 (sui-media-csv reuses the table engine; NO
+// density/dense on the rendered table), §"Backbone #2 — ViewerRenderer
 // contract" (read-only, source-in-never-fetch, sui-viewer-load/-error),
-// behavioral specs #6 (CSV → sui-table, one row per data row, NO density attr)
+// behavioral specs #6 (CSV → table, one row per data row, NO density attr)
 // and #7 (each arm fires sui-viewer-load).
 
 import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it } from 'vitest'
 import { renderComponent } from '@ship/test-setup'
-// The composed committed grid + the primitives its data footer / empty state
-// pull in. Cross-pack relative imports into @ship/sui-primitives's src tree:
-// the compiled-js shim resolves the sibling `.sui` by path (primitives'
-// package `exports` only maps `.`).
-import '../../primitives/src/sui-table/sui-table.compiled.js'
-import '../../primitives/src/sui-pagination/sui-pagination.compiled.js'
-import '../../primitives/src/sui-input/sui-input.compiled.js'
-import '../../primitives/src/sui-icon/sui-icon.compiled.js'
-// RED: greenfield CSV renderer controller.
-import csvRenderer from '../src/sui-media-csv/sui-media-csv.controller'
+import csvRenderer from '../src/sui-media-csv/sui-media-csv.sui.controller.ts'
 
 const SOURCE = readFileSync(
   new URL('../src/sui-media-csv/sui-media-csv.sui', import.meta.url),
@@ -47,17 +33,15 @@ interface ViewerSource {
   text?: string
 }
 
-const shadow = (el: HTMLElement): ShadowRoot => el.shadowRoot as ShadowRoot
+/** The rendered grid — a plain <table>, skinned by the framework contracts. */
+const innerTable = (el: HTMLElement): HTMLTableElement | null => el.querySelector('table')
 
-/** The composed sui-table host inside the renderer's shadow. */
-const innerTable = (el: HTMLElement): HTMLElement | null =>
-  shadow(el).querySelector('sui-table')
+/** Data rows rendered from the engine's row model (one per CSV data row). */
+const dataRows = (el: HTMLElement): NodeListOf<Element> =>
+  el.querySelectorAll('[data-row-id]')
 
-/** Data rows rendered by the composed engine-backed sui-table. */
-const dataRows = (el: HTMLElement): NodeListOf<Element> => {
-  const t = innerTable(el)
-  return (t?.shadowRoot ?? shadow(el)).querySelectorAll('[data-row-id]')
-}
+/** Header cells rendered from the engine's visible columns. */
+const headerCells = (el: HTMLElement): NodeListOf<Element> => el.querySelectorAll('th')
 
 const live: Array<{ unmount(): void }> = []
 afterEach(() => {
@@ -80,11 +64,14 @@ function mountCsv(src: ViewerSource) {
 
 describe('<sui-media-csv> — registration + composition', () => {
 
-  it('composes the committed sui-table (does NOT re-invent a grid)', async () => {
+  it('renders the engine\'s row model as a table (does NOT re-invent a grid)', async () => {
     const v = mountCsv({ contentType: 'text/csv', text: 'a,b\n1,2' })
     live.push(v)
     await v.flush()
     expect(innerTable(v.el)).not.toBeNull()
+    // The header row drives the columns; the engine's column order is the
+    // rendered header order.
+    expect([...headerCells(v.el)].map((th) => th.textContent)).toEqual(['a', 'b'])
   })
 })
 
@@ -116,14 +103,14 @@ describe('<sui-media-csv> — CSV → sui-table render (#6)', () => {
 })
 
 describe('<sui-media-csv> — density is the platform axis (#11)', () => {
-  it('sets NEITHER density NOR dense on the composed sui-table', async () => {
+  it('sets NEITHER density NOR dense on the rendered table', async () => {
     const v = mountCsv({ contentType: 'text/csv', text: 'a,b\n1,2' })
     live.push(v)
     await v.flush()
     const t = innerTable(v.el)
     expect(t).not.toBeNull()
-    // The pre-existing sui-table density/dense props must NOT be propagated —
-    // rows inherit the --density-* channel via <html data-density>.
+    // Density is not a component prop here — the table skin reads the
+    // --density-* channel via <html data-density>.
     expect(t!.hasAttribute('density')).toBe(false)
     expect(t!.hasAttribute('dense')).toBe(false)
   })

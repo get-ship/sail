@@ -11,7 +11,7 @@
   each cell fills with the tone role token `var(--<tone>)` and drives intensity
   via `fill-opacity` bound from the normalized value (0..1). This is the only
   token-clean continuous-intensity path; a null/zero cell renders empty
-  (fill-opacity 0). Cells expose `part="cell"`.
+  (fill-opacity 0).
 
   Props
   ─────────────────────────────────────────────────────────────────────────────
@@ -27,7 +27,9 @@
   error      —       prop:error identity-only → sui-error-state.
   ─────────────────────────────────────────────────────────────────────────────
   Slots: description (described-data override)
-  Parts: cell
+
+  The SVG is the component's box: it is sized by the grid (`cell-size` × `gap`),
+  so it shrink-wraps its cells and sits inline with the copy around it.
 -->
 
 <component>{
@@ -42,31 +44,6 @@
     loading: false,
   },
 }</component>
-<style>
-  .sui-heatmap {
-    display: inline-block;
-    font-family: var(--font-body);
-    transition: opacity var(--duration-fast) var(--ease-out);
-  }
-  .sui-heatmap[hidden] { display: none; }
-  svg { display: block; overflow: visible; }
-  .a11y-table {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-    border: 0;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .sui-heatmap { transition: none; }
-  }
-</style>
-
 
 <controller>
 import { controller, derived } from '@ship/sui-runtime'
@@ -154,11 +131,11 @@ export default controller({
 
 </controller>
 {#if loading()}
-  <span class="loading" skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
+  <span skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
 {:else if chart.error()}
-  <error-state class="error"></error-state>
+  <error-state></error-state>
 {:else if chart.isEmpty()}
-  <empty-state class="empty"></empty-state>
+  <empty-state></empty-state>
 {:else}
   <svg
     viewBox={'0 0 ' + svgW() + ' ' + svgH()}
@@ -166,13 +143,14 @@ export default controller({
     height={svgH()}
     role="img"
     aria-label={ariaLabel()}
-    aria-describedby="chart-data">
+    aria-describedby="chart-data"
+    sx="display:inline-block overflow:visible font:body">
     {#for cell of cells() key={cell.id}}
-      <rect class="cell" x={cell.x} y={cell.y} width={cell.w} height={cell.h} rx="2" fill={cell.color} fill-opacity={cell.intensity}>
+      <rect x={cell.x} y={cell.y} width={cell.w} height={cell.h} rx="2" fill={cell.color} fill-opacity={cell.intensity}>
       </rect>
     {/for}
   </svg>
-  <div class="a11y-table" id="chart-data">
+  <column id="chart-data" sx="visibility:assistive">
     <slot name="description">
       <table>
         {#for row of chart.ariaTable() key={row[0].text}}
@@ -184,5 +162,5 @@ export default controller({
         {/for}
       </table>
     </slot>
-  </div>
+  </column>
 {/if}

@@ -18,8 +18,10 @@ const mount = (markup: string): HTMLElement => {
   c.innerHTML = markup
   return c.querySelector('sui-message')!
 }
+// Light DOM, no class hooks: the anatomy IS the semantics. The bubble is the
+// box that carries the default slot — the turn's projection contract.
 const bubble = (el: HTMLElement): HTMLElement =>
-  el.shadowRoot!.querySelector<HTMLElement>('[part="bubble"]')!
+  el.querySelector<HTMLSlotElement>('slot:not([name])')!.parentElement!
 
 describe('<sui-message>', () => {
   it('registers with the global custom-element registry', () => {
@@ -39,29 +41,28 @@ describe('<sui-message>', () => {
     const el = mount('<sui-message>hello there</sui-message>')
     // The bubble carries the content slot; the consumer text renders within it.
     expect(bubble(el)).not.toBeNull()
-    expect(el.textContent).toContain('hello there')
+    expect(bubble(el).textContent).toContain('hello there')
   })
 
   it('surfaces the role label + timestamp in the meta row', () => {
     const el = mount(
       '<sui-message role="assistant" timestamp="2024-01-01T00:00:00Z">x</sui-message>',
     )
-    const meta = el.shadowRoot!.querySelector<HTMLElement>('[part="meta"]')!
-    expect(meta.textContent).toContain('assistant')
-    const time = el.shadowRoot!.querySelector<HTMLTimeElement>('time')!
+    expect(el.textContent).toContain('assistant')
+    const time = el.querySelector<HTMLTimeElement>('time')!
     expect(time.getAttribute('datetime')).toBe('2024-01-01T00:00:00Z')
   })
 
   it('omits the timestamp element when no timestamp is supplied', () => {
     const el = mount('<sui-message>x</sui-message>')
-    expect(el.shadowRoot!.querySelector('time')).toBeNull()
+    expect(el.querySelector('time')).toBeNull()
   })
 
   it('exposes a trailing slot for per-message actions', () => {
     const el = mount(
       '<sui-message>body<button slot="trailing">Retry</button></sui-message>',
     )
-    expect(el.shadowRoot!.querySelector('slot[name="trailing"]')).not.toBeNull()
+    expect(el.querySelector('slot[name="trailing"]')).not.toBeNull()
     expect(el.querySelector('[slot="trailing"]')!.textContent).toBe('Retry')
   })
 })

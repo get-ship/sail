@@ -5,7 +5,16 @@ import { createContainerRegistry, flush, mount } from '../src/test-utils'
 const reg = createContainerRegistry()
 afterEach(() => reg.cleanup())
 
-const shadow = (el: HTMLElement) => el.shadowRoot!
+// Light-DOM components: the template renders into the host itself.
+const root = (el: HTMLElement) => (el.shadowRoot ?? el)
+
+// Anatomy (no classes — the language bans them): every node is a role=button
+// card carrying data-id; the card hangs in a <center> inside the 0×0 anchor
+// that holds its position, so the anchor is the card's grandparent.
+const card = (el: HTMLElement, id: string) =>
+  root(el).querySelector(`[role="button"][data-id="${id}"]`) as HTMLElement
+const anchorOf = (c: HTMLElement) => c.parentElement!.parentElement! as HTMLElement
+const cards = (el: HTMLElement) => root(el).querySelectorAll('[role="button"][data-id]')
 
 const nodesPositioned = JSON.stringify([
   { id: 'a1', kind: 'agent', title: 'Alpha', sub: 'primary', x: 200, y: 300 },
@@ -25,8 +34,8 @@ describe('<sui-graph-canvas>', () => {
       edges: edgesPositioned,
     })
     await flush()
-    const nodes = shadow(el).querySelectorAll('.node')
-    const paths = shadow(el).querySelectorAll('svg.edges path')
+    const nodes = cards(el)
+    const paths = root(el).querySelectorAll('svg path')
     expect(nodes.length).toBe(3)
     expect(paths.length).toBe(2)
   })
@@ -40,8 +49,8 @@ describe('<sui-graph-canvas>', () => {
     })
     await flush()
     const at = (id: string) => {
-      const n = shadow(el).querySelector(`.node[data-id="${id}"]`) as HTMLElement
-      return { left: parseFloat(n.style.left), top: parseFloat(n.style.top) }
+      const anchor = anchorOf(card(el, id))
+      return { left: parseFloat(anchor.style.left), top: parseFloat(anchor.style.top) }
     }
     // a1=(200,300) s1=(700,200) s2=(700,400) over a 1000x600 surface.
     const a1 = at('a1')
@@ -73,10 +82,8 @@ describe('<sui-graph-canvas>', () => {
     ])
     const { el } = mount(reg, 'sui-graph-canvas', { nodes, edges: '[]' })
     await flush()
-    const agent = shadow(el).querySelector('.node[data-id="a1"]') as HTMLElement
-    const skill = shadow(el).querySelector('.node[data-id="sk1"]') as HTMLElement
-    const agentLeft = parseFloat(agent.style.left)
-    const skillLeft = parseFloat(skill.style.left)
+    const agentLeft = parseFloat(anchorOf(card(el, 'a1')).style.left)
+    const skillLeft = parseFloat(anchorOf(card(el, 'sk1')).style.left)
     expect(agentLeft).toBeLessThan(skillLeft)
     expect(agentLeft).toBeGreaterThan(0)
   })
@@ -91,8 +98,7 @@ describe('<sui-graph-canvas>', () => {
     el.addEventListener('sui-node-select', (e: Event) => {
       detail = (e as CustomEvent).detail
     })
-    const node = shadow(el).querySelector('.node[data-id="s1"]') as HTMLElement
-    node.click()
+    card(el, 's1').click()
     expect(detail).toEqual({ id: 's1', kind: 'skill' })
   })
 
@@ -104,8 +110,7 @@ describe('<sui-graph-canvas>', () => {
     await flush()
     let fired = 0
     el.addEventListener('sui-node-select', () => fired++)
-    const node = shadow(el).querySelector('.node[data-id="a1"]') as HTMLElement
-    node.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    card(el, 'a1').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
     expect(fired).toBe(1)
   })
 
@@ -117,19 +122,18 @@ describe('<sui-graph-canvas>', () => {
     await flush()
     let fired = 0
     el.addEventListener('sui-node-select', () => fired++)
-    const node = shadow(el).querySelector('.node[data-id="s1"]') as HTMLElement
-    node.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }))
+    card(el, 's1').dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }))
     expect(fired).toBe(1)
   })
 
-  it('selected-id attribute highlights the matching node via [data-selected]', async () => {
+  it('selected-id attribute marks the matching node aria-current', async () => {
     const { el } = mount(reg, 'sui-graph-canvas', {
       'selected-id': 's2',
       nodes: nodesPositioned,
       edges: '[]',
     })
     await flush()
-    const selected = shadow(el).querySelector('.node[data-selected]') as HTMLElement
+    const selected = root(el).querySelector('[role="button"][aria-current="true"]') as HTMLElement
     expect(selected).toBeTruthy()
     expect(selected.getAttribute('data-id')).toBe('s2')
   })
@@ -140,8 +144,7 @@ describe('<sui-graph-canvas>', () => {
       edges: '[]',
     })
     await flush()
-    const node = shadow(el).querySelector('.node[data-id="s1"]') as HTMLElement
-    node.click()
+    card(el, 's1').click()
     await flush()
     expect(el.getAttribute('selected-id')).toBe('s1')
   })
@@ -159,7 +162,7 @@ describe('<sui-graph-canvas>', () => {
       </template>`,
     )
     await flush()
-    const nodeS1 = shadow(el).querySelector('.node[data-id="s1"]') as HTMLElement
+    const nodeS1 = card(el, 's1')
     expect(nodeS1.querySelector('.stitle')?.textContent).toBe('Compile')
     expect(nodeS1.querySelector('.sid')?.textContent).toBe('s1')
   })
@@ -170,7 +173,7 @@ describe('<sui-graph-canvas>', () => {
       edges: edgesPositioned,
     })
     await flush()
-    const paths = shadow(el).querySelectorAll('svg.edges path')
+    const paths = root(el).querySelectorAll('svg path')
     const kinds = Array.from(paths).map((p) => p.getAttribute('data-kind'))
     expect(kinds).toEqual(['skill', 'skill'])
     expect(paths[1].hasAttribute('data-dashed')).toBe(true)
@@ -183,7 +186,7 @@ describe('<sui-graph-canvas>', () => {
       edges: '[]',
     })
     await flush()
-    const first = shadow(el).querySelector('.node') as HTMLElement
+    const first = cards(el)[0] as HTMLElement
     expect(first.getAttribute('tabindex')).toBe('0')
     expect(first.getAttribute('role')).toBe('button')
     expect(first.getAttribute('aria-label')).toContain('Alpha')
@@ -199,21 +202,20 @@ describe('<sui-graph-canvas>', () => {
     el.addEventListener('sui-node-hover', (e: Event) => {
       detail = (e as CustomEvent).detail
     })
-    const node = shadow(el).querySelector('.node[data-id="a1"]') as HTMLElement
-    node.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+    card(el, 'a1').dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
     expect(detail).toEqual({ id: 'a1', kind: 'agent' })
   })
 
-  it('renders svg.edges inside .canvas with part="edges"', async () => {
+  it('renders the edge svg over the graph coordinate space', async () => {
     const { el } = mount(reg, 'sui-graph-canvas', {
       nodes: nodesPositioned,
       edges: edgesPositioned,
     })
     await flush()
-    const canvas = shadow(el).querySelector('.canvas[part="canvas"]')
-    expect(canvas).not.toBeNull()
-    const svg = canvas!.querySelector('svg.edges[part="edges"]')
+    const svg = root(el).querySelector('svg')
     expect(svg).not.toBeNull()
+    // The viewBox IS the coordinate space (and the surface's aspect ratio).
+    expect(svg!.getAttribute('viewBox')).toBe('0 0 1000 600')
   })
 
   it('renders default node chrome when no matching template', async () => {
@@ -222,9 +224,12 @@ describe('<sui-graph-canvas>', () => {
     ])
     const { el } = mount(reg, 'sui-graph-canvas', { nodes, edges: '[]' })
     await flush()
-    const node = shadow(el).querySelector('.node[data-id="r1"]') as HTMLElement
-    expect(node.querySelector('.node-title')?.textContent).toBe('NoDebug')
-    expect(node.querySelector('.node-sub')?.textContent).toBe('enforce')
-    expect(node.querySelector('.tag')?.textContent).toBe('rule')
+    const node = card(el, 'r1')
+    // Default chrome: the kind eyebrow, the title, and the sub-line.
+    const text = node.textContent ?? ''
+    expect(text).toContain('rule')
+    expect(text).toContain('NoDebug')
+    expect(text).toContain('enforce')
+    expect(node.getAttribute('data-state')).toBe('rule')
   })
 })

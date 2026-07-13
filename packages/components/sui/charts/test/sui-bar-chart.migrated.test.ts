@@ -18,21 +18,29 @@ import { createContainerRegistry, flush, mount } from '../src/test-utils'
 const reg = createContainerRegistry()
 afterEach(() => reg.cleanup())
 
-const shadow = (el: HTMLElement) => el.shadowRoot!
+// Light DOM: the component renders into the host element, so the host IS the
+// query root — no shadow boundary, and no hand-authored classes to key on. The
+// queries below are the components. real semantics: tags, ARIA, SVG paint.
+const root = (el: HTMLElement): HTMLElement => el
 
 describe('<sui-bar-chart> migration — geometry at first paint', () => {
   it('renders a rect per datum synchronously at mount (no flush needed)', () => {
     const { el } = mount(reg, 'sui-bar-chart', { data: '1,2,3,4' })
-    expect(shadow(el).querySelectorAll('rect').length).toBe(4)
+    expect(root(el).querySelectorAll('rect').length).toBe(4)
   })
 })
 
-describe('<sui-bar-chart> migration — part contract', () => {
-  it('bars expose part="series"', async () => {
-    const { el } = mount(reg, 'sui-bar-chart', { data: '1,2,3' })
+describe('<sui-bar-chart> migration — the bar is the seam', () => {
+  it('every datum is one <rect> carrying its own <title>', async () => {
+    const { el } = mount(reg, 'sui-bar-chart', { data: '1,2,3', labels: 'a,b,c' })
     await flush()
-    const parts = [...shadow(el).querySelectorAll('rect')].map((r) => r.getAttribute('part'))
-    expect(parts.every((p) => p === 'series')).toBe(true)
+    const rects = [...root(el).querySelectorAll('rect')]
+    expect(rects.length).toBe(3)
+    expect(rects.map((r) => r.querySelector('title')?.textContent ?? '')).toEqual([
+      'a: 1',
+      'b: 2',
+      'c: 3',
+    ])
   })
 })
 
@@ -40,13 +48,13 @@ describe('<sui-bar-chart> migration — engine-driven states', () => {
   it('loading attribute composes a sui-skeleton', async () => {
     const { el } = mount(reg, 'sui-bar-chart', { data: '1,2,3', loading: true })
     await flush()
-    expect(shadow(el).querySelector('[skeleton]')).not.toBeNull()
+    expect(root(el).querySelector('[skeleton]')).not.toBeNull()
   })
 
   it('loading hides the data SVG', async () => {
     const { el } = mount(reg, 'sui-bar-chart', { data: '1,2,3', loading: true })
     await flush()
-    expect(shadow(el).querySelector('svg[role="img"]')).toBeNull()
+    expect(root(el).querySelector('svg[role="img"]')).toBeNull()
   })
 
   it('loading reflects to the host attribute', () => {
@@ -57,13 +65,13 @@ describe('<sui-bar-chart> migration — engine-driven states', () => {
   it('empty data composes a .sui-empty-state (not a bare aria-hidden SVG)', async () => {
     const { el } = mount(reg, 'sui-bar-chart')
     await flush()
-    expect(shadow(el).querySelector('.sui-empty-state')).not.toBeNull()
+    expect(root(el).querySelector('.sui-empty-state')).not.toBeNull()
   })
 
   it('empty data renders no rect elements', async () => {
     const { el } = mount(reg, 'sui-bar-chart')
     await flush()
-    expect(shadow(el).querySelectorAll('rect').length).toBe(0)
+    expect(root(el).querySelectorAll('rect').length).toBe(0)
   })
 })
 
@@ -71,13 +79,13 @@ describe('<sui-bar-chart> migration — domain semantics preserved', () => {
   it('max=0 means auto-domain (bars still render, scaled to data max)', async () => {
     const { el } = mount(reg, 'sui-bar-chart', { data: '10,20,30', max: '0' })
     await flush()
-    expect(shadow(el).querySelectorAll('rect').length).toBe(3)
+    expect(root(el).querySelectorAll('rect').length).toBe(3)
   })
 
   it('the tallest bar reaches the full plot height under auto-domain', async () => {
     const { el } = mount(reg, 'sui-bar-chart', { data: '5,10', width: '100', height: '200' })
     await flush()
-    const heights = [...shadow(el).querySelectorAll('rect')].map((r) =>
+    const heights = [...root(el).querySelectorAll('rect')].map((r) =>
       Number(r.getAttribute('height')),
     )
     expect(Math.max(...heights)).toBeGreaterThan(Math.min(...heights))
@@ -88,7 +96,7 @@ describe('<sui-bar-chart> migration — accessible summary', () => {
   it('aria-label is "kind: summary", not the bare kind', async () => {
     const { el } = mount(reg, 'sui-bar-chart', { data: '1,2,3', label: 'Sales bar chart' })
     await flush()
-    const aria = shadow(el).querySelector('svg[role="img"]')?.getAttribute('aria-label') ?? ''
+    const aria = root(el).querySelector('svg[role="img"]')?.getAttribute('aria-label') ?? ''
     expect(aria.startsWith('Sales bar chart')).toBe(true)
     expect(aria.length).toBeGreaterThan('Sales bar chart'.length)
   })
@@ -98,7 +106,7 @@ describe('<sui-bar-chart> migration — responsive viewBox', () => {
   it('does not stretch with preserveAspectRatio="none"', async () => {
     const { el } = mount(reg, 'sui-bar-chart', { data: '1,2,3' })
     await flush()
-    const svg = shadow(el).querySelector('svg[role="img"]')
+    const svg = root(el).querySelector('svg[role="img"]')
     expect(svg?.getAttribute('preserveAspectRatio')).not.toBe('none')
   })
 })

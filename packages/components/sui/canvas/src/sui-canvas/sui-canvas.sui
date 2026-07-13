@@ -19,6 +19,11 @@
   label       (string, '')           → aria-label on the application region.
   ─────────────────────────────────────────────────────────────────────
   Event: sui-canvas-viewport { transform } — debounced, on pan/zoom change.
+
+  Geometry contract: the world layer carries the engine's transform (pan +
+  zoom). `screenToWorld` is the inverse of that paint, and it assumes the
+  layer scales about its TOP-LEFT corner and that the viewport swallows touch
+  gestures rather than letting the page scroll them.
 -->
 
 <component>{
@@ -32,39 +37,6 @@
     label: '',
   },
 }</component>
-<style>
-  .sui-canvas {
-    display: block;
-    position: relative;
-    width: 100%;
-    height: 100%;
-    min-height: 320px;
-    background: var(--background);
-    color: var(--foreground);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    touch-action: none;
-  }
-  .sui-canvas[hidden] { display: none; }
-
-  .viewport {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    cursor: grab;
-  }
-
-  .world {
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform-origin: 0 0;
-    will-change: transform;
-  }
-</style>
-
-
 <controller>
 import { controller, signal, derived, effect, debounce, ref } from '@ship/sui-runtime'
 import type { Scope } from './sui-canvas.sui'
@@ -104,16 +76,17 @@ export default controller({
     // Drives the debounced outbound viewport event off the ACTIVE engine.
     const transformSig = derived<Transform>(() => canvas().transform())
     const debounced = debounce(transformSig, 200)
-    // The world-layer transform. This MUST live in the scope return (not a
+    // The world-layer transform — pan (x, y) + zoom (scale) off the ACTIVE
+    // engine, in world units. This MUST live in the scope return (not a
     // top-level `derived:` section): the current ScopedControllerDef merges
     // only scope/on/use/mount/unmount, so a `derived:` block is silently
     // dropped and the world would never receive its transform (the rest of the
     // codebase inlines derived() in scope for exactly this reason).
-    const transformCss = derived<string>(() => {
+    const worldTransform = derived<string>(() => {
       const t = canvas().transform()
-      return `transform: translate(${t.x}px, ${t.y}px) scale(${t.scale})`
+      return `translate(${t.x}px, ${t.y}px) scale(${t.scale})`
     })
-    return { canvas, injected, fallback, viewportEl, debounced, transformCss }
+    return { canvas, injected, fallback, viewportEl, debounced, worldTransform }
   },
 
   on: {
@@ -172,8 +145,17 @@ export default controller({
 })
 
 </controller>
-<div class="viewport" role="application" aria-label={label()} bind:this={viewportEl} on:pointerdown={pointerDown} on:pointermove={pointerMove} on:pointerup={pointerUp} on:wheel={wheel}>
-  <div class="world" style={transformCss()}>
+<div
+  role="application"
+  aria-label={label()}
+  bind:this={viewportEl}
+  on:pointerdown={pointerDown}
+  on:pointermove={pointerMove}
+  on:pointerup={pointerUp}
+  on:wheel={wheel}
+  sx="position:relative w:full h:full min-h:panel-min-w-lg bg:background fg:foreground border:border radius:md overflow:hidden cursor:grab"
+>
+  <div style:transform={worldTransform()} sx="position:absolute top:0 left:0">
     <slot></slot>
   </div>
 </div>

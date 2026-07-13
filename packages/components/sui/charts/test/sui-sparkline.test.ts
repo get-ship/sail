@@ -1,11 +1,14 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sui-sparkline/sui-sparkline.compiled.js'
-import { createContainerRegistry, flush, mount } from '../src/test-utils'
+import { createContainerRegistry, flush, mount, nonTokenPaints } from '../src/test-utils'
 
 const reg = createContainerRegistry()
 afterEach(() => reg.cleanup())
 
-const shadow = (el: HTMLElement) => el.shadowRoot!
+// Light DOM: the component renders into the host element, so the host IS the
+// query root — no shadow boundary, and no hand-authored classes to key on. The
+// queries below are the components. real semantics: tags, ARIA, SVG paint.
+const root = (el: HTMLElement): HTMLElement => el
 
 describe('<sui-sparkline>', () => {
   it('registers as a custom element', () => {
@@ -14,13 +17,13 @@ describe('<sui-sparkline>', () => {
 
   it('attaches a shadow root', () => {
     const { el } = mount(reg, 'sui-sparkline')
-    expect(shadow(el)).not.toBeNull()
+    expect(root(el)).not.toBeNull()
   })
 
   it('renders a stroke path for valid data', async () => {
     const { el } = mount(reg, 'sui-sparkline', { data: '1,2,3,4,5' })
     await flush()
-    const paths = shadow(el).querySelectorAll('path')
+    const paths = root(el).querySelectorAll('path')
     expect(paths.length).toBeGreaterThanOrEqual(1)
     expect(paths[0]?.getAttribute('d')).toMatch(/^M/)
   })
@@ -28,14 +31,14 @@ describe('<sui-sparkline>', () => {
   it('SVG has role=img when data is valid', async () => {
     const { el } = mount(reg, 'sui-sparkline', { data: '1,2,3' })
     await flush()
-    expect(shadow(el).querySelector('svg')?.getAttribute('role')).toBe('img')
+    expect(root(el).querySelector('svg')?.getAttribute('role')).toBe('img')
   })
 
   it('aria-label leads with the label prop (kind + data summary)', async () => {
     // MIGRATED: aria-label is now "kind: summary" (engine ariaSummary), not bare.
     const { el } = mount(reg, 'sui-sparkline', { data: '1,2,3', label: 'Trend' })
     await flush()
-    const aria = shadow(el).querySelector('svg')?.getAttribute('aria-label') ?? ''
+    const aria = root(el).querySelector('svg')?.getAttribute('aria-label') ?? ''
     expect(aria.startsWith('Trend')).toBe(true)
   })
 
@@ -43,27 +46,27 @@ describe('<sui-sparkline>', () => {
     // MIGRATED: ariaSummary derives the point count from the engine extent.
     const { el } = mount(reg, 'sui-sparkline', { data: '1,2,3' })
     await flush()
-    const aria = shadow(el).querySelector('svg')?.getAttribute('aria-label') ?? ''
+    const aria = root(el).querySelector('svg')?.getAttribute('aria-label') ?? ''
     expect(aria).toContain('3 points')
   })
 
   it('default aria-label leads with "sparkline"', async () => {
     const { el } = mount(reg, 'sui-sparkline', { data: '1,2,3' })
     await flush()
-    const aria = shadow(el).querySelector('svg')?.getAttribute('aria-label') ?? ''
+    const aria = root(el).querySelector('svg')?.getAttribute('aria-label') ?? ''
     expect(aria.startsWith('sparkline')).toBe(true)
   })
 
   it('renders 2 paths when fill attr is set', async () => {
     const { el } = mount(reg, 'sui-sparkline', { data: '1,2,3,4', fill: true })
     await flush()
-    expect(shadow(el).querySelectorAll('path').length).toBe(2)
+    expect(root(el).querySelectorAll('path').length).toBe(2)
   })
 
   it('area fill path has fill-opacity 0.18', async () => {
     const { el } = mount(reg, 'sui-sparkline', { data: '1,2,3,4', fill: true })
     await flush()
-    const first = shadow(el).querySelector('path')
+    const first = root(el).querySelector('path')
     expect(first?.getAttribute('fill-opacity')).toBe('0.18')
   })
 
@@ -72,14 +75,14 @@ describe('<sui-sparkline>', () => {
     // rather than dropping series with < 2 points — same null-gap contract as line.
     const { el } = mount(reg, 'sui-sparkline', { data: '5' })
     await flush()
-    expect(shadow(el).querySelectorAll('path').length).toBe(1)
+    expect(root(el).querySelectorAll('path').length).toBe(1)
   })
 
   it('a null gap splits the stroke into sub-paths (break, not interpolate)', async () => {
     // MIGRATED: a null comma slot breaks the stroke into one M-sub-path per run.
     const { el } = mount(reg, 'sui-sparkline', { data: '1,2,,4,5' })
     await flush()
-    const stroke = shadow(el).querySelectorAll('path')
+    const stroke = root(el).querySelectorAll('path')
     const d = stroke[stroke.length - 1]?.getAttribute('d') ?? ''
     const moves = d.match(/M/g)?.length ?? 0
     expect(moves).toBe(2)
@@ -88,7 +91,7 @@ describe('<sui-sparkline>', () => {
   it('renders no paths for empty data', async () => {
     const { el } = mount(reg, 'sui-sparkline')
     await flush()
-    expect(shadow(el).querySelectorAll('path').length).toBe(0)
+    expect(root(el).querySelectorAll('path').length).toBe(0)
   })
 
   it('empty data keeps the lightweight aria-hidden empty SVG (no empty-state)', async () => {
@@ -96,8 +99,8 @@ describe('<sui-sparkline>', () => {
     // aria-hidden empty SVG, NOT a full-size .sui-empty-state.
     const { el } = mount(reg, 'sui-sparkline')
     await flush()
-    expect(shadow(el).querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')
-    expect(shadow(el).querySelector('.sui-empty-state')).toBeNull()
+    expect(root(el).querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')
+    expect(root(el).querySelector('.sui-empty-state')).toBeNull()
   })
 
   it('loading attr composes a sui-spinner (inline loading profile, not skeleton)', async () => {
@@ -105,8 +108,8 @@ describe('<sui-sparkline>', () => {
     // full-size sui-skeleton would be too heavy inline.
     const { el } = mount(reg, 'sui-sparkline', { data: '1,2,3', loading: true })
     await flush()
-    expect(shadow(el).querySelector('.sui-spinner')).not.toBeNull()
-    expect(shadow(el).querySelector('[skeleton]')).toBeNull()
+    expect(root(el).querySelector('.sui-spinner')).not.toBeNull()
+    expect(root(el).querySelector('[skeleton]')).toBeNull()
   })
 
   it('loading reflects to host attribute', () => {
@@ -130,28 +133,29 @@ describe('<sui-sparkline>', () => {
     expect(el.getAttribute('data')).toBe('1,2,3')
   })
 
-  it('shadow styles include prefers-reduced-motion rule', () => {
-    const { el } = mount(reg, 'sui-sparkline')
-    const styleEl = shadow(el).querySelector('style')
-    expect(styleEl?.textContent).toContain('prefers-reduced-motion')
+  it('paints the trend line with the tone token (no color literal)', async () => {
+    const { el } = mount(reg, 'sui-sparkline', { data: '1,2,3', tone: 'success', fill: true })
+    await flush()
+    expect(nonTokenPaints(root(el))).toEqual([])
+    // The trend line is the stroked path (the area under it is the filled one).
+    expect(
+      root(el).querySelector('path[fill="none"]')?.getAttribute('stroke'),
+    ).toBe('var(--success)')
   })
 
-  it('shadow <style> carries no color literal (token-clean)', () => {
-    const { el } = mount(reg, 'sui-sparkline')
-    const css = shadow(el).querySelector('style')?.textContent ?? ''
-    expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
-    expect(css).not.toMatch(/\brgba?\(/)
-    expect(css).not.toMatch(/\boklch\(/)
-    expect(css).not.toContain('color-mix')
+  it('carries no inline style attribute (styling is the language, not style=)', async () => {
+    const { el } = mount(reg, 'sui-sparkline', { data: '1,2,3' })
+    await flush()
+    expect(root(el).querySelector('[style]')).toBeNull()
   })
 
   it('reacts to data attribute change', async () => {
     const { el } = mount(reg, 'sui-sparkline', { data: '1,2,3' })
     await flush()
-    const before = shadow(el).querySelector('path')?.getAttribute('d')
+    const before = root(el).querySelector('path')?.getAttribute('d')
     el.setAttribute('data', '5,4,3,2,1')
     await flush()
-    const after = shadow(el).querySelector('path')?.getAttribute('d')
+    const after = root(el).querySelector('path')?.getAttribute('d')
     expect(after).not.toEqual(before)
   })
 })

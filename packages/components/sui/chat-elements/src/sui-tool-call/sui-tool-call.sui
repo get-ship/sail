@@ -8,6 +8,11 @@
   Args arrive via the default slot; the result via the `result` slot.
   Both render monospace. Pure framework primitive — no SDK, no runtime.
 
+  Status is a TONE: the frame maps status → tone, and the tone channel
+  (`--tone`) carries the status color to the rail, the dot, and the status
+  text. The dot is the L1 `<span dot>` — its `pulse` attribute (set only
+  while running) owns the animation.
+
   Props
   ─────────────────────────────────────────────────────────────────────
   name    (string)  Tool name shown in the header.
@@ -27,113 +32,40 @@
     open: false,
   },
 }</component>
-<style>
-  .sui-tool-call {
-    display: block;
-    font-family: var(--font-body);
-    color: var(--foreground);
-    --status-color: var(--muted-foreground);
-  }
-  .sui-tool-call[hidden] { display: none; }
-  .sui-tool-call[status='running'] { --status-color: var(--info); }
-  .sui-tool-call[status='ok']      { --status-color: var(--success); }
-  .sui-tool-call[status='error']   { --status-color: var(--destructive); }
 
-  .frame {
-    border: 1px solid var(--border);
-    /* State-colored left rail — instant at-a-glance scannability of the
-       invocation's status, echoing the status dot / status-text tint. */
-    border-left: 3px solid var(--status-color);
-    border-radius: var(--radius-md);
-    background: var(--card);
-    overflow: hidden;
-  }
-  .header {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-3);
-  }
-  .status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--status-color);
-    flex: 0 0 auto;
-  }
-  .sui-tool-call[status='running'] .status-dot {
-    animation: sui-tool-call-pulse 1.4s var(--ease-in-out) infinite;
-  }
-  @keyframes sui-tool-call-pulse {
-    0%, 100% { opacity: 1; }
-    50%      { opacity: 0.4; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .sui-tool-call[status='running'] .status-dot { animation: none; }
-  }
+<div
+  tone={status() === 'ok' ? 'success' : status() === 'error' ? 'destructive' : 'info'}
+  sx="position:relative border:border radius:md bg:card overflow:hidden"
+>
+  <!-- The state-colored rail: at-a-glance status, echoing the dot + status text. -->
+  <span
+    aria-hidden="true"
+    sx="position:absolute left:0 top:0 bottom:0 w:0_75 bg:tone"
+  ></span>
 
-  .name {
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    font-weight: var(--font-weight-medium);
-    color: var(--foreground);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .status-text {
-    margin-inline-start: auto;
-    font-size: var(--text-xs);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--status-color);
-  }
-  .chevron {
-    flex: 0 0 auto;
-    transition: transform var(--duration-fast) var(--ease-out);
-    color: var(--muted-foreground);
-  }
-  .sui-tool-call[open] .chevron { transform: rotate(90deg); }
-
-  .body {
-    border-top: 1px solid var(--border);
-    padding: var(--space-2) var(--space-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    line-height: 1.5;
-  }
-  .body-label {
-    display: block;
-    font-family: var(--font-body);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--muted-foreground);
-    margin-bottom: var(--space-1);
-  }
-  .args { white-space: pre-wrap; overflow-wrap: anywhere; }
-  .result-block { margin-top: var(--space-2); }
-  ::slotted([slot='result']) { white-space: pre-wrap; overflow-wrap: anywhere; }
-</style>
-
-<div class="frame">
-  <collapsible open={open()}>
-    <div slot="trigger" class="header">
-      <span class="status-dot" aria-hidden="true"></span>
-      <span class="name">{name()}</span>
-      <span class="status-text status">{status()}</span>
-      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"
+  <collapsible open={open()} sx="group">
+    <row slot="trigger" gap="2" align="center" sx="py:2 px:3">
+      <span
+        dot
+        aria-hidden="true"
+        attr:pulse={status() === 'running'}
+        sx="bg:tone shadow:none"
+      ></span>
+      <span sx="font:mono text:sm weight:medium fg:foreground wrap:truncate">{name()}</span>
+      <span sx="ml:auto text:xs case:upper tracking:wide fg:tone">{status()}</span>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
         stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-        stroke-linejoin="round" aria-hidden="true">
+        stroke-linejoin="round" aria-hidden="true"
+        sx="grow:none fg:muted-foreground group-open:rotate:90">
         <path d="M4 2l4 4-4 4" />
       </svg>
-    </div>
-    <div class="body">
-      <span class="body-label">Arguments</span>
-      <div class="args"><slot></slot></div>
-      <div class="result-block">
-        <span class="body-label">Result</span>
-        <slot name="result"></slot>
+    </row>
+    <div sx="border-t:border py:2 px:3 font:mono text:sm leading:normal">
+      <span sx="display:block font:body text:xs case:upper tracking:wide fg:muted-foreground mb:1">Arguments</span>
+      <div sx="wrap:pre-wrap"><slot></slot></div>
+      <div sx="mt:2">
+        <span sx="display:block font:body text:xs case:upper tracking:wide fg:muted-foreground mb:1">Result</span>
+        <div sx="wrap:pre-wrap"><slot name="result"></slot></div>
       </div>
     </div>
   </collapsible>

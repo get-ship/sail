@@ -20,11 +20,13 @@ const mount = (markup: string): HTMLElement => {
   c.innerHTML = markup
   return c.querySelector('sui-thinking-dots')!
 }
-// The live region is the announced status; anchor on the part/role contract.
+// The live region is the announced status — anchor on the ARIA role, which is
+// the contract a screen reader reads. Light DOM: query off the host.
 const region = (el: HTMLElement): HTMLElement =>
-  el.shadowRoot!.querySelector<HTMLElement>('[part="dots"]')!
+  el.querySelector<HTMLElement>('[role="status"]')!
+// The dots are decorative by contract — aria-hidden is what makes them so.
 const dots = (el: HTMLElement): NodeListOf<HTMLElement> =>
-  el.shadowRoot!.querySelectorAll<HTMLElement>('[part="dot"]')
+  el.querySelectorAll<HTMLElement>('span[aria-hidden="true"]')
 
 describe('<sui-thinking-dots>', () => {
   it('registers with the global custom-element registry', () => {

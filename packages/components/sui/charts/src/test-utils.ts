@@ -33,9 +33,11 @@ export function createContainerRegistry(): TestContainerRegistry {
 }
 
 /**
- * Mount a component instance with the given attributes. Returns the
- * element + its shadow root (when present). Pass through a registry
- * so the host container is cleaned up automatically.
+ * Mount a component instance with the given attributes. Pass through a
+ * registry so the host container is cleaned up automatically.
+ *
+ * These components render into the LIGHT DOM: the host element IS the query
+ * root, so assertions run against `el` directly.
  *
  * @example
  * ```ts
@@ -43,9 +45,9 @@ export function createContainerRegistry(): TestContainerRegistry {
  * afterEach(() => reg.cleanup())
  *
  * it('reflects tone', () => {
- *   const { el, shadow } = mount(reg, 'sui-status-dot', { tone: 'primary', pulse: true })
+ *   const { el } = mount(reg, 'sui-status-dot', { tone: 'primary', pulse: true })
  *   expect(el.getAttribute('tone')).toBe('primary')
- *   expect(shadow!.querySelector('.dot')).not.toBeNull()
+ *   expect(el.querySelector('svg')).not.toBeNull()
  * })
  * ```
  */
@@ -54,7 +56,7 @@ export function mount(
   tag: string,
   attrs: Record<string, string | boolean> = {},
   innerHTML: string = '',
-): { el: HTMLElement; shadow: ShadowRoot | null; container: HTMLElement } {
+): { el: HTMLElement; container: HTMLElement } {
   const container = reg.mk()
   const attrsHtml = Object.entries(attrs)
     .map(([k, v]) =>
@@ -64,7 +66,24 @@ export function mount(
     .join(' ')
   container.innerHTML = `<${tag}${attrsHtml ? ' ' + attrsHtml : ''}>${innerHTML}</${tag}>`
   const el = container.querySelector(tag) as HTMLElement
-  return { el, shadow: el.shadowRoot, container }
+  return { el, container }
+}
+
+/**
+ * Every color a chart paints must be a design token — `var(--…)`, `none`, or
+ * `currentColor`. Returns the `fill`/`stroke` values that are none of those
+ * (a hex/rgb/oklch/color-mix literal); an empty list is a token-clean chart.
+ */
+export function nonTokenPaints(root: Element): string[] {
+  const offenders: string[] = []
+  for (const node of root.querySelectorAll('[fill], [stroke]')) {
+    for (const attr of ['fill', 'stroke']) {
+      const v = node.getAttribute(attr)
+      if (v === null || v === 'none' || v === 'currentColor') continue
+      if (!v.startsWith('var(--')) offenders.push(`${node.tagName}[${attr}=${v}]`)
+    }
+  }
+  return offenders
 }
 
 /** Wait one microtask + one macrotask so attributeChangedCallback →

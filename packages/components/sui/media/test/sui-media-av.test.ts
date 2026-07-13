@@ -1,12 +1,4 @@
-// TESTS-FIRST — the <sui-media-av> renderer (video/audio + optional
-// waveform).
-//
-// Status: RED. The renderer source + controller are greenfield:
-//   - `../src/sui-media-av/sui-media-av.sui`
-//   - `../src/sui-media-av/sui-media-av.controller.ts`
-//   - `../src/sui-media-av/engine/waveform.ts`   (pre-committed split)
-// None exist yet, so `readFileSync`/the controller import throws and every spec
-// errors RED. DO NOT add the impl here. DO NOT weaken into passing stubs.
+// The <sui-media-av> renderer (video/audio + optional waveform).
 //
 // Harness: `renderComponent` from `@ship/test-setup` compiles the renderer
 // `.sui` under the `sui-media-av` tag and registers it as a custom element
@@ -17,9 +9,12 @@
 // dispatching the native media events the renderer listens for (`loadedmetadata`,
 // `play`, `pause`, `ended`, `error`) — the dispatcher-spec precedent.
 //
+// The component is LIGHT DOM and hand-authors no classes, so every query below
+// is a real semantic: the native <video>/<audio> tag, the aria-hidden <canvas>.
+//
 // Authority: build-spec §"Props" (sui-media-av), §"Backbone #2 —
-// ViewerRenderer contract" (read-only, source-in-never-fetch), §"Slots / parts /
-// variants" (media · controls · waveform), §"Accessibility" (native <video>/
+// ViewerRenderer contract" (read-only, source-in-never-fetch),
+// §"Accessibility" (native <video>/
 // <audio controls> carry built-in AT; the waveform canvas is aria-hidden and the
 // real <audio> stays the accessible control), and behavioral spec #5 (media
 // plays resolved sources; object URLs revoked on unmount).
@@ -28,8 +23,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderComponent } from '@ship/test-setup'
-// RED: greenfield media renderer controller.
-import mediaRenderer from '../src/sui-media-av/sui-media-av.controller'
+import mediaRenderer from '../src/sui-media-av/sui-media-av.sui.controller.ts'
 
 const SOURCE_URL = new URL('../src/sui-media-av/sui-media-av.sui', import.meta.url)
 const SOURCE = readFileSync(SOURCE_URL, 'utf8')
@@ -45,12 +39,11 @@ interface ViewerSource {
   url?: string
 }
 
-const shadow = (el: HTMLElement): ShadowRoot => el.shadowRoot as ShadowRoot
-
-const videoEl = (el: HTMLElement): HTMLVideoElement | null =>
-  shadow(el).querySelector('video')
-const audioEl = (el: HTMLElement): HTMLAudioElement | null =>
-  shadow(el).querySelector('audio')
+const videoEl = (el: HTMLElement): HTMLVideoElement | null => el.querySelector('video')
+const audioEl = (el: HTMLElement): HTMLAudioElement | null => el.querySelector('audio')
+/** The decorative waveform strip — aria-hidden, beside the real <audio>. */
+const waveformEl = (el: HTMLElement): HTMLCanvasElement | null =>
+  el.querySelector('canvas[aria-hidden="true"]')
 /** Whichever native media element the renderer chose for this source. */
 const mediaEl = (el: HTMLElement): HTMLMediaElement | null =>
   (videoEl(el) ?? audioEl(el)) as HTMLMediaElement | null
@@ -152,11 +145,11 @@ describe('<sui-media-av> — props reflect for CSS/AT', () => {
 })
 
 describe('<sui-media-av> — waveform (#5)', () => {
-  it('draws a decorative aria-hidden canvas (part="waveform") for audio + waveform', async () => {
+  it('draws a decorative aria-hidden canvas for audio + waveform', async () => {
     const v = mountMedia({ contentType: 'audio/mpeg', url: AUDIO_URL }, { waveform: '' })
     live.push(v)
     await v.flush()
-    const wave = shadow(v.el).querySelector('canvas[part~="waveform"]')
+    const wave = waveformEl(v.el)
     expect(wave).not.toBeNull()
     expect(wave!.getAttribute('aria-hidden')).toBe('true')
   })
@@ -173,7 +166,7 @@ describe('<sui-media-av> — waveform (#5)', () => {
     const v = mountMedia({ contentType: 'audio/mpeg', url: AUDIO_URL })
     live.push(v)
     await v.flush()
-    expect(shadow(v.el).querySelector('canvas[part~="waveform"]')).toBeNull()
+    expect(waveformEl(v.el)).toBeNull()
   })
 })
 

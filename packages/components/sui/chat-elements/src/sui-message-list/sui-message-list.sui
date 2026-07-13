@@ -28,40 +28,6 @@
     'sticky-bottom': true,
   },
 }</component>
-<style>
-  .sui-message-list {
-    display: block;
-    min-height: 0;
-    font-family: var(--font-body);
-  }
-  .sui-message-list[hidden] { display: none; }
-
-  .scroll {
-    position: relative;
-    height: 100%;
-    overflow-y: auto;
-    padding: var(--space-3);
-    scrollbar-width: thin;
-  }
-  .spacer {
-    position: relative;
-    width: 100%;
-  }
-  .row {
-    position: absolute;
-    left: var(--space-3);
-    right: var(--space-3);
-    display: flex;
-    flex-direction: column;
-  }
-  .empty {
-    display: contents;
-  }
-  ::slotted([slot='empty']) {
-    margin: auto;
-  }
-</style>
-
 
 <controller>
 import {
@@ -192,20 +158,24 @@ export default controller({
 })
 
 </controller>
-<div class="scroll" bind:this={scrollEl}>
-  <div class="spacer" style:height={`${totalSize()}px`}>
+<scroll-area
+  orientation="vertical"
+  bind:this={scrollEl}
+  sx="position:relative h:full min-h:0 p:3 font:body"
+>
+  <div sx="position:relative w:full" style:height={`${totalSize()}px`}>
     {#for w of windowItems() key={w.key}}
-      <div class="row" style:transform={`translateY(${w.start}px)`}>
+      <column gap="0" sx="position:absolute left:3 right:3" style:transform={`translateY(${w.start}px)`}>
         <sui-message
           role={w.item.role || 'assistant'}
           content-type={w.item.contentType || 'text'}
           timestamp={w.item.timestamp || ''}
           status={w.item.status || 'sent'}
         >{w.item.content}</sui-message>
-      </div>
+      </column>
     {/for}
   </div>
   {#if items().length === 0}
-    <div class="empty"><slot name="empty"></slot></div>
+    <center><slot name="empty"></slot></center>
   {/if}
-</div>
+</scroll-area>

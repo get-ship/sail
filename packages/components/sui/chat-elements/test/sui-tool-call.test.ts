@@ -20,10 +20,15 @@ const mount = (markup: string): HTMLElement => {
   c.innerHTML = markup
   return c.querySelector('sui-tool-call')!
 }
-const nameEl = (el: HTMLElement): HTMLElement =>
-  el.shadowRoot!.querySelector<HTMLElement>('[part="name"]')!
-const statusEl = (el: HTMLElement): HTMLElement =>
-  el.shadowRoot!.querySelector<HTMLElement>('[part="status"]')!
+// Light DOM, no class hooks. The disclosure is a native <details>/<summary>;
+// the header's two announced texts are the tool name then the status (the dot
+// and the chevron are aria-hidden decoration).
+const headerText = (el: HTMLElement): HTMLElement[] =>
+  Array.from(
+    el.querySelectorAll<HTMLElement>('summary span:not([aria-hidden="true"])'),
+  )
+const nameEl = (el: HTMLElement): HTMLElement => headerText(el)[0]!
+const statusEl = (el: HTMLElement): HTMLElement => headerText(el)[1]!
 
 describe('<sui-tool-call>', () => {
   it('registers with the global custom-element registry', () => {
@@ -56,16 +61,12 @@ describe('<sui-tool-call>', () => {
         '<span slot="result">done</span>' +
         '</sui-tool-call>',
     )
-    const body = el.shadowRoot!.querySelector<HTMLElement>('[part="body"]')!
+    const body = el.querySelector<HTMLElement>('details')!
     expect(body.textContent).toContain('Arguments')
     expect(body.textContent).toContain('Result')
     // Light-DOM nodes slot into the disclosure body by slot contract.
-    const argSlot = el.shadowRoot!.querySelector<HTMLSlotElement>(
-      '[part="body"] slot:not([name])',
-    )!
-    const resultSlot = el.shadowRoot!.querySelector<HTMLSlotElement>(
-      '[part="body"] slot[name="result"]',
-    )!
+    const argSlot = el.querySelector<HTMLSlotElement>('details slot:not([name])')!
+    const resultSlot = el.querySelector<HTMLSlotElement>('details slot[name="result"]')!
     expect(argSlot).not.toBeNull()
     expect(resultSlot).not.toBeNull()
     expect(el.querySelector('[slot="result"]')!.textContent).toBe('done')

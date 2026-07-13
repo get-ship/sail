@@ -12,72 +12,13 @@
     sui-annotation-remove  { detail: { id: string } }  bubbles, composed
       Fired when the user clicks Remove on an item.
   ──────────────────────────────────────────────────────────────────────────────
-  Parts: list, item, empty
+  Anatomy: role=list of role=listitem rows; each row ends in a Remove button.
   ──────────────────────────────────────────────────────────────────────────────
   Parity vs <ship-annotation-list>:
     staged property           → staged JS property (same)
     ship-annotation-remove    → sui-annotation-remove (renamed)
     attributeChangedCallback JSON parsing → controller setAttribute interception
 -->
-
-<style>
-  .sui-annotation-list {
-    display: block;
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    color: var(--foreground);
-  }
-  .sui-annotation-list[hidden] { display: none; }
-
-  ol {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-  }
-  li {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-1) var(--space-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--background);
-  }
-  .kind {
-    font-size: var(--text-xs);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--muted-foreground);
-    min-width: 48px;
-  }
-  .note {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .empty {
-    color: var(--muted-foreground);
-    padding: var(--space-1) var(--space-2);
-  }
-  button {
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--muted-foreground);
-    cursor: pointer;
-    font-size: var(--text-xs);
-    padding: 2px 6px;
-  }
-  button:hover {
-    color: var(--destructive);
-    border-color: var(--destructive);
-  }
-</style>
-
 
 <controller>
 import { controller, signal } from '@ship/sui-runtime'
@@ -136,15 +77,20 @@ export default controller({
 
 </controller>
 {#if staged().length === 0}
-  <div class="empty">No staged annotations.</div>
+  <p sx="font:body text:sm fg:muted-foreground py:1 px:2">No staged annotations.</p>
 {:else}
-  <ol class="list">
+  <column role="list" gap="1" sx="font:body text:sm fg:foreground">
     {#for a of staged() key={a.id}}
-      <li class="item" data-id={a.id}>
-        <span class="kind">{a.kind}</span>
-        <span class="note" title={a.note ?? ''}>{a.note ?? '(no note)'}</span>
-        <button type="button" aria-label="Remove annotation" on:click={() => emitRemove(a.id)}>Remove</button>
-      </li>
+      <row role="listitem" data-id={a.id} gap="2" align="center" sx="py:1 px:2 bg:background border:border radius:sm">
+        <span sx="text:xs case:upper tracking:wide fg:muted-foreground">{a.kind}</span>
+        <span title={a.note ?? ''} sx="grow:1 wrap:truncate">{a.note ?? '(no note)'}</span>
+        <button
+          type="button"
+          aria-label="Remove annotation"
+          on:click={() => emitRemove(a.id)}
+          sx="min-h:0 px:1_5 py:half text:xs radius:sm bg:transparent border:border fg:muted-foreground cursor:pointer hover:fg:destructive hover:border:destructive"
+        >Remove</button>
+      </row>
     {/for}
-  </ol>
+  </column>
 {/if}

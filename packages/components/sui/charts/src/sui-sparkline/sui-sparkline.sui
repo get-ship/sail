@@ -20,7 +20,10 @@
   loading  bool    reflect   loading branch (engine isLoading) → sui-spinner.
   ─────────────────────────────────────────────────────────────────────────────
   Slots: none
-  Parts: series
+
+  The SVG is the component's box: `width`/`height` size it, `display:inline-block`
+  keeps it inline with the text it trends alongside, and `overflow:visible` keeps
+  the round stroke caps at the extremes from clipping on the viewBox edge.
 -->
 
 <component>{
@@ -34,24 +37,6 @@
     loading: false,
   },
 }</component>
-<style>
-  .sui-sparkline {
-    --sui-sparkline-w: auto;
-    --sui-sparkline-h: 40px;
-    display: inline-block;
-    width: var(--sui-sparkline-w);
-    height: var(--sui-sparkline-h);
-    line-height: 0;
-    transition: opacity var(--duration-fast) var(--ease-out);
-  }
-  .sui-sparkline[hidden] { display: none; }
-  svg { display: block; overflow: visible; }
-
-  @media (prefers-reduced-motion: reduce) {
-    .sui-sparkline { transition: none; }
-  }
-</style>
-
 
 <controller>
 import { controller, derived, ref } from '@ship/sui-runtime'
@@ -104,13 +89,14 @@ export default controller({
 
 </controller>
 {#if loading()}
-  <spinner class="loading"></spinner>
+  <spinner></spinner>
 {:else if chart.isEmpty()}
   <svg
     viewBox={'0 0 ' + viewport.width() + ' ' + viewport.height()}
     width={viewport.width()}
     height={viewport.height()}
-    aria-hidden="true">
+    aria-hidden="true"
+    sx="display:inline-block overflow:visible">
   </svg>
 {:else}
   <svg
@@ -119,12 +105,13 @@ export default controller({
     height={viewport.height()}
     role="img"
     aria-label={ariaLabel()}
+    sx="display:inline-block overflow:visible"
     bind:this={svgEl}>
     {#for s of seriesPaths() key={s.name}}
       {#if fill()}
         <path d={s.fillD} fill={s.color} fill-opacity="0.18" stroke="none"></path>
       {/if}
-      <path class="series" d={s.strokeD} fill="none" stroke={s.color} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d={s.strokeD} fill="none" stroke={s.color} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       </path>
     {/for}
   </svg>

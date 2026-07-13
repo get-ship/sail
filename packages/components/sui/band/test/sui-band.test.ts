@@ -1,6 +1,6 @@
 // <sui-band> tests — registration + anatomy, the seam-math cloning contract,
 // a11y on clones, reduced motion, the speed→duration derivation, and the
-// CSS attribute channels.
+// reflected prop channels.
 //
 // jsdom measures zero widths, so the default path exercises the documented
 // zero-measurement fallback (original + 1 clone — the minimum seamless
@@ -9,12 +9,16 @@
 // prop, pinning the real formula: copies = 2 x ceil(band / copy), duration =
 // halfWidth / rate.
 //
+// jsdom implements no Web Animations API, so `Element.animate` is recorded by a
+// stub: the loop's contract (a linear, infinite, -50% translate whose duration
+// is the measured px/s time, reversed by `direction`) is asserted against the
+// options the controller passes.
+//
 // The element registers via its `.compiled.js` (the production light-DOM
-// shape); the queries are root-agnostic (shadow root when a shadow variant
-// is registered, host subtree otherwise) so the suite pins the CONTRACT,
-// not the DOM mode.
+// shape); the queries are structural (the root, its track, the copies inside
+// it) because the component hand-authors no classes.
 
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import '../src/sui-band/sui-band.compiled.js'
 
@@ -23,9 +27,40 @@ interface Mount {
   host: HTMLElement
 }
 
+/** One recorded `el.animate(keyframes, options)` call. */
+interface AnimateCall {
+  target: Element
+  keyframes: Keyframe[]
+  options: KeyframeAnimationOptions
+}
+
+let animateCalls: AnimateCall[] = []
+let cancelled = 0
+
+/** jsdom ships no WAAPI. Record the calls and hand back a minimal Animation. */
+beforeEach(() => {
+  animateCalls = []
+  cancelled = 0
+  ;(Element.prototype as unknown as { animate: unknown }).animate = function animate(
+    this: Element,
+    keyframes: Keyframe[],
+    options: KeyframeAnimationOptions,
+  ) {
+    animateCalls.push({ target: this, keyframes, options })
+    return {
+      cancel() {
+        cancelled++
+      },
+      play() {},
+      finish() {},
+    } as unknown as Animation
+  }
+})
+
 const live: Mount[] = []
 afterEach(() => {
   for (const m of live.splice(0)) m.host.remove()
+  delete (Element.prototype as unknown as { animate?: unknown }).animate
 })
 
 /** Yield a microtask + macrotask turn so the controller's queued first
@@ -48,17 +83,23 @@ function mount(opts: { attrs?: Record<string, string>; html?: string } = {}): Mo
 }
 
 const rootOf = (m: Mount): ParentNode => m.el.shadowRoot ?? m.el
-const bandOf = (m: Mount): HTMLElement | null => rootOf(m).querySelector('.sui-band')
-const trackOf = (m: Mount): HTMLElement | null => rootOf(m).querySelector('.track')
-const copiesOf = (m: Mount): HTMLElement[] => Array.from(rootOf(m).querySelectorAll('.copy'))
+/** The band surface — the component's root element. */
+const bandOf = (m: Mount): HTMLElement | null =>
+  (rootOf(m) as Element).querySelector('.sui-root')
+/** The moving track — the band's only child. */
+const trackOf = (m: Mount): HTMLElement | null =>
+  (bandOf(m)?.firstElementChild as HTMLElement | null) ?? null
+/** Every copy of the content: the original + the clones, in track order. */
+const copiesOf = (m: Mount): HTMLElement[] =>
+  Array.from((trackOf(m)?.children ?? []) as HTMLCollectionOf<HTMLElement>)
 const clonesOf = (m: Mount): HTMLElement[] =>
   Array.from(rootOf(m).querySelectorAll('[data-sui-band-clone]'))
 
-/** The component's stylesheet, wherever the registered mode injected it. */
-const stylesOf = (m: Mount): string =>
-  m.el.shadowRoot?.querySelector('style')?.textContent ??
-  document.getElementById('ship-set-style-sui-band')?.textContent ??
-  ''
+/** The last loop the controller started on the track. */
+const lastLoop = (m: Mount): AnimateCall | undefined => {
+  const track = trackOf(m)
+  return animateCalls.filter((c) => c.target === track).at(-1)
+}
 
 /** Fix an element's measured width (jsdom always measures 0). */
 function setWidth(el: HTMLElement, width: number): void {
@@ -86,18 +127,27 @@ describe('<sui-band> — registration + anatomy', () => {
     expect(bandOf(m)).not.toBeNull()
     expect(trackOf(m)).not.toBeNull()
     expect(copiesOf(m).length).toBeGreaterThan(0)
-    expect(rootOf(m).querySelector('.copy slot')).not.toBeNull()
+    expect(copiesOf(m)[0]!.querySelector('slot')).not.toBeNull()
   })
 
-  it('carries the loop keyframes, the reverse channel, and the reduced-motion guard in its stylesheet', async () => {
+  it('runs the seamless loop on the track: linear, infinite, -50%', async () => {
     const m = mount({ html: '<span>X</span>' })
     await flush()
-    const css = stylesOf(m)
-    expect(css).toContain('translateX(-50%)')
-    expect(css).toContain("[direction='reverse'] .track")
-    expect(css).toContain('prefers-reduced-motion')
-    // Token discipline: the surface reads custom properties, never raw hex.
-    expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
+    const loop = lastLoop(m)
+    expect(loop).toBeDefined()
+    expect(loop!.keyframes).toEqual([
+      { transform: 'translateX(0)' },
+      { transform: 'translateX(-50%)' },
+    ])
+    expect(loop!.options.easing).toBe('linear')
+    expect(loop!.options.iterations).toBe(Infinity)
+    expect(loop!.options.direction).toBe('normal')
+  })
+
+  it('reverses the same loop for direction="reverse"', async () => {
+    const m = mount({ attrs: { direction: 'reverse' }, html: '<span>X</span>' })
+    await flush()
+    expect(lastLoop(m)!.options.direction).toBe('reverse')
   })
 })
 
@@ -134,11 +184,11 @@ describe('<sui-band> — seam-math cloning', () => {
     m.el.setAttribute('speed', 'fast')
     await flush()
     // halfWidth = 4 copies x 300px = 1200px; fast = 160 px/s → 7.5s.
-    expect(trackOf(m)!.style.getPropertyValue('--sui-band-duration')).toBe('7.5s')
+    expect(lastLoop(m)!.options.duration).toBe(7500)
     m.el.setAttribute('speed', 'slow')
     await flush()
     // slow = 40 px/s → 30s.
-    expect(trackOf(m)!.style.getPropertyValue('--sui-band-duration')).toBe('30s')
+    expect(lastLoop(m)!.options.duration).toBe(30000)
   })
 })
 
@@ -153,6 +203,9 @@ describe('<sui-band> — clones are presentation only', () => {
     for (const c of clonesOf(m)) {
       expect(c.getAttribute('aria-hidden')).toBe('true')
       expect(c.hasAttribute('inert')).toBe(true)
+      // A clone is the same box as the original, or the half-track it
+      // measures is not half the track.
+      expect(c.className).toBe(original!.className)
     }
   })
 
@@ -167,7 +220,7 @@ describe('<sui-band> — clones are presentation only', () => {
 })
 
 describe('<sui-band> — reduced motion', () => {
-  it('keeps the content visible but adds no clones under prefers-reduced-motion', async () => {
+  it('keeps the content visible, adds no clones, and plays nothing under prefers-reduced-motion', async () => {
     const orig = window.matchMedia
     Object.defineProperty(window, 'matchMedia', {
       configurable: true,
@@ -188,6 +241,9 @@ describe('<sui-band> — reduced motion', () => {
       await flush()
       expect(clonesOf(m).length).toBe(0)
       expect(copiesOf(m).length).toBe(1)
+      // WAAPI is programmatic — the CSS kill switch cannot stop it, so the
+      // controller must never start the loop in the first place.
+      expect(lastLoop(m)).toBeUndefined()
       // The original content is still reachable — motion off never means
       // content gone.
       expect((m.el.textContent ?? '') + (rootOf(m).textContent ?? '')).toContain('STILL HERE ◆')
@@ -201,28 +257,23 @@ describe('<sui-band> — reduced motion', () => {
   })
 })
 
-describe('<sui-band> — CSS attribute channels', () => {
-  it('mirrors tone/direction/angle onto the band root for the attribute-keyed skin + tone contract', async () => {
+describe('<sui-band> — reflected prop channels', () => {
+  it('reflects tone/direction/angle onto the host — the tone contract and the variant table read them there', async () => {
     const m = mount({
       attrs: { tone: 'primary', direction: 'reverse', angle: 'rise' },
       html: '<span>TONE ◆</span>',
     })
     await flush()
-    const band = bandOf(m)!
-    expect(band.getAttribute('tone')).toBe('primary')
-    expect(band.getAttribute('direction')).toBe('reverse')
-    expect(band.getAttribute('angle')).toBe('rise')
-    // The host carries the authored attributes too — the global [tone]
-    // channel may match either element.
     expect(m.el.getAttribute('tone')).toBe('primary')
+    expect(m.el.getAttribute('direction')).toBe('reverse')
+    expect(m.el.getAttribute('angle')).toBe('rise')
   })
 
   it('defaults are the quiet band: no branded tone, forward, flat', async () => {
     const m = mount({ html: '<span>DEFAULT ◆</span>' })
     await flush()
-    const band = bandOf(m)!
-    expect(band.getAttribute('tone') ?? 'default').toBe('default')
-    expect(band.getAttribute('direction') ?? 'forward').toBe('forward')
-    expect(band.getAttribute('angle') ?? 'none').toBe('none')
+    expect(m.el.getAttribute('tone') ?? 'default').toBe('default')
+    expect(m.el.getAttribute('direction') ?? 'forward').toBe('forward')
+    expect(m.el.getAttribute('angle') ?? 'none').toBe('none')
   })
 })

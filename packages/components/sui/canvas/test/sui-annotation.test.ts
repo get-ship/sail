@@ -43,6 +43,9 @@ const STAGED: AnnotationEvent[] = [
 
 // Host with the controller-installed `staged` accessor. We type-guard the
 // property's presence (it lives on the element after mount), then read it.
+// Light-DOM components: the template renders into the host itself.
+const root = (el: HTMLElement) => (el.shadowRoot ?? el)
+
 const readStaged = (el: HTMLElement): AnnotationEvent[] | undefined => {
   if (!('staged' in el)) return undefined
   const v = (el as { staged: unknown }).staged
@@ -56,8 +59,9 @@ describe('<sui-annotation-list> — host event dispatch (post scope→mount fix)
     readStaged; // satisfy ts-no-unused for the type guard
     ;(el as unknown as { staged: AnnotationEvent[] }).staged = STAGED
     await flush()
-    const items = el.shadowRoot!.querySelectorAll('li[part="item"]')
+    const items = root(el).querySelectorAll('[role="listitem"]')
     expect(items.length).toBe(STAGED.length)
+    expect(items[0]!.textContent).toContain('fix this')
   })
 
   it('clicking Remove dispatches sui-annotation-remove with the row id (bubbles + composed)', async () => {
@@ -69,7 +73,9 @@ describe('<sui-annotation-list> — host event dispatch (post scope→mount fix)
     el.addEventListener('sui-annotation-remove', (ev) => {
       captured = ev as CustomEvent<unknown>
     })
-    const removeBtn = el.shadowRoot!.querySelector('li[part="item"] button') as HTMLButtonElement | null
+    const removeBtn = root(el).querySelector(
+      '[role="listitem"] button[aria-label="Remove annotation"]',
+    ) as HTMLButtonElement | null
     expect(removeBtn).not.toBeNull()
     removeBtn!.click()
     await flush()
@@ -88,16 +94,20 @@ describe('<sui-annotation-list> — host event dispatch (post scope→mount fix)
 
 describe('<sui-annotation-layer> — host element surface (post scope→mount fix)', () => {
 
-  it('mount renders an overlay surface (the dead-host was inside scope, but the host itself must be alive)', async () => {
+  it('mount renders the capture overlay over the slotted content (the host must be alive)', async () => {
     const { el } = mount(reg, 'sui-annotation-layer', { mode: 'point' }, '<span data-test="wrapped">x</span>')
     await flush()
-    // The layer renders a `.surface` and `.overlay` inside its shadow root.
-    // If the controller's `mount` didn't run (or the host never materialized),
-    // the surface wouldn't be in the shadow tree at all.
-    const surface = el.shadowRoot!.querySelector('.surface')
-    const overlay = el.shadowRoot!.querySelector('.overlay')
-    expect(surface).not.toBeNull()
-    expect(overlay).not.toBeNull()
+    // The slotted content is projected, and mode=point arms the overlay that
+    // sits on top of it. If `mount` never ran (or the host never
+    // materialized), neither would be in the tree.
+    expect(root(el).querySelector('[data-test="wrapped"]')).not.toBeNull()
+    expect(root(el).querySelector('[data-state="capture"]')).not.toBeNull()
+  })
+
+  it('mode=off leaves the overlay unarmed', async () => {
+    const { el } = mount(reg, 'sui-annotation-layer', {}, '<span data-test="wrapped">x</span>')
+    await flush()
+    expect(root(el).querySelector('[data-state="capture"]')).toBeNull()
   })
 
   it('exposes a `staged` JS property the parent annotation-list can read', async () => {

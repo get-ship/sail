@@ -9,6 +9,10 @@
   `attachments` JS-property on the host. The composer echoes that array
   back in the submit event — it never fabricates attachment data.
 
+  Focus lives on the frame (`focus-within:`), not on the field. The frame
+  carries `disabled` as a `data-state` token so the dimmed surface is one
+  `state-disabled:` rule on the element that draws it.
+
   Props
   ─────────────────────────────────────────────────────────────────────
   placeholder  (string)  Input placeholder.
@@ -31,77 +35,6 @@
     multiline: false,
   },
 }</component>
-<style>
-  .sui-composer {
-    display: block;
-    font-family: var(--font-body);
-    color: var(--foreground);
-  }
-  .sui-composer[hidden] { display: none; }
-
-  .frame {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-2);
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    transition:
-      border-color var(--duration-fast) var(--ease-out),
-      box-shadow var(--duration-fast) var(--ease-out);
-  }
-  .frame:focus-within {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px var(--tone-primary-ring);
-  }
-  .sui-composer[disabled] .frame {
-    background: var(--muted);
-    opacity: 0.7;
-  }
-
-  .attachments { display: contents; }
-  ::slotted([slot='attachments']) {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1);
-  }
-
-  .row {
-    display: flex;
-    align-items: flex-end;
-    gap: var(--space-2);
-  }
-
-  .field {
-    flex: 1 1 auto;
-    min-width: 0;
-    border: 0;
-    outline: 0;
-    background: transparent;
-    resize: none;
-    font: inherit;
-    font-family: var(--font-body);
-    font-size: var(--text-base);
-    line-height: 1.5;
-    color: var(--foreground);
-    padding: var(--space-1) 2px;
-  }
-  .field::placeholder { color: var(--muted-foreground); }
-  .field:disabled { cursor: not-allowed; }
-  textarea.field {
-    min-height: calc(1.5em + 8px);
-    max-height: 200px;
-    overflow-y: auto;
-  }
-
-  .actions {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    flex: 0 0 auto;
-  }
-</style>
 
 
 <controller>
@@ -180,18 +113,40 @@ export default controller({
 })
 
 </controller>
-<div class="frame">
-  <div class="attachments">
+<column
+  gap="2"
+  data-state={disabled() ? 'disabled' : ''}
+  sx="p:2 font:body fg:foreground bg:background border:border radius:lg
+      focus-within:border:primary focus-within:ring:tone-primary-ring
+      state-disabled:bg:muted state-disabled:opacity:75"
+>
+  <div sx="display:contents">
     <slot name="attachments"></slot>
   </div>
-  <div class="row">
+  <row gap="2" align="end">
     {#if multiline()}
-      <textarea class="field" rows="1" placeholder={placeholder()} disabled={disabled()} bind:value={text} bind:this={fieldEl}></textarea>
+      <textarea
+        rows="1"
+        placeholder={placeholder()}
+        disabled={disabled()}
+        bind:value={text}
+        bind:this={fieldEl}
+        sx="grow:1 min-w:0 min-h:0 py:1 px:half font:body text:base leading:normal
+            fg:foreground bg:transparent border:none radius:none shadow:none overflow-y:auto"
+      ></textarea>
     {/if}
     {#if !multiline()}
-      <input class="field" type="text" placeholder={placeholder()} disabled={disabled()} bind:value={text} bind:this={fieldEl} />
+      <input
+        type="text"
+        placeholder={placeholder()}
+        disabled={disabled()}
+        bind:value={text}
+        bind:this={fieldEl}
+        sx="grow:1 min-w:0 min-h:0 py:1 px:half font:body text:base leading:normal
+            fg:foreground bg:transparent border:none radius:none shadow:none"
+      />
     {/if}
-    <div class="actions">
+    <row gap="1" align="center" sx="grow:none">
       <slot name="trailing"></slot>
       <button
         bind:this={sendEl}
@@ -201,6 +156,6 @@ export default controller({
         aria-label="Send"
         disabled={disabled() || text().trim().length === 0}
       >Send</button>
-    </div>
-  </div>
-</div>
+    </row>
+  </row>
+</column>

@@ -5,11 +5,11 @@
   Read-only, source-in-never-fetch. A resolved source arrives via `prop:src`
   identity (a raster object-url/bytes, or SVG text the consumer already fetched)
   — NEVER an attribute, NEVER a fetch. A raster source paints into the native
-  <img class="img"> (whose `load`/`error` drive the lifecycle events) inside a
-  `part="stage"` zoom/pan surface. An SVG TEXT source inlines through `bindHtml`
-  into a sandboxed `role="img"` container (no raster <img>, no innerHTML in the
-  controller). A `gallery` source array renders a `role="listbox"` thumbnail
-  strip with arrow-key navigation.
+  <img> (whose `load`/`error` drive the lifecycle events) inside a zoom/pan
+  stage. An SVG TEXT source inlines through `bindHtml` into a sandboxed
+  `role="img"` container (no raster <img>, no innerHTML in the controller). A
+  `gallery` source array renders a `role="listbox"` thumbnail strip with
+  arrow-key navigation.
 
   Density is the platform axis (`<html data-density>`): this renderer is NOT
   row-shaped and exposes NEITHER `density` NOR `dense`.
@@ -25,8 +25,6 @@
     sui-viewer-error {message}   — raster decode failure
     sui-viewer-zoom {scale}      — wheel/keyboard zoom
     sui-viewer-index-change {index} — gallery arrow-navigation
-
-  Parts: img · stage · thumb.
 -->
 
 <component>{
@@ -37,81 +35,6 @@
     gallery: false,
   },
 }</component>
-<style>
-  .sui-media-image {
-    display: block;
-    width: 100%;
-    color: var(--foreground);
-    /* Thumbnail edge — a fixed gallery-strip dimension (not a row metric). */
-    --sui-thumb-size: 3rem;
-  }
-  .sui-media-image[hidden] { display: none; }
-
-  .stage {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    overflow: hidden;
-    /* Checkerboard transparency matte — reveals image alpha (PNG/SVG)
-       against a neutral surface instead of a flat fill. */
-    background-color: var(--surface-1);
-    background-image: repeating-conic-gradient(
-      var(--hover-bg) 0% 25%,
-      transparent 0% 50%);
-    background-size: 22px 22px;
-    border-radius: var(--radius-md);
-    outline: none;
-  }
-
-  img {
-    display: block;
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    transition: transform var(--duration-fast) var(--ease-out);
-  }
-  .sui-media-image[fit='cover'] img { object-fit: cover; }
-  .sui-media-image[fit='actual'] img { object-fit: none; }
-
-  .svg-stage {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-  }
-  .svg-stage svg { max-width: 100%; height: auto; }
-
-  .strip {
-    display: flex;
-    gap: var(--space-2);
-    padding: var(--space-2);
-    overflow-x: auto;
-    list-style: none;
-    margin: 0;
-  }
-  .thumb {
-    flex: 0 0 auto;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 0;
-    background: var(--surface-1);
-    cursor: pointer;
-    overflow: hidden;
-  }
-  .thumb[aria-selected='true'] {
-    border-color: var(--primary);
-    box-shadow: var(--shadow-accent);
-  }
-  .thumb img { width: var(--sui-thumb-size); height: var(--sui-thumb-size); object-fit: cover; }
-
-  @media (prefers-reduced-motion: reduce) {
-    img { transition: none; }
-  }
-</style>
-
-
 <controller>
 // sui-media-image — the raster + SVG image renderer controller (tier-2, glue-
 // only). A resolved source arrives via `prop:src` identity (single ViewerSource
@@ -186,8 +109,8 @@ export default controller({
     // bind:this DOM-handle slots. Every `bind:this={X}` target in the template
     // must be declared here as `ref(null)` — the runtime writes the rendered
     // element into the ref and the controller reads it via `state.$signals.X()`.
-    // The raster <img>, its zoom/pan stage, the inline-SVG span, and the gallery
-    // strip <ul>.
+    // The raster <img>, its zoom/pan stage, the role=img SVG container (whose
+    // whole content bindHtml owns), and the gallery strip.
     const imgEl = ref<HTMLImageElement>(null)
     const stageEl = ref<HTMLElement>(null)
     const svgEl = ref<HTMLElement>(null)
@@ -361,18 +284,18 @@ export default controller({
 
 </controller>
 {#if isSvg()}
-  <div class="svg-stage stage" role="img" aria-label={alt()}>
-    <span bind:this={svgEl}></span>
-  </div>
+  <center role="img" aria-label={alt()} bind:this={svgEl} sx="position:relative overflow:hidden bg:surface-1 radius:md"></center>
 {:else}
-  <div class="stage" tabindex="0" bind:this={stageEl}>
-    <img class="img" alt={alt()} bind:this={imgEl} />
-  </div>
+  <center tabindex="0" bind:this={stageEl} sx="position:relative overflow:hidden bg:surface-1 radius:md">
+    <img alt={alt()} bind:this={imgEl} sx="display:block max-h:full" />
+  </center>
   {#if isGallery()}
-    <ul class="strip" role="listbox" aria-label="Image gallery" bind:this={stripEl}>
+    <row role="listbox" aria-label="Image gallery" gap="2" bind:this={stripEl} sx="p:2 overflow-x:auto">
       {#for item of galleryItems() key={item.id}}
-        <li class="thumb" role="option" aria-selected={item.selected ? 'true' : 'false'}><img src={item.url} alt="" /></li>
+        <row role="option" gap="0" aria-selected={item.selected ? 'true' : 'false'} sx="grow:none p:0 overflow:hidden bg:surface-1 border:border radius:sm cursor:pointer selected:border:primary selected:shadow:accent">
+          <img src={item.url} alt="" />
+        </row>
       {/for}
-    </ul>
+    </row>
   {/if}
 {/if}

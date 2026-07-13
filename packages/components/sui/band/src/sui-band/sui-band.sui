@@ -16,30 +16,24 @@
     speed      normal | slow | fast — real px/s rates, so two bands with
                different content lengths still move at the same speed.
     direction  forward | reverse — forward scrolls the content leftward.
-    angle      none | rise | fall — a ±1deg tilt. A tilted band widens
-               itself by --space-8 per side so its rotated ends bleed past
-               the container instead of showing bare corners.
+    angle      none | rise | fall — a ±1deg tilt.
     tone       Rides the global tone contract ([tone] fills --tone /
                --tone-contrast; contracts.css): unset/default is the muted
                surface band; any branded tone is the filled band.
 
-  direction / angle / tone are pure CSS channels: the template mirrors them
-  onto the root element, where the attribute-keyed rules (and the global
-  [tone] channel) pick them up. Only `speed` reaches the controller — the
-  animation duration is derived from measured content width.
+  speed + direction parameterize the loop and reach the controller; tone is a
+  variant map on the root; angle reflects onto the host.
 
-  Reduced motion: under prefers-reduced-motion the animation is off (CSS —
-  both the rule below and the runtime's global [data-component] kill-switch)
-  and the controller removes every clone: the original content stands alone,
-  fully visible and static.
+  Reduced motion: the controller plays nothing and removes every clone — the
+  original content stands alone, fully visible and static.
 
-  Seam math: the keyframe travels exactly -50% of the track, so the track
-  must hold an EVEN number of identical copies (the loop point lands on a
-  copy boundary — no seam) and each half must be at least as wide as the
-  band (the tail is always covered — no bare stretch). The inter-copy gap
-  lives INSIDE each copy (padding-inline-end), never as flex gap on the
-  track: a track-level gap is excluded from the -50% distance and shows up
-  as a one-gap jump at the loop point.
+  Seam math: the loop travels exactly -50% of the track, so the track must
+  hold an EVEN number of identical copies (the loop point lands on a copy
+  boundary — no seam) and each half must be at least as wide as the band (the
+  tail is always covered — no bare stretch). The inter-copy gap lives INSIDE
+  each copy (its trailing padding), never as gap on the track: a track-level
+  gap is excluded from the -50% distance and shows up as a one-gap jump at the
+  loop point.
 -->
 
 <component>{
@@ -47,111 +41,54 @@
     speed: 'normal' | 'slow' | 'fast',
     direction: 'forward' | 'reverse',
     angle: 'none' | 'rise' | 'fall',
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
+    tone: variant({
+      default: '',
+      primary: 'bg:tone fg:tone-contrast border-t:none border-b:none',
+      info: 'bg:tone fg:tone-contrast border-t:none border-b:none',
+      success: 'bg:tone fg:tone-contrast border-t:none border-b:none',
+      warning: 'bg:tone fg:tone-contrast border-t:none border-b:none',
+      destructive: 'bg:tone fg:tone-contrast border-t:none border-b:none',
+      accent: 'bg:tone fg:tone-contrast border-t:none border-b:none',
+      muted: 'bg:tone fg:tone-contrast border-t:none border-b:none',
+    }),
   },
 }</component>
-
-<style>
-  /* The band surface. Default (no tone / tone='default') is the muted band:
-     surface + muted text + hairline borders. Any branded tone flips it to
-     the filled band via the global tone channel — contracts.css fills
-     --tone / --tone-contrast from the mirrored [tone] attribute. */
-  .sui-band {
-    display: block;
-    overflow: hidden;
-    padding-block: var(--space-2_5);
-    background: var(--surface-2);
-    color: var(--muted-foreground);
-    border-block: 1px solid var(--border);
-    font-size: var(--text-sm);
-    font-weight: var(--font-weight-semibold);
-    letter-spacing: var(--tracking-wide);
-  }
-  .sui-band[tone]:not([tone='default']) {
-    background: var(--tone);
-    color: var(--tone-contrast);
-    border-block: none;
-  }
-
-  /* Tilt. The rotated box's ends would expose bare corners inside a
-     same-width container, so a tilted band bleeds one spacing step past
-     each edge; the parent decides whether to clip the bleed. */
-  .sui-band[angle='rise'],
-  .sui-band[angle='fall'] {
-    margin-inline: calc(-1 * var(--space-8));
-  }
-  .sui-band[angle='rise'] { transform: rotate(-1deg); }
-  .sui-band[angle='fall'] { transform: rotate(1deg); }
-
-  /* The moving track: original copy + controller-appended clones, single
-     row, sized by content. --sui-band-duration is the stylesheet default;
-     the controller overrides it inline from measured width x speed so the
-     px/s rate is constant regardless of content length. */
-  .track {
-    --sui-band-duration: 24s;
-    display: flex;
-    width: max-content;
-    white-space: nowrap;
-    will-change: transform;
-    animation: sui-band-scroll var(--sui-band-duration) linear infinite;
-  }
-  .sui-band[direction='reverse'] .track { animation-direction: reverse; }
-
-  /* One copy of the content. The inter-copy gap is padding INSIDE the copy
-     (see the seam-math note above). flex:none — a shrinking copy would
-     desynchronize the copies and break the loop-point alignment. */
-  .copy {
-    display: flex;
-    flex: none;
-    align-items: center;
-    gap: var(--space-8);
-    padding-inline-end: var(--space-8);
-  }
-
-  @keyframes sui-band-scroll {
-    to { transform: translateX(-50%); }
-  }
-
-  /* Motion off, content still visible. The controller also removes the
-     clones under this preference — the original stands alone. */
-  @media (prefers-reduced-motion: reduce) {
-    .track { animation: none; }
-  }
-</style>
 
 <controller>
 // <sui-band> controller — the seam math for the marquee loop.
 //
-// The CSS animates the track by -50%, so correctness is a counting problem:
-// the track must hold an even number of identical copies, and each half must
-// be at least as wide as the band. copies = 2 x ceil(bandWidth / copyWidth);
-// the controller appends (copies - 1) aria-hidden+inert clones after the
-// original and keeps the count in step with resizes, content changes, and
-// the speed prop. Clones are snapshots (cloneNode) with their ids stripped —
-// the original slotted nodes stay the one accessible, interactive copy.
+// The track animates by -50%, so correctness is a counting problem: the track
+// must hold an even number of identical copies, and each half must be at least
+// as wide as the band. copies = 2 x ceil(bandWidth / copyWidth); the controller
+// appends (copies - 1) aria-hidden+inert clones after the original and keeps the
+// count in step with resizes, content changes, and the speed prop. Clones are
+// snapshots (cloneNode) with their ids stripped — the original slotted nodes
+// stay the one accessible, interactive copy.
 //
 // Speed is honest px/s, not a fixed duration: duration = halfWidth / rate,
-// re-derived from measurement, so short and long bands move at the same
-// visual rate. The value rides the --sui-band-duration custom property
-// (inline style beats the stylesheet default).
+// re-derived from measurement, so short and long bands move at the same visual
+// rate.
 //
-// Environments without layout (SSR-adjacent test DOMs measure 0) fall back
-// to the minimum seamless shape — original + 1 clone — and the stylesheet's
-// default duration, so the element never divides by zero and never renders
-// an empty track.
+// The loop is a WAAPI animation this controller owns because both of its
+// defining values are only knowable at runtime: the duration comes from a
+// measurement, and `direction` reverses the same loop. WAAPI animations are
+// programmatic, so the CSS reduced-motion kill switch cannot reach them — the
+// controller consults the media query itself (and drops the clones with it).
 //
-// Under prefers-reduced-motion the CSS disables the animation and this
-// controller removes every clone: no motion, no redundant content.
+// Environments without layout (SSR-adjacent test DOMs measure 0) fall back to
+// the minimum seamless shape — original + 1 clone — and the fallback duration,
+// so the element never divides by zero and never renders an empty track.
 
 import { controller, effect } from "@ship/sui-runtime";
 import type { Scope } from "./sui-band.sui";
 
-// The slice of the mount `state` we touch: the `speed` prop signal and the
-// `bind:this` refs, exposed as callables on `$signals` (the mount-style
+// The slice of the mount `state` we touch: the `speed`/`direction` prop signals
+// and the `bind:this` refs, exposed as callables on `$signals` (the mount-style
 // controller contract — same seam <sui-mermaid> uses).
 interface BandState {
   $signals: {
     speed: () => string | undefined;
+    direction: () => string | undefined;
     band: () => HTMLElement | null;
     track: () => HTMLElement | null;
     copy: () => HTMLElement | null;
@@ -165,6 +102,9 @@ const PX_PER_SECOND: Record<string, number> = {
   normal: 80,
   fast: 160,
 };
+
+/** The loop duration when there is nothing to measure: px/s needs a width. */
+const FALLBACK_DURATION_MS = 24_000;
 
 export default controller<Scope>({
   mount(state: BandState, host: HTMLElement) {
@@ -180,6 +120,7 @@ export default controller<Scope>({
         : null;
 
     let clones: HTMLElement[] = [];
+    let loop: Animation | null = null;
 
     /** The content nodes of the original copy. Shadow mount: the slot's
      *  assigned (light-DOM) nodes. Light mount: the slot wrapper's children
@@ -192,11 +133,13 @@ export default controller<Scope>({
       return assigned.length > 0 ? assigned : Array.from(slotEl.childNodes);
     };
 
-    /** A presentation-only snapshot of the content: hidden from the a11y
-     *  tree, unfocusable, ids stripped so the document never carries dupes. */
+    /** A presentation-only snapshot of the content: hidden from the a11y tree,
+     *  unfocusable, ids stripped so the document never carries dupes. It wears
+     *  the original copy's classes — every copy must be the same box, or the
+     *  measured half-track is not half the track. */
     const buildClone = (): HTMLElement => {
       const c = document.createElement("div");
-      c.className = "copy";
+      c.className = copy.className;
       c.setAttribute("aria-hidden", "true");
       c.setAttribute("inert", "");
       c.setAttribute("data-sui-band-clone", "");
@@ -225,26 +168,48 @@ export default controller<Scope>({
       }
     };
 
+    const stopLoop = (): void => {
+      loop?.cancel();
+      loop = null;
+    };
+
+    /** (Re)start the -50% loop. Half a track is a whole number of copies, so
+     *  the loop point lands on a copy boundary — the seam is never visible. */
+    const playLoop = (durationMs: number): void => {
+      stopLoop();
+      if (typeof track.animate !== "function") return;
+      loop = track.animate(
+        [{ transform: "translateX(0)" }, { transform: "translateX(-50%)" }],
+        {
+          duration: durationMs,
+          easing: "linear",
+          iterations: Infinity,
+          direction:
+            state.$signals.direction() === "reverse" ? "reverse" : "normal",
+        },
+      );
+    };
+
     /** Re-derive clone count + duration from current measurements. */
     const layout = (): void => {
       const rate =
         PX_PER_SECOND[state.$signals.speed() ?? "normal"] ?? PX_PER_SECOND["normal"]!;
       if (reduced?.matches) {
         clearClones();
-        track.style.removeProperty("--sui-band-duration");
+        stopLoop();
         return;
       }
       const bandWidth = band.getBoundingClientRect().width;
       const copyWidth = copy.getBoundingClientRect().width;
       if (!(bandWidth > 0) || !(copyWidth > 0)) {
-        // No layout to measure — minimum seamless shape, default duration.
+        // No layout to measure — minimum seamless shape, fallback duration.
         setCloneCount(1);
-        track.style.removeProperty("--sui-band-duration");
+        playLoop(FALLBACK_DURATION_MS);
         return;
       }
       const perHalf = Math.max(1, Math.ceil(bandWidth / copyWidth));
       setCloneCount(perHalf * 2 - 1);
-      track.style.setProperty("--sui-band-duration", `${(perHalf * copyWidth) / rate}s`);
+      playLoop(((perHalf * copyWidth) / rate) * 1000);
     };
 
     /** Content changed — stale snapshots must not scroll by. */
@@ -253,10 +218,11 @@ export default controller<Scope>({
       layout();
     };
 
-    // `speed` is reactive; direction/angle/tone are pure CSS attribute
-    // channels mirrored onto the root by the template and never reach here.
+    // `speed` and `direction` both parameterize the loop. `angle`/`tone` are
+    // reflected host attributes the stylesheet reads; they never reach here.
     const stopSpeed = effect(() => {
       void state.$signals.speed();
+      void state.$signals.direction();
       layout();
     });
 
@@ -293,13 +259,14 @@ export default controller<Scope>({
       slotEl?.removeEventListener("slotchange", onSlotChange);
       reduced?.removeEventListener?.("change", onMotionPref);
       clearClones();
+      stopLoop();
     };
   },
 });
 </controller>
 
-<div class="sui-band" tone={tone()} direction={direction()} angle={angle()} bind:this={band}>
-  <div class="track" bind:this={track}>
-    <div class="copy" bind:this={copy}><slot></slot></div>
-  </div>
-</div>
+<column gap="0" bind:this={band} sx="overflow:hidden py:2_5 bg:surface-2 fg:muted-foreground border-t:border border-b:border text:sm weight:semibold tracking:wide">
+  <row gap="0" align="center" bind:this={track} sx="w:max wrap:nowrap">
+    <row gap="8" align="center" bind:this={copy} sx="grow:none pr:8"><slot></slot></row>
+  </row>
+</column>

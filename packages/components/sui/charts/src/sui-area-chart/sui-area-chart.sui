@@ -5,8 +5,8 @@
   geometry is a pure `derived` (present at first paint — no flush), the viewBox
   tracks the measured host box (no `preserveAspectRatio="none"` stretch), and
   loading / empty / error branch on the engine discriminators composing the
-  primitives pack. Each series renders an area fill path + a stroke path, both
-  carrying `part="series"`; grid lines `part="grid"`.
+  primitives pack. Each series renders an area fill path under a stroke path
+  over the y-grid lines.
 
   Props
   ─────────────────────────────────────────────────────────────────────────────
@@ -22,7 +22,9 @@
   error    —       prop:error identity-only (unknown has no <prop>) → sui-error-state.
   ─────────────────────────────────────────────────────────────────────────────
   Slots: (default) legend · description (described-data override)
-  Parts: series · grid
+
+  The SVG is the plot box: full-bleed width, `height` px tall. The legend row
+  sits under it, one 6px step away.
 -->
 
 <component>{
@@ -37,43 +39,6 @@
     loading: false,
   },
 }</component>
-<style>
-  .sui-area-chart {
-    display: block;
-    width: 100%;
-    height: 200px;
-    transition: opacity var(--duration-fast) var(--ease-out);
-  }
-  .sui-area-chart[hidden] { display: none; }
-  .wrap { display: flex; flex-direction: column; gap: 6px; width: 100%; height: 100%; }
-  svg { display: block; width: 100%; flex: 1; overflow: hidden; }
-  .legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    font-size: var(--text-xs);
-    color: var(--muted-foreground);
-    font-family: var(--font-body);
-  }
-  .legend:empty { display: none; }
-  .grid-line { stroke: var(--border); stroke-width: 1; stroke-dasharray: 2 3; }
-  .a11y-table {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-    border: 0;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .sui-area-chart { transition: none; }
-  }
-</style>
-
 
 <controller>
 import { controller, derived, ref } from '@ship/sui-runtime'
@@ -127,26 +92,28 @@ export default controller({
 })
 
 </controller>
-<div class="wrap">
+<column gap="0" sx="w:full">
   {#if loading()}
-    <span class="loading" skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
+    <span skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
   {:else if chart.error()}
-    <error-state class="error"></error-state>
+    <error-state></error-state>
   {:else if chart.isEmpty()}
-    <empty-state class="empty"></empty-state>
+    <empty-state></empty-state>
   {:else}
     <svg
       viewBox={'0 0 ' + viewport.width() + ' ' + viewport.height()}
+      height={height()}
       role="img"
       aria-label={ariaLabel()}
       aria-describedby="chart-data"
+      sx="display:block w:full overflow:hidden"
       bind:this={svgEl}>
       {#for g of gridLines() key={g.id}}
-        <line class="grid-line grid" x1="0" x2={viewport.width()} y1={g.y} y2={g.y}></line>
+        <line x1="0" x2={viewport.width()} y1={g.y} y2={g.y} stroke="var(--border)" stroke-width="1" stroke-dasharray="2 3"></line>
       {/for}
       {#for s of seriesPaths() key={s.name}}
         <path d={s.fillD} fill={s.color} fill-opacity="0.3" stroke="none"></path>
-        <path class="series" d={s.strokeD} fill="none" stroke={s.color} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+        <path d={s.strokeD} fill="none" stroke={s.color} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
         {#if points()}
           {#for p of s.pts key={p.id}}
             <circle cx={p.cx} cy={p.cy} r="2.5" fill={s.color}></circle>
@@ -154,7 +121,7 @@ export default controller({
         {/if}
       {/for}
     </svg>
-    <div class="a11y-table" id="chart-data">
+    <column id="chart-data" sx="visibility:assistive">
       <slot name="description">
         <table>
           {#for row of chart.ariaTable() key={row[0].text}}
@@ -166,7 +133,7 @@ export default controller({
           {/for}
         </table>
       </slot>
-    </div>
+    </column>
   {/if}
-  <div class="legend"><slot></slot></div>
-</div>
+  <row gap="3" align="stretch" sx="mt:1_5 font:body text:xs fg:muted-foreground"><slot></slot></row>
+</column>

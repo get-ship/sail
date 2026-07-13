@@ -86,10 +86,23 @@ const mountList = async (
   await flush()
   return el
 }
+// Light DOM, no class hooks. The component's root IS the scroll viewport; the
+// spacer is the sized box inside it, and each windowed row is the box that
+// holds one <sui-message>.
 const scrollOf = (el: MessageListEl): HTMLElement =>
-  el.shadowRoot!.querySelector<HTMLElement>('[part="scroll"]')!
+  el.firstElementChild as HTMLElement
+const spacerOf = (el: MessageListEl): HTMLElement =>
+  scrollOf(el).firstElementChild as HTMLElement
+const rowsOf = (el: MessageListEl): HTMLElement[] =>
+  Array.from(el.querySelectorAll<HTMLElement>('sui-message')).map(
+    (m) => m.parentElement as HTMLElement,
+  )
 const renderedMessages = (el: MessageListEl): NodeListOf<HTMLElement> =>
-  el.shadowRoot!.querySelectorAll<HTMLElement>('sui-message')
+  el.querySelectorAll<HTMLElement>('sui-message')
+// A message renders its meta row (role, timestamp) alongside the projected turn,
+// so the ITEM's text is what landed in that message's default slot.
+const contentOf = (msg: HTMLElement): string =>
+  msg.querySelector<HTMLSlotElement>('slot:not([name])')!.textContent!
 
 describe('<sui-message-list>', () => {
   it('registers with the global custom-element registry', () => {
@@ -106,9 +119,9 @@ describe('<sui-message-list>', () => {
     const msgs = renderedMessages(el)
     expect(msgs.length).toBe(2)
     expect(msgs[0]!.getAttribute('role')).toBe('user')
-    expect(msgs[0]!.textContent).toBe('one')
+    expect(contentOf(msgs[0]!)).toBe('one')
     expect(msgs[1]!.getAttribute('role')).toBe('assistant')
-    expect(msgs[1]!.textContent).toBe('two')
+    expect(contentOf(msgs[1]!)).toBe('two')
   })
 
   it('windows a long thread: renders only a slice while the spacer keeps the scrollbar honest', async () => {
@@ -124,7 +137,7 @@ describe('<sui-message-list>', () => {
     expect(msgs.length).toBeGreaterThan(0)
     expect(msgs.length).toBeLessThan(500)
     // The spacer encodes the FULL thread height so the scrollbar is honest.
-    const spacer = el.shadowRoot!.querySelector<HTMLElement>('[part="spacer"]')!
+    const spacer = spacerOf(el)
     expect(parseFloat(spacer.style.height || '0')).toBeGreaterThan(5000)
   })
 
@@ -132,9 +145,9 @@ describe('<sui-message-list>', () => {
     const el = await mountList()
     el.items = Array.from({ length: 2000 }, (_, i) => ({ id: String(i), content: `m${i}` }))
     await flush()
-    const rows = el.shadowRoot!.querySelectorAll<HTMLElement>('[part="row"]')
+    const rows = rowsOf(el)
     expect(rows.length).toBeGreaterThan(1)
-    const offsets = Array.from(rows).map((r) => r.style.transform)
+    const offsets = rows.map((r) => r.style.transform)
     // First row anchors at the top; every row sits at a unique offset (not
     // stacked at 0).
     expect(offsets[0]).toContain('translateY(0px)')
@@ -153,7 +166,7 @@ describe('<sui-message-list>', () => {
     expect(msgs.length).toBe(2)
     // Keyed window recycles the existing 'a' bubble rather than recreating it.
     expect(msgs[0]).toBe(firstBubble)
-    expect(msgs[1]!.textContent).toBe('world')
+    expect(contentOf(msgs[1]!)).toBe('world')
   })
 
   it('streams: growing the last message in place updates its text without remounting', async () => {
@@ -161,11 +174,11 @@ describe('<sui-message-list>', () => {
     el.items = [{ id: 'a', content: 'The ' }]
     await flush()
     const bubble = renderedMessages(el)[0]!
-    expect(bubble.textContent).toBe('The ')
+    expect(contentOf(bubble)).toBe('The ')
     el.items = [{ id: 'a', content: 'The quick brown fox' }]
     await flush()
     expect(renderedMessages(el)[0]).toBe(bubble)
-    expect(bubble.textContent).toBe('The quick brown fox')
+    expect(contentOf(bubble)).toBe('The quick brown fox')
   })
 
   it('pinned-to-bottom: a new streamed message auto-scrolls toward the newest', async () => {
@@ -237,9 +250,9 @@ describe('<sui-message-list>', () => {
     const el = await mountList(
       '<sui-message-list><div slot="empty">No messages</div></sui-message-list>',
     )
-    expect(el.shadowRoot!.querySelector('slot[name="empty"]')).not.toBeNull()
+    expect(el.querySelector('slot[name="empty"]')).not.toBeNull()
     el.items = [{ id: 'a', content: 'hi' }]
     await flush()
-    expect(el.shadowRoot!.querySelector('slot[name="empty"]')).toBeNull()
+    expect(el.querySelector('slot[name="empty"]')).toBeNull()
   })
 })

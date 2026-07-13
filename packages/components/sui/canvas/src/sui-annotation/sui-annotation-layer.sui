@@ -23,7 +23,8 @@
     staged: AnnotationEvent[]  — current staged array (readonly getter)
   ──────────────────────────────────────────────────────────────────────────────
   Slots: (default) — wraps the annotatable content
-  Parts: surface, overlay
+  Anatomy: the slotted content sits under a capture overlay (data-state=capture
+  while armed); staged annotations render as <sui-annotation-marker> children.
   ──────────────────────────────────────────────────────────────────────────────
   Parity vs <ship-annotation-layer>:
     view-id, mode, endpoint, staging attrs  → identical
@@ -39,88 +40,6 @@
     staging: false,
   },
 }</component>
-<style>
-  .sui-annotation-layer {
-    position: relative;
-    display: block;
-    font-family: var(--font-body);
-  }
-  .sui-annotation-layer[hidden] { display: none; }
-
-  .surface {
-    position: relative;
-    width: 100%;
-    height: 100%;
-  }
-
-  .overlay {
-    position: absolute;
-    inset: 0;
-    z-index: var(--z-dropdown);
-    pointer-events: none;
-  }
-  .sui-annotation-layer[mode='point'] .overlay,
-  .sui-annotation-layer[mode='region'] .overlay {
-    pointer-events: auto;
-    cursor: crosshair;
-  }
-
-  /* Drag selection rectangle */
-  .drag-rect {
-    position: absolute;
-    border: 2px dashed var(--primary);
-    background: color-mix(in oklch, var(--primary) 8%, transparent);
-    pointer-events: none;
-    border-radius: var(--radius-sm);
-  }
-
-  /* Inline note popover */
-  .popover {
-    position: absolute;
-    z-index: var(--z-sticky);
-    min-width: 220px;
-    padding: var(--space-2);
-    background: var(--popover, var(--background));
-    color: var(--popover-foreground, var(--foreground));
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    pointer-events: auto;
-  }
-  .popover textarea {
-    font: inherit;
-    width: 100%;
-    min-height: 60px;
-    resize: vertical;
-    padding: var(--space-1) 6px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--background);
-    color: var(--foreground);
-    box-sizing: border-box;
-  }
-  .popover-actions { display: flex; justify-content: flex-end; gap: 6px; }
-  .popover button {
-    font: inherit;
-    font-size: var(--text-sm);
-    padding: var(--space-1) 10px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    background: var(--background);
-    color: var(--foreground);
-    cursor: pointer;
-  }
-  .popover button[data-primary] {
-    background: var(--primary);
-    color: var(--primary-foreground);
-    border-color: var(--primary);
-  }
-</style>
-
-
 <controller>
 import { controller, signal, derived, ref } from '@ship/sui-runtime'
 import type { ViewScope } from '@ship/sui-runtime'
@@ -173,23 +92,30 @@ export default controller({
       return Math.abs(d.curX - d.startX) > 4 || Math.abs(d.curY - d.startY) > 4
     })
 
-    const dragRectStyle = derived(() => {
+    // Overlay-px geometry of the live drag; the template binds it onto the
+    // rubber-band rect through the style: channel (runtime geometry).
+    // `dragVisible` gates the rect, so the resting value is a zero box.
+    const dragRect = derived(() => {
       const d = drag()
-      if (!d) return ''
-      const x = Math.min(d.startX, d.curX)
-      const y = Math.min(d.startY, d.curY)
-      const w = Math.abs(d.curX - d.startX)
-      const h = Math.abs(d.curY - d.startY)
-      return `left:${x}px;top:${y}px;width:${w}px;height:${h}px`
+      if (!d) return { x: 0, y: 0, w: 0, h: 0 }
+      return {
+        x: Math.min(d.startX, d.curX),
+        y: Math.min(d.startY, d.curY),
+        w: Math.abs(d.curX - d.startX),
+        h: Math.abs(d.curY - d.startY),
+      }
     })
 
-    const popoverStyle = derived(() => {
+    // The note popover sits just below-right of the captured point, clamped so
+    // a wild coordinate can't fling it out of the document. `pending` gates it.
+    const popoverPos = derived(() => {
       const p = pending()
-      if (!p) return ''
-      const left = Math.min(p.x + 12, 10_000)
-      const top = Math.min(p.y + 12, 10_000)
-      return `left:${left}px;top:${top}px`
+      if (!p) return { left: 0, top: 0 }
+      return { left: Math.min(p.x + 12, 10_000), top: Math.min(p.y + 12, 10_000) }
     })
+
+    // `off` leaves the overlay inert; point/region arm it for capture.
+    const captureState = derived(() => (props.mode() === 'off' ? '' : 'capture'))
 
     const markers = derived(() =>
       staged().map((a, i) => ({
@@ -295,8 +221,9 @@ export default controller({
       drag,
       noteText,
       dragVisible,
-      dragRectStyle,
-      popoverStyle,
+      dragRect,
+      popoverPos,
+      captureState,
       markers,
       overlayEl,
       confirmNote,
@@ -417,11 +344,18 @@ export default controller({
 })
 
 </controller>
-<div class="surface">
+<div sx="position:relative w:full h:full font:body">
   <slot></slot>
-  <div class="overlay" bind:this={overlayEl}>
+  <div bind:this={overlayEl} data-state={captureState()} sx="position:absolute top:0 right:0 bottom:0 left:0 z:dropdown pointer:none state-capture:pointer:auto">
     {#if dragVisible()}
-      <div class="drag-rect" style={dragRectStyle()}></div>
+      <div
+        aria-hidden="true"
+        style:left={`${dragRect().x}px`}
+        style:top={`${dragRect().y}px`}
+        style:width={`${dragRect().w}px`}
+        style:height={`${dragRect().h}px`}
+        sx="position:absolute pointer:none bg:tone-primary-bg border:primary border-style:dashed radius:sm"
+      ></div>
     {/if}
     {#for m of markers() key={m.id}}
       <sui-annotation-marker
@@ -433,13 +367,20 @@ export default controller({
       ></sui-annotation-marker>
     {/for}
     {#if pending()}
-      <div class="popover" data-annotation-popover style={popoverStyle()} on:pointerdown={(e) => e.stopPropagation()}>
-        <textarea class="note-input" placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown}></textarea>
-        <div class="popover-actions">
-          <button type="button" on:click={cancelPending}>Cancel</button>
-          <button type="button" data-primary on:click={sendNote}>Send</button>
-        </div>
-      </div>
+      <column
+        data-annotation-popover
+        gap="2"
+        style:left={`${popoverPos().left}px`}
+        style:top={`${popoverPos().top}px`}
+        on:pointerdown={(e) => e.stopPropagation()}
+        sx="position:absolute z:sticky min-w:panel-min-w-md p:2 bg:popover fg:popover-foreground border:border radius:md shadow:lg pointer:auto"
+      >
+        <textarea placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown} sx="w:full radius:sm"></textarea>
+        <row gap="2" justify="end">
+          <button type="button" on:click={cancelPending} sx="text:sm px:2_5 radius:sm cursor:pointer">Cancel</button>
+          <button type="button" data-primary variant="solid" tone="primary" on:click={sendNote} sx="text:sm px:2_5 radius:sm cursor:pointer">Send</button>
+        </row>
+      </column>
     {/if}
   </div>
 </div>

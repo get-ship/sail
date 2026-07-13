@@ -1,20 +1,25 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sui-heatmap/sui-heatmap.compiled.js'
-import { createContainerRegistry, flush, mount } from '../src/test-utils'
+import { createContainerRegistry, flush, mount, nonTokenPaints } from '../src/test-utils'
 
 const reg = createContainerRegistry()
 afterEach(() => reg.cleanup())
 
-const shadow = (el: HTMLElement) => el.shadowRoot!
+// Light DOM: the component renders into the host element, so the host IS the
+// query root — no shadow boundary, and no hand-authored classes to key on. The
+// queries below are the component's real semantics: tags, ARIA, SVG paint.
+const root = (el: HTMLElement): HTMLElement => el
 
 describe('<sui-heatmap>', () => {
   it('registers as a custom element', () => {
     expect(customElements.get('sui-heatmap')).toBeDefined()
   })
 
-  it('attaches a shadow root', () => {
-    const { el } = mount(reg, 'sui-heatmap')
-    expect(shadow(el)).not.toBeNull()
+  it('renders into the light DOM (no shadow boundary)', async () => {
+    const { el } = mount(reg, 'sui-heatmap', { rows: 'a', cols: 'x', data: '0.5' })
+    await flush()
+    expect(el.shadowRoot).toBeNull()
+    expect(el.querySelector('svg[role="img"]')).not.toBeNull()
   })
 
   it('empty data composes a .sui-empty-state (full-size presentation profile)', async () => {
@@ -22,14 +27,14 @@ describe('<sui-heatmap>', () => {
     // .sui-empty-state, replacing the silent no-rect render.
     const { el } = mount(reg, 'sui-heatmap', { rows: 'a,b', cols: 'x,y' })
     await flush()
-    expect(shadow(el).querySelector('.sui-empty-state')).not.toBeNull()
-    expect(shadow(el).querySelector('svg[role="img"]')).toBeNull()
+    expect(root(el).querySelector('.sui-empty-state')).not.toBeNull()
+    expect(root(el).querySelector('svg[role="img"]')).toBeNull()
   })
 
   it('empty data renders no rect elements', async () => {
     const { el } = mount(reg, 'sui-heatmap', { rows: 'a,b', cols: 'x,y' })
     await flush()
-    expect(shadow(el).querySelectorAll('rect').length).toBe(0)
+    expect(root(el).querySelectorAll('rect').length).toBe(0)
   })
 
   it('1D data renders rows × cols rects', async () => {
@@ -39,7 +44,7 @@ describe('<sui-heatmap>', () => {
       data: '0.1,0.5,0.9,0.2,0.6,1.0',
     })
     await flush()
-    expect(shadow(el).querySelectorAll('rect').length).toBe(6)
+    expect(root(el).querySelectorAll('rect').length).toBe(6)
   })
 
   it('2D JSON data renders rows × cols rects', async () => {
@@ -49,7 +54,7 @@ describe('<sui-heatmap>', () => {
       data: '[[0.5,0.8],[0.2,0.9]]',
     })
     await flush()
-    expect(shadow(el).querySelectorAll('rect').length).toBe(4)
+    expect(root(el).querySelectorAll('rect').length).toBe(4)
   })
 
   it('SVG has role=img', async () => {
@@ -59,7 +64,7 @@ describe('<sui-heatmap>', () => {
       data: '0.5',
     })
     await flush()
-    expect(shadow(el).querySelector('svg')?.getAttribute('role')).toBe('img')
+    expect(root(el).querySelector('svg')?.getAttribute('role')).toBe('img')
   })
 
   it('aria-label leads with the label prop (kind + data summary)', async () => {
@@ -71,14 +76,14 @@ describe('<sui-heatmap>', () => {
       label: 'Activity grid',
     })
     await flush()
-    const aria = shadow(el).querySelector('svg')?.getAttribute('aria-label') ?? ''
+    const aria = root(el).querySelector('svg')?.getAttribute('aria-label') ?? ''
     expect(aria.startsWith('Activity grid')).toBe(true)
   })
 
   it('default aria-label leads with "heatmap"', async () => {
     const { el } = mount(reg, 'sui-heatmap', { rows: 'a', cols: 'x', data: '0.5' })
     await flush()
-    const aria = shadow(el).querySelector('svg')?.getAttribute('aria-label') ?? ''
+    const aria = root(el).querySelector('svg')?.getAttribute('aria-label') ?? ''
     expect(aria.startsWith('heatmap')).toBe(true)
   })
 
@@ -92,15 +97,28 @@ describe('<sui-heatmap>', () => {
     expect(el.getAttribute('data')).toBe('0.1,0.2')
   })
 
-  it('rect elements have part=cell', async () => {
+  it('one <rect> per cell, rounded to the sm corner', async () => {
     const { el } = mount(reg, 'sui-heatmap', {
       rows: 'a',
       cols: 'x',
       data: '0.5',
     })
     await flush()
-    const rect = shadow(el).querySelector('rect')
-    expect(rect?.getAttribute('part')).toBe('cell')
+    const cells = root(el).querySelectorAll('rect')
+    expect(cells.length).toBe(1)
+    expect(cells[0]?.getAttribute('rx')).toBe('2')
+  })
+
+  it('paints cells with the tone token (no color literal)', async () => {
+    const { el } = mount(reg, 'sui-heatmap', {
+      rows: 'a,b',
+      cols: 'x,y',
+      data: '0.1,0.5,0.9,1',
+      tone: 'success',
+    })
+    await flush()
+    expect(nonTokenPaints(root(el))).toEqual([])
+    expect(root(el).querySelector('rect')?.getAttribute('fill')).toBe('var(--success)')
   })
 
   it('cells carry no color-mix style (tokenized intensity, not a color literal)', async () => {
@@ -113,7 +131,7 @@ describe('<sui-heatmap>', () => {
       data: '0.8',
     })
     await flush()
-    const rect = shadow(el).querySelector('rect')
+    const rect = root(el).querySelector('rect')
     expect(rect?.getAttribute('style') ?? '').not.toContain('color-mix')
     expect(rect?.outerHTML ?? '').not.toContain('color-mix')
   })
@@ -127,7 +145,7 @@ describe('<sui-heatmap>', () => {
       data: '0,1',
     })
     await flush()
-    const rects = shadow(el).querySelectorAll('rect')
+    const rects = root(el).querySelectorAll('rect')
     // The max-valued cell (last) reaches full intensity (fill-opacity 1).
     const maxOpacity = Number(rects[rects.length - 1]?.getAttribute('fill-opacity'))
     expect(maxOpacity).toBe(1)
@@ -142,7 +160,7 @@ describe('<sui-heatmap>', () => {
       data: '0,1',
     })
     await flush()
-    const rects = shadow(el).querySelectorAll('rect')
+    const rects = root(el).querySelectorAll('rect')
     expect(Number(rects[0]?.getAttribute('fill-opacity'))).toBe(0)
   })
 
@@ -155,7 +173,7 @@ describe('<sui-heatmap>', () => {
       data: '[[null,1]]',
     })
     await flush()
-    const rects = shadow(el).querySelectorAll('rect')
+    const rects = root(el).querySelectorAll('rect')
     expect(Number(rects[0]?.getAttribute('fill-opacity'))).toBe(0)
   })
 
@@ -169,7 +187,7 @@ describe('<sui-heatmap>', () => {
       tone: 'success',
     })
     await flush()
-    const rect = shadow(el).querySelector('rect')
+    const rect = root(el).querySelector('rect')
     const fill = rect?.getAttribute('fill') ?? ''
     expect(fill).toContain('var(--')
     expect(fill).not.toContain('color-mix')
@@ -185,8 +203,8 @@ describe('<sui-heatmap>', () => {
       loading: true,
     })
     await flush()
-    expect(shadow(el).querySelector('[skeleton]')).not.toBeNull()
-    expect(shadow(el).querySelector('svg[role="img"]')).toBeNull()
+    expect(root(el).querySelector('[skeleton]')).not.toBeNull()
+    expect(root(el).querySelector('svg[role="img"]')).toBeNull()
   })
 
   it('loading reflects to host attribute', () => {
@@ -203,10 +221,10 @@ describe('<sui-heatmap>', () => {
       data: '0,0',
     })
     await flush()
-    expect(shadow(el).querySelectorAll('rect').length).toBe(2)
+    expect(root(el).querySelectorAll('rect').length).toBe(2)
     el.setAttribute('data', '0.5,0.8')
     await flush()
-    const rects = shadow(el).querySelectorAll('rect')
+    const rects = root(el).querySelectorAll('rect')
     expect(rects.length).toBe(2)
     // No cell carries a color-mix string; intensity is now non-zero somewhere.
     const noColorMix = Array.from(rects).every(
@@ -229,24 +247,30 @@ describe('<sui-heatmap>', () => {
     })
     await flush()
     // 3 cols × 2 rows grid → a non-degenerate viewBox is emitted.
-    const vb = shadow(el).querySelector('svg')?.getAttribute('viewBox') ?? ''
+    const vb = root(el).querySelector('svg')?.getAttribute('viewBox') ?? ''
     expect(vb).toMatch(/^0 0 \d/)
     expect(vb).not.toBe('0 0 0 0')
   })
 
-  it('shadow styles include prefers-reduced-motion rule', () => {
-    const { el } = mount(reg, 'sui-heatmap')
-    const styleEl = shadow(el).querySelector('style')
-    expect(styleEl?.textContent).toContain('prefers-reduced-motion')
+  it('carries no inline style attribute (intensity is fill-opacity, not style=)', async () => {
+    const { el } = mount(reg, 'sui-heatmap', { rows: 'a,b', cols: 'x,y', data: '1,2,3,4' })
+    await flush()
+    expect(root(el).querySelector('[style]')).toBeNull()
   })
 
-  it('shadow <style> carries no color literal (token-clean)', () => {
-    // MIGRATED: token purity — no raw hex/rgb/oklch/color-mix in the style block.
-    const { el } = mount(reg, 'sui-heatmap')
-    const css = shadow(el).querySelector('style')?.textContent ?? ''
-    expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
-    expect(css).not.toMatch(/\brgba?\(/)
-    expect(css).not.toMatch(/\boklch\(/)
-    expect(css).not.toContain('color-mix')
+  it('the grid box is cell-size driven (cells × size + gaps), not a stretched viewBox', async () => {
+    const { el } = mount(reg, 'sui-heatmap', {
+      rows: 'a,b',
+      cols: 'x,y,z',
+      data: '1,2,3,4,5,6',
+      'cell-size': '20',
+      gap: '3',
+    })
+    await flush()
+    const svg = root(el).querySelector('svg')
+    // 3 cols → 3*20 + 2*3 = 66 ; 2 rows → 2*20 + 1*3 = 43
+    expect(svg?.getAttribute('width')).toBe('66')
+    expect(svg?.getAttribute('height')).toBe('43')
+    expect(svg?.getAttribute('viewBox')).toBe('0 0 66 43')
   })
 })
