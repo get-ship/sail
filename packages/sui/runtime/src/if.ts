@@ -199,6 +199,21 @@ export function bindIf(opts: BindIfOptions): Disposer {
     const parent = anchor.parentNode
     if (!parent) return
     for (const n of active.nodes) parent.insertBefore(n, anchor)
+    // A branch that carries a <slot> re-entered the tree empty — the host's
+    // captured light children still exist and must land in it NOW (renders
+    // are synchronous in this runtime, so projection is too).
+    if (
+      active.nodes.some(
+        (n) =>
+          n.nodeType === 1 &&
+          ((n as Element).tagName === 'SLOT' || (n as Element).querySelector('slot') !== null),
+      )
+    ) {
+      const host = (parent as Element).closest?.('[data-component]') as
+        | (HTMLElement & { __suiReproject?: () => void })
+        | null
+      host?.__suiReproject?.()
+    }
     runEnter(active.nodes)
   })
 

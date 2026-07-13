@@ -8,7 +8,9 @@ afterEach(() => reg.cleanup())
 
 const shadow = (el: HTMLElement) => (el.shadowRoot ?? el)
 const fallbackBox = (el: HTMLElement) =>
-  shadow(el).querySelector('.fallback') as HTMLElement | null
+  ([...shadow(el).querySelectorAll('.fallback')].find(
+    (f) => f.closest('[data-component]') === el,
+  ) ?? null) as HTMLElement | null
 const fallbackMessage = (el: HTMLElement) =>
   shadow(el).querySelector('.message') as HTMLElement | null
 const retryBtn = (el: HTMLElement) =>
@@ -18,7 +20,9 @@ const visibleSlotContent = (el: HTMLElement, name?: string): Element[] => {
     ? shadow(el).querySelector(`slot[name="${name}"]`)
     : shadow(el).querySelector('slot:not([name])')) as HTMLSlotElement | null
   if (!slot) return []
-  return slot.assignedElements()
+  // Shadow slots assign; the light-DOM slot wrapper renders its children.
+  const assigned = slot.assignedElements()
+  return assigned.length > 0 ? assigned : [...slot.children]
 }
 
 describe('<sui-error-boundary>', () => {
@@ -80,7 +84,8 @@ describe('<sui-error-boundary>', () => {
 
     const fallbackSlot = shadow(el).querySelector('slot[name="fallback"]') as HTMLSlotElement
     expect(fallbackSlot).not.toBeNull()
-    const assigned = fallbackSlot.assignedElements()
+    const a = fallbackSlot.assignedElements()
+    const assigned = a.length > 0 ? a : [...fallbackSlot.children]
     expect(assigned).toHaveLength(1)
     expect(assigned[0]!.querySelector('[data-test="custom-fallback"]')).not.toBeNull()
   })

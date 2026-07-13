@@ -28,7 +28,9 @@ const ownSlots = (host: HTMLElement): HTMLSlotElement[] =>
   )
 
 const isProjectable = (n: Node): boolean => {
-  if (n.nodeType === Node.ELEMENT_NODE) return true
+  // <template> is an inert declaration (controllers read it, nothing renders
+  // it) — never moved, never removed by projection.
+  if (n.nodeType === Node.ELEMENT_NODE) return (n as Element).tagName !== 'TEMPLATE'
   if (n.nodeType === Node.TEXT_NODE) return (n.textContent ?? '').trim().length > 0
   return false
 }
@@ -41,8 +43,11 @@ export function projectSlots(host: HTMLElement, captured: Node[]): void {
   const slots = ownSlots(host)
   if (slots.length === 0) {
     // No slots in the template — original children have no home (matches
-    // shadow behavior where unslotted light DOM never renders).
-    for (const n of captured) (n as ChildNode).remove?.()
+    // shadow behavior where unslotted light DOM never renders). Templates
+    // stay: they are declarations, not content.
+    for (const n of captured) {
+      if (isProjectable(n) || n.nodeType === Node.TEXT_NODE) (n as ChildNode).remove?.()
+    }
     return
   }
   const named = new Map<string, HTMLSlotElement>()
@@ -57,6 +62,7 @@ export function projectSlots(host: HTMLElement, captured: Node[]): void {
     const slotName =
       n.nodeType === Node.ELEMENT_NODE ? (n as Element).getAttribute('slot') : null
     const target = slotName ? (named.get(slotName) ?? null) : fallback
+    if (!isProjectable(n) && n.nodeType === Node.ELEMENT_NODE) continue
     if (target && (slotName || isProjectable(n))) {
       const list = assigned.get(target) ?? []
       list.push(n)

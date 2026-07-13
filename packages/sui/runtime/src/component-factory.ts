@@ -352,8 +352,39 @@ export function component<Bindings>(
     // cast erases the per-component `Bindings` to the default module shape.
     cleanups.push(mountComponent(module as MountModule, host, ctx))
     // Light DOM: the template has rendered into the host — place the
-    // captured original children into their <slot> wrappers.
-    if (lightChildren) projectSlots(host, lightChildren)
+    // captured original children into their <slot> wrappers. Projection is
+    // LIVE for the component's lifetime: when control flow swaps a branch
+    // containing a <slot> back in, the new slot arrives empty while the
+    // captured nodes still exist (held here) — re-project so slotted content
+    // survives {#if}/{#match} round-trips (the error-boundary retry flow).
+    if (lightChildren) {
+      // Projection sources: the connect-time capture, plus any slot-attributed
+      // direct children that appeared since (a controller may synthesize
+      // content, e.g. the boundary's fallback wrapper). Collected fresh per
+      // projection so synthesized content is held and placed like authored
+      // content instead of rendering unslotted.
+      const extras: Node[] = []
+      const project = (): void => {
+        for (const child of Array.from(host.children)) {
+          if (
+            child.tagName !== 'TEMPLATE' &&
+            child.getAttribute('slot') &&
+            !lightChildren.includes(child) &&
+            !extras.includes(child) &&
+            child.closest('slot') === null
+          ) {
+            extras.push(child)
+          }
+        }
+        projectSlots(host, [...lightChildren, ...extras])
+      }
+      project()
+      const h = host as HTMLElement & { __suiReproject?: () => void }
+      h.__suiReproject = project
+      cleanups.push(() => {
+        delete h.__suiReproject
+      })
+    }
 
     return () => {
       clearFormHooks(host)
