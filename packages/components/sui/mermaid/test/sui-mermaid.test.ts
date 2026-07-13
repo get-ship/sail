@@ -11,7 +11,12 @@ import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import { renderComponent } from '@ship/test-setup'
 
-import mermaidController from '../src/sui-mermaid/sui-mermaid.controller'
+// The controller is the source's `<controller>` block, imported as the virtual
+// `<file>.sui.controller.ts` module — the specifier deck and the CLI emit. Going
+// through the module graph (rather than the harness's in-Function eval) is what
+// resolves this controller's third-party `mermaid` import.
+import mermaidController from '../src/sui-mermaid/sui-mermaid.sui.controller.ts'
+
 import '../src/sui-mermaid/sui-mermaid.compiled.js'
 
 const SOURCE = readFileSync(
@@ -55,13 +60,12 @@ function mount(value: string = ''): LiveMount {
   return m
 }
 
-const shadow = (m: LiveMount): ShadowRoot => m.el.shadowRoot as ShadowRoot
-const container = (m: LiveMount): Element | null =>
-  shadow(m).querySelector('.mmd-root')
-const renderedSvg = (m: LiveMount): SVGSVGElement | null =>
-  shadow(m).querySelector('.mmd-root svg')
-const errorTile = (m: LiveMount): Element | null =>
-  shadow(m).querySelector('.mmd-err')
+// Light DOM (the default), and no hand-authored classes to key on: the queries
+// are the component's actual semantics — the diagram is an <svg>, the failure
+// state is a <details> holding the source that would not render.
+const container = (m: LiveMount): Element | null => m.el.querySelector('div')
+const renderedSvg = (m: LiveMount): SVGSVGElement | null => m.el.querySelector('svg')
+const errorTile = (m: LiveMount): Element | null => m.el.querySelector('details')
 
 /** Yield N microtask + macrotask turns so the controller's async render
  *  effect (mermaid.render returns a Promise) has time to settle. */
@@ -72,10 +76,10 @@ async function settle(m: LiveMount, turns: number = 8): Promise<void> {
 }
 
 describe('<sui-mermaid> — register + render', () => {
-  it('registers the custom element and produces a shadow root with a container', () => {
+  it('registers the custom element and renders its container into the light DOM', () => {
     const m = mount()
     expect(customElements.get('sui-mermaid')).toBeDefined()
-    expect(shadow(m)).not.toBeNull()
+    expect(m.el.shadowRoot).toBeNull()
     expect(container(m)).not.toBeNull()
   })
 
@@ -99,8 +103,10 @@ describe('<sui-mermaid> — register + render', () => {
       // source for hand-fix (the documented contract for the
       // render-failure path).
       expect(err).not.toBeNull()
-      expect(err!.querySelector('.mmd-err-msg')).not.toBeNull()
-      expect(err!.querySelector('.mmd-err-src pre')).not.toBeNull()
+      // The failure state carries the message AND the source that failed, so a
+      // broken diagram is legible and fixable — never a blank tile.
+      expect(m.el.textContent).toContain('Diagram failed to render')
+      expect(err!.querySelector('pre')).not.toBeNull()
     }
   }, 15000)
 })
@@ -124,7 +130,7 @@ describe('<sui-mermaid> — error event', () => {
     }
   }, 15000)
 
-  it('sui-mermaid-error event bubbles + is composed (crosses shadow DOM)', async () => {
+  it('sui-mermaid-error event bubbles + is composed', async () => {
     const m = mount('not mermaid syntax at all >>><<<')
     let caught: Event | null = null
     m.root.addEventListener('sui-mermaid-error', (e) => {
