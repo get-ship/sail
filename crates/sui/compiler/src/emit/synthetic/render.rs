@@ -70,6 +70,14 @@ struct Walked {
     hoists: String,
     /// `hydrate(root, ctx)` body statements (empty on the SSR walk).
     hydrate_calls: String,
+    /// Module-scope `const __tplN = __tpl("…")` cloner declarations the mount
+    /// body references. These must be written OUTSIDE the mount function
+    /// (parsed once per module, like the production emit), and their presence
+    /// obliges a `__tpl` runtime import.
+    module_hoists: String,
+    /// True when the walk delegated any events — the module then calls
+    /// `delegateEvents([...])` and must import it.
+    uses_delegation: bool,
     uses_text: bool,
     uses_markers: bool,
 }
@@ -77,16 +85,32 @@ struct Walked {
 fn walk(program: &Program, is_view: bool) -> Walked {
     let registry = bindings::build(program);
     let mut emitter = TemplateEmitter::new(&registry, is_view).with_expr_prefix(SCOPE_PREFIX);
+    if !is_view {
+        // SSR walk: the render must run on the parserless server-DOM, where
+        // template cloning cannot work. The client walk (is_view) keeps it.
+        emitter = emitter.without_template_cloning();
+    }
 
     let mut body_w = Writer::new();
     // Synthetic render is for tsgo type-checking, not runtime DOM — no root class.
     emitter.emit_top_level(&mut body_w, &program.template, "container", "__cleanups", false);
 
     let hoists = emitter.take_boundary_hoists();
+    let mut module_hoists_w = emitter.take_module_hoists();
+    // One root listener per delegated event TYPE, installed once at module
+    // scope — same install the production emit writes. Without it, `$$click`
+    // handler properties are set but never dispatched.
+    let delegated = emitter.take_delegated_events();
+    let uses_delegation = !delegated.is_empty();
+    if uses_delegation {
+        let names: Vec<String> = delegated.iter().map(|e| js_string(e)).collect();
+        module_hoists_w.line(&format!("delegateEvents([{}]);", names.join(", ")));
+    }
+    let module_hoists = module_hoists_w.into_string();
     let uses_text = emitter.hydrate_uses_text();
     let uses_markers = emitter.hydrate_uses_markers();
     let hydrate_calls = emitter.take_hydrate_calls();
-    Walked { body: body_w.into_string(), hoists, hydrate_calls, uses_text, uses_markers }
+    Walked { body: body_w.into_string(), hoists, hydrate_calls, module_hoists, uses_delegation, uses_text, uses_markers }
 }
 
 /// Idempotent install of the program's lifted `<style>` CSS at the top of
@@ -116,7 +140,14 @@ pub(super) fn emit_render(
     }
 
     let walked = walk(program, false);
-    let imports = render_runtime_imports(program, true);
+    let mut imports = render_runtime_imports(program, true);
+    if walked.module_hoists.contains("__tpl(") && !imports.iter().any(|s| s == "__tpl") {
+        imports.push("__tpl".to_string());
+    }
+    if walked.uses_delegation && !imports.iter().any(|s| s == "delegateEvents") {
+        imports.push("delegateEvents".to_string());
+    }
+    imports.sort();
 
     let mut w = Writer::new();
     w.line(HEADER);
@@ -128,6 +159,10 @@ pub(super) fn emit_render(
     }
     w.line(&format!("import {{ scope }} from {};", js_string(controller_specifier)));
     w.nl();
+    if !walked.module_hoists.is_empty() {
+        w.push_str(&walked.module_hoists);
+        w.nl();
+    }
     w.line("/** Build the view's DOM under `container`; returns a disposer. */");
     w.line("export function mount(container: HTMLElement): () => void {");
     w.enter();
@@ -188,8 +223,14 @@ pub(super) fn emit_render_client(
     let mut runtime_imports = render_runtime_imports(program, true);
     if !runtime_imports.iter().any(|s| s == "component") {
         runtime_imports.push("component".to_string());
-        runtime_imports.sort();
     }
+    if walked.module_hoists.contains("__tpl(") && !runtime_imports.iter().any(|s| s == "__tpl") {
+        runtime_imports.push("__tpl".to_string());
+    }
+    if walked.uses_delegation && !runtime_imports.iter().any(|s| s == "delegateEvents") {
+        runtime_imports.push("delegateEvents".to_string());
+    }
+    runtime_imports.sort();
     // DOM imports: the `hydrate*` helpers + `collect*` preambles the hydrate
     // body calls. Same `@ship/sui-dom` split the production view emit uses.
     let dom_imports = render_dom_imports(program, true);
@@ -210,6 +251,10 @@ pub(super) fn emit_render_client(
     }
     w.line(&format!("import {{ scope }} from {};", js_string(controller_specifier)));
     w.nl();
+    if !walked.module_hoists.is_empty() {
+        w.push_str(&walked.module_hoists);
+        w.nl();
+    }
     w.line("/** Client mount contract — `default.setup(ctx)` → `{ __mount, hydrate }`. */");
     w.line("export default component(() => {");
     w.enter();

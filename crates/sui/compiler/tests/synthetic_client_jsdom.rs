@@ -92,6 +92,8 @@ fn write_harness(repo: &Path, work: &Path) {
             "export * from \"{r}/packages/sui/runtime/src/server.ts\";\n\
              export {{ component }} from \"{r}/packages/sui/runtime/src/component.ts\";\n\
              export {{ markHydrateText, markHydrateAttr, markHydrateBoundary }} from \"{r}/packages/sui/runtime/src/hydrate-mark.ts\";\n\
+             export {{ __tpl }} from \"{r}/packages/sui/runtime/src/tpl.ts\";\n\
+             export {{ delegateEvents }} from \"{r}/packages/sui/runtime/src/delegate.ts\";\n\
              export type {{ Modifier, OnOptions }} from \"{r}/packages/sui/runtime/src/on.ts\";\n"
         ),
     )
@@ -102,6 +104,7 @@ fn write_harness(repo: &Path, work: &Path) {
 export default defineConfig({{
   test: {{ environment: 'jsdom', include: ['client.test.ts'] }},
   resolve: {{ alias: {{
+    '@ship/sui-runtime/internal': '{w}/runtime-shim.ts',
     '@ship/sui-runtime': '{w}/runtime-shim.ts',
     '@ship/sui-dom': '{r}/packages/sui/dom/src/index.ts',
     '@ship/deck/router': '{r}/packages/deck/router/src/server.ts',
@@ -153,6 +156,7 @@ describe('synthetic CLIENT contract — CSR (__mount via mount.ts)', () => {{
   it('badge (a real component) mounts and stays reactive', async () => {{
     const mod = await import('./badge.client.ts')
     const el = document.createElement('div')
+    document.body.appendChild(el)
     const handle = await mount(el, payload('badge', ''), {{ module: mod as any }})
     const btn = el.querySelector('button') as HTMLButtonElement
     expect(btn).toBeTruthy()
@@ -165,6 +169,7 @@ describe('synthetic CLIENT contract — CSR (__mount via mount.ts)', () => {{
   it('board control-flow builds + reacts client-side', async () => {{
     const mod = await import('./board.client.ts')
     const el = document.createElement('div')
+    document.body.appendChild(el)
     const handle = await mount(el, payload('board', ''), {{ module: mod as any }})
     expect(el.querySelectorAll('li').length).toBe(2)
     expect(el.textContent).toContain('Alpha')
@@ -179,6 +184,7 @@ describe('isomorphic-render parity / clean hydration (acceptance #3)', () => {{
     const html_ssr = await ssrHtml('board')
     const mod = await import('./board.client.ts')
     const el = document.createElement('div')
+    document.body.appendChild(el)
     const handle = await mount(el, payload('board', ''), {{ module: mod as any }})
     const html_csr = el.innerHTML
     // The SAME render server-side and client-side → same DOM structure.

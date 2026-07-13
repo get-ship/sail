@@ -102,7 +102,8 @@ impl TemplateEmitter {
         // The `root_pending` flag must be consumed BEFORE serializing, because the
         // `sui-root` class is baked into the markup rather than added at runtime.
         let is_root = self.root_pending;
-        if self.svg_depth == 0
+        if self.tpl_enabled
+            && self.svg_depth == 0
             && let Some(html) = self.static_skeleton(el, is_root)
         {
             self.root_pending = false;

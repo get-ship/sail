@@ -86,7 +86,9 @@ fn write_harness(repo: &Path, work: &Path) {
         &shim,
         format!(
             "export * from \"{r}/packages/sui/runtime/src/server.ts\";\n\
-             export {{ markHydrateText, markHydrateAttr, markHydrateBoundary }} from \"{r}/packages/sui/runtime/src/hydrate-mark.ts\";\n"
+             export {{ markHydrateText, markHydrateAttr, markHydrateBoundary }} from \"{r}/packages/sui/runtime/src/hydrate-mark.ts\";\n\
+             export {{ __tpl }} from \"{r}/packages/sui/runtime/src/tpl.ts\";\n\
+             export {{ delegateEvents }} from \"{r}/packages/sui/runtime/src/delegate.ts\";\n"
         ),
     )
     .unwrap();
@@ -96,6 +98,7 @@ fn write_harness(repo: &Path, work: &Path) {
 export default defineConfig({{
   test: {{ environment: 'jsdom', include: ['mount.test.ts'] }},
   resolve: {{ alias: {{
+    '@ship/sui-runtime/internal': '{rt}',
     '@ship/sui-runtime': '{rt}',
     '@ship/deck/router': '{route}',
   }} }},
@@ -111,6 +114,7 @@ import { mount } from './board.render.ts'
 describe('synthesized board — client mount + reactivity', () => {
   it('builds the control-flow DOM and re-renders on a signal write', () => {
     const container = document.createElement('div')
+    document.body.appendChild(container)
     const dispose = mount(container)
 
     // {#if items().length > 0} → true → the list renders both {#for} rows.

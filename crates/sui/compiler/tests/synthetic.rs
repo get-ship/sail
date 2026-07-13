@@ -121,7 +121,7 @@ fn non_live_data_lowers_to_data_handle() {
         ctrl.contains("const cfg = data({ initial: undefined, source: () => (ship.demo.config()) });"),
         "non-live <data> lowers to the data() handle shape:\n{ctrl}"
     );
-    assert!(ctrl.contains(r#"import { data } from "@ship/sui-runtime";"#), "imports data:\n{ctrl}");
+    assert!(ctrl.contains(r#"import { data } from "@ship/sui-runtime/internal";"#), "imports data:\n{ctrl}");
 }
 
 #[test]
@@ -145,7 +145,7 @@ fn authored_controller_is_composed_via_setup_not_rewritten() {
     assert!(out.controller_ts.contains(r#"import __authored from "./controller.ts";"#));
     assert!(
         out.controller_ts.contains(
-            "import type { ControllerExport, ResolverContext } from \"@ship/sui-runtime\";"
+            "import type { ControllerExport, ResolverContext } from \"@ship/sui-runtime/internal\";"
         ),
         "composes the DSL via its typed export:\n{}",
         out.controller_ts
@@ -327,11 +327,11 @@ fn merged_client_module_is_self_contained() {
     // duplicated) — count `from "@ship/sui-runtime"` value-import lines.
     let runtime_value_imports = merged
         .lines()
-        .filter(|l| l.starts_with("import {") && l.contains("from \"@ship/sui-runtime\""))
+        .filter(|l| l.starts_with("import {") && l.contains("from \"@ship/sui-runtime/internal\""))
         .count();
     assert_eq!(
         runtime_value_imports, 1,
-        "value imports from @ship/sui-runtime must be merged to one line:\n{merged}"
+        "value imports from @ship/sui-runtime/internal must be merged to one line:\n{merged}"
     );
 }
 

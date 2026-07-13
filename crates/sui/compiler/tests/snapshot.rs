@@ -538,9 +538,10 @@ fn whitespace_text_nodes_dropped_between_elements() {
         "whitespace-only text nodes between elements must not be emitted:\n{}",
         out.js
     );
-    // Intentional space inside <span> (text-only parent) must be kept.
+    // Intentional space inside <span> (text-only parent) must be kept. With
+    // template cloning the space rides inside the hoisted skeleton HTML.
     assert!(
-        out.js.contains("createTextNode(\" \")"),
+        out.js.contains("createTextNode(\" \")") || out.js.contains("> <"),
         "intentional inline whitespace must be preserved:\n{}",
         out.js
     );

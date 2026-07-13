@@ -372,6 +372,9 @@ interface ServerDocument {
   createTextNode(text: string): TextNode
   createComment(data: string): CommentNode
   createDocumentFragment(): Frag
+  /** Server-side no-op — emitted renders install `delegateEvents` at module
+   *  scope; events never fire on the server. */
+  addEventListener(): void
 }
 
 /** The SSR mount/serialize surface — hides the server-DOM element type. */
@@ -402,6 +405,7 @@ export function installServerDom(): ServerRoot {
     },
     createComment: (data) => new CommentNode(data),
     createDocumentFragment: () => new Frag(),
+    addEventListener: () => {},
   }
   const g = globalThis as Record<string, unknown>
   g.document = doc

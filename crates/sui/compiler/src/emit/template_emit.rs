@@ -167,6 +167,11 @@ pub struct TemplateEmitter {
     /// clears it, so root-styling CSS (`.sui-root`, `:host(X)` → `.sui-root`)
     /// targets that element. Views never set it.
     pub(super) root_pending: bool,
+    /// Template cloning is a BROWSER optimization (parse once in C++, clone per
+    /// instance). The ship-js SSR render runs against the parserless server-DOM
+    /// (`innerHTML` is a verbatim round-trip blob there), so the SSR walk turns
+    /// this off and emits the plain `createElement` build instead.
+    pub(super) tpl_enabled: bool,
 }
 
 impl TemplateEmitter {
@@ -195,7 +200,15 @@ impl TemplateEmitter {
             expr_prefix: "$scope.".to_string(),
             machinery_locals: Vec::new(),
             root_pending: false,
+            tpl_enabled: true,
         }
+    }
+
+    /// Disable the template-clone fast path (see `tpl_enabled`). Used by the
+    /// synthetic SSR render, whose output must run on the server-DOM.
+    pub fn without_template_cloning(mut self) -> Self {
+        self.tpl_enabled = false;
+        self
     }
 
     /// Set the author-expression prefix (default `"$scope."`). Returns
