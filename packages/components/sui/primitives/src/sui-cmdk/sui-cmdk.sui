@@ -72,7 +72,7 @@
 // derived here; mutations (highlight, select, open/close sync) + emission live
 // in mount's listeners.
 
-import { controller, signal, derived, effect, ref, useDialog } from '@ship/sui-runtime'
+import { controller, signal, derived, effect, ref } from '@ship/sui-runtime'
 import type { ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './sui-cmdk.sui'
 import { type CmdkItem, str, parseJsonItems } from './decode'
@@ -116,7 +116,7 @@ export default controller({
     const highlight = signal(0)
     const listId = signal(`sui-cmdk-list-${seq}`)
 
-    const dlg = useDialog()
+    const dialogEl = ref<HTMLDialogElement>(null)
     const inputEl = ref<HTMLInputElement>(null)
     const listEl = ref<HTMLUListElement>(null)
 
@@ -195,7 +195,7 @@ export default controller({
 
     return {
       itemsSig, query, highlight, listId,
-      dlg, inputEl, listEl,
+      dialogEl, inputEl, listEl,
       visible, navigable, safeHighlight, highlightId, activeId, rows,
     }
   },
@@ -255,16 +255,28 @@ export default controller({
       }
     })
 
-    // Bridge the `open` prop to the useDialog handle: the handle owns
-    // showModal()/close(); a native close (ESC / backdrop) mirrors back into
-    // `open` so the two never drift. bindOpen guards both directions.
+    // `open` prop ⇄ the native modal. The platform owns top layer, focus
+    // trap, ESC and focus-return; the component owns this element, so it
+    // calls showModal()/close() directly and mirrors a native close (ESC,
+    // backdrop, form method=dialog) back into `open`.
     const stopOpenBridge = effect(() => {
-      if (state.open) state.dlg.open()
-      else state.dlg.close()
+      const el = state.$signals.dialogEl() as HTMLDialogElement | null
+      if (!el) return
+      const want = state.open === true
+      if (want && !el.open) el.showModal()
+      else if (!want && el.open) el.close()
     })
-    const stopCloseMirror = effect(() => {
-      if (!state.dlg.isOpen() && state.open) state.open = false
-    })
+    const onNativeClose = (): void => {
+      if (state.open) state.open = false
+    }
+    const stopCloseMirror = (): void => {
+      const el = state.$signals.dialogEl() as HTMLDialogElement | null
+      el?.removeEventListener('close', onNativeClose)
+    }
+    {
+      const el = state.$signals.dialogEl() as HTMLDialogElement | null
+      el?.addEventListener('close', onNativeClose)
+    }
 
     const input = state.inputEl as HTMLInputElement | null
 
@@ -354,7 +366,7 @@ export default controller({
 })
 
 </controller>
-<dialog class="dialog" use:dlg size={size()} backdrop="blur">
+<dialog class="dialog" bind:this={dialogEl} size={size()} backdrop="blur">
   <column class="cmdk panel" gap="0" sx="min-h:0 fg:foreground font:body">
     <row class="search" align="center" gap="2" sx="p:3 px:4 grow:none border-b:subtle">
       <icon class="search-icon" name="search" size="sm" sx="grow:none"></icon>

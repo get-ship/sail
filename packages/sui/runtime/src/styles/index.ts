@@ -565,6 +565,12 @@ const DIALOG_SKIN_CSS =
   ':where(dialog) > header { flex: 0 0 auto; padding: var(--space-4_5) var(--space-6); border-bottom: 1px solid var(--border-subtle); font-size: var(--text-lg); font-weight: var(--font-weight-semibold); color: var(--foreground); }\n' +
   ':where(dialog) > section { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--space-4) var(--space-6); font-size: var(--text-base); line-height: var(--leading-normal); }\n' +
   ':where(dialog) > footer { flex: 0 0 auto; display: flex; gap: var(--space-2); align-items: center; justify-content: flex-end; padding: var(--space-4) var(--space-6); border-top: 1px solid var(--border-subtle); background: var(--tone-muted-border); }\n' +
+  // A bare entry inside owning chrome (command palettes, inline editors): the
+  // wrapper draws the surface, the input contributes none.
+  ":where(input[flush]) { border: 0; outline: 0; background: transparent; padding: 0; margin: 0; font: inherit; color: var(--foreground); }\n" +
+  ":where(input[flush])::placeholder { color: var(--muted-foreground); }\n" +
+  // A ul serving as a listbox is a widget, not a document list.
+  ":where(ul[role='listbox']) { list-style: none; margin: 0; padding: 0; }\n" +
   '@media (prefers-reduced-motion: reduce) { :where(dialog)::backdrop { transition: none; } }\n' +
   // Scroll-lock — pure CSS, no JS. showModal() sets the [open] attribute, so an
   // open modal anywhere freezes the page behind it.
