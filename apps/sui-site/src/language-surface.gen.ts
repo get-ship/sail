@@ -31,7 +31,8 @@ export const SX_ATOMS: SxAtom[] = [
       "size-px",
       "density-row-py",
       "density-row-px",
-      "density-row-gap"
+      "density-row-gap",
+      "auto"
     ]
   },
   {
@@ -57,7 +58,8 @@ export const SX_ATOMS: SxAtom[] = [
       "size-px",
       "density-row-py",
       "density-row-px",
-      "density-row-gap"
+      "density-row-gap",
+      "auto"
     ]
   },
   {
@@ -83,7 +85,8 @@ export const SX_ATOMS: SxAtom[] = [
       "size-px",
       "density-row-py",
       "density-row-px",
-      "density-row-gap"
+      "density-row-gap",
+      "auto"
     ]
   },
   {
@@ -109,7 +112,8 @@ export const SX_ATOMS: SxAtom[] = [
       "size-px",
       "density-row-py",
       "density-row-px",
-      "density-row-gap"
+      "density-row-gap",
+      "auto"
     ]
   },
   {
@@ -135,7 +139,8 @@ export const SX_ATOMS: SxAtom[] = [
       "size-px",
       "density-row-py",
       "density-row-px",
-      "density-row-gap"
+      "density-row-gap",
+      "auto"
     ]
   },
   {
@@ -161,7 +166,8 @@ export const SX_ATOMS: SxAtom[] = [
       "size-px",
       "density-row-py",
       "density-row-px",
-      "density-row-gap"
+      "density-row-gap",
+      "auto"
     ]
   },
   {
@@ -187,7 +193,8 @@ export const SX_ATOMS: SxAtom[] = [
       "size-px",
       "density-row-py",
       "density-row-px",
-      "density-row-gap"
+      "density-row-gap",
+      "auto"
     ]
   },
   {
@@ -213,7 +220,8 @@ export const SX_ATOMS: SxAtom[] = [
       "size-px",
       "density-row-py",
       "density-row-px",
-      "density-row-gap"
+      "density-row-gap",
+      "auto"
     ]
   },
   {
@@ -239,7 +247,8 @@ export const SX_ATOMS: SxAtom[] = [
       "size-px",
       "density-row-py",
       "density-row-px",
-      "density-row-gap"
+      "density-row-gap",
+      "auto"
     ]
   },
   {
@@ -265,7 +274,8 @@ export const SX_ATOMS: SxAtom[] = [
       "size-px",
       "density-row-py",
       "density-row-px",
-      "density-row-gap"
+      "density-row-gap",
+      "auto"
     ]
   },
   {
@@ -291,7 +301,8 @@ export const SX_ATOMS: SxAtom[] = [
       "size-px",
       "density-row-py",
       "density-row-px",
-      "density-row-gap"
+      "density-row-gap",
+      "auto"
     ]
   },
   {
@@ -317,7 +328,8 @@ export const SX_ATOMS: SxAtom[] = [
       "size-px",
       "density-row-py",
       "density-row-px",
-      "density-row-gap"
+      "density-row-gap",
+      "auto"
     ]
   },
   {
@@ -2031,7 +2043,8 @@ export const SX_ATOMS: SxAtom[] = [
       "normal",
       "nowrap",
       "pre",
-      "pre-wrap"
+      "pre-wrap",
+      "truncate"
     ]
   },
   {
@@ -2050,6 +2063,41 @@ export const SX_ATOMS: SxAtom[] = [
       "90",
       "180",
       "270"
+    ]
+  },
+  {
+    "prop": "top",
+    "values": [
+      "0",
+      "auto"
+    ]
+  },
+  {
+    "prop": "right",
+    "values": [
+      "0",
+      "auto"
+    ]
+  },
+  {
+    "prop": "bottom",
+    "values": [
+      "0",
+      "auto"
+    ]
+  },
+  {
+    "prop": "left",
+    "values": [
+      "0",
+      "auto"
+    ]
+  },
+  {
+    "prop": "text-style",
+    "values": [
+      "italic",
+      "normal"
     ]
   },
   {

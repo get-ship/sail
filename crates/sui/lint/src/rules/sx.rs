@@ -45,6 +45,8 @@ enum Kind {
     Wrap,
     Case,
     Rotate,
+    Inset,
+    TextStyle,
     // preset: value picks a curated composition
     Ring,
     Border,
@@ -77,6 +79,8 @@ fn prop_kind(prop: &str) -> Option<Kind> {
         "wrap" => Wrap,
         "case" => Case,
         "rotate" => Rotate,
+        "top" | "right" | "bottom" | "left" => Inset,
+        "text-style" => TextStyle,
         "tracking" => Tracking,
         "ring" => Ring,
         // A border on ONE side. Same value vocabulary as `border` — this adds a
@@ -110,6 +114,7 @@ const ALL_PROPS: &[&str] = &[
     "bg", "fg", "radius", "text", "shadow", "z", "weight", "leading", "tracking", "font",
     "ring", "border", "border-t", "border-r", "border-b", "border-l",
     "w", "h", "min-w", "min-h", "max-w", "max-h", "grow", "opacity", "wrap", "case", "rotate",
+    "top", "right", "bottom", "left", "text-style",
     "display", "overflow", "overflow-x", "overflow-y", "position", "cursor", "visibility",
 ];
 
@@ -123,6 +128,8 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
             let mut v = crate::tokens::space_values().to_vec();
             v.push("size-px");
             v.extend(["density-row-py", "density-row-px", "density-row-gap"]);
+            // margins push; padding never takes auto (lower() rejects it there)
+            v.push("auto");
             v
         }
         Color => crate::tokens::color_values().to_vec(),
@@ -145,9 +152,11 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
         // The typography roles from tokens.css (`--mono-font`/`--body-font`/
         // `--heading-font`) — the themable layer, not the raw `--font-*` stacks.
         Font => vec!["mono", "body", "heading"],
-        Wrap => vec!["normal", "nowrap", "pre", "pre-wrap"],
+        Wrap => vec!["normal", "nowrap", "pre", "pre-wrap", "truncate"],
         Case => vec!["upper", "lower", "none"],
         Rotate => vec!["0", "45", "90", "180", "270"],
+        Inset => vec!["0", "auto"],
+        TextStyle => vec!["italic", "normal"],
         Ring => {
             let mut v = vec!["none"];
             v.extend(crate::tokens::color_values());
@@ -209,6 +218,11 @@ fn css_props(prop: &str) -> &'static [&'static str] {
         "wrap" => &["white-space"],
         "case" => &["text-transform"],
         "rotate" => &["transform"],
+        "top" => &["top"],
+        "right" => &["right"],
+        "bottom" => &["bottom"],
+        "left" => &["left"],
+        "text-style" => &["font-style"],
         "tracking" => &["letter-spacing"],
         "ring" => &["box-shadow"],
         "border" => &["border"],
@@ -261,6 +275,16 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
     // Framework size channels (`size-px`/`size-fs`/`size-h`, from suiSizesSheet)
     // are already the full custom-property name — they lower to their own var,
     // not a kind-prefixed one (`var(--size-px)`, not `var(--space-size-px)`).
+    if matches!(kind, Kind::Wrap) && token == "truncate" {
+        return Some(vec![
+            ("white-space", "nowrap".to_string()),
+            ("overflow", "hidden".to_string()),
+            ("text-overflow", "ellipsis".to_string()),
+        ]);
+    }
+    if matches!(kind, Kind::Space) && token == "auto" && !prop.starts_with('m') {
+        return None; // auto is a margin word; padding:auto is not CSS
+    }
     if matches!(kind, Kind::Wrap) && token == "pre-wrap" {
         return Some(vec![
             ("white-space", "pre-wrap".to_string()),
@@ -285,7 +309,11 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
     // Token-scaled kinds emit `var(--…)`; enum kinds emit the validated keyword.
     let value: String = match kind {
         // `0`/`none` are the literal zeros (no `--space-0`/`--radius-none` token).
-        Space => if token == "0" { "0".into() } else { format!("var(--space-{token})") },
+        Space => match token {
+            "0" => "0".into(),
+            "auto" => "auto".into(),
+            _ => format!("var(--space-{token})"),
+        },
         // Sanctioned CSS keyword colors pass through verbatim (no `--token`);
         // every other color is a token/tone channel.
         Color => if is_keyword_color(token) { token.into() } else { format!("var(--{token})") },
@@ -303,6 +331,8 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
             _ => "none".into(),
         },
         Rotate => format!("rotate({token}deg)"),
+        Inset => token.to_string(),
+        TextStyle => token.to_string(),
         Tracking => format!("var(--tracking-{token})"),
         // a focus ring at the standard ring width in the chosen tone (or off).
         Ring => if token == "none" {

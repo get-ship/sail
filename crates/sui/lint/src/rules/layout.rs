@@ -137,7 +137,7 @@ fn default_for(tag: &str, prop: &str) -> Option<&'static str> {
 pub const COLS_VALUES: &[&str] = &["1","2","3","4","5","6","7","8","9","10","11","12"];
 fn allowed(prop: &str) -> &'static [&'static str] {
     match prop {
-        "gap" => &["0", "1", "2", "3", "4", "5", "6", "7", "8"],
+        "gap" => &["0", "1", "2", "3", "4", "5", "6", "7", "8", "density"],
         "align" => &["start", "center", "end", "stretch", "baseline"],
         "justify" => &["start", "center", "end", "between", "around"],
         "min" => &["xs", "sm", "md", "lg"],
@@ -159,7 +159,12 @@ fn modifier(prop: &str, value: &str) -> Option<(String, String)> {
     }
     Some(match prop {
         "gap" => {
-            let v = if value == "0" { "0".to_string() } else { format!("var(--space-{value})") };
+            let v = match value {
+                "0" => "0".to_string(),
+                // the density channel's row gap — rows/tiles resize with data-density
+                "density" => "var(--density-row-gap)".to_string(),
+                _ => format!("var(--space-{value})"),
+            };
             (format!("sui-g-{value}"), format!(".sui-g-{value}{{gap:{v}}}"))
         }
         "align" => {

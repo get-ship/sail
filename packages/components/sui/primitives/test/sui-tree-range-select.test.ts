@@ -99,7 +99,7 @@ const selectedIds = (shadow: ShadowRoot | null): string[] =>
 
 /** Click a row's label region (not its caret), with optional shiftKey. */
 const clickRow = (shadow: ShadowRoot | null, id: string, shift = false): void => {
-  const label = rowFor(shadow, id).querySelector('[part="label"]') as HTMLElement
+  const label = rowFor(shadow, id).querySelector('.label') as HTMLElement
   label.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true, shiftKey: shift }))
 }
 

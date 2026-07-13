@@ -65,114 +65,6 @@
     error: '',
   },
 }</component>
-<!--
-  Residual <style> — sui-tree is largely irreducible: there is no prop here
-  that channels per-value styling (size/selectable don't drive CSS rules),
-  so <theme> adds nothing. The row is a flex container drawn via <row>
-  (display:flex + align-items + gap live on the keyword), but most of the
-  chrome is raw, because most of the rules are descendant state-driven:
-  they target data-* attrs that live ON the row, not host — and <variants>
-  selectors only match host attrs.
-
-  Rules:
-  - .sui-tree base (display + width + font-family + density-driven font-size +
-    --sui-tree-indent indirection).
-  - .viewport / .spacer layout (position + width:100% + overflow-y:auto +
-    max-height panel token).
-  - .row layout box (position:absolute + left + width:100% + box-sizing;
-    the inline-flex row's display:flex + align-items + gap are <row>;
-    padding/gap go via density-* tokens in the .row descendant CSS).
-  - .row:hover, .row[data-selected], .row[data-pending], .row:focus-visible
-    state rules.
-  - .caret flex: none + transition + the row[data-expanded] caret rotate +
-    row:not([data-can-expand]) caret visibility:hidden (descendant state).
-  - .gutter / .node-icon .row[data-selected] .node-icon color (descendant
-    reacts to row[data-selected]).
-  - .label raw `flex:1` + min-width + white-space + overflow + text-overflow.
-  - .trailing margin-inline-start:auto (the `auto` margin is not in sx).
-  - .sui-tree[show-guides] .row::before pseudo-element.
-  - @media (forced-colors: active) CanvasText outline.
--->
-<style>
-  .sui-tree {
-    display: block;
-    width: 100%;
-    font-family: var(--font-body);
-    font-size: var(--density-text);
-    color: var(--foreground);
-    --sui-tree-indent: var(--density-row-px);
-  }
-  .sui-tree[hidden] { display: none; }
-
-  .viewport {
-    position: relative;
-    width: 100%;
-    overflow-y: auto;
-    max-height: var(--panel-max-h-md);
-  }
-  .spacer { position: relative; width: 100%; }
-
-  .row {
-    position: absolute;
-    left: 0;
-    width: 100%;
-    box-sizing: border-box;
-    padding: var(--density-row-py) var(--density-row-px);
-    gap: var(--density-row-gap);
-    outline: none;
-    transition: background-color var(--duration-fast) var(--ease-out);
-  }
-  .row:hover { background: var(--hover-bg); }
-  .row[data-selected] { background: var(--selected-bg); font-weight: var(--font-weight-medium); }
-  .row[data-pending] {
-    cursor: default;
-    color: var(--muted-foreground);
-    font-style: italic;
-  }
-  .row[data-pending]:hover { background: transparent; }
-  .row:focus-visible { box-shadow: inset 0 0 0 var(--ring-width) var(--ring-color); }
-
-  .caret {
-    flex: none;
-    width: var(--density-icon);
-    height: var(--density-icon);
-    color: var(--muted-foreground);
-    transition: transform var(--duration-fast) var(--ease-out);
-  }
-  .row[data-expanded] .caret { transform: rotate(90deg); }
-  .row:not([data-can-expand]) .caret { visibility: hidden; }
-
-  .gutter { display: inline-flex; align-items: center; flex: none; }
-
-  .node-icon {
-    flex: none;
-    color: var(--muted-foreground);
-  }
-  .row[data-selected] .node-icon { color: var(--foreground); }
-
-  .label {
-    flex: 1;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .trailing { margin-inline-start: auto; color: var(--muted-foreground); font-size: var(--text-xs); }
-
-  .sui-tree[show-guides] .row::before {
-    content: '';
-    position: absolute;
-    inset-block: 0;
-    inset-inline-start: calc(var(--sui-tree-indent) * 0.5);
-    border-inline-start: 1px dashed var(--border);
-  }
-
-  @media (forced-colors: active) {
-    .row:focus-visible { outline: 2px solid CanvasText; outline-offset: -2px; }
-  }
-</style>
-
-
 <controller>
 // <sui-tree> controller — engine-backed, virtualized hierarchical tree.
 //
@@ -327,17 +219,21 @@ export default controller({
   </slot>
 </div>
 {:else}
-<div class="tree" role="tree" aria-label={label() || null} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
-  <div class="viewport" bind:this={viewportEl}>
-    <div class="spacer" style:height={`${totalSize()}px`}>
+<div class="tree" role="tree" sx="w:full font:body text:density fg:foreground" aria-label={label() || null} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
+  <div class="viewport" bind:this={viewportEl} sx="position:relative w:full overflow-y:auto max-h:panel-max-h-md">
+    <div class="spacer" style:height={`${totalSize()}px`} sx="position:relative w:full">
       {#for w of windowItems() key={w.key}}
-        <row class="row" align="center" role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} style:transform={`translateY(${w.start}px)`} style:padding-inline-start={`calc(var(--density-row-px) + ${w.indent}px)`} sx="radius:sm cursor:pointer fg:foreground hover:bg:hover-bg">
-          <row class="caret" aria-hidden="true" align="center" justify="center" sx="fg:muted-foreground">
-            <icon name="chevron-right" size="xs"></icon>
-          </row>
+        <row class="row" align="center" gap="density" role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} style:transform={`translateY(${w.start}px)`} style:padding-inline-start={`calc(var(--density-row-px) + ${w.indent}px)`} sx="group position:absolute left:0 w:full py:density-row-py pr:density-row-px radius:sm cursor:pointer fg:foreground hover:bg:hover-bg data-selected:bg:selected-bg data-selected:weight:medium data-pending:fg:muted-foreground data-pending:text-style:italic data-pending:cursor:default focus:ring:ring">
+          {#if w.canExpand}
+            <row class="caret" aria-hidden="true" align="center" justify="center" sx="w:density-icon h:density-icon min-w:density-icon fg:muted-foreground group-data-expanded:rotate:90">
+              <icon name="chevron-right" size="xs"></icon>
+            </row>
+          {:else}
+            <span class="caret-space" aria-hidden="true" sx="w:density-icon min-w:density-icon"></span>
+          {/if}
 
           {#if selectable() === 'multi'}
-            <span class="gutter">
+            <span class="gutter" sx="display:inline-flex">
               <input
                 type="checkbox"
                 size="sm"
@@ -348,12 +244,12 @@ export default controller({
             </span>
           {/if}
           {#if w.icon !== ''}
-            <icon class="node-icon" name={w.icon} size="sm"></icon>
+            <icon class="node-icon" name={w.icon} size="sm" sx="fg:muted-foreground group-data-selected:fg:foreground"></icon>
           {:else}
             <slot name="node-icon"></slot>
           {/if}
-          <span class="label">{w.label}</span>
-          <span class="trailing"><slot name="node-trailing"></slot></span>
+          <span class="label" sx="grow:1 min-w:0 wrap:truncate">{w.label}</span>
+          <span class="trailing" sx="ml:auto fg:muted-foreground text:xs"><slot name="node-trailing"></slot></span>
         </row>
       {/for}
     </div>

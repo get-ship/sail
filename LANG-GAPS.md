@@ -33,6 +33,13 @@ Ruling key: OPEN (needs a decision) · SHIPPED (atom exists) · REJECTED.
   overflows. Also the reading-column wrap rule in base.css wants to be
   language, not chrome CSS.
 
+- **Prose typography surface**: rendered-content components (sui-markdown)
+  and reading chrome (the site's .doc in base.css) need an entire
+  typography-of-prose sheet for native child elements — heading rhythm,
+  list markers, blockquote, code/pre, table cells. Not sx-shaped (children
+  are runtime-rendered). Candidate: a framework prose sheet next to the
+  contracts, or a <prose> element. Holds sui-markdown.
+
 ## Open — single-site (so far)
 
 - **Stage width tokens**: sui-render's viewport framing (desktop 1280 /
