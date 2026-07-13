@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sui-cmdk/sui-cmdk.compiled.js'
-import '../src/sui-icon/sui-icon.compiled.js'
 import { createContainerRegistry, flush, mount } from '../src/test-utils'
 import type { CmdkItem } from '../src/sui-cmdk/sui-cmdk.controller'
 
@@ -14,7 +13,7 @@ type Cmdk = HTMLElement & {
   toggle(): void
 }
 
-const shadow = (el: HTMLElement) => el.shadowRoot!
+const shadow = (el: HTMLElement) => (el.shadowRoot ?? el)
 const inputOf = (el: HTMLElement) =>
   shadow(el).querySelector('input[role="combobox"]') as HTMLInputElement
 const listOf = (el: HTMLElement) =>

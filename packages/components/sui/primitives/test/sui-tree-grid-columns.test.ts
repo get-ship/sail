@@ -31,7 +31,6 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '../src/sui-tree-grid/sui-tree-grid.compiled.js'
-import '../src/sui-icon/sui-icon.compiled.js'
 import { createTable, type Table } from '../src/sui-table/engine/create-table'
 import type { ColumnDef } from '../src/sui-table/engine/types'
 import { createContainerRegistry, flush, mount } from '../src/test-utils'
@@ -225,7 +224,7 @@ describe('<sui-tree-grid> — column VISIBILITY via the reused engine', () => {
     await flush()
     const srcRow = shadow!.querySelector('[role="row"][data-node-id="src"]') as HTMLElement
     const cells = srcRow.querySelectorAll('[role="gridcell"]')
-    const firstCaret = (cells[0] as HTMLElement).querySelector('[part="caret"] sui-icon')
+    const firstCaret = (cells[0] as HTMLElement).querySelector('[part="caret"] .sui-icon')
     expect(firstCaret).not.toBeNull()
     expect((cells[1] as HTMLElement).querySelector('[part="caret"]')).toBeNull()
   })

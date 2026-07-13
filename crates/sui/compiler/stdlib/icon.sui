@@ -1,33 +1,28 @@
 <!--
-  <icon> — L1 language element (element mode). Sizing/color wrapper around a
-  slotted SVG glyph — bare tag, lowers away at compile time; the skin routes
-  to the framework layer keyed on .sui-icon; the contract feeds the element
-  manifest.
-
-  Split from the feat/next sui-icon baseline: `name`/`src`/`set`/`variant`/
-  `radius` (lucide/app-glyph fetch, tile/solid frame styling) all resolve
-  through CONTROLLER logic in the baseline — that is L2 behavior and stays
-  out. The L1 <icon> only sizes and inks whatever SVG the use site slots in;
-  named-glyph lookup belongs to an L2 component built on top of this element.
-
-  Tone stays out too, for a different reason: the baseline's per-tone color
-  comes from an externally-adopted `suiTonesSheet`, not from sui-icon's own
-  <style> block — there is nothing of the baseline's OWN skin to port. Ink
-  here is plain `currentColor` inheritance; a tone channel is future work
-  once the stdlib compiler can share a tones sheet across elements (a
-  LANG-GAP, not eaten).
-
-  `spin` is faithful to the baseline's bool prop, but reuses the `sui-spin`
-  keyframe that already ships in spinner's skin (baseline defines its own
-  `sui-icon-spin` — duplicating it here would fork one keyframe in two
-  places for the same rotation).
+  <icon> — L1 language element. Sizes and inks a glyph: a slotted SVG, a
+  `name` from the host's icon endpoint, an arbitrary `src` URL, or the app
+  identity set (`set="app"`: framed brand glyphs — glyph/tile/solid variants,
+  per-app accent tokens). Behavior rides `use:icon` (the runtime action:
+  fetch, cache, ARIA); the bare tag lowers to <span class="sui-icon" use:icon>.
+  Ink is currentColor inheritance; app frames read --app-accent-* tokens with
+  a --foreground fallback so a bare framework build renders neutrally.
 -->
 
 <component>{
   props: {
-    /** Named glyph, resolved by `use:icon` from the host's icon endpoint
-        (deck serves the embedded lucide set). Empty keeps slotted children. */
+    /** Named glyph from the icon endpoint (deck serves the embedded lucide
+        set). Empty keeps slotted children. */
     name: '',
+    /** Fetch an arbitrary SVG URL instead of a named glyph; wins over name. */
+    src: '',
+    /** Accessible name — role=img + aria-label; label-less icons are
+        aria-hidden decoration. */
+    label: '',
+    set: 'lucide' | 'app',
+    /** App-set frame treatment (glyph = bare, tile = tinted, solid = filled). */
+    variant: 'glyph' | 'tile' | 'solid',
+    /** App-set frame radius override. */
+    radius: '',
     size: 'xs' | 'sm' | 'md' | 'lg' | 'xl',
     spin: false,
   },
@@ -43,21 +38,112 @@
     color: currentColor;
     --sz: var(--icon-size-md);
   }
-  .sui-icon[hidden] { display: none; }
   .sui-icon[size='xs'] { --sz: var(--icon-size-2xs); }
   .sui-icon[size='sm'] { --sz: var(--icon-size-sm); }
   .sui-icon[size='lg'] { --sz: var(--icon-size-xl); }
   .sui-icon[size='xl'] { --sz: var(--icon-size-2xl); }
 
-  ::slotted(svg) {
+  /* The frame is inert outside the app set. */
+  .sui-icon:not([set='app']) .frame {
+    all: unset;
+    display: contents;
+  }
+
+  /* Both glyph sources fill the icon box: the action-injected svg and a
+     slotted one. */
+  .sui-icon svg {
     display: block;
     width: var(--sz);
     height: var(--sz);
+    flex: 0 0 auto;
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .sui-icon[spin] ::slotted(svg) { animation: sui-spin 0.8s linear infinite; }
+    .sui-icon[spin] svg { animation: sui-spin 0.8s linear infinite; }
+  }
+
+  /* ── App identity set: framed brand glyphs ─────────────────────────── */
+  .sui-icon[set='app'] {
+    --app-accent: var(--foreground);
+    --tile-size: var(--space-5);
+    --tile-radius: var(--radius-md);
+    --glyph-size: var(--icon-size-sm);
+    width: var(--tile-size);
+    height: var(--tile-size);
+    color: var(--app-accent);
+  }
+
+  /* Per-app accent tint. App-domain tokens live in the ship-app token layer;
+     each falls back to --foreground so a bare framework build is neutral.
+     theme-studio aliases the theme accent (mirrors the action's APP_ALIASES). */
+  .sui-icon[set='app'][name='dashboard']    { --app-accent: var(--app-accent-dashboard, var(--foreground)); }
+  .sui-icon[set='app'][name='pipelines']    { --app-accent: var(--app-accent-pipelines, var(--foreground)); }
+  .sui-icon[set='app'][name='agents']       { --app-accent: var(--app-accent-agents, var(--foreground)); }
+  .sui-icon[set='app'][name='skills']       { --app-accent: var(--app-accent-skills, var(--foreground)); }
+  .sui-icon[set='app'][name='git']          { --app-accent: var(--app-accent-git, var(--foreground)); }
+  .sui-icon[set='app'][name='collections']  { --app-accent: var(--app-accent-collections, var(--foreground)); }
+  .sui-icon[set='app'][name='canvas']       { --app-accent: var(--app-accent-canvas, var(--foreground)); }
+  .sui-icon[set='app'][name='settings']     { --app-accent: var(--app-accent-settings, var(--foreground)); }
+  .sui-icon[set='app'][name='chat']         { --app-accent: var(--app-accent-chat, var(--foreground)); }
+  .sui-icon[set='app'][name='events']       { --app-accent: var(--app-accent-events, var(--foreground)); }
+  .sui-icon[set='app'][name='specs']        { --app-accent: var(--app-accent-specs, var(--foreground)); }
+  .sui-icon[set='app'][name='theme']        { --app-accent: var(--app-accent-theme, var(--foreground)); }
+  .sui-icon[set='app'][name='setup']        { --app-accent: var(--app-accent-setup, var(--foreground)); }
+  .sui-icon[set='app'][name='overview']     { --app-accent: var(--app-accent-overview, var(--foreground)); }
+  .sui-icon[set='app'][name='mesh']         { --app-accent: var(--app-accent-mesh, var(--foreground)); }
+  .sui-icon[set='app'][name='theme-studio'] { --app-accent: var(--app-accent-theme, var(--foreground)); }
+
+  .sui-icon[set='app'][size='sm'] { --tile-size: var(--icon-size-md); --glyph-size: var(--icon-size-xs); --tile-radius: var(--radius-sm); }
+  .sui-icon[set='app'][size='md'] { --tile-size: var(--space-5); --glyph-size: var(--icon-size-sm); --tile-radius: var(--radius-md); }
+  .sui-icon[set='app'][size='lg'] { --tile-size: var(--control-h-sm); --glyph-size: var(--icon-size-lg); --tile-radius: var(--radius-lg); }
+
+  .sui-icon[set='app'][radius='sm']   { --tile-radius: var(--radius-sm); }
+  .sui-icon[set='app'][radius='md']   { --tile-radius: var(--radius-md); }
+  .sui-icon[set='app'][radius='lg']   { --tile-radius: var(--radius-lg); }
+  .sui-icon[set='app'][radius='full'] { --tile-radius: var(--radius-full); }
+
+  .sui-icon[set='app'] .frame {
+    width: 100%;
+    height: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--tile-radius);
+    transition: background-color var(--duration-fast) var(--ease-out),
+                color var(--duration-fast) var(--ease-out),
+                box-shadow var(--duration-fast) var(--ease-out);
+  }
+
+  .sui-icon[set='app']:not([variant]) .frame,
+  .sui-icon[set='app'][variant='glyph'] .frame {
+    background: transparent;
+    color: var(--app-accent);
+  }
+
+  .sui-icon[set='app'][variant='tile'] .frame {
+    position: relative;
+    overflow: hidden;
+  }
+  /* Soft accent tint as an underlay — the design system owns the mix formula
+     in tokens.css, not component CSS. */
+  .sui-icon[set='app'][variant='tile'] .frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--app-accent);
+    opacity: 0.16;
+  }
+
+  .sui-icon[set='app'][variant='solid'] .frame {
+    background: var(--app-accent);
+    color: var(--background);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .sui-icon[set='app'] svg {
+    width: var(--glyph-size);
+    height: var(--glyph-size);
   }
 </style>
 
-<span use:icon><slot></slot></span>
+<span use:icon><span class="frame"><slot></slot></span></span>

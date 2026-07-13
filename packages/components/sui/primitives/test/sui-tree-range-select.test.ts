@@ -28,7 +28,6 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '../src/sui-tree/sui-tree.compiled.js'
-import '../src/sui-icon/sui-icon.compiled.js'
 import { createTable, type Table } from '../src/sui-table/engine/create-table'
 import { createContainerRegistry, flush, mount } from '../src/test-utils'
 

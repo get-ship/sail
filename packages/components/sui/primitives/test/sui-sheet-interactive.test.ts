@@ -32,7 +32,7 @@ function mountSheet(cells: Record<string, { value?: unknown; formula?: string }>
   return { el, shadow, container, sheet }
 }
 
-const cellAt = (shadow: ShadowRoot, a1: string): HTMLElement =>
+const cellAt = (shadow: ShadowRoot | HTMLElement, a1: string): HTMLElement =>
   shadow.querySelector(`[data-a1="${a1}"]`) as HTMLElement
 
 function pointer(el: Element, type: string, extra: MouseEventInit = {}): void {

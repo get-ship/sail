@@ -64,7 +64,7 @@ export function mount(
     .join(' ')
   container.innerHTML = `<${tag}${attrsHtml ? ' ' + attrsHtml : ''}>${innerHTML}</${tag}>`
   const el = container.querySelector(tag) as HTMLElement
-  return { el, shadow: el.shadowRoot, container }
+  return { el, shadow: el.shadowRoot ?? el, container }
 }
 
 /** Wait one microtask + one macrotask so attributeChangedCallback →

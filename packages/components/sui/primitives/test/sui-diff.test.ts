@@ -5,7 +5,7 @@ import { createContainerRegistry, flush, mount } from '../src/test-utils'
 const reg = createContainerRegistry()
 afterEach(() => reg.cleanup())
 
-const shadow = (el: HTMLElement) => el.shadowRoot!
+const shadow = (el: HTMLElement) => (el.shadowRoot ?? el)
 // Lines are semantic list items carrying a public data-line-kind state +
 // part="line"; we anchor on those, never the styling classes (.line.add …).
 const lines = (el: HTMLElement) => shadow(el).querySelectorAll('[part="line"]')

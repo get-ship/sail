@@ -20,9 +20,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '../src/sui-tree/sui-tree.compiled.js'
-// The disclosure caret composes the committed <sui-icon name="chevron-right">
 // (NOT an inline <svg>) — register it so the caret renders as a real element.
-import '../src/sui-icon/sui-icon.compiled.js'
 import { createTable, type Table } from '../src/sui-table/engine/create-table'
 import { createContainerRegistry, flush, mount } from '../src/test-utils'
 
@@ -227,7 +225,7 @@ describe('<sui-tree> — disclosure caret composes sui-icon (NOT inline svg)', (
     const branch = shadow!.querySelector('[data-node-id="src"]') as HTMLElement
     const caret = branch.querySelector('[part="caret"]') as HTMLElement
     expect(caret).not.toBeNull()
-    const icon = caret.querySelector('sui-icon') as HTMLElement
+    const icon = caret.querySelector('.sui-icon') as HTMLElement
     expect(icon).not.toBeNull()
     expect(icon.getAttribute('name')).toBe('chevron-right')
     // The NEW tag does NOT inline an <svg> caret (the KEEP item did).
@@ -390,7 +388,7 @@ describe('<sui-tree> — events via host.emit! (behavioral spec #3)', () => {
     const fn = vi.fn()
     // Listen on the ANCESTOR — only a bubbling, composed event reaches it.
     container.addEventListener('sui-toggle', fn)
-    const caret = el.shadowRoot!.querySelector(
+    const caret = (el.shadowRoot ?? el).querySelector(
       '[data-node-id="src"] [part="caret"]',
     ) as HTMLElement
     caret.click()
@@ -406,7 +404,7 @@ describe('<sui-tree> — events via host.emit! (behavioral spec #3)', () => {
     await flush()
     const fn = vi.fn()
     el.addEventListener('sui-expand-change', fn)
-    const caret = el.shadowRoot!.querySelector(
+    const caret = (el.shadowRoot ?? el).querySelector(
       '[data-node-id="src"] [part="caret"]',
     ) as HTMLElement
     caret.click()

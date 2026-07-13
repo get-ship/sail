@@ -14,7 +14,6 @@
 
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sui-tree-grid/sui-tree-grid.compiled.js'
-import '../src/sui-icon/sui-icon.compiled.js'
 import { createTable, type Table } from '../src/sui-table/engine/create-table'
 import type { ColumnDef } from '../src/sui-table/engine/types'
 import { createContainerRegistry, flush, mount } from '../src/test-utils'
@@ -148,7 +147,7 @@ describe('<sui-tree-grid> — disclosure caret + indent in the FIRST visible col
     const srcRow = shadow!.querySelector('[role="row"][data-node-id="src"]') as HTMLElement
     const cells = srcRow.querySelectorAll('[role="gridcell"]')
     const firstCell = cells[0] as HTMLElement
-    const caret = firstCell.querySelector('[part="caret"] sui-icon') as HTMLElement
+    const caret = firstCell.querySelector('[part="caret"] .sui-icon') as HTMLElement
     expect(caret).not.toBeNull()
     expect(caret.getAttribute('name')).toBe('chevron-right')
     // No caret in any later column.
@@ -171,7 +170,7 @@ describe('<sui-tree-grid> — disclosure caret + indent in the FIRST visible col
     const { shadow } = mountTreeGrid(true)
     await flush()
     const leaf = shadow!.querySelector('[role="row"][data-node-id="readme"]') as HTMLElement
-    expect(leaf.querySelector('[part="caret"] sui-icon')).toBeNull()
+    expect(leaf.querySelector('[part="caret"] .sui-icon')).toBeNull()
     expect(leaf.hasAttribute('aria-expanded')).toBe(false)
   })
 })

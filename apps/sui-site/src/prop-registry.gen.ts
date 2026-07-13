@@ -262,7 +262,36 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "name",
       "type": "string",
       "default": "",
-      "desc": "Named glyph, resolved by `use:icon` from the host's icon endpoint (deck serves the embedded lucide set). Empty keeps slotted children."
+      "desc": "Named glyph from the icon endpoint (deck serves the embedded lucide set). Empty keeps slotted children."
+    },
+    {
+      "name": "src",
+      "type": "string",
+      "default": "",
+      "desc": "Fetch an arbitrary SVG URL instead of a named glyph; wins over name."
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "default": "",
+      "desc": "Accessible name — role=img + aria-label; label-less icons are aria-hidden decoration."
+    },
+    {
+      "name": "set",
+      "type": "lucide · app",
+      "default": "lucide"
+    },
+    {
+      "name": "variant",
+      "type": "glyph · tile · solid",
+      "default": "glyph",
+      "desc": "App-set frame treatment (glyph = bare, tile = tinted, solid = filled)."
+    },
+    {
+      "name": "radius",
+      "type": "string",
+      "default": "",
+      "desc": "App-set frame radius override."
     },
     {
       "name": "size",

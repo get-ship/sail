@@ -7,7 +7,6 @@
 
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sui-tree/sui-tree.compiled.js'
-import '../src/sui-icon/sui-icon.compiled.js'
 import { createTable, type Table } from '../src/sui-table/engine/create-table'
 import { createContainerRegistry, flush, mount } from '../src/test-utils'
 
@@ -41,7 +40,7 @@ function mountTree() {
   return m
 }
 
-const rowFor = (shadow: ShadowRoot, id: string) =>
+const rowFor = (shadow: ShadowRoot | HTMLElement, id: string) =>
   shadow.querySelector(`[role="treeitem"][data-node-id="${id}"]`) as HTMLElement
 
 describe('<sui-tree> — per-node icon', () => {
@@ -49,12 +48,12 @@ describe('<sui-tree> — per-node icon', () => {
     const { shadow } = mountTree()
     await flush()
     const readme = rowFor(shadow!, 'readme')
-    const icon = readme.querySelector('sui-icon.node-icon') as HTMLElement
+    const icon = readme.querySelector('.sui-icon.node-icon') as HTMLElement
     expect(icon).not.toBeNull()
     expect(icon.getAttribute('name')).toBe('file-text')
 
     const main = rowFor(shadow!, 'main')
-    expect(main.querySelector('sui-icon.node-icon')?.getAttribute('name')).toBe('file-code')
+    expect(main.querySelector('.sui-icon.node-icon')?.getAttribute('name')).toBe('file-code')
   })
 
   it('falls back to the node-icon slot when a node has no icon', async () => {
@@ -62,7 +61,7 @@ describe('<sui-tree> — per-node icon', () => {
     await flush()
     const plain = rowFor(shadow!, 'plain')
     // No data-driven icon for this node…
-    expect(plain.querySelector('sui-icon.node-icon')).toBeNull()
+    expect(plain.querySelector('.sui-icon.node-icon')).toBeNull()
     // …the slot fallback is present instead.
     expect(plain.querySelector('slot[name="node-icon"]')).not.toBeNull()
   })

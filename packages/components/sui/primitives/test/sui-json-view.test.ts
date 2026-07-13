@@ -5,7 +5,7 @@ import { createContainerRegistry, flush, mount } from '../src/test-utils'
 const reg = createContainerRegistry()
 afterEach(() => reg.cleanup())
 
-const shadow = (el: HTMLElement) => el.shadowRoot!
+const shadow = (el: HTMLElement) => (el.shadowRoot ?? el)
 
 describe('<sui-json-view>', () => {
 

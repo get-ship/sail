@@ -310,10 +310,27 @@
       }
     },
     "icon": {
+      "label": {
+        "type": "string",
+        "default": "",
+        "description": "Accessible name — role=img + aria-label; label-less icons are aria-hidden decoration."
+      },
       "name": {
         "type": "string",
         "default": "",
-        "description": "Named glyph, resolved by `use:icon` from the host's icon endpoint (deck serves the embedded lucide set). Empty keeps slotted children."
+        "description": "Named glyph from the icon endpoint (deck serves the embedded lucide set). Empty keeps slotted children."
+      },
+      "radius": {
+        "type": "string",
+        "default": "",
+        "description": "App-set frame radius override."
+      },
+      "set": {
+        "values": [
+          "lucide",
+          "app"
+        ],
+        "default": "lucide"
       },
       "size": {
         "values": [
@@ -328,6 +345,20 @@
       "spin": {
         "type": "bool",
         "default": "false"
+      },
+      "src": {
+        "type": "string",
+        "default": "",
+        "description": "Fetch an arbitrary SVG URL instead of a named glyph; wins over name."
+      },
+      "variant": {
+        "values": [
+          "glyph",
+          "tile",
+          "solid"
+        ],
+        "default": "glyph",
+        "description": "App-set frame treatment (glyph = bare, tile = tinted, solid = filled)."
       }
     },
     "label": {

@@ -5,7 +5,7 @@ import { createContainerRegistry, flush, mount } from '../src/test-utils'
 const reg = createContainerRegistry()
 afterEach(() => reg.cleanup())
 
-const shadow = (el: HTMLElement) => el.shadowRoot!
+const shadow = (el: HTMLElement) => (el.shadowRoot ?? el)
 const inputOf = (el: HTMLElement) => shadow(el).querySelector('input.entry') as HTMLInputElement
 const panelOf = (el: HTMLElement) => shadow(el).querySelector('[part="panel"]') as HTMLElement | null
 const days = (el: HTMLElement) =>

@@ -15,7 +15,7 @@ import { createContainerRegistry, flush, mount } from '../src/test-utils'
 const reg = createContainerRegistry()
 afterEach(() => reg.cleanup())
 
-const shadow = (el: HTMLElement) => el.shadowRoot!
+const shadow = (el: HTMLElement) => (el.shadowRoot ?? el)
 const nativeDialog = (el: HTMLElement) => shadow(el).querySelector('dialog') as HTMLDialogElement
 // Anchor on the public part contract, not the styling class (.close).
 const closeBtn = (el: HTMLElement) => shadow(el).querySelector('[part="close"]') as HTMLButtonElement

@@ -6,7 +6,7 @@ import { createContainerRegistry, mount } from '../src/test-utils'
 const reg = createContainerRegistry()
 afterEach(() => reg.cleanup())
 
-const shadow = (el: HTMLElement) => el.shadowRoot!
+const shadow = (el: HTMLElement) => (el.shadowRoot ?? el)
 const fallbackBox = (el: HTMLElement) =>
   shadow(el).querySelector('.fallback') as HTMLElement | null
 const fallbackMessage = (el: HTMLElement) =>
