@@ -38,6 +38,9 @@ enum Kind {
     Weight,
     Leading,
     Tracking,
+    // role-token keyed: value picks a typography ROLE (`--mono-font`), so a
+    // theme that reassigns the role restyles every use — never a raw stack.
+    Font,
     // preset: value picks a curated composition
     Ring,
     Border,
@@ -66,6 +69,7 @@ fn prop_kind(prop: &str) -> Option<Kind> {
         "z" => Z,
         "weight" => Weight,
         "leading" => Leading,
+        "font" => Font,
         "tracking" => Tracking,
         "ring" => Ring,
         // A border on ONE side. Same value vocabulary as `border` — this adds a
@@ -96,7 +100,7 @@ fn prop_kind(prop: &str) -> Option<Kind> {
 // token names directly — the value IS the variable.
 const ALL_PROPS: &[&str] = &[
     "p", "px", "py", "pt", "pr", "pb", "pl", "m", "mt", "mr", "mb", "ml",
-    "bg", "fg", "radius", "text", "shadow", "z", "weight", "leading", "tracking",
+    "bg", "fg", "radius", "text", "shadow", "z", "weight", "leading", "tracking", "font",
     "ring", "border", "border-t", "border-r", "border-b", "border-l",
     "w", "h", "min-w", "min-h", "max-w", "max-h", "grow", "opacity",
     "display", "overflow", "overflow-x", "overflow-y", "position", "cursor", "visibility",
@@ -129,6 +133,9 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
         Weight => crate::tokens::suffixes("font-weight-"),
         Leading => crate::tokens::suffixes("leading-"),
         Tracking => crate::tokens::suffixes("tracking-"),
+        // The typography roles from tokens.css (`--mono-font`/`--body-font`/
+        // `--heading-font`) — the themable layer, not the raw `--font-*` stacks.
+        Font => vec!["mono", "body", "heading"],
         Ring => {
             let mut v = vec!["none"];
             v.extend(crate::tokens::color_values());
@@ -140,7 +147,11 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
             v
         }
         Size => {
-            let mut v = vec!["full", "auto", "fit", "screen", "min", "max", "0", "size-h"];
+            // `fill` is the viewport REMAINDER: 100dvh/100dvw minus whatever
+            // fixed chrome the shell declares via --chrome-offset(-x). A
+            // workbench route (editor panes fixed, one pane scrolling) is not
+            // expressible with `screen` — it overruns by the chrome height.
+            let mut v = vec!["full", "auto", "fit", "screen", "fill", "min", "max", "0", "size-h"];
             v.extend(crate::tokens::suffixes("space-"));
             v.extend(crate::tokens::size_values());
             v
@@ -182,6 +193,7 @@ fn css_props(prop: &str) -> &'static [&'static str] {
         "z" => &["z-index"],
         "weight" => &["font-weight"],
         "leading" => &["line-height"],
+        "font" => &["font-family"],
         "tracking" => &["letter-spacing"],
         "ring" => &["box-shadow"],
         "border" => &["border"],
@@ -257,6 +269,7 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
         Z => format!("var(--z-{token})"),
         Weight => format!("var(--font-weight-{token})"),
         Leading => format!("var(--leading-{token})"),
+        Font => format!("var(--{token}-font)"),
         Tracking => format!("var(--tracking-{token})"),
         // a focus ring at the standard ring width in the chosen tone (or off).
         Ring => if token == "none" {
@@ -280,6 +293,11 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
             "auto" => "auto".into(),
             "fit" => "fit-content".into(),
             "screen" => if matches!(prop, "h" | "min-h" | "max-h") { "100vh".into() } else { "100vw".into() },
+            "fill" => if matches!(prop, "h" | "min-h" | "max-h") {
+                "calc(100dvh - var(--chrome-offset, 0px))".into()
+            } else {
+                "calc(100dvw - var(--chrome-offset-x, 0px))".into()
+            },
             "min" => "min-content".into(),
             "max" => "max-content".into(),
             "0" => "0".into(),
@@ -316,33 +334,37 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
 /// A CLOSED set of the standard user-preference / environment queries — never an
 /// arbitrary `@media` (that would be a raw-CSS escape). An sx pair carrying a
 /// condition lowers into that media block.
+/// Condition prefixes (name → media query) — table form so surface
+/// documentation renders the same list the lowering consults.
+pub const CONDITION_PREFIXES: &[(&str, &str)] = &[
+    ("motion-reduce", "(prefers-reduced-motion: reduce)"),
+    ("motion-safe", "(prefers-reduced-motion: no-preference)"),
+    ("forced-colors", "(forced-colors: active)"),
+    ("dark", "(prefers-color-scheme: dark)"),
+    ("light", "(prefers-color-scheme: light)"),
+];
+
 pub fn condition_media(name: &str) -> Option<&'static str> {
-    Some(match name {
-        "motion-reduce" => "(prefers-reduced-motion: reduce)",
-        "motion-safe" => "(prefers-reduced-motion: no-preference)",
-        "forced-colors" => "(forced-colors: active)",
-        "dark" => "(prefers-color-scheme: dark)",
-        "light" => "(prefers-color-scheme: light)",
-        _ => return None,
-    })
+    CONDITION_PREFIXES.iter().find(|(n, _)| *n == name).map(|(_, m)| *m)
 }
 
 /// A state prefix (`hover:`/`focus:`/…) → its CSS pseudo-class. `focus` maps to
 /// `:focus-visible` (the modern default — no ring on a mouse click). Shared by
 /// the lint (validation) and preprocess (lowering) so they can't diverge.
+/// State prefixes (name → selector) — table form for surface documentation.
+/// `current` keys off aria-current (the author stamps it for assistive tech
+/// anyway; the style reads the same source of truth).
+pub const STATE_PREFIXES: &[(&str, &str)] = &[
+    ("hover", ":hover"),
+    ("focus", ":focus-visible"),
+    ("focus-within", ":focus-within"),
+    ("active", ":active"),
+    ("disabled", ":disabled"),
+    ("current", "[aria-current]:not([aria-current='false'])"),
+];
+
 pub fn state_pseudo(state: &str) -> Option<&'static str> {
-    Some(match state {
-        "hover" => ":hover",
-        "focus" => ":focus-visible",
-        "focus-within" => ":focus-within",
-        "active" => ":active",
-        "disabled" => ":disabled",
-        // The platform's "you are here" state (aria-current="page"/"step"/…).
-        // Nav links, pagination, wizards — the author stamps the attribute for
-        // assistive tech anyway; the style keys off the same source of truth.
-        "current" => "[aria-current]:not([aria-current='false'])",
-        _ => return None,
-    })
+    STATE_PREFIXES.iter().find(|(n, _)| *n == state).map(|(_, p)| *p)
 }
 
 /// The complete sx vocabulary — every prop with its full allowed-value list,
@@ -641,6 +663,10 @@ mod tests {
         assert_eq!(lower("shadow", "sm").unwrap(), vec![("box-shadow", "var(--shadow-sm)".to_string())]);
         assert_eq!(lower("z", "sticky").unwrap(), vec![("z-index", "var(--z-sticky)".to_string())]);
         assert_eq!(lower("weight", "semibold").unwrap(), vec![("font-weight", "var(--font-weight-semibold)".to_string())]);
+        // font: is ROLE-keyed — mono lowers to the themable --mono-font, and a
+        // raw stack name is not vocabulary.
+        assert_eq!(lower("font", "mono").unwrap(), vec![("font-family", "var(--mono-font)".to_string())]);
+        assert!(lower("font", "JetBrains").is_none(), "raw stack names are not vocabulary");
         assert_eq!(lower("cursor", "pointer").unwrap(), vec![("cursor", "pointer".to_string())]);
         assert_eq!(lower("opacity", "50").unwrap(), vec![("opacity", "0.5".to_string())]);
         assert_eq!(lower("border", "strong").unwrap(), vec![("border", "1px solid var(--border-strong)".to_string())]);
