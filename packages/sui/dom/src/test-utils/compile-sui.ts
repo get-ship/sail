@@ -37,6 +37,7 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 // (test-utils → src → dom → sui → packages → repo root).
 const REPO_ROOT = resolve(HERE, '../../../../..')
 const COMPILER_SRC = resolve(REPO_ROOT, 'crates/sui/compiler/src')
+const LINT_SRC = resolve(REPO_ROOT, 'crates/sui/lint/src')
 
 // Platform cdylib name `cargo build` produces for crates/sui/compiler-napi.
 // Node loads a napi cdylib directly via `process.dlopen` (it exports the
@@ -99,16 +100,17 @@ function resolveAddonPath(): string {
 function assertFresh(addonPath: string): void {
   try {
     const addonMtime = statSync(addonPath).mtimeMs
-    const newest = newestMtime(COMPILER_SRC)
+    const newest = Math.max(newestMtime(COMPILER_SRC), newestMtime(LINT_SRC))
     if (newest > addonMtime) {
       const mins = Math.max(1, Math.round((newest - addonMtime) / 60_000))
-      console.warn(
-        `[sui-compiler-napi] STALE: crates/sui/compiler/src has changes newer ` +
-          `than the built addon (~${mins}m). The harness is testing an out-of-date ` +
-          `compiler. Run \`cargo build -p sui-compiler-napi\` (or \`just sui-napi\`) to rebuild.`,
+      // A stale compiler silently tests yesterday's language — halt, don't warn.
+      throw new Error(
+        `[sui-compiler-napi] STALE addon: crates/sui/{compiler,lint}/src changed ` +
+          `~${mins}m after the built addon. Rebuild: cargo build -p sui-compiler-napi`,
       )
     }
-  } catch {
+  } catch (e) {
+    if (e instanceof Error && e.message.includes('STALE addon')) throw e
     /* source tree not locatable (published layout) — skip the freshness check */
   }
 }

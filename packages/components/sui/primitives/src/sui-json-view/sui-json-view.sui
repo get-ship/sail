@@ -1,87 +1,9 @@
 <!--
-  <sui-json-view> — SUI port of <ship-json-view>.
-  Collapsible JSON tree with toggle-per-level behavior.
-  The DOM is controller-generated via {@ html} — the .sui file owns
-  only the host and the projection root, plus the style block that
-  styles the controller-emitted children (descendant selectors that
-  no sx/variants construct can express).
-
-  Prop parity vs <ship-json-view>
-  ─────────────────────────────────────────────────────────────────────
-  Lit                          SUI                      Notes
-  ─────────────────────────────────────────────────────────────────────
-  data (String, '')            data (string, reflect)   ✓ JSON string to render
-  expanded (Boolean, false)    expanded (bool, reflect) ✓ force-expand all
-  depth (Number, 1)            depth (number, 1,        ✓ initial expand depth
-                                reflect)
-  ─────────────────────────────────────────────────────────────────────
-  (no events)                  (no events)              ✓
-  (no slots)                   (no slots)               ✓
-  parts: root, error           root, error              ✓
-  ARIA: host role=tree +       controller sets on       ✓
-    aria-label="JSON tree"       host if absent
-  ─────────────────────────────────────────────────────────────────────
-
-  Anatomy (the controller renders into the .json-root projection
-  target — every public hook has part=; the .s/.n/.b/.null/.punc/
-  .key/.meta classes are private styling hooks for the syntax-
-  color spans the controller emits):
-
-    <sui-json-view>            shadow root, role=tree, aria-label=JSON tree
-      └─ .json-root            the projection target (bind:this)
-          └─ <div part=root>   wraps the rendered JSON tree
-              ├─ <details>     one per object/array, with a <summary>
-              │   ├─ <summary>
-              │   │   ├─ .caret         (the ▶ marker; rotates when open)
-              │   │   ├─ <span class="key">"name"</span>:   (for object keys)
-              │   │   ├─ { or [
-              │   │   └─ .meta          (the "N items/keys" pill)
-              │   └─ .branch   children of this branch
-              │       └─ <div class=node>…  (one per child value)
-              ├─ <span class="s">"…"</span>     string literals
-              ├─ <span class="n">123</span>     number literals
-              ├─ <span class="b">true/false</span>   boolean literals
-              ├─ <span class="null">null</span>  null literals
-              └─ <span class="error" role="alert">  invalid JSON
-                  Invalid JSON: …
-
-  NEW SURFACE (re-port from feat/next, parity-gate pass)
-  ─────────────────────────────────────────────────────────────────────
-  - The component has NO tone/size prop and never did — no per-component
-    <theme prop="tone"> block was ever here. Style block already used
-    tokens throughout (the spike's prior variants block stays in
-    variants, which is where the hidden attr belongs).
-  - The .caret is a UNICODE glyph (▶) inside a <span> emitted by the
-    controller — it is NOT a framework <icon> control and never was. A
-    `<icon name=chevron-right size=xs>` would be a different shape
-    AND wouldn't render with the same color/text-transform as a
-    text-resident marker; substituting it would be a regression on the
-    JSON-view look. Kept verbatim.
-  - sx is closed-vocabulary. EVERY rule here targets a descendant of
-    the controller-emitted HTML — .node, .branch, details > summary,
-    .leaf, .caret, .punc, .key, .s, .n, .b, .null, .meta, .error. The
-    `details > summary` selector is a structural pseudo; `.leaf` is
-    a class on controller-emitted span/div leaves; the syntax-color
-    classes (.s/.n/.b/.null/.punc) are tiny inline-target spans. None
-    of these have an sx construct — they all stay in <style>. The
-    multi-property transition on .caret, the ::-webkit-details-marker
-    reset, and details[open] > summary .caret { transform: rotate } are
-    also non-sx (transition shorthand, vendor pseudo, attribute
-    descendant).
-  - The .sui-json-view line-height was `1.65` in feat/next (raw number). The
-    prior worktree snap was --leading-normal-plus (the prior existing
-    token); kept that — `1.65` is a non-token value the css-token lint
-    would not block (it's not a font-size/radius/z-index), but the
-    same numeric value is a named token in tokens.css already.
-  - The .caret was 11px in feat/next (raw, no token). Snapped to
-    --icon-size-3xs (8px) — the closest existing scale step. Visual
-    change: a smaller disclosure marker. Not a LANG-GAP (a token exists
-    and the snap is within rounding tolerance for a 2-3px icon); the
-    pre-existing 11px value was off-scale and the snap is the same
-    quantization tokens.css already documents for the rest of the
-    primitive library.
-
-  No new LANG-GAP.
+  <sui-json-view> — JSON tree. `data` is a JSON string; `depth` auto-opens
+  levels below it; `expanded` opens everything. Branch rows toggle on
+  click/Enter/Space and carry aria-expanded; the host is role=tree and rows
+  are role=treeitem with aria-level. Invalid JSON renders a role=alert row.
+  Level guides are per-level gutter spans with a subtle inline-start border.
 -->
 
 <component>{
@@ -91,125 +13,171 @@
     depth: 1,
   },
 }</component>
-<style>
-  .sui-json-view {
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    line-height: var(--leading-normal-plus);
-  }
-  .node { display: block; border-radius: var(--radius-sm); }
-  .branch {
-    margin-inline-start: var(--space-2);
-    border-left: 1px solid var(--border-subtle);
-    padding-inline-start: var(--space-3);
-  }
-  details > summary {
-    list-style: none;
-    cursor: pointer;
-    user-select: none;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    padding: 0 var(--space-1);
-    border-radius: var(--radius-sm);
-  }
-  details > summary:hover { background: var(--hover-bg); }
-  details > summary::-webkit-details-marker { display: none; }
-  .leaf:hover { background: var(--hover-bg); }
-  .caret {
-    display: inline-flex;
-    width: var(--icon-size-3xs);
-    height: var(--icon-size-3xs);
-    color: var(--muted-foreground);
-    transition: transform var(--duration-fast) var(--ease-out);
-  }
-  .caret svg { width: var(--icon-size-3xs); height: var(--icon-size-3xs); display: block; }
-  details[open] > summary .caret { transform: rotate(90deg); }
-  .punc { color: var(--muted-foreground); }
-  .key { color: var(--foreground); font-weight: var(--font-weight-medium); }
-  .s { color: var(--success); }
-  .n { color: var(--info); }
-  .b { color: var(--accent); font-weight: var(--font-weight-medium); }
-  .null { color: var(--muted-foreground); font-style: italic; }
-  .meta {
-    color: var(--muted-foreground);
-    font-size: var(--text-xs);
-    background: var(--muted);
-    border-radius: var(--radius-full);
-    padding: 0 var(--space-1);
-    margin-left: var(--space-1);
-  }
-  .error { color: var(--destructive); }
-
-  .sui-json-view[hidden] { display: none; }
-</style>
-
 
 <controller>
-import { controller, bindHtml } from '@ship/sui-runtime'
+import { controller, derived, signal } from '@ship/sui-runtime'
 import type { Scope } from './sui-json-view.sui'
 
 type JsonValue = null | boolean | number | string | JsonValue[] | { [k: string]: JsonValue }
 
-function escape(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+interface Pad {
+  i: number
 }
 
-function renderValue(v: JsonValue, key: string | null, level: number, expanded: boolean, depth: number): string {
-  const keyPrefix = key !== null ? `<span class="key">"${escape(key)}"</span>: ` : ''
-  if (v === null) return `${keyPrefix}<span class="null">null</span>`
-  if (typeof v === 'string') return `${keyPrefix}<span class="s">"${escape(v)}"</span>`
-  if (typeof v === 'number') return `${keyPrefix}<span class="n">${v}</span>`
-  if (typeof v === 'boolean') return `${keyPrefix}<span class="b">${String(v)}</span>`
-  const isArr = Array.isArray(v)
-  const entries: Array<[string, JsonValue]> = isArr
-    ? (v as JsonValue[]).map((x, i) => [String(i), x])
-    : Object.entries(v as Record<string, JsonValue>)
-  const open = expanded || level < depth
-  const open1 = isArr ? '[' : '{'
-  const close1 = isArr ? ']' : '}'
-  const count = entries.length
-  if (count === 0) return `${keyPrefix}${open1}${close1}`
-  const children = entries
-    .map(([k, val]) => `<div class="node">${renderValue(val, isArr ? null : k, level + 1, expanded, depth)}</div>`)
-    .join('')
-  return `<details${open ? ' open' : ''}>
-<summary sx="display:block fg:foreground"><span class="caret">▶</span>${keyPrefix}${open1}<span class="meta">${count} ${isArr ? 'items' : 'keys'}</span></summary>
-<div class="branch">${children}</div>
-${close1}</details>`
+interface Row {
+  k: string
+  path: string
+  kind: 'branch' | 'close' | 'str' | 'num' | 'bool' | 'null' | 'empty'
+  level: number
+  ariaLevel: string
+  pads: Pad[]
+  label: string
+  text: string
+  open: boolean
+  openBracket: string
+  closeBracket: string
+  meta: string
 }
 
 export default controller<Scope>({
-  mount(state, host) {
+  scope: ({ data, expanded, depth }: Scope) => {
+    // Per-path user toggles win over the depth/expanded defaults.
+    const overrides = signal<Record<string, boolean>>({})
 
-    if (!host.hasAttribute('role')) host.setAttribute('role', 'tree')
-    if (!host.hasAttribute('aria-label')) host.setAttribute('aria-label', 'JSON tree')
-
-    const el = state.$signals.contentEl() as HTMLElement | null
-    if (!el) return () => {}
-
-    return bindHtml(el, () => {
-      const data = state.$signals.data()
-      const expanded = state.$signals.expanded()
-      const depth = state.$signals.depth()
-
-      if (!data) return ''
-
-      let parsed: JsonValue
+    const parseError = derived((): string => {
+      const d = data()
+      if (!d) return ''
       try {
-        parsed = JSON.parse(data) as JsonValue
+        JSON.parse(d)
+        return ''
       } catch (e) {
-        return `<span class="error" role="alert">Invalid JSON: ${escape((e as Error).message)}</span>`
+        return (e as Error).message
+      }
+    })
+
+    const rows = derived((): Row[] => {
+      const d = data()
+      if (!d || parseError() !== '') return []
+      const parsed = JSON.parse(d) as JsonValue
+      const out: Row[] = []
+      const ov = overrides()
+      const exp = expanded()
+      const dep = depth()
+
+      const pads = (level: number): Pad[] =>
+        Array.from({ length: level }, (_, i) => ({ i }))
+
+      const walk = (v: JsonValue, label: string, level: number, path: string): void => {
+        const base = { path, level, ariaLevel: String(level + 1), pads: pads(level), label, meta: '', open: false, openBracket: '', closeBracket: '' }
+        if (v === null) {
+          out.push({ ...base, k: `${path}:null`, kind: 'null', text: 'null' })
+          return
+        }
+        if (typeof v === 'string') {
+          out.push({ ...base, k: `${path}:str:${v}`, kind: 'str', text: `"${v}"` })
+          return
+        }
+        if (typeof v === 'number') {
+          out.push({ ...base, k: `${path}:num:${v}`, kind: 'num', text: String(v) })
+          return
+        }
+        if (typeof v === 'boolean') {
+          out.push({ ...base, k: `${path}:bool:${v}`, kind: 'bool', text: String(v) })
+          return
+        }
+        const isArr = Array.isArray(v)
+        const entries: Array<[string, JsonValue]> = isArr
+          ? (v as JsonValue[]).map((x, i) => [String(i), x])
+          : Object.entries(v as Record<string, JsonValue>)
+        const openBracket = isArr ? '[' : '{'
+        const closeBracket = isArr ? ']' : '}'
+        if (entries.length === 0) {
+          out.push({ ...base, k: `${path}:empty`, kind: 'empty', text: `${openBracket}${closeBracket}` })
+          return
+        }
+        const open = ov[path] ?? (exp || level < dep)
+        out.push({
+          ...base,
+          k: `${path}:branch:${open}`,
+          kind: 'branch',
+          text: '',
+          open,
+          openBracket,
+          closeBracket,
+          meta: `${entries.length} ${isArr ? 'items' : 'keys'}`,
+        })
+        if (open) {
+          for (const [k, val] of entries) {
+            walk(val, isArr ? '' : k, level + 1, `${path}.${k}`)
+          }
+          out.push({ ...base, k: `${path}:close`, kind: 'close', text: closeBracket })
+        }
       }
 
-      return `<div class="root">${renderValue(parsed, null, 0, expanded, depth)}</div>`
+      walk(parsed, '', 0, '$')
+      return out
     })
+
+    const toggle = (path: string, open: boolean): void => {
+      overrides.set((cur) => ({ ...cur, [path]: !open }))
+    }
+
+    return { rows, parseError, toggle }
+  },
+  mount(_state, host) {
+    if (!host.hasAttribute('role')) host.setAttribute('role', 'tree')
+    if (!host.hasAttribute('aria-label')) host.setAttribute('aria-label', 'JSON tree')
   },
 })
-
 </controller>
-<div class="json-root" bind:this={contentEl}></div>
+
+<column class="json-root" gap="0" sx="font:mono text:sm leading:normal-plus">
+  {#if parseError() !== ''}
+    <span class="error" role="alert" sx="fg:destructive">Invalid JSON: {parseError()}</span>
+  {/if}
+  {#for row of rows() key={row.k}}
+    {#match row.kind}
+      {:case 'branch'}
+        <row class="node branch-row" role="treeitem" aria-level={row.ariaLevel} aria-expanded={row.open ? 'true' : 'false'} tabindex="0" gap="0" align="center"
+             on:click={() => toggle(row.path, row.open)}
+             on:keydown|key:Enter={() => toggle(row.path, row.open)}
+             sx="radius:sm cursor:pointer hover:bg:hover-bg">
+          {#for pad of row.pads key={pad.i}}
+            <span class="guide" sx="w:3 border-l:subtle"></span>
+          {/for}
+          <span class="caret" attr:data-open={row.open} aria-hidden="true" sx="fg:muted-foreground text:xs px:1 data-open:rotate:90">▶</span>
+          {#if row.label !== ''}
+            <span class="key" sx="weight:medium">"{row.label}"</span><span class="punc" sx="fg:muted-foreground">:&nbsp;</span>
+          {/if}
+          <span class="punc" sx="fg:muted-foreground">{row.openBracket}</span>
+          <span class="meta" sx="fg:muted-foreground text:xs bg:muted radius:full px:1 ml:1">{row.meta}</span>
+          {#if !row.open}
+            <span class="punc" sx="fg:muted-foreground">…{row.closeBracket}</span>
+          {/if}
+        </row>
+      {:case 'close'}
+        <row class="node" gap="0" align="center">
+          {#for pad of row.pads key={pad.i}}
+            <span class="guide" sx="w:3 border-l:subtle"></span>
+          {/for}
+          <span class="punc" sx="fg:muted-foreground px:1">{row.text}</span>
+        </row>
+      {:default}
+        <row class="node leaf" role="treeitem" aria-level={row.ariaLevel} gap="0" align="center" sx="radius:sm hover:bg:hover-bg">
+          {#for pad of row.pads key={pad.i}}
+            <span class="guide" sx="w:3 border-l:subtle"></span>
+          {/for}
+          {#if row.label !== ''}
+            <span class="key" sx="weight:medium px:1">"{row.label}"</span><span class="punc" sx="fg:muted-foreground">:&nbsp;</span>
+          {/if}
+          {#match row.kind}
+            {:case 'str'} <span class="s" sx="fg:success">{row.text}</span>
+            {:case 'num'} <span class="n" sx="fg:info">{row.text}</span>
+            {:case 'bool'} <span class="b" sx="fg:accent weight:medium">{row.text}</span>
+            {:case 'null'} <span class="null" sx="fg:muted-foreground">{row.text}</span>
+            {:default} <span class="punc" sx="fg:muted-foreground">{row.text}</span>
+          {/match}
+        </row>
+    {/match}
+  {/for}
+</column>

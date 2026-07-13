@@ -32,35 +32,31 @@ describe('<sui-json-view>', () => {
     expect(shadow(el).querySelector('[role="alert"]')).not.toBeNull()
   })
 
-  it('renders nested objects with details/summary', async () => {
+  it('renders nested objects as expandable treeitem rows', async () => {
     const { el } = mount(reg, 'sui-json-view', { data: '{"outer":{"inner":1}}', depth: '2' })
     await flush()
-    expect(shadow(el).querySelector('details')).not.toBeNull()
-    expect(shadow(el).querySelector('summary')).not.toBeNull()
+    expect(shadow(el).querySelector('[role="treeitem"][aria-expanded]')).not.toBeNull()
   })
 
-  it('respects depth — opens details at initial depth', async () => {
+  it('respects depth — branches at initial depth are open', async () => {
     const { el } = mount(reg, 'sui-json-view', { data: '{"a":{"b":1}}', depth: '1' })
     await flush()
-    const details = shadow(el).querySelectorAll('details[open]')
-    expect(details.length).toBeGreaterThan(0)
+    expect(shadow(el).querySelectorAll('[aria-expanded="true"]').length).toBeGreaterThan(0)
   })
 
-  it('expanded=true opens all details', async () => {
+  it('expanded=true opens every branch', async () => {
     const { el } = mount(reg, 'sui-json-view', { data: '{"a":{"b":{"c":1}}}', expanded: true, depth: '0' })
     await flush()
-    const allDetails = shadow(el).querySelectorAll('details')
-    const openDetails = shadow(el).querySelectorAll('details[open]')
-    expect(allDetails.length).toBeGreaterThan(0)
-    expect(openDetails.length).toBe(allDetails.length)
+    expect(shadow(el).querySelectorAll('[aria-expanded]').length).toBeGreaterThan(0)
+    expect(shadow(el).querySelectorAll('[aria-expanded="false"]').length).toBe(0)
   })
 
-  it('renders empty object without details', async () => {
+  it('renders empty object as a leaf, not a branch', async () => {
     const { el } = mount(reg, 'sui-json-view', { data: '{}' })
     await flush()
     const txt = shadow(el).textContent!
     expect(txt).toContain('{}')
-    expect(shadow(el).querySelector('details')).toBeNull()
+    expect(shadow(el).querySelector('[aria-expanded]')).toBeNull()
   })
 
   it('reacts to data attribute change', async () => {
