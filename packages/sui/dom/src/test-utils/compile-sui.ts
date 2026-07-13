@@ -152,6 +152,8 @@ export interface CompiledSui {
   css: string | null
   dts: string | null
   ssrHtml: string | null
+  /** The SFC's inline `<controller>` body, when the source declares one. */
+  controller: string | null
 }
 
 export function compileSui(source: string, opts: CompileOpts = {}): CompiledSui {
@@ -166,13 +168,26 @@ export function compileSui(source: string, opts: CompileOpts = {}): CompiledSui 
   // string (one parse here); the {kind:'ok'|'err',...} shape is byte-identical
   // to the wasm surface, so the branch below is unchanged.
   const result = JSON.parse(compile(source, optsJson)) as
-    | { kind: 'ok'; js: string; css: string | null; dts: string | null; ssrHtml: string | null }
+    | {
+        kind: 'ok'
+        js: string
+        css: string | null
+        dts: string | null
+        ssrHtml: string | null
+        controller: string | null
+      }
     | { kind: 'err'; message: string; line: number | null; col: number | null; category: string | null }
   if (result.kind === 'err') {
     const where = result.line != null ? ` (${result.line}:${result.col ?? 0})` : ''
     throw new Error(`sui-compiler: ${result.message}${where}`)
   }
-  return { js: result.js, css: result.css, dts: result.dts, ssrHtml: result.ssrHtml }
+  return {
+    js: result.js,
+    css: result.css,
+    dts: result.dts,
+    ssrHtml: result.ssrHtml,
+    controller: result.controller ?? null,
+  }
 }
 
 // The module shape a compiled view's
@@ -195,6 +210,9 @@ interface EvalDeps {
 
 function stripImports(js: string): string {
   return js
+    // type-only imports (an SFC controller body is TS, not the emitted JS)
+    .replace(/^\s*import\s+type\s+[^;\n]+;?\s*$/gm, '')
+    .replace(/^\s*import\s*\{\s*type\s[^}]*\}\s*from\s*["'][^"']+["']\s*;?\s*$/gm, '')
     // import { …names… } from "@ship/sui-runtime/internal" (the compiler's
     // emit specifier; internal re-exports the full runtime surface)
     .replace(
@@ -230,6 +248,14 @@ function stripImports(js: string): string {
  *  what deck compiles. */
 export function nativeCompileJson(source: string, optsJson: string): string {
   return ensureNative()(source, optsJson)
+}
+
+/** Evaluate an SFC's inline `<controller>` body and return its default export
+ *  (the controller definition the compiled template imports as `setup`). */
+export function evalInlineController(body: string): { setup: (ctx: unknown) => unknown } {
+  const src = stripImports(body).replace(/\bexport\s+default\s+/g, 'return ')
+  const fn = new Function('__runtime', '__dom', '__route', '__setup', src)
+  return fn(suiRuntime, suiDom, routeModule, undefined) as { setup: (ctx: unknown) => unknown }
 }
 
 /** Evaluate a compiled JS module body and return its default export. */

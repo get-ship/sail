@@ -171,13 +171,19 @@ fn lower_sx_value(
                 if let Some(m) = sui_lint::rules::sx::condition_media(s) {
                     (m, String::new(), String::new())
                 } else if let Some(base) = s.strip_prefix("group-") {
-                    match sui_lint::rules::sx::state_pseudo(base) {
+                    match sui_lint::rules::sx::state_pseudo(base)
+                        .map(str::to_string)
+                        .or_else(|| sui_lint::rules::sx::state_data(base))
+                    {
                         Some(p) => ("", format!(".sui-grp{p} "), String::new()),
                         None => continue,
                     }
                 } else {
-                    match sui_lint::rules::sx::state_pseudo(s) {
-                        Some(p) => ("", String::new(), p.to_string()),
+                    match sui_lint::rules::sx::state_pseudo(s)
+                        .map(str::to_string)
+                        .or_else(|| sui_lint::rules::sx::state_data(s))
+                    {
+                        Some(p) => ("", String::new(), p),
                         None => continue,
                     }
                 }

@@ -455,6 +455,19 @@ pub const STATE_PREFIXES: &[(&str, &str)] = &[
     ("sortable", "[aria-sort]"),
 ];
 
+/// `state-<value>:` — the component-state prefix. Keys on the reserved
+/// `data-state` attribute (`data-state="weekend"`), the single sanctioned
+/// place a component declares a visual state that is neither an ARIA state
+/// nor a CSS pseudo (out-of-month, weekend, in-range). One attribute, not a
+/// namespace: `data-*` at large stays closed.
+pub fn state_data(state: &str) -> Option<String> {
+    let v = state.strip_prefix("state-")?;
+    if v.is_empty() || !v.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-') {
+        return None;
+    }
+    Some(format!("[data-state~='{v}']"))
+}
+
 pub fn state_pseudo(state: &str) -> Option<&'static str> {
     STATE_PREFIXES.iter().find(|(n, _)| *n == state).map(|(_, p)| *p)
 }
@@ -499,13 +512,16 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 [state, prop, token] => {
                     let ok = state_pseudo(state).is_some()
                         || condition_media(state).is_some()
-                        || state.strip_prefix("group-").is_some_and(|b| state_pseudo(b).is_some());
+                        || state_data(state).is_some()
+                        || state.strip_prefix("group-").is_some_and(|b| {
+                            state_pseudo(b).is_some() || state_data(b).is_some()
+                        });
                     if !ok {
                         findings.push(mk(
                             path,
                             line,
                             col,
-                            format!("sx unknown state `{state}:` — the closed state set: hover:/focus:/focus-within:/active:/disabled:/current:/selected:/expanded:/busy:/checked:/pressed:/open: (group-<state>: reacts to an ancestor)"),
+                            format!("sx unknown state `{state}:` — the closed state set: hover:/focus:/focus-within:/active:/disabled:/current:/selected:/expanded:/busy:/checked:/pressed:/open:/sortable:, `state-<value>:` for a component state (data-state), or group-<state>: to react to an ancestor"),
                         ));
                         continue;
                     }

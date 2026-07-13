@@ -21,7 +21,7 @@
 //   await v.flush()
 //   v.unmount()
 
-import { compileSui, evalCompiledJs } from '@ship/sui-dom/test-utils'
+import { compileSui, evalCompiledJs, evalInlineController } from '@ship/sui-dom/test-utils'
 import { route as makeRoute } from '@ship/sui-runtime/route'
 import type { ControllerExport } from '@ship/sui-runtime'
 
@@ -150,14 +150,27 @@ export function renderComponent(
   // the custom element. When a controller is supplied, compile with the setup
   // marker so eval rewrites the `import setup` line to the injected controller
   // (mirrors renderView); otherwise the template renders without scope.
-  const usesController = opts.controller != null
-  const compiled = compileSui(source, {
+  // An SFC carries its controller inline — the compile returns the body and
+  // the emitted template imports it as `setup`. An explicit `opts.controller`
+  // (paired-file components, synthetic scopes) still wins.
+  const probe = compileSui(source, {
     componentName: tag,
     mode: 'component',
-    ...(usesController ? { setupMarker: SETUP_MARKER } : {}),
     ...(opts.sourcePath ? { sourcePath: opts.sourcePath } : {}),
   })
-  evalCompiledJs(compiled.js, opts.controller as never)
+  const inline = probe.controller
+  const usesController = opts.controller != null || inline != null
+  const compiled = usesController
+    ? compileSui(source, {
+        componentName: tag,
+        mode: 'component',
+        setupMarker: SETUP_MARKER,
+        ...(opts.sourcePath ? { sourcePath: opts.sourcePath } : {}),
+      })
+    : probe
+  const setup =
+    opts.controller ?? (inline != null ? evalInlineController(inline) : undefined)
+  evalCompiledJs(compiled.js, setup as never)
 
   const root = document.createElement('div')
   document.body.appendChild(root)

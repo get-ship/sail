@@ -20,12 +20,11 @@
 
 import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it } from 'vitest'
-import { renderComponent } from '@ship/test-setup'
+import '../sui-calendar.compiled.js'
+import { createContainerRegistry, mount, flush } from '../../test-utils'
 import { createCalendar } from '../engine'
 import type { Calendar, CalendarEvent } from '../engine'
-import calendarController from '../sui-calendar.controller'
 
-const SOURCE = readFileSync(new URL('../sui-calendar.sui', import.meta.url), 'utf8')
 
 const shadow = (el: HTMLElement): ShadowRoot | HTMLElement => el.shadowRoot ?? el
 
@@ -36,6 +35,7 @@ function clickShadow(el: HTMLElement, sel: string): void {
   target.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }))
 }
 
+const reg = createContainerRegistry()
 const live: Array<{ unmount(): void }> = []
 afterEach(() => {
   for (const v of live.splice(0)) {
@@ -50,8 +50,9 @@ afterEach(() => {
 /** Mount the calendar with a live engine fed through the prop:calendar identity. */
 function mountWith(events: CalendarEvent[], opts: Omit<Parameters<typeof createCalendar>[0], 'events' | 'initialDate'> = {}) {
   const calendar = createCalendar({ events, initialDate: '2026-06-15', ...opts })
-  const v = renderComponent(SOURCE, 'sui-calendar', { controller: calendarController })
-  ;(v.el as unknown as { calendar: Calendar }).calendar = calendar
+  const m = mount(reg, 'sui-calendar', {})
+  ;(m.el as unknown as { calendar: Calendar }).calendar = calendar
+  const v = { el: m.el, flush, unmount: () => m.el.remove() }
   return { v, calendar }
 }
 
@@ -97,10 +98,15 @@ describe('<sui-calendar> — month grid (#1)', () => {
   })
 
   it("today's cell carries aria-current=date (#3)", async () => {
-    const today = createCalendar({ events: [] }).focusDate() // engine seeds today
-    const { v } = mountWith([])
+    // The engine seeds itself on today; the grid it renders must mark that
+    // date. (mountWith pins an initialDate, so build the engine unpinned.)
+    const calendar = createCalendar({ events: [] })
+    const today = calendar.focusDate()
+    const m = mount(reg, 'sui-calendar', {})
+    ;(m.el as unknown as { calendar: Calendar }).calendar = calendar
+    const v = { el: m.el, flush, unmount: () => m.el.remove() }
     live.push(v)
-    await v.flush()
+    await flush()
     const cur = shadow(v.el).querySelector('[aria-current="date"]')
     expect(cur).not.toBeNull()
     expect(cur!.getAttribute('data-iso')).toBe(today)
@@ -112,11 +118,11 @@ describe('<sui-calendar> — view switching + navigation (#2/#3)', () => {
     const { v, calendar } = mountWith(EV)
     live.push(v)
     await v.flush()
-    expect(shadow(v.el).querySelector('[part=title]')!.textContent).toContain('June 2026')
+    expect(shadow(v.el).querySelector('.title')!.textContent).toContain('June 2026')
     calendar.setView('day')
     await v.flush()
     expect(v.el.getAttribute('view')).toBe('day')
-    expect(shadow(v.el).querySelector('[part=title]')!.textContent).toContain('Jun')
+    expect(shadow(v.el).querySelector('.title')!.textContent).toContain('Jun')
   })
 
   it('emits sui-view-change {view} (bubbles + composed) when the toolbar switches view', async () => {
@@ -154,14 +160,14 @@ describe('<sui-calendar> — week/day grid', () => {
     live.push(v)
     await v.flush()
     // 24 hourly slots over a 0..24 window.
-    expect(shadow(v.el).querySelectorAll('[part=time-axis] [data-slot]').length).toBe(24)
+    expect(shadow(v.el).querySelectorAll('.time-axis [data-slot]').length).toBe(24)
   })
 
   it('renders timed events as positioned lanes in the day column', async () => {
     const { v } = mountWith(EV, { initialView: 'day' })
     live.push(v)
     await v.flush()
-    const chip = shadow(v.el).querySelector('[part=time-grid] [data-event-id="a"]') as HTMLElement
+    const chip = shadow(v.el).querySelector('.time-grid [data-event-id="a"]') as HTMLElement
     expect(chip).not.toBeNull()
     // lane geometry from PositionedEvent → inline top/height.
     expect(chip.style.top).not.toBe('')
@@ -203,14 +209,14 @@ describe('<sui-calendar> — empty state precedence (#11)', () => {
     const { v } = mountWith([])
     live.push(v)
     await v.flush()
-    expect(shadow(v.el).querySelector('[part=empty]')).not.toBeNull()
+    expect(shadow(v.el).querySelector('.empty')).not.toBeNull()
   })
 
   it('does NOT render the empty part when events are present', async () => {
     const { v } = mountWith(EV)
     live.push(v)
     await v.flush()
-    expect(shadow(v.el).querySelector('[part=empty]')).toBeNull()
+    expect(shadow(v.el).querySelector('.empty')).toBeNull()
   })
 })
 
@@ -266,12 +272,10 @@ describe('<sui-calendar> — month grid keyboard operability (a11y #259)', () =>
 describe('<sui-calendar> — SSR fallback + density/token discipline', () => {
   it('parses the events type="string" SSR fallback when no engine identity is set', async () => {
     const json = JSON.stringify(EV)
-    const v = renderComponent(SOURCE, 'sui-calendar', {
-      controller: calendarController,
-      attrs: { events: json, 'focus-date': '2026-06-15' },
-    })
+    const m = mount(reg, 'sui-calendar', { events: json, 'focus-date': '2026-06-15' })
+    const v = { el: m.el, flush, unmount: () => m.el.remove() }
     live.push(v)
-    await v.flush()
+    await flush()
     const cell = shadow(v.el).querySelector('[data-iso="2026-06-15"]')!
     expect(cell.querySelector('[data-event-id="a"]')).not.toBeNull()
   })
@@ -285,13 +289,9 @@ describe('<sui-calendar> — SSR fallback + density/token discipline', () => {
     expect(Object.getOwnPropertyNames(proto)).not.toContain('dense')
   })
 
-  it('the component CSS contains no color-mix/oklch/hex/var-fallback literals (REVIEW gate, asserted)', () => {
-    const styleMatch = /<style>([\s\S]*?)<\/style>/.exec(SOURCE)
-    const css = styleMatch ? styleMatch[1]! : ''
-    expect(css).not.toMatch(/color-mix/)
-    expect(css).not.toMatch(/oklch/)
-    expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
-    // var(--token, fallback) — a comma inside a var() is a fallback smell.
-    expect(css).not.toMatch(/var\(\s*--[\w-]+\s*,/)
+  it('authors no CSS at all — the floor (REVIEW gate, asserted)', () => {
+    const src = readFileSync(new URL('../sui-calendar.sui', import.meta.url), 'utf8')
+    expect(src).not.toMatch(/<style[\s>]/)
+    expect(src).not.toMatch(/\sstyle="/)
   })
 })

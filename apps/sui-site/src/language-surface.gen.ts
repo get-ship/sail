@@ -1708,6 +1708,8 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-max-w-lg",
       "panel-max-w-md",
       "panel-max-w-sm",
+      "panel-min-h-cell",
+      "panel-min-h-daycol",
       "panel-min-w-lg",
       "panel-min-w-md",
       "panel-min-w-sm",
@@ -1772,6 +1774,8 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-max-w-lg",
       "panel-max-w-md",
       "panel-max-w-sm",
+      "panel-min-h-cell",
+      "panel-min-h-daycol",
       "panel-min-w-lg",
       "panel-min-w-md",
       "panel-min-w-sm",
@@ -1836,6 +1840,8 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-max-w-lg",
       "panel-max-w-md",
       "panel-max-w-sm",
+      "panel-min-h-cell",
+      "panel-min-h-daycol",
       "panel-min-w-lg",
       "panel-min-w-md",
       "panel-min-w-sm",
@@ -1900,6 +1906,8 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-max-w-lg",
       "panel-max-w-md",
       "panel-max-w-sm",
+      "panel-min-h-cell",
+      "panel-min-h-daycol",
       "panel-min-w-lg",
       "panel-min-w-md",
       "panel-min-w-sm",
@@ -1964,6 +1972,8 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-max-w-lg",
       "panel-max-w-md",
       "panel-max-w-sm",
+      "panel-min-h-cell",
+      "panel-min-h-daycol",
       "panel-min-w-lg",
       "panel-min-w-md",
       "panel-min-w-sm",
@@ -2028,6 +2038,8 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-max-w-lg",
       "panel-max-w-md",
       "panel-max-w-sm",
+      "panel-min-h-cell",
+      "panel-min-h-daycol",
       "panel-min-w-lg",
       "panel-min-w-md",
       "panel-min-w-sm",
@@ -2042,7 +2054,8 @@ export const SX_ATOMS: SxAtom[] = [
     "values": [
       "1",
       "2",
-      "3"
+      "3",
+      "none"
     ]
   },
   {
@@ -2183,12 +2196,30 @@ export const SX_ATOMS: SxAtom[] = [
     ]
   },
   {
+    "prop": "select",
+    "values": [
+      "none",
+      "text",
+      "auto"
+    ]
+  },
+  {
+    "prop": "text-align",
+    "values": [
+      "start",
+      "center",
+      "end"
+    ]
+  },
+  {
     "prop": "display",
     "values": [
       "block",
       "inline",
       "inline-block",
       "inline-flex",
+      "flex",
+      "contents",
       "none"
     ]
   },
@@ -2279,7 +2310,7 @@ export const SX_STATE_PREFIXES: Array<{ prefix: string; selector: string }> = [
   },
   {
     "prefix": "disabled",
-    "selector": ":disabled"
+    "selector": ":is(:disabled,[aria-disabled='true'])"
   },
   {
     "prefix": "current",

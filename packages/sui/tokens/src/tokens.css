@@ -204,6 +204,11 @@
   --tooltip-show-delay: 300ms;
   --tooltip-hide-delay: 100ms;
 
+  /* Calendar grid measurements — a month cell must fit a daynum + two chips;
+   * a day column spans 24 hours of slots. Grid geometry, like panel sizes. */
+  --panel-min-h-cell: 84px;
+  --panel-min-h-daycol: 864px;
+
   /* Viewport breakpoints — the canonical device classes. One family for
    * every consumer: the viewer's stage framing today, responsive media
    * prefixes when they land. */

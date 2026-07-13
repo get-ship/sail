@@ -11,16 +11,15 @@
 // Authority: build-spec §"GAP (drag-to-create/move, range selection)" —
 // the slices the engine now exposes. Cardinal 3: mutations only in on:* / mount.
 
-import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it } from 'vitest'
-import { renderComponent } from '@ship/test-setup'
+import '../sui-calendar.compiled.js'
+import { createContainerRegistry, mount, flush } from '../../test-utils'
 import { createCalendar } from '../engine'
 import type { Calendar, CalendarEvent } from '../engine'
-import calendarController from '../sui-calendar.controller'
 
-const SOURCE = readFileSync(new URL('../sui-calendar.sui', import.meta.url), 'utf8')
 const shadow = (el: HTMLElement): ShadowRoot | HTMLElement => el.shadowRoot ?? el
 
+const reg = createContainerRegistry()
 const live: Array<{ unmount(): void }> = []
 afterEach(() => {
   for (const v of live.splice(0)) {
@@ -34,8 +33,9 @@ afterEach(() => {
 
 function mountWith(events: CalendarEvent[], opts: Omit<Parameters<typeof createCalendar>[0], 'events' | 'initialDate'> = {}) {
   const calendar = createCalendar({ events, initialDate: '2026-06-15', ...opts })
-  const v = renderComponent(SOURCE, 'sui-calendar', { controller: calendarController })
-  ;(v.el as unknown as { calendar: Calendar }).calendar = calendar
+  const m = mount(reg, 'sui-calendar', {})
+  ;(m.el as unknown as { calendar: Calendar }).calendar = calendar
+  const v = { el: m.el, flush, unmount: () => m.el.remove() }
   return { v, calendar }
 }
 
@@ -117,10 +117,10 @@ describe('<sui-calendar> — drag-to-create (timed, day view)', () => {
     v.el.addEventListener('sui-event-create-intent', (e) => { evt = e as CustomEvent })
     await v.flush()
     // The day column carries a background slot grid: data-iso + data-minutes per slot.
-    const slots = shadow(v.el).querySelectorAll('[part=day-col] .slot-bg[data-minutes]')
+    const slots = shadow(v.el).querySelectorAll('.day-col .slot-bg[data-minutes]')
     expect(slots.length).toBeGreaterThan(0)
-    const from = shadow(v.el).querySelector('[part=day-col] .slot-bg[data-minutes="540"]')! // 09:00
-    const to = shadow(v.el).querySelector('[part=day-col] .slot-bg[data-minutes="660"]')! // 11:00
+    const from = shadow(v.el).querySelector('.day-col .slot-bg[data-minutes="540"]')! // 09:00
+    const to = shadow(v.el).querySelector('.day-col .slot-bg[data-minutes="660"]')! // 11:00
     pointer(from, 'pointerdown')
     pointer(to, 'pointermove')
     pointer(to, 'pointerup')
@@ -140,7 +140,7 @@ describe('<sui-calendar> — drag-to-create (timed, day view)', () => {
       intent = (e as CustomEvent).detail
     })
     await v.flush()
-    const slot = shadow(v.el).querySelector('[part=day-col] .slot-bg[data-minutes="600"]')! // 10:00
+    const slot = shadow(v.el).querySelector('.day-col .slot-bg[data-minutes="600"]')! // 10:00
     pointer(slot, 'pointerdown')
     pointer(slot, 'pointerup')
     await v.flush()
@@ -160,8 +160,8 @@ describe('<sui-calendar> — drag-to-move (timed, day view)', () => {
     let evt: CustomEvent | null = null
     v.el.addEventListener('sui-event-move', (e) => { evt = e as CustomEvent })
     await v.flush()
-    const chip = shadow(v.el).querySelector('[part=day-col] .timed-chip[data-event-id="a"]')!
-    const target = shadow(v.el).querySelector('[part=day-col] .slot-bg[data-minutes="660"]')! // 11:00
+    const chip = shadow(v.el).querySelector('.day-col .timed-chip[data-event-id="a"]')!
+    const target = shadow(v.el).querySelector('.day-col .slot-bg[data-minutes="660"]')! // 11:00
     pointer(chip, 'pointerdown')
     pointer(target, 'pointermove')
     pointer(target, 'pointerup')
@@ -186,7 +186,7 @@ describe('<sui-calendar> — drag-to-move (timed, day view)', () => {
       movedCount++
     })
     await v.flush()
-    const chip = shadow(v.el).querySelector('[part=day-col] .timed-chip[data-event-id="a"]')!
+    const chip = shadow(v.el).querySelector('.day-col .timed-chip[data-event-id="a"]')!
     pointer(chip, 'pointerdown')
     pointer(chip, 'pointerup') // released on the same chip — no slot move
     chip.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }))
