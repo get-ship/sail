@@ -26,103 +26,6 @@
     BASE_CSS — not authored here.
 -->
 
-<!-- Host baseline: surface-only sx props (display + text + line-height
-     + foreground). font-family has no sx token, so it stays in the
-     residual <style> below. -->
-<style>
-  /* Local markers so the css-token lint recognizes the tokens
-   * referenced from this residual block. */
-  --font-body: ; --font-mono: ; --heading-font: ; --heading-weight: ; --heading-tracking: ; --text-sm: ; --text-md: ; --text-lg: ; --text-xl: ; --text-2xl: ; --leading-tight: ; --leading-normal-plus: ; --tracking-tight: ; --muted-foreground: ; --primary: ; --selected-border: ; --surface-1: ; --surface-2: ; --muted: ; --border: ; --border-subtle: ; --tone-primary-bg: ; --ring-offset: ; --radius-sm: ; --radius-md: ; --space-1: ; --space-2: ; --space-3: ; --space-4: ; --space-5: ; --space-6: ;
-  /* Residual: the host's `font-family` (no font-family in sx); and the
-   * entire typography-of-prose surface — the h1-h6 margins, the a's
-   * text-decoration-color + hover, the code/pre/blockquote/table
-   * styling, the li::marker color, the strong weight, the th/td
-   * border + padding + tabular-nums, the thead th background, the
-   * tbody tr:last-child td bottom-border reset. None of these are
-   * simple surface tokens on a single element — they're an entire
-   * prose stylesheet for child elements rendered into .md-root
-   * (the parser writes HTML into .md-root, not via SUI elements),
-   * so sx can't apply. The host's [hidden] display:none is provided
-   * by the runtime's BASE_CSS and would be deduped at emit. */
-  .sui-markdown {
-    font-family: var(--font-body);
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--heading-font);
-    font-weight: var(--heading-weight);
-    letter-spacing: var(--heading-tracking);
-    line-height: var(--leading-tight);
-    margin: var(--space-5) 0 var(--space-2);
-  }
-  h1 { font-size: var(--text-2xl); line-height: var(--leading-tight); margin-top: var(--space-6); margin-bottom: var(--space-3); }
-  h2 { font-size: var(--text-xl); line-height: var(--leading-tight); margin-top: var(--space-6); margin-bottom: var(--space-3); }
-  h3 { font-size: var(--text-lg); margin-top: var(--space-5); margin-bottom: var(--space-2); }
-  h4, h5, h6 { font-size: var(--text-md); }
-  p { margin: var(--space-3) 0; }
-  a {
-    color: var(--primary);
-    text-decoration: underline;
-    text-decoration-color: var(--selected-border);
-    text-underline-offset: var(--ring-offset);
-  }
-  a:hover { text-decoration-color: var(--primary); }
-  code {
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    font-variant-numeric: tabular-nums;
-    padding: var(--space-1) var(--space-2);
-    border-radius: var(--radius-sm);
-    background: var(--surface-1);
-    border: 1px solid var(--border-subtle);
-  }
-  pre {
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    background: var(--surface-2);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
-    padding: var(--space-3) var(--space-4);
-    overflow-x: auto;
-    line-height: var(--leading-normal-plus);
-  }
-  pre code { background: transparent; border: none; padding: 0; }
-  blockquote {
-    margin: var(--space-4) 0;
-    padding: var(--space-2) var(--space-4);
-    border-left: 3px solid var(--primary);
-    color: var(--muted-foreground);
-    background: var(--tone-primary-bg);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  }
-  ul, ol { margin: var(--space-3) 0; padding-inline-start: var(--space-5); }
-  li { margin: var(--space-1) 0; }
-  li::marker { color: var(--muted-foreground); }
-  strong { font-weight: var(--font-weight-semibold); }
-  table {
-    border-collapse: collapse;
-    width: 100%;
-    margin: var(--space-3) 0;
-    font-size: var(--text-sm);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-  }
-  thead th {
-    background: var(--muted);
-    color: var(--foreground);
-    font-weight: var(--font-weight-semibold);
-  }
-  th, td {
-    border-bottom: 1px solid var(--border-subtle);
-    padding: var(--space-2) var(--space-3);
-    text-align: left;
-    font-variant-numeric: tabular-nums;
-  }
-  tbody tr:last-child td { border-bottom: 0; }
-</style>
-
-
 <controller>
 import { controller, bindHtml } from '@ship/sui-runtime'
 import type { Scope } from './sui-markdown.sui'
@@ -212,4 +115,6 @@ export default controller<Scope>({
 })
 
 </controller>
-<div sx="display:block text:base leading:normal fg:foreground" class="md-root" bind:this={contentEl}></div>
+<prose>
+  <div sx="display:block text:base" class="md-root" bind:this={contentEl}></div>
+</prose>

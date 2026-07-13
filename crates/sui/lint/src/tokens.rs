@@ -183,6 +183,7 @@ pub fn size_values() -> &'static [&'static str] {
                 // prefix would leak them into `w:`/`h:`.
                 t.starts_with("icon-size-")
                     || t.starts_with("control-h-")
+                    || t.starts_with("breakpoint-")
                     || t.starts_with("panel-max-")
                     || t.starts_with("panel-min-")
                     || t.starts_with("panel-ch-")

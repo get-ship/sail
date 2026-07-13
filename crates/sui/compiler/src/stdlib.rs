@@ -47,6 +47,7 @@ const SOURCES: &[(&str, &str)] = &[
     ("page", include_str!("../stdlib/page.sui")),
     ("breadcrumb", include_str!("../stdlib/breadcrumb.sui")),
     ("popover", include_str!("../stdlib/popover.sui")),
+    ("prose", include_str!("../stdlib/prose.sui")),
     ("combobox", include_str!("../stdlib/combobox.sui")),
     ("dropdown", include_str!("../stdlib/dropdown.sui")),
     ("menu-item", include_str!("../stdlib/menu-item.sui")),

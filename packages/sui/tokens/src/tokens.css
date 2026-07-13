@@ -204,6 +204,13 @@
   --tooltip-show-delay: 300ms;
   --tooltip-hide-delay: 100ms;
 
+  /* Viewport breakpoints — the canonical device classes. One family for
+   * every consumer: the viewer's stage framing today, responsive media
+   * prefixes when they land. */
+  --breakpoint-mobile: 390px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1280px;
+
   /* Font stacks. App-specific variable-weight fonts resolve at runtime if
    * loaded by Studio; daemon views fall back to the web-safe stacks. */
   --font-display-app: "Syne Variable", "Syne", "Inter", sans-serif;

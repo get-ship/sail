@@ -375,6 +375,7 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
             // name; the bare-number fallthrough is a spacing-scale step.
             _ if token.starts_with("icon-size-")
                 || token.starts_with("control-h-")
+                || token.starts_with("breakpoint-")
                 || token.starts_with("panel-") =>
             {
                 format!("var(--{token})")
