@@ -14,8 +14,8 @@
 //! {
 //!   "$comment": "generated — do not edit by hand. ...",
 //!   "primitives": {
-//!     "sui-button": {
-//!       "variant": { "values": ["solid","soft","outline","ghost","default"], "default": "default" },
+//!     "navbar": {
+//!       "placement": { "values": ["solid","soft","outline","ghost","default"], "default": "default" },
 //!       "tone":    { "values": ["default","primary",...],                    "default": "default" }
 //!     }
 //!   }
@@ -47,7 +47,7 @@ pub struct PropRule {
     pub default: Option<String>,
 }
 
-/// Registry: element-name (`"sui-button"`) → prop-name → rule.
+/// Registry: element-name (`"navbar"`) → prop-name → rule.
 pub type PrimitiveRegistry = BTreeMap<String, BTreeMap<String, PropRule>>;
 
 #[derive(Deserialize)]
@@ -73,10 +73,10 @@ mod tests {
     fn registry_parses() {
         let r = registry();
         // The bundled registry is generated; at minimum it should
-        // contain sui-button with variant + tone enums (canonical
+        // contain navbar with variant + tone enums (canonical
         // primitives that the regen tool always picks up).
-        let btn = r.get("sui-button").expect("sui-button missing from registry");
-        let variant = btn.get("variant").expect("variant prop missing");
+        let btn = r.get("navbar").expect("navbar missing from registry");
+        let variant = btn.get("placement").expect("variant prop missing");
         assert!(variant.values.is_some(), "variant should be enum-typed");
     }
 }

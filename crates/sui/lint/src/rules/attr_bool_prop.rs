@@ -1,4 +1,4 @@
-//! `sui-attr-bool-prop` — boolean props on `<sui-*>` components must be bound
+//! `sui-attr-bool-prop` — boolean props on registry components must be bound
 //! with `prop:`, not `attr:`.
 //!
 //! `attr:` stringifies its value and sets it as an HTML attribute. For a
@@ -8,11 +8,11 @@
 //! `prop:disabled={false}` passes the live boolean to the property.
 //!
 //! Scope and limits:
-//! - Only `attr:NAME={…}` bindings on `<sui-*>` tags whose registry entry
+//! - Only `attr:NAME={…}` bindings on tags whose registry entry
 //!   (`primitives.json`) declares `NAME` with `type="bool"` are flagged.
 //! - Native elements (`<option>`, `<button>`, `<input>`, `<details>`…) are not
 //!   in the registry, so their `attr:` bindings (correct there) never trip it.
-//! - Unknown `<sui-*>` tags and non-bool props are left alone.
+//! - Unknown tags and non-bool props are left alone.
 //! - HTML comments are skipped (primitives embed example tags in docblocks).
 
 use std::path::Path;
@@ -38,8 +38,9 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 None => break,
             }
         }
-        // Find the next `<sui-` opening tag.
-        if !(bytes[i] == b'<' && bytes.get(i + 1..i + 5) == Some(b"sui-")) {
+        // Any element opening tag; the registry lookup below is the filter
+        // (stdlib tags are bare — `alert`, `badge` — and unknown tags miss).
+        if !(bytes[i] == b'<' && bytes.get(i + 1).is_some_and(|b| b.is_ascii_lowercase())) {
             i += 1;
             continue;
         }

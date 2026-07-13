@@ -1,5 +1,6 @@
-//! `sui-prop-value` — static enum attribute values on `<sui-*>` elements
-//! must be one of the values declared by that primitive's `<prop>`.
+//! `sui-prop-value` — static enum attribute values on registry elements
+//! must be one of the values the element's stdlib `<component>{ props }`
+//! declaration allows.
 //!
 //! Catches the silent-typo failure mode: `tone="danger"` on a primitive
 //! whose tone enum is `default|primary|...|destructive`. Today the
@@ -19,9 +20,9 @@
 //!   and attribute-binding syntaxes (`attr:tone=…`, `bind:value=…`)
 //!   are skipped.
 //! - Only elements registered in `primitives.json` are validated.
-//!   Unknown `<sui-*>` tags (legitimate user-authored web components,
-//!   or new primitives not yet regenerated into the registry) emit
-//!   no findings.
+//!   Unknown tags (native HTML, user-authored web components, or new
+//!   stdlib elements not yet regenerated into the registry) emit no
+//!   findings.
 //! - Only props whose registry entry has a `values` set are validated.
 //!   Bool/string/number-typed props are not type-checked here.
 //!
@@ -80,10 +81,10 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 severity: Severity::Error,
                 message,
                 suggest: Some(format!(
-                    "Replace with one of: {}. Add a new enum value at the \
-                     primitive's <prop> declaration if a real new variant \
-                     is required, then `cargo run -p sui-lint --example \
-                     regen_primitives` to refresh the registry.",
+                    "Replace with one of: {}. If a real new variant is \
+                     required, add it to the prop's union in the stdlib \
+                     `<component>` declaration, then regenerate the registry \
+                     with `cargo run -p sui-compiler -- prop-registry`.",
                     allowed.join(", ")
                 )),
             });
@@ -92,7 +93,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     findings
 }
 
-/// One `<sui-foo …>` opening tag and its parsed attributes.
+/// One opening tag and its parsed attributes.
 struct SuiTag<'a> {
     name: &'a str,
     attributes: Vec<Attribute<'a>>,
@@ -116,7 +117,7 @@ enum AttrValue<'a> {
     Flag,
 }
 
-/// Walk every `<sui-*>` opening tag and parse its attributes. HTML
+/// Walk every element opening tag and parse its attributes. HTML
 /// comments (`<!-- ... -->`) are skipped — primitives frequently embed
 /// example tags in their leading docblock and we must not treat those
 /// as real call sites.
@@ -134,8 +135,11 @@ fn scan_sui_tags(source: &str) -> Vec<SuiTag<'_>> {
             // Unterminated comment — bail rather than scan to EOF.
             break;
         }
-        // Find next `<sui-`.
-        if !(bytes[i] == b'<' && bytes.get(i + 1..i + 5) == Some(b"sui-")) {
+        // Any element opening tag. The registry lookup is the filter:
+        // stdlib tags are bare (`navbar`, `avatar`), and a tag the registry
+        // doesn't know is skipped by the caller — so scanning every tag
+        // costs one BTreeMap miss for `<p>` and friends.
+        if !(bytes[i] == b'<' && bytes.get(i + 1).is_some_and(|b| b.is_ascii_lowercase())) {
             i += 1;
             continue;
         }
@@ -384,7 +388,7 @@ mod tests {
 
     #[test]
     fn valid_button_value_passes() {
-        let src = r#"<sui-button variant="solid" tone="primary" size="sm">Go</sui-button>"#;
+        let src = r#"<badge pill tone="primary" size="sm">Go</badge>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
@@ -392,7 +396,7 @@ mod tests {
     fn unknown_tone_value_reports_with_suggestion() {
         // The motivating case: tone="danger" silently fell through to
         // the default before this rule existed.
-        let src = r#"<sui-button tone="danger">Sign out</sui-button>"#;
+        let src = r#"<badge tone="danger">Sign out</badge>"#;
         let f = run(src);
         assert_eq!(rule_ids(&f), vec![RULE_ID]);
         assert!(f[0].message.contains("`danger`"), "{}", f[0].message);
@@ -405,13 +409,13 @@ mod tests {
 
     #[test]
     fn dynamic_binding_is_skipped() {
-        let src = r#"<sui-button tone={accent()}>X</sui-button>"#;
+        let src = r#"<badge tone={accent()}>X</badge>"#;
         assert!(run(src).is_empty());
     }
 
     #[test]
     fn bound_attr_namespace_is_skipped() {
-        let src = r#"<sui-button bind:tone="anything" attr:tone="danger">X</sui-button>"#;
+        let src = r#"<badge bind:tone="anything" attr:tone="danger">X</badge>"#;
         assert!(run(src).is_empty());
     }
 
@@ -425,25 +429,25 @@ mod tests {
     #[test]
     fn unknown_prop_is_skipped() {
         // tone is registered, but `flavor` is not — leave it alone.
-        let src = r#"<sui-button flavor="grape" tone="primary">X</sui-button>"#;
+        let src = r#"<badge flavor="grape" tone="primary">X</badge>"#;
         assert!(run(src).is_empty());
     }
 
     #[test]
     fn position_points_at_value_start() {
-        let src = "<sui-button tone=\"danger\">X</sui-button>";
+        let src = "<badge tone=\"danger\">X</badge>";
         let f = run(src);
         assert_eq!(f.len(), 1);
         assert_eq!(f[0].line, 1);
         // 1-based col of the first char of `danger`.
-        // `<sui-button tone="` = 18 chars; `d` starts at col 19.
-        assert_eq!(f[0].col, 19);
+        // `<badge tone="` = 13 chars; `d` starts at col 14.
+        assert_eq!(f[0].col, 14);
     }
 
     #[test]
     fn mustache_inside_literal_is_dynamic() {
         // `tone="{x()}"` — value is dynamic, do not validate.
-        let src = r#"<sui-button tone="{accentToken()}">X</sui-button>"#;
+        let src = r#"<badge tone="{accentToken()}">X</badge>"#;
         assert!(run(src).is_empty());
     }
 
@@ -451,14 +455,14 @@ mod tests {
     fn comment_block_is_skipped() {
         // Primitives often quote example tags in a leading docblock —
         // those are not real call sites.
-        let src = r#"<!-- <sui-button tone="danger"> -->
-<sui-button tone="primary">X</sui-button>"#;
+        let src = r#"<!-- <badge tone="danger"> -->
+<badge tone="primary">X</badge>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
     #[test]
     fn multiple_findings_on_one_tag() {
-        let src = r#"<sui-button variant="grape" tone="danger" size="huge">X</sui-button>"#;
+        let src = r#"<badge variant="grape" tone="danger" size="huge">X</badge>"#;
         let f = run(src);
         assert_eq!(f.len(), 3, "{f:?}");
         assert!(f.iter().all(|x| x.rule == RULE_ID));

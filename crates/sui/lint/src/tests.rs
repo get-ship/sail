@@ -244,21 +244,21 @@ fn lint_tpl(source: &str) -> Vec<crate::Finding> {
 
 #[test]
 fn attr_bool_on_sui_component_reports() {
-    let f = lint_tpl(r#"<sui-button attr:disabled={busy()}>Go</sui-button>"#);
-    assert_eq!(f.len(), 1, "attr:disabled on sui-button is a bool prop: {f:?}");
-    assert!(f[0].message.contains("prop:disabled"), "msg: {}", f[0].message);
+    let f = lint_tpl(r#"<alert attr:dismissible={busy()}>Go</alert>"#);
+    assert_eq!(f.len(), 1, "attr:dismissible on alert is a bool prop: {f:?}");
+    assert!(f[0].message.contains("prop:dismissible"), "msg: {}", f[0].message);
 }
 
 #[test]
 fn attr_bool_multiline_tag_reports() {
-    let f = lint_tpl("<sui-button\n  variant=\"ghost\"\n  attr:loading={busy()}>x</sui-button>");
+    let f = lint_tpl("<badge\n  tone=\"primary\"\n  attr:pill={busy()}>x</badge>");
     assert_eq!(f.len(), 1, "multi-line tag bool attr should report: {f:?}");
 }
 
 #[test]
 fn prop_bool_passes() {
-    let f = lint_tpl(r#"<sui-button prop:disabled={busy()}>Go</sui-button>"#);
-    assert!(f.is_empty(), "prop:disabled is correct: {f:?}");
+    let f = lint_tpl(r#"<alert prop:dismissible={busy()}>Go</alert>"#);
+    assert!(f.is_empty(), "prop:dismissible is correct: {f:?}");
 }
 
 #[test]

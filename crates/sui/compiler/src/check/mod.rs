@@ -460,7 +460,7 @@ mod gate_tests {
     /// clean `Ok` for valid sources.
     #[test]
     fn gate_rejects_lint_error_rule_run_skips() {
-        let src = r#"<sui-table size="huge">x</sui-table>"#;
+        let src = r#"<badge size="huge">x</badge>"#;
         let program = parse::parse(src).unwrap();
         let err = super::gate(&program, src, None, None, &[]).unwrap_err();
         assert_eq!(err.category.as_deref(), Some("sui-prop-value"), "{err:?}");
@@ -468,7 +468,7 @@ mod gate_tests {
 
     #[test]
     fn gate_passes_valid_source() {
-        let src = r#"<sui-table size="md">x</sui-table>"#;
+        let src = r#"<badge size="md">x</badge>"#;
         let program = parse::parse(src).unwrap();
         super::gate(&program, src, None, None, &[]).unwrap();
     }
@@ -478,7 +478,7 @@ mod gate_tests {
     /// line 1; the round-trip offset → line_col lands there.
     #[test]
     fn gate_error_span_round_trips_to_finding_location() {
-        let src = "<div>\n  <sui-table size=\"huge\">x</sui-table>\n</div>";
+        let src = "<div>\n  <badge size=\"huge\">x</badge>\n</div>";
         let program = parse::parse(src).unwrap();
         let err = super::gate(&program, src, None, None, &[]).unwrap_err();
         let span = err.span.expect("gate error carries a span");
