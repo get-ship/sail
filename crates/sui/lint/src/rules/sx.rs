@@ -49,6 +49,9 @@ enum Kind {
     TextStyle,
     Select,
     TextAlign,
+    BorderStyle,
+    Pointer,
+    Aspect,
     // preset: value picks a curated composition
     Ring,
     Border,
@@ -85,6 +88,9 @@ fn prop_kind(prop: &str) -> Option<Kind> {
         "text-style" => TextStyle,
         "select" => Select,
         "text-align" => TextAlign,
+        "border-style" => BorderStyle,
+        "pointer" => Pointer,
+        "aspect" => Aspect,
         "tracking" => Tracking,
         "ring" => Ring,
         // A border on ONE side. Same value vocabulary as `border` — this adds a
@@ -118,7 +124,7 @@ const ALL_PROPS: &[&str] = &[
     "bg", "fg", "radius", "text", "shadow", "z", "weight", "leading", "tracking", "font",
     "ring", "border", "border-t", "border-r", "border-b", "border-l",
     "w", "h", "min-w", "min-h", "max-w", "max-h", "grow", "opacity", "wrap", "case", "rotate",
-    "top", "right", "bottom", "left", "text-style", "select", "text-align",
+    "top", "right", "bottom", "left", "text-style", "select", "text-align", "border-style", "pointer", "aspect",
     "display", "overflow", "overflow-x", "overflow-y", "position", "cursor", "visibility",
 ];
 
@@ -167,6 +173,9 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
         TextStyle => vec!["italic", "normal"],
         Select => vec!["none", "text", "auto"],
         TextAlign => vec!["start", "center", "end"],
+        BorderStyle => vec!["solid", "dashed", "dotted", "none"],
+        Pointer => vec!["auto", "none"],
+        Aspect => vec!["square", "video", "auto"],
         Ring => {
             let mut v = vec!["none"];
             v.extend(crate::tokens::color_values());
@@ -236,6 +245,9 @@ fn css_props(prop: &str) -> &'static [&'static str] {
         "text-style" => &["font-style"],
         "select" => &["user-select"],
         "text-align" => &["text-align"],
+        "border-style" => &["border-style"],
+        "pointer" => &["pointer-events"],
+        "aspect" => &["aspect-ratio"],
         "tracking" => &["letter-spacing"],
         "ring" => &["box-shadow"],
         "border" => &["border"],
@@ -351,6 +363,13 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
         TextStyle => token.to_string(),
         Select => token.to_string(),
         TextAlign => token.to_string(),
+        BorderStyle => token.to_string(),
+        Pointer => token.to_string(),
+        Aspect => match token {
+            "square" => "1 / 1".into(),
+            "video" => "16 / 9".into(),
+            _ => "auto".into(),
+        },
         Tracking => format!("var(--tracking-{token})"),
         // a focus ring at the standard ring width in the chosen tone (or off).
         Ring => if token == "none" {

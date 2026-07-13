@@ -86,131 +86,6 @@
     size: 'md' | 'sm' | 'lg',
   },
 }</component>
-<!--
-  Residual <style> — what sx/variants/theme can't express in this primitive:
-  - .sui-date-picker base (the new <host sx="..."> directive is position/display-able,
-    but vertical-align:middle isn't tokenized).
-  - [part='wrap'] multi-property transition (border-color + box-shadow).
-  - .sui-date-picker[disabled] [part='wrap'] `filter: saturate(0.4)` (filter has no sx kw).
-  - input.entry: flex:1 + min-width:0 (the <row>'s child needs flex shorthand,
-    not in sx), border:0 / outline:0 / background:transparent / padding:0 (raw
-    resets; sx has no `none`/`transparent`); font: inherit + font-family /
-    font-size (font: shorthand and per-property inheritance).
-  - input.entry::placeholder color cue.
-  - input.entry:disabled cursor.
-  - .cal-icon flex:0 0 auto + pointer-events:none.
-  - .panel top: calc(100% + var(--space-1)) + left:0 (absolute math — sx has
-    position: but no `top:` / `left:` vocab); font-family: var(--font-body);
-    font-size: var(--dp-fs).
-  - .nav margin-bottom: var(--space-1).
-  - .nav button: appearance:none / border:0 / background:transparent /
-    padding:0 / font:inherit / font-size (font: shorthand + per-property);
-    line-height (raw); display:inline-flex + align-items:center +
-    justify-content:center (raw flex centering for the glyph within).
-  - .label flex:1 + text-align:center (raw flex + text-align not in sx).
-  - .dow text-align:center (text-align not in sx).
-  - .day button: appearance:none / border:0 / background:transparent /
-    font:inherit (raw); color/cursor/text-align:center/padding/border-radius
-    on the bare state; box-shadow:none on .selected; the inset outline
-    (focused:not(.selected)); the inset 1px (today:not(.selected)) — not
-    the sx ring: model.
--->
-<style>
-  /* Size channels: md base; sm/lg override (was <theme prop=size>). */
-  .sui-date-picker[size='sm'] { --dp-h: var(--control-h-sm); --dp-fs: var(--text-sm);  --dp-px: var(--space-2); }
-  .sui-date-picker[size='lg'] { --dp-h: var(--control-h-lg); --dp-fs: var(--text-md);   --dp-px: var(--space-3); }
-  .sui-date-picker {
-    --dp-h: var(--control-h-md); --dp-fs: var(--text-base); --dp-px: var(--space-2_5);
-    position: relative;
-    display: inline-flex;
-    width: 100%;
-    vertical-align: middle;
-  }
-  [part='wrap'] {
-    transition:
-      border-color var(--duration-fast) var(--ease-out),
-      box-shadow var(--duration-fast) var(--ease-out);
-  }
-  .sui-date-picker[disabled] [part='wrap'] { filter: saturate(0.4); }
-  input.entry {
-    flex: 1;
-    min-width: 0;
-    border: 0;
-    outline: 0;
-    background: transparent;
-    padding: 0;
-    font: inherit;
-    font-family: var(--font-body);
-    font-size: var(--dp-fs);
-    color: var(--foreground);
-  }
-  input.entry::placeholder { color: var(--muted-foreground); }
-  input.entry:disabled { cursor: not-allowed; }
-
-  .cal-icon { flex: 0 0 auto; pointer-events: none; }
-
-  .panel {
-    top: calc(100% + var(--space-1));
-    left: 0;
-    font-family: var(--font-body);
-    font-size: var(--dp-fs);
-  }
-  .nav { margin-bottom: var(--space-1); }
-  .nav button {
-    appearance: none;
-    border: 0;
-    background: transparent;
-    padding: 0;
-    font: inherit;
-    font-size: var(--text-md);
-    line-height: var(--leading-none);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .label { flex: 1; text-align: center; }
-  .dow { text-align: center; }
-  .day {
-    appearance: none;
-    border: 0;
-    background: transparent;
-    color: var(--foreground);
-    font: inherit;
-    cursor: pointer;
-    padding: var(--space-2) 0;
-    text-align: center;
-    border-radius: var(--radius-sm);
-  }
-  .day:disabled { color: var(--muted-foreground); opacity: 0.4; cursor: not-allowed; }
-  .day.empty { visibility: hidden; }
-  .day:hover:not(:disabled):not(.empty) { background: var(--hover-bg); }
-  .day.selected {
-    background: var(--tone);
-    color: var(--tone-contrast);
-    font-weight: var(--font-weight-semibold);
-    box-shadow: none;
-  }
-  .day.focused:not(.selected) {
-    outline: var(--ring-width) solid var(--tone-ring);
-    outline-offset: calc(-1 * var(--ring-width));
-  }
-  .day.today:not(.selected) {
-    box-shadow: inset 0 0 0 1px var(--border-strong);
-  }
-  .wrap {
-    /* De-translated from sx (min-h:dp-h px:dp-px) — ad-hoc channels are not
-       sx vocabulary. */
-    min-height: var(--dp-h);
-    padding-inline: var(--dp-px);
-  }
-  .sui-date-picker[disabled] .wrap {
-    background: var(--muted);
-    color: var(--muted-foreground);
-    cursor: not-allowed;
-  }
-</style>
-
-
 <controller>
 import { controller, derived, ref, signal } from '@ship/sui-runtime'
 import type { ViewScope } from '@ship/sui-runtime'
@@ -226,6 +101,8 @@ interface DayCell {
   today: boolean
   disabled: boolean
   label: string
+  /** data-state channel: empty | today (selected/focused ride ARIA). */
+  state: string
 }
 interface DayHeader { key: string; label: string }
 
@@ -302,7 +179,7 @@ export default controller({
         cells.push({
           key: `e-${i}`, iso: '', day: 0,
           empty: true, selected: false, focused: false, today: false,
-          disabled: false, label: '',
+          disabled: false, label: '', state: 'empty',
         })
       }
       for (let d = 1; d <= totalDays; d++) {
@@ -310,7 +187,7 @@ export default controller({
         const dt = new Date(year, month, d)
         const dayName = DOW[dt.getDay()] ?? ''
         cells.push({
-          key: iso,
+          key: `${iso}|${sel === iso ? 's' : ''}${foc === iso ? 'f' : ''}${td === iso ? 't' : ''}`,
           iso, day: d,
           empty: false,
           selected: sel === iso,
@@ -318,6 +195,7 @@ export default controller({
           today: td === iso,
           disabled: Boolean((mn && iso < mn) || (mx && iso > mx)),
           label: `${dayName}, ${MONTHS[month]} ${d}, ${year}`,
+          state: td === iso ? 'today' : '',
         })
       }
       return cells
@@ -374,7 +252,9 @@ export default controller({
       state.open = false
     }
 
-    const inputEl = state.inputEl as HTMLInputElement | null
+    // The ref lands during the template's mount, so read the signal (not the
+    // unwrapped proxy value, which is still null when this body runs).
+    const inputEl = (state.$signals.inputEl as unknown as () => HTMLInputElement | null)()
     if (!inputEl) return
 
     const onInputClick = () => openPanel()
@@ -484,27 +364,39 @@ export default controller({
 })
 
 </controller>
-<row class="wrap" gap="2" align="center" sx="w:full bg:background fg:foreground border:tone-border radius:md focus-within:ring:tone-ring">
-  <input class="entry input" type="text" name={name()} placeholder={placeholder()} disabled={disabled()} autocomplete="off" inputmode="numeric" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
-  <svg class="cal-icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" sx="w:icon-size-sm h:icon-size-sm fg:muted-foreground">
+<column class="dp-root" gap="0" sx="position:relative display:inline-flex w:full">
+<row class="wrap" gap="2" align="center" sx="w:full h:control-h-md px:2_5 bg:background fg:foreground border:tone-border radius:md focus-within:ring:tone-ring">
+  <input class="entry input" type="text" flush sx="grow:1 min-w:0 font:body disabled:cursor:not-allowed" name={name()} placeholder={placeholder()} disabled={disabled()} autocomplete="off" inputmode="numeric" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
+  <svg class="cal-icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" sx="w:icon-size-sm h:icon-size-sm min-w:icon-size-sm fg:muted-foreground pointer:none">
     <rect x="2" y="3" width="12" height="11" rx="1.5"></rect>
     <path d="M2 6h12 M5 1.5v3 M11 1.5v3"></path>
   </svg>
 </row>
 {#if open() && !disabled()}
-  <div class="panel" role="dialog" aria-label="Choose date" bind:this={panelEl} sx="position:absolute z:popover w:panel-max-w-sm p:2 bg:popover fg:popover-foreground border:border radius:md shadow:md">
-    <row class="nav" align="center" justify="between">
+  <div class="panel" role="dialog" aria-label="Choose date" bind:this={panelEl} sx="position:absolute left:0 z:popover w:panel-max-w-sm p:2 mt:1 bg:popover fg:popover-foreground border:border radius:md shadow:md font:body">
+    <row class="nav" align="center" justify="between" sx="mb:1">
       <button class="nav-btn" type="button" data-act="prev" aria-label="Previous month" sx="w:icon-size-2xl h:icon-size-2xl radius:sm fg:muted-foreground cursor:pointer hover:bg:muted hover:fg:foreground">‹</button>
-      <span class="label" sx="weight:semibold">{monthLabel()}</span>
+      <span class="label" sx="grow:1 weight:semibold text-align:center">{monthLabel()}</span>
       <button class="nav-btn" type="button" data-act="next" aria-label="Next month" sx="w:icon-size-2xl h:icon-size-2xl radius:sm fg:muted-foreground cursor:pointer hover:bg:muted hover:fg:foreground">›</button>
     </row>
     <grid class="grid" role="grid" cols="7" gap="1">
       {#for d of dayHeaders() key={d.key}}
-        <span class="dow" role="columnheader" sx="text:sm fg:muted-foreground py:1 weight:medium">{d.label}</span>
+        <span class="dow" role="columnheader" sx="text:sm fg:muted-foreground py:1 weight:medium text-align:center">{d.label}</span>
       {/for}
       {#for cell of monthCells() key={cell.key}}
-        <button type="button" disabled={cell.disabled} aria-label={cell.label} aria-selected={cell.selected ? 'true' : 'false'} tabindex={cell.focused ? '0' : '-1'} class="day {cell.empty ? 'empty' : ''} {cell.selected ? 'selected' : ''} {cell.focused ? 'focused' : ''} {cell.today ? 'today' : ''}" data-iso={cell.iso}>{cell.empty ? '' : cell.day}</button>
+        <button
+          type="button"
+          class="day"
+          disabled={cell.disabled}
+          aria-label={cell.label}
+          aria-selected={cell.selected ? 'true' : 'false'}
+          tabindex={cell.focused ? '0' : '-1'}
+          data-state={cell.state || null}
+          data-iso={cell.iso}
+          sx="h:control-h-sm radius:sm text-align:center cursor:pointer fg:foreground hover:bg:hover-bg selected:bg:primary selected:fg:primary-foreground disabled:fg:muted-foreground disabled:opacity:50 disabled:cursor:not-allowed state-empty:visibility:hidden state-today:ring:border-strong focus:ring:ring"
+        >{cell.empty ? '' : cell.day}</button>
       {/for}
     </grid>
   </div>
 {/if}
+</column>

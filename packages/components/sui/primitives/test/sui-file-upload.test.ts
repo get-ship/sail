@@ -125,15 +125,15 @@ describe('<sui-file-upload>', () => {
     expect(shadow(el).querySelectorAll('.file-item').length).toBe(1)
   })
 
-  it('dragover toggles the over class; dragleave clears it', async () => {
+  it('dragover marks the drop state; dragleave clears it', async () => {
     const { el } = mount(reg, 'sui-file-upload')
     const dz = dropzone(el)
     dz.dispatchEvent(new Event('dragover', { bubbles: true, cancelable: true }))
     await flush()
-    expect(dz.classList.contains('over')).toBe(true)
+    expect(dz.getAttribute('data-state')).toBe('over')
     dz.dispatchEvent(new Event('dragleave', { bubbles: true }))
     await flush()
-    expect(dz.classList.contains('over')).toBe(false)
+    expect(dz.getAttribute('data-state')).toBeNull()
   })
 
   it('without multiple, second selection replaces the first', async () => {
@@ -245,19 +245,19 @@ describe('<sui-file-upload>', () => {
     expect(el.getAttribute('tone')).toBe('success')
   })
 
-  it('exposes parts for external styling', async () => {
+  it('exposes its anatomy for external styling', async () => {
     const { el } = mount(reg, 'sui-file-upload')
-    expect(shadow(el).querySelector('[part~="dropzone"]')).not.toBeNull()
-    expect(shadow(el).querySelector('[part~="input"]')).not.toBeNull()
+    expect(shadow(el).querySelector('.dropzone')).not.toBeNull()
+    expect(shadow(el).querySelector('.input')).not.toBeNull()
 
     // Trigger a file selection so file-list parts render.
     const inp = fileInput(el)
     setInputFiles(inp, [makeFile('a.txt', 4)])
     inp.dispatchEvent(new Event('change', { bubbles: true }))
     await flush()
-    expect(shadow(el).querySelector('[part~="file-list"]')).not.toBeNull()
-    expect(shadow(el).querySelector('[part~="file-item"]')).not.toBeNull()
-    expect(shadow(el).querySelector('[part~="remove"]')).not.toBeNull()
+    expect(shadow(el).querySelector('.file-list')).not.toBeNull()
+    expect(shadow(el).querySelector('.file-item')).not.toBeNull()
+    expect(shadow(el).querySelector('.remove')).not.toBeNull()
   })
 
   it('cleanup on disconnect — no leaked effects', () => {

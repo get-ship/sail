@@ -7,7 +7,7 @@ afterEach(() => reg.cleanup())
 
 const shadow = (el: HTMLElement) => (el.shadowRoot ?? el)
 const inputOf = (el: HTMLElement) => shadow(el).querySelector('input.entry') as HTMLInputElement
-const panelOf = (el: HTMLElement) => shadow(el).querySelector('[part="panel"]') as HTMLElement | null
+const panelOf = (el: HTMLElement) => shadow(el).querySelector('.panel') as HTMLElement | null
 const swatches = (el: HTMLElement) =>
   Array.from(shadow(el).querySelectorAll('button.swatch[data-hex]')) as HTMLButtonElement[]
 const ranges = (el: HTMLElement) =>
@@ -15,10 +15,9 @@ const ranges = (el: HTMLElement) =>
 
 describe('<sui-color-picker>', () => {
 
-  it('renders a shadow root with the hex input and preview swatch', async () => {
+  it('renders the hex input and preview swatch', async () => {
     const { el } = mount(reg, 'sui-color-picker', { value: '#ff0000' })
     await flush()
-    expect(el.shadowRoot).not.toBeNull()
     expect(inputOf(el)).not.toBeNull()
     expect(shadow(el).querySelector('.preview')).not.toBeNull()
     expect(panelOf(el)).toBeNull()

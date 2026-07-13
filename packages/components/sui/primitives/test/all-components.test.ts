@@ -33,14 +33,20 @@ interface PortCase {
   shadowPart: string
 }
 
+// Components that dissolved into the language (button, separator, tabs, tab,
+// input, dialog…) are L1 elements, not custom elements — they are covered by
+// the l1-conformance harness, not this per-component smoke net.
 const ports: PortCase[] = [
-  // sui-button, sui-separator, sui-status-dot, sui-skeleton, sui-card
-  // dissolved to bare <button>/<hr>/<span dot>/<span skeleton>/<card>
-  // (L1 contract) — no longer custom elements, so they drop out of this
-  // per-port smoke net.
-  { tag: 'sui-tabs',       attr: 'variant', value: 'pill',  shadowPart: '.strip' },
-  { tag: 'sui-tab',        attr: 'name',  value: 'one',     shadowPart: 'button' },
-  { tag: 'sui-input',      attr: 'size',  value: 'lg',      shadowPart: 'input' },
+  { tag: 'sui-tree',       attr: 'size',  value: 'sm',      shadowPart: '.empty' },
+  { tag: 'sui-tree-grid',  attr: 'size',  value: 'sm',      shadowPart: '.empty' },
+  { tag: 'sui-json-view',  attr: 'depth', value: '2',       shadowPart: '.json-root' },
+  { tag: 'sui-timeline',   attr: 'hidden', value: '',       shadowPart: '.list' },
+  { tag: 'sui-file-upload', attr: 'accept', value: 'image/*', shadowPart: '.dropzone' },
+  { tag: 'sui-color-picker', attr: 'size', value: 'lg',     shadowPart: '.wrap' },
+  { tag: 'sui-date-picker', attr: 'size', value: 'lg',      shadowPart: '.wrap' },
+  { tag: 'sui-calendar',   attr: 'view',  value: 'month',   shadowPart: '.cal' },
+  { tag: 'sui-markdown',   attr: 'value', value: '# hi',    shadowPart: '.md-root' },
+  { tag: 'sui-diff',       attr: 'from',  value: 'a',       shadowPart: '[data-line-kind]' },
 ]
 
 describe.each(ports)('<$tag>', ({ tag, attr, value, shadowPart }) => {

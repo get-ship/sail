@@ -571,6 +571,12 @@ const DIALOG_SKIN_CSS =
   ":where(input[flush])::placeholder { color: var(--muted-foreground); }\n" +
   // A ul serving as a listbox is a widget, not a document list.
   ":where(ul[role='listbox']) { list-style: none; margin: 0; padding: 0; }\n" +
+  // A disabled composite (a component that hosts controls) reads muted and
+  // stops taking input — one rule, not a per-component reimplementation.
+  ":where([data-component][disabled]) { color: var(--muted-foreground); filter: saturate(0.6); pointer-events: none; }\n" +
+  // Native range/checkbox/radio take the platform's own theming hook — the
+  // tone channel fills it, so a toned control paints without author CSS.
+  ":where(input[type='range'], input[type='checkbox'], input[type='radio']) { accent-color: var(--tone, var(--primary)); }\n" +
   '@media (prefers-reduced-motion: reduce) { :where(dialog)::backdrop { transition: none; } }\n' +
   // Scroll-lock — pure CSS, no JS. showModal() sets the [open] attribute, so an
   // open modal anywhere freezes the page behind it.

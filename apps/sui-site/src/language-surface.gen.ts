@@ -2212,6 +2212,30 @@ export const SX_ATOMS: SxAtom[] = [
     ]
   },
   {
+    "prop": "border-style",
+    "values": [
+      "solid",
+      "dashed",
+      "dotted",
+      "none"
+    ]
+  },
+  {
+    "prop": "pointer",
+    "values": [
+      "auto",
+      "none"
+    ]
+  },
+  {
+    "prop": "aspect",
+    "values": [
+      "square",
+      "video",
+      "auto"
+    ]
+  },
+  {
     "prop": "display",
     "values": [
       "block",

@@ -206,6 +206,8 @@ meter:-moz-meter-sub-sub-optimum::-moz-meter-bar { background: var(--destructive
 :where(input[flush]) { border: 0; outline: 0; background: transparent; padding: 0; margin: 0; font: inherit; color: var(--foreground); }
 :where(input[flush])::placeholder { color: var(--muted-foreground); }
 :where(ul[role='listbox']) { list-style: none; margin: 0; padding: 0; }
+:where([data-component][disabled]) { color: var(--muted-foreground); filter: saturate(0.6); pointer-events: none; }
+:where(input[type='range'], input[type='checkbox'], input[type='radio']) { accent-color: var(--tone, var(--primary)); }
 @media (prefers-reduced-motion: reduce) { :where(dialog)::backdrop { transition: none; } }
 :where(html):has(dialog[open]) { overflow: hidden; }
 :where(dialog[side]) { inset: 0; width: auto; height: auto; max-width: none; max-height: none; border-radius: 0; }

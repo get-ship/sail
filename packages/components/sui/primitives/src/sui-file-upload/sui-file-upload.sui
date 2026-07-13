@@ -34,144 +34,6 @@
     disabled: false,
   },
 }</component>
-<!--
-  NEW SURFACE (re-port from feat/next, parity-gate pass)
-  ─────────────────────────────────────────────────────────────────────
-  - tone is a GLOBAL framework channel now (contracts.css / suiTonesSheet).
-    No <theme> block, no per-component .sui-file-upload[tone='…'] redeclaration.
-    The tone prop still reflects on the host (so the catalog contract
-    is intact) and the dropzone's `over` variant reads var(--tone-ring)
-    / var(--tone-bg) directly — the framework fills them from whichever
-    tone the host's [tone] attribute names.
-  - The .remove dismiss button is a framework `<button ghost sm>` — no
-    hand-styled color/hover/focus/padding/background. The framework's
-    L1 control skin (adoptSuiSheets now carries the button contracts)
-    supplies them. The .remove class is kept for the test selector
-    (anatomy is class-based, see <parity-gate>).
-  - sx is closed-vocab (tokens + tone-* channels only). The dropzone
-    geometry, padding, border, color, file-item row layout, file-doc
-    icon, file-name/file-size, and error all live in sx; <style> keeps
-    only what sx/variants cannot express (dashed border + multi-prop
-    transition + saturate filter / pointer-events for the compound
-    .sui-file-upload[disabled] + the host font defaults + the file-list top
-    margin that lives on a class and is target-able through a single
-    class rule + the dropzone focus ring that pairs an outline with
-    the variant tint).
-  - <row>/<column> primitives replace the hand-rolled flex/grid in
-    feat/next's <sui-stack> containers.
-  - L1 <input type="file"> is hidden via the existing input[type='file']
-    rule (no L1 file-input control in the framework).
--->
-<style>
-  .sui-file-upload {
-    display: block;
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-  }
-  .sui-file-upload[disabled] {
-    color: var(--muted-foreground);
-    filter: saturate(0.6);
-    pointer-events: none;
-  }
-  [part~='dropzone'] {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-2);
-    padding: var(--space-6) var(--space-4);
-    border: var(--space-1_25) dashed var(--border);
-    border-radius: var(--radius-lg);
-    background: transparent;
-    cursor: pointer;
-    color: var(--muted-foreground);
-    user-select: none;
-    text-align: center;
-    transition:
-      border-color var(--duration-fast) var(--ease-out),
-      background-color var(--duration-fast) var(--ease-out);
-  }
-  [part~='dropzone']:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-ring-offset);
-  }
-  [part~='dropzone']:not(.over) { border-style: dashed; }
-  [part~='dropzone'].over {
-    border-style: dashed;
-    border-color: var(--tone-ring);
-    background: var(--tone-bg);
-  }
-  .icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--space-9);
-    height: var(--space-9);
-    border-radius: var(--radius-lg);
-    background: var(--muted);
-    color: var(--muted-foreground);
-    font-size: var(--text-lg);
-    line-height: 1;
-    flex: none;
-    transition: background-color var(--duration-fast), color var(--duration-fast);
-  }
-  [part~='dropzone'].over .icon {
-    background: var(--selected-bg);
-    color: var(--tone-ring);
-  }
-  input[type='file'] { display: none; }
-  .file-list { margin-top: var(--space-2); }
-  .file-item {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    background: var(--surface-1);
-    color: var(--foreground);
-  }
-  .file-doc-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--control-h-md);
-    height: var(--control-h-md);
-    border-radius: var(--radius-md);
-    background: var(--tone-info-bg);
-    color: var(--tone-info-fg);
-    flex: none;
-  }
-  .file-meta { flex: 1; min-width: 0; }
-  .file-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--foreground);
-  }
-  .file-size {
-    color: var(--muted-foreground);
-    font-size: var(--text-xs);
-    font-variant-numeric: tabular-nums;
-    flex-shrink: 0;
-  }
-  .error {
-    color: var(--destructive);
-    margin-top: var(--space-1);
-    padding: 0 var(--space-1);
-  }
-  @media (prefers-reduced-motion: reduce) {
-    [part~='dropzone'] { transition: none; }
-  }
-  .sui-file-upload[hidden] { display: none; }
-  .sui-file-upload[disabled] { opacity: 0.75; cursor: not-allowed; }
-  .sui-file-upload[over] .dropzone {
-    border-color: var(--tone-ring);
-    background: var(--tone-bg);
-  }
-</style>
-
-
 <controller>
 import { controller, derived, ref, signal } from '@ship/sui-runtime'
 import type { ViewScope } from '@ship/sui-runtime'
@@ -331,29 +193,29 @@ export default controller({
 })
 
 </controller>
-<div class="dropzone" class:over={over()} role="button" tabindex={disabled() ? '-1' : '0'} aria-label={accept() ? 'Upload files (' + accept() + ')' : 'Upload files'} aria-disabled={disabled() ? 'true' : 'false'} bind:this={dropzoneEl}>
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-  </span>
-  <span>Drag &amp; drop or <span style="color:var(--primary);text-decoration:underline;text-underline-offset:2px">browse</span></span>
-</div>
-<input class="input" type="file" accept={accept()} multiple={multiple()} aria-hidden="true" tabindex="-1" bind:this={inputEl} />
+<center class="dropzone" gap="2" data-state={over() ? 'over' : null} role="button" tabindex={disabled() ? '-1' : '0'} aria-label={accept() ? 'Upload files (' + accept() + ')' : 'Upload files'} aria-disabled={disabled() ? 'true' : 'false'} bind:this={dropzoneEl} sx="group py:6 px:4 border:border border-style:dashed radius:lg cursor:pointer fg:muted-foreground select:none text-align:center focus:ring:ring state-over:border:tone-ring state-over:bg:tone-bg">
+  <row class="icon" align="center" justify="center" gap="0" aria-hidden="true" sx="w:9 h:9 min-w:9 radius:lg bg:muted fg:muted-foreground text:lg leading:none group-state-over:bg:selected-bg group-state-over:fg:tone-ring">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" sx="w:icon-size-md h:icon-size-md"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+  </row>
+  <span>Drag &amp; drop or <span sx="fg:primary">browse</span></span>
+</center>
+<input class="input" type="file" sx="display:none" accept={accept()} multiple={multiple()} aria-hidden="true" tabindex="-1" bind:this={inputEl} />
 {#if errorMsg()}
   <div class="error" role="alert" sx="text:sm fg:destructive">{errorMsg()}</div>
 {/if}
 {#if displayFiles().length > 0}
-  <column class="file-list" gap="1" aria-live="polite" bind:this={fileListEl}>
+  <column class="file-list" gap="1" aria-live="polite" bind:this={fileListEl} sx="mt:2">
     {#for f of displayFiles() key={f.key}}
-      <div class="file-item">
-        <span class="file-doc-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2 2V8z"/><path d="M14 2v6h6"/></svg>
+      <row class="file-item" align="center" gap="3">
+        <span class="file-doc-icon" aria-hidden="true" sx="display:inline-flex fg:muted-foreground">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" sx="w:icon-size-sm h:icon-size-sm"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2 2V8z"/><path d="M14 2v6h6"/></svg>
         </span>
-        <column class="file-meta" gap="1">
-          <span class="file-name">{f.name}</span>
-          <span class="file-size">{f.sizeStr}</span>
+        <column class="file-meta" gap="1" sx="grow:1 min-w:0">
+          <span class="file-name" sx="text:sm fg:foreground wrap:truncate">{f.name}</span>
+          <span class="file-size" sx="text:xs fg:muted-foreground">{f.sizeStr}</span>
         </column>
-        <button ghost sm class="remove" type="button" data-idx={f.idx} aria-label={'Remove ' + f.name}>×</button>
-      </div>
+        <button variant="ghost" size="sm" class="remove" type="button" data-idx={f.idx} aria-label={'Remove ' + f.name}>×</button>
+      </row>
     {/for}
   </column>
 {/if}
