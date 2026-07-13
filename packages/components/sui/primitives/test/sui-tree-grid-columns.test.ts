@@ -224,9 +224,9 @@ describe('<sui-tree-grid> — column VISIBILITY via the reused engine', () => {
     await flush()
     const srcRow = shadow!.querySelector('[role="row"][data-node-id="src"]') as HTMLElement
     const cells = srcRow.querySelectorAll('[role="gridcell"]')
-    const firstCaret = (cells[0] as HTMLElement).querySelector('.caret .sui-icon')
+    const firstCaret = (cells[0] as HTMLElement).querySelector('[data-action="toggle"] .sui-icon')
     expect(firstCaret).not.toBeNull()
-    expect((cells[1] as HTMLElement).querySelector('.caret')).toBeNull()
+    expect((cells[1] as HTMLElement).querySelector('[data-action="toggle"]')).toBeNull()
   })
 
   it('a column header exposes a hide control (the reused dropdown-menu pattern)', async () => {
@@ -244,7 +244,7 @@ describe('<sui-tree-grid> — column RESIZE via the reused engine', () => {
   it('exposes a resize handle on each resizable column header', async () => {
     const { shadow } = mountGrid(true)
     await flush()
-    const handle = headerFor(shadow, 'Name').querySelector('.resize-handle')
+    const handle = headerFor(shadow, 'Name').querySelector('[data-action="resize"]')
     expect(handle).not.toBeNull()
   })
 
@@ -272,7 +272,7 @@ describe('<sui-tree-grid> — column RESIZE via the reused engine', () => {
     await flush()
     const spy = vi.spyOn(tree, 'setColumnSizing')
     const handle = headerFor(shadow, 'Name').querySelector(
-      '.resize-handle',
+      '[data-action="resize"]',
     ) as HTMLElement
     handle.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, clientX: 100 }))
     document.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: 140 }))

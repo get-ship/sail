@@ -30,8 +30,8 @@ describe('<sui-component-viewer>', () => {
     const el = mount({ name: 'badge' }, '<badge slot="stage">Live</badge>')
     await flush()
     expect(customElements.get('sui-component-viewer')).toBeDefined()
-    expect(el.querySelector('.name')!.textContent).toBe('badge')
-    expect(el.querySelector('.stage')).not.toBeNull()
+    expect(el.querySelector('h2')!.textContent).toBe('badge')
+    expect(el.querySelector('[slot="stage"]')).not.toBeNull()
   })
 
   it('the specimen is the host-supplied component, not a re-render', async () => {
@@ -85,7 +85,7 @@ describe('<sui-component-viewer>', () => {
       { name: 'variant', type: 'solid · soft', desc: '' },
     ]
     await flush()
-    const codes = [...el.querySelectorAll('.props code')].map((c) => c.textContent)
+    const codes = [...el.querySelectorAll('code')].map((c) => c.textContent)
     expect(codes).toEqual(['tone', 'variant'])
   })
 
@@ -93,8 +93,8 @@ describe('<sui-component-viewer>', () => {
     const el = mount({ name: 'icon' }, '<icon slot="stage" name="check"></icon>')
     await flush()
     expect(el.querySelector('[data-variant]')).toBeNull()
-    expect(el.querySelector('.props')).toBeNull()
-    expect(el.querySelector('.usage')).toBeNull()
-    expect(el.querySelector('.stage')).not.toBeNull()
+    expect(el.querySelector('code')).toBeNull()
+    expect(el.querySelector('code-block')).toBeNull()
+    expect(el.querySelector('[slot="stage"]')).not.toBeNull()
   })
 })

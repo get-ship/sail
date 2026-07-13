@@ -323,13 +323,13 @@ export default controller({
         else if (act === 'next') moveView(1)
         return
       }
-      const day = t.closest?.('button.day[data-iso]') as HTMLButtonElement | null
+      const day = t.closest?.('button[data-iso]') as HTMLButtonElement | null
       if (day && !day.disabled) commit(day.dataset.iso ?? '')
     }
 
     const onShadowKeydown = (e: KeyboardEvent) => {
       if (!state.open) return
-      const inPanel = (e.target as HTMLElement | null)?.closest?.('.panel')
+      const inPanel = (e.target as HTMLElement | null)?.closest?.('[role="dialog"]')
       if (inPanel) onPanelKeydown(e)
     }
 
@@ -364,29 +364,28 @@ export default controller({
 })
 
 </controller>
-<column class="dp-root" gap="0" sx="position:relative display:inline-flex w:full">
-<row class="wrap" gap="2" align="center" sx="w:full h:control-h-md px:2_5 bg:background fg:foreground border:tone-border radius:md focus-within:ring:tone-ring">
-  <input class="entry input" type="text" flush sx="grow:1 min-w:0 font:body disabled:cursor:not-allowed" name={name()} placeholder={placeholder()} disabled={disabled()} autocomplete="off" inputmode="numeric" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
-  <svg class="cal-icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" sx="w:icon-size-sm h:icon-size-sm min-w:icon-size-sm fg:muted-foreground pointer:none">
+<column gap="0" sx="position:relative display:inline-flex w:full">
+<row gap="2" align="center" sx="w:full h:control-h-md px:2_5 bg:background fg:foreground border:tone-border radius:md focus-within:ring:tone-ring">
+  <input type="text" flush sx="grow:1 min-w:0 font:body disabled:cursor:not-allowed" name={name()} placeholder={placeholder()} disabled={disabled()} autocomplete="off" inputmode="numeric" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
+  <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" sx="w:icon-size-sm h:icon-size-sm min-w:icon-size-sm fg:muted-foreground pointer:none">
     <rect x="2" y="3" width="12" height="11" rx="1.5"></rect>
     <path d="M2 6h12 M5 1.5v3 M11 1.5v3"></path>
   </svg>
 </row>
 {#if open() && !disabled()}
-  <div class="panel" role="dialog" aria-label="Choose date" bind:this={panelEl} sx="position:absolute left:0 z:popover w:panel-max-w-sm p:2 mt:1 bg:popover fg:popover-foreground border:border radius:md shadow:md font:body">
-    <row class="nav" align="center" justify="between" sx="mb:1">
-      <button class="nav-btn" type="button" data-act="prev" aria-label="Previous month" sx="w:icon-size-2xl h:icon-size-2xl radius:sm fg:muted-foreground cursor:pointer hover:bg:muted hover:fg:foreground">‹</button>
-      <span class="label" sx="grow:1 weight:semibold text-align:center">{monthLabel()}</span>
-      <button class="nav-btn" type="button" data-act="next" aria-label="Next month" sx="w:icon-size-2xl h:icon-size-2xl radius:sm fg:muted-foreground cursor:pointer hover:bg:muted hover:fg:foreground">›</button>
+  <div role="dialog" aria-label="Choose date" bind:this={panelEl} sx="position:absolute left:0 z:popover w:panel-max-w-sm p:2 mt:1 bg:popover fg:popover-foreground border:border radius:md shadow:md font:body">
+    <row align="center" justify="between" sx="mb:1">
+      <button type="button" data-act="prev" aria-label="Previous month" sx="w:icon-size-2xl h:icon-size-2xl radius:sm fg:muted-foreground cursor:pointer hover:bg:muted hover:fg:foreground">‹</button>
+      <span sx="grow:1 weight:semibold text-align:center">{monthLabel()}</span>
+      <button type="button" data-act="next" aria-label="Next month" sx="w:icon-size-2xl h:icon-size-2xl radius:sm fg:muted-foreground cursor:pointer hover:bg:muted hover:fg:foreground">›</button>
     </row>
-    <grid class="grid" role="grid" cols="7" gap="1">
+    <grid role="grid" cols="7" gap="1">
       {#for d of dayHeaders() key={d.key}}
-        <span class="dow" role="columnheader" sx="text:sm fg:muted-foreground py:1 weight:medium text-align:center">{d.label}</span>
+        <span role="columnheader" sx="text:sm fg:muted-foreground py:1 weight:medium text-align:center">{d.label}</span>
       {/for}
       {#for cell of monthCells() key={cell.key}}
         <button
           type="button"
-          class="day"
           disabled={cell.disabled}
           aria-label={cell.label}
           aria-selected={cell.selected ? 'true' : 'false'}

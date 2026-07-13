@@ -7,7 +7,7 @@ afterEach(() => reg.cleanup())
 
 const shadow = (el: HTMLElement) => (el.shadowRoot ?? el)
 const dropzone = (el: HTMLElement) =>
-  shadow(el).querySelector('.dropzone') as HTMLDivElement
+  shadow(el).querySelector('[role="button"]') as HTMLDivElement
 const fileInput = (el: HTMLElement) =>
   shadow(el).querySelector('input[type="file"]') as HTMLInputElement
 
@@ -39,8 +39,8 @@ describe('<sui-file-upload>', () => {
 
   it('default state: no files, no error, dropzone not in over state', () => {
     const { el } = mount(reg, 'sui-file-upload')
-    expect(shadow(el).querySelector('.file-list')).toBeNull()
-    expect(shadow(el).querySelector('.error')).toBeNull()
+    expect(shadow(el).querySelector('[aria-live="polite"]')).toBeNull()
+    expect(shadow(el).querySelector('[role="alert"]')).toBeNull()
     expect(dropzone(el).classList.contains('over')).toBe(false)
   })
 
@@ -122,7 +122,7 @@ describe('<sui-file-upload>', () => {
     fireDrop(dropzone(el), [f])
     await flush()
     expect(detail!.files[0]!.name).toBe('dropped.txt')
-    expect(shadow(el).querySelectorAll('.file-item').length).toBe(1)
+    expect(shadow(el).querySelectorAll('[aria-live="polite"] > *').length).toBe(1)
   })
 
   it('dragover marks the drop state; dragleave clears it', async () => {
@@ -145,9 +145,9 @@ describe('<sui-file-upload>', () => {
     setInputFiles(inp, [makeFile('two.txt', 4)])
     inp.dispatchEvent(new Event('change', { bubbles: true }))
     await flush()
-    const items = shadow(el).querySelectorAll('.file-item')
+    const items = shadow(el).querySelectorAll('[aria-live="polite"] > *')
     expect(items.length).toBe(1)
-    expect(items[0]!.querySelector('.file-name')!.textContent).toBe('two.txt')
+    expect(items[0]!.textContent).toContain('two.txt')
   })
 
   it('with multiple, selections accumulate', async () => {
@@ -159,7 +159,7 @@ describe('<sui-file-upload>', () => {
     setInputFiles(inp, [makeFile('b.txt', 4)])
     inp.dispatchEvent(new Event('change', { bubbles: true }))
     await flush()
-    const items = shadow(el).querySelectorAll('.file-item')
+    const items = shadow(el).querySelectorAll('[aria-live="polite"] > *')
     expect(items.length).toBe(2)
   })
 
@@ -169,8 +169,8 @@ describe('<sui-file-upload>', () => {
     setInputFiles(inp, [makeFile('big.bin', 500)])
     inp.dispatchEvent(new Event('change', { bubbles: true }))
     await flush()
-    expect(shadow(el).querySelector('.file-item')).toBeNull()
-    const err = shadow(el).querySelector('.error')
+    expect(shadow(el).querySelector('[aria-live="polite"] > *')).toBeNull()
+    const err = shadow(el).querySelector('[role="alert"]')
     expect(err).not.toBeNull()
     expect(err!.textContent).toMatch(/exceeds max size/)
   })
@@ -181,8 +181,8 @@ describe('<sui-file-upload>', () => {
     setInputFiles(inp, [makeFile('doc.txt', 8, 'text/plain')])
     inp.dispatchEvent(new Event('change', { bubbles: true }))
     await flush()
-    expect(shadow(el).querySelector('.file-item')).toBeNull()
-    const err = shadow(el).querySelector('.error')
+    expect(shadow(el).querySelector('[aria-live="polite"] > *')).toBeNull()
+    const err = shadow(el).querySelector('[role="alert"]')
     expect(err).not.toBeNull()
     expect(err!.textContent).toMatch(/not an accepted file type/)
   })
@@ -193,8 +193,8 @@ describe('<sui-file-upload>', () => {
     setInputFiles(inp, [makeFile('readme.md', 8, 'text/markdown')])
     inp.dispatchEvent(new Event('change', { bubbles: true }))
     await flush()
-    expect(shadow(el).querySelectorAll('.file-item').length).toBe(1)
-    expect(shadow(el).querySelector('.error')).toBeNull()
+    expect(shadow(el).querySelectorAll('[aria-live="polite"] > *').length).toBe(1)
+    expect(shadow(el).querySelector('[role="alert"]')).toBeNull()
   })
 
   it('disabled reflects on host and disables the dropzone interaction', async () => {
@@ -215,7 +215,7 @@ describe('<sui-file-upload>', () => {
     fireDrop(dropzone(el), [makeFile('x.txt', 4)])
     await flush()
     expect(detail).toBeNull()
-    expect(shadow(el).querySelector('.file-item')).toBeNull()
+    expect(shadow(el).querySelector('[aria-live="polite"] > *')).toBeNull()
   })
 
   it('remove button deletes the file and fires sui-change with the new list', async () => {
@@ -224,18 +224,18 @@ describe('<sui-file-upload>', () => {
     setInputFiles(inp, [makeFile('a.txt', 4), makeFile('b.txt', 4)])
     inp.dispatchEvent(new Event('change', { bubbles: true }))
     await flush()
-    expect(shadow(el).querySelectorAll('.file-item').length).toBe(2)
+    expect(shadow(el).querySelectorAll('[aria-live="polite"] > *').length).toBe(2)
 
     let detail: { files: File[] } | null = null
     el.addEventListener('sui-change', (e) => {
       detail = (e as CustomEvent).detail
     })
     const firstRemove = shadow(el).querySelector(
-      'button.remove[data-idx="0"]',
+      'button[data-idx="0"][aria-label^="Remove"]',
     ) as HTMLButtonElement
     firstRemove.click()
     await flush()
-    expect(shadow(el).querySelectorAll('.file-item').length).toBe(1)
+    expect(shadow(el).querySelectorAll('[aria-live="polite"] > *').length).toBe(1)
     expect(detail!.files.length).toBe(1)
     expect(detail!.files[0]!.name).toBe('b.txt')
   })
@@ -245,19 +245,19 @@ describe('<sui-file-upload>', () => {
     expect(el.getAttribute('tone')).toBe('success')
   })
 
-  it('exposes its anatomy for external styling', async () => {
+  it('publishes its anatomy as semantics — the same hooks a screen reader uses', async () => {
     const { el } = mount(reg, 'sui-file-upload')
-    expect(shadow(el).querySelector('.dropzone')).not.toBeNull()
-    expect(shadow(el).querySelector('.input')).not.toBeNull()
+    expect(shadow(el).querySelector('[role="button"]')).not.toBeNull()
+    expect(shadow(el).querySelector('input[type="file"]')).not.toBeNull()
 
     // Trigger a file selection so file-list parts render.
     const inp = fileInput(el)
     setInputFiles(inp, [makeFile('a.txt', 4)])
     inp.dispatchEvent(new Event('change', { bubbles: true }))
     await flush()
-    expect(shadow(el).querySelector('.file-list')).not.toBeNull()
-    expect(shadow(el).querySelector('.file-item')).not.toBeNull()
-    expect(shadow(el).querySelector('.remove')).not.toBeNull()
+    expect(shadow(el).querySelector('[aria-live="polite"]')).not.toBeNull()
+    expect(shadow(el).querySelector('[aria-live="polite"] > *')).not.toBeNull()
+    expect(shadow(el).querySelector('button[aria-label^="Remove"]')).not.toBeNull()
   })
 
   it('cleanup on disconnect — no leaked effects', () => {

@@ -173,7 +173,7 @@ export default controller({
     // Event delegation for the dynamic .remove buttons inside the file list.
     const onShadowClick = (e: Event) => {
       const target = e.target as HTMLElement | null
-      const btn = target?.closest?.('button.remove') as HTMLElement | null
+      const btn = target?.closest?.('button[data-idx]') as HTMLElement | null
       if (!btn || !(host.shadowRoot ?? host).contains(btn)) return
       const idx = Number(btn.dataset.idx)
       if (Number.isInteger(idx)) removeAt(idx)
@@ -193,28 +193,28 @@ export default controller({
 })
 
 </controller>
-<center class="dropzone" gap="2" data-state={over() ? 'over' : null} role="button" tabindex={disabled() ? '-1' : '0'} aria-label={accept() ? 'Upload files (' + accept() + ')' : 'Upload files'} aria-disabled={disabled() ? 'true' : 'false'} bind:this={dropzoneEl} sx="group py:6 px:4 border:border border-style:dashed radius:lg cursor:pointer fg:muted-foreground select:none text-align:center focus:ring:ring state-over:border:tone-ring state-over:bg:tone-bg">
-  <row class="icon" align="center" justify="center" gap="0" aria-hidden="true" sx="w:9 h:9 min-w:9 radius:lg bg:muted fg:muted-foreground text:lg leading:none group-state-over:bg:selected-bg group-state-over:fg:tone-ring">
+<center gap="2" data-state={over() ? 'over' : null} role="button" tabindex={disabled() ? '-1' : '0'} aria-label={accept() ? 'Upload files (' + accept() + ')' : 'Upload files'} aria-disabled={disabled() ? 'true' : 'false'} bind:this={dropzoneEl} sx="group py:6 px:4 border:border border-style:dashed radius:lg cursor:pointer fg:muted-foreground select:none text-align:center focus:ring:ring state-over:border:tone-ring state-over:bg:tone-bg">
+  <row align="center" justify="center" gap="0" aria-hidden="true" sx="w:9 h:9 min-w:9 radius:lg bg:muted fg:muted-foreground text:lg leading:none group-state-over:bg:selected-bg group-state-over:fg:tone-ring">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" sx="w:icon-size-md h:icon-size-md"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
   </row>
   <span>Drag &amp; drop or <span sx="fg:primary">browse</span></span>
 </center>
-<input class="input" type="file" sx="display:none" accept={accept()} multiple={multiple()} aria-hidden="true" tabindex="-1" bind:this={inputEl} />
+<input type="file" sx="display:none" accept={accept()} multiple={multiple()} aria-hidden="true" tabindex="-1" bind:this={inputEl} />
 {#if errorMsg()}
-  <div class="error" role="alert" sx="text:sm fg:destructive">{errorMsg()}</div>
+  <div role="alert" sx="text:sm fg:destructive">{errorMsg()}</div>
 {/if}
 {#if displayFiles().length > 0}
-  <column class="file-list" gap="1" aria-live="polite" bind:this={fileListEl} sx="mt:2">
+  <column gap="1" aria-live="polite" bind:this={fileListEl} sx="mt:2">
     {#for f of displayFiles() key={f.key}}
-      <row class="file-item" align="center" gap="3">
-        <span class="file-doc-icon" aria-hidden="true" sx="display:inline-flex fg:muted-foreground">
+      <row align="center" gap="3">
+        <span aria-hidden="true" sx="display:inline-flex fg:muted-foreground">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" sx="w:icon-size-sm h:icon-size-sm"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2 2V8z"/><path d="M14 2v6h6"/></svg>
         </span>
-        <column class="file-meta" gap="1" sx="grow:1 min-w:0">
-          <span class="file-name" sx="text:sm fg:foreground wrap:truncate">{f.name}</span>
-          <span class="file-size" sx="text:xs fg:muted-foreground">{f.sizeStr}</span>
+        <column gap="1" sx="grow:1 min-w:0">
+          <span sx="text:sm fg:foreground wrap:truncate">{f.name}</span>
+          <span sx="text:xs fg:muted-foreground">{f.sizeStr}</span>
         </column>
-        <button variant="ghost" size="sm" class="remove" type="button" data-idx={f.idx} aria-label={'Remove ' + f.name}>×</button>
+        <button variant="ghost" size="sm" type="button" data-idx={f.idx} aria-label={'Remove ' + f.name}>×</button>
       </row>
     {/for}
   </column>

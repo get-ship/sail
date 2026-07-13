@@ -292,15 +292,15 @@ export default controller({
 
 </controller>
 <error-boundary fallback-text="The specimen threw while rendering.">
-  <column gap="2" class="frame" sx="position:relative min-h:8 font:body fg:foreground">
+  <column gap="2" sx="position:relative min-h:8 font:body fg:foreground">
     {#if compiling()}
-      <row class="compiling" align="center" justify="center" sx="p:4">
+      <row align="center" justify="center" sx="p:4">
         <sui-spinner size="sm" label="Compiling"></sui-spinner>
       </row>
     {/if}
 
     {#if compileError() !== null}
-      <column class="compile-error" gap="2" data-test="compile-error">
+      <column gap="2" data-test="compile-error">
         <alert tone="destructive">{compileErrorSummary()}</alert>
         <div role="region" aria-label="text code block" sx="bg:surface-2 fg:foreground border:subtle radius:md overflow:hidden">
           <header sx="p:2 px:3 text:xs fg:muted-foreground bg:muted weight:medium tracking:wide">TEXT</header>
@@ -311,7 +311,7 @@ export default controller({
     {/if}
 
     {#if runtimeError() !== null}
-      <column class="runtime-error" gap="2" data-test="runtime-error">
+      <column gap="2" data-test="runtime-error">
         <alert tone="destructive">The specimen threw at runtime.</alert>
         <div role="region" aria-label="text code block" sx="bg:surface-2 fg:foreground border:subtle radius:md overflow:hidden">
           <header sx="p:2 px:3 text:xs fg:muted-foreground bg:muted weight:medium tracking:wide">TEXT</header>
@@ -321,6 +321,6 @@ export default controller({
       </column>
     {/if}
 
-    <div class="stage" bind:this={stageEl} style:max-width={stageMaxWidth()} sx="w:full ml:auto mr:auto"></div>
+    <div bind:this={stageEl} style:max-width={stageMaxWidth()} sx="w:full ml:auto mr:auto"></div>
   </column>
 </error-boundary>

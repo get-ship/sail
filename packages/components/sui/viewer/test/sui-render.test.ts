@@ -23,6 +23,11 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { renderComponent } from '@ship/test-setup'
 import { compileSui } from '@ship/sui-dom/test-utils'
 
+// The controller reaches for the engine's own modules, which only the module
+// graph can resolve — import it as the virtual `<file>.sui.controller.ts` the
+// compiler emits, rather than letting the harness eval the block in isolation.
+import renderController from '../src/sui-render/sui-render.sui.controller.ts'
+
 // RED: these two modules are the Slice-1 deliverable; they do not exist yet.
 import '@ship/sui-primitives' // register the composed sui-error-boundary / sui-alert / sui-code
 
@@ -89,7 +94,7 @@ function mountRender(
   attrs: Record<string, string | boolean>,
   props: Record<string, unknown> = {},
 ): ReturnType<typeof renderComponent> {
-  const c = renderComponent(SRC, TAG, { attrs })
+  const c = renderComponent(SRC, TAG, { attrs, controller: renderController })
   mounted = c
   for (const [k, v] of Object.entries(props)) {
     ;(c.el as unknown as Record<string, unknown>)[k] = v
@@ -109,7 +114,7 @@ describe('<sui-render> — registration + shell', () => {
 
   it('wraps the fault-prone subtree in a sui-error-boundary', () => {
     const c = mountRender({ mode: 'source' }, { compile: makeBoundCompile(), source: GOOD_VIEW })
-    expect(stageRoot(c.el).querySelector('sui-error-boundary')).not.toBeNull()
+    expect(stageRoot(c.el).querySelector('error-boundary')).not.toBeNull()
   })
 })
 
@@ -371,7 +376,7 @@ describe('<sui-render> — error surface (caught, never a white screen)', () => 
     // Simulate the inner boundary catching a render/effect throw: the composed
     // sui-error-boundary:caught crosses the shadow boundary and the engine
     // re-surfaces it as a runtime sui-render:error.
-    const boundary = stageRoot(c.el).querySelector('sui-error-boundary') as HTMLElement
+    const boundary = stageRoot(c.el).querySelector('error-boundary') as HTMLElement
     expect(boundary).not.toBeNull()
     boundary.dispatchEvent(
       new CustomEvent('sui-error-boundary:caught', {

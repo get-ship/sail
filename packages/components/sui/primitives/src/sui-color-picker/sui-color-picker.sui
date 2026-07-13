@@ -162,7 +162,7 @@ export default controller({
 
     const onShadowClick = (e: Event) => {
       const t = e.target as HTMLElement | null
-      const sw = t?.closest?.('button.swatch[data-hex]') as HTMLElement | null
+      const sw = t?.closest?.('button[data-hex]') as HTMLElement | null
       if (sw) {
         const hex = (sw.dataset.hex ?? '').toLowerCase()
         if (isHex(hex)) commitHex(hex)
@@ -170,7 +170,7 @@ export default controller({
     }
     const onHexInputChange = (e: Event) => {
       const t = e.target as HTMLInputElement | null
-      if (!t || !t.matches('.hex-row input')) return
+      if (!t || !t.matches('input[type="text"]')) return
       if (!commitHex(t.value)) t.value = state.value as string
     }
 
@@ -206,18 +206,17 @@ export default controller({
 })
 
 </controller>
-<column class="cp-root" gap="0" sx="position:relative display:inline-flex w:full">
-<row class="wrap" align="center" gap="2" sx="w:full min-h:size-h py:0 px:size-px bg:background fg:foreground border:tone-border radius:md focus-within:ring:tone-ring">
-  <span class="preview" aria-hidden="true" style:background-color={value() || '#000000'} sx="w:4 h:4 min-w:4 radius:sm border:subtle"></span>
-  <input class="entry input" type="text" flush sx="grow:1 min-w:0 font:mono case:lower" name={name()} placeholder="#000000" disabled={disabled()} autocomplete="off" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
+<column gap="0" sx="position:relative display:inline-flex w:full">
+<row align="center" gap="2" sx="w:full min-h:size-h py:0 px:size-px bg:background fg:foreground border:tone-border radius:md focus-within:ring:tone-ring">
+  <span aria-hidden="true" style:background-color={value() || '#000000'} sx="w:4 h:4 min-w:4 radius:sm border:subtle"></span>
+  <input type="text" flush sx="grow:1 min-w:0 font:mono case:lower" name={name()} placeholder="#000000" disabled={disabled()} autocomplete="off" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
 </row>
 {#if open() && !disabled()}
-  <column class="panel" gap="2" role="dialog" aria-label="Choose color" bind:this={panelEl} sx="position:absolute left:0 z:popover w:panel-max-w-md p:3 mt:1 bg:popover fg:popover-foreground border:border radius:md shadow:md text:size-fs">
-    <grid class="swatches" cols="6" gap="2">
+  <column gap="2" role="dialog" aria-label="Choose color" bind:this={panelEl} sx="position:absolute left:0 z:popover w:panel-max-w-md p:3 mt:1 bg:popover fg:popover-foreground border:border radius:md shadow:md text:size-fs">
+    <grid cols="6" gap="2">
       {#for sw of swatches() key={sw.hex}}
         <button
           type="button"
-          class="swatch"
           aria-selected={sw.hex === value().toLowerCase() ? 'true' : 'false'}
           data-hex={sw.hex}
           aria-label={sw.label}
@@ -226,28 +225,28 @@ export default controller({
         ></button>
       {/for}
     </grid>
-    <column class="sliders" gap="1">
-      <row class="slider-row" align="center" gap="2">
+    <column gap="1">
+      <row align="center" gap="2">
         <label for={hueId()} sx="w:4 fg:muted-foreground">H</label>
         <input id={hueId()} type="range" min="0" max="360" step="1"
                bind:value={hueText} data-axis="h" sx="grow:1 min-w:0" />
-        <span class="val" sx="w:8 text-align:end fg:muted-foreground">{hue()}°</span>
+        <span sx="w:8 text-align:end fg:muted-foreground">{hue()}°</span>
       </row>
-      <row class="slider-row" align="center" gap="2">
+      <row align="center" gap="2">
         <label for={satId()} sx="w:4 fg:muted-foreground">S</label>
         <input id={satId()} type="range" min="0" max="100" step="1"
                bind:value={satText} data-axis="s" sx="grow:1 min-w:0" />
-        <span class="val" sx="w:8 text-align:end fg:muted-foreground">{sat()}%</span>
+        <span sx="w:8 text-align:end fg:muted-foreground">{sat()}%</span>
       </row>
-      <row class="slider-row" align="center" gap="2">
+      <row align="center" gap="2">
         <label for={lightId()} sx="w:4 fg:muted-foreground">L</label>
         <input id={lightId()} type="range" min="0" max="100" step="1"
                bind:value={lightText} data-axis="l" sx="grow:1 min-w:0" />
-        <span class="val" sx="w:8 text-align:end fg:muted-foreground">{light()}%</span>
+        <span sx="w:8 text-align:end fg:muted-foreground">{light()}%</span>
       </row>
     </column>
-    <row class="hex-row" align="center" gap="2">
-      <span class="label" sx="fg:muted-foreground">Hex</span>
+    <row align="center" gap="2">
+      <span sx="fg:muted-foreground">Hex</span>
       <input
         type="text"
         bind:value={hexDraft}

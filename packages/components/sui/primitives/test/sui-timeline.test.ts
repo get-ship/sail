@@ -14,13 +14,12 @@ describe('<sui-timeline>', () => {
 
   it('renders a shadow root with a list div and slot', () => {
     const { el } = mount(reg, 'sui-timeline')
-    expect(shadow(el).querySelector('.list')).not.toBeNull()
     expect(shadow(el).querySelector('slot')).not.toBeNull()
   })
 
   it('renders the list container', () => {
     const { el } = mount(reg, 'sui-timeline')
-    expect(shadow(el).querySelector('.list')).not.toBeNull()
+    expect(shadow(el).querySelector('slot')).not.toBeNull()
   })
 
   it('host has role=list', async () => {
@@ -34,21 +33,10 @@ describe('<sui-timeline>', () => {
 
 describe('<sui-timeline-item>', () => {
 
-  it('renders gutter dot and body in shadow root', () => {
+  it('projects a title and a body', () => {
     const { el } = mount(reg, 'sui-timeline-item')
-    expect(shadow(el).querySelector('.gutter')).not.toBeNull()
-    expect(shadow(el).querySelector('.dot')).not.toBeNull()
-    expect(shadow(el).querySelector('.body')).not.toBeNull()
-  })
-
-  it('renders the dot', () => {
-    const { el } = mount(reg, 'sui-timeline-item')
-    expect(shadow(el).querySelector('.dot')).not.toBeNull()
-  })
-
-  it('renders the body', () => {
-    const { el } = mount(reg, 'sui-timeline-item')
-    expect(shadow(el).querySelector('.body')).not.toBeNull()
+    expect(shadow(el).querySelector('slot[name="title"]')).not.toBeNull()
+    expect(shadow(el).querySelector('slot:not([name])')).not.toBeNull()
   })
 
   it('tone reflects as attribute', () => {
@@ -56,25 +44,18 @@ describe('<sui-timeline-item>', () => {
     expect(el.getAttribute('tone')).toBe('success')
   })
 
-  it('at attribute is rendered in .at span', async () => {
+  it('the timestamp renders as a <time>', async () => {
     const { el } = mount(reg, 'sui-timeline-item', { at: '1m ago' })
     await flush()
-    const atEl = shadow(el).querySelector('.at')
+    const atEl = shadow(el).querySelector('time')
     expect(atEl).not.toBeNull()
     expect(atEl!.textContent).toBe('1m ago')
   })
 
-  it('.at element not rendered when at is empty', async () => {
+  it('no <time> when there is no timestamp', async () => {
     const { el } = mount(reg, 'sui-timeline-item')
     await flush()
-    expect(shadow(el).querySelector('.at')).toBeNull()
-  })
-
-  it('the timestamp renders in the .at element', async () => {
-    const { el } = mount(reg, 'sui-timeline-item', { at: '2h ago' })
-    await flush()
-    const atEl = shadow(el).querySelector('.at')!
-    expect(atEl.textContent).toBe('2h ago')
+    expect(shadow(el).querySelector('time')).toBeNull()
   })
 
   it('host has role=listitem by default', async () => {
@@ -167,6 +148,6 @@ describe('<sui-timeline> + <sui-timeline-item> integration', () => {
     const first = items[0] as HTMLElement
     expect(first.getAttribute('tone')).toBe('success')
     expect(first.getAttribute('at')).toBe('1m ago')
-    expect(shadow(first).querySelector('.at')!.textContent).toBe('1m ago')
+    expect(shadow(first).querySelector('time')!.textContent).toBe('1m ago')
   })
 })

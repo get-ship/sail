@@ -5,8 +5,11 @@
 //!
 //! ## The floor — not a key, cannot be turned off
 //!
-//! Authored `<style>` blocks (`sui-no-style-block`) and inline `style=`
-//! (`sui-no-inline-style`) are a hard `Error` under **every** policy, and there
+//! Authored `<style>` blocks (`sui-no-style-block`), inline `style=`
+//! (`sui-no-inline-style`) and `class` (`sui-no-class` — light DOM has no
+//! boundary, so a class is a global CSS target: the hook that lets banned CSS
+//! live in a file the compiler never sees) are a hard `Error` under **every**
+//! policy, and there
 //! is no config key to relax them. This is what "floor" means: the thing not
 //! even the compiler's configuration allows. (The compiler's own `--styles`
 //! injection is internal, not authored source, so `sx`'s generated block is
@@ -92,6 +95,7 @@ impl Policy {
         vec![
             LintOverride { rule: "sui-no-style-block".to_string(), severity: Error },
             LintOverride { rule: "sui-no-inline-style".to_string(), severity: Error },
+            LintOverride { rule: "sui-no-class".to_string(), severity: Error },
         ]
     }
 
@@ -128,6 +132,7 @@ impl Policy {
             // FLOOR — non-overridable, present under every policy.
             lo("sui-no-style-block", Error),
             lo("sui-no-inline-style", Error),
+            lo("sui-no-class", Error),
             // CAPABILITY keys — the dial.
             lo("sui-no-sx", cap(self.sx)),
             lo("sui-no-variants", cap(self.variants)),

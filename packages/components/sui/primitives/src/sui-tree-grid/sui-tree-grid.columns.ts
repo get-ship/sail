@@ -57,7 +57,7 @@ export function wireGridColumns(host: HostEmit, getTree: () => Table<AnyTreeNode
   }
 
   const onPointerDown = (e: Event): void => {
-    const handle = (e.target as HTMLElement).closest('.resize-handle')
+    const handle = (e.target as HTMLElement).closest('[data-action="resize"]')
     if (!handle) return
     const id = handle.getAttribute('data-col-id')
     if (!id) return
@@ -83,7 +83,7 @@ export function wireGridColumns(host: HostEmit, getTree: () => Table<AnyTreeNode
       return
     }
     // The resize handle never sorts.
-    if (target.closest('.resize-handle')) return
+    if (target.closest('[data-action="resize"]')) return
     // A sortable header click cycles its sort none→asc→desc→none.
     const head = target.closest<HTMLElement>('[role="columnheader"][data-sortable]')
     if (head) {

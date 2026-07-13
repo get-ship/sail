@@ -35,7 +35,7 @@ function isoFromEvent(e: Event): string | null {
 
 /** The `{ iso, minutes }` of the background time-slot under a pointer event. */
 function slotFromEvent(e: Event): { iso: string; minutes: number } | null {
-  const el = (e.target as HTMLElement | null)?.closest?.('.slot-bg[data-minutes]') as HTMLElement | null
+  const el = (e.target as HTMLElement | null)?.closest?.('[data-iso][data-minutes]') as HTMLElement | null
   if (!el || el.dataset.minutes == null || !el.dataset.iso) return null
   return { iso: el.dataset.iso, minutes: Number(el.dataset.minutes) }
 }
@@ -154,14 +154,14 @@ export function wireCalendarInteractions(host: HTMLElement, ctx: CalendarInterac
     if (!target) return
 
     // A timed chip → move drag.
-    const chip = target.closest?.('.timed-chip[data-event-id]') as HTMLElement | null
+    const chip = target.closest?.('[data-event-id]') as HTMLElement | null
     if (chip) {
       beginMove(chip.dataset.eventId!)
       return
     }
     // An empty time slot → create drag.
     const slot = slotFromEvent(e)
-    if (slot && target.closest?.('.slot-bg')) {
+    if (slot && target.closest?.('[data-iso][data-minutes]')) {
       beginCreate(slot)
       return
     }

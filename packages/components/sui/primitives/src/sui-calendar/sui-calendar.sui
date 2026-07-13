@@ -342,39 +342,38 @@ export default controller({
 })
 
 </controller>
-<div class="cal wrap" sx="display:block font:body text:density bg:background fg:foreground border:border radius:lg shadow:xs overflow:hidden">
-  <row class="toolbar" align="center" gap="density" sx="py:density-row-py px:density-row-px border-b:border">
-    <row class="nav-group" gap="1" align="center">
-      <button type="button" class="tb" variant="outline" size="sm" data-nav="prev" aria-label="Previous">‹</button>
-      <button type="button" class="tb" variant="outline" size="sm" data-nav="today">Today</button>
-      <button type="button" class="tb" variant="outline" size="sm" data-nav="next" aria-label="Next">›</button>
+<div sx="display:block font:body text:density bg:background fg:foreground border:border radius:lg shadow:xs overflow:hidden">
+  <row align="center" gap="density" sx="py:density-row-py px:density-row-px border-b:border">
+    <row gap="1" align="center">
+      <button type="button" variant="outline" size="sm" data-nav="prev" aria-label="Previous">‹</button>
+      <button type="button" variant="outline" size="sm" data-nav="today">Today</button>
+      <button type="button" variant="outline" size="sm" data-nav="next" aria-label="Next">›</button>
     </row>
-    <span class="title" sx="grow:1 weight:semibold">{title()}</span>
-    <row class="view-switch" role="group" aria-label="Calendar view" gap="1" align="center">
-      <button type="button" class="tb" variant="outline" size="sm" data-view="month" aria-pressed={isMonth() ? 'true' : 'false'}>Month</button>
-      <button type="button" class="tb" variant="outline" size="sm" data-view="week" aria-pressed={isWeek() ? 'true' : 'false'}>Week</button>
-      <button type="button" class="tb" variant="outline" size="sm" data-view="day" aria-pressed={isDay() ? 'true' : 'false'}>Day</button>
+    <h2 sx="grow:1 weight:semibold text:base">{title()}</h2>
+    <row role="group" aria-label="Calendar view" gap="1" align="center">
+      <button type="button" variant="outline" size="sm" data-view="month" aria-pressed={isMonth() ? 'true' : 'false'}>Month</button>
+      <button type="button" variant="outline" size="sm" data-view="week" aria-pressed={isWeek() ? 'true' : 'false'}>Week</button>
+      <button type="button" variant="outline" size="sm" data-view="day" aria-pressed={isDay() ? 'true' : 'false'}>Day</button>
     </row>
   </row>
 
   {#if isEmpty()}
-    <div class="empty" role="status" sx="fg:muted-foreground py:6 px:density-row-px text-align:center">
+    <div role="status" sx="fg:muted-foreground py:6 px:density-row-px text-align:center">
       <slot name="empty">No events</slot>
     </div>
   {/if}
 
   {#if isMonth()}
-  <div class="grid" role="grid" aria-label={label() || 'Calendar month'}>
-    <grid cols="7" gap="0" class="dow-row" role="presentation">
+  <div role="grid" aria-label={label() || 'Calendar month'}>
+    <grid cols="7" gap="0" role="presentation">
       {#for d of weekdays() key={d.key}}
-        <span class="dow" role="columnheader" sx="fg:muted-foreground weight:medium py:density-row-py text-align:center text:density border-b:border">{d.label}</span>
+        <span role="columnheader" sx="fg:muted-foreground weight:medium py:density-row-py text-align:center text:density border-b:border">{d.label}</span>
       {/for}
     </grid>
     {#for wk of weekRows() key={wk.key}}
-      <grid cols="7" gap="0" class="week" role="row">
+      <grid cols="7" gap="0" role="row">
         {#for cr of wk.cells key={cr.key}}
           <column
-            class="cell"
             role="gridcell"
             data-iso={cr.cell.iso}
             tabindex={cr.cell.iso === focusedIso() ? '0' : '-1'}
@@ -384,23 +383,22 @@ export default controller({
             gap="1"
             sx="group py:density-row-py px:density-row-px min-h:panel-min-h-cell border-r:border border-b:border state-out:fg:muted-foreground state-out:bg:muted state-weekend:bg:tone-muted-bg state-range:bg:selected-bg"
           >
-            <row class="daynum" align="center" justify="center" gap="0" sx="text:density min-w:control-h-2xs h:control-h-2xs radius:full group-state-today:fg:primary group-state-today:weight:semibold group-state-today:ring:primary">{cr.cell.day}</row>
+            <row align="center" justify="center" gap="0" sx="text:density min-w:control-h-2xs h:control-h-2xs radius:full group-state-today:fg:primary group-state-today:weight:semibold group-state-today:ring:primary">{cr.cell.day}</row>
             {#for ev of cr.cell.events key={ev.id}}
               <button
                 type="button"
-                class="chip"
                 data-event-id={ev.id}
                 data-state={ev.allDay ? 'allday' : ''}
                 aria-selected={selectedIds().includes(ev.id) ? 'true' : 'false'}
                 title={ev.title}
                 sx="position:relative display:flex text-align:start cursor:pointer text:density fg:foreground bg:tone-primary-bg radius:sm py:half px:1_5 pl:3 wrap:truncate state-allday:bg:tone-accent-bg selected:ring:ring"
               >
-                <span class="rail" aria-hidden="true" sx="position:absolute left:half top:1 bottom:1 w:half radius:sm bg:primary group-state-allday:bg:accent"></span>
+                <span aria-hidden="true" sx="position:absolute left:half top:1 bottom:1 w:half radius:sm bg:primary group-state-allday:bg:accent"></span>
                 {ev.title}
               </button>
             {/for}
             {#if cr.cell.overflowCount > 0}
-              <span class="overflow" sx="text:xs weight:semibold fg:muted-foreground px:1">+{cr.cell.overflowCount} more</span>
+              <span sx="text:xs weight:semibold fg:muted-foreground px:1">+{cr.cell.overflowCount} more</span>
             {/if}
           </column>
         {/for}
@@ -410,25 +408,24 @@ export default controller({
 {/if}
 
 {#if isWeek() || isDay()}
-  <grid tracks="--cal-time-tracks" gap="0" class="timegrid time-grid" role="grid" aria-label={label() || 'Calendar time grid'} style:--cal-time-tracks={'auto 1fr'}>
-    <column class="time-axis" role="rowgroup" gap="0" sx="border-r:border">
+  <grid tracks="--cal-time-tracks" gap="0" role="grid" aria-label={label() || 'Calendar time grid'} style:--cal-time-tracks={'auto 1fr'}>
+    <column role="rowgroup" gap="0" sx="border-r:border">
       {#for slot of timeSlots() key={slot.key}}
-        <div class="slot" data-slot={slot.minutes} role="rowheader" sx="h:control-h-md fg:muted-foreground px:density-row-px text:density border-b:border">{slot.label}</div>
+        <div data-slot={slot.minutes} role="rowheader" sx="h:control-h-md fg:muted-foreground px:density-row-px text:density border-b:border">{slot.label}</div>
       {/for}
     </column>
-    <row class="day-cols" gap="0" sx="grow:1">
+    <row gap="0" sx="grow:1">
       {#for dc of dayColumns() key={dc.key}}
-        <div class="day-col" data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso} sx="position:relative grow:1 min-h:panel-min-h-daycol border-r:border state-today:bg:selected-bg">
-          <column class="slot-layer" gap="0" sx="position:absolute top:0 right:0 bottom:0 left:0">
+        <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso} sx="position:relative grow:1 min-h:panel-min-h-daycol border-r:border state-today:bg:selected-bg">
+          <column gap="0" sx="position:absolute top:0 right:0 bottom:0 left:0">
             {#for slot of timeSlots() key={slot.key}}
-              <div class="slot-bg" data-iso={dc.col.iso} data-minutes={slot.minutes} sx="grow:1 min-h:control-h-md cursor:cell border-b:border hover:bg:hover-bg"></div>
+              <div data-iso={dc.col.iso} data-minutes={slot.minutes} sx="grow:1 min-h:control-h-md cursor:cell border-b:border hover:bg:hover-bg"></div>
             {/for}
           </column>
-          <column class="allday-zone" gap="1" sx="position:relative z:elevated p:half">
+          <column gap="1" sx="position:relative z:elevated p:half">
             {#for ev of dc.col.allDayEvents key={ev.id}}
               <button
                 type="button"
-                class="chip allday"
                 data-event-id={ev.id}
                 data-state="allday"
                 aria-selected={selectedIds().includes(ev.id) ? 'true' : 'false'}
@@ -440,7 +437,6 @@ export default controller({
           {#for pe of dc.col.laidOut key={pe.event.id}}
             <button
               type="button"
-              class="timed-chip"
               data-event-id={pe.event.id}
               aria-selected={selectedIds().includes(pe.event.id) ? 'true' : 'false'}
               style:top={`${pe.topPct}%`}

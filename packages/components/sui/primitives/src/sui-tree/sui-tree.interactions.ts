@@ -96,7 +96,7 @@ export function wireTreeInteractions(
   const onClick = (e: Event): void => {
     const target = e.target as HTMLElement
     // Caret first (disclosure toggle, never a selection).
-    const caret = target.closest('.caret')
+    const caret = target.closest('[data-action="toggle"]')
     if (caret) {
       const id = caret.closest('[data-node-id]')?.getAttribute('data-node-id')
       if (id) {

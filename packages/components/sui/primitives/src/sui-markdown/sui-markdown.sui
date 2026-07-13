@@ -116,5 +116,5 @@ export default controller<Scope>({
 
 </controller>
 <prose>
-  <div sx="display:block text:base" class="md-root" bind:this={contentEl}></div>
+  <div sx="display:block text:base" bind:this={contentEl}></div>
 </prose>

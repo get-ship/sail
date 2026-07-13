@@ -44,6 +44,7 @@ pub mod no_script;
 pub mod no_style_block;
 pub mod no_sx;
 pub mod no_variants;
+pub mod no_class;
 pub mod no_inline_style;
 pub mod animate_token_only;
 pub type RuleFn = fn(&Path, &str) -> Vec<Finding>;
@@ -90,6 +91,7 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (no_style_block::RULE_ID, no_style_block::check),
     (no_sx::RULE_ID, no_sx::check),
     (no_variants::RULE_ID, no_variants::check),
+    (no_class::RULE_ID, no_class::check),
     (no_inline_style::RULE_ID, no_inline_style::check),
     (animate_token_only::RULE_ID, animate_token_only::check),
 ];

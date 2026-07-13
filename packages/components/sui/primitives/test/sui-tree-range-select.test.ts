@@ -97,10 +97,10 @@ const selectedIds = (shadow: ShadowRoot | null): string[] =>
     (r) => r.getAttribute('data-node-id') as string,
   )
 
-/** Click a row's label region (not its caret), with optional shiftKey. */
+/** Click a row's body (never its caret — that toggles), with optional shiftKey. */
 const clickRow = (shadow: ShadowRoot | null, id: string, shift = false): void => {
-  const label = rowFor(shadow, id).querySelector('.label') as HTMLElement
-  label.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true, shiftKey: shift }))
+  const row = rowFor(shadow, id)
+  row.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true, shiftKey: shift }))
 }
 
 describe('<sui-tree> — shift-click range select over the displayed tree order', () => {

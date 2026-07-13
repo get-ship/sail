@@ -76,26 +76,26 @@ export default controller<Scope>({
 
 </controller>
 <row gap="2" align="stretch" sx="position:relative">
-  <column class="gutter" align="center" gap="0" sx="w:5">
+  <column align="center" gap="0" sx="w:5">
     {#if first()}
-      <span class="line-top" sx="w:half h:3 visibility:hidden"></span>
+      <span sx="w:half h:3 visibility:hidden"></span>
     {:else}
-      <span class="line-top" sx="w:half h:3 bg:border-subtle"></span>
+      <span sx="w:half h:3 bg:border-subtle"></span>
     {/if}
-    <span class="dot" sx="w:2_5 h:2_5 radius:full bg:tone-fg"></span>
+    <span sx="w:2_5 h:2_5 radius:full bg:tone-fg"></span>
     {#if last()}
-      <span class="line-bottom" sx="w:half grow:1 visibility:hidden"></span>
+      <span sx="w:half grow:1 visibility:hidden"></span>
     {:else}
-      <span class="line-bottom" sx="w:half grow:1 bg:border-subtle"></span>
+      <span sx="w:half grow:1 bg:border-subtle"></span>
     {/if}
   </column>
-  <column class="body" gap="0" sx="grow:1 min-w:0 py:2">
-    <row class="head" align="baseline" justify="between" gap="2" sx="text:sm weight:medium fg:foreground font:body">
+  <column gap="0" sx="grow:1 min-w:0 py:2">
+    <row align="baseline" justify="between" gap="2" sx="text:sm weight:medium fg:foreground font:body">
       <slot name="title"></slot>
       {#if at()}
-        <span class="at" sx="fg:muted-foreground text:xs tracking:wide font:mono">{at()}</span>
+        <time sx="fg:muted-foreground text:xs tracking:wide font:mono">{at()}</time>
       {/if}
     </row>
-    <div class="content" sx="text:sm fg:muted-foreground leading:normal mt:1"><slot></slot></div>
+    <div sx="text:sm fg:muted-foreground leading:normal mt:1"><slot></slot></div>
   </column>
 </row>

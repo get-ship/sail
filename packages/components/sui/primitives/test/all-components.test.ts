@@ -17,7 +17,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 // which side-effect imports its AOT-compiled module. By the time
 // the test body runs, every <set-*> custom element is registered.
 import '../src/index'
-import { createContainerRegistry, mount } from '../src/test-utils'
+import { createContainerRegistry, flush, mount } from '../src/test-utils'
 
 const reg = createContainerRegistry()
 afterEach(() => reg.cleanup())
@@ -30,6 +30,7 @@ interface PortCase {
   /** Value to set for the reflect check. */
   value: string
   /** A part name (or class selector) that should be present in the shadow. */
+  /** A selector for the component's own semantics: its role, its tag. */
   shadowPart: string
 }
 
@@ -37,15 +38,15 @@ interface PortCase {
 // input, dialog…) are L1 elements, not custom elements — they are covered by
 // the l1-conformance harness, not this per-component smoke net.
 const ports: PortCase[] = [
-  { tag: 'sui-tree',       attr: 'size',  value: 'sm',      shadowPart: '.empty' },
-  { tag: 'sui-tree-grid',  attr: 'size',  value: 'sm',      shadowPart: '.empty' },
-  { tag: 'sui-json-view',  attr: 'depth', value: '2',       shadowPart: '.json-root' },
-  { tag: 'sui-timeline',   attr: 'hidden', value: '',       shadowPart: '.list' },
-  { tag: 'sui-file-upload', attr: 'accept', value: 'image/*', shadowPart: '.dropzone' },
-  { tag: 'sui-color-picker', attr: 'size', value: 'lg',     shadowPart: '.wrap' },
-  { tag: 'sui-date-picker', attr: 'size', value: 'lg',      shadowPart: '.wrap' },
-  { tag: 'sui-calendar',   attr: 'view',  value: 'month',   shadowPart: '.cal' },
-  { tag: 'sui-markdown',   attr: 'value', value: '# hi',    shadowPart: '.md-root' },
+  { tag: 'sui-tree',       attr: 'size',  value: 'sm',      shadowPart: '[role="status"]' },
+  { tag: 'sui-tree-grid',  attr: 'size',  value: 'sm',      shadowPart: '[role="status"]' },
+  { tag: 'sui-json-view',  attr: 'data',  value: '{"a":1}', shadowPart: '[role="treeitem"]' },
+  { tag: 'sui-timeline',   attr: 'hidden', value: '',       shadowPart: 'slot' },
+  { tag: 'sui-file-upload', attr: 'accept', value: 'image/*', shadowPart: '[role="button"]' },
+  { tag: 'sui-color-picker', attr: 'size', value: 'lg',     shadowPart: 'input[type="text"]' },
+  { tag: 'sui-date-picker', attr: 'size', value: 'lg',      shadowPart: 'input' },
+  { tag: 'sui-calendar',   attr: 'view',  value: 'month',   shadowPart: '[role="grid"]' },
+  { tag: 'sui-markdown',   attr: 'value', value: '# hi',    shadowPart: '.sui-prose' },
   { tag: 'sui-diff',       attr: 'from',  value: 'a',       shadowPart: '[data-line-kind]' },
 ]
 
@@ -54,8 +55,9 @@ describe.each(ports)('<$tag>', ({ tag, attr, value, shadowPart }) => {
     expect(customElements.get(tag)).toBeDefined()
   })
 
-  it('mounts with a shadow root containing the expected part', () => {
+  it('mounts and renders its anatomy — the semantics, not a class', async () => {
     const { el, shadow } = mount(reg, tag, { [attr]: value })
+    await flush()
     expect(shadow).not.toBeNull()
     expect(shadow!.querySelector(shadowPart)).not.toBeNull()
     expect(el.getAttribute(attr)).toBe(value)

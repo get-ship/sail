@@ -112,7 +112,7 @@ const itemIds = (shadow: ShadowRoot | null): string[] =>
 
 const caretFor = (shadow: ShadowRoot | null, id: string): HTMLElement =>
   (shadow!.querySelector(`[data-node-id="${id}"]`) as HTMLElement).querySelector(
-    '.caret',
+    '[data-action="toggle"]',
   ) as HTMLElement
 
 describe('<sui-tree> — lazy-children consumer seam (behavioral spec #9)', () => {

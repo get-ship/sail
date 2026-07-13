@@ -8,13 +8,12 @@ afterEach(() => reg.cleanup())
 
 const shadow = (el: HTMLElement) => (el.shadowRoot ?? el)
 const fallbackBox = (el: HTMLElement) =>
-  ([...shadow(el).querySelectorAll('.fallback')].find(
+  ([...shadow(el).querySelectorAll('[role="alert"]')].find(
     (f) => f.closest('[data-component]') === el,
   ) ?? null) as HTMLElement | null
-const fallbackMessage = (el: HTMLElement) =>
-  shadow(el).querySelector('.message') as HTMLElement | null
+const fallbackText = (el: HTMLElement) => fallbackBox(el)?.textContent ?? ''
 const retryBtn = (el: HTMLElement) =>
-  shadow(el).querySelector('.retry') as HTMLButtonElement | null
+  shadow(el).querySelector('[role="alert"] button') as HTMLButtonElement | null
 const visibleSlotContent = (el: HTMLElement, name?: string): Element[] => {
   const slot = (name
     ? shadow(el).querySelector(`slot[name="${name}"]`)
@@ -51,7 +50,7 @@ describe('<sui-error-boundary>', () => {
     handle.catch(new Error('boom'), 'render')
     const box = fallbackBox(el)
     expect(box).not.toBeNull()
-    expect(fallbackMessage(el)!.textContent).toBe('Something went wrong')
+    expect(fallbackText(el)).toContain('Something went wrong')
     expect(retryBtn(el)).not.toBeNull()
     expect(el.getAttribute('data-error-message')).toBe('boom')
   })
@@ -65,7 +64,7 @@ describe('<sui-error-boundary>', () => {
     )
     const handle = findNearestBoundary(el)!
     handle.catch(new Error('boom'), 'effect')
-    expect(fallbackMessage(el)!.textContent).toBe('Custom oh-no')
+    expect(fallbackText(el)).toContain('Custom oh-no')
   })
 
   it('<template slot="fallback"> renders custom fallback markup on catch', () => {

@@ -131,51 +131,51 @@ export default controller<Scope>({
 })
 </controller>
 
-<column class="json-root" gap="0" sx="font:mono text:sm leading:normal-plus">
+<column gap="0" sx="font:mono text:sm leading:normal-plus">
   {#if parseError() !== ''}
-    <span class="error" role="alert" sx="fg:destructive">Invalid JSON: {parseError()}</span>
+    <span role="alert" sx="fg:destructive">Invalid JSON: {parseError()}</span>
   {/if}
   {#for row of rows() key={row.k}}
     {#match row.kind}
       {:case 'branch'}
-        <row class="node branch-row" role="treeitem" aria-level={row.ariaLevel} aria-expanded={row.open ? 'true' : 'false'} tabindex="0" gap="0" align="center"
+        <row role="treeitem" aria-level={row.ariaLevel} aria-expanded={row.open ? 'true' : 'false'} tabindex="0" gap="0" align="center"
              on:click={() => toggle(row.path, row.open)}
              on:keydown|key:Enter={() => toggle(row.path, row.open)}
              sx="group radius:sm cursor:pointer hover:bg:hover-bg">
           {#for pad of row.pads key={pad.i}}
-            <span class="guide" sx="w:3 border-l:subtle"></span>
+            <span sx="w:3 border-l:subtle"></span>
           {/for}
-          <span class="caret" aria-hidden="true" sx="fg:muted-foreground text:xs px:1 group-expanded:rotate:90">▶</span>
+          <span aria-hidden="true" sx="fg:muted-foreground text:xs px:1 group-expanded:rotate:90">▶</span>
           {#if row.label !== ''}
-            <span class="key" sx="weight:medium">"{row.label}"</span><span class="punc" sx="fg:muted-foreground">:&nbsp;</span>
+            <span sx="weight:medium">"{row.label}"</span><span sx="fg:muted-foreground">:&nbsp;</span>
           {/if}
-          <span class="punc" sx="fg:muted-foreground">{row.openBracket}</span>
-          <span class="meta" sx="fg:muted-foreground text:xs bg:muted radius:full px:1 ml:1">{row.meta}</span>
+          <span sx="fg:muted-foreground">{row.openBracket}</span>
+          <span sx="fg:muted-foreground text:xs bg:muted radius:full px:1 ml:1">{row.meta}</span>
           {#if !row.open}
-            <span class="punc" sx="fg:muted-foreground">…{row.closeBracket}</span>
+            <span sx="fg:muted-foreground">…{row.closeBracket}</span>
           {/if}
         </row>
       {:case 'close'}
-        <row class="node" gap="0" align="center">
+        <row gap="0" align="center">
           {#for pad of row.pads key={pad.i}}
-            <span class="guide" sx="w:3 border-l:subtle"></span>
+            <span sx="w:3 border-l:subtle"></span>
           {/for}
-          <span class="punc" sx="fg:muted-foreground px:1">{row.text}</span>
+          <span sx="fg:muted-foreground px:1">{row.text}</span>
         </row>
       {:default}
-        <row class="node leaf" role="treeitem" aria-level={row.ariaLevel} gap="0" align="center" sx="radius:sm hover:bg:hover-bg">
+        <row role="treeitem" aria-level={row.ariaLevel} gap="0" align="center" sx="radius:sm hover:bg:hover-bg">
           {#for pad of row.pads key={pad.i}}
-            <span class="guide" sx="w:3 border-l:subtle"></span>
+            <span sx="w:3 border-l:subtle"></span>
           {/for}
           {#if row.label !== ''}
-            <span class="key" sx="weight:medium px:1">"{row.label}"</span><span class="punc" sx="fg:muted-foreground">:&nbsp;</span>
+            <span sx="weight:medium px:1">"{row.label}"</span><span sx="fg:muted-foreground">:&nbsp;</span>
           {/if}
           {#match row.kind}
-            {:case 'str'} <span class="s" sx="fg:success">{row.text}</span>
-            {:case 'num'} <span class="n" sx="fg:info">{row.text}</span>
-            {:case 'bool'} <span class="b" sx="fg:accent weight:medium">{row.text}</span>
-            {:case 'null'} <span class="null" sx="fg:muted-foreground">{row.text}</span>
-            {:default} <span class="punc" sx="fg:muted-foreground">{row.text}</span>
+            {:case 'str'} <span sx="fg:success">{row.text}</span>
+            {:case 'num'} <span sx="fg:info">{row.text}</span>
+            {:case 'bool'} <span sx="fg:accent weight:medium">{row.text}</span>
+            {:case 'null'} <span sx="fg:muted-foreground">{row.text}</span>
+            {:default} <span sx="fg:muted-foreground">{row.text}</span>
           {/match}
         </row>
     {/match}

@@ -147,11 +147,11 @@ describe('<sui-tree-grid> — disclosure caret + indent in the FIRST visible col
     const srcRow = shadow!.querySelector('[role="row"][data-node-id="src"]') as HTMLElement
     const cells = srcRow.querySelectorAll('[role="gridcell"]')
     const firstCell = cells[0] as HTMLElement
-    const caret = firstCell.querySelector('.caret .sui-icon') as HTMLElement
+    const caret = firstCell.querySelector('[data-action="toggle"] .sui-icon') as HTMLElement
     expect(caret).not.toBeNull()
     expect(caret.getAttribute('name')).toBe('chevron-right')
     // No caret in any later column.
-    expect((cells[1] as HTMLElement).querySelector('.caret')).toBeNull()
+    expect((cells[1] as HTMLElement).querySelector('[data-action="toggle"]')).toBeNull()
   })
 
   it('aria-level reflects row.depth + 1 (flat-list tree depth)', async () => {
@@ -170,7 +170,7 @@ describe('<sui-tree-grid> — disclosure caret + indent in the FIRST visible col
     const { shadow } = mountTreeGrid(true)
     await flush()
     const leaf = shadow!.querySelector('[role="row"][data-node-id="readme"]') as HTMLElement
-    expect(leaf.querySelector('.caret .sui-icon')).toBeNull()
+    expect(leaf.querySelector('[data-action="toggle"] .sui-icon')).toBeNull()
     expect(leaf.hasAttribute('aria-expanded')).toBe(false)
   })
 })

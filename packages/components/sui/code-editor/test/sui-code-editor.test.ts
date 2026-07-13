@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderComponent } from '@ship/test-setup'
 
-import editorController from '../src/sui-code-editor/sui-code-editor.controller'
+import editorController from '../src/sui-code-editor/sui-code-editor.sui.controller.ts'
 import '../src/sui-code-editor/sui-code-editor.compiled.js'
 
 const SOURCE = readFileSync(
@@ -60,9 +60,9 @@ function mount(attrs: Record<string, string | boolean> = {}): LiveMount {
 
 const shadow = (m: LiveMount): ShadowRoot => m.el.shadowRoot as ShadowRoot
 const cmContent = (m: LiveMount): Element | null =>
-  shadow(m).querySelector('.editor-root .cm-content')
+  shadow(m).querySelector('.cm-content')
 const cmEditor = (m: LiveMount): Element | null =>
-  shadow(m).querySelector('.editor-root .cm-editor')
+  shadow(m).querySelector('.cm-editor')
 
 /** Public host surface for the consumer (sui-tutorial, sui-site). */
 interface SuiCodeEditorHost {

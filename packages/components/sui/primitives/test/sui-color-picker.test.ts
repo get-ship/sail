@@ -6,12 +6,12 @@ const reg = createContainerRegistry()
 afterEach(() => reg.cleanup())
 
 const shadow = (el: HTMLElement) => (el.shadowRoot ?? el)
-const inputOf = (el: HTMLElement) => shadow(el).querySelector('input.entry') as HTMLInputElement
-const panelOf = (el: HTMLElement) => shadow(el).querySelector('.panel') as HTMLElement | null
+const inputOf = (el: HTMLElement) => shadow(el).querySelector('input[type="text"]') as HTMLInputElement
+const panelOf = (el: HTMLElement) => shadow(el).querySelector('[role="dialog"]') as HTMLElement | null
 const swatches = (el: HTMLElement) =>
-  Array.from(shadow(el).querySelectorAll('button.swatch[data-hex]')) as HTMLButtonElement[]
+  Array.from(shadow(el).querySelectorAll('button[data-hex]')) as HTMLButtonElement[]
 const ranges = (el: HTMLElement) =>
-  Array.from(shadow(el).querySelectorAll('.panel input[type="range"]')) as HTMLInputElement[]
+  Array.from(shadow(el).querySelectorAll('[role="dialog"] input[type="range"]')) as HTMLInputElement[]
 
 describe('<sui-color-picker>', () => {
 
@@ -19,7 +19,7 @@ describe('<sui-color-picker>', () => {
     const { el } = mount(reg, 'sui-color-picker', { value: '#ff0000' })
     await flush()
     expect(inputOf(el)).not.toBeNull()
-    expect(shadow(el).querySelector('.preview')).not.toBeNull()
+    expect(shadow(el).querySelector('span')).not.toBeNull()
     expect(panelOf(el)).toBeNull()
   })
 

@@ -203,15 +203,15 @@ export default controller({
 
 </controller>
 {#if error() !== ''}
-<div sx="display:block w:full fg:foreground" class="tree-error error" role="alert">
+<div sx="display:block w:full fg:foreground" role="alert">
   <error-state>{error()}</error-state>
 </div>
 {:else if isEmptyInitial()}
-<div class="tree-empty empty" role="status">
+<div role="status">
   <slot name="empty"><empty-state></empty-state></slot>
 </div>
 {:else if isEmptyFiltered()}
-<div class="tree-empty empty" role="status">
+<div role="status">
   <slot name="empty">
     <empty-state>
       <button slot="action" type="button" data-action="clear-filters">Clear filters</button>
@@ -219,40 +219,40 @@ export default controller({
   </slot>
 </div>
 {:else}
-<column class="grid" role="treegrid" gap="0" aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null} style:--sui-col-count={headers().length} style:--sui-grid-template={gridTemplate()} sx="w:full overflow:hidden bg:surface-1 border:border radius:lg font:body text:density">
-  <grid tracks="--sui-grid-template" gap="0" class="head thead" role="row" sx="position:sticky top:0 z:sticky bg:surface-2 border-b:border">
+<column role="treegrid" gap="0" aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null} style:--sui-col-count={headers().length} style:--sui-grid-template={gridTemplate()} sx="w:full overflow:hidden bg:surface-1 border:border radius:lg font:body text:density">
+  <grid tracks="--sui-grid-template" gap="0" role="row" sx="position:sticky top:0 z:sticky bg:surface-2 border-b:border">
     {#for h of headers() key={h.id}}
-      <row gap="1" align="center" class="col-head columnheader" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null} sx="position:relative py:density-row-py px:density-row-px weight:semibold text:xs case:upper tracking:wide fg:foreground border-b:subtle wrap:nowrap sortable:cursor:pointer">
-        <span class="col-label" sx="grow:1 min-w:0 wrap:truncate">{h.label}</span>
+      <row gap="1" align="center" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null} sx="position:relative py:density-row-py px:density-row-px weight:semibold text:xs case:upper tracking:wide fg:foreground border-b:subtle wrap:nowrap sortable:cursor:pointer">
+        <span sx="grow:1 min-w:0 wrap:truncate">{h.label}</span>
         {#if h.sorted === 'asc'}
-          <span class="sort-glyph" aria-hidden="true" sx="display:inline-flex fg:primary"><icon name="chevron-up" size="xs"></icon></span>
+          <span aria-hidden="true" sx="display:inline-flex fg:primary"><icon name="chevron-up" size="xs"></icon></span>
         {:else if h.sorted === 'desc'}
-          <span class="sort-glyph" aria-hidden="true" sx="display:inline-flex fg:primary"><icon name="chevron-down" size="xs"></icon></span>
+          <span aria-hidden="true" sx="display:inline-flex fg:primary"><icon name="chevron-down" size="xs"></icon></span>
         {/if}
         {#if h.canHide}
-          <button class="column-menu" variant="ghost" size="xs" type="button" data-action="column-menu" data-col-id={h.id} aria-label="Column options" sx="w:density-icon h:density-icon p:0 radius:sm">
+          <button variant="ghost" size="xs" type="button" data-action="column-menu" data-col-id={h.id} aria-label="Column options" sx="w:density-icon h:density-icon p:0 radius:sm">
             <icon name="more-vertical" size="xs"></icon>
           </button>
         {/if}
         {#if h.canResize}
-          <span class="resize-handle" data-col-id={h.id} aria-hidden="true" sx="position:absolute top:0 bottom:0 right:0 w:1 cursor:col-resize hover:bg:primary"></span>
+          <span data-action="resize" data-col-id={h.id} aria-hidden="true" sx="position:absolute top:0 bottom:0 right:0 w:1 cursor:col-resize hover:bg:primary"></span>
         {/if}
       </row>
     {/for}
   </grid>
-  <div class="viewport" bind:this={viewportEl} sx="position:relative w:full overflow-y:auto max-h:panel-max-h-md">
-    <div class="spacer" style:height={`${totalSize()}px`} sx="position:relative w:full">
+  <div bind:this={viewportEl} sx="position:relative w:full overflow-y:auto max-h:panel-max-h-md">
+    <div style:height={`${totalSize()}px`} sx="position:relative w:full">
       {#for w of windowItems() key={`${w.key}|${w.cellsKey}`}}
-        <grid tracks="--sui-grid-template" gap="0" class="row" role="row" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} style:transform={`translateY(${w.start}px)`} sx="group position:absolute left:0 w:full cursor:pointer hover:bg:hover-bg selected:bg:selected-bg focus:ring:ring">
-          <span class="selected-marker" aria-hidden="true" sx="position:absolute left:0 top:1 bottom:1 w:half radius:full bg:primary visibility:hidden group-selected:visibility:visible"></span>
+        <grid tracks="--sui-grid-template" gap="0" role="row" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} style:transform={`translateY(${w.start}px)`} sx="group position:absolute left:0 w:full cursor:pointer hover:bg:hover-bg selected:bg:selected-bg focus:ring:ring">
+          <span aria-hidden="true" sx="position:absolute left:0 top:1 bottom:1 w:half radius:full bg:primary visibility:hidden group-selected:visibility:visible"></span>
           {#for c of w.cells key={c.columnId}}
-            <row gap="density" align="center" class="cell" role="gridcell" sx="py:density-row-py px:density-row-px border-b:subtle fg:foreground min-w:0" style:padding-inline-start={c.first ? `calc(var(--density-row-px) + ${w.indent}px)` : null}>
+            <row gap="density" align="center" role="gridcell" sx="py:density-row-py px:density-row-px border-b:subtle fg:foreground min-w:0" style:padding-inline-start={c.first ? `calc(var(--density-row-px) + ${w.indent}px)` : null}>
               {#if c.first && w.canExpand}
-                <span class="caret" aria-hidden="true" sx="display:inline-flex w:density-icon h:density-icon min-w:density-icon fg:muted-foreground group-expanded:rotate:90">
+                <span data-action="toggle" aria-hidden="true" sx="display:inline-flex w:density-icon h:density-icon min-w:density-icon fg:muted-foreground group-expanded:rotate:90">
                   <icon name="chevron-right" size="xs"></icon>
                 </span>
               {/if}
-              <span class="cell-label" sx="grow:1 min-w:0 wrap:truncate">{c.value}</span>
+              <span sx="grow:1 min-w:0 wrap:truncate">{c.value}</span>
             </row>
           {/for}
         </grid>

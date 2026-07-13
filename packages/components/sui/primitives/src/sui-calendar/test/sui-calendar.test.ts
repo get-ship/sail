@@ -118,11 +118,11 @@ describe('<sui-calendar> — view switching + navigation (#2/#3)', () => {
     const { v, calendar } = mountWith(EV)
     live.push(v)
     await v.flush()
-    expect(shadow(v.el).querySelector('.title')!.textContent).toContain('June 2026')
+    expect(shadow(v.el).querySelector('h2')!.textContent).toContain('June 2026')
     calendar.setView('day')
     await v.flush()
     expect(v.el.getAttribute('view')).toBe('day')
-    expect(shadow(v.el).querySelector('.title')!.textContent).toContain('Jun')
+    expect(shadow(v.el).querySelector('h2')!.textContent).toContain('Jun')
   })
 
   it('emits sui-view-change {view} (bubbles + composed) when the toolbar switches view', async () => {
@@ -160,14 +160,14 @@ describe('<sui-calendar> — week/day grid', () => {
     live.push(v)
     await v.flush()
     // 24 hourly slots over a 0..24 window.
-    expect(shadow(v.el).querySelectorAll('.time-axis [data-slot]').length).toBe(24)
+    expect(shadow(v.el).querySelectorAll('[data-slot]').length).toBe(24)
   })
 
   it('renders timed events as positioned lanes in the day column', async () => {
     const { v } = mountWith(EV, { initialView: 'day' })
     live.push(v)
     await v.flush()
-    const chip = shadow(v.el).querySelector('.time-grid [data-event-id="a"]') as HTMLElement
+    const chip = shadow(v.el).querySelector('[data-event-id="a"]') as HTMLElement
     expect(chip).not.toBeNull()
     // lane geometry from PositionedEvent → inline top/height.
     expect(chip.style.top).not.toBe('')
@@ -209,14 +209,14 @@ describe('<sui-calendar> — empty state precedence (#11)', () => {
     const { v } = mountWith([])
     live.push(v)
     await v.flush()
-    expect(shadow(v.el).querySelector('.empty')).not.toBeNull()
+    expect(shadow(v.el).querySelector('[role="status"]')).not.toBeNull()
   })
 
   it('does NOT render the empty part when events are present', async () => {
     const { v } = mountWith(EV)
     live.push(v)
     await v.flush()
-    expect(shadow(v.el).querySelector('.empty')).toBeNull()
+    expect(shadow(v.el).querySelector('[role="status"]')).toBeNull()
   })
 })
 

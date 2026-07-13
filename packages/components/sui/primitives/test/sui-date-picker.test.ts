@@ -6,10 +6,10 @@ const reg = createContainerRegistry()
 afterEach(() => reg.cleanup())
 
 const shadow = (el: HTMLElement) => (el.shadowRoot ?? el)
-const inputOf = (el: HTMLElement) => shadow(el).querySelector('input.entry') as HTMLInputElement
-const panelOf = (el: HTMLElement) => shadow(el).querySelector('.panel') as HTMLElement | null
+const inputOf = (el: HTMLElement) => shadow(el).querySelector('input') as HTMLInputElement
+const panelOf = (el: HTMLElement) => shadow(el).querySelector('[role="dialog"]') as HTMLElement | null
 const days = (el: HTMLElement) =>
-  Array.from(shadow(el).querySelectorAll('button.day[data-iso]')) as HTMLButtonElement[]
+  Array.from(shadow(el).querySelectorAll("button[data-iso]")) as HTMLButtonElement[]
 
 describe('<sui-date-picker>', () => {
 

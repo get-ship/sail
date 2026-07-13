@@ -98,9 +98,9 @@ export default controller<Scope>({
 })
 </controller>
 
-<column class="viewer" gap="4" sx="w:full">
-  <row class="head" gap="3" align="center">
-    <h2 class="name" sx="font:mono tracking:tight">{name()}</h2>
+<column gap="4" sx="w:full">
+  <row gap="3" align="center">
+    <h2 sx="font:mono tracking:tight">{name()}</h2>
     {#if pack() !== ''}
       <badge tone="primary" variant="soft">{pack()}</badge>
     {/if}
@@ -109,14 +109,14 @@ export default controller<Scope>({
     {/if}
   </row>
   {#if blurb() !== ''}
-    <p class="blurb" sx="fg:muted-foreground">{blurb()}</p>
+    <p sx="fg:muted-foreground">{blurb()}</p>
   {/if}
 
-  <column class="stage-shell" gap="4" sx="p:5 radius:lg border:border bg:surface-0">
-    <row class="stage-bar" gap="2" align="center" justify="between">
+  <column gap="4" sx="p:5 radius:lg border:border bg:surface-0">
+    <row gap="2" align="center" justify="between">
       <row gap="2" align="center">
         {#if hasVariants()}
-          <span class="attr" sx="font:mono text:xs fg:muted-foreground">{variantAttr()}:</span>
+          <span sx="font:mono text:xs fg:muted-foreground">{variantAttr()}:</span>
           {#for c of chips() key={c.v}}
             <button size="sm" tone="primary" variant={c.variant} data-variant={c.v}>{c.v}</button>
           {/for}
@@ -124,31 +124,31 @@ export default controller<Scope>({
       </row>
       <row gap="2" align="center">
         <status-dot tone="success"></status-dot>
-        <span class="live" sx="font:mono text:xs fg:muted-foreground">live</span>
+        <span sx="font:mono text:xs fg:muted-foreground">live</span>
       </row>
     </row>
 
-    <center class="stage" data-stage sx="p:6 min-h:9 grow:1">
+    <center data-stage sx="p:6 min-h:9 grow:1">
       <slot name="stage"></slot>
     </center>
   </column>
 
   {#if hasUsage()}
-    <column class="usage" gap="2">
-      <p class="pane-label" sx="text:xs fg:muted-foreground case:upper tracking:wide">Usage — a complete program</p>
+    <column gap="2">
+      <p sx="text:xs fg:muted-foreground case:upper tracking:wide">Usage — a complete program</p>
       <code-block code={usage()}></code-block>
     </column>
   {/if}
 
   {#if hasProps()}
-    <card class="props" sx="p:4">
+    <card sx="p:4">
       <column gap="3">
-        <p class="pane-label" sx="text:xs fg:muted-foreground case:upper tracking:wide">Props</p>
+        <p sx="text:xs fg:muted-foreground case:upper tracking:wide">Props</p>
         {#for r of propRows() key={r.name}}
           <column gap="1">
             <row gap="3" align="baseline">
               <code>{r.name}</code>
-              <span class="type" sx="font:mono text:xs fg:muted-foreground grow:1">{r.type}</span>
+              <span sx="font:mono text:xs fg:muted-foreground grow:1">{r.type}</span>
             </row>
             {#if r.desc !== ''}
               <p sx="text:sm fg:muted-foreground">{r.desc}</p>

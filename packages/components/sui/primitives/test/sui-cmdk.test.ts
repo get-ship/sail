@@ -19,9 +19,9 @@ const inputOf = (el: HTMLElement) =>
 const listOf = (el: HTMLElement) =>
   shadow(el).querySelector('ul[role="listbox"]') as HTMLUListElement
 const items = (el: HTMLElement) =>
-  Array.from(shadow(el).querySelectorAll('li.item')) as HTMLLIElement[]
+  Array.from(shadow(el).querySelectorAll('li[role="option"]')) as HTMLLIElement[]
 const groups = (el: HTMLElement) =>
-  Array.from(shadow(el).querySelectorAll('li.group')) as HTMLLIElement[]
+  Array.from(shadow(el).querySelectorAll('li[role="presentation"]')) as HTMLLIElement[]
 const keyOn = (inp: HTMLInputElement, key: string) =>
   inp.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }))
 
@@ -113,7 +113,7 @@ describe('<sui-cmdk> — filtering', () => {
     inp.dispatchEvent(new Event('input', { bubbles: true }))
     await flush()
     expect(items(el)).toHaveLength(0)
-    expect(shadow(el).querySelector('li.empty')?.textContent).toBe('Nada.')
+    expect(shadow(el).querySelector('li[role="status"]')?.textContent).toBe('Nada.')
   })
 })
 
