@@ -1,3 +1,7 @@
+<controller>
+export default null
+</controller>
+
 <div class="demos-index">
   <h1>SUI demos</h1>
   <p class="caption">

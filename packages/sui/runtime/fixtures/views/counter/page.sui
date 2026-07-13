@@ -1,3 +1,12 @@
+<controller>
+import { controller, signal } from '@ship/sui-runtime'
+import type { Scope } from './page.sui'
+
+export default controller<Scope>({
+  scope: () => ({ count: signal(0) }),
+})
+</controller>
+
 <div class="counter">
   <h1>Counter</h1>
   <p>Count: <span data-test="value">{count()}</span></p>

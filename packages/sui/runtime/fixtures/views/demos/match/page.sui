@@ -1,3 +1,14 @@
+<controller>
+import { controller, signal } from '@ship/sui-runtime'
+import type { Scope } from './page.sui'
+
+type Tone = 'info' | 'success' | 'warning' | 'destructive'
+
+export default controller<Scope>({
+  scope: () => ({ tone: signal<Tone>('info') }),
+})
+</controller>
+
 <div class="demo">
   <p class="demo-back"><a href="/demos">← demos</a></p>
   <h1>match</h1>

@@ -40,52 +40,7 @@
   Columns arrive on the live `Table<T>` via the `prop:tree` identity host
   property; `nodes`/`columns` JSON pair is the SSR fallback.
 
-  NEW SURFACE (re-port from feat/next, parity-gate pass)
-  ───────────────────────────────────────────────────────────────────────
-  - tone is NOT a prop on this component — the spike's prior <theme
-    prop="tone"> block was deleted. There is no tone/size channel
-    scaffolding for this component; size IS a prop (sm/md/lg) but it is
-    not used for visual treatment here (density is the platform axis,
-    not a per-component switch — feat/next never re-declared density
-    per instance).
-  - The outer container is a <column> (layout primitive) carrying the
-    sx surface — the closed sx vocab (tokens only) handles the rounded
-    surface, the border, the overflow, and the bg. The "grid" layout
-    itself is a flex column with the head/row grid-template set per
-    render via inline style:--sui-grid-template (sx cannot drive
-    grid-template-columns, see "stays in <style>" below).
-  - The column-menu control is a bare framework <button ghost xs>. No
-    hand-styled .col-menu (no display/color/hover/border-radius
-    authored here). The control-skin fix the alert pilot surfaced
-    (adoptSuiSheets now carries CONTROL_SKINS_CSS) means a ghost
-    button inside this shadow L2 paints correctly.
-  - sx is closed-vocabulary. Everything else sx structurally cannot
-    express stays in <style>: per-element layout (display:grid/flex on
-    semantic elements — replacing these with <row>/<column> would
-    add wrapping semantics and break the cell/caret grid behavior),
-    the --sui-grid-template dynamic var (per-render from the engine's
-    column-sizing lane), the .row absolute positioning + per-window
-    translateY transform (the virtualizer's offset bookkeeping), the
-    sticky .head with z-index, the .row[data-expanded] .caret rotate
-    + .row:not([data-can-expand]) .caret visibility-hidden (descendant
-    attribute selectors — variants only target .sui-tree-grid attrs), the
-    .col-head[data-sortable] cursor/hover, the .row[data-selected]
-    ::before primary marker, the .row:focus-visible inset box-shadow
-    ring, the multi-property transitions, the cell/head color/border/
-    text-transform/white-space/user-select, and the @media (forced-
-    colors) CanvasText outline.
-  - The feat/next baseline's .sui-tree-grid { font-family: var(--font-body);
-    font-size: var(--density-text) } lives in <style> — no sx prop for
-    font-family, and --density-text is a runtime density variable,
-    not a token (it's set by the platform density axis at <html>).
-  - The empty-state's "Clear filters" action was already a bare
-    <button> in feat/next — kept as-is, no L1-control changes needed.
-  - Tests pin to part= / data-* / role=, NOT to .col-menu or .col-label
-    or .cell — anatomy is class-free for the public hooks; the .col-*
-    and .cell classes are private styling hooks only.
-
-  No new LANG-GAP. The control-skin fix the alert pilot surfaced is in
-  place; <button ghost xs> here paints correctly inside this shadow L2.
+  Tests pin to `part=` / `data-*` / `role=` — never to a class name.
 -->
 
 <component>{
