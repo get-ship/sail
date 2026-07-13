@@ -444,13 +444,11 @@ export function suiComponentVitestConfig(opts: SuiComponentVitestOptions = {}) {
           const source = readFileSync(id, 'utf8')
           const stem = basename(id, '.sui')
           const isComponent = stem.includes('-') && stem !== 'page' && stem !== 'index'
+          // A source's controller is its `<controller>` block, served as the
+          // virtual `<file>.sui.controller.ts`. A sibling on disk is a compile
+          // error (`sui-paired-controller`), so there is nothing else to look for.
           const hasInline = /<controller[\s>]/.test(source)
-          const paired = resolve(dirname(id), `${stem}.controller.ts`)
-          const setupUrl = hasInline
-            ? `./${basename(id)}.controller.ts`
-            : existsSync(paired)
-              ? `./${stem}.controller.ts`
-              : undefined
+          const setupUrl = hasInline ? `./${basename(id)}.controller.ts` : undefined
           const out = JSON.parse(
             nativeCompileJson(
               source,
