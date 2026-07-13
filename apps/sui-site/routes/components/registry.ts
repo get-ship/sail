@@ -123,7 +123,6 @@ export const CATALOG: CatalogEntry[] = [
   // ── @ship/sui-fx (actions, not elements — pure TS, so they clear the
   //    floor and run live; the .sui packs above are gated, see PACKS) ──
   { tag: 'use:spotlight', key: 'fxSpotlight', slug: 'spotlight', pack: 'fx', cat: 'effects' },
-  { tag: 'use:dotGrid', key: 'fxDotGrid', slug: 'dot-grid', pack: 'fx', cat: 'effects' },
 ]
 
 export const CATEGORIES = [

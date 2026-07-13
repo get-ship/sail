@@ -621,21 +621,6 @@ export const DETAILS: Record<string, DetailEntry> = {
     ],
     usage: usage.spotlight ?? '',
   },
-  'dot-grid': {
-    tag: 'use:dotGrid',
-    key: 'fxDotGrid',
-    heading: 'use:dotGrid',
-    pack: 'fx',
-    blurb:
-      'An interactive dot matrix behind your content — dots ripple away from the pointer. An action from @ship/sui-fx, themed by the same tokens.',
-    variants: [],
-    variantAttr: '',
-    props: [
-      { name: 'use:dotGrid', desc: 'the whole API — attach and done', type: 'action' },
-      { name: 'import', desc: "{ dotGrid } from '@ship/sui-fx'", type: 'module' },
-    ],
-    usage: usage['dot-grid'] ?? '',
-  },
 }
 
 export const DETAIL_TAGS = Object.keys(DETAILS)

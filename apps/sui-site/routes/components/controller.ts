@@ -13,7 +13,7 @@
 // the gap. @ship/sui-fx is pure TS and runs live.
 
 import { controller, signal, derived, filteredList, type ViewScope } from '@ship/sui-runtime'
-import { spotlight, dotGrid } from '@ship/sui-fx'
+import { spotlight } from '@ship/sui-fx'
 import type { Scope } from './page.sui'
 import { CATALOG, PACKS, CATEGORIES, packCount, type CatalogEntry, type Pack } from './registry'
 
@@ -86,7 +86,7 @@ export default controller({
       packs, cats, show, countLabel, none,
       gatedSel, gatedLabel, gatedSub, gatedWaiting,
       name, agreed, notify, volume,
-      spotlight, dotGrid,
+      spotlight,
     }
   },
 })

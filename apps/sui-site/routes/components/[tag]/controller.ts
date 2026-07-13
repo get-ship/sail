@@ -9,7 +9,7 @@
 // stage map mirrors the browser page's `show` map.
 
 import { controller, signal, derived, effect, type ViewScope } from '@ship/sui-runtime'
-import { spotlight, dotGrid } from '@ship/sui-fx'
+import { spotlight } from '@ship/sui-fx'
 import type { Scope } from './page.sui'
 import { DETAILS, type DetailEntry } from './registry'
 
@@ -72,7 +72,7 @@ export default controller({
       presses, press, notify, agreed, load, name, bio, team,
       fw, pickFw, pageNo, goPage, kept, dropChip, restoreChip,
       sheetSide, people,
-      spotlight, dotGrid,
+      spotlight,
     }
   },
 })

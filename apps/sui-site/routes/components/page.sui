@@ -1032,20 +1032,6 @@
           </card>
         {/if}
         {#if show.fxDotGrid()}
-          <card padding="none" data-tile="use:dotGrid" sx="overflow:hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h:full">
-              <div data-preview use:dotGrid sx="p:4 min-h:9 grow:1 border-b:subtle bg:surface-0">
-                <p sx="text:xs fg:muted-foreground">an interactive dot matrix, behind this text</p>
-              </div>
-              <column gap="1" sx="px:3 py:2">
-                <a class="mono" href="/components/dot-grid" sx="text:sm weight:semibold">use:dotGrid</a>
-                <row gap="2" align="center" justify="between">
-                  <badge size="sm" tone="muted" variant="soft">fx</badge>
-                  <span class="mono" sx="text:xs fg:muted-foreground">effects</span>
-                </row>
-              </column>
-            </column>
-          </card>
         {/if}
       </grid>
 

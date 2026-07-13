@@ -494,16 +494,4 @@ export default controller({
   <p>move the pointer — a spotlight follows it</p>
 </div>`,
 
-  'dot-grid': `<controller>
-import { controller } from '@ship/sui-runtime'
-import { dotGrid } from '@ship/sui-fx'
-
-export default controller({
-  scope: () => ({ dotGrid }),
-})
-</controller>
-
-<div use:dotGrid sx="p:8 radius:lg border:border">
-  <p>an interactive dot matrix, behind this text</p>
-</div>`,
 }

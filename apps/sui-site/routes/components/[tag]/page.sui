@@ -487,11 +487,6 @@
                 <center><p sx="text:sm fg:muted-foreground">move the pointer — a spotlight follows it</p></center>
               </div>
             {/if}
-            {#if stage.fxDotGrid()}
-              <div use:dotGrid sx="p:8 w:full radius:lg border:border">
-                <center><p sx="text:sm fg:muted-foreground">an interactive dot matrix, behind this text</p></center>
-              </div>
-            {/if}
           </center>
 
           <center>
