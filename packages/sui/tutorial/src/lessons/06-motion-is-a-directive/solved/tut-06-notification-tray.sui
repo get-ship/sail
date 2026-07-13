@@ -7,6 +7,45 @@
   staggered rows, fade-out exits. Dismiss demonstrates exit-hold — the
   framework keeps the row in the tree until its animation finishes.
 -->
+
+<controller>
+import { controller, signal, derived } from '@ship/sui-runtime'
+import type { Scope } from './tut-06-notification-tray.sui'
+
+interface Note {
+  id: number
+  kind: string
+  tone: 'info' | 'success' | 'warning' | 'destructive'
+  text: string
+}
+
+const SEED: Note[] = [
+  { id: 1, kind: 'deploy', tone: 'success', text: 'production is live at v2.4.0' },
+  { id: 2, kind: 'alert', tone: 'warning', text: 'p95 latency crossed 400ms on api-eu' },
+  { id: 3, kind: 'review', tone: 'info', text: 'sam requested review on #482' },
+  { id: 4, kind: 'incident', tone: 'destructive', text: 'billing webhook failing since 09:12' },
+]
+
+// This lesson's state is deliberately boring — every interesting line in
+// it lives in the TEMPLATE, because motion is a directive, not code.
+export default controller<Scope>({
+  scope: () => {
+    const open = signal(true)
+    const notes = signal<Note[]>(SEED)
+    const unread = derived(() => notes().length)
+
+    return {
+      open,
+      notes,
+      unread,
+      toggle: (): void => open.set(!open()),
+      dismiss: (id: number): void => notes.set(notes().filter((n) => n.id !== id)),
+      restock: (): void => notes.set(SEED),
+    }
+  },
+})
+</controller>
+
 <column gap="4">
   <row align="center" justify="between">
     <h3>Notifications</h3>

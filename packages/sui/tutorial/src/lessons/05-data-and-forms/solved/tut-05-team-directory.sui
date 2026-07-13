@@ -6,6 +6,74 @@
   kind === 'ok'. The form writes through bind:value / bind:checked and
   refetches by bumping a tracked signal.
 -->
+
+<controller>
+import { controller, signal, derived, live } from '@ship/sui-runtime'
+import type { Scope } from './tut-05-team-directory.sui'
+
+interface Member {
+  id: number
+  name: string
+  role: 'member' | 'admin'
+}
+
+// The "server": module state behind a latency-simulating fetch. Swap in a
+// real fetch()/SDK call and nothing else in the lesson changes.
+let nextId = 4
+const DB: Member[] = [
+  { id: 1, name: 'Ada Lovelace', role: 'admin' },
+  { id: 2, name: 'Grace Hopper', role: 'member' },
+  { id: 3, name: 'Mary Shelley', role: 'member' },
+]
+
+function fetchTeam(fail: boolean): Promise<Member[]> {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (fail) reject(new Error('503 — the team service is down. Uncheck "break the API" and reload.'))
+      else resolve([...DB])
+    }, 600)
+  })
+}
+
+export default controller<Scope>({
+  scope: () => {
+    const attempt = signal(1)
+    const breakApi = signal(false)
+    const name = signal('')
+    const role = signal<'member' | 'admin'>('member')
+
+    // live() wraps the async source in a state signal:
+    //   { kind: 'loading' } → { kind: 'ok', value } | { kind: 'error', error }
+    // attempt() and breakApi() are read INSIDE the thunk, so both are
+    // tracked deps: change either and the source re-runs, back through
+    // 'loading'. That is the whole refetch story — no refetch() method,
+    // just a signal you bump.
+    const team = live(() => {
+      attempt()
+      return fetchTeam(breakApi())
+    })
+
+    const canAdd = derived(() => name().trim().length > 0)
+
+    return {
+      team,
+      breakApi,
+      name,
+      role,
+      canAdd,
+      reload: (): void => attempt.set((n) => n + 1),
+      add: (): void => {
+        if (!canAdd()) return
+        DB.push({ id: nextId++, name: name().trim(), role: role() })
+        name.set('')
+        role.set('member')
+        attempt.set((n) => n + 1) // refetch: the list refreshes through the same path
+      },
+    }
+  },
+})
+</controller>
+
 <column gap="4">
   <row align="center" justify="between">
     <h3>Team</h3>

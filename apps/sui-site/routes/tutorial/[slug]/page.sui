@@ -78,18 +78,18 @@ export default controller({
     const nextSlug = derived(() => lesson()?.next ?? '')
 
     // ── FFI refs: the editors, the preview iframe ────────────────────────
-    const tplEl = ref<CodeEditorHost>(null)
-    const ctrlEl = ref<CodeEditorHost>(null)
+    const editorEl = ref<CodeEditorHost>(null)
     const iframeEl = ref<HTMLIFrameElement>(null)
 
     // ── Playground state — signals the template reads ────────────────────
-    const tab = signal<string>('template')
+    const tab = signal<string>('source')
     const statusTone = signal<string>('muted')
     const statusText = signal<string>('loading…')
     const logs = signal<LogLine[]>([])
     const solutionShown = signal(false)
-    const tplValue = signal('')
-    const ctrlValue = signal('')
+    // ONE source: the lesson `.sui`, controller block and template together —
+    // the file the student edits and the compiler compiles.
+    const srcValue = signal('')
 
     const compile = signal<CompileFn | null>(null)
     ensureWasm('/sui_compiler_bg.wasm')
@@ -127,14 +127,14 @@ export default controller({
       const safeSlug = (lesson()?.slug || 'lesson').replace(/[^a-z0-9-]/gi, '')
       const result = runInPreview(c, iframe, {
         tag: `tut-${safeSlug}-${++tagSeq}`,
-        template: tplValue(),
-        controllerTs: ctrlValue(),
+        source: srcValue(),
       })
       if (result.kind === 'err') {
         setStatus('error', 'compile error')
-        // The full compiler message lands in the console, destructive-toned.
+        // The full compiler message lands in the console, destructive-toned, and
+        // its line/column are the editor's own — one file, one coordinate space.
         log(result.message, 'error')
-        tplEl()?.setDiagnostics?.([{
+        editorEl()?.setDiagnostics?.([{
           line: result.line ?? 1,
           column: result.col ?? 1,
           severity: 'error',
@@ -143,33 +143,23 @@ export default controller({
         }])
         return
       }
-      tplEl()?.setDiagnostics?.([])
+      editorEl()?.setDiagnostics?.([])
       setStatus('ok', 'running')
-      log('▶ ran template.sui', 'success')
+      log('▶ ran ' + fileName(), 'success')
     }
 
-    const applyCode = (template: string, controllerTs: string): void => {
-      tplValue.set(template)
-      ctrlValue.set(controllerTs)
-      const t = tplEl()
-      const c = ctrlEl()
-      if (t) t.value = template
-      if (c) c.value = controllerTs
+    const applyCode = (source: string): void => {
+      srcValue.set(source)
+      const e = editorEl()
+      if (e) e.value = source
       runNow()
     }
 
     // ── Template handlers ────────────────────────────────────────────────
-    const onTplChange = (e: Event): void => {
+    const onSourceChange = (e: Event): void => {
       const v = (e as CustomEvent<{ value: string }>).detail?.value
       if (typeof v !== 'string') return
-      tplValue.set(v)
-      setStatus('typing', 'editing…')
-      schedule(runNow)
-    }
-    const onCtrlChange = (e: Event): void => {
-      const v = (e as CustomEvent<{ value: string }>).detail?.value
-      if (typeof v !== 'string') return
-      ctrlValue.set(v)
+      srcValue.set(v)
       setStatus('typing', 'editing…')
       schedule(runNow)
     }
@@ -181,7 +171,7 @@ export default controller({
       const l = lesson()
       if (!l) return
       solutionShown.set(false)
-      applyCode(l.starterTemplate, l.starterController)
+      applyCode(l.starterSource)
       log('↺ reset to starter', 'info')
     }
     const toggleSolution = (): void => {
@@ -190,10 +180,10 @@ export default controller({
       const next = !solutionShown()
       solutionShown.set(next)
       if (next) {
-        applyCode(l.solvedTemplate, l.solvedController)
+        applyCode(l.solvedSource)
         log('shown solution', 'info')
       } else {
-        applyCode(l.starterTemplate, l.starterController)
+        applyCode(l.starterSource)
         log('hid solution — back to your code', 'info')
       }
     }
@@ -211,12 +201,9 @@ export default controller({
       if (l.slug === lastSlug) return
       lastSlug = l.slug
       solutionShown.set(false)
-      tplValue.set(l.starterTemplate)
-      ctrlValue.set(l.starterController)
-      const t = tplEl()
-      const c = ctrlEl()
-      if (t) t.value = l.starterTemplate
-      if (c) c.value = l.starterController
+      srcValue.set(l.starterSource)
+      const ed = editorEl()
+      if (ed) ed.value = l.starterSource
       logs.set([])
       log(`loaded ${l.slug}`, 'info')
       iframeReady = false
@@ -250,6 +237,9 @@ export default controller({
     })
 
     // ── Presentation reads ───────────────────────────────────────────────
+    // The lesson's real filename — the tab is the file, so it says so.
+    const fileName = derived(() => (lesson()?.starterStem ?? 'lesson') + '.sui')
+
     const steps = derived((): StepSegment[] => {
       const cur = lesson()?.order ?? 0
       return ORDERED_LESSONS.map((l) => ({
@@ -266,15 +256,13 @@ export default controller({
       statusText,
       logs,
       solutionShown,
-      tplValue,
-      ctrlValue,
-      tplEl,
-      ctrlEl,
+      srcValue,
+      fileName,
+      editorEl,
       iframeEl,
       prose,
       steps,
-      onTplChange,
-      onCtrlChange,
+      onSourceChange,
       onTabChange,
       reset,
       toggleSolution,
@@ -282,8 +270,7 @@ export default controller({
       title: derived(() => lesson()?.title ?? 'Lesson not found'),
       description: derived(() => lesson()?.description ?? ''),
       proseHtml: derived(() => lesson()?.proseHtml ?? ''),
-      solvedTpl: derived(() => lesson()?.solvedTemplate ?? ''),
-      solvedCtrl: derived(() => lesson()?.solvedController ?? ''),
+      solvedSource: derived(() => lesson()?.solvedSource ?? ''),
       solutionLabel: derived(() => (solutionShown() ? 'Hide solution' : 'Show solution')),
       lessonNumLabel: derived(() => pad2(lesson()?.order ?? 0)),
       totalLessons: derived(() => ORDERED_LESSONS.length),
@@ -343,45 +330,28 @@ export default controller({
 
     <column sx="grow:2 min-h:0 border:border radius:lg bg:surface-1 overflow:hidden">
       <row align="center" justify="between" gap="2" sx="p:2 px:3 border-b:border">
-        <tabs active="template" variant="pill" size="sm" on:sui-tab-change={onTabChange}>
+        <tabs active="source" variant="pill" size="sm" on:sui-tab-change={onTabChange}>
           <tab-list>
-            <tab name="template">template.sui</tab>
-            <tab name="controller">controller.ts</tab>
+            <tab name="source">{fileName()}</tab>
             <tab name="diff">diff</tab>
           </tab-list>
         </tabs>
       </row>
       <column sx="grow:1 min-h:0 position:relative">
-        <tab-panel name="template" attr:hidden={tab() !== 'template'} sx="grow:1 min-h:0">
+        <tab-panel name="source" attr:hidden={tab() !== 'source'} sx="grow:1 min-h:0">
           <sui-code-editor
-            data-pane="template"
+            data-pane="source"
             language="sui"
             size="md"
             chrome="flush"
-            bind:this={tplEl}
-            on:sui-change={onTplChange}
-          ></sui-code-editor>
-        </tab-panel>
-        <tab-panel name="controller" attr:hidden={tab() !== 'controller'} sx="grow:1 min-h:0">
-          <sui-code-editor
-            data-pane="controller"
-            language="typescript"
-            size="md"
-            chrome="flush"
-            bind:this={ctrlEl}
-            on:sui-change={onCtrlChange}
+            bind:this={editorEl}
+            on:sui-change={onSourceChange}
           ></sui-code-editor>
         </tab-panel>
         <tab-panel name="diff" attr:hidden={tab() !== 'diff'} sx="grow:1 min-h:0 overflow-y:auto">
           <column gap="3" sx="p:3">
-            <column gap="1">
-              <small sx="font:mono text:xs tracking:wide fg:muted-foreground">TEMPLATE.SUI</small>
-              <sui-diff from={tplValue()} to={solvedTpl()}></sui-diff>
-            </column>
-            <column gap="1">
-              <small sx="font:mono text:xs tracking:wide fg:muted-foreground">CONTROLLER.TS</small>
-              <sui-diff from={ctrlValue()} to={solvedCtrl()}></sui-diff>
-            </column>
+            <small sx="font:mono text:xs tracking:wide fg:muted-foreground">{fileName()}</small>
+            <sui-diff from={srcValue()} to={solvedSource()}></sui-diff>
           </column>
         </tab-panel>
       </column>

@@ -60,22 +60,61 @@ export function createDebouncer(ms: number): (fn: () => void) => void {
   }
 }
 
-/** Compile the template, strip the controller, and post the run into the
- *  preview iframe. Pure seam: no status writes, no logging — the caller owns
- *  that state and reacts to the returned result. */
+/** The body of the source's `<controller>` block, or `''`. Mirrors the
+ *  compiler's extraction, including its one subtlety: a `<controller>` inside an
+ *  HTML comment is prose, not the block — a lesson's header comment talks about
+ *  the block, and matching it would splice the file from the comment onward. */
+export function extractController(source: string): string {
+  let i = 0
+  let open = -1
+  while (i < source.length) {
+    const comment = source.indexOf('<!--', i)
+    const hit = source.indexOf('<controller', i)
+    if (hit === -1) return ''
+    if (comment === -1 || hit < comment) {
+      open = hit
+      break
+    }
+    const end = source.indexOf('-->', comment)
+    if (end === -1) return ''
+    i = end + 3
+  }
+  if (open === -1) return ''
+  const bodyStart = source.indexOf('>', open)
+  if (bodyStart === -1) return ''
+  const close = source.indexOf('</controller>', bodyStart)
+  if (close === -1) return ''
+  return source.slice(bodyStart + 1, close).trim()
+}
+
+/** Compile the lesson source and post the run into the preview iframe.
+ *
+ *  ONE source: the `.sui` file the student edits, `<controller>` block and all.
+ *  The compiler resolves the block into the scope it checks the template
+ *  against, so the playground rejects exactly what `sui-compiler` rejects, and
+ *  an error's line number points at the row in the editor. The block's body is
+ *  extracted separately only because the preview iframe loads it as the ESM
+ *  module the emitted template imports.
+ *
+ *  Pure seam: no status writes, no logging — the caller owns that state. */
 export function runInPreview(
   compile: CompileFn,
   iframe: HTMLIFrameElement,
-  opts: { tag: string; template: string; controllerTs: string },
+  opts: { tag: string; source: string },
 ): CompileResult {
-  const result = compile(opts.template, {
+  const result = compile(opts.source, {
     componentName: opts.tag,
     shadow: false,
     setupUrl: `./${opts.tag}.controller.ts`,
   })
   if (result.kind === 'err') return result
   iframe.contentWindow?.postMessage(
-    { kind: 'tutorial:run', template: result.js, controller: tsToEsm(opts.controllerTs), tag: opts.tag },
+    {
+      kind: 'tutorial:run',
+      template: result.js,
+      controller: tsToEsm(extractController(opts.source)),
+      tag: opts.tag,
+    },
     '*',
   )
   return result

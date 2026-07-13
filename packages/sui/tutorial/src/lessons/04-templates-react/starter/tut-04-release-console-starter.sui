@@ -1,10 +1,60 @@
 <!--
   Lesson 04 starter — the console renders, but nothing reacts yet.
 
-  Fill in the three handlers in the sibling controller, then finish the
+  Fill in the three handlers in the <controller> block, then finish the
   template: the {#match} needs its building/live branches, and the list
   needs key= so promote() MOVES rows instead of rebuilding them.
 -->
+
+<controller>
+import { controller, signal, derived } from '@ship/sui-runtime'
+import type { Scope } from './tut-04-release-console-starter.sui'
+
+type Phase = 'idle' | 'building' | 'live' | 'failed'
+
+interface Env {
+  id: string
+  name: string
+  tier: string
+  region: string
+}
+
+const SEED: Env[] = [
+  { id: 'prod', name: 'production', tier: 'prod', region: 'eu-central' },
+  { id: 'stage', name: 'staging', tier: 'preview', region: 'eu-central' },
+  { id: 'dev', name: 'dev-sandbox', tier: 'preview', region: 'us-east' },
+]
+
+export default controller<Scope>({
+  scope: () => {
+    const phase = signal<Phase>('idle')
+    const envs = signal<Env[]>(SEED)
+    const query = signal('')
+
+    const filtered = derived(() =>
+      envs().filter((e) => e.name.includes(query().toLowerCase())),
+    )
+
+    return {
+      phase,
+      filtered,
+      // TODO 1: deploy() — set phase to 'building', then settle it with a
+      // setTimeout: 'live' most of the time, 'failed' sometimes. The
+      // handler WRITES the signal; the {#match} in the template reads it.
+      deploy: (): void => {},
+      reset: (): void => phase.set('idle'),
+      search: (e: Event): void => query.set((e.target as HTMLInputElement).value),
+      // TODO 2: clear() — empty the query. The template fires it via
+      // on:keydown|key:Escape.
+      clear: (): void => {},
+      // TODO 3: promote(id) — move that env to the FRONT of envs. The
+      // keyed {#for} will MOVE the row, not rebuild it.
+      promote: (_id: string): void => {},
+    }
+  },
+})
+</controller>
+
 <column gap="4">
   <row align="center" justify="between">
     <h3>Release console</h3>

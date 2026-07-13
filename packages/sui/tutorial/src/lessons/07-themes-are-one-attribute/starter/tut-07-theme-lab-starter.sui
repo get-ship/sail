@@ -5,6 +5,32 @@
   the second preview panel: data-theme-preview scopes the token table to
   a subtree, which is how two themes sit side by side on one page.
 -->
+
+<controller>
+import { controller, signal } from '@ship/sui-runtime'
+import { THEMES, readStoredTheme, type Theme, type ThemeId } from '@ship/tokens/themes'
+import type { Scope } from './tut-07-theme-lab-starter.sui'
+
+export default controller<Scope>({
+  scope: () => {
+    const active = signal<ThemeId>(readStoredTheme())
+
+    return {
+      themes: (): Theme[] => THEMES,
+      active,
+      // TODO 1: this only updates the label — the page never repaints.
+      // applyTheme(id) is the ONLY writer of the theme state (data-theme on
+      // <html> plus the canonical .dark class); persistTheme(id) makes the
+      // choice survive a reload. Import both from '@ship/tokens/themes'
+      // and call them here.
+      pick: (id: ThemeId): void => {
+        active.set(id)
+      },
+    }
+  },
+})
+</controller>
+
 <column gap="4">
   <row align="center" justify="between">
     <h3>Theme lab</h3>

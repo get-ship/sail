@@ -6,6 +6,40 @@
   pins its own token table with data-theme-preview, which is how a picker
   can show you a theme without applying it.
 -->
+
+<controller>
+import { controller, signal } from '@ship/sui-runtime'
+import {
+  THEMES,
+  applyTheme,
+  persistTheme,
+  readStoredTheme,
+  type Theme,
+  type ThemeId,
+} from '@ship/tokens/themes'
+import type { Scope } from './tut-07-theme-lab.sui'
+
+export default controller<Scope>({
+  scope: () => {
+    const active = signal<ThemeId>(readStoredTheme())
+
+    return {
+      themes: (): Theme[] => THEMES,
+      active,
+      // applyTheme is the ONLY writer of the theme state: it sets
+      // data-theme on <html> and toggles the canonical .dark class.
+      // Every component repaints because components read tokens, never
+      // colors. persistTheme makes the choice survive a reload.
+      pick: (id: ThemeId): void => {
+        applyTheme(id)
+        persistTheme(id)
+        active.set(id)
+      },
+    }
+  },
+})
+</controller>
+
 <column gap="4">
   <row align="center" justify="between">
     <h3>Theme lab</h3>

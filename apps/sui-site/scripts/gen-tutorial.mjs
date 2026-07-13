@@ -155,18 +155,14 @@ function read(p) {
   return existsSync(p) ? readFileSync(p, 'utf8') : ''
 }
 
-// A lesson dir holds exactly one `.sui` (stem = the custom-element tag) and
-// at most one `<stem>.controller.ts`. Zero-JS lessons have no controller.
+// A lesson dir holds exactly one `.sui` — the whole lesson, `<controller>` block
+// and template together. That file IS what the student edits and what the
+// playground compiles; there is no second file to reconcile.
 function lessonSources(dir) {
-  if (!existsSync(dir)) return { stem: '', template: '', controller: '' }
+  if (!existsSync(dir)) return { stem: '', source: '' }
   const sui = readdirSync(dir).find((f) => f.endsWith('.sui'))
-  if (!sui) return { stem: '', template: '', controller: '' }
-  const stem = sui.replace(/\.sui$/, '')
-  return {
-    stem,
-    template: read(join(dir, sui)),
-    controller: read(join(dir, `${stem}.controller.ts`)),
-  }
+  if (!sui) return { stem: '', source: '' }
+  return { stem: sui.replace(/\.sui$/, ''), source: read(join(dir, sui)) }
 }
 
 // ── collect ─────────────────────────────────────────────────────────────────
@@ -198,10 +194,8 @@ for (const slug of slugs) {
     starterStem: starter.stem,
     solvedStem: solved.stem,
     proseHtml: enc(renderMarkdown(body.trim())),
-    starterTemplate: enc(starter.template),
-    starterController: enc(starter.controller),
-    solvedTemplate: enc(solved.template),
-    solvedController: enc(solved.controller),
+    starterSource: enc(starter.source),
+    solvedSource: enc(solved.source),
   })
 }
 lessons.sort((a, b) => a.order - b.order)
@@ -254,10 +248,10 @@ const types = `export interface TutorialLesson {
   starterStem: string
   solvedStem: string
   proseHtml: string
-  starterTemplate: string
-  starterController: string
-  solvedTemplate: string
-  solvedController: string
+  /** The starter \`.sui\` — controller block and template, as authored. */
+  starterSource: string
+  /** The solved \`.sui\`. */
+  solvedSource: string
 }
 
 export interface TutorialIndexLesson {
@@ -302,10 +296,8 @@ const file =
 export const TUTORIAL_LESSONS: TutorialLesson[] = RAW_LESSONS.map((l) => ({
   ...l,
   proseHtml: dec(l.proseHtml),
-  starterTemplate: dec(l.starterTemplate),
-  starterController: dec(l.starterController),
-  solvedTemplate: dec(l.solvedTemplate),
-  solvedController: dec(l.solvedController),
+  starterSource: dec(l.starterSource),
+  solvedSource: dec(l.solvedSource),
 }))
 
 export const TUTORIAL_GROUPS: TutorialGroup[] = ${JSON.stringify(groups, null, 2)}

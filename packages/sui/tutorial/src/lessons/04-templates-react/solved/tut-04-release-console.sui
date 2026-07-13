@@ -6,6 +6,61 @@
   motion), the keyed {#for} moves rows on promote() instead of
   rebuilding them, and the event modifiers replace handler boilerplate.
 -->
+
+<controller>
+import { controller, signal, derived } from '@ship/sui-runtime'
+import type { Scope } from './tut-04-release-console.sui'
+
+type Phase = 'idle' | 'building' | 'live' | 'failed'
+
+interface Env {
+  id: string
+  name: string
+  tier: string
+  region: string
+}
+
+const SEED: Env[] = [
+  { id: 'prod', name: 'production', tier: 'prod', region: 'eu-central' },
+  { id: 'stage', name: 'staging', tier: 'preview', region: 'eu-central' },
+  { id: 'dev', name: 'dev-sandbox', tier: 'preview', region: 'us-east' },
+]
+
+export default controller<Scope>({
+  scope: () => {
+    const phase = signal<Phase>('idle')
+    const envs = signal<Env[]>(SEED)
+    const query = signal('')
+
+    const filtered = derived(() =>
+      envs().filter((e) => e.name.includes(query().toLowerCase())),
+    )
+
+    return {
+      phase,
+      filtered,
+      // A tiny async state machine: the handler WRITES phase, the
+      // {#match} in the template reads it. The build "runs" for a
+      // moment, then lands on live (mostly) or failed (sometimes) —
+      // so every branch of the match is reachable.
+      deploy: (): void => {
+        if (phase() === 'building') return
+        phase.set('building')
+        setTimeout(() => phase.set(Math.random() < 0.75 ? 'live' : 'failed'), 900)
+      },
+      reset: (): void => phase.set('idle'),
+      search: (e: Event): void => query.set((e.target as HTMLInputElement).value),
+      clear: (): void => query.set(''),
+      // Move the env to the front. The keyed {#for} sees the same ids in a
+      // new order, so the reconciler MOVES the existing rows — DOM identity
+      // (focus, animation state) survives the reorder.
+      promote: (id: string): void =>
+        envs.set([...envs().filter((e) => e.id === id), ...envs().filter((e) => e.id !== id)]),
+    }
+  },
+})
+</controller>
+
 <column gap="4">
   <row align="center" justify="between">
     <h3>Release console</h3>

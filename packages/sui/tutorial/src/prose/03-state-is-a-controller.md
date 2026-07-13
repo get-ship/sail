@@ -42,11 +42,10 @@ effect(() => {                    // a side-effect that owns its cleanup
   it read. Reach for `effect` rarely — if it does not touch the outside
   world, you probably wanted a `derived`.
 
-## One model, two spellings
+## One file
 
-This lesson keeps the controller in a sibling file
-(`tut-03-stopwatch.controller.ts`) that the compiler pairs with the
-template automatically. The same controller can live inline:
+The controller lives in the `.sui` file, in a `<controller>` block above
+the template:
 
 ```
 <controller>
@@ -58,11 +57,33 @@ export default controller({
   },
 })
 </controller>
+
+<strong>{elapsed()}</strong>
 ```
 
-These are literally the same thing — the compiler extracts an inline
-`<controller>` block to the sibling `<name>.controller.ts`. One model:
-the controller owns state, the template reads it.
+There is no second spelling. A sibling `<name>.controller.ts` is a
+compile error: a template whose meaning depends on whether a file you
+cannot see exists on disk is a template you cannot read, and it loses
+its scope silently the moment that file is renamed.
+
+When a controller grows past wiring, the answer is not another file —
+it is a **composition**: a plain function that returns signals, imported
+by the block.
+
+```
+<controller>
+import { controller } from '@ship/sui-runtime'
+import { createStopwatch } from './stopwatch'   // plain TS, plain functions
+
+export default controller({
+  scope: () => createStopwatch(),
+})
+</controller>
+```
+
+That is how the real components work: `<sui-tree>` imports a 400-line
+table engine and its controller is barely wiring. Logic composes; the
+controller stays the seam between it and the template.
 
 ## Try it
 
