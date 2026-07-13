@@ -17,36 +17,18 @@
       <small>{tag()}</small>
     </breadcrumb>
 
-    <row gap="3" align="center">
-      <h1 class="mono" sx="tracking:tight">{heading()}</h1>
-      <badge tone="primary" variant="soft">{packLabel()}</badge>
-      {#if !isFx()}
-        <badge tone="muted" variant="outline">a11y ✓ · keyboard ✓</badge>
-      {/if}
-    </row>
-    <p class="lead">{blurb()}</p>
-
-    <row class="split" align="stretch">
-      <!-- ── Live stage ────────────────────────────────────────────────── -->
-      <column>
-        <p class="pane-label">Live — this is the real component</p>
-        <column gap="4" sx="p:5 radius:lg border:border bg:surface-0 h:full">
-          <row gap="2" align="center" justify="between">
-            <row gap="2" align="center">
-              {#if hasVariants()}
-                <span class="mono" sx="text:xs fg:muted-foreground">{variantAttr()}:</span>
-                {#for v of variants() key={v}}
-                  <button size="sm" tone="primary" variant={variant() === v ? 'solid' : 'ghost'} on:click={() => pick(v)}>{v}</button>
-                {/for}
-              {/if}
-            </row>
-            <row gap="2" align="center">
-              <status-dot tone="success"></status-dot>
-              <span class="mono" sx="text:xs fg:muted-foreground">live</span>
-            </row>
-          </row>
-
-          <center data-stage sx="p:6 min-h:9 grow:1">
+    <sui-component-viewer
+      name={heading()}
+      blurb={blurb()}
+      pack={packLabel()}
+      variant-attr={variantAttr()}
+      no-a11y-chip={isFx()}
+      usage={usageCode()}
+      prop:variants={variants()}
+      prop:rows={props()}
+      on:sui-variant-change={onVariantChange}
+    >
+      <column slot="stage" gap="4" align="center">
             <!-- ══ Inputs ══════════════════════════════════════════════ -->
             {#if stage.button()}
               <column gap="3" align="center">
@@ -487,37 +469,13 @@
                 <center><p sx="text:sm fg:muted-foreground">move the pointer — a spotlight follows it</p></center>
               </div>
             {/if}
-          </center>
-
-          <center>
-            <p class="mono" sx="text:xs fg:muted-foreground">click it · type in it · pick from it — nothing here is a screenshot</p>
-          </center>
-        </column>
       </column>
+      <p slot="stage" class="mono" sx="text:xs fg:muted-foreground">click it · type in it · pick from it — nothing here is a screenshot</p>
+    </sui-component-viewer>
 
-      <!-- ── Usage + props ─────────────────────────────────────────────── -->
-      <column gap="3">
-        <p class="pane-label">Usage — a complete program, compiled on every commit</p>
-        <code-block code={usageCode()}></code-block>
-        <card sx="p:4">
-          <column gap="3">
-            <p class="eyebrow">Props</p>
-            {#for r of props() key={r.name}}
-              <column gap="1" motion:enter={{ opacity: 'fade', stagger: '0.05s' }}>
-                <row gap="3" align="baseline">
-                  <code>{r.name}</code>
-                  <span class="mono" sx="text:xs fg:muted-foreground grow:1">{r.type}</span>
-                </row>
-                <p sx="text:sm fg:muted-foreground">{r.desc}</p>
-              </column>
-            {/for}
-          </column>
-        </card>
-        <row gap="2">
-          <a class="btn" href="/components">← All components</a>
-          <a class="btn btn-primary" href="/reference">API reference</a>
-        </row>
-      </column>
+    <row gap="2">
+      <a class="btn" href="/components">← All components</a>
+      <a class="btn btn-primary" href="/reference">API reference</a>
     </row>
   {:else}
     <breadcrumb>

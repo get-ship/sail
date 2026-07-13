@@ -26,6 +26,10 @@ export default controller({
       variant.set(entry()?.variants[0] ?? '')
     })
     const pick = (v: string): void => variant.set(v)
+    // The shared viewer owns the chips; the page keeps its own variant signal
+    // because every specimen stage reads it.
+    const onVariantChange = (e: CustomEvent<{ variant: string }>): void =>
+      variant.set(e.detail?.variant ?? '')
 
     const variants = () => entry()?.variants ?? []
     const hasVariants = derived(() => (entry()?.variants.length ?? 0) > 0)
@@ -67,7 +71,7 @@ export default controller({
 
     return {
       tag, entry, known, heading, isFx, packLabel,
-      variant, pick, variants, hasVariants, variantAttr,
+      variant, pick, onVariantChange, variants, hasVariants, variantAttr,
       blurb, props, usageCode, stage,
       presses, press, notify, agreed, load, name, bio, team,
       fw, pickFw, pageNo, goPage, kept, dropChip, restoreChip,

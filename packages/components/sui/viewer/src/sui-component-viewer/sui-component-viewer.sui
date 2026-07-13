@@ -1,338 +1,163 @@
 <!--
-  <sui-component-viewer> — THE composition primitive + the embeddable product
-  tag (build-spec §The viewing components #6 / Slice 5).
+  <sui-component-viewer> — the shared component-viewing surface: a live stage
+  holding the REAL component (slot="stage"), variant chips that drive a real
+  attribute on it, and its generated prop table. Every surface that shows a
+  component composes this one — docs, studio, devtools, eval.
 
-  The single tag a host drops in to get a live, reactive preview of a SUI
-  component. It COMPOSES the four committed viewing tags — it does NOT rebuild
-  any of them:
-    - <sui-render>        the live mount stage (view-mode over the source signal)
-    - <sui-prop-knobs>    the CEM-driven playground
-    - <sui-prop-matrix>   the Storybook-style state sweep
-    - <sui-source-panel>  source + paste-able snippet
-    - the folded props/slots loop  (name/type/default from the CEM)
-  flipped between via <tabs>/<tab-panel>, the whole subtree wrapped in
-  an internal <error-boundary>.
+    <sui-component-viewer name="badge" variant-attr="variant"
+                          prop:variants={['solid','soft','outline']}
+                          prop:props={PROP_REGISTRY.badge}
+                          usage={snippet}>
+      <badge slot="stage" variant="solid" tone="primary">Live</badge>
+    </sui-component-viewer>
 
-  Thin shell. The shared 'viewer:propValues' store + the cross-child lockstep
-  (knob/matrix/reset → the shared store → stage render + matrix highlight +
-  snippet) live in the paired controller + `lockstep.ts`. The template only:
-    - declares the scalar control props (component-name / viewport-width)
-    - lays out the stage + the inspector tabs
-    - hides (does NOT error) the knobs/matrix/props-table in no-CEM degraded mode
-    - threads `propValues()` / `compile()` / `sourceText()` / `slots()` down to
-      the children via `prop:*` identity
-
-  Data (the live source signal, the CEM `attributes[]`, the bound `compile()`,
-  slots) arrives via `prop:*` IDENTITY — set as JS properties on the host. NO
-  object/json attribute props (`<prop type=json>` does not exist). So this
-  template declares only the two scalar control props.
-
-  READ-ONLY-OVER-SOURCE: nothing here writes back to the source signal — the
-  viewer is read-only over an injected source (the no-IDE fence).
+  The specimen is slotted, so the viewer never mounts a fake: the host renders
+  the component it actually ships. Picking a variant writes the named attribute
+  onto every slotted element and emits sui-variant-change.
 -->
 
 <component>{
   props: {
-    'component-name': '',
-    'viewport-width': 'full' | 'desktop' | 'tablet' | 'mobile',
+    /** Component name — the heading. */
+    name: '',
+    /** Short blurb under the heading. */
+    blurb: '',
+    /** Pack label chip (e.g. "L1 · language element"). */
+    pack: '',
+    /** Which attribute the variant chips drive (empty = no chips). */
+    'variant-attr': '',
+    /** Variant values. */
+    variants: string[],
+    /** Prop rows — the generated registry's shape. (`props` is the runtime's
+        own context key, so the rows land on `rows`.) */
+    rows: PropRow[],
+    /** A complete, compiling usage program. */
+    usage: '',
+    /** Hide the a11y assurance chip (fx actions and the like). */
+    'no-a11y-chip': false,
   },
 }</component>
-<style>
-  .sui-component-viewer {
-    display: block;
-    font-family: var(--font-body);
-    color: var(--foreground);
-  }
-  .sui-component-viewer[hidden] { display: none; }
-
-  .layout {
-    display: grid;
-    gap: var(--space-4);
-  }
-
-  .stage-shell {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    background: var(--surface-1);
-    padding: var(--space-4);
-  }
-
-  .panel {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    background: var(--surface-1);
-    padding: var(--space-3);
-  }
-
-  /* The folded props/slots table — rows are row-shaped, so padding reads the
-     density channel, not the base --space-* scale. */
-  .props-table {
-    display: grid;
-    gap: 0;
-  }
-  .prop-row {
-    display: grid;
-    grid-template-columns: 1fr 1.4fr auto;
-    gap: var(--density-row-gap);
-    align-items: baseline;
-    padding: var(--density-row-py) var(--density-row-px);
-    border-bottom: 1px solid var(--divider);
-    font-size: var(--density-text);
-  }
-  .prop-row:last-child { border-bottom: none; }
-  .prop-name {
-    font-weight: var(--font-weight-medium);
-    color: var(--foreground);
-  }
-  .prop-type { color: var(--muted-foreground); }
-  .prop-default { color: var(--muted-foreground); }
-
-  .meta-label {
-    font-size: var(--text-xs);
-    font-weight: var(--font-weight-medium);
-    color: var(--muted-foreground);
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-  }
-  .section-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--space-2);
-  }
-</style>
-
 
 <controller>
-// <sui-component-viewer> controller — THE composition primitive (build-spec
-// §The viewing components #6 / Slice 5).
-//
-// Controller-purity: this file does NO view-markup DOM construction. It owns
-// LIFECYCLE only — wiring host `prop:*` into signals, publishing the shared
-// `propValues` store under the stable 'viewer:propValues' key, and wiring the
-// cross-child lockstep (a knob/matrix/reset event → the shared store → the
-// stage render + matrix highlight + snippet, all re-derived). The composition
-// (sui-render + sui-prop-knobs + sui-prop-matrix + sui-source-panel + the
-// folded props/slots {#for} + sui-tabs/sui-tab-panel + the internal
-// sui-error-boundary) lives in the template. No `innerHTML`/`outerHTML`/
-// `insertAdjacentHTML`.
-//
-// READ-ONLY-OVER-SOURCE (the no-IDE fence): this controller NEVER calls `.set`
-// on the source signal. Source is an injected, host-owned, read-only signal —
-// the only thing the viewer mutates is `propValues`. The lockstep helper has no
-// source param, so the invariant is structural (test-enforced, Slice 5/7).
-//
-// Structured inputs (the live source signal, the CEM `attributes[]`, the bound
-// `compile()`, slots/examples) arrive via `prop:*` IDENTITY — set as JS
-// properties on the host, NEVER a json/object attribute (`<prop type=json>`
-// does not exist).
-
-import { controller, signal, derived, isSignal, provide } from '@ship/sui-runtime'
-import type { ViewScope } from '@ship/sui-runtime'
+import { controller, derived, effect, signal } from '@ship/sui-runtime'
 import type { Scope } from './sui-component-viewer.sui'
-import {
-  wireLockstep,
-  degradeMode,
-  buildPropRows,
-  metaLabel,
-  type CemAttr,
-  type PropValues,
-  type ValueSignal,
-} from './lockstep'
-import type { CompileFn } from '../wasm-bootstrap'
 
-const SHARED_KEY = 'viewer:propValues'
-
-/** Read a source prop that may be a raw string OR a live signal identity
- *  (the agentic-live path). A signal is read reactively; a string is constant.
- *  NEVER written — read-only-over-source. */
-function readSource(src: unknown): string {
-  if (isSignal(src)) return (src as () => unknown)() as string
-  return typeof src === 'string' ? src : ''
+export interface PropRow {
+  name: string
+  type: string
+  desc: string
 }
 
-export default controller({
-  scope: (_ctx: ViewScope<Scope>) => {
-    // ── identity prop:* inputs (assigned as JS properties in mount) ──
-    const sourceProp = signal<unknown>(null) // a string OR a live signal (identity)
-    const cem = signal<CemAttr[] | null>(null)
-    const compile = signal<CompileFn | null>(null)
-    const slots = signal<string | null>(null)
-
-    // ── the shared single-source-of-truth propValues store ──
-    // Published under 'viewer:propValues'; child sui-prop-* read it via
-    // useShared (with a prop:value fallback when somehow detached).
-    const propValues = signal<PropValues>({})
-
-    // ── the live source TEXT, read reactively from the source prop ──
-    // (a flip of the host's source signal re-derives this → the stage render
-    // re-mounts — the agentic-live path. Read-only: never `.set`.)
-    const sourceText = derived<string>(() => readSource(sourceProp()))
-
-    // ── degradation gate (no CEM ⇒ hide knobs/matrix/props-table, not error) ──
-    const degraded = derived<boolean>(() => degradeMode(cem()))
-    const showInspector = derived<boolean>(() => !degraded())
-
-    // ── the folded props/slots table (pure derivation over the CEM) ──
-    const propRows = derived(() => buildPropRows(cem()))
-    const slotCount = derived<number>(() => 0) // slots are daemon-only on the static path
-    const meta = derived<string>(() => metaLabel(propRows().length, slotCount()))
-    const hasSlots = derived<boolean>(() => slotCount() > 0)
-
-    return {
-      sourceProp,
-      cem,
-      compile,
-      slots,
-      propValues,
-      sourceText,
-      degraded,
-      showInspector,
-      propRows,
-      slotCount,
-      meta,
-      hasSlots,
-    }
+export default controller<Scope>({
+  scope: ({ variants, rows, usage, variantAttr }: Scope) => {
+    const active = signal('')
+    const variantList = derived(() => variants() ?? [])
+    const hasVariants = derived(() => (variantAttr() ?? '') !== '' && variantList().length > 0)
+    const current = derived(() => active() || variantList()[0] || '')
+    const propRows = derived(() => rows() ?? [])
+    const hasProps = derived(() => propRows().length > 0)
+    const hasUsage = derived(() => (usage() ?? '') !== '')
+    const chips = derived(() =>
+      variantList().map((v) => ({ v, variant: v === current() ? 'solid' : 'ghost' })),
+    )
+    return { active, current, chips, hasVariants, propRows, hasProps, hasUsage }
   },
 
   mount(state, host) {
-    // ── identity prop:* → signal wiring (mirrors sui-render's defineHostProp) ──
-    // A structured/identity value (the source signal, the CEM array, the bound
-    // `compile` function, the slot string) is assigned to the host PROPERTY, not
-    // a serialized attribute. `signal.set(fn)` interprets `fn` as the updater
-    // form, so a function- or signal-valued prop must be stored via the
-    // `() => value` updater closure to land the literal reference.
-    type AnySig = { (): unknown; set: (u: (p: unknown) => unknown) => void }
-    const defineHostProp = (name: string, sig: { (): unknown; set: (v: never) => void }): void => {
-      const s = sig as unknown as AnySig
-      const existing = (host as unknown as Record<string, unknown>)[name]
-      if (existing !== undefined) s.set(() => existing)
-      Object.defineProperty(host, name, {
-        configurable: true,
-        get: () => s(),
-        set: (v: unknown) => s.set(() => v),
-      })
+    // Picking a variant writes the real attribute onto the slotted specimen —
+    // the viewer drives the component, it does not simulate it.
+    const apply = (): void => {
+      const attr = (state.$signals.variantAttr as unknown as () => string)()
+      const val = (state.$signals.current as unknown as () => string)()
+      if (!attr || !val) return
+      for (const el of host.querySelectorAll('[slot="stage"]')) el.setAttribute(attr, val)
     }
-    defineHostProp('source', state.$signals.sourceProp)
-    defineHostProp('cem', state.$signals.cem)
-    defineHostProp('compile', state.$signals.compile)
-    defineHostProp('slots', state.$signals.slots)
-
-    // ── publish the shared propValues store under the stable key ──
-    // The auto-publish keys by tagName; the spec mandates 'viewer:propValues',
-    // so provide it explicitly. A wrapped value-signal (getter + `.set`) is the
-    // child contract (sui-prop-knobs' useShared expects `{ (): values; set }`).
-    const shared = state.$signals.propValues as unknown as ValueSignal
-    provide(host as Element, SHARED_KEY, shared)
-
-    // ── the cross-child lockstep (helper owns the SHAPE; controller the wiring) ──
-    // merge = identity here (the viewer trusts a child's announced snapshot).
-    const lock = wireLockstep(shared, (next) => next)
-
-    // The composed children bubble composed events to the host shadow root. One
-    // delegated listener per event type mirrors the announced values into the
-    // shared store; the stage render / matrix highlight / snippet all re-derive
-    // off `propValues`. The events keep bubbling past the host (composed:true),
-    // so a host listening on <sui-component-viewer> still sees the raw child
-    // events for its own record/log — the viewer does NOT stopPropagation and
-    // does NOT re-emit (no double-fire, no dedup bookkeeping).
-    const onPropChange = (e: Event): void =>
-      lock.onPropChange((e as CustomEvent).detail as Parameters<typeof lock.onPropChange>[0])
-    const onCellClick = (e: Event): void =>
-      lock.onCellClick((e as CustomEvent).detail as Parameters<typeof lock.onCellClick>[0])
-    const onReset = (e: Event): void =>
-      lock.onReset((e as CustomEvent).detail as Parameters<typeof lock.onReset>[0])
-
-    host.addEventListener('sui-prop-change', onPropChange)
-    host.addEventListener('sui-matrix-cell-click', onCellClick)
-    host.addEventListener('sui-prop-reset', onReset)
-
+    const onClick = (e: Event): void => {
+      const btn = (e.target as HTMLElement).closest('[data-variant]')
+      if (!btn) return
+      const v = btn.getAttribute('data-variant') ?? ''
+      state.active = v
+      apply()
+      host.dispatchEvent(
+        new CustomEvent('sui-variant-change', {
+          detail: { variant: v },
+          bubbles: true,
+          composed: true,
+        }),
+      )
+    }
+    host.addEventListener('click', onClick)
+    // The specimen tracks the selection: identity props (variants) may land
+    // after mount, and a pick must reach the slotted element either way.
+    const stop = effect(apply)
     return () => {
-      host.removeEventListener('sui-prop-change', onPropChange)
-      host.removeEventListener('sui-matrix-cell-click', onCellClick)
-      host.removeEventListener('sui-prop-reset', onReset)
+      stop()
+      host.removeEventListener('click', onClick)
     }
   },
 })
-
 </controller>
-<error-boundary fallback-text="The viewer threw while composing.">
-  <column gap="4" class="layout">
 
-    <!-- The live render stage (view-mode over the source signal). A flip of the
-         host's source signal re-derives sourceText() → the stage re-mounts. The
-         stage also receives propValues so a host mounting by tag patches in
-         place; in source-mode they are simply unused. -->
-    <div class="stage-shell">
-      <sui-render class="stage" mode={componentName() !== '' ? 'tag' : 'source'} component-name={componentName()} viewport-width={viewportWidth()} prop:compile={compile()} prop:source={sourceText()} prop:prop-values={propValues()} prop:slots={slots()}></sui-render>
-    </div>
+<column class="viewer" gap="4" sx="w:full">
+  <row class="head" gap="3" align="center">
+    <h2 class="name" sx="font:mono tracking:tight">{name()}</h2>
+    {#if pack() !== ''}
+      <badge tone="primary" variant="soft">{pack()}</badge>
+    {/if}
+    {#if !noA11yChip()}
+      <badge tone="muted" variant="outline">a11y ✓ · keyboard ✓</badge>
+    {/if}
+  </row>
+  {#if blurb() !== ''}
+    <p class="blurb" sx="fg:muted-foreground">{blurb()}</p>
+  {/if}
 
-    <!-- The CEM-driven playground. HIDDEN (not errored) in no-CEM degraded mode.
-         Reads the shared 'viewer:propValues' via useShared; falls back to
-         prop:value when detached. -->
-    <sui-prop-knobs class="knobs" hidden={showInspector() ? null : true} prop:props={cem()} prop:value={propValues()}></sui-prop-knobs>
+  <column class="stage-shell" gap="4" sx="p:5 radius:lg border:border bg:surface-0">
+    <row class="stage-bar" gap="2" align="center" justify="between">
+      <row gap="2" align="center">
+        {#if hasVariants()}
+          <span class="attr" sx="font:mono text:xs fg:muted-foreground">{variantAttr()}:</span>
+          {#for c of chips() key={c.v}}
+            <button size="sm" tone="primary" variant={c.variant} data-variant={c.v}>{c.v}</button>
+          {/for}
+        {/if}
+      </row>
+      <row gap="2" align="center">
+        <status-dot tone="success"></status-dot>
+        <span class="live" sx="font:mono text:xs fg:muted-foreground">live</span>
+      </row>
+    </row>
 
-    <!-- The inspector tabs: flip the state-matrix / props-table / source. -->
-    <tabs class="tabs" active="source" variant="line" size="sm">
-      <sui-tab name="source">Source</sui-tab>
-      {#if showInspector()}
-        <sui-tab name="matrix">States</sui-tab>
-        <sui-tab name="props">Props</sui-tab>
-      {/if}
-
-      <tab-panel class="source-panel" name="source">
-        <sui-source-panel
-          component-name={componentName()}
-          prop:source={sourceText()}
-          prop:props={cem()}
-          prop:value={propValues()}
-          prop:slot-content={slots()}
-        ></sui-source-panel>
-      </tab-panel>
-
-      <tab-panel class="matrix-panel" name="matrix">
-        <sui-prop-matrix
-          hidden={showInspector() ? null : true}
-          component-name={componentName()}
-          prop:props={cem()}
-          prop:compile={compile()}
-          prop:source={sourceText()}
-          prop:active={propValues()}
-          prop:slot-content={slots()}
-        ></sui-prop-matrix>
-      </tab-panel>
-
-      <tab-panel class="props-panel" name="props">
-        <div class="panel props-table-shell" data-props-table hidden={showInspector() ? null : true}>
-          <div class="section-head props-head">
-            <span class="meta-label">{meta()}</span>
-          </div>
-
-          {#if propRows().length === 0}
-            <empty-state class="props-empty"></empty-state>
-          {:else}
-            <div class="props-table" role="table">
-              {#for row of propRows() key={row.name}}
-                <div class="prop-row" data-prop-row role="row">
-                  <span class="prop-name" role="cell">{row.name}</span>
-                  <span class="prop-type" role="cell">
-                    <code sx="py:1 px:2 radius:sm bg:surface-2 fg:foreground border:subtle text:sm">{row.type}</code>
-                  </span>
-                  <span class="prop-default" role="cell">{row.def}</span>
-                </div>
-              {/for}
-            </div>
-          {/if}
-
-          <div class="section slots-section" data-slots-section>
-            {#if hasSlots()}
-              <span class="meta-label slots-label">Slots</span>
-            {:else}
-              <empty-state class="slots-empty"></empty-state>
-            {/if}
-          </div>
-        </div>
-      </tab-panel>
-    </tabs>
+    <center class="stage" data-stage sx="p:6 min-h:9 grow:1">
+      <slot name="stage"></slot>
+    </center>
   </column>
-</error-boundary>
+
+  {#if hasUsage()}
+    <column class="usage" gap="2">
+      <p class="pane-label" sx="text:xs fg:muted-foreground case:upper tracking:wide">Usage — a complete program</p>
+      <code-block code={usage()}></code-block>
+    </column>
+  {/if}
+
+  {#if hasProps()}
+    <card class="props" sx="p:4">
+      <column gap="3">
+        <p class="pane-label" sx="text:xs fg:muted-foreground case:upper tracking:wide">Props</p>
+        {#for r of propRows() key={r.name}}
+          <column gap="1">
+            <row gap="3" align="baseline">
+              <code>{r.name}</code>
+              <span class="type" sx="font:mono text:xs fg:muted-foreground grow:1">{r.type}</span>
+            </row>
+            {#if r.desc !== ''}
+              <p sx="text:sm fg:muted-foreground">{r.desc}</p>
+            {/if}
+          </column>
+        {/for}
+      </column>
+    </card>
+  {/if}
+
+  <slot></slot>
+</column>

@@ -1,14 +1,13 @@
-// @ship/sui-viewer — the wasm compile seam plus the mount engine.
+// @ship/sui-viewer — the component-viewing surface every host composes.
 //
-// The pack publishes what a host needs to render a live SUI specimen:
-// `ensureWasm`/`makeCompile` (browser compile) and `<sui-render>` (the mount
-// stage: compile/runtime error branches, breakpoint-framed viewport).
-//
-// The knob/matrix/source/viewer chrome is NOT published — the docs site owns
-// its own detail view, which reads the generated prop registry and mounts real
-// components with real interactions. Those four remain in-tree as the
-// pack-internal composition behind `<sui-component-viewer>`.
+//   <sui-component-viewer>  the shared viewer: a live stage holding the REAL
+//                           component (slotted), variant chips that drive a real
+//                           attribute on it, the generated prop table, usage.
+//   <sui-render>            the mount engine: compile/runtime error branches,
+//                           breakpoint-framed viewport.
+//   ensureWasm/makeCompile  the browser compile seam.
 
+import './sui-component-viewer/sui-component-viewer.compiled.js'
 import './sui-render/sui-render.compiled.js'
 
 export {
