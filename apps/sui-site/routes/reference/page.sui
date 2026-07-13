@@ -1,178 +1,162 @@
 <!--
-  /reference — the actual reference.
-
-  What was here: thirteen sections, each one paragraph and ONE code block holding
-  six unrelated constructs, every one of them "named" by a comment INSIDE the
-  code. Nothing was scannable, nothing had a signature, nothing had an anchor —
-  and it still taught controller hooks, ref(), scoped styles, and a paired
-  .controller.ts, none of which exist.
-
-  A reference is a lookup surface. One construct, one heading, one signature, one
-  example. You should be able to Ctrl-F `bind:checked` and land on it.
+  /reference — the COMPLETE language surface, rendered from
+  src/language-surface.gen.ts + src/prop-registry.gen.ts (emitted by
+  `sui-compiler prop-registry` from the same tables the lint enforces).
+  Nothing on this page is hand-listed except the directive section, which is
+  flagged until it has a compiler-derived table too.
 -->
-<column class="doc" gap="4">
+<controller>
+import { controller, type ViewScope } from '@ship/sui-runtime'
+import type { Scope } from './page.sui'
+import { PROP_REGISTRY } from '../../src/prop-registry.gen'
+import {
+  SX_ATOMS,
+  SX_STATE_PREFIXES,
+  SX_CONDITION_PREFIXES,
+  LAYOUT_KEYWORDS,
+  MOTION,
+} from '../../src/language-surface.gen'
+
+interface ElementRow {
+  tag: string
+  href: string
+  propCount: number
+}
+
+const ELEMENTS: ElementRow[] = Object.keys(PROP_REGISTRY)
+  .sort()
+  .map((tag) => ({
+    tag,
+    href: `/components/${tag}`,
+    propCount: PROP_REGISTRY[tag]?.length ?? 0,
+  }))
+
+const SX_ROWS = SX_ATOMS.map((a) => ({ prop: a.prop, values: a.values.join(' · ') }))
+const LAYOUT_ROWS = LAYOUT_KEYWORDS.map((k) => ({ tag: k.tag, props: k.props.join(', ') }))
+
+export default controller({
+  scope: (_ctx: ViewScope<Scope>) => ({
+    elements: () => ELEMENTS,
+    elementCount: () => ELEMENTS.length,
+    sxRows: () => SX_ROWS,
+    sxCount: () => SX_ROWS.length,
+    statePrefixes: () => SX_STATE_PREFIXES,
+    conditionPrefixes: () => SX_CONDITION_PREFIXES,
+    layoutRows: () => LAYOUT_ROWS,
+    motionTriggers: () => MOTION.triggers.join(' · '),
+    motionProperties: () => MOTION.properties.join(' · '),
+    motionStagger: () => MOTION.staggerKey,
+    motionPresets: () => MOTION.presets.join(' · '),
+  }),
+})
+</controller>
+
+<column class="doc" gap="5">
   <p class="eyebrow">Reference</p>
-  <h1>Reference</h1>
+  <h1>The language surface</h1>
   <p class="lead">
-    Every directive, block, and primitive the language has — one entry each.
-    If it is here, it compiles: every sample on this page is built by the
-    compiler on every commit.
+    Everything below is generated from the compiler's own tables — the
+    vocabulary the lint enforces is the vocabulary this page documents, by
+    construction. Regenerate with
+    <code>cargo run -p sui-compiler -- prop-registry</code>.
   </p>
 
-  <!-- ── TEMPLATE DIRECTIVES ─────────────────────────────────────────── -->
-  <h2>Template directives</h2>
-  <p sx="fg:muted-foreground">
-    Eleven, and that is all of them. There is no twelfth way to do any of this.
-  </p>
+  <column gap="3">
+    <h2>Elements — {elementCount()}</h2>
+    <p>Every standard element, with its full prop table on its detail page.</p>
+    <row gap="2" sx="min-w:0">
+      {#for e of elements() key={e.tag}}
+        <a href={e.href} sx="px:3 py:1 radius:full border:border bg:surface-1 text:sm hover:bg:surface-2 hover:border:border-strong">
+          <code>{e.tag}</code> <small sx="fg:muted-foreground">{e.propCount}</small>
+        </a>
+      {/for}
+    </row>
+  </column>
 
-  <h3><code>&#123;expr&#125;</code> — text</h3>
-  <p>Read a signal, or any expression, straight into the markup.</p>
-  <code-block code={code.text}></code-block>
+  <column gap="3">
+    <h2>Layout keywords</h2>
+    <p>Structure is elements, not CSS. Each keyword takes a closed set of axis props; anything else is a compile error.</p>
+    <column gap="1">
+      {#for k of layoutRows() key={k.tag}}
+        <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md" align="center">
+          <code sx="min-w:9">&lt;{k.tag}&gt;</code>
+          <small sx="fg:muted-foreground">{k.props}</small>
+        </row>
+      {/for}
+    </column>
+  </column>
 
-  <h3><code>attr=&#123;expr&#125;</code> — attribute</h3>
-  <p>A dynamic attribute. Native elements take attributes; custom elements route to a property.</p>
-  <code-block code={code.attr}></code-block>
+  <column gap="3">
+    <h2>sx — {sxCount()} atoms</h2>
+    <p>
+      <code>sx="prop:token …"</code>, static only. Every value is a token from
+      a closed list — the rows below are the complete surface, and an off-list
+      value is a compile error that names this same list.
+    </p>
+    <column gap="1">
+      {#for a of sxRows() key={a.prop}}
+        <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md min-w:0">
+          <code sx="min-w:9">{a.prop}:</code>
+          <small sx="fg:muted-foreground grow:1 min-w:0">{a.values}</small>
+        </row>
+      {/for}
+    </column>
 
-  <h3><code>on:event</code> — events</h3>
-  <p>
-    Any DOM event. Modifiers declare intent instead of boilerplate:
-    <code>|prevent</code>, <code>|stop</code>, <code>|self</code>,
-    <code>|trusted</code>, <code>|key:Escape</code>, <code>|debounce:200</code>.
-  </p>
-  <code-block code={code.on}></code-block>
+    <h3>State prefixes</h3>
+    <column gap="1">
+      {#for s of statePrefixes() key={s.prefix}}
+        <row gap="3" sx="px:3 py:1 radius:md" align="center">
+          <code sx="min-w:9">{s.prefix}:</code>
+          <small sx="fg:muted-foreground font:mono">{s.selector}</small>
+        </row>
+      {/for}
+    </column>
+    <p>
+      Ancestor propagation: mark the ancestor with bare <code>group</code>,
+      then <code>group-hover:</code> (any state prefix) on the descendant.
+    </p>
 
-  <h3><code>bind:value</code> — two-way, text</h3>
-  <p>An input and a signal, kept in sync. Sugar for a read plus an <code>on:input</code> write.</p>
-  <code-block code={code.bindValue}></code-block>
+    <h3>Condition prefixes</h3>
+    <column gap="1">
+      {#for c of conditionPrefixes() key={c.prefix}}
+        <row gap="3" sx="px:3 py:1 radius:md" align="center">
+          <code sx="min-w:9">{c.prefix}:</code>
+          <small sx="fg:muted-foreground font:mono">{c.media}</small>
+        </row>
+      {/for}
+    </column>
+  </column>
 
-  <h3><code>bind:checked</code> — two-way, boolean</h3>
-  <p>The same, for a checkbox or radio.</p>
-  <code-block code={code.bindChecked}></code-block>
+  <column gap="3">
+    <h2>Motion — one system</h2>
+    <p>
+      <code>motion:&lt;trigger&gt;</code> is the only animation directive;
+      <code>transition:</code> / <code>in:</code> / <code>out:</code> are retired.
+    </p>
+    <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">triggers</code><small sx="fg:muted-foreground">{motionTriggers()}</small></row>
+    <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">properties</code><small sx="fg:muted-foreground">{motionProperties()} — plus {motionStagger()}: a duration step between siblings</small></row>
+    <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">presets</code><small sx="fg:muted-foreground">{motionPresets()}</small></row>
+  </column>
 
-  <h3><code>bind:this</code> — the element</h3>
-  <p>
-    Hands you the node itself. Reach for <a href="/behavior"><code>use:</code></a>
-    first — an action <em>is</em> the handle, and it cleans up after itself. This
-    is for when you genuinely need the element as a <em>value</em>.
-  </p>
-  <code-block code={code.bindThis}></code-block>
+  <column gap="3">
+    <h2>Template directives</h2>
+    <p>
+      Hand-listed until these get a compiler-derived table like everything
+      above — treat the compiler's errors as the authority.
+    </p>
+    <column gap="1">
+      <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">on:</code><small sx="fg:muted-foreground">events; modifiers |prevent |stop |self |once |debounce:ms |key:Name</small></row>
+      <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">bind:</code><small sx="fg:muted-foreground">two-way sugar — bind:value, bind:checked, bind:this (element ref)</small></row>
+      <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">prop:</code><small sx="fg:muted-foreground">set a JS property (identity values that are not attributes)</small></row>
+      <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">attr:</code><small sx="fg:muted-foreground">force attribute semantics for a dynamic value</small></row>
+      <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">use:</code><small sx="fg:muted-foreground">attach an action — behavior bound to an element with update/destroy</small></row>
+      <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">style:--x</code><small sx="fg:muted-foreground">custom-property channel — the only style: form; a component's declared knobs</small></row>
+      <row gap="3" sx="px:3 py:2 bg:surface-1 radius:md"><code sx="min-w:9">blocks</code><small sx="fg:muted-foreground">#if/:else · #match/:case/:default · #for with required key= · #while-loading · #while-error</small></row>
+    </column>
+  </column>
 
-  <h3><code>class:name</code> — conditional class</h3>
-  <p>Toggle a class when the expression is truthy.</p>
-  <code-block code={code.classDir}></code-block>
-
-  <h3><code>style:--prop</code> — a custom property</h3>
-  <p>Set a CSS custom property. Only custom properties — this is not a way back to CSS.</p>
-  <code-block code={code.styleDir}></code-block>
-
-  <h3><code>prop:name</code> — pass a property</h3>
-  <p>Force a value onto a child element as a property rather than an attribute.</p>
-  <code-block code={code.propDir}></code-block>
-
-  <h3><code>use:action</code> — behavior</h3>
-  <p>
-    Attach a function to an element. This is how every L1 element gets its
-    behavior. <a href="/behavior">Behavior →</a>
-  </p>
-  <code-block code={code.useDir}></code-block>
-
-  <h3><code>motion:trigger</code> — animation</h3>
-  <p>
-    Nine triggers (including ambient <code>loop</code>), nine presets, one system. <a href="/motion">Motion →</a>
-  </p>
-  <code-block code={code.motionDir}></code-block>
-
-  <!-- ── CONTROL FLOW ────────────────────────────────────────────────── -->
-  <h2>Control flow</h2>
-  <p sx="fg:muted-foreground">
-    Six blocks. Each is a partial — it splices into the surrounding markup with
-    no wrapper element.
-  </p>
-
-  <h3><code>&#123;#if&#125;</code></h3>
-  <code-block code={code.ifBlock}></code-block>
-
-  <h3><code>&#123;#for&#125;</code></h3>
-  <p><code>key</code> is required. Without it a reorder is a re-render.</p>
-  <code-block code={code.forBlock}></code-block>
-
-  <h3><code>&#123;#match&#125;</code></h3>
-  <p>A discriminated match — exhaustive, and it reads like the data.</p>
-  <code-block code={code.matchBlock}></code-block>
-
-  <h3><code>&#123;#async&#125;</code></h3>
-  <p>A live handle<p>A promise's three states, in the template.</p>apos;s three states in one block — loading, error, ok. It desugars into the two below.</p>
-  <code-block code={code.asyncBlock}></code-block>
-
-  <h3><code>&#123;#while-loading&#125;</code> · <code>&#123;#while-error&#125;</code></h3>
-  <p>
-    The loading and error branches of a live handle. The loaded value is only
-    reachable through <code>kind === 'ok'</code>, so a template cannot render
-    data it has not confirmed arrived.
-  </p>
-  <code-block code={code.whileBlocks}></code-block>
-
-  <!-- ── DECLARATIONS ────────────────────────────────────────────────── -->
-  <h2>Declarations</h2>
-  <p sx="fg:muted-foreground">
-    Two blocks at the top of a <code>.sui</code>. There is no third.
-  </p>
-
-  <h3><code>&lt;component&gt;</code> — what comes in</h3>
-  <p>
-    Props, and their types. A <strong>variant is a prop</strong> with a union
-    type — there is no separate variants block, and the CSS keys off the
-    attribute.
-  </p>
-  <code-block code={code.componentBlock}></code-block>
-
-  <h3><code>&lt;controller&gt;</code> — state and logic</h3>
-  <p>
-    One file. <code>scope()</code> returns the state the template reads;
-    <code>mount()</code> runs once, after the element is in the DOM.
-  </p>
-  <code-block code={code.controllerBlock}></code-block>
-
-  <h3><code>&lt;slot&gt;</code> — the composition seam</h3>
-  <code-block code={code.slots}></code-block>
-
-  <alert tone="info">
-    <strong>There is no <code>&lt;style&gt;</code>.</strong> Authored CSS is a
-    compile error in every SUI file. <a href="/styling">Styling →</a>
-  </alert>
-
-  <!-- ── RUNTIME ─────────────────────────────────────────────────────── -->
-  <h2>Runtime</h2>
-  <p sx="fg:muted-foreground">
-    Imported from <code>@ship/sui-runtime</code>. Small on purpose.
-  </p>
-
-  <h3>Signals</h3>
-  <p>The whole reactive core: a value, a computed value, and a side effect.</p>
-  <code-block code={code.signals}></code-block>
-
-  <h3>Live data</h3>
-  <p>A server value as a three-state handle — loading, error, ok.</p>
-  <code-block code={code.liveData}></code-block>
-
-  <h3>Compositions</h3>
-  <p>
-    A plain function over the primitives. No type, no registration, no rules — if
-    it touches the DOM it is an <a href="/behavior">action</a>; if it returns
-    state it is a composition. <a href="/reactivity">Compositions →</a>
-  </p>
-  <code-block code={code.compositions}></code-block>
-
-  <h3>Context</h3>
-  <p>Push a signal down a subtree without threading it through every prop.</p>
-  <code-block code={code.context}></code-block>
-
-  <h3>Actions</h3>
-  <p>The type behind <code>use:</code>. A function over an element, returning its undo.</p>
-  <code-block code={code.action}></code-block>
-
-  <row class="page-nav" gap="2">
-    <a class="btn" href="/reference">← Tooling</a>
-    <a class="btn btn-primary" href="/why">Why SUI →</a>
+  <row class="page-nav">
+    <a class="btn" href="/templates">← Templates</a>
+    <a class="btn btn-primary" href="/components">Component catalog →</a>
   </row>
 </column>
