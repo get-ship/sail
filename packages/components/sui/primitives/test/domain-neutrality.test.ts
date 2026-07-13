@@ -21,17 +21,15 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 const PACK_SRC = dirname(fileURLToPath(import.meta.url))
-// The test file lives at packages/components/sui/primitives/test/, so the
-// pack src is one level up + /src.
-const SRC_ROOT = resolve(PACK_SRC, '..', 'src')
+// navbar and theme-picker live in the language now — the neutrality gate
+// scans their stdlib sources (plus the runtime actions that carry their
+// behavior). The property is the same: product compositions are ship-free.
+const STDLIB = resolve(PACK_SRC, '../../../../../crates/sui/compiler/stdlib')
+const ACTIONS = resolve(PACK_SRC, '../../../../sui/runtime/src/actions')
 
-// The 4 product compositions the audit named. Each ships a `<tag>.sui`
-// template. Some also have a `<tag>.controller.ts` runtime. We scan BOTH
-// the template AND the controller — the gate is the union, and either
-// half can regress.
 const COMPOSITIONS = [
-  'sui-navbar',
-  'sui-theme-picker',
+  'navbar',
+  'theme-picker',
 ] as const
 
 // Every file under the composition's directory (recursively). Both the
@@ -39,27 +37,14 @@ const COMPOSITIONS = [
 // are excluded (they may legitimately name the forbidden tokens in
 // comments that DESCRIBE the absence — see sui-calendar/engine/purity.test.ts).
 function compositionFiles(stem: string): string[] {
-  const dir = join(SRC_ROOT, stem)
-  const stat = statSync(dir, { throwIfNoEntry: false })
-  if (!stat?.isDirectory()) return []
   const out: string[] = []
-  const walk = (d: string): void => {
-    for (const entry of readdirSync(d)) {
-      const p = join(d, entry)
-      const s = statSync(p)
-      if (s.isDirectory()) {
-        walk(p)
-      } else if (
-        (entry.endsWith('.sui') || entry.endsWith('.controller.ts')) &&
-        !entry.endsWith('.test.ts')
-      ) {
-        out.push(p)
-      }
-    }
-  }
-  walk(dir)
+  const sui = join(STDLIB, `${stem}.sui`)
+  if (statSync(sui, { throwIfNoEntry: false })?.isFile()) out.push(sui)
+  const actionFile = join(ACTIONS, `${stem}.ts`)
+  if (statSync(actionFile, { throwIfNoEntry: false })?.isFile()) out.push(actionFile)
   return out
 }
+
 
 // Forbidden product-coupling tokens. Each is a substring scan. Keep this
 // list in sync with the GATE regex the operator runs at promotion time.
