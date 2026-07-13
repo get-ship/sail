@@ -8,7 +8,7 @@ afterEach(() => reg.cleanup())
 const shadow = (el: HTMLElement) => (el.shadowRoot ?? el)
 // Lines are semantic list items carrying a public data-line-kind state +
 // part="line"; we anchor on those, never the styling classes (.line.add …).
-const lines = (el: HTMLElement) => shadow(el).querySelectorAll('[part="line"]')
+const lines = (el: HTMLElement) => shadow(el).querySelectorAll('[data-line-kind]')
 const linesOf = (el: HTMLElement, kind: string) =>
   shadow(el).querySelectorAll(`[data-line-kind="${kind}"]`)
 const marker = (line: Element) => line.querySelector('[aria-hidden="true"]')

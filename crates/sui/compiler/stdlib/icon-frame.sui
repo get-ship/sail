@@ -1,9 +1,6 @@
 <!--
-  <icon-frame> — L1 language element. A framed badge box for any slotted
-  icon (the Mantine ThemeIcon shape): variant picks the frame treatment,
-  tone picks the accent via the global [tone] channel, radius overrides the
-  corner. Composes: <icon-frame tone="primary" variant="tile"><icon
-  name="rocket"></icon></icon-frame>.
+  <icon-frame> — framed box for a slotted icon. variant picks the frame
+  treatment, tone the accent (global [tone] channel), radius the corner.
 -->
 
 <component>{

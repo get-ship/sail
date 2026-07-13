@@ -103,7 +103,7 @@ describe('<sui-sheet> — editing model', () => {
     const { shadow, sheet } = mountSheet()
     await flush()
     pointer(cellAt(shadow!, 'A1'), 'pointerdown')
-    key(shadow!.querySelector('[part="grid"]')!, '4')
+    key(shadow!.querySelector('.grid')!, '4')
     await flush()
     expect(sheet.editing()).not.toBeNull()
     expect(sheet.editing()!.draft).toBe('4')
@@ -119,7 +119,7 @@ describe('<sui-sheet> — editing model', () => {
       committed = (e as CustomEvent).detail
     })
     pointer(cellAt(shadow!, 'A1'), 'pointerdown')
-    key(shadow!.querySelector('[part="grid"]')!, '4')
+    key(shadow!.querySelector('.grid')!, '4')
     await flush()
     const editor = shadow!.querySelector('[part="cell-editor"]') as HTMLInputElement
     editor.value = '42'
@@ -156,7 +156,7 @@ describe('<sui-sheet> — keyboard navigation', () => {
     const { shadow, sheet } = mountSheet()
     await flush()
     pointer(cellAt(shadow!, 'A1'), 'pointerdown')
-    const grid = shadow!.querySelector('[part="grid"]')!
+    const grid = shadow!.querySelector('.grid')!
     key(grid, 'ArrowDown')
     key(grid, 'ArrowRight')
     await flush()
@@ -167,7 +167,7 @@ describe('<sui-sheet> — keyboard navigation', () => {
     const { shadow, sheet } = mountSheet()
     await flush()
     pointer(cellAt(shadow!, 'B2'), 'pointerdown')
-    const grid = shadow!.querySelector('[part="grid"]')!
+    const grid = shadow!.querySelector('.grid')!
     key(grid, 'ArrowDown', { shiftKey: true })
     key(grid, 'ArrowRight', { shiftKey: true })
     await flush()
@@ -178,7 +178,7 @@ describe('<sui-sheet> — keyboard navigation', () => {
     const { shadow, sheet } = mountSheet()
     await flush()
     pointer(cellAt(shadow!, 'A1'), 'pointerdown')
-    key(shadow!.querySelector('[part="grid"]')!, 'Tab')
+    key(shadow!.querySelector('.grid')!, 'Tab')
     await flush()
     expect(sheet.activeCell()).toEqual({ row: 0, col: 1 })
   })
@@ -236,7 +236,7 @@ describe('<sui-sheet> — clipboard', () => {
     pointer(cellAt(shadow!, 'B1'), 'pointermove')
     pointer(cellAt(shadow!, 'B1'), 'pointerup')
     await flush()
-    const grid = shadow!.querySelector('[part="grid"]') as HTMLElement
+    const grid = shadow!.querySelector('.grid') as HTMLElement
     const clip = clipboardStub()
     grid.dispatchEvent(clipboardEvent('copy', clip))
     expect(clip.getData('text/plain')).toBe('5\t6')

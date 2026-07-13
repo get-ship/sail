@@ -156,7 +156,7 @@ describe('<sui-tree> — expand/collapse via the engine (behavioral spec #2)', (
     await flush()
     const before = el
     const srcRow = shadow!.querySelector('[data-node-id="src"]') as HTMLElement
-    const caret = srcRow.querySelector('[part="caret"]') as HTMLElement
+    const caret = srcRow.querySelector('.caret') as HTMLElement
     expect(caret).not.toBeNull()
     caret.click()
     await flush()
@@ -223,7 +223,7 @@ describe('<sui-tree> — disclosure caret composes sui-icon (NOT inline svg)', (
     const { shadow } = mountTree(true)
     await flush()
     const branch = shadow!.querySelector('[data-node-id="src"]') as HTMLElement
-    const caret = branch.querySelector('[part="caret"]') as HTMLElement
+    const caret = branch.querySelector('.caret') as HTMLElement
     expect(caret).not.toBeNull()
     const icon = caret.querySelector('.sui-icon') as HTMLElement
     expect(icon).not.toBeNull()
@@ -320,7 +320,7 @@ describe('<sui-tree> — virtualized over tree.rows() (behavioral spec #6)', () 
     const { el, shadow } = mount(reg, 'sui-tree', {})
     ;(el as unknown as { tree: Table<FileNode> }).tree = tree
     await flush()
-    const spacer = shadow!.querySelector('[part="spacer"]') as HTMLElement
+    const spacer = shadow!.querySelector('.spacer') as HTMLElement
     expect(spacer).not.toBeNull()
     const h = parseFloat(spacer.style.height || '0')
     // 5000 rows × any non-trivial estimate → a tall spacer the window never matches.
@@ -389,7 +389,7 @@ describe('<sui-tree> — events via host.emit! (behavioral spec #3)', () => {
     // Listen on the ANCESTOR — only a bubbling, composed event reaches it.
     container.addEventListener('sui-toggle', fn)
     const caret = (el.shadowRoot ?? el).querySelector(
-      '[data-node-id="src"] [part="caret"]',
+      '[data-node-id="src"] .caret',
     ) as HTMLElement
     caret.click()
     await flush()
@@ -405,7 +405,7 @@ describe('<sui-tree> — events via host.emit! (behavioral spec #3)', () => {
     const fn = vi.fn()
     el.addEventListener('sui-expand-change', fn)
     const caret = (el.shadowRoot ?? el).querySelector(
-      '[data-node-id="src"] [part="caret"]',
+      '[data-node-id="src"] .caret',
     ) as HTMLElement
     caret.click()
     await flush()
