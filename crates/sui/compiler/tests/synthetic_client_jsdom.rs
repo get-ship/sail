@@ -38,7 +38,6 @@ struct Target {
     source_rel: &'static str,
     manifest_rel: &'static str,
     mode: CompileMode,
-    controller_rel: Option<&'static str>,
     /// Component tag name (kebab-case) for component-mode emit; `None` for views.
     component_tag: Option<&'static str>,
 }
@@ -48,13 +47,21 @@ struct Target {
 /// (`<name>.ssr.ts` + `<name>.controller.ts`, what reproduces the ship-js
 /// server-DOM render). Both compose the same authored controller (abs path).
 fn synth(repo: &Path, work: &Path, t: &Target) {
-    let src = fs::read_to_string(repo.join(t.source_rel)).expect("read source");
+    let raw = fs::read_to_string(repo.join(t.source_rel)).expect("read source");
+    // SFC: the `<controller>` block is the controller. Strip it before parsing
+    // (as `compile()` does) and write the body to a real module here — deck
+    // serves it as a virtual sibling; this harness has no bundler, so it
+    // materializes it in its own work dir under a name that cannot collide
+    // with the SYNTHETIC controller the emit generates below.
+    let (src, inline) = sui_compiler::parse::preprocess::extract_controller_block(&raw);
     let manifest_src = fs::read_to_string(repo.join(t.manifest_rel)).expect("read manifest");
     let manifest = AppManifest::parse(&manifest_src).expect("manifest");
     let program = parse(&src).unwrap_or_else(|e| panic!("parse {}: {}", t.name, e.render(&src)));
-    let authored = t
-        .controller_rel
-        .map(|c| AuthoredController { specifier: repo.join(c).to_string_lossy().into_owned() });
+    let authored = inline.as_ref().map(|body| {
+        let file = work.join(format!("{}.authored.ts", t.name));
+        fs::write(&file, body).expect("write authored controller");
+        AuthoredController { specifier: file.to_string_lossy().into_owned() }
+    });
 
     let merged = emit_synthetic_client_module(&program, &manifest, authored.as_ref(), t.mode, t.component_tag)
         .unwrap_or_else(|e| panic!("merged {}: {}", t.name, e.render(&src)));
@@ -251,7 +258,6 @@ fn client_contract_csr_and_hydration_in_jsdom() {
             source_rel: "crates/deck/deck-conformance/app/components/badge/badge.sui",
             manifest_rel: CONF_MANIFEST,
             mode: CompileMode::Component,
-            controller_rel: Some("crates/deck/deck-conformance/app/components/badge/badge.controller.ts"),
             component_tag: Some("sui-badge"),
         },
         Target {
@@ -259,7 +265,6 @@ fn client_contract_csr_and_hydration_in_jsdom() {
             source_rel: "crates/deck/deck-conformance/app/views/board/page.sui",
             manifest_rel: CONF_MANIFEST,
             mode: CompileMode::Component,
-            controller_rel: Some("crates/deck/deck-conformance/app/views/board/controller.ts"),
             component_tag: None,
         },
         Target {
@@ -267,7 +272,6 @@ fn client_contract_csr_and_hydration_in_jsdom() {
             source_rel: "crates/deck/deck-conformance/app/views/greet/[id]/page.sui",
             manifest_rel: CONF_MANIFEST,
             mode: CompileMode::Component,
-            controller_rel: None,
             component_tag: None,
         },
     ];

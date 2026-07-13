@@ -102,11 +102,16 @@ pub fn write_pack_cem(pack_root: &Path) -> Result<Option<PathBuf>> {
 /// framework build (`deck build-assets`), so apps then aggregate the
 /// pre-written manifests via `generate_components_gen` (B2 stays a pure read).
 /// Returns the count written. A pack that fails to compile is skipped (logged),
-/// not fatal — one bad pack must not sink the whole catalog.
+/// A pack that fails to compile is a BUILD FAILURE, not a warning. Skipping the
+/// bad pack and exiting 0 is how five packs sat un-migrated and invisible: the
+/// components silently had no manifest, and every consumer saw an empty catalog
+/// instead of an error. Every failure is collected (so one run names them all)
+/// and the build stops.
 pub fn write_all_pack_cems(repo_root: &Path) -> Result<usize> {
     let packages = discover_workspace_packages(repo_root)
         .map_err(|e| anyhow::anyhow!("discover workspace packages: {e}"))?;
     let mut written = 0usize;
+    let mut failures: Vec<String> = Vec::new();
     for pkg in &packages {
         if pkg.custom_elements.is_none() {
             continue;
@@ -114,11 +119,15 @@ pub fn write_all_pack_cems(repo_root: &Path) -> Result<usize> {
         match write_pack_cem(&pkg.root) {
             Ok(Some(_)) => written += 1,
             Ok(None) => {}
-            Err(e) => eprintln!(
-                "[deck/cem] write_pack_cem({}) failed, skipping: {e:#}",
-                pkg.root.display()
-            ),
+            Err(e) => failures.push(format!("{}:\n  {e:#}", pkg.root.display())),
         }
+    }
+    if !failures.is_empty() {
+        anyhow::bail!(
+            "{} pack(s) failed to compile:\n\n{}",
+            failures.len(),
+            failures.join("\n\n")
+        );
     }
     Ok(written)
 }

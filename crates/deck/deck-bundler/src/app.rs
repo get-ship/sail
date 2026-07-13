@@ -1024,12 +1024,14 @@ mod tests {
         // A GENERIC dynamic route — deliberately not any app's real route, so
         // this framework test never couples to a specific app's IA. The
         // emitter statically imports + compiles each route view, so the
-        // fixture must compile: `id` is bound by the sibling controller.
-        write(&r.join("routes/widgets/[id]/page.sui"), "<div>{id()}</div>\n");
+        // fixture must compile: `id` is bound by the page's own controller.
         write(
-            &r.join("routes/widgets/[id]/controller.ts"),
-            "import { controller, signal } from '@ship/sui-runtime'\n\
-export default controller({ scope: () => ({ id: signal('demo') }) })\n",
+            &r.join("routes/widgets/[id]/page.sui"),
+            "<controller>\n\
+import { controller, signal } from '@ship/sui-runtime'\n\
+export default controller({ scope: () => ({ id: signal('demo') }) })\n\
+</controller>\n\
+<div>{id()}</div>\n",
         );
         write(&r.join("public/favicon.ico"), "ICO");
 
@@ -1182,13 +1184,12 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n",
         // entry is `routes.gen.ts`, which statically imports this).
         write(
             &r.join("routes/page.sui"),
-            "<div class=\"css-probe\">css</div>\n",
-        );
-        write(
-            &r.join("routes/controller.ts"),
-            "import './styles.css';\n\
-             import { controller } from '@ship/sui-runtime'\n\
-             export default controller({ scope: () => ({}) })\n",
+            "<controller>\n\
+import './styles.css';\n\
+import { controller } from '@ship/sui-runtime'\n\
+export default controller({ scope: () => ({}) })\n\
+</controller>\n\
+<div class=\"css-probe\">css</div>\n",
         );
         write(
             &r.join("routes/styles.css"),

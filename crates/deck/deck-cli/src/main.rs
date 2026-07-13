@@ -285,10 +285,11 @@ fn build_assets() -> Result<()> {
     // builds aggregate the pre-written manifests into `<app>/components.gen.ts`
     // (`generate_components_gen`). Also the file every pack declares for
     // external tooling (Storybook / VS Code / lit-analyzer).
-    match deck_bundler::cem::write_all_pack_cems(&repo_root) {
-        Ok(n) => println!("  cem: {n} component pack manifest(s) written"),
-        Err(e) => eprintln!("  cem: pack manifest generation failed: {e:#}"),
-    }
+    // A pack that fails to compile fails the build. Printing and continuing is
+    // how un-migrated packs stayed invisible behind an exit-0 asset bake.
+    let n = deck_bundler::cem::write_all_pack_cems(&repo_root)
+        .context("pack manifest generation")?;
+    println!("  cem: {n} component pack manifest(s) written");
 
     // Build the layout once — used for both the framework verify and the
     // consumer guard below. assets_dir_for("sui-runtime") is now

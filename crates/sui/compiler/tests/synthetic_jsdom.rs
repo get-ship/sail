@@ -39,15 +39,23 @@ fn synthesized_board_client_mounts_and_stays_reactive() {
     let manifest_src =
         fs::read_to_string(repo.join("crates/deck/deck-conformance/app/app.manifest.jsonc")).unwrap();
     let manifest = AppManifest::parse(&manifest_src).unwrap();
-    let board_src =
+    let raw =
         fs::read_to_string(repo.join("crates/deck/deck-conformance/app/views/board/page.sui")).unwrap();
+    // SFC: strip the `<controller>` block before parsing and materialize its
+    // body here (deck serves it as a virtual sibling; this harness has no
+    // bundler). The name must not collide with the SYNTHETIC controller below.
+    let (board_src, inline) = sui_compiler::parse::preprocess::extract_controller_block(&raw);
     let program = parse(&board_src).unwrap();
+
+    let work = repo.join("target/synthetic-jsdom-proof");
+    let _ = fs::remove_dir_all(&work);
+    fs::create_dir_all(&work).unwrap();
+    let authored_path = work.join("board.authored.ts");
+    fs::write(&authored_path, inline.expect("board declares a <controller> block")).unwrap();
     let authored = AuthoredController {
-        specifier: repo
-            .join("crates/deck/deck-conformance/app/views/board/controller.ts")
-            .to_string_lossy()
-            .into_owned(),
+        specifier: authored_path.to_string_lossy().into_owned(),
     };
+
     let out = emit_synthetic(
         &program,
         &manifest,
@@ -58,9 +66,6 @@ fn synthesized_board_client_mounts_and_stays_reactive() {
     )
     .unwrap();
 
-    let work = repo.join("target/synthetic-jsdom-proof");
-    let _ = fs::remove_dir_all(&work);
-    fs::create_dir_all(&work).unwrap();
     fs::write(work.join("board.synthetic.controller.ts"), &out.controller_ts).unwrap();
     fs::write(work.join("board.render.ts"), &out.render_ts).unwrap();
     write_harness(&repo, &work);
