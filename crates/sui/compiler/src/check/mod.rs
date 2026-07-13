@@ -10,6 +10,7 @@ pub mod controller_parse;
 #[cfg(test)]
 mod controller_parse_tests;
 pub mod controller_purity;
+pub mod light_shadow_root;
 pub mod css_token;
 pub mod lint_overrides;
 pub mod policy;
@@ -66,6 +67,7 @@ pub fn run(
     if let Some(c) = controller {
         closed_sections::check(c)?;
         pure_derived::check(c)?;
+        light_shadow_root::check(source, Some(c))?;
     }
     // Scope-bound checks need the controller's declared names (`scope` /
     // `derived` / `use`). We have them whenever a controller is resolved —
@@ -192,6 +194,7 @@ pub fn collect(
     if let Some(c) = controller {
         push(closed_sections::check(c), source, &mut diags);
         push(pure_derived::check(c), source, &mut diags);
+        push(light_shadow_root::check(source, Some(c)), source, &mut diags);
     }
     // Scope checks run whenever a controller is resolved (inline SFC OR paired
     // file) — not only when a `source_path` is present. See `run` above: the

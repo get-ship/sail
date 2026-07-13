@@ -90,16 +90,18 @@
     color: currentColor;
     --sz: var(--icon-size-md);
   }
-  .sui-icon[hidden] { display: none; }
   .sui-icon[size='xs'] { --sz: var(--icon-size-2xs); }
   .sui-icon[size='sm'] { --sz: var(--icon-size-sm); }
   .sui-icon[size='lg'] { --sz: var(--icon-size-xl); }
   .sui-icon[size='xl'] { --sz: var(--icon-size-2xl); }
 
+  /* Both glyph sources fill the icon box: the action-injected svg and a
+     slotted one. */
   .sui-icon svg {
     display: block;
     width: var(--sz);
     height: var(--sz);
+    flex: 0 0 auto;
   }
 
   @media (prefers-reduced-motion: no-preference) {
