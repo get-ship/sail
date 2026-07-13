@@ -1,12 +1,15 @@
 // /components/[tag] — the detail view. route.params.tag() picks the entry out
-// of the hand-curated DETAILS registry; one variant signal drives the live
-// stage (each flagship maps the chips onto whichever attribute its variants
-// mean — button:variant, slider:tone, switch:size, dialog:side).
+// of the DETAILS registry (the full L1 surface plus the fx actions); one
+// variant signal drives the live stage (each entry maps its chips onto
+// whichever attribute its variants mean — button:variant, slider:tone,
+// switch:size, tooltip:placement).
 //
-// Every read the template does is a zero-arg call (`entry()`, `isButton()`),
-// because that is the only call shape a renderable expression allows.
+// Every read the template does is a zero-arg call (`entry()`, `stage.button()`),
+// because that is the only call shape a renderable expression allows — the
+// stage map mirrors the browser page's `show` map.
 
 import { controller, signal, derived, effect, type ViewScope } from '@ship/sui-runtime'
+import { spotlight, dotGrid } from '@ship/sui-fx'
 import type { Scope } from './page.sui'
 import { DETAILS, type DetailEntry } from './registry'
 
@@ -30,26 +33,31 @@ export default controller({
     const blurb = () => entry()?.blurb ?? ''
     const props = () => entry()?.props ?? []
     const usageCode = () => entry()?.usage ?? ''
+    const heading = () => entry()?.heading ?? tag()
+    const isFx = derived(() => entry()?.pack === 'fx')
+    const packLabel = () => (entry()?.pack === 'fx' ? '@ship/sui-fx' : 'In the language')
 
-    // One zero-arg gate per flagship stage.
-    const isButton = derived(() => tag() === 'button')
-    const isCombobox = derived(() => tag() === 'combobox')
-    const isTabs = derived(() => tag() === 'tabs')
-    const isDialog = derived(() => tag() === 'dialog')
-    const isTable = derived(() => tag() === 'table')
-    const isSwitch = derived(() => tag() === 'switch')
-    const isSlider = derived(() => tag() === 'slider')
-    const isBadge = derived(() => tag() === 'badge')
-    const isCard = derived(() => tag() === 'card')
-    const isAlert = derived(() => tag() === 'alert')
+    // One zero-arg gate per stage — `stage.<key>()`, derived from the entry.
+    const stage = Object.fromEntries(
+      Object.values(DETAILS).map((e) => [e.key, () => entry()?.key === e.key]),
+    ) as Record<string, () => boolean>
 
-    // Stage state — real signals the stage mutates.
+    // Stage state — real signals the stages mutate.
     const presses = signal(0)
     const press = (): void => presses.set((n) => n + 1)
     const notify = signal(true)
+    const agreed = signal(false)
     const load = signal(62)
+    const name = signal('')
+    const bio = signal('')
+    const team = signal('Design')
     const fw = signal('')
     const pickFw = (e: CustomEvent<{ value: string }>): void => fw.set(e.detail?.value ?? '')
+    const pageNo = signal('2')
+    const goPage = (e: CustomEvent<{ value: string }>): void => pageNo.set(e.detail?.value ?? '1')
+    const kept = signal(true)
+    const dropChip = (): void => kept.set(false)
+    const restoreChip = (): void => kept.set(true)
     const sheetSide = () => (variant() === 'sheet' ? 'end' : null)
     const people = () => [
       { id: 1, name: 'Ada Lovelace', team: 'Engines', status: 'active' },
@@ -58,12 +66,13 @@ export default controller({
     ]
 
     return {
-      tag, entry, known,
+      tag, entry, known, heading, isFx, packLabel,
       variant, pick, variants, hasVariants, variantAttr,
-      blurb, props, usageCode,
-      isButton, isCombobox, isTabs, isDialog, isTable,
-      isSwitch, isSlider, isBadge, isCard, isAlert,
-      presses, press, notify, load, fw, pickFw, sheetSide, people,
+      blurb, props, usageCode, stage,
+      presses, press, notify, agreed, load, name, bio, team,
+      fw, pickFw, pageNo, goPage, kept, dropChip, restoreChip,
+      sheetSide, people,
+      spotlight, dotGrid,
     }
   },
 })
