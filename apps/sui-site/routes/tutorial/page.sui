@@ -1,0 +1,39 @@
+<!--
+  /tutorial — the table of contents: nine lessons in four chapters,
+  each a link into /tutorial/[slug]. Data is generated from
+  packages/sui/tutorial by scripts/gen-tutorial.mjs.
+-->
+<column class="doc" gap="5">
+  <p class="eyebrow">Tutorial</p>
+  <h1>Learn SUI</h1>
+  <p class="lead">
+    Nine hands-on lessons — one per decision surface the language kept, then
+    the loop it exists for: agents author, humans review. Each lesson pairs a
+    starter to edit with a solved screen running live.
+  </p>
+
+  {#for group of groups() key={group.chapter}}
+    <column gap="3">
+      <h2>{group.title}</h2>
+      <column gap="2">
+        {#for lesson of group.lessons key={lesson.slug}}
+          <a href={lesson.href}
+             sx="p:4 radius:lg border:border bg:surface-1 hover:bg:surface-2 hover:border:border-strong">
+            <row gap="3" align="center">
+              <badge tone="primary" variant="soft">{lesson.order}</badge>
+              <column gap="1" sx="grow:1">
+                <strong>{lesson.title}</strong>
+                <small sx="fg:muted-foreground">{lesson.description}</small>
+              </column>
+            </row>
+          </a>
+        {/for}
+      </column>
+    </column>
+  {/for}
+
+  <row class="page-nav">
+    <a class="btn" href="/reactivity">← State</a>
+    <a class="btn btn-primary" href="/tutorial/01-a-page-is-markup">Start lesson 1 →</a>
+  </row>
+</column>

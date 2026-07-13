@@ -1,0 +1,97 @@
+<!--
+  /tutorial/[slug] — one lesson. Prose left, the SOLVED lesson running live
+  right, both sources below. The {#match} references each solved component
+  by its literal tag so the per-view resolver compiles exactly these nine
+  out of packages/sui/tutorial. Lesson 08's STARTER never mounts anywhere —
+  it does not compile, which is that lesson's entire point; its solved
+  version is what runs here.
+-->
+<column class="doc-wide" gap="4">
+  {#if known()}
+    <breadcrumb>
+      <a href="/tutorial">tutorial</a>
+      <small>{slug()}</small>
+    </breadcrumb>
+
+    <p class="eyebrow">Tutorial · Lesson {orderLabel()}</p>
+    <h1>{title()}</h1>
+    <p class="lead">{description()}</p>
+
+    <row class="split" align="stretch">
+      <column>
+        <p class="pane-label">The lesson</p>
+        <div class="doc" use:prose={proseHtml()}></div>
+      </column>
+      <column>
+        <p class="pane-label">Live — the solved lesson, running</p>
+        <column gap="3" sx="p:5 radius:lg border:border bg:surface-0 h:full">
+          {#match slug()}
+            {:case '01-a-page-is-markup'} <tut-01-settings-page></tut-01-settings-page>
+            {:case '02-styling-is-sx'} <tut-02-usage-card></tut-02-usage-card>
+            {:case '03-state-is-a-controller'} <tut-03-stopwatch></tut-03-stopwatch>
+            {:case '04-templates-react'} <tut-04-release-console></tut-04-release-console>
+            {:case '05-data-and-forms'} <tut-05-team-directory></tut-05-team-directory>
+            {:case '06-motion-is-a-directive'} <tut-06-notification-tray></tut-06-notification-tray>
+            {:case '07-themes-are-one-attribute'} <tut-07-theme-lab></tut-07-theme-lab>
+            {:case '08-the-compiler-talks-back'} <tut-08-release-notes></tut-08-release-notes>
+            {:case '09-review-like-an-owner'} <tut-09-inbox></tut-09-inbox>
+            {:default} <p sx="fg:muted-foreground">No live example for this lesson.</p>
+          {/match}
+        </column>
+      </column>
+    </row>
+
+    <h2>The source</h2>
+    <p>
+      <strong>starter/</strong> is your working copy — edit it in
+      <code>packages/sui/tutorial/src/lessons/{slug()}</code> and compile with
+      <code>sui-compiler build --mode component</code>. <strong>solved/</strong>
+      is the reference above.
+    </p>
+    <row class="split" align="stretch">
+      <column gap="3">
+        <column gap="2">
+          <p class="pane-label">starter / {starterStem()}.sui</p>
+          <code-block code={starterTemplate()} lang="sui"></code-block>
+        </column>
+        {#if hasStarterController()}
+          <column gap="2">
+            <p class="pane-label">starter / {starterStem()}.controller.ts</p>
+            <code-block code={starterController()} lang="ts"></code-block>
+          </column>
+        {/if}
+      </column>
+      <column gap="3">
+        <column gap="2">
+          <p class="pane-label">solved / {solvedStem()}.sui</p>
+          <code-block code={solvedTemplate()} lang="sui"></code-block>
+        </column>
+        {#if hasSolvedController()}
+          <column gap="2">
+            <p class="pane-label">solved / {solvedStem()}.controller.ts</p>
+            <code-block code={solvedController()} lang="ts"></code-block>
+          </column>
+        {/if}
+      </column>
+    </row>
+
+    <row class="page-nav">
+      {#if hasPrev()}
+        <a class="btn" href={prevHref()}>← {prevTitle()}</a>
+      {:else}
+        <a class="btn" href="/tutorial">← All lessons</a>
+      {/if}
+      {#if hasNext()}
+        <a class="btn btn-primary" href={nextHref()}>{nextTitle()} →</a>
+      {:else}
+        <a class="btn btn-primary" href="/tutorial">All lessons ✓</a>
+      {/if}
+    </row>
+  {:else}
+    <empty-state variant="placeholder" tone="muted">
+      <span slot="title">No such lesson</span>
+      Nothing lives at this slug.
+      <a slot="action" class="btn" href="/tutorial">All lessons</a>
+    </empty-state>
+  {/if}
+</column>

@@ -19,14 +19,15 @@ import { controller, signal, derived } from '@ship/sui-runtime'
 
 // Ship UI is ONE site with a top product switcher (SUI · Deck · Components · AI),
 // SolidJS-style. The active product is derived from the path; each drives its own
-// sidebar and accent. Tutorial + Components render full-screen (no sidebar) — the
-// operator's "no nested nav bars" rule: one switcher + one sidebar, never stacked.
+// sidebar and accent. Components renders full-screen (no sidebar) — the
+// operator's "no nested nav bars" rule: one switcher + one sidebar, never
+// stacked. The tutorial is SUI product and KEEPS the rail: a lesson is a
+// docs page, and the reader needs the way back.
 function productFor(p: string): string {
   if (p === '/') return 'ship'
   if (p === '/deck' || p.startsWith('/deck/')) return 'deck'
   if (p === '/ai' || p.startsWith('/ai/')) return 'ai'
   if (p === '/components' || p.startsWith('/components/')) return 'components'
-  if (p.startsWith('/tutorial')) return 'tutorial'
   return 'sui'
 }
 // The umbrella landing is ship (teal); SUI red; Deck violet; Components
