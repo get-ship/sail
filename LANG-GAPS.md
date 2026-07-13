@@ -65,3 +65,11 @@ Ruling key: OPEN (needs a decision) · SHIPPED (atom exists) · REJECTED.
 - `sui-render` — stage width tokens.
 - `sui-prop-matrix` — density channel, case:, grid tracks, hover transition.
 - `sui-component-viewer` — density channel, case:, grid tracks, dividers.
+
+## Parked decisions (rule against live usage, not references)
+
+- **Icon framing** (tone-accented box around a glyph: bare/tile/solid,
+  radius/size matrix — the capability behind the retired `set="app"`):
+  parked until the ship-app repo migration produces real consumers.
+  Candidates then: an existing element absorbs it (avatar/chip),
+  composition, or a dedicated element designed against the actual usage.

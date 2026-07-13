@@ -287,30 +287,6 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": "false"
     }
   ],
-  "icon-frame": [
-    {
-      "name": "variant",
-      "type": "glyph · tile · solid",
-      "default": "glyph",
-      "desc": "glyph = bare accent ink, tile = tinted surface, solid = filled."
-    },
-    {
-      "name": "tone",
-      "type": "default · primary · info · success · warning · destructive · accent · muted",
-      "default": "default"
-    },
-    {
-      "name": "radius",
-      "type": "string",
-      "default": "",
-      "desc": "Corner override; the size matrix sets a default per size."
-    },
-    {
-      "name": "size",
-      "type": "sm · md · lg",
-      "default": "md"
-    }
-  ],
   "label": [
     {
       "name": "size",

@@ -340,43 +340,6 @@
         "description": "Fetch an arbitrary SVG URL instead of a named glyph; wins over name."
       }
     },
-    "icon-frame": {
-      "radius": {
-        "type": "string",
-        "default": "",
-        "description": "Corner override; the size matrix sets a default per size."
-      },
-      "size": {
-        "values": [
-          "sm",
-          "md",
-          "lg"
-        ],
-        "default": "md"
-      },
-      "tone": {
-        "values": [
-          "default",
-          "primary",
-          "info",
-          "success",
-          "warning",
-          "destructive",
-          "accent",
-          "muted"
-        ],
-        "default": "default"
-      },
-      "variant": {
-        "values": [
-          "glyph",
-          "tile",
-          "solid"
-        ],
-        "default": "glyph",
-        "description": "glyph = bare accent ink, tile = tinted surface, solid = filled."
-      }
-    },
     "label": {
       "required": {
         "type": "bool",

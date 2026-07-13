@@ -17,7 +17,6 @@ const SOURCES: &[(&str, &str)] = &[
     ("spinner", include_str!("../stdlib/spinner.sui")),
     ("separator", include_str!("../stdlib/separator.sui")),
     ("icon", include_str!("../stdlib/icon.sui")),
-    ("icon-frame", include_str!("../stdlib/icon-frame.sui")),
     ("label", include_str!("../stdlib/label.sui")),
     ("card", include_str!("../stdlib/card.sui")),
     ("switch", include_str!("../stdlib/switch.sui")),
