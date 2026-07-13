@@ -18,9 +18,9 @@ describe('<sui-timeline>', () => {
     expect(shadow(el).querySelector('slot')).not.toBeNull()
   })
 
-  it('list div has part=list', () => {
+  it('renders the list container', () => {
     const { el } = mount(reg, 'sui-timeline')
-    expect(shadow(el).querySelector('[part~="list"]')).not.toBeNull()
+    expect(shadow(el).querySelector('.list')).not.toBeNull()
   })
 
   it('host has role=list', async () => {
@@ -37,18 +37,18 @@ describe('<sui-timeline-item>', () => {
   it('renders gutter dot and body in shadow root', () => {
     const { el } = mount(reg, 'sui-timeline-item')
     expect(shadow(el).querySelector('.gutter')).not.toBeNull()
-    expect(shadow(el).querySelector('[part="dot"]')).not.toBeNull()
+    expect(shadow(el).querySelector('.dot')).not.toBeNull()
     expect(shadow(el).querySelector('.body')).not.toBeNull()
   })
 
-  it('dot has part=dot', () => {
+  it('renders the dot', () => {
     const { el } = mount(reg, 'sui-timeline-item')
-    expect(shadow(el).querySelector('[part~="dot"]')).not.toBeNull()
+    expect(shadow(el).querySelector('.dot')).not.toBeNull()
   })
 
-  it('body has part=body', () => {
+  it('renders the body', () => {
     const { el } = mount(reg, 'sui-timeline-item')
-    expect(shadow(el).querySelector('[part~="body"]')).not.toBeNull()
+    expect(shadow(el).querySelector('.body')).not.toBeNull()
   })
 
   it('tone reflects as attribute', () => {

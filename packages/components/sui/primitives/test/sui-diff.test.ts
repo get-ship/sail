@@ -91,11 +91,11 @@ describe('<sui-diff>', () => {
     expect(el.getAttribute('aria-label')).toBe('diff')
   })
 
-  it('each line is a listitem with part=line', async () => {
+  it('each line is a listitem carrying its kind', async () => {
     const { el } = mount(reg, 'sui-diff', { from: 'x', to: 'y' })
     await flush()
     for (const line of lines(el)) {
-      expect(line.getAttribute('part')).toBe('line')
+      expect(line.getAttribute('data-line-kind')).toBeTruthy()
       expect(line.getAttribute('role')).toBe('listitem')
     }
   })
