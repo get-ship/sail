@@ -1,4 +1,4 @@
-<component>{ props: { tone: 'default' | 'primary' | 'success' } }</component>
+<component>{ shadow: true, props: { tone: 'default' | 'primary' | 'success' } }</component>
 <style>
   :host {
     display: inline-flex;

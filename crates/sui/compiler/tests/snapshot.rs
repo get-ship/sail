@@ -569,7 +569,9 @@ fn shadow_tones_emits_adopted_style_sheets_call() {
         "expected adoptSuiSheets import + call:\n{}",
         out.js
     );
-    // Light-DOM (shadow: false) components must NOT get any shared sheet.
+    // Light-DOM components must NOT get any shared sheet. The source is
+    // authoritative for shadow (no per-invocation flag decides it), so the
+    // light case is a source that does not declare `shadow: true`.
     let light_opts = CompileOpts {
         setup_url: None,
         mode: CompileMode::Component,
@@ -582,10 +584,8 @@ fn shadow_tones_emits_adopted_style_sheets_call() {
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
-    let light_out = compile(
-        &std::fs::read_to_string(fixtures_dir().join("shadow-tones.sui")).unwrap(),
-        light_opts,
-    ).expect("compile light");
+    let light_src = "<component>{ props: { tone: 'default' | 'primary' } }</component>\n<span class=\"dot\"></span>\n";
+    let light_out = compile(light_src, light_opts).expect("compile light");
     assert!(
         !light_out.js.contains("adoptSuiSheets"),
         "light-DOM component must not import adoptSuiSheets:\n{}",
