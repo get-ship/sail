@@ -20,11 +20,7 @@
   No LANG-GAP.
 -->
 
-<style>
-  .sui-timeline { display: block; position: relative; }
-  .sui-timeline[hidden] { display: none; }
 
-</style>
 
 
 <controller>
@@ -38,5 +34,5 @@ export default controller<Scope>({
 })
 
 </controller>
-<column class="list" gap="1"><slot></slot></column>
+<column class="list" gap="1" sx="position:relative"><slot></slot></column>
 

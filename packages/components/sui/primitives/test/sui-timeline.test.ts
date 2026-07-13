@@ -70,11 +70,11 @@ describe('<sui-timeline-item>', () => {
     expect(shadow(el).querySelector('.at')).toBeNull()
   })
 
-  it('at part is set on the .at element', async () => {
+  it('the timestamp renders in the .at element', async () => {
     const { el } = mount(reg, 'sui-timeline-item', { at: '2h ago' })
     await flush()
     const atEl = shadow(el).querySelector('.at')!
-    expect(atEl.getAttribute('part')).toBe('at')
+    expect(atEl.textContent).toBe('2h ago')
   })
 
   it('host has role=listitem by default', async () => {

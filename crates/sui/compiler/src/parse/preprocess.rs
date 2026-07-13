@@ -1803,6 +1803,16 @@ fn classify_variant_state(
     }
 }
 
+/// One `name=value` condition → an attribute match. Bool props reflect as
+/// presence attributes, so `x=true` → `[x]` and `x=false` → `:not([x])`.
+fn attr_condition(k: &str, v: &str) -> String {
+    match v {
+        "true" => format!("[{k}]"),
+        "false" => format!(":not([{k}])"),
+        _ => format!("[{k}='{v}']"),
+    }
+}
+
 fn variant_selector(sel: &str) -> Option<String> {
     let sel = sel.trim();
     if let Some(inner) = sel.strip_prefix('(').and_then(|s| s.strip_suffix(')')) {
@@ -1821,7 +1831,7 @@ fn attr_match(s: &str) -> Option<String> {
     if s.starts_with('[') && s.ends_with(']') && s.len() > 2 {
         Some(s.to_string())
     } else if let Some((prop, val)) = s.split_once('=') {
-        Some(format!("[{}='{}']", prop.trim(), val.trim()))
+        Some(attr_condition(prop.trim(), val.trim()))
     } else if !s.is_empty() && s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_') {
         // A bare identifier is a boolean attribute: `invalid` → `[invalid]`.
         Some(format!("[{s}]"))
