@@ -165,18 +165,24 @@ fn lower_sx_value(
         // A `<state>` is a pseudo (`hover`) or a propagation (`group-hover` → the
         // rule keys on an ancestor `.sui-grp:hover`). `prefix` is a leading
         // ancestor selector; `pseudo` a trailing pseudo-class on the element.
-        let (media, prefix, pseudo): (&str, String, &str) = match state {
-            None => ("", String::new(), ""),
+        let (media, prefix, pseudo): (&str, String, String) = match state {
+            None => ("", String::new(), String::new()),
             Some(s) => {
                 if let Some(m) = sui_lint::rules::sx::condition_media(s) {
-                    (m, String::new(), "")
+                    (m, String::new(), String::new())
                 } else if let Some(base) = s.strip_prefix("group-") {
-                    match sui_lint::rules::sx::state_pseudo(base) {
-                        Some(p) => ("", format!(".sui-grp{p} "), ""),
+                    match sui_lint::rules::sx::state_pseudo(base)
+                        .map(str::to_string)
+                        .or_else(|| sui_lint::rules::sx::state_attr(base))
+                    {
+                        Some(p) => ("", format!(".sui-grp{p} "), String::new()),
                         None => continue,
                     }
                 } else {
-                    match sui_lint::rules::sx::state_pseudo(s) {
+                    match sui_lint::rules::sx::state_pseudo(s)
+                        .map(str::to_string)
+                        .or_else(|| sui_lint::rules::sx::state_attr(s))
+                    {
                         Some(p) => ("", String::new(), p),
                         None => continue,
                     }
@@ -1782,12 +1788,17 @@ fn classify_variant_state(
     }
     if let Some(base) = state.strip_prefix("group-")
         && let Some(p) = sui_lint::rules::sx::state_pseudo(base)
+            .map(str::to_string)
+            .or_else(|| sui_lint::rules::sx::state_attr(base))
     {
-        return (None, p.to_string(), String::new());
+        return (None, p, String::new());
     }
-    match sui_lint::rules::sx::state_pseudo(state) {
-        Some(p) if has_target => (None, String::new(), p.to_string()),
-        Some(p) => (None, p.to_string(), String::new()),
+    match sui_lint::rules::sx::state_pseudo(state)
+        .map(str::to_string)
+        .or_else(|| sui_lint::rules::sx::state_attr(state))
+    {
+        Some(p) if has_target => (None, String::new(), p),
+        Some(p) => (None, p, String::new()),
         None => (None, String::new(), String::new()),
     }
 }

@@ -28,7 +28,10 @@ export const SX_ATOMS: SxAtom[] = [
       "8",
       "9",
       "half",
-      "size-px"
+      "size-px",
+      "density-row-py",
+      "density-row-px",
+      "density-row-gap"
     ]
   },
   {
@@ -51,7 +54,10 @@ export const SX_ATOMS: SxAtom[] = [
       "8",
       "9",
       "half",
-      "size-px"
+      "size-px",
+      "density-row-py",
+      "density-row-px",
+      "density-row-gap"
     ]
   },
   {
@@ -74,7 +80,10 @@ export const SX_ATOMS: SxAtom[] = [
       "8",
       "9",
       "half",
-      "size-px"
+      "size-px",
+      "density-row-py",
+      "density-row-px",
+      "density-row-gap"
     ]
   },
   {
@@ -97,7 +106,10 @@ export const SX_ATOMS: SxAtom[] = [
       "8",
       "9",
       "half",
-      "size-px"
+      "size-px",
+      "density-row-py",
+      "density-row-px",
+      "density-row-gap"
     ]
   },
   {
@@ -120,7 +132,10 @@ export const SX_ATOMS: SxAtom[] = [
       "8",
       "9",
       "half",
-      "size-px"
+      "size-px",
+      "density-row-py",
+      "density-row-px",
+      "density-row-gap"
     ]
   },
   {
@@ -143,7 +158,10 @@ export const SX_ATOMS: SxAtom[] = [
       "8",
       "9",
       "half",
-      "size-px"
+      "size-px",
+      "density-row-py",
+      "density-row-px",
+      "density-row-gap"
     ]
   },
   {
@@ -166,7 +184,10 @@ export const SX_ATOMS: SxAtom[] = [
       "8",
       "9",
       "half",
-      "size-px"
+      "size-px",
+      "density-row-py",
+      "density-row-px",
+      "density-row-gap"
     ]
   },
   {
@@ -189,7 +210,10 @@ export const SX_ATOMS: SxAtom[] = [
       "8",
       "9",
       "half",
-      "size-px"
+      "size-px",
+      "density-row-py",
+      "density-row-px",
+      "density-row-gap"
     ]
   },
   {
@@ -212,7 +236,10 @@ export const SX_ATOMS: SxAtom[] = [
       "8",
       "9",
       "half",
-      "size-px"
+      "size-px",
+      "density-row-py",
+      "density-row-px",
+      "density-row-gap"
     ]
   },
   {
@@ -235,7 +262,10 @@ export const SX_ATOMS: SxAtom[] = [
       "8",
       "9",
       "half",
-      "size-px"
+      "size-px",
+      "density-row-py",
+      "density-row-px",
+      "density-row-gap"
     ]
   },
   {
@@ -258,7 +288,10 @@ export const SX_ATOMS: SxAtom[] = [
       "8",
       "9",
       "half",
-      "size-px"
+      "size-px",
+      "density-row-py",
+      "density-row-px",
+      "density-row-gap"
     ]
   },
   {
@@ -281,7 +314,10 @@ export const SX_ATOMS: SxAtom[] = [
       "8",
       "9",
       "half",
-      "size-px"
+      "size-px",
+      "density-row-py",
+      "density-row-px",
+      "density-row-gap"
     ]
   },
   {
@@ -610,7 +646,8 @@ export const SX_ATOMS: SxAtom[] = [
       "sm",
       "xl",
       "xs",
-      "size-fs"
+      "size-fs",
+      "density"
     ]
   },
   {
@@ -1616,6 +1653,7 @@ export const SX_ATOMS: SxAtom[] = [
       "max",
       "0",
       "size-h",
+      "density-icon",
       "0_75",
       "1",
       "1_25",
@@ -1676,6 +1714,7 @@ export const SX_ATOMS: SxAtom[] = [
       "max",
       "0",
       "size-h",
+      "density-icon",
       "0_75",
       "1",
       "1_25",
@@ -1736,6 +1775,7 @@ export const SX_ATOMS: SxAtom[] = [
       "max",
       "0",
       "size-h",
+      "density-icon",
       "0_75",
       "1",
       "1_25",
@@ -1796,6 +1836,7 @@ export const SX_ATOMS: SxAtom[] = [
       "max",
       "0",
       "size-h",
+      "density-icon",
       "0_75",
       "1",
       "1_25",
@@ -1856,6 +1897,7 @@ export const SX_ATOMS: SxAtom[] = [
       "max",
       "0",
       "size-h",
+      "density-icon",
       "0_75",
       "1",
       "1_25",
@@ -1916,6 +1958,7 @@ export const SX_ATOMS: SxAtom[] = [
       "max",
       "0",
       "size-h",
+      "density-icon",
       "0_75",
       "1",
       "1_25",
@@ -1980,6 +2023,33 @@ export const SX_ATOMS: SxAtom[] = [
       "50",
       "75",
       "100"
+    ]
+  },
+  {
+    "prop": "wrap",
+    "values": [
+      "normal",
+      "nowrap",
+      "pre",
+      "pre-wrap"
+    ]
+  },
+  {
+    "prop": "case",
+    "values": [
+      "upper",
+      "lower",
+      "none"
+    ]
+  },
+  {
+    "prop": "rotate",
+    "values": [
+      "0",
+      "45",
+      "90",
+      "180",
+      "270"
     ]
   },
   {

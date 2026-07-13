@@ -164,7 +164,7 @@ export default controller({
     // into sui-prop-knobs (the studio cell→knob round-trip). `host.emit!`
     // defaults bubbles+composed so the event crosses the shadow boundary. The
     // host listens via the exact name `on:sui-matrix-cell-click`.
-    const shadow = host.shadowRoot
+    const shadow = host.shadowRoot ?? host
     const onCellClick = (e: Event): void => {
       const cellEl = (e.target as HTMLElement).closest('[data-matrix-cell]') as HTMLElement | null
       if (!cellEl) return

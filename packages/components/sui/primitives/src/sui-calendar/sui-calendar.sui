@@ -460,7 +460,7 @@ export default controller({
       // Move DOM focus onto the newly-anchored cell after the grid re-renders.
       const iso = active().focusDate()
       queueMicrotask(() => {
-        const next = host.shadowRoot?.querySelector(
+        const next = (host.shadowRoot ?? host).querySelector(
           `[role=gridcell][data-iso="${iso}"]`,
         ) as HTMLElement | null
         next?.focus()

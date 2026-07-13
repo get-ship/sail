@@ -41,6 +41,10 @@ enum Kind {
     // role-token keyed: value picks a typography ROLE (`--mono-font`), so a
     // theme that reassigns the role restyles every use — never a raw stack.
     Font,
+    // enum-keyword mechanics — no design opinion, any theme applies unchanged
+    Wrap,
+    Case,
+    Rotate,
     // preset: value picks a curated composition
     Ring,
     Border,
@@ -70,6 +74,9 @@ fn prop_kind(prop: &str) -> Option<Kind> {
         "weight" => Weight,
         "leading" => Leading,
         "font" => Font,
+        "wrap" => Wrap,
+        "case" => Case,
+        "rotate" => Rotate,
         "tracking" => Tracking,
         "ring" => Ring,
         // A border on ONE side. Same value vocabulary as `border` — this adds a
@@ -102,7 +109,7 @@ const ALL_PROPS: &[&str] = &[
     "p", "px", "py", "pt", "pr", "pb", "pl", "m", "mt", "mr", "mb", "ml",
     "bg", "fg", "radius", "text", "shadow", "z", "weight", "leading", "tracking", "font",
     "ring", "border", "border-t", "border-r", "border-b", "border-l",
-    "w", "h", "min-w", "min-h", "max-w", "max-h", "grow", "opacity",
+    "w", "h", "min-w", "min-h", "max-w", "max-h", "grow", "opacity", "wrap", "case", "rotate",
     "display", "overflow", "overflow-x", "overflow-y", "position", "cursor", "visibility",
 ];
 
@@ -115,6 +122,7 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
         Space => {
             let mut v = crate::tokens::space_values().to_vec();
             v.push("size-px");
+            v.extend(["density-row-py", "density-row-px", "density-row-gap"]);
             v
         }
         Color => crate::tokens::color_values().to_vec(),
@@ -122,6 +130,7 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
         Text => {
             let mut v = crate::tokens::text_values().to_vec();
             v.push("size-fs");
+            v.push("density");
             v
         }
         Shadow => {
@@ -136,6 +145,9 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
         // The typography roles from tokens.css (`--mono-font`/`--body-font`/
         // `--heading-font`) — the themable layer, not the raw `--font-*` stacks.
         Font => vec!["mono", "body", "heading"],
+        Wrap => vec!["normal", "nowrap", "pre", "pre-wrap"],
+        Case => vec!["upper", "lower", "none"],
+        Rotate => vec!["0", "45", "90", "180", "270"],
         Ring => {
             let mut v = vec!["none"];
             v.extend(crate::tokens::color_values());
@@ -151,7 +163,7 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
             // fixed chrome the shell declares via --chrome-offset(-x). A
             // workbench route (editor panes fixed, one pane scrolling) is not
             // expressible with `screen` — it overruns by the chrome height.
-            let mut v = vec!["full", "auto", "fit", "screen", "fill", "min", "max", "0", "size-h"];
+            let mut v = vec!["full", "auto", "fit", "screen", "fill", "min", "max", "0", "size-h", "density-icon"];
             v.extend(crate::tokens::suffixes("space-"));
             v.extend(crate::tokens::size_values());
             v
@@ -194,6 +206,9 @@ fn css_props(prop: &str) -> &'static [&'static str] {
         "weight" => &["font-weight"],
         "leading" => &["line-height"],
         "font" => &["font-family"],
+        "wrap" => &["white-space"],
+        "case" => &["text-transform"],
+        "rotate" => &["transform"],
         "tracking" => &["letter-spacing"],
         "ring" => &["box-shadow"],
         "border" => &["border"],
@@ -246,7 +261,18 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
     // Framework size channels (`size-px`/`size-fs`/`size-h`, from suiSizesSheet)
     // are already the full custom-property name — they lower to their own var,
     // not a kind-prefixed one (`var(--size-px)`, not `var(--space-size-px)`).
-    if token.starts_with("size-") {
+    if matches!(kind, Kind::Wrap) && token == "pre-wrap" {
+        return Some(vec![
+            ("white-space", "pre-wrap".to_string()),
+            ("overflow-wrap", "break-word".to_string()),
+        ]);
+    }
+    if matches!(kind, Kind::Text) && token == "density" {
+        return Some(vec![("font-size", "var(--density-text)".to_string())]);
+    }
+    // Framework channel tokens (size-*/density-*) are full custom-property
+    // names — they lower to their own var, not a kind-prefixed one.
+    if token.starts_with("size-") || token.starts_with("density-") {
         return Some(
             css_props(prop)
                 .iter()
@@ -270,6 +296,13 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
         Weight => format!("var(--font-weight-{token})"),
         Leading => format!("var(--leading-{token})"),
         Font => format!("var(--{token}-font)"),
+        Wrap => token.to_string(),
+        Case => match token {
+            "upper" => "uppercase".into(),
+            "lower" => "lowercase".into(),
+            _ => "none".into(),
+        },
+        Rotate => format!("rotate({token}deg)"),
         Tracking => format!("var(--tracking-{token})"),
         // a focus ring at the standard ring width in the chosen tone (or off).
         Ring => if token == "none" {
@@ -363,6 +396,18 @@ pub const STATE_PREFIXES: &[(&str, &str)] = &[
     ("current", "[aria-current]:not([aria-current='false'])"),
 ];
 
+/// Attribute-state prefix: a `data-*` boolean attribute on the element (or
+/// its `group` ancestor) — self state, same class as the pseudo table.
+pub fn state_attr(state: &str) -> Option<String> {
+    if state.starts_with("data-")
+        && state.len() > 5
+        && state.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+    {
+        return Some(format!("[{state}]"));
+    }
+    None
+}
+
 pub fn state_pseudo(state: &str) -> Option<&'static str> {
     STATE_PREFIXES.iter().find(|(n, _)| *n == state).map(|(_, p)| *p)
 }
@@ -407,13 +452,16 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 [state, prop, token] => {
                     let ok = state_pseudo(state).is_some()
                         || condition_media(state).is_some()
-                        || state.strip_prefix("group-").is_some_and(|b| state_pseudo(b).is_some());
+                        || state_attr(state).is_some()
+                        || state.strip_prefix("group-").is_some_and(|b| {
+                            state_pseudo(b).is_some() || state_attr(b).is_some()
+                        });
                     if !ok {
                         findings.push(mk(
                             path,
                             line,
                             col,
-                            format!("sx unknown state `{state}:` — use hover:/focus:/focus-within:/active:/disabled:/current: (or group-hover: to react to an ancestor)"),
+                            format!("sx unknown state `{state}:` — use hover:/focus:/focus-within:/active:/disabled:/current:, a data-* attribute state, or group-<state>: to react to an ancestor"),
                         ));
                         continue;
                     }
