@@ -1,0 +1,64 @@
+<!--
+  <icon-frame> — L1 language element. A framed badge box for any slotted
+  icon (the Mantine ThemeIcon shape): variant picks the frame treatment,
+  tone picks the accent via the global [tone] channel, radius overrides the
+  corner. Composes: <icon-frame tone="primary" variant="tile"><icon
+  name="rocket"></icon></icon-frame>.
+-->
+
+<component>{
+  props: {
+    /** glyph = bare accent ink, tile = tinted surface, solid = filled. */
+    variant: 'glyph' | 'tile' | 'solid',
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
+    /** Corner override; the size matrix sets a default per size. */
+    radius: '',
+    size: 'sm' | 'md' | 'lg',
+  },
+}</component>
+
+<style>
+  .sui-icon-frame {
+    --frame-size: var(--space-5);
+    --frame-radius: var(--radius-md);
+    --frame-glyph: var(--icon-size-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: var(--frame-size);
+    height: var(--frame-size);
+    border-radius: var(--frame-radius);
+    color: var(--tone-fg, var(--foreground));
+    transition: background-color var(--duration-fast) var(--ease-out),
+                color var(--duration-fast) var(--ease-out),
+                box-shadow var(--duration-fast) var(--ease-out);
+  }
+
+  .sui-icon-frame[size='sm'] { --frame-size: var(--icon-size-md); --frame-glyph: var(--icon-size-xs); --frame-radius: var(--radius-sm); }
+  .sui-icon-frame[size='lg'] { --frame-size: var(--control-h-sm); --frame-glyph: var(--icon-size-lg); --frame-radius: var(--radius-lg); }
+
+  .sui-icon-frame[radius='sm']   { --frame-radius: var(--radius-sm); }
+  .sui-icon-frame[radius='md']   { --frame-radius: var(--radius-md); }
+  .sui-icon-frame[radius='lg']   { --frame-radius: var(--radius-lg); }
+  .sui-icon-frame[radius='full'] { --frame-radius: var(--radius-full); }
+
+  .sui-icon-frame[variant='tile'] {
+    background: var(--tone-bg, var(--muted));
+  }
+
+  .sui-icon-frame[variant='solid'] {
+    background: var(--tone, var(--foreground));
+    color: var(--tone-contrast, var(--background));
+    box-shadow: var(--shadow-xs);
+  }
+
+  /* The framed glyph sizes to the frame's matrix, whatever icon size the
+     slotted element declared. */
+  .sui-icon-frame svg {
+    width: var(--frame-glyph);
+    height: var(--frame-glyph);
+  }
+</style>
+
+<span><slot></slot></span>

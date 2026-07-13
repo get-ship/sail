@@ -277,23 +277,6 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "desc": "Accessible name — role=img + aria-label; label-less icons are aria-hidden decoration."
     },
     {
-      "name": "set",
-      "type": "lucide · app",
-      "default": "lucide"
-    },
-    {
-      "name": "variant",
-      "type": "glyph · tile · solid",
-      "default": "glyph",
-      "desc": "App-set frame treatment (glyph = bare, tile = tinted, solid = filled)."
-    },
-    {
-      "name": "radius",
-      "type": "string",
-      "default": "",
-      "desc": "App-set frame radius override."
-    },
-    {
       "name": "size",
       "type": "xs · sm · md · lg · xl",
       "default": "md"
@@ -302,6 +285,30 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "spin",
       "type": "bool",
       "default": "false"
+    }
+  ],
+  "icon-frame": [
+    {
+      "name": "variant",
+      "type": "glyph · tile · solid",
+      "default": "glyph",
+      "desc": "glyph = bare accent ink, tile = tinted surface, solid = filled."
+    },
+    {
+      "name": "tone",
+      "type": "default · primary · info · success · warning · destructive · accent · muted",
+      "default": "default"
+    },
+    {
+      "name": "radius",
+      "type": "string",
+      "default": "",
+      "desc": "Corner override; the size matrix sets a default per size."
+    },
+    {
+      "name": "size",
+      "type": "sm · md · lg",
+      "default": "md"
     }
   ],
   "label": [

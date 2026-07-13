@@ -320,18 +320,6 @@
         "default": "",
         "description": "Named glyph from the icon endpoint (deck serves the embedded lucide set). Empty keeps slotted children."
       },
-      "radius": {
-        "type": "string",
-        "default": "",
-        "description": "App-set frame radius override."
-      },
-      "set": {
-        "values": [
-          "lucide",
-          "app"
-        ],
-        "default": "lucide"
-      },
       "size": {
         "values": [
           "xs",
@@ -350,6 +338,34 @@
         "type": "string",
         "default": "",
         "description": "Fetch an arbitrary SVG URL instead of a named glyph; wins over name."
+      }
+    },
+    "icon-frame": {
+      "radius": {
+        "type": "string",
+        "default": "",
+        "description": "Corner override; the size matrix sets a default per size."
+      },
+      "size": {
+        "values": [
+          "sm",
+          "md",
+          "lg"
+        ],
+        "default": "md"
+      },
+      "tone": {
+        "values": [
+          "default",
+          "primary",
+          "info",
+          "success",
+          "warning",
+          "destructive",
+          "accent",
+          "muted"
+        ],
+        "default": "default"
       },
       "variant": {
         "values": [
@@ -358,7 +374,7 @@
           "solid"
         ],
         "default": "glyph",
-        "description": "App-set frame treatment (glyph = bare, tile = tinted, solid = filled)."
+        "description": "glyph = bare accent ink, tile = tinted surface, solid = filled."
       }
     },
     "label": {

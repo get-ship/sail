@@ -1,42 +1,12 @@
 // `use:icon` — glyph resolution for the L1 <icon> element.
 //
-// Resolution order: `src` (arbitrary URL) wins over `name`. `set="app"` maps
-// app identity names to their lucide glyphs (APP_GLYPH/APP_ALIASES); plain
-// names fetch from the host's icon endpoint (deck serves the embedded lucide
-// set at `/_deck/icons/{name}.svg`). Fetches are cached and single-flight per
-// key; `primeIconCache` seeds glyphs without a network (tests, SSR-less
-// hosts). `label` makes the element role=img with an aria-label; label-less
-// icons are aria-hidden. A failed resolve removes any injected glyph so the
-// slotted fallback shows.
-
-type AppName =
-  | 'dashboard' | 'pipelines' | 'agents' | 'skills' | 'git'
-  | 'collections' | 'canvas' | 'settings' | 'chat' | 'events'
-  | 'specs' | 'theme' | 'setup' | 'overview' | 'mesh'
-
-const APP_GLYPH: Record<AppName, string> = {
-  dashboard: 'layout-dashboard',
-  pipelines: 'workflow',
-  agents: 'bot',
-  skills: 'sparkles',
-  git: 'git-branch',
-  collections: 'database',
-  canvas: 'frame',
-  settings: 'settings',
-  chat: 'messages-square',
-  events: 'radio',
-  specs: 'file-text',
-  theme: 'palette',
-  setup: 'rocket',
-  overview: 'compass',
-  mesh: 'network',
-}
-
-const APP_ALIASES: Record<string, AppName> = {
-  'theme-studio': 'theme',
-}
-
-const APP_NAMES = new Set([...Object.keys(APP_GLYPH), ...Object.keys(APP_ALIASES)])
+// Resolution order: `src` (arbitrary URL) wins over `name`; names fetch from
+// the host's icon endpoint (deck serves the embedded lucide set at
+// `/_deck/icons/{name}.svg`). Fetches are cached and single-flight per key;
+// `primeIconCache` seeds glyphs without a network (tests, SSR-less hosts).
+// `label` makes the element role=img with an aria-label; label-less icons are
+// aria-hidden. A failed resolve removes any injected glyph so the slotted
+// fallback shows.
 
 const ENDPOINT = '/_deck/icons/'
 
@@ -106,9 +76,8 @@ export const icon = (node: Element) => {
     if (!parsed) return
     // The daemon emits stroke="currentColor", so host CSS color flows through.
     parsed.setAttribute('class', 'sui-icon-svg')
-    const target = node.querySelector('.frame') ?? node
     if (svgEl) svgEl.replaceWith(parsed)
-    else target.insertBefore(parsed, target.firstChild)
+    else node.insertBefore(parsed, node.firstChild)
     svgEl = parsed
     lastKey = key
     syncAria()
@@ -117,14 +86,7 @@ export const icon = (node: Element) => {
   const render = (): void => {
     syncAria()
     const src = node.getAttribute('src') ?? ''
-    const rawName = node.getAttribute('name') ?? ''
-    const set = node.getAttribute('set') ?? ''
-
-    let name = rawName
-    if (set === 'app' && rawName) {
-      const resolved = APP_ALIASES[rawName] ?? (rawName as AppName)
-      name = APP_NAMES.has(rawName) ? APP_GLYPH[resolved] : 'dot'
-    }
+    const name = node.getAttribute('name') ?? ''
 
     const key = src ? `src:${src}` : name ? `name:${name}` : ''
     if (!key) {
@@ -149,7 +111,7 @@ export const icon = (node: Element) => {
   }
 
   const mo = new MutationObserver(render)
-  mo.observe(node, { attributes: true, attributeFilter: ['name', 'src', 'set', 'label'] })
+  mo.observe(node, { attributes: true, attributeFilter: ['name', 'src', 'label'] })
   render()
   return {
     destroy: () => mo.disconnect(),
