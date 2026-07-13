@@ -25,6 +25,9 @@
 
 <component>{
   props: {
+    /** Named glyph, resolved by `use:icon` from the host's icon endpoint
+        (deck serves the embedded lucide set). Empty keeps slotted children. */
+    name: '',
     size: 'xs' | 'sm' | 'md' | 'lg' | 'xl',
     spin: false,
   },
@@ -57,4 +60,4 @@
   }
 </style>
 
-<span><slot></slot></span>
+<span use:icon><slot></slot></span>

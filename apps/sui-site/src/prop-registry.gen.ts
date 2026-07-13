@@ -259,6 +259,12 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
   ],
   "icon": [
     {
+      "name": "name",
+      "type": "string",
+      "default": "",
+      "desc": "Named glyph, resolved by `use:icon` from the host's icon endpoint (deck serves the embedded lucide set). Empty keeps slotted children."
+    },
+    {
       "name": "size",
       "type": "xs · sm · md · lg · xl",
       "default": "md"

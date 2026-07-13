@@ -310,6 +310,11 @@
       }
     },
     "icon": {
+      "name": {
+        "type": "string",
+        "default": "",
+        "description": "Named glyph, resolved by `use:icon` from the host's icon endpoint (deck serves the embedded lucide set). Empty keeps slotted children."
+      },
       "size": {
         "values": [
           "xs",

@@ -149,6 +149,8 @@ export {
   radioGroup,
   rangeFill,
   tabs,
+  icon,
+  primeIconCache,
   themePicker,
   toast,
   toggleGroup,
