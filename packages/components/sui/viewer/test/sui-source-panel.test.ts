@@ -179,7 +179,7 @@ describe('<sui-source-panel> — registration + composition', () => {
       { source: '<button>hi</button>', props: BUTTON_CEM, value: {} },
     )
     await c.flush()
-    expect(root(c.el).querySelector('[part="source-code"] pre')).not.toBeNull()
+    expect(root(c.el).querySelector('.source-code pre')).not.toBeNull()
     expect(root(c.el).querySelector('button')).not.toBeNull()
   })
 })

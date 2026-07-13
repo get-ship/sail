@@ -59,133 +59,6 @@
     size: 'md' | 'sm' | 'lg',
   },
 }</component>
-<!--
-  NEW SURFACE (re-port from feat/next, parity-gate pass)
-  ─────────────────────────────────────────────────────────────────────
-  - cmdk has no tone/size of its own. The framework's global tone/size
-    channels aren't relevant — this component never reads var(--tone)
-    or var(--size-h). No <theme> block, no per-component tone/size
-    redeclaration in .sui-cmdk.
-  - Closes its dialog through the useDialog handle it composes. cmdk's
-    `size={size()}` is forwarded onto the native <dialog>'s size
-    contract (DIALOG_SKIN_CSS) — and the dialog renders inside the
-    same global channel system.
-  - sx is the closed-vocab surface for everything reachable via a
-    token + a layout keyword (column/row/gap/align/padding/radius/
-    color/text). The <row>/<column> primitives in the template carry
-    the flex/grid layout that feat/next authored by hand; the residual
-    <style> below only keeps the selectors sx/variants cannot express
-    (host baseline, downstream shadow part reset, native input reset,
-    list scroll/overscroll, listbox <li> per-row styling with the
-    class-selector + .hl + .disabled + .item-icon descendant compound).
-  - The L1 <input> skin (text input baseline from contracts.css) is
-    still inherited for font-family/color/focus-visible/disabled; the
-    .entry reset zeros the surface the cmdk owns (border, padding,
-    background, font-size) so the search bar is flush to its chrome.
--->
-
-<!-- Residual: `.sui-cmdk { display:contents }` baseline (host doesn't
-     take sx); `dialog .body { padding:0 }` — restyling a
-     downstream shadow part can't reach via variants/sx; the
-     `.cmdk` font-family (font: isn't an sx prop); `.search`
-     border-bottom (no border-side sx prop) + flex:0 0 auto (no flex
-     sx prop) — keeps the search bar a fixed-height strip; the
-     native <input class="entry"> (input element, no shadow part);
-     `.list` overflow-y/overscroll-behavior/scrollbar-width/min-
-     height/flex raw values (no sx prop); `.group` text-transform +
-     user-select (text-transform not in sx); `.item` user-select +
-     scroll-margin + the .item.hl/.item.disabled class selectors
-     (variants don't reach class selectors); `.item.hl .item-icon`
-     descendant compound; `.item-icon { flex:0 0 auto }` raw; the
-     `.item-label` text-overflow + white-space (text-overflow not
-     in sx); `.item-hint` flex/margin-inline-start/font-family
-     raw; `.empty` list-style/text-align raw. The `<li>` items
-     inside `<ul>` are listbox rows so they keep the <li> element
-     (cannot swap to <row>) — the .item .item.hl .item.disabled
-     class rules therefore stay. -->
-<style>
-  .sui-cmdk { display: contents; }
-  .sui-cmdk[hidden] { display: none; }
-
-  /* The dialog owns the chrome (top-layer, focus trap, ::backdrop). Zero its
-     body padding via the documented part so the search bar sits flush to the
-     panel edges and cmdk owns all interior spacing — no reaching into the
-     dialog's private shadow vars. */
-  dialog .body { padding: 0; }
-
-  .cmdk { font-family: var(--font-body); }
-
-  .search {
-    border-bottom: 1px solid var(--border-subtle);
-    flex: 0 0 auto;
-  }
-  .search-icon { flex: 0 0 auto; }
-
-  .entry {
-    flex: 1;
-    min-width: 0;
-    border: 0;
-    outline: 0;
-    background: transparent;
-    padding: 0;
-    margin: 0;
-    font: inherit;
-    font-family: var(--font-body);
-    font-size: var(--text-base);
-    color: var(--foreground);
-    line-height: var(--leading-normal);
-  }
-  .entry::placeholder { color: var(--muted-foreground); }
-
-  .list {
-    list-style: none;
-    margin: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    min-height: 0;
-    flex: 1 1 auto;
-    scrollbar-width: thin;
-  }
-
-  .group {
-    text-transform: uppercase;
-    user-select: none;
-  }
-
-  .item {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    user-select: none;
-    scroll-margin: var(--space-2);
-  }
-  .item.hl { background: var(--selected-bg); }
-  .item.disabled {
-    color: var(--muted-foreground);
-    cursor: default;
-    opacity: 0.6;
-  }
-  .item-icon { flex: 0 0 auto; }
-  .item.hl .item-icon { color: var(--foreground); }
-  .item-label {
-    flex: 1;
-    min-width: 0;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  .item-hint {
-    flex: 0 0 auto;
-    margin-inline-start: auto;
-    font-family: var(--font-mono);
-  }
-
-  .empty {
-    list-style: none;
-    text-align: center;
-  }
-</style>
-
-
 <controller>
 // <sui-cmdk> controller — generic command palette.
 //
@@ -482,29 +355,29 @@ export default controller({
 
 </controller>
 <dialog class="dialog" use:dlg size={size()} backdrop="blur">
-  <column class="cmdk panel" gap="0" sx="min-h:0 fg:foreground">
-    <row class="search" align="center" gap="2" sx="p:3 px:4">
-      <icon class="search-icon" name="search" size="sm"></icon>
-      <input class="entry input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId()} aria-activedescendant={activeId()} aria-label={label()} placeholder={placeholder()} bind:value={query} bind:this={inputEl} />
+  <column class="cmdk panel" gap="0" sx="min-h:0 fg:foreground font:body">
+    <row class="search" align="center" gap="2" sx="p:3 px:4 grow:none border-b:subtle">
+      <icon class="search-icon" name="search" size="sm" sx="grow:none"></icon>
+      <input class="entry input" type="text" flush sx="grow:1 min-w:0 font:body text:base leading:normal" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId()} aria-activedescendant={activeId()} aria-label={label()} placeholder={placeholder()} bind:value={query} bind:this={inputEl} />
     </row>
-    <ul class="list" sx="max-h:panel-vh-sm p:1" role="listbox" id={listId()} aria-label={label()} bind:this={listEl}>
+    <ul class="list" sx="max-h:panel-vh-sm p:1 overflow-y:auto min-h:0 grow:1" role="listbox" id={listId()} aria-label={label()} bind:this={listEl}>
       {#for row of rows() key={row.key}}
         {#if row.isHeading}
-          <li class="group" role="presentation" sx="py:2 pb:1 text:xs weight:semibold tracking:wide fg:muted-foreground">{row.heading}</li>
+          <li class="group" role="presentation" sx="py:2 pb:1 text:xs weight:semibold tracking:wide fg:muted-foreground case:upper select:none">{row.heading}</li>
         {:else}
-          <li class="item" sx="p:2 radius:sm text:sm fg:foreground cursor:pointer" role="option" id={row.optId} data-id={row.id} data-value={row.value} class:hl={!row.disabled && row.id === highlightId()} class:disabled={row.disabled} aria-selected={!row.disabled && row.id === highlightId() ? 'true' : 'false'} aria-disabled={row.disabled ? 'true' : 'false'}>
+          <li class="item" sx="group display:flex p:2 radius:sm text:sm fg:foreground cursor:pointer select:none selected:bg:selected-bg disabled:fg:muted-foreground disabled:cursor:default disabled:opacity:50" role="option" id={row.optId} data-id={row.id} data-value={row.value} class:hl={!row.disabled && row.id === highlightId()} class:disabled={row.disabled} aria-selected={!row.disabled && row.id === highlightId() ? 'true' : 'false'} aria-disabled={row.disabled ? 'true' : 'false'}>
             {#if row.icon !== ''}
-              <icon class="item-icon" name={row.icon} size="sm" sx="fg:muted-foreground"></icon>
+              <icon class="item-icon" name={row.icon} size="sm" sx="grow:none fg:muted-foreground group-selected:fg:foreground"></icon>
             {/if}
-            <span class="item-label" sx="overflow:hidden">{row.label}</span>
+            <span class="item-label" sx="grow:1 min-w:0 wrap:truncate">{row.label}</span>
             {#if row.hint !== ''}
-              <span class="item-hint" sx="text:xs fg:muted-foreground">{row.hint}</span>
+              <span class="item-hint" sx="text:xs fg:muted-foreground ml:auto font:mono grow:none">{row.hint}</span>
             {/if}
           </li>
         {/if}
       {/for}
       {#if rows().length === 0}
-        <li class="empty" role="presentation" sx="p:6 px:4 text:sm fg:muted-foreground">{emptyLabel()}</li>
+        <li class="empty" role="presentation" sx="p:6 px:4 text:sm fg:muted-foreground text-align:center">{emptyLabel()}</li>
       {/if}
     </ul>
   </column>

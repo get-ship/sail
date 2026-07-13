@@ -47,6 +47,8 @@ enum Kind {
     Rotate,
     Inset,
     TextStyle,
+    Select,
+    TextAlign,
     // preset: value picks a curated composition
     Ring,
     Border,
@@ -81,6 +83,8 @@ fn prop_kind(prop: &str) -> Option<Kind> {
         "rotate" => Rotate,
         "top" | "right" | "bottom" | "left" => Inset,
         "text-style" => TextStyle,
+        "select" => Select,
+        "text-align" => TextAlign,
         "tracking" => Tracking,
         "ring" => Ring,
         // A border on ONE side. Same value vocabulary as `border` — this adds a
@@ -114,7 +118,7 @@ const ALL_PROPS: &[&str] = &[
     "bg", "fg", "radius", "text", "shadow", "z", "weight", "leading", "tracking", "font",
     "ring", "border", "border-t", "border-r", "border-b", "border-l",
     "w", "h", "min-w", "min-h", "max-w", "max-h", "grow", "opacity", "wrap", "case", "rotate",
-    "top", "right", "bottom", "left", "text-style",
+    "top", "right", "bottom", "left", "text-style", "select", "text-align",
     "display", "overflow", "overflow-x", "overflow-y", "position", "cursor", "visibility",
 ];
 
@@ -161,6 +165,8 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
             v
         }
         TextStyle => vec!["italic", "normal"],
+        Select => vec!["none", "text", "auto"],
+        TextAlign => vec!["start", "center", "end"],
         Ring => {
             let mut v = vec!["none"];
             v.extend(crate::tokens::color_values());
@@ -181,10 +187,11 @@ fn allowed(kind: Kind) -> Vec<&'static str> {
             v.extend(crate::tokens::size_values());
             v
         }
-        // 1 is "fill the rest"; 2/3 buy proportional splits (a 2:1 list+detail).
-        Grow => vec!["1", "2", "3"],
+        // 1 is "fill the rest"; 2/3 buy proportional splits (a 2:1 list+detail);
+        // none pins a fixed strip (flex: none).
+        Grow => vec!["1", "2", "3", "none"],
         Opacity => vec!["0", "25", "50", "75", "100"],
-        Display => vec!["block", "inline", "inline-block", "inline-flex", "none"],
+        Display => vec!["block", "inline", "inline-block", "inline-flex", "flex", "contents", "none"],
         Overflow => vec!["visible", "hidden", "scroll", "auto", "clip"],
         Position => vec!["static", "relative", "absolute", "fixed", "sticky"],
         Cursor => vec![
@@ -227,6 +234,8 @@ fn css_props(prop: &str) -> &'static [&'static str] {
         "bottom" => &["bottom"],
         "left" => &["left"],
         "text-style" => &["font-style"],
+        "select" => &["user-select"],
+        "text-align" => &["text-align"],
         "tracking" => &["letter-spacing"],
         "ring" => &["box-shadow"],
         "border" => &["border"],
@@ -340,6 +349,8 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
             _ => format!("var(--space-{token})"),
         },
         TextStyle => token.to_string(),
+        Select => token.to_string(),
+        TextAlign => token.to_string(),
         Tracking => format!("var(--tracking-{token})"),
         // a focus ring at the standard ring width in the chosen tone (or off).
         Ring => if token == "none" {
@@ -385,7 +396,7 @@ pub fn lower(prop: &str, token: &str) -> Option<Vec<(&'static str, String)>> {
         // Basis 0, not auto: panes split the CONTAINER proportionally instead of
         // splitting the leftovers after content sizing, and a zero basis can
         // never trip a wrapping row.
-        Grow => format!("{token} 1 0%"),
+        Grow => if token == "none" { "none".into() } else { format!("{token} 1 0%") },
         Opacity => match token {
             "0" => "0",
             "25" => "0.25",
@@ -430,7 +441,7 @@ pub const STATE_PREFIXES: &[(&str, &str)] = &[
     ("focus", ":focus-visible"),
     ("focus-within", ":focus-within"),
     ("active", ":active"),
-    ("disabled", ":disabled"),
+    ("disabled", ":is(:disabled,[aria-disabled='true'])"),
     ("current", "[aria-current]:not([aria-current='false'])"),
     // ARIA states — styling keys on the SAME attribute assistive tech reads,
     // so the visual is only reachable by stamping the semantics. A closed

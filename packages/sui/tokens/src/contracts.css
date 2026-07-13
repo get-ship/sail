@@ -239,3 +239,11 @@ meter:-moz-meter-sub-sub-optimum::-moz-meter-bar { background: var(--destructive
 [data-component] slot { display: contents; }
 @media (prefers-reduced-motion: reduce) { [data-component], [data-component] *, :where(button, input, textarea, select, a, [tabindex]) { transition: none !important; animation: none !important; } }
 }
+
+/* Flush input — a bare text entry inside owning chrome (command palettes,
+ * inline editors): the surface belongs to the wrapper. */
+:where(input[flush]) { border: 0; outline: 0; background: transparent; padding: 0; margin: 0; font: inherit; color: var(--foreground); }
+:where(input[flush])::placeholder { color: var(--muted-foreground); }
+
+/* A ul serving as a listbox is a widget, not a document list. */
+:where(ul[role='listbox']) { list-style: none; margin: 0; padding: 0; }

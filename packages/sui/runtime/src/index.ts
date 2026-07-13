@@ -156,6 +156,7 @@ export {
   toggleGroup,
   tooltip,
 } from './actions'
+export { useDialog, type DialogHandle } from './use-dialog'
 export type { AnchorPlacement } from './actions'
 
 // Native <dialog> behavior — the compiler emits bindOpen for

@@ -25,7 +25,6 @@ import { compileSui } from '@ship/sui-dom/test-utils'
 
 // RED: these two modules are the Slice-1 deliverable; they do not exist yet.
 import '@ship/sui-primitives' // register the composed sui-error-boundary / sui-alert / sui-code
-import controller from '../src/sui-render/sui-render.controller'
 
 const SRC = readFileSync(resolve(__dirname, '../src/sui-render/sui-render.sui'), 'utf8')
 const TAG = 'sui-render'
@@ -90,7 +89,7 @@ function mountRender(
   attrs: Record<string, string | boolean>,
   props: Record<string, unknown> = {},
 ): ReturnType<typeof renderComponent> {
-  const c = renderComponent(SRC, TAG, { controller, attrs })
+  const c = renderComponent(SRC, TAG, { attrs })
   mounted = c
   for (const [k, v] of Object.entries(props)) {
     ;(c.el as unknown as Record<string, unknown>)[k] = v

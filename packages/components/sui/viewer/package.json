@@ -1,7 +1,7 @@
 {
   "name": "@ship/sui-viewer",
   "version": "0.2.0",
-  "description": "Ship Viewer pack — the shared component-viewing components (`sui-render`, `sui-prop-knobs`, `sui-prop-matrix`, `sui-source-panel`, `sui-component-viewer`) every surface composes for a live, reactive preview of a SUI component.",
+  "description": "Ship Viewer pack — the browser compile seam (`ensureWasm`/`makeCompile`) and `<sui-render>`, the mount stage every surface composes for a live preview of a SUI component.",
   "type": "module",
   "license": "MIT",
   "files": [
