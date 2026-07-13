@@ -100,3 +100,69 @@ Ruling key: OPEN (needs a decision) · SHIPPED (atom exists) · REJECTED.
   is not. Alternatives: `visibility:sr-only` (Tailwind's), `visibility:a11y`,
   or an L1 `<visually-hidden>` wrapper. One-line change in
   `crates/sui/lint/src/rules/sx.rs`.
+
+## From the five-pack migration (charts · canvas · chat-elements · band · media)
+
+Each of these is a design the language could not say. Nothing was approximated;
+the declaration was left out and written down here.
+
+### Costs a user can see today
+
+- **band `angle`** — a ±1deg tilt bleeding one step past each container edge.
+  `rotate:` is 0/45/90/180/270 and there is no negative margin. The prop
+  reflects and styles nothing.
+- **media `fit`** — `object-fit: contain|cover|none`. No `object:` atom, AND a
+  variant can never reach a descendant (variants lower to `:scope[attr]
+  .sui-root`), so even with the atom the `<img>` inside is unreachable. The prop
+  reflects and styles nothing.
+- **composer double focus ring** — the frame owns `:focus-within`, so the inner
+  control must not draw its own. No `outline:` axis (`ring:` is box-shadow), and
+  the framework's `:where(input):focus-visible{outline:…}` still fires.
+- **thinking-dots no longer reads as motion** — the bounce was translateY(-25%)
+  + opacity. `pulse` bakes scale 1→1.04: sub-pixel on a 7px dot.
+- **canvas `transform-origin: 0 0`** — the world scales about its top-left,
+  which is what `screenToWorld`/`worldToScreen` assume. With the CSS default
+  (50% 50%) the pointer↔world mapping desyncs at any zoom ≠ 1.
+- **canvas `touch-action: none`** — without it a touch pan scrolls the page.
+- **thumbnail / waveform sizes (48px)** — space tops out at 40px, `control-h-xl`
+  is 44px. Approximation is forbidden, so they are unsized.
+
+### The shape of the holes
+
+- **No transition on a state change.** `motion:` is trigger-driven; there is no
+  "animate this property whenever it changes" and no `transition:` atom. Hover
+  shadows, chevron rotations, and zoom steps all snap now. The framework's own
+  button contract transitions these properties — the capability exists, the
+  authoring surface does not.
+- **Border width.** `border*:` always lowers to `1px solid var(--token)`. A 3px
+  category stripe reads as a category stripe; 1px reads as a border.
+- **Continuous animation.** `motion:loop` hardcodes `direction:'alternate'` (an
+  alternating marquee scrolls backwards), presets bake scalar from/to with a
+  duration TOKEN (60–420ms), and there is no percentage-of-own-width translate.
+  A marquee is none of those things.
+- **Component knobs.** sx cannot emit `var(--knob, var(--token))`, so a
+  consumer-overridable per-instance channel has no home. SVG survived only
+  because presentation attributes take the fallback form for free.
+- **Per-item variants.** `<variants>` keys on HOST attributes, so a per-node
+  `kind` or per-row status cannot drive one.
+- **`:empty` collapse.** A legend-less chart carries dead space; there is no
+  `empty:` state prefix.
+- **Fine steps.** Layout `gap` takes integer 0–8 while the space scale has
+  `half`/`1_25`/`1_5`. The two vocabularies disagree.
+- **Missing atoms named by real designs**: `object-fit`, `outline`, `touch-action`,
+  `transform-origin`, `will-change`, `cursor:crosshair`, `opacity:85`,
+  `font-variant-numeric`, `case:capitalize`, `overflow-wrap:anywhere`,
+  `display:inline-grid`.
+
+### Compiler bugs found (not language gaps)
+
+- **`sui-root` is clobbered.** `dom_emit.rs` emits `classList.add("sui-root")`
+  and then `setAttribute("class", …)`. Any root that is a layout keyword or has
+  a dynamic axis loses the class — so `variants`/`compound`, which lower to
+  `:scope[attr] .sui-root`, SILENTLY NEVER MATCH. Verified in jsdom.
+- **A layout root defeats the derived host display.** `.sui-root{display:inline-flex}`
+  emits before `.sui-row{display:flex}` at equal specificity, so a `<row>`-rooted
+  component is block-level whatever it asked for.
+- **A prop named `size` is hijacked** by the framework size channel and retyped
+  to xs|sm|md|lg. `<sui-donut size="120">` clamped to "md" and the chart painted
+  nothing. Any numeric prop called `size` is a trap.
