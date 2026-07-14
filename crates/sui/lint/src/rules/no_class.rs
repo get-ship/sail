@@ -25,7 +25,30 @@ use crate::report::{Finding, Severity};
 
 pub const RULE_ID: &str = "sui-no-class";
 
+/// True iff a `sui.config.json` is anywhere up the parent chain of `path`.
+/// When present, the pack has opted INTO author-managed CSS through a declared
+/// stylesheet (the `sui-no-undeclared-stylesheet` rule enforces the seam),
+/// so `class=` and `class:` are LEGAL here — they pair with the declared
+/// sheet. Without that opt-in the ban holds.
+fn has_sui_config(path: &Path) -> bool {
+    let mut dir = path.parent().unwrap_or(path).to_path_buf();
+    loop {
+        if dir.join("sui.config.json").is_file() {
+            return true;
+        }
+        if !dir.pop() {
+            return false;
+        }
+    }
+}
+
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
+    // A pack that ships a `sui.config.json` declares its OWN stylesheets;
+    // classes are then author-managed and pair with the declared sheet
+    // (the undeclared-stylesheet rule keeps that seam honest).
+    if has_sui_config(path) {
+        return Vec::new();
+    }
     let bytes = source.as_bytes();
     let mut findings = Vec::new();
     let mut i = 0;

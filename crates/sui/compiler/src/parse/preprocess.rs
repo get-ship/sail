@@ -2693,17 +2693,24 @@ mod tests {
     }
     #[test]
     fn directive_prefixes_ride_to_the_div() {
-        // SUI directive attrs (`bind:this`, `class:out`, `style:transform`,
-        // `style:--custom-prop`, etc.) are framework bindings — they ride
-        // through the layout lowering unchanged so the compiler's later
+        // SUI directive attrs (`bind:this`, `class:out`, `attr:*`,
+        // `prop:*`, `use:*`, etc.) are framework bindings — they ride through
+        // the layout lowering unchanged so the compiler's later
         // directive-handling pass can resolve them. The lint acknowledges
         // the same vocabulary, so they are not "unknown attribute" errors.
+        //
+        // `style:` is GONE — runtime geometry is owned by an action (`use:*`)
+        // writing to a custom property; sx reads it via the matching
+        // `(--var)` atom. The preprocess pass therefore does NOT carry
+        // a `style:transform=` attribute forward; the layout lint owns the
+        // rejection so the parser can refuse the form with a hint at the
+        // replacement.
         let out = preprocess(
-            r#"<row bind:this={panelEl} class:out={!cr.cell.inMonth} style:transform={t()}>x</row>"#,
+            r#"<row bind:this={panelEl} class:out={!cr.cell.inMonth}>x</row>"#,
         );
         assert!(out.contains("bind:this="), "bind:this survives: {out}");
         assert!(out.contains("class:out="), "class:out survives: {out}");
-        assert!(out.contains("style:transform="), "style:transform survives: {out}");
+        assert!(!out.contains("style:"), "the deleted `style:` directive is not allowed through: {out}");
     }
 
     #[test]
@@ -2752,4 +2759,37 @@ mod tests {
         assert_eq!(out, src);
     }
 
+
+    #[test]
+    fn lower_sx_var_ref_binds_an_atomic_class() {
+        // `translate-y-(--row-y)` is the seam for the virtualizer
+        // action — the property's value is JS-supplied at runtime
+        // via `setProperty('--row-y', …)`. sx here just declares the
+        // read, and the lowering emits a cacheable atomic class whose
+        // CSS rule binds `translate` to the var form. The class name
+        // itself is sanitized to alphanumeric (a cache key) — what
+        // matters is the rule body, since the class is bundled.
+        let out = preprocess(r#"<grid sx="translate-y-(--row-y) absolute">row</grid>"#);
+        assert!(
+            out.contains("translate:var(--sx-translate-x, 0) var(--row-y)"),
+            "var-ref translate-y lowers to translate var(--row-y):\n{out}"
+        );
+        assert!(
+            out.contains("var(--row-y)"),
+            "the var() reference survives sanitization:\n{out}"
+        );
+    }
+
+    #[test]
+    fn lower_sx_var_ref_rejects_garbage_identifier() {
+        // An invalid identifier (here `(--row.y)` — the `.` is not
+        // a CSS ident character) drops through `is_var_ref` to the
+        // scale lookup, which fails. The lowering then emits no CSS
+        // rule for the garbage var-ref — the diag surface is the lint.
+        let out = preprocess(r#"<div sx="top-(--row.y)">x</div>"#);
+        assert!(
+            !out.contains("var(--row.y)"),
+            "an invalid var-ref never reaches CSS:\n{out}"
+        );
+    }
 }

@@ -84,9 +84,26 @@ function weekdayLabels(weekStartsOn: number): { key: string; label: string }[] {
   return out
 }
 
+
 export default controller({
   scope: (ctx: ViewScope<Scope>) => {
     const { events, focusDate, weekStartsOn, slotMinutes, dayStartHour, dayEndHour, rangeMode } = ctx
+    // The time-grid tracks — a constant per skin, exposed as a derived so
+    // sx/use:gridTracks={...} can stay expression-bound. The language's
+    // layout element only accepts `--var` for `tracks`, so this lives as
+    // a custom property read at runtime, not a static literal.
+    const timeGridTracks = derived<string>(() => 'auto 1fr')
+    // `use:eventSpan={eventRect(pe)}` — convert a PositionedEvent's per-cent
+    // geometry into a Rect the action writes as four custom properties.
+    // topPct/heightPct/laneIndex/laneCount are runtime decimals from the
+    // layouter (not design); we stringify each as `N%` so the action reads
+    // it straight through.
+    const eventRect = (pe: { topPct: number; heightPct: number; laneIndex: number; laneCount: number }) => ({
+      top: `${pe.topPct}%`,
+      height: `${pe.heightPct}%`,
+      left: `${(pe.laneIndex / pe.laneCount) * 100}%`,
+      width: `${(1 / pe.laneCount) * 100}%`,
+    })
     // The live engine. `prop:calendar` identity (set in mount) supersedes; until
     // then we seed from the SSR `events` string + the focus-date attr so a
     // declarative (no-parent-controller) mount still renders.
@@ -191,6 +208,8 @@ export default controller({
       isWeek,
       isDay,
       focusedIso,
+      timeGridTracks,
+      eventRect,
     }
   },
 
@@ -408,7 +427,7 @@ export default controller({
 {/if}
 
 {#if isWeek() || isDay()}
-  <grid tracks="--cal-time-tracks" gap="0" role="grid" aria-label={label() || 'Calendar time grid'} style:--cal-time-tracks={'auto 1fr'}>
+  <grid use:gridTracks={timeGridTracks()} tracks="--cal-time-tracks" gap="0" role="grid" aria-label={label() || 'Calendar time grid'}>
     <column role="rowgroup" gap="0" sx="border-r border-r-border">
       {#for slot of timeSlots() key={slot.key}}
         <div data-slot={slot.minutes} role="rowheader" sx="h-control-h-md text-muted-foreground px-density-row-px text-density border-b border-b-border">{slot.label}</div>
@@ -439,12 +458,9 @@ export default controller({
               type="button"
               data-event-id={pe.event.id}
               aria-selected={selectedIds().includes(pe.event.id) ? 'true' : 'false'}
-              style:top={`${pe.topPct}%`}
-              style:height={`${pe.heightPct}%`}
-              style:left={`${(pe.laneIndex / pe.laneCount) * 100}%`}
-              style:width={`${(1 / pe.laneCount) * 100}%`}
+              use:eventSpan={eventRect(pe)}
               title={pe.event.title}
-              sx="absolute cursor-pointer text-start text-density text-tone-primary-fg bg-tone-primary-bg rounded-sm py-half px-1 overflow-hidden selected:ring-ring"
+              sx="absolute top-(--evt-top) h-(--evt-h) left-(--evt-left) w-(--evt-w) cursor-pointer text-start text-density text-tone-primary-fg bg-tone-primary-bg rounded-sm py-half px-1 overflow-hidden selected:ring-ring"
             >{pe.event.title}</button>
           {/for}
         </div>

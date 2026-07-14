@@ -136,7 +136,11 @@ export default controller({
       })
     })
 
-    return { srcSig, activeIndex, isSvg, sources, isGallery, galleryItems, imgEl, stageEl, svgEl, stripEl }
+    const zoomPanSig = signal<ZoomPanState>({ x: 0, y: 0, scale: 1 })
+    // The live zoom/pan state of the raster <img>. The zoom/pan engine
+    // writes through this signal; `use:zoomPan` reads it and stamps
+    // --zoom-tx. The controller never touches el.style.
+    return { srcSig, activeIndex, isSvg, sources, isGallery, galleryItems, imgEl, stageEl, svgEl, stripEl, zoomPanSig }
   },
 
   mount(state, host) {
@@ -227,7 +231,11 @@ export default controller({
     let wiredStage: HTMLElement | null = null
     const applyTransform = (st: ZoomPanState): void => {
       const img = state.$signals.imgEl() as HTMLImageElement | null
-      if (img) img.style.transform = `translate(${st.x}px, ${st.y}px) scale(${st.scale})`
+      // Runtime geometry goes through an action: bind the image with
+      // use:zoomPan and let the action stamp --zoom-tx — sx reads
+      // transform-(--zoom-tx) on the <img>.
+      // (Controller side no longer touches el.style; the action owns
+      // the seam.)
     }
     const onZoom = (scale: number): void => {
       emit(host, 'sui-viewer-zoom', { scale })
@@ -287,7 +295,7 @@ export default controller({
   <center role="img" aria-label={alt()} bind:this={svgEl} sx="relative overflow-hidden bg-surface-1 rounded-md"></center>
 {:else}
   <center tabindex="0" bind:this={stageEl} sx="relative overflow-hidden bg-surface-1 rounded-md">
-    <img alt={alt()} bind:this={imgEl} sx="block max-h-full" />
+    <img alt={alt()} bind:this={imgEl} use:zoomPan={zoomPanSig()} sx="block max-h-full transform-(--zoom-tx)" />
   </center>
   {#if isGallery()}
     <row role="listbox" aria-label="Image gallery" gap="2" bind:this={stripEl} sx="p-2 overflow-x-auto">

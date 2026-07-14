@@ -350,11 +350,8 @@ export default controller({
     {#if dragVisible()}
       <div
         aria-hidden="true"
-        style:left={`${dragRect().x}px`}
-        style:top={`${dragRect().y}px`}
-        style:width={`${dragRect().w}px`}
-        style:height={`${dragRect().h}px`}
-        sx="absolute pointer-events-none bg-tone-primary-bg border border-primary border-dashed rounded-sm"
+        use:rect={dragRect()}
+        sx="absolute left-(--box-left) top-(--box-top) w-(--box-w) h-(--box-h) pointer-events-none bg-tone-primary-bg border border-primary border-dashed rounded-sm"
       ></div>
     {/if}
     {#for m of markers() key={m.id}}
@@ -370,10 +367,9 @@ export default controller({
       <column
         data-annotation-popover
         gap="2"
-        style:left={`${popoverPos().left}px`}
-        style:top={`${popoverPos().top}px`}
+        use:rect={popoverPos()}
         on:pointerdown={(e) => e.stopPropagation()}
-        sx="absolute z-sticky min-w-panel-min-w-md p-2 bg-popover text-popover-foreground border border-border rounded-md shadow-lg pointer-events-auto"
+        sx="absolute left-(--box-left) top-(--box-top) z-sticky min-w-panel-min-w-md p-2 bg-popover text-popover-foreground border border-border rounded-md shadow-lg pointer-events-auto"
       >
         <textarea placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown} sx="w-full rounded-sm"></textarea>
         <row gap="2" justify="end">

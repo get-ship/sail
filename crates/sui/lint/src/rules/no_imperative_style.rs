@@ -147,6 +147,26 @@ impl<'a, 'src> Visit<'a> for StyleVisitor<'src> {
                     "A component's styling is sx. The framework's own sheet is generated, not injected at runtime.",
                 );
             }
+
+            // classList mutation: `el.classList.add('x')` / `.remove` /
+            // `.toggle` / `.replace` — a styling hatch through the back
+            // door. Reads (`.contains`, `.item`, `.length`) are allowed —
+            // they surface a value the host set, not an authoring branch.
+            if name == "add" || name == "remove" || name == "toggle" || name == "replace" {
+                // Callee shape: `... .classList.<method>(...)` — chain
+                // through two static member expressions.
+                if let Expression::StaticMemberExpression(class_list) = &m.object
+                    && class_list.property.name.as_str() == "classList"
+                {
+                    self.report(
+                        expr.span,
+                        format!(
+                            "controllers do not mutate `.classList.{name}()` — light DOM                              has no boundary, so a class is a global CSS target."
+                        ),
+                        "Visual state is sx keyed on ARIA (`selected:`, `expanded:`, `disabled:`).                          Stamp the semantics and the style follows. Reads                          (`.contains`, `.item`, `.length`) are observation, not an                          authoring hatch.",
+                    );
+                }
+            }
         }
 
         self.visit_expression(&expr.callee);
@@ -175,16 +195,13 @@ impl<'a, 'src> Visit<'a> for StyleVisitor<'src> {
             );
         }
 
-        if name == "classList" {
-            self.report(
-                m.span,
-                "controllers do not touch `.classList` — light DOM has no boundary, so a class \
-                 is a global CSS target."
-                    .to_string(),
-                "Visual state is sx keyed on ARIA (`selected:`, `expanded:`, `disabled:`). Stamp \
-                 the semantics and the style follows.",
-            );
-        }
+        // `.classList` reads (e.g. `document.documentElement.classList.contains("dark")`
+        // to detect the host theme) are observation — they surface a value
+        // the host already set, which is the seam the language respects.
+        // WRITES to classList (`add`/`remove`/`toggle`/`replace`) are still
+        // banned: they are a styling hatch through the back door. The exact
+        // match is in `visit_call_expression` below; the `classList`
+        // member access itself is not flagged here.
 
         if name == "adoptedStyleSheets" {
             self.report(
@@ -263,12 +280,27 @@ mod tests {
 
     #[test]
     fn the_other_hats_the_same_hole_wears() {
+        // `.classList.add/remove/toggle/replace` — the styling hatch.
         assert_eq!(run("el.classList.add('active')").len(), 1);
+        assert_eq!(run("el.classList.remove('active')").len(), 1);
+        assert_eq!(run("el.classList.toggle('active')").len(), 1);
+        assert_eq!(run("el.classList.replace('a', 'b')").len(), 1);
         assert_eq!(run("el.setAttribute('style', 'color:red')").len(), 1);
         assert_eq!(run("el.setAttribute('class', 'active')").len(), 1);
         assert_eq!(run("root.adoptedStyleSheets = [sheet]").len(), 1);
         assert_eq!(run("const s = new CSSStyleSheet()").len(), 1);
         assert_eq!(run("document.createElement('style')").len(), 1);
+    }
+
+    #[test]
+    fn classlist_reads_are_observation_not_an_authoring_hatch() {
+        // `el.classList.contains` / `.item` / `.length` — READING a class
+        // is observation, not a hatch. (The `sui-no-class` rule prevents the
+        // author from writing `class=` from inside a component; the seams
+        // are read here on purpose.)
+        assert!(run("if (el.classList.contains('active')) doThing()").is_empty());
+        assert!(run("const x = el.classList.item(0)").is_empty());
+        assert!(run("const n = el.classList.length").is_empty());
     }
 
     #[test]

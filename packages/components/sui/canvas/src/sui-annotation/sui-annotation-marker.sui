@@ -69,7 +69,7 @@ export default controller({
 
 </controller>
 {#if isPoint()}
-  <div sx="absolute w-0 h-0" style:left={`${x()}px`} style:top={`${y()}px`}>
+  <div use:pin={{x: x(), y: y()}} sx="absolute w-0 h-0 left-(--pin-x) top-(--pin-y)">
     <center sx="h-0">
       <row
         role="button"
@@ -85,10 +85,7 @@ export default controller({
   <div
     role="button"
     tabindex="0"
-    style:left={`${box().x}px`}
-    style:top={`${box().y}px`}
-    style:width={`${box().w}px`}
-    style:height={`${box().h}px`}
-    sx="absolute bg-tone-primary-bg border border-primary border-dashed rounded-sm cursor-pointer pointer-events-auto"
+    use:rect={box()}
+    sx="absolute left-(--box-left) top-(--box-top) w-(--box-w) h-(--box-h) bg-tone-primary-bg border border-primary border-dashed rounded-sm cursor-pointer pointer-events-auto"
   ></div>
 {/if}

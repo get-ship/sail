@@ -155,8 +155,33 @@ export {
   toast,
   toggleGroup,
   tooltip,
+  virtualRow,
+  virtualSpacer,
+  cellPad,
+  rect,
+  pin,
+  eventSpan,
+  worldTransform,
+  zoomPan,
+  maxWidth,
+  swatch,
+  spotlight,
+  targetCursor,
+  gridTracks,
 } from './actions'
 export type { AnchorPlacement } from './actions'
+
+// Scroll-lock / focus-return — runtime seams for overlays (dialog, drawer).
+// The body is part of the DOCUMENT, not a component, so a per-element `use:`
+// action cannot reach it. Controllers import these directly; the framework
+// layer (packages/sui/runtime/src/**) exempts them from the imperative-style
+// lint — the body lock IS the seam.
+export {
+  focusableWithin,
+  FocusReturn,
+  acquireScrollLock,
+  releaseScrollLock,
+} from './scroll-lock'
 
 // Native <dialog> behavior — the compiler emits bindOpen for
 // `<dialog bind:open={state}>`. Thin sugar over showModal()/close(); the

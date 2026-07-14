@@ -63,8 +63,22 @@ fn compile_attr(
     if let Some(rest) = name.strip_prefix("class:") {
         return compile_class(rest, value, value_span, loc);
     }
-    if let Some(rest) = name.strip_prefix("style:") {
-        return compile_style(rest, value, value_span, loc);
+    // `style:` is DELETED from the language — runtime geometry moves to
+    // a named, typed action (`use:virtualRow={start}`,
+    // `use:eventSpan={rect}`, etc.). The compiler refuses the form so
+    // the rejection names the replacement rather than silently
+    // compiling to a property write that no lint will ever see.
+    if name.starts_with("style:") {
+        return Err(CompileError::new(
+            "`style:` has been removed — runtime geometry is owned by a named, typed \
+             action (`use:virtualRow`, `use:eventSpan`, `use:rect`, `use:pin`, \
+             `use:zoomPan`, `use:worldTransform`, `use:maxWidth`, `use:indent`, \
+             `use:virtualSpacer`, `use:swatch`). The action writes to a custom \
+             property; sx reads it via the matching `(--name)` atom \
+             (`translate-y-(--row-y)`, `top-(--evt-top)`, …)."
+        )
+        .with_span(value_span)
+        .with_category(loc.to_string()));
     }
     if let Some(rest) = name.strip_prefix("attr:") {
         return compile_dynamic_attr(rest, value, value_span, loc);
@@ -474,31 +488,6 @@ fn compile_class(
     let inner = strip_braces(value).to_string();
     expr::validate_at(&inner, false, loc, value_span)?;
     Ok(AttrInstr::Class {
-        name: name.to_string(),
-        expr: Expr::new(inner, value_span, false),
-        span: value_span,
-    })
-}
-
-fn compile_style(
-    name: &str,
-    value: &str,
-    value_span: Span,
-    loc: &str,
-) -> Result<AttrInstr, CompileError> {
-    if name.is_empty() {
-        return Err(CompileError::new("style: requires a property name")
-            .with_span(value_span)
-            .with_category(loc.to_string()));
-    }
-    if !is_expr_value(value) {
-        return Err(CompileError::new(format!("style:{name} expects {{expr}}"))
-            .with_span(value_span)
-            .with_category(loc.to_string()));
-    }
-    let inner = strip_braces(value).to_string();
-    expr::validate_at(&inner, false, loc, value_span)?;
-    Ok(AttrInstr::Style {
         name: name.to_string(),
         expr: Expr::new(inner, value_span, false),
         span: value_span,

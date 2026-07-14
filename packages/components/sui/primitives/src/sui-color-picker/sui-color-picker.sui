@@ -208,7 +208,7 @@ export default controller({
 </controller>
 <column gap="0" sx="relative w-full">
 <row align="center" gap="2" sx="w-full min-h-size-h py-0 px-size-px bg-background text-foreground border border-tone-border rounded-md focus-within:ring-tone-ring">
-  <span aria-hidden="true" style:background-color={value() || '#000000'} sx="w-4 h-4 min-w-4 rounded-sm border border-border-subtle"></span>
+  <span aria-hidden="true" use:swatch={value() || '#000000'} sx="w-4 h-4 min-w-4 rounded-sm border border-border-subtle bg-(--swatch-color)"></span>
   <input type="text" flush sx="grow-1 min-w-0 font-mono lowercase" name={name()} placeholder="#000000" disabled={disabled()} autocomplete="off" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
 </row>
 {#if open() && !disabled()}
@@ -220,8 +220,8 @@ export default controller({
           aria-selected={sw.hex === value().toLowerCase() ? 'true' : 'false'}
           data-hex={sw.hex}
           aria-label={sw.label}
-          style:background-color={sw.hex}
-          sx="border border-border-subtle rounded-sm p-0 aspect-square cursor-pointer selected:ring-primary"
+          use:swatch={sw.hex}
+          sx="border border-border-subtle rounded-sm p-0 aspect-square cursor-pointer selected:ring-primary bg-(--swatch-color)"
         ></button>
       {/for}
     </grid>

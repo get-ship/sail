@@ -71,9 +71,34 @@ pub struct Utility {
 }
 
 impl Utility {
+    /// True iff `value` is a `(--name)` form — the sx-side seam to runtime
+    /// geometry (a number that crossed JS, written to a custom property by
+    /// an action). The shape mirrors Tailwind v4's `(--foo)` reader so an
+    /// agent's prior transfers; the property's identity is verified so a
+    /// typo at write time surfaces in lint, even though it is JS that
+    /// sets the value at runtime.
+    fn is_var_ref(value: &str) -> Option<&str> {
+        if !value.starts_with("(--") || !value.ends_with(')') {
+            return None;
+        }
+        let inner = &value[3..value.len() - 1];
+        if inner.is_empty()
+            || !inner.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+        {
+            return None;
+        }
+        Some(inner)
+    }
+
     /// Does this utility accept `value`? A scale utility accepts any token on its
     /// scale; a keyword utility accepts its keywords; a mapped one its keys.
+    /// `(--name)` is accepted on EVERY utility — the seam runs in BOTH
+    /// directions (JS writes the var, sx declares the read), and the
+    /// property's only constraint is that it exists at runtime.
     fn accepts(&self, value: &str) -> bool {
+        if Self::is_var_ref(value).is_some() {
+            return true;
+        }
         if self.keywords.iter().any(|k| k == value) || self.map.contains_key(value) {
             return true;
         }
@@ -88,7 +113,15 @@ impl Utility {
         if !self.decls.is_empty() {
             return Some(self.decls.clone());
         }
-        let css_value = if let Some(mapped) = self.map.get(value) {
+        let css_value = if let Some(var_name) = Self::is_var_ref(value) {
+            // `(--row-y)` → `var(--row-y)`. The property's identity is
+            // verified by `is_var_ref`; the value lives on the action.
+            // `negatable` is irrelevant here — a runtime number has no
+            // sign baked in: `-translate-y-(--row-y)` is rejected at the
+            // parser for the same reason `-translate-y-300px` is (it isn't
+            // a value the utility accepts; sign is the action's job).
+            format!("var(--{var_name})")
+        } else if let Some(mapped) = self.map.get(value) {
             mapped.clone()
         } else if self.keywords.iter().any(|k| k == value) {
             value.to_string()
@@ -98,7 +131,9 @@ impl Utility {
             if negative { format!("calc(-1 * {v})") } else { v }
         };
         // `translate-x`/`translate-y` share one CSS property; the axis decides
-        // which half of the pair the value lands in.
+        // which half of the pair the value lands in. The var-ref form is the
+        // common case for runtime geometry — `translate-y-(--row-y)` lowers
+        // to `translate: 0 var(--row-y)`.
         if let Some(axis) = self.axis.as_deref() {
             let pair = if axis == "x" {
                 format!("{css_value} var(--sx-translate-y, 0)")
@@ -385,5 +420,65 @@ mod tests {
             Resolved::Refused { instead } => assert!(instead.contains("align")),
             _ => panic!("items-center must be refused, and must name <row align>"),
         }
+    }
+
+    // `(--name)` — the seam that lets runtime geometry reach sx without a
+    // token. LANGUAGE-FLOOR.md: a value from measurement or from the user
+    // is DATA, not design; the number crosses JS, the property stays in
+    // sx. Tailwind v4's own reader syntax. Tests pin both directions:
+    // validation (accepts the form) and emission (lowers to var(--name)).
+
+    #[test]
+    fn a_var_ref_lowers_to_var_for_any_scale_utility() {
+        assert_eq!(
+            decls("translate-y-(--row-y)"),
+            vec![("translate".into(), "var(--sx-translate-x, 0) var(--row-y)".into())],
+            "translate-y has the 'y' axis — defaults the x to 0"
+        );
+        assert_eq!(
+            decls("top-(--row-y)"),
+            vec![("top".into(), "var(--row-y)".into())],
+            "top is just top: the var goes straight through"
+        );
+        assert_eq!(
+            decls("h-(--rows-h)"),
+            vec![("height".into(), "var(--rows-h)".into())],
+        );
+        assert_eq!(
+            decls("max-w-(--max-w)"),
+            vec![("max-width".into(), "var(--max-w)".into())],
+        );
+        assert_eq!(
+            decls("bg-(--swatch-color)"),
+            vec![("background-color".into(), "var(--swatch-color)".into())],
+            "a runtime hex is data — colour scale accepts the var form"
+        );
+    }
+
+    #[test]
+    fn a_garbage_var_ref_is_rejected() {
+        // Empty name — `(--)` would emit `var()`, which is a parse error in CSS.
+        assert!(matches!(resolve("top-(--)"), Resolved::BadValue { .. }));
+        // Identifier-unsafe — `(--row.y)` slips a `.` past the parser.
+        assert!(matches!(
+            resolve("top-(--row.y)"),
+            Resolved::BadValue { .. }
+        ));
+        // Wrong shape — `(-row-y)` lacks the leading `--`.
+        assert!(matches!(
+            resolve("top-(-row-y)"),
+            Resolved::BadValue { .. }
+        ));
+    }
+
+    #[test]
+    fn a_var_ref_is_legal_on_keyword_only_utilities_too() {
+        // `transform-(--world-tx)` is the seam for canvas pan/zoom — the
+        // utility happens to accept just `none` as a static keyword, but
+        // the var form remains the runtime-geometry path.
+        assert_eq!(
+            decls("transform-(--world-tx)"),
+            vec![("transform".into(), "var(--world-tx)".into())],
+        );
     }
 }

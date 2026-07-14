@@ -63,10 +63,17 @@ fn class_directive_emits_class_binding() {
 }
 
 #[test]
-fn style_directive_emits_style_binding() {
-    let r = build_for("<p style:color={c}>x</p>");
-    assert_eq!(r.len(), 1);
-    assert_eq!(r.get(0).unwrap().kind, BindingKind::Style("color".into()));
+fn style_directive_is_rejected_at_parse_time() {
+    // `style:` has been deleted from the language. Runtime geometry is a
+    // named, typed action (`use:virtualRow`, `use:eventSpan`, …); the
+    // compiler refuses the form so the rejection names the replacement
+    // rather than silently compiling to an untokened write.
+    let err = crate::parse::parse("<p style:color={c}>x</p>").unwrap_err();
+    let msg = format!("{err:?}");
+    assert!(
+        msg.contains("style:") && msg.contains("removed"),
+        "the rejection should name the mechanism that replaced style:; got: {msg}"
+    );
 }
 
 #[test]
