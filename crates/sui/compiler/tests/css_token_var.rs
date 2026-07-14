@@ -68,7 +68,7 @@ fn known_theme_token_is_silent() {
 <style>
   .card { color: var(--foreground); }
 </style>
-<div class="card">{title()}</div>"#;
+<div>{title()}</div>"#;
     let findings = css_token_findings(src, &[]);
     assert!(
         findings.is_empty(),
@@ -103,7 +103,7 @@ fn font_sans_convention_token_is_silent() {
 <style>
   .kind { font-family: var(--font-sans, sans-serif); }
 </style>
-<div class="kind">{title()}</div>"#;
+<div>{title()}</div>"#;
     let out = compile(src, opts("font-sans-convention"))
         .expect("var(--font-sans) should compile");
     assert!(
@@ -127,7 +127,7 @@ fn font_sans_convention_token_compiles_without_fallback() {
 <style>
   .card { font-family: var(--font-sans); }
 </style>
-<div class="card">{title()}</div>"#;
+<div>{title()}</div>"#;
     let out = compile(src, opts("font-sans-no-fallback"))
         .expect("var(--font-sans) should compile");
     assert!(
@@ -152,7 +152,7 @@ fn truly_unknown_token_strict_default_blocks_build() {
 <style>
   .card { color: var(--definitely-not-a-real-token); }
 </style>
-<div class="card">{title()}</div>"#;
+<div>{title()}</div>"#;
     let err = compile(src, opts("unknown-tokens-strict"))
         .expect_err("strict default must reject an unknown token");
     assert!(
@@ -185,7 +185,7 @@ fn truly_unknown_token_warn_override_lets_build_pass() {
 <style>
   .card { color: var(--definitely-not-a-real-token); }
 </style>
-<div class="card">{title()}</div>"#;
+<div>{title()}</div>"#;
     let overrides = vec![LintOverride {
         rule: "sui-css-token".into(),
         severity: OverrideSeverity::Warn,
@@ -223,7 +223,7 @@ fn truly_unknown_token_off_override_silences() {
 <style>
   .card { color: var(--definitely-not-a-real-token); }
 </style>
-<div class="card">{title()}</div>"#;
+<div>{title()}</div>"#;
     let overrides = vec![LintOverride {
         rule: "sui-css-token".into(),
         severity: OverrideSeverity::Off,

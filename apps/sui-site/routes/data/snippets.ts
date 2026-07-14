@@ -46,11 +46,11 @@ export default controller({
 
   states: `<!-- users.sui — the three states are explicit, never forgotten -->
 {#while-loading of users}
-  <p class="muted">Loading…</p>
+  <p role="status">Loading…</p>
 {/while-loading}
 
 {#while-error err of users}
-  <p class="err">{err.message}</p>
+  <p role="alert">{err.message}</p>
 {/while-error}
 
 {#if users().kind === 'ok'}

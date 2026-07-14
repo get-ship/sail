@@ -31,15 +31,15 @@ export default controller<Scope>({
 })
 </controller>
 
-<div class="demo">
-  <p class="demo-back"><a href="/demos">← demos</a></p>
+<div data-demo="true">
+  <p><a href="/demos">← demos</a></p>
   <h1>iteration</h1>
-  <p class="caption">
+  <p>
     Block <code>for</code> with a stable <code>key=</code>. The key tells
     the runtime which DOM nodes belong to which item across re-renders.
   </p>
 
-  <form class="demo-add" on:submit={onSubmit}>
+  <form on:submit={onSubmit}>
     <input
       type="text"
       placeholder="What's next?"
@@ -49,13 +49,13 @@ export default controller<Scope>({
   </form>
 
   {#if items().length === 0}
-    <p class="muted" data-test="empty">List is empty.</p>
+    <p data-muted="true" data-test="empty">List is empty.</p>
   {:else}
-    <ul class="demo-todos" data-test="todos">
+    <ul data-test="todos">
       {#for t of items() key={t.id}}
         <li>
           <span>{t.text}</span>
-          <button class="demo-remove" data-test="remove" on:click={() => remove(t.id)}>×</button>
+          <button data-test="remove" on:click={() => remove(t.id)}>×</button>
         </li>
       {/for}
     </ul>

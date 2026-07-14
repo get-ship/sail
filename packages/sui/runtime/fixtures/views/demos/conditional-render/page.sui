@@ -7,26 +7,26 @@ export default controller<Scope>({
 })
 </controller>
 
-<div class="demo">
-  <p class="demo-back"><a href="/demos">← demos</a></p>
+<div data-demo="true">
+  <p><a href="/demos">← demos</a></p>
   <h1>conditional render</h1>
-  <p class="caption">
+  <p>
     Block <code>if … else</code>. The branch swap is reactive — flip the
     checkbox and the panel re-renders.
   </p>
 
-  <label class="demo-checkbox">
+  <label>
     <input type="checkbox" data-test="toggle" bind:checked={enabled} />
     Show secret panel
   </label>
 
   {#if enabled()}
-    <section class="demo-panel demo-panel-on" data-test="panel-on">
+    <section data-test="panel-on">
       <h2>Panel is visible.</h2>
       <p>Toggling the checkbox unmounts this branch and mounts the other.</p>
     </section>
   {:else}
-    <section class="demo-panel demo-panel-off" data-test="panel-off">
+    <section data-test="panel-off">
       <p>Hidden — flip the box to reveal.</p>
     </section>
   {/if}

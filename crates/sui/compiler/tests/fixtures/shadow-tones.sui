@@ -7,4 +7,4 @@
   .dot { background: var(--tone-fg); }
 </style>
 
-<span class="dot"></span>
+<span></span>

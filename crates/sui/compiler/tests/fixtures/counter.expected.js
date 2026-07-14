@@ -3,7 +3,7 @@ import { __tpl, bindText, component, delegateEvents, markHydrateText, on } from 
 import { collectElementMarkers, collectTextOpens, hydrateOn, hydrateText } from "@ship/sui-dom";
 import setup from "./counter.controller.ts";
 
-const __tpl0 = /*@__PURE__*/ __tpl("<div class=\"counter\"><p>count: <span data-test=\"value\"> </span></p><button data-test=\"inc\">\n    increment\n  </button><button data-test=\"reset\">\n    reset\n  </button></div>");
+const __tpl0 = /*@__PURE__*/ __tpl("<div><p>count: <span data-test=\"value\"> </span></p><button data-test=\"inc\">\n    increment\n  </button><button data-test=\"reset\">\n    reset\n  </button></div>");
 delegateEvents(["click"]);
 export default Object.assign(component((ctx) => {
   const { ship, route, navigate } = ctx;

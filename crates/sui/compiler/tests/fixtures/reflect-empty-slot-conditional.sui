@@ -1,7 +1,7 @@
 <component>{ props: { busy: false } }</component>
 <button>
   {#if busy()}
-    <span class="spinner" aria-hidden="true"></span>
+    <span aria-hidden="true"></span>
   {:else}
     <slot reflect-empty="data-icon-only"></slot>
   {/if}

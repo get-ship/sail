@@ -10,7 +10,7 @@ export default controller<Scope>({
 })
 </controller>
 
-<div class="counter">
+<div data-counter="true">
   <h1>Counter</h1>
   <p>Count: <strong>{count()}</strong></p>
   <button on:click={() => count.set(count() + 1)}>increment</button>

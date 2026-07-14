@@ -5,8 +5,8 @@
   aria-busy={loading() ? 'true' : 'false'}
   aria-label={label()}
 >
-  <span class="content" data-test="label">{label()}</span>
+  <span data-test="label">{label()}</span>
   {#if loading()}
-    <span class="spinner" data-test="spinner" aria-hidden="true"></span>
+    <span data-test="spinner" aria-hidden="true"></span>
   {/if}
 </button>

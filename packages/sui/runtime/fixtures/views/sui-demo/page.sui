@@ -1,4 +1,4 @@
-<div class="demo">
+<div data-demo="true">
   <h1>SUI Demo</h1>
   <p>Visual sanity-check for the SUI component bundle.</p>
 

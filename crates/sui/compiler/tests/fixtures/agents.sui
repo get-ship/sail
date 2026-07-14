@@ -6,7 +6,7 @@ export default function setup() {
 
 <data name="agents" source="ship.agents.summaries()" live />
 
-<section class="agents">
+<section>
   {#while-loading of agents}
     <p data-test="loading">Loading agents...</p>
   {/while-loading}

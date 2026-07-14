@@ -6,9 +6,9 @@
     label: '',
   },
 }</component>
-<button class="button" data-test="root" disabled={disabled() || loading()} aria-busy={loading() ? 'true' : 'false'} aria-label={label()}>
-  <span class="content" data-test="label">{label()}</span>
+<button data-test="root" disabled={disabled() || loading()} aria-busy={loading() ? 'true' : 'false'} aria-label={label()}>
+  <span data-test="label">{label()}</span>
   {#if loading()}
-    <span class="spinner" data-test="spinner" aria-hidden="true"></span>
+    <span data-spinner="true" data-test="spinner" aria-hidden="true"></span>
   {/if}
 </button>

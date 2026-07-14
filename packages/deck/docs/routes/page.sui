@@ -25,16 +25,16 @@ export default controller({
 })
 </controller>
 
-<article class="doc">
-  <p class="eyebrow">deck · 0.2.0</p>
+<article data-doc="true">
+  <p role="doc-eyebrow">deck · 0.2.0</p>
   <h1>The standalone web framework for SUI.</h1>
-  <p class="lead">
+  <p role="doc-lead">
     deck mounts SUI views, routes them from the filesystem, server-renders or
     statically builds them, and serves every asset — with a dev server and
     state-preserving HMR. It is to SUI what Next is to React.
   </p>
 
-  <div class="callout">
+  <div role="note">
     <strong>This site is a deck app.</strong> Every page you read is a file-routed
     deck route, server-rendered and hydrated. The docs are deck's own canonical
     example — and its release test.
@@ -42,19 +42,19 @@ export default controller({
 
   <h2>The 30-second app</h2>
   <p>A deck app is a <code>routes/</code> folder and a dev server. No config file, no scaffold step.</p>
-  <pre class="code">{quickstart}</pre>
+  <pre data-code-block="true">{quickstart}</pre>
   <p>That's a running SUI single-page app, with HMR, on <code>127.0.0.1:7878</code>.</p>
 
   <h2>Where it sits</h2>
-  <pre class="code">{layers}</pre>
+  <pre data-code-block="true">{layers}</pre>
   <p>
     SUI is the component language — signals, templates, controllers. deck is the
     framework around it — routing, rendering, build, serving. Your app is what
     you write under <code>routes/</code>.
   </p>
 
-  <div class="page-nav">
+  <div role="navigation">
     <span></span>
-    <a class="btn btn-primary" href="/getting-started">Getting started →</a>
+    <a variant="solid" href="/getting-started">Getting started →</a>
   </div>
 </article>
