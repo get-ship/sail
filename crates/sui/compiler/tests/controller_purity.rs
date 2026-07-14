@@ -19,37 +19,39 @@ fn view_opts(source_path: Option<std::path::PathBuf>) -> CompileOpts {
 
 #[test]
 fn impure_controller_fails_compile() {
+    // The controller is the source's `<controller>` BLOCK — a sibling
+    // `.controller.ts` is itself a compile error now (`sui-paired-controller`), so
+    // a fixture written that way never reaches the purity gate at all. This test
+    // used to pass for the wrong reason and then silently stopped testing anything
+    // when the gate was repointed at the block.
     let dir = tempfile::tempdir().expect("tempdir");
-    fs::write(
-        dir.path().join("view.controller.ts"),
-        r#"
-            export default {
-              mount: (_state, host) => {
-                host.innerHTML = '<p>nope</p>'
-                return () => {}
-              },
-            }
-        "#,
-    )
-    .unwrap();
     let sui_path = dir.path().join("view.sui");
-    let src = r#"<div></div>"#;
+    let src = r#"<controller>
+export default controller({
+  mount: (_state, host) => {
+    host.innerHTML = '<p>nope</p>'
+    return () => {}
+  },
+})
+</controller>
+<div></div>"#;
     fs::write(&sui_path, src).unwrap();
 
     let err = compile(src, view_opts(Some(sui_path)))
-        .expect_err("controller writing .innerHTML must fail compile");
+        .expect_err("a controller writing .innerHTML must fail the compile");
     assert_eq!(
         err.category.as_deref(),
         Some("sui-controller-purity"),
-        "expected rule id as the error category, got: {:?}",
+        "expected the rule id as the error category, got: {:?}",
         err.category
     );
     assert!(
         err.message.contains("innerHTML"),
-        "expected message to name the bad property, got: {}",
+        "the message must name the bad property, got: {}",
         err.message
     );
 }
+
 
 #[test]
 fn clean_controller_compiles() {
