@@ -58,7 +58,7 @@ const BUILTINS: &[&str] = &[
     // directive (see `lower::bindings::BUILTIN_ACTIONS`), so `use:anchor` &c
     // resolve without an explicit controller import.
     "anchor", "autosize", "clickOutside", "dropzone", "cellPad", "eventSpan", "gridTracks",
-    "maxWidth", "pin", "rect", "spotlight", "swatch", "targetCursor",
+    "maxWidth", "pin", "portEdge", "rect", "spotlight", "swatch", "targetCursor",
     "virtualRow", "virtualSpacer", "worldTransform", "zoomPan",
 ];
 

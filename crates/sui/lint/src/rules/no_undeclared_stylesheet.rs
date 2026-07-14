@@ -159,8 +159,18 @@ fn check_dir(src_dir: &Path) -> Vec<Finding> {
     };
     let mut findings = Vec::new();
     for css in css_files {
+        // PACK-RELATIVE rel — `sui.config.json` and its `stylesheets[]` both
+        // live at the package root (the directory we walked up to). A CSS
+        // file at `<pack>/src/sui-board/sui-board.css` must strip against
+        // `<pack>`, not `<pack>/..`, so the rel is `src/sui-board/sui-board.css`
+        // exactly as it appears in the config. The previous form used
+        // `src_dir.parent()` here, which produced e.g. `canvas/src/...` — a
+        // path the config never wrote, so the rule fired against every css
+        // in the only pack with declared sheets (canvas), and the lint
+        // surfaced real orphans in packs with `stylesheets: []` only by
+        // accident (the declared set was empty so anything was undeclared).
         let rel = css
-            .strip_prefix(src_dir.parent().unwrap_or(src_dir))
+            .strip_prefix(src_dir)
             .unwrap_or(&css)
             .to_string_lossy()
             .trim_start_matches('/')
@@ -221,13 +231,21 @@ mod tests {
         tmp
     }
 
+    // The contract this module pins: rel is PACK-RELATIVE — strip_prefix on
+    // the package root (the directory holding `sui.config.json`), which is
+    // how the wiring in `check()` hands `check_dir` its `src_dir`. The
+    // earlier form stripped against `src_dir.parent()`; that produced
+    // `<packs-root>/<pack>/src/...` rels the config never wrote, so any
+    // pack with declared sheets was uniformly flagged (the rule's most
+    // dangerous failure mode — passing nothing to a declared sheet looks
+    // like enforcement).
     #[test]
     fn declared_stylesheet_passes() {
         let tmp = write_pack(
             &[("src/widget.css", ".x { color: red; }")],
-            Some(r#"{"stylesheets": ["widget.css"]}"#),
+            Some(r#"{"stylesheets": ["src/widget.css"]}"#),
         );
-        let findings = check_dir(&tmp.path().join("src"));
+        let findings = check_dir(tmp.path());
         assert!(
             findings.is_empty(),
             "declared css must not be flagged: {findings:?}"
@@ -238,9 +256,9 @@ mod tests {
     fn undeclared_stylesheet_reports() {
         let tmp = write_pack(
             &[("src/orphan.css", ".x { color: red; }")],
-            Some(r#"{"stylesheets": ["other.css"]}"#),
+            Some(r#"{"stylesheets": ["src/other.css"]}"#),
         );
-        let findings = check_dir(&tmp.path().join("src"));
+        let findings = check_dir(tmp.path());
         assert_eq!(findings.len(), 1, "undeclared css must be flagged: {findings:?}");
         assert_eq!(findings[0].rule, RULE_ID);
         assert!(findings[0].message.contains("orphan.css"));
@@ -252,7 +270,7 @@ mod tests {
             &[("src/widget.css", ".x { color: red; }")],
             None,
         );
-        let findings = check_dir(&tmp.path().join("src"));
+        let findings = check_dir(tmp.path());
         assert_eq!(
             findings.len(),
             1,
@@ -271,7 +289,74 @@ mod tests {
                 r#"{"stylesheets": ["src/widget.css", "src/inner/extra.css"]}"#,
             ),
         );
-        let findings = check_dir(&tmp.path().join("src"));
+        let findings = check_dir(tmp.path());
         assert!(findings.is_empty(), "declared nested css must pass: {findings:?}");
+    }
+
+    // The two ends of the contract on canvas's real layout: a pack with
+    // both declared sheets in src/ nested dirs still passes; an undeclared
+    // sheet next to a declared one fails. This is the test that was always
+    // going to catch the off-by-one-strip bug — it just needed to be
+    // written with pack-relative declarations and a pack-root src_dir.
+    #[test]
+    fn both_declared_sheets_pass() {
+        let tmp = write_pack(
+            &[
+                ("src/sui-board/sui-board.css", ".x { color: red; }"),
+                ("src/sui-draw/sui-draw.css", ".y { color: blue; }"),
+            ],
+            Some(
+                r#"{"stylesheets": [
+                    "src/sui-board/sui-board.css",
+                    "src/sui-draw/sui-draw.css"
+                ]}"#,
+            ),
+        );
+        let findings = check_dir(tmp.path());
+        assert!(
+            findings.is_empty(),
+            "both declared sheets must pass: {findings:?}"
+        );
+    }
+
+    #[test]
+    fn undeclared_sheet_among_declared_fails() {
+        let tmp = write_pack(
+            &[
+                ("src/sui-board/sui-board.css", ".x { color: red; }"),
+                ("src/sui-draw/sui-draw.css", ".y { color: blue; }"),
+                ("src/sui-orphan/sneaky.css", ".z { color: green; }"),
+            ],
+            Some(
+                r#"{"stylesheets": [
+                    "src/sui-board/sui-board.css",
+                    "src/sui-draw/sui-draw.css"
+                ]}"#,
+            ),
+        );
+        let findings = check_dir(tmp.path());
+        assert_eq!(
+            findings.len(),
+            1,
+            "exactly one undeclared sheet must be flagged: {findings:?}"
+        );
+        assert!(findings[0].message.contains("sneaky.css"));
+        assert!(findings[0].message.contains("src/sui-orphan/sneaky.css"));
+    }
+
+    #[test]
+    fn bare_name_declaration_still_recognised() {
+        // The historical shorthand: declaring just `name.css` accepts the
+        // sheet under any nested directory. Still supported after the
+        // pack-relative rel switch.
+        let tmp = write_pack(
+            &[("src/sui-board/sui-board.css", ".x { color: red; }")],
+            Some(r#"{"stylesheets": ["sui-board.css"]}"#),
+        );
+        let findings = check_dir(tmp.path());
+        assert!(
+            findings.is_empty(),
+            "bare-name declaration must still be honoured: {findings:?}"
+        );
     }
 }
