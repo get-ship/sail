@@ -8,7 +8,7 @@
 export const code = {
   loop: `<!-- AMBIENT — alternates forever; stagger is phase; off under
      prefers-reduced-motion. -->
-<div sx="w:4 h:4 radius:full bg:primary"
+<div sx="w-4 h-4 rounded-full bg-primary"
      motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>`,
 
   intro: `<!-- one directive, one system. The trigger says WHEN; the body says WHAT. -->

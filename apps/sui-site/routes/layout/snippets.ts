@@ -37,7 +37,7 @@ export const code = {
 </row>`,
 
   notSx: `<!-- WRONG: structure is not a style -->
-<div sx="display:flex align-items:center">…</div>
+<div sx="align-items:center">…</div>
 
 <!-- RIGHT -->
 <row align="center">…</row>`,

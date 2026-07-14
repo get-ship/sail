@@ -2,10 +2,10 @@
 // the build (crates/sui/compiler/tests/site_snippets_compile.rs).
 export const code = {
   useThem: `<!-- components are tags. Write them like HTML. -->
-<card sx="p:4">
+<card sx="p-4">
   <row gap="3" align="center">
     <avatar></avatar>
-    <strong sx="grow:1">Ada Lovelace</strong>
+    <strong sx="grow-1">Ada Lovelace</strong>
     <badge tone="success">Active</badge>
   </row>
 </card>`,

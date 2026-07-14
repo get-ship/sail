@@ -20,10 +20,10 @@ export default controller({
 
 <input placeholder="Filter people" bind:value={query} />
 {#for p of filtered() key={p.id}}
-  <card sx="p:4" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
+  <card sx="p-4" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
     <row gap="3" align="center">
       <avatar></avatar>
-      <strong sx="grow:1">{p.name}</strong>
+      <strong sx="grow-1">{p.name}</strong>
       <badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge>
     </row>
   </card>
@@ -39,8 +39,8 @@ export default controller({
 <badge tone="success">Active</badge>
 <alert tone="info">Saved.</alert>`,
 
-  styling: `<card sx="p:5 bg:surface-1 radius:lg shadow:sm hover:shadow:md">
-  <p sx="fg:muted-foreground text:sm">On the system, or it does not compile.</p>
+  styling: `<card sx="p-5 bg-surface-1 rounded-lg shadow-sm hover:shadow-md">
+  <p sx="text-muted-foreground text-sm">On the system, or it does not compile.</p>
 </card>`,
 
   state: `const count = signal(0)

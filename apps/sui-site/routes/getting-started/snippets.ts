@@ -18,13 +18,13 @@ $ deck dev --project my-app
 
   firstPage: `<!-- routes/page.sui — a page is markup. The components are
      already in the language; there is nothing to import. -->
-<column gap="4" sx="p:6 max-w:panel-max-w-lg">
+<column gap="4" sx="p-6 max-w-panel-max-w-lg">
   <h1>Team</h1>
   <row gap="2">
     <input placeholder="Filter people" />
     <button variant="solid" tone="primary">Invite</button>
   </row>
-  <card sx="p:4">
+  <card sx="p-4">
     <row gap="3" align="center">
       <avatar></avatar>
       <strong>Ada Lovelace</strong>
@@ -101,6 +101,6 @@ export default controller({
 
 <button on:click={() => open.set(!open())}>Toggle</button>
 {#if open()}
-  <card motion:enter={{ opacity: 'fade' }} sx="p:4">Hello.</card>
+  <card motion:enter={{ opacity: 'fade' }} sx="p-4">Hello.</card>
 {/if}`,
 }
