@@ -979,7 +979,14 @@ fn lower_layout(source: &str) -> (String, String) {
             }
         }
         if let Some(t) = open_at.get(&i)
-            && let Some((base_class, base_rules)) = layout::base(&t.tag)
+            && let Some((base_class, base_rules)) = {
+                // `inline` is a boolean axis — presence swaps the base class
+                // and the base CSS for the inline variant. Detected once
+                // here so the rest of the loop sees a consistent base; the
+                // attribute is consumed (not passed through) below.
+                let inline = t.attrs.iter().any(|(n, _)| n == "inline");
+                layout::base(&t.tag, inline)
+            }
         {
             for r in base_rules {
                 if seen.insert(r.clone()) {
@@ -1003,6 +1010,12 @@ fn lower_layout(source: &str) -> (String, String) {
                 skip_props.insert("min");
             }
             for &prop in layout::tag_props(&t.tag) {
+                // `inline` is consumed at the base selection above — never
+                // fed into `lower_axis` (which only knows about enum-style
+                // modifiers) and never emitted as a raw HTML attr.
+                if prop == "inline" {
+                    continue;
+                }
                 if skip_props.contains(prop) {
                     continue;
                 }
@@ -1031,8 +1044,11 @@ fn lower_layout(source: &str) -> (String, String) {
                     // Layout axis props — already consumed by the lowering loop
                     // above; their classes/rules are folded into the div's
                     // `class` and the injected stylesheet, NEVER emitted as
-                    // raw HTML attrs.
-                    "gap" | "align" | "justify" | "min" | "flow" | "cols" | "direction" | "tracks" => {}
+                    // raw HTML attrs. `inline` is special: its effect is the
+                    // base swap (already applied above), not a class
+                    // modifier, so it joins the consumed set here to keep the
+                    // `inline` attribute from reappearing on the div.
+                    "gap" | "align" | "justify" | "min" | "flow" | "cols" | "direction" | "tracks" | "inline" => {}
                     "class" if value.starts_with('{') => {
                         dyn_parts.push(format!("({})", &value[1..value.len() - 1]));
                     }

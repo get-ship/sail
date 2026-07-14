@@ -39,7 +39,14 @@ pub fn is_layout_tag(tag: &str) -> bool {
 /// what to read) and the lint (to reject props that don't apply to a tag).
 pub fn tag_props(tag: &str) -> &'static [&'static str] {
     match tag {
-        "column" => &["gap", "align", "direction"],
+        // `inline` opts the layout box into `display: inline-flex` / `inline-grid`
+        // — the shrink-to-fit counterpart to the (default) block-level layout.
+        // It is a flag, not an enum: presence is the whole vocabulary. The
+        // language knows the pattern (an icon wrapper that hug-wraps; the
+        // charts' inline hosts) but it had no element to express it; sx's
+        // `inline-flex` / `inline-grid` refusal redirects here, so this prop
+        // is what makes that suggestion buildable.
+        "column" => &["gap", "align", "direction", "inline"],
         // `direction` is a backward-compat alias for the old `<sui-stack
         // direction="row">` escape hatch (horizontal stack). Accepted on
         // row/column so legacy code keeps compiling through the keyword
@@ -47,20 +54,28 @@ pub fn tag_props(tag: &str) -> &'static [&'static str] {
         // want `<row>`) is what `sui-legacy-layout` would flag, but the
         // modern author has no reason to reach for `direction` — they use
         // the keyword itself.
-        "row" => &["gap", "align", "justify", "direction"],
+        "row" => &["gap", "align", "justify", "direction", "inline"],
         // `cols` is a fixed column count (1..=12); it conflicts with `min`
         // (the responsive `auto-fill minmax` axis) — `cols` wins if both
         // are present.
-        "grid" => &["gap", "min", "flow", "cols", "tracks"],
-        "center" => &["gap"],
-        "stack" => &["align", "justify"],
+        "grid" => &["gap", "min", "flow", "cols", "tracks", "inline"],
+        "center" => &["gap", "inline"],
+        "stack" => &["align", "justify", "inline"],
         _ => &[],
     }
 }
 
-/// The base structural class for a tag (`.sui-col` etc.). Its CSS is
-/// direction/display only — every tunable (gap/align/justify) rides an explicit
-/// atomic class so exactly one rule owns each property (no specificity games).
+/// The base structural class for a tag, block (default) or inline (`<row inline>`).
+/// Its CSS is direction/display only — every tunable (gap/align/justify) rides an
+/// explicit atomic class so exactly one rule owns each property (no specificity
+/// games). The inline variant swaps `display:flex|grid` for `inline-flex|inline-grid`,
+/// preserving the `min-width:0` child guard so an inline layout nested in a
+/// block parent can still shrink instead of forcing overflow.
+///
+/// `inline` and the block form are mutually exclusive — exactly one base class
+/// ends up on the lowered div, and exactly one base CSS rule is injected.
+/// They are NOT modifiers of each other: a `<row>` and a `<row inline>` are
+/// different elements, not the same element with a flag.
 fn base_class(tag: &str) -> &'static str {
     match tag {
         "row" => "sui-row",
@@ -68,6 +83,16 @@ fn base_class(tag: &str) -> &'static str {
         "grid" => "sui-grid",
         "center" => "sui-center",
         "stack" => "sui-stackz",
+        _ => "",
+    }
+}
+fn inline_base_class(tag: &str) -> &'static str {
+    match tag {
+        "row" => "sui-row-i",
+        "column" => "sui-col-i",
+        "grid" => "sui-grid-i",
+        "center" => "sui-center-i",
+        "stack" => "sui-stackz-i",
         _ => "",
     }
 }
@@ -100,6 +125,44 @@ fn base_css(tag: &str) -> Vec<String> {
         "stack" => vec![
             ".sui-stackz{display:grid}".into(),
             ".sui-stackz>*{grid-area:1/1}".into(),
+        ],
+        _ => vec![],
+    }
+}
+/// The inline counterpart to [`base_css`] — same min-width:0 child guard, same
+/// axis property ownership, only the `display` value differs. `inline-flex` /
+/// `inline-grid` make the layout box shrink-to-fit its content so it can sit
+/// inside text or alongside other inline siblings without forcing a new line.
+fn inline_base_css(tag: &str) -> Vec<String> {
+    match tag {
+        "column" => vec![
+            ".sui-col-i{display:inline-flex;flex-direction:column;min-width:0}".into(),
+            ".sui-col-i>*{min-width:0}".into(),
+        ],
+        "row" => vec![
+            ".sui-row-i{display:inline-flex;flex-wrap:wrap;min-width:0}".into(),
+            ".sui-row-i>*{min-width:0}".into(),
+        ],
+        "grid" => vec![
+            ".sui-grid-i{display:inline-grid;min-width:0}".into(),
+            ".sui-grid-i>*{grid-column:span 1;grid-row:span 1;min-width:0}".into(),
+            ".sui-grid-i>*[data-col-span='2']{grid-column:span 2}".into(),
+            ".sui-grid-i>*[data-col-span='3']{grid-column:span 3}".into(),
+            ".sui-grid-i>*[data-col-span='4']{grid-column:span 4}".into(),
+            ".sui-grid-i>*[data-row-span='2']{grid-row:span 2}".into(),
+            ".sui-grid-i>*[data-row-span='3']{grid-row:span 3}".into(),
+            ".sui-grid-i>*[data-row-span='4']{grid-row:span 4}".into(),
+            "@media(max-width:720px){.sui-grid-i>*[data-col-span]{grid-column:span 1}.sui-grid-i>*[data-row-span]{grid-row:span 1}}".into(),
+        ],
+        // `<center inline>` drops the `width:100%` block default — an inline
+        // center hug-wraps its content like an inline-flex equivalent of
+        // place-content:center.
+        "center" => vec![
+            ".sui-center-i{display:inline-grid;place-items:center;place-content:center}".into(),
+        ],
+        "stack" => vec![
+            ".sui-stackz-i{display:inline-grid}".into(),
+            ".sui-stackz-i>*{grid-area:1/1}".into(),
         ],
         _ => vec![],
     }
@@ -242,11 +305,28 @@ fn modifier(prop: &str, value: &str) -> Option<(String, String)> {
 }
 /// The base structural class + CSS for a tag (no axis modifiers). The div always
 /// gets this; axes ride on top via [`lower_axis`].
-pub fn base(tag: &str) -> Option<(String, Vec<String>)> {
+///
+/// `inline` selects the inline variant (the `<row inline>`-style hug-wrap
+/// element): the base class changes (`sui-row` → `sui-row-i`) and the
+/// `display` value in CSS swaps to `inline-flex` / `inline-grid`. Everything
+/// else — the `min-width:0` guard, axis property ownership — is identical,
+/// because an inline layout is still a layout, not a different kind of box.
+pub fn base(tag: &str, inline: bool) -> Option<(String, Vec<String>)> {
     if !is_layout_tag(tag) {
         return None;
     }
-    Some((base_class(tag).to_string(), base_css(tag)))
+    Some((
+        if inline {
+            inline_base_class(tag).to_string()
+        } else {
+            base_class(tag).to_string()
+        },
+        if inline {
+            inline_base_css(tag)
+        } else {
+            base_css(tag)
+        },
+    ))
 }
 
 /// The atomic-class PREFIX for an axis (`align` → `sui-ai-`), so a dynamic value
@@ -300,12 +380,29 @@ pub fn lower_axis(tag: &str, prop: &str, attr: Option<&str>) -> Option<AxisLower
 /// resolved axis props (already parsed out of the tag). Off-enum values are
 /// dropped here (the lint surfaces them); the base class always applies so the
 /// box still lays out.
+///
+/// `inline` (presence of the boolean axis) swaps the base class + CSS for
+/// the inline variant BEFORE axis modifiers are layered on, so axis props
+/// (gap/align/justify/cols/min/flow/direction) compose cleanly with the
+/// inline box — the same axes, just hung on a shrink-to-fit container.
 pub fn lower(tag: &str, attrs: &[(String, String)]) -> Option<(Vec<String>, Vec<String>)> {
     if !is_layout_tag(tag) {
         return None;
     }
-    let mut classes = vec![base_class(tag).to_string()];
-    let mut css = base_css(tag);
+    // `inline` is a boolean axis: presence selects the inline base. It has
+    // no class modifier of its own — the swap happens at the base, not as
+    // an `sui-*` atomic riding on top of the block base.
+    let inline = attrs.iter().any(|(n, _)| n == "inline");
+    let mut classes = vec![if inline {
+        inline_base_class(tag).to_string()
+    } else {
+        base_class(tag).to_string()
+    }];
+    let mut css = if inline {
+        inline_base_css(tag)
+    } else {
+        base_css(tag)
+    };
     // Mirror the compiler-side precedence: `cols` wins over `min` on `<grid>`.
     // Both own `grid-template-columns`, so when both axes are present the
     // responsive one is dropped to avoid a CSS cascade / specificity tie.
@@ -316,6 +413,10 @@ pub fn lower(tag: &str, attrs: &[(String, String)]) -> Option<(Vec<String>, Vec<
         std::collections::HashSet::new()
     };
     for &prop in tag_props(tag) {
+        // `inline` is handled at the base — never an axis modifier.
+        if prop == "inline" {
+            continue;
+        }
         if skip.contains(prop) {
             continue;
         }
@@ -388,6 +489,32 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 // rule set injected, so any runtime value matches. The value
                 // is a runtime expression; we can't (and needn't) enum-check
                 // it here.
+                //
+                // `inline` is NOT dynamic — its meaning is structural
+                // (`display:flex` vs `inline-flex`), not a property value,
+                // so the language pins it at compile time. A `inline={cond}`
+                // reading is almost always an authoring mistake.
+                if name == "inline" {
+                    findings.push(mk(path, line, col, format!(
+                        "<{}> inline={{…}} — `inline` is a structural axis, not a value. \
+                         Pick one element: <{}> (block) or <{} inline> (hug-wrap).",
+                        t.tag, t.tag, t.tag
+                    )));
+                    continue;
+                }
+                continue;
+            }
+            if name == "inline" {
+                // Boolean axis — presence is the entire vocabulary. Any
+                // explicit value (`inline="yes"`, `inline="true"`, …) is a
+                // contract violation that the rejection explains.
+                if !value.is_empty() {
+                    findings.push(mk(path, line, col, format!(
+                        "<{} inline=\"{value}\"> — `inline` is a flag, not a value. \
+                         Write `<{} inline>` (presence-only).",
+                        t.tag, t.tag
+                    )));
+                }
                 continue;
             }
             if name == "tracks" && is_tracks_var(&value) {
@@ -415,11 +542,13 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
 /// `cols` was added in the `job/sui-oss-grid` pass: it lives only on `<grid>`,
 /// but listing it here lets the unknown-attr error name every axis prop the
 /// user might have meant. `direction` is the legacy `<sui-stack
-/// direction="row">` alias kept for migration.
+/// direction="row">` alias kept for migration. `inline` is a boolean axis
+/// (no value) — present on row/column/grid/center/stack — that swaps the
+/// base layout box from `display:flex|grid` to `inline-flex|inline-grid`.
 fn is_known_axis_prop(name: &str) -> bool {
     matches!(
         name,
-        "gap" | "align" | "justify" | "min" | "flow" | "cols" | "direction" | "tracks"
+        "gap" | "align" | "justify" | "min" | "flow" | "cols" | "direction" | "tracks" | "inline"
     )
 }
 
@@ -891,6 +1020,162 @@ mod tests {
         assert!(!is_passthrough_attr("justify"));
         assert!(!is_passthrough_attr("min"));
         assert!(!is_passthrough_attr("flow"));
+        assert!(!is_passthrough_attr("inline"));
+    }
+
+    // --- `inline` axis (the hug-wrap counterpart to the block layout) ------
+
+    #[test]
+    fn accepts_inline_on_every_layout_tag() {
+        // `inline` is a boolean axis, present on row/column/grid/center/stack.
+        // Any of those with `<tag inline>` is a valid layout element — the
+        // compiler swaps the base class for the `-i` variant and the `display`
+        // value for `inline-flex`/`inline-grid`. No value; presence is the
+        // vocabulary.
+        assert!(run(r#"<row inline>x</row>"#).is_empty());
+        assert!(run(r#"<column inline>x</column>"#).is_empty());
+        assert!(run(r#"<grid inline>x</grid>"#).is_empty());
+        assert!(run(r#"<center inline>x</center>"#).is_empty());
+        assert!(run(r#"<stack inline>x</stack>"#).is_empty());
+    }
+
+    #[test]
+    fn lowers_row_inline_to_inline_flex_base_class() {
+        // The swap happens at the base, not as a class modifier: `<row inline>`
+        // lowers to `sui-row-i` (and NOT `sui-row sui-row-i`). The block base
+        // and the inline base are mutually exclusive — exactly one base rule
+        // is injected, exactly one base class is on the div. A duplicate would
+        // be a specificity tie that nothing can resolve.
+        let (classes, css) = lower("row", &[("inline".into(), "".into())]).unwrap();
+        assert_eq!(classes[0], "sui-row-i", "base swapped to inline variant: {classes:?}");
+        assert!(
+            !classes.iter().any(|c| c == "sui-row"),
+            "no block base leaked into inline layout: {classes:?}"
+        );
+        assert!(
+            css.iter().any(|r| r.starts_with(".sui-row-i{display:inline-flex")),
+            "inline-flex rule is the one we ship: {css:?}"
+        );
+        assert!(
+            css.iter().any(|r| r == ".sui-row-i>*{min-width:0}"),
+            "the min-width:0 child guard survives the inline swap: {css:?}"
+        );
+        assert!(
+            !css.iter().any(|r| r.starts_with(".sui-row{display:flex")),
+            "no block-flex rule when inline is set: {css:?}"
+        );
+    }
+
+    #[test]
+    fn lowers_column_inline_with_default_axes() {
+        // Default axis props still apply on `<column inline>` — the swap is
+        // orthogonal to axis selection. `gap="4"` and `align="stretch"` are
+        // the column defaults and ride on top of the inline base.
+        let (classes, _css) = lower("column", &[("inline".into(), "".into())]).unwrap();
+        assert_eq!(classes[0], "sui-col-i");
+        assert!(classes.contains(&"sui-g-4".to_string()));
+        assert!(classes.contains(&"sui-ai-stretch".to_string()));
+    }
+
+    #[test]
+    fn lowers_grid_inline_to_inline_grid_base_class() {
+        // Grid mirrors the same swap (`display:grid` → `inline-grid`). The
+        // child span/data-* selectors carry over identically — the inline
+        // base class has its own block of rules (`.sui-grid-i>` not
+        // `.sui-grid>`) so no rule collides across the two bases.
+        let (classes, css) = lower("grid", &[("inline".into(), "".into())]).unwrap();
+        assert_eq!(classes[0], "sui-grid-i");
+        assert!(
+            css.iter().any(|r| r.starts_with(".sui-grid-i{display:inline-grid")),
+            "inline-grid base rule: {css:?}"
+        );
+        assert!(
+            css.iter().any(|r| r == ".sui-grid-i>*[data-col-span='2']{grid-column:span 2}"),
+            "data-col-span rule carries to the inline base: {css:?}"
+        );
+    }
+
+    #[test]
+    fn lowers_stack_inline_to_inline_grid_with_overlay() {
+        // Stack keeps its z-axis overlay (`*{grid-area:1/1}`) on the inline
+        // variant — it is the same logical element (children layered), just
+        // shrink-to-fit at the box level.
+        let (classes, css) = lower("stack", &[("inline".into(), "".into())]).unwrap();
+        assert_eq!(classes[0], "sui-stackz-i");
+        assert!(
+            css.iter().any(|r| r.contains(".sui-stackz-i>*{grid-area:1/1}")),
+            "z-overlay child rule survives the swap: {css:?}"
+        );
+    }
+
+    #[test]
+    fn center_inline_drops_block_width_default() {
+        // `<center>` defaults to `width:100%` (block-level); the inline
+        // variant drops that — an inline center hug-wraps its content.
+        // Without the drop, the inline center would force a 100%-wide inline
+        // box, which is incoherent (inline boxes take their content width).
+        let (_classes, css) = lower("center", &[("inline".into(), "".into())]).unwrap();
+        assert!(
+            !css.iter().any(|r| r.contains("width:100%")),
+            "no width:100% on inline center: {css:?}"
+        );
+    }
+
+    #[test]
+    fn rejects_inline_with_a_value() {
+        // Boolean axes do not take values. `<row inline="yes">` is a contract
+        // violation — the rejection spells the rule out so an author who
+        // mistyped doesn't lose an afternoon.
+        let m = run(r#"<row inline="yes">x</row>"#);
+        assert_eq!(m.len(), 1);
+        assert!(m[0].contains("flag, not a value"), "got: {}", m[0]);
+    }
+
+    #[test]
+    fn rejects_dynamic_inline() {
+        // `<row inline={cond}>` is rejected — `inline` is a structural axis,
+        // not a property value, so the language pins it at compile time.
+        // A dynamic read is almost always an authoring mistake (the author
+        // wanted to swap element variants), and the rejection names the
+        // fixed choice the language offers.
+        let m = run(r#"<row inline={open()}>x</row>"#);
+        assert_eq!(m.len(), 1);
+        assert!(m[0].contains("structural axis"), "got: {}", m[0]);
+    }
+
+    #[test]
+    fn inline_does_not_leak_to_an_unknown_attr_finding() {
+        // Sanity: `inline` is in `is_known_axis_prop`, so it should NEVER
+        // surface as an unknown-attr finding. If it does, the base swap
+        // silently fails to fire and the lowered div is `display:flex` — the
+        // the exact regression that would defeat this feature.
+        let m = run(r#"<row inline>x</row>"#);
+        assert!(
+            !m.iter().any(|s| s.contains("unknown attribute")),
+            "`inline` is a known axis prop: {m:?}"
+        );
+    }
+
+    #[test]
+    fn the_compound_refusal_now_recommends_a_buildable_element() {
+        // THE MISSION: a refusal must point at something the author can
+        // actually write. Before this job, `<div sx="inline-flex">` produced
+        // a suggestion (`<row inline>`) that did not compile — the compiler
+        // recommended an unbuildable element. This test pins both halves:
+        // the suggestion is still emitted, and the suggested element is now
+        // in the layout vocabulary.
+        //
+        // We assert via the lowerer's per-tag prop list (the source of truth
+        // the compiler consults) — if `<row>` ever loses `inline`, the
+        // suggestion goes stale again and the test catches it.
+        assert!(
+            tag_props("row").contains(&"inline"),
+            "<row> must still take `inline` so the sx refusal's suggestion compiles"
+        );
+        assert!(
+            tag_props("grid").contains(&"inline"),
+            "<grid> must still take `inline` so the sx refusal's suggestion compiles"
+        );
     }
 }
 
