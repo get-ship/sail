@@ -219,7 +219,8 @@ fn mk(path: &Path, line: usize, col: usize, message: String) -> Finding {
         severity: Severity::Error,
         message,
         suggest: Some(
-            "sx is surface-only: spacing 0–8 (p/m…), colors (bg/fg), radius, text. \
+            "sx is surface-only: spacing (p/m…, the Tailwind-aligned space ramp \
+             1..64 plus half-steps), colors (bg/fg), radius, text. \
              Layout is the primitives' job (<row>/<column>/<grid>). \
              Raw px/hex are not expressible."
                 .to_string(),
