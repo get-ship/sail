@@ -24,8 +24,10 @@
   speed + direction parameterize the loop and reach the controller; tone is a
   variant map on the root; angle reflects onto the host.
 
-  Reduced motion: the controller plays nothing and removes every clone — the
-  original content stands alone, fully visible and static.
+  Reduced motion: the runtime is the single authority. `motion:loop` is
+  skipped entirely (ambient motion is decoration) and the band shows the
+  content statically — original + zero clones, the original stands alone,
+  fully visible, no horizontal scroll.
 
   Seam math: the loop travels exactly -50% of the track, so the track must
   hold an EVEN number of identical copies (the loop point lands on a copy
@@ -69,22 +71,23 @@
 // re-derived from measurement, so short and long bands move at the same visual
 // rate.
 //
-// The loop is a WAAPI animation this controller owns because both of its
-// defining values are only knowable at runtime: the duration comes from a
-// measurement, and `direction` reverses the same loop. WAAPI animations are
-// programmatic, so the CSS reduced-motion kill switch cannot reach them — the
-// controller consults the media query itself (and drops the clones with it).
+// The LOOP is owned by the runtime: `motion:loop` creates the WAAPI animation
+// through motion.dev, so the runtime is the single reduced-motion authority.
+// The controller owns the SEAM MATH (a measurement concern) and the
+// direction prop: when `direction` flips, the controller tears down the
+// current motion and reattaches with the right `repeatType`. When
+// `prefers-reduced-motion` is on, the runtime skips the motion entirely;
+// the controller clears its clones so the original content stands alone
+// (the band never scrolls under reduced motion — content gone would be
+// the worst kind of correctness).
 //
 // Environments without layout (SSR-adjacent test DOMs measure 0) fall back to
 // the minimum seamless shape — original + 1 clone — and the fallback duration,
 // so the element never divides by zero and never renders an empty track.
 
-import { controller, effect } from "@ship/sui-runtime";
+import { controller, effect, __sui_motion_attach } from "@ship/sui-runtime";
 import type { Scope } from "./sui-band.sui";
 
-// The slice of the mount `state` we touch: the `speed`/`direction` prop signals
-// and the `bind:this` refs, exposed as callables on `$signals` (the mount-style
-// controller contract — same seam <sui-mermaid> uses).
 interface BandState {
   $signals: {
     speed: () => string | undefined;
@@ -120,7 +123,9 @@ export default controller<Scope>({
         : null;
 
     let clones: HTMLElement[] = [];
-    let loop: Animation | null = null;
+    let loopDispose: (() => void) | null = null;
+    /** The measured half-track width in pixels — the loop's -50% target. */
+    let lastHalfTrack = 0;
 
     /** The content nodes of the original copy. Shadow mount: the slot's
      *  assigned (light-DOM) nodes. Light mount: the slot wrapper's children
@@ -169,25 +174,43 @@ export default controller<Scope>({
     };
 
     const stopLoop = (): void => {
-      loop?.cancel();
-      loop = null;
+      if (loopDispose) loopDispose();
+      loopDispose = null;
     };
 
-    /** (Re)start the -50% loop. Half a track is a whole number of copies, so
-     *  the loop point lands on a copy boundary — the seam is never visible. */
+    /** (Re)start the runtime-owned loop. The runtime creates the WAAPI
+     *  animation through motion.dev; we hand it the resolved duration
+     *  (derived from measurement + px/s rate) and the directional
+     *  repeatType. `marquee` is the runtime's one-direction-infinite
+     *  preset; `marquee-reverse` alternates. The runtime is the single
+     *  reduced-motion authority — under reduced motion the loop is
+     *  skipped at attach time. */
     const playLoop = (durationMs: number): void => {
       stopLoop();
-      if (typeof track.animate !== "function") return;
-      loop = track.animate(
-        [{ transform: "translateX(0)" }, { transform: "translateX(-50%)" }],
-        {
-          duration: durationMs,
-          easing: "linear",
-          iterations: Infinity,
-          direction:
-            state.$signals.direction() === "reverse" ? "reverse" : "normal",
-        },
-      );
+      // The runtime owns the WAAPI loop. `translate-x` here is a PIXEL
+      // value of `-50%` of the measured half-track — the band measures
+      // the track once per layout, so the runtime gets a number it can
+      // hand to motion.dev as `x: [0, -px]`. (Motion's per-value keyframes
+      // interpolate between numbers; the `direction: 'normal'` runs the
+      // loop one way; `direction: 'reverse'` runs it the other.)
+      const dir = state.$signals.direction() === "reverse" ? "reverse" : "normal";
+      const halfTrack = lastHalfTrack ?? 0;
+      const targetPx = dir === "reverse" ? halfTrack : -halfTrack;
+      loopDispose = __sui_motion_attach(track, {
+        trigger: "loop",
+        motions: [
+          {
+            property: "translate-x",
+            preset: dir === "reverse" ? "marquee-reverse" : "marquee",
+            kind: "tween",
+            duration: durationMs / 1000,
+            from: 0,
+            to: targetPx,
+            iterations: Infinity,
+            direction: "normal",
+          },
+        ],
+      });
     };
 
     /** Re-derive clone count + duration from current measurements. */
@@ -208,8 +231,9 @@ export default controller<Scope>({
         return;
       }
       const perHalf = Math.max(1, Math.ceil(bandWidth / copyWidth));
+      lastHalfTrack = perHalf * copyWidth;
       setCloneCount(perHalf * 2 - 1);
-      playLoop(((perHalf * copyWidth) / rate) * 1000);
+      playLoop((lastHalfTrack / rate) * 1000);
     };
 
     /** Content changed — stale snapshots must not scroll by. */

@@ -79,6 +79,36 @@
       "duration_token": "duration-fast",
       "easing": "cubic-bezier(0.4, 0, 1, 1)",
       "$doc": "opacity 1→0 — exit phase"
+    },
+    "bounce": {
+      "kind": "tween",
+      "from": 0.0,
+      "to": 1.0,
+      "duration_token": "duration-medium",
+      "easing": "ease-in-out",
+      "iterations": "infinite",
+      "direction": "alternate",
+      "$doc": "translateY 0→-100% + opacity 0.4→1 — a 7-12px dot's visible bounce, paired per dot, with a 150ms stagger step that lands as a per-dot phase offset (dot 1: 0ms, dot 2: 150ms, dot 3: 300ms)."
+    },
+    "marquee": {
+      "kind": "tween",
+      "from": 0.0,
+      "to": -50.0,
+      "duration_token": "duration-slow",
+      "easing": "linear",
+      "iterations": "infinite",
+      "direction": "normal",
+      "$doc": "translateX 0→-50% — the <sui-band> one-direction infinite loop. The runtime derives the duration from measured content width (px/s), so the rate holds for any content. Use `marquee-reverse` to flip direction."
+    },
+    "marquee-reverse": {
+      "kind": "tween",
+      "from": 0.0,
+      "to": 50.0,
+      "duration_token": "duration-slow",
+      "easing": "linear",
+      "iterations": "infinite",
+      "direction": "normal",
+      "$doc": "translateX 0→+50% — the <sui-band direction=\"reverse\"> one-direction loop. Same px/s derivation as `marquee`."
     }
   },
 

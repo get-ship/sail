@@ -5,25 +5,35 @@
 // never advances). The only trustworthy observable is COMPUTED VALUES OVER
 // TIME, so every behavior gate here samples getComputedStyle per frame.
 //
-// Construction order matters and is part of the contract under test: the
-// compiler bakes `el.animate(...)` on a <template> clone BEFORE insertion,
-// while the node is still owned by the template's inert contents document.
-// `Element.animate()` binds the Animation to the node document's timeline at
-// call time, and an inert document's timeline never advances — an animation
-// minted there holds its target at the FIRST keyframe forever (beating inline
-// styles) unless the runtime re-homes it onto the live document timeline.
-// Every gate below builds its element through that exact path.
-
-// One helper string, injected into the page: clone-from-template + bake +
-// attach + insert, exactly as the emit does it.
+// The runtime is a thin wrapper over motion.dev's vanilla `motion` package.
+// The compiler validates a closed preset catalogue and emits a per-property
+// `MotionConfig`; the runtime maps each to an `animate()` call. Reduced
+// motion: the runtime is the single authority — when the matchMedia reports
+// `reduce`, the runtime settles on the FINAL pose and never animates.
 const BUILD = `
   globalThis.buildMotionEl = function buildMotionEl(id, keyframeSets, config) {
     const t = document.createElement('template')
     t.innerHTML = '<div id="' + id + '" style="width:120px;height:44px;border-radius:8px;background:rgb(30,120,220);color:#fff;font:12px system-ui;display:flex;align-items:center;justify-content:center">' + id + '</div>'
     const el = t.content.firstElementChild.cloneNode(true)
-    // Bake BEFORE insertion, on the inert-document clone — the emit's order.
-    const anims = keyframeSets.map(([kf, opts]) => el.animate(kf, opts))
-    globalThis.SuiMotion.attach(el, { trigger: config.trigger, enter: anims, leave: anims, ...(config.stagger ? { stagger: config.stagger } : {}) })
+    // The runtime is the single reduced-motion authority: pass the per-
+    // property config the compiler emits, and motion.dev creates every
+    // animation after the node is live (no inert-document timeline).
+    const motions = keyframeSets.map(([kf, opts]) => ({
+      property: opts.property ?? 'opacity',
+      preset: opts.preset ?? 'fade',
+      kind: opts.kind ?? 'tween',
+      ...(opts.from != null ? { from: opts.from } : {}),
+      ...(opts.to != null ? { to: opts.to } : {}),
+      ...(opts.duration != null ? { duration: opts.duration } : {}),
+      ...(opts.easing != null ? { easing: opts.easing } : {}),
+      ...(opts.iterations != null ? { iterations: opts.iterations } : {}),
+      ...(opts.direction != null ? { direction: opts.direction } : {}),
+    }))
+    globalThis.SuiMotion.attach(el, {
+      trigger: config.trigger,
+      motions,
+      ...(config.stagger ? { stagger: config.stagger } : {})
+    })
     document.getElementById('m-host').append(el)
     return el
   }
@@ -71,14 +81,13 @@ export default {
       const bad = []
       await page.addScriptTag({ content: BUILD })
 
-      // ── ENTER: template-baked animation must visibly RUN after insertion ──
+      // ── ENTER: runtime-driven animation must visibly RUN after insertion ──
       // Mid-transition shortly after mount (0 < opacity < 1), arrived pose
       // (opacity 1) within 2s. A run frozen at the first keyframe — the
       // inert-timeline regression — fails both.
       const enter = await page.evaluate(async () => {
         const el = buildMotionEl('m-enter', [
-          [[{ offset: 0, opacity: '0' }, { offset: 1, opacity: '1' }], { duration: 400, easing: 'linear', fill: 'both' }],
-          [[{ offset: 0, transform: 'translateY(16px)' }, { offset: 1, transform: 'translateY(0px)' }], { duration: 400, easing: 'linear', fill: 'both' }],
+          [{ property: 'opacity', kind: 'tween', from: 0, to: 1, duration: 0.4, easing: 'linear' }],
         ], { trigger: 'enter' })
         const series = await sampleSeries(el, 45)
         return { series, final: getComputedStyle(el).opacity }
@@ -92,10 +101,10 @@ export default {
 
       // ── STAGGER: same-wave siblings cascade in arrival order ──
       const stagger = await page.evaluate(async () => {
-        const kf = () => [[[{ offset: 0, opacity: '0' }, { offset: 1, opacity: '1' }], { duration: 250, easing: 'linear', fill: 'both' }]]
+        const kf = () => [{ property: 'opacity', kind: 'tween', from: 0, to: 1, duration: 0.25, easing: 'linear' }]
         // Both attach in ONE synchronous run — one wave, offsets 0 and 1.
-        const a = buildMotionEl('m-stag-a', kf(), { trigger: 'enter', stagger: 150 })
-        const b = buildMotionEl('m-stag-b', kf(), { trigger: 'enter', stagger: 150 })
+        const a = buildMotionEl('m-stag-a', kf(), { trigger: 'enter', stagger: 0.15 })
+        const b = buildMotionEl('m-stag-b', kf(), { trigger: 'enter', stagger: 0.15 })
         const [sa, sb] = await Promise.all([sampleSeries(a, 40), sampleSeries(b, 40)])
         const arrived = (s) => s.findIndex((x) => +x.opacity >= 1)
         return { a: arrived(sa), b: arrived(sb) }
@@ -106,7 +115,7 @@ export default {
       // ── HOVER: computed transform leaves identity while the spring runs ──
       await page.evaluate(() => {
         buildMotionEl('m-hover', [
-          [[{ offset: 0, transform: 'scale(0.9)' }, { offset: 1, transform: 'scale(1)' }], { duration: 400, easing: 'linear', fill: 'both' }],
+          [{ property: 'scale', kind: 'tween', from: 0.9, to: 1, duration: 0.4, easing: 'linear' }],
         ], { trigger: 'hover' })
       })
       const restTransform = await page.evaluate(() => getComputedStyle(document.getElementById('m-hover')).transform)
@@ -122,7 +131,7 @@ export default {
       // ── EXIT: departing node is HELD in the DOM with declining opacity ──
       const exit = await page.evaluate(async () => {
         const el = buildMotionEl('m-exit', [
-          [[{ offset: 0, opacity: '1' }, { offset: 1, opacity: '0' }], { duration: 400, easing: 'linear', fill: 'both' }],
+          [{ property: 'opacity', kind: 'tween', from: 1, to: 0, duration: 0.4, easing: 'linear' }],
         ], { trigger: 'exit' })
         await new Promise((r) => requestAnimationFrame(r))
         const rest = getComputedStyle(el).opacity // parked exit must not alter the pose

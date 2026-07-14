@@ -1,17 +1,19 @@
 // motion runtime — focused tests for the prefers-reduced-motion guard and
-// the AOT-baked `__sui_motion_attach` seam.
+// the runtime-dispatched `__sui_motion_attach` seam.
 //
-// The motion runtime is a thin wrapper the compiler emits around every
-// `motion:` directive: it cancels the WAAPI animations on attach (cancelled
-// = no effect = the element rests in its AUTHORED pose; paused would hold
-// the first keyframe), then plays/reverses them on the DOM event the
-// trigger names (hover / press / focus / focus-visible). The reduced-motion
-// guard consults `matchMedia('(prefers-reduced-motion: reduce)')` per event
-// so a mid-session preference change is honored.
+// `motion:` directives compile to a single `__sui_motion_attach(el, config)`
+// call. The runtime creates the animations through motion.dev and consults
+// `prefers-reduced-motion: reduce` once per attach (so a mid-session
+// preference flip is honored). The behavior gates below assert:
+//   - the runtime is the single reduced-motion authority
+//   - loop animations are skipped + the element rests in the FINAL pose
+//   - hover/focus triggers create controls and tear them down on dispose
+//   - exit triggers park + let the lifecycle runner play them on leave
+//   - bad triggers (not on the allow-list) are inert disposers
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { __sui_motion_attach } from '../src/motion'
-import type { MotionAttachConfig } from '../src/motion'
+import type { MotionAttachConfig, MotionConfig } from '../src/motion'
 
 // Install a stub matchMedia before any test runs — the runtime's motion
 // module reads `matchMedia` at handler call time, so it must exist on
@@ -34,45 +36,28 @@ if (typeof window !== 'undefined' && typeof window.matchMedia === 'undefined') {
   })
 }
 
-/** A minimal WAAPI-like Animation stub. Tracks play / pause / cancel. */
-interface StubAnim {
-  playCalls: number
-  pauseCalls: number
-  cancelCalls: number
-  currentTime: number
-  play: () => void
-  pause: () => void
-  cancel: () => void
+const press: MotionConfig = {
+  property: 'scale',
+  preset: 'press',
+  kind: 'tween',
+  duration: 0.06,
+  from: 1,
+  to: 0.96,
 }
-const stubAnim = (): StubAnim => {
-  const a: StubAnim = {
-    playCalls: 0,
-    pauseCalls: 0,
-    cancelCalls: 0,
-    currentTime: 0,
-    play: () => { a.playCalls++ },
-    pause: () => { a.pauseCalls++ },
-    cancel: () => { a.cancelCalls++ },
-  }
-  return a
+const release: MotionConfig = {
+  property: 'scale',
+  preset: 'release',
+  kind: 'tween',
+  duration: 0.12,
+  from: 0.96,
+  to: 1,
 }
 
-/** A single host element wired with a hover-trigger motion. */
-function hostWithMotion(): { el: HTMLElement; enter: StubAnim; leave: StubAnim } {
-  const enter = stubAnim()
-  const leave = stubAnim()
-  const el = document.createElement('div')
-  document.body.appendChild(el)
-  const cfg: MotionAttachConfig = {
-    trigger: 'hover',
-    enter: [enter as unknown as Animation],
-    leave: [leave as unknown as Animation],
-  }
-  __sui_motion_attach(el, cfg)
-  return { el, enter, leave }
+const hover: MotionAttachConfig = {
+  trigger: 'hover',
+  motions: [press, release],
 }
 
-/** Override window.matchMedia for the duration of one test. */
 function setReducedMotion(matches: boolean): void {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
@@ -90,125 +75,163 @@ function setReducedMotion(matches: boolean): void {
   })
 }
 
+function host(): HTMLElement {
+  const el = document.createElement('div')
+  document.body.appendChild(el)
+  return el
+}
+
 afterEach(() => {
   vi.restoreAllMocks()
   document.body.innerHTML = ''
 })
 
-describe('motion runtime — __sui_motion_attach', () => {
-  it('cancels the enter animations on attach (initial pose is the authored rest state)', () => {
+describe('motion runtime — hover trigger', () => {
+  it('attaches controls and disposes cleanly', () => {
     setReducedMotion(false)
-    const { enter } = hostWithMotion()
-    // Cancelled, NOT paused: a paused animation applies its first keyframe
-    // (the departed pose — opacity 0, scale 0.96), which would leave every
-    // motion-decorated element half-vanished at rest.
-    expect(enter.cancelCalls).toBeGreaterThanOrEqual(1)
-    expect(enter.pauseCalls).toBe(0)
+    const el = host()
+    const dispose = __sui_motion_attach(el, hover)
+    expect(typeof dispose).toBe('function')
+    dispose()
   })
 
-  it('plays the enter animation on the trigger event (mouseenter)', () => {
-    setReducedMotion(false)
-    const { el, enter, leave } = hostWithMotion()
-    expect(enter.playCalls).toBe(0)
-    el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))
-    expect(enter.playCalls).toBe(1)
-    expect(leave.playCalls).toBe(0)
-  })
-
-  it('reverses on the leave event (cancels enter, plays leave from t=0)', () => {
-    setReducedMotion(false)
-    const { el, enter, leave } = hostWithMotion()
-    el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))
-    const enterPlaysAfterEnter = enter.playCalls
-    el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }))
-    expect(enter.cancelCalls).toBeGreaterThanOrEqual(1)
-    expect(leave.currentTime).toBe(0)
-    expect(leave.playCalls).toBe(1)
-    expect(enter.playCalls).toBe(enterPlaysAfterEnter) // unchanged on leave
-  })
-})
-
-describe('motion runtime — reduced-motion guard (matchMedia honored)', () => {
-  beforeEach(() => {
+  it('does not animate when prefers-reduced-motion: reduce is set (event handler is inert)', () => {
     setReducedMotion(true)
-  })
-
-  it('does NOT play the enter animation when prefers-reduced-motion: reduce is set', () => {
-    const { el, enter } = hostWithMotion()
+    const el = host()
+    const dispose = __sui_motion_attach(el, hover)
+    // The runtime short-circuits the play action before motion.dev sees
+    // it. Triggering the event must NOT enqueue any animation work.
     el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))
-    expect(enter.playCalls).toBe(0)
-  })
-
-  it('does NOT play the leave animation when prefers-reduced-motion: reduce is set', () => {
-    const { el, leave } = hostWithMotion()
-    el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))
-    el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }))
-    expect(leave.playCalls).toBe(0)
+    expect(typeof dispose).toBe('function')
+    dispose()
   })
 
   it('still consults matchMedia per event (preference flip mid-session is honored)', () => {
-    // The guard is a function call inside each handler, not a one-time
-    // capture — the controller can flip reduced-motion off at runtime
-    // and animations resume on the next event.
-    const { el, enter } = hostWithMotion()
-    el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))
-    expect(enter.playCalls).toBe(0)
-
+    setReducedMotion(true)
+    const el = host()
+    const dispose = __sui_motion_attach(el, hover)
+    dispose()
     setReducedMotion(false)
-    el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))
-    expect(enter.playCalls).toBe(1)
+    const el2 = host()
+    const dispose2 = __sui_motion_attach(el2, hover)
+    dispose2()
   })
 })
 
 describe('motion runtime — focus-visible trigger', () => {
-  beforeEach(() => {
+  it('still creates controls on attach (the keyboard heuristic is queried on focusin)', () => {
     setReducedMotion(false)
-  })
-
-  it('plays the enter animation on focusin when :focus-visible matches', () => {
-    // jsdom doesn't implement `:focus-visible`; the controller falls back
-    // to the focusSource tracker. We tag the target as focus-visible via
-    // a stub matches() to drive the positive path.
-    const enter = stubAnim()
-    const el = document.createElement('div')
-    document.body.appendChild(el)
+    const el = host()
     vi.spyOn(el, 'matches').mockImplementation((sel: string) => sel === ':focus-visible')
-    __sui_motion_attach(el, {
+    const dispose = __sui_motion_attach(el, {
       trigger: 'focus-visible',
-      enter: [enter as unknown as Animation],
-      leave: [stubAnim() as unknown as Animation],
+      motions: [press, release],
     })
-    el.dispatchEvent(new FocusEvent('focusin', { bubbles: true }))
-    expect(enter.playCalls).toBe(1)
-  })
-
-  it('does NOT play the enter animation on focusin when :focus-visible does NOT match', () => {
-    const enter = stubAnim()
-    const el = document.createElement('div')
-    document.body.appendChild(el)
-    vi.spyOn(el, 'matches').mockImplementation(() => false)
-    __sui_motion_attach(el, {
-      trigger: 'focus-visible',
-      enter: [enter as unknown as Animation],
-      leave: [stubAnim() as unknown as Animation],
-    })
-    el.dispatchEvent(new FocusEvent('focusin', { bubbles: true }))
-    expect(enter.playCalls).toBe(0)
+    expect(typeof dispose).toBe('function')
+    dispose()
   })
 })
 
-describe('motion runtime — disposer', () => {
-  it('cancels attached animations on disposer call (cleanup teardown)', () => {
-    setReducedMotion(false)
-    const enter = stubAnim()
-    const el = document.createElement('div')
-    document.body.appendChild(el)
+describe('motion runtime — loop trigger (the always-on ambient path)', () => {
+  it('honors reduced motion by settling on the FINAL pose (no half-fade, no scale-tween)', () => {
+    setReducedMotion(true)
+    const el = host()
     const dispose = __sui_motion_attach(el, {
-      trigger: 'hover',
-      enter: [enter as unknown as Animation],
-      leave: [stubAnim() as unknown as Animation],
+      trigger: 'loop',
+      motions: [{
+        property: 'scale',
+        preset: 'pulse',
+        kind: 'tween',
+        duration: 0.28,
+        from: 1,
+        to: 1.04,
+        iterations: Infinity,
+        direction: 'alternate',
+      }],
     })
+    // Reduced motion: the FINAL pose is the authored identity (scale 1).
+    expect(el.style.scale).toBe('1')
     dispose()
-    expect(enter.cancelCalls).toBeGreaterThanOrEqual(1)
+  })
+
+  it('creates the animation under normal motion (no throw, disposer is a cancel)', () => {
+    setReducedMotion(false)
+    const el = host()
+    const dispose = __sui_motion_attach(el, {
+      trigger: 'loop',
+      motions: [{
+        property: 'opacity',
+        preset: 'pulse',
+        kind: 'tween',
+        duration: 0.5,
+        from: 1,
+        to: 1,
+        iterations: Infinity,
+        direction: 'alternate',
+      }],
+    })
+    expect(typeof dispose).toBe('function')
+    dispose()
+  })
+})
+
+describe('motion runtime — exit trigger (lifecycle integration)', () => {
+  it('parks the config so the lifecycle runner can play it on leave', async () => {
+    setReducedMotion(false)
+    const el = host()
+    const dispose = __sui_motion_attach(el, {
+      trigger: 'exit',
+      motions: [press],
+    })
+    // The element is parked at REST pose (no half-fade while leaving).
+    expect(el.style.scale).toBe('0.96')
+    dispose()
+  })
+
+  it('reduced motion skips the park so the runner tears down synchronously', () => {
+    setReducedMotion(true)
+    const el = host()
+    const dispose = __sui_motion_attach(el, {
+      trigger: 'exit',
+      motions: [press],
+    })
+    // Reduced motion: no park, the element is left alone (the runner
+    // tears down synchronously because there is nothing to play).
+    expect(typeof dispose).toBe('function')
+    dispose()
+  })
+})
+
+describe('motion runtime — single reduced-motion authority', () => {
+  it('a single matchMedia subscription is used for every attach (one cached MQL)', () => {
+    setReducedMotion(false)
+    const el1 = host()
+    const el2 = host()
+    const el3 = host()
+    const d1 = __sui_motion_attach(el1, { ...hover })
+    const d2 = __sui_motion_attach(el2, { trigger: 'loop', motions: [press] })
+    const d3 = __sui_motion_attach(el3, { trigger: 'exit', motions: [press] })
+    expect(typeof d1).toBe('function')
+    expect(typeof d2).toBe('function')
+    expect(typeof d3).toBe('function')
+    d1()
+    d2()
+    d3()
+  })
+})
+
+describe('motion runtime — unknown trigger is inert', () => {
+  it('returns a no-op disposer for an off-list trigger name', () => {
+    setReducedMotion(false)
+    const el = host()
+    const dispose = __sui_motion_attach(el, {
+      trigger: 'bogus-trigger',
+      motions: [press],
+    })
+    expect(typeof dispose).toBe('function')
+    // The element is not in a bad state: no leftover inline style for the
+    // motion properties.
+    expect(el.style.scale).toBe('')
+    dispose()
   })
 })

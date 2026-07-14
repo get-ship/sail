@@ -26,26 +26,24 @@ fn compile_motion(source: &str) -> Result<String, String> {
 }
 
 #[test]
-fn static_hover_scale_emits_anim_and_attach() {
+fn static_hover_scale_emits_runtime_dispatch() {
     let js = compile_motion(
         r#"<button motion:hover={{ scale: 'spring:snappy' }}>x</button>"#,
     )
     .expect("compile");
-    // Per-prop keyframe + `el.animate(...)` result variables.
-    assert!(js.contains("__kf"), "expected __kf<n> in output:\n{js}");
-    assert!(js.contains("__anim"), "expected __anim<n> in output:\n{js}");
-    // The runtime attach wrapper.
-    assert!(
-        js.contains("__sui_motion_attach("),
-        "expected __sui_motion_attach call:\n{js}"
-    );
-    // The trigger string appears verbatim.
-    assert!(js.contains("\"hover\""), "expected \"hover\" trigger:\n{js}");
-    // Duration is a resolved number, not a token name.
-    assert!(
-        js.contains("duration: "),
-        "expected a resolved numeric duration:\n{js}"
-    );
+    // Runtime dispatch: the per-property `MotionConfig` is embedded as
+    // a literal object, then handed to `__sui_motion_attach`. No AOT
+    // `el.animate(...)` is emitted — motion.dev owns the animation
+    // creation at runtime (one path, one reduced-motion authority).
+    assert!(js.contains("__sui_motion_attach("), "expected runtime attach call:\n{js}");
+    assert!(js.contains("\"hover\""), "expected trigger string:\n{js}");
+    assert!(js.contains("property: \"scale\""), "expected property field:\n{js}");
+    assert!(js.contains("preset: \"spring:snappy\""), "expected preset field:\n{js}");
+    assert!(js.contains("kind: \"spring\""), "expected kind field:\n{js}");
+    assert!(js.contains("stiffness: 380"), "expected stiffness field:\n{js}");
+    assert!(js.contains("damping: 30"), "expected damping field:\n{js}");
+    // No AOT keyframe bake: the emit must not carry a baked `el.animate(...)`.
+    assert!(!js.contains("el.animate("), "no AOT el.animate() — runtime owns animation creation:\n{js}");
 }
 
 #[test]
@@ -58,9 +56,6 @@ fn unknown_preset_is_a_compile_error() {
         err.contains("does-not-exist"),
         "expected error to mention the unknown preset: {err}"
     );
-    // The lint surfaces this first with a friendlier message; the
-    // compiler would say "unknown preset" if the lint were absent.
-    // Accept either.
     assert!(
         err.contains("is not in the closed vocabulary")
             || err.contains("unknown preset"),
@@ -70,7 +65,6 @@ fn unknown_preset_is_a_compile_error() {
 
 #[test]
 fn dynamic_config_is_rejected() {
-    // `motion:hover={someExpr}` is not yet supported in milestone 1.
     let err = compile_motion(r#"<button motion:hover={someExpr}>x</button>"#)
         .expect_err("expected compile error");
     assert!(err.contains("dynamic"), "expected 'dynamic' in error: {err}");
@@ -82,22 +76,18 @@ fn multiple_props_share_one_attach_call() {
         r#"<button motion:hover={{ scale: 'spring:snappy', opacity: 'fade' }}>x</button>"#,
     )
     .expect("compile");
-    // Two per-prop `__anim<N>` variables should be referenced inside
-    // the same `__sui_motion_attach(...)` enter/leave arrays.
     let attach_idx = js
         .find("__sui_motion_attach(")
         .expect("__sui_motion_attach call");
     let after = &js[attach_idx..];
-    let enter_start = after.find("enter: [").expect("enter: [");
-    // Find the matching close bracket — handle nested brackets by
-    // counting (the `enter: [...]` array may contain other brackets in
-    // animation objects, but for milestone 1 shapes it doesn't).
-    let enter_end_rel = after[enter_start..].find(']').expect("closing ]");
-    let enter_block = &after[enter_start..enter_start + enter_end_rel + 1];
-    let anim_count = enter_block.matches("__anim").count();
+    let motions_start = after.find("motions: [").expect("motions: [");
+    let motions_end_rel = after[motions_start..].find(']').expect("closing ]");
+    let motions_block = &after[motions_start..motions_start + motions_end_rel + 1];
+    // Two property fields = two motions in the array.
+    let prop_count = motions_block.matches("property:").count();
     assert!(
-        anim_count >= 2,
-        "expected at least 2 __anim refs in enter array, got {anim_count}:\n{js}"
+        prop_count >= 2,
+        "expected at least 2 property fields in motions array, got {prop_count}:\n{js}"
     );
 }
 
@@ -108,7 +98,6 @@ fn unknown_property_alias_is_rejected() {
     )
     .expect_err("expected compile error");
     assert!(err.contains("foo"), "expected error to mention 'foo': {err}");
-    // The parser's closed set is documented in the error.
     assert!(
         err.contains("scale")
             || err.contains("opacity")

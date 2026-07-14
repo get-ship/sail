@@ -32,9 +32,12 @@ fn motion_enter_and_exit_bake_animations() {
     let js = compile(src, opts()).expect("compiles").js;
     assert!(js.contains(r#"trigger: "enter""#), "enter trigger emitted:\n{js}");
     assert!(js.contains(r#"trigger: "exit""#), "exit trigger emitted:\n{js}");
-    // AOT-baked: the keyframes are `el.animate(...)` calls in the output, not a
-    // runtime library resolving a preset name at play time.
-    assert!(js.contains(".animate("), "animations are baked, not interpreted:\n{js}");
+    // Runtime dispatch: motion.dev creates the animation after the node
+    // is live. No AOT `el.animate(...)` lives in the emit anymore.
+    assert!(
+        !js.contains("el.animate("),
+        "no AOT animation — runtime owns creation:\n{js}"
+    );
     assert!(js.contains("__sui_motion_attach"), "wired through the motion attach:\n{js}");
 }
 
@@ -44,7 +47,7 @@ fn the_interaction_triggers_are_untouched() {
     let src = r#"<button motion:hover={{ scale: 'spring:snappy' }}>x</button>"#;
     let js = compile(src, opts()).expect("compiles").js;
     assert!(js.contains(r#"trigger: "hover""#), "{js}");
-    assert!(js.contains(".animate("), "{js}");
+    assert!(js.contains("__sui_motion_attach"), "runtime attach present:\n{js}");
 }
 
 /// An unknown preset is a COMPILE error, not a silent runtime fallback. This is why
@@ -84,12 +87,12 @@ fn the_second_animation_system_is_retired_with_a_teaching_error() {
 // already-baked WAAPI animation, so the cascade runs on the compositor like
 // everything else here.
 
-/// `stagger` reaches the emitted config as a plain number of milliseconds.
+/// `stagger` reaches the emitted config as a plain number of seconds.
 #[test]
 fn stagger_bakes_a_delay_step_into_the_attach_config() {
     let src = r#"<card motion:enter={{ opacity: 'fade', stagger: '40ms' }}>x</card>"#;
     let js = compile(src, opts()).expect("compiles").js;
-    assert!(js.contains("stagger: 40"), "stagger step emitted in ms:\n{js}");
+    assert!(js.contains("stagger: 0.04"), "stagger step emitted in seconds:\n{js}");
     assert!(js.contains(r#"trigger: "enter""#), "{js}");
 }
 
@@ -98,7 +101,7 @@ fn stagger_bakes_a_delay_step_into_the_attach_config() {
 fn stagger_accepts_seconds() {
     let src = r#"<card motion:enter={{ opacity: 'fade', stagger: '0.04s' }}>x</card>"#;
     let js = compile(src, opts()).expect("compiles").js;
-    assert!(js.contains("stagger: 40"), "0.04s == 40ms:\n{js}");
+    assert!(js.contains("stagger: 0.04"), "0.04s == 40ms:\n{js}");
 }
 
 /// An app that never staggers pays nothing — not even a `stagger: undefined`.
@@ -124,7 +127,6 @@ fn a_bad_stagger_duration_fails_the_build() {
 /// catalog is one JSON that both read. This test fails if anyone re-copies either.
 #[test]
 fn the_animation_vocabulary_has_exactly_one_source() {
-    // Every property the lint publishes must be accepted by the parser...
     for prop in sui_lint::rules::animate_token_only::MOTION_PROPERTIES {
         let src = format!(r#"<card motion:hover={{{{ {prop}: 'spring:snappy' }}}}>x</card>"#);
         assert!(
@@ -132,7 +134,6 @@ fn the_animation_vocabulary_has_exactly_one_source() {
             "lint publishes `{prop}` but the parser rejects it — the lists have drifted"
         );
     }
-    // ...and a property NEITHER knows is rejected by the parser, naming the set.
     let msg = err_for(r#"<card motion:hover={{ blur: 'spring:snappy' }}>x</card>"#);
     assert!(msg.contains("not supported"), "{msg}");
     assert!(msg.contains("stagger"), "the error must mention the reserved key: {msg}");
@@ -143,13 +144,12 @@ fn the_animation_vocabulary_has_exactly_one_source() {
 // `motion:view` / `motion:scroll` are PROGRESS-driven, not time-driven: position is
 // a function of scroll, not of the clock. Reveal-on-scroll and parallax, at ZERO JS
 // runtime cost — no scroll listener, no rAF loop, no IntersectionObserver. The
-// platform drives them off the main thread, which is why a scroll effect built this
-// way stays smooth under load and one built on a scroll handler does not.
+// platform drives them off the main thread, which is why a scroll effect built
+// this way stays smooth under load and one built on a scroll handler does not.
 //
-// And they are NOT a second emit path: the compiler bakes the same `el.animate(...)`
-// it bakes for every other trigger, and the runtime hands the Animation a different
-// timeline. One directive, one catalog, one code path — verified against a real
-// chromium (opacity 0 -> 0.93 on scroll, driven through the actual runtime).
+// And they are NOT a second emit path: the compiler emits a single
+// `__sui_motion_attach(...)` call; the runtime hands Motion a different
+// timeline. One directive, one catalog, one code path.
 
 #[test]
 fn view_and_scroll_are_triggers_like_any_other() {
@@ -157,9 +157,7 @@ fn view_and_scroll_are_triggers_like_any_other() {
         let src = format!(r#"<card motion:{trigger}={{{{ opacity: 'fade' }}}}>x</card>"#);
         let js = compile(&src, opts()).expect("compiles").js;
         assert!(js.contains(&format!(r#"trigger: "{trigger}""#)), "{js}");
-        // baked exactly like the others — no separate CSS emit, no second path
-        assert!(js.contains(".animate("), "still AOT-baked:\n{js}");
-        assert!(js.contains("__sui_motion_attach"), "still the one attach:\n{js}");
+        assert!(js.contains("__sui_motion_attach"), "runtime attach present:\n{js}");
     }
 }
 
@@ -170,7 +168,8 @@ fn parallax_is_one_directive() {
     let src = r#"<card motion:view={{ translate-y: 'spring:gentle', opacity: 'fade' }}>x</card>"#;
     let js = compile(src, opts()).expect("compiles").js;
     assert!(js.contains(r#"trigger: "view""#), "{js}");
-    assert_eq!(js.matches(".animate(").count(), 2, "one baked animation per property:\n{js}");
+    let motion_count = js.matches("property:").count();
+    assert_eq!(motion_count, 2, "one motion per property:\n{js}");
 }
 
 /// Every trigger the compiler advertises must be writable. Enumerating the real

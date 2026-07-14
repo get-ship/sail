@@ -7,8 +7,8 @@
 use super::super::util::camel_of;
 use super::super::writer::{js_string, Writer};
 use super::TemplateEmitter;
-use crate::animation;
 use crate::ir::*;
+
 use crate::lower;
 
 /// SVG attribute names that require camelCase preservation. The HTML
@@ -459,133 +459,83 @@ AttrInstr::Use { action, param, .. } => {
                     "runAction({el_var}, {action_rw}, {param_thunk});",
                 ));
             }
-             AttrInstr::Motion { trigger, props, stagger_ms, span: _ } => {
-                // AOT-baked `motion:` directive. Each `MotionProp` produces
-                // one pre-baked `el.animate(...)` call; all are wired to
-                // the same trigger via `__sui_motion_attach`. The runtime
-                // helper is auto-imported by the `motion_builtins` walk in
-                // `emit/js/imports.rs` and `emit/synthetic/render.rs`.
+            AttrInstr::Motion { trigger, props, stagger_ms, span: _ } => {
+                // `motion:` is a thin runtime directive. The compiler validates the
+                // closed preset catalogue, then emits its resolved config; motion.dev
+                // creates and orchestrates every animation after the node is live.
+                // This avoids inert-document WAAPI animations and keeps reduced motion
+                // under one runtime authority.
                 let db = lower::presets::load()
                     .expect("animation-presets.json is bundled at compile time");
-                let mut anim_vars: Vec<String> = Vec::with_capacity(props.len());
+                let mut motions: Vec<String> = Vec::with_capacity(props.len());
                 for prop in props {
-                    // The target value is the property's "active" end
-                    // state — for milestone 1 every preset animates
-                    // the property to its natural identity (scale 1,
-                    // opacity 1, translate 0). The sm/md/lg alias
-                    // system is a future-milestone concern; today
-                    // `motion:scale:sm` and `motion:scale:md` are
-                    // equivalent. Presets that DO move to a different
-                    // value (press → 0.96, release → 1.0) encode that
-                    // in their `from`/`to` fields.
-                    let target = match prop.property.as_str() {
-                        "scale" => 1.0,
-                        "opacity" => 1.0,
-                        "translate-y" | "translate-x" => 0.0,
-                        "rotate" => 0.0,
-                        _ => unreachable!("MOTION_PROPERTIES enforced by parser"),
-                    };
-                    // The DEPARTED value — where the property starts when the
-                    // preset doesn't encode its own from/to. This used to be
-                    // the identity value, i.e. equal to the target: every
-                    // baked animation interpolated 1→1 / 0px→0px and the
-                    // whole motion system was a visual no-op that still
-                    // "ran" (animations existed, played, and changed nothing).
-                    let rest = match prop.property.as_str() {
-                        "opacity" => 0.0,
-                        "scale" => 0.96,
-                        "translate-y" | "translate-x" => 16.0,
-                        "rotate" => -6.0,
-                        _ => unreachable!("MOTION_PROPERTIES enforced by parser"),
-                    };
                     let spec = db
                         .preset(&prop.preset)
                         .expect("preset already validated in lower/bindings");
-                    let baked = match spec.kind {
-                        lower::presets::PresetKind::Spring => animation::bake(
-                            &animation::AnimationConfig::Spring(animation::SpringConfig {
-                                stiffness: spec.stiffness.unwrap_or(170.0),
-                                damping: spec.damping.unwrap_or(26.0),
-                                mass: spec.mass.unwrap_or(1.0),
-                                from: Some(spec.from.unwrap_or(rest)),
-                                to: Some(spec.to.unwrap_or(target)),
-                                rest_speed: spec.rest_speed.unwrap_or(0.01),
-                                ..Default::default()
-                            }),
-                        ),
-                        lower::presets::PresetKind::Tween => {
-                            let token = spec
-                                .duration_token
-                                .as_deref()
-                                .unwrap_or("duration-medium");
-                            animation::bake(&animation::AnimationConfig::Tween(
-                                animation::keyframes::TweenConfig {
-                                    from: spec.from.unwrap_or(rest),
-                                    to: spec.to.unwrap_or(target),
-                                    duration_ms: duration_token_to_ms(token),
-                                    easing: spec.easing.clone().unwrap_or_else(|| "linear".into()),
-                                    ..Default::default()
-                                },
-                            ))
-                        }
+                    let kind = match spec.kind {
+                        lower::presets::PresetKind::Spring => "spring",
+                        lower::presets::PresetKind::Tween => "tween",
+                    };
+                    let mut fields: Vec<String> = vec![
+                        format!("property: {}", js_string(&prop.property)),
+                        format!("preset: {}", js_string(&prop.preset)),
+                        format!("kind: {}", js_string(kind)),
+                    ];
+                    if let Some(value) = spec.stiffness {
+                        fields.push(format!("stiffness: {value}"));
                     }
-                    .unwrap_or_else(|e| {
-                        panic!("motion: bake failed for {}/{}: {e:?}", prop.property, prop.preset)
-                    });
-                    // Each baked keyframe carries its interpolated value (in
-                    // from..to space); wrap it in the property's CSS syntax.
-                    let css_key = match prop.property.as_str() {
-                        "opacity" => "opacity",
-                        _ => "transform",
-                    };
-                    let css_of = |v: &str| -> String {
-                        match prop.property.as_str() {
-                            "opacity" => v.to_string(),
-                            "scale" => format!("scale({v})"),
-                            "translate-y" => format!("translateY({v}px)"),
-                            "translate-x" => format!("translateX({v}px)"),
-                            "rotate" => format!("rotate({v}deg)"),
-                            _ => unreachable!("MOTION_PROPERTIES enforced by parser"),
-                        }
-                    };
-                    let kf_var = self.fresh("kf");
-                    let anim_var = self.fresh("anim");
-                    let kf_items: Vec<String> = baked
-                        .keyframes
-                        .iter()
-                        .map(|kf| {
-                            format!(
-                                "{{ offset: {off}, {k}: {v} }}",
-                                off = kf.offset,
-                                k = js_string(css_key),
-                                v = js_string(&css_of(&kf.value))
-                            )
-                        })
-                        .collect();
-                    w.line(&format!(
-                        "const {kf_var} = [ {} ];",
-                        kf_items.join(", ")
-                    ));
-                    // Guarded: WAAPI is absent under jsdom/SSR — a bare
-                    // `.animate()` call crashes the whole component setup
-                    // there. `__sui_motion_attach` drops the nulls.
-                    w.line(&format!(
-                        "const {anim_var} = typeof {el_var}.animate === 'function' ? {el_var}.animate({kf_var}, {{ duration: {dur}, easing: {easing}, fill: {fill} }}) : null;",
-                        dur = baked.timing.duration_ms,
-                        easing = js_string(&baked.timing.easing),
-                        fill = js_string(&baked.timing.fill),
-                    ));
-                    anim_vars.push(anim_var);
-                 }
+                    if let Some(value) = spec.damping {
+                        fields.push(format!("damping: {value}"));
+                    }
+                    if let Some(value) = spec.mass {
+                        fields.push(format!("mass: {value}"));
+                    }
+                    if let Some(value) = spec.rest_speed {
+                        fields.push(format!("restSpeed: {value}"));
+                    }
+                    if let Some(value) = spec.rest_delta {
+                        fields.push(format!("restDelta: {value}"));
+                    }
+                    if let Some(value) = spec.from {
+                        fields.push(format!("from: {value}"));
+                    }
+                    if let Some(value) = spec.to {
+                        fields.push(format!("to: {value}"));
+                    }
+                    if let Some(token) = spec.duration_token.as_deref() {
+                        // Motion reads duration in seconds; the compiler
+                        // resolves the token to ms (one source of truth)
+                        // then converts at the boundary.
+                        fields.push(format!(
+                            "duration: {}",
+                            duration_token_to_ms(token) / 1000.0
+                        ));
+                    }
+                    if let Some(easing) = spec.easing.as_deref() {
+                        fields.push(format!("easing: {}", js_string(easing)));
+                    }
+                    if let Some(iterations) = spec.iterations.as_deref() {
+                        // `infinite` (the catalogue's spell) maps to Motion's
+                        // `Infinity` for `repeat`. `1` means "play once".
+                        let mapped = if iterations == "infinite" {
+                            "Infinity".to_string()
+                        } else {
+                            iterations.to_string()
+                        };
+                        fields.push(format!("iterations: {mapped}"));
+                    }
+                    if let Some(direction) = spec.direction.as_deref() {
+                        fields.push(format!("direction: {}", js_string(direction)));
+                    }
+                    motions.push(format!("{{ {} }}", fields.join(", ")));
+                }
+                let stagger = stagger_ms
+                    .map(|ms| format!(", stagger: {}", ms as f64 / 1000.0))
+                    .unwrap_or_default();
                 w.line(&format!(
-                    "__sui_motion_attach({el_var}, {{ trigger: {trigger}, enter: [{anims}], leave: [{anims}]{stagger} }});",
+                    "__sui_motion_attach({el_var}, {{ trigger: {trigger}, motions: [{motions}]{stagger} }});",
                     trigger = js_string(trigger),
-                    anims = anim_vars.join(", "),
-                    // Emitted only when authored — an app that never staggers pays
-                    // nothing, not even a `stagger: undefined` in its output.
-                    stagger = stagger_ms
-                        .map(|ms| format!(", stagger: {ms}"))
-                        .unwrap_or_default(),
+                    motions = motions.join(", "),
                 ));
             }
         }

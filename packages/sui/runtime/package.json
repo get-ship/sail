@@ -29,7 +29,8 @@
     "bench": "vitest bench --run"
   },
   "dependencies": {
-    "@ship/tokens": "workspace:*"
+    "@ship/tokens": "workspace:*",
+    "motion": "^12.42.2"
   },
   "devDependencies": {
     "@ship/test-setup": "workspace:*",
