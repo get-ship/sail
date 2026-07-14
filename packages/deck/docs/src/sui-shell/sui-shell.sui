@@ -76,7 +76,7 @@ export default controller({
 </navbar>
 
 <row align="stretch">
-  <navbar placement="rail" bordered sticky style:--rail-offset={'3.5rem'}>
+  <navbar placement="rail" bordered sticky offset="14">
     <label>Introduction</label>
     <a href="/" aria-current={path() === '/' ? 'page' : null}>Overview</a>
     <a href="/getting-started" aria-current={path() === '/getting-started' ? 'page' : null}>Getting started</a>
