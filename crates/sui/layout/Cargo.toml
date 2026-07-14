@@ -1,0 +1,38 @@
+[package]
+name = "sui-layout"
+version = "0.1.0"
+edition = "2024"
+license.workspace = true
+publish = false
+description = "Static box-tree computation for .sui templates via taffy — compile-time layout diagnostics (no browser). SPIKE."
+
+[lib]
+name = "sui_layout"
+path = "src/lib.rs"
+
+[[bin]]
+name = "sui-layout"
+path = "src/bin/sui-layout.rs"
+
+[dependencies]
+# The flexbox/grid/block engine. Wasm-clean (Zed and Dioxus ship it). We keep
+# default-features off; the `std` + `taffy_tree` features are the non-wasm
+# minimal surface. See verdict notes for wasm-build details.
+taffy = { version = "0.12", default-features = false, features = ["std", "grid", "flexbox", "block_layout", "taffy_tree"] }
+
+# SUI's own substrate for token resolution — the same registry the lint reads.
+# Adding a token name to `tokens.css` lights it up in the static layout
+# without a code change here.
+sui-lint = { path = "../lint" }
+sui-compiler = { path = "../compiler" }
+
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+[dev-dependencies]
+# Nothing — spike; the only test is the binary's own CLI smoke.
+
+[lints]
+workspace = true
