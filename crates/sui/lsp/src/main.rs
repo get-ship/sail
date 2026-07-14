@@ -190,6 +190,14 @@ fn on_completion(docs: &Docs, _id: RequestId, params: CompletionParams) -> Optio
     if let Some(prefix) = sx_attr_prefix(&text, pos.line as usize, col) {
         return Some(sx_completion_items(prefix));
     }
+    // L1 element surface — when the user is typing a tag open (`<partial`
+    // or `<>`), offer the language's first-class elements. The list is
+    // the same one the skill documents and the consistency test
+    // enforces, so an element the LSP doesn't know about is a test
+    // failure, not a silent gap.
+    if let Some(prefix) = tag_open_prefix(&text, pos.line as usize, col) {
+        return Some(l1_completion_items(&prefix));
+    }
     let items = sui_compiler::completions_at(&text, path.as_deref())
         .into_iter()
         .map(|s| CompletionItem {
@@ -200,6 +208,64 @@ fn on_completion(docs: &Docs, _id: RequestId, params: CompletionParams) -> Optio
         })
         .collect();
     Some(items)
+}
+
+/// Detect a tag-open position: a `<` followed by a partial tag name on
+/// the same line, with the cursor at the end. Returns the partial name
+/// the user has typed (so completion can scope to it) or `None` when
+/// we're not in a tag-open position. Doesn't try to be perfect; a
+/// partial `<partial` inside an attribute value would also match — the
+/// LSP completion is "offer the L1 surface where it's most useful", not
+/// a parser.
+fn tag_open_prefix(text: &str, line_idx: usize, col: usize) -> Option<String> {
+    if line_idx >= text.lines().count() {
+        return None;
+    }
+    let line = text.lines().nth(line_idx)?;
+    // Walk back from the cursor to the start of the line, building
+    // the partial tag name char by char. Stop at the first non-tag
+    // char. If we hit a `<` before that, we're in a tag-open position.
+    let bytes = line.as_bytes();
+    if col > bytes.len() {
+        return None;
+    }
+    let mut start = col;
+    while start > 0 {
+        let c = bytes[start - 1];
+        if c.is_ascii_alphanumeric() || c == b'-' {
+            start -= 1;
+        } else {
+            break;
+        }
+    }
+    if start == 0 || bytes[start - 1] != b'<' {
+        return None;
+    }
+    Some(line[start..col].to_string())
+}
+
+/// L1 element completions. Sourced from the same manifest the skill
+/// documents; the consistency test in
+/// `crates/sui/compiler/tests/l1_manifest.rs` keeps the list honest.
+fn l1_completion_items(prefix: &str) -> Vec<CompletionItem> {
+    let lower = prefix.to_ascii_lowercase();
+    let mut out: Vec<CompletionItem> = Vec::new();
+    for entry in sui_compiler::l1_entries() {
+        if !entry.tag.to_ascii_lowercase().starts_with(&lower) {
+            continue;
+        }
+        let kind = match entry.kind {
+            sui_compiler::L1Kind::StdlibElement => "L1 stdlib",
+            sui_compiler::L1Kind::NativeReskin => "L1 reskin",
+        };
+        out.push(CompletionItem {
+            label: entry.tag.clone(),
+            kind: Some(CompletionItemKind::CLASS),
+            detail: Some(format!("{kind} — {}", entry.description)),
+            ..Default::default()
+        });
+    }
+    out
 }
 
 fn on_definition(
@@ -922,5 +988,63 @@ mod tests {
         // `sxy=` is not sx; `class=` is not sx.
         assert!(sx_attr_prefix(r#"<div sxy="x">y</div>"#, 0, 11).is_none());
         assert!(sx_attr_prefix(r#"<div class="x">y</div>"#, 0, 13).is_none());
+    }
+
+    // ── L1 element completion (the spec's "make the surface enumerable") ──
+
+    #[test]
+    fn tag_open_prefix_detects_partial_tag() {
+        // Cursor right after `<car` on line 0.
+        let src = "<card>x</card>";
+        assert_eq!(tag_open_prefix(src, 0, 4), Some("car".to_string()));
+        assert_eq!(tag_open_prefix(src, 0, 5), Some("card".to_string()));
+        // Right after `<` — empty prefix.
+        assert_eq!(tag_open_prefix(src, 0, 1), Some(String::new()));
+    }
+
+    #[test]
+    fn tag_open_prefix_ignores_non_tag_open() {
+        // Inside a tag (cursor after `<card` on an attribute).
+        let src = "<card>x</card>";
+        // No `<` immediately before the cursor.
+        assert_eq!(tag_open_prefix(src, 0, 6), None);
+        // After `</`.
+        assert_eq!(tag_open_prefix("</card>", 0, 6), None);
+        // No `<` at all.
+        assert_eq!(tag_open_prefix("plain text", 0, 5), None);
+    }
+
+    #[test]
+    fn l1_completion_items_offers_stdlib_and_reskin() {
+        let empty = l1_completion_items("");
+        assert!(empty.iter().any(|i| i.label == "card"), "<card> must be offered");
+        assert!(
+            empty.iter().any(|i| i.label == "button"),
+            "<button> must be offered"
+        );
+        assert!(
+            empty.iter().any(|i| i.label == "select"),
+            "<select> must be offered (the spec's whole point — no more \
+             agents saying select doesn't exist)"
+        );
+        // The `kind` is `CLASS`; the `detail` names the L1 source.
+        let select = empty.iter().find(|i| i.label == "select").unwrap();
+        assert!(select.detail.as_deref().unwrap().contains("reskin"));
+        let card = empty.iter().find(|i| i.label == "card").unwrap();
+        assert!(card.detail.as_deref().unwrap().contains("stdlib"));
+    }
+
+    #[test]
+    fn l1_completion_items_scopes_to_typed_prefix() {
+        // Typing `<but` should narrow to but-prefixed tags.
+        let items = l1_completion_items("but");
+        assert!(items.iter().any(|i| i.label == "button"));
+        for item in &items {
+            assert!(
+                item.label.to_ascii_lowercase().starts_with("but"),
+                "unscoped completion leaked: {}",
+                item.label
+            );
+        }
     }
 }

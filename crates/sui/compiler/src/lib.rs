@@ -43,6 +43,7 @@ pub mod out_layout;
 pub mod parse;
 pub mod stdlib;
 pub mod escape;
+pub mod l1_manifest;
 pub mod view_init;
 pub use view_init::{view_init, ViewInit};
 pub(crate) mod scan;
@@ -54,7 +55,7 @@ pub use diagnostics::{CompileError, DiagSeverity, Diagnostic, Span};
 pub use check::lint_overrides::{LintOverride, OverrideSeverity};
 pub use check::policy::Policy;
 pub use analysis::{analyze, completions_at, hover_at, Analysis, Hover, Symbol};
-
+pub use l1_manifest::{l1_by_kind, l1_count, l1_entries, l1_kind, L1Attribute, L1Entry, L1Kind};
 /// Identity stamp embedded in every emitted artifact (JS leading
 /// comment, CEM, schema, meta sidecar) so the daemon and runtime can
 /// detect drift between the compiled bundle and the running shell —
