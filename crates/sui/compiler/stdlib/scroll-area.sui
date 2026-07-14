@@ -3,7 +3,7 @@
   overlay-style scrollbars. Constrain it (height/max-height via sx) and it
   scrolls its overflow. Bare tag lowers to <div class="sui-scroll-area">.
 
-    <scroll-area sx="h:60 p:4"> … long content … </scroll-area>
+    <scroll-area sx="h-60 p-4"> … long content … </scroll-area>
 
   orientation vertical (default axis auto) / horizontal / both.
 -->

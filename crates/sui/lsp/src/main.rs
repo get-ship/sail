@@ -187,6 +187,9 @@ fn on_completion(docs: &Docs, _id: RequestId, params: CompletionParams) -> Optio
     if is_css_token_context(&text, pos.line as usize, col) {
         return Some(token_completion_items(&text, pos.line as usize, col));
     }
+    if let Some(prefix) = sx_attr_prefix(&text, pos.line as usize, col) {
+        return Some(sx_completion_items(prefix));
+    }
     let items = sui_compiler::completions_at(&text, path.as_deref())
         .into_iter()
         .map(|s| CompletionItem {
@@ -448,6 +451,113 @@ fn is_css_token_context(text: &str, line_idx: usize, col: usize) -> bool {
         return prefix[open + 4..].find(')').is_none();
     }
     false
+}
+
+/// Detect whether `pos` is inside an `sx="…"` attribute value. Returns
+/// the prefix (the partial atom the user is currently typing) so the
+/// completion can scope to it. Mirrors `in_style_attr_value`'s scan but
+/// also returns the prefix on the same line, up to the cursor.
+fn sx_attr_prefix(text: &str, line_idx: usize, col: usize) -> Option<String> {
+    let mut in_sx = false;
+    let mut value_start: Option<usize> = None;
+    for (i, line) in text.lines().enumerate() {
+        let bytes = line.as_bytes();
+        let mut j = 0;
+        while j < bytes.len() {
+            if i == line_idx && j == col {
+                if !in_sx {
+                    return None;
+                }
+                // The prefix the user is mid-typing: the last whitespace-
+                // delimited token WITHIN the attribute value (not the `sx="`
+                // attribute name itself).
+                let start = value_start.unwrap_or(j);
+                let prefix = &line[start..j];
+                let last = prefix.rfind(char::is_whitespace)
+                    .map(|k| start + k + 1)
+                    .unwrap_or(start);
+                return Some(line[last..j].to_string());
+            }
+            if !in_sx {
+                if j + 4 <= bytes.len() && &bytes[j..j + 4] == b"sx=\"" {
+                    in_sx = true;
+                    value_start = Some(j + 4);
+                    j += 4;
+                    continue;
+                }
+            } else if bytes[j] == b'"' {
+                in_sx = false;
+                value_start = None;
+                j += 1;
+                continue;
+            } else {
+                j += 1;
+                continue;
+            }
+            j += 1;
+        }
+    }
+    None
+}
+
+/// sx completion items, sourced from `sui_lint::sx_vocab` — the same
+/// tables the lint validates and the docs teach. So what an agent is
+/// offered is what the lint will accept, by construction.
+///
+/// Suggests:
+///   - bare atom names (`hidden`, `truncate`, `italic`)
+///   - one item per (name, value) pair from `vocabulary()`
+///   - refused atoms (with detail naming the replacement)
+fn sx_completion_items(prefix: String) -> Vec<CompletionItem> {
+    let mut out: Vec<CompletionItem> = Vec::new();
+    let lower = prefix.to_ascii_lowercase();
+
+    // Bare atoms: the atom itself is the value. Surfaced as `hidden`,
+    // `truncate`, `italic`, etc. so the user can see the keyword shape.
+    for name in sui_lint::sx_vocab::names() {
+        if name.starts_with(&lower) && !name.contains('-') {
+            out.push(CompletionItem {
+                label: name.clone(),
+                kind: Some(CompletionItemKind::KEYWORD),
+                detail: Some("bare atom".into()),
+                ..Default::default()
+            });
+        }
+    }
+
+    // (name, values) — one completion per legal (name-value) pair. The
+    // label is the full atom (`p-4`, `bg-surface-1`); the detail is the
+    // CSS shape it lowers to.
+    for (name, values) in sui_lint::sx_vocab::vocabulary() {
+        let hyphen = format!("{name}-");
+        if !lower.is_empty() && !name.starts_with(&lower) && !hyphen.starts_with(&lower) {
+            continue;
+        }
+        for value in values {
+            let label = format!("{name}-{value}");
+            out.push(CompletionItem {
+                label,
+                kind: Some(CompletionItemKind::VALUE),
+                detail: Some(format!("{name} = {value}")),
+                ..Default::default()
+            });
+        }
+    }
+
+    // Refusals — atoms the lint rejects, with the thing to use instead.
+    // Surfaced so the agent sees WHY a Tailwind-prior favourite fails.
+    for (atom, instead) in sui_lint::sx_vocab::refusals() {
+        if !lower.is_empty() && !atom.starts_with(&lower) {
+            continue;
+        }
+        out.push(CompletionItem {
+            label: atom.clone(),
+            kind: Some(CompletionItemKind::REFERENCE),
+            detail: Some(format!("REFUSED — {instead}")),
+            ..Default::default()
+        });
+    }
+    out
 }
 
 /// True if line `line_idx` falls inside an open `<style>` block. A
@@ -747,4 +857,70 @@ mod tests {
         assert!(triggers.contains(&"(".to_string()), "missing '(' trigger");
     }
 
+    #[test]
+    fn sx_attr_prefix_detects_inside_quoted_sx() {
+        // Cursor inside `<div sx="p">` — at the `p` (col 10).
+        let src = r#"<div sx="p">x</div>"#;
+        let prefix = sx_attr_prefix(src, 0, 10).expect("inside sx attr");
+        assert_eq!(prefix, "p", "prefix should be the partial atom");
+    }
+
+    #[test]
+    fn sx_attr_prefix_returns_none_outside_sx() {
+        // Cursor inside `<div class="x">` — should not detect sx.
+        let src = r#"<div class="x">y</div>"#;
+        assert!(sx_attr_prefix(src, 0, 13).is_none());
+    }
+
+    #[test]
+    fn sx_completion_items_emits_atoms_refusals_and_values() {
+        // Empty prefix — every legal atom, every value, every refusal.
+        let items = sx_completion_items(String::new());
+        // Some legal atom must appear.
+        assert!(items.iter().any(|i| i.label == "p-4"),
+            "expected `p-4` (canonical p-name-value) in completions");
+        assert!(items.iter().any(|i| i.label == "bg-surface-1"),
+            "expected `bg-surface-1` in completions");
+        // A refused atom (Tailwind-prior) must appear, with the replacement.
+        let flex = items.iter().find(|i| i.label == "flex")
+            .expect("`flex` refusal should be surfaced");
+        let detail = flex.detail.as_deref().unwrap_or("");
+        assert!(detail.contains("REFUSED"), "refusal detail must mark REFUSED: {detail}");
+        assert!(detail.contains("<row>"), "refusal must name the replacement: {detail}");
+    }
+
+    #[test]
+    fn sx_completion_items_scopes_to_typed_prefix() {
+        // Typing `bg-` should narrow to bg-prefixed completions only.
+        let items = sx_completion_items("bg-".to_string());
+        assert!(!items.is_empty(), "bg- prefix should produce items");
+        // Every non-refusal label should start with `bg-`.
+        for item in &items {
+            let is_refusal = item.detail.as_deref()
+                .map(|d| d.contains("REFUSED"))
+                .unwrap_or(false);
+            if !is_refusal {
+                assert!(
+                    item.label.starts_with("bg-") || item.label == "bg",
+                    "non-refusal item under `bg-` prefix should start with `bg-`: {item:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn sx_attr_prefix_picks_last_atom_after_whitespace() {
+        // Cursor mid-typing the second atom: typed `bg` already, cursor
+        // at col 15 (after the `g`, before the closing quote).
+        let src = r#"<div sx="p-4 bg">x</div>"#;
+        let prefix = sx_attr_prefix(src, 0, 15).expect("inside sx attr");
+        assert_eq!(prefix, "bg", "prefix should be the typed prefix `bg`");
+    }
+
+    #[test]
+    fn sx_attr_prefix_does_not_match_sxy_or_class() {
+        // `sxy=` is not sx; `class=` is not sx.
+        assert!(sx_attr_prefix(r#"<div sxy="x">y</div>"#, 0, 11).is_none());
+        assert!(sx_attr_prefix(r#"<div class="x">y</div>"#, 0, 13).is_none());
+    }
 }

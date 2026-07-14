@@ -1,7 +1,7 @@
 //! `sui-no-style-block` — raw `<style>` blocks are not the floor styling surface.
 //!
 //! The styling floor is: **one way to do CSS — the design-token vocabulary**,
-//! authored as `sx` token utilities (`sx="p:4 bg:surface-2 radius:lg"`).
+//! authored as `sx` token utilities (`sx="p-4 bg-surface-2 rounded-lg"`).
 //! Motion, tone/state variants, and responsive breakpoints are becoming
 //! first-class *language elements* rather than hand-authored CSS. A raw
 //! `<style>` block is the escape hatch the floor exists to remove.

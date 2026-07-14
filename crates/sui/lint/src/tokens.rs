@@ -5,13 +5,13 @@
 //! token CSS at `packages/sui/tokens/src/tokens.css`. This module parses the
 //! `--name:` custom-property declarations out of it directly — no hand-mirrored
 //! JSON, so the registry can never drift from the CSS (the drift that made
-//! `sx="text:3xl"` wrongly fail). `themes.css` only *overrides* these names, so
+//! `sx="text-3xl"` wrongly fail). `themes.css` only *overrides* these names, so
 //! parsing `tokens.css` alone captures every global token.
 //!
 //! Token names are stored WITHOUT the `--` prefix (e.g. `"space-4"`,
 //! `"text-3xl"`). `sx`'s allowed spacing/text/radius values are *derived* from
 //! this registry (filtered by prefix), so adding `--text-3xl` to the token CSS
-//! makes `sx="text:3xl"` legal automatically.
+//! makes `sx="text-3xl"` legal automatically.
 
 use std::collections::HashSet;
 use std::sync::OnceLock;

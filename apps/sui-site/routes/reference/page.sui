@@ -13,6 +13,7 @@ import {
   SX_ATOMS,
   SX_STATE_PREFIXES,
   SX_CONDITION_PREFIXES,
+  SX_REFUSALS,
   LAYOUT_KEYWORDS,
   MOTION,
 } from '../../src/language-surface.gen'
@@ -42,6 +43,8 @@ export default controller({
     sxCount: () => SX_ROWS.length,
     statePrefixes: () => SX_STATE_PREFIXES,
     conditionPrefixes: () => SX_CONDITION_PREFIXES,
+    refusals: () => SX_REFUSALS,
+    refusalCount: () => SX_REFUSALS.length,
     layoutRows: () => LAYOUT_ROWS,
     motionTriggers: () => MOTION.triggers.join(' · '),
     motionProperties: () => MOTION.properties.join(' · '),
@@ -85,19 +88,34 @@ export default controller({
       {/for}
     </column>
   </column>
-
   <column gap="3">
     <h2>sx — {sxCount()} atoms</h2>
     <p>
-      <code>sx="prop:token …"</code>, static only. Every value is a token from
-      a closed list — the rows below are the complete surface, and an off-list
-      value is a compile error that names this same list.
+      <code>sx="name-value name-value …"</code>, static only. Every value is a
+      token from a closed list — the rows below are the complete surface, and
+      an off-list value is a compile error that names this same list.
     </p>
     <column gap="1">
       {#for a of sxRows() key={a.prop}}
         <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md min-w-0">
           <code sx="min-w-9">{a.prop}:</code>
           <small sx="text-muted-foreground grow-1 min-w-0">{a.values}</small>
+        </row>
+      {/for}
+    </column>
+
+    <h3>Not sx — use this ({refusalCount()})</h3>
+    <p>
+      The refused table is the OTHER half of the vocabulary. Every entry below
+      is an atom a Tailwind prior will reach for and sx refuses by name; each
+      names the element or attribute to use instead. The mission is never
+      "find another way" — it is "use this."
+    </p>
+    <column gap="1">
+      {#for r of refusals() key={r.atom}}
+        <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md min-w-0" align="start">
+          <code sx="min-w-9 text-destructive">sx={r.atom}</code>
+          <small sx="text-muted-foreground grow-1 min-w-0">→ {r.instead}</small>
         </row>
       {/for}
     </column>

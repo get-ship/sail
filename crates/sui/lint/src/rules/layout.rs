@@ -737,7 +737,7 @@ mod tests {
     #[test]
     fn passes_through_non_axis_attrs() {
         // id / class / sx / on:click / data-* are fine on a layout element.
-        assert!(run(r#"<column id="hero" sx="p:4" on:click={go()} data-x="1">x</column>"#).is_empty());
+        assert!(run(r#"<column id="hero" sx="p-4" on:click={go()} data-x="1">x</column>"#).is_empty());
     }
 
     #[test]
