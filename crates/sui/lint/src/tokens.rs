@@ -227,6 +227,63 @@ mod tests {
         for n in ["1", "4", "8"] {
             assert!(s.contains(&n), "space missing `{n}`");
         }
+        // The ramp above 8 was added in job-E-space-ramp: an agent reaching
+        // for a 48px thumb or a 180px canvas can now SPEND a token (and
+        // sx accepts those names because the lint parses the CSS).
+        for n in ["12", "16", "24", "32", "48", "64"] {
+            assert!(
+                s.contains(&n),
+                "space missing `{n}` — the Tailwind-aligned upper ramp didn't reach the registry"
+            );
+        }
+        // The alignment: 7 and 8 used to be silent values (32, 40); the
+        // agent's prior was Tailwind's (28, 32). The space scale's emitted
+        // CSS values now match, by hand (see `space_lower_aligns_with_tailwind`).
+        assert_eq!(
+            crate::scales::lower("space", "7").as_deref(),
+            Some("var(--space-7)"),
+        );
+        assert_eq!(
+            crate::scales::lower("space", "8").as_deref(),
+            Some("var(--space-8)"),
+        );
+    }
+
+    #[test]
+    fn space_lower_aligns_with_tailwind() {
+        // The ramp carries our tokens as a private var() — sx spends them,
+        // not numbers — so the lower() check is whether the value at the
+        // right name is the right thing. 7/8 were silently divergent from
+        // Tailwind's prior (32/40 vs 28/32); this pins the alignment.
+        let tokens = include_str!("../../../../packages/sui/tokens/src/tokens.css");
+        for (name, want_px) in [("7", "28px"), ("8", "32px")] {
+            let decl = format!("--space-{name}:");
+            let got = tokens
+                .lines()
+                .find_map(|l| l.trim().strip_prefix(&decl))
+                .unwrap_or_default()
+                .trim()
+                .trim_end_matches(';')
+                .trim();
+            assert_eq!(got, want_px, "--space-{name} drifted from Tailwind");
+        }
+        // The full Tailwind-aligned space ramp, lower()'d to its var and the
+        // var itself resolved from tokens.css — both must agree, end to end.
+        for (n, want_px) in [
+            ("1", "4px"), ("4", "16px"), ("6", "24px"), ("7", "28px"),
+            ("8", "32px"), ("10", "40px"), ("12", "48px"), ("16", "64px"),
+            ("24", "96px"), ("48", "192px"), ("64", "256px"),
+        ] {
+            let decl = format!("--space-{n}:");
+            let got = tokens
+                .lines()
+                .find_map(|l| l.trim().strip_prefix(&decl))
+                .unwrap_or_default()
+                .trim()
+                .trim_end_matches(';')
+                .trim();
+            assert_eq!(got, want_px, "--space-{n} drifted from Tailwind ({want_px})");
+        }
     }
 
     #[test]
