@@ -96,7 +96,7 @@ export default controller({
 })
 </controller>
 
-<column class="doc-wide" gap="4">
+<column sx="max-w-breakpoint-tablet mx-auto" gap="4">
   {#if known()}
     <breadcrumb>
       <a href="/components">components</a>
@@ -121,19 +121,19 @@ export default controller({
                 <button variant={variant()} tone="primary" size="lg" on:click={press} motion:press={{ scale: 'press' }}>
                   Press me
                 </button>
-                <p class="mono" sx="text-xs text-muted-foreground">motion:press fired ×{presses()}</p>
+                <p sx="text-xs text-muted-foreground font-mono">motion:press fired ×{presses()}</p>
               </column>
             {/if}
             {#if stage.input()}
               <column gap="3" sx="w-full max-w-panel-max-w-sm">
                 <input placeholder="Ada Lovelace" bind:value={name} />
-                <p class="mono" sx="text-xs text-muted-foreground">hello, {name() || 'stranger'}</p>
+                <p sx="text-xs text-muted-foreground font-mono">hello, {name() || 'stranger'}</p>
               </column>
             {/if}
             {#if stage.textarea()}
               <column gap="3" sx="w-full max-w-panel-max-w-sm">
                 <textarea placeholder="Tell us about yourself" bind:value={bio}></textarea>
-                <p class="mono" sx="text-xs text-muted-foreground">{bio().length} characters</p>
+                <p sx="text-xs text-muted-foreground font-mono">{bio().length} characters</p>
               </column>
             {/if}
             {#if stage.select()}
@@ -143,7 +143,7 @@ export default controller({
                   <option>Design</option>
                   <option>Research</option>
                 </select>
-                <p class="mono" sx="text-xs text-muted-foreground">team: {team()}</p>
+                <p sx="text-xs text-muted-foreground font-mono">team: {team()}</p>
               </column>
             {/if}
             {#if stage.combobox()}
@@ -156,13 +156,13 @@ export default controller({
                   <option value="vue">Vue</option>
                   <option value="qwik">Qwik</option>
                 </combobox>
-                <p class="mono" sx="text-xs text-muted-foreground">picked: {fw() || 'nothing yet'}</p>
+                <p sx="text-xs text-muted-foreground font-mono">picked: {fw() || 'nothing yet'}</p>
               </column>
             {/if}
             {#if stage.checkbox()}
               <column gap="3" align="center">
                 <label><input type="checkbox" bind:checked={agreed} /> I agree to the terms</label>
-                <p class="mono" sx="text-xs text-muted-foreground">{agreed() ? 'thank you' : 'the platform checkbox, skinned'}</p>
+                <p sx="text-xs text-muted-foreground font-mono">{agreed() ? 'thank you' : 'the platform checkbox, skinned'}</p>
               </column>
             {/if}
             {#if stage.radioGroup()}
@@ -174,14 +174,14 @@ export default controller({
             {#if stage.switchToggle()}
               <row gap="3" align="center">
                 <switch bind:checked={notify} size={variant()} tone="primary"></switch>
-                <p class="mono" sx="text-xs text-muted-foreground">{notify() ? 'on' : 'off'} · size {variant()}</p>
+                <p sx="text-xs text-muted-foreground font-mono">{notify() ? 'on' : 'off'} · size {variant()}</p>
               </row>
             {/if}
             {#if stage.slider()}
               <column gap="3" sx="w-full max-w-panel-max-w-sm">
                 <slider bind:value={load} min="0" max="100" tone={variant()}></slider>
                 <progress value={load()} max="100"></progress>
-                <p class="mono" sx="text-xs text-muted-foreground">one signal, two components — {load()}%</p>
+                <p sx="text-xs text-muted-foreground font-mono">one signal, two components — {load()}%</p>
               </column>
             {/if}
             {#if stage.toggleGroup()}
@@ -224,7 +224,7 @@ export default controller({
             {#if stage.themePicker()}
               <column gap="3" align="center">
                 <theme-picker></theme-picker>
-                <p class="mono" sx="text-xs text-muted-foreground">open it — it themes this whole site, live</p>
+                <p sx="text-xs text-muted-foreground font-mono">open it — it themes this whole site, live</p>
               </column>
             {/if}
 
@@ -238,7 +238,7 @@ export default controller({
               <column gap="3" sx="w-full max-w-panel-max-w-sm">
                 <slider bind:value={load} min="0" max="100" tone="primary"></slider>
                 <progress value={load()} max="100"></progress>
-                <p class="mono" sx="text-xs text-muted-foreground">drag the slider — same signal, {load()}%</p>
+                <p sx="text-xs text-muted-foreground font-mono">drag the slider — same signal, {load()}%</p>
               </column>
             {/if}
             {#if stage.meter()}
@@ -317,7 +317,7 @@ export default controller({
                     <button variant="ghost" size="sm" on:click={restoreChip}>bring it back</button>
                   {/if}
                 </row>
-                <p class="mono" sx="text-xs text-muted-foreground">× or Backspace fires sui-remove</p>
+                <p sx="text-xs text-muted-foreground font-mono">× or Backspace fires sui-remove</p>
               </column>
             {/if}
             {#if stage.statusDot()}
@@ -407,7 +407,7 @@ export default controller({
                     <p sx="text-sm text-muted-foreground">wrote the first program.</p>
                   </card>
                 </hover-card>
-                <p class="mono" sx="text-xs text-muted-foreground">hover or focus the trigger</p>
+                <p sx="text-xs text-muted-foreground font-mono">hover or focus the trigger</p>
               </column>
             {/if}
             {#if stage.popover()}
@@ -416,7 +416,7 @@ export default controller({
                 <popover id="stage-pop">
                   <card sx="p-4">Rides the platform top layer — Escape or click outside closes it.</card>
                 </popover>
-                <p class="mono" sx="text-xs text-muted-foreground">top layer · light dismiss · zero z-index</p>
+                <p sx="text-xs text-muted-foreground font-mono">top layer · light dismiss · zero z-index</p>
               </column>
             {/if}
             {#if stage.dropdown()}
@@ -427,7 +427,7 @@ export default controller({
                   <menu-item>Duplicate</menu-item>
                   <menu-item tone="destructive">Delete</menu-item>
                 </dropdown>
-                <p class="mono" sx="text-xs text-muted-foreground">arrows rove · type-ahead · Escape closes</p>
+                <p sx="text-xs text-muted-foreground font-mono">arrows rove · type-ahead · Escape closes</p>
               </column>
             {/if}
             {#if stage.contextMenu()}
@@ -447,7 +447,7 @@ export default controller({
                 <button command="show-modal" commandfor="stage-dialog" motion:press={{ scale: 'press' }}>
                   Open the {variant()}
                 </button>
-                <p class="mono" sx="text-xs text-muted-foreground">Escape and the backdrop close it — that's the platform</p>
+                <p sx="text-xs text-muted-foreground font-mono">Escape and the backdrop close it — that's the platform</p>
                 <dialog id="stage-dialog" side={sheetSide()}>
                   <header>Delete project</header>
                   <section>This cannot be undone. Top layer, focus trap, Escape — zero JavaScript.</section>
@@ -487,7 +487,7 @@ export default controller({
                   <page value="3">3</page>
                   <page value="4">4</page>
                 </pagination>
-                <p class="mono" sx="text-xs text-muted-foreground">on page {pageNo()} — click one</p>
+                <p sx="text-xs text-muted-foreground font-mono">on page {pageNo()} — click one</p>
               </column>
             {/if}
             {#if stage.navbar()}
@@ -556,12 +556,12 @@ export default controller({
               </div>
             {/if}
       </column>
-      <p slot="stage" class="mono" sx="text-xs text-muted-foreground">click it · type in it · pick from it — nothing here is a screenshot</p>
+      <p slot="stage" sx="text-xs text-muted-foreground font-mono">click it · type in it · pick from it — nothing here is a screenshot</p>
     </sui-component-viewer>
 
     <row gap="2">
-      <a class="btn" href="/components">← All components</a>
-      <a class="btn btn-primary" href="/reference">API reference</a>
+      <a variant="default" href="/components">← All components</a>
+      <a variant="solid" tone="primary" href="/reference">API reference</a>
     </row>
   {:else}
     <breadcrumb>
@@ -573,7 +573,7 @@ export default controller({
       Every element on the L1 surface has a detail page — this looks like a typo.
     </empty-state>
     <row gap="2">
-      <a class="btn btn-primary" href="/components">← All components</a>
+      <a variant="solid" tone="primary" href="/components">← All components</a>
     </row>
   {/if}
 </column>

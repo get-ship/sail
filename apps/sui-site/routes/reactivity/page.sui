@@ -21,10 +21,10 @@ export default controller({
 })
 </controller>
 
-<column class="doc-wide" gap="5">
-  <p class="eyebrow">Building</p>
+<column sx="max-w-breakpoint-tablet mx-auto" gap="5">
+  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Building</p>
   <h1>Reactivity</h1>
-  <p class="lead">
+  <p sx="text-lg text-muted-foreground leading-relaxed">
     SUI's reactivity is three small primitives: a <strong>signal</strong> holds a
     value, a <strong>derived</strong> computes one from others, and an
     <strong>effect</strong> runs a side-effect when its inputs change. No
@@ -32,10 +32,10 @@ export default controller({
   </p>
 
   <h2>The graph, live</h2>
-  <row class="split" align="stretch">
+  <grid cols="2" gap="4">
     <column>
-      <p class="pane-label">Live</p>
-      <column class="live" gap="3">
+      <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Live</p>
+      <column sx="p-6 border border-border rounded-lg min-h-8 bg-surface-1" gap="3">
         <row gap="3" align="center">
           <button on:click={() => count.set(count() + 1)}>count.set({count() + 1})</button>
           <p><strong>{count()}</strong> <small sx="text-muted-foreground">signal</small></p>
@@ -49,7 +49,7 @@ export default controller({
       </column>
     </column>
     <column>
-      <p class="pane-label">Source</p>
+      <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Source</p>
       <code-block code={code.graph}></code-block>
     </column>
   </row>
@@ -96,7 +96,7 @@ export default controller({
     DOM that read it updates — no virtual DOM, no re-render of the component.
   </p>
   <code-block code={code.template}></code-block>
-  <p class="callout">
+  <p sx="border border-border border-l-3 border-l-primary rounded-md p-3 px-4 text-sm text-muted-foreground">
     A text binding <code>&#123;count()&#125;</code> is a compiled effect. When the
     signal changes, the compiler updates only the one text node that read it
     — nothing else in the tree re-runs. That is the whole runtime.
@@ -111,7 +111,7 @@ export default controller({
     <code>onCleanup</code>, and the runtime calls it when the component goes away.
   </p>
   <code-block code={code.lifecycle}></code-block>
-  <p class="callout">
+  <p sx="border border-border border-l-3 border-l-primary rounded-md p-3 px-4 text-sm text-muted-foreground">
     <strong>There is no dependency array.</strong> An effect subscribes to
     whatever it reads, and <code>onCleanup</code> is the only teardown there is —
     so a listener cannot be left dangling because someone forgot to list it.
@@ -133,8 +133,8 @@ export default controller({
   </p>
   <code-block code={code.composition}></code-block>
 
-  <row class="page-nav">
-    <a class="btn" href="/getting-started">← Getting started</a>
-    <a class="btn btn-primary" href="/templates">Templates →</a>
+  <row sx="mt-8 pt-4 border-t border-t-border">
+    <a variant="default" href="/getting-started">← Getting started</a>
+    <a variant="solid" tone="primary" href="/templates">Templates →</a>
   </row>
 </column>

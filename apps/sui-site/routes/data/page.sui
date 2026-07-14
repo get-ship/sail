@@ -38,10 +38,10 @@ export default controller({
 })
 </controller>
 
-<column class="doc-wide" gap="5">
-  <p class="eyebrow">Building</p>
+<column sx="max-w-breakpoint-tablet mx-auto" gap="5">
+  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Building</p>
   <h1>Live data</h1>
-  <p class="lead">
+  <p sx="text-lg text-muted-foreground leading-relaxed">
     Asynchronous data has three states — loading, error, and loaded — and
     forgetting one is where interfaces rot. SUI makes all three explicit.
     <code>live()</code> wraps any async source in a reactive state signal, and
@@ -49,10 +49,10 @@ export default controller({
   </p>
 
   <h2>The three states, live</h2>
-  <row class="split" align="stretch">
+  <grid cols="2" gap="4">
     <column>
-      <p class="pane-label">Live — a 900 ms fake API</p>
-      <column class="live" gap="3">
+      <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Live — a 900 ms fake API</p>
+      <column sx="p-6 border border-border rounded-lg min-h-8 bg-surface-1" gap="3">
         <row gap="2">
           <button on:click={reload}>Reload</button>
           <button on:click={breakIt} tone="destructive" variant="outline">Fail the next one</button>
@@ -73,7 +73,7 @@ export default controller({
       </column>
     </column>
     <column>
-      <p class="pane-label">Source</p>
+      <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Source</p>
       <code-block code={code.demo}></code-block>
     </column>
   </row>
@@ -109,15 +109,15 @@ export default controller({
   </p>
   <code-block code={code.server}></code-block>
 
-  <p class="callout">
+  <p sx="border border-border border-l-3 border-l-primary rounded-md p-3 px-4 text-sm text-muted-foreground">
     <strong>The state is the contract.</strong> Because the loaded value is only
     reachable through <code>kind === 'ok'</code>, a template physically can't
     render data it hasn't confirmed has arrived. The loading spinner and the
     error message aren't good manners — they're the only way through.
   </p>
 
-  <row class="page-nav">
-    <a class="btn" href="/reactivity">← Reactivity</a>
-    <a class="btn" href="/components">Component library →</a>
+  <row sx="mt-8 pt-4 border-t border-t-border">
+    <a variant="default" href="/reactivity">← Reactivity</a>
+    <a variant="default" href="/components">Component library →</a>
   </row>
 </column>

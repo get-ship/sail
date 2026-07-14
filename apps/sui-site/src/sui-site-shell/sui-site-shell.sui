@@ -24,14 +24,15 @@
 // owns only the accent hue, on its own attribute (data-product), so crossing
 // into Deck turns the brand violet without repainting the reader's theme.
 //
-// The SUI theme + doc base styles are imported HERE (not the clients seam): the
-// shell is in every route's module graph, so these side-effect imports can't be
-// tree-shaken — whereas an export-less clients module gets dropped.
+// The SUI theme + the framework contracts are imported HERE (not the clients
+// seam): the shell is in every route's module graph, so these side-effect
+// imports can't be tree-shaken — whereas an export-less clients module gets
+// dropped. contracts.css gives every page the design-system typography
+// (bare h1/p/ul/code/pre/button/anchor) without a class hook in any template.
 import '../product-accents.css'
 import '@ship/tokens/themes.css' // the swappable theme library (paper/halo/glass/console/contrast)
-import '../base.css' // doc typography + .doc reading column (the comment above promised this; it was missing)
+import '@ship/tokens/contracts.css' // framework contracts: bare h1/p/ul/code/pre/button/anchor skins; the design system applied to a SUI document, no class hooks needed
 import { applyTheme, readStoredTheme } from '@ship/tokens/themes'
-import { controller, signal, derived } from '@ship/sui-runtime'
 
 // Ship UI is ONE site with a top product switcher (SUI · Deck · Components · AI),
 // SolidJS-style. The active product is derived from the path; each drives its own
