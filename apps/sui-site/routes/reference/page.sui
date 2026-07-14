@@ -168,7 +168,7 @@ export default controller({
       <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">prop:</code><small sx="text-muted-foreground">set a JS property (identity values that are not attributes)</small></row>
       <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">attr:</code><small sx="text-muted-foreground">force attribute semantics for a dynamic value</small></row>
       <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">use:</code><small sx="text-muted-foreground">attach an action — behavior bound to an element with update/destroy</small></row>
-      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">style:--x</code><small sx="text-muted-foreground">custom-property channel — the only style: form; a component's declared knobs</small></row>
+      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">use:</code><small sx="text-muted-foreground">runtime geometry — a named, typed action writes the custom property; sx reads it with <code>(--name)</code>. There is no <code>style:</code>: it was the last hatch, and it is closed.</small></row>
       <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">blocks</code><small sx="text-muted-foreground">#if/:else · #match/:case/:default · #for with required key= · #while-loading · #while-error</small></row>
     </column>
   </column>

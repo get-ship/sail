@@ -1755,8 +1755,13 @@ label { display: inline-block; }
     border-inline-end: 1px solid var(--border);
   }
   /* A sticky rail under a sticky top bar: the rail yields — one z below, and
-     `--rail-offset` (the bar's height, set by the app via style:--rail-offset)
-     keeps it from sliding beneath the bar while scrolled. */
+     `offset` (the height of the bar above it) keeps it from sliding beneath
+     that bar while scrolled.
+
+     `offset` is a SPACE TOKEN, not a length: <navbar placement="rail" sticky
+     offset="14">. The bar above is 56px, so the rail starts 56px down and is
+     56px shorter. Only the tokens listed below resolve — an unlisted value
+     simply does not match, so there is no way to smuggle a raw length in. */
   .sui-navbar[placement='rail'][sticky] {
     position: sticky;
     top: var(--rail-offset, 0px);
@@ -1765,6 +1770,13 @@ label { display: inline-block; }
     overflow-y: auto;
     z-index: calc(var(--z-sticky, 100) - 1);
   }
+  .sui-navbar[placement='rail'][offset='8']  { --rail-offset: var(--space-8); }
+  .sui-navbar[placement='rail'][offset='10'] { --rail-offset: var(--space-10); }
+  .sui-navbar[placement='rail'][offset='12'] { --rail-offset: var(--space-12); }
+  .sui-navbar[placement='rail'][offset='14'] { --rail-offset: var(--space-14); }
+  .sui-navbar[placement='rail'][offset='16'] { --rail-offset: var(--space-16); }
+  .sui-navbar[placement='rail'][offset='20'] { --rail-offset: var(--space-20); }
+  .sui-navbar[placement='rail'][offset='24'] { --rail-offset: var(--space-24); }
 
   /* ── the four regions ───────────────────────────────────────────────── */
   /* A link in a nav bar is chrome wherever it sits — undecorated, ink from

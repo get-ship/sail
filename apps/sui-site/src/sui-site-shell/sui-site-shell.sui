@@ -121,9 +121,9 @@ export default controller({
   <theme-picker slot="actions"></theme-picker>
 </navbar>
 
-<row align="stretch" style:--chrome-offset={'3.5rem'}>
+<row align="stretch">
   {#if product() === 'deck'}
-    <navbar placement="rail" bordered sticky style:--rail-offset={'3.5rem'}>
+    <navbar placement="rail" bordered sticky offset="14">
       <label>Introduction</label>
       <a href="/deck" aria-current={path() === '/deck' ? 'page' : null}>Overview</a>
       <a href="/deck/getting-started" aria-current={path() === '/deck/getting-started' ? 'page' : null}>Getting started</a>
@@ -139,7 +139,7 @@ export default controller({
       <a href="/deck/build" aria-current={path() === '/deck/build' ? 'page' : null}>Build</a>
     </navbar>
   {:else if product() === 'ai'}
-    <navbar placement="rail" bordered sticky style:--rail-offset={'3.5rem'}>
+    <navbar placement="rail" bordered sticky offset="14">
       <label>AI</label>
       <a href="/ai" aria-current={path() === '/ai' ? 'page' : null}>Overview</a>
       <a href="/ai/authoring" aria-current={path() === '/ai/authoring' ? 'page' : null}>Authoring</a>
@@ -147,7 +147,7 @@ export default controller({
       <a href="/ai/eval" aria-current={path() === '/ai/eval' ? 'page' : null}>Eval</a>
     </navbar>
   {:else if !fullscreen()}
-    <navbar placement="rail" bordered sticky style:--rail-offset={'3.5rem'}>
+    <navbar placement="rail" bordered sticky offset="14">
       <label>Start here</label>
       <a href="/overview" aria-current={path() === '/overview' ? 'page' : null}>Introduction</a>
       <a href="/getting-started" aria-current={path() === '/getting-started' ? 'page' : null}>Installation</a>
