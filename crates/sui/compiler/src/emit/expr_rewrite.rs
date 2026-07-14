@@ -52,7 +52,7 @@ const BUILTINS: &[&str] = &[
     // instead of an undefined `$scope.` lookup. Kept in sync with
     // `lower::bindings::BUILTIN_ACTIONS` and `check::scope_bound::BUILTINS`.
     "anchor", "autosize", "clickOutside", "dropzone", "cellPad", "eventSpan", "gridTracks",
-    "maxWidth", "pin", "rect", "spotlight", "swatch", "targetCursor",
+    "maxWidth", "pin", "portEdge", "rect", "spotlight", "swatch", "targetCursor",
     "virtualRow", "virtualSpacer", "worldTransform", "zoomPan",
 ];
 

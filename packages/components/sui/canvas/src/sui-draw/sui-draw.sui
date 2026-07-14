@@ -244,28 +244,71 @@ export default controller({
 </controller>
 
 
-<div class="toolbar" role="toolbar" aria-label="Drawing tools">
+<!-- `.toolbar` was a flex container; compose a primitive instead — flex
+     layout is the floor's boundary, and `<row>` IS the row container. -->
+<row role="toolbar" aria-label="Drawing tools" gap="1" align="center" sx="py-1 px-2 border-b border-b-border bg-card">
   <slot name="toolbar"></slot>
-</div>
+</row>
 
-<sui-canvas class="canvas" role="application" aria-label={label()} prop:canvas={canvas} prop:readonly={readonly()} on:pointerdown={surfaceDown}>
-  <svg class="scene" role="group" aria-label={statusLabel()}>
+<sui-canvas
+  role="application"
+  aria-label={label()}
+  prop:canvas={canvas}
+  prop:readonly={readonly()}
+  on:pointerdown={surfaceDown}
+  sx="block relative w-full h-full text-foreground"
+>
+  <svg role="group" aria-label={statusLabel()} sx="absolute top-0 left-0 overflow-visible pointer-events-none">
     {#for el of rendered() key={el.id}}
       {#if el.kind === 'text'}
-        <text class="el el-text element" x={el.at.x} y={el.at.y} fill={el.color} data-el-id={el.id} data-selected={selectedSet().has(el.id)} on:pointerdown={elementDown}>{el.text}</text>
+        <text
+          x={el.at.x}
+          y={el.at.y}
+          fill={el.color}
+          data-el-id={el.id}
+          aria-selected={selectedSet().has(el.id) ? 'true' : 'false'}
+          on:pointerdown={elementDown}
+          pointer-events="fill"
+          sx="font-body text-base stroke-none selected:fill-primary"
+        >{el.text}</text>
       {:else}
-        <path class="el element" d={el.path} data-el-id={el.id} data-kind={el.kind} data-selected={selectedSet().has(el.id)} use:swatch={el.color} on:pointerdown={elementDown}></path>
+        <path
+          d={el.path}
+          data-el-id={el.id}
+          data-state={el.kind === 'pen' ? 'pen' : null}
+          aria-selected={selectedSet().has(el.id) ? 'true' : 'false'}
+          use:swatch={el.color}
+          on:pointerdown={elementDown}
+          vector-effect="non-scaling-stroke"
+          pointer-events={el.kind === 'pen' ? 'fill' : 'stroke'}
+          stroke-width="2"
+          sx="fill-none cursor-pointer selected:stroke-primary state-pen:fill-currentColor state-pen:stroke-none"
+        ></path>
       {/if}
     {/for}
-
     {#if draftPath()}
-      <path class="el el-draft draft" d={draftPath()} use:swatch={draftColor()}></path>
+      <path
+        d={draftPath()}
+        use:swatch={draftColor()}
+        vector-effect="non-scaling-stroke"
+        pointer-events="none"
+        stroke-width="2"
+        sx="fill-none opacity-85"
+      ></path>
     {/if}
 
     {#if selectionRect()}
-      <rect class="selection-box" x={selectionRect().x} y={selectionRect().y} width={selectionRect().w} height={selectionRect().h}></rect>
+      <rect
+        x={selectionRect().x}
+        y={selectionRect().y}
+        width={selectionRect().w}
+        height={selectionRect().h}
+        sx="fill-none stroke-primary pointer-events-none"
+        stroke-width="1"
+        stroke-dasharray="4 3"
+      ></rect>
     {/if}
   </svg>
 </sui-canvas>
 
-<div class="status" role="status" aria-live="polite">{statusLabel()}</div>
+<div role="status" aria-live="polite" sx="absolute bottom-1 left-2 text-xs text-muted-foreground pointer-events-none">{statusLabel()}</div>

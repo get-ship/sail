@@ -230,21 +230,42 @@ export default controller({
 </controller>
 
 
-<sui-canvas class="canvas" role="application" aria-label={label()} prop:canvas={canvas} prop:readonly={readonly()}>
-  <svg class="edges" aria-hidden="true">
+<sui-canvas
+  role="application"
+  aria-label={label()}
+  prop:canvas={canvas}
+  prop:readonly={readonly()}
+  sx="block relative w-full h-full"
+>
+  <svg aria-hidden="true" sx="absolute top-0 left-0 overflow-visible pointer-events-none">
     {#for r of routes() key={r.id}}
-      <path class="edge" d={r.path} data-edge-id={r.id} data-incident={incidentSet().has(r.id)}></path>
+      <path d={r.path} data-edge-id={r.id} data-state={incidentSet().has(r.id) ? 'incident' : null} sx="fill-none stroke-border state-incident:stroke-primary" stroke-width="2"></path>
     {/for}
     {#if pendingPath()}
-      <path class="edge edge-pending" d={pendingPath()}></path>
+      <path d={pendingPath()} sx="fill-none stroke-primary" stroke-width="2" stroke-dasharray="6 4"></path>
     {/if}
   </svg>
 
   {#for n of nodes() key={n.id}}
-    <div class="node" role="group" tabindex="0" aria-label={n.id} data-node-id={n.id} data-selected={selectedSet().has(n.id)} use:rect={{top: n.rect.y, left: n.rect.x, width: n.rect.w, height: n.rect.h}} on:pointerdown={nodePointerDown}>
+    <div
+      role="group"
+      tabindex="0"
+      aria-label={n.id}
+      aria-selected={selectedSet().has(n.id) ? 'true' : 'false'}
+      data-node-id={n.id}
+      use:rect={{top: n.rect.y, left: n.rect.x, width: n.rect.w, height: n.rect.h}}
+      on:pointerdown={nodePointerDown}
+      sx="box-border bg-card text-card-foreground border border-border rounded-md p-2 cursor-grab select-none outline-none focus:outline-solid focus:outline-2 focus:outline-ring focus:outline-offset-2 selected:border-primary selected:ring-primary"
+    >
       <slot name={n.id}></slot>
       {#for p of n.ports key={p.id}}
-        <span class="port" data-port-id={p.id} data-side={p.side} on:pointerdown={portPointerDown}></span>
+        <span
+          data-port-id={p.id}
+          data-state={p.side}
+          use:portEdge={p.side}
+          on:pointerdown={portPointerDown}
+          sx="absolute w-3 h-3 rounded-full bg-background border border-primary cursor-crosshair state-left:left-(--port-left) state-left:top-(--port-top) state-right:right-(--port-right) state-right:top-(--port-top) state-top:top-(--port-top) state-top:left-(--port-left) state-bottom:bottom-(--port-bottom) state-bottom:left-(--port-left)"
+        ></span>
       {/for}
     </div>
   {/for}

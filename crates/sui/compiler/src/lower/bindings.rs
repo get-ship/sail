@@ -14,7 +14,7 @@ pub const BUILTIN_ACTIONS: &[&str] = &[
     "alert", "anchor", "autosize", "avatar", "chip", "clickOutside", "collapsible",
     "codeBlock", "combobox", "dropzone", "emptyState", "eventSpan", "errorBoundary", "errorState",
     "cellPad", "contextMenu", "gridTracks", "hoverCard", "icon", "maxWidth", "menu", "pagination",
-    "pin", "radioGroup", "rangeFill", "rect", "swatch", "tabs", "targetCursor",
+    "pin", "portEdge", "radioGroup", "rangeFill", "rect", "swatch", "tabs", "targetCursor",
     "themePicker", "toast", "toggleGroup", "tooltip", "virtualRow", "virtualSpacer",
     "worldTransform", "zoomPan", "spotlight"];
 
