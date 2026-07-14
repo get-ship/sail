@@ -2,15 +2,15 @@
 export default null
 </controller>
 
-<div class="demos-index">
+<div>
   <h1>SUI demos</h1>
-  <p class="caption">
+  <p>
     Small, single-feature views exercising one piece of the SUI surface each.
     Each demo lives at <code>views/demos/&lt;name&gt;/</code> and is
     50–100 lines of <code>page.sui</code> + <code>controller.ts</code>.
   </p>
 
-  <ul class="demos-list">
+  <ul>
     <li>
       <a href="/demos/signals-and-derived" data-test="link-signals">signals-and-derived</a>
       <span> — counter, derived double, history list. <code>scope:</code> + <code>derived:</code>.</span>

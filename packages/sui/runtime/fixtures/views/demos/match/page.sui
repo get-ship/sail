@@ -9,22 +9,22 @@ export default controller<Scope>({
 })
 </controller>
 
-<div class="demo">
-  <p class="demo-back"><a href="/demos">← demos</a></p>
+<div data-demo="true">
+  <p><a href="/demos">← demos</a></p>
   <h1>match</h1>
-  <p class="caption">
+  <p>
     Block <code>match expr / case "x" / default</code>. Like a switch
     statement, but only the active branch is mounted.
   </p>
 
-  <div class="demo-tones" role="tablist">
-    <button role="tab" data-test="tone-info"        aria-selected={tone() === 'info'}        class:active={tone() === 'info'}        on:click={() => tone.set('info')}>info</button>
-    <button role="tab" data-test="tone-success"     aria-selected={tone() === 'success'}     class:active={tone() === 'success'}     on:click={() => tone.set('success')}>success</button>
-    <button role="tab" data-test="tone-warning"     aria-selected={tone() === 'warning'}     class:active={tone() === 'warning'}     on:click={() => tone.set('warning')}>warning</button>
-    <button role="tab" data-test="tone-destructive" aria-selected={tone() === 'destructive'} class:active={tone() === 'destructive'} on:click={() => tone.set('destructive')}>destructive</button>
+  <div role="tablist">
+    <button role="tab" data-test="tone-info"        aria-selected={tone() === 'info'}        on:click={() => tone.set('info')}>info</button>
+    <button role="tab" data-test="tone-success"     aria-selected={tone() === 'success'}     on:click={() => tone.set('success')}>success</button>
+    <button role="tab" data-test="tone-warning"     aria-selected={tone() === 'warning'}     on:click={() => tone.set('warning')}>warning</button>
+    <button role="tab" data-test="tone-destructive" aria-selected={tone() === 'destructive'} on:click={() => tone.set('destructive')}>destructive</button>
   </div>
 
-  <section class="demo-alert" data-test="alert" data-tone={tone()}>
+  <section data-test="alert" data-tone={tone()}>
     {#match tone()}
       {:case 'info'}
         <strong>Heads up.</strong> Just a friendly note.

@@ -92,10 +92,7 @@
           ],
           "anatomy": {
             "dom": "light",
-            "classes": [
-              "content",
-              "spinner"
-            ],
+            "classes": [],
             "slots": []
           }
         }

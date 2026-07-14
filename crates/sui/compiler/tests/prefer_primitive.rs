@@ -13,6 +13,10 @@
 //!      the primitives pack legitimately hand-rolls flex/grid internally.
 //!   4. A component that composes `<sui-grid>` (no ad-hoc layout CSS) emits no
 //!      `sui-prefer-primitive` finding.
+//!
+//! Note: the test sources used `class="wrap"` to mark the styled div; with the
+//! floor now banning `class=`, the markup is bare. The lint scans the `<style>`
+//! content (the only thing it cares about), so the class name is not load-bearing.
 
 use std::path::PathBuf;
 
@@ -53,7 +57,7 @@ fn consumer_display_grid_surfaces_a_warning() {
     let src = r#"<style>
   .wrap { display: grid; gap: var(--space-3); }
 </style>
-<div class="wrap"></div>"#;
+<div></div>"#;
     let diags = prefer_primitive_diags(src, CONSUMER);
     assert_eq!(diags.len(), 1, "expected one prefer-primitive finding, got {diags:?}");
     assert_eq!(diags[0].0, DiagSeverity::Warning, "must be a Warning, never Error: {diags:?}");
@@ -71,7 +75,7 @@ fn consumer_display_grid_still_compiles() {
     let src = r#"<style>
   .wrap { display: grid; }
 </style>
-<div class="wrap"></div>"#;
+<div></div>"#;
     let out = compile(src, opts("sui-gauge", CONSUMER))
         .expect("a prefer-primitive warning must not fail the build");
     assert!(
@@ -87,7 +91,7 @@ fn primitives_pack_component_is_exempt() {
     let src = r#"<style>
   .wrap { display: grid; gap: var(--space-3); }
 </style>
-<div class="wrap"></div>"#;
+<div></div>"#;
     let diags = prefer_primitive_diags(src, PRIMITIVE);
     assert!(diags.is_empty(), "primitives pack must be exempt: {diags:?}");
 }

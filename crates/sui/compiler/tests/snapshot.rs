@@ -390,8 +390,8 @@ fn for_dynamic_mixed_inlines_only_static() {
         out.js
     );
     assert!(
-        out.js.contains("bindClass("),
-        "expected bindClass effect for class:active={{selected()}}, got:\n{}",
+        out.js.contains(r#"bindAttr(__e5, "aria-selected""#),
+        "expected bindAttr effect for the row's selected state:\n{}",
         out.js
     );
 }
@@ -584,7 +584,7 @@ fn shadow_tones_emits_adopted_style_sheets_call() {
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
-    let light_src = "<component>{ props: { tone: 'default' | 'primary' } }</component>\n<span class=\"dot\"></span>\n";
+    let light_src = "<component>{ props: { tone: 'default' | 'primary' } }</component>\n<span></span>\n";
     let light_out = compile(light_src, light_opts).expect("compile light");
     assert!(
         !light_out.js.contains("adoptSuiSheets"),

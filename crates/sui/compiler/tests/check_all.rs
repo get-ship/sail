@@ -195,3 +195,98 @@ fn empty_stylesheet_array_still_permits_zero() {
     );
     assert!(permit_errors[0].message.contains("undeclared.css"));
 }
+
+#[test]
+fn no_class_fails_real_compile_path() {
+    // The disease: a `class=` in a pack source that lives under a
+    // `sui.config.json` used to be silently allowed because the rule
+    // walked the parent chain looking for ANY config. With the opt-in
+    // removed, `class=` refuses everywhere — packs, routes, apps.
+    //
+    // The dispatch path the CLI uses (`Policy::overrides_for` → floor
+    // + capabilities, then `check_all` → `lint_sui_template_source`)
+    // MUST surface an Error here, and the diagnostic's rule id MUST be
+    // `sui-no-class`. The path is real (a tempdir laid out like a
+    // pack) — no isolation.
+    let (_tmp, sui_path) = write_pack(
+        &[],
+        r#"{"stylesheets": []}"#,
+    );
+    // Replace the default widget.sui with one that has a class=.
+    let src = r#"<p class="sneaky-hook">{name}</p>"#;
+    std::fs::write(&sui_path, src).unwrap();
+    let overrides = Policy::overrides_for(&sui_path);
+    let diags = check_all(src, Some(&sui_path), &overrides);
+    let class_errors: Vec<_> = diags
+        .iter()
+        .filter(|d| {
+            d.severity == DiagSeverity::Error
+                && d.rule.as_deref() == Some("sui-no-class")
+        })
+        .collect();
+    assert_eq!(
+        class_errors.len(),
+        1,
+        "expected exactly one no-class Error, got {diags:?}"
+    );
+    assert!(
+        class_errors[0].message.contains("class")
+            || class_errors[0].message.contains("`class`"),
+        "diagnostic should mention class: {}",
+        class_errors[0].message
+    );
+}
+
+#[test]
+fn sx_only_source_passes_real_compile_path() {
+    // The negative direction: a pack source that styles with `sx=`
+    // instead of `class=` is clean. The full pre-floor surface is
+    // available: sx=, role, aria-*, bind:this, on:event, data-*.
+    let (_tmp, sui_path) = write_pack(
+        &[],
+        r#"{"stylesheets": []}"#,
+    );
+    let src = r#"<p role="listbox" aria-label="x" sx="p-4 bg-surface-2" bind:this={el}>{name}</p>"#;
+    std::fs::write(&sui_path, src).unwrap();
+    let overrides = Policy::overrides_for(&sui_path);
+    let diags = check_all(src, Some(&sui_path), &overrides);
+    let class_errors: Vec<_> = diags
+        .iter()
+        .filter(|d| {
+            d.severity == DiagSeverity::Error
+                && d.rule.as_deref() == Some("sui-no-class")
+        })
+        .collect();
+    assert!(
+        class_errors.is_empty(),
+        "sx-only source must not produce a no-class Error: {diags:?}"
+    );
+}
+
+#[test]
+fn class_directive_fails_real_compile_path() {
+    // The `class:name={value}` directive form (a state-flavored class
+    // assignment) is also banned. This pins the directive side of the
+    // rule — the static-class test covers `class="x"`, this covers
+    // `class:active={...}`. Both are the same back door.
+    let (_tmp, sui_path) = write_pack(
+        &[],
+        r#"{"stylesheets": []}"#,
+    );
+    let src = r#"<a class:active={flag()} href="/x">x</a>"#;
+    std::fs::write(&sui_path, src).unwrap();
+    let overrides = Policy::overrides_for(&sui_path);
+    let diags = check_all(src, Some(&sui_path), &overrides);
+    let class_errors: Vec<_> = diags
+        .iter()
+        .filter(|d| {
+            d.severity == DiagSeverity::Error
+                && d.rule.as_deref() == Some("sui-no-class")
+        })
+        .collect();
+    assert_eq!(
+        class_errors.len(),
+        1,
+        "class:active= must be an Error, got {diags:?}"
+    );
+}

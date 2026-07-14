@@ -110,7 +110,6 @@ const __wireBoundary_b3 = (anchor) => bindIf({
 const __cleanups = [];
 const __root = container.shadowRoot ?? container;
 const __e0 = document.createElement("section");
-__e0.setAttribute("class", "agents");
 const __wlAnchor4 = document.createComment("while-loading");
 __e0.appendChild(__wlAnchor4);
 __cleanups.push(bindWhileLoading({ anchor: __wlAnchor4, signal: $scope.agents, render: __renderWhileLoading_0 }));

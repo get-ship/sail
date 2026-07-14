@@ -21,6 +21,11 @@
 //!     which the parser collapses into ONE text node — the binding would have no node
 //!     of its own and every index after it would shift. Such an element falls back to
 //!     the createElement path rather than emitting silently-wrong navigation.
+//!
+//! Note: the original tests used `class=` to mark elements; with the floor now
+//! banning `class=`, the markup hooks here are `data-test` (the standard test
+//! selector the rest of the suite uses). The assertions are about what the
+//! compiler emits, not about class=.
 
 use sui_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
 
@@ -33,7 +38,7 @@ fn js(src: &str) -> String {
 /// A static subtree is hoisted to module scope and cloned — not built node by node.
 #[test]
 fn a_static_subtree_is_hoisted_and_cloned() {
-    let out = js(r#"<div class="actions"><button data-test="go">go</button></div>"#);
+    let out = js(r#"<div data-actions><button data-test="go">go</button></div>"#);
     assert!(out.contains("__tpl("), "the markup is hoisted as a template:\n{out}");
     assert!(
         out.contains(r#"<button data-test=\"go\">go</button>"#),
@@ -47,7 +52,7 @@ fn a_static_subtree_is_hoisted_and_cloned() {
 /// once per component instance, and certainly not once per row.
 #[test]
 fn the_cloner_is_hoisted_above_the_component() {
-    let out = js(r#"<div class="x"><span>y</span></div>"#);
+    let out = js(r#"<div data-x><span>y</span></div>"#);
     let tpl = out.find("const __tpl0").expect("a cloner is emitted");
     let comp = out.find("component(").expect("the component is emitted");
     assert!(tpl < comp, "the cloner must be hoisted ABOVE the component:\n{out}");
@@ -93,7 +98,7 @@ fn adjacent_text_falls_back_rather_than_emitting_wrong_navigation() {
 /// Its static SIBLINGS still are — the fallback is per-element, not per-file.
 #[test]
 fn control_flow_is_not_templated_but_its_siblings_still_are() {
-    let out = js(r#"<div><p class="a">static</p><ul>{#if ok()}<li>x</li>{/if}</ul></div>"#);
+    let out = js(r#"<div><p data-test="a">static</p><ul>{#if ok()}<li>x</li>{/if}</ul></div>"#);
     assert!(out.contains("__tpl("), "the static <li> subtree is still hoisted:\n{out}");
     assert!(out.contains("bindIf"), "and the control flow still wires:\n{out}");
 }
@@ -106,7 +111,7 @@ fn control_flow_is_not_templated_but_its_siblings_still_are() {
 #[test]
 fn the_model_a_root_class_bakes_into_the_markup() {
     let out = compile(
-        r#"<div class="card">x</div>"#,
+        r#"<div data-card="card">x</div>"#,
         CompileOpts {
             mode: CompileMode::Component,
             component_meta: Some(ComponentMeta { name: "tpl-probe".into(), shadow: false }),
@@ -115,9 +120,10 @@ fn the_model_a_root_class_bakes_into_the_markup() {
     )
     .expect("compiles")
     .js;
+    // The root class is framework-stamped and joins the author's data-* attribute.
     assert!(
-        out.contains(r#"class=\"sui-root card\""#),
-        "the root class joins the author's, in the markup:\n{out}"
+        out.contains(r#"class=\"sui-root\""#),
+        "sui-root bakes into the markup, alongside the author's data-card attribute:\n{out}"
     );
     assert!(!out.contains("classList.add"), "not stamped at runtime:\n{out}");
 }

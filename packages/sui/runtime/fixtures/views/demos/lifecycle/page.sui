@@ -36,21 +36,21 @@ export default controller<Scope>({
 })
 </controller>
 
-<div class="demo">
-  <p class="demo-back"><a href="/demos">← demos</a></p>
+<div data-demo="true">
+  <p><a href="/demos">← demos</a></p>
   <h1>lifecycle</h1>
-  <p class="caption">
+  <p>
     <code>mount:</code> runs after first DOM attach; return a cleanup
     callback to run on dispose. Navigate away to see <strong>unmount</strong>
     log to the console.
   </p>
 
-  <section class="demo-row">
+  <section>
     <span>elapsed = <strong data-test="elapsed">{elapsed()}</strong>s</span>
     <button data-test="reset-log" on:click={clear}>clear log</button>
   </section>
 
-  <ol class="demo-log" data-test="log">
+  <ol data-test="log">
     {#for line of log() key={line.k}}
       <li>{line.text}</li>
     {/for}

@@ -10,14 +10,14 @@ export default controller({
 })
 </controller>
 
-<article class="doc">
-  <p class="eyebrow">Rendering &amp; build</p>
+<article data-doc="true">
+  <p role="doc-eyebrow">Rendering &amp; build</p>
   <h1>HMR</h1>
-  <p class="lead">In dev, editing a route soft-reloads it with signal state preserved — no full document reload.</p>
+  <p role="doc-lead">In dev, editing a route soft-reloads it with signal state preserved — no full document reload.</p>
 
   <h2>Routes reload with state intact</h2>
   <p>Save a route's <code>.sui</code> and deck swaps the freshly-bundled module into the already-running router — via a <code>globalThis.__deckHmr</code> handle — then re-mounts. Signal state survives the swap, so counters, inputs, and scroll stay put.</p>
-  <pre class="code">{devCmd}</pre>
+  <pre data-code-block="true">{devCmd}</pre>
 
   <h2>Components hot-swap in place</h2>
   <p>Editing a <code>&lt;sui-*&gt;</code> component hot-swaps its live instances where they sit — every mounted copy updates without a reload.</p>
@@ -25,7 +25,7 @@ export default controller({
   <h2>Pushed over SSE</h2>
   <p>The dev server pushes changes to the browser over an <code>SSE</code> stream. HMR is a dev-only convenience; it ships in no build.</p>
 
-  <div class="page-nav">
+  <div role="navigation">
     <a href="/rendering">← Rendering modes</a>
     <a href="/build">Build &amp; deploy →</a>
   </div>

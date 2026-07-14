@@ -10,7 +10,7 @@ const VIEW_SRC: &str = r#"<data name="rows" source="ship.rows()" live />
 <ul>{#for (row, _i) of rows().value key={row.id}}<li>{row.label}</li>{/for}</ul>
 "#;
 
-const COMPONENT_SRC: &str = r#"<component>{ props: { label: string } }</component><button class="btn"><slot /></button>
+const COMPONENT_SRC: &str = r#"<component>{ props: { label: string } }</component><button><slot /></button>
 "#;
 
 fn view_opts() -> CompileOpts {

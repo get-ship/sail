@@ -54,10 +54,10 @@ export default controller({
 })
 </controller>
 
-<column class="doc" gap="5">
-  <p class="eyebrow">Reference</p>
+<column sx="max-w-44" gap="5">
+  <p role="doc-eyebrow">Reference</p>
   <h1>The language surface</h1>
-  <p class="lead">
+  <p role="doc-lead">
     Everything below is generated from the compiler's own tables — the
     vocabulary the lint enforces is the vocabulary this page documents, by
     construction. Regenerate with
@@ -173,8 +173,8 @@ export default controller({
     </column>
   </column>
 
-  <row class="page-nav">
-    <a class="btn" href="/templates">← Templates</a>
-    <a class="btn btn-primary" href="/components">Component catalog →</a>
+  <row role="navigation">
+    <a variant="default" href="/templates">← Templates</a>
+    <a variant="solid" href="/components">Component catalog →</a>
   </row>
 </column>

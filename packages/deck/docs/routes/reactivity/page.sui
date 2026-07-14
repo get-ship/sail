@@ -56,58 +56,58 @@ export default controller({
 })
 </controller>
 
-<section class="rx">
-  <header class="rx-head">
-    <p class="eyebrow">reactivity · the signal graph</p>
+<section data-rx="true">
+  <header data-rx-head="true">
+    <p role="doc-eyebrow">reactivity · the signal graph</p>
     <h1>The diamond, with no glitch.</h1>
-    <p class="lede">
+    <p role="doc-lede">
       Change <code>a</code>. It feeds both <code>b</code> and <code>c</code>, and
       both feed <code>d</code>. SUI recomputes <code>d</code> exactly once per
       change — never the double-fire a naive reactive system does.
     </p>
   </header>
 
-  <div class="graph">
-    <article class="node signal" data-tier="source">
-      <div class="node-head">
-        <span class="dot signal"></span><span class="name">a</span>
-        <span class="kind">signal · source</span>
+  <div data-graph="true">
+    <article data-node="signal" data-tier="source">
+      <div data-node-head="true">
+        <span data-tone="signal"></span><span data-name="true">a</span>
+        <span data-kind="true">signal · source</span>
       </div>
-      <div class="val">{a()}</div>
-      <div class="row controls">
-        <button class="btn" type="button" on:click={() => dec()}>− 1</button>
-        <button class="btn btn-primary" type="button" on:click={() => inc()}>+ 1</button>
-        <button class="btn ghost" type="button" on:click={() => resetValue()}>set 1</button>
+      <div data-val="true">{a()}</div>
+      <div data-controls="true">
+        <button variant="default" type="button" on:click={() => dec()}>− 1</button>
+        <button variant="solid" type="button" on:click={() => inc()}>+ 1</button>
+        <button variant="ghost" type="button" on:click={() => resetValue()}>set 1</button>
       </div>
     </article>
 
-    <p class="edge">feeds ↓</p>
+    <p data-edge="true">feeds ↓</p>
 
-    <div class="pair">
-      <article class="node derived">
-        <div class="node-head"><span class="dot derived"></span><span class="name">b</span><span class="kind">a × 2</span></div>
-        <div class="val">{b()}</div>
+    <div data-pair="true">
+      <article data-node="derived">
+        <div data-node-head="true"><span data-tone="derived"></span><span data-name="true">b</span><span data-kind="true">a × 2</span></div>
+        <div data-val="true">{b()}</div>
       </article>
-      <article class="node derived">
-        <div class="node-head"><span class="dot derived"></span><span class="name">c</span><span class="kind">a + 10</span></div>
-        <div class="val">{c()}</div>
+      <article data-node="derived">
+        <div data-node-head="true"><span data-tone="derived"></span><span data-name="true">c</span><span data-kind="true">a + 10</span></div>
+        <div data-val="true">{c()}</div>
       </article>
     </div>
 
-    <p class="edge">join ↓</p>
+    <p data-edge="true">join ↓</p>
 
-    <article class="node derived join">
-      <div class="node-head"><span class="dot derived"></span><span class="name">d</span><span class="kind">b + c</span></div>
-      <div class="val xl">{d()}</div>
+    <article data-node="derived-join">
+      <div data-node-head="true"><span data-tone="derived"></span><span data-name="true">d</span><span data-kind="true">b + c</span></div>
+      <div>{d()}</div>
     </article>
   </div>
 
-  <aside class="proof">
-    <div class="proof-stats">
-      <div class="stat"><span class="k">you changed a</span><span class="v">{aChanges()}×</span></div>
-      <div class="stat accent"><span class="k">d recomputed</span><span class="v">{dRecomputes()}×</span></div>
+  <aside>
+    <div>
+      <div><span>you changed a</span><span>{aChanges()}×</span></div>
+      <div><span>d recomputed</span><span>{dRecomputes()}×</span></div>
     </div>
-    <p class="proof-note">
+    <p>
       One recompute per change (plus one at first paint). A glitchy system would
       <em>double</em> that — <code>d</code> would briefly equal
       <code>b_new + c_old</code>. SUI's colored push-pull scheduler never lets
@@ -115,7 +115,7 @@ export default controller({
     </p>
   </aside>
 
-  <div class="page-nav">
+  <div role="navigation">
     <a href="/layouts">← Layouts</a>
     <a href="/data">The data seam →</a>
   </div>

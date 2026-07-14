@@ -10,26 +10,26 @@ export default controller({
 })
 </controller>
 
-<article class="doc">
-  <p class="eyebrow">Introduction</p>
+<article data-doc="true">
+  <p role="doc-eyebrow">Introduction</p>
   <h1>Getting started</h1>
-  <p class="lead">You need the <code>deck</code> CLI and a folder. No project scaffold, no install, no config to start.</p>
+  <p role="doc-lead">You need the <code>deck</code> CLI and a folder. No project scaffold, no install, no config to start.</p>
 
   <h2>1. A page is a file</h2>
   <p>Create <code>routes/page.sui</code>. Whatever markup it holds is your page.</p>
-  <pre class="code">{pageExample}</pre>
+  <pre data-code-block="true">{pageExample}</pre>
 
   <h2>2. Add a controller</h2>
   <p>Co-locate <code>routes/controller.ts</code> for reactive state. It returns a scope the template reads by name.</p>
-  <pre class="code">{controllerExample}</pre>
+  <pre data-code-block="true">{controllerExample}</pre>
 
   <h2>3. Run the dev server</h2>
-  <pre class="code">{devCmd}</pre>
-  <div class="callout">
+  <pre data-code-block="true">{devCmd}</pre>
+  <div role="note">
     <strong>No build step to develop.</strong> deck compiles <code>.sui</code> in-process and serves the SPA with HMR — edit a route and it soft-reloads with state preserved.
   </div>
 
-  <div class="page-nav">
+  <div role="navigation">
     <a href="/">← Overview</a>
     <a href="/routing">File routing →</a>
   </div>

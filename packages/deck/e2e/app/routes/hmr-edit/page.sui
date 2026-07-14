@@ -9,8 +9,8 @@ export default controller<Scope>({
 })
 </controller>
 
-<div class="hmr-edit">
-  <h1 class="hmr-heading">HMR original</h1>
+<div data-hmr-edit="true">
+  <h1 data-hmr-heading="true">HMR original</h1>
   <p>Count: <strong>{count()}</strong></p>
   <button on:click={() => count.set(count() + 1)}>increment</button>
 </div>

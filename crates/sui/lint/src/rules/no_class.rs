@@ -16,8 +16,18 @@
 //! The compiler emits its own classes (`sui-root`, layout, sx atoms). Those are
 //! the framework's, not the author's; this rule only sees what the source wrote.
 //!
-//! Natural severity `Warn` (an unconfigured buffer keeps compiling and the LSP
-//! shows the hint); every policy promotes it to `Error`.
+//! FLOOR — refuses everywhere. The historical "opt-in via `sui.config.json`
+//! presence" was the SAME disease as the dead stylesheet permit: a check
+//! that returned `Vec::new()` because a config file existed somewhere
+//! above the source. With the permit fixed and the floor in place, every
+//! pack's `sui.config.json` declares `stylesheets: []` and ships zero
+//! `.css` files — the "declared stylesheet" the early-return justified
+//! itself with was invented. `class=` is now `Error` on every path,
+//! pack, route, and app; no config relaxes it.
+//!
+//! Natural severity `Error` (and on the floor). There is no
+//! unconfigured-buffer fallback: an authored `class=` is a banned CSS
+//! seam wherever the rule fires.
 
 use std::path::Path;
 
@@ -25,30 +35,13 @@ use crate::report::{Finding, Severity};
 
 pub const RULE_ID: &str = "sui-no-class";
 
-/// True iff a `sui.config.json` is anywhere up the parent chain of `path`.
-/// When present, the pack has opted INTO author-managed CSS through a declared
-/// stylesheet (the `sui-no-undeclared-stylesheet` rule enforces the seam),
-/// so `class=` and `class:` are LEGAL here — they pair with the declared
-/// sheet. Without that opt-in the ban holds.
-fn has_sui_config(path: &Path) -> bool {
-    let mut dir = path.parent().unwrap_or(path).to_path_buf();
-    loop {
-        if dir.join("sui.config.json").is_file() {
-            return true;
-        }
-        if !dir.pop() {
-            return false;
-        }
-    }
-}
-
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
-    // A pack that ships a `sui.config.json` declares its OWN stylesheets;
-    // classes are then author-managed and pair with the declared sheet
-    // (the undeclared-stylesheet rule keeps that seam honest).
-    if has_sui_config(path) {
-        return Vec::new();
-    }
+    // FLOOR — refuses everywhere. The historical "opt-in via `sui.config.json`
+    // presence" was removed: it walked up to the filesystem root, found a
+    // config anywhere, and returned `Vec::new()` — the same dead layer as
+    // the stylesheet permit. The pack's `sui.config.json` declares
+    // `stylesheets: []` and ships zero `.css` files; there is no
+    // declared sheet for a class to "pair with".
     let bytes = source.as_bytes();
     let mut findings = Vec::new();
     let mut i = 0;
@@ -75,7 +68,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 line,
                 col,
                 rule: RULE_ID,
-                severity: Severity::Warn,
+                severity: Severity::Error,
                 message: "`class` is not the styling surface, and light DOM has no boundary — a \
                           class in a template is a global CSS target, which is how banned CSS \
                           moves to a file the compiler never sees."
@@ -158,5 +151,37 @@ mod tests {
     #[test]
     fn a_word_ending_in_class_is_not_class() {
         assert!(run(r#"<div data-subclass="x"></div>"#).is_empty());
+    }
+
+    // The disease this commit cures: a `sui.config.json` ANYWHERE in the
+    // ancestor chain used to short-circuit the rule. The new contract is
+    // unconditional — `class=` is banned regardless of which directories
+    // happen to have a config. These two tests pin both ends.
+
+    #[test]
+    fn a_class_in_a_sourceless_buffer_is_still_flagged() {
+        // Old code walked `path.parent()` up to the filesystem root looking
+        // for any `sui.config.json`; in a unit test, `t.sui` is a bare
+        // path with no ancestors, and the old code returned `Vec::new()`
+        // because nothing above it had a config. New behavior: it fires
+        // anyway. Same test name as `static_class_is_flagged`, but
+        // expressed in a way that fails if anyone re-introduces a
+        // config-walk short-circuit.
+        let findings = run(r#"<div class="track"></div>"#);
+        assert_eq!(findings.len(), 1);
+        assert_eq!(findings[0].rule, RULE_ID);
+        assert!(matches!(findings[0].severity, Severity::Error));
+    }
+
+    #[test]
+    fn severity_is_error_not_warn() {
+        // The rule was Warn-by-nature and promoted to Error by the floor.
+        // Both layers said the same thing, but the floor was the only
+        // thing actually doing the work. Now the rule itself is Error —
+        // the floor still includes it, but the rule does not depend on
+        // the override to refuse.
+        let findings = run(r#"<div class="x"></div>"#);
+        assert_eq!(findings.len(), 1);
+        assert_eq!(findings[0].severity, Severity::Error);
     }
 }
