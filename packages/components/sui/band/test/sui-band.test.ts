@@ -9,10 +9,15 @@
 // prop, pinning the real formula: copies = 2 x ceil(band / copy), duration =
 // halfWidth / rate.
 //
-// jsdom implements no Web Animations API, so `Element.animate` is recorded by a
-// stub: the loop's contract (a linear, infinite, -50% translate whose duration
-// is the measured px/s time, reversed by `direction`) is asserted against the
-// options the controller passes.
+// The loop is owned by the runtime: `motion:loop` is dispatched through
+// `__sui_motion_attach`, which delegates to motion.dev. The contract we
+// assert here is the BEHAVIORAL one: under reduced motion, no animation
+// is created and the element is left in its authored rest pose; under
+// normal motion, the runtime is invoked with the resolved duration and
+// the directional preset. The runtime is the single reduced-motion
+// authority; the controller never reads matchMedia itself anymore
+// (the only matchMedia it consults is the one cached on the runtime
+// through the `reduced` MQL, used to decide whether to skip cloning).
 //
 // The element registers via its `.compiled.js` (the production light-DOM
 // shape); the queries are structural (the root, its track, the copies inside
@@ -27,40 +32,58 @@ interface Mount {
   host: HTMLElement
 }
 
-/** One recorded `el.animate(keyframes, options)` call. */
-interface AnimateCall {
+/** Every attach call the runtime received, in order. */
+interface MotionCall {
   target: Element
-  keyframes: Keyframe[]
-  options: KeyframeAnimationOptions
+  trigger: string
+  preset: string | undefined
+  duration: number
+  from: number
+  to: number
+  iterations: number | undefined
+  direction: string | undefined
+  property: string
 }
 
-let animateCalls: AnimateCall[] = []
-let cancelled = 0
+let motionCalls: MotionCall[] = []
 
-/** jsdom ships no WAAPI. Record the calls and hand back a minimal Animation. */
-beforeEach(() => {
-  animateCalls = []
-  cancelled = 0
-  ;(Element.prototype as unknown as { animate: unknown }).animate = function animate(
-    this: Element,
-    keyframes: Keyframe[],
-    options: KeyframeAnimationOptions,
-  ) {
-    animateCalls.push({ target: this, keyframes, options })
-    return {
-      cancel() {
-        cancelled++
-      },
-      play() {},
-      finish() {},
-    } as unknown as Animation
+/** A stub for the runtime's `__sui_motion_attach`. We install it BEFORE
+ *  the band source is loaded so the controller picks up the stub via the
+ *  `@ship/sui-runtime` module surface. The runtime exports a real
+ *  implementation; this stub records the call and returns a no-op dispose. */
+function installMotionStub(): void {
+  // Wipe any previous test isolation.
+  motionCalls = []
+  const runtime = require('@ship/sui-runtime') as Record<string, unknown>
+  // Replace the real attach with a recording stub. Other exports stay.
+  ;(runtime as Record<string, unknown>).__sui_motion_attach = (
+    el: Element,
+    config: { trigger: string; motions: Array<{ property: string; preset: string; duration?: number; from?: number; to?: number; iterations?: number; direction?: string }> },
+  ): (() => void) => {
+    for (const m of config.motions) {
+      motionCalls.push({
+        target: el,
+        trigger: config.trigger,
+        preset: m.preset,
+        duration: m.duration ?? 0,
+        from: m.from ?? 0,
+        to: m.to ?? 0,
+        iterations: m.iterations,
+        direction: m.direction,
+        property: m.property,
+      })
+    }
+    return () => {}
   }
-})
+}
+
+// @ts-expect-error - CommonJS interop for vitest's `require`.
+import { createRequire } from 'node:module'
+const require = createRequire(import.meta.url)
 
 const live: Mount[] = []
 afterEach(() => {
   for (const m of live.splice(0)) m.host.remove()
-  delete (Element.prototype as unknown as { animate?: unknown }).animate
 })
 
 /** Yield a microtask + macrotask turn so the controller's queued first
@@ -71,6 +94,7 @@ const flush = (): Promise<void> => new Promise((r) => setTimeout(r, 0))
  *  light-DOM capture and native shadow slotting both require the children
  *  to exist at connect time. */
 function mount(opts: { attrs?: Record<string, string>; html?: string } = {}): Mount {
+  installMotionStub()
   const host = document.createElement('div')
   const el = document.createElement('sui-band')
   for (const [k, v] of Object.entries(opts.attrs ?? {})) el.setAttribute(k, v)
@@ -95,11 +119,9 @@ const copiesOf = (m: Mount): HTMLElement[] =>
 const clonesOf = (m: Mount): HTMLElement[] =>
   Array.from(rootOf(m).querySelectorAll('[data-sui-band-clone]'))
 
-/** The last loop the controller started on the track. */
-const lastLoop = (m: Mount): AnimateCall | undefined => {
-  const track = trackOf(m)
-  return animateCalls.filter((c) => c.target === track).at(-1)
-}
+/** The last motion call made against the track. */
+const lastLoop = (m: Mount): MotionCall | undefined =>
+  motionCalls.filter((c) => c.target === trackOf(m)).at(-1)
 
 /** Fix an element's measured width (jsdom always measures 0). */
 function setWidth(el: HTMLElement, width: number): void {
@@ -130,24 +152,20 @@ describe('<sui-band> — registration + anatomy', () => {
     expect(copiesOf(m)[0]!.querySelector('slot')).not.toBeNull()
   })
 
-  it('runs the seamless loop on the track: linear, infinite, -50%', async () => {
+  it('runs the seamless loop through the runtime: trigger: loop, translate-x, infinite', async () => {
     const m = mount({ html: '<span>X</span>' })
     await flush()
     const loop = lastLoop(m)
     expect(loop).toBeDefined()
-    expect(loop!.keyframes).toEqual([
-      { transform: 'translateX(0)' },
-      { transform: 'translateX(-50%)' },
-    ])
-    expect(loop!.options.easing).toBe('linear')
-    expect(loop!.options.iterations).toBe(Infinity)
-    expect(loop!.options.direction).toBe('normal')
+    expect(loop!.trigger).toBe('loop')
+    expect(loop!.property).toBe('translate-x')
+    expect(loop!.iterations).toBe(Infinity)
   })
 
-  it('reverses the same loop for direction="reverse"', async () => {
+  it('uses the `marquee-reverse` preset when direction="reverse"', async () => {
     const m = mount({ attrs: { direction: 'reverse' }, html: '<span>X</span>' })
     await flush()
-    expect(lastLoop(m)!.options.direction).toBe('reverse')
+    expect(lastLoop(m)!.preset).toBe('marquee-reverse')
   })
 })
 
@@ -184,11 +202,21 @@ describe('<sui-band> — seam-math cloning', () => {
     m.el.setAttribute('speed', 'fast')
     await flush()
     // halfWidth = 4 copies x 300px = 1200px; fast = 160 px/s → 7.5s.
-    expect(lastLoop(m)!.options.duration).toBe(7500)
+    expect(lastLoop(m)!.duration).toBeCloseTo(7.5, 3)
     m.el.setAttribute('speed', 'slow')
     await flush()
     // slow = 40 px/s → 30s.
-    expect(lastLoop(m)!.options.duration).toBe(30000)
+    expect(lastLoop(m)!.duration).toBeCloseTo(30, 3)
+  })
+
+  it('keeps the loop a single direction (no `direction: alternate` bounce)', async () => {
+    const m = mount({ html: '<span>ONE WAY ◆</span>' })
+    await flush()
+    // Motion's `repeatType` is the runtime abstraction; the catalog
+    // `direction: 'normal'` is the SUI token that should reach the runtime
+    // verbatim. The compile-time shape preserves the prop — the runtime
+    // is a thin directive, the loop has never bounced backwards.
+    expect(lastLoop(m)!.direction).toBe('normal')
   })
 })
 
@@ -220,7 +248,7 @@ describe('<sui-band> — clones are presentation only', () => {
 })
 
 describe('<sui-band> — reduced motion', () => {
-  it('keeps the content visible, adds no clones, and plays nothing under prefers-reduced-motion', async () => {
+  it('keeps the content visible, adds no clones, and never attaches a motion under prefers-reduced-motion', async () => {
     const orig = window.matchMedia
     Object.defineProperty(window, 'matchMedia', {
       configurable: true,
@@ -241,8 +269,9 @@ describe('<sui-band> — reduced motion', () => {
       await flush()
       expect(clonesOf(m).length).toBe(0)
       expect(copiesOf(m).length).toBe(1)
-      // WAAPI is programmatic — the CSS kill switch cannot stop it, so the
-      // controller must never start the loop in the first place.
+      // The runtime is the single reduced-motion authority: the controller
+      // NEVER calls `__sui_motion_attach` for the track under reduced
+      // motion, so the loop was never started in the first place.
       expect(lastLoop(m)).toBeUndefined()
       // The original content is still reachable — motion off never means
       // content gone.

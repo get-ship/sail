@@ -26,10 +26,12 @@ fn sui_button_with_motion_compiles() {
         out.js.contains("\"hover\""),
         "expected \"hover\" trigger in compiled JS"
     );
-    // Sanity: no raw numerical spring config — the AOT bake
-    // replaces it with keyframes.
+    // Runtime dispatch: motion.dev creates the animation at runtime;
+    // no AOT `el.animate(...)` is emitted. The runtime owns reduced
+    // motion + WAAPI orchestration in one place.
     assert!(
-        !out.js.contains("stiffness:"),
-        "AOT bake should not leak raw spring config to JS"
+        !out.js.contains("el.animate("),
+        "runtime owns animation creation — no AOT el.animate() should leak:\n{}",
+        out.js
     );
 }

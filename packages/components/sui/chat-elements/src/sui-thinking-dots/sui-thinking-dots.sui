@@ -35,26 +35,27 @@
   aria-label={label()}
   sx=""
 >
-<row
-  gap={size() === 'lg' ? '2' : '1'}
-  align="center"
-  data-state={tone() + ' ' + size()}
-  sx="group"
->
-  <span
-    aria-hidden="true"
-    motion:loop={{ scale: 'pulse', stagger: '150ms' }}
-    sx="rounded-full w-2 h-2 bg-muted-foreground group-state-sm:w-1_25 group-state-sm:h-1_25 group-state-lg:w-2_5 group-state-lg:h-2_5 group-state-primary:bg-primary group-state-info:bg-info group-state-success:bg-success group-state-warning:bg-warning group-state-destructive:bg-destructive group-state-accent:bg-accent"
-  ></span>
-  <span
-    aria-hidden="true"
-    motion:loop={{ scale: 'pulse', stagger: '150ms' }}
-    sx="rounded-full w-2 h-2 bg-muted-foreground group-state-sm:w-1_25 group-state-sm:h-1_25 group-state-lg:w-2_5 group-state-lg:h-2_5 group-state-primary:bg-primary group-state-info:bg-info group-state-success:bg-success group-state-warning:bg-warning group-state-destructive:bg-destructive group-state-accent:bg-accent"
-  ></span>
-  <span
-    aria-hidden="true"
-    motion:loop={{ scale: 'pulse', stagger: '150ms' }}
-    sx="rounded-full w-2 h-2 bg-muted-foreground group-state-sm:w-1_25 group-state-sm:h-1_25 group-state-lg:w-2_5 group-state-lg:h-2_5 group-state-primary:bg-primary group-state-info:bg-info group-state-success:bg-success group-state-warning:bg-warning group-state-destructive:bg-destructive group-state-accent:bg-accent"
-  ></span>
-</row>
+  <row
+    gap={size() === 'lg' ? '2' : '1'}
+    align="center"
+    data-state={tone() + ' ' + size()}
+    sx="group"
+  >
+    <span
+      aria-hidden="true"
+      motion:loop={{ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }}
+      sx="rounded-full w-2 h-2 bg-muted-foreground group-state-sm:w-1_25 group-state-sm:h-1_25 group-state-lg:w-2_5 group-state-lg:h-2_5 group-state-primary:bg-primary group-state-info:bg-info group-state-success:bg-success group-state-warning:bg-warning group-state-destructive:bg-destructive group-state-accent:bg-accent"
+    ></span>
+    <span
+      aria-hidden="true"
+      motion:loop={{ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }}
+      sx="rounded-full w-2 h-2 bg-muted-foreground group-state-sm:w-1_25 group-state-sm:h-1_25 group-state-lg:w-2_5 group-state-lg:h-2_5 group-state-primary:bg-primary group-state-info:bg-info group-state-success:bg-success group-state-warning:bg-warning group-state-destructive:bg-destructive group-state-accent:bg-accent"
+    ></span>
+    <span
+      aria-hidden="true"
+      motion:loop={{ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }}
+      sx="rounded-full w-2 h-2 bg-muted-foreground group-state-sm:w-1_25 group-state-sm:h-1_25 group-state-lg:w-2_5 group-state-lg:h-2_5 group-state-primary:bg-primary group-state-info:bg-info group-state-success:bg-success group-state-warning:bg-warning group-state-destructive:bg-destructive group-state-accent:bg-accent"
+    ></span>
+  </row>
+</span>
 </span>
