@@ -5,11 +5,12 @@
 // covers transitions the runtime doesn't (button hover lift, range thumb,
 // table row hover), and stays independently in `styles/index.ts`.
 //
-// The runtime is a thin wrapper over motion.dev's vanilla `motion` package.
-// The compiler does no AOT keyframe bake: it validates a closed preset
-// catalogue and emits the resolved config (property, preset, kind, the
-// preset's physics, the duration token, etc.), and the runtime maps each
-// config to an `animate()` call. Three reasons:
+// The runtime is a thin wrapper over motion.dev's vanilla `motion/mini`
+// (WAAPI-only, ~3 kB) + `motion-dom` (the spring + stagger generators the
+// mini wrapper does not export). The compiler does no AOT keyframe bake:
+// it validates a closed preset catalogue and emits the resolved config
+// (property, preset, kind, the preset's physics, the duration token, etc.),
+// and the runtime maps each config to an `animate()` call. Three reasons:
 //   1. inert-document `el.animate()` (the compiler's earlier shape) binds
 //      the animation to a timeline that never advances, and a manual
 //      `rehome` would have to be re-derived for every call site.
@@ -28,10 +29,29 @@
 // behavior motion.dev's `reduceMotion: true` would produce, but the
 // option is inert on the vanilla `animate(element, ...)` path, so we
 // short-circuit at the wrapper boundary.
+//
+// Springs: motion/mini's `animate` is a thin WAAPI wrapper. It does
+// NOT accept a `type: 'spring'` STRING (motion's own NativeAnimation
+// rejects it: `invariant(typeof options.type !== "string", ...)`). The
+// supported path is to sample the spring's curve into a
+// `linear(...)` easing string and hand THAT to motion/mini. The
+// runtime builds the spring with motion-dom's `motionSpring({...})`,
+// computes the rest duration with `calcGeneratorDuration`, and maps
+// the normalized 0..1 progress to a WAAPI-compatible `linear(...)`
+// string via `generateLinearEasing`. The compositor runs that as a
+// native WAAPI animation — hardware-accelerated, no JS frame loop.
+// This is the one place in the runtime where a spring is "really" a
+// spring: a sampled curve the browser drives.
 
 import { setTransitionRunner } from './transition-runner'
 import type { Disposer } from './bind'
-import { animate, stagger as motionStagger, initPrefersReducedMotion } from 'motion'
+import { animate } from 'motion/mini'
+import {
+  spring as motionSpring,
+  stagger as motionStagger,
+  generateLinearEasing,
+  calcGeneratorDuration,
+} from 'motion-dom'
 
 /** Per-property motion config the compiler emits. */
 export interface MotionConfig {
@@ -60,22 +80,18 @@ export interface MotionAttachConfig {
   stagger?: number
 }
 
-/** Reduced-motion is the runtime's single authority. The runtime
- *  consults `matchMedia('(prefers-reduced-motion: reduce)')` on EVERY
- *  attach and on every interactive trigger — per-call, not cached —
- *  so a mid-session preference flip is honored at the next event. A
- *  cached value would freeze the answer to the first install. */
+let reducedMedia: MediaQueryList | null = null
 function prefersReducedMotion(): boolean {
   if (typeof matchMedia === 'undefined') return false
-  return matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (!reducedMedia) {
+    const mql = matchMedia('(prefers-reduced-motion: reduce)')
+    reducedMedia = mql
+    if (typeof mql.addEventListener === 'function') {
+      mql.addEventListener('change', () => { /* live flag re-read per call */ })
+    }
+  }
+  return reducedMedia.matches
 }
-
-// The Motion library's `initPrefersReducedMotion()` is also a single
-// matchMedia subscription — we call it once at module load so the
-// `delay: stagger(...)` factory inside Motion sees the same value.
-// Idempotent: Motion's own listener guard (`hasReducedMotionListener`)
-// collapses repeated calls.
-try { initPrefersReducedMotion() } catch { /* SSR */ }
 
 const REST_VALUE: Record<MotionConfig['property'], number> = {
   opacity: 0,
@@ -97,26 +113,15 @@ function isHTMLElement(el: Element): el is HTMLElement {
   return 'style' in el
 }
 
-/** Apply a single property's authored rest pose to `el` (inline style). */
 function applyRestStyle(el: Element, cfg: MotionConfig): void {
   if (!isHTMLElement(el)) return
   const value = REST_VALUE[cfg.property]
   switch (cfg.property) {
-    case 'opacity':
-      el.style.opacity = String(value)
-      return
-    case 'scale':
-      el.style.scale = String(value)
-      return
-    case 'translate-y':
-      el.style.translate = `0 ${value}px`
-      return
-    case 'translate-x':
-      el.style.translate = `${value}px 0`
-      return
-    case 'rotate':
-      el.style.rotate = `${value}deg`
-      return
+    case 'opacity': el.style.opacity = String(value); return
+    case 'scale': el.style.scale = String(value); return
+    case 'translate-y': el.style.translate = `0 ${value}px`; return
+    case 'translate-x': el.style.translate = `${value}px 0`; return
+    case 'rotate': el.style.rotate = `${value}deg`; return
   }
 }
 
@@ -124,29 +129,14 @@ function applyFinalStyle(el: Element, cfg: MotionConfig): void {
   if (!isHTMLElement(el)) return
   const value = FINAL_VALUE[cfg.property]
   switch (cfg.property) {
-    case 'opacity':
-      el.style.opacity = String(value)
-      return
-    case 'scale':
-      el.style.scale = String(value)
-      return
-    case 'translate-y':
-      el.style.translate = '0 0'
-      return
-    case 'translate-x':
-      el.style.translate = '0 0'
-      return
-    case 'rotate':
-      el.style.rotate = '0deg'
-      return
+    case 'opacity': el.style.opacity = String(value); return
+    case 'scale': el.style.scale = String(value); return
+    case 'translate-y': el.style.translate = '0 0'; return
+    case 'translate-x': el.style.translate = '0 0'; return
+    case 'rotate': el.style.rotate = '0deg'; return
   }
 }
 
-/** Build the actual motion.dev keyframes for a property. The `bounce`
- *  preset on `translate-y`/`translate-x` expands the 0..1 contract into
- *  a pixel value measured from the element's own box — `-elHeight` for
- *  `translate-y`, `-elWidth` for `translate-x`. Every other preset uses
- *  the literal from/to the compiler resolved. */
 function buildKeyframes(cfg: MotionConfig, el: HTMLElement): Record<string, number[]> {
   if (cfg.preset === 'bounce') {
     if (cfg.property === 'translate-y') {
@@ -161,20 +151,14 @@ function buildKeyframes(cfg: MotionConfig, el: HTMLElement): Record<string, numb
   const from = cfg.from ?? REST_VALUE[cfg.property]
   const to = cfg.to ?? FINAL_VALUE[cfg.property]
   switch (cfg.property) {
-    case 'opacity':
-      return { opacity: [from, to] }
-    case 'scale':
-      return { scale: [from, to] }
-    case 'translate-y':
-      return { y: [from, to] }
-    case 'translate-x':
-      return { x: [from, to] }
-    case 'rotate':
-      return { rotate: [from, to] }
+    case 'opacity': return { opacity: [from, to] }
+    case 'scale': return { scale: [from, to] }
+    case 'translate-y': return { y: [from, to] }
+    case 'translate-x': return { x: [from, to] }
+    case 'rotate': return { rotate: [from, to] }
   }
 }
 
-/** Build the `Transition` shape Motion expects from a `MotionConfig`. */
 function buildTransition(
   cfg: MotionConfig,
   index: number,
@@ -183,29 +167,38 @@ function buildTransition(
 ): Record<string, unknown> {
   const t: Record<string, unknown> = {}
   if (cfg.kind === 'spring') {
-    t.type = 'spring'
-    if (cfg.stiffness != null) t.stiffness = cfg.stiffness
-    if (cfg.damping != null) t.damping = cfg.damping
-    if (cfg.mass != null) t.mass = cfg.mass
-    if (cfg.restSpeed != null) t.restSpeed = cfg.restSpeed
-    if (cfg.restDelta != null) t.restDelta = cfg.restDelta
+    // The spring's physics travel ON the generator, not on the transition
+    // options. motion/mini's NativeAnimation rejects a string `type` and
+    // does not consume a function `type` from mini's `animate()` path.
+    // The supported contract: build the spring, compute its rest
+    // duration, sample its curve into a 0..1 function, and hand that
+    // to `generateLinearEasing` for a WAAPI-compatible `linear(...)`
+    // string. The compositor runs that as a native WAAPI animation.
+    const springArgs: Record<string, unknown> = { keyframes: [0, 1] }
+    if (cfg.stiffness != null) springArgs.stiffness = cfg.stiffness
+    if (cfg.damping != null) springArgs.damping = cfg.damping
+    if (cfg.mass != null) springArgs.mass = cfg.mass
+    if (cfg.restSpeed != null) springArgs.restSpeed = cfg.restSpeed
+    if (cfg.restDelta != null) springArgs.restDelta = cfg.restDelta
+    const generator = motionSpring(springArgs as Parameters<typeof motionSpring>[0])
+    const durationMs = calcGeneratorDuration(generator)
+    t.duration = durationMs / 1000
+    t.ease = generateLinearEasing(
+      (s: number) => generator.next(s * durationMs).value,
+      durationMs,
+    )
   } else {
-    t.type = 'tween'
     if (cfg.duration != null) t.duration = cfg.duration
     if (cfg.easing) t.ease = cfg.easing
   }
   if (cfg.iterations != null) t.repeat = cfg.iterations
   if (cfg.direction != null) t.repeatType = cfg.direction
   if (staggerSec != null && total > 1) {
-    // Per-sibling offset: `motion:loop` reads the wave as it goes out,
-    // so the first motion in the array is the "earlier" sibling.
     t.delay = motionStagger(staggerSec)(index, total)
   }
   return t
 }
 
-/** Build an element-level `animate()` call from the configs. Returns the
- *  list of controls so the disposer can cancel them. */
 function createAnimations(
   el: HTMLElement,
   config: MotionAttachConfig,
@@ -221,15 +214,12 @@ function createAnimations(
       const c = animate(el, keyframes, transition as Parameters<typeof animate>[2])
       controls.push(c)
     } catch {
-      // Motion can throw if the element rejects animation (e.g. detached
-      // node, very old browser). Fall back to the final pose.
       applyFinalStyle(el, cfg)
     }
   }
   return controls
 }
 
-/** DOM events that drive an interaction trigger (enter, leave). */
 const TRIGGER_EVENTS: Record<string, [string, string, string?]> = {
   hover: ['mouseenter', 'mouseleave'],
   press: ['pointerdown', 'pointerup', 'pointercancel'],
@@ -237,7 +227,6 @@ const TRIGGER_EVENTS: Record<string, [string, string, string?]> = {
   'focus-visible': ['focusin', 'focusout'],
 }
 
-/** Focus-source tracker for `:focus-visible` (see also: framework action). */
 let focusSource: 'keyboard' | 'mouse' | 'unknown' = 'unknown'
 let focusTrackerInstalled = false
 function trackFocusSource(): void {
@@ -265,7 +254,6 @@ function classifyTrigger(trigger: string): Branch {
   return 'noop'
 }
 
-/** Public: called by the compiler's emitted JS for every `motion:` directive. */
 export function __sui_motion_attach(
   el: Element,
   config: MotionAttachConfig,
@@ -313,13 +301,9 @@ export function __sui_motion_attach(
     return () => { for (const c of controls) c.cancel() }
   }
 
-  // Interaction triggers (hover, press, focus, focus-visible).
   const events = TRIGGER_EVENTS[config.trigger]!
   if (config.trigger === 'focus-visible') trackFocusSource()
   const [enterEvent, leaveEvent, cancelEvent] = events
-  // The element rests at its authored identity until the first event —
-  // create the controls now and cancel them so motion.dev never applies
-  // the departed pose.
   const initial = createAnimations(el, config)
   for (const c of initial) c.cancel()
   let live = initial
@@ -343,14 +327,6 @@ export function __sui_motion_attach(
     for (const c of live) { try { c.cancel() } catch { /* ignore */ } }
   }
 }
-
-
-// ── LIFECYCLE ──────────────────────────────────────────────────────────────
-// `if.ts` / `for.ts` call `runLeave(nodes)`: return a promise and they hold
-// the nodes in the DOM until it settles; return null and they tear down
-// synchronously. The capability is real (CSS cannot hold an element after
-// it leaves the tree) and the seam survives the `motion:` rewrite — backed
-// by the same runtime.
 
 interface ExitEntry {
   controls: Array<{ stop: () => void; cancel: () => void }>
@@ -387,6 +363,19 @@ function installLifecycleRunner(): void {
       if (entry) for (const c of entry.controls) c.cancel()
     },
   })
+}
+
+/** Test seam: exposes the resolved transition the runtime hands to
+ *  motion's `animate()` so tests can assert on the easing / duration
+ *  shape without playing the animation. NOT re-exported from
+ *  `@ship/sui-runtime`. */
+export function __buildTransitionForTest(
+  cfg: MotionConfig,
+  index: number,
+  total: number,
+  staggerSec: number | undefined,
+): Record<string, unknown> {
+  return buildTransition(cfg, index, total, staggerSec)
 }
 
 export type { Disposer }

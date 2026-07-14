@@ -359,7 +359,7 @@ export type { BoundaryHandle, BoundarySource } from './error-boundary'
 // `__sui_motion_attach` from the emitted code, so this export is
 // tree-shaken when unused.
 export { __sui_motion_attach } from './motion'
-export type { MotionAttachConfig, BakedAnimation } from './motion'
+export type { MotionAttachConfig, MotionConfig } from './motion'
 // Shared-sheet adoption for shadow components. Compiler-emitted client
 // code calls `adoptSuiSheets(__root)` in every component mount (see
 // crates/sui/compiler/src/emit/js/setup.rs). It is client-safe (no-ops

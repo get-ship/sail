@@ -290,6 +290,7 @@
       "dependencies": {
         "@ship/tokens": "workspace:*",
         "motion": "^12.42.2",
+        "motion-dom": "^12.42.2",
       },
       "devDependencies": {
         "@ship/test-setup": "workspace:*",

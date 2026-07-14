@@ -10,15 +10,13 @@
 //   - hover/focus triggers create controls and tear them down on dispose
 //   - exit triggers park + let the lifecycle runner play them on leave
 //   - bad triggers (not on the allow-list) are inert disposers
+//   - a kind=spring preset reaches motion/mini as a sampled
+//     `linear(...)` easing string, NOT a dropped `type: 'spring'` flag
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { __sui_motion_attach } from '../src/motion'
+import { __sui_motion_attach, __buildTransitionForTest } from '../src/motion'
 import type { MotionAttachConfig, MotionConfig } from '../src/motion'
 
-// Install a stub matchMedia before any test runs — the runtime's motion
-// module reads `matchMedia` at handler call time, so it must exist on
-// `window`. The per-test override (Object.defineProperty) narrows
-// `matches` to drive the reduced-motion branch.
 if (typeof window !== 'undefined' && typeof window.matchMedia === 'undefined') {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
@@ -51,6 +49,16 @@ const release: MotionConfig = {
   duration: 0.12,
   from: 0.96,
   to: 1,
+}
+const snappy: MotionConfig = {
+  property: 'scale',
+  preset: 'spring:snappy',
+  kind: 'spring',
+  stiffness: 380,
+  damping: 30,
+  mass: 1.0,
+  restSpeed: 0.01,
+  restDelta: 0.005,
 }
 
 const hover: MotionAttachConfig = {
@@ -99,8 +107,6 @@ describe('motion runtime — hover trigger', () => {
     setReducedMotion(true)
     const el = host()
     const dispose = __sui_motion_attach(el, hover)
-    // The runtime short-circuits the play action before motion.dev sees
-    // it. Triggering the event must NOT enqueue any animation work.
     el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))
     expect(typeof dispose).toBe('function')
     dispose()
@@ -149,7 +155,6 @@ describe('motion runtime — loop trigger (the always-on ambient path)', () => {
         direction: 'alternate',
       }],
     })
-    // Reduced motion: the FINAL pose is the authored identity (scale 1).
     expect(el.style.scale).toBe('1')
     dispose()
   })
@@ -183,7 +188,6 @@ describe('motion runtime — exit trigger (lifecycle integration)', () => {
       trigger: 'exit',
       motions: [press],
     })
-    // The element is parked at REST pose (no half-fade while leaving).
     expect(el.style.scale).toBe('0.96')
     dispose()
   })
@@ -195,8 +199,6 @@ describe('motion runtime — exit trigger (lifecycle integration)', () => {
       trigger: 'exit',
       motions: [press],
     })
-    // Reduced motion: no park, the element is left alone (the runner
-    // tears down synchronously because there is nothing to play).
     expect(typeof dispose).toBe('function')
     dispose()
   })
@@ -220,6 +222,48 @@ describe('motion runtime — single reduced-motion authority', () => {
   })
 })
 
+describe('motion runtime — spring preset reaches motion/mini as a linear string', () => {
+  // The spring path goes through `motionSpring({stiffness, ...})` +
+  // `generateLinearEasing(...)` — the runtime samples the spring
+  // curve to a `linear(...)` string motion/mini understands. A dropped
+  // `type: 'spring'` flag (the previous bug) looked identical from
+  // the outside but played as the default ease-out. The test reads
+  // back the resolved options the runtime hands to `animate()` and
+  // asserts the easing is a `linear(...)` string. A spring you
+  // cannot distinguish from the default ease-out in a test is a
+  // spring you cannot distinguish in production either.
+  it('a kind=spring preset resolves to a `linear(...)` easing string', () => {
+    const t = __buildTransitionForTest(snappy, 0, 1, undefined)
+    expect(typeof t.ease).toBe('string')
+    expect(t.ease as string).toMatch(/^linear\(/)
+    // Duration is derived from the spring's rest thresholds — not
+    // the authored `duration` token. It is a positive number in
+    // seconds.
+    expect(typeof t.duration).toBe('number')
+    expect(t.duration).toBeGreaterThan(0)
+    // The spring path no longer leaves a `type: 'spring'` flag on
+    // the transition (the previous bug).
+    expect(t).not.toHaveProperty('type')
+  })
+
+  it('a kind=tween preset resolves to tween fields (negative control)', () => {
+    const t = __buildTransitionForTest(press, 0, 1, undefined)
+    expect(t.duration).toBe(0.06)
+    expect(t.ease).toBeUndefined()
+  })
+
+  it('a kind=spring preset under reduced motion never builds a transition', () => {
+    setReducedMotion(true)
+    const el = host()
+    const dispose = __sui_motion_attach(el, {
+      trigger: 'loop',
+      motions: [snappy],
+    })
+    expect(el.style.scale).toBe('1')
+    dispose()
+  })
+})
+
 describe('motion runtime — unknown trigger is inert', () => {
   it('returns a no-op disposer for an off-list trigger name', () => {
     setReducedMotion(false)
@@ -229,8 +273,6 @@ describe('motion runtime — unknown trigger is inert', () => {
       motions: [press],
     })
     expect(typeof dispose).toBe('function')
-    // The element is not in a bad state: no leftover inline style for the
-    // motion properties.
     expect(el.style.scale).toBe('')
     dispose()
   })
