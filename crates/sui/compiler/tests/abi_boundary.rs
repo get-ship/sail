@@ -92,34 +92,93 @@ fn sibling_subpaths_are_not_rewritten_into_the_abi_path() {
         out.js
     );
 }
-
-/// Every action the compiler AUTO-IMPORTS must be exported by the runtime.
+/// Every action the action table declares must be exported by the runtime.
 ///
-/// `BUILTIN_ACTIONS` is the compiler's list; the runtime's `index.ts` is a second
-/// one. When they drift, the failure is invisible until bundle time: the element
-/// compiles, conformance passes (it attaches actions by hand), and the app dies
-/// with a MissingExport. Ten actions had drifted out this way.
+/// Before this test read `lower::bindings::BUILTIN_ACTIONS` — a
+/// constant the compiler maintained by hand in lockstep with the
+/// runtime's `index.ts`. When they drifted, the failure was
+/// invisible until bundle time: the element compiled, conformance
+/// passed (it attaches actions by hand), and the app died with a
+/// MissingExport. `portEdge` shipped exactly that way — the test
+/// existed solely to catch the drift between two lists that should
+/// never have been separate.
+///
+/// The compiler now has ONE source of truth
+/// (`sui_compiler::action_manifest::ACTIONS`); the runtime barrel
+/// is checked against it here. A new action means one entry in the
+/// table — this test fails the build until the runtime barrel is
+/// updated to match.
 #[test]
-fn builtin_actions_are_exported_by_the_runtime() {
+fn action_table_is_exported_by_the_runtime() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
     let index = root.join("packages/sui/runtime/src/index.ts");
     let Ok(src) = std::fs::read_to_string(&index) else { return };
 
-    let missing: Vec<&str> = sui_compiler::lower::bindings::BUILTIN_ACTIONS
+    let missing: Vec<&str> = sui_compiler::action_manifest::ACTIONS
         .iter()
-        .copied()
+        .map(|a| a.name)
         .filter(|a| {
-            // The export list is one `export { … } from './actions'` block.
-            !src.contains(&format!("\n  {a},")) && !src.contains(&format!("{a},"))
+            // The runtime's front door carries a single
+            // `export { … } from './actions'` block; the format is
+            // `\n  {name},` (2-space indent inside that block).
+            !src.contains(&format!("\n  {a},"))
+                // Some entries were already there pre-block (e.g. the
+                // top-of-file imports) — accept those too.
+                && !src.contains(&format!("{a},"))
         })
         .collect();
 
     assert!(
         missing.is_empty(),
-        "the compiler auto-imports these actions and the runtime does not export them — \
-         every L1 element that uses one will compile, pass conformance, and then fail to \
-         bundle:\n  {}",
+        "the action table lists these names and the runtime's top-level \
+         `index.ts` does not export them — every L1 element that uses one will \
+         compile, pass conformance, and then fail to bundle. The action table \
+         is the single source of truth; update the runtime barrel, not the \
+         table, when adding a new action:\n  {}",
         missing.join("\n  ")
+    );
+}
+
+/// The action table is the single source of truth. A consumer
+/// (runtime barrel, type re-export, scope-bound builtin list,
+/// expression-rewrite builtin list) that disagrees with the table
+/// must fail this test. The spec calls this the "anti-drift
+/// property" — a table nothing enforces is just a fifth list.
+///
+/// This test lives in the same suite as
+/// `action_table_is_exported_by_the_runtime` so a regression in the
+/// invariant is visible next to the test that detects it.
+#[test]
+fn action_table_has_no_phantom_consumers() {
+    use sui_compiler::action_manifest::ACTIONS;
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
+    let runtime_actions_barrel = root.join("packages/sui/runtime/src/actions/index.ts");
+    let runtime_top_barrel = root.join("packages/sui/runtime/src/index.ts");
+    let Ok(actions_src) = std::fs::read_to_string(&runtime_actions_barrel) else { return };
+    let Ok(top_src) = std::fs::read_to_string(&runtime_top_barrel) else { return };
+
+    // Every action in the table must be re-exported from BOTH
+    // barrels. Drift between the table and either barrel is the
+    // exact class of bug this test exists to catch (`portEdge`).
+    let missing_actions_barrel: Vec<&str> = ACTIONS
+        .iter()
+        .map(|a| a.name)
+        .filter(|n| !actions_src.contains(&format!(" {n}\n")) && !actions_src.contains(&format!("{n} ")) && !actions_src.contains(&format!(",{n},")) && !actions_src.contains(&format!(" {n},")) && !actions_src.contains(&format!("{n},")))
+        .collect();
+    let missing_top_barrel: Vec<&str> = ACTIONS
+        .iter()
+        .map(|a| a.name)
+        .filter(|n| !top_src.contains(&format!("\n  {n},")) && !top_src.contains(&format!("{n},")))
+        .collect();
+
+    assert!(
+        missing_actions_barrel.is_empty() && missing_top_barrel.is_empty(),
+        "action table disagrees with the runtime barrels — the table is the \
+         single source; update the barrels, not the table. \
+         Missing from actions/index.ts: {:?}. \
+         Missing from index.ts: {:?}.",
+        missing_actions_barrel,
+        missing_top_barrel,
     );
 }
 

@@ -3,12 +3,12 @@
   search compose over one catalog (registry.ts); every tile below renders the
   REAL component — nothing on this page is a drawing of a component.
 
-  The `lang` tiles are the complete 48-element L1 surface (the same list the
-  l1-conformance gate renders on every commit), plus the two runtime FX
-  actions. Each tile gates itself on `show.<key>()` (the zero-arg visibility
-  read the controller derives from the three filters), so hiding a tile
-  unmounts the live component and the grid packs itself. Every tile links to
-  its /components/<slug> detail page.
+  The `lang` tiles are the complete 48-element L1 surface — the same list
+  the l1-conformance gate renders on every commit. Each tile gates itself
+  on `show.<key>()` (the zero-arg visibility read the controller derives
+  from the three filters), so hiding a tile unmounts the live component
+  and the grid packs itself. Every tile links to its /components/<slug>
+  detail page.
 
   Overlay-family tiles (popover, dropdown, hover-card) show their TRIGGER —
   the panel is a native [popover] wired by popovertarget, so the tile stays
@@ -21,21 +21,20 @@
 
 <controller>
 // /components — the browser. Three filters compose over one catalog (the
-// full 48-element L1 surface plus the fx actions): the pack rail, the
-// category chips, and the search box (the runtime's filteredList
-// composition). Their intersection is a set of visible tile keys; every
-// tile in page.sui gates itself on `show.<key>()`, so the markup for each
-// live component stays hand-written while the filtering stays data-driven.
+// full 48-element L1 surface): the pack rail, the category chips, and
+// the search box (the runtime's filteredList composition). Their
+// intersection is a set of visible tile keys; every tile in page.sui
+// gates itself on `show.<key>()`, so the markup for each live component
+// stays hand-written while the filtering stays data-driven.
 //
 // Every rendered tile is the REAL component. The .sui packs (charts, media,
 // canvas, chat, mermaid, code-editor) still carry raw <style> blocks, which
 // THIS compiler's floor rejects — pulling them into the graph kills the
 // build (the exact coupling src/register-all.ts removed). So they are
 // `gated` in the rail rather than faked in the grid: selecting one explains
-// the gap. They are pure TS and run live.
+// the gap.
 
 import { controller, signal, derived, filteredList, type ViewScope } from '@ship/sui-runtime'
-import { spotlight } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 import { CATALOG, PACKS, CATEGORIES, packCount, type CatalogEntry, type Pack } from './registry'
 
@@ -68,21 +67,11 @@ export default controller({
 
     const packs = () => PACKS.map((p) => ({ ...p, count: packCount(p.id) }))
     const cats = () => CATEGORIES.map((c) => c as string)
-    // Split the count by pack so the headline number is the L1 surface
-    // ("48 elements") and the fx actions are counted apart, never inflating it.
+    // The headline number is the L1 surface — 48 elements, all live.
     const countLabel = derived(() => {
       const v = visible()
-      let lang = 0
-      let fx = 0
-      for (const e of CATALOG) {
-        if (!v.has(e.key)) continue
-        if (e.pack === 'fx') fx += 1
-        else lang += 1
-      }
-      const parts: string[] = []
-      if (lang > 0) parts.push(`${lang} element${lang === 1 ? '' : 's'}`)
-      if (fx > 0) parts.push(`${fx} fx action${fx === 1 ? '' : 's'}`)
-      return parts.length > 0 ? `${parts.join(' · ')} — all live` : ''
+      const n = CATALOG.reduce((acc, e) => (v.has(e.key) ? acc + 1 : acc), 0)
+      return n > 0 ? `${n} element${n === 1 ? '' : 's'} — all live` : ''
     })
 
     // The selected pack, when it is floor-gated — drives the honest
@@ -108,19 +97,10 @@ export default controller({
       packs, cats, show, countLabel, none,
       gatedSel, gatedLabel, gatedSub, gatedWaiting,
       name, agreed, notify, volume,
-      spotlight,
     }
   },
 })
 </controller>
-
-<column sx="max-w-breakpoint-tablet mx-auto" gap="3">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Components</p>
-  <row gap="3" align="center">
-    <h1 sx="grow-1">Components</h1>
-    <span sx="text-xs text-muted-foreground font-mono">{countLabel()}</span>
-    <input placeholder="Search — try 'tab' or 'overlay'" bind:value={query} sx="max-w-panel-max-w-sm" />
-  </row>
   <p sx="text-sm text-muted-foreground">
     Every tile is the running component — type in it, press it, open it.
     The language's own elements need no import; the packs read the same tokens.
@@ -1108,26 +1088,6 @@ export default controller({
               </column>
             </column>
           </card>
-        {/if}
-
-        <!-- ══ @ship/sui-runtime (actions) ═══════════════════════════════════ -->
-        {#if show.fxSpotlight()}
-          <card padding="none" data-tile="use:spotlight" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <div data-preview use:spotlight sx="p-4 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
-                <p sx="text-xs text-muted-foreground">move the pointer — a spotlight follows it</p>
-              </div>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/spotlight" sx="text-sm font-semibold font-mono">use:spotlight</a>
-                <row gap="2" align="center" justify="between">
-                  <badge size="sm" tone="muted" variant="soft">fx</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">effects</span>
-                </row>
-              </column>
-            </column>
-          </card>
-        {/if}
-        {#if show.fxDotGrid()}
         {/if}
       </grid>
 

@@ -15,7 +15,6 @@ export type PackId =
   | 'chat'
   | 'mermaid'
   | 'code-editor'
-  | 'fx'
 
 export interface Pack {
   id: PackId | 'all'
@@ -32,7 +31,9 @@ export interface Pack {
 }
 
 export interface CatalogEntry {
-  /** The element tag (or action name, for runtime actions). */
+  /** The element tag. The action catalog lives in the action table
+   *   (`crates/sui/compiler/src/action_manifest.rs`) and is not shown
+   *   here — actions are not elements. */
   tag: string
   /** The scope key page.sui reads visibility through (`show.<key>()`). */
   key: string
@@ -59,7 +60,9 @@ export const PACKS: Pack[] = [
   { id: 'chat', label: 'Chat elements', sub: '@ship/sui-chat-elements', gated: true, waiting: 6 },
   { id: 'mermaid', label: 'Mermaid', sub: '@ship/sui-mermaid', gated: true, waiting: 1 },
   { id: 'code-editor', label: 'Code editor', sub: '@ship/sui-code-editor', gated: true, waiting: 1 },
-  { id: 'fx', label: 'FX', sub: '@ship/sui-runtime' },
+  // The fx pack is gone: the actions it shipped (`spotlight`,
+  // `targetCursor`) are stdlib and live in the action table; they
+  // are not in this catalog because actions are not elements.
 ]
 
 const L = (tag: string, key: string, cat: CatalogEntry['cat']): CatalogEntry => ({
@@ -120,9 +123,9 @@ export const CATALOG: CatalogEntry[] = [
   L('table', 'table', 'data'),
   L('layout', 'layout', 'layout'),
   L('scroll-area', 'scrollArea', 'layout'),
-  // ── runtime FX actions (actions, not elements — pure TS, so they clear the
-  //    floor and run live; the .sui packs above are gated, see PACKS) ──
-  { tag: 'use:spotlight', key: 'fxSpotlight', slug: 'spotlight', pack: 'fx', cat: 'effects' },
+  // Actions (`spotlight`, `targetCursor`, etc.) are stdlib and live in
+  // the action table. They are not elements; this catalog is
+  // elements only.
 ]
 
 export const CATEGORIES = [
