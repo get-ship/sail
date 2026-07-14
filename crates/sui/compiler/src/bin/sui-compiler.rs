@@ -165,6 +165,22 @@ enum Command {
         #[arg(long)]
         out_dir: PathBuf,
     },
+    /// Classify every `sui-*.sui` component in `packages/components/`
+    /// against the L1 manifest: a directory whose tag is a stdlib
+    /// element or a native-reskin domain is a duplicate; a directory
+    /// whose tag has no L1 equivalent is novel. The output is the
+    /// evidence the spec asks for — the list of components that
+    /// re-implement an L1 element, derived from the same manifest the
+    /// consistency test enforces.
+    Duplicates {
+        /// Directory to walk. Default: `packages/components/` relative
+        /// to the workspace root.
+        #[arg(long)]
+        dir: Option<PathBuf>,
+        /// Output file. Default: stdout.
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
 }
 
 #[derive(Clone, Debug, clap::ValueEnum)]
@@ -206,6 +222,7 @@ fn main() -> Result<()> {
         Command::Synthesize { input, manifest, out_dir } => {
             synthesize(input, manifest, out_dir)
         }
+        Command::Duplicates { dir, out } => gen_duplicates_report(dir, out),
     }
 }
 
@@ -583,6 +600,81 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
          Reactivity: `signal` `derived` `effect` `batch` `untrack` `shared`. Reach for\n`effect` rarely — it is the escape hatch, not the pattern. Cleanup is automatic: an\neffect created during setup dies with the component.\n\n\
          Control flow: `{{#if cond}}…{{/if}}`, `{{#for item of items key={{item.id}}}}…{{/for}}`\n(the `key=` is required — without it the reconciler falls back to positional matching\nand loses DOM identity on reorder).\n"
     );
+    // L1 ELEMENTS — the language's first-class surface. Listed
+    // verbatim from the same manifest the consistency test enforces
+    // (crates/sui/compiler/src/l1_manifest.rs).
+    let (stdlib_entries, reskin_entries) = sui_compiler::l1_by_kind();
+    let _ = writeln!(
+        md,
+        "## L1 elements — the language surface ({stdlib} stdlib + {reskin} reskins = {total} total)\n",
+        stdlib = stdlib_entries.len(),
+        reskin = reskin_entries.len(),
+        total = stdlib_entries.len() + reskin_entries.len()
+    );
+    let _ = writeln!(
+        md,
+        "These are the elements the language gives you. **The bare tag is\n\
+         the API** — a `<button>` and a `<card>` work the same way:\n\
+         tag + props (tone/size/etc.) + slotted children. No CSS, no\n\
+         <style>, no class soup. The list below is generated from the\n\
+         compiler's L1 manifest; if the count drifts, the consistency\n\
+         test in `crates/sui/compiler/tests/l1_manifest.rs` fails and\n\
+         this file is out of date.\n"
+    );
+    let _ = writeln!(
+        md,
+        "### Stdlib elements (compiled `.sui`, lower at compile time)\n"
+    );
+    for entry in &stdlib_entries {
+        let props = if entry.attributes.is_empty() {
+            "no props".to_string()
+        } else {
+            entry
+                .attributes
+                .iter()
+                .map(|a| format!("`{}`", a.name))
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        let _ = writeln!(
+            md,
+            "- `<{tag}>` — {desc} (props: {props})\n",
+            tag = entry.tag,
+            desc = entry.description,
+            props = props
+        );
+    }
+    let _ = writeln!(md);
+    let _ = writeln!(
+        md,
+        "### Native reskins (bare HTML tags the framework styles)\n"
+    );
+    for entry in &reskin_entries {
+        let attrs = if entry.attributes.is_empty() {
+            "presence / value via attribute".to_string()
+        } else {
+            entry
+                .attributes
+                .iter()
+                .map(|a| {
+                    if a.values.is_empty() {
+                        format!("`{}`", a.name)
+                    } else {
+                        format!("`{}={}`", a.name, a.values.join("|"))
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        let _ = writeln!(
+            md,
+            "- `<{tag}>` — {desc} ({attrs})\n",
+            tag = entry.tag,
+            desc = entry.description,
+            attrs = attrs
+        );
+    }
+    let _ = writeln!(md);
     let _ = writeln!(md, "## When the compiler rejects you\n");
     let _ = writeln!(
         md,
@@ -612,6 +704,194 @@ fn workspace_root_for(path: &Path) -> Option<PathBuf> {
         cur = dir.parent();
     }
     None
+}
+
+/// Walk `packages/components/` (or the supplied directory), find every
+/// `sui-*.sui` source, and classify it against the L1 manifest. The
+/// output is the evidence the spec asks for: every component in the
+/// codebase that re-implements an L1 element. Derived from the same
+/// manifest the consistency test enforces, so the report cannot drift
+/// from the surface.
+///
+/// Heuristics:
+/// - The component's tag is the directory name (`sui-xxx/`
+///   -> `sui-xxx`), minus the `sui-` prefix.
+/// - "Duplicate" = the resulting tag is a stdlib element OR matches
+///   a native reskin's domain (e.g. `dialog`, `select`).
+/// - "Novel" = the tag has no L1 equivalent in the manifest.
+/// - "Orphan" = the directory has a `.controller.ts` but no
+///   `.sui` source, a residue from the L1 cutover.
+fn gen_duplicates_report(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
+    use std::fmt::Write as _;
+    let dir = match dir {
+        Some(d) => d,
+        None => workspace_root()?.join("packages/components"),
+    };
+    if !dir.is_dir() {
+        return Err(anyhow!(
+            "duplicates: directory not found: {}",
+            dir.display()
+        ));
+    }
+    // Build a fast lookup: tag-stem (e.g. "button") -> manifest entry.
+    let entries = sui_compiler::l1_entries();
+    let mut by_tag: std::collections::HashMap<String, &sui_compiler::L1Entry> =
+        std::collections::HashMap::new();
+    for e in &entries {
+        // For attribute-keyed reskins like `input[type=checkbox]`, the
+        // "domain" stem is the part before `[`. Use it so the report
+        // groups by parent tag.
+        let stem = e.tag.split('[').next().unwrap_or(&e.tag);
+        by_tag.entry(stem.to_string()).or_insert(e);
+    }
+    // Walk every `sui-*/` directory.
+    let mut rows: Vec<(String, String, String, String)> = Vec::new();
+    fn walk_components(
+        dir: &std::path::Path,
+        max_depth: usize,
+        out: &mut Vec<(std::path::PathBuf, usize)>,
+        depth: usize,
+    ) {
+        if depth > max_depth {
+            return;
+        }
+        let Ok(rd) = std::fs::read_dir(dir) else { return };
+        for entry in rd.filter_map(Result::ok) {
+            let path = entry.path();
+            if !path.is_dir() {
+                continue;
+            }
+            let name = entry.file_name().to_str().unwrap_or("").to_string();
+            if name.starts_with("sui-") {
+                out.push((path.clone(), depth));
+            }
+            walk_components(&path, max_depth, out, depth + 1);
+        }
+    }
+    let mut component_dirs: Vec<(std::path::PathBuf, usize)> = Vec::new();
+    walk_components(&dir, 5, &mut component_dirs, 0);
+    component_dirs.sort_by(|a, b| a.0.cmp(&b.0));
+    for (dir_path, depth) in &component_dirs {
+        let dir_name = dir_path
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or("")
+            .to_string();
+        // Find the .sui source(s) in the directory.
+        let sui_sources: Vec<PathBuf> = std::fs::read_dir(dir_path)
+            .ok()
+            .map(|it| {
+                it.filter_map(Result::ok)
+                    .filter(|e| {
+                        e.path()
+                            .extension()
+                            .and_then(|s| s.to_str())
+                            .map(|s| s == "sui")
+                            .unwrap_or(false)
+                    })
+                    .map(|e| e.path())
+                    .collect()
+            })
+            .unwrap_or_default();
+        let has_controller = std::fs::read_dir(dir_path)
+            .ok()
+            .map(|it| {
+                it.filter_map(Result::ok)
+                    .any(|e| {
+                        e.path()
+                            .extension()
+                            .and_then(|s| s.to_str())
+                            .map(|s| s == "ts")
+                            .unwrap_or(false)
+                    })
+            })
+            .unwrap_or(false);
+        // Strip `sui-` prefix; the report's tag column is the bare stem.
+        let stem = dir_name.strip_prefix("sui-").unwrap_or(&dir_name);
+        let has_sui = !sui_sources.is_empty();
+        let status: String = if !has_sui && has_controller {
+            "orphan".to_string()
+        } else if has_sui {
+            match by_tag.get(stem) {
+                Some(e) => {
+                    let kind = match e.kind {
+                        sui_compiler::L1Kind::StdlibElement => "stdlib",
+                        sui_compiler::L1Kind::NativeReskin => "reskin",
+                    };
+                    format!("duplicate (L1 {kind} <{tag}>)", tag = e.tag)
+                }
+                None => "novel".to_string(),
+            }
+        } else {
+            "novel".to_string()
+        };
+        let rel = dir_path
+            .strip_prefix(&dir)
+            .unwrap_or(dir_path)
+            .display()
+            .to_string();
+        rows.push((dir_name, status, rel, depth.to_string()));
+    }
+    rows.sort_by(|a, b| a.0.cmp(&b.0));
+    let mut out_str = String::new();
+    let _ = writeln!(
+        out_str,
+        "# L1 duplicate report, every `sui-*.sui` component\n"
+    );
+    let _ = writeln!(
+        out_str,
+        "Generated by `cargo run -p sui-compiler -- duplicates` from the\n\
+         L1 manifest (`crates/sui/compiler/src/l1_manifest.rs`). The\n\
+         **duplicate** count is the answer to the spec's question,\n\
+         *which components re-implement an L1 element*, and is the\n\
+         evidence the next cutover wave acts on.\n"
+    );
+    let duplicates: Vec<_> = rows
+        .iter()
+        .filter(|r| r.1.starts_with("duplicate"))
+        .collect();
+    let orphans: Vec<_> = rows.iter().filter(|r| r.1 == "orphan").collect();
+    let novels: Vec<_> = rows.iter().filter(|r| r.1 == "novel").collect();
+    let _ = writeln!(
+        out_str,
+        "**Tally:** {duplicates} duplicates of L1 / {orphans} orphans / {novels} novel / {total} total\n",
+        duplicates = duplicates.len(),
+        orphans = orphans.len(),
+        novels = novels.len(),
+        total = rows.len(),
+    );
+    let _ = writeln!(
+        out_str,
+        "| Component | Classification | Path | Depth |\n\
+         | --- | --- | --- | --- |"
+    );
+    for (name, status, rel, depth) in &rows {
+        let _ = writeln!(out_str, "| `<{name}>` | {status} | `{rel}` | {depth} |");
+    }
+    let _ = writeln!(
+        out_str,
+        "\n## What this is and isn't\n\n\
+         * **Duplicate** components re-implement an L1 element. The next\n\
+         cutover wave deletes them (this job does NOT touch them).\n\
+         * **Orphan** components have a controller but no source, an L1\n\
+         cutover residue. The existing `PRIMITIVES-DISSOLUTION.md` covers\n\
+         them by hand; this report is the mechanical cross-check.\n\
+         * **Novel** components have no L1 equivalent; they earn their\n\
+         keep by domain (charts, canvas, code editor, ...).\n"
+    );
+    match out {
+        Some(path) => {
+            if let Some(parent) = path.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+            std::fs::write(&path, &out_str)?;
+            println!("duplicates report written: {}", path.display());
+        }
+        None => {
+            print!("{out_str}");
+        }
+    }
+    Ok(())
 }
 
 fn synthesize(

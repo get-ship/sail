@@ -6,7 +6,7 @@
 //! no recursion and no element-in-element.
 
 use crate::emit::element::ElementOutput;
-use std::sync::OnceLock;
+use std::sync::LazyLock;
 
 pub struct StdlibElement {
     pub tag: &'static str,
@@ -67,8 +67,7 @@ pub fn sources() -> &'static [(&'static str, &'static str)] {
 }
 
 pub fn elements() -> &'static [StdlibElement] {
-    static REG: OnceLock<Vec<StdlibElement>> = OnceLock::new();
-    REG.get_or_init(|| {
+    static REG: LazyLock<Vec<StdlibElement>> = LazyLock::new(|| {
         SOURCES
             .iter()
             .map(|(tag, src)| StdlibElement {
@@ -78,7 +77,8 @@ pub fn elements() -> &'static [StdlibElement] {
                 }),
             })
             .collect()
-    })
+    });
+    &REG
 }
 
 /// Lookup by tag.

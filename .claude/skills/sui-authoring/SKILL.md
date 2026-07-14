@@ -73,7 +73,7 @@ error). State prefixes: `hover:` `focus:` `focus-within:` `active:`
 - `align-` baseline, bottom, middle, sub, super, text-bottom, text-top, top
 - `appearance-` auto, none
 - `aspect-` auto, square, video
-- `basis-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, breakpoint-desktop, breakpoint-mobile, breakpoint-tablet, control-h-2xs, control-h-lg, control-h-md, control-h-sm, control-h-xl, control-h-xs, density-icon, density-row-gap, density-row-px, density-row-py, density-text, fill, fit, full, half, icon-size-2xl, icon-size-2xs, icon-size-3xl, icon-size-3xs, icon-size-lg, icon-size-md, icon-size-sm, icon-size-xl, icon-size-xs, max, min, panel-ch-w-lg, panel-ch-w-md, panel-max-h-lg, panel-max-h-md, panel-max-h-sm, panel-max-w-lg, panel-max-w-md, panel-max-w-sm, panel-min-h-cell, panel-min-h-daycol, panel-min-w-lg, panel-min-w-md, panel-min-w-sm, panel-vh-lg, panel-vh-md, panel-vh-sm, panel-w-side, screen, size-fs, size-h, size-px
+- `basis-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, breakpoint-desktop, breakpoint-mobile, breakpoint-tablet, control-h-2xs, control-h-lg, control-h-md, control-h-sm, control-h-xl, control-h-xs, density-icon, density-row-gap, density-row-px, density-row-py, density-text, fill, fit, full, half, icon-size-2xl, icon-size-2xs, icon-size-3xl, icon-size-3xs, icon-size-lg, icon-size-md, icon-size-sm, icon-size-xl, icon-size-xs, max, min, panel-ch-w-lg, panel-ch-w-md, panel-max-h-lg, panel-max-h-md, panel-max-h-sm, panel-max-w-lg, panel-max-w-md, panel-max-w-sm, panel-min-h-cell, panel-min-h-daycol, panel-min-w-lg, panel-min-w-md, panel-min-w-sm, panel-vh-lg, panel-vh-md, panel-vh-sm, panel-w-side, screen, size-fs, size-h, size-px
 - `bg-` accent, accent-foreground, active-bg, app-accent-agents, app-accent-canvas, app-accent-chat, app-accent-collections, app-accent-dashboard, app-accent-events, app-accent-git, app-accent-mesh, app-accent-overview, app-accent-pipelines, app-accent-settings, app-accent-setup, app-accent-skills, app-accent-specs, app-accent-theme, backdrop, background, border, border-strong, border-subtle, card, card-foreground, currentColor, destructive, destructive-foreground, divider, foreground, hover-bg, hue-amber, hue-blue, hue-cyan, hue-fuchsia, hue-green, hue-indigo, hue-lime, hue-orange, hue-pink, hue-purple, hue-red, hue-rose, hue-sky, hue-teal, hue-violet, hue-yellow, info, info-foreground, inherit, input, muted, muted-foreground, popover, popover-foreground, primary, primary-foreground, ring, ring-color, scrim, scrollbar-thumb, scrollbar-thumb-hover, secondary, secondary-foreground, selected-bg, selected-border, sidebar, sidebar-accent, sidebar-accent-foreground, sidebar-border, sidebar-foreground, sidebar-primary, sidebar-primary-foreground, sidebar-ring, status-amber, status-blue, status-gray, status-green, status-orange, status-purple, status-red, status-yellow, success, success-foreground, surface-0, surface-1, surface-2, surface-3, surface-inverse, syntax-attr, syntax-comment, syntax-function, syntax-keyword, syntax-number, syntax-string, syntax-tag, syntax-type, syntax-variable, tone, tone-accent-bg, tone-accent-bg-solid, tone-accent-border, tone-accent-fg, tone-accent-ring, tone-bg, tone-border, tone-contrast, tone-default-bg, tone-default-bg-solid, tone-default-border, tone-default-fg, tone-default-ring, tone-destructive-bg, tone-destructive-bg-solid, tone-destructive-border, tone-destructive-fg, tone-destructive-ring, tone-fg, tone-info-bg, tone-info-bg-solid, tone-info-border, tone-info-fg, tone-info-ring, tone-muted-bg, tone-muted-bg-solid, tone-muted-border, tone-muted-fg, tone-muted-ring, tone-primary-bg, tone-primary-bg-solid, tone-primary-border, tone-primary-fg, tone-primary-ring, tone-ring, tone-success-bg, tone-success-bg-solid, tone-success-border, tone-success-fg, tone-success-ring, tone-warning-bg, tone-warning-bg-solid, tone-warning-border, tone-warning-fg, tone-warning-ring, transparent, warning, warning-foreground
 - `block-` 
 - `border-` 0, 1, 2, 3, 4, 8, accent, accent-foreground, active-bg, app-accent-agents, app-accent-canvas, app-accent-chat, app-accent-collections, app-accent-dashboard, app-accent-events, app-accent-git, app-accent-mesh, app-accent-overview, app-accent-pipelines, app-accent-settings, app-accent-setup, app-accent-skills, app-accent-specs, app-accent-theme, backdrop, background, border, border-strong, border-subtle, card, card-foreground, currentColor, dashed, destructive, destructive-foreground, divider, dotted, double, foreground, hidden, hover-bg, hue-amber, hue-blue, hue-cyan, hue-fuchsia, hue-green, hue-indigo, hue-lime, hue-orange, hue-pink, hue-purple, hue-red, hue-rose, hue-sky, hue-teal, hue-violet, hue-yellow, info, info-foreground, inherit, input, muted, muted-foreground, none, popover, popover-foreground, primary, primary-foreground, ring, ring-color, scrim, scrollbar-thumb, scrollbar-thumb-hover, secondary, secondary-foreground, selected-bg, selected-border, sidebar, sidebar-accent, sidebar-accent-foreground, sidebar-border, sidebar-foreground, sidebar-primary, sidebar-primary-foreground, sidebar-ring, solid, status-amber, status-blue, status-gray, status-green, status-orange, status-purple, status-red, status-yellow, success, success-foreground, surface-0, surface-1, surface-2, surface-3, surface-inverse, syntax-attr, syntax-comment, syntax-function, syntax-keyword, syntax-number, syntax-string, syntax-tag, syntax-type, syntax-variable, tone, tone-accent-bg, tone-accent-bg-solid, tone-accent-border, tone-accent-fg, tone-accent-ring, tone-bg, tone-border, tone-contrast, tone-default-bg, tone-default-bg-solid, tone-default-border, tone-default-fg, tone-default-ring, tone-destructive-bg, tone-destructive-bg-solid, tone-destructive-border, tone-destructive-fg, tone-destructive-ring, tone-fg, tone-info-bg, tone-info-bg-solid, tone-info-border, tone-info-fg, tone-info-ring, tone-muted-bg, tone-muted-bg-solid, tone-muted-border, tone-muted-fg, tone-muted-ring, tone-primary-bg, tone-primary-bg-solid, tone-primary-border, tone-primary-fg, tone-primary-ring, tone-ring, tone-success-bg, tone-success-bg-solid, tone-success-border, tone-success-fg, tone-success-ring, tone-warning-bg, tone-warning-bg-solid, tone-warning-border, tone-warning-fg, tone-warning-ring, transparent, warning, warning-foreground
@@ -86,7 +86,7 @@ error). State prefixes: `hover:` `focus:` `focus-within:` `active:`
 - `border-r-` 
 - `border-t-` 0, 1, 2, 3, 4, 8, accent, accent-foreground, active-bg, app-accent-agents, app-accent-canvas, app-accent-chat, app-accent-collections, app-accent-dashboard, app-accent-events, app-accent-git, app-accent-mesh, app-accent-overview, app-accent-pipelines, app-accent-settings, app-accent-setup, app-accent-skills, app-accent-specs, app-accent-theme, backdrop, background, border, border-strong, border-subtle, card, card-foreground, currentColor, destructive, destructive-foreground, divider, foreground, hover-bg, hue-amber, hue-blue, hue-cyan, hue-fuchsia, hue-green, hue-indigo, hue-lime, hue-orange, hue-pink, hue-purple, hue-red, hue-rose, hue-sky, hue-teal, hue-violet, hue-yellow, info, info-foreground, inherit, input, muted, muted-foreground, popover, popover-foreground, primary, primary-foreground, ring, ring-color, scrim, scrollbar-thumb, scrollbar-thumb-hover, secondary, secondary-foreground, selected-bg, selected-border, sidebar, sidebar-accent, sidebar-accent-foreground, sidebar-border, sidebar-foreground, sidebar-primary, sidebar-primary-foreground, sidebar-ring, status-amber, status-blue, status-gray, status-green, status-orange, status-purple, status-red, status-yellow, success, success-foreground, surface-0, surface-1, surface-2, surface-3, surface-inverse, syntax-attr, syntax-comment, syntax-function, syntax-keyword, syntax-number, syntax-string, syntax-tag, syntax-type, syntax-variable, tone, tone-accent-bg, tone-accent-bg-solid, tone-accent-border, tone-accent-fg, tone-accent-ring, tone-bg, tone-border, tone-contrast, tone-default-bg, tone-default-bg-solid, tone-default-border, tone-default-fg, tone-default-ring, tone-destructive-bg, tone-destructive-bg-solid, tone-destructive-border, tone-destructive-fg, tone-destructive-ring, tone-fg, tone-info-bg, tone-info-bg-solid, tone-info-border, tone-info-fg, tone-info-ring, tone-muted-bg, tone-muted-bg-solid, tone-muted-border, tone-muted-fg, tone-muted-ring, tone-primary-bg, tone-primary-bg-solid, tone-primary-border, tone-primary-fg, tone-primary-ring, tone-ring, tone-success-bg, tone-success-bg-solid, tone-success-border, tone-success-fg, tone-success-ring, tone-warning-bg, tone-warning-bg-solid, tone-warning-border, tone-warning-fg, tone-warning-ring, transparent, warning, warning-foreground
 - `border-t-` 
-- `bottom-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `bottom-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
 - `box-` border, content
 - `break-` all, keep, normal, words
 - `capitalize-` 
@@ -104,40 +104,40 @@ error). State prefixes: `hover:` `focus:` `focus-within:` `active:`
 - `flow-root-` 
 - `font-` body, bold, display, heading, medium, mono, normal, semibold
 - `grow-` 0, 1
-- `h-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, breakpoint-desktop, breakpoint-mobile, breakpoint-tablet, control-h-2xs, control-h-lg, control-h-md, control-h-sm, control-h-xl, control-h-xs, density-icon, density-row-gap, density-row-px, density-row-py, density-text, fill, fit, full, half, icon-size-2xl, icon-size-2xs, icon-size-3xl, icon-size-3xs, icon-size-lg, icon-size-md, icon-size-sm, icon-size-xl, icon-size-xs, max, min, panel-ch-w-lg, panel-ch-w-md, panel-max-h-lg, panel-max-h-md, panel-max-h-sm, panel-max-w-lg, panel-max-w-md, panel-max-w-sm, panel-min-h-cell, panel-min-h-daycol, panel-min-w-lg, panel-min-w-md, panel-min-w-sm, panel-vh-lg, panel-vh-md, panel-vh-sm, panel-w-side, screen, size-fs, size-h, size-px
+- `h-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, breakpoint-desktop, breakpoint-mobile, breakpoint-tablet, control-h-2xs, control-h-lg, control-h-md, control-h-sm, control-h-xl, control-h-xs, density-icon, density-row-gap, density-row-px, density-row-py, density-text, fill, fit, full, half, icon-size-2xl, icon-size-2xs, icon-size-3xl, icon-size-3xs, icon-size-lg, icon-size-md, icon-size-sm, icon-size-xl, icon-size-xs, max, min, panel-ch-w-lg, panel-ch-w-md, panel-max-h-lg, panel-max-h-md, panel-max-h-sm, panel-max-w-lg, panel-max-w-md, panel-max-w-sm, panel-min-h-cell, panel-min-h-daycol, panel-min-w-lg, panel-min-w-md, panel-min-w-sm, panel-vh-lg, panel-vh-md, panel-vh-sm, panel-w-side, screen, size-fs, size-h, size-px
 - `hidden-` 
-- `indent-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `indent-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
 - `inline-` 
 - `inline-block-` 
-- `inset-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
-- `inset-x-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
-- `inset-y-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `inset-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `inset-x-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `inset-y-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
 - `invisible-` 
 - `isolate-` 
 - `isolation-auto-` 
 - `italic-` 
 - `justify-self-` auto, center, end, start, stretch
 - `leading-` loose, none, normal, normal-plus, relaxed, snug, tight
-- `left-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `left-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
 - `line-through-` 
 - `lining-nums-` 
 - `list-` decimal, disc, none
 - `list-item-` 
 - `lowercase-` 
-- `m-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
-- `max-h-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, breakpoint-desktop, breakpoint-mobile, breakpoint-tablet, control-h-2xs, control-h-lg, control-h-md, control-h-sm, control-h-xl, control-h-xs, density-icon, density-row-gap, density-row-px, density-row-py, density-text, fill, fit, full, half, icon-size-2xl, icon-size-2xs, icon-size-3xl, icon-size-3xs, icon-size-lg, icon-size-md, icon-size-sm, icon-size-xl, icon-size-xs, max, min, panel-ch-w-lg, panel-ch-w-md, panel-max-h-lg, panel-max-h-md, panel-max-h-sm, panel-max-w-lg, panel-max-w-md, panel-max-w-sm, panel-min-h-cell, panel-min-h-daycol, panel-min-w-lg, panel-min-w-md, panel-min-w-sm, panel-vh-lg, panel-vh-md, panel-vh-sm, panel-w-side, screen, size-fs, size-h, size-px
-- `max-w-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, breakpoint-desktop, breakpoint-mobile, breakpoint-tablet, control-h-2xs, control-h-lg, control-h-md, control-h-sm, control-h-xl, control-h-xs, density-icon, density-row-gap, density-row-px, density-row-py, density-text, fill, fit, full, half, icon-size-2xl, icon-size-2xs, icon-size-3xl, icon-size-3xs, icon-size-lg, icon-size-md, icon-size-sm, icon-size-xl, icon-size-xs, max, min, panel-ch-w-lg, panel-ch-w-md, panel-max-h-lg, panel-max-h-md, panel-max-h-sm, panel-max-w-lg, panel-max-w-md, panel-max-w-sm, panel-min-h-cell, panel-min-h-daycol, panel-min-w-lg, panel-min-w-md, panel-min-w-sm, panel-vh-lg, panel-vh-md, panel-vh-sm, panel-w-side, screen, size-fs, size-h, size-px
-- `mb-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
-- `me-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
-- `min-h-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, breakpoint-desktop, breakpoint-mobile, breakpoint-tablet, control-h-2xs, control-h-lg, control-h-md, control-h-sm, control-h-xl, control-h-xs, density-icon, density-row-gap, density-row-px, density-row-py, density-text, fill, fit, full, half, icon-size-2xl, icon-size-2xs, icon-size-3xl, icon-size-3xs, icon-size-lg, icon-size-md, icon-size-sm, icon-size-xl, icon-size-xs, max, min, panel-ch-w-lg, panel-ch-w-md, panel-max-h-lg, panel-max-h-md, panel-max-h-sm, panel-max-w-lg, panel-max-w-md, panel-max-w-sm, panel-min-h-cell, panel-min-h-daycol, panel-min-w-lg, panel-min-w-md, panel-min-w-sm, panel-vh-lg, panel-vh-md, panel-vh-sm, panel-w-side, screen, size-fs, size-h, size-px
-- `min-w-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, breakpoint-desktop, breakpoint-mobile, breakpoint-tablet, control-h-2xs, control-h-lg, control-h-md, control-h-sm, control-h-xl, control-h-xs, density-icon, density-row-gap, density-row-px, density-row-py, density-text, fill, fit, full, half, icon-size-2xl, icon-size-2xs, icon-size-3xl, icon-size-3xs, icon-size-lg, icon-size-md, icon-size-sm, icon-size-xl, icon-size-xs, max, min, panel-ch-w-lg, panel-ch-w-md, panel-max-h-lg, panel-max-h-md, panel-max-h-sm, panel-max-w-lg, panel-max-w-md, panel-max-w-sm, panel-min-h-cell, panel-min-h-daycol, panel-min-w-lg, panel-min-w-md, panel-min-w-sm, panel-vh-lg, panel-vh-md, panel-vh-sm, panel-w-side, screen, size-fs, size-h, size-px
+- `m-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `max-h-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, breakpoint-desktop, breakpoint-mobile, breakpoint-tablet, control-h-2xs, control-h-lg, control-h-md, control-h-sm, control-h-xl, control-h-xs, density-icon, density-row-gap, density-row-px, density-row-py, density-text, fill, fit, full, half, icon-size-2xl, icon-size-2xs, icon-size-3xl, icon-size-3xs, icon-size-lg, icon-size-md, icon-size-sm, icon-size-xl, icon-size-xs, max, min, panel-ch-w-lg, panel-ch-w-md, panel-max-h-lg, panel-max-h-md, panel-max-h-sm, panel-max-w-lg, panel-max-w-md, panel-max-w-sm, panel-min-h-cell, panel-min-h-daycol, panel-min-w-lg, panel-min-w-md, panel-min-w-sm, panel-vh-lg, panel-vh-md, panel-vh-sm, panel-w-side, screen, size-fs, size-h, size-px
+- `max-w-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, breakpoint-desktop, breakpoint-mobile, breakpoint-tablet, control-h-2xs, control-h-lg, control-h-md, control-h-sm, control-h-xl, control-h-xs, density-icon, density-row-gap, density-row-px, density-row-py, density-text, fill, fit, full, half, icon-size-2xl, icon-size-2xs, icon-size-3xl, icon-size-3xs, icon-size-lg, icon-size-md, icon-size-sm, icon-size-xl, icon-size-xs, max, min, panel-ch-w-lg, panel-ch-w-md, panel-max-h-lg, panel-max-h-md, panel-max-h-sm, panel-max-w-lg, panel-max-w-md, panel-max-w-sm, panel-min-h-cell, panel-min-h-daycol, panel-min-w-lg, panel-min-w-md, panel-min-w-sm, panel-vh-lg, panel-vh-md, panel-vh-sm, panel-w-side, screen, size-fs, size-h, size-px
+- `mb-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `me-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `min-h-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, breakpoint-desktop, breakpoint-mobile, breakpoint-tablet, control-h-2xs, control-h-lg, control-h-md, control-h-sm, control-h-xl, control-h-xs, density-icon, density-row-gap, density-row-px, density-row-py, density-text, fill, fit, full, half, icon-size-2xl, icon-size-2xs, icon-size-3xl, icon-size-3xs, icon-size-lg, icon-size-md, icon-size-sm, icon-size-xl, icon-size-xs, max, min, panel-ch-w-lg, panel-ch-w-md, panel-max-h-lg, panel-max-h-md, panel-max-h-sm, panel-max-w-lg, panel-max-w-md, panel-max-w-sm, panel-min-h-cell, panel-min-h-daycol, panel-min-w-lg, panel-min-w-md, panel-min-w-sm, panel-vh-lg, panel-vh-md, panel-vh-sm, panel-w-side, screen, size-fs, size-h, size-px
+- `min-w-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, breakpoint-desktop, breakpoint-mobile, breakpoint-tablet, control-h-2xs, control-h-lg, control-h-md, control-h-sm, control-h-xl, control-h-xs, density-icon, density-row-gap, density-row-px, density-row-py, density-text, fill, fit, full, half, icon-size-2xl, icon-size-2xs, icon-size-3xl, icon-size-3xs, icon-size-lg, icon-size-md, icon-size-sm, icon-size-xl, icon-size-xs, max, min, panel-ch-w-lg, panel-ch-w-md, panel-max-h-lg, panel-max-h-md, panel-max-h-sm, panel-max-w-lg, panel-max-w-md, panel-max-w-sm, panel-min-h-cell, panel-min-h-daycol, panel-min-w-lg, panel-min-w-md, panel-min-w-sm, panel-vh-lg, panel-vh-md, panel-vh-sm, panel-w-side, screen, size-fs, size-h, size-px
 - `mix-blend-` darken, difference, exclusion, lighten, luminosity, multiply, normal, overlay, screen
-- `ml-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
-- `mr-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
-- `ms-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
-- `mt-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
-- `mx-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
-- `my-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `ml-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `mr-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `ms-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `mt-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `mx-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `my-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
 - `no-underline-` 
 - `normal-case-` 
 - `normal-nums-` 
@@ -149,25 +149,25 @@ error). State prefixes: `hover:` `focus:` `focus-within:` `active:`
 - `ordinal-` 
 - `origin-` bottom, bottom-left, bottom-right, center, left, right, top, top-left, top-right
 - `outline-` 0, 1, 2, 3, 4, 8, accent, accent-foreground, active-bg, app-accent-agents, app-accent-canvas, app-accent-chat, app-accent-collections, app-accent-dashboard, app-accent-events, app-accent-git, app-accent-mesh, app-accent-overview, app-accent-pipelines, app-accent-settings, app-accent-setup, app-accent-skills, app-accent-specs, app-accent-theme, backdrop, background, border, border-strong, border-subtle, card, card-foreground, currentColor, dashed, destructive, destructive-foreground, divider, dotted, double, foreground, hover-bg, hue-amber, hue-blue, hue-cyan, hue-fuchsia, hue-green, hue-indigo, hue-lime, hue-orange, hue-pink, hue-purple, hue-red, hue-rose, hue-sky, hue-teal, hue-violet, hue-yellow, info, info-foreground, inherit, input, muted, muted-foreground, none, popover, popover-foreground, primary, primary-foreground, ring, ring-color, scrim, scrollbar-thumb, scrollbar-thumb-hover, secondary, secondary-foreground, selected-bg, selected-border, sidebar, sidebar-accent, sidebar-accent-foreground, sidebar-border, sidebar-foreground, sidebar-primary, sidebar-primary-foreground, sidebar-ring, solid, status-amber, status-blue, status-gray, status-green, status-orange, status-purple, status-red, status-yellow, success, success-foreground, surface-0, surface-1, surface-2, surface-3, surface-inverse, syntax-attr, syntax-comment, syntax-function, syntax-keyword, syntax-number, syntax-string, syntax-tag, syntax-type, syntax-variable, tone, tone-accent-bg, tone-accent-bg-solid, tone-accent-border, tone-accent-fg, tone-accent-ring, tone-bg, tone-border, tone-contrast, tone-default-bg, tone-default-bg-solid, tone-default-border, tone-default-fg, tone-default-ring, tone-destructive-bg, tone-destructive-bg-solid, tone-destructive-border, tone-destructive-fg, tone-destructive-ring, tone-fg, tone-info-bg, tone-info-bg-solid, tone-info-border, tone-info-fg, tone-info-ring, tone-muted-bg, tone-muted-bg-solid, tone-muted-border, tone-muted-fg, tone-muted-ring, tone-primary-bg, tone-primary-bg-solid, tone-primary-border, tone-primary-fg, tone-primary-ring, tone-ring, tone-success-bg, tone-success-bg-solid, tone-success-border, tone-success-fg, tone-success-ring, tone-warning-bg, tone-warning-bg-solid, tone-warning-border, tone-warning-fg, tone-warning-ring, transparent, warning, warning-foreground
-- `outline-offset-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `outline-offset-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
 - `overflow-` auto, clip, hidden, scroll, visible
 - `overflow-x-` auto, clip, hidden, scroll, visible
 - `overflow-y-` auto, clip, hidden, scroll, visible
 - `overline-` 
-- `p-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
-- `pb-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
-- `pe-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
-- `pl-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `p-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `pb-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `pe-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `pl-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
 - `pointer-events-` auto, none
-- `pr-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `pr-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
 - `proportional-nums-` 
-- `ps-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
-- `pt-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
-- `px-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
-- `py-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `ps-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `pt-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `px-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `py-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
 - `relative-` 
 - `resize-` both, none, x, y
-- `right-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `right-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
 - `ring-` accent, accent-foreground, active-bg, app-accent-agents, app-accent-canvas, app-accent-chat, app-accent-collections, app-accent-dashboard, app-accent-events, app-accent-git, app-accent-mesh, app-accent-overview, app-accent-pipelines, app-accent-settings, app-accent-setup, app-accent-skills, app-accent-specs, app-accent-theme, backdrop, background, border, border-strong, border-subtle, card, card-foreground, currentColor, destructive, destructive-foreground, divider, foreground, hover-bg, hue-amber, hue-blue, hue-cyan, hue-fuchsia, hue-green, hue-indigo, hue-lime, hue-orange, hue-pink, hue-purple, hue-red, hue-rose, hue-sky, hue-teal, hue-violet, hue-yellow, info, info-foreground, inherit, input, muted, muted-foreground, none, popover, popover-foreground, primary, primary-foreground, ring, ring-color, scrim, scrollbar-thumb, scrollbar-thumb-hover, secondary, secondary-foreground, selected-bg, selected-border, sidebar, sidebar-accent, sidebar-accent-foreground, sidebar-border, sidebar-foreground, sidebar-primary, sidebar-primary-foreground, sidebar-ring, status-amber, status-blue, status-gray, status-green, status-orange, status-purple, status-red, status-yellow, success, success-foreground, surface-0, surface-1, surface-2, surface-3, surface-inverse, syntax-attr, syntax-comment, syntax-function, syntax-keyword, syntax-number, syntax-string, syntax-tag, syntax-type, syntax-variable, tone, tone-accent-bg, tone-accent-bg-solid, tone-accent-border, tone-accent-fg, tone-accent-ring, tone-bg, tone-border, tone-contrast, tone-default-bg, tone-default-bg-solid, tone-default-border, tone-default-fg, tone-default-ring, tone-destructive-bg, tone-destructive-bg-solid, tone-destructive-border, tone-destructive-fg, tone-destructive-ring, tone-fg, tone-info-bg, tone-info-bg-solid, tone-info-border, tone-info-fg, tone-info-ring, tone-muted-bg, tone-muted-bg-solid, tone-muted-border, tone-muted-fg, tone-muted-ring, tone-primary-bg, tone-primary-bg-solid, tone-primary-border, tone-primary-fg, tone-primary-ring, tone-ring, tone-success-bg, tone-success-bg-solid, tone-success-border, tone-success-fg, tone-success-ring, tone-warning-bg, tone-warning-bg-solid, tone-warning-border, tone-warning-fg, tone-warning-ring, transparent, warning, warning-foreground
 - `rotate-` 0, 1, 12, 180, 2, 270, 3, 45, 6, 90
 - `rounded-` full, lg, md, none, sm, xl
@@ -181,7 +181,7 @@ error). State prefixes: `hover:` `focus:` `focus-within:` `active:`
 - `self-` auto, baseline, center, end, start, stretch
 - `shadow-` accent, card-rest, edge-top, hover, inset-soft, lg, md, none, sm, sticky, xl, xs
 - `shrink-` 0, 1
-- `size-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, breakpoint-desktop, breakpoint-mobile, breakpoint-tablet, control-h-2xs, control-h-lg, control-h-md, control-h-sm, control-h-xl, control-h-xs, density-icon, density-row-gap, density-row-px, density-row-py, density-text, fill, fit, full, half, icon-size-2xl, icon-size-2xs, icon-size-3xl, icon-size-3xs, icon-size-lg, icon-size-md, icon-size-sm, icon-size-xl, icon-size-xs, max, min, panel-ch-w-lg, panel-ch-w-md, panel-max-h-lg, panel-max-h-md, panel-max-h-sm, panel-max-w-lg, panel-max-w-md, panel-max-w-sm, panel-min-h-cell, panel-min-h-daycol, panel-min-w-lg, panel-min-w-md, panel-min-w-sm, panel-vh-lg, panel-vh-md, panel-vh-sm, panel-w-side, screen, size-fs, size-h, size-px
+- `size-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, breakpoint-desktop, breakpoint-mobile, breakpoint-tablet, control-h-2xs, control-h-lg, control-h-md, control-h-sm, control-h-xl, control-h-xs, density-icon, density-row-gap, density-row-px, density-row-py, density-text, fill, fit, full, half, icon-size-2xl, icon-size-2xs, icon-size-3xl, icon-size-3xs, icon-size-lg, icon-size-md, icon-size-sm, icon-size-xl, icon-size-xs, max, min, panel-ch-w-lg, panel-ch-w-md, panel-max-h-lg, panel-max-h-md, panel-max-h-sm, panel-max-w-lg, panel-max-w-md, panel-max-w-sm, panel-min-h-cell, panel-min-h-daycol, panel-min-w-lg, panel-min-w-md, panel-min-w-sm, panel-vh-lg, panel-vh-md, panel-vh-sm, panel-w-side, screen, size-fs, size-h, size-px
 - `slashed-zero-` 
 - `sr-only-` 
 - `static-` 
@@ -189,17 +189,18 @@ error). State prefixes: `hover:` `focus:` `focus-within:` `active:`
 - `stroke-` accent, accent-foreground, active-bg, app-accent-agents, app-accent-canvas, app-accent-chat, app-accent-collections, app-accent-dashboard, app-accent-events, app-accent-git, app-accent-mesh, app-accent-overview, app-accent-pipelines, app-accent-settings, app-accent-setup, app-accent-skills, app-accent-specs, app-accent-theme, backdrop, background, border, border-strong, border-subtle, card, card-foreground, currentColor, destructive, destructive-foreground, divider, foreground, hover-bg, hue-amber, hue-blue, hue-cyan, hue-fuchsia, hue-green, hue-indigo, hue-lime, hue-orange, hue-pink, hue-purple, hue-red, hue-rose, hue-sky, hue-teal, hue-violet, hue-yellow, info, info-foreground, inherit, input, muted, muted-foreground, none, popover, popover-foreground, primary, primary-foreground, ring, ring-color, scrim, scrollbar-thumb, scrollbar-thumb-hover, secondary, secondary-foreground, selected-bg, selected-border, sidebar, sidebar-accent, sidebar-accent-foreground, sidebar-border, sidebar-foreground, sidebar-primary, sidebar-primary-foreground, sidebar-ring, status-amber, status-blue, status-gray, status-green, status-orange, status-purple, status-red, status-yellow, success, success-foreground, surface-0, surface-1, surface-2, surface-3, surface-inverse, syntax-attr, syntax-comment, syntax-function, syntax-keyword, syntax-number, syntax-string, syntax-tag, syntax-type, syntax-variable, tone, tone-accent-bg, tone-accent-bg-solid, tone-accent-border, tone-accent-fg, tone-accent-ring, tone-bg, tone-border, tone-contrast, tone-default-bg, tone-default-bg-solid, tone-default-border, tone-default-fg, tone-default-ring, tone-destructive-bg, tone-destructive-bg-solid, tone-destructive-border, tone-destructive-fg, tone-destructive-ring, tone-fg, tone-info-bg, tone-info-bg-solid, tone-info-border, tone-info-fg, tone-info-ring, tone-muted-bg, tone-muted-bg-solid, tone-muted-border, tone-muted-fg, tone-muted-ring, tone-primary-bg, tone-primary-bg-solid, tone-primary-border, tone-primary-fg, tone-primary-ring, tone-ring, tone-success-bg, tone-success-bg-solid, tone-success-border, tone-success-fg, tone-success-ring, tone-warning-bg, tone-warning-bg-solid, tone-warning-border, tone-warning-fg, tone-warning-ring, transparent, warning, warning-foreground
 - `tabular-nums-` 
 - `text-` 2xl, 3xl, 4xl, accent, accent-foreground, active-bg, app-accent-agents, app-accent-canvas, app-accent-chat, app-accent-collections, app-accent-dashboard, app-accent-events, app-accent-git, app-accent-mesh, app-accent-overview, app-accent-pipelines, app-accent-settings, app-accent-setup, app-accent-skills, app-accent-specs, app-accent-theme, backdrop, background, base, border, border-strong, border-subtle, card, card-foreground, center, currentColor, density, density-icon, density-row-gap, density-row-px, density-row-py, density-text, destructive, destructive-foreground, display, divider, end, foreground, hover-bg, hue-amber, hue-blue, hue-cyan, hue-fuchsia, hue-green, hue-indigo, hue-lime, hue-orange, hue-pink, hue-purple, hue-red, hue-rose, hue-sky, hue-teal, hue-violet, hue-yellow, info, info-foreground, inherit, input, justify, left, lg, md, muted, muted-foreground, popover, popover-foreground, primary, primary-foreground, right, ring, ring-color, scrim, scrollbar-thumb, scrollbar-thumb-hover, secondary, secondary-foreground, selected-bg, selected-border, sidebar, sidebar-accent, sidebar-accent-foreground, sidebar-border, sidebar-foreground, sidebar-primary, sidebar-primary-foreground, sidebar-ring, size-fs, size-h, size-px, sm, start, status-amber, status-blue, status-gray, status-green, status-orange, status-purple, status-red, status-yellow, success, success-foreground, surface-0, surface-1, surface-2, surface-3, surface-inverse, syntax-attr, syntax-comment, syntax-function, syntax-keyword, syntax-number, syntax-string, syntax-tag, syntax-type, syntax-variable, tone, tone-accent-bg, tone-accent-bg-solid, tone-accent-border, tone-accent-fg, tone-accent-ring, tone-bg, tone-border, tone-contrast, tone-default-bg, tone-default-bg-solid, tone-default-border, tone-default-fg, tone-default-ring, tone-destructive-bg, tone-destructive-bg-solid, tone-destructive-border, tone-destructive-fg, tone-destructive-ring, tone-fg, tone-info-bg, tone-info-bg-solid, tone-info-border, tone-info-fg, tone-info-ring, tone-muted-bg, tone-muted-bg-solid, tone-muted-border, tone-muted-fg, tone-muted-ring, tone-primary-bg, tone-primary-bg-solid, tone-primary-border, tone-primary-fg, tone-primary-ring, tone-ring, tone-success-bg, tone-success-bg-solid, tone-success-border, tone-success-fg, tone-success-ring, tone-warning-bg, tone-warning-bg-solid, tone-warning-border, tone-warning-fg, tone-warning-ring, transparent, warning, warning-foreground, xl, xs
-- `top-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `top-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
 - `touch-` auto, manipulation, none, pan-x, pan-y, pinch-zoom
 - `tracking-` normal, tight, wide, wider
+- `transform-` none
 - `transition-` all, colors, none, opacity, shadow, transform
-- `translate-x-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
-- `translate-y-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `translate-x-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `translate-y-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
 - `truncate-` 
 - `underline-` 
 - `uppercase-` 
 - `visible-` 
-- `w-` 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, breakpoint-desktop, breakpoint-mobile, breakpoint-tablet, control-h-2xs, control-h-lg, control-h-md, control-h-sm, control-h-xl, control-h-xs, density-icon, density-row-gap, density-row-px, density-row-py, density-text, fill, fit, full, half, icon-size-2xl, icon-size-2xs, icon-size-3xl, icon-size-3xs, icon-size-lg, icon-size-md, icon-size-sm, icon-size-xl, icon-size-xs, max, min, panel-ch-w-lg, panel-ch-w-md, panel-max-h-lg, panel-max-h-md, panel-max-h-sm, panel-max-w-lg, panel-max-w-md, panel-max-w-sm, panel-min-h-cell, panel-min-h-daycol, panel-min-w-lg, panel-min-w-md, panel-min-w-sm, panel-vh-lg, panel-vh-md, panel-vh-sm, panel-w-side, screen, size-fs, size-h, size-px
+- `w-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, breakpoint-desktop, breakpoint-mobile, breakpoint-tablet, control-h-2xs, control-h-lg, control-h-md, control-h-sm, control-h-xl, control-h-xs, density-icon, density-row-gap, density-row-px, density-row-py, density-text, fill, fit, full, half, icon-size-2xl, icon-size-2xs, icon-size-3xl, icon-size-3xs, icon-size-lg, icon-size-md, icon-size-sm, icon-size-xl, icon-size-xs, max, min, panel-ch-w-lg, panel-ch-w-md, panel-max-h-lg, panel-max-h-md, panel-max-h-sm, panel-max-w-lg, panel-max-w-md, panel-max-w-sm, panel-min-h-cell, panel-min-h-daycol, panel-min-w-lg, panel-min-w-md, panel-min-w-sm, panel-vh-lg, panel-vh-md, panel-vh-sm, panel-w-side, screen, size-fs, size-h, size-px
 - `whitespace-` break-spaces, normal, nowrap, pre, pre-line, pre-wrap
 - `will-change-` auto, contents, scroll-position, transform
 - `z-` auto, base, dialog, dropdown, elevated, max, overlay, popover, sticky, toast
@@ -210,8 +211,8 @@ These are the closed value sets the scales above draw from. A
 scale-valued utility spends a token from one of these — never a raw number,
 colour, or unit.
 
-- `space`: 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
-- `size`: 0, 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, auto, breakpoint-desktop, breakpoint-mobile, breakpoint-tablet, control-h-2xs, control-h-lg, control-h-md, control-h-sm, control-h-xl, control-h-xs, density-icon, density-row-gap, density-row-px, density-row-py, density-text, fill, fit, full, half, icon-size-2xl, icon-size-2xs, icon-size-3xl, icon-size-3xs, icon-size-lg, icon-size-md, icon-size-sm, icon-size-xl, icon-size-xs, max, min, panel-ch-w-lg, panel-ch-w-md, panel-max-h-lg, panel-max-h-md, panel-max-h-sm, panel-max-w-lg, panel-max-w-md, panel-max-w-sm, panel-min-h-cell, panel-min-h-daycol, panel-min-w-lg, panel-min-w-md, panel-min-w-sm, panel-vh-lg, panel-vh-md, panel-vh-sm, panel-w-side, screen, size-fs, size-h, size-px
+- `space`: 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
+- `size`: 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, breakpoint-desktop, breakpoint-mobile, breakpoint-tablet, control-h-2xs, control-h-lg, control-h-md, control-h-sm, control-h-xl, control-h-xs, density-icon, density-row-gap, density-row-px, density-row-py, density-text, fill, fit, full, half, icon-size-2xl, icon-size-2xs, icon-size-3xl, icon-size-3xs, icon-size-lg, icon-size-md, icon-size-sm, icon-size-xl, icon-size-xs, max, min, panel-ch-w-lg, panel-ch-w-md, panel-max-h-lg, panel-max-h-md, panel-max-h-sm, panel-max-w-lg, panel-max-w-md, panel-max-w-sm, panel-min-h-cell, panel-min-h-daycol, panel-min-w-lg, panel-min-w-md, panel-min-w-sm, panel-vh-lg, panel-vh-md, panel-vh-sm, panel-w-side, screen, size-fs, size-h, size-px
 - `color`: accent, accent-foreground, active-bg, app-accent-agents, app-accent-canvas, app-accent-chat, app-accent-collections, app-accent-dashboard, app-accent-events, app-accent-git, app-accent-mesh, app-accent-overview, app-accent-pipelines, app-accent-settings, app-accent-setup, app-accent-skills, app-accent-specs, app-accent-theme, backdrop, background, border, border-strong, border-subtle, card, card-foreground, currentColor, destructive, destructive-foreground, divider, foreground, hover-bg, hue-amber, hue-blue, hue-cyan, hue-fuchsia, hue-green, hue-indigo, hue-lime, hue-orange, hue-pink, hue-purple, hue-red, hue-rose, hue-sky, hue-teal, hue-violet, hue-yellow, info, info-foreground, inherit, input, muted, muted-foreground, popover, popover-foreground, primary, primary-foreground, ring, ring-color, scrim, scrollbar-thumb, scrollbar-thumb-hover, secondary, secondary-foreground, selected-bg, selected-border, sidebar, sidebar-accent, sidebar-accent-foreground, sidebar-border, sidebar-foreground, sidebar-primary, sidebar-primary-foreground, sidebar-ring, status-amber, status-blue, status-gray, status-green, status-orange, status-purple, status-red, status-yellow, success, success-foreground, surface-0, surface-1, surface-2, surface-3, surface-inverse, syntax-attr, syntax-comment, syntax-function, syntax-keyword, syntax-number, syntax-string, syntax-tag, syntax-type, syntax-variable, tone, tone-accent-bg, tone-accent-bg-solid, tone-accent-border, tone-accent-fg, tone-accent-ring, tone-bg, tone-border, tone-contrast, tone-default-bg, tone-default-bg-solid, tone-default-border, tone-default-fg, tone-default-ring, tone-destructive-bg, tone-destructive-bg-solid, tone-destructive-border, tone-destructive-fg, tone-destructive-ring, tone-fg, tone-info-bg, tone-info-bg-solid, tone-info-border, tone-info-fg, tone-info-ring, tone-muted-bg, tone-muted-bg-solid, tone-muted-border, tone-muted-fg, tone-muted-ring, tone-primary-bg, tone-primary-bg-solid, tone-primary-border, tone-primary-fg, tone-primary-ring, tone-ring, tone-success-bg, tone-success-bg-solid, tone-success-border, tone-success-fg, tone-success-ring, tone-warning-bg, tone-warning-bg-solid, tone-warning-border, tone-warning-fg, tone-warning-ring, transparent, warning, warning-foreground
 - `radius`: full, lg, md, none, sm, xl
 - `text`: 2xl, 3xl, 4xl, base, density, density-icon, density-row-gap, density-row-px, density-row-py, density-text, display, lg, md, size-fs, size-h, size-px, sm, xl, xs
@@ -318,6 +319,160 @@ effect created during setup dies with the component.
 Control flow: `{#if cond}…{/if}`, `{#for item of items key={item.id}}…{/for}`
 (the `key=` is required — without it the reconciler falls back to positional matching
 and loses DOM identity on reorder).
+
+## L1 elements — the language surface (41 stdlib + 28 reskins = 69 total)
+
+These are the elements the language gives you. **The bare tag is
+the API** — a `<button>` and a `<card>` work the same way:
+tag + props (tone/size/etc.) + slotted children. No CSS, no
+<style>, no class soup. The list below is generated from the
+compiler's L1 manifest; if the count drifts, the consistency
+test in `crates/sui/compiler/tests/l1_manifest.rs` fails and
+this file is out of date.
+
+### Stdlib elements (compiled `.sui`, lower at compile time)
+
+- `<alert>` — L1 language element (element mode). An inline status banner: a (props: `tone`, `dismissible`)
+
+- `<avatar>` — L1 language element (element mode). A circular/square identity (props: `src`, `icon-slug`, `name`, `initials`, `tone`, `size`, `shape`)
+
+- `<badge>` — L1 language element (element mode). A small, static, tone-colored (props: `tone`, `variant`, `size`, `pill`)
+
+- `<breadcrumb>` — L1 breadcrumb trail (element mode). A nav > ol; author the (props: no props)
+
+- `<card>` — L1 language element (element mode). The flagship surface: a (props: `tone`, `variant`, `padding`, `interactive`, `accent-bar`, `status-rail`, `fill`)
+
+- `<chip>` — L1 language element (element mode). An interactive filter/selection (props: `tone`, `variant`, `size`, `selected`, `removable`, `disabled`)
+
+- `<code-block>` — syntax-highlighted source. (props: `code`, `lang`)
+
+- `<collapsible>` — L1 language element (element mode). A native disclosure: a (props: `open`, `disabled`)
+
+- `<combobox>` — L1 filtering picker (element mode). A text input (props: `placeholder`, `value`)
+
+- `<context-menu>` — L1 right-click menu (element mode). Same native (props: `for`)
+
+- `<dropdown>` — L1 anchored menu (element mode). (props: `placement`)
+
+- `<empty-state>` — L1 language element (element mode). A centered placeholder for (props: `variant`, `size`, `tone`)
+
+- `<error-boundary>` — L1 language element (element mode). RENDER-FAULT ISOLATION. (props: `message`)
+
+- `<error-state>` — L1 language element (element mode). The "something broke" (props: `variant`, `size`, `code`)
+
+- `<field>` — L1 language element (element mode). A vertical form-field stack: (props: `invalid`)
+
+- `<hover-card>` — L1 hover-preview overlay (element mode). (props: `placement`)
+
+- `<icon>` — L1 language element. Sizes and inks one glyph: a slotted SVG, a (props: `name`, `src`, `label`, `size`, `spin`)
+
+- `<label>` — L1 language element (element mode). Bare tag: it lowers away at (props: `size`, `required`)
+
+- `<menu-item>` — an item inside <dropdown> / <context-menu>. role=menuitem, (props: `value`, `disabled`)
+
+- `<navbar>` — the application nav bar. One element, three placements. (props: `placement`, `sticky`, `bordered`)
+
+- `<page>` — a page control inside <pagination>. aria-current is wired (props: `value`, `disabled`)
+
+- `<pagination>` — L1 pager (element mode). A nav of <page> controls; use:pagination (props: `value`, `size`)
+
+- `<popover>` — L1 anchored overlay (element mode) on the (props: `placement`)
+
+- `<prose>` — the prose typography surface. Wraps RENDERED content (markdown (props: no props)
+
+- `<radio>` — L1 language element (element mode). A single radio option: a native (props: `value`, `disabled`)
+
+- `<radio-group>` — L1 language element (element mode). A vertical group of (props: `value`, `disabled`, `tone`, `size`, `name`, `label`, `required`)
+
+- `<scroll-area>` — L1 scroll container (element mode) with thin, themed, (props: `orientation`)
+
+- `<separator>` — L1 language element (element mode). Native <hr> carries the (props: `orientation`, `tone`, `variant`)
+
+- `<slider>` — L1 language element (element mode). A compiles-away alias for the (props: `value`, `min`, `max`, `step`, `disabled`, `tone`, `size`, `name`)
+
+- `<spinner>` — L1 language element (element mode). Bare tag: it lowers away (props: `size`, `tone`, `centered`)
+
+- `<switch>` — L1 language element (element mode). A native (props: `checked`, `disabled`, `tone`, `size`)
+
+- `<tab>` — a tab button inside <tab-list>. role=tab, aria-selected, (props: `name`, `disabled`)
+
+- `<tab-list>` — the tab strip inside <tabs>. Rows the <tab>s (columns when the (props: no props)
+
+- `<tab-panel>` — the content panel for the matching <tab>. use:tabs on (props: `name`)
+
+- `<tabs>` — L1 tab strip (element mode). Compose a <tab-list> of <tab>s with (props: `active`, `variant`, `size`, `tone`, `orientation`, `sticky`)
+
+- `<theme-picker>` — the theme switcher: a trigger that opens a panel of theme (props: `value`)
+
+- `<toast>` — L1 toast (element mode). use:toast (props: `tone`, `duration`)
+
+- `<toast-region>` — L1 toast host (element mode). A fixed, (props: `position`)
+
+- `<toggle>` — a toggle cell inside <toggle-group>. role=button, (props: `value`, `disabled`)
+
+- `<toggle-group>` — L1 segmented toggle group (element mode). A row/column of (props: `type`, `value`, `variant`, `size`, `orientation`)
+
+- `<tooltip>` — L1 language element (element mode). Wraps a trigger (default slot) (props: `placement`, `content`)
+
+
+### Native reskins (bare HTML tags the framework styles)
+
+- `<a>` — Anchor — when `variant` is set, becomes a button link. Tone rides the global [tone] channel; hover shifts the fill toward the tone. (`variant=|default|solid|soft|outline|ghost`)
+
+- `<button>` — Button — bare `<button>` IS the design system's button. tone/size ride the framework channels; variant chooses default/solid/soft/outline/ghost. (`variant=|default|solid|soft|outline|ghost`, `size=xs|sm|md|lg`, `tone=default|primary|info|success|warning|destructive|accent|muted`, `disabled`)
+
+- `<details>` — Disclosure / accordion — bare `<details>`/`<summary>` is the design-system disclosure. Stacked adjacents merge into an accordion. Open/close animates natively. (`open`)
+
+- `<dialog>` — Modal / sheet — bare `<dialog>` IS the design-system modal. `side=` docks it as a sheet; showModal() gives backdrop, ESC, focus-trap, focus-return for free. (`open`, `size=sm|md|lg|full`, `backdrop=blur|solid`, `side=start|end|top|bottom`)
+
+- `<fieldset>` — Form group — bare `<fieldset>`/`<legend>` is a bordered section with the legend riding the top edge. `disabled` dims the whole group. (`disabled`)
+
+- `<hr>` — Separator — horizontal by default; `orientation=vertical` and `variant=dashed` are attribute-keyed. tone tints the rule. (`orientation=horizontal|vertical`, `variant=solid|dashed`, `tone=default|primary|destructive`)
+
+- `<html>` — Document root — the `html:has(dialog[open])` scroll-lock rule freezes the page while a native modal is open. No JS scroll-lock required. (presence / value via attribute)
+
+- `<input>` — Text entry — bare `<input>` (text/email/etc.), `<textarea>`, `<select>` are the design-system field. tone/size/invalid mirror the button contract. (`type=text|email|password|number|search|tel|url|date|time|datetime-local|month|week|file|color|checkbox|radio|range|submit`, `tone=default|primary|info|success|warning|destructive|accent`, `size=xs|sm|md|lg`, `invalid`, `disabled`, `placeholder`)
+
+- `<input[type=checkbox]>` — Checkbox — native appearance:none checkbox painted as a tone-filled square with a baked-white check. Indeterminate = tri-state. (`checked`, `indeterminate`, `invalid`)
+
+- `<input[type=color]>` — Color swatch — rounded swatch button (not a text field). The platform's value is the selected color; the skin themes the swatch frame. (`value`, `disabled`)
+
+- `<input[type=file]>` — File picker — keeps the field box, restyles the platform's file picker as a small secondary button. Use with `<div dropzone use:dropzone>` for drag-and-drop. (`accept`, `multiple`, `disabled`)
+
+- `<input[type=radio]>` — Radio — native appearance:none radio painted as a tone-filled circle with a background-punched dot. (`checked`, `invalid`)
+
+- `<input[type=range]>` — Slider — native appearance:none range, rebuilt as a tone-tinted rail with a white thumb ringed in the tone. size drives track/thumb thickness. (`value`, `min`, `max`, `step`, `size=sm|md|lg`)
+
+- `<legend>` — Fieldset caption — semibold text-sm riding the top edge of a `<fieldset>`. Inherits the fieldset's own paddings. (presence / value via attribute)
+
+- `<meter>` — Gauge — value-in-range; fill reflects WHICH band the value falls in (success/warning/destructive), not just how full. Distinct from `<progress>`. (`value`, `min`, `low`, `high`, `max`, `optimum`, `size=sm|md|lg`)
+
+- `<optgroup>` — Option list caption — semibold muted label inside a native `<select>`'s popup. Groups options without changing the value model. (`label`, `disabled`)
+
+- `<output>` — Form result — tabular figures so recomputes don't jitter. The native element for displaying a derived input value. (`for`, `form`)
+
+- `<progress>` — Progress bar — determinate when `value` is set, indeterminate (sliding sheen) when not. tone tints the fill. (`value`, `max`, `size=sm|md|lg`)
+
+- `<select>` — Picker — native `<select>` with the OS arrow replaced by a theme-aware chevron. option/optgroup reset so the popup is themed too. (`size=xs|sm|md|lg`, `tone=default|primary|info|success|warning|destructive|accent`, `invalid`, `disabled`, `multiple`)
+
+- `<span>` — Status dot (`<span dot>`) and skeleton placeholder (`<span skeleton>`). tone rides the global channel; pulse animates the dot. (`dot`, `skeleton`, `size=sm|md|lg`, `shape=block|circle|text|line`, `pulse`)
+
+- `<summary>` — Disclosure trigger — semibold trigger header inside `<details>`. Chevron rotates 180° and brightens to --foreground on open. (presence / value via attribute)
+
+- `<table>` — Data table — STRUCTURAL primitive, zero JS. Variants ride the table itself (`[dense] [striped] [hoverable] [bordered]`); `<thead sticky>` pins the header; `[numeric]` columns right-align on tabular figures. (`dense`, `striped`, `hoverable`, `bordered`)
+
+- `<tbody>` — Table body — row-group container inside `<table>`. CSS resets the trailing row's bottom border so a table reads as a single sheet. (presence / value via attribute)
+
+- `<td>` — Table cell — body row cell. `[numeric]` right-aligns on tabular figures; bordered tables add a 1px cell border. (`numeric`)
+
+- `<textarea>` — Multi-line text — shares the field surface with `<input>`. `rows=`/min-height scales the visible line count; vertical-only resize. (`rows`, `cols`, `size=xs|sm|md|lg`, `tone=default|primary|info|success|warning|destructive|accent`, `invalid`, `disabled`, `placeholder`)
+
+- `<th>` — Table header cell — de-emphasized (muted-foreground) header; the body carries the data. `[numeric]` right-aligns on tabular figures. (`numeric`, `scope=row|col|rowgroup|colgroup`)
+
+- `<thead>` — Table head — `[sticky]` pins the header to the scroll container top with a background to defeat bleed-through. (`sticky`)
+
+- `<ul>` — Listbox — a `<ul role='listbox'>` becomes a widget surface (zero list markers, no default padding). A plain `<ul>` keeps the document-list reset; the role distinguishes widget use. (`role=listbox`)
+
 
 ## When the compiler rejects you
 
