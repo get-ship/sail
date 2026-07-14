@@ -114,11 +114,11 @@ export default controller({
 })
 </controller>
 
-<column class="doc-wide" gap="3">
-  <p class="eyebrow">Components</p>
+<column sx="max-w-breakpoint-tablet mx-auto" gap="3">
+  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Components</p>
   <row gap="3" align="center">
     <h1 sx="grow-1">Components</h1>
-    <span class="mono" sx="text-xs text-muted-foreground">{countLabel()}</span>
+    <span sx="text-xs text-muted-foreground font-mono">{countLabel()}</span>
     <input placeholder="Search — try 'tab' or 'overlay'" bind:value={query} sx="max-w-panel-max-w-sm" />
   </row>
   <p sx="text-sm text-muted-foreground">
@@ -129,20 +129,20 @@ export default controller({
   <row align="stretch" gap="4">
     <!-- ── Pack rail — a filter, not a hero ──────────────────────────── -->
     <column gap="1" sx="w-panel-min-w-md">
-      <p class="eyebrow">Packs</p>
+      <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Packs</p>
       {#for p of packs() key={p.id}}
-        <button class="theme-chip" on:click={() => pickPack(p.id)} aria-pressed={packSel() === p.id ? 'true' : 'false'}>
+        <button sx="rounded-md cursor-pointer border border-border p-0 overflow-hidden bg-transparent text-start" on:click={() => pickPack(p.id)} aria-pressed={packSel() === p.id ? 'true' : 'false'}>
           <column gap="0" sx="px-3 py-2">
             <row gap="2" align="center">
               <strong sx="text-sm grow-1">{p.label}</strong>
               {#if p.gated}
                 <badge size="sm" tone="warning" variant="outline">gated</badge>
               {:else}
-                <span class="mono" sx="text-xs text-primary">{p.count}</span>
+                <span sx="text-xs text-primary font-mono">{p.count}</span>
               {/if}
             </row>
             {#if p.sub}
-              <p class="mono" sx="text-xs text-muted-foreground">{p.sub}</p>
+              <p sx="text-xs text-muted-foreground font-mono">{p.sub}</p>
             {/if}
           </column>
         </button>
@@ -154,7 +154,7 @@ export default controller({
     </column>
 
     <!-- ── Grid ──────────────────────────────────────────────────────── -->
-    <column gap="3" sx="grow-3 min-w-0">
+    <column gap="3" sx="grow-1 min-w-0">
       <row gap="2">
         {#for c of cats() key={c}}
           <button size="sm" tone="primary" variant={catSel() === c ? 'solid' : 'ghost'} on:click={() => pickCat(c)}>{c}</button>
@@ -173,10 +173,10 @@ export default controller({
                 </row>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/button" sx="text-sm font-semibold">button</a>
+                <a href="/components/button" sx="text-sm font-semibold font-mono">button</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">inputs</span>
+                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
                 </row>
               </column>
             </column>
@@ -189,10 +189,10 @@ export default controller({
                 <input placeholder="Type — it's real" bind:value={name} />
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/input" sx="text-sm font-semibold">input</a>
+                <a href="/components/input" sx="text-sm font-semibold font-mono">input</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">inputs</span>
+                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
                 </row>
               </column>
             </column>
@@ -205,10 +205,10 @@ export default controller({
                 <textarea placeholder="A few lines…"></textarea>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/textarea" sx="text-sm font-semibold">textarea</a>
+                <a href="/components/textarea" sx="text-sm font-semibold font-mono">textarea</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">inputs</span>
+                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
                 </row>
               </column>
             </column>
@@ -225,10 +225,10 @@ export default controller({
                 </select>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/select" sx="text-sm font-semibold">select</a>
+                <a href="/components/select" sx="text-sm font-semibold font-mono">select</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">inputs</span>
+                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
                 </row>
               </column>
             </column>
@@ -246,10 +246,10 @@ export default controller({
                 </combobox>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/combobox" sx="text-sm font-semibold">combobox</a>
+                <a href="/components/combobox" sx="text-sm font-semibold font-mono">combobox</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">inputs</span>
+                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
                 </row>
               </column>
             </column>
@@ -262,10 +262,10 @@ export default controller({
                 <label><input type="checkbox" bind:checked={agreed} /> I agree</label>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/checkbox" sx="text-sm font-semibold">checkbox</a>
+                <a href="/components/checkbox" sx="text-sm font-semibold font-mono">checkbox</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">inputs</span>
+                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
                 </row>
               </column>
             </column>
@@ -281,10 +281,10 @@ export default controller({
                 </radio-group>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/radio-group" sx="text-sm font-semibold">radio-group</a>
+                <a href="/components/radio-group" sx="text-sm font-semibold font-mono">radio-group</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">inputs</span>
+                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
                 </row>
               </column>
             </column>
@@ -300,10 +300,10 @@ export default controller({
                 </row>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/switch" sx="text-sm font-semibold">switch</a>
+                <a href="/components/switch" sx="text-sm font-semibold font-mono">switch</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">inputs</span>
+                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
                 </row>
               </column>
             </column>
@@ -315,14 +315,14 @@ export default controller({
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
                 <row gap="2" align="center" sx="w-full">
                   <slider bind:value={volume} tone="primary" sx="grow-1"></slider>
-                  <span class="mono" sx="text-xs text-muted-foreground">{volume()}</span>
+                  <span sx="text-xs text-muted-foreground font-mono">{volume()}</span>
                 </row>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/slider" sx="text-sm font-semibold">slider</a>
+                <a href="/components/slider" sx="text-sm font-semibold font-mono">slider</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">inputs</span>
+                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
                 </row>
               </column>
             </column>
@@ -339,10 +339,10 @@ export default controller({
                 </toggle-group>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/toggle-group" sx="text-sm font-semibold">toggle-group</a>
+                <a href="/components/toggle-group" sx="text-sm font-semibold font-mono">toggle-group</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">inputs</span>
+                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
                 </row>
               </column>
             </column>
@@ -358,10 +358,10 @@ export default controller({
                 </field>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/field" sx="text-sm font-semibold">field</a>
+                <a href="/components/field" sx="text-sm font-semibold font-mono">field</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">inputs</span>
+                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
                 </row>
               </column>
             </column>
@@ -375,10 +375,10 @@ export default controller({
                 <input id="tile-email" placeholder="ada@lovelace.dev" />
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/label" sx="text-sm font-semibold">label</a>
+                <a href="/components/label" sx="text-sm font-semibold font-mono">label</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">inputs</span>
+                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
                 </row>
               </column>
             </column>
@@ -394,10 +394,10 @@ export default controller({
                 </fieldset>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/fieldset" sx="text-sm font-semibold">fieldset</a>
+                <a href="/components/fieldset" sx="text-sm font-semibold font-mono">fieldset</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">inputs</span>
+                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
                 </row>
               </column>
             </column>
@@ -410,10 +410,10 @@ export default controller({
                 <card dropzone sx="p-3">Drop a file, or click</card>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/dropzone" sx="text-sm font-semibold">dropzone</a>
+                <a href="/components/dropzone" sx="text-sm font-semibold font-mono">dropzone</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">inputs</span>
+                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
                 </row>
               </column>
             </column>
@@ -429,10 +429,10 @@ export default controller({
                 </row>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/theme-picker" sx="text-sm font-semibold">theme-picker</a>
+                <a href="/components/theme-picker" sx="text-sm font-semibold font-mono">theme-picker</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">inputs</span>
+                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
                 </row>
               </column>
             </column>
@@ -447,10 +447,10 @@ export default controller({
                 <alert tone="success"><strong>Saved.</strong> Changes are live.</alert>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/alert" sx="text-sm font-semibold">alert</a>
+                <a href="/components/alert" sx="text-sm font-semibold font-mono">alert</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">feedback</span>
+                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
                 </row>
               </column>
             </column>
@@ -464,10 +464,10 @@ export default controller({
                 <p sx="text-xs text-muted-foreground">driven by the slider tile — one signal</p>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/progress" sx="text-sm font-semibold">progress</a>
+                <a href="/components/progress" sx="text-sm font-semibold font-mono">progress</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">feedback</span>
+                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
                 </row>
               </column>
             </column>
@@ -480,10 +480,10 @@ export default controller({
                 <meter value="0.7"></meter>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/meter" sx="text-sm font-semibold">meter</a>
+                <a href="/components/meter" sx="text-sm font-semibold font-mono">meter</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">feedback</span>
+                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
                 </row>
               </column>
             </column>
@@ -500,10 +500,10 @@ export default controller({
                 </row>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/spinner" sx="text-sm font-semibold">spinner</a>
+                <a href="/components/spinner" sx="text-sm font-semibold font-mono">spinner</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">feedback</span>
+                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
                 </row>
               </column>
             </column>
@@ -522,10 +522,10 @@ export default controller({
                 </row>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/skeleton" sx="text-sm font-semibold">skeleton</a>
+                <a href="/components/skeleton" sx="text-sm font-semibold font-mono">skeleton</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">feedback</span>
+                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
                 </row>
               </column>
             </column>
@@ -541,10 +541,10 @@ export default controller({
                 </empty-state>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/empty-state" sx="text-sm font-semibold">empty-state</a>
+                <a href="/components/empty-state" sx="text-sm font-semibold font-mono">empty-state</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">feedback</span>
+                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
                 </row>
               </column>
             </column>
@@ -557,10 +557,10 @@ export default controller({
                 <error-state variant="inline" size="sm" code="ERR_TIMEOUT">The request timed out.</error-state>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/error-state" sx="text-sm font-semibold">error-state</a>
+                <a href="/components/error-state" sx="text-sm font-semibold font-mono">error-state</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">feedback</span>
+                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
                 </row>
               </column>
             </column>
@@ -577,10 +577,10 @@ export default controller({
                 </error-boundary>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/error-boundary" sx="text-sm font-semibold">error-boundary</a>
+                <a href="/components/error-boundary" sx="text-sm font-semibold font-mono">error-boundary</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">feedback</span>
+                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
                 </row>
               </column>
             </column>
@@ -596,10 +596,10 @@ export default controller({
                 </toast>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/toast" sx="text-sm font-semibold">toast</a>
+                <a href="/components/toast" sx="text-sm font-semibold font-mono">toast</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">feedback</span>
+                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
                 </row>
               </column>
             </column>
@@ -618,10 +618,10 @@ export default controller({
                 </row>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/badge" sx="text-sm font-semibold">badge</a>
+                <a href="/components/badge" sx="text-sm font-semibold font-mono">badge</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">display</span>
+                  <span sx="text-xs text-muted-foreground font-mono">display</span>
                 </row>
               </column>
             </column>
@@ -637,10 +637,10 @@ export default controller({
                 </row>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/chip" sx="text-sm font-semibold">chip</a>
+                <a href="/components/chip" sx="text-sm font-semibold font-mono">chip</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">display</span>
+                  <span sx="text-xs text-muted-foreground font-mono">display</span>
                 </row>
               </column>
             </column>
@@ -656,10 +656,10 @@ export default controller({
                 </row>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/status-dot" sx="text-sm font-semibold">status-dot</a>
+                <a href="/components/status-dot" sx="text-sm font-semibold font-mono">status-dot</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">display</span>
+                  <span sx="text-xs text-muted-foreground font-mono">display</span>
                 </row>
               </column>
             </column>
@@ -675,10 +675,10 @@ export default controller({
                 </card>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/card" sx="text-sm font-semibold">card</a>
+                <a href="/components/card" sx="text-sm font-semibold font-mono">card</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">display</span>
+                  <span sx="text-xs text-muted-foreground font-mono">display</span>
                 </row>
               </column>
             </column>
@@ -695,10 +695,10 @@ export default controller({
                 </row>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/avatar" sx="text-sm font-semibold">avatar</a>
+                <a href="/components/avatar" sx="text-sm font-semibold font-mono">avatar</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">display</span>
+                  <span sx="text-xs text-muted-foreground font-mono">display</span>
                 </row>
               </column>
             </column>
@@ -721,10 +721,10 @@ export default controller({
                 </row>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/icon" sx="text-sm font-semibold">icon</a>
+                <a href="/components/icon" sx="text-sm font-semibold font-mono">icon</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">display</span>
+                  <span sx="text-xs text-muted-foreground font-mono">display</span>
                 </row>
               </column>
             </column>
@@ -739,10 +739,10 @@ export default controller({
                 <p sx="text-xs text-muted-foreground">below</p>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/separator" sx="text-sm font-semibold">separator</a>
+                <a href="/components/separator" sx="text-sm font-semibold font-mono">separator</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">display</span>
+                  <span sx="text-xs text-muted-foreground font-mono">display</span>
                 </row>
               </column>
             </column>
@@ -757,10 +757,10 @@ export default controller({
                 <hr variant="dashed" />
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/hr" sx="text-sm font-semibold">hr</a>
+                <a href="/components/hr" sx="text-sm font-semibold font-mono">hr</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">display</span>
+                  <span sx="text-xs text-muted-foreground font-mono">display</span>
                 </row>
               </column>
             </column>
@@ -776,10 +776,10 @@ export default controller({
                 </details>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/details" sx="text-sm font-semibold">details</a>
+                <a href="/components/details" sx="text-sm font-semibold font-mono">details</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">display</span>
+                  <span sx="text-xs text-muted-foreground font-mono">display</span>
                 </row>
               </column>
             </column>
@@ -795,10 +795,10 @@ export default controller({
                 </collapsible>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/collapsible" sx="text-sm font-semibold">collapsible</a>
+                <a href="/components/collapsible" sx="text-sm font-semibold font-mono">collapsible</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">display</span>
+                  <span sx="text-xs text-muted-foreground font-mono">display</span>
                 </row>
               </column>
             </column>
@@ -814,10 +814,10 @@ export default controller({
                 </p>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/prose" sx="text-sm font-semibold">prose</a>
+                <a href="/components/prose" sx="text-sm font-semibold font-mono">prose</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">display</span>
+                  <span sx="text-xs text-muted-foreground font-mono">display</span>
                 </row>
               </column>
             </column>
@@ -835,10 +835,10 @@ export default controller({
                 </tooltip>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/tooltip" sx="text-sm font-semibold">tooltip</a>
+                <a href="/components/tooltip" sx="text-sm font-semibold font-mono">tooltip</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">overlay</span>
+                  <span sx="text-xs text-muted-foreground font-mono">overlay</span>
                 </row>
               </column>
             </column>
@@ -854,10 +854,10 @@ export default controller({
                 </hover-card>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/hover-card" sx="text-sm font-semibold">hover-card</a>
+                <a href="/components/hover-card" sx="text-sm font-semibold font-mono">hover-card</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">overlay</span>
+                  <span sx="text-xs text-muted-foreground font-mono">overlay</span>
                 </row>
               </column>
             </column>
@@ -873,10 +873,10 @@ export default controller({
                 </popover>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/popover" sx="text-sm font-semibold">popover</a>
+                <a href="/components/popover" sx="text-sm font-semibold font-mono">popover</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">overlay</span>
+                  <span sx="text-xs text-muted-foreground font-mono">overlay</span>
                 </row>
               </column>
             </column>
@@ -894,10 +894,10 @@ export default controller({
                 </dropdown>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/dropdown" sx="text-sm font-semibold">dropdown</a>
+                <a href="/components/dropdown" sx="text-sm font-semibold font-mono">dropdown</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">overlay</span>
+                  <span sx="text-xs text-muted-foreground font-mono">overlay</span>
                 </row>
               </column>
             </column>
@@ -917,10 +917,10 @@ export default controller({
                 </context-menu>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/context-menu" sx="text-sm font-semibold">context-menu</a>
+                <a href="/components/context-menu" sx="text-sm font-semibold font-mono">context-menu</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">overlay</span>
+                  <span sx="text-xs text-muted-foreground font-mono">overlay</span>
                 </row>
               </column>
             </column>
@@ -938,10 +938,10 @@ export default controller({
                 </dialog>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/dialog" sx="text-sm font-semibold">dialog</a>
+                <a href="/components/dialog" sx="text-sm font-semibold font-mono">dialog</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">overlay</span>
+                  <span sx="text-xs text-muted-foreground font-mono">overlay</span>
                 </row>
               </column>
             </column>
@@ -963,10 +963,10 @@ export default controller({
                 </tabs>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/tabs" sx="text-sm font-semibold">tabs</a>
+                <a href="/components/tabs" sx="text-sm font-semibold font-mono">tabs</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">navigation</span>
+                  <span sx="text-xs text-muted-foreground font-mono">navigation</span>
                 </row>
               </column>
             </column>
@@ -983,10 +983,10 @@ export default controller({
                 </breadcrumb>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/breadcrumb" sx="text-sm font-semibold">breadcrumb</a>
+                <a href="/components/breadcrumb" sx="text-sm font-semibold font-mono">breadcrumb</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">navigation</span>
+                  <span sx="text-xs text-muted-foreground font-mono">navigation</span>
                 </row>
               </column>
             </column>
@@ -1005,10 +1005,10 @@ export default controller({
                 </pagination>
               </center>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/pagination" sx="text-sm font-semibold">pagination</a>
+                <a href="/components/pagination" sx="text-sm font-semibold font-mono">pagination</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">navigation</span>
+                  <span sx="text-xs text-muted-foreground font-mono">navigation</span>
                 </row>
               </column>
             </column>
@@ -1025,10 +1025,10 @@ export default controller({
                 </navbar>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/navbar" sx="text-sm font-semibold">navbar</a>
+                <a href="/components/navbar" sx="text-sm font-semibold font-mono">navbar</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">navigation</span>
+                  <span sx="text-xs text-muted-foreground font-mono">navigation</span>
                 </row>
               </column>
             </column>
@@ -1051,10 +1051,10 @@ export default controller({
                 </table>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/table" sx="text-sm font-semibold">table</a>
+                <a href="/components/table" sx="text-sm font-semibold font-mono">table</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">data</span>
+                  <span sx="text-xs text-muted-foreground font-mono">data</span>
                 </row>
               </column>
             </column>
@@ -1078,10 +1078,10 @@ export default controller({
                 <p sx="text-xs text-muted-foreground">row · column · grid · center — keywords, not components</p>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/layout" sx="text-sm font-semibold">layout</a>
+                <a href="/components/layout" sx="text-sm font-semibold font-mono">layout</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">layout</span>
+                  <span sx="text-xs text-muted-foreground font-mono">layout</span>
                 </row>
               </column>
             </column>
@@ -1100,10 +1100,10 @@ export default controller({
                 </scroll-area>
               </column>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/scroll-area" sx="text-sm font-semibold">scroll-area</a>
+                <a href="/components/scroll-area" sx="text-sm font-semibold font-mono">scroll-area</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">layout</span>
+                  <span sx="text-xs text-muted-foreground font-mono">layout</span>
                 </row>
               </column>
             </column>
@@ -1118,10 +1118,10 @@ export default controller({
                 <p sx="text-xs text-muted-foreground">move the pointer — a spotlight follows it</p>
               </div>
               <column gap="1" sx="px-3 py-2">
-                <a class="mono" href="/components/spotlight" sx="text-sm font-semibold">use:spotlight</a>
+                <a href="/components/spotlight" sx="text-sm font-semibold font-mono">use:spotlight</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="muted" variant="soft">fx</badge>
-                  <span class="mono" sx="text-xs text-muted-foreground">effects</span>
+                  <span sx="text-xs text-muted-foreground font-mono">effects</span>
                 </row>
               </column>
             </column>
@@ -1156,8 +1156,8 @@ export default controller({
     </column>
   </row>
 
-  <row class="page-nav" gap="2">
-    <a class="btn" href="/overview">← Introduction</a>
-    <a class="btn btn-primary" href="/layout">Layout →</a>
+  <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
+    <a variant="default" href="/overview">← Introduction</a>
+    <a variant="solid" tone="primary" href="/layout">Layout →</a>
   </row>
 </column>

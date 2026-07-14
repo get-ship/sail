@@ -11,23 +11,23 @@ export default controller({
 })
 </controller>
 
-<article class="doc">
-  <p class="eyebrow">Routing</p>
+<article sx="max-w-breakpoint-tablet mx-auto">
+  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Routing</p>
   <h1>File routing</h1>
-  <p class="lead">deck routes straight from the filesystem. A directory under <code>routes/</code> is a URL — there is no route-config file to keep in sync.</p>
+  <p sx="text-lg text-muted-foreground leading-relaxed">deck routes straight from the filesystem. A directory under <code>routes/</code> is a URL — there is no route-config file to keep in sync.</p>
 
   <h2>The directory is the URL</h2>
   <p>Drop a <code>page.sui</code> anywhere under <code>routes/</code> and its folder path becomes the route. The tree on disk is the routing table.</p>
-  <pre class="code">{routeTree}</pre>
+  <pre sx="font-mono text-sm leading-relaxed bg-surface-1 border border-border rounded-lg p-4 px-5 whitespace-pre-wrap break-words">{routeTree}</pre>
 
   <h2>One file is the route</h2>
   <p>The <code>page.sui</code> carries everything: markup, and — when the page has state — a <code>&lt;controller&gt;</code> block in the same file. Nothing else to co-locate, nothing to keep in sync.</p>
-  <pre class="code">{colocated}</pre>
+  <pre sx="font-mono text-sm leading-relaxed bg-surface-1 border border-border rounded-lg p-4 px-5 whitespace-pre-wrap break-words">{colocated}</pre>
 
   <h2>Generated tables</h2>
   <p>Walking <code>routes/</code>, deck generates <code>routes.gen.ts</code> (the typed route table) and <code>entry.gen.ts</code> (the SPA bootstrap that calls <code>mountRouter</code>). You never edit them — they regenerate on every build and every dev run. The filesystem is the only config.</p>
 
-  <row class="page-nav">
+  <row sx="mt-8 pt-4 border-t border-t-border">
     <a href="/deck/getting-started">← Getting started</a>
     <a href="/deck/dynamic-routes">Dynamic routes →</a>
   </row>

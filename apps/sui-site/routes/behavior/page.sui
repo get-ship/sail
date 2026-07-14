@@ -10,10 +10,10 @@ export default controller({
 })
 </controller>
 
-<column class="doc">
-  <p class="eyebrow">Components</p>
+<column sx="max-w-breakpoint-tablet mx-auto">
+  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Components</p>
   <h1>Behavior</h1>
-  <p class="lead">
+  <p sx="text-lg text-muted-foreground leading-relaxed">
     An <strong>action</strong> is a plain function that receives an element,
     does something to it, and returns a <code>destroy</code> to undo it.
     <code>use:</code> attaches one. That is the entire mechanism, and it is the

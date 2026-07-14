@@ -5,10 +5,10 @@
   assertion — every claim on this page is a number we can produce on demand.
   Do not dunk on competitors; the honest section is load-bearing for trust.
 -->
-<column class="doc why-doc">
-  <p class="eyebrow">Introduction</p>
+<column sx="p-0 max-w-breakpoint-tablet mx-auto">
+  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Introduction</p>
   <h1>Why SUI</h1>
-  <p class="lead">
+  <p sx="text-lg text-muted-foreground leading-relaxed">
     SUI is built to be written by agents. Not "agent-friendly" as a feature —
     agents are the assumed author, and every decision in the language follows
     from that. The goal is to give a model 95% of the expression that code
@@ -52,7 +52,7 @@
     way to hold state, one way to animate, one way to style, one component
     library, and it is made of tags the model already knows.
   </p>
-  <ul class="why-list">
+  <ul sx="list-none p-0">
     <li>
       <strong>The component library is the platform.</strong> A dialog is
       <code>&lt;dialog&gt;</code>. A menu is <code>[popover]</code>. There are 48
@@ -99,7 +99,7 @@
     back is the ability to <em>trust</em> the output without reading every
     line:
   </p>
-  <ul class="why-list">
+  <ul sx="list-none p-0">
     <li>
       <strong>Consistency you can check.</strong> Every element renders in
       every state across every theme on every commit, driven in a real
@@ -134,8 +134,8 @@
     guarantee.
   </p>
 
-  <row class="page-nav" gap="2">
-    <a class="btn" href="/overview">← Introduction</a>
-    <a class="btn btn-primary" href="/components">Component library →</a>
+  <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
+    <a variant="default" href="/overview">← Introduction</a>
+    <a variant="solid" tone="primary" href="/components">Component library →</a>
   </row>
 </column>

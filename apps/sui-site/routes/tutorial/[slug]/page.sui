@@ -308,7 +308,7 @@ export default controller({
         <p sx="text-lg text-muted-foreground">{description()}</p>
       </column>
 
-      <div class="doc" use:prose={proseHtml()}></div>
+      <div sx="max-w-breakpoint-tablet mx-auto" use:prose={proseHtml()}></div>
     </column>
 
     <row align="center" justify="between" gap="3" sx="p-3 px-6 border-t border-t-border bg-surface-1">

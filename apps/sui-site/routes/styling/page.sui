@@ -19,10 +19,10 @@ export default controller({
 })
 </controller>
 
-<column class="doc" gap="5">
-  <p class="eyebrow">Components</p>
+<column sx="max-w-breakpoint-tablet mx-auto" gap="5">
+  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Components</p>
   <h1>Styling</h1>
-  <p class="lead">
+  <p sx="text-lg text-muted-foreground leading-relaxed">
     <code>sx</code> is a closed vocabulary of design-system atoms. Not a
     shorthand for CSS — a <em>subset</em>, on purpose. A value that is not on the
     system does not compile.
@@ -105,8 +105,8 @@ export default controller({
     were one — the language grows a token, not a hole.
   </alert>
 
-  <row class="page-nav" gap="2">
-    <a class="btn" href="/elements">← Elements</a>
-    <a class="btn btn-primary" href="/theming">Theming →</a>
+  <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
+    <a variant="default" href="/elements">← Elements</a>
+    <a variant="solid" tone="primary" href="/theming">Theming →</a>
   </row>
 </column>
