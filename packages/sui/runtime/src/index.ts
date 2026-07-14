@@ -163,6 +163,7 @@ export {
   eventSpan,
   worldTransform,
   zoomPan,
+  portEdge,
   maxWidth,
   swatch,
   spotlight,

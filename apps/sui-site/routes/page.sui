@@ -13,7 +13,7 @@
 
 import { controller, signal, effect, live, filteredList, type ViewScope } from '@ship/sui-runtime'
 import { applyTheme, persistTheme, type ThemeId } from '@ship/tokens/themes'
-import { targetCursor } from '@ship/sui-fx'
+import { targetCursor } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 
 const WORDS = ['Batteries', 'Components', 'Styling', 'State', 'Motion', 'Themes']

@@ -32,7 +32,7 @@ export interface Pack {
 }
 
 export interface CatalogEntry {
-  /** The element tag (or action name, for @ship/sui-fx). */
+  /** The element tag (or action name, for runtime actions). */
   tag: string
   /** The scope key page.sui reads visibility through (`show.<key>()`). */
   key: string
@@ -59,7 +59,7 @@ export const PACKS: Pack[] = [
   { id: 'chat', label: 'Chat elements', sub: '@ship/sui-chat-elements', gated: true, waiting: 6 },
   { id: 'mermaid', label: 'Mermaid', sub: '@ship/sui-mermaid', gated: true, waiting: 1 },
   { id: 'code-editor', label: 'Code editor', sub: '@ship/sui-code-editor', gated: true, waiting: 1 },
-  { id: 'fx', label: 'FX', sub: '@ship/sui-fx' },
+  { id: 'fx', label: 'FX', sub: '@ship/sui-runtime' },
 ]
 
 const L = (tag: string, key: string, cat: CatalogEntry['cat']): CatalogEntry => ({
@@ -120,7 +120,7 @@ export const CATALOG: CatalogEntry[] = [
   L('table', 'table', 'data'),
   L('layout', 'layout', 'layout'),
   L('scroll-area', 'scrollArea', 'layout'),
-  // ── @ship/sui-fx (actions, not elements — pure TS, so they clear the
+  // ── runtime FX actions (actions, not elements — pure TS, so they clear the
   //    floor and run live; the .sui packs above are gated, see PACKS) ──
   { tag: 'use:spotlight', key: 'fxSpotlight', slug: 'spotlight', pack: 'fx', cat: 'effects' },
 ]

@@ -483,7 +483,7 @@ export default controller({
 
   spotlight: `<controller>
 import { controller } from '@ship/sui-runtime'
-import { spotlight } from '@ship/sui-fx'
+import { spotlight } from '@ship/sui-runtime'
 
 export default controller({
   scope: () => ({ spotlight }),

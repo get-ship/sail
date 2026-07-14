@@ -630,19 +630,19 @@ export const DETAILS: Record<string, DetailEntry> = {
     ],
   }),
 
-  // ── @ship/sui-fx ─────────────────────────────────────────────────────
+  // ── runtime actions ──────────────────────────────────────────────────
   spotlight: {
     tag: 'use:spotlight',
     key: 'fxSpotlight',
     heading: 'use:spotlight',
     pack: 'fx',
     blurb:
-      'An action, not an element: attach it to any surface and a soft spotlight tracks the pointer. Pure TS from @ship/sui-fx — it clears the compiler floor.',
+      'An action, not an element: attach it to any surface and a soft spotlight tracks the pointer. Pure TS from the runtime — it clears the compiler floor.',
     variants: [],
     variantAttr: '',
     props: [
       { name: 'use:spotlight', desc: 'the whole API — attach and done', type: 'action' },
-      { name: 'import', desc: "{ spotlight } from '@ship/sui-fx'", type: 'module' },
+      { name: 'import', desc: "{ spotlight } from '@ship/sui-runtime'", type: 'module' },
     ],
     usage: usage.spotlight ?? '',
   },

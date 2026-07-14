@@ -5,7 +5,7 @@
   curated truth from the stdlib declarations.
 
   route.params.tag() picks the entry; ./registry.ts covers the FULL L1
-  surface (all 48 elements) plus the two @ship/sui-fx actions, so the empty
+  surface (all 48 elements) plus the two runtime actions, so the empty
   state below is for typos, not for real components. Each stage mounts
   through one zero-arg gate (`stage.<key>()`) — the only call shape a
   renderable expression allows.
@@ -23,7 +23,7 @@
 // stage map mirrors the browser page's `show` map.
 
 import { controller, signal, derived, effect, type ViewScope } from '@ship/sui-runtime'
-import { spotlight } from '@ship/sui-fx'
+import { spotlight } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 import { DETAILS, type DetailEntry } from './registry'
 
@@ -53,7 +53,7 @@ export default controller({
     const usageCode = () => entry()?.usage ?? ''
     const heading = () => entry()?.heading ?? tag()
     const isFx = derived(() => entry()?.pack === 'fx')
-    const packLabel = () => (entry()?.pack === 'fx' ? '@ship/sui-fx' : 'In the language')
+    const packLabel = () => (entry()?.pack === 'fx' ? '@ship/sui-runtime' : 'In the language')
 
     // One zero-arg gate per stage — `stage.<key>()`, derived from the entry.
     const stage = Object.fromEntries(
@@ -549,7 +549,7 @@ export default controller({
               </scroll-area>
             {/if}
 
-            <!-- ══ @ship/sui-fx ════════════════════════════════════════ -->
+            <!-- ══ @ship/sui-runtime ════════════════════════════════════════ -->
             {#if stage.fxSpotlight()}
               <div use:spotlight sx="p-8 w-full rounded-lg border border-border">
                 <center><p sx="text-sm text-muted-foreground">move the pointer — a spotlight follows it</p></center>

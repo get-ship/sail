@@ -4,7 +4,7 @@
   REAL component — nothing on this page is a drawing of a component.
 
   The `lang` tiles are the complete 48-element L1 surface (the same list the
-  l1-conformance gate renders on every commit), plus the two @ship/sui-fx
+  l1-conformance gate renders on every commit), plus the two runtime FX
   actions. Each tile gates itself on `show.<key>()` (the zero-arg visibility
   read the controller derives from the three filters), so hiding a tile
   unmounts the live component and the grid packs itself. Every tile links to
@@ -32,10 +32,10 @@
 // THIS compiler's floor rejects — pulling them into the graph kills the
 // build (the exact coupling src/register-all.ts removed). So they are
 // `gated` in the rail rather than faked in the grid: selecting one explains
-// the gap. @ship/sui-fx is pure TS and runs live.
+// the gap. They are pure TS and run live.
 
 import { controller, signal, derived, filteredList, type ViewScope } from '@ship/sui-runtime'
-import { spotlight } from '@ship/sui-fx'
+import { spotlight } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 import { CATALOG, PACKS, CATEGORIES, packCount, type CatalogEntry, type Pack } from './registry'
 
@@ -1110,7 +1110,7 @@ export default controller({
           </card>
         {/if}
 
-        <!-- ══ @ship/sui-fx (actions) ═══════════════════════════════════ -->
+        <!-- ══ @ship/sui-runtime (actions) ═══════════════════════════════════ -->
         {#if show.fxSpotlight()}
           <card padding="none" data-tile="use:spotlight" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">

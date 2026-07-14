@@ -11,8 +11,10 @@
 //! aliasing as a trivial escape and a rule you can rename your way out of is not
 //! a rule. The single sanctioned form is a CUSTOM PROPERTY:
 //!
-//!     el.style.setProperty('--row-y', y)      // legal — a value, not a design
-//!     el.style.transform = `translateY(${y})`  // ERROR
+//! ```text
+//! el.style.setProperty('--row-y', y)       // legal — a value, not a design
+//! el.style.transform = `translateY(${y})`  // ERROR
+//! ```
 //!
 //! Why the custom property is not a hatch: a value that comes from measurement or
 //! from the user (a dragged node, a resized column) is DATA, not design. There is
