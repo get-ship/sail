@@ -217,3 +217,81 @@ fn sx_with_size_token_uses_dimensional_var() {
         "w-control-h-md uses the full --control-h-md var:\n{out}"
     );
 }
+#[test]
+fn layout_keyword_inline_swaps_base_class_for_inline_flex() {
+    // The hug-wrap variant. `<row inline>` is the suggestion the sx
+    // `inline-flex` refusal emits — it MUST compile cleanly, or the
+    // compiler is recommending something unbuildable. This is the half of
+    // the contract that lives in the compiler pipeline (the lint half is
+    // `layout::tests::lowers_row_inline_to_inline_flex_base_class`).
+    //
+    // The swap is at the base: the inline variant owns `display:inline-flex`
+    // (NOT `display:flex` riding on top of `sui-row`). Both bases share the
+    // `min-width:0` child guard and the axis modifier ownership.
+    //
+    // Note: default axis props (`gap="3" align="center"` for `<row>`) are
+    // applied even on a bare `<row inline>` — they are the row's defaults,
+    // not the block base's. The inline swap is orthogonal to axis
+    // selection; default axes still ride on top of the inline base.
+    let out = pp(r#"<row inline>x</row>"#);
+    // The lowered div's class string starts with the inline base class,
+    // not the block one. We assert on the class string opening rather than
+    // the standalone token, because the defaults layer their classes in
+    // right after the base.
+    assert!(
+        out.contains(r#"class="sui-row-i"#),
+        "inline base class leads the lowered div:\n{out}"
+    );
+    assert!(
+        !out.contains(r#"class="sui-row""#)
+            && !out.contains(r#"class="sui-row "#),
+        "no block base leaked into the inline variant:\n{out}"
+    );
+    assert!(
+        out.contains(".sui-row-i{display:inline-flex"),
+        "inline-flex rule is the one we ship:\n{out}"
+    );
+    assert!(
+        out.contains(".sui-row-i>*{min-width:0}"),
+        "the min-width:0 child guard survives the inline swap:\n{out}"
+    );
+    // Explicit axes ride on top of the inline base.
+    let out = pp(r#"<row inline gap="2">x</row>"#);
+    assert!(
+        out.contains(r#"sui-row-i"#) && out.contains(r#"sui-g-2"#),
+        "axis still applies on inline:\n{out}"
+    );
+    // Grid mirrors the same swap.
+    let out = pp(r#"<grid inline>x</grid>"#);
+    assert!(
+        out.contains(r#"class="sui-grid-i"#),
+        "grid inline base leads the lowered div:\n{out}"
+    );
+    assert!(
+        out.contains(".sui-grid-i{display:inline-grid"),
+        "inline-grid rule:\n{out}"
+    );
+}
+
+#[test]
+fn layout_keyword_inline_does_not_emit_inline_attr_on_the_div() {
+    // `<row inline>` consumes the `inline` axis at the base swap; it must
+    // NOT reappear as a dead HTML attribute on the lowered div. The pass-
+    // through list and the consumed axis set share the lint/compiler
+    // contract — a regression here would put `inline=""` on every `<row
+    // inline>`, the very silent-drop class the layout lint exists to
+    // prevent.
+    //
+    // We scan just the lowered `<div …>` (the markup fragment between the
+    // style block close and the source's body) so L1 element skins
+    // (`:host { display: inline-flex }`) don't trip the assertion.
+    let out = pp(r#"<row inline>x</row>"#);
+    let lowered = out
+        .split("</style>")
+        .nth(1)
+        .expect("the preprocess output keeps the </style> marker");
+    assert!(
+        !lowered.contains(" inline"),
+        "no raw `inline` attr on the lowered div: {lowered}"
+    );
+}
