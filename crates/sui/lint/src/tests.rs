@@ -3,7 +3,7 @@
 use std::path::Path;
 
 use crate::{
-    is_controller_path, lint_controller_source,
+    is_controller_path, lint_controller_source, lint_pack_source_source,
     rules::{controller_purity, controller_state_cast},
 };
 
@@ -282,3 +282,40 @@ fn static_bool_flag_passes() {
     assert!(f.is_empty(), "bare flag attr not flagged: {f:?}");
 }
 
+
+
+#[test]
+fn pack_source_path_recognises_components_dir() {
+    use crate::is_pack_source_ts;
+    // Pack src files under components/sui → gate.
+    assert!(is_pack_source_ts(Path::new(
+        "/repo/packages/components/sui/primitives/src/sui-tree/engine.ts"
+    )));
+    // Framework runtime → skip (the seam lives here, exempt).
+    assert!(!is_pack_source_ts(Path::new(
+        "/repo/packages/sui/runtime/src/actions/range-fill.ts"
+    )));
+    // .controller.ts → not this category (it's a controller).
+    assert!(!is_pack_source_ts(Path::new(
+        "/repo/packages/components/sui/primitives/src/sui-tree.controller.ts"
+    )));
+    // Not a .ts file.
+    assert!(!is_pack_source_ts(Path::new(
+        "/repo/packages/components/sui/primitives/src/sui-tree/sui-tree.sui"
+    )));
+    // Not a pack source (no /src/ under components/sui).
+    assert!(!is_pack_source_ts(Path::new(
+        "/repo/packages/components/sui/primitives/package.json"
+    )));
+}
+
+#[test]
+fn pack_source_lints_imperative_style() {
+    // A pack glue file with a `.style.x =` write — the floor rule fires.
+    let findings = lint_pack_source_source(
+        Path::new("/repo/packages/components/sui/primitives/src/widget/glue.ts"),
+        "el.style.opacity = '0.5'",
+    );
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].rule, "sui-no-imperative-style");
+}

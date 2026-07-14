@@ -128,6 +128,7 @@
     { "name": "scale",       "css": ["scale"], "scale": "percent" },
     { "name": "translate-x", "css": ["translate"], "scale": "space", "negatable": true, "axis": "x" },
     { "name": "translate-y", "css": ["translate"], "scale": "space", "negatable": true, "axis": "y" },
+    { "name": "transform",  "css": ["transform"], "keywords": ["none"] },
     { "name": "origin",      "css": ["transform-origin"], "map": { "center": "center", "top": "top", "top-right": "top right", "right": "right", "bottom-right": "bottom right", "bottom": "bottom", "bottom-left": "bottom left", "left": "left", "top-left": "top left" } },
 
     { "bare": true, "css": ["display"], "map": { "block": "block", "inline-block": "inline-block", "inline": "inline", "hidden": "none", "contents": "contents", "flow-root": "flow-root", "list-item": "list-item" } },

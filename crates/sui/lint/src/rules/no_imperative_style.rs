@@ -22,10 +22,7 @@
 //! grain.
 //!
 //! Also banned, because each is the same hole wearing a different hat:
-//!   `.classList` MUTATION — add/remove/toggle (a class is a CSS target; see
-//!     `sui-no-class`). `.classList.contains(…)` is a QUESTION, not styling —
-//!     reading whether <html> carries `.dark` is how a component learns the app's
-//!     theme, so unlike `.style` the read stays open.
+//!   `.classList` (a class is a CSS target — see `sui-no-class`)
 //!   `setAttribute('style' | 'class', …)`
 //!   `adoptedStyleSheets`, `new CSSStyleSheet`, `createElement('style')`
 
@@ -52,7 +49,6 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         file: path.to_path_buf(),
         findings: Vec::new(),
         sanctioned: Vec::new(),
-        read_only_class_list: Vec::new(),
     };
     visitor.visit_program(&ret.program);
     visitor.findings.sort_by_key(|f| (f.line, f.col));
@@ -66,8 +62,6 @@ struct StyleVisitor<'src> {
     /// Spans of `.style` accesses that ARE the sanctioned custom-property call —
     /// recorded on the way down so the member visit does not also flag them.
     sanctioned: Vec<Span>,
-    /// Spans of `.classList` accesses that are a READ (`.contains(…)`), not a mutation.
-    read_only_class_list: Vec<Span>,
 }
 
 impl<'src> StyleVisitor<'src> {
@@ -127,14 +121,6 @@ impl<'a, 'src> Visit<'a> for StyleVisitor<'src> {
         if let Expression::StaticMemberExpression(m) = &expr.callee {
             let name = m.property.name.as_str();
 
-            // `x.classList.contains(…)` — a question, not a mutation.
-            if name == "contains"
-                && let Expression::StaticMemberExpression(cl) = &m.object
-                && cl.property.name.as_str() == "classList"
-            {
-                self.read_only_class_list.push(cl.span);
-            }
-
             // setAttribute('style'|'class', …) — the same hole, spelled differently.
             if name == "setAttribute"
                 && let Some(Expression::StringLiteral(attr)) =
@@ -160,6 +146,26 @@ impl<'a, 'src> Visit<'a> for StyleVisitor<'src> {
                     "controllers do not inject a `<style>` element.".to_string(),
                     "A component's styling is sx. The framework's own sheet is generated, not injected at runtime.",
                 );
+            }
+
+            // classList mutation: `el.classList.add('x')` / `.remove` /
+            // `.toggle` / `.replace` — a styling hatch through the back
+            // door. Reads (`.contains`, `.item`, `.length`) are allowed —
+            // they surface a value the host set, not an authoring branch.
+            if name == "add" || name == "remove" || name == "toggle" || name == "replace" {
+                // Callee shape: `... .classList.<method>(...)` — chain
+                // through two static member expressions.
+                if let Expression::StaticMemberExpression(class_list) = &m.object
+                    && class_list.property.name.as_str() == "classList"
+                {
+                    self.report(
+                        expr.span,
+                        format!(
+                            "controllers do not mutate `.classList.{name}()` — light DOM                              has no boundary, so a class is a global CSS target."
+                        ),
+                        "Visual state is sx keyed on ARIA (`selected:`, `expanded:`, `disabled:`).                          Stamp the semantics and the style follows. Reads                          (`.contains`, `.item`, `.length`) are observation, not an                          authoring hatch.",
+                    );
+                }
             }
         }
 
@@ -189,20 +195,13 @@ impl<'a, 'src> Visit<'a> for StyleVisitor<'src> {
             );
         }
 
-        // `.classList` MUTATION is styling; `.classList.contains(…)` is a QUESTION.
-        // Reading whether <html> carries `.dark` is how a component learns the app's
-        // theme — banning that reads nothing into it and blocks a legitimate query,
-        // so unlike `.style` (where any access IS styling) the read stays open.
-        if name == "classList" && !self.read_only_class_list.contains(&m.span) {
-            self.report(
-                m.span,
-                "controllers do not mutate `.classList` — light DOM has no boundary, so a class \
-                 is a global CSS target."
-                    .to_string(),
-                "Visual state is sx keyed on ARIA (`selected:`, `expanded:`, `disabled:`). Stamp \
-                 the semantics and the style follows. Reading `.classList.contains(…)` is fine.",
-            );
-        }
+        // `.classList` reads (e.g. `document.documentElement.classList.contains("dark")`
+        // to detect the host theme) are observation — they surface a value
+        // the host already set, which is the seam the language respects.
+        // WRITES to classList (`add`/`remove`/`toggle`/`replace`) are still
+        // banned: they are a styling hatch through the back door. The exact
+        // match is in `visit_call_expression` below; the `classList`
+        // member access itself is not flagged here.
 
         if name == "adoptedStyleSheets" {
             self.report(
@@ -280,20 +279,28 @@ mod tests {
     }
 
     #[test]
-    fn reading_the_class_list_is_a_question_not_a_mutation() {
-        // How a component learns the app's theme. Banning it reads nothing into it.
-        assert!(run("const dark = document.documentElement.classList.contains('dark')").is_empty());
-    }
-
-    #[test]
     fn the_other_hats_the_same_hole_wears() {
+        // `.classList.add/remove/toggle/replace` — the styling hatch.
         assert_eq!(run("el.classList.add('active')").len(), 1);
-        assert_eq!(run("el.classList.toggle('x')").len(), 1);
+        assert_eq!(run("el.classList.remove('active')").len(), 1);
+        assert_eq!(run("el.classList.toggle('active')").len(), 1);
+        assert_eq!(run("el.classList.replace('a', 'b')").len(), 1);
         assert_eq!(run("el.setAttribute('style', 'color:red')").len(), 1);
         assert_eq!(run("el.setAttribute('class', 'active')").len(), 1);
         assert_eq!(run("root.adoptedStyleSheets = [sheet]").len(), 1);
         assert_eq!(run("const s = new CSSStyleSheet()").len(), 1);
         assert_eq!(run("document.createElement('style')").len(), 1);
+    }
+
+    #[test]
+    fn classlist_reads_are_observation_not_an_authoring_hatch() {
+        // `el.classList.contains` / `.item` / `.length` — READING a class
+        // is observation, not a hatch. (The `sui-no-class` rule prevents the
+        // author from writing `class=` from inside a component; the seams
+        // are read here on purpose.)
+        assert!(run("if (el.classList.contains('active')) doThing()").is_empty());
+        assert!(run("const x = el.classList.item(0)").is_empty());
+        assert!(run("const n = el.classList.length").is_empty());
     }
 
     #[test]

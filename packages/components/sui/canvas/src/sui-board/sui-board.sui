@@ -241,7 +241,7 @@ export default controller({
   </svg>
 
   {#for n of nodes() key={n.id}}
-    <div class="node" role="group" tabindex="0" aria-label={n.id} data-node-id={n.id} data-selected={selectedSet().has(n.id)} style={`transform: translate(${n.rect.x}px, ${n.rect.y}px); width: ${n.rect.w}px; height: ${n.rect.h}px;`} on:pointerdown={nodePointerDown}>
+    <div class="node" role="group" tabindex="0" aria-label={n.id} data-node-id={n.id} data-selected={selectedSet().has(n.id)} use:rect={{top: n.rect.y, left: n.rect.x, width: n.rect.w, height: n.rect.h}} on:pointerdown={nodePointerDown}>
       <slot name={n.id}></slot>
       {#for p of n.ports key={p.id}}
         <span class="port" data-port-id={p.id} data-side={p.side} on:pointerdown={portPointerDown}></span>

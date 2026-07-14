@@ -433,12 +433,12 @@ pub fn is_passthrough_attr(name: &str) -> bool {
             && name.as_bytes().get(2) == Some(&b':')
         // SUI directive prefixes — framework bindings that the compiler
         // understands (see `crates/sui/compiler/src/parse/template/attrs.rs`).
-        // `bind:`, `class:`, `style:`, `attr:`, `prop:`, `transition:`, `in:`,
+        // `bind:`, `class:`, `use:`, `attr:`, `prop:`, `transition:`, `in:`,
         // `out:`, `motion:`. Each is fully validated downstream; the layout
         // keyword lowering passes them through to the div unchanged.
         || name.starts_with("bind:")
         || name.starts_with("class:")
-        || name.starts_with("style:")
+        || name.starts_with("use:")
         || name.starts_with("attr:")
         || name.starts_with("prop:")
         || name.starts_with("transition:")

@@ -155,7 +155,7 @@ export default controller({
   on:wheel={wheel}
   sx="relative w-full h-full min-h-panel-min-w-lg bg-background text-foreground border border-border rounded-md overflow-hidden cursor-grab"
 >
-  <div style:transform={worldTransform()} sx="absolute top-0 left-0">
+  <div use:worldTransform={worldTransform()} sx="absolute top-0 left-0 transform-(--world-tx)">
     <slot></slot>
   </div>
 </div>

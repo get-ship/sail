@@ -323,7 +323,7 @@ export default controller({
   </svg>
 
   {#for n of nodeViews() key={n.id}}
-    <div sx="absolute w-0 h-0" style:left={n.left} style:top={n.top}>
+    <div use:rect={{left: n.left, top: n.top}} sx="absolute w-0 h-0 left-(--box-left) top-(--box-top)">
       <center sx="h-0">
         <column
           gap="0"
@@ -333,11 +333,11 @@ export default controller({
           data-state={n.kind}
           aria-label={n.label}
           aria-current={n.selected ? 'true' : 'false'}
-          style:width={n.width}
+          use:rect={{width: n.width}}
           on:click={() => select(n)}
           on:keydown={(e) => activate(n, e)}
           on:mouseover={() => hover(n)}
-          sx="w-panel-min-w-sm py-2 px-3 bg-card text-foreground font-body text-sm border border-border rounded-md shadow-xs cursor-pointer hover:shadow-sm focus:ring-ring current:border current:border-ring current:shadow-sm state-agent:border-l state-agent:border-l-tone-primary-fg state-skill:border-l state-skill:border-l-tone-success-fg state-mcp:border-l state-mcp:border-l-tone-info-fg state-rule:border-l state-rule:border-l-tone-warning-fg state-perm:border-l state-perm:border-l-tone-destructive-fg state-harness:border-l state-harness:border-l-tone-accent-fg"
+          sx="w-(--box-w) py-2 px-3 bg-card text-foreground font-body text-sm border border-border rounded-md shadow-xs cursor-pointer hover:shadow-sm focus:ring-ring current:border current:border-ring current:shadow-sm state-agent:border-l state-agent:border-l-tone-primary-fg state-skill:border-l state-skill:border-l-tone-success-fg state-mcp:border-l state-mcp:border-l-tone-info-fg state-rule:border-l state-rule:border-l-tone-warning-fg state-perm:border-l state-perm:border-l-tone-destructive-fg state-harness:border-l state-harness:border-l-tone-accent-fg"
         >
           {#if n.body !== ''}
             <div use:nodeBody={n.body}></div>

@@ -1,18 +1,26 @@
-// Shared focus + scroll-lock utilities for overlay components (dialog, drawer).
-// No side effects at import time; all state is per-module-instance.
-
-const FOCUSABLE = [
-  'a[href]', 'area[href]',
-  'button:not([disabled])',
-  'input:not([disabled]):not([type="hidden"])',
-  'select:not([disabled])', 'textarea:not([disabled])',
-  'iframe', 'object', 'embed', 'summary',
-  '[contenteditable]:not([contenteditable="false"])',
-  '[tabindex]:not([tabindex^="-"])',
-].join(',')
+// Runtime seam: body-level scroll lock + focus management for overlays.
+//
+// `acquireScrollLock` / `releaseScrollLock` are a refcounted document.body
+// effect. The body is part of the DOCUMENT, not a component — `style:`, sx,
+// and per-element actions have nothing to attach to. The framework owns
+// the seam: NO lint can touch this file (it touches `.style.overflow`
+// deliberately, and that is on the body — the place where an overlay lock
+// belongs).
+//
+// The companion `FocusReturn` records and restores document focus across an
+// open/close cycle, so the overlay family shares its implementation.
 
 export function focusableWithin(root: ParentNode): HTMLElement[] {
-  return Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(el => {
+  const sel = [
+    'a[href]', 'area[href]',
+    'button:not([disabled])',
+    'input:not([disabled]):not([type="hidden"])',
+    'select:not([disabled]), textarea:not([disabled])',
+    'iframe', 'object', 'embed', 'summary',
+    '[contenteditable]:not([contenteditable="false"])',
+    '[tabindex]:not([tabindex^="-"])',
+  ].join(',')
+  return Array.from(root.querySelectorAll<HTMLElement>(sel)).filter((el) => {
     if (el.hasAttribute('disabled')) return false
     if (el.getAttribute('aria-hidden') === 'true') return false
     return true
@@ -21,9 +29,12 @@ export function focusableWithin(root: ParentNode): HTMLElement[] {
 
 export class FocusReturn {
   private saved: HTMLElement | null = null
-  save(): void { this.saved = document.activeElement as HTMLElement ?? null }
+  save(): void {
+    this.saved = (document.activeElement as HTMLElement) ?? null
+  }
   restore(): void {
-    const t = this.saved; this.saved = null
+    const t = this.saved
+    this.saved = null
     if (t && typeof t.focus === 'function') t.focus()
   }
 }

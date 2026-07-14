@@ -1,0 +1,10 @@
+{
+  "preset": "author",
+  "sx": true,
+  "variants": true,
+  "raw_containers": true,
+  "stylesheets": [
+    "src/sui-board/sui-board.css",
+    "src/sui-draw/sui-draw.css"
+  ]
+}

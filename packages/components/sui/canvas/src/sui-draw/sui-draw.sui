@@ -254,12 +254,12 @@ export default controller({
       {#if el.kind === 'text'}
         <text class="el el-text element" x={el.at.x} y={el.at.y} fill={el.color} data-el-id={el.id} data-selected={selectedSet().has(el.id)} on:pointerdown={elementDown}>{el.text}</text>
       {:else}
-        <path class="el element" d={el.path} data-el-id={el.id} data-kind={el.kind} data-selected={selectedSet().has(el.id)} style={`stroke: ${el.color};`} on:pointerdown={elementDown}></path>
+        <path class="el element" d={el.path} data-el-id={el.id} data-kind={el.kind} data-selected={selectedSet().has(el.id)} use:swatch={el.color} on:pointerdown={elementDown}></path>
       {/if}
     {/for}
 
     {#if draftPath()}
-      <path class="el el-draft draft" d={draftPath()} style={`stroke: ${draftColor()};`}></path>
+      <path class="el el-draft draft" d={draftPath()} use:swatch={draftColor()}></path>
     {/if}
 
     {#if selectionRect()}

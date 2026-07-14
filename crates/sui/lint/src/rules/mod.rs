@@ -46,6 +46,7 @@ pub mod no_sx;
 pub mod no_variants;
 pub mod no_class;
 pub mod no_imperative_style;
+pub mod no_undeclared_stylesheet;
 pub mod no_inline_style;
 pub mod animate_token_only;
 pub type RuleFn = fn(&Path, &str) -> Vec<Finding>;
@@ -96,4 +97,18 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (no_class::RULE_ID, no_class::check),
     (no_inline_style::RULE_ID, no_inline_style::check),
     (animate_token_only::RULE_ID, animate_token_only::check),
+];
+
+/// Rules that lint a pack's `.ts` source files (composition modules,
+/// glue code, helpers). Dispatches only on paths under
+/// `packages/components/sui/**/src/**` — the framework layer
+/// (`packages/sui/runtime/src/**`) is exempt, and `<stem>.controller.ts`
+/// files are matched by `is_controller_path` first.
+///
+/// Why a separate list, not CONTROLLER_RULES: the floor rule
+/// (`sui-no-imperative-style`) is the only one that needs to reach into
+/// this surface today; the controller family stays scope-bound.
+pub const PACK_SOURCE_RULES: &[(&str, RuleFn)] = &[
+    (no_imperative_style::RULE_ID, no_imperative_style::check),
+    (no_undeclared_stylesheet::RULE_ID, no_undeclared_stylesheet::check),
 ];

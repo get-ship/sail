@@ -321,6 +321,6 @@ export default controller({
       </column>
     {/if}
 
-    <div bind:this={stageEl} style:max-width={stageMaxWidth()} sx="w-full ml-auto mr-auto"></div>
+    <div bind:this={stageEl} use:maxWidth={stageMaxWidth()} sx="w-full ml-auto mr-auto max-w-(--max-w)"></div>
   </column>
 </error-boundary>
