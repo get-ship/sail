@@ -135,6 +135,106 @@ pub fn is_prefix(p: &str) -> bool {
             .is_some_and(|b| state_pseudo(b).is_some() || state_data(b).is_some())
 }
 
+
+/// The layout element an sx attribute was TRYING to be.
+///
+/// `flex items-center gap-2 p-4` is one breath of Tailwind muscle memory and three
+/// separate refusals — and the author will write it again on the next element. So it
+/// must produce ONE diagnostic showing the whole replacement, not three rejections.
+/// The boundary the prior fights hardest has to be the place the language teaches
+/// best; a refusal an author has to reassemble by hand is where "puzzle, not toolkit"
+/// comes back.
+#[derive(Default)]
+struct LayoutIntent {
+    tag: Option<&'static str>,
+    inline: bool,
+    align: Option<String>,
+    justify: Option<String>,
+    gap: Option<String>,
+    cols: Option<String>,
+    rows: Option<String>,
+    wrap: Option<&'static str>,
+    saw_any: bool,
+}
+
+impl LayoutIntent {
+    /// Absorb one refused atom. Returns false if it is not a layout atom (so the
+    /// caller still reports it on its own).
+    fn absorb(&mut self, atom: &str) -> bool {
+        let mut hit = true;
+        match atom {
+            "flex" | "flex-row" => self.tag = Some("row"),
+            "inline-flex" => {
+                self.tag = Some("row");
+                self.inline = true;
+            }
+            "flex-col" => self.tag = Some("column"),
+            "grid" => self.tag = Some("grid"),
+            "inline-grid" => {
+                self.tag = Some("grid");
+                self.inline = true;
+            }
+            "flex-wrap" => self.wrap = Some("wrap"),
+            "flex-nowrap" => self.wrap = Some("nowrap"),
+            _ => {
+                if let Some(v) = atom.strip_prefix("items-") {
+                    self.align = Some(v.to_string());
+                } else if let Some(v) = atom.strip_prefix("justify-") {
+                    self.justify = Some(v.to_string());
+                } else if let Some(v) = atom.strip_prefix("gap-") {
+                    self.gap = Some(v.to_string());
+                } else if let Some(v) = atom.strip_prefix("grid-cols-") {
+                    self.cols = Some(v.to_string());
+                } else if let Some(v) = atom.strip_prefix("grid-rows-") {
+                    self.rows = Some(v.to_string());
+                } else {
+                    hit = false;
+                }
+            }
+        }
+        if hit {
+            self.saw_any = true;
+        }
+        hit
+    }
+
+    /// The element to write instead, with the surviving sx carried over so the author
+    /// can paste it whole rather than reassemble it.
+    fn render(&self, kept: &[&str]) -> String {
+        // No explicit `flex`/`grid`, but `items-`/`gap-` present: the author meant a
+        // row — that is what those props are FOR.
+        let tag = self.tag.unwrap_or(if self.cols.is_some() || self.rows.is_some() {
+            "grid"
+        } else {
+            "row"
+        });
+        let mut el = format!("<{tag}");
+        if self.inline {
+            el.push_str(" inline");
+        }
+        for (name, v) in [
+            ("cols", &self.cols),
+            ("rows", &self.rows),
+            ("gap", &self.gap),
+            ("align", &self.align),
+            ("justify", &self.justify),
+        ] {
+            if let Some(v) = v {
+                el.push_str(&format!(" {name}=\"{v}\""));
+            }
+        }
+        if let Some(w) = self.wrap {
+            el.push(' ');
+            el.push_str(w);
+        }
+        if !kept.is_empty() {
+            el.push_str(&format!(" sx=\"{}\"", kept.join(" ")));
+        }
+        el.push('>');
+        el
+    }
+}
+
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
     for hit in scan_sx(source) {
@@ -147,6 +247,31 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             SxHit::Static(val, offset) => (val, offset),
         };
         let (line, col) = offset_to_line_col(source, offset);
+        // Gather the layout atoms across the WHOLE attribute before reporting any of
+        // them, so `flex items-center gap-2` is one redirect and not three refusals.
+        let mut layout = LayoutIntent::default();
+        let mut kept: Vec<&str> = Vec::new();
+        for pair in val.split_whitespace() {
+            if pair == "group" {
+                continue;
+            }
+            let (_, atom) = split_prefix(pair);
+            if matches!(crate::sx_vocab::resolve(atom), crate::sx_vocab::Resolved::Refused { .. }) {
+                if layout.absorb(atom) {
+                    continue;
+                }
+            } else {
+                kept.push(pair);
+            }
+        }
+        if layout.saw_any {
+            findings.push(mk(path, line, col, format!(
+                "sx does not do layout — the parent decides how its children sit. Write:\n\n    {}\n\nA layout element names the axis and closes the vocabulary, which is what stops two \
+                 authors diverging on four flex properties.",
+                layout.render(&kept)
+            )));
+        }
+
         for pair in val.split_whitespace() {
             // Bare `group` marks an ancestor so a descendant can react to its
             // state with `group-<state>:`.
@@ -172,9 +297,14 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 // THE MISSION: never "not allowed, find another way". Always
                 // "use this instead".
                 crate::sx_vocab::Resolved::Refused { instead } => {
-                    findings.push(mk(path, line, col, format!(
-                        "sx `{atom}` is not sx — use {instead}"
-                    )));
+                    // A layout atom was already absorbed into the ONE compound
+                    // redirect above; reporting it again would be the very
+                    // three-rejections-per-breath this rule exists to prevent.
+                    if !LayoutIntent::default().absorb(atom) {
+                        findings.push(mk(path, line, col, format!(
+                            "sx `{atom}` is not sx — use {instead}"
+                        )));
+                    }
                 }
                 crate::sx_vocab::Resolved::BadValue { name, options } => {
                     let value = atom.strip_prefix(&name).unwrap_or(atom).trim_start_matches('-');
@@ -387,14 +517,38 @@ mod tests {
     }
 
     #[test]
+    fn the_layout_prior_gets_one_redirect_not_three_refusals() {
+        // `flex items-center gap-2` is ONE breath of Tailwind muscle memory. Three
+        // separate rejections is where "puzzle, not toolkit" comes back — and the
+        // author writes it again on the next element regardless.
+        let ms = run(r#"<div sx="flex items-center gap-2 p-4 bg-surface-2">x</div>"#);
+        assert_eq!(ms.len(), 1, "one message, not three: {ms:?}");
+        let m = &ms[0];
+        assert!(m.contains(r#"<row gap="2" align="center" sx="p-4 bg-surface-2">"#), "{m}");
+    }
+
+    #[test]
+    fn the_surviving_sx_comes_along_so_it_can_be_pasted_whole() {
+        let m = &run(r#"<div sx="flex-col justify-between p-6">x</div>"#)[0];
+        assert!(m.contains(r#"<column justify="between" sx="p-6">"#), "{m}");
+    }
+
+    #[test]
+    fn a_grid_is_inferred_from_its_own_props() {
+        // No `grid` atom, but `grid-cols-3` can only mean one thing.
+        let m = &run(r#"<div sx="grid-cols-3 gap-4">x</div>"#)[0];
+        assert!(m.contains(r#"<grid cols="3" gap="4">"#), "{m}");
+    }
+
+    #[test]
     fn a_refusal_names_the_element_to_use_instead() {
         // THE mission: never "not allowed, find another way".
         let m = &run(r#"<div sx="flex">x</div>"#)[0];
         assert!(m.contains("<row>"), "{m}");
         let m = &run(r#"<div sx="items-center">x</div>"#)[0];
-        assert!(m.contains("align"), "{m}");
+        assert!(m.contains(r#"align="center""#), "{m}");
         let m = &run(r#"<div sx="gap-4">x</div>"#)[0];
-        assert!(m.contains("gap"), "{m}");
+        assert!(m.contains(r#"gap="4""#), "{m}");
     }
 
     #[test]
