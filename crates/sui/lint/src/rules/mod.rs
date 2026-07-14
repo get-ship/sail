@@ -68,6 +68,11 @@ pub const CONTROLLER_RULES: &[(&str, RuleFn)] = &[
 /// Rules that lint a `*.sui` template source. The dispatcher in
 /// `lib.rs::lint_sui_template_source` walks this slice in order.
 pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
+    // Also on the TEMPLATE path, not just when a pack happens to have a .ts file
+    // linted. Enforcement that depends on the incidental presence of another file
+    // is not enforcement — an undeclared stylesheet must fail the compile of any
+    // source in the package that owns it.
+    (no_undeclared_stylesheet::RULE_ID, no_undeclared_stylesheet::check),
     (css_literal::RULE_ID, css_literal::check),
     (css_literals::RULE_ID, css_literals::check),
     (css_content_text::RULE_ID, css_content_text::check),

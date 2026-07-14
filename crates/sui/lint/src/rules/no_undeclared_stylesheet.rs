@@ -116,11 +116,20 @@ fn byte_offset_to_line(source: &str, offset: usize) -> (usize, usize) {
 }
 
 pub fn check(path: &Path, _source: &str) -> Vec<Finding> {
-    // We lint by DIRECTORY, but the dispatch entry gives a file path.
-    // The convention: the lint is invoked once per pack src directory;
-    // here we accept the css file's parent and report.
     if path.is_dir() {
         return check_dir(path);
+    }
+    // The dispatch hands us the `.sui` being compiled, never a directory — so an
+    // is_dir() guard meant this rule COULD NOT FIRE. It was written, registered,
+    // and dead: a stylesheet could be declared in the config and enforced by
+    // nothing. Walk up to the package that owns this source (the nearest
+    // `sui.config.json`) and lint THAT.
+    let mut dir = path.parent();
+    while let Some(d) = dir {
+        if d.join("sui.config.json").is_file() {
+            return check_dir(d);
+        }
+        dir = d.parent();
     }
     Vec::new()
 }

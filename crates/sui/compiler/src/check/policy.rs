@@ -96,6 +96,10 @@ impl Policy {
             LintOverride { rule: "sui-no-style-block".to_string(), severity: Error },
             LintOverride { rule: "sui-no-inline-style".to_string(), severity: Error },
             LintOverride { rule: "sui-no-class".to_string(), severity: Error },
+            // Every stylesheet that exists is DECLARED in sui.config.json. An
+            // undeclared companion sheet is banned CSS living in a file the
+            // compiler never sees — the back door in its purest form.
+            LintOverride { rule: "sui-no-undeclared-stylesheet".to_string(), severity: Error },
         ]
     }
 
@@ -133,6 +137,7 @@ impl Policy {
             lo("sui-no-style-block", Error),
             lo("sui-no-inline-style", Error),
             lo("sui-no-class", Error),
+            lo("sui-no-undeclared-stylesheet", Error),
             // CAPABILITY keys — the dial.
             lo("sui-no-sx", cap(self.sx)),
             lo("sui-no-variants", cap(self.variants)),
