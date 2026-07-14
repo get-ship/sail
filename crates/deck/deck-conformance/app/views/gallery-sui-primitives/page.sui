@@ -176,14 +176,14 @@ export default controller<Scope>({
     <h2 class="gsp-label">row / column</h2>
     <div class="gsp-col">
       <row gap="3" align="center">
-        <span tone="primary" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">A</span>
-        <span tone="success" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">B</span>
-        <span tone="accent" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">C</span>
+        <span tone="primary" sx="min-h-control-h-2xs px-2 text-xs font-semibold rounded-sm bg-tone-bg border border-tone-border text-tone-fg">A</span>
+        <span tone="success" sx="min-h-control-h-2xs px-2 text-xs font-semibold rounded-sm bg-tone-bg border border-tone-border text-tone-fg">B</span>
+        <span tone="accent" sx="min-h-control-h-2xs px-2 text-xs font-semibold rounded-sm bg-tone-bg border border-tone-border text-tone-fg">C</span>
       </row>
       <column gap="2">
-        <span tone="info" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Stack item 1</span>
-        <span tone="warning" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Stack item 2</span>
-        <span tone="destructive" sx="display:inline-flex min-h:control-h-2xs px:2 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Stack item 3</span>
+        <span tone="info" sx="min-h-control-h-2xs px-2 text-xs font-semibold rounded-sm bg-tone-bg border border-tone-border text-tone-fg">Stack item 1</span>
+        <span tone="warning" sx="min-h-control-h-2xs px-2 text-xs font-semibold rounded-sm bg-tone-bg border border-tone-border text-tone-fg">Stack item 2</span>
+        <span tone="destructive" sx="min-h-control-h-2xs px-2 text-xs font-semibold rounded-sm bg-tone-bg border border-tone-border text-tone-fg">Stack item 3</span>
       </column>
     </div>
   </section>
@@ -544,9 +544,9 @@ export default controller<Scope>({
     <div class="gsp-row">
       <table variant="slot" label="Demo table" hoverable>
         <tr slot="head"><th>Name</th><th>Role</th><th>Status</th></tr>
-        <tr><td>Alice</td><td>Engineer</td><td><span tone="success" sx="display:inline-flex min-h:control-h-2xs px:1_5 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Active</span></td></tr>
-        <tr><td>Bob</td><td>Designer</td><td><span tone="warning" sx="display:inline-flex min-h:control-h-2xs px:1_5 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Away</span></td></tr>
-        <tr><td>Carol</td><td>PM</td><td><span tone="muted" sx="display:inline-flex min-h:control-h-2xs px:1_5 text:xs weight:semibold radius:sm bg:tone-bg border:tone-border fg:tone-fg">Offline</span></td></tr>
+        <tr><td>Alice</td><td>Engineer</td><td><span tone="success" sx="min-h-control-h-2xs px-1_5 text-xs font-semibold rounded-sm bg-tone-bg border border-tone-border text-tone-fg">Active</span></td></tr>
+        <tr><td>Bob</td><td>Designer</td><td><span tone="warning" sx="min-h-control-h-2xs px-1_5 text-xs font-semibold rounded-sm bg-tone-bg border border-tone-border text-tone-fg">Away</span></td></tr>
+        <tr><td>Carol</td><td>PM</td><td><span tone="muted" sx="min-h-control-h-2xs px-1_5 text-xs font-semibold rounded-sm bg-tone-bg border border-tone-border text-tone-fg">Offline</span></td></tr>
       </table>
     </div>
   </section>

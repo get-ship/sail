@@ -70,3 +70,4 @@ skills-lock.json
 
 # bundle-cost.mjs scratch
 apps/sui-site/.bundle-cost/
+.archive/
