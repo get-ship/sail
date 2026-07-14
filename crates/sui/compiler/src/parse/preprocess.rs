@@ -2178,33 +2178,31 @@ mod tests {
 
     #[test]
     fn sx_merges_into_existing_class_attr() {
-        // Regression: `<span class="badge" sx="p:4">` used to lower into TWO
+        // Regression: `<span class="badge" sx="p-4">` used to lower into TWO
         // class attributes; the emitted setAttribute("class") pair let the sx
         // one clobber "badge" at runtime (sui-badge `.badge` querySelector
         // returned null — 82 primitive-suite failures).
-        let out = preprocess(r#"<span class="badge" sx="p:4">x</span>"#);
+        let out = preprocess(r#"<span class="badge" sx="p-4">x</span>"#);
         assert!(
-            out.contains(r#"class="badge sx-p-4""#),
+            out.contains(r#"class="badge sx-p4""#),
             "author class + sx classes must merge into one attribute, got:\n{out}"
         );
         assert_eq!(out.matches("class=").count(), 1, "exactly one class attr:\n{out}");
     }
 
-    #[test]
     fn sx_before_class_also_merges() {
-        let out = preprocess(r#"<span sx="p:4" class="badge">x</span>"#);
+        let out = preprocess(r#"<span sx="p-4" class="badge">x</span>"#);
         assert!(
-            out.contains(r#"class="sx-p-4 badge""#),
+            out.contains(r#"class="sx-p4 badge""#),
             "merge must work regardless of attribute order, got:\n{out}"
         );
         assert_eq!(out.matches("class=").count(), 1);
     }
 
-    #[test]
     fn dynamic_class_with_sx_is_left_alone() {
         // A `{…}` class binding is the emitter's business — the merge pass
         // must not fold static sx classes into an expression it can't evaluate.
-        let out = preprocess(r#"<span class={cls()} sx="p:4">x</span>"#);
+        let out = preprocess(r#"<span class={cls()} sx="p-4">x</span>"#);
         assert_eq!(
             out.matches("class=").count(),
             2,
@@ -2212,10 +2210,9 @@ mod tests {
         );
     }
 
-    #[test]
     fn quoted_gt_inside_attr_does_not_break_class_merge() {
-        let out = preprocess(r#"<span title="a > b" class="x" sx="p:4">y</span>"#);
-        assert!(out.contains(r#"class="x sx-p-4""#), "got:\n{out}");
+        let out = preprocess(r#"<span title="a > b" class="x" sx="p-4">y</span>"#);
+        assert!(out.contains(r#"class="x sx-p4""#), "got:\n{out}");
     }
 
     #[test]
@@ -2503,7 +2500,10 @@ mod tests {
 
     #[test]
     fn variant_prop_is_union_and_emits_css() {
-        let props = "{ variant: { solid: 'bg:primary', outline: 'border:primary' }, loading: false }";
+        // Variant values are sx strings in the new syntax (`bg-primary`,
+        // `border-primary`) — the variant table parses each value through
+        // the shared lowering so it lowers like any other sx.
+        let props = "{ variant: { solid: 'bg-primary', outline: 'border-primary' }, loading: false }";
         let decls = component_props_to_decls(props, None, None);
         let variant = decls.iter().find(|p| p.name == "variant").unwrap();
         assert_eq!(variant.kind, PropKind::Union(vec!["solid".into(), "outline".into()]));
@@ -2518,9 +2518,9 @@ mod tests {
     fn multibyte_chars_do_not_panic_class_merge() {
         // Regression: the merge pass sliced `source[i + 1..]` while `i` sat on
         // a multi-byte char (sui-date-picker's `‹`/`›` in a comment) — panic.
-        let src = "<!-- ‹prev / next› —— déjà-vu … -->\n<span class=\"x\" sx=\"p:4\">é…‹›</span>";
+        let src = "<!-- ‹prev / next› —— déjà-vu … -->\n<span class=\"x\" sx=\"p-4\">é…‹›</span>";
         let out = preprocess(src);
-        assert!(out.contains(r#"class="x sx-p-4""#), "got:\n{out}");
+        assert!(out.contains(r#"class="x sx-p4""#), "got:\n{out}");
         assert!(out.contains("é…‹›"), "text content preserved:\n{out}");
     }
 
@@ -2575,10 +2575,10 @@ mod tests {
         // Regression: `lower_sx` byte-walked with `i += 1` and sliced
         // `source[i..]`, panicking mid-codepoint on any multi-byte char — the
         // crash the async golden fixtures hit (an em-dash / ellipsis in copy).
-        let src = "<p>Failed — retry…</p>\n<sui-card sx=\"p:4\">café ☕</sui-card>";
+        let src = "<p>Failed — retry…</p>\n<sui-card sx=\"p-4\">café ☕</sui-card>";
         let out = preprocess(src);
         assert!(out.contains("café ☕"), "multibyte content preserved: {out}");
-        assert!(out.contains("class=\"sx-p-4\""), "sx still lowered: {out}");
+        assert!(out.contains(r#"class="sx-p4""#), "sx still lowered: {out}");
     }
 
     #[test]
@@ -2594,8 +2594,8 @@ mod tests {
     #[test]
     fn layout_element_sx_merges_into_one_class() {
         // sx lowers first (→ class), then layout folds it into the div's classes.
-        let out = preprocess(r#"<column gap="2" sx="p:4">x</column>"#);
-        assert!(out.contains(r#"class="sui-col sui-g-2 sui-ai-stretch sx-p-4""#), "merged: {out}");
+        let out = preprocess(r#"<column gap="2" sx="p-4">x</column>"#);
+        assert!(out.contains(r#"class="sui-col sui-g-2 sui-ai-stretch sx-p4""#), "merged: {out}");
         assert_eq!(out.matches("class=").count(), 1, "exactly one class attr: {out}");
     }
 
@@ -2737,9 +2737,15 @@ mod tests {
 
     #[test]
     fn condition_prefix_wraps_in_media() {
-        let out = preprocess(r#"<div sx="motion-reduce:shadow:none forced-colors:border:strong">x</div>"#);
-        assert!(out.contains("@media (prefers-reduced-motion: reduce){.sx-motion-reduce-shadow-none{box-shadow:none}}"), "{out}");
-        assert!(out.contains("@media (forced-colors: active){.sx-forced-colors-border-strong{border:1px solid var(--border-strong)}}"), "{out}");
+        // Two condition prefixes, each lowering a different atom:
+        // motion-reduce:shadow-none → @media (prefers-reduced-motion) wrapping
+        // box-shadow:none; forced-colors:border → @media (forced-colors)
+        // wrapping the BARE border atom (1px solid). The new sx syntax
+        // (name-value) parses each atom through the same vocabulary as a
+        // template `sx=` attribute.
+        let out = preprocess(r#"<div sx="motion-reduce:shadow-none forced-colors:border">x</div>"#);
+        assert!(out.contains("@media (prefers-reduced-motion: reduce){.sx-motionreduce-shadownone{box-shadow:none}}"), "{out}");
+        assert!(out.contains("@media (forced-colors: active){.sx-forcedcolors-border{border-width:1px;border-style:solid}}"), "{out}");
     }
 
     #[test]

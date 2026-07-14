@@ -101,9 +101,9 @@ mod tests {
 
     #[test]
     fn flags_static_and_dynamic_sx() {
-        assert_eq!(run(r#"<sui-card sx="p:4">x</sui-card>"#), 1);
-        assert_eq!(run(r#"<sui-card sx={cond ? 'p:4' : 'p:2'}>x</sui-card>"#), 1);
-        assert_eq!(run(r#"<sui-card sx = "p:4">x</sui-card>"#), 1);
+        assert_eq!(run(r#"<sui-card sx="p-4">x</sui-card>"#), 1);
+        assert_eq!(run(r#"<sui-card sx={cond ? 'p-4' : 'p-2'}>x</sui-card>"#), 1);
+        assert_eq!(run(r#"<sui-card sx = "p-4">x</sui-card>"#), 1);
     }
 
     #[test]
@@ -114,8 +114,8 @@ mod tests {
 
     #[test]
     fn is_warn_and_skips_comments() {
-        let f = check(Path::new("t.sui"), r#"<sui-card sx="p:4">x</sui-card>"#);
+        let f = check(Path::new("t.sui"), r#"<sui-card sx="p-4">x</sui-card>"#);
         assert!(matches!(f[0].severity, Severity::Warn));
-        assert_eq!(run(r#"<!-- <sui-card sx="p:9"> --> <sui-card>y</sui-card>"#), 0);
+        assert_eq!(run(r#"<!-- <sui-card sx="p-9"> --> <sui-card>y</sui-card>"#), 0);
     }
 }

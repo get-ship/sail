@@ -359,6 +359,18 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str("export const LAYOUT_KEYWORDS: Array<{ tag: string; props: string[] }> = ");
     sf.push_str(&serde_json::to_string_pretty(&layout)?);
     sf.push_str("\n\n");
+    // The REFUSED table — every atom the lint refuses, with the thing to use
+    // instead. Sourced from `sx_vocab::refusals()` (the same table the lint
+    // reads), so the docs teach the closure, by construction. The /reference
+    // page renders this as the "Not sx — use this" table; the agent SKILL.md
+    // leads with it.
+    let refusals: Vec<serde_json::Value> = sui_lint::sx_vocab::refusals()
+        .into_iter()
+        .map(|(atom, instead)| serde_json::json!({ "atom": atom, "instead": instead }))
+        .collect();
+    sf.push_str("export const SX_REFUSALS: Array<{ atom: string; instead: string }> = ");
+    sf.push_str(&serde_json::to_string_pretty(&refusals)?);
+    sf.push_str("\n\n");
     let mut preset_names: Vec<String> = sui_compiler::lower::presets::load()
         .map(|db| db.known_preset_names())
         .unwrap_or_default();
@@ -432,13 +444,47 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         "- NO `<style>` blocks, NO `style=` attributes — ever. Visuals flow through\n  tokens, props, and the surfaces listed below.\n- NO raw values anywhere (no px, no hex): spend a token.\n- Layout is elements, not CSS: `<row>`, `<column>`, `<grid>`, `<center>`,\n  `<stack>` with `gap`/`align`/`justify`/`cols` attributes. `cols` is a fixed\n  column count (1..=12) on `<grid>` and takes precedence over `min` when both\n  are present. Unrecognized attributes on a layout keyword are a compile error —\n  the language won't silently drop them.\n- Behavior is unrestricted TypeScript in `<controller>` — the restraint is\n  visual, never logical.\n- Components: `<component>{{ props: {{ tone, size, label: 'Default', ... }} }}`\n  — typed props; `tone`/`size` built-ins opt into the framework contracts.\n"
     );
     if effective.sx {
+        // LEAD WITH WHAT WE ARE NOT. The agent's Tailwind prior is right
+        // about the syntax and wrong about the scope — the most valuable
+        // section of this skill is the honest refusal list, so a refused
+        // atom names the thing to use instead. The mission is never
+        // "find another way." Sources the same table the lint consults
+        // (`sui_lint::sx_vocab::refusals()`) — the docs can never drift.
+        let _ = writeln!(md, "## What sx is NOT\n");
+        let _ = writeln!(
+            md,
+            "These atoms are refused by name. Each entry below names the thing to\nuse instead — `find another way` is not the answer. The list is the closed\nrefusal table, from the same source the lint enforces (`sx_vocab::refusals()`):\n"
+        );
+        for (atom, instead) in sui_lint::sx_vocab::refusals() {
+            let _ = writeln!(md, "- `sx=\"{atom}\"` — {instead}");
+        }
+        let _ = writeln!(md);
+
         let _ = writeln!(md, "## sx — the surface styling attribute\n");
         let _ = writeln!(
             md,
-            "`sx=\"prop:token prop:token …\"` — static only (`sx={{expr}}` is a compile\nerror). State prefixes: `hover:` `focus:` `focus-within:` `active:`\n`disabled:`, ancestor propagation `group-hover:` (mark the ancestor with bare\n`group`), conditions `motion-reduce:` `motion-safe:` `forced-colors:` `dark:`\n`light:`. ALLOWED values per prop:\n"
+            "`sx=\"name-value name-value …\"` — Tailwind's names, our values. An\natom is `[prefix:]name-value` (e.g. `bg-surface-2`, `hover:bg-muted`,\n`motion-reduce:shadow-none`); several utilities share a name and disambiguate\nby value (`text-sm` is a font size, `text-foreground` is a colour,\n`text-center` is an alignment). Static only (`sx={{expr}}` is a compile\nerror). State prefixes: `hover:` `focus:` `focus-within:` `active:`\n`disabled:`, ancestor propagation `group-hover:` (mark the ancestor with bare\n`group`), conditions `motion-reduce:` `motion-safe:` `forced-colors:` `dark:`\n`light:`. ALLOWED values per prop:\n"
         );
         for (prop, values) in sui_lint::rules::sx::vocabulary() {
-            let _ = writeln!(md, "- `{prop}:` {}", values.join(", "));
+            let _ = writeln!(md, "- `{prop}-` {}", values.join(", "));
+        }
+        let _ = writeln!(md);
+
+        // THE VALUE SPACE — the scales themselves, inline. The agent's prior
+        // gets the property right and the VALUE wrong, every time, on every
+        // colour and size. Putting the value space in context converts the
+        // biggest failure mode from a round-trip into a non-event. Sourced
+        // from the same token tables the lint reads, so they cannot drift.
+        let _ = writeln!(md, "## Token scales — spend one, never a raw value\n");
+        let _ = writeln!(
+            md,
+            "These are the closed value sets the scales above draw from. A\nscale-valued utility spends a token from one of these — never a raw number,\ncolour, or unit.\n"
+        );
+        for scale in &["space", "size", "color", "radius", "text", "weight", "leading", "tracking", "shadow", "z", "duration", "ease", "border-width", "opacity", "angle", "font"] {
+            let values = sui_lint::scales::values(scale);
+            if !values.is_empty() {
+                let _ = writeln!(md, "- `{scale}`: {}", values.join(", "));
+            }
         }
         let _ = writeln!(md);
     } else {
@@ -457,7 +503,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         let _ = writeln!(md, "## variants — a prop whose values are sx tables\n");
         let _ = writeln!(
             md,
-            "A variant IS A PROP. Declare it inside `props`, with the value being the\nvariant->sx table; the prop's type is the union of the keys (first = default),\nand it reflects to an attribute so CSS can key on it:\n\n```\n<component>{{\n  props: {{\n    variant: {{ solid: 'bg:tone fg:tone-fg', soft: 'bg:tone-bg', outline: 'border:tone' }},\n    tone: 'default' | 'primary' | 'destructive',\n  }},\n}}</component>\n```\n\nValues are sx lists and take the same state prefixes\n(`solid: 'bg:tone hover:bg:muted'`). `compound` (a sibling field of `props`)\nkeys rules on COMBINATIONS of variant values.\n\nThere is no separate `variants:` block. One declaration surface: `props`.\n"
+            "A variant IS A PROP. Declare it inside `props`, with the value being the\nvariant->sx table; the prop's type is the union of the keys (first = default),\nand it reflects to an attribute so CSS can key on it:\n\n```\n<component>{{\n  props: {{\n    variant: {{ solid: 'bg-tone text-tone-fg', soft: 'bg-tone-bg', outline: 'border-tone' }},\n    tone: 'default' | 'primary' | 'destructive',\n  }},\n}}</component>\n```\n\nValues are sx lists and take the same state prefixes\n(`solid: 'bg-tone hover:bg-tone-bg-hover'`). `compound` (a sibling field of `props`)\nkeys rules on COMBINATIONS of variant values.\n\nThere is no separate `variants:` block. One declaration surface: `props`.\n"
         );
     }
     if !effective.raw_containers {
