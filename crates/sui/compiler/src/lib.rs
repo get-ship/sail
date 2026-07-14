@@ -29,6 +29,7 @@
 
 use std::path::PathBuf;
 
+pub mod action_manifest;
 pub mod bindings;
 pub mod analysis;
 pub mod animation;

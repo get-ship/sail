@@ -22,7 +22,6 @@
         "@ship/sui-code-editor": "workspace:*",
         "@ship/sui-compiler-wasm": "workspace:*",
         "@ship/sui-dom": "workspace:*",
-        "@ship/sui-fx": "workspace:*",
         "@ship/sui-lsp-browser": "workspace:*",
         "@ship/sui-media": "workspace:*",
         "@ship/sui-mermaid": "workspace:*",
@@ -116,13 +115,6 @@
       "devDependencies": {
         "@ship/test-setup": "workspace:*",
         "vitest": "^4.1.5",
-      },
-    },
-    "packages/components/sui/fx": {
-      "name": "@ship/sui-fx",
-      "version": "0.2.0",
-      "dependencies": {
-        "@ship/sui-runtime": "workspace:*",
       },
     },
     "packages/components/sui/media": {
@@ -509,8 +501,6 @@
     "@ship/sui-dom": ["@ship/sui-dom@workspace:packages/sui/dom"],
 
     "@ship/sui-eval": ["@ship/sui-eval@workspace:packages/deck/eval"],
-
-    "@ship/sui-fx": ["@ship/sui-fx@workspace:packages/components/sui/fx"],
 
     "@ship/sui-lsp-browser": ["@ship/sui-lsp-browser@workspace:packages/deck/lsp-browser"],
 

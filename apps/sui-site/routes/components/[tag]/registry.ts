@@ -1,11 +1,11 @@
 // /components/[tag] — detail data for the FULL L1 surface (the 48 elements
-// the l1-conformance gate renders, minus nothing) plus the two fx actions.
-// slug → { heading, blurb, variants, props, usage }. Props tables are
-// GENERATED from the compiler's prop registry (see genProps below); regen
-// with `cargo run -p sui-compiler -- prop-registry` after touching a stdlib
-// <component>{ props } declaration. The usage strings live in ./snippets.ts
-// so the site-wide snippet guard compiles every one of them.
-
+// the l1-conformance gate renders, minus nothing). slug → { heading,
+// blurb, variants, props, usage }. Props tables are GENERATED from the
+// compiler's prop registry (see genProps below); regen with
+// `cargo run -p sui-compiler -- prop-registry` after touching a stdlib
+// <component>{ props } declaration. The usage strings live in
+// ./snippets.ts so the site-wide snippet guard compiles every one
+// of them.
 import { PROP_REGISTRY } from '../../../src/prop-registry.gen'
 import { usage } from './snippets'
 
@@ -16,13 +16,13 @@ export interface PropRow {
 }
 
 export interface DetailEntry {
-  /** The element tag (or action name) — breadcrumb + copy. */
+  /** The element tag — breadcrumb + copy. */
   tag: string
   /** The scope key page.sui mounts the live stage through (`stage.<key>()`). */
   key: string
-  /** The h1, already formed: '<button>', 'row · column · grid', 'use:spotlight'. */
+  /** The h1, already formed: '<button>', 'row · column · grid'. */
   heading: string
-  pack: 'lang' | 'fx'
+  pack: 'lang'
   blurb: string
   /** What the variant chips switch on the live stage. Empty = no chips. */
   variants: string[]
@@ -629,23 +629,9 @@ export const DETAILS: Record<string, DetailEntry> = {
       { name: 'sx="max-h:…"', desc: 'the constraint that makes it scroll', type: 'sx' },
     ],
   }),
-
-  // ── @ship/sui-fx ─────────────────────────────────────────────────────
-  spotlight: {
-    tag: 'use:spotlight',
-    key: 'fxSpotlight',
-    heading: 'use:spotlight',
-    pack: 'fx',
-    blurb:
-      'An action, not an element: attach it to any surface and a soft spotlight tracks the pointer. Pure TS from @ship/sui-fx — it clears the compiler floor.',
-    variants: [],
-    variantAttr: '',
-    props: [
-      { name: 'use:spotlight', desc: 'the whole API — attach and done', type: 'action' },
-      { name: 'import', desc: "{ spotlight } from '@ship/sui-fx'", type: 'module' },
-    ],
-    usage: usage.spotlight ?? '',
-  },
+  // Actions live in the action table, not in this element detail
+  // catalog. (`spotlight` / `targetCursor` were here when there was
+  // an `fx` pack; both packs and entries are gone now.)
 }
 
 export const DETAIL_TAGS = Object.keys(DETAILS)

@@ -24,8 +24,7 @@
     "@ship/sui-code-editor": "workspace:*",
     "@ship/sui-compiler-wasm": "workspace:*",
     "@ship/tokens": "workspace:*",
-    "@ship/sui-lsp-browser": "workspace:*",
-    "@ship/sui-fx": "workspace:*"
+    "@ship/sui-lsp-browser": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2"

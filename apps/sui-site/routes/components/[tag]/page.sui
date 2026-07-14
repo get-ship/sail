@@ -5,28 +5,26 @@
   curated truth from the stdlib declarations.
 
   route.params.tag() picks the entry; ./registry.ts covers the FULL L1
-  surface (all 48 elements) plus the two @ship/sui-fx actions, so the empty
-  state below is for typos, not for real components. Each stage mounts
-  through one zero-arg gate (`stage.<key>()`) — the only call shape a
-  renderable expression allows.
+  surface (all 48 elements), so the empty state below is for typos, not
+  for real components. Each stage mounts through one zero-arg gate
+  (`stage.<key>()`) — the only call shape a renderable expression
+  allows.
 -->
 
 <controller>
-// /components/[tag] — the detail view. route.params.tag() picks the entry out
-// of the DETAILS registry (the full L1 surface plus the fx actions); one
-// variant signal drives the live stage (each entry maps its chips onto
-// whichever attribute its variants mean — button:variant, slider:tone,
-// switch:size, tooltip:placement).
+// /components/[tag] — the detail view. route.params.tag() picks the entry
+// out of the DETAILS registry (the full L1 surface); one variant signal
+// drives the live stage (each entry maps its chips onto whichever
+// attribute its variants mean — button:variant, slider:tone, switch:size,
+// tooltip:placement).
 //
 // Every read the template does is a zero-arg call (`entry()`, `stage.button()`),
 // because that is the only call shape a renderable expression allows — the
 // stage map mirrors the browser page's `show` map.
 
 import { controller, signal, derived, effect, type ViewScope } from '@ship/sui-runtime'
-import { spotlight } from '@ship/sui-fx'
 import type { Scope } from './page.sui'
 import { DETAILS, type DetailEntry } from './registry'
-
 export default controller({
   scope: (ctx: ViewScope<Scope>) => {
     const tag = derived(() => ctx.route.params.tag?.() ?? '')
@@ -52,8 +50,6 @@ export default controller({
     const props = () => entry()?.props ?? []
     const usageCode = () => entry()?.usage ?? ''
     const heading = () => entry()?.heading ?? tag()
-    const isFx = derived(() => entry()?.pack === 'fx')
-    const packLabel = () => (entry()?.pack === 'fx' ? '@ship/sui-fx' : 'In the language')
 
     // One zero-arg gate per stage — `stage.<key>()`, derived from the entry.
     const stage = Object.fromEntries(
@@ -84,13 +80,12 @@ export default controller({
     ]
 
     return {
-      tag, entry, known, heading, isFx, packLabel,
+      tag, entry, known, heading,
       variant, pick, onVariantChange, variants, hasVariants, variantAttr,
       blurb, props, usageCode, stage,
       presses, press, notify, agreed, load, name, bio, team,
       fw, pickFw, pageNo, goPage, kept, dropChip, restoreChip,
       sheetSide, people,
-      spotlight,
     }
   },
 })
@@ -106,9 +101,8 @@ export default controller({
     <sui-component-viewer
       name={heading()}
       blurb={blurb()}
-      pack={packLabel()}
+      pack={"In the language"}
       variant-attr={variantAttr()}
-      no-a11y-chip={isFx()}
       usage={usageCode()}
       prop:variants={variants()}
       prop:rows={props()}
@@ -549,12 +543,6 @@ export default controller({
               </scroll-area>
             {/if}
 
-            <!-- ══ @ship/sui-fx ════════════════════════════════════════ -->
-            {#if stage.fxSpotlight()}
-              <div use:spotlight sx="p-8 w-full rounded-lg border border-border">
-                <center><p sx="text-sm text-muted-foreground">move the pointer — a spotlight follows it</p></center>
-              </div>
-            {/if}
       </column>
       <p slot="stage" sx="text-xs text-muted-foreground font-mono">click it · type in it · pick from it — nothing here is a screenshot</p>
     </sui-component-viewer>

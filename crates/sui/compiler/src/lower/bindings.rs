@@ -1,5 +1,13 @@
 //! Per-attribute import collection. Mirrors the runtime helpers
 //! exposed in `packages/sui/runtime/src/index.ts`.
+//!
+//! The `BUILTIN_ACTIONS` list is the compiler's view of the action
+//! registry, derived from `crate::action_manifest::BUILTIN_ACTION_NAMES`
+//! so the action table is the single source of truth. The runtime's
+//! `actions/index.ts` barrel and the top-level `index.ts` re-export
+//! are validated against the same source by the drift test in
+//! `tests/abi_boundary.rs` — adding an action means updating the
+//! table, never the three Rust arrays independently.
 use crate::diagnostics::CompileError;
 use crate::ir::*;
 use crate::lower::presets;
@@ -8,15 +16,14 @@ use crate::lower::Lowered;
 /// Built-in `use:` actions shipped by the runtime. When a `use:` directive
 /// names one of these (a bare identifier), the compiler auto-imports it from
 /// `@ship/sui-runtime` so it resolves as an ESM binding — no controller
-/// import, no `$scope.` lookup. Kept in sync with the `BUILTINS` lists in
-/// `emit::expr_rewrite` and `check::scope_bound`, which leave these bare.
-pub const BUILTIN_ACTIONS: &[&str] = &[
-    "alert", "anchor", "autosize", "avatar", "chip", "clickOutside", "collapsible",
-    "codeBlock", "combobox", "dropzone", "emptyState", "eventSpan", "errorBoundary", "errorState",
-    "cellPad", "contextMenu", "gridTracks", "hoverCard", "icon", "maxWidth", "menu", "pagination",
-    "pin", "portEdge", "radioGroup", "rangeFill", "rect", "swatch", "tabs", "targetCursor",
-    "themePicker", "toast", "toggleGroup", "tooltip", "virtualRow", "virtualSpacer",
-    "worldTransform", "zoomPan", "spotlight"];
+/// import, no `$scope.` lookup.
+///
+/// This is the same slice as
+/// `crate::action_manifest::BUILTIN_ACTION_NAMES` — the table is the
+/// single source. The const appears under this path for downstream
+/// code that historically reached for
+/// `sui_compiler::lower::bindings::BUILTIN_ACTIONS`.
+pub const BUILTIN_ACTIONS: &[&str] = crate::action_manifest::BUILTIN_ACTION_NAMES;
 
 pub fn collect_attr_imports(
     a: &AttrInstr,

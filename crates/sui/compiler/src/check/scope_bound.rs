@@ -55,11 +55,14 @@ const BUILTINS: &[&str] = &[
     // without an explicit declaration is correct here.
     "fade", "slide", "scale",
     // Built-in `use:` actions — auto-imported when referenced by a `use:`
-    // directive (see `lower::bindings::BUILTIN_ACTIONS`), so `use:anchor` &c
-    // resolve without an explicit controller import.
-    "anchor", "autosize", "clickOutside", "dropzone", "cellPad", "eventSpan", "gridTracks",
-    "maxWidth", "pin", "portEdge", "rect", "spotlight", "swatch", "targetCursor",
-    "virtualRow", "virtualSpacer", "worldTransform", "zoomPan",
+    // directive (see `action_manifest::BUILTIN_ACTION_NAMES`), so `use:anchor`
+    // &c resolve without an explicit controller import. This is the
+    // bare-ident subset: the actions a template expression might
+    // reference by name. Drift from `BARE_REFERENCED_ACTION_NAMES` is
+    // caught by `action_manifest::tests` — the table is the source.
+    "anchor", "autosize", "cellPad", "clickOutside", "dropzone", "eventSpan",
+    "gridTracks", "maxWidth", "pin", "portEdge", "rect", "spotlight", "swatch",
+    "targetCursor", "virtualRow", "virtualSpacer", "worldTransform", "zoomPan",
 ];
 
 pub fn check(

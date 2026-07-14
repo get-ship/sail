@@ -160,6 +160,7 @@ export {
   cellPad,
   rect,
   pin,
+  portEdge,
   eventSpan,
   worldTransform,
   zoomPan,
@@ -169,7 +170,7 @@ export {
   targetCursor,
   gridTracks,
 } from './actions'
-export type { AnchorPlacement } from './actions'
+export type { AnchorPlacement, PortSide } from './actions'
 
 // Scroll-lock / focus-return — runtime seams for overlays (dialog, drawer).
 // The body is part of the DOCUMENT, not a component, so a per-element `use:`

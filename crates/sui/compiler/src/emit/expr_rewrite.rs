@@ -49,11 +49,13 @@ const BUILTINS: &[&str] = &[
     // (`use:anchor`, `use:autosize`, `use:clickOutside`). Same deal as the
     // transitions: the `Use` lowering auto-imports whichever ones the
     // template references, so the action name resolves as a bare ESM binding
-    // instead of an undefined `$scope.` lookup. Kept in sync with
-    // `lower::bindings::BUILTIN_ACTIONS` and `check::scope_bound::BUILTINS`.
-    "anchor", "autosize", "clickOutside", "dropzone", "cellPad", "eventSpan", "gridTracks",
-    "maxWidth", "pin", "portEdge", "rect", "spotlight", "swatch", "targetCursor",
-    "virtualRow", "virtualSpacer", "worldTransform", "zoomPan",
+    // instead of an undefined `$scope.` lookup. The full registry is
+    // `action_manifest::BUILTIN_ACTION_NAMES`; this is the bare-ident
+    // subset, shared with `check::scope_bound::BUILTINS` and checked
+    // for drift by `action_manifest::tests`.
+    "anchor", "autosize", "cellPad", "clickOutside", "dropzone", "eventSpan",
+    "gridTracks", "maxWidth", "pin", "portEdge", "rect", "spotlight", "swatch",
+    "targetCursor", "virtualRow", "virtualSpacer", "worldTransform", "zoomPan",
 ];
 
 const KEYWORDS: &[&str] = &[

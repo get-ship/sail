@@ -1,5 +1,5 @@
 // /components/[tag] — the USAGE snippet each detail page shows, one per entry
-// on the full L1 surface (plus the two fx actions). Every one is a complete
+// on the full L1 surface. Every one is a complete
 // single-file program (controller + markup where state is read) and compiles
 // as written — checked by crates/sui/compiler/tests/site_snippets_compile.rs.
 export const usage: Record<string, string> = {
@@ -481,17 +481,6 @@ export default controller({
   <p>…after line.</p>
 </scroll-area>`,
 
-  spotlight: `<controller>
-import { controller } from '@ship/sui-runtime'
-import { spotlight } from '@ship/sui-fx'
-
-export default controller({
-  scope: () => ({ spotlight }),
-})
-</controller>
-
-<div use:spotlight sx="p-8 rounded-lg border border-border">
-  <p>move the pointer — a spotlight follows it</p>
-</div>`,
-
+  // Action snippets (spotlight / targetCursor) moved to the action
+  // table's docs surface; not in this element-detail snippets file.
 }
