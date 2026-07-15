@@ -131,9 +131,9 @@ impl BundleLayout {
     /// Construct with an explicit [`DeckConfig`] — the only construction path.
     /// `DeckConfig` is host-supplied (the daemon calls [`DeckConfig::defaults`]
     /// plus any overrides it wants); the bundler does not load any file from
-    /// the workspace root. `repo_root` is the host's project root (set via
-    /// `set_project_root`); `workspace_root` distinguishes an external-project
-    /// workspace from the framework repo for source-root resolution.
+    /// the workspace root. `repo_root` is the host's project root (the same root
+    /// it carries in its runtime `Resolution`); `workspace_root` distinguishes an
+    /// external-project workspace from the framework repo for source-root resolution.
     pub fn with_config(
          repo_root: PathBuf,
          workspace_root: Option<PathBuf>,
@@ -158,9 +158,9 @@ impl BundleLayout {
     /// `include_str!`. The framework's RUNTIME does not read this
     /// directory; the daemon serves singletons via `include_str!`
     /// constants and views on demand (view.rs). This is build-time
-    /// orchestration only — `deck.jsonc` had no opinion here, and
-    /// `set_project_root` does not own the path either (the bundler
-    /// always writes under `<out_root>/.deck`, the bake's contract).
+    /// orchestration only — the bundler always writes under `<out_root>/.deck`
+    /// (the bake's contract), resolved through the single
+    /// `deck_config::deck_out_path` so the runtime reader can't drift from it.
     pub fn deck_out(&self) -> PathBuf {
         deck_config::deck_out_path(&self.out_root)
     }
