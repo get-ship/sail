@@ -162,7 +162,7 @@ impl BundleLayout {
     /// `set_project_root` does not own the path either (the bundler
     /// always writes under `<out_root>/.deck`, the bake's contract).
     pub fn deck_out(&self) -> PathBuf {
-        self.out_root.join(".deck")
+        deck_config::deck_out_path(&self.out_root)
     }
     fn framework_dir(&self) -> PathBuf {
         self.deck_out().join("framework")
@@ -338,6 +338,25 @@ mod tests {
     fn write(path: &Path, body: &str) {
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         std::fs::write(path, body).unwrap();
+    }
+
+    /// `inv-deck-output-location-single`: every `.deck` output path resolves
+    /// through the ONE `deck_config::deck_out_path` join (the single declared
+    /// constant), so the bundler WRITER and the runtime READER can never drift
+    /// onto different directory names. This asserts the writer side equals the
+    /// shared constant; the reader side is pinned by
+    /// `deck_core::assets`'s view-bundle roundtrip test.
+    #[test]
+    fn deck_out_resolves_through_the_single_shared_constant() {
+        let root = PathBuf::from("/proj");
+        let writer = BundleLayout::with_config(root.clone(), None, DeckConfig::defaults()).deck_out();
+        let shared = deck_config::deck_out_path(&root);
+        assert_eq!(writer, shared, "the bundler writer resolves .deck via the shared join");
+        assert_eq!(shared, root.join(deck_config::DECK_OUT_DIRNAME), "the shared join is root/<const>");
+        assert_eq!(deck_config::DECK_OUT_DIRNAME, ".deck", "the one declared output-dir name");
+        // The framework sub-dir hangs off the SAME join — never a second `.deck` root.
+        let l = BundleLayout::with_config(root.clone(), None, DeckConfig::defaults());
+        assert_eq!(l.assets_dir_for("sui-runtime"), shared.join("framework"));
     }
 
     #[test]

@@ -365,6 +365,13 @@ pub struct AppBuild {
     /// generated `index.html`. Empty when the project imports no CSS.
     pub css_hrefs: Vec<String>,
     pub framework_assets: usize,
+    /// The asset-URL namespace the generated `index.html` bakes its hrefs
+    /// under — an explicit `--base`, else the package-name last segment
+    /// (`@ship/hub` → `hub`). The host serves assets under exactly THIS prefix
+    /// (`/<url_namespace>/<file>`), so a serve route derived from the build's
+    /// own output can never diverge from what was baked — the dev-vs-build
+    /// base-URL mismatch that 404s every asset. One derivation, returned here.
+    pub url_namespace: String,
 }
 
 /// Externalizes the framework singleton specifiers declared in
@@ -761,8 +768,8 @@ pub async fn bundle_app_with_base(
         &importmap_json,
         entry_module,
     );
-    let base = out_dir.file_name().and_then(|s| s.to_str()).unwrap_or("");
-    if out_dir.exists() && (base == "dist" || out_dir.to_string_lossy().contains("/.deck")) {
+    let out_leaf = out_dir.file_name().and_then(|s| s.to_str()).unwrap_or("");
+    if out_dir.exists() && (out_leaf == "dist" || out_leaf == deck_config::DECK_OUT_DIRNAME) {
         std::fs::remove_dir_all(out_dir).ok();
     }
     let assets_dir = out_dir.join("assets");
@@ -954,6 +961,7 @@ pub async fn bundle_app_with_base(
         js_href,
         css_hrefs,
         framework_assets,
+        url_namespace,
     })
 }
 

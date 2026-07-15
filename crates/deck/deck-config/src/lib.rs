@@ -62,12 +62,33 @@
 //! deck still names no path.
 
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
 mod jsonc;
 pub use jsonc::strip_jsonc_comments;
+
+/// The single build-output directory name. Every deck build artifact — the
+/// framework singletons (`.deck/framework/`), the per-view bundles
+/// (`.deck/views/<name>/view.js`), and each app's generated `index.html` +
+/// hashed `assets/` — lands under `<root>/.deck`.
+///
+/// Declared ONCE here so the bundler (writer) and the runtime (reader) can
+/// never drift onto different directory names — that drift is exactly the
+/// silent-asset-404 class the `inv-deck-output-location-single` invariant
+/// closes. Every `.deck` join in the tree resolves through this constant or
+/// [`deck_out_path`]; there is no second literal.
+pub const DECK_OUT_DIRNAME: &str = ".deck";
+
+/// `<root>/.deck` — the build-output dir for `root`. The SINGLE join shared by
+/// the writer ([`BundleLayout::deck_out`](../deck_bundler/targets) in
+/// deck-bundler) and the runtime view-bundle reader (`deck_core::assets`), so
+/// reader and writer resolve the SAME path for the same root — no convention
+/// duplicated across crates.
+pub fn deck_out_path(root: &Path) -> PathBuf {
+    root.join(DECK_OUT_DIRNAME)
+}
 
 /// One app's serve configuration — the parsed contents of a per-app
 /// `apps/<app>/deck.jsonc` (or `Default::default()` when the file is

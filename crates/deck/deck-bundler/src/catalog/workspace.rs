@@ -389,7 +389,7 @@ pub fn pack_id_for_name(npm_name: &str) -> String {
 /// excluded by this guard. `dist`, `node_modules`, `.git`, and `target` are
 /// skipped for speed.
 fn scan_sui_components(dir: &Path, out: &mut Vec<(String, PathBuf)>) {
-    const SKIP: [&str; 5] = ["node_modules", "dist", "target", ".git", ".deck"];
+    const SKIP: [&str; 5] = ["node_modules", "dist", "target", ".git", deck_config::DECK_OUT_DIRNAME];
     let Ok(entries) = std::fs::read_dir(dir) else { return };
     for e in entries.flatten() {
         let name = e.file_name().to_string_lossy().into_owned();

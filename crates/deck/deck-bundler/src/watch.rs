@@ -34,7 +34,8 @@ const WATCH_CHANNEL_CAP: usize = 1024;
 
 /// Directory names that are never watched — vendored/build trees whose churn
 /// notify would otherwise retain a PathBuf per descendant for (#193).
-const PRUNE: &[&str] = &["node_modules", ".git", "target", "dist", ".deck", ".sui-out", "sui-out"];
+const PRUNE: &[&str] =
+    &["node_modules", ".git", "target", "dist", deck_config::DECK_OUT_DIRNAME, ".sui-out", "sui-out"];
 
 /// Re-bundle affected targets on filesystem change. Returns when the bundler's
 /// `watching` flag is cleared by `Bundler::shutdown` (#256) or the watcher dies.

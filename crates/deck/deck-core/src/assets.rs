@@ -111,7 +111,9 @@ fn candidate_view_roots() -> Vec<std::path::PathBuf> {
     use crate::resolver::resolve_project_root;
     let mut roots: Vec<std::path::PathBuf> = Vec::new();
     if let Some(pr) = resolve_project_root() {
-        roots.push(pr.join(".deck"));
+        // Same single join the bundler writes through (`BundleLayout::deck_out`)
+        // — reader and writer resolve `<root>/.deck` from the one constant.
+        roots.push(deck_config::deck_out_path(&pr));
     }
     roots
 }

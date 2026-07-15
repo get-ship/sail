@@ -75,7 +75,7 @@ fn main() {
         .and_then(|p| p.parent())
         .expect("repo root (three levels above crates/deck/deck-core)")
         .to_path_buf();
-    let framework_src = repo_root.join(".deck").join("framework");
+    let framework_src = deck_config::deck_out_path(&repo_root).join("framework");
 
     fs::create_dir_all(&assets)
         .unwrap_or_else(|e| panic!("build.rs: mkdir assets: {e}"));

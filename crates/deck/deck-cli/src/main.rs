@@ -407,7 +407,7 @@ fn build(
     // `index.html`, the entry chunk, and the framework surface there.
     let out_dir = out
         .map(|o| abs(&o))
-        .unwrap_or_else(|| project.join(".deck"));
+        .unwrap_or_else(|| deck_config::deck_out_path(&project));
     let repo_root = find_repo_root(&project)?;
     // The framework singletons are resolved by NODE RESOLUTION from the
     // project's `node_modules` (the bundler's `framework_singletons` /
@@ -481,27 +481,6 @@ fn build(
 // layers its own `DataPort`. Wiring live data into the standalone CLI is the
 // server-functions arc (#32), targeted for a later release.
 
-/// The app's URL namespace = `package.json#name`'s last `/`-segment
-/// (`@ship/hub` → `hub`). MUST equal what `bundle_app` baked the asset
-/// hrefs under, so `serve_apps`' `/<name>/<file>` route resolves them.
-/// Mirrors the bundler's own `read_package_name` + `rsplit_once('/')`.
-fn app_url_namespace(project: &Path) -> Result<String> {
-    let pkg_path = project.join("package.json");
-    let body = std::fs::read_to_string(&pkg_path)
-        .with_context(|| format!("read {}", pkg_path.display()))?;
-    let json: serde_json::Value =
-        serde_json::from_str(&body).with_context(|| format!("parse {}", pkg_path.display()))?;
-    let name = json
-        .get("name")
-        .and_then(|v| v.as_str())
-        .with_context(|| format!("{} missing \"name\"", pkg_path.display()))?;
-    Ok(name
-        .rsplit_once('/')
-        .map(|(_, tail)| tail)
-        .unwrap_or(name)
-        .to_string())
-}
-
 /// A `DataPort` that resolves nothing — the standalone `deck dev` default.
 /// The live-data multiplex is not mounted here, so this is never actually
 /// queried; it satisfies the `Extension<Arc<dyn DataPort>>` the shared
@@ -560,7 +539,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         // workspace root (component/workspace resolution) is found by
         // walking up from the project; the project dir itself is one app.
         let workspace_root = find_repo_root(&project_dir)?;
-        let out_dir = project_dir.join(".deck");
+        let out_dir = deck_config::deck_out_path(&project_dir);
         let build = deck_bundler::app::bundle_app(
             &workspace_root,
             &cfg.packs,
@@ -574,11 +553,13 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         println!("deck dev: built app ({} css asset(s))", build.css_hrefs.len());
 
         // Register the project as the PRIMARY app at `/`. `name` MUST equal
-        // the URL namespace `bundle_app` baked the asset hrefs under
-        // (`package.json#name`'s last `/`-segment) so `/<name>/<file>`
-        // resolves; `source` is the build out dir relative to the project
-        // root. `deck.jsonc` (optional) carries injectGlobals / render /
-        // entry — name/route/source are host-bound here, never the file's.
+        // the URL namespace `bundle_app` baked the asset hrefs under, so
+        // `/<name>/<file>` resolves — so we take it from the build result
+        // (`AppBuild::url_namespace`) rather than recomputing it here, killing
+        // the second namespace derivation that could silently drift from the
+        // bake. `source` is the build out dir relative to the project root.
+        // `deck.jsonc` (optional) carries injectGlobals / render / entry —
+        // name/route/source are host-bound here, never the file's.
         let app_cfg_path = project_dir.join("deck.jsonc");
         let mut app_cfg = if app_cfg_path.exists() {
             let raw = std::fs::read_to_string(&app_cfg_path)
@@ -601,9 +582,9 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                 ),
             }
         }
-        app_cfg.name = app_url_namespace(&project_dir)?;
+        app_cfg.name = build.url_namespace.clone();
         app_cfg.route = "/".to_string();
-        app_cfg.source = ".deck".to_string();
+        app_cfg.source = deck_config::DECK_OUT_DIRNAME.to_string();
         // The per-app asset namespace is the app's name (`/<name>/<file>`);
         // `serve_app_asset` reads the app off this per-route extension and
         // maps to `<source>/assets/<file>`.
