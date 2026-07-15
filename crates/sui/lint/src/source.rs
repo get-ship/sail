@@ -21,13 +21,32 @@ fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
     let Ok(entries) = std::fs::read_dir(dir) else { return };
     for e in entries.flatten() {
         let p = e.path();
-        if p.is_dir() {
+        // file_type() does NOT follow symlinks: a symlinked directory (a
+        // `node_modules` isolated-linker link back into the workspace) reads
+        // as a symlink, not a dir, so the walk never descends the dependency
+        // graph and cannot cycle. Authoring sources are real files.
+        let Ok(ft) = e.file_type() else { continue };
+        if ft.is_dir() {
+            if is_ignored_dir(&p) {
+                continue;
+            }
             walk(&p, out);
             continue;
         }
-        if let Some(name) = p.file_name().and_then(|n| n.to_str())
+        if ft.is_file()
+            && let Some(name) = p.file_name().and_then(|n| n.to_str())
             && (name.ends_with(".sui") || name.ends_with(".controller.ts")) {
                 out.push(p);
             }
     }
+}
+
+/// Directories that never hold authoring sources and whose contents can be
+/// symlink graphs (`node_modules`) or large build trees. Skipping them keeps
+/// the walk on real source and off the dependency graph.
+fn is_ignored_dir(p: &Path) -> bool {
+    matches!(
+        p.file_name().and_then(|n| n.to_str()),
+        Some("node_modules" | "dist" | "target" | ".git" | ".deck" | ".sui-out")
+    )
 }

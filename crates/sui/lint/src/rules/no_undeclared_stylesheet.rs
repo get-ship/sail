@@ -33,13 +33,21 @@ fn collect_css_files(src_dir: &Path) -> Vec<PathBuf> {
     };
     for entry in rd.flatten() {
         let p = entry.path();
-        if p.is_file()
+        // file_type() does not follow symlinks, so a symlinked `node_modules`
+        // dir reads as a symlink and is skipped — the walk stays on pack
+        // sources and never enters the isolated-linker dependency graph.
+        let Ok(ft) = entry.file_type() else { continue };
+        if ft.is_file()
             && p.extension().and_then(|e| e.to_str()) == Some("css")
         {
             out.push(p);
-        } else if p.is_dir() {
-            // Recurse one level — pack src trees are flat (controllers,
-            // utilities, helpers), but we don't forbid subdirs.
+        } else if ft.is_dir() {
+            if matches!(
+                p.file_name().and_then(|n| n.to_str()),
+                Some("node_modules" | "dist" | "target" | ".git" | ".deck" | ".sui-out")
+            ) {
+                continue;
+            }
             out.extend(collect_css_files(&p));
         }
     }
