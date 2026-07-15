@@ -1,37 +1,17 @@
 use std::collections::BTreeMap;
-use std::path::PathBuf;
-use std::sync::{Mutex, Once, RwLock};
+use std::path::{Path, PathBuf};
 
-/// One-root-per-process invariant: a single daemon serves one workspace, so a
-/// process-global override is sound. If that ever breaks (multi-tenant
-/// embedding), per-request threading through the resolver is the fallback.
-static PROJECT_ROOT_OVERRIDE: RwLock<Option<PathBuf>> = RwLock::new(None);
-/// Per-app view-output dirs (slice-2 component 1). A host (shipd) calls
-/// `register_view_output(app_name, dir)` so apps with a non-conventional
-/// layout (e.g. `apps/hub/.deck/views/<name>/view.js`) serve their own view
-/// bundles without depending on the global project root. Read by
-/// `assets::resolve_view_js` BEFORE the workspace-root fallback.
-static VIEW_OUTPUTS: Mutex<BTreeMap<String, PathBuf>> = Mutex::new(BTreeMap::new());
-static DETECTION_WARN_ONCE: Once = Once::new();
-
-/// Per-instance resolution context — the mount-scoped replacement for the
-/// process-global `PROJECT_ROOT_OVERRIDE` + `VIEW_OUTPUTS`. A host constructs
-/// one per project and carries it per-request (like the `DataPort` Extension),
-/// so one process serves many projects without cross-talk
-/// (`inv-deck-single-root-scoped`).
+/// Per-instance resolution context — the mount-scoped root(s) + per-app view
+/// outputs a request resolves against. This is the WHOLE of deck's resolution
+/// state: there is no process-global `PROJECT_ROOT_OVERRIDE` / `VIEW_OUTPUTS`
+/// backing it, so one process can serve many projects with no cross-talk
+/// (`inv-deck-mount-scoped-resolution`). A host constructs one per project and
+/// carries it per-request (an axum `Extension`, like the `DataPort`); the serve
+/// path threads `Option<&Resolution>` end to end.
 ///
 /// The host declares view roots in PRECEDENCE ORDER and expresses "these are
 /// mine first" by ordering — deck privileges no named 'first-party' bucket
 /// (`inv-deck-no-first-party`); `roots[0]` simply wins.
-///
-/// (Step 1: the abstraction + its isolation contract. Step 2: threaded through
-/// the routes/ SERVE PATH via [`resolve_project_root_with`] — `serve_scaffold`
-/// → `routes_first_paint` resolve against the per-request Resolution, and
-/// `deck dev` carries one (proven by the e2e SSR loop). The remaining work is
-/// the SHIPD multi-app caller migration — passing a DISTINCT Resolution per app
-/// so the cross-talk dies in the long-running host — which is the ship-repo
-/// follow-on, plus the secondary readers (`resolve_view_js`, `serve_public_asset`)
-/// the view path will thread when ship-views grows its own Resolution.)
 #[derive(Debug, Clone, Default)]
 pub struct Resolution {
     roots: Vec<PathBuf>,
@@ -50,7 +30,25 @@ impl Resolution {
         self
     }
 
-    /// Register a per-app view-output dir (replaces the global VIEW_OUTPUTS).
+    /// Seed a Resolution by DETECTING the project root from `cwd` — the nearest
+    /// ancestor holding the deck-owned `views/` source marker, else `cwd` itself.
+    ///
+    /// This is the EXPLICIT replacement for the old cwd-detection FLOOR that
+    /// used to hide inside the process-global resolver as a silent fallback. A
+    /// caller with no host-supplied root (a bare CLI invocation, a test) asks
+    /// for detection here; the serve path never falls back to it on its own.
+    pub fn detect() -> Self {
+        let mut r = Self::default();
+        if let Ok(cwd) = std::env::current_dir() {
+            r.roots.push(detect_project_root_from(&cwd).unwrap_or(cwd));
+        }
+        r
+    }
+
+    /// Register a per-app view-output dir. Hosts call this for each app whose
+    /// built view bundles live outside the conventional `<root>/.deck/views`
+    /// (e.g. `apps/hub/.deck/views/<name>/view.js`). Probed BEFORE the
+    /// project-root `.deck` fallback by [`view_bundle_roots`](Self::view_bundle_roots).
     pub fn register_view_output(&mut self, app: impl Into<String>, dir: impl Into<PathBuf>) {
         self.view_outputs.insert(app.into(), dir.into());
     }
@@ -62,62 +60,40 @@ impl Resolution {
 
     /// The highest-precedence root, if any. (No 'first-party' privilege — this
     /// is simply the first declared root.)
-    pub fn project_root(&self) -> Option<&std::path::Path> {
+    pub fn project_root(&self) -> Option<&Path> {
         self.roots.first().map(|p| p.as_path())
     }
 
     /// The view-output dir for `app`, if registered.
-    pub fn view_output(&self, app: &str) -> Option<&std::path::Path> {
+    pub fn view_output(&self, app: &str) -> Option<&Path> {
         self.view_outputs.get(app).map(|p| p.as_path())
     }
-}
 
-/// Authoritative project-root override set ONCE at host startup.
-///
-/// Long-running / embedding hosts (shipd, deck-conformance) call this with the
-/// workspace root they already hold. The resolver consults this BEFORE
-/// the cwd-detection floor, so per-workspace requests resolve against
-/// the workspace they were launched against even if cwd drifts later.
-pub fn set_project_root(root: PathBuf) {
-    if let Ok(mut slot) = PROJECT_ROOT_OVERRIDE.write() {
-        *slot = Some(root);
+    /// View-bundle roots to probe for `<root>/views/<name>/view.js`, in
+    /// precedence order: the per-app view-output dirs first (host-registered),
+    /// then the project root's `<root>/.deck` (the bundler's default output).
+    /// The `.deck` join is the SAME single constant the bundler writes through
+    /// (`deck_config::deck_out_path`), so this reader can never drift from the
+    /// writer (`inv-deck-output-location-single`).
+    pub(crate) fn view_bundle_roots(&self) -> Vec<PathBuf> {
+        let mut roots: Vec<PathBuf> = self.view_outputs.values().cloned().collect();
+        if let Some(pr) = self.project_root() {
+            roots.push(deck_config::deck_out_path(pr));
+        }
+        roots
     }
 }
 
-/// Register a per-app view-bundle output dir. Hosts call this for each
-/// `AppServeConfig.view_output` they own. The resolver probes these dirs
-/// BEFORE the workspace-root fallback when serving `/_deck/views/{name}/view.js`.
-pub fn register_view_output(app_name: impl Into<String>, dir: PathBuf) {
-    if let Ok(mut map) = VIEW_OUTPUTS.lock() {
-        map.insert(app_name.into(), dir);
-    }
-}
-
-/// Snapshot the currently-registered view outputs (test-only inspection).
-pub fn current_view_outputs() -> Vec<(String, PathBuf)> {
-    VIEW_OUTPUTS
-        .lock()
-        .ok()
-        .map(|m| m.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
-        .unwrap_or_default()
-}
-
-/// Read the current override (test-only inspection).
-pub fn current_project_root_override() -> Option<PathBuf> {
-    PROJECT_ROOT_OVERRIDE.read().ok().and_then(|g| g.clone())
-}
-
-#[cfg(test)]
-pub(crate) fn reset_project_root_override_for_test() {
-    if let Ok(mut slot) = PROJECT_ROOT_OVERRIDE.write() {
-        *slot = None;
-    }
-    if let Ok(mut map) = VIEW_OUTPUTS.lock() {
-        map.clear();
-    }
-    // Note: `DETECTION_WARN_ONCE` is NOT reset — the per-process warn
-    // is one-shot by design (per spec). Tests that need a fresh warn
-    // stamp must run in their own process.
+/// The project root a serve-path request resolves against — the highest-
+/// precedence root of the per-request [`Resolution`], or `None` when the host
+/// carried no Resolution. `None` is an HONEST miss, not a hidden fallback: the
+/// caller serves a 404 / empty shell rather than silently resolving against a
+/// process global or cwd. A caller that wants cwd detection constructs
+/// [`Resolution::detect`].
+pub fn resolve_project_root_with(resolution: Option<&Resolution>) -> Option<PathBuf> {
+    resolution
+        .and_then(|r| r.project_root())
+        .map(|p| p.to_path_buf())
 }
 
 /// Nearest-ancestor detection: upwalk from `cwd`, accept the first ancestor
@@ -126,9 +102,9 @@ pub(crate) fn reset_project_root_override_for_test() {
 /// would shadow a nested project's root onto the monorepo root). Never keys on
 /// `.deck` (build output, absent on fresh checkout, flips post-build), never on
 /// `deck.jsonc` (purged — see deck-purge-root), and never sniffs a host-private
-/// dir (a host with a non-conventional layout, e.g. a different view bucket,
-/// calls `set_project_root` — the safe path; deck names no host dir here).
-pub(crate) fn detect_project_root_from(cwd: &std::path::Path) -> Option<PathBuf> {
+/// dir (a host with a non-conventional layout constructs a `Resolution` with an
+/// explicit root — the safe path; deck names no host dir here).
+pub(crate) fn detect_project_root_from(cwd: &Path) -> Option<PathBuf> {
     const MAX_DEPTH: usize = 32;
     let mut cur = cwd;
     for _ in 0..MAX_DEPTH {
@@ -144,141 +120,53 @@ pub(crate) fn detect_project_root_from(cwd: &std::path::Path) -> Option<PathBuf>
 }
 
 use deck_host::resolver::ViewLayout;
-pub use deck_host::resolver::{ResolvedView, ResolveError};
+pub use deck_host::resolver::{ResolveError, ResolvedView};
 /// Build a [`ViewLayout`] from the conventional `["views"]` bucket with a
-/// single `page.sui` leaf. The leaf is unified across all
-/// buckets (fixes the #254 `index.sui` vs `page.sui` divergence). The
-/// framework does not load any config file — a host that needs a different
-/// layout (custom view buckets, custom leaf) constructs a `DeckConfig`
-/// (clone `defaults()` + override) and threads it into `Bundler::start`;
-/// the bundler's view-discovery walks `cfg.view_dirs` directly. The
-/// runtime resolver here just reports the conventional defaults; the
-/// SAFE PATH is `set_project_root` so long-running hosts never ride the
-/// cwd-detection floor.
+/// single `page.sui` leaf. The leaf is unified across all buckets (fixes the
+/// #254 `index.sui` vs `page.sui` divergence). The framework loads no config
+/// file — a host that needs a different layout constructs a `DeckConfig` and
+/// threads it into `Bundler::start`; the bundler's view-discovery walks
+/// `cfg.view_dirs` directly. The runtime resolver here reports the conventional
+/// defaults.
 fn view_layout() -> ViewLayout {
     ViewLayout::conventional()
 }
-pub fn resolve(name: &str, sub_path: Option<&str>) -> Result<ResolvedView, ResolveError> {
+
+/// Resolve a view by name under an EXPLICIT project `root` (mount-scoped — the
+/// caller passes the root from its per-request [`Resolution`], never a process
+/// global). Delegates the on-disk walk to `deck_host::resolver::resolve`.
+pub fn resolve(
+    root: &Path,
+    name: &str,
+    sub_path: Option<&str>,
+) -> Result<ResolvedView, ResolveError> {
     let layout = view_layout();
-    // `resolve_project_root` resolves override → nearest-ancestor marker
-    // detection → cwd fallback. The override is the safe path; long-running
-    // hosts (shipd, deck-conformance) call `set_project_root` at startup so they
-    // never ride the cwd-detection floor. The detection floor is the fragile
-    // path: it keys on deck-owned SOURCE markers (`views/` > `.ship/views/`),
-    // and a nested project's `app/` is not shadowed onto the monorepo root.
-    let Some(dir) = resolve_project_root() else {
-        return Err(ResolveError {
-            message: format!(
-                "view not found: {} — no project root (host should call deck_core::resolver::set_project_root at startup)",
-                join_request(name, sub_path),
-            ),
-        });
-    };
-    deck_host::resolver::resolve(&dir, &layout, name, sub_path)
-}
-/// Project root for locating the build-output tree. deck reads app +
-/// user view/chrome bundles from where the host passes them (per-app
-/// `scaffold.source`, asset-graph entries) — not from a hardcoded
-/// `<project_root>/.deck/` reach (that was the deck-purge-root cut).
-/// The host is the authority on output location; the framework follows.
-// (formerly `pub(crate) fn deck_out_root() -> Option<PathBuf>` — `<root>/.deck`) removed.
-
-/// Resolution order (HIGH → LOW):
-/// 1. **HOST OVERRIDE** — `set_project_root(root)` set at startup. Authoritative
-///    for long-running hosts (shipd, deck-conformance) that already hold the workspace
-///    root in typed state. Sound because deck serves one root per process.
-/// 2. **DETECTION FLOOR** — std-only nearest-ancestor upwalk from
-///    `std::env::current_dir()`, looking for a deck-owned SOURCE marker
-///    (`views/` > `.ship/views/`) at any of the up to 32 ancestors.
-///    Nearest-ancestor-wins: deck-conformance's `app/` does NOT resolve
-///    to the monorepo root, and a fresh checkout resolves before `.deck` is
-///    built (markers are source-side, all git-tracked).
-/// 3. **ZERO-CONFIG FALLBACK** — `current_dir()`. Matches the
-///    `source_roots: ["."]` default in [`DeckConfig::defaults`].
-///
-/// The host-override step is the SAFE path; the cwd-detection floor is
-/// fragile. A long-running host that never calls `set_project_root` is
-/// warned once on the detection / fallback path so the coupling is
-/// surfaced instead of silently riding the floor.
-pub(crate) fn resolve_project_root() -> Option<PathBuf> {
-    if let Some(root) = PROJECT_ROOT_OVERRIDE.read().ok().and_then(|g| g.clone()) {
-        return Some(root);
-    }
-    let cwd = std::env::current_dir().ok();
-    if let Some(ref dir) = cwd
-        && let Some(root) = detect_project_root_from(dir)
-    {
-        warn_server_host_uses_detection();
-        return Some(root);
-    }
-    if let Some(dir) = cwd {
-        warn_server_host_uses_detection();
-        return Some(dir);
-    }
-    None
+    deck_host::resolver::resolve(root, &layout, name, sub_path)
 }
 
-/// Resolution-aware project root — the mount-scoped seam the SERVE PATH threads
-/// instead of reading the global directly (`Resolution` Step 2). The per-request
-/// [`Resolution`]'s highest-precedence root wins, so one process serving project
-/// B does not resolve against project A's global override
-/// (`inv-deck-single-root-scoped`, proven on the real path). When no Resolution
-/// is carried (the single-root deck-dev default), falls back to the process
-/// global + cwd floor via [`resolve_project_root`].
-pub fn resolve_project_root_with(resolution: Option<&Resolution>) -> Option<PathBuf> {
-    if let Some(root) = resolution.and_then(|r| r.project_root()) {
-        return Some(root.to_path_buf());
-    }
-    resolve_project_root()
-}
-
-/// One-shot warn behind `std::sync::Once`. Catches a future long-running host
-/// that mounts the resolver without calling `set_project_root` — a smell,
-/// because the cwd-detection floor is the fragile path.
-fn warn_server_host_uses_detection() {
-    if std::env::var_os("DECK_SERVER_HOST").is_some() {
-        DETECTION_WARN_ONCE.call_once(|| {
-            tracing::warn!(
-                "deck: project root resolved by cwd-detection; a long-running host should call set_project_root()"
-            );
-        });
-    }
-}
-
-fn join_request(name: &str, sub_path: Option<&str>) -> String {
-    match sub_path.filter(|s| !s.is_empty()) {
-        Some(sub) => format!("{name}/{sub}"),
-        None => name.to_string(),
-    }
-}
-
-/// Best-effort list of top-level view names servable on this daemon, for the
-/// human-facing not-found page. Scans the same on-disk roots the resolver
-/// consults — the first-party bucket (config-driven via
-/// `first_party_app.root` or the legacy env-var fallback) plus every
-/// bucket in the host's `view_dirs` (default `["views"]`).
-/// Cheap (one shallow `read_dir` per root, no compilation) and graceful:
-/// any missing root contributes nothing, and with no project root at
-/// all the list is simply empty. Names are deduped and sorted so the
-/// page renders deterministically.
-pub fn list_view_names() -> Vec<String> {
+/// Best-effort list of top-level view names servable under `root`, for the
+/// human-facing not-found page. Scans the conventional view buckets (default
+/// `["views"]`) under the given root. Cheap (one shallow `read_dir` per bucket,
+/// no compilation) and graceful: a missing bucket contributes nothing. Names
+/// are deduped and sorted so the page renders deterministically.
+pub fn list_view_names(root: &Path) -> Vec<String> {
     let mut names: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
     let layout = view_layout();
     if let Some(fp) = layout.first_party_root.as_deref() {
         collect_view_dirs(fp, &mut names);
     }
-    if let Some(root) = resolve_project_root() {
-        for bucket in &layout.view_dirs {
-            collect_view_dirs(&root.join(bucket), &mut names);
-        }
+    for bucket in &layout.view_dirs {
+        collect_view_dirs(&root.join(bucket), &mut names);
     }
     names.into_iter().collect()
 }
 
 /// Add each immediate child directory of `dir` whose name is a valid view name
 /// to `out`. A non-directory or unreadable `dir` contributes nothing.
-fn collect_view_dirs(dir: &std::path::Path, out: &mut std::collections::BTreeSet<String>) {
-    let Ok(entries) = std::fs::read_dir(dir) else { return };
+fn collect_view_dirs(dir: &Path, out: &mut std::collections::BTreeSet<String>) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
     for entry in entries.flatten() {
         if !entry.path().is_dir() {
             continue;
@@ -293,21 +181,12 @@ fn collect_view_dirs(dir: &std::path::Path, out: &mut std::collections::BTreeSet
 
 #[cfg(test)]
 mod project_root_tests {
-    use super::{detect_project_root_from, reset_project_root_override_for_test, set_project_root};
-    use std::path::PathBuf;
-    use std::sync::Mutex;
-
-    /// Serializes the tests that MUTATE the process-global override
-    /// (`PROJECT_ROOT_OVERRIDE`), so cargo's parallel test threads don't clobber
-    /// each other's `set_project_root` between a set and an assert. Poison is
-    /// ignored — a failing test already fails; the lock must not cascade.
-    static ROOT_OVERRIDE_TEST_LOCK: Mutex<()> = Mutex::new(());
+    use super::{detect_project_root_from, Resolution};
+    use std::path::{Path, PathBuf};
 
     /// Nested project: monorepo root has a `views/`, the inner project's
     /// `app/` ALSO has a `views/`. Detection must pick the NEAREST one
-    /// (`app/`), not the topmost (monorepo). This is the deck-conformance shape:
-    /// a demo app nested inside a wider monorepo, where reaching the
-    /// monorepo root would shadow the project's own views.
+    /// (`app/`), not the topmost (monorepo).
     #[test]
     fn detection_picks_nearest_ancestor_marker_not_topmost() {
         let tmp = tempfile::tempdir().unwrap();
@@ -319,24 +198,18 @@ mod project_root_tests {
         let deep = app.join("a").join("b");
         std::fs::create_dir_all(&deep).unwrap();
 
-        // Run from a deeply-nested leaf of `app/`; the nearest `views/`
-        // is `app/views`, not the monorepo's.
         let detected = detect_project_root_from(&deep);
         assert_eq!(
             detected,
             Some(app.clone()),
             "nearest-ancestor-wins: expected the inner app root, got {detected:?}",
         );
-        // The monorepo's `views/` is NOT picked up, even though it exists.
-        let monorepo_with_views = monorepo.join("views");
-        assert!(monorepo_with_views.is_dir());
+        assert!(monorepo.join("views").is_dir());
         assert_ne!(detected, Some(monorepo));
     }
 
-    /// `deck.jsonc` is NOT a detection marker anymore (purged). The
-    /// `views/` directory is the strongest source marker — even nested
-    /// inside a tree that also has a `deck.jsonc`, `views/` wins because
-    /// `deck.jsonc` is inert (no effect on detection or config load).
+    /// `deck.jsonc` is NOT a detection marker (purged). `views/` is the source
+    /// marker — even nested inside a tree that also has a `deck.jsonc`.
     #[test]
     fn stray_deck_jsonc_does_not_outrank_views_dir() {
         let tmp = tempfile::tempdir().unwrap();
@@ -345,27 +218,22 @@ mod project_root_tests {
         let inner = outer.join("nested");
         std::fs::create_dir(&inner).unwrap();
         std::fs::create_dir(inner.join("views")).unwrap();
-        // From `inner`, the nearest marker is `views/`. The outer's
-        // `deck.jsonc` is one level up AND is ignored.
         let detected = detect_project_root_from(&inner);
         assert_eq!(detected, Some(inner));
     }
 
     /// deck detects via its OWN marker (`views/`) only. A `.ship/views`-only
-    /// layout is a HOST convention, not deck's — detection must NOT key on it
-    /// (a host with that layout calls `set_project_root`, the safe path).
-    /// inv-deck-standalone. (This test was inverted from one that REQUIRED the
-    /// `.ship/views` marker — it had codified the very ship coupling we removed.)
+    /// layout is a HOST convention — detection must NOT key on it (a host with
+    /// that layout constructs a `Resolution` with an explicit root).
     #[test]
     fn detection_ignores_dot_ship_views_marker() {
         let tmp = tempfile::tempdir().unwrap();
         let root = tmp.path().to_path_buf();
         std::fs::create_dir_all(root.join(".ship").join("views")).unwrap();
-        // No deck-owned `views/` marker present → not auto-detected.
         assert_eq!(detect_project_root_from(&root), None);
     }
-    /// No marker anywhere up the tree → `None`. (Caller falls back to
-    /// cwd.)
+
+    /// No marker anywhere up the tree → `None`.
     #[test]
     fn detection_returns_none_with_no_marker() {
         let tmp = tempfile::tempdir().unwrap();
@@ -374,154 +242,87 @@ mod project_root_tests {
         assert!(detect_project_root_from(&deep).is_none());
     }
 
-    /// The global override ALWAYS wins — even from a directory that
-    /// would otherwise be detected as a project root.
-    #[test]
-    fn override_wins_over_detection() {
-        let _guard = ROOT_OVERRIDE_TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        reset_project_root_override_for_test();
-        let tmp = tempfile::tempdir().unwrap();
-        let detected_root = tmp.path().to_path_buf();
-        std::fs::create_dir(detected_root.join("views")).unwrap();
-
-        // The detected-root is "the project" from disk's perspective.
-        let detected = detect_project_root_from(&detected_root);
-        assert_eq!(detected, Some(detected_root.clone()));
-
-        // But the override sits at a different, unrelated path, and
-        // `resolve_project_root` consults the override FIRST. We do not
-        // call `resolve_project_root` here (it would `current_dir` and
-        // confuse the test); we only assert the contract documented on
-        // `set_project_root`.
-        set_project_root(PathBuf::from("/some/explicit/host/root"));
-        assert_eq!(
-            super::current_project_root_override(),
-            Some(PathBuf::from("/some/explicit/host/root")),
-        );
-        reset_project_root_override_for_test();
-    }
-
-    /// Acceptance #1 of the deck-purge-root job: a stray `deck.jsonc` at the
-    /// workspace root has NO effect — not loaded (no `DeckConfig::load`), not
-    /// a detection marker. Drop a `deck.jsonc` into a project root and assert
-    /// `detect_project_root_from` ignores it entirely — only `views/` and
-    /// `.ship/views/` are accepted as source-side markers.
+    /// A stray `deck.jsonc` is inert for detection — only `views/` counts.
     #[test]
     fn stray_deck_jsonc_is_not_a_detection_marker() {
         let tmp = tempfile::tempdir().unwrap();
         let root = tmp.path().to_path_buf();
-        // A stray deck.jsonc — the file the framework used to load and key
-        // detection on. Drop it at the root and a nested level; detection
-        // must ignore it.
         std::fs::write(root.join("deck.jsonc"), r#"{ "viewDirs": ["evil"] }"#).unwrap();
         let inner = root.join("nested");
         std::fs::create_dir(&inner).unwrap();
         std::fs::write(inner.join("deck.jsonc"), "{}\n").unwrap();
 
-        // No `views/` or `.ship/views/` anywhere → returns None.
-        assert_eq!(
-            detect_project_root_from(&root),
-            None,
-            "a deck.jsonc alone is NOT a detection marker; framework ignores it"
-        );
-        assert_eq!(
-            detect_project_root_from(&inner),
-            None,
-            "a nested deck.jsonc is also ignored"
-        );
+        assert_eq!(detect_project_root_from(&root), None);
+        assert_eq!(detect_project_root_from(&inner), None);
 
-        // Add a `views/` at the nested level — detection finds the inner,
-        // not the deck.jsonc-bearing root.
         std::fs::create_dir(inner.join("views")).unwrap();
-        assert_eq!(
-            detect_project_root_from(&inner),
-            Some(inner.clone()),
-            "views/ wins at the nearest ancestor; deck.jsonc is irrelevant"
-        );
-        // And from the root (which has BOTH deck.jsonc AND views/ via inner),
-        // the nearest marker path is still views/-driven — root has deck.jsonc
-        // only, so detection walks up and returns None.
-        assert_eq!(
-            detect_project_root_from(&root),
-            None,
-            "a deck.jsonc at root with no views/ nearby is still inert"
-        );
+        assert_eq!(detect_project_root_from(&inner), Some(inner.clone()));
+        assert_eq!(detect_project_root_from(&root), None);
     }
 
-    /// inv-deck-single-root-scoped + inv-deck-no-first-party (BDD — now GREEN at
-    /// the type level). Two projects in one process each carry their own
-    /// `Resolution`, so host B registering its root does NOT clobber host A:
-    /// resolution is mount-scoped, not a shared process-global. Precedence is
-    /// the ORDER of declared roots (`roots[0]` wins) — deck blesses no named
+    /// `inv-deck-mount-scoped-resolution` + `inv-deck-no-first-party`. Two
+    /// projects in ONE process each carry their own `Resolution`; there is NO
+    /// shared global for one to clobber the other through. Precedence is the
+    /// ORDER of declared roots (`roots[0]` wins) — deck blesses no named
     /// 'first-party' bucket.
-    ///
-    /// (Step 1 proves the abstraction isolates. Step 2 — threading it through
-    /// the routes/ serve path — is now done; see
-    /// `resolve_path_honors_per_request_resolution_over_the_global` below, which
-    /// proves the RESOLVE PATH (not just the struct) honors the per-request
-    /// handle over the global. This test stays as the struct's isolation
-    /// contract; the shipd multi-app caller migration is the ship-repo follow-on.)
     #[test]
     fn resolution_is_mount_scoped_not_a_shared_global() {
-        // Host A boots against project A; host B against project B — SAME process.
-        let a = super::Resolution::new().with_root("/tmp/projA");
-        let b = super::Resolution::new().with_root("/tmp/projB");
-        // B registering its root does not clobber A — each handle keeps its own.
-        assert_eq!(a.project_root(), Some(std::path::Path::new("/tmp/projA")));
+        let a = Resolution::new().with_root("/tmp/projA");
+        let b = Resolution::new().with_root("/tmp/projB");
+        assert_eq!(a.project_root(), Some(Path::new("/tmp/projA")));
         assert_eq!(
             b.project_root(),
-            Some(std::path::Path::new("/tmp/projB")),
+            Some(Path::new("/tmp/projB")),
             "mount-scoped: B is isolated from A — there is no shared global to clobber"
         );
-        // Precedence is the ORDER of roots, not a privileged 'first-party' bucket.
-        let host = super::Resolution::new()
+
+        let host = Resolution::new()
             .with_root("/srv/app")
             .with_root("/srv/shared");
         assert_eq!(host.roots().len(), 2);
         assert_eq!(
             host.project_root(),
-            Some(std::path::Path::new("/srv/app")),
+            Some(Path::new("/srv/app")),
             "first declared root wins by ordering — deck names no first-party bucket"
         );
     }
 
-    /// The REAL invariant the struct-only test above could not prove: the
-    /// resolve PATH the serve path threads (`resolve_project_root_with`) honors
-    /// the per-request [`Resolution`] OVER the process-global override — so one
-    /// process serving project B does not first-paint B's routes against project
-    /// A's global root (`inv-deck-single-root-scoped`, on the real path).
-    ///
-    /// This is the `Resolution` Step-2 contract: the green-but-lying gap (a test
-    /// that exercised the struct in isolation while the serve path still read the
-    /// global) is closed by asserting the *resolver the serve path now calls*.
+    /// The RESOLVE PATH the serve path threads (`resolve_project_root_with`)
+    /// returns the per-request root and NOTHING when no Resolution is carried —
+    /// there is no process global or cwd fallback to leak another project's root
+    /// (`inv-deck-mount-scoped-resolution`, on the real path).
     #[test]
-    fn resolve_path_honors_per_request_resolution_over_the_global() {
-        let _guard = ROOT_OVERRIDE_TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        reset_project_root_override_for_test();
-        // A prior request / another app in the SAME process set the global to A.
-        set_project_root(PathBuf::from("/tmp/projA"));
-        // THIS request carries a Resolution for project B. The resolve path must
-        // return B (the per-request handle), never A — the cross-talk fix.
-        let b = super::Resolution::new().with_root("/tmp/projB");
+    fn resolve_path_uses_only_the_per_request_resolution() {
+        let b = Resolution::new().with_root("/tmp/projB");
         assert_eq!(
             super::resolve_project_root_with(Some(&b)),
             Some(PathBuf::from("/tmp/projB")),
-            "the resolve path must use the per-request Resolution, not the shared global override"
+            "the resolve path returns the per-request Resolution's root"
         );
-        // And carrying NO Resolution still sees the global — the single-root
-        // `deck dev` default is intact, not clobbered by B's per-request root.
+        // No Resolution ⇒ an honest miss (no global, no cwd floor).
         assert_eq!(
             super::resolve_project_root_with(None),
-            Some(PathBuf::from("/tmp/projA")),
-            "no Resolution ⇒ the global override is the fallback (deck-dev single-root default)"
+            None,
+            "no Resolution ⇒ no root — never a shared global or cwd fallback"
         );
-        // A Resolution with no declared root falls through to the global too.
-        let empty = super::Resolution::new();
+        // An empty Resolution carries no root ⇒ also a miss.
+        let empty = Resolution::new();
+        assert_eq!(super::resolve_project_root_with(Some(&empty)), None);
+    }
+
+    /// The per-app view-output dirs are probed BEFORE the project-root `.deck`,
+    /// and the project-root fallback resolves through the single output-dir
+    /// constant — so the reader can't drift from the bundler writer.
+    #[test]
+    fn view_bundle_roots_precedence_and_single_output_join() {
+        let mut r = Resolution::new().with_root("/proj");
+        r.register_view_output("hub", "/apps/hub/.deck/views");
+        let roots = r.view_bundle_roots();
+        assert_eq!(roots[0], PathBuf::from("/apps/hub/.deck/views"), "per-app output first");
         assert_eq!(
-            super::resolve_project_root_with(Some(&empty)),
-            Some(PathBuf::from("/tmp/projA")),
-            "an empty Resolution carries no root ⇒ global fallback"
+            *roots.last().unwrap(),
+            deck_config::deck_out_path(Path::new("/proj")),
+            "project-root fallback is <root>/.deck via the single shared constant"
         );
-        reset_project_root_override_for_test();
     }
 }

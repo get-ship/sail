@@ -50,27 +50,28 @@ pub fn default_app_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("app")
 }
 
-/// Construct the bundler for `app_dir`, pointing deck's resolver at it.
+/// Construct the bundler for `app_dir`. repo_root == app_dir so bundle output
+/// lands where the resolver reads it. Zero-config host: no `deck.jsonc` — use
+/// built-in defaults (no consumer targets, conventional view buckets).
 fn make_bundler(app_dir: &Path) -> Bundler {
-    // Authoritative project-root override for deck-core's resolver. Set
-    // ONCE at startup — deck serves one root per process, so a single
-    // global is sound (see `deck_core::resolver::set_project_root` doc).
-    // repo_root == app_dir so bundle output lands where the resolver
-    // reads it. Zero-config host: no `deck.jsonc` — use built-in
-    // defaults (no consumer targets, conventional view buckets).
-    deck::resolver::set_project_root(app_dir.to_path_buf());
     let cfg = deck::config::DeckConfig::defaults();
     Bundler::start(app_dir.to_path_buf(), None, cfg)
 }
 
 /// deck's hosting surface + the two extensions its handlers read + the HMR SSE
 /// route + the in-memory data port. Shared by both entry points.
+///
+/// `app_dir` becomes the mount-scoped `Resolution` root, layered as an
+/// Extension so deck's handlers (and the data port's live-data SSE) resolve
+/// view sources against THIS app's root — not a process global.
 fn build_router(
     mode: DaemonMode,
+    app_dir: &Path,
     bundler: Bundler,
     cfg: Arc<deck::config::DeckConfig>,
     store: Arc<DemoStore>,
 ) -> Router {
+    let resolution = Arc::new(deck::Resolution::new().with_root(app_dir.to_path_buf()));
     router()
         // The named-view surface (`/_deck/view(s)/*`) was extracted out of deck
         // into the separate `ship-views` repo; deck's own `router()` no longer
@@ -89,6 +90,9 @@ fn build_router(
         // built-in defaults and degrade gracefully.
         .layer(Extension(cfg))
         .layer(Extension(bundler))
+        // Mount-scoped resolution root — the replacement for the removed
+        // `set_project_root` process global.
+        .layer(Extension(resolution))
 }
 
 /// A ready router with NO filesystem watcher (read-only host / tests).
@@ -108,7 +112,7 @@ pub fn deck_app_with_mode(app_dir: PathBuf, mode: DaemonMode) -> Router {
 /// tombstone in deck's router) and assert the live SSE surface reflects it.
 pub fn deck_app_with_store(app_dir: PathBuf, mode: DaemonMode, store: Arc<DemoStore>) -> Router {
     let cfg = Arc::new(deck::config::DeckConfig::defaults());
-    build_router(mode, make_bundler(&app_dir), cfg, store)
+    build_router(mode, &app_dir, make_bundler(&app_dir), cfg, store)
 }
 
 /// A dev server with the FS watcher running: edit a `.sui` → rebuild the
@@ -122,5 +126,5 @@ pub async fn deck_dev_server(app_dir: PathBuf) -> Router {
         eprintln!("deck-conformance: watcher failed to start: {e}");
     }
     let store = DemoStore::new();
-    build_router(mode, bundler, cfg, store)
+    build_router(mode, &app_dir, bundler, cfg, store)
 }

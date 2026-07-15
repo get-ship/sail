@@ -523,11 +523,11 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
             anyhow::bail!("{} is not a directory", project_dir.display());
         }
 
-        // Point deck-core's resolver at this root: `serve_index` /
-        // `serve_apps` / `spa_fallback` read the app's built assets
-        // (`.deck/index.html`, `/<name>/<file>`) relative to it.
-        deck_core::resolver::set_project_root(project_dir.clone());
-
+        // deck-core's resolution is mount-scoped: the project root is carried
+        // per-request through the `Resolution` Extension layered below (not a
+        // process global), so `serve_index` / `serve_app_*` / `spa_fallback`
+        // resolve the app's built assets (`.deck/index.html`, `/<name>/<file>`)
+        // against THIS mount's root.
         let cfg = deck_config::DeckConfig::defaults();
 
         // Build the app ONCE up front. `start_watching` only REBUILDS on
@@ -592,14 +592,13 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         let app_ext = Arc::new(app_cfg.clone());
         let apps: Arc<Vec<deck_config::AppServeConfig>> = Arc::new(vec![app_cfg]);
 
-        // `Resolution` Step 2: carry deck dev's single root as a per-request
-        // mount-scoped handle so the SSR first-paint resolves THROUGH the threaded
-        // resolver (`resolve_project_root_with`) rather than reading the process
-        // global directly. deck dev serves ONE project, so this root equals the
-        // global — but threading it proves the serve path honors a per-request
-        // Resolution end-to-end (the harness exercises it). The multi-app host
-        // (shipd) is the path that carries a DISTINCT Resolution per app, killing
-        // the cross-talk for real (`inv-deck-single-root-scoped`).
+        // Mount-scoped resolution: deck dev carries its single project root as a
+        // per-request `Resolution` handle (layered as an Extension below). The
+        // ENTIRE serve path — index / assets / public / SSR first-paint —
+        // resolves through it (`resolve_project_root_with`); there is no process
+        // global to read. A multi-app host (shipd) carries a DISTINCT Resolution
+        // per app, so two projects in one process never cross-talk
+        // (`inv-deck-mount-scoped-resolution`).
         let resolution = Arc::new(deck_core::Resolution::new().with_root(project_dir.clone()));
 
         // Bundler with the FS watcher (HMR SSE on `/_deck/dev/hmr`). The

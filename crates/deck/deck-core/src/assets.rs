@@ -27,12 +27,12 @@ fn read_asset(rel: &str) -> Option<String> {
 /// `.deck/`; the host owns the output location.
 // (formerly `read_deck_asset(rel)` — `<root>/.deck/<rel>`) removed.
 
-/// Project SOURCE (not built output), read from the project root directly.
-/// The dev/source fallback for scaffolds: when a scaffold has no built
-/// artifact under `<project_root>/<source>/`, serve the authored source
-/// at the same path — the same built-or-source pattern view.rs uses.
-fn read_source_asset(rel: &str) -> Option<String> {
-    let root = crate::resolver::resolve_project_root()?;
+/// Project SOURCE / built output, read from an EXPLICIT project `root` (the
+/// caller resolves it from the per-request [`Resolution`] — never a process
+/// global). When a scaffold has no built artifact under `<root>/<source>/`,
+/// this serves the authored source at the same path — the built-or-source
+/// pattern view.rs uses.
+fn read_source_asset(root: &std::path::Path, rel: &str) -> Option<String> {
     std::fs::read_to_string(root.join(rel)).ok()
 }
 
@@ -69,26 +69,18 @@ static ICON_MAP: std::sync::LazyLock<std::collections::HashMap<String, String>> 
 fn alias_for(name: &str) -> Option<&'static str> {
     ICON_ALIASES.iter().find_map(|(k, v)| (*k == name).then_some(*v))
 }
-// Public helper (used by view.rs). The in-process bundler writes view bundles
-// to `<project_root>/.deck/views/<name>/view.js` (the per-view output dir the
-// bundler owns). This helper reads that bundle when it exists so a controller
-// view is served from its compiled, inlined-controller form — the on-demand
-// build path in `view.rs::compile_view_js` only kicks in when no bundle is on
-// disk yet. The host calls `set_project_root(app_dir)` so the path resolves to
-// the right per-app workspace (e.g. conformance's `app/` dir, shipd's repo
-// root).
-pub fn resolve_view_js(name: &str) -> Option<String> {
-    // Per-app view outputs first (slice-2 component 1): a host with a
-    // non-conventional layout (e.g. `apps/hub/.deck/views/<name>/view.js`)
-    // registers its apps via `register_view_output` so the runtime finds
-    // the bundle without depending on the workspace-root `.deck/`.
-    for (_app, root) in crate::resolver::current_view_outputs() {
-        if let Some(js) = read_view_bundle(&root, name) {
-            return Some(js);
-        }
-    }
-    // Fallback: the bundler's default workspace-root output.
-    for view_root in candidate_view_roots() {
+/// Public helper (used by view.rs). The in-process bundler writes view bundles
+/// to `<root>/.deck/views/<name>/view.js` (the per-view output dir the bundler
+/// owns). This reads that bundle when it exists so a controller view is served
+/// from its compiled, inlined-controller form — the on-demand build path in
+/// `view.rs::compile_view_js` only kicks in when no bundle is on disk yet.
+///
+/// Mount-scoped: the roots come from the per-request [`Resolution`] (per-app
+/// view outputs first, then `<project_root>/.deck`), never a process global —
+/// so one process serving many apps reads each app's bundles from ITS own root.
+pub fn resolve_view_js(resolution: Option<&crate::resolver::Resolution>, name: &str) -> Option<String> {
+    let resolution = resolution?;
+    for view_root in resolution.view_bundle_roots() {
         if let Some(js) = read_view_bundle(&view_root, name) {
             return Some(js);
         }
@@ -99,23 +91,6 @@ pub fn resolve_view_js(name: &str) -> Option<String> {
 fn read_view_bundle(root: &std::path::Path, name: &str) -> Option<String> {
     let bundle = root.join(format!("views/{name}/view.js"));
     std::fs::read(&bundle).ok().and_then(|b| String::from_utf8(b).ok())
-}
-
-/// Iterate view-bundle roots to probe for `<root>/views/<name>/view.js`.
-/// Order: per-app view-output dirs first (host-supplied via
-/// `AppServeConfig.viewOutput`), then the bundler's default workspace root
-/// (`<project_root>/.deck/views`). Per-app wins so apps with a non-conventional
-/// layout (e.g. `apps/hub/.deck/views/<name>/view.js`) serve from their own
-/// dir without the host having to set a global project root.
-fn candidate_view_roots() -> Vec<std::path::PathBuf> {
-    use crate::resolver::resolve_project_root;
-    let mut roots: Vec<std::path::PathBuf> = Vec::new();
-    if let Some(pr) = resolve_project_root() {
-        // Same single join the bundler writes through (`BundleLayout::deck_out`)
-        // — reader and writer resolve `<root>/.deck` from the one constant.
-        roots.push(deck_config::deck_out_path(&pr));
-    }
-    roots
 }
 
 //
@@ -213,7 +188,15 @@ pub fn serve_scaffold(
     // global resolver (the single-root `deck dev` default + cwd floor).
     resolution: Option<&crate::resolver::Resolution>,
 ) -> DeckResponse {
-    let Some(html) = read_source_asset(&format!("{}/index.html", scaffold.source))
+    // Mount-scoped root: THIS request's project (the host's per-request
+    // Resolution). No Resolution ⇒ an honest 404, never a shared global.
+    let Some(root) = crate::resolver::resolve_project_root_with(resolution) else {
+        return DeckResponse::not_found(
+            format!("scaffold '{}': no project root (host must carry a Resolution)", scaffold.name),
+            mode,
+        );
+    };
+    let Some(html) = read_source_asset(&root, &format!("{}/index.html", scaffold.source))
     else {
         return DeckResponse::not_found(
             format!(
@@ -313,7 +296,12 @@ pub fn serve_scaffold(
 /// percent-decoded but NOT stripped of `..` segments. Validate it before
 /// constructing the path to prevent directory traversal: a request like
 /// `/app/_assets/../../../etc/passwd` would otherwise escape the assets dir.
-pub fn serve_scaffold_asset(mode: DaemonMode, scaffold: &AppServeConfig, file: &str) -> DeckResponse {
+pub fn serve_scaffold_asset(
+    mode: DaemonMode,
+    scaffold: &AppServeConfig,
+    file: &str,
+    resolution: Option<&crate::resolver::Resolution>,
+) -> DeckResponse {
     // Reject path-traversal patterns. Only simple filenames (no slashes, no
     // leading dots, no ".." components) are valid asset names. The chunk
     // route's same guard was here formerly (`serve_sui_chunk`); it lives
@@ -324,13 +312,18 @@ pub fn serve_scaffold_asset(mode: DaemonMode, scaffold: &AppServeConfig, file: &
             mode,
         );
     }
+    // Mount-scoped root: THIS request's project. No Resolution ⇒ honest 404.
+    let Some(root) = crate::resolver::resolve_project_root_with(resolution) else {
+        return DeckResponse::not_found(
+            format!("scaffold '{}' asset: no project root", scaffold.name),
+            mode,
+        );
+    };
     // Per-app build output: `<project_root>/<source>/assets/<file>` (e.g.
-    // `apps/hub/.deck/assets/<file>`). The framework's old
-    // `<deck_out>/<source>/assets/<file>` fallback was the legacy
-    // `deck.jsonc`-driven scaffold shape — purged (deck-purge-root);
-    // the host owns the output location via `scaffold.source`.
+    // `apps/hub/.deck/assets/<file>`). The host owns the output location via
+    // `scaffold.source`.
     let path = format!("{}/assets/{file}", scaffold.source);
-    match read_source_asset(&path) {
+    match read_source_asset(&root, &path) {
         Some(body) if file.ends_with(".css") => DeckResponse::css_view(body, mode),
         Some(body) => DeckResponse::js_asset(body, mode),
         None => DeckResponse::not_found(
@@ -341,12 +334,17 @@ pub fn serve_scaffold_asset(mode: DaemonMode, scaffold: &AppServeConfig, file: &
 }
 
 /// `GET /<file>` — serve a single-segment static asset from the host's declared
-/// public directory (`DeckConfig.public_dir`), resolved under deck's OWN project
-/// root (`resolver::resolve_project_root`, never a Ship path). Single-segment +
+/// public directory (`DeckConfig.public_dir`), resolved under the per-request
+/// [`Resolution`]'s project root (never a Ship path). Single-segment +
 /// traversal-guarded (the route is `/{file}`, but reject `..`/slashes/leading-dot
 /// belt-and-suspenders); content-type by extension; immutable long cache in
 /// Production. 404 when no public dir is configured or the file is absent.
-pub fn serve_public_asset(mode: DaemonMode, public_dir: &str, file: &str) -> DeckResponse {
+pub fn serve_public_asset(
+    mode: DaemonMode,
+    public_dir: &str,
+    file: &str,
+    resolution: Option<&crate::resolver::Resolution>,
+) -> DeckResponse {
     if file.is_empty()
         || file.contains("..")
         || file.contains('/')
@@ -355,7 +353,8 @@ pub fn serve_public_asset(mode: DaemonMode, public_dir: &str, file: &str) -> Dec
     {
         return DeckResponse::not_found(format!("invalid public asset path: {file}"), mode);
     }
-    let Some(root) = crate::resolver::resolve_project_root() else {
+    // Mount-scoped root: THIS request's project (never a process global).
+    let Some(root) = crate::resolver::resolve_project_root_with(resolution) else {
         return DeckResponse::not_found("no project root for public assets", mode);
     };
     let path = root.join(public_dir).join(file);
@@ -601,8 +600,43 @@ mod tests {
     #[test]
     fn serve_scaffold_missing_source_returns_404() {
         let scaffold = make_scaffold("test", vec![]);
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[], None, None);
+        // A real root is carried, but the scaffold source doesn't exist → 404.
+        let dir = tempfile::tempdir().unwrap();
+        let resolution = crate::resolver::Resolution::new().with_root(dir.path());
+        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[], None, Some(&resolution));
         assert_eq!(resp.status, 404);
+    }
+
+    /// `inv-deck-mount-scoped-resolution` end-to-end on the serve path: TWO
+    /// projects in ONE process, each carrying its OWN `Resolution`, serve public
+    /// assets from THEIR OWN root — never each other's. This is the isolation
+    /// the removed `PROJECT_ROOT_OVERRIDE` global could not give: there is no
+    /// shared state, so project B can never first-paint against project A's root.
+    #[test]
+    fn serve_path_is_mount_scoped_two_projects_isolated() {
+        use crate::resolver::Resolution;
+        use std::io::Write;
+        // Project A: public/logo.svg = "AAA".
+        let a = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(a.path().join("public")).unwrap();
+        std::fs::File::create(a.path().join("public/logo.svg")).unwrap().write_all(b"AAA").unwrap();
+        // Project B: public/logo.svg = "BBB".
+        let b = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(b.path().join("public")).unwrap();
+        std::fs::File::create(b.path().join("public/logo.svg")).unwrap().write_all(b"BBB").unwrap();
+
+        let res_a = Resolution::new().with_root(a.path());
+        let res_b = Resolution::new().with_root(b.path());
+
+        // Same relative request, two mounts — each resolves against its own root.
+        let ra = serve_public_asset(DaemonMode::Development, "public", "logo.svg", Some(&res_a));
+        let rb = serve_public_asset(DaemonMode::Development, "public", "logo.svg", Some(&res_b));
+        assert_eq!(ra.body, b"AAA", "project A serves ITS OWN root, not B's");
+        assert_eq!(rb.body, b"BBB", "project B serves ITS OWN root, not A's");
+        // And with NO Resolution there is no root to fall back to — honest 404,
+        // never a leaked global from another mount.
+        let none = serve_public_asset(DaemonMode::Development, "public", "logo.svg", None);
+        assert_eq!(none.status, 404, "no Resolution ⇒ 404, never a shared global");
     }
     #[test]
     fn substitute_params_replaces_dollar_token() {
@@ -619,14 +653,12 @@ mod tests {
         assert_eq!(result, "hello/world");
     }
     /// serve_scaffold with a real (tmpdir) HTML source rewrites asset hrefs
-    /// and injects globals. The resolver's project root is pinned to the
-    /// tmpdir via the test-only `ProjectRootGuard` so the resolver
-    /// deterministically sees our fixture.
+    /// and injects globals. The project root is carried mount-scoped via a
+    /// per-request `Resolution` — no process global.
     #[test]
     fn serve_scaffold_serves_html_and_injects_globals() {
-        use crate::test_lock::ProjectRootGuard;
         let dir = tempfile::tempdir().unwrap();
-        let _root = ProjectRootGuard::new(dir.path());
+        let resolution = crate::resolver::Resolution::new().with_root(dir.path());
 
         // Per-app build output: <project_root>/<source>/index.html
         // (post-cutover; the legacy `<root>/.deck/<source>/index.html`
@@ -645,7 +677,7 @@ mod tests {
             render: RenderMode::Csr,
             entry: None,
         };
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[("id", "my-space")], None, None);
+        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[("id", "my-space")], None, Some(&resolution));
 
         assert_eq!(resp.status, 200);
         // The asset href is preserved (bundler wrote the final URL).
@@ -660,9 +692,8 @@ mod tests {
     /// `content="ssr"`; the default `csr` app emits `content="csr"`.
     #[test]
     fn serve_scaffold_injects_render_meta() {
-        use crate::test_lock::ProjectRootGuard;
         let dir = tempfile::tempdir().unwrap();
-        let _root = ProjectRootGuard::new(dir.path());
+        let resolution = crate::resolver::Resolution::new().with_root(dir.path());
         let scaffold_dir = dir.path().join("ssr-scaffold");
         std::fs::create_dir_all(&scaffold_dir).unwrap();
         std::fs::write(
@@ -678,7 +709,7 @@ mod tests {
             render: RenderMode::Ssr,
             entry: None,
         };
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[], None, None);
+        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[], None, Some(&resolution));
         assert_eq!(resp.status, 200);
         let body = std::str::from_utf8(&resp.body).unwrap();
         assert!(
@@ -697,9 +728,8 @@ mod tests {
     /// needs to commit a `.deck/` artifact to serve a scaffold.
     #[test]
     fn serve_scaffold_falls_back_to_source_when_unbuilt() {
-        use crate::test_lock::ProjectRootGuard;
         let dir = tempfile::tempdir().unwrap();
-        let _root = ProjectRootGuard::new(dir.path());
+        let resolution = crate::resolver::Resolution::new().with_root(dir.path());
         // SOURCE location: <root>/my-scaffold/index.html — NOT under .deck/.
         let src_dir = dir.path().join("my-scaffold");
         std::fs::create_dir_all(&src_dir).unwrap();
@@ -716,7 +746,7 @@ mod tests {
             render: RenderMode::Csr,
             entry: None,
         };
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[("id", "x")], None, None);
+        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[("id", "x")], None, Some(&resolution));
         // Status 200 is the only contract: the source-fallback path
         // served the unbuilt scaffold. The body shape is incidental.
         assert_eq!(resp.status, 200, "source-fallback must serve the unbuilt scaffold");
@@ -724,21 +754,21 @@ mod tests {
     #[test]
     fn scaffold_asset_dotdot_rejected() {
         let scaffold = make_scaffold("test", vec![]);
-        let resp = serve_scaffold_asset(DaemonMode::Development, &scaffold, "../../../etc/passwd");
+        let resp = serve_scaffold_asset(DaemonMode::Development, &scaffold, "../../../etc/passwd", None);
         assert_eq!(resp.status, 404, "'..' traversal must be rejected");
     }
 
     #[test]
     fn scaffold_asset_slash_in_name_rejected() {
         let scaffold = make_scaffold("test", vec![]);
-        let resp = serve_scaffold_asset(DaemonMode::Development, &scaffold, "sub/dir/file.js");
+        let resp = serve_scaffold_asset(DaemonMode::Development, &scaffold, "sub/dir/file.js", None);
         assert_eq!(resp.status, 404, "slash in filename must be rejected");
     }
 
     #[test]
     fn scaffold_asset_leading_dot_rejected() {
         let scaffold = make_scaffold("test", vec![]);
-        let resp = serve_scaffold_asset(DaemonMode::Development, &scaffold, ".hidden");
+        let resp = serve_scaffold_asset(DaemonMode::Development, &scaffold, ".hidden", None);
         assert_eq!(resp.status, 404, "leading dot must be rejected");
     }
 
@@ -770,9 +800,8 @@ mod tests {
     /// includes valid keys.
     #[test]
     fn inject_globals_invalid_key_skipped_not_injected() {
-        use crate::test_lock::ProjectRootGuard;
         let dir = tempfile::tempdir().unwrap();
-        let _root = ProjectRootGuard::new(dir.path());
+        let resolution = crate::resolver::Resolution::new().with_root(dir.path());
         // Per-app build output: <project_root>/safe-scaffold/index.html
         // (the legacy `<root>/.deck/safe-scaffold/` was purged).
         let safe_scaffold = dir.path().join("safe-scaffold");
@@ -792,7 +821,7 @@ mod tests {
             render: RenderMode::Csr,
             entry: None,
         };
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[], None, None);
+        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[], None, Some(&resolution));
 
         assert_eq!(resp.status, 200);
         let body = std::str::from_utf8(&resp.body).unwrap();
@@ -810,7 +839,6 @@ mod tests {
 
     #[test]
     fn public_asset_serves_from_dir_and_rejects_traversal() {
-        use crate::test_lock::ProjectRootGuard;
         use std::io::Write;
         let tmp = tempfile::tempdir().unwrap();
         std::fs::create_dir_all(tmp.path().join("public")).unwrap();
@@ -818,20 +846,20 @@ mod tests {
             .unwrap()
             .write_all(b"<svg/>")
             .unwrap();
-        let _root = ProjectRootGuard::new(tmp.path());
+        let resolution = crate::resolver::Resolution::new().with_root(tmp.path());
 
-        let ok = serve_public_asset(DaemonMode::Development, "public", "logo.svg");
+        let ok = serve_public_asset(DaemonMode::Development, "public", "logo.svg", Some(&resolution));
         assert_eq!(ok.status, 200, "present public asset serves 200");
         assert!(ok.content_type.starts_with("image/svg+xml"), "svg content-type by extension");
         assert_eq!(ok.body, b"<svg/>", "serves the file bytes");
 
         assert_eq!(
-            serve_public_asset(DaemonMode::Development, "public", "../secret").status,
+            serve_public_asset(DaemonMode::Development, "public", "../secret", Some(&resolution)).status,
             404,
             "path traversal must 404"
         );
         assert_eq!(
-            serve_public_asset(DaemonMode::Development, "public", "nope.svg").status,
+            serve_public_asset(DaemonMode::Development, "public", "nope.svg", Some(&resolution)).status,
             404,
             "missing file must 404"
         );

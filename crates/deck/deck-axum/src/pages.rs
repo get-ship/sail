@@ -98,11 +98,13 @@ pub async fn spa_or_public_asset(
         ));
     };
     if file.contains('.') {
-        // Per-app public asset. deck-core reads `<project>/<app.source>/<file>`.
+        // Per-app public asset. deck-core reads `<project>/<app.source>/<file>`,
+        // resolving `<project>` from the mount-scoped Resolution.
         return into_axum(deck_core::serve_public_asset(
             mode_from_ext(mode),
             &app.source,
             &file,
+            resolution.as_ref().map(|e| e.0.as_ref()),
         ));
     }
     // Bare segment — SPA navigation, serve the app's `index.html`. Pass the
