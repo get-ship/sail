@@ -1382,36 +1382,156 @@ fn parse_variants_object(body: &str) -> Vec<(String, String)> {
 /// functions with no `controller({…})` ceremony. Bodies that already call
 /// `controller(` or have a `export default` pass through unchanged.
 pub fn wrap_controller_body(body: &str) -> String {
-    if body.contains("controller(") || body.contains("export default") {
-        return body.to_string();
-    }
-    let mut names: Vec<String> = Vec::new();
-    let mut lines: Vec<String> = Vec::new();
-    for line in body.lines() {
-        let t = line.trim_start();
-        if let Some(rest) = t.strip_prefix("export function ") {
-            if let Some(name) = rest.split('(').next().map(str::trim) {
-                if !name.is_empty() {
-                    names.push(name.to_string());
+    // Sugar form (a bare scope, no `controller(...)` / `export default`) is
+    // first lifted into a `controller({ scope: ... })` default export; the full
+    // form is taken as-is. BOTH then flow through the single ambient-import
+    // injection below — there is no verbatim escape, so no emitted controller
+    // module ever carries a free `controller`/`signal`/`derived` (the blank-
+    // render regression). One emit path (inv-sui-one-module-emit).
+    let module = if body.contains("controller(") || body.contains("export default") {
+        body.to_string()
+    } else {
+        let mut names: Vec<String> = Vec::new();
+        let mut lines: Vec<String> = Vec::new();
+        for line in body.lines() {
+            let t = line.trim_start();
+            if let Some(rest) = t.strip_prefix("export function ") {
+                if let Some(name) = rest.split('(').next().map(str::trim) {
+                    if !name.is_empty() {
+                        names.push(name.to_string());
+                    }
                 }
-            }
-            lines.push(line.replacen("export ", "", 1));
-        } else if let Some(rest) = t.strip_prefix("export const ") {
-            if let Some(name) = rest.split([' ', '=', ':']).next().map(str::trim) {
-                if !name.is_empty() {
-                    names.push(name.to_string());
+                lines.push(line.replacen("export ", "", 1));
+            } else if let Some(rest) = t.strip_prefix("export const ") {
+                if let Some(name) = rest.split([' ', '=', ':']).next().map(str::trim) {
+                    if !name.is_empty() {
+                        names.push(name.to_string());
+                    }
                 }
+                lines.push(line.replacen("export ", "", 1));
+            } else {
+                lines.push(line.to_string());
             }
-            lines.push(line.replacen("export ", "", 1));
-        } else {
-            lines.push(line.to_string());
         }
+        format!(
+            "{}\nexport default controller({{ scope: () => ({{ {} }}) }});\n",
+            lines.join("\n"),
+            names.join(", ")
+        )
+    };
+    inject_ambient_runtime_imports(&module)
+}
+
+/// Prepend an import for the ambient runtime idents (`runtime_ambient::RUNTIME_AMBIENT`)
+/// the module references but has not itself imported or declared, so every
+/// emitted controller module is self-contained. The ambient set + specifier are
+/// the table's; nothing here hardcodes a runtime name.
+fn inject_ambient_runtime_imports(module: &str) -> String {
+    let bound = module_bound_idents(module);
+    let needed: Vec<&str> = crate::runtime_ambient::RUNTIME_AMBIENT
+        .iter()
+        .copied()
+        .filter(|id| !bound.contains(*id) && references_ident(module, id))
+        .collect();
+    if needed.is_empty() {
+        return module.to_string();
     }
     format!(
-        "import {{ controller }} from '@ship/sui-runtime/internal';\n{}\nexport default controller({{ scope: () => ({{ {} }}) }});\n",
-        lines.join("\n"),
-        names.join(", ")
+        "import {{ {} }} from '{}';\n{}",
+        needed.join(", "),
+        crate::runtime_ambient::RUNTIME_SPECIFIER,
+        module
     )
+}
+
+/// Idents the module already binds: named-import bindings (single-line OR
+/// multi-line `import { a, b as c } from '...'`) and top-level declarations
+/// (`const/let/var/function/class NAME`). An ambient ident that is already
+/// bound must not be re-imported (a duplicate binding is a compile error).
+fn module_bound_idents(module: &str) -> std::collections::HashSet<String> {
+    let mut out = std::collections::HashSet::new();
+    let mut in_import_braces = false;
+    for line in module.lines() {
+        let t = line.trim();
+        if in_import_braces {
+            let end = t.find('}');
+            for part in t[..end.unwrap_or(t.len())].split(',') {
+                bind_specifier(&mut out, part);
+            }
+            if end.is_some() {
+                in_import_braces = false;
+            }
+            continue;
+        }
+        if t.starts_with("import") {
+            if let Some(lb) = t.find('{') {
+                let after = &t[lb + 1..];
+                if let Some(rb) = after.find('}') {
+                    for part in after[..rb].split(',') {
+                        bind_specifier(&mut out, part);
+                    }
+                } else {
+                    for part in after.split(',') {
+                        bind_specifier(&mut out, part);
+                    }
+                    in_import_braces = true;
+                }
+            }
+        } else {
+            for kw in ["const ", "let ", "var ", "function ", "class "] {
+                if let Some(rest) = t.strip_prefix(kw) {
+                    let name: String = rest
+                        .chars()
+                        .take_while(|c| c.is_ascii_alphanumeric() || *c == '_' || *c == '$')
+                        .collect();
+                    if !name.is_empty() {
+                        out.insert(name);
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Record the local binding a single import specifier introduces: `orig as bound`
+/// binds `bound`, `type X` binds `X`, a bare `name` binds itself.
+fn bind_specifier(out: &mut std::collections::HashSet<String>, part: &str) {
+    let name = part.trim().strip_prefix("type ").unwrap_or(part.trim()).trim();
+    let name = name.rsplit(" as ").next().unwrap_or(name).trim();
+    let bound: String = name
+        .chars()
+        .take_while(|c| c.is_ascii_alphanumeric() || *c == '_' || *c == '$')
+        .collect();
+    if !bound.is_empty() {
+        out.insert(bound);
+    }
+}
+
+/// Whether `ident` appears in `src` as a standalone identifier (word-boundary
+/// match — not a substring of a longer name). Coarse by design: a spurious hit
+/// only injects an unused import (tree-shaken away), while a miss would leave a
+/// free variable — so this errs toward presence.
+fn references_ident(src: &str, ident: &str) -> bool {
+    let bytes = src.as_bytes();
+    let idb = ident.as_bytes();
+    let n = idb.len();
+    if n == 0 || bytes.len() < n {
+        return false;
+    }
+    let is_ident_char = |b: u8| b.is_ascii_alphanumeric() || b == b'_' || b == b'$';
+    let mut i = 0;
+    while i + n <= bytes.len() {
+        if &bytes[i..i + n] == idb {
+            let before_ok = i == 0 || !is_ident_char(bytes[i - 1]);
+            let after_ok = i + n == bytes.len() || !is_ident_char(bytes[i + n]);
+            if before_ok && after_ok {
+                return true;
+            }
+        }
+        i += 1;
+    }
+    false
 }
 
 /// First occurrence of `needle` outside an HTML comment.
@@ -2779,6 +2899,56 @@ mod tests {
         let src = "<!-- never closed";
         let out = preprocess(src);
         assert_eq!(out, src);
+    }
+
+    #[test]
+    fn inline_controller_full_form_is_self_contained() {
+        // inv-sui-one-module-emit (sui-project-model): an inline <controller>
+        // that uses ambient runtime idents without importing them must compile
+        // to a SELF-CONTAINED module — the compiler injects the imports for the
+        // ambient idents it references. A verbatim passthrough leaves them as
+        // free variables that become `ReferenceError: controller is not
+        // defined` at runtime (the blank-render regression).
+        let src = "<controller>\n\
+export default controller({ scope: () => { const c = signal(0); return { d: derived(() => c()) } } })\n\
+</controller>\n\
+<column></column>";
+        let (_, body) = extract_controller_block(src);
+        let body = body.expect("controller block present");
+        for ident in ["controller", "signal", "derived"] {
+            let imported = body.lines().any(|l| {
+                let t = l.trim_start();
+                t.starts_with("import") && t.contains(ident)
+            });
+            assert!(
+                imported,
+                "ambient runtime ident `{ident}` is used but not imported \
+                 (free variable -> ReferenceError). Module:\n{body}"
+            );
+        }
+    }
+
+    #[test]
+    fn inline_controller_does_not_double_import_ambient() {
+        // A controller that ALREADY imports the ambient idents (here multi-line,
+        // the realistic authored shape) must not get a second injected import —
+        // a duplicate binding is a compile error. Injection fills gaps only.
+        let src = "<controller>\n\
+import {\n  controller,\n  derived,\n  signal,\n} from '@ship/sui-runtime'\n\
+export default controller({ scope: () => ({ d: derived(() => signal(0)()) }) })\n\
+</controller>\n\
+<column></column>";
+        let (_, body) = extract_controller_block(src);
+        let body = body.expect("controller block present");
+        assert!(
+            body.contains("from '@ship/sui-runtime'"),
+            "the author's own import is preserved:\n{body}"
+        );
+        assert!(
+            !body.contains("@ship/sui-runtime/internal"),
+            "ambient idents the author already imports must NOT be re-injected from \
+             /internal (a duplicate binding is a compile error). Module:\n{body}"
+        );
     }
 
 
