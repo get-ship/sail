@@ -367,9 +367,14 @@ export function __sui_motion_attach(
   const events = TRIGGER_EVENTS[config.trigger]!
   if (config.trigger === 'focus-visible') trackFocusSource()
   const [enterEvent, leaveEvent, cancelEvent] = events
-  const initial = createAnimations(el, config)
-  for (const c of initial) c.cancel()
-  let live = initial
+  // No mount-time priming. Creating (and immediately cancelling) the
+  // interaction's animations here interrupts any OTHER motion that shares a
+  // property on this element: `animate()` takes over the shared property, and
+  // the cancel then drops it back to the element's inline base — clobbering,
+  // e.g., a `motion:enter`/`motion:exit` opacity reveal so the element sticks
+  // at opacity:0. The animations are created fresh on the first event, so the
+  // priming was pure side effect. Start empty; `playForward` fills `live`.
+  let live: Array<{ stop: () => void; cancel: () => void }> = []
   const playForward = () => {
     if (prefersReducedMotion()) return
     for (const c of live) c.cancel()
