@@ -668,6 +668,12 @@ export const CONTROL_SKINS_CSS =
 
 export const LIGHT_CONTRACTS_CSS =
   BOX_MODEL_CSS +
+  // Root typography anchor for light-DOM pages: bare text inherits the body
+  // family and ink from here. The type scale sizes <p>/<h1> but never declares
+  // a family, so without this anchor the page root falls to the UA serif. Shadow
+  // components inherit the family across their boundary and own their ink via
+  // [data-component]. Specificity 0 — an author :root/body rule wins.
+  ':where(html) { font-family: var(--font-body); color: var(--foreground); line-height: var(--leading-normal); }\n' +
   hostAttrs(TONES_CSS) +
   hostAttrs(SIZES_CSS) +
   // Semantic-element + typography defaults reach light-DOM pages here (they
