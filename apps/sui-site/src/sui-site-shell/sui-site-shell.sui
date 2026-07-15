@@ -91,6 +91,30 @@ export default controller({
     // chrome offset this shell publishes.
     const workbench = derived(() => path().startsWith('/tutorial/'))
 
+    // Publish the chrome offset — the sticky top bar's height — as
+    // --chrome-offset on :root. The `h:fill` scale is
+    // `calc(100dvh - var(--chrome-offset, 0px))`; without a value it falls
+    // back to the whole viewport, so a workbench pane placed BELOW the bar
+    // overflows by exactly the bar's height (the page starts to scroll).
+    // Measure after paint and keep it fresh as the bar reflows.
+    const publishChromeOffset = () => {
+      const bar = document.querySelector('nav')
+      const h = bar ? Math.round(bar.getBoundingClientRect().height) : 0
+      if (h > 0) root.style.setProperty('--chrome-offset', `${h}px`)
+    }
+    if (typeof requestAnimationFrame !== 'undefined') {
+      requestAnimationFrame(() => {
+        publishChromeOffset()
+        const bar = document.querySelector('nav')
+        if (bar && typeof ResizeObserver !== 'undefined') {
+          new ResizeObserver(publishChromeOffset).observe(bar)
+        }
+      })
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', publishChromeOffset)
+    }
+
     return { path, product, fullscreen, workbench }
   },
 })

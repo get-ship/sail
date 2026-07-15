@@ -283,7 +283,10 @@ export default controller({
 </controller>
 
 <row sx="h-fill min-h-0 overflow-hidden" align="stretch">
-  <column sx="grow-1 max-w-panel-max-w-md h-fill min-h-0 bg-surface-1 border-r border-r-border">
+  <!-- basis-0 on both panes: the wrapping <row> floor would otherwise stack
+       the playground BELOW the lesson (each pane demanding its content width);
+       a 0 main-basis keeps them side by side, grow distributes the width. -->
+  <column sx="grow-1 basis-0 max-w-panel-max-w-md h-fill min-h-0 bg-surface-1 border-r border-r-border">
     <column sx="grow-1 min-h-0 overflow-y-auto p-6" gap="4">
       <row align="center" justify="between" gap="3">
         <p sx="font-mono text-xs font-medium tracking-wide text-primary">— TUTORIAL</p>
@@ -319,7 +322,7 @@ export default controller({
     </row>
   </column>
 
-  <column sx="grow-1 h-fill min-h-0 p-4 bg-surface-0" gap="3">
+  <column sx="grow-1 basis-0 h-fill min-h-0 p-4 bg-surface-0" gap="3">
     <row align="center" justify="between" gap="3">
       <p sx="font-mono text-xs font-medium tracking-wide text-muted-foreground">— PLAYGROUND</p>
       <row gap="2" align="center">
