@@ -29,8 +29,8 @@
 // imports can't be tree-shaken — whereas an export-less clients module gets
 // dropped. contracts.css gives every page the design-system typography
 // (bare h1/p/ul/code/pre/button/anchor) without a class hook in any template.
-import '../product-accents.css'
 import '@ship/tokens/themes.css' // the swappable theme library (paper/halo/glass/console/contrast)
+import '@ship/tokens/products.css' // brand hue per data-product; themes own lightness/chroma
 import '@ship/tokens/contracts.css' // framework contracts: bare h1/p/ul/code/pre/button/anchor skins; the design system applied to a SUI document, no class hooks needed
 import { applyTheme, readStoredTheme } from '@ship/tokens/themes'
 

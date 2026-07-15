@@ -65,15 +65,15 @@
   --muted-foreground: oklch(0.45 0.015 60);
   --border: oklch(0.20 0.015 60 / 14%);
   --input: oklch(0.20 0.015 60 / 14%);
-  --primary: oklch(0.50 0.16 30);
+  --primary: oklch(0.50 0.16 var(--brand-hue, 30));
   --primary-foreground: oklch(0.985 0.02 75);
-  --accent: oklch(0.45 0.10 280);
+  --accent: oklch(0.45 0.10 var(--brand-hue, 280));
   --accent-foreground: oklch(0.985 0.02 75);
   --destructive: oklch(0.55 0.22 27);
   --success: oklch(0.58 0.14 150);
   --warning: oklch(0.70 0.15 75);
   --info: oklch(0.55 0.15 240);
-  --ring: oklch(0.50 0.16 30 / 35%);
+  --ring: oklch(0.50 0.16 var(--brand-hue, 30)/ 35%);
 
   /* Paper surfaces: slightly brighter than the page so cards lift
    * off the pulp. Light mode plateaus at 1.0 — surface-1..3 do not
@@ -173,22 +173,22 @@
   --sidebar-accent: oklch(0.90 0.010 230);
   --sidebar-accent-foreground: oklch(0.30 0.015 230);
   --sidebar-border: transparent;
-  --sidebar-primary: oklch(0.62 0.14 50);
+  --sidebar-primary: oklch(0.62 0.14 var(--brand-hue, 50));
   --sidebar-primary-foreground: oklch(0.99 0.005 75);
   --sidebar-ring: oklch(0.62 0.14 50 / 40%);
 
   /* No borders — depth is shadow only. */
   --border: transparent;
   --input: oklch(0.90 0.008 230);
-  --primary: oklch(0.62 0.14 50);
+  --primary: oklch(0.62 0.14 var(--brand-hue, 50));
   --primary-foreground: oklch(0.99 0.005 75);
-  --accent: oklch(0.55 0.05 230);
+  --accent: oklch(0.55 0.05 var(--brand-hue, 230));
   --accent-foreground: oklch(0.99 0.005 230);
   --destructive: oklch(0.55 0.20 27);
   --success: oklch(0.58 0.14 150);
   --warning: oklch(0.70 0.15 75);
   --info: oklch(0.55 0.12 240);
-  --ring: oklch(0.62 0.14 50 / 40%);
+  --ring: oklch(0.62 0.14 var(--brand-hue, 50)/ 40%);
 
   /* Surface ladder kept within ±2% lightness — depth is shadow, not tint. */
   --surface-0: oklch(0.92 0.008 230);
@@ -271,15 +271,15 @@
   --muted-foreground: oklch(0.62 0.05 145);
   --border: oklch(0.30 0.04 145 / 40%);
   --input: oklch(0.30 0.04 145 / 40%);
-  --primary: oklch(0.78 0.20 145);
+  --primary: oklch(0.78 0.20 var(--brand-hue, 145));
   --primary-foreground: oklch(0.13 0.008 220);
-  --accent: oklch(0.78 0.16 195);
+  --accent: oklch(0.78 0.16 var(--brand-hue, 195));
   --accent-foreground: oklch(0.13 0.008 220);
   --destructive: oklch(0.70 0.22 25);
   --success: oklch(0.78 0.20 145);
   --warning: oklch(0.85 0.18 90);
   --info: oklch(0.78 0.16 195);
-  --ring: oklch(0.78 0.20 145 / 50%);
+  --ring: oklch(0.78 0.20 var(--brand-hue, 145)/ 50%);
 
   /* Surface ladder — faint cool drift up from the near-black base. */
   --surface-0: oklch(0.13 0.008 220);
@@ -316,7 +316,7 @@
   --sidebar-accent: oklch(0.18 0.012 220);
   --sidebar-accent-foreground: oklch(0.92 0.06 145);
   --sidebar-border: oklch(0.30 0.04 145 / 30%);
-  --sidebar-primary: oklch(0.78 0.20 145);
+  --sidebar-primary: oklch(0.78 0.20 var(--brand-hue, 145));
   --sidebar-primary-foreground: oklch(0.13 0.008 220);
   --sidebar-ring: oklch(0.78 0.20 145 / 50%);
 
@@ -399,15 +399,15 @@
   --muted-foreground: oklch(0.85 0 0);
   --border: oklch(0.75 0 0);
   --input: oklch(0.75 0 0);
-  --primary: oklch(0.87 0.18 85);
+  --primary: oklch(0.87 0.18 var(--brand-hue, 85));
   --primary-foreground: oklch(0.08 0 0);
-  --accent: oklch(0.87 0.18 85);
+  --accent: oklch(0.87 0.18 var(--brand-hue, 85));
   --accent-foreground: oklch(0.08 0 0);
   --destructive: oklch(0.65 0.24 25);
   --success: oklch(0.80 0.22 150);
   --warning: oklch(0.87 0.18 85);
   --info: oklch(0.75 0.22 260);
-  --ring: oklch(0.87 0.18 85 / 60%);
+  --ring: oklch(0.87 0.18 var(--brand-hue, 85)/ 60%);
 
   --surface-2: oklch(0.20 0 0);
   --border-subtle: oklch(0.50 0 0);
@@ -445,7 +445,7 @@
   --sidebar-accent: oklch(0.20 0 0);
   --sidebar-accent-foreground: oklch(0.99 0 0);
   --sidebar-border: oklch(0.99 0 0);
-  --sidebar-primary: oklch(0.87 0.18 85);
+  --sidebar-primary: oklch(0.87 0.18 var(--brand-hue, 85));
   --sidebar-primary-foreground: oklch(0.08 0 0);
   --sidebar-ring: oklch(0.87 0.18 85 / 60%);
 }
@@ -468,13 +468,13 @@
   --card-foreground: oklch(0.21 0.015 264);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.21 0.015 264);
-  --primary: oklch(0.27 0.020 264);
+  --primary: oklch(0.27 0.020 var(--brand-hue, 264));
   --primary-foreground: oklch(0.985 0.002 264);
   --secondary: oklch(0.96 0.004 264);
   --secondary-foreground: oklch(0.27 0.020 264);
   --muted: oklch(0.96 0.004 264);
   --muted-foreground: oklch(0.50 0.015 264);
-  --accent: oklch(0.55 0.090 255);
+  --accent: oklch(0.55 0.090 var(--brand-hue, 255));
   --accent-foreground: oklch(0.985 0.005 255);
   --destructive: oklch(0.58 0.220 27);
   --success: oklch(0.62 0.150 150);
@@ -482,7 +482,7 @@
   --info: oklch(0.58 0.150 245);
   --border: oklch(0.21 0.015 264 / 14%);
   --input: oklch(0.21 0.015 264 / 14%);
-  --ring: oklch(0.55 0.090 255 / 40%);
+  --ring: oklch(0.55 0.090 var(--brand-hue, 255)/ 40%);
   /* Focus reads as the slate-blue accent, not the near-black primary. */
   --ring-color: var(--accent);
 
@@ -513,7 +513,7 @@
   /* Chrome surfaces match the neutral views, not the SHIP defaults. */
   --sidebar: oklch(0.985 0.002 264);
   --sidebar-foreground: oklch(0.21 0.015 264);
-  --sidebar-primary: oklch(0.27 0.020 264);
+  --sidebar-primary: oklch(0.27 0.020 var(--brand-hue, 264));
   --sidebar-primary-foreground: oklch(0.985 0.002 264);
   --sidebar-accent: oklch(0.96 0.004 264);
   --sidebar-accent-foreground: oklch(0.21 0.015 264);
@@ -543,13 +543,13 @@
   --card-foreground: oklch(0.96 0.003 264);
   --popover: oklch(0.24 0.012 264);
   --popover-foreground: oklch(0.96 0.003 264);
-  --primary: oklch(0.92 0.008 264);
+  --primary: oklch(0.92 0.008 var(--brand-hue, 264));
   --primary-foreground: oklch(0.21 0.015 264);
   --secondary: oklch(0.27 0.012 264);
   --secondary-foreground: oklch(0.96 0.003 264);
   --muted: oklch(0.27 0.012 264);
   --muted-foreground: oklch(0.70 0.012 264);
-  --accent: oklch(0.70 0.100 255);
+  --accent: oklch(0.70 0.100 var(--brand-hue, 255));
   --accent-foreground: oklch(0.18 0.020 255);
   --destructive: oklch(0.62 0.210 25);
   --success: oklch(0.70 0.150 150);
@@ -557,7 +557,7 @@
   --info: oklch(0.68 0.140 240);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.70 0.100 255 / 40%);
+  --ring: oklch(0.70 0.100 var(--brand-hue, 255)/ 40%);
   --ring-color: var(--accent);
 
   /* Cool-slate surface ladder — ~+4% L per step lifts elevated panels. */
@@ -586,7 +586,7 @@
   /* Chrome surfaces — a hair darker than the page so the rail seats. */
   --sidebar: oklch(0.16 0.008 264);
   --sidebar-foreground: oklch(0.96 0.003 264);
-  --sidebar-primary: oklch(0.92 0.008 264);
+  --sidebar-primary: oklch(0.92 0.008 var(--brand-hue, 264));
   --sidebar-primary-foreground: oklch(0.21 0.015 264);
   --sidebar-accent: oklch(0.25 0.012 264);
   --sidebar-accent-foreground: oklch(0.96 0.003 264);
@@ -674,9 +674,9 @@
   --popover-foreground: oklch(0.22 0.02 250);
   --muted: oklch(0.94 0.008 240);
   --muted-foreground: oklch(0.42 0.02 250);
-  --primary: oklch(0.62 0.16 50);
+  --primary: oklch(0.62 0.16 var(--brand-hue, 50));
   --primary-foreground: oklch(0.99 0.005 240);
-  --accent: oklch(0.62 0.14 280);
+  --accent: oklch(0.62 0.14 var(--brand-hue, 280));
   --accent-foreground: oklch(0.99 0.005 240);
   --destructive: oklch(0.60 0.22 27);
   --success: oklch(0.62 0.14 152);
@@ -684,7 +684,7 @@
   --info: oklch(0.62 0.14 230);
   --border: oklch(1 0 0 / 22%);
   --input: oklch(1 0 0 / 28%);
-  --ring: oklch(0.62 0.16 50 / 45%);
+  --ring: oklch(0.62 0.16 var(--brand-hue, 50)/ 45%);
 
   /* Frosted surfaces — nested layers gain opacity as they climb. */
   --surface-0: oklch(0.97 0.005 240);
@@ -733,7 +733,7 @@
   --sidebar-accent: oklch(1 0 0 / 70%);
   --sidebar-accent-foreground: oklch(0.22 0.02 250);
   --sidebar-border: oklch(1 0 0 / 22%);
-  --sidebar-primary: oklch(0.62 0.16 50);
+  --sidebar-primary: oklch(0.62 0.16 var(--brand-hue, 50));
   --sidebar-primary-foreground: oklch(0.99 0.005 240);
   --sidebar-ring: oklch(0.62 0.16 50 / 40%);
 }

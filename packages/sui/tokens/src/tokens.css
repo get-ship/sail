@@ -383,18 +383,22 @@ body::after {
   --card-foreground: oklch(0.147 0.004 49.25);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.147 0.004 49.25);
-  --primary: oklch(0.67 0.16 58);
+  --primary: oklch(0.67 0.16 var(--brand-hue, 58));
   --primary-foreground: oklch(0.99 0.02 95);
+  /* Derived, so it follows whichever theme wins --primary. Mixing toward
+     --foreground darkens on light themes and lightens on dark ones — the
+     direction a hover needs in both. */
+  --primary-hover: color-mix(in oklch, var(--primary) 88%, var(--foreground));
   --secondary: oklch(0.95 0.02 302);
   --secondary-foreground: oklch(0.33 0.11 302);
   --muted: oklch(0.95 0.003 106.424);
   --muted-foreground: oklch(0.40 0.02 58.071);
-  --accent: oklch(0.61 0.23 303);
+  --accent: oklch(0.61 0.23 var(--brand-hue, 303));
   --accent-foreground: oklch(0.98 0.02 301);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.147 0.004 49.25 / 25%);
   --input: oklch(0.147 0.004 49.25 / 25%);
-  --ring: oklch(0.67 0.16 58 / 40%);
+  --ring: oklch(0.67 0.16 var(--brand-hue, 58)/ 40%);
   --ring-color: var(--primary);
 
   /* Feedback semantics (legacy names kept for backward compat) */
@@ -441,7 +445,7 @@ body::after {
   /* Sidebar — kept as-is for Studio compat. */
   --sidebar: oklch(0.99 0.001 106.423);
   --sidebar-foreground: oklch(0.147 0.004 49.25);
-  --sidebar-primary: oklch(0.67 0.16 58);
+  --sidebar-primary: oklch(0.67 0.16 var(--brand-hue, 58));
   --sidebar-primary-foreground: oklch(0.99 0.02 95);
   --sidebar-accent: oklch(0.95 0.001 106);
   --sidebar-accent-foreground: oklch(0.147 0.004 49.25);
@@ -628,7 +632,7 @@ body::after {
   --surface-2: oklch(0.25 0.018 250);
   --surface-3: oklch(0.28 0.020 250);
   --popover-foreground: oklch(0.985 0.001 106.423);
-  --primary: oklch(0.77 0.16 70);
+  --primary: oklch(0.77 0.16 var(--brand-hue, 70));
   --primary-foreground: oklch(0.2 0.01 50);
   --secondary: oklch(0.25 0.02 300);
   --secondary-foreground: oklch(0.9 0.02 300);
@@ -654,16 +658,16 @@ body::after {
    * surfaced as illegible text in dark mode — flagged by user QA on the
    * dev-panel Source tab.
    */
-  --accent: oklch(0.74 0.13 295);
+  --accent: oklch(0.74 0.13 var(--brand-hue, 295));
   --accent-foreground: oklch(0.2 0.02 295);
   --destructive: oklch(0.6 0.2 25);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.77 0.16 70 / 30%);
+  --ring: oklch(0.77 0.16 var(--brand-hue, 70)/ 30%);
 
   --sidebar: oklch(0.18 0.01 250);
   --sidebar-foreground: oklch(0.98 0.001 106);
-  --sidebar-primary: oklch(0.77 0.16 70);
+  --sidebar-primary: oklch(0.77 0.16 var(--brand-hue, 70));
   --sidebar-primary-foreground: oklch(0.2 0.01 50);
   --sidebar-accent: oklch(0.25 0.01 250);
   --sidebar-accent-foreground: oklch(0.98 0.001 106);
