@@ -572,16 +572,24 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         // SSR engine: only spin up ship-js (V8) when this app opts into SSR
         // (`deck.jsonc { "render": "ssr" }`). A CSR app (the default) pays no
         // V8 cost. Standalone dev has no live data port, so the engine renders
-        // with NoopData (None). Additive — if the engine can't start, log +
-        // continue; the serve path falls back to CSR.
-        if app_cfg.render == deck_config::RenderMode::Ssr {
-            match deck_ssr::serve::register(None) {
-                Ok(()) => println!("deck dev: ship-js SSR engine registered (render: ssr)"),
-                Err(e) => eprintln!(
-                    "deck dev: ship-js SSR engine unavailable, serving CSR: {e:#}"
-                ),
-            }
-        }
+        // with NoopData (None). The engine is a MOUNT-SCOPED handle layered as
+        // an Extension below — not a process-global install. If it can't start,
+        // log + continue; the serve path falls back to CSR (`renderer = None`).
+        let renderer: Option<Arc<dyn deck_core::synthetic_ssr::SyntheticSsr>> =
+            if app_cfg.render == deck_config::RenderMode::Ssr {
+                match deck_ssr::serve::engine(None) {
+                    Ok(r) => {
+                        println!("deck dev: ship-js SSR engine ready (render: ssr)");
+                        Some(r)
+                    }
+                    Err(e) => {
+                        eprintln!("deck dev: ship-js SSR engine unavailable, serving CSR: {e:#}");
+                        None
+                    }
+                }
+            } else {
+                None
+            };
         app_cfg.name = build.url_namespace.clone();
         app_cfg.route = "/".to_string();
         app_cfg.source = deck_config::DECK_OUT_DIRNAME.to_string();
@@ -715,7 +723,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         // `DataPort`. The live-data multiplex (`/_deck/mux/*`) is intentionally
         // NOT merged here — standalone deck has no live `<data source>` (#32).
         use axum::routing::get;
-        let app = deck_axum::router()
+        let mut app = deck_axum::router()
             // `/` → the primary app's index.html.
             .route("/", get(deck_axum::pages::serve_index))
             // `/<name>/<file>` → the app's hashed bundle assets
@@ -741,6 +749,12 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
             .layer(axum::Extension(apps))
             .layer(axum::Extension(resolution))
             .layer(axum::Extension(Arc::new(NoopDataPort) as Arc<dyn deck_core::DataPort>));
+        // The SSR engine, when this app opted into `render: ssr`, is layered as a
+        // mount-scoped Extension the serve path threads into first-paint. Absent
+        // ⇒ CSR (no process-global renderer install).
+        if let Some(r) = renderer {
+            app = app.layer(axum::Extension(r));
+        }
         let bind_addr = addr.clone();
         let listener = tokio::net::TcpListener::bind(&bind_addr)
             .await

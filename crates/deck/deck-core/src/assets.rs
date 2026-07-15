@@ -117,18 +117,20 @@ fn read_view_bundle(root: &std::path::Path, name: &str) -> Option<String> {
 /// First-paint HTML for the `routes/` page matching `request_path`, via the
 /// ship-js SSR seam. Mirrors the named-`view` path (`view_payload`) but with the
 /// file-routed layout: split the URL into name + sub-path, resolve the matching
-/// `routes/<…>/page.sui` (+ captured `[param]` params), and render through
-/// `synthetic_ssr`. Returns `None` (→ empty `#root`, client mounts CSR)
-/// when there's no project root, no matching page, no registered renderer, or
-/// the render fails (the failure is logged loud inside `synthetic_ssr`).
+/// `routes/<…>/page.sui` (+ captured `[param]` params), and render through the
+/// CARRIED `renderer`. Returns `None` (→ empty `#root`, client mounts CSR) when
+/// there's no project root, no matching page, no renderer carried, or the render
+/// fails (the failure is logged loud inside `synthetic_ssr`).
 fn routes_first_paint(
     request_path: &str,
     resolution: Option<&crate::resolver::Resolution>,
+    renderer: Option<&dyn crate::synthetic_ssr::SyntheticSsr>,
 ) -> Option<String> {
-    // `Resolution` Step 2: resolve against the per-request mount-scoped root
-    // (the host's app), falling back to the process global only when no
-    // Resolution is carried — so one process serving many apps never first-
-    // paints app B's route against app A's root (`inv-deck-single-root-scoped`).
+    // No renderer carried for this mount ⇒ CSR (never a process-global engine).
+    let renderer = renderer?;
+    // Mount-scoped root: resolve against the per-request Resolution — one process
+    // serving many apps never first-paints app B's route against app A's root
+    // (`inv-deck-mount-scoped-resolution`).
     let project_root = crate::resolver::resolve_project_root_with(resolution)?;
     // `/greet/zelda` → name=greet, sub=zelda; `/counter` → name=counter, sub=None;
     // `/` → name="" (the index `routes/page.sui`).
@@ -152,7 +154,7 @@ fn routes_first_paint(
             params: serde_json::json!({}),
             query: serde_json::json!({}),
         };
-        return crate::synthetic_ssr::first_paint(&req);
+        return crate::synthetic_ssr::first_paint(renderer, &req);
     }
     let layout = deck_host::resolver::ViewLayout {
         view_dirs: vec!["routes".to_string()],
@@ -170,7 +172,7 @@ fn routes_first_paint(
         params,
         query: serde_json::json!({}),
     };
-    crate::synthetic_ssr::first_paint(&req)
+    crate::synthetic_ssr::first_paint(renderer, &req)
 }
 
 pub fn serve_scaffold(
@@ -181,12 +183,13 @@ pub fn serve_scaffold(
     // spa_* / spa_fallback). Drives `render: ssr` first-paint resolution. `None`
     // (e.g. the multi-app host path, tests) ⇒ no SSR resolution → CSR shell.
     request_path: Option<&str>,
-    // The per-request mount-scoped resolution context (`Resolution` Step 2).
-    // Threaded so the SSR first-paint resolves against THIS app's declared root
-    // rather than a shared process global — the host (shipd) carries one per app
-    // so a single process serves many projects without cross-talk. `None` ⇒ the
-    // global resolver (the single-root `deck dev` default + cwd floor).
+    // The per-request mount-scoped resolution context. Threaded so asset + SSR
+    // resolution runs against THIS app's declared root — never a process global.
+    // `None` ⇒ no root ⇒ an honest 404.
     resolution: Option<&crate::resolver::Resolution>,
+    // The per-mount SSR renderer (`render: ssr` only). `None` ⇒ CSR shell. A
+    // per-request handle, never a process-global engine install.
+    renderer: Option<&dyn crate::synthetic_ssr::SyntheticSsr>,
 ) -> DeckResponse {
     // Mount-scoped root: THIS request's project (the host's per-request
     // Resolution). No Resolution ⇒ an honest 404, never a shared global.
@@ -262,7 +265,7 @@ pub fn serve_scaffold(
     // engine / no route match / a render error ⇒ `routes_first_paint` is None
     // and we serve the empty shell (CSR) exactly as before.
     let html = match (scaffold.render, request_path) {
-        (RenderMode::Ssr, Some(path)) => match routes_first_paint(path, resolution) {
+        (RenderMode::Ssr, Some(path)) => match routes_first_paint(path, resolution, renderer) {
             Some(ssr) => html.replacen(
                 "<div id=\"root\"></div>",
                 &format!("<div id=\"root\">{ssr}</div>"),
@@ -603,7 +606,7 @@ mod tests {
         // A real root is carried, but the scaffold source doesn't exist → 404.
         let dir = tempfile::tempdir().unwrap();
         let resolution = crate::resolver::Resolution::new().with_root(dir.path());
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[], None, Some(&resolution));
+        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[], None, Some(&resolution), None);
         assert_eq!(resp.status, 404);
     }
 
@@ -677,7 +680,7 @@ mod tests {
             render: RenderMode::Csr,
             entry: None,
         };
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[("id", "my-space")], None, Some(&resolution));
+        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[("id", "my-space")], None, Some(&resolution), None);
 
         assert_eq!(resp.status, 200);
         // The asset href is preserved (bundler wrote the final URL).
@@ -709,7 +712,7 @@ mod tests {
             render: RenderMode::Ssr,
             entry: None,
         };
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[], None, Some(&resolution));
+        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[], None, Some(&resolution), None);
         assert_eq!(resp.status, 200);
         let body = std::str::from_utf8(&resp.body).unwrap();
         assert!(
@@ -746,7 +749,7 @@ mod tests {
             render: RenderMode::Csr,
             entry: None,
         };
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[("id", "x")], None, Some(&resolution));
+        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[("id", "x")], None, Some(&resolution), None);
         // Status 200 is the only contract: the source-fallback path
         // served the unbuilt scaffold. The body shape is incidental.
         assert_eq!(resp.status, 200, "source-fallback must serve the unbuilt scaffold");
@@ -821,7 +824,7 @@ mod tests {
             render: RenderMode::Csr,
             entry: None,
         };
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[], None, Some(&resolution));
+        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[], None, Some(&resolution), None);
 
         assert_eq!(resp.status, 200);
         let body = std::str::from_utf8(&resp.body).unwrap();

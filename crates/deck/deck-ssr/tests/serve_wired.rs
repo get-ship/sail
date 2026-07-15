@@ -31,20 +31,28 @@ impl DataPort for DemoData {
     }
 }
 
-/// Register the ship-js renderer and return the mount-scoped project root
-/// (the conformance app dir) the caller threads into `resolve` — no process
-/// global. Idempotent (OnceLock), safe to call once per binary.
-fn setup() -> std::path::PathBuf {
+/// Build the ship-js renderer and return it with the mount-scoped project root
+/// (the conformance app dir) — both threaded per-request into `resolve` /
+/// `first_paint`. No process global: the engine is an owned `Arc` handle.
+fn setup() -> (
+    std::path::PathBuf,
+    Arc<dyn deck_core::synthetic_ssr::SyntheticSsr>,
+) {
     let repo = repo_root().expect("repo root");
-    deck_ssr::serve::register(Some(Arc::new(DemoData))).expect("register ship-js renderer");
-    repo.join("crates/deck/deck-conformance/app")
+    let engine = deck_ssr::serve::engine(Some(Arc::new(DemoData))).expect("build ship-js renderer");
+    (repo.join("crates/deck/deck-conformance/app"), engine)
 }
 
 /// First-paint HTML through the deck-core SSR seam for a (sub-folded) view.
 /// Mirrors `serve_view_payload`'s internal SSR call: resolve → build the
 /// `SsrRequest` from the resolved source path + captured params → run the
 /// registered ship-js renderer → host-inject `<form mutation>` actions.
-fn payload_html(root: &std::path::Path, name: &str, sub: Option<&str>) -> String {
+fn payload_html(
+    root: &std::path::Path,
+    engine: &dyn deck_core::synthetic_ssr::SyntheticSsr,
+    name: &str,
+    sub: Option<&str>,
+) -> String {
     let resolved = deck_core::resolver::resolve(root, name, sub).expect("resolve view");
     let source_path = resolved.source_path.as_deref().expect("resolved view has a source path");
     let params = serde_json::to_value(&resolved.params).unwrap_or(Value::Null);
@@ -61,7 +69,7 @@ fn payload_html(root: &std::path::Path, name: &str, sub: Option<&str>) -> String
         params,
         query: serde_json::json!({}),
     };
-    let raw = deck_core::synthetic_ssr::first_paint(&req).expect("ship-js produced first paint");
+    let raw = deck_core::synthetic_ssr::first_paint(engine, &req).expect("ship-js produced first paint");
     deck_core::inject_form_actions(&raw, &view_name)
 }
 
@@ -95,12 +103,13 @@ fn strip_markers(s: &str) -> String {
 
 #[test]
 fn wired_serve_renders_ship_js_first_paint() {
-    let root = setup();
+    let (root, engine) = setup();
+    let engine = &*engine;
 
     // ── board (a REAL controller({...}) DSL view) ──────────────────────────
     // ship-js runs the controller, so first paint carries the controller-signal
     // rows: the `{#if}` branch renders and the per-row `class:` directive fires.
-    let on_raw = payload_html(&root, "board", None);
+    let on_raw = payload_html(&root, engine, "board", None);
     let on = strip_markers(&on_raw);
     assert!(on.contains("<ul>"), "ship-js {{#if}} branch renders; got:\n{on}");
     assert!(
@@ -111,7 +120,7 @@ fn wired_serve_renders_ship_js_first_paint() {
     // ── feed (<data live> + host-dispatch) ─────────────────────────────────
     // The live op resolves over the registered DataPort, so first paint reflects
     // the resolved state, not `loading`.
-    let feed_on_raw = payload_html(&root, "feed", None);
+    let feed_on_raw = payload_html(&root, engine, "feed", None);
     let feed_on = strip_markers(&feed_on_raw);
     assert!(
         feed_on.contains("state: ok"),
@@ -121,7 +130,7 @@ fn wired_serve_renders_ship_js_first_paint() {
     // ── greet/[id] (route param via host-dispatch) ─────────────────────────
     // The router captures `id` from the sub-path; ship-js resolves
     // `route.params.id()` over host-dispatch into first paint.
-    let greet_on_raw = payload_html(&root, "greet", Some("zelda"));
+    let greet_on_raw = payload_html(&root, engine, "greet", Some("zelda"));
     let greet_on = strip_markers(&greet_on_raw);
     assert!(
         greet_on.contains("Hello, zelda"),

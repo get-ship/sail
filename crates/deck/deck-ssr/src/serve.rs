@@ -31,12 +31,15 @@ use crate::host::SsrDispatch;
 use crate::pool::ScriptPool;
 use crate::SHIP_SDK;
 
-/// Construct + register the ship-js SSR renderer into deck-core's gated seam.
-/// Call once at host startup. `data` is the host's live data surface — the
-/// `<data>`/`<client>` op resolver; pass `None` for a route-only host.
-pub fn register(data: Option<Arc<dyn DataPort>>) -> Result<()> {
-    deck_core::synthetic_ssr::register(ShipJsSsr::new(data)?);
-    Ok(())
+/// Construct the ship-js SSR renderer as a MOUNT-SCOPED handle — an
+/// `Arc<dyn SyntheticSsr>` the host layers as an axum `Extension` and the serve
+/// path threads per-request. NOT a process-global `register` install (that
+/// global was removed for `inv-deck-mount-scoped-resolution`), so one process
+/// can carry different (or no) engines per mount. `data` is the host's live
+/// data surface — the `<data>`/`<client>` op resolver; pass `None` for a
+/// route-only host.
+pub fn engine(data: Option<Arc<dyn DataPort>>) -> Result<Arc<dyn SyntheticSsr>> {
+    Ok(Arc::new(ShipJsSsr::new(data)?))
 }
 
 /// One cached bundle, keyed by the source `.sui`'s mtime.

@@ -55,6 +55,7 @@ pub async fn serve_app_index(
     mode: Option<Extension<DaemonMode>>,
     app: Option<Extension<Arc<AppServeConfig>>>,
     resolution: Option<Extension<Arc<deck_core::Resolution>>>,
+    renderer: Option<Extension<Arc<dyn deck_core::synthetic_ssr::SyntheticSsr>>>,
     Path(params): Path<HashMap<String, String>>,
 ) -> Response {
     let mode_val = mode_from_ext(mode);
@@ -80,6 +81,7 @@ pub async fn serve_app_index(
         &params_refs,
         None,
         resolution.as_ref().map(|e| e.0.as_ref()),
+        renderer.as_ref().map(|e| e.0.as_ref()),
     ))
 }
 

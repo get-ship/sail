@@ -8,13 +8,27 @@
 //! startup, and the serve path calls through this seam.
 //!
 //! ship-js is the one first-paint engine. It produces HTML whenever a renderer
-//! has been registered AND it renders without error. When no renderer is
-//! registered (e.g. a V8-less context) or a render fails, there is no server
-//! HTML and the caller serves an empty `#sui-root` for the client to mount
-//! (CSR) — there is no second rendering path.
+//! is CARRIED for the request AND it renders without error. When no renderer is
+//! carried (e.g. a V8-less context, or a CSR-only mount) or a render fails,
+//! there is no server HTML and the caller serves an empty `#sui-root` for the
+//! client to mount (CSR) — there is no second rendering path.
+//!
+//! ## Mount-scoped, not a process global
+//!
+//! The renderer is carried per-mount — an `Arc<dyn SyntheticSsr>` the host
+//! layers as an axum `Extension` and the serve path threads into
+//! [`first_paint`] — NOT a process-global `OnceLock` install. So one process
+//! can host two projects with different (or no) SSR engines without cross-talk
+//! (`inv-deck-mount-scoped-resolution` names `RENDERER` among the globals it
+//! removes).
+//!
+//! FLAG (render-ownership, deferred): this de-globalizes the RENDERER handle but
+//! does NOT decide who OWNS SSR rendering long-term. If first-paint moves into
+//! SUI (the "SSR render moves to SUI" arc), this seam is where the ship-js
+//! engine gets swapped for the SUI-owned one — the per-mount handle makes that a
+//! host-wiring change, not another global rewrite. Not resolved here.
 
 use std::path::Path;
-use std::sync::OnceLock;
 
 use serde_json::Value;
 
@@ -45,26 +59,14 @@ pub trait SyntheticSsr: Send + Sync + 'static {
     fn first_paint(&self, req: &SsrRequest) -> anyhow::Result<String>;
 }
 
-static RENDERER: OnceLock<Box<dyn SyntheticSsr>> = OnceLock::new();
-
-/// Register the ship-js SSR renderer ONCE at host startup. A second
-/// registration is ignored (the first wins) — registration is a process-wide
-/// install, not a per-request handle.
-pub fn register(renderer: impl SyntheticSsr) {
-    let _ = RENDERER.set(Box::new(renderer));
-}
-
-fn renderer() -> Option<&'static dyn SyntheticSsr> {
-    RENDERER.get().map(|b| b.as_ref())
-}
-
-/// First-paint HTML through ship-js when a renderer is registered AND it
-/// succeeds; otherwise `None`, and the caller serves an empty `#sui-root` for
-/// the client to mount (CSR). A render error is logged loudly (it is a real
-/// failure, not a quiet downgrade) — it does not fall back to a second engine.
-pub fn first_paint(req: &SsrRequest) -> Option<String> {
-    let r = renderer()?;
-    match r.first_paint(req) {
+/// First-paint HTML through the CARRIED `renderer` when it succeeds; otherwise
+/// `None`, and the caller serves an empty `#sui-root` for the client to mount
+/// (CSR). A render error is logged loudly (it is a real failure, not a quiet
+/// downgrade) — it does not fall back to a second engine. The renderer is a
+/// per-mount handle the serve path threads (see the module doc), never a
+/// process-global install.
+pub fn first_paint(renderer: &dyn SyntheticSsr, req: &SsrRequest) -> Option<String> {
+    match renderer.first_paint(req) {
         Ok(html) => Some(html),
         Err(e) => {
             tracing::error!(
