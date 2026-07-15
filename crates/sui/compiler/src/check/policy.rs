@@ -45,7 +45,6 @@ use std::path::Path;
 
 use super::lint_overrides::{LintOverride, OverrideSeverity};
 
-const CONFIG_FILE: &str = "sui.config.json";
 
 /// A package's styling policy: the (implicit, non-overridable) floor plus the
 /// three capability keys. See the module docs.
@@ -160,40 +159,32 @@ impl Policy {
     /// [`Policy::FULL`] (permissive — a config typo never hard-fails a build) and
     /// stops the walk (its presence is the package's declared intent).
     pub fn resolve_opt(source_file: &Path) -> Option<Policy> {
-        let mut dir = source_file.parent();
-        while let Some(d) = dir {
-            let cfg = d.join(CONFIG_FILE);
-            match std::fs::read_to_string(&cfg) {
-                Ok(text) => return Some(parse_config(&text).unwrap_or(Policy::FULL)),
-                Err(_) => dir = d.parent(),
-            }
-        }
-        None
+        let cfg = sui_lint::config::resolve(source_file.parent()?)?;
+        Some(policy_from_config(&cfg).unwrap_or(Policy::FULL))
     }
 }
 
-/// Parse a `sui.config.json`. A recognised `"preset"` sets the base; individual
-/// `"sx"` / `"variants"` / `"raw_containers"` booleans override it. With neither
-/// a preset nor any key, returns `None` (not a policy config). A config that
-/// names only keys starts from `STRICT` (the app default) and dials up.
-fn parse_config(text: &str) -> Option<Policy> {
-    let v: serde_json::Value = serde_json::from_str(text).ok()?;
-    let has_preset = v.get("preset").is_some();
-    let mut p = match v.get("preset").and_then(|x| x.as_str()) {
+/// Derive the capability tier from the resolved `sui.config.json`. A recognised
+/// `"preset"` sets the base; individual `"sx"` / `"variants"` / `"raw_containers"`
+/// booleans override it. With neither a preset nor any key, returns `None` (a
+/// present config with no tier signal — the caller reads that as `FULL`). A
+/// config that names only keys starts from `STRICT` (the app default) and dials
+/// up. The read + parse is owned by `sui_lint::config`; this only maps fields.
+fn policy_from_config(cfg: &sui_lint::config::SuiConfig) -> Option<Policy> {
+    let mut p = match cfg.preset() {
         Some(name) => Policy::preset(name)?,
         None => Policy::STRICT,
     };
-    let bool_key = |k: &str| v.get(k).and_then(|x| x.as_bool());
-    let mut touched = has_preset;
-    if let Some(b) = bool_key("sx") {
+    let mut touched = cfg.has_key("preset");
+    if let Some(b) = cfg.bool_key("sx") {
         p.sx = b;
         touched = true;
     }
-    if let Some(b) = bool_key("variants") {
+    if let Some(b) = cfg.bool_key("variants") {
         p.variants = b;
         touched = true;
     }
-    if let Some(b) = bool_key("raw_containers") {
+    if let Some(b) = cfg.bool_key("raw_containers") {
         p.raw_containers = b;
         touched = true;
     }
@@ -208,6 +199,12 @@ mod tests {
         p.overrides().iter().find(|o| o.rule == rule).unwrap().severity
     }
 
+    /// Derive a tier from config JSON text — the tier half of the resolution,
+    /// with the read/parse owned by `sui_lint::config`.
+    fn tier(json: &str) -> Option<Policy> {
+        policy_from_config(&sui_lint::config::SuiConfig::from_json(json))
+    }
+
     #[test]
     fn floor_is_error_under_every_preset_and_is_not_a_key() {
         for p in [Policy::FULL, Policy::STRICT] {
@@ -215,7 +212,7 @@ mod tests {
             assert_eq!(sev(p, "sui-no-inline-style"), OverrideSeverity::Error);
         }
         // No config key can turn the floor off — only capability keys exist.
-        let p = parse_config(r#"{"preset":"full","sx":false}"#).unwrap();
+        let p = tier(r#"{"preset":"full","sx":false}"#).unwrap();
         assert_eq!(sev(p, "sui-no-style-block"), OverrideSeverity::Error);
     }
 
@@ -243,20 +240,20 @@ mod tests {
     #[test]
     fn granular_keys_override_the_preset() {
         // full, but raw containers banned
-        let p = parse_config(r#"{"preset":"full","raw_containers":false}"#).unwrap();
+        let p = tier(r#"{"preset":"full","raw_containers":false}"#).unwrap();
         assert!(p.sx && p.variants && !p.raw_containers);
         // strict, but sx re-enabled — the in-between tier
-        let p = parse_config(r#"{"preset":"strict","sx":true}"#).unwrap();
+        let p = tier(r#"{"preset":"strict","sx":true}"#).unwrap();
         assert!(p.sx && !p.variants && !p.raw_containers);
         // keys only, no preset → base STRICT, dial up
-        let p = parse_config(r#"{"sx":true}"#).unwrap();
+        let p = tier(r#"{"sx":true}"#).unwrap();
         assert!(p.sx && !p.variants && !p.raw_containers);
     }
 
     #[test]
     fn non_policy_config_is_none() {
-        assert_eq!(parse_config(r#"{"other":1}"#), None);
-        assert_eq!(parse_config("not json"), None);
-        assert_eq!(parse_config(r#"{"preset":"bogus"}"#), None);
+        assert_eq!(tier(r#"{"other":1}"#), None);
+        assert_eq!(tier("not json"), None);
+        assert_eq!(tier(r#"{"preset":"bogus"}"#), None);
     }
 }

@@ -5,6 +5,7 @@
 //! (the seam the floor closes: every `.ts` file a component ships, not
 //! just the `<controller>` block). Rule IDs are prefixed `sui-<descriptor>`.
 
+pub mod config;
 pub mod prop_registry;
 pub mod scales;
 pub mod report;

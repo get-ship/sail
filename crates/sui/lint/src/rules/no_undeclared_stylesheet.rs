@@ -54,58 +54,6 @@ fn collect_css_files(src_dir: &Path) -> Vec<PathBuf> {
     out
 }
 
-/// Read the nearest `sui.config.json` walking UP from the css file's dir.
-/// Returns `Some(declared_set)` if a config was read, `None` if no config
-/// exists in any parent (so every file is reported). The JSON grammar
-/// is small: `{ "stylesheets": ["name-or-relpath", …] }`.
-fn read_declared_css(css_dir: &Path) -> Option<std::collections::HashSet<String>> {
-    let mut dir = css_dir.to_path_buf();
-    loop {
-        let cfg = dir.join("sui.config.json");
-        if let Ok(text) = std::fs::read_to_string(&cfg) {
-            // Hand-rolled (the lint is WASM-safe-free; we never depend on
-            // serde). The grammar accepts: an array under `stylesheets`
-            // whose elements are quoted strings (with `-` for clarity).
-            let mut set = std::collections::HashSet::new();
-            // Find `"stylesheets"` and walk the array.
-            if let Some(idx) = text.find("\"stylesheets\"") {
-                if let Some(arr) = text[idx..]
-                    .split('[')
-                    .nth(1)
-                    .and_then(|s| s.split(']').next())
-                {
-                    let mut buf = String::new();
-                    let mut in_str = false;
-                    for ch in arr.chars() {
-                        match ch {
-                            '"' => {
-                                if in_str {
-                                    if !buf.is_empty() {
-                                        set.insert(buf.clone());
-                                        buf.clear();
-                                    }
-                                    in_str = false;
-                                } else {
-                                    in_str = true;
-                                }
-                            }
-                            _ => {
-                                if in_str {
-                                    buf.push(ch);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return Some(set);
-        }
-        if !dir.pop() {
-            return None;
-        }
-    }
-}
-
 fn byte_offset_to_line(source: &str, offset: usize) -> (usize, usize) {
     let mut line = 1usize;
     let mut col = 1usize;
@@ -132,14 +80,10 @@ pub fn check(path: &Path, _source: &str) -> Vec<Finding> {
     // and dead: a stylesheet could be declared in the config and enforced by
     // nothing. Walk up to the package that owns this source (the nearest
     // `sui.config.json`) and lint THAT.
-    let mut dir = path.parent();
-    while let Some(d) = dir {
-        if d.join("sui.config.json").is_file() {
-            return check_dir(d);
-        }
-        dir = d.parent();
+    match path.parent().and_then(crate::config::owning_dir) {
+        Some(dir) => check_dir(&dir),
+        None => Vec::new(),
     }
-    Vec::new()
 }
 
 fn check_dir(src_dir: &Path) -> Vec<Finding> {
@@ -147,7 +91,7 @@ fn check_dir(src_dir: &Path) -> Vec<Finding> {
     if css_files.is_empty() {
         return Vec::new();
     }
-    let Some(declared) = read_declared_css(src_dir) else {
+    let Some(declared) = crate::config::resolve(src_dir).map(|c| c.declared_stylesheets()) else {
         // No sui.config.json anywhere — every css file is undeclared.
         return css_files
             .into_iter()
