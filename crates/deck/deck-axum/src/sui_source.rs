@@ -2,34 +2,25 @@
 //! `.sui` template and `.controller.ts` for a SUI component.
 //!
 //! Powers the "View source" deep-link in the component studio. The component
-//! source trees (the primitives bucket at `packages/components/sui/` and the
-//! domain bucket at `packages/components/ship/`) are read from disk at request
-//! time. This is a dev feature; a 404 outside the workspace is fine.
+//! source trees under `packages/components/*` (EVERY bucket, discovered
+//! generically — no hardcoded bucket names) are read from disk at request time.
+//!
+//! The component root is derived FROM the mount's project root — the per-request
+//! [`deck_core::Resolution`], the SAME single root source the rest of deck
+//! resolves against — walking up to the nearest `packages/components/`. There is
+//! no compile-time manifest-dir bake (which broke in any installed binary) and
+//! deck names no domain-specific bucket here. This is a dev feature; a 404
+//! outside a workspace (or with no Resolution carried) is fine.
 //!
 //! Look-ups go through `is_valid_tag()` — only `sui-[a-z0-9-]+` matches;
 //! anything else (path traversal, uppercase, foreign prefixes) returns 400.
 
-use std::sync::LazyLock;
+use std::path::{Path as FsPath, PathBuf};
+use std::sync::Arc;
 
-use axum::extract::Path;
+use axum::extract::{Extension, Path};
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
-
-/// Workspace root — three parents up from this crate's `CARGO_MANIFEST_DIR`
-/// (`crates/deck/deck-axum` → repo root), walked once at first access.
-static REPO_ROOT: LazyLock<Option<std::path::PathBuf>> = LazyLock::new(|| {
-    let mut d = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    for _ in 0..3 {
-        if !d.pop() {
-            return None;
-        }
-    }
-    if d.join("package.json").exists() && d.join("packages").is_dir() {
-        Some(d)
-    } else {
-        None
-    }
-});
 
 /// Tag whitelist — lowercase ASCII, digits, and hyphens after `sui-`.
 /// Rejects path-traversal (`..`, `/`, `\\`) and any non-component name.
@@ -44,13 +35,34 @@ pub(crate) fn is_valid_tag(tag: &str) -> bool {
         .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
 }
 
-fn lookup_file(tag: &str, suffix: &str) -> Option<String> {
-    let root = REPO_ROOT.as_ref()?;
-    for bucket in ["sui", "ship"] {
-        let pkg_dir = std::fs::read_dir(root.join("packages/components").join(bucket)).ok()?;
-        for entry in pkg_dir.flatten() {
-            let src = entry.path().join("src").join(tag);
-            let file = src.join(format!("{tag}{suffix}"));
+/// Walk up from `start` (bounded) to the nearest ancestor holding a
+/// `packages/components/` dir — where SUI + consumer component packs live. This
+/// derives the component-source root FROM the mount's single project root, not a
+/// compile-time constant, so it works in an installed binary and outside the
+/// framework build tree.
+fn find_components_dir(start: &FsPath) -> Option<PathBuf> {
+    let mut cur = start;
+    for _ in 0..32 {
+        let candidate = cur.join("packages").join("components");
+        if candidate.is_dir() {
+            return Some(candidate);
+        }
+        cur = cur.parent()?;
+    }
+    None
+}
+
+/// Read `<pkg>/src/<tag>/<tag><suffix>` under any pack in ANY bucket dir of
+/// `components_dir` (`packages/components/<bucket>/<pkg>/…`). Buckets are
+/// discovered by directory listing — deck hardcodes no `sui`/`ship` name.
+fn lookup_file(components_dir: &FsPath, tag: &str, suffix: &str) -> Option<String> {
+    let buckets = std::fs::read_dir(components_dir).ok()?;
+    for bucket in buckets.flatten() {
+        let Ok(packs) = std::fs::read_dir(bucket.path()) else {
+            continue;
+        };
+        for pack in packs.flatten() {
+            let file = pack.path().join("src").join(tag).join(format!("{tag}{suffix}"));
             if let Ok(body) = std::fs::read_to_string(&file) {
                 return Some(body);
             }
@@ -60,15 +72,25 @@ fn lookup_file(tag: &str, suffix: &str) -> Option<String> {
 }
 
 /// GET /_deck/source/{tag}
-pub async fn serve_sui_source(Path(tag): Path<String>) -> Response {
+pub async fn serve_sui_source(
+    resolution: Option<Extension<Arc<deck_core::Resolution>>>,
+    Path(tag): Path<String>,
+) -> Response {
     if !is_valid_tag(&tag) {
         return (StatusCode::BAD_REQUEST, "invalid tag").into_response();
     }
+    // Mount-scoped: resolve the component root from THIS request's project root.
+    let Some(root) = resolution.and_then(|e| e.0.project_root().map(|p| p.to_path_buf())) else {
+        return (StatusCode::NOT_FOUND, "source viewer needs a project root").into_response();
+    };
+    let Some(components) = find_components_dir(&root) else {
+        return (StatusCode::NOT_FOUND, "no packages/components under the project root").into_response();
+    };
 
-    let Some(sui_src) = lookup_file(&tag, ".sui") else {
+    let Some(sui_src) = lookup_file(&components, &tag, ".sui") else {
         return (StatusCode::NOT_FOUND, "no such component").into_response();
     };
-    let ctrl_src = lookup_file(&tag, ".controller.ts");
+    let ctrl_src = lookup_file(&components, &tag, ".controller.ts");
 
     let body = render_html(&tag, &sui_src, ctrl_src.as_deref());
     let mut resp = Html(body).into_response();
@@ -142,5 +164,50 @@ mod tests {
         assert_eq!(html_escape("<a>"), "&lt;a&gt;");
         assert_eq!(html_escape("a & b"), "a &amp; b");
         assert_eq!(html_escape("\"q\""), "&quot;q&quot;");
+    }
+
+    /// The component root is derived from the (runtime) project root by walking
+    /// up to `packages/components/` — NOT a compile-time `CARGO_MANIFEST_DIR`
+    /// bake — and lookups scan EVERY bucket generically (here an arbitrary
+    /// `acme` bucket, proving no `sui`/`ship` hardcode).
+    #[test]
+    fn lookup_reads_any_bucket_from_the_runtime_root() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        // A pack in a non-sui/non-ship bucket: packages/components/acme/widgets/…
+        let src = root.join("packages/components/acme/widgets/src/sui-thing");
+        std::fs::create_dir_all(&src).unwrap();
+        std::fs::write(src.join("sui-thing.sui"), "<div>hi</div>").unwrap();
+
+        // Derive the components dir from a DEEPLY nested project root (walk up).
+        let nested = root.join("apps/demo");
+        std::fs::create_dir_all(&nested).unwrap();
+        let components = super::find_components_dir(&nested).expect("finds packages/components upward");
+        assert_eq!(components, root.join("packages").join("components"));
+
+        assert_eq!(
+            super::lookup_file(&components, "sui-thing", ".sui").as_deref(),
+            Some("<div>hi</div>"),
+            "reads from an arbitrary bucket — no hardcoded sui/ship"
+        );
+        assert!(
+            super::lookup_file(&components, "sui-missing", ".sui").is_none(),
+            "absent tag → None"
+        );
+    }
+
+    /// Source-scan guard: the compile-time hardcodes this thread removed must
+    /// stay gone — no `env!` manifest-dir bake, no `packages/components/<domain>`
+    /// bucket literal in this module. Needles are split via `concat!` so this
+    /// test can't match its OWN source.
+    #[test]
+    fn no_compile_time_root_or_domain_hardcode() {
+        let src = include_str!("sui_source.rs");
+        let manifest_bake = concat!("env!(\"CARGO_", "MANIFEST_DIR\")");
+        let sui_bucket = concat!("components/", "sui");
+        let ship_bucket = concat!("components/", "ship");
+        assert!(!src.contains(manifest_bake), "no compile-time manifest-dir bake");
+        assert!(!src.contains(sui_bucket), "no hardcoded sui bucket path");
+        assert!(!src.contains(ship_bucket), "no hardcoded ship bucket path");
     }
 }
