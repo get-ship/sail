@@ -101,7 +101,7 @@ export default controller({
     <sui-component-viewer
       name={heading()}
       blurb={blurb()}
-      pack={"In the language"}
+      pack="In the language"
       variant-attr={variantAttr()}
       usage={usageCode()}
       prop:variants={variants()}
