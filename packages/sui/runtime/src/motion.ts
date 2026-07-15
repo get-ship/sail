@@ -192,7 +192,19 @@ function buildTransition(
     if (cfg.easing) t.ease = cfg.easing
   }
   if (cfg.iterations != null) t.repeat = cfg.iterations
-  if (cfg.direction != null) t.repeatType = cfg.direction
+  if (cfg.direction != null) {
+    // Motion's `repeatType` vocabulary is not CSS `animation-direction`:
+    // 'normal' → 'loop' (restart each iteration), 'alternate' → 'reverse'
+    // (ping-pong). 'reverse'/'mirror' already match Motion's names. Passing
+    // the raw CSS word made Motion fall back to its default and never
+    // alternate — the bounce read as a one-way restart.
+    t.repeatType =
+      cfg.direction === 'normal'
+        ? 'loop'
+        : cfg.direction === 'alternate'
+          ? 'reverse'
+          : cfg.direction
+  }
   if (staggerSec != null && total > 1) {
     t.delay = motionStagger(staggerSec)(index, total)
   }
@@ -218,6 +230,47 @@ function createAnimations(
     }
   }
   return controls
+}
+
+/** Create a motion's animations once its element is part of a live
+ *  document, then return a disposer that cancels them.
+ *
+ *  A WAAPI animation created on a DETACHED element never resolves its
+ *  play task: it stays `pending` with `startTime === null`, frozen at
+ *  `currentTime` 0. Because Motion attaches with `fill: 'both'`, that
+ *  PINS the element to the first keyframe (e.g. `opacity: 0`) forever,
+ *  and the animation never surfaces in `getAnimations()` — a silent,
+ *  permanent freeze with no console error.
+ *
+ *  The compiler wires `motion:` during detached subtree construction
+ *  (`el = __tpl(...); __sui_motion_attach(el, ...)`), so on first mount
+ *  the element is not yet in the document. We pin it to its rest pose
+ *  immediately (so it does not flash its final value for a frame) and
+ *  create the real animations on the frame after it joins the document.
+ *  Elements already connected at attach time animate synchronously,
+ *  exactly as before. Environments without `requestAnimationFrame`
+ *  (SSR, tests) fall through to the synchronous path. */
+function createAnimationsWhenConnected(
+  el: HTMLElement,
+  config: MotionAttachConfig,
+): Disposer {
+  if (el.isConnected || typeof requestAnimationFrame === 'undefined') {
+    const controls = createAnimations(el, config)
+    return () => { for (const c of controls) c.cancel() }
+  }
+  for (const m of config.motions) applyRestStyle(el, m)
+  let controls: Array<{ stop: () => void; cancel: () => void }> = []
+  let disposed = false
+  const start = (): void => {
+    if (disposed) return
+    if (!el.isConnected) { requestAnimationFrame(start); return }
+    controls = createAnimations(el, config)
+  }
+  requestAnimationFrame(start)
+  return () => {
+    disposed = true
+    for (const c of controls) c.cancel()
+  }
 }
 
 const TRIGGER_EVENTS: Record<string, [string, string, string?]> = {
@@ -268,8 +321,20 @@ export function __sui_motion_attach(
       for (const m of config.motions) applyFinalStyle(el, m)
       return () => {}
     }
-    const controls = createAnimations(el, config)
-    return () => { for (const c of controls) c.cancel() }
+    // `loop` means "play forever". A physics preset (`spring:bouncy`) is
+    // reused for one-shot triggers too, so it carries no iteration count
+    // of its own — the trigger supplies the repeat. Infinite + alternate
+    // so the element travels back and forth (a bounce) rather than
+    // snapping back to the start on every restart.
+    const looped: MotionAttachConfig = {
+      ...config,
+      motions: config.motions.map((m) => ({
+        ...m,
+        iterations: m.iterations ?? Infinity,
+        direction: m.direction ?? 'alternate',
+      })),
+    }
+    return createAnimationsWhenConnected(el, looped)
   }
 
   if (branch === 'enter' || branch === 'exit') {
@@ -279,8 +344,7 @@ export function __sui_motion_attach(
         for (const m of config.motions) applyFinalStyle(el, m)
         return () => {}
       }
-      const controls = createAnimations(el, config)
-      return () => { for (const c of controls) c.cancel() }
+      return createAnimationsWhenConnected(el, config)
     }
     if (reduced) return () => {}
     const controls = createAnimations(el, config)
@@ -297,8 +361,7 @@ export function __sui_motion_attach(
       for (const m of config.motions) applyFinalStyle(el, m)
       return () => {}
     }
-    const controls = createAnimations(el, config)
-    return () => { for (const c of controls) c.cancel() }
+    return createAnimationsWhenConnected(el, config)
   }
 
   const events = TRIGGER_EVENTS[config.trigger]!
