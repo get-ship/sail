@@ -1,18 +1,21 @@
-//! `sui-no-inline-style` — the raw `style=` attribute is banned at every policy.
+//! `sui-no-inline-style` — the raw `style=` attribute is banned in every `.sui`.
 //!
 //! `sui-no-style-block` closes the `<style>` element and `sui-no-sx` closes the
-//! `sx=` attribute at the strictest tier — but an agent denied both simply falls
+//! `sx=` attribute at the strict tier — but an agent denied both simply falls
 //! through to inline `style="…"` and hand-writes raw CSS (with raw px, raw
-//! colors, invented tokens) that NO css-token lint even scans. The strictest
-//! eval caught exactly this. Inline `style=` is raw CSS and bypasses the whole
-//! token surface, so it is banned at *every* policy (floor included) — the
-//! floor's core opinion is "one way to do CSS," and `style=` is a second way.
+//! colors, invented tokens) that NO css-token lint even scans. The strict eval
+//! caught exactly this. Inline `style=` is raw CSS and bypasses the whole token
+//! surface, so it is a floor rule — the floor's core opinion is "one way to do
+//! CSS," and `style=` is a second way.
 //!
-//! Natural severity `Warn` (so an unconfigured buffer keeps compiling and the
-//! LSP shows the hint); every policy (`floor`/`stripped`/`strictest`) promotes
-//! it to a hard `Error`. Catches both static `style="…"` and dynamic
-//! `style={…}`. Does NOT match the `<style>` *element* (that's preceded by `<`,
-//! not whitespace — `sui-no-style-block`'s job). Skips comments, char-safe.
+//! Natural severity `Warn` (so the rule read directly by the LSP / `sui_lint`
+//! shows the hint without hard-failing an unrelated tool). The compiler promotes
+//! it to a hard `Error` UNCONDITIONALLY via `check::lint_overrides::enforce_floor`
+//! — this is a floor rule (`check::policy::FLOOR_RULES`), enforced on every
+//! compile regardless of `sui.config.json` or `lint_overrides`. Catches both
+//! static `style="…"` and dynamic `style={…}`. Does NOT match the `<style>`
+//! *element* (that's preceded by `<`, not whitespace — `sui-no-style-block`'s
+//! job). Skips comments, char-safe.
 
 use std::path::Path;
 
@@ -51,13 +54,12 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 severity: Severity::Warn,
                 message:
                     "inline style= is raw CSS and bypasses the token surface — it is not allowed \
-                     at any policy. Use sx= (floor/stripped) or a primitive prop; raw values \
-                     never compile."
+                     in any `.sui`. Use sx= or a primitive prop; raw values never compile."
                         .to_string(),
                 suggest: Some(
                     "Text is already styled — write <h1>-<h6>/<p> plain (they take the type \
-                     scale). For everything else use sx= (floor/stripped) or a primitive prop. \
-                     There is no raw-CSS escape at any tier — that's the point of the floor."
+                     scale). For everything else use sx= or a primitive prop. There is no \
+                     raw-CSS escape — that's the point of the floor."
                         .to_string(),
                 ),
             });
