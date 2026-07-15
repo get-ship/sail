@@ -134,7 +134,10 @@ export default controller({
     </column>
 
     <!-- ── Grid ──────────────────────────────────────────────────────── -->
-    <column gap="3" sx="grow-1 min-w-0">
+    <!-- basis-0 keeps the fluid column from demanding its (large) content
+         width, so the wrapping <row> floor keeps rail + grid on one line
+         instead of stacking the grid below the rail. -->
+    <column gap="3" sx="grow-1 min-w-0 basis-0">
       <row gap="2">
         {#for c of cats() key={c}}
           <button size="sm" tone="primary" variant={catSel() === c ? 'solid' : 'ghost'} on:click={() => pickCat(c)}>{c}</button>
