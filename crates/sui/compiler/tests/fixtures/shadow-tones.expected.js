@@ -26,6 +26,6 @@ component("shadow-tones-test", {
     "tone": prop.union(["default", "primary", "success"], { default: "default", reflect: true }),
   },
   shadow: true,
-  styles: ":host { display: inline-flex; }\n\n\n  :host {\n    display: inline-flex;\n    --tone-fg: var(--foreground);\n  }\n  .dot { background: var(--tone-fg); }\n",
+  styles: ":host { display: inline-flex; }\n",
 }, __default);
 export default __default;

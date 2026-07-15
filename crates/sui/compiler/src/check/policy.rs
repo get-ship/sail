@@ -38,13 +38,37 @@
 //! declared one, so it rolls out per-package and every unconfigured tree — the
 //! primitives still mid-dissolution — compiles exactly as before.
 //!
-//! Implementation: a `Policy` *compiles to* a bundle of [`LintOverride`]s that
-//! rides the existing `lint_overrides` plumbing through `compile()`.
+//! Implementation: the **floor** is enforced by the compiler itself — an
+//! unconditional `enforce_floor` pass (`check::lint_overrides::enforce_floor`)
+//! that promotes every [`FLOOR_RULES`] finding to `Error` on every compile,
+//! independent of `opts.lint_overrides`. It does NOT ride the override channel,
+//! so no host (or missing host wiring) can skip it and no `lint_override` can
+//! soften it. Only the **capability keys** compile to a bundle of
+//! [`LintOverride`]s that rides the `lint_overrides` plumbing through
+//! `compile()` — they are the configurable surface ABOVE the floor.
 
 use std::path::Path;
 
 use super::lint_overrides::{LintOverride, OverrideSeverity};
 
+/// The floor rule IDs — the styling constructs banned in EVERY `.sui` compiled
+/// as a component or view, with or without a `sui.config.json`. This is the
+/// single source of truth: [`is_floor_rule`], [`Policy::floor`], and the
+/// compiler's unconditional `enforce_floor` pass
+/// (`check::lint_overrides::enforce_floor`) all read this one list, so a floor
+/// rule added here is enforced everywhere with no second place to update.
+pub const FLOOR_RULES: [&str; 4] = [
+    "sui-no-style-block",
+    "sui-no-inline-style",
+    "sui-no-class",
+    "sui-no-undeclared-stylesheet",
+];
+
+/// True iff `rule` is a floor rule — one the compiler promotes to `Error`
+/// unconditionally and that no `lint_override` can soften. See [`FLOOR_RULES`].
+pub fn is_floor_rule(rule: &str) -> bool {
+    FLOOR_RULES.contains(&rule)
+}
 
 /// A package's styling policy: the (implicit, non-overridable) floor plus the
 /// three capability keys. See the module docs.
@@ -76,40 +100,42 @@ impl Policy {
         }
     }
 
-    /// THE FLOOR. Authored `<style>` and inline `style=` are an error in every
-    /// SUI file, with or without a `sui.config.json`. This is not a policy tier
-    /// and not opt-in: it is a property of the language. The ONLY exception is
-    /// the L1 element sources inside this compiler, which do not take this path —
-    /// they compile through `compile_element`, because they ARE the styling layer.
+    /// THE FLOOR, expressed as `Error` overrides for every [`FLOOR_RULES`] id.
     ///
-    /// It used to be emitted only as part of a `Policy`, so a package with no
-    /// config got no policy and therefore no floor. An opt-in floor is not a
-    /// floor: every unconfigured tree — which was all of them — had a silent
-    /// escape hatch, and authors (including this one) walked straight through it.
+    /// Authored `<style>`, inline `style=`, `class`, and undeclared companion
+    /// stylesheets are an error in every SUI file, with or without a
+    /// `sui.config.json`. This is not a policy tier and not opt-in: it is a
+    /// property of the language. The ONLY exception is the L1 element sources
+    /// inside this compiler, which do not take this path — they compile through
+    /// `compile_element`, because they ARE the styling layer.
+    ///
+    /// The floor is NO LONGER delivered by threading this bundle through a host's
+    /// `opts.lint_overrides` (an opt-in floor is not a floor — every unconfigured
+    /// tree had a silent escape hatch, and a host that passed no overrides, like
+    /// the wasm/playground path, skipped it entirely). The compiler now enforces
+    /// it directly via `check::lint_overrides::enforce_floor`, keyed on the same
+    /// [`FLOOR_RULES`] list. This function remains the single description of the
+    /// floor-as-overrides for `Policy::overrides` and tests.
     ///
     /// When the floor bites something real — syntax highlighting, say — the
     /// answer is a missing L1 element, not a hole in the floor.
     pub fn floor() -> Vec<LintOverride> {
-        use OverrideSeverity::Error;
-        vec![
-            LintOverride { rule: "sui-no-style-block".to_string(), severity: Error },
-            LintOverride { rule: "sui-no-inline-style".to_string(), severity: Error },
-            LintOverride { rule: "sui-no-class".to_string(), severity: Error },
-            // Every stylesheet that exists is DECLARED in sui.config.json. An
-            // undeclared companion sheet is banned CSS living in a file the
-            // compiler never sees — the back door in its purest form.
-            LintOverride { rule: "sui-no-undeclared-stylesheet".to_string(), severity: Error },
-        ]
+        FLOOR_RULES
+            .iter()
+            .map(|rule| LintOverride { rule: rule.to_string(), severity: OverrideSeverity::Error })
+            .collect()
     }
 
-    /// What the compiler should enforce for `path`: the floor (always) plus
-    /// whatever capability keys the package declared (if any).
+    /// The CAPABILITY overrides the compiler should apply for `path` — the
+    /// package's declared capability keys ABOVE the floor. The floor itself is
+    /// enforced unconditionally by the compiler (`enforce_floor`) and is NOT part
+    /// of this bundle: no host wiring can skip it. An unconfigured package
+    /// declares no capabilities and gets an empty bundle (the floor still holds).
     pub fn overrides_for(path: &Path) -> Vec<LintOverride> {
-        let mut out = Policy::floor();
-        if let Some(p) = Policy::resolve_opt(path) {
-            out.extend(p.capabilities());
+        match Policy::resolve_opt(path) {
+            Some(p) => p.capabilities(),
+            None => Vec::new(),
         }
-        out
     }
 
     /// The capability keys only — the floor is added separately by `overrides_for`.
@@ -123,44 +149,34 @@ impl Policy {
         ]
     }
 
-    /// The `LintOverride` bundle this policy implies. The **floor** is always
-    /// `Error` and is emitted regardless of the keys — no configuration can bring
-    /// authored `<style>` / `style=` back. The three capability keys toggle their
-    /// ban rules between `Off` (allowed) and `Error` (forbidden).
+    /// The full `LintOverride` bundle this policy implies: the **floor**
+    /// (`Error` for every [`FLOOR_RULES`] id, via [`Policy::floor`]) plus the
+    /// three capability keys toggled between `Off` (allowed) and `Error`
+    /// (forbidden). The floor is derived from the one [`FLOOR_RULES`] list, not
+    /// re-hardcoded here. Used by tests + tooling that want the whole picture;
+    /// the compiler enforces the floor half unconditionally regardless.
     pub fn overrides(self) -> Vec<LintOverride> {
-        use OverrideSeverity::{Error, Off};
-        let lo = |rule: &str, severity| LintOverride { rule: rule.to_string(), severity };
-        let cap = |on: bool| if on { Off } else { Error };
-        vec![
-            // FLOOR — non-overridable, present under every policy.
-            lo("sui-no-style-block", Error),
-            lo("sui-no-inline-style", Error),
-            lo("sui-no-class", Error),
-            lo("sui-no-undeclared-stylesheet", Error),
-            // CAPABILITY keys — the dial.
-            lo("sui-no-sx", cap(self.sx)),
-            lo("sui-no-variants", cap(self.variants)),
-            lo("sui-no-raw-container", cap(self.raw_containers)),
-        ]
+        let mut out = Policy::floor();
+        out.extend(self.capabilities());
+        out
     }
 
-    /// Resolve the policy for a source file, falling back to [`Policy::FULL`] when
-    /// no config is found. (Direct callers that want the opt-in `None` should use
-    /// [`resolve_opt`](Policy::resolve_opt).)
-    pub fn resolve(source_file: &Path) -> Policy {
-        Self::resolve_opt(source_file).unwrap_or(Policy::FULL)
-    }
-
-    /// Like [`resolve`] but returns `None` when no `sui.config.json` is found on
-    /// the walk up, instead of a default. This is the **opt-in** entry the deck
-    /// bundler and CLI use: the policy applies only to packages that have declared
-    /// one, so it rolls out per-package and every unconfigured tree keeps
-    /// compiling exactly as before. A present-but-unparseable config fails open to
-    /// [`Policy::FULL`] (permissive — a config typo never hard-fails a build) and
-    /// stops the walk (its presence is the package's declared intent).
+    /// Resolve the CAPABILITY policy for a source file from the nearest
+    /// `sui.config.json`, or `None` when no config is found on the walk up. This
+    /// is the **opt-in** entry the deck bundler and CLI use: capability keys
+    /// apply only to packages that declared a config, so they roll out
+    /// per-package. The floor is orthogonal — enforced unconditionally by the
+    /// compiler regardless of whether this returns `Some` or `None`.
+    ///
+    /// FAIL CLOSED: a present-but-unrecognized/broken config resolves to
+    /// [`Policy::STRICT`] (every capability OFF), never [`Policy::FULL`]. A
+    /// config's presence is the package's declared intent to constrain; if we
+    /// cannot read that intent (typo, unknown keys, unparseable body), we deny
+    /// capabilities rather than silently unlock the most-permissive tier. STRICT
+    /// still compiles — a typo never hard-fails a build — but it grants nothing.
     pub fn resolve_opt(source_file: &Path) -> Option<Policy> {
         let cfg = sui_lint::config::resolve(source_file.parent()?)?;
-        Some(policy_from_config(&cfg).unwrap_or(Policy::FULL))
+        Some(policy_from_config(&cfg).unwrap_or(Policy::STRICT))
     }
 }
 
@@ -255,5 +271,75 @@ mod tests {
         assert_eq!(tier(r#"{"other":1}"#), None);
         assert_eq!(tier("not json"), None);
         assert_eq!(tier(r#"{"preset":"bogus"}"#), None);
+    }
+
+    // ----------------------------------------------------------------------
+    // Config resolution FAILS CLOSED — a broken/typo'd `sui.config.json`
+    // resolves to STRICT (capabilities off), never FULL (audit finding #4).
+    // ----------------------------------------------------------------------
+
+    /// Write a `sui.config.json` in a tempdir and resolve the policy for a
+    /// source under it — the real on-disk resolution path `overrides_for` uses.
+    fn resolve_config(body: &str) -> Option<Policy> {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(tmp.path().join("sui.config.json"), body).unwrap();
+        let src = tmp.path().join("src").join("w.sui");
+        std::fs::create_dir_all(src.parent().unwrap()).unwrap();
+        std::fs::write(&src, "<p>{x}</p>").unwrap();
+        Policy::resolve_opt(&src)
+    }
+
+    #[test]
+    fn broken_config_fails_closed_to_strict_not_full() {
+        // An unparseable body is present-but-broken: its presence is intent to
+        // constrain, but we can't read it — so deny capabilities (STRICT), never
+        // unlock the most-permissive tier (FULL). This is the audit-#4 fix.
+        assert_eq!(resolve_config("{ not valid json"), Some(Policy::STRICT));
+        assert_ne!(resolve_config("{ not valid json"), Some(Policy::FULL));
+    }
+
+    #[test]
+    fn unknown_key_config_fails_closed_to_strict() {
+        // A present config with no recognized policy signal (typo'd keys) is
+        // still a declaration — fail closed to STRICT, not FULL.
+        assert_eq!(resolve_config(r#"{"polcy":"strict"}"#), Some(Policy::STRICT));
+        assert_eq!(resolve_config(r#"{"preset":"strictest"}"#), Some(Policy::STRICT));
+    }
+
+    #[test]
+    fn recognized_preset_resolves_to_its_tier() {
+        assert_eq!(resolve_config(r#"{"preset":"strict"}"#), Some(Policy::STRICT));
+        assert_eq!(resolve_config(r#"{"preset":"full"}"#), Some(Policy::FULL));
+    }
+
+    #[test]
+    fn no_config_resolves_to_none() {
+        // No `sui.config.json` anywhere on the walk → None (opt-in; the floor
+        // still holds structurally, but no capability tier is imposed).
+        let tmp = tempfile::tempdir().unwrap();
+        let src = tmp.path().join("w.sui");
+        std::fs::write(&src, "<p>{x}</p>").unwrap();
+        assert_eq!(Policy::resolve_opt(&src), None);
+    }
+
+    // ----------------------------------------------------------------------
+    // Doc/parser key match: the config key the parser reads is `preset`, with
+    // values `full`/`strict` — NOT the drifted `{"policy":"floor|stripped|
+    // strictest"}` the docs used to advertise. Standardized on `preset`.
+    // ----------------------------------------------------------------------
+
+    #[test]
+    fn preset_is_the_parser_key_and_the_drifted_values_do_not_parse() {
+        // `{"preset":"strict"}` — the standardized key — resolves.
+        assert_eq!(tier(r#"{"preset":"strict"}"#), Some(Policy::STRICT));
+        assert_eq!(tier(r#"{"preset":"full"}"#), Some(Policy::FULL));
+        // The OLD advertised values (`floor`/`stripped`/`strictest`) are NOT
+        // preset names the parser knows — proving the docs must name `full`/
+        // `strict`, not the drifted vocabulary.
+        assert_eq!(Policy::preset("floor"), None);
+        assert_eq!(Policy::preset("stripped"), None);
+        assert_eq!(Policy::preset("strictest"), None);
+        // The OLD key name never carried a tier either.
+        assert_eq!(tier(r#"{"policy":"floor"}"#), None);
     }
 }

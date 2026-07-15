@@ -224,11 +224,22 @@ pub fn collect(
     // rule's natural severity (Error for `sui-css-token`, etc.). The
     // override only downgrades; the rule itself stays strict. This is
     // the single chokepoint the build host uses to opt out of a rule.
+    //
+    // THE FLOOR is enforced here unconditionally: `enforce_floor` promotes every
+    // floor-rule finding to Error regardless of `overrides` (and `apply_overrides`
+    // refuses to soften a floor rule), so authored `<style>` / `style=` / `class`
+    // / an undeclared stylesheet is a hard Error in every `.sui` — on every host,
+    // including one that passes no overrides (wasm/playground). This `collect` is
+    // the single path both the build gate (`gate` → here) and the LSP/agent view
+    // (`check_all` → here) flow through, so the floor is a compiler property, not
+    // opt-in host wiring. L1 element sources bypass this entirely (`compile_element`).
     let lint_path = source_path.unwrap_or_else(|| Path::new("<synthetic>.sui"));
     let template_findings =
-        crate::check::lint_overrides::apply_overrides(
-            sui_lint::lint_sui_template_source(lint_path, source),
-            overrides,
+        crate::check::lint_overrides::enforce_floor(
+            crate::check::lint_overrides::apply_overrides(
+                sui_lint::lint_sui_template_source(lint_path, source),
+                overrides,
+            ),
         );
     for f in template_findings {
         diags.push(finding_to_diag(&f));

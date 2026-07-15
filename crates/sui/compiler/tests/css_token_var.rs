@@ -22,6 +22,18 @@
 //!      `sui-css-token`. The rule itself stays strict; the override is
 //!      a build-host configuration.
 //!
+//! NOTE ON THE FLOOR: `sui-css-token` lints `var(--…)` references inside an
+//! authored `<style>` block — and an authored `<style>` block is itself a floor
+//! violation (`sui-no-style-block`), which the compiler now refuses
+//! UNCONDITIONALLY. So `compile()` no longer succeeds for these sources
+//! regardless of the token: the floor stops them. The `sui-css-token` CONTRACT
+//! (known = silent, unknown = Error, Warn/Off override softens) is therefore
+//! pinned here on the finding stream via `analyze` (`css_token_findings`), which
+//! reports every rule's findings independently of the floor's refusal. The
+//! `compile()`-level Error signal for an unknown token still holds because
+//! `css_token::check` runs in `check::run`, ahead of the floor gate — see
+//! `truly_unknown_token_strict_default_blocks_build`.
+//!
 //! Confined to `crates/sui/compiler/tests/**` per the job spec.
 
 use sui_compiler::{
@@ -42,12 +54,6 @@ fn opts(component_name: &str) -> CompileOpts {
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     }
-}
-
-fn opts_with_override(component_name: &str, overrides: Vec<LintOverride>) -> CompileOpts {
-    let mut o = opts(component_name);
-    o.lint_overrides = overrides;
-    o
 }
 
 /// Count `sui-css-token` findings for `source`. Zero = silent.
@@ -104,41 +110,30 @@ fn font_sans_convention_token_is_silent() {
   .kind { font-family: var(--font-sans, sans-serif); }
 </style>
 <div>{title()}</div>"#;
-    let out = compile(src, opts("font-sans-convention"))
-        .expect("var(--font-sans) should compile");
-    assert!(
-        out.js.contains("font-family: var(--font-sans, sans-serif)"),
-        "emitted JS should carry the var() reference with fallback: {}",
-        out.js
-    );
+    // The floor refuses the authored `<style>` (`sui-no-style-block`), so the css
+    // token contract is pinned on the finding stream, not on `compile()` success.
     let findings = css_token_findings(src, &[]);
     assert!(
         findings.is_empty(),
-        "var(--font-sans) is a documented @ship/tokens convention — must compile silently, \
-         got {findings:?}"
+        "var(--font-sans) is a documented @ship/tokens convention — must produce zero \
+         sui-css-token findings, got {findings:?}"
     );
 }
 
 #[test]
-fn font_sans_convention_token_compiles_without_fallback() {
+fn font_sans_convention_token_without_fallback_is_silent() {
     // The reference can stand without a fallback — `--font-sans` is
-    // still a real, recognized name.
+    // still a real, recognized name. (Verified on the finding stream: the
+    // authored `<style>` vehicle is refused by the floor.)
     let src = r#"<component>{ props: { title: string } }</component>
 <style>
   .card { font-family: var(--font-sans); }
 </style>
 <div>{title()}</div>"#;
-    let out = compile(src, opts("font-sans-no-fallback"))
-        .expect("var(--font-sans) should compile");
-    assert!(
-        out.js.contains("font-family: var(--font-sans)"),
-        "emitted JS should carry the var() reference: {}",
-        out.js
-    );
     let findings = css_token_findings(src, &[]);
     assert!(
         findings.is_empty(),
-        "var(--font-sans) must compile silently, got: {findings:?}"
+        "var(--font-sans) must produce zero sui-css-token findings, got: {findings:?}"
     );
 }
 
@@ -175,12 +170,13 @@ fn truly_unknown_token_strict_default_blocks_build() {
 }
 
 #[test]
-fn truly_unknown_token_warn_override_lets_build_pass() {
-    // Same source as the strict-default case. The build host (a
-    // third-party SUI consumer) passes an `OverrideSeverity::Warn`
-    // override for `sui-css-token`. The build now succeeds; the
-    // finding surfaces as a Warning so the LSP / agent can still show
-    // the typo suggestion. The rule itself is unchanged.
+fn truly_unknown_token_warn_override_downgrades_to_warning() {
+    // Same source as the strict-default case. The build host (a third-party SUI
+    // consumer) passes an `OverrideSeverity::Warn` override for `sui-css-token`.
+    // The css-token finding surfaces as a Warning so the LSP / agent can still
+    // show the typo suggestion — the rule itself is unchanged. (The build is
+    // still refused: the authored `<style>` is a floor violation; this pins the
+    // css-token severity on the finding stream.)
     let src = r#"<component>{ props: { title: string } }</component>
 <style>
   .card { color: var(--definitely-not-a-real-token); }
@@ -190,13 +186,6 @@ fn truly_unknown_token_warn_override_lets_build_pass() {
         rule: "sui-css-token".into(),
         severity: OverrideSeverity::Warn,
     }];
-    let out = compile(src, opts_with_override("unknown-tokens-warn", overrides.clone()))
-        .expect("Warn override must let the build proceed");
-    assert!(
-        out.js.contains("var(--definitely-not-a-real-token)"),
-        "emitted JS should still carry the var() reference: {}",
-        out.js
-    );
     let findings = css_token_findings(src, &overrides);
     assert_eq!(
         findings.len(),
@@ -228,13 +217,9 @@ fn truly_unknown_token_off_override_silences() {
         rule: "sui-css-token".into(),
         severity: OverrideSeverity::Off,
     }];
-    let out = compile(src, opts_with_override("unknown-tokens-off", overrides.clone()))
-        .expect("Off override must let the build proceed");
-    assert!(
-        out.js.contains("var(--definitely-not-a-real-token)"),
-        "emitted JS should still carry the var() reference: {}",
-        out.js
-    );
+    // An Off override drops the css-token finding from the gate stream. (The
+    // build is still refused by the floor's `<style>` ban — this pins that the
+    // NON-floor css-token rule is softenable, unlike the floor.)
     let findings = css_token_findings(src, &overrides);
     assert!(
         findings.is_empty(),
