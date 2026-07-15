@@ -50,3 +50,45 @@ fn is_ignored_dir(p: &Path) -> bool {
         Some("node_modules" | "dist" | "target" | ".git" | ".deck" | ".sui-out")
     )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    #[cfg(unix)]
+    fn walk_skips_node_modules_and_survives_a_symlink_cycle() {
+        // inv-sui-nodemodules-not-source: a source walk must not descend into
+        // node_modules and must terminate even against a symlink cycle back into
+        // the tree (the bun isolated-linker shape that hung compiles). If the
+        // fix regressed, this test either hangs (cycle followed) or fails (a
+        // node_modules path collected).
+        use std::os::unix::fs::symlink;
+        let root = tempfile::tempdir().unwrap();
+        let base = root.path();
+
+        // a real authoring source the walk MUST find
+        fs::create_dir_all(base.join("src/sui-x")).unwrap();
+        fs::write(base.join("src/sui-x/sui-x.sui"), "<column></column>").unwrap();
+
+        // node_modules with a source-shaped file inside — must be skipped whole
+        fs::create_dir_all(base.join("node_modules/@ship")).unwrap();
+        fs::write(base.join("node_modules/@ship/pkg.sui"), "<column></column>").unwrap();
+        // a symlink cycle NOT under node_modules — proves file_type() no-follow
+        symlink(base, base.join("src/loop")).unwrap();
+
+        let found = collect(base);
+
+        assert!(
+            found.iter().any(|p| p.ends_with("sui-x.sui")),
+            "the real source is collected: {found:?}"
+        );
+        assert!(
+            found
+                .iter()
+                .all(|p| !p.components().any(|c| c.as_os_str() == "node_modules")),
+            "no node_modules path is collected: {found:?}"
+        );
+    }
+}
