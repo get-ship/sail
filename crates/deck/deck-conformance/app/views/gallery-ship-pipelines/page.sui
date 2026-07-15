@@ -1,7 +1,7 @@
-<div class="gsp-pipelines">
-  <header class="section-header">
-    <h1>ship/pipelines — Gallery</h1>
-    <p class="section-note">
+<column gap="8" sx="py-6 px-8 max-w-breakpoint-tablet">
+  <header>
+    <h1 sx="text-xl font-bold text-foreground mb-2">ship/pipelines — Gallery</h1>
+    <p sx="text-sm text-muted-foreground">
       Pack <strong>ship/pipelines</strong>. Real component instantiations —
       one card per primitive, representative prop combinations across every
       enum variant. Static attribute values; no live data.
@@ -9,44 +9,44 @@
   </header>
 
   <!-- ── sui-pipeline-step ──────────────────────────────────────────────── -->
-  <section class="gsp-section">
-    <h2 class="gsp-label"><code>sui-pipeline-step</code></h2>
-    <p class="gsp-desc">
+  <column gap="4">
+    <h2 sx="text-base font-semibold text-foreground"><code>sui-pipeline-step</code></h2>
+    <p sx="text-sm text-muted-foreground">
       Props: <code>type: agent|gate|merge|human</code>,
       <code>state: ok|running|awaiting|err|none</code>,
       <code>compact: bool</code>.
       Slots: default (id/title), <code>sub</code>, <code>arts</code>.
     </p>
 
-    <div class="gsp-col">
+    <column gap="3">
       <!-- type variants, state=none -->
-      <span class="gsp-variant-label">type=agent · state=none</span>
+      <span sx="font-mono text-xs text-muted-foreground pt-2">type=agent · state=none</span>
       <sui-pipeline-step type="agent" state="none">
         lint-check
         <span slot="sub">Runs ESLint + Prettier over changed files</span>
       </sui-pipeline-step>
 
-      <span class="gsp-variant-label">type=gate · state=awaiting</span>
+      <span sx="font-mono text-xs text-muted-foreground pt-2">type=gate · state=awaiting</span>
       <sui-pipeline-step type="gate" state="awaiting">
         human-review
         <span slot="sub">Waiting for approval before deploy</span>
         <span slot="arts">artifact: review-notes.md</span>
       </sui-pipeline-step>
 
-      <span class="gsp-variant-label">type=merge · state=ok</span>
+      <span sx="font-mono text-xs text-muted-foreground pt-2">type=merge · state=ok</span>
       <sui-pipeline-step type="merge" state="ok">
         merge-results
         <span slot="sub">Aggregated outputs from parallel lanes</span>
         <span slot="arts">artifact: summary.json</span>
       </sui-pipeline-step>
 
-      <span class="gsp-variant-label">type=human · state=running</span>
+      <span sx="font-mono text-xs text-muted-foreground pt-2">type=human · state=running</span>
       <sui-pipeline-step type="human" state="running">
         manual-deploy
         <span slot="sub">Operator confirms production cut-over</span>
       </sui-pipeline-step>
 
-      <span class="gsp-variant-label">type=agent · state=err</span>
+      <span sx="font-mono text-xs text-muted-foreground pt-2">type=agent · state=err</span>
       <sui-pipeline-step type="agent" state="err">
         build-release
         <span slot="sub">cargo build --release exited 1</span>
@@ -54,35 +54,35 @@
       </sui-pipeline-step>
 
       <!-- compact variants -->
-      <span class="gsp-variant-label">compact=true — all four types</span>
-      <div class="gsp-row">
+      <span sx="font-mono text-xs text-muted-foreground pt-2">compact=true — all four types</span>
+      <row gap="3">
         <sui-pipeline-step type="agent" state="ok" compact>ci-check</sui-pipeline-step>
         <sui-pipeline-step type="gate"  state="awaiting" compact>review-gate</sui-pipeline-step>
         <sui-pipeline-step type="merge" state="running" compact>fan-in</sui-pipeline-step>
         <sui-pipeline-step type="human" state="none" compact>sign-off</sui-pipeline-step>
-      </div>
-    </div>
-  </section>
+      </row>
+    </column>
+  </column>
 
   <!-- ── sui-pipeline-card ─────────────────────────────────────────────── -->
-  <section class="gsp-section">
-    <h2 class="gsp-label"><code>sui-pipeline-card</code></h2>
-    <p class="gsp-desc">
+  <column gap="4">
+    <h2 sx="text-base font-semibold text-foreground"><code>sui-pipeline-card</code></h2>
+    <p sx="text-sm text-muted-foreground">
       Props: <code>state: ok|running|awaiting|err|none</code>,
       <code>interactive: bool</code>.
       Slots: default (name), <code>desc</code>, <code>steps</code>,
       <code>recent</code>.
     </p>
 
-    <div class="gsp-col">
-      <span class="gsp-variant-label">state=none (default)</span>
+    <column gap="3">
+      <span sx="font-mono text-xs text-muted-foreground pt-2">state=none (default)</span>
       <sui-pipeline-card state="none">
         nightly-build
         <span slot="desc">Full build + test suite run every night at 02:00 UTC.</span>
         <span slot="steps">agent · gate · agent</span>
       </sui-pipeline-card>
 
-      <span class="gsp-variant-label">state=running · interactive</span>
+      <span sx="font-mono text-xs text-muted-foreground pt-2">state=running · interactive</span>
       <sui-pipeline-card state="running" interactive>
         deploy-staging
         <span slot="desc">Builds the release image and promotes to staging.</span>
@@ -90,7 +90,7 @@
         <span slot="recent">run #42 · run #41 · run #40</span>
       </sui-pipeline-card>
 
-      <span class="gsp-variant-label">state=awaiting · interactive</span>
+      <span sx="font-mono text-xs text-muted-foreground pt-2">state=awaiting · interactive</span>
       <sui-pipeline-card state="awaiting" interactive>
         release-prod
         <span slot="desc">Promotes staging to production after human sign-off.</span>
@@ -98,7 +98,7 @@
         <span slot="recent">run #18 · run #17</span>
       </sui-pipeline-card>
 
-      <span class="gsp-variant-label">state=ok</span>
+      <span sx="font-mono text-xs text-muted-foreground pt-2">state=ok</span>
       <sui-pipeline-card state="ok">
         smoke-test
         <span slot="desc">Runs the smoke suite against the current deploy.</span>
@@ -106,96 +106,96 @@
         <span slot="recent">run #55 · run #54 · run #53</span>
       </sui-pipeline-card>
 
-      <span class="gsp-variant-label">state=err</span>
+      <span sx="font-mono text-xs text-muted-foreground pt-2">state=err</span>
       <sui-pipeline-card state="err">
         integration-suite
         <span slot="desc">Full integration test pass across all services.</span>
         <span slot="steps">agent · agent · gate · merge · agent</span>
         <span slot="recent">run #9</span>
       </sui-pipeline-card>
-    </div>
-  </section>
+    </column>
+  </column>
 
   <!-- ── sui-pipeline-run ──────────────────────────────────────────────── -->
-  <section class="gsp-section">
-    <h2 class="gsp-label"><code>sui-pipeline-run</code></h2>
-    <p class="gsp-desc">
+  <column gap="4">
+    <h2 sx="text-base font-semibold text-foreground"><code>sui-pipeline-run</code></h2>
+    <p sx="text-sm text-muted-foreground">
       Props: <code>state: ok|running|awaiting|err|none</code>.
       Slots: default (name), <code>meta</code>, <code>rail</code>.
     </p>
 
-    <div class="gsp-col">
-      <span class="gsp-variant-label">state=running</span>
+    <column gap="3">
+      <span sx="font-mono text-xs text-muted-foreground pt-2">state=running</span>
       <sui-pipeline-run state="running">
         deploy-staging / run #42
         <span slot="meta">started 3m ago</span>
-        <div slot="rail" style="display:flex;gap:4px">
+        <row slot="rail" gap="1">
           <sui-pipeline-step type="agent" state="ok" compact>build</sui-pipeline-step>
           <sui-pipeline-step type="gate"  state="running" compact>smoke</sui-pipeline-step>
           <sui-pipeline-step type="agent" state="none" compact>promote</sui-pipeline-step>
-        </div>
+        </row>
       </sui-pipeline-run>
 
-      <span class="gsp-variant-label">state=awaiting</span>
+      <span sx="font-mono text-xs text-muted-foreground pt-2">state=awaiting</span>
       <sui-pipeline-run state="awaiting">
         release-prod / run #18
         <span slot="meta">waiting 12m</span>
-        <div slot="rail" style="display:flex;gap:4px">
+        <row slot="rail" gap="1">
           <sui-pipeline-step type="agent" state="ok" compact>build</sui-pipeline-step>
           <sui-pipeline-step type="human" state="awaiting" compact>sign-off</sui-pipeline-step>
           <sui-pipeline-step type="agent" state="none" compact>deploy</sui-pipeline-step>
-        </div>
+        </row>
       </sui-pipeline-run>
 
-      <span class="gsp-variant-label">state=ok</span>
+      <span sx="font-mono text-xs text-muted-foreground pt-2">state=ok</span>
       <sui-pipeline-run state="ok">
         nightly-build / run #101
         <span slot="meta">finished 2h ago · 4m 12s</span>
-        <div slot="rail" style="display:flex;gap:4px">
+        <row slot="rail" gap="1">
           <sui-pipeline-step type="agent" state="ok" compact>lint</sui-pipeline-step>
           <sui-pipeline-step type="agent" state="ok" compact>test</sui-pipeline-step>
           <sui-pipeline-step type="merge" state="ok" compact>report</sui-pipeline-step>
-        </div>
+        </row>
       </sui-pipeline-run>
 
-      <span class="gsp-variant-label">state=err</span>
+      <span sx="font-mono text-xs text-muted-foreground pt-2">state=err</span>
       <sui-pipeline-run state="err">
         integration-suite / run #9
         <span slot="meta">failed 5h ago · 1m 03s</span>
-        <div slot="rail" style="display:flex;gap:4px">
+        <row slot="rail" gap="1">
           <sui-pipeline-step type="agent" state="ok" compact>setup</sui-pipeline-step>
           <sui-pipeline-step type="agent" state="err" compact>e2e-tests</sui-pipeline-step>
           <sui-pipeline-step type="merge" state="none" compact>summary</sui-pipeline-step>
-        </div>
+        </row>
       </sui-pipeline-run>
-    </div>
-  </section>
+    </column>
+  </column>
 
   <!-- ── sui-pipeline-dag ──────────────────────────────────────────────── -->
-  <section class="gsp-section">
-    <h2 class="gsp-label"><code>sui-pipeline-dag</code></h2>
-    <p class="gsp-desc">
+  <column gap="4">
+    <h2 sx="text-base font-semibold text-foreground"><code>sui-pipeline-dag</code></h2>
+    <p sx="text-sm text-muted-foreground">
       Props: <code>steps: string</code> (JSON array of
       <code>&#123; id, type, state?, after?: string[] &#125;</code>).
       The controller lays out a dependency DAG and renders it as SVG.
     </p>
 
-    <div class="gsp-col">
-      <span class="gsp-variant-label">linear chain — all states</span>
+    <column gap="3">
+      <span sx="font-mono text-xs text-muted-foreground pt-2">linear chain — all states</span>
       <sui-pipeline-dag steps='[{"id":"lint","type":"agent","state":"ok"},{"id":"test","type":"agent","state":"ok","after":["lint"]},{"id":"review","type":"gate","state":"awaiting","after":["test"]},{"id":"deploy","type":"agent","state":"none","after":["review"]}]'></sui-pipeline-dag>
 
-      <span class="gsp-variant-label">fan-out / fan-in — running</span>
+      <span sx="font-mono text-xs text-muted-foreground pt-2">fan-out / fan-in — running</span>
       <sui-pipeline-dag steps='[{"id":"build","type":"agent","state":"ok"},{"id":"unit","type":"agent","state":"ok","after":["build"]},{"id":"e2e","type":"agent","state":"running","after":["build"]},{"id":"merge","type":"merge","state":"none","after":["unit","e2e"]}]'></sui-pipeline-dag>
 
-      <span class="gsp-variant-label">human step mid-pipeline — err branch</span>
+      <span sx="font-mono text-xs text-muted-foreground pt-2">human step mid-pipeline — err branch</span>
       <sui-pipeline-dag steps='[{"id":"prepare","type":"agent","state":"ok"},{"id":"sign-off","type":"human","state":"awaiting","after":["prepare"]},{"id":"promote","type":"agent","state":"err","after":["sign-off"]}]'></sui-pipeline-dag>
-    </div>
-  </section>
+    </column>
+  </column>
 
   <!-- ── sui-log-stream ────────────────────────────────────────────────── -->
-  <section class="gsp-section">
-    <h2 class="gsp-label"><code>sui-log-stream</code></h2>
-    <p class="gsp-desc">
+  <column gap="4">
+    <h2 sx="text-base font-semibold text-foreground"><code>sui-log-stream</code></h2>
+    <p sx="text-sm text-muted-foreground">
       Props: <code>url: string</code>, <code>event: string</code> (default
       <code>log</code>), <code>autoscroll: bool</code>,
       <code>active: bool</code>, <code>max-bytes: number</code> (default 1 MB).
@@ -204,43 +204,15 @@
       placeholder.
     </p>
 
-    <div class="gsp-col">
-      <span class="gsp-variant-label">inactive (default) — placeholder state</span>
+    <column gap="3">
+      <span sx="font-mono text-xs text-muted-foreground pt-2">inactive (default) — placeholder state</span>
       <sui-log-stream url="" event="log"></sui-log-stream>
 
-      <span class="gsp-variant-label">inactive · autoscroll prop set — no connection opened</span>
+      <span sx="font-mono text-xs text-muted-foreground pt-2">inactive · autoscroll prop set — no connection opened</span>
       <sui-log-stream url="/_deck/streams/demo-run" event="log" autoscroll></sui-log-stream>
 
-      <span class="gsp-variant-label">inactive · max-bytes=4096 — same placeholder</span>
+      <span sx="font-mono text-xs text-muted-foreground pt-2">inactive · max-bytes=4096 — same placeholder</span>
       <sui-log-stream url="/_deck/streams/demo-run" event="log" max-bytes="4096"></sui-log-stream>
-    </div>
-  </section>
-</div>
-
-<style>
-  .gsp-pipelines {
-    max-width: 860px;
-    padding: var(--space-6) var(--space-8);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-8);
-  }
-
-  .section-header { display: flex; flex-direction: column; gap: var(--space-2); }
-  .section-header h1 { font-size: var(--text-xl); font-weight: 700; margin: 0; color: var(--foreground); }
-  .section-note { margin: 0; font-size: var(--text-sm); color: var(--muted-foreground); }
-
-  .gsp-section { display: flex; flex-direction: column; gap: var(--space-4); }
-  .gsp-label { font-size: var(--text-base); font-weight: 600; margin: 0; color: var(--foreground); }
-  .gsp-desc { margin: 0; font-size: var(--text-sm); color: var(--muted-foreground); }
-
-  .gsp-col { display: flex; flex-direction: column; gap: var(--space-3); }
-  .gsp-row { display: flex; flex-direction: row; gap: var(--space-3); flex-wrap: wrap; }
-
-  .gsp-variant-label {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--muted-foreground);
-    padding-top: var(--space-2);
-  }
-</style>
+    </column>
+  </column>
+</column>

@@ -1,7 +1,7 @@
-<div class="gallery-section">
-  <header class="section-header">
-    <h1>sui/canvas</h1>
-    <p class="section-note">
+<column gap="8" sx="p-6 max-w-breakpoint-tablet mx-auto">
+  <header sx="border-b border-b-border pb-4">
+    <h1 sx="text-2xl font-bold text-foreground mb-2">sui/canvas</h1>
+    <p sx="text-muted-foreground text-sm">
       Pack <strong>sui/canvas</strong> — pan/zoom substrate, SVG diagram board,
       freehand whiteboard, and graph layout surface.
       Cards marked <em>domain-stub</em> await a backend spec before live data
@@ -9,92 +9,92 @@
     </p>
   </header>
 
-  <div class="card-grid">
+  <grid min="sm">
 
     <!-- sui-canvas ─────────────────────────────────────────────── -->
-    <div class="card">
-      <div class="card-header">
-        <span class="tag-name">sui-canvas</span>
-        <span class="stub-badge">domain-stub — awaits backend spec</span>
-      </div>
-      <p class="card-desc">
+    <column gap="4" sx="border border-border rounded-lg bg-surface-1 p-5">
+      <row gap="3">
+        <span sx="text-lg font-semibold text-foreground font-mono">sui-canvas</span>
+        <span sx="text-xs font-medium font-body text-warning-foreground bg-warning rounded-sm px-2 py-1 tracking-wide">domain-stub — awaits backend spec</span>
+      </row>
+      <p sx="text-muted-foreground text-sm leading-relaxed">
         Bare pan/zoom/infinite-surface substrate. Hosts arbitrary world-space
         content via the default slot; pan and zoom with pointer/wheel.
       </p>
-      <div class="component-host">
+      <column gap="2" sx="border border-divider rounded-md p-3 bg-surface-2">
         <sui-canvas theme="light" grid="dots" label="Demo canvas">
-          <div class="demo-node" style="transform: translate(40px, 30px);">Node A</div>
-          <div class="demo-node" style="transform: translate(200px, 80px);">Node B</div>
+          <div>Node A</div>
+          <div>Node B</div>
         </sui-canvas>
-      </div>
-      <dl class="prop-list">
+      </column>
+      <dl sx="text-sm text-muted-foreground">
         <dt>theme</dt><dd>"light"</dd>
         <dt>grid</dt><dd>"dots"</dd>
         <dt>label</dt><dd>"Demo canvas"</dd>
         <dt>readonly</dt><dd>false</dd>
       </dl>
-    </div>
+    </column>
 
     <!-- sui-board ──────────────────────────────────────────────── -->
-    <div class="card">
-      <div class="card-header">
-        <span class="tag-name">sui-board</span>
-        <span class="stub-badge">domain-stub — awaits backend spec</span>
-      </div>
-      <p class="card-desc">
+    <column gap="4" sx="border border-border rounded-lg bg-surface-1 p-5">
+      <row gap="3">
+        <span sx="text-lg font-semibold text-foreground font-mono">sui-board</span>
+        <span sx="text-xs font-medium font-body text-warning-foreground bg-warning rounded-sm px-2 py-1 tracking-wide">domain-stub — awaits backend spec</span>
+      </row>
+      <p sx="text-muted-foreground text-sm leading-relaxed">
         SVG-native node/edge/port diagram. Nodes are DOM divs; edges are SVG
         paths. Geometry is owned by the board; slot content owns visuals.
       </p>
-      <div class="component-host">
+      <column gap="2" sx="border border-divider rounded-md p-3 bg-surface-2">
         <sui-board theme="light" grid="dots" layout="none" label="Demo board">
-          <div slot="node-a" class="demo-board-node">Agent A</div>
-          <div slot="node-b" class="demo-board-node">Agent B</div>
+          <div slot="node-a">Agent A</div>
+          <div slot="node-b">Agent B</div>
         </sui-board>
-      </div>
-      <dl class="prop-list">
+      </column>
+      <dl sx="text-sm text-muted-foreground">
         <dt>theme</dt><dd>"light"</dd>
         <dt>grid</dt><dd>"dots"</dd>
         <dt>layout</dt><dd>"none"</dd>
         <dt>label</dt><dd>"Demo board"</dd>
       </dl>
-    </div>
+    </column>
 
     <!-- sui-draw ───────────────────────────────────────────────── -->
-    <div class="card">
-      <div class="card-header">
-        <span class="tag-name">sui-draw</span>
-        <span class="stub-badge">domain-stub — awaits backend spec</span>
-      </div>
-      <p class="card-desc">
+    <column gap="4" sx="border border-border rounded-lg bg-surface-1 p-5">
+      <row gap="3">
+        <span sx="text-lg font-semibold text-foreground font-mono">sui-draw</span>
+        <span sx="text-xs font-medium font-body text-warning-foreground bg-warning rounded-sm px-2 py-1 tracking-wide">domain-stub — awaits backend spec</span>
+      </row>
+      <p sx="text-muted-foreground text-sm leading-relaxed">
         Excalidraw-class freehand whiteboard. SVG-native strokes + shapes +
         selection. No canvas engine — token-themeable paths throughout.
       </p>
-      <div class="component-host">
+      <column gap="2" sx="border border-divider rounded-md p-3 bg-surface-2">
         <sui-draw theme="light" grid="lines" tool="select" label="Demo whiteboard">
-          <span slot="toolbar" class="demo-tool-hint">toolbar slot</span>
+          <span slot="toolbar">toolbar slot</span>
         </sui-draw>
-      </div>
-      <dl class="prop-list">
+      </column>
+      <dl sx="text-sm text-muted-foreground">
         <dt>theme</dt><dd>"light"</dd>
         <dt>grid</dt><dd>"lines"</dd>
         <dt>tool</dt><dd>"select"</dd>
         <dt>sketchy</dt><dd>false</dd>
         <dt>label</dt><dd>"Demo whiteboard"</dd>
       </dl>
-    </div>
+    </column>
 
     <!-- sui-graph-canvas ───────────────────────────────────────── -->
-    <div class="card">
-      <div class="card-header">
-        <span class="tag-name">sui-graph-canvas</span>
-        <span class="stub-badge">domain-stub — awaits backend spec</span>
-      </div>
-      <p class="card-desc">
+    <column gap="4" sx="border border-border rounded-lg bg-surface-1 p-5">
+      <row gap="3">
+        <span sx="text-lg font-semibold text-foreground font-mono">sui-graph-canvas</span>
+        <span sx="text-xs font-medium font-body text-warning-foreground bg-warning rounded-sm px-2 py-1 tracking-wide">domain-stub — awaits backend spec</span>
+      </row>
+      <p sx="text-muted-foreground text-sm leading-relaxed">
         Positioned-graph primitive. Renders bezier SVG edges + absolutely-
         positioned node cards. Per-kind node templates via the hidden "node"
         slot.
       </p>
-      <div class="component-host">
+      <column gap="2" sx="border border-divider rounded-md p-3 bg-surface-2">
         <sui-graph-canvas
           nodes='[{"id":"a","label":"Commander","kind":"agent","x":120,"y":80},{"id":"b","label":"Coder","kind":"agent","x":340,"y":180}]'
           edges='[{"id":"e1","source":"a","target":"b","kind":"agent"}]'
@@ -102,15 +102,15 @@
           height="240"
           layout="positioned"
         ></sui-graph-canvas>
-      </div>
-      <dl class="prop-list">
+      </column>
+      <dl sx="text-sm text-muted-foreground">
         <dt>nodes</dt><dd>2 mock nodes (JSON)</dd>
         <dt>edges</dt><dd>1 mock edge (JSON)</dd>
         <dt>width</dt><dd>480</dd>
         <dt>height</dt><dd>240</dd>
         <dt>layout</dt><dd>"positioned"</dd>
       </dl>
-    </div>
+    </column>
 
-  </div>
-</div>
+  </grid>
+</column>

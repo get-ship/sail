@@ -1,7 +1,7 @@
-<div class="gallery-ship-markdown">
-  <header class="section-header">
-    <h1>ship/markdown — Domain Stubs</h1>
-    <p class="section-note">
+<column gap="8" sx="p-6 max-w-breakpoint-tablet mx-auto">
+  <header>
+    <h1 sx="text-2xl font-bold mb-2">ship/markdown — Domain Stubs</h1>
+    <p sx="text-muted-foreground">
       Pack <strong>ship/markdown</strong>. Each card below renders the real
       custom element tag with static mock attribute values so the shell
       registers and paints. A visible badge on each card marks it as a domain
@@ -10,12 +10,12 @@
   </header>
 
   <!-- ship-markdown-editor: default / md size -->
-  <section class="stub-section">
-    <h2 class="stub-heading">
+  <section>
+    <h2 sx="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 pb-2 border-b border-b-border">
       <code>ship-markdown-editor</code>
-      <span class="stub-badge">domain-stub — awaits backend spec</span>
+      <span sx="text-xs font-medium text-warning-foreground bg-warning border border-warning rounded-sm px-2 py-half whitespace-nowrap normal-case tracking-normal ms-3">domain-stub — awaits backend spec</span>
     </h2>
-    <p class="stub-desc">
+    <p sx="text-sm text-muted-foreground mb-4 leading-relaxed">
       Props: <code>value: string</code> (form-associated),
       <code>placeholder: string</code>,
       <code>size: sm|md|lg</code>,
@@ -33,7 +33,7 @@
       composer are built-in.
     </p>
 
-    <div class="stub-preview">
+    <column sx="bg-card border border-border rounded-lg p-5">
       <ship-markdown-editor
         name="demo-md-default"
         label="Default (md)"
@@ -41,20 +41,20 @@
         size="md"
         rows="8">
       </ship-markdown-editor>
-    </div>
+    </column>
   </section>
 
   <!-- ship-markdown-editor: sm size -->
-  <section class="stub-section">
-    <h2 class="stub-heading">
+  <section>
+    <h2 sx="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 pb-2 border-b border-b-border">
       <code>ship-markdown-editor</code> — size sm
-      <span class="stub-badge">domain-stub — awaits backend spec</span>
+      <span sx="text-xs font-medium text-warning-foreground bg-warning border border-warning rounded-sm px-2 py-half whitespace-nowrap normal-case tracking-normal ms-3">domain-stub — awaits backend spec</span>
     </h2>
-    <p class="stub-desc">
+    <p sx="text-sm text-muted-foreground mb-4 leading-relaxed">
       Small variant. Reduced font-size, toolbar height, and padding via
       <code>size="sm"</code>. Placeholder text demonstrates the empty state.
     </p>
-    <div class="stub-preview">
+    <column sx="bg-card border border-border rounded-lg p-5">
       <ship-markdown-editor
         name="demo-md-sm"
         label="Small editor"
@@ -62,20 +62,20 @@
         size="sm"
         rows="6">
       </ship-markdown-editor>
-    </div>
+    </column>
   </section>
 
   <!-- ship-markdown-editor: lg size -->
-  <section class="stub-section">
-    <h2 class="stub-heading">
+  <section>
+    <h2 sx="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 pb-2 border-b border-b-border">
       <code>ship-markdown-editor</code> — size lg
-      <span class="stub-badge">domain-stub — awaits backend spec</span>
+      <span sx="text-xs font-medium text-warning-foreground bg-warning border border-warning rounded-sm px-2 py-half whitespace-nowrap normal-case tracking-normal ms-3">domain-stub — awaits backend spec</span>
     </h2>
-    <p class="stub-desc">
+    <p sx="text-sm text-muted-foreground mb-4 leading-relaxed">
       Large variant. Larger font-size and row height. Suitable for document
       authoring surfaces.
     </p>
-    <div class="stub-preview">
+    <column sx="bg-card border border-border rounded-lg p-5">
       <ship-markdown-editor
         name="demo-md-lg"
         label="Large editor"
@@ -83,21 +83,21 @@
         size="lg"
         rows="10">
       </ship-markdown-editor>
-    </div>
+    </column>
   </section>
 
   <!-- ship-markdown-editor: disabled -->
-  <section class="stub-section">
-    <h2 class="stub-heading">
+  <section>
+    <h2 sx="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 pb-2 border-b border-b-border">
       <code>ship-markdown-editor</code> — disabled
-      <span class="stub-badge">domain-stub — awaits backend spec</span>
+      <span sx="text-xs font-medium text-warning-foreground bg-warning border border-warning rounded-sm px-2 py-half whitespace-nowrap normal-case tracking-normal ms-3">domain-stub — awaits backend spec</span>
     </h2>
-    <p class="stub-desc">
+    <p sx="text-sm text-muted-foreground mb-4 leading-relaxed">
       <code>disabled</code> is a boolean, form-disabled prop. The shell
       applies 60% opacity and blocks pointer events. Toolbar buttons are
       also disabled.
     </p>
-    <div class="stub-preview">
+    <column sx="bg-card border border-border rounded-lg p-5">
       <ship-markdown-editor
         name="demo-md-disabled"
         label="Disabled editor"
@@ -106,20 +106,20 @@
         rows="6"
         disabled>
       </ship-markdown-editor>
-    </div>
+    </column>
   </section>
 
   <!-- ship-markdown-editor: invalid -->
-  <section class="stub-section">
-    <h2 class="stub-heading">
+  <section>
+    <h2 sx="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 pb-2 border-b border-b-border">
       <code>ship-markdown-editor</code> — invalid
-      <span class="stub-badge">domain-stub — awaits backend spec</span>
+      <span sx="text-xs font-medium text-warning-foreground bg-warning border border-warning rounded-sm px-2 py-half whitespace-nowrap normal-case tracking-normal ms-3">domain-stub — awaits backend spec</span>
     </h2>
-    <p class="stub-desc">
+    <p sx="text-sm text-muted-foreground mb-4 leading-relaxed">
       <code>invalid</code> applies the destructive ring to the editor shell.
       Used in form-validation contexts when the field value fails a constraint.
     </p>
-    <div class="stub-preview">
+    <column sx="bg-card border border-border rounded-lg p-5">
       <ship-markdown-editor
         name="demo-md-invalid"
         label="Field with validation error"
@@ -128,22 +128,22 @@
         rows="6"
         invalid>
       </ship-markdown-editor>
-    </div>
+    </column>
   </section>
 
   <!-- ship-markdown-editor: no selection toolbar, no comment -->
-  <section class="stub-section">
-    <h2 class="stub-heading">
+  <section>
+    <h2 sx="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 pb-2 border-b border-b-border">
       <code>ship-markdown-editor</code> — toolbar-only mode
-      <span class="stub-badge">domain-stub — awaits backend spec</span>
+      <span sx="text-xs font-medium text-warning-foreground bg-warning border border-warning rounded-sm px-2 py-half whitespace-nowrap normal-case tracking-normal ms-3">domain-stub — awaits backend spec</span>
     </h2>
-    <p class="stub-desc">
+    <p sx="text-sm text-muted-foreground mb-4 leading-relaxed">
       <code>show-selection-toolbar="false"</code> hides the floating bubble
       toolbar. <code>allow-comment="false"</code> removes the comment button
       from the bubble. Both are false here — a simple editing surface without
       collaborative features.
     </p>
-    <div class="stub-preview">
+    <column sx="bg-card border border-border rounded-lg p-5">
       <ship-markdown-editor
         name="demo-md-simple"
         label="Toolbar-only editor"
@@ -153,21 +153,21 @@
         show-selection-toolbar="false"
         allow-comment="false">
       </ship-markdown-editor>
-    </div>
+    </column>
   </section>
 
   <!-- ship-markdown-editor: allow-generate -->
-  <section class="stub-section">
-    <h2 class="stub-heading">
+  <section>
+    <h2 sx="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 pb-2 border-b border-b-border">
       <code>ship-markdown-editor</code> — allow-generate
-      <span class="stub-badge">domain-stub — awaits backend spec</span>
+      <span sx="text-xs font-medium text-warning-foreground bg-warning border border-warning rounded-sm px-2 py-half whitespace-nowrap normal-case tracking-normal ms-3">domain-stub — awaits backend spec</span>
     </h2>
-    <p class="stub-desc">
+    <p sx="text-sm text-muted-foreground mb-4 leading-relaxed">
       <code>allow-generate="true"</code> adds a sparkles button to the
       selection bubble toolbar. Clicking it fires the <code>generate</code>
       event — the host is responsible for wiring to an AI back-end.
     </p>
-    <div class="stub-preview">
+    <column sx="bg-card border border-border rounded-lg p-5">
       <ship-markdown-editor
         name="demo-md-generate"
         label="AI-enabled editor"
@@ -176,76 +176,6 @@
         rows="7"
         allow-generate="true">
       </ship-markdown-editor>
-    </div>
+    </column>
   </section>
-</div>
-
-<style>
-  .gallery-ship-markdown {
-    padding: var(--space-6);
-    max-width: 860px;
-    margin: 0 auto;
-  }
-
-  .section-header {
-    margin-bottom: var(--space-8);
-  }
-
-  .section-header h1 {
-    font-size: var(--text-2xl);
-    font-weight: var(--font-weight-bold);
-    margin: 0 0 var(--space-2);
-  }
-
-  .section-note {
-    color: var(--muted-foreground);
-    margin: 0;
-  }
-
-  .stub-section {
-    margin-bottom: var(--space-8);
-  }
-
-  .stub-heading {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    font-size: var(--text-sm);
-    font-weight: var(--font-weight-semibold);
-    color: var(--muted-foreground);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin: 0 0 var(--space-3);
-    padding-bottom: var(--space-2);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .stub-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px var(--space-2);
-    border-radius: var(--radius-sm);
-    background: color-mix(in oklch, var(--warning) 15%, var(--background));
-    color: color-mix(in oklch, var(--warning) 70%, var(--foreground));
-    border: 1px solid color-mix(in oklch, var(--warning) 30%, transparent);
-    font-size: var(--text-xs);
-    font-weight: var(--font-weight-medium);
-    text-transform: none;
-    letter-spacing: 0;
-    white-space: nowrap;
-  }
-
-  .stub-desc {
-    font-size: var(--text-sm);
-    color: var(--muted-foreground);
-    margin: 0 0 var(--space-4);
-    line-height: 1.6;
-  }
-
-  .stub-preview {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-5);
-  }
-</style>
+</column>
