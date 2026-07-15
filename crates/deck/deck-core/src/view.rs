@@ -3,23 +3,36 @@ use deck_host::resolver::ResolvedView;
 
 use crate::{DaemonMode, DeckResponse};
 use crate::assets::resolve_view_js;
-use crate::resolver::resolve;
+use crate::resolver::{resolve, Resolution};
 
 #[derive(Debug, serde::Deserialize)]
 pub struct ViewSetupQuery {
     pub sub: Option<String>,
 }
 
-pub fn serve_sui_view_setup(mode: DaemonMode, name: &str, sub: Option<&str>) -> DeckResponse {
+/// Serve `/_deck/views/{name}/view.js` — the built bundle when present, else an
+/// on-demand compile. Mount-scoped: the per-request [`Resolution`] carries the
+/// project root the built bundle + source `.sui` are resolved under, so one
+/// process serving many apps reads each app's views from ITS own root (no
+/// process global).
+pub fn serve_sui_view_setup(
+    mode: DaemonMode,
+    resolution: &Resolution,
+    name: &str,
+    sub: Option<&str>,
+) -> DeckResponse {
     if !is_valid_view_name(name) {
         return DeckResponse::not_found("invalid view name", mode);
     }
     if sub.is_none() {
-        if let Some(js) = resolve_view_js(name) {
+        if let Some(js) = resolve_view_js(Some(resolution), name) {
             return DeckResponse::js_view(js, mode);
         }
     }
-    match resolve(name, sub) {
+    let Some(root) = resolution.project_root() else {
+        return DeckResponse::not_found("view: no project root (host must carry a Resolution)", mode);
+    };
+    match resolve(root, name, sub) {
         Ok(r) => compile_view_js(name, &r, mode),
         Err(e) => DeckResponse::not_found(e.message, mode),
     }

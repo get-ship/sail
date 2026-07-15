@@ -38,33 +38,10 @@ pub mod window_registry;
 #[cfg(test)]
 mod mode_tests;
 
-#[cfg(test)]
-pub(crate) mod test_lock {
-    use std::sync::Mutex;
-    static TEST_ENV_LOCK: Mutex<()> = Mutex::new(());
-    pub fn lock() -> std::sync::MutexGuard<'static, ()> {
-        TEST_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner())
-    }
-
-    /// Test-only guard that pins the resolver's project root to `dir` for
-    /// its lifetime. On Drop, the override is cleared. Holds the env lock
-    /// so two tests can't race on the resolver.
-    pub struct ProjectRootGuard {
-        _lock: std::sync::MutexGuard<'static, ()>,
-    }
-    impl ProjectRootGuard {
-        pub fn new(dir: &std::path::Path) -> Self {
-            let lock = lock();
-            super::resolver::set_project_root(dir.to_path_buf());
-            Self { _lock: lock }
-        }
-    }
-    impl Drop for ProjectRootGuard {
-        fn drop(&mut self) {
-            super::resolver::reset_project_root_override_for_test();
-        }
-    }
-}
+// (formerly `mod test_lock` with a `ProjectRootGuard` RAII helper — removed with
+// the process-global resolver it pinned. Resolution is now mount-scoped, so a
+// test simply constructs a `Resolution::new().with_root(dir)` and passes it in;
+// there is no global to guard or serialize.)
 pub use response::{CachePolicy, DeckResponse, HTML_SECURITY_HEADERS, compute_etag};
 pub use app_port::AppRegistry;
 pub use change_source::{ChangeFeed, ChangeSource};
@@ -84,9 +61,7 @@ pub use assets::{
     serve_sui_live_reload, serve_sui_runtime, serve_sui_sdk_client,
 };
 pub use form_inject::inject_form_actions;
-pub use resolver::{
-    register_view_output, resolve_project_root_with, set_project_root, Resolution,
-};
+pub use resolver::{resolve_project_root_with, Resolution};
 pub use meta::{serve_meta, DaemonBuildInfo};
 pub use mode_html::{inject_mode_meta, mode_str};
 // (formerly `packs::serve_catalog_workspace`) — purged with the `.deck/` runtime read.

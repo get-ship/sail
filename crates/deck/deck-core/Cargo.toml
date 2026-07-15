@@ -13,6 +13,12 @@ path = "src/lib.rs"
 default = []
 specta = ["dep:specta", "deck-host/specta"]
 
+[build-dependencies]
+# The build script stages `<repo>/.deck/framework/*.js` → `assets/` for
+# `include_str!`; it resolves that `.deck` dir through the SAME single constant
+# the runtime/bundler use, so the staging path can never drift from the writer.
+deck-config = { path = "../deck-config" }
+
 [dependencies]
 deck-config = { path = "../deck-config" }
 deck-host = { path = "../deck-host" }

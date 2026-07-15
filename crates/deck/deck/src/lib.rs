@@ -30,8 +30,8 @@ pub use deck_axum::pages::spa_fallback;
 // `DataPort` is the data seam a host implements (live `<data source>`); the
 // facade surfaces it so hosts write `deck::DataPort`, not `deck_core::DataPort`.
 pub use deck_core::{
-    CachePolicy, DaemonBuildInfo, DaemonMode, DataPort, DeckResponse, ViewSetupQuery,
-    inject_mode_meta, mode_str, register_view_output,
+    CachePolicy, DaemonBuildInfo, DaemonMode, DataPort, DeckResponse, Resolution, ViewSetupQuery,
+    inject_mode_meta, mode_str,
 };
 
 // SSE envelope encoders — single source of truth for the live-data wire protocol.

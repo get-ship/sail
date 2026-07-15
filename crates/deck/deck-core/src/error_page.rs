@@ -23,11 +23,11 @@ const ROUTES_PLACEHOLDER: &str = "<!-- SUI_NF_ROUTES -->";
 /// Render the `404 view-not-found` HTML page for `name`.
 ///
 /// `text/html`, status 404, never cached. The available-view list is a
-/// best-effort scan of the resolver's roots (`list_view_names`) — empty when
-/// the daemon has no project root, in which case the routes block is omitted
-/// gracefully rather than rendering an empty list.
-pub fn view_not_found(mode: DaemonMode, name: &str) -> DeckResponse {
-    let routes = list_view_names();
+/// best-effort scan of the mount's project `root` (`list_view_names`) — empty
+/// when the caller has no root (`None`), in which case the routes block is
+/// omitted gracefully rather than rendering an empty list.
+pub fn view_not_found(mode: DaemonMode, name: &str, root: Option<&std::path::Path>) -> DeckResponse {
+    let routes = root.map(list_view_names).unwrap_or_default();
     let body = NOT_FOUND_SHELL
         .replace(NAME_PLACEHOLDER, &escape_html(name))
         .replace(ROUTES_PLACEHOLDER, &routes_block(&routes));

@@ -62,6 +62,7 @@ pub async fn serve_index(
     mode: Option<Extension<DaemonMode>>,
     apps: Option<Extension<Arc<Vec<AppServeConfig>>>>,
     resolution: Option<Extension<Arc<deck_core::Resolution>>>,
+    renderer: Option<Extension<Arc<dyn deck_core::synthetic_ssr::SyntheticSsr>>>,
 ) -> Response {
     match primary_app(&apps) {
         Some(app) => into_axum(deck_core::serve_scaffold(
@@ -70,6 +71,7 @@ pub async fn serve_index(
             &[],
             Some("/"),
             resolution.as_ref().map(|e| e.0.as_ref()),
+            renderer.as_ref().map(|e| e.0.as_ref()),
         )),
         None => into_axum(deck_core::DeckResponse::not_found(
             "no primary app configured for /",
@@ -89,6 +91,7 @@ pub async fn spa_or_public_asset(
     mode: Option<Extension<DaemonMode>>,
     apps: Option<Extension<Arc<Vec<AppServeConfig>>>>,
     resolution: Option<Extension<Arc<deck_core::Resolution>>>,
+    renderer: Option<Extension<Arc<dyn deck_core::synthetic_ssr::SyntheticSsr>>>,
     Path(file): Path<String>,
 ) -> Response {
     let Some(app) = primary_app(&apps) else {
@@ -98,11 +101,13 @@ pub async fn spa_or_public_asset(
         ));
     };
     if file.contains('.') {
-        // Per-app public asset. deck-core reads `<project>/<app.source>/<file>`.
+        // Per-app public asset. deck-core reads `<project>/<app.source>/<file>`,
+        // resolving `<project>` from the mount-scoped Resolution.
         return into_axum(deck_core::serve_public_asset(
             mode_from_ext(mode),
             &app.source,
             &file,
+            resolution.as_ref().map(|e| e.0.as_ref()),
         ));
     }
     // Bare segment — SPA navigation, serve the app's `index.html`. Pass the
@@ -114,6 +119,7 @@ pub async fn spa_or_public_asset(
         &[],
         Some(&req_path),
         resolution.as_ref().map(|e| e.0.as_ref()),
+        renderer.as_ref().map(|e| e.0.as_ref()),
     ))
 }
 
@@ -129,6 +135,7 @@ pub async fn spa_fallback(
     apps: Option<Extension<Arc<Vec<AppServeConfig>>>>,
     host_backend_prefixes: Option<Extension<Arc<Vec<String>>>>,
     resolution: Option<Extension<Arc<deck_core::Resolution>>>,
+    renderer: Option<Extension<Arc<dyn deck_core::synthetic_ssr::SyntheticSsr>>>,
 ) -> Response {
     let path = uri.path();
     // deck owns ONLY its own framework surface: `/api/*` (token + theme CSS),
@@ -153,6 +160,7 @@ pub async fn spa_fallback(
                 &[],
                 Some(path),
                 resolution.as_ref().map(|e| e.0.as_ref()),
+                renderer.as_ref().map(|e| e.0.as_ref()),
             ));
         }
     }

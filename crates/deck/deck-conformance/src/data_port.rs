@@ -206,15 +206,26 @@ async fn keepalive_loop(tx: mpsc::Sender<Result<String, std::io::Error>>, cancel
 async fn serve_sse(
     Path(name): Path<String>,
     State(store): State<Arc<DemoStore>>,
+    resolution: Option<axum::Extension<Arc<deck_core::Resolution>>>,
 ) -> Response {
-    serve_sse_inner(name, store).await
+    // Mount-scoped project root (the conformance app dir), carried by the
+    // host's `Resolution` Extension — not a process global.
+    let root = resolution.and_then(|e| e.0.project_root().map(|p| p.to_path_buf()));
+    serve_sse_inner(name, store, root).await
 }
 
-async fn serve_sse_inner(name: String, store: Arc<DemoStore>) -> Response {
+async fn serve_sse_inner(
+    name: String,
+    store: Arc<DemoStore>,
+    root: Option<std::path::PathBuf>,
+) -> Response {
     if !is_valid_view_name(&name) {
         return sse_error(StatusCode::BAD_REQUEST, "invalid view name");
     }
-    let source = match deck_core::render_helpers::render_view_source(&name) {
+    let Some(root) = root else {
+        return sse_error(StatusCode::NOT_FOUND, "no project root");
+    };
+    let source = match deck_core::render_helpers::render_view_source(&root, &name) {
         Some(s) => s,
         None => return sse_error(StatusCode::NOT_FOUND, "view not found"),
     };

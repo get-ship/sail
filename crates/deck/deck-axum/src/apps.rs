@@ -54,6 +54,8 @@ use crate::{into_axum, mode_from_ext};
 pub async fn serve_app_index(
     mode: Option<Extension<DaemonMode>>,
     app: Option<Extension<Arc<AppServeConfig>>>,
+    resolution: Option<Extension<Arc<deck_core::Resolution>>>,
+    renderer: Option<Extension<Arc<dyn deck_core::synthetic_ssr::SyntheticSsr>>>,
     Path(params): Path<HashMap<String, String>>,
 ) -> Response {
     let mode_val = mode_from_ext(mode);
@@ -68,13 +70,19 @@ pub async fn serve_app_index(
         .map(|(k, v)| (k.as_str(), v.as_str()))
         .collect();
     // `None` request path: the multi-app host serve doesn't yet wire per-route
-    // SSR resolution (it's the standalone `deck dev` path that first-paints
+    // SSR first-paint (it's the standalone `deck dev` path that first-paints
     // routes/ today). An `ssr` app served here falls back to CSR until the host
-    // path threads its request path through. TODO(deck-ssr-host).
-    // `resolution: None` — the multi-app host (shipd) resolves per-app roots via
-    // the global today; threading a per-request `Resolution` here is the ship-repo
-    // caller migration (`Resolution` Step 2, host side).
-    into_axum(deck_core::serve_scaffold(mode_val, app, &params_refs, None, None))
+    // threads its request path through. TODO(deck-ssr-host). The mount-scoped
+    // `Resolution` IS threaded (each app carries its own via a per-route
+    // Extension) so asset resolution is per-app, never a shared global.
+    into_axum(deck_core::serve_scaffold(
+        mode_val,
+        app,
+        &params_refs,
+        None,
+        resolution.as_ref().map(|e| e.0.as_ref()),
+        renderer.as_ref().map(|e| e.0.as_ref()),
+    ))
 }
 
 /// `GET /<app.name>/{file}` — serve a per-app static asset
@@ -82,6 +90,7 @@ pub async fn serve_app_index(
 pub async fn serve_app_asset(
     mode: Option<Extension<DaemonMode>>,
     app: Option<Extension<Arc<AppServeConfig>>>,
+    resolution: Option<Extension<Arc<deck_core::Resolution>>>,
     Path(file): Path<String>,
 ) -> Response {
     let mode_val = mode_from_ext(mode);
@@ -91,7 +100,12 @@ pub async fn serve_app_asset(
             mode_val,
         ));
     };
-    into_axum(deck_core::serve_scaffold_asset(mode_val, app, &file))
+    into_axum(deck_core::serve_scaffold_asset(
+        mode_val,
+        app,
+        &file,
+        resolution.as_ref().map(|e| e.0.as_ref()),
+    ))
 }
 
 /// `GET /{file}` (the app's slice) — serve a per-app public asset.
@@ -103,6 +117,7 @@ pub async fn serve_app_asset(
 pub async fn serve_app_public(
     mode: Option<Extension<DaemonMode>>,
     app: Option<Extension<Arc<AppServeConfig>>>,
+    resolution: Option<Extension<Arc<deck_core::Resolution>>>,
     Path(file): Path<String>,
 ) -> Response {
     let mode_val = mode_from_ext(mode);
@@ -112,7 +127,12 @@ pub async fn serve_app_public(
             mode_val,
         ));
     };
-    into_axum(deck_core::serve_public_asset(mode_val, &app.source, &file))
+    into_axum(deck_core::serve_public_asset(
+        mode_val,
+        &app.source,
+        &file,
+        resolution.as_ref().map(|e| e.0.as_ref()),
+    ))
 }
 
 // ── Router ─────────────────────────────────────────────────────────────────────
