@@ -1111,7 +1111,7 @@ export default controller({ scope: () => ({ id: signal('demo') }) })\n\
         );
         write(
             &r.join("routes/[name]/page.sui"),
-            "<div class=\"w\">hi {1 + 1}</div>\n",
+            "<div>hi {1 + 1}</div>\n",
         );
 
         let out = r.join("dist");
@@ -1197,7 +1197,7 @@ import './styles.css';\n\
 import { controller } from '@ship/sui-runtime'\n\
 export default controller({ scope: () => ({}) })\n\
 </controller>\n\
-<div class=\"css-probe\">css</div>\n",
+<div>css</div>\n",
         );
         write(
             &r.join("routes/styles.css"),
@@ -1365,7 +1365,7 @@ export default controller({ scope: () => ({}) })\n\
         // controller) — that's the whole point of the gate.
         write(
             &r.join("routes/page.sui"),
-            "<div class=\"token-probe\">tok</div>\n",
+            "<div>tok</div>\n",
         );
         let out = r.join("dist");
         let build = bundle_app(r, &[], r, &out, false, false)

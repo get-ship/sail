@@ -547,7 +547,7 @@ mod tests {
         // Component source: stem "sui-foo" contains a hyphen → detected as Component.
         write(
             &root.join("packages/mycomp/src/sui-foo/sui-foo.sui"),
-            "<span class=\"sui-foo-marker\">foo</span>\n",
+            "<span>foo</span>\n",
         );
         // A view alongside it must NOT appear (stem "page" has no hyphen).
         write(
@@ -589,15 +589,15 @@ mod tests {
         // Three components grouped under one parent dir.
         write(
             &root.join("packages/chrome/src/sui-rail/sui-rail.sui"),
-            "<nav class=\"rail\"></nav>\n",
+            "<nav></nav>\n",
         );
         write(
             &root.join("packages/chrome/src/sui-rail/sui-rail-item.sui"),
-            "<div class=\"rail-item\"></div>\n",
+            "<div></div>\n",
         );
         write(
             &root.join("packages/chrome/src/sui-rail/sui-rail-section.sui"),
-            "<div class=\"rail-section\"></div>\n",
+            "<div></div>\n",
         );
         // A view in the same package must not appear.
         write(
@@ -628,7 +628,7 @@ mod tests {
         );
         write(
             &root.join("packages/primitives/src/sui-button/sui-button.sui"),
-            "<button class=\"sui-button-marker\"><slot></slot></button>\n",
+            "<button><slot></slot></button>\n",
         );
 
         write(
@@ -637,7 +637,7 @@ mod tests {
         );
         write(
             &root.join("packages/demo/src/demo-chip/demo-chip.sui"),
-            "<span class=\"demo-chip-marker\"><slot></slot></span>\n",
+            "<span><slot></slot></span>\n",
         );
 
         write(
@@ -646,7 +646,7 @@ mod tests {
         );
         write(
             &root.join("packages/agents/src/ship-agent-card/ship-agent-card.sui"),
-            "<article class=\"ship-agent-card-marker\"><slot></slot></article>\n",
+            "<article><slot></slot></article>\n",
         );
 
         tmp

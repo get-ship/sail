@@ -229,7 +229,7 @@ mod tests {
     fn compiles_view_to_js_in_process() {
         let src = tempdir().unwrap();
         let sui = src.path().join("page.sui");
-        std::fs::write(&sui, "<div class=\"hello\">hi {1 + 1}</div>\n").unwrap();
+        std::fs::write(&sui, "<div>hi {1 + 1}</div>\n").unwrap();
         let js = compile_sui(&sui, CompileMode::View, "page", false).expect("view compiles");
         assert!(js.contains("@ship/sui-runtime"), "emits a runtime import; got:\n{js}");
     }

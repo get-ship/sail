@@ -17,7 +17,7 @@ fn write(path: &Path, body: &str) {
     std::fs::write(path, body).unwrap();
 }
 
-/// A workspace with one component package (`sui-widget`, marker class
+/// A workspace with one component package (`sui-widget`, marker text
 /// `sui-widget-marker`) and one view that uses the tag.
 fn fixture(root: &Path) {
     write(&root.join("package.json"), r#"{"workspaces":["packages/*"]}"#);
@@ -32,7 +32,7 @@ fn fixture(root: &Path) {
     // stem "sui-widget" contains a hyphen → detect_mode compiles this as a Component.
     write(
         &root.join("packages/demo/src/sui-widget/sui-widget.sui"),
-        "<div class=\"sui-widget-marker\">w</div>\n",
+        "<div>sui-widget-marker</div>\n",
     );
     write(&root.join("views/usewidget/page.sui"), "<div><sui-widget></sui-widget></div>\n");
     // A second view that also uses the tag — for the shared-chunk dedup test.
