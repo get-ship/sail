@@ -310,6 +310,30 @@ mod project_root_tests {
         assert_eq!(super::resolve_project_root_with(Some(&empty)), None);
     }
 
+    /// `inv-deck-output-location-single`, cross-crate: the runtime READER
+    /// (`Resolution::view_bundle_roots`) and the bundler WRITER
+    /// (`deck_bundler::targets::BundleLayout::deck_out`) resolve the SAME `.deck`
+    /// path for the same project root — because both go through the one
+    /// `deck_config::deck_out_path` join. This is the invariant in its strongest
+    /// form: reader reads exactly where writer writes.
+    #[test]
+    fn reader_and_writer_agree_on_deck_output_path() {
+        use deck_bundler::targets::BundleLayout;
+        use deck_bundler::DeckConfig;
+        let root = PathBuf::from("/proj");
+        let writer_deck =
+            BundleLayout::with_config(root.clone(), None, DeckConfig::defaults()).deck_out();
+        let reader_deck = Resolution::new()
+            .with_root(root.clone())
+            .view_bundle_roots()
+            .pop()
+            .expect("project-root .deck fallback present");
+        assert_eq!(
+            writer_deck, reader_deck,
+            "runtime reader must resolve the SAME .deck the bundler writer writes"
+        );
+    }
+
     /// The per-app view-output dirs are probed BEFORE the project-root `.deck`,
     /// and the project-root fallback resolves through the single output-dir
     /// constant — so the reader can't drift from the bundler writer.
