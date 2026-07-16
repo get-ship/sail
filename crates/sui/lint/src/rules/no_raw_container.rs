@@ -66,10 +66,10 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                                 "raw <{tag}> is not allowed — structure belongs to the layout primitives; {}",
                                 suggestion(tag)
                             ),
-                            suggest: Some(
-                                "Content tags (<p>, <ul>/<li>, <h1>-<h6>, <a>, <img>, <strong>…) are fine — only <div>/<span> are closed."
-                                    .to_string(),
-                            ),
+                            suggest: Some(format!(
+                                "Content tags (<p>, <ul>/<li>, <h1>-<h6>, <a>, <img>, <strong>…) are fine — only <div>/<span> are closed.{}",
+                                crate::config::grant_hint(path, "raw_containers")
+                            )),
                         });
                     }
                 }

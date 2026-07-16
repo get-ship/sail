@@ -47,7 +47,9 @@
 //! [`LintOverride`]s that rides the `lint_overrides` plumbing through
 //! `compile()` — they are the configurable surface ABOVE the floor.
 
-use std::path::Path;
+use std::collections::HashSet;
+use std::path::{Path, PathBuf};
+use std::sync::{Mutex, OnceLock};
 
 use super::lint_overrides::{LintOverride, OverrideSeverity};
 
@@ -131,9 +133,18 @@ impl Policy {
     /// enforced unconditionally by the compiler (`enforce_floor`) and is NOT part
     /// of this bundle: no host wiring can skip it. An unconfigured package
     /// declares no capabilities and gets an empty bundle (the floor still holds).
+    ///
+    /// THE ONE LOG SEAM: every build host (CLI, deck-bundler, napi) resolves
+    /// capabilities by calling this function — so it is the single place that
+    /// announces/refuses a package's resolved tier out loud. A config-loud-strict
+    /// package (typo'd key, broken JSON, or a `stylesheets`-only config with no
+    /// tier signal) NEVER falls to STRICT in silence again: see [`announce`].
     pub fn overrides_for(path: &Path) -> Vec<LintOverride> {
-        match Policy::resolve_opt(path) {
-            Some(p) => p.capabilities(),
+        match Policy::resolve_outcome(path) {
+            Some((config_path, resolution)) => {
+                announce(&config_path, &resolution);
+                resolution.tier.capabilities()
+            }
             None => Vec::new(),
         }
     }
@@ -175,37 +186,176 @@ impl Policy {
     /// capabilities rather than silently unlock the most-permissive tier. STRICT
     /// still compiles — a typo never hard-fails a build — but it grants nothing.
     pub fn resolve_opt(source_file: &Path) -> Option<Policy> {
-        let cfg = sui_lint::config::resolve(source_file.parent()?)?;
-        Some(policy_from_config(&cfg).unwrap_or(Policy::STRICT))
+        Policy::resolve_outcome(source_file).map(|(_, r)| r.tier)
+    }
+
+    /// Resolve the full [`PolicyResolution`] (tier + WHY) for a source file,
+    /// alongside the `sui.config.json` path it came from. `None` when no
+    /// config exists anywhere on the walk up — the opt-in case, unchanged from
+    /// [`Policy::resolve_opt`]. This is the entry [`overrides_for`] uses to
+    /// build its announce/refuse message; tests use it directly to pin the
+    /// exact wording without depending on the log seam's stderr output.
+    pub fn resolve_outcome(source_file: &Path) -> Option<(PathBuf, PolicyResolution)> {
+        let (config_path, cfg) = sui_lint::config::resolve(source_file.parent()?)?;
+        Some((config_path, classify(&cfg)))
     }
 }
 
-/// Derive the capability tier from the resolved `sui.config.json`. A recognised
-/// `"preset"` sets the base; individual `"sx"` / `"variants"` / `"raw_containers"`
-/// booleans override it. With neither a preset nor any key, returns `None`
-/// (a present config with no tier signal — `resolve_opt` fails that CLOSED to
-/// `STRICT`, same as an unreadable config). A
-/// config that names only keys starts from `STRICT` (the app default) and dials
-/// up. The read + parse is owned by `sui_lint::config`; this only maps fields.
-fn policy_from_config(cfg: &sui_lint::config::SuiConfig) -> Option<Policy> {
-    let mut p = match cfg.preset() {
-        Some(name) => Policy::preset(name)?,
-        None => Policy::STRICT,
-    };
-    let mut touched = cfg.has_key("preset");
-    if let Some(b) = cfg.bool_key("sx") {
-        p.sx = b;
-        touched = true;
+/// WHY a package resolved to its tier — carries enough detail for the log
+/// seam ([`announce`]) to name the offending key / the signal that produced
+/// the tier, per the config-loud-strict contract: silence is the bug.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PolicyResolution {
+    pub tier: Policy,
+    pub kind: ResolutionKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ResolutionKind {
+    /// A recognized signal (preset and/or capability keys) produced the tier.
+    /// The joined `key: value` pairs that set it, e.g. `"preset: full"` or
+    /// `"sx: true, raw_containers: false"`.
+    Recognized(String),
+    /// The config is well-formed and every key it names is recognized, but
+    /// none of them carry tier signal (e.g. `{"stylesheets": []}` alone, or
+    /// `{}`). Fails closed to STRICT — this is the original config-loud-strict
+    /// bug: a config with no capability signal used to silently strip sx.
+    /// `String` names which recognized-but-signal-free keys are present (or
+    /// "no keys at all" for `{}`).
+    NoSignal(String),
+    /// The config is unparseable, OR names a key/value the parser does not
+    /// recognize (a typo'd key, or a preset name that isn't `full`/`strict`).
+    /// Fails closed to STRICT and REFUSES loudly. `String` names the offense.
+    Rejected(String),
+}
+
+/// Derive the full tier + reason from a resolved `sui.config.json`. The read +
+/// parse is owned by `sui_lint::config`; this only classifies the parsed value.
+fn classify(cfg: &sui_lint::config::SuiConfig) -> PolicyResolution {
+    if !cfg.parse_ok() {
+        return PolicyResolution {
+            tier: Policy::STRICT,
+            kind: ResolutionKind::Rejected("the file is not valid JSON".to_string()),
+        };
     }
-    if let Some(b) = cfg.bool_key("variants") {
-        p.variants = b;
-        touched = true;
+    let unknown = cfg.unknown_keys();
+    if !unknown.is_empty() {
+        return PolicyResolution {
+            tier: Policy::STRICT,
+            kind: ResolutionKind::Rejected(format!(
+                "unrecognized key{} {}",
+                if unknown.len() == 1 { "" } else { "s" },
+                unknown
+                    .iter()
+                    .map(|k| format!("\"{k}\""))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )),
+        };
     }
-    if let Some(b) = cfg.bool_key("raw_containers") {
-        p.raw_containers = b;
-        touched = true;
+
+    let mut p = Policy::STRICT;
+    let mut signal = Vec::new();
+    if let Some(name) = cfg.preset() {
+        match Policy::preset(name) {
+            Some(preset) => {
+                p = preset;
+                signal.push(format!("preset: {name}"));
+            }
+            None => {
+                return PolicyResolution {
+                    tier: Policy::STRICT,
+                    kind: ResolutionKind::Rejected(format!(
+                        "unrecognized preset \"{name}\" (expected \"full\" or \"strict\")"
+                    )),
+                };
+            }
+        }
     }
-    touched.then_some(p)
+    for key in ["sx", "variants", "raw_containers"] {
+        if let Some(b) = cfg.bool_key(key) {
+            match key {
+                "sx" => p.sx = b,
+                "variants" => p.variants = b,
+                "raw_containers" => p.raw_containers = b,
+                _ => unreachable!(),
+            }
+            signal.push(format!("{key}: {b}"));
+        }
+    }
+
+    if signal.is_empty() {
+        let recognized_present: Vec<&str> = sui_lint::config::RECOGNIZED_KEYS
+            .iter()
+            .copied()
+            .filter(|k| cfg.has_key(k))
+            .collect();
+        let hint = if recognized_present.is_empty() {
+            "no keys at all".to_string()
+        } else {
+            recognized_present.join(", ")
+        };
+        PolicyResolution { tier: Policy::STRICT, kind: ResolutionKind::NoSignal(hint) }
+    } else {
+        PolicyResolution { tier: p, kind: ResolutionKind::Recognized(signal.join(", ")) }
+    }
+}
+
+/// THE LOG SEAM. One line to stderr per `(config file, resulting tier)`, the
+/// first time [`Policy::overrides_for`] resolves a given `sui.config.json` in
+/// this process — dedup so a many-file package doesn't repeat itself once per
+/// compiled `.sui`, while still guaranteeing at least one line per package per
+/// build/dev-server run. Every wording names the file, the tier, and WHY:
+///
+/// - [`ResolutionKind::Rejected`] — REFUSES loudly: "typo'd/broken config,
+///   here is exactly what's wrong, tier fell back to strict."
+/// - [`ResolutionKind::NoSignal`] — ANNOUNCES: "this config carries no
+///   capability signal, so the tier fell back to strict — here's what WAS in
+///   the file." This is the config-loud-strict fix: `{"stylesheets": []}`
+///   used to strip `sx` with zero output.
+/// - [`ResolutionKind::Recognized`] — ANNOUNCES: "here is the tier and the
+///   exact keys that produced it." No noise beyond this one line.
+fn announce(config_path: &Path, resolution: &PolicyResolution) {
+    static SEEN: OnceLock<Mutex<HashSet<PathBuf>>> = OnceLock::new();
+    let seen = SEEN.get_or_init(|| Mutex::new(HashSet::new()));
+    {
+        let mut guard = seen.lock().unwrap_or_else(|e| e.into_inner());
+        if !guard.insert(config_path.to_path_buf()) {
+            return;
+        }
+    }
+    eprintln!("{}", render_announcement(config_path, resolution));
+}
+
+/// Pure message rendering — split from [`announce`] so tests can pin the
+/// exact wording without capturing stderr or fighting the process-wide dedup.
+fn render_announcement(config_path: &Path, resolution: &PolicyResolution) -> String {
+    let tier_name = tier_name(resolution.tier);
+    match &resolution.kind {
+        ResolutionKind::Rejected(reason) => format!(
+            "sui-compiler: REFUSED {} — {reason}; capability tier falls back to strict (no capabilities granted)",
+            config_path.display()
+        ),
+        ResolutionKind::NoSignal(hint) => format!(
+            "sui-compiler: {} — policy: strict (config declares {hint}, which carries no capability \
+             signal; add \"preset\" or a capability key to grant more)",
+            config_path.display()
+        ),
+        ResolutionKind::Recognized(signal) => format!(
+            "sui-compiler: {} — policy: {tier_name} ({signal})",
+            config_path.display()
+        ),
+    }
+}
+
+fn tier_name(p: Policy) -> &'static str {
+    if p == Policy::FULL {
+        "full"
+    } else if p == Policy::STRICT {
+        "strict"
+    } else {
+        "mixed"
+    }
 }
 
 #[cfg(test)]
@@ -217,9 +367,15 @@ mod tests {
     }
 
     /// Derive a tier from config JSON text — the tier half of the resolution,
-    /// with the read/parse owned by `sui_lint::config`.
-    fn tier(json: &str) -> Option<Policy> {
-        policy_from_config(&sui_lint::config::SuiConfig::from_json(json))
+    /// with the read/parse owned by `sui_lint::config`. `classify` always
+    /// resolves SOME tier (fail-closed to STRICT for the unknown/no-signal
+    /// cases); [`ResolutionKind`] is what carries "why", tested separately.
+    fn tier(json: &str) -> Policy {
+        classify(&sui_lint::config::SuiConfig::from_json(json)).tier
+    }
+
+    fn kind(json: &str) -> ResolutionKind {
+        classify(&sui_lint::config::SuiConfig::from_json(json)).kind
     }
 
     #[test]
@@ -229,7 +385,7 @@ mod tests {
             assert_eq!(sev(p, "sui-no-inline-style"), OverrideSeverity::Error);
         }
         // No config key can turn the floor off — only capability keys exist.
-        let p = tier(r#"{"preset":"full","sx":false}"#).unwrap();
+        let p = tier(r#"{"preset":"full","sx":false}"#);
         assert_eq!(sev(p, "sui-no-style-block"), OverrideSeverity::Error);
     }
 
@@ -257,21 +413,65 @@ mod tests {
     #[test]
     fn granular_keys_override_the_preset() {
         // full, but raw containers banned
-        let p = tier(r#"{"preset":"full","raw_containers":false}"#).unwrap();
+        let p = tier(r#"{"preset":"full","raw_containers":false}"#);
         assert!(p.sx && p.variants && !p.raw_containers);
         // strict, but sx re-enabled — the in-between tier
-        let p = tier(r#"{"preset":"strict","sx":true}"#).unwrap();
+        let p = tier(r#"{"preset":"strict","sx":true}"#);
         assert!(p.sx && !p.variants && !p.raw_containers);
         // keys only, no preset → base STRICT, dial up
-        let p = tier(r#"{"sx":true}"#).unwrap();
+        let p = tier(r#"{"sx":true}"#);
         assert!(p.sx && !p.variants && !p.raw_containers);
     }
 
+    // ----------------------------------------------------------------------
+    // config-loud-strict: `classify` always resolves a tier (fail-closed to
+    // STRICT), but WHICH bucket it fails into differs — an unrecognized key
+    // (typo) or unparseable body is `Rejected` (loud refusal); a well-formed
+    // config whose recognized keys carry no tier signal is `NoSignal`
+    // (announced, not refused — nothing is actually wrong). This is the
+    // distinction the log seam (`announce`) renders differently.
+    // ----------------------------------------------------------------------
+
     #[test]
-    fn non_policy_config_is_none() {
-        assert_eq!(tier(r#"{"other":1}"#), None);
-        assert_eq!(tier("not json"), None);
-        assert_eq!(tier(r#"{"preset":"bogus"}"#), None);
+    fn unknown_key_or_broken_json_is_rejected_and_fails_closed_to_strict() {
+        assert_eq!(tier(r#"{"other":1}"#), Policy::STRICT);
+        assert!(matches!(kind(r#"{"other":1}"#), ResolutionKind::Rejected(r) if r.contains("other")));
+
+        assert_eq!(tier("not json"), Policy::STRICT);
+        assert!(matches!(kind("not json"), ResolutionKind::Rejected(r) if r.contains("not valid JSON")));
+
+        assert_eq!(tier(r#"{"preset":"bogus"}"#), Policy::STRICT);
+        assert!(matches!(kind(r#"{"preset":"bogus"}"#), ResolutionKind::Rejected(r) if r.contains("bogus")));
+    }
+
+    #[test]
+    fn stylesheets_only_config_is_no_signal_not_rejected() {
+        // The original bug: a config declaring ONLY `stylesheets` is
+        // well-formed and every key it names is recognized — it just doesn't
+        // set a tier. That's `NoSignal`, not `Rejected`: nothing is typo'd.
+        assert_eq!(tier(r#"{"stylesheets": []}"#), Policy::STRICT);
+        assert!(matches!(
+            kind(r#"{"stylesheets": []}"#),
+            ResolutionKind::NoSignal(hint) if hint.contains("stylesheets")
+        ));
+    }
+
+    #[test]
+    fn empty_config_object_is_no_signal() {
+        assert_eq!(tier("{}"), Policy::STRICT);
+        assert!(matches!(kind("{}"), ResolutionKind::NoSignal(hint) if hint.contains("no keys")));
+    }
+
+    #[test]
+    fn granted_keys_are_recognized_and_name_their_signal() {
+        assert!(matches!(
+            kind(r#"{"preset":"full"}"#),
+            ResolutionKind::Recognized(s) if s == "preset: full"
+        ));
+        assert!(matches!(
+            kind(r#"{"preset":"strict","sx":true}"#),
+            ResolutionKind::Recognized(s) if s.contains("preset: strict") && s.contains("sx: true")
+        ));
     }
 
     // ----------------------------------------------------------------------
@@ -332,15 +532,56 @@ mod tests {
     #[test]
     fn preset_is_the_parser_key_and_the_drifted_values_do_not_parse() {
         // `{"preset":"strict"}` — the standardized key — resolves.
-        assert_eq!(tier(r#"{"preset":"strict"}"#), Some(Policy::STRICT));
-        assert_eq!(tier(r#"{"preset":"full"}"#), Some(Policy::FULL));
+        assert_eq!(tier(r#"{"preset":"strict"}"#), Policy::STRICT);
+        assert_eq!(tier(r#"{"preset":"full"}"#), Policy::FULL);
         // The OLD advertised values (`floor`/`stripped`/`strictest`) are NOT
         // preset names the parser knows — proving the docs must name `full`/
         // `strict`, not the drifted vocabulary.
         assert_eq!(Policy::preset("floor"), None);
         assert_eq!(Policy::preset("stripped"), None);
         assert_eq!(Policy::preset("strictest"), None);
-        // The OLD key name never carried a tier either.
-        assert_eq!(tier(r#"{"policy":"floor"}"#), None);
+        // The OLD key name never carried a tier either — and being an
+        // unrecognized key, it now fails closed LOUDLY (Rejected), not silently.
+        assert_eq!(tier(r#"{"policy":"floor"}"#), Policy::STRICT);
+        assert!(matches!(kind(r#"{"policy":"floor"}"#), ResolutionKind::Rejected(_)));
+    }
+
+    // ----------------------------------------------------------------------
+    // config-loud-strict: the exact announcement/refusal text the log seam
+    // renders. Pinned here (pure `render_announcement`, no stderr capture).
+    // ----------------------------------------------------------------------
+
+    #[test]
+    fn rejected_message_refuses_loudly_and_names_file_and_key() {
+        let cfg = sui_lint::config::SuiConfig::from_json(r#"{"polcy":"strict"}"#);
+        let resolution = classify(&cfg);
+        let msg = render_announcement(Path::new("/pkg/sui.config.json"), &resolution);
+        assert!(msg.contains("REFUSED"), "{msg}");
+        assert!(msg.contains("/pkg/sui.config.json"), "{msg}");
+        assert!(msg.contains("polcy"), "{msg}");
+        assert!(msg.contains("strict"), "{msg}");
+    }
+
+    #[test]
+    fn no_signal_message_announces_and_names_file_and_signal() {
+        let cfg = sui_lint::config::SuiConfig::from_json(r#"{"stylesheets": []}"#);
+        let resolution = classify(&cfg);
+        let msg = render_announcement(Path::new("/pkg/sui.config.json"), &resolution);
+        assert!(!msg.contains("REFUSED"), "{msg}");
+        assert!(msg.contains("/pkg/sui.config.json"), "{msg}");
+        assert!(msg.contains("strict"), "{msg}");
+        assert!(msg.contains("stylesheets"), "{msg}");
+    }
+
+    #[test]
+    fn recognized_message_names_file_tier_and_signal_with_no_extra_noise() {
+        let cfg = sui_lint::config::SuiConfig::from_json(r#"{"preset":"full"}"#);
+        let resolution = classify(&cfg);
+        let msg = render_announcement(Path::new("/pkg/sui.config.json"), &resolution);
+        assert!(!msg.contains("REFUSED"), "{msg}");
+        assert_eq!(msg.lines().count(), 1, "exactly one line: {msg}");
+        assert!(msg.contains("/pkg/sui.config.json"), "{msg}");
+        assert!(msg.contains("full"), "{msg}");
+        assert!(msg.contains("preset: full"), "{msg}");
     }
 }

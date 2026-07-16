@@ -48,13 +48,13 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                     "sx= is not allowed under the strict policy — compose primitives and use \
                      their props; there is no styling escape at this tier."
                         .to_string(),
-                suggest: Some(
+                suggest: Some(format!(
                     "Text is already styled: write <h1>-<h6> and <p> plain — they take the type \
                      scale automatically. For structure use <row>/<column>/<grid>; \
                      for surface/tone use a primitive prop (padding, tone, size, variant). If \
-                     nothing fits, that's a missing primitive to add, not a reason to keep sx."
-                        .to_string(),
-                ),
+                     nothing fits, that's a missing primitive to add, not a reason to keep sx.{}",
+                    crate::config::grant_hint(path, "sx")
+                )),
             });
         }
         i += 1;

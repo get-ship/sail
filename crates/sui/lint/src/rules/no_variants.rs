@@ -49,12 +49,12 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                         "<variants> is not allowed under the strict policy — apps compose primitives \
                          and drive them with props; they do not author variant surfaces."
                             .to_string(),
-                    suggest: Some(
+                    suggest: Some(format!(
                         "Set the primitive's prop instead (tone / size / variant). If no prop fits, \
                          that's a missing primitive variant to add upstream — not one to declare in \
-                         app code."
-                            .to_string(),
-                    ),
+                         app code.{}",
+                        crate::config::grant_hint(path, "variants")
+                    )),
                 });
             }
         }

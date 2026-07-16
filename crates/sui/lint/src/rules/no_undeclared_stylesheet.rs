@@ -91,7 +91,7 @@ fn check_dir(src_dir: &Path) -> Vec<Finding> {
     if css_files.is_empty() {
         return Vec::new();
     }
-    let Some(declared) = crate::config::resolve(src_dir).map(|c| c.declared_stylesheets()) else {
+    let Some(declared) = crate::config::resolve(src_dir).map(|(_, c)| c.declared_stylesheets()) else {
         // No sui.config.json anywhere — every css file is undeclared.
         return css_files
             .into_iter()
