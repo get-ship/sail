@@ -1,7 +1,12 @@
-<data name="rows" source="ship.rows()" live />
+<controller>
+import { controller } from '@ship/sui-runtime'
+export default controller({
+  setup: () => ({ rows: [{ id: 1, label: "a" }, { id: 2, label: "b" }] }),
+})
+</controller>
 
 <ul>
-  {#for row of rows().value key={row.id}}
+  {#for row of rows() key={row.id}}
     <li>{row.label.toUpperCase()}</li>
   {/for}
 </ul>

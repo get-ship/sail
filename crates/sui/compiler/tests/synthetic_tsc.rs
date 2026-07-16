@@ -68,8 +68,22 @@ struct Surface {
 fn synth_into(repo: &Path, manifest: &AppManifest, gendir: &Path, s: &Surface) {
     let src = fs::read_to_string(repo.join(s.source_rel))
         .unwrap_or_else(|e| panic!("read {}: {e}", s.source_rel));
-    let program = parse(&src).unwrap_or_else(|e| panic!("parse {}: {}", s.name, e.render(&src)));
-    let authored = s.authored.map(|a| AuthoredController { specifier: a.to_string() });
+    // A source may carry its controller INLINE (`<controller>…</controller>`)
+    // rather than as a sibling module — strip it before the template-only
+    // parser sees it (mirrors `deck_ssr::build`).
+    let (stripped, inline_controller) =
+        sui_compiler::parse::preprocess::extract_controller_block(&src);
+    let program = parse(&stripped).unwrap_or_else(|e| panic!("parse {}: {}", s.name, e.render(&stripped)));
+    let dir = gendir.join(s.name);
+    fs::create_dir_all(&dir).unwrap();
+    let authored = if let Some(a) = s.authored {
+        Some(AuthoredController { specifier: a.to_string() })
+    } else if let Some(body) = inline_controller {
+        fs::write(dir.join("controller.ts"), body).unwrap();
+        Some(AuthoredController { specifier: "./controller.ts".to_string() })
+    } else {
+        None
+    };
     let controller_name = format!("{}.synthetic.controller.ts", s.name);
     let out = emit_synthetic(
         &program,
@@ -80,10 +94,25 @@ fn synth_into(repo: &Path, manifest: &AppManifest, gendir: &Path, s: &Surface) {
         s.component_tag,
     )
     .unwrap_or_else(|e| panic!("synthesize {}: {}", s.name, e.render(&src)));
-    let dir = gendir.join(s.name);
-    fs::create_dir_all(&dir).unwrap();
     fs::write(dir.join(&controller_name), out.controller_ts).unwrap();
     fs::write(dir.join(format!("{}.render.ts", s.name)), out.render_ts).unwrap();
+}
+
+/// Ambient type shim for the `ship` host-dispatch module — the ONE external
+/// specifier a controller's `live(() => call(op, args))` source (or
+/// `ssr-entry.ts`) imports. Never a real npm package (deno_core supplies it
+/// at runtime via `op_ship_call`); this shim exists so tsc can resolve it in
+/// the generated-surfaces project. Mirrors the real signature `demo.server.ts`
+/// / `ssr-entry.ts` already call against.
+fn write_ship_shim(dir: &Path) {
+    fs::write(
+        dir.join("ship-shim.d.ts"),
+        "declare module 'ship' {\n  \
+         export function call(op: string, args?: Record<string, unknown>): Promise<unknown>\n  \
+         export function emit(value: unknown): void\n\
+         }\n",
+    )
+    .unwrap();
 }
 
 fn write_tsconfig(repo: &Path, dir: &Path, include: &[&str], name: &str) {
@@ -174,7 +203,7 @@ fn surfaces_typecheck_green_and_typo_is_caught() {
             authored: None,
             component_tag: None,
         },
-        // 2. <data live> + client (host-dispatch data path).
+        // 2. controller live() (host-dispatch data path).
         Surface {
             name: "feed",
             source_rel: "crates/deck/deck-conformance/app/views/feed/page.sui",
@@ -188,8 +217,10 @@ fn surfaces_typecheck_green_and_typo_is_caught() {
     }
 
     // Good set: every pair must type-check clean.
-    let good_includes: Vec<String> =
+    write_ship_shim(&work);
+    let mut good_includes: Vec<String> =
         surfaces.iter().map(|s| format!("generated/{}/**/*.ts", s.name)).collect();
+    good_includes.push("ship-shim.d.ts".to_string());
     let good_refs: Vec<&str> = good_includes.iter().map(|s| s.as_str()).collect();
     write_tsconfig(&repo, &work, &good_refs, "tsconfig.json");
 

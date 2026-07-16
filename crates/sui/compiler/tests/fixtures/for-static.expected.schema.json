@@ -1,10 +1,4 @@
 {
-  "data": [
-    {
-      "name": "rows",
-      "source": "ship.rows()",
-      "live": true
-    }
-  ],
+  "data": [],
   "component": null
 }

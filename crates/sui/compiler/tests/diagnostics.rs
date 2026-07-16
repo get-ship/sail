@@ -45,8 +45,7 @@ fn state_directive_is_retired() {
 
 #[test]
 fn async_without_ok_branch_is_rejected() {
-    let src = r#"<data name="overview" source="ship.overview()" live />
-        <section>{#async overview}{:loading}<p>L</p>{/async}</section>"#;
+    let src = r#"<section>{#async overview}{:loading}<p>L</p>{/async}</section>"#;
     let err = compile_view(src);
     assert!(
         err.message.contains("{:ok}"),
@@ -57,8 +56,7 @@ fn async_without_ok_branch_is_rejected() {
 
 #[test]
 fn async_bad_as_variable_is_rejected() {
-    let src = r#"<data name="overview" source="ship.overview()" live />
-        <section>{#async overview as 1bad}{:ok}<p>X</p>{/async}</section>"#;
+    let src = r#"<section>{#async overview as 1bad}{:ok}<p>X</p>{/async}</section>"#;
     let err = compile_view(src);
     assert!(
         err.message.contains("bad `as` variable"),
@@ -99,14 +97,6 @@ fn arrow_in_on_handler_is_allowed() {
         },
     )
     .expect("on: handlers allow arrows");
-}
-
-#[test]
-fn missing_required_data_attr_reports_directive() {
-    let src = r#"<data name="x" />"#;
-    let err = compile_view(src);
-    assert!(err.message.contains("source"), "msg: {}", err.message);
-    assert_eq!(err.category.as_deref(), Some("<data>"));
 }
 
 #[test]

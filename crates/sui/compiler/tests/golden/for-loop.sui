@@ -1,7 +1,0 @@
-<data name="items" source="ship.items()" live />
-
-<ul>
-  {#for i of items().value key={i}}
-    <li>{i}</li>
-  {/for}
-</ul>
