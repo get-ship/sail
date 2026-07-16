@@ -899,9 +899,34 @@ pub async fn bundle_app_with_base(
         &js_href,
     );
     if !css_hrefs.is_empty() {
-        let link_tags = css_hrefs
+        let link_tags = css_names
             .iter()
-            .map(|href| format!("  <link rel=\"stylesheet\" href=\"{href}\">"))
+            .zip(css_hrefs.iter())
+            .map(|(name, href)| {
+                // The `@ship/tokens/contracts.css` entry import (deck-deploy-gap,
+                // 2nd incident) emits as `assets/contracts-<hash>.css` — the
+                // AssetModulePlugin names each emitted CSS asset after its
+                // SOURCE file stem, so `contracts-` is a stable prefix. The
+                // sui runtime's `ensureLightContracts` looks for a
+                // `link[data-sui-contracts]` before warning "framework
+                // contracts are not present"; the daemon-served scaffold
+                // shell (`scaffold-base.html`) already hand-authors the
+                // marker on its `sui.css` link, but THIS bundler-generated
+                // link (the self-contained/`entry.gen.ts` build path — what
+                // `deck dev` and `deck build --bundle-framework` both use)
+                // never carried it, so every page tripped the warning. Tag
+                // it here rather than teaching the runtime to sniff hrefs:
+                // the attribute is the existing, already-tested contract: a
+                // href-based heuristic would couple the runtime to this
+                // bundler's naming convention AND still need updating
+                // whenever that convention changes, where this is a
+                // one-line fix at the single place the link is emitted.
+                if name.starts_with("contracts-") {
+                    format!("  <link rel=\"stylesheet\" href=\"{href}\" data-sui-contracts>")
+                } else {
+                    format!("  <link rel=\"stylesheet\" href=\"{href}\">")
+                }
+            })
             .collect::<Vec<_>>()
             .join("\n");
         // Anchor immediately before the entry `<script type="module">`. The
@@ -1286,6 +1311,32 @@ export default controller({ setup: () => ({}) })\n\
             link_pos < script_pos,
             "<link rel=stylesheet> must precede <script type=module>; got link@{link_pos} script@{script_pos}"
         );
+
+        // Gate 4 (deck-deploy-gap, 2nd incident): the contracts stylesheet's
+        // `<link>` must carry `data-sui-contracts` — the runtime's
+        // `ensureLightContracts` looks for exactly that attribute before
+        // warning "framework contracts are not present". Every OTHER link
+        // (tokens, the app's own CSS) must NOT carry it — the marker means
+        // "this link satisfies the framework contracts requirement," not
+        // "this is a framework stylesheet."
+        let contracts_href = build
+            .css_hrefs
+            .iter()
+            .find(|h| h.contains("/contracts-"))
+            .expect("a contracts-<hash>.css asset was emitted (asserted above)");
+        assert!(
+            html.contains(&format!("href=\"{contracts_href}\" data-sui-contracts")),
+            "the contracts <link> must carry data-sui-contracts; got: {html}"
+        );
+        for href in &build.css_hrefs {
+            if href == contracts_href {
+                continue;
+            }
+            assert!(
+                !html.contains(&format!("href=\"{href}\" data-sui-contracts")),
+                "only the contracts link should carry data-sui-contracts; {href} must not"
+            );
+        }
 
         // Belt-and-braces: exactly one `<link rel="stylesheet">` per
         // emitted CSS asset (no synthesized empty links when nothing was
