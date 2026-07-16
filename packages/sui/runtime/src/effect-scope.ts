@@ -172,7 +172,7 @@ export function createChildScope(parent?: EffectScope): EffectScope {
 /** Run `body` inside a fresh, STANDALONE scope; return its result plus the
  *  scope's disposer.
  *
- * For the control-flow primitives (`bindFor`, `bindIf`, `bindAwait`): each
+ * For the control-flow primitives (`bindFor`, `bindIf`): each
  * rendered child (a row, a branch) must own the effects created while
  * rendering it, so they tear down when THAT child is removed / swapped — not
  * when the enclosing reconciler effect re-runs. Rendering the child through

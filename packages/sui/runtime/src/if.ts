@@ -30,7 +30,7 @@ import { runEnter, runLeave, cancelTransitions } from './transition-runner'
 /**
  * One branch's rendered nodes plus an optional teardown. Returned by
  * the `then_` / `else_` / `loading` / branch-render callbacks of every
- * branching binding (`bindIf`, `bindAwait`).
+ * branching binding (`bindIf`).
  */
 export interface BranchRender {
   /** Top-level nodes the branch contributes to the tree. */
@@ -93,8 +93,7 @@ export type BindIfOptions = BindIfTwoBranchOptions | BindIfMultiBranchOptions
  * })
  * ```
  *
- * @see bindShow when the element should remain mounted (just hidden);
- *   bindAwait for promise-driven branching.
+ * @see bindShow when the element should remain mounted (just hidden).
  */
 export function bindIf(opts: BindIfOptions): Disposer {
   const { anchor } = opts

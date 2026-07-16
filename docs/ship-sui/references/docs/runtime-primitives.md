@@ -54,7 +54,7 @@ Used by compiler-emitted code; rarely written by hand.
 {#while-error err of agents}<p>{err.message}</p>{/while-error}
 ```
 
-Runtime helpers behind these: `bindIf`, `bindFor`, `bindForSignal`, `bindAwait`, `bindWhileLoading`, `bindWhileError`. The `<sui-if>`, `<sui-for>`, `<sui-match>` custom elements register on module load.
+Runtime helpers behind these: `bindIf`, `bindFor`, `bindForSignal`, `bindWhileLoading`, `bindWhileError`. The `<sui-if>`, `<sui-for>`, `<sui-match>` custom elements register on module load.
 
 `{#for}` requires `key={EXPR}` — without a stable key the reconciler falls back to positional matching and DOM identity (focus, selection, in-progress edits) is lost on reorder. `sui-for-key` lint warns when missing.
 
