@@ -18,7 +18,7 @@
   }
   variants: {
     compound: [
-      { when: { interactive: true }, sx: 'cursor:pointer radius:sm hover:bg:muted focus:ring:ring' },
+      { when: { interactive: true }, sx: 'cursor-pointer rounded-sm hover:bg-muted focus:ring-ring' },
     ]
   }
 </scope>
