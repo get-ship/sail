@@ -42,8 +42,11 @@ fn unknown_controller_section_rejected() {
         "msg: {}",
         err.message
     );
+    // The living section set: `use` died, `scope` became `setup`. (The
+    // controller-collapse job shrinks this list again — its spec owns that
+    // teaching update.)
     assert!(
-        err.message.contains("derived, on, use, mount, unmount"),
+        err.message.contains("setup, derived, on, mount, unmount"),
         "msg should list valid sections: {}",
         err.message
     );
