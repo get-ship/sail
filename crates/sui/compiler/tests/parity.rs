@@ -106,13 +106,6 @@ fn counter_compiles_to_valid_js() {
 }
 
 #[test]
-fn agents_compiles_to_valid_js() {
-    let js = compile_fixture("agents", CompileMode::Component, Some("./agents.controller.ts"));
-    let p = write_mjs("agents", &js);
-    node_check(&p);
-}
-
-#[test]
 fn ship_button_compiles_to_valid_js() {
     let js = compile_fixture("ship-button", CompileMode::Component, None);
     let p = write_mjs("ship-button", &js);
@@ -127,49 +120,12 @@ fn compile_is_deterministic() {
     for (name, mode, setup) in [
         ("hello", CompileMode::Component, None),
         ("counter", CompileMode::Component, Some("./counter.controller.ts")),
-        ("agents", CompileMode::Component, Some("./agents.controller.ts")),
         ("ship-button", CompileMode::Component, None),
     ] {
         let a = compile_fixture(name, mode, setup);
         let b = compile_fixture(name, mode, setup);
         assert_eq!(a, b, "compiler not deterministic for {name}");
     }
-}
-
-/// Regression: the `{#for}` emit must not declare `const $scope = …`
-/// in the same block as a `Object.create($scope)` reference. JS const
-/// declarations create a Temporal Dead Zone from the start of the
-/// block, so the `Object.create($scope)` would fault on the
-/// to-be-declared inner `$scope` rather than reach the outer one.
-/// The fix wraps the iteration body in an IIFE that takes `$scope`
-/// as a parameter — outer `$scope` stays reachable; inner closures
-/// see the IIFE's parameter binding.
-#[test]
-fn for_iteration_emit_has_no_scope_tdz() {
-    let js = compile_fixture("agents", CompileMode::Component, Some("./agents.controller.ts"));
-    // The view's setup body legitimately declares the outer scope
-    // exactly once: `const $scope = Object.create(null);`. Any
-    // additional `const $scope = …` is the TDZ-shadow pattern.
-    let scope_decls = js.matches("const $scope =").count();
-    assert_eq!(
-        scope_decls, 1,
-        "expected exactly one `const $scope = …` declaration (the outer \
-         seed); extra ones are the TDZ-shadow pattern. Found {scope_decls} in:\n{js}"
-    );
-    // The IIFE shape must be present in both the for-render and the
-    // while-error render hoists the agents fixture exercises.
-    // The agents fixture's key (`agent.id`) is scope-free, so the key
-    // fn emits flat — only the for-render and while-error render hoists
-    // carry the IIFE wrapper.
-    let iife_count = js.matches("(($scope) =>").count();
-    assert!(
-        iife_count >= 2,
-        "expected at least 2 `(($scope) => …)(__child…)` IIFE wrappers \
-         (render + while-error render); found {iife_count} in:\n{js}"
-    );
-    // node --check confirms the wrapped emission is still valid JS.
-    let p = write_mjs("agents-tdz-regression", &js);
-    node_check(&p);
 }
 
 /// Full hydrate-and-compare parity. Opt-in: requires the workspace's

@@ -6,8 +6,7 @@
 
 use sui_compiler::{compile, compiler_version, CompileMode, CompileOpts, ComponentMeta};
 
-const VIEW_SRC: &str = r#"<data name="rows" source="ship.rows()" live />
-<ul>{#for (row, _i) of rows().value key={row.id}}<li>{row.label}</li>{/for}</ul>
+const VIEW_SRC: &str = r#"<ul bind:this={listEl}>{#for (row, _i) of [{id: 1, label: "a"}] key={row.id}}<li>{row.label}</li>{/for}</ul>
 "#;
 
 const COMPONENT_SRC: &str = r#"<scope>

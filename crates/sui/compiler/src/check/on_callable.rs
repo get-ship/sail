@@ -137,9 +137,6 @@ fn name_kind(name: &str, table: &SymbolTable) -> String {
     if table.derived.contains_key(name) {
         return "a derived getter (not callable directly)".into();
     }
-    if table.data.contains_key(name) {
-        return "a data binding (not callable)".into();
-    }
     "not declared".into()
 }
 
@@ -170,9 +167,7 @@ mod tests {
             span: Span::point(0),
         };
         Program {
-            data: vec![],
             props: vec![],
-            clients: vec![],
             styles: String::new(),
             scope_types: String::new(),
             template: vec![Instr::Element(el)],

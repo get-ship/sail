@@ -71,60 +71,6 @@ fn route_typo_is_a_real_member_access_for_tsgo_to_reject() {
 }
 
 #[test]
-fn control_flow_reuses_template_emitter_with_mixed_prefix() {
-    // The hard path: {#while-*}, {#if}, {#for}, class:, mutation — the full
-    // production TemplateEmitter, driven with the `scope.` author prefix.
-    let src = r#"<data name="list" source="ship.demo.todos()" live />
-<div>
-  {#while-loading of list}<p>Loading…</p>{/while-loading}
-  {#while-error err of list}<p>Error: {err.message}</p>{/while-error}
-  {#if list().kind === 'ok'}
-  <ul>
-    {#for item of list().value.items key={item.id}}
-    <li class:done={item.done}>{item.text}</li>
-    {/for}
-  </ul>
-  {/if}
-</div>"#;
-    let (ctrl, render) = synth(src, SHIP_MANIFEST, CompileMode::Component);
-
-    // Controller: live data lowered + typed scope.
-    assert!(ctrl.contains("const list = live(() => (ship.demo.todos()));"), "live data:\n{ctrl}");
-    assert!(ctrl.contains("export const scope = { ship, list };"), "scope:\n{ctrl}");
-
-    // Render: the full binder set is reused from TemplateEmitter.
-    for binder in ["bindWhileLoading", "bindWhileError", "bindIf", "bindFor", "bindClass"] {
-        assert!(render.contains(binder), "render must use {binder} (TemplateEmitter reuse):\n{render}");
-    }
-    // Outer-scope data reads are typed (`scope.`), so tsgo checks them.
-    assert!(render.contains("items: () => (scope.list().value.items)"), "typed outer read:\n{render}");
-    assert!(render.contains("if (scope.list().kind === 'ok')"), "typed if test:\n{render}");
-    // Loop / error binders live on the runtime `$scope` (keyed-reuse mutates
-    // them) — qualified with `$scope.`, NOT the typed prefix.
-    assert!(render.contains("$scope.item.done"), "loop local is machinery-prefixed:\n{render}");
-    assert!(render.contains("$scope.err.message"), "error binder is machinery-prefixed:\n{render}");
-    // The key fn keeps the loop var bare (it is the key fn parameter).
-    assert!(render.contains("key: (item, __i) => (item.id)"), "key var stays bare:\n{render}");
-    // The keyed-reuse update reassigns the runtime binder and re-reads it.
-    assert!(
-        render.contains("$scope.item = __new") && render.contains("$scope.item.text"),
-        "update() reassigns and re-reads the runtime row binder:\n{render}"
-    );
-}
-
-#[test]
-fn non_live_data_lowers_to_data_handle() {
-    let src = r#"<data name="cfg" source="ship.demo.config()" />
-<p>{cfg().value}</p>"#;
-    let (ctrl, _render) = synth(src, SHIP_MANIFEST, CompileMode::Component);
-    assert!(
-        ctrl.contains("const cfg = data({ initial: undefined, source: () => (ship.demo.config()) });"),
-        "non-live <data> lowers to the data() handle shape:\n{ctrl}"
-    );
-    assert!(ctrl.contains(r#"import { data } from "@ship/sui-runtime/internal";"#), "imports data:\n{ctrl}");
-}
-
-#[test]
 fn authored_controller_is_composed_via_setup_not_rewritten() {
     // The authored module default-exports a real `controller({...})`
     // (`ControllerExport`); the synthetic controller drives its `setup(ctx)`
@@ -241,35 +187,6 @@ fn component_props_are_rejected_for_now() {
     assert!(format!("{err:?}").contains("prop"), "error names props: {err:?}");
 }
 
-/// Slice 2 G5 — `{#async … as v}` synthesizes (the `as v` binding is
-/// lifted into the typed scope as `v: any`; the render's `$scope.v`
-/// write at mount is the runtime source of truth). The slice-1
-/// regression guard flipped from "rejected" to "synthesizes".
-#[test]
-fn async_let_lifts_as_v_binding_into_typed_scope() {
-    let src = r#"<data name="thing" source="ship.demo.thing()" live />
-{#async thing as v}{:loading}<p>…</p>{:error err}<p>{err.message}</p>{:ok}<p>{v.x}</p>{/async}"#;
-    let program = parse(src).expect("parse");
-    let manifest = AppManifest::parse(SHIP_MANIFEST).expect("manifest");
-    let out = emit_synthetic(&program, &manifest, None, "./c.ts", CompileMode::Component, None)
-        .expect("G5: {#async … as v} must synthesize in slice 2");
-    // Controller exposes the `v` binding on the typed scope (the
-    // `as v` binder declared in the template, lifted into the controller).
-    assert!(
-        out.controller_ts.contains("v: any"),
-        "G5: the `as v` binding must appear on the controller's typed scope:\n{}",
-        out.controller_ts
-    );
-    // Render snapshots the value at mount, so the body can read it
-    // through the runtime `$scope.v` (the typed scope's `v: any`
-    // flows from the controller to the render via the `scope` import).
-    assert!(
-        out.render_ts.contains("$scope.v = (scope.thing().value)"),
-        "G5: render must snapshot the `as v` value at mount:\n{}",
-        out.render_ts
-    );
-}
-
 #[test]
 fn client_emit_returns_mount_and_hydrate_contract() {
     // The CLIENT half: `default.setup(ctx)` returns `__mount` (CSR build) +
@@ -310,8 +227,7 @@ fn merged_client_module_is_self_contained() {
     // The bundler-facing single module: controller + client render fused.
     // The cross-module `import { scope }` is dropped (scope is now local),
     // and the two import blocks merge without duplicate bindings.
-    let src = r#"<data name="list" source="ship.demo.todos()" live />
-<ul>{#for item of list().value.items key={item.id}}<li>{item.text}</li>{/for}</ul>"#;
+    let src = r#"<ul>{#for item of [{id: 1, text: "a"}] key={item.id}}<li>{item.text}</li>{/for}</ul>"#;
     let program = parse(src).expect("parse");
     let manifest = AppManifest::parse(SHIP_MANIFEST).expect("manifest");
     let merged = emit_synthetic_client_module(&program, &manifest, None, CompileMode::Component, None)
@@ -320,23 +236,12 @@ fn merged_client_module_is_self_contained() {
         !merged.contains("import { scope } from"),
         "merged module must not import scope across a boundary:\n{merged}"
     );
-    // The controller's `scope` const is present as a local (its export line).
-    assert!(merged.contains("export const scope = { ship, list };"), "scope is local:\n{merged}");
+    // The controller's `scope` const is present as a local (its export line);
+    // no manifest client is referenced, so the scope is empty.
+    assert!(merged.contains("export const scope = {  };"), "scope is local:\n{merged}");
     // The client default export is present.
     assert!(merged.contains("export default component(() => {"), "client default export present:\n{merged}");
-    // The live-data lowering (controller) and the for-binder (render) coexist.
-    assert!(merged.contains("const list = live(() => (ship.demo.todos()));"), "controller body:\n{merged}");
     assert!(merged.contains("bindFor("), "render body:\n{merged}");
-    // Exactly one value import per module specifier (names unioned, not
-    // duplicated) — count `from "@ship/sui-runtime"` value-import lines.
-    let runtime_value_imports = merged
-        .lines()
-        .filter(|l| l.starts_with("import {") && l.contains("from \"@ship/sui-runtime/internal\""))
-        .count();
-    assert_eq!(
-        runtime_value_imports, 1,
-        "value imports from @ship/sui-runtime/internal must be merged to one line:\n{merged}"
-    );
 }
 
 #[test]

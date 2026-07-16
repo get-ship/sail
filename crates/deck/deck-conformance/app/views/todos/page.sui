@@ -1,4 +1,10 @@
-<data name="list" source="ship.demo.todos()" live />
+<controller>
+import { controller, live } from '@ship/sui-runtime'
+import { call } from 'ship'
+export default controller({
+  setup: (_ctx) => ({ list: live(() => call('ship.demo.todos', {})) }),
+})
+</controller>
 
 <column gap="3" sx="p-6 max-w-breakpoint-tablet mx-auto">
   <h1 sx="text-2xl font-bold text-foreground">Todos</h1>

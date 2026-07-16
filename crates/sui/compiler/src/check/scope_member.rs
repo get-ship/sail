@@ -1,7 +1,7 @@
-//! Type-strengthening #1: `scope.X` / `derived.X` / `data.X` / `props.X`
-//! member typo detection.
+//! Type-strengthening #1: `scope.X` / `derived.X` / `props.X` member typo
+//! detection.
 //!
-//! `scope_bound` already validates that `scope`, `derived`, `data` etc.
+//! `scope_bound` already validates that `scope`, `derived`, `props` etc.
 //! resolve as identifiers — but the byte walker treats `.X` after the
 //! head as unrestricted property access. This pass parses each
 //! interpolation expression with the grammar parser and flags any
@@ -109,11 +109,6 @@ fn check_head_member(
             table.derived.contains_key(prop),
             table.derived.keys().cloned().collect(),
         ),
-        "data" => (
-            "data",
-            table.data.contains_key(prop),
-            table.data.keys().cloned().collect(),
-        ),
         "props" => (
             "props",
             table.props.contains_key(prop),
@@ -155,9 +150,7 @@ mod tests {
 
     fn empty_program() -> Program {
         Program {
-            data: vec![],
             props: vec![],
-            clients: vec![],
             styles: String::new(),
             scope_types: String::new(),
             template: vec![],

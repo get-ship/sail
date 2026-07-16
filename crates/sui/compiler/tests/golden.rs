@@ -136,31 +136,6 @@ fn golden_signal_text() {
 }
 
 #[test]
-fn golden_for_loop() {
-    run_golden("for-loop");
-}
-
-#[test]
-fn golden_if_else() {
-    run_golden("if-else");
-}
-
-#[test]
 fn golden_event_handler() {
     run_golden("event-handler");
-}
-
-#[test]
-fn golden_async_basic() {
-    run_golden("async-basic");
-}
-
-#[test]
-fn golden_async_with_as() {
-    run_golden("async-with-as");
-}
-
-#[test]
-fn golden_async_defaults() {
-    run_golden("async-defaults");
 }

@@ -21,7 +21,6 @@ fn fixtures() -> Vec<Fixture> {
     vec![
         Fixture { name: "hello",       setup_url: None,               mode: CompileMode::Component,      component_meta: None },
         Fixture { name: "counter",     setup_url: Some("./counter.controller.ts"), mode: CompileMode::Component,     component_meta: None },
-        Fixture { name: "agents",      setup_url: Some("./agents.controller.ts"),  mode: CompileMode::Component,     component_meta: None },
         Fixture { name: "ship-button", setup_url: None,               mode: CompileMode::Component,
             component_meta: Some(ComponentMeta { name: "ship-button-test".into() }) },
         Fixture { name: "bind-this-button", setup_url: None,           mode: CompileMode::Component,      component_meta: None },
@@ -95,14 +94,6 @@ fn hello_snapshot() {
 #[test]
 fn counter_snapshot() {
     let fx = &fixture_named("counter");
-    let js = compile_fixture(fx);
-    let path = fixtures_dir().join(format!("{}.expected.js", fx.name));
-    assert_snapshot(fx.name, &js, &path);
-}
-
-#[test]
-fn agents_snapshot() {
-    let fx = &fixture_named("agents");
     let js = compile_fixture(fx);
     let path = fixtures_dir().join(format!("{}.expected.js", fx.name));
     assert_snapshot(fx.name, &js, &path);
@@ -244,9 +235,8 @@ fn for_body_referencing_index_refreshes_on_row_reuse() {
     // join — so the inline stmt always runs on update, no per-field
     // diff needed.
     use sui_compiler::compile;
-    let src = r#"<data name="rows" source="ship.rows()" live />
-<ul>
-  {#for (row, i) of rows().value key={row.id}}
+    let src = r#"<ul>
+  {#for (row, i) of [{id: 1}, {id: 2}] key={row.id}}
     <li>{i}</li>
   {/for}
 </ul>

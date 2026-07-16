@@ -3,8 +3,8 @@
 //! The SSR proof (`synthetic_tsc.rs`) type-checks the mount-only render. This
 //! checks the CLIENT contract — `export default view(() => …)` returning
 //! `__mount` + `hydrate` — across a representative real set: hub `/`, a
-//! control-flow view, a `<data live>` view, a route-param view, a propless
-//! component, and the static view-host view. The client render imports the
+//! control-flow view, a controller live() view, a route-param view, a
+//! propless component, and the static view-host view. The client render imports the
 //! `view()` wrapper from `@ship/sui-runtime` and the `hydrate*` helpers from
 //! `@ship/sui-dom`, so the tsconfig maps both — proving the browser contract
 //! resolves against real types, exactly as strictly as authored TS.
@@ -74,7 +74,11 @@ fn synth_client_into(repo: &Path, gendir: &Path, s: &Surface) {
     let manifest_src = fs::read_to_string(repo.join(s.manifest_rel)).expect("read manifest");
     let mut manifest = AppManifest::parse(&manifest_src).expect("parse manifest");
     inject_host_context(&mut manifest);
-    let program = parse(&src).unwrap_or_else(|e| panic!("parse {}: {}", s.name, e.render(&src)));
+    // A source may carry its controller INLINE (`<controller>…</controller>`)
+    // rather than as a sibling `.controller.ts` — strip it before the
+    // template-only parser sees it (mirrors `deck_ssr::build`).
+    let (stripped, inline_controller) = sui_compiler::parse::preprocess::extract_controller_block(&src);
+    let program = parse(&stripped).unwrap_or_else(|e| panic!("parse {}: {}", s.name, e.render(&stripped)));
 
     let dir = gendir.join(s.name);
     fs::create_dir_all(&dir).unwrap();
@@ -98,9 +102,14 @@ fn synth_client_into(repo: &Path, gendir: &Path, s: &Surface) {
     }
 
     // Copy the authored controller into the gendir (so its relative imports
-    // resolve next to the emitted dts), and compose it.
+    // resolve next to the emitted dts), and compose it. An explicit sibling
+    // `controller_rel` wins; otherwise fall back to the source's own inline
+    // `<controller>` block, if any.
     let authored = if let Some(c) = s.controller_rel {
         let body = fs::read_to_string(repo.join(c)).expect("read controller");
+        fs::write(dir.join("controller.ts"), body).unwrap();
+        Some(AuthoredController { specifier: "./controller.ts".to_string() })
+    } else if let Some(body) = inline_controller {
         fs::write(dir.join("controller.ts"), body).unwrap();
         Some(AuthoredController { specifier: "./controller.ts".to_string() })
     } else {
@@ -135,6 +144,18 @@ fn write_runtime_shim(repo: &Path, work: &Path) {
          export type {{ ViewScope }} from \"{r}/packages/sui/runtime/src/controller.ts\";\n"
     );
     fs::write(work.join("runtime-shim.ts"), shim).unwrap();
+    // Ambient type shim for the `ship` host-dispatch module — the ONE
+    // external specifier a controller's `live(() => call(op, args))` source
+    // imports. Never a real npm package (deno_core supplies it at runtime
+    // via `op_ship_call`); this shim exists so tsc can resolve it here.
+    fs::write(
+        work.join("ship-shim.d.ts"),
+        "declare module 'ship' {\n  \
+         export function call(op: string, args?: Record<string, unknown>): Promise<unknown>\n  \
+         export function emit(value: unknown): void\n\
+         }\n",
+    )
+    .unwrap();
 }
 
 fn write_tsconfig(repo: &Path, work: &Path, include: &[String], name: &str) {
@@ -202,16 +223,20 @@ fn client_contract_typechecks_green_across_real_surfaces() {
     // the manifest seam (route/navigate declared into the manifest, typed
     // against `RouteSignals` — see `inject_host_context`).
     //
-    // Both surfaces here are CONTROLLER-FREE (their scope is template/data/route
-    // declared). Surfaces that COMPOSE an authored `controller({ scope })` —
-    // board, badge — are blocked on a pre-existing runtime-typing regression
-    // (ef696e5): a scope factory with no `ctx` param resolves `controller()` to
-    // the legacy `__def`-less overload, so the synthetic scope-factory recovery
-    // yields `{}`. They're tracked by the #[ignore]'d
+    // `greet` is CONTROLLER-FREE (its scope is template/route declared). `feed`
+    // carries its controller INLINE (`<controller>…</controller>`, composed
+    // automatically — see `synth_client_into`); its `setup: (_ctx) => …` takes
+    // a (`_ctx`) param to steer clear of a pre-existing runtime-typing
+    // regression (ef696e5): a scope factory with NO `ctx` param resolves
+    // `controller()` to the legacy `__def`-less overload, so the synthetic
+    // scope-factory recovery yields `{}`. Surfaces that compose an authored
+    // `controller({ scope })` from a zero-arg factory — board, badge — are
+    // blocked on that regression and tracked by the #[ignore]'d
     // `controller_recovers_scope_factory_return_type` below; restore them here
     // once `controller()`'s `__def` contract holds for the zero-ctx case.
     let surfaces = [
-        // feed — {#while-loading}/{#while-error} + <data live> + <client>.
+        // feed — {#while-loading}/{#while-error} + controller-side live() over
+        // host-dispatch (the real living-async surface).
         Surface {
             name: "feed",
             source_rel: "crates/deck/deck-conformance/app/views/feed/page.sui",
@@ -233,8 +258,9 @@ fn client_contract_typechecks_green_across_real_surfaces() {
         synth_client_into(&repo, &gendir, s);
     }
 
-    let includes: Vec<String> =
+    let mut includes: Vec<String> =
         surfaces.iter().map(|s| format!("generated/{}/**/*.ts", s.name)).collect();
+    includes.push("ship-shim.d.ts".to_string());
     write_tsconfig(&repo, &work, &includes, "tsconfig.json");
 
     let (ok, out) = run_tsc(&tsc, &work, "tsconfig.json");

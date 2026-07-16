@@ -63,20 +63,6 @@ fn compile_component_dts(source: &str) -> String {
 }
 
 #[test]
-fn data_live_emits_live_state() {
-    let dts = compile_dts(r#"<data name="agents" source="ship.agents.list()" live />"#);
-    assert!(dts.contains("agents: Signal<LiveState<unknown>>"), "got: {dts}");
-    assert!(dts.contains("import type { Signal, LiveState }"), "got: {dts}");
-}
-
-#[test]
-fn data_once_emits_signal_unknown() {
-    let dts = compile_dts(r#"<data name="config" source="ship.config.get()" />"#);
-    assert!(dts.contains("config: Signal<unknown>"), "got: {dts}");
-    assert!(!dts.contains("LiveState"), "got: {dts}");
-}
-
-#[test]
 fn prop_union_emits_union_type() {
     let dts = compile_component_dts(
         r#"<scope>
@@ -106,8 +92,7 @@ fn prop_bool_emits_boolean() {
 #[test]
 fn use_hook_with_as_emits_return_type() {
     let dts = compile_dts(
-        r#"<data name="items" source="ship.list()" />
-<use-filter-list as="filter"><span>x</span></use-filter-list>"#,
+        r#"<use-filter-list as="filter"><span>x</span></use-filter-list>"#,
     );
     assert!(
         dts.contains("filter: ReturnType<typeof useFilterList>"),
@@ -278,15 +263,15 @@ fn no_scope_section_leaves_scope_unchanged() {
 
 #[test]
 fn template_member_clashing_with_factory_is_dropped_from_scope() {
-    // A name in BOTH a template `<data>` AND the factory: the template-derived
-    // `Signal<unknown>` is dropped (clash-retain) and the factory type is NOT
-    // re-declared (omit) — so `config` is absent from Scope entirely and typed
-    // solely by the inferred SC. (Was: factory type re-declared in Scope.)
-    let sui = r#"<data name="config" source="ship.config.get()" /><p>x</p>"#;
+    // A name in BOTH a template-derived member (a `bind:this` ref) AND the
+    // factory: the template-derived `Signal<...>` is dropped (clash-retain)
+    // and the factory type is NOT re-declared (omit) — so `config` is absent
+    // from Scope entirely and typed solely by the inferred SC.
+    let sui = r#"<div bind:this={config}>x</div>"#;
     let controller = r#"
-        import { controller, signal } from '@ship/sui-runtime'
+        import { controller, ref } from '@ship/sui-runtime'
         export default controller({
-          setup: () => ({ config: signal<{ url: string }>({ url: '' }) }),
+          setup: () => ({ config: ref<HTMLDivElement>(null) }),
         })
     "#;
     let dts = compile_dts_with_controller("page", sui, controller);
@@ -294,16 +279,4 @@ fn template_member_clashing_with_factory_is_dropped_from_scope() {
         !dts.contains("config:"),
         "clashing field must be omitted from Scope (SC-sourced), got: {dts}"
     );
-}
-
-#[test]
-fn multiple_declarations_all_appear() {
-    let src = r#"
-<data name="overview" source="ship.git.overview()" live />
-<data name="config" source="ship.config.get()" />
-"#;
-    let dts = compile_dts(src);
-    assert!(dts.contains("overview: Signal<LiveState<unknown>>"), "got: {dts}");
-    assert!(dts.contains("config: Signal<unknown>"), "got: {dts}");
-    assert!(dts.contains("import type { Signal, LiveState }"), "got: {dts}");
 }

@@ -370,9 +370,6 @@ fn visit_program<F>(program: &Program, f: &mut F) -> Result<(), CompileError>
 where
     F: FnMut(&Expr) -> Result<(), CompileError>,
 {
-    for d in &program.data {
-        f(&d.source)?;
-    }
     visit_instrs(&program.template, f)?;
     Ok(())
 }

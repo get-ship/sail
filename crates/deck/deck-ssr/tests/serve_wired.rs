@@ -20,7 +20,7 @@ use deck_core::DataPort;
 use deck_ssr::build::repo_root;
 use serde_json::Value;
 
-/// Host data surface for the `<data live source="api.demo.clock()">` view.
+/// Host data surface for the feed view's `live(() => call('api.demo.clock'))`.
 struct DemoData;
 impl DataPort for DemoData {
     fn resolve(&self, domain: &str, op: &str, _args: &Value) -> Option<Value> {
@@ -122,14 +122,14 @@ fn wired_serve_renders_ship_js_first_paint() {
         "per-row aria-pressed: directive (one flagged row); got:\n{on}"
     );
 
-    // ── feed (<data live> + host-dispatch) ─────────────────────────────────
+    // ── feed (controller live() + host-dispatch) ───────────────────────────
     // The live op resolves over the registered DataPort, so first paint reflects
     // the resolved state, not `loading`.
     let feed_on_raw = payload_html(&root, engine, "feed", None);
     let feed_on = strip_markers(&feed_on_raw);
     assert!(
         feed_on.contains("state: ok"),
-        "ship-js resolves the live <data> over host-dispatch; got:\n{feed_on}"
+        "ship-js resolves the live() source over host-dispatch; got:\n{feed_on}"
     );
 
     // ── greet/[id] (route param via host-dispatch) ─────────────────────────

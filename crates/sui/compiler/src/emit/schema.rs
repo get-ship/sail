@@ -1,23 +1,22 @@
 #![allow(clippy::unwrap_used)]
 //! Emit a JSON-serializable description of a file's directive
-//! declarations: `<data>`, `<prop>`. Used by tooling (HMR, error
-//! overlay, devserver) that needs a quick semantic summary without
-//! the JS bundle.
+//! declarations: `<prop>`. Used by tooling (HMR, error overlay,
+//! devserver) that needs a quick semantic summary without the JS bundle.
+//!
+//! `"data"` stays in the wire shape as an always-empty array — the
+//! retired `<data>` directive was its only producer, but the field
+//! itself is part of the checked-in schema contract downstream tooling
+//! reads, so it isn't dropped here.
 
 use crate::ir::*;
 use crate::CompileOpts;
 use serde_json::{json, Value};
 
 pub fn emit_schema(program: &Program, opts: &CompileOpts) -> Value {
-    let data: Vec<Value> = program
-        .data
-        .iter()
-        .map(|d| json!({ "name": d.name, "source": d.source.source, "live": d.live }))
-        .collect();
     let component = opts.component_meta.as_ref().map(|m| component_value(&m.name, &program.props));
 
     json!({
-        "data": data,
+        "data": Value::Array(Vec::new()),
         "component": component,
         "_compilerVersion": crate::compiler_version().to_json(),
     })

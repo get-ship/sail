@@ -59,12 +59,6 @@ pub fn emit_element(program: &Program, name: &str) -> Result<ElementOutput, Comp
              makes it an L1 element"
         )));
     }
-    if !program.data.is_empty() || !program.clients.is_empty() {
-        return Err(CompileError::new(
-            "element mode: <data>/<client> need runtime state — this source is a \
-             component; compile it with --component-name instead",
-        ));
-    }
     let root_class = format!("sui-{name}");
 
     // Exactly one root element; whitespace text and comments tolerated.

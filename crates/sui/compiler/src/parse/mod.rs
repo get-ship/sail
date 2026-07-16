@@ -4,10 +4,10 @@
 //!  1. Preprocess — same two transforms the interpreter does
 //!     (quote unquoted brace attrs, expand non-void self-closers).
 //!  2. HTML parse — produces a span-bearing DOM-ish tree.
-//!  3. Directive lift — pluck `<data>`, `<prop>`, and top-level
-//!     `<style>` out of the top-level child list into the IR. A
-//!     top-level `<state>` directive is rejected with a parse error
-//!     pointing authors at the controller's `setup:` factory.
+//!  3. Directive lift — pluck `<scope>` (props/variants/types) and
+//!     top-level `<style>` out of the top-level child list into the
+//!     IR. A top-level `<state>` directive is rejected with a parse
+//!     error pointing authors at the controller's `setup:` factory.
 //!  4. Template grammar scan — text-node `{...}` markers become
 //!     template instructions; element children recurse.
 //!  5. Expression validate — every brace expression goes through the
@@ -45,9 +45,7 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
     let prepared = preprocess::preprocess_impl(source, expand_elements);
     let nodes = html::parse_fragment(&prepared)?;
 
-    let mut data: Vec<DataDecl> = Vec::new();
     let mut props: Vec<PropDecl> = Vec::new();
-    let mut clients: Vec<ClientDecl> = Vec::new();
     let mut style_parts: Vec<String> = Vec::new();
     let mut scope_types = String::new();
     let mut template_nodes: Vec<Node> = Vec::with_capacity(nodes.len());
@@ -63,14 +61,6 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
                 continue;
             }
             Node::Element(el) => match el.tag.as_str() {
-                "data" => {
-                    data.push(parse_data(el)?);
-                    continue;
-                }
-                "client" => {
-                    clients.push(parse_client(el, &clients)?);
-                    continue;
-                }
                 "state" => {
                     return Err(state_directive_retired(el));
                 }
@@ -115,9 +105,7 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
     let template = template::compile_children(&template_nodes)?;
 
     Ok(Program {
-        data,
         props,
-        clients,
         styles,
         scope_types,
         template,
@@ -206,90 +194,3 @@ fn state_directive_retired(el: &html::Element) -> CompileError {
     .with_category(label)
 }
 
-fn parse_data(el: &html::Element) -> Result<DataDecl, CompileError> {
-    let name = required_attr(el, "name", "<data>")?;
-    let source_attr = required_attr(el, "source", "<data>")?;
-    let live = el.has_attribute("live");
-    // The `source=` attribute is a JS expression evaluated against
-    // (ship, route). We validate it as a normal expression.
-    let span = attr_span(el, "source").unwrap_or(el.span);
-    let expr_text = strip_brace_attr(&source_attr);
-    expr::validate_at(&expr_text, false, &format!("<data name=\"{name}\"> source"), span)?;
-    Ok(DataDecl {
-        name,
-        source: Expr::new(expr_text, span, false),
-        live,
-        span: el.span,
-    })
-}
-
-/// Setup-context names a `<client>` may not shadow. `ship` is deliberately
-/// NOT here — declaring `<client name="ship" />` is the migration path off
-/// the ambient default, routing the same key through `ctx.clients`.
-const RESERVED_CLIENT_NAMES: &[&str] = &["route", "navigate", "ctx", "scope", "setup", "props", "derived"];
-
-fn parse_client(el: &html::Element, existing: &[ClientDecl]) -> Result<ClientDecl, CompileError> {
-    let name = required_attr(el, "name", "<client>")?;
-    if !is_js_identifier(&name) {
-        return Err(CompileError::new(format!(
-            "<client name=\"{name}\">: name must be a JS identifier — it becomes \
-             the scope name the template resolves (e.g. `{name}.domain.op()`)"
-        ))
-        .with_span(el.span)
-        .with_category("<client>"));
-    }
-    if RESERVED_CLIENT_NAMES.contains(&name.as_str()) {
-        return Err(CompileError::new(format!(
-            "<client name=\"{name}\">: `{name}` is a reserved setup-context name \
-             and cannot be used as a client key"
-        ))
-        .with_span(el.span)
-        .with_category("<client>"));
-    }
-    if existing.iter().any(|c| c.name == name) {
-        return Err(CompileError::new(format!(
-            "<client name=\"{name}\"> is declared more than once"
-        ))
-        .with_span(el.span)
-        .with_category("<client>"));
-    }
-    Ok(ClientDecl { name, span: el.span })
-}
-
-fn is_js_identifier(s: &str) -> bool {
-    let mut chars = s.chars();
-    match chars.next() {
-        Some(c) if c.is_ascii_alphabetic() || c == '_' || c == '$' => {}
-        _ => return false,
-    }
-    chars.all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '$')
-}
-
-
-
-fn required_attr(
-    el: &html::Element,
-    name: &str,
-    label: &str,
-) -> Result<String, CompileError> {
-    el.get_attribute(name).ok_or_else(|| {
-        CompileError::new(format!("{label} missing required attribute: {name}"))
-            .with_span(el.span)
-            .with_category(label.to_string())
-    })
-}
-
-fn attr_span(el: &html::Element, name: &str) -> Option<Span> {
-    el.attributes.iter().find(|a| a.name == name).map(|a| a.value_span)
-}
-
-/// Authors may write `value={0}` (brace form) or `value="0"` (literal
-/// expression string). Both compile to the same code.
-pub fn strip_brace_attr(s: &str) -> String {
-    let trimmed = s.trim();
-    if trimmed.starts_with('{') && trimmed.ends_with('}') && trimmed.len() >= 2 {
-        trimmed[1..trimmed.len() - 1].trim().to_string()
-    } else {
-        trimmed.to_string()
-    }
-}

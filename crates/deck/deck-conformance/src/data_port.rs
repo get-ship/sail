@@ -230,22 +230,26 @@ async fn serve_sse_inner(
         None => return sse_error(StatusCode::NOT_FOUND, "view not found"),
     };
 
-    let program = match sui_compiler::parse::parse(&source) {
-        Ok(p) => p,
-        Err(e) => {
-            let msg = e.render(&source);
-            tracing::warn!(view = %name, error = %msg, "data_port: parse error");
-            return sse_error(StatusCode::INTERNAL_SERVER_ERROR, "view parse error");
-        }
-    };
+    // A view may carry its controller INLINE (`<controller>…</controller>`) —
+    // strip it before the template-only parser sees it (the view is only
+    // parsed here to validate it exists / is well-formed; see below).
+    let (stripped, _inline_controller) =
+        sui_compiler::parse::preprocess::extract_controller_block(&source);
+    if let Err(e) = sui_compiler::parse::parse(&stripped) {
+        let msg = e.render(&stripped);
+        tracing::warn!(view = %name, error = %msg, "data_port: parse error");
+        return sse_error(StatusCode::INTERNAL_SERVER_ERROR, "view parse error");
+    }
 
-    // Collect live <data> declarations.
-    let live_data: Vec<(String, String)> = program
-        .data
-        .iter()
-        .filter(|d| d.live)
-        .map(|d| (d.name.clone(), d.source.source.clone()))
-        .collect();
+    // Live-data discovery: the retired `<data live>` directive used to be
+    // parsed straight out of the `.sui` to find sources to stream. That
+    // authoring surface is gone (compiler-side) and its replacement — how a
+    // controller's own `live(() => …)` sources get discovered for a
+    // server-push SSE channel — is a redesign owned elsewhere. Until that
+    // lands, every view's SSE channel is keepalive-only; a first-paint /
+    // hydrate read still resolves data correctly via host-dispatch (see
+    // `deck-ssr`), this channel just doesn't yet re-push updates.
+    let live_data: Vec<(String, String)> = Vec::new();
 
     let (tx, rx) = mpsc::channel::<Result<String, std::io::Error>>(64);
     let cancel = CancellationToken::new();

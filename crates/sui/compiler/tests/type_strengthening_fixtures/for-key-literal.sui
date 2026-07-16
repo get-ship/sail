@@ -1,6 +1,5 @@
-<data name="xs" source="ship.agents.summaries()" />
 <ul>
-  {#for x of xs key={[1, 2]}}
+  {#for x of [1, 2] key={[1, 2]}}
     <li>x</li>
   {/for}
 </ul>

@@ -145,10 +145,10 @@ fn targets() -> Vec<Target> {
         // ── Control flow + bindings (conformance views) ────────────────────
         v("board", "{#if}, {#for} keyed, class:, on:, nested component", "board", conf_ctrl("board"), false, "Alpha"),
         v("counter", "on:, signal reactivity", "counter", conf_ctrl("counter"), false, "<button"),
-        v("todos", "{#for} keyed, {#if}, {#while}, class:, <data live>, form mutation", "todos", None, true, "ship it"),
-        v("feed", "{#while}, <data live>, <client>", "feed", None, true, "state"),
-        v("boom", "{#if}, {#while}, <data live> error branch", "boom", None, true, ""),
-        v("clock", "{#if}, {#while}, <data live>", "clock", None, true, ""),
+        v("todos", "{#for} keyed, {#if}, {#while}, class:, controller live(), form mutation", "todos", None, true, "ship it"),
+        v("feed", "{#while}, controller live() over host-dispatch", "feed", None, true, "state"),
+        v("boom", "{#if}, {#while}, controller live() error branch", "boom", None, true, ""),
+        v("clock", "{#if}, {#while}, controller live()", "clock", None, true, ""),
         v("glyph", "inline SVG, namespaced serialization", "glyph", None, false, "<svg"),
         Target {
             name: "greet/[id]",
