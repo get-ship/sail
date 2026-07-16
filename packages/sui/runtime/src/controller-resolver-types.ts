@@ -44,10 +44,11 @@ export interface ResolverContext {
    */
   stateKeys?: ReadonlySet<string>
   /**
-   * The custom-element host. When present, signals marked
-   * `shared(...)` in the controller's `scope:` block are auto-
-   * published on this element under the host's tag name, reachable
-   * by descendants via `useShared(host, '<tag>')`.
+   * The custom-element host. Useful for controller code that
+   * needs to reach its own shadow root (e.g. to imperatively
+   * mount a third-party editor, or to focus an input). Not used
+   * for shared-state publication — that's scope-homed now via
+   * `useStore` / `provideContext` (see `./store` / `./effect-scope`).
    */
   host?: Element
 }

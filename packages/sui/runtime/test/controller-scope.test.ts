@@ -1,11 +1,15 @@
-// scope: block + auto-provide flow
+// scope: block + useStore/defineStore flow.
 //
 // The scope: factory contributes signals/derived/hooks to the merged
-// scope; signals wrapped with shared() get auto-published on the host
-// for descendants to consume via useShared.
+// scope. State that needs to be shared across components now goes
+// through `defineStore(setup)` + `useStore(def)` (scope-homed, no DOM
+// walk) — the old `shared(signal)` + `useShared(host, tag)` auto-publish
+// on the element was deleted with context.ts. A controller's scope
+// factory reaches a store via `useStore(def)`, identical to a regular
+// component; the store instance lives on the chain root of the mount.
 
 import { describe, expect, it } from 'vitest'
-import { signal, derived, shared, useShared } from '../src/index'
+import { signal, derived, defineStore, useStore } from '../src/index'
 import { resolveController } from '../src/controller-resolver'
 import type { ResolverContext } from '../src/controller-resolver-types'
 import type { ShipSDK } from '../src/ship'
@@ -46,43 +50,53 @@ describe('scope: block', () => {
     expect(count()).toBe(2)
   })
 
-  it('shared() signals are auto-provided on host under tag name', () => {
-    const host = document.createElement('sui-cmd-bar')
-    const child = document.createElement('span')
-    host.appendChild(child)
-    document.body.appendChild(host)
+  it('scope: factory can pull a scoped store via useStore', () => {
+    // A store is defined once, at module top-level. A controller's
+    // scope: factory calls useStore(def) the same way a regular
+    // component does — the runtime walks the scope chain, finds
+    // the existing instance (or creates one on the chain root), and
+    // returns it. The returned shape is destructured into the
+    // scope like any other scope: contribution.
+    const ui = defineStore('test.ui', () => {
+      const mode = signal<'find' | 'command'>('find')
+      const setMode = (m: 'find' | 'command'): void => mode.set(m)
+      return { mode, setMode }
+    })
 
     const def = {
-      scope: () => ({
-        mode: shared(signal('find')),
-        value: shared(signal('')),
-        local: signal(0),  // not shared
-      }),
+      scope: () => {
+        const s = useStore(ui)
+        return { ui: s.mode, setUiMode: s.setMode }
+      },
     }
-    resolveController(def, ctx(host))
-
-    const ctxFound = useShared<{ mode: () => string; value: () => string; local?: never }>(
-      child,
-      'sui-cmd-bar',
-    )
-    expect(ctxFound).not.toBeNull()
-    expect(ctxFound?.mode()).toBe('find')
-    expect(ctxFound?.value()).toBe('')
-    expect((ctxFound as Record<string, unknown> | null)?.local).toBeUndefined()
-
-    document.body.removeChild(host)
+    const bindings = resolveController(def, ctx())
+    const mode = bindings.ui as () => 'find' | 'command'
+    const setMode = bindings.setUiMode as (m: 'find' | 'command') => void
+    expect(mode()).toBe('find')
+    setMode('command')
+    expect(mode()).toBe('command')
   })
 
-  it('without shared() entries, no provide call is made', () => {
-    const host = document.createElement('sui-x')
-    document.body.appendChild(host)
-    const def = {
-      scope: () => ({ count: signal(0) }),
-    }
-    resolveController(def, ctx(host))
-    // Property is not set; useShared returns null on host or descendants.
-    expect((host as Record<string, unknown>)['__sui_ctx_sui-x']).toBeUndefined()
-    document.body.removeChild(host)
+  it('two resolves of the same store share the instance', () => {
+    // The scope: factory runs once per `resolveController` call. Two
+    // controllers (or two scope: blocks across renders) that both
+    // call useStore(def) for the same store id get the same signals
+    // — a write in one is visible in the other.
+    const counter = defineStore('test.counter', () => {
+      const n = signal(0)
+      return { n, inc: () => n.set(n() + 1) }
+    })
+
+    const defA = { scope: () => useStore(counter) }
+    const defB = { scope: () => useStore(counter) }
+
+    const a = resolveController(defA, ctx()) as { n: () => number; inc: () => void }
+    const b = resolveController(defB, ctx()) as { n: () => number; inc: () => void }
+
+    a.inc()
+    a.inc()
+    expect(a.n()).toBe(2)
+    expect(b.n()).toBe(2)  // shared — same instance
   })
 
   it('mount: can mutate scope: signals when template declares no <state>', () => {

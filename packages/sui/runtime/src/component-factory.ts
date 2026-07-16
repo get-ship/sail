@@ -332,13 +332,13 @@ export function component<Bindings>(
     // (LIFECYCLE_KEY) wires. `internals` rides along for form-associated
     // controllers. The returned disposer tears the child down on disconnect.
     //
-    // `host` MUST ride on `ctx`: `resolveController` reads `ctx.host` to pass
-    // as the controller scope factory's 2nd arg AND to auto-publish `shared()`
-    // signals on the element. Omitting it (the prior bug) left every registered
-    // custom element's controller with `host === undefined` — so any controller
-    // reaching for its own shadow root (`host?.shadowRoot`, e.g. to imperatively
-    // mount a third-party editor like TipTap, or to focus an input) silently got
-    // null and never mounted, and `shared()`/`useShared` never wired.
+    // `host` MUST ride on `ctx`: `resolveController` passes it as the
+    // controller scope factory's 2nd arg, where a controller can reach its
+    // own shadow root (e.g. to imperatively mount a third-party editor like
+    // TipTap, or to focus an input). The runtime no longer auto-publishes
+    // shared signals on the element — that's scope-homed now via
+    // `useStore` / `provideContext` (see `./store` / `./effect-scope`), so
+    // `host` here is for imperative reach, not shared-state publication.
     const ctx: {
       props: Record<string, Signal<unknown>>
       host: HTMLElement

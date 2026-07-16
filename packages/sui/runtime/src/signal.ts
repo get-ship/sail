@@ -29,7 +29,7 @@
 // the Rust side to follow.
 
 import { findNearestBoundary } from './error-boundary'
-import { onCleanup, withScope, type EffectScope } from './effect-scope'
+import { currentScope, onCleanup, withScope, type EffectScope } from './effect-scope'
 
 /** Legacy alias retained for the public `Signal.__subs` field shape. */
 type Subscriber = () => void
@@ -67,6 +67,11 @@ interface Computation extends SourceNode {
    *  effects + `onCleanup`s registered during the body enroll straight onto
    *  `cleanups` through it — no per-run allocation. */
   scope?: EffectScope
+  /** The scope current at CREATION — the lexical owner. The ownership-scope
+   *  adapter chains to it via `parent`, so scope-chain lookups
+   *  (`useStore` / `injectContext`) inside the body resolve through the
+   *  creating component's chain instead of dead-ending at the adapter. */
+  owner?: EffectScope | null
 }
 
 /** Build an effect node's reused ownership-scope adapter. Cleanups registered
@@ -75,12 +80,20 @@ interface Computation extends SourceNode {
  *  disposer fires on teardown. `dispose`/`disposed` are inert: the node owns
  *  its own lifecycle, so the scope is purely a routing target for `onCleanup`. */
 function makeOwnerScope(node: Computation): EffectScope {
+  const ctx = new Map<symbol, unknown>()
   return {
     cleanup(fn: () => void) {
       node.cleanups.push(fn)
     },
     dispose() {},
     disposed: false,
+    // Chain to the computation's lexical owner: the body runs with this
+    // adapter installed, and a `useStore` / `injectContext` inside it must
+    // keep resolving through the component that created the computation —
+    // a `parent: null` here would make every effect its own chain root and
+    // fragment store instances per-effect.
+    parent: node.owner ?? null,
+    contexts: ctx,
   }
 }
 
@@ -442,6 +455,7 @@ export function derived<T>(fn: () => T): Derived<T> {
     active: true,
     computation: true,
     value: undefined,
+    owner: currentScope(),
   }
 
   const reader = (() => {
@@ -507,6 +521,10 @@ export function effect(fn: () => void | (() => void)): () => void {
     // outside any `withHost` scope) still know which boundary subtree
     // they belong to.
     host: currentHost(),
+    // Capture the lexical owner scope for the same reason — re-runs happen
+    // outside any `withScope`, but chain lookups from the body must still
+    // resolve through the creating component (see `makeOwnerScope`).
+    owner: currentScope(),
   }
 
   // Eager initial run. Writes triggered during it schedule + flush
