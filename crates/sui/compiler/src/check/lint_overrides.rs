@@ -18,9 +18,17 @@
 //! Overrides mostly *soften* (Error → Warn or Off) so an external consumer can
 //! opt out of a rule without editing it. They can also *promote* (→ Error):
 //! the styling policy (`check::policy::Policy`) uses that direction to turn a
-//! migration-Warn rule (`sui-no-style-block`, `sui-no-raw-container`) into a
-//! hard wall for the `full`/`strict` presets. Promotion is reserved for those
-//! policy rules — arbitrary Warn rules are tightened by editing the rule.
+//! migration-Warn capability rule (`sui-no-raw-container`) into a hard wall for
+//! the `full`/`strict` presets. Promotion is reserved for those policy rules —
+//! arbitrary Warn rules are tightened by editing the rule.
+//!
+//! THE FLOOR is NOT part of this override channel. The floor rules
+//! (`check::policy::FLOOR_RULES`) are enforced unconditionally by
+//! [`enforce_floor`], which runs on every compile independent of `overrides`.
+//! [`apply_overrides`] additionally REFUSES to touch a floor rule — an
+//! `Off`/`Warn` override naming a floor rule id is ignored — so the floor
+//! cannot be softened through this channel either. Between the two, a floor
+//! violation is an `Error` in every `.sui`, on every host, with any overrides.
 //!
 //! Plumbing: `CompileOpts::lint_overrides` carries a `Vec<LintOverride>`
 //! from the build host (CLI / napi / wasm) into `compile()`. The
@@ -102,6 +110,14 @@ pub fn apply_overrides(
     findings
         .into_iter()
         .filter_map(|mut f| {
+            // THE FLOOR is non-negotiable: an override naming a floor rule id is
+            // ignored, so no `lint_override` (Off/Warn) can drop or downgrade a
+            // floor finding. Its Error severity is then guaranteed by
+            // `enforce_floor`. This is what makes the floor a language property
+            // rather than host-configurable lint wiring.
+            if crate::check::policy::is_floor_rule(f.rule) {
+                return Some(f);
+            }
             for o in overrides {
                 if o.rule == f.rule {
                     return match o.severity {
@@ -118,6 +134,34 @@ pub fn apply_overrides(
                 }
             }
             Some(f)
+        })
+        .collect()
+}
+
+/// THE FLOOR, as a compiler pass. Promote every finding whose rule is a
+/// [`crate::check::policy::FLOOR_RULES`] id to `Error`, unconditionally.
+///
+/// This runs on every compile regardless of `opts.lint_overrides`, so the
+/// styling constructs the floor bans (`sui-no-style-block`,
+/// `sui-no-inline-style`, `sui-no-class`, `sui-no-undeclared-stylesheet`) are a
+/// hard `Error` in every `.sui` — including on a host that passes no overrides
+/// at all (the wasm/playground path that historically skipped the floor). The
+/// two natural-`Warn` floor rules (`sui-no-style-block`, `sui-no-inline-style`)
+/// gate here without any host promotion; the two natural-`Error` ones pass
+/// through unchanged.
+///
+/// L1 element sources never reach this pass: they compile through
+/// `compile_element`, which does not run the lint gate, because they ARE the
+/// styling layer (the compiler's own generated `sx` block is likewise not
+/// authored source).
+pub fn enforce_floor(findings: Vec<sui_lint::Finding>) -> Vec<sui_lint::Finding> {
+    findings
+        .into_iter()
+        .map(|mut f| {
+            if crate::check::policy::is_floor_rule(f.rule) {
+                f.severity = sui_lint::Severity::Error;
+            }
+            f
         })
         .collect()
 }

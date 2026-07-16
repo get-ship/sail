@@ -6,12 +6,13 @@
 //! first-class *language elements* rather than hand-authored CSS. A raw
 //! `<style>` block is the escape hatch the floor exists to remove.
 //!
-//! Severity is **Warn** by nature so a package with no config / mid-migration
-//! keeps compiling and the LSP still surfaces the hint. Both real policies —
-//! `floor` and `stripped` — promote it to a hard `Error` (via
-//! `check::policy::Policy` → a `LintOverride`): raw `<style>` is banned at the
-//! floor, primitives included. There is no policy under which it is allowed;
-//! the natural Warn is only the unconfigured fallback.
+//! Severity is **Warn** by nature so the rule read directly (the LSP, `sui_lint`
+//! CLI) surfaces the hint without hard-failing an unrelated tool. The compiler,
+//! though, promotes it to a hard `Error` UNCONDITIONALLY: this is a floor rule
+//! (`check::policy::FLOOR_RULES`), and `check::lint_overrides::enforce_floor`
+//! runs on every compile independent of `sui.config.json` or `lint_overrides`.
+//! Raw `<style>` is banned at the floor, primitives included; there is no
+//! capability key, preset, or host wiring under which it compiles.
 //!
 //! IMPORTANT: this rule scans the **raw** source (pre-preprocess), so the
 //! synthetic `<style>` that `sx` lowering injects is invisible to it — only
