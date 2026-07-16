@@ -26,6 +26,7 @@ const REF_WITH_STATIC: &str =
 
 fn component_opts(setup_url: Option<&str>, component_imports: bool) -> CompileOpts {
     CompileOpts {
+        route_params: None,
         setup_url: setup_url.map(Into::into),
         mode: CompileMode::Component,
         source_path: None,

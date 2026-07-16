@@ -28,6 +28,7 @@ export default controller({
 
 fn opts(name: &str) -> CompileOpts {
     CompileOpts {
+        route_params: None,
         setup_url: Some(format!("./{name}.sui.controller.ts")),
         mode: CompileMode::Component,
         source_path: Some(PathBuf::from(format!("/x/{name}.sui"))),

@@ -9,6 +9,7 @@ use sui_compiler::{check_all, compile, CompileMode, CompileOpts, DiagSeverity, P
 
 fn opts() -> CompileOpts {
     CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: None,
@@ -30,7 +31,7 @@ fn collects_multiple_errors_where_compile_stops_at_one() {
     compile(src, opts()).expect_err("compile should fail");
 
     // check_all surfaces both.
-    let diags = check_all(src, None, &[]);
+    let diags = check_all(src, None, &[], None);
     assert!(
         diags.len() >= 2,
         "expected >=2 diagnostics, got {}: {diags:?}",
@@ -45,21 +46,21 @@ fn collects_multiple_errors_where_compile_stops_at_one() {
 fn clean_source_yields_no_diagnostics() {
     // Bare interpolation is renderable; with no controller path, scope-bound
     // checks are skipped, so this is clean.
-    let diags = check_all("<p>{name}</p>", None, &[]);
+    let diags = check_all("<p>{name}</p>", None, &[], None);
     assert!(diags.is_empty(), "expected no diagnostics, got {diags:?}");
 }
 
 #[test]
 fn parse_error_is_a_single_diagnostic() {
     // Nothing can run without an AST, so a parse failure is exactly one diag.
-    let diags = check_all("<p>{", None, &[]);
+    let diags = check_all("<p>{", None, &[], None);
     assert_eq!(diags.len(), 1, "parse error should yield one diag: {diags:?}");
 }
 
 #[test]
 fn diagnostics_are_sorted_by_position() {
     let src = "<em>{this.value}</em>\n<p>{new Date()}</p>";
-    let diags = check_all(src, None, &[]);
+    let diags = check_all(src, None, &[], None);
     let positions: Vec<(usize, usize)> = diags.iter().map(|d| (d.line, d.col)).collect();
     let mut sorted = positions.clone();
     sorted.sort();
@@ -124,7 +125,7 @@ fn undeclared_stylesheet_fails_real_compile_path() {
     );
     let src = std::fs::read_to_string(&sui_path).unwrap();
     let overrides = Policy::overrides_for(&sui_path);
-    let diags = check_all(&src, Some(&sui_path), &overrides);
+    let diags = check_all(&src, Some(&sui_path), &overrides, None);
     let permit_errors: Vec<_> = diags
         .iter()
         .filter(|d| {
@@ -154,7 +155,7 @@ fn declared_stylesheet_passes_real_compile_path() {
     );
     let src = std::fs::read_to_string(&sui_path).unwrap();
     let overrides = Policy::overrides_for(&sui_path);
-    let diags = check_all(&src, Some(&sui_path), &overrides);
+    let diags = check_all(&src, Some(&sui_path), &overrides, None);
     let permit_errors: Vec<_> = diags
         .iter()
         .filter(|d| {
@@ -180,7 +181,7 @@ fn empty_stylesheet_array_still_permits_zero() {
     );
     let src = std::fs::read_to_string(&sui_path).unwrap();
     let overrides = Policy::overrides_for(&sui_path);
-    let diags = check_all(&src, Some(&sui_path), &overrides);
+    let diags = check_all(&src, Some(&sui_path), &overrides, None);
     let permit_errors: Vec<_> = diags
         .iter()
         .filter(|d| {
@@ -216,7 +217,7 @@ fn no_class_fails_real_compile_path() {
     let src = r#"<p class="sneaky-hook">{name}</p>"#;
     std::fs::write(&sui_path, src).unwrap();
     let overrides = Policy::overrides_for(&sui_path);
-    let diags = check_all(src, Some(&sui_path), &overrides);
+    let diags = check_all(src, Some(&sui_path), &overrides, None);
     let class_errors: Vec<_> = diags
         .iter()
         .filter(|d| {
@@ -249,7 +250,7 @@ fn sx_only_source_passes_real_compile_path() {
     let src = r#"<p role="listbox" aria-label="x" sx="p-4 bg-surface-2" bind:this={el}>{name}</p>"#;
     std::fs::write(&sui_path, src).unwrap();
     let overrides = Policy::overrides_for(&sui_path);
-    let diags = check_all(src, Some(&sui_path), &overrides);
+    let diags = check_all(src, Some(&sui_path), &overrides, None);
     let class_errors: Vec<_> = diags
         .iter()
         .filter(|d| {
@@ -276,7 +277,7 @@ fn class_directive_fails_real_compile_path() {
     let src = r#"<a class:active={flag()} href="/x">x</a>"#;
     std::fs::write(&sui_path, src).unwrap();
     let overrides = Policy::overrides_for(&sui_path);
-    let diags = check_all(src, Some(&sui_path), &overrides);
+    let diags = check_all(src, Some(&sui_path), &overrides, None);
     let class_errors: Vec<_> = diags
         .iter()
         .filter(|d| {

@@ -29,7 +29,7 @@ fn empty_host() -> CompileOpts {
 
 /// True iff `check_all` (with the given overrides) reports `rule` as an Error.
 fn reports_floor_error(src: &str, rule: &str, overrides: &[LintOverride]) -> bool {
-    check_all(src, None, overrides).iter().any(|d| {
+    check_all(src, None, overrides, None).iter().any(|d| {
         d.severity == DiagSeverity::Error && d.rule.as_deref() == Some(rule)
     })
 }
@@ -139,7 +139,7 @@ fn non_floor_rules_remain_softenable() {
         rule: "sui-prop-value".to_string(),
         severity: OverrideSeverity::Off,
     }];
-    let with_off = check_all(token_src, None, &off);
+    let with_off = check_all(token_src, None, &off, None);
     assert!(
         !with_off.iter().any(|d| d.rule.as_deref() == Some("sui-prop-value")),
         "a NON-floor rule (sui-prop-value) must be softenable via override: {with_off:?}"
@@ -179,7 +179,7 @@ fn undeclared_stylesheet_cannot_be_softened() {
         rule: "sui-no-undeclared-stylesheet".to_string(),
         severity: OverrideSeverity::Off,
     }];
-    let diags = check_all(&src, Some(&sui), &off);
+    let diags = check_all(&src, Some(&sui), &off, None);
     assert!(
         diags.iter().any(|d| d.rule.as_deref() == Some("sui-no-undeclared-stylesheet")
             && d.severity == DiagSeverity::Error),

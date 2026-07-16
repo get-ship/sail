@@ -29,6 +29,7 @@ fn view_opts() -> CompileOpts {
 
 fn component_opts() -> CompileOpts {
     CompileOpts {
+        route_params: None,
         mode: CompileMode::Component,
         component_meta: Some(ComponentMeta {
             name: "vs-button".into(),

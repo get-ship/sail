@@ -62,6 +62,7 @@ pub fn write_pack_cem(pack_root: &Path) -> Result<Option<PathBuf>> {
         let source = std::fs::read_to_string(sui_file)
             .with_context(|| format!("read {}", sui_file.display()))?;
         let opts = sui_compiler::CompileOpts {
+        route_params: None,
             setup_url: None,
             mode: sui_compiler::CompileMode::Component,
             source_path: Some(sui_file.to_path_buf()),

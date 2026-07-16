@@ -40,6 +40,10 @@ struct WasmOpts {
     /// Setup URL relative to the emitted JS. When `None`, no
     /// `import setup …` is emitted (template-only modules).
     setup_url: Option<String>,
+    /// Host grant: route params when the host's routing convention names
+    /// this file a route. `None`/absent = not a route.
+    #[serde(default)]
+    route_params: Option<Vec<String>>,
     /// Optional CSS to prepend as a `<style>` block — same semantics
     /// as the native CLI's `--styles` flag.
     styles: Option<String>,
@@ -91,6 +95,7 @@ pub fn compile(source: &str, opts_json: &str) -> Result<JsValue, JsValue> {
     });
 
     let opts = CompileOpts {
+        route_params: parsed.route_params.clone(),
         setup_url: parsed.setup_url,
         mode,
         source_path: None,

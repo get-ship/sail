@@ -128,6 +128,13 @@ pub struct CompileOpts {
     /// Component metadata (tag name + shadow flag). When set, `compile()`
     /// treats the source as a component file regardless of `mode`.
     pub component_meta: Option<ComponentMeta>,
+    /// HOST GRANT: the route params for this file when the host's routing
+    /// convention names it a route (deck routes by file location). `Some`
+    /// legalizes + types `route` in the template and controller; `None`
+    /// means "not a route" and any `route` read is refused. Structured
+    /// params, passed IN — the sui compiler never sniffs the filesystem
+    /// for a routing convention it does not own.
+    pub route_params: Option<Vec<String>>,
     /// Emit a `.sui.d.ts` declaration file alongside the JS module.
     /// Defaults to `true`. Pass `false` (via `--no-dts`) to suppress.
     pub emit_dts: bool,
@@ -179,6 +186,7 @@ impl Default for CompileOpts {
             mode: CompileMode::Auto,
             source_path: None,
             component_meta: None,
+            route_params: None,
             emit_dts: true,
             emit_component_imports: false,
             lint_overrides: Vec::new(),
@@ -212,6 +220,7 @@ pub fn check_all(
     source: &str,
     source_path: Option<&std::path::Path>,
     overrides: &[LintOverride],
+    route_params: Option<&[String]>,
 ) -> Vec<Diagnostic> {
     // SFC: strip the inline `<controller>` block (else it parses as a template)
     // and resolve the controller (inline body wins, else paired file) for the
@@ -228,7 +237,7 @@ pub fn check_all(
     });
     match parse::parse(&stripped) {
         Ok(program) => {
-            check::collect(&program, &stripped, source_path, controller.as_ref(), overrides)
+            check::collect(&program, &stripped, source_path, controller.as_ref(), overrides, route_params)
         }
         Err(e) => vec![Diagnostic::from_compile_error(&e, &stripped)],
     }
@@ -355,6 +364,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
         opts.source_path.as_deref(),
         controller.as_ref(),
         &effective_overrides,
+        opts.route_params.as_deref(),
     )
     .map_err(|e| attach_path(e, &opts))?;
     // One contract per boundary (#255): the full Error-severity lint stream
@@ -368,6 +378,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
         opts.source_path.as_deref(),
         controller.as_ref(),
         &effective_overrides,
+        opts.route_params.as_deref(),
     )
     .map_err(|e| attach_path(e, &opts))?;
     let bindings = bindings::build(&program);

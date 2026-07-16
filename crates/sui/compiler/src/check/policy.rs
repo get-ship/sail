@@ -182,8 +182,9 @@ impl Policy {
 
 /// Derive the capability tier from the resolved `sui.config.json`. A recognised
 /// `"preset"` sets the base; individual `"sx"` / `"variants"` / `"raw_containers"`
-/// booleans override it. With neither a preset nor any key, returns `None` (a
-/// present config with no tier signal — the caller reads that as `FULL`). A
+/// booleans override it. With neither a preset nor any key, returns `None`
+/// (a present config with no tier signal — `resolve_opt` fails that CLOSED to
+/// `STRICT`, same as an unreadable config). A
 /// config that names only keys starts from `STRICT` (the app default) and dials
 /// up. The read + parse is owned by `sui_lint::config`; this only maps fields.
 fn policy_from_config(cfg: &sui_lint::config::SuiConfig) -> Option<Policy> {

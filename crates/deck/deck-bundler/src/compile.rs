@@ -62,6 +62,12 @@ pub fn compile_sui(
     // nearest `sui.config.json` walking up, which is how a project dials the
     // surface ABOVE the floor.
     let policy_overrides = Policy::overrides_for(sui_file);
+    // POSITION GRANT, computed once: deck routes by file location, so deck
+    // (not the author, not the sui compiler) decides whether this file may
+    // read `route` — and with which params.
+    let route_params = (mode == CompileMode::View)
+        .then(|| deck_core::routes::route_params_for(sui_file))
+        .flatten();
     let opts = CompileOpts {
         setup_url: controller_specifier(sui_file, stem, &source),
         mode: match mode {
@@ -71,6 +77,7 @@ pub fn compile_sui(
         source_path: Some(sui_file.to_path_buf()),
         component_meta: (mode == CompileMode::Component)
             .then(|| ComponentMeta { name: stem.to_string() }),
+        route_params: route_params.clone(),
         // The bundler reads only the JS — dts/ssr are the CLI bake's job, and
         // the CEM is walked from disk by the catalog, not returned here.
         emit_dts: false,
@@ -90,7 +97,7 @@ pub fn compile_sui(
             // gate, so only Warnings remain. Re-runs the collect() pass (a
             // parse + lint over this one file); cheap next to bundling and
             // only on the build path.
-            emit_build_warnings(sui_file, &source, &policy_overrides);
+            emit_build_warnings(sui_file, &source, &policy_overrides, route_params.as_deref());
             Ok(out.js)
         }
         Err(e) => Err(CompileError::Compile(e.render(&source))),
@@ -101,8 +108,13 @@ pub fn compile_sui(
 /// surfacing seam for #2). Errors never appear — they fail `compile()` before
 /// this is reached. Mirrors the CLI/MCP rendering: `<path>:<line>:<col>
 /// [<rule>] <message>`.
-fn emit_build_warnings(sui_file: &Path, source: &str, overrides: &[sui_compiler::LintOverride]) {
-    for d in sui_compiler::check_all(source, Some(sui_file), overrides) {
+fn emit_build_warnings(
+    sui_file: &Path,
+    source: &str,
+    overrides: &[sui_compiler::LintOverride],
+    route_params: Option<&[String]>,
+) {
+    for d in sui_compiler::check_all(source, Some(sui_file), overrides, route_params) {
         if d.severity != sui_compiler::DiagSeverity::Warning {
             continue;
         }
@@ -281,7 +293,10 @@ mod tests {
     fn synthetic_gate_is_scoped_and_additive() {
         let _env = EMIT_ENV_LOCK.lock().unwrap_or_else(|p| p.into_inner());
         let src = tempdir().unwrap();
-        let dir = src.path();
+        // Route-ness is POSITION: the page must live under a `views/` (or
+        // `routes/`) ancestor for deck to grant `route` at compile time.
+        let dir = src.path().join("views/greet/[id]");
+        std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(dir.join("page.sui"), "<h1>{route.params.id()}</h1>\n").unwrap();
         let sui = dir.join("page.sui");
 

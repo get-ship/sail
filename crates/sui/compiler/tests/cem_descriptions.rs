@@ -28,6 +28,7 @@ fn jsdoc_above_prop_emits_description_in_cem() {
     let path = fixtures_dir().join("jsdoc-prop.sui");
     let source = fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),
@@ -79,6 +80,7 @@ fn a_documented_prop_keeps_its_name() {
     let out = compile(
         src,
         CompileOpts {
+        route_params: None,
             mode: CompileMode::Component,
             component_meta: Some(ComponentMeta { name: "doc-probe".into() }),
             ..Default::default()

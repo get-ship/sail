@@ -40,6 +40,10 @@ struct NapiOpts {
     /// default as the playground.
     /// Setup URL relative to the emitted JS. `None` => no `import setup …`.
     setup_url: Option<String>,
+    /// Host grant: route params when the host's routing convention names
+    /// this file a route. `None`/absent = not a route.
+    #[serde(default)]
+    route_params: Option<Vec<String>>,
     /// On-disk path of the `.sui` source. When set, locates the paired
     /// `<stem>.controller.ts` for the four controller-aware check passes
     /// (`scope_bound`, `scope_member`, `bind_this_target`, `on_callable`)
@@ -120,6 +124,7 @@ fn compile_to_result(source: &str, opts_json: &str) -> Result<NapiResult, String
         .map(|p| sui_compiler::Policy::overrides_for(std::path::Path::new(p)))
         .unwrap_or_default();
     let opts = CompileOpts {
+        route_params: parsed.route_params.clone(),
         setup_url: parsed.setup_url,
         mode,
         source_path: parsed.source_path.map(std::path::PathBuf::from),

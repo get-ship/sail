@@ -9,6 +9,7 @@ fn compile_view(source: &str) -> sui_compiler::CompileError {
     compile(
         source,
         CompileOpts {
+        route_params: None,
             setup_url: None,
             mode: CompileMode::Component,
             source_path: None,
@@ -87,6 +88,7 @@ fn arrow_in_on_handler_is_allowed() {
     compile(
         src,
         CompileOpts {
+        route_params: None,
             setup_url: None,
             mode: CompileMode::Component,
             source_path: None,

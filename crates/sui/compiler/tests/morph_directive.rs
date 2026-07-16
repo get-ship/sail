@@ -18,6 +18,7 @@ fn compile_sui(name: &str) -> String {
     let path = fixtures_dir().join(format!("{name}.sui"));
     let source = fs::read_to_string(&path).expect("read fixture");
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),

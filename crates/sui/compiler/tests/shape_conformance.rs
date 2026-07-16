@@ -99,6 +99,7 @@ fn compile_one(path: &Path, repo: &Path) -> Result<String, String> {
     let source = fs::read_to_string(path).map_err(|e| format!("read {}: {e}", path.display()))?;
     let (mode, component_meta) = classify(path, repo);
     let opts = CompileOpts {
+        route_params: None,
         // No paired controller: the test exercises the compiler's
         // import shape against the framework, not the controller side.
         setup_url: None,

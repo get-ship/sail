@@ -5,7 +5,9 @@
 //!  * `<data name="…">`, `<prop name="…">` declarations on the program.
 //!  * `setup` factory return keys, `derived` keys, and `on` keys from
 //!    the paired controller (when one exists).
-//!  * The setup-context idents `ship`, `route`, `navigate`.
+//!  * `ship` (grandfathered until the `<client>` migration removes it) and
+//!    `route` — the latter ONLY when the host GRANTED it (a route file;
+//!    deck routes by file location and passes the params at compile time).
 //!  * JS / browser globals from a small fixed allowlist.
 //!  * Locals introduced by an arrow's parameter list (handlers can
 //!    write `(e) => …`; `e` is in scope inside the body).
@@ -26,8 +28,10 @@ use super::scope_bound_expr::check_expr;
 /// JS/browser globals + framework-known ctx names that are always
 /// available without an explicit declaration.
 const BUILTINS: &[&str] = &[
-    // Setup context.
-    "ship", "route", "navigate", "ctx",
+    // Setup context. `ship` is grandfathered until the `<client>` migration
+    // removes it; `route` is HOST-GRANTED per file (never ambient), and
+    // `navigate` is gone with it.
+    "ship", "ctx",
     // Namespace heads — the `check::scope_member` pass type-checks
     // member access through these so typos are flagged with a
     // useful "did you mean…" message instead of "scope is not
@@ -68,8 +72,9 @@ const BUILTINS: &[&str] = &[
 pub fn check(
     program: &Program,
     controller: Option<&ParsedController>,
+    route_params: Option<&[String]>,
 ) -> Result<(), CompileError> {
-    let scope = build_scope(program, controller);
+    let scope = build_scope(program, controller, route_params);
     let mut visitor = Visitor { scope, errors: Vec::new() };
     visit_program(program, &mut visitor);
     // Errors are pushed in traversal order, so the first is the same one the
@@ -84,8 +89,9 @@ pub fn check(
 pub fn collect(
     program: &Program,
     controller: Option<&ParsedController>,
+    route_params: Option<&[String]>,
 ) -> Vec<CompileError> {
-    let scope = build_scope(program, controller);
+    let scope = build_scope(program, controller, route_params);
     let mut visitor = Visitor { scope, errors: Vec::new() };
     visit_program(program, &mut visitor);
     visitor.errors
@@ -113,15 +119,25 @@ impl Scope {
             .collect();
         declared.sort();
         if declared.is_empty() {
-            "(none — only built-ins like Math, ship, route, navigate are available)".into()
+            "(none — only built-ins like Math and JSON are available)".into()
         } else {
             declared.join(", ")
         }
     }
 }
 
-fn build_scope(program: &Program, controller: Option<&ParsedController>) -> Scope {
+fn build_scope(
+    program: &Program,
+    controller: Option<&ParsedController>,
+    route_params: Option<&[String]>,
+) -> Scope {
     let mut names = BTreeSet::new();
+    // POSITION GRANT: the host told us this file is a route, so `route` is a
+    // legal root (its params arrive from the router at mount). No grant, no
+    // name — a component reading `route` gets the teaching refusal.
+    if route_params.is_some() {
+        names.insert("route".to_string());
+    }
     for d in &program.data {
         names.insert(d.name.clone());
     }
@@ -399,7 +415,7 @@ mod collect_tests {
             "<client name=\"feed\" />\n<data name=\"t\" source=\"feed.clock()\" live />\n<div>{t()}</div>",
         )
         .expect("parses");
-        assert!(check(&with, None).is_ok(), "declared <client> must legalize feed.*");
+        assert!(check(&with, None, None).is_ok(), "declared <client> must legalize feed.*");
 
         // Without the declaration the same root is an unknown identifier.
         let without = crate::parse::parse(
@@ -407,7 +423,7 @@ mod collect_tests {
         )
         .expect("parses");
         assert!(
-            check(&without, None).is_err(),
+            check(&without, None, None).is_err(),
             "an undeclared client root must still be rejected (typo-safe)"
         );
 
@@ -416,7 +432,36 @@ mod collect_tests {
             "<data name=\"t\" source=\"ship.git.overview()\" live />\n<div>{t()}</div>",
         )
         .expect("parses");
-        assert!(check(&grandfathered, None).is_ok(), "ship stays grandfathered for now");
+        assert!(check(&grandfathered, None, None).is_ok(), "ship stays grandfathered for now");
+    }
+
+    #[test]
+    fn route_is_host_granted_never_ambient() {
+        let program = crate::parse::parse("<h1>Hello, {route.params.id()}</h1>").expect("parses");
+        // Granted (deck passed the params): legal.
+        let params = vec!["id".to_string()];
+        assert!(
+            check(&program, None, Some(&params)).is_ok(),
+            "a host-granted route file reads `route` freely"
+        );
+        // No grant: refused, and the error names the real cause.
+        let err = check(&program, None, None).unwrap_err();
+        assert!(
+            err.message.contains("not registered as a route"),
+            "the refusal must teach the file-location convention: {}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn navigate_is_no_longer_ambient() {
+        let program =
+            crate::parse::parse("<button on:click={() => navigate('/x')}>go</button>")
+                .expect("parses");
+        assert!(
+            check(&program, None, Some(&["id".to_string()])).is_err(),
+            "navigate is not granted by route-ness — it is simply not a name"
+        );
     }
 
     #[test]
@@ -426,8 +471,8 @@ mod collect_tests {
         // (the build gate needs one reason).
         let src = "<p>{alpha}</p><p>{beta}</p><p>{gamma}</p>";
         let program = crate::parse::parse(src).expect("parses");
-        let all = collect(&program, None);
+        let all = collect(&program, None, None);
         assert_eq!(all.len(), 3, "want 3 unbound, got {}: {all:?}", all.len());
-        assert!(check(&program, None).is_err(), "check() still flags the first");
+        assert!(check(&program, None, None).is_err(), "check() still flags the first");
     }
 }

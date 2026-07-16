@@ -153,6 +153,7 @@ pub fn check_synthetic_controller(
                             name: stem.to_string(),
 
                         }),
+                        route_params: None,
                         emit_dts: true,
                         emit_component_imports: false,
                         lint_overrides: Vec::new(),

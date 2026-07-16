@@ -49,6 +49,7 @@ pub fn run(
     source_path: Option<&Path>,
     controller: Option<&controller_parse::ParsedController>,
     overrides: &[crate::check::lint_overrides::LintOverride],
+    route_params: Option<&[String]>,
 ) -> Result<(), CompileError> {
     visit_program(program, &mut |e| {
         if e.allow_arrow {
@@ -80,7 +81,7 @@ pub fn run(
     // every free name would false-positive as undeclared.
     let has_scope_context = source_path.is_some() || controller.is_some();
     if has_scope_context {
-        scope_bound::check(program, controller)?;
+        scope_bound::check(program, controller, route_params)?;
     }
     // Type-strengthening passes — see crates/sui/compiler/EXPRESSIONS.md.
     // These run after scope_bound so the user gets the "name not declared"
@@ -117,8 +118,9 @@ pub fn gate(
     source_path: Option<&Path>,
     controller: Option<&controller_parse::ParsedController>,
     overrides: &[crate::check::lint_overrides::LintOverride],
+    route_params: Option<&[String]>,
 ) -> Result<(), CompileError> {
-    let fatal = collect(program, source, source_path, controller, overrides)
+    let fatal = collect(program, source, source_path, controller, overrides, route_params)
         .into_iter()
         .find(|d| d.severity == DiagSeverity::Error);
     let Some(d) = fatal else {
@@ -173,6 +175,7 @@ pub fn collect(
     source_path: Option<&Path>,
     controller: Option<&controller_parse::ParsedController>,
     overrides: &[crate::check::lint_overrides::LintOverride],
+    route_params: Option<&[String]>,
 ) -> Vec<Diagnostic> {
     let mut diags: Vec<Diagnostic> = Vec::new();
 
@@ -206,7 +209,7 @@ pub fn collect(
     if has_scope_context {
         // Collect ALL out-of-scope references (one per expression), not just the
         // first — the common "I have three typos" case.
-        push_all(scope_bound::collect(program, controller), source, &mut diags);
+        push_all(scope_bound::collect(program, controller, route_params), source, &mut diags);
     }
     push(key_identity::check(program), source, &mut diags);
     push(for_iterable::check(program), source, &mut diags);
@@ -479,7 +482,7 @@ mod gate_tests {
     fn gate_rejects_lint_error_rule_run_skips() {
         let src = r#"<badge size="huge">x</badge>"#;
         let program = parse::parse(src).unwrap();
-        let err = super::gate(&program, src, None, None, &[]).unwrap_err();
+        let err = super::gate(&program, src, None, None, &[], None).unwrap_err();
         assert_eq!(err.category.as_deref(), Some("sui-prop-value"), "{err:?}");
     }
 
@@ -487,7 +490,7 @@ mod gate_tests {
     fn gate_passes_valid_source() {
         let src = r#"<badge size="md">x</badge>"#;
         let program = parse::parse(src).unwrap();
-        super::gate(&program, src, None, None, &[]).unwrap();
+        super::gate(&program, src, None, None, &[], None).unwrap();
     }
 
     /// The gate's span must map back to the offending line/col so the
@@ -497,7 +500,7 @@ mod gate_tests {
     fn gate_error_span_round_trips_to_finding_location() {
         let src = "<div>\n  <badge size=\"huge\">x</badge>\n</div>";
         let program = parse::parse(src).unwrap();
-        let err = super::gate(&program, src, None, None, &[]).unwrap_err();
+        let err = super::gate(&program, src, None, None, &[], None).unwrap_err();
         let span = err.span.expect("gate error carries a span");
         let (line, _col) = line_col(src, span.start);
         assert_eq!(line, 2, "the bad size is on line 2");

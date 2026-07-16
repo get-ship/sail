@@ -43,6 +43,7 @@ use sui_compiler::{
 
 fn opts(component_name: &str) -> CompileOpts {
     CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(format!("components/{component_name}/{component_name}.sui").into()),

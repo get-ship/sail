@@ -16,6 +16,7 @@ use sui_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
 
 fn view_opts(setup: Option<&str>) -> CompileOpts {
     CompileOpts {
+        route_params: None,
         setup_url: setup.map(|s| s.to_string()),
         mode: CompileMode::Component,
         source_path: None,
@@ -28,6 +29,7 @@ fn view_opts(setup: Option<&str>) -> CompileOpts {
 
 fn component_opts(setup: Option<&str>) -> CompileOpts {
     CompileOpts {
+        route_params: None,
         setup_url: setup.map(|s| s.to_string()),
         mode: CompileMode::Component,
         source_path: None,

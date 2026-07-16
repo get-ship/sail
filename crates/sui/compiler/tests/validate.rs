@@ -15,6 +15,7 @@ fn fixtures_dir() -> PathBuf {
 
 fn opts(source_path: PathBuf) -> CompileOpts {
     CompileOpts {
+        route_params: None,
         setup_url: Some("./view.controller.ts".into()),
         mode: CompileMode::Component,
         source_path: Some(source_path),

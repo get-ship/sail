@@ -384,6 +384,7 @@ fn native_compile(repo: &Path, f: &Fixture) -> Result<String, String> {
         name: name.to_string(),
     });
     let opts = CompileOpts {
+        route_params: None,
         setup_url: f.setup_url.map(String::from),
         mode: f.mode,
         // Matches the wasm export's `CompileOpts` exactly (wasm.rs).

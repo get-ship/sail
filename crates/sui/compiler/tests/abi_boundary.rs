@@ -22,6 +22,7 @@ const SRC: &str = r#"<button on:click={() => go()} use:tooltip>{label()}</button
 
 fn opts() -> CompileOpts {
     CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: None,

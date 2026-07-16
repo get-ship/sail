@@ -113,6 +113,7 @@ fn the_model_a_root_class_bakes_into_the_markup() {
     let out = compile(
         r#"<div data-card="card">x</div>"#,
         CompileOpts {
+        route_params: None,
             mode: CompileMode::Component,
             component_meta: Some(ComponentMeta { name: "tpl-probe".into() }),
             ..Default::default()

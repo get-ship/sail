@@ -106,9 +106,18 @@ pub(super) fn check_expr(expr: &Expr, v: &mut Visitor, extra_locals: &[&str]) {
             continue;
         }
         if !v.scope.contains(word) && !local_stack.iter().any(|s| s == word) {
+            // `route` is host-granted, never ambient — the likeliest reach for
+            // it outside a route file deserves the real explanation, not a
+            // generic unknown-name error.
+            let hint = if word == "route" {
+                " `route` is provided by the host to route files only — this file is \
+                 not registered as a route (deck routes by file location)."
+            } else {
+                ""
+            };
             v.errors.push(
                 CompileError::new(format!(
-                    "Identifier '{}' is not declared in scope. Available: {}.",
+                    "Identifier '{}' is not declared in scope. Available: {}.{hint}",
                     word,
                     v.scope.list_for_diagnostic()
                 ))

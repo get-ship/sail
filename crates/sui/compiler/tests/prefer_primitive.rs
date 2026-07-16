@@ -29,6 +29,7 @@ const RULE: &str = "sui-prefer-primitive";
 
 fn opts(name: &str, path: &str) -> CompileOpts {
     CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(PathBuf::from(path)),

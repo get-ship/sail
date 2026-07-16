@@ -7,6 +7,7 @@ use sui_compiler::{compile, CompileMode, CompileOpts};
 
 fn view_opts(source_path: Option<std::path::PathBuf>) -> CompileOpts {
     CompileOpts {
+        route_params: None,
         setup_url: Some("./view.controller.ts".into()),
         mode: CompileMode::Component,
         source_path,

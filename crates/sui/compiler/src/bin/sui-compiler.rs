@@ -1232,6 +1232,7 @@ fn compile_one(
     // surface). A present-but-unrecognized config fails CLOSED to `strict`, never
     // `full`. (The floor holds under every tier — it is not a key.)
     let opts = CompileOpts {
+        route_params: None,
         setup_url,
         mode,
         source_path: Some(path.to_path_buf()),
@@ -1319,7 +1320,7 @@ fn compile_one(
 /// `source` is the SFC as authored: `check_all` resolves the `<controller>`
 /// block's scope from it, and reports spans in its coordinates.
 fn fatal_diagnostics_gate(source: &str, path: &Path) -> Result<()> {
-    let fatal: Vec<_> = check_all(source, Some(path), &[])
+    let fatal: Vec<_> = check_all(source, Some(path), &[], None)
         .into_iter()
         .filter(|d| d.severity == DiagSeverity::Error)
         .collect();

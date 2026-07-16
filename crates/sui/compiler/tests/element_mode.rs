@@ -141,6 +141,7 @@ fn stdlib_elements_can_self_nest() {
     // the /components showcase (a card of cards is an essential pattern).
     use sui_compiler::{compile, CompileMode, CompileOpts};
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: None,

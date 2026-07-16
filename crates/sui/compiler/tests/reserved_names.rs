@@ -5,6 +5,7 @@ use sui_compiler::{compile, CompileMode, CompileOpts};
 
 fn opts() -> CompileOpts {
     CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Auto,
         source_path: None,

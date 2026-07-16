@@ -12,6 +12,7 @@ use sui_compiler::{compile, CompileMode, CompileOpts};
 
 fn view_opts(source_path: Option<PathBuf>) -> CompileOpts {
     CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path,

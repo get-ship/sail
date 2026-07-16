@@ -34,6 +34,7 @@ fn compile_fixture(name: &str, mode: CompileMode, setup: Option<&str>) -> String
     let out = compile(
         &source,
         CompileOpts {
+        route_params: None,
             setup_url: setup.map(String::from),
             mode,
             source_path: Some(path),

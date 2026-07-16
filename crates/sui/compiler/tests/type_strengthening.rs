@@ -16,6 +16,7 @@ fn fixtures_dir() -> PathBuf {
 
 fn paired_opts(path: PathBuf) -> CompileOpts {
     CompileOpts {
+        route_params: None,
         setup_url: Some("./view.controller.ts".into()),
         mode: CompileMode::Component,
         source_path: Some(path),
@@ -28,6 +29,7 @@ fn paired_opts(path: PathBuf) -> CompileOpts {
 
 fn standalone_opts(path: PathBuf) -> CompileOpts {
     CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),

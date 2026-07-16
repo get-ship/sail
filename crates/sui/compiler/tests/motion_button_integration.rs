@@ -6,6 +6,7 @@ fn sui_button_with_motion_compiles() {
     // component with a motion directive (the old file-read target is gone).
     let source = "<button motion:hover={{ scale: 'spring:snappy' }}>Go</button>";
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: None,

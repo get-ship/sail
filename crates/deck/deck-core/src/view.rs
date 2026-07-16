@@ -59,6 +59,7 @@ fn compile_view_js(name: &str, resolved: &ResolvedView, mode: DaemonMode) -> Dec
     // HTTP request and never persists outputs. dts lives next to the
     // source and is the build-step's job (the deck bundler + FFI).
     let opts = CompileOpts {
+        route_params: None,
         source_path: resolved.source_path.clone(),
         emit_dts: false,
         setup_url: ts_path.as_ref().map(|_| format!("./{ts_filename}")),

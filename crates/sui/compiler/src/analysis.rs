@@ -74,7 +74,7 @@ pub fn analyze(
     source_path: Option<&Path>,
     overrides: &[crate::LintOverride],
 ) -> Analysis {
-    let diagnostics = crate::check_all(source, source_path, overrides);
+    let diagnostics = crate::check_all(source, source_path, overrides, None);
     let Ok(program) = crate::parse::parse(source) else {
         // Without an AST we can still return the parse diagnostic.
         return Analysis {

@@ -7,6 +7,7 @@ use sui_compiler::{compile, CompileMode, CompileOpts};
 
 fn compile_dts(source: &str) -> String {
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: None,
@@ -27,6 +28,7 @@ fn compile_dts(source: &str) -> String {
 fn compile_dts_with_controller(_stem: &str, sui_src: &str, controller_ts: &str) -> String {
     let src = format!("<controller>\n{controller_ts}\n</controller>\n{sui_src}");
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: None,
@@ -45,6 +47,7 @@ fn compile_dts_with_controller(_stem: &str, sui_src: &str, controller_ts: &str) 
 fn compile_component_dts(source: &str) -> String {
     use sui_compiler::ComponentMeta;
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: None,
@@ -115,6 +118,7 @@ fn use_hook_with_as_emits_return_type() {
 #[test]
 fn emit_dts_false_returns_none() {
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: None,

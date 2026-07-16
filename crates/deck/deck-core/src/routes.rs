@@ -81,3 +81,66 @@ mod tests {
         assert_eq!(subscribe_url("studio/agents"), "/_deck/views/studio/agents/sse");
     }
 }
+
+/// Deck's file-location routing convention, as a QUESTION the compile
+/// pipeline can ask: is this `.sui` file a route, and with which params?
+///
+/// A file is a route iff it is a `page.sui` under the nearest `routes/`
+/// (app convention) or `views/` (the conformance fixture app) ancestor.
+/// Params are the `[seg]` directory names between that ancestor and the
+/// file, in path order — `routes/tutorial/[slug]/page.sui` → `["slug"]`.
+///
+/// This is deck's convention in deck's crate: the sui compiler receives the
+/// result as a structured GRANT (`CompileOpts::route_params`) and never
+/// sniffs the filesystem for a routing scheme it does not own.
+pub fn route_params_for(view_path: &std::path::Path) -> Option<Vec<String>> {
+    let file = view_path.file_name()?.to_str()?;
+    if file != "page.sui" {
+        return None;
+    }
+    let comps: Vec<&str> = view_path
+        .parent()?
+        .components()
+        .filter_map(|c| c.as_os_str().to_str())
+        .collect();
+    let anchor = comps.iter().rposition(|c| *c == "routes" || *c == "views")?;
+    let params = comps[anchor + 1..]
+        .iter()
+        .filter_map(|seg| seg.strip_prefix('[').and_then(|s| s.strip_suffix(']')))
+        .map(str::to_string)
+        .collect();
+    Some(params)
+}
+
+#[cfg(test)]
+mod route_params_tests {
+    use super::route_params_for;
+    use std::path::Path;
+
+    #[test]
+    fn page_under_routes_is_a_route_with_bracket_params() {
+        assert_eq!(
+            route_params_for(Path::new("/x/apps/site/routes/tutorial/[slug]/page.sui")),
+            Some(vec!["slug".to_string()])
+        );
+        assert_eq!(
+            route_params_for(Path::new("/x/app/views/greet/[id]/page.sui")),
+            Some(vec!["id".to_string()])
+        );
+        // Static routes are still routes — an empty grant legalizes `route`
+        // (e.g. `route.path`) with no params.
+        assert_eq!(
+            route_params_for(Path::new("/x/routes/about/page.sui")),
+            Some(vec![])
+        );
+    }
+
+    #[test]
+    fn non_route_files_get_no_grant() {
+        assert_eq!(route_params_for(Path::new("/x/packs/sui-badge/badge.sui")), None);
+        assert_eq!(
+            route_params_for(Path::new("/x/routes/tutorial/[slug]/lesson.ts")),
+            None
+        );
+    }
+}

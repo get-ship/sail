@@ -130,6 +130,7 @@ fn bind_this_button_direct_emits_hydrate_ref() {
     let path = fixtures_dir().join("bind-this-button.sui");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),
@@ -192,6 +193,7 @@ fn for_static_body_omits_v_sentinel() {
     let path = fixtures_dir().join("for-static.sui");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),
@@ -250,6 +252,7 @@ fn for_body_referencing_index_refreshes_on_row_reuse() {
 </ul>
 "#;
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: None,
@@ -316,6 +319,7 @@ fn for_static_text_inlines_text_content() {
     let path = fixtures_dir().join("for-static-text.sui");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),
@@ -345,6 +349,7 @@ fn for_static_attr_inlines_set_attribute() {
     let path = fixtures_dir().join("for-static-attr.sui");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),
@@ -374,6 +379,7 @@ fn for_dynamic_mixed_inlines_only_static() {
     let path = fixtures_dir().join("for-dynamic-mixed.sui");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),
@@ -400,6 +406,7 @@ fn for_render_closure_emits_update_field() {
     let path = fixtures_dir().join("for-update.sui");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),
@@ -446,6 +453,7 @@ fn route_view_reads_route_from_ctx() {
     let path = fixtures_dir().join("route-view.sui");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        route_params: Some(vec!["name".to_string()]),
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),
@@ -472,6 +480,7 @@ fn routeless_view_omits_route_import() {
     let path = fixtures_dir().join("counter.sui");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),
@@ -499,6 +508,7 @@ fn comment_nodes_not_emitted() {
     let path = fixtures_dir().join("comment-and-whitespace.sui");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),
@@ -522,6 +532,7 @@ fn whitespace_text_nodes_dropped_between_elements() {
     let path = fixtures_dir().join("comment-and-whitespace.sui");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),
@@ -553,6 +564,7 @@ fn reflect_empty_slot_emits_bind_slot_empty_call() {
     let path = fixtures_dir().join("reflect-empty-slot.sui");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),
@@ -591,6 +603,7 @@ fn reflect_empty_slot_in_conditional_threads_container() {
     let path = fixtures_dir().join("reflect-empty-slot-conditional.sui");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),
@@ -629,6 +642,7 @@ fn ship_button_emits_cem() {
     let path = fixtures_dir().join("ship-button.sui");
     let source = fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),
@@ -650,6 +664,7 @@ fn schema_emitted_for_each_fixture() {
         let path = fixtures_dir().join(format!("{}.sui", fx.name));
         let source = fs::read_to_string(&path).unwrap();
         let opts = CompileOpts {
+        route_params: None,
             setup_url: None,
             mode: fx.mode,
             source_path: Some(path),
@@ -674,6 +689,7 @@ fn meta_sidecar_emitted_for_each_fixture() {
         let path = fixtures_dir().join(format!("{}.sui", fx.name));
         let source = fs::read_to_string(&path).unwrap();
         let opts = CompileOpts {
+        route_params: None,
             setup_url: None,
             mode: fx.mode,
             source_path: Some(path),
