@@ -3,6 +3,7 @@ import { signal } from '../src/signal'
 import { effect } from '../src/signal'
 import { bindFor } from '../src/for'
 import { bindIf } from '../src/if'
+import { defineComponent } from '../src/component'
 import {
   attachBoundary,
   detachBoundary,
@@ -11,6 +12,7 @@ import {
   type BoundaryHandle,
   type BoundarySource,
 } from '../src/error-boundary'
+import type { SuiErrorDetail } from '../src/error-overlay'
 
 interface CapturedError {
   err: unknown
@@ -240,6 +242,129 @@ describe('effect — boundary integration via host capture', () => {
     const logged = errSpy.mock.calls.flat().some((c) => String(c).includes('lonely throw'))
     expect(logged).toBe(true)
     dispose()
+  })
+})
+
+describe('sui:error — fallback event channel', () => {
+  let errSpy: ReturnType<typeof vi.spyOn>
+
+  beforeEach(() => {
+    errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    document.body.innerHTML = ''
+    vi.restoreAllMocks()
+  })
+
+  it('an uncaught effect throw dispatches sui:error with phase, error, host and tag', async () => {
+    const { withHost } = await import('../src/signal')
+    const tag = `sui-error-test-${Math.random().toString(36).slice(2)}`
+    defineComponent(tag, { observedAttrs: [], props: {} }, () => () => {})
+    const el = document.createElement(tag)
+    document.body.appendChild(el)
+
+    const events: CustomEvent<SuiErrorDetail>[] = []
+    document.addEventListener('sui:error', (e) => events.push(e as CustomEvent<SuiErrorDetail>))
+
+    const trigger = signal(0)
+    const dispose = withHost(el, () =>
+      effect(() => {
+        if (trigger() > 0) throw new Error('overlay boom')
+      }),
+    )
+    trigger.set(1)
+
+    expect(events).toHaveLength(1)
+    const detail = events[0]!.detail
+    expect(detail.phase).toBe('effect')
+    expect((detail.error as Error).message).toBe('overlay boom')
+    expect(detail.host).toBe(el)
+    expect(detail.tag).toBe(tag)
+    expect(events[0]!.bubbles).toBe(true)
+    expect(events[0]!.composed).toBe(true)
+    dispose()
+  })
+
+  it('dispatches on document when the effect has no host', () => {
+    let heardOnDocument = false
+    document.addEventListener('sui:error', () => {
+      heardOnDocument = true
+    })
+    const trigger = signal(0)
+    const dispose = effect(() => {
+      if (trigger() > 0) throw new Error('hostless boom')
+    })
+    trigger.set(1)
+    expect(heardOnDocument).toBe(true)
+    dispose()
+  })
+
+  it('a boundary host wins — no sui:error is dispatched when a boundary handles the throw', async () => {
+    const { withHost } = await import('../src/signal')
+    const boundary = document.createElement('div')
+    document.body.appendChild(boundary)
+    const host = document.createElement('div')
+    boundary.appendChild(host)
+    const { caught } = makeBoundary(boundary)
+
+    let events = 0
+    document.addEventListener('sui:error', () => events++)
+
+    const trigger = signal(0)
+    const dispose = withHost(host, () =>
+      effect(() => {
+        if (trigger() > 0) throw new Error('boundary wins')
+      }),
+    )
+    trigger.set(1)
+
+    expect(caught).toHaveLength(1)
+    expect(events).toBe(0)
+    expect(errSpy).not.toHaveBeenCalled()
+    dispose()
+  })
+
+  it('an uncaught setup throw (no boundary) dispatches sui:error with phase "setup"', () => {
+    const tag = `sui-error-setup-test-${Math.random().toString(36).slice(2)}`
+    defineComponent(tag, { observedAttrs: [], props: {} }, () => {
+      throw new Error('setup boom')
+    })
+
+    const events: CustomEvent<SuiErrorDetail>[] = []
+    document.addEventListener('sui:error', (e) => events.push(e as CustomEvent<SuiErrorDetail>))
+
+    const el = document.createElement(tag)
+    document.body.appendChild(el)
+
+    expect(events).toHaveLength(1)
+    const detail = events[0]!.detail
+    expect(detail.phase).toBe('setup')
+    expect((detail.error as Error).message).toBe('setup boom')
+    expect(detail.host).toBe(el)
+    expect(detail.tag).toBe(tag)
+    expect(errSpy).toHaveBeenCalled()
+  })
+
+  it('a boundary host wins on setup too — no sui:error when the boundary catches it', () => {
+    const boundary = document.createElement('div')
+    document.body.appendChild(boundary)
+    const { caught } = makeBoundary(boundary)
+
+    const tag = `sui-error-setup-boundary-test-${Math.random().toString(36).slice(2)}`
+    defineComponent(tag, { observedAttrs: [], props: {} }, () => {
+      throw new Error('setup boundary wins')
+    })
+
+    let events = 0
+    document.addEventListener('sui:error', () => events++)
+
+    const el = document.createElement(tag)
+    boundary.appendChild(el)
+
+    expect(caught).toHaveLength(1)
+    expect(caught[0]!.source).toBe('mount')
+    expect(events).toBe(0)
   })
 })
 

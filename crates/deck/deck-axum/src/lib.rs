@@ -17,6 +17,7 @@ pub use handlers::{
     serve_deck_route,
     serve_meta,
     serve_sui_dom, serve_sui_icon,
+    serve_sui_error_overlay,
     serve_sui_live_reload,
     serve_sui_runtime,
     serve_sui_sdk_client,
@@ -143,6 +144,7 @@ pub fn router() -> Router {
         .route("/_deck/route.js", get(serve_deck_route))
         .route("/_deck/icons/{file}", get(serve_sui_icon))
         .route("/_deck/live-reload.js", get(serve_sui_live_reload))
+        .route("/_deck/error-overlay.js", get(serve_sui_error_overlay))
         // (formerly `/\_deck/{file}` → `serve_sui_chunk`) — purged:
         // shared chunks from the multi-entry view build were served
         // from `<root>/.deck/<chunk>.js`; the framework no longer reads

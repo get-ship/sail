@@ -48,6 +48,7 @@ const SUI_SDK_CLIENT_JS: &str = include_str!("../assets/sui-sdk-client.js");
 const DECK_ROUTE_JS: &str = include_str!("../assets/deck-route.js");
 const SUI_LUCIDE_ICONS_JSON: &str = include_str!("../assets/lucide-icons.json");
 const LIVE_RELOAD_JS: &str = include_str!("../assets/live-reload.js");
+const ERROR_OVERLAY_JS: &str = include_str!("../assets/error-overlay.js");
 // Aliases the runtime used to resolve client-side. Promoted to the daemon so a
 // `<sui-icon name="git">` request finds `git-branch` server-side with no client
 // indirection. Keep in lockstep with `packages/components/sui/primitives/src/sui-icon/registry.ts`.
@@ -295,6 +296,23 @@ pub fn serve_scaffold(
     } else {
         html
     };
+    // Dev-only: attach the runtime error overlay (task #80). A `sui:error`
+    // event (dispatched by packages/sui/runtime when an effect or setup
+    // throw reaches no error boundary) previously had no visible surface —
+    // console.error only, invisible unless devtools was already open. This
+    // tag is never written in Production, so the overlay ships zero bytes
+    // there; the client script also self-gates on the `deck-mode` meta
+    // above, matching the live-reload tag's defense-in-depth pattern.
+    let html = if matches!(mode, DaemonMode::Development) {
+        let tag = "<script type=\"module\">import { attachErrorOverlay } from '/_deck/error-overlay.js'; attachErrorOverlay()</script>";
+        if html.contains("</body>") {
+            html.replace("</body>", &format!("  {tag}\n</body>"))
+        } else {
+            format!("{html}{tag}")
+        }
+    } else {
+        html
+    };
     DeckResponse::html_view(html, mode)
 }
 
@@ -522,6 +540,15 @@ pub fn serve_sui_icon(mode: DaemonMode, name: &str) -> DeckResponse {
 /// `deck-mode` meta tag); only subscribes when the daemon is in dev.
 pub fn serve_sui_live_reload(mode: DaemonMode) -> DeckResponse {
     let js = read_asset("live-reload.js").unwrap_or_else(|| LIVE_RELOAD_JS.to_string());
+    DeckResponse::js_asset(js, mode)
+}
+
+/// `GET /_deck/error-overlay.js` — the dev-mode runtime error overlay
+/// client (task #80). Served in every mode like `live-reload.js` (it
+/// self-gates on the `deck-mode` meta tag); the injecting `<script>` tag
+/// in `serve_scaffold` is what actually keeps it out of production pages.
+pub fn serve_sui_error_overlay(mode: DaemonMode) -> DeckResponse {
+    let js = read_asset("error-overlay.js").unwrap_or_else(|| ERROR_OVERLAY_JS.to_string());
     DeckResponse::js_asset(js, mode)
 }
 
@@ -780,6 +807,44 @@ mod tests {
         // boundary.rs::deck_crates_name_no_ship_app (the forbidden set includes
         // `ship-mode`/`ship-render`/`ship-keepalive`) — a stronger guard than a
         // runtime output check, since it catches the emitter at authoring time.
+    }
+
+    /// serve_scaffold injects the dev-mode error-overlay script tag in
+    /// Development and NEVER in Production — task #80's "zero overlay
+    /// bytes in prod" requirement pinned at the injection site itself.
+    #[test]
+    fn serve_scaffold_overlay_in_dev_no_overlay_in_prod() {
+        let dir = tempfile::tempdir().unwrap();
+        let resolution = crate::resolver::Resolution::new().with_root(dir.path());
+        let scaffold_dir = dir.path().join("overlay-scaffold");
+        std::fs::create_dir_all(&scaffold_dir).unwrap();
+        std::fs::write(
+            scaffold_dir.join("index.html"),
+            r#"<!doctype html><html><head></head><body></body></html>"#,
+        )
+        .unwrap();
+        let scaffold = AppServeConfig {
+            name: "overlay-app".to_string(),
+            route: "/".to_string(),
+            source: "overlay-scaffold".to_string(),
+            inject_globals: std::collections::BTreeMap::new(),
+            render: RenderMode::Csr,
+            entry: None,
+        };
+
+        let dev = serve_scaffold(DaemonMode::Development, &scaffold, &[], None, Some(&resolution), None);
+        let dev_body = std::str::from_utf8(&dev.body).unwrap();
+        assert!(
+            dev_body.contains("/_deck/error-overlay.js"),
+            "dev-mode HTML must include the error-overlay script; got: {dev_body}"
+        );
+
+        let prod = serve_scaffold(DaemonMode::Production, &scaffold, &[], None, Some(&resolution), None);
+        let prod_body = std::str::from_utf8(&prod.body).unwrap();
+        assert!(
+            !prod_body.contains("error-overlay"),
+            "prod-mode HTML must carry ZERO overlay bytes; got: {prod_body}"
+        );
     }
 
     /// serve_scaffold falls back to the authored SOURCE `<source>/index.html`

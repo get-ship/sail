@@ -11,6 +11,7 @@ import { createScope, withScope, type EffectScope } from './effect-scope'
 import { withHost, untrack } from './signal'
 import { attachHostApi } from './host-api'
 import { findNearestBoundary } from './error-boundary'
+import { dispatchSuiError } from './error-overlay'
 
 // The declarative `component()` factory lives in component-factory.ts to
 // keep this file under the 300-line cap. Re-exported here so the public
@@ -212,6 +213,7 @@ export function defineComponent(
             boundary.catch(err, 'mount')
           } else {
             console.error(`[ship-set:${tag}] setup threw:`, err)
+            dispatchSuiError(this, err, 'setup')
           }
         }
         // Flush any prop values set via JS property BEFORE the factory
@@ -344,6 +346,7 @@ export function defineComponent(
           boundary.catch(err, 'mount')
         } else {
           console.error(`[ship-set:${tag}] setup threw:`, err)
+          dispatchSuiError(this, err, 'setup')
         }
       }
     }

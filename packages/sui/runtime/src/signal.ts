@@ -29,6 +29,7 @@
 // the Rust side to follow.
 
 import { findNearestBoundary } from './error-boundary'
+import { dispatchSuiError } from './error-overlay'
 import { currentScope, onCleanup, withScope, type EffectScope } from './effect-scope'
 
 /** Legacy alias retained for the public `Signal.__subs` field shape. */
@@ -272,6 +273,7 @@ function runEffect(node: Computation): void {
       boundary.catch(e, 'effect')
     } else {
       console.error('[sui] effect threw:', e)
+      dispatchSuiError(node.host ?? null, e, 'effect')
     }
   } finally {
     CURRENT_OBSERVER = prev
