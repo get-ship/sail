@@ -1,5 +1,10 @@
-<client name="api" />
-<data name="t" source="api.demo.clock()" live />
+<controller>
+import { controller, live } from '@ship/sui-runtime'
+import { call } from 'ship'
+export default controller({
+  setup: (_ctx) => ({ t: live(() => call('api.demo.clock', {})) }),
+})
+</controller>
 
 <column gap="3" sx="p-6 max-w-breakpoint-tablet mx-auto">
   <h1 sx="text-2xl font-bold text-foreground">Live Feed</h1>

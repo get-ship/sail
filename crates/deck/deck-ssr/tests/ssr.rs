@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use deck_ssr::build::{repo_root, synthesize_and_bundle, ClientAlias};
+use deck_ssr::build::{repo_root, synthesize_and_bundle};
 use deck_ssr::host::SsrDispatch;
 use deck_ssr::run::render;
 use deck_core::DataPort;
@@ -16,7 +16,6 @@ const GLYPH: &str = "crates/deck/deck-conformance/app/views/glyph/page.sui";
 const BOARD: &str = "crates/deck/deck-conformance/app/views/board/page.sui";
 const FEED: &str = "crates/deck/deck-conformance/app/views/feed/page.sui";
 const STYLED: &str = "crates/deck/deck-conformance/app/views/styled.view/page.sui";
-const DEMO_SERVER: &str = "crates/deck/deck-conformance/app/clients/demo.server.ts";
 const MANIFEST: &str = "crates/deck/deck-conformance/app/app.manifest.jsonc";
 
 /// A test data port: answers the demo ops the host-dispatch wire forwards.
@@ -190,18 +189,16 @@ fn glyph_svg_first_paint_serializes_namespaced() {
 
 #[test]
 fn feed_data_client_value_resolves_via_host_dispatch() {
-    // The <data live source="api.demo.clock()"> + <client> surface. The client
-    // server entry resolves the source over the host-dispatch wire; after the
-    // async flush, first paint carries the resolved state (not `loading`).
+    // A controller-side `live(() => call('api.demo.clock', {}))` source (the
+    // real living-async surface — no `<data>`/`<client>` authoring elements
+    // involved). `call` crosses the host-dispatch wire directly; the fake
+    // `DataPort` (`DemoData`, above) answers it; after the async flush, first
+    // paint carries the resolved state (not `loading`).
     let repo = repo_root().expect("repo root");
     let build_dir = repo.join("target/deck-ssr-test/feed");
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
-    let client = ClientAlias {
-        specifier: "@app/clients/demo".to_string(),
-        server_entry: repo.join(DEMO_SERVER),
-    };
     let bundle = rt
-        .block_on(synthesize_and_bundle(&repo, FEED, MANIFEST, CompileMode::Component, &[client], &build_dir))
+        .block_on(synthesize_and_bundle(&repo, FEED, MANIFEST, CompileMode::Component, &[], &build_dir))
         .expect("synthesize + bundle feed");
 
     let dispatch = Arc::new(
@@ -212,7 +209,7 @@ fn feed_data_client_value_resolves_via_host_dispatch() {
     // The live data op crossed the host-dispatch wire.
     assert!(
         out.call_path.iter().any(|op| op == "api.demo.clock"),
-        "the <data> source op must cross the wire; call path: {:?}",
+        "the live() source op must cross the wire; call path: {:?}",
         out.call_path
     );
     // After the flush, the live signal is resolved (ok), not loading.
