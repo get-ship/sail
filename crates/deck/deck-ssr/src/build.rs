@@ -79,7 +79,7 @@ pub async fn synthesize_and_bundle_with(
     // the template — the synthetic emit reads it as a paired controller.
     // The template-only parser expects the block to be stripped first; the
     // CLI does this in `parse::preprocess`, the SSR bundler must too.
-    let (stripped, _inline) = extract_controller_block(&source);
+    let (stripped, inline) = extract_controller_block(&source);
     let program = parse(&stripped).map_err(|e| anyhow!("parse view: {}", e.render(&stripped)))?;
     let mut manifest = AppManifest::parse(&manifest_src)
         .map_err(|e| anyhow!("parse manifest: {}", e.render(&manifest_src)))?;
@@ -88,13 +88,25 @@ pub async fn synthesize_and_bundle_with(
     for (name, client) in deck_core::host_context::host_context_clients() {
         manifest.clients.entry(name).or_insert(client);
     }
-    let authored = authored.map(|p| AuthoredController { specifier: path_str(p) });
+    std::fs::create_dir_all(build_dir)
+        .with_context(|| format!("mkdir {}", build_dir.display()))?;
+    // The controller IS the .sui's own `<controller>` block; an explicit
+    // `authored` path (test-only) overrides it. For an inline block, write it to a
+    // module beside the synthetic controller and import it by the same absolute
+    // specifier an authored sibling would use.
+    let authored = if let Some(p) = authored {
+        Some(AuthoredController { specifier: path_str(p) })
+    } else if let Some(inline_src) = inline.as_deref() {
+        let inline_path = build_dir.join("page.inline.controller.ts");
+        std::fs::write(&inline_path, inline_src)
+            .with_context(|| format!("write inline controller {}", inline_path.display()))?;
+        Some(AuthoredController { specifier: path_str(&inline_path) })
+    } else {
+        None
+    };
     let out =
         emit_synthetic(&program, &manifest, authored.as_ref(), "./page.synthetic.controller.ts", mode, None)
             .map_err(|e| anyhow!("synthesize: {}", e.render(&source)))?;
-
-    std::fs::create_dir_all(build_dir)
-        .with_context(|| format!("mkdir {}", build_dir.display()))?;
     std::fs::write(build_dir.join("page.synthetic.controller.ts"), &out.controller_ts)?;
     std::fs::write(build_dir.join("page.render.ts"), &out.render_ts)?;
     // The SSR entry (server-DOM + host-dispatch + serialize), from the crate.

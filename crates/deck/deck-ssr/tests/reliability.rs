@@ -98,8 +98,10 @@ impl DataPort for DemoData {
 fn conf(view: &str) -> String {
     format!("{CONF}/views/{view}/page.sui")
 }
-fn conf_ctrl(view: &str) -> Option<String> {
-    Some(format!("{CONF}/views/{view}/controller.ts"))
+fn conf_ctrl(_view: &str) -> Option<String> {
+    // Conformance views carry their controller INLINE (`<controller>` block); the
+    // SSR bundler reads it directly — no sibling controller.ts path.
+    None
 }
 
 fn targets() -> Vec<Target> {
@@ -322,7 +324,7 @@ fn slice1_warm_ssr_latency() {
     let repo = repo_root().expect("repo root");
     let samples: Vec<(&str, String, &str, Option<String>, &str)> = vec![
         ("hub /", "apps/hub/routes/page.sui".to_string(), HUB_MANIFEST, Some("apps/hub/routes/controller.ts".to_string()), "/"),
-        ("board", conf("board"), CONF_MANIFEST, Some(format!("{CONF}/views/board/controller.ts")), "/"),
+        ("board", conf("board"), CONF_MANIFEST, None, "/"),
         ("glyph", conf("glyph"), CONF_MANIFEST, None, "/"),
     ];
     const N: usize = 9;

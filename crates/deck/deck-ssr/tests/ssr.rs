@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use deck_ssr::build::{repo_root, synthesize_and_bundle, synthesize_and_bundle_with, ClientAlias};
+use deck_ssr::build::{repo_root, synthesize_and_bundle, ClientAlias};
 use deck_ssr::host::SsrDispatch;
 use deck_ssr::run::render;
 use deck_core::DataPort;
@@ -14,7 +14,6 @@ use sui_compiler::CompileMode;
 const GREET: &str = "crates/deck/deck-conformance/app/views/greet/[id]/page.sui";
 const GLYPH: &str = "crates/deck/deck-conformance/app/views/glyph/page.sui";
 const BOARD: &str = "crates/deck/deck-conformance/app/views/board/page.sui";
-const BOARD_CTRL: &str = "crates/deck/deck-conformance/app/views/board/controller.ts";
 const FEED: &str = "crates/deck/deck-conformance/app/views/feed/page.sui";
 const STYLED: &str = "crates/deck/deck-conformance/app/views/styled.view/page.sui";
 const DEMO_SERVER: &str = "crates/deck/deck-conformance/app/clients/demo.server.ts";
@@ -114,12 +113,11 @@ fn board_control_flow_first_paint_via_ship_js() {
     let build_dir = repo.join("target/deck-ssr-test/board");
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
     let bundle = rt
-        .block_on(synthesize_and_bundle_with(
+        .block_on(synthesize_and_bundle(
             &repo,
             BOARD,
             MANIFEST,
             CompileMode::Component,
-            Some(&repo.join(BOARD_CTRL)),
             &[],
             &build_dir,
         ))
