@@ -174,13 +174,15 @@ function buildTransition(
     // duration, sample its curve into a 0..1 function, and hand that
     // to `generateLinearEasing` for a WAAPI-compatible `linear(...)`
     // string. The compositor runs that as a native WAAPI animation.
-    const springArgs: Record<string, unknown> = { keyframes: [0, 1] }
+    const springArgs: Exclude<Parameters<typeof motionSpring>[0], number> = {
+      keyframes: [0, 1],
+    }
     if (cfg.stiffness != null) springArgs.stiffness = cfg.stiffness
     if (cfg.damping != null) springArgs.damping = cfg.damping
     if (cfg.mass != null) springArgs.mass = cfg.mass
     if (cfg.restSpeed != null) springArgs.restSpeed = cfg.restSpeed
     if (cfg.restDelta != null) springArgs.restDelta = cfg.restDelta
-    const generator = motionSpring(springArgs as Parameters<typeof motionSpring>[0])
+    const generator = motionSpring(springArgs)
     const durationMs = calcGeneratorDuration(generator)
     t.duration = durationMs / 1000
     t.ease = generateLinearEasing(
