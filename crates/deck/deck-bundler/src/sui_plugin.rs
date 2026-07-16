@@ -79,35 +79,36 @@ pub(crate) fn normalize(p: &Path) -> PathBuf {
 /// the SPA graph compiles its own `.sui` in-process — one compile path, no
 /// on-disk `.compiled.js` pre-step.
 #[derive(Debug)]
-pub(crate) struct SuiPlugin {
-    pub(crate) repo_root: PathBuf,
+pub struct SuiPlugin {
+    pub repo_root: PathBuf,
     /// View builds opt in: each `.sui` compiled in this build emits
     /// `@sui-tag/<tag>` registration imports (the per-view resolver). Off for
     /// framework/app builds.
-    pub(crate) emit_component_imports: bool,
+    pub emit_component_imports: bool,
     /// `<tag>` → component source `.sui`, for resolving `@sui-tag/<tag>`.
     /// Empty when `emit_component_imports` is false.
-    pub(crate) component_index: Arc<HashMap<String, PathBuf>>,
+    pub component_index: Arc<HashMap<String, PathBuf>>,
     /// `<tag>` → providing-pack name, for every tag a declared-`packs` scope
     /// EXCLUDES. Empty under global resolution. When a built view references one
     /// of these tags, the resolver no-ops it AND warns the author (naming the
     /// pack to declare).
-    pub(crate) shadowed_tags: Arc<HashMap<String, String>>,
+    pub shadowed_tags: Arc<HashMap<String, String>>,
     /// npm package name → absolute package root, for resolving a `@ship/<name>`
     /// import to its workspace source. DERIVED from the bun/npm workspace package
-    /// map (`component_package_roots`) — deck bakes no monorepo layout and keeps
-    /// no hand-maintained search order. A name absent from the map falls through
-    /// to Rolldown's native resolver (prod / node_modules resolution).
-    pub(crate) component_roots: Arc<HashMap<String, PathBuf>>,
+    /// map (`component_roots`) — deck bakes no monorepo layout and keeps
+    /// the resolver's idea of "workspace" identical to bun's. Empty when the
+    /// host's importmap is the source of truth.
+    pub component_roots: Arc<HashMap<String, PathBuf>>,
 }
 
 /// The per-view resolver's lookup tables, built once per `(repo_root, packs)`.
+
 /// `index` resolves `@sui-tag/<tag>` to component source; `shadowed` explains a
 /// tag a declared scope excluded (empty under global resolution).
 #[derive(Clone)]
-pub(crate) struct ResolverIndex {
-    pub(crate) index: Arc<HashMap<String, PathBuf>>,
-    pub(crate) shadowed: Arc<HashMap<String, String>>,
+pub struct ResolverIndex {
+    pub index: Arc<HashMap<String, PathBuf>>,
+    pub shadowed: Arc<HashMap<String, String>>,
 }
 
 impl ResolverIndex {
@@ -594,7 +595,7 @@ fn component_index_cache() -> &'static Mutex<HashMap<ComponentIndexCacheKey, Res
     COMPONENT_INDEX_CACHE.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
-pub(crate) fn component_index(
+pub fn component_index(
     repo_root: &Path,
     packs: &[String],
 ) -> ResolverIndex {
