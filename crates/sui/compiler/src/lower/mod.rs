@@ -218,14 +218,6 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_view: bool, depth: &mut usize
             walk_instrs(&we.body, out, is_view, depth)?;
             *depth -= 1;
         }
-        Instr::Let(l) => {
-            // `Let` is internal-only — emitted by `{#async X as v}` to
-            // snapshot the signal's `.value`. No new runtime imports
-            // beyond what the body already needs.
-            *depth += 1;
-            walk_instrs(&l.body, out, is_view, depth)?;
-            *depth -= 1;
-        }
         Instr::If(IfInstr { branches, else_body, .. }) => {
             out.runtime_imports.insert("bindIf");
             if is_view && *depth == 0 {

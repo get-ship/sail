@@ -329,7 +329,6 @@ fn check_mutations_instrs(instrs: &[Instr]) -> Result<(), CompileError> {
             }
             Instr::WhileLoading(wl) => check_mutations_instrs(&wl.body)?,
             Instr::WhileError(we) => check_mutations_instrs(&we.body)?,
-            Instr::Let(l) => check_mutations_instrs(&l.body)?,
             _ => {}
         }
     }
@@ -428,10 +427,6 @@ where
         }
         Instr::WhileLoading(wl) => visit_instrs(&wl.body, f)?,
         Instr::WhileError(we) => visit_instrs(&we.body, f)?,
-        Instr::Let(l) => {
-            f(&l.value)?;
-            visit_instrs(&l.body, f)?;
-        }
     }
     Ok(())
 }

@@ -93,13 +93,6 @@ pub enum BindingKind {
     For,
     /// `{#match}` boundary.
     Match,
-    /// `{#await}` boundary. Reserved — IR does not yet model await, so no
-    /// constructor emits this variant today. The match in `as_marker_str`
-    /// covers the future emitter; the `#[allow(dead_code)]` is needed
-    /// because rustc still flags the variant as never-constructed. Delete
-    /// the variant + arm together once `{#await}` lands.
-    #[allow(dead_code)]
-    Await,
     /// `<form mutation="ship.X.Y">` — form mutation directive.
     Mutation,
     /// `{#while-loading of <signal>}` boundary.
@@ -126,7 +119,6 @@ impl BindingKind {
             BindingKind::If => "if".into(),
             BindingKind::For => "for".into(),
             BindingKind::Match => "match".into(),
-            BindingKind::Await => "await".into(),
             BindingKind::Mutation => "mutation".into(),
             BindingKind::WhileLoading => "while-loading".into(),
             BindingKind::WhileError => "while-error".into(),

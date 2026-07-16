@@ -127,7 +127,6 @@ pub(crate) fn collect_anatomy(template: &[Instr]) -> (Vec<String>, Vec<String>) 
                 }
                 Instr::WhileLoading(w) => &w.body,
                 Instr::WhileError(w) => &w.body,
-                Instr::Let(l) => &l.body,
                 _ => &[],
             };
             walk(children, classes, slots);

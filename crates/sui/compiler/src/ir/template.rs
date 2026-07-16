@@ -18,18 +18,6 @@ pub enum Instr {
     Match(MatchInstr),
     WhileLoading(WhileLoadingInstr),
     WhileError(WhileErrorInstr),
-    /// `{let <name> = <value> in ...body}` — internal-only instruction
-    /// emitted by `{#async X as v}` to bind a snapshot of the signal's
-    /// `.value` inside the `{:ok}` body. Not author-visible syntax.
-    Let(LetInstr),
-}
-
-#[derive(Debug, Clone)]
-pub struct LetInstr {
-    pub name: String,
-    pub value: Expr,
-    pub body: Vec<Instr>,
-    pub span: Span,
 }
 
 #[derive(Debug, Clone)]

@@ -95,25 +95,15 @@ pub(crate) fn parse_tokens(
                 instrs.push(r.instr);
                 i = r.end;
             }
-            TokenKind::OpenAsync { .. } => {
-                let scope = make_scope();
-                let r = blocks::parse_async(tokens, i, &scope)?;
-                instrs.extend(r.instrs);
-                i = r.end;
-            }
             TokenKind::ElseIf { .. }
             | TokenKind::Else
             | TokenKind::Case { .. }
             | TokenKind::Default
-            | TokenKind::AsyncLoading
-            | TokenKind::AsyncError { .. }
-            | TokenKind::AsyncOk
             | TokenKind::CloseIf
             | TokenKind::CloseFor
             | TokenKind::CloseMatch
             | TokenKind::CloseWhileLoading
-            | TokenKind::CloseWhileError
-            | TokenKind::CloseAsync => {
+            | TokenKind::CloseWhileError => {
                 return Err(CompileError::new(format!(
                     "unexpected token: {}",
                     tok.kind.label()

@@ -1348,10 +1348,11 @@ fn parse_variants_object(body: &str) -> Vec<(String, String)> {
 }
 
 /// Desugar a wrapper-less `<controller>` body — bare `export function`/`export
-/// const` — into the canonical `controller({ scope })` form the pipeline reads.
-/// The exported names become the template scope, so an author writes plain
-/// functions with no `controller({…})` ceremony. Bodies that already call
-/// `controller(` or have a `export default` pass through unchanged.
+/// const` — into the canonical `controller({ setup: () => ({...}) })` form
+/// the pipeline reads. The exported names become the template scope, so an
+/// author writes plain functions with no `controller({…})` ceremony. Bodies
+/// that already call `controller(` or have a `export default` pass through
+/// unchanged.
 pub fn wrap_controller_body(body: &str) -> String {
     // Sugar form (a bare scope, no `controller(...)` / `export default`) is
     // first lifted into a `controller({ scope: ... })` default export; the full

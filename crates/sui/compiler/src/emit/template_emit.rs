@@ -563,33 +563,7 @@ impl TemplateEmitter {
             Instr::WhileError(we) => {
                 self.emit_while_error_block(w, we, parent_var, cleanups_var)
             }
-            Instr::Let(l) => self.emit_let_block(w, l, parent_var, cleanups_var),
         }
-    }
-
-    /// `Instr::Let` — snapshot a value expression into `$scope.<name>`
-    /// before emitting the body, so body references like `<name>.field`
-    /// (rewritten to `$scope.<name>.field` by `rewrite_for_scope`)
-    /// resolve correctly. Only emitted by `{#async X as v}`.
-    fn emit_let_block(
-        &mut self,
-        w: &mut Writer,
-        instr: &crate::ir::LetInstr,
-        parent_var: &str,
-        cleanups_var: &str,
-    ) {
-        let value_rw = self.rw(&instr.value.source, &[]);
-        w.line(&format!("$scope.{name} = ({value_rw});", name = instr.name));
-        // The `as` binder lives on the runtime `$scope`; qualify body
-        // references to it with `$scope.` (synthetic mode). (The synthetic
-        // render currently rejects `{#async}` upstream; this keeps the emit
-        // internally consistent and is a no-op in production.)
-        let machinery_mark = self.machinery_locals.len();
-        self.machinery_locals.push(instr.name.clone());
-        for child in &instr.body {
-            self.emit_one(w, child, parent_var, cleanups_var);
-        }
-        self.machinery_locals.truncate(machinery_mark);
     }
 
     /// Emit a `{ nodes, cleanup }` branch result. Used by `bindIf`,

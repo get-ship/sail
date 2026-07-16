@@ -211,7 +211,6 @@ fn walk(instrs: &[Instr], tags: &mut BTreeSet<String>, events: &mut BTreeSet<Str
             }
             Instr::WhileLoading(wl) => walk(&wl.body, tags, events),
             Instr::WhileError(we) => walk(&we.body, tags, events),
-            Instr::Let(l) => walk(&l.body, tags, events),
             _ => {}
         }
     }

@@ -68,10 +68,6 @@ fn instr_references(instr: &Instr, var_name: &str, idx_name: Option<&str>) -> bo
         }
         Instr::WhileLoading(w) => body_references_for_vars(&w.body, var_name, idx_name),
         Instr::WhileError(w) => body_references_for_vars(&w.body, var_name, idx_name),
-        Instr::Let(l) => {
-            expr_references(&l.value, var_name, idx_name)
-                || body_references_for_vars(&l.body, var_name, idx_name)
-        }
     }
 }
 

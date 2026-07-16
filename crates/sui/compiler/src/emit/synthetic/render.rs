@@ -354,30 +354,13 @@ fn render_dom_imports(program: &Program, is_view: bool) -> Vec<String> {
 }
 
 /// Detect template features the synthetic render cannot yet emit correctly,
-/// returning a hard error rather than mis-emitting. Today that is only
-/// `{#async X as v}` (`Instr::Let`): it snapshots `$scope.<name> = value`,
-/// but author body reads resolve through the typed `scope.<name>` — and
-/// `<name>` is not a member of the controller's `Scope`, so the two
-/// diverge. Phase 2 handles `{#async}` by lifting the binding into the
-/// controller's typed scope; until then it is out of scope here.
-/// G5 — `{#async … as v}` lifts the `as v` binding into the typed
-/// scope so the render can reference `scope.v` after the Let
-/// snapshot. The render's `emit_let_block` writes `$scope.v = (value)`
-/// at mount; the controller's scope declares `v: any` so the
-/// type-check passes (the actual shape is the value expression's
-/// return type, but we don't have that at the controller level —
-/// the controller only knows the NAME; the render sees the value).
-/// The slice-2 acceptance is that views using `{#async … as v}`
-/// synthesize (no more unsupported-feature error) and the render
-/// still drives the binding through the runtime `$scope`.
+/// returning a hard error rather than mis-emitting. No such feature is
+/// currently flagged, but the recursive walk stays in place for future
+/// unsupported-feature checks — call sites already treat `None` as "safe
+/// to emit".
 fn unsupported_feature(instrs: &[Instr]) -> Option<CompileError> {
     for instr in instrs {
         let nested: Option<&[Instr]> = match instr {
-            // G5: Let (from `{#async … as v}`) is now allowed — the
-            // controller declares the binding on its typed scope,
-            // and the render snapshots the value into the runtime
-            // `$scope` at mount.
-            Instr::Let(_) => None,
             Instr::Element(el) => Some(&el.children),
             Instr::If(i) => {
                 for b in &i.branches {
