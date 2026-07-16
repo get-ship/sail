@@ -108,13 +108,18 @@ fn wired_serve_renders_ship_js_first_paint() {
 
     // ── board (a REAL controller({...}) DSL view) ──────────────────────────
     // ship-js runs the controller, so first paint carries the controller-signal
-    // rows: the `{#if}` branch renders and the per-row `class:` directive fires.
+    // rows: the `{#if}` branch renders and the per-row `aria-pressed:`
+    // directive fires (post-floor migration; the prior `class:flagged`
+    // global hook is banned by `sui-no-class`).
     let on_raw = payload_html(&root, engine, "board", None);
     let on = strip_markers(&on_raw);
-    assert!(on.contains("<ul>"), "ship-js {{#if}} branch renders; got:\n{on}");
+    assert!(on.contains("Alpha") && on.contains("Bravo"), "ship-js {{#for}} renders every row; got:\n{on}");
+    // Match the literal attribute form (space-prefixed, on the element
+    // opening tag) — the SX stylesheet also references `[aria-pressed='true']`
+    // for the pressed: state-prefix utility, so count only the attribute.
     assert!(
-        on.matches("class=\"flagged\"").count() == 1,
-        "per-row class: directive; got:\n{on}"
+        on.matches(" aria-pressed=\"").count() == 1,
+        "per-row aria-pressed: directive (one flagged row); got:\n{on}"
     );
 
     // ── feed (<data live> + host-dispatch) ─────────────────────────────────

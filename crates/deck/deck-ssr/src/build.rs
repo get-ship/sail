@@ -15,6 +15,7 @@ use rolldown::BundlerBuilder;
 use rolldown_common::{BundlerOptions, InputItem, Output, OutputFormat, ResolveOptions};
 use sui_compiler::emit::synthetic::{emit_synthetic, AppManifest};
 use sui_compiler::parse::parse;
+use sui_compiler::parse::preprocess::extract_controller_block;
 use sui_compiler::CompileMode;
 
 /// Walk up from this crate to the repo root (the dir holding `package.json`
@@ -74,8 +75,12 @@ pub async fn synthesize_and_bundle_with(
         .with_context(|| format!("read view {view_rel}"))?;
     let manifest_src = std::fs::read_to_string(repo.join(manifest_rel))
         .with_context(|| format!("read manifest {manifest_rel}"))?;
-    let program =
-        parse(&source).map_err(|e| anyhow!("parse view: {}", e.render(&source)))?;
+    // SUI sources may declare a `<controller>…</controller>` block alongside
+    // the template — the synthetic emit reads it as a paired controller.
+    // The template-only parser expects the block to be stripped first; the
+    // CLI does this in `parse::preprocess`, the SSR bundler must too.
+    let (stripped, inline) = extract_controller_block(&source);
+    let program = parse(&stripped).map_err(|e| anyhow!("parse view: {}", e.render(&stripped)))?;
     let mut manifest = AppManifest::parse(&manifest_src)
         .map_err(|e| anyhow!("parse manifest: {}", e.render(&manifest_src)))?;
     // Deck declares its host context (route/navigate -> @ship/deck/router) into
@@ -83,13 +88,25 @@ pub async fn synthesize_and_bundle_with(
     for (name, client) in deck_core::host_context::host_context_clients() {
         manifest.clients.entry(name).or_insert(client);
     }
-    let authored = authored.map(|p| AuthoredController { specifier: path_str(p) });
+    std::fs::create_dir_all(build_dir)
+        .with_context(|| format!("mkdir {}", build_dir.display()))?;
+    // The controller IS the .sui's own `<controller>` block; an explicit
+    // `authored` path (test-only) overrides it. For an inline block, write it to a
+    // module beside the synthetic controller and import it by the same absolute
+    // specifier an authored sibling would use.
+    let authored = if let Some(p) = authored {
+        Some(AuthoredController { specifier: path_str(p) })
+    } else if let Some(inline_src) = inline.as_deref() {
+        let inline_path = build_dir.join("page.inline.controller.ts");
+        std::fs::write(&inline_path, inline_src)
+            .with_context(|| format!("write inline controller {}", inline_path.display()))?;
+        Some(AuthoredController { specifier: path_str(&inline_path) })
+    } else {
+        None
+    };
     let out =
         emit_synthetic(&program, &manifest, authored.as_ref(), "./page.synthetic.controller.ts", mode, None)
             .map_err(|e| anyhow!("synthesize: {}", e.render(&source)))?;
-
-    std::fs::create_dir_all(build_dir)
-        .with_context(|| format!("mkdir {}", build_dir.display()))?;
     std::fs::write(build_dir.join("page.synthetic.controller.ts"), &out.controller_ts)?;
     std::fs::write(build_dir.join("page.render.ts"), &out.render_ts)?;
     // The SSR entry (server-DOM + host-dispatch + serialize), from the crate.
@@ -102,9 +119,11 @@ pub async fn synthesize_and_bundle_with(
 
 async fn bundle(repo: &Path, build_dir: &Path, client_aliases: &[ClientAlias]) -> Result<String> {
     let runtime_server = repo.join("packages/sui/runtime/src/server.ts");
+    let runtime_internal = repo.join("packages/sui/runtime/src/internal.ts");
     let route_server = repo.join("packages/deck/router/src/server.ts");
     let mut alias = vec![
         ("@ship/sui-runtime".to_string(), vec![Some(path_str(&runtime_server))]),
+        ("@ship/sui-runtime/internal".to_string(), vec![Some(path_str(&runtime_internal))]),
         ("@ship/deck/router".to_string(), vec![Some(path_str(&route_server))]),
     ];
     for c in client_aliases {
@@ -142,9 +161,10 @@ async fn bundle(repo: &Path, build_dir: &Path, client_aliases: &[ClientAlias]) -
     Err(anyhow!("rolldown produced no entry chunk"))
 }
 
+
 fn path_str(p: &Path) -> String {
-    normalize(p).to_string_lossy().into_owned()
-}
+     normalize(p).to_string_lossy().into_owned()
+ }
 
 /// Collapse `.`/`..` components without touching the filesystem (the paths
 /// are built from a canonical repo root + known-good relatives).

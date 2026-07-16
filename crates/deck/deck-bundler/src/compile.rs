@@ -244,7 +244,7 @@ mod tests {
         let sui = src.path().join("page.sui");
         std::fs::write(
             &sui,
-            "<style>.hero { color: var(--foreground); }</style>\n<div class=\"hero\">hi</div>\n",
+            "<style>.hero { color: var(--foreground); }</style>\n<p>hi</p>\n",
         )
         .unwrap();
         let err = compile_sui(&sui, CompileMode::View, "page", false)

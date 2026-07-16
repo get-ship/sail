@@ -1241,15 +1241,20 @@ fn compile_one(
             format!("./{file}.controller.ts")
         }
     });
-    // Resolve the styling policy from the nearest `sui.config.json` walking up
-    // from this file. OPT-IN (identical to the deck bundler): a package with no
-    // config gets no overrides and compiles exactly as before, so the floor rolls
-    // out per-package instead of failing every un-migrated file — critically, the
-    // primitives (which legitimately author `<style>` blocks) still compile via
-    // the CLI. A package opts in with `{"policy":"floor|stripped|strictest"}`; the
-    // eval lanes do exactly that. `floor` bans raw `<style>`/`style=` and makes sx
-    // the styling surface; `stripped` also bans raw containers; `strictest` also
-    // bans sx.
+    // Resolve the CAPABILITY policy from the nearest `sui.config.json` walking up
+    // from this file. The FLOOR (no authored `<style>`/`style=`/`class`/undeclared
+    // stylesheet) is NOT resolved here — the compiler enforces it unconditionally
+    // for every `.sui` (`check::lint_overrides::enforce_floor`), so `overrides_for`
+    // returns only the capability overrides declared above the floor. Capabilities
+    // are opt-in per package: a package with no config declares none.
+    //
+    // A package configures capabilities with `sui.config.json`. The key the parser
+    // reads is `"preset"`, values `full` | `strict` (`{"preset":"strict"}`), plus
+    // optional per-key booleans `"sx"` / `"variants"` / `"raw_containers"` that
+    // override the preset. `full` unlocks every capability (primitive authoring);
+    // `strict` locks all three (app authoring — compose primitives, no raw CSS
+    // surface). A present-but-unrecognized config fails CLOSED to `strict`, never
+    // `full`. (The floor holds under every tier — it is not a key.)
     let opts = CompileOpts {
         setup_url,
         mode,

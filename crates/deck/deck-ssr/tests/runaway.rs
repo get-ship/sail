@@ -18,6 +18,7 @@ use deck_ssr::host::SsrDispatch;
 use deck_ssr::run::render_with_limits;
 use serde_json::{json, Value};
 use ship_js::deno::{run_module_with_limits, RunError, RunLimits, TerminateReason};
+use ship_js::dispatch::{CancellationToken, SesPolicy};
 use ship_js::{Dispatch, DispatchError};
 
 /// A bundle that infinite-loops on a counter, allocating slightly each tick
@@ -120,8 +121,13 @@ fn engine_run_module_with_limits_terminates_runaway_script() {
     let t0 = Instant::now();
     let r = rt.block_on(run_module_with_limits(
         arc_echo(),
-        None,
-        None,
+        None, // op_allow_list
+        None, // module_allow_list
+        None, // expression_policy
+        None, // compartment_id
+        None, // module_cache_key
+        CancellationToken::new(),
+        SesPolicy::Off,
         "export const noop = 1;".to_string(),
         RUNAWAY_BUNDLE.to_string(),
         RunLimits {

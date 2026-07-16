@@ -6,9 +6,12 @@
 //!   1. A consumer component with `display: grid` (or `flex`) in its `<style>`
 //!      block surfaces a `sui-prefer-primitive` **Warning** diagnostic. The
 //!      message names the layout primitives and the skill.
-//!   2. The warning NEVER blocks the build — `compile()` returns `Ok` and the
-//!      emitted JS still carries the CSS. This is the "must not break existing
-//!      builds" guarantee: the rule is advisory only.
+//!   2. `sui-prefer-primitive` is advisory ONLY — it never escalates to an
+//!      Error on its own (its finding is always a `Warning`). The build it lives
+//!      in may still be refused for an UNRELATED reason: the ad-hoc layout lives
+//!      in an authored `<style>` block, and an authored `<style>` is a floor
+//!      violation (`sui-no-style-block`) the compiler refuses unconditionally.
+//!      So the floor — not prefer-primitive — is what stops the build.
 //!   3. Components under `packages/components/sui/primitives/**` are exempt —
 //!      the primitives pack legitimately hand-rolls flex/grid internally.
 //!   4. A component that composes `<sui-grid>` (no ad-hoc layout CSS) emits no
@@ -69,19 +72,26 @@ fn consumer_display_grid_surfaces_a_warning() {
 }
 
 #[test]
-fn consumer_display_grid_still_compiles() {
-    // The warning must NOT break the build: compile() returns Ok and the
-    // emitted JS still carries the grid CSS.
+fn prefer_primitive_is_advisory_but_floor_refuses_the_style_block() {
+    // `sui-prefer-primitive` on its own is only a Warning (it never escalates) —
+    // proven on the finding stream. But the ad-hoc grid lives in an authored
+    // `<style>` block, so the FLOOR (`sui-no-style-block`) refuses the build
+    // unconditionally. The floor, not prefer-primitive, is what stops it.
     let src = r#"<style>
   .wrap { display: grid; }
 </style>
 <div></div>"#;
-    let out = compile(src, opts("sui-gauge", CONSUMER))
-        .expect("a prefer-primitive warning must not fail the build");
-    assert!(
-        out.js.contains("display: grid"),
-        "emitted JS should still carry the CSS: {}",
-        out.js
+    // prefer-primitive stays a Warning — advisory, never an Error.
+    let diags = prefer_primitive_diags(src, CONSUMER);
+    assert_eq!(diags.len(), 1, "expected one prefer-primitive finding, got {diags:?}");
+    assert_eq!(diags[0].0, DiagSeverity::Warning, "prefer-primitive is advisory: {diags:?}");
+    // ...but the authored `<style>` is a floor violation, so the build refuses.
+    let err = compile(src, opts("sui-gauge", CONSUMER))
+        .expect_err("authored <style> must be refused by the floor");
+    assert_eq!(
+        err.category.as_deref(),
+        Some("sui-no-style-block"),
+        "the floor rule (not prefer-primitive) refuses the build: {err:?}"
     );
 }
 
