@@ -106,7 +106,10 @@ pub async fn bundle_target(
     let module_paths = {
         let mut bundler = BundlerBuilder::default()
             .with_options(options)
-            .with_plugins(vec![Arc::new(plugin)])
+            .with_plugins(vec![
+                Arc::new(plugin),
+                Arc::new(crate::ship_asset_css::ShipAssetCssPlugin),
+            ])
             .build()
             .map_err(|e| anyhow!("rolldown build({}): {e:?}", target.name))?;
         let output = bundler

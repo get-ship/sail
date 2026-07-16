@@ -829,7 +829,11 @@ pub async fn bundle_app_with_base(
     };
     let mut bundler = BundlerBuilder::default()
         .with_options(options)
-        .with_plugins(vec![Arc::new(app_plugin), Arc::new(sui_plugin)])
+        .with_plugins(vec![
+            Arc::new(app_plugin),
+            Arc::new(sui_plugin),
+            Arc::new(crate::ship_asset_css::ShipAssetCssPlugin),
+        ])
         .build()
         .map_err(|e| anyhow!("rolldown build(app): {e:?}"))?;
     bundler
