@@ -57,7 +57,7 @@ function parseBoard(raw: string): { nodes?: Node[]; edges?: Edge[] } | null {
 // substrate. Geometry lives in the board model (world coords); the view maps
 // to screen through the substrate transform. Node visuals are a per-node slot.
 export default controller({
-  scope: ({ value }: Scope) => {
+  setup: ({ value }: Scope) => {
     const seed = parseBoard(value())
     const board = createBoardModel({
       nodes: seed?.nodes ?? [],

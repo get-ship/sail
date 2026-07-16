@@ -8,7 +8,7 @@ interface TodoItem {
 }
 
 export default controller({
-  scope: () => {
+  setup: () => {
     let nextId = 3
     const items = signal<TodoItem[]>([
       { id: 1, text: 'buy milk', done: false },

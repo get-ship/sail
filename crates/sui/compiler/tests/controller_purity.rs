@@ -79,7 +79,7 @@ fn paired_controller_file_is_rejected() {
     let dir = tempfile::tempdir().expect("tempdir");
     fs::write(
         dir.path().join("view.controller.ts"),
-        "export default controller({ scope: () => ({}) })",
+        "export default controller({ setup: () => ({}) })",
     )
     .unwrap();
     let sui_path = dir.path().join("view.sui");

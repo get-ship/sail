@@ -18,7 +18,7 @@ import { controller, signal, derived, effect, untrack, type ViewScope } from '@s
 import type { Scope } from './page.sui'
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => {
+  setup: (_ctx: ViewScope<Scope>) => {
     const a = signal(1)
     const b = derived(() => a() * 2)
     const c = derived(() => a() + 10)

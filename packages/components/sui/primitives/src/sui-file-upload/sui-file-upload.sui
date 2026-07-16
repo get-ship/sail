@@ -54,7 +54,7 @@ interface DisplayFile {
 }
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => {
+  setup: (_ctx: ViewScope<Scope>) => {
     const files = signal<File[]>([])
     const over = signal(false)
     const errorMsg = signal('')

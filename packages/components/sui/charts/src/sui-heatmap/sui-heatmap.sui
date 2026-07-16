@@ -89,7 +89,7 @@ function toGrid(raw: string, rowLabels: string[], colLabels: string[]): ChartSer
 }
 
 export default controller({
-  scope: ({ data, rows, cols, tone, cellSize, gap, label, loading }: Scope) => {
+  setup: ({ data, rows, cols, tone, cellSize, gap, label, loading }: Scope) => {
     const grid = derived<ChartSeries[]>(() =>
       toGrid(data(), parseLabels(rows()), parseLabels(cols())),
     )

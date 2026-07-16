@@ -8,7 +8,7 @@ import type { Scope } from './page.sui'
 // empty reactive slot + hydration anchor, and the client fills `0` on mount.
 // (Contrast `views/hello`, whose `{1 + 1}` is a constant the SSR pass folds.)
 export default controller<Scope>({
-  scope: () => ({ count: signal(0) }),
+  setup: () => ({ count: signal(0) }),
 })
 </controller>
 

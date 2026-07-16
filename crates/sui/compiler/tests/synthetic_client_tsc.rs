@@ -286,7 +286,7 @@ fn client_render_typo_is_caught_by_tsgo() {
 ///
 /// IGNORED — blocked on a pre-existing runtime-typing regression in `ef696e5`
 /// ("canonical controller() now actually infers Ctx & SC"). board's scope
-/// factory `scope: () => ({…})` takes NO `ctx` param, so `Ctx` can't be
+/// factory `setup: () => ({…})` takes NO `ctx` param, so `Ctx` can't be
 /// inferred → the `<Ctx, SC>` overload fails its contravariant check → the call
 /// resolves to the legacy `controller<Scope>(def): ControllerExport<Scope>`
 /// overload, which does NOT carry `__def`. The synthetic recovery

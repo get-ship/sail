@@ -34,7 +34,7 @@ describe('sniffEscapeHatches', () => {
 describe('scoreOutput — compile path', () => {
   it('compiled=false on a malformed template', async () => {
     // The <state> directive was retired (reactive state lives in the
-    // controller's `scope:` factory now), so a top-level <state> is a
+    // controller's `setup:` factory now), so a top-level <state> is a
     // parse error.
     const report = await scoreOutput({
       template: '<state name="n" value="0" /><span>{n()}</span>',
@@ -72,7 +72,7 @@ describe('scoreOutput — behavioral path', () => {
   it('behavioral=true when assertions hold', async () => {
     // Template-only behavioral check — the runtime evaluates mustache
     // expressions at mount. (Client reactive state lives in a controller
-    // `scope:` factory now; the harness mounts templates without a setup,
+    // `setup:` factory now; the harness mounts templates without a setup,
     // so the old inline-<state> counter is no longer expressible here. A
     // setup-mounting path would restore reactive-state behavioral scoring.)
     const report = await scoreOutput({

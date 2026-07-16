@@ -51,7 +51,7 @@ interface DonutHost extends Element {
 }
 
 export default controller({
-  scope: ({ data, diameter, thickness, label, loading }: Scope) => {
+  setup: ({ data, diameter, thickness, label, loading }: Scope) => {
     const chart = createChartData({
       // normalizeSeries accepts string | ChartSeries[] — ONE scope key handles
       // both the SSR JSON string AND a live prop:series identity, no cast.

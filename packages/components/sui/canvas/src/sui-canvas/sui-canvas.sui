@@ -58,7 +58,7 @@ function parseSnapshot(raw: string): { transform?: Partial<Transform> } | null {
 // createCanvas() in scope, forwards raw pointer/wheel events to the engine
 // in on:*, and emits a debounced sui-canvas-viewport event via host.emit!.
 export default controller({
-  scope: ({ value }: Scope) => {
+  setup: ({ value }: Scope) => {
     const viewportEl = ref<HTMLDivElement>(null)
     // Fallback engine — used when no engine is injected via prop:canvas.
     // exactOptionalPropertyTypes: only set initialTransform when present —

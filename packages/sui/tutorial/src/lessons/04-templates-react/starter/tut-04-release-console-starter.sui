@@ -26,7 +26,7 @@ const SEED: Env[] = [
 ]
 
 export default controller<Scope>({
-  scope: () => {
+  setup: () => {
     const phase = signal<Phase>('idle')
     const envs = signal<Env[]>(SEED)
     const query = signal('')

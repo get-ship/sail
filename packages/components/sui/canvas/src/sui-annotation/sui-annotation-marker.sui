@@ -54,7 +54,7 @@ function parseRect(raw: string): BoxRect {
 }
 
 export default controller({
-  scope: ({ kind, rect, index, active }: Scope) => ({
+  setup: ({ kind, rect, index, active }: Scope) => ({
     isPoint: derived(() => kind() !== 'region'),
     box: derived(() => parseRect(rect())),
     hasBox: derived(() => {

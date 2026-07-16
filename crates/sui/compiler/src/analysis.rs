@@ -151,7 +151,7 @@ fn symbols_from_table(table: &SymbolTable, controller: Option<&ParsedController>
     }
     for (name, e) in &table.scope {
         let (l, c) = pos(ctrl_src, e.offset);
-        out.push(Symbol { name: name.clone(), kind: e.kind.label().to_string(), source: "scope".into(), line: l, col: c });
+        out.push(Symbol { name: name.clone(), kind: e.kind.label().to_string(), source: "setup".into(), line: l, col: c });
     }
     out.sort_by(|a, b| a.name.cmp(&b.name));
     out

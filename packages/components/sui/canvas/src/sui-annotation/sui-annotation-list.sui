@@ -27,7 +27,7 @@ import type { Scope } from './sui-annotation-list.sui'
 import type { AnnotationEvent } from './sui-annotation.internals'
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>, _host?: Element) => {
+  setup: (_ctx: ViewScope<Scope>, _host?: Element) => {
     const staged = signal<AnnotationEvent[]>([])
     // The host element is not present in the scope factory (the post-
     // convergence "SUI names no host" compile stops passing it as the 2nd

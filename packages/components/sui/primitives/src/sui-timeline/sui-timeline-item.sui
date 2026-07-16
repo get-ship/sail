@@ -26,7 +26,7 @@ import { controller, effect, signal } from '@ship/sui-runtime'
 import type { Scope } from './sui-timeline-item.sui'
 
 export default controller<Scope>({
-  scope: () => {
+  setup: () => {
     const first = signal(false)
     const last = signal(false)
     return { first, last }

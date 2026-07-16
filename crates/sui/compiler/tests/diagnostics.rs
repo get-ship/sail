@@ -24,7 +24,7 @@ fn compile_view(source: &str) -> sui_compiler::CompileError {
 #[test]
 fn state_directive_is_retired() {
     // The legacy `<state>` directive was retired in favour of declaring
-    // reactive state in the controller's `scope:` factory. Authors who
+    // reactive state in the controller's `setup:` factory. Authors who
     // still ship the old form get a parse error pointing at the
     // migration target.
     let src = r#"<state name="x" value="0" />"#;
@@ -35,7 +35,7 @@ fn state_directive_is_retired() {
         err.message
     );
     assert!(
-        err.message.contains("scope:"),
+        err.message.contains("setup:"),
         "msg should name the migration target: {}",
         err.message
     );

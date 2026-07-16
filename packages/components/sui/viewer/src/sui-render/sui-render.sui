@@ -60,7 +60,7 @@ function diagFromError(e: unknown): CompileDiagnostic {
 }
 
 export default controller({
-  scope: (ctx: ViewScope<Scope>) => {
+  setup: (ctx: ViewScope<Scope>) => {
     const stageEl = ref<HTMLElement>(null)
     // Stage framing: the reflected viewport-width prop picks a breakpoint
     // token; full means unconstrained.

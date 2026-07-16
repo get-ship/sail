@@ -7,7 +7,7 @@ export const code = {
   demo: `<controller>
 import { controller, live, signal } from '@ship/sui-runtime'
 export default controller({
-  scope: () => {
+  setup: () => {
     const attempt = signal(1)
     const users = live(() => {
       attempt() // tracked: bump it and the source re-runs
@@ -36,7 +36,7 @@ export default controller({
 import { controller, live } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => {
+  setup: () => {
     // live() wraps any async source in a reactive state signal:
     //   { kind: 'loading' } → { kind: 'ok', value } | { kind: 'error', error }
     const users = live(() => fetch('/api/users').then((r) => r.json()))

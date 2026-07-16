@@ -17,7 +17,7 @@ interface Note {
 }
 
 export default controller<Scope>({
-  scope: () => {
+  setup: () => {
     const publishedAt = signal(new Date('2026-07-01T09:00:00Z'))
     const notes = signal<Note[]>([
       { id: 1, tag: 'feat', text: 'motion:loop — ambient animation as a directive' },

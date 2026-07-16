@@ -109,7 +109,7 @@ interface RenderRow {
 let _seq = 0
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => {
+  setup: (_ctx: ViewScope<Scope>) => {
     const seq = ++_seq
     const itemsSig = signal<CmdkItem[]>([])
     const query = signal('')

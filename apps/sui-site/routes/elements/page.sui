@@ -10,7 +10,7 @@ import type { Scope } from './page.sui'
 import { code } from './snippets'
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => {
+  setup: (_ctx: ViewScope<Scope>) => {
     return { code }
   },
 })

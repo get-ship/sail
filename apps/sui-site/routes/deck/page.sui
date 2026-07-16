@@ -12,7 +12,7 @@ import type { Scope } from './page.sui'
 import { quickstart, layers } from './snippets'
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => ({ quickstart, layers }),
+  setup: (_ctx: ViewScope<Scope>) => ({ quickstart, layers }),
 })
 </controller>
 

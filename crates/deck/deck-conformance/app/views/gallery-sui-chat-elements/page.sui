@@ -56,7 +56,7 @@ const THREAD_ITEMS: MessageItem[] = [
 ]
 
 export default controller<Scope>({
-  scope: () => ({
+  setup: () => ({
     emptyItems: signal<MessageItem[]>([]),
     threadItems: signal<MessageItem[]>(THREAD_ITEMS),
   }),

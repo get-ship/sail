@@ -32,7 +32,7 @@ import type { ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './sui-citation.sui'
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => {
+  setup: (_ctx: ViewScope<Scope>) => {
     const pillEl = ref<HTMLButtonElement>(null)
     return { pillEl }
   },

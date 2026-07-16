@@ -51,7 +51,7 @@ the template:
 <controller>
 import { controller, signal } from '@ship/sui-runtime'
 export default controller({
-  scope: () => {
+  setup: () => {
     const elapsed = signal(0)
     return { elapsed }
   },
@@ -76,7 +76,7 @@ import { controller } from '@ship/sui-runtime'
 import { createStopwatch } from './stopwatch'   // plain TS, plain functions
 
 export default controller({
-  scope: () => createStopwatch(),
+  setup: () => createStopwatch(),
 })
 </controller>
 ```

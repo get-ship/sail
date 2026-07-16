@@ -75,7 +75,7 @@ const BOTTOM_THRESHOLD = 48
 const ESTIMATED_MESSAGE_HEIGHT = 72
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => {
+  setup: (_ctx: ViewScope<Scope>) => {
     const items = signal<MessageItem[]>([])
     const scrollEl = ref<HTMLElement>(null)
 

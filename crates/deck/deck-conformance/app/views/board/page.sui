@@ -17,7 +17,7 @@ export interface BoardItem {
 }
 
 export default controller({
-  scope: () => {
+  setup: () => {
     const items = signal<BoardItem[]>([
       { id: 'a', label: 'Alpha', flagged: false },
       { id: 'b', label: 'Bravo', flagged: true },

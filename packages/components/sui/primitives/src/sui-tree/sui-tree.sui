@@ -106,7 +106,7 @@ function emptyTree(): Table<AnyTreeNode> {
 export default controller({
   // `nodes` (string) + `selectable` (enum) are read imperatively from the host
   // in mount/interactions — they are not part of the compiler-emitted `Scope`.
-  scope: (_ctx: ViewScope<Scope>) => {
+  setup: (_ctx: ViewScope<Scope>) => {
     const treeSig = signal<Table<AnyTreeNode> | null>(null)
     const viewportEl = ref<HTMLDivElement>(null)
 

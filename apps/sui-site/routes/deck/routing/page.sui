@@ -7,7 +7,7 @@ import type { Scope } from './page.sui'
 import { routeTree, colocated } from './snippets'
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => ({ routeTree, colocated }),
+  setup: (_ctx: ViewScope<Scope>) => ({ routeTree, colocated }),
 })
 </controller>
 

@@ -17,7 +17,7 @@ import type { Scope } from './page.sui'
 import { configExample, usageExample } from './snippets'
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => ({ configExample, usageExample }),
+  setup: (_ctx: ViewScope<Scope>) => ({ configExample, usageExample }),
 })
 </controller>
 

@@ -10,7 +10,7 @@ export const configExample = `// deck.jsonc
 }`
 
 export const usageExample = `// any controller
-scope: (ctx) => {
+setup: (ctx) => {
   const visits = ctx.clients.store.visits
   return { visits }
 }`

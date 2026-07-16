@@ -10,7 +10,7 @@ import { controller, signal } from '@ship/sui-runtime'
 const MODE_KEY = 'deck-mode'
 
 export default controller({
-  scope: () => {
+  setup: () => {
     const root = document.documentElement
     root.setAttribute('data-theme', 'deck')
 

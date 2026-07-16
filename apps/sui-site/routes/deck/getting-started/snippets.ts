@@ -11,7 +11,7 @@ export const controllerExample = `<!-- routes/page.sui — one file: state + tem
   import { controller, signal } from '@ship/sui-runtime'
 
   export default controller({
-    scope: () => {
+    setup: () => {
       const count = signal(0)
       return { count }
     },

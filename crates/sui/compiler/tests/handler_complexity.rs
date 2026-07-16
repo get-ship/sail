@@ -74,7 +74,7 @@ fn multi_stmt_passes_with_inline_controller() {
     let src = "<controller>\n\
         import { controller, signal } from '@ship/sui-runtime'\n\
         export default controller({\n\
-          scope: () => ({ x: signal(0), y: signal(0) }),\n\
+          setup: () => ({ x: signal(0), y: signal(0) }),\n\
         })\n\
         </controller>\n\
         <button on:click={() => { x.set(1); y.set(2) }}>+</button>";

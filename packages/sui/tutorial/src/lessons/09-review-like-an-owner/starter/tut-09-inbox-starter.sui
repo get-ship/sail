@@ -41,7 +41,7 @@ function fetchInbox(): Promise<Message[]> {
 // TEMPLATE, and every one of them compiles — that is the point: the
 // compiler owns correctness of the surface, the reviewer owns intent.
 export default controller<Scope>({
-  scope: () => {
+  setup: () => {
     const inbox = live(fetchInbox)
     const filter = signal<'all' | 'unread'>('all')
     const archived = signal<number[]>([])

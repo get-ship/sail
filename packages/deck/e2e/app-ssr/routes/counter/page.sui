@@ -6,7 +6,7 @@ import type { Scope } from './page.sui'
 // renders the static structure + a hydration anchor for the count slot; the
 // client fills `0` on hydrate. Clicking proves reactivity survived hydration.
 export default controller<Scope>({
-  scope: () => ({ count: signal(0) }),
+  setup: () => ({ count: signal(0) }),
 })
 </controller>
 

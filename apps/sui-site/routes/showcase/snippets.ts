@@ -6,7 +6,7 @@ export const code = {
 import { controller, signal, filteredList, selection } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => {
+  setup: () => {
     const people = signal([
       { id: 1, name: 'Ada Lovelace', team: 'Engines', status: 'active' },
       { id: 2, name: 'Grace Hopper', team: 'Compilers', status: 'active' },
@@ -48,7 +48,7 @@ export default controller({
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => {
+  setup: () => {
     const services = signal([
       { id: 'api', name: 'api-gateway', status: 'live', p99: 41, load: 82 },
     ])
@@ -81,7 +81,7 @@ export default controller({
 import { controller, signal, effect } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => {
+  setup: () => {
     const playing = signal(true)
     const position = signal(23)
     // The interval lives in an effect: it tracks playing(), so pausing

@@ -43,7 +43,7 @@ import type { ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './sui-composer.sui'
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => {
+  setup: (_ctx: ViewScope<Scope>) => {
     const text = signal('')
     // Consumer-owned attachment payloads. The composer never fabricates
     // these — it echoes whatever the host assigned in the submit event.

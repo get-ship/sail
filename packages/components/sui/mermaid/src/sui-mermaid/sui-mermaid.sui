@@ -98,7 +98,7 @@ async function renderMermaid(src: string, dark: boolean): Promise<RenderResult> 
 export default controller<Scope>({
   // The template reads `error` and `html`, so they are scope — the error state is
   // markup the template owns, not a string this controller builds.
-  scope: () => {
+  setup: () => {
     const error = signal<string>("");
     return {
     container: ref<HTMLElement>(null),

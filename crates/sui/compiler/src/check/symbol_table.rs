@@ -102,7 +102,7 @@ impl SymbolTable {
                 "derived" => collect_section_keys(c, sec.value_span, "derived", &mut t.derived),
                 "on" => collect_section_keys(c, sec.value_span, "on", &mut t.on),
                 "use" => collect_use_keys(c, sec.value_span, &mut t.use_keys),
-                "scope" => collect_scope_kinds(c, sec.value_span, &mut t.scope),
+                "setup" => collect_scope_kinds(c, sec.value_span, &mut t.scope),
                 _ => {}
             }
         }
@@ -624,7 +624,7 @@ mod tests {
     fn classifies_scope_kinds() {
         let c = ctrl(
             r#"export default controller({
-                scope: () => ({
+                setup: () => ({
                     el: ref(null),
                     n: signal(0),
                     doubled: derived(() => 1),
@@ -651,7 +651,7 @@ mod tests {
         // handlers) should round-trip the on:-callable check.
         let c = ctrl(
             r#"export default controller({
-                scope: () => ({
+                setup: () => ({
                     asyncArrow: async (): Promise<void> => {},
                     asyncShort: async e => e,
                     fnExpr: function foo(): void {},
@@ -674,7 +674,7 @@ mod tests {
     fn classifies_shorthand_arrow_const() {
         let c = ctrl(
             r#"export default controller({
-                scope: () => {
+                setup: () => {
                     const inc = (e) => 1;
                     const typed = (e: KeyboardEvent): void => { return };
                     function dec() { return 2 }
@@ -694,7 +694,7 @@ mod tests {
     fn classifies_ref_with_ts_generic() {
         let c = ctrl(
             r#"export default controller({
-                scope: () => ({
+                setup: () => ({
                     btn: ref<HTMLButtonElement>(null),
                     list: signal<string[]>([]),
                 }),

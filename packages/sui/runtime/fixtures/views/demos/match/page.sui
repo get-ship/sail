@@ -5,7 +5,7 @@ import type { Scope } from './page.sui'
 type Tone = 'info' | 'success' | 'warning' | 'destructive'
 
 export default controller<Scope>({
-  scope: () => ({ tone: signal<Tone>('info') }),
+  setup: () => ({ tone: signal<Tone>('info') }),
 })
 </controller>
 

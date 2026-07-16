@@ -34,7 +34,7 @@ function fetchTeam(fail: boolean): Promise<Member[]> {
 }
 
 export default controller<Scope>({
-  scope: () => {
+  setup: () => {
     const breakApi = signal(false)
     const name = signal('')
     const role = signal<'member' | 'admin'>('member')

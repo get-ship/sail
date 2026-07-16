@@ -19,7 +19,7 @@ import type { Scope } from './page.sui'
 const WORDS = ['Batteries', 'Components', 'Styling', 'State', 'Motion', 'Themes']
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => {
+  setup: (_ctx: ViewScope<Scope>) => {
     const i = signal(0)
     effect(() => {
       const t = setInterval(() => i.set((n) => (n + 1) % WORDS.length), 2600)

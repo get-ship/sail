@@ -7,7 +7,7 @@ export const code = {
   graph: `<controller>
 import { controller, signal, derived, effect } from '@ship/sui-runtime'
 export default controller({
-  scope: () => {
+  setup: () => {
     const count = signal(0)
     const doubled = derived(() => count() * 2)
     effect(() => console.log('count is', count()))
@@ -76,7 +76,7 @@ effect(() => {
   lifecycle: `import { controller, signal, onCleanup } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => ({ size: signal({ w: 0, h: 0 }) }),
+  setup: () => ({ size: signal({ w: 0, h: 0 }) }),
 
   // mount runs once, after the element is in the DOM. host IS the element.
   mount(state, host) {

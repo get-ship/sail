@@ -58,7 +58,7 @@ interface BarHost extends Element {
 }
 
 export default controller({
-  scope: ({ data, labels, tone, orientation, max, width, height, label, loading }: Scope) => {
+  setup: ({ data, labels, tone, orientation, max, width, height, label, loading }: Scope) => {
     const svgEl = ref<SVGSVGElement>(null) // bind:this target → viewport observe
     const viewport = createChartViewport({
       initialWidth: width(),

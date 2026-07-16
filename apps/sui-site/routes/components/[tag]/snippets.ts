@@ -7,7 +7,7 @@ export const usage: Record<string, string> = {
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => {
+  setup: () => {
     const saved = signal(false)
     return { saved, save: () => saved.set(true) }
   },
@@ -23,7 +23,7 @@ export default controller({
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => ({ name: signal('') }),
+  setup: () => ({ name: signal('') }),
 })
 </controller>
 
@@ -34,7 +34,7 @@ export default controller({
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => ({ bio: signal('') }),
+  setup: () => ({ bio: signal('') }),
 })
 </controller>
 
@@ -45,7 +45,7 @@ export default controller({
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => ({ team: signal('Design') }),
+  setup: () => ({ team: signal('Design') }),
 })
 </controller>
 
@@ -60,7 +60,7 @@ export default controller({
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => {
+  setup: () => {
     const fw = signal('')
     return { fw, pick: (e) => fw.set(e.detail.value) }
   },
@@ -81,7 +81,7 @@ export default controller({
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => ({ agreed: signal(false) }),
+  setup: () => ({ agreed: signal(false) }),
 })
 </controller>
 
@@ -97,7 +97,7 @@ export default controller({
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => ({ notify: signal(true) }),
+  setup: () => ({ notify: signal(true) }),
 })
 </controller>
 
@@ -110,7 +110,7 @@ export default controller({
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => ({ load: signal(62) }),
+  setup: () => ({ load: signal(62) }),
 })
 </controller>
 
@@ -158,7 +158,7 @@ export default controller({
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => {
+  setup: () => {
     const visible = signal(true)
     return { visible, dismiss: () => visible.set(false) }
   },
@@ -176,7 +176,7 @@ export default controller({
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => ({ done: signal(64) }),
+  setup: () => ({ done: signal(64) }),
 })
 </controller>
 
@@ -193,7 +193,7 @@ export default controller({
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => ({ loading: signal(true) }),
+  setup: () => ({ loading: signal(true) }),
 })
 </controller>
 
@@ -246,7 +246,7 @@ export default controller({
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => {
+  setup: () => {
     const kept = signal(true)
     return { kept, drop: () => kept.set(false) }
   },
@@ -366,7 +366,7 @@ export default controller({
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => {
+  setup: () => {
     const gone = signal(false)
     return { gone, confirm: () => gone.set(true) }
   },
@@ -409,7 +409,7 @@ export default controller({
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => {
+  setup: () => {
     const page = signal('2')
     return { page, go: (e) => page.set(e.detail.value) }
   },
@@ -434,7 +434,7 @@ export default controller({
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => ({
+  setup: () => ({
     people: signal([
       { id: 1, name: 'Ada Lovelace', team: 'Engines', status: 'active' },
       { id: 2, name: 'Grace Hopper', team: 'Compilers', status: 'away' },

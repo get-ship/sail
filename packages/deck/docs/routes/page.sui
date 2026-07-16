@@ -21,7 +21,7 @@ const layers = `SUI    :  deck   :  your app
 React  :  Next   :  your app`
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => ({ quickstart, layers }),
+  setup: (_ctx: ViewScope<Scope>) => ({ quickstart, layers }),
 })
 </controller>
 

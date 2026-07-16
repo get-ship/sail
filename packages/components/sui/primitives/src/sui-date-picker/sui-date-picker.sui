@@ -149,7 +149,7 @@ const clampIso = (iso: string, min: string, max: string): string => {
 }
 
 export default controller({
-  scope: ({ value, min, max }: ViewScope<Scope>) => {
+  setup: ({ value, min, max }: ViewScope<Scope>) => {
     const open = signal(false)
     const today = signal(todayIso())
     const focused = signal(todayIso())

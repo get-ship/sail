@@ -57,7 +57,7 @@ interface AreaHost extends Element {
 }
 
 export default controller({
-  scope: ({ series, width, height, grid, label, loading }: Scope) => {
+  setup: ({ series, width, height, grid, label, loading }: Scope) => {
     const svgEl = ref<SVGSVGElement>(null) // bind:this target → viewport observe
     const viewport = createChartViewport({
       initialWidth: width(),

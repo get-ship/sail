@@ -9,7 +9,7 @@
 import { controller, signal, derived } from '@ship/sui-runtime'
 
 export default controller({
-  scope: ({ title, body, tags }: { title: () => string; body: () => string; tags: () => string }) => {
+  setup: ({ title, body, tags }: { title: () => string; body: () => string; tags: () => string }) => {
     const expanded = signal(false)
     const parsedTags = derived(() => {
       try {

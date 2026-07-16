@@ -68,7 +68,7 @@ pub(super) fn emit_setup_body(
     // Pre-seed `$scope.<var> = signal(null)` for every `bind:this={var}`
     // target the template references — including ones inside conditional /
     // loop branches that won't render until later. The controller's
-    // scope: factory may overwrite specific keys with an author-declared
+    // setup: factory may overwrite specific keys with an author-declared
     // `ref(null)`; either way, `scope.<var>()` is always callable at
     // setup time, so a controller mount() reading `scope.headerEl()`
     // before the `{#if open()}` branch first renders sees `null`

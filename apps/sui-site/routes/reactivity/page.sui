@@ -8,7 +8,7 @@ import type { Scope } from './page.sui'
 import { code } from './snippets'
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => {
+  setup: (_ctx: ViewScope<Scope>) => {
     const count = signal(0)
     const doubled = derived(() => count() * 2)
     const log = signal<string[]>([])

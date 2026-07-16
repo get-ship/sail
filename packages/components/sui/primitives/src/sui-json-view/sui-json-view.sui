@@ -40,7 +40,7 @@ interface Row {
 }
 
 export default controller<Scope>({
-  scope: ({ data, expanded, depth }: Scope) => {
+  setup: ({ data, expanded, depth }: Scope) => {
     // Per-path user toggles win over the depth/expanded defaults.
     const overrides = signal<Record<string, boolean>>({})
 

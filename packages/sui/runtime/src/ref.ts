@@ -4,7 +4,7 @@
 // A `Ref<T>` is a `Signal<T | null>` slot the runtime writes into when
 // the corresponding `bind:this={var}` element mounts, and clears on
 // unmount. Authors declare a ref by adding `var: ref(null)` to the
-// controller's `scope:` factory; the compiler's `bind_this_target`
+// controller's `setup:` factory; the compiler's `bind_this_target`
 // check enforces this shape. The paired template reads it with `var()`
 // like any signal.
 //

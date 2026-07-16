@@ -26,7 +26,7 @@ import { controller, signal, derived, effect, type ViewScope } from '@ship/sui-r
 import type { Scope } from './page.sui'
 import { DETAILS, type DetailEntry } from './registry'
 export default controller({
-  scope: (ctx: ViewScope<Scope>) => {
+  setup: (ctx: ViewScope<Scope>) => {
     const tag = derived(() => ctx.route.params.tag?.() ?? '')
     const entry = derived<DetailEntry | null>(() => DETAILS[tag()] ?? null)
     const known = derived(() => entry() !== null)

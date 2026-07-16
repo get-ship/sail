@@ -47,7 +47,7 @@ Error: routes/page.sui: line 4 col 13: [sui-sx]
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => {
+  setup: () => {
     const count = signal(0)
     return { count }
   },
@@ -92,7 +92,7 @@ sui-compiler build greeting/greeting.sui`,
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => {
+  setup: () => {
     const open = signal(false)
     return { open }
   },

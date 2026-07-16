@@ -12,7 +12,7 @@ function notify(message: string, tone: string, description?: string) {
 }
 
 export default controller<Scope>({
-  scope: () => ({
+  setup: () => ({
     // Overlays
     dialogDemo: useDialog(),
     alertDialogOpen: signal(false),

@@ -73,7 +73,7 @@ const prose: Action<string> = (node, html) => {
 }
 
 export default controller({
-  scope: (ctx: ViewScope<Scope>) => {
+  setup: (ctx: ViewScope<Scope>) => {
     const lesson = derived(() => BY_SLUG[ctx.route.params.slug() ?? ''])
     const nextSlug = derived(() => lesson()?.next ?? '')
 

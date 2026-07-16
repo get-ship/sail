@@ -38,7 +38,7 @@ function fetchInbox(): Promise<Message[]> {
 }
 
 export default controller<Scope>({
-  scope: () => {
+  setup: () => {
     const inbox = live(fetchInbox)
     const filter = signal<'all' | 'unread'>('all')
     const archived = signal<number[]>([])

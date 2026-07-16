@@ -9,7 +9,7 @@ import type { Scope } from './page.sui'
 import { ssrConfig, buildCmd } from './snippets'
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => ({ ssrConfig, buildCmd }),
+  setup: (_ctx: ViewScope<Scope>) => ({ ssrConfig, buildCmd }),
 })
 </controller>
 

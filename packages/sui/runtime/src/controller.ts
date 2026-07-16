@@ -1,7 +1,7 @@
 // controller.ts — typed contract for the five-section controller shape.
 //
 // A controller has four sections: `derived`, `on`, `mount`, `unmount`. State is
-// declared in the `scope:` factory (`scope: () => ({ n: signal(0) })`). The
+// declared in the `setup:` factory (`setup: () => ({ n: signal(0) })`). The
 // `<state>` directive this comment used to describe is RETIRED — and the comment
 // outlived it by long enough to start lying, which is how docs rot.
 //
@@ -187,7 +187,7 @@ export type OnSection<Scope> = Record<
  *      returned a number) or when you want to hand a `Signal<T>` to a
  *      callback that closes over it.
  *
- * Non-signal entries from the controller's `scope: () => ({...})`
+ * Non-signal entries from the controller's `setup: () => ({...})`
  * factory (helper functions, plain values) are directly accessible
  * via the proxy fallthrough — `state.reset()` resolves to the
  * factory-returned arrow. The compiler emits both groups into the
@@ -230,7 +230,7 @@ export interface ControllerShape<Scope = object> {
    * tier-2+ controllers. Author writes idiomatic TypeScript inside
    * the factory; types flow through inference.
    */
-  scope?: (init: ViewScope<Scope>, host?: Element) => Record<string, unknown>
+  setup?: (init: ViewScope<Scope>, host?: Element) => Record<string, unknown>
 
   /**
    * Event handlers. The **only** section in a controller that can
@@ -250,7 +250,7 @@ export interface ControllerShape<Scope = object> {
  * The canonical controller shape — single call, precise, cast-free.
  *
  * Both type parameters are INFERRED from the `def` object, so authors
- * write `controller({ scope: (ctx: ViewScope<Scope>) => ({…}) })` with no
+ * write `controller({ setup: (ctx: ViewScope<Scope>) => ({…}) })` with no
  * explicit type argument and no currying:
  *   - `Ctx` is inferred from the `scope` factory's PARAMETER annotation
  *     (the compiler-generated `ViewScope<Scope>` the author imports). This
@@ -264,7 +264,7 @@ export interface ControllerShape<Scope = object> {
  * controller returns `({})`.
  */
 export interface ScopedControllerDef<Ctx, SC extends Record<string, unknown>> {
-  scope: (init: Ctx, host?: Element) => SC
+  setup: (init: Ctx, host?: Element) => SC
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   on?: Record<string, (state: MutableState<Ctx & SC>, ...args: any[]) => void | Promise<void>>
   mount?: (state: MutableState<Ctx & SC>, el: HTMLElement) => (() => void) | void | Promise<void>

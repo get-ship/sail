@@ -372,7 +372,7 @@ fn collect_let_names(instrs: &[Instr]) -> Vec<String> {
 /// The authored module default-exports a `ControllerExport` (what
 /// `controller(def)` returns). We run its `setup(ctx)` — the SAME
 /// `resolveController` the browser hydrate path runs — so the authored
-/// logic is COMPOSED, never rewritten: signals from the `scope:` factory,
+/// logic is COMPOSED, never rewritten: signals from the `setup:` factory,
 /// memoized `derived`, and pre-bound `on` handlers all resolve exactly as in
 /// production. `setup` returns flat `ResolvedBindings` (erased to
 /// `Record<string, unknown>`), so we recover the controller's contributed
@@ -389,21 +389,21 @@ fn emit_authored_compose(w: &mut Writer, used: &[String], manifest: &AppManifest
     w.line("// Authored controller — COMPOSED via its real `controller({...})` DSL:");
     w.line("// `setup(ctx)` runs `resolveController` (the same resolver the browser");
     w.line("// hydrate path runs) and returns the flat bindings. The scope's");
-    w.line("// contributed type is recovered from the controller's `__def.scope`");
+    w.line("// contributed type is recovered from the controller's `__def.setup`");
     w.line("// factory return (not the legacy `ControllerExport<infer S>` generic");
     w.line("// — the generic is often pinned to the empty view `Scope` and would");
     w.line("// erase factory-added members from the recovered type).");
-    // Use `infer ReturnType<...>` so a non-function `scope` (legacy
-    // `controller<Scope>({...})` with no `scope:` factory) falls back to
+    // Use `infer ReturnType<...>` so a non-function `setup` (a
+    // `controller<Scope>({...})` with no `setup:` factory) falls back to
     // `object` — matches the controller's contribution of nothing.
     w.line(
-        "type __AuthoredScope = typeof __authored.__def extends { scope?: infer F }",
+        "type __AuthoredScope = typeof __authored.__def extends { setup?: infer F }",
     );
     // Match the factory regardless of its parameter list. `ScopedControllerDef`
-    // types `scope` as `(init: Ctx, host?) => SC` — a REQUIRED `init` param — so
+    // types `setup` as `(init: Ctx, host?) => SC` — a REQUIRED `init` param — so
     // the zero-arg pattern `() => infer R` failed to match (a fn requiring args
     // isn't assignable to `() => R`), collapsing the recovered scope to `object`
-    // and false-erroring EVERY `scope.X` read. `(...a: never[]) => infer R`
+    // and false-erroring EVERY `setup.X` read. `(...a: never[]) => infer R`
     // (the `ReturnType` idiom) matches any factory and recovers SC precisely.
     w.line("  ? F extends (...a: never[]) => infer R ? R : object");
     w.line("  : object;");

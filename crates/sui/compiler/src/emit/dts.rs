@@ -3,7 +3,7 @@
 //!
 //! Walks `<data>`, `<prop>`, and `<use-* as=>` declarations from the
 //! IR and emits a TypeScript declaration file that authors can import
-//! as `Scope`. Reactive state lives in the controller's `scope:`
+//! as `Scope`. Reactive state lives in the controller's `setup:`
 //! factory and is typed by TS itself, so it has no `.d.ts` entry.
 
 use crate::check::controller_parse::ParsedController;
@@ -12,7 +12,7 @@ use crate::ir::{AttrInstr, DataDecl, ElementInstr, Instr, Program, PropDecl, Pro
 /// Emit the `.sui.d.ts` text for a compiled `.sui` file.
 ///
 /// When a paired controller is available, the `Scope` interface also
-/// includes every key surfaced by the controller's `scope: () => ({...})`
+/// includes every key surfaced by the controller's `setup: () => ({...})`
 /// factory. Each entry is typed by a lightweight heuristic — see
 /// `super::scope_factory` for the supported shapes. Authors who want a
 /// tighter inferred type than the heuristic can always annotate the
@@ -406,7 +406,7 @@ mod tests {
     use std::path::PathBuf;
 
     /// An empty (template-less) `Program` — the d.ts under test draws all of
-    /// its members from the paired controller's `scope:` factory.
+    /// its members from the paired controller's `setup:` factory.
     fn empty_program() -> Program {
         Program {
             data: Vec::new(),
@@ -431,7 +431,7 @@ mod tests {
         // template therefore yields an empty Scope with no spurious imports.
         let c = ctrl(
             "export default controller({\n  \
-             scope: () => ({\n    \
+             setup: () => ({\n    \
                q: signal(''),\n    \
                rail: live(() => liveExpr(`ship.skills.summaries()`)),\n  \
              }),\n});",

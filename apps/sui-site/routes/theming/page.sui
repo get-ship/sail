@@ -16,7 +16,7 @@ import type { Scope } from './page.sui'
 import { code } from './snippets'
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => {
+  setup: (_ctx: ViewScope<Scope>) => {
     const active = signal<string>(readStoredTheme())
     const pick = (id: ThemeId): void => {
       applyTheme(id)

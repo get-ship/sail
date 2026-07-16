@@ -7,7 +7,7 @@
 //!  3. Directive lift — pluck `<data>`, `<prop>`, and top-level
 //!     `<style>` out of the top-level child list into the IR. A
 //!     top-level `<state>` directive is rejected with a parse error
-//!     pointing authors at the controller's `scope:` factory.
+//!     pointing authors at the controller's `setup:` factory.
 //!  4. Template grammar scan — text-node `{...}` markers become
 //!     template instructions; element children recurse.
 //!  5. Expression validate — every brace expression goes through the
@@ -285,7 +285,7 @@ fn reject_part_selector(source: &str) -> Result<(), CompileError> {
 
 /// Build the parse error returned when an author writes a top-level
 /// `<state>` element. The directive was retired in favour of
-/// declaring reactive state in the paired controller's `scope:`
+/// declaring reactive state in the paired controller's `setup:`
 /// factory; the message names the migration target so authors can
 /// fix the file without consulting the changelog.
 fn state_directive_retired(el: &html::Element) -> CompileError {
@@ -297,8 +297,8 @@ fn state_directive_retired(el: &html::Element) -> CompileError {
     };
     CompileError::new(format!(
         "{label} directive is no longer supported. Declare reactive state \
-         in the paired controller's `scope:` factory \
-         (e.g. `scope: () => ({{ {} }})`).",
+         in the paired controller's `setup:` factory \
+         (e.g. `setup: () => ({{ {} }})`).",
         if name.is_empty() {
             "x: signal(0)".to_string()
         } else {
@@ -329,7 +329,7 @@ fn parse_data(el: &html::Element) -> Result<DataDecl, CompileError> {
 /// Setup-context names a `<client>` may not shadow. `ship` is deliberately
 /// NOT here — declaring `<client name="ship" />` is the migration path off
 /// the ambient default, routing the same key through `ctx.clients`.
-const RESERVED_CLIENT_NAMES: &[&str] = &["route", "navigate", "ctx", "scope", "props", "derived"];
+const RESERVED_CLIENT_NAMES: &[&str] = &["route", "navigate", "ctx", "scope", "setup", "props", "derived"];
 
 fn parse_client(el: &html::Element, existing: &[ClientDecl]) -> Result<ClientDecl, CompileError> {
     let name = required_attr(el, "name", "<client>")?;

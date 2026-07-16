@@ -31,7 +31,7 @@ import type { Scope } from './sui-color-picker.sui'
 let idSeq = 0
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => {
+  setup: (_ctx: ViewScope<Scope>) => {
     const open = signal(false)
     const hue = signal(0)
     const sat = signal(0)

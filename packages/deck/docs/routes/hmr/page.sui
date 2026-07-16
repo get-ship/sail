@@ -6,7 +6,7 @@ import type { Scope } from './page.sui'
 import { devCmd } from './snippets'
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => ({ devCmd }),
+  setup: (_ctx: ViewScope<Scope>) => ({ devCmd }),
 })
 </controller>
 

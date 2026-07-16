@@ -52,7 +52,7 @@ describe('controller() helper', () => {
   it('setup() runs the resolver and returns bindings', () => {
     const ctx = withState({ count: 5 })
     const out = controller({
-      scope: (init) => ({ doubled: derived(() => ((init as { count: () => number }).count()) * 2) }),
+      setup: (init) => ({ doubled: derived(() => ((init as { count: () => number }).count()) * 2) }),
       on: { incr: (s) => { s.count++ } },
     })
     const bindings = out.setup(ctx)
@@ -78,7 +78,7 @@ describe('tier-2 — object form compiles for every section', () => {
   it('scope deriveds + on', () => {
     type Scope = { count: Signal<number> }
     controller({
-      scope: (s: ViewScope<Scope>) => ({
+      setup: (s: ViewScope<Scope>) => ({
         doubled: derived(() => s.count() * 2),
         over9k: derived(() => s.count() > 9000),
       }),
@@ -95,7 +95,7 @@ describe('tier-2 — object form compiles for every section', () => {
       agents: Signal<{ items: string[] }>
     }
     controller({
-      scope: (s: ViewScope<Scope>) => ({
+      setup: (s: ViewScope<Scope>) => ({
         filtered: derived(() => s.agents().items.filter((n) => n.includes(s.query()))),
       }),
       on: {

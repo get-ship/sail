@@ -10,7 +10,7 @@ const stamp = (k: number, text: string): LogLine => ({
 })
 
 export default controller<Scope>({
-  scope: () => {
+  setup: () => {
     const elapsed = signal(0)
     const log = signal<LogLine[]>([])
     return {

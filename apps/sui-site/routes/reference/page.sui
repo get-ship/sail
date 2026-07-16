@@ -36,7 +36,7 @@ const SX_ROWS = SX_ATOMS.map((a) => ({ prop: a.prop, values: a.values.join(' · 
 const LAYOUT_ROWS = LAYOUT_KEYWORDS.map((k) => ({ tag: k.tag, props: k.props.join(', ') }))
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => ({
+  setup: (_ctx: ViewScope<Scope>) => ({
     elements: () => ELEMENTS,
     elementCount: () => ELEMENTS.length,
     sxRows: () => SX_ROWS,

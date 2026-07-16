@@ -14,7 +14,7 @@ import type { Scope } from './page.sui'
 import { loopDiagram } from './snippets'
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => ({ loopDiagram }),
+  setup: (_ctx: ViewScope<Scope>) => ({ loopDiagram }),
 })
 </controller>
 

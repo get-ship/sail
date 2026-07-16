@@ -49,7 +49,7 @@ export interface PropRow {
 }
 
 export default controller<Scope>({
-  scope: ({ variants, rows, usage, variantAttr }: Scope) => {
+  setup: ({ variants, rows, usage, variantAttr }: Scope) => {
     const active = signal('')
     const variantList = derived(() => variants() ?? [])
     const hasVariants = derived(() => (variantAttr() ?? '') !== '' && variantList().length > 0)

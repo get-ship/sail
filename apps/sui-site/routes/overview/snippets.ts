@@ -5,7 +5,7 @@ export const code = {
 import { controller, signal, filteredList } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => {
+  setup: () => {
     const people = signal([
       { id: 1, name: 'Ada Lovelace', status: 'active' },
       { id: 2, name: 'Grace Hopper', status: 'away' },

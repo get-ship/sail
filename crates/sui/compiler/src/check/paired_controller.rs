@@ -76,7 +76,7 @@ mod tests {
     fn inline_block_alone_passes() {
         let dir = tempfile::tempdir().unwrap();
         let sui = dir.path().join("sui-x.sui");
-        let src = "<controller>export default controller({ scope: () => ({}) })</controller>\n<span></span>";
+        let src = "<controller>export default controller({ setup: () => ({}) })</controller>\n<span></span>";
         std::fs::write(&sui, src).unwrap();
         check(src, Some(&sui)).unwrap();
     }

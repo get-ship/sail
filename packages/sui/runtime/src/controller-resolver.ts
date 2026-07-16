@@ -69,13 +69,13 @@ export function resolveController(
     ...(ctx.scope ?? {}),
   }
 
-  // `scope:` factory runs first — its returned entries become part of
+  // `setup:` factory runs first — its returned entries become part of
   // the merged scope before any other section. Idiomatic TypeScript
   // closure: signals, derived, hooks, shared wrappers all live here.
   // Pass ctx.host as second arg so a controller can reach its own element
   // (shadow root, focus) from the scope factory.
-  const scopeAdds = shape.scope
-    ? (shape.scope as (s: unknown, h?: Element) => Record<string, unknown>)(baseScope, ctx.host)
+  const scopeAdds = shape.setup
+    ? (shape.setup as (s: unknown, h?: Element) => Record<string, unknown>)(baseScope, ctx.host)
     : {}
   Object.assign(baseScope, scopeAdds)
 
@@ -138,7 +138,7 @@ function normalize(
 /**
  * Extract the writable-state subset of an ambient scope. State signals
  * are identified by `stateKeys` (template `<state>` directives) AND the
- * keys returned by the controller's `scope:` factory — both are author-
+ * keys returned by the controller's `setup:` factory — both are author-
  * declared writable signals. Without `stateKeys` and without `scopeAdds`
  * we fall back to the "any callable value with a `.set` method" heuristic.
  */
@@ -239,7 +239,7 @@ export interface ControllerExport<Scope = object> {
 // deprecated legacy/curried bridges (an explicit single `<Scope>` can't bind
 // this overload's two inferred params, so resolution falls through to them).
 // `__def` is added to the canonical return so the synthetic controller can
-// recover the scope-factory return type via `typeof __authored.__def.scope`
+// recover the setup-factory return type via `typeof __authored.__def.setup`
 // (slice 2 G4). Typing `def` DIRECTLY as `ScopedControllerDef<Ctx, SC>` (not a
 // generic `D extends ScopedControllerDef<Ctx, SC>`) is load-bearing: it gives
 // `Ctx`/`SC` real inference positions — the `scope` param annotation drives
@@ -251,7 +251,7 @@ export interface ControllerExport<Scope = object> {
 export function controller<Ctx, SC extends Record<string, unknown>>(
   def: ScopedControllerDef<Ctx, SC>,
 ): ControllerExport<Ctx & SC> & { __def: ScopedControllerDef<Ctx, SC> }
-// Legacy form `controller<Scope>(def)` — for controllers with NO `scope:`
+// Legacy form `controller<Scope>(def)` — for controllers with NO `setup:`
 // factory (only `on`/`mount`). Their scope is entirely template-declared, so
 // the compiler-emitted `Scope` is already precise (no casts). A controller
 export function controller<Scope>(def: ControllerDef<Scope>): ControllerExport<Scope>

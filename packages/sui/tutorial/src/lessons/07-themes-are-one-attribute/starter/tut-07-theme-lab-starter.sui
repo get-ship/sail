@@ -12,7 +12,7 @@ import { THEMES, readStoredTheme, type Theme, type ThemeId } from '@ship/tokens/
 import type { Scope } from './tut-07-theme-lab-starter.sui'
 
 export default controller<Scope>({
-  scope: () => {
+  setup: () => {
     const active = signal<ThemeId>(readStoredTheme())
 
     return {

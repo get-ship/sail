@@ -17,7 +17,7 @@ interface Lap {
 // The controller owns ALL state. The template can bind only what scope()
 // returns — nothing else exists on the other side of the boundary.
 export default controller<Scope>({
-  scope: () => {
+  setup: () => {
     const elapsed = signal(0) // milliseconds
     const running = signal(false)
     const laps = signal<Lap[]>([])

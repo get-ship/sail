@@ -7,7 +7,7 @@ import type { Scope } from './page.sui'
 import { configExample, usageExample } from './snippets'
 
 export default controller({
-  scope: (ctx: ViewScope<Scope>) => ({
+  setup: (ctx: ViewScope<Scope>) => ({
     configExample,
     usageExample,
     visits: ctx.clients.store.visits,

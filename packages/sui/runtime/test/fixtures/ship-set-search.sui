@@ -4,7 +4,7 @@ import { controller, signal, derived } from '@ship/sui-runtime'
 const ITEMS = ['apple', 'apricot', 'banana', 'blueberry', 'cherry', 'grape']
 
 export default controller({
-  scope: () => {
+  setup: () => {
     const query = signal('')
     const caseSensitive = signal(false)
     const filtered = derived(() => {

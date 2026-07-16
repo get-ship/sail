@@ -47,7 +47,7 @@
       <!-- code arm — TypeScript via filename extension -->
       <column gap="2" sx="border border-divider rounded-md p-3 bg-surface-2">
         <span sx="text-xs font-medium text-muted-foreground lowercase tracking-wide font-mono">filename=controller.ts · code arm (extension detection)</span>
-        <ship-viewer filename="controller.ts" text="import { controller, signal } from '@ship/sui-runtime'&#10;&#10;export default controller({&#10;  scope: () => ({ count: signal(0) }),&#10;})">
+        <ship-viewer filename="controller.ts" text="import { controller, signal } from '@ship/sui-runtime'&#10;&#10;export default controller({&#10;  setup: () => ({ count: signal(0) }),&#10;})">
         </ship-viewer>
       </column>
 

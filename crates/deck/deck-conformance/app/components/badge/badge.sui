@@ -9,7 +9,7 @@
 import { controller, signal } from '@ship/sui-runtime'
 
 export default controller({
-  scope: () => {
+  setup: () => {
     const count = signal(0)
     const bump = (): void => count.set(count() + 1)
     return { count, bump }

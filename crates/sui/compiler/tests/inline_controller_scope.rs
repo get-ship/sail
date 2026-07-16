@@ -27,7 +27,7 @@ fn opts() -> CompileOpts {
 const CONTROLLER: &str = "<controller>\n\
     import { controller, signal } from '@ship/sui-runtime'\n\
     export default controller({\n\
-      scope: () => ({ count: signal(0) }),\n\
+      setup: () => ({ count: signal(0) }),\n\
     })\n\
     </controller>\n";
 

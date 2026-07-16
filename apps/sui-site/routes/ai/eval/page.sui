@@ -15,7 +15,7 @@ import type { Scope } from './page.sui'
 import { evalExample, hatchExample } from './snippets'
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => ({ evalExample, hatchExample }),
+  setup: (_ctx: ViewScope<Scope>) => ({ evalExample, hatchExample }),
 })
 </controller>
 

@@ -3,7 +3,7 @@ import { controller, signal, derived } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 
 export default controller<Scope>({
-  scope: () => {
+  setup: () => {
     const count = signal(0)
     const history = signal<Array<{ k: number; value: number }>>([])
     const double = derived(() => count() * 2)

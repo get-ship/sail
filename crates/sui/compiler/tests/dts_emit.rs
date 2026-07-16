@@ -185,7 +185,7 @@ fn scope_factory_fields_omitted_from_scope() {
     let controller = r#"
         import { controller, signal } from '@ship/sui-runtime'
         export default controller({
-          scope: () => ({
+          setup: () => ({
             foo: signal<number>(0),
             label: signal(''),
           }),
@@ -214,7 +214,7 @@ fn scope_factory_shorthand_fields_omitted_from_scope() {
     let controller = r#"
         import { controller, signal } from '@ship/sui-runtime'
         export default controller({
-          scope: (_b: unknown, host?: Element) => {
+          setup: (_b: unknown, host?: Element) => {
             const caughtError = signal<Error | null>(null)
             const reset = (): void => { caughtError.set(null); host?.removeAttribute('x') }
             return { caughtError, reset }
@@ -234,7 +234,7 @@ fn empty_scope_factory_leaves_scope_unchanged() {
     let sui = r#"<p>x</p>"#;
     let controller = r#"
         import { controller } from '@ship/sui-runtime'
-        export default controller({ scope: () => ({}) })
+        export default controller({ setup: () => ({}) })
     "#;
     let dts = compile_dts_with_controller("page", sui, controller);
     assert!(
@@ -242,14 +242,14 @@ fn empty_scope_factory_leaves_scope_unchanged() {
         "expected empty Scope when factory adds nothing, got: {dts}"
     );
     assert!(
-        !dts.contains("// From controller scope: factory"),
+        !dts.contains("// From controller setup: factory"),
         "should not emit the factory header when factory is empty, got: {dts}"
     );
 }
 
 #[test]
 fn no_scope_section_leaves_scope_unchanged() {
-    // Controller without a `scope:` section — falls back to template-derived
+    // Controller without a `setup:` section — falls back to template-derived
     // Scope only. Existing controllers must continue typechecking.
     let sui = r#"<p>x</p>"#;
     let controller = r#"
@@ -275,7 +275,7 @@ fn template_member_clashing_with_factory_is_dropped_from_scope() {
     let controller = r#"
         import { controller, signal } from '@ship/sui-runtime'
         export default controller({
-          scope: () => ({ config: signal<{ url: string }>({ url: '' }) }),
+          setup: () => ({ config: signal<{ url: string }>({ url: '' }) }),
         })
     "#;
     let dts = compile_dts_with_controller("page", sui, controller);

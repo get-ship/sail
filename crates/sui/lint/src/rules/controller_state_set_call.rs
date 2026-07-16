@@ -5,7 +5,7 @@
 //! handlers receive the MutableState proxy — there `state.x` is the
 //! unwrapped value, `state.x.set(…)` calls `.set` on the value and errors
 //! at runtime; the canonical write is the assignment form `state.x = …`
-//! (the set-trap routes it through `signal.set`). The `scope:`/`setup`
+//! (the set-trap routes it through `signal.set`). The `setup:`/`setup`
 //! factory and `derived` entries receive the RAW scope — there entries
 //! ARE `Signal`s and `state.x.set(v)` is the correct write. The lint
 //! therefore fires only inside proxy contexts.
@@ -51,7 +51,7 @@ struct SetCallVisitor<'src> {
     findings: Vec<Finding>,
     /// True while inside a controller section that receives the MutableState
     /// proxy (`mount`/`unmount` bodies, `on:` handler maps). The
-    /// `scope:`/`setup` factory and `derived` entries receive the raw scope,
+    /// `setup:`/`setup` factory and `derived` entries receive the raw scope,
     /// where `state.x.set(v)` is the correct write form.
     in_proxy_ctx: bool,
 }
@@ -214,7 +214,7 @@ mod tests {
         // Signals there and `state.x.set(v)` is the correct write form.
         let src = r#"
             export default controller<Scope>({
-              scope: (state) => {
+              setup: (state) => {
                 function activate(id) {
                   state.activeTab.set(id)
                 }

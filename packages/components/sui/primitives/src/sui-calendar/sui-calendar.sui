@@ -86,7 +86,7 @@ function weekdayLabels(weekStartsOn: number): { key: string; label: string }[] {
 
 
 export default controller({
-  scope: (ctx: ViewScope<Scope>) => {
+  setup: (ctx: ViewScope<Scope>) => {
     const { events, focusDate, weekStartsOn, slotMinutes, dayStartHour, dayEndHour, rangeMode } = ctx
     // The time-grid tracks — a constant per skin, exposed as a derived so
     // sx/use:gridTracks={...} can stay expression-bound. The language's

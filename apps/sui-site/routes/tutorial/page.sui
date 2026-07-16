@@ -13,7 +13,7 @@ import type { Scope } from './page.sui'
 import { TUTORIAL_GROUPS, TUTORIAL_LESSONS, type TutorialGroup } from '../../src/tutorial-data'
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => ({
+  setup: (_ctx: ViewScope<Scope>) => ({
     groups: (): TutorialGroup[] => TUTORIAL_GROUPS,
     total: (): number => TUTORIAL_LESSONS.length,
   }),

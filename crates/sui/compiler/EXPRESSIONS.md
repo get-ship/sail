@@ -138,7 +138,7 @@ These are rejected by the parser and/or the post-parse subset check:
 - Tagged template literals (`` html`...` ``).
 - Non-allow-listed method calls with arguments (e.g. `xs.push(3)`).
 - Non-allow-listed plain calls with arguments (e.g. `doStuff(a, b)`).
-  Helpers must be invoked via `scope:` actions or `derived` keys
+  Helpers must be invoked via `setup:` actions or `derived` keys
   declared in the controller.
 - Regular-expression literals (`/foo/`).
 - Spread outside an array or object literal.
@@ -157,17 +157,17 @@ fine" used to hide:
    name. See `check/scope_bound.rs`.
 3. **`scope.X` member typo** — when the head of a member chain is
    `scope`, the second segment must be a key returned by the paired
-   controller's `scope:` factory. See `check/scope_member.rs`.
+   controller's `setup:` factory. See `check/scope_member.rs`.
 4. **Stable `key=` identity** — `{#for}` `key={expr}` rejects fresh
    array / object literals (always-new identity defeats keyed reuse).
    See `check/key_identity.rs`.
 5. **`bind:this` target** — must be a controller-declared `ref(...)`
-   in `scope:`. See `check/bind_this_target.rs`.
+   in `setup:`. See `check/bind_this_target.rs`.
 6. **`prop:foo` typo** — when the child element is a sibling SUI
    component file with declared `<prop>` directives, `prop:foo={…}`
    must match a declared prop name. See `check/prop_target.rs`.
 7. **`on:event` callable** — non-arrow handlers must reference an
-   `on:` action, a `scope:` action, or a callable in scope. See
+   `on:` action, a `setup:` action, or a callable in scope. See
    `check/on_callable.rs`.
 8. **Mutation chain** — `mutation="ship.X.Y"` is `ship.<ns>.<method>`
    shape only. See `check/mod.rs::validate_mutation_expr`.

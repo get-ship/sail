@@ -31,7 +31,7 @@ describe('MutableState<Scope> (handler-state arg)', () => {
   })
 
   it('canonical form: handlers get PRECISE, cast-free types inferred from scope', () => {
-    // `controller({ scope: (ctx: ViewScope<Tpl>) => ({…}) })` infers both the
+    // `controller({ setup: (ctx: ViewScope<Tpl>) => ({…}) })` infers both the
     // template `Ctx` (from the scope param annotation) and `SC` (from the
     // return) — the controller's own TS is the source of truth (no
     // `Signal<unknown>` from the compiler). No `<Scope>` type arg, no currying,
@@ -42,7 +42,7 @@ describe('MutableState<Scope> (handler-state arg)', () => {
     // `s.label()`.
     interface Tpl { /* template-declared <data>/<state> only */ }
     controller({
-      scope: (_ctx: ViewScope<Tpl>) => ({
+      setup: (_ctx: ViewScope<Tpl>) => ({
         count: signal(0),
         flag: signal(false),
         label: derived(() => 'hello'),

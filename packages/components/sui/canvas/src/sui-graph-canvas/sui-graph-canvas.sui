@@ -201,7 +201,7 @@ function nodeBodyHtml(host: HTMLElement | null, n: GraphNode): string {
 }
 
 export default controller({
-  scope: ({ nodes, edges, width, height, layout, selectedId }: Scope, host?: Element) => {
+  setup: ({ nodes, edges, width, height, layout, selectedId }: Scope, host?: Element) => {
     // The per-kind <template>s are the host's own light-DOM children, and a
     // node card's body is fixed at FIRST render (a keyed row re-binds its own
     // attributes, not a nested branch), so the host must be read here — the

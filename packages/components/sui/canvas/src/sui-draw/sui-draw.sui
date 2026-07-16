@@ -78,7 +78,7 @@ const TOOL_KEYS: Record<string, DrawTool> = {
 // screen through the substrate transform. Pen drafting + shape drag + select
 // + undo/redo run through on:* handlers / mount (Cardinal 3).
 export default controller({
-  scope: ({ value, sketchy }: Scope) => {
+  setup: ({ value, sketchy }: Scope) => {
     const seed = parseScene(value())
     const scene = createDrawScene({
       elements: seed?.elements ?? [],

@@ -58,7 +58,7 @@ interface GaugeHost extends Element {
 }
 
 export default controller({
-  scope: ({
+  setup: ({
     value,
     min,
     max,

@@ -10,7 +10,7 @@ import type { Scope } from './page.sui'
 const DARK_THEMES = new Set(['ship-dark', 'console', 'contrast'])
 
 export default controller<Scope>({
-  scope: () => ({
+  setup: () => ({
     activeTheme: signal<string>('ship-light'),
   }),
   mount(state) {

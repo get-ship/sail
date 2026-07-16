@@ -14,7 +14,7 @@ import type { Scope } from './page.sui'
 import { lintCmd, lintOutput, compileCmd, lspJson } from './snippets'
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => ({ lintCmd, lintOutput, compileCmd, lspJson }),
+  setup: (_ctx: ViewScope<Scope>) => ({ lintCmd, lintOutput, compileCmd, lspJson }),
 })
 </controller>
 

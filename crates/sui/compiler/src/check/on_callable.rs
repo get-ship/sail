@@ -99,7 +99,7 @@ fn validate(
             // `scope.handlerName` — verify the head segment routes to a
             // callable scope key.
             if let AstKind::Ident(head) = &obj.kind
-                && head == "scope"
+                && head == "setup"
             {
                 match table.kind_of_scope(prop) {
                     Some(k) if k.is_callable() => Ok(()),
@@ -182,14 +182,14 @@ mod tests {
 
     #[test]
     fn allows_arrow_handler() {
-        let c = ctrl("export default controller({ scope: () => ({ n: signal(0) }) });");
+        let c = ctrl("export default controller({ setup: () => ({ n: signal(0) }) });");
         check(&program_with_on("(e) => n.set(1)"), Some(&c)).unwrap();
     }
 
     #[test]
     fn allows_scope_action_ident() {
         let c = ctrl(
-            "export default controller({ scope: () => ({ inc: (e) => e }) });",
+            "export default controller({ setup: () => ({ inc: (e) => e }) });",
         );
         check(&program_with_on("inc"), Some(&c)).unwrap();
     }
@@ -197,7 +197,7 @@ mod tests {
     #[test]
     fn rejects_signal_as_handler() {
         let c = ctrl(
-            "export default controller({ scope: () => ({ n: signal(0) }) });",
+            "export default controller({ setup: () => ({ n: signal(0) }) });",
         );
         let err = check(&program_with_on("n"), Some(&c)).unwrap_err();
         assert!(err.message.contains("signal"), "{}", err.message);
@@ -206,7 +206,7 @@ mod tests {
     #[test]
     fn rejects_call_expression_handler() {
         let c = ctrl(
-            "export default controller({ scope: () => ({ inc: (e) => e }) });",
+            "export default controller({ setup: () => ({ inc: (e) => e }) });",
         );
         let err = check(&program_with_on("inc()"), Some(&c)).unwrap_err();
         assert!(err.message.contains("call expression"), "{}", err.message);
@@ -215,17 +215,17 @@ mod tests {
     #[test]
     fn allows_scope_dot_action() {
         let c = ctrl(
-            "export default controller({ scope: () => ({ inc: (e) => e }) });",
+            "export default controller({ setup: () => ({ inc: (e) => e }) });",
         );
-        check(&program_with_on("scope.inc"), Some(&c)).unwrap();
+        check(&program_with_on("setup.inc"), Some(&c)).unwrap();
     }
 
     #[test]
     fn rejects_scope_dot_signal() {
         let c = ctrl(
-            "export default controller({ scope: () => ({ n: signal(0) }) });",
+            "export default controller({ setup: () => ({ n: signal(0) }) });",
         );
-        let err = check(&program_with_on("scope.n"), Some(&c)).unwrap_err();
+        let err = check(&program_with_on("setup.n"), Some(&c)).unwrap_err();
         assert!(err.message.contains("signal"), "{}", err.message);
     }
 }

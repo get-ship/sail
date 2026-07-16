@@ -267,7 +267,7 @@ impl TemplateEmitter {
             AttrInstr::BindThis { var, .. } => {
                 let key = self.next_key();
                 // Refs are write-once-from-runtime. If the controller's
-                // scope: factory pre-declared `var: ref(null)` we write
+                // setup: factory pre-declared `var: ref(null)` we write
                 // the freshly constructed element into that slot;
                 // otherwise we install a fresh signal seeded with the
                 // element. Same shape as React's `ref.current`, but

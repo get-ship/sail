@@ -79,7 +79,7 @@ const SIGNS: Record<Kind, string> = { add: '+', del: '-', hunk: '@', ctx: ' ' }
 const LABELS: Record<Kind, string> = { add: 'added', del: 'removed', hunk: 'hunk', ctx: 'context' }
 
 export default controller<Scope>({
-  scope: ({ from, to, value }: Scope) => {
+  setup: ({ from, to, value }: Scope) => {
     const lines = derived((): Line[] => {
       const v = value()
       const f = from()

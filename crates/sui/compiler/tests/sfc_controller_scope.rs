@@ -15,7 +15,7 @@ use sui_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
 const SFC: &str = r#"<controller>
 import { controller, signal } from '@ship/sui-runtime'
 export default controller({
-  scope: () => {
+  setup: () => {
     const phase = signal('idle')
     return { phase }
   },

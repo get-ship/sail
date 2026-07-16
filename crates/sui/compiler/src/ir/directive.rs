@@ -4,7 +4,7 @@
 //! emitter expands each one into the matching runtime call.
 //!
 //! Reactive component state is declared in the paired controller's
-//! `scope:` factory; the `<state>` directive was retired in favour
+//! `setup:` factory; the `<state>` directive was retired in favour
 //! of typed, testable controller scope. See `.ship/skills/ship-views`.
 
 use crate::diagnostics::Span;

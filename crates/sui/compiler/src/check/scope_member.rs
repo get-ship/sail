@@ -99,8 +99,8 @@ fn check_head_member(
     node: &Ast,
 ) -> Option<CompileError> {
     let (label, exists, available): (&str, bool, Vec<String>) = match head {
-        "scope" => (
-            "scope",
+        "setup" => (
+            "setup",
             table.scope.contains_key(prop),
             table.scope.keys().cloned().collect(),
         ),
@@ -176,21 +176,21 @@ mod tests {
     #[test]
     fn flags_scope_dot_typo() {
         let c = ctrl(
-            "export default controller({ scope: () => ({ count: signal(0) }) });",
+            "export default controller({ setup: () => ({ count: signal(0) }) });",
         );
         let table = SymbolTable::build(&empty_program(), Some(&c));
-        let e = expr("scope.coun");
+        let e = expr("setup.coun");
         let err = check_one(&e, &table).unwrap_err();
-        assert!(err.message.contains("scope.coun"), "{}", err.message);
+        assert!(err.message.contains("setup.coun"), "{}", err.message);
     }
 
     #[test]
     fn allows_known_scope_member() {
         let c = ctrl(
-            "export default controller({ scope: () => ({ count: signal(0) }) });",
+            "export default controller({ setup: () => ({ count: signal(0) }) });",
         );
         let table = SymbolTable::build(&empty_program(), Some(&c));
-        let e = expr("scope.count()");
+        let e = expr("setup.count()");
         check_one(&e, &table).unwrap();
     }
 

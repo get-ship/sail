@@ -28,7 +28,7 @@ const SEED: Note[] = [
 // This lesson's state is deliberately boring — every interesting line in
 // it lives in the TEMPLATE, because motion is a directive, not code.
 export default controller<Scope>({
-  scope: () => {
+  setup: () => {
     const open = signal(true)
     const notes = signal<Note[]>(SEED)
     const unread = derived(() => notes().length)

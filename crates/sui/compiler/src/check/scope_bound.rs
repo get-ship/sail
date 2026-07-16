@@ -3,8 +3,8 @@
 //! actually has. Scope sources, in resolution order:
 //!
 //!  * `<data name="…">`, `<prop name="…">` declarations on the program.
-//!  * `scope` factory return keys, `derived` keys, `on` keys, and
-//!    `use` keys from the paired controller (when one exists).
+//!  * `setup` factory return keys, `derived` keys, and `on` keys from
+//!    the paired controller (when one exists).
 //!  * The setup-context idents `ship`, `route`, `navigate`.
 //!  * JS / browser globals from a small fixed allowlist.
 //!  * Locals introduced by an arrow's parameter list (handlers can
@@ -32,7 +32,7 @@ const BUILTINS: &[&str] = &[
     // member access through these so typos are flagged with a
     // useful "did you mean…" message instead of "scope is not
     // declared".
-    "scope", "derived", "props",
+    "setup", "derived", "props",
     // JS standard objects.
     "Math", "JSON", "Object", "Array", "String", "Number", "Boolean", "Date",
     "Symbol", "Map", "Set", "WeakMap", "WeakSet", "Error", "RegExp",
@@ -138,8 +138,7 @@ fn build_scope(program: &Program, controller: Option<&ParsedController>) -> Scop
         for sec in &c.sections {
             match sec.name.as_str() {
                 "derived" | "on" => collect_object_keys(&c.source, sec.value_span, &mut names),
-                "use" => collect_use_keys(&c.source, sec.value_span, &mut names),
-                "scope" => collect_scope_return_keys(&c.source, sec.value_span, &mut names),
+                "setup" => collect_setup_return_keys(&c.source, sec.value_span, &mut names),
                 _ => {}
             }
         }
@@ -194,46 +193,13 @@ fn collect_object_keys(src: &str, span: Span, into: &mut BTreeSet<String>) {
     }
 }
 
-/// `use` may be either `{ key: factory(...), … }` (object form) or
-/// `(s) => ({ key: factory(...), … })` (function form). Skip an
-/// optional `(args) =>` prefix, then harvest keys from the object
-/// literal that follows (unwrapping a parenthesized wrapper).
-fn collect_use_keys(src: &str, span: Span, into: &mut BTreeSet<String>) {
-    let bytes = src.as_bytes();
-    let mut i = span.start;
-    let end = span.end.min(bytes.len());
-    i = skip_trivia(bytes, i);
-    // Optional `(...)` parameter list.
-    if i < end && bytes[i] == b'(' {
-        let close = skip_balanced(bytes, i, end);
-        let after = skip_trivia(bytes, close);
-        if after + 1 < end && bytes[after] == b'=' && bytes[after + 1] == b'>' {
-            i = skip_trivia(bytes, after + 2);
-        }
-        // If no `=>` follows, treat the original `(` as the start of
-        // the object — but per `use` shape, that wouldn't be a key
-        // bag; bail out without harvesting.
-        if i == span.start {
-            return;
-        }
-    }
-    // Optional outer `(` wrapping the object literal: `({...})`.
-    if i < end && bytes[i] == b'(' {
-        i = skip_trivia(bytes, i + 1);
-    }
-    if i < end && bytes[i] == b'{' {
-        let close = skip_balanced(bytes, i, end);
-        collect_object_keys(src, Span::new(i, close), into);
-    }
-}
-
-/// `scope:` factory — collect the keys of the object the factory returns.
+/// `setup:` factory — collect the keys of the object the factory returns.
 ///
 /// Handles three author shapes:
-///   - block body:    `scope: (init) => { ... return { x, y } }`
-///   - expression body, parenthesised:  `scope: () => ({ x, y })`
-///   - expression body, bare object:    `scope: () => ({x, y})` (same as above)
-fn collect_scope_return_keys(src: &str, span: Span, into: &mut BTreeSet<String>) {
+///   - block body:    `setup: (init) => { ... return { x, y } }`
+///   - expression body, parenthesised:  `setup: () => ({ x, y })`
+///   - expression body, bare object:    `setup: () => ({x, y})` (same as above)
+fn collect_setup_return_keys(src: &str, span: Span, into: &mut BTreeSet<String>) {
     let bytes = src.as_bytes();
     let start = span.start;
     let end = span.end.min(bytes.len());

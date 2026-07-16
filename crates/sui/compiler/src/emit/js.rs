@@ -9,7 +9,7 @@
 //! export default component((ctx) => {
 //!   const $scope = Object.create(null);
 //!   $scope.ship = ctx.ship; …
-//!   //  state signals come from the controller's `scope:` factory:
+//!   //  state signals come from the controller's `setup:` factory:
 //!   //  Object.assign($scope, setup.setup(ctx)) seeds them here.
 //!   …
 //!   const __wireBoundary_b3 = (anchor) => bindIf({ … });

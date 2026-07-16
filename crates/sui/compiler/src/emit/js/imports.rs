@@ -21,7 +21,7 @@ pub(super) fn emit_imports(
     // Built-in transition factories are auto-imported when the template
     // references them — authors don't have to wire fade/slide/scale by
     // hand. Custom transition names (anything not in this set) still
-    // resolve through `$scope` (i.e. the controller's scope: factory).
+    // resolve through `$scope` (i.e. the controller's setup: factory).
     for &name in &lowered.transition_builtins {
         let s = name.to_string();
         if !imports.contains(&s) {

@@ -5,7 +5,7 @@ import type { Scope } from './page.sui'
 interface Todo { id: number; text: string }
 
 export default controller<Scope>({
-  scope: () => {
+  setup: () => {
     const items = signal<Todo[]>([
       { id: 1, text: 'Read ship-views skill' },
       { id: 2, text: 'Open /demos' },

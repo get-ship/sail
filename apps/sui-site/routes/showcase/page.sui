@@ -32,7 +32,7 @@ interface Service {
 }
 
 export default controller({
-  scope: (_ctx: ViewScope<Scope>) => {
+  setup: (_ctx: ViewScope<Scope>) => {
     const people = signal<Person[]>([
       { id: 1, name: 'Ada Lovelace', team: 'Engines', status: 'active' },
       { id: 2, name: 'Grace Hopper', team: 'Compilers', status: 'active' },

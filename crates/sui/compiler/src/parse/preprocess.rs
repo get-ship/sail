@@ -1414,7 +1414,7 @@ pub fn wrap_controller_body(body: &str) -> String {
             }
         }
         format!(
-            "{}\nexport default controller({{ scope: () => ({{ {} }}) }});\n",
+            "{}\nexport default controller({{ setup: () => ({{ {} }}) }});\n",
             lines.join("\n"),
             names.join(", ")
         )
@@ -2910,7 +2910,7 @@ mod tests {
         // free variables that become `ReferenceError: controller is not
         // defined` at runtime (the blank-render regression).
         let src = "<controller>\n\
-export default controller({ scope: () => { const c = signal(0); return { d: derived(() => c()) } } })\n\
+export default controller({ setup: () => { const c = signal(0); return { d: derived(() => c()) } } })\n\
 </controller>\n\
 <column></column>";
         let (_, body) = extract_controller_block(src);
@@ -2935,7 +2935,7 @@ export default controller({ scope: () => { const c = signal(0); return { d: deri
         // a duplicate binding is a compile error. Injection fills gaps only.
         let src = "<controller>\n\
 import {\n  controller,\n  derived,\n  signal,\n} from '@ship/sui-runtime'\n\
-export default controller({ scope: () => ({ d: derived(() => signal(0)()) }) })\n\
+export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\n\
 </controller>\n\
 <column></column>";
         let (_, body) = extract_controller_block(src);

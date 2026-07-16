@@ -8,7 +8,7 @@
 use crate::check::controller_parse::ParsedController;
 use crate::diagnostics::CompileError;
 
-const ALLOWED: &[&str] = &["scope", "derived", "on", "use", "mount", "unmount"];
+const ALLOWED: &[&str] = &["setup", "derived", "on", "mount", "unmount"];
 
 pub fn check(controller: &ParsedController) -> Result<(), CompileError> {
     for section in &controller.sections {
@@ -16,8 +16,9 @@ pub fn check(controller: &ParsedController) -> Result<(), CompileError> {
             continue;
         }
         return Err(CompileError::new(format!(
-            "Unknown controller section '{}'. Valid sections are: derived, on, use, mount, unmount.",
-            section.name
+            "Unknown controller section '{}'. Valid sections are: {}.",
+            section.name,
+            ALLOWED.join(", ")
         ))
         .with_span(section.key_span)
         .with_path(controller.path.clone())
@@ -40,9 +41,9 @@ mod tests {
     fn allows_full_section_set() {
         let src = r#"
 export default controller({
+  setup: () => ({}),
   derived: {},
   on: {},
-  use: () => ({}),
   mount: () => {},
   unmount: () => {},
 })
@@ -60,7 +61,7 @@ export default controller({
 "#;
         let err = check(&parse_src(src)).expect_err("effects should fail");
         assert!(err.message.contains("Unknown controller section 'effects'"));
-        assert!(err.message.contains("derived, on, use, mount, unmount"));
+        assert!(err.message.contains("setup, derived, on, mount, unmount"));
     }
 
     #[test]

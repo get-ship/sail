@@ -251,7 +251,7 @@ describe('controller() — drop-in compatibility with view() shape', () => {
   it('function-form def works through the wrap', () => {
     const ship = { hello: () => 'world' }
     const def = ({ ship: s }: { ship: typeof ship }) => ({
-      scope: () => ({ greeting: derived(() => s.hello()) }),
+      setup: () => ({ greeting: derived(() => s.hello()) }),
     })
     const out = controller(def)
     const b = out.setup({ ship }) as Record<string, () => string>
