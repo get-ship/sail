@@ -29,6 +29,13 @@ const VOID = new Set([
   'param', 'source', 'track', 'wbr',
 ])
 
+/** Raw-text elements — their content is never entity-escaped, in the HTML
+ *  spec or in a browser's `innerHTML` serialization. A `<style>` node's
+ *  CSS text (which routinely contains `>` from descendant-combinator
+ *  selectors) must round-trip byte-identical to what the client's
+ *  `el.textContent = css` produces, or isomorphic-render parity breaks. */
+const RAW_TEXT = new Set(['style', 'script'])
+
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const ELEMENT_NODE = 1
 const TEXT_NODE = 3
@@ -155,6 +162,85 @@ class RawHtml {
   toHTML(): string {
     return this.html
   }
+}
+
+/** One simple compound selector: `tag.class1.class2#id[attr][attr2="v"]`. */
+interface Compound {
+  tag: string | null
+  classes: string[]
+  id: string | null
+  attrs: Array<{ name: string; value: string | null }>
+}
+
+const COMPOUND_TOKEN = /^[a-zA-Z][\w-]*|\.[\w-]+|#[\w-]+|\[[^\]]+\]/g
+
+function parseCompound(text: string): Compound {
+  const c: Compound = { tag: null, classes: [], id: null, attrs: [] }
+  for (const tok of text.match(COMPOUND_TOKEN) ?? []) {
+    if (tok[0] === '.') c.classes.push(tok.slice(1))
+    else if (tok[0] === '#') c.id = tok.slice(1)
+    else if (tok[0] === '[') {
+      const inner = tok.slice(1, -1)
+      const eq = inner.indexOf('=')
+      if (eq < 0) c.attrs.push({ name: inner.trim(), value: null })
+      else {
+        const name = inner.slice(0, eq).trim()
+        const value = inner.slice(eq + 1).trim().replace(/^['"]|['"]$/g, '')
+        c.attrs.push({ name, value })
+      }
+    } else c.tag = tok
+  }
+  return c
+}
+
+/** `sel, sel` → alternatives; each alternative → a descendant-combinator chain. */
+function parseSelector(selector: string): Compound[][] {
+  return selector.split(',').map((group) =>
+    group
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map(parseCompound),
+  )
+}
+
+function compoundMatches(el: El, c: Compound): boolean {
+  if (c.tag && c.tag.toLowerCase() !== el.tag.toLowerCase()) return false
+  if (c.id && el.getAttribute('id') !== c.id) return false
+  for (const cls of c.classes) if (!el._classes.has(cls)) return false
+  for (const a of c.attrs) {
+    if (a.value === null) {
+      if (!el.hasAttribute(a.name)) return false
+    } else if (el.getAttribute(a.name) !== a.value) return false
+  }
+  return true
+}
+
+/** Does `el` satisfy `chain` (a descendant-combinator compound list), anchored at `el`? */
+function chainMatchesAt(el: El, chain: Compound[]): boolean {
+  if (!compoundMatches(el, chain[chain.length - 1]!)) return false
+  let idx = chain.length - 2
+  let anc = el.parentNode instanceof El ? el.parentNode : null
+  while (anc && idx >= 0) {
+    if (compoundMatches(anc, chain[idx]!)) idx--
+    anc = anc.parentNode instanceof El ? anc.parentNode : null
+  }
+  return idx < 0
+}
+
+function matchesSelector(el: El, selector: string): boolean {
+  return parseSelector(selector).some((chain) => chainMatchesAt(el, chain))
+}
+
+function descendants(node: Parent): El[] {
+  const out: El[] = []
+  for (const c of node.childNodes) {
+    if (c.nodeType === ELEMENT_NODE) {
+      out.push(c as El)
+      out.push(...descendants(c as El))
+    }
+  }
+  return out
 }
 
 class ClassList {
@@ -304,6 +390,23 @@ class El {
   }
   addEventListener(): void {}
   removeEventListener(): void {}
+  matches(selector: string): boolean {
+    return matchesSelector(this, selector)
+  }
+  closest(selector: string): El | null {
+    let node: El | null = this
+    while (node) {
+      if (matchesSelector(node, selector)) return node
+      node = node.parentNode instanceof El ? node.parentNode : null
+    }
+    return null
+  }
+  querySelector(selector: string): El | null {
+    return descendants(this).find((el) => matchesSelector(el, selector)) ?? null
+  }
+  querySelectorAll(selector: string): El[] {
+    return descendants(this).filter((el) => matchesSelector(el, selector))
+  }
   get textContent(): string {
     return this.childNodes.map((c) => ('textContent' in c ? c.textContent : '')).join('')
   }
@@ -347,7 +450,9 @@ class El {
       : ''
     const attrs = [...this.attrs].map(([k, v]) => ` ${k}="${esc(v)}"`).join('')
     const open = `<${this.tag}${cls}${styleStr}${attrs}${markerAttrs.join('')}${boundaryAttr}`
-    const inner = this.childNodes.map((c) => c.toHTML()).join('')
+    const inner = RAW_TEXT.has(this.tag)
+      ? this.childNodes.map((c) => (c.nodeType === TEXT_NODE ? (c as TextNode)._t : c.toHTML())).join('')
+      : this.childNodes.map((c) => c.toHTML()).join('')
     // HTML void elements never close; empty SVG elements self-close.
     if (VOID.has(this.tag)) return `${open}>`
     if (this.namespaceURI === SVG_NS && inner === '') return `${open}/>`

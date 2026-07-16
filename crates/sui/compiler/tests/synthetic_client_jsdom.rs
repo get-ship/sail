@@ -109,7 +109,15 @@ fn write_harness(repo: &Path, work: &Path) {
     let cfg = format!(
         r#"import {{ defineConfig }} from 'vitest/config'
 export default defineConfig({{
-  test: {{ environment: 'jsdom', include: ['client.test.ts'] }},
+  // testTimeout: 20s, not vitest's 5s default — this harness's work dir is
+  // nuked and rebuilt every run (see `remove_dir_all` above), so vite's
+  // dependency pre-bundle cache under `<work>/node_modules/.vite` never
+  // survives to warm a second run. A COLD transform of the runtime's
+  // module graph (mount.ts, if.ts, for.ts, component-factory.ts, …) took
+  // ~13s in one observed run — comfortably past the 5s default, which
+  // read as a flaky timeout on whichever test happened to import it first
+  // (not a real hang: the same assertions pass once the graph is warm).
+  test: {{ environment: 'jsdom', include: ['client.test.ts'], testTimeout: 20000 }},
   resolve: {{ alias: {{
     '@ship/sui-runtime/internal': '{w}/runtime-shim.ts',
     '@ship/sui-runtime': '{w}/runtime-shim.ts',
@@ -178,10 +186,14 @@ describe('synthetic CLIENT contract — CSR (__mount via mount.ts)', () => {{
     const el = document.createElement('div')
     document.body.appendChild(el)
     const handle = await mount(el, payload('board', ''), {{ module: mod as any }})
-    expect(el.querySelectorAll('li').length).toBe(2)
+    // The `{{#for}}` row is a `<row>` primitive (compiles to `.sui-row`), not
+    // an `<li>` — the fixture migrated off `<ul>`/`<li class:flagged>` to
+    // `<column>`/`<row>` + `aria-pressed` (see 22fd23f); these selectors
+    // track the current, correct markup.
+    expect(el.querySelectorAll('.sui-row').length).toBe(2)
     expect(el.textContent).toContain('Alpha')
     expect(el.querySelector('demo-chip')).toBeTruthy()
-    expect(el.querySelectorAll('li.flagged').length).toBe(1)
+    expect(el.querySelectorAll('.sui-row[aria-pressed]').length).toBe(1)
     handle.dispose()
   }})
 }})
