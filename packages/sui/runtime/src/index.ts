@@ -73,14 +73,34 @@ export {
   withScope,
   onCleanup,
   currentScope,
+  provideContext,
+  injectContext,
+  contextKey,
+  walkScope,
 } from './effect-scope'
-export type { EffectScope } from './effect-scope'
+export type { EffectScope, ContextKey } from './effect-scope'
 
-// Dev-mode leak detector lives at `@ship/sui-runtime/dev` (separate
-// subpath import so the wrappers don't ship in the production
-// runtime bundle). See packages/sui/runtime/src/dev.ts.
-
-export { shared, isShared, provide, useShared, pickShared } from './context'
+// Store API — scope-homed shared state. `defineStore(setup)` is
+// the registration; `useStore(def)` resolves the instance from
+// the current scope's parent chain (root-or-nearest). The SSR
+// payload handshake (`setStoreSSRPayload` server-side,
+// `hydrateStoreSSRPayload` client-side) hands the per-request
+// signal values from server to client before the first effect
+// runs — no flash, no double-init.
+export {
+  defineStore,
+  useStore,
+  provideStore,
+  peekStore,
+  setStoreSSRPayload,
+  clearStoreSSRPayload,
+  readStoreSSRSeed,
+  hydrateStoreSSRPayload,
+  snapshotStore,
+  snapshotScopeStores,
+  SSR_PAYLOAD_GLOBAL,
+} from './store'
+export type { StoreDef, StoreInstance } from './store'
 
 // Host→runtime context seam (active project / session). Host-provided,
 // like RouterPort/ShipHost — replaces the old window.__ship* globals.

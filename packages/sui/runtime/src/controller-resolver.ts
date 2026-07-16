@@ -24,7 +24,6 @@ import type {
   ScopedControllerDef,
 } from './controller'
 import { createMountState } from './state-proxy'
-import { pickShared, provide } from './context'
 import type {
   ResolverContext,
   ResolvedBindings,
@@ -73,7 +72,8 @@ export function resolveController(
   // `scope:` factory runs first — its returned entries become part of
   // the merged scope before any other section. Idiomatic TypeScript
   // closure: signals, derived, hooks, shared wrappers all live here.
-  // Pass ctx.host as second arg so consumers can call useShared(host, tag).
+  // Pass ctx.host as second arg so a controller can reach its own element
+  // (shadow root, focus) from the scope factory.
   const scopeAdds = shape.scope
     ? (shape.scope as (s: unknown, h?: Element) => Record<string, unknown>)(baseScope, ctx.host)
     : {}
@@ -98,17 +98,6 @@ export function resolveController(
     ...onHandlers,
   }
 
-  // Auto-publish any signals marked with `shared(...)` to the host so
-  // descendant components can resolve via `useShared(host, '<tag>')`.
-  // The host element is the custom element itself (provided via ctx).
-  if (Object.keys(scopeAdds).length > 0 && ctx.host) {
-    const sharedEntries = pickShared(scopeAdds)
-    if (Object.keys(sharedEntries).length > 0) {
-      const hostEl = ctx.host as Element
-      const tag = hostEl.tagName.toLowerCase()
-      provide(hostEl, tag, sharedEntries)
-    }
-  }
 
   if (shape.mount || shape.unmount) {
     const lifecycle: Record<string, unknown> = {

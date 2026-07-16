@@ -37,6 +37,33 @@ export { data } from './data'
 export { createMountState, componentMountState, pickSignals, SIGNALS_KEY } from './state-proxy'
 export { ref, attachRef } from './ref'
 
+// ── scope + store (scope-homed shared state) ────────────────────────────────
+export {
+  createScope,
+  createChildScope,
+  withScope,
+  onCleanup,
+  currentScope,
+  provideContext,
+  injectContext,
+  contextKey,
+  walkScope,
+} from './effect-scope'
+export type { EffectScope, ContextKey } from './effect-scope'
+export {
+  defineStore,
+  useStore,
+  provideStore,
+  peekStore,
+  setStoreSSRPayload,
+  clearStoreSSRPayload,
+  readStoreSSRSeed,
+  snapshotStore,
+  snapshotScopeStores,
+  SSR_PAYLOAD_GLOBAL,
+} from './store'
+export type { StoreDef, StoreInstance } from './store'
+
 // ── controller DSL (pure; no DOM) ───────────────────────────────────────────
 // The synthetic controller composes an authored `controller({ scope, derived,
 // on })` by calling its `setup(ctx)` — the same resolver the browser hydrate
