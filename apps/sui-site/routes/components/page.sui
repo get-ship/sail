@@ -14,9 +14,22 @@
   the panel is a native [popover] wired by popovertarget, so the tile stays
   honest: what you see closed is what a page shows closed.
 
-  The .sui packs in the rail are floor-gated on this branch (their sources
-  still carry raw style blocks this compiler rejects). This page will not
-  draw imitations of them — selecting a gated pack states the gap instead.
+  All 25 pack components are un-gated (their `sui.config.json` now grants
+  the design-system capabilities — sx / raw_containers / variants — their
+  sources use). Three components are still counted here but not mounted
+  anywhere in the compiled app: the 7 canvas-pack tiles (sui-canvas /
+  sui-board / sui-draw / sui-graph-canvas / sui-annotation-*) trip their
+  world-layer actions when instantiated inside this page's already-large
+  component tree (renders fine via direct /components/<slug> nav);
+  sui-message-list and sui-media-csv both transitively import
+  `@ship/sui-runtime/virtual` (message-list directly, media-csv via
+  `createTable` from the `@ship/sui-primitives` barrel, which side-effect-
+  imports sui-tree/sui-tree-grid) — a framework-singleton subpath with no
+  deck-bundler importmap entry (see apps/sui-site/src/register-all.ts).
+  That is a pre-existing bundler gap, not a floor issue; closing it is a
+  separate job. Until then neither tag may be referenced by ANY compiled
+  route, canvas tiles included, or the app build fails outright — so
+  sui-message-list and sui-media-csv have no live route at all right now.
 -->
 
 <controller>
@@ -27,16 +40,17 @@
 // gates itself on `show.<key>()`, so the markup for each live component
 // stays hand-written while the filtering stays data-driven.
 //
-// Every rendered tile is the REAL component. The .sui packs (charts, media,
-// canvas, chat, mermaid, code-editor) still carry raw <style> blocks, which
-// THIS compiler's floor rejects — pulling them into the graph kills the
-// build (the exact coupling src/register-all.ts removed). So they are
-// `gated` in the rail rather than faked in the grid: selecting one explains
-// the gap.
+// Every rendered tile is the REAL component. The 6 packs (charts, media,
+// canvas, chat, mermaid, code-editor) are un-gated (granted the design-
+// system capabilities via their `sui.config.json`); every pack component
+// is in the catalog and counts. The canvas tiles are skipped in THIS grid
+// (see the file banner) but still render via their own
+// /components/<slug> route. sui-message-list and sui-media-csv are
+// skipped everywhere (see the file banner) — no live route yet.
 
 import { controller, signal, derived, filteredList, type ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
-import { CATALOG, PACKS, CATEGORIES, packCount, type CatalogEntry, type Pack } from './registry'
+import { CATALOG, PACKS, CATEGORIES, packCount, type CatalogEntry } from './registry'
 
 export default controller({
   setup: (_ctx: ViewScope<Scope>) => {
@@ -49,11 +63,24 @@ export default controller({
     const pickPack = (id: string): void => packSel.set(id)
     const pickCat = (id: string): void => catSel.set(id)
 
+    // Skipped in THIS grid — canvas's world-layer actions throw when
+    // mounted in this already-large page (still renders fine via direct
+    // /components/<slug> navigation). sui-message-list and sui-media-csv
+    // are skipped EVERYWHERE — both transitively need
+    // `@ship/sui-runtime/virtual`, a framework-singleton subpath deck's
+    // importmap doesn't declare (see the file banner); referencing either
+    // tag from ANY route fails the whole app build.
+    const SKIP_TAGS = new Set([
+      'sui-canvas', 'sui-board', 'sui-draw', 'sui-graph-canvas',
+      'sui-annotation-layer', 'sui-annotation-list', 'sui-annotation-marker',
+      'sui-message-list', 'sui-media-csv',
+    ])
     const visible = derived(() => {
       const p = packSel()
       const c = catSel()
       const pass = new Set<string>()
       for (const e of filtered()) {
+        if (SKIP_TAGS.has(e.tag)) continue
         if ((p === 'all' || e.pack === p) && (c === 'all' || e.cat === c)) pass.add(e.key)
       }
       return pass
@@ -74,17 +101,7 @@ export default controller({
       return n > 0 ? `${n} element${n === 1 ? '' : 's'} — all live` : ''
     })
 
-    // The selected pack, when it is floor-gated — drives the honest
-    // explanation card instead of a grid of fakes.
-    const gatedPack = derived<Pack | null>(() => {
-      const p = PACKS.find((x) => x.id === packSel())
-      return p?.gated ? p : null
-    })
-    const gatedSel = derived(() => gatedPack() !== null)
-    const gatedLabel = () => gatedPack()?.label ?? ''
-    const gatedSub = () => gatedPack()?.sub ?? ''
-    const gatedWaiting = () => gatedPack()?.waiting ?? 0
-    const none = derived(() => visible().size === 0 && !gatedSel())
+    const none = derived(() => visible().size === 0)
 
     // Demo state the interactive tiles mutate — real signals, not props.
     const name = signal('')
@@ -95,7 +112,6 @@ export default controller({
     return {
       query, packSel, catSel, pickPack, pickCat,
       packs, cats, show, countLabel, none,
-      gatedSel, gatedLabel, gatedSub, gatedWaiting,
       name, agreed, notify, volume,
     }
   },
@@ -115,11 +131,7 @@ export default controller({
           <column gap="0" sx="px-3 py-2">
             <row gap="2" align="center">
               <strong sx="text-sm grow-1">{p.label}</strong>
-              {#if p.gated}
-                <badge size="sm" tone="warning" variant="outline">gated</badge>
-              {:else}
-                <span sx="text-xs text-primary font-mono">{p.count}</span>
-              {/if}
+              <span sx="text-xs text-primary font-mono">{p.count}</span>
             </row>
             {#if p.sub}
               <p sx="text-xs text-muted-foreground font-mono">{p.sub}</p>
@@ -138,10 +150,13 @@ export default controller({
          width, so the wrapping <row> floor keeps rail + grid on one line
          instead of stacking the grid below the rail. -->
     <column gap="3" sx="grow-1 min-w-0 basis-0">
-      <row gap="2">
-        {#for c of cats() key={c}}
-          <button size="sm" tone="primary" variant={catSel() === c ? 'solid' : 'ghost'} on:click={() => pickCat(c)}>{c}</button>
-        {/for}
+      <row gap="2" align="center" justify="between">
+        <row gap="2">
+          {#for c of cats() key={c}}
+            <button size="sm" tone="primary" variant={catSel() === c ? 'solid' : 'ghost'} on:click={() => pickCat(c)}>{c}</button>
+          {/for}
+        </row>
+        <input placeholder="Search — try 'tab' or 'overlay'" bind:value={query} sx="max-w-panel-max-w-sm" />
       </row>
 
       <grid cols="4" gap="3">
@@ -1092,24 +1107,272 @@ export default controller({
             </column>
           </card>
         {/if}
+
+        <!-- ══ @ship/sui-charts ═════════════════════════════════════════ -->
+        {#if show.suiSparkline()}
+          <card padding="none" data-tile="sui-sparkline" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h-full">
+              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+                <sui-sparkline data="2,5,3,8,4,6,7" width="120" height="40"></sui-sparkline>
+              </center>
+              <column gap="1" sx="px-3 py-2">
+                <a href="/components/sui-sparkline" sx="text-sm font-semibold font-mono">sui-sparkline</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="accent" variant="soft">charts</badge>
+                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.suiAreaChart()}
+          <card padding="none" data-tile="sui-area-chart" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h-full">
+              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+                <sui-area-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sui-area-chart>
+              </center>
+              <column gap="1" sx="px-3 py-2">
+                <a href="/components/sui-area-chart" sx="text-sm font-semibold font-mono">sui-area-chart</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="accent" variant="soft">charts</badge>
+                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.suiBarChart()}
+          <card padding="none" data-tile="sui-bar-chart" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h-full">
+              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+                <sui-bar-chart data="2,5,3,8,4" labels="A,B,C,D,E" width="160" height="60"></sui-bar-chart>
+              </center>
+              <column gap="1" sx="px-3 py-2">
+                <a href="/components/sui-bar-chart" sx="text-sm font-semibold font-mono">sui-bar-chart</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="accent" variant="soft">charts</badge>
+                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.suiDonut()}
+          <card padding="none" data-tile="sui-donut" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h-full">
+              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+                <sui-donut data='[{"label":"a","value":40},{"label":"b","value":30},{"label":"c","value":30}]' diameter="80" thickness="10"></sui-donut>
+              </center>
+              <column gap="1" sx="px-3 py-2">
+                <a href="/components/sui-donut" sx="text-sm font-semibold font-mono">sui-donut</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="accent" variant="soft">charts</badge>
+                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.suiGauge()}
+          <card padding="none" data-tile="sui-gauge" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h-full">
+              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+                <sui-gauge value="72" diameter="80" thickness="10"></sui-gauge>
+              </center>
+              <column gap="1" sx="px-3 py-2">
+                <a href="/components/sui-gauge" sx="text-sm font-semibold font-mono">sui-gauge</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="accent" variant="soft">charts</badge>
+                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.suiHeatmap()}
+          <card padding="none" data-tile="sui-heatmap" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h-full">
+              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+                <sui-heatmap rows="3" cols="5" values="1,2,3,4,3,4,5,6,5,4,3,2,1,2,3" width="160" height="60"></sui-heatmap>
+              </center>
+              <column gap="1" sx="px-3 py-2">
+                <a href="/components/sui-heatmap" sx="text-sm font-semibold font-mono">sui-heatmap</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="accent" variant="soft">charts</badge>
+                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.suiLineChart()}
+          <card padding="none" data-tile="sui-line-chart" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h-full">
+              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+                <sui-line-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sui-line-chart>
+              </center>
+              <column gap="1" sx="px-3 py-2">
+                <a href="/components/sui-line-chart" sx="text-sm font-semibold font-mono">sui-line-chart</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="accent" variant="soft">charts</badge>
+                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+
+        <!-- ══ @ship/sui-media ══════════════════════════════════════════ -->
+        {#if show.suiMediaImage()}
+          <card padding="none" data-tile="sui-media-image" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h-full">
+              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+                <sui-media-image src="/sui-oss/sui-mark.svg" alt="SUI mark"></sui-media-image>
+              </center>
+              <column gap="1" sx="px-3 py-2">
+                <a href="/components/sui-media-image" sx="text-sm font-semibold font-mono">sui-media-image</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="info" variant="soft">media</badge>
+                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.suiMediaAv()}
+          <card padding="none" data-tile="sui-media-av" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h-full">
+              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+                <sui-media-av></sui-media-av>
+              </center>
+              <column gap="1" sx="px-3 py-2">
+                <a href="/components/sui-media-av" sx="text-sm font-semibold font-mono">sui-media-av</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="info" variant="soft">media</badge>
+                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+
+        <!-- ══ @ship/sui-code-editor + @ship/sui-mermaid ═══════════════════ -->
+        {#if show.suiCodeEditor()}
+          <card padding="none" data-tile="sui-code-editor" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h-full">
+              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+                <sui-code-editor value="const greeting = 'hi';" language="js" line-numbers size="sm"></sui-code-editor>
+              </center>
+              <column gap="1" sx="px-3 py-2">
+                <a href="/components/sui-code-editor" sx="text-sm font-semibold font-mono">sui-code-editor</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="muted" variant="soft">code-editor</badge>
+                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.suiMermaid()}
+          <card padding="none" data-tile="sui-mermaid" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h-full">
+              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+                <sui-mermaid value="graph TD; A[Idea]-->B[Build]; B-->C[Ship]"></sui-mermaid>
+              </center>
+              <column gap="1" sx="px-3 py-2">
+                <a href="/components/sui-mermaid" sx="text-sm font-semibold font-mono">sui-mermaid</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="success" variant="soft">mermaid</badge>
+                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+
+        <!-- ══ @ship/sui-chat-elements — sui-message-list deferred (see banner) ═ -->
+        {#if show.suiMessage()}
+          <card padding="none" data-tile="sui-message" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h-full">
+              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+                <sui-message role="user" state="user">Hello — the live chat message primitive.</sui-message>
+              </center>
+              <column gap="1" sx="px-3 py-2">
+                <a href="/components/sui-message" sx="text-sm font-semibold font-mono">sui-message</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">chat</badge>
+                  <span sx="text-xs text-muted-foreground font-mono">display</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.suiCitation()}
+          <card padding="none" data-tile="sui-citation" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h-full">
+              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+                <sui-citation source="docs.sui.dev" href="https://docs.sui.dev">A citation from the docs</sui-citation>
+              </center>
+              <column gap="1" sx="px-3 py-2">
+                <a href="/components/sui-citation" sx="text-sm font-semibold font-mono">sui-citation</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">chat</badge>
+                  <span sx="text-xs text-muted-foreground font-mono">display</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.suiComposer()}
+          <card padding="none" data-tile="sui-composer" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h-full">
+              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+                <sui-composer placeholder="Ask anything…"></sui-composer>
+              </center>
+              <column gap="1" sx="px-3 py-2">
+                <a href="/components/sui-composer" sx="text-sm font-semibold font-mono">sui-composer</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">chat</badge>
+                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.suiThinkingDots()}
+          <card padding="none" data-tile="sui-thinking-dots" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h-full">
+              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+                <sui-thinking-dots></sui-thinking-dots>
+              </center>
+              <column gap="1" sx="px-3 py-2">
+                <a href="/components/sui-thinking-dots" sx="text-sm font-semibold font-mono">sui-thinking-dots</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">chat</badge>
+                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
+        {#if show.suiToolCall()}
+          <card padding="none" data-tile="sui-tool-call" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx="h-full">
+              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+                <sui-tool-call name="search" status="running">query: search</sui-tool-call>
+              </center>
+              <column gap="1" sx="px-3 py-2">
+                <a href="/components/sui-tool-call" sx="text-sm font-semibold font-mono">sui-tool-call</a>
+                <row gap="2" align="center" justify="between">
+                  <badge size="sm" tone="primary" variant="soft">chat</badge>
+                  <span sx="text-xs text-muted-foreground font-mono">display</span>
+                </row>
+              </column>
+            </column>
+          </card>
+        {/if}
       </grid>
 
-      {#if gatedSel()}
-        <card variant="outline" sx="p-4" motion:enter={{ opacity: 'fade' }}>
-          <column gap="2">
-            <row gap="2" align="center">
-              <badge tone="warning" variant="outline">floor-gated</badge>
-              <strong>{gatedLabel()} can't mount on this branch</strong>
-            </row>
-            <p sx="text-sm text-muted-foreground leading-relaxed">
-              {gatedSub()} ships {gatedWaiting()} components, but their sources
-              still carry raw style blocks — and this compiler's floor rejects
-              raw CSS, in packs as much as in pages. This browser doesn't fake
-              tiles with drawings: the pack appears here the day it compiles.
-            </p>
-          </column>
-        </card>
-      {/if}
       {#if none()}
         <empty-state motion:enter={{ opacity: 'fade' }}>
           <strong slot="title">Nothing matches</strong>

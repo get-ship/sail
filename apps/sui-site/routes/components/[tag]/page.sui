@@ -30,6 +30,29 @@ export default controller({
     const tag = derived(() => ctx.route.params.tag?.() ?? '')
     const entry = derived<DetailEntry | null>(() => DETAILS[tag()] ?? null)
     const known = derived(() => entry() !== null)
+    // Pack-component tags don't have DETAILS entries (that registry is the
+    // L1 surface only) — mark them known too so this route mounts them
+    // instead of reporting a typo. Includes the 7 canvas-pack tags, which
+    // page.sui skips in its own grid but which still render fully here via
+    // direct navigation. sui-message-list and sui-media-csv are NOT here:
+    // both transitively import `@ship/sui-runtime/virtual` — message-list
+    // directly, media-csv via `createTable` from the `@ship/sui-primitives`
+    // barrel, whose index.ts side-effect-imports sui-tree/sui-tree-grid — a
+    // framework-singleton subpath with no deck-bundler importmap entry
+    // (apps/sui-site/src/register-all.ts). Pre-existing bundler gap, not a
+    // floor issue. Both still count in the registry catalog, but no
+    // template may reference either tag anywhere until that importmap gap
+    // is closed (separate job), or the app build fails outright.
+    const PACK_TAGS = new Set([
+      'sui-sparkline', 'sui-area-chart', 'sui-bar-chart', 'sui-donut', 'sui-gauge',
+      'sui-heatmap', 'sui-line-chart', 'sui-media-image', 'sui-media-av',
+      'sui-code-editor', 'sui-mermaid', 'sui-message',
+      'sui-citation', 'sui-composer', 'sui-thinking-dots',
+      'sui-tool-call', 'sui-canvas', 'sui-board', 'sui-draw', 'sui-graph-canvas',
+      'sui-annotation-layer', 'sui-annotation-list', 'sui-annotation-marker',
+    ])
+    const knownPack = derived(() => PACK_TAGS.has(tag()))
+    const showViewer = derived(() => known() || knownPack())
 
     const variant = signal('')
     // A navigation between two detail pages reuses this scope — re-seed the
@@ -49,12 +72,83 @@ export default controller({
     const blurb = () => entry()?.blurb ?? ''
     const props = () => entry()?.props ?? []
     const usageCode = () => entry()?.usage ?? ''
+    // Slot tagline — the page subtitle under the specimen. For pack
+    // components the L1 "nothing here is a screenshot" copy undersells the
+    // point (the pack IS the live component) and some packs have their own
+    // interaction model (world layer, code editor, mermaid SVG).
+    const slotCopy = (() => {
+      if (!knownPack()) return 'click it · type in it · pick from it — nothing here is a screenshot'
+      const t = tag()
+      if (t === 'sui-canvas' || t === 'sui-board' || t === 'sui-draw' || t === 'sui-graph-canvas' || t.startsWith('sui-annotation-')) {
+        return 'use the world layer — pan/zoom · drop annotations on click'
+      }
+      if (t === 'sui-code-editor') return 'click into the editor · edit and watch the value'
+      if (t === 'sui-mermaid') return 'mermaid rendered the diagram · pan the SVG to inspect'
+      return 'interact with the live component — type, click, toggle'
+    })()
     const heading = () => entry()?.heading ?? tag()
 
+    // Pack blurb — packs without a DETAILS entry get a hand-written
+    // one-liner keyed off the tag.
+    const packBlurb = () => {
+      const t = tag()
+      if (t === 'sui-area-chart') return 'Multi-series area chart with stacked fills. Series JSON + label list.'
+      if (t === 'sui-bar-chart') return 'Vertical bars, one per label. CSV data string + label list.'
+      if (t === 'sui-donut') return 'Stroked-arc segments, sized by value. JSON label/value/tone.'
+      if (t === 'sui-gauge') return 'Single-arc gauge, value 0..max. Auto-centers the indicator.'
+      if (t === 'sui-heatmap') return 'Grid of cells, colored by value. rows × cols × values.'
+      if (t === 'sui-line-chart') return 'Multi-series line chart with markers and grid. Series JSON + label list.'
+      if (t === 'sui-sparkline') return 'Compact single-line trend. CSV data, width × height.'
+      if (t === 'sui-media-image') return 'Image primitive with src/alt + framework theming.'
+      if (t === 'sui-media-av') return 'Audio/video primitive with platform controls + framework skin.'
+      if (t === 'sui-code-editor') return 'CodeMirror 6 wrapped as a primitive; controlled value + language prop.'
+      if (t === 'sui-mermaid') return 'Mermaid-rendered SVG; pass the source as the value prop.'
+      if (t === 'sui-message') return 'A single chat message; role, state, content, timestamp props.'
+      if (t === 'sui-citation') return 'Citation pill with source/label; click to follow href.'
+      if (t === 'sui-composer') return 'Chat-composer input with submit + cancel events.'
+      if (t === 'sui-thinking-dots') return 'Three bouncing dots with polite live status.'
+      if (t === 'sui-tool-call') return 'Tool-call disclosure with name + status (running|ok|error).'
+      if (t === 'sui-canvas') return 'The pannable/zoomable world layer canvas-pack components mount on.'
+      if (t === 'sui-board') return 'A bounded canvas surface hosting a world layer.'
+      if (t === 'sui-draw') return 'Freehand drawing surface over the world layer.'
+      if (t === 'sui-graph-canvas') return 'Node/edge graph canvas; JSON nodes + edges.'
+      if (t === 'sui-annotation-layer') return 'Click-to-annotate overlay for the world layer.'
+      if (t === 'sui-annotation-list') return 'List view of the annotations dropped on a layer.'
+      if (t === 'sui-annotation-marker') return 'A single point annotation marker at x/y.'
+      return 'Pack component.'
+    }
+    // Pack props table — hand-curated per the pack's authored prop surface.
+    const PACK_PROPS: Record<string, { name: string; type: string; desc: string }[]> = {
+      'sui-sparkline':   [{ name: 'data',   type: 'string',  desc: 'CSV numbers, e.g. "2,5,3,8,4,6,7".' }, { name: 'width',  type: 'number',  desc: 'SVG width in px.' }, { name: 'height', type: 'number',  desc: 'SVG height in px.' }],
+      'sui-area-chart':  [{ name: 'series', type: 'string (JSON)', desc: '[{name, data, tone?}] — multi-series.' }, { name: 'labels', type: 'string (CSV)', desc: 'X-axis labels.' }],
+      'sui-bar-chart':   [{ name: 'data',   type: 'string (CSV)', desc: 'Bar values, e.g. "2,5,3,8,4".' }, { name: 'labels', type: 'string (CSV)', desc: 'Bar labels.' }],
+      'sui-donut':       [{ name: 'data',   type: 'string (JSON)', desc: '[{label,value,tone?}] segments.' }, { name: 'diameter', type: 'number', desc: 'Outer diameter in px.' }],
+      'sui-gauge':       [{ name: 'value',  type: 'number', desc: 'Indicator position (0..max).' }, { name: 'diameter', type: 'number', desc: 'Outer diameter in px.' }],
+      'sui-heatmap':     [{ name: 'rows',  type: 'number', desc: 'Cell rows.' }, { name: 'cols', type: 'number', desc: 'Cell columns.' }, { name: 'values', type: 'string (CSV)', desc: 'Row-major cell values.' }],
+      'sui-line-chart':  [{ name: 'series', type: 'string (JSON)', desc: '[{name, data, tone?}].' }, { name: 'labels', type: 'string (CSV)', desc: 'X-axis labels.' }],
+      'sui-media-image': [{ name: 'src',   type: 'string', desc: 'Image URL.' }, { name: 'alt',  type: 'string', desc: 'Alt text.' }],
+      'sui-media-av':    [{ name: 'src',   type: 'string', desc: 'Audio/video URL.' }, { name: 'mime', type: 'string', desc: 'Override mime type.' }],
+      'sui-code-editor': [{ name: 'value', type: 'string', desc: 'Editor text.' }, { name: 'language', type: 'string', desc: 'CodeMirror language.' }, { name: 'line-numbers', type: 'bool', desc: 'Show gutter.' }],
+      'sui-mermaid':     [{ name: 'value', type: 'string', desc: 'Mermaid source text.' }],
+      'sui-message':     [{ name: 'role',  type: 'string', desc: 'Message author role.' }, { name: 'state', type: 'string', desc: 'Message state (user|assistant|...).' }, { name: 'content', type: 'string', desc: 'Body text.' }],
+      'sui-citation':    [{ name: 'source', type: 'string', desc: 'Citation source label.' }, { name: 'href',  type: 'string', desc: 'Click target.' }],
+      'sui-composer':    [{ name: 'placeholder', type: 'string', desc: 'Empty-state copy.' }],
+      'sui-thinking-dots': [{ name: 'aria-label', type: 'string', desc: 'Live-region label.' }],
+      'sui-tool-call':   [{ name: 'name',   type: 'string', desc: 'Tool name.' }, { name: 'status', type: 'string', desc: 'running|ok|error.' }],
+      'sui-canvas':      [{ name: 'width',  type: 'number', desc: 'Viewport width in px.' }, { name: 'height', type: 'number', desc: 'Viewport height in px.' }],
+      'sui-graph-canvas': [{ name: 'nodes', type: 'string (JSON)', desc: '[{id, kind, title, x, y}].' }, { name: 'edges', type: 'string (JSON)', desc: '[{from, to}].' }],
+      'sui-annotation-marker': [{ name: 'x', type: 'number', desc: 'X position.' }, { name: 'y', type: 'number', desc: 'Y position.' }],
+    }
+    const packProps = () => PACK_PROPS[tag()] ?? []
+
     // One zero-arg gate per stage — `stage.<key>()`, derived from the entry.
-    const stage = Object.fromEntries(
-      Object.values(DETAILS).map((e) => [e.key, () => entry()?.key === e.key]),
-    ) as Record<string, () => boolean>
+    // Pack components (the 6 un-gated packs, 25 components) are added here
+    // as a side channel — they don't have DETAILS entries, so their
+    // `entry()` is null; we gate on tag() (kebab-case) directly.
+    const stage = Object.fromEntries([
+      ...Object.values(DETAILS).map((e) => [e.key, () => entry()?.key === e.key]),
+      ...[...PACK_TAGS].map((k) => [k.replace(/-([a-z])/g, (_, c) => c.toUpperCase()), () => tag() === k]),
+    ]) as Record<string, () => boolean>
 
     // Stage state — real signals the stages mutate.
     const presses = signal(0)
@@ -80,9 +174,9 @@ export default controller({
     ]
 
     return {
-      tag, entry, known, heading,
+      tag, entry, known, knownPack, showViewer, heading,
       variant, pick, onVariantChange, variants, hasVariants, variantAttr,
-      blurb, props, usageCode, stage,
+      blurb, props, packBlurb, packProps, usageCode, stage, slotCopy,
       presses, press, notify, agreed, load, name, bio, team,
       fw, pickFw, pageNo, goPage, kept, dropChip, restoreChip,
       sheetSide, people,
@@ -92,7 +186,7 @@ export default controller({
 </controller>
 
 <column sx="max-w-breakpoint-tablet mx-auto" gap="4">
-  {#if known()}
+  {#if showViewer()}
     <breadcrumb>
       <a href="/components">components</a>
       <small>{tag()}</small>
@@ -100,12 +194,19 @@ export default controller({
 
     <sui-component-viewer
       name={heading()}
-      blurb={blurb()}
-      pack="In the language"
+      blurb={knownPack() ? packBlurb() : blurb()}
+      pack={knownPack() ? (
+        tag().startsWith('sui-area-chart') || tag().startsWith('sui-bar-chart') || tag().startsWith('sui-line-chart') || tag() === 'sui-donut' || tag() === 'sui-gauge' || tag() === 'sui-heatmap' || tag() === 'sui-sparkline' ? 'Pack: charts' :
+        tag().startsWith('sui-media-') ? 'Pack: media' :
+        tag() === 'sui-canvas' || tag() === 'sui-board' || tag() === 'sui-draw' || tag() === 'sui-graph-canvas' || tag().startsWith('sui-annotation-') ? 'Pack: canvas' :
+        tag().startsWith('sui-message') || tag() === 'sui-citation' || tag() === 'sui-composer' || tag() === 'sui-thinking-dots' || tag() === 'sui-tool-call' ? 'Pack: chat' :
+        tag() === 'sui-mermaid' ? 'Pack: mermaid' :
+        tag() === 'sui-code-editor' ? 'Pack: code-editor' : 'Pack'
+      ) : 'In the language'}
       variant-attr={variantAttr()}
       usage={usageCode()}
       prop:variants={variants()}
-      prop:rows={props()}
+      prop:rows={knownPack() ? packProps() : props()}
       on:sui-variant-change={onVariantChange}
     >
       <column slot="stage" gap="4" align="center">
@@ -543,8 +644,127 @@ export default controller({
               </scroll-area>
             {/if}
 
+            <!-- ══ Pack components ═══════════════════════════════════════ -->
+            {#if stage.suiSparkline()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-sparkline">
+                <sui-sparkline data="2,5,3,8,4,6,7" width="200" height="60"></sui-sparkline>
+              </column>
+            {/if}
+            {#if stage.suiAreaChart()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-area-chart">
+                <sui-area-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="200" height="120"></sui-area-chart>
+              </column>
+            {/if}
+            {#if stage.suiBarChart()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-bar-chart">
+                <sui-bar-chart data="2,5,3,8,4" labels="A,B,C,D,E" width="200" height="120"></sui-bar-chart>
+              </column>
+            {/if}
+            {#if stage.suiDonut()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-donut">
+                <sui-donut data='[{"label":"a","value":40},{"label":"b","value":30},{"label":"c","value":30}]' diameter="120" thickness="12"></sui-donut>
+              </column>
+            {/if}
+            {#if stage.suiGauge()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-gauge">
+                <sui-gauge value="72" diameter="120" thickness="12"></sui-gauge>
+              </column>
+            {/if}
+            {#if stage.suiHeatmap()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-heatmap">
+                <sui-heatmap rows="4" cols="6" values="1,2,3,4,3,2,4,5,6,5,4,3,2,1,2,3,4,3,2,1,2,3,4,5" width="200" height="120"></sui-heatmap>
+              </column>
+            {/if}
+            {#if stage.suiLineChart()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-line-chart">
+                <sui-line-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="200" height="120"></sui-line-chart>
+              </column>
+            {/if}
+            {#if stage.suiMediaImage()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-media-image">
+                <sui-media-image src="/sui-oss/sui-mark.svg" alt="SUI mark"></sui-media-image>
+              </column>
+            {/if}
+            {#if stage.suiMediaAv()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-media-av">
+                <sui-media-av></sui-media-av>
+              </column>
+            {/if}
+            {#if stage.suiCodeEditor()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-code-editor">
+                <sui-code-editor value="const greeting = 'hi';" language="js" line-numbers size="md"></sui-code-editor>
+              </column>
+            {/if}
+            {#if stage.suiMermaid()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-mermaid">
+                <sui-mermaid value="graph TD; A[Idea]-->B[Build]; B-->C[Ship]"></sui-mermaid>
+              </column>
+            {/if}
+            {#if stage.suiMessage()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-message">
+                <sui-message role="user" state="user">Hello — the live chat message primitive.</sui-message>
+              </column>
+            {/if}
+            {#if stage.suiCitation()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-citation">
+                <sui-citation source="docs.sui.dev" href="https://docs.sui.dev">A citation from the docs</sui-citation>
+              </column>
+            {/if}
+            {#if stage.suiComposer()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-composer">
+                <sui-composer placeholder="Ask anything…"></sui-composer>
+              </column>
+            {/if}
+            {#if stage.suiThinkingDots()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-thinking-dots">
+                <sui-thinking-dots></sui-thinking-dots>
+              </column>
+            {/if}
+            {#if stage.suiToolCall()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-tool-call">
+                <sui-tool-call name="search" status="running">query: search</sui-tool-call>
+              </column>
+            {/if}
+            {#if stage.suiCanvas()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-canvas">
+                <sui-canvas width="200" height="120"></sui-canvas>
+              </column>
+            {/if}
+            {#if stage.suiBoard()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-board">
+                <sui-board width="200" height="120">
+                  <sui-canvas width="200" height="120"></sui-canvas>
+                </sui-board>
+              </column>
+            {/if}
+            {#if stage.suiDraw()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-draw">
+                <sui-draw width="200" height="120"></sui-draw>
+              </column>
+            {/if}
+            {#if stage.suiGraphCanvas()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-graph-canvas">
+                <sui-graph-canvas width="200" height="120" nodes='[{"id":"a","kind":"agent","title":"A","x":80,"y":60},{"id":"b","kind":"skill","title":"B","x":120,"y":60}]' edges="[]"></sui-graph-canvas>
+              </column>
+            {/if}
+            {#if stage.suiAnnotationLayer()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-annotation-layer">
+                <sui-annotation-layer></sui-annotation-layer>
+              </column>
+            {/if}
+            {#if stage.suiAnnotationList()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-annotation-list">
+                <sui-annotation-list></sui-annotation-list>
+              </column>
+            {/if}
+            {#if stage.suiAnnotationMarker()}
+              <column gap="3" align="center" data-tile-stage="sui-pack-annotation-marker">
+                <sui-annotation-marker x="50" y="30"></sui-annotation-marker>
+              </column>
+            {/if}
+
       </column>
-      <p slot="stage" sx="text-xs text-muted-foreground font-mono">click it · type in it · pick from it — nothing here is a screenshot</p>
+      <p slot="stage" sx="text-xs text-muted-foreground font-mono">{slotCopy}</p>
     </sui-component-viewer>
 
     <row gap="2">
@@ -558,7 +778,8 @@ export default controller({
     </breadcrumb>
     <empty-state motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
       <strong slot="title">Nothing named “{tag()}” here</strong>
-      Every element on the L1 surface has a detail page — this looks like a typo.
+      Every element on the L1 surface has a detail page. Pack components
+      (the 6 un-gated packs) render here too — this looks like a typo.
     </empty-state>
     <row gap="2">
       <a variant="solid" tone="primary" href="/components">← All components</a>
