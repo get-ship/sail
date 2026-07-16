@@ -22,6 +22,7 @@ pub mod compile;
 pub mod proto;
 pub mod rolldown_bundle;
 pub mod ship_asset_css;
+pub mod stamp;
 pub mod sui_plugin;
 pub mod targets;
 pub mod views_bundle;

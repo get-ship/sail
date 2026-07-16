@@ -439,6 +439,33 @@ pub fn serve_sui_sdk_client(mode: DaemonMode) -> DeckResponse {
     DeckResponse::js_asset(SUI_SDK_CLIENT_JS.to_string(), mode)
 }
 
+/// Parse the `/*! sui-framework-stamp: sha=<hash> */` leading comment
+/// `deck-cli build_assets` writes into a baked bundle (deck-deploy-gap). The
+/// writer half lives in `deck_bundler::stamp::format_stamp_header` — keep the
+/// format in lockstep. `None` for a bake that predates stamping (an older
+/// commit's `.deck/framework/*.js`, still staged into `assets/` verbatim) —
+/// callers treat that as "can't verify," not "verified fresh."
+pub fn parse_baked_stamp(js: &str) -> Option<&str> {
+    js.lines()
+        .next()?
+        .strip_prefix("/*! sui-framework-stamp: sha=")?
+        .strip_suffix(" */")
+}
+
+/// `(bundle out_file, baked stamp hash)` for every framework singleton this
+/// binary bakes. Read at `deck dev` startup and compared against
+/// `deck_bundler::stamp::current_framework_stamps` — deck-core can't depend
+/// on deck-bundler (it's the other way around), so the comparison itself
+/// lives in deck-cli; this just exposes the baked half.
+pub fn baked_framework_stamps() -> Vec<(&'static str, Option<&'static str>)> {
+    vec![
+        ("sui-runtime.js", parse_baked_stamp(SUI_RUNTIME_JS)),
+        ("sui-dom.js", parse_baked_stamp(SUI_DOM_JS)),
+        ("sui-sdk-client.js", parse_baked_stamp(SUI_SDK_CLIENT_JS)),
+        ("deck-route.js", parse_baked_stamp(DECK_ROUTE_JS)),
+    ]
+}
+
 /// `GET /_deck/route.js` — the `@ship/deck/router` framework singleton.
 /// The bundler-generated entry imports it for `defineRoutes`, `route`,
 /// `navigate`, `setEditMode`. The bundle is the package compiled
@@ -544,6 +571,30 @@ mod tests {
             !SUI_RUNTIME_JS.contains("as view,") && !SUI_RUNTIME_JS.contains("as view}"),
             "baked sui-runtime.js still EXPORTS `view` (removed in de-view) — stale \
              bake; run `cargo run -p deck-cli -- build-assets`"
+        );
+    }
+
+    #[test]
+    fn parse_baked_stamp_reads_the_leading_comment() {
+        let js = "/*! sui-framework-stamp: sha=deadbeef00000000 */\nexport const x = 1;\n";
+        assert_eq!(parse_baked_stamp(js), Some("deadbeef00000000"));
+    }
+
+    #[test]
+    fn parse_baked_stamp_none_when_absent() {
+        // A bake that predates stamping (or a non-framework asset) has no
+        // header — "can't verify," not a fabricated hash.
+        assert_eq!(parse_baked_stamp("export const x = 1;\n"), None);
+        assert_eq!(parse_baked_stamp(""), None);
+    }
+
+    #[test]
+    fn baked_framework_stamps_covers_every_singleton() {
+        let stamps = baked_framework_stamps();
+        let names: Vec<_> = stamps.iter().map(|(n, _)| *n).collect();
+        assert_eq!(
+            names,
+            vec!["sui-runtime.js", "sui-dom.js", "sui-sdk-client.js", "deck-route.js"]
         );
     }
 

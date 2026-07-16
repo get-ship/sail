@@ -56,8 +56,8 @@ pub use window_registry::{
 };
 
 pub use assets::{
-    resolve_view_js, serve_deck_route, serve_public_asset, serve_scaffold, serve_scaffold_asset,
-    serve_sui_dom, serve_sui_icon,
+    baked_framework_stamps, parse_baked_stamp, resolve_view_js, serve_deck_route,
+    serve_public_asset, serve_scaffold, serve_scaffold_asset, serve_sui_dom, serve_sui_icon,
     serve_sui_live_reload, serve_sui_runtime, serve_sui_sdk_client,
 };
 pub use form_inject::inject_form_actions;

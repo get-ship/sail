@@ -280,27 +280,22 @@ fn build_assets() -> Result<()> {
     rt.block_on(bundler.build_all())
         .map_err(|e| anyhow::anyhow!("build_all failed: {e}"))?;
 
-    // Materialize each component pack's standard `dist/custom-elements.json`
-    // (CEM) from its source. Run once here (the framework build), so per-app
-    // builds aggregate the pre-written manifests into `<app>/components.gen.ts`
-    // (`generate_components_gen`). Also the file every pack declares for
-    // external tooling (Storybook / VS Code / lit-analyzer).
-    // A pack that fails to compile fails the build. Printing and continuing is
-    // how un-migrated packs stayed invisible behind an exit-0 asset bake.
-    let n = deck_bundler::cem::write_all_pack_cems(&repo_root)
-        .context("pack manifest generation")?;
-    println!("  cem: {n} component pack manifest(s) written");
-
-    // Build the layout once — used for both the framework verify and the
-    // consumer guard below. assets_dir_for("sui-runtime") is now
-    // .deck/framework/ (the canonical bake target per Recommendation B1).
+    // Build the layout once — used for the framework verify+stamp, the pack
+    // CEM step, and the consumer guard below. assets_dir_for("sui-runtime")
+    // is now .deck/framework/ (the canonical bake target per Recommendation
+    // B1).
     let layout = deck_bundler::targets::BundleLayout::with_config(
         repo_root.clone(),
         None,
         cfg,
     );
 
-    // Verify every framework singleton that RESOLVED for this repo is non-empty.
+    // Verify + stamp the framework singletons BEFORE the pack CEM step
+    // (deck-deploy-gap): `deck-core/build.rs` needs these 4 files to build at
+    // all (an `include_str!` bake), but pack CEM generation can legitimately
+    // fail on an UNRELATED component's lint violations — that must not take
+    // down the framework bake `build.rs` depends on. Verify every framework
+    // singleton that RESOLVED for this repo is non-empty.
     // build_all returns Err on per-target failure, but a swallowed empty-write
     // wouldn't surface there — keep this as defense in depth so the daemon can
     // never ship empty framework bytes. The set is derived from the bundler's
@@ -323,6 +318,65 @@ fn build_assets() -> Result<()> {
     if fw_targets.is_empty() {
         println!("  (no framework singletons resolved from this repo — none baked here)");
     }
+
+    // Stamp each freshly-baked framework bundle with the content hash of the
+    // TS sources it was built from (deck-deploy-gap): a leading `/*! ... */`
+    // comment header IN the bundle (so `deck-core`'s `include_str!` bakes it
+    // along with the code — no sidecar read needed to check the RUNNING
+    // binary) plus a `manifest.json` sidecar (for tooling that wants the
+    // stamps without parsing JS). `deck dev` recomputes the current source
+    // hash at startup and compares against the header baked into its own
+    // binary; a mismatch means the binary is older than its sources.
+    if !fw_targets.is_empty() {
+        let stamps = deck_bundler::stamp::current_framework_stamps(&repo_root)
+            .context("hashing framework source trees for the bake stamp")?;
+        let mut manifest = serde_json::Map::new();
+        for t in &fw_targets {
+            let Some(stamp) = stamps.iter().find(|s| s.bundle == t.out_file) else {
+                // No source root under this repo for this singleton (an
+                // external consumer vendoring a prebuilt framework) — nothing
+                // to stamp against, leave the bundle unstamped.
+                continue;
+            };
+            let path = layout.assets_dir_for(&t.name).join(&t.out_file);
+            let body = std::fs::read_to_string(&path)
+                .with_context(|| format!("reading {} to stamp it", path.display()))?;
+            // Re-running build-assets must not pile up headers.
+            let body = match deck_core::parse_baked_stamp(&body) {
+                Some(_) => body.splitn(2, '\n').nth(1).unwrap_or("").to_string(),
+                None => body,
+            };
+            let stamped = format!("{}{body}", deck_bundler::stamp::format_stamp_header(&stamp.hash));
+            std::fs::write(&path, stamped)
+                .with_context(|| format!("writing stamped {}", path.display()))?;
+            manifest.insert(t.out_file.clone(), serde_json::Value::String(stamp.hash.clone()));
+        }
+        if !manifest.is_empty() {
+            let manifest_dir = layout.assets_dir_for(&fw_targets[0].name);
+            let manifest_path = manifest_dir.join("manifest.json");
+            std::fs::write(
+                &manifest_path,
+                serde_json::to_string_pretty(&serde_json::Value::Object(manifest))?,
+            )
+            .with_context(|| format!("writing {}", manifest_path.display()))?;
+            println!("  manifest: {}", manifest_path.display());
+        }
+    }
+
+    // Materialize each component pack's standard `dist/custom-elements.json`
+    // (CEM) from its source. Run once here (the framework build), so per-app
+    // builds aggregate the pre-written manifests into `<app>/components.gen.ts`
+    // (`generate_components_gen`). Also the file every pack declares for
+    // external tooling (Storybook / VS Code / lit-analyzer).
+    // A pack that fails to compile fails the build. Printing and continuing is
+    // how un-migrated packs stayed invisible behind an exit-0 asset bake.
+    // Runs AFTER the framework verify+stamp above (deck-deploy-gap): a
+    // component pack's lint failure is real and must still fail the overall
+    // command, but it must never block the framework bundles `build.rs`
+    // needs from being staged and stamped first.
+    let n = deck_bundler::cem::write_all_pack_cems(&repo_root)
+        .context("pack manifest generation")?;
+    println!("  cem: {n} component pack manifest(s) written");
 
     // Consumer guard: the discovered consumer bundles (per-package
     // `deck.bundles`) have no build.rs guard — verify each is non-empty as
@@ -360,6 +414,107 @@ fn build_assets() -> Result<()> {
     println!("deck build-assets: bundles baked via in-process Rolldown");
     println!("note: lucide-icons.json is committed source; regen via `cargo run -p xtask-deck -- gen-icons`");
     Ok(())
+}
+
+/// deck-deploy-gap: the incident this closes is a stale `sui-runtime.js`
+/// baked via `include_str!` served against post-rename compiled views —
+/// every setup binding came back undefined, the site rendered nothing, and
+/// the only symptom was a silent console error. The manual cure was a
+/// 3-step dance (`build-assets`, `cargo build -p deck-cli`, restart) that
+/// nothing enforced.
+///
+/// Called once at `deck dev` startup: recomputes the current content hash of
+/// each framework singleton's TS source tree and compares it against the
+/// hash stamped into THIS binary's baked bundle (the leading `/*! ... */`
+/// comment `build_assets` writes — see `deck_bundler::stamp`). Three
+/// outcomes:
+///   - fresh (hashes match): silent, `deck dev` proceeds.
+///   - stale AND regeneration is possible (a real Cargo workspace + `cargo`
+///     on PATH, and we haven't already tried once this restart cycle): log
+///     loud, run `build_assets()` in-process to re-stage `.deck/framework/`
+///     with a fresh stamp, then `cargo run -p deck-cli -- dev …` — cargo
+///     picks up the changed `.deck/framework/*.js` via `build.rs`'s
+///     `cargo:rerun-if-changed`, rebuilds `deck-core` (re-baking the fresh,
+///     now-stamped bundle) and `deck-cli`, and launches the new binary with
+///     the same args. This process then exits with the child's status — the
+///     restart IS the "then continue."
+///   - stale AND regeneration is impossible (no Cargo workspace / no cargo /
+///     already tried once and still mismatched): HARD FAIL, naming the exact
+///     commands. Never serve a mismatched runtime silently.
+fn ensure_framework_fresh(repo_root: &Path, project: &Path, addr: &str) -> Result<()> {
+    let current = deck_bundler::stamp::current_framework_stamps(repo_root)
+        .context("deck dev: hashing framework source trees to check bake freshness")?;
+    let baked = deck_core::baked_framework_stamps();
+
+    let mut stale: Vec<String> = Vec::new();
+    for (name, baked_hash) in &baked {
+        // No source tree for this singleton under this repo root — nothing
+        // to verify against (an external consumer / partial checkout).
+        // `current_framework_stamps` already treats this as "unverifiable,"
+        // not "stale"; mirror that here rather than false-failing.
+        let Some(cur) = current.iter().find(|s| s.bundle == *name) else {
+            continue;
+        };
+        match baked_hash {
+            Some(h) if *h == cur.hash => {}
+            Some(h) => stale.push(format!("{name}: baked sha={h} current sha={}", cur.hash)),
+            None => stale.push(format!(
+                "{name}: baked bundle predates the stamp (no header) — current sha={}",
+                cur.hash
+            )),
+        }
+    }
+
+    if stale.is_empty() {
+        return Ok(());
+    }
+
+    const REGEN_CMDS: &str = "cargo run -p deck-cli -- build-assets && cargo build -p deck-cli";
+    let repo_has_cargo = repo_root.join("Cargo.toml").is_file();
+    let cargo_available = std::process::Command::new("cargo")
+        .arg("--version")
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false);
+    let already_tried = std::env::var_os("DECK_DEV_STALE_REGEN_ATTEMPTED").is_some();
+
+    if !repo_has_cargo || !cargo_available {
+        anyhow::bail!(
+            "deck dev: baked framework bundle(s) are STALE and cannot be regenerated from here \
+             (no Cargo workspace at {} / no `cargo` on PATH):\n  {}\n\
+             Fix: from the sui monorepo, run `{REGEN_CMDS}`, then restart `deck dev`.",
+            repo_root.display(),
+            stale.join("\n  ")
+        );
+    }
+    if already_tried {
+        anyhow::bail!(
+            "deck dev: baked framework bundle(s) are STILL stale after an automatic \
+             regenerate-and-restart:\n  {}\n\
+             The stamp may not be reproducible (e.g. a source tree that changes on every \
+             read). Fix manually: `{REGEN_CMDS}`, then restart `deck dev`.",
+            stale.join("\n  ")
+        );
+    }
+
+    eprintln!(
+        "deck dev: STALE framework bundle(s) detected — regenerating automatically:\n  {}",
+        stale.join("\n  ")
+    );
+    build_assets().context("deck dev: automatic build-assets (staleness regen) failed")?;
+
+    eprintln!("deck dev: rebuilding + restarting `deck dev` with the fresh bake...");
+    let status = std::process::Command::new("cargo")
+        .current_dir(repo_root)
+        .env("DECK_DEV_STALE_REGEN_ATTEMPTED", "1")
+        .args(["run", "--quiet", "-p", "deck-cli", "--", "dev", "--project"])
+        .arg(project)
+        .args(["--addr", addr])
+        .status()
+        .context("deck dev: spawning `cargo run -p deck-cli -- dev` for the staleness restart")?;
+    std::process::exit(status.code().unwrap_or(1));
 }
 
 /// Resolve the workspace root for a build from `start` (the project dir).
@@ -500,29 +655,42 @@ impl deck_core::DataPort for NoopDataPort {
 }
 
 fn dev(project: PathBuf, addr: String) -> Result<()> {
+    // Resolve the project root. Canonicalize so symlinks/bare relative paths
+    // collapse to a single absolute path the bundler and resolver can key
+    // off.
+    let cwd = std::env::current_dir().context("cwd")?;
+    let project_path = if project.is_absolute() {
+        project.clone()
+    } else {
+        cwd.join(&project)
+    };
+    let project_dir = project_path
+        .canonicalize()
+        .with_context(|| format!("canonicalize {}", project_path.display()))?;
+    // Bail up front if the path isn't a directory — keeps the later bundler
+    // diagnostics readable.
+    if !project_dir.is_dir() {
+        anyhow::bail!("{} is not a directory", project_dir.display());
+    }
+    // The real workspace root (component/workspace resolution) is found by
+    // walking up from the project; the project dir itself is one app.
+    let workspace_root = find_repo_root(&project_dir)?;
+
+    // deck-deploy-gap: never serve a framework bundle staler than its
+    // sources. Regenerates + restarts (see `ensure_framework_fresh`) or
+    // hard-fails naming the exact fix — checked BEFORE the server (and
+    // BEFORE the tokio runtime below exists): `ensure_framework_fresh`'s
+    // regen path calls `build_assets()`, which spins up its OWN tokio
+    // runtime — `block_on` from inside an already-running runtime panics
+    // ("Cannot start a runtime from within a runtime"), so this must run on
+    // a plain sync thread, not inside `runtime.block_on(async move { .. })`.
+    ensure_framework_fresh(&workspace_root, &project_dir, &addr)?;
+
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
         .context("build tokio runtime")?;
     runtime.block_on(async move {
-        // Resolve the project root. Canonicalize so symlinks/bare
-        // relative paths collapse to a single absolute path the bundler
-        // and resolver can key off.
-        let cwd = std::env::current_dir().context("cwd")?;
-        let project_path = if project.is_absolute() {
-            project.clone()
-        } else {
-            cwd.join(&project)
-        };
-        let project_dir = project_path
-            .canonicalize()
-            .with_context(|| format!("canonicalize {}", project_path.display()))?;
-        // Bail up front if the path isn't a directory — keeps the
-        // later bundler diagnostics readable.
-        if !project_dir.is_dir() {
-            anyhow::bail!("{} is not a directory", project_dir.display());
-        }
-
         // deck-core's resolution is mount-scoped: the project root is carried
         // per-request through the `Resolution` Extension layered below (not a
         // process global), so `serve_index` / `serve_app_*` / `spa_fallback`
@@ -535,10 +703,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         // output and EVERY page 404s — the gap a runtime-only smoke test
         // (just `/_deck/runtime.js`) misses. `bundle_framework = false`:
         // deck dev serves the framework singletons itself at `/_deck/*`,
-        // so the app graph keeps them external (no per-app copy). The real
-        // workspace root (component/workspace resolution) is found by
-        // walking up from the project; the project dir itself is one app.
-        let workspace_root = find_repo_root(&project_dir)?;
+        // so the app graph keeps them external (no per-app copy).
         let out_dir = deck_config::deck_out_path(&project_dir);
         let build = deck_bundler::app::bundle_app(
             &workspace_root,
