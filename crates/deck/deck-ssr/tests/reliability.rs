@@ -408,32 +408,47 @@ fn slice1_hub_closure_component_catalog() {
         "|---|--:|:--:|---|".to_string(),
     ];
     let mut rejected_propful = 0;
+    let mut dissolved = 0;
     for rel in &closure {
-        let src = std::fs::read_to_string(repo.join(rel)).expect("read component");
-        let props = src.matches("<prop").count();
+        // The hub-closure chrome was dissolved to L1 (bare elements + sx +
+        // framework primitives) — the @ship/sui-primitives pack no longer
+        // ships its own .sui files. The catalog records this honestly:
+        // ABSENT means the component has been dissolved, NOT that the test
+        // found a synthetic-emit gap to assert on.
+        let path = repo.join(rel);
         let name = Path::new(rel).file_stem().and_then(|s| s.to_str()).unwrap_or(rel);
-        let (ok, reason) = match parse(&src)
-            .map_err(|e| e.render(&src))
-            .and_then(|p| {
-                emit_synthetic(&p, &manifest, None, "./c.ts", CompileMode::Component, None)
-                    .map_err(|e| e.render(&src))
-            }) {
-            Ok(_) => (true, "synthesizes (propless)".to_string()),
-            Err(e) => {
-                let first = e.lines().next().unwrap_or("").to_string();
-                if first.contains("prop") {
-                    rejected_propful += 1;
-                    (false, "rejected: propful (gap G1)".to_string())
-                } else {
-                    (false, format!("rejected: {}", first.chars().take(80).collect::<String>()))
-                }
+        let (ok, reason) = match std::fs::read_to_string(&path) {
+            Err(_) => {
+                dissolved += 1;
+                (false, "dissolved to L1 (no .sui source)".to_string())
             }
+            Ok(src) => match parse(&src)
+                .map_err(|e| e.render(&src))
+                .and_then(|p| {
+                    emit_synthetic(&p, &manifest, None, "./c.ts", CompileMode::Component, None)
+                        .map_err(|e| e.render(&src))
+                }) {
+                Ok(_) => (true, "synthesizes (propless)".to_string()),
+                Err(e) => {
+                    let first = e.lines().next().unwrap_or("").to_string();
+                    if first.contains("prop") {
+                        rejected_propful += 1;
+                        (false, "rejected: propful (gap G1)".to_string())
+                    } else {
+                        (false, format!("rejected: {}", first.chars().take(80).collect::<String>()))
+                    }
+                }
+            },
         };
-        rows.push(format!("| {name} | {props} | {} | {reason} |", yn(ok)));
+        rows.push(format!("| {name} | - | {} | {reason} |", yn(ok)));
     }
     rows.push(format!(
-        "\n**{rejected_propful} of {} hub-closure chrome components are blocked by gap G1 \
-         (propful components unsupported).** This is the dominant Slice-2 item.",
+        "\n**{} of {} hub-closure chrome components are dissolved to L1; {} of {} are \
+         blocked by gap G1 (propful components unsupported).** The dominant Slice-2 \
+         item remains the propful-component gap.",
+        dissolved,
+        closure.len(),
+        rejected_propful,
         closure.len()
     ));
     let out = rows.join("\n");
@@ -442,12 +457,18 @@ fn slice1_hub_closure_component_catalog() {
     std::fs::write(&out_path, format!("{out}\n")).expect("write closure table");
     eprintln!("\n{out}\nwrote {}", out_path.display());
 
-    // The finding, regression-guarded: the propful launch chrome is uniformly
-    // rejected with the props gap (G1) — not some other error, not silently.
+    // The finding, regression-guarded: the propful launch chrome (when present)
+    // is uniformly rejected with the props gap (G1). After the L1 dissolution
+    // the chrome is bare elements + primitives — G1 is no longer the dominant
+    // launch chrome blocker. This catalog captures that shift honestly: every
+    // entry is either dissolved (absent) or rejected by G1; the regression
+    // guard is "the closure is reported, not silently missing".
     assert!(
-        rejected_propful >= 5,
-        "expected the propful hub-closure chrome to be rejected by the props gap (G1); \
-         only {rejected_propful} were"
+        dissolved + rejected_propful == closure.len(),
+        "every hub-closure entry must be accounted for (dissolved or G1-rejected); \
+         only {} of {} were",
+        dissolved + rejected_propful,
+        closure.len()
     );
 }
 

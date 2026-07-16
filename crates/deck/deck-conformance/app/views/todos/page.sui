@@ -1,7 +1,7 @@
 <data name="list" source="ship.demo.todos()" live />
 
-<div class="todos-demo">
-  <h1>Todos</h1>
+<column gap="3" sx="p-6 max-w-breakpoint-tablet mx-auto">
+  <h1 sx="text-2xl font-bold text-foreground">Todos</h1>
 
   <form mutation="ship.demo.addTodo">
     <input name="text" placeholder="New todo…" />
@@ -9,16 +9,16 @@
   </form>
 
   {#while-loading of list}
-  <p>Loading…</p>
+  <p sx="text-muted-foreground text-sm">Loading…</p>
   {/while-loading}
   {#while-error err of list}
-  <p>Error: {err.message}</p>
+  <p sx="text-destructive text-sm">Error: {err.message}</p>
   {/while-error}
   {#if list().kind === 'ok'}
-  <ul>
+  <column gap="1" sx="list-none p-0 m-0">
     {#for item of list().value.items key={item.id}}
-    <li class:done={item.done}>{item.text}</li>
+    <li aria-pressed={item.done} sx="pressed:line-through pressed:text-muted-foreground rounded-md p-1">{item.text}</li>
     {/for}
-  </ul>
+  </column>
   {/if}
-</div>
+</column>

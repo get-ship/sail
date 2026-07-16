@@ -1,15 +1,15 @@
 <client name="api" />
 <data name="t" source="api.demo.clock()" live />
 
-<div class="clock-demo">
-  <h1>Live Clock</h1>
+<column gap="3" sx="p-6 max-w-breakpoint-tablet mx-auto">
+  <h1 sx="text-2xl font-bold text-foreground">Live Clock</h1>
   {#while-loading of t}
-  <p>Loading…</p>
+  <p sx="text-muted-foreground text-sm">Loading…</p>
   {/while-loading}
   {#while-error err of t}
-  <p>Error: {err.message}</p>
+  <p sx="text-destructive text-sm">Error: {err.message}</p>
   {/while-error}
   {#if t().kind === 'ok'}
-  <p class="tick">Tick: <strong>{t().value.now}</strong></p>
+  <p sx="text-muted-foreground text-sm">Tick: <strong sx="text-foreground font-mono">{t().value.now}</strong></p>
   {/if}
-</div>
+</column>

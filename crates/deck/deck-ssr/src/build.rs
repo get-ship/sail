@@ -15,6 +15,7 @@ use rolldown::BundlerBuilder;
 use rolldown_common::{BundlerOptions, InputItem, Output, OutputFormat, ResolveOptions};
 use sui_compiler::emit::synthetic::{emit_synthetic, AppManifest};
 use sui_compiler::parse::parse;
+use sui_compiler::parse::preprocess::extract_controller_block;
 use sui_compiler::CompileMode;
 
 /// Walk up from this crate to the repo root (the dir holding `package.json`
@@ -74,8 +75,12 @@ pub async fn synthesize_and_bundle_with(
         .with_context(|| format!("read view {view_rel}"))?;
     let manifest_src = std::fs::read_to_string(repo.join(manifest_rel))
         .with_context(|| format!("read manifest {manifest_rel}"))?;
-    let program =
-        parse(&source).map_err(|e| anyhow!("parse view: {}", e.render(&source)))?;
+    // SUI sources may declare a `<controller>…</controller>` block alongside
+    // the template — the synthetic emit reads it as a paired controller.
+    // The template-only parser expects the block to be stripped first; the
+    // CLI does this in `parse::preprocess`, the SSR bundler must too.
+    let (stripped, _inline) = extract_controller_block(&source);
+    let program = parse(&stripped).map_err(|e| anyhow!("parse view: {}", e.render(&stripped)))?;
     let mut manifest = AppManifest::parse(&manifest_src)
         .map_err(|e| anyhow!("parse manifest: {}", e.render(&manifest_src)))?;
     // Deck declares its host context (route/navigate -> @ship/deck/router) into
@@ -102,9 +107,11 @@ pub async fn synthesize_and_bundle_with(
 
 async fn bundle(repo: &Path, build_dir: &Path, client_aliases: &[ClientAlias]) -> Result<String> {
     let runtime_server = repo.join("packages/sui/runtime/src/server.ts");
+    let runtime_internal = repo.join("packages/sui/runtime/src/internal.ts");
     let route_server = repo.join("packages/deck/router/src/server.ts");
     let mut alias = vec![
         ("@ship/sui-runtime".to_string(), vec![Some(path_str(&runtime_server))]),
+        ("@ship/sui-runtime/internal".to_string(), vec![Some(path_str(&runtime_internal))]),
         ("@ship/deck/router".to_string(), vec![Some(path_str(&route_server))]),
     ];
     for c in client_aliases {
@@ -142,9 +149,10 @@ async fn bundle(repo: &Path, build_dir: &Path, client_aliases: &[ClientAlias]) -
     Err(anyhow!("rolldown produced no entry chunk"))
 }
 
+
 fn path_str(p: &Path) -> String {
-    normalize(p).to_string_lossy().into_owned()
-}
+     normalize(p).to_string_lossy().into_owned()
+ }
 
 /// Collapse `.`/`..` components without touching the filesystem (the paths
 /// are built from a canonical repo root + known-good relatives).

@@ -12,8 +12,8 @@ export default controller<Scope>({
 })
 </controller>
 
-<div class="counter">
-  <h1>Counter</h1>
-  <p>Count: <strong>{count()}</strong></p>
+<column gap="3" sx="p-6 max-w-breakpoint-tablet mx-auto">
+  <h1 sx="text-2xl font-bold text-foreground">Counter</h1>
+  <p sx="text-muted-foreground text-sm">Count: <strong sx="text-foreground font-mono">{count()}</strong></p>
   <button on:click={() => count.set(count() + 1)}>increment</button>
-</div>
+</column>

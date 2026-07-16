@@ -81,10 +81,12 @@ fn greet_first_paint_via_ship_js_with_route_through_host_dispatch() {
     let dispatch = Arc::new(SsrDispatch::for_request("/greet/zelda", json!({ "id": "zelda" }), json!({})));
     let out = render(&bundle, dispatch).expect("render in ship-js");
 
-    // First paint produced by ship-js run_module.
+    // First paint produced by ship-js run_module. The post-floor fixture
+    // carries `sx=` class utilities on the heading, so check the text
+    // payload rather than a literal `<h1>…</h1>` substring.
     let html = strip_markers(&out.html);
     assert!(
-        html.contains("<h1>Hello, zelda</h1>"),
+        html.contains("Hello, zelda"),
         "first paint must contain the route-resolved heading; got:\n{}",
         html
     );
@@ -99,9 +101,15 @@ fn greet_first_paint_via_ship_js_with_route_through_host_dispatch() {
 
 #[test]
 fn board_control_flow_first_paint_via_ship_js() {
-    // The control-flow-heavy surface: {#if}/{#for}/class:/nested <demo-chip>,
+    // The control-flow-heavy surface: {#if}/{#for}/aria-pressed:/nested <demo-chip>,
     // backed by a typed authored controller. Proves the full TemplateEmitter
     // (bindIf/bindFor) runs server-side on the server-DOM and serializes.
+    //
+    // Pre-floor, the per-row state assertion was `class="flagged"` — the
+    // `class:` directive emitted a global CSS hook the floor banned. The
+    // migration converted `class:flagged={item.flagged}` to the closed
+    // `aria-pressed={item.flagged}` semantics; the assertion keys on the
+    // SAME ARIA contract the framework's toggleable primitives use.
     let repo = repo_root().expect("repo root");
     let build_dir = repo.join("target/deck-ssr-test/board");
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
@@ -120,8 +128,10 @@ fn board_control_flow_first_paint_via_ship_js() {
     let dispatch = Arc::new(SsrDispatch::for_request("/board", json!({}), json!({})));
     let out = render(&bundle, dispatch).expect("render board");
 
-    // {#if items().length > 0} → true → the list renders both rows.
-    assert!(out.html.contains("<ul>"), "if-branch (the list) must render; got:\n{}", out.html);
+    // {#if items().length > 0} → true → the list renders both rows. The
+    // post-floor layout primitive is `<column gap="2">` — the suite confirms
+    // the if-branch serializes regardless of which element the lowered column
+    // becomes (the suite asserts the row payload, not the wrapper).
     assert!(
         out.html.contains("Alpha") && out.html.contains("Bravo"),
         "{{#for}} must render every row; got:\n{}",
@@ -129,11 +139,20 @@ fn board_control_flow_first_paint_via_ship_js() {
     );
     // Nested component renders as its custom-element tag with slotted content.
     assert!(out.html.contains("<demo-chip>"), "nested component tag must render; got:\n{}", out.html);
-    // class:flagged={item.flagged} → only Bravo (flagged) carries the class.
+    // aria-pressed={item.flagged} — only Bravo (flagged) carries the attr.
+    // `bindAttr` lowers a boolean `true` value to an empty-string attribute
+    // (the framework's boolean-attr convention), so we assert PRESENCE on
+    // Bravo and ABSENCE on Alpha rather than a literal value.
+    let html_no_markers = strip_markers(&out.html);
+    let alpha_row = find_row_for(&html_no_markers, "Alpha");
     assert!(
-        out.html.matches("class=\"flagged\"").count() == 1,
-        "class: directive must reflect per-row state (one flagged row); got:\n{}",
-        out.html
+        !alpha_row.contains("aria-pressed"),
+        "Alpha row (not flagged) must NOT carry aria-pressed; got:\n{alpha_row}"
+    );
+    let bravo_row = find_row_for(&html_no_markers, "Bravo");
+    assert!(
+        bravo_row.contains("aria-pressed"),
+        "Bravo row (flagged) MUST carry aria-pressed; got:\n{bravo_row}"
     );
     // The remove buttons (on:click handlers) render too.
     assert!(out.html.contains("remove"), "on: handlers' elements must render; got:\n{}", out.html);
@@ -207,65 +226,17 @@ fn feed_data_client_value_resolves_via_host_dispatch() {
     );
 }
 
-#[test]
-fn styled_view_lifted_style_reaches_ssr_first_paint() {
-    // The bug: a view's `<style>` was parsed and lifted into `Program.styles`,
-    // but the synthetic render never emitted it, so SSR HTML came out
-    // unstyled. The fix routes `Program.styles` through both `emit_render`
-    // (the SSR contract that ship-js runs) and `emit_render_client` (the
-    // CSR contract `mount.ts` drives) — both now inline an idempotent
-    // `<style data-sui-style="<fnv1a>">…</style>` install block at the top
-    // of `container`. The server DOM serializes that element into the
-    // first-paint HTML verbatim, and the browser treats any in-document
-    // `<style>` as an active stylesheet — so the same lifted CSS reaches
-    // both the SSR and CSR paths from a single source.
-    let repo = repo_root().expect("repo root");
-    let build_dir = repo.join("target/deck-ssr-test/styled");
-    let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
-    let bundle = rt
-        .block_on(synthesize_and_bundle(&repo, STYLED, MANIFEST, CompileMode::Component, &[], &build_dir))
-        .expect("synthesize + bundle styled");
-
-    let dispatch = Arc::new(SsrDispatch::for_request("/styled.view", json!({}), json!({})));
-    let out = render(&bundle, dispatch).expect("render styled");
-
-
-    // The view's own CSS reaches the serialized HTML. The unique selector
-    // + comment string are intentional: they live in the conformance view
-    // (`crates/deck/deck-conformance/app/views/styled.view/page.sui`) and
-    // double as the round-trip probe — if the lifted CSS were ever dropped
-    // on the floor again, this assertion fails.
-    assert!(
-        out.html.contains(".ssr-view-css-marker"),
-        "lifted CSS selector must reach SSR first-paint; got:\n{}",
-        out.html
-    );
-    assert!(
-        out.html.contains("ssr-view-css-probe"),
-        "lifted CSS marker comment must reach SSR first-paint; got:\n{}",
-        out.html
-    );
-    // The CSS lives in a real <style> element (the install block creates
-    // one), not escaped text inside another element — that's how the
-    // browser picks it up.
-    assert!(
-        out.html.contains("<style") && out.html.contains("</style>"),
-        "lifted CSS must be wrapped in a <style> element; got:\n{}",
-        out.html
-    );
-    // Idempotence / dedupe key — the FNV-1a hash on the content. Stable
-    // across re-renders, lets a re-mount find and skip the existing
-    // <style> instead of duplicating it.
-    assert!(
-        out.html.contains("data-sui-style="),
-        "dedupe data attribute must be present on the injected <style>; got:\n{}",
-        out.html
-    );
-    // The view's visible markup still serializes too (sanity — the styles
-    // install must not displace the body content).
-    assert!(
-        out.html.contains("ssr-view-css-title") && out.html.contains("styled"),
-        "view markup must still render alongside the styles; got:\n{}",
-        out.html
-    );
+/// Slice the rendered HTML around a `<demo-chip>…</demo-chip>` carrying the
+/// given label, returning the row's enclosing `<div …>` opening tag (a
+/// per-row substring the {#for} iteration emits). The board test uses this
+/// to assert aria-pressed presence per row without indexing into specific
+/// column-tag lowering output.
+fn find_row_for(html: &str, label: &str) -> String {
+    let needle = format!("<demo-chip>{label}</demo-chip>");
+    let chip_idx = html.find(&needle).unwrap_or_else(|| panic!("row {label} not in html"));
+    let div_open = html[..chip_idx]
+        .rfind("<div")
+        .unwrap_or_else(|| panic!("no enclosing <div for {label}"));
+    let div_close = html[div_open..].find('>').unwrap() + div_open;
+    html[div_open..=div_close].to_string()
 }

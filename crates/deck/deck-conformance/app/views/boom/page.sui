@@ -1,14 +1,14 @@
 <data name="result" source="ship.demo.boom()" live />
 
-<div class="boom-demo">
-  <h1>Error Boundary</h1>
+<column gap="3" sx="p-6 max-w-breakpoint-tablet mx-auto">
+  <h1 sx="text-2xl font-bold text-foreground">Error Boundary</h1>
   {#while-loading of result}
-  <p class="boom-fallback">Loading…</p>
+  <p sx="text-muted-foreground text-sm">Loading…</p>
   {/while-loading}
   {#while-error err of result}
-  <p class="boom-fallback">Something went wrong</p>
+  <p sx="text-muted-foreground text-sm">Something went wrong</p>
   {/while-error}
   {#if result().kind === 'ok'}
-  <p>Value: {result().value.data}</p>
+  <p sx="text-muted-foreground text-sm">Value: <strong sx="text-foreground font-mono">{result().value.data}</strong></p>
   {/if}
-</div>
+</column>
