@@ -78,7 +78,7 @@ export default controller({
 
   <h2>Shape</h2>
   <p>
-    Four blocks. Each is a <em>partial</em> — it splices into the surrounding
+    Three blocks. Each is a <em>partial</em> — it splices into the surrounding
     markup with no wrapper element, so control flow never shows up in your DOM.
   </p>
 
@@ -96,14 +96,6 @@ export default controller({
   <h3><code>&#123;#match&#125;</code></h3>
   <p>A discriminated match that reads like the data it is matching on.</p>
   <code-block code={code.matchBlock}></code-block>
-
-  <h3><code>&#123;#async&#125;</code></h3>
-  <p>
-    A live handle's three states in one block. The value is only reachable inside
-    <code>:ok</code> — <strong>a template cannot render data it has not confirmed
-    arrived.</strong> The loading spinner you forgot is now a compile error.
-  </p>
-  <code-block code={code.asyncBlock}></code-block>
 
   <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
     <a variant="default" href="/reactivity">← State</a>

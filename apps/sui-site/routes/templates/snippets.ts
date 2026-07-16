@@ -58,15 +58,4 @@ export default controller({
   {:case 'live'}  <badge tone="success">Live</badge>
   {:default}      <badge>Unknown</badge>
 {/match}`,
-
-  asyncBlock: `<!-- a live handle's three states. The value is only reachable in
-     :ok — a template cannot render data it has not confirmed arrived. -->
-{#async users as list}
-  {:loading}
-    <spinner></spinner>
-  {:error err}
-    <alert tone="destructive">{err.message}</alert>
-  {:ok}
-    <p>{list.length} users</p>
-{/async}`,
 }

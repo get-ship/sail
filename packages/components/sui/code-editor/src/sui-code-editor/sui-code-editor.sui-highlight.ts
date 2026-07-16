@@ -5,11 +5,10 @@
  * coloring) and adds highlighting for SUI-specific constructs:
  *
  *   • Block directives — `{#if}`, `{#for x of list key={…}}`,
- *     `{#match}`, `{#async}`, `{#while-loading of x}`,
+ *     `{#match}`, `{#while-loading of x}`,
  *     `{#while-error err of x}` and their `:else if` / `{:else}` /
- *     `{:case}` / `{:default}` / `{:loading}` / `{:error …}` / `{:ok}`
- *     continuations and `{/if}` / `{/for}` / `{/match}` / `{/async}` /
- *     `{/while-loading}` / `{/while-error}` closers.
+ *     `{:case}` / `{:default}` continuations and `{/if}` / `{/for}` /
+ *     `{/match}` / `{/while-loading}` / `{/while-error}` closers.
  *   • Interpolation braces — `{expr}` in text content (distinct from
  *     plain text and from the directive forms above).
  *   • Directive attribute prefixes — `bind:` / `on:` / `class:` /
@@ -55,15 +54,15 @@ const CLS_ATTR_MODIFIER = 'sui-attr-modifier' // |prevent / |debounce:N …
 
 // ─── Grammar tables (mirrors `crates/sui/compiler`) ──────────────────
 const OPEN_KEYWORDS = [
-  'if', 'for', 'match', 'async', 'while-loading', 'while-error',
+  'if', 'for', 'match', 'while-loading', 'while-error',
 ] as const
 
 const CLOSE_KEYWORDS = [
-  'if', 'for', 'match', 'async', 'while-loading', 'while-error',
+  'if', 'for', 'match', 'while-loading', 'while-error',
 ] as const
 
 const CONTINUATION_KEYWORDS = [
-  'else if', 'else', 'case', 'default', 'loading', 'error', 'ok',
+  'else if', 'else', 'case', 'default',
 ] as const
 
 const ATTR_PREFIXES = [
@@ -132,7 +131,7 @@ function matchContinuationBody(inner: string): { keyword: string; bodyStart: num
 
 /**
  * Match a closer body (the text after a `/` sigil). Recognises `/if`,
- * `/for`, `/match`, `/async`, `/while-loading`, `/while-error`. Returns
+ * `/for`, `/match`, `/while-loading`, `/while-error`. Returns
  * the matched keyword, or `null`.
  */
 function matchCloseBody(inner: string): string | null {
@@ -409,8 +408,8 @@ const suiHighlightTheme = EditorView.theme({
     color: 'var(--syntax-punctuation, var(--syntax-operator, var(--syntax-keyword)))',
     fontWeight: '600',
   },
-  // `if`, `for`, `match`, `async`, `while-loading`, `else`, `case`, `default`,
-  // `loading`, `error`, `ok`, etc.
+  // `if`, `for`, `match`, `while-loading`, `while-error`, `else`, `case`,
+  // `default`, etc.
   '& .sui-directive-kw': {
     color: 'var(--syntax-keyword)',
     fontWeight: '600',
