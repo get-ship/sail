@@ -47,6 +47,10 @@ pub async fn serve_sui_live_reload(mode: Option<Extension<DaemonMode>>) -> Respo
     into_axum(deck_core::serve_sui_live_reload(mode_from_ext(mode)))
 }
 
+pub async fn serve_sui_error_overlay(mode: Option<Extension<DaemonMode>>) -> Response {
+    into_axum(deck_core::serve_sui_error_overlay(mode_from_ext(mode)))
+}
+
 // (formerly `serve_sui_chunk` + `serve_catalog_workspace`) — purged
 // with the runtime `.deck/` reads. The routes are gone too (deck-axum
 // `router()`).
