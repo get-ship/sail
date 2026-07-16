@@ -49,7 +49,9 @@ export const PACKS: Pack[] = [
   { id: 'lang', label: 'In the language', sub: 'no import — it compiles in' },
   { id: 'charts', label: 'Charts', sub: '@ship/sui-charts' },
   { id: 'media', label: 'Media', sub: '@ship/sui-media' },
-  { id: 'canvas', label: 'Canvas', sub: '@ship/sui-canvas' },
+  // Canvas is deliberately absent from the rail: its pack has zero
+  // cataloged components until their demo tiles land (see the CATALOG
+  // note) — a rail entry whose filter shows an empty grid is a lie.
   { id: 'chat', label: 'Chat elements', sub: '@ship/sui-chat-elements' },
   { id: 'mermaid', label: 'Mermaid', sub: '@ship/sui-mermaid' },
   { id: 'code-editor', label: 'Code editor', sub: '@ship/sui-code-editor' },
@@ -146,23 +148,26 @@ export const CATALOG: CatalogEntry[] = [
   P('charts', 'sui-line-chart', 'suiLineChart', 'data'),
   P('charts', 'sui-sparkline', 'suiSparkline', 'data'),
 
-  // ── @ship/sui-media — 3 content renderers (image / audio-video / csv)
+  // ── @ship/sui-media — content renderers (image / audio-video) ────────
+  // sui-media-csv exists in the pack but has NO live tile in page.sui yet —
+  // a catalog entry REQUIRES a live tile (`show.<key>()` gate), or the
+  // rail's counts lie and its filter shows an empty grid. Add the entry
+  // WITH its demo, never before.
   P('media', 'sui-media-image', 'suiMediaImage', 'data'),
   P('media', 'sui-media-av', 'suiMediaAv', 'data'),
-  P('media', 'sui-media-csv', 'suiMediaCsv', 'data'),
 
-  // ── @ship/sui-canvas — 7 drawing + annotation surfaces ──────────────
-  P('canvas', 'sui-canvas', 'suiCanvas', 'data'),
-  P('canvas', 'sui-board', 'suiBoard', 'data'),
-  P('canvas', 'sui-draw', 'suiDraw', 'data'),
-  P('canvas', 'sui-graph-canvas', 'suiGraphCanvas', 'data'),
-  P('canvas', 'sui-annotation-layer', 'suiAnnotationLayer', 'data'),
-  P('canvas', 'sui-annotation-list', 'suiAnnotationList', 'data'),
-  P('canvas', 'sui-annotation-marker', 'suiAnnotationMarker', 'data'),
+  // ── @ship/sui-canvas — NOT CATALOGED YET ─────────────────────────────
+  // The pack ships 7 drawing/annotation surfaces (sui-canvas, sui-board,
+  // sui-draw, sui-graph-canvas, sui-annotation-*), floor-migrated and
+  // CEM-green — but none has a live demo tile in page.sui, so listing
+  // them made the Canvas filter an empty lie (owner-reported 2026-07-16).
+  // They enter this catalog with the pack-consolidation wave (task #53),
+  // each entry landing together with its tile.
 
-  // ── @ship/sui-chat-elements — 6 chat-message UI primitives ───────────
+  // ── @ship/sui-chat-elements — chat-message UI primitives ─────────────
+  // sui-message-list: pack component without a live tile — same rule as
+  // sui-media-csv above; enters with its demo.
   P('chat', 'sui-message', 'suiMessage', 'display'),
-  P('chat', 'sui-message-list', 'suiMessageList', 'display'),
   P('chat', 'sui-citation', 'suiCitation', 'display'),
   P('chat', 'sui-composer', 'suiComposer', 'inputs'),
   P('chat', 'sui-thinking-dots', 'suiThinkingDots', 'feedback'),
