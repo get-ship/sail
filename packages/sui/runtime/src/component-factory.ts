@@ -279,7 +279,17 @@ export function component<Bindings>(
         shadowAttached.appendChild(style)
       }
     } else {
-      lightChildren = Array.from(host.childNodes)
+      // Capture ONCE per host element, not once per connect. The connect
+      // handler re-runs when control flow ({#if}/{#match}) detaches and
+      // re-attaches the SAME host node; at that point the host's children
+      // are the previous render's own template output, and capturing THAT
+      // as "authored content" makes projection try to place the rendered
+      // wrapper inside its own <slot> — HierarchyRequestError, page dead
+      // (the /components filter crash). The authored nodes stay alive here
+      // by reference across the round-trip; projection moves them into the
+      // fresh render's slots.
+      const h = host as HTMLElement & { __suiLightCapture?: Node[] }
+      lightChildren = h.__suiLightCapture ??= Array.from(host.childNodes)
       // Model A: the host is a transparent pass-through — its `.sui-root`
       // template child is the visual root. `display: contents` removes the
       // host's own box so a block-rooted component lays out correctly (an

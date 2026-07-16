@@ -232,3 +232,50 @@ describe('component() — styles', () => {
     el.remove()
   })
 })
+
+describe('component() — light-DOM capture across reconnect', () => {
+  // The /components filter crash: {#if} detaches and re-attaches the SAME
+  // host node. The connect handler re-runs; re-capturing host.childNodes at
+  // that point grabs the previous render's own wrapper as "authored
+  // content", and projection then places the wrapper inside its own <slot>
+  // — HierarchyRequestError, page replaced by the route error card.
+  it('re-attaching the same host reuses the original capture ({#if} round-trip)', async () => {
+    const tag = nextTag()
+    // The compiled __mount ADOPTS existing markup on a non-empty host (the
+    // hydration/morph path) instead of rebuilding — so on reconnect the
+    // previously-rendered wrapper stays live, and a stale capture of it is
+    // an ancestor of the very slot projection targets.
+    const slotModule = () =>
+      component(() => ({
+        __mount: (host: HTMLElement) => {
+          if (host.querySelector(':scope > div.rendered-root')) return
+          const wrapper = document.createElement('div')
+          wrapper.className = 'rendered-root'
+          wrapper.appendChild(document.createElement('slot'))
+          host.replaceChildren(wrapper)
+        },
+      }))
+    component(tag, { props: {} }, slotModule())
+
+    const errSpy = vi.spyOn(console, 'error')
+    const el = document.createElement(tag)
+    const authored = document.createElement('span')
+    authored.textContent = 'authored'
+    el.appendChild(authored)
+    document.body.appendChild(el)
+    await flushMicrotasks()
+    expect(el.querySelector('slot')?.contains(authored)).toBe(true)
+
+    el.remove()
+    document.body.appendChild(el)
+    await flushMicrotasks()
+
+    const hierarchyErrs = errSpy.mock.calls.filter((c) =>
+      c.map(String).join(' ').includes('HierarchyRequestError'),
+    )
+    expect(hierarchyErrs).toEqual([])
+    expect(el.querySelector('slot')?.contains(authored)).toBe(true)
+    errSpy.mockRestore()
+    el.remove()
+  })
+})
