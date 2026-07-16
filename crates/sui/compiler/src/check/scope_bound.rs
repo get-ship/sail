@@ -52,10 +52,6 @@ const BUILTINS: &[&str] = &[
     // Runtime helpers (unwrap variants are imported by the compiled
     // module; templates may also reference them via `use:` results).
     "unwrap", "unwrapOr",
-    // Built-in transition factories — auto-imported when referenced by
-    // `transition:` / `in:` / `out:` directives, so resolving them
-    // without an explicit declaration is correct here.
-    "fade", "slide", "scale",
     // Built-in `use:` actions — auto-imported when referenced by a `use:`
     // directive (see `action_manifest::BUILTIN_ACTION_NAMES`), so `use:anchor`
     // &c resolve without an explicit controller import. This is the
@@ -284,9 +280,9 @@ pub(super) struct Visitor {
 
 // The walk no longer short-circuits on the first error — `check_expr` pushes
 // one diagnostic per offending expression and the traversal continues, so
-// `collect()` sees every out-of-scope reference. `{#for}` / `{#while-error}` /
-// `{#async … as}` locals are still added before the body and removed after, so
-// the scope stays balanced regardless of how many errors were found.
+// `collect()` sees every out-of-scope reference. `{#for}` / `{#while-error}`
+// locals are still added before the body and removed after, so the scope
+// stays balanced regardless of how many errors were found.
 fn visit_program(program: &Program, v: &mut Visitor) {
     visit_instrs(&program.template, v);
 }
@@ -352,13 +348,6 @@ fn visit_instr(instr: &Instr, v: &mut Visitor) {
             v.scope.names.insert(we.error_var.clone());
             visit_instrs(&we.body, v);
             v.scope.names.remove(&we.error_var);
-        }
-        Instr::Let(l) => {
-            // `{#async X as v}` binds `v` inside the `{:ok}` body.
-            check_expr(&l.value, v, &[]);
-            v.scope.names.insert(l.name.clone());
-            visit_instrs(&l.body, v);
-            v.scope.names.remove(&l.name);
         }
     }
 }

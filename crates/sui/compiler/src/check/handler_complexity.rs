@@ -57,7 +57,6 @@ fn check_instr(instr: &Instr) -> Result<(), CompileError> {
         }
         Instr::WhileLoading(wl) => check_instrs(&wl.body)?,
         Instr::WhileError(we) => check_instrs(&we.body)?,
-        Instr::Let(l) => check_instrs(&l.body)?,
     }
     Ok(())
 }

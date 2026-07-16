@@ -44,28 +44,6 @@ fn state_directive_is_retired() {
 }
 
 #[test]
-fn async_without_ok_branch_is_rejected() {
-    let src = r#"<section>{#async overview}{:loading}<p>L</p>{/async}</section>"#;
-    let err = compile_view(src);
-    assert!(
-        err.message.contains("{:ok}"),
-        "msg: {}",
-        err.message
-    );
-}
-
-#[test]
-fn async_bad_as_variable_is_rejected() {
-    let src = r#"<section>{#async overview as 1bad}{:ok}<p>X</p>{/async}</section>"#;
-    let err = compile_view(src);
-    assert!(
-        err.message.contains("bad `as` variable"),
-        "msg: {}",
-        err.message
-    );
-}
-
-#[test]
 fn arrow_in_attr_expression_is_rejected() {
     let src = r#"<button disabled={() => true}></button>"#;
     let err = compile_view(src);

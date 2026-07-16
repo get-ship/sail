@@ -15,7 +15,7 @@
  *                    `bindProp`, `bindValue`, `bindChecked`, `bindRawHtml`
  *                    (+ type `Disposer`)
  *   - Events:        `on`, `matchesKey` (+ types `OnOptions`, `Modifier`)
- *   - Control flow:  `bindFor`, `bindForSignal`, `bindIf`, `bindAwait`
+ *   - Control flow:  `bindFor`, `bindForSignal`, `bindIf`
  *                    (+ types `BindForOptions`, `RenderedItem`,
  *                    `BindIfOptions`, `BranchRender`, `BindAwaitOptions`)
  *   - Slots:         `resolveSlots`, `snapshotChildren`, `slotFilled`
@@ -258,8 +258,6 @@ export { __tpl } from './tpl'
 // Event delegation — one root listener per event type; handlers live on the node.
 export { delegateEvents } from './delegate'
 export { runEnter, runLeave, cancelTransitions, setTransitionRunner } from './transition-runner'
-export { bindAwait } from './await'
-export type { BindAwaitOptions } from './await'
 
 export { bindRawHtml } from './raw-html'
 

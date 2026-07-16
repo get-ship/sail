@@ -87,11 +87,6 @@ impl Builder {
             Instr::Match(match_instr) => self.walk_match(match_instr),
             Instr::WhileLoading(wl) => self.walk_while_loading(wl),
             Instr::WhileError(we) => self.walk_while_error(we),
-            Instr::Let(l) => {
-                for child in &l.body {
-                    self.walk_instr(child);
-                }
-            }
         }
     }
 

@@ -80,12 +80,10 @@ semver bump. Treat the absence of an export from `src/index.ts` as a
 | `bindFor`          | Keyed list reconciler.                                        |
 | `bindForSignal`    | `bindFor` convenience for signal-backed lists.                |
 | `bindIf`           | Conditional branch render.                                    |
-| `bindAwait`        | Promise-driven branch render (loading / then / catch).        |
 | `BindForOptions`   | Inputs to `bindFor`.                                          |
 | `RenderedItem`     | Output of a `bindFor` row renderer.                           |
 | `BindIfOptions`    | Inputs to `bindIf`.                                           |
-| `BranchRender`     | One branch's nodes + cleanup (shared by `bindIf`/`bindAwait`).|
-| `BindAwaitOptions` | Inputs to `bindAwait`.                                        |
+| `BranchRender`     | One branch's nodes + cleanup (shared by `bindIf`).            |
 
 ### Patch protocol (`patch.ts`)
 

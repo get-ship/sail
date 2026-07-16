@@ -148,7 +148,6 @@ fn instr_has_reflect_empty_slot(instr: &Instr) -> bool {
         }
         Instr::WhileLoading(w) => instrs_have_reflect_empty_slot(&w.body),
         Instr::WhileError(w) => instrs_have_reflect_empty_slot(&w.body),
-        Instr::Let(l) => instrs_have_reflect_empty_slot(&l.body),
         Instr::StaticText { .. } | Instr::DynamicText { .. } | Instr::Comment { .. } => false,
     }
 }

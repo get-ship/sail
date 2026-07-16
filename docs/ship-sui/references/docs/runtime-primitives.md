@@ -54,7 +54,7 @@ Used by compiler-emitted code; rarely written by hand.
 {#while-error err of agents}<p>{err.message}</p>{/while-error}
 ```
 
-Runtime helpers behind these: `bindIf`, `bindFor`, `bindForSignal`, `bindAwait`, `bindWhileLoading`, `bindWhileError`. The `<sui-if>`, `<sui-for>`, `<sui-match>` custom elements register on module load.
+Runtime helpers behind these: `bindIf`, `bindFor`, `bindForSignal`, `bindWhileLoading`, `bindWhileError`. The `<sui-if>`, `<sui-for>`, `<sui-match>` custom elements register on module load.
 
 `{#for}` requires `key={EXPR}` — without a stable key the reconciler falls back to positional matching and DOM identity (focus, selection, in-progress edits) is lost on reorder. `sui-for-key` lint warns when missing.
 
@@ -134,22 +134,18 @@ The compiler wires the form to `wireFormMutation` against the named SDK call. Th
 
 Out-of-band (controller-driven) mutations call the typed SDK directly: `await ship.sessions.start({...})`.
 
-## Transitions
+## Motion
 
-```html
-{#if visible()}
-  <div transition:fade={{ duration: 200 }}>…</div>
-{/if}
+`transition:` / `in:` / `out:` are retired — the compiler rejects them with a
+teaching error pointing at `motion:`, the one animation system. `motion:` is a
+directive, not a runtime import: `motion:enter`, `motion:exit`, and trigger
+variants like `motion:hover` take a static preset object literal
+(`motion:exit={{ duration: 150 }}`) and are wired through the
+`TransitionRunner` seam (`packages/sui/runtime/src/transition-runner.ts`),
+backed by `packages/sui/runtime/src/motion.ts`'s lifecycle animations.
 
-<!-- Asymmetric: slide in, fade out -->
-{#if visible()}
-  <div in:slide out:fade={{ duration: 150 }}>…</div>
-{/if}
-```
-
-Built-ins: `fade`, `slide`, `scale`. Custom transitions register via `registerTransition(name, { in?, out? })`. The compiler auto-imports built-in names from `@ship/sui-runtime`; custom transitions must be on the controller's `scope:` factory.
-
-Out-transitions defer DOM removal until the animation finishes. A rapid toggle while an out-transition is in flight rescues the same nodes so the in-transition picks up from current state without re-rendering. `prefers-reduced-motion: reduce` collapses duration and delay to `0` automatically. Transitions don't surface in SSR output — they register on element construction (CSR + hydrate paths).
+See `packages/sui/tutorial/src/prose/06-motion-is-a-directive.md` for the
+canonical walkthrough.
 
 ## Morph — in-place DOM patching
 

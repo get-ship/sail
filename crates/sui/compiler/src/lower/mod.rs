@@ -43,14 +43,8 @@ pub struct Lowered {
     /// "@ship/sui-runtime/route"` so routeless views don't pull in the
     /// route module.
     pub uses_route: bool,
-    /// Built-in transition names referenced by `transition:` / `in:` /
-    /// `out:` directives — limited to `fade`, `slide`, `scale`. The
-    /// emitter folds these into the `@ship/sui-runtime` import list so
-    /// authors don't have to import them manually. Custom transition
-    /// names (anything else) resolve through `$scope`.
-    pub transition_builtins: BTreeSet<&'static str>,
     /// Runtime attacher symbols referenced by `motion:` directives.
-    /// Mirrors [`transition_builtins`] — the emitter folds these into
+    /// The emitter folds these into
     /// the `@ship/sui-runtime` import list so views using `motion:`
     /// pull in the spring_attach / tween_attach helpers transparently.
     /// In milestone 1 the only entries are `"spring_attach"` (when any
@@ -216,14 +210,6 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_view: bool, depth: &mut usize
             }
             *depth += 1;
             walk_instrs(&we.body, out, is_view, depth)?;
-            *depth -= 1;
-        }
-        Instr::Let(l) => {
-            // `Let` is internal-only — emitted by `{#async X as v}` to
-            // snapshot the signal's `.value`. No new runtime imports
-            // beyond what the body already needs.
-            *depth += 1;
-            walk_instrs(&l.body, out, is_view, depth)?;
             *depth -= 1;
         }
         Instr::If(IfInstr { branches, else_body, .. }) => {

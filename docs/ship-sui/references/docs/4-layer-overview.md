@@ -53,7 +53,7 @@ Public API barrel: `packages/sui/runtime/src/index.ts`. Anything not re-exported
 | Reactivity | `signal`, `derived`, `effect`, `batch`, `untrack`, `createScope`, `createChildScope`, `onCleanup` |
 | DOM bindings | `bindText`, `bindShow`, `bindAttr`, `bindClass`, `bindProp`, `bindValue`, `bindChecked`, `bindHtml`, `bindRawHtml` |
 | Events | `on`, `matchesKey` |
-| Control flow | `bindFor`, `bindForSignal`, `bindIf`, `bindAwait` |
+| Control flow | `bindFor`, `bindForSignal`, `bindIf` |
 | Projection | `projectSlots`, `resolveSlots`, `snapshotChildren`, `slotFilled`, `bindSlotEmpty` (light-DOM slot redistribution + empty-reflection; `projectSlots` is the runtime path the component factory uses at connect) |
 | Components | `defineComponent`, `component`, `prop`, `camelOf` |
 | Prop decoders | `decodeString`, `decodeNumber`, `decodeBoolean`, `decodeJson`, `decodeEnum` |

@@ -10,16 +10,6 @@ pub(super) fn emit_imports(
     uses_delegation: bool,
 ) {
     let mut imports: Vec<String> = lowered.runtime_imports.iter().map(|s| s.to_string()).collect();
-    // Built-in transition factories are auto-imported when the template
-    // references them — authors don't have to wire fade/slide/scale by
-    // hand. Custom transition names (anything not in this set) still
-    // resolve through `$scope` (i.e. the controller's setup: factory).
-    for &name in &lowered.transition_builtins {
-        let s = name.to_string();
-        if !imports.contains(&s) {
-            imports.push(s);
-        }
-    }
     for &name in &lowered.motion_builtins {
         let s = name.to_string();
         if !imports.contains(&s) {

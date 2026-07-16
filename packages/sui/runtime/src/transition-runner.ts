@@ -1,19 +1,16 @@
-// Tiny indirection layer for the transition runner. Lets `for.ts` and
-// `if.ts` call `runEnter` / `runLeave` / `cancelTransitions` without
-// pulling the full ~3KB transition.ts (built-in fade/slide/scale,
-// Web Animations API plumbing, prefers-reduced-motion checks).
+// The `TransitionRunner` seam: `runEnter` / `runLeave` / `cancelTransitions`
+// / `setTransitionRunner` / `getTransitionRunner`. `if.ts` and `for.ts` call
+// through this indirection when removing/inserting nodes, instead of
+// depending on a concrete animation implementation directly.
 //
-// Apps that don't use `transition:` directives don't import
-// transition.ts via the compiler's emitted code path. They also
-// don't import `registerTransition` / `fade` / `slide` / `scale`
-// from the runtime. So esbuild's tree-shaker drops transition.ts
-// from the app bundle entirely — ~870B compressed in the Krausest
-// bench bundle.
-//
-// When transition.ts IS imported (a template with a `transition:`
-// directive, or an app calling `registerTransition`), its top-level
-// invokes `setTransitionRunner(real)` to swap the stubs out. From
-// then on bindFor/bindIf get the real animation runner.
+// The seam is backed by `motion.ts`'s `motion:enter` / `motion:exit`
+// lifecycle animations. Apps that don't use `motion:` directives never call
+// `installLifecycleRunner()`, so the stub runners here (no-ops) stay in
+// place and esbuild's tree-shaker drops `motion.ts` from the app bundle
+// entirely. Apps that do use `motion:` have their compiled output call
+// `installLifecycleRunner()`, which swaps the stubs out for the real
+// lifecycle-animation runner — from then on bindFor/bindIf drive real
+// enter/exit animations through this same seam.
 
 type RunEnter = (nodes: Iterable<Node>) => void
 type RunLeave = (nodes: Iterable<Node>) => Promise<void> | null

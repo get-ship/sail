@@ -48,7 +48,6 @@ fn visit(instrs: &[Instr], found: &mut BTreeSet<String>) {
             }
             Instr::WhileLoading(wl) => visit(&wl.body, found),
             Instr::WhileError(we) => visit(&we.body, found),
-            Instr::Let(l) => visit(&l.body, found),
             Instr::StaticText { .. } | Instr::DynamicText { .. } | Instr::Comment { .. } => {}
         }
     }

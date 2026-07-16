@@ -42,14 +42,6 @@ suite is green and the build is warning-free.
 - **Where:** `src/emit/synthetic/mod.rs:191`.
 - **Status:** planned (Phase 2: a props-parameterized scope factory).
 
-### Synthetic render can't model `{#async X as v}`
-- **What:** The preview path can't represent the async-let binding; the
-  snapshot scope and the typed author scope diverge. Real compilation is
-  unaffected.
-- **Repro:** `{#async fetchThing() as v}` inside a playground preview.
-- **Where:** `src/emit/synthetic/render.rs:311`.
-- **Status:** planned (Phase 2 lifts the binding into the typed scope).
-
 ## L1 language elements
 
 ### `<card>` uses attribute-selected header/footer, not real named slots

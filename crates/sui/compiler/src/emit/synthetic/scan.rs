@@ -43,10 +43,6 @@ fn instr_references_ident(instr: &Instr, name: &str) -> bool {
         }
         Instr::WhileLoading(wl) => template_references_ident(&wl.body, name),
         Instr::WhileError(we) => template_references_ident(&we.body, name),
-        Instr::Let(l) => {
-            expr_references_ident(&l.value.source, name)
-                || template_references_ident(&l.body, name)
-        }
         Instr::StaticText { .. } | Instr::Comment { .. } => false,
     }
 }

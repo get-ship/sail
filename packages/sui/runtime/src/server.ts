@@ -105,7 +105,6 @@ export { markHydrateText, markHydrateAttr, markHydrateBoundary } from './hydrate
 export { bindIf } from './if'
 export { bindFor, bindForSignal } from './for'
 export { bindWhileLoading, bindWhileError } from './while'
-export { bindAwait } from './await'
 
 // ── the server DOM (SSR-only; one isomorphic render artifact) ────────────────
 // `installServerDom()` is what makes the SAME render + bindings above run in a

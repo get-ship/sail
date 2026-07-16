@@ -11,9 +11,7 @@ use crate::parse::expr;
 use super::tokenize::{Discriminant, Token, TokenKind};
 use super::ParseResult;
 
-mod async_block;
 mod for_header;
-pub(crate) use async_block::parse_async;
 use for_header::parse_for_header;
 
 /// Callback that re-enters the top-level parser. Avoids a circular
@@ -28,20 +26,8 @@ pub(crate) struct InstrResult {
     pub end: usize,
 }
 
-/// Multi-instr result for blocks that desugar to >1 top-level instr.
-pub(crate) struct InstrsResult {
-    pub instrs: Vec<Instr>,
-    pub end: usize,
-}
-
 const WHILE_LOADING_TERMS: &[Discriminant] = &[Discriminant::CloseWhileLoading];
 const WHILE_ERROR_TERMS: &[Discriminant] = &[Discriminant::CloseWhileError];
-const ASYNC_TERMS: &[Discriminant] = &[
-    Discriminant::AsyncLoading,
-    Discriminant::AsyncError,
-    Discriminant::AsyncOk,
-    Discriminant::CloseAsync,
-];
 
 const IF_TERMS: &[Discriminant] = &[
     Discriminant::ElseIf,
