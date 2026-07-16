@@ -44,12 +44,12 @@
   }
   variants: {
     size: {
-      md: 'text:sm leading:normal-plus',
-      sm: 'text:xs leading:normal',
-      lg: 'text:base leading:loose',
+      md: 'text-sm leading-normal-plus',
+      sm: 'text-xs leading-normal',
+      lg: 'text-base leading-loose',
     }
     chrome: {
-      card: 'border:border bg:surface-1 radius:lg shadow:xs',
+      card: 'border-border bg-surface-1 rounded-lg shadow-xs',
       flush: '',
     }
   }

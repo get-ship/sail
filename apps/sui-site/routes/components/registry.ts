@@ -21,13 +21,6 @@ export interface Pack {
   label: string
   /** The install line — empty for the language itself. */
   sub: string
-  /** Floor-gated on this branch: the pack's components still carry raw
-   *  `<style>` blocks, which this compiler rejects — so they cannot mount
-   *  live, and this page refuses to fake them with drawings. The rail still
-   *  lists the pack; selecting it explains the gap. */
-  gated?: boolean
-  /** How many components are waiting behind the gate (for the copy). */
-  waiting?: number
 }
 
 export interface CatalogEntry {
@@ -54,12 +47,12 @@ export interface CatalogEntry {
 export const PACKS: Pack[] = [
   { id: 'all', label: 'All packs', sub: '' },
   { id: 'lang', label: 'In the language', sub: 'no import — it compiles in' },
-  { id: 'charts', label: 'Charts', sub: '@ship/sui-charts', gated: true, waiting: 7 },
-  { id: 'media', label: 'Media', sub: '@ship/sui-media', gated: true, waiting: 3 },
-  { id: 'canvas', label: 'Canvas', sub: '@ship/sui-canvas', gated: true, waiting: 5 },
-  { id: 'chat', label: 'Chat elements', sub: '@ship/sui-chat-elements', gated: true, waiting: 6 },
-  { id: 'mermaid', label: 'Mermaid', sub: '@ship/sui-mermaid', gated: true, waiting: 1 },
-  { id: 'code-editor', label: 'Code editor', sub: '@ship/sui-code-editor', gated: true, waiting: 1 },
+  { id: 'charts', label: 'Charts', sub: '@ship/sui-charts' },
+  { id: 'media', label: 'Media', sub: '@ship/sui-media' },
+  { id: 'canvas', label: 'Canvas', sub: '@ship/sui-canvas' },
+  { id: 'chat', label: 'Chat elements', sub: '@ship/sui-chat-elements' },
+  { id: 'mermaid', label: 'Mermaid', sub: '@ship/sui-mermaid' },
+  { id: 'code-editor', label: 'Code editor', sub: '@ship/sui-code-editor' },
   // The fx pack is gone: the actions it shipped (`spotlight`,
   // `targetCursor`) are stdlib and live in the action table; they
   // are not in this catalog because actions are not elements.
@@ -70,6 +63,23 @@ const L = (tag: string, key: string, cat: CatalogEntry['cat']): CatalogEntry => 
   key,
   slug: tag,
   pack: 'lang',
+  cat,
+})
+
+/** Pack-component helper. `key` is the camelCase scope key page.sui reads
+ *  through `show.<key>()`, `slug` is the /components/<slug> detail route.
+ *  Every pack tag is the custom element the @ship/sui-* packs define; the
+ *  helper keeps pack rows consistent with the `L` ones. */
+const P = (
+  pack: Exclude<PackId, 'lang'>,
+  tag: string,
+  key: string,
+  cat: CatalogEntry['cat'],
+): CatalogEntry => ({
+  tag,
+  key,
+  slug: tag,
+  pack,
   cat,
 })
 
@@ -126,6 +136,43 @@ export const CATALOG: CatalogEntry[] = [
   // Actions (`spotlight`, `targetCursor`, etc.) are stdlib and live in
   // the action table. They are not elements; this catalog is
   // elements only.
+
+  // ── @ship/sui-charts — 7 SVG-rendered data viz primitives ───────────
+  P('charts', 'sui-area-chart', 'suiAreaChart', 'data'),
+  P('charts', 'sui-bar-chart', 'suiBarChart', 'data'),
+  P('charts', 'sui-donut', 'suiDonut', 'data'),
+  P('charts', 'sui-gauge', 'suiGauge', 'data'),
+  P('charts', 'sui-heatmap', 'suiHeatmap', 'data'),
+  P('charts', 'sui-line-chart', 'suiLineChart', 'data'),
+  P('charts', 'sui-sparkline', 'suiSparkline', 'data'),
+
+  // ── @ship/sui-media — 3 content renderers (image / audio-video / csv)
+  P('media', 'sui-media-image', 'suiMediaImage', 'data'),
+  P('media', 'sui-media-av', 'suiMediaAv', 'data'),
+  P('media', 'sui-media-csv', 'suiMediaCsv', 'data'),
+
+  // ── @ship/sui-canvas — 7 drawing + annotation surfaces ──────────────
+  P('canvas', 'sui-canvas', 'suiCanvas', 'data'),
+  P('canvas', 'sui-board', 'suiBoard', 'data'),
+  P('canvas', 'sui-draw', 'suiDraw', 'data'),
+  P('canvas', 'sui-graph-canvas', 'suiGraphCanvas', 'data'),
+  P('canvas', 'sui-annotation-layer', 'suiAnnotationLayer', 'data'),
+  P('canvas', 'sui-annotation-list', 'suiAnnotationList', 'data'),
+  P('canvas', 'sui-annotation-marker', 'suiAnnotationMarker', 'data'),
+
+  // ── @ship/sui-chat-elements — 6 chat-message UI primitives ───────────
+  P('chat', 'sui-message', 'suiMessage', 'display'),
+  P('chat', 'sui-message-list', 'suiMessageList', 'display'),
+  P('chat', 'sui-citation', 'suiCitation', 'display'),
+  P('chat', 'sui-composer', 'suiComposer', 'inputs'),
+  P('chat', 'sui-thinking-dots', 'suiThinkingDots', 'feedback'),
+  P('chat', 'sui-tool-call', 'suiToolCall', 'display'),
+
+  // ── @ship/sui-mermaid — 1 diagram renderer (themed SVG) ──────────────
+  P('mermaid', 'sui-mermaid', 'suiMermaid', 'data'),
+
+  // ── @ship/sui-code-editor — 1 CodeMirror-wrapped editor ──────────────
+  P('code-editor', 'sui-code-editor', 'suiCodeEditor', 'inputs'),
 ]
 
 export const CATEGORIES = [
