@@ -30,21 +30,38 @@ pub fn owning_dir(from: &Path) -> Option<PathBuf> {
     None
 }
 
+/// The top-level `sui.config.json` keys the parser recognizes. Anything else
+/// present is a typo/unknown key — the compiler must refuse loudly rather
+/// than silently ignore it (config-loud-strict: a `{"polcy":"strict"}` typo
+/// used to fail closed with zero signal).
+pub const RECOGNIZED_KEYS: [&str; 5] = ["preset", "sx", "variants", "raw_containers", "stylesheets"];
+
 /// The parsed contents of the nearest `sui.config.json` on the walk up. Holds
 /// the raw JSON; typed accessors read individual fields leniently.
 #[derive(Debug, Clone)]
 pub struct SuiConfig {
     raw: serde_json::Value,
+    parse_ok: bool,
 }
 
 impl SuiConfig {
     /// Parse config JSON text. Unparseable text yields an empty config — its
     /// presence on disk is the package's declared intent, and a broken body must
-    /// not hard-fail a build (the accessors read fields leniently).
+    /// not hard-fail a build (the accessors read fields leniently). `parse_ok`
+    /// tracks whether the body actually parsed, so a caller that wants to
+    /// REFUSE LOUDLY on an unparseable config (vs. one that parsed but carries
+    /// no recognized signal) can tell the two apart.
     pub fn from_json(text: &str) -> SuiConfig {
-        SuiConfig {
-            raw: serde_json::from_str(text).unwrap_or(serde_json::Value::Null),
+        match serde_json::from_str(text) {
+            Ok(raw) => SuiConfig { raw, parse_ok: true },
+            Err(_) => SuiConfig { raw: serde_json::Value::Null, parse_ok: false },
         }
+    }
+
+    /// False iff the config body failed to parse as JSON at all (a malformed
+    /// file, not merely an unrecognized key).
+    pub fn parse_ok(&self) -> bool {
+        self.parse_ok
     }
 
     /// The `"preset"` string, if present and a string.
@@ -63,6 +80,21 @@ impl SuiConfig {
         self.raw.get(key).and_then(|v| v.as_bool())
     }
 
+    /// Top-level keys present in the config that are NOT in [`RECOGNIZED_KEYS`]
+    /// — typos (`"polcy"`) or made-up keys. A parse failure yields no keys
+    /// (there's no object to inspect); callers check [`Self::parse_ok`] first.
+    pub fn unknown_keys(&self) -> Vec<String> {
+        self.raw
+            .as_object()
+            .map(|obj| {
+                obj.keys()
+                    .filter(|k| !RECOGNIZED_KEYS.contains(&k.as_str()))
+                    .cloned()
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
     /// The declared `"stylesheets"` set — the CSS files the pack is allowed to
     /// ship. Absent/wrong-typed → empty.
     pub fn declared_stylesheets(&self) -> HashSet<String> {
@@ -78,15 +110,35 @@ impl SuiConfig {
     }
 }
 
-/// Walk up from `dir` (inclusive) and return the first `sui.config.json`'s
-/// parsed contents, or `None` if none exists on the walk. A present-but-
-/// unparseable config resolves to an empty `SuiConfig` and stops the walk — its
-/// presence is the package's declared intent, even if its body is broken.
-pub fn resolve(dir: &Path) -> Option<SuiConfig> {
+/// A trailing clause naming the `sui.config.json` that could grant capability
+/// `key` for a source at `path` — appended to a strict-tier rule's `suggest`
+/// text so the refusal names WHERE to grant it, not just that it's refused
+/// (config-loud-strict rule #3). Empty string when no config exists on the
+/// walk (a synthetic/unrooted source, or a real gap — either way there is no
+/// path to name). Does not read the file — `owning_dir` only checks
+/// existence, so this is not a second `sui.config.json` reader.
+pub fn grant_hint(path: &Path, key: &str) -> String {
+    match path.parent().and_then(owning_dir) {
+        Some(dir) => format!(
+            " Grant it in `{}` — `{{ \"{key}\": true }}`.",
+            dir.join(CONFIG_FILE).display()
+        ),
+        None => String::new(),
+    }
+}
+
+/// Walk up from `dir` (inclusive) and return the path to the first
+/// `sui.config.json` found plus its parsed contents, or `None` if none exists
+/// on the walk. A present-but-unparseable config resolves to an empty
+/// `SuiConfig` (`parse_ok() == false`) and stops the walk — its presence is
+/// the package's declared intent, even if its body is broken. The returned
+/// path is what a caller names in a loud refusal/announcement message.
+pub fn resolve(dir: &Path) -> Option<(PathBuf, SuiConfig)> {
     let mut cur = Some(dir);
     while let Some(d) = cur {
-        match std::fs::read_to_string(d.join(CONFIG_FILE)) {
-            Ok(text) => return Some(SuiConfig::from_json(&text)),
+        let candidate = d.join(CONFIG_FILE);
+        match std::fs::read_to_string(&candidate) {
+            Ok(text) => return Some((candidate, SuiConfig::from_json(&text))),
             Err(_) => cur = d.parent(),
         }
     }
