@@ -46,8 +46,6 @@ pub mod stdlib;
 pub mod escape;
 pub mod l1_manifest;
 pub mod runtime_ambient;
-pub mod view_init;
-pub use view_init::{view_init, ViewInit};
 pub(crate) mod scan;
 
 #[cfg(target_arch = "wasm32")]

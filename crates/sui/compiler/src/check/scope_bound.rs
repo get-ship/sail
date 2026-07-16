@@ -2,12 +2,11 @@
 //! interpolation or `on:` handler must resolve to a name the runtime
 //! actually has. Scope sources, in resolution order:
 //!
-//!  * `<data name="…">`, `<prop name="…">` declarations on the program.
+//!  * `<prop name="…">` declarations on the program.
 //!  * `setup` factory return keys, `derived` keys, and `on` keys from
 //!    the paired controller (when one exists).
-//!  * `ship` (grandfathered until the `<client>` migration removes it) and
-//!    `route` — the latter ONLY when the host GRANTED it (a route file;
-//!    deck routes by file location and passes the params at compile time).
+//!  * `route` — ONLY when the host GRANTED it (a route file; deck routes
+//!    by file location and passes the params at compile time).
 //!  * JS / browser globals from a small fixed allowlist.
 //!  * Locals introduced by an arrow's parameter list (handlers can
 //!    write `(e) => …`; `e` is in scope inside the body).
@@ -28,10 +27,9 @@ use super::scope_bound_expr::check_expr;
 /// JS/browser globals + framework-known ctx names that are always
 /// available without an explicit declaration.
 const BUILTINS: &[&str] = &[
-    // Setup context. `ship` is grandfathered until the `<client>` migration
-    // removes it; `route` is HOST-GRANTED per file (never ambient), and
+    // Setup context. `route` is HOST-GRANTED per file (never ambient), and
     // `navigate` is gone with it.
-    "ship", "ctx",
+    "ctx",
     // Namespace heads — the `check::scope_member` pass type-checks
     // member access through these so typos are flagged with a
     // useful "did you mean…" message instead of "scope is not
@@ -138,17 +136,8 @@ fn build_scope(
     if route_params.is_some() {
         names.insert("route".to_string());
     }
-    for d in &program.data {
-        names.insert(d.name.clone());
-    }
     for p in &program.props {
         names.insert(super::super::emit::util::camel_of(&p.name));
-    }
-    // Declared `<client>` names are legal data-source roots — the per-view,
-    // implementor-named replacement for the hardcoded ambient `ship` (which
-    // stays in BUILTINS, grandfathered, until the migration removes it).
-    for client in &program.clients {
-        names.insert(client.name.clone());
     }
     if let Some(c) = controller {
         for sec in &c.sections {
@@ -299,9 +288,6 @@ pub(super) struct Visitor {
 // `{#async … as}` locals are still added before the body and removed after, so
 // the scope stays balanced regardless of how many errors were found.
 fn visit_program(program: &Program, v: &mut Visitor) {
-    for d in &program.data {
-        check_expr(&d.source, v, &[]);
-    }
     visit_instrs(&program.template, v);
 }
 
@@ -408,31 +394,14 @@ mod collect_tests {
     use super::{check, collect};
 
     #[test]
-    fn declared_client_legalizes_its_source_root() {
-        // `<client name="feed">` makes `feed` a legal data-source root (the
-        // per-view, implementor-named replacement for the hardcoded `ship`).
-        let with = crate::parse::parse(
-            "<client name=\"feed\" />\n<data name=\"t\" source=\"feed.clock()\" live />\n<div>{t()}</div>",
-        )
-        .expect("parses");
-        assert!(check(&with, None, None).is_ok(), "declared <client> must legalize feed.*");
-
-        // Without the declaration the same root is an unknown identifier.
-        let without = crate::parse::parse(
-            "<data name=\"t\" source=\"feed.clock()\" live />\n<div>{t()}</div>",
-        )
-        .expect("parses");
+    fn ship_is_no_longer_ambient() {
+        // `ship` is no longer an ambient BUILTIN — it's simply not a name,
+        // same as any other undeclared identifier.
+        let program = crate::parse::parse("<div>{ship.git.overview()}</div>").expect("parses");
         assert!(
-            check(&without, None, None).is_err(),
-            "an undeclared client root must still be rejected (typo-safe)"
+            check(&program, None, None).is_err(),
+            "ship must be rejected as an unbound identifier"
         );
-
-        // `ship` stays grandfathered until the migration removes it.
-        let grandfathered = crate::parse::parse(
-            "<data name=\"t\" source=\"ship.git.overview()\" live />\n<div>{t()}</div>",
-        )
-        .expect("parses");
-        assert!(check(&grandfathered, None, None).is_ok(), "ship stays grandfathered for now");
     }
 
     #[test]

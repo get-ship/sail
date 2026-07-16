@@ -10,9 +10,8 @@
 //!
 //! A `.sui` lowers into **two artifacts**:
 //!  * a **synthetic controller** — the logic/data half: real ESM imports
-//!    for manifested names, `<data>` directives lowered to controller
-//!    statements, the authored `controller.ts` **composed** (imported,
-//!    never rewritten), and a single **typed** `scope` export.
+//!    for manifested names, the authored `controller.ts` **composed**
+//!    (imported, never rewritten), and a single **typed** `scope` export.
 //!  * a **render** (see [`render`]) — the markup half: reuses the
 //!    production [`super::template_emit::TemplateEmitter`] with a `scope.`
 //!    author-expression prefix so all template features wire against the
@@ -132,9 +131,9 @@ const HEADER: &str = "\
 // resolves member access against the imported type, so a typo like
 // `route.parms.id` is a hard type error, not an ambient passthrough.";
 
-/// Compute the set of manifest client names this `program` actually
-/// references (template or `<data source>`). Per-view resolver: import only
-/// what's used. Names are taken solely from the app manifest — there is no
+/// Compute the set of manifest client names this `program`'s template
+/// actually references. Per-view resolver: import only what's used. Names
+/// are taken solely from the app manifest — there is no
 /// host convention; the host declares `route`/`navigate`/etc. into the
 /// manifest itself. Manifest key order (a `BTreeMap`) keeps the import block
 /// byte-stable for the same inputs.
@@ -160,10 +159,10 @@ pub fn emit_synthetic(
     mode: CompileMode,
     component_tag: Option<&str>,
 ) -> Result<SyntheticOutput, CompileError> {
-    // Per-view resolver: import only the manifest clients this template (or
-    // a `<data source>`) actually references — mirrors how the production
-    // emitter imports only the tags a view uses. Names come solely from the
-    // manifest (see [`used_clients`]); the compiler names no host provider.
+    // Per-view resolver: import only the manifest clients this template
+    // actually references — mirrors how the production emitter imports only
+    // the tags a view uses. Names come solely from the manifest (see
+    // [`used_clients`]); the compiler names no host provider.
     let used = used_clients(program, manifest);
 
 
@@ -229,24 +228,6 @@ pub(super) fn emit_controller(
             ));
         }
     }
-    // `<data>` directives lower to runtime statements: `live()` for the
-    // reactive form, `data({initial, source})` for the non-live form —
-    // matching the production `emit_data_decls` shapes exactly.
-    let uses_live = program.data.iter().any(|d| d.live);
-    let uses_data = program.data.iter().any(|d| !d.live);
-    let mut runtime_imports: Vec<&str> = Vec::new();
-    if uses_live {
-        runtime_imports.push("live");
-    }
-    if uses_data {
-        runtime_imports.push("data");
-    }
-    if !runtime_imports.is_empty() {
-        w.line(&format!(
-            "import {{ {} }} from \"@ship/sui-runtime/internal\";",
-            runtime_imports.join(", ")
-        ));
-    }
     // Compose the authored controller — import it, never rewrite it. The
     // authored module default-exports a real `controller({ scope, derived,
     // on })` (`ControllerExport`); the synthetic controller drives its
@@ -270,32 +251,10 @@ pub(super) fn emit_controller(
     if authored.is_some() {
         emit_authored_compose(&mut w, used, manifest);
     }
-    if !program.data.is_empty() {
-        w.line("// `<data>` directives, lowered to controller statements.");
-        for d in &program.data {
-            // The source references bare manifest clients (the consts
-            // above), exactly as authored — no `scope.` qualification in
-            // the controller.
-            if d.live {
-                w.line(&format!(
-                    "const {name} = live(() => ({src}));",
-                    name = d.name,
-                    src = d.source.source
-                ));
-            } else {
-                w.line(&format!(
-                    "const {name} = data({{ initial: undefined, source: () => ({src}) }});",
-                    name = d.name,
-                    src = d.source.source
-                ));
-            }
-        }
-        w.nl();
-    }
 
-    // The single typed scope. Member order: manifest clients, then
-    // `<data>`, then the spread of the composed authored scope. `tsgo`/
-    // `tsc` type-checks the render against THIS type.
+    // The single typed scope. Member order: manifest clients, then the
+    // spread of the composed authored scope. `tsgo`/`tsc` type-checks the
+    // render against THIS type.
     //
     // G5 — `{#async … as v}` lifts the `as v` binding into the typed
     // scope so the render can reference `scope.v` after the Let
@@ -306,12 +265,9 @@ pub(super) fn emit_controller(
     // declaration. The render's `emit_let_block` writes `$scope.v`
     // at mount, so the runtime lookup matches.
     w.line("// The view's typed scope: every name a template expression resolves,");
-    w.line("// merged from manifest imports, `<data>` directives, and the composed");
-    w.line("// controller. `tsgo`/`tsc` type-checks the template against THIS type.");
+    w.line("// merged from manifest imports and the composed controller.");
+    w.line("// `tsgo`/`tsc` type-checks the template against THIS type.");
     let mut members: Vec<String> = used.to_vec();
-    for d in &program.data {
-        members.push(d.name.clone());
-    }
     if authored.is_some() {
         members.push("...__authoredScope".to_string());
     }

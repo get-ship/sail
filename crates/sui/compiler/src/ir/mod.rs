@@ -15,14 +15,8 @@ use crate::diagnostics::Span;
 /// The full IR for a single `.sui` source file.
 #[derive(Debug, Clone)]
 pub struct Program {
-    pub data: Vec<DataDecl>,
     /// Props declared by the `<scope>` block (`props:` fields + variant axes).
     pub props: Vec<PropDecl>,
-    /// Host-injected data/ops clients declared by top-level `<client>`
-    /// directives. Each name is legal in `<data source>` + handler scope and
-    /// is provided by the host at mount — the implementor-named replacement
-    /// for the hardcoded ambient `ship`.
-    pub clients: Vec<ClientDecl>,
     /// CSS lifted from top-level `<style>` elements (component files only).
     pub styles: String,
     /// Raw `type` / `export type` alias text from the `<scope>` block,

@@ -1,13 +1,13 @@
 #![allow(clippy::if_same_then_else)]
 //! `.d.ts` declaration file emitter.
 //!
-//! Walks `<data>`, `<prop>`, and `<use-* as=>` declarations from the
-//! IR and emits a TypeScript declaration file that authors can import
-//! as `Scope`. Reactive state lives in the controller's `setup:`
-//! factory and is typed by TS itself, so it has no `.d.ts` entry.
+//! Walks `<prop>` and `<use-* as=>` declarations from the IR and emits a
+//! TypeScript declaration file that authors can import as `Scope`.
+//! Reactive state lives in the controller's `setup:` factory and is
+//! typed by TS itself, so it has no `.d.ts` entry.
 
 use crate::check::controller_parse::ParsedController;
-use crate::ir::{AttrInstr, DataDecl, ElementInstr, Instr, Program, PropDecl, PropKind};
+use crate::ir::{AttrInstr, ElementInstr, Instr, Program, PropDecl, PropKind};
 
 /// Emit the `.sui.d.ts` text for a compiled `.sui` file.
 ///
@@ -20,10 +20,6 @@ use crate::ir::{AttrInstr, DataDecl, ElementInstr, Instr, Program, PropDecl, Pro
 pub fn emit_dts(program: &Program, controller: Option<&ParsedController>) -> String {
     let mut members: Vec<(String, String)> = Vec::new();
 
-    let client_names: Vec<&str> = program.clients.iter().map(|c| c.name.as_str()).collect();
-    for d in &program.data {
-        members.push((d.name.clone(), data_ts_type(d, &client_names)));
-    }
     for p in &program.props {
         // Prop names in templates are kebab-case to match HTML attribute
         // convention (e.g. `<prop name="font-size">`); the runtime
@@ -46,9 +42,9 @@ pub fn emit_dts(program: &Program, controller: Option<&ParsedController>) -> Str
     // Signal<T>` and calling that intersection returned `unknown` (first call
     // signature wins) — the root cause of the `as unknown as` state casts.
     // Dropping them here lets SC be the sole, precise source: `$signals.x() = T`.
-    // We still drop any template-derived member (e.g. a `<data>` of the same
-    // name → `Signal<unknown>`) that clashes, so the field is SC-sourced, not a
-    // stale template type. Do NOT re-add factory fields to Scope.
+    // We still drop any template-derived member of the same name that
+    // clashes, so the field is SC-sourced, not a stale template type. Do NOT
+    // re-add factory fields to Scope.
     let factory_names: std::collections::HashSet<String> =
         scope_factory_fields.iter().map(|(n, _)| n.clone()).collect();
     members.retain(|(n, _)| !factory_names.contains(n));
@@ -59,35 +55,13 @@ pub fn emit_dts(program: &Program, controller: Option<&ParsedController>) -> Str
     }
 
     // Which runtime type aliases the emitted members reference. `Signal<…>`
-    // covers `<data>` (`Signal<unknown>`) and most scope-factory entries;
-    // `LiveState<…>` is the live-`<data>` envelope; `LiveSignal<…>` is the
-    // controller's `live(…)` factory entries (= `Signal<LiveState<T>>`).
-    // `LiveSignal<` is a superstring of `Signal<` only by suffix, so test it
-    // explicitly rather than relying on the `Signal<` substring scan.
-    // Imports are driven only by the emitted `members` now — factory fields
-    // are no longer written into Scope (see the omit rationale above).
-    let needs_live_state = members.iter().any(|(_, t)| t.contains("LiveState<"));
-    let needs_live_signal = members.iter().any(|(_, t)| t.contains("LiveSignal<"));
+    // covers prop / ref / use-hook entries. Imports are driven only by the
+    // emitted `members` now — factory fields are no longer written into
+    // Scope (see the omit rationale above).
     let needs_signal = members.iter().any(|(_, t)| t.contains("Signal<"));
-    // `<data source>` typed from a declared `<client>` references the host's
-    // `Clients` map + the `LiveValueOf` source-unwrap helper.
-    let needs_clients = members.iter().any(|(_, t)| t.contains("Clients["));
-    let needs_live_value = members.iter().any(|(_, t)| t.contains("LiveValueOf<"));
     let mut imports: Vec<&str> = Vec::new();
     if needs_signal {
         imports.push("Signal");
-    }
-    if needs_live_signal {
-        imports.push("LiveSignal");
-    }
-    if needs_live_state {
-        imports.push("LiveState");
-    }
-    if needs_live_value {
-        imports.push("LiveValueOf");
-    }
-    if needs_clients {
-        imports.push("Clients");
     }
     let import_line = if imports.is_empty() {
         String::new()
@@ -118,95 +92,6 @@ pub fn emit_dts(program: &Program, controller: Option<&ParsedController>) -> Str
     }
     out.push_str("}\n");
     out
-}
-
-fn data_ts_type(d: &DataDecl, clients: &[&str]) -> String {
-    if let Some(t) = client_data_type(d, clients) {
-        return t;
-    }
-    if d.live {
-        "Signal<LiveState<unknown>>".to_string()
-    } else {
-        "Signal<unknown>".to_string()
-    }
-}
-
-/// When a `<data source>` is a single clean call on a declared `<client>`
-/// (`feed.git.overview(args)`), type the signal from the client's method return
-/// instead of `unknown`:
-///   live → `LiveSignal<LiveValueOf<ReturnType<Clients['feed']['git']['overview']>>>`
-///   once → `Signal<Awaited<ReturnType<Clients['feed']['git']['overview']>>>`
-/// Returns `None` (→ conservative `unknown`) for anything that isn't one simple
-/// call on a declared client: chained calls, complex expressions, or a
-/// `ship.*`/unknown root.
-fn client_data_type(d: &DataDecl, clients: &[&str]) -> Option<String> {
-    let path = simple_call_path(&d.source.source)?;
-    let root = path.first()?;
-    if !clients.contains(&root.as_str()) {
-        return None;
-    }
-    let mut indexed = String::from("Clients");
-    for seg in &path {
-        indexed.push_str("['");
-        indexed.push_str(seg);
-        indexed.push_str("']");
-    }
-    let ret = format!("ReturnType<{indexed}>");
-    Some(if d.live {
-        format!("LiveSignal<LiveValueOf<{ret}>>")
-    } else {
-        format!("Signal<Awaited<{ret}>>")
-    })
-}
-
-/// Parse a source that is exactly one simple call `root.m1.m2(...)` into
-/// `[root, m1, m2]`. `None` if the source chains past the call, isn't a dotted
-/// ident path, or otherwise isn't a single member call.
-fn simple_call_path(src: &str) -> Option<Vec<String>> {
-    let src = src.trim();
-    let open = src.find('(')?;
-    if !call_closes_at_end(src, open) {
-        return None;
-    }
-    let segs: Vec<String> = src[..open].split('.').map(|s| s.trim().to_string()).collect();
-    if !segs.is_empty() && segs.iter().all(|s| is_js_ident(s)) {
-        Some(segs)
-    } else {
-        None
-    }
-}
-
-/// True when the `(` at `open` matches a `)` that is the last non-whitespace
-/// char — i.e. the whole source is `target(args)` with no trailing chain.
-/// Conservative: a `)` inside a string arg ends it early → fall back to
-/// `unknown` (safe).
-fn call_closes_at_end(src: &str, open: usize) -> bool {
-    let bytes = src.as_bytes();
-    let mut depth = 0i32;
-    let mut i = open;
-    while i < bytes.len() {
-        match bytes[i] {
-            b'(' => depth += 1,
-            b')' => {
-                depth -= 1;
-                if depth == 0 {
-                    return src[i + 1..].trim().is_empty();
-                }
-            }
-            _ => {}
-        }
-        i += 1;
-    }
-    false
-}
-
-fn is_js_ident(s: &str) -> bool {
-    let mut chars = s.chars();
-    match chars.next() {
-        Some(c) if c.is_ascii_alphabetic() || c == '_' || c == '$' => {}
-        _ => return false,
-    }
-    chars.all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '$')
 }
 
 fn prop_ts_type(p: &PropDecl) -> String {
@@ -404,9 +289,7 @@ mod tests {
     /// its members from the paired controller's `setup:` factory.
     fn empty_program() -> Program {
         Program {
-            data: Vec::new(),
             props: Vec::new(),
-            clients: Vec::new(),
             styles: String::new(),
             scope_types: String::new(),
             template: Vec::new(),

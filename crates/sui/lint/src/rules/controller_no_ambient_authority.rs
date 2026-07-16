@@ -92,7 +92,7 @@ impl AmbientVisitor<'_> {
                  through the `ship` SDK — the only sanctioned, policy-gated path. Raw \
                  network/eval is denied at runtime by the Deck secure-execution Compartment."
             ),
-            suggest: Some("use a <data source=\"ship.<domain>.<op>()\"> subscription or a ship.<domain>.<op>() call".to_string()),
+            suggest: Some("use a ship.<domain>.<op>() call".to_string()),
         });
     }
 }

@@ -28,7 +28,7 @@ use crate::ir::Program;
 use crate::keys::BindingRegistry;
 use serde_json::{json, Value};
 
-pub fn emit_meta(program: &Program, bindings: &BindingRegistry) -> Value {
+pub fn emit_meta(_program: &Program, bindings: &BindingRegistry) -> Value {
     let entries: Vec<Value> = bindings
         .iter()
         .filter(|b| !b.suppressed)
@@ -45,18 +45,14 @@ pub fn emit_meta(program: &Program, bindings: &BindingRegistry) -> Value {
             entry
         })
         .collect();
-    // Declared `<client>` names — the host-injected data/ops clients this
-    // source consumes (`ctx.clients` keys). Tooling (and hosts that build
-    // the keyed Clients map from metadata) read the list here; the compiled
-    // module carries the same list on its default export.
-    let clients: Vec<Value> = program
-        .clients
-        .iter()
-        .map(|c| Value::String(c.name.clone()))
-        .collect();
+    // `"clients"` stays in the wire shape as an always-empty array — the
+    // retired `<client>` directive was its only producer, but the field
+    // itself is part of the checked-in sidecar contract downstream tooling
+    // (and the compiled module's own default export) reads, so it isn't
+    // dropped here.
     json!({
         "bindings": entries,
-        "clients": clients,
+        "clients": Value::Array(Vec::new()),
         "_compilerVersion": crate::compiler_version().to_json(),
     })
 }

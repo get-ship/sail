@@ -52,11 +52,10 @@ impl ScopeKind {
     }
 }
 
-/// Symbol table merged across the program's `<data>` / `<prop>`
-/// directives and the paired controller's top-level sections.
+/// Symbol table merged across the program's `<prop>` directives and
+/// the paired controller's top-level sections.
 #[derive(Debug, Default)]
 pub struct SymbolTable {
-    pub data: BTreeMap<String, KeyEntry>,
     pub props: BTreeMap<String, KeyEntry>,
     pub derived: BTreeMap<String, KeyEntry>,
     pub on: BTreeMap<String, KeyEntry>,
@@ -84,12 +83,6 @@ pub struct ScopeEntry {
 impl SymbolTable {
     pub fn build(program: &Program, controller: Option<&ParsedController>) -> Self {
         let mut t = Self::default();
-        for d in &program.data {
-            t.data.insert(
-                d.name.clone(),
-                KeyEntry { offset: 0, kind_label: "data" },
-            );
-        }
         for p in &program.props {
             let cm = crate::emit::util::camel_of(&p.name);
             t.props.insert(cm, KeyEntry { offset: 0, kind_label: "prop" });
@@ -116,7 +109,6 @@ impl SymbolTable {
     /// Iterator of every (name, label) pair for completion.
     pub fn all_root_names(&self) -> Vec<(String, &'static str)> {
         let mut out: Vec<(String, &'static str)> = Vec::new();
-        out.extend(self.data.iter().map(|(k, v)| (k.clone(), v.kind_label)));
         out.extend(self.props.iter().map(|(k, v)| (k.clone(), v.kind_label)));
         out.extend(self.derived.iter().map(|(k, v)| (k.clone(), v.kind_label)));
         out.extend(self.on.iter().map(|(k, v)| (k.clone(), v.kind_label)));
@@ -610,9 +602,7 @@ mod tests {
 
     fn empty_program() -> Program {
         Program {
-            data: vec![],
             props: vec![],
-            clients: vec![],
             styles: String::new(),
             scope_types: String::new(),
             template: vec![],

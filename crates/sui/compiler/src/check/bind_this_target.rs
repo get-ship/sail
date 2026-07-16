@@ -122,9 +122,7 @@ mod tests {
             span: Span::point(0),
         };
         Program {
-            data: vec![],
             props: vec![],
-            clients: vec![],
             styles: String::new(),
             scope_types: String::new(),
             template: vec![Instr::Element(el)],

@@ -129,10 +129,7 @@ fn symbols_from_table(table: &SymbolTable, controller: Option<&ParsedController>
     let ctrl_src = controller.map(|c| c.source.as_str()).unwrap_or("");
     let mut out: Vec<Symbol> = Vec::new();
 
-    // `<data>` / `<prop>` live in the .sui — no controller offset (0).
-    for (name, e) in &table.data {
-        out.push(Symbol { name: name.clone(), kind: e.kind_label.to_string(), source: "data".into(), line: 0, col: 0 });
-    }
+    // `<prop>` lives in the .sui — no controller offset (0).
     for (name, e) in &table.props {
         out.push(Symbol { name: name.clone(), kind: e.kind_label.to_string(), source: "prop".into(), line: 0, col: 0 });
     }

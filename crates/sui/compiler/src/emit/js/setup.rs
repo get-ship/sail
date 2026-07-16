@@ -22,10 +22,6 @@ pub(super) fn emit_setup_body(
     // This is the sole view/component distinction now that `CompileMode::View`
     // is gone — keyed on the tag, not a mode flag.
     let is_component = opts.component_meta.is_some();
-    // A source that DECLARES `<client name="ship" />` resolves `ship` from
-    // `ctx.clients.ship` (falling back to the `ctx.ship` alias); undeclared
-    // `ship` stays the ambient ctx default.
-    let ship_via_clients = program.clients.iter().any(|c| c.name == "ship");
 
     // ── ctx → $scope seeding (unified) ──────────────────────────────────────
     // Every compiled `.sui` is a component module: `setup(ctx)` seeds the scope
@@ -34,26 +30,11 @@ pub(super) fn emit_setup_body(
     // for a registered component, which never reads them). Routing is deck's —
     // SUI vends no router or factory fallback. Props come from `ctx.props`
     // (registered components have them, pages don't).
-    if ship_via_clients {
-        w.line("const { route, navigate } = ctx;");
-        w.line("const ship = (ctx.clients ?? {}).ship ?? ctx.ship;");
-    } else {
-        w.line("const { ship, route, navigate } = ctx;");
-    }
+    w.line("const { ship, route, navigate } = ctx;");
     w.line("const $scope = Object.create(null);");
     w.line("$scope.ship = ship;");
     w.line("$scope.route = route;");
     w.line("$scope.navigate = navigate;");
-    // Declared `<client>` names → seed from `ctx.clients` so `<data
-    // source="X.op()">` + inline handlers resolve bare `X` (host-injected).
-    for client in &program.clients {
-        let name = client.name.as_str();
-        if name == "ship" || name == "route" || name == "navigate" {
-            continue;
-        }
-        w.line(&format!("const {{ {name} }} = ctx.clients ?? {{}};"));
-        w.line(&format!("$scope.{name} = {name};"));
-    }
     // Props (registered components) → seed from `ctx.props` (the prop signals
     // the custom-element adapter passes). Pages declare none.
     if !program.props.is_empty() {
@@ -63,7 +44,6 @@ pub(super) fn emit_setup_body(
             w.line(&format!("$scope.{ident} = __props.{ident};"));
         }
     }
-    emit_data_decls(w, program);
     // Pre-seed `$scope.<var> = signal(null)` for every `bind:this={var}`
     // target the template references — including ones inside conditional /
     // loop branches that won't render until later. The controller's
@@ -171,34 +151,6 @@ fn emit_view_hydrate(
     w.line("},");
 }
 
-fn emit_data_decls(w: &mut Writer, program: &Program) {
-    // The view's setup closure already destructures `ship`, `route`,
-    // `navigate` from `ctx` into its lexical scope, so the data thunk
-    // closes over them instead of taking them as args. The earlier
-    // form `({ ship, route }) => …` looked like it would receive a
-    // context arg, but `live()` / `data().source()` don't pass one —
-    // every `<data live>` resolved its source against `undefined` and
-    // got stuck on `loading` because `ship.git.overview()` threw a
-    // synchronous TypeError that sat inside the `signal` reset on
-    // the next effect tick.
-    for d in &program.data {
-        let src = &d.source.source;
-        if d.live {
-            w.line(&format!(
-                "$scope.{name} = live(() => {src});",
-                name = js_ident(&d.name),
-                src = src
-            ));
-        } else {
-            w.line(&format!(
-                "$scope.{name} = data({{ initial: undefined, source: () => {src} }});",
-                name = js_ident(&d.name),
-                src = src
-            ));
-        }
-    }
-}
-
 fn emit_ref_slot_seeds(w: &mut Writer, template: &[Instr]) {
     let mut names: BTreeSet<String> = BTreeSet::new();
     collect_bind_this_targets(template, &mut names);
@@ -258,19 +210,15 @@ fn emit_setup_call(w: &mut Writer) {
     // of letting it shadow the runtime's $scope.
     //
     // Expose `$scope` to the controller via `ctx.scope` BEFORE invoking
-    // its setup. The template's `$scope.<data>` is the live signal
-    // emitted by `emit_data_decls` (e.g. `$scope.agents = live(() =>
-    // ship.agents.summaries())`) — that's the signal the template's
-    // bindings (`bindWhileLoading`, `bindIf` over `$scope.agents()`)
-    // actually read. If the controller's `derived` section destructures
-    // the same name out of `ctx.scope`, it must resolve to that same
-    // signal, otherwise the controller computes against the inert
-    // mount-built copy (stuck at `{kind:'loading'}`) while the template
-    // sees the patched live signal. Mount.ts hands us `ctx.scope` as a
+    // its setup. If the controller's own `setup:` factory declares a
+    // `live(...)`-backed signal (the real living-async surface) and the
+    // template reads the same name, both must resolve to the SAME signal
+    // object, otherwise the controller computes against a stale copy while
+    // the template sees the patched one. Mount.ts hands us `ctx.scope` as a
     // snapshot of the SSR-built scope; we narrow it to `$scope` here so
-    // controller-and-template agree on a single source-of-truth signal
-    // per `<data>` declaration. Components already did this via
-    // `emit_component_setup_call`; views were lagging.
+    // controller-and-template agree on a single source-of-truth signal.
+    // Components already did this via `emit_component_setup_call`; views
+    // were lagging.
     w.line("if (setup && typeof setup.setup === \"function\") {");
     w.enter();
     w.line("ctx.scope = $scope;");

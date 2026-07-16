@@ -1,14 +1,13 @@
 //! Free-identifier scan for the synthetic-controller emit: does a template
-//! (or a `<data source>`) reference a given manifest name? A word-boundary
-//! match so `route` hits in `route.params` but not in `myroute`, and a
-//! leading `.` is treated as a member access (not a free root).
+//! reference a given manifest name? A word-boundary match so `route` hits
+//! in `route.params` but not in `myroute`, and a leading `.` is treated as
+//! a member access (not a free root).
 
 use crate::ir::*;
 
-/// Does any template expression or `<data source>` reference `name`?
+/// Does any template expression reference `name`?
 pub(super) fn references_ident(program: &Program, name: &str) -> bool {
-    program.data.iter().any(|d| expr_references_ident(&d.source.source, name))
-        || template_references_ident(&program.template, name)
+    template_references_ident(&program.template, name)
 }
 
 fn template_references_ident(instrs: &[Instr], name: &str) -> bool {
