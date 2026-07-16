@@ -24,30 +24,12 @@ pub(super) fn emit_registered_component(
     w.line(&format!("component({}, {{", js_string(&meta.name)));
     w.enter();
     emit_props_object(w, &program.props);
-    if meta.shadow {
-        w.line("shadow: true,");
-    }
-    let form_value_prop = program.props.iter().find(|p| p.form_value);
-    let form_disabled_prop = program.props.iter().find(|p| p.form_disabled);
-    if form_value_prop.is_some() || form_disabled_prop.is_some() {
-        w.line("formAssociated: true,");
-        if let Some(p) = form_value_prop {
-            w.line(&format!("formValue: {},", js_string(&p.name)));
-        }
-        if let Some(p) = form_disabled_prop {
-            w.line(&format!("formDisabled: {},", js_string(&p.name)));
-        }
-    }
-    let emitted_styles = if meta.shadow {
-        strip_shared_rules(&program.styles)
-    } else {
-        // LIGHT DOM (the default architecture): the runtime wraps these styles
-        // in an `@scope ([data-component="tag"]) to ([data-component])` donut,
-        // so shadow idioms rewrite — :host → :scope, ::slotted(X) → slot > X.
-        // Shared-rule stripping also applies: the document-level contract
-        // sheets carry those rules once.
-        light_dom_selectors(&strip_shared_rules(&program.styles))
-    };
+    // LIGHT DOM (the architecture): the runtime wraps these styles in an
+    // `@scope ([data-component="tag"]) to ([data-component])` donut, so
+    // shadow idioms rewrite — :host → :scope, ::slotted(X) → slot > X.
+    // Shared-rule stripping also applies: the document-level contract
+    // sheets carry those rules once.
+    let emitted_styles = light_dom_selectors(&strip_shared_rules(&program.styles));
     if !emitted_styles.trim().is_empty() {
         w.line(&format!("styles: {},", js_string(&emitted_styles)));
     }

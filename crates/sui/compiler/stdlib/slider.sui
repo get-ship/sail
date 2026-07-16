@@ -12,17 +12,17 @@
   implementation of what the platform already gives for free.
 -->
 
-<component>{
+<scope>
   props: {
-    value: 0,
-    min: 0,
-    max: 100,
-    step: 1,
-    disabled: false,
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
-    size: 'sm' | 'md' | 'lg',
-    name: '',
-  },
-}</component>
+    value = 0
+    min = 0
+    max = 100
+    step = 1
+    disabled = false
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    size: 'sm' | 'md' | 'lg' = 'md'
+    name = ''
+  }
+</scope>
 
 <input type="range" use:rangeFill />

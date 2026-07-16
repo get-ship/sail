@@ -10,7 +10,11 @@
     </context-menu>
 -->
 
-<component>{ props: { for: string } }</component>
+<scope>
+  props: {
+    for = ''
+  }
+</scope>
 
 <style>
   .sui-context-menu {

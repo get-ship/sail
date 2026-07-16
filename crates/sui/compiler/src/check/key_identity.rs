@@ -113,6 +113,7 @@ mod tests {
             props: vec![],
             clients: vec![],
             styles: String::new(),
+            scope_types: String::new(),
             template: vec![Instr::For(f)],
             source_len: 0,
             span: Span::point(0),

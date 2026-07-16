@@ -22,13 +22,13 @@
   what a centered control looks like is the author's sentence to write, in sx.
 -->
 
-<component>{
+<scope>
   props: {
-    placement: 'top' | 'rail' | 'bottom',
-    sticky: bool,
-    bordered: bool,
-  },
-}</component>
+    placement: 'top' | 'rail' | 'bottom' = 'top'
+    sticky = false
+    bordered = false
+  }
+</scope>
 
 <style>
   /* The DEFAULT placement lives in the BASE rule, not behind [placement='top'].

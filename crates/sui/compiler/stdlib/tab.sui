@@ -5,12 +5,12 @@
   lowers to <button class="sui-tab" type="button">.
 -->
 
-<component>{
+<scope>
   props: {
-    name: string,
-    disabled: bool,
-  },
-}</component>
+    name = ''
+    disabled = false
+  }
+</scope>
 
 <style>
   .sui-tab {

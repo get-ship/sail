@@ -1,6 +1,6 @@
 //! `sui-light-shadow-root` — a light-DOM component has no shadow root.
 //!
-//! Shadow is source-authoritative (`<component>{ shadow: true }`); every other
+//! Components are light DOM — there is no shadow opt-in; every
 //! component renders into its host element, so a controller reading
 //! `.shadowRoot` wires listeners and queries to null (or silently no-ops via
 //! `?.`). The one sanctioned form is the root-agnostic `host.shadowRoot ??
@@ -11,13 +11,10 @@ use crate::diagnostics::CompileError;
 
 pub const RULE_ID: &str = "sui-light-shadow-root";
 
-pub fn check(source: &str, controller: Option<&ParsedController>) -> Result<(), CompileError> {
+pub fn check(controller: Option<&ParsedController>) -> Result<(), CompileError> {
     let Some(c) = controller else {
         return Ok(());
     };
-    if crate::parse::preprocess::declares_shadow_dom(source) {
-        return Ok(());
-    }
     let needle = ".shadowRoot";
     let mut from = 0;
     while let Some(rel) = c.source[from..].find(needle) {
@@ -27,7 +24,7 @@ pub fn check(source: &str, controller: Option<&ParsedController>) -> Result<(), 
             let line = c.source[..at].bytes().filter(|&b| b == b'\n').count() + 1;
             return Err(CompileError::new(format!(
                 "`{}` line {line} reads `.shadowRoot`, but this component is light DOM \
-                 (no `shadow: true` in its <component> block) — the shadow root is null \
+                 — the shadow root is null \
                  at runtime, so this wiring is dead. Use the host element, or the \
                  root-agnostic `host.shadowRoot ?? host`.",
                 c.path.display()
@@ -53,25 +50,20 @@ mod tests {
     #[test]
     fn light_component_with_bare_shadow_root_errors() {
         let c = ctrl("export default controller({ mount(state, host) { host.shadowRoot.addEventListener('click', () => {}) } })");
-        let err = check("<span><slot></slot></span>", Some(&c)).unwrap_err();
+        let err = check(Some(&c)).unwrap_err();
         assert_eq!(err.category.as_deref(), Some(RULE_ID));
     }
 
     #[test]
     fn optional_chain_is_still_dead_wiring() {
         let c = ctrl("export default controller({ mount(state, host) { host.shadowRoot?.addEventListener('click', () => {}) } })");
-        assert!(check("<span></span>", Some(&c)).is_err());
+        assert!(check(Some(&c)).is_err());
     }
 
     #[test]
     fn root_agnostic_fallback_passes() {
         let c = ctrl("export default controller({ mount(state, host) { const root = host.shadowRoot ?? host; root.addEventListener('click', () => {}) } })");
-        check("<span></span>", Some(&c)).unwrap();
+        check(Some(&c)).unwrap();
     }
 
-    #[test]
-    fn shadow_component_may_use_shadow_root() {
-        let c = ctrl("export default controller({ mount(state, host) { host.shadowRoot.querySelector('.x') } })");
-        check("<component>{ shadow: true }</component>\n<span></span>", Some(&c)).unwrap();
-    }
 }

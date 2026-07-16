@@ -20,12 +20,12 @@ const AUTHOR: &str = "@ship/sui-runtime";
 /// builtin). All three are things the emitter writes, none are things a human does.
 const SRC: &str = r#"<button on:click={() => go()} use:tooltip>{label()}</button>"#;
 
-fn opts(shadow: bool) -> CompileOpts {
+fn opts() -> CompileOpts {
     CompileOpts {
         setup_url: None,
         mode: CompileMode::Component,
         source_path: None,
-        component_meta: Some(ComponentMeta { name: "abi-probe".into(), shadow }),
+        component_meta: Some(ComponentMeta { name: "abi-probe".into() }),
         emit_dts: false,
         emit_component_imports: false,
         lint_overrides: Vec::new(),
@@ -36,7 +36,7 @@ fn opts(shadow: bool) -> CompileOpts {
 /// never the package root, which is the author's front door.
 #[test]
 fn emitter_imports_the_abi_subpath_not_the_root() {
-    let out = compile(SRC, opts(false)).expect("compile");
+    let out = compile(SRC, opts()).expect("compile");
     let js = &out.js;
 
     assert!(
@@ -57,35 +57,18 @@ fn emitter_imports_the_abi_subpath_not_the_root() {
 /// The symbols in question really are ABI: emitter-written, never hand-typed.
 #[test]
 fn the_abi_import_carries_emitter_symbols() {
-    let out = compile(SRC, opts(false)).expect("compile");
+    let out = compile(SRC, opts()).expect("compile");
     let js = &out.js;
     for sym in ["component", "on", "runAction"] {
         assert!(js.contains(sym), "expected emitter symbol `{sym}`:\n{js}");
     }
 }
 
-/// The shadow path pulls `adoptSuiSheets` — a second emit branch, same boundary.
-/// Shadow is SOURCE-authoritative (light DOM is the default), so the opt-in has to
-/// be declared in the `<component>` block: passing `ComponentMeta { shadow: true }`
-/// alone does nothing, which is itself the contract worth pinning.
-#[test]
-fn the_shadow_emit_path_holds_the_boundary_too() {
-    const SHADOW_SRC: &str = r#"<component>{ shadow: true }</component>
-<button on:click={() => go()} use:tooltip>{label()}</button>"#;
-    let out = compile(SHADOW_SRC, opts(true)).expect("compile");
-    let js = &out.js;
-    assert!(js.contains("adoptSuiSheets"), "shadow emit pulls the sheet adopter:\n{js}");
-    assert!(
-        !js.contains(&format!("from \"{AUTHOR}\"")),
-        "shadow emit leaked the author front door:\n{js}"
-    );
-}
-
 /// `@ship/sui-runtime/template-hooks` is a legitimate subpath and must not be
 /// mistaken for the root by a naive prefix rewrite. Guards the rewrite itself.
 #[test]
 fn sibling_subpaths_are_not_rewritten_into_the_abi_path() {
-    let out = compile(SRC, opts(false)).expect("compile");
+    let out = compile(SRC, opts()).expect("compile");
     assert!(
         !out.js.contains("@ship/sui-runtime/internal/template-hooks"),
         "the ABI rewrite corrupted a sibling subpath:\n{}",

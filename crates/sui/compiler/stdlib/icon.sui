@@ -5,20 +5,20 @@
   cache, ARIA); ink is currentColor inheritance. Brand/identity mappings are app-land composition, not language.
 -->
 
-<component>{
+<scope>
   props: {
     /** Named glyph from the icon endpoint (deck serves the embedded lucide
         set). Empty keeps slotted children. */
-    name: '',
+    name = ''
     /** Fetch an arbitrary SVG URL instead of a named glyph; wins over name. */
-    src: '',
+    src = ''
     /** Accessible name — role=img + aria-label; label-less icons are
         aria-hidden decoration. */
-    label: '',
-    size: 'xs' | 'sm' | 'md' | 'lg' | 'xl',
-    spin: false,
-  },
-}</component>
+    label = ''
+    size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' = 'md'
+    spin = false
+  }
+</scope>
 
 <style>
   .sui-icon {

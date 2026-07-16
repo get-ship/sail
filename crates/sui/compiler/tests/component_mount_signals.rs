@@ -19,7 +19,7 @@ fn component_opts(setup: Option<&str>) -> CompileOpts {
         source_path: None,
         component_meta: Some(ComponentMeta {
             name: "sui-test-dock".into(),
-            shadow: true,
+
         }),
         emit_dts: false,
         emit_component_imports: false,

@@ -15,13 +15,13 @@
   went wrong"); the code chip is a `code` string attribute filled by the action.
 -->
 
-<component>{
+<scope>
   props: {
-    variant: 'default' | 'inline',
-    size: 'sm' | 'md' | 'lg',
-    code: '',
-  },
-}</component>
+    variant: 'default' | 'inline' = 'default'
+    size: 'sm' | 'md' | 'lg' = 'md'
+    code = ''
+  }
+</scope>
 
 <style>
   .sui-error-state {

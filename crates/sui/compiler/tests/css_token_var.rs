@@ -48,7 +48,7 @@ fn opts(component_name: &str) -> CompileOpts {
         source_path: Some(format!("components/{component_name}/{component_name}.sui").into()),
         component_meta: Some(ComponentMeta {
             name: component_name.into(),
-            shadow: true,
+
         }),
         emit_dts: false,
         emit_component_imports: false,
@@ -70,7 +70,11 @@ fn css_token_findings(source: &str, overrides: &[LintOverride]) -> Vec<(DiagSeve
 fn known_theme_token_is_silent() {
     // `--foreground` is declared in `tokens.css`. The lint must NOT surface a
     // finding for it.
-    let src = r#"<component>{ props: { title: string } }</component>
+    let src = r#"<scope>
+  props: {
+    title = ''
+  }
+</scope>
 <style>
   .card { color: var(--foreground); }
 </style>
@@ -85,7 +89,11 @@ fn known_theme_token_is_silent() {
 #[test]
 fn locally_defined_token_is_silent() {
     // `--btn-h` is defined in the same `<style>` block. No finding.
-    let src = r#"<component>{ props: { title: string } }</component>
+    let src = r#"<scope>
+  props: {
+    title = ''
+  }
+</scope>
 <style>
   :host { --btn-h: 34px; height: var(--btn-h); }
 </style>
@@ -105,7 +113,11 @@ fn font_sans_convention_token_is_silent() {
     // `packages/sui/tokens/src/themes.css`. It is listed in
     // `sui_lint::tokens::CONVENTION_TOKENS` so the lint recognizes it
     // without an Error.
-    let src = r#"<component>{ props: { title: string } }</component>
+    let src = r#"<scope>
+  props: {
+    title = ''
+  }
+</scope>
 <style>
   .kind { font-family: var(--font-sans, sans-serif); }
 </style>
@@ -125,7 +137,11 @@ fn font_sans_convention_token_without_fallback_is_silent() {
     // The reference can stand without a fallback — `--font-sans` is
     // still a real, recognized name. (Verified on the finding stream: the
     // authored `<style>` vehicle is refused by the floor.)
-    let src = r#"<component>{ props: { title: string } }</component>
+    let src = r#"<scope>
+  props: {
+    title = ''
+  }
+</scope>
 <style>
   .card { font-family: var(--font-sans); }
 </style>
@@ -143,7 +159,11 @@ fn truly_unknown_token_strict_default_blocks_build() {
     // nor a local convention is Error. `compile()` rejects; the build
     // hard-fails. This is the internal monorepo's contract — it catches
     // typos at the build line, not three weeks later in the browser.
-    let src = r#"<component>{ props: { title: string } }</component>
+    let src = r#"<scope>
+  props: {
+    title = ''
+  }
+</scope>
 <style>
   .card { color: var(--definitely-not-a-real-token); }
 </style>
@@ -177,7 +197,11 @@ fn truly_unknown_token_warn_override_downgrades_to_warning() {
     // show the typo suggestion — the rule itself is unchanged. (The build is
     // still refused: the authored `<style>` is a floor violation; this pins the
     // css-token severity on the finding stream.)
-    let src = r#"<component>{ props: { title: string } }</component>
+    let src = r#"<scope>
+  props: {
+    title = ''
+  }
+</scope>
 <style>
   .card { color: var(--definitely-not-a-real-token); }
 </style>
@@ -208,7 +232,11 @@ fn truly_unknown_token_off_override_silences() {
     // the build gate. (The lint still emits it; `sui_lint::lint_path`
     // consumers like the LSP still see the raw Error finding — the
     // override only affects this build's gate.)
-    let src = r#"<component>{ props: { title: string } }</component>
+    let src = r#"<scope>
+  props: {
+    title = ''
+  }
+</scope>
 <style>
   .card { color: var(--definitely-not-a-real-token); }
 </style>

@@ -1,4 +1,8 @@
-<component>{ props: { busy: false } }</component>
+<scope>
+  props: {
+    busy = false
+  }
+</scope>
 <button>
   {#if busy()}
     <span aria-hidden="true"></span>

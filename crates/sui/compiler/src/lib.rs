@@ -110,13 +110,12 @@ pub enum CompileMode {
     Component,
 }
 
-/// Tag name and shadow-root flag for a component file. Passed in from the
-/// build system (read from the per-component `.sui.json` metadata file) so
-/// the template source no longer needs a `<component>` wrapper element.
+/// Tag name for a component file. Passed in from the build system so the
+/// template source does not carry its own tag. Components are light DOM —
+/// the shadow opt-in was removed with the `<scope>` redesign.
 #[derive(Debug, Clone)]
 pub struct ComponentMeta {
     pub name: String,
-    pub shadow: bool,
 }
 #[derive(Debug, Clone)]
 pub struct CompileOpts {
@@ -297,16 +296,10 @@ pub fn compile_element(
     emit::element::emit_element(&program, name)
 }
 
-pub fn compile(source: &str, mut opts: CompileOpts) -> Result<CompileOutput, CompileError> {
-    // Light DOM is the default architecture (invariant 9): components render
-    // into their own element, so native events from composed L1 controls bubble
-    // to the host with no boundary. Shadow DOM is a per-component containment
-    // FEATURE declared in the component's own manifest (`<component>{ shadow:
-    // true }`) for wrapping foreign content (tiptap-class editors, FFI). The
-    // SOURCE is authoritative for every caller — bundler, napi, CLI.
-    if let Some(meta) = opts.component_meta.as_mut() {
-        meta.shadow = parse::preprocess::declares_shadow_dom(source);
-    }
+pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, CompileError> {
+    // Light DOM is the architecture (invariant 9): components render into
+    // their own element, so native events from composed L1 controls bubble
+    // to the host with no boundary.
     // A tagged component registers via `customElements.define(name, …)`, which
     // throws at runtime unless `name` is a valid custom-element name. Reject it
     // at compile time (fail-loud) rather than emit code that explodes on load.
@@ -341,6 +334,21 @@ pub fn compile(source: &str, mut opts: CompileOpts) -> Result<CompileOutput, Com
     let effective_overrides = opts.lint_overrides.clone();
 
     let program = parse::parse(effective_source).map_err(|e| attach_path(e, &opts))?;
+    // `<scope>` member sets are POSITION-SCOPED: the same input that names a
+    // file (a tag = component; tagless = route/page) decides which members
+    // are addable. A route receives params from the router, never props from
+    // a parent — `props:`/`variants:` there is a modeling error, told now.
+    if opts.component_meta.is_none() && !program.props.is_empty() {
+        return Err(attach_path(
+            CompileError::new(
+                "`props:`/`variants:` declared in a route/page `<scope>` — a route has no \
+                 parent to fill props; it receives route params from the router. Props and \
+                 variants are component members."
+                    .to_string(),
+            ),
+            &opts,
+        ));
+    }
     check::run(
         &program,
         effective_source,
@@ -420,7 +428,7 @@ mod name_validation_tests {
     #[test]
     fn compile_rejects_a_hyphenless_component_name() {
         let opts = CompileOpts {
-            component_meta: Some(ComponentMeta { name: "dashboard".into(), shadow: true }),
+            component_meta: Some(ComponentMeta { name: "dashboard".into() }),
             ..CompileOpts::default()
         };
         let err = compile("<column><p>x</p></column>", opts).unwrap_err();

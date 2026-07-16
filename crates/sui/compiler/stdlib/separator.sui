@@ -8,13 +8,13 @@
   merge onto the root, so `<separator role="none">` covers it).
 -->
 
-<component>{
+<scope>
   props: {
-    orientation: 'horizontal' | 'vertical',
-    tone: 'default' | 'muted' | 'primary' | 'destructive',
-    variant: 'solid' | 'dashed',
-  },
-}</component>
+    orientation: 'horizontal' | 'vertical' = 'horizontal'
+    tone: 'default' | 'muted' | 'primary' | 'destructive' = 'default'
+    variant: 'solid' | 'dashed' = 'solid'
+  }
+</scope>
 
 <style>
   .sui-separator {

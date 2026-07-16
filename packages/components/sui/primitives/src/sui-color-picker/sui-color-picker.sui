@@ -5,15 +5,15 @@
   accent-color contract.
 -->
 
-<component>{
+<scope>
   props: {
-    name: '',
-    value: '#000000',
-    disabled: false,
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
-    size: 'md' | 'sm' | 'lg',
-  },
-}</component>
+    name = ''
+    value = '#000000'
+    disabled = false
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    size: 'md' | 'sm' | 'lg' = 'md'
+  }
+</scope>
 <controller>
 import { controller, effect, ref, signal } from '@ship/sui-runtime'
 import type { ViewScope } from '@ship/sui-runtime'

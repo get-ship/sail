@@ -8,13 +8,13 @@
   the root, overriding the static defaults here.
 -->
 
-<component>{
+<scope>
   props: {
-    size: 'xs' | 'sm' | 'md' | 'lg',
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent',
-    centered: false,
-  },
-}</component>
+    size: 'xs' | 'sm' | 'md' | 'lg' = 'md'
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' = 'default'
+    centered = false
+  }
+</scope>
 
 <style>
   .sui-spinner {

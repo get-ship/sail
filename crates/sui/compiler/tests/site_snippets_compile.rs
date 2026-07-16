@@ -102,7 +102,7 @@ fn is_sui(s: &str) -> bool {
         return false;
     }
 
-    s.contains("<component>")
+    s.contains("<scope>")
         || s.contains("<controller>")
         || s.contains("{#if")
         || s.contains("{#each")
@@ -145,7 +145,14 @@ fn every_sui_snippet_on_the_site_compiles() {
                 continue;
             }
             checked += 1;
-            let opts = CompileOpts { mode: CompileMode::Component, ..Default::default() };
+            // A snippet that declares `<scope>` props/variants teaches a
+            // COMPONENT — compile it as one (a tag), or the position gate
+            // rightly refuses props in a tagless route/page compile.
+            let component_meta = snip
+                .contains("<scope>")
+                .then(|| sui_compiler::ComponentMeta { name: "snippet-demo".into() });
+            let opts =
+                CompileOpts { mode: CompileMode::Component, component_meta, ..Default::default() };
             if let Err(e) = compile(&snip, opts) {
                 let first = snip.lines().next().unwrap_or("").trim().to_string();
                 broken.push(format!("  {route}: {first}\n    -> {}", e.message));

@@ -10,16 +10,18 @@
   not sx values); first/last detection is mount-time (static lists).
 -->
 
-<component>{
+<scope>
   props: {
-    tone: 'default',
-    at: '',
-    interactive: false,
-  },
-  compound: [
-    { when: { interactive: true }, sx: 'cursor:pointer radius:sm hover:bg:muted focus:ring:ring' },
-  ],
-}</component>
+    tone = 'default'
+    at = ''
+    interactive = false
+  }
+  variants: {
+    compound: [
+      { when: { interactive: true }, sx: 'cursor:pointer radius:sm hover:bg:muted focus:ring:ring' },
+    ]
+  }
+</scope>
 
 <controller>
 import { controller, effect, signal } from '@ship/sui-runtime'

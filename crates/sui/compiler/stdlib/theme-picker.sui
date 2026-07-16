@@ -13,7 +13,11 @@
   `data-theme`, toggles `.dark`, and announces `ship:theme:change`.
 -->
 
-<component>{ props: { value: string } }</component>
+<scope>
+  props: {
+    value = ''
+  }
+</scope>
 
 <style>
   .sui-theme-picker { display: inline-flex; }

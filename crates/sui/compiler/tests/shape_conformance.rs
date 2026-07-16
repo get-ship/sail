@@ -81,7 +81,6 @@ fn classify(path: &Path, repo: &Path) -> (CompileMode, Option<ComponentMeta>) {
             CompileMode::Component,
             Some(ComponentMeta {
                 name: stem,
-                shadow: false,
             }),
         )
     } else {

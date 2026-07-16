@@ -9,7 +9,7 @@
 //
 // Exposes a single `compile(source, optsJSON) -> resultJSON` function
 // callable from JS — the playground passes the editor's current .sui
-// text + an opts JSON (mode, component name, shadow flag, …); the
+// text + an opts JSON (mode, component name, …); the
 // returned result holds the emitted JS module plus any compile error
 // in a discriminated shape JS can branch on without try/catch.
 //
@@ -30,14 +30,13 @@ struct WasmOpts {
     /// "view" | "component" | "auto" (default).
     mode: Option<String>,
     /// Component name. When set, forces component mode AND seeds
-    /// `ComponentMeta { name, shadow }`. The playground passes this
+    /// `ComponentMeta { name }`. The playground passes this
     /// whenever the user's source is a component.
     component_name: Option<String>,
     /// Shadow flag for component mode. Defaults to false to match the
     /// standalone-example shape — playground rendering uses light DOM
     /// so the page's stylesheet can target the rendered tree.
     #[serde(default)]
-    shadow: bool,
     /// Setup URL relative to the emitted JS. When `None`, no
     /// `import setup …` is emitted (template-only modules).
     setup_url: Option<String>,
@@ -89,7 +88,6 @@ pub fn compile(source: &str, opts_json: &str) -> Result<JsValue, JsValue> {
 
     let component_meta = parsed.component_name.as_ref().map(|name| ComponentMeta {
         name: name.clone(),
-        shadow: parsed.shadow,
     });
 
     let opts = CompileOpts {

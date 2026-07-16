@@ -40,17 +40,17 @@
   migrates clean today.
 -->
 
-<component>{
+<scope>
   props: {
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
-    variant: 'default' | 'outline',
-    padding: 'md' | 'none' | 'sm' | 'lg',
-    interactive: false,
-    'accent-bar': 'off' | 'hover' | 'static',
-    'status-rail': false,
-    fill: false,
-  },
-}</component>
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    variant: 'default' | 'outline' = 'default'
+    padding: 'md' | 'none' | 'sm' | 'lg' = 'md'
+    interactive = false
+    'accent-bar': 'off' | 'hover' | 'static' = 'off'
+    'status-rail' = false
+    fill = false
+  }
+</scope>
 
 <style>
   .sui-card {

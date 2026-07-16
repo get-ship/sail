@@ -70,7 +70,7 @@ pub fn compile_sui(
         },
         source_path: Some(sui_file.to_path_buf()),
         component_meta: (mode == CompileMode::Component)
-            .then(|| ComponentMeta { name: stem.to_string(), shadow: true }),
+            .then(|| ComponentMeta { name: stem.to_string() }),
         // The bundler reads only the JS — dts/ssr are the CLI bake's job, and
         // the CEM is walked from disk by the catalog, not returned here.
         emit_dts: false,

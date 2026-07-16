@@ -14,15 +14,15 @@
   segmented (muted track). size sm/md/lg. orientation horizontal/vertical.
 -->
 
-<component>{
+<scope>
   props: {
-    type: 'single' | 'multiple',
-    value: string,
-    variant: 'outline' | 'ghost' | 'segmented',
-    size: 'sm' | 'md' | 'lg',
-    orientation: 'horizontal' | 'vertical',
-  },
-}</component>
+    type: 'single' | 'multiple' = 'single'
+    value = ''
+    variant: 'outline' | 'ghost' | 'segmented' = 'outline'
+    size: 'sm' | 'md' | 'lg' = 'md'
+    orientation: 'horizontal' | 'vertical' = 'horizontal'
+  }
+</scope>
 
 <style>
   .sui-toggle-group {

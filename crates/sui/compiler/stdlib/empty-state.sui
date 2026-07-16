@@ -15,13 +15,13 @@
   neutral (empty states read quiet by default).
 -->
 
-<component>{
+<scope>
   props: {
-    variant: 'default' | 'inline' | 'placeholder' | 'connecting',
-    size: 'sm' | 'md' | 'lg',
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
-  },
-}</component>
+    variant: 'default' | 'inline' | 'placeholder' | 'connecting' = 'default'
+    size: 'sm' | 'md' | 'lg' = 'md'
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+  }
+</scope>
 
 <style>
   .sui-empty-state {

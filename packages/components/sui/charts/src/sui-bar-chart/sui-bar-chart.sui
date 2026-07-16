@@ -28,19 +28,19 @@
   blocks.
 -->
 
-<component>{
+<scope>
   props: {
-    data: '',
-    labels: '',
-    tone: 'primary' | 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
-    orientation: 'vertical' | 'horizontal',
-    width: 300,
-    height: 200,
-    max: 0,
-    label: 'bar chart',
-    loading: false,
-  },
-}</component>
+    data = ''
+    labels = ''
+    tone: 'primary' | 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    orientation: 'vertical' | 'horizontal' = 'vertical'
+    width = 300
+    height = 200
+    max = 0
+    label = 'bar chart'
+    loading = false
+  }
+</scope>
 
 <controller>
 import { controller, derived, ref } from '@ship/sui-runtime'

@@ -6,11 +6,11 @@
   pull request: what breaks on the second render, the slow network, the
   reorder, the translation pass — the paths the demo never took.
 -->
-<component>{
+<scope>
   props: {
-    title: 'Support inbox',
-  },
-}</component>
+    title = 'Support inbox'
+  }
+</scope>
 <controller>
 import { controller, signal, derived, live } from '@ship/sui-runtime'
 import type { Scope } from './tut-09-inbox-starter.sui'

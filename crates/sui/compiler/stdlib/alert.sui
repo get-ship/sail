@@ -23,12 +23,12 @@
   skin authored here, where L1 is allowed to own CSS.
 -->
 
-<component>{
+<scope>
   props: {
-    tone: 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'muted',
-    dismissible: false,
-  },
-}</component>
+    tone: 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'muted' = 'default'
+    dismissible = false
+  }
+</scope>
 
 <style>
   .sui-alert {

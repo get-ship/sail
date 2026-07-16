@@ -52,18 +52,18 @@
   this residual correctly.
 -->
 
-<component>{
+<scope>
   props: {
-    nodes: '',
-    label: '',
-    selectable: 'none' | 'single' | 'multi',
-    'expand-on-select': false,
-    'show-guides': true,
-    size: 'md' | 'sm' | 'lg',
-    loading: false,
-    error: '',
-  },
-}</component>
+    nodes = ''
+    label = ''
+    selectable: 'none' | 'single' | 'multi' = 'none'
+    'expand-on-select' = false
+    'show-guides' = true
+    size: 'md' | 'sm' | 'lg' = 'md'
+    loading = false
+    error = ''
+  }
+</scope>
 <controller>
 // <sui-tree> controller — engine-backed, virtualized hierarchical tree.
 //

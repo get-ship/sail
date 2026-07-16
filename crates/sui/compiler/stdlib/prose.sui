@@ -7,9 +7,8 @@
   declare "this is prose".
 -->
 
-<component>{
-  props: {},
-}</component>
+<scope>
+</scope>
 
 <style>
   .sui-prose {

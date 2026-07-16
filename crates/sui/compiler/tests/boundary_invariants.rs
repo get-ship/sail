@@ -31,7 +31,7 @@ fn component_opts(setup: Option<&str>) -> CompileOpts {
         setup_url: setup.map(|s| s.to_string()),
         mode: CompileMode::Component,
         source_path: None,
-        component_meta: Some(ComponentMeta { name: "sui-x".into(), shadow: true }),
+        component_meta: Some(ComponentMeta { name: "sui-x".into() }),
         emit_dts: false,
         emit_component_imports: false,
         lint_overrides: Vec::new(),

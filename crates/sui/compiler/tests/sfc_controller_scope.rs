@@ -31,7 +31,7 @@ fn opts(name: &str) -> CompileOpts {
         setup_url: Some(format!("./{name}.sui.controller.ts")),
         mode: CompileMode::Component,
         source_path: Some(PathBuf::from(format!("/x/{name}.sui"))),
-        component_meta: Some(ComponentMeta { name: name.to_string(), shadow: false }),
+        component_meta: Some(ComponentMeta { name: name.to_string() }),
         emit_dts: false,
         emit_component_imports: false,
         lint_overrides: Vec::new(),

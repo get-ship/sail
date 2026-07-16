@@ -27,15 +27,15 @@
   math. The stack shrink-wraps to the `diameter` box.
 -->
 
-<component>{
+<scope>
   props: {
-    data: '',
-    diameter: 120,
-    thickness: 16,
-    label: 'donut chart',
-    loading: false,
-  },
-}</component>
+    data = ''
+    diameter = 120
+    thickness = 16
+    label = 'donut chart'
+    loading = false
+  }
+</scope>
 
 <controller>
 import { controller, derived } from '@ship/sui-runtime'

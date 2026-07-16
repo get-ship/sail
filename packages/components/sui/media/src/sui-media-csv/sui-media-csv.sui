@@ -25,13 +25,13 @@
     sui-viewer-error {message} — malformed input
 -->
 
-<component>{
+<scope>
   props: {
-    delimiter: 'auto' | 'comma' | 'tab',
-    header: true,
-    text: '',
-  },
-}</component>
+    delimiter: 'auto' | 'comma' | 'tab' = 'auto'
+    header = true
+    text = ''
+  }
+</scope>
 <controller>
 // sui-media-csv — the CSV/TSV renderer controller (tier-2, glue-only). Parses
 // resolved text (prop:src identity OR the `text` SSR prop) into the shared

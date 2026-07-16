@@ -9,7 +9,11 @@
     <hover-card id="hc1" placement="top">…profile card…</hover-card>
 -->
 
-<component>{ props: { placement: string } }</component>
+<scope>
+  props: {
+    placement = ''
+  }
+</scope>
 
 <style>
   .sui-hover-card {

@@ -265,36 +265,35 @@ fn build_exit_is_honest_unlike_build_all() {
 // ── Part 2: cross-producer parity (native vs wasm) ───────────────────────────
 
 /// A fixture + the `CompileOpts` driven IDENTICALLY into the native and wasm
-/// producers. `setup_url` / `component_name` / `shadow` all affect the emitted
+/// producers. `setup_url` / `component_name` affect the emitted
 /// `.js`, so both sides must receive the same values — that is the whole point.
 struct Fixture {
     name: &'static str,
     mode: CompileMode,
     setup_url: Option<&'static str>,
     component_name: Option<&'static str>,
-    shadow: bool,
 }
 
-/// The fixture corpus. Views, components (light + shadow DOM), and the
+/// The fixture corpus. Views, components, and the
 /// control-flow / binding edge cases. Components carry a `component_name` so the
 /// component emit path is exercised on both producers, not just views.
 fn fixtures() -> Vec<Fixture> {
     use CompileMode::{Component, View};
     vec![
-        Fixture { name: "hello", mode: View, setup_url: None, component_name: None, shadow: false },
-        Fixture { name: "counter", mode: View, setup_url: Some("./counter.controller.ts"), component_name: None, shadow: false },
-        Fixture { name: "agents", mode: View, setup_url: Some("./agents.controller.ts"), component_name: None, shadow: false },
-        Fixture { name: "comment-and-whitespace", mode: View, setup_url: None, component_name: None, shadow: false },
-        Fixture { name: "for-static", mode: View, setup_url: None, component_name: None, shadow: false },
-        Fixture { name: "for-static-text", mode: View, setup_url: None, component_name: None, shadow: false },
-        Fixture { name: "for-static-attr", mode: View, setup_url: None, component_name: None, shadow: false },
-        Fixture { name: "for-dynamic-mixed", mode: View, setup_url: None, component_name: None, shadow: false },
-        Fixture { name: "for-update", mode: View, setup_url: None, component_name: None, shadow: false },
-        Fixture { name: "route-view", mode: View, setup_url: None, component_name: None, shadow: false },
-        Fixture { name: "ship-button", mode: Component, setup_url: None, component_name: Some("ship-button-test"), shadow: false },
-        Fixture { name: "reflect-empty-slot", mode: Component, setup_url: None, component_name: Some("reflect-empty-slot"), shadow: false },
-        Fixture { name: "shadow-tones", mode: Component, setup_url: None, component_name: Some("shadow-tones"), shadow: true },
-        Fixture { name: "bind-this-button", mode: Component, setup_url: None, component_name: Some("bind-this-button"), shadow: false },
+        Fixture { name: "hello", mode: View, setup_url: None, component_name: None },
+        Fixture { name: "counter", mode: View, setup_url: Some("./counter.controller.ts"), component_name: None },
+        Fixture { name: "agents", mode: View, setup_url: Some("./agents.controller.ts"), component_name: None },
+        Fixture { name: "comment-and-whitespace", mode: View, setup_url: None, component_name: None },
+        Fixture { name: "for-static", mode: View, setup_url: None, component_name: None },
+        Fixture { name: "for-static-text", mode: View, setup_url: None, component_name: None },
+        Fixture { name: "for-static-attr", mode: View, setup_url: None, component_name: None },
+        Fixture { name: "for-dynamic-mixed", mode: View, setup_url: None, component_name: None },
+        Fixture { name: "for-update", mode: View, setup_url: None, component_name: None },
+        Fixture { name: "route-view", mode: View, setup_url: None, component_name: None },
+        Fixture { name: "ship-button", mode: Component, setup_url: None, component_name: Some("ship-button-test") },
+        Fixture { name: "reflect-empty-slot", mode: Component, setup_url: None, component_name: Some("reflect-empty-slot") },
+        Fixture { name: "shadow-tones", mode: Component, setup_url: None, component_name: Some("shadow-tones") },
+        Fixture { name: "bind-this-button", mode: Component, setup_url: None, component_name: Some("bind-this-button") },
     ]
 }
 
@@ -383,7 +382,6 @@ fn native_compile(repo: &Path, f: &Fixture) -> Result<String, String> {
     let source = std::fs::read_to_string(&path).map_err(|e| format!("read {}: {e}", f.name))?;
     let component_meta = f.component_name.map(|name| ComponentMeta {
         name: name.to_string(),
-        shadow: f.shadow,
     });
     let opts = CompileOpts {
         setup_url: f.setup_url.map(String::from),
@@ -450,7 +448,6 @@ fn wasm_compile_all(repo: &Path, fixtures: &[Fixture]) -> Vec<WasmRow> {
                 "opts": {
                     "mode": mode,
                     "componentName": f.component_name,
-                    "shadow": f.shadow,
                     "setupUrl": f.setup_url,
                 },
             })

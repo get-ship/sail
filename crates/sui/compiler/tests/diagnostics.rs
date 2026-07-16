@@ -201,7 +201,7 @@ fn missing_close_tag_is_rejected() {
 fn the_retired_prop_tag_is_rejected() {
     // This used to assert `<prop type="custom">` -> "unknown type". Both halves are
     // gone. `<prop>` itself is retired (props are declared as typed TS in the
-    // `<component>` block — ONE place, not N tags), and a custom TS type is now
+    // `<scope>` block — ONE place, not N tags), and a custom TS type is now
     // perfectly legal: `PropKind::Identity` carries it through verbatim rather than
     // forcing everything into a closed primitive enum. So the invariant worth
     // holding is the retirement, and that its error TEACHES rather than just refuses.

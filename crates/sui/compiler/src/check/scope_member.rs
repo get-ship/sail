@@ -159,6 +159,7 @@ mod tests {
             props: vec![],
             clients: vec![],
             styles: String::new(),
+            scope_types: String::new(),
             template: vec![],
             source_len: 0,
             span: crate::diagnostics::Span::point(0),

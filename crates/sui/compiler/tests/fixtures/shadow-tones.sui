@@ -1,3 +1,0 @@
-<component>{ shadow: true, props: { tone: 'default' | 'primary' | 'success' } }</component>
-
-<span></span>

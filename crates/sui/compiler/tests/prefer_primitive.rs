@@ -34,7 +34,7 @@ fn opts(name: &str, path: &str) -> CompileOpts {
         source_path: Some(PathBuf::from(path)),
         component_meta: Some(ComponentMeta {
             name: name.into(),
-            shadow: true,
+
         }),
         emit_dts: false,
         emit_component_imports: false,

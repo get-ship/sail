@@ -4,7 +4,8 @@
   tag lowers to <div class="sui-tab-list" role="tablist">.
 -->
 
-<component>{ props: {} }</component>
+<scope>
+</scope>
 
 <style>
   .sui-tab-list {

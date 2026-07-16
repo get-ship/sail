@@ -10,12 +10,12 @@
   on the native input.
 -->
 
-<component>{
+<scope>
   props: {
-    value: '',
-    disabled: false,
-  },
-}</component>
+    value = ''
+    disabled = false
+  }
+</scope>
 
 <style>
   .sui-radio {

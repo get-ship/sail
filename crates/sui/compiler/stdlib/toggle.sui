@@ -5,12 +5,12 @@
   <button class="sui-toggle" type="button">.
 -->
 
-<component>{
+<scope>
   props: {
-    value: string,
-    disabled: bool,
-  },
-}</component>
+    value = ''
+    disabled = false
+  }
+</scope>
 
 <style>
   .sui-toggle {

@@ -114,7 +114,7 @@ fn the_model_a_root_class_bakes_into_the_markup() {
         r#"<div data-card="card">x</div>"#,
         CompileOpts {
             mode: CompileMode::Component,
-            component_meta: Some(ComponentMeta { name: "tpl-probe".into(), shadow: false }),
+            component_meta: Some(ComponentMeta { name: "tpl-probe".into() }),
             ..Default::default()
         },
     )

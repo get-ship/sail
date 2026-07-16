@@ -24,16 +24,16 @@
     sui-edge-create  { source, target } — drag-from-port created an edge.
 -->
 
-<component>{
+<scope>
   props: {
-    value: '',
-    readonly: false,
-    theme: 'light' | 'dark',
-    grid: 'none' | 'dots' | 'lines',
-    layout: 'none' | 'layered' | 'force',
-    label: '',
-  },
-}</component>
+    value = ''
+    readonly = false
+    theme: 'light' | 'dark' = 'light'
+    grid: 'none' | 'dots' | 'lines' = 'none'
+    layout: 'none' | 'layered' | 'force' = 'none'
+    label = ''
+  }
+</scope>
 <controller>
 import { controller, signal, derived, effect, debounce } from '@ship/sui-runtime'
 import type { Scope } from './sui-board.sui'

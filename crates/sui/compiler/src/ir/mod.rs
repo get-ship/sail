@@ -16,7 +16,7 @@ use crate::diagnostics::Span;
 #[derive(Debug, Clone)]
 pub struct Program {
     pub data: Vec<DataDecl>,
-    /// Props declared by top-level `<prop>` directives (component files only).
+    /// Props declared by the `<scope>` block (`props:` fields + variant axes).
     pub props: Vec<PropDecl>,
     /// Host-injected data/ops clients declared by top-level `<client>`
     /// directives. Each name is legal in `<data source>` + handler scope and
@@ -25,6 +25,10 @@ pub struct Program {
     pub clients: Vec<ClientDecl>,
     /// CSS lifted from top-level `<style>` elements (component files only).
     pub styles: String,
+    /// Raw `type` / `export type` alias text from the `<scope>` block,
+    /// appended to the controller module so aliases are reusable there
+    /// (type aliases hoist — appending preserves controller spans).
+    pub scope_types: String,
     pub template: Vec<Instr>,
     /// Total source length — useful for serialization tools.
     pub source_len: usize,

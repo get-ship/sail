@@ -13,12 +13,12 @@
   sui-collapsible twin's native rebuild.
 -->
 
-<component>{
+<scope>
   props: {
-    open: false,
-    disabled: false,
-  },
-}</component>
+    open = false
+    disabled = false
+  }
+</scope>
 
 <style>
   /* The framework's global :where(summary) / :where(details) treatment in

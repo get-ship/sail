@@ -19,11 +19,11 @@
       gating + monotone fast-path optimize.
 -->
 
-<component>{
+<scope>
   props: {
-    shadow: false,
-  },
-}</component>
+    shadow = false
+  }
+</scope>
 <controller>
 import { controller, signal, derived, effect } from '@ship/sui-runtime'
 import type { Scope } from './sui-app.sui'

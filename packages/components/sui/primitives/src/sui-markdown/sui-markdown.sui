@@ -1,8 +1,8 @@
-<component>{
+<scope>
   props: {
-    value: '',
-  },
-}</component>
+    value = ''
+  }
+</scope>
 <!--
   NEW SURFACE (re-port from feat/next, parity-gate pass)
   ─────────────────────────────────────────────────────────────────────

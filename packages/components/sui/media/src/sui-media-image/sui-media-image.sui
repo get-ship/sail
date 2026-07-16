@@ -27,14 +27,14 @@
     sui-viewer-index-change {index} — gallery arrow-navigation
 -->
 
-<component>{
+<scope>
   props: {
-    alt: '',
-    fit: 'contain' | 'cover' | 'actual',
-    zoomable: true,
-    gallery: false,
-  },
-}</component>
+    alt = ''
+    fit: 'contain' | 'cover' | 'actual' = 'contain'
+    zoomable = true
+    gallery = false
+  }
+</scope>
 <controller>
 // sui-media-image — the raster + SVG image renderer controller (tier-2, glue-
 // only). A resolved source arrives via `prop:src` identity (single ViewerSource

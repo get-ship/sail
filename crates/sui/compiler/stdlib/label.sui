@@ -26,12 +26,12 @@
   "fixed", since faithful porting is the job here.
 -->
 
-<component>{
+<scope>
   props: {
-    size: 'sm' | 'md' | 'lg',
-    required: false,
-  },
-}</component>
+    size: 'sm' | 'md' | 'lg' = 'md'
+    required = false
+  }
+</scope>
 
 <style>
   label {

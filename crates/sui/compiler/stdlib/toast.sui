@@ -10,12 +10,12 @@
     </toast>
 -->
 
-<component>{
+<scope>
   props: {
-    tone,
-    duration: string,
-  },
-}</component>
+    tone = 'default'
+    duration = ''
+  }
+</scope>
 
 <style>
   .sui-toast {

@@ -15,16 +15,16 @@
   tone vocabulary (solid/soft/outline/ghost + hover + contrast) is owned locally.
 -->
 
-<component>{
+<scope>
   props: {
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
-    variant: 'solid' | 'soft' | 'outline' | 'ghost',
-    size: 'sm' | 'md' | 'lg',
-    selected: false,
-    removable: false,
-    disabled: false,
-  },
-}</component>
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    variant: 'solid' | 'soft' | 'outline' | 'ghost' = 'solid'
+    size: 'sm' | 'md' | 'lg' = 'md'
+    selected = false
+    removable = false
+    disabled = false
+  }
+</scope>
 
 <style>
   .sui-chip {

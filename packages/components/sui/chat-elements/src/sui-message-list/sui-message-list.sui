@@ -23,11 +23,11 @@
   ─────────────────────────────────────────────────────────────────────
 -->
 
-<component>{
+<scope>
   props: {
-    'sticky-bottom': true,
-  },
-}</component>
+    'sticky-bottom' = true
+  }
+</scope>
 
 <controller>
 import {

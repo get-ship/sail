@@ -32,14 +32,14 @@
     send(), clear()                         → identical
 -->
 
-<component>{
+<scope>
   props: {
-    'view-id': '',
-    mode: 'off' | 'point' | 'region',
-    endpoint: '/api/feedback',
-    staging: false,
-  },
-}</component>
+    'view-id' = ''
+    mode: 'off' | 'point' | 'region' = 'off'
+    endpoint = '/api/feedback'
+    staging = false
+  }
+</scope>
 <controller>
 import { controller, signal, derived, ref } from '@ship/sui-runtime'
 import type { ViewScope } from '@ship/sui-runtime'

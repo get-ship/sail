@@ -20,7 +20,7 @@ fn fixtures_dir() -> PathBuf {
 }
 
 fn ship_button_meta() -> ComponentMeta {
-    ComponentMeta { name: "ship-button-test".into(), shadow: false }
+    ComponentMeta { name: "ship-button-test".into() }
 }
 
 fn compile_fixture(name: &str, mode: CompileMode, setup: Option<&str>) -> String {

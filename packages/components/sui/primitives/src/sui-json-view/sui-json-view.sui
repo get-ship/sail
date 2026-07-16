@@ -6,13 +6,13 @@
   Level guides are per-level gutter spans with a subtle inline-start border.
 -->
 
-<component>{
+<scope>
   props: {
-    data: '',
-    expanded: false,
-    depth: 1,
-  },
-}</component>
+    data = ''
+    expanded = false
+    depth = 1
+  }
+</scope>
 
 <controller>
 import { controller, derived, signal } from '@ship/sui-runtime'

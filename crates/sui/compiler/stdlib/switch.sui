@@ -13,14 +13,14 @@
   `<label><switch></switch> Wi-Fi</label>`; the switch is only the control.
 -->
 
-<component>{
+<scope>
   props: {
-    checked: false,
-    disabled: false,
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
-    size: 'sm' | 'md' | 'lg',
-  },
-}</component>
+    checked = false
+    disabled = false
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    size: 'sm' | 'md' | 'lg' = 'md'
+  }
+</scope>
 
 <style>
   .sui-switch {

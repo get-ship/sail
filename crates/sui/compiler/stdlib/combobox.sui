@@ -24,12 +24,12 @@
     </combobox>
 -->
 
-<component>{
+<scope>
   props: {
-    placeholder: string,
-    value: string,
-  },
-}</component>
+    placeholder = ''
+    value = ''
+  }
+</scope>
 
 <style>
   .sui-combobox {

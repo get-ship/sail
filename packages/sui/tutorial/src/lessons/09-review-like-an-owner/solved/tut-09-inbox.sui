@@ -6,11 +6,11 @@
   well as enter; and the empty case is the semantic <empty-state>, not a
   hand-rolled div.
 -->
-<component>{
+<scope>
   props: {
-    title: 'Support inbox',
-  },
-}</component>
+    title = 'Support inbox'
+  }
+</scope>
 <controller>
 import { controller, signal, derived, live } from '@ship/sui-runtime'
 import type { Scope } from './tut-09-inbox.sui'

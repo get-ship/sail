@@ -8,11 +8,11 @@
   orientation vertical (default axis auto) / horizontal / both.
 -->
 
-<component>{
+<scope>
   props: {
-    orientation: 'vertical' | 'horizontal' | 'both',
-  },
-}</component>
+    orientation: 'vertical' | 'horizontal' | 'both' = 'vertical'
+  }
+</scope>
 
 <style>
   .sui-scroll-area {

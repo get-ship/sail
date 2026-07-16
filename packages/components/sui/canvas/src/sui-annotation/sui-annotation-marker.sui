@@ -20,16 +20,16 @@
   midpoint exactly on (x, y), which is what the capture gesture recorded.
 -->
 
-<component>{
+<scope>
   props: {
-    kind: 'point' | 'region',
-    x: 0,
-    y: 0,
-    rect: '',
-    active: false,
-    index: 0,
-  },
-}</component>
+    kind: 'point' | 'region' = 'point'
+    x = 0
+    y = 0
+    rect = ''
+    active = false
+    index = 0
+  }
+</scope>
 
 <controller>
 import { controller, derived } from '@ship/sui-runtime'

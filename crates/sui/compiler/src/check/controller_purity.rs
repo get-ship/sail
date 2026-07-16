@@ -10,7 +10,6 @@
 //! rule family — purity, ambient authority, set-value, state-cast, and the
 //! imperative-styling floor — was silently dead.
 
-use std::path::Path;
 
 use crate::check::controller_parse::ParsedController;
 use crate::diagnostics::{CompileError, Span};

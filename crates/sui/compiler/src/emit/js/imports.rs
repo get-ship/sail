@@ -9,15 +9,7 @@ pub(super) fn emit_imports(
     uses_templates: bool,
     uses_delegation: bool,
 ) {
-    let is_shadow = opts.component_meta.as_ref().map(|m| m.shadow).unwrap_or(false);
     let mut imports: Vec<String> = lowered.runtime_imports.iter().map(|s| s.to_string()).collect();
-    if is_shadow {
-        let sym = "adoptSuiSheets".to_string();
-        if !imports.contains(&sym) {
-            imports.push(sym);
-            imports.sort();
-        }
-    }
     // Built-in transition factories are auto-imported when the template
     // references them — authors don't have to wire fade/slide/scale by
     // hand. Custom transition names (anything not in this set) still

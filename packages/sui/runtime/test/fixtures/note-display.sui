@@ -1,10 +1,10 @@
-<component>{
+<scope>
   props: {
-    title: '',
-    body: '',
-    tags: '[]',
-  },
-}</component>
+    title = ''
+    body = ''
+    tags = '[]'
+  }
+</scope>
 <controller>
 import { controller, signal, derived } from '@ship/sui-runtime'
 

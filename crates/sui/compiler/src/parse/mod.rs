@@ -19,6 +19,7 @@ use crate::ir::*;
 pub mod expr;
 pub mod html;
 pub mod preprocess;
+pub(crate) mod scope_block;
 pub mod template;
 
 pub use html::{Attr, Node};
@@ -48,11 +49,12 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
     let mut props: Vec<PropDecl> = Vec::new();
     let mut clients: Vec<ClientDecl> = Vec::new();
     let mut style_parts: Vec<String> = Vec::new();
+    let mut scope_types = String::new();
     let mut template_nodes: Vec<Node> = Vec::with_capacity(nodes.len());
 
     for node in nodes {
         match &node {
-            Node::Comment(c) => {
+            Node::Comment(_c) => {
                 template_nodes.push(node);
                 continue;
             }
@@ -72,11 +74,12 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
                 "state" => {
                     return Err(state_directive_retired(el));
                 }
-                "component" => {
-                    // The single declaration surface. Props are props-as-ts in
-                    // this block → `PropDecl` directly (no `<prop>` tag, no
-                    // desugar). `form:` names the form-associated props. The
-                    // `variants` field is lowered in preprocess; ignore it here.
+                "scope" => {
+                    // The component's static surface: `type` aliases +
+                    // `props:` + `variants:`, in TypeScript field syntax with
+                    // literal values only (see parse::scope_block). Types
+                    // thread to the controller module; variants lower to
+                    // attribute-keyed CSS + reflected union props.
                     let body: String = el
                         .children
                         .iter()
@@ -85,116 +88,12 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
                             _ => None,
                         })
                         .collect();
-                    let fields = crate::parse::preprocess::parse_object_fields(&body);
-                    // The block holds a fixed, small field set. Anything else —
-                    // a retired construct (`light`, `variants`), a typo — is
-                    // rejected generically: the compiler names what IS valid and
-                    // carries no memory of the old forms (no fossilization).
-                    const COMPONENT_FIELDS: &[&str] = &["props", "form", "compound", "shadow"];
-                    if let Some((k, _)) =
-                        fields.iter().find(|(k, _)| !COMPONENT_FIELDS.contains(&k.as_str()))
-                    {
-                        return Err(CompileError::new(format!(
-                            "unknown `<component>` field `{k}` \u{2014} the block holds \
-                             `props`, `form`, `compound`, and `shadow` only."
-                        ))
-                        .with_span(el.span));
+                    let block = scope_block::parse_scope_block(&body, el.span)?;
+                    props.extend(block.props);
+                    if !block.variants_css.is_empty() {
+                        style_parts.push(block.variants_css);
                     }
-                    let (form_value, form_disabled) = fields
-                        .iter()
-                        .find(|(k, _)| k == "form")
-                        .map(|(_, v)| crate::parse::preprocess::parse_form_field(v))
-                        .unwrap_or((None, None));
-                    let props_obj = fields
-                        .iter()
-                        .find(|(k, _)| k == "props")
-                        .map(|(_, v)| v.clone())
-                        .unwrap_or_default();
-                    let compound = fields.iter().find(|(k, _)| k == "compound").map(|(_, v)| v.clone());
-                    // Strict, one-way variant syntax — no parallel paths, teaching
-                    // errors so a fresh agent is corrected rather than left to guess.
-                    for (k, v) in crate::parse::preprocess::parse_object_fields(&props_obj) {
-                        let v = v.trim();
-                        if k == "variant" && v.starts_with("variant(") {
-                            return Err(CompileError::new(
-                                "`variant` is the reserved variant key \u{2014} drop the `variant()` wrapper (write `variant: { \u{2026} }`)",
-                            )
-                            .with_span(el.span));
-                        }
-                    }
-                    let decls = crate::parse::preprocess::component_props_to_decls(
-                        &props_obj,
-                        form_value.as_deref(),
-                        form_disabled.as_deref(),
-                    );
-
-                    // `form: { value, disabled }` names props that get wired to the
-                    // PLATFORM's form APIs, so their types are not ours to choose:
-                    // `ElementInternals.setFormValue` takes a serializable value, and
-                    // `formDisabledCallback` takes a bool. The old `<prop type="…">`
-                    // tag checked this; props-as-ts dropped the check with the tag,
-                    // and nothing replaced it — so `form: { disabled: 'label' }` on a
-                    // string silently produced a component that lies to the browser.
-                    // (`form` naming a prop that doesn't exist is caught here too;
-                    // "at most one form-value" is gone because the object shape makes
-                    // it unrepresentable — one key, one value.)
-                    let find = |n: &str| decls.iter().find(|p| p.name == n);
-                    if let Some(name) = form_value.as_deref() {
-                        match find(name).map(|p| &p.kind) {
-                            None => {
-                                return Err(CompileError::new(format!(
-                                    "`form: {{ value: '{name}' }}` names no prop — form-value must \
-                                     name a prop declared in the same block."
-                                ))
-                                .with_span(el.span));
-                            }
-                            // A bool IS a legitimate form value — that is a checkbox
-                            // (`checked`). What cannot be submitted is an arbitrary TS
-                            // type: `Identity` is an identity property, never reflected
-                            // and never serialized.
-                            Some(PropKind::Identity(_)) => {
-                                return Err(CompileError::new(format!(
-                                    "prop `{name}` cannot be the form-value — the platform submits it \
-                                     via `setFormValue`, which takes a serializable value, and `{name}` \
-                                     is a non-primitive type (an identity property, never reflected). \
-                                     Declare it as a string, number, bool, or union."
-                                ))
-                                .with_span(el.span));
-                            }
-                            _ => {}
-                        }
-                    }
-                    if let Some(name) = form_disabled.as_deref() {
-                        match find(name).map(|p| &p.kind) {
-                            None => {
-                                return Err(CompileError::new(format!(
-                                    "`form: {{ disabled: '{name}' }}` names no prop — form-disabled \
-                                     must name a prop declared in the same block."
-                                ))
-                                .with_span(el.span));
-                            }
-                            Some(PropKind::Bool) => {}
-                            Some(_) => {
-                                return Err(CompileError::new(format!(
-                                    "prop `{name}` cannot be the form-disabled flag — the platform \
-                                     calls `formDisabledCallback(disabled)` with a boolean. Declare \
-                                     it as `{name}: false`."
-                                ))
-                                .with_span(el.span));
-                            }
-                        }
-                    }
-
-                    props.extend(decls);
-                    // Variant styles (from the `variant` props + a sibling
-                    // `compound`) lower straight to CSS — no `<variants>` block.
-                    let variant_css = crate::parse::preprocess::component_variants_to_css(
-                        &props_obj,
-                        compound.as_deref(),
-                    );
-                    if !variant_css.is_empty() {
-                        style_parts.push(variant_css);
-                    }
+                    scope_types.push_str(&block.types);
                     continue;
                 }
                 "style" => {
@@ -220,22 +119,20 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
         props,
         clients,
         styles,
+        scope_types,
         template,
         source_len: source.len(),
         span: Span::new(0, source.len()),
     })
 }
 
-/// Reject author-written `:host` in a light component's `<style>` block. Model
-/// A: an element styles its own template nodes by class — a spliced element's
-/// root is `.sui-<name>`, a native-kind element's is the bare tag; variants are
-/// attribute-keyed. Shadow components (the `shadow: true` opt-in) keep `:host` —
-/// shadow DOM has a real host. Scans the RAW source, before preprocess prepends
-/// the compiler's own scoped CSS.
+/// Reject author-written `:host` in a component's `<style>` block. Model A:
+/// an element styles its own template nodes by class — a spliced element's
+/// root is `.sui-<name>`, a native-kind element's is the bare tag; variants
+/// are attribute-keyed. Components are light DOM; there is no host to select.
+/// Scans the RAW source, before preprocess prepends the compiler's own
+/// scoped CSS.
 fn reject_retired_host_selector(source: &str) -> Result<(), CompileError> {
-    if preprocess::declares_shadow_dom(source) {
-        return Ok(());
-    }
     let mut i = 0;
     while let Some(rel) = source[i..].find("<style") {
         let open = i + rel;

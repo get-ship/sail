@@ -4,12 +4,12 @@
   <button class="sui-page" type="button">.
 -->
 
-<component>{
+<scope>
   props: {
-    value: string,
-    disabled: bool,
-  },
-}</component>
+    value = ''
+    disabled = false
+  }
+</scope>
 
 <style>
   .sui-page {

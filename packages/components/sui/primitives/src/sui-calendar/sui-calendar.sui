@@ -20,20 +20,20 @@
   The virtualized agenda remains an explicit GAP.
 -->
 
-<component>{
+<scope>
   props: {
-    view: 'month' | 'week' | 'day',
-    events: '',
-    'focus-date': '',
-    'week-starts-on': 0,
-    'slot-minutes': 30,
-    'day-start-hour': 0,
-    'day-end-hour': 24,
-    'range-mode': 'none' | 'date' | 'datetime',
-    editable: false,
-    label: '',
-  },
-}</component>
+    view: 'month' | 'week' | 'day' = 'month'
+    events = ''
+    'focus-date' = ''
+    'week-starts-on' = 0
+    'slot-minutes' = 30
+    'day-start-hour' = 0
+    'day-end-hour' = 24
+    'range-mode': 'none' | 'date' | 'datetime' = 'none'
+    editable = false
+    label = ''
+  }
+</scope>
 <controller>
 // <sui-calendar> controller — Slice 2 (the VIEW). Glue-only / tier-2.
 //

@@ -26,17 +26,17 @@
   gestures rather than letting the page scroll them.
 -->
 
-<component>{
+<scope>
   props: {
-    value: '',
-    readonly: false,
-    theme: 'light' | 'dark',
-    grid: 'none' | 'dots' | 'lines',
-    'min-scale': number,
-    'max-scale': number,
-    label: '',
-  },
-}</component>
+    value = ''
+    readonly = false
+    theme: 'light' | 'dark' = 'light'
+    grid: 'none' | 'dots' | 'lines' = 'none'
+    'min-scale' = 0
+    'max-scale' = 0
+    label = ''
+  }
+</scope>
 <controller>
 import { controller, signal, derived, effect, debounce, ref } from '@ship/sui-runtime'
 import type { Scope } from './sui-canvas.sui'

@@ -45,14 +45,6 @@ pub struct PropDecl {
     pub default: Option<String>,
     pub reflect: bool,
     pub bindable: bool,
-    /// `<prop ... form-value />` — when set, the component is registered
-    /// as form-associated and the runtime auto-wires the prop's signal
-    /// to `ElementInternals.setFormValue` plus `formResetCallback` /
-    /// `formStateRestoreCallback`.
-    pub form_value: bool,
-    /// `<prop ... form-disabled />` — when set, the runtime wires
-    /// `formDisabledCallback(disabled)` to this (bool) prop's signal.
-    pub form_disabled: bool,
     /// Author-supplied JSDoc description from a `<!-- /** ... */ -->`
     /// HTML comment immediately preceding the `<prop>` declaration.
     pub description: Option<String>,

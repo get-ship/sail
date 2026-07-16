@@ -23,12 +23,10 @@ fn fixtures() -> Vec<Fixture> {
         Fixture { name: "counter",     setup_url: Some("./counter.controller.ts"), mode: CompileMode::Component,     component_meta: None },
         Fixture { name: "agents",      setup_url: Some("./agents.controller.ts"),  mode: CompileMode::Component,     component_meta: None },
         Fixture { name: "ship-button", setup_url: None,               mode: CompileMode::Component,
-            component_meta: Some(ComponentMeta { name: "ship-button-test".into(), shadow: false }) },
+            component_meta: Some(ComponentMeta { name: "ship-button-test".into() }) },
         Fixture { name: "bind-this-button", setup_url: None,           mode: CompileMode::Component,      component_meta: None },
         Fixture { name: "reflect-empty-slot", setup_url: None,         mode: CompileMode::Component,
-            component_meta: Some(ComponentMeta { name: "reflect-empty-slot-test".into(), shadow: true }) },
-        Fixture { name: "shadow-tones", setup_url: None,               mode: CompileMode::Component,
-            component_meta: Some(ComponentMeta { name: "shadow-tones-test".into(), shadow: true }) },
+            component_meta: Some(ComponentMeta { name: "reflect-empty-slot-test".into() }) },
         Fixture { name: "comment-and-whitespace", setup_url: None,    mode: CompileMode::Component,      component_meta: None },
         Fixture { name: "for-update",  setup_url: None,               mode: CompileMode::Component,      component_meta: None },
         Fixture { name: "for-static",  setup_url: None,               mode: CompileMode::Component,      component_meta: None },
@@ -78,9 +76,17 @@ fn assert_snapshot(name: &str, actual: &str, expected_path: &Path) {
     );
 }
 
+
+fn fixture_named(name: &str) -> Fixture {
+    fixtures()
+        .into_iter()
+        .find(|f| f.name == name)
+        .unwrap_or_else(|| panic!("no fixture named {name}"))
+}
+
 #[test]
 fn hello_snapshot() {
-    let fx = &fixtures()[0];
+    let fx = &fixture_named("hello");
     let js = compile_fixture(fx);
     let path = fixtures_dir().join(format!("{}.expected.js", fx.name));
     assert_snapshot(fx.name, &js, &path);
@@ -88,7 +94,7 @@ fn hello_snapshot() {
 
 #[test]
 fn counter_snapshot() {
-    let fx = &fixtures()[1];
+    let fx = &fixture_named("counter");
     let js = compile_fixture(fx);
     let path = fixtures_dir().join(format!("{}.expected.js", fx.name));
     assert_snapshot(fx.name, &js, &path);
@@ -96,7 +102,7 @@ fn counter_snapshot() {
 
 #[test]
 fn agents_snapshot() {
-    let fx = &fixtures()[2];
+    let fx = &fixture_named("agents");
     let js = compile_fixture(fx);
     let path = fixtures_dir().join(format!("{}.expected.js", fx.name));
     assert_snapshot(fx.name, &js, &path);
@@ -104,7 +110,7 @@ fn agents_snapshot() {
 
 #[test]
 fn ship_button_snapshot() {
-    let fx = &fixtures()[3];
+    let fx = &fixture_named("ship-button");
     let js = compile_fixture(fx);
     let path = fixtures_dir().join(format!("{}.expected.js", fx.name));
     assert_snapshot(fx.name, &js, &path);
@@ -112,7 +118,7 @@ fn ship_button_snapshot() {
 
 #[test]
 fn bind_this_button_snapshot() {
-    let fx = &fixtures()[4];
+    let fx = &fixture_named("bind-this-button");
     let js = compile_fixture(fx);
     let path = fixtures_dir().join(format!("{}.expected.js", fx.name));
     assert_snapshot(fx.name, &js, &path);
@@ -150,23 +156,16 @@ fn bind_this_button_direct_emits_hydrate_ref() {
 
 #[test]
 fn reflect_empty_slot_snapshot() {
-    let fx = &fixtures()[5];
+    let fx = &fixture_named("reflect-empty-slot");
     let js = compile_fixture(fx);
     let path = fixtures_dir().join(format!("{}.expected.js", fx.name));
     assert_snapshot(fx.name, &js, &path);
 }
 
-#[test]
-fn shadow_tones_snapshot() {
-    let fx = &fixtures()[6];
-    let js = compile_fixture(fx);
-    let path = fixtures_dir().join(format!("{}.expected.js", fx.name));
-    assert_snapshot(fx.name, &js, &path);
-}
 
 #[test]
 fn comment_and_whitespace_snapshot() {
-    let fx = &fixtures()[7];
+    let fx = &fixture_named("comment-and-whitespace");
     let js = compile_fixture(fx);
     let path = fixtures_dir().join(format!("{}.expected.js", fx.name));
     assert_snapshot(fx.name, &js, &path);
@@ -177,7 +176,7 @@ fn comment_and_whitespace_snapshot() {
 /// increments the per-row version signal so bindings re-evaluate.
 #[test]
 fn for_update_snapshot() {
-    let fx = &fixtures()[8];
+    let fx = &fixture_named("for-update");
     let js = compile_fixture(fx);
     let path = fixtures_dir().join(format!("{}.expected.js", fx.name));
     assert_snapshot(fx.name, &js, &path);
@@ -279,7 +278,7 @@ fn for_body_referencing_index_refreshes_on_row_reuse() {
 
 #[test]
 fn for_static_snapshot() {
-    let fx = &fixtures()[9];
+    let fx = &fixture_named("for-static");
     let js = compile_fixture(fx);
     let path = fixtures_dir().join(format!("{}.expected.js", fx.name));
     assert_snapshot(fx.name, &js, &path);
@@ -287,7 +286,7 @@ fn for_static_snapshot() {
 
 #[test]
 fn for_static_text_snapshot() {
-    let fx = &fixtures()[10];
+    let fx = &fixture_named("for-static-text");
     let js = compile_fixture(fx);
     let path = fixtures_dir().join(format!("{}.expected.js", fx.name));
     assert_snapshot(fx.name, &js, &path);
@@ -295,7 +294,7 @@ fn for_static_text_snapshot() {
 
 #[test]
 fn for_static_attr_snapshot() {
-    let fx = &fixtures()[11];
+    let fx = &fixture_named("for-static-attr");
     let js = compile_fixture(fx);
     let path = fixtures_dir().join(format!("{}.expected.js", fx.name));
     assert_snapshot(fx.name, &js, &path);
@@ -303,7 +302,7 @@ fn for_static_attr_snapshot() {
 
 #[test]
 fn for_dynamic_mixed_snapshot() {
-    let fx = &fixtures()[12];
+    let fx = &fixture_named("for-dynamic-mixed");
     let js = compile_fixture(fx);
     let path = fixtures_dir().join(format!("{}.expected.js", fx.name));
     assert_snapshot(fx.name, &js, &path);
@@ -547,51 +546,6 @@ fn whitespace_text_nodes_dropped_between_elements() {
     );
 }
 
-#[test]
-fn shadow_tones_emits_adopted_style_sheets_call() {
-    let path = fixtures_dir().join("shadow-tones.sui");
-    let source = std::fs::read_to_string(&path).unwrap();
-    let opts = CompileOpts {
-        setup_url: None,
-        mode: CompileMode::Component,
-        source_path: Some(path),
-        component_meta: Some(ComponentMeta {
-            name: "shadow-tones-test".into(),
-            shadow: true,
-        }),
-        emit_dts: false,
-        emit_component_imports: false,
-        lint_overrides: Vec::new(),
-    };
-    let out = compile(&source, opts).expect("compile");
-    assert!(
-        out.js.contains("adoptSuiSheets"),
-        "expected adoptSuiSheets import + call:\n{}",
-        out.js
-    );
-    // Light-DOM components must NOT get any shared sheet. The source is
-    // authoritative for shadow (no per-invocation flag decides it), so the
-    // light case is a source that does not declare `shadow: true`.
-    let light_opts = CompileOpts {
-        setup_url: None,
-        mode: CompileMode::Component,
-        source_path: None,
-        component_meta: Some(ComponentMeta {
-            name: "shadow-tones-test".into(),
-            shadow: false,
-        }),
-        emit_dts: false,
-        emit_component_imports: false,
-        lint_overrides: Vec::new(),
-    };
-    let light_src = "<component>{ props: { tone: 'default' | 'primary' } }</component>\n<span></span>\n";
-    let light_out = compile(light_src, light_opts).expect("compile light");
-    assert!(
-        !light_out.js.contains("adoptSuiSheets"),
-        "light-DOM component must not import adoptSuiSheets:\n{}",
-        light_out.js
-    );
-}
 
 #[test]
 fn reflect_empty_slot_emits_bind_slot_empty_call() {
@@ -604,7 +558,7 @@ fn reflect_empty_slot_emits_bind_slot_empty_call() {
         source_path: Some(path),
         component_meta: Some(ComponentMeta {
             name: "reflect-empty-slot-test".into(),
-            shadow: true,
+
         }),
         emit_dts: false,
         emit_component_imports: false,
@@ -642,7 +596,7 @@ fn reflect_empty_slot_in_conditional_threads_container() {
         source_path: Some(path),
         component_meta: Some(ComponentMeta {
             name: "reflect-empty-slot-conditional-test".into(),
-            shadow: true,
+
         }),
         emit_dts: false,
         emit_component_imports: false,
@@ -678,7 +632,7 @@ fn ship_button_emits_cem() {
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),
-        component_meta: Some(ComponentMeta { name: "ship-button-test".into(), shadow: false }),
+        component_meta: Some(ComponentMeta { name: "ship-button-test".into() }),
         emit_dts: false,
         emit_component_imports: false,
         lint_overrides: Vec::new(),

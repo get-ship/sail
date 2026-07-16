@@ -33,7 +33,7 @@ fn jsdoc_above_prop_emits_description_in_cem() {
         source_path: Some(path),
         component_meta: Some(ComponentMeta {
             name: "jsdoc-prop-test".into(),
-            shadow: false,
+
         }),
         emit_dts: false,
         emit_component_imports: false,
@@ -63,24 +63,24 @@ fn jsdoc_above_prop_emits_description_in_cem() {
 /// `____Picks_the_active_tone_`.
 #[test]
 fn a_documented_prop_keeps_its_name() {
-    let src = r#"<component>{
+    let src = r#"<scope>
   props: {
     /** Picks the active tone */
-    tone: 'default' | 'primary',
+    tone: 'default' | 'primary' = 'default'
     /** Multi-line.
      *  Second line. */
-    size: 'sm' | 'lg',
+    size: 'sm' | 'lg' = 'sm'
     // a line comment is not documentation, but it must not corrupt the name either
-    plain: string,
-  },
-}</component>
+    plain = ''
+  }
+</scope>
 <button>{tone()}{size()}{plain()}</button>"#;
 
     let out = compile(
         src,
         CompileOpts {
             mode: CompileMode::Component,
-            component_meta: Some(ComponentMeta { name: "doc-probe".into(), shadow: false }),
+            component_meta: Some(ComponentMeta { name: "doc-probe".into() }),
             ..Default::default()
         },
     )

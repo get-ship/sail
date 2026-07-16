@@ -18,16 +18,16 @@
   drives the active accent (the global channel). sticky pins the strip.
 -->
 
-<component>{
+<scope>
   props: {
-    active: string,
-    variant: 'line' | 'pill' | 'enclosed',
-    size: 'sm' | 'md' | 'lg',
-    tone,
-    orientation: 'horizontal' | 'vertical',
-    sticky: bool,
-  },
-}</component>
+    active = ''
+    variant: 'line' | 'pill' | 'enclosed' = 'line'
+    size: 'sm' | 'md' | 'lg' = 'md'
+    tone = 'default'
+    orientation: 'horizontal' | 'vertical' = 'horizontal'
+    sticky = false
+  }
+</scope>
 
 <style>
   .sui-tabs {

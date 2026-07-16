@@ -28,14 +28,14 @@
   ─────────────────────────────────────────────────────────────────────
 -->
 
-<component>{
+<scope>
   props: {
-    role: 'assistant' | 'user' | 'system' | 'tool',
-    'content-type': 'text' | 'code' | 'drawing' | 'terminal-snapshot' | 'tool-call' | 'citation' | 'image',
-    timestamp: '',
-    status: 'sent' | 'sending' | 'error',
-  },
-}</component>
+    role: 'assistant' | 'user' | 'system' | 'tool' = 'assistant'
+    'content-type': 'text' | 'code' | 'drawing' | 'terminal-snapshot' | 'tool-call' | 'citation' | 'image' = 'text'
+    timestamp = ''
+    status: 'sent' | 'sending' | 'error' = 'sent'
+  }
+</scope>
 
 <column
   gap="1"

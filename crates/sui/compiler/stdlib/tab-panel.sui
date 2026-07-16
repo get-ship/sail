@@ -5,7 +5,11 @@
   <div class="sui-tab-panel">.
 -->
 
-<component>{ props: { name: string } }</component>
+<scope>
+  props: {
+    name = ''
+  }
+</scope>
 
 <style>
   .sui-tab-panel { padding: var(--space-4) 0 0; min-width: 0; }

@@ -21,13 +21,13 @@
   ─────────────────────────────────────────────────────────────────────
 -->
 
-<component>{
+<scope>
   props: {
-    label: 'Assistant is thinking',
-    size: 'md' | 'sm' | 'lg',
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
-  },
-}</component>
+    label = 'Assistant is thinking'
+    size: 'md' | 'sm' | 'lg' = 'md'
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+  }
+</scope>
 
 <span
   role="status"

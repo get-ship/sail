@@ -4,12 +4,12 @@
   the parent. Bare tag lowers to <button class="sui-menu-item" type="button">.
 -->
 
-<component>{
+<scope>
   props: {
-    value: string,
-    disabled: bool,
-  },
-}</component>
+    value = ''
+    disabled = false
+  }
+</scope>
 
 <style>
   .sui-menu-item {

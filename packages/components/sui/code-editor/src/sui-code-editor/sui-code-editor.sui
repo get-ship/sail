@@ -31,27 +31,29 @@
   themed in sui-code-editor.theme.ts — the FFI library's styling system.
   [hidden] comes from the framework contracts sheet.
 -->
-<component>{
+<scope>
   props: {
-    value: '',
-    language: '',
-    placeholder: '',
-    readonly: false,
-    'line-numbers': true,
-    size: variant({
+    value = ''
+    language = ''
+    placeholder = ''
+    readonly = false
+    'line-numbers' = true
+    tone: 'default' | 'info' | 'success' | 'warning' | 'destructive' = 'default'
+    theme: 'auto' | 'light' | 'dark' = 'auto'
+    'wasm-url' = '/sui_compiler_bg.wasm'
+  }
+  variants: {
+    size: {
       md: 'text:sm leading:normal-plus',
       sm: 'text:xs leading:normal',
       lg: 'text:base leading:loose',
-    }),
-    chrome: variant({
+    }
+    chrome: {
       card: 'border:border bg:surface-1 radius:lg shadow:xs',
       flush: '',
-    }),
-    tone: 'default' | 'info' | 'success' | 'warning' | 'destructive',
-    theme: 'auto' | 'light' | 'dark',
-    'wasm-url': '/sui_compiler_bg.wasm',
-  },
-}</component>
+    }
+  }
+</scope>
 
 
 <controller>

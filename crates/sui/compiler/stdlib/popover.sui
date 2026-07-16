@@ -9,7 +9,11 @@
     <popover id="p1" placement="bottom-end">…</popover>
 -->
 
-<component>{ props: { placement: string } }</component>
+<scope>
+  props: {
+    placement = ''
+  }
+</scope>
 
 <style>
   .sui-popover {

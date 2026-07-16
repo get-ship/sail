@@ -1,4 +1,11 @@
-<component>{ props: { tone: 'default' | 'primary', disabled: false, loading: false, label: string } }</component>
+<scope>
+  props: {
+    tone: 'default' | 'primary' = 'default'
+    disabled = false
+    loading = false
+    label = ''
+  }
+</scope>
 <button
   data-test="root"
   disabled={disabled() || loading()}

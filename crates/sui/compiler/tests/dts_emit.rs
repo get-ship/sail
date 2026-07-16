@@ -3,7 +3,6 @@
 //! Each test compiles a small `.sui` snippet with `emit_dts: true` and
 //! asserts the resulting d.ts contains the expected type lines.
 
-use std::fs;
 use sui_compiler::{compile, CompileMode, CompileOpts};
 
 fn compile_dts(source: &str) -> String {
@@ -49,7 +48,7 @@ fn compile_component_dts(source: &str) -> String {
         setup_url: None,
         mode: CompileMode::Component,
         source_path: None,
-        component_meta: Some(ComponentMeta { name: "test-el".into(), shadow: false }),
+        component_meta: Some(ComponentMeta { name: "test-el".into() }),
         emit_dts: true,
         emit_component_imports: false,
     
@@ -77,7 +76,11 @@ fn data_once_emits_signal_unknown() {
 #[test]
 fn prop_union_emits_union_type() {
     let dts = compile_component_dts(
-        r#"<component>{ props: { tone: 'primary' | 'neutral' } }</component><span>x</span>"#,
+        r#"<scope>
+  props: {
+    tone: 'primary' | 'neutral' = 'primary'
+  }
+</scope><span>x</span>"#,
     );
     assert!(
         dts.contains("tone: Signal<'primary' | 'neutral'>"),
@@ -88,7 +91,11 @@ fn prop_union_emits_union_type() {
 #[test]
 fn prop_bool_emits_boolean() {
     let dts = compile_component_dts(
-        r#"<component>{ props: { loading: false } }</component><span>x</span>"#,
+        r#"<scope>
+  props: {
+    loading = false
+  }
+</scope><span>x</span>"#,
     );
     assert!(dts.contains("loading: Signal<boolean>"), "got: {dts}");
 }

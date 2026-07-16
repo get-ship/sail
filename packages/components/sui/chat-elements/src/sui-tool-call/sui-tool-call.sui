@@ -25,13 +25,13 @@
   ─────────────────────────────────────────────────────────────────────
 -->
 
-<component>{
+<scope>
   props: {
-    name: '',
-    status: 'running' | 'ok' | 'error',
-    open: false,
-  },
-}</component>
+    name = ''
+    status: 'running' | 'ok' | 'error' = 'running'
+    open = false
+  }
+</scope>
 
 <div
   tone={status() === 'ok' ? 'success' : status() === 'error' ? 'destructive' : 'info'}

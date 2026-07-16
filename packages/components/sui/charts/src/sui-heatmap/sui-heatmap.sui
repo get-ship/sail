@@ -32,18 +32,18 @@
   so it shrink-wraps its cells and sits inline with the copy around it.
 -->
 
-<component>{
+<scope>
   props: {
-    data: '',
-    rows: '',
-    cols: '',
-    tone: 'primary' | 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
-    'cell-size': 20,
-    gap: 3,
-    label: 'heatmap',
-    loading: false,
-  },
-}</component>
+    data = ''
+    rows = ''
+    cols = ''
+    tone: 'primary' | 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    'cell-size' = 20
+    gap = 3
+    label = 'heatmap'
+    loading = false
+  }
+</scope>
 
 <controller>
 import { controller, derived } from '@ship/sui-runtime'

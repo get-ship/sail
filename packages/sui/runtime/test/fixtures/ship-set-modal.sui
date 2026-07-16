@@ -1,8 +1,8 @@
-<component>{
+<scope>
   props: {
-    open: false,
-  },
-}</component>
+    open = false
+  }
+</scope>
 <div attr:data-open={open() ? 'true' : 'false'}>
   <div data-testid="backdrop" on:click={() => open.set(false)}></div>
   <div>

@@ -18,13 +18,13 @@
   object/json attribute props (Cardinal: `<prop type=json>` does not exist).
 -->
 
-<component>{
+<scope>
   props: {
-    mode: 'source' | 'tag',
-    'component-name': '',
-    'viewport-width': 'full' | 'desktop' | 'tablet' | 'mobile',
-  },
-}</component>
+    mode: 'source' | 'tag' = 'source'
+    'component-name' = ''
+    'viewport-width': 'full' | 'desktop' | 'tablet' | 'mobile' = 'full'
+  }
+</scope>
 
 
 

@@ -26,14 +26,14 @@
   ────────────────────────────────────────────────────────────────────────
 -->
 
-<component>{
+<scope>
   props: {
-    accept: '',
-    multiple: false,
-    'max-size': 10485760,
-    disabled: false,
-  },
-}</component>
+    accept = ''
+    multiple = false
+    'max-size' = 10485760
+    disabled = false
+  }
+</scope>
 <controller>
 import { controller, derived, ref, signal } from '@ship/sui-runtime'
 import type { ViewScope } from '@ship/sui-runtime'

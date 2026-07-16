@@ -50,15 +50,15 @@
         highlight and aria-disabled on disabled rows.
 -->
 
-<component>{
+<scope>
   props: {
-    open: false,
-    placeholder: 'Type a command or search…',
-    label: 'Command palette',
-    'empty-label': 'No results found.',
-    size: 'md' | 'sm' | 'lg',
-  },
-}</component>
+    open = false
+    placeholder = 'Type a command or search…'
+    label = 'Command palette'
+    'empty-label' = 'No results found.'
+    size: 'md' | 'sm' | 'lg' = 'md'
+  }
+</scope>
 <controller>
 // <sui-cmdk> controller — generic command palette.
 //

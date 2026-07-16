@@ -26,18 +26,18 @@
   sits under it, one 6px step away.
 -->
 
-<component>{
+<scope>
   props: {
-    series: '',
-    labels: '',
-    width: 300,
-    height: 200,
-    points: false,
-    grid: false,
-    label: 'line chart',
-    loading: false,
-  },
-}</component>
+    series = ''
+    labels = ''
+    width = 300
+    height = 200
+    points = false
+    grid = false
+    label = 'line chart'
+    loading = false
+  }
+</scope>
 
 <controller>
 import { controller, derived, ref } from '@ship/sui-runtime'

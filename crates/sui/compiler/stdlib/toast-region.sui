@@ -11,7 +11,11 @@
   position: top-start / top-end / bottom-start / bottom-end (default).
 -->
 
-<component>{ props: { position: 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end' } }</component>
+<scope>
+  props: {
+    position: 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end' = 'top-start'
+  }
+</scope>
 
 <style>
   .sui-toast-region {

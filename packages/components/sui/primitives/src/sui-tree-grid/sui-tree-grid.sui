@@ -49,18 +49,18 @@
   attributes — runtime geometry is the seam the actions own.
 -->
 
-<component>{
+<scope>
   props: {
-    nodes: '',
-    columns: '',
-    label: '',
-    selectable: 'none' | 'single' | 'multi',
-    'expand-on-select': false,
-    size: 'md' | 'sm' | 'lg',
-    loading: false,
-    error: '',
-  },
-}</component>
+    nodes = ''
+    columns = ''
+    label = ''
+    selectable: 'none' | 'single' | 'multi' = 'none'
+    'expand-on-select' = false
+    size: 'md' | 'sm' | 'lg' = 'md'
+    loading = false
+    error = ''
+  }
+</scope>
 
 
 

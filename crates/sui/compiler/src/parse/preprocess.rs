@@ -11,8 +11,6 @@
 //!  4. Lower the layout keywords (`<column>`/`<row>`/…) → `<div>` + atomic classes.
 //! Steps 3–4 emit deduped CSS that `preprocess` injects as one `<style>`.
 
-use crate::diagnostics::Span;
-use crate::ir::directive::{PropDecl, PropKind};
 
 const VOID_TAGS: &[&str] = &[
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta",
@@ -1227,7 +1225,7 @@ fn top_level_colon(s: &str) -> Option<usize> {
 }
 
 /// Strip a single layer of matching quotes.
-fn unquote(s: &str) -> String {
+pub(crate) fn unquote(s: &str) -> String {
     let s = s.trim();
     let b = s.as_bytes();
     if b.len() >= 2 && (b[0] == b'\'' || b[0] == b'"') && b[b.len() - 1] == b[0] {
@@ -1286,33 +1284,6 @@ fn strip_leading_doc(entry: &str) -> (Option<String>, &str) {
     (doc, rest)
 }
 
-/// Object fields WITH their JSDoc, when the caller wants the descriptions (props →
-/// CEM → editor autocomplete, the component showcase, agent tooling).
-pub(crate) fn parse_object_fields_with_docs(obj: &str) -> Vec<(String, String, Option<String>)> {
-    let inner = obj
-        .trim()
-        .trim_start_matches('{')
-        .trim_end_matches('}')
-        .trim();
-    split_top_level(inner, ',')
-        .into_iter()
-        .filter_map(|entry| {
-            let (doc, entry) = strip_leading_doc(entry.trim());
-            let entry = entry.trim();
-            if entry.is_empty() {
-                return None;
-            }
-            match top_level_colon(entry) {
-                Some(idx) => Some((
-                    unquote(entry[..idx].trim()),
-                    entry[idx + 1..].trim().to_string(),
-                    doc,
-                )),
-                None => Some((unquote(entry), String::new(), doc)),
-            }
-        })
-        .collect()
-}
 
 pub(crate) fn parse_object_fields(obj: &str) -> Vec<(String, String)> {
     let inner = obj
@@ -1622,19 +1593,10 @@ fn derive_host_display(source: &str) -> String {
     format!(":host {{ display: {display}; }}\n")
 }
 
-/// The tag name of the first real template element — skipping HTML comments and
-/// the non-visual blocks the compiler generates/consumes (`<prop>`, `<variants>`,
-/// `<theme>`, `<host>`, `<style>`, `<component>`, `<controller>`).
+/// The tag name of the first real template element — skipping HTML comments
+/// and the non-visual blocks (`<scope>`, `<controller>`, `<style>`).
 fn first_template_tag(source: &str) -> Option<String> {
-    const SKIP: &[&str] = &[
-        "prop",
-        "variants",
-        "theme",
-        "host",
-        "style",
-        "component",
-        "controller",
-    ];
+    const SKIP: &[&str] = &["scope", "controller", "style"];
     let bytes = source.as_bytes();
     let mut i = 0;
     while i < bytes.len() {
@@ -1675,201 +1637,7 @@ fn first_template_tag(source: &str) -> Option<String> {
 }
 
 /// Return the raw body of the `<component>` block (the `{ props, variants, meta }`
-/// object text), or `None` if there is no block. Used by the tsgo type-check.
-pub(crate) fn extract_component_body(source: &str) -> Option<String> {
-    let start = source.find("<component")?;
-    let open_rel = source[start..].find('>')?;
-    let body_start = start + open_rel + 1;
-    let rel = source[body_start..].find("</component>")?;
-    Some(source[body_start..body_start + rel].trim().to_string())
-}
-
-/// Whether the `<component>` block opts INTO shadow DOM (`shadow: true`).
-///
-/// Light DOM is the default for every layer (invariant 9). Shadow DOM is a
-/// per-component containment FEATURE declared in the component's own manifest —
-/// used only for wrapping foreign content (tiptap-class editors, FFI). The
-/// SOURCE is authoritative for every compile path (bundler, napi, CLI); no
-/// per-invocation flag decides it.
-pub(crate) fn declares_shadow_dom(source: &str) -> bool {
-    extract_component_body(source)
-        .map(|body| {
-            parse_object_fields(&body)
-                .iter()
-                .any(|(k, v)| k == "shadow" && v.trim() == "true")
-        })
-        .unwrap_or(false)
-}
-
-/// Parse the `form: { value: '…', disabled: '…' }` object into the two prop
-/// names. Unknown keys are ignored (tsgo owns shape validation of the block).
-pub(crate) fn parse_form_field(obj: &str) -> (Option<String>, Option<String>) {
-    let mut value = None;
-    let mut disabled = None;
-    let inner = obj.trim().trim_start_matches('{').trim_end_matches('}');
-    for (k, v) in parse_object_fields(inner) {
-        match k.as_str() {
-            "value" => value = Some(unquote(v.trim())),
-            "disabled" => disabled = Some(unquote(v.trim())),
-            _ => {}
-        }
-    }
-    (value, disabled)
-}
-
-/// Build `PropDecl`s directly from the `<component>` block's `props` object.
-/// `<prop>` was our own tag; the component block replaces it with props-as-ts,
-/// so props lower straight to `PropDecl` — no `<prop>` tag, no desugar, no IR.
-pub(crate) fn component_props_to_decls(
-    obj: &str,
-    form_value: Option<&str>,
-    form_disabled: Option<&str>,
-) -> Vec<PropDecl> {
-    let mut out = Vec::new();
-    // WITH_DOCS: a `/** … */` above a prop is its DESCRIPTION — it reaches the CEM,
-    // which is what feeds editor autocomplete, the component showcase's prop tables,
-    // and agent tooling. (It also used to be silently parsed as part of the prop's
-    // NAME; see `strip_leading_doc`.)
-    for (name, val, doc) in parse_object_fields_with_docs(obj) {
-        let n = name.as_str();
-        let val = val.trim();
-        // Variant prop: reserved `variant` key with an object, or any key via
-        // `variant({…})`. The prop is a union of the map's keys (first =
-        // default), reflected. Styles emit separately (variant CSS).
-        if let Some(map) = variant_map(n, val) {
-            let keys: Vec<String> = parse_object_fields(
-                map.trim().trim_start_matches('{').trim_end_matches('}'),
-            )
-            .into_iter()
-            .map(|(k, _)| k)
-            .collect();
-            out.push(PropDecl {
-                name: n.to_string(),
-                kind: PropKind::Union(keys.clone()),
-                default: keys.first().cloned(),
-                reflect: true,
-                bindable: false,
-                form_value: form_value == Some(n),
-                form_disabled: form_disabled == Some(n),
-                description: doc.clone(),
-                span: Span::new(0, 0),
-            });
-            continue;
-        }
-        // Object / array type (`config: { … }`, `columns: Column[]`) — caught
-        // before the union/`|` logic so a `{ a: 'x' | 'y' }` isn't misread as a
-        // union. Its type is authored TypeScript, preserved verbatim; a plain
-        // reactive property, never an attribute.
-        if val.starts_with('{') || val.ends_with("[]") {
-            out.push(PropDecl {
-                name: n.to_string(),
-                kind: PropKind::Identity(val.to_string()),
-                default: None,
-                reflect: false,
-                bindable: false,
-                form_value: form_value == Some(n),
-                form_disabled: form_disabled == Some(n),
-                description: doc.clone(),
-                span: Span::new(0, 0),
-            });
-            continue;
-        }
-        let (kind, default, reflect): (PropKind, Option<String>, bool) =
-            if (n == "tone" || n == "size") && !val.contains('|') {
-                let (vocab, builtin) = if n == "tone" {
-                    ("default|primary|info|success|warning|destructive|accent|muted", "default")
-                } else {
-                    ("xs|sm|md|lg", "md")
-                };
-                let vals = vocab.split('|').map(str::to_string).collect();
-                (PropKind::Union(vals), Some(builtin.to_string()), true)
-            } else if n == "tone" || n == "size" {
-                let builtin = if n == "tone" { "default" } else { "md" };
-                let vals: Vec<String> =
-                    val.split('|').map(|s| unquote(s.trim())).filter(|s| !s.is_empty()).collect();
-                let default = if vals.iter().any(|v| v == builtin) {
-                    builtin.to_string()
-                } else {
-                    vals.first().cloned().unwrap_or_default()
-                };
-                (PropKind::Union(vals), Some(default), true)
-            } else if val.contains('|') {
-                let vals: Vec<String> =
-                    val.split('|').map(|s| unquote(s.trim())).filter(|s| !s.is_empty()).collect();
-                let default = vals.first().cloned().unwrap_or_default();
-                (PropKind::Union(vals), Some(default), true)
-            } else if val.starts_with('[') {
-                let inner = val.trim_start_matches('[').trim_end_matches(']');
-                let vals: Vec<String> =
-                    split_top_level(inner, ',').into_iter().map(|s| unquote(&s)).collect();
-                let default = vals.first().cloned().unwrap_or_default();
-                (PropKind::Union(vals), Some(default), true)
-            } else if val == "boolean" || val == "bool" {
-                (PropKind::Bool, Some("false".to_string()), true)
-            } else if val == "true" || val == "false" {
-                (PropKind::Bool, Some(val.to_string()), true)
-            } else if val == "number" {
-                (PropKind::Number, Some("0".to_string()), false)
-            } else if val.parse::<f64>().is_ok() {
-                (PropKind::Number, Some(val.to_string()), false)
-            } else if (val.starts_with('\'') && val.ends_with('\'') && val.len() >= 2)
-                || (val.starts_with('"') && val.ends_with('"') && val.len() >= 2)
-            {
-                (PropKind::String, Some(unquote(val)), false)
-            } else if val == "string" || val == "String" {
-                (PropKind::String, Some(String::new()), false)
-            } else {
-                // Any other RHS is authored TypeScript — a custom-typed reactive
-                // property, preserved verbatim. Not attribute-backed, no default.
-                (PropKind::Identity(val.to_string()), None, false)
-            };
-        out.push(PropDecl {
-            name: n.to_string(),
-            kind,
-            default,
-            reflect,
-            bindable: false,
-            form_value: form_value == Some(n),
-            form_disabled: form_disabled == Some(n),
-            description: doc.clone(),
-            span: Span::new(0, 0),
-        });
-    }
-    out
-}
-
-/// Recognise a variant prop's map. The reserved `variant` key with an object
-/// value IS the map (no wrapper); any key wrapped in `variant({…})` is an
-/// explicit variant axis. Returns the map body (`{ solid: 'sx', … }`).
-fn variant_map<'a>(name: &str, val: &'a str) -> Option<&'a str> {
-    if let Some(inner) = val.strip_prefix("variant(") {
-        Some(inner.strip_suffix(')').unwrap_or(inner).trim())
-    } else if name == "variant" && val.starts_with('{') {
-        Some(val)
-    } else {
-        None
-    }
-}
-
-/// Emit variant CSS for a component: collect the `variant` props from the `props`
-/// object plus a sibling `compound` list into the CVA-shaped object the CSS core
 /// consumes, then lower it. No `<variants>` block, no desugar.
-pub(crate) fn component_variants_to_css(props_obj: &str, compound: Option<&str>) -> String {
-    let mut parts: Vec<String> = Vec::new();
-    for (name, val) in parse_object_fields(props_obj) {
-        if let Some(map) = variant_map(name.as_str(), val.trim()) {
-            parts.push(format!("{name}: {map}"));
-        }
-    }
-    if let Some(c) = compound {
-        parts.push(format!("compound: {}", c.trim()));
-    }
-    if parts.is_empty() {
-        return String::new();
-    }
-    variants_object_to_css(&format!("{{ {} }}", parts.join(", ")))
-}
-
 /// Emit CSS from `(selector-dsl, sx)` variant pairs — the one variant→CSS core.
 fn variant_pairs_to_css(pairs: &[(String, String)]) -> String {
     let mut css = String::new();
@@ -2346,6 +2114,7 @@ mod tests {
         );
     }
 
+    #[test]
     fn quoted_gt_inside_attr_does_not_break_class_merge() {
         let out = preprocess(r#"<span title="a > b" class="x" sx="p-4">y</span>"#);
         assert!(out.contains(r#"class="x sx-p4""#), "got:\n{out}");
@@ -2555,99 +2324,15 @@ mod tests {
     }
 
     #[test]
-    fn props_default_literals_are_honored() {
-        let decls = component_props_to_decls("{ label: 'Loading', centered: false, count: 3 }", None, None);
-        let get = |n: &str| decls.iter().find(|p| p.name == n).unwrap();
-        assert_eq!(get("label").kind, PropKind::String);
-        assert_eq!(get("label").default.as_deref(), Some("Loading"));
-        assert_eq!(get("centered").kind, PropKind::Bool);
-        assert_eq!(get("centered").default.as_deref(), Some("false"));
-        assert!(get("centered").reflect);
-        assert_eq!(get("count").kind, PropKind::Number);
-        assert_eq!(get("count").default.as_deref(), Some("3"));
-    }
-
-    #[test]
-    fn object_array_and_custom_typed_props_are_identity_props() {
-        // Object/array/custom-typed props are plain reactive properties: the
-        // authored TS type is preserved verbatim, nothing reflects to an
-        // attribute, nothing is mistyped as a stringly prop. A recognized
-        // primitive (`label: string`) is unaffected.
-        let props = "{ label: string, config: { a: 'x' | 'y' }, columns: Column[], data: DataPoint }";
-        let decls = component_props_to_decls(props, None, None);
-        let get = |n: &str| decls.iter().find(|p| p.name == n).unwrap();
-        // `{ a: 'x' | 'y' }` keeps its `|` — it's an object type, not a union.
-        assert_eq!(get("config").kind, PropKind::Identity("{ a: 'x' | 'y' }".into()));
-        assert_eq!(get("columns").kind, PropKind::Identity("Column[]".into()));
-        // A bare custom type is preserved, not stringly-typed as before.
-        assert_eq!(get("data").kind, PropKind::Identity("DataPoint".into()));
-        for n in ["config", "columns", "data"] {
-            assert!(!get(n).reflect, "{n} must not reflect");
-            assert!(get(n).default.is_none(), "{n} has no scalar default");
-        }
-        assert_eq!(get("label").kind, PropKind::String);
-    }
-
-    #[test]
-    fn shadow_is_opt_in_light_is_the_default() {
-        // Light DOM is the default (invariant 9): no declaration ⇒ not shadow.
-        assert!(!declares_shadow_dom("<component>{ props: { tone: union } }</component>"));
-        // `shadow: true` is the per-component opt-in (foreign-content wrapping).
-        assert!(declares_shadow_dom("<component>{ shadow: true, props: {} }</component>"));
-    }
-
-    #[test]
-    fn unknown_component_field_is_rejected_generically() {
-        // Retired constructs (`light`, `variants`) and typos are rejected by a
-        // generic unknown-field error — the compiler names the valid set, not
-        // the old forms (no fossilization).
-        let err = crate::parse::parse(
-            "<component>{ light: true, props: {} }</component><div>x</div>",
-        )
-        .unwrap_err();
-        assert!(err.message.contains("unknown `<component>` field `light`"), "{}", err.message);
-        // The valid fields all parse cleanly.
-        assert!(crate::parse::parse("<component>{ props: {} }</component><div>x</div>").is_ok());
-        assert!(
-            crate::parse::parse("<component>{ shadow: true, props: {} }</component><div>x</div>")
-                .is_ok()
-        );
-    }
-
-    #[test]
-    fn component_form_field_flags_the_named_props() {
-        let decls = component_props_to_decls(
-            "{ checked: bool, disabled: bool, name: string }",
-            Some("checked"),
-            Some("disabled"),
-        );
-        let get = |n: &str| decls.iter().find(|p| p.name == n).unwrap();
-        assert_eq!(get("checked").kind, PropKind::Bool);
-        assert!(get("checked").form_value);
-        assert!(get("disabled").form_disabled);
-        assert!(!get("name").form_value && !get("name").form_disabled);
-    }
-
-    #[test]
-    fn component_form_field_before_props_also_flags() {
-        let decls = component_props_to_decls("{ value: string }", Some("value"), None);
-        assert!(decls.iter().find(|p| p.name == "value").unwrap().form_value);
-    }
-
-    #[test]
-    fn variant_prop_is_union_and_emits_css() {
-        // Variant values are sx strings in the new syntax (`bg-primary`,
-        // `border-primary`) — the variant table parses each value through
-        // the shared lowering so it lowers like any other sx.
-        let props = "{ variant: { solid: 'bg-primary', outline: 'border-primary' }, loading: false }";
-        let decls = component_props_to_decls(props, None, None);
-        let variant = decls.iter().find(|p| p.name == "variant").unwrap();
-        assert_eq!(variant.kind, PropKind::Union(vec!["solid".into(), "outline".into()]));
-        assert_eq!(variant.default.as_deref(), Some("solid"));
-        assert!(variant.reflect);
-        let css = component_variants_to_css(props, None);
-        assert!(css.contains("[variant='solid']"), "got: {css}");
-        assert!(css.contains("[variant='outline']"), "got: {css}");
+    fn retired_component_tag_is_not_a_known_element() {
+        // `<component>` was replaced by `<scope>`. A stray one parses as a
+        // plain bare tag and dies in the reserved-names check like any other
+        // unknown element — no bespoke error, no fossilization. (The tag is
+        // concatenated so fixture codemods can never mistake it for a block.)
+        let src = format!("<{t}>x</{t}><div>x</div>", t = "compo\u{6e}ent");
+        let program = crate::parse::parse(&src).expect("parses as a template element");
+        let err = crate::check::reserved_names::check(&program).unwrap_err();
+        assert!(err.message.to_lowercase().contains("element"), "{}", err.message);
     }
 
     #[test]

@@ -11,11 +11,11 @@
   as the twin.
 -->
 
-<component>{
+<scope>
   props: {
-    invalid: false,
-  },
-}</component>
+    invalid = false
+  }
+</scope>
 
 <style>
   .sui-field {

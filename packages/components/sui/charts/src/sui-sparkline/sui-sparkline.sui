@@ -26,17 +26,17 @@
   the round stroke caps at the extremes from clipping on the viewBox edge.
 -->
 
-<component>{
+<scope>
   props: {
-    data: '',
-    tone: 'primary' | 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
-    width: 80,
-    height: 20,
-    fill: false,
-    label: 'sparkline',
-    loading: false,
-  },
-}</component>
+    data = ''
+    tone: 'primary' | 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    width = 80
+    height = 20
+    fill = false
+    label = 'sparkline'
+    loading = false
+  }
+</scope>
 
 <controller>
 import { controller, derived, ref } from '@ship/sui-runtime'

@@ -26,7 +26,7 @@ use sui_compiler::{compile as native_compile, CompileMode, CompileOpts, Componen
 
 /// JS-facing opts — identical field set + camelCase mapping to
 /// `wasm.rs::WasmOpts`. The harness passes
-/// `JSON.stringify({ mode, componentName, setupUrl })`; `shadow`
+/// `JSON.stringify({ mode, componentName, setupUrl })`
 /// default and round-trip the same way the playground's do.
 #[derive(Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -34,12 +34,10 @@ struct NapiOpts {
     /// "view" | "component" | "auto" (default).
     mode: Option<String>,
     /// Component name. When set, forces component mode AND seeds
-    /// `ComponentMeta { name, shadow }`.
+    /// `ComponentMeta { name }`.
     component_name: Option<String>,
     /// Shadow flag for component mode. Defaults to false — light DOM, same
     /// default as the playground.
-    #[serde(default)]
-    shadow: bool,
     /// Setup URL relative to the emitted JS. `None` => no `import setup …`.
     setup_url: Option<String>,
     /// On-disk path of the `.sui` source. When set, locates the paired
@@ -112,8 +110,7 @@ fn compile_to_result(source: &str, opts_json: &str) -> Result<NapiResult, String
 
     let component_meta = parsed.component_name.as_ref().map(|name| ComponentMeta {
         name: name.clone(),
-        shadow: parsed.shadow,
-    });
+            });
 
     // Language policy comes from the source's own sui.config.json walk-up —
     // this seam enforces exactly what deck and the CLI enforce.

@@ -17,11 +17,11 @@
   <div> — the sanctioned, purity-lint-clean path for reactive innerHTML.
 -->
 
-<component>{
+<scope>
   props: {
-    value: '',
-  },
-}</component>
+    value = ''
+  }
+</scope>
 <controller>
 // <sui-mermaid> controller — render mermaid SOURCE TEXT to a themed SVG.
 //

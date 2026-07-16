@@ -74,10 +74,12 @@ export default controller({
 # there is no component library to add on top.
 npm install @ship/sui-runtime`,
 
-  component: `<!-- greeting.sui — a component is a <component> block + markup -->
-<component>{
-  props: { name: '' },
-}</component>
+  component: `<!-- greeting.sui — a component is a <scope> block + markup -->
+<scope>
+  props: {
+    name = ''
+  }
+</scope>
 
 <p>Hello, {name()}.</p>`,
 

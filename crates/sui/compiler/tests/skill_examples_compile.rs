@@ -56,7 +56,7 @@ fn sui_examples(md: &str) -> Vec<String> {
     for line in md.lines() {
         if line.trim_start().starts_with("```") {
             if in_fence {
-                let looks_like_sui = buf.contains("<component>")
+                let looks_like_sui = buf.contains("<scope>")
                     || buf.contains("<controller>")
                     || buf.contains("motion:")
                     || buf.contains("use:");

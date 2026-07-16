@@ -1,5 +1,5 @@
 //! ELEMENT MODE — the L1 compile path. One authoring technology per layer:
-//! element sources are normal `.sui` (a `<component>` block, a template, and a
+//! element sources are normal `.sui` (a `<scope>` block, a template, and a
 //! `<style>` skin); the mode changes the outputs and enforces the seam test.
 //!
 //! Both retired idioms this file used to exercise are gone: the `variants:` field
@@ -10,12 +10,12 @@
 use sui_compiler::compile_element;
 
 const SPINNER: &str = r#"
-<component>{
+<scope>
   props: {
-    tone: 'default' | 'primary' | 'destructive',
-    label: 'Loading',
-  },
-}</component>
+    tone: 'default' | 'primary' | 'destructive' = 'default'
+    label = 'Loading'
+  }
+</scope>
 
 <style>
   .sui-spinner[tone='primary']{color:var(--primary);}

@@ -67,7 +67,6 @@ pub fn write_pack_cem(pack_root: &Path) -> Result<Option<PathBuf>> {
             source_path: Some(sui_file.to_path_buf()),
             component_meta: Some(sui_compiler::ComponentMeta {
                 name: stem.clone(),
-                shadow: true,
             }),
             emit_dts: false,
             emit_component_imports: false,

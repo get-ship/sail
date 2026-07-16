@@ -11,7 +11,8 @@
     </breadcrumb>
 -->
 
-<component>{ props: {} }</component>
+<scope>
+</scope>
 
 <style>
   .sui-breadcrumb ol {

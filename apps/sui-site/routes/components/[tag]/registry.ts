@@ -3,7 +3,7 @@
 // blurb, variants, props, usage }. Props tables are GENERATED from the
 // compiler's prop registry (see genProps below); regen with
 // `cargo run -p sui-compiler -- prop-registry` after touching a stdlib
-// <component>{ props } declaration. The usage strings live in
+// <scope> props declaration. The usage strings live in
 // ./snippets.ts so the site-wide snippet guard compiles every one
 // of them.
 import { PROP_REGISTRY } from '../../../src/prop-registry.gen'
@@ -35,7 +35,7 @@ export interface DetailEntry {
 const TONES = 'default · primary · info · success · warning · destructive · accent · muted'
 
 // The props table is GENERATED: names, types and defaults come from the
-// compiler's prop registry (the same <component>{ props } declarations the
+// compiler's prop registry (the same <scope> props declarations the
 // build validates attributes against), so this page can never drift from the
 // stdlib. The curated rows below serve two narrower jobs:
 //   * a hand description for a generated prop the stdlib hasn't documented

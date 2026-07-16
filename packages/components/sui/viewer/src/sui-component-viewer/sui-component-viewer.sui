@@ -16,27 +16,27 @@
   onto every slotted element and emits sui-variant-change.
 -->
 
-<component>{
+<scope>
   props: {
     /** Component name — the heading. */
-    name: '',
+    name = ''
     /** Short blurb under the heading. */
-    blurb: '',
+    blurb = ''
     /** Pack label chip (e.g. "L1 · language element"). */
-    pack: '',
+    pack = ''
     /** Which attribute the variant chips drive (empty = no chips). */
-    'variant-attr': '',
+    'variant-attr' = ''
     /** Variant values. */
-    variants: string[],
+    variants: string[]
     /** Prop rows — the generated registry's shape. (`props` is the runtime's
         own context key, so the rows land on `rows`.) */
-    rows: PropRow[],
+    rows: PropRow[]
     /** A complete, compiling usage program. */
-    usage: '',
+    usage = ''
     /** Hide the a11y assurance chip (fx actions and the like). */
-    'no-a11y-chip': false,
-  },
-}</component>
+    'no-a11y-chip' = false
+  }
+</scope>
 
 <controller>
 import { controller, derived, effect, signal } from '@ship/sui-runtime'

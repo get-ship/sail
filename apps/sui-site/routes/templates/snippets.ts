@@ -1,9 +1,11 @@
 // Snippets for the templates page. Every SUI sample is compiled by the build.
 export const code = {
   anatomy: `<!-- one file, three parts. -->
-<component>{
-  props: { name: '' },        /* what comes IN (attributes/props)      */
-}</component>
+<scope>
+  props: {
+    name = ''                 /* what comes IN (attributes/props)      */
+  }
+</scope>
 
 <controller>
 import { controller, signal } from '@ship/sui-runtime'

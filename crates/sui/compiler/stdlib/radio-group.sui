@@ -9,17 +9,17 @@
   twin, rebuilt on native radios.
 -->
 
-<component>{
+<scope>
   props: {
-    value: '',
-    disabled: false,
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
-    size: 'sm' | 'md' | 'lg',
-    name: '',
-    label: '',
-    required: false,
-  },
-}</component>
+    value = ''
+    disabled = false
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    size: 'sm' | 'md' | 'lg' = 'md'
+    name = ''
+    label = ''
+    required = false
+  }
+</scope>
 
 <style>
   .sui-radio-group {

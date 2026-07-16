@@ -40,16 +40,16 @@
   host); the paths read them with a token fallback.
 -->
 
-<component>{
+<scope>
   props: {
-    nodes: '',
-    edges: '',
-    width: 1000,
-    height: 600,
-    layout: 'positioned' | 'radial',
-    'selected-id': '',
-  },
-}</component>
+    nodes = ''
+    edges = ''
+    width = 1000
+    height = 600
+    layout: 'positioned' | 'radial' = 'positioned'
+    'selected-id' = ''
+  }
+</scope>
 
 <controller>
 import { controller, signal, derived, bindHtml } from '@ship/sui-runtime'

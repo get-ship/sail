@@ -22,7 +22,6 @@ pub(super) fn emit_setup_body(
     // This is the sole view/component distinction now that `CompileMode::View`
     // is gone — keyed on the tag, not a mode flag.
     let is_component = opts.component_meta.is_some();
-    let is_shadow = opts.component_meta.as_ref().map(|m| m.shadow).unwrap_or(false);
     // A source that DECLARES `<client name="ship" />` resolves `ship` from
     // `ctx.clients.ship` (falling back to the `ctx.ship` alias); undeclared
     // `ship` stays the ambient ctx default.
@@ -94,9 +93,6 @@ pub(super) fn emit_setup_body(
     let mut mount_w = Writer::new();
     mount_w.line("const __cleanups = [];");
     mount_w.line("const __root = container.shadowRoot ?? container;");
-    if is_shadow {
-        mount_w.line("adoptSuiSheets(__root);");
-    }
     // Pages install their lifted top-level `<style>` into the container.
     // Registered components install styles via the custom-element adapter
     // (scoped by `data-component` / the shadow root), so the module skips it.
@@ -111,7 +107,7 @@ pub(super) fn emit_setup_body(
         &program.template,
         "__root",
         "__cleanups",
-        is_component && !is_shadow,
+        is_component,
     );
     mount_w.line("return () => { for (const c of __cleanups) try { c(); } catch (e) {} };");
 

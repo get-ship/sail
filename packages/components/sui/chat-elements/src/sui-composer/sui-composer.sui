@@ -28,13 +28,13 @@
   ─────────────────────────────────────────────────────────────────────
 -->
 
-<component>{
+<scope>
   props: {
-    placeholder: '',
-    disabled: false,
-    multiline: false,
-  },
-}</component>
+    placeholder = ''
+    disabled = false
+    multiline = false
+  }
+</scope>
 
 
 <controller>

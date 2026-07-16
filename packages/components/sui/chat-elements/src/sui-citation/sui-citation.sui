@@ -18,12 +18,12 @@
   ─────────────────────────────────────────────────────────────────────
 -->
 
-<component>{
+<scope>
   props: {
-    source: '',
-    index: 0,
-  },
-}</component>
+    source = ''
+    index = 0
+  }
+</scope>
 
 
 <controller>

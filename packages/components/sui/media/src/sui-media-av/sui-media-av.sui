@@ -25,14 +25,14 @@
     sui-viewer-play/-pause/-ended — native transport
 -->
 
-<component>{
+<scope>
   props: {
-    kind: 'auto' | 'video' | 'audio',
-    autoplay: false,
-    controls: true,
-    waveform: false,
-  },
-}</component>
+    kind: 'auto' | 'video' | 'audio' = 'auto'
+    autoplay = false
+    controls = true
+    waveform = false
+  }
+</scope>
 <controller>
 // sui-media-av — the video/audio renderer controller (tier-2, glue-only).
 // A resolved source arrives via `prop:src` identity. The controller:

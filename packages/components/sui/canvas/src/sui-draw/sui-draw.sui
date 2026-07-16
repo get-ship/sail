@@ -32,17 +32,17 @@
     sui-draw-select { ids }            — selection changed.
 -->
 
-<component>{
+<scope>
   props: {
-    value: '',
-    readonly: false,
-    theme: 'light' | 'dark',
-    grid: 'none' | 'dots' | 'lines',
-    tool: 'select' | 'pan' | 'pen' | 'rect' | 'ellipse' | 'arrow' | 'line' | 'text',
-    sketchy: false,
-    label: '',
-  },
-}</component>
+    value = ''
+    readonly = false
+    theme: 'light' | 'dark' = 'light'
+    grid: 'none' | 'dots' | 'lines' = 'none'
+    tool: 'select' | 'pan' | 'pen' | 'rect' | 'ellipse' | 'arrow' | 'line' | 'text' = 'select'
+    sketchy = false
+    label = ''
+  }
+</scope>
 <controller>
 import { controller, signal, derived, effect, debounce } from '@ship/sui-runtime'
 import type { Scope } from './sui-draw.sui'

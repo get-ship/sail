@@ -35,11 +35,11 @@
   attribute.
 -->
 
-<component>{
+<scope>
   props: {
-    message: '',
-  },
-}</component>
+    message = ''
+  }
+</scope>
 
 <style>
   /* A healthy boundary is invisible to layout: `display: contents` on both the

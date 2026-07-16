@@ -7,7 +7,7 @@
 //! `<controller>`.
 //!
 //! Scans the raw source (pre-preprocess), skips HTML comments. `<controller>`,
-//! `<component>`, and the residual `<style>` are their own sanctioned blocks and
+//! `<scope>`, and the residual `<style>` are their own sanctioned blocks and
 //! are not touched here.
 use crate::report::{Finding, Severity};
 use std::path::Path;

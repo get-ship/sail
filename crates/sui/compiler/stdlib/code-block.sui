@@ -11,12 +11,12 @@
   The highlighter escapes all source and only ever emits its own `tok-*` spans.
 -->
 
-<component>{
+<scope>
   props: {
-    code: '',
-    lang: 'sui',
-  },
-}</component>
+    code = ''
+    lang = 'sui'
+  }
+</scope>
 
 <style>
   .sui-code-block { display: block; }

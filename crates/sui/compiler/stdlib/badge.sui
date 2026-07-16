@@ -17,14 +17,14 @@
   base :host is the muted default (a soft, low-key label).
 -->
 
-<component>{
+<scope>
   props: {
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
-    variant: 'solid' | 'soft' | 'outline',
-    size: 'sm' | 'md' | 'lg',
-    pill: false,
-  },
-}</component>
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    variant: 'solid' | 'soft' | 'outline' = 'solid'
+    size: 'sm' | 'md' | 'lg' = 'md'
+    pill = false
+  }
+</scope>
 
 <style>
   .sui-badge {

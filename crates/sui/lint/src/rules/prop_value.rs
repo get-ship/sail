@@ -1,5 +1,5 @@
 //! `sui-prop-value` — static enum attribute values on registry elements
-//! must be one of the values the element's stdlib `<component>{ props }`
+//! must be one of the values the element's stdlib `<scope>` props
 //! declaration allows.
 //!
 //! Catches the silent-typo failure mode: `tone="danger"` on a primitive
@@ -83,7 +83,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 suggest: Some(format!(
                     "Replace with one of: {}. If a real new variant is \
                      required, add it to the prop's union in the stdlib \
-                     `<component>` declaration, then regenerate the registry \
+                     `<scope>` declaration, then regenerate the registry \
                      with `cargo run -p sui-compiler -- prop-registry`.",
                     allowed.join(", ")
                 )),

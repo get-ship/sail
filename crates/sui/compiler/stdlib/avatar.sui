@@ -16,17 +16,17 @@
   the host/.root split collapses onto the single root span (light DOM).
 -->
 
-<component>{
+<scope>
   props: {
-    src: '',
-    'icon-slug': '',
-    name: '',
-    initials: '',
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted',
-    size: 'xs' | 'sm' | 'md' | 'lg' | 'xl',
-    shape: 'round' | 'square',
-  },
-}</component>
+    src = ''
+    'icon-slug' = ''
+    name = ''
+    initials = ''
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' = 'md'
+    shape: 'round' | 'square' = 'round'
+  }
+</scope>
 
 <style>
   .sui-avatar {

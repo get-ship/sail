@@ -25,11 +25,6 @@ pub fn emit_cem(program: &Program, opts: &CompileOpts) -> Value {
         .map(attr_entry)
         .collect();
     let members: Vec<Value> = program.props.iter().map(member_entry).collect();
-    let form_associated = program
-        .props
-        .iter()
-        .any(|p| p.form_value || p.form_disabled);
-
     let mut declaration = json!({
         "kind": "class",
         "name": class_name_for(tag),
@@ -39,10 +34,6 @@ pub fn emit_cem(program: &Program, opts: &CompileOpts) -> Value {
         "attributes": attributes,
         "members": members,
     });
-    if form_associated {
-        let obj = declaration.as_object_mut().unwrap();
-        obj.insert("formAssociated".into(), Value::Bool(true));
-    }
     // ANATOMY — the sui extension over standard CEM. Classes + slots are the
     // published styling contract (classes ARE the anatomy in the light-DOM
     // architecture; skins are written against them), `dom` records which side
@@ -54,7 +45,7 @@ pub fn emit_cem(program: &Program, opts: &CompileOpts) -> Value {
         obj.insert(
             "anatomy".into(),
             json!({
-                "dom": if meta.shadow { "shadow" } else { "light" },
+                "dom": "light",
                 "classes": classes,
                 "slots": slots,
             }),
@@ -158,12 +149,6 @@ fn attr_entry(p: &PropDecl) -> Value {
     }
     if let PropKind::Union(values) = &p.kind {
         e.as_object_mut().unwrap().insert("values".into(), json!(values));
-    }
-    if p.form_value {
-        e.as_object_mut().unwrap().insert("formValue".into(), Value::Bool(true));
-    }
-    if p.form_disabled {
-        e.as_object_mut().unwrap().insert("formDisabled".into(), Value::Bool(true));
     }
     e
 }

@@ -12,12 +12,12 @@
   projection lands.
 -->
 
-<component>{
+<scope>
   props: {
-    placement: 'top' | 'bottom' | 'left' | 'right',
-    content: '',
-  },
-}</component>
+    placement: 'top' | 'bottom' | 'left' | 'right' = 'top'
+    content = ''
+  }
+</scope>
 
 <style>
   .sui-tooltip {

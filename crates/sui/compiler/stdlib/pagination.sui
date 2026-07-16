@@ -11,12 +11,12 @@
     </pagination>
 -->
 
-<component>{
+<scope>
   props: {
-    value: string,
-    size: 'sm' | 'md' | 'lg',
-  },
-}</component>
+    value = ''
+    size: 'sm' | 'md' | 'lg' = 'md'
+  }
+</scope>
 
 <style>
   .sui-pagination {

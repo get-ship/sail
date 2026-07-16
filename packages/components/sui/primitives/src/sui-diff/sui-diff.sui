@@ -20,13 +20,13 @@
   break-word this component actually wants).
 -->
 
-<component>{
+<scope>
   props: {
-    from: '',
-    to: '',
-    value: '',
-  },
-}</component>
+    from = ''
+    to = ''
+    value = ''
+  }
+</scope>
 
 <controller>
 import { controller, derived } from '@ship/sui-runtime'
