@@ -32,8 +32,10 @@ fn read_asset(rel: &str) -> Option<String> {
 /// global). When a scaffold has no built artifact under `<root>/<source>/`,
 /// this serves the authored source at the same path — the built-or-source
 /// pattern view.rs uses.
-fn read_source_asset(root: &std::path::Path, rel: &str) -> Option<String> {
-    std::fs::read_to_string(root.join(rel)).ok()
+/// Binary-safe: assets include bundler-emitted woff2, which is not UTF-8 —
+/// a text read would 404 every font.
+fn read_source_asset(root: &std::path::Path, rel: &str) -> Option<Vec<u8>> {
+    std::fs::read(root.join(rel)).ok()
 }
 
 const SUI_RUNTIME_JS: &str = include_str!("../assets/sui-runtime.js");
@@ -199,7 +201,10 @@ pub fn serve_scaffold(
             mode,
         );
     };
+    // index.html IS text — decode the binary-safe read (a scaffold's html
+    // that isn't UTF-8 is honestly broken, not a font).
     let Some(html) = read_source_asset(&root, &format!("{}/index.html", scaffold.source))
+        .and_then(|b| String::from_utf8(b).ok())
     else {
         return DeckResponse::not_found(
             format!(
@@ -328,6 +333,7 @@ pub fn serve_scaffold_asset(
     let path = format!("{}/assets/{file}", scaffold.source);
     match read_source_asset(&root, &path) {
         Some(body) if file.ends_with(".css") => DeckResponse::css_view(body, mode),
+        Some(body) if file.ends_with(".woff2") => DeckResponse::font_asset(body, mode),
         Some(body) => DeckResponse::js_asset(body, mode),
         None => DeckResponse::not_found(
             format!("scaffold '{}' asset not found: {file}", scaffold.name),

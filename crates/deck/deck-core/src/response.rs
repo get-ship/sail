@@ -121,6 +121,12 @@ impl DeckResponse {
     pub fn css_view(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
         Self::new(200, "text/css; charset=utf-8", CachePolicy::View, mode, body)
     }
+    /// A binary font asset (the bundler-emitted hashed woff2). Immutable by
+    /// construction — the hash is in the filename — so it takes the Asset
+    /// cache policy.
+    pub fn font_asset(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
+        Self::new(200, "font/woff2", CachePolicy::Asset, mode, body)
+    }
     pub fn html_view(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
         // All HTML responses carry the deck-defined security header set. The
         // values live in `HTML_SECURITY_HEADERS` (top of file) — the single
