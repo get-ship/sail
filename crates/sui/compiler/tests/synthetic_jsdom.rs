@@ -123,13 +123,16 @@ describe('synthesized board — client mount + reactivity', () => {
     const dispose = mount(container)
 
     // {#if items().length > 0} → true → the list renders both {#for} rows.
-    expect(container.querySelectorAll('li').length).toBe(2)
+    // The canonical fixture authors <row>, which lowers to div.sui-row —
+    // the old <ul>/<li> markup died with the corpus codemod.
+    expect(container.querySelectorAll('.sui-row').length).toBe(2)
     expect(container.textContent).toContain('Alpha')
     expect(container.textContent).toContain('Bravo')
     // Nested component tag renders with its slotted label.
     expect(container.querySelector('demo-chip')).toBeTruthy()
-    // class:flagged={item.flagged} → exactly one flagged row.
-    expect(container.querySelectorAll('li.flagged').length).toBe(1)
+    // aria-pressed={item.flagged} → exactly one pressed row (false removes
+    // the attribute; true sets it).
+    expect(container.querySelectorAll('.sui-row[aria-pressed]').length).toBe(1)
 
     // on:click={() => add()} mutates the controller signal → the {#for}
     // re-renders with a third row. Proves live reactivity, not just paint.
@@ -137,14 +140,14 @@ describe('synthesized board — client mount + reactivity', () => {
     const addBtn = buttons.find((b) => b.textContent === 'add')
     expect(addBtn).toBeTruthy()
     addBtn!.click()
-    expect(container.querySelectorAll('li').length).toBe(3)
+    expect(container.querySelectorAll('.sui-row').length).toBe(3)
 
     // on:click={() => remove(item.id)} removes a row.
     const removeBtn = [...container.querySelectorAll('button')].find(
       (b) => b.textContent === 'remove',
     ) as HTMLButtonElement
     removeBtn.click()
-    expect(container.querySelectorAll('li').length).toBe(2)
+    expect(container.querySelectorAll('.sui-row').length).toBe(2)
 
     dispose()
   })
