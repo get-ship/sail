@@ -7,5 +7,5 @@ export default controller({
 </controller>
 
 <div>
-  <p>{scope.coun()}</p>
+  <p>{coun()}</p>
 </div>

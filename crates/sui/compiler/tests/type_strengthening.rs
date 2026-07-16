@@ -49,13 +49,22 @@ fn read(name: &str) -> (String, PathBuf) {
 }
 
 #[test]
-fn scope_dot_typo_rejected() {
+fn scope_member_typo_rejected() {
+    // Bare reads ARE the scope surface — `scope.` as a template namespace
+    // died with the ambient cleanup (zero corpus uses). A typo'd bare read
+    // must refuse AND teach: name the unknown identifier and list what the
+    // controller actually contributed.
     let (src, path) = read("scope-typo");
-    let err = compile(&src, paired_opts(path)).expect_err("scope.coun typo must fail");
-    assert!(err.message.contains("scope.coun"), "msg: {}", err.message);
+    let err = compile(&src, paired_opts(path)).expect_err("coun typo must fail");
+    assert!(err.message.contains("coun"), "msg: {}", err.message);
     assert!(
         err.message.contains("Available"),
         "should list available scope keys: {}",
+        err.message
+    );
+    assert!(
+        err.message.contains("count"),
+        "the teaching must name the real key: {}",
         err.message
     );
 }
