@@ -123,10 +123,6 @@ pub struct MotionProp {
     pub preset: String,
 }
 
-/// Which phase(s) a `transition:` directive applies to. `transition:`
-/// is both; `in:` is enter-only; `out:` is exit-only.
-
-
 #[derive(Debug, Clone)]
 pub enum Modifier {
     PreventDefault,

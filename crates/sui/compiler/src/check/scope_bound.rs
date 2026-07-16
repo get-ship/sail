@@ -52,10 +52,6 @@ const BUILTINS: &[&str] = &[
     // Runtime helpers (unwrap variants are imported by the compiled
     // module; templates may also reference them via `use:` results).
     "unwrap", "unwrapOr",
-    // Built-in transition factories — auto-imported when referenced by
-    // `transition:` / `in:` / `out:` directives, so resolving them
-    // without an explicit declaration is correct here.
-    "fade", "slide", "scale",
     // Built-in `use:` actions — auto-imported when referenced by a `use:`
     // directive (see `action_manifest::BUILTIN_ACTION_NAMES`), so `use:anchor`
     // &c resolve without an explicit controller import. This is the

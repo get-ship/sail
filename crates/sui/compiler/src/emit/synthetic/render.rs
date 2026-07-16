@@ -325,12 +325,6 @@ fn render_runtime_imports(program: &Program, is_view: bool) -> Vec<String> {
         .filter(|s| !CONTROLLER_ONLY_IMPORTS.contains(s))
         .map(|s| s.to_string())
         .collect();
-    for &name in &lowered.transition_builtins {
-        let s = name.to_string();
-        if !imports.contains(&s) {
-            imports.push(s);
-        }
-    }
     for &name in &lowered.motion_builtins {
         let s = name.to_string();
         if !imports.contains(&s) {
