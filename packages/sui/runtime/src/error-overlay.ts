@@ -32,12 +32,22 @@ export interface SuiErrorDetail {
  */
 export function dispatchSuiError(host: Node | null, error: unknown, phase: SuiErrorPhase): void {
   const detail: SuiErrorDetail = { error, phase }
-  let target: EventTarget = document
-  if (host instanceof Element) {
-    detail.host = host
-    target = host
+  let target: EventTarget = typeof document !== 'undefined' ? document : (null as unknown as EventTarget)
+  if (host != null && typeof (host as Element).tagName === 'string') {
+    detail.host = host as Element
+    target = host as unknown as EventTarget
     const tag = (host as HTMLElement).dataset?.component
     if (tag) detail.tag = tag
   }
-  target.dispatchEvent(new CustomEvent<SuiErrorDetail>('sui:error', { detail, bubbles: true, composed: true }))
+  // The fallback surface must NEVER itself throw. Server-dom shim nodes
+  // (ship-js SSR) are not EventTargets — no dispatchEvent, and CustomEvent
+  // may be absent too. The console.error at the call site already fired;
+  // this event is dev-overlay sugar, silently skipped where undispatchable.
+  if (typeof (target as { dispatchEvent?: unknown })?.dispatchEvent !== 'function') return
+  if (typeof CustomEvent !== 'function') return
+  try {
+    target.dispatchEvent(new CustomEvent<SuiErrorDetail>('sui:error', { detail, bubbles: true, composed: true }))
+  } catch {
+    /* an exotic host — the console.error already carried the failure */
+  }
 }
