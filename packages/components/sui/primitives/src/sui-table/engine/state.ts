@@ -7,13 +7,13 @@
 // engine — that wiring lands with manual mode; this seed is the uncontrolled
 // baseline every slice reads from now.
 //
-// PURE TypeScript — imports `signal` from `@ship/sui-runtime` only.
+// PURE TypeScript — imports `signal` from `@ship/sail-runtime` only.
 //
 // Authority: build-spec §"API sketch" (`initialState` UNCONTROLLED seed,
 // `state` CONTROLLED), §"Signal graph" (each slice is a Signal), §"Features"
 // (the slice → feature mapping), Slice 1b (`state.sorting` is `SortState[]`).
 
-import { signal } from '@ship/sui-runtime'
+import { signal } from '@ship/sail-runtime'
 import type { ReactiveTableState, TableState } from './types'
 
 /** The inert baseline — every feature off, every collection empty. */

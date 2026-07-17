@@ -2,7 +2,7 @@
   /deck/routing — adapted from packages/deck/docs/routes/routing/page.sui.
 -->
 <controller>
-import { controller, type ViewScope } from '@ship/sui-runtime'
+import { controller, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sui'
 import { routeTree, colocated } from './snippets'
 

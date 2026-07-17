@@ -1,12 +1,12 @@
 // sui-board — the board domain model on the createCanvas() substrate.
 //
-// Pure reactive state on @ship/sui-runtime signals: nodes/edges/ports +
+// Pure reactive state on @ship/sail-runtime signals: nodes/edges/ports +
 // selection + edge routing + drag/snap + pending-edge (drag-from-port). The
 // board is SVG-NATIVE — there is NO canvas engine. Geometry lives in world
 // coordinates; the view maps to screen through the substrate's
 // worldToScreen. Heavy edge-path math lives in `edge-route.ts`.
 
-import { signal, derived, batch, untrack, type Derived } from '@ship/sui-runtime'
+import { signal, derived, batch, untrack, type Derived } from '@ship/sail-runtime'
 import type { Rect, Vec2 } from '../../engine/types'
 import { routeEdge, type EdgeKind } from './edge-route'
 import { layoutBoard, type LayoutOptions } from './layout-adapter'

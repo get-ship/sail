@@ -43,24 +43,24 @@ const SHIP_CONTRACTS_SDK_CLIENT = resolve(
 export default defineConfig({
   resolve: {
     alias: {
-      // `@ship/sui-*` resolves to this repo's source (sui owns the framework).
-      '@ship/sui-runtime/template-hooks': resolve(
+      // `@ship/sail-*` resolves to this repo's source (sui owns the framework).
+      '@ship/sail-runtime/template-hooks': resolve(
         __dirname,
         '../packages/sui/runtime/src/template-hooks/index.ts',
       ),
-      '@ship/sui-runtime/dev': resolve(
+      '@ship/sail-runtime/dev': resolve(
         __dirname,
         '../packages/sui/runtime/src/dev.ts',
       ),
-      '@ship/sui-runtime': resolve(
+      '@ship/sail-runtime': resolve(
         __dirname,
         '../packages/sui/runtime/src/index.ts',
       ),
-      '@ship/sui-dom/test-utils': resolve(
+      '@ship/sail-dom/test-utils': resolve(
         __dirname,
         '../packages/sui/dom/src/test-utils/compile-sui.ts',
       ),
-      '@ship/sui-dom': resolve(
+      '@ship/sail-dom': resolve(
         __dirname,
         '../packages/sui/dom/src/index.ts',
       ),

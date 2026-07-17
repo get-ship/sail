@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 // Isolated file (vitest runs each file in its own jsdom realm) so that
 // `sui-error-state` is NEVER registered here — exercising the registration-free
 // bare-card fallback (the same guard pattern mountRouter's buildNotFound uses).
-vi.mock('@ship/sui-runtime', () => {
+vi.mock('@ship/sail-runtime', () => {
   const BOUNDARY_KEY = Symbol.for('sui:error-boundary')
   const attachBoundary = (host: any, handle: unknown) => { host[BOUNDARY_KEY] = handle }
   const detachBoundary = (host: any) => { delete host[BOUNDARY_KEY] }
@@ -28,7 +28,7 @@ vi.mock('@ship/sui-runtime', () => {
 })
 
 import { installRouteBoundary } from '../src/route-boundary'
-import { runProtected } from '@ship/sui-runtime'
+import { runProtected } from '@ship/sail-runtime'
 
 let outlet: HTMLElement
 

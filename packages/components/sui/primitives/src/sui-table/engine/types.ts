@@ -3,13 +3,13 @@
 // The ColumnDef discriminated union (accessor | display | group) plus the
 // Row/Cell/Header API shapes and the reactive TableState slices. PURE
 // TypeScript — no runtime imports beyond the Signal/Derived type handles
-// from `@ship/sui-runtime` (type-only; no value imports here). The engine
+// from `@ship/sail-runtime` (type-only; no value imports here). The engine
 // emits no DOM and makes no SDK calls.
 //
 // Authority: build-spec §"API sketch" (the discriminated union + the
 // authoritative Row/Cell/ColumnApi/Header member tables) and §"Features".
 
-import type { Derived, Signal } from '@ship/sui-runtime'
+import type { Derived, Signal } from '@ship/sail-runtime'
 
 // ── Cell values ─────────────────────────────────────────────────────────────
 export type CellValue = string | number | boolean | null | undefined

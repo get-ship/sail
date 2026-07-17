@@ -22,7 +22,7 @@
 // because that is the only call shape a renderable expression allows — the
 // stage map mirrors the browser page's `show` map.
 
-import { controller, signal, derived, effect, type ViewScope } from '@ship/sui-runtime'
+import { controller, signal, derived, effect, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sui'
 import { DETAILS, type DetailEntry } from './registry'
 export default controller((ctx: ViewScope<Scope>) => {
@@ -34,8 +34,8 @@ export default controller((ctx: ViewScope<Scope>) => {
     // instead of reporting a typo. Includes the 7 canvas-pack tags, which
     // page.sui skips in its own grid but which still render fully here via
     // direct navigation. sui-message-list and sui-media-csv are NOT here:
-    // both transitively import `@ship/sui-runtime/virtual` — message-list
-    // directly, media-csv via `createTable` from the `@ship/sui-primitives`
+    // both transitively import `@ship/sail-runtime/virtual` — message-list
+    // directly, media-csv via `createTable` from the `@ship/sail-primitives`
     // barrel, whose index.ts side-effect-imports sui-tree/sui-tree-grid — a
     // framework-singleton subpath with no deck-bundler importmap entry
     // (apps/sui-site/src/register-all.ts). Pre-existing bundler gap, not a

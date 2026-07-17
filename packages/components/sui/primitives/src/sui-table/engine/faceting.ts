@@ -14,13 +14,13 @@
 // MANUAL seam: under `manualFiltering` the facets come from the injected
 // `facets` option (server-computed) so server-mode filter UIs have a source.
 //
-// PURE TypeScript — imports `untrack` from `@ship/sui-runtime` ONLY. No DOM, no
+// PURE TypeScript — imports `untrack` from `@ship/sail-runtime` ONLY. No DOM, no
 // SDK.
 //
 // Authority: build-spec §Features #4 ("Faceting"), §"Signal graph" (facets
 // branch off preColumnFilteredRows, lazy + memoized), Slice 3b.
 
-import { untrack, type Derived, type Signal } from '@ship/sui-runtime'
+import { untrack, type Derived, type Signal } from '@ship/sail-runtime'
 import type { CellValue, ColumnDef, ColumnFilter, Row } from './types'
 
 /** A column's resolved cell-level predicate (for OTHER-column filtering). */

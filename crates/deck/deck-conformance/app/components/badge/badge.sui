@@ -6,7 +6,7 @@
 // scope type from the `ControllerExport`. Component props remain a Phase-2
 // concern (the standalone synthetic controller can't model mount-time props
 // yet); this proves a state-only, controller-bearing component.
-import { controller, signal } from '@ship/sui-runtime'
+import { controller, signal } from '@ship/sail-runtime'
 
 export default controller(() => {
     const count = signal(0)

@@ -31,10 +31,10 @@ function narrowDocument(doc: Document): NodeFactories {
 }
 
 export interface ViewEndowmentInput {
-  /** `@ship/sui-runtime` namespace — signal/derived/effect/controller/… The
+  /** `@ship/sail-runtime` namespace — signal/derived/effect/controller/… The
    *  host injects it (keeps deck-host decoupled from a hard runtime dep). */
   runtime: Record<string, unknown>
-  /** `@ship/sui-dom` namespace — bindText/bindAttr/… (run host-side). */
+  /** `@ship/sail-dom` namespace — bindText/bindAttr/… (run host-side). */
   dom?: Record<string, unknown>
   /** Policy-gated op surface (op-registry `ship`, NOT the full SDK). */
   ship: unknown

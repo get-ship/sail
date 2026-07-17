@@ -11,7 +11,7 @@
 // body are not wired — by definition the signal must transition before
 // they would change, and any transition replaces the entire body.
 
-import { effect } from '@ship/sui-runtime'
+import { effect } from '@ship/sail-runtime'
 
 type WhileResult = { nodes: Node[]; cleanup: () => void }
 type WhileRender = () => WhileResult

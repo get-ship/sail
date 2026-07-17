@@ -27,7 +27,7 @@ let motionCalls: MotionCall[] = []
 
 function installMotionStub(): void {
   motionCalls = []
-  const runtime = require('@ship/sui-runtime') as Record<string, unknown>
+  const runtime = require('@ship/sail-runtime') as Record<string, unknown>
   ;(runtime as Record<string, unknown>).__sui_motion_attach = (
     el: Element,
     config: { trigger: string; motions: Array<{ preset: string; property: string }>; stagger?: number },

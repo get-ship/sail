@@ -14,7 +14,7 @@
 //
 // Authority: build-spec §"Events", §"Keyboard nav", behavioral specs #2/#3/#4/#7.
 
-import { effect } from '@ship/sui-runtime'
+import { effect } from '@ship/sail-runtime'
 import type { Table } from '../sui-table/engine/create-table'
 import type { ExpandedState } from '../sui-table/engine/types'
 import type { TreeNode } from '../sui-tree-view/sui-tree-view.controller'

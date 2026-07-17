@@ -1,5 +1,5 @@
 {
-  "name": "@ship/sui-charts",
+  "name": "@ship/sail-charts",
   "version": "0.2.0",
   "description": "Ship Charts pack \u2014 `<sui-*-chart>` + sparkline / donut / gauge / meter / heatmap custom elements.",
   "type": "module",
@@ -20,8 +20,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@ship/sui-dom": "workspace:*",
-    "@ship/sui-runtime": "workspace:*"
+    "@ship/sail-dom": "workspace:*",
+    "@ship/sail-runtime": "workspace:*"
   },
   "devDependencies": {
     "@ship/test-setup": "workspace:*",

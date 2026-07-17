@@ -23,13 +23,13 @@
 // Virtualization seam: moving focus to an off-window row calls `scrollToIndex`
 // BEFORE focus so the view can reassert DOM focus post-recycle from `nav.active`.
 //
-// PURE TypeScript — imports `{ signal, derived }` from `@ship/sui-runtime` ONLY.
+// PURE TypeScript — imports `{ signal, derived }` from `@ship/sail-runtime` ONLY.
 // No DOM, no SDK.
 //
 // Authority: build-spec §Features #14 ("Keyboard-nav hooks"), §"API sketch"
 // (the `nav` surface), Slice 4.
 
-import { derived, signal, type Derived } from '@ship/sui-runtime'
+import { derived, signal, type Derived } from '@ship/sail-runtime'
 import { buildTreeNav } from './nav-tree'
 import type { ColumnApi, Row } from './types'
 

@@ -634,7 +634,7 @@ function installLifecycleRunner(): void {
 /** Test seam: exposes the resolved transition the runtime hands to
  *  motion's `animate()` so tests can assert on the easing / duration
  *  shape without playing the animation. NOT re-exported from
- *  `@ship/sui-runtime`. */
+ *  `@ship/sail-runtime`. */
 export function __buildTransitionForTest(
   cfg: MotionConfig,
   index: number,
@@ -647,7 +647,7 @@ export function __buildTransitionForTest(
 /** Test seam: exposes the resolved keyframes the runtime hands to
  *  motion's `animate()` so tests can assert every property lands as
  *  WAAPI-valid CSS (units where the spec requires them) without
- *  playing the animation. NOT re-exported from `@ship/sui-runtime`. */
+ *  playing the animation. NOT re-exported from `@ship/sail-runtime`. */
 export function __buildKeyframesForTest(
   cfg: MotionConfig,
   el: HTMLElement,
@@ -658,7 +658,7 @@ export function __buildKeyframesForTest(
 /** Test seam: exposes the SILENCE-IS-THE-BUG guard directly so tests can
  *  assert its warning contract (names the property + the element)
  *  without having to reconstruct the historical `x`/`y` defect through
- *  a broken fixture. NOT re-exported from `@ship/sui-runtime`. */
+ *  a broken fixture. NOT re-exported from `@ship/sail-runtime`. */
 export function __warnIfNotAnimatableForTest(
   el: Element,
   keyframes: Record<string, Array<number | string>>,
@@ -668,7 +668,7 @@ export function __warnIfNotAnimatableForTest(
 
 /** Test seam: the bound `runLeave` uses to guarantee removal is never
  *  wedged by a stuck exit animation. NOT re-exported from
- *  `@ship/sui-runtime`. */
+ *  `@ship/sail-runtime`. */
 export const __EXIT_TIMEOUT_MS_FOR_TEST = EXIT_TIMEOUT_MS
 
 export type { Disposer }

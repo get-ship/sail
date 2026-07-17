@@ -52,7 +52,7 @@ title that follows a signal, the right primitive is `effect` in the
 controller (covered in step 4):
 
 ```ts
-import { controller, signal, effect } from '@ship/sui-runtime'
+import { controller, signal, effect } from '@ship/sail-runtime'
 
 export default controller((ctx) => {
   const count = signal(0)

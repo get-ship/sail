@@ -1,6 +1,6 @@
 //! Node-style package resolution for the framework singletons.
 //!
-//! deck's framework singletons (`@ship/sui-runtime`, `@ship/sui-dom`,
+//! deck's framework singletons (`@ship/sail-runtime`, `@ship/sail-dom`,
 //! `@ship/deck-router`, `@ship/sdk-client`) are no longer pinned to a hardcoded
 //! monorepo path (`packages/sui/runtime/src/index.ts`). They are resolved like
 //! any npm dependency: from the project being built, find the package's
@@ -33,8 +33,8 @@ use crate::catalog::discover_workspace_packages;
 /// Resolve a bare package specifier to an absolute entry module, starting from
 /// `start` (the project / repo root being built).
 ///
-/// `spec` may carry a subpath: `@ship/sui-runtime` resolves the package's `.`
-/// export; `@ship/sui-runtime/route` resolves its `./route` export. Returns
+/// `spec` may carry a subpath: `@ship/sail-runtime` resolves the package's `.`
+/// export; `@ship/sail-runtime/route` resolves its `./route` export. Returns
 /// `None` when the package is not installed/discoverable from `start`, or when
 /// no entry file actually exists on disk — callers treat that as "this
 /// singleton isn't present in this repo" and skip it rather than fail the whole
@@ -177,10 +177,10 @@ mod tests {
 
     #[test]
     fn split_spec_scoped_and_subpath() {
-        assert_eq!(split_spec("@ship/sui-runtime"), ("@ship/sui-runtime".into(), ".".into()));
+        assert_eq!(split_spec("@ship/sail-runtime"), ("@ship/sail-runtime".into(), ".".into()));
         assert_eq!(
-            split_spec("@ship/sui-runtime/route"),
-            ("@ship/sui-runtime".into(), "./route".into())
+            split_spec("@ship/sail-runtime/route"),
+            ("@ship/sail-runtime".into(), "./route".into())
         );
         assert_eq!(split_spec("lodash"), ("lodash".into(), ".".into()));
         assert_eq!(split_spec("lodash/fp"), ("lodash".into(), "./fp".into()));
@@ -195,13 +195,13 @@ mod tests {
         let project = root.join("apps/hub");
         fs::create_dir_all(&project).unwrap();
         write(
-            &root.join("node_modules/@ship/sui-runtime/package.json"),
-            r#"{ "name": "@ship/sui-runtime", "exports": { ".": "./src/index.ts" } }"#,
+            &root.join("node_modules/@ship/sail-runtime/package.json"),
+            r#"{ "name": "@ship/sail-runtime", "exports": { ".": "./src/index.ts" } }"#,
         );
-        write(&root.join("node_modules/@ship/sui-runtime/src/index.ts"), "export const x=1;\n");
+        write(&root.join("node_modules/@ship/sail-runtime/src/index.ts"), "export const x=1;\n");
 
-        let entry = resolve_entry(&project, "@ship/sui-runtime").expect("resolved via ancestor walk");
-        assert_eq!(entry, root.join("node_modules/@ship/sui-runtime/src/index.ts"));
+        let entry = resolve_entry(&project, "@ship/sail-runtime").expect("resolved via ancestor walk");
+        assert_eq!(entry, root.join("node_modules/@ship/sail-runtime/src/index.ts"));
     }
 
     #[test]
@@ -209,13 +209,13 @@ mod tests {
         let tmp = tempdir().unwrap();
         let root = tmp.path();
         write(
-            &root.join("node_modules/@ship/sui-runtime/package.json"),
-            r#"{ "name": "@ship/sui-runtime",
+            &root.join("node_modules/@ship/sail-runtime/package.json"),
+            r#"{ "name": "@ship/sail-runtime",
                 "exports": { ".": "./src/index.ts", "./route": "./src/route/index.ts" } }"#,
         );
-        write(&root.join("node_modules/@ship/sui-runtime/src/route/index.ts"), "export const r=1;\n");
-        let entry = resolve_entry(root, "@ship/sui-runtime/route").unwrap();
-        assert_eq!(entry, root.join("node_modules/@ship/sui-runtime/src/route/index.ts"));
+        write(&root.join("node_modules/@ship/sail-runtime/src/route/index.ts"), "export const r=1;\n");
+        let entry = resolve_entry(root, "@ship/sail-runtime/route").unwrap();
+        assert_eq!(entry, root.join("node_modules/@ship/sail-runtime/src/route/index.ts"));
     }
 
     #[test]
@@ -276,11 +276,11 @@ mod tests {
         write(&root.join("package.json"), r#"{ "workspaces": ["packages/sui/*"] }"#);
         write(
             &root.join("packages/sui/runtime/package.json"),
-            r#"{ "name": "@ship/sui-runtime", "exports": { ".": "./src/index.ts" } }"#,
+            r#"{ "name": "@ship/sail-runtime", "exports": { ".": "./src/index.ts" } }"#,
         );
         write(&root.join("packages/sui/runtime/src/index.ts"), "export const x=1;\n");
 
-        let entry = resolve_entry(root, "@ship/sui-runtime").expect("resolved via workspace member");
+        let entry = resolve_entry(root, "@ship/sail-runtime").expect("resolved via workspace member");
         assert_eq!(entry, root.join("packages/sui/runtime/src/index.ts"));
     }
 

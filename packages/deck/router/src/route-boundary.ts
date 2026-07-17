@@ -4,7 +4,7 @@
 // the component factory's `mount()` / `effect()` already wrap their throw-prone
 // call sites in `runProtected(node, source, fn)`, which walks up the DOM from
 // `node` to the nearest element carrying a `BoundaryHandle` and routes the
-// error there (see `@ship/sui-runtime`'s error-boundary.ts). The opt-in
+// error there (see `@ship/sail-runtime`'s error-boundary.ts). The opt-in
 // `<sui-error-boundary>` primitive is one consumer of that mechanism.
 //
 // This module is the OTHER consumer: it lets the deck router install a boundary
@@ -24,7 +24,7 @@ import {
   findNearestBoundary,
   type BoundaryHandle,
   type BoundarySource,
-} from '@ship/sui-runtime'
+} from '@ship/sail-runtime'
 
 /**
  * True when the served HTML declares the daemon is in development mode.

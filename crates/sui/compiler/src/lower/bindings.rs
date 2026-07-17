@@ -15,7 +15,7 @@ use crate::lower::Lowered;
 
 /// Built-in `use:` actions shipped by the runtime. When a `use:` directive
 /// names one of these (a bare identifier), the compiler auto-imports it from
-/// `@ship/sui-runtime` so it resolves as an ESM binding — no controller
+/// `@ship/sail-runtime` so it resolves as an ESM binding — no controller
 /// import, no `$scope.` lookup.
 ///
 /// This is the same slice as
@@ -132,8 +132,8 @@ AttrInstr::Use { action, .. } => {
             // `motion:` directives bake to literal `el.animate(...)`
             // calls plus a `__sui_motion_attach(...)` wrapper. The
             // attach wrapper and any animation-side runtime helpers
-            // come from `@ship/sui-runtime/motion` (separate from
-            // the umbrella `@ship/sui-runtime` import); we record
+            // come from `@ship/sail-runtime/motion` (separate from
+            // the umbrella `@ship/sail-runtime` import); we record
             // each used helper here so the imports emitter can
             // emit a side-effect import per symbol.
             //

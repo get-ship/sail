@@ -33,7 +33,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
 
 | Field | What it is |
 |---|---|
-| `js` | ESM module that imports from `@ship/sui-runtime`. Constructs the render tree directly — no parser ships to the client. |
+| `js` | ESM module that imports from `@ship/sail-runtime`. Constructs the render tree directly — no parser ships to the client. |
 | `css` | Extracted / passed-through CSS (component `<style>` blocks, `styles` opt), present when the source carries styles. |
 | `cem` | Custom Elements Manifest (components only) — fuel for editor tooling. |
 | `schema` | Prop schema JSON — read by `decode.ts` to validate runtime prop values. |
@@ -75,14 +75,14 @@ Public API barrel: `packages/sui/runtime/src/index.ts`. Anything not re-exported
 
 | Field | What it is |
 |---|---|
-| `js` | ESM module that imports from `@ship/sui-runtime`. Constructs the render tree directly — no parser ships to the client. |
+| `js` | ESM module that imports from `@ship/sail-runtime`. Constructs the render tree directly — no parser ships to the client. |
 | `css` | Extracted / passed-through CSS (component `<style>` blocks, `styles` opt), present when the source carries styles. |
 | `cem` | Custom Elements Manifest (components only) — fuel for editor tooling. |
 | `schema` | Prop schema JSON — read by `decode.ts` to validate runtime prop values. |
 | `dts` | Typed `Scope` for the inline `<controller>` block. Includes both `<data>` names and the controller function's returned keys. |
 | `meta` | `.sui.meta.json` — binding kinds / exprs / deps / renderKey. Developer-tooling fuel; the runtime never loads it. |
 
-The dev-only leak detector lives at the subpath `@ship/sui-runtime/dev` so it doesn't ship in production bundles.
+The dev-only leak detector lives at the subpath `@ship/sail-runtime/dev` so it doesn't ship in production bundles.
 
 `<sui-if>`, `<sui-for>`, `<sui-match>` custom elements register on module load (`import './boundary-elements'` at the bottom of `index.ts`).
 
@@ -151,7 +151,7 @@ Five rules carried over from the `ship-views` skill:
 4. **`manifest.jsonc` is required for views.** JSONC, not YAML.
 5. **`_components/` for view-private widgets.** Tag MUST prefix with the view name (`home-hero` for `views/home/`) so two views can each ship their own widget without colliding on `customElements.define`.
 
-Every first-party view is on this shape — `views/agents/`, `views/git/`, `views/home/`, etc. all ship `page.sui` + `style.css` + `manifest.jsonc`. The router (`@ship/sui-runtime/route + defineRoutes() in apps/shell/src/main.ts`) walks only manifest-bearing directories.
+Every first-party view is on this shape — `views/agents/`, `views/git/`, `views/home/`, etc. all ship `page.sui` + `style.css` + `manifest.jsonc`. The router (`@ship/sail-runtime/route + defineRoutes() in apps/shell/src/main.ts`) walks only manifest-bearing directories.
 
 ## How the layers compose
 

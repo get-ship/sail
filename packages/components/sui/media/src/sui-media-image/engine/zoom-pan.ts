@@ -1,6 +1,6 @@
 // sui-media engine — the image-stage zoom/pan interaction. PURE controller
 // glue extracted from the renderer's `mount` so the controller stays glue-only
-// (build-spec Slice 6 pre-committed split). No `@ship/sui-runtime`, no DOM
+// (build-spec Slice 6 pre-committed split). No `@ship/sail-runtime`, no DOM
 // construction — it wires listeners onto an already-mounted `part="stage"`
 // element and reports scale/pan changes through a callback.
 //

@@ -5,7 +5,7 @@
 // first, persisted) and the current path for sidebar active-state. mountRouter
 // rebuilds the chrome on every client-side navigation, so reading
 // location.pathname at scope time always reflects the active route.
-import { controller, signal } from '@ship/sui-runtime'
+import { controller, signal } from '@ship/sail-runtime'
 
 const MODE_KEY = 'deck-mode'
 

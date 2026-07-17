@@ -4,7 +4,7 @@
 // the --syntax-* tokens. A left-to-right single-pass tokenizer, so matches never
 // overlap.
 //
-// (A faithful tree-sitter-sui pass is the eventual upgrade; this gets real,
+// (A faithful tree-sitter-sail pass is the eventual upgrade; this gets real,
 // correct colour now.)
 
 const KEYWORDS = new Set([

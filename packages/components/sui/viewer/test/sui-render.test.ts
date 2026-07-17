@@ -21,7 +21,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { renderComponent } from '@ship/test-setup'
-import { compileSui } from '@ship/sui-dom/test-utils'
+import { compileSui } from '@ship/sail-dom/test-utils'
 
 // The controller reaches for the engine's own modules, which only the module
 // graph can resolve — import it as the virtual `<file>.sui.controller.ts` the
@@ -29,7 +29,7 @@ import { compileSui } from '@ship/sui-dom/test-utils'
 import renderController from '../src/sui-render/sui-render.sui.controller.ts'
 
 // RED: these two modules are the Slice-1 deliverable; they do not exist yet.
-import '@ship/sui-primitives' // register the composed sui-error-boundary / sui-alert / sui-code
+import '@ship/sail-primitives' // register the composed sui-error-boundary / sui-alert / sui-code
 
 const SRC = readFileSync(resolve(__dirname, '../src/sui-render/sui-render.sui'), 'utf8')
 const TAG = 'sui-render'

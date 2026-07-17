@@ -9,12 +9,12 @@
 //
 // So the rule is now one line:
 //
-//     the COMPILER imports from `@ship/sui-runtime/internal`
-//     HUMANS import from `@ship/sui-runtime`
+//     the COMPILER imports from `@ship/sail-runtime/internal`
+//     HUMANS import from `@ship/sail-runtime`
 //
 // Splitting the entry is step one and it is purely additive — nothing breaks,
 // because the root still re-exports these for now. Step two points the emitter
-// here (a hardcoded '@ship/sui-runtime' literal in emit/js.rs, emit/dts.rs and
+// here (a hardcoded '@ship/sail-runtime' literal in emit/js.rs, emit/dts.rs and
 // emit/synthetic/render.rs). Step three strips the ABI from the root, which is
 // the only breaking part and is coupled to the legacy migration — the 66 files
 // still importing `ref` are all pre-cutover and don't compile anyway.

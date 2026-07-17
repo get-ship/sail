@@ -19,7 +19,7 @@ index.html                <sui-keyed> mount + dist/main.js
 src/main.ts               side-effect import of the compiled component
 src/sui-keyed.sui         the keyed table template
 src/sui-keyed.controller.ts   row model + run/add/update/clear/swap/select/remove
-scripts/precompile.mjs    compiles .sui → dist/, links @ship/sui-runtime
+scripts/precompile.mjs    compiles .sui → dist/, links @ship/sail-runtime
 ```
 
 `node_modules/`, `dist/`, and `bun.lock` are **not** vendored — they're build

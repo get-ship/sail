@@ -131,7 +131,7 @@ fn write_tsconfig(temp_dir: &Path, repo: &Path) {
     // already gates on missing exports; this layer adds tsc's own
     // module-resolution view as a cross-check (catches subtle subpath
     // issues — e.g. the compiler started importing from
-    // `@ship/sui-runtime/foo` and that subpath doesn't exist).
+    // `@ship/sail-runtime/foo` and that subpath doesn't exist).
     //
     // We deliberately stop short of `checkJs: true`. The compiled
     // output is intentionally untyped scaffolding (Object.create(null)
@@ -159,11 +159,11 @@ fn write_tsconfig(temp_dir: &Path, repo: &Path) {
             "types": [],
             "baseUrl": ".",
             "paths": {
-                "@ship/sui-runtime": [runtime_index.to_string_lossy()],
-                "@ship/sui-runtime/template-hooks": [runtime_template_hooks.to_string_lossy()],
-                "@ship/sui-runtime/route": [runtime_route.to_string_lossy()],
-                "@ship/sui-runtime/dev": [runtime_dev.to_string_lossy()],
-                "@ship/sui-dom": [ui_dom_index.to_string_lossy()],
+                "@ship/sail-runtime": [runtime_index.to_string_lossy()],
+                "@ship/sail-runtime/template-hooks": [runtime_template_hooks.to_string_lossy()],
+                "@ship/sail-runtime/route": [runtime_route.to_string_lossy()],
+                "@ship/sail-runtime/dev": [runtime_dev.to_string_lossy()],
+                "@ship/sail-dom": [ui_dom_index.to_string_lossy()],
             },
         },
         "include": ["**/*.js"],
@@ -197,8 +197,8 @@ fn extract_named_imports(js: &str, module: &str) -> Vec<(String, String)> {
             continue;
         }
         // Match exact module spec to avoid false positives where one
-        // module is a prefix of another (e.g. `@ship/sui-runtime` vs
-        // `@ship/sui-runtime/template-hooks`).
+        // module is a prefix of another (e.g. `@ship/sail-runtime` vs
+        // `@ship/sail-runtime/template-hooks`).
         let from_spec = format!("from \"{module}\"");
         if !l.contains(&from_spec) {
             continue;
@@ -318,7 +318,7 @@ fn structural_check(
 
     let mut errors = Vec::new();
     for (src, _temp_name, js) in js_files {
-        for (name, module) in extract_named_imports(js, "@ship/sui-runtime") {
+        for (name, module) in extract_named_imports(js, "@ship/sail-runtime") {
             if !runtime_exports.contains(&name) {
                 errors.push(format!(
                     "{}: imports `{name}` from `{module}` — not exported by runtime",
@@ -326,7 +326,7 @@ fn structural_check(
                 ));
             }
         }
-        for (name, module) in extract_named_imports(js, "@ship/sui-runtime/template-hooks") {
+        for (name, module) in extract_named_imports(js, "@ship/sail-runtime/template-hooks") {
             if !runtime_hook_exports.contains(&name) {
                 errors.push(format!(
                     "{}: imports `{name}` from `{module}` — not exported",
@@ -334,7 +334,7 @@ fn structural_check(
                 ));
             }
         }
-        for (name, module) in extract_named_imports(js, "@ship/sui-runtime/route") {
+        for (name, module) in extract_named_imports(js, "@ship/sail-runtime/route") {
             // The import uses `as` alias: `import { route as __routeFactory }`.
             // extract_named_imports returns the local alias, so strip any
             // `as <alias>` suffix to recover the original export name.
@@ -345,12 +345,12 @@ fn structural_check(
             };
             if !runtime_route_exports.contains(&export_name) {
                 errors.push(format!(
-                    "{}: imports `{name}` from `{module}` — not exported by @ship/sui-runtime/route",
+                    "{}: imports `{name}` from `{module}` — not exported by @ship/sail-runtime/route",
                     src.display()
                 ));
             }
         }
-        for (name, module) in extract_named_imports(js, "@ship/sui-dom") {
+        for (name, module) in extract_named_imports(js, "@ship/sail-dom") {
             if !dom_exports.contains(&name) {
                 errors.push(format!(
                     "{}: imports `{name}` from `{module}` — not exported by ui-dom",

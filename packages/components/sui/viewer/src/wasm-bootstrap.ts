@@ -1,9 +1,9 @@
 // Framework-pure WASM bootstrap for the browser compile path.
 //
-// `@ship/sui-dom/test-utils`'s `ensureWasm()` is Node-only — it
+// `@ship/sail-dom/test-utils`'s `ensureWasm()` is Node-only — it
 // `readFileSync`s `../../../compiler-wasm/pkg/sui_compiler_bg.wasm` and
 // `initSync`s the bytes. That path does not exist in a browser. This module is
-// the browser analogue: it instantiates the same `@ship/sui-compiler-wasm`
+// the browser analogue: it instantiates the same `@ship/sail-compiler-wasm`
 // module from a URL the HOST supplies, runs exactly ONCE (module-scope
 // `wasmReady` guard mirroring `ensureWasm`), and exposes the bound `compile()`.
 //
@@ -19,7 +19,7 @@
 //     never import the wasm or know a URL — Cardinal 4 keeps primitives
 //     backend-free.
 
-import init, { initSync, compile as wasmCompile } from '@ship/sui-compiler-wasm'
+import init, { initSync, compile as wasmCompile } from '@ship/sail-compiler-wasm'
 
 /** The wasm `compile(source, optsJson)` return — `kind:'ok'` carries the
  *  emitted module surfaces; `kind:'err'` carries a structured diagnostic the
@@ -28,14 +28,14 @@ export type WasmCompileResult =
   | { kind: 'ok'; js: string; css: string | null; dts: string | null; ssrHtml: string | null }
   | { kind: 'err'; message: string; line: number | null; col: number | null; category: string | null }
 
-/** Compile opts mirror `@ship/sui-dom/test-utils`'s `CompileOpts`. */
+/** Compile opts mirror `@ship/sail-dom/test-utils`'s `CompileOpts`. */
 export interface WasmCompileOpts {
   mode?: 'view' | 'component' | 'auto'
   componentName?: string
   /** Marker passed as the setup_url; a host that injects a setup rewrites the
    *  resulting `import setup from "<marker>"` to its own setup module. */
   setupUrl?: string
-  /** The Node test harness (`@ship/sui-dom/test-utils` `compileSui`) reads the
+  /** The Node test harness (`@ship/sail-dom/test-utils` `compileSui`) reads the
    *  marker under `setupMarker`; the production wasm reads `setupUrl`. The
    *  engine passes both so a single opts object works across either compile. */
   setupMarker?: string

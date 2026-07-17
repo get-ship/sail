@@ -1,4 +1,4 @@
-// Build script: read the @ship/sui-tutorial lessons and emit a single typed
+// Build script: read the @ship/sail-tutorial lessons and emit a single typed
 // data module the docs routes import. We DO NOT rewrite the tutorial — we
 // load `packages/sui/tutorial/src/prose/<slug>.md` (flat files: frontmatter +
 // body) and the paired `lessons/<slug>/{starter,solved}/` sources (one `.sui`

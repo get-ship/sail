@@ -3,8 +3,8 @@
 
   Backbone #3: a viewport + a transformed world layer + a `default` slot for
   arbitrary world-space content. Pan/zoom/coordinate state lives in
-  `createCanvas()` (engine/) on @ship/sui-runtime signals — no React, no
-  Excalidraw, no SDK. This pack imports @ship/sui-runtime + @ship/sui-dom ONLY.
+  `createCanvas()` (engine/) on @ship/sail-runtime signals — no React, no
+  Excalidraw, no SDK. This pack imports @ship/sail-runtime + @ship/sail-dom ONLY.
 
   Props
   ─────────────────────────────────────────────────────────────────────
@@ -38,7 +38,7 @@
   }
 </scope>
 <controller>
-import { controller, signal, derived, effect, debounce, ref } from '@ship/sui-runtime'
+import { controller, signal, derived, effect, debounce, ref } from '@ship/sail-runtime'
 import type { Scope } from './sui-canvas.sui'
 import { createCanvas } from '../engine/create-canvas'
 import type { Canvas, Transform } from '../engine/types'

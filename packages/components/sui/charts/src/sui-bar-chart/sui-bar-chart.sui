@@ -43,7 +43,7 @@
 </scope>
 
 <controller>
-import { controller, derived, ref } from '@ship/sui-runtime'
+import { controller, derived, ref } from '@ship/sail-runtime'
 import { createChartData } from '../engine/create-chart-data'
 import { createChartViewport } from '../engine/create-chart-viewport'
 import { normalizeSeries } from '../engine/normalize'

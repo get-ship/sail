@@ -73,7 +73,7 @@ fn multi_stmt_passes_with_inline_controller() {
     // paired `.controller.ts` fallback). It provides x/y so the multi-statement
     // handler is allowed and its scope refs bind.
     let src = "<controller>\n\
-        import { controller, signal } from '@ship/sui-runtime'\n\
+        import { controller, signal } from '@ship/sail-runtime'\n\
         export default controller((ctx) => ({ x: signal(0), y: signal(0) }))\n\
         </controller>\n\
         <button on:click={() => { x.set(1); y.set(2) }}>+</button>";

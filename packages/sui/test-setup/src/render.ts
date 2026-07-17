@@ -6,7 +6,7 @@
 // compiler the daemon uses, so a passing test means the production emit shape
 // renders and behaves.
 //
-// The compile + eval + mount mechanics live in `@ship/sui-dom/test-utils`
+// The compile + eval + mount mechanics live in `@ship/sail-dom/test-utils`
 // (one source of truth, exercised by sui-dom's own suite). This module is the
 // ergonomic surface on top: it returns the mounted root, the live scope, and
 // helpers to fire events and flush microtasks.
@@ -21,9 +21,9 @@
 //   await v.flush()
 //   v.unmount()
 
-import { compileSui, evalCompiledJs, evalInlineController } from '@ship/sui-dom/test-utils'
-import { route as makeRoute } from '@ship/sui-runtime/route'
-import type { ControllerExport } from '@ship/sui-runtime'
+import { compileSui, evalCompiledJs, evalInlineController } from '@ship/sail-dom/test-utils'
+import { route as makeRoute } from '@ship/sail-runtime/route'
+import type { ControllerExport } from '@ship/sail-runtime'
 
 /** A controller's default export (the `controller(fn)` shape, which carries
  *  a `.setup`), a `ControllerExport<Scope>` with a typed setup, or a bare

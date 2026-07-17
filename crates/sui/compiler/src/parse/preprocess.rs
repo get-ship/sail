@@ -1,5 +1,5 @@
 //! Source preprocessor — the single, Rust-only path. (There is no JS twin:
-//! the legacy `@ship/sui-dom` preprocess was removed when every directive was
+//! the legacy `@ship/sail-dom` preprocess was removed when every directive was
 //! made to round-trip through this crate; deck's bundler and the Node test
 //! harness both compile in-process through `sail_compiler`.)
 //!
@@ -2645,18 +2645,18 @@ export default controller({ setup: () => { const c = signal(0); return { d: deri
         // the realistic authored shape) must not get a second injected import —
         // a duplicate binding is a compile error. Injection fills gaps only.
         let src = "<controller>\n\
-import {\n  controller,\n  derived,\n  signal,\n} from '@ship/sui-runtime'\n\
+import {\n  controller,\n  derived,\n  signal,\n} from '@ship/sail-runtime'\n\
 export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\n\
 </controller>\n\
 <column></column>";
         let (_, body) = extract_controller_block(src);
         let body = body.expect("controller block present");
         assert!(
-            body.contains("from '@ship/sui-runtime'"),
+            body.contains("from '@ship/sail-runtime'"),
             "the author's own import is preserved:\n{body}"
         );
         assert!(
-            !body.contains("@ship/sui-runtime/internal"),
+            !body.contains("@ship/sail-runtime/internal"),
             "ambient idents the author already imports must NOT be re-injected from \
              /internal (a duplicate binding is a compile error). Module:\n{body}"
         );

@@ -58,7 +58,7 @@ the bun workspace / crates.io with no external sibling checkout required.
 | `packages/deck/` | `router`, `host` (SES-confined controller execution), `hono` (TS sibling of deck-axum), `lsp-browser`, `docs` (deck's own docs site — the canonical standalone example and release gate), `e2e` (Playwright against the real CLI), `eval`, `test-harness`. |
 | `packages/components/sui/` | Component packs: `primitives`, `charts`, `media`, `viewer`, `canvas`, `chat-elements`, `code-editor`. |
 | `apps/sui-site` | The SUI site: docs, tutorial, component catalog + interactive playground. A deck app dogfooding the framework. |
-| `packages/deck/eval` | The SUI authoring eval (`@ship/sui-eval`) — lane agents build a view from a spec; compile + lint + structural rubric grade the output. |
+| `packages/deck/eval` | The SUI authoring eval (`@ship/sail-eval`) — lane agents build a view from a spec; compile + lint + structural rubric grade the output. |
 | `tests/` | `integration` (vitest), `parity` (emit parity), `perf` (js-framework-benchmark baselines). |
 | `docs/` | `ARCHITECTURE.md` (the governing language/userland map), `LANG-GAPS.md` (the migration ledger), generated reports. |
 | `scripts/`, `xtask-deck/` | Repo tooling: typecheck orchestration, config lints, lucide icon bake. |
@@ -143,4 +143,4 @@ Standalone deck serves routing, assets, SSR and HMR without any daemon; live
 - `crates/deck/README.md` — deck architecture, modes, `DataPort`, mounting.
 - `crates/deck/FEATURES.md` — the drift-gated feature inventory.
 - `packages/deck/docs/` — deck's docs site, built and served by deck.
-- `packages/deck/eval/` — the authoring eval rig (`@ship/sui-eval`).
+- `packages/deck/eval/` — the authoring eval rig (`@ship/sail-eval`).

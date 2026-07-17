@@ -7,7 +7,7 @@
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
-      "@ship/sui-dom": ["./types/ui-dom.d.ts"]
+      "@ship/sail-dom": ["./types/ui-dom.d.ts"]
     },
     "strict": true,
     "noUncheckedIndexedAccess": true,

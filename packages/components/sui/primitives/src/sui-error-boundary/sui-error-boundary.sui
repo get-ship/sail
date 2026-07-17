@@ -57,8 +57,8 @@
 
 
 <controller>
-import { controller, signal, attachBoundary, detachBoundary } from '@ship/sui-runtime'
-import type { BoundarySource, ViewScope } from '@ship/sui-runtime'
+import { controller, signal, attachBoundary, detachBoundary } from '@ship/sail-runtime'
+import type { BoundarySource, ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './sui-error-boundary.sui'
 
 interface HostWithReset extends HTMLElement {

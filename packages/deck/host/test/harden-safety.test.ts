@@ -1,6 +1,6 @@
 // Slice 8 — harden-safety audit (#133). The confined-view endowment surface is
 // `harden()`-ed, which transitively freezes everything reachable. This asserts
-// the REAL `@ship/sui-runtime` reactive core survives that freeze and stays
+// the REAL `@ship/sail-runtime` reactive core survives that freeze and stays
 // functional — the precondition for endowing the real runtime to a confined
 // view.
 //
@@ -29,7 +29,7 @@ const fakeDoc = {
   createDocumentFragment: () => ({ kind: 'fragment' }),
 } as unknown as Document
 
-describe('harden-safety of the real @ship/sui-runtime reactive core', () => {
+describe('harden-safety of the real @ship/sail-runtime reactive core', () => {
   beforeAll(() => lockdownRealm())
 
   it('hardens the real reactive surface without throwing', () => {

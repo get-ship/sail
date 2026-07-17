@@ -1,6 +1,6 @@
 // sui-media engine — the PURE resolution function. Given an ordered entry list
 // (the kind→renderer table the consumer owns) and a resolved source, decide the
-// descriptor. PURE: detection only — no I/O, no DOM, no `@ship/sui-runtime`, no
+// descriptor. PURE: detection only — no I/O, no DOM, no `@ship/sail-runtime`, no
 // knowledge of WHICH tags exist (the entry list carries that). The dispatch
 // decision (the default kind→TAG table) lives in the consumer that owns the
 // routing; this module only inspects signals and walks the supplied entries.

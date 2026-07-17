@@ -1,4 +1,4 @@
-// Chart-data engine barrel — Backbone #1 + #2 (pure @ship/sui-runtime).
+// Chart-data engine barrel — Backbone #1 + #2 (pure @ship/sail-runtime).
 //
 // One typed series shape in (`normalizeSeries`), reactive scales/extent/
 // geometry out (`createChartData` + the geometry helpers), responsive box from

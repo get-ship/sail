@@ -126,8 +126,8 @@ const FEW_SHOT_CONTROLLER = {
     {/for}
   {/if}
 </ul>`,
-  setup: `import { controller, signal, derived } from '@ship/sui-runtime'
-import type { LiveSignal } from '@ship/sui-runtime'
+  setup: `import { controller, signal, derived } from '@ship/sail-runtime'
+import type { LiveSignal } from '@ship/sail-runtime'
 
 export default controller((ctx: { agents: LiveSignal<{ items: { id: string; name: string }[] }> }) => {
   const selectedId = signal<string | null>(null)

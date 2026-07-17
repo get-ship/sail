@@ -235,7 +235,7 @@ pub(super) fn emit_controller(
     // type and shape the resolver context.
     if let Some(a) = authored {
         w.line(&format!("import __authored from {};", js_string(&a.specifier)));
-        w.line("import type { ControllerExport, ResolverContext } from \"@ship/sui-runtime/internal\";");
+        w.line("import type { ControllerExport, ResolverContext } from \"@ship/sail-runtime/internal\";");
         // `createScope`/`withScope` give `__authored.setup(...)` a real setup
         // window — a controller that calls the ambient `mount(fn)` (see
         // `packages/sui/runtime/src/effect-scope.ts`) throws
@@ -245,7 +245,7 @@ pub(super) fn emit_controller(
         // so `mount()` callbacks registered here are simply never fired —
         // scope.dispose() drops them along with anything an authored
         // controller registered via `onCleanup` — but the CALL must not throw.
-        w.line("import { createScope, withScope } from \"@ship/sui-runtime/internal\";");
+        w.line("import { createScope, withScope } from \"@ship/sail-runtime/internal\";");
     }
     w.nl();
 

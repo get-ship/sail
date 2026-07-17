@@ -15,7 +15,7 @@
 // §API sketch (`setColumnFilter`, `setGlobalFilter`, `preColumnFilteredRows`,
 // `filteredRows`), Slice 2.
 //
-// Engine purity (Cardinal 4): imports ONLY @ship/sui-runtime.
+// Engine purity (Cardinal 4): imports ONLY @ship/sail-runtime.
 
 import { describe, expect, it } from 'vitest'
 // RED: greenfield module — resolves only once Slice 2 ships.

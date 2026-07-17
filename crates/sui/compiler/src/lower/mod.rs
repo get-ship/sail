@@ -23,9 +23,9 @@ pub mod template;
 
 #[derive(Debug, Clone, Default)]
 pub struct Lowered {
-    /// Symbols imported from `@ship/sui-runtime`. Sorted for stable emit.
+    /// Symbols imported from `@ship/sail-runtime`. Sorted for stable emit.
     pub runtime_imports: BTreeSet<&'static str>,
-    /// Symbols imported from `@ship/sui-dom`. Sorted for stable emit.
+    /// Symbols imported from `@ship/sail-dom`. Sorted for stable emit.
     /// Phase 3b.3: views with depth-0 `DynamicText` import the hydrate
     /// helpers (`hydrateText`, `collectTextOpens`) — direct-emit replaces
     /// the `text` manifest entry that the runtime walker used to wire.
@@ -34,18 +34,18 @@ pub struct Lowered {
     pub uses_setup: bool,
     /// `true` if the template contains any `<use-*>` element. The
     /// emitter drops a side-effect import of
-    /// `@ship/sui-runtime/template-hooks` so the eight built-in hooks
-    /// register on view module load — `@ship/sui-runtime`'s entry no
+    /// `@ship/sail-runtime/template-hooks` so the eight built-in hooks
+    /// register on view module load — `@ship/sail-runtime`'s entry no
     /// longer ships them, so views that need them have to ask.
     pub uses_template_hooks: bool,
     /// `true` if any template expression references `route` as an
     /// identifier. The emitter adds `import { route } from
-    /// "@ship/sui-runtime/route"` so routeless views don't pull in the
+    /// "@ship/sail-runtime/route"` so routeless views don't pull in the
     /// route module.
     pub uses_route: bool,
     /// Runtime attacher symbols referenced by `motion:` directives.
     /// The emitter folds these into
-    /// the `@ship/sui-runtime` import list so views using `motion:`
+    /// the `@ship/sail-runtime` import list so views using `motion:`
     /// pull in the spring_attach / tween_attach helpers transparently.
     /// In milestone 1 the only entries are `"spring_attach"` (when any
     /// `motion:` preset resolves to a spring) and `"tween_attach"`

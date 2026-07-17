@@ -60,7 +60,7 @@ fn clean_controller_compiles() {
     let dir = tempfile::tempdir().expect("tempdir");
     let sui_path = dir.path().join("view.sui");
     let src = r#"<controller>
-import { controller } from '@ship/sui-runtime'
+import { controller } from '@ship/sail-runtime'
 export default controller((ctx, host) => {
   mount((el) => {
     host.addEventListener('click', () => {})

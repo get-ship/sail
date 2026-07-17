@@ -1,6 +1,6 @@
 // sui-media engine — shared types for the MIME registry + dispatcher.
 //
-// PURE TypeScript. No `@ship/sui-runtime`, no I/O, no DOM. The reactive slice
+// PURE TypeScript. No `@ship/sail-runtime`, no I/O, no DOM. The reactive slice
 // (`descriptor.ts`) imports `signal`/`derived`; these type shapes are the
 // contract every other engine file resolves against.
 //

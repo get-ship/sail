@@ -2,7 +2,7 @@
 // (`createTable`) and the windowed `.sui` render (Backbone #1 × #2).
 //
 // Keeps `sui-table.controller.ts` lean (the controller is glue; this is the
-// reactive plumbing it composes). PURE `@ship/sui-runtime` — no DOM, no SDK.
+// reactive plumbing it composes). PURE `@ship/sail-runtime` — no DOM, no SDK.
 // The controller owns DOM-side imperative wiring (the host `table` property,
 // delegated click/keydown, `host.emit`); this file owns the reactive deriveds
 // the template reads.
@@ -10,12 +10,12 @@
 // Authority: build-spec §"The view", §"Composition map", §"Behavioral spec
 // list", Slices 5 + 7c.
 
-import { derived, type Derived } from '@ship/sui-runtime'
+import { derived, type Derived } from '@ship/sail-runtime'
 import {
   createVirtualizer,
   type Virtual,
   type VirtualItem,
-} from '@ship/sui-runtime/virtual'
+} from '@ship/sail-runtime/virtual'
 import type { Table } from '../engine/create-table'
 import type { CellValue, ColumnApi, Row } from '../engine/types'
 

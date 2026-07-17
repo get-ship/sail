@@ -1,5 +1,5 @@
 {
-  "name": "sui-framework",
+  "name": "sail-framework",
   "private": true,
   "workspaces": {
     "packages": [
@@ -24,7 +24,7 @@
     "lightningcss"
   ],
   "scripts": {
-    "wasm": "wasm-pack build crates/sui/compiler --target web --out-dir ../../../packages/sui/compiler-wasm/pkg --out-name sui_compiler -- --features wasm",
+    "wasm": "wasm-pack build crates/sui/compiler --target web --out-dir ../../../packages/sui/compiler-wasm/pkg --out-name sail_compiler -- --features wasm",
     "build:bundles": "cargo run -p deck-cli -- build-assets",
     "typecheck": "node scripts/typecheck-components.mjs",
     "typecheck:tsgo": "tsgo --noEmit -p packages/sui/runtime/tsconfig.json && tsgo --noEmit -p packages/sui/dom/tsconfig.json",

@@ -1,5 +1,5 @@
 {
-  "name": "@ship/sui-primitives",
+  "name": "@ship/sail-primitives",
   "version": "0.2.0",
   "description": "Ship Primitives pack — generic `<sui-*>` UI elements (button, input, dialog, popover, etc.).",
   "type": "module",
@@ -21,8 +21,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ship/sui-dom": "workspace:*",
-    "@ship/sui-runtime": "workspace:*",
+    "@ship/sail-dom": "workspace:*",
+    "@ship/sail-runtime": "workspace:*",
     "@ship/tokens": "workspace:*"
   },
   "devDependencies": {

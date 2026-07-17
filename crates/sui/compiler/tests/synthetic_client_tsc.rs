@@ -5,12 +5,12 @@
 //! `__mount` + `hydrate` — across a representative real set: hub `/`, a
 //! control-flow view, a controller live() view, a route-param view, a
 //! propless component, and the static view-host view. The client render imports the
-//! `view()` wrapper from `@ship/sui-runtime` and the `hydrate*` helpers from
-//! `@ship/sui-dom`, so the tsconfig maps both — proving the browser contract
+//! `view()` wrapper from `@ship/sail-runtime` and the `hydrate*` helpers from
+//! `@ship/sail-dom`, so the tsconfig maps both — proving the browser contract
 //! resolves against real types, exactly as strictly as authored TS.
 //!
-//! `@ship/sui-runtime` maps to a tiny shim (the SSR server entry + `view`) so
-//! the check stays lightweight; `@ship/sui-dom` maps to its real source.
+//! `@ship/sail-runtime` maps to a tiny shim (the SSR server entry + `view`) so
+//! the check stays lightweight; `@ship/sail-dom` maps to its real source.
 //!
 //! Opt-in: requires `bun install` so `node_modules/.bin/tsc` + the workspace
 //! sources exist. Absent tsc → prints why and returns (mirrors `synthetic_tsc`).
@@ -123,7 +123,7 @@ fn synth_client_into(repo: &Path, gendir: &Path, s: &Surface) {
     fs::write(dir.join(format!("{stem}.client.ts")), out.render_client_ts).unwrap();
 }
 
-/// Write the `@ship/sui-runtime` shim: the SSR server surface + the
+/// Write the `@ship/sail-runtime` shim: the SSR server surface + the
 /// `component()` factory (which the server entry omits). Lightweight — avoids
 /// pulling the full browser index graph into the check.
 fn write_runtime_shim(repo: &Path, work: &Path) {
@@ -135,7 +135,7 @@ fn write_runtime_shim(repo: &Path, work: &Path) {
          // the synthetic emit's `mount(container)` (which calls\n\
          // `markHydrateText` next to `bindText`) type-checks under tsc.\n\
          export {{ markHydrateText, markHydrateAttr, markHydrateBoundary }} from \"{r}/packages/sui/runtime/src/hydrate-mark.ts\";\n\
-         // Types the @ship/sui-dom hydrate helpers import from the runtime but\n\
+         // Types the @ship/sail-dom hydrate helpers import from the runtime but\n\
          // that the SSR server entry does not surface.\n\
          export type {{ Modifier, OnOptions }} from \"{r}/packages/sui/runtime/src/on.ts\";\n\
          // `ViewScope` lives on controller.ts (the legacy export authors still\n\
@@ -176,9 +176,9 @@ fn write_tsconfig(repo: &Path, work: &Path, include: &[String], name: &str) {
     "allowArbitraryExtensions": true,
     "baseUrl": ".",
     "paths": {{
-      "@ship/sui-runtime": ["./runtime-shim.ts"],
-      "@ship/sui-runtime/*": ["{r}/packages/sui/runtime/src/*"],
-      "@ship/sui-dom": ["{r}/packages/sui/dom/src/index.ts"],
+      "@ship/sail-runtime": ["./runtime-shim.ts"],
+      "@ship/sail-runtime/*": ["{r}/packages/sui/runtime/src/*"],
+      "@ship/sail-dom": ["{r}/packages/sui/dom/src/index.ts"],
       "@ship/deck/router": ["{r}/packages/deck/router/src/server.ts"],
       "@app/*": ["{r}/crates/deck/deck-conformance/app/*"]
     }}
@@ -219,7 +219,7 @@ fn client_contract_typechecks_green_across_real_surfaces() {
 
     // The strict-green set. These exercise the CLIENT contract — view() wrapper,
     // __mount (CSR), hydrate (text/element/boundary/while markers), typed scope
-    // reads, the @ship/sui-dom helper imports — with author-sound typing, AND
+    // reads, the @ship/sail-dom helper imports — with author-sound typing, AND
     // the manifest seam (route/navigate declared into the manifest, typed
     // against `RouteSignals` — see `inject_host_context`).
     //

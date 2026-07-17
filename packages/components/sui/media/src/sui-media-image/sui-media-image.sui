@@ -56,7 +56,7 @@
 // Authority: build-spec Slice 6, §"Backbone #2 — ViewerRenderer contract",
 // §"Props" (sui-media-image), §Accessibility, behavioral spec #4.
 
-import { bindHtml, controller, derived, effect, emit, ref, signal } from '@ship/sui-runtime'
+import { bindHtml, controller, derived, effect, emit, ref, signal } from '@ship/sail-runtime'
 import type { ViewerSource } from '../engine/types'
 import { emitViewerError, emitViewerLoad } from '../engine/renderer-contract'
 import { attachZoomPan, type ZoomPanState } from './engine/zoom-pan'

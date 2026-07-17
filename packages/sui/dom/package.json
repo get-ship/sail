@@ -1,7 +1,7 @@
 {
-  "name": "@ship/sui-dom",
+  "name": "@ship/sail-dom",
   "version": "0.2.0",
-  "description": "SUI DOM interpreter — parses .sui files and hydrates them against @ship/sui-runtime.",
+  "description": "SUI DOM interpreter — parses .sui files and hydrates them against @ship/sail-runtime.",
   "type": "module",
   "license": "MIT",
   "main": "src/index.ts",
@@ -21,7 +21,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@ship/sui-runtime": "workspace:*"
+    "@ship/sail-runtime": "workspace:*"
   },
   "devDependencies": {
     "@ship/test-setup": "workspace:*",

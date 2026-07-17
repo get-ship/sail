@@ -11,7 +11,7 @@
 // '@ship/deck-router'` in `view.ts` / `controller.ts` / `mount.ts` /
 // `controller-resolver-types.ts`. The deck-side `RouteSignals` is
 // structurally compatible (it imports the SAME `Signal` from
-// `@ship/sui-runtime`); runtime values from the deck router satisfy
+// `@ship/sail-runtime`); runtime values from the deck router satisfy
 // this type at the assignment site (the deck `route` factory returns
 // a structurally-compatible object).
 

@@ -16,9 +16,9 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@ship/sui-compiler-wasm": "workspace:*",
-    "@ship/sui-dom": "workspace:*",
-    "@ship/sui-runtime": "workspace:*"
+    "@ship/sail-compiler-wasm": "workspace:*",
+    "@ship/sail-dom": "workspace:*",
+    "@ship/sail-runtime": "workspace:*"
   },
   "devDependencies": {
     "happy-dom": "^20.9.0",

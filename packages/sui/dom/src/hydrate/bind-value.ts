@@ -5,7 +5,7 @@
 //   - DOM → signal: `input` event writes `el.value` back via `.set()`
 //   - signal → DOM: `effect()` reads the signal and assigns `.value`
 
-import { effect, type Signal } from '@ship/sui-runtime'
+import { effect, type Signal } from '@ship/sail-runtime'
 
 export function hydrateBindValue(
   el: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,

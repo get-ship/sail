@@ -1,5 +1,5 @@
 {
-  "name": "@ship/sui-runtime",
+  "name": "@ship/sail-runtime",
   "version": "0.2.0",
   "description": "SUI runtime — fine-grained signals, custom-element wrapper, patch protocol applicator. The reactive engine that templates and components share.",
   "type": "module",

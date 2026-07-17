@@ -15,8 +15,8 @@
   }
 </scope>
 <controller>
-import { controller, effect, ref, signal } from '@ship/sui-runtime'
-import type { ViewScope } from '@ship/sui-runtime'
+import { controller, effect, ref, signal } from '@ship/sail-runtime'
+import type { ViewScope } from '@ship/sail-runtime'
 import {
   type Swatch,
   deriveSwatches,

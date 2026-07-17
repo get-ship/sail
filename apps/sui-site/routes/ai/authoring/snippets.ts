@@ -8,5 +8,5 @@ export const loopDiagram = `            ┌────────────�
             │                       source         │
             │ 4. Diagnose           sui_diagnostics│
             │ 5. Fix + reloop ↑                    │
-            │ 6. Score              sui-eval       │
+            │ 6. Score              sail-eval      │
             └──────────────────────────────────────┘`

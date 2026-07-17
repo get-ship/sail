@@ -8,15 +8,15 @@
 // visible rows is mapped (never all of `tree.rows()`), so a 100k-node tree
 // allocates ~overscan+viewport views.
 //
-// PURE `@ship/sui-runtime` — no DOM, no SDK. The flat-list ARIA (level/posinset/
+// PURE `@ship/sail-runtime` — no DOM, no SDK. The flat-list ARIA (level/posinset/
 // setsize) reads the engine's `Row<T>` helpers directly; there is no sibling
 // walk to reinvent.
 //
 // Authority: build-spec §"Accessibility" (flat-list ARIA), §"The view", Slices
 // 3-5; behavioral specs #1/#2/#4/#6/#8.
 
-import { derived, type Derived } from '@ship/sui-runtime'
-import type { VirtualItem } from '@ship/sui-runtime/virtual'
+import { derived, type Derived } from '@ship/sail-runtime'
+import type { VirtualItem } from '@ship/sail-runtime/virtual'
 import type { Table } from '../sui-table/engine/create-table'
 import type { CellValue, ColumnApi, Row } from '../sui-table/engine/types'
 import type { TreeNode } from '../sui-tree-view/sui-tree-view.controller'

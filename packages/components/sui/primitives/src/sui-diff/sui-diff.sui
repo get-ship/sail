@@ -29,7 +29,7 @@
 </scope>
 
 <controller>
-import { controller, derived } from '@ship/sui-runtime'
+import { controller, derived } from '@ship/sail-runtime'
 import type { Scope } from './sui-diff.sui'
 
 type Kind = 'add' | 'del' | 'ctx' | 'hunk'

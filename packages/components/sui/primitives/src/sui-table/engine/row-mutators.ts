@@ -5,13 +5,13 @@
 // the matching `on*Change` + `onStateChange` (Cardinal 2 & 3). Expansion is the
 // late-bound handle the rows read through (`getIsExpanded`/`toggleExpanded`).
 //
-// PURE TypeScript — imports `batch` from `@ship/sui-runtime` ONLY.
+// PURE TypeScript — imports `batch` from `@ship/sail-runtime` ONLY.
 //
 // Authority: build-spec §Features #5/#13 (setGrouping/toggleGrouping +
 // setExpanded/toggleExpanded/toggleAllExpanded; `expanded: true` = expand-all),
 // §"Mutation discipline", Slice 3b.
 
-import { batch } from '@ship/sui-runtime'
+import { batch } from '@ship/sail-runtime'
 import type { ExpandedState, ReactiveTableState, TableState } from './types'
 
 export interface RowMutatorCallbacks {

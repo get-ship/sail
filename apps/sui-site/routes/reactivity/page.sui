@@ -3,7 +3,7 @@
 // one effect writing a visible log: the reader clicks and watches all three
 // layers respond.
 
-import { controller, signal, derived, effect, type ViewScope } from '@ship/sui-runtime'
+import { controller, signal, derived, effect, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sui'
 import { code } from './snippets'
 

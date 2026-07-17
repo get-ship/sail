@@ -47,14 +47,14 @@ export interface CatalogEntry {
 export const PACKS: Pack[] = [
   { id: 'all', label: 'All packs', sub: '' },
   { id: 'lang', label: 'In the language', sub: 'no import — it compiles in' },
-  { id: 'charts', label: 'Charts', sub: '@ship/sui-charts' },
-  { id: 'media', label: 'Media', sub: '@ship/sui-media' },
+  { id: 'charts', label: 'Charts', sub: '@ship/sail-charts' },
+  { id: 'media', label: 'Media', sub: '@ship/sail-media' },
   // Canvas is deliberately absent from the rail: its pack has zero
   // cataloged components until their demo tiles land (see the CATALOG
   // note) — a rail entry whose filter shows an empty grid is a lie.
-  { id: 'chat', label: 'Chat elements', sub: '@ship/sui-chat-elements' },
-  { id: 'mermaid', label: 'Mermaid', sub: '@ship/sui-mermaid' },
-  { id: 'code-editor', label: 'Code editor', sub: '@ship/sui-code-editor' },
+  { id: 'chat', label: 'Chat elements', sub: '@ship/sail-chat-elements' },
+  { id: 'mermaid', label: 'Mermaid', sub: '@ship/sail-mermaid' },
+  { id: 'code-editor', label: 'Code editor', sub: '@ship/sail-code-editor' },
   // The fx pack is gone: the actions it shipped (`spotlight`,
   // `targetCursor`) are stdlib and live in the action table; they
   // are not in this catalog because actions are not elements.
@@ -70,7 +70,7 @@ const L = (tag: string, key: string, cat: CatalogEntry['cat']): CatalogEntry => 
 
 /** Pack-component helper. `key` is the camelCase scope key page.sui reads
  *  through `show.<key>()`, `slug` is the /components/<slug> detail route.
- *  Every pack tag is the custom element the @ship/sui-* packs define; the
+ *  Every pack tag is the custom element the @ship/sail-* packs define; the
  *  helper keeps pack rows consistent with the `L` ones. */
 const P = (
   pack: Exclude<PackId, 'lang'>,
@@ -139,7 +139,7 @@ export const CATALOG: CatalogEntry[] = [
   // the action table. They are not elements; this catalog is
   // elements only.
 
-  // ── @ship/sui-charts — 7 SVG-rendered data viz primitives ───────────
+  // ── @ship/sail-charts — 7 SVG-rendered data viz primitives ───────────
   P('charts', 'sui-area-chart', 'suiAreaChart', 'data'),
   P('charts', 'sui-bar-chart', 'suiBarChart', 'data'),
   P('charts', 'sui-donut', 'suiDonut', 'data'),
@@ -148,7 +148,7 @@ export const CATALOG: CatalogEntry[] = [
   P('charts', 'sui-line-chart', 'suiLineChart', 'data'),
   P('charts', 'sui-sparkline', 'suiSparkline', 'data'),
 
-  // ── @ship/sui-media — content renderers (image / audio-video) ────────
+  // ── @ship/sail-media — content renderers (image / audio-video) ────────
   // sui-media-csv exists in the pack but has NO live tile in page.sui yet —
   // a catalog entry REQUIRES a live tile (`show.<key>()` gate), or the
   // rail's counts lie and its filter shows an empty grid. Add the entry
@@ -156,7 +156,7 @@ export const CATALOG: CatalogEntry[] = [
   P('media', 'sui-media-image', 'suiMediaImage', 'data'),
   P('media', 'sui-media-av', 'suiMediaAv', 'data'),
 
-  // ── @ship/sui-canvas — NOT CATALOGED YET ─────────────────────────────
+  // ── @ship/sail-canvas — NOT CATALOGED YET ─────────────────────────────
   // The pack ships 7 drawing/annotation surfaces (sui-canvas, sui-board,
   // sui-draw, sui-graph-canvas, sui-annotation-*), floor-migrated and
   // CEM-green — but none has a live demo tile in page.sui, so listing
@@ -164,7 +164,7 @@ export const CATALOG: CatalogEntry[] = [
   // They enter this catalog with the pack-consolidation wave (task #53),
   // each entry landing together with its tile.
 
-  // ── @ship/sui-chat-elements — chat-message UI primitives ─────────────
+  // ── @ship/sail-chat-elements — chat-message UI primitives ─────────────
   // sui-message-list: pack component without a live tile — same rule as
   // sui-media-csv above; enters with its demo.
   P('chat', 'sui-message', 'suiMessage', 'display'),
@@ -173,10 +173,10 @@ export const CATALOG: CatalogEntry[] = [
   P('chat', 'sui-thinking-dots', 'suiThinkingDots', 'feedback'),
   P('chat', 'sui-tool-call', 'suiToolCall', 'display'),
 
-  // ── @ship/sui-mermaid — 1 diagram renderer (themed SVG) ──────────────
+  // ── @ship/sail-mermaid — 1 diagram renderer (themed SVG) ──────────────
   P('mermaid', 'sui-mermaid', 'suiMermaid', 'data'),
 
-  // ── @ship/sui-code-editor — 1 CodeMirror-wrapped editor ──────────────
+  // ── @ship/sail-code-editor — 1 CodeMirror-wrapped editor ──────────────
   P('code-editor', 'sui-code-editor', 'suiCodeEditor', 'inputs'),
 ]
 

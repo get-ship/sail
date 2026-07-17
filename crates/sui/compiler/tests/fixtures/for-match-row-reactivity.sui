@@ -4,7 +4,7 @@
 // `id` key, so bindFor's keyed-reuse path fires — no remount) but flips
 // `status`, which should re-select the {#match} arm WITHOUT changing which
 // row is mounted.
-import { controller, signal } from '@ship/sui-runtime'
+import { controller, signal } from '@ship/sail-runtime'
 
 export interface Task {
   id: string

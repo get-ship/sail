@@ -15,14 +15,14 @@
 // `row.getValue()` reflects the commit. `isEditing(rowId, columnId)` is the
 // query the Cell `getIsEditing()` reflects (tracks the slice in a derived).
 //
-// PURE TypeScript — imports `{ batch }` from `@ship/sui-runtime` ONLY. No DOM,
+// PURE TypeScript — imports `{ batch }` from `@ship/sail-runtime` ONLY. No DOM,
 // no SDK, no network.
 //
 // Authority: build-spec §Features #15 ("Cell editing": per-column enableEditing;
 // editing slice = { rowId, columnId } | null; startEditing/commitEdit(value)/
 // cancelEdit; optional validation hook), §"Cell<T>" (getIsEditing), Slice 4.
 
-import { batch, type Signal } from '@ship/sui-runtime'
+import { batch, type Signal } from '@ship/sail-runtime'
 import type { CellValue, ColumnDef, EditingState } from './types'
 
 export interface EditingInputs<T> {

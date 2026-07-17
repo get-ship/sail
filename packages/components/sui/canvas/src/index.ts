@@ -1,8 +1,8 @@
-// @ship/sui-canvas — the spatial substrate pack.
+// @ship/sail-canvas — the spatial substrate pack.
 //
 // <sui-canvas> is the bare pan/zoom/infinite-surface primitive (backbone #3),
-// built on @ship/sui-runtime signals — no React, no Excalidraw, no SDK. A
-// single `import '@ship/sui-canvas'` registers the tag globally; the compiled
+// built on @ship/sail-runtime signals — no React, no Excalidraw, no SDK. A
+// single `import '@ship/sail-canvas'` registers the tag globally; the compiled
 // tag calls customElements.define() on import.
 //
 // The shared engine is exported for the sibling faces (sui-board, sui-draw)

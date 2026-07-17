@@ -22,14 +22,14 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { describe, expect, it, beforeEach, afterEach } from 'vitest'
-import { compileSui, evalCompiledJs } from '@ship/sui-dom/test-utils'
+import { compileSui, evalCompiledJs } from '@ship/sail-dom/test-utils'
 import { measureMountLeakAsync, gcAvailable, type RetentionCycle } from '../src/leak-retention'
 
 // Resolve the sui primitives package by walking up to the workspace root and
 // landing on the package by NAME — NOT by counting `../` from this test file
 // (the brittle traversal that broke the moment test-setup moved one dir).
 //
-// Why not `require.resolve('@ship/sui-primitives')`: it is not a declared
+// Why not `require.resolve('@ship/sail-primitives')`: it is not a declared
 // dependency of @ship/test-setup, and bun's per-package node_modules layout
 // leaves it unresolvable from here (verified: MODULE_NOT_FOUND) — declaring it
 // would mean editing the lockfile. So we use the repo's OTHER sanctioned
@@ -62,9 +62,9 @@ function primitivesSrc(): string {
   const name = existsSync(pkgJson)
     ? (JSON.parse(readFileSync(pkgJson, 'utf8')) as { name?: string }).name
     : undefined
-  if (name !== '@ship/sui-primitives') {
+  if (name !== '@ship/sail-primitives') {
     throw new Error(
-      `[component-leak-gate] expected @ship/sui-primitives at ${pkgDir} but found ${name ?? '(missing)'} — ` +
+      `[component-leak-gate] expected @ship/sail-primitives at ${pkgDir} but found ${name ?? '(missing)'} — ` +
         `update this resolver if the primitives package moved.`,
     )
   }

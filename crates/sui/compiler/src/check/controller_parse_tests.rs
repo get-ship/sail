@@ -27,7 +27,7 @@ fn ignores_null_default() {
 #[test]
 fn extracts_block_body_returned_members() {
     let src = r#"
-import { controller, derived } from '@ship/sui-runtime'
+import { controller, derived } from '@ship/sail-runtime'
 export default controller((ctx) => {
   const x = derived(() => 1)
   const go = (s) => {}

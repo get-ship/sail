@@ -14,7 +14,7 @@ fn lint(source: &str) -> Vec<crate::Finding> {
 #[test]
 fn clean_controller_passes() {
     let src = r#"
-        import { controller, signal } from '@ship/sui-runtime'
+        import { controller, signal } from '@ship/sail-runtime'
         export default controller({
           mount: (state, host) => {
             const count = signal(0)
@@ -147,7 +147,7 @@ fn flags_synthetic_innerhtml_offender() {
     // exercised end-to-end against the kind of code it's meant to catch.
     let path = std::path::PathBuf::from("synthetic/sui-foo/sui-foo.controller.ts");
     let source = r#"
-import { controller } from '@ship/sui-runtime'
+import { controller } from '@ship/sail-runtime'
 export default controller({
   mount(state, host) {
     const root = host.shadowRoot
@@ -165,7 +165,7 @@ export default controller({
 #[test]
 fn state_cast_unknown_as_scope_reports() {
     let src = r#"
-        import { controller } from '@ship/sui-runtime'
+        import { controller } from '@ship/sail-runtime'
         import type { Scope } from './foo.sui'
         export default controller<Scope>({
           mount(state, host) {
@@ -219,7 +219,7 @@ fn state_cast_scopeview_alias_reports() {
 fn typed_signals_access_passes_state_cast() {
     // The post-#121 pattern: no cast, read via $signals — must NOT report.
     let src = r#"
-        import { controller } from '@ship/sui-runtime'
+        import { controller } from '@ship/sail-runtime'
         export default controller({
           mount(state, host) {
             const el = state.$signals.dialogEl()

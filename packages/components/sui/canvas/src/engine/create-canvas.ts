@@ -1,14 +1,14 @@
 // Backbone #3 — `createCanvas()`: the shared pan/zoom/pointer substrate.
 //
-// Pure reactive state on `@ship/sui-runtime` signals. No DOM emission, no
+// Pure reactive state on `@ship/sail-runtime` signals. No DOM emission, no
 // SDK, no React, no fetch. The viewport element is a thunk (null until
 // mount, mirroring `createVirtualizer`'s `getScrollElement`). Heavy
 // coordinate/transform math lives in `transform.ts`; this file is the thin
 // assembler — construct slices, wire the derived chain, own the pointer
 // gesture pump, return the facade.
 
-import { signal, derived, batch, untrack, type Derived } from '@ship/sui-runtime'
-import { onCleanup } from '@ship/sui-runtime'
+import { signal, derived, batch, untrack, type Derived } from '@ship/sail-runtime'
+import { onCleanup } from '@ship/sail-runtime'
 import {
   clampScale,
   composeZoomAt,

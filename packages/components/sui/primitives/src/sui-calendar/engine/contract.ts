@@ -2,10 +2,10 @@
 //
 // `CalendarOptions` (input) + the `Calendar` facade the assembler returns.
 // PURE TypeScript — type-only. Imports the Signal/Derived handles from
-// `@ship/sui-runtime` and the shared shapes from `./types`. `types.ts` and
+// `@ship/sail-runtime` and the shared shapes from `./types`. `types.ts` and
 // `contract.ts` are the one source of truth for the surface (no parallel defn).
 
-import type { Derived, Signal } from '@ship/sui-runtime'
+import type { Derived, Signal } from '@ship/sail-runtime'
 import type {
   AgendaRow,
   AllDayLane,

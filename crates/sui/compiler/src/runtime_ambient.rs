@@ -18,7 +18,7 @@
 /// is `export * from './index'`), and it is what the compiled render module
 /// already imports its helpers from — so bundle externalization treats a
 /// controller module's imports identically to a render module's.
-pub const RUNTIME_SPECIFIER: &str = "@ship/sui-runtime/internal";
+pub const RUNTIME_SPECIFIER: &str = "@ship/sail-runtime/internal";
 
 /// The ambient authoring vocabulary of a controller: the reactive primitives,
 /// the controller factory, and its ambient lifecycle (`mount`/`onCleanup`). A
@@ -28,7 +28,7 @@ pub const RUNTIME_SPECIFIER: &str = "@ship/sui-runtime/internal";
 ///
 /// Each entry is `(authored_ident, exported_ident)`. Most idents import
 /// under their own name (`exported_ident == authored_ident`). `mount` is the
-/// one exception: `@ship/sui-runtime/internal` already exports a `mount`
+/// one exception: `@ship/sail-runtime/internal` already exports a `mount`
 /// (the F1 "mount a view into the DOM" host entry point — see
 /// `packages/sui/runtime/src/mount.ts`), so the ambient lifecycle function a
 /// controller body calls is exported under `mountAmbient` and imported

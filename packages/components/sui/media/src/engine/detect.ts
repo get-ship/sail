@@ -1,6 +1,6 @@
 // sui-media engine — content detection (extension + magic-byte + content-type
 // normalization). PURE: string/byte inspection only, no I/O, no DOM, no
-// `@ship/sui-runtime`. The consumer already resolved the bytes — the sniffer
+// `@ship/sail-runtime`. The consumer already resolved the bytes — the sniffer
 // inspects the supplied head, it never fetches.
 //
 // Authority: build-spec §"Resolution order is FIXED and validated",

@@ -47,10 +47,10 @@ crates/deck/deck-core/assets/sui-custom-elements.json
 .artifacts/
 
 # Ship-harness output + runtime (mirror og Ship/ship). `.ship/` holds tracked
-# config too, so ignore selectively: the sui-compiler's `.ship/sui-out/` mirror,
+# config too, so ignore selectively: the sail-compiler's `.ship/sail-out/` mirror,
 # worktrees, and local dbs are generated/runtime — never committed.
-.sui-out/
-.ship/sui-out/
+.sail-out/
+.ship/sail-out/
 .ship/worktrees/
 .ship/.trash/
 .ship/.boundary

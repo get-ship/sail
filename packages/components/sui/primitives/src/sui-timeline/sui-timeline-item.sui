@@ -24,7 +24,7 @@
 </scope>
 
 <controller>
-import { controller, effect, signal } from '@ship/sui-runtime'
+import { controller, effect, signal } from '@ship/sail-runtime'
 
 export default controller((ctx) => {
     const first = signal(false)

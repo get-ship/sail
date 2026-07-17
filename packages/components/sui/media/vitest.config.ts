@@ -4,7 +4,7 @@ import {
   shadowForComponentCompilePlugin,
 } from '@ship/test-setup/vitest'
 
-// happy-dom (not jsdom): the renderers compose `@ship/sui-primitives`
+// happy-dom (not jsdom): the renderers compose `@ship/sail-primitives`
 // (sui-table, sui-empty-state) which inject modern scoped CSS; jsdom 25's
 // parser throws "Could not parse CSS stylesheet" on mount, happy-dom tolerates
 // it. The default include globs (`test/**/*.test.ts` + `src/**/*.test.ts`) pick

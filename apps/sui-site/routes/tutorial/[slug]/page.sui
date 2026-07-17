@@ -26,8 +26,8 @@ import {
   bindHtml,
   type Action,
   type ViewScope,
-} from '@ship/sui-runtime'
-import { ensureWasm, makeCompile } from '@ship/sui-viewer/wasm-bootstrap'
+} from '@ship/sail-runtime'
+import { ensureWasm, makeCompile } from '@ship/sail-viewer/wasm-bootstrap'
 import type { Scope } from './page.sui'
 import { TUTORIAL_LESSONS, type TutorialLesson } from '../../../src/tutorial-data'
 import {

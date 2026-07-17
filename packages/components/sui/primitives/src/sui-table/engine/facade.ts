@@ -6,12 +6,12 @@
 // (possibly tree) core-row set, and the `hasActiveFilters` derived. Factored out
 // to keep the assembler under the file cap.
 //
-// PURE TypeScript — imports `derived` from `@ship/sui-runtime` ONLY.
+// PURE TypeScript — imports `derived` from `@ship/sail-runtime` ONLY.
 //
 // Authority: build-spec §"Backbone #1", §"API sketch" (initialState merge,
 // onStateChange snapshot), §States (hasActiveFilters).
 
-import { derived, isSignal, type Derived, type Signal } from '@ship/sui-runtime'
+import { derived, isSignal, type Derived, type Signal } from '@ship/sail-runtime'
 import { isActiveFilterValue } from './filtering'
 import type { ReactiveTableState, Row, TableOptions, TableState } from './types'
 

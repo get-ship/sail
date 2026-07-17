@@ -1,7 +1,7 @@
-// @ship/sui-code-editor — SUI pack, framework-pure.
+// @ship/sail-code-editor — SUI pack, framework-pure.
 //
 // One element: <sui-code-editor>. The compiled `.compiled.js` calls
-// `customElements.define()` on import, so a single `import '@ship/sui-code-editor'`
+// `customElements.define()` on import, so a single `import '@ship/sail-code-editor'`
 // registers the tag globally before any view template instantiates it.
 //
 // Pure presentational: no SDK reads, no ship-platform coupling. The host

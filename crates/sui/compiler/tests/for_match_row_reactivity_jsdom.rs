@@ -104,8 +104,8 @@ fn write_harness(repo: &Path, work: &Path) {
 export default defineConfig({{
   test: {{ environment: 'jsdom', include: ['mount.test.ts'] }},
   resolve: {{ alias: {{
-    '@ship/sui-runtime/internal': '{rt}',
-    '@ship/sui-runtime': '{rt}',
+    '@ship/sail-runtime/internal': '{rt}',
+    '@ship/sail-runtime': '{rt}',
   }} }},
 }})
 "#,

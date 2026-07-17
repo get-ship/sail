@@ -17,7 +17,7 @@
 // §Features #2 (`getSortIndex()`), #8-#11 (sizing/order/visibility/pinning
 // reads), Slices 1b + 3a.
 
-import type { Signal } from '@ship/sui-runtime'
+import type { Signal } from '@ship/sail-runtime'
 import type { ColumnLane } from './columns'
 import type { CellValue, ColumnApi, ColumnDef, Row, SortDirection, SortState } from './types'
 

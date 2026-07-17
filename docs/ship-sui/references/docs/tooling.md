@@ -16,7 +16,7 @@ The chain from `.sui` source on disk to a live, hot-reloaded view in the browser
 
 ```sh
 # Compile a single file. Emits to the project mirror tree
-# (<repo-root>/.ship/sui-out/<src-rel>/<stem>.compiled.js by default):
+# (<repo-root>/.ship/sail-out/<src-rel>/<stem>.compiled.js by default):
 cargo run -q -p sui-compiler -- build views/home/page.sui
 
 # Compile a directory recursively, into a single output dir (legacy <stem>.js):
@@ -32,7 +32,7 @@ Flags (from `crates/sui/compiler/src/bin/sui-compiler.rs`):
 
 | Flag | Purpose |
 |---|---|
-| `--out <dir>` | Single output directory (legacy `<stem>.js` naming). When omitted, emits to `<repo-root>/.ship/sui-out/<src-rel>/<stem>.compiled.js`. |
+| `--out <dir>` | Single output directory (legacy `<stem>.js` naming). When omitted, emits to `<repo-root>/.ship/sail-out/<src-rel>/<stem>.compiled.js`. |
 | `--clean` | Remove each source file's mirror directory (or `--out` directory) before emitting. Idempotent rebuilds. |
 | `--mode <view\|component\|auto>` | Override mode (otherwise auto-detected from `--component-name`). |
 | `--no-dts` | Suppress `.sui.d.ts` emission. |
@@ -44,7 +44,7 @@ The binary is also exposed as a `cdylib` (`crate-type = ["lib", "cdylib"]` in `C
 
 ## The deck bundler — the ONLY bundler
 
-There is one bundler: the in-process Rust Rolldown bundler in `crates/deck/deck-bundler/` (#163, #167, #220). The retired `@ship/sui-build` (esbuild, one package at a time) and the old `packages/deck/bundler/index.ts` Bun worker are both gone — components are no longer pre-compiled to on-disk `dist/` bundles per package.
+There is one bundler: the in-process Rust Rolldown bundler in `crates/deck/deck-bundler/` (#163, #167, #220). The retired `@ship/sail-build` (esbuild, one package at a time) and the old `packages/deck/bundler/index.ts` Bun worker are both gone — components are no longer pre-compiled to on-disk `dist/` bundles per package.
 
 **How it works.** A Rust Rolldown plugin (`SuiPlugin`) compiles each `.sui` via `sui-compiler` in its `load` hook — no bun worker, no subprocess, no `.compiled.js` pre-step. Membership is **traced**, not declared: each entry (a view, an app, a marketing/arcade page) is bundled by following its imports and template tags.
 

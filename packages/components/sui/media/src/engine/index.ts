@@ -1,5 +1,5 @@
-// @ship/sui-media/engine — the PURE detection/parse/resolution engine, with NO
-// component registration side effects. The `@ship/sui-media` package barrel
+// @ship/sail-media/engine — the PURE detection/parse/resolution engine, with NO
+// component registration side effects. The `@ship/sail-media` package barrel
 // (src/index.ts) re-exports this AND imports the renderer `.compiled.js` (which
 // `customElements.define()` on import); consumers that want only the headless
 // engine — e.g. the @ship/viewer router's dispatcher controller, which resolves

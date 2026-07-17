@@ -1,5 +1,5 @@
 <controller>
-import { controller, signal, effect } from '@ship/sui-runtime'
+import { controller, signal, effect } from '@ship/sail-runtime'
 
 // Dark themes pair with `data-mode="dark"` on <html> so the [data-mode="light"]
 // override in deck-theme.css can layer the light palette on top. This is the

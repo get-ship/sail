@@ -1,5 +1,5 @@
-import { signal, derived } from '@ship/sui-runtime'
-import type { Signal } from '@ship/sui-runtime'
+import { signal, derived } from '@ship/sail-runtime'
+import type { Signal } from '@ship/sail-runtime'
 
 /**
  * A list source: a plain array, a `Signal<T[]>`, a `derived(() => T[])`, or any

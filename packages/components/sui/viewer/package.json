@@ -1,5 +1,5 @@
 {
-  "name": "@ship/sui-viewer",
+  "name": "@ship/sail-viewer",
   "version": "0.2.0",
   "description": "Ship Viewer pack — the browser compile seam (`ensureWasm`/`makeCompile`) and `<sui-render>`, the mount stage every surface composes for a live preview of a SUI component.",
   "type": "module",
@@ -20,10 +20,10 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@ship/sui-compiler-wasm": "workspace:*",
-    "@ship/sui-dom": "workspace:*",
-    "@ship/sui-primitives": "workspace:*",
-    "@ship/sui-runtime": "workspace:*"
+    "@ship/sail-compiler-wasm": "workspace:*",
+    "@ship/sail-dom": "workspace:*",
+    "@ship/sail-primitives": "workspace:*",
+    "@ship/sail-runtime": "workspace:*"
   },
   "devDependencies": {
     "@ship/test-setup": "workspace:*",

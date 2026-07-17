@@ -3,7 +3,7 @@
 // crates/sui/compiler/tests/site_snippets_compile.rs.
 export const code = {
   team: `<controller>
-import { controller, signal, filteredList, selection } from '@ship/sui-runtime'
+import { controller, signal, filteredList, selection } from '@ship/sail-runtime'
 
 export default controller(() => {
   const people = signal([
@@ -43,7 +43,7 @@ export default controller(() => {
 {/if}`,
 
   fleet: `<controller>
-import { controller, signal } from '@ship/sui-runtime'
+import { controller, signal } from '@ship/sail-runtime'
 
 export default controller(() => {
   const services = signal([
@@ -74,7 +74,7 @@ export default controller(() => {
 {/for}`,
 
   player: `<controller>
-import { controller, signal, effect } from '@ship/sui-runtime'
+import { controller, signal, effect } from '@ship/sail-runtime'
 
 export default controller(() => {
   const playing = signal(true)

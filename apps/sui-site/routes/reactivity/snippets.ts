@@ -1,11 +1,11 @@
 // Code snippets for the reactivity page. Kept OUT of the controller so the
 // compiler's scope scan isn't fooled by `return {…}` / `signal(…)` patterns
-// inside these strings. Each snippet matches the real @ship/sui-runtime API
+// inside these strings. Each snippet matches the real @ship/sail-runtime API
 // (signal/derived/effect/batch/untrack); the .sui template compiles paired
 // with a controller declaring `count`.
 export const code = {
   graph: `<controller>
-import { controller, signal, derived, effect } from '@ship/sui-runtime'
+import { controller, signal, derived, effect } from '@ship/sail-runtime'
 export default controller(() => {
   const count = signal(0)
   const doubled = derived(() => count() * 2)
@@ -17,7 +17,7 @@ export default controller(() => {
 <button on:click={() => count.set(count() + 1)}>+1</button>
 <p>{count()} · doubled: {doubled()}</p>`,
 
-  signal: `import { signal } from '@ship/sui-runtime'
+  signal: `import { signal } from '@ship/sail-runtime'
 
 const count = signal(0)
 
@@ -25,7 +25,7 @@ count()                 // read  → 0
 count.set(5)            // write → 5
 count.set((n) => n + 1) // functional update → 6`,
 
-  derived: `import { signal, derived } from '@ship/sui-runtime'
+  derived: `import { signal, derived } from '@ship/sail-runtime'
 
 const count = signal(2)
 const doubled = derived(() => count() * 2)
@@ -34,7 +34,7 @@ doubled()      // 4
 count.set(10)
 doubled()      // 20 — recomputed lazily, only when read`,
 
-  effect: `import { signal, effect } from '@ship/sui-runtime'
+  effect: `import { signal, effect } from '@ship/sail-runtime'
 
 const count = signal(0)
 
@@ -50,7 +50,7 @@ const dispose = effect(() => {
 count.set(1)   // clears the pending log, schedules a fresh one
 // dispose()   // stop the effect entirely`,
 
-  escape: `import { signal, effect, batch, untrack } from '@ship/sui-runtime'
+  escape: `import { signal, effect, batch, untrack } from '@ship/sail-runtime'
 
 const first = signal('Ada')
 const last = signal('Lovelace')
@@ -71,7 +71,7 @@ effect(() => {
 <output>{count()}</output>
 <button on:click={() => count.set((n) => n + 1)}>+</button>`,
 
-  lifecycle: `import { controller, signal, mount } from '@ship/sui-runtime'
+  lifecycle: `import { controller, signal, mount } from '@ship/sail-runtime'
 
 export default controller(() => {
   const size = signal({ w: 0, h: 0 })
@@ -91,7 +91,7 @@ export default controller(() => {
   composition: `// A COMPOSITION is a plain function over the primitives. No type, no
 // registration, no base class. If it touches the DOM it is an ACTION; if it
 // returns state it is a composition — that is the whole rule.
-import { selection } from '@ship/sui-runtime'
+import { selection } from '@ship/sail-runtime'
 
 export function useSelection(rows) {
   const { selected, isSelected, toggle } = selection(rows)

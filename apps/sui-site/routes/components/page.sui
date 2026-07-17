@@ -22,8 +22,8 @@
   world-layer actions when instantiated inside this page's already-large
   component tree (renders fine via direct /components/<slug> nav);
   sui-message-list and sui-media-csv both transitively import
-  `@ship/sui-runtime/virtual` (message-list directly, media-csv via
-  `createTable` from the `@ship/sui-primitives` barrel, which side-effect-
+  `@ship/sail-runtime/virtual` (message-list directly, media-csv via
+  `createTable` from the `@ship/sail-primitives` barrel, which side-effect-
   imports sui-tree/sui-tree-grid) — a framework-singleton subpath with no
   deck-bundler importmap entry (see apps/sui-site/src/register-all.ts).
   That is a pre-existing bundler gap, not a floor issue; closing it is a
@@ -48,7 +48,7 @@
 // /components/<slug> route. sui-message-list and sui-media-csv are
 // skipped everywhere (see the file banner) — no live route yet.
 
-import { controller, signal, derived, filteredList, type ViewScope } from '@ship/sui-runtime'
+import { controller, signal, derived, filteredList, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sui'
 import { CATALOG, PACKS, CATEGORIES, packCount, type CatalogEntry } from './registry'
 
@@ -66,7 +66,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
     // mounted in this already-large page (still renders fine via direct
     // /components/<slug> navigation). sui-message-list and sui-media-csv
     // are skipped EVERYWHERE — both transitively need
-    // `@ship/sui-runtime/virtual`, a framework-singleton subpath deck's
+    // `@ship/sail-runtime/virtual`, a framework-singleton subpath deck's
     // importmap doesn't declare (see the file banner); referencing either
     // tag from ANY route fails the whole app build.
     const SKIP_TAGS = new Set([
@@ -1106,7 +1106,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
           </card>
         {/if}
 
-        <!-- ══ @ship/sui-charts ═════════════════════════════════════════ -->
+        <!-- ══ @ship/sail-charts ═════════════════════════════════════════ -->
         {#if show.suiSparkline()}
           <card padding="none" data-tile="sui-sparkline" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
@@ -1220,7 +1220,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
           </card>
         {/if}
 
-        <!-- ══ @ship/sui-media ══════════════════════════════════════════ -->
+        <!-- ══ @ship/sail-media ══════════════════════════════════════════ -->
         {#if show.suiMediaImage()}
           <card padding="none" data-tile="sui-media-image" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
@@ -1254,7 +1254,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
           </card>
         {/if}
 
-        <!-- ══ @ship/sui-code-editor + @ship/sui-mermaid ═══════════════════ -->
+        <!-- ══ @ship/sail-code-editor + @ship/sail-mermaid ═══════════════════ -->
         {#if show.suiCodeEditor()}
           <card padding="none" data-tile="sui-code-editor" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
@@ -1288,7 +1288,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
           </card>
         {/if}
 
-        <!-- ══ @ship/sui-chat-elements — sui-message-list deferred (see banner) ═ -->
+        <!-- ══ @ship/sail-chat-elements — sui-message-list deferred (see banner) ═ -->
         {#if show.suiMessage()}
           <card padding="none" data-tile="sui-message" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">

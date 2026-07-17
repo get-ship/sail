@@ -11,7 +11,7 @@
 // {monthCells, dayColumns, timeSlots, allDayBand}. Selection / focus / view are
 // orthogonal slices so a write to one recomputes only the relevant suffix.
 
-import { batch, derived, isSignal, signal } from '@ship/sui-runtime'
+import { batch, derived, isSignal, signal } from '@ship/sail-runtime'
 import {
   addDays,
   addMonths,

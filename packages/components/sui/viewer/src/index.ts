@@ -1,4 +1,4 @@
-// @ship/sui-viewer — the component-viewing surface every host composes.
+// @ship/sail-viewer — the component-viewing surface every host composes.
 //
 //   <sui-component-viewer>  the shared viewer: a live stage holding the REAL
 //                           component (slotted), variant chips that drive a real

@@ -12,7 +12,7 @@
 // mount, unmount })`) and the `use:` hook mini-DSL before it. Both
 // made a framework feature out of what is now just calling a plain
 // TypeScript function and returning an object — the same move,
-// applied twice. Compositions (`@ship/sui-std`) are still plain
+// applied twice. Compositions (`@ship/sail-std`) are still plain
 // functions: call one in the controller and the signals it returns
 // are ordinary scope members. The only language type a composition
 // touches is `Signal<T>`.

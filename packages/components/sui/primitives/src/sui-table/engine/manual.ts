@@ -16,14 +16,14 @@
 //      any OTHER gap before a later manual stage is a foot-gun and WARNS. In
 //      practice manualPagination implies manualSorting + manualFiltering.
 //
-// PURE TypeScript — imports `{ batch }` from `@ship/sui-runtime` ONLY. No DOM,
+// PURE TypeScript — imports `{ batch }` from `@ship/sail-runtime` ONLY. No DOM,
 // no SDK, no network, no server-events.
 //
 // Authority: build-spec §"Manual / server mode (the seam — preserves Cardinal
 // 4)" (per-feature manual* = transform skip; controlled-slice rule; pipeline-
 // prefix rule with a WARN on a non-prefix combo), Slice 4.
 
-import { batch, type Signal } from '@ship/sui-runtime'
+import { batch, type Signal } from '@ship/sail-runtime'
 import type { ReactiveTableState, TableState } from './types'
 
 /**

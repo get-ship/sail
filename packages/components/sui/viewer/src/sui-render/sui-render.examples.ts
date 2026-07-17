@@ -9,7 +9,7 @@
 // by scenario name. A host wires `prop:source={sources[name]}` +
 // `prop:compile={compile}` to bring the specimen alive.
 
-import type { ComponentExample } from '@ship/sui-runtime'
+import type { ComponentExample } from '@ship/sail-runtime'
 
 /** Raw view-mode `.sui` sources, keyed by the matching example `name`. The
  *  host injects these via `prop:source` (identity) — they can't ride a scalar

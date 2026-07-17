@@ -1,6 +1,6 @@
 // `class:NAME={cond}` hydrator — toggles a class on truthy / off on falsy.
 
-import { effect } from '@ship/sui-runtime'
+import { effect } from '@ship/sail-runtime'
 
 export function hydrateClass(
   el: Element,

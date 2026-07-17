@@ -57,7 +57,7 @@ const fontBanner =
 const fontFaces = FONTS.map(fontFace).join('\n')
 
 const banner =
-  '/* GENERATED from @ship/sui-runtime styles — do not hand-edit.\n' +
+  '/* GENERATED from @ship/sail-runtime styles — do not hand-edit.\n' +
   ' * Regenerate: bun packages/sui/runtime/scripts/emit-contracts-css.ts\n' +
   ' * The light-DOM framework contracts: tone/size channels (attribute-\n' +
   ' * keyed), interactive-surface baseline, focus/disabled, L1 element\n' +

@@ -6,7 +6,7 @@
   flagged until it has a compiler-derived table too.
 -->
 <controller>
-import { controller, type ViewScope } from '@ship/sui-runtime'
+import { controller, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sui'
 import { PROP_REGISTRY } from '../../src/prop-registry.gen'
 import {

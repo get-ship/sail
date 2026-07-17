@@ -24,7 +24,7 @@
 // *mechanism* (reactive signals + popstate listener). The
 // `setRouterPort` plug-in keeps the runtime host-agnostic.
 
-import { signal, type Signal } from '@ship/sui-runtime'
+import { signal, type Signal } from '@ship/sail-runtime'
 import {
   installScrollRestoration,
   onNavigate,

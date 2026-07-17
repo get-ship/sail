@@ -52,7 +52,7 @@
 // Authority: build-spec Slice 7, §"Backbone #2 — ViewerRenderer contract",
 // §"Props" (sui-media-av), §Accessibility, behavioral spec #5.
 
-import { controller, derived, effect, emit, ref, signal } from '@ship/sui-runtime'
+import { controller, derived, effect, emit, ref, signal } from '@ship/sail-runtime'
 import type { ViewerSource } from '../engine/types'
 import { emitViewerError, emitViewerLoad } from '../engine/renderer-contract'
 import { decodePeaks, drawWaveform } from './engine/waveform'

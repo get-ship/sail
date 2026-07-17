@@ -8,9 +8,9 @@ import { shipWorkspaceAliases } from '../../sui/test-setup/src/vitest'
 export default defineConfig({
   resolve: {
     // The eval's compile path pulls the runtime (including its SUBPATH exports —
-    // `@ship/sui-runtime/route` et al.) through @ship/sui-dom/test-utils. Derive
+    // `@ship/sail-runtime/route` et al.) through @ship/sail-dom/test-utils. Derive
     // the full @ship/* alias table from every package's `exports` map so those
-    // subpaths resolve to source instead of the bare `@ship/sui-runtime` alias.
+    // subpaths resolve to source instead of the bare `@ship/sail-runtime` alias.
     alias: shipWorkspaceAliases(),
   },
   test: {

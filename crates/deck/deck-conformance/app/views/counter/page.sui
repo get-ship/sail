@@ -1,5 +1,5 @@
 <controller>
-import { controller, signal } from '@ship/sui-runtime'
+import { controller, signal } from '@ship/sail-runtime'
 
 // A view WITH a controller can't be served from source — its compiled module
 // imports `./controller`, so deck must produce a Rolldown bundle. The signal's

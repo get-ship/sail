@@ -8,7 +8,7 @@
 //!
 //! These were a leak — host facts stashed on `window` and fished out
 //! ad-hoc. The runtime exposes them through the `HostContext` seam
-//! (`hostContext()` from `@ship/sui-runtime`); the daemon mode is on the
+//! (`hostContext()` from `@ship/sail-runtime`); the daemon mode is on the
 //! `<meta name="ship-mode">` tag. Reaching for the globals re-creates the
 //! leak the seam exists to close.
 //!
@@ -61,11 +61,11 @@ impl ContextVisitor<'_> {
             severity: Severity::Error,
             message: format!(
                 "controllers must not read host facts from `window.{prop}`. Use the \
-                 HostContext seam — `hostContext()` from @ship/sui-runtime (or the \
+                 HostContext seam — `hostContext()` from @ship/sail-runtime (or the \
                  `<meta name=\"ship-mode\">` tag for daemon mode)."
             ),
             suggest: Some(
-                "import { hostContext } from '@ship/sui-runtime'  // hostContext().projectId / .sessionId"
+                "import { hostContext } from '@ship/sail-runtime'  // hostContext().projectId / .sessionId"
                     .to_string(),
             ),
         });

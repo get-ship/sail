@@ -1,6 +1,6 @@
 // mount() — F1 unified entry point.
 //
-// Replaces attach() (legacy, in @ship/sui-dom) with a payload-driven
+// Replaces attach() (legacy, in @ship/sail-dom) with a payload-driven
 // flow. Hosts (shell, view-host static, embed surfaces, tests) pass
 // either a fetched ViewPayload or a name string; mount injects the
 // SSR HTML, builds signals from payload.scope, imports the compiled
@@ -156,7 +156,7 @@ export async function mount<Scope = Record<string, unknown>>(
 
   // 5. Build setup context + run setup(ctx).
   // Route signals come from opts.route (host-provided) or the compiled
-  // view's own import of @ship/sui-runtime/route. Mount no longer creates
+  // view's own import of @ship/sail-runtime/route. Mount no longer creates
   // a fallback instance — route.ts is out of the static bundle.
   //
   // Clients ↔ ship aliasing: the keyed `clients` map is the injection
@@ -239,7 +239,7 @@ export async function mount<Scope = Record<string, unknown>>(
   // the DOM. The compiled view's `__mount` is the CSR equivalent
   // of the SSR template — it builds the elements and wires the
   // text-open / attr-marker hooks that `hydrate` then activates.
-  // (The legacy `attach()` path in @ship/sui-dom followed this same
+  // (The legacy `attach()` path in @ship/sail-dom followed this same
   // shape; the new mount keeps it for the bundled-per-app world.)
   const clientMount = setupRet?.['__mount']
   if (
@@ -562,8 +562,8 @@ function noop(_p: string): void {
 
 // ── Live SSE channel (parallel to ui-dom's attach/live-channel) ────────
 //
-// Mount owns its own copy because @ship/sui-runtime cannot import
-// @ship/sui-dom (would invert the layering). Once F1.6 deletes attach(),
+// Mount owns its own copy because @ship/sail-runtime cannot import
+// @ship/sail-dom (would invert the layering). Once F1.6 deletes attach(),
 // the ui-dom copy goes too.
 
 interface PatchSignalsPayload {

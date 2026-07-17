@@ -23,7 +23,7 @@ const ROOT = resolve(HERE, '../../..')
 const COMPILER = join(ROOT, 'target/debug/sui-compiler')
 
 const CONTROLLER = `<controller>
-import { controller, signal } from '@ship/sui-runtime'
+import { controller, signal } from '@ship/sail-runtime'
 export default controller({
   scope: () => ({ open: signal(false), q: signal('') }),
 })
@@ -95,7 +95,7 @@ function measure(name, source) {
     stdio: 'pipe',
   })
 
-  // Bundle from inside the repo so `@ship/sui-runtime` resolves.
+  // Bundle from inside the repo so `@ship/sail-runtime` resolves.
   const work = join(ROOT, 'apps/sui-site/.bundle-cost')
   mkdirSync(work, { recursive: true })
   cpSync(join(dir, 'dist', `${name}.compiled.js`), join(work, `${name}.compiled.js`))

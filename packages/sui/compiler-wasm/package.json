@@ -1,5 +1,5 @@
 {
-  "name": "@ship/sui-compiler-wasm",
+  "name": "@ship/sail-compiler-wasm",
   "version": "0.2.0",
   "private": false,
   "type": "module",
@@ -16,15 +16,15 @@
     "pkg"
   ],
   "scripts": {
-    "pretest": "test -f pkg/sui_compiler.js || (cd ../../.. && bun run wasm)",
+    "pretest": "test -f pkg/sail_compiler.js || (cd ../../.. && bun run wasm)",
     "test": "vitest run",
-    "prepack": "test -f pkg/sui_compiler.js || (cd ../../.. && bun run wasm) ; printf '# override wasm-pack .gitignore\\n' > pkg/.npmignore"
+    "prepack": "test -f pkg/sail_compiler.js || (cd ../../.. && bun run wasm) ; printf '# override wasm-pack .gitignore\\n' > pkg/.npmignore"
   },
-  "main": "./pkg/sui_compiler.js",
-  "types": "./pkg/sui_compiler.d.ts",
+  "main": "./pkg/sail_compiler.js",
+  "types": "./pkg/sail_compiler.d.ts",
   "exports": {
-    ".": "./pkg/sui_compiler.js",
-    "./sui_compiler_bg.wasm": "./pkg/sui_compiler_bg.wasm"
+    ".": "./pkg/sail_compiler.js",
+    "./sail_compiler_bg.wasm": "./pkg/sail_compiler_bg.wasm"
   },
   "devDependencies": {
     "vitest": "^4.1.5"

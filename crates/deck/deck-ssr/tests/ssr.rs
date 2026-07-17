@@ -71,7 +71,7 @@ fn greet_first_paint_via_ship_js_with_route_through_host_dispatch() {
     assert!(bundle.len() > 1000, "bundle should be a real self-contained module");
     // `ship` is the only external import (the host wire); nothing else leaks.
     assert!(
-        !bundle.contains("@ship/sui-runtime") && !bundle.contains("@ship/deck/router"),
+        !bundle.contains("@ship/sail-runtime") && !bundle.contains("@ship/deck/router"),
         "framework specifiers must be inlined to their server entries; only `ship` stays external"
     );
 

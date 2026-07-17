@@ -8,7 +8,7 @@
 //! else (`fetch`, `XMLHttpRequest`, `window`, `process`, intrinsic tampering).
 //!
 //! Import model: per the SES spike, the compiler's *confined build mode* lowers
-//! `import { signal } from '@ship/sui-runtime'` to references resolved from the
+//! `import { signal } from '@ship/sail-runtime'` to references resolved from the
 //! Compartment's endowed globals — so the controller source we evaluate here
 //! reads its runtime from endowments, NOT an ESM import. We never use the
 //! Compartment module loader (proven friction under ses@1.x).

@@ -39,7 +39,7 @@
 </scope>
 
 <controller>
-import { controller, derived, effect, signal } from '@ship/sui-runtime'
+import { controller, derived, effect, signal } from '@ship/sail-runtime'
 import type { Scope } from './sui-component-viewer.sui'
 
 export interface PropRow {

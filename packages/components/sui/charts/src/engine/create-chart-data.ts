@@ -5,12 +5,12 @@
 // `isEmpty`/`isLoading`/`error` discriminators plus the `ariaSummary`/
 // `ariaTable` accessible-data derivations — all as `Derived<…>`.
 //
-// PURE: imports `{ signal, derived, batch, isSignal }` from `@ship/sui-runtime`
+// PURE: imports `{ signal, derived, batch, isSignal }` from `@ship/sail-runtime`
 // ONLY. No DOM, no ship.*, no fetch, no <data>, no effect-into-signal — the
 // derivation is one-direction `derived`, the single fix for the per-controller
 // effect-into-signal anti-pattern.
 
-import { signal, derived, isSignal, type Signal, type Derived } from '@ship/sui-runtime'
+import { signal, derived, isSignal, type Signal, type Derived } from '@ship/sail-runtime'
 import { resolveExtent, normalizeSeriesToDomain } from './scales'
 import type { ChartSeries, Extent, NormalizedSeries, AriaCell } from './types'
 

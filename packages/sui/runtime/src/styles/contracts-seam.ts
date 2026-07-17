@@ -17,10 +17,10 @@
 //
 //   1. LINK THEM (preferred, and what a real app should do):
 //        <link rel="stylesheet" href="/sui.css" data-sui-contracts>
-//      The file is already materialized at @ship/sui-tokens/contracts.css.
+//      The file is already materialized at @ship/sail-tokens/contracts.css.
 //
 //   2. IMPORT THE INSTALLER (for JS-only hosts, and convenient in dev):
-//        import '@ship/sui-runtime/contracts'
+//        import '@ship/sail-runtime/contracts'
 //      That module fills this seam, and only then does the 30KB enter the bundle —
 //      which is the honest deal: you pay for it exactly when you ask for it.
 
@@ -29,7 +29,7 @@ type Installer = () => void
 let installer: Installer | null = null
 let warned = false
 
-/** Called by `@ship/sui-runtime/contracts` when an app opts into JS injection. */
+/** Called by `@ship/sail-runtime/contracts` when an app opts into JS injection. */
 export function setContractsInstaller(fn: Installer): void {
   installer = fn
 }
@@ -59,7 +59,7 @@ export function ensureLightContracts(): void {
   console.warn(
     '[sui] A component mounted but the framework contracts are not present. Either link ' +
       'the stylesheet (`<link rel="stylesheet" href="…/contracts.css" data-sui-contracts>`, ' +
-      'shipped as @ship/sui-tokens/contracts.css) or `import "@ship/sui-runtime/contracts"` ' +
+      'shipped as @ship/sail-tokens/contracts.css) or `import "@ship/sail-runtime/contracts"` ' +
       'to inject it from JS. Linking is preferred: it keeps ~30KB of CSS out of your JS bundle.',
   )
 }

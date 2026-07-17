@@ -90,6 +90,6 @@ Six edges SUI has over comparable frameworks:
 - **[Effect scopes](./effect-scope/)** — cleanup ownership on unmount.
 - **[SSR and the attach runtime](./ssr-hydration/)** — server-rendered HTML, client attach.
 - **[Canonical examples](./examples/)** — three view shapes that anchor the discipline.
-- **[Agent surfaces](./agent-surfaces/)** — every MCP tool, LSP CLI subcommand, `@ship/sui-eval` entrypoint, and `ship://` resource an authoring agent uses.
+- **[Agent surfaces](./agent-surfaces/)** — every MCP tool, LSP CLI subcommand, `@ship/sail-eval` entrypoint, and `ship://` resource an authoring agent uses.
 - **[E2E test suite](./e2e-testing/)** — Playwright coverage and interpretation.
 - **[Implementation status](./status/)** — what's stable, what's in flight.

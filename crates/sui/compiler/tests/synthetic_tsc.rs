@@ -2,7 +2,7 @@
 //!
 //! Synthesizes the four representative surfaces against the conformance app's
 //! manifest, then type-checks the emitted controller+render pairs with the
-//! workspace `tsc` against the REAL `@ship/deck/router`, `@ship/sui-runtime`,
+//! workspace `tsc` against the REAL `@ship/deck/router`, `@ship/sail-runtime`,
 //! and the app's typed demo clients — proving manifest names resolve as real
 //! imports with real type resolution (no ambient passthrough). Finally it
 //! shows a deliberate `route.parms` typo is CAUGHT (TS2339).
@@ -133,8 +133,8 @@ fn write_tsconfig(repo: &Path, dir: &Path, include: &[&str], name: &str) {
     "baseUrl": ".",
     "paths": {{
       "@ship/deck/router": ["{r}/packages/deck/router/src/server.ts"],
-      "@ship/sui-runtime": ["{r}/packages/sui/runtime/src/server.ts"],
-      "@ship/sui-runtime/*": ["{r}/packages/sui/runtime/src/*"],
+      "@ship/sail-runtime": ["{r}/packages/sui/runtime/src/server.ts"],
+      "@ship/sail-runtime/*": ["{r}/packages/sui/runtime/src/*"],
       "@ship/deck/router": ["{r}/packages/deck/router/src/server.ts"],
       "@app/*": ["{r}/crates/deck/deck-conformance/app/*"]
     }}

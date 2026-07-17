@@ -11,7 +11,7 @@
 // `prop:source={sources[name]}` + `prop:compile={compile}` (+ optionally
 // `prop:cem`) to bring the viewer alive.
 
-import type { ComponentExample } from '@ship/sui-runtime'
+import type { ComponentExample } from '@ship/sail-runtime'
 
 /** Raw `.sui` sources the viewer previews, keyed by the matching example
  *  `name`. The host injects these via `prop:source` (identity) — they can't

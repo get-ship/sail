@@ -1,6 +1,6 @@
 //! Compile-time CSS rule stripping.
 //!
-//! R3 (bundle-perf): rules that exist verbatim in `@ship/sui-runtime`'s
+//! R3 (bundle-perf): rules that exist verbatim in `@ship/sail-runtime`'s
 //! `suiBaseSheet` are duplicated across nearly every shadow component's
 //! `<style>` block. The runtime adopts `suiBaseSheet` into every shadow
 //! root, so the per-component copies are dead weight in the bundle.

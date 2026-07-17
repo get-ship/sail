@@ -1,6 +1,6 @@
-// @ship/sui-runtime/contracts — the OPT-IN JS injection of the framework contracts.
+// @ship/sail-runtime/contracts — the OPT-IN JS injection of the framework contracts.
 //
-//     import '@ship/sui-runtime/contracts'
+//     import '@ship/sail-runtime/contracts'
 //
 // Importing this module (for side effect) installs the ~30KB light-DOM contracts
 // stylesheet from JavaScript at first component mount. It exists for JS-only hosts
@@ -10,7 +10,7 @@
 //
 //     <link rel="stylesheet" href="…/contracts.css" data-sui-contracts>
 //
-// (from `@ship/sui-tokens/contracts.css`). A <link> is cacheable, parses in parallel
+// (from `@ship/sail-tokens/contracts.css`). A <link> is cacheable, parses in parallel
 // with the JS, and costs the JS bundle nothing. Importing this module puts the whole
 // design system inside your JavaScript — which is fine if you asked for it, and was
 // NOT fine when the framework did it to you unconditionally (it was half the

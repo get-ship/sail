@@ -44,7 +44,7 @@ The `Bundler` is in-process:
   stabilised in 1.95) — see `rust-toolchain.toml`.
 - **SUI plugin** (`sui_plugin.rs`): a native Rust Rolldown `Plugin`.
   `resolve_id` redirects `./X.compiled.js` siblings, externalises the framework
-  singletons (`@ship/sui-runtime`/`-dom`/`sdk-client`), and re-anchors
+  singletons (`@ship/sail-runtime`/`-dom`/`sdk-client`), and re-anchors
   `@ship/<pkg>` to workspace `src/`. `load` spawns `sui-compiler` to compile
   `.sui` → JS. Rolldown handles TS transpile + node resolution natively.
 - **Output:** `assets_dir_for` — `crates/deck/deck-core/assets` for the baked

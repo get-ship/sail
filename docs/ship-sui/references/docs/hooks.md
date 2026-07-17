@@ -177,7 +177,7 @@ A controller hook is a function that returns a plain object of signals and helpe
 
 ```ts
 // packages/sui-std/src/filtered-list.ts
-import { signal, derived, type Signal } from '@ship/sui-runtime'
+import { signal, derived, type Signal } from '@ship/sail-runtime'
 
 export const filteredList = <T>(
   source: Signal<T[]>,
@@ -194,7 +194,7 @@ Nothing distinguishes this from any other helper function — reactive state is 
 
 ```ts
 // controller
-import { filteredList } from '@ship/sui-std'
+import { filteredList } from '@ship/sail-std'
 
 export default controller((ctx) => {
   const list = filteredList(ctx.agents, (a, q) => a.name.includes(q))

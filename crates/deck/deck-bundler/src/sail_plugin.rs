@@ -28,7 +28,7 @@ use crate::compile::{compile_sui, CompileMode};
 // importmap declares. Hardcoding the alias here would silently anchor
 // `@ship/sdk-client` to workspace source — the OPPOSITE of what the
 // importmap says — and break the host-declared singleton pattern.
-const SINGLETONS: [&str; 2] = ["@ship/sui-runtime", "@ship/sui-dom"];
+const SINGLETONS: [&str; 2] = ["@ship/sail-runtime", "@ship/sail-dom"];
 
 /// Virtual id for an unresolved `@sui-tag/<tag>` import — a shared empty module
 /// so the import is a harmless no-op. `\0` marks it virtual (Rollup/Rolldown
@@ -482,7 +482,7 @@ mod tests {
         write(&root.join("package.json"), r#"{"workspaces":["packages/*"]}"#);
         write(
             &root.join("packages/primitives/package.json"),
-            r#"{"name":"@ship/sui-primitives"}"#,
+            r#"{"name":"@ship/sail-primitives"}"#,
         );
         write(
             &root.join("packages/primitives/src/sui-button/sui-button.sui"),
@@ -503,7 +503,7 @@ mod tests {
     fn component_index_scoped_carries_index_and_shadowed() {
         let tmp = two_pack_fixture();
         let root = tmp.path();
-        let declared: Vec<String> = vec!["@ship/sui-primitives".into()];
+        let declared: Vec<String> = vec!["@ship/sail-primitives".into()];
 
         let scoped = component_index(root, &declared);
         assert!(scoped.index.contains_key("sui-button"), "declared tag resolves");

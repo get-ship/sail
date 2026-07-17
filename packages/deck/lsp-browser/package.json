@@ -1,5 +1,5 @@
 {
-  "name": "@ship/sui-lsp-browser",
+  "name": "@ship/sail-lsp-browser",
   "version": "0.2.0",
   "description": "Browser-side analyser for .sui files. Pure parse + diagnostics + scope-aware completions for editors that can't shell out to the Node LSP (docs playground, shell source editor).",
   "private": false,
@@ -18,7 +18,7 @@
     "test:watch": "bun test --watch test/"
   },
   "dependencies": {
-    "@ship/sui-compiler-wasm": "workspace:*"
+    "@ship/sail-compiler-wasm": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^4.1.5"

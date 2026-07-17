@@ -10,7 +10,7 @@ import { confineController, lowerModuleToExpression, lockdownRealm } from '../sr
 describe('lowerModuleToExpression', () => {
   it('lowers export default to a returnable trailing expression', () => {
     const out = lowerModuleToExpression(
-      `import { signal } from '@ship/sui-runtime';\nexport default { setup: () => signal(0) };\n`,
+      `import { signal } from '@ship/sail-runtime';\nexport default { setup: () => signal(0) };\n`,
     )
     expect(out).not.toContain('import')
     expect(out).not.toContain('export default')
@@ -36,7 +36,7 @@ describe('whole compiled view runs confined with a narrow document', () => {
     // A view-shaped module: framework import, raw document node creation (what
     // the compiler emits), a default export — and ambient-authority probes.
     const viewModule = `
-      import { signal } from "@ship/sui-runtime";
+      import { signal } from "@ship/sail-runtime";
       const el = document.createElement('div');
       const count = signal(5);
       const probes = {

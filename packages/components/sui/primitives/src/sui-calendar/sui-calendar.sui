@@ -51,8 +51,8 @@
 // drag-to-create/move ride the engine's range/intent mutators; the DOM bridge
 // (pointer drag + Shift+Arrow → engine + sui-* emits) lives in `./sui-calendar.interactions`.
 
-import { controller, derived, effect, signal } from '@ship/sui-runtime'
-import type { ViewScope } from '@ship/sui-runtime'
+import { controller, derived, effect, signal } from '@ship/sail-runtime'
+import type { ViewScope } from '@ship/sail-runtime'
 import { createCalendar } from './engine'
 import type { Calendar, CalendarEvent, DateRange, MonthCell, ViewMode } from './engine'
 import { wireCalendarInteractions } from './sui-calendar.interactions'

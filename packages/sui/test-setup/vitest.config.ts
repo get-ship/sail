@@ -1,12 +1,12 @@
 import { defineConfig } from 'vitest/config'
 import { SHIP_VITEST_DEFAULTS, shipWorkspaceAliases } from './src/vitest'
 
-// render.ts pulls the wasm-backed compile harness from @ship/sui-dom/test-utils
-// plus the runtime — and the runtime's SUBPATH exports (`@ship/sui-runtime/route`
+// render.ts pulls the wasm-backed compile harness from @ship/sail-dom/test-utils
+// plus the runtime — and the runtime's SUBPATH exports (`@ship/sail-runtime/route`
 // et al.). `shipWorkspaceAliases()` derives the full @ship/* alias table from
 // every package's `exports` map (subpaths sorted before bare names), so those
 // subpaths resolve to their real source file instead of falling through to the
-// bare `@ship/sui-runtime` alias.
+// bare `@ship/sail-runtime` alias.
 export default defineConfig({
   resolve: {
     alias: shipWorkspaceAliases(),

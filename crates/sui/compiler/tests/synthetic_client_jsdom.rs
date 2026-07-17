@@ -86,8 +86,8 @@ fn synth(repo: &Path, work: &Path, t: &Target) {
 
 fn write_harness(repo: &Path, work: &Path) {
     let r = repo.display();
-    // @ship/sui-runtime → a shim (the SSR server surface + `view` + the types
-    // @ship/sui-dom imports). @ship/sui-dom → its real source. @ship/deck/router
+    // @ship/sail-runtime → a shim (the SSR server surface + `view` + the types
+    // @ship/sail-dom imports). @ship/sail-dom → its real source. @ship/deck/router
     // → the server route factory. mount.ts is imported by absolute path.
     // Slice 2 — re-export the hydration-marker recording helpers so the
     // SSR modules (which call `markHydrateText` next to `bindText`) type-check
@@ -119,9 +119,9 @@ export default defineConfig({{
   // (not a real hang: the same assertions pass once the graph is warm).
   test: {{ environment: 'jsdom', include: ['client.test.ts'], testTimeout: 20000 }},
   resolve: {{ alias: {{
-    '@ship/sui-runtime/internal': '{w}/runtime-shim.ts',
-    '@ship/sui-runtime': '{w}/runtime-shim.ts',
-    '@ship/sui-dom': '{r}/packages/sui/dom/src/index.ts',
+    '@ship/sail-runtime/internal': '{w}/runtime-shim.ts',
+    '@ship/sail-runtime': '{w}/runtime-shim.ts',
+    '@ship/sail-dom': '{r}/packages/sui/dom/src/index.ts',
     '@ship/deck/router': '{r}/packages/deck/router/src/server.ts',
   }} }},
 }})

@@ -2,7 +2,7 @@
 // program; the tour snippets are deliberately tiny. All compiled by the build.
 export const code = {
   page: `<controller>
-import { controller, signal, filteredList } from '@ship/sui-runtime'
+import { controller, signal, filteredList } from '@ship/sail-runtime'
 
 export default controller(() => {
   const people = signal([

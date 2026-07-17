@@ -5,7 +5,7 @@
 // minimal seeded force sim, returning new node rects in world coords. No
 // signals, no DOM — a function of (nodes, edges, options).
 import { describe, expect, it } from 'vitest'
-import { signal, effect } from '@ship/sui-runtime'
+import { signal, effect } from '@ship/sail-runtime'
 import { layoutBoard, type LayoutKind } from '../src/sui-board/engine/layout-adapter'
 import { createBoardModel } from '../src/sui-board/engine/board-model'
 import type { Node, Edge } from '../src/sui-board/engine/board-model'

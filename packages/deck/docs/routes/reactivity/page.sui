@@ -14,7 +14,7 @@
 // briefly holds an inconsistent value. SUI's colored push-pull scheduler
 // recomputes d exactly ONCE per `a` change. We prove it live: an effect counts
 // d's recomputes; it should climb by exactly 1 each time you nudge `a`.
-import { controller, signal, derived, effect, untrack, type ViewScope } from '@ship/sui-runtime'
+import { controller, signal, derived, effect, untrack, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sui'
 
 export default controller((_ctx: ViewScope<Scope>) => {

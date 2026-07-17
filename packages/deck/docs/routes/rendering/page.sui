@@ -1,7 +1,7 @@
 <controller>
 // Rendering controller. Snippets live in ./snippets (a plain data module) so
 // example code containing `{ ... }` is never scope-scanned by the compiler.
-import { controller, type ViewScope } from '@ship/sui-runtime'
+import { controller, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sui'
 import { ssrConfig, buildCmd } from './snippets'
 

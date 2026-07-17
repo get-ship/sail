@@ -13,7 +13,7 @@
 //   - deck → sui only: this imports the runtime's `mount()`; the runtime never
 //     imports this.
 
-import { mount, type MountHandle, type ViewPayload } from '@ship/sui-runtime'
+import { mount, type MountHandle, type ViewPayload } from '@ship/sail-runtime'
 import {
   installScrollRestoration,
   onNavigate,

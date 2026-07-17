@@ -2,7 +2,7 @@
 // choose) against a real mounted view, queried by what a user perceives.
 
 import { describe, expect, it } from 'vitest'
-import { signal } from '@ship/sui-runtime'
+import { signal } from '@ship/sail-runtime'
 import { runScenarios, type BehaviorSpec } from '../src/scenario-runner'
 
 // A tiny two-step wizard exercising navigation, an input→preview binding, and a

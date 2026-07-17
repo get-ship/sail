@@ -1,14 +1,14 @@
 /**
- * @ship/sui-dom — DOM-walk hydrators.
+ * @ship/sail-dom — DOM-walk hydrators.
  *
  * F1 mount unification removed `attach()` — hosts call
- * `mount(target, payload)` from `@ship/sui-runtime` instead. ui-dom
+ * `mount(target, payload)` from `@ship/sail-runtime` instead. ui-dom
  * now exists only to publish the per-kind hydrators the compiler-
  * emitted `hydrate(root, ctx)` calls during SSR resume.
  *
  * The legacy parse-on-the-client subpath has been deleted; every
  * `.sui` file goes through the Rust sui-compiler ahead of time. Tests
- * compile via the wasm-backed `@ship/sui-dom/test-utils` helper.
+ * compile via the wasm-backed `@ship/sail-dom/test-utils` helper.
  *
  * @packageDocumentation
  */

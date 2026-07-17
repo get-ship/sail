@@ -1,5 +1,5 @@
 {
-  "name": "@ship/sui-eval",
+  "name": "@ship/sail-eval",
   "version": "0.2.0",
   "description": "SUI eval rig — dispatch a feature spec to a model and assert the output is a working .sui view.",
   "type": "module",
@@ -7,7 +7,7 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "bin": {
-    "sui-eval": "bin/sui-eval.mjs"
+    "sail-eval": "bin/sail-eval.mjs"
   },
   "files": [
     "src",
@@ -20,8 +20,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@ship/sui-dom": "workspace:*",
-    "@ship/sui-runtime": "workspace:*"
+    "@ship/sail-dom": "workspace:*",
+    "@ship/sail-runtime": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

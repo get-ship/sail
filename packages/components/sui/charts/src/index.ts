@@ -1,8 +1,8 @@
-// @ship/sui-charts — SUI chart primitives registry.
+// @ship/sail-charts — SUI chart primitives registry.
 //
 // Side-effect imports for the chart components. Each `<tag>.compiled.js`
 // calls `customElements.define()` on import, so a single
-// `import '@ship/sui-charts'` at the consumer registers every tag in this
+// `import '@ship/sail-charts'` at the consumer registers every tag in this
 // pack globally.
 
 import './sui-area-chart/sui-area-chart.compiled.js'

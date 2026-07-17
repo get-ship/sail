@@ -12,7 +12,7 @@
 // non-prefix manual combos warn; state.* still drives header chevrons under manual").
 
 import { describe, expect, it, vi } from 'vitest'
-import { signal } from '@ship/sui-runtime'
+import { signal } from '@ship/sail-runtime'
 // RED: greenfield module.
 import { createTable } from './create-table'
 

@@ -3,7 +3,7 @@
 // Nullish or `false` removes the attribute (so authors can flip an
 // attribute on/off via the signal value).
 
-import { effect } from '@ship/sui-runtime'
+import { effect } from '@ship/sail-runtime'
 
 export function hydrateAttr(
   el: Element,

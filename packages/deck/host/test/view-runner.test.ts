@@ -88,7 +88,7 @@ describe('confineViewModule', () => {
     // A view-shaped module: framework import, raw document node creation in
     // setup (what the compiler emits), default export, ambient probe.
     const source = `
-      import { signal } from "@ship/sui-runtime";
+      import { signal } from "@ship/sail-runtime";
       export default {
         setup: (ctx) => {
           const el = document.createElement('section');

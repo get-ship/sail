@@ -11,14 +11,14 @@
 // minimal group stage; the filter stages live in `filtering.ts` and the page
 // slice in `pagination.ts`, wired together by the assembler.
 //
-// PURE TypeScript — imports `derived` from `@ship/sui-runtime` and the typed
+// PURE TypeScript — imports `derived` from `@ship/sail-runtime` and the typed
 // comparators from Slice 1a. No DOM, no SDK.
 //
 // Authority: build-spec §"Signal graph (one-direction derived chain)",
 // §Features #2 (numeric-aware comparator), §Features #6/#7 (group rows feed the
 // selection cascade), Slices 1b/2.
 
-import { derived, type Derived, type Signal } from '@ship/sui-runtime'
+import { derived, type Derived, type Signal } from '@ship/sail-runtime'
 import { detectSortType, resolveComparator, type SortType } from './comparators'
 import { buildAccessors, makeRow, type Accessor, type RowBindings } from './row-api'
 import type { CellValue, ColumnDef, Row, SortState } from './types'

@@ -5,14 +5,14 @@
 // is not needed to make components render.
 //
 // It is also currently BLOCKED. Re-populating this with the pack imports
-// (`@ship/sui-primitives`, `@ship/sui-charts`, …) fails the app build with:
+// (`@ship/sail-primitives`, `@ship/sail-charts`, …) fails the app build with:
 //
-//   `@ship/sui-runtime/virtual` is a framework-singleton subpath with no
+//   `@ship/sail-runtime/virtual` is a framework-singleton subpath with no
 //   importmap entry — bundling it inline would duplicate the singleton.
 //   Add it to FRAMEWORK_ASSETS in deck-bundler/src/app.rs.
 //
-// The virtualizer subpath is pulled in by @ship/sui-primitives (sui-tree,
-// sui-tree-grid, sui-table) and @ship/sui-chat-elements (sui-message-list).
+// The virtualizer subpath is pulled in by @ship/sail-primitives (sui-tree,
+// sui-tree-grid, sui-table) and @ship/sail-chat-elements (sui-message-list).
 // This is a deck-bundler importmap gap, NOT the floor rejecting pack styles —
 // those .ts packs carry no raw <style>. It resolves in the deck lane
 // (deck-bundler `FRAMEWORK_ASSETS`), after which this module can register the

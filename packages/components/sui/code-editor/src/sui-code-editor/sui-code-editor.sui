@@ -59,8 +59,8 @@
 <controller>
 // bind:this + mount() pattern: ref → EditorView → event bridge → cleanup.
 
-import { controller, effect } from '@ship/sui-runtime'
-import type { Signal } from '@ship/sui-runtime'
+import { controller, effect } from '@ship/sail-runtime'
+import type { Signal } from '@ship/sail-runtime'
 import { EditorState, Compartment } from '@codemirror/state'
 import type { Extension } from '@codemirror/state'
 import {
@@ -326,8 +326,8 @@ export default controller((ctx: Scope) => {
       lspInit = (async () => {
         try {
           const [diag, comp] = await Promise.all([
-            import('@ship/sui-lsp-browser/diagnostics') as unknown as Promise<{ diagnose: LspDiagnoseFn }>,
-            import('@ship/sui-lsp-browser/completions') as unknown as Promise<{ allSources: LspAllSourcesFn }>,
+            import('@ship/sail-lsp-browser/diagnostics') as unknown as Promise<{ diagnose: LspDiagnoseFn }>,
+            import('@ship/sail-lsp-browser/completions') as unknown as Promise<{ allSources: LspAllSourcesFn }>,
           ])
           lspDiagnose = diag.diagnose
           try { el.setCompletions?.(comp.allSources()) } catch { /* best-effort */ }

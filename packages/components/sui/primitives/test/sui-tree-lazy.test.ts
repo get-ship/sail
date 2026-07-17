@@ -32,7 +32,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import '../src/sui-tree/sui-tree.compiled.js'
-import { signal, type Signal } from '@ship/sui-runtime'
+import { signal, type Signal } from '@ship/sail-runtime'
 import { createTable, type Table } from '../src/sui-table/engine/create-table'
 import { createContainerRegistry, flush, mount } from '../src/test-utils'
 

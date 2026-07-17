@@ -38,8 +38,8 @@
 // `engine/*.ts` (the legitimate render-engine seam, outside
 // `sui-controller-purity` scope). No `innerHTML`/`outerHTML`/`insertAdjacentHTML`.
 
-import { controller, signal, effect, untrack, ref } from '@ship/sui-runtime'
-import type { ViewScope } from '@ship/sui-runtime'
+import { controller, signal, effect, untrack, ref } from '@ship/sail-runtime'
+import type { ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './sui-render.sui'
 import { attachEngineShadow, mountBySource, type ViewMount } from './engine/mount-source'
 import { mountByTag, type TagMount } from './engine/mount-tag'

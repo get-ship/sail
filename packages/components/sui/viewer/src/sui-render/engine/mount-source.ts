@@ -17,7 +17,7 @@
 // shadow root the spec describes — no nested shadow (a nested shadow would
 // hide the specimen from the host's `shadowRoot.querySelector`).
 
-import { route as makeRoute, type RouteSignals } from '@ship/sui-runtime/route'
+import { route as makeRoute, type RouteSignals } from '@ship/sail-runtime/route'
 import { evalViewModule, type InjectedSetup } from './eval-module'
 import type { CompileFn } from '../../wasm-bootstrap'
 

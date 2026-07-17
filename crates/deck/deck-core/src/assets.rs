@@ -588,7 +588,7 @@ mod tests {
         );
         assert!(
             SUI_RUNTIME_JS.contains("as route,") || SUI_RUNTIME_JS.contains("as route}"),
-            "baked sui-runtime.js missing the `route` export — `@ship/sui-runtime/route` \
+            "baked sui-runtime.js missing the `route` export — `@ship/sail-runtime/route` \
              maps to this same bundle in production; a stale bake or a missing index.ts \
              re-export breaks every compiled view's route import"
         );

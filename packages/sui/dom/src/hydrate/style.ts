@@ -3,7 +3,7 @@
 // Falsy values clear the property (mirrors how the SSR walker omits
 // the style fragment when its expression is falsy).
 
-import { effect } from '@ship/sui-runtime'
+import { effect } from '@ship/sail-runtime'
 
 export function hydrateStyle(
   el: HTMLElement,

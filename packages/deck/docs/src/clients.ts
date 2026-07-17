@@ -8,7 +8,7 @@
 //    durable state. Read it in any view as `ctx.clients.store`.
 import './deck-theme.css'
 import './base.css'
-import { signal } from '@ship/sui-runtime'
+import { signal } from '@ship/sail-runtime'
 
 const KEY = 'deck-playground:v1'
 

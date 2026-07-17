@@ -15,7 +15,7 @@ namespace key: call it inside the controller and merge whatever it
 returns into the controller's own returned scope however you choose.
 
 ```ts
-import { controller, signal, filteredList, selection } from '@ship/sui-runtime'
+import { controller, signal, filteredList, selection } from '@ship/sail-runtime'
 
 const AGENTS = [
   { id: 'planner',  label: 'Planner — long-horizon work breakdown' },

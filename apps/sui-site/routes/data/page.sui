@@ -4,7 +4,7 @@
 // in an effect, so reading `attempt` inside it makes the button a refetch:
 // bump the signal, the source re-runs, the state walks through loading again.
 
-import { controller, live, signal, type ViewScope } from '@ship/sui-runtime'
+import { controller, live, signal, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sui'
 import { code } from './snippets'
 

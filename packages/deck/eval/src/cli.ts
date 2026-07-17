@@ -1,10 +1,10 @@
-// `sui-eval` CLI entry. Loads task JSON from disk, dispatches to a
+// `sail-eval` CLI entry. Loads task JSON from disk, dispatches to a
 // model via the public runEval API, prints structured results.
 //
 // Usage:
-//   sui-eval run --task <id> --model <model> [--out <dir>]
-//   sui-eval run --all --tier <easy|medium|hard> --model <model> [--out <dir>]
-//   sui-eval --help
+//   sail-eval run --task <id> --model <model> [--out <dir>]
+//   sail-eval run --all --tier <easy|medium|hard> --model <model> [--out <dir>]
+//   sail-eval --help
 
 import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
@@ -12,20 +12,20 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { runEval, type EvalResult, type EvalTask } from './index.ts'
 
-const HELP = `sui-eval — design-quality regression suite for .sui views
+const HELP = `sail-eval — design-quality regression suite for .sui views
 
 Usage:
-  sui-eval run --task <id> --model <model> [--out <dir>]
-  sui-eval run --all --tier <easy|medium|hard> --model <model> [--out <dir>]
-  sui-eval list [--tier <easy|medium|hard>]
-  sui-eval --help
+  sail-eval run --task <id> --model <model> [--out <dir>]
+  sail-eval run --all --tier <easy|medium|hard> --model <model> [--out <dir>]
+  sail-eval list [--tier <easy|medium|hard>]
+  sail-eval --help
 
 Environment:
   ANTHROPIC_API_KEY    required for live dispatch.
 
 Examples:
-  sui-eval run --task counter-toggle --model claude-haiku-4-5
-  sui-eval run --all --tier easy --model claude-sonnet-4-6 --out .artifacts/eval
+  sail-eval run --task counter-toggle --model claude-haiku-4-5
+  sail-eval run --all --tier easy --model claude-sonnet-4-6 --out .artifacts/eval
 `
 
 interface Argv {

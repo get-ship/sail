@@ -9,7 +9,7 @@ export const code = {
 
   author: `// autofocus.ts — an action IS a function over an element.
 // No registry, no base class, no lifecycle to implement.
-import type { Action } from '@ship/sui-runtime'
+import type { Action } from '@ship/sail-runtime'
 
 export const autofocus: Action<void> = (node) => {
   const el = node as HTMLElement

@@ -18,10 +18,10 @@
 // offsets from the resolved sizing map; … The setColumnSizing does NOT recompute rows
 // assertion lands here").
 //
-// Engine purity (Cardinal 4): imports ONLY @ship/sui-runtime.
+// Engine purity (Cardinal 4): imports ONLY @ship/sail-runtime.
 
 import { describe, expect, it, vi } from 'vitest'
-import { derived } from '@ship/sui-runtime'
+import { derived } from '@ship/sail-runtime'
 // RED: greenfield module — resolves only once Slice 3a ships.
 import { createTable } from './create-table'
 

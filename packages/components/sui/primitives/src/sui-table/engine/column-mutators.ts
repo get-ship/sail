@@ -7,7 +7,7 @@
 // resize, which writes the size (so the live drag is reflected) but DEFERS the
 // callback until a later commit (`onChange`) write fires it once.
 //
-// PURE TypeScript — imports `batch` from `@ship/sui-runtime` only. No DOM, no
+// PURE TypeScript — imports `batch` from `@ship/sail-runtime` only. No DOM, no
 // SDK.
 //
 // Authority: build-spec §Features #8 (resize mode onChange/onEnd: "default
@@ -15,7 +15,7 @@
 // (ordering), #10 (visibility), #11 (pinning), §"Signal graph" (mutation
 // discipline: write in batch + fire on*Change), Slice 3a.
 
-import { batch } from '@ship/sui-runtime'
+import { batch } from '@ship/sail-runtime'
 import { clampSizingPatch } from './columns'
 import type {
   ColumnDef,

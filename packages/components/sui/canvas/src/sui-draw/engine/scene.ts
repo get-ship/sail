@@ -1,6 +1,6 @@
 // sui-draw — the whiteboard scene model on the createCanvas() substrate.
 //
-// Pure reactive state on @ship/sui-runtime signals: a flat list of draw
+// Pure reactive state on @ship/sail-runtime signals: a flat list of draw
 // elements (freehand strokes, rectangles, ellipses, lines, arrows, text) +
 // the active tool + selection + a command-stack undo/redo. This REPLACES the
 // deleted Excalidraw bridge — the scene-graph is OURS (SVG-native, like the
@@ -9,7 +9,7 @@
 // maps to screen through the substrate transform. Path-string rendering is in
 // stroke.ts/shape.ts/rough-adapter.ts.
 
-import { signal, derived, batch, untrack, type Derived } from '@ship/sui-runtime'
+import { signal, derived, batch, untrack, type Derived } from '@ship/sail-runtime'
 import type { Rect, Vec2 } from '../../engine/types'
 import { strokePath, strokeBounds, type StrokeSample } from './stroke'
 import { shapePath, rectFromPoints, type ShapeKind } from './shape'

@@ -1,10 +1,10 @@
 // Backbone #3 — the shared pan/zoom/pointer substrate type surface.
 //
 // Pure geometry/state types for `createCanvas()`. No DOM, no SDK, no
-// runtime imports beyond `@ship/sui-runtime` signal types. A `Vec2` is a
+// runtime imports beyond `@ship/sail-runtime` signal types. A `Vec2` is a
 // world OR screen point — the calling context names which.
 
-import type { Signal, Derived } from '@ship/sui-runtime'
+import type { Signal, Derived } from '@ship/sail-runtime'
 
 /** A 2-D point — world OR screen space (context names which). */
 export interface Vec2 {

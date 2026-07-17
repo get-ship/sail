@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
-// Same mock strategy as mount-router.test.ts: the real @ship/sui-runtime pulls
+// Same mock strategy as mount-router.test.ts: the real @ship/sail-runtime pulls
 // a cycle vitest can't resolve. We provide a FAITHFUL re-implementation of the
 // error-boundary helpers (identical Symbol key + DOM walk + runProtected
 // try/catch) so a throw routed through `runProtected` reaches the boundary
 // exactly as it does against the real runtime.
-vi.mock('@ship/sui-runtime', () => {
+vi.mock('@ship/sail-runtime', () => {
   const BOUNDARY_KEY = Symbol.for('sui:error-boundary')
   const attachBoundary = (host: any, handle: unknown) => { host[BOUNDARY_KEY] = handle }
   const detachBoundary = (host: any) => { delete host[BOUNDARY_KEY] }
@@ -32,7 +32,7 @@ vi.mock('@ship/sui-runtime', () => {
 import { installRouteBoundary, isDevMode } from '../src/route-boundary'
 // The faithful runProtected from the mock — used to simulate a view throwing
 // through the runtime's protected call site, the way bindFor/bindIf/effect do.
-import { runProtected, findNearestBoundary } from '@ship/sui-runtime'
+import { runProtected, findNearestBoundary } from '@ship/sail-runtime'
 
 let outlet: HTMLElement
 

@@ -19,13 +19,13 @@
 // with `enableGlobalFilter: false`. Manual mode (`manualFiltering`) skips both
 // stages (the server already filtered the page).
 //
-// PURE TypeScript — imports `derived` from `@ship/sui-runtime` only. No DOM, no
+// PURE TypeScript — imports `derived` from `@ship/sail-runtime` only. No DOM, no
 // SDK.
 //
 // Authority: build-spec §Features #3 ("Column + global filtering"), §"Signal
 // graph" (`preColumnFilteredRows` the facet source), Slice 2.
 
-import { derived, type Derived, type Signal } from '@ship/sui-runtime'
+import { derived, type Derived, type Signal } from '@ship/sail-runtime'
 import type { CellValue, ColumnDef, ColumnFilter, Row } from './types'
 
 /** A resolved predicate over one cell value + the active filter value. */

@@ -39,7 +39,7 @@ import {
   type LiveSource,
   type LiveState,
   type ViewPayload,
-} from '@ship/sui-runtime'
+} from '@ship/sail-runtime'
 import {
   installWrappers,
   snapshot,

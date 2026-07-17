@@ -6,7 +6,7 @@ import { renderCatalog } from '../src/prompt'
 // P1.5: the `covers the five required primitives` describe block tested
 // `mockCatalog.primitives.map((p) => p.tag).sort()` — asserting on a
 // private fixture against itself. The behavior the test was guarding
-// (every primitive a user of the `sui-eval` CLI sees) is what
+// (every primitive a user of the `sail-eval` CLI sees) is what
 // `renderCatalog(catalog)` emits into the prompt. Rewrote to assert
 // on the rendered CLI output: a model that reads the prompt sees
 // every primitive tag + its props + its slots.

@@ -21,8 +21,8 @@
 -->
 
 <controller>
-import { controller, signal } from '@ship/sui-runtime'
-import type { ViewScope } from '@ship/sui-runtime'
+import { controller, signal } from '@ship/sail-runtime'
+import type { ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './sui-annotation-list.sui'
 import type { AnnotationEvent } from './sui-annotation.internals'
 

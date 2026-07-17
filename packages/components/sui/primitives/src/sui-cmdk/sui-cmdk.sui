@@ -72,8 +72,8 @@
 // derived here; mutations (highlight, select, open/close sync) + emission live
 // in mount's listeners.
 
-import { controller, signal, derived, effect, ref } from '@ship/sui-runtime'
-import type { ViewScope } from '@ship/sui-runtime'
+import { controller, signal, derived, effect, ref } from '@ship/sail-runtime'
+import type { ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './sui-cmdk.sui'
 import { type CmdkItem, str, parseJsonItems } from './decode'
 

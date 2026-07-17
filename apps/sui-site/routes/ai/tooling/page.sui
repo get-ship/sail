@@ -9,7 +9,7 @@
 // /ai/tooling — the LSP / CLI surface, adapted from the 10-lsp-cli tutorial
 // lesson. Snippets live in ./snippets so literal braces (e.g. the
 // `.lsp.json` payload) never leak into the inferred scope.
-import { controller, type ViewScope } from '@ship/sui-runtime'
+import { controller, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sui'
 import { lintCmd, lintOutput, compileCmd, lspJson } from './snippets'
 
@@ -73,7 +73,7 @@ export default controller((_ctx: ViewScope<Scope>) => ({ lintCmd, lintOutput, co
     <li><strong><code>sui-lint</code></strong> — fast per-edit binary for agents and CI</li>
     <li><strong><code>sui-compiler</code></strong> — full compile with emit, used by the deck bundler</li>
     <li><strong><code>sui-lsp</code></strong> — LSP server for editors over stdio</li>
-    <li><strong>WASM compiler</strong> (<code>@ship/sui-compiler-wasm</code>) — in-browser diagnostics for the docs and any embedded editor</li>
+    <li><strong>WASM compiler</strong> (<code>@ship/sail-compiler-wasm</code>) — in-browser diagnostics for the docs and any embedded editor</li>
   </ul>
   <p>
     A human typing in the docs site, an agent running <code>sui-lint</code>,

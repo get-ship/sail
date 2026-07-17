@@ -7,12 +7,12 @@
 // one source of truth, no parallel definition.
 //
 // PURE TypeScript — type-only; imports the Signal/Derived handles from
-// `@ship/sui-runtime` and the shared shapes from `./types`.
+// `@ship/sail-runtime` and the shared shapes from `./types`.
 //
 // Authority: build-spec §"API sketch" (TableOptions + Table facade), §"Features"
 // (the option/method surface), §Slices.
 
-import type { Derived, Signal } from '@ship/sui-runtime'
+import type { Derived, Signal } from '@ship/sail-runtime'
 import type { NavApi } from './nav'
 import type {
   CellValue,

@@ -5,7 +5,7 @@
 //! - `history.replaceState(…)` / `window.history.replaceState(…)`
 //!
 //! These are hand-rolled SPA routing. The framework affordance is
-//! `navigate(path)` (`@ship/sui-runtime`), which routes through the host
+//! `navigate(path)` (`@ship/sail-runtime`), which routes through the host
 //! `RouterPort` — history + path matching + mounting + the route-change
 //! notification — so a single call actually switches views from any view
 //! bundle. See ADR `unified-deck-router`.
@@ -58,11 +58,11 @@ impl NavVisitor<'_> {
             severity: Severity::Error,
             message: format!(
                 "controllers must not drive SPA navigation via `history.{method}(…)`. \
-                 Call `navigate(path)` from @ship/sui-runtime — it routes through the host \
+                 Call `navigate(path)` from @ship/sail-runtime — it routes through the host \
                  router (history + match + mount). For a deliberate full-page reload, \
                  `window.location` is fine."
             ),
-            suggest: Some("navigate(path)  // import { navigate } from '@ship/sui-runtime'".to_string()),
+            suggest: Some("navigate(path)  // import { navigate } from '@ship/sail-runtime'".to_string()),
         });
     }
 }

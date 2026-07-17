@@ -8,13 +8,13 @@
 //
 //   prePaginationRows ─(client ? slice [pageIndex*pageSize, +pageSize] : pass)─► paginatedRows
 //
-// PURE TypeScript — imports `derived` from `@ship/sui-runtime` only. No DOM, no
+// PURE TypeScript — imports `derived` from `@ship/sail-runtime` only. No DOM, no
 // SDK.
 //
 // Authority: build-spec §Features #6 ("Pagination (client AND manual)"),
 // §"Signal graph" (pagination slices prePaginationRows), Slice 2.
 
-import { derived, isSignal, type Derived, type Signal } from '@ship/sui-runtime'
+import { derived, isSignal, type Derived, type Signal } from '@ship/sail-runtime'
 import type { PaginationState, Row } from './types'
 
 /** Read a `number | Signal<number>` total, tracking the signal when present. */

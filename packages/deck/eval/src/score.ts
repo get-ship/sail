@@ -9,7 +9,7 @@
 import { typeCheckSetup } from './typecheck.ts'
 import { createMockShip } from './mock-ship.ts'
 
-// Lazy because @ship/sui-dom/test-utils boots a wasm compiler that
+// Lazy because @ship/sail-dom/test-utils boots a wasm compiler that
 // only matters when we actually score a template. CLI --help and
 // dispatch-only paths don't need it loaded.
 async function loadDom(): Promise<{
@@ -20,7 +20,7 @@ async function loadDom(): Promise<{
     opts: { container: HTMLElement; ship?: unknown },
   ) => { dispose: () => void }
 }> {
-  const mod = (await import('@ship/sui-dom/test-utils')) as {
+  const mod = (await import('@ship/sail-dom/test-utils')) as {
     compileSui: (source: string, opts?: unknown) => { js: string }
     compileAndMount: (
       source: string,

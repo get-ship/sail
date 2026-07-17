@@ -29,10 +29,10 @@
 //   MUST break identity to force a re-render.
 
 // Reactive core via the BARE self-specifier, not relative paths (mirrors
-// template-hooks/index.ts). This module is a `@ship/sui-runtime/virtual`
+// template-hooks/index.ts). This module is a `@ship/sail-runtime/virtual`
 // subpath OFF the root barrel (#297): consumer bundles inline it (plus
 // `@tanstack/virtual-core`), so its runtime imports must stay external —
-// the deck bundler externalizes the bare `@ship/sui-runtime` specifier,
+// the deck bundler externalizes the bare `@ship/sail-runtime` specifier,
 // keeping ONE signal graph. Relative imports here would inline a second
 // copy of the reactive core into every consumer (split-brain signals).
 import {
@@ -43,7 +43,7 @@ import {
   onCleanup,
   type Derived,
   type Disposer,
-} from '@ship/sui-runtime'
+} from '@ship/sail-runtime'
 import {
   Virtualizer,
   elementScroll,

@@ -2,25 +2,25 @@
 // "runtime evaluator" (build-spec §Mount by raw .sui source, option B).
 //
 // The compiler emits an ES module whose only imports are the framework
-// specifiers (`@ship/sui-runtime`, `@ship/sui-dom`, `@ship/sui-runtime/route`,
-// the side-effect `@ship/sui-runtime/template-hooks`) plus an optional
+// specifiers (`@ship/sail-runtime`, `@ship/sail-dom`, `@ship/sail-runtime/route`,
+// the side-effect `@ship/sail-runtime/template-hooks`) plus an optional
 // `import setup from "<marker>"` when a setup is injected. Those specifiers
 // resolve to the SAME singleton modules this engine is statically linked
 // against — so the evaluator rewrites the bare imports to reference the
 // injected namespaces and runs the body. Static linkage (not a fetch, not a
 // daemon) keeps the single-runtime guarantee: the specimen shares the host
-// page's `@ship/sui-runtime` instance, so signals/effects/boundary events
+// page's `@ship/sail-runtime` instance, so signals/effects/boundary events
 // interoperate across the seam.
 //
 // NOT a test shortcut: the framework namespaces are real static `import`s the
 // bundler keeps, so this is the production evaluator a standalone SPA ships
 // (the deck importmap externalizes the same specifiers to the same chunks).
 
-import * as suiRuntime from '@ship/sui-runtime'
-import * as suiDom from '@ship/sui-dom'
-import * as suiRoute from '@ship/sui-runtime/route'
-import '@ship/sui-runtime/template-hooks'
-import type { MountModule } from '@ship/sui-runtime'
+import * as suiRuntime from '@ship/sail-runtime'
+import * as suiDom from '@ship/sail-dom'
+import * as suiRoute from '@ship/sail-runtime/route'
+import '@ship/sail-runtime/template-hooks'
+import type { MountModule } from '@ship/sail-runtime'
 
 /** A user setup the host injects for a view-mode specimen (the throwing-setup
  *  diagnostic path, or a future ctx-bearing view). */
@@ -31,24 +31,24 @@ export type InjectedSetup =
 function rewriteImports(js: string): string {
   return (
     js
-      // import { …names… } from "@ship/sui-runtime"
+      // import { …names… } from "@ship/sail-runtime"
       .replace(
         /^\s*import\s*\{\s*([^}]+?)\s*\}\s*from\s*["']@ship\/sui-runtime["']\s*;?\s*$/gm,
         'const { $1 } = __runtime;',
       )
-      // import { …names… } from "@ship/sui-dom"
+      // import { …names… } from "@ship/sail-dom"
       .replace(
         /^\s*import\s*\{\s*([^}]+?)\s*\}\s*from\s*["']@ship\/sui-dom["']\s*;?\s*$/gm,
         'const { $1 } = __dom;',
       )
-      // import { route as __routeFactory } from "@ship/sui-runtime/route"
+      // import { route as __routeFactory } from "@ship/sail-runtime/route"
       .replace(
         /^\s*import\s*\{\s*route\s+as\s+__routeFactory\s*\}\s*from\s*["']@ship\/deck\/route["']\s*;?\s*$/gm,
         'const __routeFactory = __route.route;',
       )
-      // side-effect: import "@ship/sui-runtime"
+      // side-effect: import "@ship/sail-runtime"
       .replace(/^\s*import\s+["']@ship\/sui-runtime["']\s*;?\s*$/gm, '')
-      // side-effect: import "@ship/sui-runtime/template-hooks"
+      // side-effect: import "@ship/sail-runtime/template-hooks"
       .replace(/^\s*import\s+["']@ship\/sui-runtime\/template-hooks["']\s*;?\s*$/gm, '')
       // import setup from "<marker>" — the injected controller/setup
       .replace(/^\s*import\s+setup\s+from\s+["'][^"']+["']\s*;?\s*$/gm, 'const setup = __setup;')

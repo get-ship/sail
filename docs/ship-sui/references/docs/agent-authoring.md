@@ -13,7 +13,7 @@ file is the do-now checklist.
 
 Throughout: file paths are relative to the repo root, every snippet is
 either lifted from a real view (cited inline) or testable in isolation
-against `bun run --filter @ship/sui-runtime test`.
+against `bun run --filter @ship/sail-runtime test`.
 
 > **Light-DOM contract.** Every `sui-*` element renders into its
 > own custom element in the page's tree — no shadow root by
@@ -139,7 +139,7 @@ rules, not view-scoped page CSS.
 ```ts
 <!-- inside views/<name>/page.sui -->
 <controller>
-import { signal, derived, unwrap } from '@ship/sui-runtime'
+import { signal, derived, unwrap } from '@ship/sail-runtime'
 
 export default controller((ctx) => {
   const { items /* live signal from <data> */, ship, route, navigate } = ctx
@@ -209,7 +209,7 @@ directly via `/sui/<name>`.
 `ref(null)`; read with `refSig()` (returns the element or `null`):
 
 ```ts
-import { ref } from '@ship/sui-runtime'
+import { ref } from '@ship/sail-runtime'
 // inside controller((ctx) => { … })
 const dialogEl = ref<HTMLDialogElement>(null)
 ```
@@ -268,7 +268,7 @@ all three; never assume `ok`:
 > **Projection in this snippet.** The `<sui-button slot="action">`
 > and `<span slot="title">` are projected children — the
 > `slot="…"` attribute names the region, the runtime
-> (`@ship/sui-runtime/slot-project.ts`) matches it to the
+> (`@ship/sail-runtime/slot-project.ts`) matches it to the
 > corresponding `<slot name="…">` wrapper in the host's body at
 > connect. The contract is the same as web-component slots, but
 > the implementation is light-DOM (no shadow root, the slot is
@@ -416,7 +416,7 @@ Hard-won. Each one is from a real fix in this repo.
    and read params with the namespace form `route.params.id()` (it
    returns `Signal<string|undefined>`, so the trailing `()` is the
    read). This is the form `views/agents/[id]/page.sui` uses. A
-   `route()` factory is also importable from `@ship/sui-runtime/route`
+   `route()` factory is also importable from `@ship/sail-runtime/route`
    for non-controller code; don't mix the two within one file.
 
 4. **`bind:this` inside a branch with no ref declared.** Used to

@@ -18,7 +18,7 @@
 // shaped view (no `.set`; you don't navigate during SSR). It is cast to
 // `Signal` because that is its type at the call site; the host owns mutation.
 
-import type { Signal } from '@ship/sui-runtime'
+import type { Signal } from '@ship/sail-runtime'
 import type { RouteSignals } from './types'
 
 export type { RouteSignals, RouteShape } from './types'

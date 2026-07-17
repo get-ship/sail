@@ -26,7 +26,7 @@ fn opts() -> CompileOpts {
 
 /// Inline controller whose typed scope provides exactly `count`.
 const CONTROLLER: &str = "<controller>\n\
-    import { controller, signal } from '@ship/sui-runtime'\n\
+    import { controller, signal } from '@ship/sail-runtime'\n\
     export default controller((ctx) => ({ count: signal(0) }))\n\
     </controller>\n";
 

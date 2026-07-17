@@ -30,28 +30,28 @@ pub(crate) struct FrameworkSingleton {
 pub(crate) const FRAMEWORK_SINGLETONS: &[FrameworkSingleton] = &[
     FrameworkSingleton {
         name: "sui-runtime",
-        spec: "@ship/sui-runtime",
+        spec: "@ship/sail-runtime",
         out_file: "sui-runtime.js",
         externals: &[],
     },
     FrameworkSingleton {
         name: "sui-dom",
-        spec: "@ship/sui-dom",
+        spec: "@ship/sail-dom",
         out_file: "sui-dom.js",
-        externals: &["@ship/sui-runtime"],
+        externals: &["@ship/sail-runtime"],
     },
     FrameworkSingleton {
         name: "sui-sdk-client",
         spec: "@ship/sdk-client",
         out_file: "sui-sdk-client.js",
-        externals: &["@ship/sui-runtime"],
+        externals: &["@ship/sail-runtime"],
     },
     // `@ship/sdk` — the Connect SDK (generated protobuf/Connect client, the
     // `@ship/sdk/connect` surface). It is large (~1.5MB) and shared across
     // every app that talks to the daemon, so it is a framework singleton: one
     // shared bundle, referenced via the importmap, NOT inlined per-app. Before
     // this, an app like cmdk that imports `@ship/sdk/connect` inlined the whole
-    // SDK into its own bundle. Standalone (no `@ship/sui-runtime` dependency),
+    // SDK into its own bundle. Standalone (no `@ship/sail-runtime` dependency),
     // so it externalises nothing. Resolved by node from the project being built
     // and skipped when absent (consumer repos that don't depend on it).
     FrameworkSingleton {
@@ -68,7 +68,7 @@ pub(crate) const FRAMEWORK_SINGLETONS: &[FrameworkSingleton] = &[
         name: "deck-route",
         spec: "@ship/deck-router",
         out_file: "deck-route.js",
-        externals: &["@ship/sui-runtime"],
+        externals: &["@ship/sail-runtime"],
     },
 ];
 
@@ -97,7 +97,7 @@ pub struct BundleTarget {
     pub name: String,
     pub entry: TargetEntry,
     /// Externals the author declared. The build phase additionally forces
-    /// `@ship/sui-runtime` external for every target except `sui-runtime`.
+    /// `@ship/sail-runtime` external for every target except `sui-runtime`.
     pub externals: Vec<String>,
     /// Output path relative to the target's assets dir (`assets_dir_for`).
     pub out_file: String,
@@ -295,10 +295,10 @@ impl BundleLayout {
                     name: format!("views/{name}/view"),
                     entry: TargetEntry::Real(entry),
                     externals: vec![
-                        "@ship/sui-runtime".into(),
-                        "@ship/sui-runtime/internal".into(),
-                        "@ship/sui-runtime/template-hooks".into(),
-                        "@ship/sui-dom".into(),
+                        "@ship/sail-runtime".into(),
+                        "@ship/sail-runtime/internal".into(),
+                        "@ship/sail-runtime/template-hooks".into(),
+                        "@ship/sail-dom".into(),
                         "@ship/sdk-client".into(),
                     ],
                     out_file: format!("views/{name}/view.js"),
@@ -388,12 +388,12 @@ mod tests {
         // A view.
         write(&root.join("views/git/page.sui"), "<div>git</div>\n");
         // The framework singleton must be node-resolvable from the repo root for
-        // its target to appear — install a stub `@ship/sui-runtime`.
+        // its target to appear — install a stub `@ship/sail-runtime`.
         write(
-            &root.join("node_modules/@ship/sui-runtime/package.json"),
-            r#"{ "name": "@ship/sui-runtime", "exports": { ".": "./src/index.ts" } }"#,
+            &root.join("node_modules/@ship/sail-runtime/package.json"),
+            r#"{ "name": "@ship/sail-runtime", "exports": { ".": "./src/index.ts" } }"#,
         );
-        write(&root.join("node_modules/@ship/sui-runtime/src/index.ts"), "export const x=1;\n");
+        write(&root.join("node_modules/@ship/sail-runtime/src/index.ts"), "export const x=1;\n");
 
         let l = BundleLayout::with_config(root, None, DeckConfig::defaults());
         let targets = l.all_targets();
@@ -461,13 +461,13 @@ mod tests {
             &root.join("apps/site/package.json"),
             r#"{ "name": "@ship/site", "deck": { "bundles": [
                 { "name": "sui-marketing", "entry": "src/marketing/marketing-bundle.ts",
-                  "externals": ["@ship/sui-runtime", "@ship/sui-dom"], "lazy": false } ] } }"#,
+                  "externals": ["@ship/sail-runtime", "@ship/sail-dom"], "lazy": false } ] } }"#,
         );
         write(
             &root.join("packages/arcade/package.json"),
             r#"{ "name": "@ship/arcade", "deck": { "bundles": [
                 { "name": "sui-arcade", "entry": "src/index.ts",
-                  "externals": ["@ship/sui-runtime", "@ship/sui-dom"], "lazy": true } ] } }"#,
+                  "externals": ["@ship/sail-runtime", "@ship/sail-dom"], "lazy": true } ] } }"#,
         );
 
         let l = BundleLayout::with_config(root.clone(), None, DeckConfig::defaults());
@@ -479,7 +479,7 @@ mod tests {
             TargetEntry::Real(root.join("apps/site/src/marketing/marketing-bundle.ts")),
             "entry is package-relative, joined onto the declaring package root"
         );
-        assert_eq!(marketing.externals, vec!["@ship/sui-runtime", "@ship/sui-dom"]);
+        assert_eq!(marketing.externals, vec!["@ship/sail-runtime", "@ship/sail-dom"]);
         assert_eq!(marketing.out_file, "sui-marketing.js");
         assert!(!marketing.lazy, "marketing is eager");
 

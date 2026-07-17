@@ -11,7 +11,7 @@
 // resolve through `op_ship_call`; in the browser they fetch the deck op
 // surface. Either way the typed shape is the one source of truth.
 
-import type { LiveSource, LiveSignal } from '@ship/sui-runtime'
+import type { LiveSource, LiveSignal } from '@ship/sail-runtime'
 
 /** The deck op-surface URL prefix (mirrors `@ship/sdk-client`'s `DECK_PREFIX`,
  *  inlined so the demo client has no codegen-bearing dependency). */

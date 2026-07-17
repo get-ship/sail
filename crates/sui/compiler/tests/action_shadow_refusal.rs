@@ -51,7 +51,7 @@ const SUI_CANVAS_COLLISION_SHAPE: &str = r#"<scope>
   }
 </scope>
 <controller>
-import { controller, signal, derived, ref } from '@ship/sui-runtime'
+import { controller, signal, derived, ref } from '@ship/sail-runtime'
 import type { Scope } from './sui-canvas.sui'
 
 export default controller(({ value }: Scope) => {
@@ -101,7 +101,7 @@ fn sui_canvas_shape_self_call_collision_refuses_at_compile() {
 /// unreachable from any template expression, so this must refuse too, not
 /// just the `use:X={X()}` special case.
 const SCOPE_IMPORT_COLLISION_OUTSIDE_USE: &str = r#"<controller>
-import { controller, signal } from '@ship/sui-runtime'
+import { controller, signal } from '@ship/sail-runtime'
 export default controller((ctx) => {
   const tooltip = signal('hello')
   return { tooltip }
@@ -131,7 +131,7 @@ fn scope_import_collision_outside_use_directive_refuses() {
 /// observed by the compiler's template walk. No error: the compiler only
 /// refuses ambiguity it can actually see materialize.
 const SAME_NAME_NEVER_USED_IN_TEMPLATE: &str = r#"<controller>
-import { controller, signal } from '@ship/sui-runtime'
+import { controller, signal } from '@ship/sail-runtime'
 export default controller((ctx) => {
   const tooltip = signal('hello')
   const label = signal('shown')
@@ -152,7 +152,7 @@ fn colliding_name_never_referenced_in_template_compiles_clean() {
 /// DIFFERENTLY-named scope value is the normal, correct shape and must
 /// keep compiling.
 const NO_COLLISION_USE_DIRECTIVE: &str = r#"<controller>
-import { controller, derived, signal } from '@ship/sui-runtime'
+import { controller, derived, signal } from '@ship/sail-runtime'
 export default controller((ctx) => {
   const scale = signal(1)
   const worldTransformCss = derived<string>(() => `scale(${scale()})`)

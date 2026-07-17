@@ -3,7 +3,7 @@
 //!
 //! `synthesize_and_bundle` calls the synthetic emitter as a pure function (no
 //! CLI shell-out) and drives Rolldown — the project's own bundler — so the
-//! module matches the real pipeline. `@ship/sui-runtime` and `@ship/deck/router`
+//! module matches the real pipeline. `@ship/sail-runtime` and `@ship/deck/router`
 //! alias to their SERVER entries (no browser side-effects, host-backed route),
 //! app `<client>` modules alias to their server entries, and `ship` stays
 //! external (the host-dispatch wire).
@@ -122,8 +122,8 @@ async fn bundle(repo: &Path, build_dir: &Path, client_aliases: &[ClientAlias]) -
     let runtime_internal = repo.join("packages/sui/runtime/src/internal.ts");
     let route_server = repo.join("packages/deck/router/src/server.ts");
     let mut alias = vec![
-        ("@ship/sui-runtime".to_string(), vec![Some(path_str(&runtime_server))]),
-        ("@ship/sui-runtime/internal".to_string(), vec![Some(path_str(&runtime_internal))]),
+        ("@ship/sail-runtime".to_string(), vec![Some(path_str(&runtime_server))]),
+        ("@ship/sail-runtime/internal".to_string(), vec![Some(path_str(&runtime_internal))]),
         ("@ship/deck/router".to_string(), vec![Some(path_str(&route_server))]),
     ];
     for c in client_aliases {

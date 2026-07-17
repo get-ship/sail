@@ -9,10 +9,10 @@ export default defineConfig({
   resolve: {
     alias: {
       // The integration test compiles real .set files; the emitted
-      // JS imports `@ship/sui-runtime`. Point it at the local source so
+      // JS imports `@ship/sail-runtime`. Point it at the local source so
       // dynamic-imported compiled modules can find the runtime.
-      '@ship/sui-runtime/internal': resolve(__dirname, 'src/internal.ts'),
-      '@ship/sui-runtime': resolve(__dirname, 'src/index.ts'),
+      '@ship/sail-runtime/internal': resolve(__dirname, 'src/internal.ts'),
+      '@ship/sail-runtime': resolve(__dirname, 'src/index.ts'),
     },
   },
   test: {

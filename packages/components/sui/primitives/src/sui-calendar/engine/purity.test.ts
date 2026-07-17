@@ -50,14 +50,14 @@ describe('engine purity (grep gate — Cardinal 4 + sui-* boundary)', () => {
     }
   })
 
-  it('every engine module using reactivity imports it from @ship/sui-runtime', () => {
+  it('every engine module using reactivity imports it from @ship/sail-runtime', () => {
     for (const file of engineSourceFiles()) {
       const src = readFileSync(file, 'utf8')
       // Match import/usage of the reactivity primitives (not just any prose).
       const usesReactivity = /\b(signal|derived|batch|untrack)\s*[(<]/.test(src)
       if (usesReactivity) {
-        expect(src, `${file} uses reactivity but does not import @ship/sui-runtime`).toContain(
-          '@ship/sui-runtime',
+        expect(src, `${file} uses reactivity but does not import @ship/sail-runtime`).toContain(
+          '@ship/sail-runtime',
         )
       }
     }

@@ -3,13 +3,13 @@
 // The engine owns the reactive `series → extent → normalized` derivation and
 // exposes it as `Derived<…>` signals, plus the centralized `isEmpty`/
 // `isLoading`/`error` discriminators and the `ariaSummary`/`ariaTable`
-// accessible-data derivations. Pure `@ship/sui-runtime`: signal/derived/batch
+// accessible-data derivations. Pure `@ship/sail-runtime`: signal/derived/batch
 // only — no DOM, no ship.*, no fetch, no effect-into-signal.
 //
 // Build-spec: Backbone #1 "API sketch" + "Signal graph" + Slice 3.
 
 import { describe, expect, it } from 'vitest'
-import { signal, derived } from '@ship/sui-runtime'
+import { signal, derived } from '@ship/sail-runtime'
 import { createChartData } from './create-chart-data'
 import type { ChartSeries } from './types'
 

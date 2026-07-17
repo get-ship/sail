@@ -86,7 +86,7 @@ The `sui-controller-purity` rule rejects markup-producing code inside the `<cont
   `bind:this` would have given you (use `bind:this` for refs)
 - A `.sui` body that is just `<div bind:this={ref}></div>` — the template is the renderer
 
-For HTML-blob cases (markdown rendering, third-party SVG generators, icon-pack swaps), use `bindHtml(el, () => string)` from `@ship/sui-runtime`. It auto-morphs across re-renders.
+For HTML-blob cases (markdown rendering, third-party SVG generators, icon-pack swaps), use `bindHtml(el, () => string)` from `@ship/sail-runtime`. It auto-morphs across re-renders.
 
 > **The host element IS the component.** A `bind:this` on the
 > component's own root gives the controller a handle to the same

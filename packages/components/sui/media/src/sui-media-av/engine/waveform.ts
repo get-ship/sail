@@ -1,6 +1,6 @@
 // sui-media engine — audio waveform peak decode + draw. Extracted from the
 // renderer's `mount` so the controller stays glue-only (build-spec Slice 7
-// pre-committed split). PURE of `@ship/sui-runtime`; it touches only the
+// pre-committed split). PURE of `@ship/sail-runtime`; it touches only the
 // canvas it is handed and the resolved bytes it is given.
 //
 // Source-in, never fetch: peaks are decoded from already-resolved `bytes`

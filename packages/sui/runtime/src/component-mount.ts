@@ -6,10 +6,10 @@
 // element. The sui-compiler emits every tagless `.sui` (a deck page, the
 // synthetic SSR render) as:
 //
-//   import { component, … } from "@ship/sui-runtime"
+//   import { component, … } from "@ship/sail-runtime"
 //   export default component((ctx) => { …; return { …$scope, __mount(c) {…} } })
 //
-// `attach()` (in @ship/sui-dom) reads `module.default.setup(ctx)` to seed scope
+// `attach()` (in @ship/sail-dom) reads `module.default.setup(ctx)` to seed scope
 // and then walks SSR DOM. This is the contract glue between those two halves.
 //
 // The two-argument `component(tag, def)` overload — in component-factory.ts —
@@ -20,7 +20,7 @@
 import type { ShipHost, Clients } from './ship'
 // SUI-local structural `RouteSignals` (the deck-side `RouteSignals` is
 // structurally compatible — both import the same `Signal` from
-// `@ship/sui-runtime`; deck's `route` factory return satisfies this type at the
+// `@ship/sail-runtime`; deck's `route` factory return satisfies this type at the
 // assignment site). SUI names no host: route/navigate arrive via the seam.
 import type { RouteSignals } from './route-signals'
 

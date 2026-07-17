@@ -116,7 +116,7 @@ holds only declarative directives and pure expressions:
 ```ts
 <controller>
 <!-- ✅ page.sui — inline <controller> block: declarations, logic, and the auth-gated read -->
-import { derived } from '@ship/sui-runtime'
+import { derived } from '@ship/sail-runtime'
 
 export default controller(({ users }) => {
   // The template's local `const` is now a declared scope member returned

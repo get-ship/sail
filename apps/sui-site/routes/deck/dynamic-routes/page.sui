@@ -2,7 +2,7 @@
   /deck/dynamic-routes — adapted from packages/deck/docs/routes/dynamic-routes/page.sui.
 -->
 <controller>
-import { controller, type ViewScope } from '@ship/sui-runtime'
+import { controller, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sui'
 import { routeExample, readExample } from './snippets'
 

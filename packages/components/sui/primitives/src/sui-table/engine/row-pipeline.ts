@@ -11,11 +11,11 @@
 // `grouping.ts`. Returns every row-chain derived the facade re-exports plus the
 // `expanded`-keyed expansion handle the rows bind to.
 //
-// PURE TypeScript — imports `derived` from `@ship/sui-runtime` ONLY.
+// PURE TypeScript — imports `derived` from `@ship/sail-runtime` ONLY.
 //
 // Authority: build-spec §"Signal graph", §Features #5/#13, Slice 3b.
 
-import { derived, type Derived } from '@ship/sui-runtime'
+import { derived, type Derived } from '@ship/sail-runtime'
 import { buildFilterStages, resolveCellPredicate } from './filtering'
 import { buildGroupStage, filterTreeFromLeaves } from './grouping'
 import { buildCore, buildSortStage } from './pipeline'
@@ -34,7 +34,7 @@ export interface RowChainInputs<T> {
   options: TableOptions<T>
   state: ReactiveTableState
   bindings: RowBindings<T>
-  dataSignal: import('@ship/sui-runtime').Signal<T[]>
+  dataSignal: import('@ship/sail-runtime').Signal<T[]>
 }
 
 /** Assemble the full row chain (filter → sort → group/flatten). */

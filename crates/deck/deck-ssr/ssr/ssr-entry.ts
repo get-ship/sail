@@ -2,7 +2,7 @@
 // string INSIDE ship-js (a deno_core/V8 isolate), with route + data resolved
 // over the host-dispatch wire — never the browser.
 //
-// The server DOM lives in `@ship/sui-runtime/server` (`installServerDom`) — a
+// The server DOM lives in `@ship/sail-runtime/server` (`installServerDom`) — a
 // shared, tested module, not an inline shim. Installing it as
 // `globalThis.document` lets the SAME synthesized render that runs in the
 // browser (`createElement`, `appendChild`, `bindText`, `bindFor`, …) run here
@@ -12,7 +12,7 @@
 // `import "ship"` is the one door: `call(op, args)` is the host-dispatch wire
 // (`op_ship_call` → the host's `Dispatch`), `emit(v)` surfaces the result.
 
-import { installServerDom } from '@ship/sui-runtime'
+import { installServerDom } from '@ship/sail-runtime'
 import { mount } from './page.render.ts'
 import { call, emit } from 'ship'
 

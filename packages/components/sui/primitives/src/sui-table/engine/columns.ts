@@ -13,7 +13,7 @@
 // reads it via `getSize()` and the body reads the SAME number via the
 // `--col-<id>-size` custom-property value. They cannot drift.
 //
-// PURE TypeScript — imports `derived` from `@ship/sui-runtime` ONLY. No DOM, no
+// PURE TypeScript — imports `derived` from `@ship/sail-runtime` ONLY. No DOM, no
 // SDK.
 //
 // Authority: build-spec §Features #8 (resize onChange/onEnd, flexible px/'auto'/
@@ -23,7 +23,7 @@
 // §"Signal graph" ("ORTHOGONAL (presentational, NOT in the row chain)"),
 // Slice 3a.
 
-import { derived, type Derived, type Signal } from '@ship/sui-runtime'
+import { derived, type Derived, type Signal } from '@ship/sail-runtime'
 import type {
   ColumnDef,
   ColumnPinningState,

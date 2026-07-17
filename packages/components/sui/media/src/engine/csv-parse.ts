@@ -1,5 +1,5 @@
 // sui-media engine — RFC-4180-ish CSV/TSV parser. PURE: text → { rows,
-// columns }. No I/O, no `@ship/sui-runtime`, no DOM. The CSV renderer composes
+// columns }. No I/O, no `@ship/sail-runtime`, no DOM. The CSV renderer composes
 // the committed `sui-table`, so the parser's only job is the shape the table
 // consumes: a header row drives column field/label when `header=true`, else
 // synthetic `col0..N`; quoted fields with embedded delimiters/newlines; comma-

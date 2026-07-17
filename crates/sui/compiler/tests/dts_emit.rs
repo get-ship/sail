@@ -179,7 +179,7 @@ fn scope_factory_fields_omitted_from_scope() {
     // (`{foo()}`) do not add Scope members; only `<data>`/props/use/ref do.
     let sui = r#"<p>{foo()} {label()}</p>"#;
     let controller = r#"
-        import { controller, signal } from '@ship/sui-runtime'
+        import { controller, signal } from '@ship/sail-runtime'
         export default controller((ctx) => ({
             foo: signal<number>(0),
             label: signal(''),
@@ -206,7 +206,7 @@ fn scope_factory_shorthand_fields_omitted_from_scope() {
     // — same omit rule: caughtError/reset are SC-typed, absent from Scope.
     let sui = r#"<p>x</p>"#;
     let controller = r#"
-        import { controller, signal } from '@ship/sui-runtime'
+        import { controller, signal } from '@ship/sail-runtime'
         export default controller((_b: unknown, host?: Element) => {
             const caughtError = signal<Error | null>(null)
             const reset = (): void => { caughtError.set(null); host?.removeAttribute('x') }
@@ -225,7 +225,7 @@ fn scope_factory_shorthand_fields_omitted_from_scope() {
 fn empty_scope_factory_leaves_scope_unchanged() {
     let sui = r#"<p>x</p>"#;
     let controller = r#"
-        import { controller } from '@ship/sui-runtime'
+        import { controller } from '@ship/sail-runtime'
         export default controller((ctx) => ({}))
     "#;
     let dts = compile_dts_with_controller("page", sui, controller);
@@ -245,7 +245,7 @@ fn no_scope_section_leaves_scope_unchanged() {
     // Scope only. Existing controllers must continue typechecking.
     let sui = r#"<p>x</p>"#;
     let controller = r#"
-        import { controller } from '@ship/sui-runtime'
+        import { controller } from '@ship/sail-runtime'
         export default controller((ctx) => {
           mount((_host) => {})
           return {}
@@ -266,7 +266,7 @@ fn template_member_clashing_with_factory_is_dropped_from_scope() {
     // from Scope entirely and typed solely by the inferred SC.
     let sui = r#"<div bind:this={config}>x</div>"#;
     let controller = r#"
-        import { controller, ref } from '@ship/sui-runtime'
+        import { controller, ref } from '@ship/sail-runtime'
         export default controller((ctx) => ({ config: ref<HTMLDivElement>(null) }))
     "#;
     let dts = compile_dts_with_controller("page", sui, controller);

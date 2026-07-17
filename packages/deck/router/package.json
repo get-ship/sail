@@ -28,7 +28,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@ship/sui-runtime": "workspace:*"
+    "@ship/sail-runtime": "workspace:*"
   },
   "devDependencies": {
     "typescript": "~5.8.3",

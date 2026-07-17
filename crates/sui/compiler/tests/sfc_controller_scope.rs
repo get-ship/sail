@@ -13,7 +13,7 @@ use std::path::PathBuf;
 use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
 
 const SFC: &str = r#"<controller>
-import { controller, signal } from '@ship/sui-runtime'
+import { controller, signal } from '@ship/sail-runtime'
 export default controller((ctx) => {
   const phase = signal('idle')
   return { phase }

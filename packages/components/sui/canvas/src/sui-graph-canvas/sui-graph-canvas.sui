@@ -52,8 +52,8 @@
 </scope>
 
 <controller>
-import { controller, signal, derived, bindHtml } from '@ship/sui-runtime'
-import type { Action } from '@ship/sui-runtime'
+import { controller, signal, derived, bindHtml } from '@ship/sail-runtime'
+import type { Action } from '@ship/sail-runtime'
 import type { Scope } from './sui-graph-canvas.sui'
 
 export interface GraphNode {

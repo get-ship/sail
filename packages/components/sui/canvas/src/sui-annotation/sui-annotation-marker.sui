@@ -32,7 +32,7 @@
 </scope>
 
 <controller>
-import { controller, derived } from '@ship/sui-runtime'
+import { controller, derived } from '@ship/sail-runtime'
 import type { Scope } from './sui-annotation-marker.sui'
 
 interface BoxRect {

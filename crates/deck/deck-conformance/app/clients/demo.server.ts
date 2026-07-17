@@ -7,7 +7,7 @@
 // shape matches `./demo.ts` (the client/type module) exactly — same contract,
 // host-backed resolution.
 
-import type { LiveSource, LiveSignal } from '@ship/sui-runtime'
+import type { LiveSource, LiveSignal } from '@ship/sail-runtime'
 import { call } from 'ship'
 import type { ShipClient, ApiClient, TodoList, DemoConfig, Tick } from './demo'
 

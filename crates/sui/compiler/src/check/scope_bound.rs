@@ -9,7 +9,7 @@
 //!    by file location and passes the params at compile time).
 //!  * JS / browser globals from a small fixed allowlist.
 //!  * Built-in `use:` actions (`action_manifest::BUILTIN_ACTION_NAMES`),
-//!    auto-imported from `@ship/sui-runtime` when a template references
+//!    auto-imported from `@ship/sail-runtime` when a template references
 //!    them — a bare ESM binding, not a scope read.
 //!  * Locals introduced by an arrow's parameter list (handlers can
 //!    write `(e) => …`; `e` is in scope inside the body).

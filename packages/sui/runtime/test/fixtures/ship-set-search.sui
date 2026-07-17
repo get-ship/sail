@@ -1,5 +1,5 @@
 <controller>
-import { controller, signal, derived } from '@ship/sui-runtime'
+import { controller, signal, derived } from '@ship/sail-runtime'
 
 const ITEMS = ['apple', 'apricot', 'banana', 'blueberry', 'cherry', 'grape']
 

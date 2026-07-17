@@ -6,7 +6,7 @@ export default defineConfig({
   resolve: {
     alias: [
       {
-        find: '@ship/sui-runtime/template-hooks',
+        find: '@ship/sail-runtime/template-hooks',
         replacement: resolve(__dirname, '../runtime/src/template-hooks/index.ts'),
       },
       {
@@ -14,15 +14,15 @@ export default defineConfig({
         replacement: resolve(__dirname, '../deck/router/src/index.ts'),
       },
       {
-        find: '@ship/sui-runtime/route',
+        find: '@ship/sail-runtime/route',
         replacement: resolve(__dirname, '../runtime/src/route/index.ts'),
       },
       {
-        find: '@ship/sui-runtime',
+        find: '@ship/sail-runtime',
         replacement: resolve(__dirname, '../runtime/src/index.ts'),
       },
-      { find: '@ship/sui-dom', replacement: resolve(__dirname, 'src/index.ts') },
-      // No `@ship/sui-compiler-wasm` alias: the test helper
+      { find: '@ship/sail-dom', replacement: resolve(__dirname, 'src/index.ts') },
+      // No `@ship/sail-compiler-wasm` alias: the test helper
       // (src/test-utils/compile-sui.ts) now loads the native sui-compiler as a
       // Node-API `.node` addon (built by `cargo build -p sui-compiler-napi` /
       // `just sui-napi`) via process.dlopen — one cargo-current build feeds

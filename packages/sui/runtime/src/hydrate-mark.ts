@@ -16,7 +16,7 @@
 // it. This is the SAME marker contract the production walker emits;
 // we move WHO emits them, not WHAT they look like.
 //
-// The functions are exported from `@ship/sui-runtime` (alongside
+// The functions are exported from `@ship/sail-runtime` (alongside
 // `bindText` et al.) so the synthetic emit can `import { markHydrateText }`
 // next to its other runtime imports and the client bundles tree-shake
 // them cleanly (the typeof / `in` checks JIT to true no-ops).

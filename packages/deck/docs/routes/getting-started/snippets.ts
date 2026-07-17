@@ -12,7 +12,7 @@ export const pageExample = `<!-- routes/page.sui -->
 </main>`
 
 export const controllerExample = `// routes/controller.ts
-import { controller, signal } from '@ship/sui-runtime'
+import { controller, signal } from '@ship/sail-runtime'
 
 export default controller(() => {
   const count = signal(0)

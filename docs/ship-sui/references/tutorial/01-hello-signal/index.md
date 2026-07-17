@@ -13,7 +13,7 @@ A **signal** is the smallest reactive primitive in SUI — a callable
 cell that notifies its subscribers when it changes.
 
 ```ts
-import { signal } from '@ship/sui-runtime'
+import { signal } from '@ship/sail-runtime'
 
 const count = signal(0)
 count()          // → 0     (read)

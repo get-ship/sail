@@ -37,7 +37,7 @@
 //!     table is hand-authored (it carries prose), not derived from
 //!     a grep.
 //!   * `auto_import` — whether the compiler auto-imports this from
-//!     `@ship/sui-runtime` when a template references it. Every entry
+//!     `@ship/sail-runtime` when a template references it. Every entry
 //!     here is auto-imported today; the field is present so a future
 //!     author-side action can opt out without restructuring.
 
@@ -58,7 +58,7 @@ pub struct ActionEntry {
     /// docs site / agent skill — the table is the source.
     pub summary: &'static str,
     /// If `true`, the compiler auto-imports this action from
-    /// `@ship/sui-runtime` when a template references it. Every entry
+    /// `@ship/sail-runtime` when a template references it. Every entry
     /// in the language is auto-imported today; the field is here so a
     /// future author-side action can opt out without restructuring.
     pub auto_import: bool,

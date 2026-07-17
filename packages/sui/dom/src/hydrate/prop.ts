@@ -1,6 +1,6 @@
 // `prop:NAME={expr}` hydrator — assigns the JS property on the element.
 
-import { bindProp } from '@ship/sui-runtime'
+import { bindProp } from '@ship/sail-runtime'
 
 export function hydrateProp(
   el: Element,

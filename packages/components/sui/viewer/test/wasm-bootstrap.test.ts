@@ -22,7 +22,7 @@ const SRC_DIR = resolve(HERE, '../src')
 // Resolve the wasm binary by PACKAGE NAME (move-proof), exactly as
 // `@ship/test-setup` does — never a brittle relative `../../..` path.
 const require = createRequire(import.meta.url)
-const WASM_BYTES = readFileSync(require.resolve('@ship/sui-compiler-wasm/sui_compiler_bg.wasm'))
+const WASM_BYTES = readFileSync(require.resolve('@ship/sail-compiler-wasm/sui_compiler_bg.wasm'))
 
 /** Recursively collect every `.ts` source file in the pack `src` tree. */
 function packSourceFiles(dir = SRC_DIR): string[] {

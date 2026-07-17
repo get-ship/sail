@@ -2,7 +2,7 @@
 // suffix-only recompute + navigation + selection.
 
 import { describe, expect, it } from 'vitest'
-import { signal } from '@ship/sui-runtime'
+import { signal } from '@ship/sail-runtime'
 import { createCalendar } from './create-calendar'
 import type { AllDayEvent, CalendarEvent, TimedEvent } from './types'
 

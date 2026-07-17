@@ -6,12 +6,12 @@ const { mountCalls } = vi.hoisted(() => ({
   mountCalls: [] as Array<{ target: unknown; name: unknown; opts: any }>,
 }))
 
-// Mock the runtime instead of importing it: the real @ship/sui-runtime pulls
+// Mock the runtime instead of importing it: the real @ship/sail-runtime pulls
 // chrome.ts → @ship/deck-router, a cycle vitest can't resolve (pre-existing).
 // A minimal signal + a recording mount is all the router needs.
 // The mock calls opts.module.__mount(target) when present so layout-module
 // stubs can simulate rendering (proves authored markup is rendered, not dropped).
-vi.mock('@ship/sui-runtime', () => {
+vi.mock('@ship/sail-runtime', () => {
   const signal = <T>(initial: T) => {
     let v = initial
     const s = (() => v) as { (): T; set(n: T): void; peek(): T; __peek(): T }
@@ -55,7 +55,7 @@ vi.mock('@ship/sui-runtime', () => {
 
 import { mountRouter, type RouterHandle } from '../src/mount-router'
 import { navigate, setEditMode } from '../src/index'
-import { findNearestBoundary, runProtected } from '@ship/sui-runtime'
+import { findNearestBoundary, runProtected } from '@ship/sail-runtime'
 
 // Generic, app-agnostic fixtures. The router is framework code (deck) and must
 // not know any app's routes — so these are abstract paths/tags, never an app's

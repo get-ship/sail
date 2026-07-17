@@ -1,6 +1,6 @@
 // Main-thread Promise API over the worker. Use from any editor:
 //
-//   import { createSuiLspClient } from '@ship/sui-lsp-browser'
+//   import { createSuiLspClient } from '@ship/sail-lsp-browser'
 //   const lsp = createSuiLspClient(new Worker('/sui-lsp.worker.js', { type: 'module' }))
 //   const diags = await lsp.diagnose(text)
 //   const completions = await lsp.completionsAt(text, cursorOffset)

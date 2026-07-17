@@ -1,6 +1,6 @@
 //! Workspace discovery for the catalog aggregator (#163 catalog port).
 //!
-//! Port of `@ship/sui-catalog`'s `workspace.ts`: read the root `package.json`
+//! Port of `@ship/sail-catalog`'s `workspace.ts`: read the root `package.json`
 //! `workspaces.packages` globs, expand each (single trailing `*` only), and
 //! return every package dir with a parsable `package.json` that has a `name`.
 
@@ -41,7 +41,7 @@ pub struct BundleDecl {
     /// Entry module, relative to the declaring package's root.
     pub entry: PathBuf,
     /// Module specifiers kept external (not bundled). The build phase
-    /// additionally forces `@ship/sui-runtime` external for every target.
+    /// additionally forces `@ship/sail-runtime` external for every target.
     #[serde(default)]
     pub externals: Vec<String>,
     /// Eager (false) vs lazy (true) intent. Both bundle identically; `lazy`
@@ -263,7 +263,7 @@ pub fn discover_bundle_declarations(repo_root: &Path) -> Vec<(PathBuf, BundleDec
 /// Sui's own workspace root — three parents up from this crate's
 /// `CARGO_MANIFEST_DIR` (`<sui>/crates/deck/deck-bundler` → `<sui>`), validated
 /// once at first access. Sui carved the framework `@ship/*` packages out of the
-/// consuming project (`@ship/tokens`, `@ship/sui-*`, the `packages/components/
+/// consuming project (`@ship/tokens`, `@ship/sail-*`, the `packages/components/
 /// sui/*` packs); a consuming project depends on them via `file:` deps, so they
 /// no longer live under the project's `repo_root` and a `repo_root`-only
 /// workspace walk misses them. Resolving sui's root from the build crate's own
@@ -309,14 +309,14 @@ fn sui_workspace_root() -> Option<&'static Path> {
 ///   1. the consuming project's `repo_root` (its own `@ship/*` — `@ship/sdk`,
 ///      `@ship/agents`, the `packages/components/ship/*` packs, etc.);
 ///   2. sui's own workspace ([`sui_workspace_root`]) — the carved framework
-///      packages (`@ship/tokens`, `@ship/sui-*`, `packages/components/sui/*`).
+///      packages (`@ship/tokens`, `@ship/sail-*`, `packages/components/sui/*`).
 ///
 /// PRECEDENCE on a name collision: **sui wins**. Sui owns the framework `@ship/*`
 /// names; after the carve they live only under sui's root, so a stale or absent
 /// entry under the project's root must never shadow the real sui source. Sui's
 /// entries are therefore overlaid AFTER the project's, overwriting on collision.
 /// (Today the two sets are disjoint — project owns `@ship/sdk`/`@ship/agents`/…,
-/// sui owns `@ship/tokens`/`@ship/sui-*` — so this rule only ever fires
+/// sui owns `@ship/tokens`/`@ship/sail-*` — so this rule only ever fires
 /// defensively.) If sui's root can't be derived the union degrades to
 /// project-only resolution.
 ///

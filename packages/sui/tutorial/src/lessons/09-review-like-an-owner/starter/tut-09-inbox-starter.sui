@@ -12,7 +12,7 @@
   }
 </scope>
 <controller>
-import { controller, signal, derived, live } from '@ship/sui-runtime'
+import { controller, signal, derived, live } from '@ship/sail-runtime'
 
 interface Message {
   id: number

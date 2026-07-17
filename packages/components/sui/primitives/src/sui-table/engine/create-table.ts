@@ -8,7 +8,7 @@
 // `comparators.ts`). Every `set*`/`toggle*` writes its Signal inside `batch()`
 // then fires the matching `on*Change`; reads track in `derived`/template.
 //
-// PURE: imports `{ signal, batch, isSignal }` from `@ship/sui-runtime` ONLY —
+// PURE: imports `{ signal, batch, isSignal }` from `@ship/sail-runtime` ONLY —
 // no SDK client, no platform calls, no network, no server-events, no data
 // directive.
 //
@@ -16,7 +16,7 @@
 // §"getRowId is REQUIRED", §"Signal graph" (suffix-only recompute; filter →
 // sort → group → paginate order), §Features #2/#3/#6/#7, Slices 1b + 2.
 
-import { signal, batch, derived, isSignal, type Derived, type Signal } from '@ship/sui-runtime'
+import { signal, batch, derived, isSignal, type Derived, type Signal } from '@ship/sail-runtime'
 import { buildEditingAndCells, buildNavSurface } from './assemble-extras'
 import { applyControlledState, warnOnNonPrefix } from './manual'
 import { makeColumnApi, type ColumnApiDeps } from './column-api'

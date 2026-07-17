@@ -36,13 +36,13 @@ import {
   effect,
   ref,
   signal,
-} from '@ship/sui-runtime'
-import type { Derived, ViewScope } from '@ship/sui-runtime'
+} from '@ship/sail-runtime'
+import type { Derived, ViewScope } from '@ship/sail-runtime'
 import {
   createVirtualizer,
   type Virtual,
   type VirtualItem,
-} from '@ship/sui-runtime/virtual'
+} from '@ship/sail-runtime/virtual'
 import type { Scope } from './sui-message-list.sui'
 
 interface MessageItem {

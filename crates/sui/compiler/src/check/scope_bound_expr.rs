@@ -173,7 +173,7 @@ fn check_expr_inner(
                 CompileError::new(format!(
                     "Identifier '{word}' is ambiguous: this component's scope declares a \
                      value named '{word}' (from setup/props), and '{word}' is also a \
-                     built-in `use:` action auto-imported from @ship/sui-runtime. \
+                     built-in `use:` action auto-imported from @ship/sail-runtime. \
                      Template expressions resolve the action import first, so this \
                      reference reads the ACTION, not your scope value — the compiler \
                      refuses rather than silently pick one. Rename the scope binding (or \

@@ -7,7 +7,7 @@
 // boundary): the engine is pure reactive state — no SDK, no network, no <data>.
 //
 // Authority: build-spec §"Backbone #1" ("Imports { signal, derived, batch,
-// untrack } from @ship/sui-runtime ONLY — no @ship/sdk-client, no ship.*, no
+// untrack } from @ship/sail-runtime ONLY — no @ship/sdk-client, no ship.*, no
 // fetch, no <data>. It emits no DOM and makes no SDK calls"), §Slices ("Engine
 // purity is NOT lint-enforced … Assert via a grep test"), behavioral spec #14
 // ("a grep/test scan confirms no @ship/sdk-client/ship.*/fetch/EventSource/<data>
@@ -67,15 +67,15 @@ describe('engine purity (Slice 4 grep gate — Cardinal 4 + sui-* boundary)', ()
     }
   })
 
-  it('every engine module that imports the runtime imports it from @ship/sui-runtime', () => {
+  it('every engine module that imports the runtime imports it from @ship/sail-runtime', () => {
     for (const file of engineSourceFiles()) {
       const src = readFileSync(file, 'utf8')
       // If a module references signal/derived it must come from the runtime
       // barrel — not a relative re-implementation or a forbidden package.
       const importsReactivity = /\b(signal|derived|batch|untrack)\b/.test(src)
       if (importsReactivity) {
-        expect(src, `${file} uses reactivity but does not import @ship/sui-runtime`).toContain(
-          '@ship/sui-runtime',
+        expect(src, `${file} uses reactivity but does not import @ship/sail-runtime`).toContain(
+          '@ship/sail-runtime',
         )
       }
     }

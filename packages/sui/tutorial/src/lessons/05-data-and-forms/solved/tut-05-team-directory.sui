@@ -8,7 +8,7 @@
 -->
 
 <controller>
-import { controller, signal, derived, live } from '@ship/sui-runtime'
+import { controller, signal, derived, live } from '@ship/sail-runtime'
 
 interface Member {
   id: number

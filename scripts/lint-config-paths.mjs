@@ -2,7 +2,7 @@
 // lint-config-paths — fail committed config that reaches OUTSIDE the repo or
 // INTO build output. This is the filter for the failure-mode that the nest
 // restructure surfaced by hand (e.g. a component tsconfig's `rootDirs` pointing
-// at `.ship/sui-out` — a moving, build-output, cross-concern path that, when
+// at `.ship/sail-out` — a moving, build-output, cross-concern path that, when
 // mispathed, silently resolved types to `any` and masked real errors).
 //
 // Rules (each a P0; they STACK):

@@ -4,7 +4,7 @@
 // type-only consumer import from here; `index.ts` re-exports them so the
 // public `@ship/deck-router` surface is unchanged.
 
-import type { Signal } from '@ship/sui-runtime'
+import type { Signal } from '@ship/sail-runtime'
 
 /**
  * The reactive URL handle exposed to view scope as `route`.

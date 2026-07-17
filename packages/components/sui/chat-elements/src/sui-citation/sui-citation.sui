@@ -27,8 +27,8 @@
 
 
 <controller>
-import { controller, ref } from '@ship/sui-runtime'
-import type { ViewScope } from '@ship/sui-runtime'
+import { controller, ref } from '@ship/sail-runtime'
+import type { ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './sui-citation.sui'
 
 export default controller((_ctx: ViewScope<Scope>) => {

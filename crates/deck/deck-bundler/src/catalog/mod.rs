@@ -614,7 +614,7 @@ mod tests {
     }
 
     /// Three-pack fixture mirroring a real project shape:
-    ///   - `@ship/sui-primitives` exports `sui-button`
+    ///   - `@ship/sail-primitives` exports `sui-button`
     ///   - `deck-demo-app` exports `demo-chip` (the project's own component)
     ///   - `@ship/agents` exports `ship-agent-card`
     fn three_pack_fixture() -> tempfile::TempDir {
@@ -624,7 +624,7 @@ mod tests {
 
         write(
             &root.join("packages/primitives/package.json"),
-            r#"{"name":"@ship/sui-primitives","private":false}"#,
+            r#"{"name":"@ship/sail-primitives","private":false}"#,
         );
         write(
             &root.join("packages/primitives/src/sui-button/sui-button.sui"),
@@ -669,7 +669,7 @@ mod tests {
         assert_eq!(global_tags, vec!["demo-chip", "ship-agent-card", "sui-button"]);
 
         // The project declares a PARTIAL pack set (deck.jsonc `packs`).
-        let declared: Vec<String> = vec!["@ship/sui-primitives".into(), "deck-demo-app".into()];
+        let declared: Vec<String> = vec!["@ship/sail-primitives".into(), "deck-demo-app".into()];
         let scoped = tag_source_index_scoped(root, Some(&declared));
 
         // (a) declared-pack tag resolves to a real .sui source; own tag resolves.
@@ -711,7 +711,7 @@ mod tests {
     fn shadowed_tags_attributes_excluded_tag_to_its_pack() {
         let tmp = three_pack_fixture();
         let root = tmp.path();
-        let declared: Vec<String> = vec!["@ship/sui-primitives".into(), "deck-demo-app".into()];
+        let declared: Vec<String> = vec!["@ship/sail-primitives".into(), "deck-demo-app".into()];
 
         let shadowed = shadowed_tags(root, &declared);
         // Only the undeclared pack's tag is shadowed — named with its pack.

@@ -1,5 +1,5 @@
 /**
- * @ship/sui-runtime — public API surface.
+ * @ship/sail-runtime — public API surface.
  *
  * Everything re-exported from this module is part of ship-set's stable
  * runtime contract. Anything not re-exported here is internal and may
@@ -34,7 +34,7 @@
 // Singleton diagnostic. The whole runtime depends on exactly ONE instance:
 // signals, effects, and the context/route registries are module-level state.
 // The hard guarantee is structural — the deck bundler externalizes
-// `@ship/sui-runtime` for every target so the importmap resolves them all to
+// `@ship/sail-runtime` for every target so the importmap resolves them all to
 // one `/_deck/runtime.js`. This load-time counter is the belt-and-suspenders
 // heads-up: a second instance means signals/effects in one copy can't react to
 // the other's (split-brain).
@@ -51,7 +51,7 @@
   if (g.__suiRuntimeInstances > 1) {
     console.warn(
       '[sui-runtime] loaded %d times. In production this means a bundle is not ' +
-        'externalizing @ship/sui-runtime (split-brain signals); under vite ' +
+        'externalizing @ship/sail-runtime (split-brain signals); under vite ' +
         'shell-dev it is the expected @fs-source + /_deck-bundle duplication.',
       g.__suiRuntimeInstances,
     )
@@ -85,7 +85,7 @@ export type { EffectScope, ContextKey } from './effect-scope'
 // the DOM" entry point (F1). The compiler's ambient-injection table maps
 // the authored bare identifier `mount` to this export under that alias
 // (`crates/sui/compiler/src/runtime_ambient.rs`), so a controller body
-// can write `mount(fn)` with no import while `@ship/sui-runtime`'s own
+// can write `mount(fn)` with no import while `@ship/sail-runtime`'s own
 // `mount(target, payload, opts)` keeps its name for hosts.
 export { mount as mountAmbient } from './effect-scope'
 
@@ -233,7 +233,7 @@ export {
 export { bindFor, bindForSignal } from './for'
 export type { BindForOptions, RenderedItem } from './for'
 
-// Backbone #2 — virtualization — lives on the `@ship/sui-runtime/virtual`
+// Backbone #2 — virtualization — lives on the `@ship/sail-runtime/virtual`
 // subpath, NOT this barrel (#297): re-exporting it here dragged
 // `@tanstack/virtual-core` (~21KB minified, a third of the bundle) into the
 // always-loaded runtime singleton. Windowing consumers import
@@ -362,7 +362,7 @@ export {
 } from './template-hooks/registry'
 export type { KbdShortcut } from './template-hooks/kbd'
 // Built-in hook factories are loaded on demand via the
-// `@ship/sui-runtime/template-hooks` subpath: the SUI compiler emits a
+// `@ship/sail-runtime/template-hooks` subpath: the SUI compiler emits a
 // side-effect import of that subpath into compiled views that contain
 // `<use-*>` elements, so hook code only ships with views that use it.
 // Register <sui-if>, <sui-for>, <sui-match> custom elements.
@@ -403,7 +403,7 @@ export type { RouteSignals } from './route-signals'
 
 // Re-export the route factory (the passive RouteSignals reader) for the SAME
 // reason as the patch surface below: a compiled view imports `route` from
-// `@ship/sui-runtime/route`, and the deck importmap points that subpath at the
+// `@ship/sail-runtime/route`, and the deck importmap points that subpath at the
 // single `runtime.js` bundle — so the symbol must be reachable from THIS entry
 // or production resolves it to a bundle that doesn't export it. (Policy —
 // history/navigate/route-table — stays in the deck router; this is the SUI
@@ -420,7 +420,7 @@ export {
 
 // Re-export the patch applicator for the same reason as the route
 // surface above: `@ship/sdk-client`'s SSE layer imports
-// `@ship/sui-runtime/patch`, and the importmap points that subpath at
+// `@ship/sail-runtime/patch`, and the importmap points that subpath at
 // the single runtime.js bundle — so the symbols must be reachable here.
 export { applyPatch, applyPatches, tokenizePath } from './patch'
 export type { Patch, PatchOp, PathToken } from './patch'

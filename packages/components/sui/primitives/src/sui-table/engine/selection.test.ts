@@ -13,11 +13,11 @@
 // over current displayed order with a selection anchor; include/exclude select-all
 // model … per-row enableRowSelection predicate; group-row cascade + tri-state").
 //
-// Engine purity (Cardinal 4): imports ONLY @ship/sui-runtime. The purity GREP-test is
+// Engine purity (Cardinal 4): imports ONLY @ship/sail-runtime. The purity GREP-test is
 // Slice 4's contract, not this file's.
 
 import { describe, expect, it } from 'vitest'
-import { signal } from '@ship/sui-runtime'
+import { signal } from '@ship/sail-runtime'
 // RED: greenfield modules — resolve only once Slice 2 ships.
 import { createTable } from './create-table'
 

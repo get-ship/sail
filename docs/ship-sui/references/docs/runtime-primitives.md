@@ -12,7 +12,7 @@ All symbols below are re-exported from `packages/sui/runtime/src/index.ts`. Anyt
 ## Reactivity
 
 ```ts
-import { signal, derived, effect, batch, untrack } from '@ship/sui-runtime'
+import { signal, derived, effect, batch, untrack } from '@ship/sail-runtime'
 
 const count   = signal(0)
 const doubled = derived(() => count() * 2)
@@ -24,7 +24,7 @@ untrack(() => count())                    // read without subscribing
 
 `signal<T>(initial)` returns `Signal<T>`: call to read, `.set(v)` / `.update(fn)` to write. `derived<T>(fn)` returns `Derived<T>` (read-only). `effect(fn)` re-runs on dep change; `batch(fn)` coalesces writes; `untrack(fn)` reads without recording.
 
-Scopes (`createScope`, `createChildScope`, `withScope`, `onCleanup`, `currentScope`) own a tree of disposers — child scopes dispose when their parent does. The dev-only leak detector lives at `@ship/sui-runtime/dev` (separate subpath so it doesn't ship in production).
+Scopes (`createScope`, `createChildScope`, `withScope`, `onCleanup`, `currentScope`) own a tree of disposers — child scopes dispose when their parent does. The dev-only leak detector lives at `@ship/sail-runtime/dev` (separate subpath so it doesn't ship in production).
 
 ## DOM bindings
 
@@ -249,14 +249,14 @@ DOM appends, so this covers the authored surface.
 <use-intersection callback={onIntersect} />
 ```
 
-The compiler emits a side-effect import of `@ship/sui-runtime/template-hooks` into views that contain `<use-*>` elements, so hook code only ships with views that use it. Register a custom hook via `registerTemplateHook(name, factory)`; `listRegisteredHooks()` enumerates.
+The compiler emits a side-effect import of `@ship/sail-runtime/template-hooks` into views that contain `<use-*>` elements, so hook code only ships with views that use it. Register a custom hook via `registerTemplateHook(name, factory)`; `listRegisteredHooks()` enumerates.
 
 ## Routes — reactive URL state
 
 ```ts
 <controller>
-import { derived } from '@ship/sui-runtime'
-import { defineRoutes, navigate } from '@ship/sui-runtime/route'
+import { derived } from '@ship/sail-runtime'
+import { defineRoutes, navigate } from '@ship/sail-runtime/route'
 
 defineRoutes([{ pattern: '/agents/:id' }])
 
@@ -270,12 +270,12 @@ export default controller(({ route }) => {
 </controller>
 ```
 
-`route` is part of the ambient `ctx` every controller function receives. `route.params.<name>` and `route.query.<name>` are signals — call them (`route.params.id()`) to read and subscribe inside `effect`, `derived`, or a `<data>` source thunk. `popstate` and `navigate` both fire the global updater so every attached view re-evaluates. (`route` is also importable as a `route()` factory from `@ship/sui-runtime/route` for non-controller code; the namespace form `route.params.id()` is the controller exemplar — see `views/agents/[id]/page.sui`'s `<controller>` block.)
+`route` is part of the ambient `ctx` every controller function receives. `route.params.<name>` and `route.query.<name>` are signals — call them (`route.params.id()`) to read and subscribe inside `effect`, `derived`, or a `<data>` source thunk. `popstate` and `navigate` both fire the global updater so every attached view re-evaluates. (`route` is also importable as a `route()` factory from `@ship/sail-runtime/route` for non-controller code; the namespace form `route.params.id()` is the controller exemplar — see `views/agents/[id]/page.sui`'s `<controller>` block.)
 
 ## Mount API
 
 ```ts
-import { mount, type MountHandle } from '@ship/sui-runtime'
+import { mount, type MountHandle } from '@ship/sail-runtime'
 
 const handle: MountHandle = mount(target, payload, opts)
 // later: handle.dispose()

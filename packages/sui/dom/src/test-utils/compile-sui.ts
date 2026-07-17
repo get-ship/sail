@@ -10,7 +10,7 @@
 // playground (viewer/wasm-bootstrap.ts + lsp-browser) keeps the wasm surface;
 // this path is the Node test harness only.
 //
-// The legacy `@ship/sui-dom/legacy` path is gone — every directive must
+// The legacy `@ship/sail-dom/legacy` path is gone — every directive must
 // round-trip through Rust now. This helper is the only test-time bridge
 // between `.sui` source and a mounted DOM tree.
 
@@ -18,18 +18,18 @@ import { existsSync, readdirSync, statSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import * as suiRuntime from '@ship/sui-runtime'
-import * as suiDom from '@ship/sui-dom'
+import * as suiRuntime from '@ship/sail-runtime'
+import * as suiDom from '@ship/sail-dom'
 // The runtime's `/route` subpath provides a passive `RouteSignals` reader
 // built from a URL — exactly the shape the compiled view's
-// `import { route as __routeFactory } from "@ship/sui-runtime/route"`
+// `import { route as __routeFactory } from "@ship/sail-runtime/route"`
 // expects after the eval layer strips imports. The deck router owns the
 // *policy* (history, popstate, route table, `navigate`); the runtime
 // owns the *mechanism*. The test harness needs only the mechanism, and
-// `@ship/sui-runtime/route` is sui ⊥ deck by construction.
-import { route as makeRoute } from '@ship/sui-runtime/route'
-import type { RouteSignals } from '@ship/sui-runtime'
-import '@ship/sui-runtime/template-hooks'
+// `@ship/sail-runtime/route` is sui ⊥ deck by construction.
+import { route as makeRoute } from '@ship/sail-runtime/route'
+import type { RouteSignals } from '@ship/sail-runtime'
+import '@ship/sail-runtime/template-hooks'
 /* ----------------------- native addon load ----------------------- */
 
 const HERE = dirname(fileURLToPath(import.meta.url))
@@ -191,7 +191,7 @@ export function compileSui(source: string, opts: CompileOpts = {}): CompiledSui 
 }
 
 // The module shape a compiled view's
-// `import { route as __routeFactory } from "@ship/sui-runtime/route"`
+// `import { route as __routeFactory } from "@ship/sail-runtime/route"`
 // resolves to after `stripImports` rewrites it to `__route.route`. Backed
 // by the runtime's `/route` subpath — see the import note at the top.
 const routeModule: { route: typeof makeRoute } = { route: makeRoute }
@@ -213,31 +213,31 @@ function stripImports(js: string): string {
     // type-only imports (an SFC controller body is TS, not the emitted JS)
     .replace(/^\s*import\s+type\s+[^;\n]+;?\s*$/gm, '')
     .replace(/^\s*import\s*\{\s*type\s[^}]*\}\s*from\s*["'][^"']+["']\s*;?\s*$/gm, '')
-    // import { …names… } from "@ship/sui-runtime/internal" (the compiler's
+    // import { …names… } from "@ship/sail-runtime/internal" (the compiler's
     // emit specifier; internal re-exports the full runtime surface)
     .replace(
       /^\s*import\s*\{\s*([^}]+)\s*\}\s*from\s*["']@ship\/sui-runtime\/internal["']\s*;?\s*$/gm,
       'const { $1 } = __runtime;',
     )
-    // import { …names… } from "@ship/sui-runtime"
+    // import { …names… } from "@ship/sail-runtime"
     .replace(
       /^\s*import\s*\{\s*([^}]+)\s*\}\s*from\s*["']@ship\/sui-runtime["']\s*;?\s*$/gm,
       'const { $1 } = __runtime;',
     )
-    // import { …names… } from "@ship/sui-dom"
+    // import { …names… } from "@ship/sail-dom"
     .replace(
       /^\s*import\s*\{\s*([^}]+)\s*\}\s*from\s*["']@ship\/sui-dom["']\s*;?\s*$/gm,
       'const { $1 } = __dom;',
     )
-    // import { route as __routeFactory } from "@ship/sui-runtime/route"
+    // import { route as __routeFactory } from "@ship/sail-runtime/route"
     // (the specifier the compiler emits — see crates/sui/compiler/src/emit/js/imports.rs).
     .replace(
       /^\s*import\s*\{\s*route\s+as\s+__routeFactory\s*\}\s*from\s*["']@ship\/sui-runtime\/route["']\s*;?\s*$/gm,
       'const __routeFactory = __route.route;',
     )
-    // side-effect: import "@ship/sui-runtime"
+    // side-effect: import "@ship/sail-runtime"
     .replace(/^\s*import\s+["']@ship\/sui-runtime["']\s*;?\s*$/gm, '')
-    // side-effect: import "@ship/sui-runtime/template-hooks"
+    // side-effect: import "@ship/sail-runtime/template-hooks"
     .replace(/^\s*import\s+["']@ship\/sui-runtime\/template-hooks["']\s*;?\s*$/gm, '')
     // import setup from "<marker>"
     .replace(/^\s*import\s+setup\s+from\s+["'][^"']+["']\s*;?\s*$/gm, 'const setup = __setup;')

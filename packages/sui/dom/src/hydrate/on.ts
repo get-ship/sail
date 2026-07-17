@@ -5,7 +5,7 @@
 // the handler closure at hydrate time (via the same IIFE pattern it
 // uses in `__mount`) and passes it in alongside the modifier list.
 
-import { on, type Modifier } from '@ship/sui-runtime'
+import { on, type Modifier } from '@ship/sail-runtime'
 
 export function hydrateOn(
   el: Element,

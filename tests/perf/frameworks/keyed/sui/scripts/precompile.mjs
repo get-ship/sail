@@ -46,7 +46,7 @@ function discoverSuiRepo() {
 
 const SAIL_REPO = discoverSuiRepo()
 
-// Resolve @ship/sui-runtime to the live sui checkout WITHOUT a package.json
+// Resolve @ship/sail-runtime to the live sui checkout WITHOUT a package.json
 // `file:` dep — that drags in the runtime's `workspace:*` devDeps, which don't
 // resolve outside the sui monorepo. A direct symlink gives esbuild the current
 // source AND lets the bench runner read the version from its package.json.
@@ -63,9 +63,9 @@ if (!RUNTIME_SRC || !existsSync(RUNTIME_SRC)) {
 
 const shipModules = resolve(root, 'node_modules/@ship')
 mkdirSync(shipModules, { recursive: true })
-const runtimeLink = resolve(shipModules, 'sui-runtime')
+const runtimeLink = resolve(shipModules, 'sail-runtime')
 
-// (Re)link @ship/sui-runtime → the resolved runtime. Recreate when missing OR
+// (Re)link @ship/sail-runtime → the resolved runtime. Recreate when missing OR
 // stale (dangling / points elsewhere) — a moved sui checkout would otherwise
 // leave a dead symlink esbuild can't follow.
 let linkOk = false
@@ -77,7 +77,7 @@ try {
 if (!linkOk) {
   try { rmSync(runtimeLink, { recursive: true, force: true }) } catch {}
   symlinkSync(RUNTIME_SRC, runtimeLink, 'dir')
-  console.log(`linked @ship/sui-runtime -> ${RUNTIME_SRC}`)
+  console.log(`linked @ship/sail-runtime -> ${RUNTIME_SRC}`)
 }
 
 const compiler = process.env.SAIL_COMPILER ?? firstExisting([

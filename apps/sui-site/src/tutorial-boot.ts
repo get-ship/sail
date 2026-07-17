@@ -6,7 +6,7 @@
 // console lines, editor values) lives as signals in the route's <controller>,
 // and the template reads it.
 
-/** The wasm compile result the engine returns (mirrors @ship/sui-viewer). */
+/** The wasm compile result the engine returns (mirrors @ship/sail-viewer). */
 export type CompileResult =
   | { kind: 'ok'; js: string; css?: string | null }
   | { kind: 'err'; message: string; line?: number | null; col?: number | null }

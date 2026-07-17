@@ -15,7 +15,7 @@
 </scope>
 
 <controller>
-import { controller, derived, signal } from '@ship/sui-runtime'
+import { controller, derived, signal } from '@ship/sail-runtime'
 import type { Scope } from './sui-json-view.sui'
 
 type JsonValue = null | boolean | number | string | JsonValue[] | { [k: string]: JsonValue }

@@ -8,7 +8,7 @@
 // side (jsdom mount). The contributed scope type is recovered from the
 // `ControllerExport` so the template's `items()`/`add()`/`remove(id)` reads
 // type-check against it.
-import { controller, signal } from '@ship/sui-runtime'
+import { controller, signal } from '@ship/sail-runtime'
 
 export interface BoardItem {
   id: string

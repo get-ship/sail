@@ -61,8 +61,8 @@ patterns registered via `defineRoutes`. A view that reads `route.params.id()`
 ```ts
 <controller>
 // views/agents/[id]/page.sui
-import { derived, live, unwrap } from '@ship/sui-runtime'
-import { defineRoutes } from '@ship/sui-runtime/route'
+import { derived, live, unwrap } from '@ship/sail-runtime'
+import { defineRoutes } from '@ship/sail-runtime/route'
 
 // TOP-LEVEL — before the controller default export.
 defineRoutes([{ pattern: '/agents/:id' }])
@@ -90,7 +90,7 @@ defineRoutes([
 ```
 
 > **Hard rule.** Per-controller `defineRoutes` only works because every bundle
-> shares the single `@ship/sui-runtime` instance. The shape registry and the
+> shares the single `@ship/sail-runtime` instance. The shape registry and the
 > global URL updater both live on `globalThis`
 > (`packages/sui/runtime/src/route/index.ts:72`, `:309`). A second runtime copy
 > would register into a different proxy the shell never reads.
@@ -108,7 +108,7 @@ a test — it updates history and the `route.*` signals in place
 (`packages/sui/runtime/src/route/index.ts:192`).
 
 ```ts
-import { navigate } from '@ship/sui-runtime/route'
+import { navigate } from '@ship/sail-runtime/route'
 
 navigate('/agents/42')
 navigate('/login', { replace: true })   // replaceState instead of pushState

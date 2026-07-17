@@ -66,7 +66,7 @@ pub fn emit_dts(program: &Program, controller: Option<&ParsedController>) -> Str
     let import_line = if imports.is_empty() {
         String::new()
     } else {
-        format!("import type {{ {} }} from '@ship/sui-runtime'\n", imports.join(", "))
+        format!("import type {{ {} }} from '@ship/sail-runtime'\n", imports.join(", "))
     };
 
     let mut out = String::with_capacity(256);

@@ -436,7 +436,7 @@ fn for_render_closure_emits_update_field() {
 
 /// Routing is deck's: a view that references `route` reads the handle from
 /// `ctx.route` (deck injects it via host-context). SUI vends no route factory,
-/// so the compiled output must NOT import `@ship/sui-runtime/route`, and assigns
+/// so the compiled output must NOT import `@ship/sail-runtime/route`, and assigns
 /// `$scope.route = route` straight from the ctx destructure.
 #[test]
 fn route_view_reads_route_from_ctx() {
@@ -454,7 +454,7 @@ fn route_view_reads_route_from_ctx() {
     };
     let out = sail_compiler::compile(&source, opts).expect("compile");
     assert!(
-        !out.js.contains("@ship/sui-runtime/route") && !out.js.contains("__routeFactory"),
+        !out.js.contains("@ship/sail-runtime/route") && !out.js.contains("__routeFactory"),
         "routing is deck: no SUI route-factory import or fallback, got:\n{}",
         out.js
     );
@@ -481,8 +481,8 @@ fn routeless_view_omits_route_import() {
     };
     let out = sail_compiler::compile(&source, opts).expect("compile");
     assert!(
-        !out.js.contains("@ship/sui-runtime/route"),
-        "routeless view must not import @ship/sui-runtime/route, got:\n{}",
+        !out.js.contains("@ship/sail-runtime/route"),
+        "routeless view must not import @ship/sail-runtime/route, got:\n{}",
         out.js
     );
     assert!(

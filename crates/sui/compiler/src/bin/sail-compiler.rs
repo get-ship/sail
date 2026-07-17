@@ -571,7 +571,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
            (+ an optional reactive param), returns `{{ update?, destroy? }}`. It replaces the\n  \
            ref + effect + cleanup triad entirely. Yours work exactly like the built-ins:\n  \
            `import {{ myAction }} from './my-action'` then `use:myAction={{param}}`.\n\
-         - COMPOSITIONS (`@ship/sui-std`) — plain functions that combine the reactive\n  \
+         - COMPOSITIONS (`@ship/sail-std`) — plain functions that combine the reactive\n  \
            primitives and return signals. `form()`, `selection()`, `filteredList()`. There is\n  \
            no type, no registration, no lifecycle contract — nothing to author against, which\n  \
            is why anyone can write one. Call it in the `<controller>`, and the signals it\n  \
@@ -583,8 +583,8 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         "State lives in the `<controller>` — a raw `<script>` is banned, and the `<state>`\ndirective is retired. `controller(fn)` is ONE function, no sections: whatever it\nRETURNS is the template's scope — state signals, derived values, plain helpers, and\nevent handlers alike, all as ordinary object properties.\n\n\
          ```\n\
          <controller>\n  \
-           import {{ controller, signal, derived }} from '@ship/sui-runtime'\n  \
-           import {{ selection }} from '@ship/sui-std'\n\n  \
+           import {{ controller, signal, derived }} from '@ship/sail-runtime'\n  \
+           import {{ selection }} from '@ship/sail-std'\n\n  \
            export default controller((ctx) => {{\n    \
              const rows = signal([])\n    \
              const sel = selection(rows, (r) => r.id)\n    \
@@ -593,7 +593,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
          </controller>\n\
          ```\n\n\
          Mutation is ALWAYS `signal.set(newValue)` (or `signal.set(prev => next)`). Lifecycle\nis ambient, not a section — call `mount(fn)` (fires once after this instance's DOM\nconnects; a returned function is cleanup run on dispose) or `onCleanup(fn)` (runs on\ndispose) from anywhere in the setup call graph, including a composition function\ncalled from setup. Both are auto-injected — no import needed.\n\n\
-         Import primitives from `@ship/sui-runtime` — the front door. Never from\n`@ship/sui-runtime/internal`: that is the COMPILER's ABI (`bindFor`, `attachRef`,\n`runAction`, …). If you are typing a symbol from there, you are hand-writing something\nthe compiler emits.\n\n\
+         Import primitives from `@ship/sail-runtime` — the front door. Never from\n`@ship/sail-runtime/internal`: that is the COMPILER's ABI (`bindFor`, `attachRef`,\n`runAction`, …). If you are typing a symbol from there, you are hand-writing something\nthe compiler emits.\n\n\
          Reactivity: `signal` `derived` `effect` `batch` `untrack` `shared`. Reach for\n`effect` rarely — it is the escape hatch, not the pattern. Cleanup is automatic: an\neffect created during setup dies with the component.\n\n\
          Control flow: `{{#if cond}}…{{/if}}`, `{{#for item of items key={{item.id}}}}…{{/for}}`\n(the `key=` is required — without it the reconciler falls back to positional matching\nand loses DOM identity on reorder).\n"
     );
@@ -1303,7 +1303,7 @@ fn compile_one(
     // ADJACENT to the `.sui` (not into the build mirror like the JS/CEM/SSR
     // artifacts). That lets a controller's `import type { Scope } from
     // './<name>.sui'` resolve natively to the sibling `.d.ts` — no `rootDirs`
-    // round-trip into `.ship/sui-out` in every consumer's tsconfig (which was
+    // round-trip into `.ship/sail-out` in every consumer's tsconfig (which was
     // fragile and, when mispathed, silently masked type errors as `any`).
     // Gitignored via `*.sui.d.ts`.
     if let Some(dts) = result.dts {

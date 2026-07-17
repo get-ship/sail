@@ -34,7 +34,7 @@ The runtime exposes `<name>` as a signal in [view scope](index.md#the-shared-vie
 `live` signals always wrap the daemon's payload in a uniform envelope. The shape is contractual; hooks rely on it.
 
 ```ts
-// from @ship/sui-runtime — `live.ts`
+// from @ship/sail-runtime — `live.ts`
 type LiveState<T> =
   | { kind: 'loading' }
   | { kind: 'error'; error: Error }
@@ -148,8 +148,8 @@ Concrete pattern — a `/agents/<id>` view:
 ```ts
 <controller>
 // page.sui — inline <controller> block
-import { derived } from '@ship/sui-runtime'
-import { defineRoutes } from '@ship/sui-runtime/route'
+import { derived } from '@ship/sail-runtime'
+import { defineRoutes } from '@ship/sail-runtime/route'
 
 defineRoutes([{ pattern: '/agents/:id' }])
 
@@ -186,7 +186,7 @@ The `ship.*` SDK is the typed bridge to `shipd`. It is *not* a global; it's one 
 - Each controller section's destructure (`{ ship }` is part of the scope object; so is every other declared client)
 - Each controller hook's factory (when it accepts scope)
 
-Authors do not import `ship`. The host owns the value, the runtime owns the wiring, and the SDK provider owns the type (`declare module '@ship/sui-runtime' { interface Clients { ship: ShipSDK } }`). `ship` is just the key Ship hosts use — a non-Ship host injects its own clients under its own names. Templates that declare no clients still receive the ambient `ship` as a grandfathered compatibility default.
+Authors do not import `ship`. The host owns the value, the runtime owns the wiring, and the SDK provider owns the type (`declare module '@ship/sail-runtime' { interface Clients { ship: ShipSDK } }`). `ship` is just the key Ship hosts use — a non-Ship host injects its own clients under its own names. Templates that declare no clients still receive the ambient `ship` as a grandfathered compatibility default.
 
 ## Mutations
 

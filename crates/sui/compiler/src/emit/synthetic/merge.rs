@@ -29,7 +29,7 @@ const MERGED_HEADER: &str = "\
 // single-module form the bundler `load` hook returns.";
 
 /// Emit ONE self-contained CLIENT module. The result imports only the framework
-/// singletons (`@ship/sui-runtime`, `@ship/sui-dom`), the manifest clients'
+/// singletons (`@ship/sail-runtime`, `@ship/sail-dom`), the manifest clients'
 /// modules, and the authored controller — exactly what a browser/jsdom bundle
 /// resolves.
 pub fn emit_synthetic_client_module(

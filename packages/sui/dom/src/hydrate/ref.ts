@@ -6,7 +6,7 @@
 // onto the scope so subsequent reads find it. On unmount the signal
 // is reset to `null`.
 
-import { signal, type Signal } from '@ship/sui-runtime'
+import { signal, type Signal } from '@ship/sail-runtime'
 
 export function hydrateRef(
   el: Element,

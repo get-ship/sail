@@ -9,7 +9,7 @@ description: Worked recipes for common SUI view tasks.
 
 Copy-paste-and-modify worked examples for an agent authoring a SUI
 view. Every recipe is either lifted from a working view in this repo
-(cited) or testable in isolation against `@ship/sui-runtime`.
+(cited) or testable in isolation against `@ship/sail-runtime`.
 
 Read `agent-authoring.md` first — these are the patterns; that file
 explains the rules.
@@ -17,7 +17,7 @@ explains the rules.
 > **Projection in the recipes.** Several recipes fill component
 > regions with `<el slot="region-name">…</el>`. The `slot="…"`
 > attribute names the region; the runtime
-> (`@ship/sui-runtime/slot-project.ts`) matches it to the
+> (`@ship/sail-runtime/slot-project.ts`) matches it to the
 > corresponding `<slot name="…">` wrapper in the host's body at
 > connect. The contract is the same as web-component slots, but
 > the implementation is light-DOM (no shadow root, the slot
@@ -77,7 +77,7 @@ its inline `<controller>` block).
 
 ```ts
 <controller>
-import { derived, unwrap } from '@ship/sui-runtime'
+import { derived, unwrap } from '@ship/sail-runtime'
 
 export default controller(({ items }) => {
   const rows  = derived(() => unwrap(items)?.items ?? [])
@@ -136,7 +136,7 @@ Its inline `<controller>` block:
 
 ```ts
 <controller>
-import { signal, derived, unwrap } from '@ship/sui-runtime'
+import { signal, derived, unwrap } from '@ship/sail-runtime'
 
 interface Row { id: string; name: string; label?: string }
 interface State { items: Row[]; active: string | null }
@@ -235,7 +235,7 @@ Its inline `<controller>` block:
 
 ```ts
 <controller>
-import { signal, derived, unwrap } from '@ship/sui-runtime'
+import { signal, derived, unwrap } from '@ship/sail-runtime'
 
 export default controller(({ rows }) => {
   const selectedId = signal('')
@@ -275,7 +275,7 @@ From `views/git/page.sui`'s inline `<controller>` block (`tab: signal<GitTab>('c
 
 ```ts
 <controller>
-import { signal } from '@ship/sui-runtime'
+import { signal } from '@ship/sail-runtime'
 
 type Tab = 'changes' | 'history'
 
@@ -304,7 +304,7 @@ from `views/agents/[id]/page.sui`):
 
 ```ts
 <controller>
-import { derived, live, unwrap } from '@ship/sui-runtime'
+import { derived, live, unwrap } from '@ship/sail-runtime'
 
 export default controller(({ route, ship }) => {
   const agentId = derived(() => route.params.id() ?? '')
@@ -318,7 +318,7 @@ export default controller(({ route, ship }) => {
 If `defineRoutes` is needed (catalog-style detail views):
 
 ```ts
-import { defineRoutes } from '@ship/sui-runtime/route'
+import { defineRoutes } from '@ship/sail-runtime/route'
 // TOP-LEVEL — before the controller default export.
 defineRoutes([{ pattern: '/<name>/:id' }])
 ```
@@ -358,7 +358,7 @@ boolean predicates.
 
 **Gotcha.** Branches inside `{#for}` had a leak where inline-updates
 crossed branches (fix in `789d0dab`). If you find rows visually
-swapping data after a re-key, update `@ship/sui-runtime` and
+swapping data after a re-key, update `@ship/sail-runtime` and
 `sui-compiler` to the post-fix versions; do NOT work around it in the
 template.
 
@@ -532,7 +532,7 @@ The host's mount call (the deck view-host does this from the payload's
 declared-clients list; a hand-rolled host writes it directly):
 
 ```ts
-import { mount } from '@ship/sui-runtime'
+import { mount } from '@ship/sail-runtime'
 
 const handle = await mount(target, payload, {
   clients: { api: myDataClient },
@@ -543,7 +543,7 @@ Typing — the provider augments its own key on the runtime's `Clients`
 interface, so `api.demo.clock()` and the `t` signal are fully typed:
 
 ```ts
-declare module '@ship/sui-runtime' {
+declare module '@ship/sail-runtime' {
   interface Clients { api: MyDataClient }
 }
 ```

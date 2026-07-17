@@ -67,7 +67,7 @@ impl<'src> SetValueVisitor<'src> {
             suggest: Some(
                 "For text content: `bindText(el, () => x)`. \
                  For form inputs: `bindValue(el, signal)`. \
-                 Both are exported from @ship/sui-runtime."
+                 Both are exported from @ship/sail-runtime."
                     .to_string(),
             ),
         });

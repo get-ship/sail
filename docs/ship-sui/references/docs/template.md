@@ -19,7 +19,7 @@ Reactive component state lives in the controller — there is no `<state>` direc
 
 ```ts
 <controller>
-import { signal } from '@ship/sui-runtime'
+import { signal } from '@ship/sail-runtime'
 
 export default controller(() => {
   const count = signal(0)
@@ -80,7 +80,7 @@ The client's TYPE comes from declaration-merging the runtime's `Clients` interfa
 
 ```ts
 // @ship/sdk-client does this for `ship`:
-declare module '@ship/sui-runtime' {
+declare module '@ship/sail-runtime' {
   interface Clients { ship: ShipSDK }
 }
 ```
@@ -305,7 +305,7 @@ works inside a shadow root.
   fallback content for the assigned children at connect.
 - The component's anatomy manifest lists the regions it accepts —
   the *published contract*. Consumers read it the same way they read
-  `props` and `events` (LSP, `@ship/sui-eval`).
+  `props` and `events` (LSP, `@ship/sail-eval`).
 
 **Anatomy manifest shape** (shipped): the compiler emits an `anatomy`
 block on each `custom-elements.json` declaration —

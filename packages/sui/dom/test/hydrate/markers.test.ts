@@ -19,7 +19,7 @@
 // on hydration.
 
 import { describe, expect, it } from 'vitest'
-import { signal } from '@ship/sui-runtime'
+import { signal } from '@ship/sail-runtime'
 import { collectElementMarkers } from '../../src/hydrate/markers'
 import { hydrateProp } from '../../src/hydrate/prop'
 

@@ -110,20 +110,20 @@
   <div id="root"></div>
   <div id="err" class="err" hidden></div>
 
-  <!-- Importmap so compiled output's `import { … } from "@ship/sui-runtime"`
+  <!-- Importmap so compiled output's `import { … } from "@ship/sail-runtime"`
        resolves to deck's stable served framework bundles. Mirrors the top
        document's importmap (apps/sui-site/.deck/index.html). -->
   <script type="importmap">
     {
       "imports": {
-        "@ship/sui-runtime": "/_deck/runtime.js",
-        "@ship/sui-runtime/route": "/_deck/runtime.js",
-        "@ship/sui-runtime/template-hooks": "/_deck/runtime.js",
-        "@ship/sui-runtime/patch": "/_deck/runtime.js",
-        "@ship/sui-runtime/internal": "/_deck/runtime.js",
-        "@ship/sui-dom": "/_deck/dom.js",
+        "@ship/sail-runtime": "/_deck/runtime.js",
+        "@ship/sail-runtime/route": "/_deck/runtime.js",
+        "@ship/sail-runtime/template-hooks": "/_deck/runtime.js",
+        "@ship/sail-runtime/patch": "/_deck/runtime.js",
+        "@ship/sail-runtime/internal": "/_deck/runtime.js",
+        "@ship/sail-dom": "/_deck/dom.js",
         "@ship/deck/router": "/_deck/route.js",
-        "@ship/sui-primitives": "/tut-sui-primitives.js"
+        "@ship/sail-primitives": "/tut-sui-primitives.js"
       }
     }
   </script>

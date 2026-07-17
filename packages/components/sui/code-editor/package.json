@@ -1,5 +1,5 @@
 {
-  "name": "@ship/sui-code-editor",
+  "name": "@ship/sail-code-editor",
   "version": "0.2.0",
   "description": "SUI code-editor pack \u2014 <sui-code-editor> (CodeMirror 6), framework-pure (no ship-platform deps). Drop-in successor to <ship-code-editor> for sui-site public surfaces.",
   "type": "module",
@@ -14,10 +14,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@ship/sui-runtime": "workspace:*",
-    "@ship/sui-dom": "workspace:*",
-    "@ship/sui-lsp-browser": "workspace:*",
-    "@ship/sui-primitives": "workspace:*",
+    "@ship/sail-runtime": "workspace:*",
+    "@ship/sail-dom": "workspace:*",
+    "@ship/sail-lsp-browser": "workspace:*",
+    "@ship/sail-primitives": "workspace:*",
     "@codemirror/autocomplete": "^6",
     "@codemirror/commands": "^6",
     "@codemirror/lang-css": "^6",
@@ -45,8 +45,8 @@
         "name": "sui-code-editor",
         "entry": "src/index.ts",
         "externals": [
-          "@ship/sui-runtime",
-          "@ship/sui-dom"
+          "@ship/sail-runtime",
+          "@ship/sail-dom"
         ],
         "lazy": true
       }

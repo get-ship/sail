@@ -18,7 +18,7 @@ import { resolve, dirname, basename, relative } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 // @ts-expect-error — JS module, no .d.ts.
 import { spawnBoundedOrThrow } from './spawn-bounded.mjs'
-import { nativeCompileJson } from '@ship/sui-dom/test-utils'
+import { nativeCompileJson } from '@ship/sail-dom/test-utils'
 
 const require = createRequire(import.meta.url)
 
@@ -64,7 +64,7 @@ const repoRoot = findRepoRoot()
 // The compiler's neutral, sui-owned mirror dir. MUST match the canonical
 // `sail_compiler::out_layout::DEFAULT_SAIL_OUT_DIR` (`.sail-out`) — the compiler is
 // framework-neutral and deliberately does NOT bake a `.ship/` path. (This was
-// `.ship/sui-out` and silently fell back to the stale WASM compiler when the
+// `.ship/sail-out` and silently fell back to the stale WASM compiler when the
 // native compile landed in `.sail-out` where the harness wasn't looking.)
 const mirrorRoot = resolve(repoRoot, '.sail-out')
 const compilerBin = resolve(repoRoot, 'target/debug/sui-compiler')
@@ -78,7 +78,7 @@ const nativeCompileAvailable =
 // Honesty guard — runs `expect.hasAssertions()` before every test so a body
 // that asserts nothing FAILS instead of passing green. Prepended to every
 // package's setupFiles (its own setup.ts still runs after). Resolved by
-// package subpath so it survives the package moving, same as @ship/sui-* below.
+// package subpath so it survives the package moving, same as @ship/sail-* below.
 const assertHonestySetup = require.resolve('@ship/test-setup/assert-honesty')
 
 const MAX_FORKS = Number(process.env.VITEST_MAX_FORKS ?? 2)
@@ -99,7 +99,7 @@ export const SHIP_VITEST_DEFAULTS: NonNullable<VitestUserConfig['test']> = {
 }
 
 // ── WASM fallback for the compiled-js shim ──────────────────────────────────
-// Resolved through the `@ship/sui-compiler-wasm` package, NOT a hardcoded
+// Resolved through the `@ship/sail-compiler-wasm` package, NOT a hardcoded
 // `packages/sui/compiler-wasm/pkg` path — so it survives the package moving.
 let wasmCompile: ((source: string, optsJson: string) => unknown) | null = null
 function ensureWasm(): (source: string, optsJson: string) => unknown {
@@ -107,8 +107,8 @@ function ensureWasm(): (source: string, optsJson: string) => unknown {
   let jsPath: string
   let wasmPath: string
   try {
-    jsPath = require.resolve('@ship/sui-compiler-wasm')
-    wasmPath = require.resolve('@ship/sui-compiler-wasm/sui_compiler_bg.wasm')
+    jsPath = require.resolve('@ship/sail-compiler-wasm')
+    wasmPath = require.resolve('@ship/sail-compiler-wasm/sui_compiler_bg.wasm')
   } catch {
     throw new Error('[test-setup/vitest] sui-compiler-wasm not built. Run `just sui-wasm`.')
   }
@@ -218,14 +218,14 @@ export function shadowForComponentCompilePlugin(name: string): Plugin {
 // sui→deck closure), so `resolveSuiAliases` skips whatever doesn't resolve and
 // lets node resolution cover the rest — keeping one factory across repos.
 const SUI_ALIAS_SPECS = [
-  '@ship/sui-dom/test-utils',
-  '@ship/sui-runtime/template-hooks',
+  '@ship/sail-dom/test-utils',
+  '@ship/sail-runtime/template-hooks',
   '@ship/deck-router',
-  '@ship/sui-runtime/route',
-  '@ship/sui-runtime/virtual',
-  '@ship/sui-runtime/internal',
-  '@ship/sui-runtime',
-  '@ship/sui-dom',
+  '@ship/sail-runtime/route',
+  '@ship/sail-runtime/virtual',
+  '@ship/sail-runtime/internal',
+  '@ship/sail-runtime',
+  '@ship/sail-dom',
 ] as const
 
 function resolveSuiAliases(): Record<string, string> {
@@ -249,7 +249,7 @@ function resolveSuiAliases(): Record<string, string> {
 // test-setup's own and deck-eval's. They listed the runtime by BARE name plus a
 // couple of subpaths and silently missed the rest (`/route`, `/server`, `/dev`,
 // `/patch`, `/virtual`, and `@ship/tokens/themes`). An unlisted subpath like
-// `@ship/sui-runtime/route` then fell through to the bare `@ship/sui-runtime`
+// `@ship/sail-runtime/route` then fell through to the bare `@ship/sail-runtime`
 // string alias and resolved to `…/src/index.ts/route` — a path that doesn't
 // exist — so vitest reported "Failed to resolve import".
 //
@@ -324,8 +324,8 @@ const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\
  * `@ship/*` workspace package's `exports` map. Each export key becomes an alias:
  * `.` → the bare package name, `./route` → `<name>/route`, and a wildcard like
  * `./lessons/*` → a regex that captures the trailing segment. Subpath entries
- * sort BEFORE the bare name (longest `find` first) so `@ship/sui-runtime/route`
- * can never fall through to the `@ship/sui-runtime` alias. Location-independent:
+ * sort BEFORE the bare name (longest `find` first) so `@ship/sail-runtime/route`
+ * can never fall through to the `@ship/sail-runtime` alias. Location-independent:
  * every path is resolved from the package's real directory (walked from the
  * repo root), so a config that spreads this list works from any package.
  */

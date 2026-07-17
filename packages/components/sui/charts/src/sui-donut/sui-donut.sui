@@ -38,7 +38,7 @@
 </scope>
 
 <controller>
-import { controller, derived } from '@ship/sui-runtime'
+import { controller, derived } from '@ship/sail-runtime'
 import { createChartData } from '../engine/create-chart-data'
 import { normalizeSeries } from '../engine/normalize'
 import { arcGeometry } from '../engine/geometry-radial'

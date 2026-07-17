@@ -8,7 +8,7 @@ export const pageExample = `<!-- routes/page.sui -->
 
 export const controllerExample = `<!-- routes/page.sui — one file: state + template -->
 <controller>
-  import { controller, signal } from '@ship/sui-runtime'
+  import { controller, signal } from '@ship/sail-runtime'
 
   export default controller(() => {
     const count = signal(0)

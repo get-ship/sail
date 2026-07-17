@@ -7,7 +7,7 @@
   <code-block> (strings from ./snippets).
 -->
 <controller>
-import { controller, type ViewScope } from '@ship/sui-runtime'
+import { controller, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sui'
 import { code } from './snippets'
 

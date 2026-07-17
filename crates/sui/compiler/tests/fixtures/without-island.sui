@@ -1,5 +1,5 @@
 <controller>
-import { controller, signal } from '@ship/sui-runtime'
+import { controller, signal } from '@ship/sail-runtime'
 import type { Scope } from './without-island.sui'
 
 export default controller<Scope>((ctx) => ({ count: signal(0) }))

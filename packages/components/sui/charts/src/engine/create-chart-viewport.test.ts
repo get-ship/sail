@@ -3,7 +3,7 @@
 // The responsive-geometry adapter: a shared `ResizeObserver` wrapper turning the
 // host's measured pixel box into reactive `width()`/`height()` signals so charts
 // stop hardcoding the viewBox. One observer implementation, seven consumers.
-// Pure `@ship/sui-runtime` (signal/derived) + the DOM `ResizeObserver` platform
+// Pure `@ship/sail-runtime` (signal/derived) + the DOM `ResizeObserver` platform
 // API created in `observe()` and torn down in `dispose()`.
 //
 // Build-spec: Backbone #2 "API" + "Mechanics" + Slice 4.

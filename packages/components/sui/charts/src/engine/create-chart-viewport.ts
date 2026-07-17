@@ -5,11 +5,11 @@
 // and `preserveAspectRatio="none"` (which stretches strokes). One observer
 // implementation, every chart a consumer.
 //
-// PURE `@ship/sui-runtime` (signal) + the DOM `ResizeObserver` platform API,
+// PURE `@ship/sail-runtime` (signal) + the DOM `ResizeObserver` platform API,
 // created in `observe()` and torn down in `dispose()`. The single write site is
 // the observer callback, invoked from the controller's `mount` scope.
 
-import { signal, type Signal } from '@ship/sui-runtime'
+import { signal, type Signal } from '@ship/sail-runtime'
 
 export interface ChartViewport {
   /** Measured host content-box width, reactive. */

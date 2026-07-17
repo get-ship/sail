@@ -14,7 +14,7 @@
 // FOOTER model (`footerGroups` + `column.getFooterAggregate()`) is computed over
 // `filteredRows`, orthogonal to the row chain.
 //
-// PURE TypeScript — imports `derived` from `@ship/sui-runtime` ONLY. No DOM, no
+// PURE TypeScript — imports `derived` from `@ship/sail-runtime` ONLY. No DOM, no
 // SDK.
 //
 // Authority: build-spec §Features #5 (grouping + aggregation + footer over
@@ -22,7 +22,7 @@
 // getParentRows, expanded:true expand-all, filterFromLeafRows + per-level sort),
 // §"Signal graph", Slice 3b.
 
-import { derived, type Derived, type Signal } from '@ship/sui-runtime'
+import { derived, type Derived, type Signal } from '@ship/sail-runtime'
 import { hasAggregation, resolveAggregator } from './aggregation'
 import { sortRows } from './pipeline'
 import { makeGroupRow } from './row-api'

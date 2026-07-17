@@ -71,8 +71,8 @@ async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
         name: "views/widgets/view".into(),
         entry: TargetEntry::Real(app.join("views/widgets/page.sui")),
         externals: vec![
-            "@ship/sui-runtime".into(),
-            "@ship/sui-dom".into(),
+            "@ship/sail-runtime".into(),
+            "@ship/sail-dom".into(),
             "@ship/sdk-client".into(),
         ],
         out_file: "views/widgets/view.js".into(),
@@ -82,8 +82,8 @@ async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
         name: "views/gallery/view".into(),
         entry: TargetEntry::Real(app.join("views/gallery/page.sui")),
         externals: vec![
-            "@ship/sui-runtime".into(),
-            "@ship/sui-dom".into(),
+            "@ship/sail-runtime".into(),
+            "@ship/sail-dom".into(),
             "@ship/sdk-client".into(),
         ],
         out_file: "views/gallery/view.js".into(),

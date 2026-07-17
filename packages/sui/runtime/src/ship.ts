@@ -4,7 +4,7 @@
 // an empty interface that the app (deck / `@ship/sdk-client`) augments via
 // declaration merging to the concrete `ShipSDK`:
 //
-//   declare module '@ship/sui-runtime' {
+//   declare module '@ship/sail-runtime' {
 //     interface ShipHost extends ShipSDK {}
 //   }
 //
@@ -20,7 +20,7 @@ export interface ShipHost {}
 // `<client name="X" />`. Empty here; each provider augments its OWN key via
 // declaration merging:
 //
-//   declare module '@ship/sui-runtime' {
+//   declare module '@ship/sail-runtime' {
 //     interface Clients { ship: ShipSDK }
 //   }
 //

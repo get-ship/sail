@@ -77,7 +77,7 @@ fn parse_line(line: &str) -> Option<TsDiag> {
 
 /// Type-check the synthetic controller + render pair for an SFC `source`: emit
 /// the pair (composing the inline `<controller>` block), write them alongside a
-/// tsconfig whose `paths` map `@ship/sui-runtime` / `@ship/sui-dom` to the real
+/// tsconfig whose `paths` map `@ship/sail-runtime` / `@ship/sail-dom` to the real
 /// package sources under `workspace_root`, and run tsgo. A template expression
 /// that reads a name the controller's typed scope does not provide
 /// (`scope.dragVisible` with no `dragVisible`) is a hard type error here — the
@@ -176,8 +176,8 @@ pub fn check_synthetic_controller(
     let tsconfig = format!(
         "{{\n  \"compilerOptions\": {{\n    \"noEmit\": true, \"strict\": true, \"skipLibCheck\": true,\n\
          \"moduleResolution\": \"bundler\", \"module\": \"esnext\", \"target\": \"esnext\",\n\
-         \"allowImportingTsExtensions\": true,\n    \"paths\": {{\n      \"@ship/sui-runtime\": [{}],\n\
-         \"@ship/sui-dom\": [{}]\n    }}\n  }},\n  \
+         \"allowImportingTsExtensions\": true,\n    \"paths\": {{\n      \"@ship/sail-runtime\": [{}],\n\
+         \"@ship/sail-dom\": [{}]\n    }}\n  }},\n  \
          \"include\": [\"view.render.ts\", \"view.synthetic.controller.ts\", \"view.controller.ts\"]\n}}\n",
         js_string(&runtime.to_string_lossy()),
         js_string(&dom.to_string_lossy()),
@@ -231,7 +231,7 @@ mod tests {
         let dir = std::env::temp_dir().join("sui-synthetic-gate-test");
 
         const CTRL: &str = "<controller>\n\
-            import { controller, signal } from '@ship/sui-runtime'\n\
+            import { controller, signal } from '@ship/sail-runtime'\n\
             export default controller((ctx) => ({ count: signal(0) }))\n\
             </controller>\n";
 

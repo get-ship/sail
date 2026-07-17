@@ -9,7 +9,7 @@
 // `getter` is a closure the compiler emitted from the IR expression
 // against the captured scope — no string-eval at runtime.
 
-import { effect } from '@ship/sui-runtime'
+import { effect } from '@ship/sail-runtime'
 
 const TEXT_OPEN_PREFIX = 'sui:text:'
 const TEXT_CLOSE = '/sui'

@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@ship/sui-runtime": "workspace:*",
-    "@ship/sui-dom": "workspace:*"
+    "@ship/sail-runtime": "workspace:*",
+    "@ship/sail-dom": "workspace:*"
   }
 }

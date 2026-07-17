@@ -378,7 +378,7 @@ fn builds_a_zero_ship_product_app() {
     // ship.* client, no .ship/ — a genuinely host-free app.
     std::fs::write(
         root.join("package.json"),
-        r#"{"name":"zeroship","type":"module","dependencies":{"@ship/sui-runtime":"workspace:*","@ship/sui-dom":"workspace:*"}}"#,
+        r#"{"name":"zeroship","type":"module","dependencies":{"@ship/sail-runtime":"workspace:*","@ship/sail-dom":"workspace:*"}}"#,
     )
     .expect("package.json");
     std::fs::write(

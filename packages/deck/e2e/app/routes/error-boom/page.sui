@@ -1,5 +1,5 @@
 <controller>
-import { controller, effect } from '@ship/sui-runtime'
+import { controller, effect } from '@ship/sail-runtime'
 
 // Deliberately throws from an effect on mount, with no
 // <sui-error-boundary> anywhere in this route — the exact no-boundary

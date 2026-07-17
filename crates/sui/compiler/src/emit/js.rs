@@ -3,7 +3,7 @@
 //! Layout of the emitted module:
 //!
 //! ```js
-//! import { component, … } from "@ship/sui-runtime";
+//! import { component, … } from "@ship/sail-runtime";
 //! import setup from "./controller.ts";  // when paired
 //!
 //! export default component((ctx) => {

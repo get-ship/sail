@@ -1,6 +1,6 @@
 // sui-board — board-model engine behavioral specs (Slice 2).
 //
-// Pure-runtime: nodes/edges/ports/selection + edge routing on @ship/sui-runtime
+// Pure-runtime: nodes/edges/ports/selection + edge routing on @ship/sail-runtime
 // signals. No DOM, no canvas-engine — the board is SVG-native and layers its
 // domain model on the createCanvas() substrate's coordinate transforms.
 import { describe, expect, it } from 'vitest'

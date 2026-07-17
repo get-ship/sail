@@ -1,5 +1,5 @@
 <controller>
-import { controller, signal } from '@ship/sui-runtime'
+import { controller, signal } from '@ship/sail-runtime'
 
 interface LogLine { k: number; text: string }
 

@@ -153,7 +153,7 @@ pub(super) fn emit_render(
     w.line(HEADER);
     if !imports.is_empty() {
         w.line(&format!(
-            "import {{ {} }} from \"@ship/sui-runtime/internal\";",
+            "import {{ {} }} from \"@ship/sail-runtime/internal\";",
             imports.join(", ")
         ));
     }
@@ -201,7 +201,7 @@ pub(super) fn emit_render(
 /// browser counterpart of the SSR [`emit_render`]: SAME mount body, SAME
 /// boundary hoists, plus the production `hydrate(root, ctx)` buffers wired
 /// against SSR'd text/element/boundary markers. The two share [`walk`]; the
-/// only divergence is the export shape and the additional `@ship/sui-dom`
+/// only divergence is the export shape and the additional `@ship/sail-dom`
 /// hydrate-helper imports the client contract needs.
 pub(super) fn emit_render_client(
     program: &Program,
@@ -232,20 +232,20 @@ pub(super) fn emit_render_client(
     }
     runtime_imports.sort();
     // DOM imports: the `hydrate*` helpers + `collect*` preambles the hydrate
-    // body calls. Same `@ship/sui-dom` split the production view emit uses.
+    // body calls. Same `@ship/sail-dom` split the production view emit uses.
     let dom_imports = render_dom_imports(program, true);
 
     let mut w = Writer::new();
     w.line(CLIENT_HEADER);
     if !runtime_imports.is_empty() {
         w.line(&format!(
-            "import {{ {} }} from \"@ship/sui-runtime/internal\";",
+            "import {{ {} }} from \"@ship/sail-runtime/internal\";",
             runtime_imports.join(", ")
         ));
     }
     if !dom_imports.is_empty() {
         w.line(&format!(
-            "import {{ {} }} from \"@ship/sui-dom\";",
+            "import {{ {} }} from \"@ship/sail-dom\";",
             dom_imports.join(", ")
         ));
     }
@@ -313,7 +313,7 @@ pub(super) fn emit_render_client(
     Ok(w.into_string())
 }
 
-/// The runtime symbols the render imports from `@ship/sui-runtime`: the
+/// The runtime symbols the render imports from `@ship/sail-runtime`: the
 /// template binders `lower` detected, minus the controller-only set.
 fn render_runtime_imports(program: &Program, is_view: bool) -> Vec<String> {
     let Ok(lowered) = lower::lower(program, is_view) else {
@@ -335,7 +335,7 @@ fn render_runtime_imports(program: &Program, is_view: bool) -> Vec<String> {
     imports
 }
 
-/// The `@ship/sui-dom` hydrate helpers the CLIENT render imports: the
+/// The `@ship/sail-dom` hydrate helpers the CLIENT render imports: the
 /// `hydrate*` binders + `collect*` preambles `lower` detected for the
 /// view's `hydrate(root, ctx)` body. Empty for the SSR render (no hydrate),
 /// which is why this is client-only. Mirrors the production view emit's

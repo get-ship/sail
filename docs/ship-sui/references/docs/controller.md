@@ -110,10 +110,10 @@ export default controller((ctx) => {
 
 ## Compositions are still plain functions
 
-`@ship/sui-std` compositions are ordinary TypeScript functions — call one inside the setup function and whatever `Signal<T>`s (or other values) it returns become ordinary scope members, exactly like state declared directly in the controller:
+`@ship/sail-std` compositions are ordinary TypeScript functions — call one inside the setup function and whatever `Signal<T>`s (or other values) it returns become ordinary scope members, exactly like state declared directly in the controller:
 
 ```ts
-import { controller, filteredList, selection } from '@ship/sui-runtime'
+import { controller, filteredList, selection } from '@ship/sail-runtime'
 
 export default controller((ctx) => {
   const list = filteredList(ctx.agents, (a, q) => a.name.includes(q))

@@ -1,6 +1,6 @@
 // Browser-safe diagnostics — backed by the Rust grammar via WASM.
 //
-// Calls `@ship/sui-compiler-wasm`'s `analyze` (the same `sail_compiler::analyze`
+// Calls `@ship/sail-compiler-wasm`'s `analyze` (the same `sail_compiler::analyze`
 // the native LSP + agent tooling use), so the docs playground reports the SAME
 // diagnostics as `cargo build` / `sui-lsp` — one grammar, no TypeScript parser
 // fork. The compiler resolves positions (1-based line/col) already.
@@ -8,7 +8,7 @@
 // `analyze` runs without a paired controller (the browser has no `.ts` on
 // disk), so this covers template parse + semantic + lint diagnostics.
 
-import initWasm, { analyze as wasmAnalyze } from '@ship/sui-compiler-wasm'
+import initWasm, { analyze as wasmAnalyze } from '@ship/sail-compiler-wasm'
 
 /** Shape consumed by `<sui-code-editor>.setDiagnostics()`. */
 export interface SuiDiagnostic {

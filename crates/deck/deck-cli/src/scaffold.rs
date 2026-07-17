@@ -161,7 +161,7 @@ pub fn run_component(tag: String, want_controller: bool) -> Result<()> {
          <scope>\n  props: {{ tone = 'default' }}\n</scope>\n\n"
     );
     if want_controller {
-        sui.push_str("<controller>\nimport { controller, type ViewScope } from '@ship/sui-runtime'\n");
+        sui.push_str("<controller>\nimport { controller, type ViewScope } from '@ship/sail-runtime'\n");
         sui.push_str(&format!("import type {{ Scope }} from './{tag}.sui'\n\n"));
         sui.push_str(
             "export default controller({\n  setup: (_ctx: ViewScope<Scope>) => ({}),\n})\n</controller>\n\n",
@@ -220,8 +220,8 @@ pub fn run_pack(name: String) -> Result<()> {
          \"test:watch\": \"vitest\"\n  \
          }},\n  \
          \"dependencies\": {{\n    \
-         \"@ship/sui-dom\": \"workspace:*\",\n    \
-         \"@ship/sui-runtime\": \"workspace:*\"\n  \
+         \"@ship/sail-dom\": \"workspace:*\",\n    \
+         \"@ship/sail-runtime\": \"workspace:*\"\n  \
          }},\n  \
          \"devDependencies\": {{\n    \
          \"vitest\": \"^4.1.5\"\n  \

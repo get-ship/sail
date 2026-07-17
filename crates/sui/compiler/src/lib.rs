@@ -2,7 +2,7 @@
 //!
 //! Same semantics as the Phase-2 interpreter
 //! (`packages/sui/dom`); everything that can be resolved at build
-//! time is. The emitted ESM module imports from `@ship/sui-runtime`
+//! time is. The emitted ESM module imports from `@ship/sail-runtime`
 //! and constructs the rendered tree directly, with no parser code in
 //! the runtime payload.
 //!

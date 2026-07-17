@@ -1,4 +1,4 @@
-# @ship/sui-tutorial
+# @ship/sail-tutorial
 
 The SUI tutorial, co-located with the framework so it can't go stale.
 

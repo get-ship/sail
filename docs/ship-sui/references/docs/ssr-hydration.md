@@ -143,20 +143,20 @@ For the local-daemon case Ship targets, this matters less than for the public-we
 
 Two pieces of the previous (Phase 3) architecture are gone:
 
-- **Client-side template parser** — the client never parses `.sui` source on the production path. The parser lives in `@ship/sui-dom/legacy` and is used only by tests and the eval rig. The default `@ship/sui-dom` entry exports only `attach` and has zero parser code.
+- **Client-side template parser** — the client never parses `.sui` source on the production path. The parser lives in `@ship/sail-dom/legacy` and is used only by tests and the eval rig. The default `@ship/sail-dom` entry exports only `attach` and has zero parser code.
 - **The empty HTML shell** — `shipd` no longer serves an empty `<div id="root">` shell at `/sui/<view>`. It serves server-rendered HTML directly.
 
 Both follow from the IR-as-source-of-truth move. Two parsers (Rust + JS) and two emit shapes (empty shell + client-rendered DOM) become one parser (Rust) and one emit shape (rendered HTML).
 
 ## Import surface: default vs. legacy
 
-`@ship/sui-dom` exposes two import paths with distinct responsibilities:
+`@ship/sail-dom` exposes two import paths with distinct responsibilities:
 
 | Path | Exports | Who uses it |
 |---|---|---|
-| `from '@ship/sui-dom'` | `attach()`, `AttachOptions`, `loadSetup` | Production views, daemon asset bundles |
-| `from '@ship/sui-dom/legacy'` | `hydrate()`, `parseSetSource()`, `HydrateOptions` | Tests, eval harness |
+| `from '@ship/sail-dom'` | `attach()`, `AttachOptions`, `loadSetup` | Production views, daemon asset bundles |
+| `from '@ship/sail-dom/legacy'` | `hydrate()`, `parseSetSource()`, `HydrateOptions` | Tests, eval harness |
 
-The parser (`hydrate`, `parseSetSource`, `directives/`) lives exclusively in the `legacy` subpath. The default `@ship/sui-dom` bundle (`sui-dom.js`) contains zero parser code; it sits at ≤ 4.8 KB gzip today, against a 9 KB ceiling enforced by `scripts/lint/check-sui-bundle-size.sh` in CI.
+The parser (`hydrate`, `parseSetSource`, `directives/`) lives exclusively in the `legacy` subpath. The default `@ship/sail-dom` bundle (`sui-dom.js`) contains zero parser code; it sits at ≤ 4.8 KB gzip today, against a 9 KB ceiling enforced by `scripts/lint/check-sui-bundle-size.sh` in CI.
 
-**Never import `@ship/sui-dom/legacy` from a production view.** Doing so would pull the full parser (~5 KB gzip) into the view bundle and violate the size budget. The bundle-size lint asserts zero references to `parseSetSource` in `sui-dom.js`.
+**Never import `@ship/sail-dom/legacy` from a production view.** Doing so would pull the full parser (~5 KB gzip) into the view bundle and violate the size budget. The bundle-size lint asserts zero references to `parseSetSource` in `sui-dom.js`.

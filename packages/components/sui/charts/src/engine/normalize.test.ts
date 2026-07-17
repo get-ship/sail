@@ -4,7 +4,7 @@
 // input shapes (comma-string, JSON `[{name,data}]`, 1D array, 2D array, donut
 // `[{label,value}]`) PLUS a raw JSON string and a live `ChartSeries[]` identity
 // — all collapsing to one canonical `ChartSeries[]`, branching on `typeof`.
-// Pure `@ship/sui-runtime` boundary: no DOM, no ship.*, no fetch.
+// Pure `@ship/sail-runtime` boundary: no DOM, no ship.*, no fetch.
 //
 // Build-spec: Backbone #1 "Features → 1. Series normalization" + Slice 2.
 

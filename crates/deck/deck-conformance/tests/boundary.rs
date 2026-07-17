@@ -336,19 +336,19 @@ fn zero_config_discovers_views_only() {
 
     // Framework singletons are present ONLY when the framework package is
     // resolvable by NODE RESOLUTION from the project (node_modules / workspace
-    // install). In the framework repo without a `bun install`, @ship/sui-runtime
+    // install). In the framework repo without a `bun install`, @ship/sail-runtime
     // does not resolve from a synthetic tempdir, so the singleton-presence checks
     // are install-gated — skip them with a note (not an apps/ coupling). The
     // test's subject — view discovery + zero consumer targets — runs regardless.
     // sui-components is NOT a singleton — the umbrella was retired (#221/#269);
     // the `sui-components/<tag>` prefix is now the per-tag resolver namespace.
-    if deck_bundler::node_resolve::resolve_entry(&root, "@ship/sui-runtime").is_some() {
+    if deck_bundler::node_resolve::resolve_entry(&root, "@ship/sail-runtime").is_some() {
         assert!(names.contains(&"sui-runtime"), "sui-runtime present");
         assert!(names.contains(&"sui-dom"), "sui-dom present");
         assert!(names.contains(&"sui-sdk-client"), "sui-sdk-client present");
     } else {
         eprintln!(
-            "SKIP zero_config_discovers_views_only singleton checks: @ship/sui-runtime \
+            "SKIP zero_config_discovers_views_only singleton checks: @ship/sail-runtime \
              not resolvable from the project (no node_modules / workspace install) — \
              install-gated, not an apps/ coupling"
         );

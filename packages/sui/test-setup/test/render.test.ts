@@ -4,7 +4,7 @@
 // assert the reaction.
 
 import { describe, expect, it } from 'vitest'
-import { signal } from '@ship/sui-runtime'
+import { signal } from '@ship/sail-runtime'
 import { renderView } from '../src/render'
 
 describe('renderView — static template', () => {

@@ -68,7 +68,7 @@ in-tree example is `mount.ts`), call `createScope()` and run user
 code inside `withScope(scope, () => userCode())`:
 
 ```ts
-import { createScope, withScope } from '@ship/sui-runtime'
+import { createScope, withScope } from '@ship/sail-runtime'
 
 const scope = createScope()
 withScope(scope, () => userCode())
@@ -83,7 +83,7 @@ the outer mount but should still get cleaned up if the mount goes
 away first, create a child scope:
 
 ```ts
-import { createChildScope, withScope } from '@ship/sui-runtime'
+import { createChildScope, withScope } from '@ship/sail-runtime'
 
 const child = createChildScope() // implicitly owned by the current scope
 withScope(child, () => {
@@ -99,7 +99,7 @@ Wire the leak detector during development to catch missing cleanups
 before they ship:
 
 ```ts
-import { enableLeakWarn } from '@ship/sui-runtime/dev'
+import { enableLeakWarn } from '@ship/sail-runtime/dev'
 
 // Top of your app entry, behind a dev-only branch:
 if (import.meta.env?.DEV) enableLeakWarn()

@@ -5,7 +5,7 @@
 // `CalendarOptions`/`Calendar` surface and re-exports these so consumers have
 // one import site (mirrors sui-table's types/contract split).
 
-import type { Signal } from '@ship/sui-runtime'
+import type { Signal } from '@ship/sail-runtime'
 import type { ISODate, ISODateTime } from './date-math'
 
 export type { ISODate, ISODateTime } from './date-math'

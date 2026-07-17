@@ -1,5 +1,5 @@
-//! The ABI boundary: the COMPILER imports from `@ship/sui-runtime/internal`,
-//! HUMANS import from `@ship/sui-runtime`.
+//! The ABI boundary: the COMPILER imports from `@ship/sail-runtime/internal`,
+//! HUMANS import from `@ship/sail-runtime`.
 //!
 //! The runtime's front door used to advertise ~80 symbols — `bindFor`, `bindIf`,
 //! `attachRef`, `runAction`, `applyPatch`, `__sui_motion_attach` — sitting in the
@@ -12,8 +12,8 @@
 
 use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
 
-const ABI: &str = "@ship/sui-runtime/internal";
-const AUTHOR: &str = "@ship/sui-runtime";
+const ABI: &str = "@ship/sail-runtime/internal";
+const AUTHOR: &str = "@ship/sail-runtime";
 
 /// A component exercising the emit paths that pull ABI symbols: text binding,
 /// an event handler (`on`), and an action (`runAction` + the auto-imported
@@ -46,8 +46,8 @@ fn emitter_imports_the_abi_subpath_not_the_root() {
     );
 
     // The root must not appear as an import SOURCE in generated code. (Checking
-    // the closing quote matters: `@ship/sui-runtime/internal` and
-    // `@ship/sui-runtime/template-hooks` both start with the root's text.)
+    // the closing quote matters: `@ship/sail-runtime/internal` and
+    // `@ship/sail-runtime/template-hooks` both start with the root's text.)
     assert!(
         !js.contains(&format!("from \"{AUTHOR}\"")),
         "generated code must never import the author front door — that is the \
@@ -65,13 +65,13 @@ fn the_abi_import_carries_emitter_symbols() {
     }
 }
 
-/// `@ship/sui-runtime/template-hooks` is a legitimate subpath and must not be
+/// `@ship/sail-runtime/template-hooks` is a legitimate subpath and must not be
 /// mistaken for the root by a naive prefix rewrite. Guards the rewrite itself.
 #[test]
 fn sibling_subpaths_are_not_rewritten_into_the_abi_path() {
     let out = compile(SRC, opts()).expect("compile");
     assert!(
-        !out.js.contains("@ship/sui-runtime/internal/template-hooks"),
+        !out.js.contains("@ship/sail-runtime/internal/template-hooks"),
         "the ABI rewrite corrupted a sibling subpath:\n{}",
         out.js
     );

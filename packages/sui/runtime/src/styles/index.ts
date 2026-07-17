@@ -724,5 +724,5 @@ export const LIGHT_CONTRACTS_CSS =
 // `ensureLightContracts()` used to live here and inject the contracts from a string
 // constant at every component mount — which meant no bundler could drop the 30KB,
 // because the code demonstrably read it. It moved behind a seam
-// (./contracts-seam) and the injection itself is opt-in (@ship/sui-runtime/contracts).
+// (./contracts-seam) and the injection itself is opt-in (@ship/sail-runtime/contracts).
 // Nothing in the default path references LIGHT_CONTRACTS_CSS now, so it shakes out.

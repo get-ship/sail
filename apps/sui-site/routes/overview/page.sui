@@ -9,7 +9,7 @@
 // filterable team list where Invite actually adds a row. The snippet above
 // it is this exact program in its single-file form.
 
-import { controller, signal, filteredList, type ViewScope } from '@ship/sui-runtime'
+import { controller, signal, filteredList, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sui'
 import { code } from './snippets'
 

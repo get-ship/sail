@@ -5,7 +5,7 @@
 // WHY THIS EXISTS: a `.sui` template's `Scope` type is generated, not authored.
 // The compiler emits `<stem>.sui.d.ts` ADJACENT to its `.sui` (a codegen
 // companion, like a CSS-modules `.d.ts`), and the build artifacts (JS/CEM/…) to
-// the pack's own `dist/` via `--out`. Nothing here touches `.ship/sui-out` —
+// the pack's own `dist/` via `--out`. Nothing here touches `.ship/sail-out` —
 // that path is the Ship dynamic-views output, owned by Ship, and components must
 // stay insulated from it. Run before `typecheck` (wired as each pack's
 // `pretypecheck`).

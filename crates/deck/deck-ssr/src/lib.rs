@@ -3,7 +3,7 @@
 //! The pipeline ([`build`] + [`run`]):
 //!   1. [`build::synthesize_and_bundle`] runs the synthetic emitter
 //!      (`emit_synthetic`, pure) for a `.sui` + app manifest, then drives
-//!      Rolldown into ONE self-contained ES module — `@ship/sui-runtime`
+//!      Rolldown into ONE self-contained ES module — `@ship/sail-runtime`
 //!      and `@ship/deck/router` aliased to their **server** entries, app
 //!      `<client>` modules to their server entries, and only `import "ship"`
 //!      (the host wire) left external.

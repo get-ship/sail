@@ -44,14 +44,14 @@
 // so a fast theme/source flip never paints an earlier, slower result.
 //
 // Lazy loading: mermaid is a heavy dep. The pack's deck bundle is declared
-// `lazy: true`, so importing `@ship/sui-mermaid` doesn't fetch mermaid at
+// `lazy: true`, so importing `@ship/sail-mermaid` doesn't fetch mermaid at
 // app boot — only when the bundle is first loaded (i.e. when the host
 // element is first instantiated) does the mermaid module get pulled. The
 // static import below is correct: the specifier is a literal, known at
 // author time; the lazy-load boundary is the deck bundle, not the import
 // expression.
 
-import { controller, signal, derived, effect, ref, bindHtml } from "@ship/sui-runtime";
+import { controller, signal, derived, effect, ref, bindHtml } from "@ship/sail-runtime";
 import mermaid from "mermaid";
 
 type RenderResult =

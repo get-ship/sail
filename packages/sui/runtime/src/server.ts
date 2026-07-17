@@ -1,6 +1,6 @@
-// @ship/sui-runtime/server — the SERVER (V8 / no-browser) entry.
+// @ship/sail-runtime/server — the SERVER (V8 / no-browser) entry.
 //
-// The synthetic SSR build aliases `@ship/sui-runtime` to THIS module. It
+// The synthetic SSR build aliases `@ship/sail-runtime` to THIS module. It
 // re-exports the environment-agnostic reactive core + the DOM bindings from
 // their source modules, deliberately bypassing the package index
 // (`./index.ts`) for two reasons:
@@ -72,7 +72,7 @@ export type { StoreDef, StoreInstance } from './store'
 // path runs. `controller`/`resolveController` are environment-agnostic (they
 // build signal/derived/on bindings, no DOM), so they belong in the server
 // entry too: a synthesized view's authored controller imports `controller`
-// from `@ship/sui-runtime`, which the SSR build aliases here.
+// from `@ship/sail-runtime`, which the SSR build aliases here.
 export { controller, resolveController } from './controller-resolver'
 export type {
   ControllerExport,
@@ -100,7 +100,7 @@ export { wireFormMutation } from './mutation'
 // The helpers are no-ops on the browser DOM and the SSR server-DOM stamps
 // the field the server-DOM serialization reads. Re-exported from the
 // server entry so synthesized renders type-check + resolve when the SSR
-// build aliases `@ship/sui-runtime` here.
+// build aliases `@ship/sail-runtime` here.
 export { markHydrateText, markHydrateAttr, markHydrateBoundary } from './hydrate-mark'
 // ── control flow ────────────────────────────────────────────────────────────
 export { bindIf } from './if'

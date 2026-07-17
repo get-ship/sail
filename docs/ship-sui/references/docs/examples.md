@@ -26,7 +26,7 @@ The smallest reactive shape: a single signal returned from the inline controller
 ```ts
 <controller>
 // views/home/page.sui (excerpt)
-import { signal, derived } from '@ship/sui-runtime'
+import { signal, derived } from '@ship/sail-runtime'
 
 export default controller(() => {
   const seen = signal(0)
@@ -78,8 +78,8 @@ The actual working view in the repo today (`views/agents/`). Server data via `<d
 ```ts
 <controller>
 // views/agents/page.sui
-import { derived } from '@ship/sui-runtime'
-import type { LiveSignal } from '@ship/sui-runtime'
+import { derived } from '@ship/sail-runtime'
+import type { LiveSignal } from '@ship/sail-runtime'
 import type { AgentsSummariesResponse, AgentSummary } from '@ship/sdk-client'
 
 export default controller(({ agents, navigate }: { agents: LiveSignal<AgentsSummariesResponse>; navigate: (path: string) => void }) => {
@@ -154,7 +154,7 @@ The search-toggle signal lives in the inline controller, alongside two compositi
 ```ts
 <controller>
 // views/agents/page.sui
-import { signal, useFilteredList, useSelection } from '@ship/sui-runtime'
+import { signal, useFilteredList, useSelection } from '@ship/sail-runtime'
 
 export default controller(({ agents, navigate }) => {
   const searchOpen = signal(false)
@@ -217,7 +217,7 @@ Forms exercise two-way binding, validation, and the `useForm` composition — al
 ```ts
 <controller>
 // views/settings/page.sui
-import { useForm } from '@ship/sui-runtime'
+import { useForm } from '@ship/sail-runtime'
 
 export default controller(({ ship, settings }) => {
   const form = useForm({

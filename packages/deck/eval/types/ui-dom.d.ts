@@ -2,10 +2,10 @@
 // in isolation. Runtime resolution still goes through the workspace
 // alias (vitest config) or the published package main field.
 //
-// Mirrors the public surface of @ship/sui-dom we depend on. Keep in
+// Mirrors the public surface of @ship/sail-dom we depend on. Keep in
 // sync with packages/ship-set-dom/src/index.ts.
 
-declare module '@ship/sui-dom' {
+declare module '@ship/sail-dom' {
   export interface HydrateOptions {
     container: HTMLElement
     route?: Record<string, string>

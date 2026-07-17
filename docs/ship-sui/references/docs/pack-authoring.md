@@ -23,10 +23,10 @@ under `packages/components/<name>/`
 (`crates/deck/deck-cli/src/scaffold.rs:225`):
 
 - `package.json` — `@ship/<name>`, `type: module`, `main`/`types` →
-  `src/index.ts`, `workspace:*` deps on `@ship/sui-dom` + `@ship/sui-runtime`,
+  `src/index.ts`, `workspace:*` deps on `@ship/sail-dom` + `@ship/sail-runtime`,
   a `vitest` devDependency, and `test` / `test:watch` scripts.
 - `tsconfig.json` — strict, with a `rootDirs` entry pointing at the compiler's
-  mirror tree (`.ship/sui-out/packages/components/<name>/src`) so `tsc` resolves
+  mirror tree (`.ship/sail-out/packages/components/<name>/src`) so `tsc` resolves
   imports from the generated `.sui.d.ts` files.
 - `src/index.ts` — the umbrella. Side-effect-imports each component's
   `.compiled.js` so importing the package registers every tag globally.
@@ -71,7 +71,7 @@ sui-compiler build packages/components/<name>/src/<tag>/<tag>.sui \
 ```
 
 Without `--out`, outputs land in the mirror tree at
-`.ship/sui-out/<source-rel>/` and the module is named `<tag>.compiled.js`
+`.ship/sail-out/<source-rel>/` and the module is named `<tag>.compiled.js`
 (`sui-compiler.rs:71`). `--styles` prepends a CSS file as a `<style>` block and
 is only valid for a single component file. In the monorepo this is driven for
 you by `just build` (`_sui-compiler-lib` + the per-pack rebuild) — author tags,
@@ -101,7 +101,7 @@ The factory (`packages/test-setup/src/vitest.ts`) is location-independent: it
 walks up to the `ship-monorepo` root and resolves everything by package name or
 absolute path, so a pack can move anywhere under `packages/` with no config
 edit. It compiles `.sui` sources through the repo's `sui-compiler` binary into
-the `.ship/sui-out` mirror, caps fork count (each happy-dom/jsdom fork holds
+the `.ship/sail-out` mirror, caps fork count (each happy-dom/jsdom fork holds
 ~500 MB), and prepends an honesty guard (`expect.hasAssertions()`) so a test
 that asserts nothing fails instead of passing green. Real consumers:
 `packages/components/sui/{viewer,charts,chat-elements}/vitest.config.ts`.

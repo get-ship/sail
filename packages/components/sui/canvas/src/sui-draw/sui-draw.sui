@@ -44,7 +44,7 @@
   }
 </scope>
 <controller>
-import { controller, signal, derived, effect, debounce } from '@ship/sui-runtime'
+import { controller, signal, derived, effect, debounce } from '@ship/sail-runtime'
 import type { Scope } from './sui-draw.sui'
 import { createCanvas } from '../engine/create-canvas'
 import { createDrawScene, type DrawElement, type DrawTool } from './engine/scene'

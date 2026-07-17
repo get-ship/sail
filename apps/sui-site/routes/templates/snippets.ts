@@ -8,7 +8,7 @@ export const code = {
 </scope>
 
 <controller>
-import { controller, signal } from '@ship/sui-runtime'
+import { controller, signal } from '@ship/sail-runtime'
 export default controller(() => {              /* what the template may BIND            */
   const count = signal(0)
   return { count }

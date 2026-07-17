@@ -1,5 +1,5 @@
 <controller>
-import { controller, signal } from '@ship/sui-runtime'
+import { controller, signal } from '@ship/sail-runtime'
 
 // The signal's initial value lives in JS, so SSR can't fold it: the server
 // renders an empty reactive slot + hydration anchor; the client fills `0` on

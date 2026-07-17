@@ -13,7 +13,7 @@
 // screen walks a deploy through its states and jitters latency on a
 // mount-owned interval so the dashboard reads as live.
 
-import { controller, signal, effect, filteredList, selection, type ViewScope } from '@ship/sui-runtime'
+import { controller, signal, effect, filteredList, selection, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sui'
 import { code } from './snippets'
 

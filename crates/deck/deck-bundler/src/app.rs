@@ -10,7 +10,7 @@
 //! build uses — so no on-disk `.compiled.js` pre-step is needed.
 //! `AppPlugin` runs alongside it to externalize the framework singletons
 //! (which resolve to `/_deck/*` via the document's importmap); it runs FIRST so
-//! importmap specifiers (incl. `@ship/sui-runtime/*` subpaths) stay external
+//! importmap specifiers (incl. `@ship/sail-runtime/*` subpaths) stay external
 //! rather than being re-anchored to source by `SailPlugin`.
 //!
 //! The dev's authored source is THREE files only: `package.json` (the
@@ -53,24 +53,24 @@ use rolldown_common::{ChunkFilenamesOutputOption, ModuleType, ResolvedExternal};
 /// embedded set at `/_deck/icons/{name}.svg`. Static-only deploys without
 /// a daemon use `<sui-icon src=…>` (CDN escape hatch).
 ///
-/// The package_alias MAY include a subpath: `@ship/sui-runtime/route` etc.
+/// The package_alias MAY include a subpath: `@ship/sail-runtime/route` etc.
 /// All aliases for one source bundle point at the same output URL — the
-/// runtime exports a single module entry. (e.g. `@ship/sui-runtime/route`,
-/// `@ship/sui-runtime/template-hooks`, `@ship/sui-runtime/patch` all share
+/// runtime exports a single module entry. (e.g. `@ship/sail-runtime/route`,
+/// `@ship/sail-runtime/template-hooks`, `@ship/sail-runtime/patch` all share
 /// the runtime bundle.)
 const FRAMEWORK_ASSETS: &[(&str, &str, &str)] = &[
-    ("@ship/sui-runtime", "sui-runtime.js", "_deck/runtime.js"),
-    ("@ship/sui-runtime/route", "sui-runtime.js", "_deck/runtime.js"),
-    ("@ship/sui-runtime/template-hooks", "sui-runtime.js", "_deck/runtime.js"),
-    ("@ship/sui-runtime/patch", "sui-runtime.js", "_deck/runtime.js"),
+    ("@ship/sail-runtime", "sui-runtime.js", "_deck/runtime.js"),
+    ("@ship/sail-runtime/route", "sui-runtime.js", "_deck/runtime.js"),
+    ("@ship/sail-runtime/template-hooks", "sui-runtime.js", "_deck/runtime.js"),
+    ("@ship/sail-runtime/patch", "sui-runtime.js", "_deck/runtime.js"),
     // `/internal` is what COMPILED VIEWS import (__tpl, bind*, effect — the
     // emitter's surface). Its absence here inlined a SECOND copy of the
     // signal graph into every app bundle: view bindings subscribed in the
     // copy, controller signals wrote in the real one, and no page reacted
     // to anything. The resolve guard below makes this class of miss a
     // build error instead of a silent fork.
-    ("@ship/sui-runtime/internal", "sui-runtime.js", "_deck/runtime.js"),
-    ("@ship/sui-dom", "sui-dom.js", "_deck/dom.js"),
+    ("@ship/sail-runtime/internal", "sui-runtime.js", "_deck/runtime.js"),
+    ("@ship/sail-dom", "sui-dom.js", "_deck/dom.js"),
     // `@ship/deck/router` lives in the framework because the bundler
     // generates an entry that imports it. The runtime exports
     // `defineRoutes`, `route`, `navigate`, `setEditMode` — every app's
@@ -407,7 +407,7 @@ impl Plugin for AppPlugin {
         // copy of the module — for the runtime that means a second signal
         // graph, and every binding in the app goes quietly dead. Fail the
         // build and name the fix.
-        for root in ["@ship/sui-runtime/", "@ship/sui-dom/", "@ship/deck/"] {
+        for root in ["@ship/sail-runtime/", "@ship/sail-dom/", "@ship/deck/"] {
             if args.specifier.starts_with(root) {
                 anyhow::bail!(
                     "app build: `{}` is a framework-singleton subpath with no importmap \
@@ -574,7 +574,7 @@ fn walk_deck_frameworks(
 /// `--bundle-framework` path. Entries are resolved by node resolution from
 /// `repo_root` (`BundleLayout::framework_singletons`): no prebuilt-asset dir,
 /// no `DECK_FRAMEWORK_ASSETS_DIR`. One source bundle may back several aliases
-/// (`@ship/sui-runtime` and `@ship/sui-runtime/route` share `runtime.js`), so
+/// (`@ship/sail-runtime` and `@ship/sail-runtime/route` share `runtime.js`), so
 /// the output is mapped onto every matching `FRAMEWORK_ASSETS` `dist_rel`.
 /// Bails when a singleton named in the importmap can't be resolved/built — a
 /// self-contained build must not ship an importmap pointing at a missing file.
@@ -779,7 +779,7 @@ pub async fn bundle_app_with_base(
     // tree has no `main.ts`; the bundler generates it from the
     // routes/ walk (data only) plus, when the host declares one, a
     // host-owned `entry.gen.ts` (client wiring + mountRouter call).
-    // AppPlugin runs FIRST so importmap specifiers (incl. `@ship/sui-runtime/*`
+    // AppPlugin runs FIRST so importmap specifiers (incl. `@ship/sail-runtime/*`
     // subpaths and every host-registered client alias) win as externals;
     // SailPlugin then compiles `.sui` siblings and re-anchors the remaining
     // `@ship/<pkg>` (e.g. sui-charts, pipelines) to workspace source so the
@@ -947,8 +947,8 @@ pub async fn bundle_app_with_base(
         // resolution from the project's node_modules (`framework_singletons`) —
         // no prebuilt-asset dir, no `DECK_FRAMEWORK_ASSETS_DIR`. Each singleton's
         // output is mapped onto its served `_deck/<file>` URL via FRAMEWORK_ASSETS
-        // (one source bundle may back several aliases, e.g. `@ship/sui-runtime`
-        // and `@ship/sui-runtime/route`).
+        // (one source bundle may back several aliases, e.g. `@ship/sail-runtime`
+        // and `@ship/sail-runtime/route`).
         framework_assets +=
             bundle_owned_framework(repo_root, out_dir, minify).await?;
         // Discovered provider-declared singletons. Each `src_path` is
@@ -1065,7 +1065,7 @@ mod tests {
         write(
             &r.join("routes/widgets/[id]/page.sui"),
             "<controller>\n\
-import { controller, signal } from '@ship/sui-runtime'\n\
+import { controller, signal } from '@ship/sail-runtime'\n\
 export default controller(() => ({ id: signal('demo') }))\n\
 </controller>\n\
 <div>{id()}</div>\n",
@@ -1099,7 +1099,7 @@ export default controller(() => ({ id: signal('demo') }))\n\
         // Behavior 3: the framework singletons are externalized in the
         // bundle (the importmap is the runtime's source of truth, not
         // the bundler — but the importmap must at least NAME the assets).
-        assert!(html.contains("@ship/sui-runtime"), "framework runtime in importmap");
+        assert!(html.contains("@ship/sail-runtime"), "framework runtime in importmap");
         // Deck must NOT hardcode any framework CLIENT (no `@ship/sdk-client`).
         // Framework clients are per-app registrations the host supplies
         // through `AppServeConfig::framework_clients`. A default build
@@ -1165,7 +1165,7 @@ export default controller(() => ({ id: signal('demo') }))\n\
         write(
             &r.join("routes/counter/page.sui"),
             "<controller>\n\
-             import { controller, signal } from '@ship/sui-runtime'\n\
+             import { controller, signal } from '@ship/sail-runtime'\n\
              export default controller(() => ({ n: signal(41) }))\n\
              </controller>\n\
              <main>\n  <p>{n()}</p>\n</main>\n",
@@ -1223,7 +1223,7 @@ export default controller(() => ({ id: signal('demo') }))\n\
             &r.join("routes/page.sui"),
             "<controller>\n\
 import './styles.css';\n\
-import { controller } from '@ship/sui-runtime'\n\
+import { controller } from '@ship/sail-runtime'\n\
 export default controller(() => ({}))\n\
 </controller>\n\
 <div>css</div>\n",
@@ -1588,8 +1588,8 @@ export default controller(() => ({}))\n\
         // packages — `--bundle-framework` now BUILDS them from source
         // (resolved from `node_modules/@ship/<pkg>`), not a prebuilt dir.
         for (pkg, file) in [
-            ("@ship/sui-runtime", "src/index.ts"),
-            ("@ship/sui-dom", "src/index.ts"),
+            ("@ship/sail-runtime", "src/index.ts"),
+            ("@ship/sail-dom", "src/index.ts"),
             ("@ship/deck-router", "src/index.ts"),
         ] {
             write(
@@ -1675,8 +1675,8 @@ export default controller(() => ({}))\n\
             "importmap must bind the discovered SDK-client (got: {html})",
         );
         // The framework singletons still ship (deck-owned runtime + dom + route).
-        assert!(html.contains("@ship/sui-runtime"), "framework runtime in importmap");
-        assert!(html.contains("@ship/sui-dom"), "framework dom in importmap");
+        assert!(html.contains("@ship/sail-runtime"), "framework runtime in importmap");
+        assert!(html.contains("@ship/sail-dom"), "framework dom in importmap");
         assert!(html.contains("@ship/deck/router"), "framework route in importmap");
         // No `entry.bootstrap` declared ⇒ deck emits its DEFAULT bootstrap:
         // `entry.gen.ts` is ALWAYS written (it calls mountRouter so a
@@ -1693,8 +1693,8 @@ export default controller(() => ({}))\n\
     /// paths plus bare strings that aren't in an import position.
     #[test]
     fn scan_bare_specifiers_covers_import_shapes() {
-        let js = r#"import"@ship/agents";import x from"@ship/sui-runtime";
-export{a}from'@ship/sui-dom';const y=await import("@ship/lazy/sub");
+        let js = r#"import"@ship/agents";import x from"@ship/sail-runtime";
+export{a}from'@ship/sail-dom';const y=await import("@ship/lazy/sub");
 import "./local.js";import"/abs.js";const s="@ship/not-an-import";"#;
         let mut got = scan_bare_specifiers(js);
         got.sort();
@@ -1704,8 +1704,8 @@ import "./local.js";import"/abs.js";const s="@ship/not-an-import";"#;
             vec![
                 "@ship/agents".to_string(),
                 "@ship/lazy/sub".to_string(),
-                "@ship/sui-dom".to_string(),
-                "@ship/sui-runtime".to_string(),
+                "@ship/sail-dom".to_string(),
+                "@ship/sail-runtime".to_string(),
             ],
             "bare import specifiers only — no `./local.js`, `/abs.js`, or the plain string"
         );
@@ -1741,13 +1741,13 @@ import real from "@ship/real-import";"#;
         let dir = tempfile::tempdir().unwrap();
         let assets = dir.path().join("assets");
         std::fs::create_dir_all(&assets).unwrap();
-        let keys: HashSet<String> = ["@ship/sui-runtime", "@ship/deck/router"]
+        let keys: HashSet<String> = ["@ship/sail-runtime", "@ship/deck/router"]
             .into_iter()
             .map(String::from)
             .collect();
 
         // All importmapped → OK.
-        std::fs::write(assets.join("ok.js"), r#"import"@ship/sui-runtime";from"@ship/deck/router";"#)
+        std::fs::write(assets.join("ok.js"), r#"import"@ship/sail-runtime";from"@ship/deck/router";"#)
             .unwrap();
         assert_pack_imports_resolved(&assets, &keys).expect("all imports importmapped");
 
@@ -1768,12 +1768,12 @@ import real from "@ship/real-import";"#;
         let dir = tempfile::tempdir().unwrap();
         let assets = dir.path().join("assets");
         std::fs::create_dir_all(&assets).unwrap();
-        // `@ship/sui-runtime/` (trailing slash) covers the `/route` subpath.
+        // `@ship/sail-runtime/` (trailing slash) covers the `/route` subpath.
         let keys: HashSet<String> =
-            ["@ship/sui-runtime/".to_string()].into_iter().collect();
+            ["@ship/sail-runtime/".to_string()].into_iter().collect();
         std::fs::write(
             assets.join("c.js"),
-            r#"import"@ship/sui-runtime/route";import"lodash";from"react";"#,
+            r#"import"@ship/sail-runtime/route";import"lodash";from"react";"#,
         )
         .unwrap();
         assert_pack_imports_resolved(&assets, &keys)

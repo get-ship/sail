@@ -6,7 +6,7 @@
   }
 </scope>
 <controller>
-import { controller, signal, derived } from '@ship/sui-runtime'
+import { controller, signal, derived } from '@ship/sail-runtime'
 
 export default controller(({ title, body, tags }: { title: () => string; body: () => string; tags: () => string }) => {
     const expanded = signal(false)

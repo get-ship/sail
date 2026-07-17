@@ -9,7 +9,7 @@
 //                (the Cell.getIsEditing reflects the editing slice)
 //   • nav      — the keyboard focus model (navMode, onKeydown, typeahead, …)
 //
-// PURE TypeScript — imports nothing from `@ship/sui-runtime` itself (the pieces
+// PURE TypeScript — imports nothing from `@ship/sail-runtime` itself (the pieces
 // it composes already carry their reactivity); no DOM, no SDK.
 //
 // Authority: build-spec §Features #14 (keyboard-nav) + #15 (cell editing),
@@ -27,7 +27,7 @@ import type {
   ReactiveTableState,
   Row,
 } from './types'
-import type { Derived, Signal } from '@ship/sui-runtime'
+import type { Derived, Signal } from '@ship/sail-runtime'
 
 export interface EditingCellsInputs<T> {
   state: ReactiveTableState

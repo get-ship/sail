@@ -1,7 +1,7 @@
 // sui-draw — scene-model behavioral specs (Slice 3).
 //
 // Pure-runtime: a flat element list (pen strokes / shapes / text) + tool +
-// selection + undo/redo command stack on @ship/sui-runtime signals. No DOM,
+// selection + undo/redo command stack on @ship/sail-runtime signals. No DOM,
 // no canvas engine — the scene is SVG-native (perfect-freehand outlines +
 // roughjs aesthetic) and layers on the createCanvas() substrate.
 import { describe, expect, it } from 'vitest'

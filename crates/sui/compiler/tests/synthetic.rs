@@ -91,7 +91,7 @@ fn authored_controller_is_composed_via_setup_not_rewritten() {
     assert!(out.controller_ts.contains(r#"import __authored from "./controller.ts";"#));
     assert!(
         out.controller_ts.contains(
-            "import type { ControllerExport, ResolverContext } from \"@ship/sui-runtime/internal\";"
+            "import type { ControllerExport, ResolverContext } from \"@ship/sail-runtime/internal\";"
         ),
         "composes the DSL via its typed export:\n{}",
         out.controller_ts
@@ -205,8 +205,8 @@ fn client_emit_returns_mount_and_hydrate_contract() {
     assert!(client.contains("__mount(container: HTMLElement) {"), "client has __mount:\n{client}");
     assert!(client.contains("hydrate(root: HTMLElement) {"), "client has hydrate:\n{client}");
     // It imports `component` from the runtime and the text hydrate helpers from
-    // @ship/sui-dom (the production split).
-    assert!(client.contains("from \"@ship/sui-dom\""), "imports hydrate helpers from sui-dom:\n{client}");
+    // @ship/sail-dom (the production split).
+    assert!(client.contains("from \"@ship/sail-dom\""), "imports hydrate helpers from sui-dom:\n{client}");
     assert!(client.contains("collectTextOpens") && client.contains("hydrateText"), "text hydrate:\n{client}");
     // __mount still reads the typed scope (the CSR path), exactly like SSR.
     assert!(client.contains("scope.route.params.id()"), "typed scope read in __mount:\n{client}");
@@ -297,7 +297,7 @@ fn authored_scope_factory_return_type_is_recovered() {
     // TypeScript infers `SC = { name: Signal<string> }` from `fn`'s return;
     // the synthetic controller must recover that exact type from `__def`
     // directly (not from the generic `ControllerExport<Scope>`).
-    let authored_src = r#"import { controller, signal } from '@ship/sui-runtime'
+    let authored_src = r#"import { controller, signal } from '@ship/sail-runtime'
 export default controller(() => ({ name: signal('Hub') }))
 "#;
     // The recovery is structural (text on the emitted controller module);

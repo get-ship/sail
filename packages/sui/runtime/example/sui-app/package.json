@@ -1,5 +1,5 @@
 {
-  "name": "sui-example-app",
+  "name": "sail-example-app",
   "private": true,
   "version": "0.2.0",
   "description": "Standalone SUI demo — no daemon, no shell, no view-host. Plain HTML + esbuild + the SUI runtime + compiler. Sanity check for the framework.",
@@ -9,7 +9,7 @@
     "start": "bun run build && python3 -m http.server --bind 127.0.0.1 8765"
   },
   "dependencies": {
-    "@ship/sui-runtime": "file:../.."
+    "@ship/sail-runtime": "file:../.."
   },
   "devDependencies": {
     "esbuild": "0.24.0"

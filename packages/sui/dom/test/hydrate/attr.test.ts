@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it } from 'vitest'
-import { signal } from '@ship/sui-runtime'
+import { signal } from '@ship/sail-runtime'
 import { hydrateAttr } from '../../src/hydrate/attr'
 
 describe('hydrate/attr', () => {

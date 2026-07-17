@@ -27,7 +27,7 @@
 -->
 
 <controller>
-import { controller, bindHtml } from '@ship/sui-runtime'
+import { controller, bindHtml } from '@ship/sail-runtime'
 import type { Scope } from './sui-markdown.sui'
 
 function escape(s: string): string {

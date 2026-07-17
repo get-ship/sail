@@ -41,8 +41,8 @@
   }
 </scope>
 <controller>
-import { controller, signal, derived, ref } from '@ship/sui-runtime'
-import type { ViewScope } from '@ship/sui-runtime'
+import { controller, signal, derived, ref } from '@ship/sail-runtime'
+import type { ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './sui-annotation-layer.sui'
 import { type AnnotationEvent, buildAnnotationEvent } from './sui-annotation.internals'
 

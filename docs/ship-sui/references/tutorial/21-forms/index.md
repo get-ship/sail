@@ -15,7 +15,7 @@ call. You call it once inside the controller, then read its
 identifiers in the template the same way you'd read any signal.
 
 ```ts
-import { controller, form } from '@ship/sui-runtime'
+import { controller, form } from '@ship/sail-runtime'
 
 export default controller((ctx) => {
   const signup = form({

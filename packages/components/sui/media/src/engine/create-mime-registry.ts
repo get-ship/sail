@@ -1,6 +1,6 @@
 // sui-media engine — `createMimeRegistry()`, the thin assembler. Wires the
 // detection slices (detect.ts → resolve.ts → descriptor.ts) and returns the
-// `MimeRegistry` facade. PURE reactive resolution: imports `@ship/sui-runtime`
+// `MimeRegistry` facade. PURE reactive resolution: imports `@ship/sail-runtime`
 // ONLY (transitively, via descriptor.ts). No I/O, no DOM, no `ship.*`/`fetch`/
 // `<data>`/`@ship/sdk-client`. Inspects already-resolved inputs (content-type
 // string, filename, the first N bytes) and returns a descriptor.
@@ -15,7 +15,7 @@
 // Authority: build-spec §"Backbone #1 — createMimeRegistry() + the
 // <ship-viewer> dispatcher", §"API sketch (the load-bearing surface)".
 
-import type { Derived, Signal } from '@ship/sui-runtime'
+import type { Derived, Signal } from '@ship/sail-runtime'
 import type {
   CreateMimeRegistryOptions,
   RegistryEntry,

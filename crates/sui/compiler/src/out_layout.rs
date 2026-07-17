@@ -7,7 +7,7 @@
 //! `.sui.d.ts` type companion is the EXCEPTION: it is written ADJACENT to its
 //! `.sui` source (see `compile_one` in the bin), so a controller's
 //! `import type { Scope } from './x.sui'` resolves with no `rootDirs` into a
-//! build dir. NOTE: `.ship/sui-out` is the Ship dynamic-views output and is
+//! build dir. NOTE: `.ship/sail-out` is the Ship dynamic-views output and is
 //! moving — it must not be load-bearing for component typing.
 //!
 //! Production-distribution bundles (`crates/deck/deck-core/assets/sui-*.js`)
@@ -21,7 +21,7 @@ use std::path::{Path, PathBuf};
 const WORKSPACE_MARKER: &str = "[workspace]";
 
 /// Default mirror sub-directory, relative to the repo root. The compiler is
-/// framework-neutral and must NOT bake a `.ship/` (Ship) path: `.ship/sui-out`
+/// framework-neutral and must NOT bake a `.ship/` (Ship) path: `.ship/sail-out`
 /// is the Ship dynamic-views location, it is MOVING, and the host owns it. So
 /// the default is a neutral, sui-owned scratch dir; a host (deck/shipd — "however
 /// Ship compiles deck") points it at the real location via `SAIL_OUT_DIR`.

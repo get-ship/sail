@@ -1,8 +1,8 @@
-// @ship/sui-primitives — SUI primitive registry.
+// @ship/sail-primitives — SUI primitive registry.
 //
 // Side-effect imports for every generic `<sui-*>` UI primitive. Each
 // `<tag>.compiled.js` calls `customElements.define()` on import, so a
-// single `import '@ship/sui-primitives'` at the consumer registers every
+// single `import '@ship/sail-primitives'` at the consumer registers every
 // tag in this pack globally before any view template instantiates it.
 //
 // Companion families (sui-tab + sui-tab-panel + sui-tabs;

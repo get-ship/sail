@@ -532,7 +532,7 @@ mod tests {
             .await
             .expect("marketing should bundle");
         let body = std::fs::read_to_string(&m.out_path).unwrap();
-        assert!(body.contains("@ship/sui-runtime"), "runtime kept external");
+        assert!(body.contains("@ship/sail-runtime"), "runtime kept external");
 
         // The traceable marketing components (sui-stat / sui-toolbar /
         // sui-progress from the retired const have no `.sui` source and are not
@@ -561,7 +561,7 @@ mod tests {
     /// games. Its `index.ts` registers every arcade tag and pulls the
     /// pixi + arcade-engine graph. pixi + arcade-engine must be BUNDLED (it's the
     /// big chunk), while the runtime singleton stays EXTERNAL — exactly one
-    /// `@ship/sui-runtime` instance across the page.
+    /// `@ship/sail-runtime` instance across the page.
     #[tokio::test(flavor = "multi_thread")]
     async fn rolldown_bundles_arcade_pixi_inline_runtime_external() {
         let repo = repo_root();
@@ -587,7 +587,7 @@ mod tests {
         // Runtime stays external (one instance) — an import of the bare
         // specifier survives, not an inlined second copy.
         assert!(
-            body.contains("@ship/sui-runtime"),
+            body.contains("@ship/sail-runtime"),
             "arcade keeps the runtime singleton external"
         );
         // Each arcade tag registers via its `component(\`<tag>\`, …)` call.
@@ -632,7 +632,7 @@ mod tests {
         let body = std::fs::read_to_string(&m.out_path).unwrap();
         // Runtime stays external (one instance).
         assert!(
-            body.contains("@ship/sui-runtime"),
+            body.contains("@ship/sail-runtime"),
             "pdf keeps the runtime singleton external"
         );
         // The worker module is bundled, not fetched — it side-effect-registers the

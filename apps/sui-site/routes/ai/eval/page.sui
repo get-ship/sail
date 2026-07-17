@@ -1,5 +1,5 @@
 <!--
-  /ai/eval — scoring with sui-eval, adapted from
+  /ai/eval — scoring with sail-eval, adapted from
   packages/sui/tutorial/src/prose/11-sui-eval/index.md. The source covers a
   sub-scores table and a sniffEscapeHatches() helper; both land here. The
   sub-score table is rendered as sub-headings under "Sub-scores" so the page
@@ -7,10 +7,10 @@
 -->
 
 <controller>
-// /ai/eval — scoring with sui-eval, adapted from the 11-sui-eval tutorial
+// /ai/eval — scoring with sail-eval, adapted from the 11-sui-eval tutorial
 // lesson. Snippets live in ./snippets so literal braces in the example block
 // and the sniffEscapeHatches output never leak into the inferred scope.
-import { controller, type ViewScope } from '@ship/sui-runtime'
+import { controller, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sui'
 import { evalExample, hatchExample } from './snippets'
 
@@ -19,9 +19,9 @@ export default controller((_ctx: ViewScope<Scope>) => ({ evalExample, hatchExamp
 
 <article sx="max-w-breakpoint-tablet mx-auto">
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">AI</p>
-  <h1>Scoring with sui-eval</h1>
+  <h1>Scoring with sail-eval</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    <code>@ship/sui-eval</code> runs an agent's output against a behavioural
+    <code>@ship/sail-eval</code> runs an agent's output against a behavioural
     spec and returns a structured quality score. The sub-scores tell you
     which gate (compile / scope / behaviour) the agent missed, so the next
     turn's prompt can target the failure.
@@ -72,7 +72,7 @@ export default controller((_ctx: ViewScope<Scope>) => ({ evalExample, hatchExamp
 
   <h2>Why this matters</h2>
   <p>
-    <code>sui-eval</code> is the <strong>assertion</strong> an agent makes
+    <code>sail-eval</code> is the <strong>assertion</strong> an agent makes
     about its own output before reporting done. Diagnostics tell you "this
     compiles"; eval tells you "this <em>works</em>". The combination is what
     makes one-turn authoring viable.

@@ -10,7 +10,7 @@
 // setAttribute. The engine is the state owner; this file is imperative glue
 // living in `mount` (Cardinal 3).
 
-import { effect, type Disposer } from '@ship/sui-runtime'
+import { effect, type Disposer } from '@ship/sail-runtime'
 import { findCenterRow, type AnyRow } from './wiring'
 import type { Table } from '../engine/create-table'
 import type { SortState } from '../engine/types'

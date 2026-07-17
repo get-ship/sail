@@ -1,13 +1,13 @@
 // Full DOM-level parity runner. For each fixture:
 //   1. Read source.
-//   2. Hydrate via @ship/sui-dom into a jsdom container.
+//   2. Hydrate via @ship/sail-dom into a jsdom container.
 //   3. Import the compiled JS, run its `__mount` (or component
 //      registration) into a fresh jsdom container.
 //   4. Compare outerHTML.
 //
 // Prerequisites:
-//   - Workspace installed (bun install) so `@ship/sui-dom` and
-//     `@ship/sui-runtime` resolve via TypeScript-aware loader (tsx).
+//   - Workspace installed (bun install) so `@ship/sail-dom` and
+//     `@ship/sail-runtime` resolve via TypeScript-aware loader (tsx).
 //   - jsdom installed.
 //
 // Invoke with:
@@ -38,9 +38,9 @@ async function main() {
     console.error('jsdom not installed; cannot run parity check')
     process.exit(2)
   }
-  const { hydrate } = await import('@ship/sui-dom').catch(() => ({}))
+  const { hydrate } = await import('@ship/sail-dom').catch(() => ({}))
   if (!hydrate) {
-    console.error('@ship/sui-dom not resolvable; run bun install')
+    console.error('@ship/sail-dom not resolvable; run bun install')
     process.exit(2)
   }
 

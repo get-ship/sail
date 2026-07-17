@@ -2,10 +2,10 @@
 // compiler's scope scan isn't fooled by patterns inside these strings.
 // The live() controller + the while-loading/while-error/if-ok template are
 // compile-checked against the in-repo sui-compiler; data() matches the real
-// @ship/sui-runtime DataOpts signature.
+// @ship/sail-runtime DataOpts signature.
 export const code = {
   demo: `<controller>
-import { controller, live, signal } from '@ship/sui-runtime'
+import { controller, live, signal } from '@ship/sail-runtime'
 export default controller(() => {
   const attempt = signal(1)
   const users = live(() => {
@@ -31,7 +31,7 @@ export default controller(() => {
 {/if}`,
 
   source: `// the <controller> block body (inline in users.sui)
-import { controller, live } from '@ship/sui-runtime'
+import { controller, live } from '@ship/sail-runtime'
 
 export default controller(() => {
   // live() wraps any async source in a reactive state signal:
@@ -54,7 +54,7 @@ export default controller(() => {
 {/if}`,
 
   server: `// A live SERVER signal: SSR'd initial value + SSE patches.
-import { data } from '@ship/sui-runtime'
+import { data } from '@ship/sail-runtime'
 
 const feed = data({
   initial: [],                   // server-rendered at request time

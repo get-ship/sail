@@ -13,10 +13,10 @@
 // `getCanNextPage`, `getCanPreviousPage`, `pageCount`, `manualPagination`, `rowCount`),
 // Slice 2.
 //
-// Engine purity (Cardinal 4): imports ONLY @ship/sui-runtime.
+// Engine purity (Cardinal 4): imports ONLY @ship/sail-runtime.
 
 import { describe, expect, it } from 'vitest'
-import { signal } from '@ship/sui-runtime'
+import { signal } from '@ship/sail-runtime'
 // RED: greenfield module — resolves only once Slice 2 ships.
 import { createTable } from './create-table'
 

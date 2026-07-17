@@ -1,5 +1,5 @@
 /**
- * @ship/sui-eval — design-quality regression suite for .sui views.
+ * @ship/sail-eval — design-quality regression suite for .sui views.
  *
  * Given a feature description, the primitive catalog, and a behavioral
  * spec, dispatch to a model and assert the output is a working

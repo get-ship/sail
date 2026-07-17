@@ -1,5 +1,5 @@
 <controller>
-import { controller, signal, useDialog } from '@ship/sui-runtime'
+import { controller, signal, useDialog } from '@ship/sail-runtime'
 
 function notify(message: string, tone: string, description?: string) {
   window.dispatchEvent(

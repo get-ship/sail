@@ -9,7 +9,7 @@
 // /ai/authoring — the agent authoring loop, adapted from the
 // 09-agent-loop tutorial lesson. Snippets live in ./snippets so the literal
 // loop-diagram ASCII never leaks into the inferred scope.
-import { controller, type ViewScope } from '@ship/sui-runtime'
+import { controller, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sui'
 import { loopDiagram } from './snippets'
 
@@ -51,7 +51,7 @@ export default controller((_ctx: ViewScope<Scope>) => ({ loopDiagram }))
       missed (lowering-only failures). A non-zero exit is a hard failure.
     </li>
     <li>
-      <strong>Score</strong> — once the view compiles, <code>@ship/sui-eval</code>
+      <strong>Score</strong> — once the view compiles, <code>@ship/sail-eval</code>
       runs it in jsdom against a behavioural spec and returns
       <code>&#123; score, sub, report &#125;</code>. The agent decides whether
       to retry based on the score.

@@ -13,14 +13,14 @@
 // skipped inside a range span. A group row cascades to its leaf children and
 // drives tri-state via `getIsSomeSelected()`.
 //
-// PURE TypeScript — imports `derived` + `batch` from `@ship/sui-runtime`. No DOM,
+// PURE TypeScript — imports `derived` + `batch` from `@ship/sail-runtime`. No DOM,
 // no SDK.
 //
 // Authority: build-spec §Features #7 ("Row selection"), §"Signal graph"
 // (rowSelection +anchor, include/exclude → selectedRowIds / getIsAll*Selected),
 // Slice 2.
 
-import { batch, derived, type Derived, type Signal } from '@ship/sui-runtime'
+import { batch, derived, type Derived, type Signal } from '@ship/sail-runtime'
 import type { Row, RowSelectionState } from './types'
 
 export interface SelectionInputs<T> {

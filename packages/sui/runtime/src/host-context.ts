@@ -12,7 +12,7 @@
 // `setHostContext`, the runtime reads it via `hostContext()`. Same pattern
 // as `RouterPort` / `ShipHost` / `SuiLoader` — the runtime names no host
 // concept, the host plugs one in. Held on `globalThis` so it's visible to
-// every bundle sharing the single `@ship/sui-runtime` instance.
+// every bundle sharing the single `@ship/sail-runtime` instance.
 
 /** Ambient host facts the runtime may read. All optional — a host that
  *  doesn't know a value omits it, and the runtime falls back. */

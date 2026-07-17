@@ -13,7 +13,7 @@
 //       the sibling count. Every tree/treegrid consumer needs these for
 //       aria-posinset / aria-setsize.
 //
-// PURE @ship/sui-runtime engine — vitest-tested directly (no WASM).
+// PURE @ship/sail-runtime engine — vitest-tested directly (no WASM).
 //
 // Authority: build-spec §Features #7 (selection cascade + tri-state), #13 (tree
 // expansion), §"Authoritative Row API"; #240 follow-ups.
