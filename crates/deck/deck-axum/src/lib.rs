@@ -217,10 +217,10 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     async fn into_axum_preserves_extra_headers() {
         let dr = DeckResponse::js_view("v", DaemonMode::Development)
-            .with_header("X-Sail-View", "counter");
+            .with_header("X-Deck-Test", "counter");
         let resp = into_axum(dr);
         assert_eq!(
-            resp.headers().get("X-Sail-View").unwrap().to_str().unwrap(),
+            resp.headers().get("X-Deck-Test").unwrap().to_str().unwrap(),
             "counter"
         );
     }

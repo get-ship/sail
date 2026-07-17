@@ -26,6 +26,7 @@ pub mod setup;
 pub mod synthetic_ssr;
 pub mod host_context;
 pub mod sail_css;
+pub mod tag;
 pub mod themes;
 pub mod view;
 pub mod view_tokens;
@@ -71,6 +72,7 @@ pub use mode_html::{inject_mode_meta, mode_str};
 pub use setup::redirect;
 pub use themes::{list_themes, resolve_theme_css, serve_theme_css, serve_themes_list, ThemeMeta, ThemeSource};
 pub use sail_css::serve_sail_css;
+pub use tag::{strip_sail_tag_prefix, SAIL_TAG_PREFIX};
 pub use view_tokens::serve_view_tokens;
 pub use view::{serve_sui_view_setup, ViewSetupQuery};
 // `serve_view_host` / `serve_view_payload[_subpath]` moved to `ship-views`.

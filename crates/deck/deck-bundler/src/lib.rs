@@ -7,6 +7,7 @@
 //! targets on filesystem change (via `notify`), emitting `BundlerEvent`s on a
 //! broadcast channel for HMR. Output lands in `assets_dir_for` (sail-out/dist).
 
+pub mod dup_version_check;
 pub mod paths;
 pub mod tag_check;
 pub mod templates;

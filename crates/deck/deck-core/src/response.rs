@@ -134,7 +134,7 @@ pub struct DeckResponse {
     pub cache_control: &'static str,
     /// Strong ETag (Production only); `None` omits the header.
     pub etag: Option<String>,
-    /// Additional headers beyond content-type/cache/etag (e.g. `X-Sail-View`).
+    /// Additional headers beyond content-type/cache/etag (e.g. `Location`).
     pub extra_headers: Vec<(&'static str, String)>,
     pub body: Vec<u8>,
 }
