@@ -33,6 +33,7 @@ pub mod key_identity;
 pub mod bind_this_target;
 pub mod on_callable;
 pub mod for_iterable;
+pub mod query_keys;
 
 use std::path::Path;
 
@@ -71,6 +72,7 @@ pub fn run(
     if let Some(c) = controller {
         pure_derived::check(c)?;
         light_shadow_root::check(Some(c))?;
+        query_keys::check(&c.source)?;
     }
     // Scope-bound checks need the controller's declared names (`scope` /
     // `derived` / `use`). We have them whenever a controller is resolved —
@@ -201,6 +203,7 @@ pub fn collect(
     if let Some(c) = controller {
         push(pure_derived::check(c), source, &mut diags);
         push(light_shadow_root::check(Some(c)), source, &mut diags);
+        push(query_keys::check(&c.source), source, &mut diags);
     }
     // Scope checks run whenever a controller is resolved (inline SFC OR paired
     // file) — not only when a `source_path` is present. See `run` above: the
