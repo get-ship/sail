@@ -117,7 +117,6 @@ fn check_attr_for_route(a: &AttrInstr, out: &mut Lowered) {
         | AttrInstr::BindValue { expr, .. }
         | AttrInstr::BindChecked { expr, .. }
         | AttrInstr::Class { expr, .. }
-        | AttrInstr::Style { expr, .. }
         | AttrInstr::Prop { expr, .. }
         | AttrInstr::Mutation { expr, .. } => {
             if expr_references_route(&expr.source) {

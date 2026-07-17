@@ -272,14 +272,42 @@ only at computed-style equivalence with the `feat/next` baseline across
 parts × states × variants × sizes, plus green behavior tests. A port that
 cannot pass files a language gap; nothing ships degraded.
 
-## The `style:` directive ruling
+## `style:` is dead — the `(--x)` binding replaced it
 
-`style:prop={expr}` (single-property dynamic binding) is **toolchain-
-privileged, for data-driven values only** — a user-picked color, a computed
-hue, a drag position: values that cannot be tokens *by definition*. It is
-not a styling escape: static values in `style:` are a lint error (spend a
-token), and userland never gets the directive at all. The lint rides the
-policy floor.
+`style:prop={expr}` is gone: the parser refuses it outright, with a
+diagnostic that teaches the replacement. Runtime geometry — a value that
+cannot be a token *by definition* (a drag position, a virtualizer offset, a
+user-picked color) — crosses JS through a named, typed `use:` action
+(`use:virtualRow`, `use:eventSpan`, `use:rect`, `use:pin`, `use:zoomPan`,
+`use:worldTransform`, `use:maxWidth`, `use:swatch`, …), which writes ONE
+custom property; sx reads it back with `(--name)`
+(`translate-y-(--row-y)`, `top-(--evt-top)`).
+
+Ownership stays where it already lives — no new grammar:
+
+- **Scope owns PROPS** (parent-granted config). No state block in scope;
+  state is code, not a declaration table.
+- **The controller owns state** — `const hue = signal(220)` in `setup()`,
+  returned.
+- **An action owns its runtime-geometry property** — `--row-y`,
+  `--evt-top`, and the rest are fixed names a `use:` action writes; they
+  are neither a prop nor a signal of the component that reads them.
+
+**Resolution law for `(--x)` in sx**: global token vars (including the
+action-owned runtime-geometry names, `sui_lint::tokens::CONVENTION_TOKENS`)
+→ declared props → setup-returned signals → refusal, with a did-you-mean
+(`check::sx_vars`). A name never read via `(--x)` gets no CSS wiring at
+all — the compiler only wires names actually referenced.
+
+When `(--x)` matches a declared prop or a setup-returned signal, the
+compiler emits a CSS `@property` registration (typed from the prop's
+declared type / the signal's inferred type — a `number` gets
+`syntax: '<number>'`, so a CSS transition on it tweens natively with zero
+JS) and reflects the value onto the host as an inline custom property,
+seeded at mount and kept live on every write
+(`emit::styles::register_properties_install_js`, the runtime's
+`registerCustomProperties`). `el.style` stays closed — actions gain no
+styling powers beyond the one property they own.
 
 ## Complete cutover — no shims, ever
 

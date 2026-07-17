@@ -379,13 +379,19 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
         opts.route_params.as_deref(),
     )
     .map_err(|e| attach_path(e, &opts))?;
+    // `run`/`gate` above already validated the `(--x)` resolution law
+    // (fail-fast); re-resolving here is cheap (pure text scan) and gets us
+    // the matched prop/signal bindings the emitter wires `@property` +
+    // host reflection for.
+    let sx_var_bindings = check::sx_vars::resolve(effective_source, &program, controller.as_ref())
+        .map_err(|e| attach_path(e, &opts))?;
     let bindings = bindings::build(&program);
     // `is_view` is the master view/component switch in lowering (which runtime
     // factory to import, direct-emit hydration, route detection). A source is a
     // view iff it is tagless (no `component_meta`); a tag makes it a component.
     let lowered = lower::lower(&program, opts.component_meta.is_none()).map_err(|e| attach_path(e, &opts))?;
 
-    let js = emit::js::emit_module(&program, &lowered, &bindings, &opts);
+    let js = emit::js::emit_module(&program, &lowered, &bindings, &opts, &sx_var_bindings);
     // CEM (custom-elements-manifest) describes a custom element, so it's emitted
     // only for tagged sources (components) — a tagless page has no element to
     // describe. Keyed on the tag, like the emit split itself.

@@ -36,3 +36,5 @@ export {
   hydrateWhileLoading,
   hydrateWhileError,
 } from './hydrate'
+
+export { registerCustomProperties } from './register-properties'

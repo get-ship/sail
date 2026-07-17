@@ -12,6 +12,7 @@ pub mod controller_purity;
 pub mod light_shadow_root;
 pub mod paired_controller;
 pub mod css_token;
+pub mod sx_vars;
 pub mod lint_overrides;
 pub mod policy;
 pub mod expr_subset;
@@ -64,6 +65,7 @@ pub fn run(
     controller_purity::check(controller, overrides)?;
     paired_controller::check(source, source_path)?;
     css_token::check(source, source_path, overrides)?;
+    sx_vars::resolve(source, program, controller).map(|_| ())?;
     // `controller` is resolved by the caller: the inline `<controller>` block
     // (SFC) wins, else the paired `.controller.ts`.
     if let Some(c) = controller {
@@ -194,6 +196,7 @@ pub fn collect(
     // block (SFC) — the one source, no paired-file fallback.
     push(check_mutations(program), source, &mut diags);
     push(paired_controller::check(source, source_path), source, &mut diags);
+    push(sx_vars::resolve(source, program, controller).map(|_| ()), source, &mut diags);
     push(handler_complexity::check(program, controller.is_some()), source, &mut diags);
     if let Some(c) = controller {
         push(pure_derived::check(c), source, &mut diags);
@@ -442,9 +445,7 @@ where
         AttrInstr::BindValue { expr, .. } | AttrInstr::BindChecked { expr, .. } => f(expr)?,
         AttrInstr::BindThis { .. } | AttrInstr::SlotReflectEmpty { .. } => {}
         AttrInstr::On { handler, .. } => f(handler)?,
-        AttrInstr::Class { expr, .. }
-        | AttrInstr::Style { expr, .. }
-        | AttrInstr::Prop { expr, .. } => f(expr)?,
+        AttrInstr::Class { expr, .. } | AttrInstr::Prop { expr, .. } => f(expr)?,
         AttrInstr::Mutation { .. } => {}
         AttrInstr::Use { param, .. } => {
             if let Some(e) = param {

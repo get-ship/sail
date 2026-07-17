@@ -60,7 +60,14 @@ pub fn emit_module(
     lowered: &Lowered,
     bindings: &BindingRegistry,
     opts: &CompileOpts,
+    sx_var_bindings: &[crate::check::sx_vars::SxVarBinding],
 ) -> String {
+    let mut lowered = lowered.clone();
+    if !sx_var_bindings.is_empty() {
+        lowered.runtime_imports.insert("effect");
+        lowered.dom_imports.insert("registerCustomProperties");
+    }
+    let lowered = &lowered;
     let mut w = Writer::new();
     // Leading `_compilerVersion` legal comment. Lets the shell compare
     // its loaded component bundle against the daemon's `/_deck/meta` and
@@ -84,7 +91,8 @@ pub fn emit_module(
     // import list then reflects what the body actually used, rather than guessing.
     let mut body = Writer::new();
     body.enter();
-    let module_hoists = setup::emit_setup_body(&mut body, program, bindings, opts, lowered);
+    let module_hoists =
+        setup::emit_setup_body(&mut body, program, bindings, opts, lowered, sx_var_bindings);
     body.leave();
     let hoisted = module_hoists.into_string();
     let uses_templates = hoisted.contains("__tpl(");

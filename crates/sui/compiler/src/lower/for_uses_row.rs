@@ -81,7 +81,6 @@ fn attr_references(attr: &AttrInstr, var_name: &str, idx_name: Option<&str>) -> 
         | AttrInstr::BindValue { expr, .. }
         | AttrInstr::BindChecked { expr, .. }
         | AttrInstr::Class { expr, .. }
-        | AttrInstr::Style { expr, .. }
         | AttrInstr::Prop { expr, .. }
         | AttrInstr::Mutation { expr, .. } => expr_references(expr, var_name, idx_name),
         AttrInstr::On { handler, .. } => expr_references(handler, var_name, idx_name),

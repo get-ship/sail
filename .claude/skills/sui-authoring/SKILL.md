@@ -231,31 +231,26 @@ colour, or unit.
 - `angle`: 0, 1, 12, 180, 2, 270, 3, 45, 6, 90
 - `font`: body, display, heading, mono
 
-## variants — sx tables keyed by a reflected prop
+## variants — a prop whose values are sx tables
 
-`variants:` is a member of `<scope>`, sibling of `props:`. Each axis becomes
-a reflected union prop — first key is the default — and the table lowers to
-attribute-keyed CSS:
+A variant IS A PROP. Declare it inside `props`, with the value being the
+variant->sx table; the prop's type is the union of the keys (first = default),
+and it reflects to an attribute so CSS can key on it:
 
 ```
-<scope>
-  props: { label = '' }
-  variants: {
-    size: {
-      md: 'text-sm leading-normal-plus',
-      sm: 'text-xs leading-normal',
-    }
-    chrome: {
-      card: 'border-border bg-surface-1 rounded-lg shadow-xs',
-      flush: '',
-    }
-  }
-</scope>
+<component>{
+  props: {
+    variant: { solid: 'bg-tone text-tone-fg', soft: 'bg-tone-bg', outline: 'border-tone' },
+    tone: 'default' | 'primary' | 'destructive',
+  },
+}</component>
 ```
 
 Values are sx lists and take the same state prefixes
-(`solid: 'bg-tone hover:bg-tone-bg-hover'`). `compound:` rows ride inside the
-table, CVA-style, keying rules on COMBINATIONS of axis values.
+(`solid: 'bg-tone hover:bg-tone-bg-hover'`). `compound` (a sibling field of `props`)
+keys rules on COMBINATIONS of variant values.
+
+There is no separate `variants:` block. One declaration surface: `props`.
 
 ## Motion — one system
 
@@ -303,23 +298,28 @@ function.** "use" means exactly one thing in this language — the `use:` direct
 ## State + imports
 
 State lives in the `<controller>` — a raw `<script>` is banned, and the `<state>`
-directive is retired. The block default-exports `controller({ setup })`; whatever
-`setup` RETURNS is the template's scope.
+directive is retired. `controller(fn)` is ONE function, no sections: whatever it
+RETURNS is the template's scope — state signals, derived values, plain helpers, and
+event handlers alike, all as ordinary object properties.
 
 ```
 <controller>
-  import { controller, signal } from '@ship/sui-runtime'
+  import { controller, signal, derived } from '@ship/sui-runtime'
   import { selection } from '@ship/sui-std'
 
-  export default controller({
-    setup: () => {
-      const rows = signal([])
-      const sel = selection(rows, (r) => r.id)
-      return { rows, sel }
-    },
+  export default controller((ctx) => {
+    const rows = signal([])
+    const sel = selection(rows, (r) => r.id)
+    return { rows, sel }
   })
 </controller>
 ```
+
+Mutation is ALWAYS `signal.set(newValue)` (or `signal.set(prev => next)`). Lifecycle
+is ambient, not a section — call `mount(fn)` (fires once after this instance's DOM
+connects; a returned function is cleanup run on dispose) or `onCleanup(fn)` (runs on
+dispose) from anywhere in the setup call graph, including a composition function
+called from setup. Both are auto-injected — no import needed.
 
 Import primitives from `@ship/sui-runtime` — the front door. Never from
 `@ship/sui-runtime/internal`: that is the COMPILER's ABI (`bindFor`, `attachRef`,
@@ -331,8 +331,29 @@ Reactivity: `signal` `derived` `effect` `batch` `untrack` `shared`. Reach for
 effect created during setup dies with the component.
 
 Control flow: `{#if cond}…{/if}`, `{#for item of items key={item.id}}…{/for}`
-(always write `key=` — the parser accepts its absence, but without it the reconciler
-falls back to positional matching and loses DOM identity on reorder).
+(the `key=` is required — without it the reconciler falls back to positional matching
+and loses DOM identity on reorder).
+
+## Runtime CSS — the `(--x)` binding
+
+ONE RULE: **scope owns props, the controller owns state** — there is no state block
+in scope; state is code, not a declaration table. `style:` is gone; a `style:` use
+refuses with a diagnostic that teaches this.
+
+`sx` reads runtime values through `(--name)` (camelCase → kebab, e.g. a prop or
+signal named `rowY` reads as `(--row-y)`): `translate-y-(--row-y)`, `bg-(--hue)`. When
+`(--name)` matches a declared prop or a value `setup()` returns via `signal(...)`, the
+compiler registers a typed CSS `@property` (a `number` gets `syntax: '<number>'`, so a
+CSS transition on it tweens natively, no JS) and reflects the value onto the host as an
+inline custom property, kept live automatically — no action, no manual `effect`. A name
+never read via `(--x)` gets no wiring; an unmatched name is a compile error with a
+did-you-mean.
+
+Runtime GEOMETRY (a virtualizer offset, a drag position — not a prop, not scope
+state) stays on `use:` actions: a named, typed action
+(`use:virtualRow`, `use:eventSpan`, `use:rect`, `use:zoomPan`, `use:swatch`, …) writes
+its own fixed custom property; sx reads it the same way, `(--name)`. `el.style` stays
+closed — actions gain no styling powers beyond the one property they own.
 
 ## L1 elements — the language surface (41 stdlib + 28 reskins = 69 total)
 
