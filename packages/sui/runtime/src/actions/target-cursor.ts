@@ -39,7 +39,6 @@ const overlayCss = `
   height: 12px;
   border-top: 2px solid var(--primary);
   border-left: 2px solid var(--primary);
-  transform: rotate(var(--tc-rot, 0deg));
   /* The action sets --tc-x / --tc-y per-frame as custom properties; the
      translate consumes them. The framework exemption covers the
      setProperty write — translate itself lives in the framework sheet. */
@@ -48,9 +47,13 @@ const overlayCss = `
   top: 0;
   will-change: translate;
 }
-.sui-tc-bracket[data-side='tr'] { transform: rotate(90deg); border-left: 0; border-right: 2px solid var(--primary); }
-.sui-tc-bracket[data-side='br'] { transform: rotate(180deg); border: 0; border-bottom: 2px solid var(--primary); border-right: 2px solid var(--primary); }
-.sui-tc-bracket[data-side='bl'] { transform: rotate(270deg); border: 0; border-bottom: 2px solid var(--primary); border-left: 2px solid var(--primary); }
+/* One mechanism: each corner is DRAWN by its two borders — no rotation.
+   The old rules drew the right borders AND rotated, which un-cornered
+   them (br drew ┘ then flipped it 180° into ┌ — the wrong-facing
+   bracket). The never-written --tc-rot var died with the rotations. */
+.sui-tc-bracket[data-side='tr'] { border-left: 0; border-right: 2px solid var(--primary); }
+.sui-tc-bracket[data-side='br'] { border: 0; border-bottom: 2px solid var(--primary); border-right: 2px solid var(--primary); }
+.sui-tc-bracket[data-side='bl'] { border: 0; border-bottom: 2px solid var(--primary); border-left: 2px solid var(--primary); }
 .sui-tc-dot {
   position: fixed;
   width: 4px;
