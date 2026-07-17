@@ -24,6 +24,18 @@ pub(crate) struct FrameworkSingleton {
     pub spec: &'static str,
     pub out_file: &'static str,
     pub externals: &'static [&'static str],
+    /// Extra files copied verbatim to the PROJECT ROOT (not next to the built
+    /// `out_file`), sourced from the same directory as the resolved entry
+    /// (`resolve_entry`'s result, before Rolldown ever sees it), under their
+    /// own literal filename — never renamed, never bundled. `diagnostics.ts`
+    /// (`packages/deck/lsp-browser/src/diagnostics.ts`) calls the wasm's
+    /// `initWasm(wasmUrl)` with an EXPLICIT url (default `/sail_compiler_bg.wasm`,
+    /// root-absolute) rather than letting wasm-bindgen fall back to its own
+    /// `import.meta.url`-relative default, so the `.wasm` binary must sit at
+    /// the root path callers actually request — see `bundle_owned_framework`
+    /// in `app.rs`. Empty for every singleton that is pure JS/TS source (the
+    /// rest).
+    pub co_assets: &'static [&'static str],
 }
 
 /// The framework singletons, resolved from `node_modules`/workspace by `spec`.
@@ -33,18 +45,56 @@ pub(crate) const FRAMEWORK_SINGLETONS: &[FrameworkSingleton] = &[
         spec: "@ship/sail-runtime",
         out_file: "sail-runtime.js",
         externals: &[],
+        co_assets: &[],
     },
     FrameworkSingleton {
         name: "sail-dom",
         spec: "@ship/sail-dom",
         out_file: "sail-dom.js",
         externals: &["@ship/sail-runtime"],
+        co_assets: &[],
     },
     FrameworkSingleton {
         name: "sail-sdk-client",
         spec: "@ship/sdk-client",
         out_file: "sail-sdk-client.js",
         externals: &["@ship/sail-runtime"],
+        co_assets: &[],
+    },
+    // `@ship/sail-compiler-wasm` — the in-browser WebAssembly build of the
+    // SAIL compiler (docs playground + LSP worker's `analyze`/`compile`).
+    // Shipped by deck itself (same class as runtime/dom), so it is a
+    // framework singleton, not provider-declared. Its `.` export is a
+    // wasm-bindgen glue module (`pkg/sail_compiler.js`), not TS source — see
+    // `co_assets` doc: the companion `.wasm` binary must ride along.
+    FrameworkSingleton {
+        name: "sail-compiler-wasm",
+        spec: "@ship/sail-compiler-wasm",
+        out_file: "sail-compiler-wasm.js",
+        externals: &[],
+        co_assets: &["sail_compiler_bg.wasm"],
+    },
+    // `@ship/sail-lsp-browser/completions` — scope-aware `.sail` completions
+    // for the docs playground editor. Self-contained (no compiler-wasm
+    // dependency), so it externalises nothing.
+    FrameworkSingleton {
+        name: "sail-lsp-completions",
+        spec: "@ship/sail-lsp-browser/completions",
+        out_file: "sail-lsp-completions.js",
+        externals: &[],
+        co_assets: &[],
+    },
+    // `@ship/sail-lsp-browser/diagnostics` — the full diagnostic stream, off
+    // the same wasm `analyze()` diagnostics.ts calls directly
+    // (`import initWasm, { analyze } from '@ship/sail-compiler-wasm'`). Must
+    // externalise `@ship/sail-compiler-wasm` or this inlines a SECOND copy of
+    // the (large) wasm glue + binary into this singleton.
+    FrameworkSingleton {
+        name: "sail-lsp-diagnostics",
+        spec: "@ship/sail-lsp-browser/diagnostics",
+        out_file: "sail-lsp-diagnostics.js",
+        externals: &["@ship/sail-compiler-wasm"],
+        co_assets: &[],
     },
     // `@ship/sdk` — the Connect SDK (generated protobuf/Connect client, the
     // `@ship/sdk/connect` surface). It is large (~1.5MB) and shared across
@@ -59,6 +109,7 @@ pub(crate) const FRAMEWORK_SINGLETONS: &[FrameworkSingleton] = &[
         spec: "@ship/sdk",
         out_file: "sdk.js",
         externals: &[],
+        co_assets: &[],
     },
     // `@ship/deck-router` — the unified router singleton (defineRoutes / route /
     // navigate / mountRouter / mergeRoutes). Every per-app `routes.gen.ts`
@@ -69,6 +120,7 @@ pub(crate) const FRAMEWORK_SINGLETONS: &[FrameworkSingleton] = &[
         spec: "@ship/deck-router",
         out_file: "deck-route.js",
         externals: &["@ship/sail-runtime"],
+        co_assets: &[],
     },
 ];
 
