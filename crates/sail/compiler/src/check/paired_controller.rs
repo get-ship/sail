@@ -1,4 +1,4 @@
-//! `sail-paired-controller` — a `.sui` file's controller is its `<controller>`
+//! `sail-paired-controller` — a `.sail` file's controller is its `<controller>`
 //! block. A sibling `<stem>.controller.ts` is a compile error.
 //!
 //! One spelling. A template whose meaning depends on whether a sibling file
@@ -12,8 +12,8 @@ use crate::diagnostics::CompileError;
 
 pub const RULE_ID: &str = "sail-paired-controller";
 
-/// The sibling controller path for a `.sui` source, by the retired convention:
-/// `page.sui` → `controller.ts`, `<stem>.sui` → `<stem>.controller.ts`.
+/// The sibling controller path for a `.sail` source, by the retired convention:
+/// `page.sail` → `controller.ts`, `<stem>.sail` → `<stem>.controller.ts`.
 pub fn sibling_path(source_path: &Path) -> Option<std::path::PathBuf> {
     let stem = source_path.file_stem()?.to_str()?;
     let dir = source_path.parent().unwrap_or(Path::new("."));
@@ -41,7 +41,7 @@ pub fn check(source: &str, source_path: Option<&Path>) -> Result<(), CompileErro
         "move its body into a `<controller>` block in this file"
     };
     Err(CompileError::new(format!(
-        "`{}` — a paired controller file is not the language: a `.sui` file's controller is its \
+        "`{}` — a paired controller file is not the language: a `.sail` file's controller is its \
          `<controller>` block. Delete the sibling and {detail}. Reusable logic belongs in a \
          composition module the block imports (`import {{ createTable }} from './engine'`).",
         sibling.display()
@@ -56,7 +56,7 @@ mod tests {
     #[test]
     fn sibling_file_is_an_error() {
         let dir = tempfile::tempdir().unwrap();
-        let sui = dir.path().join("sail-x.sui");
+        let sui = dir.path().join("sail-x.sail");
         std::fs::write(&sui, "<span></span>").unwrap();
         std::fs::write(dir.path().join("sail-x.controller.ts"), "export default {}").unwrap();
         let err = check("<span></span>", Some(&sui)).unwrap_err();
@@ -66,7 +66,7 @@ mod tests {
     #[test]
     fn page_convention_is_covered() {
         let dir = tempfile::tempdir().unwrap();
-        let sui = dir.path().join("page.sui");
+        let sui = dir.path().join("page.sail");
         std::fs::write(&sui, "<span></span>").unwrap();
         std::fs::write(dir.path().join("controller.ts"), "export default {}").unwrap();
         assert!(check("<span></span>", Some(&sui)).is_err());
@@ -75,7 +75,7 @@ mod tests {
     #[test]
     fn inline_block_alone_passes() {
         let dir = tempfile::tempdir().unwrap();
-        let sui = dir.path().join("sail-x.sui");
+        let sui = dir.path().join("sail-x.sail");
         let src = "<controller>export default controller((ctx) => ({}))</controller>\n<span></span>";
         std::fs::write(&sui, src).unwrap();
         check(src, Some(&sui)).unwrap();
@@ -84,7 +84,7 @@ mod tests {
     #[test]
     fn no_sibling_no_error() {
         let dir = tempfile::tempdir().unwrap();
-        let sui = dir.path().join("sail-x.sui");
+        let sui = dir.path().join("sail-x.sail");
         std::fs::write(&sui, "<span></span>").unwrap();
         check("<span></span>", Some(&sui)).unwrap();
     }

@@ -313,7 +313,7 @@ mod tests {
     use super::*;
 
     fn findings(src: &str) -> Vec<Finding> {
-        check(Path::new("t.sui"), src)
+        check(Path::new("t.sail"), src)
     }
 
     #[test]

@@ -14,7 +14,7 @@ use sail_compiler::parse::parse;
 use sail_compiler::parse::preprocess::extract_controller_block;
 use sail_compiler::{compile, CompileMode as SuiMode, CompileOpts, ComponentMeta, Policy};
 
-/// A `.sui` compiles as a custom-element (`component`) or a view. Component mode
+/// A `.sail` compiles as a custom-element (`component`) or a view. Component mode
 /// passes a tag name so the element is registered; view mode emits a route module.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CompileMode {
@@ -32,8 +32,8 @@ pub enum CompileError {
     Compile(String),
 }
 
-/// Compile one `.sui` to JS via `sail_compiler::compile` (in-process). Auto-wires
-/// a sibling controller (`page.sui`→`controller.ts`, `<stem>.sui`→
+/// Compile one `.sail` to JS via `sail_compiler::compile` (in-process). Auto-wires
+/// a sibling controller (`page.sail`→`controller.ts`, `<stem>.sail`→
 /// `<stem>.controller.ts`) as `import setup from "./<controller>"`.
 /// `emit_component_imports` opts the view into the per-view resolver — it emits
 /// `@sail-tag/<tag>` registration imports the bundler resolves to source.
@@ -130,9 +130,9 @@ fn emit_build_warnings(
     }
 }
 
-/// The setup-import specifier for a `.sui`'s controller — SFC first. An inline
+/// The setup-import specifier for a `.sail`'s controller — SFC first. An inline
 /// `<controller>` block IS the controller: the specifier is the VIRTUAL
-/// `./<file>.sui.controller.ts` sibling the plugin serves by extracting the
+/// `./<file>.sail.controller.ts` sibling the plugin serves by extracting the
 /// block (nothing is materialized to disk — one authored file). Only a source
 /// without a block falls back to the paired-file model (a real sibling
 /// `controller.ts` / `<stem>.controller.ts` on disk). Inline-wins matches
@@ -147,7 +147,7 @@ fn controller_specifier(sui_file: &Path, stem: &str, source: &str) -> Option<Str
 }
 
 /// `import setup from "./<controller>"` when a sibling controller exists next to
-/// the `.sui`. Mirrors the CLI's `paired_setup` for the bundler (`--out`/
+/// the `.sail`. Mirrors the CLI's `paired_setup` for the bundler (`--out`/
 /// in-process) case: relative `./` import that Rolldown resolves to the sibling.
 fn paired_controller(sui_file: &Path, stem: &str) -> Option<String> {
     let parent = sui_file.parent()?;
@@ -191,7 +191,7 @@ fn try_synthetic_client(sui_file: &Path) -> Result<Option<String>, CompileError>
         manifest.clients.entry(name).or_insert(client);
     }
     // Inline `<controller>` wins here too: the authored controller is the
-    // virtual `.sui.controller.ts` module the plugin extracts from the source.
+    // virtual `.sail.controller.ts` module the plugin extracts from the source.
     let authored = extract_controller_block(&source)
         .1
         .map(|_| format!("{}.controller.ts", sui_file.display()))
@@ -215,7 +215,7 @@ fn find_app_manifest(sui_file: &Path) -> Option<PathBuf> {
     None
 }
 
-/// The sibling authored controller next to a `page.sui`, as an absolute path
+/// The sibling authored controller next to a `page.sail`, as an absolute path
 /// string — the synthetic controller imports it directly so Rolldown resolves
 /// it to the on-disk `.ts`.
 fn sibling_controller_abs(sui_file: &Path) -> Option<String> {
@@ -240,7 +240,7 @@ mod tests {
     #[test]
     fn compiles_view_to_js_in_process() {
         let src = tempdir().unwrap();
-        let sui = src.path().join("page.sui");
+        let sui = src.path().join("page.sail");
         std::fs::write(&sui, "<div>hi {1 + 1}</div>\n").unwrap();
         let js = compile_sui(&sui, CompileMode::View, "page", false).expect("view compiles");
         assert!(js.contains("@ship/sail-runtime"), "emits a runtime import; got:\n{js}");
@@ -253,7 +253,7 @@ mod tests {
         // else. (This test used to pin the pre-floor behavior — inline
         // <style> bundled into the view JS. That surface is gone.)
         let src = tempdir().unwrap();
-        let sui = src.path().join("page.sui");
+        let sui = src.path().join("page.sail");
         std::fs::write(
             &sui,
             "<style>.hero { color: var(--foreground); }</style>\n<p>hi</p>\n",
@@ -270,7 +270,7 @@ mod tests {
     #[test]
     fn surfaces_compile_errors_with_rendered_diagnostic() {
         let src = tempdir().unwrap();
-        let sui = src.path().join("broken.sui");
+        let sui = src.path().join("broken.sail");
         std::fs::write(&sui, "<div>{#if cond()}oops</div>\n").unwrap();
         let err = compile_sui(&sui, CompileMode::View, "broken", false).unwrap_err();
         assert!(matches!(err, CompileError::Compile(_)));
@@ -279,7 +279,7 @@ mod tests {
     #[test]
     fn component_imports_flag_emits_tag_registration() {
         let src = tempdir().unwrap();
-        let sui = src.path().join("page.sui");
+        let sui = src.path().join("page.sail");
         std::fs::write(&sui, "<div><sail-table></sail-table></div>\n").unwrap();
         let on = compile_sui(&sui, CompileMode::View, "page", true).expect("compiles");
         assert!(on.contains("@sail-tag/sail-table"), "flag emits the registration import");
@@ -297,8 +297,8 @@ mod tests {
         // `routes/`) ancestor for deck to grant `route` at compile time.
         let dir = src.path().join("views/greet/[id]");
         std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(dir.join("page.sui"), "<h1>{route.params.id()}</h1>\n").unwrap();
-        let sui = dir.join("page.sui");
+        std::fs::write(dir.join("page.sail"), "<h1>{route.params.id()}</h1>\n").unwrap();
+        let sui = dir.join("page.sail");
 
         // Flag OFF (default): production emit regardless of manifest presence.
         let prev = std::env::var("SAIL_CLIENT_EMIT").ok();
@@ -335,7 +335,7 @@ mod tests {
         }
     }
 
-    /// `route` and `navigate` are the view-host handles every `.sui` view may
+    /// `route` and `navigate` are the view-host handles every `.sail` view may
     /// reference; they resolve through the synthetic emit's convention
     /// (`@ship/deck/router` import, `construct: true` for `route`) so an
     /// app needs no `app.manifest.jsonc` entry for them. The synthetic
@@ -348,11 +348,11 @@ mod tests {
         let src = tempdir().unwrap();
         let dir = src.path();
         std::fs::write(
-            dir.join("page.sui"),
+            dir.join("page.sail"),
             "<h1>id={route.params.id()}</h1>\n",
         )
         .unwrap();
-        let sui = dir.join("page.sui");
+        let sui = dir.join("page.sail");
 
         // Flag ON, NO manifest above → convention still kicks in and the
         // synthetic client contract is emitted (the manifest here is the
@@ -382,7 +382,7 @@ mod tests {
         // A view that does NOT reference `route` must not pull in
         // `@ship/deck/router` — the convention is per-view, not global.
         std::fs::write(
-            dir.join("page.sui"),
+            dir.join("page.sail"),
             "<p>just a paragraph, no route reads</p>\n",
         )
         .unwrap();

@@ -5,7 +5,7 @@
 //! This is the deck-owned replacement for the retired `shell-app.ts`
 //! (`Bun.build`) — one bundler engine (Rolldown) for framework + views +
 //! projects. Driven by `deck build` (`crates/deck/deck-cli`). The project
-//! graph compiles its own `.sui` in-process via the shared `SailPlugin`
+//! graph compiles its own `.sail` in-process via the shared `SailPlugin`
 //! (`rolldown_bundle.rs`) — the exact resolve/load hooks the view/component
 //! build uses — so no on-disk `.compiled.js` pre-step is needed.
 //! `AppPlugin` runs alongside it to externalize the framework singletons
@@ -378,7 +378,7 @@ pub struct AppBuild {
 /// FRAMEWORK_ASSETS. The bundler generates the importmap at build time
 /// (from the same FRAMEWORK_ASSETS list); the AppPlugin runs FIRST so
 /// the importmap specifiers win as externals rather than being re-anchored
-/// to source by `SailPlugin`. `.sui` compilation is handled by the sibling
+/// to source by `SailPlugin`. `.sail` compilation is handled by the sibling
 /// `SailPlugin` in the same bundle pass.
 #[derive(Debug)]
 struct AppPlugin {
@@ -781,7 +781,7 @@ pub async fn bundle_app_with_base(
     // host-owned `entry.gen.ts` (client wiring + mountRouter call).
     // AppPlugin runs FIRST so importmap specifiers (incl. `@ship/sail-runtime/*`
     // subpaths and every host-registered client alias) win as externals;
-    // SailPlugin then compiles `.sui` siblings and re-anchors the remaining
+    // SailPlugin then compiles `.sail` siblings and re-anchors the remaining
     // `@ship/<pkg>` (e.g. sail-charts, pipelines) to workspace source so the
     // app graph compiles them in-process.
     let routes_gen = project.join(entry_module);
@@ -790,7 +790,7 @@ pub async fn bundle_app_with_base(
     }
     // CSS ships as a hashed asset via Rolldown's native `ModuleType::Asset`
     // path (`rolldown_plugin_asset_module`). The `SailPlugin::load` hook only
-    // handles `.sui` / `.compiled.js` and returns `Ok(None)` for everything
+    // handles `.sail` / `.compiled.js` and returns `Ok(None)` for everything
     // else, so the built-in `AssetModulePlugin` runs and emits a hashed
     // `assets/<name>-<hash>.css` file. The chunk references it via a
     // placeholder that `render_chunk` resolves to the asset filename;
@@ -1015,7 +1015,7 @@ mod tests {
             &r.join("package.json"),
             r#"{"name":"@scope/branded-app","private":true,"type":"module"}"#,
         );
-        write(&r.join("routes/page.sui"), "<main>home</main>\n");
+        write(&r.join("routes/page.sail"), "<main>home</main>\n");
 
         // Default: the package name's last segment is the serve namespace.
         let out_def = r.join("dist-default");
@@ -1063,7 +1063,7 @@ mod tests {
         // emitter statically imports + compiles each route view, so the
         // fixture must compile: `id` is bound by the page's own controller.
         write(
-            &r.join("routes/widgets/[id]/page.sui"),
+            &r.join("routes/widgets/[id]/page.sail"),
             "<controller>\n\
 import { controller, signal } from '@ship/sail-runtime'\n\
 export default controller(() => ({ id: signal('demo') }))\n\
@@ -1087,7 +1087,7 @@ export default controller(() => ({ id: signal('demo') }))\n\
 
         // Behavior 2: the entry is the generated `routes.gen.ts` (NOT a
         // dev-authored `src/main.ts`). The bundled output references the
-        // routes directory's `page.sui` pattern.
+        // routes directory's `page.sail` pattern.
         assert!(!r.join("src/main.ts").exists(), "dev did not author main.ts");
         // The bundler generated the entry, and the dynamic route bundled —
         // bundle_app() above would have errored if the route view failed to
@@ -1126,7 +1126,7 @@ export default controller(() => ({ id: signal('demo') }))\n\
     }
 
     /// The dev doesn't write a main.ts. The entry is `routes.gen.ts`,
-    /// which the bundler generates. A `.sui` file inside `routes/`
+    /// which the bundler generates. A `.sail` file inside `routes/`
     /// must compile IN-PROCESS (no `.compiled.js` artifact) and be
     /// available to the bundle. A failure to compile would surface as
     /// a panic from the bundler, not as a missing chunk.
@@ -1139,17 +1139,17 @@ export default controller(() => ({ id: signal('demo') }))\n\
             r#"{"name":"test-app","private":true,"type":"module"}"#,
         );
         write(
-            &r.join("routes/[name]/page.sui"),
+            &r.join("routes/[name]/page.sail"),
             "<div>hi {1 + 1}</div>\n",
         );
 
         let out = r.join("dist");
         bundle_app(r, &[], r, &out, false, false)
             .await
-            .expect("bundle_app should compile the .sui entry in-process");
+            .expect("bundle_app should compile the .sail entry in-process");
     }
 
-    /// SFC route pages: a `page.sui` with an inline `<controller>` block is the
+    /// SFC route pages: a `page.sail` with an inline `<controller>` block is the
     /// single-file authoring model — no sibling `controller.ts` exists and none
     /// may be required. The bundler must (1) build the app and (2) actually
     /// carry the controller code into the emitted chunks; silently dropping the
@@ -1163,7 +1163,7 @@ export default controller(() => ({ id: signal('demo') }))\n\
             r#"{"name":"sfc-app","private":true,"type":"module"}"#,
         );
         write(
-            &r.join("routes/counter/page.sui"),
+            &r.join("routes/counter/page.sail"),
             "<controller>\n\
              import { controller, signal } from '@ship/sail-runtime'\n\
              export default controller(() => ({ n: signal(41) }))\n\
@@ -1174,7 +1174,7 @@ export default controller(() => ({ id: signal('demo') }))\n\
         let out = r.join("dist");
         bundle_app(r, &[], r, &out, false, false)
             .await
-            .expect("an inline-<controller> page.sui must bundle");
+            .expect("an inline-<controller> page.sail must bundle");
 
         // The controller must be IN the output — walk every emitted JS chunk
         // (route modules are code-split) for the scope literal.
@@ -1220,7 +1220,7 @@ export default controller(() => ({ id: signal('demo') }))\n\
         // on the sibling controller so it reaches the entry graph (the
         // entry is `routes.gen.ts`, which statically imports this).
         write(
-            &r.join("routes/page.sui"),
+            &r.join("routes/page.sail"),
             "<controller>\n\
 import './styles.css';\n\
 import { controller } from '@ship/sail-runtime'\n\
@@ -1419,7 +1419,7 @@ export default controller(() => ({}))\n\
         // through the generated `routes.gen.ts` (not a hand-authored
         // controller) — that's the whole point of the gate.
         write(
-            &r.join("routes/page.sui"),
+            &r.join("routes/page.sail"),
             "<div>tok</div>\n",
         );
         let out = r.join("dist");
@@ -1524,7 +1524,7 @@ export default controller(() => ({}))\n\
 }"#,
         );
         // Minimal route so the entry isn't empty.
-        write(&r.join("routes/page.sui"), "<div>x</div>\n");
+        write(&r.join("routes/page.sail"), "<div>x</div>\n");
 
         let out = r.join("dist");
         bundle_app(r, &[], r, &out, false, false)
@@ -1598,7 +1598,7 @@ export default controller(() => ({}))\n\
             );
             write(&r.join(format!("node_modules/{pkg}/{file}")), "export const ok = 1;\n");
         }
-        write(&r.join("routes/page.sui"), "<div>x</div>\n");
+        write(&r.join("routes/page.sail"), "<div>x</div>\n");
 
         let out = r.join("dist");
         let build = bundle_app(r, &[], r, &out, false, true)
@@ -1659,7 +1659,7 @@ export default controller(() => ({}))\n\
             "// stub\n",
         )
         .unwrap();
-        write(&r.join("routes/page.sui"), "<div>x</div>\n");
+        write(&r.join("routes/page.sail"), "<div>x</div>\n");
 
         let out = r.join("dist");
         bundle_app(r, &[], r, &out, false, false)

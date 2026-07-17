@@ -1,4 +1,4 @@
-// Resolver for the paired `.ts` setup file referenced by a `.sui`
+// Resolver for the paired `.ts` setup file referenced by a `.sail`
 // view. Given the URL of the template, look for a sibling file with
 // the same base name and a `.ts` extension; dynamic-import it and
 // return the default export.
@@ -8,12 +8,12 @@
 // (devserver, view loader) can do the resolution in one place.
 
 /**
- * Locate the `.ts` setup file paired with a `.sui` template and
+ * Locate the `.ts` setup file paired with a `.sail` template and
  * dynamic-import it.
  *
  * Resolution rules:
- *  - Replace the trailing `.sui` extension with `.ts`.
- *  - If `setUrl` lacks `.sui`, append `.ts` to its directory and
+ *  - Replace the trailing `.sail` extension with `.ts`.
+ *  - If `setUrl` lacks `.sail`, append `.ts` to its directory and
  *    treat the trailing segment as the setup file name.
  *  - Use `globalThis.fetch` (or a custom `loader`) to verify the
  *    paired file exists; if it returns 404 the loader resolves with
@@ -23,14 +23,14 @@
  * import surface their error via the returned promise so callers can
  * decide whether to render anyway or short-circuit.
  *
- * @param setUrl Absolute or root-relative URL of the `.sui` file.
+ * @param setUrl Absolute or root-relative URL of the `.sail` file.
  * @param loader Optional dynamic-import shim. Defaults to `import(...)`.
  * @returns The module's `default` export when present and callable,
  *   otherwise `undefined`.
  *
  * @example
  * ```ts
- * const setup = await loadSetup('/views/agents/view.sui')
+ * const setup = await loadSetup('/views/agents/view.sail')
  * hydrate(template, setup, { container })
  * ```
  */
@@ -54,10 +54,10 @@ export async function loadSetup(
   return undefined
 }
 
-/** Compute the paired `.ts` path for a given `.sui` URL. */
+/** Compute the paired `.ts` path for a given `.sail` URL. */
 export function pairedTsPath(setUrl: string): string {
-  if (setUrl.endsWith('.sui')) {
-    return setUrl.slice(0, -'.sui'.length) + '.ts'
+  if (setUrl.endsWith('.sail')) {
+    return setUrl.slice(0, -'.sail'.length) + '.ts'
   }
   if (setUrl.endsWith('.set')) {
     return setUrl.slice(0, -'.set'.length) + '.ts'

@@ -6,11 +6,11 @@
  */
 
 import type { Extension } from '@codemirror/state'
-import { suiHighlight } from './sail-code-editor.sail-highlight'
+import { sailHighlight } from './sail-code-editor.sail-highlight'
 
 export type SupportedLanguage =
   | 'yaml' | 'json' | 'jsonc' | 'javascript' | 'typescript'
-  | 'rust' | 'markdown' | 'html' | 'css' | 'shell' | 'python' | 'sui'
+  | 'rust' | 'markdown' | 'html' | 'css' | 'shell' | 'python' | 'sail'
 
 export async function loadLanguage(lang: string): Promise<Extension> {
   switch (lang as SupportedLanguage) {
@@ -39,12 +39,12 @@ export async function loadLanguage(lang: string): Promise<Extension> {
       const { markdown } = await import('@codemirror/lang-markdown')
       return markdown()
     }
-    // SUI is HTML-shaped (tags, attributes, {expr} + {#directives}); base the
+    // SAIL is HTML-shaped (tags, attributes, {expr} + {#directives}); base the
     // highlighting on the HTML mode so tags/attributes/text are colored,
-    // then layer the SUI directive + interpolation overlay on top.
-    case 'sui': {
+    // then layer the SAIL directive + interpolation overlay on top.
+    case 'sail': {
       const { html: htmlLang } = await import('@codemirror/lang-html')
-      return [htmlLang(), suiHighlight]
+      return [htmlLang(), sailHighlight]
     }
     case 'html': {
       const { html: htmlLang } = await import('@codemirror/lang-html')

@@ -5,7 +5,7 @@
 //! "did you mean", type errors) instead of a hand-rolled subset parser. This is
 //! the load-bearing bridge: it writes a harness (the props()/variants() surface)
 //! + the author's block to a temp dir, runs tsgo, and parses the diagnostics
-//! back into structured form the compiler can remap onto `.sui` spans.
+//! back into structured form the compiler can remap onto `.sail` spans.
 use std::path::Path;
 use std::process::Command;
 
@@ -128,10 +128,10 @@ pub fn check_synthetic_controller(
     std::fs::write(out_dir.join("view.render.ts"), &out.render_ts)?;
 
     // Resolve the controller's sibling imports so the isolated check doesn't
-    // TS2307 on `import type { Scope } from './X.sui'` / `import {..} from
+    // TS2307 on `import type { Scope } from './X.sail'` / `import {..} from
     // './utils'`. Copy sibling `.ts`/`.d.ts` verbatim, and GENERATE
-    // `<sib>.sui.d.ts` for every sibling `.sui` — the emitted d.ts exports the
-    // `Scope` type and TS resolves `./X.sui` to `./X.sui.d.ts`. Best-effort: a
+    // `<sib>.sail.d.ts` for every sibling `.sail` — the emitted d.ts exports the
+    // `Scope` type and TS resolves `./X.sail` to `./X.sail.d.ts`. Best-effort: a
     // sibling that fails to compile is skipped (the tsgo run reports the real
     // error if the missing type actually matters).
     if let Ok(entries) = std::fs::read_dir(source_dir) {
@@ -142,9 +142,9 @@ pub fn check_synthetic_controller(
             };
             if name.ends_with(".ts") {
                 let _ = std::fs::copy(&p, out_dir.join(name));
-            } else if name.ends_with(".sui") {
+            } else if name.ends_with(".sail") {
                 if let Ok(sib) = std::fs::read_to_string(&p) {
-                    let stem = name.strip_suffix(".sui").unwrap_or(name);
+                    let stem = name.strip_suffix(".sail").unwrap_or(name);
                     let opts = crate::CompileOpts {
                         setup_url: None,
                         mode: crate::CompileMode::Component,

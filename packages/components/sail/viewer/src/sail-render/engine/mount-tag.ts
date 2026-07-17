@@ -21,7 +21,7 @@ import type { CompileFn } from '../../wasm-bootstrap'
 export interface TagMountOpts {
   /** The base custom-element tag the specimen registers under. */
   tag: string
-  /** The `.sui` source compiled in component mode. */
+  /** The `.sail` source compiled in component mode. */
   source: string
   /** Scalar + structured props applied to the createElement host. */
   props?: Record<string, unknown> | null

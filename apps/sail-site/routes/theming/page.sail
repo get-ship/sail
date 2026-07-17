@@ -1,0 +1,131 @@
+<!--
+  /theming — themes are the argument made visible: components read tokens,
+  never colors, so one attribute repaints the world. The page is its own
+  demo — every switch below restyles the page you are reading.
+-->
+
+<controller>
+// /theming — the live theme switchboard. `pick` is the same two calls the
+// top-bar <theme-picker> makes: applyTheme (data-theme + the canonical .dark
+// class) and persistTheme (survives reload). The page IS the preview — every
+// component on it reads tokens, so the pick repaints the reader's world.
+
+import { controller, signal, type ViewScope } from '@ship/sail-runtime'
+import { applyTheme, persistTheme, readStoredTheme, THEMES, type ThemeId } from '@ship/tokens/themes'
+import type { Scope } from './page.sail'
+import { code } from './snippets'
+
+export default controller((_ctx: ViewScope<Scope>) => {
+  const active = signal<string>(readStoredTheme())
+  const pick = (id: ThemeId): void => {
+    applyTheme(id)
+    persistTheme(id)
+    active.set(id)
+  }
+  return {
+    active,
+    pick,
+    themes: () => THEMES,
+    code,
+  }
+})
+</controller>
+
+<column sx="max-w-breakpoint-tablet mx-auto">
+  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Components</p>
+  <h1>Theming</h1>
+  <p sx="text-lg text-muted-foreground leading-relaxed">
+    A theme is a complete aesthetic — palette, surfaces, radii, shadows,
+    typography, motion — applied as one attribute. Nine ship with the
+    framework. There is no light/dark switch; dark is a property a theme
+    has, not a mode you manage.
+  </p>
+
+  <h2>Try it here</h2>
+  <p>
+    Every button below makes the same two calls the theme picker in the top
+    bar makes. This page — the code blocks, the sidebar, the buttons
+    themselves — is the preview.
+  </p>
+  <row gap="2">
+    {#for t of themes() key={t.id}}
+      <button
+        on:click={() => pick(t.id)}
+        variant={active() === t.id ? 'solid' : 'outline'}
+        tone={active() === t.id ? 'primary' : 'default'}
+        aria-pressed={active() === t.id ? 'true' : 'false'}
+      >{t.label}</button>
+    {/for}
+  </row>
+  <code-block code={code.apply}></code-block>
+  <p>
+    The UI for this is one tag — it is the control in the top-right of every
+    page on this site:
+  </p>
+  <code-block code={code.picker}></code-block>
+
+  <h2>Why the whole page follows</h2>
+  <p>
+    No component in the framework names a color. A card reads
+    <code>--surface-1</code>; a primary button reads <code>--primary</code>;
+    a destructive alert reads the tone contract. The theme defines those
+    tokens, so applying one repaints every component at once — including
+    components written long before the theme existed. That is the deal:
+    components read tokens, themes write them, and neither knows the
+    other's name.
+  </p>
+
+  <h2>The token ladder</h2>
+  <p>
+    Tokens stack in four layers, highest abstraction first. Read the highest
+    layer that captures intent; reach for primitives only when no semantic
+    token fits.
+  </p>
+  <ol sx="list-decimal pl-6">
+    <li>
+      <strong>Semantic surfaces</strong> — <code>--surface-0..3</code>,
+      <code>--card</code>, <code>--popover</code>, <code>--backdrop</code>.
+      The page ground is <code>--surface-0</code>; a card sits on
+      <code>--surface-1</code>.
+    </li>
+    <li>
+      <strong>Tone ramps</strong> —
+      <code>--tone-fg</code>, <code>--tone-bg</code>, <code>--tone-border</code>,
+      <code>--tone-ring</code>, resolved per subtree by
+      <code>tone="…"</code>. Status UI reads the ramp; nothing composes a
+      red by hand.
+    </li>
+    <li>
+      <strong>Brand</strong> — <code>--primary</code>, <code>--accent</code>,
+      <code>--foreground</code>, <code>--background</code>,
+      <code>--muted-foreground</code>. The handful that define a voice.
+    </li>
+    <li>
+      <strong>Primitives</strong> — the spacing, radius, type, shadow and
+      easing scales everything above composes from.
+    </li>
+  </ol>
+
+  <h2>Where themes come from</h2>
+  <p>
+    A theme is a <strong>token file</strong> — the nine built-ins are exactly
+    that, checked into <code>@ship/tokens</code>. You author one with the
+    theme editor, which generates the file: pick a palette, a radius scale, a
+    shadow voice, preview every component live, export. You never hand-write
+    global CSS — that is precisely the escape hatch this system closes, and a
+    theme written as loose CSS is a theme the tooling can't check, preview,
+    or migrate.
+  </p>
+  <p>
+    The same discipline is why themes compose: the product accents on this
+    site (the switch to violet on Deck pages) are a second, smaller token
+    slice riding alongside the theme — tokens layering on tokens, with the
+    theme owning surfaces and the accent owning brand. No rule ever fights
+    another rule.
+  </p>
+
+  <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
+    <a variant="default" href="/styling">← Styling</a>
+    <a variant="solid" tone="primary" href="/motion">Animation →</a>
+  </row>
+</column>

@@ -69,7 +69,7 @@ pub struct Lowered {
 /// [`Lowered`] value.
 pub fn lower(program: &Program, is_view: bool) -> Result<Lowered, CompileError> {
     let mut out = Lowered::default();
-    // Every compiled `.sui` exports `component(...)` — the tagless mount-form
+    // Every compiled `.sail` exports `component(...)` — the tagless mount-form
     // (`component(setup)`) or the registered custom element (`component(tag,
     // def)`). `prop` only rides along when a registered component declares props.
     out.runtime_imports.insert("component");

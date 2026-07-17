@@ -1,6 +1,6 @@
 // Co-located component examples — the showcase contract.
 //
-// Each `<tag>.examples.ts` next to a component's `.sui` exports
+// Each `<tag>.examples.ts` next to a component's `.sail` exports
 // `examples: ComponentExample[]`. The component owns its showcase; the
 // Studio components explorer, web-qa fixtures, and docs all read from
 // here (one source of truth) instead of a central map that drifts.

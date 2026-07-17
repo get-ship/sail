@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test'
 // that rendered nothing, dozens of throws, zero visible failure surface
 // unless a developer already had devtools open.
 //
-// `/error-boom` (app/routes/error-boom/page.sui) throws from an effect on
+// `/error-boom` (app/routes/error-boom/page.sail) throws from an effect on
 // mount with no boundary anywhere in the route — the exact no-boundary path.
 // These specs prove: the dev overlay renders for it, a healthy page shows no
 // overlay, and the same app built for PROD carries zero overlay bytes.

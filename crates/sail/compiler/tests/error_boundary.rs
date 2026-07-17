@@ -19,7 +19,7 @@ fn js(src: &str) -> String {
 #[test]
 fn a_healthy_boundary_does_not_participate_in_layout() {
     let el = compile_element(
-        include_str!("../stdlib/error-boundary.sui"),
+        include_str!("../stdlib/error-boundary.sail"),
         "error-boundary",
     )
     .expect("element compiles");
@@ -42,7 +42,7 @@ fn a_healthy_boundary_does_not_participate_in_layout() {
 #[test]
 fn the_swap_is_a_css_gate_not_a_reactive_branch() {
     let el = compile_element(
-        include_str!("../stdlib/error-boundary.sui"),
+        include_str!("../stdlib/error-boundary.sail"),
         "error-boundary",
     )
     .expect("element compiles");
@@ -66,7 +66,7 @@ fn the_swap_is_a_css_gate_not_a_reactive_branch() {
 #[test]
 fn the_fallback_is_a_slot_with_a_built_in_default() {
     let el = compile_element(
-        include_str!("../stdlib/error-boundary.sui"),
+        include_str!("../stdlib/error-boundary.sail"),
         "error-boundary",
     )
     .expect("element compiles");

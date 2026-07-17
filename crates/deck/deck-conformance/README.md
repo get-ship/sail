@@ -1,7 +1,7 @@
 # deck-conformance — deck, standing on its own
 
 A **ship-free** deck app: `deck::router()` mounted on axum, serving a plain
-directory of `.sui` views with **no daemon, no ship domains, no
+directory of `.sail` views with **no daemon, no ship domains, no
 `@ship/primitives`**. It is two things at once:
 
 1. **An instructional example** — the smallest real "how do I serve a deck
@@ -23,7 +23,7 @@ Just two env vars + mounting the router:
 
 | Var | Meaning here |
 |---|---|
-| `SHIP_DEV_PROJECT_DIR` | App root holding `views/<name>/page.sui`. Set to `app/`. |
+| `SHIP_DEV_PROJECT_DIR` | App root holding `views/<name>/page.sail`. Set to `app/`. |
 | `SHIP_FIRST_PARTY_VIEWS` | **Unset** — a non-ship host has no first-party view bucket. |
 
 ```rust
@@ -36,7 +36,7 @@ axum::serve(listener, app).await?;
 
 | Mode | What deck does | Slice |
 |---|---|---|
-| **SSR + hydrate** | Per-view: compile `.sui` → SSR HTML snapshot spliced into the host shell; client fetches `/_deck/views/{name}/view.js` and `mount()`s. Visit `/_deck/view/{name}` to load. | 1–3 |
+| **SSR + hydrate** | Per-view: compile `.sail` → SSR HTML snapshot spliced into the host shell; client fetches `/_deck/views/{name}/view.js` and `mount()`s. Visit `/_deck/view/{name}` to load. | 1–3 |
 | **SPA** | `deck build` bundles one app entry (split, hashed); framework external via importmap; client mounts everything. | 4 |
 | **Static** | `deck build --bundle_framework` — SPA + materialized `/_deck/*`, deployable with no daemon. | 4 |
 

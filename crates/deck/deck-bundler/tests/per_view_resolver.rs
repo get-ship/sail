@@ -27,22 +27,22 @@ fn fixture(root: &Path) {
     );
     write(
         &root.join("packages/demo/dist/custom-elements.json"),
-        r#"{"schemaVersion":"1","modules":[{"path":"sail-widget.sui","declarations":[{"kind":"class","name":"sail-widget","tagName":"sail-widget","customElement":true,"description":"demo"}]}]}"#,
+        r#"{"schemaVersion":"1","modules":[{"path":"sail-widget.sail","declarations":[{"kind":"class","name":"sail-widget","tagName":"sail-widget","customElement":true,"description":"demo"}]}]}"#,
     );
     // stem "sail-widget" contains a hyphen → detect_mode compiles this as a Component.
     write(
-        &root.join("packages/demo/src/sail-widget/sail-widget.sui"),
+        &root.join("packages/demo/src/sail-widget/sail-widget.sail"),
         "<div>sail-widget-marker</div>\n",
     );
-    write(&root.join("views/usewidget/page.sui"), "<div><sail-widget></sail-widget></div>\n");
+    write(&root.join("views/usewidget/page.sail"), "<div><sail-widget></sail-widget></div>\n");
     // A second view that also uses the tag — for the shared-chunk dedup test.
-    write(&root.join("views/usewidget2/page.sui"), "<div><sail-widget></sail-widget></div>\n");
+    write(&root.join("views/usewidget2/page.sail"), "<div><sail-widget></sail-widget></div>\n");
 }
 
 fn view_target(root: &Path) -> BundleTarget {
     BundleTarget {
         name: "views/usewidget/view".into(),
-        entry: TargetEntry::Real(root.join("views/usewidget/page.sui")),
+        entry: TargetEntry::Real(root.join("views/usewidget/page.sail")),
         externals: vec![],
         out_file: "views/usewidget/view.js".into(),
         lazy: false,
@@ -52,7 +52,7 @@ fn view_target(root: &Path) -> BundleTarget {
 fn second_view_target(root: &Path) -> BundleTarget {
     BundleTarget {
         name: "views/usewidget2/view".into(),
-        entry: TargetEntry::Real(root.join("views/usewidget2/page.sui")),
+        entry: TargetEntry::Real(root.join("views/usewidget2/page.sail")),
         externals: vec![],
         out_file: "views/usewidget2/view.js".into(),
         lazy: false,

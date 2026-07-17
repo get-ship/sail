@@ -53,8 +53,8 @@ fn prefer_primitive_diags(source: &str, path: &str) -> Vec<(DiagSeverity, String
         .collect()
 }
 
-const CONSUMER: &str = "packages/components/sail/charts/src/sail-gauge/sail-gauge.sui";
-const PRIMITIVE: &str = "packages/components/sail/primitives/src/sail-card/sail-card.sui";
+const CONSUMER: &str = "packages/components/sail/charts/src/sail-gauge/sail-gauge.sail";
+const PRIMITIVE: &str = "packages/components/sail/primitives/src/sail-card/sail-card.sail";
 
 #[test]
 fn consumer_display_grid_surfaces_a_warning() {

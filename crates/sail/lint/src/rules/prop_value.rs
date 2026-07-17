@@ -375,7 +375,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn fake_path() -> PathBuf {
-        PathBuf::from("/fake/view.sui")
+        PathBuf::from("/fake/view.sail")
     }
 
     fn run(src: &str) -> Vec<Finding> {

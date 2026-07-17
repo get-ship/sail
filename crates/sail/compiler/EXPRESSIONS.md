@@ -1,6 +1,6 @@
 # SUI Template Expressions
 
-`{expr}` regions in `.sui` files are not arbitrary JavaScript. They
+`{expr}` regions in `.sail` files are not arbitrary JavaScript. They
 parse as a **constrained subset** designed to be stable, statically
 checkable, and predictable inside the brace-counting boundaries of
 the template parser.
@@ -187,4 +187,4 @@ The grammar's AST powers `crates/lsp/src/expr_intel.rs`:
 
 The intelligence layer is purely **symbol-level** in v1: there is no
 TypeScript type checking. Cross-file inference beyond the
-`controller.ts` ↔ `.sui` pair is out of scope.
+`controller.ts` ↔ `.sail` pair is out of scope.

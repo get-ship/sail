@@ -65,8 +65,8 @@ fn inject_host_context(manifest: &mut AppManifest) {
 }
 
 /// Synthesize the CLIENT (controller + client render) for `s` into its own
-/// gendir, alongside the view's emitted `.sui.d.ts` and a copy of the authored
-/// controller (so the controller's `import type { Scope } from './page.sui'`
+/// gendir, alongside the view's emitted `.sail.d.ts` and a copy of the authored
+/// controller (so the controller's `import type { Scope } from './page.sail'`
 /// and `./controller` both resolve locally).
 fn synth_client_into(repo: &Path, gendir: &Path, s: &Surface) {
     let src = fs::read_to_string(repo.join(s.source_rel))
@@ -83,12 +83,12 @@ fn synth_client_into(repo: &Path, gendir: &Path, s: &Surface) {
     let dir = gendir.join(s.name);
     fs::create_dir_all(&dir).unwrap();
 
-    // The source stem (page / badge) — the controller imports `./<stem>.sui`.
+    // The source stem (page / badge) — the controller imports `./<stem>.sail`.
     let stem = Path::new(s.source_rel).file_stem().and_then(|f| f.to_str()).unwrap_or("page");
 
-    // Emit the view's `.sui.d.ts` so `import { Scope } from './page.sui'`
+    // Emit the view's `.sail.d.ts` so `import { Scope } from './page.sail'`
     // (in some authored controllers) resolves under allowArbitraryExtensions.
-    // Views only — component controllers don't import their own `.sui`.
+    // Views only — component controllers don't import their own `.sail`.
     if s.mode == CompileMode::Component {
         let dts = compile(
             &src,
@@ -98,7 +98,7 @@ fn synth_client_into(repo: &Path, gendir: &Path, s: &Surface) {
         .unwrap_or_else(|e| panic!("compile dts {}: {}", s.name, e.render(&src)))
         .dts
         .unwrap_or_default();
-        fs::write(dir.join(format!("{stem}.sui.d.ts")), dts).unwrap();
+        fs::write(dir.join(format!("{stem}.sail.d.ts")), dts).unwrap();
     }
 
     // Copy the authored controller into the gendir (so its relative imports
@@ -238,7 +238,7 @@ fn client_contract_typechecks_green_across_real_surfaces() {
         // host-dispatch (the real living-async surface).
         Surface {
             name: "feed",
-            source_rel: "crates/deck/deck-conformance/app/views/feed/page.sui",
+            source_rel: "crates/deck/deck-conformance/app/views/feed/page.sail",
             manifest_rel: CONF_MANIFEST,
             mode: CompileMode::Component,
             controller_rel: None,
@@ -246,7 +246,7 @@ fn client_contract_typechecks_green_across_real_surfaces() {
         // greet/[id] — dynamic route params (the typed-scope typo-catch surface).
         Surface {
             name: "greet",
-            source_rel: "crates/deck/deck-conformance/app/views/greet/[id]/page.sui",
+            source_rel: "crates/deck/deck-conformance/app/views/greet/[id]/page.sail",
             manifest_rel: CONF_MANIFEST,
             mode: CompileMode::Component,
             controller_rel: None,
@@ -321,7 +321,7 @@ fn client_render_typo_is_caught_by_tsgo() {
 ///
 /// STILL IGNORED — for an unrelated reason: `board/controller.ts` (the
 /// `controller_rel` this test points at) does not exist in this repo — only
-/// `board/page.sui` does. Nobody noticed because the test was already
+/// `board/page.sail` does. Nobody noticed because the test was already
 /// `#[ignore]`d. Un-ignore once a `board/controller.ts` fixture exists.
 #[test]
 #[ignore = "board/controller.ts fixture doesn't exist (pre-existing gap, unrelated to controller-collapse) — the __def/overload regression this test tracked is fixed, see doc comment"]
@@ -341,7 +341,7 @@ fn controller_recovers_scope_factory_return_type() {
         &gendir,
         &Surface {
             name: "board",
-            source_rel: "crates/deck/deck-conformance/app/views/board/page.sui",
+            source_rel: "crates/deck/deck-conformance/app/views/board/page.sail",
             manifest_rel: CONF_MANIFEST,
             mode: CompileMode::Component,
             controller_rel: Some("crates/deck/deck-conformance/app/views/board/controller.ts"),

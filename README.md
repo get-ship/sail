@@ -1,6 +1,6 @@
 # sui
 
-An ahead-of-time-compiled UI framework. `.sui` templates compile to plain ESM
+An ahead-of-time-compiled UI framework. `.sail` templates compile to plain ESM
 bound to a fine-grained signal runtime — real custom elements, light DOM by
 default (shadow only as a per-component containment feature for foreign
 content), server-rendered and hydrated. **deck** is the meta-framework that
@@ -12,13 +12,13 @@ SUI : deck  ::  React : Next
 
 Three layers, dependencies pointing one way (deck → sui, never back):
 
-- **SUI** — the `.sui` language: AOT compiler (Rust, WASM-safe), lint rules,
+- **SUI** — the `.sail` language: AOT compiler (Rust, WASM-safe), lint rules,
   LSP, tree-sitter grammar, and the JS runtime/DOM packages compiled output
   binds to. A template *declares*; its inline `<controller>` block *does*
   (state, lifecycle, I/O).
-- **deck** — the host: file-routed pages (`routes/<seg>/page.sui`, `[param]`
+- **deck** — the host: file-routed pages (`routes/<seg>/page.sail`, `[param]`
   dynamic segments), SSR + hydrate, an in-process Rolldown bundler that
-  compiles `.sui` via the linked compiler, HMR with state preservation, static
+  compiles `.sail` via the linked compiler, HMR with state preservation, static
   builds, and a `DataPort` seam so a host app supplies live data without deck
   knowing the app.
 - **Design system** — the OKLCH token substrate (`@ship/tokens`, ~250 tokens,
@@ -51,7 +51,7 @@ the bun workspace / crates.io with no external sibling checkout required.
 
 | Path | What it is |
 |---|---|
-| `crates/sail/` | The language: `compiler` (`.sui` → ESM, pure, WASM-safe), `compiler-napi` (Node binding), `lint`, `lsp`. |
+| `crates/sail/` | The language: `compiler` (`.sail` → ESM, pure, WASM-safe), `compiler-napi` (Node binding), `lint`, `lsp`. |
 | `crates/deck/` | The host: `deck-core` (transport-agnostic serving), `deck-axum` (axum adapter), `deck-host`, `deck-bundler` (in-process Rolldown), `deck-config` (`deck.jsonc`), `deck-cli` (the `deck` binary), `deck` (facade), `deck-conformance` (harness), `deck-ssr` (TS-SSR through ship-js; members-only). |
 | `crates/build-info` | Per-repo build-time identity (git sha/dirty/timestamp). |
 | `packages/sail/` | `runtime` (signals + custom-element wrapper), `dom` (DOM interpreter + hydration), `tokens`, `compiler-wasm` (browser compiler), `grammar` (tree-sitter), `test-setup`, `tutorial` (lesson sources). |

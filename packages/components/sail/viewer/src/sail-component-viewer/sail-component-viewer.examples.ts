@@ -13,7 +13,7 @@
 
 import type { ComponentExample } from '@ship/sail-runtime'
 
-/** Raw `.sui` sources the viewer previews, keyed by the matching example
+/** Raw `.sail` sources the viewer previews, keyed by the matching example
  *  `name`. The host injects these via `prop:source` (identity) — they can't
  *  ride a scalar attribute. Real Ship-domain content; no placeholders. */
 export const sources: Record<string, string> = {

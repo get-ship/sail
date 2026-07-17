@@ -14,7 +14,7 @@ pub fn emit_cem(program: &Program, opts: &CompileOpts) -> Value {
         .as_ref()
         .and_then(|p| p.file_name())
         .map(|f| f.to_string_lossy().to_string())
-        .unwrap_or_else(|| format!("{tag}.sui"));
+        .unwrap_or_else(|| format!("{tag}.sail"));
 
     // Identity props are plain properties, not attributes — they never appear
     // in the element's attribute surface (only as fields/members below).
@@ -248,17 +248,17 @@ mod tests {
     fn merge_two_cems_sorts_by_path() {
         let cem_z = json!({
             "schemaVersion": "1.0.0",
-            "modules": [{"path": "z.sui", "kind": "javascript-module"}]
+            "modules": [{"path": "z.sail", "kind": "javascript-module"}]
         });
         let cem_a = json!({
             "schemaVersion": "1.0.0",
-            "modules": [{"path": "a.sui", "kind": "javascript-module"}]
+            "modules": [{"path": "a.sail", "kind": "javascript-module"}]
         });
         let merged = merge_cem(&[cem_z, cem_a]);
         let modules = merged["modules"].as_array().unwrap();
         assert_eq!(modules.len(), 2, "two modules in merged manifest");
-        assert_eq!(modules[0]["path"], "a.sui", "a.sui sorts before z.sui");
-        assert_eq!(modules[1]["path"], "z.sui", "z.sui sorts after a.sui");
+        assert_eq!(modules[0]["path"], "a.sail", "a.sail sorts before z.sail");
+        assert_eq!(modules[1]["path"], "z.sail", "z.sail sorts after a.sail");
         assert_eq!(merged["schemaVersion"], "1.0.0");
     }
 

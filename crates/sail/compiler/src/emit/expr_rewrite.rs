@@ -732,7 +732,7 @@ mod tests {
 
     #[test]
     fn ts_annotation_strip_handles_array_filter_handler() {
-        // The exact shape that bit views/overview/page.sui.
+        // The exact shape that bit views/overview/page.sail.
         assert_eq!(
             rw("(_: string, i: number) => i !== idx"),
             "(_, i) => i !== $scope.idx"

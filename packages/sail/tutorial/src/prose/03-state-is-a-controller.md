@@ -45,7 +45,7 @@ effect(() => {                    // a side-effect that owns its cleanup
 
 ## One file
 
-The controller lives in the `.sui` file, in a `<controller>` block above
+The controller lives in the `.sail` file, in a `<controller>` block above
 the template:
 
 ```

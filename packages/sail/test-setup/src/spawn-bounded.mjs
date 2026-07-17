@@ -3,7 +3,7 @@
 // `prlimit --as=N timeout S …` so the child dies cleanly long before the
 // kernel OOM-killer fires.
 //
-// A buggy `.sui` input once drove sail-compiler to 19+GB RSS before the OOM
+// A buggy `.sail` input once drove sail-compiler to 19+GB RSS before the OOM
 // killer took down the surrounding WSL VM. The compiler now self-binds via
 // setrlimit + a wall-clock watchdog, but every external caller still wraps
 // its invocations through this helper so a single buggy compile never

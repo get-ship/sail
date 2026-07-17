@@ -180,7 +180,7 @@ fn emit_places_target_in_out_dir() {
 // ── scaffold view ───────────────────────────────────────────────────────────
 
 /// `deck scaffold view <name>` writes the 2 documented files at the
-/// documented paths (`views/<name>/{manifest.jsonc,page.sui}`) and the
+/// documented paths (`views/<name>/{manifest.jsonc,page.sail}`) and the
 /// manifest's `path` field starts with `/`. The retired sibling files
 /// (`controller.ts`, `style.css`) must NOT be written — state is an
 /// inline `<controller>` block and userland CSS is banned.
@@ -194,7 +194,7 @@ fn scaffold_view_writes_two_files_and_manifest_path() {
     let status = run_deck(&["scaffold", "view", &name]).status;
     assert!(status.success(), "deck scaffold view {name} exited {status:?}");
 
-    for rel in ["manifest.jsonc", "page.sui"] {
+    for rel in ["manifest.jsonc", "page.sail"] {
         let p = view_dir.join(rel);
         assert!(p.exists(), "missing {} after scaffold view", p.display());
         let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
@@ -241,7 +241,7 @@ fn scaffold_view_with_component_writes_widget() {
         "deck scaffold view {name} --component {tag} exited {status:?}"
     );
 
-    let p = widget_dir.join(format!("{tag}.sui"));
+    let p = widget_dir.join(format!("{tag}.sail"));
     assert!(p.exists(), "missing {} after scaffold view --component", p.display());
     let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
     assert!(len > 0, "empty {} after scaffold view --component", p.display());
@@ -253,9 +253,9 @@ fn scaffold_view_with_component_writes_widget() {
 
 // ── scaffold component ──────────────────────────────────────────────────────
 
-/// `deck scaffold component <tag>` writes the `.sui` (and optional
+/// `deck scaffold component <tag>` writes the `.sail` (and optional
 /// controller) under the SUI primitives package:
-/// `packages/components/sail/primitives/src/<tag>/<tag>.sui`.
+/// `packages/components/sail/primitives/src/<tag>/<tag>.sail`.
 #[test]
 fn scaffold_component_writes_sui_under_primitives_package() {
     let mut guard = ScaffoldGuard::new();
@@ -271,7 +271,7 @@ fn scaffold_component_writes_sui_under_primitives_package() {
         "deck scaffold component {tag} exited {status:?}"
     );
 
-    let sui = base.join(format!("{tag}.sui"));
+    let sui = base.join(format!("{tag}.sail"));
     assert!(sui.exists(), "missing {} after scaffold component", sui.display());
     let len = std::fs::metadata(&sui).map(|m| m.len()).unwrap_or(0);
     assert!(len > 0, "empty {} after scaffold component", sui.display());
@@ -340,7 +340,7 @@ fn scaffold_pack_writes_package_json_tsconfig_and_src() {
         assert!(len > 0, "empty {} after scaffold pack", p.display());
     }
     // Placeholder example primitive under src/<name>-example/.
-    let p = example_dir.join(format!("{name}-example.sui"));
+    let p = example_dir.join(format!("{name}-example.sail"));
     assert!(p.exists(), "missing {} after scaffold pack", p.display());
     let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
     assert!(len > 0, "empty {} after scaffold pack", p.display());
@@ -382,10 +382,10 @@ fn builds_a_zero_ship_product_app() {
     )
     .expect("package.json");
     std::fs::write(
-        root.join("routes").join("page.sui"),
+        root.join("routes").join("page.sail"),
         "<main>\n  <h1>zero-ship</h1>\n  <p>sum is {1 + 1}</p>\n</main>\n",
     )
-    .expect("page.sui");
+    .expect("page.sail");
 
     let out = run_deck(&["build", "--project", root.to_str().unwrap()]);
     assert!(

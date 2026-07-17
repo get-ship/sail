@@ -1,6 +1,6 @@
 //! CEM catalog integration for deck-bundler.
 //!
-//! B1: `write_pack_cem` — compile all component `.sui` files in a component
+//! B1: `write_pack_cem` — compile all component `.sail` files in a component
 //!     pack in-process and write the merged `dist/custom-elements.json`
 //!     declared in `package.json`.
 //! B2: `generate_components_gen` — emit `<project>/components.gen.ts` for an
@@ -16,12 +16,12 @@ use serde_json::Value;
 
 use crate::catalog::discover_workspace_packages;
 
-/// Compile all component `.sui` files in a component pack and write the merged
+/// Compile all component `.sail` files in a component pack and write the merged
 /// `dist/custom-elements.json` declared in its `package.json`.
 ///
 /// - Reads `<pack_root>/package.json` for `customElements` field; returns
 ///   `Ok(None)` if absent.
-/// - Walks `src/` for `<stem>/<stem>.sui` files (component convention).
+/// - Walks `src/` for `<stem>/<stem>.sail` files (component convention).
 /// - Compiles each in-process via `sail_compiler::compile` with
 ///   `CompileMode::Component` and extracts the CEM from `CompileOutput::cem`.
 /// - Calls `sail_compiler::emit::cem::merge_cem` to produce the standard
@@ -42,7 +42,7 @@ pub fn write_pack_cem(pack_root: &Path) -> Result<Option<PathBuf>> {
     };
     let ce_field = ce_field.to_string();
 
-    // 2. Walk src/ for component .sui files (stem == parent dir name).
+    // 2. Walk src/ for component .sail files (stem == parent dir name).
     let src_dir = pack_root.join("src");
     let mut sui_files: Vec<PathBuf> = Vec::new();
     if src_dir.exists() {
@@ -132,8 +132,8 @@ pub fn write_all_pack_cems(repo_root: &Path) -> Result<usize> {
     Ok(written)
 }
 
-/// Walk `dir` recursively and collect every component `.sui` file. Per the SUI
-/// authoring convention the filename stem IS the custom-element tag — a `.sui`
+/// Walk `dir` recursively and collect every component `.sail` file. Per the SUI
+/// authoring convention the filename stem IS the custom-element tag — a `.sail`
 /// file always declares a component (dynamic markup lives inside it via control
 /// flow, never in sibling partials). Companion tags (`sail-tab` in `sail-tabs/`,
 /// `sail-accordion-item` in `sail-accordion/`, the `sail-annotation-*` family) are
@@ -147,7 +147,7 @@ fn walk_component_sui_files(dir: &Path, out: &mut Vec<PathBuf>) {
         let p = entry.path();
         if p.is_dir() {
             walk_component_sui_files(&p, out);
-        } else if p.extension().map_or(false, |e| e == "sui") {
+        } else if p.extension().map_or(false, |e| e == "sail") {
             // The stem is the tag; a custom element must contain a hyphen.
             let is_component = p
                 .file_stem()
@@ -270,7 +270,7 @@ mod tests {
             "schemaVersion": "1.0.0",
             "modules": [{
                 "kind": "javascript-module",
-                "path": format!("{tag}.sui"),
+                "path": format!("{tag}.sail"),
                 "declarations": [{
                     "kind": "class",
                     "name": tag,
@@ -282,7 +282,7 @@ mod tests {
         .to_string()
     }
 
-    /// Compile a component .sui in-process and verify the merged CEM is written.
+    /// Compile a component .sail in-process and verify the merged CEM is written.
     #[test]
     fn write_pack_cem_writes_standard_manifest() {
         let tmp = tempdir().unwrap();
@@ -293,7 +293,7 @@ mod tests {
             r#"{"name":"@ship/fixture-pack","customElements":"dist/custom-elements.json"}"#,
         );
         // Minimal component file — no props, tag comes from ComponentMeta.
-        write(&pack_root.join("src/sail-foo/sail-foo.sui"), "<div>hello</div>\n");
+        write(&pack_root.join("src/sail-foo/sail-foo.sail"), "<div>hello</div>\n");
 
         let result = write_pack_cem(pack_root).expect("write_pack_cem");
         let out_path = result.expect("expected Some(path)");

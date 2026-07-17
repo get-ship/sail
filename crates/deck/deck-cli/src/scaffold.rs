@@ -3,7 +3,7 @@
 //! `scripts/scaffold-view.mjs` + `scripts/scaffold-sail-component.mjs`.
 //!
 //! Scaffolding is a deck capability because deck owns the app/component
-//! shape (manifest fields, the single-file `.sui` convention — state lives
+//! shape (manifest fields, the single-file `.sail` convention — state lives
 //! in an inline `<controller>` block). The retired .mjs called into `node` and
 //! pointed at since-renamed paths (`packages/ui-components/src/`); the
 //! port writes to the current layout (`packages/components/sail/primitives/`)
@@ -110,7 +110,7 @@ pub fn run_view(name: String, route_path: Option<String>, component_tag: Option<
          <h1>{title}</h1>\n  <p>New view — replace this body.</p>\n</column>\n"
     );
     fs::write(base.join("manifest.jsonc"), manifest)?;
-    fs::write(base.join("page.sui"), page)?;
+    fs::write(base.join("page.sail"), page)?;
 
     if let Some(tag) = component_tag {
         let tag_dir = base.join("_components").join(&tag);
@@ -124,13 +124,13 @@ pub fn run_view(name: String, route_path: Option<String>, component_tag: Option<
              <scope>\n  props: {{ tone = 'default' }}\n</scope>\n\n\
              <card tone={{tone()}}>\n  <slot></slot>\n</card>\n"
         );
-        fs::write(tag_dir.join(format!("{tag}.sui")), comp_sui)?;
+        fs::write(tag_dir.join(format!("{tag}.sail")), comp_sui)?;
     }
 
     println!("[scaffold] created views/{name}/");
-    println!("[scaffold]   page.sui  manifest.jsonc");
+    println!("[scaffold]   page.sail  manifest.jsonc");
     println!("[scaffold] next steps:");
-    println!("  1. Edit page.sui — replace placeholder body");
+    println!("  1. Edit page.sail — replace placeholder body");
     println!("  2. Edit manifest.jsonc — set rail/preload/events as needed");
     println!("  3. Add an inline <controller> block when the view needs state");
     println!("  4. Reload the shell — views auto-mount via the daemon");
@@ -162,19 +162,19 @@ pub fn run_component(tag: String, want_controller: bool) -> Result<()> {
     );
     if want_controller {
         sui.push_str("<controller>\nimport { controller, type ViewScope } from '@ship/sail-runtime'\n");
-        sui.push_str(&format!("import type {{ Scope }} from './{tag}.sui'\n\n"));
+        sui.push_str(&format!("import type {{ Scope }} from './{tag}.sail'\n\n"));
         sui.push_str(
             "export default controller({\n  setup: (_ctx: ViewScope<Scope>) => ({}),\n})\n</controller>\n\n",
         );
     }
     sui.push_str("<row align=\"center\" gap=\"1\" sx=\"text-tone-fg\">\n  <slot></slot>\n</row>\n");
-    fs::write(base.join(format!("{tag}.sui")), sui)?;
+    fs::write(base.join(format!("{tag}.sail")), sui)?;
 
     println!("[scaffold] created packages/components/sail/primitives/src/{tag}/");
     println!("[scaffold] next steps:");
-    println!("  1. Edit {tag}.sui — scope props, template body");
+    println!("  1. Edit {tag}.sail — scope props, template body");
     println!("  2. Run: cargo run -p deck-cli -- build-assets");
-    println!("     (deck compiles the .sui in-process via the shared SailPlugin)");
+    println!("     (deck compiles the .sail in-process via the shared SailPlugin)");
     Ok(())
 }
 
@@ -208,7 +208,7 @@ pub fn run_pack(name: String) -> Result<()> {
          \"name\": \"@ship/{name}\",\n  \
          \"version\": \"0.1.0\",\n  \
          \"description\": \"Ship {name} pack — SUI components registry. \
-         Author tags under src/<tag>/<tag>.sui; the umbrella in src/index.ts side-effect-imports each compiled.js so a single `import \\\"@ship/{name}\\\"` registers them all.\",\n  \
+         Author tags under src/<tag>/<tag>.sail; the umbrella in src/index.ts side-effect-imports each compiled.js so a single `import \\\"@ship/{name}\\\"` registers them all.\",\n  \
          \"type\": \"module\",\n  \
          \"main\": \"src/index.ts\",\n  \
          \"types\": \"src/index.ts\",\n  \
@@ -276,13 +276,13 @@ pub fn run_pack(name: String) -> Result<()> {
          <row align=\"center\" sx=\"px-3 py-2 border border-border rounded-md\">{{label()}}</row>\n"
     );
     fs::write(
-        base.join(format!("src/{name}-example/{name}-example.sui")),
+        base.join(format!("src/{name}-example/{name}-example.sail")),
         example_sui,
     )?;
 
     println!("[scaffold] created packages/components/{name}/");
     println!("[scaffold]   package.json  tsconfig.json");
-    println!("[scaffold]   src/index.ts  src/{name}-example/{name}-example.sui");
+    println!("[scaffold]   src/index.ts  src/{name}-example/{name}-example.sail");
     println!("[scaffold] next steps:");
     println!("  1. bun install — wires the new workspace package.");
     println!("  2. Replace the {name}-example placeholder with the pack's first tag.");

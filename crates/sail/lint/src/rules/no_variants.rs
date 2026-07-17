@@ -88,7 +88,7 @@ mod tests {
     use super::*;
 
     fn run(src: &str) -> usize {
-        check(Path::new("t.sui"), src).len()
+        check(Path::new("t.sail"), src).len()
     }
 
     #[test]
@@ -106,7 +106,7 @@ mod tests {
 
     #[test]
     fn is_warn() {
-        let f = check(Path::new("t.sui"), "<variants>tone=x: bg:surface-1</variants>");
+        let f = check(Path::new("t.sail"), "<variants>tone=x: bg:surface-1</variants>");
         assert!(matches!(f[0].severity, Severity::Warn));
     }
 }

@@ -42,7 +42,7 @@ fn keyed_for_row_reuse_reselects_nested_match_branch() {
 
     let manifest = AppManifest::parse("{}").unwrap();
     let raw = fs::read_to_string(
-        repo.join("crates/sail/compiler/tests/fixtures/for-match-row-reactivity.sui"),
+        repo.join("crates/sail/compiler/tests/fixtures/for-match-row-reactivity.sail"),
     )
     .unwrap();
     let (src, inline) = sail_compiler::parse::preprocess::extract_controller_block(&raw);

@@ -12,7 +12,7 @@ pub struct ViewSetupQuery {
 
 /// Serve `/_deck/views/{name}/view.js` — the built bundle when present, else an
 /// on-demand compile. Mount-scoped: the per-request [`Resolution`] carries the
-/// project root the built bundle + source `.sui` are resolved under, so one
+/// project root the built bundle + source `.sail` are resolved under, so one
 /// process serving many apps reads each app's views from ITS own root (no
 /// process global).
 pub fn serve_sui_view_setup(

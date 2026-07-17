@@ -1,4 +1,4 @@
-// Context-aware completions for .sui templates.
+// Context-aware completions for .sail templates.
 //
 // Inspects the character immediately before the cursor (and a small
 // look-back window) to decide which completion list to surface.

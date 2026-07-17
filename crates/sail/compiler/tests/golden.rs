@@ -1,6 +1,6 @@
 //! Golden-fixture parity suite for `sail-compiler`.
 //!
-//! Each fixture under `tests/golden/<name>.sui` is compiled with
+//! Each fixture under `tests/golden/<name>.sail` is compiled with
 //! `CompileOpts::default()` and the full `CompileOutput` is captured
 //! as JSON in `<name>.expected.json`. The expected JSON locks the
 //! compiler's wire format so future drift surfaces as a test failure
@@ -42,7 +42,7 @@ fn output_to_json(out: &CompileOutput) -> serde_json::Value {
 
 fn run_golden(name: &str) {
     let dir = golden_dir();
-    let src_path = dir.join(format!("{name}.sui"));
+    let src_path = dir.join(format!("{name}.sail"));
     let expected_path = dir.join(format!("{name}.expected.json"));
 
     let source = fs::read_to_string(&src_path)

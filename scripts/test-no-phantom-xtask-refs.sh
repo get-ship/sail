@@ -36,7 +36,7 @@ excludes=(
   --exclude=tokens.json
   --exclude=generated.ts
   --exclude=*.d.ts
-  --exclude=*.sui.d.ts
+  --exclude=*.sail.d.ts
 )
 
 fail=0

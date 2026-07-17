@@ -25,7 +25,7 @@ fn fixtures_dir() -> PathBuf {
 
 #[test]
 fn jsdoc_above_prop_emits_description_in_cem() {
-    let path = fixtures_dir().join("jsdoc-prop.sui");
+    let path = fixtures_dir().join("jsdoc-prop.sail");
     let source = fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         route_params: None,

@@ -17,7 +17,7 @@ pub struct ResolveError {
     pub message: String,
 }
 /// Hard ceiling on a single view artifact read+compiled per request (source
-/// `.sui` and any co-located CSS). Each request reads from disk and compiles in
+/// `.sail` and any co-located CSS). Each request reads from disk and compiles in
 /// process with no size bound otherwise — a multi-MB file would let one request
 /// pin a worker on a large parse. 4 MiB is comfortably above any real view yet
 /// rejects pathological inputs. Exposed so deck-core's CSS reads share one
@@ -28,8 +28,8 @@ pub const MAX_VIEW_SOURCE_BYTES: u64 = 4 * 1024 * 1024;
 /// `view_dirs` are the bucket names appended to the project root
 /// (e.g. `["views"]`). For each `view_dirs[i]`, the
 /// resolver looks for `<root>/<view_dirs[i]>/<name>/<view_leaf>`. All
-/// buckets share one `view_leaf` (defaults to `page.sui`), which fixes
-/// the #254 `index.sui` vs `page.sui` divergence between
+/// buckets share one `view_leaf` (defaults to `page.sail`), which fixes
+/// the #254 `index.sail` vs `page.sail` divergence between
 /// buckets. A host that serves additional buckets (Ship's `.ship/views`)
 /// supplies them as an OVERRIDE — deck names no host-private path.
 /// `first_party_root`, when set, takes precedence over the
@@ -44,13 +44,13 @@ pub struct ViewLayout {
 }
 impl ViewLayout {
     /// Conventional defaults — the deck-native `views/` bucket and the
-    /// `page.sui` leaf. A host that serves additional buckets (Ship's
+    /// `page.sail` leaf. A host that serves additional buckets (Ship's
     /// `.ship/views`) supplies them as an override; deck names no
     /// host-private path in its zero-config default.
     pub fn conventional() -> Self {
         Self {
             view_dirs: vec!["views".into()],
-            view_leaf: "page.sui".into(),
+            view_leaf: "page.sail".into(),
             first_party_root: None,
         }
     }
@@ -103,7 +103,7 @@ pub fn resolve(
     // Walk every configured view-dir bucket in order. First hit wins; the
     // rest are reported as "tried" so a 404 names every bucket consulted.
     // A single leaf convention (`layout.view_leaf`) replaces the old
-    // `page.sui`/`index.sui` per-bucket divergence (#254): every configured
+    // `page.sail`/`index.sail` per-bucket divergence (#254): every configured
     // bucket looks up the same `<name>/<view_leaf>`.
     for bucket in &layout.view_dirs {
         let bucket_root = project_root.join(bucket);

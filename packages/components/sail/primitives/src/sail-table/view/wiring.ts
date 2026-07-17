@@ -1,5 +1,5 @@
 // sail-table view wiring — the data-variant glue between the headless engine
-// (`createTable`) and the windowed `.sui` render (Backbone #1 × #2).
+// (`createTable`) and the windowed `.sail` render (Backbone #1 × #2).
 //
 // Keeps `sail-table.controller.ts` lean (the controller is glue; this is the
 // reactive plumbing it composes). PURE `@ship/sail-runtime` — no DOM, no SDK.

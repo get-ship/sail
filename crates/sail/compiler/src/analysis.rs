@@ -28,7 +28,7 @@ fn inline_controller(source: &str, source_path: Option<&std::path::Path>) -> Opt
 }
 
 
-/// A name in scope for a `.sui` template, with where it came from and (when
+/// A name in scope for a `.sail` template, with where it came from and (when
 /// controller-declared) where to jump to.
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct Symbol {
@@ -39,7 +39,7 @@ pub struct Symbol {
     /// Origin section: `data` | `prop` | `scope` | `derived` | `on` | `use`.
     pub source: String,
     /// 1-based declaration position in the controller. `(0, 0)` when the
-    /// symbol is declared in the `.sui` itself (`<data>` / `<prop>`).
+    /// symbol is declared in the `.sail` itself (`<data>` / `<prop>`).
     pub line: usize,
     pub col: usize,
 }
@@ -54,7 +54,7 @@ pub struct Hover {
     pub col: usize,
 }
 
-/// Everything the tooling needs about one `.sui` source in a single pass.
+/// Everything the tooling needs about one `.sail` source in a single pass.
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct Analysis {
     pub diagnostics: Vec<Diagnostic>,
@@ -67,7 +67,7 @@ pub struct Analysis {
     pub controller_path: Option<String>,
 }
 
-/// Full analysis of a `.sui` source: diagnostics + scope symbols + the tag /
+/// Full analysis of a `.sail` source: diagnostics + scope symbols + the tag /
 /// event dependency surface. `source_path` locates the paired controller.
 pub fn analyze(
     source: &str,
@@ -129,7 +129,7 @@ fn symbols_from_table(table: &SymbolTable, controller: Option<&ParsedController>
     let ctrl_src = controller.map(|c| c.source.as_str()).unwrap_or("");
     let mut out: Vec<Symbol> = Vec::new();
 
-    // `<prop>` lives in the .sui — no controller offset (0).
+    // `<prop>` lives in the .sail — no controller offset (0).
     for (name, e) in &table.props {
         out.push(Symbol { name: name.clone(), kind: e.kind_label.to_string(), source: "prop".into(), line: 0, col: 0 });
     }
@@ -146,7 +146,7 @@ fn symbols_from_table(table: &SymbolTable, controller: Option<&ParsedController>
 }
 
 /// Controller byte offset → 1-based (line, col). Offset 0 means "declared in
-/// the .sui", reported as `(0, 0)`.
+/// the .sail", reported as `(0, 0)`.
 fn pos(ctrl_src: &str, offset: usize) -> (usize, usize) {
     if offset == 0 || ctrl_src.is_empty() {
         return (0, 0);

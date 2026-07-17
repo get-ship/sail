@@ -12,7 +12,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { runEval, type EvalResult, type EvalTask } from './index.ts'
 
-const HELP = `sail-eval — design-quality regression suite for .sui views
+const HELP = `sail-eval — design-quality regression suite for .sail views
 
 Usage:
   sail-eval run --task <id> --model <model> [--out <dir>]

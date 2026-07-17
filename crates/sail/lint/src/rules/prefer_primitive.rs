@@ -292,12 +292,12 @@ mod tests {
 
     /// A consumer component path (NOT under the primitives pack).
     fn consumer() -> PathBuf {
-        PathBuf::from("packages/components/sail/charts/src/sail-gauge/sail-gauge.sui")
+        PathBuf::from("packages/components/sail/charts/src/sail-gauge/sail-gauge.sail")
     }
 
     /// A primitives-pack component path.
     fn primitive() -> PathBuf {
-        PathBuf::from("packages/components/sail/primitives/src/sail-card/sail-card.sui")
+        PathBuf::from("packages/components/sail/primitives/src/sail-card/sail-card.sail")
     }
 
     // (a) A consumer component with `display: grid` in its <style> warns.
@@ -338,7 +338,7 @@ mod tests {
     #[test]
     fn primitives_pack_absolute_path_is_exempt() {
         let p = PathBuf::from(
-            "/home/dev/repo/packages/components/sail/primitives/src/sail-stack/sail-stack.sui",
+            "/home/dev/repo/packages/components/sail/primitives/src/sail-stack/sail-stack.sail",
         );
         let src = "<style>:host { display: flex; }</style><slot></slot>";
         let f = check(&p, src);

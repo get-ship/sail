@@ -10,7 +10,7 @@
 // check does not exist in a browser. The concrete browser check is a VERSION
 // compare — the running wasm's embedded `_compilerVersion` (the compiler emits
 // it as a leading `/*! _compilerVersion … */` banner on every module, and the
-// CEM/`.sui.meta.json` carry the same shape) against the catalog entries'
+// CEM/`.sail.meta.json` carry the same shape) against the catalog entries'
 // `_compilerVersion`. The SPA shell owns surfacing a banner on mismatch; the
 // engine exposes the parser so the host reads one canonical version off any
 // compiled module rather than re-deriving it.

@@ -2,7 +2,7 @@
 //
 // The mount-FORM of a component (`component(setup)`, which returns `{ setup }`)
 // is how SUI composes a component WITHOUT registering it as a custom element:
-// an internal/private part (an underscore-named `.sui` the compiler resolves
+// an internal/private part (an underscore-named `.sail` the compiler resolves
 // and mounts inside its parent's render) rather than a published custom element
 // the browser upgrades by tag. Registration is an EXPORT decision; composition
 // is this.

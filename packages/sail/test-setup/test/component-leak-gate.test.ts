@@ -16,7 +16,7 @@
 // daemon, no browser, no OOM surface (per the leak-arc safety constraint).
 //
 // ADD A PRIMITIVE: drop another entry in PRIMITIVES below. Each is a checked-in
-// `.sui` under packages/components/sail/primitives/src; controller-less ones need
+// `.sail` under packages/components/sail/primitives/src; controller-less ones need
 // no wiring. Keep CYCLES bounded.
 
 import { existsSync, readFileSync } from 'node:fs'
@@ -78,7 +78,7 @@ const PRIM_ROOT = primitivesSrc()
 const CYCLES = 30
 
 interface Primitive {
-  /** The checked-in `.sui` file, relative to PRIM_ROOT. */
+  /** The checked-in `.sail` file, relative to PRIM_ROOT. */
   file: string
   /** A unique custom-element tag to register the compiled component under.
    *  Use a `-gate` suffix so the gate never collides with a real catalog tag
@@ -95,9 +95,9 @@ interface Primitive {
 // are a deliberate next step — the pattern above is how to add them.
 const PRIMITIVES: Primitive[] = [
   // sail-button, sail-separator dissolved to bare <button>/<hr> (L1 contract) —
-  // no longer checked-in .sui files to gate.
-  { file: 'sail-badge/sail-badge.sui', tag: 'sail-badge-gate', attrs: { tone: 'success' } },
-  { file: 'sail-spinner/sail-spinner.sui', tag: 'sail-spinner-gate' },
+  // no longer checked-in .sail files to gate.
+  { file: 'sail-badge/sail-badge.sail', tag: 'sail-badge-gate', attrs: { tone: 'success' } },
+  { file: 'sail-spinner/sail-spinner.sail', tag: 'sail-spinner-gate' },
 ]
 
 /**

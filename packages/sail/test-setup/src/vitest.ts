@@ -70,7 +70,7 @@ const mirrorRoot = resolve(repoRoot, '.sail-out')
 const compilerBin = resolve(repoRoot, 'target/debug/sail-compiler')
 // The native/CLI sail-compiler is only reachable in a repo that carries the
 // Rust workspace (a root `Cargo.toml`) or a prebuilt binary. A JS-only
-// consumer (e.g. ship-apps post-carve) has neither, so `.sui` sources compile
+// consumer (e.g. ship-apps post-carve) has neither, so `.sail` sources compile
 // through the inline WASM fallback instead of shelling out to `cargo`.
 const nativeCompileAvailable =
   existsSync(compilerBin) || existsSync(resolve(repoRoot, 'Cargo.toml'))
@@ -121,7 +121,7 @@ function ensureWasm(): (source: string, optsJson: string) => unknown {
   return wasmCompile
 }
 
-/** Compile a `.sui` file to its emitted JS module. Throws on compile error.
+/** Compile a `.sail` file to its emitted JS module. Throws on compile error.
  *  Pass `shadow: true` for component sources so the WASM emit matches the
  *  bin/FFI `.compiled.js` shape (which hardcodes shadow DOM) — without it the
  *  WASM/native default is `shadow:false` and `el.shadowRoot` comes back null. */
@@ -385,15 +385,15 @@ export interface SuiComponentVitestOptions {
  */
 /** The SUI source loader — deck-parity, one compiler, one controller path.
  *
- *  `.compiled.js` is the published-name convention for a sibling `.sui`; the
- *  `.sui` compiles in-process through the linked addon with the source's own
+ *  `.compiled.js` is the published-name convention for a sibling `.sail`; the
+ *  `.sail` compiles in-process through the linked addon with the source's own
  *  policy (`sail.config.json` walk-up), so the floor applies here exactly as it
  *  does in deck and the CLI, and an unmigrated component fails with the
  *  compiler's own message. A source's `<controller>` block is served as the
- *  virtual `<file>.sui.controller.ts` — the specifier deck and the CLI emit —
+ *  virtual `<file>.sail.controller.ts` — the specifier deck and the CLI emit —
  *  which vite transforms as TS and whose imports resolve like any module's.
  *
- *  Every suite that touches a `.sui` needs this, not just the component packs:
+ *  Every suite that touches a `.sail` needs this, not just the component packs:
  *  the runtime's integration tests compile real fixtures and import the result.
  */
 export function suiSourceLoaderPlugin(): Plugin {
@@ -402,21 +402,21 @@ export function suiSourceLoaderPlugin(): Plugin {
   enforce: 'pre' as const,
   resolveId(id: string, importer?: string) {
     if (!importer) return null
-    if (id.endsWith('.sui.controller.ts')) {
+    if (id.endsWith('.sail.controller.ts')) {
       return resolve(dirname(importer), id)
     }
     if (id.endsWith('.compiled.js')) {
       const artifact = resolve(dirname(importer), id)
-      const sui = artifact.replace(/\.compiled\.js$/, '.sui')
+      const sui = artifact.replace(/\.compiled\.js$/, '.sail')
       if (existsSync(sui)) return sui
     }
     return null
   },
   load(id: string) {
-    if (id.endsWith('.sui.controller.ts')) {
+    if (id.endsWith('.sail.controller.ts')) {
       const sui = id.slice(0, -'.controller.ts'.length)
-      const suiStem = basename(sui, '.sui')
-      // Same component-vs-route classification the main `.sui` branch below
+      const suiStem = basename(sui, '.sail')
+      // Same component-vs-route classification the main `.sail` branch below
       // uses. Without it every hyphenated component whose `<scope>` declares
       // `props:`/`variants:` alongside an inline `<controller>` block hits
       // the route/page rejection (`component_meta` is None, so a route's
@@ -436,12 +436,12 @@ export function suiSourceLoaderPlugin(): Plugin {
       if (!out.controller) throw new Error(`[sui] ${id}: no inline <controller> in ${sui}`)
       return out.controller
     }
-    if (!id.endsWith('.sui')) return null
+    if (!id.endsWith('.sail')) return null
     const source = readFileSync(id, 'utf8')
-    const stem = basename(id, '.sui')
+    const stem = basename(id, '.sail')
     const isComponent = stem.includes('-') && stem !== 'page' && stem !== 'index'
     // A source's controller is its `<controller>` block, served as the
-    // virtual `<file>.sui.controller.ts`. A sibling on disk is a compile
+    // virtual `<file>.sail.controller.ts`. A sibling on disk is a compile
     // error (`sail-paired-controller`), so there is nothing else to look for.
     const hasInline = /<controller[\s>]/.test(source)
     const setupUrl = hasInline ? `./${basename(id)}.controller.ts` : undefined

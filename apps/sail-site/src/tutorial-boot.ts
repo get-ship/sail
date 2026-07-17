@@ -89,7 +89,7 @@ export function extractController(source: string): string {
 
 /** Compile the lesson source and post the run into the preview iframe.
  *
- *  ONE source: the `.sui` file the student edits, `<controller>` block and all.
+ *  ONE source: the `.sail` file the student edits, `<controller>` block and all.
  *  The compiler resolves the block into the scope it checks the template
  *  against, so the playground rejects exactly what `sail-compiler` rejects, and
  *  an error's line number points at the row in the editor. The block's body is

@@ -12,6 +12,6 @@
     "verbatimModuleSyntax": true,
     "types": []
   },
-  "include": ["src/**/*.ts", "src/**/*.sui"],
+  "include": ["src/**/*.ts", "src/**/*.sail"],
   "exclude": ["node_modules", "test"]
 }

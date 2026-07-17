@@ -32,7 +32,7 @@ fn cli_builds_a_single_fixture() {
     }
     let tmp = tempfile::tempdir().unwrap();
     let input = manifest_dir()
-        .join("tests/fixtures/hello.sui");
+        .join("tests/fixtures/hello.sail");
     let out = tmp.path().to_path_buf();
     let status = Command::new(&bin)
         .args(["build"])
@@ -61,7 +61,7 @@ fn cli_renders_diagnostic_with_path() {
         return;
     }
     let tmp = tempfile::tempdir().unwrap();
-    let bad = tmp.path().join("bad.sui");
+    let bad = tmp.path().join("bad.sail");
     std::fs::write(&bad, r#"<p>{a = 1}</p>"#).unwrap();
     let out = tmp.path().join("out");
     let output = Command::new(&bin)
@@ -74,7 +74,7 @@ fn cli_renders_diagnostic_with_path() {
     assert!(!output.status.success(), "expected failure");
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("bad.sui"),
+        stderr.contains("bad.sail"),
         "stderr should mention the source path: {stderr}"
     );
     assert!(

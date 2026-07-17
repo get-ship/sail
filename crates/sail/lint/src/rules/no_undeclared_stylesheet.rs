@@ -16,7 +16,7 @@
 //! legs of the contract — declared files pass, undeclared ones fail.
 //!
 //! Exempt: pack files outside `src/` (test fixtures, vitest setup), the
-//! framework runtime, and pack-resident `<stem>.sui` host CSS (those
+//! framework runtime, and pack-resident `<stem>.sail` host CSS (those
 //! ARE compiler-known — they're typed through `element-skin.css`).
 
 use std::path::{Path, PathBuf};
@@ -75,7 +75,7 @@ pub fn check(path: &Path, _source: &str) -> Vec<Finding> {
     if path.is_dir() {
         return check_dir(path);
     }
-    // The dispatch hands us the `.sui` being compiled, never a directory — so an
+    // The dispatch hands us the `.sail` being compiled, never a directory — so an
     // is_dir() guard meant this rule COULD NOT FIRE. It was written, registered,
     // and dead: a stylesheet could be declared in the config and enforced by
     // nothing. Walk up to the package that owns this source (the nearest

@@ -12,7 +12,7 @@ pub use template::*;
 
 use crate::diagnostics::Span;
 
-/// The full IR for a single `.sui` source file.
+/// The full IR for a single `.sail` source file.
 #[derive(Debug, Clone)]
 pub struct Program {
     /// Props declared by the `<scope>` block (`props:` fields + variant axes).

@@ -1,4 +1,4 @@
-//! `sail-css-literals` — design-system *anti-smells* inside a `.sui`
+//! `sail-css-literals` — design-system *anti-smells* inside a `.sail`
 //! `<style>` block. These are the token-layer bypasses the primitives
 //! audit flagged 28 times and that were, until this rule, REVIEW-only.
 //!
@@ -44,7 +44,7 @@
 //! `sail-icon`'s `oklab` color-space, and the `var(--token, fallback)`
 //! patterns in `sail-toast`/`sail-card`/`sail-tab-panel`/`sail-collapsible`/
 //! `sail-alert`. Promoting this rule to `Error` today would fail every
-//! `.sui` compile that touches those primitives.
+//! `.sail` compile that touches those primitives.
 //!
 //! **This rule FLIPS TO `Error` once Tier B clears the existing
 //! violations** (the tone-ramp migration + fallback strip described in
@@ -541,7 +541,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn run(src: &str) -> Vec<Finding> {
-        check(&PathBuf::from("/fake/foo.sui"), src)
+        check(&PathBuf::from("/fake/foo.sail"), src)
     }
 
     // --- Anti-smell 1: inline color-mix() ---

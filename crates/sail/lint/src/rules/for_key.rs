@@ -208,7 +208,7 @@ mod tests {
     use super::*;
 
     fn lint(src: &str) -> Vec<Finding> {
-        check(Path::new("test.sui"), src)
+        check(Path::new("test.sail"), src)
     }
 
     #[test]

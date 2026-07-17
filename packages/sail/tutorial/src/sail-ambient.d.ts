@@ -1,9 +1,9 @@
-// Ambient module declarations for the tutorial's `.sui` templates.
+// Ambient module declarations for the tutorial's `.sail` templates.
 //
 // WHY THIS EXISTS: each lesson's `controller.ts` does
-//   `import type { Scope } from './template.sui'`
-// where `template.sui` is a SUI template file (a custom file extension that
-// the sail-compiler would normally emit an adjacent `<stem>.sui.d.ts` for —
+//   `import type { Scope } from './template.sail'`
+// where `template.sail` is a SUI template file (a custom file extension that
+// the sail-compiler would normally emit an adjacent `<stem>.sail.d.ts` for —
 // see `scripts/gen-component-types.mjs` and the component packs under
 // `packages/components/sail/*`). The tutorial is a docs asset, not a
 // component pack, and the compiler is a Rust binary that isn't required
@@ -21,7 +21,7 @@
 // is therefore a precise-enough stand-in without pretending the compiler
 // generated per-binding types we don't have.
 
-declare module '*.sui' {
+declare module '*.sail' {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   export type Scope = Record<string, unknown>;
 }

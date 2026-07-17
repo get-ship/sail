@@ -147,7 +147,7 @@ Concrete pattern — a `/agents/<id>` view:
 
 ```ts
 <controller>
-// page.sui — inline <controller> block
+// page.sail — inline <controller> block
 import { derived } from '@ship/sail-runtime'
 import { defineRoutes } from '@ship/sail-runtime/route'
 
@@ -161,7 +161,7 @@ export default controller(({ agent }) => {
 ```
 
 ```html
-<!-- page.sui -->
+<!-- page.sail -->
 <data name="agent" source="ship.agents.detail({id: route.params.id()})" live />
 
 <h1>{name()}</h1>

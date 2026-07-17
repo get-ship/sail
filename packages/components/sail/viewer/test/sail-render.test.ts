@@ -1,7 +1,7 @@
 // Slice 1 — behavioral spec for <sail-render>, THE engine primitive.
 //
 // TESTS-FIRST / RED: this file imports the not-yet-authored
-// `sail-render.sui` + `sail-render.controller` (Slice 1 source). They do not
+// `sail-render.sail` + `sail-render.controller` (Slice 1 source). They do not
 // exist yet, so the suite is RED by construction — no impl is written here.
 //
 // The whole pack is framework-pure: `sail-render` never imports a wasm URL or
@@ -24,14 +24,14 @@ import { renderComponent } from '@ship/test-setup'
 import { compileSui } from '@ship/sail-dom/test-utils'
 
 // The controller reaches for the engine's own modules, which only the module
-// graph can resolve — import it as the virtual `<file>.sui.controller.ts` the
+// graph can resolve — import it as the virtual `<file>.sail.controller.ts` the
 // compiler emits, rather than letting the harness eval the block in isolation.
-import renderController from '../src/sail-render/sail-render.sui.controller.ts'
+import renderController from '../src/sail-render/sail-render.sail.controller.ts'
 
 // RED: these two modules are the Slice-1 deliverable; they do not exist yet.
 import '@ship/sail-primitives' // register the composed sail-error-boundary / sail-alert / sail-code
 
-const SRC = readFileSync(resolve(__dirname, '../src/sail-render/sail-render.sui'), 'utf8')
+const SRC = readFileSync(resolve(__dirname, '../src/sail-render/sail-render.sail'), 'utf8')
 const TAG = 'sail-render'
 
 // ---------------------------------------------------------------------------
@@ -63,7 +63,7 @@ function makeBoundCompile(): (source: string, opts?: Record<string, unknown>) =>
   }
 }
 
-// A trivially-valid view-mode `.sui` source: a static element the engine
+// A trivially-valid view-mode `.sail` source: a static element the engine
 // `__mount`s into its shadow stage. Distinct marker text so we assert presence.
 const GOOD_VIEW = `<div data-test="specimen">hello-from-view</div>`
 const GOOD_VIEW_ALT = `<section data-test="specimen-alt">a-different-render</section>`
@@ -71,7 +71,7 @@ const GOOD_VIEW_ALT = `<section data-test="specimen-alt">a-different-render</sec
 // branch (message + line:col + caret), and the last-good-on-error policy.
 const BAD_VIEW = `<div data-test="broken"`
 
-// A view-mode `.sui` whose `setup` throws synchronously — the secondary
+// A view-mode `.sail` whose `setup` throws synchronously — the secondary
 // engine try/catch must render a panel, not a blank stage.
 const SETUP_MARKER = '__viewer_setup__'
 const throwingSetup = () => {
@@ -118,7 +118,7 @@ describe('<sail-render> — registration + shell', () => {
   })
 })
 
-describe('<sail-render> — VIEW-mode (prop:source raw .sui)', () => {
+describe('<sail-render> — VIEW-mode (prop:source raw .sail)', () => {
   it('compiles + mounts the raw source into the engine shadow stage', async () => {
     const c = mountRender({ mode: 'source' }, { compile: makeBoundCompile(), source: GOOD_VIEW })
     await c.flush()

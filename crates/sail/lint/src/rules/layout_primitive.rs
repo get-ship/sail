@@ -337,7 +337,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn run(src: &str) -> Vec<Finding> {
-        check(&PathBuf::from("/fake/foo.sui"), src)
+        check(&PathBuf::from("/fake/foo.sail"), src)
     }
 
     #[test]
@@ -404,7 +404,7 @@ mod tests {
     #[test]
     fn host_bare_selector_passes() {
         // The custom element's own `:host` is the host itself — not a
-        // hand-rolled sub-stack. Pattern from `sail-input.sui:85`.
+        // hand-rolled sub-stack. Pattern from `sail-input.sail:85`.
         let f = run("<style>:host { display: inline-flex; flex-direction: column; gap: var(--space-1); }</style>");
         assert!(f.is_empty(), "host should be exempt: {f:?}");
     }

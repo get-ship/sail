@@ -25,7 +25,7 @@ fn load_template(step: &str, variant: &str) -> Option<String> {
         .and_then(Path::parent)
         .expect("workspace root");
     let p = root.join(format!(
-        "apps/site/tutorial-examples/{step}/{variant}/template.sui"
+        "apps/site/tutorial-examples/{step}/{variant}/template.sail"
     ));
     // The tutorial fixtures are docs-SITE content (the site's interactive
     // playground), which lives OUTSIDE the framework-boundary repo. When

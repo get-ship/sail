@@ -266,8 +266,8 @@ impl BundleLayout {
     ///   (defaults to `["views"]`; a host serving more buckets overrides
     ///   it) and look for a
     ///   `<bucket>/<name>/<view_leaf>` artifact. The leaf is
-    ///   `cfg.view_leaf` (defaults to `page.sui`) — one convention for
-    ///   all buckets, fixing the #254 `index.sui` vs `page.sui` divergence.
+    ///   `cfg.view_leaf` (defaults to `page.sail`) — one convention for
+    ///   all buckets, fixing the #254 `index.sail` vs `page.sail` divergence.
     /// - If `cfg.` is set, its `root` is treated as a
     ///   first-party view root too: `<root>/<name>/<view_leaf>`. The
     ///   host (e.g. ship) declares its own first-party app layout in
@@ -278,7 +278,7 @@ impl BundleLayout {
     fn discover_view_bundles(&self) -> Vec<BundleTarget> {
         let mut out = Vec::new();
         let mut seen = HashSet::new();
-        let leaf = self.cfg.view_leaf.as_deref().unwrap_or("page.sui");
+        let leaf = self.cfg.view_leaf.as_deref().unwrap_or("page.sail");
         for dir in self.view_bucket_dirs() {
             let Ok(entries) = std::fs::read_dir(&dir) else { continue };
             for e in entries.flatten() {
@@ -386,7 +386,7 @@ mod tests {
         let tmp = tempdir().unwrap();
         let root = tmp.path().to_path_buf();
         // A view.
-        write(&root.join("views/git/page.sui"), "<div>git</div>\n");
+        write(&root.join("views/git/page.sail"), "<div>git</div>\n");
         // The framework singleton must be node-resolvable from the repo root for
         // its target to appear — install a stub `@ship/sail-runtime`.
         write(

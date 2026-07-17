@@ -32,9 +32,9 @@ use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
 fn opts(name: &str) -> CompileOpts {
     CompileOpts {
         route_params: None,
-        setup_url: Some(format!("./{name}.sui.controller.ts")),
+        setup_url: Some(format!("./{name}.sail.controller.ts")),
         mode: CompileMode::Component,
-        source_path: Some(PathBuf::from(format!("/x/{name}.sui"))),
+        source_path: Some(PathBuf::from(format!("/x/{name}.sail"))),
         component_meta: Some(ComponentMeta { name: name.to_string() }),
         emit_dts: false,
         emit_component_imports: false,
@@ -52,7 +52,7 @@ const SUI_CANVAS_COLLISION_SHAPE: &str = r#"<scope>
 </scope>
 <controller>
 import { controller, signal, derived, ref } from '@ship/sail-runtime'
-import type { Scope } from './sail-canvas.sui'
+import type { Scope } from './sail-canvas.sail'
 
 export default controller(({ value }: Scope) => {
   const viewportEl = ref<HTMLDivElement>(null)

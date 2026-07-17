@@ -94,7 +94,7 @@ describe('setup() — the whole controller surface', () => {
 
   it('setup-created signals are mutated directly, no lifecycle/proxy plumbing needed', () => {
     // Regression precursor: ship-ui-studio's old `mount()` section did
-    // `state.sui = catalog.sui` against signals the setup: factory
+    // `state.sail = catalog.sail` against signals the setup: factory
     // created, working around an empty-stateKeys writable-proxy bug.
     // There is no proxy anymore — a controller with no <state>
     // declarations mutates its own setup-created signals the same way

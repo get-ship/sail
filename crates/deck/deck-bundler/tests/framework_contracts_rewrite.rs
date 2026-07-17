@@ -52,7 +52,7 @@ async fn framework_contracts_css_emits_hashed_woff2_assets() {
     // `@ship/tokens` map points at the workspace source). The entry
     // file uses a unique tag suffix so concurrent test runs don't
     // collide. A guard removes it on drop.
-    let entry_path = repo_root.join("app/routes/fonts-smoke.sui");
+    let entry_path = repo_root.join("app/routes/fonts-smoke.sail");
     write(
         &entry_path,
         r#"<controller>

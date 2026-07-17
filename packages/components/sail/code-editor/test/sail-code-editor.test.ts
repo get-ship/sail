@@ -13,15 +13,15 @@ import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderComponent } from '@ship/test-setup'
 
-import editorController from '../src/sail-code-editor/sail-code-editor.sui.controller.ts'
+import editorController from '../src/sail-code-editor/sail-code-editor.sail.controller.ts'
 import '../src/sail-code-editor/sail-code-editor.compiled.js'
 
 const SOURCE = readFileSync(
-  new URL('../src/sail-code-editor/sail-code-editor.sui', import.meta.url),
+  new URL('../src/sail-code-editor/sail-code-editor.sail', import.meta.url),
   'utf8',
 )
 const SOURCE_PATH = fileURLToPath(
-  new URL('../src/sail-code-editor/sail-code-editor.sui', import.meta.url),
+  new URL('../src/sail-code-editor/sail-code-editor.sail', import.meta.url),
 )
 
 interface LiveMount {

@@ -2,7 +2,7 @@
 //!   - `resolve_id`: redirect `./X.compiled.js` siblings to a virtual id,
 //!     externalize the framework singletons, re-anchor `@ship/<pkg>` to
 //!     workspace `src/`, resolve `@sail-tag/<tag>` to the component source.
-//!   - `load`: compile `.sui` (and `.compiled.js`→sibling `.sui`) via
+//!   - `load`: compile `.sail` (and `.compiled.js`→sibling `.sail`) via
 //!     sail-compiler, returning JS.
 
 use std::borrow::Cow;
@@ -35,20 +35,20 @@ const SINGLETONS: [&str; 2] = ["@ship/sail-runtime", "@ship/sail-dom"];
 /// convention: never read/written on disk).
 const SAIL_TAG_NOOP: &str = "\0sail-tag-noop";
 
-/// Detect compile mode for a `.sui` file using the HTML custom-element tag-name
+/// Detect compile mode for a `.sail` file using the HTML custom-element tag-name
 /// rule: a valid custom element tag MUST contain a hyphen (HTML spec §4.13.3).
-/// Every component `.sui` file uses its stem as the tag name (`sail-button`,
-/// `sail-rail-item`) and therefore contains a hyphen. Every view uses `page.sui`
-/// or `index.sui` — no hyphen. So the rule is exact and path-structure-free:
+/// Every component `.sail` file uses its stem as the tag name (`sail-button`,
+/// `sail-rail-item`) and therefore contains a hyphen. Every view uses `page.sail`
+/// or `index.sail` — no hyphen. So the rule is exact and path-structure-free:
 ///
 ///   stem contains `'-'` AND stem ∉ {"page", "index"} → Component
 ///   otherwise → View
 ///
 /// This replaces the old `stem == parent_dir` heuristic, which missed all
-/// GROUPED-DIRECTORY components (e.g. `sail-rail/sail-rail-item.sui`,
-/// `sail-command-bar/sail-command-chat.sui`) and required a special-case for
+/// GROUPED-DIRECTORY components (e.g. `sail-rail/sail-rail-item.sail`,
+/// `sail-command-bar/sail-command-chat.sail`) and required a special-case for
 /// `packages/components/ui-components/src`. That shortcut is now subsumed by
-/// this rule (every `.sui` in that tree has a hyphenated stem) and is removed.
+/// this rule (every `.sail` in that tree has a hyphenated stem) and is removed.
 pub(crate) fn detect_mode(abs: &Path, _repo_root: &Path) -> (CompileMode, String) {
     let stem = abs.file_stem().and_then(|s| s.to_str()).unwrap_or("").to_string();
     let mode = if stem.contains('-') && stem != "page" && stem != "index" {
@@ -75,17 +75,17 @@ pub(crate) fn normalize(p: &Path) -> PathBuf {
 
 /// SUI compile plugin — `resolve_id` redirects `*.compiled.js` siblings to a
 /// virtual id and re-anchors `@ship/<pkg>` to workspace `src/`; `load` compiles
-/// the sibling `.sui` via sail-compiler. Reused by the app build (`app.rs`) so
-/// the SPA graph compiles its own `.sui` in-process — one compile path, no
+/// the sibling `.sail` via sail-compiler. Reused by the app build (`app.rs`) so
+/// the SPA graph compiles its own `.sail` in-process — one compile path, no
 /// on-disk `.compiled.js` pre-step.
 #[derive(Debug)]
 pub struct SailPlugin {
     pub repo_root: PathBuf,
-    /// View builds opt in: each `.sui` compiled in this build emits
+    /// View builds opt in: each `.sail` compiled in this build emits
     /// `@sail-tag/<tag>` registration imports (the per-view resolver). Off for
     /// framework/app builds.
     pub emit_component_imports: bool,
-    /// `<tag>` → component source `.sui`, for resolving `@sail-tag/<tag>`.
+    /// `<tag>` → component source `.sail`, for resolving `@sail-tag/<tag>`.
     /// Empty when `emit_component_imports` is false.
     pub component_index: Arc<HashMap<String, PathBuf>>,
     /// `<tag>` → providing-pack name, for every tag a declared-`packs` scope
@@ -120,7 +120,7 @@ impl ResolverIndex {
 }
 
 impl SailPlugin {
-    /// Compile a `.sui` to JS via `sail_compiler::compile` IN-PROCESS (#255):
+    /// Compile a `.sail` to JS via `sail_compiler::compile` IN-PROCESS (#255):
     /// the compiler is the linked crate, not a spawned binary — no temp dir, no
     /// file roundtrip, no version drift, no flag that a stale binary can reject.
     fn compile(&self, sui: &Path) -> Result<String> {
@@ -156,7 +156,7 @@ impl Plugin for SailPlugin {
             }));
         }
         // `@sail-tag/<tag>` — the per-view resolver. Map to the component's
-        // source `.sui` (so it compiles into the view bundle); an unknown tag
+        // source `.sail` (so it compiles into the view bundle); an unknown tag
         // (view-private, or no CEM yet) → virtual no-op. Emitted only under
         // `--emit-component-imports`.
         if let Some(tag) = spec.strip_prefix("@sail-tag/") {
@@ -194,13 +194,13 @@ impl Plugin for SailPlugin {
                 }
             }));
         }
-        // `<file>.sui.controller.ts` → virtual id: the inline `<controller>`
-        // block of the named `.sui`, served by `load` (SFC — nothing on disk).
+        // `<file>.sail.controller.ts` → virtual id: the inline `<controller>`
+        // block of the named `.sail`, served by `load` (SFC — nothing on disk).
         // Must be redirected here: the native resolver would fail on the
-        // nonexistent file. Relative (`./page.sui.controller.ts`, what the
-        // compiled `.sui` module imports) and absolute (the synthetic client
+        // nonexistent file. Relative (`./page.sail.controller.ts`, what the
+        // compiled `.sail` module imports) and absolute (the synthetic client
         // emit) shapes both land on the normalized absolute id.
-        if spec.ends_with(".sui.controller.ts") {
+        if spec.ends_with(".sail.controller.ts") {
             if Path::new(spec).is_absolute() {
                 return Ok(Some(HookResolveIdOutput::from_id(
                     normalize(Path::new(spec)).to_string_lossy().to_string(),
@@ -212,7 +212,7 @@ impl Plugin for SailPlugin {
                 return Ok(Some(HookResolveIdOutput::from_id(abs.to_string_lossy().to_string())));
             }
         }
-        // `*.compiled.js` → virtual id; `load` compiles the sibling `.sui`. The
+        // `*.compiled.js` → virtual id; `load` compiles the sibling `.sail`. The
         // `.compiled.js` is synthetic (never on disk), so we must redirect here
         // rather than fall through to Rolldown's native resolver, which would
         // fail to resolve a nonexistent file. Two shapes reach here: relative
@@ -310,12 +310,12 @@ impl Plugin for SailPlugin {
                 ..Default::default()
             }));
         }
-        // Virtual inline-controller module (`<file>.sui.controller.ts`): the
-        // `<controller>` block extracted from the named `.sui`, returned as TS
+        // Virtual inline-controller module (`<file>.sail.controller.ts`): the
+        // `<controller>` block extracted from the named `.sail`, returned as TS
         // so Rolldown's transform strips the types. Checked BEFORE the generic
         // `.ts` read below — the file never exists on disk.
         if let Some(base) = id.strip_suffix(".controller.ts")
-            && base.ends_with(".sui")
+            && base.ends_with(".sail")
         {
             let sui = Path::new(base);
             let source = std::fs::read_to_string(sui).map_err(|e| {
@@ -337,8 +337,8 @@ impl Plugin for SailPlugin {
             }));
         }
         let sui: Option<PathBuf> = if let Some(base) = id.strip_suffix(".compiled.js") {
-            Some(PathBuf::from(format!("{base}.sui")))
-        } else if id.ends_with(".sui") {
+            Some(PathBuf::from(format!("{base}.sail")))
+        } else if id.ends_with(".sail") {
             Some(PathBuf::from(id))
         } else {
             None
@@ -423,19 +423,19 @@ mod tests {
     #[test]
     fn grouped_dir_component_detected_as_component() {
         assert_eq!(
-            detect("/repo/apps/shell/src/components/sail-rail/sail-rail-item.sui"),
+            detect("/repo/apps/shell/src/components/sail-rail/sail-rail-item.sail"),
             CompileMode::Component,
-            "sail-rail-item.sui must be a Component (hyphenated stem)"
+            "sail-rail-item.sail must be a Component (hyphenated stem)"
         );
     }
 
-    /// Views use page.sui (no hyphen in stem).
+    /// Views use page.sail (no hyphen in stem).
     #[test]
     fn page_sui_detected_as_view() {
         assert_eq!(
-            detect("/repo/views/agents/page.sui"),
+            detect("/repo/views/agents/page.sail"),
             CompileMode::View,
-            "page.sui must be a View"
+            "page.sail must be a View"
         );
     }
 
@@ -443,20 +443,20 @@ mod tests {
     #[test]
     fn same_name_component_detected_as_component() {
         assert_eq!(
-            detect("/repo/packages/components/sail/primitives/src/sail-button/sail-button.sui"),
+            detect("/repo/packages/components/sail/primitives/src/sail-button/sail-button.sail"),
             CompileMode::Component,
-            "sail-button/sail-button.sui must be a Component"
+            "sail-button/sail-button.sail must be a Component"
         );
     }
 
-    /// index.sui is a view even though it could theoretically have a hyphen
+    /// index.sail is a view even though it could theoretically have a hyphen
     /// (no known case, but the exclusion is correct by spec).
     #[test]
     fn index_sui_detected_as_view() {
         assert_eq!(
-            detect("/repo/.ship/views/component-viewer/index.sui"),
+            detect("/repo/.ship/views/component-viewer/index.sail"),
             CompileMode::View,
-            "index.sui must be a View"
+            "index.sail must be a View"
         );
     }
 
@@ -464,7 +464,7 @@ mod tests {
     #[test]
     fn detect_mode_returns_stem_as_tag() {
         let (_, tag) = detect_mode(
-            Path::new("/repo/apps/shell/src/components/sail-command-bar/sail-command-chat.sui"),
+            Path::new("/repo/apps/shell/src/components/sail-command-bar/sail-command-chat.sail"),
             &fake_root(),
         );
         assert_eq!(tag, "sail-command-chat");
@@ -485,12 +485,12 @@ mod tests {
             r#"{"name":"@ship/sail-primitives"}"#,
         );
         write(
-            &root.join("packages/primitives/src/sail-button/sail-button.sui"),
+            &root.join("packages/primitives/src/sail-button/sail-button.sail"),
             "<button><slot></slot></button>\n",
         );
         write(&root.join("packages/agents/package.json"), r#"{"name":"@ship/agents"}"#);
         write(
-            &root.join("packages/agents/src/ship-agent-card/ship-agent-card.sui"),
+            &root.join("packages/agents/src/ship-agent-card/ship-agent-card.sail"),
             "<article><slot></slot></article>\n",
         );
         tmp
@@ -548,7 +548,7 @@ mod tests {
 
         // A component appears mid-session (what an author does under `deck dev`).
         write(
-            &root.join("packages/primitives/src/sail-late/sail-late.sui"),
+            &root.join("packages/primitives/src/sail-late/sail-late.sail"),
             "<span><slot></slot></span>\n",
         );
 
@@ -570,7 +570,7 @@ mod tests {
     }
 }
 
-/// Cached `<tag>` → source `.sui` index for a repo (the per-view resolver's
+/// Cached `<tag>` → source `.sail` index for a repo (the per-view resolver's
 /// lookup). Memoized per `(repo_root, packs)` so a one-shot build walks the CEM
 /// once. Under `deck dev`'s watcher a component can be ADDED/REMOVED mid-session,
 /// so the watcher calls [`invalidate_component_index`] on a structural change to

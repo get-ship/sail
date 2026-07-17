@@ -1,4 +1,4 @@
-// A small, dependency-free syntax highlighter for the docs — covers the .sui /
+// A small, dependency-free syntax highlighter for the docs — covers the .sail /
 // HTML / TS we show. It escapes all source text and only ever emits its own
 // <span class="tok-*"> wrappers (no injection), which the codeblock styles via
 // the --syntax-* tokens. A left-to-right single-pass tokenizer, so matches never

@@ -1,6 +1,6 @@
 //! Integration tests for the synthetic emitter (`emit::synthetic`).
 //!
-//! These exercise the emitter as a pure function — parse a `.sui`, run
+//! These exercise the emitter as a pure function — parse a `.sail`, run
 //! `emit_synthetic`, assert structural properties of the emitted controller
 //! + render. The TS-level proof (tsgo-green + typo caught + jsdom mount)
 //! lives alongside the deck-conformance app; these lock the *shape* the
@@ -25,7 +25,7 @@ const SHIP_MANIFEST: &str = r#"{
 }"#;
 
 fn synth(src: &str, manifest_src: &str, mode: CompileMode) -> (String, String) {
-    let program = parse(src).expect("parse .sui");
+    let program = parse(src).expect("parse .sail");
     let manifest = AppManifest::parse(manifest_src).expect("parse manifest");
     let out = emit_synthetic(&program, &manifest, None, "./page.synthetic.controller.ts", mode, None)
         .expect("emit_synthetic");

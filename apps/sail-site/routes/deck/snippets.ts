@@ -5,7 +5,7 @@
 
 export const quickstart = `my-app/
 └─ routes/
-   └─ page.sui        <h1>Hello, deck.</h1>
+   └─ page.sail        <h1>Hello, deck.</h1>
 
 $ deck dev
   ▸ serving http://127.0.0.1:7878`

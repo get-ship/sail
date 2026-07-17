@@ -1,6 +1,6 @@
 //! `cargo run -p sail-lint --example check -- <path>` — lint one file
 //! from CLI. Dispatches by extension: `*.controller.ts` runs the
-//! controller rules, `*.sui` runs the template rules.
+//! controller rules, `*.sail` runs the template rules.
 
 fn main() {
     let path_str = std::env::args().nth(1).expect("usage: check <path>");

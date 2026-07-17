@@ -5,7 +5,7 @@
 #   1. `deck routes --shell-root <spa>` → exit 0, prints route count
 #   2. `deck build --shell-root <spa>` → exit 0, produces dist/
 #   3. `deck build-assets` → exit 0, framework bundles present
-#   4. `deck scaffold view <tmpname>` → exit 0, emits page.sui
+#   4. `deck scaffold view <tmpname>` → exit 0, emits page.sail
 #
 # Commands requiring a running daemon are skipped with a note.
 # This script runs ship-free: no shipd, no SHIP_HOME, no auth.
@@ -81,11 +81,11 @@ cd "$ROOT"
 OUT=$("$DECK" scaffold view "$SCAFFOLD_NAME" 2>&1) \
   || fail "deck scaffold view $SCAFFOLD_NAME exited non-zero: $OUT"
 
-PAGE="$ROOT/views/$SCAFFOLD_NAME/page.sui"
+PAGE="$ROOT/views/$SCAFFOLD_NAME/page.sail"
 MANIFEST_FILE="$ROOT/views/$SCAFFOLD_NAME/manifest.jsonc"
-[ -f "$PAGE" ] || fail "deck scaffold view: page.sui not emitted at $PAGE"
-grep -q "div\|h1\|<" "$PAGE" || fail "deck scaffold view: page.sui appears empty"
-ok "deck scaffold view $SCAFFOLD_NAME → page.sui emitted"
+[ -f "$PAGE" ] || fail "deck scaffold view: page.sail not emitted at $PAGE"
+grep -q "div\|h1\|<" "$PAGE" || fail "deck scaffold view: page.sail appears empty"
+ok "deck scaffold view $SCAFFOLD_NAME → page.sail emitted"
 
 [ -f "$MANIFEST_FILE" ] || fail "deck scaffold view: manifest.jsonc not emitted"
 grep -q "$SCAFFOLD_NAME" "$MANIFEST_FILE" || fail "deck scaffold view: manifest.jsonc missing view name"

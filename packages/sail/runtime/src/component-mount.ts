@@ -3,7 +3,7 @@
 // `component(setup)` — the single-argument (function) overload — wraps a setup
 // function as the default export of a compiled *tagless* SUI component: a
 // component that is MOUNTED into a host node rather than REGISTERED as a custom
-// element. The sail-compiler emits every tagless `.sui` (a deck page, the
+// element. The sail-compiler emits every tagless `.sail` (a deck page, the
 // synthetic SSR render) as:
 //
 //   import { component, … } from "@ship/sail-runtime"

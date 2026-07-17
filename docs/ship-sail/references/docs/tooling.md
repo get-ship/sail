@@ -2,12 +2,12 @@
 group: Views
 order: 6
 title: SUI — Tooling
-description: The toolchain from .sui source to a live hot-reloaded view.
+description: The toolchain from .sail source to a live hot-reloaded view.
 ---
 
 # SUI — Tooling
 
-The chain from `.sui` source on disk to a live, hot-reloaded view in the browser passes through six tools. Each maps to one entry point.
+The chain from `.sail` source on disk to a live, hot-reloaded view in the browser passes through six tools. Each maps to one entry point.
 
 ## `sail-compiler` — the Rust ahead-of-time compiler
 
@@ -17,13 +17,13 @@ The chain from `.sui` source on disk to a live, hot-reloaded view in the browser
 ```sh
 # Compile a single file. Emits to the project mirror tree
 # (<repo-root>/.ship/sail-out/<src-rel>/<stem>.compiled.js by default):
-cargo run -q -p sail-compiler -- build views/home/page.sui
+cargo run -q -p sail-compiler -- build views/home/page.sail
 
 # Compile a directory recursively, into a single output dir (legacy <stem>.js):
 cargo run -q -p sail-compiler -- build views --out target/sail-debug --clean
 
 # Component mode — implied by --component-name:
-cargo run -q -p sail-compiler -- build packages/components/ui-components/src/sail-button/sail-button.sui \
+cargo run -q -p sail-compiler -- build packages/components/ui-components/src/sail-button/sail-button.sail \
   --component-name sail-button \
   --styles packages/components/ui-components/src/sail-button/sail-button.css
 ```
@@ -35,7 +35,7 @@ Flags (from `crates/sail/compiler/src/bin/sail-compiler.rs`):
 | `--out <dir>` | Single output directory (legacy `<stem>.js` naming). When omitted, emits to `<repo-root>/.ship/sail-out/<src-rel>/<stem>.compiled.js`. |
 | `--clean` | Remove each source file's mirror directory (or `--out` directory) before emitting. Idempotent rebuilds. |
 | `--mode <view\|component\|auto>` | Override mode (otherwise auto-detected from `--component-name`). |
-| `--no-dts` | Suppress `.sui.d.ts` emission. |
+| `--no-dts` | Suppress `.sail.d.ts` emission. |
 | `--no-ssr` | Suppress `.ssr.html` emission (e.g. island bundles). |
 | `--styles <file>` | Prepend a CSS file as a `<style>` block. Component sources only. |
 | `--component-name <tag>` | Set the custom element tag name; implies component mode. |
@@ -46,10 +46,10 @@ The binary is also exposed as a `cdylib` (`crate-type = ["lib", "cdylib"]` in `C
 
 There is one bundler: the in-process Rust Rolldown bundler in `crates/deck/deck-bundler/` (#163, #167, #220). The retired `@ship/sail-build` (esbuild, one package at a time) and the old `packages/deck/bundler/index.ts` Bun worker are both gone — components are no longer pre-compiled to on-disk `dist/` bundles per package.
 
-**How it works.** A Rust Rolldown plugin (`SuiPlugin`) compiles each `.sui` via `sail-compiler` in its `load` hook — no bun worker, no subprocess, no `.compiled.js` pre-step. Membership is **traced**, not declared: each entry (a view, an app, a marketing/arcade page) is bundled by following its imports and template tags.
+**How it works.** A Rust Rolldown plugin (`SuiPlugin`) compiles each `.sail` via `sail-compiler` in its `load` hook — no bun worker, no subprocess, no `.compiled.js` pre-step. Membership is **traced**, not declared: each entry (a view, an app, a marketing/arcade page) is bundled by following its imports and template tags.
 
 **Two modes**, wired to `DaemonMode`:
-- **Development** — the daemon serves compiled `.sui` as un-bundled native ESM; HMR re-compiles only the edited component.
+- **Development** — the daemon serves compiled `.sail` as un-bundled native ESM; HMR re-compiles only the edited component.
 - **Production** — Rolldown emits per-entry traced chunks with `sail-runtime`/`sail-dom` as the shared external, immutable-cached.
 
 **Baking.** `cargo run -p deck-cli -- build-assets` (aliased `bun run build:bundles`) bakes the framework singletons + the `sail-components` umbrella + per-component islands (`<bundle separate />`) + per-view bundles + the site's `sail-marketing.js` / `sail-arcade.js` into `crates/deck/deck-core/assets/` and `.deck/` — the same on-disk asset trees the release binary `include_str!`s. It's what `smoke-deploy.sh` runs and what `just cem` invokes.
@@ -61,9 +61,9 @@ analysis facade — **one grammar, no TypeScript, no WASM, no Node**. The same
 Rust intelligence serves three consumers:
 
 - **Claude Code** — `.lsp.json` at the repo root points the editor's LSP
-  client at the `sail-lsp` binary (`extensionToLanguage: { ".sui": "sui" }`).
+  client at the `sail-lsp` binary (`extensionToLanguage: { ".sail": "sui" }`).
 - **opencode** — add to the (user-local, gitignored) `opencode.json`:
-  `"lsp": { "sui": { "command": ["sail-lsp"], "extensions": [".sui"] } }`. The
+  `"lsp": { "sui": { "command": ["sail-lsp"], "extensions": [".sail"] } }`. The
   binary ignores extra args, so opencode's `--stdio` convention is harmless.
 - **VS Code / any editor** — `apps/vscode` launches `sail-lsp` over stdio
   (override with the `sui.serverPath` setting); any LSP-capable editor maps the
@@ -80,12 +80,12 @@ inline `<controller>` block — no `typescript` package), and an IR walk for the
 tag/event dependency surface (`sail_compiler::analyze`).
 
 > **Retired:** the former TypeScript LSP (`packages/deck/lsp`, ex-`ship-set-lsp`)
-> — a fork of the `.sui` grammar that also bundled the full `typescript` package
+> — a fork of the `.sail` grammar that also bundled the full `typescript` package
 > — has been deleted. Its grammar duplicated `sail-compiler`; editors use the
 > `sail-lsp` binary, and the docs-playground browser analyzer (`packages/deck/lsp-browser`)
 > calls the WASM `analyze`. One grammar, no TS fork.
 
-VS Code: `apps/vscode/` auto-launches `sail-lsp` on `.sui` open. Other editors map
+VS Code: `apps/vscode/` auto-launches `sail-lsp` on `.sail` open. Other editors map
 the `sui` language ID to the `sail-lsp` binary over stdio.
 
 ## Per-edit lint and compile loop
@@ -95,10 +95,10 @@ MCP is removed from this project. The verification loop is the binary. Run both 
 ```sh
 # Fast per-edit lint (grammar, missing bindings, unstable keys, purity,
 # css tokens, prop values). Exits 1 on findings — wire it into your loop:
-cargo run -p sail-lint --example check -- views/hello/page.sui
+cargo run -p sail-lint --example check -- views/hello/page.sail
 
 # Full compile (lint folds into the diagnostic stream; aborts on errors):
-cargo run -p sail-compiler -- build views/hello/page.sui
+cargo run -p sail-compiler -- build views/hello/page.sail
 ```
 
 ## UI Studio — the in-browser catalog
@@ -107,8 +107,8 @@ cargo run -p sail-compiler -- build views/hello/page.sui
 
 | File | Owns |
 |---|---|
-| `page.sui` (with its inline `<controller>` block) | Catalog index — search, filter (All / Components / Views), grouped nav |
-| `[name]/page.sui` (with its inline `<controller>` block) | Detail page — exercise prop knobs, slot compositions, deep-link state, render matrix |
+| `page.sail` (with its inline `<controller>` block) | Catalog index — search, filter (All / Components / Views), grouped nav |
+| `[name]/page.sail` (with its inline `<controller>` block) | Detail page — exercise prop knobs, slot compositions, deep-link state, render matrix |
 | `catalog.ts` | The component / view registry the index reads |
 | `[name]/matrix.ts` | Render-matrix configurations (prop × value grid) |
 | `[name]/slot-compositions.ts` | Slot composition presets |
@@ -119,7 +119,7 @@ Use it to find a component, browse its props (including enum values from `<prop 
 
 ## Devtools panes — in-page introspection
 
-`packages/components/ui-components/src/sail-devtools/` ships five panes that share a separate bundle (opted in via `<bundle separate />` in each `.sui` source). Each is a `.sui` file with its own inline `<controller>` block, lazy-loaded on first mount via the `sail-devtools.js` bundle.
+`packages/components/ui-components/src/sail-devtools/` ships five panes that share a separate bundle (opted in via `<bundle separate />` in each `.sail` source). Each is a `.sail` file with its own inline `<controller>` block, lazy-loaded on first mount via the `sail-devtools.js` bundle.
 
 | Tag | What it shows |
 |---|---|
@@ -177,7 +177,7 @@ Both scaffolds emit the manifest / template / controller / style files documente
 ```sh
 just dev                              # daemon (in-process Rolldown bundler)
 # (optional) just shell-dev          # vite outer shell at :3200, proxies to daemon
-# edit views/home/page.sui or controller.ts
+# edit views/home/page.sail or controller.ts
 #  → the daemon's in-process bundler (notify watch) re-bundles via Rolldown,
 #    writing to crates/deck/deck-core/assets/... or .deck/...
 #  → emits BundlerEvent::ModuleChanged (broadcast) → sui_hmr

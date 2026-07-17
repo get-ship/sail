@@ -32,14 +32,14 @@ end-to-end by the browser harness (`packages/deck/e2e`):
 | Mode | Command | What the browser gets |
 |---|---|---|
 | **Dev — CSR SPA** | `deck dev` (default) | An empty `#root` + importmap shell; the client entry mounts the file-routed `routes/` SPA and renders. `<a>` nav is client-side (no document reload). |
-| **Dev — SSR** | `deck dev`, `render: "ssr"` in `deck.jsonc` | The matched `routes/<…>/page.sui` is server-rendered (via ship-js) INTO `#root`; the client hydrates it. |
+| **Dev — SSR** | `deck dev`, `render: "ssr"` in `deck.jsonc` | The matched `routes/<…>/page.sail` is server-rendered (via ship-js) INTO `#root`; the client hydrates it. |
 | **Prod build** | `deck build --bundle-framework` | A self-contained static dir: `index.html` (importmap) + `_deck/{runtime,dom,route}.js` (framework singletons, materialized) + `assets/page-<hash>.js` (one **code-split, lazily-loaded** chunk per route). |
 
-**Routing.** File-routed: `routes/<seg>/page.sui` (state in the page's inline `<controller>` block); a
+**Routing.** File-routed: `routes/<seg>/page.sail` (state in the page's inline `<controller>` block); a
 `[param]` dir segment is a dynamic route (`routes.gen.ts` emits a typed `:param`
 pattern). The bundler generates the entry; you write pages.
 
-**HMR (dev only).** Editing a route's `.sui` soft-reloads it with **state
+**HMR (dev only).** Editing a route's `.sail` soft-reloads it with **state
 preserved** (no full document reload); a `<sail-*>` component edit **hot-swaps**
 live instances in place.
 
@@ -60,7 +60,7 @@ asset URLs become `/assets/<file>`, matching the on-disk layout. (`deck build
 | `deck-core` | Transport-agnostic hosting logic. Produces a `DeckResponse` (status + bytes + headers); never speaks HTTP. Owns view resolution, SSR payload assembly, token/theme CSS, the setup flow, and the `DataPort` trait. |
 | `deck-axum` | The axum adapter. Thin `serve_*` shims map `DeckResponse` → `axum::Response`. `router()` registers deck's whole serving surface as one mountable unit; `multiplex_router()` is the live-data transport — **host-wired, not mounted by `deck dev`** (see the data seam below). |
 | `deck-host` | Pure host helpers shared across adapters: `render_helpers`, `resolver` (project-root + view resolution), `view_payload`. |
-| `deck-bundler` | The one bundler (#163). In-process Rolldown; a Rust plugin compiles `.sui` via the linked `sail-compiler`. Builds framework singletons, packs, views, and app scaffolds. |
+| `deck-bundler` | The one bundler (#163). In-process Rolldown; a Rust plugin compiles `.sail` via the linked `sail-compiler`. Builds framework singletons, packs, views, and app scaffolds. |
 | `deck-config` | Parses `deck.jsonc` into `DeckConfig` — the host's single configuration surface (below). |
 | `deck-cli` | The `deck` binary: `dev`, `build`, `build-assets`, `routes`, `emit`, `scaffold {view,component,pack}`. The `next`/`vite` analog. |
 | `deck` | Thin re-export facade so a host writes `deck::*` for everything above. |
@@ -103,7 +103,7 @@ Everything Ship-specific about the layout lives in `deck.jsonc`, not in deck's
 code. Key fields (`deck-config/src/lib.rs`):
 
 - `targets[]` — consumer bundle targets (`name`, `entry`, `externals`, `kind`).
-- `sourceRoots` / `componentSourceRoots` — where `.sui` and `@ship/<pack>`
+- `sourceRoots` / `componentSourceRoots` — where `.sail` and `@ship/<pack>`
   components resolve from. The host declares its monorepo layout here; deck's
   resolver names none of it.
 - `packs[]` — the per-tag component resolver's roots.
@@ -148,7 +148,7 @@ deck build-assets          # bake framework + consumer bundles (in-process Rolld
 deck routes --root apps/shell --root apps/spaces
 # walks <root>/routes/ → emits <root>/routes.gen.ts (label = basename).
 # Repeatable; required at least once.
-deck scaffold view <name>  # new view (page.sui + manifest.jsonc)
+deck scaffold view <name>  # new view (page.sail + manifest.jsonc)
 deck scaffold component <tag>
 deck scaffold pack <name>
 deck emit --target <name> --out <dir>   # copy baked targets (+ chunk closure) out
@@ -184,5 +184,5 @@ Astro build needs and shells out to `cargo run -p deck-cli -- emit`.
   app exercising routing, dynamic `[param]` routes, layouts, controllers/reactivity,
   the data seam, HMR and the static build) AND the native-path release gate
   (`bunx playwright test` drives the real CLI; 6 specs).
-- `.claude/skills/ship-sui` — authoring `.sui` views + components.
+- `.claude/skills/ship-sui` — authoring `.sail` views + components.
 - `docs/ship-adrs/` — the architectural decisions deck implements.

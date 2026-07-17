@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Typecheck every sui component pack. Regenerates the adjacent `.sui.d.ts` type
+// Typecheck every sui component pack. Regenerates the adjacent `.sail.d.ts` type
 // companions FIRST (they're gitignored, so a clean checkout has none) so each
-// controller's `import type { Scope } from './x.sui'` resolves, then runs
+// controller's `import type { Scope } from './x.sail'` resolves, then runs
 // `tsc --noEmit` per pack. Wired as the root `typecheck` script.
 import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, statSync } from 'node:fs'
@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
-console.log('▸ generating .sui.d.ts companions')
+console.log('▸ generating .sail.d.ts companions')
 execFileSync(process.execPath, [resolve(ROOT, 'scripts/gen-component-types.mjs')], { stdio: 'inherit' })
 
 const tsc = resolve(ROOT, 'node_modules/.bin/tsc')

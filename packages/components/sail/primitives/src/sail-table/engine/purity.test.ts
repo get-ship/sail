@@ -14,7 +14,7 @@
 // in sail-table/ or engine/ … Test-asserted; not sail-lint-asserted").
 //
 // NOTE (per build-spec): engine purity is TEST-asserted here, NOT sail-lint —
-// sail-lint targets .sui/.controller.ts and never sees these .ts modules.
+// sail-lint targets .sail/.controller.ts and never sees these .ts modules.
 
 import { readFileSync, readdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'

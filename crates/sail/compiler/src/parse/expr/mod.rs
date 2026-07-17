@@ -17,7 +17,7 @@
 //!    times.
 //!
 //! Both flavours share span semantics — diagnostics surface byte
-//! ranges into the original `.sui` source.
+//! ranges into the original `.sail` source.
 
 pub mod ast;
 pub mod grammar;

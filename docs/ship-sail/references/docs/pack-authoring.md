@@ -27,10 +27,10 @@ under `packages/components/<name>/`
   a `vitest` devDependency, and `test` / `test:watch` scripts.
 - `tsconfig.json` — strict, with a `rootDirs` entry pointing at the compiler's
   mirror tree (`.ship/sail-out/packages/components/<name>/src`) so `tsc` resolves
-  imports from the generated `.sui.d.ts` files.
+  imports from the generated `.sail.d.ts` files.
 - `src/index.ts` — the umbrella. Side-effect-imports each component's
   `.compiled.js` so importing the package registers every tag globally.
-- `src/<name>-example/<name>-example.sui` — a starter component to replace,
+- `src/<name>-example/<name>-example.sail` — a starter component to replace,
   with its inline `<controller>` block (if any) in the same file.
 
 After scaffolding, run `bun install` to wire the new workspace package.
@@ -42,30 +42,30 @@ After scaffolding, run `bun install` to wire the new workspace package.
 ## The grouped-directory convention
 
 One component per directory; the directory stem is the component's hyphenated
-tag, and the `.sui` filename matches it. A pack's `src/` is a flat list of these
+tag, and the `.sail` filename matches it. A pack's `src/` is a flat list of these
 directories:
 
 ```
 packages/components/sail/primitives/src/
   sail-button/
-    sail-button.sui              (inline <controller> block, if any, lives here)
+    sail-button.sail              (inline <controller> block, if any, lives here)
     sail-button.css               (optional)
   sail-card/
-    sail-card.sui
+    sail-card.sail
   index.ts                     (umbrella: side-effect imports each .compiled.js)
 ```
 
-The hyphenated stem is the custom-element tag — `sail-button.sui` compiles to the
+The hyphenated stem is the custom-element tag — `sail-button.sail` compiles to the
 `<sail-button>` element. Components carry no `manifest.jsonc` (that is a view-only
 file).
 
 ## The compile gate — `sail-compiler build --component-name`
 
-A `.sui` is compiled in component mode by passing `--component-name <tag>`,
+A `.sail` is compiled in component mode by passing `--component-name <tag>`,
 which implies component mode (`crates/sail/compiler/src/bin/sail-compiler.rs:104`):
 
 ```sh
-sail-compiler build packages/components/<name>/src/<tag>/<tag>.sui \
+sail-compiler build packages/components/<name>/src/<tag>/<tag>.sail \
   --component-name <tag> \
   --styles packages/components/<name>/src/<tag>/<tag>.css
 ```
@@ -100,7 +100,7 @@ export default suiComponentVitestConfig({ environment: 'happy-dom' })
 The factory (`packages/test-setup/src/vitest.ts`) is location-independent: it
 walks up to the `ship-monorepo` root and resolves everything by package name or
 absolute path, so a pack can move anywhere under `packages/` with no config
-edit. It compiles `.sui` sources through the repo's `sail-compiler` binary into
+edit. It compiles `.sail` sources through the repo's `sail-compiler` binary into
 the `.ship/sail-out` mirror, caps fork count (each happy-dom/jsdom fork holds
 ~500 MB), and prepends an honesty guard (`expect.hasAssertions()`) so a test
 that asserts nothing fails instead of passing green. Real consumers:

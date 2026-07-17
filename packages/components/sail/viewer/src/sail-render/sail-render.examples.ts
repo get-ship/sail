@@ -1,7 +1,7 @@
-// <sail-render> showcase fixtures — real Ship-domain `.sui` specimens the
+// <sail-render> showcase fixtures — real Ship-domain `.sail` specimens the
 // engine mounts live. The Studio components explorer / docs read these.
 //
-// `sail-render` is the engine primitive: its target data (the raw `.sui`
+// `sail-render` is the engine primitive: its target data (the raw `.sail`
 // `source`, the bound `compile()`) arrives via `prop:*` identity, NOT scalar
 // attributes (`ComponentExample.props` is scalar-only — verified). So each
 // scenario pairs a scalar `props` row (the `mode`/`viewport-width` reflect
@@ -11,7 +11,7 @@
 
 import type { ComponentExample } from '@ship/sail-runtime'
 
-/** Raw view-mode `.sui` sources, keyed by the matching example `name`. The
+/** Raw view-mode `.sail` sources, keyed by the matching example `name`. The
  *  host injects these via `prop:source` (identity) — they can't ride a scalar
  *  attribute. Real, characterful Ship-domain content; no placeholders. */
 export const sources: Record<string, string> = {

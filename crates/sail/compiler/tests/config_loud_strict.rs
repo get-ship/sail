@@ -24,7 +24,7 @@ fn write_pack(config: &str, sui_body: &str) -> (tempfile::TempDir, PathBuf) {
     fs::write(tmp.path().join("sail.config.json"), config).unwrap();
     let src_dir = tmp.path().join("src");
     fs::create_dir_all(&src_dir).unwrap();
-    let sui = src_dir.join("w.sui");
+    let sui = src_dir.join("w.sail");
     fs::write(&sui, sui_body).unwrap();
     (tmp, sui)
 }
@@ -154,7 +154,7 @@ fn granted_full_preset_compiles_clean_with_one_recognized_announcement() {
 #[test]
 fn no_config_leaves_default_semantics_unchanged() {
     let tmp = tempfile::tempdir().unwrap();
-    let sui = tmp.path().join("w.sui");
+    let sui = tmp.path().join("w.sail");
     fs::write(&sui, r#"<sail-card sx="p-4">hi</sail-card>"#).unwrap();
     assert!(Policy::resolve_outcome(&sui).is_none(), "no config anywhere on the walk");
     assert!(Policy::overrides_for(&sui).is_empty(), "no config → no capability overrides");

@@ -242,7 +242,7 @@ async fn serve_sse_inner(
     }
 
     // Live-data discovery: the retired `<data live>` directive used to be
-    // parsed straight out of the `.sui` to find sources to stream. That
+    // parsed straight out of the `.sail` to find sources to stream. That
     // authoring surface is gone (compiler-side) and its replacement — how a
     // controller's own `live(() => …)` sources get discovered for a
     // server-push SSE channel — is a redesign owned elsewhere. Until that

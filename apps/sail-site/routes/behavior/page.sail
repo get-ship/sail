@@ -1,0 +1,68 @@
+<controller>
+import { controller, type ViewScope } from '@ship/sail-runtime'
+import type { Scope } from './page.sail'
+import { code } from './snippets'
+
+export default controller((_ctx: ViewScope<Scope>) => {
+  return { code }
+})
+</controller>
+
+<column sx="max-w-breakpoint-tablet mx-auto">
+  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Components</p>
+  <h1>Behavior</h1>
+  <p sx="text-lg text-muted-foreground leading-relaxed">
+    An <strong>action</strong> is a plain function that receives an element,
+    does something to it, and returns a <code>destroy</code> to undo it.
+    <code>use:</code> attaches one. That is the entire mechanism, and it is the
+    only way to reach an element. Actions come from the runtime's built-ins
+    (the action table is the source of truth) and from your controllers
+    — every effect is a <code>use:</code> action, because an effect
+    decorates an existing element and that is exactly that grammar.
+  </p>
+  <code-block code={code.attach}></code-block>
+
+  <h2>Feel one work</h2>
+  <p>
+    <code>use:autosize</code> is a built-in: type a few lines and watch the
+    box grow to fit. No wrapper element, no resize logic in your file — the
+    action owns it and cleans up when the element leaves.
+  </p>
+  <textarea use:autosize placeholder="Type a few lines here…" sx="max-w-panel-max-w-sm"></textarea>
+
+  <h2>There is no ref</h2>
+  <p>
+    Most frameworks give you two ways to touch the DOM: a ref you store, thread
+    through scope, and remember to release — and an effect that runs at the right
+    moment if you got the dependencies right. Two ways is one too many. It is a
+    decision, and a decision is variance.
+  </p>
+  <p>
+    An action <em>is</em> the handle. The element arrives as an argument, the
+    cleanup is the return value, and neither can be forgotten because neither is
+    optional. There is nothing to store, so there is nothing to leak.
+  </p>
+
+  <h2>Writing one</h2>
+  <p>
+    No registry. No base class. No lifecycle interface to implement. If you can
+    write a function, you can write an action.
+  </p>
+  <code-block code={code.author}></code-block>
+  <p>
+    Pass it a parameter and it becomes reactive: the action's <code>update</code>
+    runs whenever the value changes.
+  </p>
+  <code-block code={code.param}></code-block>
+
+  <h2>The standard library uses the same door</h2>
+  <p>
+    This isn't an escape hatch bolted on for you. It is how every element in the
+    standard library gets its behavior. <code>&lt;combobox&gt;</code> is markup
+    plus <code>use:combobox</code>. <code>&lt;tabs&gt;</code> is markup plus
+    <code>use:tabs</code>. The thing you write is the thing we write — which is
+    why there is no privileged internal API you'll eventually need and can't
+    reach.
+  </p>
+  <code-block code={code.stdlib}></code-block>
+</column>

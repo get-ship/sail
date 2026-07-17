@@ -24,7 +24,7 @@ the documentation. An author (human or agent) who works this loop never
 needs to memorize the token tables, and never needs to guess.
 
 ```
-sail-compiler build --mode component tut-08-release-notes-starter.sui
+sail-compiler build --mode component tut-08-release-notes-starter.sail
 ```
 
 ## The loop, played out
@@ -33,7 +33,7 @@ Run 1. The compiler reports one costed rejection at a time — first, a
 call shape the render path forbids:
 
 ```
-Error: tut-08-release-notes-starter.sui: line 33 col 1: [expr `formatDate(publishedAt())`]
+Error: tut-08-release-notes-starter.sail: line 33 col 1: [expr `formatDate(publishedAt())`]
 call `formatDate(…)` with arguments is not allowed in renderable expressions;
 only zero-arg signal reads are permitted
 ```
@@ -45,7 +45,7 @@ derived, and the template reads `{published()}`.
 Run 2. Now it reaches the sx lint:
 
 ```
-Error: tut-08-release-notes-starter.sui: line 12 col 21: [sail-sx] sx `p:12px` —
+Error: tut-08-release-notes-starter.sail: line 12 col 21: [sail-sx] sx `p:12px` —
 `12px` is not a token (raw values are not allowed; spend a token). allowed: 0,
 0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, half, size-px; did
 you mean `p:1`?
@@ -59,7 +59,7 @@ padding; `p:4` is the token that means it.
 Run 3. The motion system holds its vocabulary the same way:
 
 ```
-Error: tut-08-release-notes-starter.sui: line 15 col 1: [sail-animate-token-only]
+Error: tut-08-release-notes-starter.sail: line 15 col 1: [sail-animate-token-only]
 motion preset `whoosh` is not in the closed vocabulary. Known presets:
 spring:snappy, spring:gentle, spring:bouncy, spring:deliberate, press, release,
 pulse, fade, fade-out
@@ -72,7 +72,7 @@ there in the error.
 Run 4. Last, the floor itself:
 
 ```
-Error: tut-08-release-notes-starter.sui: line 30 col 1: [sail-no-style-block]
+Error: tut-08-release-notes-starter.sail: line 30 col 1: [sail-no-style-block]
 raw <style> is not the floor styling surface — the floor is one way to do CSS:
 sx token utilities (sx="p:4 bg:surface-2"). Motion/variants/responsive are
 becoming language elements, not raw CSS. This is the opinionated floor;

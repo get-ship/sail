@@ -30,10 +30,10 @@ explains the rules.
 ## 1. Simple list view with live SSE
 
 A typed list, the 3-branch loading/error/ok shape, an empty state.
-Worked exemplar in the repo: `views/agents/page.sui` (template plus
+Worked exemplar in the repo: `views/agents/page.sail` (template plus
 its inline `<controller>` block).
 
-`views/example-list/page.sui`:
+`views/example-list/page.sail`:
 
 ```html
 <data name="items" source="ship.agents.summaries()" live />
@@ -73,7 +73,7 @@ its inline `<controller>` block).
 </div>
 ```
 
-`views/example-list/page.sui`'s inline `<controller>` block:
+`views/example-list/page.sail`'s inline `<controller>` block:
 
 ```ts
 <controller>
@@ -100,9 +100,9 @@ export default controller(({ items }) => {
 ## 2. Form + mutation flow
 
 User input → POST → optimistic UI → live patch reconciles. Worked
-exemplar: `views/workspaces/page.sui` and its inline `<controller>` block.
+exemplar: `views/workspaces/page.sail` and its inline `<controller>` block.
 
-`page.sui`:
+`page.sail`:
 
 ```html
 <data name="projects" source="ship.workspaces.list()" live />
@@ -193,10 +193,10 @@ Declarative-form alternative (no optimistic overlay):
 
 A list on the left drives a detail panel on the right. The selection
 is a `Signal<string>`; the detail view subscribes to a live source
-parameterized by it. Pattern from `views/skills/page.sui`'s inline
+parameterized by it. Pattern from `views/skills/page.sail`'s inline
 `<controller>` block, adapted for the typed-SDK path.
 
-`page.sui`:
+`page.sail`:
 
 ```html
 <data name="rows" source="ship.agents.summaries()" live />
@@ -259,7 +259,7 @@ Two flavors. **In-page tabs** (no URL change) use a signal. **Sub-routes**
 
 ### 4a. In-page tabs
 
-From `views/git/page.sui`'s inline `<controller>` block (`tab: signal<GitTab>('changes')`):
+From `views/git/page.sail`'s inline `<controller>` block (`tab: signal<GitTab>('changes')`):
 
 ```html
 <sail-segmented prop:value={tab()}>
@@ -292,15 +292,15 @@ Directory layout (mirrors `views/agents/`):
 
 ```
 views/<name>/
-  page.sui                  # /<name>          — list
+  page.sail                  # /<name>          — list
   manifest.jsonc            # { path: "/<name>" }
   [id]/
-    page.sui                # /<name>/[id]    — detail
+    page.sail                # /<name>/[id]    — detail
     manifest.jsonc          # { path: "/<name>/[id]" }
 ```
 
-`[id]/page.sui`'s inline `<controller>` block reads the param (pattern
-from `views/agents/[id]/page.sui`):
+`[id]/page.sail`'s inline `<controller>` block reads the param (pattern
+from `views/agents/[id]/page.sail`):
 
 ```ts
 <controller>
@@ -323,7 +323,7 @@ import { defineRoutes } from '@ship/sail-runtime/route'
 defineRoutes([{ pattern: '/<name>/:id' }])
 ```
 
-Worked exemplar: `apps/shell/src/studio/components/[name]/page.sui`'s
+Worked exemplar: `apps/shell/src/studio/components/[name]/page.sail`'s
 inline `<controller>` block.
 
 ---
@@ -474,7 +474,7 @@ The scaffold lays out:
 
 ```
 packages/components/ui-components/src/my-widget/
-  my-widget.sui   # <prop> directives + body with <slot> wrappers (light-DOM anatomy) + anatomy manifest;
+  my-widget.sail   # <prop> directives + body with <slot> wrappers (light-DOM anatomy) + anatomy manifest;
                   # --controller adds an inline <controller> block to this file
   my-widget.css   # optional
 ```
@@ -511,9 +511,9 @@ prop:rows={rowsSignal}>…</my-widget>`. The compiler emits the
 A view names the data clients it consumes with `<client>`; the host
 supplies a keyed map at mount. `ship` is just the key Ship hosts use —
 here a deck host injects its own client as `api`. Worked exemplar in
-the repo: `crates/deck/deck-conformance/app/views/clock/page.sui`.
+the repo: `crates/deck/deck-conformance/app/views/clock/page.sail`.
 
-`app/views/clock/page.sui`:
+`app/views/clock/page.sail`:
 
 ```html
 <client name="api" />
@@ -549,7 +549,7 @@ declare module '@ship/sail-runtime' {
 ```
 
 Declared names are checked: an undeclared root in a `<data source>` is
-a compile error, and the generated `.sui.d.ts` types each data signal
+a compile error, and the generated `.sail.d.ts` types each data signal
 from the client method's return. Views that declare nothing still get
 the ambient `ship` (compatibility default); the `sail-client-directive`
 lint (Warn) nudges those toward an explicit `<client name="ship" />`.

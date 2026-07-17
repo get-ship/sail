@@ -1,6 +1,6 @@
 //! SUI authoring lint engine.
 //!
-//! Lints `*.controller.ts` (paired SUI controllers), `*.sui` templates,
+//! Lints `*.controller.ts` (paired SUI controllers), `*.sail` templates,
 //! and the `.ts` composition modules under a component pack's `src/`
 //! (the seam the floor closes: every `.ts` file a component ships, not
 //! just the `<controller>` block). Rule IDs are prefixed `sail-<descriptor>`.
@@ -41,9 +41,9 @@ pub fn is_controller_path(path: &std::path::Path) -> bool {
         .unwrap_or(false)
 }
 
-/// True iff `path` is a SUI template (`*.sui`).
+/// True iff `path` is a SUI template (`*.sail`).
 pub fn is_sui_template_path(path: &std::path::Path) -> bool {
-    path.extension().and_then(|e| e.to_str()) == Some("sui")
+    path.extension().and_then(|e| e.to_str()) == Some("sail")
 }
 
 /// True iff `path` is a pack source `.ts` (a composition module a component ships).
@@ -115,7 +115,7 @@ pub fn lint_pack_source_source(path: &std::path::Path, source: &str) -> Vec<Find
     findings
 }
 
-/// Lint a SUI template (`*.sui`) from its source. Returns findings
+/// Lint a SUI template (`*.sail`) from its source. Returns findings
 /// sorted by `(line, col)`. No filesystem access.
 pub fn lint_sui_template_source(path: &std::path::Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();

@@ -11,12 +11,12 @@ cargo build                              # deck CLI + compiler`,
 
   app: `my-app/
 └─ routes/
-   └─ page.sui        # the / route
+   └─ page.sail        # the / route
 
 $ deck dev --project my-app
   ▸ serving http://127.0.0.1:7878`,
 
-  firstPage: `<!-- routes/page.sui — a page is markup. The components are
+  firstPage: `<!-- routes/page.sail — a page is markup. The components are
      already in the language; there is nothing to import. -->
 <column gap="4" sx="p-6 max-w-panel-max-w-lg">
   <h1>Team</h1>
@@ -35,13 +35,13 @@ $ deck dev --project my-app
 
   feedback: `# Write something off the system and the build says no — precisely.
 $ deck dev
-Error: routes/page.sui: line 4 col 13: [sail-sx]
+Error: routes/page.sail: line 4 col 13: [sail-sx]
   sx \`bg:blurple\` — \`blurple\` is not a token.
   allowed: accent, background, border, muted, primary, … (the token list)
   suggest: sx is surface-only: spacing 0-8 (p/m…), colors (bg/fg),
   radius, text. Raw px/hex are not expressible.`,
 
-  state: `<!-- routes/page.sui — state lives in a <controller> block in the
+  state: `<!-- routes/page.sail — state lives in a <controller> block in the
      same file. The template binds ONLY what the controller function returns. -->
 <controller>
 import { controller, signal } from '@ship/sail-runtime'
@@ -57,12 +57,12 @@ export default controller((ctx) => {
 </button>`,
 
   routesTree: `routes/
-├─ page.sui               → /
+├─ page.sail               → /
 ├─ settings/
-│  └─ page.sui            → /settings
+│  └─ page.sail            → /settings
 └─ users/
    └─ [id]/
-      └─ page.sui         → /users/:id   (read it: route.params.id())`,
+      └─ page.sail         → /users/:id   (read it: route.params.id())`,
 
   build: `$ deck build --project my-app
 # static output: SSR'd HTML per route + hydrating bundles.
@@ -72,7 +72,7 @@ export default controller((ctx) => {
 # there is no component library to add on top.
 npm install @ship/sail-runtime`,
 
-  component: `<!-- greeting.sui — a component is a <scope> block + markup -->
+  component: `<!-- greeting.sail — a component is a <scope> block + markup -->
 <scope>
   props: {
     name = ''
@@ -81,8 +81,8 @@ npm install @ship/sail-runtime`,
 
 <p>Hello, {name()}.</p>`,
 
-  compile: `# lower the .sui to a standard custom-element module
-sail-compiler build greeting/greeting.sui`,
+  compile: `# lower the .sail to a standard custom-element module
+sail-compiler build greeting/greeting.sail`,
 
   use: `<!-- importing the compiled module registers the element -->
 <script type="module" src="/greeting.js"></script>

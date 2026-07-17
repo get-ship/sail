@@ -1,7 +1,7 @@
 // Public author-facing test API for SUI views and components.
 //
 // This is the "shared unlock": a `views/<name>/` or component author imports
-// ONE function, points it at their `.sui` source + controller, and asserts
+// ONE function, points it at their `.sail` source + controller, and asserts
 // against a real (jsdom) DOM tree — driven through the SAME production Rust/WASM
 // compiler the daemon uses, so a passing test means the production emit shape
 // renders and behaves.
@@ -13,7 +13,7 @@
 //
 //   import { renderView } from '@ship/test-setup'
 //   import gitView from '../controller'
-//   const TEMPLATE = readFileSync(new URL('./page.sui', import.meta.url), 'utf8')
+//   const TEMPLATE = readFileSync(new URL('./page.sail', import.meta.url), 'utf8')
 //
 //   const v = renderView(TEMPLATE, { controller: gitView, ship: fakeShip })
 //   expect(v.html()).toContain('main')
@@ -43,11 +43,11 @@ export interface RenderOpts {
   url?: string
   /** Navigation sink — called when the view navigates. Defaults to a no-op. */
   navigate?: (path: string) => void
-  /** On-disk path of the `.sui` source. Pass it when the source was read off
-   *  disk (`readFileSync(new URL('./page.sui', import.meta.url))`) so the
+  /** On-disk path of the `.sail` source. Pass it when the source was read off
+   *  disk (`readFileSync(new URL('./page.sail', import.meta.url))`) so the
    *  compiler resolves the source's own styling policy and runs the four
    *  controller-aware passes — the harness then rejects exactly what the daemon
-   *  + CLI do. Use `fileURLToPath(new URL('./page.sui', import.meta.url))`. */
+   *  + CLI do. Use `fileURLToPath(new URL('./page.sail', import.meta.url))`. */
   sourcePath?: string
 }
 
@@ -73,7 +73,7 @@ export interface Rendered {
 const SETUP_MARKER = '__test_setup__'
 
 /**
- * Compile a `.sui` view from source, mount it against jsdom with the given
+ * Compile a `.sail` view from source, mount it against jsdom with the given
  * controller + fakes, and return handles to assert and drive it.
  */
 export function renderView(source: string, opts: RenderOpts = {}): Rendered {
@@ -126,19 +126,19 @@ export interface RenderComponentOpts {
    *  setup function. An SFC's `<controller>` block is resolved automatically, so
    *  pass this only to inject a fake, or when the block's imports need the real
    *  module graph (a third-party dep the harness cannot eval): import the virtual
-   *  `<file>.sui.controller.ts` and hand it in. */
+   *  `<file>.sail.controller.ts` and hand it in. */
   controller?: ControllerInput
-  /** On-disk path of the `.sui` source. Pass it when the source was read off
+  /** On-disk path of the `.sail` source. Pass it when the source was read off
    *  disk so the compiler resolves the source's own styling policy and runs
    *  the four controller-aware passes (scope_bound, scope_member,
    *  bind_this_target, on_callable) — the harness then rejects exactly what the
    *  daemon + CLI do. Use
-   *  `fileURLToPath(new URL('./foo.sui', import.meta.url))`. */
+   *  `fileURLToPath(new URL('./foo.sail', import.meta.url))`. */
   sourcePath?: string
 }
 
 /**
- * Compile a component `.sui` (one declaring `<prop>`s) under the given tag,
+ * Compile a component `.sail` (one declaring `<prop>`s) under the given tag,
  * register it, instantiate it with `attrs`, and return handles. Assert against
  * `root` (the host) or `scope` is unused for components — query the element /
  * its shadow root via `root.querySelector(tag)`.

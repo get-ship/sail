@@ -49,11 +49,11 @@ const FIXTURES = [
 // The fixture dir and Cargo.toml are resolved relative to `repoRoot`
 // (computed above) so the script works on any checkout, worktree, or CI
 // run — not just the original author's machine.
-const fixturesDir = join(repoRoot, 'crates', 'sui', 'compiler', 'tests', 'fixtures')
+const fixturesDir = join(repoRoot, 'crates', 'sail', 'compiler', 'tests', 'fixtures')
 const tmp = mkdtempSync(join(tmpdir(), 'sail-emit-parity-'))
 
 function compileFixture(fx) {
-  const src = join(fixturesDir, `${fx.name}.sui`)
+  const src = join(fixturesDir, `${fx.name}.sail`)
   const args = ['run', '-q', '--manifest-path', join(repoRoot, 'Cargo.toml'), '-p', 'sail-compiler', '--', 'build', src, '--out', tmp, '--no-dts']
   if (fx.mode === 'component' && fx.componentName) {
     args.push('--component-name', fx.componentName)

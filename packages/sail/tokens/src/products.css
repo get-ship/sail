@@ -12,7 +12,7 @@
 */
 
 :root[data-product='ship']       { --brand-hue: 195; }  /* teal   — umbrella */
-:root[data-product='sui']        { --brand-hue: 27; }   /* red    — the framework */
+:root[data-product='sail']        { --brand-hue: 27; }   /* red    — the framework */
 :root[data-product='deck']       { --brand-hue: 285; }  /* violet — the app framework */
 :root[data-product='components'] { --brand-hue: 155; }  /* green  — the library */
 :root[data-product='ai']         { --brand-hue: 255; }  /* blue   — agent tooling */

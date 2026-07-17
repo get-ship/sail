@@ -4,9 +4,9 @@
   "private": false,
   "type": "module",
   "license": "MIT",
-  "description": "In-browser WebAssembly build of the SUI compiler — compiles .sui source to ESM at edit time (docs playground + LSP worker).",
+  "description": "In-browser WebAssembly build of the SUI compiler \u2014 compiles .sail source to ESM at edit time (docs playground + LSP worker).",
   "keywords": [
-    "sui",
+    "sail",
     "compiler",
     "wasm",
     "webassembly",

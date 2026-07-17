@@ -1,6 +1,6 @@
-//! Fixture-based tests for the `.sui.d.ts` declaration emitter.
+//! Fixture-based tests for the `.sail.d.ts` declaration emitter.
 //!
-//! Each test compiles a small `.sui` snippet with `emit_dts: true` and
+//! Each test compiles a small `.sail` snippet with `emit_dts: true` and
 //! asserts the resulting d.ts contains the expected type lines.
 
 use sail_compiler::{compile, CompileMode, CompileOpts};
@@ -22,7 +22,7 @@ fn compile_dts(source: &str) -> String {
         .expect("dts emitted")
 }
 
-/// Compile a `.sui` source whose controller is inlined as a `<controller>`
+/// Compile a `.sail` source whose controller is inlined as a `<controller>`
 /// block — the ONE source (the paired `.controller.ts` fallback is gone) — so
 /// the d.ts emitter can pull the scope factory's fields. Returns the d.ts text.
 fn compile_dts_with_controller(_stem: &str, sui_src: &str, controller_ts: &str) -> String {

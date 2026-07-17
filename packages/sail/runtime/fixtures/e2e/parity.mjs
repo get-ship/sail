@@ -94,7 +94,7 @@ function loadJ2(name) {
 }
 
 function loadSui(name) {
-  const main = path.join(SUI_ROOT, name, 'page.sui')
+  const main = path.join(SUI_ROOT, name, 'page.sail')
   if (!existsSync(main)) return null
   return extractContent(stripSui(readFileSync(main, 'utf8')))
 }
@@ -114,7 +114,7 @@ function diffContent(j2, sui) {
     }
   }
   for (const s of j2.sectionMacros) {
-    const allHeadings = [...sui.headings.map(h => h.text), ...sui.sectionMacros, ...sui.ariaLabels]
+    const allHeadings = [...sail.headings.map(h => h.text), ...sail.sectionMacros, ...sail.ariaLabels]
     if (!inSui(s, allHeadings)) {
       missing.push(`section: "${s}"`)
     }
@@ -231,7 +231,7 @@ async function run() {
       let j2, sui
       if (playwright) {
         const j2Cap = await capturePage(browser, `${BASE}/api/v1/v/${v.j2}`, authToken)
-        const suiCap = await capturePage(browser, `${BASE}/sui/${v.sui}`, null)
+        const suiCap = await capturePage(browser, `${BASE}/sui/${v.sail}`, null)
         j2 = extractContent(stripJinja(j2Cap.html))
         sui = extractContent(stripSui(suiCap.html))
         row.missing = diffContent(j2, sui)
@@ -241,7 +241,7 @@ async function run() {
         }
       } else {
         j2 = loadJ2(v.j2)
-        sui = loadSui(v.sui)
+        sui = loadSui(v.sail)
         if (!j2) { row.error = 'j2 not found'; results.push(row); console.log('skip'); continue }
         if (!sui) { row.error = 'SUI not found'; results.push(row); console.log('skip'); continue }
         row.missing = diffContent(j2, sui)

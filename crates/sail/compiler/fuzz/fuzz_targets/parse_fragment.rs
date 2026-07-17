@@ -1,4 +1,4 @@
-// Fuzz target: drive the .sui parser on arbitrary input bytes.
+// Fuzz target: drive the .sail parser on arbitrary input bytes.
 //
 // The bug class this exists to catch was demonstrated by an infinite loop
 // in `parse/html/parser.rs::parse_children`: a stray `<` followed by a
@@ -10,7 +10,7 @@
 // Run locally:
 //     cargo +nightly fuzz run parse_fragment -- -max_total_time=60
 //
-// Seed corpus: `corpus/parse_fragment/` (start with copies of every .sui
+// Seed corpus: `corpus/parse_fragment/` (start with copies of every .sail
 // in packages/ui-components/src so the fuzzer has real-world inputs to
 // mutate from).
 

@@ -44,11 +44,11 @@ struct NapiOpts {
     /// this file a route. `None`/absent = not a route.
     #[serde(default)]
     route_params: Option<Vec<String>>,
-    /// On-disk path of the `.sui` source. When set, locates the paired
+    /// On-disk path of the `.sail` source. When set, locates the paired
     /// `<stem>.controller.ts` for the four controller-aware check passes
     /// (`scope_bound`, `scope_member`, `bind_this_target`, `on_callable`)
     /// gated on `source_path.is_some()` in `check::run`. The harness passes
-    /// the real path for tests that `readFileSync` a checked-in `.sui` so the
+    /// the real path for tests that `readFileSync` a checked-in `.sail` so the
     /// napi path rejects exactly what the daemon + CLI do (#263-A). `None` for
     /// synthetic in-memory sources (no controller to pair with).
     source_path: Option<String>,

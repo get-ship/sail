@@ -1,10 +1,10 @@
-// Integration test: compile a real .sui file via the Rust `sail-compiler`
+// Integration test: compile a real .sail file via the Rust `sail-compiler`
 // binary, load the produced JS in jsdom, and exercise the resulting
 // custom element. This is the test that proves the compiler+runtime
 // contract end-to-end. Substring assertions in the compiler's emit
 // tests can pass while the actual JS is broken; this can't.
 //
-// Fixtures live in test/fixtures/ — one .sui per
+// Fixtures live in test/fixtures/ — one .sail per
 // component under test. Components compile with shadow DOM (the CLI
 // default for component mode), so DOM queries go via el.shadowRoot.
 
@@ -37,15 +37,15 @@ function compileFixture(file: string): string {
     ['build', '--mode', 'component', join(FIXTURES, file), '--out', COMPILE_OUT],
     { stdio: 'pipe' },
   )
-  // Output filename = input stem (e.g. ship-set-counter.sui → ship-set-counter.js).
+  // Output filename = input stem (e.g. ship-set-counter.sail → ship-set-counter.js).
   // The component tag registered by the runtime is also the stem.
-  const stem = file.replace(/\.sui$/, '')
+  const stem = file.replace(/\.sail$/, '')
   const jsPath = join(COMPILE_OUT, `${stem}.js`)
 
   // The compiled JS imports its controller as the virtual
-  // `./<stem>.sui.controller.ts`, resolved against the module's own directory.
+  // `./<stem>.sail.controller.ts`, resolved against the module's own directory.
   // The harness serves that module by extracting the `<controller>` block from
-  // the sibling `.sui` — so the source has to sit next to the output.
+  // the sibling `.sail` — so the source has to sit next to the output.
   const suiDst = join(COMPILE_OUT, file)
   if (!existsSync(suiDst)) copyFileSync(join(FIXTURES, file), suiDst)
 
@@ -62,7 +62,7 @@ async function loadCompiled(file: string): Promise<string> {
   // Cache-bust per test run with a query param; vitest dedupes by URL.
   await import(`${path}?t=${Date.now()}`)
   // Tag name = stem (all fixture names already include the required hyphen).
-  return file.replace(/\.sui$/, '')
+  return file.replace(/\.sail$/, '')
 }
 
 /** Query helper — light DOM (the default) renders into the host itself;
@@ -83,7 +83,7 @@ describe('integration: real compile → run', () => {
   }, 120_000)
 
   it('counter compiles and ticks', async () => {
-    const tag = await loadCompiled('ship-set-counter.sui')
+    const tag = await loadCompiled('ship-set-counter.sail')
     const el = document.createElement(tag)
     document.body.appendChild(el)
 
@@ -109,7 +109,7 @@ describe('integration: real compile → run', () => {
   }, 60_000)
 
   it('search filters with derived + if/else', async () => {
-    const tag = await loadCompiled('ship-set-search.sui')
+    const tag = await loadCompiled('ship-set-search.sail')
     const el = document.createElement(tag)
     document.body.appendChild(el)
 
@@ -146,7 +146,7 @@ describe('integration: real compile → run', () => {
   }, 60_000)
 
   it('note-display props + expand toggle + list', async () => {
-    const tag = await loadCompiled('note-display.sui')
+    const tag = await loadCompiled('note-display.sail')
     const el = document.createElement(tag)
     el.setAttribute('title', 'My Note')
     el.setAttribute('body', 'Hello world')
@@ -173,7 +173,7 @@ describe('integration: real compile → run', () => {
   }, 60_000)
 
   it('modal: visibility, prop-driven open/close, backdrop close', async () => {
-    const tag = await loadCompiled('ship-set-modal.sui')
+    const tag = await loadCompiled('ship-set-modal.sail')
     const el = document.createElement(tag)
     document.body.appendChild(el)
 
@@ -194,7 +194,7 @@ describe('integration: real compile → run', () => {
   }, 60_000)
 
   it('todo list adds, toggles, removes', async () => {
-    const tag = await loadCompiled('ship-set-todo.sui')
+    const tag = await loadCompiled('ship-set-todo.sail')
     const el = document.createElement(tag)
     document.body.appendChild(el)
 

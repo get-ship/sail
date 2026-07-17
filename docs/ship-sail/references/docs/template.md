@@ -2,12 +2,12 @@
 group: Views
 order: 2
 title: The template surface
-description: Everything you can write in a `.sui` file — directives, control flow, bindings, hooks, projection, expressions.
+description: Everything you can write in a `.sail` file — directives, control flow, bindings, hooks, projection, expressions.
 ---
 
 # The template surface
 
-A `.sui` file is HTML with a small set of directive elements at the top, mustache control flow inside, and a few binding shorthands on attributes. There is no script block and no style block. Logic lives in an inline `<controller>` block in the same file; styles live in a sibling `style.css` linked by `<link rel="stylesheet">`.
+A `.sail` file is HTML with a small set of directive elements at the top, mustache control flow inside, and a few binding shorthands on attributes. There is no script block and no style block. Logic lives in an inline `<controller>` block in the same file; styles live in a sibling `style.css` linked by `<link rel="stylesheet">`.
 
 ## Directive elements
 
@@ -85,7 +85,7 @@ declare module '@ship/sail-runtime' {
 }
 ```
 
-With the declaration in place, a `<data source>` that is a single call on a declared client types its signal from the client's method return (`Clients['ship']['git']['overview']`) in the generated `.sui.d.ts`.
+With the declaration in place, a `<data source>` that is a single call on a declared client types its signal from the client's method return (`Clients['ship']['git']['overview']`) in the generated `.sail.d.ts`.
 
 **Compatibility default:** a template that declares NO clients still receives the ambient `ship` (the grandfathered pre-directive behavior). New and migrated templates declare it explicitly — the `sail-client-directive` lint (Warn) flags `ship.*` usage without the declaration.
 
@@ -99,7 +99,7 @@ With the declaration in place, a `<data source>` that is a single call on a decl
 <button disabled={disabled() || loading()}>{label()}</button>
 ```
 
-The file IS the component. `<prop>` appears at the top of a component `.sui` file alongside `<data>` — no wrapper element needed. Convention is the contract: directory name is the tag name. Views (top-level page surfaces) do not use `<prop>`.
+The file IS the component. `<prop>` appears at the top of a component `.sail` file alongside `<data>` — no wrapper element needed. Convention is the contract: directory name is the tag name. Views (top-level page surfaces) do not use `<prop>`.
 
 Prop kinds: `string` (default), `bool`, `number`, `values="a|b|c"` (union). `reflect` mirrors the prop to the host element's attributes.
 
@@ -151,7 +151,7 @@ Progressive enhancement: when JS is absent the SSR walker injects `action="/_dec
 ```
 
 ```
-page.sui: line 1 col 30: [on:click handler]
+page.sail: line 1 col 30: [on:click handler]
 multi-statement handler — paired `<view>.ts` controller required for tier-2 work
 ```
 
@@ -319,7 +319,7 @@ light-DOM projection is one-shot at connect; the compiler-managed
 equivalent for scoped binding is its own design work.
 
 ```sui
-<!-- in sail-card.sui — body declares the chrome; regions are in the manifest -->
+<!-- in sail-card.sail — body declares the chrome; regions are in the manifest -->
 <div class="card">
   <header class="card-head">
     <slot name="header"></slot>

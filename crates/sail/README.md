@@ -1,12 +1,12 @@
 # crates/sail/
 
-The **SUI view framework** (Rust side) — the `.sui` language, its ahead-of-time
+The **SUI view framework** (Rust side) — the `.sail` language, its ahead-of-time
 compiler, lint rules, and the signal-graph runtime. SUI is the "React" of the
 stack; the meta-framework that hosts, serves, and bundles SUI views lives next
 door in [`crates/deck/`](../deck/). See the ADR
 [`sail-deck-crate-boundary`](../../docs/ship-adrs/references/docs/sail-deck-crate-boundary.md).
 
-`.sui` files compile **ahead-of-time to ESM JavaScript** attached to a
+`.sail` files compile **ahead-of-time to ESM JavaScript** attached to a
 signal-graph runtime — not Jinja, not Datastar. The Rust crates here are the
 pure, portable leaves of that pipeline.
 
@@ -14,8 +14,8 @@ pure, portable leaves of that pipeline.
 
 | Crate | Workspace member? | Role |
 |---|---|---|
-| `compiler/` | yes | `.sui` → ESM JavaScript transform (`sail-compiler`). Pure — no FS, no env; WASM-safe. Also exposes `check_all` / `analyze` for the LSP + agent tooling. |
-| `lint/` | yes | Lint rules for `.sui` templates + controller TypeScript (oxc-parsed). Findings shared with the compiler's build-time checks. |
+| `compiler/` | yes | `.sail` → ESM JavaScript transform (`sail-compiler`). Pure — no FS, no env; WASM-safe. Also exposes `check_all` / `analyze` for the LSP + agent tooling. |
+| `lint/` | yes | Lint rules for `.sail` templates + controller TypeScript (oxc-parsed). Findings shared with the compiler's build-time checks. |
 | `signals/` | yes | Signal-graph runtime — the fine-grained reactivity layer the compiled output binds to. |
 | `lsp/` | yes | `sail-lsp` — a thin LSP/stdio server over `compiler`'s analysis facade. One grammar for editors + agents; no TypeScript, no WASM. |
 

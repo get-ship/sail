@@ -2,7 +2,7 @@
 group: Agents
 order: 2
 title: SUI — Agent Authoring
-description: How agents author .sui views end to end.
+description: How agents author .sail views end to end.
 ---
 
 # SUI — Agent-Authoring Guide
@@ -38,18 +38,18 @@ Output (`views/<name>/`):
 
 | File | Purpose | Required |
 |---|---|---|
-| `page.sui` | Template — declares route body, `<data>`, control flow, and (if needed) an inline `<controller>` block for state, lifecycle, mutations | Yes |
+| `page.sail` | Template — declares route body, `<data>`, control flow, and (if needed) an inline `<controller>` block for state, lifecycle, mutations | Yes |
 | `style.css` | Page-scoped CSS, auto-linked by the daemon | Optional |
 | `manifest.jsonc` | `{ name, path, title, layout, auth, rail? }` | **Yes — routes are manifest-driven** |
-| `_components/<view>-<tag>/` | View-private component (`<tag>.sui`, with its own inline `<controller>` block if needed) | Optional |
+| `_components/<view>-<tag>/` | View-private component (`<tag>.sail`, with its own inline `<controller>` block if needed) | Optional |
 
 **Rules from `references/4-layer-overview.md` § Layer 4 that an agent
 gets wrong most often:**
 
-- Filename stem says what the file IS: `page.sui`, never `view.sui`,
-  never `<name>.sui`.
+- Filename stem says what the file IS: `page.sail`, never `view.sail`,
+  never `<name>.sail`.
 - A controller is always an inline `<controller>` block inside the
-  `.sui` file — a paired `<stem>.controller.ts` sibling file is a
+  `.sail` file — a paired `<stem>.controller.ts` sibling file is a
   compile error. The directory IS the view.
 - View-private components live under `_components/<view>-<tag>/`, and
   the tag MUST start with the view name (so `tasks-row`, not `row`)
@@ -58,15 +58,15 @@ gets wrong most often:**
 Verify the scaffold parses before adding logic:
 
 ```sh
-cargo run -p sail-lint --example check -- views/<name>/page.sui
+cargo run -p sail-lint --example check -- views/<name>/page.sail
 ```
 
 ---
 
-## 2. Anatomy of a `.sui` template
+## 2. Anatomy of a `.sail` template
 
 ```html
-<!-- views/<name>/page.sui — declarative only. No <script>. -->
+<!-- views/<name>/page.sail — declarative only. No <script>. -->
 
 <!-- 1. TOP-LEVEL DIRECTIVES — declare scope before the body -->
 <data name="items" source="ship.<domain>.<op>(args)" live />
@@ -119,7 +119,7 @@ Surface in compact form (full grammar in
 | `<use-kbd>…</use-kbd>` / `<use-click-outside>` | Template hooks; side-effect import emitted by compiler. |
 
 **Scoped CSS.** A view's `style.css` is page-scoped (auto-linked). A
-component's CSS goes in a `<style>` block inside the `.sui`, or for
+component's CSS goes in a `<style>` block inside the `.sail`, or for
 external CSS via `compile_opts.styles`. The compiler does **not**
 shadow-DOM anything by default — every `sail-*` renders into its
 own element with no shadow root. Scoped CSS is `@scope
@@ -137,7 +137,7 @@ rules, not view-scoped page CSS.
 ## 3. Anatomy of an inline `<controller>` block
 
 ```ts
-<!-- inside views/<name>/page.sui -->
+<!-- inside views/<name>/page.sail -->
 <controller>
 import { signal, derived, unwrap } from '@ship/sail-runtime'
 
@@ -178,7 +178,7 @@ Mutation is always `signal.set(newValue)` (or `signal.set(prev => next)`) — th
    `/sui/<name>` host does NOT inject `ship` into ctx, so the
    compiler-emitted `<data live>` form sticks on `loading`. Wire
    `live()` directly to `/_deck/data?expr=…` instead. The canonical
-   helper currently lives in `views/git/page.sui`'s inline
+   helper currently lives in `views/git/page.sail`'s inline
    `<controller>` block (`sseSource`) — copy verbatim:
 
 ```ts
@@ -275,9 +275,9 @@ all three; never assume `ok`:
 > a `display: contents` wrapper). See
 > [template.md](template.md#projection) for the full model.
 
-Worked exemplars in this repo: `views/home/page.sui` (compact),
-`views/agents/page.sui` (full skeleton grid), `views/sessions/page.sui`,
-`views/workspaces/page.sui`.
+Worked exemplars in this repo: `views/home/page.sail` (compact),
+`views/agents/page.sail` (full skeleton grid), `views/sessions/page.sail`,
+`views/workspaces/page.sail`.
 
 The `kind === 'ok'` guard is **mandatory** before reading
 `items().value` — accessing `.value` while `kind === 'loading'` or
@@ -400,7 +400,7 @@ Hard-won. Each one is from a real fix in this repo.
    `error`. Always guard. Pattern: `{#if x().kind === 'ok'}{x().value.field}{/if}`,
    or pull the read through `unwrap(x)?.field ?? fallback` /
    `unwrapOr(x, EMPTY).field` (see the `<controller>` blocks in
-   `views/home/page.sui` and `views/git/page.sui`). Fix that originated this rule:
+   `views/home/page.sail` and `views/git/page.sail`). Fix that originated this rule:
    `dba0113f fix(views/skills + probe): null-guard skill().value`.
 
 2. **`(x as any)` cast leftovers.** Every `as any` in a controller is
@@ -408,14 +408,14 @@ Hard-won. Each one is from a real fix in this repo.
    replace with the real generated type from `@ship/sdk-client`
    (`AgentSummary`, `GitOverview`, …) or define a local `interface`
    and parse the live envelope through it explicitly. The remaining
-   `as any` in `views/agents/[id]/page.sui`'s `<controller>` block is a
+   `as any` in `views/agents/[id]/page.sail`'s `<controller>` block is a
    known leftover, not a pattern to copy.
 
 3. **`route` access form.** `route` is part of the ambient `ctx` every
    controller function receives — destructure it (`(ctx) => { const { route, ship } = ctx; … }`)
    and read params with the namespace form `route.params.id()` (it
    returns `Signal<string|undefined>`, so the trailing `()` is the
-   read). This is the form `views/agents/[id]/page.sui` uses. A
+   read). This is the form `views/agents/[id]/page.sail` uses. A
    `route()` factory is also importable from `@ship/sail-runtime/route`
    for non-controller code; don't mix the two within one file.
 
@@ -442,7 +442,7 @@ Hard-won. Each one is from a real fix in this repo.
 7. **`route` is not a function (in chat).** The `defineRoutes` call
    must run at the top level of the `<controller>` block's module (it
    side-effect registers patterns). See
-   `apps/shell/src/studio/components/[name]/page.sui`'s `<controller>`
+   `apps/shell/src/studio/components/[name]/page.sail`'s `<controller>`
    block for the canonical position — BEFORE the `controller((ctx) => {…})`
    default export. Putting it inside the controller function runs it
    too late, and the first `route()` call from a `derived` will throw.
@@ -452,7 +452,7 @@ Hard-won. Each one is from a real fix in this repo.
    injecting `ship` into ctx. If the view will be linked to directly
    (not just through shell), hand-wire the live source with
    `sseSource(...)` (see § 3 above and the `<controller>` blocks in
-   `views/skills/page.sui`, `views/git/page.sui`).
+   `views/skills/page.sail`, `views/git/page.sail`).
 
 9. **Tag-name collisions across views.** Two views each shipping a
    private `row` widget will fight for `customElements.define('row',
@@ -472,12 +472,12 @@ class of error the others miss.
 
 ```sh
 # 1. Fast per-edit lint — grammar, missing bindings, unstable keys, purity:
-cargo run -p sail-lint --example check -- views/<name>/page.sui
+cargo run -p sail-lint --example check -- views/<name>/page.sail
 
 # 2. Full compile — lint folds in; aborts on errors:
-cargo run -p sail-compiler -- build views/<name>/page.sui
+cargo run -p sail-compiler -- build views/<name>/page.sail
 
-# 3. Build all .sui sources + run lint + cargo test (proxy for CI):
+# 3. Build all .sail sources + run lint + cargo test (proxy for CI):
 just smoke-deploy
 ```
 

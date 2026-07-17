@@ -96,7 +96,7 @@ mod tests {
     use super::*;
 
     fn run(src: &str) -> usize {
-        check(Path::new("t.sui"), src).len()
+        check(Path::new("t.sail"), src).len()
     }
 
     #[test]
@@ -114,7 +114,7 @@ mod tests {
 
     #[test]
     fn is_warn_and_skips_comments() {
-        let f = check(Path::new("t.sui"), r#"<sail-card sx="p-4">x</sail-card>"#);
+        let f = check(Path::new("t.sail"), r#"<sail-card sx="p-4">x</sail-card>"#);
         assert!(matches!(f[0].severity, Severity::Warn));
         assert_eq!(run(r#"<!-- <sail-card sx="p-9"> --> <sail-card>y</sail-card>"#), 0);
     }

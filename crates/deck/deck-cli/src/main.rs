@@ -3,7 +3,7 @@
 //! deck is the framework; an app (the hub `apps/shell`, a space scaffold) is
 //! built *with* deck via `deck build`, just as `next build` builds a Next app.
 //! This is why the command lives here and not in the `ship` app CLI. Backed by
-//! `deck-bundler` (Rolldown). `.sui` sources must be compiled first
+//! `deck-bundler` (Rolldown). `.sail` sources must be compiled first
 //! by the deck bundler; `deck dev` / `deck serve` are future commands.
 
 mod scaffold;
@@ -130,7 +130,7 @@ enum Command {
 
 #[derive(Subcommand)]
 enum Scaffold {
-    /// New SUI view under `views/<name>/` (page.sui + controller.ts +
+    /// New SUI view under `views/<name>/` (page.sail + controller.ts +
     /// style.css + manifest.jsonc; optional view-private widget).
     View {
         /// View dir name + manifest `name` field. Lowercase ASCII + hyphens.
@@ -147,7 +147,7 @@ enum Scaffold {
     Component {
         /// Tag name (must start with `sail-`).
         tag: String,
-        /// Also include an inline `<controller>` stub in the `.sui`.
+        /// Also include an inline `<controller>` stub in the `.sail`.
         #[arg(long)]
         controller: bool,
     },
@@ -189,7 +189,7 @@ fn run() -> Result<()> {
                 anyhow::bail!("specify --root=<path> and/or --views=<path> at least once");
             }
             // First-party app routes: walk <root>/routes/ for mountable
-            // views (each is a dir with a page.sui). One routes.gen.ts per
+            // views (each is a dir with a page.sail). One routes.gen.ts per
             // --root; the label is the path's basename. The codegen has
             // no app-name coupling — generic over the workspace.
             let mut routes_specs = Vec::new();
@@ -578,7 +578,7 @@ fn build(
     // bundler is per-app and reads its own project root.
     let cfg = deck_bundler::DeckConfig::defaults();
 
-    // The app graph compiles its own `.sui` in-process via the linked
+    // The app graph compiles its own `.sail` in-process via the linked
     // sail-compiler crate (#255) — no binary to locate.
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -812,13 +812,13 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                     return;
                 }
                 // Ignore generated artifacts a rebuild writes (`.gen.ts`,
-                // `.sui.d.ts` companions, `.compiled.js`) so they can't
+                // `.sail.d.ts` companions, `.compiled.js`) so they can't
                 // self-trigger.
                 let all_generated = !ev.paths.is_empty()
                     && ev.paths.iter().all(|p| {
                         let s = p.to_string_lossy();
                         s.ends_with(".gen.ts")
-                            || s.contains(".sui.d.ts")
+                            || s.contains(".sail.d.ts")
                             || s.contains(".compiled.js")
                     });
                 if all_generated {

@@ -1,4 +1,4 @@
-//! View-side controller pairing: when a `.sui` view is compiled with
+//! View-side controller pairing: when a `.sail` view is compiled with
 //! `setup_url: Some(...)`, the emitted JS must import the controller
 //! module, call `setup.setup(ctx)`, and merge its return into `$scope`
 //! via `Object.assign`. Components have always done this; this test

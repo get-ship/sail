@@ -1,5 +1,5 @@
 //! `GET /_deck/source/{tag}` — render a simple HTML page showing the
-//! `.sui` template and `.controller.ts` for a SUI component.
+//! `.sail` template and `.controller.ts` for a SUI component.
 //!
 //! Powers the "View source" deep-link in the component studio. The component
 //! source trees under `packages/components/*` (EVERY bucket, discovered
@@ -87,7 +87,7 @@ pub async fn serve_sui_source(
         return (StatusCode::NOT_FOUND, "no packages/components under the project root").into_response();
     };
 
-    let Some(sui_src) = lookup_file(&components, &tag, ".sui") else {
+    let Some(sui_src) = lookup_file(&components, &tag, ".sail") else {
         return (StatusCode::NOT_FOUND, "no such component").into_response();
     };
     let ctrl_src = lookup_file(&components, &tag, ".controller.ts");
@@ -115,7 +115,7 @@ h2{{font:600 .9rem ui-sans-serif,system-ui;margin:1.5rem 0 .5rem;color:#9cdcfe}}
 pre{{background:#1a1a1d;padding:1rem;border-radius:6px;overflow:auto;margin:0}}\
 </style>\
 <h1>&lt;{tag}&gt; source</h1>\
-<h2>page.sui</h2>\
+<h2>page.sail</h2>\
 <pre>{sui_src_esc}</pre>\
 <h2>controller.ts</h2>\
 <pre>{ctrl}</pre>",
@@ -177,7 +177,7 @@ mod tests {
         // A pack in a non-sui/non-ship bucket: packages/components/acme/widgets/…
         let src = root.join("packages/components/acme/widgets/src/sail-thing");
         std::fs::create_dir_all(&src).unwrap();
-        std::fs::write(src.join("sail-thing.sui"), "<div>hi</div>").unwrap();
+        std::fs::write(src.join("sail-thing.sail"), "<div>hi</div>").unwrap();
 
         // Derive the components dir from a DEEPLY nested project root (walk up).
         let nested = root.join("apps/demo");
@@ -186,12 +186,12 @@ mod tests {
         assert_eq!(components, root.join("packages").join("components"));
 
         assert_eq!(
-            super::lookup_file(&components, "sail-thing", ".sui").as_deref(),
+            super::lookup_file(&components, "sail-thing", ".sail").as_deref(),
             Some("<div>hi</div>"),
             "reads from an arbitrary bucket — no hardcoded sui/ship"
         );
         assert!(
-            super::lookup_file(&components, "sail-missing", ".sui").is_none(),
+            super::lookup_file(&components, "sail-missing", ".sail").is_none(),
             "absent tag → None"
         );
     }

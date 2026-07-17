@@ -1,5 +1,5 @@
 //! THE L1 SURFACE — one source of truth for every element the language
-//! ships. The compiler is the SSOT: a `.sui` element source is its own
+//! ships. The compiler is the SSOT: a `.sail` element source is its own
 //! declaration, and a native reskin is a row in the table below. Everything
 //! the agent (SKILL.md, LSP) and the audit report see is derived from
 //! this manifest, so "what elements does SUI give me?" has a single
@@ -13,13 +13,13 @@
 //! is a comment that is allowed to lie. This module is the build's view
 //! of the surface; the consistency test in
 //! `crates/sail/compiler/tests/l1_manifest.rs` fails when it disagrees with
-//! either the stdlib registry (a `.sui` removed) or the runtime's
+//! either the stdlib registry (a `.sail` removed) or the runtime's
 //! `LIGHT_CONTRACTS_CSS` (a reskin added without an entry).
 //!
 //! # What an entry is
 //!
 //! One row per L1 element. `StdlibElement` rows are derived from the
-//! compiled `.sui` (props, root tag, native flag, one-line description
+//! compiled `.sail` (props, root tag, native flag, one-line description
 //! pulled from the source's leading docblock). `NativeReskin` rows are
 //! declared here, with the CSS selectors the runtime MUST contain, the
 //! key attribute(s) that activate the skin, and a one-line description.
@@ -40,7 +40,7 @@ use serde::Serialize;
 use std::sync::LazyLock;
 
 /// One L1 element. `kind` is the source of truth: a `StdlibElement` row
-/// means the .sui compiler registered the element; a `NativeReskin` row
+/// means the .sail compiler registered the element; a `NativeReskin` row
 /// means the runtime styles a native HTML tag. `tag` is the bare author
 /// name (the same string the agent types between `<` and `>`).
 #[derive(Debug, Clone, Serialize)]
@@ -50,12 +50,12 @@ pub struct L1Entry {
     pub tag: String,
     /// Where this row came from. Determines what "consistency" means for
     /// the entry: a StdlibElement's `tag` must be in the stdlib registry
-    /// AND its `.sui` must compile; a NativeReskin's `tag` (or attribute
+    /// AND its `.sail` must compile; a NativeReskin's `tag` (or attribute
     /// trigger) must appear as a selector in `LIGHT_CONTRACTS_CSS`.
     pub kind: L1Kind,
     /// One-line description, surfaced in the agent skill and the
     /// duplicate report. For stdlib rows this is pulled from the
-    /// `.sui` source's leading docblock; for reskins it is authored here.
+    /// `.sail` source's leading docblock; for reskins it is authored here.
     pub description: String,
     /// Typed props (stdlib) or key attributes (reskin). The shape is
     /// `{ name, type, default? }` so the agent can read a prop table,
@@ -89,7 +89,7 @@ pub struct L1Attribute {
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum L1Kind {
-    /// A compiled `.sui` element in `crates/sail/compiler/stdlib/`. The
+    /// A compiled `.sail` element in `crates/sail/compiler/stdlib/`. The
     /// runtime tag is the same as the `tag` (spliced) or a native tag
     /// when `native` is true.
     StdlibElement,
@@ -99,12 +99,12 @@ pub enum L1Kind {
     NativeReskin,
 }
 
-// ── stdlib rows: derived from the .sui sources ──────────────────────────
+// ── stdlib rows: derived from the .sail sources ──────────────────────────
 
 /// Memoized stdlib rows. Each row is built from the compiled
 /// `ElementOutput` (props, native flag, root tag) plus the source's
 /// leading docblock (one-line description). The source string is the
-/// pre-compile `.sui` text — we read it via the same `SOURCES` table
+/// pre-compile `.sail` text — we read it via the same `SOURCES` table
 /// `stdlib::sources()` exposes, so a registry entry is impossible to
 /// delete without also changing this.
 static STDLIB_ROWS: LazyLock<Vec<L1Entry>> = LazyLock::new(|| {
@@ -120,7 +120,7 @@ static STDLIB_ROWS: LazyLock<Vec<L1Entry>> = LazyLock::new(|| {
                 .unwrap_or_else(|| {
                     // Fall back to the source's leading docblock — the
                     // `<!--  <name> — one-line description -->` first
-                    // non-empty line. The .sui sources all carry one;
+                    // non-empty line. The .sail sources all carry one;
                     // an empty fallback means the description was
                     // forgotten (also caught by the duplicate-report
                     // quality bar).

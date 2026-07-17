@@ -10,14 +10,14 @@ export interface TutorialLesson {
   order: number
   prev: string | null
   next: string | null
-  /** Custom-element tag of the solved lesson (its .sui stem). */
+  /** Custom-element tag of the solved lesson (its .sail stem). */
   solvedTag: string
   starterStem: string
   solvedStem: string
   proseHtml: string
-  /** The starter `.sui` — controller block and template, as authored. */
+  /** The starter `.sail` — controller block and template, as authored. */
   starterSource: string
-  /** The solved `.sui`. */
+  /** The solved `.sail`. */
   solvedSource: string
 }
 

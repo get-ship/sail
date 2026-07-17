@@ -122,7 +122,7 @@ mod tests {
     use super::*;
 
     fn run(src: &str) -> Vec<Finding> {
-        check(Path::new("t.sui"), src)
+        check(Path::new("t.sail"), src)
     }
 
     #[test]
@@ -161,7 +161,7 @@ mod tests {
     #[test]
     fn a_class_in_a_sourceless_buffer_is_still_flagged() {
         // Old code walked `path.parent()` up to the filesystem root looking
-        // for any `sail.config.json`; in a unit test, `t.sui` is a bare
+        // for any `sail.config.json`; in a unit test, `t.sail` is a bare
         // path with no ancestors, and the old code returned `Vec::new()`
         // because nothing above it had a config. New behavior: it fires
         // anyway. Same test name as `static_class_is_flagged`, but

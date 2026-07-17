@@ -26,7 +26,7 @@ fn impure_controller_fails_compile() {
     // used to pass for the wrong reason and then silently stopped testing anything
     // when the gate was repointed at the block.
     let dir = tempfile::tempdir().expect("tempdir");
-    let sui_path = dir.path().join("view.sui");
+    let sui_path = dir.path().join("view.sail");
     let src = r#"<controller>
 export default controller((ctx, host) => {
   mount((el) => {
@@ -58,7 +58,7 @@ export default controller((ctx, host) => {
 #[test]
 fn clean_controller_compiles() {
     let dir = tempfile::tempdir().expect("tempdir");
-    let sui_path = dir.path().join("view.sui");
+    let sui_path = dir.path().join("view.sail");
     let src = r#"<controller>
 import { controller } from '@ship/sail-runtime'
 export default controller((ctx, host) => {
@@ -85,7 +85,7 @@ fn paired_controller_file_is_rejected() {
         "export default controller((ctx) => ({}))",
     )
     .unwrap();
-    let sui_path = dir.path().join("view.sui");
+    let sui_path = dir.path().join("view.sail");
     let src = r#"<div></div>"#;
     fs::write(&sui_path, src).unwrap();
 
@@ -95,9 +95,9 @@ fn paired_controller_file_is_rejected() {
 
 #[test]
 fn no_controller_paired_skips_rule() {
-    // Sanity: a .sui without a paired .controller.ts compiles fine.
+    // Sanity: a .sail without a paired .controller.ts compiles fine.
     let dir = tempfile::tempdir().expect("tempdir");
-    let sui_path = dir.path().join("view.sui");
+    let sui_path = dir.path().join("view.sail");
     fs::write(&sui_path, r#"<div></div>"#).unwrap();
 
     compile(r#"<div></div>"#, view_opts(Some(sui_path)))

@@ -1,7 +1,7 @@
 // Template hooks — `<use-*>` elements the runtime ships built-in.
 //
 // The runtime registers each hook by name at module load. Authors
-// don't import these directly — they appear in `.sui` templates
+// don't import these directly — they appear in `.sail` templates
 // as `<use-name>` elements and the dom hydrate flow looks them up
 // in the registry.
 //

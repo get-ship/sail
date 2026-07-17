@@ -1,6 +1,6 @@
 //! Shape-conformance integration test.
 //!
-//! Compiles every checked-in `.sui` component (under `packages/components/`)
+//! Compiles every checked-in `.sail` component (under `packages/components/`)
 //! with the in-process compiler API,
 //! merges the emitted JS into a tempdir, and runs `tsc --noEmit`
 //! against it with paths mapped to the runtime / ui-dom sources.
@@ -54,13 +54,13 @@ fn walk_collect(dir: &Path, out: &mut Vec<PathBuf>) {
                 continue;
             }
             walk_collect(&path, out);
-        } else if path.extension() == Some(OsStr::new("sui")) {
+        } else if path.extension() == Some(OsStr::new("sail")) {
             out.push(path);
         }
     }
 }
 
-/// Determine compile mode + component metadata for a given `.sui` path.
+/// Determine compile mode + component metadata for a given `.sail` path.
 /// Files under `packages/components/` are components; their component name is
 /// the file stem. (The framework builds components, full stop — there is no
 /// `views/` concept here; views are a Ship/deck applet feature.)
@@ -369,10 +369,10 @@ fn every_sui_compiles_and_imports_resolve() {
     let files = collect_sui_files(&roots);
     assert!(
         !files.is_empty(),
-        "shape-conformance found zero `.sui` files under {roots:?} — wrong repo root?"
+        "shape-conformance found zero `.sail` files under {roots:?} — wrong repo root?"
     );
 
-    // Compile every `.sui` to JS via the in-process API. No spawned
+    // Compile every `.sail` to JS via the in-process API. No spawned
     // sub-processes, no concurrency deadlock — sequential, fast.
     let mut compiled: Vec<(PathBuf, String, String)> = Vec::new();
     let mut compile_errors: Vec<String> = Vec::new();
@@ -430,7 +430,7 @@ fn every_sui_typechecks_against_runtime_dts() {
         let js = compile_one(sui, &repo).unwrap_or_else(|e| panic!("{e}"));
         let rel = sui.strip_prefix(&repo).unwrap_or(sui);
         // Each fixture lands as `<sanitized-path>.js` so tsc diagnostics
-        // name the originating .sui file directly.
+        // name the originating .sail file directly.
         let out_name = format!("{}.js", sanitize_for_tempdir(rel));
         fs::write(temp_path.join(&out_name), js).expect("write js");
     }
@@ -449,18 +449,18 @@ fn every_sui_typechecks_against_runtime_dts() {
     let stderr = String::from_utf8_lossy(&output.stderr);
 
     // Filter to diagnostics that originate in the temp dir's compiled
-    // fixtures (the `<sanitized>.sui.js` files we wrote). tsc walks
+    // fixtures (the `<sanitized>.sail.js` files we wrote). tsc walks
     // imported modules and may surface errors in workspace files
     // outside our test surface (the runtime source isn't strict-clean
     // at HEAD; `packages/sail/runtime/src/context.ts` and
     // `scope-resource-warn.ts` have pre-existing errors that this
     // job is out-of-scope to fix). Those errors aren't a shape-
-    // conformance signal — they'd fire even if every `.sui` was
+    // conformance signal — they'd fire even if every `.sail` was
     // empty — so we drop them here and only gate on diagnostics
     // tied to compiler-emitted output.
     let fixture_errors: Vec<&str> = stdout
         .lines()
-        .filter(|line| line.contains(".sui.js("))
+        .filter(|line| line.contains(".sail.js("))
         .collect();
 
     if !fixture_errors.is_empty() {
@@ -469,8 +469,8 @@ fn every_sui_typechecks_against_runtime_dts() {
              --- fixture diagnostics ---\n{}\n\n\
              --- full stdout (includes pre-existing runtime/source noise filtered out above) ---\n{stdout}\n\
              --- stderr ---\n{stderr}\n\n\
-             Each fixture diagnostic names a file like `views__git__page.sui.js`. \
-             Reverse `__` -> `/` to find the originating `.sui` source.",
+             Each fixture diagnostic names a file like `views__git__page.sail.js`. \
+             Reverse `__` -> `/` to find the originating `.sail` source.",
             fixture_errors.len(),
             output.status.code(),
             fixture_errors.join("\n")

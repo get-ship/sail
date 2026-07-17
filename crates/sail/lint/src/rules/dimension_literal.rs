@@ -339,7 +339,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn run(src: &str) -> Vec<Finding> {
-        check(&PathBuf::from("/fake/foo.sui"), src)
+        check(&PathBuf::from("/fake/foo.sail"), src)
     }
 
     #[test]

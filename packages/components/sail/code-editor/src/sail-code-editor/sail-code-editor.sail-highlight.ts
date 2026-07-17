@@ -330,7 +330,7 @@ function scanAttributeValue(
   builder.add(valueStart + close, valueStart + close + 1, Decoration.mark({ class: CLS_INTERP_BRACE }))
 }
 
-class SuiHighlighter implements PluginValue {
+class SailHighlighter implements PluginValue {
   decorations: DecorationSet
 
   constructor(view: EditorView) {
@@ -392,7 +392,7 @@ function build(view: EditorView): DecorationSet {
   return builder.finish()
 }
 
-const suiHighlightPlugin = ViewPlugin.fromClass(SuiHighlighter, {
+const sailHighlightPlugin = ViewPlugin.fromClass(SailHighlighter, {
   decorations: (v) => v.decorations,
 })
 
@@ -402,7 +402,7 @@ const suiHighlightPlugin = ViewPlugin.fromClass(SuiHighlighter, {
  * attribute names, we override the inline style the language's
  * `HighlightStyle` writes for `t.attributeName`.
  */
-const suiHighlightTheme = EditorView.theme({
+const sailHighlightTheme = EditorView.theme({
   // Block directive sigils — `#`, `{:`, `{/`, plus the matching `}`.
   '& .sail-sigil': {
     color: 'var(--syntax-punctuation, var(--syntax-operator, var(--syntax-keyword)))',
@@ -446,4 +446,4 @@ const suiHighlightTheme = EditorView.theme({
  * The SUI language extension: a text-decoration overlay that lights
  * up SUI's directives + interpolations on top of `lang-html`.
  */
-export const suiHighlight = [suiHighlightPlugin, suiHighlightTheme]
+export const sailHighlight = [sailHighlightPlugin, sailHighlightTheme]

@@ -64,7 +64,7 @@ pub const CONTROLLER_RULES: &[(&str, RuleFn)] = &[
     (controller_no_load_state::RULE_ID, controller_no_load_state::check),
 ];
 
-/// Rules that lint a `*.sui` template source. The dispatcher in
+/// Rules that lint a `*.sail` template source. The dispatcher in
 /// `lib.rs::lint_sui_template_source` walks this slice in order.
 pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     // Also on the TEMPLATE path, not just when a pack happens to have a .ts file

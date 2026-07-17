@@ -36,7 +36,7 @@
 //!
 //! ## Part 2 — CROSS-PRODUCER parity (native vs wasm, #160)
 //!
-//! For each compiler fixture (`crates/sail/compiler/tests/fixtures/*.sui`),
+//! For each compiler fixture (`crates/sail/compiler/tests/fixtures/*.sail`),
 //! compile via the native `sail_compiler::compile` (in-process, x86_64) AND via
 //! the wasm `compile` export (the artifact `just sail-wasm` builds into
 //! `packages/sail/compiler-wasm/pkg`, the exact surface the docs playground +
@@ -378,7 +378,7 @@ fn skip_balanced_object(s: &str) -> Option<&str> {
 /// internally (`source_path: None`, `emit_dts/ssr: false`). Returns
 /// `Ok(js)` / `Err(message)` so we can assert kind-parity with the wasm side.
 fn native_compile(repo: &Path, f: &Fixture) -> Result<String, String> {
-    let path = fixtures_dir(repo).join(format!("{}.sui", f.name));
+    let path = fixtures_dir(repo).join(format!("{}.sail", f.name));
     let source = std::fs::read_to_string(&path).map_err(|e| format!("read {}: {e}", f.name))?;
     let component_meta = f.component_name.map(|name| ComponentMeta {
         name: name.to_string(),
@@ -435,7 +435,7 @@ fn wasm_compile_all(repo: &Path, fixtures: &[Fixture]) -> Vec<WasmRow> {
     let jobs: Vec<_> = fixtures
         .iter()
         .map(|f| {
-            let path = fixtures_dir(repo).join(format!("{}.sui", f.name));
+            let path = fixtures_dir(repo).join(format!("{}.sail", f.name));
             let source = std::fs::read_to_string(&path)
                 .unwrap_or_else(|e| panic!("read {} for wasm side: {e}", f.name));
             let mode = match f.mode {
@@ -561,7 +561,7 @@ fn gate_bundle_parity_native_vs_wasm() {
                 checked += 1;
             }
             // KIND DIVERGENCE — one producer compiled, the other didn't. This is
-            // exactly the dangerous #160 split: a `.sui` one toolchain accepts
+            // exactly the dangerous #160 split: a `.sail` one toolchain accepts
             // and the other rejects.
             (Ok(_), other) => diffs.push(format!(
                 "{}: native OK but wasm produced kind={other:?} (msg: {:?}) — producers disagree on acceptance",

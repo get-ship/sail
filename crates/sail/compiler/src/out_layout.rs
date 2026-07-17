@@ -1,12 +1,12 @@
 //! Canonical output-tree layout for sail-compiler emit artifacts.
 //!
 //! Build artifacts (`.compiled.js`, `.custom-elements.json`, `.schema.json`,
-//! `.sui.meta.json`, `.ssr.html`) land under the mirror tree at
+//! `.sail.meta.json`, `.ssr.html`) land under the mirror tree at
 //! `<repo-root>/.sail-out/<source-rel>/` (the neutral default — or `SAIL_OUT_DIR`
 //! / the `--out` dir). The
-//! `.sui.d.ts` type companion is the EXCEPTION: it is written ADJACENT to its
-//! `.sui` source (see `compile_one` in the bin), so a controller's
-//! `import type { Scope } from './x.sui'` resolves with no `rootDirs` into a
+//! `.sail.d.ts` type companion is the EXCEPTION: it is written ADJACENT to its
+//! `.sail` source (see `compile_one` in the bin), so a controller's
+//! `import type { Scope } from './x.sail'` resolves with no `rootDirs` into a
 //! build dir. NOTE: `.ship/sail-out` is the Ship dynamic-views output and is
 //! moving — it must not be load-bearing for component typing.
 //!
@@ -64,7 +64,7 @@ pub fn find_repo_root(start: &Path) -> Option<PathBuf> {
     }
 }
 
-/// Resolve the canonical mirror directory for a given `.sui` source path.
+/// Resolve the canonical mirror directory for a given `.sail` source path.
 ///
 /// Layout: `<repo-root>/<SAIL_OUT_DIR>/<source-dir-relative-to-repo-root>/`,
 /// where `<SAIL_OUT_DIR>` defaults to `.sail-out` and is host-configurable.
@@ -80,7 +80,7 @@ pub fn mirror_dir_for(sui_path: &Path) -> Option<PathBuf> {
     Some(root.join(sui_out_dir()).join(rel))
 }
 
-/// Returns the mirror directory for a `.sui` source path, falling back to
+/// Returns the mirror directory for a `.sail` source path, falling back to
 /// a sibling `dist/` directory when the source is outside any detectable
 /// repo (only happens in unit tests that compile from a tempdir).
 pub fn resolve_out_dir(sui_path: &Path) -> PathBuf {
@@ -106,7 +106,7 @@ mod tests {
     #[test]
     fn falls_back_to_dist_outside_repo() {
         let tmp = tempfile::tempdir().unwrap();
-        let sui = tmp.path().join("foo.sui");
+        let sui = tmp.path().join("foo.sail");
         std::fs::write(&sui, "x").unwrap();
         let out = resolve_out_dir(&sui);
         assert!(out.ends_with("dist"));
@@ -118,7 +118,7 @@ mod tests {
         std::fs::write(tmp.path().join("Cargo.toml"), "[workspace]\nmembers = []\n").unwrap();
         let src_dir = tmp.path().join("packages/foo/src");
         std::fs::create_dir_all(&src_dir).unwrap();
-        let sui = src_dir.join("bar.sui");
+        let sui = src_dir.join("bar.sail");
         std::fs::write(&sui, "x").unwrap();
         let out = mirror_dir_for(&sui).unwrap();
         assert_eq!(out, tmp.path().join(".sail-out/packages/foo/src"));

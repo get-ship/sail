@@ -1,4 +1,4 @@
-//! `sail-lsp` — Language Server for `.sui` templates.
+//! `sail-lsp` — Language Server for `.sail` templates.
 //!
 //! A thin LSP/stdio shell over the `sail-compiler` analysis facade. All
 //! intelligence (diagnostics, hover, completion, definition) comes from the
@@ -36,7 +36,7 @@ fn main() -> anyhow::Result<()> {
 
 fn server_capabilities() -> ServerCapabilities {
     ServerCapabilities {
-        // FULL sync: each change resends the whole document. `.sui` files are
+        // FULL sync: each change resends the whole document. `.sail` files are
         // small; incremental sync isn't worth the complexity here.
         text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
         hover_provider: Some(HoverProviderCapability::Simple(true)),
@@ -313,7 +313,7 @@ fn diag_to_lsp(d: &sail_compiler::Diagnostic) -> Diagnostic {
             sail_compiler::DiagSeverity::Warning => DiagnosticSeverity::WARNING,
         }),
         code: d.rule.clone().map(NumberOrString::String),
-        source: Some("sui".to_string()),
+        source: Some("sail".to_string()),
         message: d.message.clone(),
         ..Default::default()
     }
@@ -645,7 +645,7 @@ fn in_style_block(text: &str, line_idx: usize) -> bool {
 
 /// True if the cursor at `(line_idx, col)` sits inside a `style=`
 /// attribute value (double- or single-quoted, or a `style:` flow
-/// attribute without quotes — uncommon but legal in `.sui`).
+/// attribute without quotes — uncommon but legal in `.sail`).
 fn in_style_attr_value(text: &str, line_idx: usize, col: usize) -> bool {
     let mut in_style = false;
     let mut quote: Option<char> = None;
@@ -705,7 +705,7 @@ fn in_style_attr_value(text: &str, line_idx: usize, col: usize) -> bool {
 
 /// For each `<style …>` opening or `</style>` closing tag on `line`,
 /// bump `depth` accordingly. `<style …>` opens (+1), `</style>` closes
-/// (-1). The tag match is naive (substring) — `.sui` files don't embed
+/// (-1). The tag match is naive (substring) — `.sail` files don't embed
 /// `<style>` as text content, so a false positive is extremely unlikely.
 fn scan_tag_openings(line: &str, tag: &str, depth: &mut i32) {
     let open = format!("<{tag}");
@@ -758,7 +758,7 @@ mod tests {
         assert_eq!(l.range.end, Position::new(1, 5));
         assert_eq!(l.severity, Some(DiagnosticSeverity::ERROR));
         assert_eq!(l.code, Some(NumberOrString::String("sail-for-key".into())));
-        assert_eq!(l.source.as_deref(), Some("sui"));
+        assert_eq!(l.source.as_deref(), Some("sail"));
     }
 
     #[test]
@@ -819,7 +819,7 @@ mod tests {
         // `<style>` is open on line 0, unclosed on line 1.
         // Cursor sits right after `var(--` on line 1 (0-indexed) col 20.
         // `<style>` is open on line 0, unclosed on line 1.
-        let items = build_item("file:///tmp/test.sui", 1, 20);
+        let items = build_item("file:///tmp/test.sail", 1, 20);
         assert!(!items.is_empty(), "expected token completions inside var(--)");
         let primary = items.iter().find(|i| i.label == "--primary").expect("--primary item");
         assert_eq!(primary.kind, Some(CompletionItemKind::COLOR));
@@ -836,7 +836,7 @@ mod tests {
         // with insert_text that doesn't double the leading `--`.
         let doc = "<style>\n  .x { color: var(--sp; }\n</style>\n";
         let mut docs: Docs = HashMap::new();
-        let url = Url::parse("file:///tmp/test_prefix.sui").unwrap();
+        let url = Url::parse("file:///tmp/test_prefix.sail").unwrap();
         docs.insert(url.clone(), doc.to_string());
         let params = CompletionParams {
             text_document_position: lsp_types::TextDocumentPositionParams {
@@ -861,7 +861,7 @@ mod tests {
         // our cursor position.
         let doc = "<div style=\"color: var(--\">\n</div>\n";
         let mut docs: Docs = HashMap::new();
-        let url = Url::parse("file:///tmp/test_attr.sui").unwrap();
+        let url = Url::parse("file:///tmp/test_attr.sail").unwrap();
         docs.insert(url.clone(), doc.to_string());
         let params = CompletionParams {
             text_document_position: lsp_types::TextDocumentPositionParams {
@@ -880,7 +880,7 @@ mod tests {
     #[test]
     fn markup_position_does_not_emit_token_completions() {
         // Line 3 of TEST_DOC is `<div>{count()}</div>` — markup, no tokens.
-        let items = build_item("file:///tmp/test.sui", 3, 13);
+        let items = build_item("file:///tmp/test.sail", 3, 13);
         assert!(
             items.iter().all(|i| !i.label.starts_with("--")),
             "markup position leaked token completions: {items:?}"
@@ -893,7 +893,7 @@ mod tests {
         // doesn't end with `--`. Tokens should not fire.
         let doc = "<style>\n  .x { padding: 12px; }\n</style>\n";
         let mut docs: Docs = HashMap::new();
-        let url = Url::parse("file:///tmp/test_plain.sui").unwrap();
+        let url = Url::parse("file:///tmp/test_plain.sail").unwrap();
         docs.insert(url.clone(), doc.to_string());
         let params = CompletionParams {
             text_document_position: lsp_types::TextDocumentPositionParams {

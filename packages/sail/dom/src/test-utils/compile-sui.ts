@@ -1,4 +1,4 @@
-// Native-backed test helper. Compiles `.sui` source through the SAME
+// Native-backed test helper. Compiles `.sail` source through the SAME
 // `sail-compiler` crate the daemon compiles through (deck-core/src/view.rs),
 // loaded in-process as a Node-API `.node` addon, then evaluates the emitted
 // module so vitest tests assert against the production emit shape rather than
@@ -12,7 +12,7 @@
 //
 // The legacy `@ship/sail-dom/legacy` path is gone — every directive must
 // round-trip through Rust now. This helper is the only test-time bridge
-// between `.sui` source and a mounted DOM tree.
+// between `.sail` source and a mounted DOM tree.
 
 import { existsSync, readdirSync, statSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
@@ -138,8 +138,8 @@ export interface CompileOpts {
   /** Marker passed to the compiler as the setup_url; eval rewrites the
    *  resulting `import setup from "<marker>"` to the injected setup. */
   setupMarker?: string
-  /** On-disk path of the `.sui` source. Pass it when the test reads a
-   *  checked-in `.sui` off disk (e.g. `readFileSync(here('foo.sui'))`) so the
+  /** On-disk path of the `.sail` source. Pass it when the test reads a
+   *  checked-in `.sail` off disk (e.g. `readFileSync(here('foo.sail'))`) so the
    *  compiler can locate the paired `<stem>.controller.ts` and run the four
    *  controller-aware passes (scope_bound, scope_member, bind_this_target,
    *  on_callable) — the napi path then rejects exactly what the daemon + CLI

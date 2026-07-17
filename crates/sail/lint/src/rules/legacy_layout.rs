@@ -93,7 +93,7 @@ mod tests {
     use super::*;
 
     fn run(src: &str) -> Vec<String> {
-        check(Path::new("t.sui"), src).into_iter().map(|f| f.message).collect()
+        check(Path::new("t.sail"), src).into_iter().map(|f| f.message).collect()
     }
 
     #[test]

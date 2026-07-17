@@ -81,7 +81,7 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> String {
     }
 }
 
-/// Find every static `sx="…"` attribute VALUE in raw `.sui` source, with its
+/// Find every static `sx="…"` attribute VALUE in raw `.sail` source, with its
 /// byte offset (pointing at the first character inside the quotes). Read-only
 /// twin of [`lower_sx`]'s attribute-recognition walk — used by the `(--x)`
 /// resolution check (`check::sx_vars`), which runs on the pre-preprocess
@@ -2029,7 +2029,7 @@ mod tests {
     /// A comment may name `<controller>` above the block it describes.
     #[test]
     fn a_comment_may_name_the_controller_block_it_describes() {
-        let src = "<!-- counter.sui — when there's state, add an inline <controller> block. -->\n\
+        let src = "<!-- counter.sail — when there's state, add an inline <controller> block. -->\n\
                    <controller>\nexport default controller({})\n</controller>\n<p>hi</p>";
         let (stripped, body) = extract_controller_block(src);
         assert!(body.is_some(), "the REAL block is the one extracted");
@@ -2387,7 +2387,7 @@ mod tests {
         // tracker, which then leaked into every subsequent attribute
         // — every brace-attr after the comment failed to get quoted
         // and the HTML parser later rejected the unquoted `={` shape.
-        // Real repro: views/eval/page.sui's header comment.
+        // Real repro: views/eval/page.sail's header comment.
         let src = r#"<!--
   Note: the renderable subset doesn't admit `.items({…})` here.
 -->

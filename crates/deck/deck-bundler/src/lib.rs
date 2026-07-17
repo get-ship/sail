@@ -78,7 +78,7 @@ pub struct Bundler {
     /// the same view → N full module graphs live simultaneously.
     in_flight: Arc<tokio::sync::Mutex<HashMap<String, Arc<Notify>>>>,
     /// Cached `all_targets()` snapshot (#256). `all_targets` re-reads every
-    /// `.sui` under the source roots; the watcher hit it on every FS event and
+    /// `.sail` under the source roots; the watcher hit it on every FS event and
     /// the build path on every request. Reuse one long-lived snapshot,
     /// invalidated only when a directory is created/removed (the watcher calls
     /// `invalidate_targets`).
@@ -117,7 +117,7 @@ impl Bundler {
 
     /// One long-lived `all_targets()` snapshot, computed on first use and
     /// reused until `invalidate_targets` clears it (#256). Cheap clone of the
-    /// shared `Arc<Vec<_>>` — the expensive per-`.sui` FS walk runs once per
+    /// shared `Arc<Vec<_>>` — the expensive per-`.sail` FS walk runs once per
     /// invalidation, not once per request/FS-event.
     fn targets_snapshot(&self) -> Arc<Vec<BundleTarget>> {
         {
@@ -312,7 +312,7 @@ impl Bundler {
         let skip_lazy = std::env::var("DECK_DEV_SKIP_LAZY")
             .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
             .unwrap_or(false);
-        // Reuse the cached snapshot instead of re-walking every `.sui` (#256).
+        // Reuse the cached snapshot instead of re-walking every `.sail` (#256).
         for t in self.targets_snapshot().iter() {
             if t.name.starts_with("views/") {
                 views.push(t.clone());
@@ -422,7 +422,7 @@ impl Bundler {
     }
     pub(crate) fn invalidate_targets_for_watch(&self) {
         self.invalidate_targets();
-        // A structural change (a `.sui` CREATE) may have ADDED or removed a
+        // A structural change (a `.sail` CREATE) may have ADDED or removed a
         // component; the tag→source CEM index is memoized process-globally, so
         // clear it too — otherwise a component authored mid-session resolves to a
         // virtual no-op until restart (the `component_index` staleness hazard).

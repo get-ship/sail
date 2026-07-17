@@ -10,7 +10,7 @@ runtimes.
 
 ```
 tests/golden/
-  <name>.sui              -- input source
+  <name>.sail              -- input source
   <name>.expected.json    -- full CompileOutput shape (js/css/cem/schema/dts/ssrHtml/meta)
 ```
 
@@ -33,7 +33,7 @@ Inspect the `git diff` and commit only when the change is intended.
 
 ## Add a fixture
 
-1. Drop a new `<name>.sui` next to the existing inputs. The fixture
+1. Drop a new `<name>.sail` next to the existing inputs. The fixture
    should be the smallest source that exercises the surface area you
    want pinned (a single block, a single attribute kind, etc.).
 2. Add a `#[test] fn golden_<name>()` entry in `tests/golden.rs`
@@ -41,7 +41,7 @@ Inspect the `git diff` and commit only when the change is intended.
 3. Run `SAIL_GOLDEN_UPDATE=1 cargo test -p sail-compiler --test golden`
    once to write `<name>.expected.json`. Re-run without the env var
    to confirm it passes.
-4. Commit both the `.sui` source and the generated `.expected.json`.
+4. Commit both the `.sail` source and the generated `.expected.json`.
 
 ## Compile options
 

@@ -1,7 +1,7 @@
 // The <sail-media-av> renderer (video/audio + optional waveform).
 //
 // Harness: `renderComponent` from `@ship/test-setup` compiles the renderer
-// `.sui` under the `sail-media-av` tag and registers it as a custom element
+// `.sail` under the `sail-media-av` tag and registers it as a custom element
 // (the new-tag-via-harness path — no WASM rebuild). The media renderer receives
 // an already-resolved source via the `prop:src` identity property (a video/audio
 // object-url or resolved bytes the consumer fetched) — it NEVER fetches its own
@@ -23,9 +23,9 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderComponent } from '@ship/test-setup'
-import mediaRenderer from '../src/sail-media-av/sail-media-av.sui.controller.ts'
+import mediaRenderer from '../src/sail-media-av/sail-media-av.sail.controller.ts'
 
-const SOURCE_URL = new URL('../src/sail-media-av/sail-media-av.sui', import.meta.url)
+const SOURCE_URL = new URL('../src/sail-media-av/sail-media-av.sail', import.meta.url)
 const SOURCE = readFileSync(SOURCE_URL, 'utf8')
 // On-disk path so the compiler pairs the controller and runs the
 // controller-aware passes (bind:this targets must be `ref(null)`) — the

@@ -148,7 +148,7 @@ fn mutators_and_forbidden_constructs_still_reject() {
 
 #[test]
 fn agents_view_real_expressions() {
-    // Real expressions lifted from views/agents/view.sui.
+    // Real expressions lifted from views/agents/view.sail.
     ok("total()");
     ok("total() === 1 ? '' : 's'");
     ok("agents().kind === 'ok'");

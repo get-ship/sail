@@ -383,9 +383,9 @@ pub fn pack_id_for_name(npm_name: &str) -> String {
 }
 
 /// Recursively walk `dir`, collecting `(tag, abs_path)` pairs for component
-/// `.sui` files. A `.sui` is a component iff its stem contains a hyphen and is
+/// `.sail` files. A `.sail` is a component iff its stem contains a hyphen and is
 /// neither "page" nor "index" — the HTML custom-element tag-name rule (HTML spec
-/// §4.13.3 requires a hyphen). Views use `page.sui` or `index.sui` and are
+/// §4.13.3 requires a hyphen). Views use `page.sail` or `index.sail` and are
 /// excluded by this guard. `dist`, `node_modules`, `.git`, and `target` are
 /// skipped for speed.
 fn scan_sui_components(dir: &Path, out: &mut Vec<(String, PathBuf)>) {
@@ -400,7 +400,7 @@ fn scan_sui_components(dir: &Path, out: &mut Vec<(String, PathBuf)>) {
         if p.is_dir() {
             scan_sui_components(&p, out);
         } else if let Some(stem) = p.file_stem().and_then(|s| s.to_str()) {
-            if p.extension().and_then(|x| x.to_str()) != Some("sui") {
+            if p.extension().and_then(|x| x.to_str()) != Some("sail") {
                 continue;
             }
             // Guard: stem must contain a hyphen and not be "page" or "index".
@@ -412,7 +412,7 @@ fn scan_sui_components(dir: &Path, out: &mut Vec<(String, PathBuf)>) {
 }
 
 /// Return all `(tag, abs_path)` component pairs discovered by source scan of
-/// `pkg_root/src/`. Only `.sui` files whose stem contains a hyphen and is not
+/// `pkg_root/src/`. Only `.sail` files whose stem contains a hyphen and is not
 /// "page" or "index" are returned; views and other files are excluded by the
 /// guard.
 pub fn source_tags_for_package(pkg_root: &Path) -> Vec<(String, PathBuf)> {
@@ -425,14 +425,14 @@ pub fn source_tags_for_package(pkg_root: &Path) -> Vec<(String, PathBuf)> {
     out
 }
 
-/// Build a `<tag>` → source `.sui` index from a registry-composed root's
+/// Build a `<tag>` → source `.sail` index from a registry-composed root's
 /// `components/` tree — the per-space component layer.
 ///
 /// This is the monorepo-decoupled discovery: instead of reading the root
 /// `package.json` workspaces, scan the `components/` dir of a space's composed
 /// root (`ship_platform::registry::compose::composed_root_for`), which holds
 /// each declared dep's components namespaced as
-/// `components/<pkg.path>/<tag>/<tag>.sui`. The same custom-element hyphen rule
+/// `components/<pkg.path>/<tag>/<tag>.sail`. The same custom-element hyphen rule
 /// applies (component iff hyphenated stem ∉ {page,index}), so views never leak.
 /// First tag wins on collision (byte-stable: WalkDir is lexical).
 pub fn composed_component_index(composed_root: &Path) -> std::collections::HashMap<String, PathBuf> {

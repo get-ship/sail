@@ -29,7 +29,7 @@ export default defineConfig({
       // both the daemon and this harness, so there is no wasm pkg to alias or
       // keep fresh (#255). The wasm surface stays browser-only.
     ],
-    // sail-compiler emits `view.js` next to `view.sui` and the paired `view.ts`
+    // sail-compiler emits `view.js` next to `view.sail` and the paired `view.ts`
     // (see scripts/build-bundles.mjs::compileSui). Tests target the controller
     // source — prefer `.ts` over the generated `.js` shadow.
     extensions: ['.mts', '.ts', '.tsx', '.mjs', '.js', '.jsx', '.json'],

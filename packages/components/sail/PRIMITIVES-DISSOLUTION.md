@@ -1,7 +1,7 @@
 # @ship/sail-primitives — dissolution audit
 
 Audit of every component and export in `packages/components/sail/primitives`
-against the L1 standard library (`crates/sail/compiler/stdlib/*.sui`, 40
+against the L1 standard library (`crates/sail/compiler/stdlib/*.sail`, 40
 elements, plus the native+skin tags: `button`, `input`, `select`, `textarea`,
 `dialog`, `details`, `table`, …). Rule applied: **primitives dissolves into
 other packs or is deleted in the event of duplication.** This document is the
@@ -18,7 +18,7 @@ imports (`@ship/sail-primitives`).
 - `src/index.ts` registers **13 custom elements** and re-exports the table
   engine (`createTable` + types) and the `Tone`/`Size` unions.
 - **24 component directories are orphans**: a `.controller.ts` + generated
-  `.sui.d.ts` with **no `.sui` source** — leftovers of the L1 cutover commits
+  `.sail.d.ts` with **no `.sail` source** — leftovers of the L1 cutover commits
   (`cutover(l1): …`, `refactor(sui): execute the surface decision — 25
   components deleted`). None is imported by `index.ts`; none is imported by
   anything else in the repo.
@@ -27,7 +27,7 @@ imports (`@ship/sail-primitives`).
   deleted when `<icon>` moved to L1. Nothing has depended on these tests
   passing for some time.
 - Several orphan tests only resolve through **stale `.sail-out` mirror
-  artifacts** of deleted `.sui` sources (e.g. `sail-drawer-a11y.test.ts`,
+  artifacts** of deleted `.sail` sources (e.g. `sail-drawer-a11y.test.ts`,
   `sail-app-icon.test.ts`); `sail-sheet.controller.ts` imports
   `./engine/create-sheet` and `./view/geometry`, directories that no longer
   exist.
@@ -39,8 +39,8 @@ imports (`@ship/sail-primitives`).
 
 ## Classification table
 
-Status: LIVE = registered via `index.ts`; ORPHAN = controller + `.sui.d.ts`
-residue, no `.sui`, unregistered, unreferenced.
+Status: LIVE = registered via `index.ts`; ORPHAN = controller + `.sail.d.ts`
+residue, no `.sail`, unregistered, unreferenced.
 
 | Component / export | Status | Classification | Disposition | Rationale |
 | --- | --- | --- | --- | --- |
@@ -107,7 +107,7 @@ and both helpers die with the pack.
 ### Consumer migrations required at execution time
 
 - `@ship/sail-media` — `import { createTable, type Table } from '@ship/sail-primitives'`
-  (controller + `.sui`) → `@ship/sail-data`.
+  (controller + `.sail`) → `@ship/sail-data`.
 - `@ship/sail-viewer` — tests side-effect-import `@ship/sail-primitives` to
   register tags their comments say are "sail-error-boundary / sail-alert /
   sail-code"; the templates now use L1 elements, so the imports just drop.
@@ -133,7 +133,7 @@ and both helpers die with the pack.
    runtime consumer; everything else is then unreferenced.
 2. Fix the viewer event-name bug + drop its vestigial imports.
 3. Create sail-inputs / sail-prose / sail-cmdk from the live sources (each pack
-   mirrors the @ship/sail-mermaid shape: `.sui` with inline controller,
+   mirrors the @ship/sail-mermaid shape: `.sail` with inline controller,
    `renderComponent`-based tests, `suiComponentVitestConfig`). Port each
    component's dedicated tests; leave the dead orphan tests behind.
 4. Decide `sail-timeline`: L1 stdlib promotion or sail-prose.

@@ -27,9 +27,9 @@ export default controller((ctx) => {
 fn opts(name: &str) -> CompileOpts {
     CompileOpts {
         route_params: None,
-        setup_url: Some(format!("./{name}.sui.controller.ts")),
+        setup_url: Some(format!("./{name}.sail.controller.ts")),
         mode: CompileMode::Component,
-        source_path: Some(PathBuf::from(format!("/x/{name}.sui"))),
+        source_path: Some(PathBuf::from(format!("/x/{name}.sail"))),
         component_meta: Some(ComponentMeta { name: name.to_string() }),
         emit_dts: false,
         emit_component_imports: false,

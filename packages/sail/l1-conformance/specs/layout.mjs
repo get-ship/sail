@@ -37,8 +37,8 @@ const FIXTURE = `<component>{ props: {} }</component>
 
 function compiledLayoutCss() {
   mkdirSync(TMP, { recursive: true })
-  writeFileSync(resolve(TMP, 'fixture.sui'), FIXTURE)
-  execFileSync(resolve(ROOT, 'target/debug/sail-compiler'), ['build', resolve(TMP, 'fixture.sui'), '--out', TMP], {
+  writeFileSync(resolve(TMP, 'fixture.sail'), FIXTURE)
+  execFileSync(resolve(ROOT, 'target/debug/sail-compiler'), ['build', resolve(TMP, 'fixture.sail'), '--out', TMP], {
     stdio: 'pipe',
   })
   const js = readFileSync(resolve(TMP, 'fixture.js'), 'utf8')

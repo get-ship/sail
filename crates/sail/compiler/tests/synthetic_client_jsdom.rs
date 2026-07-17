@@ -267,21 +267,21 @@ fn client_contract_csr_and_hydration_in_jsdom() {
     let targets = [
         Target {
             name: "badge",
-            source_rel: "crates/deck/deck-conformance/app/components/badge/badge.sui",
+            source_rel: "crates/deck/deck-conformance/app/components/badge/badge.sail",
             manifest_rel: CONF_MANIFEST,
             mode: CompileMode::Component,
             component_tag: Some("sail-badge"),
         },
         Target {
             name: "board",
-            source_rel: "crates/deck/deck-conformance/app/views/board/page.sui",
+            source_rel: "crates/deck/deck-conformance/app/views/board/page.sail",
             manifest_rel: CONF_MANIFEST,
             mode: CompileMode::Component,
             component_tag: None,
         },
         Target {
             name: "greet",
-            source_rel: "crates/deck/deck-conformance/app/views/greet/[id]/page.sui",
+            source_rel: "crates/deck/deck-conformance/app/views/greet/[id]/page.sail",
             manifest_rel: CONF_MANIFEST,
             mode: CompileMode::Component,
             component_tag: None,

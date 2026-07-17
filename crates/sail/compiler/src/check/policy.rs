@@ -53,7 +53,7 @@ use std::sync::{Mutex, OnceLock};
 
 use super::lint_overrides::{LintOverride, OverrideSeverity};
 
-/// The floor rule IDs — the styling constructs banned in EVERY `.sui` compiled
+/// The floor rule IDs — the styling constructs banned in EVERY `.sail` compiled
 /// as a component or view, with or without a `sail.config.json`. This is the
 /// single source of truth: [`is_floor_rule`], [`Policy::floor`], and the
 /// compiler's unconditional `enforce_floor` pass
@@ -355,7 +355,7 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
 /// THE LOG SEAM. One line to stderr per `(config file, resulting tier)`, the
 /// first time [`Policy::overrides_for`] resolves a given `sail.config.json` in
 /// this process — dedup so a many-file package doesn't repeat itself once per
-/// compiled `.sui`, while still guaranteeing at least one line per package per
+/// compiled `.sail`, while still guaranteeing at least one line per package per
 /// build/dev-server run. Every wording names the file, the tier, and WHY:
 ///
 /// - [`ResolutionKind::Rejected`] — REFUSES loudly: "typo'd/broken config,
@@ -535,7 +535,7 @@ mod tests {
     fn resolve_config(body: &str) -> Option<Policy> {
         let tmp = tempfile::tempdir().unwrap();
         std::fs::write(tmp.path().join("sail.config.json"), body).unwrap();
-        let src = tmp.path().join("src").join("w.sui");
+        let src = tmp.path().join("src").join("w.sail");
         std::fs::create_dir_all(src.parent().unwrap()).unwrap();
         std::fs::write(&src, "<p>{x}</p>").unwrap();
         Policy::resolve_opt(&src)
@@ -569,7 +569,7 @@ mod tests {
         // No `sail.config.json` anywhere on the walk → None (opt-in; the floor
         // still holds structurally, but no capability tier is imposed).
         let tmp = tempfile::tempdir().unwrap();
-        let src = tmp.path().join("w.sui");
+        let src = tmp.path().join("w.sail");
         std::fs::write(&src, "<p>{x}</p>").unwrap();
         assert_eq!(Policy::resolve_opt(&src), None);
     }

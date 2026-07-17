@@ -201,7 +201,7 @@ def main():
     for root, dirs, files in os.walk("."):
         dirs[:] = [d for d in dirs if d not in ("node_modules", "target", ".git", ".sail-out", "dist")]
         for fn in files:
-            if not fn.endswith(".sui"):
+            if not fn.endswith(".sail"):
                 continue
             path = os.path.join(root, fn)
             src = open(path, encoding="utf8").read()

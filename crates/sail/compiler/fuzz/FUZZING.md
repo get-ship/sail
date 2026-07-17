@@ -1,4 +1,4 @@
-# Fuzzing the .sui parser
+# Fuzzing the .sail parser
 
 `fuzz/` hosts a [cargo-fuzz](https://rust-fuzz.github.io/book/cargo-fuzz.html)
 harness for `sail_compiler::parse::parse`. The bug class to catch is the
@@ -16,7 +16,7 @@ rustup toolchain install nightly   # libfuzzer-sys requires nightly
 
 ## Running
 
-Quick 60-second smoke run, seeded from every `.sui` in
+Quick 60-second smoke run, seeded from every `.sail` in
 `packages/components/ui-components/src`:
 
 ```sh
@@ -55,7 +55,7 @@ cargo +nightly fuzz tmin parse_fragment fuzz/artifacts/parse_fragment/<file>
 ## Corpus
 
 `fuzz/corpus/parse_fragment/` is gitignored. The runner script reseeds it
-from `packages/components/ui-components/src/**/*.sui` on every invocation so the
+from `packages/components/ui-components/src/**/*.sail` on every invocation so the
 fuzzer mutates from real inputs rather than random bytes. Inputs the
 fuzzer discovers stay in the corpus dir between runs (until you
 `rm -rf fuzz/corpus`).

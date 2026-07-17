@@ -2,7 +2,7 @@
   "name": "tree-sitter-sail",
   "version": "0.2.0",
   "type": "module",
-  "description": "Tree-sitter grammar for the SUI .sui template language",
+  "description": "Tree-sitter grammar for the SAIL .sail template language",
   "main": "bindings/node",
   "scripts": {
     "build": "tree-sitter generate",
@@ -10,8 +10,8 @@
   },
   "tree-sitter": [
     {
-      "scope": "source.sui",
-      "file-types": ["sui"],
+      "scope": "source.sail",
+      "file-types": ["sail"],
       "highlights": "queries/highlights.scm",
       "injections": "queries/injections.scm"
     }

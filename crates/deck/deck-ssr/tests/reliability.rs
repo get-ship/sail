@@ -48,7 +48,7 @@ struct Target {
     name: &'static str,
     /// Feature surface this target exercises (for the table).
     features: &'static str,
-    /// `.sui` source, repo-relative.
+    /// `.sail` source, repo-relative.
     source: String,
     /// App manifest, repo-relative.
     manifest: &'static str,
@@ -96,7 +96,7 @@ impl DataPort for DemoData {
 }
 
 fn conf(view: &str) -> String {
-    format!("{CONF}/views/{view}/page.sui")
+    format!("{CONF}/views/{view}/page.sail")
 }
 fn conf_ctrl(_view: &str) -> Option<String> {
     // Conformance views carry their controller INLINE (`<controller>` block); the
@@ -121,7 +121,7 @@ fn targets() -> Vec<Target> {
         Target {
             name: "hub /",
             features: "text-binding, slots, custom-element chrome, authored controller",
-            source: "apps/hub/routes/page.sui".to_string(),
+            source: "apps/hub/routes/page.sail".to_string(),
             manifest: HUB_MANIFEST,
             controller: Some("apps/hub/routes/controller.ts".to_string()),
             needs_data: false,
@@ -134,7 +134,7 @@ fn targets() -> Vec<Target> {
         Target {
             name: "views/showcase",
             features: "static gallery, attribute props, custom-element charts, nesting",
-            source: "views/showcase/page.sui".to_string(),
+            source: "views/showcase/page.sail".to_string(),
             manifest: VIEWS_MANIFEST,
             controller: None,
             needs_data: false,
@@ -291,7 +291,7 @@ fn slice1_reliability_sweep() {
     //
     // `hub /` + `views/showcase` source from the `apps/` and `views/` trees,
     // which live OUTSIDE the framework repo (the framework/app boundary split).
-    // When their `.sui` source is absent here, skip the gate with a note rather
+    // When their `.sail` source is absent here, skip the gate with a note rather
     // than fail — the conformance core (board, counter, glyph, greet/[id]) is
     // the in-repo fidelity floor. In an app repo (apps/ present) all six are
     // required again, unchanged.
@@ -323,7 +323,7 @@ fn slice1_warm_ssr_latency() {
     // pooled warm latency, not the floor.
     let repo = repo_root().expect("repo root");
     let samples: Vec<(&str, String, &str, Option<String>, &str)> = vec![
-        ("hub /", "apps/hub/routes/page.sui".to_string(), HUB_MANIFEST, Some("apps/hub/routes/controller.ts".to_string()), "/"),
+        ("hub /", "apps/hub/routes/page.sail".to_string(), HUB_MANIFEST, Some("apps/hub/routes/controller.ts".to_string()), "/"),
         ("board", conf("board"), CONF_MANIFEST, None, "/"),
         ("glyph", conf("glyph"), CONF_MANIFEST, None, "/"),
     ];
@@ -394,12 +394,12 @@ fn slice1_hub_closure_component_catalog() {
     let repo = repo_root().expect("repo root");
     let manifest = AppManifest::parse("{}").expect("empty manifest");
     let closure = [
-        "packages/components/sail/primitives/src/sail-navbar/sail-navbar.sui",
-        "packages/components/sail/primitives/src/sail-brand-mark/sail-brand-mark.sui",
-        "packages/components/sail/primitives/src/sail-theme-picker/sail-theme-picker.sui",
-        "packages/components/sail/primitives/src/sail-account-chip/sail-account-chip.sui",
-        "packages/components/sail/primitives/src/sail-icon/sail-icon.sui",
-        "packages/components/sail/primitives/src/sail-popover/sail-popover.sui",
+        "packages/components/sail/primitives/src/sail-navbar/sail-navbar.sail",
+        "packages/components/sail/primitives/src/sail-brand-mark/sail-brand-mark.sail",
+        "packages/components/sail/primitives/src/sail-theme-picker/sail-theme-picker.sail",
+        "packages/components/sail/primitives/src/sail-account-chip/sail-account-chip.sail",
+        "packages/components/sail/primitives/src/sail-icon/sail-icon.sail",
+        "packages/components/sail/primitives/src/sail-popover/sail-popover.sail",
     ];
     let mut rows = vec![
         "# Slice 1 — hub `/` component closure (synthetic emit)\n".to_string(),
@@ -414,7 +414,7 @@ fn slice1_hub_closure_component_catalog() {
     for rel in &closure {
         // The hub-closure chrome was dissolved to L1 (bare elements + sx +
         // framework primitives) — the @ship/sail-primitives pack no longer
-        // ships its own .sui files. The catalog records this honestly:
+        // ships its own .sail files. The catalog records this honestly:
         // ABSENT means the component has been dissolved, NOT that the test
         // found a synthetic-emit gap to assert on.
         let path = repo.join(rel);
@@ -422,7 +422,7 @@ fn slice1_hub_closure_component_catalog() {
         let (ok, reason) = match std::fs::read_to_string(&path) {
             Err(_) => {
                 dissolved += 1;
-                (false, "dissolved to L1 (no .sui source)".to_string())
+                (false, "dissolved to L1 (no .sail source)".to_string())
             }
             Ok(src) => match parse(&src)
                 .map_err(|e| e.render(&src))

@@ -2,16 +2,16 @@
   "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
   "grammars": [
     {
-      "name": "sui",
-      "camelcase": "Sui",
-      "scope": "source.sui",
+      "name": "sail",
+      "camelcase": "Sail",
+      "scope": "source.sail",
       "path": ".",
       "file-types": [
-        "sui"
+        "sail"
       ],
       "highlights": "queries/highlights.scm",
       "injections": "queries/injections.scm",
-      "injection-regex": "^sui$",
+      "injection-regex": "^sail$",
       "abi": 15
     }
   ],

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Compiles every .sui under src/ via the sail-compiler binary so main.ts
+// Compiles every .sail under src/ via the sail-compiler binary so main.ts
 // can side-effect-import the emitted ESM. Emits sibling <stem>/dist/.
 //
 // Uses the release sail-compiler from the framework's own target dir,
@@ -40,7 +40,7 @@ function* walk(dir) {
       // Don't recurse into compiled output.
       if (entry === 'dist') continue
       yield* walk(p)
-    } else if (entry.endsWith('.sui')) {
+    } else if (entry.endsWith('.sail')) {
       yield p
     }
   }
@@ -48,12 +48,12 @@ function* walk(dir) {
 
 const targets = [...walk(srcDir)]
 if (targets.length === 0) {
-  console.error('no .sui files found under', srcDir)
+  console.error('no .sail files found under', srcDir)
   process.exit(1)
 }
 
 for (const target of targets) {
-  const stem = basename(target, '.sui')
+  const stem = basename(target, '.sail')
   // Emit alongside source in src/dist/ so the compiler-emitted
   // `import setup from "./<stem>.controller.ts"` resolves against
   // src/ when esbuild walks the import graph (`./` from src/dist/
@@ -77,7 +77,7 @@ for (const target of targets) {
 // against the rendered tree directly). When the compiler grows a
 // shadow="false" directive this patch can come out.
 for (const target of targets) {
-  const stem = basename(target, '.sui')
+  const stem = basename(target, '.sail')
   // With --out, the compiler emits `<stem>.js` (legacy name), not
   // the `<stem>.compiled.js` it produces in mirror-tree mode.
   const compiledPath = resolve(dirname(target), 'dist', stem + '.js')
@@ -105,4 +105,4 @@ for (const target of targets) {
   if (changed) writeFileSync(compiledPath, src, 'utf8')
 }
 
-console.log(`compiled ${targets.length} .sui file(s)`)
+console.log(`compiled ${targets.length} .sail file(s)`)

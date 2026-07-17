@@ -7,14 +7,14 @@
 //! Multi-root: a single invocation can walk several roots (the shell's first-
 //! party `routes/`, the spaces scaffold's `routes/`) and emit a `routes.gen.ts`
 //! at each requested output path. Every root is a `routes/` dir — a route IS a
-//! directory with a `page.sui` and (optionally) `controller.ts`. A `[param]`
+//! directory with a `page.sail` and (optionally) `controller.ts`. A `[param]`
 //! segment in the dir name is a dynamic. No manifests, no per-route metadata.
 
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
 
-/// One codegen spec: walk `dir` recursively for mountable views (`page.sui`),
+/// One codegen spec: walk `dir` recursively for mountable views (`page.sail`),
 /// emit the generated `routes.gen.ts` content to `out`. `label` is the
 /// human-readable surface the file is for (e.g. `shell`, `spaces`) — it shows
 /// up in the file header so the file is self-describing.
@@ -42,7 +42,7 @@ pub(crate) struct Route {
     pub(crate) builder: String,
 }
 
-/// A `_layout.sui` discovered at the top level of a `routes/` dir. The
+/// A `_layout.sail` discovered at the top level of a `routes/` dir. The
 /// runtime wraps the subtree's content in the layout component; the layout
 /// template has a `<slot>` that the route content fills.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -51,12 +51,12 @@ pub(crate) struct Layout {
     pub(crate) tag: String,
 }
 
-/// Recursively collect dirs holding a mountable view (`page.sui`).
-/// The root `dir` itself is also a candidate — `routes/page.sui`
+/// Recursively collect dirs holding a mountable view (`page.sail`).
+/// The root `dir` itself is also a candidate — `routes/page.sail`
 /// is a mount at `/` (the index route). Subdirs are walked for
 /// nested mounts.
 fn view_dirs(dir: &Path, acc: &mut Vec<std::path::PathBuf>) -> Result<()> {
-    if dir.join("page.sui").is_file() {
+    if dir.join("page.sail").is_file() {
         acc.push(dir.to_path_buf());
     }
     for entry in std::fs::read_dir(dir)? {
@@ -100,7 +100,7 @@ fn to_route(routes_dir: &Path, dir: &Path) -> Option<Route> {
     // Builder name: camelCase of the segments, including the first
     // segment (the top-level route name) so builders namespace per
     // route. e.g. `studio/agents/[id]` → `studioAgentsId`. The root
-    // `routes/page.sui` (a mount at `/`) gets the reserved `index`
+    // `routes/page.sail` (a mount at `/`) gets the reserved `index`
     // name — a single segment is too short to camelCase meaningfully.
     let builder = if segs_raw.is_empty() {
         "index".to_string()
@@ -117,8 +117,8 @@ fn to_route(routes_dir: &Path, dir: &Path) -> Option<Route> {
 
 /// Reconstruct a route's view-module import path from its URL pattern — the
 /// inverse of `to_route`'s segment mapping (`:param` ↔ `[param]` dir):
-/// `/studio/agents/:id` → `./routes/studio/agents/[id]/page.sui`; `/` →
-/// `./routes/page.sui`. The emitter uses it to statically import each view.
+/// `/studio/agents/:id` → `./routes/studio/agents/[id]/page.sail`; `/` →
+/// `./routes/page.sail`. The emitter uses it to statically import each view.
 fn module_import_path(pattern: &str) -> String {
     let segs: Vec<String> = pattern
         .split('/')
@@ -130,25 +130,25 @@ fn module_import_path(pattern: &str) -> String {
         })
         .collect();
     if segs.is_empty() {
-        "./routes/page.sui".to_string()
+        "./routes/page.sail".to_string()
     } else {
-        format!("./routes/{}/page.sui", segs.join("/"))
+        format!("./routes/{}/page.sail", segs.join("/"))
     }
 }
 
-/// Inverse of the layout discovery: `/` → `./routes/_layout.sui`
-/// (the root layout, sibling of `routes/page.sui`); `/studio` →
-/// `./routes/studio/_layout.sui`. The codegen imports the layout's
-/// `.sui` so the chrome wrapper it composes registers at first
+/// Inverse of the layout discovery: `/` → `./routes/_layout.sail`
+/// (the root layout, sibling of `routes/page.sail`); `/studio` →
+/// `./routes/studio/_layout.sail`. The codegen imports the layout's
+/// `.sail` so the chrome wrapper it composes registers at first
 /// paint (the per-view resolver chain — layout → its first
-/// `<sail-*` / `<ship-*` tag → that wrapper's source `.sui` —
+/// `<sail-*` / `<ship-*` tag → that wrapper's source `.sail` —
 /// lands the `customElements.define` call when the module loads).
 fn layout_module_path(path_prefix: &str) -> String {
     if path_prefix == "/" {
-        return "./routes/_layout.sui".to_string();
+        return "./routes/_layout.sail".to_string();
     }
     let rest = path_prefix.strip_prefix('/').unwrap_or(path_prefix);
-    format!("./routes/{rest}/_layout.sui")
+    format!("./routes/{rest}/_layout.sail")
 }
 
 /// `agents-id-settings` → `agentsIdSettings` (uppercase the char after each `-`).
@@ -168,14 +168,14 @@ fn camel_case(s: &str) -> String {
     out
 }
 
-/// Walk `routes_dir` for `_layout.sui` files. Two flavors:
-///   - A root `routes/_layout.sui` (sibling of `routes/page.sui`) becomes
+/// Walk `routes_dir` for `_layout.sail` files. Two flavors:
+///   - A root `routes/_layout.sail` (sibling of `routes/page.sail`) becomes
 ///     a layout entry with prefix `/` — the runtime's longest-prefix
 ///     match treats `/` as "every pathname" (see
 ///     `packages/deck/router/src/layouts.ts::matchPrefix`). This is how
 ///     the hub root layout covers the index route `/` and every other
 ///     route under it; without it the nav had to be composed per-page.
-///   - A `routes/<name>/_layout.sui` becomes a layout entry with prefix
+///   - A `routes/<name>/_layout.sail` becomes a layout entry with prefix
 ///     `/<name>`. Unchanged from the pre-root-layout codegen.
 ///
 /// The tag is read from the first `<sail-…>` or `<ship-…>` element in
@@ -183,10 +183,10 @@ fn camel_case(s: &str) -> String {
 /// generated `routes.gen.ts` is byte-stable across runs.
 fn discover_layouts(routes_dir: &Path) -> Result<Vec<Layout>> {
     let mut layouts = Vec::new();
-    // Root layout: `routes/_layout.sui` → prefix `/`. Discovered before
+    // Root layout: `routes/_layout.sail` → prefix `/`. Discovered before
     // the subdir loop so the prefix `/` sorts first (shortest path_prefix,
     // and the loop below sorts by `path_prefix` for byte stability).
-    let root_layout = routes_dir.join("_layout.sui");
+    let root_layout = routes_dir.join("_layout.sail");
     if root_layout.is_file() {
         let tag = extract_layout_tag(&root_layout)
             .with_context(|| format!("parsing `{}`", root_layout.display()))?;
@@ -200,7 +200,7 @@ fn discover_layouts(routes_dir: &Path) -> Result<Vec<Layout>> {
             continue;
         }
         let child = entry.path();
-        let layout_file = child.join("_layout.sui");
+        let layout_file = child.join("_layout.sail");
         if !layout_file.is_file() {
             continue;
         }
@@ -214,7 +214,7 @@ fn discover_layouts(routes_dir: &Path) -> Result<Vec<Layout>> {
     Ok(layouts)
 }
 
-/// Read up to the first 4 KiB of a `_layout.sui` and return the tag name
+/// Read up to the first 4 KiB of a `_layout.sail` and return the tag name
 /// of the first `<sail-…>` or `<ship-…>` element. The SUI template grammar
 /// is HTML-flavoured; the codegen does not need a full parse — it just needs
 /// the wrapper component the runtime should import. If no qualifying tag is
@@ -625,7 +625,7 @@ fn render_routes_gen_with(tree: &RouteTree, include_token_import: bool) -> Strin
     // router src, else the bake serves an eager mountRouter and the lazy thunks
     // arrive un-awaited (mount() sees a function, not a module).
     let route_imports = String::new();
-    // Each layout's `.sui` is imported as a named module (import * as layoutN)
+    // Each layout's `.sail` is imported as a named module (import * as layoutN)
     // so the bundler tracks it as a real use (no tree-shake removal) AND
     // `mountRouter` receives the module object to render the layout's authored
     // markup via mount(). The named binding also guarantees the custom-element
@@ -638,7 +638,7 @@ fn render_routes_gen_with(tree: &RouteTree, include_token_import: bool) -> Strin
         .map(|(i, l)| format!("import * as layout{i} from '{}';", layout_module_path(&l.path_prefix)))
         .collect::<Vec<_>>()
         .join("\n");
-    // Pattern → `() => import('<route>/page.sui')` thunk. The dynamic import is
+    // Pattern → `() => import('<route>/page.sail')` thunk. The dynamic import is
     // rolldown's code-split signal (one chunk per route); mountRouter's lazy path
     // awaits it on navigation.
     let module_map = tree
@@ -656,9 +656,9 @@ fn render_routes_gen_with(tree: &RouteTree, include_token_import: bool) -> Strin
     // pathPrefix → layout module map, parallel to `modules` for routes.
     // mountRouter uses this to render each layout as a view module (authored
     // markup) rather than a bare createElement(tag). Layouts without a
-    // _layout.sui would not be in this table — the tag-only fallback path
+    // _layout.sail would not be in this table — the tag-only fallback path
     // in the router handles them. Currently every discovered layout has a
-    // _layout.sui (discover_layouts only records files that exist), so the
+    // _layout.sail (discover_layouts only records files that exist), so the
     // map is always complete.
     let layout_modules_map = tree
         .layouts
@@ -1032,7 +1032,7 @@ mod tests {
         let r = root.path().join("routes");
         for d in ["a/b/[id]/c", "a/d/[name]", "a/e"] {
             std::fs::create_dir_all(r.join(d)).unwrap();
-            std::fs::write(r.join(d).join("page.sui"), "<div/>").unwrap();
+            std::fs::write(r.join(d).join("page.sail"), "<div/>").unwrap();
         }
         let tree = build_route_tree(&r, "app").unwrap();
         // Static routes are NOT filtered out: a static mount (`/a/e`, no
@@ -1057,9 +1057,9 @@ mod tests {
         let one_routes = root.path().join("apps/one/routes");
         let two_routes = root.path().join("apps/two/routes");
         std::fs::create_dir_all(one_routes.join("x/[id]")).unwrap();
-        std::fs::write(one_routes.join("x/[id]/page.sui"), "<div/>").unwrap();
+        std::fs::write(one_routes.join("x/[id]/page.sail"), "<div/>").unwrap();
         std::fs::create_dir_all(two_routes.join("[id]")).unwrap();
-        std::fs::write(two_routes.join("[id]/page.sui"), "<div/>").unwrap();
+        std::fs::write(two_routes.join("[id]/page.sail"), "<div/>").unwrap();
         let specs = vec![
             RouteGenSpec {
                 dir: one_routes,
@@ -1098,15 +1098,15 @@ mod tests {
 
     #[test]
     fn layout_discovery_emits_layouts_block() {
-        // A `routes/foo/_layout.sui` becomes a LAYOUTS entry with
+        // A `routes/foo/_layout.sail` becomes a LAYOUTS entry with
         // `pathPrefix: '/foo'` and the tag read from the file.
         let root = tempfile::tempdir().unwrap();
         let r = root.path().join("routes");
         std::fs::create_dir_all(r.join("foo/bar/[id]")).unwrap();
-        std::fs::write(r.join("foo/bar/[id]/page.sui"), "<div/>").unwrap();
+        std::fs::write(r.join("foo/bar/[id]/page.sail"), "<div/>").unwrap();
         // Realistic layout: comment + a `<sail-*` wrapper + a `<slot>`.
         std::fs::write(
-            r.join("foo/_layout.sui"),
+            r.join("foo/_layout.sail"),
             "// chrome\n<sail-foo-chrome>\n  <slot />\n</sail-foo-chrome>\n",
         )
         .unwrap();
@@ -1122,8 +1122,8 @@ mod tests {
         let root = tempfile::tempdir().unwrap();
         let r = root.path().join("routes");
         std::fs::create_dir_all(r.join("baz")).unwrap();
-        std::fs::write(r.join("baz/page.sui"), "<div/>").unwrap();
-        std::fs::write(r.join("baz/_layout.sui"), "<ship-baz-chrome/>\n").unwrap();
+        std::fs::write(r.join("baz/page.sail"), "<div/>").unwrap();
+        std::fs::write(r.join("baz/_layout.sail"), "<ship-baz-chrome/>\n").unwrap();
         let tree = build_route_tree(&r, "app").unwrap();
         assert_eq!(tree.layouts[0].tag, "ship-baz-chrome");
         assert_eq!(tree.layouts[0].path_prefix, "/baz");
@@ -1131,7 +1131,7 @@ mod tests {
 
     #[test]
     fn layout_discovery_root_layout_has_slash_prefix() {
-        // A `routes/_layout.sui` (sibling of `routes/page.sui`) becomes a
+        // A `routes/_layout.sail` (sibling of `routes/page.sail`) becomes a
         // LAYOUTS entry with `pathPrefix: '/'` — the runtime's longest-
         // prefix match treats `/` as "every pathname" (see
         // `packages/deck/router/src/layouts.ts::matchPrefix`). The root
@@ -1142,15 +1142,15 @@ mod tests {
         // Index route + a nested subdir with its OWN layout (the
         // subdir layout must coexist with the root layout).
         std::fs::create_dir_all(r.join("studio/components/[name]")).unwrap();
-        std::fs::write(r.join("page.sui"), "<div/>").unwrap();
+        std::fs::write(r.join("page.sail"), "<div/>").unwrap();
         std::fs::write(
-            r.join("studio/components/[name]/page.sui"),
+            r.join("studio/components/[name]/page.sail"),
             "<div/>",
         )
         .unwrap();
-        std::fs::write(r.join("studio/_layout.sui"), "<sail-studio-chrome/>\n").unwrap();
+        std::fs::write(r.join("studio/_layout.sail"), "<sail-studio-chrome/>\n").unwrap();
         std::fs::write(
-            r.join("_layout.sui"),
+            r.join("_layout.sail"),
             "<ship-hub-chrome>\n  <slot name=\"route\"/>\n</ship-hub-chrome>\n",
         )
         .unwrap();
@@ -1166,14 +1166,14 @@ mod tests {
 
     #[test]
     fn layout_discovery_root_layout_only_when_no_subdir_layouts() {
-        // A sole `routes/_layout.sui` → a single LAYOUTS entry with
+        // A sole `routes/_layout.sail` → a single LAYOUTS entry with
         // prefix `/`. The /studio case above is a richer version of
         // this; this one isolates the root-only path.
         let root = tempfile::tempdir().unwrap();
         let r = root.path().join("routes");
         std::fs::create_dir_all(&r).unwrap();
-        std::fs::write(r.join("page.sui"), "<div/>").unwrap();
-        std::fs::write(r.join("_layout.sui"), "<ship-app-chrome/>\n").unwrap();
+        std::fs::write(r.join("page.sail"), "<div/>").unwrap();
+        std::fs::write(r.join("_layout.sail"), "<ship-app-chrome/>\n").unwrap();
         let tree = build_route_tree(&r, "hub").unwrap();
         assert_eq!(tree.layouts.len(), 1);
         assert_eq!(tree.layouts[0].path_prefix, "/");
@@ -1182,13 +1182,13 @@ mod tests {
 
     #[test]
     fn layout_discovery_skips_div_only_layout() {
-        // A `_layout.sui` with no `<sail-*` / `<ship-*` element errors out
+        // A `_layout.sail` with no `<sail-*` / `<ship-*` element errors out
         // — a layout must name a wrapper component.
         let root = tempfile::tempdir().unwrap();
         let r = root.path().join("routes");
         std::fs::create_dir_all(r.join("home")).unwrap();
-        std::fs::write(r.join("home/page.sui"), "<div/>").unwrap();
-        std::fs::write(r.join("home/_layout.sui"), "<div>no wrapper here</div>\n").unwrap();
+        std::fs::write(r.join("home/page.sail"), "<div/>").unwrap();
+        std::fs::write(r.join("home/_layout.sail"), "<div>no wrapper here</div>\n").unwrap();
         let err = build_route_tree(&r, "shell").unwrap_err();
         let msg = format!("{err:#}");
         assert!(
@@ -1200,25 +1200,25 @@ mod tests {
     #[test]
     fn module_import_path_inverts_to_route_segment_mapping() {
         // Pure logic, generic inputs — no app routes. `:param` ↔ `[param]` dir.
-        assert_eq!(module_import_path("/"), "./routes/page.sui");
-        assert_eq!(module_import_path("/x"), "./routes/x/page.sui");
-        assert_eq!(module_import_path("/x/:id"), "./routes/x/[id]/page.sui");
-        assert_eq!(module_import_path("/a/:b/c/:d"), "./routes/a/[b]/c/[d]/page.sui");
+        assert_eq!(module_import_path("/"), "./routes/page.sail");
+        assert_eq!(module_import_path("/x"), "./routes/x/page.sail");
+        assert_eq!(module_import_path("/x/:id"), "./routes/x/[id]/page.sail");
+        assert_eq!(module_import_path("/a/:b/c/:d"), "./routes/a/[b]/c/[d]/page.sail");
     }
 
     #[test]
     fn layout_module_path_inverts_to_layout_file() {
         // Pure logic, mirrors `module_import_path` for layouts. The
-        // codegen statically imports each layout's `.sui` so the
+        // codegen statically imports each layout's `.sail` so the
         // chrome wrapper it composes registers at first paint; the
         // generated path is the on-disk layout relative to the
         // entry (the entry lives next to `routes/`).
-        //   `/`        → `./routes/_layout.sui` (the root layout, sibling
-        //                  of `routes/page.sui`)
-        //   `/studio`  → `./routes/studio/_layout.sui` (the subdir layout)
-        assert_eq!(layout_module_path("/"), "./routes/_layout.sui");
-        assert_eq!(layout_module_path("/studio"), "./routes/studio/_layout.sui");
-        assert_eq!(layout_module_path("/a/b"), "./routes/a/b/_layout.sui");
+        //   `/`        → `./routes/_layout.sail` (the root layout, sibling
+        //                  of `routes/page.sail`)
+        //   `/studio`  → `./routes/studio/_layout.sail` (the subdir layout)
+        assert_eq!(layout_module_path("/"), "./routes/_layout.sail");
+        assert_eq!(layout_module_path("/studio"), "./routes/studio/_layout.sail");
+        assert_eq!(layout_module_path("/a/b"), "./routes/a/b/_layout.sail");
     }
 
     
@@ -1299,11 +1299,11 @@ mod tests {
         let ts = render_routes_gen(&tree);
         // Named imports (not bare side-effect imports).
         assert!(
-            ts.contains("import * as layout0 from './routes/_layout.sui';"),
+            ts.contains("import * as layout0 from './routes/_layout.sail';"),
             "root layout must be a named module import: {ts}",
         );
         assert!(
-            ts.contains("import * as layout1 from './routes/studio/_layout.sui';"),
+            ts.contains("import * as layout1 from './routes/studio/_layout.sail';"),
             "subdir layout must be a named module import: {ts}",
         );
         // Data-only shape: `layoutModules` is a typed export for entry.gen.ts.
@@ -1421,7 +1421,7 @@ mod tests {
         let root = tempfile::tempdir().unwrap();
         let r = root.path().join("routes/studio");
         std::fs::create_dir_all(r.join("agents/[id]")).unwrap();
-        std::fs::write(r.join("agents/[id]/page.sui"), "<div/>").unwrap();
+        std::fs::write(r.join("agents/[id]/page.sail"), "<div/>").unwrap();
         let s = spec(root.path(), "shell");
         generate_routes(&[s.clone()]).unwrap();
         let target = &s.out;

@@ -103,7 +103,7 @@ mod tests {
     use super::*;
 
     fn run(src: &str) -> usize {
-        check(Path::new("t.sui"), src).len()
+        check(Path::new("t.sail"), src).len()
     }
 
     #[test]
@@ -121,7 +121,7 @@ mod tests {
 
     #[test]
     fn is_warn_not_error() {
-        let f = check(Path::new("t.sui"), "<style>x</style>");
+        let f = check(Path::new("t.sail"), "<style>x</style>");
         assert_eq!(f.len(), 1);
         assert!(matches!(f[0].severity, Severity::Warn));
     }

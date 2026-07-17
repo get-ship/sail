@@ -202,7 +202,7 @@ in our own code first.
 ## The seams in detail
 
 **One authoring TECHNOLOGY for every layer (element mode).** L1 elements are
-authored in `.sui` like everything else — `<component>{ props }`, template,
+authored in `.sail` like everything else — `<component>{ props }`, template,
 variants/sx skin — compiled in **element mode**, which changes only the
 output targets: the template becomes a use-site lowering (like the layout
 keywords) instead of a registered module; the skin routes into the framework

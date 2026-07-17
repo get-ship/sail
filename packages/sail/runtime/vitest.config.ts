@@ -3,8 +3,8 @@ import { resolve } from 'node:path'
 import { SHIP_VITEST_DEFAULTS, suiSourceLoaderPlugin } from '@ship/test-setup/vitest'
 
 export default defineConfig({
-  // The integration tests compile real `.sui` fixtures and import the emitted
-  // module, which imports its controller as the virtual `<file>.sui.controller.ts`.
+  // The integration tests compile real `.sail` fixtures and import the emitted
+  // module, which imports its controller as the virtual `<file>.sail.controller.ts`.
   plugins: [suiSourceLoaderPlugin()],
   resolve: {
     alias: {

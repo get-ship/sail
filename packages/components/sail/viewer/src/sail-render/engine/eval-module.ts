@@ -1,5 +1,5 @@
-// Module evaluator for compiled `.sui` output — the render-engine seam's
-// "runtime evaluator" (build-spec §Mount by raw .sui source, option B).
+// Module evaluator for compiled `.sail` output — the render-engine seam's
+// "runtime evaluator" (build-spec §Mount by raw .sail source, option B).
 //
 // The compiler emits an ES module whose only imports are the framework
 // specifiers (`@ship/sail-runtime`, `@ship/sail-dom`, `@ship/sail-runtime/route`,

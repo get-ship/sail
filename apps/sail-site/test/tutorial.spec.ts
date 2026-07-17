@@ -1,7 +1,7 @@
 // The tutorial workbench — the site's most load-bearing page, and the only one
 // that runs the compiler in the reader's browser.
 //
-// The contract these tests hold: the editor holds ONE file (the lesson `.sui`,
+// The contract these tests hold: the editor holds ONE file (the lesson `.sail`,
 // `<controller>` block and template together), the wasm compiler accepts that
 // file, and the preview renders it. When the compiler's SFC handling regressed,
 // every lesson silently compiled with an empty scope — the page still "loaded",
@@ -30,13 +30,13 @@ async function openLesson(page: Page, slug: string): Promise<void> {
   )
 }
 
-test('the editor holds the whole .sui — controller block and template', async ({ page }) => {
+test('the editor holds the whole .sail — controller block and template', async ({ page }) => {
   await openLesson(page, '03-state-is-a-controller')
   const src = await editorValue(page)
   expect(src).toContain('<controller>')
   expect(src).toContain('</controller>')
-  // The tab names the file, not a "template.sui" / "controller.ts" pair.
-  await expect(page.locator('tab[name="source"]')).toContainText('.sui')
+  // The tab names the file, not a "template.sail" / "controller.ts" pair.
+  await expect(page.locator('tab[name="source"]')).toContainText('.sail')
   expect(await page.locator('tab').count()).toBe(2)
 })
 

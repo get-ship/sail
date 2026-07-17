@@ -1,0 +1,11 @@
+<controller>
+import { controller, signal } from '@ship/sail-runtime'
+import type { Scope } from './without-island.sail'
+
+export default controller<Scope>((ctx) => ({ count: signal(0) }))
+</controller>
+
+<div>
+  <p>{count()}</p>
+  <button on:click={() => count.set(count() + 1)}>increment</button>
+</div>

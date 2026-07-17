@@ -46,7 +46,7 @@ async function main() {
 
   let failed = 0
   for (const f of FIXTURES) {
-    const sourcePath = join(__dirname, 'fixtures', `${f.name}.sui`)
+    const sourcePath = join(__dirname, 'fixtures', `${f.name}.sail`)
     const source = readFileSync(sourcePath, 'utf8')
 
     // Interpreter side

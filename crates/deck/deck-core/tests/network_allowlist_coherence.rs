@@ -40,7 +40,7 @@ fn write_fixture(fetch_target: &str) -> (tempfile::TempDir, PathBuf) {
         format!(r#"{{"network": ["{GRANTED_ORIGIN}"]}}"#),
     )
     .unwrap();
-    let sui = views_dir.join("w.sui");
+    let sui = views_dir.join("w.sail");
     let body = format!(
         "<controller>\nexport default controller((ctx) => {{\n  fetch('{fetch_target}')\n  return {{}}\n}})\n</controller>\n<p>hi</p>"
     );

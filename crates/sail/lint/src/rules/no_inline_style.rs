@@ -1,4 +1,4 @@
-//! `sail-no-inline-style` — the raw `style=` attribute is banned in every `.sui`.
+//! `sail-no-inline-style` — the raw `style=` attribute is banned in every `.sail`.
 //!
 //! `sail-no-style-block` closes the `<style>` element and `sail-no-sx` closes the
 //! `sx=` attribute at the strict tier — but an agent denied both simply falls
@@ -54,7 +54,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 severity: Severity::Warn,
                 message:
                     "inline style= is raw CSS and bypasses the token surface — it is not allowed \
-                     in any `.sui`. Use sx= or a primitive prop; raw values never compile."
+                     in any `.sail`. Use sx= or a primitive prop; raw values never compile."
                         .to_string(),
                 suggest: Some(
                     "Text is already styled — write <h1>-<h6>/<p> plain (they take the type \
@@ -103,7 +103,7 @@ mod tests {
     use super::*;
 
     fn run(src: &str) -> usize {
-        check(Path::new("t.sui"), src).len()
+        check(Path::new("t.sail"), src).len()
     }
 
     #[test]
@@ -122,7 +122,7 @@ mod tests {
 
     #[test]
     fn is_warn_and_skips_comments() {
-        let f = check(Path::new("t.sui"), r#"<p style="x">y</p>"#);
+        let f = check(Path::new("t.sail"), r#"<p style="x">y</p>"#);
         assert!(matches!(f[0].severity, Severity::Warn));
         assert_eq!(run(r#"<!-- <p style="x"> --> <sail-card>y</sail-card>"#), 0);
     }

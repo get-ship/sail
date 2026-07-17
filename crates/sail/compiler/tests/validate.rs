@@ -1,5 +1,5 @@
 //! End-to-end validation tests for the compile-time rules: scope-bound
-//! expressions and pure `derived` getters. Each test pairs a `.sui`
+//! expressions and pure `derived` getters. Each test pairs a `.sail`
 //! template with a `.ts` controller on disk, then asserts `compile()`
 //! rejects the pair with the spec-mandated error message.
 //!
@@ -36,7 +36,7 @@ fn opts(source_path: PathBuf) -> CompileOpts {
 
 fn read(name: &str) -> (String, PathBuf) {
     let dir = fixtures_dir();
-    let sui = dir.join(format!("{name}.sui"));
+    let sui = dir.join(format!("{name}.sail"));
     let src = fs::read_to_string(&sui).unwrap_or_else(|e| panic!("read {}: {e}", sui.display()));
     (src, sui)
 }

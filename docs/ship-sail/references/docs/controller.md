@@ -7,7 +7,7 @@ description: The optional inline `<controller>` block. One function, ambient lif
 
 # The controller surface
 
-A controller is an **optional** `<controller>` block inline in the `.sui` file — never a separate file. There is no config, no import statement to wire it up, no directory-pairing convention: the block lives where the template lives.
+A controller is an **optional** `<controller>` block inline in the `.sail` file — never a separate file. There is no config, no import statement to wire it up, no directory-pairing convention: the block lives where the template lives.
 
 The controller is the view's view-model: reactive state, derived values, event handlers, and lifecycle. Templates declare structure; the controller owns everything reactive.
 
@@ -16,7 +16,7 @@ The controller is the view's view-model: reactive state, derived values, event h
 Pure declarative views need nothing. The template uses `<data>` for subscriptions and inline expressions for anything computed. **No reactive state, no `<controller>` block.**
 
 ```html
-<!-- views/static/page.sui -->
+<!-- views/static/page.sail -->
 <data name="overview" source="ship.git.overview()" live />
 
 <p>Branch: {overview().value?.branch}</p>
@@ -29,7 +29,7 @@ Most one-shot read-only views land here.
 The moment a view needs local state, a derived value, or an event handler, add a `<controller>` block. It contains exactly one call: `controller(fn)`.
 
 ```html
-<!-- views/agents/page.sui -->
+<!-- views/agents/page.sail -->
 <controller>
 export default controller((ctx) => {
   const items = signal<Item[]>([])
@@ -63,7 +63,7 @@ export default controller((ctx) => {
 - **`host`** (optional second parameter) is the custom-element host, for reaching the shadow root or doing direct DOM work.
 - Whatever `fn` **returns** is the entire contributed template scope: state signals (`signal(...)`), computed values (`derived(...)`), plain helper functions, and event handlers — all as ordinary object properties. There is no separate section for handlers; a handler is just a function returned alongside everything else.
 
-No sections. No `setup:`/`derived:`/`on:`/`mount:`/`unmount:` object keys, no `use:` controller-hook mini-DSL, no paired `<stem>.controller.ts` sibling file — a sibling `.controller.ts` next to a `.sui` file is a compile error. `controller()` takes the function directly.
+No sections. No `setup:`/`derived:`/`on:`/`mount:`/`unmount:` object keys, no `use:` controller-hook mini-DSL, no paired `<stem>.controller.ts` sibling file — a sibling `.controller.ts` next to a `.sail` file is a compile error. `controller()` takes the function directly.
 
 ## Mutation is always `.set(...)`
 
@@ -143,16 +143,16 @@ The controller lives inline. Most common shape:
 
 ```
 views/<name>/
-  page.sui              # template + inline <controller> block (controller optional)
+  page.sail              # template + inline <controller> block (controller optional)
   style.css             # styles (optional)
   manifest.jsonc         # route descriptor (required for views)
 ```
 
-Components follow the same rule — the file IS the component, and any controller for it is an inline `<controller>` block inside that same `.sui` file:
+Components follow the same rule — the file IS the component, and any controller for it is an inline `<controller>` block inside that same `.sail` file:
 
 ```
 packages/components/ui-components/src/sail-button/
-  sail-button.sui            # template + <prop> directives + inline <controller> (only if needed)
+  sail-button.sail            # template + <prop> directives + inline <controller> (only if needed)
   sail-button.css            # extracted styles (optional)
 ```
 

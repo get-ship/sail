@@ -120,7 +120,7 @@ fn read_view_bundle(root: &std::path::Path, name: &str) -> Option<String> {
 /// First-paint HTML for the `routes/` page matching `request_path`, via the
 /// ship-js SSR seam. Mirrors the named-`view` path (`view_payload`) but with the
 /// file-routed layout: split the URL into name + sub-path, resolve the matching
-/// `routes/<…>/page.sui` (+ captured `[param]` params), and render through the
+/// `routes/<…>/page.sail` (+ captured `[param]` params), and render through the
 /// CARRIED `renderer`. Returns `None` (→ empty `#root`, client mounts CSR) when
 /// there's no project root, no matching page, no renderer carried, or the render
 /// fails (the failure is logged loud inside `synthetic_ssr`).
@@ -136,16 +136,16 @@ fn routes_first_paint(
     // (`inv-deck-mount-scoped-resolution`).
     let project_root = crate::resolver::resolve_project_root_with(resolution)?;
     // `/greet/zelda` → name=greet, sub=zelda; `/counter` → name=counter, sub=None;
-    // `/` → name="" (the index `routes/page.sui`).
+    // `/` → name="" (the index `routes/page.sail`).
     let trimmed = request_path.trim_start_matches('/');
     let (name, sub) = match trimmed.split_once('/') {
         Some((n, rest)) if !rest.is_empty() => (n, Some(rest)),
         _ => (trimmed, None),
     };
-    // The index route is `routes/page.sui` (empty name). `resolve()` keys off a
+    // The index route is `routes/page.sail` (empty name). `resolve()` keys off a
     // non-empty `<name>` dir, so resolve the index leaf directly.
     if name.is_empty() {
-        let source = project_root.join("routes").join("page.sui");
+        let source = project_root.join("routes").join("page.sail");
         if !source.is_file() {
             return None;
         }
@@ -161,7 +161,7 @@ fn routes_first_paint(
     }
     let layout = deck_host::resolver::ViewLayout {
         view_dirs: vec!["routes".to_string()],
-        view_leaf: "page.sui".to_string(),
+        view_leaf: "page.sail".to_string(),
         first_party_root: None,
     };
     let resolved = deck_host::resolver::resolve(&project_root, &layout, name, sub).ok()?;

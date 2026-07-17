@@ -2,11 +2,11 @@
 // scope-scanned by the compiler.
 
 export const routeTree = `routes/
-  page.sui              → /
-  about/page.sui        → /about
-  blog/posts/page.sui   → /blog/posts`
+  page.sail              → /
+  about/page.sail        → /about
+  blog/posts/page.sail   → /blog/posts`
 
-export const colocated = `<!-- routes/blog/page.sui — the whole /blog route -->
+export const colocated = `<!-- routes/blog/page.sail — the whole /blog route -->
 <controller>
   …reactive state for the page…
 </controller>

@@ -143,7 +143,7 @@ pub struct TemplateEmitter {
     /// While > 0, `emit_element` emits `createElementNS(SVG_NS, tag)`
     /// instead of `createElement(tag)` so the resulting nodes are in
     /// the SVG namespace — without this, `<svg>` / `<rect>` etc. from
-    /// `.sui` templates resolve as HTML elements and render blank.
+    /// `.sail` templates resolve as HTML elements and render blank.
     pub(super) svg_depth: usize,
     /// Prefix applied to free identifiers in author expressions. The
     /// default `"$scope."` is the production runtime-proxy path (output

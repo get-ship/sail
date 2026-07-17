@@ -32,7 +32,7 @@ The example to the right declares a `count` signal in its
 controller and reads it in the template's `{count()}` binding. The
 two buttons call `count.set(c => c ± 1)` to push new values.
 
-Open the `<controller>` block in `sail-app.sui` and try:
+Open the `<controller>` block in `sail-app.sail` and try:
 
 1. **Add a reset button.** Add a `reset` handler that sets the
    count to `0` and return it from the controller function, then

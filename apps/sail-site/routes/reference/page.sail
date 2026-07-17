@@ -1,0 +1,179 @@
+<!--
+  /reference — the COMPLETE language surface, rendered from
+  src/language-surface.gen.ts + src/prop-registry.gen.ts (emitted by
+  `sail-compiler prop-registry` from the same tables the lint enforces).
+  Nothing on this page is hand-listed except the directive section, which is
+  flagged until it has a compiler-derived table too.
+-->
+<controller>
+import { controller, type ViewScope } from '@ship/sail-runtime'
+import type { Scope } from './page.sail'
+import { PROP_REGISTRY } from '../../src/prop-registry.gen'
+import {
+  SX_ATOMS,
+  SX_STATE_PREFIXES,
+  SX_CONDITION_PREFIXES,
+  SX_REFUSALS,
+  LAYOUT_KEYWORDS,
+  MOTION,
+} from '../../src/language-surface.gen'
+
+interface ElementRow {
+  tag: string
+  href: string
+  propCount: number
+}
+
+const ELEMENTS: ElementRow[] = Object.keys(PROP_REGISTRY)
+  .sort()
+  .map((tag) => ({
+    tag,
+    href: `/components/${tag}`,
+    propCount: PROP_REGISTRY[tag]?.length ?? 0,
+  }))
+
+const SX_ROWS = SX_ATOMS.map((a) => ({ prop: a.prop, values: a.values.join(' · ') }))
+const LAYOUT_ROWS = LAYOUT_KEYWORDS.map((k) => ({ tag: k.tag, props: k.props.join(', ') }))
+
+export default controller((_ctx: ViewScope<Scope>) => ({
+  elements: () => ELEMENTS,
+  elementCount: () => ELEMENTS.length,
+  sxRows: () => SX_ROWS,
+  sxCount: () => SX_ROWS.length,
+  statePrefixes: () => SX_STATE_PREFIXES,
+  conditionPrefixes: () => SX_CONDITION_PREFIXES,
+  refusals: () => SX_REFUSALS,
+  refusalCount: () => SX_REFUSALS.length,
+  layoutRows: () => LAYOUT_ROWS,
+  motionTriggers: () => MOTION.triggers.join(' · '),
+  motionProperties: () => MOTION.properties.join(' · '),
+  motionStagger: () => MOTION.staggerKey,
+  motionPresets: () => MOTION.presets.join(' · '),
+}))
+</controller>
+
+<column sx="max-w-44" gap="5">
+  <p role="doc-eyebrow">Reference</p>
+  <h1>The language surface</h1>
+  <p role="doc-lead">
+    Everything below is generated from the compiler's own tables — the
+    vocabulary the lint enforces is the vocabulary this page documents, by
+    construction. Regenerate with
+    <code>cargo run -p sail-compiler -- prop-registry</code>.
+  </p>
+
+  <column gap="3">
+    <h2>Elements — {elementCount()}</h2>
+    <p>Every standard element, with its full prop table on its detail page.</p>
+    <row gap="2" sx="min-w-0">
+      {#for e of elements() key={e.tag}}
+        <a href={e.href} sx="px-3 py-1 rounded-full border border-border bg-surface-1 text-sm hover:bg-surface-2 hover:border hover:border-border-strong">
+          <code>{e.tag}</code> <small sx="text-muted-foreground">{e.propCount}</small>
+        </a>
+      {/for}
+    </row>
+  </column>
+
+  <column gap="3">
+    <h2>Layout keywords</h2>
+    <p>Structure is elements, not CSS. Each keyword takes a closed set of axis props; anything else is a compile error.</p>
+    <column gap="1">
+      {#for k of layoutRows() key={k.tag}}
+        <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md" align="center">
+          <code sx="min-w-9">&lt;{k.tag}&gt;</code>
+          <small sx="text-muted-foreground">{k.props}</small>
+        </row>
+      {/for}
+    </column>
+  </column>
+  <column gap="3">
+    <h2>sx — {sxCount()} atoms</h2>
+    <p>
+      <code>sx="name-value name-value …"</code>, static only. Every value is a
+      token from a closed list — the rows below are the complete surface, and
+      an off-list value is a compile error that names this same list.
+    </p>
+    <column gap="1">
+      {#for a of sxRows() key={a.prop}}
+        <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md min-w-0">
+          <code sx="min-w-9">{a.prop}:</code>
+          <small sx="text-muted-foreground grow-1 min-w-0">{a.values}</small>
+        </row>
+      {/for}
+    </column>
+
+    <h3>Not sx — use this ({refusalCount()})</h3>
+    <p>
+      The refused table is the OTHER half of the vocabulary. Every entry below
+      is an atom a Tailwind prior will reach for and sx refuses by name; each
+      names the element or attribute to use instead. The mission is never
+      "find another way" — it is "use this."
+    </p>
+    <column gap="1">
+      {#for r of refusals() key={r.atom}}
+        <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md min-w-0" align="start">
+          <code sx="min-w-9 text-destructive">sx={r.atom}</code>
+          <small sx="text-muted-foreground grow-1 min-w-0">→ {r.instead}</small>
+        </row>
+      {/for}
+    </column>
+
+    <h3>State prefixes</h3>
+    <column gap="1">
+      {#for s of statePrefixes() key={s.prefix}}
+        <row gap="3" sx="px-3 py-1 rounded-md" align="center">
+          <code sx="min-w-9">{s.prefix}:</code>
+          <small sx="text-muted-foreground font-mono">{s.selector}</small>
+        </row>
+      {/for}
+    </column>
+    <p>
+      Ancestor propagation: mark the ancestor with bare <code>group</code>,
+      then <code>group-hover:</code> (any state prefix) on the descendant.
+    </p>
+
+    <h3>Condition prefixes</h3>
+    <column gap="1">
+      {#for c of conditionPrefixes() key={c.prefix}}
+        <row gap="3" sx="px-3 py-1 rounded-md" align="center">
+          <code sx="min-w-9">{c.prefix}:</code>
+          <small sx="text-muted-foreground font-mono">{c.media}</small>
+        </row>
+      {/for}
+    </column>
+  </column>
+
+  <column gap="3">
+    <h2>Motion — one system</h2>
+    <p>
+      <code>motion:&lt;trigger&gt;</code> is the only animation directive;
+      <code>transition:</code> / <code>in:</code> / <code>out:</code> are retired.
+    </p>
+    <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">triggers</code><small sx="text-muted-foreground">{motionTriggers()}</small></row>
+    <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">properties</code><small sx="text-muted-foreground">{motionProperties()} — plus {motionStagger()}: a duration step between siblings</small></row>
+    <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">presets</code><small sx="text-muted-foreground">{motionPresets()}</small></row>
+  </column>
+
+  <column gap="3">
+    <h2>Template directives</h2>
+    <p>
+      Hand-listed until these get a compiler-derived table like everything
+      above — treat the compiler's errors as the authority.
+    </p>
+    <column gap="1">
+      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">on:</code><small sx="text-muted-foreground">events; modifiers |prevent |stop |self |once |debounce:ms |key:Name</small></row>
+      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">bind:</code><small sx="text-muted-foreground">two-way sugar — bind:value, bind:checked, bind:this (element ref)</small></row>
+      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">prop:</code><small sx="text-muted-foreground">set a JS property (identity values that are not attributes)</small></row>
+      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">attr:</code><small sx="text-muted-foreground">force attribute semantics for a dynamic value</small></row>
+      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">use:</code><small sx="text-muted-foreground">attach an action — behavior bound to an element with update/destroy</small></row>
+      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">use:</code><small sx="text-muted-foreground">runtime geometry — a named, typed action writes the custom property; sx reads it with <code>(--name)</code>. There is no <code>style:</code>: it was the last hatch, and it is closed.</small></row>
+      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">(--x)</code><small sx="text-muted-foreground">scope owns props, the controller owns state — when <code>(--x)</code> matches a declared prop or a <code>setup()</code>-returned signal, the compiler registers a typed CSS <code>@property</code> and reflects it onto the host, live. A name never read this way gets no wiring; an unmatched name refuses with a did-you-mean.</small></row>
+      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">blocks</code><small sx="text-muted-foreground">#if/:else · #match/:case/:default · #for with required key= · #while-loading · #while-error</small></row>
+    </column>
+  </column>
+
+  <row role="navigation">
+    <a variant="default" href="/templates">← Templates</a>
+    <a variant="solid" href="/components">Component catalog →</a>
+  </row>
+</column>

@@ -21,7 +21,7 @@ use sail_compiler::{CompileMode, CompileOpts, compile};
 fuzz_target!(|data: &[u8]| {
     let Ok(src) = std::str::from_utf8(data) else { return };
     // Bound input size — extreme blowup is interesting but the fuzzer's job
-    // is panic-hunting, and a 10MB .sui isn't a realistic regression class.
+    // is panic-hunting, and a 10MB .sail isn't a realistic regression class.
     if src.len() > 64 * 1024 {
         return;
     }

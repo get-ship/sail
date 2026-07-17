@@ -12,19 +12,19 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { renderComponent } from '@ship/test-setup'
 
 // The controller is the source's `<controller>` block, imported as the virtual
-// `<file>.sui.controller.ts` module — the specifier deck and the CLI emit. Going
+// `<file>.sail.controller.ts` module — the specifier deck and the CLI emit. Going
 // through the module graph (rather than the harness's in-Function eval) is what
 // resolves this controller's third-party `mermaid` import.
-import mermaidController from '../src/sail-mermaid/sail-mermaid.sui.controller.ts'
+import mermaidController from '../src/sail-mermaid/sail-mermaid.sail.controller.ts'
 
 import '../src/sail-mermaid/sail-mermaid.compiled.js'
 
 const SOURCE = readFileSync(
-  new URL('../src/sail-mermaid/sail-mermaid.sui', import.meta.url),
+  new URL('../src/sail-mermaid/sail-mermaid.sail', import.meta.url),
   'utf8',
 )
 const SOURCE_PATH = fileURLToPath(
-  new URL('../src/sail-mermaid/sail-mermaid.sui', import.meta.url),
+  new URL('../src/sail-mermaid/sail-mermaid.sail', import.meta.url),
 )
 
 interface LiveMount {

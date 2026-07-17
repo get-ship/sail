@@ -33,12 +33,12 @@ const COMPOSITIONS = [
 ] as const
 
 // Every file under the composition's directory (recursively). Both the
-// .sui source and the .controller.ts runtime are scanned; .test.ts specs
+// .sail source and the .controller.ts runtime are scanned; .test.ts specs
 // are excluded (they may legitimately name the forbidden tokens in
 // comments that DESCRIBE the absence — see sail-calendar/engine/purity.test.ts).
 function compositionFiles(stem: string): string[] {
   const out: string[] = []
-  const sui = join(STDLIB, `${stem}.sui`)
+  const sui = join(STDLIB, `${stem}.sail`)
   if (statSync(sui, { throwIfNoEntry: false })?.isFile()) out.push(sui)
   const actionFile = join(ACTIONS, `${stem}.ts`)
   if (statSync(actionFile, { throwIfNoEntry: false })?.isFile()) out.push(actionFile)
@@ -81,7 +81,7 @@ describe('domain-neutrality (job-lock) — 4 product compositions are ship-free'
     const files = compositionFiles(stem)
 
     it(`<${stem}> has source files to scan (precondition)`, () => {
-      // The audit can only run if the composition has at least a .sui
+      // The audit can only run if the composition has at least a .sail
       // template. A .controller.ts is OPTIONAL — some compositions
       // (e.g. sail-empty-state) are pure templates with no runtime.
       // Empty directories FAIL the precondition (would mask a future
@@ -102,7 +102,7 @@ describe('domain-neutrality (job-lock) — 4 product compositions are ship-free'
     it(`<${stem}> contains NO product coupling tokens in CODE (comments stripped)`, () => {
       for (const file of files) {
         const raw = readFileSync(file, 'utf8')
-        const code = file.endsWith('.sui') ? stripSuiComments(raw) : stripTsComments(raw)
+        const code = file.endsWith('.sail') ? stripSuiComments(raw) : stripTsComments(raw)
         for (const { token, why } of FORBIDDEN_PRODUCT_TOKENS) {
           expect(
             code.includes(token),
@@ -115,7 +115,7 @@ describe('domain-neutrality (job-lock) — 4 product compositions are ship-free'
     it(`<${stem}> does not name the product domain nouns (account/billing/project) in CODE`, () => {
       for (const file of files) {
         const raw = readFileSync(file, 'utf8')
-        const code = file.endsWith('.sui') ? stripSuiComments(raw) : stripTsComments(raw)
+        const code = file.endsWith('.sail') ? stripSuiComments(raw) : stripTsComments(raw)
         for (const noun of ['account', 'billing', 'project']) {
           // Word-boundary match — catches "account" but not "accountant".
           // The `brand` noun is intentionally NOT in this list — `brand`

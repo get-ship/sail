@@ -40,7 +40,7 @@ fn fixtures_dir() -> PathBuf {
 }
 
 fn compile_fixture(f: &Fixture) -> String {
-    let path = fixtures_dir().join(format!("{}.sui", f.name));
+    let path = fixtures_dir().join(format!("{}.sail", f.name));
     let source = fs::read_to_string(&path).expect("read fixture");
     let opts = CompileOpts {
         setup_url: f.setup_url.map(|s| s.to_string()),
@@ -118,7 +118,7 @@ fn bind_this_button_snapshot() {
 #[test]
 fn bind_this_button_direct_emits_hydrate_ref() {
     use sail_compiler::compile;
-    let path = fixtures_dir().join("bind-this-button.sui");
+    let path = fixtures_dir().join("bind-this-button.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         route_params: None,
@@ -181,7 +181,7 @@ fn for_update_snapshot() {
 /// runtime import is also dropped (nothing else here uses it).
 #[test]
 fn for_static_body_omits_v_sentinel() {
-    let path = fixtures_dir().join("for-static.sui");
+    let path = fixtures_dir().join("for-static.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         route_params: None,
@@ -306,7 +306,7 @@ fn for_dynamic_mixed_snapshot() {
 /// and never call `bindText` for that read.
 #[test]
 fn for_static_text_inlines_text_content() {
-    let path = fixtures_dir().join("for-static-text.sui");
+    let path = fixtures_dir().join("for-static-text.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         route_params: None,
@@ -336,7 +336,7 @@ fn for_static_text_inlines_text_content() {
 /// `bindAttr` for that read.
 #[test]
 fn for_static_attr_inlines_set_attribute() {
-    let path = fixtures_dir().join("for-static-attr.sui");
+    let path = fixtures_dir().join("for-static-attr.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         route_params: None,
@@ -366,7 +366,7 @@ fn for_static_attr_inlines_set_attribute() {
 /// binding still emits its `bind*` effect.
 #[test]
 fn for_dynamic_mixed_inlines_only_static() {
-    let path = fixtures_dir().join("for-dynamic-mixed.sui");
+    let path = fixtures_dir().join("for-dynamic-mixed.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         route_params: None,
@@ -393,7 +393,7 @@ fn for_dynamic_mixed_inlines_only_static() {
 
 #[test]
 fn for_render_closure_emits_update_field() {
-    let path = fixtures_dir().join("for-update.sui");
+    let path = fixtures_dir().join("for-update.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         route_params: None,
@@ -440,7 +440,7 @@ fn for_render_closure_emits_update_field() {
 /// `$scope.route = route` straight from the ctx destructure.
 #[test]
 fn route_view_reads_route_from_ctx() {
-    let path = fixtures_dir().join("route-view.sui");
+    let path = fixtures_dir().join("route-view.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         route_params: Some(vec!["name".to_string()]),
@@ -467,7 +467,7 @@ fn route_view_reads_route_from_ctx() {
 
 #[test]
 fn routeless_view_omits_route_import() {
-    let path = fixtures_dir().join("counter.sui");
+    let path = fixtures_dir().join("counter.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         route_params: None,
@@ -495,7 +495,7 @@ fn routeless_view_omits_route_import() {
 /// Fix 1: source HTML comments must never appear as createComment() in output.
 #[test]
 fn comment_nodes_not_emitted() {
-    let path = fixtures_dir().join("comment-and-whitespace.sui");
+    let path = fixtures_dir().join("comment-and-whitespace.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         route_params: None,
@@ -519,7 +519,7 @@ fn comment_nodes_not_emitted() {
 /// intentional inline whitespace (text-only parent) must be preserved.
 #[test]
 fn whitespace_text_nodes_dropped_between_elements() {
-    let path = fixtures_dir().join("comment-and-whitespace.sui");
+    let path = fixtures_dir().join("comment-and-whitespace.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         route_params: None,
@@ -551,7 +551,7 @@ fn whitespace_text_nodes_dropped_between_elements() {
 #[test]
 fn reflect_empty_slot_emits_bind_slot_empty_call() {
     use sail_compiler::compile;
-    let path = fixtures_dir().join("reflect-empty-slot.sui");
+    let path = fixtures_dir().join("reflect-empty-slot.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         route_params: None,
@@ -590,7 +590,7 @@ fn reflect_empty_slot_in_conditional_threads_container() {
     // defined` (the bug behind every `<sail-*>` with a conditional reflect-empty
     // slot, e.g. sail-input's `<slot name="trailing">`).
     use sail_compiler::compile;
-    let path = fixtures_dir().join("reflect-empty-slot-conditional.sui");
+    let path = fixtures_dir().join("reflect-empty-slot-conditional.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         route_params: None,
@@ -629,7 +629,7 @@ fn reflect_empty_slot_in_conditional_threads_container() {
 
 #[test]
 fn ship_button_emits_cem() {
-    let path = fixtures_dir().join("ship-button.sui");
+    let path = fixtures_dir().join("ship-button.sail");
     let source = fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         route_params: None,
@@ -651,7 +651,7 @@ fn ship_button_emits_cem() {
 #[test]
 fn schema_emitted_for_each_fixture() {
     for fx in &fixtures() {
-        let path = fixtures_dir().join(format!("{}.sui", fx.name));
+        let path = fixtures_dir().join(format!("{}.sail", fx.name));
         let source = fs::read_to_string(&path).unwrap();
         let opts = CompileOpts {
         route_params: None,
@@ -670,13 +670,13 @@ fn schema_emitted_for_each_fixture() {
         assert_snapshot(&format!("{}.schema", fx.name), &s, &expected);
     }
 }
-/// Phase 3b.5 (gate L): every fixture emits a `.sui.meta.json` sidecar
+/// Phase 3b.5 (gate L): every fixture emits a `.sail.meta.json` sidecar
 /// with binding info. The runtime never loads it; it's purely
 /// developer-tooling fuel (LSP hover, error overlay, HMR diff).
 #[test]
 fn meta_sidecar_emitted_for_each_fixture() {
     for fx in &fixtures() {
-        let path = fixtures_dir().join(format!("{}.sui", fx.name));
+        let path = fixtures_dir().join(format!("{}.sail", fx.name));
         let source = fs::read_to_string(&path).unwrap();
         let opts = CompileOpts {
         route_params: None,

@@ -58,7 +58,7 @@ pub fn extract(controller: &ParsedController) -> Vec<(String, String)> {
         return Vec::new();
     };
     // Types declared in the controller .ts (`interface Pin`, `type Foo`) can't
-    // resolve in the generated .sui.d.ts — see `downgrade_unresolvable`.
+    // resolve in the generated .sail.d.ts — see `downgrade_unresolvable`.
     let locals = local_type_names(&controller.source);
     let mut out: Vec<(String, String)> = Vec::new();
     walk_entries(bytes, obj_span, |name, value_start, value_end| {
@@ -75,7 +75,7 @@ pub fn extract(controller: &ParsedController) -> Vec<(String, String)> {
 
 /// Names declared locally in the controller source (`interface X`, `type X`,
 /// `enum X`, `class X`). These are visible to the controller's own type
-/// inference but NOT to the generated `.sui.d.ts`.
+/// inference but NOT to the generated `.sail.d.ts`.
 fn local_type_names(source: &str) -> std::collections::HashSet<String> {
     let mut set = std::collections::HashSet::new();
     for kw in ["interface ", "type ", "enum ", "class "] {
@@ -99,7 +99,7 @@ fn local_type_names(source: &str) -> std::collections::HashSet<String> {
 /// controller-local type (e.g. `Signal<Pin[]>` where `Pin` is an `interface`
 /// in the controller) to `unknown`.
 ///
-/// Why: the generated `.sui.d.ts` only imports the signal wrappers, so a
+/// Why: the generated `.sail.d.ts` only imports the signal wrappers, so a
 /// dangling `Pin` degrades to `any` — and `any & <SC-inferred>` absorbs to
 /// `any`, muddying the controller's `MutableState`. `Signal<unknown>` instead
 /// resolves, and `unknown & Signal<Pin[]>` collapses to the precise `SC` type
@@ -690,7 +690,7 @@ mod tests {
 
     #[test]
     fn controller_local_type_downgrades_to_unknown() {
-        // `Pin` is declared in the controller, so the generated .sui.d.ts
+        // `Pin` is declared in the controller, so the generated .sail.d.ts
         // can't resolve it — emit Signal<unknown> (the controller's SC
         // inference carries the precise Signal<Pin[]>). DOM/lib globals and
         // un-declared (imported) names are left untouched.

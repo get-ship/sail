@@ -1,12 +1,12 @@
 // @vitest-environment happy-dom
 // TESTS-FIRST — Slice 2: the <sail-calendar> VIEW (month/week/day + controller).
 //
-// Status: RED until `../sail-calendar.sui` + `../sail-calendar.controller.ts`
+// Status: RED until `../sail-calendar.sail` + `../sail-calendar.controller.ts`
 // exist. The engine (`./engine/`) is COMMITTED + GREEN — this slice renders its
 // view-model (monthCells / dayColumns / timeSlots / agenda) and wires
 // navigation / view-switch / event-select, emitting `sail-*` via `host.emit!`.
 //
-// Harness: `renderComponent` compiles `sail-calendar.sui` under the tag and
+// Harness: `renderComponent` compiles `sail-calendar.sail` under the tag and
 // registers the custom element. The live engine reaches the view through the
 // `prop:calendar` IDENTITY path — assigned to the host `calendar` property
 // (a live JS reference, never a stringified attribute), mirroring the
@@ -290,7 +290,7 @@ describe('<sail-calendar> — SSR fallback + density/token discipline', () => {
   })
 
   it('authors no CSS at all — the floor (REVIEW gate, asserted)', () => {
-    const src = readFileSync(new URL('../sail-calendar.sui', import.meta.url), 'utf8')
+    const src = readFileSync(new URL('../sail-calendar.sail', import.meta.url), 'utf8')
     expect(src).not.toMatch(/<style[\s>]/)
     expect(src).not.toMatch(/\sstyle="/)
   })

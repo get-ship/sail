@@ -199,13 +199,13 @@ const buildSchema = (def: ComponentDef): ComponentSchema => {
 }
 
 /**
- * `component(...)` — the one factory a compiled `.sui` exports. Two shapes,
+ * `component(...)` — the one factory a compiled `.sail` exports. Two shapes,
  * disjoint on the first argument so the compiler (and the rare direct caller)
  * can never confuse them:
  *
  *   • `component(setup)` — tagless MOUNT form. Returns `{ setup }`; the host
  *     (deck / `attach()`) mounts it into a node. No custom-element registration.
- *     This is what the compiler emits for a tagless `.sui` (a deck page).
+ *     This is what the compiler emits for a tagless `.sail` (a deck page).
  *   • `component(tag, def)` — REGISTER a `<tag>` custom element from a
  *     declarative definition (this overload, documented below). A hyphenated
  *     tag is the only thing that turns a component into a registered element.

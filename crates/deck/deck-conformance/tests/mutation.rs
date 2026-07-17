@@ -4,7 +4,7 @@
 //! retired framework-wide: deck's router answers it with a 410 tombstone and
 //! JS-attached mutations call the SDK directly. What this file still gates:
 //!
-//! 1. The wire vocabulary contract — `views/todos/page.sui` carries exactly
+//! 1. The wire vocabulary contract — `views/todos/page.sail` carries exactly
 //!    one mutation binding pointing at `ship.demo.addTodo`, parsed via
 //!    `sail_compiler::{parse, bindings}` (the same path a host uses).
 //! 2. Resolver semantics — `demo.addTodo` then `demo.todos` against the store.
@@ -73,8 +73,8 @@ async fn resolve_demo_shows_added_todo_after_add() {
 fn todos_view_has_mutation_binding_for_add_todo() {
     let app_dir = default_app_dir();
     let source =
-        std::fs::read_to_string(app_dir.join("views/todos/page.sui")).expect("todos page.sui");
-    // todos/page.sui carries its controller INLINE (`<controller>…</controller>`)
+        std::fs::read_to_string(app_dir.join("views/todos/page.sail")).expect("todos page.sail");
+    // todos/page.sail carries its controller INLINE (`<controller>…</controller>`)
     // — strip it before the template-only parser sees it (mirrors deck-ssr's
     // build path).
     let (stripped, _inline_controller) =

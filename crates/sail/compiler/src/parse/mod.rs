@@ -1,4 +1,4 @@
-//! Parse pipeline. Walks `.sui` source and produces an IR.
+//! Parse pipeline. Walks `.sail` source and produces an IR.
 //!
 //! Stages, in order:
 //!  1. Preprocess — same two transforms the interpreter does
@@ -24,7 +24,7 @@ pub mod template;
 
 pub use html::{Attr, Node};
 
-/// Parse a `.sui` source string into an IR program.
+/// Parse a `.sail` source string into an IR program.
 pub fn parse(source: &str) -> Result<Program, CompileError> {
     parse_inner(source, true)
 }

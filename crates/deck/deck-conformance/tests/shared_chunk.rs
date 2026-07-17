@@ -69,7 +69,7 @@ async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
 
     let widgets = BundleTarget {
         name: "views/widgets/view".into(),
-        entry: TargetEntry::Real(app.join("views/widgets/page.sui")),
+        entry: TargetEntry::Real(app.join("views/widgets/page.sail")),
         externals: vec![
             "@ship/sail-runtime".into(),
             "@ship/sail-dom".into(),
@@ -80,7 +80,7 @@ async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
     };
     let gallery = BundleTarget {
         name: "views/gallery/view".into(),
-        entry: TargetEntry::Real(app.join("views/gallery/page.sui")),
+        entry: TargetEntry::Real(app.join("views/gallery/page.sail")),
         externals: vec![
             "@ship/sail-runtime".into(),
             "@ship/sail-dom".into(),
@@ -93,7 +93,7 @@ async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
     // The bundler uses `layout.repo_root` for the component_index lookup (the
     // CEM walk). Since `layout.repo_root == app`, it reads `app/package.json`
     // workspaces → `components/*` → discovers `@demo/demo-chip` → indexes
-    // `demo-chip` → resolves `@sail-tag/demo-chip` to the source .sui.
+    // `demo-chip` → resolves `@sail-tag/demo-chip` to the source .sail.
     bundle_views(&layout, &[widgets, gallery], &staging, false)
         .await
         .expect("multi-entry views bundle must succeed");

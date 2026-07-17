@@ -30,7 +30,7 @@ pub fn is_valid_view_name(s: &str) -> bool {
 }
 
 pub fn render_view_source(project_root: &Path, name: &str) -> Option<String> {
-    let path = project_root.join("views").join(name).join("page.sui");
+    let path = project_root.join("views").join(name).join("page.sail");
     std::fs::read_to_string(&path).ok()
 }
 

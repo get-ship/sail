@@ -29,7 +29,7 @@ fn compile_fixture(name: &str, mode: CompileMode, setup: Option<&str>) -> String
     } else {
         None
     };
-    let path = fixtures_dir().join(format!("{name}.sui"));
+    let path = fixtures_dir().join(format!("{name}.sail"));
     let source = fs::read_to_string(&path).unwrap();
     let out = compile(
         &source,

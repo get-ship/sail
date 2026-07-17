@@ -1,4 +1,4 @@
-//! `sail-css-token` — `var(--xyz)` inside a `.sui` `<style>` block must
+//! `sail-css-token` — `var(--xyz)` inside a `.sail` `<style>` block must
 //! resolve to either the canonical token CSS
 //! (`packages/sail/tokens/src/tokens.css`, parsed by `crate::tokens`) or a
 //! custom property set locally inside the same `<style>` block.
@@ -57,7 +57,7 @@ use crate::report::{Finding, Severity};
 
 pub const RULE_ID: &str = "sail-css-token";
 
-/// Lint a `.sui` source. Walks every `<style>...</style>` block: each
+/// Lint a `.sail` source. Walks every `<style>...</style>` block: each
 /// `var(--xyz)` reference must be in the theme registry or defined
 /// locally as `--xyz: ...` somewhere in the same block.
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
@@ -351,7 +351,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn fake_path() -> PathBuf {
-        PathBuf::from("/fake/foo.sui")
+        PathBuf::from("/fake/foo.sail")
     }
 
     fn run(src: &str) -> Vec<Finding> {

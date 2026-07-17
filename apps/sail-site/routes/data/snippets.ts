@@ -30,7 +30,7 @@ export default controller(() => {
   {/for}
 {/if}`,
 
-  source: `// the <controller> block body (inline in users.sui)
+  source: `// the <controller> block body (inline in users.sail)
 import { controller, live } from '@ship/sail-runtime'
 
 export default controller(() => {
@@ -40,7 +40,7 @@ export default controller(() => {
   return { users }
 })`,
 
-  states: `<!-- users.sui — the three states are explicit, never forgotten -->
+  states: `<!-- users.sail — the three states are explicit, never forgotten -->
 {#while-loading of users}
   <p role="status">Loading…</p>
 {/while-loading}

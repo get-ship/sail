@@ -28,7 +28,7 @@
 //! [`apply_overrides`] additionally REFUSES to touch a floor rule — an
 //! `Off`/`Warn` override naming a floor rule id is ignored — so the floor
 //! cannot be softened through this channel either. Between the two, a floor
-//! violation is an `Error` in every `.sui`, on every host, with any overrides.
+//! violation is an `Error` in every `.sail`, on every host, with any overrides.
 //!
 //! Plumbing: `CompileOpts::lint_overrides` carries a `Vec<LintOverride>`
 //! from the build host (CLI / napi / wasm) into `compile()`. The
@@ -144,7 +144,7 @@ pub fn apply_overrides(
 /// This runs on every compile regardless of `opts.lint_overrides`, so the
 /// styling constructs the floor bans (`sail-no-style-block`,
 /// `sail-no-inline-style`, `sail-no-class`, `sail-no-undeclared-stylesheet`) are a
-/// hard `Error` in every `.sui` — including on a host that passes no overrides
+/// hard `Error` in every `.sail` — including on a host that passes no overrides
 /// at all (the wasm/playground path that historically skipped the floor). The
 /// two natural-`Warn` floor rules (`sail-no-style-block`, `sail-no-inline-style`)
 /// gate here without any host promotion; the two natural-`Error` ones pass

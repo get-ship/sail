@@ -2,7 +2,7 @@
 group: Views
 order: 6
 title: SSR and the attach runtime
-description: How `shipd` renders `.sui` to HTML server-side, and how the client runtime attaches reactivity to the rendered DOM. Progressive enhancement first.
+description: How `shipd` renders `.sail` to HTML server-side, and how the client runtime attaches reactivity to the rendered DOM. Progressive enhancement first.
 ---
 
 # SSR and the attach runtime
@@ -14,7 +14,7 @@ This is progressive enhancement, not hydration of an empty shell. The framework'
 ## The pipeline
 
 ```
-.sui source
+.sail source
     │
     ▼
 sail-compiler  (Rust, AOT)
@@ -79,7 +79,7 @@ Any addition to the allowlist must satisfy four constraints, **in this order**:
 
 1. **Referentially transparent.** No I/O, no allocation that escapes, no mutation, no closures-as-args, no eval-shaped args. If the method takes a function (e.g. `.map(fn)`), the function must itself stay inside the renderable subset — verified by walking the AST.
 2. **SSR implementation in `crates/sail/compiler/src/render/eval/methods.rs::dispatch`.** Match the method name, evaluate via the `coerce`/`exec` helpers, return a `serde_json::Value`. Must produce identical output to the runtime JS semantics for the same inputs — round-trip tested.
-3. **Test pair.** One test in `crates/sail/compiler/tests/` exercising the method through SSR (input → expected HTML). One test in a framework integration test exercising the same expression in a `.sui` view's attached state — confirms SSR output matches client-eval output character-for-character.
+3. **Test pair.** One test in `crates/sail/compiler/tests/` exercising the method through SSR (input → expected HTML). One test in a framework integration test exercising the same expression in a `.sail` view's attached state — confirms SSR output matches client-eval output character-for-character.
 4. **Docs entry.** Add to the allowlist line above (this section), with one line of rationale if non-obvious. If the method has subtle browser-vs-server semantics (number formatting locales, etc.), call them out.
 
 Reject the addition if any of (1)–(4) can't be met. The subset is intentionally narrow — a method that requires special-casing in SSR is a method we shouldn't admit. Better to direct the author to a `derived()` in the controller.
@@ -143,7 +143,7 @@ For the local-daemon case Ship targets, this matters less than for the public-we
 
 Two pieces of the previous (Phase 3) architecture are gone:
 
-- **Client-side template parser** — the client never parses `.sui` source on the production path. The parser lives in `@ship/sail-dom/legacy` and is used only by tests and the eval rig. The default `@ship/sail-dom` entry exports only `attach` and has zero parser code.
+- **Client-side template parser** — the client never parses `.sail` source on the production path. The parser lives in `@ship/sail-dom/legacy` and is used only by tests and the eval rig. The default `@ship/sail-dom` entry exports only `attach` and has zero parser code.
 - **The empty HTML shell** — `shipd` no longer serves an empty `<div id="root">` shell at `/sui/<view>`. It serves server-rendered HTML directly.
 
 Both follow from the IR-as-source-of-truth move. Two parsers (Rust + JS) and two emit shapes (empty shell + client-rendered DOM) become one parser (Rust) and one emit shape (rendered HTML).

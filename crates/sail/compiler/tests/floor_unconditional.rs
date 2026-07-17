@@ -160,7 +160,7 @@ fn write_pack(config: &str, css: &[(&str, &str)]) -> (tempfile::TempDir, PathBuf
     fs::write(tmp.path().join("sail.config.json"), config).unwrap();
     let src_dir = tmp.path().join("src");
     fs::create_dir_all(&src_dir).unwrap();
-    let sui = src_dir.join("w.sui");
+    let sui = src_dir.join("w.sail");
     fs::write(&sui, "<p>{name}</p>").unwrap();
     for (rel, body) in css {
         fs::write(src_dir.join(rel), body).unwrap();

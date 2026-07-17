@@ -28,7 +28,7 @@ const flush = () => new Promise((r) => setTimeout(r, 0))
 describe('hydrate — hello (static)', () => {
   it('renders static markup verbatim and disposes cleanly', () => {
     const container = mkContainer()
-    const handle = hydrate(loadFixture('hello.sui'), undefined, {
+    const handle = hydrate(loadFixture('hello.sail'), undefined, {
       container,
     })
     expect(container.querySelector('h1')!.textContent).toBe('Hello, world.')
@@ -41,7 +41,7 @@ describe('hydrate — hello (static)', () => {
 describe('hydrate — counter (state + on:click)', () => {
   it('updates the displayed count when the button is clicked', async () => {
     const container = mkContainer()
-    const handle = hydrate(loadFixture('counter.sui'), counterSetup, {
+    const handle = hydrate(loadFixture('counter.sail'), counterSetup, {
       container,
     })
     const value = container.querySelector('[data-test="value"]')!
@@ -66,7 +66,7 @@ describe('hydrate — counter (state + on:click)', () => {
 
   it('removes event listeners on dispose so post-dispose clicks are inert', () => {
     const container = mkContainer()
-    const handle = hydrate(loadFixture('counter.sui'), counterSetup, {
+    const handle = hydrate(loadFixture('counter.sail'), counterSetup, {
       container,
     })
     const inc = container.querySelector(
@@ -94,7 +94,7 @@ describe('hydrate — agents (live data + while + if + for)', () => {
           }),
       },
     }
-    const handle = hydrate(loadFixture('agents.sui'), undefined, {
+    const handle = hydrate(loadFixture('agents.sail'), undefined, {
       container,
       ship,
     })
@@ -116,7 +116,7 @@ describe('hydrate — agents (live data + while + if + for)', () => {
     const ship = {
       agents: { summaries: () => Promise.resolve({ items: [] }) },
     }
-    const handle = hydrate(loadFixture('agents.sui'), undefined, {
+    const handle = hydrate(loadFixture('agents.sail'), undefined, {
       container,
       ship,
     })
@@ -131,7 +131,7 @@ describe('hydrate — agents (live data + while + if + for)', () => {
     const ship = {
       agents: { summaries: () => Promise.reject(new Error('boom')) },
     }
-    const handle = hydrate(loadFixture('agents.sui'), undefined, {
+    const handle = hydrate(loadFixture('agents.sail'), undefined, {
       container,
       ship,
     })
@@ -149,7 +149,7 @@ describe('hydrate — agents (live data + while + if + for)', () => {
         summaries: () => Promise.resolve({ items: [{ id: 'x', name: 'X' }] }),
       },
     }
-    const handle = hydrate(loadFixture('agents.sui'), undefined, {
+    const handle = hydrate(loadFixture('agents.sail'), undefined, {
       container,
       ship,
     })
@@ -167,7 +167,7 @@ describe('hydrate — agents (live data + while + if + for)', () => {
 describe('hydrate — ship-button (component + props + reflect)', () => {
   it('registers a custom element and reflects bool prop changes', async () => {
     const container = mkContainer()
-    hydrate(loadFixture('ship-button.sui'), undefined, {
+    hydrate(loadFixture('ship-button.sail'), undefined, {
       container,
       componentName: 'ship-button-test',
     })
@@ -194,7 +194,7 @@ describe('hydrate — ship-button (component + props + reflect)', () => {
 describe('hydrate — disposer fully tears down', () => {
   it('removes inserted nodes and unsubscribes signals', () => {
     const container = mkContainer()
-    const handle = hydrate(loadFixture('counter.sui'), counterSetup, {
+    const handle = hydrate(loadFixture('counter.sail'), counterSetup, {
       container,
     })
     expect(container.childNodes.length).toBeGreaterThan(0)
@@ -204,7 +204,7 @@ describe('hydrate — disposer fully tears down', () => {
 
   it('disposes effects so subsequent signal writes do not throw', () => {
     const container = mkContainer()
-    const handle = hydrate(loadFixture('counter.sui'), counterSetup, {
+    const handle = hydrate(loadFixture('counter.sail'), counterSetup, {
       container,
     })
     handle.dispose()

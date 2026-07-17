@@ -1,5 +1,5 @@
 // Editor-LSP smoke — drive the /tutorial/01-hello-signal lesson, type a
-// syntax-broken .sui fragment into the template editor, and assert that the
+// syntax-broken .sail fragment into the template editor, and assert that the
 // browser-side LSP wires through to live diagnostic gutters in the
 // CodeMirror editor (the whole reason we ported the full
 // ship-code-editor-with-LSP impl). Pre-LSP behavior: lint gutter stays
@@ -8,7 +8,7 @@
 
 import { test, expect } from '@playwright/test'
 
-test('LSP diagnostics populate the editor gutter for a broken .sui', async ({ page }) => {
+test('LSP diagnostics populate the editor gutter for a broken .sail', async ({ page }) => {
   // Drop known benign noise; print everything else so the LSP
   // dynamic-import path is observable from the test output.
   const log: string[] = []

@@ -76,7 +76,7 @@ fn suggest_text(family: &str, role: &str) -> String {
     )
 }
 
-/// Lint a `.sui` source. Walks every `<style>...</style>` block; for
+/// Lint a `.sail` source. Walks every `<style>...</style>` block; for
 /// every `font-family: …;` declaration, looks for a whole-token
 /// occurrence of any palette name in the value.
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
@@ -392,7 +392,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn fake_path() -> PathBuf {
-        PathBuf::from("/fake/foo.sui")
+        PathBuf::from("/fake/foo.sail")
     }
 
     fn run(src: &str) -> Vec<Finding> {

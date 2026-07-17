@@ -4,7 +4,7 @@
 //! - [`deck_app`] — a ready router, NO filesystem watcher (read-only host /
 //!   tests). On-demand bundling still works; nothing watches for edits.
 //! - [`deck_dev_server`] — the same, plus the bundler's FS watcher running, so
-//!   editing a `.sui` rebuilds the affected target and pushes an HMR event.
+//!   editing a `.sail` rebuilds the affected target and pushes an HMR event.
 //!
 //! The host contract:
 //! 1. Point the resolver at an app dir via `DECK_PROJECT_DIR` (leave
@@ -45,7 +45,7 @@ pub fn demo_mode() -> DaemonMode {
     }
 }
 
-/// This crate's example app: `app/views/<name>/page.sui`.
+/// This crate's example app: `app/views/<name>/page.sail`.
 pub fn default_app_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("app")
 }
@@ -115,7 +115,7 @@ pub fn deck_app_with_store(app_dir: PathBuf, mode: DaemonMode, store: Arc<DemoSt
     build_router(mode, &app_dir, make_bundler(&app_dir), cfg, store)
 }
 
-/// A dev server with the FS watcher running: edit a `.sui` → rebuild the
+/// A dev server with the FS watcher running: edit a `.sail` → rebuild the
 /// affected target → push an HMR event. Async because `start_watching` spawns
 /// the watch task. Reads the daemon mode from [`demo_mode`].
 pub async fn deck_dev_server(app_dir: PathBuf) -> Router {

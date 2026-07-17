@@ -4,7 +4,7 @@
   "modules": [
     {
       "kind": "javascript-module",
-      "path": "ship-button.sui",
+      "path": "ship-button.sail",
       "declarations": [
         {
           "kind": "class",
@@ -103,7 +103,7 @@
           "name": "ship-button-test",
           "declaration": {
             "name": "ShipButtonTest",
-            "module": "ship-button.sui"
+            "module": "ship-button.sail"
           }
         }
       ]

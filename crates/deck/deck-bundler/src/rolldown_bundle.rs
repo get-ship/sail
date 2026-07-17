@@ -23,7 +23,7 @@ pub async fn bundle_target(
     staging: &Path,
     production: bool,
 ) -> Result<BundleManifest> {
-    // Entry: real `.ts`/`.sui` directly, or a generated `.ts` for virtual
+    // Entry: real `.ts`/`.sail` directly, or a generated `.ts` for virtual
     // aggregates importing each source's `.compiled.js` (so `load` compiles it).
     let entry: PathBuf = match &target.entry {
         TargetEntry::Real(p) => p.clone(),
@@ -535,7 +535,7 @@ mod tests {
         assert!(body.contains("@ship/sail-runtime"), "runtime kept external");
 
         // The traceable marketing components (sail-stat / sail-toolbar /
-        // sail-progress from the retired const have no `.sui` source and are not
+        // sail-progress from the retired const have no `.sail` source and are not
         // members — see marketing-bundle.ts). Each registers via its
         // `component(\`<tag>\`, …)` call; the tag literal survives minification.
         for tag in [

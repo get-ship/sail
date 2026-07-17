@@ -323,7 +323,7 @@ export function bindChecked(
  *
  * Use this when the markup is produced by an external generator
  * (markdown renderer, SVG library, code highlighter) and putting the
- * shape in the `.sui` template would mean re-encoding the generator's
+ * shape in the `.sail` template would mean re-encoding the generator's
  * output by hand. Reach for `{#if}` / `{#for}` / `{#match}` first;
  * `bindHtml` is the escape hatch when those don't fit.
  *

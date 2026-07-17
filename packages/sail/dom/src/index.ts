@@ -7,7 +7,7 @@
  * emitted `hydrate(root, ctx)` calls during SSR resume.
  *
  * The legacy parse-on-the-client subpath has been deleted; every
- * `.sui` file goes through the Rust sail-compiler ahead of time. Tests
+ * `.sail` file goes through the Rust sail-compiler ahead of time. Tests
  * compile via the wasm-backed `@ship/sail-dom/test-utils` helper.
  *
  * @packageDocumentation

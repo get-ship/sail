@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 license.workspace = true
 publish = false
-description = "Static box-tree computation for .sui templates via taffy — compile-time layout diagnostics (no browser). SPIKE."
+description = "Static box-tree computation for .sail templates via taffy — compile-time layout diagnostics (no browser). SPIKE."
 
 [lib]
 name = "sail_layout"

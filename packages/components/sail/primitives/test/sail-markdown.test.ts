@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sail-markdown/sail-markdown.compiled.js'
-import { renderMarkdown } from '../src/sail-markdown/sail-markdown.sui.controller.ts'
+import { renderMarkdown } from '../src/sail-markdown/sail-markdown.sail.controller.ts'
 import { signal } from '@ship/sail-runtime'
 import { bindHtml } from '@ship/sail-runtime'
 import { createContainerRegistry, flush, mount } from '../src/test-utils'

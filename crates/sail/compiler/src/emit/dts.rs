@@ -9,7 +9,7 @@
 use crate::check::controller_parse::ParsedController;
 use crate::ir::{AttrInstr, ElementInstr, Instr, Program, PropDecl, PropKind};
 
-/// Emit the `.sui.d.ts` text for a compiled `.sui` file.
+/// Emit the `.sail.d.ts` text for a compiled `.sail` file.
 ///
 /// When a paired controller is available, the `Scope` interface also
 /// includes every key surfaced by the controller's setup function's

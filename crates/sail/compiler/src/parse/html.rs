@@ -1,4 +1,4 @@
-//! Hand-rolled HTML parser scoped to `.sui` files.
+//! Hand-rolled HTML parser scoped to `.sail` files.
 //!
 //! After `preprocess::preprocess` has run, the source is well-formed
 //! enough that we don't need a full HTML5 implementation:
@@ -26,7 +26,7 @@ pub(super) const VOID_TAGS: &[&str] = &[
 /// closing handled by the literal `</tag>` match).
 pub(super) const RAW_TEXT_TAGS: &[&str] = &["script", "style", "controller", "scope"];
 
-/// Parse a `.sui` source fragment into a flat list of top-level
+/// Parse a `.sail` source fragment into a flat list of top-level
 /// nodes. The fragment is parsed at "body" level — no document/html
 /// wrapping, no doctype handling.
 pub fn parse_fragment(source: &str) -> Result<Vec<Node>, CompileError> {
@@ -84,7 +84,7 @@ impl Element {
     }
 }
 
-/// Decode HTML entities found in `.sui` text content + attribute values.
+/// Decode HTML entities found in `.sail` text content + attribute values.
 ///
 /// Supports:
 ///   * The five XML core entities (`&amp;`, `&lt;`, `&gt;`, `&quot;`,
@@ -92,7 +92,7 @@ impl Element {
 ///   * A curated list of common typographic / symbol entities authors
 ///     reach for (`&middot;`, `&hellip;`, `&copy;`, etc.). Without
 ///     this, templates using `&middot;` rendered the literal text
-///     `&middot;` to the page (visible bug in `views/git/page.sui`
+///     `&middot;` to the page (visible bug in `views/git/page.sail`
 ///     where every `<a> &middot; <b>` pair surfaced as undecoded HTML).
 ///   * Numeric character references — both decimal `&#NNN;` and
 ///     hexadecimal `&#xHEX;` / `&#XHEX;`.

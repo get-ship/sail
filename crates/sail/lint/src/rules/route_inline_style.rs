@@ -1,17 +1,17 @@
-//! `sail-route-inline-style` — a route `page.sui` that contains an inline
+//! `sail-route-inline-style` — a route `page.sail` that contains an inline
 //! `<style>` block.
 //!
 //! The deck bundler auto-links a co-located `style.css` as a route stylesheet
 //! (the `deck-route-css` convention). An inline `<style>` block inside a
-//! route `page.sui` is **silently dropped** — the compiler emits no JS for it
+//! route `page.sail` is **silently dropped** — the compiler emits no JS for it
 //! and the bundler emits no CSS import. The author gets no styling and no
 //! error, which is confusing and hard to debug.
 //!
 //! The fix is to move the styles to a sibling `style.css`; the bundler then
 //! picks it up automatically.
 //!
-//! Only fires on files whose name is exactly `page.sui` — the deck route
-//! template convention. Component `.sui` files (e.g. `sail-button.sui`) are
+//! Only fires on files whose name is exactly `page.sail` — the deck route
+//! template convention. Component `.sail` files (e.g. `sail-button.sail`) are
 //! expected to carry `<style>` blocks (shadow-DOM scoped), so this rule
 //! intentionally skips them.
 //!
@@ -24,9 +24,9 @@ use crate::report::{Finding, Severity};
 pub const RULE_ID: &str = "sail-route-inline-style";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
-    // Only route templates (`page.sui`) — component .sui files legitimately
+    // Only route templates (`page.sail`) — component .sail files legitimately
     // carry <style> blocks.
-    if path.file_name().and_then(|n| n.to_str()) != Some("page.sui") {
+    if path.file_name().and_then(|n| n.to_str()) != Some("page.sail") {
         return Vec::new();
     }
 
@@ -67,11 +67,11 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             col,
             rule: RULE_ID,
             severity: Severity::Warn,
-            message: "inline `<style>` in a route `page.sui` is silently dropped by the bundler \
+            message: "inline `<style>` in a route `page.sail` is silently dropped by the bundler \
                       — move styles to a sibling `style.css` (the deck-route-css convention)"
                 .to_string(),
             suggest: Some(
-                "Create `style.css` next to `page.sui`; the bundler picks it up automatically \
+                "Create `style.css` next to `page.sail`; the bundler picks it up automatically \
                  (deck-route-css convention). Remove the inline `<style>` block."
                     .to_string(),
             ),
@@ -115,11 +115,11 @@ mod tests {
     use std::path::PathBuf;
 
     fn page_path() -> PathBuf {
-        PathBuf::from("/routes/agents/page.sui")
+        PathBuf::from("/routes/agents/page.sail")
     }
 
     fn component_path() -> PathBuf {
-        PathBuf::from("/components/sail-button/sail-button.sui")
+        PathBuf::from("/components/sail-button/sail-button.sail")
     }
 
     #[test]
@@ -134,7 +134,7 @@ mod tests {
 
     #[test]
     fn inline_style_in_component_sui_passes() {
-        // Component .sui files legitimately carry <style> blocks.
+        // Component .sail files legitimately carry <style> blocks.
         let src = "<style>:host { display: block; }</style><slot></slot>";
         let findings = check(&component_path(), src);
         assert!(findings.is_empty(), "{findings:?}");
@@ -183,10 +183,10 @@ mod tests {
 
     #[test]
     fn only_page_sui_filename_triggers() {
-        // A file named something other than `page.sui` even in a routes dir.
-        let other = PathBuf::from("/routes/agents/layout.sui");
+        // A file named something other than `page.sail` even in a routes dir.
+        let other = PathBuf::from("/routes/agents/layout.sail");
         let src = "<style>.foo{}</style><slot></slot>";
         let findings = check(&other, src);
-        assert!(findings.is_empty(), "only page.sui should trigger: {findings:?}");
+        assert!(findings.is_empty(), "only page.sail should trigger: {findings:?}");
     }
 }

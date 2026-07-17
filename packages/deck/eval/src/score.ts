@@ -1,5 +1,5 @@
 // Scoring for one model output. Three sub-scores, each independent:
-//   - compiled:    does the .sui parse, and (if there's a setup .ts)
+//   - compiled:    does the .sail parse, and (if there's a setup .ts)
 //                  does it type-check?
 //   - boundedScope: are there any escape-hatch patterns in the output?
 //   - behavioral:  do the task's behavioral tests pass against the

@@ -1,15 +1,15 @@
 //! Filesystem walk + classification for SUI authoring sources.
 //!
 //! Two file shapes are recognised:
-//! - `*.sui` — template (parsed by `sail-compiler`)
+//! - `*.sail` — template (parsed by `sail-compiler`)
 //! - `*.controller.ts` — paired controller (parsed by `oxc_parser`)
 //!
-//! Plain `*.ts` files next to a `.sui` are not controllers — they're
+//! Plain `*.ts` files next to a `.sail` are not controllers — they're
 //! helpers, types, or tests. The suffix carries the intent.
 
 use std::path::{Path, PathBuf};
 
-/// Recursively collect every `*.sui` and `*.controller.ts` file under `dir`.
+/// Recursively collect every `*.sail` and `*.controller.ts` file under `dir`.
 pub fn collect(dir: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
     walk(dir, &mut out);
@@ -35,7 +35,7 @@ fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
         }
         if ft.is_file()
             && let Some(name) = p.file_name().and_then(|n| n.to_str())
-            && (name.ends_with(".sui") || name.ends_with(".controller.ts")) {
+            && (name.ends_with(".sail") || name.ends_with(".controller.ts")) {
                 out.push(p);
             }
     }
@@ -70,18 +70,18 @@ mod tests {
 
         // a real authoring source the walk MUST find
         fs::create_dir_all(base.join("src/sail-x")).unwrap();
-        fs::write(base.join("src/sail-x/sail-x.sui"), "<column></column>").unwrap();
+        fs::write(base.join("src/sail-x/sail-x.sail"), "<column></column>").unwrap();
 
         // node_modules with a source-shaped file inside — must be skipped whole
         fs::create_dir_all(base.join("node_modules/@ship")).unwrap();
-        fs::write(base.join("node_modules/@ship/pkg.sui"), "<column></column>").unwrap();
+        fs::write(base.join("node_modules/@ship/pkg.sail"), "<column></column>").unwrap();
         // a symlink cycle NOT under node_modules — proves file_type() no-follow
         symlink(base, base.join("src/loop")).unwrap();
 
         let found = collect(base);
 
         assert!(
-            found.iter().any(|p| p.ends_with("sail-x.sui")),
+            found.iter().any(|p| p.ends_with("sail-x.sail")),
             "the real source is collected: {found:?}"
         );
         assert!(

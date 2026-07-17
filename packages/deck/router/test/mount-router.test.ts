@@ -220,7 +220,7 @@ describe('layout module rendering', () => {
   }
 
   it('renders authored layout markup including slotted children', async () => {
-    // The slotted child <x-extra slot="foo"> is composed in the _layout.sui
+    // The slotted child <x-extra slot="foo"> is composed in the _layout.sail
     // template. Before the fix, only the bare chrome tag was createElement'd
     // — the authored content was silently dropped. This test proves it now renders.
     history.replaceState({}, '', '/a/b')

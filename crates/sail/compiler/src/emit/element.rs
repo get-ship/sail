@@ -1,6 +1,6 @@
-//! ELEMENT MODE — compile a `.sui` source as an L1 language element.
+//! ELEMENT MODE — compile a `.sail` source as an L1 language element.
 //!
-//! One authoring technology per layer: an element source is a normal `.sui`
+//! One authoring technology per layer: an element source is a normal `.sail`
 //! file (component block for the contract, template for the structure,
 //! variants/sx for the skin), but the outputs differ from a component:
 //!

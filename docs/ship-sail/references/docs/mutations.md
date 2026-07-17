@@ -21,7 +21,7 @@ with the form's `FormData`, and drives a `loading → ok | error` lifecycle
 (`packages/sail/runtime/src/mutation.ts:38`).
 
 ```html
-<!-- apps/shell/src/settings/page.sui:375 -->
+<!-- apps/shell/src/settings/page.sail:375 -->
 <form mutation="ship.settings.update" on:success={() => flashSaved(savedProvider)}>
   <select name="provider"> … </select>
   <button type="submit">Save</button>
@@ -55,7 +55,7 @@ controller. Mutations are allowed **only** inside event handlers, `mount`, or
 hard rule #3).
 
 ```ts
-// apps/shell/src/studio/collections/page.sui — inside its <controller> block
+// apps/shell/src/studio/collections/page.sail — inside its <controller> block
 export default controller(({ ship }) => {
   const newColOpen    = signal(false)
   const newColDraftId = signal('')

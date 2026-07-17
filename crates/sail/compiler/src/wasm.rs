@@ -8,7 +8,7 @@
 // WASM-bindgen surface for the docs-site playground.
 //
 // Exposes a single `compile(source, optsJSON) -> resultJSON` function
-// callable from JS — the playground passes the editor's current .sui
+// callable from JS — the playground passes the editor's current .sail
 // text + an opts JSON (mode, component name, …); the
 // returned result holds the emitted JS module plus any compile error
 // in a discriminated shape JS can branch on without try/catch.
@@ -131,7 +131,7 @@ pub fn compile(source: &str, opts_json: &str) -> Result<JsValue, JsValue> {
 
 /// Browser analysis surface for the docs-playground LSP worker: the full
 /// multi-diagnostic stream + scope symbols + tag/event dependencies from one
-/// `.sui` source, off the same Rust grammar the compiler + native LSP use.
+/// `.sail` source, off the same Rust grammar the compiler + native LSP use.
 /// `source_path` is `None` (the browser has no paired `.controller.ts` on
 /// disk), so controller-aware passes are skipped — template parse/semantic
 /// checks + lint still run. Mirrors `sail_compiler::analyze`.

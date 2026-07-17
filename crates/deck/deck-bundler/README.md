@@ -19,7 +19,7 @@ See the decision record:
 ## Runtime directory — `~/.deck/runtime/`
 
 The runtime dir holds exactly one thing: the `sail-compiler` binary the bundler
-spawns to compile `.sui` files. It mirrors what `rustup` does for Rust toolchains:
+spawns to compile `.sail` files. It mirrors what `rustup` does for Rust toolchains:
 one well-known path, pinned to the version that installed it. The dir lives under
 deck's own `~/.deck/` namespace — deck names no host-private path.
 
@@ -46,7 +46,7 @@ The `Bundler` is in-process:
   `resolve_id` redirects `./X.compiled.js` siblings, externalises the framework
   singletons (`@ship/sail-runtime`/`-dom`/`sdk-client`), and re-anchors
   `@ship/<pkg>` to workspace `src/`. `load` spawns `sail-compiler` to compile
-  `.sui` → JS. Rolldown handles TS transpile + node resolution natively.
+  `.sail` → JS. Rolldown handles TS transpile + node resolution natively.
 - **Output:** `assets_dir_for` — `crates/deck/deck-core/assets` for the baked
   framework bundles, `.deck/` for views/components/spaces. No source-tree writes.
 - **API** (`lib.rs`): `Bundler::start` → `build(target)` / `build_all`
@@ -71,7 +71,7 @@ The `Bundler` is in-process:
 
 ## HMR
 
-`start_watching` runs a `notify` watcher over the source dirs; on a `.sui` /
+`start_watching` runs a `notify` watcher over the source dirs; on a `.sail` /
 `.ts` / `.js` change it re-bundles the affected targets and emits a
 `BundlerEvent` (`ModuleChanged` / `CompileError`) on a broadcast channel. The
 daemon (`apps/shipd/src/lib.rs`) forwards these to `views::sui_hmr` →
@@ -111,14 +111,14 @@ Every `ship_platform::toolchain` error carries a recovery hint in `Display`:
 ## bun — dev/build-time only, never shipped
 
 bun is **dev/build-time tooling only**, never in the deploy bundle:
-- The `apps/shell` dev server is vite (dev-only); `.sui` compilation is in-process
+- The `apps/shell` dev server is vite (dev-only); `.sail` compilation is in-process
   via this crate (`sail-build` was retired in #220). The lucide icon set is
   committed source at `crates/deck/deck-core/assets/lucide-icons.json` and
   regenerated only on a lucide-static version bump via
   `cargo run -p xtask-deck -- gen-icons` (#172).
 
 The `apps/shell` / `apps/spaces` SPA prod build is **not** bun: `deck build`
-(`crates/deck/deck-cli`, #170) bundles the app via Rolldown, compiling each `.sui`
+(`crates/deck/deck-cli`, #170) bundles the app via Rolldown, compiling each `.sail`
 in-process — no separate pre-compile step. One engine for framework + views + apps.
 
 The framework-asset bake is **not** bun: `cargo run -p deck-cli -- build-assets` drives the

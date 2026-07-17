@@ -4,11 +4,11 @@
 //   - `route` is the reactive URL handle deck injects into every view scope;
 //     its fields are signals (packages/sail/runtime/src/route-signals.ts).
 //   - `<data … live>` is deck's live-data seam, exactly as the conformance
-//     view drives it (crates/deck/deck-conformance/app/views/feed/page.sui).
+//     view drives it (crates/deck/deck-conformance/app/views/feed/page.sail).
 export const code = {
   // The URL as a reactive source. Navigating re-runs only the bindings that
   // read `route`, with no document reload and no component re-mount.
-  routeSignals: `<!-- routes/posts/[id]/page.sui -->
+  routeSignals: `<!-- routes/posts/[id]/page.sail -->
 <!-- \`route\` is ambient in every deck view; its fields are signals. -->
 <h1>Post {route.params.id()}</h1>
 <p>Sorted by {route.query.sort() ?? 'newest'}</p>
@@ -19,7 +19,7 @@ export const code = {
 
   // A live server-data source. deck subscribes the view to the stream and
   // patches \`tick\` as values arrive; only the bindings reading it re-render.
-  liveData: `<!-- routes/feed/page.sui — subscribe a view to live server data -->
+  liveData: `<!-- routes/feed/page.sail — subscribe a view to live server data -->
 <client name="api" />
 <data name="tick" source="api.demo.clock()" live />
 

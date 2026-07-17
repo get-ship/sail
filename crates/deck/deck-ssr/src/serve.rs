@@ -3,7 +3,7 @@
 //!
 //! deck-core declares the result ("first-paint HTML for this view + request");
 //! this owns the procedure: locate the app manifest + sibling controller
-//! relative to the source `.sui`, synthesize + Rolldown-bundle (mtime-cached on
+//! relative to the source `.sail`, synthesize + Rolldown-bundle (mtime-cached on
 //! the source), then run the bundle in a POOLED isolate ([`ScriptPool`], not
 //! single-shot [`crate::run`]) with route + data resolved over the
 //! host-dispatch wire.
@@ -42,7 +42,7 @@ pub fn engine(data: Option<Arc<dyn DataPort>>) -> Result<Arc<dyn SyntheticSsr>> 
     Ok(Arc::new(ShipJsSsr::new(data)?))
 }
 
-/// One cached bundle, keyed by the source `.sui`'s mtime.
+/// One cached bundle, keyed by the source `.sail`'s mtime.
 struct BundleEntry {
     mtime: SystemTime,
     bundle: Arc<String>,
@@ -176,7 +176,7 @@ fn find_manifest(source: &Path) -> Option<PathBuf> {
     None
 }
 
-/// The sibling authored controller (`controller.ts`) next to a `page.sui`, if
+/// The sibling authored controller (`controller.ts`) next to a `page.sail`, if
 /// present. The synthetic controller composes it via `setup(ctx)`.
 fn sibling_controller(source: &Path) -> Option<PathBuf> {
     let c = source.parent()?.join("controller.ts");

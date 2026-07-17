@@ -8,7 +8,7 @@
 //
 // Engine reaches the view via `prop:tree` IDENTITY binding (the live Table<T>
 // reference). TESTS-FIRST: the `.compiled.js` does NOT exist yet → RED until
-// `sail-tree-grid.sui` + `.controller.ts` land.
+// `sail-tree-grid.sail` + `.controller.ts` land.
 // Authority: .artifacts/sail-arc/sail-tree/build-spec.md (Slice 5 + behavioral
 // spec #8), governed by ship-sui + ship-design-system skills.
 

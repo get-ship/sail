@@ -1,9 +1,9 @@
 /**
- * @ship/sail-eval — design-quality regression suite for .sui views.
+ * @ship/sail-eval — design-quality regression suite for .sail views.
  *
  * Given a feature description, the primitive catalog, and a behavioral
  * spec, dispatch to a model and assert the output is a working
- * `.sui` (+ optional setup `.ts`) that compiles, stays in scope,
+ * `.sail` (+ optional setup `.ts`) that compiles, stays in scope,
  * and behaves correctly inside jsdom.
  *
  * @packageDocumentation

@@ -135,7 +135,7 @@ fn is_controller_path_recognises_suffix() {
     assert!(is_controller_path(Path::new("/abs/sail-button.controller.ts")));
     assert!(!is_controller_path(Path::new("foo/bar.ts")));
     assert!(!is_controller_path(Path::new("foo/bar.controller.tsx")));
-    assert!(!is_controller_path(Path::new("foo/bar.sui")));
+    assert!(!is_controller_path(Path::new("foo/bar.sail")));
     assert!(!is_controller_path(Path::new("foo/render.ts")));
 }
 
@@ -166,7 +166,7 @@ export default controller({
 fn state_cast_unknown_as_scope_reports() {
     let src = r#"
         import { controller } from '@ship/sail-runtime'
-        import type { Scope } from './foo.sui'
+        import type { Scope } from './foo.sail'
         export default controller<Scope>({
           mount(state, host) {
             const scope = state as unknown as Scope
@@ -236,7 +236,7 @@ fn typed_signals_access_passes_state_cast() {
 }
 
 fn lint_tpl(source: &str) -> Vec<crate::Finding> {
-    crate::lint_sui_template_source(Path::new("/fake/page.sui"), source)
+    crate::lint_sui_template_source(Path::new("/fake/page.sail"), source)
         .into_iter()
         .filter(|f| f.rule == crate::rules::attr_bool_prop::RULE_ID)
         .collect()
@@ -301,7 +301,7 @@ fn pack_source_path_recognises_components_dir() {
     )));
     // Not a .ts file.
     assert!(!is_pack_source_ts(Path::new(
-        "/repo/packages/components/sail/primitives/src/sail-tree/sail-tree.sui"
+        "/repo/packages/components/sail/primitives/src/sail-tree/sail-tree.sail"
     )));
     // Not a pack source (no /src/ under components/sui).
     assert!(!is_pack_source_ts(Path::new(

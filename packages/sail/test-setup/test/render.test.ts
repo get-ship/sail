@@ -1,6 +1,6 @@
 // Proves the public author-facing test API (`renderView` / `renderComponent`)
 // against the real Rust/WASM compiler + jsdom. This is the exemplar a view
-// author copies: compile a `.sui`, mount it, assert the DOM, drive an event,
+// author copies: compile a `.sail`, mount it, assert the DOM, drive an event,
 // assert the reaction.
 
 import { describe, expect, it } from 'vitest'

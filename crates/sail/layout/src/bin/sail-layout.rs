@@ -1,4 +1,4 @@
-//! `sail-layout` — compile-time box-tree diagnostics for a `.sui` template.
+//! `sail-layout` — compile-time box-tree diagnostics for a `.sail` template.
 //!
 //! SPIKE. Usage:
 //!
@@ -6,7 +6,7 @@
 //!
 //! Example:
 //!
-//!     sail-layout apps/sail-site/routes/tutorial/\[slug\]/page.sui \
+//!     sail-layout apps/sail-site/routes/tutorial/\[slug\]/page.sail \
 //!         --viewport 1440x900
 //!
 //! Emits each diagnostic on its own line in the rough shape the compiler
@@ -20,9 +20,9 @@ use clap::Parser;
 use sail_layout as layout;
 
 #[derive(Parser, Debug)]
-#[command(about = "Compile-time box-tree diagnostics for .sui templates (spike)")]
+#[command(about = "Compile-time box-tree diagnostics for .sail templates (spike)")]
 struct Args {
-    /// Path to a `.sui` file. Pass `-` to read from stdin.
+    /// Path to a `.sail` file. Pass `-` to read from stdin.
     input: PathBuf,
 
     /// Viewport in CSS pixels (W x H). Defaults to 1440 x 900 — the canonical

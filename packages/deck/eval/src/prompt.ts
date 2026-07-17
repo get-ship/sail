@@ -1,5 +1,5 @@
 // Prompt construction for the eval rig. The model receives:
-//   1) a system primer describing .sui syntax + the SDK type sketch
+//   1) a system primer describing .sail syntax + the SDK type sketch
 //   2) the primitive catalog (so it knows which <ship-*> elements exist)
 //   3) two few-shot examples (a static view + a stateful counter)
 //   4) the task feature description and any starter fixtures
@@ -20,7 +20,7 @@ export interface PromptParts {
   user: string
 }
 
-const SYSTEM_PRIMER = `You author Ship .sui views. A view is plain HTML augmented with three top-level directives and a small expression grammar.
+const SYSTEM_PRIMER = `You author Ship .sail views. A view is plain HTML augmented with three top-level directives and a small expression grammar.
 
 Top-level directives:
   <data name="x" source="ship.foo.bar()" [live] />   — fetches data; live makes it a streaming signal.
@@ -40,7 +40,7 @@ Template grammar:
 Reactive values are read by calling them: \`count()\` reads, \`count.set(n)\` writes.
 A \`<data live>\` declaration exposes a Result-shaped signal whose kind is \`'loading' | 'ok' | 'error'\`; check \`x().kind === 'ok'\` then read \`x().value\`.
 
-Controller (optional) — ONE function, authored inline in the .sui file, no sections:
+Controller (optional) — ONE function, authored inline in the .sail file, no sections:
   <controller>
   export default controller((ctx) => {
     const items = signal<Item[]>([])
@@ -228,7 +228,7 @@ Reply with one \`\`\`html.set\`\`\` block, optionally followed by one \`\`\`ts\`
   return { system: SYSTEM_PRIMER, user }
 }
 
-/** Pull the .sui + optional .ts block out of a model reply. */
+/** Pull the .sail + optional .ts block out of a model reply. */
 export function parseModelReply(raw: string): { template: string; setup?: string } {
   const html = matchFence(raw, 'html.set') ?? matchFence(raw, 'html')
   if (!html) {

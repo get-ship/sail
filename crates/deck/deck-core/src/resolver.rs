@@ -122,8 +122,8 @@ pub(crate) fn detect_project_root_from(cwd: &Path) -> Option<PathBuf> {
 use deck_host::resolver::ViewLayout;
 pub use deck_host::resolver::{ResolveError, ResolvedView};
 /// Build a [`ViewLayout`] from the conventional `["views"]` bucket with a
-/// single `page.sui` leaf. The leaf is unified across all buckets (fixes the
-/// #254 `index.sui` vs `page.sui` divergence). The framework loads no config
+/// single `page.sail` leaf. The leaf is unified across all buckets (fixes the
+/// #254 `index.sail` vs `page.sail` divergence). The framework loads no config
 /// file — a host that needs a different layout constructs a `DeckConfig` and
 /// threads it into `Bundler::start`; the bundler's view-discovery walks
 /// `cfg.view_dirs` directly. The runtime resolver here reports the conventional

@@ -1,6 +1,6 @@
 //! AST for the constrained `{expr}` subset.
 //!
-//! Spans are byte ranges into the original `.sui` source — the parser
+//! Spans are byte ranges into the original `.sail` source — the parser
 //! takes a `base_offset` so caller-side spans line up with diagnostics
 //! emitted from anywhere else in the pipeline.
 

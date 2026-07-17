@@ -18,7 +18,7 @@ export interface PropRow {
 export interface DetailEntry {
   /** The element tag — breadcrumb + copy. */
   tag: string
-  /** The scope key page.sui mounts the live stage through (`stage.<key>()`). */
+  /** The scope key page.sail mounts the live stage through (`stage.<key>()`). */
   key: string
   /** The h1, already formed: '<button>', 'row · column · grid'. */
   heading: string

@@ -85,7 +85,7 @@ unwrapOr(sig, fallback)  // T
 ## Live SSE — end-to-end loop
 
 ```
-.sui  <data live source="ship.git.overview()" live />
+.sail  <data live source="ship.git.overview()" live />
   ↓ sail-compiler
 .js   $scope.git = live(() => ship.git.overview())
   ↓ @ship/sdk-client createClient()
@@ -270,7 +270,7 @@ export default controller(({ route }) => {
 </controller>
 ```
 
-`route` is part of the ambient `ctx` every controller function receives. `route.params.<name>` and `route.query.<name>` are signals — call them (`route.params.id()`) to read and subscribe inside `effect`, `derived`, or a `<data>` source thunk. `popstate` and `navigate` both fire the global updater so every attached view re-evaluates. (`route` is also importable as a `route()` factory from `@ship/sail-runtime/route` for non-controller code; the namespace form `route.params.id()` is the controller exemplar — see `views/agents/[id]/page.sui`'s `<controller>` block.)
+`route` is part of the ambient `ctx` every controller function receives. `route.params.<name>` and `route.query.<name>` are signals — call them (`route.params.id()`) to read and subscribe inside `effect`, `derived`, or a `<data>` source thunk. `popstate` and `navigate` both fire the global updater so every attached view re-evaluates. (`route` is also importable as a `route()` factory from `@ship/sail-runtime/route` for non-controller code; the namespace form `route.params.id()` is the controller exemplar — see `views/agents/[id]/page.sail`'s `<controller>` block.)
 
 ## Mount API
 

@@ -51,7 +51,7 @@ function ensureWasm(wasmUrl: string): Promise<unknown> {
   return wasmReady
 }
 
-/** Analyse a `.sui` document and map every diagnostic to the editor shape. */
+/** Analyse a `.sail` document and map every diagnostic to the editor shape. */
 export async function diagnose(
   source: string,
   wasmUrl: string = '/sail_compiler_bg.wasm',

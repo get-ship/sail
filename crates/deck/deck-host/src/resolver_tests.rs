@@ -12,7 +12,7 @@ fn with_tempdir<F: FnOnce(&Path)>(f: F) {
 }
 
 /// The deck-native zero-config layout — the single `views/` bucket and the
-/// `page.sui` leaf. Deck names no host-private path in its default.
+/// `page.sail` leaf. Deck names no host-private path in its default.
 fn layout() -> ViewLayout {
     ViewLayout::conventional()
 }
@@ -23,7 +23,7 @@ fn layout() -> ViewLayout {
 fn host_layout() -> ViewLayout {
     ViewLayout {
         view_dirs: vec!["views".into(), ".ship/views".into()],
-        view_leaf: "page.sui".into(),
+        view_leaf: "page.sail".into(),
         first_party_root: None,
     }
 }
@@ -36,7 +36,7 @@ fn on_disk_page_sui_resolves_in_overridden_ship_views() {
         let view_dir = root.join(".ship/views/widget");
         fs::create_dir_all(&view_dir).unwrap();
         fs::write(
-            view_dir.join("page.sui"),
+            view_dir.join("page.sail"),
             r#"<state name="x" value="1" /><p>{x()}</p>"#,
         )
         .unwrap();
@@ -54,7 +54,7 @@ fn on_disk_param_segment_captures() {
         let leaf = root.join("views/things/[id]");
         fs::create_dir_all(&leaf).unwrap();
         fs::write(
-            leaf.join("page.sui"),
+            leaf.join("page.sail"),
             r#"<state name="x" value="1" /><p>{x()}</p>"#,
         )
         .unwrap();
@@ -78,7 +78,7 @@ fn missing_view_returns_diagnostic() {
 
 #[test]
 fn oversized_source_is_rejected() {
-    // A pathologically large `.sui` would otherwise be slurped + compiled in
+    // A pathologically large `.sail` would otherwise be slurped + compiled in
     // process per request. The cap stats the file first and rejects it before
     // any bytes are read, surfacing as a 404 upstream.
     with_tempdir(|root| {
@@ -90,7 +90,7 @@ fn oversized_source_is_rejected() {
             big.push_str("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
         }
         big.push_str("</p>");
-        fs::write(view_dir.join("page.sui"), &big).unwrap();
+        fs::write(view_dir.join("page.sail"), &big).unwrap();
 
         let err = resolve(root, &layout(), "huge", None).unwrap_err();
         assert!(
@@ -125,13 +125,13 @@ fn symlink_leaf_escaping_root_is_rejected() {
     with_tempdir(|root| {
         let secret_dir = root.join("outside");
         fs::create_dir_all(&secret_dir).unwrap();
-        let secret = secret_dir.join("secret.sui");
+        let secret = secret_dir.join("secret.sail");
         fs::write(&secret, "<p>top-secret</p>").unwrap();
 
         let view_dir = root.join("views/leaky");
         fs::create_dir_all(&view_dir).unwrap();
-        // page.sui in the view dir is a symlink pointing OUT of the bucket.
-        std::os::unix::fs::symlink(&secret, view_dir.join("page.sui")).unwrap();
+        // page.sail in the view dir is a symlink pointing OUT of the bucket.
+        std::os::unix::fs::symlink(&secret, view_dir.join("page.sail")).unwrap();
 
         let err = resolve(root, &layout(), "leaky", None).unwrap_err();
         assert!(
@@ -151,12 +151,12 @@ fn symlink_leaf_inside_root_is_allowed() {
         let views = root.join("views");
         let real_dir = views.join("real");
         fs::create_dir_all(&real_dir).unwrap();
-        let real_leaf = real_dir.join("page.sui");
+        let real_leaf = real_dir.join("page.sail");
         fs::write(&real_leaf, "<p>in-bucket</p>").unwrap();
 
         let view_dir = views.join("aliased");
         fs::create_dir_all(&view_dir).unwrap();
-        std::os::unix::fs::symlink(&real_leaf, view_dir.join("page.sui")).unwrap();
+        std::os::unix::fs::symlink(&real_leaf, view_dir.join("page.sail")).unwrap();
 
         let r = resolve(root, &layout(), "aliased", None).expect("in-bucket symlink resolves");
         assert!(r.source.contains("in-bucket"));
@@ -169,7 +169,7 @@ fn on_disk_page_sui_resolves_in_top_views() {
         let view_dir = root.join("views/widget");
         fs::create_dir_all(&view_dir).unwrap();
         fs::write(
-            view_dir.join("page.sui"),
+            view_dir.join("page.sail"),
             r#"<state name="x" value="1" /><p>{x()}</p>"#,
         )
         .unwrap();
@@ -191,14 +191,14 @@ fn dotdot_segments_in_sub_path_stripped_before_walk() {
         // Create a view that would be hit IF ".." didn't escape.
         let view_dir = root.join("views/myview");
         fs::create_dir_all(&view_dir).unwrap();
-        fs::write(view_dir.join("page.sui"), r#"<p>safe</p>"#).unwrap();
+        fs::write(view_dir.join("page.sail"), r#"<p>safe</p>"#).unwrap();
 
         // Place a "secret" outside the views bucket.
-        let outside = root.join("secret.sui");
+        let outside = root.join("secret.sail");
         fs::write(&outside, r#"<p>LEAKED</p>"#).unwrap();
 
         // The traversal sub_path; after stripping ".." this becomes empty,
-        // which resolves myview's page.sui (the normal path), NOT the outside file.
+        // which resolves myview's page.sail (the normal path), NOT the outside file.
         let result = resolve(root, &layout(), "myview", Some("../../secret"));
         // Either resolves the view (traversal stripped → normal resolution) or
         // returns a not-found. Either way it must NOT read the outside secret.

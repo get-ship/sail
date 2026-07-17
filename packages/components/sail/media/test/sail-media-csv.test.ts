@@ -1,7 +1,7 @@
 // The <sail-media-csv> renderer — CSV parse → the shared table engine → a plain
 // <table>.
 //
-// Harness: `renderComponent` compiles the renderer `.sui` under the
+// Harness: `renderComponent` compiles the renderer `.sail` under the
 // `sail-media-csv` tag. The renderer parses text into the committed
 // `createTable` engine (Backbone #1) and renders that engine's columns/rows as
 // a native <table>, which the framework's contracts sheet already styles — so
@@ -20,10 +20,10 @@
 import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it } from 'vitest'
 import { renderComponent } from '@ship/test-setup'
-import csvRenderer from '../src/sail-media-csv/sail-media-csv.sui.controller.ts'
+import csvRenderer from '../src/sail-media-csv/sail-media-csv.sail.controller.ts'
 
 const SOURCE = readFileSync(
-  new URL('../src/sail-media-csv/sail-media-csv.sui', import.meta.url),
+  new URL('../src/sail-media-csv/sail-media-csv.sail', import.meta.url),
   'utf8',
 )
 

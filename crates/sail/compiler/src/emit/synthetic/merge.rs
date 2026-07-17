@@ -2,7 +2,7 @@
 //!
 //! The split two-file form (controller exporting `scope` + render importing it)
 //! is what the SSR pipeline and the type-checked harness use. A consumer that
-//! loads a `.sui` as a SINGLE module — the deck-bundler `load` hook, which
+//! loads a `.sail` as a SINGLE module — the deck-bundler `load` hook, which
 //! returns one module's code per id — needs the two halves merged. The merge
 //! drops the cross-module `import { scope }` (the controller's `scope` const is
 //! then in lexical scope), unions the two import blocks (multiple `import {…}

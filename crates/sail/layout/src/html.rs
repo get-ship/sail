@@ -1,4 +1,4 @@
-//! Minimal HTML parser for **preprocessed** `.sui` source.
+//! Minimal HTML parser for **preprocessed** `.sail` source.
 //!
 //! `sail_compiler::parse::preprocess` has already done the heavy lifting:
 //! `<column>` is `<div class="sail-col …">`, `sx="…"` is `class="sx-…"`. We
@@ -10,7 +10,7 @@
 //! - Comment-aware (`<!--…-->` and skipped entirely).
 //! - Ignores `<style>`, `<controller>` blocks (no layout semantics).
 //! - Tracks byte ranges (`span`) so a diagnostic can point at the original
-//!   `.sui` source.
+//!   `.sail` source.
 
 use std::collections::HashMap;
 

@@ -39,7 +39,7 @@ export interface MountRouterOptions {
   /** The generated layout table (`LAYOUTS`); empty = no chrome wrappers. */
   layouts?: LayoutShape[]
   /** Pattern → statically-imported view module. The emitted entry imports each
-   *  route's `page.sui` and builds this map. */
+   *  route's `page.sail` and builds this map. */
   modules: Record<string, unknown>
   /** Host-injected named clients, spread into view scope. Generic — the client
    *  name is the app's (e.g. `ship`), not a framework constant. */

@@ -7,7 +7,7 @@
 //!
 //! Mirrors `controller_purity.rs` (this directory) — same plumbing
 //! (`sail_lint` finding → `CompileError`), only the source it lints is
-//! the `.sui` itself rather than a paired `.controller.ts`.
+//! the `.sail` itself rather than a paired `.controller.ts`.
 //!
 //! Skipped when `source` is empty, which only happens via internal
 //! synthetic-fragment paths that bypass `compile()`.

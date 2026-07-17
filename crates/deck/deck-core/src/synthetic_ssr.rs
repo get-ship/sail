@@ -39,7 +39,7 @@ pub struct SsrRequest<'a> {
     pub view_name: &'a str,
     /// Nested sub-path, when the view was served at `/_deck/view/<name>/<sub>`.
     pub sub_path: Option<&'a str>,
-    /// Absolute path to the source `.sui` (the synth input). The renderer
+    /// Absolute path to the source `.sail` (the synth input). The renderer
     /// discovers the app manifest + sibling controller relative to this.
     pub source_path: &'a Path,
     /// The request pathname the deck router matched.

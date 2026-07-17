@@ -17,9 +17,9 @@ package.json              frameworkVersion 0.1.0 + esbuild build scripts
 package-lock.json         minimal npm lock (the runner's isFrameworkDir needs it)
 index.html                <sail-keyed> mount + dist/main.js
 src/main.ts               side-effect import of the compiled component
-src/sail-keyed.sui         the keyed table template
+src/sail-keyed.sail         the keyed table template
 src/sail-keyed.controller.ts   row model + run/add/update/clear/swap/select/remove
-scripts/precompile.mjs    compiles .sui → dist/, links @ship/sail-runtime
+scripts/precompile.mjs    compiles .sail → dist/, links @ship/sail-runtime
 ```
 
 `node_modules/`, `dist/`, and `bun.lock` are **not** vendored — they're build

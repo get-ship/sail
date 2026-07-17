@@ -1,4 +1,4 @@
-// View-mode mount (build-spec §Mount by raw .sui source). Wraps the harness
+// View-mode mount (build-spec §Mount by raw .sail source). Wraps the harness
 // `compileAndMount` view-mode branch over the INJECTED `compile()` (purity
 // seam — the engine never imports a wasm URL or `fetch`):
 //
@@ -112,7 +112,7 @@ export function adoptCompiledCss(root: ShadowRoot, css: string | null): () => vo
 }
 
 /**
- * Compile + mount a raw `.sui` view-mode source into the stage container.
+ * Compile + mount a raw `.sail` view-mode source into the stage container.
  * Throws if `compile()` returns `{kind:'err'}` (the controller catches it and
  * renders the compile-error branch). Mount throws (setup/`__mount`) propagate
  * so the controller's secondary try/catch renders a panel, not a blank stage.

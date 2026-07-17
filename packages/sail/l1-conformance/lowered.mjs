@@ -32,8 +32,8 @@ export function lowered(tag, { attrs = '', children = '' } = {}) {
   try {
     const dir = mkdtempSync(join(tmpdir(), 'l1-lowered-'))
     const name = 'lw-host'
-    writeFileSync(join(dir, `${name}.sui`), `<${tag}${attrs ? ' ' + attrs : ''}>${children}</${tag}>`)
-    execFileSync(COMPILER, ['build', join(dir, `${name}.sui`), '--component-name', name], {
+    writeFileSync(join(dir, `${name}.sail`), `<${tag}${attrs ? ' ' + attrs : ''}>${children}</${tag}>`)
+    execFileSync(COMPILER, ['build', join(dir, `${name}.sail`), '--component-name', name], {
       cwd: ROOT,
       stdio: 'pipe',
     })

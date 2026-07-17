@@ -2,10 +2,10 @@
 //
 // The `lang` rows are the FULL L1 surface — the same 48 elements the
 // conformance gate (packages/sail/l1-conformance/specs, minus the motion spec)
-// renders on every commit. Each row names a tile that page.sui renders LIVE
+// renders on every commit. Each row names a tile that page.sail renders LIVE
 // (the tile markup is the component, not a picture of it). The pack rail and
 // the category chips both key off this list, so a new tile is one row here
-// plus its markup in page.sui — and the counts stay honest by construction.
+// plus its markup in page.sail — and the counts stay honest by construction.
 
 export type PackId =
   | 'lang'
@@ -28,7 +28,7 @@ export interface CatalogEntry {
    *   (`crates/sail/compiler/src/action_manifest.rs`) and is not shown
    *   here — actions are not elements. */
   tag: string
-  /** The scope key page.sui reads visibility through (`show.<key>()`). */
+  /** The scope key page.sail reads visibility through (`show.<key>()`). */
   key: string
   /** The /components/<slug> detail route. Every tile has one. */
   slug: string
@@ -68,7 +68,7 @@ const L = (tag: string, key: string, cat: CatalogEntry['cat']): CatalogEntry => 
   cat,
 })
 
-/** Pack-component helper. `key` is the camelCase scope key page.sui reads
+/** Pack-component helper. `key` is the camelCase scope key page.sail reads
  *  through `show.<key>()`, `slug` is the /components/<slug> detail route.
  *  Every pack tag is the custom element the @ship/sail-* packs define; the
  *  helper keeps pack rows consistent with the `L` ones. */
@@ -149,7 +149,7 @@ export const CATALOG: CatalogEntry[] = [
   P('charts', 'sail-sparkline', 'suiSparkline', 'data'),
 
   // ── @ship/sail-media — content renderers (image / audio-video) ────────
-  // sail-media-csv exists in the pack but has NO live tile in page.sui yet —
+  // sail-media-csv exists in the pack but has NO live tile in page.sail yet —
   // a catalog entry REQUIRES a live tile (`show.<key>()` gate), or the
   // rail's counts lie and its filter shows an empty grid. Add the entry
   // WITH its demo, never before.
@@ -159,7 +159,7 @@ export const CATALOG: CatalogEntry[] = [
   // ── @ship/sail-canvas — NOT CATALOGED YET ─────────────────────────────
   // The pack ships 7 drawing/annotation surfaces (sail-canvas, sail-board,
   // sail-draw, sail-graph-canvas, sail-annotation-*), floor-migrated and
-  // CEM-green — but none has a live demo tile in page.sui, so listing
+  // CEM-green — but none has a live demo tile in page.sail, so listing
   // them made the Canvas filter an empty lie (owner-reported 2026-07-16).
   // They enter this catalog with the pack-consolidation wave (task #53),
   // each entry landing together with its tile.

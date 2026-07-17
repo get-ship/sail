@@ -3,7 +3,7 @@
 //!
 //! Regression guard for the stale `source_path.is_some()` gate in
 //! `check::{run,collect}` that skipped every scope check (`scope_bound`,
-//! `scope_member`, `on_callable`, `bind_this_target`) whenever a `.sui` was
+//! `scope_member`, `on_callable`, `bind_this_target`) whenever a `.sail` was
 //! compiled in-memory (no path). Those checks read the passed `controller`,
 //! not the path — so the inline `<controller>` block is enough context. Before
 //! the fix, an out-of-scope template reference in an in-memory SFC compiled

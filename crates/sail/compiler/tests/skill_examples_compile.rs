@@ -48,7 +48,7 @@ fn generate_skill() -> Option<String> {
 }
 
 /// Fenced blocks that are SUI source — i.e. contain a tag or a block the compiler
-/// owns. Skips prose fences and pure-TS snippets (which are not `.sui` files).
+/// owns. Skips prose fences and pure-TS snippets (which are not `.sail` files).
 fn sui_examples(md: &str) -> Vec<String> {
     let mut out = Vec::new();
     let mut in_fence = false;

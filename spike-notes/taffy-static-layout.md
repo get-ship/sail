@@ -1,4 +1,4 @@
-# taffy-static-layout — box-tree compilation for `.sui` templates
+# taffy-static-layout — box-tree compilation for `.sail` templates
 
 PROVEN — but only as a **diagnostic**. Building it into a renderer would be a
 much larger spike and the cleanest payoff is the dirt-cheap loop this gives
@@ -22,7 +22,7 @@ WASM-cleanliness: **YES**. `cargo build -p sail-layout --target wasm32-unknown-u
 
 A new crate, `crates/sail/layout/`, with:
 
-- A minimal HTML parser that walks the **preprocessed** `.sui` source (the
+- A minimal HTML parser that walks the **preprocessed** `.sail` source (the
   same source the runtime sees — `<column>` is already `<div class="sail-col …">`
   and `sx="…"` is already `class="sx-…"`).
 - A style resolver that maps the class-name vocabulary back to a
@@ -47,7 +47,7 @@ A new crate, `crates/sail/layout/`, with:
 
 ```
 $ cargo run -q -p sail-layout -- \
-    apps/sail-site/routes/tutorial/\[slug\]/page.sui \
+    apps/sail-site/routes/tutorial/\[slug\]/page.sail \
     --viewport 1440x900
 
 warning: [zero-main-axis] at byte 12961..13093
@@ -57,7 +57,7 @@ warning: [zero-main-axis] at byte 12961..13093
   — <div> measures 0px on its main axis while having 2 child(ren) totaling 0px.
 ```
 
-That signature is exactly the pane at `routes/tutorial/[slug]/page.sui:286`:
+That signature is exactly the pane at `routes/tutorial/[slug]/page.sail:286`:
 
 ```sui
 <column

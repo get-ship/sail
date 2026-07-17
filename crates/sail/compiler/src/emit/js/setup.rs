@@ -25,7 +25,7 @@ pub(super) fn emit_setup_body(
     let is_component = opts.component_meta.is_some();
 
     // ── ctx → $scope seeding (unified) ──────────────────────────────────────
-    // Every compiled `.sui` is a component module: `setup(ctx)` seeds the scope
+    // Every compiled `.sail` is a component module: `setup(ctx)` seeds the scope
     // and returns `{ …$scope, __mount(container), [hydrate] }`. ship/route/
     // navigate always come from ctx (deck injects them for pages; `undefined`
     // for a registered component, which never reads them). Routing is deck's —

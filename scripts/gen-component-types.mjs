@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// Generate the `<stem>.sui.d.ts` type companions for every component pack so
-// `tsc` can resolve each controller's `import type { Scope } from './<stem>.sui'`.
+// Generate the `<stem>.sail.d.ts` type companions for every component pack so
+// `tsc` can resolve each controller's `import type { Scope } from './<stem>.sail'`.
 //
-// WHY THIS EXISTS: a `.sui` template's `Scope` type is generated, not authored.
-// The compiler emits `<stem>.sui.d.ts` ADJACENT to its `.sui` (a codegen
+// WHY THIS EXISTS: a `.sail` template's `Scope` type is generated, not authored.
+// The compiler emits `<stem>.sail.d.ts` ADJACENT to its `.sail` (a codegen
 // companion, like a CSS-modules `.d.ts`), and the build artifacts (JS/CEM/…) to
 // the pack's own `dist/` via `--out`. Nothing here touches `.ship/sail-out` —
 // that path is the Ship dynamic-views output, owned by Ship, and components must
@@ -41,7 +41,7 @@ function* walkSui(dir) {
     if (st.isDirectory()) {
       if (entry === 'dist' || entry === 'node_modules') continue
       yield* walkSui(p)
-    } else if (entry.endsWith('.sui')) {
+    } else if (entry.endsWith('.sail')) {
       yield p
     }
   }
@@ -53,9 +53,9 @@ for (const pack of PACKS) {
   if (!existsSync(src)) continue
   const dist = resolve(pack, 'dist')
   for (const sui of walkSui(src)) {
-    const stem = basename(sui, '.sui')
+    const stem = basename(sui, '.sail')
     // `--out <pack>/dist`: build artifacts land in the pack's own dist; the
-    // `.sui.d.ts` lands adjacent to the source regardless. (The compiler emits
+    // `.sail.d.ts` lands adjacent to the source regardless. (The compiler emits
     // no SSR skeletons — that path was removed in the JS-only SSR cutover — so
     // there's nothing to suppress here.)
     execFileSync(COMPILER, ['build', sui, '--component-name', stem, '--out', dist], {

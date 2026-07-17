@@ -1,4 +1,4 @@
-//! `sail-css-literal` — hardcoded color values inside a `.sui` `<style>`
+//! `sail-css-literal` — hardcoded color values inside a `.sail` `<style>`
 //! block must be `var(--token)`, never a raw hex / rgb / hsl / named
 //! color.
 //!
@@ -480,7 +480,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn run(src: &str) -> Vec<Finding> {
-        check(&PathBuf::from("/fake/foo.sui"), src)
+        check(&PathBuf::from("/fake/foo.sail"), src)
     }
 
     #[test]

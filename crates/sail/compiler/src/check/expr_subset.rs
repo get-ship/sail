@@ -1,4 +1,4 @@
-//! Renderable-expression subset checker for `.sui` interpolations.
+//! Renderable-expression subset checker for `.sail` interpolations.
 //!
 //! Allowed: identifier reads; literals; property access incl. `?.`;
 //! `??`, logical / arithmetic / comparison / ternary / unary `!`;

@@ -3,7 +3,7 @@
 // `signal(...)` to infer scope, and example code containing `signal(0)` would
 // leak into it. A plain data module (not a controller) is never scope-scanned.
 
-export const pageExample = `<!-- routes/page.sui -->
+export const pageExample = `<!-- routes/page.sail -->
 <main>
   <h1>Hello, deck.</h1>
   <button on:click={() => count.set(count() + 1)}>

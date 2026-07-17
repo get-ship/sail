@@ -2,7 +2,7 @@
 //!
 //! Grammar lives in `crates/sail/compiler/EXPRESSIONS.md`. This module
 //! produces an [`Ast`] tree with byte-range spans pointing into the
-//! original `.sui` source. The caller passes a `base_offset` so spans
+//! original `.sail` source. The caller passes a `base_offset` so spans
 //! are absolute in the file, not relative to the inner-of-brace slice.
 //!
 //! The parser does NOT enforce the renderable subset's "no calls with

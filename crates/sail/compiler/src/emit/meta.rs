@@ -1,4 +1,4 @@
-//! `.sui.meta.json` sidecar.
+//! `.sail.meta.json` sidecar.
 //!
 //! Phase 3b.5 (gate L): every binding kind is now wired by the
 //! compiled `hydrate(root, ctx)` directly — the runtime no longer

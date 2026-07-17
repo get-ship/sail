@@ -27,7 +27,7 @@ import { morph } from './morph'
  * but should still re-run when some toggle flips).
  *
  * If `el` carries the `morph` directive (`<element morph>…</element>`
- * in `.sui`), updates go through `morph()` instead of `innerHTML =`,
+ * in `.sail`), updates go through `morph()` instead of `innerHTML =`,
  * preserving DOM identity (focus, scroll, selection, custom-element
  * state) across re-renders.
  *

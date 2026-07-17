@@ -1,12 +1,12 @@
 // Code snippets for the Deck getting-started page. Plain data module — never
 // scope-scanned by the compiler.
 
-export const pageExample = `<!-- routes/page.sui -->
+export const pageExample = `<!-- routes/page.sail -->
 <main>
   <h1>Hello, deck.</h1>
 </main>`
 
-export const controllerExample = `<!-- routes/page.sui — one file: state + template -->
+export const controllerExample = `<!-- routes/page.sail — one file: state + template -->
 <controller>
   import { controller, signal } from '@ship/sail-runtime'
 

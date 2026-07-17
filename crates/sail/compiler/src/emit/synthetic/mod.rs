@@ -1,14 +1,14 @@
 //! Manifest-driven **synthetic controller** emit (additive).
 //!
-//! Thesis: the `.sui` compiler can be *ignorant of* `route` (and, by
+//! Thesis: the `.sail` compiler can be *ignorant of* `route` (and, by
 //! extension, `ship`, data sources, components). Those are **deck/app**
-//! concepts, not SUI ones — SUI compiles `.sui` into TS; deck owns the
+//! concepts, not SUI ones — SUI compiles `.sail` into TS; deck owns the
 //! "view" feature (routing, the route handle, the view-host). Composition
 //! happens through real ESM imports declared in an **app manifest** (a
 //! name → module-specifier import map) and injected here, validated
 //! downstream by tsgo/tsc.
 //!
-//! A `.sui` lowers into **two artifacts**:
+//! A `.sail` lowers into **two artifacts**:
 //!  * a **synthetic controller** — the logic/data half: real ESM imports
 //!    for manifested names, the authored `controller.ts` **composed**
 //!    (imported, never rewritten), and a single **typed** `scope` export.
@@ -18,7 +18,7 @@
 //!    controller's typed `scope`.
 //!
 //! Nothing here consults `check::scope_bound`'s `BUILTINS` or the ambient
-//! `emit/js/setup.rs` ctx handling. EVERY free name a `.sui` uses — `route`,
+//! `emit/js/setup.rs` ctx handling. EVERY free name a `.sail` uses — `route`,
 //! `navigate`, `ship`, data sources — resolves through the app manifest; the
 //! compiler names no provider (no `@ship/deck/router` hardcode, no
 //! convention fallback). The host declares its context into the manifest seam.

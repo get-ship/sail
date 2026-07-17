@@ -1,4 +1,4 @@
-//! `sail-no-raw-container` — raw `<div>` / `<span>` are banned in `.sui` templates.
+//! `sail-no-raw-container` — raw `<div>` / `<span>` are banned in `.sail` templates.
 //!
 //! They are pure hand-rolled containers whose only job is structure — which
 //! belongs to the layout keywords: `<column>` (vertical), `<row>`
@@ -107,7 +107,7 @@ mod tests {
     use super::*;
 
     fn run(src: &str) -> usize {
-        check(Path::new("t.sui"), src).len()
+        check(Path::new("t.sail"), src).len()
     }
 
     #[test]

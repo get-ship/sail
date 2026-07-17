@@ -60,7 +60,7 @@ patterns registered via `defineRoutes`. A view that reads `route.params.id()`
 
 ```ts
 <controller>
-// views/agents/[id]/page.sui
+// views/agents/[id]/page.sail
 import { derived, live, unwrap } from '@ship/sail-runtime'
 import { defineRoutes } from '@ship/sail-runtime/route'
 
@@ -79,7 +79,7 @@ export default controller(({ route, ship }) => {
 The single-source-of-truth example in the shell registers two patterns at once
 — the shell route and the view-host standalone route — so the same controller
 works popped out of the dashboard
-(`apps/shell/src/studio/components/[name]/page.sui`'s `<controller>` block):
+(`apps/shell/src/studio/components/[name]/page.sail`'s `<controller>` block):
 
 ```ts
 import { DECK_PREFIX } from '@ship/sdk-client'
@@ -135,7 +135,7 @@ Two patterns, chosen by whether the URL should change.
 **In-page tabs** (no URL change, no back-button history) use a signal:
 
 ```ts
-// views/git/page.sui — inside its <controller> block
+// views/git/page.sail — inside its <controller> block
 export default controller(() => {
   const tab = signal<'changes' | 'history'>('changes')
   return { tab }
@@ -159,10 +159,10 @@ plus `defineRoutes`:
 
 ```
 views/<name>/
-  page.sui                  # /<name>        — list
+  page.sail                  # /<name>        — list
   manifest.jsonc            # { path: "/<name>" }
   [id]/
-    page.sui                # /<name>/[id]  — detail
+    page.sail                # /<name>/[id]  — detail
     manifest.jsonc          # { path: "/<name>/[id]" }
 ```
 

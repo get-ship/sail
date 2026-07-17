@@ -214,7 +214,7 @@ describe('resource-symmetry — synthetic leak-class scenarios', () => {
 
 // ── Per-view smoke loop ────────────────────────────────────────────────
 //
-// For every controller paired with a `.sui` template under `views/`, we
+// For every controller paired with a `.sail` template under `views/`, we
 // build a synthetic compiled-module wrapper that mirrors what the real
 // compiler emits — `setup(ctx)` runs the controller's resolveController,
 // merges the resulting bindings into a flat scope, and exposes any

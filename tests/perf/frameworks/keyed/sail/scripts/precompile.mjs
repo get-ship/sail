@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Compiles every .sui under src/ via the sail-compiler binary so main.ts can
+// Compiles every .sail under src/ via the sail-compiler binary so main.ts can
 // side-effect-import the emitted ESM (which registers the custom element).
 // Adapted from packages/sail/runtime/example/sail-app/scripts/precompile.mjs.
 //
@@ -100,7 +100,7 @@ function* walk(dir) {
     if (st.isDirectory()) {
       if (entry === 'dist') continue
       yield* walk(p)
-    } else if (entry.endsWith('.sui')) {
+    } else if (entry.endsWith('.sail')) {
       yield p
     }
   }
@@ -108,12 +108,12 @@ function* walk(dir) {
 
 const targets = [...walk(srcDir)]
 if (targets.length === 0) {
-  console.error('no .sui files found under', srcDir)
+  console.error('no .sail files found under', srcDir)
   process.exit(1)
 }
 
 for (const target of targets) {
-  const stem = basename(target, '.sui')
+  const stem = basename(target, '.sail')
   const outDir = resolve(dirname(target), 'dist')
   mkdirSync(outDir, { recursive: true })
   console.log(`compiling ${target.replace(root + '/', '')}`)
@@ -127,7 +127,7 @@ for (const target of targets) {
 // the sibling-relative controller import to `../` since --out moves the output
 // out of src/. Both patches mirror the example app + the original harness.
 for (const target of targets) {
-  const stem = basename(target, '.sui')
+  const stem = basename(target, '.sail')
   const compiledPath = resolve(dirname(target), 'dist', stem + '.js')
   let src = readFileSync(compiledPath, 'utf8')
   let changed = false
@@ -144,4 +144,4 @@ for (const target of targets) {
   if (changed) writeFileSync(compiledPath, src, 'utf8')
 }
 
-console.log(`compiled ${targets.length} .sui file(s)`)
+console.log(`compiled ${targets.length} .sail file(s)`)

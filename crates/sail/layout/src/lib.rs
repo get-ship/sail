@@ -1,4 +1,4 @@
-//! `sail-layout` — compile-time box-tree computation for `.sui` templates.
+//! `sail-layout` — compile-time box-tree computation for `.sail` templates.
 //!
 //! SPIKE for **Job H — taffy: the compiler computes the box tree, with no
 //! browser**. The thesis is that the closed vocabulary pays for static layout:
@@ -11,7 +11,7 @@
 //! ## Pipeline
 //!
 //! ```text
-//!   .sui source
+//!   .sail source
 //!        │
 //!        ├── sail_compiler::parse::preprocess::preprocess  (sx→class, layout→div+class)
 //!        ▼
@@ -49,7 +49,7 @@ pub use taffy_tree::Layout;
 /// hooks) build trees and call compute_layout through this alias.
 pub use taffy;
 
-/// Compute a layout for a `.sui` source string at `viewport` px and emit
+/// Compute a layout for a `.sail` source string at `viewport` px and emit
 /// diagnostics. The single entry API: every other surface lowers into this.
 pub fn check(source: &str, viewport: (f32, f32)) -> anyhow::Result<ScanResult> {
     // 1. Lower sx + layout keywords to atomic CSS the same way the compiler

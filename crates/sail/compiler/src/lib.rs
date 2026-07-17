@@ -1,4 +1,4 @@
-//! `sail-compiler` — ahead-of-time compiler for `.sui` files.
+//! `sail-compiler` — ahead-of-time compiler for `.sail` files.
 //!
 //! Same semantics as the Phase-2 interpreter
 //! (`packages/sail/dom`); everything that can be resolved at build
@@ -98,7 +98,7 @@ pub fn compiler_version() -> CompilerVersion {
     }
 }
 
-/// Compile mode. Every `.sui` compiles to a component; `Auto` resolves to
+/// Compile mode. Every `.sail` compiles to a component; `Auto` resolves to
 /// `Component`. The retired `View` mode (static SSR HTML + a hydration island)
 /// is gone — SSR is the host's job, run on the same component via ship-js.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -133,7 +133,7 @@ pub struct CompileOpts {
     /// params, passed IN — the sui compiler never sniffs the filesystem
     /// for a routing convention it does not own.
     pub route_params: Option<Vec<String>>,
-    /// Emit a `.sui.d.ts` declaration file alongside the JS module.
+    /// Emit a `.sail.d.ts` declaration file alongside the JS module.
     /// Defaults to `true`. Pass `false` (via `--no-dts`) to suppress.
     pub emit_dts: bool,
     /// Emit a side-effect `import "@sail-tag/<tag>";` for every custom-element
@@ -198,15 +198,15 @@ pub struct CompileOutput {
     pub css: Option<String>,
     pub cem: Option<serde_json::Value>,
     pub schema: Option<serde_json::Value>,
-    /// Emitted `.sui.d.ts` text, present when `CompileOpts::emit_dts` is true.
+    /// Emitted `.sail.d.ts` text, present when `CompileOpts::emit_dts` is true.
     pub dts: Option<String>,
-    /// `.sui.meta.json` sidecar — binding info (kinds/exprs/deps/renderKey)
+    /// `.sail.meta.json` sidecar — binding info (kinds/exprs/deps/renderKey)
     /// for LSP/IDE consumption. The runtime never loads this; it's purely
     /// developer-tooling fuel.
     pub meta: Option<serde_json::Value>,
 }
 
-/// Check a `.sui` source string and return **every** diagnostic, not just
+/// Check a `.sail` source string and return **every** diagnostic, not just
 /// the first. This is the entry point for the LSP + agent tooling — it
 /// parses, runs all check passes collecting (rather than short-circuiting
 /// like [`compile`]), and merges the full `sail-lint` findings.
@@ -241,7 +241,7 @@ pub fn check_all(
     }
 }
 
-/// Compile a `.sui` source string.
+/// Compile a `.sail` source string.
 /// Validate a custom-element tag name — the subset whose violation makes
 /// `customElements.define` throw: non-empty, contains a hyphen, lowercase ASCII
 /// start, no uppercase, only `[a-z0-9._-]`. (The full spec's reserved-name and
@@ -268,7 +268,7 @@ fn validate_custom_element_name(name: &str) -> Result<(), &'static str> {
     Ok(())
 }
 
-/// ELEMENT MODE — compile a `.sui` source as an L1 language element (one
+/// ELEMENT MODE — compile a `.sail` source as an L1 language element (one
 /// authoring technology per layer; see `emit::element`). Same parse pipeline
 /// as `compile()` — preprocess (sx/variants/component-block lowering) then
 /// parse — but the outputs are the element artifacts: a static structure

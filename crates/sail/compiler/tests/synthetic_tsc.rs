@@ -197,7 +197,7 @@ fn surfaces_typecheck_green_and_typo_is_caught() {
         // 1. route param.
         Surface {
             name: "greet",
-            source_rel: "crates/deck/deck-conformance/app/views/greet/[id]/page.sui",
+            source_rel: "crates/deck/deck-conformance/app/views/greet/[id]/page.sail",
             mode: CompileMode::Component,
             authored: None,
             component_tag: None,
@@ -205,7 +205,7 @@ fn surfaces_typecheck_green_and_typo_is_caught() {
         // 2. controller live() (host-dispatch data path).
         Surface {
             name: "feed",
-            source_rel: "crates/deck/deck-conformance/app/views/feed/page.sui",
+            source_rel: "crates/deck/deck-conformance/app/views/feed/page.sail",
             mode: CompileMode::Component,
             authored: None,
             component_tag: None,

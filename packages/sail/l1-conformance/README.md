@@ -49,6 +49,6 @@ violation.
 ## Fidelity note
 
 v1 specs render the lowered *shape* by hand. The tracked upgrade is to compile a
-canonical `.sui` usage snippet with the native `sail-compiler` and assert the
+canonical `.sail` usage snippet with the native `sail-compiler` and assert the
 spec's markup matches the real lowered output — so a spec can never silently
 drift from the compiler. Until then, keep specs mirrored to the emitted DOM.

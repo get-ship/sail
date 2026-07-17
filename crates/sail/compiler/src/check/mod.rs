@@ -157,7 +157,7 @@ fn offset_for_line_col(source: &str, line: usize, col: usize) -> usize {
 
 /// Run every post-parse check **collecting all diagnostics** instead of
 /// stopping at the first. This is the intelligence behind the LSP + agent
-/// tooling: a `.sui` author (or agent) sees every issue in one pass.
+/// tooling: a `.sail` author (or agent) sees every issue in one pass.
 ///
 /// `run()` (above) stays the build-time gate — it short-circuits because a
 /// failed build only needs one reason. `collect()` is the editor/agent view.
@@ -231,12 +231,12 @@ pub fn collect(
     // THE FLOOR is enforced here unconditionally: `enforce_floor` promotes every
     // floor-rule finding to Error regardless of `overrides` (and `apply_overrides`
     // refuses to soften a floor rule), so authored `<style>` / `style=` / `class`
-    // / an undeclared stylesheet is a hard Error in every `.sui` — on every host,
+    // / an undeclared stylesheet is a hard Error in every `.sail` — on every host,
     // including one that passes no overrides (wasm/playground). This `collect` is
     // the single path both the build gate (`gate` → here) and the LSP/agent view
     // (`check_all` → here) flow through, so the floor is a compiler property, not
     // opt-in host wiring. L1 element sources bypass this entirely (`compile_element`).
-    let lint_path = source_path.unwrap_or_else(|| Path::new("<synthetic>.sui"));
+    let lint_path = source_path.unwrap_or_else(|| Path::new("<synthetic>.sail"));
     let template_findings =
         crate::check::lint_overrides::enforce_floor(
             crate::check::lint_overrides::apply_overrides(

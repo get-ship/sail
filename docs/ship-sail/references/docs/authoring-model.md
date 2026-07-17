@@ -2,13 +2,13 @@
 group: Views
 order: 1.5
 title: The authoring model — pure-expression templates, controller logic
-description: The line between a `.sui` template and its inline `<controller>` block. Templates carry declarative directives plus pure expressions; capabilities, statements, and declarations belong in the controller, reached through the ship SDK. SUI is the Svelte/Vue/Astro SFC lineage — deliberately not JSX.
+description: The line between a `.sail` template and its inline `<controller>` block. Templates carry declarative directives plus pure expressions; capabilities, statements, and declarations belong in the controller, reached through the ship SDK. SUI is the Svelte/Vue/Astro SFC lineage — deliberately not JSX.
 ---
 
 # The authoring model
 
 Every line you write in a view lands on one side of a single boundary: the
-`.sui` template, or its inline `<controller>` block. Get the boundary right and the
+`.sail` template, or its inline `<controller>` block. Get the boundary right and the
 rest of the framework — SSR, the LSP, route generation, the capability gate —
 works for free. Get it wrong and you fight the renderer.
 
@@ -18,11 +18,11 @@ authority**, and it has two halves.
 
 ## The line: pure expressions, not capabilities
 
-A `.sui` template expression must be a **pure function of scope signals** — safe
+A `.sail` template expression must be a **pure function of scope signals** — safe
 to re-run on every dependency change, and identical on the server and the
 client.
 
-**Allowed in `.sui`** — signal reads and pure transforms:
+**Allowed in `.sail`** — signal reads and pure transforms:
 
 - `map` / `filter` / `reduce` / `slice` / `find` / `flatMap`
 - arithmetic, string ops, `toFixed`, comparisons, ternaries
@@ -57,13 +57,13 @@ explicit, with instant author feedback — is the same contract stated positivel
 SUI is the Svelte/Vue/Astro single-file-component lineage, **deliberately not
 JSX**. The split is by *kind of code*, not by *amount*:
 
-- **Template (`.sui`):** declarative directives — `<prop>` / `<data>` /
+- **Template (`.sail`):** declarative directives — `<prop>` / `<data>` /
   `<client>`, control flow `{#for}` / `{#if}` / `{#while-loading}` — plus pure
   expressions.
 - **Controller (`.ts`):** full JavaScript — variable declarations, `signal` /
   `derived` / `live` / `effect`, and the auth-gated I/O.
 
-There are **no `const`/`let`/statements in a `.sui` file.** Want a local
+There are **no `const`/`let`/statements in a `.sail` file.** Want a local
 binding? **Promote it to a `derived`** in the controller. That promotion is not
 a tax — the friction *is* the feature: it forces every named computation to be a
 declared, typed, statically analyzable part of the view's scope.
@@ -81,7 +81,7 @@ by admitting statements into the template.
 in-place sort. Every one of these belongs in the controller:
 
 ```html
-<!-- ❌ page.sui — capabilities + statements in the template -->
+<!-- ❌ page.sail — capabilities + statements in the template -->
 {const res = fetch('/api/users')}                       <!-- I/O + declaration -->
 {const sorted = res.items.sort((a, b) =>                <!-- declaration + non-owned mutation -->
   a.name.localeCompare(b.name))}
@@ -97,7 +97,7 @@ gate), the `const` becomes a `derived`, the sort copies first, and the template
 holds only declarative directives and pure expressions:
 
 ```html
-<!-- ✅ page.sui — declarative directives + pure expressions only -->
+<!-- ✅ page.sail — declarative directives + pure expressions only -->
 <data name="users" source="ship.users.list()" live />
 
 {#if users().kind === 'loading'}
@@ -115,7 +115,7 @@ holds only declarative directives and pure expressions:
 
 ```ts
 <controller>
-<!-- ✅ page.sui — inline <controller> block: declarations, logic, and the auth-gated read -->
+<!-- ✅ page.sail — inline <controller> block: declarations, logic, and the auth-gated read -->
 import { derived } from '@ship/sail-runtime'
 
 export default controller(({ users }) => {
@@ -140,7 +140,7 @@ access, a loading/error/ready branch — but all of it is pure and re-run-safe.
 - **[Architecture](./index.md)** — the three roles and the discipline this line
   enforces.
 - **[The template surface](./template.md)** — every directive and expression a
-  `.sui` file may hold.
+  `.sail` file may hold.
 - **[The controller surface](./controller.md)** — `signal` / `derived` / `live`
   / `on`, the scope, and mutation discipline.
 - **ADR — SUI authoring model** (`docs/ship-adrs/references/docs/sail-authoring-model.md`)

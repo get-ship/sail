@@ -86,11 +86,11 @@ const DIV = `${CONTROLLER}
 </div>
 `
 
-/** Compile a .sui, bundle it where the workspace deps resolve, return sizes. */
+/** Compile a .sail, bundle it where the workspace deps resolve, return sizes. */
 function measure(name, source) {
   const dir = mkdtempSync(join(tmpdir(), `l1cost-${name}-`))
-  writeFileSync(join(dir, `${name}.sui`), source)
-  execFileSync(COMPILER, ['build', join(dir, `${name}.sui`), '--component-name', name], {
+  writeFileSync(join(dir, `${name}.sail`), source)
+  execFileSync(COMPILER, ['build', join(dir, `${name}.sail`), '--component-name', name], {
     cwd: ROOT,
     stdio: 'pipe',
   })

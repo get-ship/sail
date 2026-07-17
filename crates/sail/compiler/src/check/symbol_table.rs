@@ -32,7 +32,7 @@ pub struct SymbolTable {
 #[derive(Debug, Clone)]
 pub struct KeyEntry {
     /// Byte offset into the controller source (or 0 if the key is
-    /// declared in the `.sui`).
+    /// declared in the `.sail`).
     pub offset: usize,
     /// Source kind label — surfaced in hover.
     pub kind_label: &'static str,

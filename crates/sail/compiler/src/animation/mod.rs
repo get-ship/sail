@@ -4,7 +4,7 @@
 //!
 //! # Why AOT bake
 //!
-//! `.sui` files compile to ESM that runs in the browser. Running a
+//! `.sail` files compile to ESM that runs in the browser. Running a
 //! spring solver per frame would (a) require shipping solver code and
 //! (b) tie runtime animation work to the JS thread. Instead, we
 //! resolve the spring (or tween) at compile time into a list of
@@ -119,7 +119,7 @@ pub enum AnimationConfig {
 
 /// Errors that [`bake`] can produce. All variants are recoverable —
 /// callers should surface them as `CompileError` with a span pointing
-/// at the `motion:` directive in the user's `.sui` source.
+/// at the `motion:` directive in the user's `.sail` source.
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum AnimationError {
     /// A numeric input was NaN (e.g. a token that didn't resolve to a

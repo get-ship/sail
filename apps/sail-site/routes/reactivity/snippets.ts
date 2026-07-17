@@ -1,7 +1,7 @@
 // Code snippets for the reactivity page. Kept OUT of the controller so the
 // compiler's scope scan isn't fooled by `return {…}` / `signal(…)` patterns
 // inside these strings. Each snippet matches the real @ship/sail-runtime API
-// (signal/derived/effect/batch/untrack); the .sui template compiles paired
+// (signal/derived/effect/batch/untrack); the .sail template compiles paired
 // with a controller declaring `count`.
 export const code = {
   graph: `<controller>
@@ -66,7 +66,7 @@ effect(() => {
   console.log(first(), untrack(() => last()))
 })   // re-runs when first changes — never when last does`,
 
-  template: `<!-- counter.sui -->
+  template: `<!-- counter.sail -->
 <button on:click={() => count.set((n) => n - 1)}>−</button>
 <output>{count()}</output>
 <button on:click={() => count.set((n) => n + 1)}>+</button>`,

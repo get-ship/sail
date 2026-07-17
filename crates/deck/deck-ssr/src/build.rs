@@ -1,4 +1,4 @@
-//! Synthesize + bundle: turn a `.sui` + app manifest into ONE self-contained
+//! Synthesize + bundle: turn a `.sail` + app manifest into ONE self-contained
 //! ES module ready to run in the isolate.
 //!
 //! `synthesize_and_bundle` calls the synthetic emitter as a pure function (no
@@ -90,7 +90,7 @@ pub async fn synthesize_and_bundle_with(
     }
     std::fs::create_dir_all(build_dir)
         .with_context(|| format!("mkdir {}", build_dir.display()))?;
-    // The controller IS the .sui's own `<controller>` block; an explicit
+    // The controller IS the .sail's own `<controller>` block; an explicit
     // `authored` path (test-only) overrides it. For an inline block, write it to a
     // module beside the synthetic controller and import it by the same absolute
     // specifier an authored sibling would use.

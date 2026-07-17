@@ -4,7 +4,7 @@
 // STATIC SCAN of the engine source (not an import): asserts the boundary holds
 // (Cardinal 4 + the sail-* boundary). The engine is pure reactive state — no
 // SDK, no network, no <data>. Engine purity is NOT lint-enforced (sail-lint
-// targets .sui/.controller.ts and never sees these .ts modules) — it is
+// targets .sail/.controller.ts and never sees these .ts modules) — it is
 // TEST-asserted here. Authority: build-spec §"Backbone #1" + §Slices +
 // behavioral spec #15.
 

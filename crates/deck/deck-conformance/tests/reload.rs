@@ -25,7 +25,7 @@ use deck::bundler::{Bundler, BundlerEvent};
 async fn editing_a_view_fires_bounded_rebuilds_then_settles() {
     let tmp = tempfile::tempdir().expect("tempdir");
     let root = tmp.path();
-    let view = root.join("views/probe/page.sui");
+    let view = root.join("views/probe/page.sail");
     std::fs::create_dir_all(view.parent().unwrap()).unwrap();
     std::fs::write(&view, "<div>probe {1 + 1}</div>\n").unwrap();
 

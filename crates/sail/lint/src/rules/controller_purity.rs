@@ -5,7 +5,7 @@
 //! - `<expr>.outerHTML  = …`
 //! - `<expr>.insertAdjacentHTML(…)` calls
 //!
-//! Dynamic markup belongs in the `.sui` template via `{#if}/{#for}/{#match}`
+//! Dynamic markup belongs in the `.sail` template via `{#if}/{#for}/{#match}`
 //! and the binding primitives (`bindAttr`/`bindText`/`bindClass`/`bindValue`).
 //! Controllers own state, refs, lifecycle, and async I/O.
 
@@ -59,7 +59,7 @@ impl<'src> PurityVisitor<'src> {
             severity: Severity::Error,
             message,
             suggest: Some(
-                "Move dynamic markup into the .sui template ({#if}/{#for}/{#match}). \
+                "Move dynamic markup into the .sail template ({#if}/{#for}/{#match}). \
                  For HTML/SVG-blob cases, use bindHtml()."
                     .to_string(),
             ),
@@ -76,7 +76,7 @@ impl<'a, 'src> Visit<'a> for PurityVisitor<'src> {
                     expr.span,
                     format!(
                         "controllers do not write `.{prop}`. Render dynamic markup from \
-                         the .sui template, or use bindHtml() for HTML-blob cases."
+                         the .sail template, or use bindHtml() for HTML-blob cases."
                     ),
                 );
             }
@@ -92,7 +92,7 @@ impl<'a, 'src> Visit<'a> for PurityVisitor<'src> {
                 self.report(
                     expr.span,
                     "controllers do not call `.insertAdjacentHTML(...)`. Render dynamic \
-                     markup from the .sui template, or use bindHtml() for HTML-blob cases."
+                     markup from the .sail template, or use bindHtml() for HTML-blob cases."
                         .to_string(),
                 );
             }

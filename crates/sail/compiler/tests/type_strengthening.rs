@@ -42,7 +42,7 @@ fn standalone_opts(path: PathBuf) -> CompileOpts {
 
 fn read(name: &str) -> (String, PathBuf) {
     let dir = fixtures_dir();
-    let sui = dir.join(format!("{name}.sui"));
+    let sui = dir.join(format!("{name}.sail"));
     let src = fs::read_to_string(&sui)
         .unwrap_or_else(|e| panic!("read {}: {e}", sui.display()));
     (src, sui)
@@ -115,7 +115,7 @@ fn happy_view_with_all_checks_compiles() {
     // new check pass.
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests/validate/fixtures");
-    let sui = dir.join("happy-derived.sui");
+    let sui = dir.join("happy-derived.sail");
     let src = fs::read_to_string(&sui).unwrap();
     compile(&src, paired_opts(sui)).expect("happy-derived must still compile");
 }

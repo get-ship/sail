@@ -2,7 +2,7 @@
 group: Views
 order: 3
 title: SUI — Authoring Patterns
-description: Canonical patterns for .sui view authoring.
+description: Canonical patterns for .sail view authoring.
 ---
 
 # SUI — Authoring Patterns
@@ -13,7 +13,7 @@ How to author a SUI view, a SUI component, and the controller that lives inside 
 
 | Trait | View | Component |
 |---|---|---|
-| Filename stem | `page.sui` (manifest-keyed route) | `<tag>.sui` (registers a custom element) |
+| Filename stem | `page.sail` (manifest-keyed route) | `<tag>.sail` (registers a custom element) |
 | Lives under | `views/<name>/`, `.ship/views/<name>/` | `packages/components/ui-components/src/<tag>/`, `_components/<view>-<tag>/` |
 | Has `manifest.jsonc`? | Yes — required | Yes — anatomy regions / containment declaration live here |
 | Has `<prop>` directives? | No | Yes — declares the public attribute / property contract |
@@ -45,10 +45,10 @@ A view that wants reusable markup pulls a component in (`packages/components/ui-
 
 ## The controller block
 
-One inline `<controller>` block, authored directly in the `.sui` file — no paired sibling file. The template still declares markup and bindings; the controller still does the work, it's just one function now instead of a sectioned object.
+One inline `<controller>` block, authored directly in the `.sail` file — no paired sibling file. The template still declares markup and bindings; the controller still does the work, it's just one function now instead of a sectioned object.
 
 ```ts
-// inside page.sui
+// inside page.sail
 <controller>
 export default controller((ctx) => {
   const { agents, navigate } = ctx
@@ -84,7 +84,7 @@ The `sail-controller-purity` rule rejects markup-producing code inside the `<con
 - A sibling `render.ts` of HTML-string template-literal helpers
 - Re-querying the host's children after `mount` for what a
   `bind:this` would have given you (use `bind:this` for refs)
-- A `.sui` body that is just `<div bind:this={ref}></div>` — the template is the renderer
+- A `.sail` body that is just `<div bind:this={ref}></div>` — the template is the renderer
 
 For HTML-blob cases (markdown rendering, third-party SVG generators, icon-pack swaps), use `bindHtml(el, () => string)` from `@ship/sail-runtime`. It auto-morphs across re-renders.
 
@@ -175,7 +175,7 @@ Worked examples and lookup semantics are in the `ship-views` skill's `references
 
 ## Scope is typed
 
-The compiler emits `Scope` in `<file>.sui.d.ts` covering BOTH template reactive identifiers AND the keys the controller function returns. `mount((el) => { … })` sees direct, typed members via the closure over the controller's returned scope:
+The compiler emits `Scope` in `<file>.sail.d.ts` covering BOTH template reactive identifiers AND the keys the controller function returns. `mount((el) => { … })` sees direct, typed members via the closure over the controller's returned scope:
 
 ```ts
 mount((el) => {
@@ -194,7 +194,7 @@ deck scaffold view settings --component settings-toolbar
 deck scaffold component my-widget --controller
 ```
 
-The first generates `views/settings/` with `page.sui` (including an inline `<controller>` block) + `style.css` + `manifest.jsonc`. The `--component` flag also scaffolds `_components/settings-toolbar/`. The component scaffold drops `packages/components/ui-components/src/my-widget/` with `<tag>.sui`; `--controller` adds the inline `<controller>` block to it.
+The first generates `views/settings/` with `page.sail` (including an inline `<controller>` block) + `style.css` + `manifest.jsonc`. The `--component` flag also scaffolds `_components/settings-toolbar/`. The component scaffold drops `packages/components/ui-components/src/my-widget/` with `<tag>.sail`; `--controller` adds the inline `<controller>` block to it.
 
 ## User-app views — authoring outside the Ship repo
 
@@ -206,20 +206,20 @@ Two layouts are honored, both rooted at the workspace `shipd --workspace <path>`
 ~/my-project/
 ├── views/
 │   └── my-view/
-│       ├── page.sui            # required (controller, if any, is an inline <controller> block inside)
+│       ├── page.sail            # required (controller, if any, is an inline <controller> block inside)
 │       ├── style.css           # optional — view-scoped CSS
 │       └── manifest.jsonc      # optional — rail label/icon, view type
 └── .ship/
     └── views/
         └── another-view/
-            ├── index.sui                 # required (note the stem: index, not page)
+            ├── index.sail                 # required (note the stem: index, not page)
             └── manifest.jsonc            # optional
 ```
 
-- **`<workspace>/views/<name>/page.sui`** — same convention as in-tree views. Use this when the view *is* the app surface (e.g. you're building a Ship-shaped tool).
-- **`<workspace>/.ship/views/<name>/index.sui`** — colocates the view with the rest of your `.ship/` config. Use this for views that are auxiliary to a non-Ship project.
+- **`<workspace>/views/<name>/page.sail`** — same convention as in-tree views. Use this when the view *is* the app surface (e.g. you're building a Ship-shaped tool).
+- **`<workspace>/.ship/views/<name>/index.sail`** — colocates the view with the rest of your `.ship/` config. Use this for views that are auxiliary to a non-Ship project.
 
-A controller is always authored inline as a `<controller>` block inside the `.sui` file — a paired `<stem>.controller.ts` sibling file is a compile error.
+A controller is always authored inline as a `<controller>` block inside the `.sail` file — a paired `<stem>.controller.ts` sibling file is a compile error.
 
 When both layouts contain a view with the same name, the top-level `views/` directory wins — that's how a workspace can shadow a built-in by id without renaming.
 
@@ -249,7 +249,7 @@ The daemon persists this workspace into `~/.ship/machine/daemons/<hash>/workspac
 
 ## Hot reload in dev
 
-`.sui` edits (including changes inside the inline `<controller>` block) trigger an in-place view re-mount without a full page reload. `apps/shell/src/hmr.ts` subscribes to `shipd`'s `/_deck/dev/hmr` SSE channel. When the bundler emits `module-changed` for `views/<name>/view`, shell cache-busts the rebuilt `view.js` and re-mounts through `mount()`. Other bundles (sail-components, islands, sail-runtime, sail-dom, sail-components) trigger a full reload — custom-element re-registration without reload is not yet supported.
+`.sail` edits (including changes inside the inline `<controller>` block) trigger an in-place view re-mount without a full page reload. `apps/shell/src/hmr.ts` subscribes to `shipd`'s `/_deck/dev/hmr` SSE channel. When the bundler emits `module-changed` for `views/<name>/view`, shell cache-busts the rebuilt `view.js` and re-mounts through `mount()`. Other bundles (sail-components, islands, sail-runtime, sail-dom, sail-components) trigger a full reload — custom-element re-registration without reload is not yet supported.
 
 Production builds inline `import.meta.env.DEV` to `false`, so HMR is a no-op and no EventSource opens.
 

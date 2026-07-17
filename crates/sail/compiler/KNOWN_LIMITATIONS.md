@@ -53,7 +53,7 @@ suite is green and the build is warning-free.
 - **Repro:** `<card><h3 slot="header">Title</h3>…</card>` renders correctly;
   a `<slot name="header">` inside a userland element mode component does not
   yet route children by name.
-- **Where:** `stdlib/card.sui` (STRUCTURAL DIVERGENCE note);
+- **Where:** `stdlib/card.sail` (STRUCTURAL DIVERGENCE note);
   use-site splicing in `src/parse/preprocess.rs`.
 - **Status:** needs-design — named-slot projection for element mode.
 
@@ -62,7 +62,7 @@ suite is green and the build is warning-free.
   ships no `role="button"` / `tabindex` / Enter-Space activation (that was
   runtime JS in the L2 baseline; element mode is static structure).
 - **Repro:** `<card interactive>` is not keyboard-activatable on its own.
-- **Where:** `stdlib/card.sui` (LANG-GAP note).
+- **Where:** `stdlib/card.sail` (LANG-GAP note).
 - **Status:** by-design — add `role`/`tabindex`/keydown at the use site, or
   slot a real `<button>`/`<a>`.
 
@@ -72,7 +72,7 @@ suite is green and the build is warning-free.
   can't emit yet.
 - **Repro:** `<icon tone="destructive">` does not tint; wrap in a
   tone-colored context or set `color` instead.
-- **Where:** `stdlib/icon.sui` (LANG-GAP note).
+- **Where:** `stdlib/icon.sail` (LANG-GAP note).
 - **Status:** planned — shared cross-element tones sheet.
 
 ### `<icon>` has no named-glyph lookup
@@ -81,5 +81,5 @@ suite is green and the build is warning-free.
   and intentionally live in an L2 component built on top of `<icon>`.
 - **Repro:** `<icon name="check" />` renders nothing; slot the SVG:
   `<icon><svg>…</svg></icon>`.
-- **Where:** `stdlib/icon.sui` (header note).
+- **Where:** `stdlib/icon.sail` (header note).
 - **Status:** by-design — named-glyph lookup is an L2 concern.

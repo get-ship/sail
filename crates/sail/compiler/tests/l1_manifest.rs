@@ -9,7 +9,7 @@
 //! Two halves:
 //!
 //! - **FORWARD** — every entry the manifest declares has a built artifact.
-//!   Stdlib rows: the `.sui` source compiles (the registry panics if it
+//!   Stdlib rows: the `.sail` source compiles (the registry panics if it
 //!   doesn't, before the test runs). Reskin rows: the runtime's
 //!   `packages/sail/runtime/src/styles/index.ts` contains the declared
 //!   selector. We text-search the file because every selector lives
@@ -106,14 +106,14 @@ fn strip_comments(src: &str) -> String {
 fn every_manifest_entry_has_a_built_artifact() {
     let styles = strip_comments(&read_styles_source());
     // Stdlib half: every stdlib row's tag is in the registry AND the
-    // `.sui` compiles. The registry panics on compile failure before
+    // `.sail` compiles. The registry panics on compile failure before
     // this loop, so here we just confirm the entry produced an artifact.
     for el in stdlib::elements() {
         let out = stdlib::element(el.tag).expect("stdlib element must be in registry");
         assert!(
             !out.out.skin_css.trim().is_empty()
                 || !out.out.structure_html.trim().is_empty(),
-            "stdlib element `{}` has neither skin nor structure — the .sui \
+            "stdlib element `{}` has neither skin nor structure — the .sail \
              source compiled to an empty artifact",
             el.tag
         );

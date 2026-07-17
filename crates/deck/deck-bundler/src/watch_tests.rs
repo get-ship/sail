@@ -68,13 +68,13 @@ async fn wait_nonempty_returns_true_when_signal_present() {
 
 // ── classify ─────────────────────────────────────────────────────────────────
 
-/// A `.sui` CREATE must invalidate the snapshot (P0-1); a `.sui` EDIT must
+/// A `.sail` CREATE must invalidate the snapshot (P0-1); a `.sail` EDIT must
 /// not (the target set is unchanged). Before the fix only dir-create
 /// invalidated, leaving a leaf written into a watched bucket invisible.
 #[test]
 fn classify_sui_create_invalidates_snapshot() {
     let tmp = tempfile::tempdir().unwrap();
-    let sui = tmp.path().join("views/bar/page.sui");
+    let sui = tmp.path().join("views/bar/page.sail");
     std::fs::create_dir_all(sui.parent().unwrap()).unwrap();
     std::fs::write(&sui, "<div/>").unwrap();
     let create = classify(&WatchSignal { path: sui.clone(), is_create: true });
@@ -150,7 +150,7 @@ fn new_view_discovery_via_entry_match() {
     let root = tmp.path().to_path_buf();
     let view_dir = root.join("views/newview");
     std::fs::create_dir_all(&view_dir).unwrap();
-    let leaf = view_dir.join("page.sui");
+    let leaf = view_dir.join("page.sail");
     std::fs::write(&leaf, "<div>new</div>").unwrap();
 
     use crate::targets::{BundleLayout, TargetEntry};

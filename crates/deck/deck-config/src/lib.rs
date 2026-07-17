@@ -270,9 +270,9 @@ pub struct DeckConfig {
     /// no longer bakes a host-private path into its default.
     pub view_dirs: Vec<String>,
     /// The leaf filename for view artifacts under each `view_dir/<name>/`.
-    /// Defaults to `"page.sui"`. A single leaf convention across all
-    /// `view_dirs` fixes the #254 leaf-name divergence (`page.sui` vs
-    /// `index.sui`) that broke `.ship/views/<name>/index.sui` resolution.
+    /// Defaults to `"page.sail"`. A single leaf convention across all
+    /// `view_dirs` fixes the #254 leaf-name divergence (`page.sail` vs
+    /// `index.sail`) that broke `.ship/views/<name>/index.sail` resolution.
     pub view_leaf: Option<String>,
 }
 
@@ -284,7 +284,7 @@ impl Default for DeckConfig {
 impl DeckConfig {
     /// Built-in defaults — a zero-config host (e.g. deck-conformance) gets these
     /// when the host passes no override. The deck-native `["views"]` bucket and
-    /// the unified `page.sui` leaf (#254). Deck names no host-private path: a
+    /// the unified `page.sail` leaf (#254). Deck names no host-private path: a
     /// host serving Ship's `.ship/views` supplies it as an override.
     pub fn defaults() -> Self {
         Self {
@@ -296,9 +296,9 @@ impl DeckConfig {
             // `DeckConfig` (clone `defaults()` + override) and pass it in — no
             // file load, no baked host path.
             view_dirs: vec!["views".into()],
-            // Single leaf convention — fixes the #254 `index.sui`/`page.sui`
+            // Single leaf convention — fixes the #254 `index.sail`/`page.sail`
             // divergence. Both buckets look up `<name>/<view_leaf>`.
-            view_leaf: Some("page.sui".into()),
+            view_leaf: Some("page.sail".into()),
         }
     }
 }
@@ -320,7 +320,7 @@ mod tests {
   "sourceRoots": ["."],
   "watch": ["packages", "apps/site/src"],
   "viewDirs": ["views", ".ship/views"],
-  "viewLeaf": "page.sui"
+  "viewLeaf": "page.sail"
 }"#;
     #[test]
     fn parse_example_jsonc() {
@@ -330,7 +330,7 @@ mod tests {
         assert_eq!(cfg.source_roots, vec![PathBuf::from(".")]);
         assert_eq!(cfg.watch, vec![PathBuf::from("packages"), PathBuf::from("apps/site/src")]);
         assert_eq!(cfg.view_dirs, vec!["views".to_string(), ".ship/views".to_string()]);
-        assert_eq!(cfg.view_leaf.as_deref(), Some("page.sui"));
+        assert_eq!(cfg.view_leaf.as_deref(), Some("page.sail"));
     }
     #[test]
     fn defaults_round_trip() {
@@ -379,7 +379,7 @@ mod tests {
             vec!["views".to_string()],
             "partial config must inherit the deck-native view bucket default"
         );
-        assert_eq!(cfg.view_leaf.as_deref(), Some("page.sui"));
+        assert_eq!(cfg.view_leaf.as_deref(), Some("page.sail"));
     }
 
     // ── per-app deck.jsonc (AppServeConfig) ───────────────────────────────────
@@ -541,7 +541,7 @@ mod tests {
         // not load it on its own.
         let jsonc = r#"{
   "viewDirs": ["apps/shell/src/views"],
-  "viewLeaf": "page.sui"
+  "viewLeaf": "page.sail"
 }"#;
         let from_str: DeckConfig =
             serde_json::from_str(&strip_jsonc_comments(jsonc)).expect("host-parsed config");

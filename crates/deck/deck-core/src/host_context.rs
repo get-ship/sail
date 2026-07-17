@@ -1,4 +1,4 @@
-//! Deck's host context — the framework-provided names a `.sui` may use without
+//! Deck's host context — the framework-provided names a `.sail` may use without
 //! the app declaring them in its `app.manifest.jsonc`.
 //!
 //! SUI names no host: its synthesize path resolves every free name through the

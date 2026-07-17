@@ -7,7 +7,7 @@
 // host element. These tests pin the host-event-dispatch contract that the
 // dead-`host` bug broke.
 //
-// Both events are the spec contract from the .sui files: bubbles + composed
+// Both events are the spec contract from the .sail files: bubbles + composed
 // + a non-null `detail`. The TDD test for the list (clicking Remove →
 // `sail-annotation-remove`) is the one the dead-`host` bug would silently fail
 // (the dispatch would no-op on a null/undefined host). The layer test pins

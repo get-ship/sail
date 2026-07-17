@@ -14,7 +14,7 @@ These three examples cover the discipline boundaries. Each tier has a representa
 The smallest reactive shape: a single signal returned from the inline controller plus an inline arrow handler in the template, alongside one `<data live>` subscription. Worked exemplar in the repo: `views/home/`.
 
 ```html
-<!-- views/home/page.sui (excerpt) -->
+<!-- views/home/page.sail (excerpt) -->
 <data name="git" source="ship.git.overview()" live />
 
 <section class="counter">
@@ -25,7 +25,7 @@ The smallest reactive shape: a single signal returned from the inline controller
 
 ```ts
 <controller>
-// views/home/page.sui (excerpt)
+// views/home/page.sail (excerpt)
 import { signal, derived } from '@ship/sail-runtime'
 
 export default controller(() => {
@@ -45,7 +45,7 @@ What this avoids: a pile of named handlers for trivial state. Inline handlers co
 The actual working view in the repo today (`views/agents/`). Server data via `<data>`, two memos, one navigation handler. No compositions yet — the composition-based version is below.
 
 ```html
-<!-- views/agents/page.sui (excerpt) -->
+<!-- views/agents/page.sail (excerpt) -->
 <data name="agents" source="ship.agents.summaries()" live />
 
 <header class="agents-head">
@@ -77,7 +77,7 @@ The actual working view in the repo today (`views/agents/`). Server data via `<d
 
 ```ts
 <controller>
-// views/agents/page.sui
+// views/agents/page.sail
 import { derived } from '@ship/sail-runtime'
 import type { LiveSignal } from '@ship/sail-runtime'
 import type { AgentsSummariesResponse, AgentSummary } from '@ship/sdk-client'
@@ -111,7 +111,7 @@ What this avoids: a separate live-subscription section in the controller, callin
 The same view, scaled with the v1 compositions (`useFilteredList`, `useSelection`, `<use-kbd>`) — all shipped, see [status.md](status.md).
 
 ```html
-<!-- views/agents/page.sui -->
+<!-- views/agents/page.sail -->
 <data name="agents" source="ship.agents.summaries()" live />
 
 <use-kbd>
@@ -153,7 +153,7 @@ The search-toggle signal lives in the inline controller, alongside two compositi
 
 ```ts
 <controller>
-// views/agents/page.sui
+// views/agents/page.sail
 import { signal, useFilteredList, useSelection } from '@ship/sail-runtime'
 
 export default controller(({ agents, navigate }) => {
@@ -184,7 +184,7 @@ What this exercises beyond tier 2:
 Forms exercise two-way binding, validation, and the `useForm` composition — all shipped, see [status.md](status.md).
 
 ```html
-<!-- views/settings/page.sui -->
+<!-- views/settings/page.sail -->
 <data name="settings" source="ship.settings.state()" />
 
 <form on:submit={form.submit}>
@@ -216,7 +216,7 @@ Forms exercise two-way binding, validation, and the `useForm` composition — al
 
 ```ts
 <controller>
-// views/settings/page.sui
+// views/settings/page.sail
 import { useForm } from '@ship/sail-runtime'
 
 export default controller(({ ship, settings }) => {

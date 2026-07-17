@@ -81,7 +81,7 @@ const CSP_SUFFIX: &str = "frame-ancestors 'self'";
 /// NOT YET WIRED to `html_view`/`DeckResponse` — deck-core's request path
 /// (`assets.rs`'s `serve_shell`/`html_view` call, deck-core/src/assets.rs:316)
 /// has no per-package resolved `"network"` list in hand today; the SPA shell
-/// HTML deck-core serves isn't scoped to one `.sui` package, so the seam that
+/// HTML deck-core serves isn't scoped to one `.sail` package, so the seam that
 /// would supply this list does not exist yet. This function is the
 /// correctly-parameterized piece; wiring it in is a follow-up.
 pub fn connect_src_directive(network: &[String]) -> String {

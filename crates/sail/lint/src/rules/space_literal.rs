@@ -1,5 +1,5 @@
 //! `sail-space-literal` (POC) — raw `px` in a spacing property (`padding`,
-//! `margin`, `gap` + longhands) inside a `.sui` `<style>` block should be a
+//! `margin`, `gap` + longhands) inside a `.sail` `<style>` block should be a
 //! design-system spacing token, `var(--space-N)`.
 //!
 //! This is the proof-of-concept extension of the design-system enforcement
@@ -343,7 +343,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn run(src: &str) -> Vec<Finding> {
-        check(&PathBuf::from("/fake/foo.sui"), src)
+        check(&PathBuf::from("/fake/foo.sail"), src)
     }
 
     #[test]

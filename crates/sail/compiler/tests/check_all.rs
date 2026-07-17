@@ -72,7 +72,7 @@ fn diagnostics_are_sorted_by_position() {
 //
 // These tests use the **real dispatch path** the compiler uses: a tempdir
 // laid out like `packages/components/sail/<pack>/` (a `sail.config.json` at
-// the pack root, a `.sui` source under `src/`, an undeclared `.css` next
+// the pack root, a `.sail` source under `src/`, an undeclared `.css` next
 // to it), then `check_all()` with the overrides the CLI applies. That is
 // the same call shape the daemon and CLI take — `compile()` invokes
 // `check::gate` → `check::collect` → `sail_lint::lint_sui_template_source`
@@ -88,8 +88,8 @@ fn diagnostics_are_sorted_by_position() {
 // ----------------------------------------------------------------------------
 
 /// Write a synthetic pack into a tempdir: `<pack>/sail.config.json`,
-/// `<pack>/src/widget.sui`, plus the css files named in `css_files` as
-/// `<pack>/src/<rel>` (e.g. `"x.css"`, `"widget/widget.css"`). The `.sui`
+/// `<pack>/src/widget.sail`, plus the css files named in `css_files` as
+/// `<pack>/src/<rel>` (e.g. `"x.css"`, `"widget/widget.css"`). The `.sail`
 /// source is a renderable component (`<p>{name}</p>`) so the structural
 /// passes produce nothing and the only diagnostic the compiler can emit is
 /// the stylesheet-permit one.
@@ -98,7 +98,7 @@ fn write_pack(css_files: &[(&str, &str)], config: &str) -> (tempfile::TempDir, s
     std::fs::write(tmp.path().join("sail.config.json"), config).unwrap();
     let src_dir = tmp.path().join("src");
     std::fs::create_dir_all(&src_dir).unwrap();
-    let sui_path = src_dir.join("widget.sui");
+    let sui_path = src_dir.join("widget.sail");
     std::fs::write(&sui_path, "<p>{name}</p>").unwrap();
     for (rel, body) in css_files {
         let p = src_dir.join(rel);
@@ -213,7 +213,7 @@ fn no_class_fails_real_compile_path() {
         &[],
         r#"{"stylesheets": []}"#,
     );
-    // Replace the default widget.sui with one that has a class=.
+    // Replace the default widget.sail with one that has a class=.
     let src = r#"<p class="sneaky-hook">{name}</p>"#;
     std::fs::write(&sui_path, src).unwrap();
     let overrides = Policy::overrides_for(&sui_path);

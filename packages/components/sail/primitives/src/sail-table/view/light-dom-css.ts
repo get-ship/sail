@@ -3,7 +3,7 @@
 // The slot/native variants project a consumer-authored `<table>` into the host
 // LIGHT DOM (shadow CSS can't reach it), so the table styling is adopted onto
 // the host document once per document (WeakSet-guarded). The data variant is
-// shadow-rendered and styled in `sail-table.sui`'s `<style>` instead.
+// shadow-rendered and styled in `sail-table.sail`'s `<style>` instead.
 //
 // Tokens only: density via the platform `--density-*` channel, selection via
 // the prebuilt `--selected-bg`/`--tone-primary-bg` ramps, surfaces via

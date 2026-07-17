@@ -6,14 +6,14 @@ import { dirname, join } from 'node:path'
 // ── deck HMR — edit→reload loop (state-preserving, no full document reload) ───
 //
 // The full module-granular HMR loop end-to-end against the real `deck dev`:
-// edit a route's .sui on disk → deck dev rebuilds the SPA → emits `app` over the
+// edit a route's .sail on disk → deck dev rebuilds the SPA → emits `app` over the
 // HMR SSE → the live-reload client re-imports the freshly-bundled entry → the
 // HMR-aware bootstrap swaps the fresh `modules` (new chunk URLs) into the
 // running router + re-mounts the current route preserving signal state. No full
 // document reload. Restores the file in `finally` so the fixture stays clean.
 
 const here = dirname(fileURLToPath(import.meta.url))
-const PAGE = join(here, '..', 'app', 'routes', 'hmr-edit', 'page.sui')
+const PAGE = join(here, '..', 'app', 'routes', 'hmr-edit', 'page.sail')
 
 test.describe('deck HMR — edit→reload loop', () => {
   test('editing a route on disk soft-reloads it: code updates, state survives, no full reload', async ({

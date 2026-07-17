@@ -160,7 +160,7 @@ pub(crate) async fn run(b: &Bundler) {
                 }
                 SignalAction::Ignore => {}
                 SignalAction::Rebuild { invalidate } => {
-                    // P0-1: a `.sui` written into an already-watched bucket
+                    // P0-1: a `.sail` written into an already-watched bucket
                     // creates no directory, so dir-create invalidation misses it
                     // — refresh the snapshot the moment the leaf lands.
                     if invalidate {
@@ -249,7 +249,7 @@ pub(crate) fn module_parent_dirs(graph: &HashMap<String, HashSet<PathBuf>>) -> H
 
 /// One FS signal from the notify callback: the changed path plus whether the
 /// originating event was a CREATE (a new directory to re-prune, #193 completion,
-/// or a new `.sui` view leaf to discover, P0-1). Modify/remove events carry
+/// or a new `.sail` view leaf to discover, P0-1). Modify/remove events carry
 /// `is_create = false`.
 struct WatchSignal {
     path: PathBuf,
@@ -264,8 +264,8 @@ enum SignalAction {
     /// invalidate the target snapshot.
     NewDir,
     /// A source file that may rebuild targets. `invalidate` is true only when the
-    /// event CREATED a `.sui` leaf — a new view target the snapshot predates, so
-    /// it must be re-walked (P0-1). A `.sui` edit / `.ts` change leaves the
+    /// event CREATED a `.sail` leaf — a new view target the snapshot predates, so
+    /// it must be re-walked (P0-1). A `.sail` edit / `.ts` change leaves the
     /// target set unchanged.
     Rebuild { invalidate: bool },
     /// Generated build output or an unrelated extension — nothing to do.
@@ -278,18 +278,18 @@ fn classify(sig: &WatchSignal) -> SignalAction {
         return SignalAction::NewDir;
     }
     let ext = sig.path.extension().and_then(|e| e.to_str()).unwrap_or("");
-    if !matches!(ext, "ts" | "tsx" | "js" | "sui") {
+    if !matches!(ext, "ts" | "tsx" | "js" | "sail") {
         return SignalAction::Ignore;
     }
     // Generated build OUTPUTS (routes.gen.ts, packages/.../generated/*.ts) are a
     // rebuild RESULT, not a source change — reacting self-triggers an endless
     // rebuild loop (shipd CPU spin). A real route change still fires via the
-    // `[param]` dir / `.sui`.
+    // `[param]` dir / `.sail`.
     let s = sig.path.to_string_lossy();
     if s.ends_with(".gen.ts") || s.contains("/generated/") {
         return SignalAction::Ignore;
     }
-    SignalAction::Rebuild { invalidate: sig.is_create && ext == "sui" }
+    SignalAction::Rebuild { invalidate: sig.is_create && ext == "sail" }
 }
 
 /// Bounded, drop-oldest, coalescing watch ring shared between the sync notify

@@ -1,7 +1,7 @@
 // Build script: read the @ship/sail-tutorial lessons and emit a single typed
 // data module the docs routes import. We DO NOT rewrite the tutorial — we
 // load `packages/sail/tutorial/src/prose/<slug>.md` (flat files: frontmatter +
-// body) and the paired `lessons/<slug>/{starter,solved}/` sources (one `.sui`
+// body) and the paired `lessons/<slug>/{starter,solved}/` sources (one `.sail`
 // per dir, stem = custom-element tag, controller block inline when the lesson
 // has state), render the prose body to HTML here, and write `src/tutorial-data.ts`.
 //
@@ -155,14 +155,14 @@ function read(p) {
   return existsSync(p) ? readFileSync(p, 'utf8') : ''
 }
 
-// A lesson dir holds exactly one `.sui` — the whole lesson, `<controller>` block
+// A lesson dir holds exactly one `.sail` — the whole lesson, `<controller>` block
 // and template together. That file IS what the student edits and what the
 // playground compiles; there is no second file to reconcile.
 function lessonSources(dir) {
   if (!existsSync(dir)) return { stem: '', source: '' }
-  const sui = readdirSync(dir).find((f) => f.endsWith('.sui'))
+  const sui = readdirSync(dir).find((f) => f.endsWith('.sail'))
   if (!sui) return { stem: '', source: '' }
-  return { stem: sui.replace(/\.sui$/, ''), source: read(join(dir, sui)) }
+  return { stem: sui.replace(/\.sail$/, ''), source: read(join(dir, sui)) }
 }
 
 // ── collect ─────────────────────────────────────────────────────────────────
@@ -243,14 +243,14 @@ const types = `export interface TutorialLesson {
   order: number
   prev: string | null
   next: string | null
-  /** Custom-element tag of the solved lesson (its .sui stem). */
+  /** Custom-element tag of the solved lesson (its .sail stem). */
   solvedTag: string
   starterStem: string
   solvedStem: string
   proseHtml: string
-  /** The starter \`.sui\` — controller block and template, as authored. */
+  /** The starter \`.sail\` — controller block and template, as authored. */
   starterSource: string
-  /** The solved \`.sui\`. */
+  /** The solved \`.sail\`. */
   solvedSource: string
 }
 

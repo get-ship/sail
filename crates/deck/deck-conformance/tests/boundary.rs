@@ -313,7 +313,7 @@ fn deck_crates_name_no_ship_app() {
     );
 }
 
-/// Positive zero-config test: `DeckConfig::defaults()` + a temp `views/foo/page.sui`
+/// Positive zero-config test: `DeckConfig::defaults()` + a temp `views/foo/page.sail`
 /// yields exactly one views/foo target and zero consumer targets.
 #[test]
 fn zero_config_discovers_views_only() {
@@ -323,7 +323,7 @@ fn zero_config_discovers_views_only() {
     let root = tmp.path().to_path_buf();
 
     // Write a single view.
-    let page_sui = root.join("views/foo/page.sui");
+    let page_sui = root.join("views/foo/page.sail");
     std::fs::create_dir_all(page_sui.parent().unwrap()).unwrap();
     std::fs::write(&page_sui, "<div>foo</div>\n").unwrap();
 
