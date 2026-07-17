@@ -37,7 +37,7 @@ import {
   hydrateNative,
   type PushSource,
 } from '../src/native-cache'
-import { queried } from '../src/queried'
+import { queriedQueryCore } from '../src/queried-querycore'
 
 const tick = () => new Promise((r) => setTimeout(r, 0))
 
@@ -610,7 +610,7 @@ describe('6. DEHYDRATE UNDER FIRE', () => {
 })
 
 // ---------------------------------------------------------------------------
-// 7. DIFFERENTIAL — nativeQueried vs queried (query-core), identical scripts
+// 7. DIFFERENTIAL — nativeQueried vs the retired query-core twin, identical scripts
 // ---------------------------------------------------------------------------
 
 function snapshot(sig: { (): LiveState<unknown> }): unknown {
@@ -619,7 +619,7 @@ function snapshot(sig: { (): LiveState<unknown> }): unknown {
   return v
 }
 
-async function scenarioSuccess(query: typeof nativeQueried | typeof queried) {
+async function scenarioSuccess(query: typeof nativeQueried | typeof queriedQueryCore) {
   const scope = createScope()
   const s = withScope(scope, () => query(['diff-success'], () => Promise.resolve(42)))
   const before = snapshot(s)
@@ -628,7 +628,7 @@ async function scenarioSuccess(query: typeof nativeQueried | typeof queried) {
   return [before, snapshot(s)]
 }
 
-async function scenarioError(query: typeof nativeQueried | typeof queried) {
+async function scenarioError(query: typeof nativeQueried | typeof queriedQueryCore) {
   const scope = createScope()
   const s = withScope(scope, () =>
     query(['diff-error'], () => Promise.reject(new Error('boom')), { retry: false }),
@@ -638,7 +638,7 @@ async function scenarioError(query: typeof nativeQueried | typeof queried) {
   return [snapshot(s)]
 }
 
-async function scenarioDedup(query: typeof nativeQueried | typeof queried) {
+async function scenarioDedup(query: typeof nativeQueried | typeof queriedQueryCore) {
   const scope = createScope()
   const fetcher = vi.fn(() => Promise.resolve('shared'))
   const [a, b] = withScope(scope, () => [
@@ -650,7 +650,7 @@ async function scenarioDedup(query: typeof nativeQueried | typeof queried) {
   return [snapshot(a), snapshot(b), fetcher.mock.calls.length]
 }
 
-async function scenarioRemountFresh(query: typeof nativeQueried | typeof queried) {
+async function scenarioRemountFresh(query: typeof nativeQueried | typeof queriedQueryCore) {
   const root = createScope()
   const fetcher = vi.fn(() => Promise.resolve('cached'))
   const first = childOf(root)
@@ -664,7 +664,7 @@ async function scenarioRemountFresh(query: typeof nativeQueried | typeof queried
   return [snap1, snapshot(s2), fetcher.mock.calls.length]
 }
 
-async function scenarioStaleRevalidate(query: typeof nativeQueried | typeof queried) {
+async function scenarioStaleRevalidate(query: typeof nativeQueried | typeof queriedQueryCore) {
   const root = createScope()
   let call = 0
   const fetcher = vi.fn(() => Promise.resolve(`v${++call}`))
@@ -682,7 +682,7 @@ async function scenarioStaleRevalidate(query: typeof nativeQueried | typeof quer
   return [snapFirst, snapImmediate, snapshot(s2), fetcher.mock.calls.length]
 }
 
-async function scenarioIsolatedRoots(query: typeof nativeQueried | typeof queried) {
+async function scenarioIsolatedRoots(query: typeof nativeQueried | typeof queriedQueryCore) {
   const rootA = createScope()
   const rootB = createScope()
   const fetcherA = vi.fn(() => Promise.resolve('A'))
@@ -694,8 +694,8 @@ async function scenarioIsolatedRoots(query: typeof nativeQueried | typeof querie
   return [snapshot(sA), snapshot(sB)]
 }
 
-describe('7. DIFFERENTIAL — nativeQueried vs queried, identical scripted sources', () => {
-  const scenarios: Array<[string, (q: typeof nativeQueried | typeof queried) => Promise<unknown>]> = [
+describe('7. DIFFERENTIAL — nativeQueried vs the retired query-core twin, identical scripted sources', () => {
+  const scenarios: Array<[string, (q: typeof nativeQueried | typeof queriedQueryCore) => Promise<unknown>]> = [
     ['success', scenarioSuccess],
     ['error', scenarioError],
     ['dedup', scenarioDedup],
@@ -707,7 +707,7 @@ describe('7. DIFFERENTIAL — nativeQueried vs queried, identical scripted sourc
   for (const [name, scenario] of scenarios) {
     it(`${name}: native and query-core produce the same state sequence`, async () => {
       const nativeResult = await scenario(nativeQueried)
-      const queryResult = await scenario(queried)
+      const queryResult = await scenario(queriedQueryCore)
       expect(nativeResult).toEqual(queryResult)
     })
   }

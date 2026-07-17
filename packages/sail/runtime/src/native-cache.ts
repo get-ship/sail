@@ -1,8 +1,9 @@
-// native-cache — SPIKE. A signals-native replacement for the
-// query-core-backed `queried()` (see `queried.ts`'s CONTRACT header,
-// which this file reproduces). NOT wired in: no app site, no
-// index.ts export. Exists to answer one question with numbers — see
-// `helm/data/missions/m-deck-standalone/scratch/signals-cache-spike-report.md`.
+// native-cache — the signals-native cache engine. WIRED IN as of the
+// query-slice job: `queried()` (queried.ts) and the public `query()`/
+// `mutation()` primitives (query.ts) sit directly on top of this
+// file. Originated as a spike answering one question with numbers —
+// see `helm/data/missions/m-deck-standalone/scratch/signals-cache-spike-report.md`
+// — then ruled the engine in `data-arch-seed.md` ("CACHE = BUILD").
 //
 // The bet: a cache entry IS a signal homed on the owner tree. A pull
 // (`nativeQueried`) fills the entry once and lets it go stale; a push
@@ -35,10 +36,19 @@
 //      exactly), never a module singleton. Disposed with the root.
 //   5. UNSUBSCRIBE — registered via `onCleanup` on the CALLING scope.
 
-import type { QueryKey } from '@tanstack/query-core'
 import { signal, type Signal } from './signal'
 import { onCleanup, currentScope, createScope, type EffectScope } from './effect-scope'
 import type { LiveState } from './live'
+
+/** A cache identity: client-root + static member-path segments +
+ *  (optionally) a tail of call-arg values. Compiler-derived, never
+ *  handwritten by an author — see query.ts's module header. Owned
+ *  here rather than imported from `@tanstack/query-core` so the real
+ *  engine has zero dependency on that package; only the retired
+ *  differential-test twin (`queried-querycore.ts`) still imports
+ *  query-core's own `QueryKey`, which is structurally the same
+ *  shape (`readonly unknown[]`). */
+export type QueryKey = readonly unknown[]
 
 // ---------------------------------------------------------------------------
 // Cache entry
