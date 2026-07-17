@@ -13,6 +13,13 @@ export default defineConfig({
       // dynamic-imported compiled modules can find the runtime.
       '@ship/sail-runtime/internal': resolve(__dirname, 'src/internal.ts'),
       '@ship/sail-runtime': resolve(__dirname, 'src/index.ts'),
+      // The mount-route-bug repro fixture (test/fixtures/repro-route/page.sail)
+      // interpolates text, so its compiled module emits a `hydrate()` that
+      // imports `collectTextOpens`/`hydrateText` from `@ship/sail-dom` — the
+      // existing integration fixtures don't hit this because none of them
+      // interpolate text at the top level. Point it at the local source like
+      // the runtime aliases above.
+      '@ship/sail-dom': resolve(__dirname, '../dom/src/index.ts'),
     },
   },
   test: {

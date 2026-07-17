@@ -11,6 +11,7 @@ mod controller_parse_tests;
 pub mod controller_purity;
 pub mod light_shadow_root;
 pub mod paired_controller;
+pub mod mount_ambient_shadow;
 pub mod css_token;
 pub mod sx_vars;
 pub mod lint_overrides;
@@ -73,6 +74,7 @@ pub fn run(
         pure_derived::check(c)?;
         light_shadow_root::check(Some(c))?;
         query_keys::check(&c.source)?;
+        mount_ambient_shadow::check(&c.source)?;
     }
     // Scope-bound checks need the controller's declared names (`scope` /
     // `derived` / `use`). We have them whenever a controller is resolved —
@@ -204,6 +206,7 @@ pub fn collect(
         push(pure_derived::check(c), source, &mut diags);
         push(light_shadow_root::check(Some(c)), source, &mut diags);
         push(query_keys::check(&c.source), source, &mut diags);
+        push(mount_ambient_shadow::check(&c.source), source, &mut diags);
     }
     // Scope checks run whenever a controller is resolved (inline SFC OR paired
     // file) — not only when a `source_path` is present. See `run` above: the
