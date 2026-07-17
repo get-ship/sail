@@ -221,6 +221,23 @@ impl TemplateEmitter {
         h.line("anchor,");
         h.line("test: () => {");
         h.enter();
+        // D5: subscribe to every branch condition's row-field deps so a
+        // keyed `{#for}` row reuse (which reassigns `$scope.<var>` and
+        // bumps the row's `__v_<field>` signals rather than re-running
+        // this closure's caller) still re-fires this `bindIf` test and
+        // re-selects the matching branch. Without this the discriminant
+        // reads the row directly with no signal subscription — see
+        // `for_version_stmt` doc comment.
+        let combined_source = instr
+            .branches
+            .iter()
+            .map(|b| b.cond.source.as_str())
+            .collect::<Vec<_>>()
+            .join(" ; ");
+        let fvs = self.for_version_stmt(&combined_source);
+        if !fvs.is_empty() {
+            h.line(&fvs);
+        }
         for (i, b) in instr.branches.iter().enumerate() {
             let rw = self.rw(&b.cond.source, &[]);
             h.line(&format!("if ({rw}) return {i};"));
@@ -609,6 +626,18 @@ impl TemplateEmitter {
         h.line("anchor,");
         h.line("test: () => {");
         h.enter();
+        // D5: subscribe to the discriminant's (and each case test's)
+        // row-field deps — same rationale as `emit_if` above. A keyed
+        // `{#for}` row reuse only bumps `__v_<field>` signals; without
+        // reading them here this `bindIf` test never re-fires and the
+        // stale branch stays mounted.
+        let mut combined_parts: Vec<&str> = vec![instr.discriminant.source.as_str()];
+        combined_parts.extend(instr.cases.iter().map(|c| c.test.source.as_str()));
+        let combined_source = combined_parts.join(" ; ");
+        let fvs = self.for_version_stmt(&combined_source);
+        if !fvs.is_empty() {
+            h.line(&fvs);
+        }
         h.line(&format!("const __d = ({disc_rw});"));
         for (i, c) in instr.cases.iter().enumerate() {
             let c_rw = self.rw(&c.test.source, &[]);

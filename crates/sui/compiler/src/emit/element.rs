@@ -16,9 +16,129 @@
 //! text, `<data>`, or a controller mean the source is a COMPONENT — the
 //! error says so.
 
+use crate::diagnostics::Span;
 use crate::ir::*;
 use crate::CompileError;
 use serde_json::{json, Value};
+
+/// Spans on `Program`/`Instr` are byte offsets into the PREPROCESSED source
+/// (`parse::preprocess::preprocess_impl`): brace-attr quoting, self-close
+/// expansion, `sx=`/layout lowering, and any injected `<style>` block can
+/// all change the text's length ahead of a given position. Every other
+/// diagnostic renderer (`CompileError::render`, `Diagnostic::from_compile_error`,
+/// the wasm surface) is handed the AUTHOR'S ORIGINAL source, not that
+/// preprocessed copy — so reusing an IR span as-is can point past its end.
+///
+/// The root-element structural checks below therefore locate their span by
+/// scanning the ORIGINAL source text directly, rather than trusting the
+/// (possibly-shifted) IR span. This sidesteps the mismatch entirely instead
+/// of trying to reverse-map an offset.
+///
+/// Byte offset just past the top-level `<scope>…</scope>` / `<style>…</style>`
+/// blocks (in whatever order/repetition they appear, leading the source) —
+/// where an element's template body is expected to start. Falls back to 0
+/// when neither is present, which is always in-bounds.
+fn skip_scope_and_style(source: &str) -> usize {
+    let mut i = 0usize;
+    loop {
+        let rest = source[i..].trim_start();
+        let ws = source[i..].len() - rest.len();
+        let close = if rest.starts_with("<scope") {
+            "</scope>"
+        } else if rest.starts_with("<style") {
+            "</style>"
+        } else {
+            return i + ws;
+        };
+        match source[i + ws..].find(close) {
+            Some(off) => i = i + ws + off + close.len(),
+            None => return i + ws,
+        }
+    }
+}
+
+/// The tag-name span (just `span` in `<span …>`) and the byte offset just
+/// past the element's matching close tag, for every element found at the
+/// top level of `source` starting at `from` — comments and whitespace text
+/// are skipped, nested content is walked past as one unit via a depth
+/// count. A pragmatic scan (not a full HTML parser): good enough for the
+/// flat, static shape element-mode templates are required to have.
+fn top_level_element_spans(source: &str, from: usize) -> Vec<(Span, usize)> {
+    let mut out = Vec::new();
+    let len = source.len();
+    let mut i = from.min(len);
+    while i < len {
+        let rest = &source[i..];
+        let ws = rest.len() - rest.trim_start().len();
+        i += ws;
+        if i >= len {
+            break;
+        }
+        if source.as_bytes()[i] != b'<' {
+            // Stray top-level text — not an element; skip to the next tag.
+            match source[i..].find('<') {
+                Some(off) => i += off,
+                None => break,
+            }
+            continue;
+        }
+        if source[i..].starts_with("<!--") {
+            match source[i..].find("-->") {
+                Some(off) => i += off + 3,
+                None => break,
+            }
+            continue;
+        }
+        let Some(name_end_off) = source[i + 1..]
+            .find(|c: char| c.is_whitespace() || c == '>' || c == '/')
+        else {
+            break;
+        };
+        let name_start = i + 1;
+        let name_end = name_start + name_end_off;
+        let tag = &source[name_start..name_end];
+        let Some(gt_off) = source[i..].find('>') else {
+            break;
+        };
+        let open_end = i + gt_off + 1;
+        let self_closed = source[..open_end].ends_with("/>") || is_void_element(tag);
+        let name_span = Span::new(name_start, name_end);
+        if self_closed {
+            out.push((name_span, open_end));
+            i = open_end;
+            continue;
+        }
+        let open_prefix = format!("<{tag}");
+        let close_tag = format!("</{tag}>");
+        let mut depth = 1usize;
+        let mut j = open_end;
+        let end = loop {
+            let next_open = source[j..].find(&open_prefix).map(|o| j + o).filter(|&o| {
+                source.as_bytes().get(o + open_prefix.len()).is_some_and(|b| {
+                    matches!(b, b' ' | b'\t' | b'\n' | b'\r' | b'>' | b'/')
+                })
+            });
+            let next_close = source[j..].find(&close_tag).map(|o| j + o);
+            match (next_open, next_close) {
+                (Some(no), Some(nc)) if no < nc => {
+                    depth += 1;
+                    j = no + open_prefix.len();
+                }
+                (_, Some(nc)) => {
+                    depth -= 1;
+                    j = nc + close_tag.len();
+                    if depth == 0 {
+                        break j;
+                    }
+                }
+                _ => break len,
+            }
+        };
+        out.push((name_span, end));
+        i = end;
+    }
+    out
+}
 
 /// The element-mode artifacts.
 #[derive(Debug, Clone)]
@@ -40,7 +160,7 @@ pub struct ElementOutput {
     pub manifest: Value,
 }
 
-pub fn emit_element(program: &Program, name: &str) -> Result<ElementOutput, CompileError> {
+pub fn emit_element(program: &Program, source: &str, name: &str) -> Result<ElementOutput, CompileError> {
     // L1 element names are lowercase words, optionally hyphen-joined
     // (`badge`, `empty-state`, `date-picker`). The naming seam is the STDLIB
     // REGISTRY, not the hyphen: a tag in the registry compiles away (L1); a
@@ -66,10 +186,15 @@ pub fn emit_element(program: &Program, name: &str) -> Result<ElementOutput, Comp
         Instr::Element(el) => Some(el),
         _ => None,
     });
+    // The template body starts right after any leading `<scope>`/`<style>`
+    // blocks — the sensible location to point at when there's no root
+    // element there to point at instead.
+    let body_start = skip_scope_and_style(source);
     let Some(root) = roots.next() else {
         return Err(CompileError::new(
             "element mode: the template needs exactly one root element",
-        ));
+        )
+        .with_span(Span::point(body_start)));
     };
     if roots.next().is_some()
         || program.template.iter().any(|i| match i {
@@ -78,10 +203,23 @@ pub fn emit_element(program: &Program, name: &str) -> Result<ElementOutput, Comp
             _ => true,
         })
     {
+        // Point at whatever comes after the (valid) first root — a second
+        // root element if there is one, else the end of the first root's
+        // subtree (where the offending stray text/control-flow begins).
+        // Located by scanning the ORIGINAL source text rather than reusing
+        // an IR span, which is relative to the PREPROCESSED source and can
+        // land past this source's end (see the module-level span note).
+        let elements = top_level_element_spans(source, body_start);
+        let span = match elements.as_slice() {
+            [_, (second, _), ..] => *second,
+            [(_, first_end)] => Span::point(*first_end),
+            [] => Span::point(body_start),
+        };
         return Err(CompileError::new(
             "element mode: the template must be ONE static root element \
              (control flow at the top level means this is a component)",
-        ));
+        )
+        .with_span(span));
     }
 
     let native = root.tag == name;

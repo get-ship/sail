@@ -57,6 +57,58 @@ pub const HTML_SECURITY_HEADERS: &[(&str, &str)] = &[
     ),
 ];
 
+/// The CSP body shared by every `connect-src` variant — everything except the
+/// `connect-src` clause itself, which [`connect_src_directive`] derives from
+/// a package's resolved `"network"` allowlist
+/// (`sui_compiler::check::policy::Policy::network_for` /
+/// `PolicyResolution::network`). Split out so [`html_security_headers_for`]
+/// cannot drift from [`HTML_SECURITY_HEADERS`]'s hand-written string on any
+/// clause OTHER than `connect-src`.
+const CSP_PREFIX: &str = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:;";
+const CSP_SUFFIX: &str = "frame-ancestors 'self'";
+
+/// Derive the `connect-src` CSP clause from a package's resolved `"network"`
+/// per-origin allowlist — the SAME list the `sui-controller-no-ambient-
+/// authority` lint checks fetch/WebSocket/EventSource targets against
+/// (`sui_compiler::check::policy::Policy::network_for`). Empty list (the
+/// default: no `sui.config.json`, or one that never declares `"network"`)
+/// yields `connect-src 'self'` — byte-identical to [`HTML_SECURITY_HEADERS`]'s
+/// hardcoded clause, so this is a strict generalization, not a behavior
+/// change for anyone who doesn't opt in. `"self"` in the list contributes the
+/// CSP `'self'` keyword; any other entry (`"https://api.example.com"`) is
+/// already an origin and is emitted verbatim.
+///
+/// NOT YET WIRED to `html_view`/`DeckResponse` — deck-core's request path
+/// (`assets.rs`'s `serve_shell`/`html_view` call, deck-core/src/assets.rs:316)
+/// has no per-package resolved `"network"` list in hand today; the SPA shell
+/// HTML deck-core serves isn't scoped to one `.sui` package, so the seam that
+/// would supply this list does not exist yet. This function is the
+/// correctly-parameterized piece; wiring it in is a follow-up.
+pub fn connect_src_directive(network: &[String]) -> String {
+    if network.is_empty() {
+        return "connect-src 'self'".to_string();
+    }
+    let parts: Vec<String> = network
+        .iter()
+        .map(|o| if o == "self" { "'self'".to_string() } else { o.clone() })
+        .collect();
+    format!("connect-src {}", parts.join(" "))
+}
+
+/// The full HTML security header set with `connect-src` derived from
+/// `network` (see [`connect_src_directive`]) instead of the hardcoded
+/// `'self'`. Same names/order/every-other-value as [`HTML_SECURITY_HEADERS`];
+/// `network: &[]` reproduces it byte-for-byte (pinned by
+/// `network_aware_headers_match_the_default_when_network_is_empty`).
+pub fn html_security_headers_for(network: &[String]) -> Vec<(&'static str, String)> {
+    let csp = format!("{CSP_PREFIX} {}; {CSP_SUFFIX}", connect_src_directive(network));
+    vec![
+        ("X-Frame-Options", "SAMEORIGIN".to_string()),
+        ("X-Content-Type-Options", "nosniff".to_string()),
+        ("Content-Security-Policy", csp),
+    ]
+}
+
 
 impl CachePolicy {
     fn header(self, mode: DaemonMode) -> &'static str {
@@ -321,6 +373,42 @@ mod tests {
             "extra_headers count drifted from HTML_SECURITY_HEADERS.len() — \
              either `html_view` added an extra header or the const shrank",
         );
+    }
+
+    // ── network-aware CSP (connect-src derivation) ────────────────────────────
+
+    #[test]
+    fn network_aware_headers_match_the_default_when_network_is_empty() {
+        let derived = html_security_headers_for(&[]);
+        let expected: Vec<(&str, String)> =
+            HTML_SECURITY_HEADERS.iter().map(|(k, v)| (*k, v.to_string())).collect();
+        assert_eq!(derived, expected, "empty network must reproduce the hardcoded default exactly");
+    }
+
+    #[test]
+    fn network_aware_headers_name_the_granted_origins() {
+        let network = vec!["https://api.example.com".to_string()];
+        let headers = html_security_headers_for(&network);
+        let csp = headers.iter().find(|(k, _)| *k == "Content-Security-Policy").unwrap().1.clone();
+        assert!(
+            csp.contains("connect-src https://api.example.com"),
+            "connect-src must name the granted origin verbatim: {csp}"
+        );
+        assert!(!csp.contains("connect-src 'self'"), "the default 'self' must not leak in: {csp}");
+        // Every other clause is unchanged.
+        assert!(csp.contains("default-src 'self'"));
+        assert!(csp.contains("frame-ancestors 'self'"));
+    }
+
+    #[test]
+    fn network_aware_headers_translate_self_to_the_csp_keyword() {
+        let network = vec!["self".to_string()];
+        let csp = html_security_headers_for(&network)
+            .into_iter()
+            .find(|(k, _)| *k == "Content-Security-Policy")
+            .unwrap()
+            .1;
+        assert!(csp.contains("connect-src 'self'"), "{csp}");
     }
 
     #[test]

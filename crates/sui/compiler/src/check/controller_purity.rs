@@ -26,10 +26,30 @@ pub fn check(
     // rule's natural severity is preserved for everyone who consumes
     // the lint directly (the LSP, `sui_lint` CLI); the override only
     // affects this build-time gate.
-    let findings = crate::check::lint_overrides::apply_overrides(
+    let mut findings = crate::check::lint_overrides::apply_overrides(
         sui_lint::lint_controller_source(&controller_path, &source),
         overrides,
     );
+    // `sui-controller-no-ambient-authority` is `sui.config.json`
+    // "network"-aware (the fetch/WebSocket/EventSource per-origin allowlist),
+    // but `lint_controller_source` (above) dispatches through the generic,
+    // config-blind `CONTROLLER_RULES` table — it always ran the rule's
+    // default (empty-allowlist) entry. Drop those findings and re-run the
+    // network-aware `check_confined` with the resolved allowlist
+    // (`Policy::network_for`), same fix as `check::collect`'s identical
+    // splice — this gate and `collect` are two independent call sites into
+    // the same generic table, so both need it.
+    findings.retain(|f| f.rule != sui_lint::rules::controller_no_ambient_authority::RULE_ID);
+    let network = crate::check::policy::Policy::network_for(&controller_path);
+    let ambient_findings = crate::check::lint_overrides::apply_overrides(
+        sui_lint::rules::controller_no_ambient_authority::check_confined(
+            &controller_path,
+            &source,
+            &network,
+        ),
+        overrides,
+    );
+    findings.extend(ambient_findings);
     // The build gate fails only on Error-severity findings. Warnings surface
     // through the LSP / `sui-lint` CLI (which call `lint_controller_source`
     // directly) but don't break compilation — so a rule can ship as a
