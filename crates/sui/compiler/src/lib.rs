@@ -37,7 +37,7 @@ pub mod check;
 pub mod diagnostics;
 pub mod emit;
 pub mod ir;
-pub mod islands;
+pub mod used_tags;
 pub mod keys;
 pub mod lower;
 pub mod out_layout;

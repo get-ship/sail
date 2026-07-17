@@ -81,7 +81,7 @@ pub fn lower(program: &Program, is_view: bool) -> Result<Lowered, CompileError> 
     }
     let mut depth = 0;
     walk_instrs(&program.template, &mut out, is_view, &mut depth)?;
-    out.used_component_tags = crate::islands::collect_used_tags(&program.template);
+    out.used_component_tags = crate::used_tags::collect_used_tags(&program.template);
     Ok(out)
 }
 
