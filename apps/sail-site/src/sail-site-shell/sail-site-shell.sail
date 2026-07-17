@@ -71,14 +71,14 @@ export default controller(() => {
     // data-theme/.dark; idempotent, so re-running per navigation is free.
     applyTheme(readStoredTheme())
 
-    // The umbrella landing, the component catalog, and the tutorial LESSON
-    // pages own the full width (no sidebar). The /tutorial index is a docs
-    // page and keeps the rail; a lesson is a two-pane workbench and needs
-    // the whole viewport.
+    // The component catalog and the tutorial LESSON pages own the full width
+    // (no sidebar). The /tutorial index is a docs page and keeps the rail; a
+    // lesson is a two-pane workbench and needs the whole viewport. The umbrella
+    // landing (design 2a) is a docs page too — top switcher + rail + content,
+    // the same chrome as every other page — so it no longer opts out.
     const fullscreen = derived(() => {
       const p = path()
       return (
-        p === '/' ||
         p === '/components' ||
         p.startsWith('/components/') ||
         p.startsWith('/tutorial/')
@@ -171,7 +171,7 @@ export default controller(() => {
   {:else if !fullscreen()}
     <navbar placement="rail" bordered sticky offset="14">
       <label>Start here</label>
-      <a href="/overview" aria-current={path() === '/overview' ? 'page' : null}>Introduction</a>
+      <a href="/overview" aria-current={path() === '/' || path() === '/overview' ? 'page' : null}>Introduction</a>
       <a href="/getting-started" aria-current={path() === '/getting-started' ? 'page' : null}>Installation</a>
       <a href="/why" aria-current={path() === '/why' ? 'page' : null}>Why SAIL</a>
       <a href="/tutorial" aria-current={path().startsWith('/tutorial') ? 'page' : null}>Tutorial</a>
