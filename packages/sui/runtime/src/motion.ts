@@ -137,30 +137,108 @@ function applyFinalStyle(el: Element, cfg: MotionConfig): void {
   }
 }
 
-function buildKeyframes(cfg: MotionConfig, el: HTMLElement): Record<string, Array<number | string>> {
+/** `x`/`y` are motion/mini's own animatable-value names — NOT CSS
+ *  properties. `motion/mini`'s `NativeAnimation` (unlike the full
+ *  `motion` build's `visualElement`) does not map them to a transform;
+ *  it hands the key straight to `element.animate({ x: [...] }, ...)`.
+ *  Browsers accept unknown WAAPI keyframe properties silently — no
+ *  error, no effect — so a `translate-x`/`translate-y` motion "ran"
+ *  forever at `iterations: Infinity` while moving nothing. The one CSS
+ *  property that actually moves an HTML element on both axes is
+ *  `translate` (distinct from the `transform` shorthand, same as
+ *  `rotate`/`scale` already used here), so every translate-x/y preset
+ *  resolves through it instead. */
+function axisRange(cfg: MotionConfig, el: HTMLElement): [number, number] {
   if (cfg.preset === 'bounce') {
     if (cfg.property === 'translate-y') {
       const h = el.getBoundingClientRect().height || el.offsetHeight || 8
-      return { y: [0, -h] }
+      return [0, -h]
     }
     if (cfg.property === 'translate-x') {
       const w = el.getBoundingClientRect().width || el.offsetWidth || 8
-      return { x: [0, -w] }
+      return [0, -w]
     }
+  }
+  return [cfg.from ?? REST_VALUE[cfg.property], cfg.to ?? FINAL_VALUE[cfg.property]]
+}
+
+function buildKeyframes(cfg: MotionConfig, el: HTMLElement): Record<string, Array<number | string>> {
+  if (cfg.property === 'translate-y' || cfg.property === 'translate-x') {
+    const [from, to] = axisRange(cfg, el)
+    // Single-axis case: the other component is pinned at 0 for both
+    // keyframes — the same shape `applyRestStyle`/`applyFinalStyle`
+    // already write to `el.style.translate`.
+    return cfg.property === 'translate-y'
+      ? { translate: [`0px ${from}px`, `0px ${to}px`] }
+      : { translate: [`${from}px 0px`, `${to}px 0px`] }
   }
   const from = cfg.from ?? REST_VALUE[cfg.property]
   const to = cfg.to ?? FINAL_VALUE[cfg.property]
   switch (cfg.property) {
     case 'opacity': return { opacity: [from, to] }
     case 'scale': return { scale: [from, to] }
-    case 'translate-y': return { y: [from, to] }
-    case 'translate-x': return { x: [from, to] }
-    // CSS's native `rotate` property (unlike the `x`/`y`/`scale` transform
+    // CSS's native `rotate` property (unlike the `translate`/`scale`
     // shorthands) requires an angle, not a bare number — WAAPI rejects
     // `{ rotate: [-6, 0] }` with "Invalid keyframe value for property
-    // rotate". Every other property in this switch is either unitless by
-    // spec (opacity, scale) or auto-unit'd by motion/mini (x/y → px).
+    // rotate". Every other property in this switch is unitless by spec
+    // (opacity, scale).
     case 'rotate': return { rotate: [`${from}deg`, `${to}deg`] }
+  }
+}
+
+/** Two motions on one element that both animate `translate` (one
+ *  `translate-x`, one `translate-y`) would otherwise fight: WAAPI has
+ *  exactly one `translate` property per element, and motion/mini's
+ *  interruption contract stops whichever animation on that property
+ *  was created first the moment the second is created (see
+ *  `animateElements`'s per-key animation map) — so the two `animate()`
+ *  calls the naive per-motion loop would issue don't compose, the
+ *  first one is cancelled before it ever plays. The honest fix is to
+ *  merge both axes into ONE `translate` keyframe track up front. */
+function buildMergedTranslateKeyframes(
+  xCfg: MotionConfig | undefined,
+  yCfg: MotionConfig | undefined,
+  el: HTMLElement,
+): Record<string, Array<string>> {
+  const [xFrom, xTo] = xCfg ? axisRange(xCfg, el) : [0, 0]
+  const [yFrom, yTo] = yCfg ? axisRange(yCfg, el) : [0, 0]
+  return { translate: [`${xFrom}px ${yFrom}px`, `${xTo}px ${yTo}px`] }
+}
+
+/** The full set of CSS properties this runtime's preset table can ever
+ *  emit as a WAAPI keyframe key. `SILENCE IS THE BUG`: a keyframe
+ *  property outside this set animates zero pixels/opacity/anything on
+ *  an HTML element — WAAPI accepts (and ignores) unknown keyframe
+ *  properties with no error, so a bug here would otherwise ship
+ *  invisibly, exactly like the `x`/`y` defect this guards against. */
+const ANIMATABLE_KEYFRAME_PROPERTIES = new Set(['opacity', 'scale', 'translate', 'rotate'])
+
+function warnIfNotAnimatable(el: Element, keyframes: Record<string, Array<number | string>>): void {
+  const supports = typeof CSS !== 'undefined' && typeof CSS.supports === 'function' ? CSS.supports : null
+  for (const prop of Object.keys(keyframes)) {
+    if (!ANIMATABLE_KEYFRAME_PROPERTIES.has(prop)) {
+      console.warn(
+        `[sui/motion] keyframe property "${prop}" is not one of this runtime's known-animatable ` +
+        `properties (${[...ANIMATABLE_KEYFRAME_PROPERTIES].join(', ')}) — WAAPI accepts unknown ` +
+        `keyframe properties silently, so this animation will run forever and move nothing.`,
+        el,
+      )
+      continue
+    }
+    // Belt-and-suspenders: an allow-listed property with a malformed
+    // value (e.g. a unitless `rotate` regression) is just as silent —
+    // `CSS.supports` catches the value shape even when the property
+    // name itself is fine.
+    if (!supports) continue
+    for (const value of keyframes[prop]!) {
+      if (!supports(prop, String(value))) {
+        console.warn(
+          `[sui/motion] keyframe value ${JSON.stringify(value)} is not valid for CSS property ` +
+          `"${prop}" — the animation will silently no-op.`,
+          el,
+        )
+      }
+    }
   }
 }
 
@@ -230,9 +308,38 @@ function createAnimations(
   const controls: AnimControls[] = []
   const stagger = config.stagger
   const total = config.motions.length
+  const xIndex = config.motions.findIndex((m) => m.property === 'translate-x')
+  const yIndex = config.motions.findIndex((m) => m.property === 'translate-y')
+  const merged = new Set<number>()
+
+  if (xIndex !== -1 && yIndex !== -1) {
+    const xCfg = config.motions[xIndex]!
+    const yCfg = config.motions[yIndex]!
+    const keyframes = buildMergedTranslateKeyframes(xCfg, yCfg, el)
+    warnIfNotAnimatable(el, keyframes)
+    // The transition (duration/easing/iterations/stagger) is taken from
+    // whichever axis is authored first — one WAAPI `translate` track
+    // gets one transition, so mismatched x/y presets on the same
+    // element resolve to the earlier motion's physics. Authoring the
+    // same preset on both axes (the common case) makes this moot.
+    const leadIndex = Math.min(xIndex, yIndex)
+    const transition = buildTransition(config.motions[leadIndex]!, leadIndex, total, stagger)
+    try {
+      const c = animate(el, keyframes, transition as Parameters<typeof animate>[2])
+      controls.push(c as unknown as AnimControls)
+    } catch {
+      applyFinalStyle(el, xCfg)
+      applyFinalStyle(el, yCfg)
+    }
+    merged.add(xIndex)
+    merged.add(yIndex)
+  }
+
   for (let i = 0; i < total; i++) {
+    if (merged.has(i)) continue
     const cfg = config.motions[i]!
     const keyframes = buildKeyframes(cfg, el)
+    warnIfNotAnimatable(el, keyframes)
     const transition = buildTransition(cfg, i, total, stagger)
     try {
       const c = animate(el, keyframes, transition as Parameters<typeof animate>[2])
@@ -514,6 +621,17 @@ export function __buildKeyframesForTest(
   el: HTMLElement,
 ): Record<string, Array<number | string>> {
   return buildKeyframes(cfg, el)
+}
+
+/** Test seam: exposes the SILENCE-IS-THE-BUG guard directly so tests can
+ *  assert its warning contract (names the property + the element)
+ *  without having to reconstruct the historical `x`/`y` defect through
+ *  a broken fixture. NOT re-exported from `@ship/sui-runtime`. */
+export function __warnIfNotAnimatableForTest(
+  el: Element,
+  keyframes: Record<string, Array<number | string>>,
+): void {
+  warnIfNotAnimatable(el, keyframes)
 }
 
 /** Test seam: the bound `runLeave` uses to guarantee removal is never

@@ -72,8 +72,18 @@ attach(bandTrack, {
   }],
 })
 console.log('normal motion: calls =', calls.length, 'preset =', calls[0]?.cfg.motions[0].preset)
+console.log('keyframes handed to animate():', JSON.stringify(mod.__buildKeyframesForTest(
+  { property: 'translate-x', preset: 'marquee', kind: 'tween', duration: 7.5, from: 0, to: -1200 },
+  bandTrack,
+)))
 await new Promise(r => setTimeout(r, 100))
-console.log('track transform after 100ms:', bandTrack.style.transform)
+// happy-dom stubs `element.animate()` — it does not run a real compositor,
+// so it cannot demonstrate PIXELS moving (that's apps/sui-site/test/
+// motion.spec.ts's job, in a real browser). What this script CAN and does
+// pin: the keyframe shape handed to motion/mini. The bug this script exists
+// to catch was `{ x: [...] }`/`{ y: [...] }` — motion/mini's own value
+// names, not CSS properties on an HTML element, so WAAPI silently ignored
+// them forever. The `translate` key logged above is the fix.
 setReduced(true)
 calls = []
 const bandTrack2 = w.document.createElement('div')

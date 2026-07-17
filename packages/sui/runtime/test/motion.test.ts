@@ -14,7 +14,12 @@
 //     `linear(...)` easing string, NOT a dropped `type: 'spring'` flag
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { __sui_motion_attach, __buildTransitionForTest, __buildKeyframesForTest } from '../src/motion'
+import {
+  __sui_motion_attach,
+  __buildTransitionForTest,
+  __buildKeyframesForTest,
+  __warnIfNotAnimatableForTest,
+} from '../src/motion'
 import type { MotionAttachConfig, MotionConfig } from '../src/motion'
 
 if (typeof window !== 'undefined' && typeof window.matchMedia === 'undefined') {
@@ -311,12 +316,6 @@ describe('motion runtime — rotate preset produces WAAPI-valid keyframes', () =
         dummyEl,
       ).opacity,
     ).toEqual([1, 0]) // opacity: unitless
-    for (const v of __buildKeyframesForTest(
-      { property: 'translate-y', preset: 'spring:deliberate', kind: 'spring' },
-      dummyEl,
-    ).y!) {
-      expect(typeof v).toBe('number') // x/y: auto-unit'd by motion/mini, stay numeric here
-    }
   })
 
   it('reaches motion/mini as an actual keyframe object with deg-suffixed rotate values (end-to-end, mocked animate)', async () => {
@@ -342,6 +341,141 @@ describe('motion runtime — rotate preset produces WAAPI-valid keyframes', () =
     dispose()
     vi.doUnmock('motion/mini')
     vi.resetModules()
+  })
+})
+
+describe('motion runtime — translate-x/y emit the `translate` CSS property, not `x`/`y`', () => {
+  // `x`/`y` are motion/mini's own value names, not CSS properties on an
+  // HTML element — WAAPI silently accepts and no-ops unknown keyframe
+  // properties, so the loop "played" forever and moved nothing. The
+  // fix: translate-x/y resolve through the `translate` CSS property
+  // (already what the REST/FINAL inline styles use), unit-suffixed.
+  const dummyEl = document.createElement('div')
+
+  it('translate-y emits a `translate` keyframe with px units, y-axis only', () => {
+    const kf = __buildKeyframesForTest(
+      { property: 'translate-y', preset: 'spring:gentle', kind: 'spring', from: 16, to: 0 },
+      dummyEl,
+    )
+    expect(kf.x).toBeUndefined()
+    expect(kf.y).toBeUndefined()
+    expect(kf.translate).toEqual(['0px 16px', '0px 0px'])
+  })
+
+  it('translate-x emits a `translate` keyframe with px units, x-axis only', () => {
+    const kf = __buildKeyframesForTest(
+      { property: 'translate-x', preset: 'spring:deliberate', kind: 'spring', from: 16, to: 0 },
+      dummyEl,
+    )
+    expect(kf.translate).toEqual(['16px 0px', '0px 0px'])
+  })
+
+  it('a bounce preset also resolves through `translate`, not raw `x`/`y`', () => {
+    const el = document.createElement('div')
+    Object.defineProperty(el, 'offsetHeight', { value: 10, configurable: true })
+    Object.defineProperty(el, 'offsetWidth', { value: 20, configurable: true })
+    const kfY = __buildKeyframesForTest({ property: 'translate-y', preset: 'bounce', kind: 'tween' }, el)
+    expect(kfY.translate).toEqual(['0px 0px', '0px -10px'])
+    const kfX = __buildKeyframesForTest({ property: 'translate-x', preset: 'bounce', kind: 'tween' }, el)
+    expect(kfX.translate).toEqual(['0px 0px', '-20px 0px'])
+  })
+
+  it('reaches motion/mini as `translate`, and MOVES: sampled easing keyframes differ (end-to-end, mocked animate)', async () => {
+    vi.resetModules()
+    const calls: Array<{ keyframes: Record<string, unknown> }> = []
+    vi.doMock('motion/mini', () => ({
+      animate: (_el: unknown, keyframes: Record<string, unknown>) => {
+        calls.push({ keyframes })
+        return { stop: () => {}, cancel: () => {}, finished: Promise.resolve() }
+      },
+    }))
+    const { __sui_motion_attach: attach } = await import('../src/motion')
+    setReducedMotion(false)
+    const el = host()
+    const dispose = attach(el, {
+      trigger: 'loop',
+      motions: [{ property: 'translate-y', preset: 'spring:gentle', kind: 'spring', from: 16, to: 0 }],
+    })
+    expect(calls.length).toBe(1)
+    expect(calls[0]!.keyframes.x).toBeUndefined()
+    expect(calls[0]!.keyframes.y).toBeUndefined()
+    expect(calls[0]!.keyframes.translate).toEqual(['0px 16px', '0px 0px'])
+    dispose()
+    vi.doUnmock('motion/mini')
+    vi.resetModules()
+  })
+
+  describe('axis-merge: translate-x and translate-y on one element compose into one track', () => {
+    it('merges both axes into a single `translate` animate() call instead of two fighting ones', async () => {
+      vi.resetModules()
+      const calls: Array<{ keyframes: Record<string, unknown>; transition: unknown }> = []
+      vi.doMock('motion/mini', () => ({
+        animate: (_el: unknown, keyframes: Record<string, unknown>, transition: unknown) => {
+          calls.push({ keyframes, transition })
+          return { stop: () => {}, cancel: () => {}, finished: Promise.resolve() }
+        },
+      }))
+      const { __sui_motion_attach: attach } = await import('../src/motion')
+      setReducedMotion(false)
+      const el = host()
+      const dispose = attach(el, {
+        trigger: 'loop',
+        motions: [
+          { property: 'translate-x', preset: 'spring:deliberate', kind: 'tween', duration: 0.3, from: 8, to: 0 },
+          { property: 'translate-y', preset: 'spring:gentle', kind: 'tween', duration: 0.3, from: 16, to: 0 },
+        ],
+      })
+      // ONE animate() call for both motions, not two racing ones.
+      expect(calls.length).toBe(1)
+      expect(calls[0]!.keyframes.translate).toEqual(['8px 16px', '0px 0px'])
+      dispose()
+      vi.doUnmock('motion/mini')
+      vi.resetModules()
+    })
+
+    it('a single-axis motion (no partner) still animates alone, unmerged', () => {
+      setReducedMotion(false)
+      const el = host()
+      const dispose = __sui_motion_attach(el, {
+        trigger: 'loop',
+        motions: [{ property: 'translate-y', preset: 'spring:gentle', kind: 'tween', duration: 0.3, from: 16, to: 0 }],
+      })
+      expect(typeof dispose).toBe('function')
+      dispose()
+    })
+  })
+})
+
+describe('motion runtime — SILENCE IS THE BUG: dev-mode warn on a non-animatable keyframe property', () => {
+  it('warns naming the property and the element when a keyframe property is not in the known-animatable set', () => {
+    // Asserts the guard's contract directly against the exact historical
+    // defect shape (`{ x: [...], y: [...] }` — motion/mini's own value
+    // names, not CSS properties on an HTML element) rather than trying
+    // to reconstruct a broken fixture through the (now-fixed) builder.
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const el = host()
+    __warnIfNotAnimatableForTest(el, { x: [16, 0], y: [16, 0] })
+    expect(warnSpy).toHaveBeenCalledTimes(2) // one per bad property
+    expect(String(warnSpy.mock.calls[0]![0])).toContain('"x"')
+    expect(String(warnSpy.mock.calls[1]![0])).toContain('"y"')
+    expect(warnSpy.mock.calls[0]![1]).toBe(el)
+    warnSpy.mockRestore()
+  })
+
+  it('does NOT warn on the fixed translate/rotate/scale/opacity keyframes the preset table actually emits', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    setReducedMotion(false)
+    const el = host()
+    const dispose = __sui_motion_attach(el, {
+      trigger: 'loop',
+      motions: [
+        { property: 'translate-y', preset: 'spring:gentle', kind: 'tween', duration: 0.3, from: 16, to: 0 },
+        { property: 'opacity', preset: 'fade', kind: 'tween', duration: 0.3, from: 0.4, to: 1 },
+      ],
+    })
+    expect(warnSpy).not.toHaveBeenCalled()
+    dispose()
+    warnSpy.mockRestore()
   })
 })
 
