@@ -15,6 +15,25 @@ use crate::ir::Expr;
 /// resolve. `extra_locals` are additional bound names from a parent
 /// scope (e.g. a `{#for}` item).
 pub(super) fn check_expr(expr: &Expr, v: &mut Visitor, extra_locals: &[&str]) {
+    check_expr_inner(expr, v, extra_locals, None)
+}
+
+/// Same walk as [`check_expr`], but `use_action` names the `use:` action
+/// this expression is the VALUE of (`use:worldTransform={expr}` passes
+/// `Some("worldTransform")`). Inside that value expression a bare
+/// reference to the action's own name is always the canvas-detail-crash
+/// shape — see the `use_action` handling below — so it gets a dedicated
+/// diagnostic before the general scope/collision checks run.
+pub(super) fn check_use_value_expr(action: &str, expr: &Expr, v: &mut Visitor) {
+    check_expr_inner(expr, v, &[], Some(action))
+}
+
+fn check_expr_inner(
+    expr: &Expr,
+    v: &mut Visitor,
+    extra_locals: &[&str],
+    use_action: Option<&str>,
+) {
     // Collect across the whole template (the outer visitor no longer
     // short-circuits), but at most one diagnostic per expression: once THIS
     // call has pushed an error, stop scanning the rest of this expression.
@@ -44,7 +63,7 @@ pub(super) fn check_expr(expr: &Expr, v: &mut Visitor, extra_locals: &[&str]) {
             continue;
         }
         if c == b'`' {
-            i = scan_template_literal(&expr.source, i, expr.span, v, &local_stack);
+            i = scan_template_literal(&expr.source, i, expr.span, v, &local_stack, use_action);
             if v.errors.len() > start { return; }
             prev_dot = false;
             continue;
@@ -105,7 +124,68 @@ pub(super) fn check_expr(expr: &Expr, v: &mut Visitor, extra_locals: &[&str]) {
             prev_dot = false;
             continue;
         }
-        if !v.scope.contains(word) && !local_stack.iter().any(|s| s == word) {
+        let shadowed_by_local = local_stack.iter().any(|s| s == word);
+        // The exact canvas-detail-crash shape: inside `use:X={expr}`, a bare
+        // `X` in `expr` NEVER means the scope value the author probably
+        // intended — the emitter's expr-rewrite leaves built-in action
+        // names bare (see `emit::expr_rewrite::BUILTINS`), so this compiles
+        // to the ACTION IMPORT called with zero arguments, not a `$scope.X`
+        // read. Refuse unconditionally rather than let it through when
+        // there happens to be no colliding scope member today — renaming
+        // the action's own bare name into a scope value is never valid.
+        if let Some(action) = use_action
+            && word == action
+            && !shadowed_by_local
+        {
+            v.errors.push(
+                CompileError::new(format!(
+                    "`use:{action}={{{src}}}` calls '{action}' bare inside its own value \
+                     expression — that name always resolves to the `use:{action}` action \
+                     import itself (invoked with zero arguments), never to a scope value, \
+                     even when scope declares a same-named binding. This is the \
+                     canvas-detail-crash shape: an argless self-call where the action \
+                     expects (element, param) and gets neither, then throws reading off an \
+                     undefined node. If you meant to read a scope value here, give it a \
+                     name other than '{action}' so it no longer collides with the action \
+                     import.",
+                    src = expr.source,
+                ))
+                .with_span(expr.span)
+                .with_category(format!("use:{action} value `{}`", expr.source)),
+            );
+            return;
+        }
+        // General precedence rule for scope-vs-import name lookups: a
+        // built-in `use:` action import always wins over a same-named
+        // scope member in a template expression (see
+        // `emit::expr_rewrite::BUILTINS` — it leaves action names bare
+        // rather than qualifying them with `$scope.`, since a `use:`
+        // directive needs the real ESM binding to pass to `runAction`).
+        // A same-named scope member is therefore permanently unreachable
+        // from any template expression while the collision exists — never
+        // a case where "whichever the author meant" is a safe guess.
+        // Refuse instead of silently shadowing.
+        if !shadowed_by_local
+            && v.scope.names.contains(word)
+            && crate::lower::bindings::BUILTIN_ACTIONS.contains(&word)
+        {
+            v.errors.push(
+                CompileError::new(format!(
+                    "Identifier '{word}' is ambiguous: this component's scope declares a \
+                     value named '{word}' (from setup/props), and '{word}' is also a \
+                     built-in `use:` action auto-imported from @ship/sui-runtime. \
+                     Template expressions resolve the action import first, so this \
+                     reference reads the ACTION, not your scope value — the compiler \
+                     refuses rather than silently pick one. Rename the scope binding (or \
+                     stop using `use:{word}` under this name) so the two no longer share \
+                     an identifier.",
+                ))
+                .with_span(expr.span)
+                .with_category(format!("expression `{}`", expr.source)),
+            );
+            return;
+        }
+        if !v.scope.contains(word) && !shadowed_by_local {
             // `route` is host-granted, never ambient — the likeliest reach for
             // it outside a route file deserves the real explanation, not a
             // generic unknown-name error.
@@ -293,6 +373,7 @@ fn scan_template_literal(
     span: Span,
     v: &mut Visitor,
     locals: &[String],
+    use_action: Option<&str>,
 ) -> usize {
     let bytes = src.as_bytes();
     debug_assert_eq!(bytes[start], b'`');
@@ -305,7 +386,7 @@ fn scan_template_literal(
             let close = skip_balanced(bytes, i + 1, bytes.len());
             let inner = &src[i + 2..close.saturating_sub(1)];
             let sub = Expr::new(inner, span, true);
-            check_expr(
+            check_expr_inner(
                 &sub,
                 v,
                 locals
@@ -313,6 +394,7 @@ fn scan_template_literal(
                     .map(|s| s.as_str())
                     .collect::<Vec<_>>()
                     .as_slice(),
+                use_action,
             );
             i = close;
             continue;

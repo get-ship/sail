@@ -8,10 +8,62 @@
 //!  * `route` — ONLY when the host GRANTED it (a route file; deck routes
 //!    by file location and passes the params at compile time).
 //!  * JS / browser globals from a small fixed allowlist.
+//!  * Built-in `use:` actions (`action_manifest::BUILTIN_ACTION_NAMES`),
+//!    auto-imported from `@ship/sui-runtime` when a template references
+//!    them — a bare ESM binding, not a scope read.
 //!  * Locals introduced by an arrow's parameter list (handlers can
 //!    write `(e) => …`; `e` is in scope inside the body).
 //!
 //! Anything else triggers a compile error pointing at the unknown name.
+//!
+//! ## Precedence: scope vs. a built-in action import
+//!
+//! A scope member (prop, `setup`-returned key, …) and a built-in `use:`
+//! action can be given the SAME name — the parser doesn't forbid it. The
+//! two live in different namespaces at the type level (one is a scope
+//! read, the other an ESM import), but a template expression is flat
+//! source text: `worldTransform` in `{worldTransform()}` has to resolve to
+//! ONE of them.
+//!
+//! The precedence is: **the action import always wins.** `emit::expr_rewrite`
+//! must leave a built-in action name bare so `runAction(el, worldTransform,
+//! …)` receives the real imported function — qualifying it as `$scope.
+//! worldTransform` would pass `runAction` a scope value that is almost
+//! certainly not a valid action, and `use:` couldn't work at all otherwise
+//! (the directive name itself has nowhere else to resolve from). That part
+//! of the rule is not new here and is not changing.
+//!
+//! What IS new: this precedence made a same-named scope member silently,
+//! permanently unreachable from every template expression while the
+//! collision existed — no diagnostic, just a value that always read as
+//! something else. That is the canvas-detail-crash shape: `<sui-canvas>`
+//! named a `derived()` value `worldTransform`, identical to the
+//! `use:worldTransform` action it fed via
+//! `use:worldTransform={worldTransform()}`; the compiler resolved the bare
+//! `worldTransform()` call to the ACTION import (zero args) instead of the
+//! scope value, and the action crashed reading properties off the
+//! `undefined` node it never received. Three composing components broke
+//! on mount for weeks with no compile-time signal.
+//!
+//! So: the compiler now REFUSES the collision outright rather than
+//! silently applying the action-wins precedence — see the two checks in
+//! `scope_bound_expr::check_expr_inner` for the enforcement:
+//!
+//!  1. General rule — any template expression that references a name
+//!     which is BOTH a declared scope member AND a built-in action name is
+//!     a compile error naming both bindings, everywhere that name is read
+//!     (not only inside its own `use:` directive).
+//!  2. Special case — inside `use:X={expr}`, a bare reference to `X`
+//!     itself inside `expr` is ALWAYS an error, even on the (currently
+//!     impossible in practice, but not worth trusting) chance there's no
+//!     separate scope collision: calling the action you're attaching,
+//!     zero-arg, from within its own param thunk, is never a valid
+//!     program.
+//!
+//! A same name that is declared in scope but never referenced from any
+//! template expression is not observable by this pass and is not an
+//! error — the compiler only refuses ambiguity it can actually see
+//! materialize.
 
 use std::collections::BTreeSet;
 
@@ -22,7 +74,7 @@ use crate::check::js_scan::{
 use crate::diagnostics::CompileError;
 use crate::ir::*;
 
-use super::scope_bound_expr::check_expr;
+use super::scope_bound_expr::{check_expr, check_use_value_expr};
 
 /// JS/browser globals + framework-known ctx names that are always
 /// available without an explicit declaration.
@@ -327,9 +379,9 @@ fn visit_attr(attr: &AttrInstr, v: &mut Visitor) {
         }
         AttrInstr::On { handler, .. } => check_expr(handler, v, &[]),
         AttrInstr::Mutation { .. } => {}
-AttrInstr::Use { param, .. } => {
+AttrInstr::Use { action, param, .. } => {
             if let Some(e) = param {
-                check_expr(e, v, &[]);
+                check_use_value_expr(action, e, v);
             }
         }
         // `motion:` has no expression body in milestone 1 (statically
