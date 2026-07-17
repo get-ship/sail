@@ -104,13 +104,6 @@ pub fn collect_attr_imports(
                 out.dom_imports.insert("hydrateClass");
             }
         }
-        AttrInstr::Style { .. } => {
-            out.runtime_imports.insert("effect");
-            if direct_emit {
-                out.dom_imports.insert("collectElementMarkers");
-                out.dom_imports.insert("hydrateStyle");
-            }
-        }
         AttrInstr::Prop { .. } => {
             out.runtime_imports.insert("bindProp");
             if direct_emit {

@@ -53,7 +53,6 @@ fn attr_references_ident(attr: &AttrInstr, name: &str) -> bool {
         | AttrInstr::BindValue { expr, .. }
         | AttrInstr::BindChecked { expr, .. }
         | AttrInstr::Class { expr, .. }
-        | AttrInstr::Style { expr, .. }
         | AttrInstr::Prop { expr, .. }
         | AttrInstr::Mutation { expr, .. } => expr_references_ident(&expr.source, name),
         AttrInstr::On { handler, .. } => expr_references_ident(&handler.source, name),

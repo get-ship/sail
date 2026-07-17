@@ -16,6 +16,7 @@ pub(super) fn emit_setup_body(
     bindings: &BindingRegistry,
     opts: &CompileOpts,
     _lowered: &Lowered,
+    sx_var_bindings: &[crate::check::sx_vars::SxVarBinding],
 ) -> Writer {
     // A source is a COMPONENT (custom element) iff it carries a tag
     // (`component_meta`); otherwise it's a tagless mount-form ("view"/page).
@@ -73,6 +74,26 @@ pub(super) fn emit_setup_body(
     let mut mount_w = Writer::new();
     mount_w.line("const __cleanups = [];");
     mount_w.line("const __root = container.shadowRoot ?? container;");
+    // The `(--x)` binding: every prop/signal a `sx="…"` read matched gets a
+    // CSS `@property` registration (own, unscoped install — see
+    // `emit::styles::register_properties_install_js`) and is reflected onto
+    // the host as an inline custom property, seeded now and kept live by the
+    // same `effect()` that seeds it (an effect's body runs once
+    // synchronously at creation, which IS mount time, then again on every
+    // write). `__root` is the host: for a registered component `container`
+    // IS the host element (light DOM, no shadow root); for a page/view it's
+    // the mount target, which plays the same "inline custom property host"
+    // role for its subtree's `var(--x)` reads.
+    if !sx_var_bindings.is_empty() {
+        mount_w.push_str(&crate::emit::styles::register_properties_install_js(sx_var_bindings));
+        for b in sx_var_bindings {
+            let css_prop = js_string(&format!("--{}", b.css_name));
+            let scope_ident = js_ident(&b.scope_name);
+            mount_w.line(&format!(
+                "__cleanups.push(effect(() => {{ const __v = ($scope.{scope_ident}()); if (__v == null) __root.style.removeProperty({css_prop}); else __root.style.setProperty({css_prop}, String(__v)); }}));"
+            ));
+        }
+    }
     // Pages install their lifted top-level `<style>` into the container.
     // Registered components install styles via the custom-element adapter
     // (scoped by `data-component` / the shadow root), so the module skips it.

@@ -167,6 +167,7 @@ export default controller((_ctx: ViewScope<Scope>) => ({
       <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">attr:</code><small sx="text-muted-foreground">force attribute semantics for a dynamic value</small></row>
       <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">use:</code><small sx="text-muted-foreground">attach an action — behavior bound to an element with update/destroy</small></row>
       <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">use:</code><small sx="text-muted-foreground">runtime geometry — a named, typed action writes the custom property; sx reads it with <code>(--name)</code>. There is no <code>style:</code>: it was the last hatch, and it is closed.</small></row>
+      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">(--x)</code><small sx="text-muted-foreground">scope owns props, the controller owns state — when <code>(--x)</code> matches a declared prop or a <code>setup()</code>-returned signal, the compiler registers a typed CSS <code>@property</code> and reflects it onto the host, live. A name never read this way gets no wiring; an unmatched name refuses with a did-you-mean.</small></row>
       <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">blocks</code><small sx="text-muted-foreground">#if/:else · #match/:case/:default · #for with required key= · #while-loading · #while-error</small></row>
     </column>
   </column>

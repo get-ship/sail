@@ -78,6 +78,47 @@ pub(crate) fn styles_install_js(css: &str, typed: bool) -> String {
     b
 }
 
+/// `@property` registration for every prop/signal `(--x)` binding this
+/// component's `sx` reads matched (see `check::sx_vars`). Emitted as its
+/// OWN install call, never appended to `program.styles` — that string gets
+/// wrapped in a `@scope (...) to (...) { ... }` donut at runtime
+/// (`injectScopedStyles`), and `@property` is a top-level-only at-rule: a
+/// browser silently drops one nested inside another at-rule/block. The
+/// runtime's `registerCustomProperties` helper installs this CSS as its own
+/// unscoped, deduped-by-content `<style>` in `<head>` instead.
+///
+/// `initial-value` is required by the CSS spec for every `syntax` value
+/// except `"*"` — a non-numeric binding registers with `syntax: '*'` and no
+/// `initial-value`, which the spec permits (`"*"` matches any token
+/// sequence, so there's no type to default).
+pub(crate) fn register_properties_install_js(
+    bindings: &[crate::check::sx_vars::SxVarBinding],
+) -> String {
+    if bindings.is_empty() {
+        return String::new();
+    }
+    let mut css = String::new();
+    for b in bindings {
+        if b.numeric {
+            css.push_str(&format!(
+                "@property --{name} {{ syntax: '<number>'; inherits: true; initial-value: 0; }}",
+                name = b.css_name,
+            ));
+        } else {
+            css.push_str(&format!(
+                "@property --{name} {{ syntax: '*'; inherits: true; }}",
+                name = b.css_name,
+            ));
+        }
+    }
+    let key = fnv1a32_hex(css.as_bytes());
+    format!(
+        "registerCustomProperties({}, {});\n",
+        js_string(&format!("sui-props-{key}")),
+        js_string(&css),
+    )
+}
+
 /// FNV-1a 32-bit hash, hex string. A tiny dep-free helper to key the
 /// `data-sui-style` dedupe attribute.
 fn fnv1a32_hex(bytes: &[u8]) -> String {

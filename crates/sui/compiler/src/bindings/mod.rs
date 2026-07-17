@@ -112,9 +112,6 @@ impl Builder {
             AttrInstr::Class { name, expr, .. } => {
                 self.push(BindingKind::Class(name.clone()), &expr.source);
             }
-            AttrInstr::Style { name, expr, .. } => {
-                self.push(BindingKind::Style(name.clone()), &expr.source);
-            }
             AttrInstr::Prop { name, expr, .. } => {
                 self.push(BindingKind::Prop(name.clone()), &expr.source);
             }

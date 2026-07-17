@@ -81,6 +81,53 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> String {
     }
 }
 
+/// Find every static `sx="…"` attribute VALUE in raw `.sui` source, with its
+/// byte offset (pointing at the first character inside the quotes). Read-only
+/// twin of [`lower_sx`]'s attribute-recognition walk — used by the `(--x)`
+/// resolution check (`check::sx_vars`), which runs on the pre-preprocess
+/// source (before `sx=` is rewritten to `class=`) so it can still see the
+/// literal attribute text and report spans against the author's source.
+pub(crate) fn find_sx_attr_values(source: &str) -> Vec<(usize, &str)> {
+    let bytes = source.as_bytes();
+    let mut out = Vec::new();
+    let mut i = 0;
+    while i < bytes.len() {
+        if source[i..].starts_with("<!--") {
+            match source[i..].find("-->") {
+                Some(end) => {
+                    i += end + 3;
+                    continue;
+                }
+                None => break,
+            }
+        }
+        if i > 0
+            && bytes[i - 1].is_ascii_whitespace()
+            && source[i..].starts_with("sx")
+            && is_eq_quote(&bytes[i + 2..])
+        {
+            let mut j = i + 2;
+            while j < bytes.len() && bytes[j] != b'"' && bytes[j] != b'{' {
+                j += 1;
+            }
+            if j < bytes.len() && bytes[j] == b'"' {
+                let vstart = j + 1;
+                if let Some(rel) = source[vstart..].find('"') {
+                    out.push((vstart, &source[vstart..vstart + rel]));
+                    i = vstart + rel + 1;
+                    continue;
+                }
+            }
+        }
+        let mut n = i + 1;
+        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
+            n += 1;
+        }
+        i = n;
+    }
+    out
+}
+
 /// Lower every static `sx="…"` attribute to `class="sx-…"`, returning the
 /// rewritten body and the deduped atomic CSS (the caller injects it into the
 /// shared `<style>`). The prop→CSS mapping is `sui_lint::rules::sx::lower` — the

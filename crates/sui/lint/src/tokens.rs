@@ -41,6 +41,28 @@ pub const CONVENTION_TOKENS: &[&str] = &[
     "ship-rail-w", "ship-rail-w-collapsed", "ship-top-bar-h",
     // Misc component-local channels.
     "card-shadow-style", "font-sans", "toast-duration", "z-overlay",
+    // Runtime-geometry channels — a `use:<action>` action (see
+    // `packages/sui/runtime/src/actions/`) writes these; sx reads them via
+    // the matching `(--name)` atom. Not tokens (a measurement, not a design
+    // decision) and not component props/signals either — the ACTION owns
+    // the name, same as a token owns its name, which is why this allowlist
+    // (rather than `check::sx_vars`'s prop/signal resolution) is where they
+    // belong.
+    "box-top", "box-left", "box-w", "box-h",           // use:rect
+    "evt-top", "evt-h", "evt-left", "evt-w",           // use:eventSpan
+    "row-y",                                            // use:virtualRow
+    "rows-h",                                           // use:virtualSpacer
+    "cell-ps",                                          // use:cellPad
+    "pin-x", "pin-y",                                   // use:pin
+    "port-top", "port-left", "port-right", "port-bottom", // use:portEdge
+    "world-tx",                                          // use:worldTransform
+    "zoom-tx",                                           // use:zoomPan
+    "max-w",                                             // use:maxWidth
+    "swatch-color",                                      // use:swatch
+    "tc-x", "tc-y",                                      // use:targetCursor
+    "spot-x", "spot-y", "spot-strength",                 // use:spotlight
+    "sui-grid-template",                                 // use:gridTracks
+    "rng-pct",                                           // use:rangeFill
 ];
 
 /// Every valid design-token name (no `--` prefix): the custom-property

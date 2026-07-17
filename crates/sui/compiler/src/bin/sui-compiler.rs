@@ -597,6 +597,13 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
          Reactivity: `signal` `derived` `effect` `batch` `untrack` `shared`. Reach for\n`effect` rarely — it is the escape hatch, not the pattern. Cleanup is automatic: an\neffect created during setup dies with the component.\n\n\
          Control flow: `{{#if cond}}…{{/if}}`, `{{#for item of items key={{item.id}}}}…{{/for}}`\n(the `key=` is required — without it the reconciler falls back to positional matching\nand loses DOM identity on reorder).\n"
     );
+    let _ = writeln!(md, "## Runtime CSS — the `(--x)` binding\n");
+    let _ = writeln!(
+        md,
+        "ONE RULE: **scope owns props, the controller owns state** — there is no state block\nin scope; state is code, not a declaration table. `style:` is gone; a `style:` use\nrefuses with a diagnostic that teaches this.\n\n\
+         `sx` reads runtime values through `(--name)` (camelCase → kebab, e.g. a prop or\nsignal named `rowY` reads as `(--row-y)`): `translate-y-(--row-y)`, `bg-(--hue)`. When\n`(--name)` matches a declared prop or a value `setup()` returns via `signal(...)`, the\ncompiler registers a typed CSS `@property` (a `number` gets `syntax: '<number>'`, so a\nCSS transition on it tweens natively, no JS) and reflects the value onto the host as an\ninline custom property, kept live automatically — no action, no manual `effect`. A name\nnever read via `(--x)` gets no wiring; an unmatched name is a compile error with a\ndid-you-mean.\n\n\
+         Runtime GEOMETRY (a virtualizer offset, a drag position — not a prop, not scope\nstate) stays on `use:` actions: a named, typed action\n(`use:virtualRow`, `use:eventSpan`, `use:rect`, `use:zoomPan`, `use:swatch`, …) writes\nits own fixed custom property; sx reads it the same way, `(--name)`. `el.style` stays\nclosed — actions gain no styling powers beyond the one property they own.\n"
+    );
     // L1 ELEMENTS — the language's first-class surface. Listed
     // verbatim from the same manifest the consistency test enforces
     // (crates/sui/compiler/src/l1_manifest.rs).

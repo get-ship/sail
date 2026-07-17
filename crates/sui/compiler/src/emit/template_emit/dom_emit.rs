@@ -361,37 +361,6 @@ impl TemplateEmitter {
                     ));
                 }
             }
-            AttrInstr::Style { name, expr, .. } => {
-                let key = self.next_key();
-                let rw = self.rw(&expr.source, &[]);
-                let prop = js_string(name);
-                if self.is_static_row_expr(&expr.source) {
-                    // D5: row-scope static style — initial setProperty,
-                    // matching the effect's null → remove pass. Also
-                    // recorded for the for's `update()` callback so
-                    // keyed-row reuse refreshes the style.
-                    let v = self.fresh("sv");
-                    let stmt = format!(
-                        "{{ const {v} = ({rw}); if ({v} == null) {el_var}.style.removeProperty({prop}); else {el_var}.style.setProperty({prop}, String({v})); }}"
-                    );
-                    w.line(&stmt);
-                    let use_ = self.row_use_for_source(&expr.source);
-                    self.inline_update_stmts.push((stmt, use_));
-                } else {
-                    let fvs = self.for_version_stmt(&expr.source);
-                    w.line(&format!(
-                        "{cleanups_var}.push(effect(() => {{ {fvs}const __v = ({rw}); if (__v == null) {el_var}.style.removeProperty({prop}); else {el_var}.style.setProperty({prop}, String(__v)); }}));"
-                    ));
-                }
-                if self.is_view && self.boundary_depth == 0 {
-                    self.hydrate_uses_markers = true;
-                    self.hydrate_calls.line(&format!(
-                        "if (__m[{k}]) __cleanups.push(hydrateStyle(__m[{k}], {p}, () => ({rw})));",
-                        k = js_string(&key),
-                        p = prop,
-                    ));
-                }
-            }
             AttrInstr::Prop { name, expr, .. } => {
                 let key = self.next_key();
                 let rw = self.rw(&expr.source, &[]);
