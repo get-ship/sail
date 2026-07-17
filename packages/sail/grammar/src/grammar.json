@@ -1,6 +1,6 @@
 {
   "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/grammar.schema.json",
-  "name": "set",
+  "name": "sail",
   "word": "identifier",
   "rules": {
     "source_file": {
@@ -28,6 +28,14 @@
         {
           "type": "SYMBOL",
           "name": "match_block"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "while_loading_block"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "while_error_block"
         },
         {
           "type": "SYMBOL",
@@ -282,15 +290,19 @@
         },
         {
           "type": "SYMBOL",
-          "name": "style_attr"
-        },
-        {
-          "type": "SYMBOL",
           "name": "attr_attr"
         },
         {
           "type": "SYMBOL",
-          "name": "let_attr"
+          "name": "prop_attr"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "use_attr"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "motion_attr"
         },
         {
           "type": "SYMBOL",
@@ -413,35 +425,6 @@
         }
       ]
     },
-    "style_attr": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "style:"
-        },
-        {
-          "type": "FIELD",
-          "name": "name",
-          "content": {
-            "type": "SYMBOL",
-            "name": "style_prop_name"
-          }
-        },
-        {
-          "type": "STRING",
-          "value": "="
-        },
-        {
-          "type": "FIELD",
-          "name": "value",
-          "content": {
-            "type": "SYMBOL",
-            "name": "brace_expression"
-          }
-        }
-      ]
-    },
     "attr_attr": {
       "type": "SEQ",
       "members": [
@@ -453,8 +436,17 @@
           "type": "FIELD",
           "name": "name",
           "content": {
-            "type": "SYMBOL",
-            "name": "brace_expression"
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "attr_local"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "brace_expression"
+              }
+            ]
           }
         },
         {
@@ -471,12 +463,12 @@
         }
       ]
     },
-    "let_attr": {
+    "prop_attr": {
       "type": "SEQ",
       "members": [
         {
           "type": "STRING",
-          "value": "let:"
+          "value": "prop:"
         },
         {
           "type": "FIELD",
@@ -484,6 +476,89 @@
           "content": {
             "type": "SYMBOL",
             "name": "attr_local"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "="
+        },
+        {
+          "type": "FIELD",
+          "name": "value",
+          "content": {
+            "type": "SYMBOL",
+            "name": "brace_expression"
+          }
+        }
+      ]
+    },
+    "use_attr": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "use:"
+        },
+        {
+          "type": "FIELD",
+          "name": "action",
+          "content": {
+            "type": "SYMBOL",
+            "name": "attr_local"
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "="
+                },
+                {
+                  "type": "FIELD",
+                  "name": "param",
+                  "content": {
+                    "type": "SYMBOL",
+                    "name": "brace_expression"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        }
+      ]
+    },
+    "motion_attr": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "motion:"
+        },
+        {
+          "type": "FIELD",
+          "name": "trigger",
+          "content": {
+            "type": "SYMBOL",
+            "name": "attr_local"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "="
+        },
+        {
+          "type": "FIELD",
+          "name": "config",
+          "content": {
+            "type": "SYMBOL",
+            "name": "brace_expression"
           }
         }
       ]
@@ -553,10 +628,6 @@
     "attr_local": {
       "type": "PATTERN",
       "value": "[a-zA-Z_][a-zA-Z0-9_-]*"
-    },
-    "style_prop_name": {
-      "type": "PATTERN",
-      "value": "(?:--|-)?[a-zA-Z_][a-zA-Z0-9_-]*"
     },
     "string_literal": {
       "type": "CHOICE",
@@ -683,7 +754,7 @@
           "type": "REPEAT",
           "content": {
             "type": "SYMBOL",
-            "name": "elif_clause"
+            "name": "else_if_clause"
           }
         },
         {
@@ -704,21 +775,12 @@
         }
       ]
     },
-    "elif_clause": {
+    "else_if_clause": {
       "type": "SEQ",
       "members": [
         {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "{:else if"
-            },
-            {
-              "type": "STRING",
-              "value": "{:elif"
-            }
-          ]
+          "type": "STRING",
+          "value": "{:else if"
         },
         {
           "type": "FIELD",
@@ -843,27 +905,36 @@
       ]
     },
     "for_pattern": {
-      "type": "SEQ",
+      "type": "CHOICE",
       "members": [
         {
           "type": "SYMBOL",
           "name": "identifier"
         },
         {
-          "type": "REPEAT",
-          "content": {
-            "type": "SEQ",
-            "members": [
-              {
-                "type": "STRING",
-                "value": ","
-              },
-              {
-                "type": "SYMBOL",
-                "name": "identifier"
-              }
-            ]
-          }
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "("
+            },
+            {
+              "type": "SYMBOL",
+              "name": "identifier"
+            },
+            {
+              "type": "STRING",
+              "value": ","
+            },
+            {
+              "type": "SYMBOL",
+              "name": "identifier"
+            },
+            {
+              "type": "STRING",
+              "value": ")"
+            }
+          ]
         }
       ]
     },
@@ -952,6 +1023,86 @@
             "type": "SYMBOL",
             "name": "_template_node"
           }
+        }
+      ]
+    },
+    "while_loading_block": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "{#while-loading"
+        },
+        {
+          "type": "STRING",
+          "value": "of"
+        },
+        {
+          "type": "FIELD",
+          "name": "signal",
+          "content": {
+            "type": "SYMBOL",
+            "name": "identifier"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "}"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_template_node"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "{/while-loading}"
+        }
+      ]
+    },
+    "while_error_block": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "{#while-error"
+        },
+        {
+          "type": "FIELD",
+          "name": "error",
+          "content": {
+            "type": "SYMBOL",
+            "name": "identifier"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "of"
+        },
+        {
+          "type": "FIELD",
+          "name": "signal",
+          "content": {
+            "type": "SYMBOL",
+            "name": "identifier"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "}"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_template_node"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "{/while-error}"
         }
       ]
     },

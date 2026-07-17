@@ -1,6 +1,8 @@
 ==================
-conformance: views/agents/view.sail (smoke)
+conformance smoke: full live surface in one document
 ==================
+
+<data name="agents" source="ship.list('agents')" live/>
 
 <div class="ship-view agents-view">
   <link rel="stylesheet" href="/_ship-set/views/agents/view.css">
@@ -8,19 +10,20 @@ conformance: views/agents/view.sail (smoke)
     <h1 class="agents-title">Agents</h1>
     <p class="agents-sub">{total()} agent{total() === 1 ? '' : 's'}</p>
     <ship-button tone="primary" variant="solid"
-                 on:click={() => navigate('/agents/create')}>
+                 on:click={() => navigate('/agents/create')}
+                 motion:enter={{ opacity: 'fade' }}>
       <ship-icon slot="leading" name="plus"></ship-icon>
       New agent
     </ship-button>
   </header>
 
-  <while-loading bind="agents">
+  {#while-loading of agents}
     <p class="loading-copy" data-test="loading">Loading agents&hellip;</p>
-  </while-loading>
+  {/while-loading}
 
-  <while-error bind="agents" let:err>
+  {#while-error err of agents}
     <p class="loading-copy" data-test="error">Error loading agents: {err.message}</p>
-  </while-error>
+  {/while-error}
 
   {#if agents().kind === 'ok'}
     {#if items().length === 0}
@@ -28,9 +31,9 @@ conformance: views/agents/view.sail (smoke)
         <span slot="title">No agents yet</span>
       </ship-empty-state>
     {:else}
-      <div class="agents-grid" data-view-enter data-test="grid">
+      <div class="agents-grid" data-view-enter data-test="grid" attr:hidden={items().length === 0}>
         {#for a of items() key={a.id}}
-          <ship-list-tile variant="card" navigable={'/agents/' + a.id}>
+          <ship-list-tile variant="card" navigable={'/agents/' + a.id} use:hoverCard>
             <span class="agents-card-letter">{a.letter}</span>
             {#if a.providers && a.providers.length > 0}
               <div class="agents-card-providers">
@@ -49,6 +52,16 @@ conformance: views/agents/view.sail (smoke)
 ---
 
 (source_file
+  (element
+    tag: (tag_name)
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
+    (boolean_attr
+      (attr_name)))
   (element
     tag: (tag_name)
     (static_attr
@@ -97,6 +110,9 @@ conformance: views/agents/view.sail (smoke)
           event: (attr_local)
           handler: (brace_expression
             (identifier)))
+        (motion_attr
+          trigger: (attr_local)
+          config: (brace_expression))
         (element
           tag: (tag_name)
           (static_attr
@@ -109,11 +125,8 @@ conformance: views/agents/view.sail (smoke)
         (text)
         close_tag: (tag_name))
       close_tag: (tag_name))
-    (element
-      tag: (tag_name)
-      (static_attr
-        name: (attr_name)
-        value: (string_literal))
+    (while_loading_block
+      signal: (identifier)
       (element
         tag: (tag_name)
         (static_attr
@@ -123,15 +136,10 @@ conformance: views/agents/view.sail (smoke)
           name: (attr_name)
           value: (string_literal))
         (text)
-        close_tag: (tag_name))
-      close_tag: (tag_name))
-    (element
-      tag: (tag_name)
-      (static_attr
-        name: (attr_name)
-        value: (string_literal))
-      (let_attr
-        name: (attr_local))
+        close_tag: (tag_name)))
+    (while_error_block
+      error: (identifier)
+      signal: (identifier)
       (element
         tag: (tag_name)
         (static_attr
@@ -143,8 +151,7 @@ conformance: views/agents/view.sail (smoke)
         (text)
         (interpolation
           (identifier))
-        close_tag: (tag_name))
-      close_tag: (tag_name))
+        close_tag: (tag_name)))
     (if_block
       cond: (identifier)
       (if_block
@@ -182,6 +189,10 @@ conformance: views/agents/view.sail (smoke)
             (static_attr
               name: (attr_name)
               value: (string_literal))
+            (attr_attr
+              name: (attr_local)
+              value: (brace_expression
+                (identifier)))
             (for_block
               item: (for_pattern
                 (identifier))
@@ -197,6 +208,8 @@ conformance: views/agents/view.sail (smoke)
                   name: (attr_name)
                   value: (brace_expression
                     (identifier)))
+                (use_attr
+                  action: (attr_local))
                 (element
                   tag: (tag_name)
                   (static_attr

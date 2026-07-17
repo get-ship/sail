@@ -51,20 +51,69 @@ class toggle attribute
     close_tag: (tag_name)))
 
 ==================
-style custom property
+prop attribute
 ==================
 
-<div style:--tone={t}></div>
+<sail-donut prop:data={rows()}></sail-donut>
 
 ---
 
 (source_file
   (element
     tag: (tag_name)
-    (style_attr
-      name: (style_prop_name)
+    (prop_attr
+      name: (attr_local)
       value: (brace_expression
         (identifier)))
+    close_tag: (tag_name)))
+
+==================
+use action with param
+==================
+
+<span use:swatch={value() || '#000000'}></span>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (use_attr
+      action: (attr_local)
+      param: (brace_expression
+        (identifier)))
+    close_tag: (tag_name)))
+
+==================
+use action without param
+==================
+
+<div use:errorBoundary></div>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (use_attr
+      action: (attr_local))
+    close_tag: (tag_name)))
+
+==================
+motion attribute with static preset object
+==================
+
+<badge motion:enter={{ opacity: 'fade', stagger: '150ms' }}>live</badge>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (motion_attr
+      trigger: (attr_local)
+      config: (brace_expression))
+    (text)
     close_tag: (tag_name)))
 
 ==================
@@ -86,21 +135,20 @@ attr dynamic name
     close_tag: (tag_name)))
 
 ==================
-let attribute
+attr bare name (the common real-world form)
 ==================
 
-<while-error bind="agents" let:err></while-error>
+<section attr:hidden={tab() !== 'source'}></section>
 
 ---
 
 (source_file
   (element
     tag: (tag_name)
-    (static_attr
-      name: (attr_name)
-      value: (string_literal))
-    (let_attr
-      name: (attr_local))
+    (attr_attr
+      name: (attr_local)
+      value: (brace_expression
+        (identifier)))
     close_tag: (tag_name)))
 
 ==================

@@ -8,6 +8,10 @@
         "required": true,
         "types": [
           {
+            "type": "attr_local",
+            "named": true
+          },
+          {
             "type": "brace_expression",
             "named": true
           }
@@ -161,6 +165,14 @@
         {
           "type": "text",
           "named": true
+        },
+        {
+          "type": "while_error_block",
+          "named": true
+        },
+        {
+          "type": "while_loading_block",
+          "named": true
         }
       ]
     }
@@ -225,6 +237,14 @@
         },
         {
           "type": "text",
+          "named": true
+        },
+        {
+          "type": "while_error_block",
+          "named": true
+        },
+        {
+          "type": "while_loading_block",
           "named": true
         }
       ]
@@ -330,11 +350,15 @@
           "named": true
         },
         {
-          "type": "let_attr",
+          "type": "match_block",
           "named": true
         },
         {
-          "type": "match_block",
+          "type": "motion_attr",
+          "named": true
+        },
+        {
+          "type": "prop_attr",
           "named": true
         },
         {
@@ -342,18 +366,73 @@
           "named": true
         },
         {
-          "type": "style_attr",
+          "type": "text",
           "named": true
         },
         {
-          "type": "text",
+          "type": "use_attr",
+          "named": true
+        },
+        {
+          "type": "while_error_block",
+          "named": true
+        },
+        {
+          "type": "while_loading_block",
           "named": true
         }
       ]
     }
   },
   {
-    "type": "elif_clause",
+    "type": "else_clause",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "element",
+          "named": true
+        },
+        {
+          "type": "for_block",
+          "named": true
+        },
+        {
+          "type": "html_comment",
+          "named": true
+        },
+        {
+          "type": "if_block",
+          "named": true
+        },
+        {
+          "type": "interpolation",
+          "named": true
+        },
+        {
+          "type": "match_block",
+          "named": true
+        },
+        {
+          "type": "text",
+          "named": true
+        },
+        {
+          "type": "while_error_block",
+          "named": true
+        },
+        {
+          "type": "while_loading_block",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "else_if_clause",
     "named": true,
     "fields": {
       "cond": {
@@ -422,44 +501,13 @@
         {
           "type": "text",
           "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "else_clause",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": false,
-      "types": [
+        },
         {
-          "type": "element",
+          "type": "while_error_block",
           "named": true
         },
         {
-          "type": "for_block",
-          "named": true
-        },
-        {
-          "type": "html_comment",
-          "named": true
-        },
-        {
-          "type": "if_block",
-          "named": true
-        },
-        {
-          "type": "interpolation",
-          "named": true
-        },
-        {
-          "type": "match_block",
-          "named": true
-        },
-        {
-          "type": "text",
+          "type": "while_loading_block",
           "named": true
         }
       ]
@@ -595,6 +643,14 @@
         {
           "type": "text",
           "named": true
+        },
+        {
+          "type": "while_error_block",
+          "named": true
+        },
+        {
+          "type": "while_loading_block",
+          "named": true
         }
       ]
     }
@@ -662,11 +718,11 @@
           "named": true
         },
         {
-          "type": "elif_clause",
+          "type": "else_clause",
           "named": true
         },
         {
-          "type": "else_clause",
+          "type": "else_if_clause",
           "named": true
         },
         {
@@ -692,6 +748,14 @@
         {
           "type": "text",
           "named": true
+        },
+        {
+          "type": "while_error_block",
+          "named": true
+        },
+        {
+          "type": "while_loading_block",
+          "named": true
         }
       ]
     }
@@ -709,22 +773,6 @@
           "named": true
         }
       ]
-    }
-  },
-  {
-    "type": "let_attr",
-    "named": true,
-    "fields": {
-      "name": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "attr_local",
-            "named": true
-          }
-        ]
-      }
     }
   },
   {
@@ -782,6 +830,58 @@
     }
   },
   {
+    "type": "motion_attr",
+    "named": true,
+    "fields": {
+      "config": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "brace_expression",
+            "named": true
+          }
+        ]
+      },
+      "trigger": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "attr_local",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "prop_attr",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "attr_local",
+            "named": true
+          }
+        ]
+      },
+      "value": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "brace_expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "source_file",
     "named": true,
     "root": true,
@@ -816,6 +916,14 @@
         },
         {
           "type": "text",
+          "named": true
+        },
+        {
+          "type": "while_error_block",
+          "named": true
+        },
+        {
+          "type": "while_loading_block",
           "named": true
         }
       ]
@@ -853,22 +961,22 @@
     "fields": {}
   },
   {
-    "type": "style_attr",
+    "type": "use_attr",
     "named": true,
     "fields": {
-      "name": {
+      "action": {
         "multiple": false,
         "required": true,
         "types": [
           {
-            "type": "style_prop_name",
+            "type": "attr_local",
             "named": true
           }
         ]
       },
-      "value": {
+      "param": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "brace_expression",
@@ -876,6 +984,132 @@
           }
         ]
       }
+    }
+  },
+  {
+    "type": "while_error_block",
+    "named": true,
+    "fields": {
+      "error": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "signal": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "element",
+          "named": true
+        },
+        {
+          "type": "for_block",
+          "named": true
+        },
+        {
+          "type": "html_comment",
+          "named": true
+        },
+        {
+          "type": "if_block",
+          "named": true
+        },
+        {
+          "type": "interpolation",
+          "named": true
+        },
+        {
+          "type": "match_block",
+          "named": true
+        },
+        {
+          "type": "text",
+          "named": true
+        },
+        {
+          "type": "while_error_block",
+          "named": true
+        },
+        {
+          "type": "while_loading_block",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "while_loading_block",
+    "named": true,
+    "fields": {
+      "signal": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "element",
+          "named": true
+        },
+        {
+          "type": "for_block",
+          "named": true
+        },
+        {
+          "type": "html_comment",
+          "named": true
+        },
+        {
+          "type": "if_block",
+          "named": true
+        },
+        {
+          "type": "interpolation",
+          "named": true
+        },
+        {
+          "type": "match_block",
+          "named": true
+        },
+        {
+          "type": "text",
+          "named": true
+        },
+        {
+          "type": "while_error_block",
+          "named": true
+        },
+        {
+          "type": "while_loading_block",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -943,7 +1177,7 @@
     "named": false
   },
   {
-    "type": "let:",
+    "type": "motion:",
     "named": false
   },
   {
@@ -955,12 +1189,8 @@
     "named": false
   },
   {
-    "type": "style:",
+    "type": "prop:",
     "named": false
-  },
-  {
-    "type": "style_prop_name",
-    "named": true
   },
   {
     "type": "tag_name",
@@ -969,6 +1199,10 @@
   {
     "type": "text",
     "named": true
+  },
+  {
+    "type": "use:",
+    "named": false
   },
   {
     "type": "{",
@@ -987,6 +1221,14 @@
     "named": false
   },
   {
+    "type": "{#while-error",
+    "named": false
+  },
+  {
+    "type": "{#while-loading",
+    "named": false
+  },
+  {
     "type": "{/for}",
     "named": false
   },
@@ -999,15 +1241,19 @@
     "named": false
   },
   {
+    "type": "{/while-error}",
+    "named": false
+  },
+  {
+    "type": "{/while-loading}",
+    "named": false
+  },
+  {
     "type": "{:case",
     "named": false
   },
   {
     "type": "{:default}",
-    "named": false
-  },
-  {
-    "type": "{:elif",
     "named": false
   },
   {

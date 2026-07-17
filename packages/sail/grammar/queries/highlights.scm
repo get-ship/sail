@@ -8,7 +8,6 @@
 (tag_name) @tag
 (attr_name) @attribute
 (attr_local) @attribute
-(style_prop_name) @attribute
 
 (string_literal) @string
 
@@ -19,35 +18,44 @@
 "/>" @punctuation.bracket
 
 ; ── directive elements (recognised by tag name) ──────────────────────
-; Highlight `<data>`, `<component>`, `<prop>`, `<while-loading>`,
-; `<while-error>` distinctively so authors can see the runtime
-; contract at a glance.
+; Highlight `<data>`, `<scope>` distinctively so authors can see the
+; runtime contract at a glance. `<state>`, `<component>`, `<prop>` are
+; retired; element-form `<while-loading>`/`<while-error>` are retired
+; in favor of the brace-block forms below.
 ((tag_name) @keyword.directive
-  (#match? @keyword.directive "^(data|component|prop|while-loading|while-error|slot)$"))
+  (#match? @keyword.directive "^(data|scope|slot)$"))
 
 ; ── binding attribute prefixes ───────────────────────────────────────
-"bind:"  @keyword.directive
-"on:"    @keyword.directive
-"class:" @keyword.directive
-"style:" @keyword.directive
-"attr:"  @keyword.directive
-"let:"   @keyword.directive
-"|"      @punctuation.delimiter
+; `style:` and `let:` are deliberately absent: the compiler hard-refuses
+; `style:` and never implemented `let:` — neither is live syntax.
+"bind:"   @keyword.directive
+"on:"     @keyword.directive
+"class:"  @keyword.directive
+"attr:"   @keyword.directive
+"prop:"   @keyword.directive
+"use:"    @keyword.directive
+"motion:" @keyword.directive
+"|"       @punctuation.delimiter
 
 ; ── template control flow markers ────────────────────────────────────
-"{#if"      @keyword.directive
-"{:elif"    @keyword.directive
-"{:else if" @keyword.directive
-"{:else}"   @keyword.directive
-"{/if}"     @keyword.directive
-"{#for"     @keyword.directive
-"of"        @keyword.directive
-"key"       @keyword.directive
-"{/for}"    @keyword.directive
-"{#match"   @keyword.directive
-"{:case"    @keyword.directive
-"{:default}" @keyword.directive
-"{/match}"  @keyword.directive
+; `{:elif}` is deliberately absent — the compiler's tokenizer only
+; recognises `{:else if}`.
+"{#if"             @keyword.directive
+"{:else if"        @keyword.directive
+"{:else}"          @keyword.directive
+"{/if}"            @keyword.directive
+"{#for"            @keyword.directive
+"of"               @keyword.directive
+"key"              @keyword.directive
+"{/for}"           @keyword.directive
+"{#match"          @keyword.directive
+"{:case"           @keyword.directive
+"{:default}"       @keyword.directive
+"{/match}"         @keyword.directive
+"{#while-loading"  @keyword.directive
+"{/while-loading}" @keyword.directive
+"{#while-error"    @keyword.directive
+"{/while-error}"   @keyword.directive
 
 ; Brace boundaries.
 "{" @punctuation.special
@@ -59,15 +67,19 @@
 (interpolation (identifier) @variable)
 (brace_expression (identifier) @variable)
 (if_block cond: (identifier) @variable)
+(else_if_clause cond: (identifier) @variable)
 (for_block iter: (identifier) @variable)
 (match_block value: (identifier) @variable)
 (case_clause value: (identifier) @variable)
+(while_loading_block signal: (identifier) @variable)
+(while_error_block signal: (identifier) @variable)
 
 ; For-loop binding pattern names are locals introduced by the loop.
 (for_pattern (identifier) @variable.parameter)
 
-; let:NAME — slot binding name.
-(let_attr name: (attr_local) @variable.parameter)
+; `{#while-error <errVar> of <signal>}` — the error binding is a local
+; introduced by the block, scoped to its body.
+(while_error_block error: (identifier) @variable.parameter)
 
 ; ── comments ─────────────────────────────────────────────────────────
 (html_comment) @comment

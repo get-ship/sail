@@ -15,7 +15,7 @@
 
 (if_block cond: (_) @injection.content
   (#set! injection.language "typescript"))
-(elif_clause cond: (_) @injection.content
+(else_if_clause cond: (_) @injection.content
   (#set! injection.language "typescript"))
 (for_block iter: (_) @injection.content
   (#set! injection.language "typescript"))

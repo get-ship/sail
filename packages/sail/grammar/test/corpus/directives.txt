@@ -1,5 +1,5 @@
 ==================
-data directive (live)
+data directive (top-level query declaration)
 ==================
 
 <data name="agents" source="ship.list('agents')" live/>
@@ -19,130 +19,82 @@ data directive (live)
       (attr_name))))
 
 ==================
-state directive
+scope directive with declared props
 ==================
 
-<state name="count" value="0"/>
+<scope>
+  props: {
+    data = ''
+    diameter = 120
+  }
+</scope>
 
 ---
 
 (source_file
   (element
     tag: (tag_name)
-    (static_attr
-      name: (attr_name)
-      value: (string_literal))
-    (static_attr
-      name: (attr_name)
-      value: (string_literal))))
-
-==================
-component with prop
-==================
-
-<component name="ship-button">
-  <prop name="tone" type="string" default="neutral"/>
-  <prop name="variant" values="solid|soft|outline" default="solid"/>
-  <prop name="disabled" type="bool" reflect/>
-  <prop name="value" type="string" bindable/>
-</component>
-
----
-
-(source_file
-  (element
-    tag: (tag_name)
-    (static_attr
-      name: (attr_name)
-      value: (string_literal))
-    (element
-      tag: (tag_name)
-      (static_attr
-        name: (attr_name)
-        value: (string_literal))
-      (static_attr
-        name: (attr_name)
-        value: (string_literal))
-      (static_attr
-        name: (attr_name)
-        value: (string_literal)))
-    (element
-      tag: (tag_name)
-      (static_attr
-        name: (attr_name)
-        value: (string_literal))
-      (static_attr
-        name: (attr_name)
-        value: (string_literal))
-      (static_attr
-        name: (attr_name)
-        value: (string_literal)))
-    (element
-      tag: (tag_name)
-      (static_attr
-        name: (attr_name)
-        value: (string_literal))
-      (static_attr
-        name: (attr_name)
-        value: (string_literal))
-      (boolean_attr
-        (attr_name)))
-    (element
-      tag: (tag_name)
-      (static_attr
-        name: (attr_name)
-        value: (string_literal))
-      (static_attr
-        name: (attr_name)
-        value: (string_literal))
-      (boolean_attr
-        (attr_name)))
+    (text)
+    (interpolation
+      (identifier)
+      (identifier))
     close_tag: (tag_name)))
 
 ==================
-while-loading boundary
+while-loading boundary (brace block, not an element)
 ==================
 
-<while-loading bind="data">
+{#while-loading of agents}
   <p>loading</p>
-</while-loading>
+{/while-loading}
 
 ---
 
 (source_file
-  (element
-    tag: (tag_name)
-    (static_attr
-      name: (attr_name)
-      value: (string_literal))
+  (while_loading_block
+    signal: (identifier)
     (element
       tag: (tag_name)
       (text)
-      close_tag: (tag_name))
-    close_tag: (tag_name)))
+      close_tag: (tag_name))))
 
 ==================
-while-error boundary with let
+while-error boundary with bound error var (brace block, not an element)
 ==================
 
-<while-error bind="data" let:err>
+{#while-error err of agents}
   <p>err: {err.message}</p>
-</while-error>
+{/while-error}
 
 ---
 
 (source_file
-  (element
-    tag: (tag_name)
-    (static_attr
-      name: (attr_name)
-      value: (string_literal))
-    (let_attr
-      name: (attr_local))
+  (while_error_block
+    error: (identifier)
+    signal: (identifier)
     (element
       tag: (tag_name)
       (text)
       (interpolation
         (identifier))
-      close_tag: (tag_name))
+      close_tag: (tag_name))))
+
+==================
+style: attribute is refused syntax — must NOT parse as a directive
+==================
+
+<div style:color={c}></div>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (dynamic_attr
+      name: (attr_name)
+      (ERROR
+        (UNEXPECTED ':')
+        (identifier))
+      value: (brace_expression
+        (identifier)))
     close_tag: (tag_name)))

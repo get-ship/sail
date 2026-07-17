@@ -1,5 +1,5 @@
 ==================
-if / elif / else
+if / else if / else
 ==================
 
 {#if a > 0}<p>pos</p>{:else if a == 0}<p>zero</p>{:else}<p>neg</p>{/if}
@@ -13,7 +13,7 @@ if / elif / else
       tag: (tag_name)
       (text)
       close_tag: (tag_name))
-    (elif_clause
+    (else_if_clause
       cond: (identifier)
       (element
         tag: (tag_name)
@@ -26,10 +26,59 @@ if / elif / else
         close_tag: (tag_name)))))
 
 ==================
+{:elif} is NOT compiler-recognized syntax — must not parse as else-if
+==================
+
+{#if a}<p>pos</p>{:elif b}<p>neg</p>{/if}
+
+---
+
+(source_file
+  (if_block
+    cond: (identifier)
+    (element
+      tag: (tag_name)
+      (text)
+      close_tag: (tag_name))
+    (interpolation
+      (identifier)
+      (identifier))
+    (element
+      tag: (tag_name)
+      (text)
+      close_tag: (tag_name))))
+
+==================
 for / key / else
 ==================
 
-{#for item, idx of items() key={item.id}}<li>{item.name}</li>{:else}<em>empty</em>{/for}
+{#for item of items() key={item.id}}<li>{item.name}</li>{:else}<em>empty</em>{/for}
+
+---
+
+(source_file
+  (for_block
+    item: (for_pattern
+      (identifier))
+    iter: (identifier)
+    key: (brace_expression
+      (identifier))
+    (element
+      tag: (tag_name)
+      (interpolation
+        (identifier))
+      close_tag: (tag_name))
+    (else_clause
+      (element
+        tag: (tag_name)
+        (text)
+        close_tag: (tag_name)))))
+
+==================
+for / parenthesized (item, index) tuple binding
+==================
+
+{#for (item, idx) of items() key={item.id}}<li>{idx}: {item.name}</li>{/for}
 
 ---
 
@@ -45,12 +94,10 @@ for / key / else
       tag: (tag_name)
       (interpolation
         (identifier))
-      close_tag: (tag_name))
-    (else_clause
-      (element
-        tag: (tag_name)
-        (text)
-        close_tag: (tag_name)))))
+      (text)
+      (interpolation
+        (identifier))
+      close_tag: (tag_name))))
 
 ==================
 match / case / default
@@ -99,3 +146,39 @@ nested for inside if
         (interpolation
           (identifier))
         close_tag: (tag_name)))))
+
+==================
+while-loading / while-error blocks
+==================
+
+{#while-loading of agents}
+  <p data-test="loading">Loading agents&hellip;</p>
+{/while-loading}
+{#while-error err of agents}
+  <p data-test="error">Error: {err.message}</p>
+{/while-error}
+
+---
+
+(source_file
+  (while_loading_block
+    signal: (identifier)
+    (element
+      tag: (tag_name)
+      (static_attr
+        name: (attr_name)
+        value: (string_literal))
+      (text)
+      close_tag: (tag_name)))
+  (while_error_block
+    error: (identifier)
+    signal: (identifier)
+    (element
+      tag: (tag_name)
+      (static_attr
+        name: (attr_name)
+        value: (string_literal))
+      (text)
+      (interpolation
+        (identifier))
+      close_tag: (tag_name))))

@@ -100,18 +100,17 @@ HTML comment
 custom element with hyphen
 ==================
 
-<while-loading bind="agents">
+<error-boundary use:errorBoundary>
   <p>...</p>
-</while-loading>
+</error-boundary>
 
 ---
 
 (source_file
   (element
     tag: (tag_name)
-    (static_attr
-      name: (attr_name)
-      value: (string_literal))
+    (use_attr
+      action: (attr_local))
     (element
       tag: (tag_name)
       (text)

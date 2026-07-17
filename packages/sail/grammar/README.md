@@ -5,35 +5,63 @@ language.
 
 ## Status
 
-V2. Conformance corpus passes against `views/agents/view.sail`
-with no ERROR nodes. ABI 15.
+V2. Corpus + a battery of real `.sail` sources across the repo parse
+with no ERROR nodes. ABI 15. Block/clause vocabulary is checked
+against the compiler's `block_manifest::BLOCKS` table by
+`bindings/rust/tests/block_vocabulary.rs` so this grammar can't
+silently re-drift from `crates/sail/compiler`.
 
 ## What the grammar parses
 
 `.sail` is HTML extended with template grammar. The grammar
 recognises:
 
-- **Directive elements** — `<data>`, `<component>`, `<prop>`,
-  `<while-loading>`, `<while-error>` (just HTML elements as far as
+- **Directive elements** — `<data>` (top-level query declaration),
+  `<scope>` (declares props/variants) (just HTML elements as far as
   the grammar is concerned; the runtime extracts them by tag name;
   queries flag them visually).
 - **Standard HTML elements** — both the explicit-close form
   (`<div>…</div>`) and the self-closing form (`<ship-icon …/>`),
   plus the void-element forms (`<link>`, `<br>`, `<img>`, …).
 - **Binding attributes** — `bind:value={x}`, `on:event[|mod]*={fn}`,
-  `class:active={cond}`, `style:--tone={value}`, `attr:{name}={value}`,
-  `let:err`. Plain attributes (`name="x"`, `name={expr}`, bare-name
-  boolean attrs) round-trip through their own rules.
+  `class:active={cond}`, `attr:name={value}` / `attr:{nameExpr}={value}`,
+  `prop:name={value}`, `use:action` / `use:action={param}`,
+  `motion:trigger={{ prop: 'preset' }}`. Plain attributes (`name="x"`,
+  `name={expr}`, `sx="…"`, bare-name boolean attrs) round-trip through
+  their own rules.
 - **Brace interpolation** — `{expr}` in text and attribute-value
   position. The expression body is captured as an opaque balanced
   atom stream; host-language highlighting comes from a TypeScript
   injection (`queries/injections.scm`).
-- **Control-flow blocks**
-  - `{#if cond}` / `{:else if cond}` / `{:elif cond}` / `{:else}` / `{/if}`
-  - `{#for x of items key={x.id}}` / `{:else}` / `{/for}` (key is optional;
-    pattern accepts `(item, idx)`-style tuples)
+- **Control-flow blocks** (mirrors
+  `crates/sail/compiler/src/block_manifest.rs`)
+  - `{#if cond}` / `{:else if cond}` / `{:else}` / `{/if}`
+  - `{#for x of items key={x.id}}` / `{:else}` / `{/for}` (key is
+    optional; the item binding is a bare identifier or a
+    parenthesized `(item, index)` tuple — a bare comma list without
+    parens is not valid)
   - `{#match value}` / `{:case 'a'}` / `{:default}` / `{/match}`
+  - `{#while-loading of signal}` / `{/while-loading}` — pending state
+    of an async query
+  - `{#while-error errVar of signal}` / `{/while-error}` — rejected
+    state of an async query, binding the rejection to `errVar`
 - **HTML comments** `<!-- … -->`.
+
+### Deliberately NOT recognised (retired/refused surface)
+
+- `style:` attrs — the compiler hard-refuses them
+  (`parse/template/attrs.rs`); runtime geometry moves through a named
+  `use:<action>`.
+- `let:` attrs — never implemented by the compiler and unused in the
+  wild; slot/async bindings are declared on the block header itself
+  (`{#while-error err of x}`).
+- `<state>` as a top-level directive — retired; use the controller's
+  `setup:` factory.
+- `<component>` / `<prop>` directive elements — retired; replaced by
+  `<scope>`.
+- Element-form `<while-loading>` / `<while-error>` — these are brace
+  blocks now, not elements.
+- `{:elif}` — only `{:else if}` is compiler-recognized.
 
 ## Architecture
 
@@ -58,34 +86,50 @@ keywords disambiguated:
 
 ```bash
 cd packages/sail/grammar
-npm install                 # one-shot install of tree-sitter-cli
-npx tree-sitter generate    # writes src/parser.c
-npx tree-sitter test        # runs the corpus
+npx tree-sitter generate --js-runtime native   # writes src/parser.c
+npx tree-sitter test                           # runs the corpus
 ```
+
+`--js-runtime native` uses tree-sitter's built-in QuickJS runtime
+instead of shelling out to a `node` binary — needed in environments
+where `node` isn't a real Node.js install (e.g. only Bun's `node`
+shim is on `PATH`). Drop the flag if a real Node.js is available.
 
 ## Validation
 
+Parse a battery of real `.sail` sources (site routes, stdlib
+elements, pack components) and confirm none produce an ERROR node:
+
 ```bash
 cd packages/sail/grammar
-npx tree-sitter parse ../../views/agents/view.sail --quiet \
-  || echo "FAIL: views/agents/view.sail"
+fail=0
+while IFS= read -r f; do
+  npx tree-sitter parse --quiet --stat total-only "$f" | grep -q ERROR && { echo "FAIL: $f"; fail=1; }
+done < <(find ../../.. -name '*.sail' -not -path '*/node_modules/*')
+exit $fail
 ```
 
-Expected: prints nothing.
+Expected: no `FAIL:` lines.
 
 ## Known v3 work
 
 - **External scanner.** Multi-line balanced expressions and
-  raw-text element bodies (`<style>` / `<script>` without `src`)
-  rely on a regex/precedence approximation. An external C scanner
-  would handle template literals containing `${\``}` (a backtick
-  inside `${…}` inside a backtick — none in the corpus today) and
-  let inline `<style>` bodies span unmatched `{` characters cleanly.
+  raw-text element bodies (`<style>`, `<controller>`, `<script>`
+  without `src`) rely on a regex/precedence approximation. `<style>`
+  CSS and `<controller>` TypeScript bodies are NOT raw-text today —
+  they're walked as ordinary template nodes, so CSS/TS punctuation
+  (`<` combinators, generic `Foo<Bar>`, unbalanced braces across
+  statements, …) routinely produces ERROR nodes on real sources. An
+  external C scanner would let both element bodies span to their
+  matching close tag as one opaque raw-text token, and would also
+  handle template literals containing `` ${`}` `` (a backtick inside
+  `${…}` inside a backtick — none in the corpus today).
 - **`queries/locals.scm`.** Would expose declaration scopes
-  (component props, `let:` bindings) for jump-to-def in editors
-  that consume the `@local.*` family. Currently absent.
+  (`<scope>` props, `{#while-error err of x}`'s `err` binding) for
+  jump-to-def in editors that consume the `@local.*` family.
+  Currently absent.
 - **HTML attribute namespaces.** `attr_name` excludes `:` so the
-  `bind:` / `on:` / `class:` / `style:` / `attr:` / `let:`
+  `bind:` / `on:` / `class:` / `attr:` / `prop:` / `use:` / `motion:`
   directives win the lexer race; the corpus has no SVG-style
   namespaced attributes (`xlink:href`, …) so this is safe today
   but worth revisiting if SVG lands as a first-class template
