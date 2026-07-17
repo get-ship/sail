@@ -350,9 +350,18 @@ body::after {
     --duration-slow: 0.01ms;
     --duration-deliberate: 0.01ms;
   }
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
+  /* :where(...) carries zero specificity, and neither property below is
+   * !important — so a component that OWNS its reduced-motion behaviour
+   * (spinner's slowdown, ticker's animation-play-state: paused) has real
+   * rule specificity (`.sui-spinner .ring`, `.sui-ticker .track`) and wins
+   * this default on the cascade, unforced. Anything that has NOT opted in
+   * still gets stopped here — this is the floor, not a universal override.
+   * transition-duration/scroll-behavior stay a blanket !important kill:
+   * hover/interaction micro-transitions are not a component's motion
+   * design decision, so there is nothing legitimate to lose here. */
+  :where(*, *::before, *::after) {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }

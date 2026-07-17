@@ -571,6 +571,18 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": ""
     }
   ],
+  "ticker": [
+    {
+      "name": "duration",
+      "type": "fast · normal · slow",
+      "default": "normal"
+    },
+    {
+      "name": "reverse",
+      "type": "bool",
+      "default": "false"
+    }
+  ],
   "toast": [
     {
       "name": "tone",

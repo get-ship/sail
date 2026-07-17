@@ -83,10 +83,10 @@ export default controller((_ctx: ViewScope<Scope>) => {
 <column sx="max-w-breakpoint-tablet mx-auto px-6 py-8">
   <div use:targetCursor>
   <column sx="py-8 max-w-breakpoint-tablet text-center relative" gap="4">
-    <div data-glow></div>
+    <div sx="bg-glow-primary"></div>
     <center><p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">SHIP UI · 0.2.0</p></center>
     <h1 sx="text-display font-bold tracking-tight">
-      <strong sx="text-right align-bottom">
+      <strong sx="text-right align-bottom min-w-ch-16">
         {#for w of word() key={w}}
           <b sx="text-primary" motion:enter={{ opacity: 'fade' }}>{w}</b>
         {/for}
@@ -107,16 +107,12 @@ export default controller((_ctx: ViewScope<Scope>) => {
   </div>
 </column>
 
-<column data-band>
-  <row data-track gap="0">
-    <p>NO RAW CSS ◆ SIGNALS BUILT IN ◆ 48 COMPONENTS ◆ 9 THEMES ◆ A11Y BY CONSTRUCTION ◆ NO RAW CSS ◆ SIGNALS BUILT IN ◆ 48 COMPONENTS ◆ 9 THEMES ◆ A11Y BY CONSTRUCTION ◆ NO RAW CSS ◆ SIGNALS BUILT IN ◆ 48 COMPONENTS ◆ 9 THEMES ◆ A11Y BY CONSTRUCTION ◆ NO RAW CSS ◆ SIGNALS BUILT IN ◆ 48 COMPONENTS ◆ 9 THEMES ◆ A11Y BY CONSTRUCTION ◆&nbsp;</p>
-  </row>
-</column>
-<column data-band="alt">
-  <row data-track gap="0">
-    <p>forms + validation · live data · springs + tweens · ssr · hot reload · design tokens · forms + validation · live data · springs + tweens · ssr · hot reload · design tokens · forms + validation · live data · springs + tweens · ssr · hot reload · design tokens · forms + validation · live data · springs + tweens · ssr · hot reload · design tokens ·&nbsp;</p>
-  </row>
-</column>
+<ticker sx="-rotate-1 bg-primary text-primary-foreground font-bold tracking-wide text-sm py-3 my-9 -mx-6">
+  <p>NO RAW CSS ◆ SIGNALS BUILT IN ◆ 48 COMPONENTS ◆ 9 THEMES ◆ A11Y BY CONSTRUCTION ◆&nbsp;</p>
+</ticker>
+<ticker duration="slow" reverse sx="rotate-1 bg-surface-2 text-muted-foreground font-mono text-sm py-3 -mt-1 border-t border-b border-border">
+  <p>forms + validation · live data · springs + tweens · ssr · hot reload · design tokens ·&nbsp;</p>
+</ticker>
 
 <!-- ══ MOTION ═══════════════════════════════════════════════════════════ -->
 <column sx="py-9">
@@ -362,5 +358,5 @@ export default controller((_ctx: ViewScope<Scope>) => {
 </column>
 
 <column sx="max-w-breakpoint-tablet mx-auto px-6 py-8">
-  <p data-wordmark motion:scroll={{ scale: 'spring:deliberate' }}>SHIP</p>
+  <p sx="text-gradient-primary text-display font-bold tracking-tight leading-none text-center select-none -mb-2" motion:scroll={{ scale: 'spring:deliberate' }}>SHIP</p>
 </column>

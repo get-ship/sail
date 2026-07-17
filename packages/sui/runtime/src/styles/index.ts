@@ -63,7 +63,15 @@ const BASE_CSS =
   // what lets most <host> blocks disappear entirely.
   ':host { display: block; color: var(--foreground); }\n' +
   ':host([hidden]) { display: none !important; }\n' +
-  '@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }\n'
+  // transition kill stays a blanket !important — hover/interaction micro-
+  // transitions carry no component-authored reduced-motion intent to lose.
+  // The animation kill is NOT !important and is wrapped in :where() (zero
+  // specificity): a shadow component that owns its own reduced-motion
+  // behavior (a slowdown, a pause) has real selector specificity inside
+  // its own adopted stylesheet and wins the cascade unforced, instead of
+  // being defeated by this default. Anything that has NOT opted in still
+  // gets stopped here — this is the floor, not a universal override.
+  '@media (prefers-reduced-motion: reduce) { :where(*) { transition: none !important; animation: none; } }\n'
 
 // LANGUAGE-LAYER TYPOGRAPHY. Semantic content tags are styled from the type
 // scale automatically — the author writes `<h1>`/`<p>` plain and gets taste,
@@ -704,7 +712,14 @@ export const LIGHT_CONTRACTS_CSS =
   '[data-component] slot { display: contents; }\n' +
   // Reduced motion kills transitions/animation for component subtrees AND the
   // globally-styled controls (their lift/press/transition are document-wide now).
-  '@media (prefers-reduced-motion: reduce) { [data-component], [data-component] *, :where(button, input, textarea, select, a, [tabindex]) { transition: none !important; animation: none !important; } }\n'
+  // transition stays a blanket !important kill (interaction micro-transitions
+  // carry no component-authored intent to lose). animation is NOT !important
+  // and the whole selector list sits inside :where() (zero specificity), so a
+  // component that owns its own reduced-motion behavior (e.g. a marquee that
+  // pauses instead of vanishing) has real specificity in its own skin and
+  // wins the cascade unforced — this rule is only the floor default for
+  // anything that has not opted in.
+  '@media (prefers-reduced-motion: reduce) { :where([data-component], [data-component] *, button, input, textarea, select, a, [tabindex]) { transition: none !important; animation: none; } }\n'
 
 // `ensureLightContracts()` used to live here and inject the contracts from a string
 // constant at every component mount — which meant no bundler could drop the 30KB,

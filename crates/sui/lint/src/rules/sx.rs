@@ -561,6 +561,10 @@ mod tests {
         assert!(run(r#"<div sx="tabular-nums">x</div>"#).is_empty(), "chat timestamps");
         assert!(run(r#"<div sx="transition-colors duration-fast ease-out">x</div>"#).is_empty(), "change-driven motion");
         assert!(run(r#"<table sx="sr-only"><tr><td>1</td></tr></table>"#).is_empty(), "a chart's data table");
+        assert!(run(r#"<p sx="text-gradient-primary">SHIP</p>"#).is_empty(), "the wordmark's gradient clip");
+        assert!(run(r#"<p sx="text-gradient-accent">SHIP</p>"#).is_empty(), "gradient clip, accent tone");
+        assert!(run(r#"<div sx="bg-glow-primary"></div>"#).is_empty(), "the hero's radial glow");
+        assert!(run(r#"<div sx="bg-glow-accent"></div>"#).is_empty(), "radial glow, accent tone");
     }
 
     #[test]

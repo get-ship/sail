@@ -221,8 +221,8 @@ fn l1_surface_count_is_documented() {
     let (stdlib, reskins) = l1_by_kind();
     assert_eq!(
         stdlib.len(),
-        41,
-        "stdlib L1 count drifted from 41 — update the spec's count claim \
+        42,
+        "stdlib L1 count drifted from 42 — update the spec's count claim \
          and run `cargo run -p sui-compiler -- skill` to refresh the agent surface"
     );
     assert_eq!(
@@ -232,8 +232,8 @@ fn l1_surface_count_is_documented() {
     );
     assert_eq!(
         l1_entries().len(),
-        69,
-        "total L1 surface count drifted from 69"
+        70,
+        "total L1 surface count drifted from 70"
     );
 }
 #[test]

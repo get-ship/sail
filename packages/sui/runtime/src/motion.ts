@@ -137,6 +137,38 @@ function applyFinalStyle(el: Element, cfg: MotionConfig): void {
   }
 }
 
+/** Reduced-motion policy for a whole `motions` set, in one place (every
+ *  branch below — loop/enter/view/scroll/event — used to duplicate this).
+ *
+ *  Ruling: translate/scale/rotate are vestibular-hazard motion under
+ *  `prefers-reduced-motion`, so they never PLAY. Every config in the set —
+ *  including a companion `opacity` config — is snapped straight to its
+ *  FINAL resting value: opacity to fully visible, translate/scale/rotate
+ *  to their neutral identity transform (0 / 1 / 0deg — no jump, since
+ *  that IS the rest pose). The element is visible immediately; nothing is
+ *  left at zero opacity or off-screen.
+ *
+ *  An earlier version of this also fired a real WAAPI opacity fade
+ *  (0 → 1) for the translate/scale/rotate case, so reduced-motion users
+ *  would still see a settle-in cue instead of an instant appearance.
+ *  Browser verification (Playwright, `reducedMotion: 'reduce'`) found
+ *  that starting a `element.animate()` opacity keyframe from 0 on a
+ *  reduced-motion page leaves Chromium's computed style for that
+ *  property stuck at the FROM value even after the animation reports
+ *  `finished` and the inline style is re-asserted — reproducible with a
+ *  bare native `el.animate()` call, independent of this runtime, so it
+ *  is a browser/engine interaction with the reduced-motion emulation,
+ *  not a bug in this function. The mandate's own ruling allows either
+ *  "opacity-only entries still visibly run OR content is simply fully
+ *  visible" — given the fade path's unreliability, this takes the
+ *  synchronous-snap branch of that OR unconditionally, which is
+ *  guaranteed correct and was already this codebase's pre-existing
+ *  behavior before the fade was attempted. */
+function applyReducedMotionSettle(el: Element, motions: MotionConfig[]): void {
+  if (!isHTMLElement(el)) return
+  for (const m of motions) applyFinalStyle(el, m)
+}
+
 /** `x`/`y` are motion/mini's own animatable-value names — NOT CSS
  *  properties. `motion/mini`'s `NativeAnimation` (unlike the full
  *  `motion` build's `visualElement`) does not map them to a transform;
@@ -437,7 +469,7 @@ export function __sui_motion_attach(
 
   if (branch === 'loop') {
     if (reduced) {
-      for (const m of config.motions) applyFinalStyle(el, m)
+      applyReducedMotionSettle(el, config.motions)
       return () => {}
     }
     // `loop` means "play forever". A physics preset (`spring:bouncy`) is
@@ -460,7 +492,7 @@ export function __sui_motion_attach(
     installLifecycleRunner()
     if (branch === 'enter') {
       if (reduced) {
-        for (const m of config.motions) applyFinalStyle(el, m)
+        applyReducedMotionSettle(el, config.motions)
         return () => {}
       }
       return createAnimationsWhenConnected(el, config)
@@ -483,7 +515,7 @@ export function __sui_motion_attach(
 
   if (branch === 'view' || branch === 'scroll') {
     if (reduced) {
-      for (const m of config.motions) applyFinalStyle(el, m)
+      applyReducedMotionSettle(el, config.motions)
       return () => {}
     }
     return createAnimationsWhenConnected(el, config)

@@ -41,6 +41,7 @@ const SOURCES: &[(&str, &str)] = &[
     ("toggle-group", include_str!("../stdlib/toggle-group.sui")),
     ("toggle", include_str!("../stdlib/toggle.sui")),
     ("scroll-area", include_str!("../stdlib/scroll-area.sui")),
+    ("ticker", include_str!("../stdlib/ticker.sui")),
     ("theme-picker", include_str!("../stdlib/theme-picker.sui")),
     ("navbar", include_str!("../stdlib/navbar.sui")),
     ("pagination", include_str!("../stdlib/pagination.sui")),

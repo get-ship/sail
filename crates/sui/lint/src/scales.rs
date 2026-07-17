@@ -39,6 +39,12 @@ pub fn values(scale: &str) -> Vec<String> {
             s.extend(tokens::space_values().iter().map(|t| t.to_string()));
             s.extend(channels());
             s.extend(["auto", "full", "screen", "fill", "fit", "min", "max", "0"].iter().map(|t| t.to_string()));
+            // A closed, content-relative width family: a FIXED text slot (a
+            // rotating-word `<strong>` that must not reflow the line around
+            // it) needs a step sized to a character count, not a rem. Same
+            // precedent as border-width: a closed token name that lowers to
+            // a literal unit — the author never writes a raw `16ch`.
+            s.extend(CH.iter().map(|t| format!("ch-{t}")));
             s
         }
         "color" => tokens::color_values().iter().map(|t| t.to_string()).collect(),
@@ -118,6 +124,7 @@ pub fn lower(scale: &str, token: &str) -> Option<String> {
             {
                 format!("var(--{t})")
             }
+            t if t.starts_with("ch-") => format!("{}ch", &t["ch-".len()..]),
             _ => format!("var(--space-{token})"),
         },
         // A sanctioned CSS keyword colour passes through; everything else is a
@@ -179,6 +186,12 @@ fn is_channel(t: &str) -> bool {
 /// decision, and every border in the old sx lowered to 1px.
 const BORDER_WIDTH: &[&str] = &["0", "1", "2", "3", "4", "8"];
 
+/// Content-relative width steps, in characters. A fixed text slot (e.g. a
+/// rotating word that must not reflow its line) sizes itself to the longest
+/// word it will ever show — `ch` is the CSS unit built for exactly that, and
+/// this is the closed set an author can spend it through.
+const CH: &[&str] = &["8", "10", "12", "16", "20", "24"];
+
 /// Opacity / scale steps, finer than the old quarters (a bar chart rests at 85).
 const OPACITY: &[&str] = &[
     "0", "5", "10", "15", "20", "25", "30", "40", "50", "60", "70", "75", "80", "85", "90", "95",
@@ -225,6 +238,16 @@ mod tests {
         assert_eq!(lower("color", "surface-2").unwrap(), "var(--surface-2)");
         assert_eq!(lower("radius", "md").unwrap(), "var(--radius-md)");
         assert_eq!(lower("duration", "fast").unwrap(), "var(--duration-fast)");
+    }
+
+    #[test]
+    fn ch_widths_close_the_fixed_text_slot_gap() {
+        // the landing page's word-cycler: a fixed-width slot sized to the
+        // longest word ("Components", 11 chars) so the trailing text never
+        // reflows mid-cycle.
+        assert!(contains("size", "ch-16"), "closed content-relative width step");
+        assert!(!contains("size", "ch-7"), "not every integer — a closed ramp");
+        assert_eq!(lower("size", "ch-16").unwrap(), "16ch");
     }
 
     #[test]
