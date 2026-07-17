@@ -32,7 +32,7 @@
 import '@ship/tokens/themes.css' // the swappable theme library (paper/halo/glass/console/contrast)
 import '@ship/tokens/products.css' // brand hue per data-product; themes own lightness/chroma
 import '@ship/tokens/contracts.css' // framework contracts: bare h1/p/ul/code/pre/button/anchor skins; the design system applied to a SAIL document, no class hooks needed
-import { applyTheme, readStoredTheme } from '@ship/tokens/themes'
+import { applyTheme, isValidTheme, THEME_STORAGE_KEY, DEFAULT_THEME } from '@ship/tokens/themes'
 
 // Ship UI is ONE site with a top product switcher (SAIL · Deck · Components · AI),
 // SolidJS-style. The active product is derived from the path; each drives its own
@@ -67,23 +67,52 @@ export default controller(() => {
     const product = derived(() => productFor(path()))
     root.setAttribute('data-product', productAttr(product()))
 
-    // Restore the reader's theme. applyTheme is the ONLY writer of
-    // data-theme/.dark; idempotent, so re-running per navigation is free.
-    applyTheme(readStoredTheme())
+    // Theme application. applyTheme is the ONLY writer of data-theme/.dark and
+    // does NOT persist (the picker owns localStorage) — so re-running per
+    // navigation is free and never overrides an explicit pick.
+    //
+    // The marketing home (design 1c) leads with the kinetic DARK design, so a
+    // first-time reader with no stored preference lands on `ship-dark`; the
+    // docs then present in the stored/default theme. An explicit choice in
+    // localStorage always wins, on the home or anywhere else.
+    const explicitTheme = (): string | null => {
+      if (typeof localStorage === 'undefined') return null
+      try {
+        const raw = localStorage.getItem(THEME_STORAGE_KEY)
+        return isValidTheme(raw) ? raw : null
+      } catch {
+        return null
+      }
+    }
+    effect(() => {
+      const chosen = explicitTheme()
+      if (chosen) {
+        applyTheme(chosen)
+        return
+      }
+      applyTheme(path() === '/' ? 'ship-dark' : DEFAULT_THEME)
+    })
 
     // The component catalog and the tutorial LESSON pages own the full width
     // (no sidebar). The /tutorial index is a docs page and keeps the rail; a
     // lesson is a two-pane workbench and needs the whole viewport. The umbrella
-    // landing (design 2a) is a docs page too — top switcher + rail + content,
-    // the same chrome as every other page — so it no longer opts out.
+    // landing (design 1c) is the marketing home — a full-bleed kinetic page
+    // (crossing diagonal tickers, giant wordmark) that must NOT sit inside the
+    // docs rail or the reading gutter, so it opts out of both.
     const fullscreen = derived(() => {
       const p = path()
       return (
+        p === '/' ||
         p === '/components' ||
         p.startsWith('/components/') ||
         p.startsWith('/tutorial/')
       )
     })
+
+    // The marketing landing owns the whole width edge-to-edge (its tickers and
+    // wordmark bleed past the reading gutter), so it renders in a no-padding
+    // main like the workbench — its own sections carry their own insets.
+    const landing = derived(() => path() === '/')
 
     // A workbench route (the tutorial lesson) is a fixed-viewport app: no
     // reading padding, and its page sizes itself with h:fill against the
@@ -114,7 +143,7 @@ export default controller(() => {
       window.addEventListener('resize', publishChromeOffset)
     }
 
-    return { path, product, fullscreen, workbench }
+    return { path, product, fullscreen, workbench, landing }
 })
 </controller>
 
@@ -195,7 +224,7 @@ export default controller(() => {
     </navbar>
   {/if}
 
-  {#if workbench()}
+  {#if workbench() || landing()}
     <main sx="grow-1 min-w-0">
       <slot name="route"></slot>
     </main>
