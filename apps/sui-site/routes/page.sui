@@ -101,7 +101,7 @@ export default controller({
         write and humans to review, with no way to drift off the design system.
       </p>
     </center>
-    <row gap="3" sx="mt-2">
+    <row gap="3" justify="center" sx="mt-2">
       <a variant="solid" tone="primary" href="/getting-started" motion:press={{ scale: 'press' }}>Get started</a>
       <a variant="default" href="/why">Why a language?</a>
     </row>
