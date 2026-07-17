@@ -1,0 +1,165 @@
+//! config-loud-strict: silent capability stripping is a bug, not a feature.
+//!
+//! A `sail.config.json` that fails closed to `strict` — whether from a typo'd
+//! key, unparseable JSON, or a well-formed config that just doesn't happen to
+//! carry a capability signal (`{"stylesheets": []}` alone, the incident that
+//! bit the owner for weeks) — must never do so in silence. These tests pin
+//! the three tier OUTCOME rules end to end, through the real `overrides_for`
+//! log seam and the real `compile()` build gate, not just the pure resolver.
+//!
+//! `PolicyResolution` / `ResolutionKind` carry WHY a tier resolved the way it
+//! did; `crate::check::policy::tests` (unit tests next to the resolver) pin
+//! the exact rendered wording. These tests pin the OBSERVABLE BEHAVIOR: what
+//! `compile()` does with the resolved overrides, and that every fail-closed
+//! path names the file.
+
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use sail_compiler::check::policy::{Policy, ResolutionKind};
+use sail_compiler::{compile, CompileMode, CompileOpts};
+
+fn write_pack(config: &str, sui_body: &str) -> (tempfile::TempDir, PathBuf) {
+    let tmp = tempfile::tempdir().unwrap();
+    fs::write(tmp.path().join("sail.config.json"), config).unwrap();
+    let src_dir = tmp.path().join("src");
+    fs::create_dir_all(&src_dir).unwrap();
+    let sui = src_dir.join("w.sui");
+    fs::write(&sui, sui_body).unwrap();
+    (tmp, sui)
+}
+
+fn opts_for(path: &Path) -> CompileOpts {
+    CompileOpts {
+        route_params: None,
+        setup_url: None,
+        mode: CompileMode::Auto,
+        source_path: Some(path.to_path_buf()),
+        component_meta: None,
+        emit_dts: false,
+        emit_component_imports: false,
+        lint_overrides: Policy::overrides_for(path),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Rule 1: unparseable config or unknown keys → fail closed (strict) AND
+// refuse LOUDLY, naming the file, the offending key, and the resulting tier.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn unknown_key_fails_closed_and_the_refusal_names_file_key_and_tier() {
+    let (_tmp, sui) = write_pack(r#"{"polcy":"strict"}"#, "<p>hi</p>");
+    let (config_path, resolution) = Policy::resolve_outcome(&sui).expect("config resolves");
+    assert_eq!(resolution.tier, Policy::STRICT, "unknown key fails closed to strict");
+    let ResolutionKind::Rejected(reason) = &resolution.kind else {
+        panic!("expected Rejected, got {:?}", resolution.kind);
+    };
+    assert!(reason.contains("polcy"), "must name the offending key: {reason}");
+    assert!(config_path.ends_with("sail.config.json"), "must name the file: {config_path:?}");
+
+    // A component that actually uses a stripped capability now fails the
+    // build gate — sx is off under the fail-closed strict tier.
+    let (_tmp2, sui_sx) = write_pack(r#"{"polcy":"strict"}"#, r#"<sail-card sx="p-4">x</sail-card>"#);
+    let err = compile(&fs::read_to_string(&sui_sx).unwrap(), opts_for(&sui_sx))
+        .expect_err("sx must be refused under the fail-closed strict tier");
+    assert_eq!(err.category.as_deref(), Some("sail-no-sx"));
+}
+
+#[test]
+fn unparseable_config_fails_closed_and_refuses_loudly() {
+    let (_tmp, sui) = write_pack("{ not valid json", "<p>hi</p>");
+    let (_config_path, resolution) = Policy::resolve_outcome(&sui).expect("config resolves");
+    assert_eq!(resolution.tier, Policy::STRICT);
+    assert!(
+        matches!(&resolution.kind, ResolutionKind::Rejected(r) if r.contains("not valid JSON")),
+        "{:?}",
+        resolution.kind
+    );
+}
+
+#[test]
+fn unrecognized_preset_value_is_rejected_not_silently_none() {
+    // `{"preset":"strictest"}` names a RECOGNIZED key (`preset`) with a value
+    // the parser doesn't know — same fail-closed-and-loud bucket as a typo'd
+    // key, not the softer "no signal" bucket.
+    let (_tmp, sui) = write_pack(r#"{"preset":"strictest"}"#, "<p>hi</p>");
+    let (_config_path, resolution) = Policy::resolve_outcome(&sui).expect("config resolves");
+    assert_eq!(resolution.tier, Policy::STRICT);
+    assert!(
+        matches!(&resolution.kind, ResolutionKind::Rejected(r) if r.contains("strictest")),
+        "{:?}",
+        resolution.kind
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Rule 2: recognized keys with no capability signal (stylesheets alone) →
+// the resulting tier must be ANNOUNCED — the original incident.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn stylesheets_only_config_is_announced_not_silently_rejected() {
+    // The exact incident: `{"stylesheets": []}` used to fail closed to strict
+    // with ZERO signal. It must now resolve to strict via the `NoSignal`
+    // bucket (an announcement, not a "your config is broken" refusal) and
+    // name what recognized key WAS present.
+    let (_tmp, sui) = write_pack(r#"{"stylesheets": []}"#, "<p>hi</p>");
+    let (config_path, resolution) = Policy::resolve_outcome(&sui).expect("config resolves");
+    assert_eq!(resolution.tier, Policy::STRICT);
+    let ResolutionKind::NoSignal(hint) = &resolution.kind else {
+        panic!("expected NoSignal (announced), got {:?}", resolution.kind);
+    };
+    assert!(hint.contains("stylesheets"), "must name which key produced no signal: {hint}");
+    assert!(config_path.ends_with("sail.config.json"));
+
+    // The build-time reproduction of the original bug report: a package with
+    // only `stylesheets` declared, and an sx-using component. The compile
+    // must refuse and the refusal must point at the missing grant, not
+    // silently drop the sx.
+    let (_tmp2, sui_sx) =
+        write_pack(r#"{"stylesheets": []}"#, r#"<sail-card sx="p-4">hi</sail-card>"#);
+    let err = compile(&fs::read_to_string(&sui_sx).unwrap(), opts_for(&sui_sx))
+        .expect_err("sx must be refused — stylesheets-only config still fails closed to strict");
+    assert_eq!(err.category.as_deref(), Some("sail-no-sx"));
+    assert!(
+        err.message.contains("sail.config.json"),
+        "the refusal must name the config file that could grant sx: {}",
+        err.message
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Rule 3 (Verify section): granted keys → full, no noise beyond the one
+// announcement line — a clean, explicit config compiles quietly.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn granted_full_preset_compiles_clean_with_one_recognized_announcement() {
+    let (_tmp, sui) = write_pack(r#"{"preset":"full"}"#, r#"<sail-card sx="p-4">hi</sail-card>"#);
+    let (_config_path, resolution) = Policy::resolve_outcome(&sui).expect("config resolves");
+    assert_eq!(resolution.tier, Policy::FULL);
+    assert!(matches!(&resolution.kind, ResolutionKind::Recognized(s) if s == "preset: full"));
+
+    // sx is granted — the build succeeds, no sail-no-sx finding at all.
+    compile(&fs::read_to_string(&sui).unwrap(), opts_for(&sui))
+        .expect("full preset must grant sx cleanly");
+}
+
+// ---------------------------------------------------------------------------
+// Rule 3: no config at all — default semantics unchanged (opt-in; natural
+// lint severities apply, nothing is promoted to strict).
+// ---------------------------------------------------------------------------
+
+#[test]
+fn no_config_leaves_default_semantics_unchanged() {
+    let tmp = tempfile::tempdir().unwrap();
+    let sui = tmp.path().join("w.sui");
+    fs::write(&sui, r#"<sail-card sx="p-4">hi</sail-card>"#).unwrap();
+    assert!(Policy::resolve_outcome(&sui).is_none(), "no config anywhere on the walk");
+    assert!(Policy::overrides_for(&sui).is_empty(), "no config → no capability overrides");
+    // sx's natural severity is Warn, not gated — an unconfigured package
+    // keeps compiling exactly as before.
+    compile(&fs::read_to_string(&sui).unwrap(), opts_for(&sui))
+        .expect("unconfigured package must compile unchanged");
+}

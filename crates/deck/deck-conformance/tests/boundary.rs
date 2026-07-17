@@ -4,13 +4,13 @@
 //! deck-core / deck-axum / deck-host serve SUI views + assets for ANY host.
 //! deck-bundler builds those assets. deck-config holds the config schema.
 //! None of them may hardcode a Ship app layout (`apps/shell`, `apps/shipd`,
-//! `apps/site`) or a Ship-specific identifier (`sui-chrome`, `sui-marketing`,
-//! `sui-arcade`, `sui-pdf`, `__SHIP_APP_ID__`) in PRODUCTION source lines.
+//! `apps/site`) or a Ship-specific identifier (`sail-chrome`, `sail-marketing`,
+//! `sail-arcade`, `sail-pdf`, `__SHIP_APP_ID__`) in PRODUCTION source lines.
 //!
-//! The three deck-own singleton bundle names (sui-runtime, sui-dom,
-//! sui-sdk-client) are legitimately hardcoded in deck-bundler and ARE expected.
-//! (`sui-components` is no longer a singleton — the umbrella was retired
-//! (#221/#269); `sui-components/<tag>` is now the per-tag resolver namespace.)
+//! The three deck-own singleton bundle names (sail-runtime, sail-dom,
+//! sail-sdk-client) are legitimately hardcoded in deck-bundler and ARE expected.
+//! (`sail-components` is no longer a singleton — the umbrella was retired
+//! (#221/#269); `sail-components/<tag>` is now the per-tag resolver namespace.)
 //!
 //! P2-11 hardening:
 //!   - `FORBIDDEN` widens to Ship-app-prefixed route patterns (`/shell/`,
@@ -50,12 +50,12 @@ const FORBIDDEN: &[&str] = &[
     "apps/shipd",
     "apps/site",
     // Ship-app-specific bundle names (deck owns the generic framework
-    // singletons — sui-runtime, sui-dom, sui-sdk-client — but the app-side
+    // singletons — sail-runtime, sail-dom, sail-sdk-client — but the app-side
     // bundles below are Ship-app concerns).
-    "sui-chrome",
-    "sui-marketing",
-    "sui-arcade",
-    "sui-pdf",
+    "sail-chrome",
+    "sail-marketing",
+    "sail-arcade",
+    "sail-pdf",
     // The ship-app identifier macro.
     "__SHIP_APP_ID__",
     // Route patterns that only exist inside Ship apps — a deck crate must
@@ -340,12 +340,12 @@ fn zero_config_discovers_views_only() {
     // does not resolve from a synthetic tempdir, so the singleton-presence checks
     // are install-gated — skip them with a note (not an apps/ coupling). The
     // test's subject — view discovery + zero consumer targets — runs regardless.
-    // sui-components is NOT a singleton — the umbrella was retired (#221/#269);
-    // the `sui-components/<tag>` prefix is now the per-tag resolver namespace.
+    // sail-components is NOT a singleton — the umbrella was retired (#221/#269);
+    // the `sail-components/<tag>` prefix is now the per-tag resolver namespace.
     if deck_bundler::node_resolve::resolve_entry(&root, "@ship/sail-runtime").is_some() {
-        assert!(names.contains(&"sui-runtime"), "sui-runtime present");
-        assert!(names.contains(&"sui-dom"), "sui-dom present");
-        assert!(names.contains(&"sui-sdk-client"), "sui-sdk-client present");
+        assert!(names.contains(&"sail-runtime"), "sail-runtime present");
+        assert!(names.contains(&"sail-dom"), "sail-dom present");
+        assert!(names.contains(&"sail-sdk-client"), "sail-sdk-client present");
     } else {
         eprintln!(
             "SKIP zero_config_discovers_views_only singleton checks: @ship/sail-runtime \

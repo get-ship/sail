@@ -42,10 +42,10 @@ export interface DeckAdaptorConfig {
 
 // Framework singletons: /_deck/<route> -> deck-core/assets/<file> (assets.rs:318-387).
 const FRAMEWORK_JS: Record<string, string> = {
-  "/_deck/runtime.js": "sui-runtime.js",
-  "/_deck/dom.js": "sui-dom.js",
+  "/_deck/runtime.js": "sail-runtime.js",
+  "/_deck/dom.js": "sail-dom.js",
   "/_deck/route.js": "deck-route.js",
-  "/_deck/sdk-client.js": "sui-sdk-client.js",
+  "/_deck/sdk-client.js": "sail-sdk-client.js",
   "/_deck/live-reload.js": "live-reload.js",
 };
 

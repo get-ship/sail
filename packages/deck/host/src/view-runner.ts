@@ -44,9 +44,9 @@ export interface ViewEndowmentInput {
   doc?: Document
   /**
    * The package's resolved `sail.config.json` `"network"` per-origin
-   * allowlist — the SAME declaration the `sui-controller-no-ambient-
+   * allowlist — the SAME declaration the `sail-controller-no-ambient-
    * authority` lint checks fetch/WebSocket/EventSource targets against
-   * (`crates/sui/compiler/src/check/policy.rs`'s `Policy::network_for`).
+   * (`crates/sail/compiler/src/check/policy.rs`'s `Policy::network_for`).
    * Absent/empty means no grant: `fetch` stays un-endowed (`undefined` in
    * the confined view), exactly as before this capability existed. A
    * non-empty list endows a confined `fetch` WRAPPER (never the bare

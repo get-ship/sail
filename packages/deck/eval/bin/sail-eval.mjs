@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Thin shim — published as the `sui-eval` binary. Loads the
+// Thin shim — published as the `sail-eval` binary. Loads the
 // compiled CLI when present; otherwise re-execs Node with TypeScript
 // stripping turned on so the source `.ts` works in dev.
 

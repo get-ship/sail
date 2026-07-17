@@ -1,7 +1,0 @@
-<!--
-  Root layout — wraps every route. deck reads the first custom-element tag
-  (<sui-site-shell>) as the chrome, then mounts each route's content into that
-  chrome's <slot name="route">. A unique tag (not <sui-shell>) avoids colliding
-  with the deck docs site's shell in the shared workspace build.
--->
-<sui-site-shell></sui-site-shell>

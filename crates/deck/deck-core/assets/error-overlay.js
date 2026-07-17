@@ -3,9 +3,9 @@
 // "[sui] effect threw:" buried in console.error. Dozens of throws, zero
 // visible failure surface unless a developer already had devtools open.
 //
-// This listens for the `sui:error` CustomEvent the sui runtime dispatches
-// (packages/sui/runtime/src/error-overlay.ts) whenever an effect or
-// component-setup throw reaches no `<sui-error-boundary>`, and renders a
+// This listens for the `sail:error` CustomEvent the sui runtime dispatches
+// (packages/sail/runtime/src/error-overlay.ts) whenever an effect or
+// component-setup throw reaches no `<sail-error-boundary>`, and renders a
 // fixed, dismissible panel on top of the page.
 //
 // Deliberately dependency-free plain DOM + inline styles: it must render
@@ -26,7 +26,7 @@ function isDevMode() {
 }
 
 /**
- * Subscribe to `sui:error` and render the overlay on each occurrence.
+ * Subscribe to `sail:error` and render the overlay on each occurrence.
  * Repeat errors (same tag + message) bump a count on the existing panel
  * instead of stacking duplicate panels.
  *
@@ -38,10 +38,10 @@ export function attachErrorOverlay() {
   }
   const counts = new Map()
   const handler = (e) => renderError(e.detail, counts)
-  document.addEventListener('sui:error', handler)
+  document.addEventListener('sail:error', handler)
   return {
     close() {
-      document.removeEventListener('sui:error', handler)
+      document.removeEventListener('sail:error', handler)
       clearOverlay()
     },
   }

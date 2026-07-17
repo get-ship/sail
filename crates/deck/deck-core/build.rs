@@ -4,8 +4,8 @@
 //! framework binary at compile time. Every asset under `assets/` is
 //! gitignored — the build emits them on demand and `dispatch.sh`
 //! bootstraps fresh worktrees by copying from the launching repo (or
-//! rebuilding when that's empty). The framework bundles (sui-runtime,
-//! sui-dom, sui-sdk-client, sui-components) are produced by
+//! rebuilding when that's empty). The framework bundles (sail-runtime,
+//! sail-dom, sail-sdk-client, sail-components) are produced by
 //! `cargo run -p deck-cli -- build-assets` and land in `.deck/framework/`.
 //! This build script copies them into `crates/deck/deck-core/assets/` (the
 //! `include_str!` staging path) before the existence/empty guard runs.
@@ -17,7 +17,7 @@
 //! by `build-assets` and read at runtime by `src/packs.rs`.
 //!
 //! What this build script DOES:
-//! 1. Copy `.deck/framework/sui-*.js` → `assets/sui-*.js` (the staging path
+//! 1. Copy `.deck/framework/sail-*.js` → `assets/sail-*.js` (the staging path
 //!    `include_str!` requires). This keeps the canonical bake target in
 //!    `.deck/framework/` while the Rust compiler still reads a fixed path.
 //! 2. Verify the staged assets are populated (panic with actionable message
@@ -38,17 +38,17 @@ use std::path::PathBuf;
 /// bundler-generated entry imports it, so the framework ships it as
 /// `include_str!("../assets/deck-route.js")` from `assets.rs`.
 const FRAMEWORK_BUNDLES: &[&str] = &[
-    "sui-runtime.js",
-    "sui-dom.js",
-    "sui-sdk-client.js",
+    "sail-runtime.js",
+    "sail-dom.js",
+    "sail-sdk-client.js",
     "deck-route.js",
 ];
 
 /// All assets that must be non-empty before the build proceeds.
 const ASSETS: &[&str] = &[
-    "sui-runtime.js",
-    "sui-dom.js",
-    "sui-sdk-client.js",
+    "sail-runtime.js",
+    "sail-dom.js",
+    "sail-sdk-client.js",
     "deck-route.js",
     "lucide-icons.json",
 ];
@@ -59,8 +59,8 @@ const ASSETS: &[&str] = &[
 // script. The bake writes host assets at runtime; build.rs need not track
 // them for rerun invalidation.
 const COARSE_SOURCE_ROOTS: &[&str] = &[
-    "packages/sui/runtime/src",
-    "packages/sui/dom/src",
+    "packages/sail/runtime/src",
+    "packages/sail/dom/src",
     "packages/deck/sdk-client/src",
 ];
 
@@ -80,7 +80,7 @@ fn main() {
     fs::create_dir_all(&assets)
         .unwrap_or_else(|e| panic!("build.rs: mkdir assets: {e}"));
 
-    // ── Stage: copy .deck/framework/sui-*.js → assets/sui-*.js ───────────────
+    // ── Stage: copy .deck/framework/sail-*.js → assets/sail-*.js ───────────────
     //
     // The canonical bake target is .deck/framework/ (produced by
     // `cargo run -p deck-cli -- build-assets`). include_str! requires a

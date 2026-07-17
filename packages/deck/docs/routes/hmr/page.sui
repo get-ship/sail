@@ -18,7 +18,7 @@ export default controller((_ctx: ViewScope<Scope>) => ({ devCmd }))
   <pre data-code-block="true">{devCmd}</pre>
 
   <h2>Components hot-swap in place</h2>
-  <p>Editing a <code>&lt;sui-*&gt;</code> component hot-swaps its live instances where they sit — every mounted copy updates without a reload.</p>
+  <p>Editing a <code>&lt;sail-*&gt;</code> component hot-swaps its live instances where they sit — every mounted copy updates without a reload.</p>
 
   <h2>Pushed over SSE</h2>
   <p>The dev server pushes changes to the browser over an <code>SSE</code> stream. HMR is a dev-only convenience; it ships in no build.</p>

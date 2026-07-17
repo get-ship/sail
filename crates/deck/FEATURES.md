@@ -21,7 +21,7 @@ each is guarded by a dedicated gate test:
 - **deck / sui seam** — SUI emits *structure*, never a serve location. Compiled
   output carries DOM wiring + bare-specifier imports only; it never bakes a
   `/_deck/...` URL or an importmap (serving is Deck's concern; the compiler knows
-  no URLs). Gate: `crates/sui/compiler/tests/boundary_invariants.rs`
+  no URLs). Gate: `crates/sail/compiler/tests/boundary_invariants.rs`
   (`view_output_emits_no_behavior_or_urls`, `form_mutation_ssr_contains_no_sui_urls`,
   `live_data_ssr_contains_no_sui_urls`). Deck injects the `/_deck/...` URLs
   host-side (form actions, the live-data `__subscribe__` URL).
@@ -65,8 +65,8 @@ Each handler logic lives in `deck-core` and returns a `DeckResponse`; the matchi
 | Feature | Route | Implementation | Description |
 | --- | --- | --- | --- |
 | Compiled view module | `GET /_deck/views/{name}/view.js` | `crates/deck/deck-core/src/view.rs::serve_sui_view_setup` | Serves the per-view ESM bundle; compiles on demand when no `.deck` artifact exists. |
-| sui-runtime bundle | `GET /_deck/runtime.js` | `crates/deck/deck-core/src/assets.rs::serve_sui_runtime` | Deck's own baked runtime singleton. |
-| sui-dom bundle | `GET /_deck/dom.js` | `crates/deck/deck-core/src/assets.rs::serve_sui_dom` | Deck's own baked DOM module. |
+| sail-runtime bundle | `GET /_deck/runtime.js` | `crates/deck/deck-core/src/assets.rs::serve_sui_runtime` | Deck's own baked runtime singleton. |
+| sail-dom bundle | `GET /_deck/dom.js` | `crates/deck/deck-core/src/assets.rs::serve_sui_dom` | Deck's own baked DOM module. |
 | sdk-client bundle | `GET /_deck/sdk-client.js` | `crates/deck/deck-core/src/assets.rs::serve_sui_sdk_client` | Deck's own baked SDK client. |
 | Per-icon SVG | `GET /_deck/icons/{name}.svg` | `crates/deck/deck-core/src/assets.rs::serve_sui_icon` | One lucide icon per request, alias-resolved server-side, from the embedded set. |
 | Shared chunk | `GET /_deck/{file}` | `crates/deck/deck-core/src/assets.rs::serve_sui_chunk` | Content-addressed shared chunk from the multi-entry view build, served from `.deck/`. |
@@ -95,7 +95,7 @@ Each handler logic lives in `deck-core` and returns a `DeckResponse`; the matchi
 ## Bundling (`deck-bundler`)
 
 In-process Rolldown — no child process. The bundler compiles `.sui` via the
-linked `sui-compiler` crate, resolves each view's components, dedups shared
+linked `sail-compiler` crate, resolves each view's components, dedups shared
 chunks, builds apps and views, writes the asset graph, and watches for HMR.
 
 | Feature | Output | Implementation | Description |
@@ -104,8 +104,8 @@ chunks, builds apps and views, writes the asset graph, and watches for HMR.
 | Build all targets | `.deck/` + `crates/deck/deck-core/assets/` | `crates/deck/deck-bundler/src/lib.rs::build_all` | Bakes every target (views multi-entry), refreshes the catalog, writes the asset graph; honest per-target failure. |
 | In-process compile | (JS string) | `crates/deck/deck-bundler/src/compile.rs::compile_sui` | Compiles one `.sui` to JS via `sail_compiler::compile`, auto-wiring a paired controller. |
 | Rolldown driver | per-target `.js` | `crates/deck/deck-bundler/src/rolldown_bundle.rs::bundle_target` | Drives Rolldown for one target with the SUI plugin; trims arenas after each build. |
-| SUI resolve/load plugin | (Rolldown plugin) | `crates/deck/deck-bundler/src/sail_plugin.rs` | `resolve_id`/`load` hooks: compile `.sui`, externalize singletons, re-anchor `@ship/<pkg>`, resolve `@sui-tag/<tag>`. |
-| Per-view `@sui-tag` resolver | (view bundle) | `crates/deck/deck-bundler/src/sail_plugin.rs` | `<tag>` → source `.sui` index so a view bundle carries exactly the components it uses. |
+| SUI resolve/load plugin | (Rolldown plugin) | `crates/deck/deck-bundler/src/sail_plugin.rs` | `resolve_id`/`load` hooks: compile `.sui`, externalize singletons, re-anchor `@ship/<pkg>`, resolve `@sail-tag/<tag>`. |
+| Per-view `@sail-tag` resolver | (view bundle) | `crates/deck/deck-bundler/src/sail_plugin.rs` | `<tag>` → source `.sui` index so a view bundle carries exactly the components it uses. |
 | Shared-chunk dedup | `.deck/` shared chunks | `crates/deck/deck-bundler/src/views_bundle.rs::bundle_views` | Multi-entry view build: a component used by ≥2 views lands in one shared chunk. |
 | App build | static dir | `crates/deck/deck-bundler/src/app.rs::bundle_app` | Bundles a SUI SPA (hub/space), externalizing the document importmap; compiles its `.sui` in-process. |
 | Asset-graph write | (purged — `deck-bundler/src/asset_graph.rs`) | (purged — `deck-purge-root`) | The framework no longer writes a monorepo-root `.deck/asset-graph.json`. |
@@ -141,7 +141,7 @@ The pure SUI-facing read side, plus the framework CLI.
 | CLI: bake assets | `deck build-assets` | `crates/deck/deck-cli/src/main.rs` | Bakes framework + consumer bundles via the in-process bundler, with non-empty guards. |
 | CLI: routes | `deck routes` | `crates/deck/deck-cli/src/main.rs` | Regenerates the typed dynamic-route table standalone. `--root=<path>` is required and repeatable; the CLI walks `<root>/routes/` and writes `<root>/routes.gen.ts` with a label auto-derived from the path's basename (no app-name coupling, no monorepo-defaults heuristic). |
 | CLI: scaffold view | `deck scaffold view` | `crates/deck/deck-cli/src/scaffold.rs::run_view` | Generates a new view (page.sui + manifest.jsonc; state goes in an inline `<controller>`). |
-| CLI: scaffold component | `deck scaffold component` | `crates/deck/deck-cli/src/scaffold.rs::run_component` | Generates a new `sui-*` primitive under the primitives package. |
+| CLI: scaffold component | `deck scaffold component` | `crates/deck/deck-cli/src/scaffold.rs::run_component` | Generates a new `sail-*` primitive under the primitives package. |
 | CLI: scaffold pack | `deck scaffold pack` | `crates/deck/deck-cli/src/scaffold.rs::run_pack` | Generates a new first-party `@ship/<name>` component pack. |
 
 ## Security

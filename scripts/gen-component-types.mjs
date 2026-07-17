@@ -19,14 +19,14 @@ import { fileURLToPath } from 'node:url'
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const COMPILER = process.env.SAIL_COMPILER
-  ?? resolve(REPO_ROOT, 'target/debug/sui-compiler')
+  ?? resolve(REPO_ROOT, 'target/debug/sail-compiler')
 if (!existsSync(COMPILER)) {
-  console.error(`sui-compiler not found at ${COMPILER}. Build it (cargo build -p sui-compiler) or set SAIL_COMPILER.`)
+  console.error(`sail-compiler not found at ${COMPILER}. Build it (cargo build -p sail-compiler) or set SAIL_COMPILER.`)
   process.exit(1)
 }
 
 // Pack roots: an explicit arg (a single pack dir), else every pack under
-// packages/components/sui/*.
+// packages/components/sail/*.
 const arg = process.argv[2]
 const PACKS = arg
   ? [resolve(arg)]

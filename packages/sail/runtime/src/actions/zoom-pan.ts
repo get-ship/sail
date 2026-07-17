@@ -1,0 +1,90 @@
+import type { Action } from '../action'
+
+/**
+ * `use:zoomPan={state}` — the live transform of a zoomed+panned image
+ * (sail-media-image). `state` carries the cursor-relative translate and
+ * scale; the action composes the CSS `transform` string and writes it as
+ * a custom property. The consuming element reads it via
+ *     sx="transform-(--zoom-tx)"
+ *
+ * The values are user input (wheel zoom, drag pan) or measured (the
+ * rect-clamped pan bounds), so they are NOT tokens — there is no
+ * `var(--zoom-scale-7)` and there should not be. The seam is exactly
+ * the seam described in LANGUAGE-FLOOR.md: the property stays in sx,
+ * the number crosses JS.
+ */
+export interface ZoomPanState {
+  x: number
+  y: number
+  scale: number
+}
+
+export const zoomPan: Action<ZoomPanState | null | undefined> = (node, initial) => {
+  const el = node as HTMLElement
+  const compose = (s: ZoomPanState): string => {
+    const x = Number.isFinite(s.x) ? s.x : 0
+    const y = Number.isFinite(s.y) ? s.y : 0
+    const sc = Number.isFinite(s.scale) ? s.scale : 1
+    return `translate(${x}px, ${y}px) scale(${sc})`
+  }
+  const apply = (state: ZoomPanState | null | undefined): void => {
+    if (!state) {
+      el.style.removeProperty('--zoom-tx')
+      return
+    }
+    el.style.setProperty('--zoom-tx', compose(state))
+  }
+  apply(initial)
+  return {
+    update: (next) => apply(next),
+  }
+}
+
+/**
+ * `use:maxWidth={px}` — runtime max-width (e.g. a viewer stage sized to
+ * the host viewport minus chrome). A value the user resized to, not a
+ * design decision. Writes `--max-w`; the consuming template uses
+ *     sx="max-w-(--max-w)"
+ */
+export const maxWidth: Action<number | string | null | undefined> = (
+  node,
+  initial,
+) => {
+  const el = node as HTMLElement
+  const toValue = (v: number | string | null | undefined): string | null => {
+    if (v == null) return null
+    if (typeof v === 'number') return Number.isFinite(v) ? `${v}px` : null
+    return v === '' ? null : v
+  }
+  const apply = (v: number | string | null | undefined): void => {
+    const val = toValue(v)
+    if (val == null) el.style.removeProperty('--max-w')
+    else el.style.setProperty('--max-w', val)
+  }
+  apply(initial)
+  return {
+    update: (next) => apply(next),
+  }
+}
+
+/**
+ * `use:swatch={hex}` — runtime swatch background for sail-color-picker.
+ * The colour is user input (#3366ff or `oklch(...)`, whatever they typed);
+ * it is not a token. The action writes the value to `--swatch-color`
+ * verbatim. The consuming template reads it via
+ *     sx="bg-(--swatch-color)"
+ */
+export const swatch: Action<string | null | undefined> = (node, initial) => {
+  const el = node as HTMLElement
+  const apply = (c: string | null | undefined): void => {
+    if (c == null || c === '') {
+      el.style.removeProperty('--swatch-color')
+    } else {
+      el.style.setProperty('--swatch-color', c)
+    }
+  }
+  apply(initial)
+  return {
+    update: (next) => apply(next),
+  }
+}

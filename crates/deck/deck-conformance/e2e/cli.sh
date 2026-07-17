@@ -64,7 +64,7 @@ OUT=$("$DECK" build-assets 2>&1) \
 cd "$DEMO"
 
 # Verify the four framework bundles are non-empty.
-for f in sui-runtime.js sui-dom.js sui-sdk-client.js sui-components.js; do
+for f in sail-runtime.js sail-dom.js sail-sdk-client.js sail-components.js; do
   [ -s "$ASSETS/$f" ] || fail "deck build-assets: $f missing or empty"
   ok "framework bundle: $f ($(wc -c < "$ASSETS/$f") bytes)"
 done

@@ -135,8 +135,8 @@ pub fn write_all_pack_cems(repo_root: &Path) -> Result<usize> {
 /// Walk `dir` recursively and collect every component `.sui` file. Per the SUI
 /// authoring convention the filename stem IS the custom-element tag — a `.sui`
 /// file always declares a component (dynamic markup lives inside it via control
-/// flow, never in sibling partials). Companion tags (`sui-tab` in `sui-tabs/`,
-/// `sui-accordion-item` in `sui-accordion/`, the `sui-annotation-*` family) are
+/// flow, never in sibling partials). Companion tags (`sail-tab` in `sail-tabs/`,
+/// `sail-accordion-item` in `sail-accordion/`, the `sail-annotation-*` family) are
 /// co-located under the PRIMARY tag's directory, so their stem does NOT equal
 /// the parent dir — an earlier `stem == parent` filter silently dropped them
 /// from every pack's manifest. The only requirement is that the stem be a valid
@@ -293,7 +293,7 @@ mod tests {
             r#"{"name":"@ship/fixture-pack","customElements":"dist/custom-elements.json"}"#,
         );
         // Minimal component file — no props, tag comes from ComponentMeta.
-        write(&pack_root.join("src/sui-foo/sui-foo.sui"), "<div>hello</div>\n");
+        write(&pack_root.join("src/sail-foo/sail-foo.sui"), "<div>hello</div>\n");
 
         let result = write_pack_cem(pack_root).expect("write_pack_cem");
         let out_path = result.expect("expected Some(path)");
@@ -309,10 +309,10 @@ mod tests {
 
         let has_foo = modules.iter().any(|m| {
             m["declarations"].as_array().map_or(false, |decls| {
-                decls.iter().any(|d| d["tagName"] == "sui-foo")
+                decls.iter().any(|d| d["tagName"] == "sail-foo")
             })
         });
-        assert!(has_foo, "sui-foo tag in merged manifest");
+        assert!(has_foo, "sail-foo tag in merged manifest");
     }
 
     #[test]
@@ -333,7 +333,7 @@ mod tests {
         );
         write(
             &repo_root.join("packages/charts/dist/custom-elements.json"),
-            &cem_fixture("sui-bar-chart"),
+            &cem_fixture("sail-bar-chart"),
         );
 
         // @ship/agents — NOT in the app's deps.
@@ -343,7 +343,7 @@ mod tests {
         );
         write(
             &repo_root.join("packages/agents/dist/custom-elements.json"),
-            &cem_fixture("sui-agent"),
+            &cem_fixture("sail-agent"),
         );
 
         // App project — depends on @ship/charts only.
@@ -360,8 +360,8 @@ mod tests {
 
         let out = std::fs::read_to_string(project.join("components.gen.ts")).unwrap();
 
-        assert!(out.contains("sui-bar-chart"), "charts component in output");
-        assert!(!out.contains("sui-agent"), "agents component excluded");
+        assert!(out.contains("sail-bar-chart"), "charts component in output");
+        assert!(!out.contains("sail-agent"), "agents component excluded");
         assert!(out.contains("@ship/charts"), "package field present for charts");
         assert!(!out.contains("@ship/agents"), "agents package absent from output");
     }

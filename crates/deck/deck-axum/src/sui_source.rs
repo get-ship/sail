@@ -12,7 +12,7 @@
 //! deck names no domain-specific bucket here. This is a dev feature; a 404
 //! outside a workspace (or with no Resolution carried) is fine.
 //!
-//! Look-ups go through `is_valid_tag()` — only `sui-[a-z0-9-]+` matches;
+//! Look-ups go through `is_valid_tag()` — only `sail-[a-z0-9-]+` matches;
 //! anything else (path traversal, uppercase, foreign prefixes) returns 400.
 
 use std::path::{Path as FsPath, PathBuf};
@@ -22,13 +22,13 @@ use axum::extract::{Extension, Path};
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
 
-/// Tag whitelist — lowercase ASCII, digits, and hyphens after `sui-`.
+/// Tag whitelist — lowercase ASCII, digits, and hyphens after `sail-`.
 /// Rejects path-traversal (`..`, `/`, `\\`) and any non-component name.
 pub(crate) fn is_valid_tag(tag: &str) -> bool {
-    if !tag.starts_with("sui-") {
+    if !tag.starts_with("sail-") {
         return false;
     }
-    if tag.len() < 5 || tag.len() > 64 {
+    if tag.len() < 6 || tag.len() > 64 {
         return false;
     }
     tag.bytes()
@@ -144,19 +144,19 @@ mod tests {
 
     #[test]
     fn valid_tag_passes() {
-        assert!(is_valid_tag("sui-button"));
-        assert!(is_valid_tag("sui-icon"));
-        assert!(is_valid_tag("sui-pipeline-dag"));
+        assert!(is_valid_tag("sail-button"));
+        assert!(is_valid_tag("sail-icon"));
+        assert!(is_valid_tag("sail-pipeline-dag"));
     }
 
     #[test]
     fn invalid_tag_rejected() {
         assert!(!is_valid_tag("ship-button"));
-        assert!(!is_valid_tag("sui-../etc"));
-        assert!(!is_valid_tag("sui-../etc/passwd"));
-        assert!(!is_valid_tag("sui-Button"));
-        assert!(!is_valid_tag("sui-"));
-        assert!(!is_valid_tag(&format!("sui-{}", "a".repeat(64))));
+        assert!(!is_valid_tag("sail-../etc"));
+        assert!(!is_valid_tag("sail-../etc/passwd"));
+        assert!(!is_valid_tag("sail-Button"));
+        assert!(!is_valid_tag("sail-"));
+        assert!(!is_valid_tag(&format!("sail-{}", "a".repeat(64))));
     }
 
     #[test]
@@ -175,9 +175,9 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let root = tmp.path();
         // A pack in a non-sui/non-ship bucket: packages/components/acme/widgets/…
-        let src = root.join("packages/components/acme/widgets/src/sui-thing");
+        let src = root.join("packages/components/acme/widgets/src/sail-thing");
         std::fs::create_dir_all(&src).unwrap();
-        std::fs::write(src.join("sui-thing.sui"), "<div>hi</div>").unwrap();
+        std::fs::write(src.join("sail-thing.sui"), "<div>hi</div>").unwrap();
 
         // Derive the components dir from a DEEPLY nested project root (walk up).
         let nested = root.join("apps/demo");
@@ -186,12 +186,12 @@ mod tests {
         assert_eq!(components, root.join("packages").join("components"));
 
         assert_eq!(
-            super::lookup_file(&components, "sui-thing", ".sui").as_deref(),
+            super::lookup_file(&components, "sail-thing", ".sui").as_deref(),
             Some("<div>hi</div>"),
             "reads from an arbitrary bucket — no hardcoded sui/ship"
         );
         assert!(
-            super::lookup_file(&components, "sui-missing", ".sui").is_none(),
+            super::lookup_file(&components, "sail-missing", ".sui").is_none(),
             "absent tag → None"
         );
     }
@@ -204,10 +204,10 @@ mod tests {
     fn no_compile_time_root_or_domain_hardcode() {
         let src = include_str!("sui_source.rs");
         let manifest_bake = concat!("env!(\"CARGO_", "MANIFEST_DIR\")");
-        let sui_bucket = concat!("components/", "sui");
+        let sail_bucket = concat!("components/", "sail");
         let ship_bucket = concat!("components/", "ship");
         assert!(!src.contains(manifest_bake), "no compile-time manifest-dir bake");
-        assert!(!src.contains(sui_bucket), "no hardcoded sui bucket path");
+        assert!(!src.contains(sail_bucket), "no hardcoded sail bucket path");
         assert!(!src.contains(ship_bucket), "no hardcoded ship bucket path");
     }
 }

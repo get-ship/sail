@@ -75,7 +75,7 @@ pub async fn bundle_views(
         // every shared dep is hoisted to a single content-addressed chunk
         // regardless of how many views use it. See
         // .artifacts/2026-06-06-spaces-isolation.md for the duplication
-        // evidence (35 sui-pagination-*.js chunks pre-fix).
+        // evidence (35 sail-pagination-*.js chunks pre-fix).
         manual_code_splitting: Some(ManualCodeSplittingOptions {
             min_share_count: Some(1),
             min_size: Some(0.0),

@@ -1,9 +1,0 @@
-// Route metadata for views/sui-demo/. See
-// docs/ship-adrs/references/docs/view-directory-convention.md.
-{
-  "name": "sui-demo",
-  "path": "/sui-demo",
-  "title": "SUI Demo",
-  "layout": "default",
-  "auth": "public"
-}

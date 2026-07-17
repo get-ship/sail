@@ -74,7 +74,7 @@ fn payload_html(
 }
 
 /// Slice 2 — strip the ship-js SSR hydration markers
-/// (`<!--sui:text:bN-->...<!--/sui-->`) so the assertions below check the
+/// (`<!--sail:text:bN-->...<!--/sail-->`) so the assertions below check the
 /// rendered text content, not the SSR-only hydration hint. A char-by-char
 /// scan handles the two marker shapes the synthetic emit injects; avoids
 /// pulling the `regex` crate in for what is fundamentally fixed-string
@@ -84,11 +84,11 @@ fn strip_markers(s: &str) -> String {
     let bytes = s.as_bytes();
     let mut i = 0;
     while i < bytes.len() {
-        if s[i..].starts_with("<!--/sui-->") {
-            i += "<!--/sui-->".len();
+        if s[i..].starts_with("<!--/sail-->") {
+            i += "<!--/sail-->".len();
             continue;
         }
-        let prefix = "<!--sui:text:b";
+        let prefix = "<!--sail:text:b";
         if s[i..].starts_with(prefix)
             && let Some(end_rel) = s[i + prefix.len()..].find("-->")
         {
@@ -110,7 +110,7 @@ fn wired_serve_renders_ship_js_first_paint() {
     // ship-js runs the controller, so first paint carries the controller-signal
     // rows: the `{#if}` branch renders and the per-row `aria-pressed:`
     // directive fires (post-floor migration; the prior `class:flagged`
-    // global hook is banned by `sui-no-class`).
+    // global hook is banned by `sail-no-class`).
     let on_raw = payload_html(&root, engine, "board", None);
     let on = strip_markers(&on_raw);
     assert!(on.contains("Alpha") && on.contains("Bravo"), "ship-js {{#for}} renders every row; got:\n{on}");

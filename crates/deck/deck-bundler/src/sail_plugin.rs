@@ -1,7 +1,7 @@
 //! SUI resolve/load plugin for Rolldown. Handles:
 //!   - `resolve_id`: redirect `./X.compiled.js` siblings to a virtual id,
 //!     externalize the framework singletons, re-anchor `@ship/<pkg>` to
-//!     workspace `src/`, resolve `@sui-tag/<tag>` to the component source.
+//!     workspace `src/`, resolve `@sail-tag/<tag>` to the component source.
 //!   - `load`: compile `.sui` (and `.compiled.js`→sibling `.sui`) via
 //!     sail-compiler, returning JS.
 
@@ -30,23 +30,23 @@ use crate::compile::{compile_sui, CompileMode};
 // importmap says — and break the host-declared singleton pattern.
 const SINGLETONS: [&str; 2] = ["@ship/sail-runtime", "@ship/sail-dom"];
 
-/// Virtual id for an unresolved `@sui-tag/<tag>` import — a shared empty module
+/// Virtual id for an unresolved `@sail-tag/<tag>` import — a shared empty module
 /// so the import is a harmless no-op. `\0` marks it virtual (Rollup/Rolldown
 /// convention: never read/written on disk).
-const SAIL_TAG_NOOP: &str = "\0sui-tag-noop";
+const SAIL_TAG_NOOP: &str = "\0sail-tag-noop";
 
 /// Detect compile mode for a `.sui` file using the HTML custom-element tag-name
 /// rule: a valid custom element tag MUST contain a hyphen (HTML spec §4.13.3).
-/// Every component `.sui` file uses its stem as the tag name (`sui-button`,
-/// `sui-rail-item`) and therefore contains a hyphen. Every view uses `page.sui`
+/// Every component `.sui` file uses its stem as the tag name (`sail-button`,
+/// `sail-rail-item`) and therefore contains a hyphen. Every view uses `page.sui`
 /// or `index.sui` — no hyphen. So the rule is exact and path-structure-free:
 ///
 ///   stem contains `'-'` AND stem ∉ {"page", "index"} → Component
 ///   otherwise → View
 ///
 /// This replaces the old `stem == parent_dir` heuristic, which missed all
-/// GROUPED-DIRECTORY components (e.g. `sui-rail/sui-rail-item.sui`,
-/// `sui-command-bar/sui-command-chat.sui`) and required a special-case for
+/// GROUPED-DIRECTORY components (e.g. `sail-rail/sail-rail-item.sui`,
+/// `sail-command-bar/sail-command-chat.sui`) and required a special-case for
 /// `packages/components/ui-components/src`. That shortcut is now subsumed by
 /// this rule (every `.sui` in that tree has a hyphenated stem) and is removed.
 pub(crate) fn detect_mode(abs: &Path, _repo_root: &Path) -> (CompileMode, String) {
@@ -82,10 +82,10 @@ pub(crate) fn normalize(p: &Path) -> PathBuf {
 pub struct SailPlugin {
     pub repo_root: PathBuf,
     /// View builds opt in: each `.sui` compiled in this build emits
-    /// `@sui-tag/<tag>` registration imports (the per-view resolver). Off for
+    /// `@sail-tag/<tag>` registration imports (the per-view resolver). Off for
     /// framework/app builds.
     pub emit_component_imports: bool,
-    /// `<tag>` → component source `.sui`, for resolving `@sui-tag/<tag>`.
+    /// `<tag>` → component source `.sui`, for resolving `@sail-tag/<tag>`.
     /// Empty when `emit_component_imports` is false.
     pub component_index: Arc<HashMap<String, PathBuf>>,
     /// `<tag>` → providing-pack name, for every tag a declared-`packs` scope
@@ -103,7 +103,7 @@ pub struct SailPlugin {
 
 /// The per-view resolver's lookup tables, built once per `(repo_root, packs)`.
 
-/// `index` resolves `@sui-tag/<tag>` to component source; `shadowed` explains a
+/// `index` resolves `@sail-tag/<tag>` to component source; `shadowed` explains a
 /// tag a declared scope excluded (empty under global resolution).
 #[derive(Clone)]
 pub struct ResolverIndex {
@@ -112,7 +112,7 @@ pub struct ResolverIndex {
 }
 
 impl ResolverIndex {
-    /// Empty resolver — for builds that emit no `@sui-tag` imports (framework/
+    /// Empty resolver — for builds that emit no `@sail-tag` imports (framework/
     /// app non-view targets).
     pub(crate) fn empty() -> Self {
         Self { index: Arc::new(HashMap::new()), shadowed: Arc::new(HashMap::new()) }
@@ -155,11 +155,11 @@ impl Plugin for SailPlugin {
                 ..Default::default()
             }));
         }
-        // `@sui-tag/<tag>` — the per-view resolver. Map to the component's
+        // `@sail-tag/<tag>` — the per-view resolver. Map to the component's
         // source `.sui` (so it compiles into the view bundle); an unknown tag
         // (view-private, or no CEM yet) → virtual no-op. Emitted only under
         // `--emit-component-imports`.
-        if let Some(tag) = spec.strip_prefix("@sui-tag/") {
+        if let Some(tag) = spec.strip_prefix("@sail-tag/") {
             return Ok(Some(match self.component_index.get(tag) {
                 Some(src) => HookResolveIdOutput::from_id(src.to_string_lossy().to_string()),
                 None => {
@@ -189,7 +189,7 @@ impl Plugin for SailPlugin {
                     }
                     // Resolve to a shared empty module — a harmless no-op. NOT
                     // external, which would leave an unresolvable
-                    // `@sui-tag/<tag>` specifier in the served view.
+                    // `@sail-tag/<tag>` specifier in the served view.
                     HookResolveIdOutput::from_id(SAIL_TAG_NOOP.to_string())
                 }
             }));
@@ -246,7 +246,7 @@ impl Plugin for SailPlugin {
             // Resolve `@ship/<name>` via the DERIVED workspace package map
             // (`component_roots`, keyed by package.json `name`) — the same map
             // bun/npm resolve through. No hand-maintained search order, no
-            // `sui-` dir-name heuristic: the map IS the authoritative
+            // `sail-` dir-name heuristic: the map IS the authoritative
             // name→source binding. A name absent from the map (a prod build with
             // no workspace, a true node_modules dep) falls through to Rolldown's
             // native resolver below. (There is no umbrella bundle — chrome is
@@ -356,7 +356,7 @@ impl Plugin for SailPlugin {
         // Real .ts/.js — we read the source and override
         // `side_effects` to `True` so the importer's bare
         // `import 'x'` keeps the body regardless of
-        // `package.json#sideEffects: false` (sui-sideeffects
+        // `package.json#sideEffects: false` (sail-sideeffects
         // footgun). Per-statement tree-shaking still applies
         // inside the kept body, so a barrel's dead export is
         // still shaken.
@@ -423,9 +423,9 @@ mod tests {
     #[test]
     fn grouped_dir_component_detected_as_component() {
         assert_eq!(
-            detect("/repo/apps/shell/src/components/sui-rail/sui-rail-item.sui"),
+            detect("/repo/apps/shell/src/components/sail-rail/sail-rail-item.sui"),
             CompileMode::Component,
-            "sui-rail-item.sui must be a Component (hyphenated stem)"
+            "sail-rail-item.sui must be a Component (hyphenated stem)"
         );
     }
 
@@ -443,9 +443,9 @@ mod tests {
     #[test]
     fn same_name_component_detected_as_component() {
         assert_eq!(
-            detect("/repo/packages/components/sui/primitives/src/sui-button/sui-button.sui"),
+            detect("/repo/packages/components/sail/primitives/src/sail-button/sail-button.sui"),
             CompileMode::Component,
-            "sui-button/sui-button.sui must be a Component"
+            "sail-button/sail-button.sui must be a Component"
         );
     }
 
@@ -464,10 +464,10 @@ mod tests {
     #[test]
     fn detect_mode_returns_stem_as_tag() {
         let (_, tag) = detect_mode(
-            Path::new("/repo/apps/shell/src/components/sui-command-bar/sui-command-chat.sui"),
+            Path::new("/repo/apps/shell/src/components/sail-command-bar/sail-command-chat.sui"),
             &fake_root(),
         );
-        assert_eq!(tag, "sui-command-chat");
+        assert_eq!(tag, "sail-command-chat");
     }
 
     fn write(path: &Path, body: &str) {
@@ -485,7 +485,7 @@ mod tests {
             r#"{"name":"@ship/sail-primitives"}"#,
         );
         write(
-            &root.join("packages/primitives/src/sui-button/sui-button.sui"),
+            &root.join("packages/primitives/src/sail-button/sail-button.sui"),
             "<button><slot></slot></button>\n",
         );
         write(&root.join("packages/agents/package.json"), r#"{"name":"@ship/agents"}"#);
@@ -506,7 +506,7 @@ mod tests {
         let declared: Vec<String> = vec!["@ship/sail-primitives".into()];
 
         let scoped = component_index(root, &declared);
-        assert!(scoped.index.contains_key("sui-button"), "declared tag resolves");
+        assert!(scoped.index.contains_key("sail-button"), "declared tag resolves");
         assert!(
             !scoped.index.contains_key("ship-agent-card"),
             "undeclared tag is excluded from the index"
@@ -525,7 +525,7 @@ mod tests {
         let tmp = two_pack_fixture();
         let root = tmp.path();
         let global = component_index(root, &[]);
-        assert!(global.index.contains_key("sui-button"));
+        assert!(global.index.contains_key("sail-button"));
         assert!(global.index.contains_key("ship-agent-card"));
         assert!(global.shadowed.is_empty(), "global scope shadows nothing");
     }
@@ -541,21 +541,21 @@ mod tests {
         let tmp = two_pack_fixture();
         let root = tmp.path();
 
-        // First walk caches the index — sui-button present, sui-late absent.
+        // First walk caches the index — sail-button present, sail-late absent.
         let first = component_index(root, &[]);
-        assert!(first.index.contains_key("sui-button"));
-        assert!(!first.index.contains_key("sui-late"), "the new tag does not exist yet");
+        assert!(first.index.contains_key("sail-button"));
+        assert!(!first.index.contains_key("sail-late"), "the new tag does not exist yet");
 
         // A component appears mid-session (what an author does under `deck dev`).
         write(
-            &root.join("packages/primitives/src/sui-late/sui-late.sui"),
+            &root.join("packages/primitives/src/sail-late/sail-late.sui"),
             "<span><slot></slot></span>\n",
         );
 
         // Without invalidation the cache still serves the STALE index — the bug.
         let stale = component_index(root, &[]);
         assert!(
-            !stale.index.contains_key("sui-late"),
+            !stale.index.contains_key("sail-late"),
             "cached index is stale: the mid-session component is invisible (the hazard)"
         );
 
@@ -563,10 +563,10 @@ mod tests {
         invalidate_component_index();
         let fresh = component_index(root, &[]);
         assert!(
-            fresh.index.contains_key("sui-late"),
+            fresh.index.contains_key("sail-late"),
             "after invalidation the re-walk picks up the new component"
         );
-        assert!(fresh.index.contains_key("sui-button"), "and keeps the original");
+        assert!(fresh.index.contains_key("sail-button"), "and keeps the original");
     }
 }
 

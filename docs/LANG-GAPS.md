@@ -17,7 +17,7 @@ Ruling key: OPEN (needs a decision) · SHIPPED (atom exists) · REJECTED.
 
 - **Density channel**: `--density-row-py/px/gap/text/icon` are a core design
   axis (rows/tiles resize with `data-density`) and sx cannot reference them.
-  Blocks: sui-prop-matrix (cells), sui-component-viewer (prop rows), every
+  Blocks: sail-prop-matrix (cells), sail-component-viewer (prop rows), every
   row-shaped surface to come. Candidate: density values join the space/text
   vocabularies (`p:density-row-py`, `text:density`), or a `row-shaped` idiom.
 - **`case:` atom** (`upper`/`lower`/`none`): the label idiom (xs + wide
@@ -28,29 +28,29 @@ Ruling key: OPEN (needs a decision) · SHIPPED (atom exists) · REJECTED.
   migrations needed `repeat(auto-fill, minmax(180px, 1fr))` (with a real
   width token) and proportional tracks (`1fr 1.4fr auto`). Candidate: a
   closed `tracks` preset vocabulary on `<grid>`.
-- **`wrap:` atom** (`pre`/`pre-wrap`/`anywhere`/`nowrap`): sui-diff needs
+- **`wrap:` atom** (`pre`/`pre-wrap`/`anywhere`/`nowrap`): sail-diff needs
   pre-wrap + break-word for code lines; currently a plain `<pre>` that
   overflows. Also the reading-column wrap rule in base.css wants to be
   language, not chrome CSS.
 
-- **Prose typography surface**: rendered-content components (sui-markdown)
+- **Prose typography surface**: rendered-content components (sail-markdown)
   and reading chrome (the site's .doc in base.css) need an entire
   typography-of-prose sheet for native child elements — heading rhythm,
   list markers, blockquote, code/pre, table cells. Not sx-shaped (children
   are runtime-rendered). Candidate: a framework prose sheet next to the
-  contracts, or a <prose> element. Holds sui-markdown.
+  contracts, or a <prose> element. Holds sail-markdown.
 
 ## Open — single-site (so far)
 
-- **Stage width tokens**: sui-render's viewport framing (desktop 1280 /
+- **Stage width tokens**: sail-render's viewport framing (desktop 1280 /
   tablet 768 / mobile 390). No device-width tokens exist; `w`/`max-w` only
-  speak tokens. Blocks sui-render.
+  speak tokens. Blocks sail-render.
 - **Nowrap row / split element**: `<row>` wraps by default, so a full-height
   split cannot rely on stretch (the tutorial workbench bug). Either a nowrap
   word on `<row>` or a dedicated panes element.
 - **Column clamp**: exact `minmax(0, 30rem)` pane (tutorial lesson column);
   nearest today is `grow:1 + max-w:panel-max-w-md`.
-- **Hairline insets**: sui-diff's deliberate 1px line padding; smallest space
+- **Hairline insets**: sail-diff's deliberate 1px line padding; smallest space
   token is coarser. Candidate: `--space-hairline` token.
 - **Transform presets**: hover scaleY (tutorial stepper), press translateY
   (buttons). Motion presets cover enter/exit; hover/press micro-transforms
@@ -69,9 +69,9 @@ Ruling key: OPEN (needs a decision) · SHIPPED (atom exists) · REJECTED.
 
 ## Held components (keep `<style>` pending rulings)
 
-- `sui-render` — stage width tokens.
-- `sui-prop-matrix` — density channel, case:, grid tracks, hover transition.
-- `sui-component-viewer` — density channel, case:, grid tracks, dividers.
+- `sail-render` — stage width tokens.
+- `sail-prop-matrix` — density channel, case:, grid tracks, hover transition.
+- `sail-component-viewer` — density channel, case:, grid tracks, dividers.
 
 ## Parked decisions (rule against live usage, not references)
 
@@ -99,7 +99,7 @@ Ruling key: OPEN (needs a decision) · SHIPPED (atom exists) · REJECTED.
   physics with no design opinion. The NAME is the open question; the capability
   is not. Alternatives: `visibility:sr-only` (Tailwind's), `visibility:a11y`,
   or an L1 `<visually-hidden>` wrapper. One-line change in
-  `crates/sui/lint/src/rules/sx.rs`.
+  `crates/sail/lint/src/rules/sx.rs`.
 
 ## From the five-pack migration (charts · canvas · chat-elements · band · media)
 
@@ -113,7 +113,7 @@ the declaration was left out and written down here.
   reflects and styles nothing.
 - **media `fit`** — `object-fit: contain|cover|none`. No `object:` atom, AND a
   variant can never reach a descendant (variants lower to `:scope[attr]
-  .sui-root`), so even with the atom the `<img>` inside is unreachable. The prop
+  .sail-root`), so even with the atom the `<img>` inside is unreachable. The prop
   reflects and styles nothing.
 - **composer double focus ring** — the frame owns `:focus-within`, so the inner
   control must not draw its own. No `outline:` axis (`ring:` is box-shadow), and
@@ -156,13 +156,13 @@ the declaration was left out and written down here.
 
 ### Compiler bugs found (not language gaps)
 
-- **`sui-root` is clobbered.** `dom_emit.rs` emits `classList.add("sui-root")`
+- **`sail-root` is clobbered.** `dom_emit.rs` emits `classList.add("sail-root")`
   and then `setAttribute("class", …)`. Any root that is a layout keyword or has
   a dynamic axis loses the class — so `variants`/`compound`, which lower to
-  `:scope[attr] .sui-root`, SILENTLY NEVER MATCH. Verified in jsdom.
-- **A layout root defeats the derived host display.** `.sui-root{display:inline-flex}`
-  emits before `.sui-row{display:flex}` at equal specificity, so a `<row>`-rooted
+  `:scope[attr] .sail-root`, SILENTLY NEVER MATCH. Verified in jsdom.
+- **A layout root defeats the derived host display.** `.sail-root{display:inline-flex}`
+  emits before `.sail-row{display:flex}` at equal specificity, so a `<row>`-rooted
   component is block-level whatever it asked for.
 - **A prop named `size` is hijacked** by the framework size channel and retyped
-  to xs|sm|md|lg. `<sui-donut size="120">` clamped to "md" and the chart painted
+  to xs|sm|md|lg. `<sail-donut size="120">` clamped to "md" and the chart painted
   nothing. Any numeric prop called `size` is a trap.

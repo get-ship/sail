@@ -1,7 +1,7 @@
 //! The bound's end-to-end proof: a runaway controller is terminated by the
 //! deadline and the SSR render path returns a CLEAN `Err` (not a hang, not a
 //! panic). The gate (`deck_core::synthetic_ssr`) catches that `Err` and serves
-//! CSR (an empty `#sui-root`, logged loudly) — this is the contract
+//! CSR (an empty `#sail-root`, logged loudly) — this is the contract
 //! reliability.rs already assumes ("a failure records the precise gap, never a
 //! silent exclusion").
 //!

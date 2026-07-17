@@ -17,7 +17,7 @@ use deck_config::DeckConfig;
 /// other singletons it must NOT inline. SSOT for the singleton set: the build
 /// target list, the `assets_dir_for` routing, and `is_framework_singleton` all
 /// read it. Chrome components are NOT here — the per-tag tree-shaking resolver
-/// (`sui-components/<name>` in `assets_dir_for` + the `@sui-tag/<tag>` virtual
+/// (`sail-components/<name>` in `assets_dir_for` + the `@sail-tag/<tag>` virtual
 /// import in `sail_plugin.rs`) is the canonical way chrome loads.
 pub(crate) struct FrameworkSingleton {
     pub name: &'static str,
@@ -29,21 +29,21 @@ pub(crate) struct FrameworkSingleton {
 /// The framework singletons, resolved from `node_modules`/workspace by `spec`.
 pub(crate) const FRAMEWORK_SINGLETONS: &[FrameworkSingleton] = &[
     FrameworkSingleton {
-        name: "sui-runtime",
+        name: "sail-runtime",
         spec: "@ship/sail-runtime",
-        out_file: "sui-runtime.js",
+        out_file: "sail-runtime.js",
         externals: &[],
     },
     FrameworkSingleton {
-        name: "sui-dom",
+        name: "sail-dom",
         spec: "@ship/sail-dom",
-        out_file: "sui-dom.js",
+        out_file: "sail-dom.js",
         externals: &["@ship/sail-runtime"],
     },
     FrameworkSingleton {
-        name: "sui-sdk-client",
+        name: "sail-sdk-client",
         spec: "@ship/sdk-client",
-        out_file: "sui-sdk-client.js",
+        out_file: "sail-sdk-client.js",
         externals: &["@ship/sail-runtime"],
     },
     // `@ship/sdk` — the Connect SDK (generated protobuf/Connect client, the
@@ -93,11 +93,11 @@ pub enum TargetEntry {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BundleTarget {
-    /// Logical name, e.g. `sui-runtime`, `sui-components/sui-rail`, `views/git/view`.
+    /// Logical name, e.g. `sail-runtime`, `sail-components/sail-rail`, `views/git/view`.
     pub name: String,
     pub entry: TargetEntry,
     /// Externals the author declared. The build phase additionally forces
-    /// `@ship/sail-runtime` external for every target except `sui-runtime`.
+    /// `@ship/sail-runtime` external for every target except `sail-runtime`.
     pub externals: Vec<String>,
     /// Output path relative to the target's assets dir (`assets_dir_for`).
     pub out_file: String,
@@ -173,9 +173,9 @@ impl BundleLayout {
     /// root is never a bake target. Deck-own framework singletons go
     /// under `.deck/framework/` (the build-script staging path that
     /// `build.rs` copies into `crates/deck/deck-core/assets/` for
-    /// `include_str!`); everything else — `views/*`, `sui-components/*`,
-    /// and discovered consumer packs (`sui-marketing`, `sui-arcade`,
-    /// `sui-pdf`, `ship-code-editor`, …) — goes directly under `.deck/`.
+    /// `include_str!`); everything else — `views/*`, `sail-components/*`,
+    /// and discovered consumer packs (`sail-marketing`, `sail-arcade`,
+    /// `sail-pdf`, `ship-code-editor`, …) — goes directly under `.deck/`.
     pub fn assets_dir_for(&self, name: &str) -> PathBuf {
         if is_framework_singleton(name) {
             return self.framework_dir();
@@ -356,28 +356,28 @@ mod tests {
         assert_eq!(deck_config::DECK_OUT_DIRNAME, ".deck", "the one declared output-dir name");
         // The framework sub-dir hangs off the SAME join — never a second `.deck` root.
         let l = BundleLayout::with_config(root.clone(), None, DeckConfig::defaults());
-        assert_eq!(l.assets_dir_for("sui-runtime"), shared.join("framework"));
+        assert_eq!(l.assets_dir_for("sail-runtime"), shared.join("framework"));
     }
 
     #[test]
     fn assets_dir_routes_by_name() {
         // Framework singletons land in `.deck/framework/` (build-script staging).
         let l = BundleLayout::with_config(PathBuf::from("/repo"), None, DeckConfig::defaults());
-        assert_eq!(l.assets_dir_for("sui-runtime"), PathBuf::from("/repo/.deck/framework"));
-        assert_eq!(l.assets_dir_for("sui-dom"), PathBuf::from("/repo/.deck/framework"));
-        assert_eq!(l.assets_dir_for("sui-sdk-client"), PathBuf::from("/repo/.deck/framework"));
-        // Per-tag chrome (`sui-components/<name>`) lands in `.deck/`.
-        // (The umbrella `sui-components` target no longer exists — chrome
+        assert_eq!(l.assets_dir_for("sail-runtime"), PathBuf::from("/repo/.deck/framework"));
+        assert_eq!(l.assets_dir_for("sail-dom"), PathBuf::from("/repo/.deck/framework"));
+        assert_eq!(l.assets_dir_for("sail-sdk-client"), PathBuf::from("/repo/.deck/framework"));
+        // Per-tag chrome (`sail-components/<name>`) lands in `.deck/`.
+        // (The umbrella `sail-components` target no longer exists — chrome
         // is per-tag tree-shaking only.)
-        assert_eq!(l.assets_dir_for("sui-components/sui-rail"), PathBuf::from("/repo/.deck"));
+        assert_eq!(l.assets_dir_for("sail-components/sail-rail"), PathBuf::from("/repo/.deck"));
         assert_eq!(l.assets_dir_for("views/git/view"), PathBuf::from("/repo/.deck"));
-        // Consumer targets (e.g. sui-marketing, sui-arcade, sui-pdf,
+        // Consumer targets (e.g. sail-marketing, sail-arcade, sail-pdf,
         // ship-code-editor) ALSO land in `.deck/` — the bake's staging
         // area, sibling to the framework singletons. No target is a host
         // asset; the bundler owns its output layout and every build
         // artifact belongs under `.deck/`.
-        assert_eq!(l.assets_dir_for("sui-marketing"), PathBuf::from("/repo/.deck"));
-        assert_eq!(l.assets_dir_for("sui-arcade"), PathBuf::from("/repo/.deck"));
+        assert_eq!(l.assets_dir_for("sail-marketing"), PathBuf::from("/repo/.deck"));
+        assert_eq!(l.assets_dir_for("sail-arcade"), PathBuf::from("/repo/.deck"));
         assert_eq!(l.assets_dir_for("ship-something"), PathBuf::from("/repo/.deck"));
     }
 
@@ -399,7 +399,7 @@ mod tests {
         let targets = l.all_targets();
         let names: Vec<&str> = targets.iter().map(|t| t.name.as_str()).collect();
 
-        assert!(names.contains(&"sui-runtime"), "node-resolved framework target present");
+        assert!(names.contains(&"sail-runtime"), "node-resolved framework target present");
         assert!(names.contains(&"views/git/view"), "discovered view");
     }
 
@@ -415,7 +415,7 @@ mod tests {
         let names: Vec<String> =
             l.all_targets().into_iter().map(|t| t.name).collect();
         assert!(
-            !names.iter().any(|n| n == "sui-runtime"),
+            !names.iter().any(|n| n == "sail-runtime"),
             "no framework target when the package isn't installed"
         );
     }
@@ -460,30 +460,30 @@ mod tests {
         write(
             &root.join("apps/site/package.json"),
             r#"{ "name": "@ship/site", "deck": { "bundles": [
-                { "name": "sui-marketing", "entry": "src/marketing/marketing-bundle.ts",
+                { "name": "sail-marketing", "entry": "src/marketing/marketing-bundle.ts",
                   "externals": ["@ship/sail-runtime", "@ship/sail-dom"], "lazy": false } ] } }"#,
         );
         write(
             &root.join("packages/arcade/package.json"),
             r#"{ "name": "@ship/arcade", "deck": { "bundles": [
-                { "name": "sui-arcade", "entry": "src/index.ts",
+                { "name": "sail-arcade", "entry": "src/index.ts",
                   "externals": ["@ship/sail-runtime", "@ship/sail-dom"], "lazy": true } ] } }"#,
         );
 
         let l = BundleLayout::with_config(root.clone(), None, DeckConfig::defaults());
         let consumer = l.consumer_targets();
 
-        let marketing = consumer.iter().find(|t| t.name == "sui-marketing").expect("marketing discovered");
+        let marketing = consumer.iter().find(|t| t.name == "sail-marketing").expect("marketing discovered");
         assert_eq!(
             marketing.entry,
             TargetEntry::Real(root.join("apps/site/src/marketing/marketing-bundle.ts")),
             "entry is package-relative, joined onto the declaring package root"
         );
         assert_eq!(marketing.externals, vec!["@ship/sail-runtime", "@ship/sail-dom"]);
-        assert_eq!(marketing.out_file, "sui-marketing.js");
+        assert_eq!(marketing.out_file, "sail-marketing.js");
         assert!(!marketing.lazy, "marketing is eager");
 
-        let arcade = consumer.iter().find(|t| t.name == "sui-arcade").expect("arcade discovered");
+        let arcade = consumer.iter().find(|t| t.name == "sail-arcade").expect("arcade discovered");
         assert!(arcade.lazy, "arcade's lazy intent rides onto the BundleTarget");
 
         // No central registry: discovery is the only source of consumer targets.

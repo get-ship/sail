@@ -110,7 +110,7 @@ Still open:
   `lib.rs::deck_dev_server` here remains the wired-demo variant (with the
   conformance `DemoStore`) the standalone CLI deliberately does not bundle.
 - **`Bundler` construction couples to `ship_substrate::ShipHome`.** Its
-  constructor takes `&ShipHome` (used only to locate `sui-compiler` + a staging
+  constructor takes `&ShipHome` (used only to locate `sail-compiler` + a staging
   dir). A standalone deck should accept a plain compiler path + staging dir.
 - **View-host shell references ship surfaces.** It links
   `/api/assets/view-tokens.css` (and the browser requests `/favicon.ico`); a

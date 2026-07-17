@@ -22,7 +22,7 @@ Three layers, dependencies pointing one way (deck → sui, never back):
   builds, and a `DataPort` seam so a host app supplies live data without deck
   knowing the app.
 - **Design system** — the OKLCH token substrate (`@ship/tokens`, ~250 tokens,
-  LSP-completed) and `<sui-*>` component packs built on it.
+  LSP-completed) and `<sail-*>` component packs built on it.
 
 ## Place in the Ship project
 
@@ -51,13 +51,13 @@ the bun workspace / crates.io with no external sibling checkout required.
 
 | Path | What it is |
 |---|---|
-| `crates/sui/` | The language: `compiler` (`.sui` → ESM, pure, WASM-safe), `compiler-napi` (Node binding), `lint`, `lsp`. |
+| `crates/sail/` | The language: `compiler` (`.sui` → ESM, pure, WASM-safe), `compiler-napi` (Node binding), `lint`, `lsp`. |
 | `crates/deck/` | The host: `deck-core` (transport-agnostic serving), `deck-axum` (axum adapter), `deck-host`, `deck-bundler` (in-process Rolldown), `deck-config` (`deck.jsonc`), `deck-cli` (the `deck` binary), `deck` (facade), `deck-conformance` (harness), `deck-ssr` (TS-SSR through ship-js; members-only). |
 | `crates/build-info` | Per-repo build-time identity (git sha/dirty/timestamp). |
-| `packages/sui/` | `runtime` (signals + custom-element wrapper), `dom` (DOM interpreter + hydration), `tokens`, `compiler-wasm` (browser compiler), `grammar` (tree-sitter), `test-setup`, `tutorial` (lesson sources). |
+| `packages/sail/` | `runtime` (signals + custom-element wrapper), `dom` (DOM interpreter + hydration), `tokens`, `compiler-wasm` (browser compiler), `grammar` (tree-sitter), `test-setup`, `tutorial` (lesson sources). |
 | `packages/deck/` | `router`, `host` (SES-confined controller execution), `hono` (TS sibling of deck-axum), `lsp-browser`, `docs` (deck's own docs site — the canonical standalone example and release gate), `e2e` (Playwright against the real CLI), `eval`, `test-harness`. |
-| `packages/components/sui/` | Component packs: `primitives`, `charts`, `media`, `viewer`, `canvas`, `chat-elements`, `code-editor`. |
-| `apps/sui-site` | The SUI site: docs, tutorial, component catalog + interactive playground. A deck app dogfooding the framework. |
+| `packages/components/sail/` | Component packs: `primitives`, `charts`, `media`, `viewer`, `canvas`, `chat-elements`, `code-editor`. |
+| `apps/sail-site` | The SUI site: docs, tutorial, component catalog + interactive playground. A deck app dogfooding the framework. |
 | `packages/deck/eval` | The SUI authoring eval (`@ship/sail-eval`) — lane agents build a view from a spec; compile + lint + structural rubric grade the output. |
 | `tests/` | `integration` (vitest), `parity` (emit parity), `perf` (js-framework-benchmark baselines). |
 | `docs/` | `ARCHITECTURE.md` (the governing language/userland map), `LANG-GAPS.md` (the migration ledger), generated reports. |
@@ -75,7 +75,7 @@ cargo build                              # default members
 ```
 
 The order matters: `deck-core`'s build script `include_str!`s the framework
-bundles (`sui-runtime.js`, `sui-dom.js`, …) and fails with instructions when
+bundles (`sail-runtime.js`, `sail-dom.js`, …) and fails with instructions when
 they haven't been baked. Baked output is gitignored, never committed.
 
 A bare `cargo build` excludes `deck-ssr` (see `default-members` in the root
@@ -92,7 +92,7 @@ no sibling checkout.
 Run the SUI site:
 
 ```sh
-cd apps/sui-site && bun run dev          # deck dev server on 127.0.0.1:7878
+cd apps/sail-site && bun run dev          # deck dev server on 127.0.0.1:7878
 ```
 
 ## Test
@@ -105,12 +105,12 @@ cd packages/deck/e2e && bun run test     # browser e2e: real deck CLI, headless 
 ```
 
 `tests/perf/` holds checked-in js-framework-benchmark baselines;
-`crates/sui/compiler/fuzz` is a cargo-fuzz target (own workspace, nightly).
+`crates/sail/compiler/fuzz` is a cargo-fuzz target (own workspace, nightly).
 
 ## The deck CLI
 
 ```sh
-cargo run -p deck-cli -- dev --project apps/sui-site   # standalone dev + HMR
+cargo run -p deck-cli -- dev --project apps/sail-site   # standalone dev + HMR
 cargo run -p deck-cli -- build --project <app> --bundle-framework
 cargo run -p deck-cli -- routes --root <app>           # routes/ → routes.gen.ts
 cargo run -p deck-cli -- scaffold view <name>          # also: component, pack
@@ -126,7 +126,7 @@ Standalone deck serves routing, assets, SSR and HMR without any daemon; live
 - `main` is guarded; work lands on `feat/next`. Commit types: `feat`, `fix`,
   `refactor`, `test`, `docs`, `chore`.
 - Boundary and drift are test-enforced: the compiler emits structure, never
-  serve URLs (`crates/sui/compiler/tests/boundary_invariants.rs`); deck names
+  serve URLs (`crates/sail/compiler/tests/boundary_invariants.rs`); deck names
   no app concept (`crates/deck/deck-core/tests/boundary.rs`); the feature
   inventory `crates/deck/FEATURES.md` is gated by
   `deck-core/tests/features_doc.rs` so it cannot silently rot.
@@ -135,11 +135,11 @@ Standalone deck serves routing, assets, SSR and HMR without any daemon; live
 
 ## Docs
 
-- `.claude/skills/sui-authoring/SKILL.md` — the generated authoring surface
-  (regenerate with `cargo run -p sui-compiler -- skill`; drift-gated by
-  `crates/sui/compiler/tests/skill_examples_compile.rs`).
+- `.claude/skills/sail-authoring/SKILL.md` — the generated authoring surface
+  (regenerate with `cargo run -p sail-compiler -- skill`; drift-gated by
+  `crates/sail/compiler/tests/skill_examples_compile.rs`).
 - `docs/ARCHITECTURE.md` — the governing language / stdlib / userland map.
-- `crates/sui/README.md` — the SUI Rust side and the sui/deck split.
+- `crates/sail/README.md` — the SUI Rust side and the sui/deck split.
 - `crates/deck/README.md` — deck architecture, modes, `DataPort`, mounting.
 - `crates/deck/FEATURES.md` — the drift-gated feature inventory.
 - `packages/deck/docs/` — deck's docs site, built and served by deck.

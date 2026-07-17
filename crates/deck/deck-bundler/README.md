@@ -3,7 +3,7 @@
 `crates/deck/deck-bundler/` owns the asset bundler for Ship's daemon. The
 bundler runs **in-process inside `shipd`** (Rolldown, compiled into the binary)
 with no child processes and no external worker. The only runtime dependency
-outside this crate is the `sui-compiler` binary, which the daemon installs under
+outside this crate is the `sail-compiler` binary, which the daemon installs under
 `~/.deck/runtime/` (deck's own namespace) and spawns per-file during bundling.
 
 > History (#163, #167): this used to be a `bun`-driven `bundler.ts` worker the
@@ -18,14 +18,14 @@ See the decision record:
 
 ## Runtime directory — `~/.deck/runtime/`
 
-The runtime dir holds exactly one thing: the `sui-compiler` binary the bundler
+The runtime dir holds exactly one thing: the `sail-compiler` binary the bundler
 spawns to compile `.sui` files. It mirrors what `rustup` does for Rust toolchains:
 one well-known path, pinned to the version that installed it. The dir lives under
 deck's own `~/.deck/` namespace — deck names no host-private path.
 
 ```
 ~/.deck/runtime/
-  sui-compiler        # Rust release build of crates/sui/compiler
+  sail-compiler        # Rust release build of crates/sail/compiler
 ```
 
 The path accessor (`runtime_dir`, `runtime_sui_compiler`) is host-owned: in the
@@ -45,7 +45,7 @@ The `Bundler` is in-process:
 - **SUI plugin** (`sui_plugin.rs`): a native Rust Rolldown `Plugin`.
   `resolve_id` redirects `./X.compiled.js` siblings, externalises the framework
   singletons (`@ship/sail-runtime`/`-dom`/`sdk-client`), and re-anchors
-  `@ship/<pkg>` to workspace `src/`. `load` spawns `sui-compiler` to compile
+  `@ship/<pkg>` to workspace `src/`. `load` spawns `sail-compiler` to compile
   `.sui` → JS. Rolldown handles TS transpile + node resolution natively.
 - **Output:** `assets_dir_for` — `crates/deck/deck-core/assets` for the baked
   framework bundles, `.deck/` for views/components/spaces. No source-tree writes.
@@ -87,13 +87,13 @@ never ships in the daemon or the shell bundle.)
 ## CLI
 
 ```sh
-ship runtime install   # populate ~/.deck/runtime/ (sui-compiler) from local sources
+ship runtime install   # populate ~/.deck/runtime/ (sail-compiler) from local sources
 ship runtime update    # wipe + reinstall
-ship runtime doctor    # verify sui-compiler is present + executable
+ship runtime doctor    # verify sail-compiler is present + executable
 ```
 
-`runtime install` resolves `sui-compiler` from `--sui-compiler <path>` or a
-walk-up search for `target/{release,debug}/sui-compiler` from cwd. `update`
+`runtime install` resolves `sail-compiler` from `--sail-compiler <path>` or a
+walk-up search for `target/{release,debug}/sail-compiler` from cwd. `update`
 wipes the runtime dir then reinstalls.
 
 ---
@@ -103,7 +103,7 @@ wipes the runtime dir then reinstalls.
 Every `ship_platform::toolchain` error carries a recovery hint in `Display`:
 
 - **"Ship toolchain not installed at …"** → `ship runtime install`
-- **"Ship toolchain is incomplete: missing sui-compiler"** → `ship runtime install`
+- **"Ship toolchain is incomplete: missing sail-compiler"** → `ship runtime install`
 - **"… is not executable"** → `ship runtime install` (resets +x)
 
 ---
@@ -112,7 +112,7 @@ Every `ship_platform::toolchain` error carries a recovery hint in `Display`:
 
 bun is **dev/build-time tooling only**, never in the deploy bundle:
 - The `apps/shell` dev server is vite (dev-only); `.sui` compilation is in-process
-  via this crate (`sui-build` was retired in #220). The lucide icon set is
+  via this crate (`sail-build` was retired in #220). The lucide icon set is
   committed source at `crates/deck/deck-core/assets/lucide-icons.json` and
   regenerated only on a lucide-static version bump via
   `cargo run -p xtask-deck -- gen-icons` (#172).

@@ -1,6 +1,6 @@
 //! Shared design tokens + base styles for every deck-served view.
 //!
-//! Canonical OKLCH palette sourced from `packages/sui/tokens/src/tokens.css`
+//! Canonical OKLCH palette sourced from `packages/sail/tokens/src/tokens.css`
 //! so SUI components, deck-served views, and the theme studio can never drift.
 //! View-scoped base rules live alongside in `deck-core/assets/view-tokens.css`
 //! (deck owns this file — relocated out of shipd in the UI-purge so deck is
@@ -13,11 +13,11 @@ use crate::{CachePolicy, DaemonMode, DeckResponse};
 /// on `<html>` — the `:root[data-theme='paper']` etc. blocks come from
 /// `themes.css`.
 const VIEW_TOKENS_CSS: &str = concat!(
-    include_str!("../../../../packages/sui/tokens/src/tokens.css"),
+    include_str!("../../../../packages/sail/tokens/src/tokens.css"),
     "\n",
     include_str!("../assets/view-tokens.css"),
     "\n",
-    include_str!("../../../../packages/sui/tokens/src/themes.css"),
+    include_str!("../../../../packages/sail/tokens/src/themes.css"),
 );
 
 /// `GET /api/assets/view-tokens.css` — the design-token + base stylesheet.

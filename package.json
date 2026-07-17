@@ -3,13 +3,13 @@
   "private": true,
   "workspaces": {
     "packages": [
-      "packages/sui/compiler-wasm",
-      "packages/sui/dom",
-      "packages/sui/runtime",
-      "packages/sui/tokens",
-      "packages/sui/test-setup",
-      "packages/sui/tutorial",
-      "packages/components/sui/*",
+      "packages/sail/compiler-wasm",
+      "packages/sail/dom",
+      "packages/sail/runtime",
+      "packages/sail/tokens",
+      "packages/sail/test-setup",
+      "packages/sail/tutorial",
+      "packages/components/sail/*",
       "packages/deck/*",
       "apps/*"
     ]
@@ -24,10 +24,10 @@
     "lightningcss"
   ],
   "scripts": {
-    "wasm": "wasm-pack build crates/sui/compiler --target web --out-dir ../../../packages/sui/compiler-wasm/pkg --out-name sail_compiler -- --features wasm",
+    "wasm": "wasm-pack build crates/sail/compiler --target web --out-dir ../../../packages/sail/compiler-wasm/pkg --out-name sail_compiler -- --features wasm",
     "build:bundles": "cargo run -p deck-cli -- build-assets",
     "typecheck": "node scripts/typecheck-components.mjs",
-    "typecheck:tsgo": "tsgo --noEmit -p packages/sui/runtime/tsconfig.json && tsgo --noEmit -p packages/sui/dom/tsconfig.json",
+    "typecheck:tsgo": "tsgo --noEmit -p packages/sail/runtime/tsconfig.json && tsgo --noEmit -p packages/sail/dom/tsconfig.json",
     "test": "(vitest run; echo \"vitest exit: $?\") && bash scripts/test-no-phantom-xtask-refs.sh",
     "test:vitest": "vitest run"
   },

@@ -30,13 +30,13 @@ interface Entry {
 const DIRECTIVES: Record<string, Entry> = {
   'on:': {
     signature: '`on:<event>={handler}`',
-    doc: 'Bind a DOM event listener. `<event>` is any DOM event name (`click`, `input`, `submit`, …) or a custom event (`sui-change`, `sui-tab-change`). Compose with `|<modifier>` pipes to wrap the handler.',
-    see: 'docs/ship-sui/references/docs/template.md#events',
+    doc: 'Bind a DOM event listener. `<event>` is any DOM event name (`click`, `input`, `submit`, …) or a custom event (`sail-change`, `sail-tab-change`). Compose with `|<modifier>` pipes to wrap the handler.',
+    see: 'docs/ship-sail/references/docs/template.md#events',
   },
   'bind:': {
     signature: '`bind:<target>={signal}`',
     doc: 'Two-way binding. `bind:value` mirrors a `<input>`/`<select>`/`<textarea>` value into the signal and back; `bind:checked` for checkboxes; `bind:this` captures the DOM element ref into the signal.',
-    see: 'docs/ship-sui/references/tutorial/06-bind-value/',
+    see: 'docs/ship-sail/references/tutorial/06-bind-value/',
   },
   'prop:': {
     signature: '`prop:<name>={expr}`',
@@ -45,12 +45,12 @@ const DIRECTIVES: Record<string, Entry> = {
   'class:': {
     signature: '`class:<name>={truthy}`',
     doc: 'Conditional class toggle. Adds the class when the expression is truthy, removes it otherwise. Composes with `class=` (static classes survive).',
-    see: 'docs/ship-sui/references/tutorial/14-class-style/',
+    see: 'docs/ship-sail/references/tutorial/14-class-style/',
   },
   'style:': {
     signature: '`style:<--var>={value}`',
     doc: 'Set a CSS custom property (or any CSS property) from an expression. Most useful for `style:--my-var={…}` so component CSS reading `var(--my-var)` picks up the value.',
-    see: 'docs/ship-sui/references/tutorial/14-class-style/',
+    see: 'docs/ship-sail/references/tutorial/14-class-style/',
   },
 }
 
@@ -95,17 +95,17 @@ const BLOCKS: Record<string, Entry> = {
   'if': {
     signature: '`{#if expr}…{:else if expr}…{:else}…{/if}`',
     doc: 'Conditional rendering. Branches mount/unmount as the expression flips. Effects + refs in the inactive branch are torn down.',
-    see: 'docs/ship-sui/references/tutorial/05-bind-if/',
+    see: 'docs/ship-sail/references/tutorial/05-bind-if/',
   },
   'for': {
     signature: '`{#for item of items() key={item.id}}…{/for}`',
     doc: 'Keyed list reconciliation. The `key` expression tracks identity across reorders. Per-field reactivity means each row only re-renders when *its* fields change.',
-    see: 'docs/ship-sui/references/tutorial/03-bindfor/',
+    see: 'docs/ship-sail/references/tutorial/03-bindfor/',
   },
   'while-loading': {
     signature: '`{#while-loading of <liveSignal>}…{/while-loading}`',
     doc: 'Mounts the body while the live signal is in `kind: "loading"` state. Boundary primitive — unmounts when the envelope transitions away from loading.',
-    see: 'docs/ship-sui/references/tutorial/23-while-loading/',
+    see: 'docs/ship-sail/references/tutorial/23-while-loading/',
   },
   'while-error': {
     signature: '`{#while-error err of <liveSignal>}…{/while-error}`',

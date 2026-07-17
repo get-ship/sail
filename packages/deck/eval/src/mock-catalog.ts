@@ -7,7 +7,7 @@ export const mockCatalog: PrimitiveCatalog = {
   version: 'mock-1',
   primitives: [
     {
-      tag: 'sui-button',
+      tag: 'sail-button',
       summary: 'Standard interactive button.',
       props: [
         { name: 'tone', type: 'union', values: ['default', 'primary', 'destructive'], default: 'default' },
@@ -26,7 +26,7 @@ export const mockCatalog: PrimitiveCatalog = {
       ],
     },
     {
-      tag: 'sui-input',
+      tag: 'sail-input',
       summary: 'Text input with two-way binding support.',
       props: [
         { name: 'value', type: 'string', default: '', bindable: true },
@@ -40,26 +40,26 @@ export const mockCatalog: PrimitiveCatalog = {
       ],
     },
     {
-      tag: 'sui-spinner',
+      tag: 'sail-spinner',
       summary: 'Indeterminate loading indicator.',
       props: [],
       slots: [],
       events: [],
     },
     {
-      tag: 'sui-empty-state',
+      tag: 'sail-empty-state',
       summary: 'Empty-state placeholder with a graphic, title, and optional action.',
       props: [
         { name: 'icon', type: 'string', default: '' },
       ],
       slots: [
         { name: 'title', summary: 'Headline copy.' },
-        { name: 'action', summary: 'Optional call-to-action — typically a sui-button.' },
+        { name: 'action', summary: 'Optional call-to-action — typically a sail-button.' },
       ],
       events: [],
     },
     {
-      tag: 'sui-list-tile',
+      tag: 'sail-list-tile',
       summary: 'Single row in a list — title, optional metadata, optional chevron.',
       props: [
         { name: 'variant', type: 'union', values: ['default', 'subtle'], default: 'default' },

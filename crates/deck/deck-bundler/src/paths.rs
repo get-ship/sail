@@ -65,7 +65,7 @@ fn declares_js_workspaces(dir: &Path) -> bool {
 /// that as "not in a workspace" (a truly standalone app) and fall back to the
 /// project dir.
 pub fn topmost_workspace_root(start: &Path) -> Option<PathBuf> {
-    // A Cargo workspace takes precedence — preserves the sui-monorepo path
+    // A Cargo workspace takes precedence — preserves the sail-monorepo path
     // byte-for-byte (the JS fallback only fires when there is no Cargo.toml).
     if let Some(cargo) = topmost_cargo_root(start) {
         return Some(cargo);
@@ -165,7 +165,7 @@ mod tests {
     }
 
     /// A Cargo workspace WINS — the JS fallback only fires when there is no
-    /// `Cargo.toml`, so the sui-monorepo path is byte-for-byte unchanged.
+    /// `Cargo.toml`, so the sail-monorepo path is byte-for-byte unchanged.
     #[test]
     fn topmost_workspace_root_prefers_cargo() {
         let root = tempfile::tempdir().unwrap();

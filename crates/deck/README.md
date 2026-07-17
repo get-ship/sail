@@ -40,7 +40,7 @@ end-to-end by the browser harness (`packages/deck/e2e`):
 pattern). The bundler generates the entry; you write pages.
 
 **HMR (dev only).** Editing a route's `.sui` soft-reloads it with **state
-preserved** (no full document reload); a `<sui-*>` component edit **hot-swaps**
+preserved** (no full document reload); a `<sail-*>` component edit **hot-swaps**
 live instances in place.
 
 **Serve-time vs baked.** `deck dev` injects the `deck-render`/`deck-mode` metas
@@ -60,7 +60,7 @@ asset URLs become `/assets/<file>`, matching the on-disk layout. (`deck build
 | `deck-core` | Transport-agnostic hosting logic. Produces a `DeckResponse` (status + bytes + headers); never speaks HTTP. Owns view resolution, SSR payload assembly, token/theme CSS, the setup flow, and the `DataPort` trait. |
 | `deck-axum` | The axum adapter. Thin `serve_*` shims map `DeckResponse` → `axum::Response`. `router()` registers deck's whole serving surface as one mountable unit; `multiplex_router()` is the live-data transport — **host-wired, not mounted by `deck dev`** (see the data seam below). |
 | `deck-host` | Pure host helpers shared across adapters: `render_helpers`, `resolver` (project-root + view resolution), `view_payload`. |
-| `deck-bundler` | The one bundler (#163). In-process Rolldown; a Rust plugin compiles `.sui` via the linked `sui-compiler`. Builds framework singletons, packs, views, and app scaffolds. |
+| `deck-bundler` | The one bundler (#163). In-process Rolldown; a Rust plugin compiles `.sui` via the linked `sail-compiler`. Builds framework singletons, packs, views, and app scaffolds. |
 | `deck-config` | Parses `deck.jsonc` into `DeckConfig` — the host's single configuration surface (below). |
 | `deck-cli` | The `deck` binary: `dev`, `build`, `build-assets`, `routes`, `emit`, `scaffold {view,component,pack}`. The `next`/`vite` analog. |
 | `deck` | Thin re-export facade so a host writes `deck::*` for everything above. |
@@ -157,7 +157,7 @@ deck emit --target <name> --out <dir>   # copy baked targets (+ chunk closure) o
 ### `deck emit`
 
 ```sh
-deck emit --target sui-runtime --target sui-marketing --out dist/_assets
+deck emit --target sail-runtime --target sail-marketing --out dist/_assets
 ```
 
 Copy already-baked target bundles into a directory for a consumer that loads
@@ -165,8 +165,8 @@ them without the daemon (e.g. a static site build). Run it **after**
 `deck build-assets` — emit copies bake output, it does not bake.
 
 - `--target <name>` (repeatable, required) — a framework singleton
-  (`sui-runtime`, `sui-dom`, `sui-sdk-client`) or a consumer target declared in
-  `deck.jsonc` (`sui-marketing`, `sui-arcade`, `ship-code-editor`, …).
+  (`sail-runtime`, `sail-dom`, `sail-sdk-client`) or a consumer target declared in
+  `deck.jsonc` (`sail-marketing`, `sail-arcade`, `ship-code-editor`, …).
 - `--out <dir>` — destination directory, created if absent.
 
 deck resolves each target's output path via the same `BundleLayout` the bundler
@@ -174,7 +174,7 @@ writes through, copies the target file, then follows its relative
 `import("./chunk.js")` graph and copies the whole content-hashed lazy-chunk
 **closure** — so the consumer never hardcodes deck's internal output layout
 (`crates/deck/deck-bundler/src/emit.rs`). The canonical consumer is
-`apps/site/scripts/copy-sui-assets.ts`, which names the six targets the static
+`apps/site/scripts/copy-sail-assets.ts`, which names the six targets the static
 Astro build needs and shells out to `cargo run -p deck-cli -- emit`.
 
 ## See also

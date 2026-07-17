@@ -1,0 +1,44 @@
+[package]
+name = "sail-compiler-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.sail-compiler]
+path = ".."
+
+# Prevent this crate from being picked up by the workspace at
+# `crates/sail/compiler/..`. cargo-fuzz drives this Cargo.toml directly via
+# `cargo +nightly fuzz run …`; the workspace must not try to compile it
+# under stable (libfuzzer-sys requires nightly).
+[workspace]
+
+[[bin]]
+name = "parse_fragment"
+path = "fuzz_targets/parse_fragment.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "compile_full"
+path = "fuzz_targets/compile_full.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "bindings_build"
+path = "fuzz_targets/bindings_build.rs"
+test = false
+doc = false
+bench = false
+
+[lints]
+workspace = true

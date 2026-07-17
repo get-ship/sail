@@ -2,7 +2,7 @@
 // by the compiler.
 
 export const layoutFile = `<!-- routes/_layout.sui -->
-<sui-shell></sui-shell>`
+<sail-shell></sail-shell>`
 
 export const layoutChain = `routes/
   _layout.sui          wraps every route

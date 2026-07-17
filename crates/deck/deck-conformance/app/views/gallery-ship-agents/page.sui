@@ -35,7 +35,7 @@
     </h2>
     <p sx="text-muted-foreground text-sm leading-relaxed">
       Props: <code>session-id: string</code>. No slots.
-      Composes <code>sui-message-list</code> + <code>sui-composer</code>;
+      Composes <code>sail-message-list</code> + <code>sail-composer</code>;
       the Ship wrapper owns the session binding and submit handler.
     </p>
     <column gap="4">
@@ -52,17 +52,17 @@
     <p sx="text-muted-foreground text-sm leading-relaxed">
       No props — data is fetched internally via <code>live()</code> from
       <code>ship.agents.summaries()</code>. Renders a sortable
-      <code>sui-table</code> with columns: name, description, source, skills, mcp.
+      <code>sail-table</code> with columns: name, description, source, skills, mcp.
     </p>
     <column gap="4">
       <ship-agents-table></ship-agents-table>
     </column>
   </column>
 
-  <!-- sui-harness-blob — all enum combinations sampled -->
+  <!-- sail-harness-blob — all enum combinations sampled -->
   <column gap="4" sx="border border-border rounded-lg bg-surface-1 p-5">
     <h2 sx="text-lg font-semibold text-foreground font-mono">
-      <code>sui-harness-blob</code>
+      <code>sail-harness-blob</code>
       <span sx="text-xs font-medium font-body text-warning-foreground bg-warning border border-warning rounded-full px-2 py-half whitespace-nowrap ms-3">domain-stub — awaits backend spec</span>
     </h2>
     <p sx="text-muted-foreground text-sm leading-relaxed">
@@ -74,38 +74,38 @@
     <column gap="4">
       <row gap="3">
         <span sx="font-mono text-xs text-muted-foreground min-w-20">tile / md</span>
-        <sui-harness-blob harness="claude" size="md" variant="tile">Claude</sui-harness-blob>
-        <sui-harness-blob harness="codex" size="md" variant="tile">Codex</sui-harness-blob>
-        <sui-harness-blob harness="cursor" size="md" variant="tile">Cursor</sui-harness-blob>
-        <sui-harness-blob harness="gemini" size="md" variant="tile">Gemini</sui-harness-blob>
-        <sui-harness-blob harness="opencode" size="md" variant="tile">OpenCode</sui-harness-blob>
+        <sail-harness-blob harness="claude" size="md" variant="tile">Claude</sail-harness-blob>
+        <sail-harness-blob harness="codex" size="md" variant="tile">Codex</sail-harness-blob>
+        <sail-harness-blob harness="cursor" size="md" variant="tile">Cursor</sail-harness-blob>
+        <sail-harness-blob harness="gemini" size="md" variant="tile">Gemini</sail-harness-blob>
+        <sail-harness-blob harness="opencode" size="md" variant="tile">OpenCode</sail-harness-blob>
       </row>
 
       <row gap="3">
         <span sx="font-mono text-xs text-muted-foreground min-w-20">tile / sm</span>
-        <sui-harness-blob harness="claude" size="sm" variant="tile">Claude</sui-harness-blob>
-        <sui-harness-blob harness="codex" size="sm" variant="tile">Codex</sui-harness-blob>
-        <sui-harness-blob harness="cursor" size="sm" variant="tile">Cursor</sui-harness-blob>
-        <sui-harness-blob harness="gemini" size="sm" variant="tile">Gemini</sui-harness-blob>
-        <sui-harness-blob harness="opencode" size="sm" variant="tile">OpenCode</sui-harness-blob>
+        <sail-harness-blob harness="claude" size="sm" variant="tile">Claude</sail-harness-blob>
+        <sail-harness-blob harness="codex" size="sm" variant="tile">Codex</sail-harness-blob>
+        <sail-harness-blob harness="cursor" size="sm" variant="tile">Cursor</sail-harness-blob>
+        <sail-harness-blob harness="gemini" size="sm" variant="tile">Gemini</sail-harness-blob>
+        <sail-harness-blob harness="opencode" size="sm" variant="tile">OpenCode</sail-harness-blob>
       </row>
 
       <row gap="3">
         <span sx="font-mono text-xs text-muted-foreground min-w-20">tile / lg</span>
-        <sui-harness-blob harness="claude" size="lg" variant="tile">Claude</sui-harness-blob>
-        <sui-harness-blob harness="codex" size="lg" variant="tile">Codex</sui-harness-blob>
-        <sui-harness-blob harness="cursor" size="lg" variant="tile">Cursor</sui-harness-blob>
-        <sui-harness-blob harness="gemini" size="lg" variant="tile">Gemini</sui-harness-blob>
-        <sui-harness-blob harness="opencode" size="lg" variant="tile">OpenCode</sui-harness-blob>
+        <sail-harness-blob harness="claude" size="lg" variant="tile">Claude</sail-harness-blob>
+        <sail-harness-blob harness="codex" size="lg" variant="tile">Codex</sail-harness-blob>
+        <sail-harness-blob harness="cursor" size="lg" variant="tile">Cursor</sail-harness-blob>
+        <sail-harness-blob harness="gemini" size="lg" variant="tile">Gemini</sail-harness-blob>
+        <sail-harness-blob harness="opencode" size="lg" variant="tile">OpenCode</sail-harness-blob>
       </row>
 
       <row gap="3">
         <span sx="font-mono text-xs text-muted-foreground min-w-20">glyph / md</span>
-        <sui-harness-blob harness="claude" size="md" variant="glyph">Claude</sui-harness-blob>
-        <sui-harness-blob harness="codex" size="md" variant="glyph">Codex</sui-harness-blob>
-        <sui-harness-blob harness="cursor" size="md" variant="glyph">Cursor</sui-harness-blob>
-        <sui-harness-blob harness="gemini" size="md" variant="glyph">Gemini</sui-harness-blob>
-        <sui-harness-blob harness="opencode" size="md" variant="glyph">OpenCode</sui-harness-blob>
+        <sail-harness-blob harness="claude" size="md" variant="glyph">Claude</sail-harness-blob>
+        <sail-harness-blob harness="codex" size="md" variant="glyph">Codex</sail-harness-blob>
+        <sail-harness-blob harness="cursor" size="md" variant="glyph">Cursor</sail-harness-blob>
+        <sail-harness-blob harness="gemini" size="md" variant="glyph">Gemini</sail-harness-blob>
+        <sail-harness-blob harness="opencode" size="md" variant="glyph">OpenCode</sail-harness-blob>
       </row>
     </column>
   </column>

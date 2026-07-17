@@ -1,9 +1,9 @@
 import { defineConfig } from 'vitest/config'
 // Relative import (not the `@ship/test-setup/vitest` specifier) because eval does
 // not declare test-setup as a dependency — consistent with this config's other
-// relative `../../sui/...` paths. The shared module's internal resolution is
+// relative `../../sail/...` paths. The shared module's internal resolution is
 // anchored to its own file location, so it works regardless of the import style.
-import { shipWorkspaceAliases } from '../../sui/test-setup/src/vitest'
+import { shipWorkspaceAliases } from '../../sail/test-setup/src/vitest'
 
 export default defineConfig({
   resolve: {

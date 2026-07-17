@@ -30,7 +30,7 @@ vi.mock('@ship/sail-runtime', () => {
   // Faithful re-implementation of the runtime's error-boundary helpers (same
   // Symbol key + DOM walk) so the router's default route boundary behaves
   // exactly as it does against the real runtime, without pulling the cycle.
-  const BOUNDARY_KEY = Symbol.for('sui:error-boundary')
+  const BOUNDARY_KEY = Symbol.for('sail:error-boundary')
   const attachBoundary = (host: any, handle: unknown) => { host[BOUNDARY_KEY] = handle }
   const detachBoundary = (host: any) => { delete host[BOUNDARY_KEY] }
   const findNearestBoundary = (node: any): unknown => {
@@ -355,7 +355,7 @@ describe('default route error boundary', () => {
     expect(() =>
       runProtected(viewNode, 'render', () => { throw new Error('view boom') }),
     ).not.toThrow()
-    // No sui-error-state registered here → the registration-free bare card.
+    // No sail-error-state registered here → the registration-free bare card.
     expect(root.querySelector('.deck-route-error')).not.toBeNull()
     expect(root.hasAttribute('data-route-error')).toBe(true)
   })

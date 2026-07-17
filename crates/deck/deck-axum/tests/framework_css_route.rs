@@ -34,7 +34,7 @@ async fn serves_framework_stylesheet_with_both_halves() {
     let body = res.text().await.unwrap();
     // Contracts half (a tone channel) + element-skins half (spinner skin).
     assert!(body.contains("[tone="), "contracts present");
-    assert!(body.contains(".sui-spinner"), "element skins present");
+    assert!(body.contains(".sail-spinner"), "element skins present");
     // The widened icon vocabulary rode along the skins.
-    assert!(body.contains(".sui-icon"), "icon skin present");
+    assert!(body.contains(".sail-icon"), "icon skin present");
 }

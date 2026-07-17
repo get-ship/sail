@@ -10,7 +10,7 @@
 //! ship-js is the one first-paint engine. It produces HTML whenever a renderer
 //! is CARRIED for the request AND it renders without error. When no renderer is
 //! carried (e.g. a V8-less context, or a CSR-only mount) or a render fails,
-//! there is no server HTML and the caller serves an empty `#sui-root` for the
+//! there is no server HTML and the caller serves an empty `#sail-root` for the
 //! client to mount (CSR) — there is no second rendering path.
 //!
 //! ## Mount-scoped, not a process global
@@ -60,7 +60,7 @@ pub trait SyntheticSsr: Send + Sync + 'static {
 }
 
 /// First-paint HTML through the CARRIED `renderer` when it succeeds; otherwise
-/// `None`, and the caller serves an empty `#sui-root` for the client to mount
+/// `None`, and the caller serves an empty `#sail-root` for the client to mount
 /// (CSR). A render error is logged loudly (it is a real failure, not a quiet
 /// downgrade) — it does not fall back to a second engine. The renderer is a
 /// per-mount handle the serve path threads (see the module doc), never a
@@ -71,7 +71,7 @@ pub fn first_paint(renderer: &dyn SyntheticSsr, req: &SsrRequest) -> Option<Stri
         Err(e) => {
             tracing::error!(
                 view = req.view_name,
-                "ship-js SSR failed; serving an empty #sui-root (client mounts via CSR): {e:#}"
+                "ship-js SSR failed; serving an empty #sail-root (client mounts via CSR): {e:#}"
             );
             None
         }

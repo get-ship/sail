@@ -1,0 +1,782 @@
+/*
+ * Ship canonical design tokens.
+ *
+ * Single source of truth. Every component reads from these. Themes
+ * override this layer (see ./themes.css) to ship more than color —
+ * surfaces, motion, typography, density, shadow depth, and tone ramps
+ * all bend through the token API.
+ *
+ * Token layers, in order of abstraction (highest first):
+ *   1. Semantic surfaces  — --surface-0..3, --backdrop
+ *   2. Tone ramps         — --tone-{name}-{fg|bg|bg-solid|border|ring}
+ *   3. Brand palette      — --primary, --accent, --foreground, etc.
+ *   4. Primitives         — spacing, radii, typography scale, motion curves
+ *
+ * Components should read the HIGHEST layer that fits. A card reads
+ * --surface-1, not --card. A success chip reads --tone-success-bg, not
+ * `color-mix(in oklch, var(--success) 14%, transparent)`. A panel head
+ * reads --heading-font, not --font-display.
+ *
+ * Consumed by:
+ *   - apps/web/src/styles.css (Studio shell)
+ *   - apps/shipd/assets/view-tokens.css (daemon-served runtime views)
+ *   - packages/ship-set/src/web-components/* (via var(--foo) in shadow DOM)
+ */
+
+/* ─── Primitives: these never change per theme ────────────────────── */
+:root {
+  /* Radii */
+  --radius: 10px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-full: 9999px;
+
+  /* Spacing scale — 4px base */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  /* Fine steps between the 4px base — kills the `calc(var(--space-2)/2)`
+     anti-pattern (60 raw occurrences across 17 primitives). */
+  --space-half: 2px;
+  --space-0_75: 3px;
+  --space-1_25: 5px;
+  --space-1_5: 6px;
+  --space-2_5: 10px;
+  --space-3_5: 14px;
+  --space-4_5: 18px;
+  /* Above space-8, follow Tailwind's ramp — the names are the agent's
+     prior, the values are the project's. One closed scale from gap to
+     hero, so a 48px thumb, a 180/320px canvas, and a 256px card all
+     spend a token instead of reaching for a hatch. 7 and 8 were
+     silently divergent (TW: 28px, 32px; us: 32px, 40px) — aligned so
+     `p-7`/`p-8` mean the same thing here as everywhere an agent has
+     seen spacing. */
+  --space-9: 36px;
+  --space-10: 40px;
+  --space-11: 44px;
+  --space-12: 48px;
+  --space-14: 56px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-28: 112px;
+  --space-32: 128px;
+  --space-36: 144px;
+  --space-40: 160px;
+  --space-44: 176px;
+  --space-48: 192px;
+  --space-52: 208px;
+  --space-56: 224px;
+  --space-60: 240px;
+  --space-64: 256px;
+
+  /* Icon sizes — chevrons/carets/dots/glyphs (78 raw-px occurrences, 23
+     primitives). Consume via `sx="w:icon-md h:icon-md"`. */
+  --icon-size-3xs: 8px;
+  --icon-size-2xs: 10px;
+  --icon-size-xs: 12px;
+  --icon-size-sm: 14px;
+  --icon-size-md: 16px;
+  --icon-size-lg: 18px;
+  --icon-size-xl: 20px;
+  --icon-size-2xl: 24px;
+  --icon-size-3xl: 28px;
+
+  /* Control heights — inputs/buttons/switches (32 occurrences, 13 primitives).
+     One ladder so control feel is consistent and theme-tunable. */
+  --control-h-2xs: 22px;
+  --control-h-xs: 24px;
+  --control-h-sm: 28px;
+  --control-h-md: 34px;
+  --control-h-lg: 40px;
+  --control-h-xl: 44px;
+
+  /* Panel clamps — menus/popovers/dialogs/drawers/lists (166 occurrences, 48
+     primitives — the single biggest raw-value family). */
+  --panel-max-w-sm: 320px;
+  --panel-max-w-md: 480px;
+  --panel-max-w-lg: 720px;
+  --panel-max-h-sm: 240px;
+  --panel-max-h-md: 480px;
+  --panel-max-h-lg: 720px;
+  --panel-min-w-sm: 180px;
+  --panel-min-w-md: 240px;
+  --panel-min-w-lg: 320px;
+  --panel-vh-sm: 50vh;
+  --panel-vh-md: 80vh;
+  --panel-vh-lg: 90vh;
+  --panel-ch-w-md: 38ch;
+  --panel-ch-w-lg: 60ch;
+
+  /* Panel paddings — the component-token tier for overlay shells
+     (dialog/drawer/sheet/toast + the popover/menu quartet), census-locked
+     (mission m-sail-stdlib, census/overlay.md). Defaults are the dialog md
+     column; the systematic dialog-vs-drawer 2px header/footer offset is
+     unified here (the re-port gate will show the 2px diffs as intentional).
+     NOTE: dialog's 500px max-w unifies onto --panel-max-w-md (480px) at
+     re-port — intentional, oracle-visible.
+     `pad` tokens are deliberately NOT in the sx sizing vocabulary (the
+     registry harvests only the dimensional panel-* subfamilies). */
+  --panel-pad-x: var(--space-6);
+  --panel-head-pad-y: 18px;
+  --panel-body-pad-y: var(--space-4);
+  --panel-foot-pad-y: var(--space-4);
+  --panel-close-inset: var(--space-7);
+  --panel-pad-card: var(--space-2);
+  --panel-pad-menu: var(--space-1);
+  --panel-w-side: 420px;
+
+  /* Control accents — census/control-glyph.md. The glyph box scale ALIASES
+     the icon scale exactly (14/16/18 = icon-size-sm/md/lg): no separate
+     glyph tokens. Stroke is the one real knob. */
+  --control-stroke: 2px;
+
+  /* Long-form body leading — the census's three-component 1.55 cluster,
+     ruled a typography primitive (not a component token). */
+  --leading-loose: 1.55;
+
+  /* Filled-surface top-edge highlight (badge/chip) — brand-definable. */
+  --edge-highlight: inset 0 1px 0 0 var(--hover-bg);
+
+  /* Z-index scale */
+  --z-base: 0;
+  --z-elevated: 1;
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-popover: 30;
+  --z-dialog: 40;
+  --z-toast: 50;
+  --z-max: 100;
+
+  /* Typography scale */
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 28px;
+  --text-4xl: 36px;
+  /* Display type: ONE fluid semantic size for hero/landing headlines, not a
+     ladder of ever-bigger steps. Themes may retune the clamp. */
+  --text-display: clamp(2.75rem, 7.5vw, 5.5rem);
+
+  --leading-none: 1;
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+  --leading-normal-plus: 1.55;
+  --leading-relaxed: 1.7;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Letter spacing */
+  --tracking-tight: -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+  --tracking-wider: 0.1em;
+
+  /* Motion curves — expressive by default, soft for surface changes,
+   * spring for tactile feedback. Components that need a true linear
+   * curve write the CSS keyword directly. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-soft: cubic-bezier(0.33, 1, 0.68, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-instant: 60ms;
+  --duration-fast: 120ms;
+  --duration-medium: 180ms;
+  --duration-slow: 280ms;
+  --duration-deliberate: 420ms;
+
+  /* Focus ring.
+   *
+   * `--focus-ring` + `--focus-ring-offset` are the canonical pair every
+   * primitive consumes — single source of truth so the keyboard tab
+   * sequence doesn't visually "snap" between styles. Uses outline (not
+   * stacked box-shadow) so `forced-colors: active` still draws a
+   * system-colour ring and so the ring doesn't get clipped by z-stacking
+   * against neighbouring shadows. The older `--ring-*` triple is kept
+   * for chip-style halo overlays that need separate width/offset/opacity
+   * control. */
+  --focus-ring: 2px solid var(--ring-color);
+  --focus-ring-offset: 2px;
+  --ring-width: 3px;
+  --ring-offset: 2px;
+  --ring-opacity: 25%;
+
+  /* Interaction tints — used by hover/active/selected states so the
+   * depth hierarchy stays consistent. Themes can dial these up (high
+   * contrast) or relax (paper). */
+  --hover-strength: 6%;
+  --active-strength: 10%;
+  --selected-strength: 14%;
+
+  /* Tooltip delays */
+  --tooltip-show-delay: 300ms;
+  --tooltip-hide-delay: 100ms;
+
+  /* Calendar grid measurements — a month cell must fit a daynum + two chips;
+   * a day column spans 24 hours of slots. Grid geometry, like panel sizes. */
+  --panel-min-h-cell: 84px;
+  --panel-min-h-daycol: 864px;
+
+  /* Viewport breakpoints — the canonical device classes. One family for
+   * every consumer: the viewer's stage framing today, responsive media
+   * prefixes when they land. */
+  --breakpoint-mobile: 390px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1280px;
+
+  /* Font stacks. App-specific variable-weight fonts resolve at runtime if
+   * loaded by Studio; daemon views fall back to the web-safe stacks. */
+  --font-display-app: "Syne Variable", "Syne", "Inter", sans-serif;
+  --font-body-app: "DM Sans Variable", "DM Sans", "Inter", sans-serif;
+  --font-mono-app: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --font-display: var(--font-display-app);
+  --font-body: var(--font-body-app);
+  --font-mono: var(--font-mono-app);
+
+  /* Typography roles — components read these, themes override. A theme
+   * can swap --heading-font to body, or flip display roles entirely. */
+  --heading-font: var(--font-display);
+  --heading-weight: var(--font-weight-semibold);
+  --heading-tracking: var(--tracking-tight);
+  --body-font: var(--font-body);
+  --body-weight: var(--font-weight-normal);
+  --body-tracking: var(--tracking-normal);
+  --mono-font: var(--font-mono);
+  --label-font: var(--font-body);
+  --label-weight: var(--font-weight-semibold);
+  --label-tracking: var(--tracking-wide);
+
+  /* Density channel — :root[data-density=compact|comfortable|spacious]
+   * overrides these. Components that present rows/tiles read from here
+   * instead of the base scale so density propagates everywhere at once. */
+  --density-row-py: var(--space-2);
+  --density-row-px: var(--space-3);
+  --density-row-gap: var(--space-2);
+  --density-text: var(--text-base);
+  --density-icon: 16px;
+
+  /* Elevation — light mode defaults. Dark mode + accent themes override.
+   * Layered (close + far) shadows give cards visible lift against the page
+   * surface; flat 1-stop shadows read as "sticker on paper" and the QA pass
+   * called them out for it. Numbers are tuned so a card on --surface-0
+   * reads its edge without bleeding into the page. */
+  --shadow-xs: 0 1px 2px 0 oklch(0 0 0 / 5%);
+  --shadow-sm: 0 1px 3px 0 oklch(0 0 0 / 7%), 0 1px 2px -1px oklch(0 0 0 / 5%);
+  --shadow-md: 0 4px 12px -2px oklch(0 0 0 / 9%), 0 2px 4px -2px oklch(0 0 0 / 6%);
+  --shadow-lg: 0 12px 32px -6px oklch(0 0 0 / 13%), 0 4px 12px -4px oklch(0 0 0 / 8%);
+  --shadow-xl: 0 24px 64px -12px oklch(0 0 0 / 18%), 0 8px 24px -8px oklch(0 0 0 / 10%);
+  /* Semantic shadows — components read these for intent, not depth. */
+  --shadow-card-rest: 0 1px 3px oklch(0.20 0.04 60 / 6%), 0 0 0 1px oklch(0.20 0.04 60 / 6%);
+  --shadow-hover: 0 8px 20px oklch(0.20 0.04 60 / 12%), 0 0 0 1px oklch(0.20 0.04 60 / 8%);
+  --shadow-sticky: 0 2px 6px -2px oklch(0 0 0 / 8%), 0 1px 2px oklch(0 0 0 / 4%);
+  --shadow-accent: 0 0 0 3px color-mix(in oklch, var(--primary) 22%, transparent);
+  --shadow-inset-soft: inset 0 1px 2px oklch(0 0 0 / 5%);
+  /* Top-edge cue for floating panels seated above content (debug dock). */
+  --shadow-edge-top: 0 -8px 24px -8px oklch(0 0 0 / 8%), 0 -1px 0 oklch(0 0 0 / 4%);
+
+  /* Effect channels — themes flip these to transform component aesthetics
+   * without changing component CSS. Defaults are no-ops; existing rendering
+   * is unchanged unless a theme overrides.
+   *
+   *   --card-backdrop-filter — actual CSS filter value applied to elevated
+   *     surfaces (cards, popovers, dialogs, card-variant tiles). Default
+   *     `none` so no surface gets a filter unless a theme opts in (e.g. a
+   *     glass theme setting `blur(24px) saturate(180%)`).
+   *   --surface-overlay — a body-level texture (gradient, data-URI SVG,
+   *     repeating-linear-gradient). `body::after` reads this. Default
+   *     `none`; per-theme overrides reinstate the existing grain/scanline
+   *     visuals (see themes.css). Paired with `--surface-overlay-blend`
+   *     so themes that need a different mix-blend-mode (paper uses
+   *     multiply, ship-light/dark use overlay) can opt in.
+   */
+  --card-backdrop-filter: none;
+  --surface-overlay: none;
+  --surface-overlay-blend: overlay;
+  --surface-overlay-opacity: 1;
+
+  /* Card-level texture overlay channel — distinct from --surface-overlay
+   * (which paints the body). Gives elevated surfaces (ship-card,
+   * ship-list-tile[variant=card]) their own subtle "wash" so cards read
+   * differently from the page background even when surface deltas are
+   * close. Default `none` is a no-op; ship-light/ship-dark opt in below.
+   * Themes with their own card aesthetic (paper grain, console scanlines,
+   * halo neumorph, glass frost) override to `none` to keep their look. */
+  --card-texture: none;
+  --card-texture-blend: overlay;
+  --card-texture-opacity: 1;
+}
+
+/* ─── Surface overlay — body-level texture channel ─────────────────────
+ * Themes set --surface-overlay to a background value (data-URI SVG noise,
+ * repeating-linear-gradient scanlines, etc.) and optionally bend the
+ * blend-mode/opacity. Default `none` is a no-op. Sits at z-index 9999 so
+ * it floats above content without intercepting pointer events. Reduced
+ * motion preference disables overlays entirely. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: var(--surface-overlay);
+  mix-blend-mode: var(--surface-overlay-blend);
+  opacity: var(--surface-overlay-opacity);
+}
+@media (prefers-reduced-motion: reduce) {
+  body::after { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 0.01ms;
+    --duration-fast: 0.01ms;
+    --duration-medium: 0.01ms;
+    --duration-slow: 0.01ms;
+    --duration-deliberate: 0.01ms;
+  }
+  /* :where(...) carries zero specificity, and neither property below is
+   * !important — so a component that OWNS its reduced-motion behaviour
+   * (spinner's slowdown, ticker's animation-play-state: paused) has real
+   * rule specificity (`.sail-spinner .ring`, `.sail-ticker .track`) and wins
+   * this default on the cascade, unforced. Anything that has NOT opted in
+   * still gets stopped here — this is the floor, not a universal override.
+   * transition-duration/scroll-behavior stay a blanket !important kill:
+   * hover/interaction micro-transitions are not a component's motion
+   * design decision, so there is nothing legitimate to lose here. */
+  :where(*, *::before, *::after) {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── Density channels (opt-in via :root[data-density=…]) ───────────── */
+:root[data-density='compact'] {
+  --density-row-py: 4px;
+  --density-row-px: 8px;
+  --density-row-gap: 6px;
+  --density-text: var(--text-sm);
+  --density-icon: 14px;
+}
+:root[data-density='spacious'] {
+  --density-row-py: var(--space-3);
+  --density-row-px: var(--space-4);
+  --density-row-gap: var(--space-3);
+  --density-text: var(--text-md);
+  --density-icon: 18px;
+}
+
+/* ─── Brand palette — light (:root) ──────────────────────────────────
+ * The canonical palette. Themes override this layer. */
+:root {
+  --background: oklch(0.975 0.002 106.423);
+  --foreground: oklch(0.147 0.004 49.25);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.147 0.004 49.25);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.147 0.004 49.25);
+  --primary: oklch(0.67 0.16 var(--brand-hue, 58));
+  --primary-foreground: oklch(0.99 0.02 95);
+  /* Derived, so it follows whichever theme wins --primary. Mixing toward
+     --foreground darkens on light themes and lightens on dark ones — the
+     direction a hover needs in both. */
+  --primary-hover: color-mix(in oklch, var(--primary) 88%, var(--foreground));
+  --secondary: oklch(0.95 0.02 302);
+  --secondary-foreground: oklch(0.33 0.11 302);
+  --muted: oklch(0.95 0.003 106.424);
+  --muted-foreground: oklch(0.40 0.02 58.071);
+  --accent: oklch(0.61 0.23 var(--brand-hue, 303));
+  --accent-foreground: oklch(0.98 0.02 301);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.147 0.004 49.25 / 25%);
+  --input: oklch(0.147 0.004 49.25 / 25%);
+  --ring: oklch(0.67 0.16 var(--brand-hue, 58)/ 40%);
+  --ring-color: var(--primary);
+
+  /* Feedback semantics (legacy names kept for backward compat) */
+  --success: oklch(0.65 0.2 150);
+  --warning: oklch(0.75 0.15 75);
+  --info: oklch(0.6 0.18 260);
+
+  /* Contrast foregrounds for solid feedback fills (used by tone-on-fg /
+   * tone-contrast in components like ship-button, ship-badge, ship-checkbox,
+   * ship-switch, ship-chip). Theme-invariant — solid tone surfaces stay the
+   * same saturation in light + dark. */
+  --info-foreground:        oklch(0.99 0.02 260);
+  --success-foreground:     oklch(0.99 0.02 150);
+  --warning-foreground:     oklch(0.2 0.04 75);
+  --destructive-foreground: oklch(0.99 0.02 25);
+
+  /* Chart / data-viz — kept separate from feedback so theme authors
+   * can set them independently. */
+  --status-gray: oklch(0.5 0.01 58);
+  --status-blue: oklch(0.6 0.18 260);
+  --status-red: oklch(0.55 0.25 25);
+  --status-green: oklch(0.65 0.2 150);
+  --status-yellow: oklch(0.7 0.18 55);
+  --status-purple: oklch(0.6 0.2 300);
+  --status-orange: oklch(0.6 0.2 35);
+  --status-amber: oklch(0.75 0.15 75);
+
+  /* Syntax-highlighting tokens — read by ship-code-editor and any
+   * other code-rendering surface. Kept separate from the brand
+   * palette so themes that intentionally subdue their --primary /
+   * --accent (halo, paper) can still keep code legibility high.
+   * Defaults track the canonical brand palette but with chroma
+   * floored for contrast against typical card backgrounds. */
+  --syntax-keyword:  oklch(0.55 0.20 280);
+  --syntax-string:   oklch(0.50 0.15 152);
+  --syntax-number:   oklch(0.50 0.16 250);
+  --syntax-function: oklch(0.55 0.22 310);
+  --syntax-type:     oklch(0.55 0.18 200);
+  --syntax-tag:      oklch(0.50 0.20 25);
+  --syntax-attr:     oklch(0.55 0.16 60);
+  --syntax-comment:  oklch(0.55 0.02 250);
+  --syntax-variable: var(--foreground);
+
+  /* Sidebar — kept as-is for Studio compat. */
+  --sidebar: oklch(0.99 0.001 106.423);
+  --sidebar-foreground: oklch(0.147 0.004 49.25);
+  --sidebar-primary: oklch(0.67 0.16 var(--brand-hue, 58));
+  --sidebar-primary-foreground: oklch(0.99 0.02 95);
+  --sidebar-accent: oklch(0.95 0.001 106);
+  --sidebar-accent-foreground: oklch(0.147 0.004 49.25);
+  --sidebar-border: oklch(0.147 0.004 49.25 / 12%);
+  --sidebar-ring: oklch(0.67 0.16 58 / 20%);
+}
+
+/* ─── Hue palette — canonical identity colors ─────────────────────────
+ * A 16-hue ramp around the OKLCH wheel. These are IDENTITY colors, not
+ * semantic ones: agent hue tiles, project hue dots, profile-color
+ * affordances. Theme-neutral by default (themes may override individual
+ * hues — e.g. console's cyan-monochrome — but the base palette stands
+ * alone). Tuned for medium saturation + lightness so each hue is
+ * distinct from its neighbours AND readable with white text + a drop
+ * shadow on both light (--background) and dark surfaces. */
+:root {
+  --hue-red:      oklch(0.62 0.21 25);
+  --hue-orange:   oklch(0.68 0.18 50);
+  --hue-amber:    oklch(0.74 0.16 75);
+  --hue-yellow:   oklch(0.82 0.16 95);
+  --hue-lime:     oklch(0.78 0.18 130);
+  --hue-green:    oklch(0.62 0.16 150);
+  --hue-teal:     oklch(0.62 0.13 185);
+  --hue-cyan:     oklch(0.68 0.13 220);
+  --hue-sky:      oklch(0.65 0.16 235);
+  --hue-blue:     oklch(0.55 0.20 260);
+  --hue-indigo:   oklch(0.50 0.20 280);
+  --hue-violet:   oklch(0.55 0.22 295);
+  --hue-purple:   oklch(0.55 0.22 310);
+  --hue-fuchsia:  oklch(0.60 0.25 330);
+  --hue-pink:     oklch(0.68 0.20 345);
+  --hue-rose:     oklch(0.62 0.21 5);
+}
+
+/* ─── Semantic surface stack ──────────────────────────────────────────
+ * Components read --surface-{N} for depth; brand palette slots map the
+ * canonical values. A theme that wants a warmer card can shift
+ * --surface-1 without touching every component. */
+:root {
+  /* Light-mode surface stack — explicit values give a visible card vs
+   * background delta (~3% L) and keep the page bg slightly warmer than
+   * the pure-white card. Matches the brand-id-2 polish pass. */
+  --surface-0: oklch(0.97 0.004 80);
+  --surface-1: oklch(1 0 0);
+  /* Light-mode ceiling: surface-1..3 plateau at pure white. Elevation
+   * above the card is communicated by --shadow-md / --shadow-lg and
+   * border tokens, not by lightness — there is no L headroom above 1.0. */
+  --surface-2: oklch(1 0 0);
+  --surface-3: oklch(1 0 0);
+  --surface-inverse: var(--foreground);
+
+  --backdrop: oklch(0 0 0 / 40%);
+  --scrim: oklch(0 0 0 / 20%);
+
+  /* Border variants. --border-strong derives from --foreground (not
+   * --border) because color-mix percentages are clamped to [0,100] —
+   * "--border at 150%" is invalid CSS and silently unsets the property. */
+  --border-subtle: color-mix(in oklch, var(--border) 60%, transparent);
+  --border-strong: color-mix(in oklch, var(--foreground) 55%, transparent);
+  --divider: var(--border-subtle);
+
+  /* Interaction surfaces — use these for hover/pressed states instead
+   * of re-inventing color-mix per component. */
+  --hover-bg: color-mix(in oklch, var(--foreground) var(--hover-strength), transparent);
+  --active-bg: color-mix(in oklch, var(--foreground) var(--active-strength), transparent);
+  --selected-bg: color-mix(in oklch, var(--primary) var(--selected-strength), transparent);
+  --selected-border: color-mix(in oklch, var(--primary) 40%, transparent);
+}
+
+/* ─── Tone ramps ───────────────────────────────────────────────────────
+ * Each tone exposes fg / bg-soft / bg-solid / border / ring. Every
+ * component that tints by tone (chips, alerts, badges, status dots,
+ * diff lines) reads from here — no bespoke color-mix in component CSS.
+ *
+ * Theme authors: override the base --success / --warning / etc. values
+ * and the ramps rebuild automatically. */
+:root {
+  --tone-default-fg: var(--foreground);
+  --tone-default-bg: var(--muted);
+  --tone-default-bg-solid: var(--muted);
+  --tone-default-border: var(--border);
+  --tone-default-ring: var(--ring);
+
+  --tone-muted-fg: var(--muted-foreground);
+  --tone-muted-bg: color-mix(in oklch, var(--muted) 60%, transparent);
+  --tone-muted-bg-solid: var(--muted);
+  --tone-muted-border: var(--border-subtle);
+  --tone-muted-ring: color-mix(in oklch, var(--muted-foreground) 20%, transparent);
+
+  --tone-info-fg: var(--info);
+  --tone-info-bg: color-mix(in oklch, var(--info) 14%, transparent);
+  --tone-info-bg-solid: var(--info);
+  --tone-info-border: color-mix(in oklch, var(--info) 30%, transparent);
+  --tone-info-ring: color-mix(in oklch, var(--info) 22%, transparent);
+
+  /* Light-base tone: the raw base is too light to read as ink on the soft
+     fill / on the page. Darken (hue preserved) so soft/outline/ghost text
+     clears the contrast floor. Success has no dark -foreground anchor
+     (--success-foreground is white, the on-solid ink), so darken toward black. */
+  --tone-success-fg: color-mix(in oklch, var(--success) 66%, black);
+  --tone-success-bg: color-mix(in oklch, var(--success) 14%, transparent);
+  --tone-success-bg-solid: var(--success);
+  --tone-success-border: color-mix(in oklch, var(--success) 30%, transparent);
+  --tone-success-ring: color-mix(in oklch, var(--success) 22%, transparent);
+
+  /* Light-base tone (L≈0.75): raw base is invisible as ink on the pale soft
+     fill. Darken toward the same-hue dark warning ink so text clears the
+     contrast floor; hue stays amber. */
+  --tone-warning-fg: color-mix(in oklch, var(--warning), var(--warning-foreground));
+  --tone-warning-bg: color-mix(in oklch, var(--warning) 14%, transparent);
+  --tone-warning-bg-solid: var(--warning);
+  --tone-warning-border: color-mix(in oklch, var(--warning) 30%, transparent);
+  --tone-warning-ring: color-mix(in oklch, var(--warning) 22%, transparent);
+
+  --tone-destructive-fg: var(--destructive);
+  --tone-destructive-bg: color-mix(in oklch, var(--destructive) 14%, transparent);
+  --tone-destructive-bg-solid: var(--destructive);
+  --tone-destructive-border: color-mix(in oklch, var(--destructive) 30%, transparent);
+  --tone-destructive-ring: color-mix(in oklch, var(--destructive) 22%, transparent);
+
+  --tone-accent-fg: var(--accent);
+  --tone-accent-bg: color-mix(in oklch, var(--accent) 14%, transparent);
+  --tone-accent-bg-solid: var(--accent);
+  --tone-accent-border: color-mix(in oklch, var(--accent) 30%, transparent);
+  --tone-accent-ring: color-mix(in oklch, var(--accent) 22%, transparent);
+
+  --tone-primary-fg: var(--primary);
+  --tone-primary-bg: color-mix(in oklch, var(--primary) 14%, transparent);
+  --tone-primary-bg-solid: var(--primary);
+  --tone-primary-border: color-mix(in oklch, var(--primary) 30%, transparent);
+  --tone-primary-ring: var(--ring);
+
+  /* Legacy tone mix percentages — still exposed for util.toneVars() but
+   * new code should read the ramp variables above directly. */
+  --tone-bg-mix: 18%;
+  --tone-border-mix: 35%;
+  --tone-hover-mix: 24%;
+
+  /* ─── App accent palette ─────────────────────────────────────────
+   * Per-app hue tokens consumed by <ship-app-icon>. Each app gets
+   * one OKLCH that stays distinct across themes. Themes raise L for
+   * dark backgrounds and may pull chroma. Values are tuned to remain
+   * visually distinct from each other AND legible against every
+   * theme's surface. */
+  --app-accent-dashboard:    oklch(0.62 0.18 260);
+  --app-accent-pipelines:    oklch(0.67 0.16 58);
+  --app-accent-agents:       oklch(0.58 0.22 295);
+  --app-accent-skills:       oklch(0.62 0.16 152);
+  --app-accent-git:          oklch(0.58 0.21 25);
+  --app-accent-collections:  oklch(0.65 0.15 200);
+  --app-accent-canvas:       oklch(0.72 0.16 80);
+  --app-accent-settings:     oklch(0.55 0.02 60);
+  --app-accent-chat:         oklch(0.62 0.13 280);
+  --app-accent-events:       oklch(0.62 0.18 30);
+  --app-accent-specs:        oklch(0.55 0.05 240);
+  --app-accent-theme:        oklch(0.66 0.20 320);
+  --app-accent-setup:        oklch(0.68 0.16 110);
+  --app-accent-overview:     oklch(0.60 0.10 230);
+  --app-accent-mesh:         oklch(0.64 0.14 195);
+
+  /* ─── Scrollbar channel ──────────────────────────────────────────
+   * Tokenized scrollbars. Themes can sharpen the radius (console),
+   * tint the thumb (paper), or make it heavier (contrast). Every
+   * scroll surface that opts in via `.ship-scroll*` rides along. */
+  --scrollbar-thumb: color-mix(in oklab, var(--foreground) 22%, transparent);
+  --scrollbar-thumb-hover: color-mix(in oklab, var(--foreground) 38%, transparent);
+  --scrollbar-track: transparent;
+  --scrollbar-width: 10px;
+  --scrollbar-width-thin: 6px;
+  --scrollbar-radius: 999px;
+}
+
+/* ─── Dark mode overrides ─────────────────────────────────────────── */
+.dark {
+  --background: oklch(0.16 0.012 250);
+  --foreground: oklch(0.98 0.001 106);
+  --card: oklch(0.22 0.016 250);
+  --card-foreground: oklch(0.98 0.001 106);
+  --popover: oklch(0.28 0.020 250);
+  /* Dark surface stack — explicit ~6% L delta from page bg to card so
+   * elevated surfaces read as lifted instead of flush. */
+  --surface-0: oklch(0.16 0.012 250);
+  --surface-1: oklch(0.22 0.016 250);
+  --surface-2: oklch(0.25 0.018 250);
+  --surface-3: oklch(0.28 0.020 250);
+  --popover-foreground: oklch(0.985 0.001 106.423);
+  --primary: oklch(0.77 0.16 var(--brand-hue, 70));
+  --primary-foreground: oklch(0.2 0.01 50);
+  --secondary: oklch(0.25 0.02 300);
+  --secondary-foreground: oklch(0.9 0.02 300);
+  --muted: oklch(0.2 0.01 50);
+  --muted-foreground: oklch(0.75 0.015 50);
+  /* Rebuild the neutral (default/muted) tone washes from the DARK --muted.
+     The :root ramps derive these via var()/color-mix() at :root computed-value
+     time, which freezes var(--muted) at the LIGHT value — so overriding --muted
+     alone leaves the washes near-white (unreadable) in dark themes, contra the
+     "ramps rebuild automatically" promise above. Re-derive here so every .dark
+     theme (ship-dark/console/contrast) gets adaptive neutral surfaces. */
+  --tone-default-bg: var(--muted);
+  --tone-default-bg-solid: var(--muted);
+  --tone-muted-bg: color-mix(in oklch, var(--muted) 60%, transparent);
+  --tone-muted-bg-solid: var(--muted);
+  --tone-muted-ring: color-mix(in oklch, var(--muted-foreground) 20%, transparent);
+  /*
+   * --accent in dark mode must be readable AS A FOREGROUND COLOR — it's
+   * used as text in syntax highlighting (attribute names, type names,
+   * function calls in ship-code-editor) and as link/select tone foregrounds
+   * via the --tone-accent-fg alias in tokens.css. The prior value
+   * (oklch 0.3 lightness) was too close to the 0.22 card background and
+   * surfaced as illegible text in dark mode — flagged by user QA on the
+   * dev-panel Source tab.
+   */
+  --accent: oklch(0.74 0.13 var(--brand-hue, 295));
+  --accent-foreground: oklch(0.2 0.02 295);
+  --destructive: oklch(0.6 0.2 25);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.77 0.16 var(--brand-hue, 70)/ 30%);
+
+  --sidebar: oklch(0.18 0.01 250);
+  --sidebar-foreground: oklch(0.98 0.001 106);
+  --sidebar-primary: oklch(0.77 0.16 var(--brand-hue, 70));
+  --sidebar-primary-foreground: oklch(0.2 0.01 50);
+  --sidebar-accent: oklch(0.25 0.01 250);
+  --sidebar-accent-foreground: oklch(0.98 0.001 106);
+  --sidebar-border: oklch(1 0 0 / 15%);
+  --sidebar-ring: oklch(0.77 0.16 70 / 25%);
+
+  /* Dark elevation — flat blacks vanish on a dark warm-navy background.
+   * Tint the shadow with a cool blue at very low L so it reads as a true
+   * cast shadow against the page. Higher alpha because the contrast
+   * delta is what creates the depth cue here. */
+  --shadow-xs: 0 1px 2px 0 oklch(0.05 0.02 250 / 40%);
+  --shadow-sm: 0 1px 3px 0 oklch(0.05 0.02 250 / 45%), 0 1px 2px -1px oklch(0.05 0.02 250 / 30%);
+  --shadow-md: 0 4px 14px -2px oklch(0.05 0.03 250 / 50%), 0 2px 6px -2px oklch(0.05 0.02 250 / 35%);
+  --shadow-lg: 0 14px 32px -6px oklch(0.05 0.03 250 / 60%), 0 4px 12px -4px oklch(0.05 0.02 250 / 40%);
+  --shadow-xl: 0 28px 64px -12px oklch(0.05 0.03 250 / 65%), 0 8px 24px -8px oklch(0.05 0.02 250 / 45%);
+  /* Brand-id-2: visible cool-blue tinted hairline border so the card
+   * silhouette reads against a near-flat dark page surface even at low
+   * monitor brightness. */
+  --shadow-card-rest: 0 1px 3px oklch(0 0 0 / 30%), 0 0 0 1px oklch(0.5 0.04 250 / 14%);
+  --shadow-hover: 0 8px 20px oklch(0 0 0 / 40%), 0 0 0 1px oklch(0.5 0.04 250 / 22%);
+  --shadow-sticky: 0 2px 6px -2px oklch(0.05 0.02 250 / 45%), 0 1px 2px oklch(0.05 0.02 250 / 30%);
+  --shadow-inset-soft: inset 0 1px 2px oklch(0 0 0 / 25%);
+  --shadow-edge-top: 0 -8px 24px -8px oklch(0.05 0.03 250 / 45%), 0 -1px 0 oklch(1 0 0 / 4%);
+
+  --backdrop: oklch(0 0 0 / 55%);
+  --scrim: oklch(0 0 0 / 30%);
+
+  /* App accents — bias toward higher chroma + brighter L for legibility
+   * against deep warm-navy. Hues are preserved so each app keeps its
+   * identity across the light/dark switch. */
+  --app-accent-dashboard:    oklch(0.74 0.16 260);
+  --app-accent-pipelines:    oklch(0.78 0.15 70);
+  --app-accent-agents:       oklch(0.72 0.20 295);
+  --app-accent-skills:       oklch(0.76 0.16 152);
+  --app-accent-git:          oklch(0.72 0.20 25);
+  --app-accent-collections:  oklch(0.78 0.14 200);
+  --app-accent-canvas:       oklch(0.82 0.15 80);
+  --app-accent-settings:     oklch(0.72 0.02 60);
+  --app-accent-chat:         oklch(0.74 0.13 280);
+  --app-accent-events:       oklch(0.74 0.18 30);
+  --app-accent-specs:        oklch(0.72 0.05 240);
+  --app-accent-theme:        oklch(0.78 0.20 320);
+  --app-accent-setup:        oklch(0.80 0.16 110);
+  --app-accent-overview:     oklch(0.74 0.10 230);
+  --app-accent-mesh:         oklch(0.76 0.14 195);
+}
+
+/* ─── Scrollbar utility classes ─────────────────────────────────────
+ * Tokenized scroll styling. The `.ship-scroll-thin` utility on a
+ * scrolling ancestor (typically <body>) applies thin tokenized
+ * scrollbars to that element AND, via descendant `*` selectors, to
+ * every nested scroll container — same coverage as the previous
+ * global rules in apps/shell/index.html, now centralized so themes
+ * can bend it through the --scrollbar-* channel.
+ *
+ * Use `.ship-scroll` for default-width, `.ship-scroll-thin` for thin
+ * rails (sidebars, dock), `.ship-scroll-none` to hide completely.
+ * Apply on a single root container; descendants inherit via the
+ * descendant selectors below. */
+.ship-scroll, .ship-scroll-thin {
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+.ship-scroll-thin, .ship-scroll-thin * { scrollbar-width: thin; }
+.ship-scroll-none, .ship-scroll-none * { scrollbar-width: none; }
+.ship-scroll-thin *,
+.ship-scroll * {
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.ship-scroll::-webkit-scrollbar,
+.ship-scroll *::-webkit-scrollbar { width: var(--scrollbar-width); height: var(--scrollbar-width); }
+.ship-scroll-thin::-webkit-scrollbar,
+.ship-scroll-thin *::-webkit-scrollbar { width: var(--scrollbar-width-thin); height: var(--scrollbar-width-thin); }
+.ship-scroll-none::-webkit-scrollbar,
+.ship-scroll-none *::-webkit-scrollbar { display: none; }
+
+.ship-scroll::-webkit-scrollbar-track,
+.ship-scroll-thin::-webkit-scrollbar-track,
+.ship-scroll *::-webkit-scrollbar-track,
+.ship-scroll-thin *::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+
+.ship-scroll::-webkit-scrollbar-thumb,
+.ship-scroll-thin::-webkit-scrollbar-thumb,
+.ship-scroll *::-webkit-scrollbar-thumb,
+.ship-scroll-thin *::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--scrollbar-radius);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.ship-scroll::-webkit-scrollbar-thumb:hover,
+.ship-scroll-thin::-webkit-scrollbar-thumb:hover,
+.ship-scroll *::-webkit-scrollbar-thumb:hover,
+.ship-scroll-thin *::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+.ship-scroll::-webkit-scrollbar-corner,
+.ship-scroll-thin::-webkit-scrollbar-corner,
+.ship-scroll *::-webkit-scrollbar-corner,
+.ship-scroll-thin *::-webkit-scrollbar-corner { background: transparent; }

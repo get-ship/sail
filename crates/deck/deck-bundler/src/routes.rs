@@ -141,7 +141,7 @@ fn module_import_path(pattern: &str) -> String {
 /// `./routes/studio/_layout.sui`. The codegen imports the layout's
 /// `.sui` so the chrome wrapper it composes registers at first
 /// paint (the per-view resolver chain — layout → its first
-/// `<sui-*` / `<ship-*` tag → that wrapper's source `.sui` —
+/// `<sail-*` / `<ship-*` tag → that wrapper's source `.sui` —
 /// lands the `customElements.define` call when the module loads).
 fn layout_module_path(path_prefix: &str) -> String {
     if path_prefix == "/" {
@@ -178,7 +178,7 @@ fn camel_case(s: &str) -> String {
 ///   - A `routes/<name>/_layout.sui` becomes a layout entry with prefix
 ///     `/<name>`. Unchanged from the pre-root-layout codegen.
 ///
-/// The tag is read from the first `<sui-…>` or `<ship-…>` element in
+/// The tag is read from the first `<sail-…>` or `<ship-…>` element in
 /// the file. Layouts are emitted sorted by `path_prefix` so the
 /// generated `routes.gen.ts` is byte-stable across runs.
 fn discover_layouts(routes_dir: &Path) -> Result<Vec<Layout>> {
@@ -215,10 +215,10 @@ fn discover_layouts(routes_dir: &Path) -> Result<Vec<Layout>> {
 }
 
 /// Read up to the first 4 KiB of a `_layout.sui` and return the tag name
-/// of the first `<sui-…>` or `<ship-…>` element. The SUI template grammar
+/// of the first `<sail-…>` or `<ship-…>` element. The SUI template grammar
 /// is HTML-flavoured; the codegen does not need a full parse — it just needs
 /// the wrapper component the runtime should import. If no qualifying tag is
-/// found, error: a layout with no `<sui-*` / `<ship-*` element has no
+/// found, error: a layout with no `<sail-*` / `<ship-*` element has no
 /// component to mount.
 fn extract_layout_tag(path: &Path) -> Result<String> {
     // Cap the read so a stray giant file can't pin the codegen. The tag is
@@ -229,7 +229,7 @@ fn extract_layout_tag(path: &Path) -> Result<String> {
     let head_bytes = if bytes.len() > HEAD_BYTES { &bytes[..HEAD_BYTES] } else { &bytes[..] };
     let head = std::str::from_utf8(head_bytes)
         .with_context(|| format!("non-utf8 in `{}`", path.display()))?;
-    // Match the opening of the first element whose tag starts with `sui-`
+    // Match the opening of the first element whose tag starts with `sail-`
     // or `ship-`. Whitespace, a tag name (letters/digits/`-`/`_`), and
     // either a `>` or whitespace ends the tag name. This is intentionally
     // minimal — the layout is just a chrome wrapper, not a full template
@@ -266,13 +266,13 @@ fn extract_layout_tag(path: &Path) -> Result<String> {
         }
         let tag = std::str::from_utf8(&bytes_str[name_start..name_end])
             .context("non-utf8 tag name")?;
-        if tag.starts_with("sui-") || tag.starts_with("ship-") {
+        if tag.starts_with("sail-") || tag.starts_with("ship-") {
             return Ok(tag.to_string());
         }
         idx = name_end;
     }
     bail!(
-        "`{}` has no `<sui-…>` or `<ship-…>` element — a layout must name a wrapper component",
+        "`{}` has no `<sail-…>` or `<ship-…>` element — a layout must name a wrapper component",
         path.display()
     );
 }
@@ -1104,16 +1104,16 @@ mod tests {
         let r = root.path().join("routes");
         std::fs::create_dir_all(r.join("foo/bar/[id]")).unwrap();
         std::fs::write(r.join("foo/bar/[id]/page.sui"), "<div/>").unwrap();
-        // Realistic layout: comment + a `<sui-*` wrapper + a `<slot>`.
+        // Realistic layout: comment + a `<sail-*` wrapper + a `<slot>`.
         std::fs::write(
             r.join("foo/_layout.sui"),
-            "// chrome\n<sui-foo-chrome>\n  <slot />\n</sui-foo-chrome>\n",
+            "// chrome\n<sail-foo-chrome>\n  <slot />\n</sail-foo-chrome>\n",
         )
         .unwrap();
         let tree = build_route_tree(&r, "app").unwrap();
         assert_eq!(tree.layouts.len(), 1);
         assert_eq!(tree.layouts[0].path_prefix, "/foo");
-        assert_eq!(tree.layouts[0].tag, "sui-foo-chrome");
+        assert_eq!(tree.layouts[0].tag, "sail-foo-chrome");
     }
 
     #[test]
@@ -1148,7 +1148,7 @@ mod tests {
             "<div/>",
         )
         .unwrap();
-        std::fs::write(r.join("studio/_layout.sui"), "<sui-studio-chrome/>\n").unwrap();
+        std::fs::write(r.join("studio/_layout.sui"), "<sail-studio-chrome/>\n").unwrap();
         std::fs::write(
             r.join("_layout.sui"),
             "<ship-hub-chrome>\n  <slot name=\"route\"/>\n</ship-hub-chrome>\n",
@@ -1161,7 +1161,7 @@ mod tests {
         assert_eq!(tree.layouts[0].path_prefix, "/");
         assert_eq!(tree.layouts[0].tag, "ship-hub-chrome");
         assert_eq!(tree.layouts[1].path_prefix, "/studio");
-        assert_eq!(tree.layouts[1].tag, "sui-studio-chrome");
+        assert_eq!(tree.layouts[1].tag, "sail-studio-chrome");
     }
 
     #[test]
@@ -1182,7 +1182,7 @@ mod tests {
 
     #[test]
     fn layout_discovery_skips_div_only_layout() {
-        // A `_layout.sui` with no `<sui-*` / `<ship-*` element errors out
+        // A `_layout.sui` with no `<sail-*` / `<ship-*` element errors out
         // — a layout must name a wrapper component.
         let root = tempfile::tempdir().unwrap();
         let r = root.path().join("routes");
@@ -1192,7 +1192,7 @@ mod tests {
         let err = build_route_tree(&r, "shell").unwrap_err();
         let msg = format!("{err:#}");
         assert!(
-            msg.contains("no `<sui-…>` or `<ship-…>` element"),
+            msg.contains("no `<sail-…>` or `<ship-…>` element"),
             "expected layout-tag error, got: {msg}"
         );
     }
@@ -1293,7 +1293,7 @@ mod tests {
             ],
             layouts: vec![
                 Layout { path_prefix: "/".to_string(), tag: "ship-app-chrome".to_string() },
-                Layout { path_prefix: "/studio".to_string(), tag: "sui-studio-chrome".to_string() },
+                Layout { path_prefix: "/studio".to_string(), tag: "sail-studio-chrome".to_string() },
             ],
         };
         let ts = render_routes_gen(&tree);
@@ -1441,7 +1441,7 @@ mod tests {
     /// the host's bootstrap pulls tokens in + calls the router.
     ///
     /// The token CSS package stays the canonical home
-    /// (`packages/sui/tokens/package.json` declares `./tokens.css` as
+    /// (`packages/sail/tokens/package.json` declares `./tokens.css` as
     /// a subpath export); `entry.gen.ts` is the conventional entry
     /// that pulls it in.
     #[test]
@@ -1452,7 +1452,7 @@ mod tests {
             .and_then(|p| p.parent()) // crates
             .and_then(|p| p.parent()) // repo root
             .expect("CARGO_MANIFEST_DIR has three ancestors")
-            .join("packages/sui/tokens/package.json");
+            .join("packages/sail/tokens/package.json");
         let pkg = std::fs::read_to_string(&tokens_pkg)
             .unwrap_or_else(|e| panic!("read {}: {e}", tokens_pkg.display()));
         assert!(

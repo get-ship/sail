@@ -118,8 +118,8 @@ pub async fn synthesize_and_bundle_with(
 }
 
 async fn bundle(repo: &Path, build_dir: &Path, client_aliases: &[ClientAlias]) -> Result<String> {
-    let runtime_server = repo.join("packages/sui/runtime/src/server.ts");
-    let runtime_internal = repo.join("packages/sui/runtime/src/internal.ts");
+    let runtime_server = repo.join("packages/sail/runtime/src/server.ts");
+    let runtime_internal = repo.join("packages/sail/runtime/src/internal.ts");
     let route_server = repo.join("packages/deck/router/src/server.ts");
     let mut alias = vec![
         ("@ship/sail-runtime".to_string(), vec![Some(path_str(&runtime_server))]),

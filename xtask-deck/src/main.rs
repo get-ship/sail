@@ -11,7 +11,7 @@
 //! Run after a `lucide-static` version bump:
 //!   bun install
 //!   cargo run -p xtask-deck -- gen-icons
-//!   git add <sui-repo>/crates/deck/deck-core/assets/lucide-icons.json && git commit
+//!   git add <sail-repo>/crates/deck/deck-core/assets/lucide-icons.json && git commit
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -133,7 +133,7 @@ pub fn run(repo_root: &Path) -> Result<()> {
         bail!("no icons read from {} (empty dir?)", icons_dir.display());
     }
 
-    // Compact JSON — same shape `<sui-icon>` has always seen. The size
+    // Compact JSON — same shape `<sail-icon>` has always seen. The size
     // (~410KB) is the daemon's embed cost; clients fetch one icon at a time
     // via `/_deck/icons/{name}.svg`, never the whole map.
     let json = serde_json::to_string(&out).context("serialize icons JSON")?;

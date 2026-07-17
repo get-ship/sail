@@ -8,9 +8,9 @@
     </p>
   </header>
 
-  <!-- ── sui-pipeline-step ──────────────────────────────────────────────── -->
+  <!-- ── sail-pipeline-step ──────────────────────────────────────────────── -->
   <column gap="4">
-    <h2 sx="text-base font-semibold text-foreground"><code>sui-pipeline-step</code></h2>
+    <h2 sx="text-base font-semibold text-foreground"><code>sail-pipeline-step</code></h2>
     <p sx="text-sm text-muted-foreground">
       Props: <code>type: agent|gate|merge|human</code>,
       <code>state: ok|running|awaiting|err|none</code>,
@@ -21,52 +21,52 @@
     <column gap="3">
       <!-- type variants, state=none -->
       <span sx="font-mono text-xs text-muted-foreground pt-2">type=agent · state=none</span>
-      <sui-pipeline-step type="agent" state="none">
+      <sail-pipeline-step type="agent" state="none">
         lint-check
         <span slot="sub">Runs ESLint + Prettier over changed files</span>
-      </sui-pipeline-step>
+      </sail-pipeline-step>
 
       <span sx="font-mono text-xs text-muted-foreground pt-2">type=gate · state=awaiting</span>
-      <sui-pipeline-step type="gate" state="awaiting">
+      <sail-pipeline-step type="gate" state="awaiting">
         human-review
         <span slot="sub">Waiting for approval before deploy</span>
         <span slot="arts">artifact: review-notes.md</span>
-      </sui-pipeline-step>
+      </sail-pipeline-step>
 
       <span sx="font-mono text-xs text-muted-foreground pt-2">type=merge · state=ok</span>
-      <sui-pipeline-step type="merge" state="ok">
+      <sail-pipeline-step type="merge" state="ok">
         merge-results
         <span slot="sub">Aggregated outputs from parallel lanes</span>
         <span slot="arts">artifact: summary.json</span>
-      </sui-pipeline-step>
+      </sail-pipeline-step>
 
       <span sx="font-mono text-xs text-muted-foreground pt-2">type=human · state=running</span>
-      <sui-pipeline-step type="human" state="running">
+      <sail-pipeline-step type="human" state="running">
         manual-deploy
         <span slot="sub">Operator confirms production cut-over</span>
-      </sui-pipeline-step>
+      </sail-pipeline-step>
 
       <span sx="font-mono text-xs text-muted-foreground pt-2">type=agent · state=err</span>
-      <sui-pipeline-step type="agent" state="err">
+      <sail-pipeline-step type="agent" state="err">
         build-release
         <span slot="sub">cargo build --release exited 1</span>
         <span slot="arts">artifact: build.log</span>
-      </sui-pipeline-step>
+      </sail-pipeline-step>
 
       <!-- compact variants -->
       <span sx="font-mono text-xs text-muted-foreground pt-2">compact=true — all four types</span>
       <row gap="3">
-        <sui-pipeline-step type="agent" state="ok" compact>ci-check</sui-pipeline-step>
-        <sui-pipeline-step type="gate"  state="awaiting" compact>review-gate</sui-pipeline-step>
-        <sui-pipeline-step type="merge" state="running" compact>fan-in</sui-pipeline-step>
-        <sui-pipeline-step type="human" state="none" compact>sign-off</sui-pipeline-step>
+        <sail-pipeline-step type="agent" state="ok" compact>ci-check</sail-pipeline-step>
+        <sail-pipeline-step type="gate"  state="awaiting" compact>review-gate</sail-pipeline-step>
+        <sail-pipeline-step type="merge" state="running" compact>fan-in</sail-pipeline-step>
+        <sail-pipeline-step type="human" state="none" compact>sign-off</sail-pipeline-step>
       </row>
     </column>
   </column>
 
-  <!-- ── sui-pipeline-card ─────────────────────────────────────────────── -->
+  <!-- ── sail-pipeline-card ─────────────────────────────────────────────── -->
   <column gap="4">
-    <h2 sx="text-base font-semibold text-foreground"><code>sui-pipeline-card</code></h2>
+    <h2 sx="text-base font-semibold text-foreground"><code>sail-pipeline-card</code></h2>
     <p sx="text-sm text-muted-foreground">
       Props: <code>state: ok|running|awaiting|err|none</code>,
       <code>interactive: bool</code>.
@@ -76,49 +76,49 @@
 
     <column gap="3">
       <span sx="font-mono text-xs text-muted-foreground pt-2">state=none (default)</span>
-      <sui-pipeline-card state="none">
+      <sail-pipeline-card state="none">
         nightly-build
         <span slot="desc">Full build + test suite run every night at 02:00 UTC.</span>
         <span slot="steps">agent · gate · agent</span>
-      </sui-pipeline-card>
+      </sail-pipeline-card>
 
       <span sx="font-mono text-xs text-muted-foreground pt-2">state=running · interactive</span>
-      <sui-pipeline-card state="running" interactive>
+      <sail-pipeline-card state="running" interactive>
         deploy-staging
         <span slot="desc">Builds the release image and promotes to staging.</span>
         <span slot="steps">agent · agent · gate · agent</span>
         <span slot="recent">run #42 · run #41 · run #40</span>
-      </sui-pipeline-card>
+      </sail-pipeline-card>
 
       <span sx="font-mono text-xs text-muted-foreground pt-2">state=awaiting · interactive</span>
-      <sui-pipeline-card state="awaiting" interactive>
+      <sail-pipeline-card state="awaiting" interactive>
         release-prod
         <span slot="desc">Promotes staging to production after human sign-off.</span>
         <span slot="steps">human · gate · agent</span>
         <span slot="recent">run #18 · run #17</span>
-      </sui-pipeline-card>
+      </sail-pipeline-card>
 
       <span sx="font-mono text-xs text-muted-foreground pt-2">state=ok</span>
-      <sui-pipeline-card state="ok">
+      <sail-pipeline-card state="ok">
         smoke-test
         <span slot="desc">Runs the smoke suite against the current deploy.</span>
         <span slot="steps">agent · merge</span>
         <span slot="recent">run #55 · run #54 · run #53</span>
-      </sui-pipeline-card>
+      </sail-pipeline-card>
 
       <span sx="font-mono text-xs text-muted-foreground pt-2">state=err</span>
-      <sui-pipeline-card state="err">
+      <sail-pipeline-card state="err">
         integration-suite
         <span slot="desc">Full integration test pass across all services.</span>
         <span slot="steps">agent · agent · gate · merge · agent</span>
         <span slot="recent">run #9</span>
-      </sui-pipeline-card>
+      </sail-pipeline-card>
     </column>
   </column>
 
-  <!-- ── sui-pipeline-run ──────────────────────────────────────────────── -->
+  <!-- ── sail-pipeline-run ──────────────────────────────────────────────── -->
   <column gap="4">
-    <h2 sx="text-base font-semibold text-foreground"><code>sui-pipeline-run</code></h2>
+    <h2 sx="text-base font-semibold text-foreground"><code>sail-pipeline-run</code></h2>
     <p sx="text-sm text-muted-foreground">
       Props: <code>state: ok|running|awaiting|err|none</code>.
       Slots: default (name), <code>meta</code>, <code>rail</code>.
@@ -126,54 +126,54 @@
 
     <column gap="3">
       <span sx="font-mono text-xs text-muted-foreground pt-2">state=running</span>
-      <sui-pipeline-run state="running">
+      <sail-pipeline-run state="running">
         deploy-staging / run #42
         <span slot="meta">started 3m ago</span>
         <row slot="rail" gap="1">
-          <sui-pipeline-step type="agent" state="ok" compact>build</sui-pipeline-step>
-          <sui-pipeline-step type="gate"  state="running" compact>smoke</sui-pipeline-step>
-          <sui-pipeline-step type="agent" state="none" compact>promote</sui-pipeline-step>
+          <sail-pipeline-step type="agent" state="ok" compact>build</sail-pipeline-step>
+          <sail-pipeline-step type="gate"  state="running" compact>smoke</sail-pipeline-step>
+          <sail-pipeline-step type="agent" state="none" compact>promote</sail-pipeline-step>
         </row>
-      </sui-pipeline-run>
+      </sail-pipeline-run>
 
       <span sx="font-mono text-xs text-muted-foreground pt-2">state=awaiting</span>
-      <sui-pipeline-run state="awaiting">
+      <sail-pipeline-run state="awaiting">
         release-prod / run #18
         <span slot="meta">waiting 12m</span>
         <row slot="rail" gap="1">
-          <sui-pipeline-step type="agent" state="ok" compact>build</sui-pipeline-step>
-          <sui-pipeline-step type="human" state="awaiting" compact>sign-off</sui-pipeline-step>
-          <sui-pipeline-step type="agent" state="none" compact>deploy</sui-pipeline-step>
+          <sail-pipeline-step type="agent" state="ok" compact>build</sail-pipeline-step>
+          <sail-pipeline-step type="human" state="awaiting" compact>sign-off</sail-pipeline-step>
+          <sail-pipeline-step type="agent" state="none" compact>deploy</sail-pipeline-step>
         </row>
-      </sui-pipeline-run>
+      </sail-pipeline-run>
 
       <span sx="font-mono text-xs text-muted-foreground pt-2">state=ok</span>
-      <sui-pipeline-run state="ok">
+      <sail-pipeline-run state="ok">
         nightly-build / run #101
         <span slot="meta">finished 2h ago · 4m 12s</span>
         <row slot="rail" gap="1">
-          <sui-pipeline-step type="agent" state="ok" compact>lint</sui-pipeline-step>
-          <sui-pipeline-step type="agent" state="ok" compact>test</sui-pipeline-step>
-          <sui-pipeline-step type="merge" state="ok" compact>report</sui-pipeline-step>
+          <sail-pipeline-step type="agent" state="ok" compact>lint</sail-pipeline-step>
+          <sail-pipeline-step type="agent" state="ok" compact>test</sail-pipeline-step>
+          <sail-pipeline-step type="merge" state="ok" compact>report</sail-pipeline-step>
         </row>
-      </sui-pipeline-run>
+      </sail-pipeline-run>
 
       <span sx="font-mono text-xs text-muted-foreground pt-2">state=err</span>
-      <sui-pipeline-run state="err">
+      <sail-pipeline-run state="err">
         integration-suite / run #9
         <span slot="meta">failed 5h ago · 1m 03s</span>
         <row slot="rail" gap="1">
-          <sui-pipeline-step type="agent" state="ok" compact>setup</sui-pipeline-step>
-          <sui-pipeline-step type="agent" state="err" compact>e2e-tests</sui-pipeline-step>
-          <sui-pipeline-step type="merge" state="none" compact>summary</sui-pipeline-step>
+          <sail-pipeline-step type="agent" state="ok" compact>setup</sail-pipeline-step>
+          <sail-pipeline-step type="agent" state="err" compact>e2e-tests</sail-pipeline-step>
+          <sail-pipeline-step type="merge" state="none" compact>summary</sail-pipeline-step>
         </row>
-      </sui-pipeline-run>
+      </sail-pipeline-run>
     </column>
   </column>
 
-  <!-- ── sui-pipeline-dag ──────────────────────────────────────────────── -->
+  <!-- ── sail-pipeline-dag ──────────────────────────────────────────────── -->
   <column gap="4">
-    <h2 sx="text-base font-semibold text-foreground"><code>sui-pipeline-dag</code></h2>
+    <h2 sx="text-base font-semibold text-foreground"><code>sail-pipeline-dag</code></h2>
     <p sx="text-sm text-muted-foreground">
       Props: <code>steps: string</code> (JSON array of
       <code>&#123; id, type, state?, after?: string[] &#125;</code>).
@@ -182,19 +182,19 @@
 
     <column gap="3">
       <span sx="font-mono text-xs text-muted-foreground pt-2">linear chain — all states</span>
-      <sui-pipeline-dag steps='[{"id":"lint","type":"agent","state":"ok"},{"id":"test","type":"agent","state":"ok","after":["lint"]},{"id":"review","type":"gate","state":"awaiting","after":["test"]},{"id":"deploy","type":"agent","state":"none","after":["review"]}]'></sui-pipeline-dag>
+      <sail-pipeline-dag steps='[{"id":"lint","type":"agent","state":"ok"},{"id":"test","type":"agent","state":"ok","after":["lint"]},{"id":"review","type":"gate","state":"awaiting","after":["test"]},{"id":"deploy","type":"agent","state":"none","after":["review"]}]'></sail-pipeline-dag>
 
       <span sx="font-mono text-xs text-muted-foreground pt-2">fan-out / fan-in — running</span>
-      <sui-pipeline-dag steps='[{"id":"build","type":"agent","state":"ok"},{"id":"unit","type":"agent","state":"ok","after":["build"]},{"id":"e2e","type":"agent","state":"running","after":["build"]},{"id":"merge","type":"merge","state":"none","after":["unit","e2e"]}]'></sui-pipeline-dag>
+      <sail-pipeline-dag steps='[{"id":"build","type":"agent","state":"ok"},{"id":"unit","type":"agent","state":"ok","after":["build"]},{"id":"e2e","type":"agent","state":"running","after":["build"]},{"id":"merge","type":"merge","state":"none","after":["unit","e2e"]}]'></sail-pipeline-dag>
 
       <span sx="font-mono text-xs text-muted-foreground pt-2">human step mid-pipeline — err branch</span>
-      <sui-pipeline-dag steps='[{"id":"prepare","type":"agent","state":"ok"},{"id":"sign-off","type":"human","state":"awaiting","after":["prepare"]},{"id":"promote","type":"agent","state":"err","after":["sign-off"]}]'></sui-pipeline-dag>
+      <sail-pipeline-dag steps='[{"id":"prepare","type":"agent","state":"ok"},{"id":"sign-off","type":"human","state":"awaiting","after":["prepare"]},{"id":"promote","type":"agent","state":"err","after":["sign-off"]}]'></sail-pipeline-dag>
     </column>
   </column>
 
-  <!-- ── sui-log-stream ────────────────────────────────────────────────── -->
+  <!-- ── sail-log-stream ────────────────────────────────────────────────── -->
   <column gap="4">
-    <h2 sx="text-base font-semibold text-foreground"><code>sui-log-stream</code></h2>
+    <h2 sx="text-base font-semibold text-foreground"><code>sail-log-stream</code></h2>
     <p sx="text-sm text-muted-foreground">
       Props: <code>url: string</code>, <code>event: string</code> (default
       <code>log</code>), <code>autoscroll: bool</code>,
@@ -206,13 +206,13 @@
 
     <column gap="3">
       <span sx="font-mono text-xs text-muted-foreground pt-2">inactive (default) — placeholder state</span>
-      <sui-log-stream url="" event="log"></sui-log-stream>
+      <sail-log-stream url="" event="log"></sail-log-stream>
 
       <span sx="font-mono text-xs text-muted-foreground pt-2">inactive · autoscroll prop set — no connection opened</span>
-      <sui-log-stream url="/_deck/streams/demo-run" event="log" autoscroll></sui-log-stream>
+      <sail-log-stream url="/_deck/streams/demo-run" event="log" autoscroll></sail-log-stream>
 
       <span sx="font-mono text-xs text-muted-foreground pt-2">inactive · max-bytes=4096 — same placeholder</span>
-      <sui-log-stream url="/_deck/streams/demo-run" event="log" max-bytes="4096"></sui-log-stream>
+      <sail-log-stream url="/_deck/streams/demo-run" event="log" max-bytes="4096"></sail-log-stream>
     </column>
   </column>
 </column>

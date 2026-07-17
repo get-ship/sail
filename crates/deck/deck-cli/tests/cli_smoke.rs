@@ -16,7 +16,7 @@
 //!   picks a unique timestamped name. A `Drop` guard removes the dirs
 //!   the test wrote so reruns stay clean.
 //! - `build-assets` may exit non-zero when a consumer bundle fails on
-//!   this worktree (sui-marketing astro/tsconfigs/strict miss, see
+//!   this worktree (sail-marketing astro/tsconfigs/strict miss, see
 //!   job-spec.md Scope). Framework singletons bake independently of
 //!   consumer targets — `build_all` writes each framework bundle to
 //!   `.deck/framework/` before the consumer guard runs — so the test
@@ -25,7 +25,7 @@
 //!   runs `build-assets` first (accepting non-zero exit), then asserts
 //!   the requested target lands in the out dir.
 //! - The component validator is tested by running the CLI with a
-//!   non-`sui-` tag and asserting non-zero exit — no artifacts on
+//!   non-`sail-` tag and asserting non-zero exit — no artifacts on
 //!   disk means the validator was the failure point.
 
 use std::path::{Path, PathBuf};
@@ -114,16 +114,16 @@ impl Drop for ScaffoldGuard {
 /// (the bundles deck-core's build.rs stages into `assets/` for
 /// `include_str!`). Framework targets bake independently of consumer
 /// targets in `build_all`, so their on-disk artifacts are present
-/// even when a consumer target (e.g. sui-marketing) fails the bake.
+/// even when a consumer target (e.g. sail-marketing) fails the bake.
 #[test]
 fn build_assets_writes_framework_bundles() {
     let out = run_deck(&["build-assets"]);
     let stderr = String::from_utf8_lossy(&out.stderr);
-    // Don't assert status — consumer failures (sui-marketing) are a
+    // Don't assert status — consumer failures (sail-marketing) are a
     // known-bad on this worktree. Framework bundles are written
     // before build_all returns; their absence is the real signal.
     let fw_dir = repo_root().join(".deck").join("framework");
-    for name in ["sui-runtime.js", "sui-dom.js", "sui-sdk-client.js"] {
+    for name in ["sail-runtime.js", "sail-dom.js", "sail-sdk-client.js"] {
         let path = fw_dir.join(name);
         assert!(
             path.exists(),
@@ -143,7 +143,7 @@ fn build_assets_writes_framework_bundles() {
 
 /// `deck emit --target <name> --out <dir>` must place the named target
 /// (and its lazy-chunk closure) into `<dir>`. Uses the framework
-/// singleton `sui-runtime` because it bundles deterministically on
+/// singleton `sail-runtime` because it bundles deterministically on
 /// this worktree (no consumer-bundle dependency).
 ///
 /// Runs `build-assets` first so the target is on disk; accepts a
@@ -158,16 +158,16 @@ fn emit_places_target_in_out_dir() {
     let status = run_deck(&[
         "emit",
         "--target",
-        "sui-runtime",
+        "sail-runtime",
         "--out",
         out.path().to_str().unwrap(),
     ])
     .status;
     assert!(
         status.success(),
-        "deck emit --target sui-runtime exited {status:?}"
+        "deck emit --target sail-runtime exited {status:?}"
     );
-    let entry = out.path().join("sui-runtime.js");
+    let entry = out.path().join("sail-runtime.js");
     assert!(
         entry.exists(),
         "emit did not write {}",
@@ -255,13 +255,13 @@ fn scaffold_view_with_component_writes_widget() {
 
 /// `deck scaffold component <tag>` writes the `.sui` (and optional
 /// controller) under the SUI primitives package:
-/// `packages/components/sui/primitives/src/<tag>/<tag>.sui`.
+/// `packages/components/sail/primitives/src/<tag>/<tag>.sui`.
 #[test]
 fn scaffold_component_writes_sui_under_primitives_package() {
     let mut guard = ScaffoldGuard::new();
-    let tag = unique_stem("sui-testcomp");
+    let tag = unique_stem("sail-testcomp");
     let base = repo_root()
-        .join("packages/components/sui/primitives/src")
+        .join("packages/components/sail/primitives/src")
         .join(&tag);
     guard.track(base.clone());
 
@@ -283,17 +283,17 @@ fn scaffold_component_writes_sui_under_primitives_package() {
     );
 }
 
-/// The component validator rejects tags that don't start with `sui-`.
-/// Tested by running the CLI with a non-`sui-` tag and asserting
+/// The component validator rejects tags that don't start with `sail-`.
+/// Tested by running the CLI with a non-`sail-` tag and asserting
 /// non-zero exit; the validator runs before any directory is created,
 /// so the absence of artifacts on disk is the failure-mode proof.
 #[test]
 fn scaffold_component_rejects_non_sui_tag() {
     // `tag` must pass `validate_view_name` (lowercase ASCII + hyphens
-    // + digits) but violate the `sui-` prefix requirement.
-    let bad_tag = unique_stem("not-sui-widget");
+    // + digits) but violate the `sail-` prefix requirement.
+    let bad_tag = unique_stem("not-sail-widget");
     let base = repo_root()
-        .join("packages/components/sui/primitives/src")
+        .join("packages/components/sail/primitives/src")
         .join(&bad_tag);
     // Cleanup guard in case validation is bypassed (defense in depth).
     let mut guard = ScaffoldGuard::new();
@@ -307,8 +307,8 @@ fn scaffold_component_rejects_non_sui_tag() {
     );
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("sui-"),
-        "expected validator message mentioning `sui-`, got: {stderr}"
+        stderr.contains("sail-"),
+        "expected validator message mentioning `sail-`, got: {stderr}"
     );
     assert!(
         !base.exists(),
@@ -373,7 +373,7 @@ fn builds_a_zero_ship_product_app() {
     let proj = TempDir::new().expect("tempdir");
     let root = proj.path();
     std::fs::create_dir_all(root.join("routes")).expect("routes dir");
-    // Framework deps only (@ship/* is the org npm SCOPE — sui-runtime/dom are
+    // Framework deps only (@ship/* is the org npm SCOPE — sail-runtime/dom are
     // framework packages, not the ship product). No @ship/sdk-client, no
     // ship.* client, no .ship/ — a genuinely host-free app.
     std::fs::write(

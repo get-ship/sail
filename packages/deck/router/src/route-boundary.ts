@@ -5,7 +5,7 @@
 // call sites in `runProtected(node, source, fn)`, which walks up the DOM from
 // `node` to the nearest element carrying a `BoundaryHandle` and routes the
 // error there (see `@ship/sail-runtime`'s error-boundary.ts). The opt-in
-// `<sui-error-boundary>` primitive is one consumer of that mechanism.
+// `<sail-error-boundary>` primitive is one consumer of that mechanism.
 //
 // This module is the OTHER consumer: it lets the deck router install a boundary
 // handle on the route outlet so a throwing route degrades to an error card
@@ -13,7 +13,7 @@
 // having to wrap anything. deck ⊥ sui holds: this imports the runtime's
 // boundary helpers (deck → sui); the runtime never imports deck.
 //
-// Registration-free by design: the fallback prefers the `<sui-error-state>`
+// Registration-free by design: the fallback prefers the `<sail-error-state>`
 // primitive but degrades to a self-contained styled card when no primitive is
 // registered — mirroring `mountRouter`'s `buildNotFound`, which never assumes
 // `@ship/primitives` is present (registration is a bundler concern).
@@ -61,7 +61,7 @@ export interface RouteBoundaryHandle {
  * reactive effect degrades to an error card rather than a dead subtree.
  *
  * Opt-out / no-double-wrap: if a boundary is already present in `outlet`'s
- * ancestry (a layout supplied its own `<sui-error-boundary>` or attached a
+ * ancestry (a layout supplied its own `<sail-error-boundary>` or attached a
  * handle), this is a no-op and returns `null` — the author's boundary wins.
  * The app-wide opt-out is `mountRouter({ errorBoundary: false })`.
  *
@@ -79,7 +79,7 @@ export function installRouteBoundary(
   if (findNearestBoundary(outlet)) return null
 
   const dev = opts.dev ?? isDevMode()
-  // Re-entrancy guard, mirroring <sui-error-boundary>: a single render pass can
+  // Re-entrancy guard, mirroring <sail-error-boundary>: a single render pass can
   // throw many times (e.g. every row of a bindFor) — only the first is shown
   // until reset, so the card isn't rebuilt on each repeat throw.
   let caught = false
@@ -113,7 +113,7 @@ export function installRouteBoundary(
 }
 
 /**
- * Build the card shown when a route view throws. Prefers `<sui-error-state>`
+ * Build the card shown when a route view throws. Prefers `<sail-error-state>`
  * (the SUI port) and falls back to a self-contained styled `<div>` so the card
  * never depends on a primitive being registered — the same guard pattern
  * `mountRouter`'s `buildNotFound` uses for the 404 surface.
@@ -133,8 +133,8 @@ function buildErrorCard(
     ? `A ${source} error was caught by the route boundary.`
     : 'This page hit an unexpected error. Try again, or go back.'
 
-  if (customElements.get('sui-error-state')) {
-    const el = document.createElement('sui-error-state')
+  if (customElements.get('sail-error-state')) {
+    const el = document.createElement('sail-error-state')
     el.setAttribute('title', title)
     el.setAttribute('body', body)
     if (dev) {
@@ -154,7 +154,7 @@ function buildErrorCard(
   return buildBareCard(title, body, dev ? error.message : '', reset)
 }
 
-/** A Retry button. `slotted` projects it into `<sui-error-state>`'s action slot. */
+/** A Retry button. `slotted` projects it into `<sail-error-state>`'s action slot. */
 function buildRetryButton(reset: () => void, slotted: boolean): HTMLButtonElement {
   const btn = document.createElement('button')
   if (slotted) btn.setAttribute('slot', 'action')

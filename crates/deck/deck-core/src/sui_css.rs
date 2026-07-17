@@ -5,23 +5,23 @@
 //!
 //!   - `contracts.css` — the tone/size channels, interactive-surface
 //!     baseline, focus/disabled, button skin. Generated from the runtime's
-//!     `LIGHT_CONTRACTS_CSS` (`packages/sui/runtime/scripts/emit-contracts-css.ts`).
+//!     `LIGHT_CONTRACTS_CSS` (`packages/sail/runtime/scripts/emit-contracts-css.ts`).
 //!   - `element-skins.css` — the L1 element skins (spinner/separator/icon/
 //!     label/…). Generated from the sail-compiler stdlib registry
 //!     (`cargo run -p sail-compiler -- framework-css`).
 //!
 //! Both are drift-locked by tests in their source crates, so this concat can
 //! never serve stale framework CSS. The shell links it with
-//! `data-sui-contracts`, and the runtime's `ensureLightContracts` yields to
+//! `data-sail-contracts`, and the runtime's `ensureLightContracts` yields to
 //! that link — injection is the JS-only-host fallback (dies at full cutover).
 
 use crate::{CachePolicy, DaemonMode, DeckResponse};
 
 /// Framework contracts + stdlib element skins, concatenated at compile time.
 const SUI_CSS: &str = concat!(
-    include_str!("../../../../packages/sui/tokens/src/contracts.css"),
+    include_str!("../../../../packages/sail/tokens/src/contracts.css"),
     "\n",
-    include_str!("../../../../packages/sui/tokens/src/element-skins.css"),
+    include_str!("../../../../packages/sail/tokens/src/element-skins.css"),
 );
 
 /// `GET /api/assets/sui.css` — the framework stylesheet.
@@ -58,6 +58,6 @@ mod tests {
         let css = String::from_utf8(serve_sui_css(DaemonMode::Development).body).unwrap();
         // A contracts marker (tone channel) and a skin marker (spinner).
         assert!(css.contains("[tone="), "contracts half present: {css:.80}");
-        assert!(css.contains(".sui-spinner"), "element-skins half present");
+        assert!(css.contains(".sail-spinner"), "element-skins half present");
     }
 }

@@ -10,7 +10,7 @@ use std::path::PathBuf;
 /// package's `sideEffects: false` / array contract) so the build can emit a
 /// loud warning. Without this, a CSS or `customElements.define` import gets
 /// silently tree-shaken and the author has no way to know why their
-/// registration never runs (sui-sideeffects footgun).
+/// registration never runs (sail-sideeffects footgun).
 #[derive(Debug, Clone)]
 pub struct DroppedSideEffectModule {
     /// Absolute path of the module that was dropped.
@@ -26,7 +26,7 @@ pub struct DroppedSideEffectModule {
 /// What one target produced.
 #[derive(Debug, Clone)]
 pub struct BundleManifest {
-    /// Logical target name (e.g. `sui-runtime`, `views/git/view`).
+    /// Logical target name (e.g. `sail-runtime`, `views/git/view`).
     pub target: String,
     /// Absolute output path.
     pub out_path: String,

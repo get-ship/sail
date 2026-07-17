@@ -2,7 +2,7 @@
 //!
 //! deck's framework singletons (`@ship/sail-runtime`, `@ship/sail-dom`,
 //! `@ship/deck-router`, `@ship/sdk-client`) are no longer pinned to a hardcoded
-//! monorepo path (`packages/sui/runtime/src/index.ts`). They are resolved like
+//! monorepo path (`packages/sail/runtime/src/index.ts`). They are resolved like
 //! any npm dependency: from the project being built, find the package's
 //! `package.json` and read its `exports`/`main` to locate the entry module.
 //!
@@ -273,15 +273,15 @@ mod tests {
         // into the root node_modules), discovered via `workspaces` globs.
         let tmp = tempdir().unwrap();
         let root = tmp.path();
-        write(&root.join("package.json"), r#"{ "workspaces": ["packages/sui/*"] }"#);
+        write(&root.join("package.json"), r#"{ "workspaces": ["packages/sail/*"] }"#);
         write(
-            &root.join("packages/sui/runtime/package.json"),
+            &root.join("packages/sail/runtime/package.json"),
             r#"{ "name": "@ship/sail-runtime", "exports": { ".": "./src/index.ts" } }"#,
         );
-        write(&root.join("packages/sui/runtime/src/index.ts"), "export const x=1;\n");
+        write(&root.join("packages/sail/runtime/src/index.ts"), "export const x=1;\n");
 
         let entry = resolve_entry(root, "@ship/sail-runtime").expect("resolved via workspace member");
-        assert_eq!(entry, root.join("packages/sui/runtime/src/index.ts"));
+        assert_eq!(entry, root.join("packages/sail/runtime/src/index.ts"));
     }
 
     #[test]

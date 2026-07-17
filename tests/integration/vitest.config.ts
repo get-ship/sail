@@ -19,7 +19,7 @@
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { defineConfig } from 'vitest/config'
-import { SHIP_VITEST_DEFAULTS } from '../packages/sui/test-setup/src/vitest.ts'
+import { SHIP_VITEST_DEFAULTS } from '../packages/sail/test-setup/src/vitest.ts'
 
 function discoverShipContractsDir(): string {
   let dir = new URL('.', import.meta.url).pathname
@@ -46,23 +46,23 @@ export default defineConfig({
       // `@ship/sail-*` resolves to this repo's source (sui owns the framework).
       '@ship/sail-runtime/template-hooks': resolve(
         __dirname,
-        '../packages/sui/runtime/src/template-hooks/index.ts',
+        '../packages/sail/runtime/src/template-hooks/index.ts',
       ),
       '@ship/sail-runtime/dev': resolve(
         __dirname,
-        '../packages/sui/runtime/src/dev.ts',
+        '../packages/sail/runtime/src/dev.ts',
       ),
       '@ship/sail-runtime': resolve(
         __dirname,
-        '../packages/sui/runtime/src/index.ts',
+        '../packages/sail/runtime/src/index.ts',
       ),
       '@ship/sail-dom/test-utils': resolve(
         __dirname,
-        '../packages/sui/dom/src/test-utils/compile-sui.ts',
+        '../packages/sail/dom/src/test-utils/compile-sui.ts',
       ),
       '@ship/sail-dom': resolve(
         __dirname,
-        '../packages/sui/dom/src/index.ts',
+        '../packages/sail/dom/src/index.ts',
       ),
       // Contract SDK lives in ship-contracts.
       '@ship/sdk-client': SHIP_CONTRACTS_SDK_CLIENT,

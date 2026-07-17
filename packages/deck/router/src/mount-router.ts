@@ -57,7 +57,7 @@ export interface MountRouterOptions {
   /** Install the DEFAULT route-level error boundary (the framework wraps every
    *  route outlet so a throwing view degrades to an error card, not a dead
    *  subtree). On by default. Set `false` to opt the whole app out — a layout
-   *  can opt out a subtree on its own by supplying its own `<sui-error-boundary>`
+   *  can opt out a subtree on its own by supplying its own `<sail-error-boundary>`
    *  (which this detects and defers to). */
   errorBoundary?: boolean
 }
@@ -318,7 +318,7 @@ function coBundledPayload(name: string): ViewPayload {
   * INSIDE the chrome's route slot — the rail and nav stay visible. The
   * surface is the shared `<ship-error-state>` primitive from
   * `@ship/primitives`; the chrome's compiled view emits a
-  * `@sui-tag/ship-error-state` import for us, so by the time this runs
+  * `@sail-tag/ship-error-state` import for us, so by the time this runs
   * the custom element is registered.
   *
   * `textContent` (not innerHTML) on the body keeps user-controlled URL
@@ -354,7 +354,7 @@ function coBundledPayload(name: string): ViewPayload {
  *
  * When a layout has an entry in `layoutModules`, its view module is mounted via
  * the runtime's `mount()` so its full authored markup (the chrome element plus
- * any composed slotted children, e.g. `<sui-command-bar slot="command-bar">`)
+ * any composed slotted children, e.g. `<sail-command-bar slot="command-bar">`)
  * renders into the DOM. The rendered chrome element is located by `layout.tag`
  * after mounting; `parent` (the inner content accumulated so far) is appended
  * to it. When no module entry exists for a prefix, falls back to the original

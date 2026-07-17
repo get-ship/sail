@@ -4,4 +4,4 @@
   chrome's <slot name="route">. The header + theme toggle persist across
   client-side navigations; only the route slot swaps.
 -->
-<sui-shell></sui-shell>
+<sail-shell></sail-shell>

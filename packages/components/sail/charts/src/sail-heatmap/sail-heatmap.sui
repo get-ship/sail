@@ -1,0 +1,165 @@
+<!--
+  <sail-heatmap> — 2D grid of SVG rect cells, intensity-colored.
+
+  MIGRATED onto the createChartData engine + cellGeometry helper: 1D-comma /
+  2D-JSON `data` decodes through `normalizeSeries` (reshaped into rows by the
+  rows/cols labels), cells are a pure `derived` over `cellGeometry` (present at
+  first paint), and empty / loading branch on the engine discriminators
+  composing the full-size primitives (heatmap is full-size despite being compact).
+
+  TOKEN CLEANUP: the controller-built `color-mix(in oklch,…)` string is GONE —
+  each cell fills with the tone role token `var(--<tone>)` and drives intensity
+  via `fill-opacity` bound from the normalized value (0..1). This is the only
+  token-clean continuous-intensity path; a null/zero cell renders empty
+  (fill-opacity 0).
+
+  Props
+  ─────────────────────────────────────────────────────────────────────────────
+  data       string  reflect   1D comma nums OR JSON [[row],[row]]; prop:series
+                               identity supersedes (normalizeSeries handles both).
+  rows       string             comma-separated y labels (shapes the grid).
+  cols       string             comma-separated x labels (shapes the grid).
+  tone       union   reflect    cell base hue (toneColor role-token map).
+  cell-size  number  20         px per cell.
+  gap        number  3          px between cells.
+  label      string  "heatmap"  aria-label kind (prefixes the data summary).
+  loading    bool    reflect    loading branch (engine isLoading) → sail-skeleton.
+  error      —       prop:error identity-only → sail-error-state.
+  ─────────────────────────────────────────────────────────────────────────────
+  Slots: description (described-data override)
+
+  The SVG is the component's box: it is sized by the grid (`cell-size` × `gap`),
+  so it shrink-wraps its cells and sits inline with the copy around it.
+-->
+
+<scope>
+  props: {
+    data = ''
+    rows = ''
+    cols = ''
+    tone: 'primary' | 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    'cell-size' = 20
+    gap = 3
+    label = 'heatmap'
+    loading = false
+  }
+</scope>
+
+<controller>
+import { controller, derived } from '@ship/sail-runtime'
+import { createChartData } from '../engine/create-chart-data'
+import { normalizeSeries } from '../engine/normalize'
+import { cellGeometry } from '../engine/geometry-grid'
+import { parseLabels } from '../chart-util'
+import type { ChartSeries, ChartValue, ChartPoint } from '../engine/types'
+import type { Scope } from './sail-heatmap.sui'
+
+// `error` arrives via `prop:error={…}` identity (no decodable <prop> for
+// `unknown`); read off the host in `mount` and patch the engine.
+interface HeatmapHost extends Element {
+  error?: unknown
+}
+
+/** Read the y of a flat value or an explicit point. */
+function yOf(entry: ChartValue | ChartPoint): ChartValue {
+  return typeof entry === 'object' && entry !== null ? entry.y : entry
+}
+
+/**
+ * Resolve the canonical row-series for the grid. `normalizeSeries` already
+ * yields one series per row for 2D JSON; a 1D comma string yields ONE flat
+ * series, which is reshaped here into `ceil(n / cols)` rows by the cols label
+ * count (preserving null gaps positionally).
+ */
+function toGrid(raw: string, rowLabels: string[], colLabels: string[]): ChartSeries[] {
+  const series = normalizeSeries(raw)
+  if (series.length === 0) return []
+  // 2D JSON (or already multi-row) — one series per row, kept as-is.
+  if (series.length > 1) return series
+
+  // 1D flat series → reshape into rows by the col count.
+  const flat = (series[0]!.data as Array<ChartValue | ChartPoint>).map(yOf)
+  const nc = colLabels.length || 1
+  const nr = rowLabels.length || (flat.length > 0 ? Math.ceil(flat.length / nc) : 0)
+  const rows: ChartSeries[] = []
+  for (let r = 0; r < nr; r++) {
+    rows.push({ name: rowLabels[r] ?? `row-${r}`, data: flat.slice(r * nc, (r + 1) * nc) })
+  }
+  return rows
+}
+
+export default controller(({ data, rows, cols, tone, cellSize, gap, label, loading }: Scope) => {
+    const grid = derived<ChartSeries[]>(() =>
+      toGrid(data(), parseLabels(rows()), parseLabels(cols())),
+    )
+    const chart = createChartData({ series: grid, isLoading: loading })
+
+    // Grid dimensions are cell-size driven (not the responsive viewport): the
+    // box fed to cellGeometry is sized so each cell renders at exactly cell-size.
+    const dims = derived(() => {
+      const norm = chart.normalized()
+      const nRows = norm.length
+      const nCols = nRows > 0 ? Math.max(...norm.map((s) => s.data.length), 0) : 0
+      const cs = cellSize()
+      const gp = gap()
+      return {
+        nCols,
+        nRows,
+        w: nCols > 0 ? nCols * cs + (nCols - 1) * gp : 0,
+        h: nRows > 0 ? nRows * cs + (nRows - 1) * gp : 0,
+      }
+    })
+    const svgW = derived(() => dims().w)
+    const svgH = derived(() => dims().h)
+
+    // GEOMETRY IS A PURE DERIVED — intensity from the normalized value over the
+    // tone role token (no color-mix). A null/zero cell renders empty (opacity 0).
+    const cells = derived(() => {
+      const d = dims()
+      return cellGeometry(chart.normalized(), { w: d.w, h: d.h }, { tone: tone(), gap: gap() })
+    })
+    const ariaLabel = derived(() => `${label()}: ${chart.ariaSummary()}`)
+
+    mount((host) => {
+      const err = (host as HeatmapHost).error
+      if (err !== undefined) chart.setOptions({ error: err })
+    })
+
+    return { chart, cells, svgW, svgH, ariaLabel }
+  })
+
+</controller>
+{#if loading()}
+  <span skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
+{:else if chart.error()}
+  <error-state></error-state>
+{:else if chart.isEmpty()}
+  <empty-state></empty-state>
+{:else}
+  <svg
+    viewBox={'0 0 ' + svgW() + ' ' + svgH()}
+    width={svgW()}
+    height={svgH()}
+    role="img"
+    aria-label={ariaLabel()}
+    aria-describedby="chart-data"
+    sx="inline-block overflow-visible font-body">
+    {#for cell of cells() key={cell.id}}
+      <rect x={cell.x} y={cell.y} width={cell.w} height={cell.h} rx="2" fill={cell.color} fill-opacity={cell.intensity}>
+      </rect>
+    {/for}
+  </svg>
+  <column id="chart-data" sx="sr-only">
+    <slot name="description">
+      <table>
+        {#for row of chart.ariaTable() key={row[0].text}}
+          <tr>
+            {#for c of row key={c.text}}
+              <td>{c.text}</td>
+            {/for}
+          </tr>
+        {/for}
+      </table>
+    </slot>
+  </column>
+{/if}

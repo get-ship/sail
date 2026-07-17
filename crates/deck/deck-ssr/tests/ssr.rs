@@ -30,7 +30,7 @@ impl DataPort for DemoData {
 }
 
 /// Slice 2 — strip the ship-js SSR hydration text markers
-/// (`<!--sui:text:bN-->...<!--/sui-->`) so the rendered-content assertions
+/// (`<!--sail:text:bN-->...<!--/sail-->`) so the rendered-content assertions
 /// check the visible payload, not the SSR-only hydration hint the markers
 /// carry. Char-by-char scan avoids pulling `regex` in for what is fixed-
 /// string stripping.
@@ -39,11 +39,11 @@ fn strip_markers(s: &str) -> String {
     let bytes = s.as_bytes();
     let mut i = 0;
     while i < bytes.len() {
-        if s[i..].starts_with("<!--/sui-->") {
-            i += "<!--/sui-->".len();
+        if s[i..].starts_with("<!--/sail-->") {
+            i += "<!--/sail-->".len();
             continue;
         }
-        let prefix = "<!--sui:text:b";
+        let prefix = "<!--sail:text:b";
         if s[i..].starts_with(prefix)
             && let Some(end_rel) = s[i + prefix.len()..].find("-->")
         {

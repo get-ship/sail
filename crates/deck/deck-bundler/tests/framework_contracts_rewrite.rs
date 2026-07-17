@@ -7,8 +7,8 @@
 //!
 //! Why a separate test from the in-module unit test: that test uses a
 //! synthetic CSS and a fake woff2 (`b"wOF2"`). This test uses the
-//! REAL `packages/sui/tokens/src/contracts.css` (with the three OFL
-//! woff2 paths) and the REAL `packages/sui/tokens/src/fonts/*.woff2`
+//! REAL `packages/sail/tokens/src/contracts.css` (with the three OFL
+//! woff2 paths) and the REAL `packages/sail/tokens/src/fonts/*.woff2`
 //! binaries. It catches anything the synthetic test can't — a banner
 //! comment with illustrative `url(...)` text (e.g. the actual
 //! `contracts.css` banner has `url('./<file>-<hash>.woff2')` as a doc
@@ -33,10 +33,10 @@ fn write(path: &Path, body: &str) {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn framework_contracts_css_emits_hashed_woff2_assets() {
-    // Re-use the repo root so the workspace's `packages/sui/tokens`
+    // Re-use the repo root so the workspace's `packages/sail/tokens`
     // resolution actually walks the package map (the
     // `@ship/tokens/contracts.css` subpath is defined in
-    // `packages/sui/tokens/package.json`).
+    // `packages/sail/tokens/package.json`).
     let repo_root = {
         let mut d = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         while !d.join("packages").is_dir() {

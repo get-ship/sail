@@ -1,5 +1,5 @@
 //! Rolldown bundler — drives Rolldown with the SUI plugin to bundle each target.
-//! Output goes to `assets_dir_for` (sui-out/dist) — no source-tree writes.
+//! Output goes to `assets_dir_for` (sail-out/dist) — no source-tree writes.
 //!
 //! The SUI resolve/load plugin lives in `sail_plugin.rs`; this module owns the
 //! target-to-bundle driver and its integration tests.
@@ -56,7 +56,7 @@ pub async fn bundle_target(
         // Hoist every shared module into its own chunk (mirrors the multi-view
         // build in views_bundle.rs). Without this the single-view path uses
         // rolldown's default per-entry split, which produces 1 chunk per shared
-        // primitive *per consumer* — N chunks for `sui-pagination` where 1
+        // primitive *per consumer* — N chunks for `sail-pagination` where 1
         // would do. Each duplicate chunk's `customElements.define()` adds a no-op
         // "called twice" warning at runtime; cumulative heap retention is the
         // 1.5 GB Firefox OOM. See .artifacts/2026-06-06-spaces-isolation.md.
@@ -66,7 +66,7 @@ pub async fn bundle_target(
             min_module_size: Some(0.0),
             ..Default::default()
         }),
-        // Framework singletons (sui-runtime/sui-dom/sui-sdk-client) are libraries
+        // Framework singletons (sail-runtime/sail-dom/sail-sdk-client) are libraries
         // consumed by name via the host importmap — preserve their full public
         // export surface. The default `ExportsOnly` tree-shook a re-exported const
         // (`DECK_API_ASSETS`) with no in-bundle consumer, producing a runtime
@@ -77,11 +77,11 @@ pub async fn bundle_target(
         ..Default::default()
     };
 
-    // Per-view resolver (#255/#267): view builds emit `@sui-tag/<tag>` imports
+    // Per-view resolver (#255/#267): view builds emit `@sail-tag/<tag>` imports
     // that resolve to component source so the bundle carries exactly what the
     // view uses. Always on for views — the in-process compiler is the linked
     // crate, so there is no compiler-version drift to gate around. Framework/
-    // app builds leave component_index empty (no `@sui-tag` imports emitted).
+    // app builds leave component_index empty (no `@sail-tag` imports emitted).
     let emit_component_imports = target.name.starts_with("views/");
     let resolver = if emit_component_imports {
         component_index(
@@ -457,7 +457,7 @@ fn side_effects_reason(module_path: &Path) -> String {
 
 
 const MODULE_PRUNE: &[&str] =
-    &["node_modules", ".git", "target", "dist", deck_config::DECK_OUT_DIRNAME, ".sail-out", "sui-out"];
+    &["node_modules", ".git", "target", "dist", deck_config::DECK_OUT_DIRNAME, ".sail-out", "sail-out"];
 
 fn extract_module_paths(output: &rolldown::BundleOutput) -> Vec<PathBuf> {
     use rolldown_common::Output;
@@ -500,7 +500,7 @@ mod tests {
         }
     }
 
-    /// The `sui-marketing` bundle is now TRACED from the site-owned entry
+    /// The `sail-marketing` bundle is now TRACED from the site-owned entry
     /// `apps/site/src/marketing/marketing-bundle.ts` (no hardcoded source list).
     /// Rolldown must follow that import graph and register exactly the marketing
     /// tag set — no tag dropped, and the full umbrella must NOT leak in.
@@ -513,9 +513,9 @@ mod tests {
             BundleLayout::with_config(repo, None, DeckConfig::defaults()).with_out_root(scratch.path().to_path_buf());
 
         let targets = layout.all_targets();
-        let Some(marketing) = targets.iter().find(|t| t.name == "sui-marketing") else {
+        let Some(marketing) = targets.iter().find(|t| t.name == "sail-marketing") else {
             eprintln!(
-                "SKIP rolldown_bundles_marketing_traced: no sui-marketing target — \
+                "SKIP rolldown_bundles_marketing_traced: no sail-marketing target — \
                  apps/site content outside the framework boundary"
             );
             return;
@@ -524,7 +524,7 @@ mod tests {
         assert!(
             matches!(&marketing.entry, TargetEntry::Real(p)
                 if p.ends_with("apps/site/src/marketing/marketing-bundle.ts")),
-            "sui-marketing must be a Real (traced) entry, got {:?}",
+            "sail-marketing must be a Real (traced) entry, got {:?}",
             marketing.entry
         );
 
@@ -534,14 +534,14 @@ mod tests {
         let body = std::fs::read_to_string(&m.out_path).unwrap();
         assert!(body.contains("@ship/sail-runtime"), "runtime kept external");
 
-        // The traceable marketing components (sui-stat / sui-toolbar /
-        // sui-progress from the retired const have no `.sui` source and are not
+        // The traceable marketing components (sail-stat / sail-toolbar /
+        // sail-progress from the retired const have no `.sui` source and are not
         // members — see marketing-bundle.ts). Each registers via its
         // `component(\`<tag>\`, …)` call; the tag literal survives minification.
         for tag in [
-            "sui-icon", "sui-badge", "sui-button", "sui-separator",
-            "sui-status-dot", "sui-table", "sui-bar-chart",
-            "sui-sparkline", "sui-brand-mark", "sui-theme-picker",
+            "sail-icon", "sail-badge", "sail-button", "sail-separator",
+            "sail-status-dot", "sail-table", "sail-bar-chart",
+            "sail-sparkline", "sail-brand-mark", "sail-theme-picker",
         ] {
             assert!(
                 body.contains(&format!("`{tag}`")),
@@ -557,7 +557,7 @@ mod tests {
         );
     }
 
-    /// The `sui-arcade` bundle is the heavy lazy chunk for the marketing site's
+    /// The `sail-arcade` bundle is the heavy lazy chunk for the marketing site's
     /// games. Its `index.ts` registers every arcade tag and pulls the
     /// pixi + arcade-engine graph. pixi + arcade-engine must be BUNDLED (it's the
     /// big chunk), while the runtime singleton stays EXTERNAL — exactly one
@@ -571,9 +571,9 @@ mod tests {
             BundleLayout::with_config(repo, None, DeckConfig::defaults()).with_out_root(scratch.path().to_path_buf());
 
         let targets = layout.all_targets();
-        let Some(arcade) = targets.iter().find(|t| t.name == "sui-arcade") else {
+        let Some(arcade) = targets.iter().find(|t| t.name == "sail-arcade") else {
             eprintln!(
-                "SKIP rolldown_bundles_arcade_pixi_inline_runtime_external: no sui-arcade target — \
+                "SKIP rolldown_bundles_arcade_pixi_inline_runtime_external: no sail-arcade target — \
                  apps/site content outside the framework boundary"
             );
             return;
@@ -591,7 +591,7 @@ mod tests {
             "arcade keeps the runtime singleton external"
         );
         // Each arcade tag registers via its `component(\`<tag>\`, …)` call.
-        for tag in ["sui-stage", "sui-sprite", "sui-emitter", "sui-stage-input", "sui-hud"] {
+        for tag in ["sail-stage", "sail-sprite", "sail-emitter", "sail-stage-input", "sail-hud"] {
             assert!(
                 body.contains(&format!("`{tag}`")),
                 "arcade bundle must register {tag}"
@@ -599,7 +599,7 @@ mod tests {
         }
     }
 
-    /// The `sui-pdf` bundle wraps the pdf.js (`pdfjs-dist`) engine. The pack's
+    /// The `sail-pdf` bundle wraps the pdf.js (`pdfjs-dist`) engine. The pack's
     /// `index.ts` side-effect-imports the worker module
     /// (`pdfjs-dist/build/pdf.worker.mjs`) instead of a `?url` asset — the deck
     /// bundler has no `?url` support, so a `?url` import ABORTS the build (the bug
@@ -617,9 +617,9 @@ mod tests {
             BundleLayout::with_config(repo, None, DeckConfig::defaults()).with_out_root(scratch.path().to_path_buf());
 
         let targets = layout.all_targets();
-        let Some(pdf) = targets.iter().find(|t| t.name == "sui-pdf") else {
+        let Some(pdf) = targets.iter().find(|t| t.name == "sail-pdf") else {
             eprintln!(
-                "SKIP rolldown_bundles_pdf_with_worker_inlined: no sui-pdf target — \
+                "SKIP rolldown_bundles_pdf_with_worker_inlined: no sail-pdf target — \
                  apps/site content outside the framework boundary"
             );
             return;
@@ -875,7 +875,7 @@ mod tests {
     /// effect is a top-level `customElements.define(...)` — must NOT silently
     /// disappear. The default Rolldown setting (`module_side_effects = true`)
     /// keeps the module's body in the bundle; the deck bundler must NOT
-    /// override that. Regression for the sui-sideeffects footgun: authors
+    /// override that. Regression for the sail-sideeffects footgun: authors
     /// were forced to route such imports through a graph-anchored module
     /// (the shell) because the bundler dropped their CSS/registration
     /// import without warning.
@@ -934,7 +934,7 @@ mod tests {
     /// '@ship/<pkg>'`) wins over `package.json`'s
     /// `sideEffects: false` / array form — otherwise the body
     /// vanishes and a CSS or `customElements.define` import
-    /// silently disappears (the sui-sideeffects footgun).
+    /// silently disappears (the sail-sideeffects footgun).
     ///
     /// This is the deck bundler's "respect" contract: the
     /// import statement is a deliberate side-effect request from
@@ -1011,7 +1011,7 @@ mod tests {
              `load`-hook `side_effects: true` override. The package \
              contract (`sideEffects: false`) is being honored instead \
              of the importer's intent (a bare `import` statement). \
-             This is the sui-sideeffects footgun. bundle: {body}"
+             This is the sail-sideeffects footgun. bundle: {body}"
         );
         // And the dropped list MUST be empty — the module
         // wasn't dropped, so nothing to warn about.

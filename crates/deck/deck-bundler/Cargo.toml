@@ -34,7 +34,7 @@ rustc-hash = "2"
 libc = { workspace = true }
 
 [features]
-# G3 bundle-parity regression gate (.artifacts/sui-arc/integrity/report.md §4).
+# G3 bundle-parity regression gate (.artifacts/sail-arc/integrity/report.md §4).
 # OFF by default so it never runs in `cargo test -p deck-bundler` / `just build`.
 # The gate (`tests/bundle_parity.rs`) (1) builds every `all_targets()` target
 # through the deck Rolldown path SEQUENTIALLY with a real exit check (Err
@@ -48,7 +48,7 @@ libc = { workspace = true }
 g3 = []
 
 [dependencies.sail-compiler]
-path = "../../sui/compiler"
+path = "../../sail/compiler"
 
 [dependencies.deck-core]
 path = "../deck-core"

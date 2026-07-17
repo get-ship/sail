@@ -10,7 +10,7 @@ declaration + contract opt-in.
                         "Cannot find name 'sizee'. Did you mean 'size'?"
                         (autocomplete-grade, the whole point).
 
-## Before → after (sui-button)
+## Before → after (sail-button)
 BEFORE: 9 <prop name=... values=... default=... reflect /> tags + <theme prop="size">.
 AFTER:
   <props>{

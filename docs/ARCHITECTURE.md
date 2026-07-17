@@ -25,7 +25,7 @@ L3  USERLAND        apps + product compositions (account-menu, nav-top, …)
                     — no CSS, no new vocabulary, no new elements —
 ────────────────────────────────────────────────────────────── the seam ──
 L2  STDLIB          compiler-known custom elements with runtime behavior
-    COMPONENTS      (sui-dialog, sui-combobox, sui-tree-grid, sui-toast, …)
+    COMPONENTS      (sail-dialog, sail-combobox, sail-tree-grid, sail-toast, …)
                     behavior machinery · anatomy manifest · default skin
 L1  LANGUAGE        compile-time lowered, no runtime tag identity
     ELEMENTS        layout (row/column/grid/center/stack) · typography
@@ -37,7 +37,7 @@ L0  TOKENS          primitive → semantic → component tiers; six themes today
 ```
 
 **The naming seam.** A bare name (`<row>`, `<button>`, `<icon>`) is a
-language element — it compiles away; a hyphenated name (`<sui-dialog>`) is a
+language element — it compiles away; a hyphenated name (`<sail-dialog>`) is a
 stdlib component — it exists at runtime. Userland components are also
 hyphenated but live outside the toolchain and are subject to L3 rules.
 
@@ -50,7 +50,7 @@ flash), one document cascade (no per-root sheet adoption), and honest
 devtools/tests. What it obligates: compiler-managed slot projection (native
 `<slot>` is shadow-only), compiler-generated unique IDs for ARIA wiring,
 and style containment by construction — component rules compile into
-`@scope (sui-x) to ([data-sui])` donuts so a component styles its own
+`@scope (sail-x) to ([data-sui])` donuts so a component styles its own
 subtree and stops at nested component boundaries. Never by accident, never
 by encapsulation technology.
 
@@ -62,7 +62,7 @@ the FFI boundary). A shadow-wrapped component pays the full isolation tax
 knows it from the manifest.
 
 **`part` and `::part`/`:host` are not authoring surface.** In light DOM the
-host is just the element (`sui-x[attr]`) and "parts" are the anatomy's
+host is just the element (`sail-x[attr]`) and "parts" are the anatomy's
 classes and attributes — published API in the manifest, styleable by skins
 directly. The `<host>` directive and `part=` attributes are shadow-era
 idioms and retire with it. The anatomy manifest is CEM — the standard
@@ -144,47 +144,47 @@ interaction patterns.
 
 | Today | Becomes | Wave | Notes |
 | --- | --- | --- | --- |
-| sui-stack, sui-cluster | `<stack>`/`<row>`/`<column>` | done (spike) | already deleted |
-| sui-center | `<center>` | T1 | keyword exists; absorb the component's residue |
-| sui-grid | `<grid>` | T1 | same |
-| sui-button | `<button>` | T1 | states, transitions, loading spinner, icon-only — all element-owned |
-| sui-input | `<input>` | T1 | + `<textarea>` on the same contract |
-| sui-textarea | `<textarea>` | T1 | |
-| sui-label | `<label>` | T1 | pairing, required marker, disabled ink |
-| sui-checkbox | `<checkbox>` | T1 | shared glyph engine with radio/switch |
-| sui-radio-group | `<radio>` + stdlib group wrapper | T1 | glyph is L1; group semantics L2 |
-| sui-switch | `<switch>` | T1 | |
-| sui-icon | `<icon>` | T2 | kills the ::slotted icon boilerplate |
-| sui-spinner | `<spinner>` | T2 | one spin keyframe, language-owned |
-| sui-separator | `<separator>` | T2 | |
-| sui-avatar | `<img>` reset + stdlib avatar | T2 | image baseline L1; initials-fallback logic L2 |
-| sui-badge | bare `<span>` + sx | dissolved | JS-free, static; no L1 element registered — dissolves to a semantic tag styled by the closed sx vocabulary + the global tone contract, not a stdlib skin |
-| sui-link | bare `<a>` + sx | dissolved | JS-free; decoration/hover styling (no sx `decoration` prop) and the external-link sr-only text dropped as cosmetic — zero usages in-repo |
-| sui-code | bare `<code>` (inline) / `<div>`+`<header>`+`<separator>`+`<pre>` (block) + sx | dissolved | JS-free; the block-mode header's border-bottom (sx has no per-edge border) is composed with the L1 `<separator>` element instead, and its uppercase transform (sx has no `text-transform`) moves into the template expression (`{lang().toUpperCase()}`) — both losslessly, no stdlib skin needed |
-| sui-scroll-area | `<scroll>` | T3 | scrollbar chrome is deliberately inexpressible elsewhere |
-| sui-table | `<table>` family reset + stdlib table | T3 | visual baseline L1; sort/select behavior L2 |
+| sail-stack, sail-cluster | `<stack>`/`<row>`/`<column>` | done (spike) | already deleted |
+| sail-center | `<center>` | T1 | keyword exists; absorb the component's residue |
+| sail-grid | `<grid>` | T1 | same |
+| sail-button | `<button>` | T1 | states, transitions, loading spinner, icon-only — all element-owned |
+| sail-input | `<input>` | T1 | + `<textarea>` on the same contract |
+| sail-textarea | `<textarea>` | T1 | |
+| sail-label | `<label>` | T1 | pairing, required marker, disabled ink |
+| sail-checkbox | `<checkbox>` | T1 | shared glyph engine with radio/switch |
+| sail-radio-group | `<radio>` + stdlib group wrapper | T1 | glyph is L1; group semantics L2 |
+| sail-switch | `<switch>` | T1 | |
+| sail-icon | `<icon>` | T2 | kills the ::slotted icon boilerplate |
+| sail-spinner | `<spinner>` | T2 | one spin keyframe, language-owned |
+| sail-separator | `<separator>` | T2 | |
+| sail-avatar | `<img>` reset + stdlib avatar | T2 | image baseline L1; initials-fallback logic L2 |
+| sail-badge | bare `<span>` + sx | dissolved | JS-free, static; no L1 element registered — dissolves to a semantic tag styled by the closed sx vocabulary + the global tone contract, not a stdlib skin |
+| sail-link | bare `<a>` + sx | dissolved | JS-free; decoration/hover styling (no sx `decoration` prop) and the external-link sr-only text dropped as cosmetic — zero usages in-repo |
+| sail-code | bare `<code>` (inline) / `<div>`+`<header>`+`<separator>`+`<pre>` (block) + sx | dissolved | JS-free; the block-mode header's border-bottom (sx has no per-edge border) is composed with the L1 `<separator>` element instead, and its uppercase transform (sx has no `text-transform`) moves into the template expression (`{lang().toUpperCase()}`) — both losslessly, no stdlib skin needed |
+| sail-scroll-area | `<scroll>` | T3 | scrollbar chrome is deliberately inexpressible elsewhere |
+| sail-table | `<table>` family reset + stdlib table | T3 | visual baseline L1; sort/select behavior L2 |
 | (new) | `<progress>`, `<visually-hidden>`, `<kbd>`, list resets | T2/T3 | no current dir; born language-level |
 
 ### → L2 stdlib components (custom elements, toolchain-shipped)
 
-Overlay/popup: sui-dialog, sui-alert-dialog, sui-sheet, sui-drawer,
-sui-popover, sui-tooltip, sui-hover-card, sui-context-menu,
-sui-dropdown-menu, sui-toast (+host/container), sui-cmdk, sui-portal.
-Selection/input: sui-select, sui-combobox, sui-autocomplete,
-sui-toggle-group (+toggle), sui-slider, sui-color-picker, sui-date-picker,
-sui-calendar, sui-file-upload, sui-field.
-Disclosure/nav: sui-accordion, sui-collapsible, sui-tabs (+tab, tab-panel),
-sui-navigation-menu, sui-pagination.
-Data/content: sui-tree, sui-tree-view, sui-tree-grid, sui-json-view,
-sui-diff, sui-markdown, sui-timeline (+item).
-Status/display: sui-alert, sui-chip, sui-card, sui-status-dot,
-sui-skeleton, sui-error-boundary (runtime-backed).
+Overlay/popup: sail-dialog, sail-alert-dialog, sail-sheet, sail-drawer,
+sail-popover, sail-tooltip, sail-hover-card, sail-context-menu,
+sail-dropdown-menu, sail-toast (+host/container), sail-cmdk, sail-portal.
+Selection/input: sail-select, sail-combobox, sail-autocomplete,
+sail-toggle-group (+toggle), sail-slider, sail-color-picker, sail-date-picker,
+sail-calendar, sail-file-upload, sail-field.
+Disclosure/nav: sail-accordion, sail-collapsible, sail-tabs (+tab, tab-panel),
+sail-navigation-menu, sail-pagination.
+Data/content: sail-tree, sail-tree-view, sail-tree-grid, sail-json-view,
+sail-diff, sail-markdown, sail-timeline (+item).
+Status/display: sail-alert, sail-chip, sail-card, sail-status-dot,
+sail-skeleton, sail-error-boundary (runtime-backed).
 
 These keep custom-element identity (behavior, shadow DOM, anatomy manifest)
 but move **into the toolchain** and stop being a published userspace package.
 Design-vocabulary components (chip, card, alert) are deliberately L2, not L1:
 they're design semantics, not platform behavior — but they are still stdlib,
-because the stdlib is where taste lives. sui-badge is the exception that
+because the stdlib is where taste lives. sail-badge is the exception that
 proves the rule: unlike chip (keyboard/ARIA/remove-event behavior) it carries
 no runtime behavior at all, so per the north-star ruling ("L1 grows bigger
 than the ~10 — promote everything universal + JS-free") it dissolved straight
@@ -192,8 +192,8 @@ to a bare tag instead of staying L2.
 
 ### → L3 userland (move out of primitives; the permanent dogfood canary)
 
-sui-account-chip, sui-account-menu, sui-brand-mark, sui-empty-state,
-sui-error-state, sui-nav-top, sui-project-switcher, sui-theme-picker.
+sail-account-chip, sail-account-menu, sail-brand-mark, sail-empty-state,
+sail-error-state, sail-nav-top, sail-project-switcher, sail-theme-picker.
 
 These encode product decisions. They are the proof the seam works: the day
 one of them needs an L1/L2 privilege, the stdlib has a gap — and we find out
@@ -223,7 +223,7 @@ events, states) is defined once, at the language level; the layer is an
 implementation detail the author must never be able to observe.** Concretely:
 
 - `tone="primary"`, `size={x()}`, `disabled`, `on:change`, `bind:value`
-  behave identically on `<button>` (L1) and `<sui-dialog>` (L2) — same
+  behave identically on `<button>` (L1) and `<sail-dialog>` (L2) — same
   syntax, same dynamics, same reflection semantics.
 - Contract styling is keyed on ATTRIBUTES, not compile-time classes
   (`button[tone='primary']`, `:host([tone='primary'])`), so a dynamic
@@ -341,9 +341,9 @@ user. None are part of the taggable authoring surface:
 
 | Seam | Mechanism | Status |
 | --- | --- | --- |
-| No authored CSS in userland | policy floor (`sui-no-style-block`, `sui-no-inline-style`) | exists (spike) |
-| No raw containers | `sui-no-raw-container` → layout keywords | exists (spike) |
-| sx closed vocabulary | `sui-sx` lint + token registry single-sourced from tokens.css | exists; channel back door **to close** |
+| No authored CSS in userland | policy floor (`sail-no-style-block`, `sail-no-inline-style`) | exists (spike) |
+| No raw containers | `sail-no-raw-container` → layout keywords | exists (spike) |
+| sx closed vocabulary | `sail-sx` lint + token registry single-sourced from tokens.css | exists; channel back door **to close** |
 | `<theme>` retirement from userland | compile error outside toolchain | planned (Phase 1) |
 | Knobs are marked declarations | manifest key + build-output banner + guarantee flag | planned |
 | Anatomy as public API | compiler-emitted anatomy manifest | planned (Phase 2) |

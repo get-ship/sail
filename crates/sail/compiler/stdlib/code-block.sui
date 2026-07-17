@@ -1,0 +1,49 @@
+<!--
+  <code-block> — syntax-highlighted source.
+
+    <code-block code={src} lang="sui"></code-block>
+
+  Colours are the `--syntax-*` theme tokens, so a code block re-themes with
+  everything else — Console renders it green-on-black, Paper renders it on cream.
+  A hand-picked hex cannot do that, which is why four hand-rolled highlighters
+  (docs, markdown, diff, editor) each drifted their own palette.
+
+  The highlighter escapes all source and only ever emits its own `tok-*` spans.
+-->
+
+<scope>
+  props: {
+    code = ''
+    lang = 'sui'
+  }
+</scope>
+
+<style>
+  .sail-code-block { display: block; }
+  .sail-code-block pre {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+    background: var(--surface-1);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4) var(--space-5);
+    overflow-x: auto;
+    white-space: pre;
+    tab-size: 2;
+  }
+  .sail-code-block .tok-tag { color: var(--syntax-tag); }
+  .sail-code-block .tok-attr { color: var(--syntax-attr); }
+  .sail-code-block .tok-string { color: var(--syntax-string); }
+  .sail-code-block .tok-comment { color: var(--syntax-comment); font-style: italic; }
+  .sail-code-block .tok-keyword { color: var(--syntax-keyword); }
+  .sail-code-block .tok-fn { color: var(--syntax-function); }
+  .sail-code-block .tok-number { color: var(--syntax-number); }
+  .sail-code-block .tok-bind { color: var(--syntax-function); }
+</style>
+
+<div use:codeBlock>
+  <pre></pre>
+</div>

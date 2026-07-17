@@ -16,7 +16,7 @@ export default controller((_ctx: ViewScope<Scope>) => ({ layoutFile, layoutChain
   <h2>A layout is chrome</h2>
   <p>deck reads the layout's <strong>first custom-element tag</strong> as the chrome wrapper, then mounts each route into that element's <code>&lt;slot name="route"&gt;</code>.</p>
   <pre data-code-block="true">{layoutFile}</pre>
-  <p>This docs site's <code>routes/_layout.sui</code> is exactly that one line. <code>&lt;sui-shell&gt;</code> projects a <code>&lt;slot name="route"&gt;</code> — the sidebar and top bar around this page are the chrome; the article is the route.</p>
+  <p>This docs site's <code>routes/_layout.sui</code> is exactly that one line. <code>&lt;sail-shell&gt;</code> projects a <code>&lt;slot name="route"&gt;</code> — the sidebar and top bar around this page are the chrome; the article is the route.</p>
 
   <h2>The chrome persists</h2>
   <p>On a client-side navigation only the route slot swaps. The header, nav, and any layout state stay mounted across navigations — no chrome reflow, no flash.</p>

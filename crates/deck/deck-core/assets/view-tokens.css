@@ -2,7 +2,7 @@
  * Daemon-view base styles.
  *
  * Design tokens themselves come from the single canonical source
- * `packages/sui/tokens/src/{tokens,themes}.css`, which
+ * `packages/sail/tokens/src/{tokens,themes}.css`, which
  * `deck-core/src/view_tokens.rs` include_str!s and concatenates in front of
  * this file at compile time. Only view-container-scoped resets + defaults here.
  */

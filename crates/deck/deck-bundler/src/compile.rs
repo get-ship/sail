@@ -36,7 +36,7 @@ pub enum CompileError {
 /// a sibling controller (`page.sui`→`controller.ts`, `<stem>.sui`→
 /// `<stem>.controller.ts`) as `import setup from "./<controller>"`.
 /// `emit_component_imports` opts the view into the per-view resolver — it emits
-/// `@sui-tag/<tag>` registration imports the bundler resolves to source.
+/// `@sail-tag/<tag>` registration imports the bundler resolves to source.
 pub fn compile_sui(
     sui_file: &Path,
     mode: CompileMode,
@@ -280,11 +280,11 @@ mod tests {
     fn component_imports_flag_emits_tag_registration() {
         let src = tempdir().unwrap();
         let sui = src.path().join("page.sui");
-        std::fs::write(&sui, "<div><sui-table></sui-table></div>\n").unwrap();
+        std::fs::write(&sui, "<div><sail-table></sail-table></div>\n").unwrap();
         let on = compile_sui(&sui, CompileMode::View, "page", true).expect("compiles");
-        assert!(on.contains("@sui-tag/sui-table"), "flag emits the registration import");
+        assert!(on.contains("@sail-tag/sail-table"), "flag emits the registration import");
         let off = compile_sui(&sui, CompileMode::View, "page", false).expect("compiles");
-        assert!(!off.contains("@sui-tag/"), "off: no component imports");
+        assert!(!off.contains("@sail-tag/"), "off: no component imports");
     }
 
     /// The synthetic gate is OFF by default and ON only for manifested views.

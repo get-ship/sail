@@ -51,7 +51,7 @@ use rolldown_common::{ChunkFilenamesOutputOption, ModuleType, ResolvedExternal};
 ///
 /// Lucide icons are NOT here — the daemon serves them per-icon from its
 /// embedded set at `/_deck/icons/{name}.svg`. Static-only deploys without
-/// a daemon use `<sui-icon src=…>` (CDN escape hatch).
+/// a daemon use `<sail-icon src=…>` (CDN escape hatch).
 ///
 /// The package_alias MAY include a subpath: `@ship/sail-runtime/route` etc.
 /// All aliases for one source bundle point at the same output URL — the
@@ -59,18 +59,18 @@ use rolldown_common::{ChunkFilenamesOutputOption, ModuleType, ResolvedExternal};
 /// `@ship/sail-runtime/template-hooks`, `@ship/sail-runtime/patch` all share
 /// the runtime bundle.)
 const FRAMEWORK_ASSETS: &[(&str, &str, &str)] = &[
-    ("@ship/sail-runtime", "sui-runtime.js", "_deck/runtime.js"),
-    ("@ship/sail-runtime/route", "sui-runtime.js", "_deck/runtime.js"),
-    ("@ship/sail-runtime/template-hooks", "sui-runtime.js", "_deck/runtime.js"),
-    ("@ship/sail-runtime/patch", "sui-runtime.js", "_deck/runtime.js"),
+    ("@ship/sail-runtime", "sail-runtime.js", "_deck/runtime.js"),
+    ("@ship/sail-runtime/route", "sail-runtime.js", "_deck/runtime.js"),
+    ("@ship/sail-runtime/template-hooks", "sail-runtime.js", "_deck/runtime.js"),
+    ("@ship/sail-runtime/patch", "sail-runtime.js", "_deck/runtime.js"),
     // `/internal` is what COMPILED VIEWS import (__tpl, bind*, effect — the
     // emitter's surface). Its absence here inlined a SECOND copy of the
     // signal graph into every app bundle: view bindings subscribed in the
     // copy, controller signals wrote in the real one, and no page reacted
     // to anything. The resolve guard below makes this class of miss a
     // build error instead of a silent fork.
-    ("@ship/sail-runtime/internal", "sui-runtime.js", "_deck/runtime.js"),
-    ("@ship/sail-dom", "sui-dom.js", "_deck/dom.js"),
+    ("@ship/sail-runtime/internal", "sail-runtime.js", "_deck/runtime.js"),
+    ("@ship/sail-dom", "sail-dom.js", "_deck/dom.js"),
     // `@ship/deck/router` lives in the framework because the bundler
     // generates an entry that imports it. The runtime exports
     // `defineRoutes`, `route`, `navigate`, `setEditMode` — every app's
@@ -446,7 +446,7 @@ fn read_package_name(project: &Path) -> Result<String> {
 /// {
 ///   "deckFramework": {
 ///     "alias": "@ship/sdk-client",
-///     "entry": "sui-sdk-client.js",
+///     "entry": "sail-sdk-client.js",
 ///     "serve": "_deck/sdk-client.js"
 ///   }
 /// }
@@ -597,7 +597,7 @@ async fn bundle_owned_framework(
     let mut written: HashSet<String> = HashSet::new();
     for target in layout.framework_singletons() {
         // The FRAMEWORK_ASSETS `dist_rel`s this singleton's output backs. A
-        // singleton not surfaced in the importmap (sui-sdk-client — it is
+        // singleton not surfaced in the importmap (sail-sdk-client — it is
         // provider-declared, not deck-owned) maps to none → skip it.
         let dists: Vec<&str> = FRAMEWORK_ASSETS
             .iter()
@@ -782,7 +782,7 @@ pub async fn bundle_app_with_base(
     // AppPlugin runs FIRST so importmap specifiers (incl. `@ship/sail-runtime/*`
     // subpaths and every host-registered client alias) win as externals;
     // SailPlugin then compiles `.sui` siblings and re-anchors the remaining
-    // `@ship/<pkg>` (e.g. sui-charts, pipelines) to workspace source so the
+    // `@ship/<pkg>` (e.g. sail-charts, pipelines) to workspace source so the
     // app graph compiles them in-process.
     let routes_gen = project.join(entry_module);
     if !routes_gen.exists() {
@@ -908,7 +908,7 @@ pub async fn bundle_app_with_base(
                 // AssetModulePlugin names each emitted CSS asset after its
                 // SOURCE file stem, so `contracts-` is a stable prefix. The
                 // sui runtime's `ensureLightContracts` looks for a
-                // `link[data-sui-contracts]` before warning "framework
+                // `link[data-sail-contracts]` before warning "framework
                 // contracts are not present"; the daemon-served scaffold
                 // shell (`scaffold-base.html`) already hand-authors the
                 // marker on its `sui.css` link, but THIS bundler-generated
@@ -922,7 +922,7 @@ pub async fn bundle_app_with_base(
                 // whenever that convention changes, where this is a
                 // one-line fix at the single place the link is emitted.
                 if name.starts_with("contracts-") {
-                    format!("  <link rel=\"stylesheet\" href=\"{href}\" data-sui-contracts>")
+                    format!("  <link rel=\"stylesheet\" href=\"{href}\" data-sail-contracts>")
                 } else {
                     format!("  <link rel=\"stylesheet\" href=\"{href}\">")
                 }
@@ -1313,7 +1313,7 @@ export default controller(() => ({}))\n\
         );
 
         // Gate 4 (deck-deploy-gap, 2nd incident): the contracts stylesheet's
-        // `<link>` must carry `data-sui-contracts` — the runtime's
+        // `<link>` must carry `data-sail-contracts` — the runtime's
         // `ensureLightContracts` looks for exactly that attribute before
         // warning "framework contracts are not present". Every OTHER link
         // (tokens, the app's own CSS) must NOT carry it — the marker means
@@ -1325,16 +1325,16 @@ export default controller(() => ({}))\n\
             .find(|h| h.contains("/contracts-"))
             .expect("a contracts-<hash>.css asset was emitted (asserted above)");
         assert!(
-            html.contains(&format!("href=\"{contracts_href}\" data-sui-contracts")),
-            "the contracts <link> must carry data-sui-contracts; got: {html}"
+            html.contains(&format!("href=\"{contracts_href}\" data-sail-contracts")),
+            "the contracts <link> must carry data-sail-contracts; got: {html}"
         );
         for href in &build.css_hrefs {
             if href == contracts_href {
                 continue;
             }
             assert!(
-                !html.contains(&format!("href=\"{href}\" data-sui-contracts")),
-                "only the contracts link should carry data-sui-contracts; {href} must not"
+                !html.contains(&format!("href=\"{href}\" data-sail-contracts")),
+                "only the contracts link should carry data-sail-contracts; {href} must not"
             );
         }
 
@@ -1383,10 +1383,10 @@ export default controller(() => ({}))\n\
         write(
             &r.join("package.json"),
             r#"{"name":"tokens-app","private":true,"type":"module",
-                "workspaces":["packages/sui/*"]}"#,
+                "workspaces":["packages/sail/*"]}"#,
         );
         write(
-            &r.join("packages/sui/tokens/package.json"),
+            &r.join("packages/sail/tokens/package.json"),
             r#"{"name":"@ship/tokens","type":"module",
                 "exports":{".":"./src/index.ts","./tokens.css":"./src/tokens.css",
                 "./contracts.css":"./src/contracts.css",
@@ -1397,22 +1397,22 @@ export default controller(() => ({}))\n\
         // The gate asserts both presence (the convention) and shape
         // (a real `:root` block with the named token).
         write(
-            &r.join("packages/sui/tokens/src/tokens.css"),
+            &r.join("packages/sail/tokens/src/tokens.css"),
             ":root { --background: oklch(20% 0 0); }\n",
         );
         // The framework stylesheet the entry also imports (contracts + skins,
         // each a direct JS import). Minimal but real so the bundle resolves
         // the extra entry imports.
         write(
-            &r.join("packages/sui/tokens/src/contracts.css"),
+            &r.join("packages/sail/tokens/src/contracts.css"),
             "[tone='default'] { --tone: var(--foreground); }\n",
         );
         write(
-            &r.join("packages/sui/tokens/src/element-skins.css"),
-            ".sui-spinner { display: inline-flex; }\n",
+            &r.join("packages/sail/tokens/src/element-skins.css"),
+            ".sail-spinner { display: inline-flex; }\n",
         );
         write(
-            &r.join("packages/sui/tokens/src/index.ts"),
+            &r.join("packages/sail/tokens/src/index.ts"),
             "export const __noop = 1;\n",
         );
         // Minimal route so the entry isn't empty. The token import goes
@@ -1429,7 +1429,7 @@ export default controller(() => ({}))\n\
         // Gate 1: a hashed `tokens-<hash>.css` asset is emitted under
         // `<out>/assets/`. The default Rolldown asset filename is
         // `assets/[name]-[hash][extname]`. The stem comes from the source
-        // file (`packages/sui/tokens/src/tokens.css` → `tokens-<hash>.css`).
+        // file (`packages/sail/tokens/src/tokens.css` → `tokens-<hash>.css`).
         let css_on_disk: Vec<String> = std::fs::read_dir(out.join("assets"))
             .expect("assets dir emitted")
             .filter_map(|e| e.ok())
@@ -1518,7 +1518,7 @@ export default controller(() => ({}))\n\
   "type": "module",
   "deckFramework": {
     "alias": "@ship/sdk-client",
-    "entry": "sui-sdk-client.js",
+    "entry": "sail-sdk-client.js",
     "serve": "_deck/sdk-client.js"
   }
 }"#,
@@ -1574,13 +1574,13 @@ export default controller(() => ({}))\n\
   "type": "module",
   "deckFramework": {
     "alias": "@ship/sdk-client",
-    "entry": "sui-sdk-client.js",
+    "entry": "sail-sdk-client.js",
     "serve": "_deck/sdk-client.js"
   }
 }"#,
         );
         std::fs::write(
-            r.join("packages/sdk-client/sui-sdk-client.js"),
+            r.join("packages/sdk-client/sail-sdk-client.js"),
             "// stub\n",
         )
         .unwrap();
@@ -1649,13 +1649,13 @@ export default controller(() => ({}))\n\
   "type": "module",
   "deckFramework": {
     "alias": "@ship/sdk-client",
-    "entry": "sui-sdk-client.js",
+    "entry": "sail-sdk-client.js",
     "serve": "_deck/sdk-client.js"
   }
 }"#,
         );
         std::fs::write(
-            r.join("packages/sdk-client/sui-sdk-client.js"),
+            r.join("packages/sdk-client/sail-sdk-client.js"),
             "// stub\n",
         )
         .unwrap();

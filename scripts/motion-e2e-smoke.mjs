@@ -32,7 +32,7 @@ globalThis.requestAnimationFrame = w.requestAnimationFrame.bind(w)
 globalThis.cancelAnimationFrame = w.cancelAnimationFrame.bind(w)
 globalThis.getComputedStyle = w.getComputedStyle.bind(w)
 
-let mod = await import(`${WT}/packages/sui/runtime/src/motion.ts`)
+let mod = await import(`${WT}/packages/sail/runtime/src/motion.ts`)
 let realAttach = mod.__sui_motion_attach
 let calls = []
 let attach = (el, cfg) => {
@@ -78,7 +78,7 @@ console.log('keyframes handed to animate():', JSON.stringify(mod.__buildKeyframe
 )))
 await new Promise(r => setTimeout(r, 100))
 // happy-dom stubs `element.animate()` — it does not run a real compositor,
-// so it cannot demonstrate PIXELS moving (that's apps/sui-site/test/
+// so it cannot demonstrate PIXELS moving (that's apps/sail-site/test/
 // motion.spec.ts's job, in a real browser). What this script CAN and does
 // pin: the keyframe shape handed to motion/mini. The bug this script exists
 // to catch was `{ x: [...] }`/`{ y: [...] }` — motion/mini's own value

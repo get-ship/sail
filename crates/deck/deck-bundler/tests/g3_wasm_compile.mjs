@@ -1,7 +1,7 @@
 // G3 cross-producer parity — WASM side.
 //
 // Drives the SAME wasm `compile` export the docs playground / browser LSP
-// worker ship (`packages/sui/compiler-wasm/pkg`, built by `just sui-wasm`)
+// worker ship (`packages/sail/compiler-wasm/pkg`, built by `just sail-wasm`)
 // over a list of fixtures, and prints each fixture's emitted `.js` so the Rust
 // gate (`tests/bundle_parity.rs`) can byte-diff it against the native
 // `sail_compiler::compile` output. This is the #160 native-vs-wasm divergence

@@ -7,11 +7,11 @@ members = [
     # build-info under a distinct package name (sail-build-info) so there is no
     # build-info package collision when sui crates are pulled into Ship's lockfile.
     "crates/build-info",
-    "crates/sui/compiler",
-    "crates/sui/compiler-napi",
-    "crates/sui/lint",
-    "crates/sui/layout",
-    "crates/sui/lsp",
+    "crates/sail/compiler",
+    "crates/sail/compiler-napi",
+    "crates/sail/lint",
+    "crates/sail/layout",
+    "crates/sail/lsp",
     "crates/deck/deck-host",
     "crates/deck/deck-bundler",
     "crates/deck/deck-cli",
@@ -20,7 +20,7 @@ members = [
     "crates/deck/deck",
     "crates/deck/deck-conformance",
     "crates/deck/deck-ssr",
-    "packages/sui/grammar",
+    "packages/sail/grammar",
     "xtask-deck",
 ]
 # A bare `cargo build` (no -p) builds this subset, which EXCLUDES deck-ssr.
@@ -29,10 +29,10 @@ members = [
 # must be opt-in. `members` above stays complete so the crate is still part of
 # the workspace (path deps, `cargo build -p deck-ssr`, lockfile).
 default-members = [
-    "crates/sui/compiler",
-    "crates/sui/compiler-napi",
-    "crates/sui/lint",
-    "crates/sui/lsp",
+    "crates/sail/compiler",
+    "crates/sail/compiler-napi",
+    "crates/sail/lint",
+    "crates/sail/lsp",
     "crates/deck/deck-host",
     "crates/deck/deck-bundler",
     "crates/deck/deck-cli",
@@ -40,11 +40,11 @@ default-members = [
     "crates/deck/deck-axum",
     "crates/deck/deck",
     "crates/deck/deck-conformance",
-    "packages/sui/grammar",
+    "packages/sail/grammar",
 ]
-# `crates/sui/compiler/fuzz` declares its own [workspace] (cargo-fuzz drives it
+# `crates/sail/compiler/fuzz` declares its own [workspace] (cargo-fuzz drives it
 # directly under nightly) and `.artifacts` holds build scratch — both excluded.
-exclude = [".artifacts", "crates/sui/compiler/fuzz"]
+exclude = [".artifacts", "crates/sail/compiler/fuzz"]
 resolver = "2"
 
 # Shared package metadata. Member crates opt in via `license.workspace = true`.

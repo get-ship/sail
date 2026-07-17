@@ -11,11 +11,11 @@ active anchor that `just bench-check` reads.
 filename, which is `2026-05-14-current.json` (swap1k 7.2 ms, SHA `747a5f17`) —
 not `post-d2-d4`. That anchor is **architecturally stale**: it was captured
 against the old cursor-based `bindFor` in the bundled runtime, before the
-LIS-based `packages/sui/runtime/src/for.ts` (`0c65c6568`) replaced it. Gating
+LIS-based `packages/sail/runtime/src/for.ts` (`0c65c6568`) replaced it. Gating
 the current LIS runtime against it reports a spurious +56% `05_swap1k`
 regression that is an architecture-gap accounting artifact, not a code
 regression. Re-capture a contemporary `<date>-current.json` with `just bench`
-before trusting the gate. Full write-up: `.artifacts/sui-arc/perf-status.md`.
+before trusting the gate. Full write-up: `.artifacts/sail-arc/perf-status.md`.
 
 - `2026-05-13-post-d2-d4.json` — post D2 (`bindFor` scratch reuse) + D4
   (bind\* short-circuit) merges. Captured at `2a951ef6` on 2026-05-13.
@@ -57,7 +57,7 @@ comparison frameworks (solid, svelte, vue, vanillajs), and writes a fresh
 `<today>-baseline.json`. Commit it.
 
 The SUI bench app is **owned in this repo** at
-`tests/perf/frameworks/keyed/sui/` (see its README) and synced into the external
+`tests/perf/frameworks/keyed/sail/` (see its README) and synced into the external
 checkout (`syncSuiFramework()` in `scripts/dev/bench-lib.mjs`) before each build
 — we maintain only those source files, not a fork of the whole benchmark. The
 comparison frameworks (solid, lit, svelte, vue, vanillajs) still live in the
@@ -76,7 +76,7 @@ Requires:
 - A sui checkout the vendored `precompile.mjs` can find — it resolves `SAIL_REPO`
   (env), then `SAIL_COMPILER`/`SAIL_RUNTIME` (env), then probes `~/dev/sui` and
   `~/dev/Ship/sui`. Set `SAIL_REPO` if the checkout lives elsewhere. Build the
-  compiler first: `cargo build -p sui-compiler` under that checkout.
+  compiler first: `cargo build -p sail-compiler` under that checkout.
 
 ## Checking against the baseline
 
@@ -143,10 +143,10 @@ When analysing a profile, group self-time by:
   — the DOM construction model. Compare against the comparison
   framework's `cloneNode` count.
 - **framework code** (URLs ending `.compiled.js`, `dist/main.js`,
-  or `sui-runtime/*`) — reconciler + binding overhead. The `bindFor`
+  or `sail-runtime/*`) — reconciler + binding overhead. The `bindFor`
   effect body's per-render allocations show up here.
 - **GC** — proxy for allocation pressure. Bigger gap than the bench
   number suggests = signal/object churn in the row body.
 
-The first audit using this harness is `.artifacts/sui-arc/perf-profile.md`
+The first audit using this harness is `.artifacts/sail-arc/perf-profile.md`
 (gitignored — transient report).

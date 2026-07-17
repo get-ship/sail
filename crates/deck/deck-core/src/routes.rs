@@ -137,7 +137,7 @@ mod route_params_tests {
 
     #[test]
     fn non_route_files_get_no_grant() {
-        assert_eq!(route_params_for(Path::new("/x/packs/sui-badge/badge.sui")), None);
+        assert_eq!(route_params_for(Path::new("/x/packs/sail-badge/badge.sui")), None);
         assert_eq!(
             route_params_for(Path::new("/x/routes/tutorial/[slug]/lesson.ts")),
             None

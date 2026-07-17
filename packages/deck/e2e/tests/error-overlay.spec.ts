@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 // ── deck dev — runtime error overlay (task #80) ──────────────────────────────
 //
-// Before this, an uncaught effect/setup throw with no `<sui-error-boundary>`
+// Before this, an uncaught effect/setup throw with no `<sail-error-boundary>`
 // in scope reached ONLY `console.error` — the incident this kills: a page
 // that rendered nothing, dozens of throws, zero visible failure surface
 // unless a developer already had devtools open.

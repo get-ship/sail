@@ -1,12 +1,12 @@
 //! `deck scaffold view|component` — generate boilerplate for a new SUI view
 //! or primitive. Ported verbatim from the retired
-//! `scripts/scaffold-view.mjs` + `scripts/scaffold-sui-component.mjs`.
+//! `scripts/scaffold-view.mjs` + `scripts/scaffold-sail-component.mjs`.
 //!
 //! Scaffolding is a deck capability because deck owns the app/component
 //! shape (manifest fields, the single-file `.sui` convention — state lives
 //! in an inline `<controller>` block). The retired .mjs called into `node` and
 //! pointed at since-renamed paths (`packages/ui-components/src/`); the
-//! port writes to the current layout (`packages/components/sui/primitives/`)
+//! port writes to the current layout (`packages/components/sail/primitives/`)
 //! and the next-steps text reflects today's toolchain.
 
 use std::fs;
@@ -30,18 +30,18 @@ fn validate_view_name(name: &str) -> Result<()> {
     Ok(())
 }
 
-/// Same shape as `validate_view_name` plus the `sui-` prefix the runtime
+/// Same shape as `validate_view_name` plus the `sail-` prefix the runtime
 /// custom-element registry expects for primitives.
 fn validate_component_tag(tag: &str) -> Result<()> {
-    if !tag.starts_with("sui-") {
-        bail!("component tag must start with `sui-` — got {tag:?}");
+    if !tag.starts_with("sail-") {
+        bail!("component tag must start with `sail-` — got {tag:?}");
     }
-    let rest = &tag[4..];
+    let rest = &tag[5..];
     if rest.is_empty()
         || !rest.starts_with(|c: char| c.is_ascii_lowercase())
         || !rest.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
     {
-        bail!("component tag must match /^sui-[a-z][a-z0-9-]*$/ — got {tag:?}");
+        bail!("component tag must match /^sail-[a-z][a-z0-9-]*$/ — got {tag:?}");
     }
     Ok(())
 }
@@ -140,9 +140,9 @@ pub fn run_view(name: String, route_path: Option<String>, component_tag: Option<
 pub fn run_component(tag: String, want_controller: bool) -> Result<()> {
     validate_component_tag(&tag)?;
     let repo_root = find_repo_root(&std::env::current_dir().context("cwd")?)?;
-    // Primitives live under packages/components/sui/primitives/src/ today — the
+    // Primitives live under packages/components/sail/primitives/src/ today — the
     // retired .mjs wrote to packages/ui-components/src/ which no longer exists.
-    let base = repo_root.join("packages/components/sui/primitives/src").join(&tag);
+    let base = repo_root.join("packages/components/sail/primitives/src").join(&tag);
     if base.exists() {
         bail!("directory already exists: {}", base.display());
     }
@@ -170,7 +170,7 @@ pub fn run_component(tag: String, want_controller: bool) -> Result<()> {
     sui.push_str("<row align=\"center\" gap=\"1\" sx=\"text-tone-fg\">\n  <slot></slot>\n</row>\n");
     fs::write(base.join(format!("{tag}.sui")), sui)?;
 
-    println!("[scaffold] created packages/components/sui/primitives/src/{tag}/");
+    println!("[scaffold] created packages/components/sail/primitives/src/{tag}/");
     println!("[scaffold] next steps:");
     println!("  1. Edit {tag}.sui — scope props, template body");
     println!("  2. Run: cargo run -p deck-cli -- build-assets");

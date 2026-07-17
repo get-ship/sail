@@ -11,8 +11,8 @@
 //! NOT touch the CSS BODY: it only rewrites the JS chunk's
 //! `__ROLLDOWN_ASSET__#<ref>` placeholders. The browser fetches the CSS
 //! at `assets/contracts-<hash>.css` and resolves `url('./fonts/X.woff2')`
-//! to `/sui-site/fonts/X.woff2` — 404, because the woff2 live under
-//! `/sui-site/assets/`, not `/sui-site/fonts/`.
+//! to `/sail-site/fonts/X.woff2` — 404, because the woff2 live under
+//! `/sail-site/assets/`, not `/sail-site/fonts/`.
 //!
 //! # The fix (chosen path: mutable `generate_bundle`)
 //!
@@ -675,14 +675,14 @@ mod tests {
 
     #[test]
     fn resolve_relative_basic() {
-        let css_dir = Path::new("/repo/packages/sui/tokens/src");
+        let css_dir = Path::new("/repo/packages/sail/tokens/src");
         assert_eq!(
             resolve_relative(css_dir, "./fonts/x.woff2"),
-            Path::new("/repo/packages/sui/tokens/src/fonts/x.woff2")
+            Path::new("/repo/packages/sail/tokens/src/fonts/x.woff2")
         );
         assert_eq!(
             resolve_relative(css_dir, "../shared/y.woff2"),
-            Path::new("/repo/packages/sui/tokens/src/../shared/y.woff2")
+            Path::new("/repo/packages/sail/tokens/src/../shared/y.woff2")
         );
     }
 

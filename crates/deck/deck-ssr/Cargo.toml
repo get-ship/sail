@@ -10,7 +10,7 @@ path = "src/lib.rs"
 
 [dependencies]
 # The synthetic emitter — used as a pure function (no CLI shell-out).
-sail-compiler = { path = "../../sui/compiler" }
+sail-compiler = { path = "../../sail/compiler" }
 # ship-js — the org's shared L0 deno_core/V8 isolate (the consistent JS execution
 # environment; home for configurable sandboxes / egress / allowed-expression
 # policy). Shared org INFRASTRUCTURE, not a ship-PRODUCT coupling. Local path dep

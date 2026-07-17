@@ -19,7 +19,7 @@
 //     (in-place `handle.reload()`, preserving serializable signal state).
 //   - `views/<other>/view` → ignored (next navigation fetches it fresh).
 //   - anything else (component / island / runtime bundle) → full reload:
-//     a `<sui-*>` custom element cannot be redefined in a live document.
+//     a `<sail-*>` custom element cannot be redefined in a live document.
 
 const HMR_ENDPOINT = '/_deck/dev/hmr'
 const OVERLAY_ID = '__sui_live_reload_overlay'

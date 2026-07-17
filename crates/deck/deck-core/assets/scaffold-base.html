@@ -16,9 +16,9 @@
 
   What differs per scaffold:
     * The HUB adds: Google Fonts (display/body/mono), six rail icon
-      prefetches, the body chrome (<sui-nav-top>, <sui-panel-dock>,
-      <sui-shell-bottom>, <sui-launcher>, <sui-toast-container>,
-      <sui-edit-overlay>), and an explicit <sui-command-bar> in the
+      prefetches, the body chrome (<sail-nav-top>, <sail-panel-dock>,
+      <sail-shell-bottom>, <sail-launcher>, <sail-toast-container>,
+      <sail-edit-overlay>), and an explicit <sail-command-bar> in the
       top-nav slot.
     * The SPACE scaffold adds: a `__suiRuntimeReady` IIFE that surfaces
       the runtime on `window.__suiRuntime` for the confined view bundles
@@ -61,9 +61,9 @@
   <link rel="stylesheet" href="/api/assets/view-tokens.css" />
   <!-- Framework stylesheet: light-DOM contracts + stdlib element skins, so
        components/L1 elements are styled at first paint WITHOUT the runtime's
-       JS injection (SSR / no-FOUC). `data-sui-contracts` is the signal the
+       JS injection (SSR / no-FOUC). `data-sail-contracts` is the signal the
        runtime's `ensureLightContracts` reads to skip its injection. -->
-  <link rel="stylesheet" href="/api/assets/sui.css" data-sui-contracts />
+  <link rel="stylesheet" href="/api/assets/sui.css" data-sail-contracts />
   <link rel="stylesheet" href="/src/chrome/layout.css" />
 
   <!-- Pre-paint theme (FOUC guard). Reads the persisted theme from

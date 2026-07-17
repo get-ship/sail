@@ -8,7 +8,7 @@
 //! (`GRANTED_ORIGIN`), used to:
 //!   (a) build the fixture `sail.config.json` body that the real compiler
 //!       resolver (`sail_compiler::check::policy::Policy`) reads, driving the
-//!       `sui-controller-no-ambient-authority` lint through the real
+//!       `sail-controller-no-ambient-authority` lint through the real
 //!       `compile()` build gate — same path `config_loud_strict.rs` exercises;
 //!   (b) build the `connect-src` header via `deck_core::connect_src_directive`
 //!       — the same list, not two independently hardcoded origin strings.

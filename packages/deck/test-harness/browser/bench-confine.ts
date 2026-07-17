@@ -5,8 +5,8 @@
 // one-time costs on a real compiled view. Result on `window.__bench`.
 
 import { buildViewEndowments, confineViewModule, lockdownRealm } from '../../host/src/index.ts'
-import * as runtime from '../../../sui/runtime/src/index.ts'
-import * as dom from '../../../sui/dom/src/index.ts'
+import * as runtime from '../../../sail/runtime/src/index.ts'
+import * as dom from '../../../sail/dom/src/index.ts'
 
 declare const __GIT_VIEW_SOURCE__: string
 

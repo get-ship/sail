@@ -22,7 +22,7 @@ deck-config = { path = "../deck-config" }
 [dependencies]
 deck-config = { path = "../deck-config" }
 deck-host = { path = "../deck-host" }
-sail-compiler = { path = "../../sui/compiler" }
+sail-compiler = { path = "../../sail/compiler" }
 
 serde = { workspace = true }
 serde_json = { workspace = true }

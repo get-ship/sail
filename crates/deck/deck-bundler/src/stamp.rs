@@ -1,10 +1,10 @@
 //! Framework-bundle staleness stamping (deck-deploy-gap).
 //!
 //! The incident this closes: `deck-core`'s framework singletons
-//! (`sui-runtime.js`, `sui-dom.js`, `sui-sdk-client.js`, `deck-route.js`) are
+//! (`sail-runtime.js`, `sail-dom.js`, `sail-sdk-client.js`, `deck-route.js`) are
 //! baked into the binary at compile time via `include_str!` (see
 //! `deck-core/build.rs`). Nothing enforced that the bake was regenerated
-//! after its TypeScript sources changed — a 20h-stale `sui-runtime.js` served
+//! after its TypeScript sources changed — a 20h-stale `sail-runtime.js` served
 //! against post-rename compiled views rendered nothing, with only a silent
 //! console error as the symptom.
 //!
@@ -25,9 +25,9 @@ use anyhow::{Context, Result};
 /// `targets.rs::FRAMEWORK_SINGLETONS` — one entry per framework singleton
 /// that gets an `include_str!` bake.
 pub const FRAMEWORK_SOURCE_ROOTS: &[(&str, &str)] = &[
-    ("sui-runtime.js", "packages/sui/runtime/src"),
-    ("sui-dom.js", "packages/sui/dom/src"),
-    ("sui-sdk-client.js", "packages/deck/sdk-client/src"),
+    ("sail-runtime.js", "packages/sail/runtime/src"),
+    ("sail-dom.js", "packages/sail/dom/src"),
+    ("sail-sdk-client.js", "packages/deck/sdk-client/src"),
     ("deck-route.js", "packages/deck/router/src"),
 ];
 
@@ -102,7 +102,7 @@ pub fn current_framework_stamps(repo_root: &Path) -> Result<Vec<FrameworkStamp>>
 /// `deck-core::assets::parse_baked_stamp` is the reader half — keep the
 /// format in lockstep with it.
 pub fn format_stamp_header(hash: &str) -> String {
-    format!("/*! sui-framework-stamp: sha={hash} */\n")
+    format!("/*! sail-framework-stamp: sha={hash} */\n")
 }
 
 #[cfg(test)]
@@ -150,7 +150,7 @@ mod tests {
     #[test]
     fn format_stamp_header_roundtrips_the_hash() {
         let header = format_stamp_header("deadbeef00000000");
-        assert!(header.starts_with("/*! sui-framework-stamp: sha="));
+        assert!(header.starts_with("/*! sail-framework-stamp: sha="));
         assert!(header.contains("deadbeef00000000"));
         assert!(header.ends_with(" */\n"));
     }

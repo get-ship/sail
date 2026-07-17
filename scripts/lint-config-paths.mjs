@@ -25,7 +25,7 @@ const SKIP_DIRS = new Set(['node_modules', 'target', '.git', 'dist', '.deck', '.
 const BUILD_SEGMENTS = new Set(['.ship', '.deck', 'dist', 'target', 'gen', 'out-tsc', 'out', '.next'])
 // sui framework repo? (marker: it ships the sui runtime). Gates the jsx fence —
 // ship-level repos legitimately wrap React (e.g. TipTap), the framework repo does not.
-const IS_SUI = existsSync(resolve(REPO, 'packages/sui/runtime'))
+const IS_SUI = existsSync(resolve(REPO, 'packages/sail/runtime'))
 
 const findings = []
 const flag = (file, line, rule, detail) =>

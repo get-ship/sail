@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 // Isolated file (vitest runs each file in its own jsdom realm) so that
-// `sui-error-state` is NEVER registered here — exercising the registration-free
+// `sail-error-state` is NEVER registered here — exercising the registration-free
 // bare-card fallback (the same guard pattern mountRouter's buildNotFound uses).
 vi.mock('@ship/sail-runtime', () => {
-  const BOUNDARY_KEY = Symbol.for('sui:error-boundary')
+  const BOUNDARY_KEY = Symbol.for('sail:error-boundary')
   const attachBoundary = (host: any, handle: unknown) => { host[BOUNDARY_KEY] = handle }
   const detachBoundary = (host: any) => { delete host[BOUNDARY_KEY] }
   const findNearestBoundary = (node: any): unknown => {
@@ -39,7 +39,7 @@ beforeEach(() => {
 
 describe('installRouteBoundary — bare fallback when no primitive is registered', () => {
   it('renders a self-contained card with detail in dev', () => {
-    expect(customElements.get('sui-error-state')).toBeUndefined()
+    expect(customElements.get('sail-error-state')).toBeUndefined()
     installRouteBoundary(outlet, { onReset: () => {}, dev: true })
     expect(() =>
       runProtected(outlet, 'render', () => { throw new Error('bare-detail') }),

@@ -1,5 +1,5 @@
 //! End-to-end proof of the per-view resolver (#267 wave 0, capability gap #1):
-//! with `DECK_PER_VIEW_RESOLVER` on, a view that uses `<sui-widget>` has the
+//! with `DECK_PER_VIEW_RESOLVER` on, a view that uses `<sail-widget>` has the
 //! component's code tree-shaken INTO its bundle (resolved from source via the
 //! CEM index); with it off, the component is absent (the umbrella registers it
 //! at runtime). Uses the LOCAL sail-compiler — which carries
@@ -17,8 +17,8 @@ fn write(path: &Path, body: &str) {
     std::fs::write(path, body).unwrap();
 }
 
-/// A workspace with one component package (`sui-widget`, marker text
-/// `sui-widget-marker`) and one view that uses the tag.
+/// A workspace with one component package (`sail-widget`, marker text
+/// `sail-widget-marker`) and one view that uses the tag.
 fn fixture(root: &Path) {
     write(&root.join("package.json"), r#"{"workspaces":["packages/*"]}"#);
     write(
@@ -27,16 +27,16 @@ fn fixture(root: &Path) {
     );
     write(
         &root.join("packages/demo/dist/custom-elements.json"),
-        r#"{"schemaVersion":"1","modules":[{"path":"sui-widget.sui","declarations":[{"kind":"class","name":"sui-widget","tagName":"sui-widget","customElement":true,"description":"demo"}]}]}"#,
+        r#"{"schemaVersion":"1","modules":[{"path":"sail-widget.sui","declarations":[{"kind":"class","name":"sail-widget","tagName":"sail-widget","customElement":true,"description":"demo"}]}]}"#,
     );
-    // stem "sui-widget" contains a hyphen → detect_mode compiles this as a Component.
+    // stem "sail-widget" contains a hyphen → detect_mode compiles this as a Component.
     write(
-        &root.join("packages/demo/src/sui-widget/sui-widget.sui"),
-        "<div>sui-widget-marker</div>\n",
+        &root.join("packages/demo/src/sail-widget/sail-widget.sui"),
+        "<div>sail-widget-marker</div>\n",
     );
-    write(&root.join("views/usewidget/page.sui"), "<div><sui-widget></sui-widget></div>\n");
+    write(&root.join("views/usewidget/page.sui"), "<div><sail-widget></sail-widget></div>\n");
     // A second view that also uses the tag — for the shared-chunk dedup test.
-    write(&root.join("views/usewidget2/page.sui"), "<div><sui-widget></sui-widget></div>\n");
+    write(&root.join("views/usewidget2/page.sui"), "<div><sail-widget></sail-widget></div>\n");
 }
 
 fn view_target(root: &Path) -> BundleTarget {
@@ -89,7 +89,7 @@ async fn bundle(root: &Path, out_root: &Path) -> String {
 #[tokio::test(flavor = "multi_thread")]
 async fn view_bundle_carries_its_component() {
     // In-process compiler (#255), per-view resolver always on for `views/`: a
-    // view using <sui-widget> tree-shakes the component INTO its bundle from
+    // view using <sail-widget> tree-shakes the component INTO its bundle from
     // source (via the CEM index). No binary to locate, no gate to flip — the
     // component is in the bundle *because* the resolver pulled it from source
     // (without it, the component lives only in the umbrella, loaded separately).
@@ -99,7 +99,7 @@ async fn view_bundle_carries_its_component() {
     let out = tempfile::tempdir().unwrap();
     let js = bundle(root, out.path()).await;
     assert!(
-        js.contains("sui-widget-marker"),
+        js.contains("sail-widget-marker"),
         "the view bundle must carry its component's code; got:\n{js}"
     );
 }
@@ -114,7 +114,7 @@ async fn shared_component_dedups_into_one_chunk_across_views() {
     fixture(root);
     let out = tempfile::tempdir().unwrap();
 
-    // Both views import <sui-widget>; the multi-entry build must hoist it.
+    // Both views import <sail-widget>; the multi-entry build must hoist it.
     deck_bundler::views_bundle::bundle_views(
         &BundleLayout::with_config(root.to_path_buf(), None, DeckConfig::defaults()).with_out_root(out.path().to_path_buf()),
         &[view_target(root), second_view_target(root)],
@@ -127,7 +127,7 @@ async fn shared_component_dedups_into_one_chunk_across_views() {
     let chunks_with_component = js_files(&out.path().join(".deck"))
         .into_iter()
         .filter(|p| {
-            std::fs::read_to_string(p).map(|s| s.contains("sui-widget-marker")).unwrap_or(false)
+            std::fs::read_to_string(p).map(|s| s.contains("sail-widget-marker")).unwrap_or(false)
         })
         .count();
     assert_eq!(

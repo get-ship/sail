@@ -1,6 +1,6 @@
 //! G3 — bundle-parity regression gate.
 //!
-//! Spec: `.artifacts/sui-arc/integrity/report.md` §4 (gate G3) + the
+//! Spec: `.artifacts/sail-arc/integrity/report.md` §4 (gate G3) + the
 //! bundling-robustness audit. This gate proves two things the default test
 //! sweep does not, on a pure-transformation surface (no daemon boot, no
 //! browser, no network):
@@ -8,7 +8,7 @@
 //! ## Part 1 — ALL-TARGETS build with a REAL exit check
 //!
 //! Enumerate `BundleLayout::all_targets()` — the static framework singletons
-//! (`sui-runtime`, `sui-dom`, the umbrella, the heavy lazy packs) PLUS every
+//! (`sail-runtime`, `sail-dom`, the umbrella, the heavy lazy packs) PLUS every
 //! discovered per-component island AND every discovered view bundle —
 //! and build each one through the deck Rolldown path. Every target must return
 //! `Ok`.
@@ -36,10 +36,10 @@
 //!
 //! ## Part 2 — CROSS-PRODUCER parity (native vs wasm, #160)
 //!
-//! For each compiler fixture (`crates/sui/compiler/tests/fixtures/*.sui`),
+//! For each compiler fixture (`crates/sail/compiler/tests/fixtures/*.sui`),
 //! compile via the native `sail_compiler::compile` (in-process, x86_64) AND via
-//! the wasm `compile` export (the artifact `just sui-wasm` builds into
-//! `packages/sui/compiler-wasm/pkg`, the exact surface the docs playground +
+//! the wasm `compile` export (the artifact `just sail-wasm` builds into
+//! `packages/sail/compiler-wasm/pkg`, the exact surface the docs playground +
 //! browser LSP ship). Assert the emitted `.js` is byte-identical (modulo the
 //! build-stamp comment — see below). One Rust grammar compiled to two targets
 //! must emit the same module; a divergence is the #160 native-vs-wasm class.
@@ -92,8 +92,8 @@
 //! a tool is absent so a misconfigured CI cannot masquerade as green):
 //!   * `sail-compiler` built under `target/` (the bundler's Rolldown `load` hook
 //!     spawns it) — `cargo build -p sail-compiler`.
-//!   * `packages/sui/compiler-wasm/pkg/sail_compiler_bg.wasm` present —
-//!     `just sui-wasm`.
+//!   * `packages/sail/compiler-wasm/pkg/sail_compiler_bg.wasm` present —
+//!     `just sail-wasm`.
 //!   * `node` on PATH (drives the wasm side).
 
 #![cfg(feature = "g3")]
@@ -145,11 +145,11 @@ fn repo_root() -> PathBuf {
 }
 
 fn fixtures_dir(repo: &Path) -> PathBuf {
-    repo.join("crates/sui/compiler/tests/fixtures")
+    repo.join("crates/sail/compiler/tests/fixtures")
 }
 
 fn wasm_pkg_dir(repo: &Path) -> PathBuf {
-    repo.join("packages/sui/compiler-wasm/pkg")
+    repo.join("packages/sail/compiler-wasm/pkg")
 }
 
 // ── Part 1: all-targets sequential build with real exit check ────────────────
@@ -425,7 +425,7 @@ fn wasm_compile_all(repo: &Path, fixtures: &[Fixture]) -> Vec<WasmRow> {
     let pkg = wasm_pkg_dir(repo);
     if !pkg.join("sail_compiler_bg.wasm").exists() {
         panic!(
-            "G3 PREREQ MISSING: wasm artifact not built at {}. Run `just sui-wasm`.",
+            "G3 PREREQ MISSING: wasm artifact not built at {}. Run `just sail-wasm`.",
             pkg.display()
         );
     }

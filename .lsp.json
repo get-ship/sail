@@ -1,6 +1,6 @@
 {
   "sui": {
-    "command": "sui-lsp",
+    "command": "sail-lsp",
     "extensionToLanguage": {
       ".sui": "sui"
     }

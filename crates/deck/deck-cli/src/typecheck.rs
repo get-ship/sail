@@ -5,7 +5,7 @@
 //!
 //! Default build behavior is unchanged — the flag is opt-in for v1. The
 //! tsconfig + subprocess invocation are modeled on the compiler's
-//! `crates/sui/compiler/tests/synthetic_tsc.rs` (`write_tsconfig` / `run_tsc`):
+//! `crates/sail/compiler/tests/synthetic_tsc.rs` (`write_tsconfig` / `run_tsc`):
 //! full-strict, `noEmit`, `moduleResolution: Bundler`, run with `tsc -p <cfg>`.
 //!
 //! Unlike the test (which SKIPs when `tsc` is absent), the flag was requested

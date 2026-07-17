@@ -4,7 +4,7 @@
 //!
 //! This is the ship-js (SSR) half of the slice's reliability proof. The CSR /
 //! hydration half (the client `__mount` + `hydrate` contract, jsdom) lives in
-//! `crates/sui/compiler/tests/synthetic_client_jsdom.rs`; the tsgo-green half
+//! `crates/sail/compiler/tests/synthetic_client_jsdom.rs`; the tsgo-green half
 //! in `synthetic_client_tsc.rs`. Together they answer the load-bearing
 //! question: do real-world surfaces render reliably through the JS engine?
 //!
@@ -140,7 +140,7 @@ fn targets() -> Vec<Target> {
             needs_data: false,
             pathname: "/showcase",
             params: json!({}),
-            expect: "sui-area-chart",
+            expect: "sail-area-chart",
         },
         // ── Control flow + bindings (conformance views) ────────────────────
         v("board", "{#if}, {#for} keyed, class:, on:, nested component", "board", conf_ctrl("board"), false, "Alpha"),
@@ -165,10 +165,10 @@ fn targets() -> Vec<Target> {
         v("widgets", "repeated nested component (shared-chunk)", "widgets", None, false, "demo-chip"),
         v("gallery", "on:, class:, authored controller, nested", "gallery", conf_ctrl("gallery"), false, ""),
         // ── Component-gallery views (render real component tags) ────────────
-        v("gallery-sui-primitives", "{#if}, bind:, on:, style:, transitions, nested", "gallery-sui-primitives", conf_ctrl("gallery-sui-primitives"), false, ""),
-        v("gallery-sui-charts", "static chart components", "gallery-sui-charts", None, false, ""),
-        v("gallery-sui-media", "static media components", "gallery-sui-media", None, false, ""),
-        v("gallery-sui-viewer", "static viewer component", "gallery-sui-viewer", None, false, ""),
+        v("gallery-sail-primitives", "{#if}, bind:, on:, style:, transitions, nested", "gallery-sail-primitives", conf_ctrl("gallery-sail-primitives"), false, ""),
+        v("gallery-sail-charts", "static chart components", "gallery-sail-charts", None, false, ""),
+        v("gallery-sail-media", "static media components", "gallery-sail-media", None, false, ""),
+        v("gallery-sail-viewer", "static viewer component", "gallery-sail-viewer", None, false, ""),
         v("gallery-ship-markdown", "static markdown component", "gallery-ship-markdown", None, false, ""),
         v("gallery-ship-pdf", "style:, transitions", "gallery-ship-pdf", None, false, ""),
         v("gallery-ship-arcade", "on:, transitions", "gallery-ship-arcade", None, false, ""),
@@ -394,12 +394,12 @@ fn slice1_hub_closure_component_catalog() {
     let repo = repo_root().expect("repo root");
     let manifest = AppManifest::parse("{}").expect("empty manifest");
     let closure = [
-        "packages/components/sui/primitives/src/sui-navbar/sui-navbar.sui",
-        "packages/components/sui/primitives/src/sui-brand-mark/sui-brand-mark.sui",
-        "packages/components/sui/primitives/src/sui-theme-picker/sui-theme-picker.sui",
-        "packages/components/sui/primitives/src/sui-account-chip/sui-account-chip.sui",
-        "packages/components/sui/primitives/src/sui-icon/sui-icon.sui",
-        "packages/components/sui/primitives/src/sui-popover/sui-popover.sui",
+        "packages/components/sail/primitives/src/sail-navbar/sail-navbar.sui",
+        "packages/components/sail/primitives/src/sail-brand-mark/sail-brand-mark.sui",
+        "packages/components/sail/primitives/src/sail-theme-picker/sail-theme-picker.sui",
+        "packages/components/sail/primitives/src/sail-account-chip/sail-account-chip.sui",
+        "packages/components/sail/primitives/src/sail-icon/sail-icon.sui",
+        "packages/components/sail/primitives/src/sail-popover/sail-popover.sui",
     ];
     let mut rows = vec![
         "# Slice 1 — hub `/` component closure (synthetic emit)\n".to_string(),

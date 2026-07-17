@@ -109,9 +109,9 @@ enum Command {
     /// deck resolves their output paths and copies the closure. No consumer
     /// ever hardcodes deck's internal output layout. Run after `build-assets`.
     Emit {
-        /// Target name(s): framework singletons (sui-runtime, sui-dom,
-        /// sui-sdk-client) or discovered consumer bundles (sui-marketing,
-        /// sui-arcade, ship-code-editor, …) — the names declared in each
+        /// Target name(s): framework singletons (sail-runtime, sail-dom,
+        /// sail-sdk-client) or discovered consumer bundles (sail-marketing,
+        /// sail-arcade, ship-code-editor, …) — the names declared in each
         /// package's `deck.bundles`. Repeatable.
         #[arg(long = "target", required = true)]
         targets: Vec<String>,
@@ -143,9 +143,9 @@ enum Scaffold {
         component: Option<String>,
     },
 
-    /// New SUI primitive under `packages/components/sui/primitives/src/<tag>/`.
+    /// New SUI primitive under `packages/components/sail/primitives/src/<tag>/`.
     Component {
-        /// Tag name (must start with `sui-`).
+        /// Tag name (must start with `sail-`).
         tag: String,
         /// Also include an inline `<controller>` stub in the `.sui`.
         #[arg(long)]
@@ -281,7 +281,7 @@ fn build_assets() -> Result<()> {
         .map_err(|e| anyhow::anyhow!("build_all failed: {e}"))?;
 
     // Build the layout once — used for the framework verify+stamp, the pack
-    // CEM step, and the consumer guard below. assets_dir_for("sui-runtime")
+    // CEM step, and the consumer guard below. assets_dir_for("sail-runtime")
     // is now .deck/framework/ (the canonical bake target per Recommendation
     // B1).
     let layout = deck_bundler::targets::BundleLayout::with_config(
@@ -416,7 +416,7 @@ fn build_assets() -> Result<()> {
     Ok(())
 }
 
-/// deck-deploy-gap: the incident this closes is a stale `sui-runtime.js`
+/// deck-deploy-gap: the incident this closes is a stale `sail-runtime.js`
 /// baked via `include_str!` served against post-rename compiled views —
 /// every setup binding came back undefined, the site rendered nothing, and
 /// the only symptom was a silent console error. The manual cure was a
@@ -602,12 +602,12 @@ fn build(
         // but ZERO framework (`_deck/runtime.js`, `dom.js`, `route.js`) and still
         // exits 0. Fine for a shipd-served app (shipd embeds the framework via
         // `include_str!`), but a standalone host (a Tauri shell, a custom server)
-        // serves nothing — every `<sui-*>` stays unregistered and the app renders
+        // serves nothing — every `<sail-*>` stays unregistered and the app renders
         // unstyled with no error. shipd bundles in-process via `bundle_app`, not
         // this CLI path, so this warning targets exactly the standalone builds.
         eprintln!(
             "  warning: built WITHOUT a framework bundle (no --bundle-framework).\n  \
-             This app's <sui-*> components need /_deck/runtime.js, dom.js and route.js\n  \
+             This app's <sail-*> components need /_deck/runtime.js, dom.js and route.js\n  \
              served by the host. A bundling host embeds them; a standalone host serves nothing,\n  \
              so the app then renders unstyled with every custom element unregistered.\n  \
              For a self-contained build, re-run with --bundle-framework."

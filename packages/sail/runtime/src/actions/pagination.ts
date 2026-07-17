@@ -1,0 +1,57 @@
+import type { Action } from '../action'
+
+/**
+ * `use:pagination` — the L1 `<pagination>` behavior. Marks the `.sail-page` whose
+ * value matches the element's `value` with `aria-current="page"`, and on click
+ * of a page sets `value` + emits `sail-page-change`. Prev/next are just pages
+ * whose value is the target page. Structure (which pages/ellipsis to show) is
+ * authored; this owns the state contract.
+ */
+export const pagination: Action<void> = (node) => {
+  const root = node as HTMLElement
+  const valueOf = (el: Element): string => el.getAttribute('value') ?? ''
+  const pagesOf = (): HTMLElement[] =>
+    Array.from(root.querySelectorAll<HTMLElement>('.sail-page'))
+  const current = (): string => root.getAttribute('value') ?? ''
+
+  if (!root.hasAttribute('aria-label')) root.setAttribute('aria-label', 'Pagination')
+
+  const sync = (): void => {
+    const cur = current()
+    for (const p of pagesOf()) {
+      if (valueOf(p) === cur) p.setAttribute('aria-current', 'page')
+      else p.removeAttribute('aria-current')
+    }
+  }
+
+  const setPage = (v: string): void => {
+    if (!v || v === current()) return
+    root.setAttribute('value', v)
+    sync()
+    root.dispatchEvent(
+      new CustomEvent('sail-page-change', { detail: { page: v }, bubbles: true, composed: true }),
+    )
+  }
+
+  const pageFrom = (e: Event): HTMLElement | null => {
+    const p = (e.target as Element | null)?.closest<HTMLElement>('.sail-page') ?? null
+    return p && root.contains(p) ? p : null
+  }
+
+  const onClick = (e: MouseEvent): void => {
+    const p = pageFrom(e)
+    if (p && !p.hasAttribute('disabled')) setPage(valueOf(p))
+  }
+
+  root.addEventListener('click', onClick)
+  const mo = new MutationObserver(() => sync())
+  mo.observe(root, { childList: true, subtree: true })
+  sync()
+
+  return {
+    destroy: () => {
+      root.removeEventListener('click', onClick)
+      mo.disconnect()
+    },
+  }
+}

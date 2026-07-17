@@ -1,0 +1,4 @@
+// Side-effect import: the compiled .sui calls component() at import time,
+// registering <sail-keyed> as a custom element. <stem>.js (not .compiled.js)
+// because precompile.mjs passes --out (see that script).
+import './dist/sail-keyed.js'

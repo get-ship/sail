@@ -52,10 +52,10 @@ echo "ok: deck build → $DIST"
 
 # 2. Stage the framework singletons a daemon would otherwise serve at /_deck/*.
 mkdir -p "$DIST/_deck"
-cp "$ASSETS/sui-runtime.js"    "$DIST/_deck/runtime.js"
-cp "$ASSETS/sui-dom.js"        "$DIST/_deck/dom.js"
-cp "$ASSETS/sui-sdk-client.js" "$DIST/_deck/sdk-client.js"
-cp "$ASSETS/sui-components.js" "$DIST/_deck/components.js"
+cp "$ASSETS/sail-runtime.js"    "$DIST/_deck/runtime.js"
+cp "$ASSETS/sail-dom.js"        "$DIST/_deck/dom.js"
+cp "$ASSETS/sail-sdk-client.js" "$DIST/_deck/sdk-client.js"
+cp "$ASSETS/sail-components.js" "$DIST/_deck/components.js"
 
 # 3. Serve statically — NO daemon.
 python3 "$SERVER" "$PORT" "$DIST" &

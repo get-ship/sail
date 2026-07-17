@@ -1,7 +1,7 @@
 //! SES Compartment runner — confined execution of view-controller code.
 //!
 //! Deck runs views, so Deck owns secure execution (the SUI runtime provides the
-//! hardened endowment surface; the author-time `sui-controller-no-ambient-
+//! hardened endowment surface; the author-time `sail-controller-no-ambient-
 //! authority` lint is the static first line). A controller is untrusted code;
 //! the Compartment is the capability boundary. We endow ONLY the runtime
 //! reactive surface + the view's policy-gated `ship.*` ops, and deny everything
@@ -69,7 +69,7 @@ export function confineController<T = unknown>(
 
 // ── network-capability fetch wrapper ────────────────────────────────────────
 //
-// The static lint (`sui-controller-no-ambient-authority`) checks a fetch
+// The static lint (`sail-controller-no-ambient-authority`) checks a fetch
 // call's STRING-LITERAL target against a package's resolved `sail.config.json`
 // `"network"` allowlist at author time. A dynamic target (a variable, a
 // template with interpolation) can't be verified statically — this wrapper is
@@ -80,7 +80,7 @@ export function confineController<T = unknown>(
 /** Extract the `scheme://host[:port]` authority from an absolute URL-ish
  *  string. `null` for a relative/schemeless string (`/api/x`, `./x`) — those
  *  are same-origin, matched against `"self"` instead. Mirrors
- *  `crates/sui/lint/src/rules/controller_no_ambient_authority.rs`'s
+ *  `crates/sail/lint/src/rules/controller_no_ambient_authority.rs`'s
  *  `authority_of` so the static lint and this runtime wall agree on what
  *  "the same origin" means. */
 function authorityOf(url: string): string | null {

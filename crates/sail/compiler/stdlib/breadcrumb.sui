@@ -1,0 +1,46 @@
+<!--
+  <breadcrumb> — L1 breadcrumb trail (element mode). A nav > ol; author the
+  crumbs as <li> with an <a> (mark the current page's <a> aria-current="page").
+  Separators are drawn by CSS between items. Bare tag lowers to
+  <nav class="sail-breadcrumb"><ol>.
+
+    <breadcrumb>
+      <li><a href="/">Home</a></li>
+      <li><a href="/docs">Docs</a></li>
+      <li><a aria-current="page">Tabs</a></li>
+    </breadcrumb>
+-->
+
+<scope>
+</scope>
+
+<style>
+  .sail-breadcrumb ol {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+  }
+  .sail-breadcrumb li { display: inline-flex; align-items: center; gap: var(--space-2); }
+  .sail-breadcrumb li:not(:first-child)::before {
+    content: '/';
+    color: var(--muted-foreground);
+    user-select: none;
+  }
+  .sail-breadcrumb a {
+    color: var(--muted-foreground);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+  .sail-breadcrumb a:hover { color: var(--foreground); }
+  .sail-breadcrumb a:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: 2px; }
+  .sail-breadcrumb [aria-current='page'] { color: var(--foreground); font-weight: var(--font-weight-medium); }
+</style>
+
+<nav aria-label="Breadcrumb"><ol><slot></slot></ol></nav>

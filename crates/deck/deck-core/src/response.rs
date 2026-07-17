@@ -68,7 +68,7 @@ const CSP_PREFIX: &str = "default-src 'self'; script-src 'self' 'unsafe-inline' 
 const CSP_SUFFIX: &str = "frame-ancestors 'self'";
 
 /// Derive the `connect-src` CSP clause from a package's resolved `"network"`
-/// per-origin allowlist — the SAME list the `sui-controller-no-ambient-
+/// per-origin allowlist — the SAME list the `sail-controller-no-ambient-
 /// authority` lint checks fetch/WebSocket/EventSource targets against
 /// (`sail_compiler::check::policy::Policy::network_for`). Empty list (the
 /// default: no `sail.config.json`, or one that never declares `"network"`)

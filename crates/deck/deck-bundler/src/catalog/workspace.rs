@@ -36,7 +36,7 @@ pub struct WorkspacePackage {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BundleDecl {
-    /// Logical name + output basename (`<name>.js`), e.g. `sui-marketing`.
+    /// Logical name + output basename (`<name>.js`), e.g. `sail-marketing`.
     pub name: String,
     /// Entry module, relative to the declaring package's root.
     pub entry: PathBuf,
@@ -125,7 +125,7 @@ pub fn discover_workspace_packages(repo_root: &Path) -> Result<Vec<WorkspacePack
 ///   `package.json` `name` is in the declared set are returned. A declared pack
 ///   that doesn't resolve to a discovered package is silently absent; its tags
 ///   never enter the resolver index. This is the access-control mechanic:
-///   undeclared packs' tags become `@sui-tag` no-ops (and the bundler emits an
+///   undeclared packs' tags become `@sail-tag` no-ops (and the bundler emits an
 ///   author diagnostic naming them — see `catalog::shadowed_tags`).
 ///
 /// The scope is matched by workspace `name` — a stand-in for a registry lookup
@@ -287,7 +287,7 @@ fn sui_workspace_root() -> Option<&'static Path> {
         // tokens check is the cheap, specific guard that this is sui (not some
         // other ancestor workspace) without a full discovery walk.
         if d.join("package.json").exists()
-            && d.join("packages/sui/tokens/package.json").exists()
+            && d.join("packages/sail/tokens/package.json").exists()
         {
             Some(d)
         } else {
@@ -309,7 +309,7 @@ fn sui_workspace_root() -> Option<&'static Path> {
 ///   1. the consuming project's `repo_root` (its own `@ship/*` — `@ship/sdk`,
 ///      `@ship/agents`, the `packages/components/ship/*` packs, etc.);
 ///   2. sui's own workspace ([`sui_workspace_root`]) — the carved framework
-///      packages (`@ship/tokens`, `@ship/sail-*`, `packages/components/sui/*`).
+///      packages (`@ship/tokens`, `@ship/sail-*`, `packages/components/sail/*`).
 ///
 /// PRECEDENCE on a name collision: **sui wins**. Sui owns the framework `@ship/*`
 /// names; after the carve they live only under sui's root, so a stale or absent

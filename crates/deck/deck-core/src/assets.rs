@@ -4,7 +4,7 @@ use deck_config::RenderMode;
 
 const ASSETS_DIR: &str = env!("CARGO_MANIFEST_DIR");
 
-/// deck's OWN baked product (sui-runtime/dom/sdk-client + primitives umbrella +
+/// deck's OWN baked product (sail-runtime/dom/sdk-client + primitives umbrella +
 /// lucide). These ship inside the deck-core crate, like Next shipping its own
 /// runtime. App + user content is NOT here — see `read_source_asset`.
 ///
@@ -38,9 +38,9 @@ fn read_source_asset(root: &std::path::Path, rel: &str) -> Option<Vec<u8>> {
     std::fs::read(root.join(rel)).ok()
 }
 
-const SUI_RUNTIME_JS: &str = include_str!("../assets/sui-runtime.js");
-const SUI_DOM_JS: &str = include_str!("../assets/sui-dom.js");
-const SUI_SDK_CLIENT_JS: &str = include_str!("../assets/sui-sdk-client.js");
+const SUI_RUNTIME_JS: &str = include_str!("../assets/sail-runtime.js");
+const SUI_DOM_JS: &str = include_str!("../assets/sail-dom.js");
+const SUI_SDK_CLIENT_JS: &str = include_str!("../assets/sail-sdk-client.js");
 // `deck/route` is the bundler-generated entry's `@ship/deck/router`
 // import. The runtime exports `defineRoutes`, `route`, `navigate`,
 // `setEditMode` — every app's entry needs this singleton, so the
@@ -50,8 +50,8 @@ const SUI_LUCIDE_ICONS_JSON: &str = include_str!("../assets/lucide-icons.json");
 const LIVE_RELOAD_JS: &str = include_str!("../assets/live-reload.js");
 const ERROR_OVERLAY_JS: &str = include_str!("../assets/error-overlay.js");
 // Aliases the runtime used to resolve client-side. Promoted to the daemon so a
-// `<sui-icon name="git">` request finds `git-branch` server-side with no client
-// indirection. Keep in lockstep with `packages/components/sui/primitives/src/sui-icon/registry.ts`.
+// `<sail-icon name="git">` request finds `git-branch` server-side with no client
+// indirection. Keep in lockstep with `packages/components/sail/primitives/src/sail-icon/registry.ts`.
 const ICON_ALIASES: &[(&str, &str)] = &[
     ("git", "git-branch"),
     ("refresh", "refresh-cw"),
@@ -296,8 +296,8 @@ pub fn serve_scaffold(
     } else {
         html
     };
-    // Dev-only: attach the runtime error overlay (task #80). A `sui:error`
-    // event (dispatched by packages/sui/runtime when an effect or setup
+    // Dev-only: attach the runtime error overlay (task #80). A `sail:error`
+    // event (dispatched by packages/sail/runtime when an effect or setup
     // throw reaches no error boundary) previously had no visible surface —
     // console.error only, invisible unless devtools was already open. This
     // tag is never written in Production, so the overlay ships zero bytes
@@ -457,7 +457,7 @@ pub fn serve_sui_sdk_client(mode: DaemonMode) -> DeckResponse {
     DeckResponse::js_asset(SUI_SDK_CLIENT_JS.to_string(), mode)
 }
 
-/// Parse the `/*! sui-framework-stamp: sha=<hash> */` leading comment
+/// Parse the `/*! sail-framework-stamp: sha=<hash> */` leading comment
 /// `deck-cli build_assets` writes into a baked bundle (deck-deploy-gap). The
 /// writer half lives in `deck_bundler::stamp::format_stamp_header` — keep the
 /// format in lockstep. `None` for a bake that predates stamping (an older
@@ -466,7 +466,7 @@ pub fn serve_sui_sdk_client(mode: DaemonMode) -> DeckResponse {
 pub fn parse_baked_stamp(js: &str) -> Option<&str> {
     js.lines()
         .next()?
-        .strip_prefix("/*! sui-framework-stamp: sha=")?
+        .strip_prefix("/*! sail-framework-stamp: sha=")?
         .strip_suffix(" */")
 }
 
@@ -477,9 +477,9 @@ pub fn parse_baked_stamp(js: &str) -> Option<&str> {
 /// lives in deck-cli; this just exposes the baked half.
 pub fn baked_framework_stamps() -> Vec<(&'static str, Option<&'static str>)> {
     vec![
-        ("sui-runtime.js", parse_baked_stamp(SUI_RUNTIME_JS)),
-        ("sui-dom.js", parse_baked_stamp(SUI_DOM_JS)),
-        ("sui-sdk-client.js", parse_baked_stamp(SUI_SDK_CLIENT_JS)),
+        ("sail-runtime.js", parse_baked_stamp(SUI_RUNTIME_JS)),
+        ("sail-dom.js", parse_baked_stamp(SUI_DOM_JS)),
+        ("sail-sdk-client.js", parse_baked_stamp(SUI_SDK_CLIENT_JS)),
         ("deck-route.js", parse_baked_stamp(DECK_ROUTE_JS)),
     ]
 }
@@ -494,7 +494,7 @@ pub fn serve_deck_route(mode: DaemonMode) -> DeckResponse {
 }
 /// the retired whole-blob `/_deck/lucide-icons.json` endpoint (~410 KB fetched
 /// once on first mount). Per-icon serving hands the browser HTTP cache the
-/// granularity that matches usage: each `<sui-icon>` triggers one tiny GET
+/// granularity that matches usage: each `<sail-icon>` triggers one tiny GET
 /// (typically <1 KB), 304-cached on second mount.
 ///
 /// The response is a full standalone `<svg>` with lucide's canonical viewBox
@@ -519,7 +519,7 @@ pub fn serve_sui_icon(mode: DaemonMode, name: &str) -> DeckResponse {
     };
     let inner = ICON_MAP.get(resolved).expect("resolved name in map");
     // Canonical lucide attrs — kept in lockstep with `makeSvg()` in
-    // sui-icon.controller.ts so client (CDN-src mode) + daemon (named mode)
+    // sail-icon.controller.ts so client (CDN-src mode) + daemon (named mode)
     // render identically.
     let svg = format!(
         "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" \
@@ -580,15 +580,15 @@ mod tests {
     fn baked_runtime_is_the_current_engine_not_a_stale_bake() {
         assert!(
             SUI_RUNTIME_JS.contains("as mountComponent,"),
-            "baked sui-runtime.js missing the `mountComponent` export — stale bake"
+            "baked sail-runtime.js missing the `mountComponent` export — stale bake"
         );
         assert!(
             SUI_RUNTIME_JS.contains("as component,"),
-            "baked sui-runtime.js missing the `component` export — stale bake"
+            "baked sail-runtime.js missing the `component` export — stale bake"
         );
         assert!(
             SUI_RUNTIME_JS.contains("as route,") || SUI_RUNTIME_JS.contains("as route}"),
-            "baked sui-runtime.js missing the `route` export — `@ship/sail-runtime/route` \
+            "baked sail-runtime.js missing the `route` export — `@ship/sail-runtime/route` \
              maps to this same bundle in production; a stale bake or a missing index.ts \
              re-export breaks every compiled view's route import"
         );
@@ -596,14 +596,14 @@ mod tests {
         // view`), not warning strings that merely mention the word "view".
         assert!(
             !SUI_RUNTIME_JS.contains("as view,") && !SUI_RUNTIME_JS.contains("as view}"),
-            "baked sui-runtime.js still EXPORTS `view` (removed in de-view) — stale \
+            "baked sail-runtime.js still EXPORTS `view` (removed in de-view) — stale \
              bake; run `cargo run -p deck-cli -- build-assets`"
         );
     }
 
     #[test]
     fn parse_baked_stamp_reads_the_leading_comment() {
-        let js = "/*! sui-framework-stamp: sha=deadbeef00000000 */\nexport const x = 1;\n";
+        let js = "/*! sail-framework-stamp: sha=deadbeef00000000 */\nexport const x = 1;\n";
         assert_eq!(parse_baked_stamp(js), Some("deadbeef00000000"));
     }
 
@@ -621,7 +621,7 @@ mod tests {
         let names: Vec<_> = stamps.iter().map(|(n, _)| *n).collect();
         assert_eq!(
             names,
-            vec!["sui-runtime.js", "sui-dom.js", "sui-sdk-client.js", "deck-route.js"]
+            vec!["sail-runtime.js", "sail-dom.js", "sail-sdk-client.js", "deck-route.js"]
         );
     }
 
@@ -860,7 +860,7 @@ mod tests {
         std::fs::create_dir_all(&src_dir).unwrap();
         std::fs::write(
             src_dir.join("index.html"),
-            r#"<!doctype html><html><head></head><body><div id="sui-root"></div></body></html>"#,
+            r#"<!doctype html><html><head></head><body><div id="sail-root"></div></body></html>"#,
         )
         .unwrap();
         let scaffold = AppServeConfig {

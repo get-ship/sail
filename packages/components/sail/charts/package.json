@@ -1,0 +1,30 @@
+{
+  "name": "@ship/sail-charts",
+  "version": "0.2.0",
+  "description": "Ship Charts pack \u2014 `<sail-*-chart>` + sparkline / donut / gauge / meter / heatmap custom elements.",
+  "type": "module",
+  "license": "MIT",
+  "files": [
+    "src",
+    "dist/custom-elements.json"
+  ],
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "customElements": "dist/custom-elements.json",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "prepublishOnly": "test -f dist/custom-elements.json || (cd ../../../.. && cargo run -p deck-cli -- build-assets)",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@ship/sail-dom": "workspace:*",
+    "@ship/sail-runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@ship/test-setup": "workspace:*",
+    "vitest": "^4.1.5"
+  }
+}

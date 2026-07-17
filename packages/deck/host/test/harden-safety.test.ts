@@ -19,7 +19,7 @@ import {
   batch,
   untrack,
   isSignal,
-} from '../../../sui/runtime/src/signal.ts'
+} from '../../../sail/runtime/src/signal.ts'
 
 const fakeDoc = {
   createElement: (t: string) => ({ tagName: t.toUpperCase() }),

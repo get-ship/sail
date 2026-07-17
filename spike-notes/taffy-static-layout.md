@@ -12,18 +12,18 @@ the floor already pays for:
 
 - sx is atomic and selector-free → no cascade to resolve. The computed style
   of every element is already known.
-- values are tokens → real pixels (the same registry `sui-lint::tokens` reads).
+- values are tokens → real pixels (the same registry `sail-lint::tokens` reads).
 - layout is `<row>`/`<column>`/`<grid>` → intent is declared, not inferred.
 - the tree is the template.
 
-WASM-cleanliness: **YES**. `cargo build -p sui-layout --target wasm32-unknown-unknown --features sui-compiler/wasm` builds clean. The bin doesn't (cli parser can't appear in wasm), but `sui_layout.rlib` does — and `libtaffy-*.rlib` does. So the diagnostic can ride the same in-browser compiler pipeline the tutorial playground already uses.
+WASM-cleanliness: **YES**. `cargo build -p sail-layout --target wasm32-unknown-unknown --features sail-compiler/wasm` builds clean. The bin doesn't (cli parser can't appear in wasm), but `sui_layout.rlib` does — and `libtaffy-*.rlib` does. So the diagnostic can ride the same in-browser compiler pipeline the tutorial playground already uses.
 
 ## What the spike does
 
-A new crate, `crates/sui/layout/`, with:
+A new crate, `crates/sail/layout/`, with:
 
 - A minimal HTML parser that walks the **preprocessed** `.sui` source (the
-  same source the runtime sees — `<column>` is already `<div class="sui-col …">`
+  same source the runtime sees — `<column>` is already `<div class="sail-col …">`
   and `sx="…"` is already `class="sx-…"`).
 - A style resolver that maps the class-name vocabulary back to a
   `taffy::Style` (padding, gap, flex-grow, max-*, the layout primitives'
@@ -46,12 +46,12 @@ A new crate, `crates/sui/layout/`, with:
 ## What was proven against a real repo file
 
 ```
-$ cargo run -q -p sui-layout -- \
-    apps/sui-site/routes/tutorial/\[slug\]/page.sui \
+$ cargo run -q -p sail-layout -- \
+    apps/sail-site/routes/tutorial/\[slug\]/page.sui \
     --viewport 1440x900
 
 warning: [zero-main-axis] at byte 12961..13093
-  (tag=div, class="sui-col sui-g-4 sui-ai-stretch sx-grow1
+  (tag=div, class="sail-col sail-g-4 sail-ai-stretch sx-grow1
                  sx-maxwpanelmaxwmd sx-hfill sx-minh0 sx-bgsurface1
                  sx-borderr sx-borderrborder")
   — <div> measures 0px on its main axis while having 2 child(ren) totaling 0px.
@@ -88,8 +88,8 @@ because it's a description of the box tree's *shape*, not its pixels.
 - **`if` / `for` / dynamic content.** Pure static for now. `{#if cond}`
   branches evaluate both sides; `{#for xs}` is empty.
 - **Stdlib primitive intrinsic sizes.** `<tabs>`, `<tab-panel>`,
-  `<tab-list>`, `<sui-code-editor>` get standard sizes from their skins; the
-  spike reads the lowered `<div class="sui-tabs">` and asks taffy to figure
+  `<tab-list>`, `<sail-code-editor>` get standard sizes from their skins; the
+  spike reads the lowered `<div class="sail-tabs">` and asks taffy to figure
   the size out (it usually can't — and fires zero-main-axis warnings). A
   production pass would carry each primitive's intrinsic min-size as data.
 
@@ -100,7 +100,7 @@ compiles to wasm32; it costs ~600 lines of Rust, three source files, and a
 shared dep on `taffy`. **Build it.** The honest verdict isn't "is the
 diagnostic useful" but "what's the smallest thing to ship":
 
-1. The current spike, exposed as a `sui-layout-diagnostics` lint rule that
+1. The current spike, exposed as a `sail-layout-diagnostics` lint rule that
    ships with `check_all()`. Author sees the same diagnostic from CLI and
    LSP, no browser, every edit.
 2. Text shaping as a follow-on, scoped to docs pages (lessons, docs chrome)

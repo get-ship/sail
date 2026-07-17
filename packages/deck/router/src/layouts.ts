@@ -5,7 +5,7 @@
 // `<div slot="route">`. Pure: same inputs, same outputs.
 //
 //   export const LAYOUTS: LayoutShape[] = [
-//     { pathPrefix: '/studio', tag: 'sui-studio-chrome' },
+//     { pathPrefix: '/studio', tag: 'sail-studio-chrome' },
 //   ]
 
 export interface LayoutShape {

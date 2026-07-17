@@ -36,7 +36,7 @@ describe('buildPrompt', () => {
 
   it('includes the catalog version, primitives, few-shots, and feature spec', () => {
     expect(parts.user).toContain(mockCatalog.version)
-    expect(parts.user).toContain('<sui-button>')
+    expect(parts.user).toContain('<sail-button>')
     expect(parts.user).toContain('Example feature')
     expect(parts.user).toContain('A counter view.')
   })
