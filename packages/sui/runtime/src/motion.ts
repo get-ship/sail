@@ -137,7 +137,7 @@ function applyFinalStyle(el: Element, cfg: MotionConfig): void {
   }
 }
 
-function buildKeyframes(cfg: MotionConfig, el: HTMLElement): Record<string, number[]> {
+function buildKeyframes(cfg: MotionConfig, el: HTMLElement): Record<string, Array<number | string>> {
   if (cfg.preset === 'bounce') {
     if (cfg.property === 'translate-y') {
       const h = el.getBoundingClientRect().height || el.offsetHeight || 8
@@ -155,7 +155,12 @@ function buildKeyframes(cfg: MotionConfig, el: HTMLElement): Record<string, numb
     case 'scale': return { scale: [from, to] }
     case 'translate-y': return { y: [from, to] }
     case 'translate-x': return { x: [from, to] }
-    case 'rotate': return { rotate: [from, to] }
+    // CSS's native `rotate` property (unlike the `x`/`y`/`scale` transform
+    // shorthands) requires an angle, not a bare number — WAAPI rejects
+    // `{ rotate: [-6, 0] }` with "Invalid keyframe value for property
+    // rotate". Every other property in this switch is either unitless by
+    // spec (opacity, scale) or auto-unit'd by motion/mini (x/y → px).
+    case 'rotate': return { rotate: [`${from}deg`, `${to}deg`] }
   }
 }
 
@@ -213,11 +218,16 @@ function buildTransition(
   return t
 }
 
+/** The subset of `AnimationPlaybackControls` this runtime relies on —
+ *  `stop`/`cancel` to tear an animation down, `finished` to know when
+ *  it settled on its own. */
+type AnimControls = { stop: () => void; cancel: () => void; finished: Promise<unknown> }
+
 function createAnimations(
   el: HTMLElement,
   config: MotionAttachConfig,
-): Array<{ stop: () => void; cancel: () => void }> {
-  const controls: Array<{ stop: () => void; cancel: () => void }> = []
+): AnimControls[] {
+  const controls: AnimControls[] = []
   const stagger = config.stagger
   const total = config.motions.length
   for (let i = 0; i < total; i++) {
@@ -226,7 +236,7 @@ function createAnimations(
     const transition = buildTransition(cfg, i, total, stagger)
     try {
       const c = animate(el, keyframes, transition as Parameters<typeof animate>[2])
-      controls.push(c)
+      controls.push(c as unknown as AnimControls)
     } catch {
       applyFinalStyle(el, cfg)
     }
@@ -348,13 +358,19 @@ export function __sui_motion_attach(
       }
       return createAnimationsWhenConnected(el, config)
     }
+    // Exit motions do NOT run at mount — they are parked here and only
+    // played by the lifecycle runner's `runLeave`, when the owning
+    // {#if}/{#match} branch is actually torn down. (Previously this called
+    // `createAnimations` eagerly, which played the "exit" animation the
+    // moment the element mounted, and then `runLeave` just cancelled it and
+    // snapped to the final pose — so real removal never held the node for
+    // an animation, and the exit contract was silently a no-op.)
     if (reduced) return () => {}
-    const controls = createAnimations(el, config)
-    for (const m of config.motions) applyRestStyle(el, m)
-    EXITS.set(el, { controls, motions: config.motions })
+    EXITS.set(el, { config, controls: [] })
     return () => {
+      const entry = EXITS.get(el)
       EXITS.delete(el)
-      for (const c of controls) c.cancel()
+      if (entry) for (const c of entry.controls) c.cancel()
     }
   }
 
@@ -399,12 +415,27 @@ export function __sui_motion_attach(
 }
 
 interface ExitEntry {
-  controls: Array<{ stop: () => void; cancel: () => void }>
-  motions: MotionConfig[]
+  /** Parked at attach time; motions are only turned into real
+   *  animations when `runLeave` actually fires. */
+  config: MotionAttachConfig
+  /** The in-flight exit animation's controls, if `runLeave` is
+   *  currently playing one. Empty otherwise. */
+  controls: AnimControls[]
 }
 
 const EXITS = new WeakMap<Element, ExitEntry>()
 let runnerInstalled = false
+
+/** Upper bound on how long `runLeave` will hold a node in the DOM for its
+ *  exit animation. A broken/never-settling animation (a bad easing curve,
+ *  a preset with an unreachable rest state, a test double that never
+ *  resolves `finished`) must not wedge removal forever — after this many
+ *  ms the animation is cancelled, the final pose is snapped on, and
+ *  removal proceeds regardless of playback state. 4000ms is generous
+ *  headroom over the slowest shipped preset (`spring:deliberate`, well
+ *  under 1s to rest) while still being a bounded, user-perceptible cap
+ *  rather than an unbounded wait. */
+const EXIT_TIMEOUT_MS = 4000
 
 function installLifecycleRunner(): void {
   if (runnerInstalled) return
@@ -412,25 +443,51 @@ function installLifecycleRunner(): void {
   setTransitionRunner({
     runEnter: () => null,
     runLeave: (nodes: Iterable<Node>): Promise<void> | null => {
-      const playing: Promise<unknown>[] = []
+      const matched: Array<{ el: Element; entry: ExitEntry }> = []
       for (const n of nodes) {
         if (!(n instanceof Element)) continue
         const targets = EXITS.has(n) ? [n] : [...n.querySelectorAll('*')].filter((e) => EXITS.has(e))
         for (const t of targets) {
           const entry = EXITS.get(t)
-          if (!entry) continue
-          for (const m of entry.motions) applyFinalStyle(t, m)
-          for (const c of entry.controls) c.cancel()
+          if (entry) matched.push({ el: t, entry })
         }
       }
-      if (playing.length === 0) return null
-      if (prefersReducedMotion()) return null
-      return Promise.all(playing).then(() => {})
+      if (matched.length === 0) return null
+      if (prefersReducedMotion()) {
+        for (const { el, entry } of matched) {
+          for (const m of entry.config.motions) applyFinalStyle(el, m)
+        }
+        return null
+      }
+      const playing: Promise<unknown>[] = []
+      for (const { el, entry } of matched) {
+        const controls = createAnimations(el as HTMLElement, entry.config)
+        entry.controls = controls
+        for (const c of controls) playing.push(c.finished.catch(() => {}))
+      }
+      let timeoutId: ReturnType<typeof setTimeout>
+      const settled = Promise.race([
+        Promise.all(playing).then(() => {}),
+        new Promise<void>((resolve) => { timeoutId = setTimeout(resolve, EXIT_TIMEOUT_MS) }),
+      ])
+      return settled.then(() => {
+        clearTimeout(timeoutId)
+        for (const { el, entry } of matched) {
+          // Cancel unconditionally: a no-op on an already-finished
+          // animation, and the guard that stops a timed-out one.
+          for (const c of entry.controls) c.cancel()
+          for (const m of entry.config.motions) applyFinalStyle(el, m)
+          entry.controls = []
+        }
+      })
     },
     cancelTransitions: (node: Node): void => {
       if (!(node instanceof Element)) return
       const entry = EXITS.get(node)
-      if (entry) for (const c of entry.controls) c.cancel()
+      if (entry) {
+        for (const c of entry.controls) c.cancel()
+        entry.controls = []
+      }
     },
   })
 }
@@ -447,5 +504,21 @@ export function __buildTransitionForTest(
 ): Record<string, unknown> {
   return buildTransition(cfg, index, total, staggerSec)
 }
+
+/** Test seam: exposes the resolved keyframes the runtime hands to
+ *  motion's `animate()` so tests can assert every property lands as
+ *  WAAPI-valid CSS (units where the spec requires them) without
+ *  playing the animation. NOT re-exported from `@ship/sui-runtime`. */
+export function __buildKeyframesForTest(
+  cfg: MotionConfig,
+  el: HTMLElement,
+): Record<string, Array<number | string>> {
+  return buildKeyframes(cfg, el)
+}
+
+/** Test seam: the bound `runLeave` uses to guarantee removal is never
+ *  wedged by a stuck exit animation. NOT re-exported from
+ *  `@ship/sui-runtime`. */
+export const __EXIT_TIMEOUT_MS_FOR_TEST = EXIT_TIMEOUT_MS
 
 export type { Disposer }

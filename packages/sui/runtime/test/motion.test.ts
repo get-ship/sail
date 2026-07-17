@@ -14,7 +14,7 @@
 //     `linear(...)` easing string, NOT a dropped `type: 'spring'` flag
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { __sui_motion_attach, __buildTransitionForTest } from '../src/motion'
+import { __sui_motion_attach, __buildTransitionForTest, __buildKeyframesForTest } from '../src/motion'
 import type { MotionAttachConfig, MotionConfig } from '../src/motion'
 
 if (typeof window !== 'undefined' && typeof window.matchMedia === 'undefined') {
@@ -181,14 +181,16 @@ describe('motion runtime — loop trigger (the always-on ambient path)', () => {
 })
 
 describe('motion runtime — exit trigger (lifecycle integration)', () => {
-  it('parks the config so the lifecycle runner can play it on leave', async () => {
+  it('parks the config without animating or touching style at mount — nothing plays until leave', async () => {
     setReducedMotion(false)
     const el = host()
     const dispose = __sui_motion_attach(el, {
       trigger: 'exit',
       motions: [press],
     })
-    expect(el.style.scale).toBe('0.96')
+    // No mount-time animation, no mount-time style clobber: the element
+    // renders in its natural pose until the branch is actually removed.
+    expect(el.style.scale).toBe('')
     dispose()
   })
 
@@ -261,6 +263,85 @@ describe('motion runtime — spring preset reaches motion/mini as a linear strin
     })
     expect(el.style.scale).toBe('1')
     dispose()
+  })
+})
+
+describe('motion runtime — rotate preset produces WAAPI-valid keyframes', () => {
+  // CSS's native `rotate` property (distinct from the `transform`
+  // shorthand) requires an angle, not a bare number — WAAPI throws
+  // "Invalid keyframe value for property rotate" on `{ rotate: [-6, 0] }`.
+  // `x`/`y`/`scale`/`opacity` are unaffected: `x`/`y` are auto-unit'd to
+  // px by motion/mini, and `scale`/`opacity` are unitless by spec.
+  const dummyEl = document.createElement('div')
+
+  it('the default rest→final rotate sweep is unit-suffixed (deg), not bare numbers', () => {
+    const rotateSpring: MotionConfig = {
+      property: 'rotate',
+      preset: 'spring:bouncy',
+      kind: 'spring',
+      stiffness: 320,
+      damping: 14,
+      mass: 1.0,
+    }
+    const kf = __buildKeyframesForTest(rotateSpring, dummyEl)
+    expect(kf.rotate).toEqual(['-6deg', '0deg'])
+    for (const v of kf.rotate!) expect(typeof v).toBe('string')
+  })
+
+  it('an authored from/to rotate sweep is also unit-suffixed', () => {
+    const rotate: MotionConfig = {
+      property: 'rotate',
+      preset: 'spring:snappy',
+      kind: 'spring',
+      stiffness: 380,
+      damping: 30,
+      mass: 1.0,
+      from: -12,
+      to: 4,
+    }
+    const kf = __buildKeyframesForTest(rotate, dummyEl)
+    expect(kf.rotate).toEqual(['-12deg', '4deg'])
+  })
+
+  it('other properties in the preset table stay unitless numbers (negative control)', () => {
+    expect(__buildKeyframesForTest(press, dummyEl).scale).toEqual([1, 0.96]) // scale: unitless
+    expect(
+      __buildKeyframesForTest(
+        { property: 'opacity', preset: 'fade-out', kind: 'tween', from: 1, to: 0 },
+        dummyEl,
+      ).opacity,
+    ).toEqual([1, 0]) // opacity: unitless
+    for (const v of __buildKeyframesForTest(
+      { property: 'translate-y', preset: 'spring:deliberate', kind: 'spring' },
+      dummyEl,
+    ).y!) {
+      expect(typeof v).toBe('number') // x/y: auto-unit'd by motion/mini, stay numeric here
+    }
+  })
+
+  it('reaches motion/mini as an actual keyframe object with deg-suffixed rotate values (end-to-end, mocked animate)', async () => {
+    // Re-import with `motion/mini` mocked so we can read back exactly what
+    // the runtime hands to `animate()`, not just what buildKeyframes returns.
+    vi.resetModules()
+    const calls: Array<{ keyframes: Record<string, unknown> }> = []
+    vi.doMock('motion/mini', () => ({
+      animate: (_el: unknown, keyframes: Record<string, unknown>) => {
+        calls.push({ keyframes })
+        return { stop: () => {}, cancel: () => {}, finished: Promise.resolve() }
+      },
+    }))
+    const { __sui_motion_attach: attach } = await import('../src/motion')
+    setReducedMotion(false)
+    const el = host()
+    const dispose = attach(el, {
+      trigger: 'loop',
+      motions: [{ property: 'rotate', preset: 'spring:bouncy', kind: 'spring', stiffness: 320, damping: 14, mass: 1 }],
+    })
+    expect(calls.length).toBe(1)
+    expect(calls[0]!.keyframes.rotate).toEqual(['-6deg', '0deg'])
+    dispose()
+    vi.doUnmock('motion/mini')
+    vi.resetModules()
   })
 })
 
