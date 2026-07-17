@@ -643,119 +643,119 @@ export default controller((ctx: ViewScope<Scope>) => {
             {/if}
 
             <!-- ══ Pack components ═══════════════════════════════════════ -->
-            {#if stage.suiSparkline()}
+            {#if stage.sailSparkline()}
               <column gap="3" align="center" data-tile-stage="sail-pack-sparkline">
                 <sail-sparkline data="2,5,3,8,4,6,7" width="200" height="60"></sail-sparkline>
               </column>
             {/if}
-            {#if stage.suiAreaChart()}
+            {#if stage.sailAreaChart()}
               <column gap="3" align="center" data-tile-stage="sail-pack-area-chart">
                 <sail-area-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="200" height="120"></sail-area-chart>
               </column>
             {/if}
-            {#if stage.suiBarChart()}
+            {#if stage.sailBarChart()}
               <column gap="3" align="center" data-tile-stage="sail-pack-bar-chart">
                 <sail-bar-chart data="2,5,3,8,4" labels="A,B,C,D,E" width="200" height="120"></sail-bar-chart>
               </column>
             {/if}
-            {#if stage.suiDonut()}
+            {#if stage.sailDonut()}
               <column gap="3" align="center" data-tile-stage="sail-pack-donut">
                 <sail-donut data='[{"label":"a","value":40},{"label":"b","value":30},{"label":"c","value":30}]' diameter="120" thickness="12"></sail-donut>
               </column>
             {/if}
-            {#if stage.suiGauge()}
+            {#if stage.sailGauge()}
               <column gap="3" align="center" data-tile-stage="sail-pack-gauge">
                 <sail-gauge value="72" diameter="120" thickness="12"></sail-gauge>
               </column>
             {/if}
-            {#if stage.suiHeatmap()}
+            {#if stage.sailHeatmap()}
               <column gap="3" align="center" data-tile-stage="sail-pack-heatmap">
                 <sail-heatmap rows="4" cols="6" values="1,2,3,4,3,2,4,5,6,5,4,3,2,1,2,3,4,3,2,1,2,3,4,5" width="200" height="120"></sail-heatmap>
               </column>
             {/if}
-            {#if stage.suiLineChart()}
+            {#if stage.sailLineChart()}
               <column gap="3" align="center" data-tile-stage="sail-pack-line-chart">
                 <sail-line-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="200" height="120"></sail-line-chart>
               </column>
             {/if}
-            {#if stage.suiMediaImage()}
+            {#if stage.sailMediaImage()}
               <column gap="3" align="center" data-tile-stage="sail-pack-media-image">
                 <sail-media-image src="/sail-oss/sail-mark.svg" alt="SAIL mark"></sail-media-image>
               </column>
             {/if}
-            {#if stage.suiMediaAv()}
+            {#if stage.sailMediaAv()}
               <column gap="3" align="center" data-tile-stage="sail-pack-media-av">
                 <sail-media-av></sail-media-av>
               </column>
             {/if}
-            {#if stage.suiCodeEditor()}
+            {#if stage.sailCodeEditor()}
               <column gap="3" align="center" data-tile-stage="sail-pack-code-editor">
                 <sail-code-editor value="const greeting = 'hi';" language="js" line-numbers size="md"></sail-code-editor>
               </column>
             {/if}
-            {#if stage.suiMermaid()}
+            {#if stage.sailMermaid()}
               <column gap="3" align="center" data-tile-stage="sail-pack-mermaid">
                 <sail-mermaid value="graph TD; A[Idea]-->B[Build]; B-->C[Ship]"></sail-mermaid>
               </column>
             {/if}
-            {#if stage.suiMessage()}
+            {#if stage.sailMessage()}
               <column gap="3" align="center" data-tile-stage="sail-pack-message">
                 <sail-message role="user" state="user">Hello — the live chat message primitive.</sail-message>
               </column>
             {/if}
-            {#if stage.suiCitation()}
+            {#if stage.sailCitation()}
               <column gap="3" align="center" data-tile-stage="sail-pack-citation">
                 <sail-citation source="docs.sail.dev" href="https://docs.sail.dev">A citation from the docs</sail-citation>
               </column>
             {/if}
-            {#if stage.suiComposer()}
+            {#if stage.sailComposer()}
               <column gap="3" align="center" data-tile-stage="sail-pack-composer">
                 <sail-composer placeholder="Ask anything…"></sail-composer>
               </column>
             {/if}
-            {#if stage.suiThinkingDots()}
+            {#if stage.sailThinkingDots()}
               <column gap="3" align="center" data-tile-stage="sail-pack-thinking-dots">
                 <sail-thinking-dots></sail-thinking-dots>
               </column>
             {/if}
-            {#if stage.suiToolCall()}
+            {#if stage.sailToolCall()}
               <column gap="3" align="center" data-tile-stage="sail-pack-tool-call">
                 <sail-tool-call name="search" status="running">query: search</sail-tool-call>
               </column>
             {/if}
-            {#if stage.suiCanvas()}
+            {#if stage.sailCanvas()}
               <column gap="3" align="center" data-tile-stage="sail-pack-canvas">
                 <sail-canvas width="200" height="120"></sail-canvas>
               </column>
             {/if}
-            {#if stage.suiBoard()}
+            {#if stage.sailBoard()}
               <column gap="3" align="center" data-tile-stage="sail-pack-board">
                 <sail-board width="200" height="120">
                   <sail-canvas width="200" height="120"></sail-canvas>
                 </sail-board>
               </column>
             {/if}
-            {#if stage.suiDraw()}
+            {#if stage.sailDraw()}
               <column gap="3" align="center" data-tile-stage="sail-pack-draw">
                 <sail-draw width="200" height="120"></sail-draw>
               </column>
             {/if}
-            {#if stage.suiGraphCanvas()}
+            {#if stage.sailGraphCanvas()}
               <column gap="3" align="center" data-tile-stage="sail-pack-graph-canvas">
                 <sail-graph-canvas width="200" height="120" nodes='[{"id":"a","kind":"agent","title":"A","x":80,"y":60},{"id":"b","kind":"skill","title":"B","x":120,"y":60}]' edges="[]"></sail-graph-canvas>
               </column>
             {/if}
-            {#if stage.suiAnnotationLayer()}
+            {#if stage.sailAnnotationLayer()}
               <column gap="3" align="center" data-tile-stage="sail-pack-annotation-layer">
                 <sail-annotation-layer></sail-annotation-layer>
               </column>
             {/if}
-            {#if stage.suiAnnotationList()}
+            {#if stage.sailAnnotationList()}
               <column gap="3" align="center" data-tile-stage="sail-pack-annotation-list">
                 <sail-annotation-list></sail-annotation-list>
               </column>
             {/if}
-            {#if stage.suiAnnotationMarker()}
+            {#if stage.sailAnnotationMarker()}
               <column gap="3" align="center" data-tile-stage="sail-pack-annotation-marker">
                 <sail-annotation-marker x="50" y="30"></sail-annotation-marker>
               </column>
