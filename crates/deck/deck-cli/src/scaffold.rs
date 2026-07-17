@@ -164,7 +164,7 @@ pub fn run_component(tag: String, want_controller: bool) -> Result<()> {
         sail.push_str("<controller>\nimport { controller, type ViewScope } from '@ship/sail-runtime'\n");
         sail.push_str(&format!("import type {{ Scope }} from './{tag}.sail'\n\n"));
         sail.push_str(
-            "export default controller({\n  setup: (_ctx: ViewScope<Scope>) => ({}),\n})\n</controller>\n\n",
+            "export default controller((_ctx: ViewScope<Scope>) => ({}))\n</controller>\n\n",
         );
     }
     sail.push_str("<row align=\"center\" gap=\"1\" sx=\"text-tone-fg\">\n  <slot></slot>\n</row>\n");

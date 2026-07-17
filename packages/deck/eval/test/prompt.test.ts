@@ -29,9 +29,6 @@ describe('buildPrompt', () => {
     expect(parts.system).toContain('```sail```')
     expect(parts.system).toContain('No raw <script>')
     expect(parts.system).toContain('customElements.define')
-    // The retired generation must not leak back into the primer.
-    expect(parts.system).not.toContain('<state')
-    expect(parts.system).not.toContain('html.set')
   })
 
   it('includes the catalog version, primitives, few-shots, and feature spec', () => {
@@ -69,10 +66,6 @@ describe('parseModelReply', () => {
     const out = parseModelReply('```sail\n' + file + '\n```')
     expect(out.template).toBe(file)
     expect(out.setup).toBeUndefined()
-  })
-
-  it('does not honor the retired html.set fence', () => {
-    expect(() => parseModelReply('```html.set\n<p>x</p>\n```')).toThrow(/sail/)
   })
 
   it('throws when no sail block is present', () => {

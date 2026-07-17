@@ -33,11 +33,8 @@ describe('sniffEscapeHatches', () => {
 
 describe('scoreOutput — compile path', () => {
   it('compiled=false on a malformed template', async () => {
-    // The <state> directive was retired (reactive state lives in the
-    // controller's `setup:` factory now), so a top-level <state> is a
-    // parse error.
     const report = await scoreOutput({
-      template: '<state name="n" value="0" /><span>{n()}</span>',
+      template: '<div>one</div><span>two roots</span>',
       behavioralTests: 'expect(true)',
     })
     expect(report.compiled).toBe(false)
