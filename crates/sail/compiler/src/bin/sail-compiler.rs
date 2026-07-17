@@ -1026,7 +1026,7 @@ fn build(
     } else if input
         .file_name()
         .and_then(|f| f.to_str())
-        .is_some_and(is_sui_source)
+        .is_some_and(is_sail_source)
     {
         targets.push(input.clone());
     } else {
@@ -1130,17 +1130,12 @@ fn build(
 fn stem_of(path: &Path) -> String {
     path.file_name()
         .and_then(|f| f.to_str())
-        .map(|s| {
-            s.strip_suffix(".sail")
-                .or_else(|| s.strip_suffix(".html.set"))
-                .unwrap_or(s)
-                .to_string()
-        })
+        .map(|s| s.strip_suffix(".sail").unwrap_or(s).to_string())
         .unwrap_or_default()
 }
 
-fn is_sui_source(name: &str) -> bool {
-    name.ends_with(".sail") || name.ends_with(".html.set")
+fn is_sail_source(name: &str) -> bool {
+    name.ends_with(".sail")
 }
 
 /// `<tag>/<tag>.sail` — the convention every SAIL component follows. The
@@ -1167,7 +1162,7 @@ fn collect_targets(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
         } else if p
             .file_name()
             .and_then(|f| f.to_str())
-            .is_some_and(is_sui_source)
+            .is_some_and(is_sail_source)
         {
             out.push(p);
         }
@@ -1263,10 +1258,7 @@ fn compile_one(
         .file_name()
         .and_then(|f| f.to_str())
         .ok_or_else(|| anyhow!("bad path"))?;
-    let stem_no_ext = stem
-        .strip_suffix(".html.set")
-        .or_else(|| stem.strip_suffix(".sail"))
-        .unwrap_or(stem);
+    let stem_no_ext = stem.strip_suffix(".sail").unwrap_or(stem);
     // In mirror mode the emitted JS is named `<stem>.compiled.js` so
     // imports can name it directly without a separate rename step in
     // the build pipeline. With --out we keep the legacy `<stem>.js`

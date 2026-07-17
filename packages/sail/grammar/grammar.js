@@ -1,6 +1,6 @@
-// Tree-sitter grammar for `.html.set` / `.set` template files.
+// Tree-sitter grammar for `.sail` template files.
 //
-// `.html.set` is HTML extended with template grammar:
+// `.sail` is HTML extended with template grammar:
 //
 //   • brace interpolations  `{expr}`
 //   • control-flow blocks   `{#if}` / `{#for}` / `{#match}`
@@ -16,11 +16,11 @@
 // host-language highlighting comes from `tree-sitter-typescript` via
 // `queries/injections.scm`. Inline `<style>` content gets `tree-sitter-css`.
 //
-// Conformance target: `views/agents/view.html.set` parses with no
+// Conformance target: `views/agents/view.sail` parses with no
 // ERROR nodes. Validation lives in `test/corpus/`.
 
 export default grammar({
-  name: 'set',
+  name: 'sail',
 
   extras: $ => [/\s+/],
 

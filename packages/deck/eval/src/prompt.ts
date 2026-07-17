@@ -4,7 +4,7 @@
 //   3) two few-shot examples (a static view + a stateful counter)
 //   4) the task feature description and any starter fixtures
 //
-// The output contract is strict: a fenced ```html.set``` block, optionally
+// The output contract is strict: a fenced ```sail``` block, optionally
 // followed by a fenced ```ts``` block. The dispatcher parses both back out.
 
 import type { PrimitiveCatalog, PrimitiveDef } from './catalog'
@@ -86,7 +86,7 @@ Hard rules — violating any of these fails the eval:
   - Use <ship-*> primitives from the catalog rather than reinventing buttons or inputs.
   - Mutation is always \`signal.set(...)\`. Never assign to a signal like a plain property, anywhere.
   - Subscriptions live in <data> elements, never in controller code. Don't call ship.* outside <data>.
-  - Output exactly one fenced \`\`\`html.set\`\`\` block. If a controller is needed, append one fenced \`\`\`ts\`\`\` block. No prose outside the blocks.`
+  - Output exactly one fenced \`\`\`sail\`\`\` block. If a controller is needed, append one fenced \`\`\`ts\`\`\` block. No prose outside the blocks.`
 
 const FEW_SHOT_STATIC = {
   description: 'A static info card listing the three Ship core values.',
@@ -184,7 +184,7 @@ function renderFewShot(ex: {
   setup?: string
 }): string {
   const out = [`Example feature: ${ex.description}`, '', 'Example output:', '']
-  out.push('```html.set', ex.template, '```')
+  out.push('```sail', ex.template, '```')
   if (ex.setup) out.push('', '```ts', ex.setup, '```')
   return out.join('\n')
 }
@@ -202,7 +202,7 @@ export function buildPrompt(input: PromptInputs): PromptParts {
 
   const fixtureBlock =
     input.fixtures.template.trim() || input.fixtures.setup?.trim()
-      ? `\n\nStarter fixture (extend or replace as needed):\n\n\`\`\`html.set\n${input.fixtures.template}\n\`\`\`${
+      ? `\n\nStarter fixture (extend or replace as needed):\n\n\`\`\`sail\n${input.fixtures.template}\n\`\`\`${
           input.fixtures.setup
             ? `\n\n\`\`\`ts\n${input.fixtures.setup}\n\`\`\``
             : ''
@@ -223,16 +223,16 @@ Feature to implement:
 
 ${input.description.trim()}${fixtureBlock}
 
-Reply with one \`\`\`html.set\`\`\` block, optionally followed by one \`\`\`ts\`\`\` block. No prose.`
+Reply with one \`\`\`sail\`\`\` block, optionally followed by one \`\`\`ts\`\`\` block. No prose.`
 
   return { system: SYSTEM_PRIMER, user }
 }
 
 /** Pull the .sail + optional .ts block out of a model reply. */
 export function parseModelReply(raw: string): { template: string; setup?: string } {
-  const html = matchFence(raw, 'html.set') ?? matchFence(raw, 'html')
+  const html = matchFence(raw, 'sail')
   if (!html) {
-    throw new Error('model reply did not contain an ```html.set``` block')
+    throw new Error('model reply did not contain an ```sail``` block')
   }
   const ts = matchFence(raw, 'ts') ?? matchFence(raw, 'typescript')
   return ts ? { template: html, setup: ts } : { template: html }
@@ -240,7 +240,7 @@ export function parseModelReply(raw: string): { template: string; setup?: string
 
 function matchFence(raw: string, tag: string): string | undefined {
   // Match a fenced block whose info-string starts with `tag`. We
-  // tolerate trailing junk on the info line so ```html.set view``` works.
+  // tolerate trailing junk on the info line so ```sail view``` works.
   const re = new RegExp(
     '```' + escapeRegex(tag) + '[^\\n]*\\n([\\s\\S]*?)\\n?```',
     'm',

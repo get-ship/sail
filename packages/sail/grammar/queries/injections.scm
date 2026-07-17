@@ -1,4 +1,4 @@
-; Embedded language injections for `.html.set`.
+; Embedded language injections for `.sail`.
 ;
 ; Routes interpolation/binding bodies to TypeScript and inline `<style>`
 ; blocks to CSS so editors get host-language IntelliSense, formatting,

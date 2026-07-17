@@ -12,7 +12,7 @@ import type { TemplateHook } from '../controller'
 const registry = new Map<string, TemplateHook<Record<string, unknown>, unknown>>()
 
 /**
- * Register a template hook so `<use-<name>>` elements in `.html.set`
+ * Register a template hook so `<use-<name>>` elements in `.sail`
  * templates resolve to its factory at hydrate time.
  *
  * Re-registering the same name overwrites — useful for tests; in

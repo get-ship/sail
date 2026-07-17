@@ -1,5 +1,5 @@
 ==================
-conformance: views/agents/view.html.set (smoke)
+conformance: views/agents/view.sail (smoke)
 ==================
 
 <div class="ship-view agents-view">

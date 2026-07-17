@@ -1,4 +1,4 @@
-; Tree-sitter highlight scopes for `.html.set` / `.set` template files.
+; Tree-sitter highlight scopes for `.sail` template files.
 ;
 ; Scope names follow the conventional `tree-sitter-highlight` palette
 ; (https://tree-sitter.github.io/tree-sitter/syntax-highlighting).

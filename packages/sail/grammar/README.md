@@ -1,16 +1,16 @@
-# tree-sitter-set
+# tree-sitter-sail
 
-Tree-sitter grammar for the SAIL `.html.set` / `.set` template
+Tree-sitter grammar for the SAIL `.sail` template
 language.
 
 ## Status
 
-V2. Conformance corpus passes against `views/agents/view.html.set`
+V2. Conformance corpus passes against `views/agents/view.sail`
 with no ERROR nodes. ABI 15.
 
 ## What the grammar parses
 
-`.html.set` is HTML extended with template grammar. The grammar
+`.sail` is HTML extended with template grammar. The grammar
 recognises:
 
 - **Directive elements** — `<data>`, `<component>`, `<prop>`,
@@ -67,8 +67,8 @@ npx tree-sitter test        # runs the corpus
 
 ```bash
 cd packages/sail/grammar
-npx tree-sitter parse ../../views/agents/view.html.set --quiet \
-  || echo "FAIL: views/agents/view.html.set"
+npx tree-sitter parse ../../views/agents/view.sail --quiet \
+  || echo "FAIL: views/agents/view.sail"
 ```
 
 Expected: prints nothing.
