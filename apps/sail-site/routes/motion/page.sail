@@ -105,7 +105,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
           <button motion:press={{ scale: 'press' }}>press</button>
           <button motion:press={{ rotate: 'spring:snappy' }}>press · rotate</button>
           <button motion:focus-visible={{ scale: 'spring:snappy' }}>tab to me</button>
-          <badge tone="primary" motion:hover={{ opacity: 'pulse' }}>hover · pulse</badge>
+          <badge tone="primary" motion:hover={{ scale: 'pulse' }}>hover · pulse</badge>
         </row>
       </column>
     </column>
