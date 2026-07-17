@@ -64,6 +64,7 @@ export default controller(() => {
        <li><a href="/_deck/view/counter">counter — signal basics (sui/*)</a></li>
        <li><a href="/_deck/view/clock">clock — live data tick (&lt;client name="api"&gt;, api/demo.*)</a></li>
        <li><a href="/_deck/view/todos">todos — live list + mutation (ship/demo.*)</a></li>
+       <li><a href="/_deck/view/query-demo">query-demo — query()/mutation() derived identity (crm/deals.*)</a></li>
        <li><a href="/_deck/view/boom">boom — error boundary (ship/demo.*)</a></li>
        <li><a href="/_deck/view/greet">greet — static SSR (sui/*)</a></li>
        <li><a href="/_deck/view/hello">hello — constant folding (sui/*)</a></li>
