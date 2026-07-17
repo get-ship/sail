@@ -140,21 +140,21 @@ export const CATALOG: CatalogEntry[] = [
   // elements only.
 
   // ── @ship/sail-charts — 7 SVG-rendered data viz primitives ───────────
-  P('charts', 'sail-area-chart', 'suiAreaChart', 'data'),
-  P('charts', 'sail-bar-chart', 'suiBarChart', 'data'),
-  P('charts', 'sail-donut', 'suiDonut', 'data'),
-  P('charts', 'sail-gauge', 'suiGauge', 'data'),
-  P('charts', 'sail-heatmap', 'suiHeatmap', 'data'),
-  P('charts', 'sail-line-chart', 'suiLineChart', 'data'),
-  P('charts', 'sail-sparkline', 'suiSparkline', 'data'),
+  P('charts', 'sail-area-chart', 'sailAreaChart', 'data'),
+  P('charts', 'sail-bar-chart', 'sailBarChart', 'data'),
+  P('charts', 'sail-donut', 'sailDonut', 'data'),
+  P('charts', 'sail-gauge', 'sailGauge', 'data'),
+  P('charts', 'sail-heatmap', 'sailHeatmap', 'data'),
+  P('charts', 'sail-line-chart', 'sailLineChart', 'data'),
+  P('charts', 'sail-sparkline', 'sailSparkline', 'data'),
 
   // ── @ship/sail-media — content renderers (image / audio-video) ────────
   // sail-media-csv exists in the pack but has NO live tile in page.sail yet —
   // a catalog entry REQUIRES a live tile (`show.<key>()` gate), or the
   // rail's counts lie and its filter shows an empty grid. Add the entry
   // WITH its demo, never before.
-  P('media', 'sail-media-image', 'suiMediaImage', 'data'),
-  P('media', 'sail-media-av', 'suiMediaAv', 'data'),
+  P('media', 'sail-media-image', 'sailMediaImage', 'data'),
+  P('media', 'sail-media-av', 'sailMediaAv', 'data'),
 
   // ── @ship/sail-canvas — NOT CATALOGED YET ─────────────────────────────
   // The pack ships 7 drawing/annotation surfaces (sail-canvas, sail-board,
@@ -167,17 +167,17 @@ export const CATALOG: CatalogEntry[] = [
   // ── @ship/sail-chat-elements — chat-message UI primitives ─────────────
   // sail-message-list: pack component without a live tile — same rule as
   // sail-media-csv above; enters with its demo.
-  P('chat', 'sail-message', 'suiMessage', 'display'),
-  P('chat', 'sail-citation', 'suiCitation', 'display'),
-  P('chat', 'sail-composer', 'suiComposer', 'inputs'),
-  P('chat', 'sail-thinking-dots', 'suiThinkingDots', 'feedback'),
-  P('chat', 'sail-tool-call', 'suiToolCall', 'display'),
+  P('chat', 'sail-message', 'sailMessage', 'display'),
+  P('chat', 'sail-citation', 'sailCitation', 'display'),
+  P('chat', 'sail-composer', 'sailComposer', 'inputs'),
+  P('chat', 'sail-thinking-dots', 'sailThinkingDots', 'feedback'),
+  P('chat', 'sail-tool-call', 'sailToolCall', 'display'),
 
   // ── @ship/sail-mermaid — 1 diagram renderer (themed SVG) ──────────────
-  P('mermaid', 'sail-mermaid', 'suiMermaid', 'data'),
+  P('mermaid', 'sail-mermaid', 'sailMermaid', 'data'),
 
   // ── @ship/sail-code-editor — 1 CodeMirror-wrapped editor ──────────────
-  P('code-editor', 'sail-code-editor', 'suiCodeEditor', 'inputs'),
+  P('code-editor', 'sail-code-editor', 'sailCodeEditor', 'inputs'),
 ]
 
 export const CATEGORIES = [

@@ -18,8 +18,8 @@ import { existsSync, readdirSync, statSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import * as suiRuntime from '@ship/sail-runtime'
-import * as suiDom from '@ship/sail-dom'
+import * as sailRuntime from '@ship/sail-runtime'
+import * as sailDom from '@ship/sail-dom'
 // The runtime's `/route` subpath provides a passive `RouteSignals` reader
 // built from a URL — exactly the shape the compiled view's
 // `import { route as __routeFactory } from "@ship/sail-runtime/route"`
@@ -202,8 +202,8 @@ const SETUP_MARKER = '__test_setup__'
 type UserSetup = ((ctx: unknown) => Record<string, unknown> | void) | { setup: (ctx: unknown) => unknown } | undefined
 
 interface EvalDeps {
-  __runtime: typeof suiRuntime
-  __dom: typeof suiDom
+  __runtime: typeof sailRuntime
+  __dom: typeof sailDom
   __route: typeof routeModule
   __setup: { setup: (ctx: unknown) => unknown } | null
 }
@@ -255,7 +255,7 @@ export function nativeCompileJson(source: string, optsJson: string): string {
 export function evalInlineController(body: string): { setup: (ctx: unknown) => unknown } {
   const src = stripImports(body).replace(/\bexport\s+default\s+/g, 'return ')
   const fn = new Function('__runtime', '__dom', '__route', '__setup', src)
-  return fn(suiRuntime, suiDom, routeModule, undefined) as { setup: (ctx: unknown) => unknown }
+  return fn(sailRuntime, sailDom, routeModule, undefined) as { setup: (ctx: unknown) => unknown }
 }
 
 /** Evaluate a compiled JS module body and return its default export. */
@@ -267,8 +267,8 @@ export function evalCompiledJs(
   const setupObj = wrapSetup(setup)
   const fn = new Function('__runtime', '__dom', '__route', '__setup', body)
   const deps: EvalDeps = {
-    __runtime: suiRuntime,
-    __dom: suiDom,
+    __runtime: sailRuntime,
+    __dom: sailDom,
     __route: routeModule,
     __setup: setupObj,
   }
@@ -322,7 +322,7 @@ export function compileAndMount(source: string, setup: UserSetup, opts: MountOpt
 
   const def = evalCompiledJs(compiled.js, setup)
   const ctx = {
-    ship: (opts.ship ?? {}) as suiRuntime.ShipHost,
+    ship: (opts.ship ?? {}) as sailRuntime.ShipHost,
     route: opts.route ?? makeRoute({ url: new URL('http://localhost/') }),
     navigate: opts.navigate ?? (() => {}),
   }

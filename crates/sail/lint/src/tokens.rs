@@ -160,7 +160,7 @@ pub fn color_values() -> &'static [&'static str] {
                 }
             }
         }
-        // The universal framework tone channels. suiTonesSheet sets these on
+        // The universal framework tone channels. sailTonesSheet sets these on
         // every shadow component from the `tone` prop, so they are valid sx
         // color values everywhere — no per-component <theme channels="…">
         // declaration needed (that ceremony is gone in the collapsed shape).

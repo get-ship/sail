@@ -1107,7 +1107,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
         {/if}
 
         <!-- ══ @ship/sail-charts ═════════════════════════════════════════ -->
-        {#if show.suiSparkline()}
+        {#if show.sailSparkline()}
           <card padding="none" data-tile="sail-sparkline" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
@@ -1123,7 +1123,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
             </column>
           </card>
         {/if}
-        {#if show.suiAreaChart()}
+        {#if show.sailAreaChart()}
           <card padding="none" data-tile="sail-area-chart" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
@@ -1139,7 +1139,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
             </column>
           </card>
         {/if}
-        {#if show.suiBarChart()}
+        {#if show.sailBarChart()}
           <card padding="none" data-tile="sail-bar-chart" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
@@ -1155,7 +1155,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
             </column>
           </card>
         {/if}
-        {#if show.suiDonut()}
+        {#if show.sailDonut()}
           <card padding="none" data-tile="sail-donut" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
@@ -1171,7 +1171,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
             </column>
           </card>
         {/if}
-        {#if show.suiGauge()}
+        {#if show.sailGauge()}
           <card padding="none" data-tile="sail-gauge" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
@@ -1187,7 +1187,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
             </column>
           </card>
         {/if}
-        {#if show.suiHeatmap()}
+        {#if show.sailHeatmap()}
           <card padding="none" data-tile="sail-heatmap" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
@@ -1203,7 +1203,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
             </column>
           </card>
         {/if}
-        {#if show.suiLineChart()}
+        {#if show.sailLineChart()}
           <card padding="none" data-tile="sail-line-chart" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
@@ -1221,7 +1221,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
         {/if}
 
         <!-- ══ @ship/sail-media ══════════════════════════════════════════ -->
-        {#if show.suiMediaImage()}
+        {#if show.sailMediaImage()}
           <card padding="none" data-tile="sail-media-image" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
@@ -1237,7 +1237,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
             </column>
           </card>
         {/if}
-        {#if show.suiMediaAv()}
+        {#if show.sailMediaAv()}
           <card padding="none" data-tile="sail-media-av" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
@@ -1255,7 +1255,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
         {/if}
 
         <!-- ══ @ship/sail-code-editor + @ship/sail-mermaid ═══════════════════ -->
-        {#if show.suiCodeEditor()}
+        {#if show.sailCodeEditor()}
           <card padding="none" data-tile="sail-code-editor" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
@@ -1271,7 +1271,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
             </column>
           </card>
         {/if}
-        {#if show.suiMermaid()}
+        {#if show.sailMermaid()}
           <card padding="none" data-tile="sail-mermaid" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
@@ -1289,7 +1289,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
         {/if}
 
         <!-- ══ @ship/sail-chat-elements — sail-message-list deferred (see banner) ═ -->
-        {#if show.suiMessage()}
+        {#if show.sailMessage()}
           <card padding="none" data-tile="sail-message" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
@@ -1305,7 +1305,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
             </column>
           </card>
         {/if}
-        {#if show.suiCitation()}
+        {#if show.sailCitation()}
           <card padding="none" data-tile="sail-citation" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
@@ -1321,7 +1321,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
             </column>
           </card>
         {/if}
-        {#if show.suiComposer()}
+        {#if show.sailComposer()}
           <card padding="none" data-tile="sail-composer" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
@@ -1337,7 +1337,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
             </column>
           </card>
         {/if}
-        {#if show.suiThinkingDots()}
+        {#if show.sailThinkingDots()}
           <card padding="none" data-tile="sail-thinking-dots" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
@@ -1353,7 +1353,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
             </column>
           </card>
         {/if}
-        {#if show.suiToolCall()}
+        {#if show.sailToolCall()}
           <card padding="none" data-tile="sail-tool-call" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">

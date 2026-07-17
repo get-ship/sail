@@ -81,7 +81,7 @@ import {
 } from '@codemirror/autocomplete'
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search'
 import { lintGutter, setDiagnostics as cmSetDiagnostics, type Diagnostic } from '@codemirror/lint'
-import { suiEditorTheme, suiHighlighting } from './sail-code-editor.theme'
+import { sailEditorTheme, sailHighlighting } from './sail-code-editor.theme'
 import { loadLanguage } from './sail-code-editor.lang'
 import type { Scope } from './sail-code-editor.sail'
 
@@ -191,8 +191,8 @@ export default controller((ctx: Scope) => {
         ...searchKeymap, ...historyKeymap, ...foldKeymap,
         indentWithTab,
       ]),
-      suiEditorTheme,
-      suiHighlighting,
+      sailEditorTheme,
+      sailHighlighting,
       lintGutter(),
       langCompartment.of([]),
       completionCompartment.of(buildCompletionExt()),

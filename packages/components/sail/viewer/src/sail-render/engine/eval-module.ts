@@ -16,9 +16,9 @@
 // bundler keeps, so this is the production evaluator a standalone SPA ships
 // (the deck importmap externalizes the same specifiers to the same chunks).
 
-import * as suiRuntime from '@ship/sail-runtime'
-import * as suiDom from '@ship/sail-dom'
-import * as suiRoute from '@ship/sail-runtime/route'
+import * as sailRuntime from '@ship/sail-runtime'
+import * as sailDom from '@ship/sail-dom'
+import * as sailRoute from '@ship/sail-runtime/route'
 import '@ship/sail-runtime/template-hooks'
 import type { MountModule } from '@ship/sail-runtime'
 
@@ -69,12 +69,12 @@ export function evalViewModule(js: string, setup?: InjectedSetup): MountModule {
   const body = rewriteImports(js).replace(/\bexport\s+default\s+/g, 'return ')
   // eslint-disable-next-line @typescript-eslint/no-implied-eval
   const fn = new Function('__runtime', '__dom', '__route', '__setup', body) as (
-    r: typeof suiRuntime,
-    d: typeof suiDom,
-    rt: typeof suiRoute,
+    r: typeof sailRuntime,
+    d: typeof sailDom,
+    rt: typeof sailRoute,
     s: { setup: (ctx: unknown) => unknown } | null,
   ) => MountModule
-  return fn(suiRuntime, suiDom, suiRoute, normalizeSetup(setup))
+  return fn(sailRuntime, sailDom, sailRoute, normalizeSetup(setup))
 }
 
 /**
@@ -88,10 +88,10 @@ export function evalComponentModule(js: string): void {
   const body = rewriteImports(js).replace(/\bexport\s+default\s+/g, '')
   // eslint-disable-next-line @typescript-eslint/no-implied-eval
   const fn = new Function('__runtime', '__dom', '__route', '__setup', body) as (
-    r: typeof suiRuntime,
-    d: typeof suiDom,
-    rt: typeof suiRoute,
+    r: typeof sailRuntime,
+    d: typeof sailDom,
+    rt: typeof sailRoute,
     s: null,
   ) => void
-  fn(suiRuntime, suiDom, suiRoute, null)
+  fn(sailRuntime, sailDom, sailRoute, null)
 }

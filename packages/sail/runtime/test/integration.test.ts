@@ -46,8 +46,8 @@ function compileFixture(file: string): string {
   // `./<stem>.sail.controller.ts`, resolved against the module's own directory.
   // The harness serves that module by extracting the `<controller>` block from
   // the sibling `.sail` — so the source has to sit next to the output.
-  const suiDst = join(COMPILE_OUT, file)
-  if (!existsSync(suiDst)) copyFileSync(join(FIXTURES, file), suiDst)
+  const sailDst = join(COMPILE_OUT, file)
+  if (!existsSync(sailDst)) copyFileSync(join(FIXTURES, file), sailDst)
 
   // Copy as .mjs so vitest treats it as a module unambiguously.
   const js = readFileSync(jsPath, 'utf8')

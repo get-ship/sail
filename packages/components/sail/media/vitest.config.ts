@@ -1,5 +1,5 @@
 import {
-  suiComponentVitestConfig,
+  sailComponentVitestConfig,
   pinImportMetaUrlPlugin,
   shadowForComponentCompilePlugin,
 } from '@ship/test-setup/vitest'
@@ -10,7 +10,7 @@ import {
 // it. The default include globs (`test/**/*.test.ts` + `src/**/*.test.ts`) pick
 // up both the relocated renderer suites (under test/) and the co-located engine
 // specs (under src/engine/).
-const base = suiComponentVitestConfig({ environment: 'happy-dom' })
+const base = sailComponentVitestConfig({ environment: 'happy-dom' })
 
 export default {
   ...base,

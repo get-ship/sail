@@ -1,6 +1,6 @@
 // Shared vitest config for SAIL component packages.
 //
-// One factory, `suiComponentVitestConfig()`, replaces the ~90-line
+// One factory, `sailComponentVitestConfig()`, replaces the ~90-line
 // `compiled-js-test-shim` plugin that used to be copy-pasted into every
 // component package's `vitest.config.ts` — plus the depth-counted relative
 // imports (`../../../vitest.shared`, `../../../scripts/...`) that broke the
@@ -125,9 +125,9 @@ function ensureWasm(): (source: string, optsJson: string) => unknown {
  *  Pass `shadow: true` for component sources so the WASM emit matches the
  *  bin/FFI `.compiled.js` shape (which hardcodes shadow DOM) — without it the
  *  WASM/native default is `shadow:false` and `el.shadowRoot` comes back null. */
-export function compileSuiToJs(suiPath: string, opts: { shadow?: boolean } = {}): string {
+export function compileSuiToJs(sailPath: string, opts: { shadow?: boolean } = {}): string {
   const compile = ensureWasm()
-  const source = readFileSync(suiPath, 'utf8')
+  const source = readFileSync(sailPath, 'utf8')
   const compileOpts: Record<string, unknown> = { mode: 'auto' }
   if (opts.shadow) compileOpts.shadow = true
   const result = compile(source, JSON.stringify(compileOpts)) as
@@ -135,19 +135,19 @@ export function compileSuiToJs(suiPath: string, opts: { shadow?: boolean } = {})
     | { kind: 'err'; message: string; line: number | null; col: number | null }
   if (result.kind === 'err') {
     throw new Error(
-      `[test-setup/vitest] sail-compiler error in ${suiPath} (${result.line ?? '?'}:${result.col ?? '?'}): ${result.message}`,
+      `[test-setup/vitest] sail-compiler error in ${sailPath} (${result.line ?? '?'}:${result.col ?? '?'}): ${result.message}`,
     )
   }
   return result.js
 }
 
-function compileSui(suiPath: string, stem: string): void {
+function compileSui(sailPath: string, stem: string): void {
   const hasBin = existsSync(compilerBin)
   const cmd = hasBin ? compilerBin : 'cargo'
   const args = hasBin
-    ? ['build', suiPath, '--component-name', stem, '--no-dts']
-    : ['run', '--quiet', '-p', 'sail-compiler', '--', 'build', suiPath, '--component-name', stem, '--no-dts']
-  spawnBoundedOrThrow(cmd, args, `sail-compiler ${suiPath}`, { cwd: repoRoot })
+    ? ['build', sailPath, '--component-name', stem, '--no-dts']
+    : ['run', '--quiet', '-p', 'sail-compiler', '--', 'build', sailPath, '--component-name', stem, '--no-dts']
+  spawnBoundedOrThrow(cmd, args, `sail-compiler ${sailPath}`, { cwd: repoRoot })
 }
 
 function mirrorArtifactFor(sourceDir: string, stem: string): string {
@@ -244,7 +244,7 @@ function resolveSuiAliases(): Record<string, string> {
 //
 // `resolveSuiAliases` above pins a CURATED set of specifiers through
 // `require.resolve` (node's own `exports` resolution) — that's why every
-// component package authored with `suiComponentVitestConfig()` resolves subpath
+// component package authored with `sailComponentVitestConfig()` resolves subpath
 // imports fine. Two hand-written vitest configs did NOT go through the factory:
 // test-setup's own and deck-eval's. They listed the runtime by BARE name plus a
 // couple of subpaths and silently missed the rest (`/route`, `/server`, `/dev`,
@@ -379,8 +379,8 @@ export interface SuiComponentVitestOptions {
  * The one config every SAIL component package's `vitest.config.ts` should use:
  *
  * ```ts
- * import { suiComponentVitestConfig } from '@ship/test-setup/vitest'
- * export default suiComponentVitestConfig()
+ * import { sailComponentVitestConfig } from '@ship/test-setup/vitest'
+ * export default sailComponentVitestConfig()
  * ```
  */
 /** The SAIL source loader — deck-parity, one compiler, one controller path.
@@ -396,7 +396,7 @@ export interface SuiComponentVitestOptions {
  *  Every suite that touches a `.sail` needs this, not just the component packs:
  *  the runtime's integration tests compile real fixtures and import the result.
  */
-export function suiSourceLoaderPlugin(): Plugin {
+export function sailSourceLoaderPlugin(): Plugin {
   return {
   name: 'sail-source-loader',
   enforce: 'pre' as const,
@@ -415,20 +415,20 @@ export function suiSourceLoaderPlugin(): Plugin {
   load(id: string) {
     if (id.endsWith('.sail.controller.ts')) {
       const sail = id.slice(0, -'.controller.ts'.length)
-      const suiStem = basename(sail, '.sail')
+      const sailStem = basename(sail, '.sail')
       // Same component-vs-route classification the main `.sail` branch below
       // uses. Without it every hyphenated component whose `<scope>` declares
       // `props:`/`variants:` alongside an inline `<controller>` block hits
       // the route/page rejection (`component_meta` is None, so a route's
       // "props has no parent to fill it" check fires) — the controller-only
       // compile call never told the compiler this was a component at all.
-      const suiIsComponent = suiStem.includes('-') && suiStem !== 'page' && suiStem !== 'index'
+      const sailIsComponent = sailStem.includes('-') && sailStem !== 'page' && sailStem !== 'index'
       const out = JSON.parse(
         nativeCompileJson(
           readFileSync(sail, 'utf8'),
           JSON.stringify({
             sourcePath: sail,
-            componentName: suiIsComponent ? suiStem : undefined,
+            componentName: sailIsComponent ? sailStem : undefined,
           }),
         ),
       ) as { kind: string; controller?: string | null; message?: string }
@@ -463,7 +463,7 @@ export function suiSourceLoaderPlugin(): Plugin {
   }
 }
 
-export function suiComponentVitestConfig(opts: SuiComponentVitestOptions = {}) {
+export function sailComponentVitestConfig(opts: SuiComponentVitestOptions = {}) {
   return defineConfig({
     // The honesty-guard setup file lives in @ship/test-setup, outside each
     // consuming package's root. Vite's dev FS guard (`/@fs/…`) blocks reads
@@ -486,6 +486,6 @@ export function suiComponentVitestConfig(opts: SuiComponentVitestOptions = {}) {
       setupFiles: [assertHonestySetup, ...(opts.setupFiles ?? ['./test/setup.ts'])],
       ...SHIP_VITEST_DEFAULTS,
     },
-    plugins: [suiSourceLoaderPlugin()],
+    plugins: [sailSourceLoaderPlugin()],
   })
 }

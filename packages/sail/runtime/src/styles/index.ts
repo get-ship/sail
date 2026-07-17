@@ -158,10 +158,10 @@ function makeSheet(css: string): CSSStyleSheet | null {
 /// invisible to the author-override story, which is pure layer order.)
 export const layered = (css: string): string => `@layer sail {\n${css}}\n`
 
-export const suiTonesSheet: CSSStyleSheet | null = makeSheet(layered(TONES_CSS))
-export const suiSizesSheet: CSSStyleSheet | null = makeSheet(layered(SIZES_CSS))
-export const suiBaseSheet: CSSStyleSheet | null = makeSheet(layered(BASE_CSS))
-export const suiTypographySheet: CSSStyleSheet | null = makeSheet(
+export const sailTonesSheet: CSSStyleSheet | null = makeSheet(layered(TONES_CSS))
+export const sailSizesSheet: CSSStyleSheet | null = makeSheet(layered(SIZES_CSS))
+export const sailBaseSheet: CSSStyleSheet | null = makeSheet(layered(BASE_CSS))
+export const sailTypographySheet: CSSStyleSheet | null = makeSheet(
   layered(TYPOGRAPHY_CSS + SEMANTIC_ELEMENTS_CSS),
 )
 
@@ -189,7 +189,7 @@ export const suiTypographySheet: CSSStyleSheet | null = makeSheet(
 // Lazy: the skin constants are defined further down the module. (Surfaced by
 // the sail-alert re-port pilot — bare controls in every shadow L2 otherwise.)
 let controlsSheetMemo: CSSStyleSheet | null | undefined
-function suiControlsSheet(): CSSStyleSheet | null {
+function sailControlsSheet(): CSSStyleSheet | null {
   if (controlsSheetMemo === undefined) {
     controlsSheetMemo = makeSheet(layered(CONTROL_SKINS_CSS))
   }
@@ -200,11 +200,11 @@ export function adoptSuiSheets(root: unknown): void {
   if (typeof ShadowRoot === 'undefined') return
   if (!(root instanceof ShadowRoot)) return
   const sheets = [
-    suiBaseSheet,
-    suiTonesSheet,
-    suiSizesSheet,
-    suiTypographySheet,
-    suiControlsSheet(),
+    sailBaseSheet,
+    sailTonesSheet,
+    sailSizesSheet,
+    sailTypographySheet,
+    sailControlsSheet(),
   ].filter((s): s is CSSStyleSheet => s != null)
   if (sheets.length === 0) return
   try {

@@ -9,7 +9,7 @@ import { EditorView } from '@codemirror/view'
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { tags } from '@lezer/highlight'
 
-export const suiEditorTheme = EditorView.theme({
+export const sailEditorTheme = EditorView.theme({
   '&': {
     backgroundColor: 'var(--card)',
     color: 'var(--foreground)',
@@ -83,7 +83,7 @@ export const suiEditorTheme = EditorView.theme({
 // Syntax colors read --syntax-* tokens (tokens.css) rather than --primary
 // / --accent so themes that intentionally subdue their brand palette
 // (halo, paper) can still keep code legible at AA contrast.
-const suiHighlightStyle = HighlightStyle.define([
+const sailHighlightStyle = HighlightStyle.define([
   { tag: tags.keyword, color: 'var(--syntax-keyword)' },
   { tag: tags.operator, color: 'var(--syntax-keyword)' },
   { tag: tags.controlKeyword, color: 'var(--syntax-keyword)', fontWeight: '500' },
@@ -117,4 +117,4 @@ const suiHighlightStyle = HighlightStyle.define([
   { tag: tags.invalid, color: 'var(--destructive)' },
 ])
 
-export const suiHighlighting = syntaxHighlighting(suiHighlightStyle)
+export const sailHighlighting = syntaxHighlighting(sailHighlightStyle)

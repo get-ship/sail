@@ -1,12 +1,12 @@
 import {
-  suiComponentVitestConfig,
+  sailComponentVitestConfig,
   pinImportMetaUrlPlugin,
   shadowForComponentCompilePlugin,
 } from '@ship/test-setup/vitest'
 
 // jsdom — the controller is CodeMirror 6, which has no DOM dependency
 // beyond a contenteditable host; the rest is canvas- and layout-free.
-const base = suiComponentVitestConfig()
+const base = sailComponentVitestConfig()
 
 export default {
   ...base,

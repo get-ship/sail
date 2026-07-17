@@ -1,5 +1,5 @@
 import {
-  suiComponentVitestConfig,
+  sailComponentVitestConfig,
   pinImportMetaUrlPlugin,
   shadowForComponentCompilePlugin,
 } from '@ship/test-setup/vitest'
@@ -9,7 +9,7 @@ import {
 // renderComponent suite that needs happy-dom (sail-calendar, whose scoped CSS
 // trips jsdom's parser) opts in PER-FILE via a `// @vitest-environment happy-dom`
 // docblock, so it can never regress the rest of the suite again.
-const base = suiComponentVitestConfig()
+const base = sailComponentVitestConfig()
 
 export default {
   ...base,

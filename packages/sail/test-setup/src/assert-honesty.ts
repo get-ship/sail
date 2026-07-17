@@ -6,7 +6,7 @@
 // only `expect`) is not a passing test — it is a hole. This converts those
 // holes to red.
 //
-// Wired through `suiComponentVitestConfig()` as the first setup file so it
+// Wired through `sailComponentVitestConfig()` as the first setup file so it
 // applies to every component package uniformly, regardless of whether the
 // package authored its own `test/setup.ts`.
 
