@@ -33,12 +33,10 @@ fn validate_view_name(name: &str) -> Result<()> {
 /// Same shape as `validate_view_name` plus the `sail-` prefix the runtime
 /// custom-element registry expects for primitives.
 fn validate_component_tag(tag: &str) -> Result<()> {
-    if !tag.starts_with("sail-") {
-        bail!("component tag must start with `sail-` — got {tag:?}");
-    }
-    let rest = &tag[5..];
-    if rest.is_empty()
-        || !rest.starts_with(|c: char| c.is_ascii_lowercase())
+    let Some(rest) = deck_core::strip_sail_tag_prefix(tag) else {
+        bail!("component tag must start with `{}` — got {tag:?}", deck_core::SAIL_TAG_PREFIX);
+    };
+    if !rest.starts_with(|c: char| c.is_ascii_lowercase())
         || !rest.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
     {
         bail!("component tag must match /^sail-[a-z][a-z0-9-]*$/ — got {tag:?}");

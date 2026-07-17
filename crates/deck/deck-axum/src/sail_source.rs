@@ -25,10 +25,10 @@ use axum::response::{Html, IntoResponse, Response};
 /// Tag whitelist — lowercase ASCII, digits, and hyphens after `sail-`.
 /// Rejects path-traversal (`..`, `/`, `\\`) and any non-component name.
 pub(crate) fn is_valid_tag(tag: &str) -> bool {
-    if !tag.starts_with("sail-") {
+    let Some(_rest) = deck_core::strip_sail_tag_prefix(tag) else {
         return false;
-    }
-    if tag.len() < 6 || tag.len() > 64 {
+    };
+    if tag.len() > 64 {
         return false;
     }
     tag.bytes()
