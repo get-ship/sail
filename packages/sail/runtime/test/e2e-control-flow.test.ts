@@ -1,4 +1,4 @@
-// E2E: hand-crafted modules mirroring what the sui compiler emits
+// E2E: hand-crafted modules mirroring what the sail compiler emits
 // for {#if} and {#for} blocks.
 
 import { describe, expect, it } from 'vitest'

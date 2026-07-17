@@ -416,7 +416,7 @@ async function checkProp(page, tag, prop) {
     }
     if (prop.kind === 'disabled') {
       const before = h.hasAttribute('disabled')
-      // SUI framework 's `disabled reflect` mirrors JS prop → attribute
+      // SAIL framework 's `disabled reflect` mirrors JS prop → attribute
       // (attribute → prop isn't wired). Setting the attribute on the
       // host doesn't always update the internal prop — use the JS prop
       // directly (with attribute fallback).
@@ -441,7 +441,7 @@ async function checkProp(page, tag, prop) {
         return best ?? h
       })()
       // `disabled` may be reflected only to the host's inner control
-      // (the SUI framework reflects onto the wrapped input/button,
+      // (the SAIL framework reflects onto the wrapped input/button,
       // not the host). Accept either location.
       const ic = getComputedStyle(interactiveRoot)
       const hostHasDisabled = h.hasAttribute('disabled') ||

@@ -1,6 +1,6 @@
 //! Bridge to the shipped TypeScript compiler (tsgo / @typescript/native-preview).
 //!
-//! The SUI compiler shells out to `tsgo --noEmit` to type-check embedded TS
+//! The SAIL compiler shells out to `tsgo --noEmit` to type-check embedded TS
 //! blocks (`<props>`, `<variants>`) — REAL TypeScript inference (autocomplete,
 //! "did you mean", type errors) instead of a hand-rolled subset parser. This is
 //! the load-bearing bridge: it writes a harness (the props()/variants() surface)

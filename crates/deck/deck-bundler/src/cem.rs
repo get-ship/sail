@@ -132,7 +132,7 @@ pub fn write_all_pack_cems(repo_root: &Path) -> Result<usize> {
     Ok(written)
 }
 
-/// Walk `dir` recursively and collect every component `.sail` file. Per the SUI
+/// Walk `dir` recursively and collect every component `.sail` file. Per the SAIL
 /// authoring convention the filename stem IS the custom-element tag — a `.sail`
 /// file always declares a component (dynamic markup lives inside it via control
 /// flow, never in sibling partials). Companion tags (`sail-tab` in `sail-tabs/`,

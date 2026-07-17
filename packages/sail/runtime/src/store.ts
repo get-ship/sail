@@ -148,7 +148,7 @@ export function readStoreSSRSeed(id: string): Record<string, unknown> | null {
 /** Symbol per store id, used as the contexts-map key. Strings
  *  would also work; symbols are slightly faster to hash and
  *  can't collide with `provideContext` keys. */
-const idKey = (id: string): symbol => Symbol.for(`sui.store.${id}`)
+const idKey = (id: string): symbol => Symbol.for(`sail.store.${id}`)
 
 /**
  * Return the existing instance on `scope` for `def`, or `null`
@@ -390,7 +390,7 @@ export function hydrateStoreSSRPayload(): void {
 
 /**
  * Server-side: walk `scope`'s contexts map, find every store
- * instance (key description starts with `sui.store.`), snapshot
+ * instance (key description starts with `sail.store.`), snapshot
  * each, and return the full per-request payload. The SSR entry
  * calls this at end-of-request and passes the result to
  * `setStoreSSRPayload` / renders it into the HTML.
@@ -399,9 +399,9 @@ export function snapshotScopeStores(scope: EffectScope): Record<string, Record<s
   const out: Record<string, Record<string, unknown>> = {}
   for (const [sym, val] of scope.contexts) {
     const desc = sym.description
-    if (!desc || !desc.startsWith('sui.store.')) continue
+    if (!desc || !desc.startsWith('sail.store.')) continue
     // Store id is everything after the prefix.
-    const id = desc.slice('sui.store.'.length)
+    const id = desc.slice('sail.store.'.length)
     if (val && typeof val === 'object') {
       out[id] = snapshotStore(val as object)
     }

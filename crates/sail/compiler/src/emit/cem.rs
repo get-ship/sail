@@ -34,7 +34,7 @@ pub fn emit_cem(program: &Program, opts: &CompileOpts) -> Value {
         "attributes": attributes,
         "members": members,
     });
-    // ANATOMY — the sui extension over standard CEM. Classes + slots are the
+    // ANATOMY — the sail extension over standard CEM. Classes + slots are the
     // published styling contract (classes ARE the anatomy in the light-DOM
     // architecture; skins are written against them), `dom` records which side
     // of the light/shadow seam this component compiles to. States live on the
@@ -222,7 +222,7 @@ fn camel_of(attr: &str) -> String {
 /// Input: slice of per-component `{schemaVersion, modules:[...]}` values
 /// (as produced by `emit_cem`).
 /// Output: `{schemaVersion:"1.0.0", modules:[<all concatenated, sorted by "path">]}`.
-/// Pure, deterministic, no I/O. sui owns this format.
+/// Pure, deterministic, no I/O. sail owns this format.
 pub fn merge_cem(components: &[Value]) -> Value {
     let mut all_modules: Vec<Value> = components
         .iter()

@@ -59,7 +59,7 @@ warning: [zero-main-axis] at byte 12961..13093
 
 That signature is exactly the pane at `routes/tutorial/[slug]/page.sail:286`:
 
-```sui
+```sail
 <column
   sx="grow-1 max-w-panel-max-w-md h-fill min-h-0 bg-surface-1
       border-r border-r-border"

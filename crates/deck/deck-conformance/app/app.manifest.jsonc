@@ -1,6 +1,6 @@
 // App manifest — a name → real-ESM-import map (the synthetic-view import map).
 //
-// SUI stays ignorant of what these names MEAN. `ship` and `api` are the
+// SAIL stays ignorant of what these names MEAN. `ship` and `api` are the
 // conformance app's custom data clients (declared here so the conformance
 // views can resolve `ship.demo.todos()` and `api.demo.clock()` against real
 // ESM imports, type-checked by tsgo); the view-host handles `route` and

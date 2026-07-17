@@ -1,13 +1,13 @@
 ---
 group: Views
 order: 4
-title: SUI — Cookbook
-description: Worked recipes for common SUI view tasks.
+title: SAIL — Cookbook
+description: Worked recipes for common SAIL view tasks.
 ---
 
-# SUI — Cookbook
+# SAIL — Cookbook
 
-Copy-paste-and-modify worked examples for an agent authoring a SUI
+Copy-paste-and-modify worked examples for an agent authoring a SAIL
 view. Every recipe is either lifted from a working view in this repo
 (cited) or testable in isolation against `@ship/sail-runtime`.
 

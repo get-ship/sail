@@ -44,7 +44,7 @@ const FIXTURES = [
   { name: 'shadow-tones',          mode: 'component', componentName: 'shadow-tones-test' },
 ]
 
-// Post-carve: sail-compiler lives in this same sui repo (the script itself
+// Post-carve: sail-compiler lives in this same sail repo (the script itself
 // is a parity check that runs against the in-tree fixtures + cargo bin).
 // The fixture dir and Cargo.toml are resolved relative to `repoRoot`
 // (computed above) so the script works on any checkout, worktree, or CI

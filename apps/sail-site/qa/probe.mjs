@@ -17,7 +17,7 @@
 //   OVERFLOW-X     a box scrolls horizontally with overflow-x:visible
 //   LOW-CONTRAST   visible text below ~2.5:1 against its effective background
 //   ERR:…          an uncaught page error (compiler/runtime break)
-import { chromium } from '/home/madvib/dev/Ship/worktrees/sui/sui-sx/node_modules/.bun/playwright@1.61.0/node_modules/playwright/index.mjs'
+import { chromium } from '/home/madvib/dev/Ship/worktrees/sail/sail-sx/node_modules/.bun/playwright@1.61.0/node_modules/playwright/index.mjs'
 import { readFileSync, writeFileSync } from 'node:fs'
 
 const BASE = process.env.SAIL_PROBE_BASE ?? 'http://127.0.0.1:7878'
@@ -60,7 +60,7 @@ export async function probe(page, tag, theme) {
     const stageEl = document.querySelector('.detail-stage') || el.parentElement
     const S = stageEl.getBoundingClientRect()
     const cs = (e) => getComputedStyle(e)
-    // Colours in SUI are authored in oklch, and the browser returns
+    // Colours in SAIL are authored in oklch, and the browser returns
     // getComputedStyle().color AS oklch(...). A naive numeric regex garbles
     // that (treats L/C/H as R/G/B), breaking every contrast reading. Rasterise
     // any CSS colour (oklch / rgb / hex / named) to TRUE sRGB via a 1×1 canvas.

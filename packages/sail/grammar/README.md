@@ -1,6 +1,6 @@
 # tree-sitter-set
 
-Tree-sitter grammar for the SUI `.html.set` / `.set` template
+Tree-sitter grammar for the SAIL `.html.set` / `.set` template
 language.
 
 ## Status

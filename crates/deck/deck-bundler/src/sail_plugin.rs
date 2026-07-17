@@ -1,4 +1,4 @@
-//! SUI resolve/load plugin for Rolldown. Handles:
+//! SAIL resolve/load plugin for Rolldown. Handles:
 //!   - `resolve_id`: redirect `./X.compiled.js` siblings to a virtual id,
 //!     externalize the framework singletons, re-anchor `@ship/<pkg>` to
 //!     workspace `src/`, resolve `@sail-tag/<tag>` to the component source.
@@ -73,7 +73,7 @@ pub(crate) fn normalize(p: &Path) -> PathBuf {
     out
 }
 
-/// SUI compile plugin — `resolve_id` redirects `*.compiled.js` siblings to a
+/// SAIL compile plugin — `resolve_id` redirects `*.compiled.js` siblings to a
 /// virtual id and re-anchors `@ship/<pkg>` to workspace `src/`; `load` compiles
 /// the sibling `.sail` via sail-compiler. Reused by the app build (`app.rs`) so
 /// the SPA graph compiles its own `.sail` in-process — one compile path, no
@@ -123,22 +123,22 @@ impl SailPlugin {
     /// Compile a `.sail` to JS via `sail_compiler::compile` IN-PROCESS (#255):
     /// the compiler is the linked crate, not a spawned binary — no temp dir, no
     /// file roundtrip, no version drift, no flag that a stale binary can reject.
-    fn compile(&self, sui: &Path) -> Result<String> {
-        let (mode, stem) = detect_mode(sui, &self.repo_root);
-        compile_sui(sui, mode, &stem, self.emit_component_imports).map_err(|e| {
+    fn compile(&self, sail: &Path) -> Result<String> {
+        let (mode, stem) = detect_mode(sail, &self.repo_root);
+        compile_sui(sail, mode, &stem, self.emit_component_imports).map_err(|e| {
             // Surface the real compiler error: rolldown collapses a plugin error
-            // to a generic "plugin `ship-sui` threw an error", swallowing the
+            // to a generic "plugin `ship-sail` threw an error", swallowing the
             // message/line/col. Print it so a consumer can see WHY a view failed
             // to compile (deck invariant: compile errors are surfaced, not swallowed).
-            eprintln!("deck ship-sui: compile {} failed:\n  {e}", sui.display());
-            anyhow!("compile {}: {e}", sui.display())
+            eprintln!("deck ship-sail: compile {} failed:\n  {e}", sail.display());
+            anyhow!("compile {}: {e}", sail.display())
         })
     }
 }
 
 impl Plugin for SailPlugin {
     fn name(&self) -> Cow<'static, str> {
-        "ship-sui".into()
+        "ship-sail".into()
     }
 
     async fn resolve_id(
@@ -317,9 +317,9 @@ impl Plugin for SailPlugin {
         if let Some(base) = id.strip_suffix(".controller.ts")
             && base.ends_with(".sail")
         {
-            let sui = Path::new(base);
-            let source = std::fs::read_to_string(sui).map_err(|e| {
-                anyhow!("read {} for its inline <controller>: {e}", sui.display())
+            let sail = Path::new(base);
+            let source = std::fs::read_to_string(sail).map_err(|e| {
+                anyhow!("read {} for its inline <controller>: {e}", sail.display())
             })?;
             let body = sail_compiler::parse::preprocess::extract_controller_block(&source)
                 .1
@@ -327,7 +327,7 @@ impl Plugin for SailPlugin {
                     anyhow!(
                         "`{id}` names the inline controller of `{}`, but that file has no \
                          <controller> block",
-                        sui.display()
+                        sail.display()
                     )
                 })?;
             return Ok(Some(HookLoadOutput {
@@ -336,17 +336,17 @@ impl Plugin for SailPlugin {
                 ..Default::default()
             }));
         }
-        let sui: Option<PathBuf> = if let Some(base) = id.strip_suffix(".compiled.js") {
+        let sail: Option<PathBuf> = if let Some(base) = id.strip_suffix(".compiled.js") {
             Some(PathBuf::from(format!("{base}.sail")))
         } else if id.ends_with(".sail") {
             Some(PathBuf::from(id))
         } else {
             None
         };
-        if let Some(sui) = sui {
+        if let Some(sail) = sail {
             let code = self
-                .compile(&sui)
-                .map_err(|e| anyhow!("compile {}: {e}", sui.display()))?;
+                .compile(&sail)
+                .map_err(|e| anyhow!("compile {}: {e}", sail.display()))?;
             return Ok(Some(HookLoadOutput {
                 code: code.into(),
                 module_type: Some(ModuleType::Js),

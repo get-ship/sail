@@ -78,7 +78,7 @@ test('showcase page: animates with zero console errors', async ({ page }) => {
 test('landing MOTION section: the spring ball, the stagger bar, and the drift chip actually move', async ({ page }) => {
   const motionWarnings: string[] = []
   page.on('console', (msg) => {
-    if (msg.text().includes('[sui/motion]')) motionWarnings.push(msg.text())
+    if (msg.text().includes('[sail/motion]')) motionWarnings.push(msg.text())
   })
 
   await page.goto('/', { waitUntil: 'domcontentloaded' })
@@ -123,7 +123,7 @@ test('landing MOTION section: the spring ball, the stagger bar, and the drift ch
 test('/motion page: the ambient loop dots keep animating (translate-y, staggered, infinite)', async ({ page }) => {
   const motionWarnings: string[] = []
   page.on('console', (msg) => {
-    if (msg.text().includes('[sui/motion]')) motionWarnings.push(msg.text())
+    if (msg.text().includes('[sail/motion]')) motionWarnings.push(msg.text())
   })
 
   await page.goto('/motion', { waitUntil: 'domcontentloaded' })

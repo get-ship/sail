@@ -43,7 +43,7 @@ test('LSP diagnostics populate the editor gutter for a broken .sail', async ({ p
   await page.waitForTimeout(2000)
 
   // Probe: confirm the imperative API surface is on the host (setDiagnostics
-  // defined by the controller) and the language is 'sui' so the LSP effect
+  // defined by the controller) and the language is 'sail' so the LSP effect
   // gates-open.
   const before = await page.evaluate(() => {
     const tpl = document.querySelector('sail-code-editor[data-pane="template"]') as (HTMLElement & { setDiagnostics?: unknown; setCompletions?: unknown; value?: string }) | null
@@ -55,7 +55,7 @@ test('LSP diagnostics populate the editor gutter for a broken .sail', async ({ p
     }
   })
 
-  // Type a deliberately broken-sui fragment by setting value imperatively.
+  // Type a deliberately broken-sail fragment by setting value imperatively.
   // `host.value = v` calls the controller's imperative setter, which writes
   // to valSig; the controller's `effect(() => valSig())` then mirrors the
   // change into the CodeMirror view. The LSP effect also runs on valSig

@@ -2,9 +2,9 @@
 //
 // WHY THIS EXISTS. The framework contracts are ~30KB of CSS. They used to be a
 // string constant that `component-factory` referenced unconditionally at mount, so
-// every bundle that mounted a SUI component carried the entire design system inside
+// every bundle that mounted a SAIL component carried the entire design system inside
 // its JAVASCRIPT — 49% of the js-framework-benchmark bundle was this stylesheet, in
-// an app that renders plain <div>s with Bootstrap classes and uses no SUI components
+// an app that renders plain <div>s with Bootstrap classes and uses no SAIL components
 // at all. A bundler cannot drop a string the code demonstrably reads.
 //
 // The right home for a stylesheet is a stylesheet: a <link> is cacheable, parses on
@@ -16,7 +16,7 @@
 // out. Two ways to get the contracts:
 //
 //   1. LINK THEM (preferred, and what a real app should do):
-//        <link rel="stylesheet" href="/sui.css" data-sail-contracts>
+//        <link rel="stylesheet" href="/sail.css" data-sail-contracts>
 //      The file is already materialized at @ship/sail-tokens/contracts.css.
 //
 //   2. IMPORT THE INSTALLER (for JS-only hosts, and convenient in dev):
@@ -57,7 +57,7 @@ export function ensureLightContracts(): void {
   // stylesheet tag to quiet a warning. Saying "no" is different from forgetting.
   if (document.documentElement.getAttribute('data-sail-contracts') === 'none') return
   console.warn(
-    '[sui] A component mounted but the framework contracts are not present. Either link ' +
+    '[sail] A component mounted but the framework contracts are not present. Either link ' +
       'the stylesheet (`<link rel="stylesheet" href="…/contracts.css" data-sail-contracts>`, ' +
       'shipped as @ship/sail-tokens/contracts.css) or `import "@ship/sail-runtime/contracts"` ' +
       'to inject it from JS. Linking is preferred: it keeps ~30KB of CSS out of your JS bundle.',

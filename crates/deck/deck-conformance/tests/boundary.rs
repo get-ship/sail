@@ -1,7 +1,7 @@
 //! Boundary invariant I2 — Deck's HOST and BUNDLER crates name no Ship app
 //! concepts.
 //!
-//! deck-core / deck-axum / deck-host serve SUI views + assets for ANY host.
+//! deck-core / deck-axum / deck-host serve SAIL views + assets for ANY host.
 //! deck-bundler builds those assets. deck-config holds the config schema.
 //! None of them may hardcode a Ship app layout (`apps/shell`, `apps/shipd`,
 //! `apps/site`) or a Ship-specific identifier (`sail-chrome`, `sail-marketing`,

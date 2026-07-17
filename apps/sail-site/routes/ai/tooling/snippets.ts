@@ -7,4 +7,4 @@ views/tasks/page.sail:18:9 warning: <data> directive without \`name\` attr [sail
 
 export const compileCmd = `cargo run -p sail-compiler -- build views/tasks/page.sail`
 
-export const lspJson = `{ "sui": { "command": "sail-lsp", "extensionToLanguage": { ".sail": "sui" } } }`
+export const lspJson = `{ "sail": { "command": "sail-lsp", "extensionToLanguage": { ".sail": "sail" } } }`

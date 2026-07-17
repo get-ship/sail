@@ -7,7 +7,7 @@ const trig = 'display:flex;align-items:center;justify-content:space-between;gap:
 const body = 'padding:0 14px 14px;font-size:14px;color:var(--muted-foreground);line-height:1.5'
 const box = 'border:1px solid var(--border);border-radius:10px;background:var(--card);overflow:hidden;width:340px'
 const coll = (open) =>
-  `<details class="sail-collapsible"${open ? ' open' : ''} style="${box}"><summary class="trigger-wrap" style="${trig}"><span>What is SUI?</span>${chev}</summary><div class="content-wrap"><div class="content-inner" style="${body}">A trustworthy compiler and a beautiful component language — L1 primitives that compile away to static DOM with zero runtime.</div></div></details>`
+  `<details class="sail-collapsible"${open ? ' open' : ''} style="${box}"><summary class="trigger-wrap" style="${trig}"><span>What is SAIL?</span>${chev}</summary><div class="content-wrap"><div class="content-inner" style="${body}">A trustworthy compiler and a beautiful component language — L1 primitives that compile away to static DOM with zero runtime.</div></div></details>`
 
 export default {
   tag: 'collapsible',

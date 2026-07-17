@@ -27,7 +27,7 @@ use sail_compiler::parse::parse;
 use sail_compiler::CompileMode;
 
 /// Mirror deck's host context — the `route`/`navigate` handles deck injects into
-/// every app manifest at build (`deck_core::host_context_clients`). SUI's
+/// every app manifest at build (`deck_core::host_context_clients`). SAIL's
 /// compiler names no host, so post-seam route/navigate must be DECLARED in the
 /// manifest; the real pipeline merges them in. This stands in for that merge so
 /// the route-bearing surface + the route-typo gate type-check against
@@ -46,7 +46,7 @@ fn inject_host_context(manifest: &mut AppManifest) {
 }
 
 fn repo_root() -> PathBuf {
-    // crates/sail/compiler -> crates/sui -> crates -> repo root.
+    // crates/sail/compiler -> crates/sail -> crates -> repo root.
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..").canonicalize().unwrap()
 }
 

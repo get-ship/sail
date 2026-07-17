@@ -1,4 +1,4 @@
-// Shared vitest config for SUI component packages.
+// Shared vitest config for SAIL component packages.
 //
 // One factory, `suiComponentVitestConfig()`, replaces the ~90-line
 // `compiled-js-test-shim` plugin that used to be copy-pasted into every
@@ -200,7 +200,7 @@ export function shadowForComponentCompilePlugin(name: string): Plugin {
     name: `${name}:shadow-for-component-compile`,
     enforce: 'pre',
     transform(code: string, id: string) {
-      if (!/[\\/]test-utils[\\/]compile-sui\.ts$/.test(id)) return null
+      if (!/[\\/]test-utils[\\/]compile-sail\.ts$/.test(id)) return null
       const needle = 'setupUrl: opts.setupMarker,'
       if (!code.includes(needle)) return null
       return {
@@ -211,11 +211,11 @@ export function shadowForComponentCompilePlugin(name: string): Plugin {
   }
 }
 
-// The @ship/* specifiers that renderView/renderComponent (and the SUI runtime's
+// The @ship/* specifiers that renderView/renderComponent (and the SAIL runtime's
 // internal subpaths) need pinned to ONE resolved instance. Subpaths first (most
 // specific) so they win over the bare-name aliases. A JS-only consumer may not
 // ship every runtime subpath (`./route`, `./virtual` were dropped in the
-// sui→deck closure), so `resolveSuiAliases` skips whatever doesn't resolve and
+// sail→deck closure), so `resolveSuiAliases` skips whatever doesn't resolve and
 // lets node resolution cover the rest — keeping one factory across repos.
 const SUI_ALIAS_SPECS = [
   '@ship/sail-dom/test-utils',
@@ -363,7 +363,7 @@ export function shipWorkspaceAliases(): Array<{ find: string | RegExp; replaceme
 }
 
 export interface SuiComponentVitestOptions {
-  /** Extra `resolve.alias` entries merged over the SUI defaults. */
+  /** Extra `resolve.alias` entries merged over the SAIL defaults. */
   alias?: Record<string, string>
   /** Override the default test setup files. */
   setupFiles?: string[]
@@ -376,14 +376,14 @@ export interface SuiComponentVitestOptions {
 }
 
 /**
- * The one config every SUI component package's `vitest.config.ts` should use:
+ * The one config every SAIL component package's `vitest.config.ts` should use:
  *
  * ```ts
  * import { suiComponentVitestConfig } from '@ship/test-setup/vitest'
  * export default suiComponentVitestConfig()
  * ```
  */
-/** The SUI source loader — deck-parity, one compiler, one controller path.
+/** The SAIL source loader — deck-parity, one compiler, one controller path.
  *
  *  `.compiled.js` is the published-name convention for a sibling `.sail`; the
  *  `.sail` compiles in-process through the linked addon with the source's own
@@ -407,15 +407,15 @@ export function suiSourceLoaderPlugin(): Plugin {
     }
     if (id.endsWith('.compiled.js')) {
       const artifact = resolve(dirname(importer), id)
-      const sui = artifact.replace(/\.compiled\.js$/, '.sail')
-      if (existsSync(sui)) return sui
+      const sail = artifact.replace(/\.compiled\.js$/, '.sail')
+      if (existsSync(sail)) return sail
     }
     return null
   },
   load(id: string) {
     if (id.endsWith('.sail.controller.ts')) {
-      const sui = id.slice(0, -'.controller.ts'.length)
-      const suiStem = basename(sui, '.sail')
+      const sail = id.slice(0, -'.controller.ts'.length)
+      const suiStem = basename(sail, '.sail')
       // Same component-vs-route classification the main `.sail` branch below
       // uses. Without it every hyphenated component whose `<scope>` declares
       // `props:`/`variants:` alongside an inline `<controller>` block hits
@@ -425,15 +425,15 @@ export function suiSourceLoaderPlugin(): Plugin {
       const suiIsComponent = suiStem.includes('-') && suiStem !== 'page' && suiStem !== 'index'
       const out = JSON.parse(
         nativeCompileJson(
-          readFileSync(sui, 'utf8'),
+          readFileSync(sail, 'utf8'),
           JSON.stringify({
-            sourcePath: sui,
+            sourcePath: sail,
             componentName: suiIsComponent ? suiStem : undefined,
           }),
         ),
       ) as { kind: string; controller?: string | null; message?: string }
-      if (out.kind !== 'ok') throw new Error(`[sui] ${sui}: ${out.message}`)
-      if (!out.controller) throw new Error(`[sui] ${id}: no inline <controller> in ${sui}`)
+      if (out.kind !== 'ok') throw new Error(`[sail] ${sail}: ${out.message}`)
+      if (!out.controller) throw new Error(`[sail] ${id}: no inline <controller> in ${sail}`)
       return out.controller
     }
     if (!id.endsWith('.sail')) return null
@@ -456,7 +456,7 @@ export function suiSourceLoaderPlugin(): Plugin {
       ),
     ) as { kind: string; js?: string; message?: string; line?: number }
     if (out.kind !== 'ok') {
-      throw new Error(`[sui] ${id}:${out.line ?? ''} ${out.message}`)
+      throw new Error(`[sail] ${id}:${out.line ?? ''} ${out.message}`)
     }
     return out.js
   },

@@ -1,4 +1,4 @@
-// Performance microbenchmarks for the SUI runtime.
+// Performance microbenchmarks for the SAIL runtime.
 //
 // Run with `bun run --filter @ship/sail-runtime bench`. Results land in stdout.
 // Numbers are baselines — what matters is the ratio across changes,

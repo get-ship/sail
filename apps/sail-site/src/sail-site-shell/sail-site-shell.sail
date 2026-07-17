@@ -1,7 +1,7 @@
 <!--
   <sail-site-shell> — the docs chrome, written in the language, with no CSS.
 
-  The product switcher (SUI · Deck · Components · AI) is the navbar's center
+  The product switcher (SAIL · Deck · Components · AI) is the navbar's center
   slot with the pill written in sx — container atoms on the <row>, link atoms
   plus `current:` on each segment. The navbar contributes placement and
   regions; the look is authored here, where it belongs. The sidebar is the
@@ -24,21 +24,21 @@
 // owns only the accent hue, on its own attribute (data-product), so crossing
 // into Deck turns the brand violet without repainting the reader's theme.
 //
-// The SUI theme + the framework contracts are imported HERE (not the clients
+// The SAIL theme + the framework contracts are imported HERE (not the clients
 // seam): the shell is in every route's module graph, so these side-effect
 // imports can't be tree-shaken — whereas an export-less clients module gets
 // dropped. contracts.css gives every page the design-system typography
 // (bare h1/p/ul/code/pre/button/anchor) without a class hook in any template.
 import '@ship/tokens/themes.css' // the swappable theme library (paper/halo/glass/console/contrast)
 import '@ship/tokens/products.css' // brand hue per data-product; themes own lightness/chroma
-import '@ship/tokens/contracts.css' // framework contracts: bare h1/p/ul/code/pre/button/anchor skins; the design system applied to a SUI document, no class hooks needed
+import '@ship/tokens/contracts.css' // framework contracts: bare h1/p/ul/code/pre/button/anchor skins; the design system applied to a SAIL document, no class hooks needed
 import { applyTheme, readStoredTheme } from '@ship/tokens/themes'
 
-// Ship UI is ONE site with a top product switcher (SUI · Deck · Components · AI),
+// Ship UI is ONE site with a top product switcher (SAIL · Deck · Components · AI),
 // SolidJS-style. The active product is derived from the path; each drives its own
 // sidebar and accent. Components renders full-screen (no sidebar) — the
 // operator's "no nested nav bars" rule: one switcher + one sidebar, never
-// stacked. The tutorial is SUI product and KEEPS the rail: a lesson is a
+// stacked. The tutorial is SAIL product and KEEPS the rail: a lesson is a
 // docs page, and the reader needs the way back.
 function productFor(p: string): string {
   if (p === '/') return 'ship'
@@ -47,7 +47,7 @@ function productFor(p: string): string {
   if (p === '/components' || p.startsWith('/components/')) return 'components'
   return 'sail'
 }
-// The umbrella landing is ship (teal); SUI red; Deck violet; Components
+// The umbrella landing is ship (teal); SAIL red; Deck violet; Components
 // green; AI blue. `product-accents.css` keys on this attribute.
 function productAttr(product: string): string {
   switch (product) {
@@ -134,7 +134,7 @@ export default controller(() => {
   </a>
 
   <row slot="center" gap="1" align="center" sx="p-1 bg-surface-2 border border-border rounded-full" aria-label="Products">
-    <a href="/overview" sx="px-3 py-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground current:bg-primary current:text-primary-foreground" aria-current={product() === 'sail' ? 'page' : null}>SUI</a>
+    <a href="/overview" sx="px-3 py-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground current:bg-primary current:text-primary-foreground" aria-current={product() === 'sail' ? 'page' : null}>SAIL</a>
     <a href="/deck" sx="px-3 py-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground current:bg-primary current:text-primary-foreground" aria-current={product() === 'deck' ? 'page' : null}>Deck</a>
     <a href="/components" sx="px-3 py-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground current:bg-primary current:text-primary-foreground" aria-current={product() === 'components' ? 'page' : null}>Components</a>
     <a href="/ai" sx="px-3 py-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground current:bg-primary current:text-primary-foreground" aria-current={product() === 'ai' ? 'page' : null}>AI</a>
@@ -173,7 +173,7 @@ export default controller(() => {
       <label>Start here</label>
       <a href="/overview" aria-current={path() === '/overview' ? 'page' : null}>Introduction</a>
       <a href="/getting-started" aria-current={path() === '/getting-started' ? 'page' : null}>Installation</a>
-      <a href="/why" aria-current={path() === '/why' ? 'page' : null}>Why SUI</a>
+      <a href="/why" aria-current={path() === '/why' ? 'page' : null}>Why SAIL</a>
       <a href="/tutorial" aria-current={path().startsWith('/tutorial') ? 'page' : null}>Tutorial</a>
       <a href="/showcase" aria-current={path() === '/showcase' ? 'page' : null}>Showcase</a>
 

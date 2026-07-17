@@ -1,4 +1,4 @@
-//! Cargo validates SUI bundle production.
+//! Cargo validates SAIL bundle production.
 //!
 //! `include_str!` in `src/assets.rs` bakes bundle outputs into the
 //! framework binary at compile time. Every asset under `assets/` is
@@ -121,7 +121,7 @@ fn main() {
             .collect::<Vec<_>>()
             .join("\n");
         panic!(
-            "build.rs: SUI bundle assets are missing or empty.\n{lines}\n\n\
+            "build.rs: SAIL bundle assets are missing or empty.\n{lines}\n\n\
              Framework bundles are baked to .deck/framework/ by:\n\n  \
              cargo build -p sail-compiler   # the compiler the bundler uses\n  \
              cargo run -p deck-cli -- build-assets   # framework bundles via in-process Rolldown\n\n\

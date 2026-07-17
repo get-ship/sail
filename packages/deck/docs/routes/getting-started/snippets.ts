@@ -1,5 +1,5 @@
 // Code snippets for the Getting-started page, kept OUT of the paired
-// controller.ts on purpose: the SUI compiler scans a view's controller for
+// controller.ts on purpose: the SAIL compiler scans a view's controller for
 // `signal(...)` to infer scope, and example code containing `signal(0)` would
 // leak into it. A plain data module (not a controller) is never scope-scanned.
 

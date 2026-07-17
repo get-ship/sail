@@ -1,6 +1,6 @@
 //! Host-side form-action injection.
 //!
-//! The SUI compiler emits `mutation="bN"` markers on `<form>` elements but
+//! The SAIL compiler emits `mutation="bN"` markers on `<form>` elements but
 //! does NOT bake the `/_deck/mutation/…` URL into the SSR output — that is the
 //! host's job, because only the host knows which daemon it is running.
 //!

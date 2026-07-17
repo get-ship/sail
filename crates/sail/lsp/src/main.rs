@@ -3,7 +3,7 @@
 //! A thin LSP/stdio shell over the `sail-compiler` analysis facade. All
 //! intelligence (diagnostics, hover, completion, definition) comes from the
 //! one Rust grammar — no TypeScript, no WASM. This single binary serves every
-//! LSP client: Claude Code (`.lsp.json`), VS Code (`sui.serverPath`), and any
+//! LSP client: Claude Code (`.lsp.json`), VS Code (`sail.serverPath`), and any
 //! editor.
 //!
 //! Transport is the synchronous `lsp-server` loop (rust-analyzer lineage);

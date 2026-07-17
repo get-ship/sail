@@ -1,4 +1,4 @@
-# sui
+# sail
 
 An ahead-of-time-compiled UI framework. `.sail` templates compile to plain ESM
 bound to a fine-grained signal runtime — real custom elements, light DOM by
@@ -7,12 +7,12 @@ content), server-rendered and hydrated. **deck** is the meta-framework that
 hosts them: filesystem routing, SSR, bundling, the dev loop.
 
 ```
-SUI : deck  ::  React : Next
+SAIL : deck  ::  React : Next
 ```
 
-Three layers, dependencies pointing one way (deck → sui, never back):
+Three layers, dependencies pointing one way (deck → sail, never back):
 
-- **SUI** — the `.sail` language: AOT compiler (Rust, WASM-safe), lint rules,
+- **SAIL** — the `.sail` language: AOT compiler (Rust, WASM-safe), lint rules,
   LSP, tree-sitter grammar, and the JS runtime/DOM packages compiled output
   binds to. A template *declares*; its inline `<controller>` block *does*
   (state, lifecycle, I/O).
@@ -26,13 +26,13 @@ Three layers, dependencies pointing one way (deck → sui, never back):
 
 ## Place in the Ship project
 
-sui is developed alongside an internal counterpart at the author's org — a
-polyrepo where sui sits as one repo among private siblings (the core runtime,
+sail is developed alongside an internal counterpart at the author's org — a
+polyrepo where sail sits as one repo among private siblings (the core runtime,
 internal apps, marketing site, and shared infrastructure crates). That
 internal layout isn't required to build or use this repo; it's mentioned here
 only because a couple of things below are a direct consequence of it:
 
-- The core runtime repo consumes sui via Cargo path deps; its daemon mounts
+- The core runtime repo consumes sail via Cargo path deps; its daemon mounts
   `deck::router()` and implements the `DataPort` seam.
 - `deck-ssr` (the Deno/V8-based production SSR path) depends on a private
   sibling crate — the org's shared `deno_core`/V8 isolate — via a
@@ -57,8 +57,8 @@ the bun workspace / crates.io with no external sibling checkout required.
 | `packages/sail/` | `runtime` (signals + custom-element wrapper), `dom` (DOM interpreter + hydration), `tokens`, `compiler-wasm` (browser compiler), `grammar` (tree-sitter), `test-setup`, `tutorial` (lesson sources). |
 | `packages/deck/` | `router`, `host` (SES-confined controller execution), `hono` (TS sibling of deck-axum), `lsp-browser`, `docs` (deck's own docs site — the canonical standalone example and release gate), `e2e` (Playwright against the real CLI), `eval`, `test-harness`. |
 | `packages/components/sail/` | Component packs: `primitives`, `charts`, `media`, `viewer`, `canvas`, `chat-elements`, `code-editor`. |
-| `apps/sail-site` | The SUI site: docs, tutorial, component catalog + interactive playground. A deck app dogfooding the framework. |
-| `packages/deck/eval` | The SUI authoring eval (`@ship/sail-eval`) — lane agents build a view from a spec; compile + lint + structural rubric grade the output. |
+| `apps/sail-site` | The SAIL site: docs, tutorial, component catalog + interactive playground. A deck app dogfooding the framework. |
+| `packages/deck/eval` | The SAIL authoring eval (`@ship/sail-eval`) — lane agents build a view from a spec; compile + lint + structural rubric grade the output. |
 | `tests/` | `integration` (vitest), `parity` (emit parity), `perf` (js-framework-benchmark baselines). |
 | `docs/` | `ARCHITECTURE.md` (the governing language/userland map), `LANG-GAPS.md` (the migration ledger), generated reports. |
 | `scripts/`, `xtask-deck/` | Repo tooling: typecheck orchestration, config lints, lucide icon bake. |
@@ -89,7 +89,7 @@ distribution item, not yet done. Nothing else in this repo is affected:
 `cargo build` / `cargo test` (default members) work from a clean clone with
 no sibling checkout.
 
-Run the SUI site:
+Run the SAIL site:
 
 ```sh
 cd apps/sail-site && bun run dev          # deck dev server on 127.0.0.1:7878
@@ -139,7 +139,7 @@ Standalone deck serves routing, assets, SSR and HMR without any daemon; live
   (regenerate with `cargo run -p sail-compiler -- skill`; drift-gated by
   `crates/sail/compiler/tests/skill_examples_compile.rs`).
 - `docs/ARCHITECTURE.md` — the governing language / stdlib / userland map.
-- `crates/sail/README.md` — the SUI Rust side and the sui/deck split.
+- `crates/sail/README.md` — the SAIL Rust side and the sail/deck split.
 - `crates/deck/README.md` — deck architecture, modes, `DataPort`, mounting.
 - `crates/deck/FEATURES.md` — the drift-gated feature inventory.
 - `packages/deck/docs/` — deck's docs site, built and served by deck.

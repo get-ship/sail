@@ -1,4 +1,4 @@
-// @ship/sail-charts — SUI chart primitives registry.
+// @ship/sail-charts — SAIL chart primitives registry.
 //
 // Side-effect imports for the chart components. Each `<tag>.compiled.js`
 // calls `customElements.define()` on import, so a single

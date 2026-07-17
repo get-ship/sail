@@ -130,7 +130,7 @@ pub struct CompileOpts {
     /// convention names it a route (deck routes by file location). `Some`
     /// legalizes + types `route` in the template and controller; `None`
     /// means "not a route" and any `route` read is refused. Structured
-    /// params, passed IN — the sui compiler never sniffs the filesystem
+    /// params, passed IN — the sail compiler never sniffs the filesystem
     /// for a routing convention it does not own.
     pub route_params: Option<Vec<String>>,
     /// Emit a `.sail.d.ts` declaration file alongside the JS module.
@@ -149,7 +149,7 @@ pub struct CompileOpts {
     /// (Error for the typo-catching rules, Warn for surfaced-but-
     /// non-blocking rules); this list downgrades specific rules'
     /// Error findings to Warning (or drops them) so an external
-    /// SUI consumer can opt out of a strict rule without editing
+    /// SAIL consumer can opt out of a strict rule without editing
     /// the rule itself. The internal monorepo leaves this empty
     /// (the default) and stays strict. See
     /// `crate::check::lint_overrides::LintOverride` for the shape.

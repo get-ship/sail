@@ -8,7 +8,7 @@ next: "02-styling-is-sx"
 chapter: "surface"
 ---
 
-In SUI, a screen is **tags all the way down**. Structure comes from the
+In SAIL, a screen is **tags all the way down**. Structure comes from the
 layout keywords — `<row>`, `<column>`, `<grid>`, `<center>`, `<stack>` —
 and appearance comes from component props. The solved example is a
 complete settings screen, and its controller file does not exist: there

@@ -1,7 +1,7 @@
 //! Shared design tokens + base styles for every deck-served view.
 //!
 //! Canonical OKLCH palette sourced from `packages/sail/tokens/src/tokens.css`
-//! so SUI components, deck-served views, and the theme studio can never drift.
+//! so SAIL components, deck-served views, and the theme studio can never drift.
 //! View-scoped base rules live alongside in `deck-core/assets/view-tokens.css`
 //! (deck owns this file — relocated out of shipd in the UI-purge so deck is
 //! self-contained). Per-theme overrides come from `themes.css`.

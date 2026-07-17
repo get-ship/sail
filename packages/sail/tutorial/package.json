@@ -1,7 +1,7 @@
 {
   "name": "@ship/sail-tutorial",
   "version": "0.2.0",
-  "description": "SUI tutorial — 9 lessons (paired starter + solved, template + controller, plus prose). Droppable into the docs site or any host.",
+  "description": "SAIL tutorial — 9 lessons (paired starter + solved, template + controller, plus prose). Droppable into the docs site or any host.",
   "private": false,
   "type": "module",
   "license": "MIT",

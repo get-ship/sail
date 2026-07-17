@@ -1,14 +1,14 @@
 {
   "name": "@ship/sail-dom",
   "version": "0.2.0",
-  "description": "SUI DOM interpreter — parses .sail files and hydrates them against @ship/sail-runtime.",
+  "description": "SAIL DOM interpreter — parses .sail files and hydrates them against @ship/sail-runtime.",
   "type": "module",
   "license": "MIT",
   "main": "src/index.ts",
   "types": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./test-utils": "./src/test-utils/compile-sui.ts"
+    "./test-utils": "./src/test-utils/compile-sail.ts"
   },
   "files": [
     "src",

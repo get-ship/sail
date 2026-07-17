@@ -20,7 +20,7 @@ export default controller((_ctx: ViewScope<Scope>) => ({ lintCmd, lintOutput, co
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">AI</p>
   <h1>The LSP — diagnostics on tap</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    SUI's language intelligence is the Rust compiler —
+    SAIL's language intelligence is the Rust compiler —
     <code>sail_compiler::analyze</code> (diagnostics + scope symbols + dependencies)
     and <code>check_all</code> (every diagnostic, not just the first). It's the
     same grammar the build uses, exposed to agents through two binary commands.

@@ -100,7 +100,7 @@ fn expr_references_ident(src: &str, name: &str) -> bool {
         if b == b'"' || b == b'\'' {
             // String literal — skip until matching close (no escape
             // handling needed; a `\` before the close quote is rare in
-            // SUI expressions and the false positive is bounded).
+            // SAIL expressions and the false positive is bounded).
             let quote = b;
             i += 1;
             while i < bytes.len() && bytes[i] != quote {

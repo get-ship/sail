@@ -198,11 +198,11 @@ impl BundleLayout {
     /// Each entry is resolved by NODE RESOLUTION from the project being built
     /// (`node_resolve::resolve_entry` against `repo_root`) — NOT a hardcoded
     /// monorepo path. The framework comes from wherever npm/bun installed it:
-    /// a workspace member in the sui monorepo, or a registry install in a
+    /// a workspace member in the sail monorepo, or a registry install in a
     /// consumer repo (ship-apps, ship-site). A singleton that doesn't resolve
     /// from this repo (it isn't installed here) is simply skipped — the bake
     /// builds what's present and never hard-fails on a missing framework path.
-    /// This is what lets `build-assets` / per-app `build` run outside the sui
+    /// This is what lets `build-assets` / per-app `build` run outside the sail
     /// monorepo without the `DECK_FRAMEWORK_ASSETS_DIR` crutch.
     pub(crate) fn framework_singletons(&self) -> Vec<BundleTarget> {
         FRAMEWORK_SINGLETONS

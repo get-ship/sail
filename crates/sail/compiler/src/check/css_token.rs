@@ -40,7 +40,7 @@ pub fn check(
     // The rule's natural severity is preserved for everyone who
     // consumes the lint directly (the LSP, `sail_lint` CLI, the agent
     // tooling); the override only affects this build-time gate. An
-    // external SUI app that wants the softer behavior sets
+    // external SAIL app that wants the softer behavior sets
     // `CompileOpts::lint_overrides` and threads it through here.
     let findings = crate::check::lint_overrides::apply_overrides(
         sail_lint::lint_sui_template_source(path, source),

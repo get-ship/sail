@@ -1,8 +1,8 @@
 # Deck — Feature Inventory
 
-Deck is the host / meta-framework for SUI. The relationship is
-`SUI : Deck : Ship :: React : Next : app` — SUI is the component language, Deck
-is the framework that *hosts* SUI views and bundles their assets, and a Ship app
+Deck is the host / meta-framework for SAIL. The relationship is
+`SAIL : Deck : Ship :: React : Next : app` — SAIL is the component language, Deck
+is the framework that *hosts* SAIL views and bundles their assets, and a Ship app
 (the hub, a space) is built *with* Deck. Deck owns *what* gets served and *how*
 assets are built; it never owns app concepts.
 
@@ -15,10 +15,10 @@ test — so this inventory cannot silently rot.
 
 ## The two seams (both CLEAN, both test-enforced)
 
-Deck sits between SUI below and the server/app above. Both seams are clean and
+Deck sits between SAIL below and the server/app above. Both seams are clean and
 each is guarded by a dedicated gate test:
 
-- **deck / sui seam** — SUI emits *structure*, never a serve location. Compiled
+- **deck / sail seam** — SAIL emits *structure*, never a serve location. Compiled
   output carries DOM wiring + bare-specifier imports only; it never bakes a
   `/_deck/...` URL or an importmap (serving is Deck's concern; the compiler knows
   no URLs). Gate: `crates/sail/compiler/tests/boundary_invariants.rs`
@@ -39,7 +39,7 @@ each is guarded by a dedicated gate test:
 - `deck-core` — transport-agnostic hosting logic. Produces a `DeckResponse`
   per request; never touches HTTP.
 - `deck-axum` — the axum adapter: thin shims + `router()` + the HMR stream.
-- `deck-host` — pure view resolution + render helpers (the SUI-facing read side).
+- `deck-host` — pure view resolution + render helpers (the SAIL-facing read side).
 - `deck-bundler` — in-process Rolldown bundler (compile, per-view resolve,
   shared-chunk dedup, app/view builds, asset-graph, watch/HMR, catalog,
   route codegen).
@@ -103,11 +103,11 @@ chunks, builds apps and views, writes the asset graph, and watches for HMR.
 | Bundler handle | (in-process) | `crates/deck/deck-bundler/src/lib.rs::Bundler` | Clone-safe handle: locate compiler once, build / build_all / watch, single-flight coalescing. |
 | Build all targets | `.deck/` + `crates/deck/deck-core/assets/` | `crates/deck/deck-bundler/src/lib.rs::build_all` | Bakes every target (views multi-entry), refreshes the catalog, writes the asset graph; honest per-target failure. |
 | In-process compile | (JS string) | `crates/deck/deck-bundler/src/compile.rs::compile_sui` | Compiles one `.sail` to JS via `sail_compiler::compile`, auto-wiring a paired controller. |
-| Rolldown driver | per-target `.js` | `crates/deck/deck-bundler/src/rolldown_bundle.rs::bundle_target` | Drives Rolldown for one target with the SUI plugin; trims arenas after each build. |
-| SUI resolve/load plugin | (Rolldown plugin) | `crates/deck/deck-bundler/src/sail_plugin.rs` | `resolve_id`/`load` hooks: compile `.sail`, externalize singletons, re-anchor `@ship/<pkg>`, resolve `@sail-tag/<tag>`. |
+| Rolldown driver | per-target `.js` | `crates/deck/deck-bundler/src/rolldown_bundle.rs::bundle_target` | Drives Rolldown for one target with the SAIL plugin; trims arenas after each build. |
+| SAIL resolve/load plugin | (Rolldown plugin) | `crates/deck/deck-bundler/src/sail_plugin.rs` | `resolve_id`/`load` hooks: compile `.sail`, externalize singletons, re-anchor `@ship/<pkg>`, resolve `@sail-tag/<tag>`. |
 | Per-view `@sail-tag` resolver | (view bundle) | `crates/deck/deck-bundler/src/sail_plugin.rs` | `<tag>` → source `.sail` index so a view bundle carries exactly the components it uses. |
 | Shared-chunk dedup | `.deck/` shared chunks | `crates/deck/deck-bundler/src/views_bundle.rs::bundle_views` | Multi-entry view build: a component used by ≥2 views lands in one shared chunk. |
-| App build | static dir | `crates/deck/deck-bundler/src/app.rs::bundle_app` | Bundles a SUI SPA (hub/space), externalizing the document importmap; compiles its `.sail` in-process. |
+| App build | static dir | `crates/deck/deck-bundler/src/app.rs::bundle_app` | Bundles a SAIL SPA (hub/space), externalizing the document importmap; compiles its `.sail` in-process. |
 | Asset-graph write | (purged — `deck-bundler/src/asset_graph.rs`) | (purged — `deck-purge-root`) | The framework no longer writes a monorepo-root `.deck/asset-graph.json`. |
 | Watch / HMR | (broadcast events) | `crates/deck/deck-bundler/src/watch.rs` | Pruned non-recursive FS watch, bounded drop-oldest ring, debounced rebuild, emits `BundlerEvent`s. |
 | Catalog aggregation | (purged — `.deck/catalogs/`) | (purged — `deck-purge-root`) | The framework no longer writes a monorepo-root `.deck/catalogs/workspace.json`. The catalog walker (`crates/deck/deck-bundler/src/catalog/mod.rs::build_catalog`) is available in-memory for hosts. |
@@ -129,7 +129,7 @@ chunks, builds apps and views, writes the asset graph, and watches for HMR.
 
 ## Host contract (`deck-host`, `deck-cli`)
 
-The pure SUI-facing read side, plus the framework CLI.
+The pure SAIL-facing read side, plus the framework CLI.
 
 | Feature | Surface | Implementation | Description |
 | --- | --- | --- | --- |
@@ -137,7 +137,7 @@ The pure SUI-facing read side, plus the framework CLI.
 | Resolved view | (resolution result) | `crates/deck/deck-host/src/resolver.rs::ResolvedView` | Source + params + canonical source path returned by the resolver. |
 | View payload shape | (JSON contract) | `crates/deck/deck-host/src/view_payload.rs::ViewPayload` | The serialized payload contract (html/css/scope/moduleUrl/params) shared with the runtime. |
 | Render helper | (source read) | `crates/deck/deck-host/src/render_helpers.rs::render_view_source` | Reads a view's `page.sail` source from the project root. |
-| CLI: build app | `deck build` | `crates/deck/deck-cli/src/main.rs` | Builds a SUI SPA app to a static output dir. |
+| CLI: build app | `deck build` | `crates/deck/deck-cli/src/main.rs` | Builds a SAIL SPA app to a static output dir. |
 | CLI: bake assets | `deck build-assets` | `crates/deck/deck-cli/src/main.rs` | Bakes framework + consumer bundles via the in-process bundler, with non-empty guards. |
 | CLI: routes | `deck routes` | `crates/deck/deck-cli/src/main.rs` | Regenerates the typed dynamic-route table standalone. `--root=<path>` is required and repeatable; the CLI walks `<root>/routes/` and writes `<root>/routes.gen.ts` with a label auto-derived from the path's basename (no app-name coupling, no monorepo-defaults heuristic). |
 | CLI: scaffold view | `deck scaffold view` | `crates/deck/deck-cli/src/scaffold.rs::run_view` | Generates a new view (page.sail + manifest.jsonc; state goes in an inline `<controller>`). |

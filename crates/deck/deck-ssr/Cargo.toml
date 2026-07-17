@@ -3,7 +3,7 @@ name = "deck-ssr"
 version = "0.1.0"
 edition = "2024"
 publish = false
-description = "Server-render a SYNTHESIZED SUI view (synthetic controller+render) through ship-js — the L0 deno_core/V8 isolate — with route + data resolved over the host-dispatch wire. The production TS-SSR path, ADDITIVE beside the Rust render-eval (it never touches render/eval). Heavy (V8 + Rolldown), so members-only — excluded from default-members like apps/host."
+description = "Server-render a SYNTHESIZED SAIL view (synthetic controller+render) through ship-js — the L0 deno_core/V8 isolate — with route + data resolved over the host-dispatch wire. The production TS-SSR path, ADDITIVE beside the Rust render-eval (it never touches render/eval). Heavy (V8 + Rolldown), so members-only — excluded from default-members like apps/host."
 
 [lib]
 path = "src/lib.rs"

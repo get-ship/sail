@@ -1,4 +1,4 @@
-//! Filesystem walk + classification for SUI authoring sources.
+//! Filesystem walk + classification for SAIL authoring sources.
 //!
 //! Two file shapes are recognised:
 //! - `*.sail` — template (parsed by `sail-compiler`)

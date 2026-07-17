@@ -1,7 +1,7 @@
-# SUI perf baselines
+# SAIL perf baselines
 
 Checked-in median results from the js-framework-benchmark suite, captured
-against `keyed/sui` at a known git SHA. Standard filename is
+against `keyed/sail` at a known git SHA. Standard filename is
 `YYYY-MM-DD-baseline.json`; the latest such filename (sorted) is the
 active anchor that `just bench-check` reads.
 
@@ -36,10 +36,10 @@ future deliberate captures: `YYYY-MM-DD-<short-label>.json`.
   "git_sha": "<short SHA>",
   "framework_version": "0.1.0",
   "compared_against": ["solid", "svelte", "vue", "vanillajs"],
-  "operations":   { "01_run1k":  { "sui": 59.8, "solid": 49.5, ... }, ... },
-  "memory_mb":    { "22_run-memory":  { "sui": 3.4, ... }, ... },
-  "size_kb":      { "41_size-uncompressed": { "sui": 18.3, ... }, ... },
-  "first_paint_ms": { "43_first-paint": { "sui": 38.0, ... } }
+  "operations":   { "01_run1k":  { "sail": 59.8, "solid": 49.5, ... }, ... },
+  "memory_mb":    { "22_run-memory":  { "sail": 3.4, ... }, ... },
+  "size_kb":      { "41_size-uncompressed": { "sail": 18.3, ... }, ... },
+  "first_paint_ms": { "43_first-paint": { "sail": 38.0, ... } }
 }
 ```
 
@@ -52,13 +52,13 @@ files inside the bench checkout.
 just bench
 ```
 
-This rebuilds the SUI bench bundle, runs the benchmark against SUI plus
+This rebuilds the SAIL bench bundle, runs the benchmark against SAIL plus
 comparison frameworks (solid, svelte, vue, vanillajs), and writes a fresh
 `<today>-baseline.json`. Commit it.
 
-The SUI bench app is **owned in this repo** at
+The SAIL bench app is **owned in this repo** at
 `tests/perf/frameworks/keyed/sail/` (see its README) and synced into the external
-checkout (`syncSuiFramework()` in `scripts/dev/bench-lib.mjs`) before each build
+checkout (`syncSailFramework()` in `scripts/dev/bench-lib.mjs`) before each build
 — we maintain only those source files, not a fork of the whole benchmark. The
 comparison frameworks (solid, lit, svelte, vue, vanillajs) still live in the
 external checkout. Its clone URL is not recorded in-tree — record it as the repo
@@ -70,12 +70,12 @@ Requires:
 - An external js-framework-benchmark checkout (default `~/dev/js-framework-benchmark`,
   override with `BENCH_HOME=...`) with comparison frameworks already built
   (`npm run build-prod` in each). On first use, `bun install` once inside the
-  synced `frameworks/keyed/sui` dir (esbuild).
+  synced `frameworks/keyed/sail` dir (esbuild).
 - Playwright Chromium installed at the path in `scripts/dev/bench-lib.mjs`
   (override with `CHROME_BINARY=...`).
-- A sui checkout the vendored `precompile.mjs` can find — it resolves `SAIL_REPO`
-  (env), then `SAIL_COMPILER`/`SAIL_RUNTIME` (env), then probes `~/dev/sui` and
-  `~/dev/Ship/sui`. Set `SAIL_REPO` if the checkout lives elsewhere. Build the
+- A sail checkout the vendored `precompile.mjs` can find — it resolves `SAIL_REPO`
+  (env), then `SAIL_COMPILER`/`SAIL_RUNTIME` (env), then probes `~/dev/sail` and
+  `~/dev/Ship/sail`. Set `SAIL_REPO` if the checkout lives elsewhere. Build the
   compiler first: `cargo build -p sail-compiler` under that checkout.
 
 ## Checking against the baseline
@@ -84,7 +84,7 @@ Requires:
 just bench-check
 ```
 
-Re-runs the benchmark against `keyed/sui` only (skips comparison frameworks
+Re-runs the benchmark against `keyed/sail` only (skips comparison frameworks
 for speed), reads the most recent committed baseline, and compares medians
 op-by-op. Exits non-zero if any op regresses by more than 15%. Override the
 threshold with `BENCH_REGRESSION_THRESHOLD=0.25 just bench-check`.
@@ -102,10 +102,10 @@ threshold with `BENCH_REGRESSION_THRESHOLD=0.25 just bench-check`.
 
 `just bench` answers "how fast"; profiling answers "why this fast / what's
 the dominant cost". Use `scripts/dev/perf-profile.mjs` to capture a V8
-CPU profile of any bench op against SUI plus one comparison framework.
+CPU profile of any bench op against SAIL plus one comparison framework.
 
 ```sh
-# Default: SUI / 01_run1k / 10 iterations
+# Default: SAIL / 01_run1k / 10 iterations
 node scripts/dev/perf-profile.mjs
 
 # Sweep the create-path ops against both frameworks

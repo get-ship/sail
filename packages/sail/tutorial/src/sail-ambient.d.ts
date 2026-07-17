@@ -2,7 +2,7 @@
 //
 // WHY THIS EXISTS: each lesson's `controller.ts` does
 //   `import type { Scope } from './template.sail'`
-// where `template.sail` is a SUI template file (a custom file extension that
+// where `template.sail` is a SAIL template file (a custom file extension that
 // the sail-compiler would normally emit an adjacent `<stem>.sail.d.ts` for —
 // see `scripts/gen-component-types.mjs` and the component packs under
 // `packages/components/sail/*`). The tutorial is a docs asset, not a

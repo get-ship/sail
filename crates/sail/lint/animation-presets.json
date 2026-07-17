@@ -1,5 +1,5 @@
 {
-  "$comment": "Sui motion preset vocabulary — a CLOSED, design-system-owned set of spring + tween configs. The compiler resolves a `motion: { scale: 'sm' }` reference against this file at build time. Adding a preset = adding a row here + (optionally) extending the sx token surface. Mirrors the `sail-sx` rule's design: token-only, no raw values, no bracket escape.",
+  "$comment": "Sail motion preset vocabulary — a CLOSED, design-system-owned set of spring + tween configs. The compiler resolves a `motion: { scale: 'sm' }` reference against this file at build time. Adding a preset = adding a row here + (optionally) extending the sx token surface. Mirrors the `sail-sx` rule's design: token-only, no raw values, no bracket escape.",
 
   "presets": {
     "spring:snappy": {

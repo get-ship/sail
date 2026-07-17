@@ -1,5 +1,5 @@
 // Tutorial playground machinery — the FFI seams ONLY. This module owns the
-// things a SUI template cannot be: the wasm compiler call, the sandboxed
+// things a SAIL template cannot be: the wasm compiler call, the sandboxed
 // preview iframe's postMessage protocol, and the theme-attribute observer.
 //
 // It does not touch page DOM: playground UI state (active tab, status,

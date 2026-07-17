@@ -1,4 +1,4 @@
-// Public author-facing test API for SUI views and components.
+// Public author-facing test API for SAIL views and components.
 //
 // This is the "shared unlock": a `views/<name>/` or component author imports
 // ONE function, points it at their `.sail` source + controller, and asserts

@@ -24,7 +24,7 @@
 //!
 //! ## The presets
 //!
-//! - [`Policy::FULL`] — primitive-authoring: every capability on. Where the SUI
+//! - [`Policy::FULL`] — primitive-authoring: every capability on. Where the SAIL
 //!   primitives are built. The floor still holds; a dissolved primitive expresses
 //!   itself in `sx` + `<variants>` + layout keywords, never raw CSS.
 //! - [`Policy::STRICT`] — app-authoring: every capability off. Compose primitives,
@@ -105,7 +105,7 @@ impl Policy {
     /// THE FLOOR, expressed as `Error` overrides for every [`FLOOR_RULES`] id.
     ///
     /// Authored `<style>`, inline `style=`, `class`, and undeclared companion
-    /// stylesheets are an error in every SUI file, with or without a
+    /// stylesheets are an error in every SAIL file, with or without a
     /// `sail.config.json`. This is not a policy tier and not opt-in: it is a
     /// property of the language. The ONLY exception is the L1 element sources
     /// inside this compiler, which do not take this path — they compile through

@@ -10,7 +10,7 @@
 //     map; the client name belongs to the app, not the framework.
 //   - no hardcoding: the root element, route table, and layouts are injected
 //     by the bundler-emitted entry (from config); nothing is baked in.
-//   - deck → sui only: this imports the runtime's `mount()`; the runtime never
+//   - deck → sail only: this imports the runtime's `mount()`; the runtime never
 //     imports this.
 
 import { mount, type MountHandle, type ViewPayload } from '@ship/sail-runtime'

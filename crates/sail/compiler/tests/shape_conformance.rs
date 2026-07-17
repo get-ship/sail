@@ -376,12 +376,12 @@ fn every_sui_compiles_and_imports_resolve() {
     // sub-processes, no concurrency deadlock — sequential, fast.
     let mut compiled: Vec<(PathBuf, String, String)> = Vec::new();
     let mut compile_errors: Vec<String> = Vec::new();
-    for sui in &files {
-        match compile_one(sui, &repo) {
+    for sail in &files {
+        match compile_one(sail, &repo) {
             Ok(js) => {
-                let rel = sui.strip_prefix(&repo).unwrap_or(sui);
+                let rel = sail.strip_prefix(&repo).unwrap_or(sail);
                 let temp_name = sanitize_for_tempdir(rel);
-                compiled.push((sui.clone(), temp_name, js));
+                compiled.push((sail.clone(), temp_name, js));
             }
             Err(e) => compile_errors.push(e),
         }
@@ -426,9 +426,9 @@ fn every_sui_typechecks_against_runtime_dts() {
     let files = collect_sui_files(&roots);
     assert!(!files.is_empty());
 
-    for sui in &files {
-        let js = compile_one(sui, &repo).unwrap_or_else(|e| panic!("{e}"));
-        let rel = sui.strip_prefix(&repo).unwrap_or(sui);
+    for sail in &files {
+        let js = compile_one(sail, &repo).unwrap_or_else(|e| panic!("{e}"));
+        let rel = sail.strip_prefix(&repo).unwrap_or(sail);
         // Each fixture lands as `<sanitized-path>.js` so tsc diagnostics
         // name the originating .sail file directly.
         let out_name = format!("{}.js", sanitize_for_tempdir(rel));

@@ -1225,7 +1225,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
           <card padding="none" data-tile="sail-media-image" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
-                <sail-media-image src="/sail-oss/sail-mark.svg" alt="SUI mark"></sail-media-image>
+                <sail-media-image src="/sail-oss/sail-mark.svg" alt="SAIL mark"></sail-media-image>
               </center>
               <column gap="1" sx="px-3 py-2">
                 <a href="/components/sail-media-image" sx="text-sm font-semibold font-mono">sail-media-image</a>

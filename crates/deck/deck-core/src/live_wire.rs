@@ -1,4 +1,4 @@
-//! SSE envelope encoders for the SUI live-data wire protocol.
+//! SSE envelope encoders for the SAIL live-data wire protocol.
 //!
 //! These pure formatting functions are the single source of truth for every
 //! SSE frame the runtime consumes. Both `shipd` and `deck-conformance` (and any

@@ -1,6 +1,6 @@
 // wireFormMutation — compile-target helper for `<form mutation="ship.X.Y">`.
 //
-// Emitted by the SUI compiler into compiled view modules as:
+// Emitted by the SAIL compiler into compiled view modules as:
 //   cleanups.push(wireFormMutation(formEl, "ship.agents.create", $scope))
 //
 // Behavior mirrors the attach-time wirer in ui-dom, but runs in the

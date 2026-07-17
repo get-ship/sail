@@ -1,5 +1,5 @@
 <!--
-  <sail-render> — THE engine primitive: a live, reactive mount stage for a SUI
+  <sail-render> — THE engine primitive: a live, reactive mount stage for a SAIL
   component (build-spec §1 / §Render-engine seam).
 
   Thin shell. ALL render-engine work (compile + view-mode `__mount` + net-new

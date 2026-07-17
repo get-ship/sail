@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url'
  *  serves at `/_deck/icons/{name}.svg`). Resolved RELATIVE to this module so it
  *  survives the checkout moving on disk; `LUCIDE_ICONS_JSON` overrides for
  *  out-of-tree consumers (the published `@ship/test-setup` installed outside
- *  the sui repo, where the `crates/` sibling isn't present). */
+ *  the sail repo, where the `crates/` sibling isn't present). */
 const DEFAULT_LUCIDE = resolve(
   dirname(fileURLToPath(import.meta.url)),
   '../../../../crates/deck/deck-core/assets/lucide-icons.json',
@@ -31,9 +31,9 @@ export function defaultLucideIconsPath(): string {
   const candidate = process.env.LUCIDE_ICONS_JSON ?? DEFAULT_LUCIDE
   if (existsSync(candidate)) return candidate
   throw new Error(
-    `lucide-icons.json not found at ${candidate}. It lives in the sui repo at ` +
+    `lucide-icons.json not found at ${candidate}. It lives in the sail repo at ` +
     `crates/deck/deck-core/assets/lucide-icons.json; set LUCIDE_ICONS_JSON when ` +
-    `running @ship/test-setup outside the sui checkout.`,
+    `running @ship/test-setup outside the sail checkout.`,
   )
 }
 

@@ -53,7 +53,7 @@ function recordsFor(scope: EffectScope): Set<ResourceRecord> {
         return acc
       }, {})
       console.warn(
-        '[sui/scope] mount disposed with open resources:',
+        '[sail/scope] mount disposed with open resources:',
         Object.entries(grouped)
           .map(([kind, n]) => `${n}× ${kind}`)
           .join(', '),
@@ -64,7 +64,7 @@ function recordsFor(scope: EffectScope): Set<ResourceRecord> {
         if (!sampleByKind.has(r.kind)) sampleByKind.set(r.kind, r.stack)
       }
       for (const [kind, stack] of sampleByKind) {
-        console.warn(`[sui/scope] sample ${kind} allocation site:\n${stack ?? '(no stack)'}`)
+        console.warn(`[sail/scope] sample ${kind} allocation site:\n${stack ?? '(no stack)'}`)
       }
     })
   }

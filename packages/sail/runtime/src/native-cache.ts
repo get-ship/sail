@@ -257,7 +257,7 @@ export interface DehydratedEntry {
 // Owner-tree homing — mirrors query-client.ts exactly
 // ---------------------------------------------------------------------------
 
-const idKey = Symbol.for('sui.nativeCache')
+const idKey = Symbol.for('sail.nativeCache')
 
 function rootOf(scope: EffectScope): EffectScope {
   let cur: EffectScope = scope

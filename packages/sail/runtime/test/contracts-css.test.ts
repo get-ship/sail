@@ -1,5 +1,5 @@
 // Drift lock: the materialized `packages/sail/tokens/src/contracts.css`
-// (the asset build-time consumers read — the deck bundler's sui.css,
+// (the asset build-time consumers read — the deck bundler's sail.css,
 // non-JS hosts) must byte-match the runtime's LIGHT_CONTRACTS_CSS after
 // its generated banner. Regenerate on mismatch:
 //   bun packages/sail/runtime/scripts/emit-contracts-css.ts
@@ -37,10 +37,10 @@ describe('contracts.css asset', () => {
       /\/\* Framework webfonts —[\s\S]*?\*\/\s*/,
       '',
     )
-    // The asset is wrapped in the `sui` cascade layer; unwrap to compare the
+    // The asset is wrapped in the `sail` cascade layer; unwrap to compare the
     // rule body against the constant.
     const inner = withoutFonts
-      .replace(/^@layer sui \{\n/, '')
+      .replace(/^@layer sail \{\n/, '')
       .replace(/\}\n$/, '')
     expect(inner).toBe(LIGHT_CONTRACTS_CSS)
   })

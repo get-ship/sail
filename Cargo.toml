@@ -5,7 +5,7 @@
 members = [
     # Per-repo build-time identity (git sha/dirty/timestamp). A copy of Ship's
     # build-info under a distinct package name (sail-build-info) so there is no
-    # build-info package collision when sui crates are pulled into Ship's lockfile.
+    # build-info package collision when sail crates are pulled into Ship's lockfile.
     "crates/build-info",
     "crates/sail/compiler",
     "crates/sail/compiler-napi",

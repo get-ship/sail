@@ -1,4 +1,4 @@
-// SUI runtime — fine-grained reactive signals.
+// SAIL runtime — fine-grained reactive signals.
 //
 // Solid-shaped: signals are sources, derived are memoized computeds,
 // effects subscribe and re-run on dep change. Reading inside a tracked
@@ -218,7 +218,7 @@ function runCleanups(node: Computation): void {
     try {
       cs[i]!()
     } catch (e) {
-      console.error('[sui] cleanup threw:', e)
+      console.error('[sail] cleanup threw:', e)
     }
   }
 }
@@ -281,7 +281,7 @@ function runEffect(node: Computation): void {
     if (boundary) {
       boundary.catch(e, 'effect')
     } else {
-      console.error('[sui] effect threw:', e)
+      console.error('[sail] effect threw:', e)
       dispatchSuiError(node.host ?? null, e, 'effect')
     }
   } finally {
@@ -354,7 +354,7 @@ function flush(): void {
       if (++rounds > MAX_FLUSH_ROUNDS) {
         QUEUE = []
         throw new Error(
-          `[sui] reactivity: aborting flush after ${MAX_FLUSH_ROUNDS} rounds — ` +
+          `[sail] reactivity: aborting flush after ${MAX_FLUSH_ROUNDS} rounds — ` +
             'a reaction keeps scheduling itself (likely an effect writing a ' +
             'signal it reads with no stable fixpoint).',
         )
@@ -579,7 +579,7 @@ export function effect(fn: () => void | (() => void)): () => void {
  * the NEW value) re-notify their subscribers. Other keys are left
  * alone — no re-evaluation, no DOM thrash.
  *
- * The Krausest motivation: SUI's bench has
+ * The Krausest motivation: SAIL's bench has
  *
  *   class:danger={row.id === selected()}
  *

@@ -1,6 +1,6 @@
 # @ship/sail-tutorial
 
-The SUI tutorial, co-located with the framework so it can't go stale.
+The SAIL tutorial, co-located with the framework so it can't go stale.
 
 Nine lessons, each a paired `starter/` (the reader's working copy) and
 `solved/` (the reference implementation). Every lesson is a real, small

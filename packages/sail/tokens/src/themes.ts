@@ -101,7 +101,7 @@ export const THEMES: Theme[] = [
     ],
   },
   {
-    // Brand-free default for building on SUI without adopting any
+    // Brand-free default for building on SAIL without adopting any
     // product identity. Neutral slate surfaces, a deep-slate "ink"
     // primary, one restrained slate-blue accent. Carries zero brand.
     id: 'neutral-light', label: 'Neutral Light', dark: false,
@@ -175,7 +175,7 @@ export function readStoredTheme(): ThemeId {
 
 /**
  * Theme persistence transport — the host's authoritative settings store.
- * sui/tokens is a framework package and names no daemon URL; the host
+ * sail/tokens is a framework package and names no daemon URL; the host
  * (shell) wires this to its settings service. Omitted ⇒ persistence is
  * localStorage-only.
  */

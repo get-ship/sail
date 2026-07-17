@@ -1,4 +1,4 @@
-// Code snippets for the theming page. Every SUI sample is compiled by the
+// Code snippets for the theming page. Every SAIL sample is compiled by the
 // build (crates/sail/compiler/tests/site_snippets_compile.rs).
 export const code = {
   picker: `<!-- the whole theming UI. Trigger, panel, previews, keyboard,

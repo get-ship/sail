@@ -680,7 +680,7 @@ export default controller((ctx: ViewScope<Scope>) => {
             {/if}
             {#if stage.suiMediaImage()}
               <column gap="3" align="center" data-tile-stage="sail-pack-media-image">
-                <sail-media-image src="/sail-oss/sail-mark.svg" alt="SUI mark"></sail-media-image>
+                <sail-media-image src="/sail-oss/sail-mark.svg" alt="SAIL mark"></sail-media-image>
               </column>
             {/if}
             {#if stage.suiMediaAv()}

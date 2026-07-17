@@ -51,7 +51,7 @@ fn declares_js_workspaces(dir: &Path) -> bool {
 /// Walk up from `start` to the WORKSPACE ROOT for a build — the directory the
 /// bundler resolves `@ship/<pkg>` workspace sources and node_modules against.
 ///
-/// A Cargo workspace wins (the sui monorepo): when an ancestor holds a
+/// A Cargo workspace wins (the sail monorepo): when an ancestor holds a
 /// `Cargo.toml` the topmost one is the root, identical to [`topmost_cargo_root`].
 /// Only when there is NO Cargo workspace (a pure-JS consumer like `ship-apps`)
 /// do we fall back to the topmost ancestor whose `package.json` declares a

@@ -1,4 +1,4 @@
-// @ship/sail-media — SUI media-renderer pack (the PURE leaf content renderers
+// @ship/sail-media — SAIL media-renderer pack (the PURE leaf content renderers
 // plus the pure detection/parse engine).
 //
 // Each <tag>.compiled.js calls customElements.define() on import, so a single

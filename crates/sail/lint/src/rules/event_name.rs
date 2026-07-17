@@ -8,7 +8,7 @@
 //!   - `sail-*` — framework-emitted custom events (e.g. `sail-rail:toggle`)
 //!   - `ship-*` — Ship product custom events
 //!   - `<tag>:` prefix — namespaced events from custom elements
-//!   - a small set of bare SUI framework custom events that carry no
+//!   - a small set of bare SAIL framework custom events that carry no
 //!     prefix — `success` (and `failure`) emitted by `<form mutation=…>`
 //!     after the mutation settles. These are real emitted events, not
 //!     DOM events, so they live in their own allowlist rather than the
@@ -21,7 +21,7 @@
 //!
 //! **Severity: Error.** Every `on:<event>` across the components/views
 //! tree resolves to a known DOM event, a prefixed/namespaced custom
-//! event, or a SUI framework custom event (verified by the repo-wide
+//! event, or a SAIL framework custom event (verified by the repo-wide
 //! scan). Error hard-fails a typo'd handler that would silently never
 //! fire.
 
@@ -73,7 +73,7 @@ const KNOWN_EVENTS: &[&str] = &[
     "wheel", "message", "messageerror", "storage",
 ];
 
-/// SUI framework custom events that carry NO prefix. `<form mutation=…>`
+/// SAIL framework custom events that carry NO prefix. `<form mutation=…>`
 /// emits `success` / `failure` on its host once the mutation settles, so
 /// `on:success=` / `on:failure=` are legitimate even though they aren't DOM
 /// events and lack a `sail-`/`ship-` prefix. Keep this list tight — it's the
@@ -166,7 +166,7 @@ fn is_acceptable_event_name(name: &str) -> bool {
     if KNOWN_EVENTS.contains(&name) {
         return true;
     }
-    // Bare SUI framework custom events (`success`/`failure` from <form mutation>).
+    // Bare SAIL framework custom events (`success`/`failure` from <form mutation>).
     if SUI_CUSTOM_EVENTS.contains(&name) {
         return true;
     }

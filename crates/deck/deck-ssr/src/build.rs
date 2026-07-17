@@ -75,7 +75,7 @@ pub async fn synthesize_and_bundle_with(
         .with_context(|| format!("read view {view_rel}"))?;
     let manifest_src = std::fs::read_to_string(repo.join(manifest_rel))
         .with_context(|| format!("read manifest {manifest_rel}"))?;
-    // SUI sources may declare a `<controller>…</controller>` block alongside
+    // SAIL sources may declare a `<controller>…</controller>` block alongside
     // the template — the synthetic emit reads it as a paired controller.
     // The template-only parser expects the block to be stripped first; the
     // CLI does this in `parse::preprocess`, the SSR bundler must too.
@@ -84,7 +84,7 @@ pub async fn synthesize_and_bundle_with(
     let mut manifest = AppManifest::parse(&manifest_src)
         .map_err(|e| anyhow!("parse manifest: {}", e.render(&manifest_src)))?;
     // Deck declares its host context (route/navigate -> @ship/deck/router) into
-    // the manifest seam; the app's own entries win. SUI names no host.
+    // the manifest seam; the app's own entries win. SAIL names no host.
     for (name, client) in deck_core::host_context::host_context_clients() {
         manifest.clients.entry(name).or_insert(client);
     }

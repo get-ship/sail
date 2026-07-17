@@ -49,7 +49,7 @@ const SIZES_CSS =
 // ask for is the size you get. Without it the framework silently inherits
 // whatever box model the host page happens to have — a [size=md] input stops
 // being --control-h-md, and a <textarea rows=4> stops honoring `rows` (the
-// min-height floor swallows the rows whole). Specificity 0 and inside @layer sui,
+// min-height floor swallows the rows whole). Specificity 0 and inside @layer sail,
 // so an author still wins. Shared by BOTH surfaces below: shadow components adopt
 // it via BASE_CSS, light-DOM pages get it via LIGHT_CONTRACTS_CSS. One definition.
 const BOX_MODEL_CSS = '*, *::before, *::after { box-sizing: border-box; }\n'
@@ -110,7 +110,7 @@ const TYPOGRAPHY_CSS =
 // <blockquote> looks designed with no sx and no <style>. This is the L1
 // promise applied to the whole element set: reserved by the compiler,
 // styled by the framework, zero bundle cost until used. Media/lists/table/
-// quote/inline — all token-driven, theme-reactive, @layer sui.
+// quote/inline — all token-driven, theme-reactive, @layer sail.
 const SEMANTIC_ELEMENTS_CSS =
   // Media — never overflow the container.
   'img, video, canvas, svg { max-width: 100%; }\n' +
@@ -150,13 +150,13 @@ function makeSheet(css: string): CSSStyleSheet | null {
   }
 }
 
-/// Wrap framework CSS in the `sui` cascade layer. Author CSS is UNLAYERED,
+/// Wrap framework CSS in the `sail` cascade layer. Author CSS is UNLAYERED,
 /// which beats any layer — so users override the design system by writing
 /// normal CSS (or a theme), never fighting specificity or reaching for
 /// !important. One rule governs all precedence: your styles are above ours.
 /// (`:where()` is kept inside for the framework's OWN internal cascade; it's
 /// invisible to the author-override story, which is pure layer order.)
-export const layered = (css: string): string => `@layer sui {\n${css}}\n`
+export const layered = (css: string): string => `@layer sail {\n${css}}\n`
 
 export const suiTonesSheet: CSSStyleSheet | null = makeSheet(layered(TONES_CSS))
 export const suiSizesSheet: CSSStyleSheet | null = makeSheet(layered(SIZES_CSS))
@@ -226,8 +226,8 @@ const hostAttrs = (css: string): string =>
 
 // The INTERACTIVE-SURFACE contracts — the framework decisions no component
 // re-makes (the audit's control-baseline + focus + disabled clusters:
-// ~18% of all baseline CSS was these, hand-repeated). GLOBAL: a SUI document
-// is SUI's canvas, so these apply to every control in the light tree, not
+// ~18% of all baseline CSS was these, hand-repeated). GLOBAL: a SAIL document
+// is SAIL's canvas, so these apply to every control in the light tree, not
 // just component subtrees — "the web, with default styles." Interop with a
 // foreign page is a DIFFERENT mode (emit a web component; its shadow root
 // insulates it for free). :where() keeps specificity at zero so any explicit
@@ -327,7 +327,7 @@ const TOGGLE_CONTROLS_CSS =
   ":where(input[type='checkbox'][invalid]:checked, input[type='radio'][invalid]:checked, input[type='checkbox'][aria-invalid='true']:checked, input[type='radio'][aria-invalid='true']:checked) { background-color: var(--destructive); border-color: var(--destructive); }\n"
 
 // L1 <button> — the first language element skin. A bare <button> anywhere in
-// a SUI document IS the design system's button ("the web with default styles"):
+// a SAIL document IS the design system's button ("the web with default styles"):
 // tone/size arrive through the attribute-keyed channel contracts above,
 // variant surfaces mirror the hand-polished baseline, and every rule sits at
 // :where() zero specificity so sx atomics and component variants win ties.

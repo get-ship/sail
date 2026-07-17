@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// View parity harness — j2 template vs SUI template structural comparison.
+// View parity harness — j2 template vs SAIL template structural comparison.
 //
 // Default: static source analysis (no daemon needed).
 // Playwright mode (PARITY_PLAYWRIGHT=1): boots shipd, uses live rendering.
@@ -106,10 +106,10 @@ function inSui(needle, haystack) {
   return haystack.some(s => s.toLowerCase() === n)
 }
 
-function diffContent(j2, sui) {
+function diffContent(j2, sail) {
   const missing = []
   for (const h of j2.headings) {
-    if (!inSui(h.text, sui.headings.map(s => s.text))) {
+    if (!inSui(h.text, sail.headings.map(s => s.text))) {
       missing.push(`h${h.level}: "${h.text}"`)
     }
   }
@@ -120,12 +120,12 @@ function diffContent(j2, sui) {
     }
   }
   for (const lbl of j2.ariaLabels) {
-    if (!inSui(lbl, sui.ariaLabels)) {
+    if (!inSui(lbl, sail.ariaLabels)) {
       missing.push(`aria-label: "${lbl}"`)
     }
   }
   for (const t of j2.slotTitles) {
-    if (!inSui(t, sui.slotTitles)) {
+    if (!inSui(t, sail.slotTitles)) {
       missing.push(`slot[title]: "${t}"`)
     }
   }
@@ -139,10 +139,10 @@ function elementCount(c) {
 // ── Playwright mode ───────────────────────────────────────────────────────
 
 async function findShipd() {
-  // The sui repo root (5 up from this fixture), then the sibling ship repo
-  // where shipd is built (post-nest layout: <parent>/{sui,ship}). Derived from
+  // The sail repo root (5 up from this fixture), then the sibling ship repo
+  // where shipd is built (post-nest layout: <parent>/{sail,ship}). Derived from
   // this file's dir so it survives the checkout moving; SHIPD_BIN overrides.
-  // (Note: the module-level ROOT is sui/packages, not the repo root — don't
+  // (Note: the module-level ROOT is sail/packages, not the repo root — don't
   //  reuse it here.)
   const suiRoot = path.resolve(__dirname, '../../../../..')
   const candidates = [
@@ -228,26 +228,26 @@ async function run() {
     const row = { name: v.name, j2Count: 0, suiCount: 0, missing: [], error: null }
 
     try {
-      let j2, sui
+      let j2, sail
       if (playwright) {
         const j2Cap = await capturePage(browser, `${BASE}/api/v1/v/${v.j2}`, authToken)
-        const suiCap = await capturePage(browser, `${BASE}/sui/${v.sail}`, null)
+        const suiCap = await capturePage(browser, `${BASE}/sail/${v.sail}`, null)
         j2 = extractContent(stripJinja(j2Cap.html))
-        sui = extractContent(stripSui(suiCap.html))
-        row.missing = diffContent(j2, sui)
+        sail = extractContent(stripSui(suiCap.html))
+        row.missing = diffContent(j2, sail)
         if (row.missing.length > 0) {
           writeFileSync(path.join(BASELINES, `${v.name}-j2.png`), j2Cap.shot)
-          writeFileSync(path.join(BASELINES, `${v.name}-sui.png`), suiCap.shot)
+          writeFileSync(path.join(BASELINES, `${v.name}-sail.png`), suiCap.shot)
         }
       } else {
         j2 = loadJ2(v.j2)
-        sui = loadSui(v.sail)
+        sail = loadSui(v.sail)
         if (!j2) { row.error = 'j2 not found'; results.push(row); console.log('skip'); continue }
-        if (!sui) { row.error = 'SUI not found'; results.push(row); console.log('skip'); continue }
-        row.missing = diffContent(j2, sui)
+        if (!sail) { row.error = 'SAIL not found'; results.push(row); console.log('skip'); continue }
+        row.missing = diffContent(j2, sail)
       }
       row.j2Count = elementCount(j2)
-      row.suiCount = elementCount(sui)
+      row.suiCount = elementCount(sail)
       console.log(row.missing.length === 0 ? '✓' : `${row.missing.length} gap(s)`)
     } catch (e) {
       row.error = e.message
@@ -273,7 +273,7 @@ async function run() {
   if (errored.length) report += `, ${errored.length} errored`
   report += `\n\n`
 
-  report += `| View | j2 elements | SUI elements | Missing in SUI |\n`
+  report += `| View | j2 elements | SAIL elements | Missing in SAIL |\n`
   report += `|---|---|---|---|\n`
   for (const r of results) {
     if (r.error) {

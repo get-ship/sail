@@ -1,11 +1,11 @@
 <!--
-  <sail-graph-canvas> — SUI port of <ship-graph-canvas>.
+  <sail-graph-canvas> — SAIL port of <ship-graph-canvas>.
   Generic positioned-graph primitive. Renders an SVG edge layer with bezier
   paths plus absolutely-positioned node cards.
 
   Prop / event parity vs <ship-graph-canvas>
   ─────────────────────────────────────────────────────────────────────────────
-  Lit                           SUI                          Notes
+  Lit                           SAIL                          Notes
   ─────────────────────────────────────────────────────────────────────────────
   nodes (array|string, [])      nodes (string, '')            ✓ JSON-encoded
   edges (array|string, [])      edges (string, '')            ✓ JSON-encoded

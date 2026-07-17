@@ -82,7 +82,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
   <p>
     This is the part that matters, and it is the part every other system gets
     wrong. <strong>Authored CSS is a compile error.</strong> Not discouraged, not
-    linted with a warning — an error, in every SUI file, with or without a config.
+    linted with a warning — an error, in every SAIL file, with or without a config.
     The only exception is the ~40 L1 elements inside the compiler, because they
     <em>are</em> the styling layer.
   </p>

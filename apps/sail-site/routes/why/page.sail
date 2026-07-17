@@ -7,9 +7,9 @@
 -->
 <column sx="p-0 max-w-breakpoint-tablet mx-auto">
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Introduction</p>
-  <h1>Why SUI</h1>
+  <h1>Why SAIL</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    SUI is built to be written by agents. Not "agent-friendly" as a feature —
+    SAIL is built to be written by agents. Not "agent-friendly" as a feature —
     agents are the assumed author, and every decision in the language follows
     from that. The goal is to give a model 95% of the expression that code
     offers with 10% of the decisions.
@@ -82,7 +82,7 @@
   <p>
     This is the part that matters most, and it's the part that's easy to miss.
     An agent writing React gets no oracle: a wrong program <em>renders</em>,
-    plausibly, and ships. An agent writing SUI gets told exactly what is wrong,
+    plausibly, and ships. An agent writing SAIL gets told exactly what is wrong,
     in the language's own vocabulary, the moment it writes it — an unknown
     motion trigger, a color that isn't on the system, a layout that should have
     been a primitive.
@@ -90,7 +90,7 @@
   <p>
     Agents run in a loop. A language that can <em>correct</em> them in one turn
     beats a language they happen to have memorized. We don't need the model to
-    have read a million lines of SUI. We need it to be correctable.
+    have read a million lines of SAIL. We need it to be correctable.
   </p>
 
   <h2>What the constraint bought</h2>
@@ -128,7 +128,7 @@
     to guarantee.
   </p>
   <p>
-    SUI takes the other side. It will feel constrained if you came looking for a
+    SAIL takes the other side. It will feel constrained if you came looking for a
     flexible toolkit to hand-write — and it should. That constraint is the
     product. It is what turns "an agent built this" from a warning into a
     guarantee.

@@ -103,12 +103,12 @@ fn element_skins_css_matches_registry() {
     );
     let file = std::fs::read_to_string(path).expect("element-skins.css must exist");
     // Strip the generated banner (through the first `*/\n`) and the `@layer
-    // sui { … }` wrapper, then compare the rule body to the registry.
+    // sail { … }` wrapper, then compare the rule body to the registry.
     let after_banner = &file[file.find("*/\n").expect("banner present") + 3..];
     let inner = after_banner
-        .strip_prefix("@layer sui {\n")
+        .strip_prefix("@layer sail {\n")
         .and_then(|s| s.strip_suffix("}\n"))
-        .expect("element-skins.css is wrapped in @layer sui");
+        .expect("element-skins.css is wrapped in @layer sail");
     assert_eq!(
         inner,
         sail_compiler::stdlib::skins_css(),

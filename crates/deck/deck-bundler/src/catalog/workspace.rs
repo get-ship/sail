@@ -260,17 +260,17 @@ pub fn discover_bundle_declarations(repo_root: &Path) -> Vec<(PathBuf, BundleDec
         .collect()
 }
 
-/// Sui's own workspace root — three parents up from this crate's
-/// `CARGO_MANIFEST_DIR` (`<sui>/crates/deck/deck-bundler` → `<sui>`), validated
-/// once at first access. Sui carved the framework `@ship/*` packages out of the
+/// Sail's own workspace root — three parents up from this crate's
+/// `CARGO_MANIFEST_DIR` (`<sail>/crates/deck/deck-bundler` → `<sail>`), validated
+/// once at first access. Sail carved the framework `@ship/*` packages out of the
 /// consuming project (`@ship/tokens`, `@ship/sail-*`, the `packages/components/
-/// sui/*` packs); a consuming project depends on them via `file:` deps, so they
+/// sail/*` packs); a consuming project depends on them via `file:` deps, so they
 /// no longer live under the project's `repo_root` and a `repo_root`-only
-/// workspace walk misses them. Resolving sui's root from the build crate's own
+/// workspace walk misses them. Resolving sail's root from the build crate's own
 /// location lets the bundler union those packages into the `@ship/<name>` →
 /// source map regardless of which project it is building.
 ///
-/// `None` when the derived path doesn't look like sui's workspace (e.g. the
+/// `None` when the derived path doesn't look like sail's workspace (e.g. the
 /// crate was relocated, or a prod build runs from an install layout) — callers
 /// fall back to project-only resolution and never panic.
 fn sui_workspace_root() -> Option<&'static Path> {
@@ -282,9 +282,9 @@ fn sui_workspace_root() -> Option<&'static Path> {
                 return None;
             }
         }
-        // Confirm it's sui's workspace: a `package.json` + `packages/` dir,
+        // Confirm it's sail's workspace: a `package.json` + `packages/` dir,
         // AND it actually declares the carved `@ship/tokens` package. The
-        // tokens check is the cheap, specific guard that this is sui (not some
+        // tokens check is the cheap, specific guard that this is sail (not some
         // other ancestor workspace) without a full discovery walk.
         if d.join("package.json").exists()
             && d.join("packages/sail/tokens/package.json").exists()
@@ -308,16 +308,16 @@ fn sui_workspace_root() -> Option<&'static Path> {
 /// The map UNIONS two workspaces:
 ///   1. the consuming project's `repo_root` (its own `@ship/*` — `@ship/sdk`,
 ///      `@ship/agents`, the `packages/components/ship/*` packs, etc.);
-///   2. sui's own workspace ([`sui_workspace_root`]) — the carved framework
+///   2. sail's own workspace ([`sui_workspace_root`]) — the carved framework
 ///      packages (`@ship/tokens`, `@ship/sail-*`, `packages/components/sail/*`).
 ///
-/// PRECEDENCE on a name collision: **sui wins**. Sui owns the framework `@ship/*`
-/// names; after the carve they live only under sui's root, so a stale or absent
-/// entry under the project's root must never shadow the real sui source. Sui's
+/// PRECEDENCE on a name collision: **sail wins**. Sail owns the framework `@ship/*`
+/// names; after the carve they live only under sail's root, so a stale or absent
+/// entry under the project's root must never shadow the real sail source. Sail's
 /// entries are therefore overlaid AFTER the project's, overwriting on collision.
 /// (Today the two sets are disjoint — project owns `@ship/sdk`/`@ship/agents`/…,
-/// sui owns `@ship/tokens`/`@ship/sail-*` — so this rule only ever fires
-/// defensively.) If sui's root can't be derived the union degrades to
+/// sail owns `@ship/tokens`/`@ship/sail-*` — so this rule only ever fires
+/// defensively.) If sail's root can't be derived the union degrades to
 /// project-only resolution.
 ///
 /// Cached per `repo_root` (shared `Arc`, mirroring `component_index`) so the
@@ -346,7 +346,7 @@ pub fn component_package_roots(repo_root: &Path) -> Arc<HashMap<String, PathBuf>
     // `SailPlugin` can't re-anchor a bare `import "@ship/agents"` to source, it
     // falls through to a bare external the importmap never covers, and the app
     // renders blank. Resolve the enclosing workspace root and union its packages
-    // (skip when it IS the project root — the sui monorepo, where they coincide).
+    // (skip when it IS the project root — the sail monorepo, where they coincide).
     if let Some(ws_root) = crate::paths::topmost_workspace_root(repo_root) {
         if ws_root != repo_root {
             for p in discover_workspace_packages(&ws_root).unwrap_or_default() {
@@ -354,7 +354,7 @@ pub fn component_package_roots(repo_root: &Path) -> Arc<HashMap<String, PathBuf>
             }
         }
     }
-    // Overlay sui's own workspace (sui wins on collision). Skip when sui IS the
+    // Overlay sail's own workspace (sail wins on collision). Skip when sail IS the
     // project root — its packages are already in `roots`, and re-walking would
     // only be redundant work for an identical result.
     if let Some(sui_root) = sui_workspace_root() {

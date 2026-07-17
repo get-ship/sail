@@ -1,9 +1,9 @@
-// SUI component QA sweep — DETERMINISTIC defect detection (no vision).
+// SAIL component QA sweep — DETERMINISTIC defect detection (no vision).
 // Renders each component's detail page across themes and runs an assertion
 // battery: console errors, off-screen geometry, overflow, zero-size content.
 // Emits a JSON defect report. This is the CI-able quality gate; agents fix
 // what it flags. Usage: node qa/sweep.mjs [themes] [base]
-import { chromium } from '/home/madvib/dev/Ship/worktrees/sui/sui-sx/node_modules/.bun/playwright@1.61.0/node_modules/playwright/index.mjs'
+import { chromium } from '/home/madvib/dev/Ship/worktrees/sail/sail-sx/node_modules/.bun/playwright@1.61.0/node_modules/playwright/index.mjs'
 import { readFileSync, writeFileSync } from 'node:fs'
 
 const BASE = process.argv[3] || 'http://127.0.0.1:7878'

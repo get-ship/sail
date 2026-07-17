@@ -1,4 +1,4 @@
-// Regression: the lowering must handle the forms the SUI COMPILER actually
+// Regression: the lowering must handle the forms the SAIL COMPILER actually
 // emits — not the hand-written `export default {…}` fixtures the earlier tests
 // used. A real compiled page module (e.g. views/git) emits:
 //   import { bindText, component, … } from "@ship/sail-runtime";

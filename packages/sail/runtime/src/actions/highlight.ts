@@ -12,7 +12,7 @@ const KEYWORDS = new Set([
   'default', 'if', 'else', 'for', 'of', 'in', 'new', 'await', 'async', 'type',
   'interface', 'class', 'extends', 'as',
 ])
-// SUI / runtime vocabulary — highlighted as functions so the reactive verbs pop.
+// SAIL / runtime vocabulary — highlighted as functions so the reactive verbs pop.
 const VERBS = new Set([
   'signal', 'derived', 'effect', 'controller', 'scope', 'mount', 'untrack',
   'prop', 'data', 'client', 'npm', 'install',

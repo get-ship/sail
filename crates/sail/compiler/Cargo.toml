@@ -13,7 +13,7 @@ crate-type = ["lib", "cdylib"]
 path = "src/lib.rs"
 
 [build-dependencies]
-# Per-repo build-time identity. sui owns its copy (package `sail-build-info`,
+# Per-repo build-time identity. sail owns its copy (package `sail-build-info`,
 # referenced in code as `build_info`) so there is no absolute back-edge to the
 # Ship repo and no build-info package collision in Ship's lockfile.
 build-info = { package = "sail-build-info", path = "../../build-info" }
@@ -50,7 +50,7 @@ optional = true
 version = "0.6"
 optional = true
 
-# SUI lint substrate — controller-purity rule and (Phase 2+) other
+# SAIL lint substrate — controller-purity rule and (Phase 2+) other
 # authoring-discipline rules. Compile-time hard wall: any finding
 # becomes a CompileError. Same rule definition consumed by crates/lsp
 # at edit-time.
@@ -58,7 +58,7 @@ optional = true
 path = "../lint"
 
 [dependencies.build-info]
-# Per-repo build-time identity. sui owns its copy (package `sail-build-info`,
+# Per-repo build-time identity. sail owns its copy (package `sail-build-info`,
 # referenced in code as `build_info`) so there is no absolute back-edge to the
 # Ship repo and no build-info package collision in Ship's lockfile.
 package = "sail-build-info"

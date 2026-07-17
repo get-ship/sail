@@ -66,7 +66,7 @@ fn consumer_display_grid_surfaces_a_warning() {
     assert_eq!(diags.len(), 1, "expected one prefer-primitive finding, got {diags:?}");
     assert_eq!(diags[0].0, DiagSeverity::Warning, "must be a Warning, never Error: {diags:?}");
     assert!(
-        diags[0].1.contains("<sail-grid>") && diags[0].1.contains("sui skill"),
+        diags[0].1.contains("<sail-grid>") && diags[0].1.contains("sail skill"),
         "message should name the primitives + skill: {}",
         diags[0].1
     );

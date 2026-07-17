@@ -3,7 +3,7 @@ name = "sail-build-info"
 version = "0.1.0"
 edition = "2024"
 publish = false
-description = "Shared build-time identity capture (git SHA, dirty flag, build timestamp, rustc version) for the sui repo. A per-repo copy of Ship's build-info under a distinct package name so there is no build-info package-name clash when sui crates are pulled into Ship's lockfile."
+description = "Shared build-time identity capture (git SHA, dirty flag, build timestamp, rustc version) for the sail repo. A per-repo copy of Ship's build-info under a distinct package name so there is no build-info package-name clash when sail crates are pulled into Ship's lockfile."
 
 [lints]
 workspace = true

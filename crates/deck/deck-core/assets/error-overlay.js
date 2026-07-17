@@ -1,15 +1,15 @@
 // Deck dev-mode error overlay — the fallback surface for task #80's
 // incident: a page that rendered nothing, with the only symptom being
-// "[sui] effect threw:" buried in console.error. Dozens of throws, zero
+// "[sail] effect threw:" buried in console.error. Dozens of throws, zero
 // visible failure surface unless a developer already had devtools open.
 //
-// This listens for the `sail:error` CustomEvent the sui runtime dispatches
+// This listens for the `sail:error` CustomEvent the sail runtime dispatches
 // (packages/sail/runtime/src/error-overlay.ts) whenever an effect or
 // component-setup throw reaches no `<sail-error-boundary>`, and renders a
 // fixed, dismissible panel on top of the page.
 //
 // Deliberately dependency-free plain DOM + inline styles: it must render
-// even when the framework itself is broken (no sui components, no
+// even when the framework itself is broken (no sail components, no
 // contracts/sx, nothing that could itself throw). Gating: this no-ops
 // unless `<meta name="deck-mode" content="development">` is present, so
 // the daemon's mode stays the single source of truth — the injecting
@@ -99,8 +99,8 @@ function renderError(detail, counts) {
   heading.style.cssText = 'font-weight:700;font-size:14px;margin-bottom:.25rem;color:#ff6b6b;padding-right:1.5rem'
   const phaseLabel = detail?.phase === 'setup' ? 'setup' : 'effect'
   heading.textContent = detail?.tag
-    ? `[sui] ${phaseLabel} threw in <${detail.tag}>`
-    : `[sui] ${phaseLabel} threw`
+    ? `[sail] ${phaseLabel} threw in <${detail.tag}>`
+    : `[sail] ${phaseLabel} threw`
   el.appendChild(heading)
 
   if (count > 1) {

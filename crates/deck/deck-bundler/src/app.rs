@@ -1,4 +1,4 @@
-//! Deck `app` build target (#170) — bundles a SUI SPA project (the hub
+//! Deck `app` build target (#170) — bundles a SAIL SPA project (the hub
 //! `apps/hub/`, the space scaffold `apps/spaces/`, or any other host
 //! that uses the `routes/` convention) to a static dir.
 //!
@@ -39,7 +39,7 @@ use rolldown_common::{ChunkFilenamesOutputOption, ModuleType, ResolvedExternal};
 /// `output_url_relative_to_project` in the project's output, then emits
 /// an importmap entry mapping `package_alias → /output_url_relative_to_project`.
 ///
-/// Scope of this list: deck-owned runtime (the SUI runtime + DOM bindings
+/// Scope of this list: deck-owned runtime (the SAIL runtime + DOM bindings
 /// + the router the framework owns). What is NOT here: framework CLIENTS
 /// (`@ship/sdk-client`, etc.) — those are provider-declared. A framework-
 /// singleton package self-declares its serve contract in its OWN
@@ -643,7 +643,7 @@ async fn bundle_owned_framework(
     Ok(written.len())
 }
 
-/// Build a SUI SPA project to `out_dir`. `repo_root` is the workspace root
+/// Build a SAIL SPA project to `out_dir`. `repo_root` is the workspace root
 /// (cwd for module resolution); `project` is the dev's authored source
 /// (`package.json` + `routes/` + `public/`). The dev does NOT author
 /// `index.html` or any entry script — those are generated from a template
@@ -907,11 +907,11 @@ pub async fn bundle_app_with_base(
                 // 2nd incident) emits as `assets/contracts-<hash>.css` — the
                 // AssetModulePlugin names each emitted CSS asset after its
                 // SOURCE file stem, so `contracts-` is a stable prefix. The
-                // sui runtime's `ensureLightContracts` looks for a
+                // sail runtime's `ensureLightContracts` looks for a
                 // `link[data-sail-contracts]` before warning "framework
                 // contracts are not present"; the daemon-served scaffold
                 // shell (`scaffold-base.html`) already hand-authors the
-                // marker on its `sui.css` link, but THIS bundler-generated
+                // marker on its `sail.css` link, but THIS bundler-generated
                 // link (the self-contained/`entry.gen.ts` build path — what
                 // `deck dev` and `deck build --bundle-framework` both use)
                 // never carried it, so every page tripped the warning. Tag
@@ -1255,7 +1255,7 @@ export default controller(() => ({}))\n\
         // (`styles.css` → `styles-<hash>.css`). The build ALSO emits the design
         // tokens stylesheet (`tokens-<hash>.css`): `routes.gen.ts`/`entry.gen.ts`
         // unconditionally import `@ship/tokens/tokens.css` (the entry contract),
-        // and `component_package_roots` now unions sui's own workspace so that
+        // and `component_package_roots` now unions sail's own workspace so that
         // import resolves to source and bundles — exactly the path proven by
         // `bundle_app_bundles_design_tokens_via_entry`. So assert the app's stem
         // is present, not that it's the ONLY asset.
@@ -1358,7 +1358,7 @@ export default controller(() => ({}))\n\
         );
     }
 
-    /// Gate per `.artifacts/job-spec.md`: a freshly built sui app's
+    /// Gate per `.artifacts/job-spec.md`: a freshly built sail app's
     /// `index.html` links the design-token stylesheet AND the emitted CSS
     /// under `assets/` defines `:root` tokens (e.g. `--background`). The
     /// token CSS enters the entry graph by convention: the generated

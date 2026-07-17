@@ -1,8 +1,8 @@
-// Deck live-reload client — the one HMR consumer for every SUI host.
+// Deck live-reload client — the one HMR consumer for every SAIL host.
 //
 // This is Deck control-plane code: it owns the transport (an SSE
 // subscription to `/_deck/dev/hmr`), the `/_deck/` URL scheme, the
-// change-target classification, and the compile-error overlay. The SUI
+// change-target classification, and the compile-error overlay. The SAIL
 // runtime owns only the *mechanism* (`mount().reload(payload)`); the host
 // supplies how to apply a view reload via `onViewChanged`.
 //

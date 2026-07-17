@@ -41,7 +41,7 @@ use std::collections::HashSet;
 pub const RULE_ID: &str = "sail-state-set-call";
 
 /// Lint a controller `.ts` source. Returns findings ordered by source
-/// position. Parse errors are silently swallowed — the SUI compiler
+/// position. Parse errors are silently swallowed — the SAIL compiler
 /// (and tsc) own parse-error reporting; we only care about clean,
 /// well-formed sources.
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {

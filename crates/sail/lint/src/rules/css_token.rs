@@ -23,7 +23,7 @@
 //! Severity: `Error` — the build hard-fails on an unknown token. The
 //! intent is to catch typos, NOT to reject real tokens; the
 //! convention-tokens block above is the way real-but-undeclared
-//! names are recognized. External SUI apps that want a softer
+//! names are recognized. External SAIL apps that want a softer
 //! behavior can opt-out via `CompileOpts::lint_overrides`
 //! (`OverrideSeverity::Warn` or `Off`); the internal monorepo
 //! compiles with the default (Error) and stays strict.

@@ -155,7 +155,7 @@ export function createScope(): EffectScope {
       // Late registration after dispose — run immediately so the
       // resource isn't leaked. Matches the `mount.ts` async-mount
       // disposer guard.
-      try { fn() } catch (e) { console.error('[sui/scope] late cleanup threw:', e) }
+      try { fn() } catch (e) { console.error('[sail/scope] late cleanup threw:', e) }
       return
     }
     cleanups.push(fn)
@@ -185,12 +185,12 @@ export function createScope(): EffectScope {
                 if (typeof asyncResult === 'function') registerCleanup(asyncResult as () => void)
               },
               (err) => {
-                console.error('[sui/scope] mount() promise rejected:', err)
+                console.error('[sail/scope] mount() promise rejected:', err)
               },
             )
           }
         } catch (e) {
-          console.error('[sui/scope] mount() callback threw:', e)
+          console.error('[sail/scope] mount() callback threw:', e)
         }
       }
     },
@@ -201,7 +201,7 @@ export function createScope(): EffectScope {
         try {
           cleanups[i]!()
         } catch (e) {
-          console.error('[sui/scope] cleanup threw:', e)
+          console.error('[sail/scope] cleanup threw:', e)
         }
       }
       cleanups.length = 0

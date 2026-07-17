@@ -13,7 +13,7 @@
 //! Generating from tables fixes the vocabulary lists. It does NOT fix the examples,
 //! because an example is prose too. So the examples get a compiler.
 //!
-//! This test GENERATES the skill, pulls every fenced block that is SUI source, and
+//! This test GENERATES the skill, pulls every fenced block that is SAIL source, and
 //! compiles it. If an example rots, the build says so.
 
 use std::fs;
@@ -47,7 +47,7 @@ fn generate_skill() -> Option<String> {
     fs::read_to_string(&out).ok()
 }
 
-/// Fenced blocks that are SUI source — i.e. contain a tag or a block the compiler
+/// Fenced blocks that are SAIL source — i.e. contain a tag or a block the compiler
 /// owns. Skips prose fences and pure-TS snippets (which are not `.sail` files).
 fn sui_examples(md: &str) -> Vec<String> {
     let mut out = Vec::new();
@@ -87,7 +87,7 @@ fn every_sui_example_in_the_agent_skill_compiles() {
     let examples = sui_examples(&md);
     assert!(
         !examples.is_empty(),
-        "the generated skill contains no SUI examples — either it lost them or this \
+        "the generated skill contains no SAIL examples — either it lost them or this \
          extractor stopped recognizing them; both are bugs"
     );
 

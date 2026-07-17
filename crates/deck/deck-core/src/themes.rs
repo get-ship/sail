@@ -1,7 +1,7 @@
 //! Theme serving — a deck-owned serving concern.
 //!
-//! Themes are a SUI-native feature (CSS vars). The layering:
-//!   - SUI ships a default light + dark theme (its base tokens).
+//! Themes are a SAIL-native feature (CSS vars). The layering:
+//!   - SAIL ships a default light + dark theme (its base tokens).
 //!   - deck ships a default light + dark theme — its base tokens, served as
 //!     `view-tokens.css`. deck's default IS that base; the `theme.css` override
 //!     is empty by default (the base tokens apply as-is).
@@ -12,7 +12,7 @@
 //! NOT discover themes by reaching into a host directory at runtime (the old
 //! host-config fs-walk was a ship-product reach + the wrong shape —
 //! inv-deck-standalone). deck serves its own default here; the bundler will
-//! resolve + bake the theme cascade (SUI default → deck default → host themes)
+//! resolve + bake the theme cascade (SAIL default → deck default → host themes)
 //! and deck will serve the baked result, exactly as it serves `view-tokens.css`.
 //!
 //! TARGET (not yet built — bundler theme-cascade): `serve_theme_css` reads the
@@ -39,7 +39,7 @@ pub struct ThemeMeta {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ThemeSource {
-    /// The framework's own default (SUI/deck base tokens).
+    /// The framework's own default (SAIL/deck base tokens).
     Default,
     /// A host-shipped override theme (baked by the bundler cascade).
     Host,

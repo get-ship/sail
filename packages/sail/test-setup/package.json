@@ -4,7 +4,7 @@
   "version": "0.2.0",
   "type": "module",
   "license": "MIT",
-  "description": "Shared vitest/jsdom setup harness for SUI component packs: JSDOM polyfills (ResizeObserver, matchMedia, Popover, Dialog, ToggleEvent, PointerEvent) + lucide-icon-map loader, the repo-agnostic suiComponentVitestConfig() factory, renderView/renderComponent, and the lightweight mount/flush/createContainerRegistry container helpers. One source of truth so consuming packs stop rolling their own test-utils.",
+  "description": "Shared vitest/jsdom setup harness for SAIL component packs: JSDOM polyfills (ResizeObserver, matchMedia, Popover, Dialog, ToggleEvent, PointerEvent) + lucide-icon-map loader, the repo-agnostic suiComponentVitestConfig() factory, renderView/renderComponent, and the lightweight mount/flush/createContainerRegistry container helpers. One source of truth so consuming packs stop rolling their own test-utils.",
   "main": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",

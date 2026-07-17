@@ -106,9 +106,9 @@ mod tests {
     #[test]
     fn falls_back_to_dist_outside_repo() {
         let tmp = tempfile::tempdir().unwrap();
-        let sui = tmp.path().join("foo.sail");
-        std::fs::write(&sui, "x").unwrap();
-        let out = resolve_out_dir(&sui);
+        let sail = tmp.path().join("foo.sail");
+        std::fs::write(&sail, "x").unwrap();
+        let out = resolve_out_dir(&sail);
         assert!(out.ends_with("dist"));
     }
 
@@ -118,9 +118,9 @@ mod tests {
         std::fs::write(tmp.path().join("Cargo.toml"), "[workspace]\nmembers = []\n").unwrap();
         let src_dir = tmp.path().join("packages/foo/src");
         std::fs::create_dir_all(&src_dir).unwrap();
-        let sui = src_dir.join("bar.sail");
-        std::fs::write(&sui, "x").unwrap();
-        let out = mirror_dir_for(&sui).unwrap();
+        let sail = src_dir.join("bar.sail");
+        std::fs::write(&sail, "x").unwrap();
+        let out = mirror_dir_for(&sail).unwrap();
         assert_eq!(out, tmp.path().join(".sail-out/packages/foo/src"));
     }
 }

@@ -20,7 +20,7 @@ export default controller((_ctx: ViewScope<Scope>) => ({ loopDiagram }))
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">AI</p>
   <h1>The agent authoring loop</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    An agent authoring a SUI view produces a <code>.sail</code> +
+    An agent authoring a SAIL view produces a <code>.sail</code> +
     <code>controller.ts</code> pair that compiles, stays in scope, and behaves
     to spec — all in one turn. Ship gives the agent six surfaces to make that
     one-turn target reachable.

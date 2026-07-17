@@ -1,4 +1,4 @@
-# SUI Template Expressions
+# SAIL Template Expressions
 
 `{expr}` regions in `.sail` files are not arbitrary JavaScript. They
 parse as a **constrained subset** designed to be stable, statically
@@ -163,7 +163,7 @@ fine" used to hide:
    See `check/key_identity.rs`.
 5. **`bind:this` target** — must be a controller-declared `ref(...)`
    in `setup:`. See `check/bind_this_target.rs`.
-6. **`prop:foo` typo** — when the child element is a sibling SUI
+6. **`prop:foo` typo** — when the child element is a sibling SAIL
    component file with declared `<prop>` directives, `prop:foo={…}`
    must match a declared prop name. See `check/prop_target.rs`.
 7. **`on:event` callable** — non-arrow handlers must reference an

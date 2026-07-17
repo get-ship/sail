@@ -1,6 +1,6 @@
 //! SES Compartment runner — confined execution of view-controller code.
 //!
-//! Deck runs views, so Deck owns secure execution (the SUI runtime provides the
+//! Deck runs views, so Deck owns secure execution (the SAIL runtime provides the
 //! hardened endowment surface; the author-time `sail-controller-no-ambient-
 //! authority` lint is the static first line). A controller is untrusted code;
 //! the Compartment is the capability boundary. We endow ONLY the runtime

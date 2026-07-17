@@ -1,13 +1,13 @@
 ---
 group: Views
 order: 2
-title: SUI — Four-Layer Overview
-description: The compile/runtime/host/chrome layering of a SUI view.
+title: SAIL — Four-Layer Overview
+description: The compile/runtime/host/chrome layering of a SAIL view.
 ---
 
-# SUI — Four-Layer Overview
+# SAIL — Four-Layer Overview
 
-SUI splits cleanly into four layers. Each owns one concern and exposes a narrow contract to the next.
+SAIL splits cleanly into four layers. Each owns one concern and exposes a narrow contract to the next.
 
 ```
 page.sail (with inline <controller>)     (authoring — what humans write)
@@ -160,6 +160,6 @@ A request for `/agents` resolves end-to-end:
 1. Browser hits `GET /agents` → daemon serves the view-host HTML shell (`serve_view_host`).
 2. Shell loads `/_deck/views/agents` → SSR payload (compiled HTML + manifest).
 3. Shell loads `/_deck/views/agents/view.js` → compiled ESM module.
-4. Module imports from `/_deck/runtime.js` (the SUI runtime barrel) and `/_deck/sdk-client.js`.
+4. Module imports from `/_deck/runtime.js` (the SAIL runtime barrel) and `/_deck/sdk-client.js`.
 5. `attach()` walks the SSR DOM, binds reactive identifiers from the module's controller, opens `<data live>` SSE channels to `/_deck/data?expr=…`.
 6. Edits in dev mode emit `module-changed` on `/_deck/dev/hmr`; `apps/shell/src/hmr.ts` cache-busts the rebuilt `view.js` and re-mounts in place.

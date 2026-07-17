@@ -6,7 +6,7 @@
 //! any npm dependency: from the project being built, find the package's
 //! `package.json` and read its `exports`/`main` to locate the entry module.
 //!
-//! This is what lets a build run OUTSIDE the sui monorepo — a consumer repo
+//! This is what lets a build run OUTSIDE the sail monorepo — a consumer repo
 //! (ship-apps, ship-site) installs the framework from the registry, and the
 //! bundler resolves it from wherever npm/bun put it, with no
 //! `DECK_FRAMEWORK_ASSETS_DIR` crutch and no `|| true` workaround.

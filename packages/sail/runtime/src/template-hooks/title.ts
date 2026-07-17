@@ -9,7 +9,7 @@
 // not live bindings.
 //
 // Example:
-//   <use-title text="SUI tutorial · step 19" />
+//   <use-title text="SAIL tutorial · step 19" />
 
 import type { TemplateHook, TemplateHookContext } from '../controller'
 

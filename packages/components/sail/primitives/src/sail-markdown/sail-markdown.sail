@@ -16,7 +16,7 @@
     doesn't expose, so it stays in style as a single line.
   - The prose body (h1-h6 / p / a / code / pre / blockquote / ul / ol /
     li / strong / table / thead / tbody) is intentionally NOT in sx:
-    the parser writes raw HTML into .md-root, not SUI elements, so
+    the parser writes raw HTML into .md-root, not SAIL elements, so
     sx can't apply to children — the whole prose stylesheet has to
     live in style. The selector list + each property is chosen so
     the css-token lint passes (every value is a token; the lint

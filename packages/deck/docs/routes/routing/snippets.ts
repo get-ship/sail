@@ -1,5 +1,5 @@
 // Code samples for the File-routing page. Kept in a plain data module (not the
-// paired controller.ts) so the SUI compiler never scope-scans them for signals.
+// paired controller.ts) so the SAIL compiler never scope-scans them for signals.
 
 export const routeTree = `routes/
   page.sail              → /

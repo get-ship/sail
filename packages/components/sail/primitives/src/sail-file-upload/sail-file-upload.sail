@@ -1,10 +1,10 @@
 <!--
-  <sail-file-upload> — SUI port of <ship-file-upload>.
+  <sail-file-upload> — SAIL port of <ship-file-upload>.
   Drag-and-drop file upload zone with removable file list.
 
   Prop / event / parts parity vs <ship-file-upload>
   ────────────────────────────────────────────────────────────────────────
-  Lit                              SUI                       Notes
+  Lit                              SAIL                       Notes
   ────────────────────────────────────────────────────────────────────────
   accept (String, '')              accept (string, '')       ✓
   multiple (Boolean, false)        multiple (bool, false)    ✓

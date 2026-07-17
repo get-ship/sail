@@ -1,4 +1,4 @@
-# SUI QA harness — component render-correctness gate
+# SAIL QA harness — component render-correctness gate
 
 Deterministic, programmatic verification that every catalogued component
 actually renders in the component viewer. No vision, no eyeballing: the probe

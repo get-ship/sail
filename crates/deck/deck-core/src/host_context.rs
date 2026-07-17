@@ -1,7 +1,7 @@
 //! Deck's host context — the framework-provided names a `.sail` may use without
 //! the app declaring them in its `app.manifest.jsonc`.
 //!
-//! SUI names no host: its synthesize path resolves every free name through the
+//! SAIL names no host: its synthesize path resolves every free name through the
 //! app manifest, with no built-in convention. Deck declares its context **here**
 //! — the one place `@ship/deck/router` is named into the synthesize seam — and
 //! merges it into each app's manifest at build/synthesize time (the app's own

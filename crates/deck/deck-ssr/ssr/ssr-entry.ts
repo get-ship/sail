@@ -1,4 +1,4 @@
-// ssr-entry.ts — the SERVER ENTRY: render a synthesized SUI view to an HTML
+// ssr-entry.ts — the SERVER ENTRY: render a synthesized SAIL view to an HTML
 // string INSIDE ship-js (a deno_core/V8 isolate), with route + data resolved
 // over the host-dispatch wire — never the browser.
 //

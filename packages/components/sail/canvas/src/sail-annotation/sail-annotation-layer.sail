@@ -1,5 +1,5 @@
 <!--
-  <sail-annotation-layer> — SUI port of <ship-annotation-layer>.
+  <sail-annotation-layer> — SAIL port of <ship-annotation-layer>.
   Framework-agnostic capture overlay. Wraps slotted content, captures pointer
   gestures (point click or region drag), opens an inline note popover, and
   either POSTs each annotation immediately or stages them for batch send().
@@ -76,7 +76,7 @@ export default controller((props: ViewScope<Scope>, _host?: Element) => {
     const noteText = signal('')
 
     // The host element is not present in the scope factory (the post-
-    // convergence "SUI names no host" compile stops passing it as the 2nd
+    // convergence "SAIL names no host" compile stops passing it as the 2nd
     // arg), so read it through this signal — set in `mount` once the
     // runtime hands over the real element. The `sendOne` / `confirmNote`
     // closures below emit `sail-annotation-{staged,sent,error}` on the host,

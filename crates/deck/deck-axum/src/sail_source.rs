@@ -1,5 +1,5 @@
 //! `GET /_deck/source/{tag}` — render a simple HTML page showing the
-//! `.sail` template and `.controller.ts` for a SUI component.
+//! `.sail` template and `.controller.ts` for a SAIL component.
 //!
 //! Powers the "View source" deep-link in the component studio. The component
 //! source trees under `packages/components/*` (EVERY bucket, discovered
@@ -36,7 +36,7 @@ pub(crate) fn is_valid_tag(tag: &str) -> bool {
 }
 
 /// Walk up from `start` (bounded) to the nearest ancestor holding a
-/// `packages/components/` dir — where SUI + consumer component packs live. This
+/// `packages/components/` dir — where SAIL + consumer component packs live. This
 /// derives the component-source root FROM the mount's single project root, not a
 /// compile-time constant, so it works in an installed binary and outside the
 /// framework build tree.
@@ -54,7 +54,7 @@ fn find_components_dir(start: &FsPath) -> Option<PathBuf> {
 
 /// Read `<pkg>/src/<tag>/<tag><suffix>` under any pack in ANY bucket dir of
 /// `components_dir` (`packages/components/<bucket>/<pkg>/…`). Buckets are
-/// discovered by directory listing — deck hardcodes no `sui`/`ship` name.
+/// discovered by directory listing — deck hardcodes no `sail`/`ship` name.
 fn lookup_file(components_dir: &FsPath, tag: &str, suffix: &str) -> Option<String> {
     let buckets = std::fs::read_dir(components_dir).ok()?;
     for bucket in buckets.flatten() {
@@ -72,7 +72,7 @@ fn lookup_file(components_dir: &FsPath, tag: &str, suffix: &str) -> Option<Strin
 }
 
 /// GET /_deck/source/{tag}
-pub async fn serve_sui_source(
+pub async fn serve_sail_source(
     resolution: Option<Extension<Arc<deck_core::Resolution>>>,
     Path(tag): Path<String>,
 ) -> Response {
@@ -169,12 +169,12 @@ mod tests {
     /// The component root is derived from the (runtime) project root by walking
     /// up to `packages/components/` — NOT a compile-time `CARGO_MANIFEST_DIR`
     /// bake — and lookups scan EVERY bucket generically (here an arbitrary
-    /// `acme` bucket, proving no `sui`/`ship` hardcode).
+    /// `acme` bucket, proving no `sail`/`ship` hardcode).
     #[test]
     fn lookup_reads_any_bucket_from_the_runtime_root() {
         let tmp = tempfile::tempdir().unwrap();
         let root = tmp.path();
-        // A pack in a non-sui/non-ship bucket: packages/components/acme/widgets/…
+        // A pack in a non-sail/non-ship bucket: packages/components/acme/widgets/…
         let src = root.join("packages/components/acme/widgets/src/sail-thing");
         std::fs::create_dir_all(&src).unwrap();
         std::fs::write(src.join("sail-thing.sail"), "<div>hi</div>").unwrap();
@@ -188,7 +188,7 @@ mod tests {
         assert_eq!(
             super::lookup_file(&components, "sail-thing", ".sail").as_deref(),
             Some("<div>hi</div>"),
-            "reads from an arbitrary bucket — no hardcoded sui/ship"
+            "reads from an arbitrary bucket — no hardcoded sail/ship"
         );
         assert!(
             super::lookup_file(&components, "sail-missing", ".sail").is_none(),
@@ -202,7 +202,7 @@ mod tests {
     /// test can't match its OWN source.
     #[test]
     fn no_compile_time_root_or_domain_hardcode() {
-        let src = include_str!("sui_source.rs");
+        let src = include_str!("sail_source.rs");
         let manifest_bake = concat!("env!(\"CARGO_", "MANIFEST_DIR\")");
         let sail_bucket = concat!("components/", "sail");
         let ship_bucket = concat!("components/", "ship");

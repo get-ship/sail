@@ -74,12 +74,12 @@ async fn wait_nonempty_returns_true_when_signal_present() {
 #[test]
 fn classify_sui_create_invalidates_snapshot() {
     let tmp = tempfile::tempdir().unwrap();
-    let sui = tmp.path().join("views/bar/page.sail");
-    std::fs::create_dir_all(sui.parent().unwrap()).unwrap();
-    std::fs::write(&sui, "<div/>").unwrap();
-    let create = classify(&WatchSignal { path: sui.clone(), is_create: true });
+    let sail = tmp.path().join("views/bar/page.sail");
+    std::fs::create_dir_all(sail.parent().unwrap()).unwrap();
+    std::fs::write(&sail, "<div/>").unwrap();
+    let create = classify(&WatchSignal { path: sail.clone(), is_create: true });
     assert_eq!(create, SignalAction::Rebuild { invalidate: true }, "create re-walks");
-    let edit = classify(&WatchSignal { path: sui, is_create: false });
+    let edit = classify(&WatchSignal { path: sail, is_create: false });
     assert_eq!(edit, SignalAction::Rebuild { invalidate: false }, "edit does not");
 }
 

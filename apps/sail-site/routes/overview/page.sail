@@ -1,5 +1,5 @@
 <!--
-  /overview — the introduction: what SUI is, a small working program, and a
+  /overview — the introduction: what SAIL is, a small working program, and a
   tour that actually teaches usage. The demo below is live and its source is
   the snippet above it — same program.
 -->
@@ -36,7 +36,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
 
 <column sx="max-w-breakpoint-tablet mx-auto" gap="5">
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Introduction</p>
-  <h1>SUI</h1>
+  <h1>SAIL</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
     A batteries-included framework for building web pages. It ships a component
     library, a design system, layout, theming, animation, and state — so a page
@@ -135,6 +135,6 @@ export default controller((_ctx: ViewScope<Scope>) => {
 
   <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
     <a variant="solid" tone="primary" href="/getting-started">Installation →</a>
-    <a variant="default" href="/why">Why SUI</a>
+    <a variant="default" href="/why">Why SAIL</a>
   </row>
 </column>

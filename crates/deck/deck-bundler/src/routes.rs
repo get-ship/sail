@@ -215,7 +215,7 @@ fn discover_layouts(routes_dir: &Path) -> Result<Vec<Layout>> {
 }
 
 /// Read up to the first 4 KiB of a `_layout.sail` and return the tag name
-/// of the first `<sail-…>` or `<ship-…>` element. The SUI template grammar
+/// of the first `<sail-…>` or `<ship-…>` element. The SAIL template grammar
 /// is HTML-flavoured; the codegen does not need a full parse — it just needs
 /// the wrapper component the runtime should import. If no qualifying tag is
 /// found, error: a layout with no `<sail-*` / `<ship-*` element has no

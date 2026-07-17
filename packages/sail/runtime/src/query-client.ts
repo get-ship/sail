@@ -15,7 +15,7 @@
 import { QueryClient } from '@tanstack/query-core'
 import { createScope, currentScope, type EffectScope } from './effect-scope'
 
-const idKey = Symbol.for('sui.queryClient')
+const idKey = Symbol.for('sail.queryClient')
 
 /** Find the root of `scope`'s chain — the scope with `parent === null`. */
 function rootOf(scope: EffectScope): EffectScope {

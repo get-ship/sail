@@ -1,4 +1,4 @@
-# SUI Architecture — the language / userland seam
+# SAIL Architecture — the language / userland seam
 
 Status: **governing**. This document is the explicit map: which things are
 **language**, which are **standard library**, which are **userland**, and the
@@ -12,7 +12,7 @@ cannot be checked against the compiler.
 
 ## The one-sentence architecture
 
-SUI is a UI language whose standard library IS the component set: every
+SAIL is a UI language whose standard library IS the component set: every
 element ships **behavior + published anatomy + a replaceable default skin**;
 userland composes elements with typed props, tokens, and motion presets, and
 never writes CSS.
@@ -50,7 +50,7 @@ flash), one document cascade (no per-root sheet adoption), and honest
 devtools/tests. What it obligates: compiler-managed slot projection (native
 `<slot>` is shadow-only), compiler-generated unique IDs for ARIA wiring,
 and style containment by construction — component rules compile into
-`@scope (sail-x) to ([data-sui])` donuts so a component styles its own
+`@scope (sail-x) to ([data-sail])` donuts so a component styles its own
 subtree and stops at nested component boundaries. Never by accident, never
 by encapsulation technology.
 
@@ -356,7 +356,7 @@ user. None are part of the taggable authoring surface:
 
 Component libraries exist on the web because nobody owns the platform
 vocabulary — HTML froze, so every team rebuilds the missing patterns in
-userspace and then governs that middle tier forever. SUI owns its compiler,
+userspace and then governs that middle tier forever. SAIL owns its compiler,
 lint, LSP, and runtime, so the middle tier is removed instead of governed:
 interaction patterns are standard library, taste ships as a replaceable
 default skin over published anatomy, and userland is composition. Anyone who

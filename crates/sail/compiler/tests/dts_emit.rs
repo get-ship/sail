@@ -177,7 +177,7 @@ fn scope_factory_fields_omitted_from_scope() {
     // `$signals.x` collapsed to `unknown` — the root cause of the state casts
     // (#121/#122). They are OMITTED from Scope now. Template expression reads
     // (`{foo()}`) do not add Scope members; only `<data>`/props/use/ref do.
-    let sui = r#"<p>{foo()} {label()}</p>"#;
+    let sail = r#"<p>{foo()} {label()}</p>"#;
     let controller = r#"
         import { controller, signal } from '@ship/sail-runtime'
         export default controller((ctx) => ({
@@ -185,7 +185,7 @@ fn scope_factory_fields_omitted_from_scope() {
             label: signal(''),
           }))
     "#;
-    let dts = compile_dts_with_controller("page", sui, controller);
+    let dts = compile_dts_with_controller("page", sail, controller);
     assert!(
         dts.contains("export interface Scope {}"),
         "factory-only scope over an empty template must yield an empty Scope, got: {dts}"
@@ -204,7 +204,7 @@ fn scope_factory_fields_omitted_from_scope() {
 fn scope_factory_shorthand_fields_omitted_from_scope() {
     // Block-body factory with shorthand return (the sail-error-boundary pattern)
     // — same omit rule: caughtError/reset are SC-typed, absent from Scope.
-    let sui = r#"<p>x</p>"#;
+    let sail = r#"<p>x</p>"#;
     let controller = r#"
         import { controller, signal } from '@ship/sail-runtime'
         export default controller((_b: unknown, host?: Element) => {
@@ -213,7 +213,7 @@ fn scope_factory_shorthand_fields_omitted_from_scope() {
             return { caughtError, reset }
           })
     "#;
-    let dts = compile_dts_with_controller("page", sui, controller);
+    let dts = compile_dts_with_controller("page", sail, controller);
     assert!(dts.contains("export interface Scope {}"), "got: {dts}");
     assert!(
         !dts.contains("caughtError:") && !dts.contains("reset:"),
@@ -223,12 +223,12 @@ fn scope_factory_shorthand_fields_omitted_from_scope() {
 
 #[test]
 fn empty_scope_factory_leaves_scope_unchanged() {
-    let sui = r#"<p>x</p>"#;
+    let sail = r#"<p>x</p>"#;
     let controller = r#"
         import { controller } from '@ship/sail-runtime'
         export default controller((ctx) => ({}))
     "#;
-    let dts = compile_dts_with_controller("page", sui, controller);
+    let dts = compile_dts_with_controller("page", sail, controller);
     assert!(
         dts.contains("export interface Scope {}"),
         "expected empty Scope when factory adds nothing, got: {dts}"
@@ -243,7 +243,7 @@ fn empty_scope_factory_leaves_scope_unchanged() {
 fn no_scope_section_leaves_scope_unchanged() {
     // Controller without a `setup:` section — falls back to template-derived
     // Scope only. Existing controllers must continue typechecking.
-    let sui = r#"<p>x</p>"#;
+    let sail = r#"<p>x</p>"#;
     let controller = r#"
         import { controller } from '@ship/sail-runtime'
         export default controller((ctx) => {
@@ -251,7 +251,7 @@ fn no_scope_section_leaves_scope_unchanged() {
           return {}
         })
     "#;
-    let dts = compile_dts_with_controller("page", sui, controller);
+    let dts = compile_dts_with_controller("page", sail, controller);
     assert!(
         dts.contains("export interface Scope {}"),
         "expected empty Scope when no scope: section, got: {dts}"
@@ -264,12 +264,12 @@ fn template_member_clashing_with_factory_is_dropped_from_scope() {
     // factory: the template-derived `Signal<...>` is dropped (clash-retain)
     // and the factory type is NOT re-declared (omit) — so `config` is absent
     // from Scope entirely and typed solely by the inferred SC.
-    let sui = r#"<div bind:this={config}>x</div>"#;
+    let sail = r#"<div bind:this={config}>x</div>"#;
     let controller = r#"
         import { controller, ref } from '@ship/sail-runtime'
         export default controller((ctx) => ({ config: ref<HTMLDivElement>(null) }))
     "#;
-    let dts = compile_dts_with_controller("page", sui, controller);
+    let dts = compile_dts_with_controller("page", sail, controller);
     assert!(
         !dts.contains("config:"),
         "clashing field must be omitted from Scope (SC-sourced), got: {dts}"

@@ -16,7 +16,7 @@ peer agents) sees it.
 
 The shape:
 
-```sui
+```sail
 <data name="users" source="ship.users.list()" live />
 
 <form on:submit|preventDefault={(e) => add(name())}>

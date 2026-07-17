@@ -17,7 +17,7 @@
 //!      finding by default. The build hard-fails. This is the strict
 //!      typo-catcher behavior the internal monorepo relies on.
 //!   4. The strict default is *opt-out* via `CompileOpts::lint_overrides`.
-//!      An external SUI consumer that wants the softer behavior passes
+//!      An external SAIL consumer that wants the softer behavior passes
 //!      an `OverrideSeverity::Warn` (or `Off`) override for
 //!      `sail-css-token`. The rule itself stays strict; the override is
 //!      a build-host configuration.
@@ -192,7 +192,7 @@ fn truly_unknown_token_strict_default_blocks_build() {
 
 #[test]
 fn truly_unknown_token_warn_override_downgrades_to_warning() {
-    // Same source as the strict-default case. The build host (a third-party SUI
+    // Same source as the strict-default case. The build host (a third-party SAIL
     // consumer) passes an `OverrideSeverity::Warn` override for `sail-css-token`.
     // The css-token finding surfaces as a Warning so the LSP / agent can still
     // show the typo suggestion — the rule itself is unchanged. (The build is

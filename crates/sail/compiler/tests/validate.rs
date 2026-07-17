@@ -36,9 +36,9 @@ fn opts(source_path: PathBuf) -> CompileOpts {
 
 fn read(name: &str) -> (String, PathBuf) {
     let dir = fixtures_dir();
-    let sui = dir.join(format!("{name}.sail"));
-    let src = fs::read_to_string(&sui).unwrap_or_else(|e| panic!("read {}: {e}", sui.display()));
-    (src, sui)
+    let sail = dir.join(format!("{name}.sail"));
+    let src = fs::read_to_string(&sail).unwrap_or_else(|e| panic!("read {}: {e}", sail.display()));
+    (src, sail)
 }
 
 #[test]

@@ -80,7 +80,7 @@ pub fn compile(source: &str, opts_json: &str) -> Result<JsValue, JsValue> {
 
     let mode = match parsed.mode.as_deref() {
         // "view" is a legacy alias — a tagless source is just Auto with no
-        // component_name (deck owns the view feature; SUI builds components).
+        // component_name (deck owns the view feature; SAIL builds components).
         Some("view") | Some("auto") | None => CompileMode::Auto,
         Some("component") => CompileMode::Component,
         Some(other) => {

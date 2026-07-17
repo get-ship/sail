@@ -69,7 +69,7 @@ export default controller((_ctx: ViewScope<Scope>, _host?: Element) => {
     const caughtError = signal<Error | null>(null)
     const hasFallbackSlot = signal<boolean>(false)
     // The host element is not present in the scope factory (the post-
-    // convergence "SUI names no host" compile stops passing it as the 2nd
+    // convergence "SAIL names no host" compile stops passing it as the 2nd
     // arg), so read it through this signal — set in `mount` once the
     // runtime hands over the real element. The template wires
     // `on:click={reset}`, so reset must always read the latest host.

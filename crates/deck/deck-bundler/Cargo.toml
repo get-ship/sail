@@ -3,7 +3,7 @@ name = "deck-bundler"
 version = "0.1.0"
 edition = "2024"
 publish = false
-description = "Deck's in-process Rolldown bundler (#163/#167) — compiles + bundles SUI views/components/framework via a native Rust plugin that spawns sail-compiler in its load hook. The bundling half of the deck framework; serving is deck-core/deck-axum."
+description = "Deck's in-process Rolldown bundler (#163/#167) — compiles + bundles SAIL views/components/framework via a native Rust plugin that spawns sail-compiler in its load hook. The bundling half of the deck framework; serving is deck-core/deck-axum."
 
 [lib]
 name = "deck_bundler"

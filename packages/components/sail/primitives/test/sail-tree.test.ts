@@ -15,7 +15,7 @@
 // TESTS-FIRST: the `.compiled.js` outputs do NOT exist yet, so the imports
 // fail and every spec is RED until `sail-tree.sail` + `.controller.ts` land.
 // Authority: .artifacts/sail-arc/sail-tree/build-spec.md (Slices 2-4 +
-// behavioral specs #1/#2/#4/#6/#7/#10/#11), governed by ship-sui +
+// behavioral specs #1/#2/#4/#6/#7/#10/#11), governed by ship-sail +
 // ship-design-system skills.
 
 import { afterEach, describe, expect, it, vi } from 'vitest'

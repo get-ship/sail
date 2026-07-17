@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SUI tutorial host</title>
+  <title>SAIL tutorial host</title>
   <script>
-    // Stamp the SUI theme + light/dark mode the parent passes via ?mode=.
+    // Stamp the SAIL theme + light/dark mode the parent passes via ?mode=.
     // The sail-site has a single brand theme ("sail") with a light/dark mode
     // axis (data-theme="sail" + data-mode="dark") — mirror exactly what the
     // sail-site-shell sets on the top document so every var(--…) resolves the
@@ -45,7 +45,7 @@
       })
     })()
   </script>
-  <!-- SUI tokens + theme + base, concatenated by gen-tutorial-host.mjs from the
+  <!-- SAIL tokens + theme + base, concatenated by gen-tutorial-host.mjs from the
        same three sheets the top document links (tokens.css + themes.css +
        sail-theme.css + base.css). Makes every var(--…) inside the preview resolve
        identically to the page. -->
@@ -69,7 +69,7 @@
       border-left: 3px solid var(--destructive);
       white-space: pre-wrap;
     }
-    /* Lesson example containers — read SUI tokens so they flip with the
+    /* Lesson example containers — read SAIL tokens so they flip with the
        parent's light/dark mode. The hand-crafted .counter/.todo/.dash
        containers in the lesson templates pick these up. */
     .counter, .card, .todo, .dash, .form, .users, .clock,

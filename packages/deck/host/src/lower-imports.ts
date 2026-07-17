@@ -8,7 +8,7 @@
 //! resolve as the free globals the runner endows.
 //!
 //! Operates on BUILT controller JS (types already erased by tsc/bundler). Only
-//! the SUI framework specifiers are lowered; every other import (a pack, a
+//! the SAIL framework specifiers are lowered; every other import (a pack, a
 //! relative module) is left intact — those are the controller's own deps, not
 //! the endowed surface.
 
@@ -62,7 +62,7 @@ export function lowerModuleToExpression(source: string): string {
     return `${indent}const __sui_default__ = `
   })
 
-  // (b) `export { foo as default }` — the form the SUI compiler actually emits
+  // (b) `export { foo as default }` — the form the SAIL compiler actually emits
   // (`export { page_default as default }`, often multi-line). Capture the local
   // bound to `default` BEFORE the export block is stripped below. Only when an
   // `export default` form wasn't already found.

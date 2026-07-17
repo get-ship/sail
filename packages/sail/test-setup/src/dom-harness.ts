@@ -1,4 +1,4 @@
-// Lightweight component-mount helpers for SUI component tests.
+// Lightweight component-mount helpers for SAIL component tests.
 //
 // Most component specs follow the same dance: make a throwaway host container,
 // append it to the document, write `<tag attrs>…</tag>` into it, and query the

@@ -277,7 +277,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
   </p>
 
   <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
-    <a variant="default" href="/why">← Why SUI</a>
+    <a variant="default" href="/why">← Why SAIL</a>
     <a variant="solid" tone="primary" href="/components">Component library →</a>
   </row>
 </column>

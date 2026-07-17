@@ -1,6 +1,6 @@
 // Code snippets for the behavior page. Kept out of the controller so the
 // compiler's scope scan isn't fooled by `return {…}` / `signal(…)` patterns.
-// Every SUI sample is compiled by the build
+// Every SAIL sample is compiled by the build
 // (crates/sail/compiler/tests/site_snippets_compile.rs).
 export const code = {
   attach: `<!-- use: hands the element to a function. Nothing to store. -->

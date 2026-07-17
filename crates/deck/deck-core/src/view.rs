@@ -93,7 +93,7 @@ fn compile_view_js(name: &str, resolved: &ResolvedView, mode: DaemonMode) -> Dec
     };
 
     DeckResponse::js_view(final_js, mode).with_header(
-        "X-Sui-View",
+        "X-Sail-View",
         name.chars().filter(|c| c.is_ascii()).collect::<String>(),
     )
 }

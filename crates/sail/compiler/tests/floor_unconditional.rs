@@ -160,26 +160,26 @@ fn write_pack(config: &str, css: &[(&str, &str)]) -> (tempfile::TempDir, PathBuf
     fs::write(tmp.path().join("sail.config.json"), config).unwrap();
     let src_dir = tmp.path().join("src");
     fs::create_dir_all(&src_dir).unwrap();
-    let sui = src_dir.join("w.sail");
-    fs::write(&sui, "<p>{name}</p>").unwrap();
+    let sail = src_dir.join("w.sail");
+    fs::write(&sail, "<p>{name}</p>").unwrap();
     for (rel, body) in css {
         fs::write(src_dir.join(rel), body).unwrap();
     }
-    (tmp, sui)
+    (tmp, sail)
 }
 
 #[test]
 fn undeclared_stylesheet_cannot_be_softened() {
-    let (_tmp, sui) = write_pack(
+    let (_tmp, sail) = write_pack(
         r#"{"stylesheets": []}"#,
         &[("orphan.css", ".x{color:red}")],
     );
-    let src = fs::read_to_string(&sui).unwrap();
+    let src = fs::read_to_string(&sail).unwrap();
     let off = [LintOverride {
         rule: "sail-no-undeclared-stylesheet".to_string(),
         severity: OverrideSeverity::Off,
     }];
-    let diags = check_all(&src, Some(&sui), &off, None);
+    let diags = check_all(&src, Some(&sail), &off, None);
     assert!(
         diags.iter().any(|d| d.rule.as_deref() == Some("sail-no-undeclared-stylesheet")
             && d.severity == DiagSeverity::Error),
@@ -212,7 +212,7 @@ fn rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
 
 #[test]
 fn no_source_advertises_the_drifted_policy_key() {
-    // crates/sail/compiler -> crates/sui
+    // crates/sail/compiler -> crates/sail
     let sui_root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
     let mut offenders = Vec::new();
     for sub in ["compiler/src", "lint/src"] {

@@ -1,4 +1,4 @@
-// Snippets for the using-components guide. Every SUI sample is compiled by
+// Snippets for the using-components guide. Every SAIL sample is compiled by
 // the build (crates/sail/compiler/tests/site_snippets_compile.rs).
 export const code = {
   useThem: `<!-- components are tags. Write them like HTML. -->

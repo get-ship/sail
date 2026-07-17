@@ -7,7 +7,7 @@
   `oklch(L C var(--brand-hue, <theme's own hue>))`, so with no product set the
   theme looks exactly as it always did, and with one set only the hue moves.
 
-  Switch the theme and the whole page repaints. Cross from SUI into Deck and
+  Switch the theme and the whole page repaints. Cross from SAIL into Deck and
   only the accent turns violet.
 */
 

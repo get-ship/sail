@@ -13,8 +13,8 @@ A **template hook** is a custom element of the form `<use-name>`.
 It doesn't render to the DOM — it attaches a host-side side effect
 (or contributes a scope identifier) and tears down on unmount.
 
-```sui
-<use-title text="SUI tutorial · step 19" />
+```sail
+<use-title text="SAIL tutorial · step 19" />
 
 <use-kbd>
   <on key="/"      action="toggleSearch" />

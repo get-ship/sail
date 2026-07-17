@@ -1,4 +1,4 @@
-//! Boundary invariant I1 — SUI emits STRUCTURE, not BEHAVIOR, and never a
+//! Boundary invariant I1 — SAIL emits STRUCTURE, not BEHAVIOR, and never a
 //! serve location.
 //!
 //! Compiler output is DOM/structure wiring + bare-specifier imports only. It
@@ -7,7 +7,7 @@
 //!     `$signals`-undefined regression #149 came from a bespoke inline proxy
 //!     that drifted from the runtime's),
 //!   - emit a `/_deck/...` URL or an `importmap` (serving is Deck's concern;
-//!     SUI knows no URLs).
+//!     SAIL knows no URLs).
 //!
 //! These gates run on representative compiled output (view + component) so a
 //! regression fails the build rather than slipping to web-QA.
@@ -41,7 +41,7 @@ fn component_opts(setup: Option<&str>) -> CompileOpts {
 }
 const FORBIDDEN: &[(&str, &str)] = &[
     ("new Proxy($scope", "hand-rolled scope proxy — call the runtime builder (componentMountState)"),
-    ("/_deck/", "a served URL — serving is Deck's concern, SUI emits no URLs"),
+    ("/_deck/", "a served URL — serving is Deck's concern, SAIL emits no URLs"),
     ("importmap", "an import map — that's the host page's job, not compiler output"),
 ];
 

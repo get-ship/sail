@@ -18,23 +18,23 @@
 use crate::{CachePolicy, DaemonMode, DeckResponse};
 
 /// Framework contracts + stdlib element skins, concatenated at compile time.
-const SUI_CSS: &str = concat!(
+const SAIL_CSS: &str = concat!(
     include_str!("../../../../packages/sail/tokens/src/contracts.css"),
     "\n",
     include_str!("../../../../packages/sail/tokens/src/element-skins.css"),
 );
 
-/// `GET /api/assets/sui.css` — the framework stylesheet.
+/// `GET /api/assets/sail.css` — the framework stylesheet.
 ///
 /// No-cache so contract/skin edits land on the next load without a hard
 /// refresh (mirrors `view-tokens.css`).
-pub fn serve_sui_css(mode: DaemonMode) -> DeckResponse {
+pub fn serve_sail_css(mode: DaemonMode) -> DeckResponse {
     let mut r = DeckResponse::new(
         200,
         "text/css; charset=utf-8",
         CachePolicy::None,
         mode,
-        SUI_CSS.as_bytes().to_vec(),
+        SAIL_CSS.as_bytes().to_vec(),
     );
     r.cache_control = "no-cache";
     r
@@ -45,8 +45,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn sui_css_served_with_css_content_type() {
-        let r = serve_sui_css(DaemonMode::Development);
+    fn sail_css_served_with_css_content_type() {
+        let r = serve_sail_css(DaemonMode::Development);
         assert_eq!(r.status, 200);
         assert!(r.content_type.starts_with("text/css"));
         assert_eq!(r.cache_control, "no-cache");
@@ -54,8 +54,8 @@ mod tests {
     }
 
     #[test]
-    fn sui_css_carries_both_halves() {
-        let css = String::from_utf8(serve_sui_css(DaemonMode::Development).body).unwrap();
+    fn sail_css_carries_both_halves() {
+        let css = String::from_utf8(serve_sail_css(DaemonMode::Development).body).unwrap();
         // A contracts marker (tone channel) and a skin marker (spinner).
         assert!(css.contains("[tone="), "contracts half present: {css:.80}");
         assert!(css.contains(".sail-spinner"), "element-skins half present");

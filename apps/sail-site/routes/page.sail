@@ -278,7 +278,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
     <p sx="text-lg text-muted-foreground leading-relaxed" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
       File-routed pages, server rendering, hydration, bundling, live data and
       a hot-reloading dev loop — <a href="/deck">deck</a> is the half of the
-      stack that runs what SUI writes. This site is a deck app.
+      stack that runs what SAIL writes. This site is a deck app.
     </p>
     <grid cols="2" gap="4">
       <column>

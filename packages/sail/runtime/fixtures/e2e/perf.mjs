@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Browser-side perf for SUI rendering.
+// Browser-side perf for SAIL rendering.
 //
 // Two measurements:
 //

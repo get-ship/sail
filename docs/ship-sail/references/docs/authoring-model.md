@@ -2,7 +2,7 @@
 group: Views
 order: 1.5
 title: The authoring model — pure-expression templates, controller logic
-description: The line between a `.sail` template and its inline `<controller>` block. Templates carry declarative directives plus pure expressions; capabilities, statements, and declarations belong in the controller, reached through the ship SDK. SUI is the Svelte/Vue/Astro SFC lineage — deliberately not JSX.
+description: The line between a `.sail` template and its inline `<controller>` block. Templates carry declarative directives plus pure expressions; capabilities, statements, and declarations belong in the controller, reached through the ship SDK. SAIL is the Svelte/Vue/Astro SFC lineage — deliberately not JSX.
 ---
 
 # The authoring model
@@ -54,7 +54,7 @@ explicit, with instant author feedback — is the same contract stated positivel
 
 ## Not JSX: expression-in-template, statement-in-controller
 
-SUI is the Svelte/Vue/Astro single-file-component lineage, **deliberately not
+SAIL is the Svelte/Vue/Astro single-file-component lineage, **deliberately not
 JSX**. The split is by *kind of code*, not by *amount*:
 
 - **Template (`.sail`):** declarative directives — `<prop>` / `<data>` /
@@ -143,5 +143,5 @@ access, a loading/error/ready branch — but all of it is pure and re-run-safe.
   `.sail` file may hold.
 - **[The controller surface](./controller.md)** — `signal` / `derived` / `live`
   / `on`, the scope, and mutation discipline.
-- **ADR — SUI authoring model** (`docs/ship-adrs/references/docs/sail-authoring-model.md`)
+- **ADR — SAIL authoring model** (`docs/ship-adrs/references/docs/sail-authoring-model.md`)
   — the durable contract and its enforcement.

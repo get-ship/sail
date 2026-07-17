@@ -25,7 +25,7 @@ import { describe, expect, it, beforeEach, afterEach } from 'vitest'
 import { compileSui, evalCompiledJs } from '@ship/sail-dom/test-utils'
 import { measureMountLeakAsync, gcAvailable, type RetentionCycle } from '../src/leak-retention'
 
-// Resolve the sui primitives package by walking up to the workspace root and
+// Resolve the sail primitives package by walking up to the workspace root and
 // landing on the package by NAME — NOT by counting `../` from this test file
 // (the brittle traversal that broke the moment test-setup moved one dir).
 //

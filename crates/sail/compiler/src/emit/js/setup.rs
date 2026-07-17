@@ -29,7 +29,7 @@ pub(super) fn emit_setup_body(
     // and returns `{ …$scope, __mount(container), [hydrate] }`. ship/route/
     // navigate always come from ctx (deck injects them for pages; `undefined`
     // for a registered component, which never reads them). Routing is deck's —
-    // SUI vends no router or factory fallback. Props come from `ctx.props`
+    // SAIL vends no router or factory fallback. Props come from `ctx.props`
     // (registered components have them, pages don't).
     w.line("const { ship, route, navigate } = ctx;");
     w.line("const $scope = Object.create(null);");

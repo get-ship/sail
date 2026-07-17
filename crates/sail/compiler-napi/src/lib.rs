@@ -1,4 +1,4 @@
-//! Node-API surface for the SUI test harness.
+//! Node-API surface for the SAIL test harness.
 //!
 //! Mirrors `crates/sail/compiler/src/wasm.rs` field-for-field — same
 //! `WasmOpts -> CompileOpts` mapping (`emit_dts:false`, `emit_ssr:false`,

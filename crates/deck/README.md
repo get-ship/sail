@@ -1,14 +1,14 @@
 # deck
 
-deck is Ship's **host / meta-framework** — the layer that mounts SUI views,
+deck is Ship's **host / meta-framework** — the layer that mounts SAIL views,
 does SSR + routing, serves every asset, and supplies views with a data-source
-client. It is to SUI what Next is to React.
+client. It is to SAIL what Next is to React.
 
 ```
-SUI   :  Deck  :  Ship      ::      React  :  Next  :  your app
+SAIL  :  Deck  :  Ship      ::      React  :  Next  :  your app
 ```
 
-Dependencies point one way only: **deck → sui**, **ship → deck**. The SUI
+Dependencies point one way only: **deck → sail**, **ship → deck**. The SAIL
 compiler depends on nothing downstream; deck names no Ship domain or daemon URL;
 Ship (the `shipd` daemon) is the app that mounts deck and implements the one
 data seam deck asks for. A boundary lint (`scripts/lint/*`,
@@ -184,5 +184,5 @@ Astro build needs and shells out to `cargo run -p deck-cli -- emit`.
   app exercising routing, dynamic `[param]` routes, layouts, controllers/reactivity,
   the data seam, HMR and the static build) AND the native-path release gate
   (`bunx playwright test` drives the real CLI; 6 specs).
-- `.claude/skills/ship-sui` — authoring `.sail` views + components.
+- `.claude/skills/sail-authoring` — authoring `.sail` views + components.
 - `docs/ship-adrs/` — the architectural decisions deck implements.

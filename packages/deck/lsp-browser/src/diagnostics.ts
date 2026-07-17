@@ -65,6 +65,6 @@ export async function diagnose(
     endColumn: d.end_col,
     severity: d.severity === 'warning' ? 'warning' : 'error',
     message: d.message,
-    source: 'sui',
+    source: 'sail',
   }))
 }

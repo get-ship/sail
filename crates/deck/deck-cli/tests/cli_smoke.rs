@@ -254,7 +254,7 @@ fn scaffold_view_with_component_writes_widget() {
 // ── scaffold component ──────────────────────────────────────────────────────
 
 /// `deck scaffold component <tag>` writes the `.sail` (and optional
-/// controller) under the SUI primitives package:
+/// controller) under the SAIL primitives package:
 /// `packages/components/sail/primitives/src/<tag>/<tag>.sail`.
 #[test]
 fn scaffold_component_writes_sui_under_primitives_package() {
@@ -271,10 +271,10 @@ fn scaffold_component_writes_sui_under_primitives_package() {
         "deck scaffold component {tag} exited {status:?}"
     );
 
-    let sui = base.join(format!("{tag}.sail"));
-    assert!(sui.exists(), "missing {} after scaffold component", sui.display());
-    let len = std::fs::metadata(&sui).map(|m| m.len()).unwrap_or(0);
-    assert!(len > 0, "empty {} after scaffold component", sui.display());
+    let sail = base.join(format!("{tag}.sail"));
+    assert!(sail.exists(), "missing {} after scaffold component", sail.display());
+    let len = std::fs::metadata(&sail).map(|m| m.len()).unwrap_or(0);
+    assert!(len > 0, "empty {} after scaffold component", sail.display());
 
     // Without --controller, no controller file should be written.
     assert!(
@@ -302,7 +302,7 @@ fn scaffold_component_rejects_non_sui_tag() {
     let output = run_deck(&["scaffold", "component", &bad_tag]);
     assert!(
         !output.status.success(),
-        "deck scaffold component accepted non-sui tag (status: {:?})",
+        "deck scaffold component accepted non-sail tag (status: {:?})",
         output.status
     );
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -364,7 +364,7 @@ fn scaffold_pack_writes_package_json_tsconfig_and_src() {
 
 /// The REAL standalone test (the boundary lint in deck-conformance is only the
 /// backstop): deck BUILDS a zero-ship-PRODUCT app — a plain `routes/` page that
-/// depends on the SUI framework and nothing of the ship product — into a served
+/// depends on the SAIL framework and nothing of the ship product — into a served
 /// SPA. If deck can compile + emit a runnable app that names nothing ship, it
 /// stands on its own. This serves development (it proves the capability) and
 /// doesn't break when a path is renamed, unlike a forbidden-string scan.

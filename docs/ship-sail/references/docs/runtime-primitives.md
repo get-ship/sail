@@ -1,11 +1,11 @@
 ---
 group: Views
 order: 5
-title: SUI — Runtime Primitives
-description: The signal/bind/effect primitives the SUI runtime exposes.
+title: SAIL — Runtime Primitives
+description: The signal/bind/effect primitives the SAIL runtime exposes.
 ---
 
-# SUI — Runtime Primitives
+# SAIL — Runtime Primitives
 
 All symbols below are re-exported from `packages/sail/runtime/src/index.ts`. Anything not in that barrel is internal.
 
@@ -234,7 +234,7 @@ specify.
 
 Known limit: projection runs once at connect. Children appended
 to the host LATER are not re-projected — the dynamic composition
-path in SUI templates goes through compiled call sites, not raw
+path in SAIL templates goes through compiled call sites, not raw
 DOM appends, so this covers the authored surface.
 
 ## Template hooks — `<use-*>`

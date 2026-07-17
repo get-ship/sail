@@ -1,4 +1,4 @@
-// Playwright config for the SUI site smoke test. Spins up the deck dev
+// Playwright config for the SAIL site smoke test. Spins up the deck dev
 // server (the canonical sail-site serving loop) and drives three surface
 // checks: landing, /components, /tutorial/01-hello-signal.
 

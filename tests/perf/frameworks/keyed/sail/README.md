@@ -1,12 +1,12 @@
-# keyed/sui — js-framework-benchmark app (vendored)
+# keyed/sail — js-framework-benchmark app (vendored)
 
 This is the [js-framework-benchmark](https://github.com/krausest/js-framework-benchmark)
-`keyed/sui` implementation. It is **owned here**, not in a fork of the upstream
+`keyed/sail` implementation. It is **owned here**, not in a fork of the upstream
 benchmark repo — we maintain only these source files, never the whole harness.
 
-The benchmark runner expects the app to live at `$BENCH_HOME/frameworks/keyed/sui`
+The benchmark runner expects the app to live at `$BENCH_HOME/frameworks/keyed/sail`
 inside an external js-framework-benchmark checkout. `scripts/dev/bench-lib.mjs`
-copies the files below into that location (`syncSuiFramework()`) before every
+copies the files below into that location (`syncSailFramework()`) before every
 build, so this directory is the single source of truth. Edit here; the checkout
 copy is overwritten on the next `just bench` / `just bench-check`.
 
@@ -25,17 +25,17 @@ scripts/precompile.mjs    compiles .sail → dist/, links @ship/sail-runtime
 `node_modules/`, `dist/`, and `bun.lock` are **not** vendored — they're build
 state, regenerated in the checkout.
 
-## Resolving the sui toolchain
+## Resolving the sail toolchain
 
-`precompile.mjs` needs the sui compiler + runtime. It resolves a single sui
+`precompile.mjs` needs the sail compiler + runtime. It resolves a single sail
 checkout root, in order:
 
 1. `SAIL_REPO` env — explicit checkout root (the cutover-safe knob).
 2. `SAIL_COMPILER` / `SAIL_RUNTIME` envs — granular overrides.
-3. Discovery — probes `~/dev/sui`, then `~/dev/Ship/sui`, for one that contains
+3. Discovery — probes `~/dev/sail`, then `~/dev/Ship/sail`, for one that contains
    `packages/sail/runtime`.
 
-If the sui checkout moves, set `SAIL_REPO=/new/path` (or rely on discovery if it
+If the sail checkout moves, set `SAIL_REPO=/new/path` (or rely on discovery if it
 lands in a probed location). No absolute paths are baked in.
 
 ## First run in a fresh checkout

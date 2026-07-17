@@ -3,7 +3,7 @@ name = "xtask-deck"
 version = "0.1.0"
 edition = "2024"
 publish = false
-description = "Bakes the lucide SVG set into sui's deck-core assets. The output is committed source the deck-bundler loads at compile time and the daemon reads at runtime to serve /_deck/icons/{name}.svg."
+description = "Bakes the lucide SVG set into sail's deck-core assets. The output is committed source the deck-bundler loads at compile time and the daemon reads at runtime to serve /_deck/icons/{name}.svg."
 
 [[bin]]
 name = "xtask-deck"

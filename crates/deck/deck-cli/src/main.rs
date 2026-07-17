@@ -57,7 +57,7 @@ enum Command {
     #[command(subcommand)]
     Scaffold(Scaffold),
 
-    /// Build a SUI SPA project (the hub, a space scaffold) to a static
+    /// Build a SAIL SPA project (the hub, a space scaffold) to a static
     /// output dir. The project's source tree holds `package.json` (the
     /// manifest: the bundler reads `name` for the page <title>), `routes/`
     /// (the file-routed chrome), and `public/` (static assets). The
@@ -89,7 +89,7 @@ enum Command {
         base: Option<String>,
     },
 
-    /// Run a standalone dev server for a SUI project — the framework
+    /// Run a standalone dev server for a SAIL project — the framework
     /// standing on its own, no shipd, no host adapter. Boots the
     /// bundler FS watcher (HMR) and serves the deck router on
     /// `127.0.0.1:<port>`. `Ctrl-C` triggers a graceful bundler
@@ -130,7 +130,7 @@ enum Command {
 
 #[derive(Subcommand)]
 enum Scaffold {
-    /// New SUI view under `views/<name>/` (page.sail + controller.ts +
+    /// New SAIL view under `views/<name>/` (page.sail + controller.ts +
     /// style.css + manifest.jsonc; optional view-private widget).
     View {
         /// View dir name + manifest `name` field. Lowercase ASCII + hyphens.
@@ -143,7 +143,7 @@ enum Scaffold {
         component: Option<String>,
     },
 
-    /// New SUI primitive under `packages/components/sail/primitives/src/<tag>/`.
+    /// New SAIL primitive under `packages/components/sail/primitives/src/<tag>/`.
     Component {
         /// Tag name (must start with `sail-`).
         tag: String,
@@ -152,7 +152,7 @@ enum Scaffold {
         controller: bool,
     },
 
-    /// New first-party SUI component pack under `packages/components/<name>/`.
+    /// New first-party SAIL component pack under `packages/components/<name>/`.
     /// Generates package.json, tsconfig.json, the umbrella `src/index.ts`,
     /// and a starter `<name>-example` component.
     Pack {
@@ -484,7 +484,7 @@ fn ensure_framework_fresh(repo_root: &Path, project: &Path, addr: &str) -> Resul
         anyhow::bail!(
             "deck dev: baked framework bundle(s) are STALE and cannot be regenerated from here \
              (no Cargo workspace at {} / no `cargo` on PATH):\n  {}\n\
-             Fix: from the sui monorepo, run `{REGEN_CMDS}`, then restart `deck dev`.",
+             Fix: from the sail monorepo, run `{REGEN_CMDS}`, then restart `deck dev`.",
             repo_root.display(),
             stale.join("\n  ")
         );
@@ -570,7 +570,7 @@ fn build(
     // There is no prebuilt-asset staging dir and no `DECK_FRAMEWORK_ASSETS_DIR`
     // crutch: the framework comes from wherever it was installed (the registry,
     // a workspace symlink), so a build runs identically inside or outside the
-    // sui monorepo.
+    // sail monorepo.
 
     // Load the host's view-discovery config (packs scope). Consumer bundles
     // are discovered from per-package `deck.bundles`, not read here. L1 (deck)

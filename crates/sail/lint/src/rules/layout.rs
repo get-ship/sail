@@ -554,13 +554,13 @@ fn is_known_axis_prop(name: &str) -> bool {
 
 pub fn is_passthrough_attr(name: &str) -> bool {
     // Universal attribute prefixes — namespaced attr families that ride through
-    // to the div unchanged. The SUI compile pass treats these as opaque to
+    // to the div unchanged. The SAIL compile pass treats these as opaque to
     // validation (the framework / browser own their semantics).
     if name.starts_with("data-")
         || name.starts_with("aria-")
         || name.starts_with("on")
             && name.as_bytes().get(2) == Some(&b':')
-        // SUI directive prefixes — framework bindings that the compiler
+        // SAIL directive prefixes — framework bindings that the compiler
         // understands (see `crates/sail/compiler/src/parse/template/attrs.rs`).
         // `bind:`, `class:`, `use:`, `attr:`, `prop:`, `motion:`. Each is
         // fully validated downstream; the layout keyword lowering passes

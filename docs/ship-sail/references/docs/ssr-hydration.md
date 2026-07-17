@@ -7,7 +7,7 @@ description: How `shipd` renders `.sail` to HTML server-side, and how the client
 
 # SSR and the attach runtime
 
-SUI is **server-rendered first**. `shipd` renders the template to HTML with initial values inlined; the page is meaningful before any JavaScript runs. A small client runtime then attaches event handlers, signals, and SSE subscriptions to the existing DOM.
+SAIL is **server-rendered first**. `shipd` renders the template to HTML with initial values inlined; the page is meaningful before any JavaScript runs. A small client runtime then attaches event handlers, signals, and SSE subscriptions to the existing DOM.
 
 This is progressive enhancement, not hydration of an empty shell. The framework's design assumes the daemon owns the data and the page should reflect it immediately on first paint.
 
@@ -144,7 +144,7 @@ For the local-daemon case Ship targets, this matters less than for the public-we
 Two pieces of the previous (Phase 3) architecture are gone:
 
 - **Client-side template parser** — the client never parses `.sail` source on the production path. The parser lives in `@ship/sail-dom/legacy` and is used only by tests and the eval rig. The default `@ship/sail-dom` entry exports only `attach` and has zero parser code.
-- **The empty HTML shell** — `shipd` no longer serves an empty `<div id="root">` shell at `/sui/<view>`. It serves server-rendered HTML directly.
+- **The empty HTML shell** — `shipd` no longer serves an empty `<div id="root">` shell at `/sail/<view>`. It serves server-rendered HTML directly.
 
 Both follow from the IR-as-source-of-truth move. Two parsers (Rust + JS) and two emit shapes (empty shell + client-rendered DOM) become one parser (Rust) and one emit shape (rendered HTML).
 

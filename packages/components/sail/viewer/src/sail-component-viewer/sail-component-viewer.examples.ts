@@ -1,5 +1,5 @@
 // <sail-component-viewer> showcase fixtures — the embeddable composition tag, the
-// one tag a host drops in for a live, reactive preview of a SUI component. The
+// one tag a host drops in for a live, reactive preview of a SAIL component. The
 // Studio components explorer / docs read these.
 //
 // The viewer's structured inputs (the live `source` signal, the CEM

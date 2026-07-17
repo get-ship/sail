@@ -1,5 +1,5 @@
 <!--
-  <sail-annotation-marker> — SUI port of <ship-annotation-marker>.
+  <sail-annotation-marker> — SAIL port of <ship-annotation-marker>.
   Visual pin or region-box marker for a staged / sent annotation.
 
   Prop surface

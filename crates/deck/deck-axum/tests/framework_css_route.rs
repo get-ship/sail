@@ -17,7 +17,7 @@ async fn serve() -> std::net::SocketAddr {
 async fn serves_framework_stylesheet_with_both_halves() {
     let addr = serve().await;
     let res = reqwest::Client::new()
-        .get(format!("http://{addr}/api/assets/sui.css"))
+        .get(format!("http://{addr}/api/assets/sail.css"))
         .send()
         .await
         .unwrap();

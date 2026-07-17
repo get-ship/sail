@@ -1,7 +1,7 @@
 <!--
-  <sail-code-editor> — SUI primitive, framework-pure. CodeMirror 6 wrapped as a
+  <sail-code-editor> — SAIL primitive, framework-pure. CodeMirror 6 wrapped as a
   lazy-loaded web-component. Drop-in for any code-editing surface in sail-site
-  (or any SUI app) without depending on the ship platform.
+  (or any SAIL app) without depending on the ship platform.
 
   Prop / event parity
   ───────────────────────────────────────────────────────────────────────────

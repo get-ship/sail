@@ -362,7 +362,7 @@ export {
 } from './template-hooks/registry'
 export type { KbdShortcut } from './template-hooks/kbd'
 // Built-in hook factories are loaded on demand via the
-// `@ship/sail-runtime/template-hooks` subpath: the SUI compiler emits a
+// `@ship/sail-runtime/template-hooks` subpath: the SAIL compiler emits a
 // side-effect import of that subpath into compiled views that contain
 // `<use-*>` elements, so hook code only ships with views that use it.
 // Register <sail-if>, <sail-for>, <sail-match> custom elements.
@@ -394,11 +394,11 @@ export { adoptSuiSheets } from './styles/index'
 export { mount } from './mount'
 export type { ViewPayload, MountOptions, MountHandle, SuiLoader } from './mount'
 
-// SUI-local structural route type. Canonical home is the runtime (see
+// SAIL-local structural route type. Canonical home is the runtime (see
 // route-signals.ts) — views read `scope.route.params.<name>()` against this
 // shape, and the deck router's `route()` factory returns a structurally
 // compatible value. Exported so consumers (and the dom test harness) can
-// name `RouteSignals` without importing `@ship/deck-router` (keeps sui ⊥ deck).
+// name `RouteSignals` without importing `@ship/deck-router` (keeps sail ⊥ deck).
 export type { RouteSignals } from './route-signals'
 
 // Re-export the route factory (the passive RouteSignals reader) for the SAME
@@ -406,8 +406,8 @@ export type { RouteSignals } from './route-signals'
 // `@ship/sail-runtime/route`, and the deck importmap points that subpath at the
 // single `runtime.js` bundle — so the symbol must be reachable from THIS entry
 // or production resolves it to a bundle that doesn't export it. (Policy —
-// history/navigate/route-table — stays in the deck router; this is the SUI
-// mechanism half: sui ⊥ deck.)
+// history/navigate/route-table — stays in the deck router; this is the SAIL
+// mechanism half: sail ⊥ deck.)
 export { route, routeWithUpdate } from './route'
 export type { RouteHandle } from './route'
 

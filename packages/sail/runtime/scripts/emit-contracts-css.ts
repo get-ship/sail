@@ -1,6 +1,6 @@
 // Emit the light-DOM framework contracts as a real CSS asset —
 // `packages/sail/tokens/src/contracts.css` — so build-time consumers (the
-// deck bundler's `sui.css` aggregation, any non-JS host) read the SAME
+// deck bundler's `sail.css` aggregation, any non-JS host) read the SAME
 // text the runtime injects. The runtime TS constants remain the authoring
 // source; this script materializes them, and the drift test in
 // `test/contracts-css.test.ts` fails the suite whenever the two diverge

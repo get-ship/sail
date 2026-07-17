@@ -1,4 +1,4 @@
-// @ship/sail-primitives — SUI primitive registry.
+// @ship/sail-primitives — SAIL primitive registry.
 //
 // Side-effect imports for every generic `<sail-*>` UI primitive. Each
 // `<tag>.compiled.js` calls `customElements.define()` on import, so a
@@ -51,13 +51,13 @@ export type Tone =
  *  rationale — sail-avatar (xs|sm|md|xl), sail-dialog (sm|md|full). */
 // ── Public table engine ─────────────────────────────────────────────
 //
-// `createTable` is the SUI table engine (Backbone #1) — a thin assembler
+// `createTable` is the SAIL table engine (Backbone #1) — a thin assembler
 // composing the filter/sort/group/page pipeline + the orthogonal
 // selection + column lanes. Re-exported here so adjacent packs (media
 // at present, future `chart-table` / `sheet-table` siblings) can use
 // the engine via the public package entry instead of reaching into
 // `primitives/src/sail-table/engine/*` (a path that breaks `rootDir`
-// isolation and the sui ⊥ sui pack boundary).
+// isolation and the sail ⊥ sail pack boundary).
 export { createTable, type Table, type TableOptions } from './sail-table/engine/create-table'
 // Re-export the public type catalog from `types.ts` so consumers can
 // name `ColumnDef`, `Row`, `Cell`, `SortState`, etc. without reaching

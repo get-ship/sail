@@ -1,6 +1,6 @@
 // route-boundary.ts — the DEFAULT error boundary every route outlet gets.
 //
-// The catch *mechanism* lives in the SUI runtime: `bindFor` / `bindIf` /
+// The catch *mechanism* lives in the SAIL runtime: `bindFor` / `bindIf` /
 // the component factory's `mount()` / `effect()` already wrap their throw-prone
 // call sites in `runProtected(node, source, fn)`, which walks up the DOM from
 // `node` to the nearest element carrying a `BoundaryHandle` and routes the
@@ -10,8 +10,8 @@
 // This module is the OTHER consumer: it lets the deck router install a boundary
 // handle on the route outlet so a throwing route degrades to an error card
 // instead of crashing its subtree / white-screening — without the route author
-// having to wrap anything. deck ⊥ sui holds: this imports the runtime's
-// boundary helpers (deck → sui); the runtime never imports deck.
+// having to wrap anything. deck ⊥ sail holds: this imports the runtime's
+// boundary helpers (deck → sail); the runtime never imports deck.
 //
 // Registration-free by design: the fallback prefers the `<sail-error-state>`
 // primitive but degrades to a self-contained styled card when no primitive is
@@ -114,7 +114,7 @@ export function installRouteBoundary(
 
 /**
  * Build the card shown when a route view throws. Prefers `<sail-error-state>`
- * (the SUI port) and falls back to a self-contained styled `<div>` so the card
+ * (the SAIL port) and falls back to a self-contained styled `<div>` so the card
  * never depends on a primitive being registered — the same guard pattern
  * `mountRouter`'s `buildNotFound` uses for the 404 surface.
  *

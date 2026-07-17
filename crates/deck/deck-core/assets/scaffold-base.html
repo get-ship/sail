@@ -1,12 +1,12 @@
 <!--
-  SUI scaffold base — the shared HTML skeleton every daemon-served SUI SPA
+  SAIL scaffold base — the shared HTML skeleton every daemon-served SAIL SPA
   starts from.
 
   Both apps/shell (the hub) and apps/spaces (the per-space frontend) ship
   their own `index.html`, but the head boilerplate is the same:
 
-    * charset + viewport (every SUI SPA)
-    * favicon + ship-logo SVG (every SUI SPA)
+    * charset + viewport (every SAIL SPA)
+    * favicon + ship-logo SVG (every SAIL SPA)
     * the <meta name="deck-mode"> tag (daemon rewrites in production)
     * /api/assets/view-tokens.css (design tokens — daemon-served, root-absolute)
     * /src/chrome/layout.css (the per-app chrome baseline)
@@ -63,7 +63,7 @@
        components/L1 elements are styled at first paint WITHOUT the runtime's
        JS injection (SSR / no-FOUC). `data-sail-contracts` is the signal the
        runtime's `ensureLightContracts` reads to skip its injection. -->
-  <link rel="stylesheet" href="/api/assets/sui.css" data-sail-contracts />
+  <link rel="stylesheet" href="/api/assets/sail.css" data-sail-contracts />
   <link rel="stylesheet" href="/src/chrome/layout.css" />
 
   <!-- Pre-paint theme (FOUC guard). Reads the persisted theme from

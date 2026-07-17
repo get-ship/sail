@@ -18,7 +18,7 @@ alike:
 3. fix exactly what it names,
 4. run again.
 
-SUI's errors are written to be *acted on*: each one names the rule, the
+SAIL's errors are written to be *acted on*: each one names the rule, the
 offending value, and the complete legal vocabulary — the rejection is
 the documentation. An author (human or agent) who works this loop never
 needs to memorize the token tables, and never needs to guess.
@@ -89,7 +89,7 @@ Run 5: `compiled 1 file(s)`.
 
 ## Why this is the agent lesson
 
-An agent authoring SUI does exactly what you just did — nothing more.
+An agent authoring SAIL does exactly what you just did — nothing more.
 It cannot ship an off-system value, an invented preset, or a stylesheet,
 because the build stops it; and the error text is precise enough to fix
 mechanically. The compiler is the review that never gets tired. What it

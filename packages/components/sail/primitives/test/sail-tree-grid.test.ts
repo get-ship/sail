@@ -10,7 +10,7 @@
 // reference). TESTS-FIRST: the `.compiled.js` does NOT exist yet → RED until
 // `sail-tree-grid.sail` + `.controller.ts` land.
 // Authority: .artifacts/sail-arc/sail-tree/build-spec.md (Slice 5 + behavioral
-// spec #8), governed by ship-sui + ship-design-system skills.
+// spec #8), governed by ship-sail + ship-design-system skills.
 
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sail-tree-grid/sail-tree-grid.compiled.js'

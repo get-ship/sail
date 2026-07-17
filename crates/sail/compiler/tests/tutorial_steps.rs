@@ -1,4 +1,4 @@
-//! Compile-check the SUI tutorial's starter + solved templates under the
+//! Compile-check the SAIL tutorial's starter + solved templates under the
 //! **playground-shaped** path (`source_path: None`, no `setup_url`).
 //!
 //! The docs site's `TutorialApp` compiles user edits in the browser via

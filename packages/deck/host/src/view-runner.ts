@@ -1,8 +1,8 @@
 //! High-level Deck view confinement: assemble the endowment surface + confine a
 //! whole compiled view into the `{ default: { setup } }` shape `mount()` accepts
-//! as `opts.module`. The host calls these; `mount.ts` (SUI) is unchanged — it
+//! as `opts.module`. The host calls these; `mount.ts` (SAIL) is unchanged — it
 //! already takes a pre-resolved module, so Deck drives confinement without a
-//! SUI→Deck dependency or a live-path edit. Default (unconfined) mount is
+//! SAIL→Deck dependency or a live-path edit. Default (unconfined) mount is
 //! untouched; a host opts in per view.
 
 import { confineController, createConfinedFetch } from './confine'

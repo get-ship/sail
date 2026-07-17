@@ -318,7 +318,7 @@ support `<slot name="x" item={x}>` and consumer `let:item`. The
 light-DOM projection is one-shot at connect; the compiler-managed
 equivalent for scoped binding is its own design work.
 
-```sui
+```sail
 <!-- in sail-card.sail — body declares the chrome; regions are in the manifest -->
 <div class="card">
   <header class="card-head">
@@ -333,7 +333,7 @@ equivalent for scoped binding is its own design work.
 </div>
 ```
 
-```sui
+```sail
 <!-- in a consumer -->
 <sail-card>
   <sail-chip slot="header" tone="primary">draft</sail-chip>
@@ -370,7 +370,7 @@ no public projection API exists by design: authors write `<slot>` and
 
 **Known limit (documented, not hidden):** projection runs once at
 connect. Children appended to the host LATER are not re-projected —
-the dynamic composition path in SUI templates goes through compiled
+the dynamic composition path in SAIL templates goes through compiled
 call sites, not raw DOM appends, so this covers the authored
 surface. Streaming-parse upgrades are the other gap; bundles load
 deferred today so the DOM is complete at registration.

@@ -7,7 +7,7 @@ description: Two categories of hook with different jobs and different syntax. Te
 
 # Hooks
 
-SUI has **two** categories of hook with different jobs and different syntax. They are not interchangeable.
+SAIL has **two** categories of hook with different jobs and different syntax. They are not interchangeable.
 
 | Category | Job | Where it lives | hooks |
 |---|---|---|---|

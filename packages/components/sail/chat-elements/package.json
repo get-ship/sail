@@ -1,7 +1,7 @@
 {
   "name": "@ship/sail-chat-elements",
   "version": "0.2.0",
-  "description": "SUI Chat Elements \u2014 unbound multi-modal chat-shape primitives (message \u00b7 message-list \u00b7 composer \u00b7 thinking-dots \u00b7 tool-call \u00b7 citation). Pure framework tier: no Ship runtime, no SDK reads. Consumers bind their own data.",
+  "description": "SAIL Chat Elements \u2014 unbound multi-modal chat-shape primitives (message \u00b7 message-list \u00b7 composer \u00b7 thinking-dots \u00b7 tool-call \u00b7 citation). Pure framework tier: no Ship runtime, no SDK reads. Consumers bind their own data.",
   "type": "module",
   "license": "MIT",
   "files": [

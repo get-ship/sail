@@ -9,7 +9,7 @@ next: "16-effect-cleanup"
 chapter: "lifecycle"
 ---
 
-SUI's lifecycle model is shorter than most frameworks':
+SAIL's lifecycle model is shorter than most frameworks':
 
 | Frame | Where it lives |
 |---|---|

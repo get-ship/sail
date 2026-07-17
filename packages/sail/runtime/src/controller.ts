@@ -22,7 +22,7 @@
 
 import type { Signal } from './signal'
 import type { ShipHost, Clients } from './ship'
-// Slice 2 — SUI-local `RouteSignals` (see ./route-signals for the
+// Slice 2 — SAIL-local `RouteSignals` (see ./route-signals for the
 // decoupling rationale). Replaces the `@ship/deck-router` import.
 import type { RouteSignals } from './route-signals'
 

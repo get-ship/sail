@@ -32,7 +32,7 @@ pub const RULE_ID: &str = "sail-prefer-primitive";
 
 /// The ad-hoc-layout message. Points at all three primitives and the skill.
 const MESSAGE: &str =
-    "ad-hoc layout — prefer <sail-grid>/<sail-stack>/<sail-cluster> (see the sui skill)";
+    "ad-hoc layout — prefer <sail-grid>/<sail-stack>/<sail-cluster> (see the sail skill)";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     // The primitives pack IS the layout substrate — flex/grid is legitimate
@@ -311,7 +311,7 @@ mod tests {
         assert_eq!(f[0].severity, Severity::Warn);
         assert_eq!(
             f[0].message,
-            "ad-hoc layout — prefer <sail-grid>/<sail-stack>/<sail-cluster> (see the sui skill)"
+            "ad-hoc layout — prefer <sail-grid>/<sail-stack>/<sail-cluster> (see the sail skill)"
         );
     }
 

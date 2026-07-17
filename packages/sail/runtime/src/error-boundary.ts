@@ -125,7 +125,7 @@ export function runProtected<T>(
       handle.catch(err, source)
       return undefined
     }
-    console.error('[sui] uncaught throw (no error boundary):', err)
+    console.error('[sail] uncaught throw (no error boundary):', err)
     return undefined
   }
 }

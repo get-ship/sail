@@ -1,4 +1,4 @@
-// @ship/sail-mermaid — SUI pack, framework-pure.
+// @ship/sail-mermaid — SAIL pack, framework-pure.
 //
 // One element: <sail-mermaid>. The compiled `.compiled.js` calls
 // `customElements.define()` on import, so a single `import '@ship/sail-mermaid'`

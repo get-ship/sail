@@ -1,11 +1,11 @@
 ---
 group: Agents
 order: 2
-title: SUI — Agent Authoring
+title: SAIL — Agent Authoring
 description: How agents author .sail views end to end.
 ---
 
-# SUI — Agent-Authoring Guide
+# SAIL — Agent-Authoring Guide
 
 For an AI agent producing a Ship view in one shot. Read the parent
 `SKILL.md` first for the four-layer overview and the hard rules; this
@@ -123,7 +123,7 @@ component's CSS goes in a `<style>` block inside the `.sail`, or for
 external CSS via `compile_opts.styles`. The compiler does **not**
 shadow-DOM anything by default — every `sail-*` renders into its
 own element with no shadow root. Scoped CSS is `@scope
-([data-component="sail-x"]) to ([data-sui])` (a donut that stops
+([data-component="sail-x"]) to ([data-sail])` (a donut that stops
 at nested component boundaries); the compiler rewrites `:host` →
 `:scope` and `::slotted(<sel>)` → `slot > <sel>` at emit time
 (`crates/sail/compiler/src/emit/styles.rs` `light_dom_selectors`).
@@ -175,7 +175,7 @@ Mutation is always `signal.set(newValue)` (or `signal.set(prev => next)`) — th
    `live(() => ship.foo.bar(args))` and wires the channel.
 
 2. **Hand-wired (required for view-host mounts).** The daemon's
-   `/sui/<name>` host does NOT inject `ship` into ctx, so the
+   `/sail/<name>` host does NOT inject `ship` into ctx, so the
    compiler-emitted `<data live>` form sticks on `loading`. Wire
    `live()` directly to `/_deck/data?expr=…` instead. The canonical
    helper currently lives in `views/git/page.sail`'s inline
@@ -203,7 +203,7 @@ function sseSource<T>(expr: string): LiveSource<T> {
 
 Default to the template form (path 1) when authoring inside shell.
 Adopt the `sseSource` helper if the view will also be linked to
-directly via `/sui/<name>`.
+directly via `/sail/<name>`.
 
 **Refs (`bind:this`).** Declare in the controller function as
 `ref(null)`; read with `refSig()` (returns the element or `null`):
@@ -448,7 +448,7 @@ Hard-won. Each one is from a real fix in this repo.
    too late, and the first `route()` call from a `derived` will throw.
 
 8. **Compiler-emitted `<data live>` sticks on `loading` under
-   `/sui/<name>`.** The daemon's view-host mounts views without
+   `/sail/<name>`.** The daemon's view-host mounts views without
    injecting `ship` into ctx. If the view will be linked to directly
    (not just through shell), hand-wire the live source with
    `sseSource(...)` (see § 3 above and the `<controller>` blocks in
@@ -499,7 +499,7 @@ A healthy view in the probe report has `status === '200'`,
 fix the live-data wire-up (§ 5, § 7-8).
 
 Direct-mount path (skips shell's router):
-`http://localhost:$PORT/sui/<name>` — confirms the view-host serves
+`http://localhost:$PORT/sail/<name>` — confirms the view-host serves
 the compiled bundle and SSR snapshot. Useful when bisecting
 shell-routing bugs vs view-content bugs.
 

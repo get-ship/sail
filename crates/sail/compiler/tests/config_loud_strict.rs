@@ -24,9 +24,9 @@ fn write_pack(config: &str, sui_body: &str) -> (tempfile::TempDir, PathBuf) {
     fs::write(tmp.path().join("sail.config.json"), config).unwrap();
     let src_dir = tmp.path().join("src");
     fs::create_dir_all(&src_dir).unwrap();
-    let sui = src_dir.join("w.sail");
-    fs::write(&sui, sui_body).unwrap();
-    (tmp, sui)
+    let sail = src_dir.join("w.sail");
+    fs::write(&sail, sui_body).unwrap();
+    (tmp, sail)
 }
 
 fn opts_for(path: &Path) -> CompileOpts {
@@ -49,8 +49,8 @@ fn opts_for(path: &Path) -> CompileOpts {
 
 #[test]
 fn unknown_key_fails_closed_and_the_refusal_names_file_key_and_tier() {
-    let (_tmp, sui) = write_pack(r#"{"polcy":"strict"}"#, "<p>hi</p>");
-    let (config_path, resolution) = Policy::resolve_outcome(&sui).expect("config resolves");
+    let (_tmp, sail) = write_pack(r#"{"polcy":"strict"}"#, "<p>hi</p>");
+    let (config_path, resolution) = Policy::resolve_outcome(&sail).expect("config resolves");
     assert_eq!(resolution.tier, Policy::STRICT, "unknown key fails closed to strict");
     let ResolutionKind::Rejected(reason) = &resolution.kind else {
         panic!("expected Rejected, got {:?}", resolution.kind);
@@ -68,8 +68,8 @@ fn unknown_key_fails_closed_and_the_refusal_names_file_key_and_tier() {
 
 #[test]
 fn unparseable_config_fails_closed_and_refuses_loudly() {
-    let (_tmp, sui) = write_pack("{ not valid json", "<p>hi</p>");
-    let (_config_path, resolution) = Policy::resolve_outcome(&sui).expect("config resolves");
+    let (_tmp, sail) = write_pack("{ not valid json", "<p>hi</p>");
+    let (_config_path, resolution) = Policy::resolve_outcome(&sail).expect("config resolves");
     assert_eq!(resolution.tier, Policy::STRICT);
     assert!(
         matches!(&resolution.kind, ResolutionKind::Rejected(r) if r.contains("not valid JSON")),
@@ -83,8 +83,8 @@ fn unrecognized_preset_value_is_rejected_not_silently_none() {
     // `{"preset":"strictest"}` names a RECOGNIZED key (`preset`) with a value
     // the parser doesn't know — same fail-closed-and-loud bucket as a typo'd
     // key, not the softer "no signal" bucket.
-    let (_tmp, sui) = write_pack(r#"{"preset":"strictest"}"#, "<p>hi</p>");
-    let (_config_path, resolution) = Policy::resolve_outcome(&sui).expect("config resolves");
+    let (_tmp, sail) = write_pack(r#"{"preset":"strictest"}"#, "<p>hi</p>");
+    let (_config_path, resolution) = Policy::resolve_outcome(&sail).expect("config resolves");
     assert_eq!(resolution.tier, Policy::STRICT);
     assert!(
         matches!(&resolution.kind, ResolutionKind::Rejected(r) if r.contains("strictest")),
@@ -104,8 +104,8 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
     // with ZERO signal. It must now resolve to strict via the `NoSignal`
     // bucket (an announcement, not a "your config is broken" refusal) and
     // name what recognized key WAS present.
-    let (_tmp, sui) = write_pack(r#"{"stylesheets": []}"#, "<p>hi</p>");
-    let (config_path, resolution) = Policy::resolve_outcome(&sui).expect("config resolves");
+    let (_tmp, sail) = write_pack(r#"{"stylesheets": []}"#, "<p>hi</p>");
+    let (config_path, resolution) = Policy::resolve_outcome(&sail).expect("config resolves");
     assert_eq!(resolution.tier, Policy::STRICT);
     let ResolutionKind::NoSignal(hint) = &resolution.kind else {
         panic!("expected NoSignal (announced), got {:?}", resolution.kind);
@@ -136,13 +136,13 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
 
 #[test]
 fn granted_full_preset_compiles_clean_with_one_recognized_announcement() {
-    let (_tmp, sui) = write_pack(r#"{"preset":"full"}"#, r#"<sail-card sx="p-4">hi</sail-card>"#);
-    let (_config_path, resolution) = Policy::resolve_outcome(&sui).expect("config resolves");
+    let (_tmp, sail) = write_pack(r#"{"preset":"full"}"#, r#"<sail-card sx="p-4">hi</sail-card>"#);
+    let (_config_path, resolution) = Policy::resolve_outcome(&sail).expect("config resolves");
     assert_eq!(resolution.tier, Policy::FULL);
     assert!(matches!(&resolution.kind, ResolutionKind::Recognized(s) if s == "preset: full"));
 
     // sx is granted — the build succeeds, no sail-no-sx finding at all.
-    compile(&fs::read_to_string(&sui).unwrap(), opts_for(&sui))
+    compile(&fs::read_to_string(&sail).unwrap(), opts_for(&sail))
         .expect("full preset must grant sx cleanly");
 }
 
@@ -154,12 +154,12 @@ fn granted_full_preset_compiles_clean_with_one_recognized_announcement() {
 #[test]
 fn no_config_leaves_default_semantics_unchanged() {
     let tmp = tempfile::tempdir().unwrap();
-    let sui = tmp.path().join("w.sail");
-    fs::write(&sui, r#"<sail-card sx="p-4">hi</sail-card>"#).unwrap();
-    assert!(Policy::resolve_outcome(&sui).is_none(), "no config anywhere on the walk");
-    assert!(Policy::overrides_for(&sui).is_empty(), "no config → no capability overrides");
+    let sail = tmp.path().join("w.sail");
+    fs::write(&sail, r#"<sail-card sx="p-4">hi</sail-card>"#).unwrap();
+    assert!(Policy::resolve_outcome(&sail).is_none(), "no config anywhere on the walk");
+    assert!(Policy::overrides_for(&sail).is_empty(), "no config → no capability overrides");
     // sx's natural severity is Warn, not gated — an unconfigured package
     // keeps compiling exactly as before.
-    compile(&fs::read_to_string(&sui).unwrap(), opts_for(&sui))
+    compile(&fs::read_to_string(&sail).unwrap(), opts_for(&sail))
         .expect("unconfigured package must compile unchanged");
 }

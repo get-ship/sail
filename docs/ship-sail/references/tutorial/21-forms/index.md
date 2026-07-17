@@ -36,7 +36,7 @@ export default controller((ctx) => {
 
 Read in the template:
 
-```sui
+```sail
 <form on:submit|preventDefault={(e) => form.submit(e)}>
   <label>name  <input bind:value={form.fields.name}   /></label>
   {#if form.errors().name}<p class="err">{form.errors().name}</p>{/if}

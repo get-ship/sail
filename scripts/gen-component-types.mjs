@@ -30,8 +30,8 @@ if (!existsSync(COMPILER)) {
 const arg = process.argv[2]
 const PACKS = arg
   ? [resolve(arg)]
-  : readdirSync(resolve(REPO_ROOT, 'packages/components/sui'))
-      .map((d) => resolve(REPO_ROOT, 'packages/components/sui', d))
+  : readdirSync(resolve(REPO_ROOT, 'packages/components/sail'))
+      .map((d) => resolve(REPO_ROOT, 'packages/components/sail', d))
       .filter((d) => statSync(d).isDirectory() && existsSync(resolve(d, 'src')))
 
 function* walkSui(dir) {
@@ -52,13 +52,13 @@ for (const pack of PACKS) {
   const src = resolve(pack, 'src')
   if (!existsSync(src)) continue
   const dist = resolve(pack, 'dist')
-  for (const sui of walkSui(src)) {
-    const stem = basename(sui, '.sail')
+  for (const sail of walkSui(src)) {
+    const stem = basename(sail, '.sail')
     // `--out <pack>/dist`: build artifacts land in the pack's own dist; the
     // `.sail.d.ts` lands adjacent to the source regardless. (The compiler emits
     // no SSR skeletons — that path was removed in the JS-only SSR cutover — so
     // there's nothing to suppress here.)
-    execFileSync(COMPILER, ['build', sui, '--component-name', stem, '--out', dist], {
+    execFileSync(COMPILER, ['build', sail, '--component-name', stem, '--out', dist], {
       stdio: ['inherit', 'ignore', 'inherit'],
     })
     total++

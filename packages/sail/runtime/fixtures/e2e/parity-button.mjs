@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Lit ↔ SUI button parity — disabled.
+// Lit ↔ SAIL button parity — disabled.
 //
 // Mixing Lit (Ship product) into the framework fixtures workspace breaks
 // the layering this directory was created to enforce. The right home for

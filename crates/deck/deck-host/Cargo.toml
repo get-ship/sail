@@ -3,7 +3,7 @@ name = "deck-host"
 version = "0.1.0"
 edition = "2024"
 publish = false
-description = "SUI framework core — view resolution, compilation, SSR, asset manifests. No HTTP, no server runtime."
+description = "SAIL framework core — view resolution, compilation, SSR, asset manifests. No HTTP, no server runtime."
 
 [lib]
 name = "deck_host"

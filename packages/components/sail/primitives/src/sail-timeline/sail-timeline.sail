@@ -1,10 +1,10 @@
 <!--
-  <sail-timeline> — SUI port of <ship-timeline>.
+  <sail-timeline> — SAIL port of <ship-timeline>.
   Vertical event list with left-gutter connector line and tone-colored dots.
 
   Prop parity vs <ship-timeline>
   ─────────────────────────────────────────────────────────────────────────────
-  Lit                          SUI                      Notes
+  Lit                          SAIL                      Notes
   ─────────────────────────────────────────────────────────────────────────────
   (no props)                   (no props)               ✓
   ─────────────────────────────────────────────────────────────────────────────

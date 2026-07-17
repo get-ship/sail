@@ -1,4 +1,4 @@
-// Snippets for the templates page. Every SUI sample is compiled by the build.
+// Snippets for the templates page. Every SAIL sample is compiled by the build.
 export const code = {
   anatomy: `<!-- one file, three parts. -->
 <scope>

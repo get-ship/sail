@@ -11,7 +11,7 @@
 //
 // When `a` changes, both b and c change, and both feed d. A naive reactive
 // system recomputes d TWICE (once per changed input) — a "glitch", where d
-// briefly holds an inconsistent value. SUI's colored push-pull scheduler
+// briefly holds an inconsistent value. SAIL's colored push-pull scheduler
 // recomputes d exactly ONCE per `a` change. We prove it live: an effect counts
 // d's recomputes; it should climb by exactly 1 each time you nudge `a`.
 import { controller, signal, derived, effect, untrack, type ViewScope } from '@ship/sail-runtime'
@@ -60,7 +60,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
     <h1>The diamond, with no glitch.</h1>
     <p role="doc-lede">
       Change <code>a</code>. It feeds both <code>b</code> and <code>c</code>, and
-      both feed <code>d</code>. SUI recomputes <code>d</code> exactly once per
+      both feed <code>d</code>. SAIL recomputes <code>d</code> exactly once per
       change — never the double-fire a naive reactive system does.
     </p>
   </header>
@@ -108,7 +108,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
     <p>
       One recompute per change (plus one at first paint). A glitchy system would
       <em>double</em> that — <code>d</code> would briefly equal
-      <code>b_new + c_old</code>. SUI's colored push-pull scheduler never lets
+      <code>b_new + c_old</code>. SAIL's colored push-pull scheduler never lets
       that intermediate value exist.
     </p>
   </aside>

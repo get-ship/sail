@@ -5,12 +5,12 @@
 // (`**/src/generated.ts`). When that file is present it wins module
 // resolution over this `.d.ts` (`.ts` is resolved before `.d.ts`), so the
 // deck build is never affected by this stub. When it is ABSENT — a fresh
-// checkout, CI typechecking sui standalone, or a consumer (e.g. helm web)
-// pointing `@ship/*` at sui source instead of hand-mirrored shims — these
+// checkout, CI typechecking sail standalone, or a consumer (e.g. helm web)
+// pointing `@ship/*` at sail source instead of hand-mirrored shims — these
 // declarations let the runtime typecheck without the codegen step.
 //
 // Keep in sync with the generated output. This is a faithful mirror of the
-// types the sui runtime imports plus their transitive dependencies; if the
+// types the sail runtime imports plus their transitive dependencies; if the
 // Rust wire types grow a new field the runtime depends on, update here too
 // (the per-package `typecheck` script will flag a missing/incompatible
 // type as a hard error, so drift cannot pass silently).

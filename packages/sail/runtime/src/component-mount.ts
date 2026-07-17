@@ -1,7 +1,7 @@
 // component-mount.ts — the mount-form of `component()`.
 //
 // `component(setup)` — the single-argument (function) overload — wraps a setup
-// function as the default export of a compiled *tagless* SUI component: a
+// function as the default export of a compiled *tagless* SAIL component: a
 // component that is MOUNTED into a host node rather than REGISTERED as a custom
 // element. The sail-compiler emits every tagless `.sail` (a deck page, the
 // synthetic SSR render) as:
@@ -18,10 +18,10 @@
 // registered custom element. With no tag, a component is mounted, not defined.
 
 import type { ShipHost, Clients } from './ship'
-// SUI-local structural `RouteSignals` (the deck-side `RouteSignals` is
+// SAIL-local structural `RouteSignals` (the deck-side `RouteSignals` is
 // structurally compatible — both import the same `Signal` from
 // `@ship/sail-runtime`; deck's `route` factory return satisfies this type at the
-// assignment site). SUI names no host: route/navigate arrive via the seam.
+// assignment site). SAIL names no host: route/navigate arrive via the seam.
 import type { RouteSignals } from './route-signals'
 
 export interface MountContext {

@@ -2,7 +2,7 @@
 //!
 //! Thesis: the `.sail` compiler can be *ignorant of* `route` (and, by
 //! extension, `ship`, data sources, components). Those are **deck/app**
-//! concepts, not SUI ones — SUI compiles `.sail` into TS; deck owns the
+//! concepts, not SAIL ones — SAIL compiles `.sail` into TS; deck owns the
 //! "view" feature (routing, the route handle, the view-host). Composition
 //! happens through real ESM imports declared in an **app manifest** (a
 //! name → module-specifier import map) and injected here, validated
@@ -61,7 +61,7 @@ pub struct AppManifest {
     pub clients: BTreeMap<String, ManifestClient>,
 }
 
-/// Look up a manifested name. **SUI names no host:** a name resolves ONLY
+/// Look up a manifested name. **SAIL names no host:** a name resolves ONLY
 /// through the app manifest. The host (deck) declares its own context —
 /// `route`, `navigate`, and anything else — into the manifest seam; the
 /// compiler stays ignorant of any specific provider (no `@ship/deck/router`

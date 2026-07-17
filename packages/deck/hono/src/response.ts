@@ -15,7 +15,7 @@ export interface DeckResponse {
   contentType: string;
   cachePolicy: CachePolicy;
   body: Uint8Array | string;
-  /** Extra headers (e.g. X-Sui-View, Location). Security headers are added by `htmlView`. */
+  /** Extra headers (e.g. X-Sail-View, Location). Security headers are added by `htmlView`. */
   extraHeaders: Array<[string, string]>;
 }
 

@@ -9,7 +9,7 @@
 //
 // Spec: .artifacts/design-f1-mount-unification.md
 //
-// IMPORTANT: this module owns the runtime-side half of the SUI mount
+// IMPORTANT: this module owns the runtime-side half of the SAIL mount
 // contract. Anything that knows about HTML structure (importmap, boot
 // scripts, doctype) lives OUTSIDE this file — in the host page.
 //
@@ -115,7 +115,7 @@ export async function mount<Scope = Record<string, unknown>>(
   payloadOrName: ViewPayload<Scope> | string,
   opts: MountOptions = {},
 ): Promise<MountHandle<Scope>> {
-  if (!target) throw new Error('[sui/mount] target is required')
+  if (!target) throw new Error('[sail/mount] target is required')
 
   const payload =
     typeof payloadOrName === 'string'
@@ -150,7 +150,7 @@ export async function mount<Scope = Record<string, unknown>>(
   const mod = (opts.module ?? (await import(/* @vite-ignore */ payload.moduleUrl))) as CompiledModule
   if (!mod?.default || typeof mod.default.setup !== 'function') {
     throw new Error(
-      `[sui/mount] module ${payload.moduleUrl} missing default.setup()`,
+      `[sail/mount] module ${payload.moduleUrl} missing default.setup()`,
     )
   }
 
@@ -249,7 +249,7 @@ export async function mount<Scope = Record<string, unknown>>(
     try {
       clientMount(target)
     } catch (err) {
-      console.error('[sui/mount] __mount threw:', err)
+      console.error('[sail/mount] __mount threw:', err)
     }
   }
 
@@ -268,7 +268,7 @@ export async function mount<Scope = Record<string, unknown>>(
       )
       if (typeof dispose === 'function') cleanups.push(dispose as () => void)
     } catch (err) {
-      console.error('[sui/mount] hydrate threw:', err)
+      console.error('[sail/mount] hydrate threw:', err)
     }
   }
 
@@ -347,7 +347,7 @@ export async function mount<Scope = Record<string, unknown>>(
         try {
           fn()
         } catch (err) {
-          console.error('[sui/mount] cleanup threw:', err)
+          console.error('[sail/mount] cleanup threw:', err)
         }
       }
       // Dispose the scope: closes any EventSource subscription opened
@@ -396,7 +396,7 @@ function warnUndeclaredClients(
     if (typeof name !== 'string') continue
     if (clients === undefined || !(name in clients)) {
       console.warn(
-        `[sui/mount] view "${viewName}" declares <client name="${name}"> but the host did not supply opts.clients.${name}`,
+        `[sail/mount] view "${viewName}" declares <client name="${name}"> but the host did not supply opts.clients.${name}`,
       )
     }
   }
@@ -431,7 +431,7 @@ async function resolveView(
 ): Promise<ViewPayload> {
   if (!loader) {
     throw new Error(
-      `[sui/mount] mounting by name ("${nameOrPath}") requires opts.loader — the ` +
+      `[sail/mount] mounting by name ("${nameOrPath}") requires opts.loader — the ` +
         `host must provide a SuiLoader. The runtime does not know the view URL scheme.`,
     )
   }
@@ -583,7 +583,7 @@ function openLiveChannel(
     try {
       payload = JSON.parse(event.data as string) as PatchSignalsPayload
     } catch {
-      console.warn('[sui/mount] patch-signals: bad payload', event.data)
+      console.warn('[sail/mount] patch-signals: bad payload', event.data)
       return
     }
     const { name, value } = payload
@@ -624,12 +624,12 @@ function applyPatchElementsFrame(root: HTMLElement, raw: string): void {
   try {
     payload = JSON.parse(raw) as PatchElementsPayload
   } catch {
-    console.warn('[sui/mount] patch-elements: malformed payload', raw)
+    console.warn('[sail/mount] patch-elements: malformed payload', raw)
     return
   }
   const { selector, mode, html } = payload
   if (typeof selector !== 'string' || selector.trim() === '') {
-    console.warn('[sui/mount] patch-elements: empty selector')
+    console.warn('[sail/mount] patch-elements: empty selector')
     return
   }
   let target: Element | null = null
@@ -637,7 +637,7 @@ function applyPatchElementsFrame(root: HTMLElement, raw: string): void {
     target = root.querySelector(selector)
   } catch (err) {
     console.warn(
-      `[sui/mount] patch-elements: invalid selector ${selector!}:`,
+      `[sail/mount] patch-elements: invalid selector ${selector!}:`,
       err,
     )
     return
@@ -648,7 +648,7 @@ function applyPatchElementsFrame(root: HTMLElement, raw: string): void {
     // `data-sail-root[data-view]` precisely so external publishers can't
     // mutate the rest of the page through this channel.
     console.warn(
-      `[sui/mount] patch-elements: selector ${selector!} matched no element inside the view root; dropped`,
+      `[sail/mount] patch-elements: selector ${selector!} matched no element inside the view root; dropped`,
     )
     return
   }
@@ -699,7 +699,7 @@ function applyPatchElementsTarget(
       tmpl.innerHTML = html
       const source = tmpl.content.firstElementChild
       if (!source) {
-        console.warn('[sui/mount] patch-elements: morph with no source element')
+        console.warn('[sail/mount] patch-elements: morph with no source element')
         return
       }
       if (source.tagName !== target.tagName) {
@@ -710,6 +710,6 @@ function applyPatchElementsTarget(
       return
     }
     default:
-      console.warn(`[sui/mount] patch-elements: unknown mode ${String(mode)}`)
+      console.warn(`[sail/mount] patch-elements: unknown mode ${String(mode)}`)
   }
 }

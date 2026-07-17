@@ -1,6 +1,6 @@
 // Standalone vitest config for the integration suite.
 //
-// Aliases sui runtime + dom to the sui repo's own source, and the
+// Aliases sail runtime + dom to the sail repo's own source, and the
 // contract SDK to ship-contracts. Relative paths so the config is
 // portable across clones — earlier revisions hardcoded
 // absolute author-machine paths which only worked on the original
@@ -43,7 +43,7 @@ const SHIP_CONTRACTS_SDK_CLIENT = resolve(
 export default defineConfig({
   resolve: {
     alias: {
-      // `@ship/sail-*` resolves to this repo's source (sui owns the framework).
+      // `@ship/sail-*` resolves to this repo's source (sail owns the framework).
       '@ship/sail-runtime/template-hooks': resolve(
         __dirname,
         '../packages/sail/runtime/src/template-hooks/index.ts',
@@ -58,7 +58,7 @@ export default defineConfig({
       ),
       '@ship/sail-dom/test-utils': resolve(
         __dirname,
-        '../packages/sail/dom/src/test-utils/compile-sui.ts',
+        '../packages/sail/dom/src/test-utils/compile-sail.ts',
       ),
       '@ship/sail-dom': resolve(
         __dirname,

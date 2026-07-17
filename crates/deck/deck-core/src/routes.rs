@@ -18,7 +18,7 @@ pub const DECK_API_ASSETS: &str = "/api/assets";
 /// that names `/_deck/...` (and the companion TS `DECK_PREFIX` export in
 /// `@ship/sdk-client`) routes through this constant so the prefix has ONE
 /// mint point on the server side. deck, the host, names the URL namespace;
-/// the framework (SUI) does not.
+/// the framework (SAIL) does not.
 pub const DECK_PREFIX: &str = "/_deck";
 
 /// URL of a view's compiled ESM module. `sub` is the optional sub-route segment
@@ -90,7 +90,7 @@ mod tests {
 /// Params are the `[seg]` directory names between that ancestor and the
 /// file, in path order — `routes/tutorial/[slug]/page.sail` → `["slug"]`.
 ///
-/// This is deck's convention in deck's crate: the sui compiler receives the
+/// This is deck's convention in deck's crate: the sail compiler receives the
 /// result as a structured GRANT (`CompileOpts::route_params`) and never
 /// sniffs the filesystem for a routing scheme it does not own.
 pub fn route_params_for(view_path: &std::path::Path) -> Option<Vec<String>> {

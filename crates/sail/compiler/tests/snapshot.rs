@@ -435,7 +435,7 @@ fn for_render_closure_emits_update_field() {
 }
 
 /// Routing is deck's: a view that references `route` reads the handle from
-/// `ctx.route` (deck injects it via host-context). SUI vends no route factory,
+/// `ctx.route` (deck injects it via host-context). SAIL vends no route factory,
 /// so the compiled output must NOT import `@ship/sail-runtime/route`, and assigns
 /// `$scope.route = route` straight from the ctx destructure.
 #[test]
@@ -455,7 +455,7 @@ fn route_view_reads_route_from_ctx() {
     let out = sail_compiler::compile(&source, opts).expect("compile");
     assert!(
         !out.js.contains("@ship/sail-runtime/route") && !out.js.contains("__routeFactory"),
-        "routing is deck: no SUI route-factory import or fallback, got:\n{}",
+        "routing is deck: no SAIL route-factory import or fallback, got:\n{}",
         out.js
     );
     assert!(

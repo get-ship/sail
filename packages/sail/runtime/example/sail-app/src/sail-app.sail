@@ -205,7 +205,7 @@ export default controller(() => {
 <div>
   <header>
     <div>
-      <h1>SUI sanity-check</h1>
+      <h1>SAIL sanity-check</h1>
       <p>standalone — no daemon, no shell, no view-host</p>
     </div>
     <div data-row="true">

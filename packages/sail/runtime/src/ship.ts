@@ -1,6 +1,6 @@
 // ship.ts — the framework's host seam.
 //
-// The SUI runtime is host-agnostic: it names no Ship concepts. `ShipHost` is
+// The SAIL runtime is host-agnostic: it names no Ship concepts. `ShipHost` is
 // an empty interface that the app (deck / `@ship/sdk-client`) augments via
 // declaration merging to the concrete `ShipSDK`:
 //

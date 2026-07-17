@@ -186,7 +186,7 @@ export function bindFor<T>(opts: BindForOptions<T>): Disposer {
         // identity). Reconciliation continues using last-wins to keep
         // the DOM in a consistent state.
         console.warn(
-          '[sui] {#for}: duplicate key',
+          '[sail] {#for}: duplicate key',
           k,
           'at index',
           i,
@@ -246,7 +246,7 @@ export function bindFor<T>(opts: BindForOptions<T>): Disposer {
             if (handle) {
               handle.catch(err, 'render')
             } else {
-              console.error('[sui] uncaught throw (no error boundary):', err)
+              console.error('[sail] uncaught throw (no error boundary):', err)
             }
           }
         }
@@ -270,7 +270,7 @@ export function bindFor<T>(opts: BindForOptions<T>): Disposer {
           if (handle) {
             handle.catch(err, 'render')
           } else {
-            console.error('[sui] uncaught throw (no error boundary):', err)
+            console.error('[sail] uncaught throw (no error boundary):', err)
           }
         }
         if (!r) {

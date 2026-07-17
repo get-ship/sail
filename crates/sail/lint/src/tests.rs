@@ -1,4 +1,4 @@
-//! Tests for SUI lint rules.
+//! Tests for SAIL lint rules.
 
 use std::path::Path;
 
@@ -287,7 +287,7 @@ fn static_bool_flag_passes() {
 #[test]
 fn pack_source_path_recognises_components_dir() {
     use crate::is_pack_source_ts;
-    // Pack src files under components/sui → gate.
+    // Pack src files under components/sail → gate.
     assert!(is_pack_source_ts(Path::new(
         "/repo/packages/components/sail/primitives/src/sail-tree/engine.ts"
     )));
@@ -303,7 +303,7 @@ fn pack_source_path_recognises_components_dir() {
     assert!(!is_pack_source_ts(Path::new(
         "/repo/packages/components/sail/primitives/src/sail-tree/sail-tree.sail"
     )));
-    // Not a pack source (no /src/ under components/sui).
+    // Not a pack source (no /src/ under components/sail).
     assert!(!is_pack_source_ts(Path::new(
         "/repo/packages/components/sail/primitives/package.json"
     )));

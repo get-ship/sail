@@ -1,11 +1,11 @@
 ---
 group: Views
 order: 6
-title: SUI — Tooling
+title: SAIL — Tooling
 description: The toolchain from .sail source to a live hot-reloaded view.
 ---
 
-# SUI — Tooling
+# SAIL — Tooling
 
 The chain from `.sail` source on disk to a live, hot-reloaded view in the browser passes through six tools. Each maps to one entry point.
 
@@ -61,13 +61,13 @@ analysis facade — **one grammar, no TypeScript, no WASM, no Node**. The same
 Rust intelligence serves three consumers:
 
 - **Claude Code** — `.lsp.json` at the repo root points the editor's LSP
-  client at the `sail-lsp` binary (`extensionToLanguage: { ".sail": "sui" }`).
+  client at the `sail-lsp` binary (`extensionToLanguage: { ".sail": "sail" }`).
 - **opencode** — add to the (user-local, gitignored) `opencode.json`:
-  `"lsp": { "sui": { "command": ["sail-lsp"], "extensions": [".sail"] } }`. The
+  `"lsp": { "sail": { "command": ["sail-lsp"], "extensions": [".sail"] } }`. The
   binary ignores extra args, so opencode's `--stdio` convention is harmless.
 - **VS Code / any editor** — `apps/vscode` launches `sail-lsp` over stdio
-  (override with the `sui.serverPath` setting); any LSP-capable editor maps the
-  `sui` language id to the `sail-lsp` binary the same way.
+  (override with the `sail.serverPath` setting); any LSP-capable editor maps the
+  `sail` language id to the `sail-lsp` binary the same way.
 
 ```sh
 just install-dev        # builds + installs `sail-lsp` to ~/.local/bin
@@ -86,7 +86,7 @@ tag/event dependency surface (`sail_compiler::analyze`).
 > calls the WASM `analyze`. One grammar, no TS fork.
 
 VS Code: `apps/vscode/` auto-launches `sail-lsp` on `.sail` open. Other editors map
-the `sui` language ID to the `sail-lsp` binary over stdio.
+the `sail` language ID to the `sail-lsp` binary over stdio.
 
 ## Per-edit lint and compile loop
 
@@ -125,7 +125,7 @@ Use it to find a component, browse its props (including enum values from `<prop 
 |---|---|
 | `<sail-devtools-source>` | The mounted view's template + manifest. Editable for user-scoped views; read-only for project-scoped (Fork affordance for project scope). Embeds `<sail-code-editor>` lazily. |
 | `<sail-devtools-components>` | Live component tree of the mounted view |
-| `<sail-devtools-lint>` | SUI lint findings for the current file |
+| `<sail-devtools-lint>` | SAIL lint findings for the current file |
 | `<sail-devtools-schema>` | Prop schema for selected component |
 | `<sail-devtools-signals>` | Live signal values; subscribes + repaints on change |
 
@@ -155,7 +155,7 @@ Flags (from `dispatch.sh`):
 | `--dry-run` | false | Print actions without executing them. |
 | `SHIP_AGENT_MODEL` env | unset | Override the agent's default model. |
 
-The script honours `SHIP_DISPATCH_CONFIRM` for non-interactive confirmation prompts and resolves `~` in the worktree base. It is not specific to SUI work — it dispatches any agent — but every SUI authoring job (this docs job included) lands in a worktree created by it.
+The script honours `SHIP_DISPATCH_CONFIRM` for non-interactive confirmation prompts and resolves `~` in the worktree base. It is not specific to SAIL work — it dispatches any agent — but every SAIL authoring job (this docs job included) lands in a worktree created by it.
 
 ## Scaffolds
 
@@ -186,7 +186,7 @@ just dev                              # daemon (in-process Rolldown bundler)
 #  → mount() re-runs in place; SSR snapshot stays, no full reload
 ```
 
-`just dev` starts only the daemon (`scripts/dev/start.sh`); bundling + watching happen IN-PROCESS (`crates/deck/deck-bundler/`, `Bundler::start_watching`) — no spawned worker. To hit the daemon through the outer shell, run `just shell-dev` in a second terminal — it proxies `/api`, `/_deck`, `^/sui/.*`, and `/view-host` to the daemon.
+`just dev` starts only the daemon (`scripts/dev/start.sh`); bundling + watching happen IN-PROCESS (`crates/deck/deck-bundler/`, `Bundler::start_watching`) — no spawned worker. To hit the daemon through the outer shell, run `just shell-dev` in a second terminal — it proxies `/api`, `/_deck`, `^/sail/.*`, and `/view-host` to the daemon.
 
 For a clean dev restart use `just dev-restart`. Visual regressions: `just visual` (Playwright vs committed PNGs; pass `--update-snapshots` to refresh after a deliberate change). Perf regressions: `just bench-check` (fails on >15% vs the latest committed baseline; override via `BENCH_REGRESSION_THRESHOLD`).
 

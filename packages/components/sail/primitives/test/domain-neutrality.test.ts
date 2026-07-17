@@ -38,8 +38,8 @@ const COMPOSITIONS = [
 // comments that DESCRIBE the absence — see sail-calendar/engine/purity.test.ts).
 function compositionFiles(stem: string): string[] {
   const out: string[] = []
-  const sui = join(STDLIB, `${stem}.sail`)
-  if (statSync(sui, { throwIfNoEntry: false })?.isFile()) out.push(sui)
+  const sail = join(STDLIB, `${stem}.sail`)
+  if (statSync(sail, { throwIfNoEntry: false })?.isFile()) out.push(sail)
   const actionFile = join(ACTIONS, `${stem}.ts`)
   if (statSync(actionFile, { throwIfNoEntry: false })?.isFile()) out.push(actionFile)
   return out

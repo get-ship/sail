@@ -214,7 +214,7 @@ describe('sail-tree pack — boundary purity (no fetch / SDK / ship.* / <data>)'
     for (const dir of packDirs) {
       for (const entry of readdirSync(dir)) {
         if (entry.endsWith('.compiled.js')) continue
-        if (!/\.(ts|sui|css)$/.test(entry)) continue
+        if (!/\.(ts|sail|css)$/.test(entry)) continue
         const path = join(dir, entry)
         out.push({ path, text: readFileSync(path, 'utf8') })
       }

@@ -40,12 +40,12 @@ fn write_fixture(fetch_target: &str) -> (tempfile::TempDir, PathBuf) {
         format!(r#"{{"network": ["{GRANTED_ORIGIN}"]}}"#),
     )
     .unwrap();
-    let sui = views_dir.join("w.sail");
+    let sail = views_dir.join("w.sail");
     let body = format!(
         "<controller>\nexport default controller((ctx) => {{\n  fetch('{fetch_target}')\n  return {{}}\n}})\n</controller>\n<p>hi</p>"
     );
-    fs::write(&sui, &body).unwrap();
-    (tmp, sui)
+    fs::write(&sail, &body).unwrap();
+    (tmp, sail)
 }
 
 fn opts_for(path: &PathBuf) -> CompileOpts {
@@ -64,9 +64,9 @@ fn opts_for(path: &PathBuf) -> CompileOpts {
 #[test]
 fn granted_origin_passes_lint_evil_origin_is_refused_same_config() {
     // (a) the granted origin compiles clean.
-    let (_tmp, sui) = write_fixture(GRANTED_ORIGIN);
-    let src = fs::read_to_string(&sui).unwrap();
-    compile(&src, opts_for(&sui)).expect("a fetch to the granted origin must compile clean");
+    let (_tmp, sail) = write_fixture(GRANTED_ORIGIN);
+    let src = fs::read_to_string(&sail).unwrap();
+    compile(&src, opts_for(&sail)).expect("a fetch to the granted origin must compile clean");
 
     // (a) an origin NOT on the same config's allowlist is refused.
     let (_tmp2, sui2) = write_fixture(EVIL_ORIGIN);
@@ -104,8 +104,8 @@ fn served_csp_names_exactly_the_same_granted_origin() {
 /// builder — no hardcoded origin at all on this path.
 #[test]
 fn resolved_config_network_list_drives_the_csp_header_directly() {
-    let (_tmp, sui) = write_fixture(GRANTED_ORIGIN);
-    let resolved = Policy::network_for(&sui);
+    let (_tmp, sail) = write_fixture(GRANTED_ORIGIN);
+    let resolved = Policy::network_for(&sail);
     assert_eq!(resolved, vec![GRANTED_ORIGIN.to_string()], "sanity: fixture resolves as declared");
 
     let headers = deck_core::html_security_headers_for(&resolved);

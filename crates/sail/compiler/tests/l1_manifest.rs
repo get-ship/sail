@@ -33,7 +33,7 @@ use sail_compiler::l1_manifest::{l1_by_kind, l1_entries, l1_kind, reskin_selecto
 use sail_compiler::stdlib;
 
 fn repo_root() -> PathBuf {
-    // crates/sail/compiler -> crates/sui -> crates -> repo root.
+    // crates/sail/compiler -> crates/sail -> crates -> repo root.
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")
         .join("..")
@@ -214,7 +214,7 @@ fn stdlib_tags_match_manifest() {
 
 #[test]
 fn l1_surface_count_is_documented() {
-    // The spec asks the answer to "what elements does SUI give me?" — a
+    // The spec asks the answer to "what elements does SAIL give me?" — a
     // number an agent can quote. If this assertion fires, the count
     // shifted: an element was added or removed from either half, and
     // the spec's count claim needs to be re-derived.

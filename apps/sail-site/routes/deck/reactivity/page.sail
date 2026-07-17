@@ -1,6 +1,6 @@
 <!--
   /deck/reactivity — deck's role in the reactive update path. Reactivity
-  itself (signal / derived / effect, the glitch-free update pass) is SUI's;
+  itself (signal / derived / effect, the glitch-free update pass) is SAIL's;
   that model lives at /reactivity and is not re-taught here. This page is
   about the sources deck owns and feeds into the graph: the URL, live server
   data, durable app state, and dev edits. Code blocks are highlighted via
@@ -18,17 +18,17 @@ export default controller((_ctx: ViewScope<Scope>) => ({ code }))
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Reactivity</p>
   <h1>deck in the reactive path</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    Reactivity is SUI's, not deck's. SUI gives a view signals, derived values,
+    Reactivity is SAIL's, not deck's. SAIL gives a view signals, derived values,
     and effects; deck's job is to keep that graph fed from the things a
     framework owns and changes — the URL, live server data, and state that
     outlives a route.
   </p>
 
   <alert tone="info">
-    <strong>The signal model lives in SUI.</strong> Signals, <code>derived</code>,
-    <code>effect</code>, batching, and the glitch-free update pass are all the SUI
+    <strong>The signal model lives in SAIL.</strong> Signals, <code>derived</code>,
+    <code>effect</code>, batching, and the glitch-free update pass are all the SAIL
     runtime — deck adds no reactive primitive of its own. For how the graph
-    recomputes, see <a href="/reactivity">SUI · Reactivity</a>.
+    recomputes, see <a href="/reactivity">SAIL · Reactivity</a>.
   </alert>
 
   <h2>The URL is reactive</h2>

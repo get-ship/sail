@@ -250,7 +250,7 @@ function warnIfNotAnimatable(el: Element, keyframes: Record<string, Array<number
   for (const prop of Object.keys(keyframes)) {
     if (!ANIMATABLE_KEYFRAME_PROPERTIES.has(prop)) {
       console.warn(
-        `[sui/motion] keyframe property "${prop}" is not one of this runtime's known-animatable ` +
+        `[sail/motion] keyframe property "${prop}" is not one of this runtime's known-animatable ` +
         `properties (${[...ANIMATABLE_KEYFRAME_PROPERTIES].join(', ')}) — WAAPI accepts unknown ` +
         `keyframe properties silently, so this animation will run forever and move nothing.`,
         el,
@@ -265,7 +265,7 @@ function warnIfNotAnimatable(el: Element, keyframes: Record<string, Array<number
     for (const value of keyframes[prop]!) {
       if (!supports(prop, String(value))) {
         console.warn(
-          `[sui/motion] keyframe value ${JSON.stringify(value)} is not valid for CSS property ` +
+          `[sail/motion] keyframe value ${JSON.stringify(value)} is not valid for CSS property ` +
           `"${prop}" — the animation will silently no-op.`,
           el,
         )

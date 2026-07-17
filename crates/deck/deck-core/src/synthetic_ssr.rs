@@ -24,8 +24,8 @@
 //!
 //! FLAG (render-ownership, deferred): this de-globalizes the RENDERER handle but
 //! does NOT decide who OWNS SSR rendering long-term. If first-paint moves into
-//! SUI (the "SSR render moves to SUI" arc), this seam is where the ship-js
-//! engine gets swapped for the SUI-owned one — the per-mount handle makes that a
+//! SAIL (the "SSR render moves to SAIL" arc), this seam is where the ship-js
+//! engine gets swapped for the SAIL-owned one — the per-mount handle makes that a
 //! host-wiring change, not another global rewrite. Not resolved here.
 
 use std::path::Path;

@@ -3,7 +3,7 @@ name = "deck-core"
 version = "0.1.0"
 edition = "2024"
 publish = false
-description = "SUI framework hosting logic — transport-agnostic. Produces DeckResponse; adapters (deck-axum, …) bind it to a server."
+description = "SAIL framework hosting logic — transport-agnostic. Produces DeckResponse; adapters (deck-axum, …) bind it to a server."
 
 [lib]
 name = "deck_core"

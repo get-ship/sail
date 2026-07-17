@@ -19,7 +19,7 @@ imports (`@ship/sail-primitives`).
   engine (`createTable` + types) and the `Tone`/`Size` unions.
 - **24 component directories are orphans**: a `.controller.ts` + generated
   `.sail.d.ts` with **no `.sail` source** — leftovers of the L1 cutover commits
-  (`cutover(l1): …`, `refactor(sui): execute the surface decision — 25
+  (`cutover(l1): …`, `refactor(sail): execute the surface decision — 25
   components deleted`). None is imported by `index.ts`; none is imported by
   anything else in the repo.
 - **The pack's test suite is entirely red: 44/44 test files fail** before

@@ -44,7 +44,7 @@ struct Surface {
 const CONF_MANIFEST: &str = "crates/deck/deck-conformance/app/app.manifest.jsonc";
 
 /// Mirror deck's host context — the `route`/`navigate` handles deck injects into
-/// every app manifest at build time (`deck_core::host_context_clients`). SUI's
+/// every app manifest at build time (`deck_core::host_context_clients`). SAIL's
 /// compiler names no host, so post-seam route/navigate are NOT compiler-ambient;
 /// they must be DECLARED in the manifest, and the real pipeline merges them in.
 /// This stands in for that merge so the route-bearing surfaces (and the

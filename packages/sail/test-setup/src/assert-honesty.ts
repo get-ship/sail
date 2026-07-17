@@ -1,4 +1,4 @@
-// Shared honesty guard for every SUI component vitest run.
+// Shared honesty guard for every SAIL component vitest run.
 //
 // `expect.hasAssertions()` makes any `it()` whose executed path runs ZERO
 // assertions FAIL instead of passing green. A test that mounts a component,

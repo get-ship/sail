@@ -16,7 +16,7 @@
 //
 // KNOWN LIMIT (documented, not hidden): projection runs once at connect.
 // Children appended to the host LATER are not re-projected — the dynamic
-// composition path in SUI templates goes through compiled call sites, not
+// composition path in SAIL templates goes through compiled call sites, not
 // raw DOM appends, so this covers the authored surface. Streaming-parse
 // upgrades (element connects before its children parse) are the other
 // gap; bundles load deferred today so the DOM is complete at registration.

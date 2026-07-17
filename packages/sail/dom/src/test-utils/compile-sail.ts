@@ -26,7 +26,7 @@ import * as suiDom from '@ship/sail-dom'
 // expects after the eval layer strips imports. The deck router owns the
 // *policy* (history, popstate, route table, `navigate`); the runtime
 // owns the *mechanism*. The test harness needs only the mechanism, and
-// `@ship/sail-runtime/route` is sui ⊥ deck by construction.
+// `@ship/sail-runtime/route` is sail ⊥ deck by construction.
 import { route as makeRoute } from '@ship/sail-runtime/route'
 import type { RouteSignals } from '@ship/sail-runtime'
 import '@ship/sail-runtime/template-hooks'
@@ -34,7 +34,7 @@ import '@ship/sail-runtime/template-hooks'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 // HERE = packages/sail/dom/src/test-utils; repo root is five dirs up
-// (test-utils → src → dom → sui → packages → repo root).
+// (test-utils → src → dom → sail → packages → repo root).
 const REPO_ROOT = resolve(HERE, '../../../../..')
 const COMPILER_SRC = resolve(REPO_ROOT, 'crates/sail/compiler/src')
 const LINT_SRC = resolve(REPO_ROOT, 'crates/sail/lint/src')

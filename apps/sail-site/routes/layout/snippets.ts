@@ -1,4 +1,4 @@
-// Snippets for the layout page. Every SUI sample is compiled by the build.
+// Snippets for the layout page. Every SAIL sample is compiled by the build.
 export const code = {
   axes: `<row gap="3">…</row>        <!-- x: left to right -->
 <column gap="3">…</column>  <!-- y: top to bottom -->

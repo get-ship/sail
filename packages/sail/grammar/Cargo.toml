@@ -1,6 +1,6 @@
 [package]
 name = "tree-sitter-sail"
-description = "Tree-sitter grammar for the SUI .sail template format"
+description = "Tree-sitter grammar for the SAIL .sail template format"
 version = "0.1.0"
 authors = ["Sail"]
 license = "MIT"

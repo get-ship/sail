@@ -1,7 +1,7 @@
 // Slice — regression coverage for the scope→mount(host) migration on
 // <sail-annotation-layer> and <sail-annotation-list>.
 //
-// Background: the post-convergence "SUI names no host" compile stops passing
+// Background: the post-convergence "SAIL names no host" compile stops passing
 // `host` as the controller scope's 2nd arg, so the scope-level `host!` reads
 // were silently undefined and event dispatches from scope never reached the
 // host element. These tests pin the host-event-dispatch contract that the

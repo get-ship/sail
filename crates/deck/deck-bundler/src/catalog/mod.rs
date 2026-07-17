@@ -140,7 +140,7 @@ pub fn tag_source_index_scoped(
     // misses the app's local components. Scan the project root's own `src/`
     // unconditionally (never scope-gated: the app always owns its own tags).
     // This is what makes the `workspaces: ["."]` self-listing hack unnecessary.
-    // For a monorepo root (sui, ship-apps) there is no `<root>/src` → no-op.
+    // For a monorepo root (sail, ship-apps) there is no `<root>/src` → no-op.
     for (tag, abs_path) in source_tags_for_package(repo_root) {
         if abs_path.is_file() {
             out.entry(tag).or_insert(abs_path);

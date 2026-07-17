@@ -3,7 +3,7 @@
 // `controller-resolver.ts` (which delegates to `resolveHook`) and
 // `controller-hook-resolver.ts` (which needs `ResolverContext`).
 //
-// Slice 2 — SUI-local `RouteSignals` (see ./route-signals for the
+// Slice 2 — SAIL-local `RouteSignals` (see ./route-signals for the
 // decoupling rationale). Replaces the `@ship/deck-router` import.
 import type { RouteSignals } from './route-signals'
 import type { ShipHost, Clients } from './ship'

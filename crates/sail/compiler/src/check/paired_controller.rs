@@ -56,36 +56,36 @@ mod tests {
     #[test]
     fn sibling_file_is_an_error() {
         let dir = tempfile::tempdir().unwrap();
-        let sui = dir.path().join("sail-x.sail");
-        std::fs::write(&sui, "<span></span>").unwrap();
+        let sail = dir.path().join("sail-x.sail");
+        std::fs::write(&sail, "<span></span>").unwrap();
         std::fs::write(dir.path().join("sail-x.controller.ts"), "export default {}").unwrap();
-        let err = check("<span></span>", Some(&sui)).unwrap_err();
+        let err = check("<span></span>", Some(&sail)).unwrap_err();
         assert_eq!(err.category.as_deref(), Some(RULE_ID));
     }
 
     #[test]
     fn page_convention_is_covered() {
         let dir = tempfile::tempdir().unwrap();
-        let sui = dir.path().join("page.sail");
-        std::fs::write(&sui, "<span></span>").unwrap();
+        let sail = dir.path().join("page.sail");
+        std::fs::write(&sail, "<span></span>").unwrap();
         std::fs::write(dir.path().join("controller.ts"), "export default {}").unwrap();
-        assert!(check("<span></span>", Some(&sui)).is_err());
+        assert!(check("<span></span>", Some(&sail)).is_err());
     }
 
     #[test]
     fn inline_block_alone_passes() {
         let dir = tempfile::tempdir().unwrap();
-        let sui = dir.path().join("sail-x.sail");
+        let sail = dir.path().join("sail-x.sail");
         let src = "<controller>export default controller((ctx) => ({}))</controller>\n<span></span>";
-        std::fs::write(&sui, src).unwrap();
-        check(src, Some(&sui)).unwrap();
+        std::fs::write(&sail, src).unwrap();
+        check(src, Some(&sail)).unwrap();
     }
 
     #[test]
     fn no_sibling_no_error() {
         let dir = tempfile::tempdir().unwrap();
-        let sui = dir.path().join("sail-x.sail");
-        std::fs::write(&sui, "<span></span>").unwrap();
-        check("<span></span>", Some(&sui)).unwrap();
+        let sail = dir.path().join("sail-x.sail");
+        std::fs::write(&sail, "<span></span>").unwrap();
+        check("<span></span>", Some(&sail)).unwrap();
     }
 }

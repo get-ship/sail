@@ -36,7 +36,7 @@ under `packages/components/<name>/`
 After scaffolding, run `bun install` to wire the new workspace package.
 
 > The CLI scaffolds `package.json`, `tsconfig.json`, the umbrella, and the
-> example component. It does not emit a `sui.config.ts` or `vitest.config.ts` —
+> example component. It does not emit a `sail.config.ts` or `vitest.config.ts` —
 > add a `vitest.config.ts` yourself (next section) when you write tests.
 
 ## The grouped-directory convention

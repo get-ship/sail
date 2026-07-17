@@ -56,14 +56,14 @@ pub fn compile_sui(
     }
     let source = std::fs::read_to_string(sui_file)
         .map_err(|e| CompileError::Read(sui_file.to_path_buf(), e))?;
-    // The FLOOR is unconditional — no <style>, no style=, in any SUI file, with
+    // The FLOOR is unconditional — no <style>, no style=, in any SAIL file, with
     // or without a config. A deck project does not opt into the language. The
     // capability keys (sx / variants / raw containers) still come from the
     // nearest `sail.config.json` walking up, which is how a project dials the
     // surface ABOVE the floor.
     let policy_overrides = Policy::overrides_for(sui_file);
     // POSITION GRANT, computed once: deck routes by file location, so deck
-    // (not the author, not the sui compiler) decides whether this file may
+    // (not the author, not the sail compiler) decides whether this file may
     // read `route` — and with which params.
     let route_params = (mode == CompileMode::View)
         .then(|| deck_core::routes::route_params_for(sui_file))
@@ -186,7 +186,7 @@ fn try_synthetic_client(sui_file: &Path) -> Result<Option<String>, CompileError>
     let mut manifest =
         AppManifest::parse(&manifest_src).map_err(|e| CompileError::Compile(e.render(&manifest_src)))?;
     // Deck declares its host context (route/navigate -> @ship/deck/router) into
-    // the manifest seam; the app's own entries win. SUI names no host.
+    // the manifest seam; the app's own entries win. SAIL names no host.
     for (name, client) in deck_core::host_context::host_context_clients() {
         manifest.clients.entry(name).or_insert(client);
     }
@@ -240,26 +240,26 @@ mod tests {
     #[test]
     fn compiles_view_to_js_in_process() {
         let src = tempdir().unwrap();
-        let sui = src.path().join("page.sail");
-        std::fs::write(&sui, "<div>hi {1 + 1}</div>\n").unwrap();
-        let js = compile_sui(&sui, CompileMode::View, "page", false).expect("view compiles");
+        let sail = src.path().join("page.sail");
+        std::fs::write(&sail, "<div>hi {1 + 1}</div>\n").unwrap();
+        let js = compile_sui(&sail, CompileMode::View, "page", false).expect("view compiles");
         assert!(js.contains("@ship/sail-runtime"), "emits a runtime import; got:\n{js}");
     }
 
     #[test]
     fn view_raw_style_block_is_rejected_by_the_floor() {
-        // The FLOOR: authored <style> is a compile error in every SUI file,
+        // The FLOOR: authored <style> is a compile error in every SAIL file,
         // config or not — deck enforces it for route views like everything
         // else. (This test used to pin the pre-floor behavior — inline
         // <style> bundled into the view JS. That surface is gone.)
         let src = tempdir().unwrap();
-        let sui = src.path().join("page.sail");
+        let sail = src.path().join("page.sail");
         std::fs::write(
-            &sui,
+            &sail,
             "<style>.hero { color: var(--foreground); }</style>\n<p>hi</p>\n",
         )
         .unwrap();
-        let err = compile_sui(&sui, CompileMode::View, "page", false)
+        let err = compile_sui(&sail, CompileMode::View, "page", false)
             .expect_err("raw <style> in a view must not compile");
         assert!(
             format!("{err}").contains("sail-no-style-block"),
@@ -270,20 +270,20 @@ mod tests {
     #[test]
     fn surfaces_compile_errors_with_rendered_diagnostic() {
         let src = tempdir().unwrap();
-        let sui = src.path().join("broken.sail");
-        std::fs::write(&sui, "<div>{#if cond()}oops</div>\n").unwrap();
-        let err = compile_sui(&sui, CompileMode::View, "broken", false).unwrap_err();
+        let sail = src.path().join("broken.sail");
+        std::fs::write(&sail, "<div>{#if cond()}oops</div>\n").unwrap();
+        let err = compile_sui(&sail, CompileMode::View, "broken", false).unwrap_err();
         assert!(matches!(err, CompileError::Compile(_)));
     }
 
     #[test]
     fn component_imports_flag_emits_tag_registration() {
         let src = tempdir().unwrap();
-        let sui = src.path().join("page.sail");
-        std::fs::write(&sui, "<div><sail-table></sail-table></div>\n").unwrap();
-        let on = compile_sui(&sui, CompileMode::View, "page", true).expect("compiles");
+        let sail = src.path().join("page.sail");
+        std::fs::write(&sail, "<div><sail-table></sail-table></div>\n").unwrap();
+        let on = compile_sui(&sail, CompileMode::View, "page", true).expect("compiles");
         assert!(on.contains("@sail-tag/sail-table"), "flag emits the registration import");
-        let off = compile_sui(&sui, CompileMode::View, "page", false).expect("compiles");
+        let off = compile_sui(&sail, CompileMode::View, "page", false).expect("compiles");
         assert!(!off.contains("@sail-tag/"), "off: no component imports");
     }
 
@@ -298,12 +298,12 @@ mod tests {
         let dir = src.path().join("views/greet/[id]");
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(dir.join("page.sail"), "<h1>{route.params.id()}</h1>\n").unwrap();
-        let sui = dir.join("page.sail");
+        let sail = dir.join("page.sail");
 
         // Flag OFF (default): production emit regardless of manifest presence.
         let prev = std::env::var("SAIL_CLIENT_EMIT").ok();
         unsafe { std::env::remove_var("SAIL_CLIENT_EMIT") };
-        let off = compile_sui(&sui, CompileMode::View, "page", false).expect("compiles");
+        let off = compile_sui(&sail, CompileMode::View, "page", false).expect("compiles");
         assert!(
             off.contains("component((ctx)") && !off.contains("export default component(() =>"),
             "flag-off must be the production emit:\n{off}"
@@ -311,7 +311,7 @@ mod tests {
 
         // Flag ON but NO manifest above → still production (scoped opt-in).
         unsafe { std::env::set_var("SAIL_CLIENT_EMIT", "synthetic") };
-        let on_no_manifest = compile_sui(&sui, CompileMode::View, "page", false).expect("compiles");
+        let on_no_manifest = compile_sui(&sail, CompileMode::View, "page", false).expect("compiles");
         assert!(
             on_no_manifest.contains("component((ctx)"),
             "flag-on without a manifest stays production:\n{on_no_manifest}"
@@ -323,7 +323,7 @@ mod tests {
             r#"{ "clients": { "route": { "from": "@ship/deck/router", "import": "route", "construct": true } } }"#,
         )
         .unwrap();
-        let on = compile_sui(&sui, CompileMode::View, "page", false).expect("compiles");
+        let on = compile_sui(&sail, CompileMode::View, "page", false).expect("compiles");
         assert!(
             on.contains("export default component(() =>") && on.contains("__mount(container"),
             "flag-on + manifest emits the synthetic client contract:\n{on}"
@@ -352,7 +352,7 @@ mod tests {
             "<h1>id={route.params.id()}</h1>\n",
         )
         .unwrap();
-        let sui = dir.join("page.sail");
+        let sail = dir.join("page.sail");
 
         // Flag ON, NO manifest above → convention still kicks in and the
         // synthetic client contract is emitted (the manifest here is the
@@ -366,7 +366,7 @@ mod tests {
             r#"{ "clients": {} }"#,
         )
         .unwrap();
-        let on = compile_sui(&sui, CompileMode::View, "page", false).expect("compiles");
+        let on = compile_sui(&sail, CompileMode::View, "page", false).expect("compiles");
         assert!(
             on.contains("export default component(() =>") && on.contains("__mount(container"),
             "convention must drive the synthetic client contract:\n{on}"
@@ -386,7 +386,7 @@ mod tests {
             "<p>just a paragraph, no route reads</p>\n",
         )
         .unwrap();
-        let on_no_route = compile_sui(&sui, CompileMode::View, "page", false).expect("compiles");
+        let on_no_route = compile_sui(&sail, CompileMode::View, "page", false).expect("compiles");
         assert!(
             !on_no_route.contains("@ship/deck/router"),
             "a view that never references `route` must not import `@ship/deck/router`:\n{on_no_route}"

@@ -1,10 +1,10 @@
-// Code snippets for getting-started. SUI samples are compiled by the build
+// Code snippets for getting-started. SAIL samples are compiled by the build
 // (crates/sail/compiler/tests/site_snippets_compile.rs).
 export const code = {
-  toolchain: `# Prerequisites: Bun and Rust. SUI's compiler and deck's server are
+  toolchain: `# Prerequisites: Bun and Rust. SAIL's compiler and deck's server are
 # Rust binaries; the runtime and tokens are JS packages. Prebuilt
 # binaries are planned; today you build the toolchain from the repo:
-git clone <the sui repo> && cd sui
+git clone <the sail repo> && cd sail
 bun install                              # JS workspace
 cargo run -p deck-cli -- build-assets    # bake the framework bundles
 cargo build                              # deck CLI + compiler`,

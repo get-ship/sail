@@ -1,8 +1,8 @@
 /**
- * SUI syntax overlay for CodeMirror 6.
+ * SAIL syntax overlay for CodeMirror 6.
  *
  * Builds on top of `lang-html` (which already gives us tag/attribute
- * coloring) and adds highlighting for SUI-specific constructs:
+ * coloring) and adds highlighting for SAIL-specific constructs:
  *
  *   • Block directives — `{#if}`, `{#for x of list key={…}}`,
  *     `{#match}`, `{#while-loading of x}`,
@@ -20,7 +20,7 @@
  *
  * Approach: a `ViewPlugin` that walks the HTML parse tree, scopes work
  * to text content (`Text` nodes) and attribute name/value nodes, and
- * emits `Decoration.mark` spans with SUI-specific CSS classes. The
+ * emits `Decoration.mark` spans with SAIL-specific CSS classes. The
  * theme block at the bottom maps those classes onto the same
  * `--syntax-*` design tokens the rest of the editor uses, so dark
  * / light / theme overrides carry through automatically.
@@ -82,7 +82,7 @@ const ATTR_MODIFIERS_ARG = new Set(['key', 'debounce', 'throttle'])
 /**
  * Match a directive *body* (the text after the opening sigil). Returns
  * `{ keyword, bodyStart, bodyEnd }` indices into the original `inner`,
- * or `null` when the body doesn't start with one of the SUI directive
+ * or `null` when the body doesn't start with one of the SAIL directive
  * keywords. `inner` is the full text between `{` and `}`, including the
  * leading `#`, `/`, or `:` — exactly as the Rust compiler's
  * `classify_brace` receives it (crates/sail/compiler/src/parse/template/
@@ -256,7 +256,7 @@ function findMatchingBrace(source: string, openIdx: number): number {
 }
 
 /**
- * Scan an `AttributeName` node for a SUI directive prefix. Highlights
+ * Scan an `AttributeName` node for a SAIL directive prefix. Highlights
  * `prefix:name` by separating the prefix from the rest, and tints the
  * `on:` modifier segments (`|prevent`, `|key:Enter` …) differently.
  */
@@ -397,7 +397,7 @@ const sailHighlightPlugin = ViewPlugin.fromClass(SailHighlighter, {
 })
 
 /**
- * Color rules for the SUI-specific token classes. They intentionally
+ * Color rules for the SAIL-specific token classes. They intentionally
  * sit on top of `lang-html`'s attribute coloring — for directive
  * attribute names, we override the inline style the language's
  * `HighlightStyle` writes for `t.attributeName`.
@@ -443,7 +443,7 @@ const sailHighlightTheme = EditorView.theme({
 })
 
 /**
- * The SUI language extension: a text-decoration overlay that lights
- * up SUI's directives + interpolations on top of `lang-html`.
+ * The SAIL language extension: a text-decoration overlay that lights
+ * up SAIL's directives + interpolations on top of `lang-html`.
  */
 export const sailHighlight = [sailHighlightPlugin, sailHighlightTheme]

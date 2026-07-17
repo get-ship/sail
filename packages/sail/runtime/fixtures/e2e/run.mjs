@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// SUI framework E2E runner.
+// SAIL framework E2E runner.
 //
 // Spins up a chromium page per view in `VIEWS`, asserts the body
 // contains the expected sentinel string, and fails on any console
@@ -24,7 +24,7 @@ if (!engine) {
 
 const VIEWS = [
   { path: '/_deck/view/counter', sentinel: 'Counter' },
-  { path: '/_deck/view/sail-demo', sentinel: 'SUI' },
+  { path: '/_deck/view/sail-demo', sentinel: 'SAIL' },
   { path: '/_deck/view/demos', sentinel: 'demo' },
   { path: '/_deck/view/demos/conditional-render', sentinel: 'conditional' },
   { path: '/_deck/view/demos/iteration', sentinel: 'iteration' },

@@ -1,8 +1,8 @@
-//! Every SUI snippet on the website must compile.
+//! Every SAIL snippet on the website must compile.
 //!
 //! Docs code that does not compile is worse than no docs: the reader assumes they
 //! made the mistake. Snippets live in `apps/sail-site/routes/**/snippets.ts` as
-//! backtick strings; the ones that are SUI get compiled.
+//! backtick strings; the ones that are SAIL get compiled.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -26,7 +26,7 @@ fn snippet_files(dir: &Path, out: &mut Vec<PathBuf>) {
 }
 
 /// The backtick-delimited template literals in a snippets module. JS comments are
-/// skipped: a comment may quote SUI source without being any.
+/// skipped: a comment may quote SAIL source without being any.
 fn template_literals(src: &str) -> Vec<String> {
     let mut out = Vec::new();
     let mut chars = src.chars().peekable();
@@ -74,7 +74,7 @@ fn template_literals(src: &str) -> Vec<String> {
     out
 }
 
-/// Is this snippet SUI source — as opposed to shell, TypeScript, a reference
+/// Is this snippet SAIL source — as opposed to shell, TypeScript, a reference
 /// table, or server-rendered HTML output?
 ///
 /// A tag must be present: the reference page lists directives in a table
@@ -160,11 +160,11 @@ fn every_sui_snippet_on_the_site_compiles() {
         }
     }
 
-    assert!(checked > 0, "no SUI snippets recognized — the classifier is broken");
+    assert!(checked > 0, "no SAIL snippets recognized — the classifier is broken");
 
     assert!(
         broken.is_empty(),
-        "{} of {checked} SUI snippets on the website do not compile:\n\n{}",
+        "{} of {checked} SAIL snippets on the website do not compile:\n\n{}",
         broken.len(),
         broken.join("\n")
     );

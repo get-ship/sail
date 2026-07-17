@@ -1,6 +1,6 @@
 //! `@ship/deck-host` — Deck's browser-side host.
 //!
-//! Owns secure view-controller execution (SES Compartment runner). The SUI
+//! Owns secure view-controller execution (SES Compartment runner). The SAIL
 //! runtime provides the hardened endowment surface; the author-time
 //! `sail-controller-no-ambient-authority` lint is the static first line; this is
 //! the runtime backstop.

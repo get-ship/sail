@@ -31,7 +31,7 @@ test.describe('deck dev — runtime error overlay', () => {
 
     // The event channel is IN ADDITION to console.error, never instead of —
     // the existing fallback log must still fire.
-    expect(consoleErrors.some((m) => m.includes('[sui] effect threw'))).toBe(true)
+    expect(consoleErrors.some((m) => m.includes('[sail] effect threw'))).toBe(true)
 
     // Dismiss button clears the panel.
     await overlay.locator('button', { hasText: '×' }).click()

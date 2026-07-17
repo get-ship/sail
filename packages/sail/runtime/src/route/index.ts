@@ -1,12 +1,12 @@
-// SUI runtime — the reactive URL factory.
+// SAIL runtime — the reactive URL factory.
 //
-// The SUI runtime names no host concept, so this is the *mechanism* half of
+// The SAIL runtime names no host concept, so this is the *mechanism* half of
 // routing: it builds a `RouteSignals` (pathname/hash + lazy params/query
 // proxies) from a URL. The *policy* half (history, route table, popstate
-// listener, `navigate()`) lives in `@ship/deck-router`. SUI packs and the
+// listener, `navigate()`) lives in `@ship/deck-router`. SAIL packs and the
 // `sail-dom` test harness import this module so a compiled view that reads
 // `route.params.x()` evaluates without pulling deck into the dependency
-// graph — sui ⊥ deck at the module boundary.
+// graph — sail ⊥ deck at the module boundary.
 //
 // A `route()` instance is a passive reader by design. The deck router
 // registers a host-owned `__shipSetRouteUpdate` callback that walks a set

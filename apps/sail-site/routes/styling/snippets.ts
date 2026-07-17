@@ -1,4 +1,4 @@
-// Code snippets for the styling page. Every SUI sample is compiled by the build
+// Code snippets for the styling page. Every SAIL sample is compiled by the build
 // (crates/sail/compiler/tests/site_snippets_compile.rs).
 export const code = {
   sx: `<!-- sx is a closed vocabulary of design-system atoms.

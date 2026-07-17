@@ -13,7 +13,7 @@ prop→value-union map (the compiler generates it from `<prop values="…">`).
 1. Compiler extracts the `<variants>` object body + generates `type V` from `<prop values>`.
 2. Wraps it: `variants<V>('part', <body>)`, shells to the shipped `tsgo --noEmit`.
 3. tsgo validates STRUCTURE + prop VALUES (real inference, suggestions).
-4. SUI's existing sx lint validates the sx VALUE STRINGS (tsgo sees them as `string`).
+4. SAIL's existing sx lint validates the sx VALUE STRINGS (tsgo sees them as `string`).
 5. Diagnostics map back to .sail spans.
 
 Division of labor: tsgo owns the TypeScript; the sx lint owns sx. No shadowing.

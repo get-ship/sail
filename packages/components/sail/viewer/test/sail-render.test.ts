@@ -168,7 +168,7 @@ describe('<sail-render> — VIEW-mode (prop:source raw .sail)', () => {
   })
 
   it('keeps the shadow stage CSS-scoped — no stray global stylesheet leak', async () => {
-    // A view-mode source compile returns `css: null` (the SUI compiler inlines
+    // A view-mode source compile returns `css: null` (the SAIL compiler inlines
     // styling into the template/JS for inline sources rather than surfacing a
     // separate compiled.css string), so the engine adopts ZERO sheets here.
     // The discriminating contract is the SCOPING invariant: whatever the engine

@@ -14,7 +14,7 @@
 // with the JS, and costs the JS bundle nothing. Importing this module puts the whole
 // design system inside your JavaScript — which is fine if you asked for it, and was
 // NOT fine when the framework did it to you unconditionally (it was half the
-// js-framework-benchmark bundle, in an app that uses no SUI components).
+// js-framework-benchmark bundle, in an app that uses no SAIL components).
 
 import { LIGHT_CONTRACTS_CSS, layered } from './styles/index'
 import { setContractsInstaller } from './styles/contracts-seam'

@@ -1,6 +1,6 @@
-//! SUI authoring lint engine.
+//! SAIL authoring lint engine.
 //!
-//! Lints `*.controller.ts` (paired SUI controllers), `*.sail` templates,
+//! Lints `*.controller.ts` (paired SAIL controllers), `*.sail` templates,
 //! and the `.ts` composition modules under a component pack's `src/`
 //! (the seam the floor closes: every `.ts` file a component ships, not
 //! just the `<controller>` block). Rule IDs are prefixed `sail-<descriptor>`.
@@ -29,9 +29,9 @@ pub fn all_rule_ids() -> Vec<&'static str> {
         .collect()
 }
 
-/// True iff `path` is a paired SUI controller (`<stem>.controller.ts`).
+/// True iff `path` is a paired SAIL controller (`<stem>.controller.ts`).
 ///
-/// The `.controller.ts` suffix is the SUI convention for paired
+/// The `.controller.ts` suffix is the SAIL convention for paired
 /// controllers. Plain `.ts` files (helpers, types, tests) are never
 /// linted as controllers regardless of co-location.
 pub fn is_controller_path(path: &std::path::Path) -> bool {
@@ -41,7 +41,7 @@ pub fn is_controller_path(path: &std::path::Path) -> bool {
         .unwrap_or(false)
 }
 
-/// True iff `path` is a SUI template (`*.sail`).
+/// True iff `path` is a SAIL template (`*.sail`).
 pub fn is_sui_template_path(path: &std::path::Path) -> bool {
     path.extension().and_then(|e| e.to_str()) == Some("sail")
 }
@@ -84,7 +84,7 @@ pub fn is_pack_source_ts(path: &std::path::Path) -> bool {
     p.contains("/src/")
         || p.ends_with("/src")
 }
-/// Lint a SUI controller from its source. Returns findings sorted by
+/// Lint a SAIL controller from its source. Returns findings sorted by
 /// `(line, col)`.
 ///
 /// Caller-supplied `path` is used in findings' `file` field; reads
@@ -115,7 +115,7 @@ pub fn lint_pack_source_source(path: &std::path::Path, source: &str) -> Vec<Find
     findings
 }
 
-/// Lint a SUI template (`*.sail`) from its source. Returns findings
+/// Lint a SAIL template (`*.sail`) from its source. Returns findings
 /// sorted by `(line, col)`. No filesystem access.
 pub fn lint_sui_template_source(path: &std::path::Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
@@ -127,7 +127,7 @@ pub fn lint_sui_template_source(path: &std::path::Path, source: &str) -> Vec<Fin
 }
 
 /// Lint a single file path. Reads from disk, dispatches by extension.
-/// Returns empty `Vec` for files outside SUI's authoring scope.
+/// Returns empty `Vec` for files outside SAIL's authoring scope.
 pub fn lint_path(path: &std::path::Path) -> Vec<Finding> {
     if is_controller_path(path) {
         let Ok(source) = std::fs::read_to_string(path) else {

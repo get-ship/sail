@@ -1,4 +1,4 @@
-//! Server-render a SYNTHESIZED SUI view through ship-js (deno_core/V8).
+//! Server-render a SYNTHESIZED SAIL view through ship-js (deno_core/V8).
 //!
 //! The pipeline ([`build`] + [`run`]):
 //!   1. [`build::synthesize_and_bundle`] runs the synthetic emitter

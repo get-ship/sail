@@ -1,13 +1,13 @@
 ---
 group: Views
 order: 3
-title: SUI — Authoring Patterns
+title: SAIL — Authoring Patterns
 description: Canonical patterns for .sail view authoring.
 ---
 
-# SUI — Authoring Patterns
+# SAIL — Authoring Patterns
 
-How to author a SUI view, a SUI component, and the controller that lives inside each.
+How to author a SAIL view, a SAIL component, and the controller that lives inside each.
 
 ## Component vs view
 
@@ -19,7 +19,7 @@ How to author a SUI view, a SUI component, and the controller that lives inside 
 | Has `<prop>` directives? | No | Yes — declares the public attribute / property contract |
 | Has projection regions? | No | Yes — declared in the anatomy manifest; runtime projects matching children at connect. |
 | Has a shadow root? | No | **Only** for components that wrap foreign content (tiptap, third-party widgets, FFI boundary); declared in the manifest, paid for knowingly. |
-| Has scoped CSS? | `style.css` (auto-linked, page-scoped) | Component rules compile to `@scope (sail-x) to ([data-sui])` donuts. A skin restyles an existing anatomy; a skin cannot add regions or states. |
+| Has scoped CSS? | `style.css` (auto-linked, page-scoped) | Component rules compile to `@scope (sail-x) to ([data-sail])` donuts. A skin restyles an existing anatomy; a skin cannot add regions or states. |
 | Form participation? | Native (the element is in the light DOM) | Native (the host is in the light DOM; projected inputs are real descendants). |
 | `customElements.define`? | n/a | Compiler-emitted; never written by hand |
 | Used by | Other views, the shell, deep links from `<a>` | Composed inside views or other components |
@@ -245,7 +245,7 @@ Drop a `manifest.jsonc` next to the leaf source to opt the view into the launche
 shipd --workspace ~/my-project
 ```
 
-The daemon persists this workspace into `~/.ship/machine/daemons/<hash>/workspace`. The resolver reads from there, so all `/sui/<name>`, `/_deck/views/<name>/payload`, and `/_deck/views/<name>/view.js` requests are scoped to your workspace.
+The daemon persists this workspace into `~/.ship/machine/daemons/<hash>/workspace`. The resolver reads from there, so all `/sail/<name>`, `/_deck/views/<name>/payload`, and `/_deck/views/<name>/view.js` requests are scoped to your workspace.
 
 ## Hot reload in dev
 

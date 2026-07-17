@@ -42,7 +42,7 @@ The `Bundler` is in-process:
 - **Engine:** Rolldown (oxc-based, Rust-native), embedded in `ship-platform`.
   Requires the pinned toolchain to be Rust **1.95+** (oxc uses `if let` guards,
   stabilised in 1.95) — see `rust-toolchain.toml`.
-- **SUI plugin** (`sui_plugin.rs`): a native Rust Rolldown `Plugin`.
+- **SAIL plugin** (`sail_plugin.rs`): a native Rust Rolldown `Plugin`.
   `resolve_id` redirects `./X.compiled.js` siblings, externalises the framework
   singletons (`@ship/sail-runtime`/`-dom`/`sdk-client`), and re-anchors
   `@ship/<pkg>` to workspace `src/`. `load` spawns `sail-compiler` to compile

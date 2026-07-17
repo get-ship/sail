@@ -1,7 +1,7 @@
 <!--
   /getting-started — the real workflow, end to end: toolchain, first app,
   the edit loop with the compiler as feedback, state, routes, production
-  build, and the standalone component path. Honest about what SUI is — a
+  build, and the standalone component path. Honest about what SAIL is — a
   Rust toolchain plus JS packages — not a fake one-liner.
 -->
 
@@ -27,7 +27,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
   <h2>1 · Install (once)</h2>
   <code-block code={code.toolchain}></code-block>
   <p>
-    SUI's compiler and dev server are Rust binaries; the runtime is a JS
+    SAIL's compiler and dev server are Rust binaries; the runtime is a JS
     package. Prebuilt binaries are planned — today the build takes a few
     minutes once, and then <code>deck</code> and <code>sail-compiler</code>
     are ordinary commands on your path.
@@ -83,7 +83,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
 
   <h2>Without deck: components in an existing stack</h2>
   <p>
-    The compiler's output is a standard custom element, so SUI components can
+    The compiler's output is a standard custom element, so SAIL components can
     live inside any page — a React app, a CMS template, plain HTML. You lose
     the app half (routing, SSR, the dev loop) and keep the language.
   </p>

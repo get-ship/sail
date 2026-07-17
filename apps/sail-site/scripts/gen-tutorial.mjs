@@ -160,9 +160,9 @@ function read(p) {
 // playground compiles; there is no second file to reconcile.
 function lessonSources(dir) {
   if (!existsSync(dir)) return { stem: '', source: '' }
-  const sui = readdirSync(dir).find((f) => f.endsWith('.sail'))
-  if (!sui) return { stem: '', source: '' }
-  return { stem: sui.replace(/\.sail$/, ''), source: read(join(dir, sui)) }
+  const sail = readdirSync(dir).find((f) => f.endsWith('.sail'))
+  if (!sail) return { stem: '', source: '' }
+  return { stem: sail.replace(/\.sail$/, ''), source: read(join(dir, sail)) }
 }
 
 // ── collect ─────────────────────────────────────────────────────────────────

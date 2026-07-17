@@ -37,8 +37,8 @@ pub enum CachePolicy {
 //   - `X-Content-Type-Options: nosniff` — stops browsers from MIME-sniffing a
 //     body whose declared content-type is `text/html` into something else.
 //   - `Content-Security-Policy: …` — defence-in-depth against stored XSS via
-//     SUI primitives. `'unsafe-inline'` is required because deck inlines
-//     scripts (`inject_globals`) and SUI templates may inline styles; the
+//     SAIL primitives. `'unsafe-inline'` is required because deck inlines
+//     scripts (`inject_globals`) and SAIL templates may inline styles; the
 //     policy still restricts external origins so a stored XSS cannot load
 //     attacker-controlled scripts. font-src / style-src admit Google Fonts
 //     because the shell's `index.html` loads Syne / DM Sans / JetBrains Mono
@@ -134,7 +134,7 @@ pub struct DeckResponse {
     pub cache_control: &'static str,
     /// Strong ETag (Production only); `None` omits the header.
     pub etag: Option<String>,
-    /// Additional headers beyond content-type/cache/etag (e.g. `X-Sui-View`).
+    /// Additional headers beyond content-type/cache/etag (e.g. `X-Sail-View`).
     pub extra_headers: Vec<(&'static str, String)>,
     pub body: Vec<u8>,
 }

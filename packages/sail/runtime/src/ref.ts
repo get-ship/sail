@@ -1,4 +1,4 @@
-// Refs — the SUI parallel of Svelte's `bind:this={el}` and React's
+// Refs — the SAIL parallel of Svelte's `bind:this={el}` and React's
 // `useRef<T>()`.
 //
 // A `Ref<T>` is a `Signal<T | null>` slot the runtime writes into when

@@ -11,7 +11,7 @@ mod handlers;
 pub mod multiplex;
 pub mod pages;
 pub mod render_helpers;
-pub mod sui_source;
+pub mod sail_source;
 pub use handlers::{
     serve_bundle_hmr,
     serve_deck_route,
@@ -81,7 +81,7 @@ pub fn into_axum(resp: DeckResponse) -> Response {
 /// it moved to `ship_views::router()` (deck ⊥ ship-views). A host that serves
 /// views merges that router alongside this one.
 ///
-/// HMR and the state-aware SUI endpoints (sse/data/mutation/patch) are NOT
+/// HMR and the state-aware SAIL endpoints (sse/data/mutation/patch) are NOT
 /// registered here — they need host-supplied extensions or router state.
 /// `/_deck/meta` is registered here; hosts that need to inject a
 /// `DaemonBuildInfo` extension (shipd) simply layer it before mounting.
@@ -93,7 +93,7 @@ pub fn into_axum(resp: DeckResponse) -> Response {
 // The corresponding `// /api/...` literal still appears nowhere else in the
 // production tree (verified by the boundary gate plus this const).
 const ROUTE_VIEW_TOKENS_CSS: &str = "/api/assets/view-tokens.css";
-const ROUTE_SUI_CSS: &str = "/api/assets/sui.css";
+const ROUTE_SAIL_CSS: &str = "/api/assets/sail.css";
 const ROUTE_THEME_CSS: &str = "/api/assets/theme.css";
 const ROUTE_THEMES_LIST: &str = "/api/v1/themes";
 
@@ -107,7 +107,7 @@ mod route_ssot {
     #[test]
     fn routes_match_ssot() {
         assert_eq!(super::ROUTE_VIEW_TOKENS_CSS, format!("{DECK_API_ASSETS}/view-tokens.css"));
-        assert_eq!(super::ROUTE_SUI_CSS, format!("{DECK_API_ASSETS}/sui.css"));
+        assert_eq!(super::ROUTE_SAIL_CSS, format!("{DECK_API_ASSETS}/sail.css"));
         assert_eq!(super::ROUTE_THEME_CSS, format!("{DECK_API_ASSETS}/theme.css"));
         assert_eq!(super::ROUTE_THEMES_LIST, "/api/v1/themes");
         // The `/_deck/*` half of the surface still uses literal strings
@@ -118,7 +118,7 @@ mod route_ssot {
 }
 
 pub fn router() -> Router {
-    use pages::{serve_sui_css, serve_theme_css, serve_themes_list, serve_view_tokens};
+    use pages::{serve_sail_css, serve_theme_css, serve_themes_list, serve_view_tokens};
     // The root `/` and the `/{file}` SPA/public catch-all are HOST
     // concerns. The host mounts `serve_index` at `/` and the per-app
     // `serve_apps` for the app's routes + per-app `/{file}` catch-all.
@@ -130,11 +130,11 @@ pub fn router() -> Router {
         // Shared CSS / theme assets (unauthenticated) — paths are the
         // canonical `Route` enum values (routes.rs is ground truth).
         .route(ROUTE_VIEW_TOKENS_CSS, get(serve_view_tokens))
-        .route(ROUTE_SUI_CSS, get(serve_sui_css))
+        .route(ROUTE_SAIL_CSS, get(serve_sail_css))
         .route(ROUTE_THEME_CSS, get(serve_theme_css))
         .route(ROUTE_THEMES_LIST, get(serve_themes_list))
         // Per-tag component source viewer (dev studio deep-link).
-        .route("/_deck/source/{tag}", get(sui_source::serve_sui_source))
+        .route("/_deck/source/{tag}", get(sail_source::serve_sail_source))
         // HMR firehose — always mounted; the handler self-gates (empty SSE
         // when no bundler is wired), so no `if Development` guard is needed.
         .route("/_deck/dev/hmr", get(serve_bundle_hmr))
@@ -217,10 +217,10 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     async fn into_axum_preserves_extra_headers() {
         let dr = DeckResponse::js_view("v", DaemonMode::Development)
-            .with_header("X-Sui-View", "counter");
+            .with_header("X-Sail-View", "counter");
         let resp = into_axum(dr);
         assert_eq!(
-            resp.headers().get("X-Sui-View").unwrap().to_str().unwrap(),
+            resp.headers().get("X-Sail-View").unwrap().to_str().unwrap(),
             "counter"
         );
     }

@@ -1,6 +1,6 @@
 //! Ship-free in-memory data port for the deck-conformance live-data showcases.
 //!
-//! Provides the two live `/_deck/` endpoints the SUI wire protocol requires:
+//! Provides the two live `/_deck/` endpoints the SAIL wire protocol requires:
 //! - `GET /_deck/views/{name}/sse`         — per-view live-data SSE channel
 //! - `GET /_deck/data?expr=`               — single-expression SSE stream
 //!

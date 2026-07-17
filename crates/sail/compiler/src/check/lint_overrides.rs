@@ -6,7 +6,7 @@
 //! build gate (`check::run` + `check::gate`) only promotes Error-severity
 //! findings to a hard build failure.
 //!
-//! An external SUI consumer (a third-party design system, a porting
+//! An external SAIL consumer (a third-party design system, a porting
 //! target, a tutorial the operator wants to ship as-is without pruning
 //! every `var(--…)` reference) can opt out of a specific rule's hard
 //! wall without modifying the rule itself. The override is applied

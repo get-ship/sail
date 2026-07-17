@@ -1,8 +1,8 @@
 //! `cargo run -p xtask-deck -- gen-icons` — bake the lucide SVG set into the
-//! sui repo's deck-core assets directory (see SMELL comment in `pub fn run`
+//! sail repo's deck-core assets directory (see SMELL comment in `pub fn run`
 //! for the exact hardcoded path). The output is the embedded source the
 //! daemon reads to answer `/_deck/icons/{name}.svg` per-icon. The
-//! `crates/deck/deck-core/assets/` directory lives in the external sui repo
+//! `crates/deck/deck-core/assets/` directory lives in the external sail repo
 //! post-carve; the assets are committed source there.
 //! This replaces the retired `scripts/codegen/generate-lucide-registry.mjs`.
 //! `gen-icons` is the only task in this crate — codegen that crosses a
@@ -97,7 +97,7 @@ fn extract_inner(svg: &str) -> Result<String> {
 
 pub fn run(repo_root: &Path) -> Result<()> {
     let icons_dir = locate_lucide_icons(repo_root)?;
-    // Output lives inside this sui repo at the canonical deck-core assets
+    // Output lives inside this sail repo at the canonical deck-core assets
     // path. We join against `repo_root` instead of hardcoding an absolute
     // path so the tool is portable across checkouts and worktrees; pass
     // `repo_root` as the cwd (or override via SUI_GEN_ICONS_OUT) for a

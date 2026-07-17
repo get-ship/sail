@@ -1,6 +1,6 @@
 ---
 title: "Signals"
-description: "The reactive cell at the heart of SUI."
+description: "The reactive cell at the heart of SAIL."
 group: "Tutorial"
 order: 1
 slug: "01-hello-signal"
@@ -9,7 +9,7 @@ next: "02-derived"
 chapter: "reactivity"
 ---
 
-A **signal** is the smallest reactive primitive in SUI — a callable
+A **signal** is the smallest reactive primitive in SAIL — a callable
 cell that notifies its subscribers when it changes.
 
 ```ts

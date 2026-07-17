@@ -1,4 +1,4 @@
-//! `deck scaffold view|component` — generate boilerplate for a new SUI view
+//! `deck scaffold view|component` — generate boilerplate for a new SAIL view
 //! or primitive. Ported verbatim from the retired
 //! `scripts/scaffold-view.mjs` + `scripts/scaffold-sail-component.mjs`.
 //!
@@ -153,22 +153,22 @@ pub fn run_component(tag: String, want_controller: bool) -> Result<()> {
     // layout elements + sx, and state — when asked for — is an inline
     // `<controller>` block in the same file. No siblings, no `<style>`,
     // no `:host`: the compiler rejects all three.
-    let mut sui = format!(
+    let mut sail = format!(
         "<!--\n  \
-         {tag} — SUI primitive.\n\n  \
+         {tag} — SAIL primitive.\n\n  \
          Props / slots / events / ARIA: document as they land.\n\
          -->\n\n\
          <scope>\n  props: {{ tone = 'default' }}\n</scope>\n\n"
     );
     if want_controller {
-        sui.push_str("<controller>\nimport { controller, type ViewScope } from '@ship/sail-runtime'\n");
-        sui.push_str(&format!("import type {{ Scope }} from './{tag}.sail'\n\n"));
-        sui.push_str(
+        sail.push_str("<controller>\nimport { controller, type ViewScope } from '@ship/sail-runtime'\n");
+        sail.push_str(&format!("import type {{ Scope }} from './{tag}.sail'\n\n"));
+        sail.push_str(
             "export default controller({\n  setup: (_ctx: ViewScope<Scope>) => ({}),\n})\n</controller>\n\n",
         );
     }
-    sui.push_str("<row align=\"center\" gap=\"1\" sx=\"text-tone-fg\">\n  <slot></slot>\n</row>\n");
-    fs::write(base.join(format!("{tag}.sail")), sui)?;
+    sail.push_str("<row align=\"center\" gap=\"1\" sx=\"text-tone-fg\">\n  <slot></slot>\n</row>\n");
+    fs::write(base.join(format!("{tag}.sail")), sail)?;
 
     println!("[scaffold] created packages/components/sail/primitives/src/{tag}/");
     println!("[scaffold] next steps:");
@@ -207,7 +207,7 @@ pub fn run_pack(name: String) -> Result<()> {
         "{{\n  \
          \"name\": \"@ship/{name}\",\n  \
          \"version\": \"0.1.0\",\n  \
-         \"description\": \"Ship {name} pack — SUI components registry. \
+         \"description\": \"Ship {name} pack — SAIL components registry. \
          Author tags under src/<tag>/<tag>.sail; the umbrella in src/index.ts side-effect-imports each compiled.js so a single `import \\\"@ship/{name}\\\"` registers them all.\",\n  \
          \"type\": \"module\",\n  \
          \"main\": \"src/index.ts\",\n  \
@@ -256,7 +256,7 @@ pub fn run_pack(name: String) -> Result<()> {
     fs::write(base.join("tsconfig.json"), tsconfig)?;
 
     let index_ts = format!(
-        "// @ship/{name} — SUI component registry.\n\
+        "// @ship/{name} — SAIL component registry.\n\
          //\n\
          // Side-effect imports for every tag in the pack. Each\n\
          // `<tag>.compiled.js` calls `customElements.define()` on import,\n\

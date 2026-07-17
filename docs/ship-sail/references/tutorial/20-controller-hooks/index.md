@@ -41,7 +41,7 @@ whatever key you gave it in the returned object — `list` contributes
 `list.query` / `list.filtered()`, `sel` contributes `sel.selected()`
 and friends:
 
-```sui
+```sail
 <input bind:value={list.query} placeholder="filter…" />
 
 {#for item of list.filtered() key={item.id}}

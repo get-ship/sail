@@ -45,7 +45,7 @@ fn find_tsc(project: &Path, repo_root: &Path) -> Option<PathBuf> {
 /// resolution. `include`/`exclude`/`baseUrl` are ABSOLUTE so the config can
 /// live in the build output dir while still covering the project tree —
 /// `@ship/*` and friends resolve through the consumer's own `node_modules`
-/// (no `paths` map needed; a general consumer is not the sui workspace).
+/// (no `paths` map needed; a general consumer is not the sail workspace).
 fn write_tsconfig(project: &Path, out_dir: &Path) -> Result<PathBuf> {
     let proj = project.display();
     let out = out_dir.display();

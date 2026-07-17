@@ -89,7 +89,7 @@ pub fn element(tag: &str) -> Option<&'static StdlibElement> {
 
 /// The concatenated stdlib element skins — the compiler's half of the
 /// framework stylesheet (the runtime's `LIGHT_CONTRACTS_CSS` is the other
-/// half). This is the SSOT: the served `sui.css` and the materialized
+/// half). This is the SSOT: the served `sail.css` and the materialized
 /// `packages/sail/tokens/src/element-skins.css` both derive from here, and a
 /// drift test re-derives and compares. Each element contributes its skin
 /// once, under a header naming the tag.

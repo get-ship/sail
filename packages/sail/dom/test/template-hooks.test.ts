@@ -11,7 +11,7 @@
 // here.
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { compileAndMount as hydrate } from '../src/test-utils/compile-sui'
+import { compileAndMount as hydrate } from '../src/test-utils/compile-sail'
 import { controller } from '@ship/sail-runtime'
 
 const containers: HTMLElement[] = []

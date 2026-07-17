@@ -44,7 +44,7 @@ fn is_config_reader(text: &str) -> bool {
 
 #[test]
 fn sui_config_has_a_single_reader() {
-    // crates/sail/compiler -> crates/sui
+    // crates/sail/compiler -> crates/sail
     let sui_root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
     let mut readers = Vec::new();
     for sub in ["compiler/src", "lint/src"] {

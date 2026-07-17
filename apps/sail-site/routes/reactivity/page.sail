@@ -23,7 +23,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Building</p>
   <h1>Reactivity</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    SUI's reactivity is three small primitives: a <strong>signal</strong> holds a
+    SAIL's reactivity is three small primitives: a <strong>signal</strong> holds a
     value, a <strong>derived</strong> computes one from others, and an
     <strong>effect</strong> runs a side-effect when its inputs change. No
     proxies, no dependency arrays — you read the graph.

@@ -9,13 +9,13 @@
 //! bypasses the reactive system, so updates don't track and the
 //! signal proxy never sees the write.
 //!
-//! Either case, the canonical SUI helper is the right call:
+//! Either case, the canonical SAIL helper is the right call:
 //! - non-form / text content → `bindText(el, () => x)`
 //! - form inputs            → `bindValue(el, signal)`
 //!
 //! The lint is intentionally narrow — it flags the exact two-argument
 //! `setAttribute("value", …)` shape only. Other `setAttribute` calls
-//! (aria-*, data-*, custom attrs) stay free; SUI does not own them.
+//! (aria-*, data-*, custom attrs) stay free; SAIL does not own them.
 
 use std::path::{Path, PathBuf};
 

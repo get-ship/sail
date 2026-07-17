@@ -7,7 +7,7 @@ description: The three-role split, MVVM mapping, and the discipline that holds t
 
 # Architecture
 
-SUI is a single-file template DSL (`.sail`) compiled AOT to ESM that runs against a small signals runtime. Templates render server-side from `shipd`; a client runtime attaches reactive bindings, event handlers, and SSE subscriptions to the rendered DOM. Custom elements are the unit of composition; **light DOM is the default** — every `sail-*` renders into its own element with no shadow root, and components opt into a shadow boundary only when they wrap foreign content (declared in the manifest, paid for knowingly). The daemon is the data source.
+SAIL is a single-file template DSL (`.sail`) compiled AOT to ESM that runs against a small signals runtime. Templates render server-side from `shipd`; a client runtime attaches reactive bindings, event handlers, and SSE subscriptions to the rendered DOM. Custom elements are the unit of composition; **light DOM is the default** — every `sail-*` renders into its own element with no shadow root, and components opt into a shadow boundary only when they wrap foreign content (declared in the manifest, paid for knowingly). The daemon is the data source.
 
 ## The three roles
 
@@ -23,7 +23,7 @@ The three do not overlap. There is no fourth role, and there will not be a fourt
 
 ## MVVM mapping
 
-| MVVM | SUI | Notes |
+| MVVM | SAIL | Notes |
 |---|---|---|
 | **Model** | The Ship daemon (`shipd`) | Out of band. Not a framework concept. The SDK on the other side of `<data>`. |
 | **View** | The template (`.sail`) | Markup + declarative wiring. Per Vue/Svelte usage, "template" is more honest than "view" because it carries wiring, not pure structure — but it occupies the V slot. |
@@ -66,12 +66,12 @@ Three rules that hold the architecture together. They are non-negotiable.
 - **Not React.** No virtual DOM, no reconciler, no render functions. Templates compile to attach instructions over server-rendered DOM.
 - **Not Vue.** No SFC compilation step splitting one authored file into three concerns. The `.sail` file and its inline `<controller>` block *are* one file — closer to Vue's `<script setup>` than to a paired-file convention — plus an optional sibling CSS file.
 - **Not Svelte.** Similar template syntax; different reactivity model (no `$state` rune); different controller convention (no per-component `<script>` block); different SSR shape (Rust IR walker, not Node SSR).
-- **Not Datastar.** Compatible philosophy (server-driven HTML + tiny client runtime + SSE), but SUI has its own template DSL, its own signals primitive, and its own marker shape. We do not ship Datastar's `data-*` attributes verbatim.
+- **Not Datastar.** Compatible philosophy (server-driven HTML + tiny client runtime + SSE), but SAIL has its own template DSL, its own signals primitive, and its own marker shape. We do not ship Datastar's `data-*` attributes verbatim.
 - **Not Hotwire/LiveView.** No server-pushed HTML fragments + idiomorph as the *only* update path. Local state is fully client-side; `data live` is the SSE channel for server-owned state. The two coexist.
 
 ## What's unique
 
-Six edges SUI has over comparable frameworks:
+Six edges SAIL has over comparable frameworks:
 
 1. **`data live` as a language verb.** Server-pushed reactivity is a first-class directive, not a library bolted on top.
 2. **Single binary, no asset pipeline.** AOT compiler is invisible; `shipd` serves rendered HTML directly.

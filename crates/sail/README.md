@@ -1,8 +1,8 @@
 # crates/sail/
 
-The **SUI view framework** (Rust side) — the `.sail` language, its ahead-of-time
-compiler, lint rules, and the signal-graph runtime. SUI is the "React" of the
-stack; the meta-framework that hosts, serves, and bundles SUI views lives next
+The **SAIL view framework** (Rust side) — the `.sail` language, its ahead-of-time
+compiler, lint rules, and the signal-graph runtime. SAIL is the "React" of the
+stack; the meta-framework that hosts, serves, and bundles SAIL views lives next
 door in [`crates/deck/`](../deck/). See the ADR
 [`sail-deck-crate-boundary`](../../docs/ship-adrs/references/docs/sail-deck-crate-boundary.md).
 
@@ -23,10 +23,10 @@ pure, portable leaves of that pipeline.
 
 - `compiler`, `lint`, `signals` are **pure leaves** — no native I/O, WASM-safe.
 - `lsp` is a thin transport binary over `compiler` (stdio LSP loop only).
-- Anything that *resolves*, *SSRs*, *serves over HTTP*, or *bundles* SUI views
-  is **Deck**, not SUI — it lives in [`crates/deck/`](../deck/)
+- Anything that *resolves*, *SSRs*, *serves over HTTP*, or *bundles* SAIL views
+  is **Deck**, not SAIL — it lives in [`crates/deck/`](../deck/)
   (`deck-host`, `deck-server`, `deck`). Those crates depend on `sail-compiler` +
-  `sail-signals`; the dependency only ever points sui ← deck, never the reverse.
+  `sail-signals`; the dependency only ever points sail ← deck, never the reverse.
 
 ## Why this split
 
@@ -34,7 +34,7 @@ The Rust workspace mirrors the JS package split so the mental model is stated
 once and both agree:
 
 ```
-crates/sail/   = SUI view framework (Rust)   ↔  packages/sail/   = SUI (JS)
+crates/sail/   = SAIL view framework (Rust)   ↔  packages/sail/   = SAIL (JS)
 crates/deck/  = Deck meta-framework (Rust)  ↔  packages/deck/  = Deck (JS)
 crates/core/  = substrate + platform tier (kernel, pipelines, supervisor, …)
 ```

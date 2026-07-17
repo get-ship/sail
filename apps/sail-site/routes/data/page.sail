@@ -41,7 +41,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
   <h1>Live data</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
     Asynchronous data has three states — loading, error, and loaded — and
-    forgetting one is where interfaces rot. SUI makes all three explicit.
+    forgetting one is where interfaces rot. SAIL makes all three explicit.
     <code>live()</code> wraps any async source in a reactive state signal, and
     the template renders each state on its own terms.
   </p>

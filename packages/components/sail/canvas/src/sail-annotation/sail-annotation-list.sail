@@ -1,5 +1,5 @@
 <!--
-  <sail-annotation-list> — SUI port of <ship-annotation-list>.
+  <sail-annotation-list> — SAIL port of <ship-annotation-list>.
   Compact list of staged AnnotationEvents with per-item remove controls.
 
   API surface
@@ -29,7 +29,7 @@ import type { AnnotationEvent } from './sail-annotation.internals'
 export default controller((_ctx: ViewScope<Scope>, _host?: Element) => {
     const staged = signal<AnnotationEvent[]>([])
     // The host element is not present in the scope factory (the post-
-    // convergence "SUI names no host" compile stops passing it as the 2nd
+    // convergence "SAIL names no host" compile stops passing it as the 2nd
     // arg), so read it through this signal — set in `mount` once the
     // runtime hands over the real element. The template wires
     // `on:click={() => emitRemove(a.id)}`, so the emit must read the host

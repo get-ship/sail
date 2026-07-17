@@ -75,7 +75,7 @@ describe('effect-scope', () => {
     scope.dispose()
     expect(after).toHaveBeenCalledOnce()
     expect(errSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[sui/scope] cleanup threw'),
+      expect.stringContaining('[sail/scope] cleanup threw'),
       expect.any(Error),
     )
     errSpy.mockRestore()

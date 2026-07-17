@@ -1,7 +1,7 @@
 {
   "name": "@ship/sail-eval",
   "version": "0.2.0",
-  "description": "SUI eval rig — dispatch a feature spec to a model and assert the output is a working .sail view.",
+  "description": "SAIL eval rig — dispatch a feature spec to a model and assert the output is a working .sail view.",
   "type": "module",
   "license": "MIT",
   "main": "src/index.ts",

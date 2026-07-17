@@ -2,7 +2,7 @@
 //! ships. The compiler is the SSOT: a `.sail` element source is its own
 //! declaration, and a native reskin is a row in the table below. Everything
 //! the agent (SKILL.md, LSP) and the audit report see is derived from
-//! this manifest, so "what elements does SUI give me?" has a single
+//! this manifest, so "what elements does SAIL give me?" has a single
 //! answer that cannot disagree with what the runtime actually styles.
 //!
 //! # Why this is not a document
@@ -31,7 +31,7 @@
 //! The native elements styled by `packages/sail/runtime/src/styles/index.ts`
 //! — every `:where(tag)` selector plus attribute-keyed skins
 //! (`<a variant>`, `<span dot>`, `<span skeleton>`, `<thead sticky>`, etc.).
-//! They are L1 because a bare `<button>` / `<select>` / `<table>` in a SUI
+//! They are L1 because a bare `<button>` / `<select>` / `<table>` in a SAIL
 //! document IS the design system's surface — same tokens, same tone
 //! channel, zero bundle cost until used. The reskin entries make that
 //! surface enumerable.
@@ -573,7 +573,7 @@ pub fn l1_kind(tag: &str) -> Option<L1Kind> {
 }
 
 /// Count the L1 surface — the number that answers the question "what
-/// elements does SUI give me?".
+/// elements does SAIL give me?".
 pub fn l1_count() -> usize {
     l1_entries().len()
 }

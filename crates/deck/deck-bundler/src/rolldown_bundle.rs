@@ -1,7 +1,7 @@
-//! Rolldown bundler — drives Rolldown with the SUI plugin to bundle each target.
+//! Rolldown bundler — drives Rolldown with the SAIL plugin to bundle each target.
 //! Output goes to `assets_dir_for` (sail-out/dist) — no source-tree writes.
 //!
-//! The SUI resolve/load plugin lives in `sail_plugin.rs`; this module owns the
+//! The SAIL resolve/load plugin lives in `sail_plugin.rs`; this module owns the
 //! target-to-bundle driver and its integration tests.
 
 use std::path::{Path, PathBuf};
@@ -949,7 +949,7 @@ mod tests {
         let root = tmp.path();
         std::fs::create_dir_all(root.join("app")).unwrap();
         std::fs::create_dir_all(root.join("sidefx-pkg/src")).unwrap();
-        // Workspace marker so the fixture mirrors a real Sui
+        // Workspace marker so the fixture mirrors a real Sail
         // workspace. The `*` glob matches every subdir of root
         // (each subdir is a package) — the same pattern the
         // deck-bundler test fixtures use to keep the test

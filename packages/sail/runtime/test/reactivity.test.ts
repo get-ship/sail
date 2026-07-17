@@ -1,6 +1,6 @@
 // reactivity.test.ts — the signal graph's behavioral contract, exhaustively.
 //
-// This is the failure-mode taxonomy for SUI's fine-grained reactivity, written
+// This is the failure-mode taxonomy for SAIL's fine-grained reactivity, written
 // as the DESIRED end-state (not the current state). Tests that are red today
 // are the proof-attempts the scheduler fix must turn green — per the honesty
 // policy, a red here is a real, un-papered gap, not a TODO.

@@ -13,7 +13,7 @@ use axum::{
 
 pub use deck_core::render_helpers::{is_valid_view_name, render_view_source};
 
-/// Plain-text 404 axum response. Used by state-aware SUI handlers in shipd
+/// Plain-text 404 axum response. Used by state-aware SAIL handlers in shipd
 /// (sui_mutation, sui_sse) that build axum responses directly.
 pub fn not_found(msg: &str) -> Response {
     Response::builder()
