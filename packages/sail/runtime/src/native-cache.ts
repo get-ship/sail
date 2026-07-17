@@ -1,8 +1,9 @@
-// native-cache — SPIKE. A signals-native replacement for the
-// query-core-backed `queried()` (see `queried.ts`'s CONTRACT header,
-// which this file reproduces). NOT wired in: no app site, no
-// index.ts export. Exists to answer one question with numbers — see
-// `helm/data/missions/m-deck-standalone/scratch/signals-cache-spike-report.md`.
+// native-cache — the signals-native cache engine. WIRED IN as of the
+// query-slice job: `queried()` (queried.ts) and the public `query()`/
+// `mutation()` primitives (query.ts) sit directly on top of this
+// file. Originated as a spike answering one question with numbers —
+// see `helm/data/missions/m-deck-standalone/scratch/signals-cache-spike-report.md`
+// — then ruled the engine in `data-arch-seed.md` ("CACHE = BUILD").
 //
 // The bet: a cache entry IS a signal homed on the owner tree. A pull
 // (`nativeQueried`) fills the entry once and lets it go stale; a push
@@ -13,24 +14,32 @@
 // `interleaved pull+push` test) instead of needing a second primitive
 // query-core has no room for.
 //
-// Reproduces the FIVE-CLAUSE CONTRACT from queried.ts:
-//   1. SUBSCRIBE — the returned Signal IS the entry's signal; every
-//      transition lands via `.set()` synchronously, no microtask hop
-//      added by this file. A remount that finds a live entry reflects
-//      its current value synchronously (nothing to do — same signal).
-//   2. READ — exactly the frozen `LiveState<T>` union; a background
-//      revalidate (§ stale-while-revalidate) never flips ok→loading.
-//   3. INVALIDATE — staleTime/gcTime/retry are the only knobs; forwarded
-//      unmodified from `NativeCacheOpts`, interpreted only by this file.
-//   4. OWNER-TREE HOMING — one `NativeCache` per chain root, resolved by
-//      walking `.parent` to `parent === null` (mirrors `query-client.ts`
-//      exactly), never a module singleton. Disposed with the root.
-//   5. UNSUBSCRIBE — registered via `onCleanup` on the CALLING scope.
+// Implements the FIVE-CLAUSE CONTRACT — see `query.ts`'s module
+// header for the canonical, numbered text (moved there now that
+// `query()` is the public door; this file is implementation detail
+// underneath it). One-line-per-clause recap: (1) SUBSCRIBE — the
+// returned Signal IS the entry's signal, synchronous `.set()`; (2)
+// READ — exactly `LiveState<T>`, never flips ok→loading on a
+// background revalidate; (3) INVALIDATE — staleTime/gcTime/retry are
+// the only knobs, `invalidate(prefix)` (method below) is the shared
+// mechanism, every fetch attempt owns a real `AbortController`; (4)
+// OWNER-TREE HOMING — one `NativeCache` per chain root via
+// `useNativeCache()`, never a module singleton; (5) UNSUBSCRIBE —
+// `onCleanup` on the CALLING scope.
 
-import type { QueryKey } from '@tanstack/query-core'
 import { signal, type Signal } from './signal'
 import { onCleanup, currentScope, createScope, type EffectScope } from './effect-scope'
 import type { LiveState } from './live'
+
+/** A cache identity: client-root + static member-path segments +
+ *  (optionally) a tail of call-arg values. Compiler-derived, never
+ *  handwritten by an author — see query.ts's module header. Owned
+ *  here rather than imported from `@tanstack/query-core` so the real
+ *  engine has zero dependency on that package; only the retired
+ *  differential-test twin (`queried-querycore.ts`) still imports
+ *  query-core's own `QueryKey`, which is structurally the same
+ *  shape (`readonly unknown[]`). */
+export type QueryKey = readonly unknown[]
 
 // ---------------------------------------------------------------------------
 // Cache entry
@@ -53,6 +62,15 @@ interface CacheEntry<T> {
    *  stale (dispose during flight, or a newer fetch started) is
    *  discarded. Mirrors `live.ts`'s token guard. */
   fetchToken: number
+  /** The fetcher last passed to `fetch()`. Retained so `invalidate()`
+   *  can trigger a background refetch of an actively-observed entry
+   *  without the caller re-supplying `fn` (see INVALIDATE contract). */
+  fetchFn: ((signal: AbortSignal) => Promise<unknown>) | null
+  /** The controller for whichever attempt (initial or retry) is
+   *  currently in flight; `null` when nothing is fetching. Aborted on
+   *  dispose, GC eviction, and invalidate-while-fetching — real
+   *  network work stops, it does not just get its result discarded. */
+  abortController: AbortController | null
   /** Set the first time a push source attaches; lets a second
    *  `nativePush` call on the same key reuse the one subscription
    *  instead of opening a duplicate. */
@@ -74,6 +92,20 @@ function hashKey(key: QueryKey): string {
 
 function retryDelay(attempt: number): number {
   return Math.min(1000 * 2 ** (attempt - 1), 30_000)
+}
+
+/** Whether `key` starts with every segment of `prefix`, value-compared
+ *  (not reference-compared, since args are often fresh objects/arrays
+ *  per call). `invalidate(crm)` → `['crm']`, `invalidate(crm.deals)` →
+ *  `['crm','deals']`, `invalidate(crm.deals.list)` →
+ *  `['crm','deals','list']` — no args segment, so it matches every
+ *  cached call to that method regardless of arguments. */
+function isKeyPrefixedBy(key: QueryKey, prefix: QueryKey): boolean {
+  if (prefix.length > key.length) return false
+  for (let i = 0; i < prefix.length; i++) {
+    if (JSON.stringify(key[i]) !== JSON.stringify(prefix[i])) return false
+  }
+  return true
 }
 
 // ---------------------------------------------------------------------------
@@ -100,6 +132,8 @@ export class NativeCache {
         retryCount: 0,
         retryTimer: null,
         fetchToken: 0,
+        fetchFn: null,
+        abortController: null,
         pushUnsubscribe: null,
         disposed: false,
       }
@@ -119,6 +153,7 @@ export class NativeCache {
     entry.gcTimer = setTimeout(() => {
       entry.disposed = true
       entry.pushUnsubscribe?.()
+      entry.abortController?.abort()
       if (entry.retryTimer !== null) clearTimeout(entry.retryTimer)
       this.entries.delete(hashed)
     }, entry.gcTime)
@@ -150,24 +185,37 @@ export class NativeCache {
 
   /** Start (or join) a fetch for `entry`. A background revalidate of
    *  already-`ok` data never flips the signal back to `loading` — only
-   *  a genuinely empty entry starts in `loading`. */
-  fetch<T>(entry: CacheEntry<T>, fn: () => Promise<T>): void {
+   *  a genuinely empty entry starts in `loading`. `fn` receives the
+   *  in-flight attempt's `AbortSignal`; dispose, GC eviction, and a
+   *  forced invalidate-refetch all abort it for real, not just discard
+   *  its eventual result. */
+  fetch<T>(entry: CacheEntry<T>, fn: (signal: AbortSignal) => Promise<T>): void {
     if (entry.status === 'fetching') return
     entry.status = 'fetching'
     const myToken = ++entry.fetchToken
-    if (entry.dataUpdatedAt === 0) entry.sig.set({ kind: 'loading' })
+    entry.fetchFn = fn as (signal: AbortSignal) => Promise<unknown>
+    // Only a genuinely empty/errored entry flashes to loading. An
+    // invalidate-triggered background revalidate of `ok` data zeroes
+    // `dataUpdatedAt` (staleness bookkeeping) but must NOT flip the
+    // signal — checking the signal's own kind, not `dataUpdatedAt`,
+    // keeps those two concerns from colliding.
+    if (entry.sig.__peek().kind !== 'ok') entry.sig.set({ kind: 'loading' })
 
     const run = (): void => {
-      fn().then(
+      const controller = new AbortController()
+      entry.abortController = controller
+      fn(controller.signal).then(
         (value) => {
           if (entry.disposed || myToken !== entry.fetchToken) return
           entry.status = 'idle'
+          entry.abortController = null
           entry.dataUpdatedAt = Date.now()
           entry.retryCount = 0
           entry.sig.set({ kind: 'ok', value })
         },
         (err) => {
           if (entry.disposed || myToken !== entry.fetchToken) return
+          entry.abortController = null
           const maxRetries = entry.retry === false ? 0 : entry.retry === true ? Infinity : entry.retry
           if (entry.retryCount < maxRetries) {
             entry.retryCount++
@@ -183,6 +231,46 @@ export class NativeCache {
       )
     }
     run()
+  }
+
+  /** Invalidate every entry whose key is prefixed by `prefix` (the
+   *  compiler-resolved surface: `invalidate(crm.deals.list)`,
+   *  `invalidate(crm.deals)`, `invalidate(crm)` all compile down to a
+   *  prefix here). Same mechanism serves mutation auto-invalidation
+   *  and the public `invalidate()` grammar — one implementation, two
+   *  callers. See invalidate-design-proposal.md for the full contract;
+   *  summary of the five rules applied per matched entry:
+   *   1. mark stale (`dataUpdatedAt = 0`),
+   *   2. observed entries refetch in the background — `ok` never
+   *      flips to `loading` mid-revalidate,
+   *   3. unobserved-but-resident entries are just marked stale — no
+   *      wasted fetch; the next `attach()` catches it via `isFresh()`,
+   *   4. push-fed entries are exempt, skipped silently,
+   *   5. an in-flight fetch is aborted and its token bumped so the
+   *      stale resolution can never land, then a fresh fetch starts. */
+  invalidate(prefix: QueryKey): void {
+    for (const entry of this.entries.values()) {
+      if (entry.disposed) continue
+      if (!isKeyPrefixedBy(entry.key, prefix)) continue
+
+      entry.dataUpdatedAt = 0
+      if (entry.pushUnsubscribe !== null) continue // rule 4: push-fed, exempt
+      if (entry.observers === 0) continue // rule 3: unobserved, just marked stale above
+
+      // rule 5: discard whatever the in-flight attempt was about to write
+      if (entry.status === 'fetching') {
+        entry.abortController?.abort()
+        entry.abortController = null
+        entry.fetchToken++
+      }
+      if (entry.retryTimer !== null) {
+        clearTimeout(entry.retryTimer)
+        entry.retryTimer = null
+      }
+      entry.retryCount = 0
+      entry.status = 'idle'
+      if (entry.fetchFn) this.fetch(entry, entry.fetchFn)
+    }
   }
 
   /** Whether `key` is fresh enough that a new observer should skip a
@@ -223,6 +311,7 @@ export class NativeCache {
       this.cancelGc(entry)
       if (entry.retryTimer !== null) clearTimeout(entry.retryTimer)
       entry.pushUnsubscribe?.()
+      entry.abortController?.abort()
     }
     this.entries.clear()
   }
@@ -317,7 +406,7 @@ export interface NativeCacheOpts {
  */
 export function nativeQueried<T>(
   key: QueryKey,
-  fn: () => Promise<T>,
+  fn: (signal: AbortSignal) => Promise<T>,
   opts?: NativeCacheOpts,
 ): Signal<LiveState<T>> {
   const cache = useNativeCache()

@@ -51,11 +51,24 @@ pub struct TodoItem {
     pub done: bool,
 }
 
+/// One CRM deal — the query()/mutation() derived-identity proof fixture's
+/// backing row (see `app/clients/crm-demo.ts`). Plain one-shot JSON, NOT
+/// SSE — `query()`'s fetcher contract is Promise-returning, unlike the
+/// `<client>`-injected `LiveSource<T>` demo clients this store already
+/// serves via `resolve_demo`/SSE.
+#[derive(Debug, Clone)]
+pub struct Deal {
+    pub id: String,
+    pub stage: String,
+    pub amount: u64,
+}
+
 /// Shared in-memory state for the demo views.
 /// The background ticker advances `tick` every second and sends a `bump`
 /// so every open SSE connection re-resolves and emits a fresh patch.
 pub struct DemoStore {
     pub todos: Mutex<Vec<TodoItem>>,
+    pub deals: Mutex<Vec<Deal>>,
     pub tick: AtomicU64,
     /// Broadcast channel: any send wakes all SSE loops.
     /// Capacity 16 — bursts are coalesced before re-resolve anyway.
@@ -70,6 +83,11 @@ impl DemoStore {
         let cancel = CancellationToken::new();
         let store = Arc::new(Self {
             todos: Mutex::new(Vec::new()),
+            deals: Mutex::new(vec![
+                Deal { id: "d1".to_string(), stage: "open".to_string(), amount: 4200 },
+                Deal { id: "d2".to_string(), stage: "open".to_string(), amount: 9100 },
+                Deal { id: "d3".to_string(), stage: "closed".to_string(), amount: 1500 },
+            ]),
             tick: AtomicU64::new(0),
             bump,
             cancel,
@@ -420,6 +438,64 @@ async fn serve_data(
         .unwrap_or_else(|_| Response::new(Body::from("sse stream init failed")))
 }
 
+// ── query()/mutation() one-shot JSON fixture ─────────────────────────────────
+//
+// `crm-demo.ts` calls these two plain REST-ish endpoints (not SSE) — the
+// derived-identity proof needs a Promise-returning fetch, which the
+// existing `<client>`-injected demo clients (LiveSource-returning, over
+// SSE) don't provide. Kept deliberately tiny: no auth, no pagination,
+// in-memory only, exactly enough to prove `query()`/`mutation()`/
+// `invalidate()` round-trip through a real browser fetch.
+
+#[derive(Debug, Deserialize)]
+struct DealsListQuery {
+    stage: Option<String>,
+}
+
+fn deal_json(d: &Deal) -> Value {
+    json!({ "id": d.id, "stage": d.stage, "amount": d.amount })
+}
+
+/// `GET /_deck/api/demo/deals?stage=open`
+async fn get_deals_list(
+    Query(q): Query<DealsListQuery>,
+    State(store): State<Arc<DemoStore>>,
+) -> axum::Json<Value> {
+    let deals = store.deals.lock().await;
+    let items: Vec<Value> = deals
+        .iter()
+        .filter(|d| q.stage.as_deref().is_none_or(|s| s == d.stage))
+        .map(deal_json)
+        .collect();
+    axum::Json(json!({ "items": items }))
+}
+
+#[derive(Debug, Deserialize)]
+struct DealsUpdateBody {
+    id: String,
+    stage: String,
+}
+
+/// `POST /_deck/api/demo/deals/update` — updates a deal's stage, bumps the
+/// store's broadcast channel (so any push-based observers stay honest,
+/// though `query()`'s pull-based cache doesn't rely on it — invalidation is
+/// the client-side job of `mutation()`'s auto-invalidate + `NativeCache`).
+async fn post_deals_update(
+    State(store): State<Arc<DemoStore>>,
+    axum::Json(body): axum::Json<DealsUpdateBody>,
+) -> Result<axum::Json<Value>, (StatusCode, String)> {
+    let mut deals = store.deals.lock().await;
+    let deal = deals
+        .iter_mut()
+        .find(|d| d.id == body.id)
+        .ok_or_else(|| (StatusCode::NOT_FOUND, format!("no deal with id {}", body.id)))?;
+    deal.stage = body.stage;
+    let out = deal_json(deal);
+    drop(deals);
+    let _ = store.bump.send(());
+    Ok(axum::Json(out))
+}
+
 fn is_valid_expr(expr: &str) -> bool {
     if expr.is_empty() || expr.len() > 1024 {
         return false;
@@ -439,6 +515,8 @@ pub fn router(store: Arc<DemoStore>) -> Router {
     Router::new()
         .route("/_deck/views/{name}/sse", get(serve_sse))
         .route("/_deck/data", get(serve_data))
+        .route("/_deck/api/demo/deals", get(get_deals_list))
+        .route("/_deck/api/demo/deals/update", axum::routing::post(post_deals_update))
         .with_state(store)
 }
 

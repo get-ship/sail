@@ -30,7 +30,6 @@
   },
   "dependencies": {
     "@ship/tokens": "workspace:*",
-    "@tanstack/query-core": "^5.101.2",
     "motion": "^12.42.2",
     "motion-dom": "^12.42.2"
   },

@@ -52,7 +52,8 @@ const SCOPE_PREFIX: &str = "scope.";
 /// calls `component()`/`data()`/`live()`/`prop()` — those lower into the
 /// controller's logic half. Everything else `lower` reports is a template
 /// binder the mount body uses.
-const CONTROLLER_ONLY_IMPORTS: &[&str] = &["component", "prop", "data", "live"];
+const CONTROLLER_ONLY_IMPORTS: &[&str] =
+    &["component", "prop", "data", "live", "query", "mutation", "invalidate"];
 
 /// The reusable template walk: drives the production [`TemplateEmitter`] with
 /// the `scope.` author prefix and returns the emitted pieces. `is_view` gates

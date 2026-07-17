@@ -111,8 +111,16 @@ pub fn check_synthetic_controller(
     };
 
     std::fs::create_dir_all(out_dir)?;
+    // Lower `query()`/`mutation()`/`invalidate()` before the ambient-import
+    // wrap (see `check::query_keys`). This tsgo pass is best-effort type
+    // checking, not the compile gate — a refusal here just skips the tsgo
+    // run; `check::run`/`compile()` is where a bad usage becomes a real
+    // build error.
+    let Ok(rewritten) = crate::check::query_keys::rewrite(&body) else {
+        return Ok(Vec::new());
+    };
     // Materialize the inline controller, then compose it into the typed pair.
-    std::fs::write(out_dir.join("view.controller.ts"), preprocess::wrap_controller_body(&body))?;
+    std::fs::write(out_dir.join("view.controller.ts"), preprocess::wrap_controller_body(&rewritten))?;
     let authored = AuthoredController { specifier: "./view.controller.ts".to_string() };
     let Ok(out) = emit_synthetic(
         &program,

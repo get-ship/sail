@@ -296,6 +296,12 @@ export { debounce } from './signal'
 export { live, unwrap, unwrapOr } from './live'
 export type { LiveState, LiveSignal, LiveSource, LiveOpts, LiveValueOf } from './live'
 
+// query()/mutation() — the read/write primitives that replace live()
+// per data-arch-seed.md ruling 3. live() stays exported above until
+// the corpus migration (query-rename-slice-spec.md) completes.
+export { query, queryKeyed, mutation, __invalidate } from './query'
+export type { QueryOpts, QueryKey, MutationOpts, MutationState, Mutation } from './query'
+
 export { wireFormMutation } from './mutation'
 
 export { bindWhileLoading, bindWhileError } from './while'
