@@ -32,7 +32,6 @@
 import '@ship/tokens/themes.css' // the swappable theme library (paper/halo/glass/console/contrast)
 import '@ship/tokens/products.css' // brand hue per data-product; themes own lightness/chroma
 import '@ship/tokens/contracts.css' // framework contracts: bare h1/p/ul/code/pre/button/anchor skins; the design system applied to a SUI document, no class hooks needed
-import '../identity.css' // site identity (DECLARED in sui.config.json): angled marquee bands, hero glow, gradient wordmark — the visuals the sx table can't express yet
 import { applyTheme, readStoredTheme } from '@ship/tokens/themes'
 
 // Ship UI is ONE site with a top product switcher (SUI · Deck · Components · AI),

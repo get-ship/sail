@@ -395,6 +395,21 @@ mod tests {
     }
 
     #[test]
+    fn gradient_and_glow_composites_beat_the_named_prefixes() {
+        // text-gradient-* / bg-glow-* are bare exact matches — they must NOT be
+        // caught by the "text"/"bg" named-utility longest-prefix matcher first.
+        let tg = decls("text-gradient-primary");
+        assert!(tg.iter().any(|(p, v)| p == "background-clip" && v == "text"));
+        assert!(tg.iter().any(|(p, v)| p == "color" && v == "transparent"));
+        assert!(decls("text-gradient-accent").iter().any(|(p, _)| p == "background"));
+
+        let glow = decls("bg-glow-primary");
+        assert!(glow.iter().any(|(p, v)| p == "position" && v == "absolute"));
+        assert!(glow.iter().any(|(p, _)| p == "background"));
+        assert!(decls("bg-glow-accent").iter().any(|(p, _)| p == "background"));
+    }
+
+    #[test]
     fn longest_name_wins() {
         assert_eq!(decls("min-w-full"), vec![("min-width".into(), "100%".into())]);
     }

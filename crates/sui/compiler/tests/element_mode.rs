@@ -117,6 +117,38 @@ fn element_skins_css_matches_registry() {
 }
 
 #[test]
+fn ticker_loops_via_two_slots_and_pauses_under_reduced_motion() {
+    let src = sui_compiler::stdlib::sources()
+        .iter()
+        .find(|(tag, _)| *tag == "ticker")
+        .map(|(_, src)| *src)
+        .expect("ticker registered in stdlib SOURCES");
+    let el = compile_element(src, "ticker").expect("ticker compiles");
+    assert_eq!(el.root_class, "sui-ticker");
+    assert_eq!(
+        el.structure_html.matches("<slot></slot>").count(),
+        2,
+        "two independently-filled slots build the seamless-loop duplicate track: {}",
+        el.structure_html
+    );
+    assert!(el.skin_css.contains("@keyframes sui-ticker-scroll"), "{}", el.skin_css);
+    assert!(
+        el.skin_css.contains("prefers-reduced-motion")
+            && el.skin_css.contains("animation-play-state: paused"),
+        "reduced motion pauses, it does not stop: {}",
+        el.skin_css
+    );
+    assert!(
+        !el.skin_css.contains("animation: none"),
+        "must not hard-stop under reduced motion: {}",
+        el.skin_css
+    );
+    let attrs = el.manifest["attributes"].as_array().unwrap();
+    assert!(attrs.iter().any(|a| a["name"] == "duration"), "{}", el.manifest);
+    assert!(attrs.iter().any(|a| a["name"] == "reverse"), "{}", el.manifest);
+}
+
+#[test]
 fn element_void_root_takes_no_closing_tag() {
     // separator's root is <hr> — a void element. The structure must NOT
     // carry </hr> (invalid HTML the template parser rejects when the lowered

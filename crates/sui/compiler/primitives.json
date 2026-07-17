@@ -673,6 +673,20 @@
         "default": ""
       }
     },
+    "ticker": {
+      "duration": {
+        "values": [
+          "fast",
+          "normal",
+          "slow"
+        ],
+        "default": "normal"
+      },
+      "reverse": {
+        "type": "bool",
+        "default": "false"
+      }
+    },
     "toast": {
       "duration": {
         "type": "string",

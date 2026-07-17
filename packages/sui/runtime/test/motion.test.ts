@@ -144,7 +144,7 @@ describe('motion runtime — focus-visible trigger', () => {
 })
 
 describe('motion runtime — loop trigger (the always-on ambient path)', () => {
-  it('honors reduced motion by settling on the FINAL pose (no half-fade, no scale-tween)', () => {
+  it('honors reduced motion by snapping translate/scale/rotate to the neutral FINAL transform (no tween)', () => {
     setReducedMotion(true)
     const el = host()
     const dispose = __sui_motion_attach(el, {
@@ -160,7 +160,85 @@ describe('motion runtime — loop trigger (the always-on ambient path)', () => {
         direction: 'alternate',
       }],
     })
+    // The scale animation itself never plays — it snaps straight to the
+    // neutral final transform (1 = identity, no visual jump).
     expect(el.style.scale).toBe('1')
+    dispose()
+  })
+
+  it('a translate/scale/rotate config settles fully visible under reduced motion — never left at zero opacity', async () => {
+    // Ruling: reduced motion drops vestibular-hazard motion (translate/
+    // scale/rotate) but must not leave the element looking dead. A real
+    // WAAPI opacity fade (0 → 1) was tried here and found unreliable
+    // under browser reduced-motion emulation (see the doc comment on
+    // `applyReducedMotionSettle` in src/motion.ts) — the guaranteed-safe
+    // half of the mandate's OR is what ships: content is immediately,
+    // fully visible, not animated in. `animate()` is never called for
+    // this path — confirmed via a mock that fails the test if it is.
+    vi.resetModules()
+    const calls: Array<unknown> = []
+    vi.doMock('motion/mini', () => ({
+      animate: (..._args: unknown[]) => {
+        calls.push(_args)
+        return { stop: () => {}, cancel: () => {}, finished: Promise.resolve() }
+      },
+    }))
+    const { __sui_motion_attach: attach } = await import('../src/motion')
+    setReducedMotion(true)
+    const el = host()
+    const dispose = attach(el, {
+      trigger: 'loop',
+      motions: [{ property: 'translate-y', preset: 'spring:gentle', kind: 'spring', stiffness: 200, damping: 20, mass: 1 }],
+    })
+    expect(calls.length).toBe(0)
+    // The translate itself is snapped to neutral, not animated.
+    expect(el.style.translate).toBe('0 0')
+    dispose()
+  })
+
+  it('a paired opacity + translate config settles both to FINAL — visible, neutral transform', async () => {
+    vi.resetModules()
+    const calls: Array<unknown> = []
+    vi.doMock('motion/mini', () => ({
+      animate: (..._args: unknown[]) => {
+        calls.push(_args)
+        return { stop: () => {}, cancel: () => {}, finished: Promise.resolve() }
+      },
+    }))
+    const { __sui_motion_attach: attach } = await import('../src/motion')
+    setReducedMotion(true)
+    const el = host()
+    const dispose = attach(el, {
+      trigger: 'loop',
+      motions: [
+        { property: 'opacity', preset: 'fade', kind: 'tween', duration: 0.3, from: 0, to: 1 },
+        { property: 'translate-y', preset: 'spring:gentle', kind: 'spring', stiffness: 200, damping: 20, mass: 1 },
+      ],
+    })
+    expect(el.style.opacity).toBe('1')
+    expect(el.style.translate).toBe('0 0')
+    expect(calls.length).toBe(0)
+    dispose()
+  })
+
+  it('a pure-opacity config keeps its existing snap-to-final behavior under reduced motion (no extra fade)', async () => {
+    vi.resetModules()
+    const calls: Array<unknown> = []
+    vi.doMock('motion/mini', () => ({
+      animate: (..._args: unknown[]) => {
+        calls.push(_args)
+        return { stop: () => {}, cancel: () => {}, finished: Promise.resolve() }
+      },
+    }))
+    const { __sui_motion_attach: attach } = await import('../src/motion')
+    setReducedMotion(true)
+    const el = host()
+    const dispose = attach(el, {
+      trigger: 'loop',
+      motions: [{ property: 'opacity', preset: 'fade', kind: 'tween', duration: 0.3, from: 0, to: 1 }],
+    })
+    expect(el.style.opacity).toBe('1')
+    expect(calls.length).toBe(0)
     dispose()
   })
 

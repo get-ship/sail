@@ -280,5 +280,5 @@ meter:-moz-meter-sub-sub-optimum::-moz-meter-bar { background: var(--destructive
 [data-component] { display: block; color: var(--foreground); }
 [data-component][hidden] { display: none !important; }
 [data-component] slot { display: contents; }
-@media (prefers-reduced-motion: reduce) { [data-component], [data-component] *, :where(button, input, textarea, select, a, [tabindex]) { transition: none !important; animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { :where([data-component], [data-component] *, button, input, textarea, select, a, [tabindex]) { transition: none !important; animation: none; } }
 }
