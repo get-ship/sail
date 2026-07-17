@@ -1415,17 +1415,17 @@ pub fn wrap_controller_body(body: &str) -> String {
 /// (`mount` → `import { mountAmbient as mount } from '...'`).
 fn inject_ambient_runtime_imports(module: &str) -> String {
     let bound = module_bound_idents(module);
-    let needed: Vec<(&str, &str)> = crate::runtime_ambient::RUNTIME_AMBIENT
+    let needed: Vec<(&str, &str, &str)> = crate::runtime_ambient::RUNTIME_AMBIENT
         .iter()
         .copied()
-        .filter(|(authored, _)| !bound.contains(*authored) && references_ident(module, authored))
+        .filter(|(authored, _, _)| !bound.contains(*authored) && references_ident(module, authored))
         .collect();
     if needed.is_empty() {
         return module.to_string();
     }
     let specifiers: Vec<String> = needed
         .iter()
-        .map(|(authored, exported)| {
+        .map(|(authored, exported, _)| {
             if authored == exported {
                 (*authored).to_string()
             } else {

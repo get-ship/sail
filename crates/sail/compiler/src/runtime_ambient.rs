@@ -26,28 +26,30 @@ pub const RUNTIME_SPECIFIER: &str = "@ship/sail-runtime/internal";
 /// the import injected. Sorted by authored name; the emitter preserves this
 /// order so injected import lists are stable.
 ///
-/// Each entry is `(authored_ident, exported_ident)`. Most idents import
+/// Each entry is `(authored_ident, exported_ident, doc)`. Most idents import
 /// under their own name (`exported_ident == authored_ident`). `mount` is the
 /// one exception: `@ship/sail-runtime/internal` already exports a `mount`
 /// (the F1 "mount a view into the DOM" host entry point — see
 /// `packages/sail/runtime/src/mount.ts`), so the ambient lifecycle function a
 /// controller body calls is exported under `mountAmbient` and imported
 /// aliased back to `mount` (`import { mountAmbient as mount } from '...'`).
-pub const RUNTIME_AMBIENT: &[(&str, &str)] = &[
+/// `doc` is one line of prose — the reference generator's source for the
+/// controller-vocabulary section; it plays no role in import injection.
+pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
     // `__invalidate` is never authored — it's the compiler's lowering
     // target for `invalidate(ref)` (see `check::query_keys`), so it can
     // only ever be REFERENCED (by the rewrite pass's own emitted call),
     // never bound by the author. Ambient injection is exactly the "self-
     // contained emitted module" property this table already exists for.
-    ("__invalidate", "__invalidate"),
-    ("batch", "batch"),
-    ("controller", "controller"),
-    ("derived", "derived"),
-    ("effect", "effect"),
-    ("mount", "mountAmbient"),
-    ("onCleanup", "onCleanup"),
-    ("signal", "signal"),
-    ("untrack", "untrack"),
+    ("__invalidate", "__invalidate", "compiler-only lowering target for `invalidate(ref)`; never authored directly"),
+    ("batch", "batch", "coalesce multiple signal writes into one flush"),
+    ("controller", "controller", "the controller factory — wraps a setup function into a bound scope"),
+    ("derived", "derived", "a read-only signal computed from other signals, recomputed on dependency change"),
+    ("effect", "effect", "run a side effect on mount and whenever its read signals change"),
+    ("mount", "mountAmbient", "run a callback once, after the controller's first render"),
+    ("onCleanup", "onCleanup", "register a callback to run when the controller tears down"),
+    ("signal", "signal", "a reactive value cell — read by calling it, written by calling it with a value"),
+    ("untrack", "untrack", "read signals inside without subscribing the enclosing effect/derived"),
 ];
 
 #[cfg(test)]
@@ -57,8 +59,8 @@ mod tests {
     #[test]
     fn table_is_sorted_and_unique_by_authored_name() {
         let mut sorted = RUNTIME_AMBIENT.to_vec();
-        sorted.sort_unstable_by_key(|(authored, _)| *authored);
-        sorted.dedup_by_key(|(authored, _)| *authored);
+        sorted.sort_unstable_by_key(|(authored, _, _)| *authored);
+        sorted.dedup_by_key(|(authored, _, _)| *authored);
         assert_eq!(
             sorted.as_slice(),
             RUNTIME_AMBIENT,

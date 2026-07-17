@@ -5292,7 +5292,13 @@ export const SX_REFUSALS: Array<{ atom: string; instead: string }> = [
   }
 ]
 
-export const MOTION: { triggers: string[]; properties: string[]; staggerKey: string; presets: string[] } = {
+export interface MotionPreset {
+  name: string
+  kind: string
+  doc: string
+}
+
+export const MOTION: { triggers: string[]; properties: string[]; staggerKey: string; presets: MotionPreset[] } = {
   "triggers": [
     "hover",
     "press",
@@ -5313,17 +5319,652 @@ export const MOTION: { triggers: string[]; properties: string[]; staggerKey: str
   ],
   "staggerKey": "stagger",
   "presets": [
-    "bounce",
-    "fade",
-    "fade-out",
-    "marquee",
-    "marquee-reverse",
-    "press",
-    "pulse",
-    "release",
-    "spring:bouncy",
-    "spring:deliberate",
-    "spring:gentle",
-    "spring:snappy"
+    {
+      "name": "bounce",
+      "kind": "tween",
+      "doc": "translateY 0→-100% + opacity 0.4→1 — a 7-12px dot's visible bounce, paired per dot, with a 150ms stagger step that lands as a per-dot phase offset (dot 1: 0ms, dot 2: 150ms, dot 3: 300ms). Deliberate (420ms/phase) so the loop reads as a calm breathing rhythm, not a frantic flicker."
+    },
+    {
+      "name": "fade",
+      "kind": "tween",
+      "doc": "opacity 0→1 — extension of existing transition:fade"
+    },
+    {
+      "name": "fade-out",
+      "kind": "tween",
+      "doc": "opacity 1→0 — exit phase"
+    },
+    {
+      "name": "marquee",
+      "kind": "tween",
+      "doc": "translateX 0→-50% — the <sail-band> one-direction infinite loop. The runtime derives the duration from measured content width (px/s), so the rate holds for any content. Use `marquee-reverse` to flip direction."
+    },
+    {
+      "name": "marquee-reverse",
+      "kind": "tween",
+      "doc": "translateX 0→+50% — the <sail-band direction=\"reverse\"> one-direction loop. Same px/s derivation as `marquee`."
+    },
+    {
+      "name": "press",
+      "kind": "tween",
+      "doc": "scale-down on pointerdown — paired with a spring:snappy release"
+    },
+    {
+      "name": "pulse",
+      "kind": "tween",
+      "doc": "gentle scale pulse, infinite — loading state, attention"
+    },
+    {
+      "name": "release",
+      "kind": "tween",
+      "doc": "scale-up on pointerup — completes the press/release pair"
+    },
+    {
+      "name": "spring:bouncy",
+      "kind": "spring",
+      "doc": "visible overshoot — playful micro-interaction, badge pop"
+    },
+    {
+      "name": "spring:deliberate",
+      "kind": "spring",
+      "doc": "slow, weighty — page transitions, drawer slide"
+    },
+    {
+      "name": "spring:gentle",
+      "kind": "spring",
+      "doc": "softer settling — hover state, panel expand"
+    },
+    {
+      "name": "spring:snappy",
+      "kind": "spring",
+      "doc": "high-stiffness, well-damped — quick UI feedback (button press, toggle)"
+    }
   ]
 }
+
+export interface ElementDoc {
+  tag: string
+  description: string
+}
+
+export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
+  "stdlib": [
+    {
+      "tag": "alert",
+      "description": "L1 language element (element mode). An inline status banner: a"
+    },
+    {
+      "tag": "avatar",
+      "description": "L1 language element (element mode). A circular/square identity"
+    },
+    {
+      "tag": "badge",
+      "description": "L1 language element (element mode). A small, static, tone-colored"
+    },
+    {
+      "tag": "breadcrumb",
+      "description": "L1 breadcrumb trail (element mode). A nav > ol; author the"
+    },
+    {
+      "tag": "card",
+      "description": "L1 language element (element mode). The flagship surface: a"
+    },
+    {
+      "tag": "chip",
+      "description": "L1 language element (element mode). An interactive filter/selection"
+    },
+    {
+      "tag": "code-block",
+      "description": "syntax-highlighted source."
+    },
+    {
+      "tag": "collapsible",
+      "description": "L1 language element (element mode). A native disclosure: a"
+    },
+    {
+      "tag": "combobox",
+      "description": "L1 filtering picker (element mode). A text input"
+    },
+    {
+      "tag": "context-menu",
+      "description": "L1 right-click menu (element mode). Same native"
+    },
+    {
+      "tag": "dropdown",
+      "description": "L1 anchored menu (element mode)."
+    },
+    {
+      "tag": "empty-state",
+      "description": "L1 language element (element mode). A centered placeholder for"
+    },
+    {
+      "tag": "error-boundary",
+      "description": "L1 language element (element mode). RENDER-FAULT ISOLATION."
+    },
+    {
+      "tag": "error-state",
+      "description": "L1 language element (element mode). The \"something broke\""
+    },
+    {
+      "tag": "field",
+      "description": "L1 language element (element mode). A vertical form-field stack:"
+    },
+    {
+      "tag": "hover-card",
+      "description": "L1 hover-preview overlay (element mode)."
+    },
+    {
+      "tag": "icon",
+      "description": "L1 language element. Sizes and inks one glyph: a slotted SVG, a"
+    },
+    {
+      "tag": "label",
+      "description": "L1 language element (element mode). Bare tag: it lowers away at"
+    },
+    {
+      "tag": "menu-item",
+      "description": "an item inside <dropdown> / <context-menu>. role=menuitem,"
+    },
+    {
+      "tag": "navbar",
+      "description": "the application nav bar. One element, three placements."
+    },
+    {
+      "tag": "page",
+      "description": "a page control inside <pagination>. aria-current is wired"
+    },
+    {
+      "tag": "pagination",
+      "description": "L1 pager (element mode). A nav of <page> controls; use:pagination"
+    },
+    {
+      "tag": "popover",
+      "description": "L1 anchored overlay (element mode) on the"
+    },
+    {
+      "tag": "prose",
+      "description": "the prose typography surface. Wraps RENDERED content (markdown"
+    },
+    {
+      "tag": "radio",
+      "description": "L1 language element (element mode). A single radio option: a native"
+    },
+    {
+      "tag": "radio-group",
+      "description": "L1 language element (element mode). A vertical group of"
+    },
+    {
+      "tag": "scroll-area",
+      "description": "L1 scroll container (element mode) with thin, themed,"
+    },
+    {
+      "tag": "separator",
+      "description": "L1 language element (element mode). Native <hr> carries the"
+    },
+    {
+      "tag": "slider",
+      "description": "L1 language element (element mode). A compiles-away alias for the"
+    },
+    {
+      "tag": "spinner",
+      "description": "L1 language element (element mode). Bare tag: it lowers away"
+    },
+    {
+      "tag": "switch",
+      "description": "L1 language element (element mode). A native"
+    },
+    {
+      "tag": "tab",
+      "description": "a tab button inside <tab-list>. role=tab, aria-selected,"
+    },
+    {
+      "tag": "tab-list",
+      "description": "the tab strip inside <tabs>. Rows the <tab>s (columns when the"
+    },
+    {
+      "tag": "tab-panel",
+      "description": "the content panel for the matching <tab>. use:tabs on"
+    },
+    {
+      "tag": "tabs",
+      "description": "L1 tab strip (element mode). Compose a <tab-list> of <tab>s with"
+    },
+    {
+      "tag": "theme-picker",
+      "description": "the theme switcher: a trigger that opens a panel of theme"
+    },
+    {
+      "tag": "ticker",
+      "description": "L1 stdlib element (element mode). An infinite, linear marquee:"
+    },
+    {
+      "tag": "toast",
+      "description": "L1 toast (element mode). use:toast"
+    },
+    {
+      "tag": "toast-region",
+      "description": "L1 toast host (element mode). A fixed,"
+    },
+    {
+      "tag": "toggle",
+      "description": "a toggle cell inside <toggle-group>. role=button,"
+    },
+    {
+      "tag": "toggle-group",
+      "description": "L1 segmented toggle group (element mode). A row/column of"
+    },
+    {
+      "tag": "tooltip",
+      "description": "L1 language element (element mode). Wraps a trigger (default slot)"
+    }
+  ],
+  "reskins": [
+    {
+      "tag": "a",
+      "description": "Anchor — when `variant` is set, becomes a button link. Tone rides the global [tone] channel; hover shifts the fill toward the tone."
+    },
+    {
+      "tag": "button",
+      "description": "Button — bare `<button>` IS the design system's button. tone/size ride the framework channels; variant chooses default/solid/soft/outline/ghost."
+    },
+    {
+      "tag": "details",
+      "description": "Disclosure / accordion — bare `<details>`/`<summary>` is the design-system disclosure. Stacked adjacents merge into an accordion. Open/close animates natively."
+    },
+    {
+      "tag": "dialog",
+      "description": "Modal / sheet — bare `<dialog>` IS the design-system modal. `side=` docks it as a sheet; showModal() gives backdrop, ESC, focus-trap, focus-return for free."
+    },
+    {
+      "tag": "fieldset",
+      "description": "Form group — bare `<fieldset>`/`<legend>` is a bordered section with the legend riding the top edge. `disabled` dims the whole group."
+    },
+    {
+      "tag": "hr",
+      "description": "Separator — horizontal by default; `orientation=vertical` and `variant=dashed` are attribute-keyed. tone tints the rule."
+    },
+    {
+      "tag": "html",
+      "description": "Document root — the `html:has(dialog[open])` scroll-lock rule freezes the page while a native modal is open. No JS scroll-lock required."
+    },
+    {
+      "tag": "input",
+      "description": "Text entry — bare `<input>` (text/email/etc.), `<textarea>`, `<select>` are the design-system field. tone/size/invalid mirror the button contract."
+    },
+    {
+      "tag": "input[type=checkbox]",
+      "description": "Checkbox — native appearance:none checkbox painted as a tone-filled square with a baked-white check. Indeterminate = tri-state."
+    },
+    {
+      "tag": "input[type=color]",
+      "description": "Color swatch — rounded swatch button (not a text field). The platform's value is the selected color; the skin themes the swatch frame."
+    },
+    {
+      "tag": "input[type=file]",
+      "description": "File picker — keeps the field box, restyles the platform's file picker as a small secondary button. Use with `<div dropzone use:dropzone>` for drag-and-drop."
+    },
+    {
+      "tag": "input[type=radio]",
+      "description": "Radio — native appearance:none radio painted as a tone-filled circle with a background-punched dot."
+    },
+    {
+      "tag": "input[type=range]",
+      "description": "Slider — native appearance:none range, rebuilt as a tone-tinted rail with a white thumb ringed in the tone. size drives track/thumb thickness."
+    },
+    {
+      "tag": "legend",
+      "description": "Fieldset caption — semibold text-sm riding the top edge of a `<fieldset>`. Inherits the fieldset's own paddings."
+    },
+    {
+      "tag": "meter",
+      "description": "Gauge — value-in-range; fill reflects WHICH band the value falls in (success/warning/destructive), not just how full. Distinct from `<progress>`."
+    },
+    {
+      "tag": "optgroup",
+      "description": "Option list caption — semibold muted label inside a native `<select>`'s popup. Groups options without changing the value model."
+    },
+    {
+      "tag": "output",
+      "description": "Form result — tabular figures so recomputes don't jitter. The native element for displaying a derived input value."
+    },
+    {
+      "tag": "progress",
+      "description": "Progress bar — determinate when `value` is set, indeterminate (sliding sheen) when not. tone tints the fill."
+    },
+    {
+      "tag": "select",
+      "description": "Picker — native `<select>` with the OS arrow replaced by a theme-aware chevron. option/optgroup reset so the popup is themed too."
+    },
+    {
+      "tag": "span",
+      "description": "Status dot (`<span dot>`) and skeleton placeholder (`<span skeleton>`). tone rides the global channel; pulse animates the dot."
+    },
+    {
+      "tag": "summary",
+      "description": "Disclosure trigger — semibold trigger header inside `<details>`. Chevron rotates 180° and brightens to --foreground on open."
+    },
+    {
+      "tag": "table",
+      "description": "Data table — STRUCTURAL primitive, zero JS. Variants ride the table itself (`[dense] [striped] [hoverable] [bordered]`); `<thead sticky>` pins the header; `[numeric]` columns right-align on tabular figures."
+    },
+    {
+      "tag": "tbody",
+      "description": "Table body — row-group container inside `<table>`. CSS resets the trailing row's bottom border so a table reads as a single sheet."
+    },
+    {
+      "tag": "td",
+      "description": "Table cell — body row cell. `[numeric]` right-aligns on tabular figures; bordered tables add a 1px cell border."
+    },
+    {
+      "tag": "textarea",
+      "description": "Multi-line text — shares the field surface with `<input>`. `rows=`/min-height scales the visible line count; vertical-only resize."
+    },
+    {
+      "tag": "th",
+      "description": "Table header cell — de-emphasized (muted-foreground) header; the body carries the data. `[numeric]` right-aligns on tabular figures."
+    },
+    {
+      "tag": "thead",
+      "description": "Table head — `[sticky]` pins the header to the scroll container top with a background to defeat bleed-through."
+    },
+    {
+      "tag": "ul",
+      "description": "Listbox — a `<ul role='listbox'>` becomes a widget surface (zero list markers, no default padding). A plain `<ul>` keeps the document-list reset; the role distinguishes widget use."
+    }
+  ]
+}
+
+export interface ActionDoc {
+  name: string
+  param: string
+  summary: string
+}
+
+export const ACTIONS: ActionDoc[] = [
+  {
+    "name": "alert",
+    "param": "void",
+    "summary": "Inline alert surface; renders a dismissable message with tone."
+  },
+  {
+    "name": "anchor",
+    "param": "AnchorPlacement | undefined",
+    "summary": "Position a popper-like surface against an anchor element."
+  },
+  {
+    "name": "autosize",
+    "param": "void",
+    "summary": "Autosize a textarea to its content as the user types."
+  },
+  {
+    "name": "avatar",
+    "param": "void",
+    "summary": "Image-with-fallback behavior for an <avatar> element."
+  },
+  {
+    "name": "cellPad",
+    "param": "number | null | undefined",
+    "summary": "Track the current cell's left/right padding for a virtualized grid."
+  },
+  {
+    "name": "chip",
+    "param": "void",
+    "summary": "Dismissible chip behavior; click-to-remove wired to the element."
+  },
+  {
+    "name": "clickOutside",
+    "param": "(() => void) | undefined",
+    "summary": "Fire a callback when a click lands outside the element."
+  },
+  {
+    "name": "codeBlock",
+    "param": "void",
+    "summary": "Syntax-highlight + copy-button behavior for a <code-block>."
+  },
+  {
+    "name": "collapsible",
+    "param": "void",
+    "summary": "Toggle a <collapsible> body open or closed."
+  },
+  {
+    "name": "combobox",
+    "param": "void",
+    "summary": "Combobox keyboard/ARIA behavior for an input + list pairing."
+  },
+  {
+    "name": "contextMenu",
+    "param": "void",
+    "summary": "Right-click menu: open on contextmenu, close on outside-click / ESC."
+  },
+  {
+    "name": "dropzone",
+    "param": "undefined",
+    "summary": "Drag-and-drop file receiver; reads files into a controller-side handler."
+  },
+  {
+    "name": "emptyState",
+    "param": "void",
+    "summary": "Empty-state element behavior; arms an action for the call-to-action slot."
+  },
+  {
+    "name": "errorBoundary",
+    "param": "void",
+    "summary": "Catch render errors thrown by descendants; show a fallback UI."
+  },
+  {
+    "name": "errorState",
+    "param": "void",
+    "summary": "Error-state element behavior; arms a retry action for the call-to-action slot."
+  },
+  {
+    "name": "eventSpan",
+    "param": "RectSpan | null | undefined",
+    "summary": "Track the bounding rect of a pointer event target across the screen."
+  },
+  {
+    "name": "field",
+    "param": "void",
+    "summary": "Form-field wiring: label, hint, error slot, and ARIA association."
+  },
+  {
+    "name": "gridTracks",
+    "param": "string | null | undefined",
+    "summary": "Measure a CSS grid's resolved track widths/positions for layout math."
+  },
+  {
+    "name": "hoverCard",
+    "param": "void",
+    "summary": "Hover-triggered card; open on pointer-in, close on pointer-out with delay."
+  },
+  {
+    "name": "icon",
+    "param": "void",
+    "summary": "Resolve a glyph from the icon cache and stamp the matching <use href>."
+  },
+  {
+    "name": "maxWidth",
+    "param": "number | string | null | undefined",
+    "summary": "Cap the element's content width to a max (px or CSS length)."
+  },
+  {
+    "name": "menu",
+    "param": "void",
+    "summary": "Dropdown menu: keyboard nav, roving tabindex, ARIA menu role."
+  },
+  {
+    "name": "pagination",
+    "param": "void",
+    "summary": "Pagination controls; page number + prev/next wired to the controller."
+  },
+  {
+    "name": "pin",
+    "param": "PinPoint | null | undefined",
+    "summary": "Pin one corner of an element to a fixed viewport coordinate."
+  },
+  {
+    "name": "portEdge",
+    "param": "PortSide",
+    "summary": "Anchor a fixed-size port to the midpoint of one of its parent's four edges."
+  },
+  {
+    "name": "radioGroup",
+    "param": "void",
+    "summary": "Radio-group keyboard nav: arrow keys move the checked item."
+  },
+  {
+    "name": "rangeFill",
+    "param": "void",
+    "summary": "Paint the filled portion of a <input type=range> on a custom track."
+  },
+  {
+    "name": "rect",
+    "param": "BoxRect | null | undefined",
+    "summary": "Track the element's bounding rect via ResizeObserver."
+  },
+  {
+    "name": "spotlight",
+    "param": "void",
+    "summary": "Soft spotlight following the pointer; visual highlight for surfaces under it."
+  },
+  {
+    "name": "swatch",
+    "param": "string | null | undefined",
+    "summary": "Render a color swatch keyed by a token name from the active theme."
+  },
+  {
+    "name": "tabs",
+    "param": "void",
+    "summary": "Tabs keyboard nav: left/right arrows move the active tab, ARIA tablist role."
+  },
+  {
+    "name": "targetCursor",
+    "param": "void",
+    "summary": "Switch the cursor to a custom 'target' style while over the element."
+  },
+  {
+    "name": "themePicker",
+    "param": "void",
+    "summary": "Theme switcher: click to write the picked theme to the host context."
+  },
+  {
+    "name": "toast",
+    "param": "void",
+    "summary": "Toast notification behavior; auto-dismiss timer + close on click."
+  },
+  {
+    "name": "toggleGroup",
+    "param": "void",
+    "summary": "Toggle-group keyboard nav: arrow keys move focus, space toggles."
+  },
+  {
+    "name": "tooltip",
+    "param": "void",
+    "summary": "Hover/focus-triggered tooltip; open on pointer-in, close on pointer-out with delay."
+  },
+  {
+    "name": "virtualRow",
+    "param": "number | null | undefined",
+    "summary": "Register a virtualized row; tells the parent scroller its measured height."
+  },
+  {
+    "name": "virtualSpacer",
+    "param": "number | null | undefined",
+    "summary": "Spacer row in a virtualized list; the engine reads its measured height."
+  },
+  {
+    "name": "worldTransform",
+    "param": "string | null | undefined",
+    "summary": "Track the cumulative CSS transform up the parent chain (for canvas positioning)."
+  },
+  {
+    "name": "zoomPan",
+    "param": "ZoomPanState | null | undefined",
+    "summary": "Pinch/wheel zoom + drag pan on a surface; emits state changes to the controller."
+  }
+]
+
+export interface AmbientDoc {
+  name: string
+  doc: string
+}
+
+export const CONTROLLER_AMBIENT: AmbientDoc[] = [
+  {
+    "name": "__invalidate",
+    "doc": "compiler-only lowering target for `invalidate(ref)`; never authored directly"
+  },
+  {
+    "name": "batch",
+    "doc": "coalesce multiple signal writes into one flush"
+  },
+  {
+    "name": "controller",
+    "doc": "the controller factory — wraps a setup function into a bound scope"
+  },
+  {
+    "name": "derived",
+    "doc": "a read-only signal computed from other signals, recomputed on dependency change"
+  },
+  {
+    "name": "effect",
+    "doc": "run a side effect on mount and whenever its read signals change"
+  },
+  {
+    "name": "mount",
+    "doc": "run a callback once, after the controller's first render"
+  },
+  {
+    "name": "onCleanup",
+    "doc": "register a callback to run when the controller tears down"
+  },
+  {
+    "name": "signal",
+    "doc": "a reactive value cell — read by calling it, written by calling it with a value"
+  },
+  {
+    "name": "untrack",
+    "doc": "read signals inside without subscribing the enclosing effect/derived"
+  }
+]
+
+export interface BlockDoc {
+  open: string
+  clauses: string[]
+  summary: string
+}
+
+export const BLOCKS: BlockDoc[] = [
+  {
+    "open": "{#if}",
+    "clauses": [
+      "{:else if}",
+      "{:else}"
+    ],
+    "summary": "conditional branches; any number of {:else if}, an optional trailing {:else}"
+  },
+  {
+    "open": "{#for}",
+    "clauses": [
+      "{:else}"
+    ],
+    "summary": "iterate a list; requires key={expr} on the opening tag; {:else} renders when the list is empty"
+  },
+  {
+    "open": "{#match}",
+    "clauses": [
+      "{:case}",
+      "{:default}"
+    ],
+    "summary": "pattern branches over a discriminant; any number of {:case}, an optional {:default}"
+  },
+  {
+    "open": "{#while-loading}",
+    "clauses": [],
+    "summary": "renders while an async query's promise is pending"
+  },
+  {
+    "open": "{#while-error}",
+    "clauses": [],
+    "summary": "renders while an async query's promise is rejected"
+  }
+]

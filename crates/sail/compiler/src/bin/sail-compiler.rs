@@ -381,21 +381,92 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str("export const SX_REFUSALS: Array<{ atom: string; instead: string }> = ");
     sf.push_str(&serde_json::to_string_pretty(&refusals)?);
     sf.push_str("\n\n");
-    let mut preset_names: Vec<String> = sail_compiler::lower::presets::load()
-        .map(|db| db.known_preset_names())
-        .unwrap_or_default();
-    preset_names.sort_unstable();
+    let preset_db = sail_compiler::lower::presets::load().unwrap_or_default();
+    let mut presets: Vec<serde_json::Value> = preset_db
+        .presets
+        .iter()
+        .map(|(name, spec)| {
+            let kind = match spec.kind {
+                sail_compiler::lower::presets::PresetKind::Spring => "spring",
+                sail_compiler::lower::presets::PresetKind::Tween => "tween",
+            };
+            serde_json::json!({ "name": name, "kind": kind, "doc": spec.doc.clone().unwrap_or_default() })
+        })
+        .collect();
+    presets.sort_by(|a, b| a["name"].as_str().cmp(&b["name"].as_str()));
     let motion = serde_json::json!({
         "triggers": sail_lint::rules::animate_token_only::MOTION_TRIGGERS,
         "properties": sail_lint::rules::animate_token_only::MOTION_PROPERTIES,
         "staggerKey": sail_lint::rules::animate_token_only::MOTION_STAGGER_KEY,
-        "presets": preset_names,
+        "presets": presets,
     });
-    sf.push_str("export const MOTION: { triggers: string[]; properties: string[]; staggerKey: string; presets: string[] } = ");
+    sf.push_str("export interface MotionPreset {\n  name: string\n  kind: string\n  doc: string\n}\n\n");
+    sf.push_str("export const MOTION: { triggers: string[]; properties: string[]; staggerKey: string; presets: MotionPreset[] } = ");
     sf.push_str(&serde_json::to_string_pretty(&motion)?);
+    sf.push_str("\n\n");
+
+    // ELEMENTS — the L1 manifest (stdlib + native reskins), WITH the
+    // one-line description every entry already carries. The prop tables
+    // themselves live in prop-registry.gen.ts; this is the "what is this
+    // element, in prose" companion.
+    let (stdlib_l1, reskin_l1) = sail_compiler::l1_by_kind();
+    let to_element_row = |e: &sail_compiler::l1_manifest::L1Entry| {
+        serde_json::json!({ "tag": e.tag, "description": e.description })
+    };
+    let elements = serde_json::json!({
+        "stdlib": stdlib_l1.iter().map(to_element_row).collect::<Vec<_>>(),
+        "reskins": reskin_l1.iter().map(to_element_row).collect::<Vec<_>>(),
+    });
+    sf.push_str("export interface ElementDoc {\n  tag: string\n  description: string\n}\n\n");
+    sf.push_str("export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = ");
+    sf.push_str(&serde_json::to_string_pretty(&elements)?);
+    sf.push_str("\n\n");
+
+    // ACTIONS — the `use:` registry, straight from action_manifest::ACTIONS
+    // (already sorted, already carries a prose `summary` per entry).
+    let actions: Vec<serde_json::Value> = sail_compiler::action_manifest::ACTIONS
+        .iter()
+        .map(|a| serde_json::json!({ "name": a.name, "param": a.param, "summary": a.summary }))
+        .collect();
+    sf.push_str("export interface ActionDoc {\n  name: string\n  param: string\n  summary: string\n}\n\n");
+    sf.push_str("export const ACTIONS: ActionDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&actions)?);
+    sf.push_str("\n\n");
+
+    // CONTROLLER — the ambient runtime vocabulary a `<controller>` block may
+    // use without importing (signal/derived/effect/mount/onCleanup/the
+    // controller factory), straight from runtime_ambient::RUNTIME_AMBIENT.
+    let controller_vocab: Vec<serde_json::Value> = sail_compiler::runtime_ambient::RUNTIME_AMBIENT
+        .iter()
+        .map(|(authored, _exported, doc)| serde_json::json!({ "name": authored, "doc": doc }))
+        .collect();
+    sf.push_str("export interface AmbientDoc {\n  name: string\n  doc: string\n}\n\n");
+    sf.push_str("export const CONTROLLER_AMBIENT: AmbientDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&controller_vocab)?);
+    sf.push_str("\n\n");
+
+    // BLOCKS — the template block vocabulary (#if/#for/#match/#while-*),
+    // straight from block_manifest::BLOCKS.
+    let blocks: Vec<serde_json::Value> = sail_compiler::block_manifest::BLOCKS
+        .iter()
+        .map(|b| serde_json::json!({ "open": b.open, "clauses": b.clauses, "summary": b.summary }))
+        .collect();
+    sf.push_str("export interface BlockDoc {\n  open: string\n  clauses: string[]\n  summary: string\n}\n\n");
+    sf.push_str("export const BLOCKS: BlockDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&blocks)?);
     sf.push_str("\n");
+
     std::fs::write(&surface_path, sf)?;
-    println!("wrote {} (sx {} atoms, {} presets)", surface_path.display(), atoms.len(), preset_names.len());
+    println!(
+        "wrote {} (sx {} atoms, {} presets, {} elements, {} actions, {} ambient, {} blocks)",
+        surface_path.display(),
+        atoms.len(),
+        presets.len(),
+        stdlib_l1.len() + reskin_l1.len(),
+        actions.len(),
+        controller_vocab.len(),
+        blocks.len(),
+    );
     Ok(())
 }
 

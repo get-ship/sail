@@ -33,6 +33,9 @@ pub struct PresetSpec {
     pub easing: Option<String>,
     pub iterations: Option<String>,
     pub direction: Option<String>,
+    /// One-line prose from the JSON source's `$doc` field — the reference
+    /// generator's source for per-preset documentation.
+    pub doc: Option<String>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -42,7 +45,7 @@ pub struct Resolver {
     pub property_aliases: BTreeMap<String, f64>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct PresetDb {
     pub presets: BTreeMap<String, PresetSpec>,
     pub resolver: Resolver,
@@ -112,6 +115,7 @@ fn parse_db(v: Value) -> Option<PresetDb> {
                 easing: str(fields.get("easing")),
                 iterations: str(fields.get("iterations")),
                 direction: str(fields.get("direction")),
+                doc: str(fields.get("$doc")),
             };
             presets.insert(name.clone(), p);
         }
@@ -338,9 +342,22 @@ impl<'a> Parser<'a> {
                         other => return Err(format!("bad escape `\\{}`", other.map(|b| b as char).unwrap_or('?'))),
                     }
                 }
-                _ => out.push(b as char),
+                // Non-ASCII bytes are UTF-8 continuation sequences (the
+                // source carries prose with em dashes, arrows, etc.) —
+                // decode the whole codepoint rather than treating each raw
+                // byte as its own `char` (which corrupts multi-byte runs).
+                _ if b < 0x80 => {
+                    out.push(b as char);
+                    self.pos += 1;
+                }
+                _ => {
+                    let rest = &self.bytes[self.pos..];
+                    let s = std::str::from_utf8(rest).map_err(|e| format!("invalid utf-8: {e}"))?;
+                    let c = s.chars().next().ok_or("invalid utf-8: empty")?;
+                    out.push(c);
+                    self.pos += c.len_utf8();
+                }
             }
-            self.pos += 1;
         }
         Err("unterminated string".to_string())
     }

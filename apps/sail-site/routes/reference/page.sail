@@ -1,9 +1,10 @@
 <!--
   /reference — the COMPLETE language surface, rendered from
   src/language-surface.gen.ts + src/prop-registry.gen.ts (emitted by
-  `sail-compiler prop-registry` from the same tables the lint enforces).
-  Nothing on this page is hand-listed except the directive section, which is
-  flagged until it has a compiler-derived table too.
+  `sail-compiler prop-registry` from the same tables the lint/compiler
+  enforce). Nothing on this page is hand-listed — sx, motion, elements,
+  actions, template blocks, and the controller ambient vocabulary all
+  render from generated data.
 -->
 <controller>
 import { controller, type ViewScope } from '@ship/sail-runtime'
@@ -16,28 +17,49 @@ import {
   SX_REFUSALS,
   LAYOUT_KEYWORDS,
   MOTION,
+  ELEMENTS,
+  ACTIONS,
+  CONTROLLER_AMBIENT,
+  BLOCKS,
 } from '../../src/language-surface.gen'
 
 interface ElementRow {
   tag: string
   href: string
   propCount: number
+  description: string
 }
 
-const ELEMENTS: ElementRow[] = Object.keys(PROP_REGISTRY)
-  .sort()
-  .map((tag) => ({
-    tag,
-    href: `/components/${tag}`,
-    propCount: PROP_REGISTRY[tag]?.length ?? 0,
+function elementRows(docs: { tag: string; description: string }[]): ElementRow[] {
+  return docs.map((d) => ({
+    tag: d.tag,
+    href: `/components/${d.tag}`,
+    propCount: PROP_REGISTRY[d.tag]?.length ?? 0,
+    description: d.description,
   }))
+}
+
+const STDLIB_ELEMENTS = elementRows(ELEMENTS.stdlib)
+const RESKIN_ELEMENTS = elementRows(ELEMENTS.reskins)
 
 const SX_ROWS = SX_ATOMS.map((a) => ({ prop: a.prop, values: a.values.join(' · ') }))
 const LAYOUT_ROWS = LAYOUT_KEYWORDS.map((k) => ({ tag: k.tag, props: k.props.join(', ') }))
 
+const BLOCK_ROWS = BLOCKS.map((b) => ({
+  open: b.open,
+  clauses: b.clauses.length > 0 ? b.clauses.join(' · ') : '—',
+  summary: b.summary,
+}))
+
+// The compiler-only lowering target is never authored — exclude it from the
+// vocabulary a controller body is taught to write.
+const CONTROLLER_ROWS = CONTROLLER_AMBIENT.filter((a) => a.name !== '__invalidate')
+
 export default controller((_ctx: ViewScope<Scope>) => ({
-  elements: () => ELEMENTS,
-  elementCount: () => ELEMENTS.length,
+  stdlibElements: () => STDLIB_ELEMENTS,
+  stdlibCount: () => STDLIB_ELEMENTS.length,
+  reskinElements: () => RESKIN_ELEMENTS,
+  reskinCount: () => RESKIN_ELEMENTS.length,
   sxRows: () => SX_ROWS,
   sxCount: () => SX_ROWS.length,
   statePrefixes: () => SX_STATE_PREFIXES,
@@ -48,7 +70,11 @@ export default controller((_ctx: ViewScope<Scope>) => ({
   motionTriggers: () => MOTION.triggers.join(' · '),
   motionProperties: () => MOTION.properties.join(' · '),
   motionStagger: () => MOTION.staggerKey,
-  motionPresets: () => MOTION.presets.join(' · '),
+  motionPresets: () => MOTION.presets,
+  actions: () => ACTIONS,
+  actionCount: () => ACTIONS.length,
+  controllerRows: () => CONTROLLER_ROWS,
+  blockRows: () => BLOCK_ROWS,
 }))
 </controller>
 
@@ -63,15 +89,27 @@ export default controller((_ctx: ViewScope<Scope>) => ({
   </p>
 
   <column gap="3">
-    <h2>Elements — {elementCount()}</h2>
-    <p>Every standard element, with its full prop table on its detail page.</p>
-    <row gap="2" sx="min-w-0">
-      {#for e of elements() key={e.tag}}
-        <a href={e.href} sx="px-3 py-1 rounded-full border border-border bg-surface-1 text-sm hover:bg-surface-2 hover:border hover:border-border-strong">
-          <code>{e.tag}</code> <small sx="text-muted-foreground">{e.propCount}</small>
-        </a>
+    <h2>Elements — {stdlibCount()} stdlib + {reskinCount()} reskins</h2>
+    <p>Every standard element, with its one-line description and its full prop table on its detail page.</p>
+    <column gap="1">
+      {#for e of stdlibElements() key={e.tag}}
+        <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md min-w-0" align="start">
+          <a href={e.href} sx="min-w-9"><code>{e.tag}</code> <small sx="text-muted-foreground">{e.propCount}</small></a>
+          <small sx="text-muted-foreground grow-1 min-w-0">{e.description}</small>
+        </row>
       {/for}
-    </row>
+    </column>
+
+    <h3>Native reskins</h3>
+    <p>Bare HTML tags the framework styles — the tag is still the API.</p>
+    <column gap="1">
+      {#for e of reskinElements() key={e.tag}}
+        <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md min-w-0" align="start">
+          <a href={e.href} sx="min-w-9"><code>{e.tag}</code></a>
+          <small sx="text-muted-foreground grow-1 min-w-0">{e.description}</small>
+        </row>
+      {/for}
+    </column>
   </column>
 
   <column gap="3">
@@ -151,24 +189,75 @@ export default controller((_ctx: ViewScope<Scope>) => ({
     </p>
     <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">triggers</code><small sx="text-muted-foreground">{motionTriggers()}</small></row>
     <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">properties</code><small sx="text-muted-foreground">{motionProperties()} — plus {motionStagger()}: a duration step between siblings</small></row>
-    <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">presets</code><small sx="text-muted-foreground">{motionPresets()}</small></row>
+
+    <h3>Presets</h3>
+    <column gap="1">
+      {#for p of motionPresets() key={p.name}}
+        <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md min-w-0" align="start">
+          <code sx="min-w-9">{p.name}</code>
+          <small sx="text-muted-foreground grow-1 min-w-0">({p.kind}) {p.doc}</small>
+        </row>
+      {/for}
+    </column>
+  </column>
+
+  <column gap="3">
+    <h2>Behavior — {actionCount()} actions</h2>
+    <p>
+      <code>use:action</code> attaches behavior bound to an element — the
+      built-in <code>use:</code> registry, sorted, param + one-line summary.
+    </p>
+    <column gap="1">
+      {#for a of actions() key={a.name}}
+        <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md min-w-0" align="start">
+          <code sx="min-w-9">use:{a.name}</code>
+          <small sx="text-muted-foreground min-w-9">{a.param}</small>
+          <small sx="text-muted-foreground grow-1 min-w-0">{a.summary}</small>
+        </row>
+      {/for}
+    </column>
+  </column>
+
+  <column gap="3">
+    <h2>Controller — the ambient vocabulary</h2>
+    <p>
+      A <code>&lt;controller&gt;</code> block may reference these without
+      importing them — the compiler injects the import for exactly the
+      idents referenced.
+    </p>
+    <column gap="1">
+      {#for c of controllerRows() key={c.name}}
+        <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md min-w-0" align="start">
+          <code sx="min-w-9">{c.name}</code>
+          <small sx="text-muted-foreground grow-1 min-w-0">{c.doc}</small>
+        </row>
+      {/for}
+    </column>
   </column>
 
   <column gap="3">
     <h2>Template directives</h2>
     <p>
-      Hand-listed until these get a compiler-derived table like everything
-      above — treat the compiler's errors as the authority.
+      <code>on:</code> events; modifiers |prevent |stop |self |once |debounce:ms |key:Name.
+      <code>bind:</code> two-way sugar — bind:value, bind:checked, bind:this
+      (element ref). <code>prop:</code> sets a JS property (identity values
+      that are not attributes). <code>attr:</code> forces attribute semantics
+      for a dynamic value. <code>(--x)</code> — scope owns props, the
+      controller owns state: when <code>(--x)</code> matches a declared prop
+      or a <code>setup()</code>-returned signal, the compiler registers a
+      typed CSS <code>@property</code> and reflects it onto the host, live.
+      There is no <code>style:</code> — it was the last hatch, and it is closed.
     </p>
+
+    <h3>Blocks</h3>
     <column gap="1">
-      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">on:</code><small sx="text-muted-foreground">events; modifiers |prevent |stop |self |once |debounce:ms |key:Name</small></row>
-      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">bind:</code><small sx="text-muted-foreground">two-way sugar — bind:value, bind:checked, bind:this (element ref)</small></row>
-      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">prop:</code><small sx="text-muted-foreground">set a JS property (identity values that are not attributes)</small></row>
-      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">attr:</code><small sx="text-muted-foreground">force attribute semantics for a dynamic value</small></row>
-      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">use:</code><small sx="text-muted-foreground">attach an action — behavior bound to an element with update/destroy</small></row>
-      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">use:</code><small sx="text-muted-foreground">runtime geometry — a named, typed action writes the custom property; sx reads it with <code>(--name)</code>. There is no <code>style:</code>: it was the last hatch, and it is closed.</small></row>
-      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">(--x)</code><small sx="text-muted-foreground">scope owns props, the controller owns state — when <code>(--x)</code> matches a declared prop or a <code>setup()</code>-returned signal, the compiler registers a typed CSS <code>@property</code> and reflects it onto the host, live. A name never read this way gets no wiring; an unmatched name refuses with a did-you-mean.</small></row>
-      <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md"><code sx="min-w-9">blocks</code><small sx="text-muted-foreground">#if/:else · #match/:case/:default · #for with required key= · #while-loading · #while-error</small></row>
+      {#for b of blockRows() key={b.open}}
+        <row gap="3" sx="px-3 py-2 bg-surface-1 rounded-md min-w-0" align="start">
+          <code sx="min-w-9">{b.open}</code>
+          <small sx="text-muted-foreground min-w-9">{b.clauses}</small>
+          <small sx="text-muted-foreground grow-1 min-w-0">{b.summary}</small>
+        </row>
+      {/for}
     </column>
   </column>
 
