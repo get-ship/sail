@@ -330,6 +330,17 @@ impl Plugin for SailPlugin {
                         sail.display()
                     )
                 })?;
+            // Lower `query()`/`mutation()`/`invalidate()` before serving —
+            // see `sail_compiler::check::query_keys`. A refusal here is a
+            // real dev-server compile error, not a runtime one. The
+            // rewrite itself injects the `__invalidate` import a lowered
+            // `invalidate()` call needs, so the served module is
+            // self-contained without running the full ambient-import wrap
+            // (which this path has never run, and which auto-imports a
+            // wider set of names this hook has no reason to newly affect).
+            let body = sail_compiler::check::query_keys::rewrite(&body).map_err(|e| {
+                anyhow!("{}", e.render(&body))
+            })?;
             return Ok(Some(HookLoadOutput {
                 code: body.into(),
                 module_type: Some(ModuleType::Ts),

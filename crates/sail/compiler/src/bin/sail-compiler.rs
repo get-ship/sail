@@ -922,7 +922,12 @@ fn synthesize(
     fs::create_dir_all(&out_dir)
         .with_context(|| format!("create out dir {}", out_dir.display()))?;
     let authored = if let Some(body) = &inline_controller_src {
-        let wrapped = parse::preprocess::wrap_controller_body(body);
+        // Lower `query()`/`mutation()`/`invalidate()` before the ambient-import
+        // wrap — see `check::query_keys` module header. A refusal here is a
+        // real compile error, same as any other structural check.
+        let rewritten = sail_compiler::check::query_keys::rewrite(body)
+            .map_err(|e| anyhow!("{}", e.render(body)))?;
+        let wrapped = parse::preprocess::wrap_controller_body(&rewritten);
         let ctrl_name = format!("{stem}.controller.ts");
         let ctrl_path = out_dir.join(&ctrl_name);
         fs::write(&ctrl_path, wrapped)
