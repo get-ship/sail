@@ -122,9 +122,9 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
     <column id="chart-data" sx="sr-only">
       <slot name="description">
         <table>
-          {#for row of chart.ariaTable() key={row[0].text}}
+          {#for row of chart.ariaTable() key={row[0].id}}
             <tr>
-              {#for cell of row key={cell.text}}
+              {#for cell of row key={cell.id}}
                 <td>{cell.text}</td>
               {/for}
             </tr>

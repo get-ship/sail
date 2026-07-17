@@ -113,16 +113,18 @@ function fmt(n: number): string {
 function buildAriaTable(normalized: NormalizedSeries[]): AriaCell[][] {
   if (normalized.length === 0) return []
   const cols = Math.max(...normalized.map((s) => s.data.length), 0)
-  const header: AriaCell[] = [{ text: 'Series', header: true }]
-  for (let i = 0; i < cols; i++) header.push({ text: String(i + 1), header: true })
+  const header: AriaCell[] = [{ id: 'row-header:col-header', text: 'Series', header: true }]
+  for (let i = 0; i < cols; i++) {
+    header.push({ id: `row-header:col-${i}`, text: String(i + 1), header: true })
+  }
   const rows: AriaCell[][] = [header]
-  for (const s of normalized) {
-    const row: AriaCell[] = [{ text: s.name, header: true }]
+  normalized.forEach((s, rowIndex) => {
+    const row: AriaCell[] = [{ id: `row-${rowIndex}:col-header`, text: s.name, header: true }]
     for (let i = 0; i < cols; i++) {
       const pt = s.data[i]
-      row.push({ text: pt && pt.raw != null ? fmt(pt.raw) : '—' })
+      row.push({ id: `row-${rowIndex}:col-${i}`, text: pt && pt.raw != null ? fmt(pt.raw) : '—' })
     }
     rows.push(row)
-  }
+  })
   return rows
 }
