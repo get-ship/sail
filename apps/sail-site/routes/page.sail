@@ -1,166 +1,226 @@
 <!--
-  SAIL landing — design 1c, the kinetic "Ship UI home". A full-bleed dark
-  marketing hero (NOT a docs page): a two-line display headline behind a soft
-  radial glow, two CTAs, then the signature TWO CROSSING DIAGONAL TICKER BANDS
-  (a bright teal band angled one way over a darker mono band angled the other,
-  both running continuously and full-width). Below, an asymmetric bento of live
-  micro-demos — an animating bar chart, pulsing deploy dots, a real toggle, a
-  blinking-cursor terminal — and a closing giant SHIP wordmark in a teal→void
-  gradient, cropped at the very bottom.
+  Ship UI landing — design 1c KINETIC treatment carrying the REAL landing copy.
+  A full-bleed dark marketing home (NOT a docs page):
 
-  Everything here is tokens + L1 primitives + motion. The tickers are the
-  stdlib <ticker> (its own seamless loop); the rotation, glow, gradient
-  wordmark, bars and cursor are ordinary sx atoms (rotate-*, bg-glow-accent,
-  text-gradient-primary) and motion:loop — no <style>, no style=, no raw px/hex.
-  The shell renders `/` full-bleed (fullscreen, no rail, no reading gutter).
+    · a GIANT rotating headline — one teal word cycles ("Batteries · Components ·
+      Styling · State · Motion · Themes") in front of the fixed "included. All of
+      them." The cycle is the previous landing's proven WORDS + {#for}+motion:enter
+      fade word-cycler, blown up to display size.
+    · the signature TWO CROSSING DIAGONAL TICKER BANDS — a bright teal band tilted
+      one way OVER a dark mono band tilted the other, overlapping so they visually
+      cross, both running continuously (the stdlib <ticker> owns the loop).
+    · a bento of SIX cards, each a real <a href> to an existing section, carrying
+      that section's real headline and an on-brand micro-animation (spring bars,
+      pulsing swatches, a live signal counter, deploy dots, live components, an
+      agent terminal).
+    · a closing giant SHIP wordmark in a teal→void gradient, cropped at the bottom.
+
+  Everything is tokens + L1 primitives + motion — no <style>, no style=, no raw
+  px/hex. The shell renders `/` full-bleed (fullscreen, no rail, no gutter) and
+  defaults it to ship-dark.
 -->
 
 <controller>
-// The page is almost entirely CSS/motion — the one piece of real state is the
-// bento's "it works" switch, a genuine interactive toggle the reader can flip.
-import { controller, signal, type ViewScope } from '@ship/sail-runtime'
+// The page is CSS + motion; the two pieces of real state are the hero word
+// cycler (i → which WORD is showing) and the reactivity card's live counter
+// (ticks → a signal you can literally watch increment). Both are the previous
+// landing's mechanisms, reused verbatim.
+import { controller, signal, effect, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 
+const WORDS = ['Batteries', 'Components', 'Styling', 'State', 'Motion', 'Themes']
+
 export default controller((_ctx: ViewScope<Scope>) => {
-    const on = signal(true)
-    const toggle = (): void => on.set((v) => !v)
-    return { on, toggle }
+    const i = signal(0)
+    effect(() => {
+      const t = setInterval(() => i.set((n) => (n + 1) % WORDS.length), 2600)
+      return () => clearInterval(t)
+    })
+
+    // "State you can watch think." — a real signal ticking once a second.
+    const ticks = signal(0)
+    effect(() => {
+      const t = setInterval(() => ticks.set((n) => n + 1), 1000)
+      return () => clearInterval(t)
+    })
+
+    return {
+      word: () => [WORDS[i()]],
+      ticks,
+    }
 })
 </controller>
 
 <column gap="0" sx="w-full min-w-0 overflow-x-hidden bg-surface-0">
 
-  <!-- ══ HERO ═══════════════════════════════════════════════════════════ -->
+  <!-- ══ HERO — GIANT rotating type ═════════════════════════════════════ -->
   <section sx="relative px-8 pt-20 pb-16">
     <!-- soft radial glow behind the headline -->
     <div sx="absolute inset-x-0 top-0 h-64 bg-glow-accent pointer-events-none z-base"></div>
 
     <column gap="8" align="center" sx="relative w-full max-w-breakpoint-desktop mx-auto">
-      <!-- two-line kinetic headline: "Agents" then "You review." offset right -->
-      <column gap="0" align="center" sx="w-full">
-        <p sx="w-full text-display font-display font-bold tracking-tighter leading-none text-foreground text-left pl-6">Agents</p>
-        <p sx="w-full text-display font-display font-bold tracking-tighter leading-none text-foreground text-right pr-6">You review.</p>
-      </column>
+      <p sx="font-mono text-xs uppercase tracking-wide text-accent">SHIP UI · 0.2.0</p>
+
+      <!-- GIANT three-line stack: the teal word cycles on its own line, then the
+           fixed "included. / All of them." Each line is display-size and fits at
+           1440 on its own, so the cycling word never overflows or reflows the rest. -->
+      <h1 sx="text-display font-display font-bold tracking-tighter leading-none text-center text-foreground">
+        <span sx="block">
+          {#for w of word() key={w}}
+            <b sx="text-primary" motion:enter={{ opacity: 'fade' }}>{w}</b>
+          {/for}
+        </span>
+        <span sx="block">included.</span>
+        <span sx="block">All of them.</span>
+      </h1>
 
       <p sx="text-lg text-muted-foreground leading-relaxed text-center max-w-breakpoint-mobile">
-        One confined language for the whole interface — so agent-written UI
-        compiles into guarantees, not surprises.
+        One language with the whole interface inside it — built for agents to
+        write and humans to review, with no way to drift off the design system.
       </p>
 
       <row gap="4" justify="center" align="center" sx="w-full">
         <a variant="solid" tone="primary" href="/getting-started" sx="rounded-full px-8" motion:press={{ scale: 'press' }}>Get started</a>
-        <a variant="outline" href="/getting-started" sx="rounded-full px-8 font-mono" motion:press={{ scale: 'press' }}>npx create-ship</a>
+        <a variant="outline" href="/why" sx="rounded-full px-8" motion:press={{ scale: 'press' }}>Why SAIL</a>
       </row>
     </column>
   </section>
 
   <!-- ══ TWO CROSSING DIAGONAL TICKER BANDS ════════════════════════════ -->
-  <!-- Full-bleed: each band is wider than the viewport (-inset-x-10) and
-       tilted opposite ways so they cross; the section clips the overhang. The
-       <ticker> owns the seamless infinite scroll (both bands move, always). -->
+  <!-- Full-bleed: each band is wider than the viewport (-inset-x-10) and tilted
+       opposite ways so they cross; the section clips the overhang. The <ticker>
+       owns the seamless infinite scroll — both bands move, always. -->
   <section sx="relative w-full h-44 overflow-hidden my-8 z-elevated">
-    <!-- darker mono band — angled down-right, runs in reverse, sits lower -->
+    <!-- dark mono band — tilted down-right, runs in reverse, sits lower -->
     <div sx="absolute -inset-x-10 top-24 rotate-2">
       <ticker duration="slow" reverse sx="border-t border-b border-border bg-surface-2 py-3">
-        <p sx="font-mono text-sm text-muted-foreground whitespace-nowrap">hot reload&nbsp;&nbsp;·&nbsp;&nbsp;forms + validation&nbsp;&nbsp;·&nbsp;&nbsp;swr data&nbsp;&nbsp;·&nbsp;&nbsp;server functions&nbsp;&nbsp;·&nbsp;&nbsp;ssr&nbsp;&nbsp;·&nbsp;&nbsp;animations&nbsp;&nbsp;·&nbsp;&nbsp;</p>
+        <p sx="font-mono text-sm text-muted-foreground whitespace-nowrap">forms + validation&nbsp;&nbsp;·&nbsp;&nbsp;live data&nbsp;&nbsp;·&nbsp;&nbsp;springs + tweens&nbsp;&nbsp;·&nbsp;&nbsp;ssr&nbsp;&nbsp;·&nbsp;&nbsp;hot reload&nbsp;&nbsp;·&nbsp;&nbsp;design tokens&nbsp;&nbsp;·&nbsp;&nbsp;</p>
       </ticker>
     </div>
-    <!-- bright teal band — angled up-right, on top where they cross -->
-    <div sx="absolute -inset-x-10 top-10 -rotate-2 z-popover">
+    <!-- bright teal band — tilted up-right, on top where they cross -->
+    <div sx="absolute -inset-x-10 top-12 -rotate-2 z-popover">
       <ticker sx="bg-primary py-3">
-        <p sx="font-bold uppercase tracking-wide text-md text-primary-foreground whitespace-nowrap">9 themes&nbsp;&nbsp;◆&nbsp;&nbsp;a11y by construction&nbsp;&nbsp;◆&nbsp;&nbsp;no raw css&nbsp;&nbsp;◆&nbsp;&nbsp;signals built in&nbsp;&nbsp;◆&nbsp;&nbsp;tokens&nbsp;&nbsp;◆&nbsp;&nbsp;</p>
+        <p sx="font-bold uppercase tracking-wide text-md text-primary-foreground whitespace-nowrap">NO RAW CSS&nbsp;&nbsp;◆&nbsp;&nbsp;SIGNALS BUILT IN&nbsp;&nbsp;◆&nbsp;&nbsp;48 COMPONENTS&nbsp;&nbsp;◆&nbsp;&nbsp;9 THEMES&nbsp;&nbsp;◆&nbsp;&nbsp;A11Y BY CONSTRUCTION&nbsp;&nbsp;◆&nbsp;&nbsp;</p>
       </ticker>
     </div>
   </section>
 
-  <!-- ══ BENTO — asymmetric grid of live micro-demos ═══════════════════ -->
+  <!-- ══ BENTO — six real links, each with a micro-animation ═══════════ -->
   <section sx="px-8 pt-8 pb-12">
-    <row gap="4" align="start" sx="w-full max-w-breakpoint-desktop mx-auto">
+    <grid cols="3" gap="4" sx="w-full max-w-breakpoint-desktop mx-auto">
 
-      <!-- LEFT column: the tall SAIL card + the AI terminal beneath it -->
-      <column gap="4" sx="basis-half grow-1 min-w-0">
-        <!-- SAIL reactive language — animated bar chart + signals link -->
-        <card sx="grow-1 min-w-0 min-h-64 overflow-hidden">
-          <column gap="6" sx="h-full">
-            <column gap="2">
-              <p><strong sx="text-2xl text-primary">SAIL</strong> <span sx="font-mono text-xs text-muted-foreground">reactive language</span></p>
-              <p sx="text-sm text-muted-foreground leading-relaxed max-w-64">Markup that already knows how to style, animate and react. The framework has the rest.</p>
+      <!-- MOTION → /motion : a spring bar-loop -->
+      <a href="/motion" sx="block no-underline min-w-0">
+        <card interactive sx="h-full overflow-hidden">
+          <column gap="4" sx="h-full">
+            <column gap="1">
+              <p sx="font-mono text-xs uppercase tracking-wide text-accent">Motion</p>
+              <strong sx="text-lg text-foreground leading-snug">Real physics. Zero choreography code.</strong>
             </column>
-            <row gap="2" align="end" sx="h-20 mt-auto">
-              <div sx="w-5 h-9 rounded-sm bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
-              <div sx="w-5 h-14 rounded-sm bg-primary opacity-60" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
-              <div sx="w-5 h-11 rounded-sm bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
-              <div sx="w-5 h-16 rounded-sm bg-primary opacity-60" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
-              <div sx="w-5 h-8 rounded-sm bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
-              <div sx="w-5 h-12 rounded-sm bg-primary opacity-60" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
-              <span sx="ml-auto self-end font-mono text-xs text-muted-foreground">signals →</span>
+            <row gap="2" align="end" sx="h-16 mt-auto">
+              <div sx="w-4 h-8 rounded-sm bg-primary" motion:loop={{ translate-y: 'spring:bouncy' }}></div>
+              <div sx="w-4 h-14 rounded-sm bg-primary opacity-60" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+              <div sx="w-4 h-11 rounded-sm bg-primary" motion:loop={{ translate-y: 'spring:bouncy', stagger: '0.12s' }}></div>
+              <div sx="w-4 h-16 rounded-sm bg-primary opacity-60" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+              <div sx="w-4 h-10 rounded-sm bg-primary" motion:loop={{ translate-y: 'spring:bouncy', stagger: '0.12s' }}></div>
             </row>
           </column>
         </card>
+      </a>
 
-        <!-- AI agent tooling — accent-tinted card with a live terminal -->
-        <card sx="grow-1 min-w-0 bg-tone-primary-bg border border-primary">
-          <row gap="4" justify="between" align="center">
-            <column gap="2" sx="min-w-0 basis-56 grow-1">
-              <p><strong sx="text-xl text-primary">AI</strong> <span sx="font-mono text-xs text-muted-foreground">agent tooling</span></p>
-              <p sx="text-sm text-muted-foreground leading-relaxed">MCP server, scored authoring eval, and a compiler that rejects what it can't guarantee.</p>
+      <!-- THEMING → /theming : pulsing repaint swatches -->
+      <a href="/theming" sx="block no-underline min-w-0">
+        <card interactive sx="h-full overflow-hidden">
+          <column gap="4" sx="h-full">
+            <column gap="1">
+              <p sx="font-mono text-xs uppercase tracking-wide text-accent">Theming</p>
+              <strong sx="text-lg text-foreground leading-snug">Press a button. The whole site repaints.</strong>
             </column>
-            <column gap="1" sx="shrink-0 font-mono text-sm bg-surface-0 border border-border rounded-lg px-4 py-3">
-              <row gap="2" align="center"><span sx="text-muted-foreground">$</span><span sx="text-foreground">agent → ship compile</span></row>
+            <row gap="2" sx="mt-auto">
+              <div sx="w-10 h-10 rounded-md bg-primary" motion:loop={{ opacity: 'pulse' }}></div>
+              <div sx="w-10 h-10 rounded-md bg-success" motion:loop={{ opacity: 'pulse', stagger: '0.15s' }}></div>
+              <div sx="w-10 h-10 rounded-md bg-warning" motion:loop={{ opacity: 'pulse', stagger: '0.15s' }}></div>
+              <div sx="w-10 h-10 rounded-md bg-info" motion:loop={{ opacity: 'pulse', stagger: '0.15s' }}></div>
+            </row>
+          </column>
+        </card>
+      </a>
+
+      <!-- REACTIVITY → /reactivity : a live signal counter -->
+      <a href="/reactivity" sx="block no-underline min-w-0">
+        <card interactive sx="h-full overflow-hidden">
+          <column gap="4" sx="h-full">
+            <column gap="1">
+              <p sx="font-mono text-xs uppercase tracking-wide text-accent">Reactivity</p>
+              <strong sx="text-lg text-foreground leading-snug">State you can watch think.</strong>
+            </column>
+            <row gap="3" align="baseline" sx="mt-auto">
+              <strong sx="font-mono text-display text-primary tabular-nums leading-none">{ticks()}</strong>
+              <span sx="font-mono text-xs text-muted-foreground">signal · live</span>
+            </row>
+          </column>
+        </card>
+      </a>
+
+      <!-- DECK → /deck : pulsing build/deploy status dots -->
+      <a href="/deck" sx="block no-underline min-w-0">
+        <card interactive sx="h-full overflow-hidden">
+          <column gap="4" sx="h-full">
+            <column gap="1">
+              <p sx="font-mono text-xs uppercase tracking-wide text-accent">Deck</p>
+              <strong sx="text-lg text-foreground leading-snug">The app layer is already wired.</strong>
+            </column>
+            <column gap="2" sx="mt-auto font-mono text-xs text-muted-foreground">
+              <row gap="2" align="center"><span dot tone="primary" size="sm" pulse></span><span>build 214</span></row>
+              <row gap="2" align="center"><span dot tone="success" size="sm" pulse></span><span>deployed</span></row>
+              <row gap="2" align="center"><span dot tone="info" size="sm" pulse></span><span>live · ssr</span></row>
+            </column>
+          </column>
+        </card>
+      </a>
+
+      <!-- COMPONENTS → /components : live components peek -->
+      <a href="/components" sx="block no-underline min-w-0">
+        <card interactive sx="h-full overflow-hidden relative">
+          <column gap="4" sx="h-full">
+            <column gap="1">
+              <p sx="font-mono text-xs uppercase tracking-wide text-accent">Components</p>
+              <strong sx="text-lg text-foreground leading-snug">The hard parts are already correct.</strong>
+            </column>
+            <row gap="3" align="center" sx="mt-auto">
+              <switch checked tone="primary"></switch>
+              <spinner></spinner>
+              <badge tone="success">live</badge>
+              <chip>chip</chip>
+            </row>
+          </column>
+          <span sx="absolute bottom-4 right-4 font-mono text-xs text-muted-foreground">48 + packs</span>
+        </card>
+      </a>
+
+      <!-- AI → /ai : an agent-compile terminal with a blinking cursor -->
+      <a href="/ai" sx="block no-underline min-w-0">
+        <card interactive sx="h-full overflow-hidden bg-tone-primary-bg border border-primary">
+          <column gap="4" sx="h-full">
+            <column gap="1">
+              <p sx="font-mono text-xs uppercase tracking-wide text-accent">AI</p>
+              <strong sx="text-lg text-foreground leading-snug">Agents can't break what the language won't allow.</strong>
+            </column>
+            <column gap="1" sx="mt-auto font-mono text-sm bg-surface-0 border border-border rounded-lg px-4 py-3">
+              <row gap="2" align="center"><span sx="text-muted-foreground">$</span><span sx="text-foreground">agent → sail compile</span></row>
               <row gap="1" align="center">
                 <span sx="text-primary">✓ 0 errors · themed · a11y</span>
                 <span sx="inline-block w-1 h-4 bg-primary" motion:loop={{ opacity: 'pulse' }}></span>
               </row>
             </column>
-          </row>
+          </column>
         </card>
-      </column>
+      </a>
 
-      <!-- RIGHT column: Deck card, then Components + toggle side by side -->
-      <column gap="4" sx="basis-half grow-1 min-w-0">
-        <!-- Deck app framework — pulsing status readout -->
-        <card sx="min-w-0">
-          <row gap="4" justify="between" align="center">
-            <column gap="2" sx="min-w-0 basis-56 grow-1">
-              <p><strong sx="text-xl text-primary">Deck</strong> <span sx="font-mono text-xs text-muted-foreground">app framework</span></p>
-              <p sx="text-sm text-muted-foreground leading-relaxed">SSR, routing, bundling, server functions, live data.</p>
-            </column>
-            <column gap="1" sx="shrink-0 font-mono text-xs text-primary">
-              <row gap="2" align="center"><span dot tone="primary" size="sm" pulse></span><span>build 214</span></row>
-              <row gap="2" align="center"><span dot tone="primary" size="sm" pulse></span><span>deployed</span></row>
-              <row gap="2" align="center"><span dot tone="primary" size="sm" pulse></span><span>p99 41ms</span></row>
-            </column>
-          </row>
-        </card>
-
-        <row gap="4" align="stretch">
-          <!-- Components — catalog readout -->
-          <card sx="grow-1 basis-0 min-w-0 relative overflow-hidden">
-            <column gap="3">
-              <strong sx="text-lg text-primary">Components</strong>
-              <column gap="1" sx="font-mono text-sm text-muted-foreground">
-                <span>toast · queued</span>
-                <span>tabs · animated</span>
-              </column>
-            </column>
-            <span sx="absolute bottom-4 right-4 font-mono text-xs text-muted-foreground">48 + packs</span>
-          </card>
-
-          <!-- the small interactive card: a real toggle -->
-          <card sx="shrink-0 basis-28">
-            <center sx="h-full">
-              <column gap="3" align="center">
-                <switch bind:checked={on} tone="primary"></switch>
-                <span sx="font-mono text-xs text-muted-foreground">it works</span>
-              </column>
-            </center>
-          </card>
-        </row>
-      </column>
-    </row>
+    </grid>
   </section>
 
-  <!-- ══ FOOTER + giant SHIP wordmark ══════════════════════════════════ -->
+  <!-- ══ FOOTER + closing giant SHIP wordmark ══════════════════════════ -->
   <section sx="px-8 pt-12">
     <row justify="between" align="center" sx="w-full max-w-breakpoint-desktop mx-auto pb-6 border-b border-border font-mono text-sm text-muted-foreground">
       <row gap="6" align="center">
@@ -168,12 +228,16 @@ export default controller((_ctx: ViewScope<Scope>) => {
         <a href="https://github.com" sx="text-muted-foreground hover:text-primary">GitHub</a>
         <a href="https://discord.com" sx="text-muted-foreground hover:text-primary">Discord</a>
       </row>
-      <span>v0.2.0</span>
+      <row gap="3" align="center">
+        <!-- diamond logo mark: a tilted teal square with the brand glow -->
+        <span sx="inline-block w-3 h-3 rotate-45 bg-primary rounded-sm"></span>
+        <span>SHIP UI · 0.2.0</span>
+      </row>
     </row>
   </section>
 
   <!-- teal→void gradient wordmark, full-bleed and cropped at the bottom edge -->
   <div sx="w-full overflow-hidden">
-    <p sx="text-display font-display font-bold tracking-tighter leading-none text-center text-gradient-primary select-none -mb-8">SHIP</p>
+    <p sx="text-display font-display font-bold tracking-tighter leading-none text-center text-gradient-primary select-none -mb-8" motion:scroll={{ scale: 'spring:deliberate' }}>SHIP</p>
   </div>
 </column>
