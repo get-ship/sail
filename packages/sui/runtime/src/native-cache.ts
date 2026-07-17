@@ -57,6 +57,13 @@ interface CacheEntry<T> {
    *  `nativePush` call on the same key reuse the one subscription
    *  instead of opening a duplicate. */
   pushUnsubscribe: (() => void) | null
+  /** Set once this entry is torn down (root `dispose()` or GC
+   *  eviction). A fetch or push callback closed over this entry
+   *  checks this BEFORE `fetchToken` — neither `dispose()` nor GC
+   *  eviction bumps `fetchToken`, so without this flag a promise
+   *  already in flight (or a push source that keeps delivering after
+   *  its own unsubscribe) writes into a torn-down entry's signal. */
+  disposed: boolean
 }
 
 const toError = (err: unknown): Error => (err instanceof Error ? err : new Error(String(err)))
@@ -94,6 +101,7 @@ export class NativeCache {
         retryTimer: null,
         fetchToken: 0,
         pushUnsubscribe: null,
+        disposed: false,
       }
       this.entries.set(hashed, entry as CacheEntry<unknown>)
     }
@@ -109,6 +117,7 @@ export class NativeCache {
 
   private scheduleGc(hashed: string, entry: CacheEntry<unknown>): void {
     entry.gcTimer = setTimeout(() => {
+      entry.disposed = true
       entry.pushUnsubscribe?.()
       if (entry.retryTimer !== null) clearTimeout(entry.retryTimer)
       this.entries.delete(hashed)
@@ -151,19 +160,19 @@ export class NativeCache {
     const run = (): void => {
       fn().then(
         (value) => {
-          if (myToken !== entry.fetchToken) return
+          if (entry.disposed || myToken !== entry.fetchToken) return
           entry.status = 'idle'
           entry.dataUpdatedAt = Date.now()
           entry.retryCount = 0
           entry.sig.set({ kind: 'ok', value })
         },
         (err) => {
-          if (myToken !== entry.fetchToken) return
+          if (entry.disposed || myToken !== entry.fetchToken) return
           const maxRetries = entry.retry === false ? 0 : entry.retry === true ? Infinity : entry.retry
           if (entry.retryCount < maxRetries) {
             entry.retryCount++
             entry.retryTimer = setTimeout(() => {
-              if (myToken !== entry.fetchToken) return
+              if (entry.disposed || myToken !== entry.fetchToken) return
               run()
             }, retryDelay(entry.retryCount))
             return
@@ -210,6 +219,7 @@ export class NativeCache {
    *  subscription so nothing outlives the scope that created it. */
   dispose(): void {
     for (const entry of this.entries.values()) {
+      entry.disposed = true
       this.cancelGc(entry)
       if (entry.retryTimer !== null) clearTimeout(entry.retryTimer)
       entry.pushUnsubscribe?.()
@@ -347,10 +357,12 @@ export function nativePush<T>(
     if (entry.dataUpdatedAt === 0) entry.sig.set({ kind: 'loading' })
     const unsub = subscribe(
       (value) => {
+        if (entry.disposed) return
         entry.dataUpdatedAt = Date.now()
         entry.sig.set({ kind: 'ok', value })
       },
       (err) => {
+        if (entry.disposed) return
         entry.sig.set({ kind: 'error', error: toError(err) })
       },
     )
