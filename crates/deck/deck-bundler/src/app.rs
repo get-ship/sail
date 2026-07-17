@@ -78,6 +78,19 @@ const FRAMEWORK_ASSETS: &[(&str, &str, &str)] = &[
     // `crates/deck/deck-core/build.rs` and shipped via
     // `include_str!` in `assets.rs`.
     ("@ship/deck/router", "deck-route.js", "_deck/route.js"),
+    // The code-editor/playground route's WASM-backed compiler + browser
+    // analyser. Framework-owned (deck ships them), same class as
+    // runtime/dom — NOT provider-declared, since the app declares nothing
+    // and deck names both packages itself. `sail-compiler-wasm`'s co-asset
+    // (`.wasm` binary) rides next to `_deck/compiler-wasm.js` — see
+    // `FrameworkSingleton::co_assets`. Only the two subpaths the
+    // code-editor actually imports (`sail-code-editor.sail`'s dynamic
+    // `import('@ship/sail-lsp-browser/completions' | '/diagnostics')`) are
+    // registered — `/worker` and `/hover` are real exports but unused by
+    // any route today, so they are not surfaced here.
+    ("@ship/sail-compiler-wasm", "sail-compiler-wasm.js", "_deck/compiler-wasm.js"),
+    ("@ship/sail-lsp-browser/completions", "sail-lsp-completions.js", "_deck/lsp-completions.js"),
+    ("@ship/sail-lsp-browser/diagnostics", "sail-lsp-diagnostics.js", "_deck/lsp-diagnostics.js"),
 ];
 /// A framework-singleton self-declaration, read from a package's
 /// `package.json#deckFramework`. Replaces the host-declared
@@ -407,7 +420,19 @@ impl Plugin for AppPlugin {
         // copy of the module — for the runtime that means a second signal
         // graph, and every binding in the app goes quietly dead. Fail the
         // build and name the fix.
-        for root in ["@ship/sail-runtime/", "@ship/sail-dom/", "@ship/deck/"] {
+        // `@ship/sail-compiler-wasm` is NOT in this list: it has no
+        // meaningful subpath tree the way runtime/dom/lsp-browser do (its
+        // package.json exports only its own `.` entry plus the `.wasm`
+        // co-export the wasm-bindgen glue resolves at runtime via a plain
+        // string, never a static import specifier) — so there is no unknown
+        // subpath a bare import could name. Its bare `.` alias is matched
+        // directly by the `self.externals.contains` check above.
+        for root in [
+            "@ship/sail-runtime/",
+            "@ship/sail-dom/",
+            "@ship/deck/",
+            "@ship/sail-lsp-browser/",
+        ] {
             if args.specifier.starts_with(root) {
                 anyhow::bail!(
                     "app build: `{}` is a framework-singleton subpath with no importmap \
@@ -611,6 +636,19 @@ async fn bundle_owned_framework(
             .await
             .with_context(|| format!("bundle framework singleton `{}`", target.name))?;
         let built = layout.assets_dir_for(&target.name).join(&target.out_file);
+        // Co-assets (e.g. `sail-compiler-wasm`'s `.wasm` binary) ride along
+        // next to the JS under their OWN literal filename — see
+        // `FrameworkSingleton::co_assets` doc. Sourced from the resolved
+        // entry's directory (the wasm-bindgen `pkg/` dir), copied verbatim.
+        let co_assets: &[&str] = crate::targets::FRAMEWORK_SINGLETONS
+            .iter()
+            .find(|s| s.name == target.name)
+            .map(|s| s.co_assets)
+            .unwrap_or(&[]);
+        let entry_dir = match &target.entry {
+            crate::targets::TargetEntry::Real(p) => p.parent().map(Path::to_path_buf),
+            crate::targets::TargetEntry::Virtual { .. } => None,
+        };
         for dist_rel in dists {
             if !written.insert(dist_rel.to_string()) {
                 continue;
@@ -621,6 +659,29 @@ async fn bundle_owned_framework(
             }
             std::fs::copy(&built, &dst)
                 .with_context(|| format!("copy {} -> {}", built.display(), dst.display()))?;
+        }
+        // Co-assets land at the PROJECT ROOT (`out_dir`), not next to the JS —
+        // `diagnostics.ts` calls `initWasm(wasmUrl)` with an EXPLICIT url
+        // (default `/sail_compiler_bg.wasm`, root-absolute; see that file's
+        // doc comment), which bypasses wasm-bindgen's own
+        // `import.meta.url`-relative default entirely. So the binary must sit
+        // at the root path the caller actually requests, not wherever the JS
+        // singleton happens to be served from.
+        for co_asset in co_assets {
+            if !written.insert(format!("co-asset:{co_asset}")) {
+                continue;
+            }
+            let Some(entry_dir) = &entry_dir else { continue };
+            let src = entry_dir.join(co_asset);
+            let co_dst = out_dir.join(co_asset);
+            std::fs::copy(&src, &co_dst).with_context(|| {
+                format!(
+                    "copy co-asset {} -> {} (framework singleton `{}`)",
+                    src.display(),
+                    co_dst.display(),
+                    target.name
+                )
+            })?;
         }
     }
     std::fs::remove_dir_all(&staging).ok();
@@ -1598,6 +1659,41 @@ export default controller(() => ({}))\n\
             );
             write(&r.join(format!("node_modules/{pkg}/{file}")), "export const ok = 1;\n");
         }
+        // The code-editor/playground's wasm compiler + browser LSP singletons
+        // — also deck-owned, also strictly required by `bundle_owned_framework`
+        // now that they're in FRAMEWORK_ASSETS. `sail-compiler-wasm`'s co-asset
+        // (`sail_compiler_bg.wasm`) must sit next to its resolved entry, or the
+        // co-asset copy step 404s the build.
+        write(
+            &r.join("node_modules/@ship/sail-compiler-wasm/package.json"),
+            r#"{ "name": "@ship/sail-compiler-wasm", "exports": {
+                ".": "./pkg/sail_compiler.js",
+                "./sail_compiler_bg.wasm": "./pkg/sail_compiler_bg.wasm" } }"#,
+        );
+        write(
+            &r.join("node_modules/@ship/sail-compiler-wasm/pkg/sail_compiler.js"),
+            "export const ok = 1;\n",
+        );
+        std::fs::write(
+            r.join("node_modules/@ship/sail-compiler-wasm/pkg/sail_compiler_bg.wasm"),
+            b"\0asm-stub",
+        )
+        .unwrap();
+        write(
+            &r.join("node_modules/@ship/sail-lsp-browser/package.json"),
+            r#"{ "name": "@ship/sail-lsp-browser", "exports": {
+                ".": "./src/client.ts",
+                "./completions": "./src/completions.ts",
+                "./diagnostics": "./src/diagnostics.ts" } }"#,
+        );
+        write(
+            &r.join("node_modules/@ship/sail-lsp-browser/src/completions.ts"),
+            "export const ok = 1;\n",
+        );
+        write(
+            &r.join("node_modules/@ship/sail-lsp-browser/src/diagnostics.ts"),
+            "export const ok = 1;\n",
+        );
         write(&r.join("routes/page.sail"), "<div>x</div>\n");
 
         let out = r.join("dist");
@@ -1613,14 +1709,27 @@ export default controller(() => ({}))\n\
         );
         // Gate 2: the deck-owned singletons were built from source into
         // their served `_deck/*` paths.
-        for f in ["_deck/runtime.js", "_deck/dom.js", "_deck/route.js"] {
+        for f in [
+            "_deck/runtime.js",
+            "_deck/dom.js",
+            "_deck/route.js",
+            "_deck/compiler-wasm.js",
+            "_deck/lsp-completions.js",
+            "_deck/lsp-diagnostics.js",
+        ] {
             assert!(out.join(f).exists(), "deck-owned singleton {f} built from source");
         }
+        // The wasm-bindgen co-asset rides to the PROJECT ROOT, not next to
+        // its JS — see `FrameworkSingleton::co_assets`.
+        assert!(
+            out.join("sail_compiler_bg.wasm").exists(),
+            "sail-compiler-wasm's co-asset must land at the project root",
+        );
         // Gate 3: framework_assets counter includes the discovered
-        // singleton (alongside the 3 deck-owned singletons).
+        // singleton (alongside the 6 deck-owned singletons).
         assert!(
             build.framework_assets >= 4,
-            "framework_assets must include 3 deck-owned singletons + 1 discovered singleton (got {})",
+            "framework_assets must include the deck-owned singletons + 1 discovered singleton (got {})",
             build.framework_assets,
         );
     }
