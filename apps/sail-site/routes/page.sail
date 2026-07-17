@@ -1,362 +1,138 @@
 <!--
-  Ship UI landing — a long-scroll pillar page. Each pillar is a full section
-  with a WORKING centerpiece: motion deals, themes repaint the whole site,
-  data filters and refetches, deck deploys, AI compiles. Scroll reveals use
-  spring presets so the no-scroll-timeline fallback (Firefox) still reads as
-  motion, not a blink.
+  Ship UI landing — option 2a ("Code ⇆ Live"): a docs-shaped introduction, not
+  a long marketing scroll. The hero states the pitch, an install line proves
+  it ships today, and one synced panel puts the exact program that's running
+  right next to the program's own source — the same demo /overview uses for
+  its first working example, shown here as the front door. A 3-up feature
+  strip closes it. Deeper tours (motion, theming, reactive data, deck, ai,
+  components) live one click away via the docs chrome (top switcher + rail)
+  that now wraps this route too — see the report for the full route map.
 -->
 
 <controller>
-// Landing — the long-scroll pillar page. Every section owns a working
-// centerpiece: the motion section deals, the theme section repaints the whole
-// site, the data section filters and refetches, deck deploys, AI compiles.
+// Landing — option 2a. One synced "code ⇆ live" panel: a filterable team
+// list where Invite actually appends a signal, narrated by an auto-cycling
+// step label + dot rail so a reader who never touches the keyboard still
+// sees what "synced" means.
 
-import { controller, signal, effect, live, filteredList, type ViewScope } from '@ship/sail-runtime'
-import { targetCursor } from '@ship/sail-runtime'
-import { applyTheme, persistTheme, type ThemeId } from '@ship/tokens/themes'
+import { controller, signal, effect, filteredList, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
+import { code } from './snippets'
 
-const WORDS = ['Batteries', 'Components', 'Styling', 'State', 'Motion', 'Themes']
+const STEPS = [
+  'Filtering — type to narrow filtered().',
+  'Reactive — the list recomputes on every keystroke.',
+  'Inviting — one click appends with signal.set().',
+  'Synced — the code on the left is the exact program running.',
+]
+const BENCH = ['Katherine Johnson', 'Annie Easley', 'Margaret Hamilton', 'Radia Perlman']
 
 export default controller((_ctx: ViewScope<Scope>) => {
-    const i = signal(0)
+    const step = signal(0)
     effect(() => {
-      const t = setInterval(() => i.set((n) => (n + 1) % WORDS.length), 2600)
+      const t = setInterval(() => step.set((n) => (n + 1) % STEPS.length), 2600)
       return () => clearInterval(t)
     })
 
-    // MOTION — the deal.
-    const dealt = signal(true)
-    const replay = (): void => {
-      dealt.set(false)
-      setTimeout(() => dealt.set(true), 420)
-    }
-
-    // THEMES — repaint the world, inline.
-    const theme = signal<string>('ship-light')
-    const pick = (id: ThemeId): void => {
-      applyTheme(id)
-      persistTheme(id)
-      theme.set(id)
-    }
-
-    // DATA — filter + refetch.
     const people = signal([
-      { id: 1, name: 'Ada Lovelace', status: 'active' },
-      { id: 2, name: 'Grace Hopper', status: 'away' },
-      { id: 3, name: 'Alan Turing', status: 'active' },
+      { id: 1, name: 'Ada Lovelace', team: 'Engineering', status: 'active' },
+      { id: 2, name: 'Grace Hopper', team: 'Engineering', status: 'away' },
+      { id: 3, name: 'Alan Turing', team: 'Research', status: 'active' },
     ])
-    const { query, filtered } = filteredList(() => people(), (p, q) => p.name.toLowerCase().includes(q))
+    const { query, filtered } = filteredList(() => people(), (p, q) =>
+      (p.name + ' ' + p.team).toLowerCase().includes(q),
+    )
     const invite = (): void => {
-      const bench = ['Katherine Johnson', 'Annie Easley', 'Margaret Hamilton', 'Radia Perlman']
-      people.set((l) => [...l, { id: l.length + 1, name: bench[(l.length - 3) % bench.length] ?? `Member ${l.length + 1}`, status: 'active' }])
-    }
-    const attempt = signal(1)
-    const users = live(() => {
-      attempt()
-      return new Promise<string[]>((resolve) => setTimeout(() => resolve(['Ada', 'Grace', 'Edsger', 'Barbara']), 800))
-    })
-    const reload = (): void => attempt.set((a) => a + 1)
-
-    // DECK — the deploy walk.
-    const status = signal<'live' | 'rolling'>('live')
-    const buildNo = signal(214)
-    const deploy = (): void => {
-      status.set('rolling')
-      setTimeout(() => {
-        status.set('live')
-        buildNo.set((n) => n + 1)
-      }, 1400)
+      people.set((l) => [
+        ...l,
+        { id: l.length + 1, name: BENCH[(l.length - 3) % BENCH.length] ?? `Member ${l.length + 1}`, team: 'Engineering', status: 'active' },
+      ])
     }
 
     return {
-      word: () => [WORDS[i()]],
-      targetCursor,
-      dealt, replay,
-      theme, pick,
-      people, query, filtered, invite, users, reload,
-      status, buildNo, deploy,
+      code,
+      step, stepLabel: () => STEPS[step()],
+      people, query, filtered, invite,
     }
 })
 </controller>
 
-<column sx="max-w-breakpoint-tablet mx-auto px-6 py-8">
-  <div use:targetCursor>
-  <column sx="py-8 max-w-breakpoint-tablet text-center relative" gap="4">
-    <div sx="bg-glow-primary"></div>
-    <center><p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">SHIP UI · 0.2.0</p></center>
-    <h1 sx="text-display font-bold tracking-tight">
-      <strong sx="text-right align-bottom min-w-ch-16">
-        {#for w of word() key={w}}
-          <b sx="text-primary" motion:enter={{ opacity: 'fade' }}>{w}</b>
-        {/for}
-      </strong>
-      included.<br /><b sx="text-primary">All of them.</b>
-    </h1>
-    <center>
-      <p sx="text-lg text-muted-foreground leading-relaxed">
-        One language with the whole interface inside it — built for agents to
-        write and humans to review, with no way to drift off the design system.
-      </p>
-    </center>
-    <row gap="3" justify="center" sx="mt-2">
+<column gap="8" sx="max-w-full min-w-0">
+  <!-- ══ HERO ═══════════════════════════════════════════════════════════ -->
+  <column gap="4" sx="max-w-breakpoint-tablet">
+    <p sx="font-mono text-xs uppercase tracking-wide text-accent">Introduction</p>
+    <h1 sx="text-display font-bold tracking-tighter">Ship UI</h1>
+    <p sx="text-lg text-muted-foreground leading-relaxed">
+      A batteries-included language for web pages. Components, layout,
+      styling, theming, animation and state ship in the syntax — a page is
+      markup, and nothing has to be assembled first.
+    </p>
+    <row gap="2" align="center" sx="font-mono text-sm p-3 border border-border rounded-lg bg-surface-1 w-fit">
+      <span sx="text-muted-foreground">$</span> npm install @ship/sail-runtime
+    </row>
+    <row gap="3">
       <a variant="solid" tone="primary" href="/getting-started" motion:press={{ scale: 'press' }}>Get started</a>
       <a variant="default" href="/why">Why a language?</a>
     </row>
   </column>
-  </div>
-</column>
 
-<ticker sx="-rotate-1 bg-primary text-primary-foreground font-bold tracking-wide text-sm py-3 my-9 -mx-6">
-  <p>NO RAW CSS ◆ SIGNALS BUILT IN ◆ 48 COMPONENTS ◆ 9 THEMES ◆ A11Y BY CONSTRUCTION ◆&nbsp;</p>
-</ticker>
-<ticker duration="slow" reverse sx="rotate-1 bg-surface-2 text-muted-foreground font-mono text-sm py-3 -mt-1 border-t border-b border-border">
-  <p>forms + validation · live data · springs + tweens · ssr · hot reload · design tokens ·&nbsp;</p>
-</ticker>
-
-<!-- ══ MOTION ═══════════════════════════════════════════════════════════ -->
-<column sx="py-9">
-  <column sx="max-w-breakpoint-tablet mx-auto px-6" gap="4">
-    <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>MOTION</p>
-    <h2 sx="text-3xl font-bold tracking-tight leading-tight" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>Real physics.<br />Zero choreography code.</h2>
-    <p sx="text-lg text-muted-foreground leading-relaxed" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
-      Springs solved at compile time and driven by the browser. The runtime
-      holds exiting elements until their animation finishes, staggers siblings
-      into a sequence, and ties motion to scroll — each one a directive, not a
-      library you wire up.
-    </p>
-    {#if dealt()}
-      <grid cols="4" gap="3">
-        <card sx="p-4">
-          <column gap="3" align="center">
-            <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">FIG. 01 · SPRING PHYSICS</p>
-            <div sx="w-6 h-6 rounded-full bg-primary" motion:loop={{ translate-y: 'spring:bouncy' }}></div>
-            <p sx="text-sm text-muted-foreground">a mass on a spring — overshoot, settle, forever</p>
-            <code>motion:loop · spring:bouncy</code>
-          </column>
-        </card>
-        <card sx="p-4">
-          <column gap="3">
-            <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">FIG. 02 · STAGGER WAVE</p>
-            <row gap="2" align="center" sx="min-h-9">
-              <div sx="w-3 h-8 rounded-sm bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
-              <div sx="w-3 h-8 rounded-sm bg-primary opacity-75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
-              <div sx="w-3 h-8 rounded-sm bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
-              <div sx="w-3 h-8 rounded-sm bg-primary opacity-75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
-              <div sx="w-3 h-8 rounded-sm bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
-            </row>
-            <p sx="text-sm text-muted-foreground">the delay BETWEEN siblings makes a wave</p>
-            <code>motion:loop · stagger: '0.12s'</code>
-          </column>
-        </card>
-        <card sx="p-4">
-          <column gap="3" align="center">
-            <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">FIG. 03 · DRIFT</p>
-            <div sx="w-7 h-7 rounded-md bg-tone-primary-bg border border-primary" motion:loop={{ translate-x: 'spring:gentle' }}></div>
-            <p sx="text-sm text-muted-foreground">ambient side-to-side, compositor-driven — off under reduced motion</p>
-            <code>motion:loop · translate-x</code>
-          </column>
-        </card>
-        <card sx="p-4">
-          <column gap="3">
-            <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">FIG. 04 · EXIT HOLD</p>
-            <row gap="2">
-              <badge tone="primary" motion:enter={{ scale: 'spring:gentle' }} motion:exit={{ opacity: 'fade-out' }}>a</badge>
-              <badge tone="primary" motion:enter={{ scale: 'spring:gentle', stagger: '0.1s' }} motion:exit={{ opacity: 'fade-out' }}>b</badge>
-              <badge tone="primary" motion:enter={{ scale: 'spring:gentle', stagger: '0.1s' }} motion:exit={{ opacity: 'fade-out' }}>c</badge>
-            </row>
-            <p sx="text-sm text-muted-foreground">removed elements stay mounted until their exit finishes — press replay to watch them leave and return</p>
-            <code>motion:exit</code>
-          </column>
-        </card>
-      </grid>
-    {/if}
-    <row gap="2">
-      <button on:click={replay} variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Run the figures again</button>
-      <a variant="ghost" href="/motion">The whole system →</a>
+  <!-- ══ ONE PROGRAM, BOTH SIDES ═══════════════════════════════════════ -->
+  <column gap="0" sx="border border-border rounded-xl bg-surface-1 overflow-hidden min-w-0">
+    <row justify="between" align="center" sx="px-6 py-4 border-b border-border">
+      <column gap="1">
+        <strong sx="text-md">One program, both sides.</strong>
+        <p sx="text-sm text-muted-foreground">{stepLabel()}</p>
+      </column>
+      <row gap="1" align="center">
+        <span dot tone={step() === 0 ? 'primary' : 'muted'} size="sm"></span>
+        <span dot tone={step() === 1 ? 'primary' : 'muted'} size="sm"></span>
+        <span dot tone={step() === 2 ? 'primary' : 'muted'} size="sm"></span>
+        <span dot tone={step() === 3 ? 'primary' : 'muted'} size="sm"></span>
+      </row>
     </row>
-  </column>
-</column>
-
-<!-- ══ STYLE & THEMES ═══════════════════════════════════════════════════ -->
-<column sx="bg-surface-0 py-9">
-  <column sx="max-w-breakpoint-tablet mx-auto px-6" gap="4">
-    <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>STYLE &amp; THEMES</p>
-    <h2 sx="text-3xl font-bold tracking-tight leading-tight" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>Press a button.<br />The whole site repaints.</h2>
-    <p sx="text-lg text-muted-foreground leading-relaxed" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
-      Components read tokens, never colors, so a theme is a complete aesthetic
-      — palette, radii, shadows, type — applied in one attribute. Not a demo
-      panel: these buttons restyle every page you visit next.
-    </p>
-    <grid cols="4" gap="3">
-      <button sx="rounded-md cursor-pointer border border-border p-0 overflow-hidden bg-transparent text-start" on:click={() => pick('ship-light')} aria-pressed={theme() === 'ship-light' ? 'true' : 'false'}>
-        <column data-theme-preview="ship-light" gap="2" sx="p-4 bg-background text-foreground">
-          <strong>SHIP Light</strong>
-          <row gap="2"><badge tone="primary">aa</badge><badge tone="success">bb</badge></row>
-        </column>
-      </button>
-      <button sx="rounded-md cursor-pointer border border-border p-0 overflow-hidden bg-transparent text-start" on:click={() => pick('paper')} aria-pressed={theme() === 'paper' ? 'true' : 'false'}>
-        <column data-theme-preview="paper" gap="2" sx="p-4 bg-background text-foreground">
-          <strong>Paper</strong>
-          <row gap="2"><badge tone="primary">aa</badge><badge tone="success">bb</badge></row>
-        </column>
-      </button>
-      <button sx="rounded-md cursor-pointer border border-border p-0 overflow-hidden bg-transparent text-start" on:click={() => pick('console')} aria-pressed={theme() === 'console' ? 'true' : 'false'}>
-        <column data-theme-preview="console" gap="2" sx="p-4 bg-background text-foreground">
-          <strong>Console</strong>
-          <row gap="2"><badge tone="primary">aa</badge><badge tone="success">bb</badge></row>
-        </column>
-      </button>
-      <button sx="rounded-md cursor-pointer border border-border p-0 overflow-hidden bg-transparent text-start" on:click={() => pick('glass')} aria-pressed={theme() === 'glass' ? 'true' : 'false'}>
-        <column data-theme-preview="glass" gap="2" sx="p-4 bg-background text-foreground">
-          <strong>Glass</strong>
-          <row gap="2"><badge tone="primary">aa</badge><badge tone="success">bb</badge></row>
-        </column>
-      </button>
-    </grid>
-    <row gap="2">
-      <a variant="ghost" href="/theming">Theming →</a>
-      <a variant="ghost" href="/styling">Styling →</a>
-    </row>
-  </column>
-</column>
-
-<!-- ══ REACTIVE DATA ════════════════════════════════════════════════════ -->
-<column sx="py-9">
-  <column sx="max-w-breakpoint-tablet mx-auto px-6" gap="4">
-    <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>REACTIVE DATA</p>
-    <h2 sx="text-3xl font-bold tracking-tight leading-tight" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>State you can watch think.</h2>
-    <p sx="text-lg text-muted-foreground leading-relaxed" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
-      Signals for state, compositions for the patterns, and async that is
-      three explicit states — a template physically cannot render data it has
-      not confirmed. Type. Invite. Reload.
-    </p>
-    <grid cols="2" gap="4">
-      <column>
-        <column gap="2" sx="p-5 p-6 border border-border rounded-lg min-h-8 bg-surface-1">
-          <input placeholder="Filter people" bind:value={query} />
-          {#for pn of filtered() key={pn.id}}
-            <row gap="2" align="center" motion:enter={{ opacity: 'fade' }}>
-              <avatar></avatar>
-              <strong sx="grow-1">{pn.name}</strong>
-              <badge tone={pn.status === 'active' ? 'success' : 'muted'}>{pn.status}</badge>
+    <row gap="0" align="stretch" sx="max-w-full">
+      <column sx="p-6 border-r border-border grow-1 min-w-0 overflow-x-auto">
+        <code-block code={code.team}></code-block>
+      </column>
+      <column gap="3" sx="p-6 grow-1 min-w-0">
+        <row justify="between" align="center">
+          <strong>Team</strong>
+          <p sx="font-mono text-xs text-muted-foreground">{filtered().length} of {people().length}</p>
+        </row>
+        <input placeholder="Filter people — try 'eng'" bind:value={query} />
+        <column gap="2">
+          {#for p of filtered() key={p.id}}
+            <row gap="3" align="center" sx="p-3 border border-border rounded-lg bg-surface-0" motion:enter={{ opacity: 'fade' }}>
+              <avatar name={p.name} tone="primary"></avatar>
+              <column gap="0" sx="grow-1">
+                <strong sx="text-sm">{p.name}</strong>
+                <p sx="text-xs text-muted-foreground">{p.team}</p>
+              </column>
+              <badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge>
             </row>
           {/for}
-          <row gap="2">
-            <button on:click={invite} variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Invite</button>
-            <a variant="ghost" href="/reactivity">State →</a>
-          </row>
         </column>
-      </column>
-      <column>
-        <column gap="2" sx="p-5 p-6 border border-border rounded-lg min-h-8 bg-surface-1">
-          {#while-loading of users}
-            <row gap="2" align="center"><spinner></spinner> <p sx="text-sm text-muted-foreground">loading…</p></row>
-          {/while-loading}
-          {#if users().kind === 'ok'}
-            <row gap="2">
-              {#for name of users().value key={name}}
-                <badge motion:enter={{ opacity: 'fade' }}>{name}</badge>
-              {/for}
-            </row>
-          {/if}
-          <row gap="2">
-            <button on:click={reload} motion:press={{ scale: 'press' }}>Reload</button>
-            <a variant="ghost" href="/data">Data →</a>
-          </row>
-        </column>
+        <row gap="2">
+          <button on:click={invite} variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Invite</button>
+          <button variant="outline">Export</button>
+        </row>
       </column>
     </row>
   </column>
-</column>
 
-<!-- ══ DECK ═════════════════════════════════════════════════════════════ -->
-<column sx="bg-surface-0 py-9">
-  <column sx="max-w-breakpoint-tablet mx-auto px-6" gap="4">
-    <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>DECK</p>
-    <h2 sx="text-3xl font-bold tracking-tight leading-tight" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>The app layer is already wired.</h2>
-    <p sx="text-lg text-muted-foreground leading-relaxed" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
-      File-routed pages, server rendering, hydration, bundling, live data and
-      a hot-reloading dev loop — <a href="/deck">deck</a> is the half of the
-      stack that runs what SAIL writes. This site is a deck app.
-    </p>
-    <grid cols="2" gap="4">
-      <column>
-        <column sx="font-mono text-sm leading-loose p-5 rounded-lg bg-tone-primary-bg" motion:view={{ opacity: 'fade', translate-x: 'spring:deliberate' }}>
-          <p><em sx="opacity-75">$</em> deck dev</p>
-          <p><b sx="text-success">▸</b> serving http://127.0.0.1:7878</p>
-          <p><em sx="opacity-75">$</em> deck build</p>
-          <p><b sx="text-success">✓</b> SSR'd 31 routes · hydrating bundles · static out</p>
-        </column>
-      </column>
-      <column>
-        <column gap="3" sx="p-5 p-6 border border-border rounded-lg min-h-8 bg-surface-1">
-          <row gap="2" align="center">
-            <badge tone={status() === 'live' ? 'success' : 'warning'}>{status()}</badge>
-            <strong sx="grow-1">api-gateway · build {buildNo()}</strong>
-            <button on:click={deploy} disabled={status() === 'rolling'} motion:press={{ scale: 'press' }}>
-              {status() === 'rolling' ? 'Rolling…' : 'Deploy'}
-            </button>
-          </row>
-          <progress value="72" max="100"></progress>
-          <a variant="ghost" href="/deck">Deck →</a>
-        </column>
-      </column>
-    </row>
-  </column>
-</column>
-
-<!-- ══ COMPONENTS ═══════════════════════════════════════════════════════ -->
-<column sx="py-9">
-  <column sx="max-w-breakpoint-tablet mx-auto px-6" gap="4">
-    <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>COMPONENTS</p>
-    <h2 sx="text-3xl font-bold tracking-tight leading-tight" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>The hard parts are<br />already correct.</h2>
-    <p sx="text-lg text-muted-foreground leading-relaxed" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
-      Keyboard traversal, focus trapping, ARIA wiring, touch targets, theming —
-      the things every team gets subtly wrong are built into the elements, and
-      they compile away to native markup: your DOM ships a real
-      <code>&lt;dialog&gt;</code> with the behavior attached, not a div
-      pretending. Which is why an agent using them can't produce an
-      inaccessible screen.
-    </p>
-    <row gap="3" align="center" motion:view={{ opacity: 'fade', translate-y: 'spring:bouncy' }}>
-      <switch checked></switch>
-      <slider sx="w-half"></slider>
-      <badge tone="success">live</badge>
-      <spinner></spinner>
-      <button variant="soft" tone="primary">soft</button>
-      <button variant="outline" tone="destructive">outline</button>
-      <chip>chip</chip>
-      <avatar></avatar>
-    </row>
-    <row gap="2">
-      <a variant="ghost" href="/components">All forty-eight, running →</a>
-      <a variant="ghost" href="/elements">How they compile away →</a>
-    </row>
-  </column>
-</column>
-
-<!-- ══ AI ═══════════════════════════════════════════════════════════════ -->
-<column sx="bg-surface-0 py-9">
-  <column sx="max-w-breakpoint-tablet mx-auto px-6" gap="4">
-    <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>AI</p>
-    <h2 sx="text-3xl font-bold tracking-tight leading-tight" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>Agents can't break what<br />the language won't allow.</h2>
-    <p sx="text-lg text-muted-foreground leading-relaxed" motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
-      The compiler is the guardrail: off-system styles and untyped props do
-      not build, so agent output that compiles is UI you can trust. MCP
-      tooling and a scored authoring eval close the loop.
-    </p>
-    <column sx="max-w-panel-max-w-md font-mono text-sm leading-loose p-5 rounded-lg bg-tone-primary-bg" motion:view={{ opacity: 'fade', translate-y: 'spring:deliberate' }}>
-      <p><b sx="text-destructive">✕</b> <em sx="opacity-75">style="color:#ff0000"</em> <b sx="text-destructive">rejected</b></p>
-      <p><b sx="text-destructive">✕</b> <em sx="opacity-75">&lt;div onClick=…&gt;</em> <b sx="text-destructive">rejected</b></p>
-      <p><b sx="text-success">✓</b> sx="bg-tone-bg text-tone-fg" <b sx="text-success">themed · a11y</b></p>
-    </column>
-    <row gap="2">
-      <a variant="ghost" href="/ai">Agent tooling →</a>
-    </row>
-  </column>
-</column>
-
-<column sx="max-w-breakpoint-tablet mx-auto px-6 py-8">
-  <p sx="text-gradient-primary text-display font-bold tracking-tight leading-none text-center select-none -mb-2" motion:scroll={{ scale: 'spring:deliberate' }}>SHIP</p>
+  <!-- ══ WHAT COMES WITH IT ══════════════════════════════════════════════ -->
+  <row gap="3" align="stretch" sx="max-w-full">
+    <card sx="p-5 grow-1 min-w-0">
+      <strong sx="text-accent">48 components</strong>
+      <p sx="text-sm text-muted-foreground mt-1">Accessible, keyboard-complete, themed.</p>
+    </card>
+    <card sx="p-5 grow-1 min-w-0">
+      <strong sx="text-accent">Layout &amp; styling</strong>
+      <p sx="text-sm text-muted-foreground mt-1"><code>&lt;row&gt;</code> <code>&lt;column&gt;</code> <code>&lt;grid&gt;</code>, sx tokens — no CSS to write.</p>
+    </card>
+    <card sx="p-5 grow-1 min-w-0">
+      <strong sx="text-accent">9.4 kB gzipped</strong>
+      <p sx="text-sm text-muted-foreground mt-1">Signals, no virtual DOM — Solid-class performance.</p>
+    </card>
+  </row>
 </column>
