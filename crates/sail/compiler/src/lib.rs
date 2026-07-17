@@ -46,6 +46,7 @@ pub mod stdlib;
 pub mod escape;
 pub mod l1_manifest;
 pub mod runtime_ambient;
+pub mod block_manifest;
 pub(crate) mod scan;
 
 #[cfg(target_arch = "wasm32")]
