@@ -40,5 +40,8 @@ test = false
 doc = false
 bench = false
 
-[lints]
-workspace = true
+# NOTE: no `[lints] workspace = true` here. This crate declares its own
+# empty `[workspace]` above so cargo-fuzz can drive it standalone under
+# nightly (the parent workspace excludes it — libfuzzer-sys needs nightly).
+# That detachment means there is no parent `[workspace.lints]` to inherit,
+# so a `workspace = true` lints table fails to build the fuzz binaries.

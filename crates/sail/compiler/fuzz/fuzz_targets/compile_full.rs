@@ -41,7 +41,6 @@ fuzz_target!(|data: &[u8]| {
             mode: CompileMode::Component,
             component_meta: Some(sail_compiler::ComponentMeta {
                 name: "fuzz-component".into(),
-                shadow: false,
             }),
             ..Default::default()
         },

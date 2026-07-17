@@ -53,6 +53,30 @@ fn fuzz_2026_05_12_for_with_harr_entity() {
     let _ = sail_compiler::bindings::build(&program);
 }
 
+/// Issue: an attribute name whose 4th byte falls inside a multi-byte UTF-8
+/// char crashed the parser (`raw[..4]` on a `str` slice while checking the
+/// `use:` prefix) — "byte index 4 is not a char boundary". Found by the
+/// `bindings_build` fuzz target on 2026-07-17; the crash input was a real
+/// `.sail` route whose comment used an em dash right after a 3-char word.
+/// Reproducer below: `<a abc—>` — `abc` (3 bytes) + `—` (U+2014, 3 bytes).
+#[test]
+fn fuzz_2026_07_17_attr_name_multibyte_prefix_boundary() {
+    for src in ["<a abc—>x</a>", "<a ───>x</a>", "<div use:—>x</div>"] {
+        // Parse → bindings::build (the fuzzed path). Must not panic.
+        if let Ok(program) = sail_compiler::parse::parse(src) {
+            let _ = sail_compiler::bindings::build(&program);
+        }
+        // And the full compile pipeline for good measure.
+        let _ = compile(
+            src,
+            CompileOpts {
+                mode: CompileMode::Component,
+                ..Default::default()
+            },
+        );
+    }
+}
+
 /// Issue: nested template literals with `&sect;` entity crashed
 /// compile_full. Different panic site after the lex + expr_subset
 /// fixes above.

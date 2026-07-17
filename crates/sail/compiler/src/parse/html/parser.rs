@@ -177,7 +177,17 @@ impl<'a> Parser<'a> {
             // scope, e.g. `use:clickOutside`). Preserve the suffix's case so it
             // resolves; the `use:` prefix normalizes to lowercase.
             let raw = &self.src[name_start..self.i];
-            let name = if raw.len() >= 4 && raw[..4].eq_ignore_ascii_case("use:") {
+            // Compare the `use:` prefix on BYTES, not a `str` slice: an
+            // attribute name may contain non-ASCII (is_attr_name_byte admits
+            // any non-delimiter byte), so `raw[..4]` could slice mid-char and
+            // panic ("byte index 4 is not a char boundary"). The byte compare
+            // is boundary-safe, and reaching `&raw[4..]` implies bytes 0..4 are
+            // the ASCII "use:" prefix — a valid char boundary at 4.
+            let name = if raw
+                .as_bytes()
+                .get(..4)
+                .is_some_and(|p| p.eq_ignore_ascii_case(b"use:"))
+            {
                 format!("use:{}", &raw[4..])
             } else {
                 raw.to_ascii_lowercase()
@@ -342,5 +352,21 @@ mod tests {
         let _ = parse_fragment("<style><-──");
         let _ = parse_fragment("<script>x<─</script>");
         let _ = parse_fragment("<style>a<bc</style>");
+    }
+
+    #[test]
+    fn attr_name_with_multibyte_at_prefix_boundary_does_not_panic() {
+        // An attribute name whose 4th byte lands inside a multi-byte UTF-8
+        // char used to panic when the `use:`-prefix check did `raw[..4]` on
+        // the str slice: `<a abc—>` — name `abc—` is 3 ASCII bytes + `—`
+        // (U+2014, 3 bytes), so byte index 4 is mid-char. Found by the
+        // `bindings_build` fuzz target. Must yield a diagnostic or parse,
+        // never panic.
+        let _ = parse_fragment("<a abc—>x</a>");
+        let _ = parse_fragment("<a ───>x</a>");
+        // The legitimate `use:` path must still work (ASCII prefix).
+        let _ = parse_fragment(r#"<div use:clickOutside={h}></div>"#);
+        // A non-ASCII char immediately after a valid `use:` prefix.
+        let _ = parse_fragment("<div use:—>x</div>");
     }
 }
