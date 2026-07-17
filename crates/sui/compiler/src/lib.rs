@@ -300,7 +300,7 @@ pub fn compile_element(
     // parse_element_source: the pipeline minus the stdlib-element pass — an
     // element source may not use stdlib elements (no recursion).
     let program = parse::parse_element_source(source)?;
-    emit::element::emit_element(&program, name)
+    emit::element::emit_element(&program, source, name)
 }
 
 pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, CompileError> {

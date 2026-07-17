@@ -3,7 +3,7 @@
 //! arrows where not allowed) with a message and span pointing at
 //! the user's source.
 
-use sui_compiler::{compile, CompileMode, CompileOpts};
+use sui_compiler::{compile, compile_element, CompileMode, CompileOpts, Diagnostic};
 
 fn compile_view(source: &str) -> sui_compiler::CompileError {
     compile(
@@ -184,4 +184,88 @@ fn the_retired_prop_tag_is_rejected() {
         "the retired `<prop>` tag must be rejected by name: {}",
         err.message
     );
+}
+
+// ---------------------------------------------------------------------
+// Task #38 — element mode's "exactly one root element" diagnostics must
+// point at a REAL, in-bounds location in the AUTHOR'S source, not past
+// end-of-file and not a meaningless (1,1) fallback.
+//
+// `emit_element`'s root-count checks used `CompileError::new(...)` with no
+// `.with_span(...)` at all, so `Diagnostic::from_compile_error`'s `None`
+// branch reported every one of these at a hardcoded (1,1) — never the
+// actual problem location. Worse: the IR's spans are byte offsets into
+// the PREPROCESSED source (`parse::preprocess::preprocess_impl` can inject
+// a leading `<style>` block and otherwise change the text's length ahead of
+// any given position), so naively reusing an `Instr`'s span against the
+// caller's ORIGINAL source can point past its end — reusing them was tried
+// and confirmed to produce exactly that: a multi-root fixture whose second
+// root's IR span (start byte 92) exceeded the 59-byte original source.
+// These pinned spans are computed by an independent textual scan of the
+// ORIGINAL source instead (see `skip_scope_and_style` /
+// `top_level_element_spans` in `emit/element.rs`), so they can never drift
+// past the text that's actually being rendered.
+
+/// Zero-root element source: a `<scope>` block with nothing after it. The
+/// diagnostic must land right where a root element was expected — the byte
+/// immediately after `</scope>` — not at a fallback (1,1).
+#[test]
+fn lone_root_element_missing_span_is_in_bounds_and_exact() {
+    let src = "<scope>\nprops: { }\n</scope>\n";
+    assert_eq!(src.len(), 28, "fixture pinned at 28 bytes");
+
+    let err = compile_element(src, "empty-thing").expect_err("zero roots must be rejected");
+    assert!(
+        err.message.contains("exactly one root element"),
+        "msg: {}",
+        err.message
+    );
+
+    // The span must exist, and must never exceed the source it is rendered
+    // against — this is the literal "past end-of-file" failure mode.
+    let span = err.span.expect("zero-root error must carry a span");
+    assert!(
+        span.start <= src.len() && span.end <= src.len(),
+        "span {span:?} must stay within the {}-byte source",
+        src.len()
+    );
+    // Exact, pinned location: end of file (nothing follows `</scope>`) —
+    // the sole sensible in-bounds place to point when there's no element.
+    assert_eq!(span.start, 28);
+    assert_eq!(span.end, 28);
+
+    let d = Diagnostic::from_compile_error(&err, src);
+    assert_eq!((d.line, d.col), (4, 1), "diag: {d:?}");
+    assert_eq!((d.end_line, d.end_col), (4, 1), "diag: {d:?}");
+}
+
+/// Two root elements: the diagnostic must point at the SECOND root — the
+/// one that actually violates "exactly one root" — not past EOF, not (1,1).
+#[test]
+fn multi_root_element_span_points_at_the_offending_second_root() {
+    let src = "<scope>\nprops: { }\n</scope>\n\n<span>a</span>\n<span>b</span>\n";
+    assert_eq!(src.len(), 59, "fixture pinned at 59 bytes");
+
+    let err = compile_element(src, "two-things").expect_err("two roots must be rejected");
+    assert!(
+        err.message.contains("ONE static root element"),
+        "msg: {}",
+        err.message
+    );
+
+    let span = err.span.expect("multi-root error must carry a span");
+    assert!(
+        span.start <= src.len() && span.end <= src.len(),
+        "span {span:?} must stay within the {}-byte source (this is exactly \
+         where the bug reused a PREPROCESSED-source offset — 92 — against \
+         this 59-byte original and landed past its end)",
+        src.len()
+    );
+    // Exact, pinned location: the tag-name token of the SECOND `<span>`.
+    assert_eq!(&src[span.start..span.end], "span");
+    assert_eq!((span.start, span.end), (45, 49));
+
+    let d = Diagnostic::from_compile_error(&err, src);
+    assert_eq!((d.line, d.col), (6, 2), "diag: {d:?}");
+    assert_eq!((d.end_line, d.end_col), (6, 6), "diag: {d:?}");
 }
