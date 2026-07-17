@@ -248,14 +248,22 @@ fn parse_props_fields(body: &str, span: Span) -> Result<Vec<PropDecl>, CompileEr
                 ))
                 .with_span(span));
             }
-            if !is_literal(text) {
+            // `<literal> as <Type>` — TypeScript's widening idiom for an empty
+            // array/object literal whose type can't be inferred (`[] as
+            // Array<{ id: string }>`). The literal IS the value; the cast
+            // supplies the annotation when one wasn't already written.
+            let (literal_text, cast_ty) = split_as_cast(text);
+            if !is_literal(literal_text) {
                 return Err(CompileError::new(format!(
                     "prop `{name}` default `{text}` is not a literal — `<scope>` holds types and \
                      literal values only; computed values belong in `<controller>`."
                 ))
                 .with_span(span));
             }
-            value = Some(text.to_string());
+            if annotation.is_none() && let Some(ty) = cast_ty {
+                annotation = Some(ty.to_string());
+            }
+            value = Some(literal_text.to_string());
             i = end;
         }
 
@@ -392,7 +400,11 @@ fn split_top_level_pipe(s: &str) -> Vec<&str> {
         }
         match bytes[i] {
             b'{' | b'(' | b'[' | b'<' => depth += 1,
-            b'}' | b')' | b']' | b'>' => depth -= 1,
+            b'}' | b')' | b']' => depth -= 1,
+            // An arrow's `>` (`=>`) closes nothing — mirrors the guard in
+            // `scan_annotation_end`. Without it, a method-typed field (e.g.
+            // `Array<{ onClick: () => void }>`) desyncs the depth counter.
+            b'>' if i > 0 && bytes[i - 1] != b'=' => depth -= 1,
             b'|' if depth == 0 => {
                 parts.push(&s[start..i]);
                 start = i + 1;
@@ -403,6 +415,43 @@ fn split_top_level_pipe(s: &str) -> Vec<&str> {
     }
     parts.push(&s[start..]);
     parts
+}
+
+/// Split `<literal> as <Type>` at the top-level ` as ` keyword — TypeScript's
+/// widening idiom for an empty array/object literal whose type can't be
+/// inferred (`[] as Array<{ id: string }>`). Returns `(literal, None)`
+/// unchanged when there's no top-level ` as `.
+fn split_as_cast(s: &str) -> (&str, Option<&str>) {
+    let bytes = s.as_bytes();
+    let mut depth = 0i32;
+    let mut i = 0usize;
+    while i < bytes.len() {
+        let j = skip_strings_and_comments(s, i);
+        if j != i {
+            i = j;
+            continue;
+        }
+        match bytes[i] {
+            b'{' | b'(' | b'[' => depth += 1,
+            b'}' | b')' | b']' => depth -= 1,
+            b'a' if depth == 0
+                && i > 0
+                && bytes[i - 1].is_ascii_whitespace()
+                && i + 2 < bytes.len()
+                && bytes[i + 1] == b's'
+                && bytes[i + 2].is_ascii_whitespace() =>
+            {
+                let lit = s[..i].trim_end();
+                let ty = s[i + 2..].trim();
+                if !lit.is_empty() && !ty.is_empty() {
+                    return (lit, Some(ty));
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    (s, None)
 }
 
 // ── variants ─────────────────────────────────────────────────────────────────
@@ -808,6 +857,58 @@ mod tests {
         let b = block("props: {\n  center: Point = { x: 0, y: 0 }\n}");
         assert_eq!(prop(&b, "center").kind, PropKind::Identity("Point".into()));
         assert_eq!(prop(&b, "center").default.as_deref(), Some("{ x: 0, y: 0 }"));
+    }
+
+    #[test]
+    fn array_of_object_type_default_is_identity_not_union() {
+        // `Array<{...}>` with a method-typed field: the exact shape a
+        // false-union classifier would trip on (an object type argument
+        // containing its own `=>` arrow). Must land as Identity, never
+        // PropKind::Union, and the annotation must be captured whole.
+        let b = block(
+            "props: {\n  items: Array<{ id: string; onClick: () => void }> = []\n}",
+        );
+        assert_eq!(
+            prop(&b, "items").kind,
+            PropKind::Identity("Array<{ id: string; onClick: () => void }>".into())
+        );
+        assert_eq!(prop(&b, "items").default.as_deref(), Some("[]"));
+    }
+
+    #[test]
+    fn as_cast_widens_an_empty_array_default_and_infers_the_annotation() {
+        // TypeScript's widening idiom: `[] as Array<{...}>` gives an empty
+        // array literal a type when it can't be inferred. No explicit
+        // `: Type` — the cast supplies the annotation. This must land as
+        // Identity (verbatim TS), never PropKind::Union, with the literal
+        // `[]` as the default (the cast itself is not the value).
+        let b = block(
+            "props: {\n  items = [] as Array<{ id: string; onClick: () => void }>\n}",
+        );
+        assert_eq!(
+            prop(&b, "items").kind,
+            PropKind::Identity("Array<{ id: string; onClick: () => void }>".into())
+        );
+        assert_eq!(prop(&b, "items").default.as_deref(), Some("[]"));
+    }
+
+    #[test]
+    fn as_cast_with_explicit_annotation_strips_the_redundant_cast() {
+        let b = block(
+            "props: {\n  items: Array<{ id: string }> = [] as Array<{ id: string }>\n}",
+        );
+        assert_eq!(prop(&b, "items").kind, PropKind::Identity("Array<{ id: string }>".into()));
+        assert_eq!(prop(&b, "items").default.as_deref(), Some("[]"));
+    }
+
+    #[test]
+    fn as_cast_to_a_string_union_still_classifies_as_union() {
+        // The cast target can itself be a union of string literals — this
+        // must still land as PropKind::Union, not Identity, proving the
+        // `as`-cast path and the union-detection path compose correctly.
+        let b = block("props: {\n  kind = 'a' as 'a' | 'b'\n}");
+        assert_eq!(prop(&b, "kind").kind, PropKind::Union(vec!["a".into(), "b".into()]));
+        assert_eq!(prop(&b, "kind").default.as_deref(), Some("a"));
     }
 
     #[test]
