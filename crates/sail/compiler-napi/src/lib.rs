@@ -228,8 +228,16 @@ mod tests {
         // both call — while the CLI rejected it (dishonest exit codes / silent
         // daemon accept). It must now reject here too: one contract per
         // boundary.
+        //
+        // Fixture: `<badge tone="destructiv">` — `badge#tone` is a registry
+        // enum prop whose allowed set does NOT contain `destructiv` (a typo
+        // for `destructive`). Kept current against `primitives.json`: the tag
+        // must be a registered primitive and the prop a `values`-typed enum,
+        // else the rule can't fire and this test would silently pass on `ok`
+        // (the exact rot that hid behind the old `<sail-button variant>` input
+        // once `sail-button` was dropped from the registry).
         let json =
-            compile_to_result(r#"<sail-button variant="primary">x</sail-button>"#, "{}").unwrap();
+            compile_to_result(r#"<badge tone="destructiv">x</badge>"#, "{}").unwrap();
         let v = serde_json::to_value(&json).unwrap();
         assert_eq!(v["kind"], "err", "{v}");
         assert_eq!(v["category"], "sail-prop-value");

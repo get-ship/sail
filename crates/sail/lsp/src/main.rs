@@ -368,8 +368,9 @@ fn parse_tokens(src: &str) -> TokenTable {
     //   - `in_root` — how many `:root` blocks we're nested inside.
     // `:root` (with or without a `[data-…]` attribute selector) collects
     // tokens; `.dark`, media queries, utility classes don't. Skipping
-    // `.dark` overrides is what gets us the canonical 247 leaves instead
-    // of the 318 you'd get reading every `--name: value;` in the file.
+    // `.dark` overrides is what gets us the canonical `:root` leaves instead
+    // of the larger count you'd get reading every `--name: value;` in the file
+    // (each `.dark`/media override redeclares names already collected).
     let mut block_depth: i32 = 0;
     let mut in_root: i32 = 0;
     // Selector being built for a not-yet-opened block. When we see `{`,
@@ -771,14 +772,48 @@ mod tests {
     }
 
     #[test]
-    fn parses_247_tokens_from_canonical_css() {
-        assert_eq!(TOKENS.len(), 247, "expected 247 design tokens; got {}", TOKENS.len());
+    fn parses_design_tokens_from_canonical_css() {
+        // Robust against token growth: assert a FLOOR (the table only ever
+        // grows as the design system adds tokens; it was 247, is 374 today)
+        // plus the presence of key token FAMILIES and a few pinned anchor
+        // values. A magic exact count rots on every token add — a floor +
+        // family coverage proves the parser is still reading `:root` leaves
+        // correctly without breaking on unrelated additions.
+        assert!(
+            TOKENS.len() >= 300,
+            "token table shrank unexpectedly — expected >= 300 :root leaves, got {}. \
+             A DROP means the `:root` extractor regressed (or tokens.css lost blocks); \
+             investigate before lowering this floor.",
+            TOKENS.len()
+        );
+
+        // Key families an author completes against must each be non-empty.
+        // (One representative prefix per major axis: color scales, spacing,
+        // radii, typography, motion, elevation, and the tone channel.)
+        for family in ["space-", "radius", "primary", "tone-", "font-", "duration-", "shadow-"] {
+            assert!(
+                TOKENS.iter().any(|(n, _)| n.starts_with(family)),
+                "expected at least one `--{family}*` token family member; \
+                 none found — the parser or tokens.css regressed"
+            );
+        }
+
+        // Pinned anchors — stable, load-bearing values. If these change the
+        // design system changed deliberately; update them here.
         let primary = TOKENS.iter().find(|(n, _)| n == "primary").expect("--primary");
         assert!(primary.1.contains("oklch("), "primary value should resolve to oklch: {:?}", primary.1);
         let space_3 = TOKENS.iter().find(|(n, _)| n == "space-3").expect("--space-3");
         assert_eq!(space_3.1, "12px");
         let radius = TOKENS.iter().find(|(n, _)| n == "radius").expect("--radius");
         assert_eq!(radius.1, "10px");
+
+        // Convention tokens (no `:root` value) must still be merged in.
+        for &name in sail_lint::tokens::CONVENTION_TOKENS {
+            assert!(
+                TOKENS.iter().any(|(n, _)| n == name.trim_start_matches("--")),
+                "convention token `{name}` missing from the completion table"
+            );
+        }
     }
 
     #[test]
