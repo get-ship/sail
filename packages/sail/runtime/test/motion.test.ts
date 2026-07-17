@@ -318,7 +318,7 @@ describe('motion runtime — spring preset reaches motion/mini as a linear strin
   // cannot distinguish from the default ease-out in a test is a
   // spring you cannot distinguish in production either.
   it('a kind=spring preset resolves to a `linear(...)` easing string', () => {
-    const t = __buildTransitionForTest(snappy, 0, 1, undefined)
+    const t = __buildTransitionForTest(snappy, undefined)
     expect(typeof t.ease).toBe('string')
     expect(t.ease as string).toMatch(/^linear\(/)
     // Duration is derived from the spring's rest thresholds — not
@@ -332,7 +332,7 @@ describe('motion runtime — spring preset reaches motion/mini as a linear strin
   })
 
   it('a kind=tween preset resolves to tween fields (negative control)', () => {
-    const t = __buildTransitionForTest(press, 0, 1, undefined)
+    const t = __buildTransitionForTest(press, undefined)
     expect(t.duration).toBe(0.06)
     expect(t.ease).toBeUndefined()
   })
@@ -551,6 +551,155 @@ describe('motion runtime — SILENCE IS THE BUG: dev-mode warn on a non-animatab
         { property: 'opacity', preset: 'fade', kind: 'tween', duration: 0.3, from: 0.4, to: 1 },
       ],
     })
+    expect(warnSpy).not.toHaveBeenCalled()
+    dispose()
+    warnSpy.mockRestore()
+  })
+})
+
+describe('motion runtime — cross-sibling stagger vs intra-element lockstep', () => {
+  // `stagger` describes the delay BETWEEN SIBLING ELEMENTS sharing a
+  // trigger (the 5 dealt cards, the 3 thinking-dots) — never between
+  // two properties on ONE element. Previously `buildTransition`'s
+  // (index, total) pair was drawn from `config.motions` (this
+  // element's OWN property list): a single-property sibling always
+  // saw `total === 1` and the delay silently zeroed — the whole group
+  // animated in lockstep (the /motion page's stagger demo, the
+  // ambient loop dots). A multi-property element (thinking-dots' own
+  // paired translate-y + opacity) saw its own two properties
+  // staggered AGAINST EACH OTHER instead — the flashing: position and
+  // fade visibly desync every cycle.
+
+  it('three single-property siblings under one parent get increasing delays, not all zero', async () => {
+    vi.resetModules()
+    const calls: Array<{ transition: Record<string, unknown> }> = []
+    vi.doMock('motion/mini', () => ({
+      animate: (_el: unknown, _kf: unknown, transition: Record<string, unknown>) => {
+        calls.push({ transition })
+        return { stop: () => {}, cancel: () => {}, finished: Promise.resolve() }
+      },
+    }))
+    const { __sui_motion_attach: attach } = await import('../src/motion')
+    setReducedMotion(false)
+    const parent = document.createElement('div')
+    document.body.appendChild(parent)
+    const cfg = (): MotionAttachConfig => ({
+      trigger: 'loop',
+      motions: [{ property: 'translate-y', preset: 'spring:gentle', kind: 'tween', duration: 0.3, from: 16, to: 0 }],
+      stagger: 0.1,
+    })
+    for (let i = 0; i < 3; i++) {
+      const el = document.createElement('div')
+      parent.appendChild(el)
+      attach(el, cfg())
+    }
+    expect(calls.length).toBe(3)
+    expect(calls[0]!.transition.delay).toBe(0)
+    expect(calls[1]!.transition.delay).toBeCloseTo(0.1)
+    expect(calls[2]!.transition.delay).toBeCloseTo(0.2)
+    vi.doUnmock('motion/mini')
+    vi.resetModules()
+  })
+
+  it('one element with two staggered properties keeps them in lockstep with EACH OTHER (same delay)', async () => {
+    vi.resetModules()
+    const calls: Array<{ transition: Record<string, unknown> }> = []
+    vi.doMock('motion/mini', () => ({
+      animate: (_el: unknown, _kf: unknown, transition: Record<string, unknown>) => {
+        calls.push({ transition })
+        return { stop: () => {}, cancel: () => {}, finished: Promise.resolve() }
+      },
+    }))
+    const { __sui_motion_attach: attach } = await import('../src/motion')
+    setReducedMotion(false)
+    const el = host()
+    attach(el, {
+      trigger: 'loop',
+      motions: [
+        { property: 'translate-y', preset: 'bounce', kind: 'tween', duration: 0.18, iterations: Infinity, direction: 'alternate' },
+        { property: 'opacity', preset: 'bounce', kind: 'tween', duration: 0.18, from: 0, to: 1, iterations: Infinity, direction: 'alternate' },
+      ],
+      stagger: 0.15,
+    })
+    expect(calls.length).toBe(2)
+    expect(calls[0]!.transition.delay).toBe(calls[1]!.transition.delay)
+    vi.doUnmock('motion/mini')
+    vi.resetModules()
+  })
+
+  it('a fresh parent (e.g. a rebuilt {#if} container, like the /motion page "Deal again" replay) resets the sibling index to 0', async () => {
+    vi.resetModules()
+    const calls: Array<{ transition: Record<string, unknown> }> = []
+    vi.doMock('motion/mini', () => ({
+      animate: (_el: unknown, _kf: unknown, transition: Record<string, unknown>) => {
+        calls.push({ transition })
+        return { stop: () => {}, cancel: () => {}, finished: Promise.resolve() }
+      },
+    }))
+    const { __sui_motion_attach: attach } = await import('../src/motion')
+    setReducedMotion(false)
+    const cfg = (): MotionAttachConfig => ({
+      trigger: 'loop',
+      motions: [{ property: 'opacity', preset: 'fade', kind: 'tween', duration: 0.12, from: 0, to: 1 }],
+      stagger: 0.1,
+    })
+    const parentA = document.createElement('div')
+    document.body.appendChild(parentA)
+    const elA0 = document.createElement('div')
+    parentA.appendChild(elA0)
+    attach(elA0, cfg())
+    const elA1 = document.createElement('div')
+    parentA.appendChild(elA1)
+    attach(elA1, cfg())
+
+    const parentB = document.createElement('div')
+    document.body.appendChild(parentB)
+    const elB0 = document.createElement('div')
+    parentB.appendChild(elB0)
+    attach(elB0, cfg())
+
+    expect(calls[0]!.transition.delay).toBe(0)
+    expect(calls[1]!.transition.delay).toBeCloseTo(0.1)
+    expect(calls[2]!.transition.delay).toBe(0)
+    vi.doUnmock('motion/mini')
+    vi.resetModules()
+  })
+})
+
+describe('motion runtime — SILENCE IS THE BUG: dev-mode warn on an out-of-range opacity keyframe', () => {
+  // `CSS.supports('opacity', '1.04')` passes (a syntactically valid
+  // `<number>`), but the computed style clamps it to `1` — so a
+  // preset whose `from`/`to` were authored for a different property
+  // (`pulse`: 1.0 → 1.04, meant for `scale`) produces an `opacity`
+  // motion that genuinely runs and visibly moves nothing. The /motion
+  // page's own "hover · pulse" badge shipped exactly this: `motion:
+  // hover={{ opacity: 'pulse' }}`.
+  it('warns when an opacity keyframe value falls outside 0..1 (a preset authored for the wrong property)', () => {
+    setReducedMotion(false)
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const el = host()
+    const dispose = __sui_motion_attach(el, {
+      trigger: 'hover',
+      motions: [{ property: 'opacity', preset: 'pulse', kind: 'tween', duration: 0.28, from: 1, to: 1.04 }],
+    })
+    el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))
+    expect(warnSpy).toHaveBeenCalled()
+    const opacityWarning = warnSpy.mock.calls.find((c) => String(c[0]).includes('opacity keyframe value'))
+    expect(opacityWarning).toBeDefined()
+    expect(String(opacityWarning![0])).toContain('pulse')
+    dispose()
+    warnSpy.mockRestore()
+  })
+
+  it('does not warn for an in-range opacity keyframe', () => {
+    setReducedMotion(false)
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const el = host()
+    const dispose = __sui_motion_attach(el, {
+      trigger: 'hover',
+      motions: [{ property: 'opacity', preset: 'fade', kind: 'tween', duration: 0.12, from: 0, to: 1 }],
+    })
+    el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))
     expect(warnSpy).not.toHaveBeenCalled()
     dispose()
     warnSpy.mockRestore()

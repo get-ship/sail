@@ -274,11 +274,39 @@ function warnIfNotAnimatable(el: Element, keyframes: Record<string, Array<number
   }
 }
 
+/** SILENCE IS THE BUG, opacity edition: `CSS.supports('opacity', '1.04')`
+ *  passes — `1.04` is syntactically a valid `<number>` — but the
+ *  computed style clamps it to `1`, so an `opacity` motion authored
+ *  against a preset whose `from`/`to` live outside `0..1` (e.g. a scale
+ *  preset like `pulse`, 1.0 → 1.04, applied to the wrong property)
+ *  renders NO visible change at all: the keyframe is valid CSS, the
+ *  animation genuinely runs, and nothing moves. `warnIfNotAnimatable`'s
+ *  `CSS.supports` check cannot catch this — it only rejects malformed
+ *  values, and an out-of-range opacity number is well-formed. */
+function warnIfOutOfVisibleRange(
+  el: Element,
+  cfg: MotionConfig,
+  keyframes: Record<string, Array<number | string>>,
+): void {
+  if (cfg.property !== 'opacity') return
+  for (const value of keyframes.opacity ?? []) {
+    const n = typeof value === 'number' ? value : Number(value)
+    if (Number.isFinite(n) && (n < 0 || n > 1)) {
+      console.warn(
+        `[sail/motion] opacity keyframe value ${JSON.stringify(value)} (from preset "${cfg.preset}") ` +
+        `is outside the visible 0..1 range — the computed style clamps it, so this animation runs ` +
+        `and moves nothing. "${cfg.preset}" looks like a preset authored for a different property ` +
+        `(e.g. scale) — check the property this preset is attached to.`,
+        el,
+      )
+      return
+    }
+  }
+}
+
 function buildTransition(
   cfg: MotionConfig,
-  index: number,
-  total: number,
-  staggerSec: number | undefined,
+  delaySec: number | undefined,
 ): Record<string, unknown> {
   const t: Record<string, unknown> = {}
   if (cfg.kind === 'spring') {
@@ -322,10 +350,58 @@ function buildTransition(
           ? 'reverse'
           : cfg.direction
   }
-  if (staggerSec != null && total > 1) {
-    t.delay = motionStagger(staggerSec)(index, total)
+  if (delaySec != null) {
+    t.delay = delaySec
   }
   return t
+}
+
+/** `stagger` describes the delay BETWEEN SIBLING ELEMENTS sharing a
+ *  trigger (the 5 dealt cards, the 3 thinking-dots) — never between two
+ *  PROPERTIES animated on the SAME element (an element's own
+ *  translate-y + opacity, both driven by one preset, must stay in
+ *  lockstep with each other, or the position and the fade visibly
+ *  desync every cycle). The compiler has no visibility into an
+ *  element's siblings at compile time (a `{#for}` list is
+ *  unknown-length; even a static run of sibling tags isn't tracked),
+ *  so the runtime assigns each element's phase index the moment it
+ *  attaches, keyed by (immediate parent, trigger) — a fresh parent (a
+ *  `{#if}`-gated container torn down and rebuilt, e.g. the "Deal
+ *  again" replay) naturally resets the count back to 0.
+ *
+ *  Previously this index/total pair was `(i, config.motions.length)` —
+ *  this element's OWN property list, not its sibling position — so a
+ *  single-property element (every card, every loop dot) always saw
+ *  `total === 1` and the `total > 1` guard silently zeroed every
+ *  delay: the whole group animated in lockstep. A multi-property
+ *  element (thinking-dots' paired translate-y + opacity) saw
+ *  `total === 2` instead, and its own two properties got staggered
+ *  AGAINST EACH OTHER — the flashing: position starts moving while
+ *  opacity is still delayed (or vice versa), every cycle. */
+const staggerIndices = new WeakMap<Element, Map<string, number>>()
+function nextStaggerIndex(parent: Element, trigger: string): number {
+  let byTrigger = staggerIndices.get(parent)
+  if (!byTrigger) {
+    byTrigger = new Map()
+    staggerIndices.set(parent, byTrigger)
+  }
+  const index = byTrigger.get(trigger) ?? 0
+  byTrigger.set(trigger, index + 1)
+  return index
+}
+
+/** Resolved ONCE per `__sui_motion_attach` call (per element, per
+ *  mount) — never recomputed on repeat triggers (hover in/out, replay)
+ *  — so an element's sibling phase is fixed for its lifetime. Motion's
+ *  own `stagger()` distance formula (`from: 0`, the default) is
+ *  `duration * index` regardless of `total`, so no sibling count needs
+ *  to be known in advance. */
+function computeStaggerDelay(config: MotionAttachConfig, el: Element): number | undefined {
+  if (config.stagger == null) return undefined
+  const parent = el.parentElement
+  if (!parent) return 0
+  const index = nextStaggerIndex(parent, config.trigger)
+  return motionStagger(config.stagger)(index, index + 1)
 }
 
 /** The subset of `AnimationPlaybackControls` this runtime relies on —
@@ -336,9 +412,9 @@ type AnimControls = { stop: () => void; cancel: () => void; finished: Promise<un
 function createAnimations(
   el: HTMLElement,
   config: MotionAttachConfig,
+  delaySec: number | undefined,
 ): AnimControls[] {
   const controls: AnimControls[] = []
-  const stagger = config.stagger
   const total = config.motions.length
   const xIndex = config.motions.findIndex((m) => m.property === 'translate-x')
   const yIndex = config.motions.findIndex((m) => m.property === 'translate-y')
@@ -349,13 +425,15 @@ function createAnimations(
     const yCfg = config.motions[yIndex]!
     const keyframes = buildMergedTranslateKeyframes(xCfg, yCfg, el)
     warnIfNotAnimatable(el, keyframes)
-    // The transition (duration/easing/iterations/stagger) is taken from
+    // The transition (duration/easing/iterations) is taken from
     // whichever axis is authored first — one WAAPI `translate` track
     // gets one transition, so mismatched x/y presets on the same
     // element resolve to the earlier motion's physics. Authoring the
-    // same preset on both axes (the common case) makes this moot.
+    // same preset on both axes (the common case) makes this moot. The
+    // sibling stagger delay is the same for every property on this
+    // element regardless — it is not indexed by which axis leads.
     const leadIndex = Math.min(xIndex, yIndex)
-    const transition = buildTransition(config.motions[leadIndex]!, leadIndex, total, stagger)
+    const transition = buildTransition(config.motions[leadIndex]!, delaySec)
     try {
       const c = animate(el, keyframes, transition as Parameters<typeof animate>[2])
       controls.push(c as unknown as AnimControls)
@@ -372,7 +450,8 @@ function createAnimations(
     const cfg = config.motions[i]!
     const keyframes = buildKeyframes(cfg, el)
     warnIfNotAnimatable(el, keyframes)
-    const transition = buildTransition(cfg, i, total, stagger)
+    warnIfOutOfVisibleRange(el, cfg, keyframes)
+    const transition = buildTransition(cfg, delaySec)
     try {
       const c = animate(el, keyframes, transition as Parameters<typeof animate>[2])
       controls.push(c as unknown as AnimControls)
@@ -404,9 +483,10 @@ function createAnimations(
 function createAnimationsWhenConnected(
   el: HTMLElement,
   config: MotionAttachConfig,
+  delaySec: number | undefined,
 ): Disposer {
   if (el.isConnected || typeof requestAnimationFrame === 'undefined') {
-    const controls = createAnimations(el, config)
+    const controls = createAnimations(el, config, delaySec)
     return () => { for (const c of controls) c.cancel() }
   }
   for (const m of config.motions) applyRestStyle(el, m)
@@ -415,7 +495,7 @@ function createAnimationsWhenConnected(
   const start = (): void => {
     if (disposed) return
     if (!el.isConnected) { requestAnimationFrame(start); return }
-    controls = createAnimations(el, config)
+    controls = createAnimations(el, config, delaySec)
   }
   requestAnimationFrame(start)
   return () => {
@@ -466,6 +546,10 @@ export function __sui_motion_attach(
   const reduced = prefersReducedMotion()
   const branch = classifyTrigger(config.trigger)
   if (branch === 'noop') return () => {}
+  // Resolved ONCE per attach (per element, per mount) — the sibling
+  // phase index this consumes must not be recomputed on repeat
+  // triggers (hover in/out) or it would keep advancing forever.
+  const delaySec = computeStaggerDelay(config, el)
 
   if (branch === 'loop') {
     if (reduced) {
@@ -485,7 +569,7 @@ export function __sui_motion_attach(
         direction: m.direction ?? 'alternate',
       })),
     }
-    return createAnimationsWhenConnected(el, looped)
+    return createAnimationsWhenConnected(el, looped, delaySec)
   }
 
   if (branch === 'enter' || branch === 'exit') {
@@ -495,7 +579,7 @@ export function __sui_motion_attach(
         applyReducedMotionSettle(el, config.motions)
         return () => {}
       }
-      return createAnimationsWhenConnected(el, config)
+      return createAnimationsWhenConnected(el, config, delaySec)
     }
     // Exit motions do NOT run at mount — they are parked here and only
     // played by the lifecycle runner's `runLeave`, when the owning
@@ -505,7 +589,7 @@ export function __sui_motion_attach(
     // snapped to the final pose — so real removal never held the node for
     // an animation, and the exit contract was silently a no-op.)
     if (reduced) return () => {}
-    EXITS.set(el, { config, controls: [] })
+    EXITS.set(el, { config, controls: [], delaySec })
     return () => {
       const entry = EXITS.get(el)
       EXITS.delete(el)
@@ -518,7 +602,7 @@ export function __sui_motion_attach(
       applyReducedMotionSettle(el, config.motions)
       return () => {}
     }
-    return createAnimationsWhenConnected(el, config)
+    return createAnimationsWhenConnected(el, config, delaySec)
   }
 
   const events = TRIGGER_EVENTS[config.trigger]!
@@ -535,7 +619,7 @@ export function __sui_motion_attach(
   const playForward = () => {
     if (prefersReducedMotion()) return
     for (const c of live) c.cancel()
-    live = createAnimations(el, config)
+    live = createAnimations(el, config, delaySec)
   }
   const onEnter = (ev: Event) => {
     if (config.trigger === 'focus-visible' && !isFocusVisible(ev as FocusEvent)) return
@@ -560,6 +644,9 @@ interface ExitEntry {
   /** The in-flight exit animation's controls, if `runLeave` is
    *  currently playing one. Empty otherwise. */
   controls: AnimControls[]
+  /** The sibling stagger delay resolved at attach time — exit shares
+   *  the same fixed-per-element phase index as enter/loop. */
+  delaySec: number | undefined
 }
 
 const EXITS = new WeakMap<Element, ExitEntry>()
@@ -600,7 +687,7 @@ function installLifecycleRunner(): void {
       }
       const playing: Promise<unknown>[] = []
       for (const { el, entry } of matched) {
-        const controls = createAnimations(el as HTMLElement, entry.config)
+        const controls = createAnimations(el as HTMLElement, entry.config, entry.delaySec)
         entry.controls = controls
         for (const c of controls) playing.push(c.finished.catch(() => {}))
       }
@@ -637,11 +724,9 @@ function installLifecycleRunner(): void {
  *  `@ship/sail-runtime`. */
 export function __buildTransitionForTest(
   cfg: MotionConfig,
-  index: number,
-  total: number,
-  staggerSec: number | undefined,
+  delaySec: number | undefined,
 ): Record<string, unknown> {
-  return buildTransition(cfg, index, total, staggerSec)
+  return buildTransition(cfg, delaySec)
 }
 
 /** Test seam: exposes the resolved keyframes the runtime hands to
