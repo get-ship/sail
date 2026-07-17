@@ -82,11 +82,17 @@ export default controller({
     // only scope/on/use/mount/unmount, so a `derived:` block is silently
     // dropped and the world would never receive its transform (the rest of the
     // codebase inlines derived() in scope for exactly this reason).
-    const worldTransform = derived<string>(() => {
+    // Named worldTransformCss, NOT worldTransform: the `use:worldTransform`
+    // directive below shares this file's scope with the runtime's imported
+    // `worldTransform` action of the same name. A scope value named identically
+    // to the action it feeds resolves, in the compiled `use:` value callback,
+    // to the ACTION import itself (called with zero args) instead of this
+    // derived signal — `undefined.style` inside the action is the result.
+    const worldTransformCss = derived<string>(() => {
       const t = canvas().transform()
       return `translate(${t.x}px, ${t.y}px) scale(${t.scale})`
     })
-    return { canvas, injected, fallback, viewportEl, debounced, worldTransform }
+    return { canvas, injected, fallback, viewportEl, debounced, worldTransformCss }
   },
 
   on: {
@@ -155,7 +161,7 @@ export default controller({
   on:wheel={wheel}
   sx="relative w-full h-full min-h-panel-min-w-lg bg-background text-foreground border border-border rounded-md overflow-hidden cursor-grab"
 >
-  <div use:worldTransform={worldTransform()} sx="absolute top-0 left-0 transform-(--world-tx)">
+  <div use:worldTransform={worldTransformCss()} sx="absolute top-0 left-0 transform-(--world-tx)">
     <slot></slot>
   </div>
 </div>
