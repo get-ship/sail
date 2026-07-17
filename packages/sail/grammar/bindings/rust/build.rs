@@ -35,7 +35,7 @@ fn main() {
         println!("cargo:rerun-if-changed={}", scanner_path.to_str().unwrap());
     }
 
-    c_config.compile("tree-sitter-set");
+    c_config.compile("tree-sitter-sail");
 
     println!("cargo:rustc-check-cfg=cfg(with_highlights_query)");
     if std::path::Path::new("queries/highlights.scm").exists() {
