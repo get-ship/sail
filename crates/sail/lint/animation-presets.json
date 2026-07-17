@@ -84,11 +84,11 @@
       "kind": "tween",
       "from": 0.0,
       "to": 1.0,
-      "duration_token": "duration-medium",
+      "duration_token": "duration-deliberate",
       "easing": "ease-in-out",
       "iterations": "infinite",
       "direction": "alternate",
-      "$doc": "translateY 0→-100% + opacity 0.4→1 — a 7-12px dot's visible bounce, paired per dot, with a 150ms stagger step that lands as a per-dot phase offset (dot 1: 0ms, dot 2: 150ms, dot 3: 300ms)."
+      "$doc": "translateY 0→-100% + opacity 0.4→1 — a 7-12px dot's visible bounce, paired per dot, with a 150ms stagger step that lands as a per-dot phase offset (dot 1: 0ms, dot 2: 150ms, dot 3: 300ms). Deliberate (420ms/phase) so the loop reads as a calm breathing rhythm, not a frantic flicker."
     },
     "marquee": {
       "kind": "tween",
