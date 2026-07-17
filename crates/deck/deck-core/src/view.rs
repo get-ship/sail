@@ -92,10 +92,7 @@ fn compile_view_js(name: &str, resolved: &ResolvedView, mode: DaemonMode) -> Dec
         _ => out.js,
     };
 
-    DeckResponse::js_view(final_js, mode).with_header(
-        "X-Sail-View",
-        name.chars().filter(|c| c.is_ascii()).collect::<String>(),
-    )
+    DeckResponse::js_view(final_js, mode)
 }
 
 // The view-name validator is a single source of truth in deck-host so the
