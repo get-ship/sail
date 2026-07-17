@@ -34,6 +34,12 @@ pub const RUNTIME_SPECIFIER: &str = "@ship/sail-runtime/internal";
 /// controller body calls is exported under `mountAmbient` and imported
 /// aliased back to `mount` (`import { mountAmbient as mount } from '...'`).
 pub const RUNTIME_AMBIENT: &[(&str, &str)] = &[
+    // `__invalidate` is never authored — it's the compiler's lowering
+    // target for `invalidate(ref)` (see `check::query_keys`), so it can
+    // only ever be REFERENCED (by the rewrite pass's own emitted call),
+    // never bound by the author. Ambient injection is exactly the "self-
+    // contained emitted module" property this table already exists for.
+    ("__invalidate", "__invalidate"),
     ("batch", "batch"),
     ("controller", "controller"),
     ("derived", "derived"),

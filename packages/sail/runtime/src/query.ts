@@ -245,3 +245,31 @@ export function mutation<T>(
 
   return { state, mutate }
 }
+
+// ---------------------------------------------------------------------------
+// invalidate() — the public escape-hatch primitive.
+// ---------------------------------------------------------------------------
+
+/**
+ * The compiler's lowering target for author-facing `invalidate(ref)` (see
+ * `invalidate-design-proposal.md`). Author source:
+ *
+ *   invalidate(crm.deals.list)   // exact method
+ *   invalidate(crm.deals)        // namespace
+ *   invalidate(crm)              // whole client
+ *
+ * The compiler statically resolves `ref` to a key prefix (root + member
+ * path — same resolution law `query()`/`mutation()` use) and rewrites the
+ * call to `__invalidate(prefix)`. `invalidate()` itself is never called at
+ * runtime — it is fully erased/rewritten at compile time — so this is the
+ * ONLY export of the pair that does real work; `invalidate` exists purely
+ * as the author-facing name the compiler pattern-matches on.
+ *
+ * Resolves the current owner-tree's cache via `useNativeCache()` (never a
+ * singleton — see native-cache.ts's OWNER-TREE HOMING clause) and applies
+ * the prefix match already implemented and tested on
+ * `NativeCache.invalidate()`.
+ */
+export function __invalidate(prefix: QueryKey): void {
+  useNativeCache().invalidate(prefix)
+}
