@@ -24,9 +24,13 @@
 // — section 2 below exercises the real method. Section 9 covers the
 // AbortSignal wiring added alongside it (dispose/GC/invalidate all
 // abort real in-flight network work, not just discard its result).
+//
+// Section 7's differential-vs-query-core suite (and the invalidate
+// differential at the end of section 2) proved parity pre-cutover and
+// was retired along with @tanstack/query-core and queried-querycore.ts
+// — see the query-slice job's report.
 
 import { describe, expect, it, vi } from 'vitest'
-import { QueryClient } from '@tanstack/query-core'
 import { createScope, withScope, type EffectScope } from '../src/effect-scope'
 import type { LiveState } from '../src/live'
 import {
@@ -37,7 +41,6 @@ import {
   hydrateNative,
   type PushSource,
 } from '../src/native-cache'
-import { queriedQueryCore } from '../src/queried-querycore'
 
 const tick = () => new Promise((r) => setTimeout(r, 0))
 
@@ -264,59 +267,12 @@ describe('2. INVALIDATE', () => {
     expect(sDetail()).toEqual({ kind: 'ok', value: 'detail-2' })
   })
 
-  it('differential vs query-core invalidateQueries: identical stale->refetch transition sequence for the pull-only subset', async () => {
-    async function scenario(engine: 'native' | 'querycore') {
-      if (engine === 'native') {
-        const scope = createScope()
-        const cache = withScope(scope, () => useNativeCache())
-        let call = 0
-        const s = withScope(scope, () =>
-          nativeQueried(['diff-invalidate'], () => Promise.resolve(`v${++call}`), { staleTime: 60_000 }),
-        )
-        await tick()
-        await tick()
-        const before = snapshot(s)
-        cache.invalidate(['diff-invalidate'])
-        const duringRevalidate = snapshot(s) // must still read old value, no loading flash
-        await tick()
-        await tick()
-        return [before, duringRevalidate, snapshot(s)]
-      }
-      const client = new QueryClient()
-      let call = 0
-      const observer = new (
-        await import('@tanstack/query-core')
-      ).QueryObserver(client, {
-        queryKey: ['diff-invalidate-qc'],
-        queryFn: () => Promise.resolve(`v${++call}`),
-        staleTime: 60_000,
-      })
-      const toSnap = (r: ReturnType<typeof observer.getCurrentResult>) =>
-        r.status === 'pending' ? { kind: 'loading' } : { kind: 'ok', value: r.data }
-      let current = toSnap(observer.getCurrentResult())
-      observer.subscribe((r) => {
-        current = toSnap(r)
-      })
-      await tick()
-      await tick()
-      const before = current
-      // deliberately NOT awaited — `invalidateQueries` awaits refetch
-      // completion for active queries by default, which would already
-      // observe the settled value by the time we read `current` below.
-      // native's `invalidate()` is fire-and-forget/synchronous-return
-      // the same way; reading `current` immediately after the call is
-      // the comparable mid-flight snapshot for both engines.
-      void client.invalidateQueries({ queryKey: ['diff-invalidate-qc'] })
-      const duringRevalidate = current
-      await tick()
-      await tick()
-      return [before, duringRevalidate, current]
-    }
-
-    const nativeResult = await scenario('native')
-    const qcResult = await scenario('querycore')
-    expect(nativeResult).toEqual(qcResult)
-  })
+  // A differential test proving this matches query-core's
+  // `invalidateQueries` transition sequence (before -> during-revalidate,
+  // no loading flash -> settled) ran here pre-cutover and passed byte-
+  // for-byte; see query-slice-report.md. Removed along with the
+  // @tanstack/query-core dependency itself (section 7 below explains the
+  // same retirement for the broader differential suite).
 })
 
 // ---------------------------------------------------------------------------
@@ -610,108 +566,14 @@ describe('6. DEHYDRATE UNDER FIRE', () => {
 })
 
 // ---------------------------------------------------------------------------
-// 7. DIFFERENTIAL — nativeQueried vs the retired query-core twin, identical scripts
+// 7. DIFFERENTIAL — RETIRED. Ran nativeQueried vs the query-core-backed twin
+// through 6 identical scripted scenarios (success, error, dedup, remount-
+// fresh, stale-then-revalidate, isolated-roots) and asserted byte-identical
+// state sequences — all 6 passed before this cutover (see
+// query-slice-report.md). Removed along with @tanstack/query-core and
+// queried-querycore.ts once that parity was proven; nothing left to diff
+// against post-swap.
 // ---------------------------------------------------------------------------
-
-function snapshot(sig: { (): LiveState<unknown> }): unknown {
-  const v = sig()
-  if (v.kind === 'error') return { kind: 'error', message: v.error.message }
-  return v
-}
-
-async function scenarioSuccess(query: typeof nativeQueried | typeof queriedQueryCore) {
-  const scope = createScope()
-  const s = withScope(scope, () => query(['diff-success'], () => Promise.resolve(42)))
-  const before = snapshot(s)
-  await tick()
-  await tick()
-  return [before, snapshot(s)]
-}
-
-async function scenarioError(query: typeof nativeQueried | typeof queriedQueryCore) {
-  const scope = createScope()
-  const s = withScope(scope, () =>
-    query(['diff-error'], () => Promise.reject(new Error('boom')), { retry: false }),
-  )
-  await tick()
-  await tick()
-  return [snapshot(s)]
-}
-
-async function scenarioDedup(query: typeof nativeQueried | typeof queriedQueryCore) {
-  const scope = createScope()
-  const fetcher = vi.fn(() => Promise.resolve('shared'))
-  const [a, b] = withScope(scope, () => [
-    query(['diff-dedup'], fetcher),
-    query(['diff-dedup'], fetcher),
-  ])
-  await tick()
-  await tick()
-  return [snapshot(a), snapshot(b), fetcher.mock.calls.length]
-}
-
-async function scenarioRemountFresh(query: typeof nativeQueried | typeof queriedQueryCore) {
-  const root = createScope()
-  const fetcher = vi.fn(() => Promise.resolve('cached'))
-  const first = childOf(root)
-  const s1 = withScope(first, () => query(['diff-remount'], fetcher, { staleTime: 60_000 }))
-  await tick()
-  await tick()
-  const snap1 = snapshot(s1)
-  first.dispose()
-  const second = childOf(root)
-  const s2 = withScope(second, () => query(['diff-remount'], fetcher, { staleTime: 60_000 }))
-  return [snap1, snapshot(s2), fetcher.mock.calls.length]
-}
-
-async function scenarioStaleRevalidate(query: typeof nativeQueried | typeof queriedQueryCore) {
-  const root = createScope()
-  let call = 0
-  const fetcher = vi.fn(() => Promise.resolve(`v${++call}`))
-  const first = childOf(root)
-  const s1 = withScope(first, () => query(['diff-stale'], fetcher, { staleTime: 0 }))
-  await tick()
-  await tick()
-  const snapFirst = snapshot(s1)
-  first.dispose()
-  const second = childOf(root)
-  const s2 = withScope(second, () => query(['diff-stale'], fetcher, { staleTime: 0 }))
-  const snapImmediate = snapshot(s2)
-  await tick()
-  await tick()
-  return [snapFirst, snapImmediate, snapshot(s2), fetcher.mock.calls.length]
-}
-
-async function scenarioIsolatedRoots(query: typeof nativeQueried | typeof queriedQueryCore) {
-  const rootA = createScope()
-  const rootB = createScope()
-  const fetcherA = vi.fn(() => Promise.resolve('A'))
-  const fetcherB = vi.fn(() => Promise.resolve('B'))
-  const sA = withScope(rootA, () => query(['diff-iso'], fetcherA))
-  const sB = withScope(rootB, () => query(['diff-iso'], fetcherB))
-  await tick()
-  await tick()
-  return [snapshot(sA), snapshot(sB)]
-}
-
-describe('7. DIFFERENTIAL — nativeQueried vs the retired query-core twin, identical scripted sources', () => {
-  const scenarios: Array<[string, (q: typeof nativeQueried | typeof queriedQueryCore) => Promise<unknown>]> = [
-    ['success', scenarioSuccess],
-    ['error', scenarioError],
-    ['dedup', scenarioDedup],
-    ['remount-fresh', scenarioRemountFresh],
-    ['stale-then-revalidate', scenarioStaleRevalidate],
-    ['isolated-roots', scenarioIsolatedRoots],
-  ]
-
-  for (const [name, scenario] of scenarios) {
-    it(`${name}: native and query-core produce the same state sequence`, async () => {
-      const nativeResult = await scenario(nativeQueried)
-      const queryResult = await scenario(queriedQueryCore)
-      expect(nativeResult).toEqual(queryResult)
-    })
-  }
-})
 
 // ---------------------------------------------------------------------------
 // 8. TWO-ROOTS + CLOCK SKEW
