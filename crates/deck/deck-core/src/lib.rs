@@ -42,7 +42,10 @@ mod mode_tests;
 // the process-global resolver it pinned. Resolution is now mount-scoped, so a
 // test simply constructs a `Resolution::new().with_root(dir)` and passes it in;
 // there is no global to guard or serialize.)
-pub use response::{CachePolicy, DeckResponse, HTML_SECURITY_HEADERS, compute_etag};
+pub use response::{
+    CachePolicy, DeckResponse, HTML_SECURITY_HEADERS, compute_etag, connect_src_directive,
+    html_security_headers_for,
+};
 pub use app_port::AppRegistry;
 pub use change_source::{ChangeFeed, ChangeSource};
 pub use data_port::DataPort;

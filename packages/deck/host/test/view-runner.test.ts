@@ -41,6 +41,44 @@ describe('buildViewEndowments', () => {
     // Hardened — the view can't graft new capabilities onto the surface.
     expect(Object.isFrozen(surface)).toBe(true)
   })
+
+  it('does not endow fetch by default (no "network" grant) — unchanged from before the capability existed', () => {
+    const surface = buildViewEndowments({
+      runtime: {},
+      ship: {},
+      doc: fakeDoc,
+    }) as Record<string, unknown>
+    expect(surface.fetch).toBeUndefined()
+  })
+
+  it('endows a confined fetch WRAPPER (never the bare global) when "network" is granted', async () => {
+    const surface = buildViewEndowments({
+      runtime: {},
+      ship: {},
+      doc: fakeDoc,
+      network: ['https://api.example.com'],
+    }) as Record<string, unknown>
+    expect(typeof surface.fetch).toBe('function')
+    expect(surface.fetch).not.toBe(globalThis.fetch)
+    // Same allowlist semantics as the confine-level wrapper: granted origin
+    // is reachable (network error, not a capability refusal, since this test
+    // has no real network); a refused origin throws before ever attempting
+    // the request.
+    const confinedFetch = surface.fetch as typeof fetch
+    await expect(confinedFetch('https://evil.com/x')).rejects.toThrow(
+      /network" allowlist/,
+    )
+  })
+
+  it('an empty "network" array behaves like no grant at all — fetch stays un-endowed', () => {
+    const surface = buildViewEndowments({
+      runtime: {},
+      ship: {},
+      doc: fakeDoc,
+      network: [],
+    }) as Record<string, unknown>
+    expect(surface.fetch).toBeUndefined()
+  })
 })
 
 describe('confineViewModule', () => {

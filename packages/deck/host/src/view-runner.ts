@@ -5,7 +5,7 @@
 //! SUI→Deck dependency or a live-path edit. Default (unconfined) mount is
 //! untouched; a host opts in per view.
 
-import { confineController } from './confine'
+import { confineController, createConfinedFetch } from './confine'
 import { lowerModuleToExpression } from './lower-imports'
 
 /** The minimal node-factory surface the compiled view's renderer needs. */
@@ -42,6 +42,26 @@ export interface ViewEndowmentInput {
   navigate?: (path: string) => void
   /** Defaults to the realm's `document`; the view sees only its node factories. */
   doc?: Document
+  /**
+   * The package's resolved `sui.config.json` `"network"` per-origin
+   * allowlist — the SAME declaration the `sui-controller-no-ambient-
+   * authority` lint checks fetch/WebSocket/EventSource targets against
+   * (`crates/sui/compiler/src/check/policy.rs`'s `Policy::network_for`).
+   * Absent/empty means no grant: `fetch` stays un-endowed (`undefined` in
+   * the confined view), exactly as before this capability existed. A
+   * non-empty list endows a confined `fetch` WRAPPER (never the bare
+   * global, see `createConfinedFetch` in `./confine`) that checks each
+   * call's target origin against this list at call time — the actual
+   * runtime wall; the lint is a static mirror of it for literal targets.
+   *
+   * NOT YET WIRED to a live per-view resolved config: nothing in this repo
+   * currently calls `buildViewEndowments` from a real view-serving path with
+   * a resolved `sui.config.json` in hand (only tests construct
+   * `ViewEndowmentInput` today) — the host call site that would resolve a
+   * view's package config and pass its `"network"` list here is a follow-up.
+   * This field + `createConfinedFetch` are the correctly-shaped pieces.
+   */
+  network?: string[]
 }
 
 /**
@@ -60,6 +80,13 @@ export function buildViewEndowments(input: ViewEndowmentInput): Record<string, u
   }
   if (input.route !== undefined) surface.route = input.route
   if (input.navigate) surface.navigate = input.navigate
+  // Only endow `fetch` at all when a non-empty grant exists — an
+  // always-throwing endowed `fetch` is observably different from the
+  // default `undefined` (today's full refusal), and callers/tests that
+  // probe `typeof fetch === 'undefined'` must keep seeing that by default.
+  if (input.network && input.network.length > 0) {
+    surface.fetch = createConfinedFetch(input.network)
+  }
   return harden(surface) as Record<string, unknown>
 }
 
