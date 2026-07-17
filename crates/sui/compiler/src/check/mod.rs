@@ -248,11 +248,31 @@ pub fn collect(
         diags.push(finding_to_diag(&f));
     }
     if let Some(c) = controller {
-        let controller_findings =
+        let mut controller_findings =
             crate::check::lint_overrides::apply_overrides(
                 sui_lint::lint_controller_source(&c.path, &c.source),
                 overrides,
             );
+        // `sui-controller-no-ambient-authority` is `sui.config.json`
+        // "network"-aware, but the generic `CONTROLLER_RULES` table
+        // (`lint_controller_source`, above) is config-blind — it always ran
+        // the rule's default (empty-allowlist) entry. Drop those findings and
+        // re-run the network-aware `check_confined` with the resolved
+        // allowlist (`Policy::network_for`), same "specially invoked" pattern
+        // `css_token` uses in `run()`. This is not a second `sui.config.json`
+        // reader: `network_for` re-derives from the one resolver
+        // (`sui_lint::config::resolve`) via `Policy::resolve_outcome`.
+        controller_findings.retain(|f| {
+            f.rule != sui_lint::rules::controller_no_ambient_authority::RULE_ID
+        });
+        let network = crate::check::policy::Policy::network_for(&c.path);
+        let ambient_findings = crate::check::lint_overrides::apply_overrides(
+            sui_lint::rules::controller_no_ambient_authority::check_confined(
+                &c.path, &c.source, &network,
+            ),
+            overrides,
+        );
+        controller_findings.extend(ambient_findings);
         for f in controller_findings {
             diags.push(finding_to_diag(&f));
         }

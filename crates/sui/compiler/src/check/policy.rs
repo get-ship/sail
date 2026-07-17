@@ -199,6 +199,21 @@ impl Policy {
         let (config_path, cfg) = sui_lint::config::resolve(source_file.parent()?)?;
         Some((config_path, classify(&cfg)))
     }
+
+    /// The resolved `"network"` per-origin allowlist for a source file's
+    /// nearest `sui.config.json` — the fetch/WebSocket/EventSource capability
+    /// grant that drives the network-aware lint pass
+    /// (`sui_lint::rules::controller_no_ambient_authority::check_confined`).
+    /// This is NOT a second `sui.config.json` reader: it re-derives from
+    /// [`Policy::resolve_outcome`], the same walk-up/parse `overrides_for`
+    /// uses. Empty when no config exists, the config fails closed
+    /// (`Rejected`), or the config simply never declares `"network"` —
+    /// today's full refusal, unchanged for anyone who doesn't opt in.
+    pub fn network_for(source_file: &Path) -> Vec<String> {
+        Policy::resolve_outcome(source_file)
+            .map(|(_, r)| r.network)
+            .unwrap_or_default()
+    }
 }
 
 /// WHY a package resolved to its tier — carries enough detail for the log
@@ -208,6 +223,13 @@ impl Policy {
 pub struct PolicyResolution {
     pub tier: Policy,
     pub kind: ResolutionKind,
+    /// The `"network"` per-origin allowlist declared by this config, or empty
+    /// when absent — the fetch/WebSocket/EventSource capability grant. Empty
+    /// on every `Rejected` resolution too: a config that fails closed grants
+    /// nothing, regardless of what its (unread) `"network"` value might have
+    /// said. Orthogonal to `tier` — the styling capability keys don't gate it
+    /// and it doesn't gate them.
+    pub network: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -236,6 +258,7 @@ fn classify(cfg: &sui_lint::config::SuiConfig) -> PolicyResolution {
         return PolicyResolution {
             tier: Policy::STRICT,
             kind: ResolutionKind::Rejected("the file is not valid JSON".to_string()),
+            network: Vec::new(),
         };
     }
     let unknown = cfg.unknown_keys();
@@ -251,6 +274,7 @@ fn classify(cfg: &sui_lint::config::SuiConfig) -> PolicyResolution {
                     .collect::<Vec<_>>()
                     .join(", ")
             )),
+            network: Vec::new(),
         };
     }
 
@@ -268,6 +292,7 @@ fn classify(cfg: &sui_lint::config::SuiConfig) -> PolicyResolution {
                     kind: ResolutionKind::Rejected(format!(
                         "unrecognized preset \"{name}\" (expected \"full\" or \"strict\")"
                     )),
+                    network: Vec::new(),
                 };
             }
         }
@@ -284,6 +309,32 @@ fn classify(cfg: &sui_lint::config::SuiConfig) -> PolicyResolution {
         }
     }
 
+    // `"network"` — the fetch/WebSocket/EventSource per-origin allowlist.
+    // Orthogonal to the styling tier: it never touches `p`, only `network`.
+    // A wrong-typed value (not an array, or a non-string element) is a type
+    // error — fail closed LOUDLY (Rejected), never silently granted. An
+    // explicit empty array is well-typed and contributes signal like any
+    // other explicit capability key (e.g. `"sx": false`) — it's a declared
+    // "grant nothing", not a config with no signal at all.
+    let mut network = Vec::new();
+    if let Some(net) = cfg.network_key() {
+        match net {
+            Ok(origins) => {
+                signal.push(format!("network: [{}]", origins.join(", ")));
+                network = origins;
+            }
+            Err(()) => {
+                return PolicyResolution {
+                    tier: Policy::STRICT,
+                    kind: ResolutionKind::Rejected(
+                        "\"network\" must be an array of origin strings".to_string(),
+                    ),
+                    network: Vec::new(),
+                };
+            }
+        }
+    }
+
     if signal.is_empty() {
         let recognized_present: Vec<&str> = sui_lint::config::RECOGNIZED_KEYS
             .iter()
@@ -295,9 +346,9 @@ fn classify(cfg: &sui_lint::config::SuiConfig) -> PolicyResolution {
         } else {
             recognized_present.join(", ")
         };
-        PolicyResolution { tier: Policy::STRICT, kind: ResolutionKind::NoSignal(hint) }
+        PolicyResolution { tier: Policy::STRICT, kind: ResolutionKind::NoSignal(hint), network: Vec::new() }
     } else {
-        PolicyResolution { tier: p, kind: ResolutionKind::Recognized(signal.join(", ")) }
+        PolicyResolution { tier: p, kind: ResolutionKind::Recognized(signal.join(", ")), network }
     }
 }
 
@@ -571,6 +622,101 @@ mod tests {
         assert!(msg.contains("/pkg/sui.config.json"), "{msg}");
         assert!(msg.contains("strict"), "{msg}");
         assert!(msg.contains("stylesheets"), "{msg}");
+    }
+
+    // ----------------------------------------------------------------------
+    // `"network"` — the per-origin allowlist. Orthogonal to the styling tier;
+    // parsed by `classify`, exposed via `PolicyResolution::network` and
+    // `Policy::network_for`.
+    // ----------------------------------------------------------------------
+
+    #[test]
+    fn absent_network_key_resolves_to_an_empty_allowlist() {
+        let r = classify(&sui_lint::config::SuiConfig::from_json(r#"{"preset":"full"}"#));
+        assert!(r.network.is_empty());
+    }
+
+    #[test]
+    fn declared_network_key_resolves_its_origins_and_is_recognized() {
+        let r = classify(&sui_lint::config::SuiConfig::from_json(
+            r#"{"network":["https://api.example.com","self"]}"#,
+        ));
+        assert_eq!(r.network, vec!["https://api.example.com".to_string(), "self".to_string()]);
+        assert!(matches!(&r.kind, ResolutionKind::Recognized(s) if s.contains("network:")));
+    }
+
+    #[test]
+    fn empty_network_array_is_a_well_typed_no_grant_declaration() {
+        // Explicit `[]` is not a type error — it's a declared "grant nothing",
+        // same bucket as `"sx": false`: Recognized, not Rejected.
+        let r = classify(&sui_lint::config::SuiConfig::from_json(r#"{"network":[]}"#));
+        assert!(r.network.is_empty());
+        assert!(matches!(&r.kind, ResolutionKind::Recognized(_)), "{:?}", r.kind);
+    }
+
+    #[test]
+    fn non_array_network_value_is_a_type_error_and_fails_closed() {
+        // `{"network": "https://x.com"}` — a string, not an array — must never
+        // be silently treated as granting. Rejected, empty allowlist.
+        let r = classify(&sui_lint::config::SuiConfig::from_json(r#"{"network":"https://x.com"}"#));
+        assert!(r.network.is_empty());
+        assert!(
+            matches!(&r.kind, ResolutionKind::Rejected(reason) if reason.contains("network")),
+            "{:?}",
+            r.kind
+        );
+    }
+
+    #[test]
+    fn non_string_element_in_network_array_is_a_type_error() {
+        let r = classify(&sui_lint::config::SuiConfig::from_json(r#"{"network":[1, 2]}"#));
+        assert!(r.network.is_empty());
+        assert!(matches!(&r.kind, ResolutionKind::Rejected(_)), "{:?}", r.kind);
+    }
+
+    #[test]
+    fn network_for_resolves_on_disk_and_defaults_to_empty() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("sui.config.json"),
+            r#"{"network":["https://api.example.com"]}"#,
+        )
+        .unwrap();
+        let src = tmp.path().join("src").join("w.controller.ts");
+        std::fs::create_dir_all(src.parent().unwrap()).unwrap();
+        std::fs::write(&src, "export default {}").unwrap();
+        assert_eq!(Policy::network_for(&src), vec!["https://api.example.com".to_string()]);
+
+        // No config anywhere on the walk → empty (today's default refusal).
+        let tmp2 = tempfile::tempdir().unwrap();
+        let src2 = tmp2.path().join("w.controller.ts");
+        std::fs::write(&src2, "export default {}").unwrap();
+        assert!(Policy::network_for(&src2).is_empty());
+    }
+
+    #[test]
+    fn network_announcement_names_the_granted_origins() {
+        // THE loud seam: granting network must name the origins, not just
+        // say "granted: true" — same shape as the existing preset/capability
+        // announcements.
+        let cfg = sui_lint::config::SuiConfig::from_json(
+            r#"{"network":["https://api.example.com","self"]}"#,
+        );
+        let resolution = classify(&cfg);
+        let msg = render_announcement(Path::new("/pkg/sui.config.json"), &resolution);
+        assert!(!msg.contains("REFUSED"), "{msg}");
+        assert!(msg.contains("/pkg/sui.config.json"), "{msg}");
+        assert!(msg.contains("https://api.example.com"), "{msg}");
+        assert!(msg.contains("self"), "{msg}");
+    }
+
+    #[test]
+    fn non_array_network_announcement_refuses_loudly_and_names_the_key() {
+        let cfg = sui_lint::config::SuiConfig::from_json(r#"{"network":"https://x.com"}"#);
+        let resolution = classify(&cfg);
+        let msg = render_announcement(Path::new("/pkg/sui.config.json"), &resolution);
+        assert!(msg.contains("REFUSED"), "{msg}");
+        assert!(msg.contains("network"), "{msg}");
     }
 
     #[test]

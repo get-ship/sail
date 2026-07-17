@@ -34,7 +34,8 @@ pub fn owning_dir(from: &Path) -> Option<PathBuf> {
 /// present is a typo/unknown key — the compiler must refuse loudly rather
 /// than silently ignore it (config-loud-strict: a `{"polcy":"strict"}` typo
 /// used to fail closed with zero signal).
-pub const RECOGNIZED_KEYS: [&str; 5] = ["preset", "sx", "variants", "raw_containers", "stylesheets"];
+pub const RECOGNIZED_KEYS: [&str; 6] =
+    ["preset", "sx", "variants", "raw_containers", "stylesheets", "network"];
 
 /// The parsed contents of the nearest `sui.config.json` on the walk up. Holds
 /// the raw JSON; typed accessors read individual fields leniently.
@@ -93,6 +94,31 @@ impl SuiConfig {
                     .collect()
             })
             .unwrap_or_default()
+    }
+
+    /// The declared `"network"` per-origin allowlist — the fetch/WebSocket/
+    /// EventSource capability grant. `None` when the key is absent entirely
+    /// (today's default: full refusal). `Some(Err(()))` when the key is
+    /// present but wrong-typed (not an array, or an array with a non-string
+    /// element) — a type error the caller must fail closed on, never silently
+    /// treat as granting. `Some(Ok(origins))` when present and well-typed;
+    /// an empty array is a valid, explicit "grant nothing" declaration, not a
+    /// type error.
+    pub fn network_key(&self) -> Option<Result<Vec<String>, ()>> {
+        let v = self.raw.get("network")?;
+        match v.as_array() {
+            Some(arr) => {
+                let mut out = Vec::with_capacity(arr.len());
+                for item in arr {
+                    match item.as_str() {
+                        Some(s) => out.push(s.to_string()),
+                        None => return Some(Err(())),
+                    }
+                }
+                Some(Ok(out))
+            }
+            None => Some(Err(())),
+        }
     }
 
     /// The declared `"stylesheets"` set — the CSS files the pack is allowed to
