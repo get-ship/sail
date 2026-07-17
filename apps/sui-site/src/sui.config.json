@@ -1,5 +1,8 @@
 {
   "preset": "strict",
   "sx": true,
-  "raw_containers": true
+  "raw_containers": true,
+  "stylesheets": [
+    "identity.css"
+  ]
 }
