@@ -166,8 +166,11 @@
   --text-3xl: 28px;
   --text-4xl: 36px;
   /* Display type: ONE fluid semantic size for hero/landing headlines, not a
-     ladder of ever-bigger steps. Themes may retune the clamp. */
-  --text-display: clamp(2.75rem, 7.5vw, 5.5rem);
+     ladder of ever-bigger steps. Themes may retune the clamp. The kinetic
+     landing (design 1c) leans on this for both the two-line hero and the
+     closing SHIP wordmark, so the clamp reaches further up than a docs h1
+     would ever need — nothing else in the app spends `text-display`. */
+  --text-display: clamp(3rem, 9vw, 8.5rem);
 
   --leading-none: 1;
   --leading-tight: 1.2;
