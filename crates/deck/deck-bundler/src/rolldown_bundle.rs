@@ -127,6 +127,10 @@ pub async fn bundle_target(
     // called twice` runtime warning + first-write-wins hijack.
     crate::tag_check::verify_no_duplicate_tag_defines(&out_dir)
         .map_err(|e| anyhow!("{} tag-collision check failed: {e}", target.name))?;
+    // Post-bundle duplicate-package-version WARNING (#89 item 3, diagnostic
+    // only — never changes what gets bundled). See `dup_version_check` for
+    // the CodeMirror 6.7.0/6.7.1 case this catches.
+    crate::dup_version_check::warn_duplicate_versions(&module_paths);
     let out_path = out_dir.join(&target.out_file);
     let bytes = std::fs::metadata(&out_path).map(|m| m.len() as usize).unwrap_or(0);
     let dropped_side_effect_modules = detect_dropped_side_effect_modules(&module_paths, &entry);
