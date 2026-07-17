@@ -1,6 +1,6 @@
 ---
 title: "State is a controller"
-description: "signal, derived, and effect — one owner for state, and templates bind only what scope() returns."
+description: "signal, derived, and effect — one owner for state, and templates bind only what the controller returns."
 order: 3
 slug: "03-state-is-a-controller"
 prev: "02-styling-is-sx"
@@ -8,9 +8,10 @@ next: "04-templates-react"
 chapter: "state"
 ---
 
-Behavior lives in **one place**: the controller. Whatever its `scope()`
-returns is the template's entire world — a binding like `{clock()}`
-can only reach what the controller chose to expose.
+Behavior lives in **one place**: the controller. Whatever the
+controller function returns is the template's entire world — a
+binding like `{clock()}` can only reach what the controller chose to
+expose.
 
 The example is a stopwatch, built from the three reactive primitives:
 
@@ -50,11 +51,9 @@ the template:
 ```
 <controller>
 import { controller, signal } from '@ship/sui-runtime'
-export default controller({
-  setup: () => {
-    const elapsed = signal(0)
-    return { elapsed }
-  },
+export default controller(() => {
+  const elapsed = signal(0)
+  return { elapsed }
 })
 </controller>
 
@@ -75,9 +74,7 @@ by the block.
 import { controller } from '@ship/sui-runtime'
 import { createStopwatch } from './stopwatch'   // plain TS, plain functions
 
-export default controller({
-  setup: () => createStopwatch(),
-})
+export default controller(() => createStopwatch())
 </controller>
 ```
 

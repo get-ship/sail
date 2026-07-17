@@ -1,7 +1,8 @@
-//! Pure-`derived` rule: each entry in `controller({ derived: {...} })`
-//! must be a side-effect-free getter. The runtime memo-evaluates
-//! deriveds on signal reads — anything async or impure breaks that
-//! invariant.
+//! Pure-`derived` rule: every scope member classified as
+//! [`ScopeKind::Derived`] (i.e. every `derived(() => …)` / `computed(() =>
+//! …)` call in a controller's returned scope) must be a side-effect-free
+//! getter. The runtime memo-evaluates deriveds on signal reads — anything
+//! async or impure breaks that invariant.
 //!
 //! Forbidden patterns (textual scan, string-aware):
 //!   * `await` keyword
@@ -14,10 +15,8 @@
 //! The job spec (phase 3) lists these as the canonical bad set. Move
 //! work that needs them to `mount()` or `use()` instead.
 
-use crate::check::controller_parse::ParsedController;
-use crate::check::js_scan::{
-    is_ident_cont, is_ident_start, next_top_separator, skip_balanced, skip_trivia,
-};
+use crate::check::controller_parse::{ParsedController, ScopeKind};
+use crate::check::js_scan::is_ident_cont;
 use crate::diagnostics::{CompileError, Span};
 
 struct Pattern {
@@ -45,107 +44,21 @@ const PATTERNS: &[Pattern] = &[
 ];
 
 pub fn check(controller: &ParsedController) -> Result<(), CompileError> {
-    let Some(derived) = controller.section("derived") else {
-        return Ok(());
-    };
-    // The value span brackets `{ ... }`. Walk its inner top-level
-    // entries; each entry's body is scanned for the forbidden patterns.
-    let value = controller.slice(derived.value_span);
-    if !value.starts_with('{') || !value.ends_with('}') {
-        // Atypical shape (`derived: someFactory(...)`) — out of scope
-        // for this check; let lowering deal with it.
-        return Ok(());
-    }
-    let inner_start = derived.value_span.start + 1;
-    let inner_end = derived.value_span.end - 1;
-    let entries = parse_entries(&controller.source, inner_start, inner_end);
-    for entry in entries {
-        if let Some((label, span)) = scan_for_forbidden(&controller.source, entry.body_span) {
+    for member in &controller.returned {
+        if member.kind != ScopeKind::Derived {
+            continue;
+        }
+        if let Some((label, span)) = scan_for_forbidden(&controller.source, member.value_span) {
             return Err(CompileError::new(format!(
                 "Derived '{}' contains side effect '{}'. Move to mount() or use().",
-                entry.name, label
+                member.name, label
             ))
             .with_span(span)
             .with_path(controller.path.clone())
-            .with_category(format!("derived.{}", entry.name)));
+            .with_category(format!("derived.{}", member.name)));
         }
     }
     Ok(())
-}
-
-struct Entry {
-    name: String,
-    /// Span over the value text (e.g. the arrow body, or the entire
-    /// arrow expression — anything after the `:` and before the
-    /// trailing `,`/`}`).
-    body_span: Span,
-}
-
-fn parse_entries(src: &str, start: usize, end: usize) -> Vec<Entry> {
-    let bytes = src.as_bytes();
-    let mut out = Vec::new();
-    let mut i = start;
-    while i < end {
-        i = skip_trivia(bytes, i);
-        if i >= end {
-            break;
-        }
-        if bytes[i] == b',' {
-            i += 1;
-            continue;
-        }
-        let key_start = i;
-        let key;
-        if bytes[i] == b'"' || bytes[i] == b'\'' {
-            let q = bytes[i];
-            i += 1;
-            let s = i;
-            while i < end && bytes[i] != q {
-                if bytes[i] == b'\\' { i += 2; continue; }
-                i += 1;
-            }
-            key = src[s..i].to_string();
-            if i < end { i += 1; }
-        } else if is_ident_start(bytes[i]) {
-            while i < end && is_ident_cont(bytes[i]) {
-                i += 1;
-            }
-            key = src[key_start..i].to_string();
-        } else {
-            i = next_top_separator(bytes, i, end);
-            if i < end && bytes[i] == b',' { i += 1; }
-            continue;
-        }
-        i = skip_trivia(bytes, i);
-        // Method form: `foo(args) { body }` — we treat both args + body
-        // as the body span.
-        if i < end && bytes[i] == b'(' {
-            let body_start = i;
-            i = skip_balanced(bytes, i, end);
-            i = skip_trivia(bytes, i);
-            if i < end && bytes[i] == b'{' {
-                i = skip_balanced(bytes, i, end);
-            }
-            out.push(Entry { name: key, body_span: Span::new(body_start, i) });
-            i = skip_trivia(bytes, i);
-            if i < end && bytes[i] == b',' { i += 1; }
-            continue;
-        }
-        if i >= end || bytes[i] != b':' {
-            // Shorthand or unrecognised — skip.
-            i = next_top_separator(bytes, i, end);
-            if i < end && bytes[i] == b',' { i += 1; }
-            continue;
-        }
-        i += 1;
-        i = skip_trivia(bytes, i);
-        let body_start = i;
-        let body_end = next_top_separator(bytes, i, end);
-        out.push(Entry { name: key, body_span: Span::new(body_start, body_end) });
-        i = body_end;
-        if i < end && bytes[i] == b',' { i += 1; }
-    }
-    out
 }
 
 fn scan_for_forbidden(src: &str, span: Span) -> Option<(&'static str, Span)> {
@@ -175,7 +88,7 @@ fn scan_for_forbidden(src: &str, span: Span) -> Option<(&'static str, Span)> {
             }
             _ => {}
         }
-        if !is_ident_start(c) {
+        if !is_ident_start_byte(c) {
             i += 1;
             continue;
         }
@@ -197,8 +110,6 @@ fn scan_for_forbidden(src: &str, span: Span) -> Option<(&'static str, Span)> {
                     continue;
                 }
             }
-            // No suffix needed: just ensure the token isn't part of a
-            // longer identifier. `at_token` already handles that.
             if hit.map(|(h, _)| h.token.len()).unwrap_or(0) < pat.token.len() {
                 hit = Some((pat, after));
             }
@@ -209,12 +120,13 @@ fn scan_for_forbidden(src: &str, span: Span) -> Option<(&'static str, Span)> {
         // Advance past this identifier so we don't re-scan it.
         let mut k = i;
         while k < end && is_ident_cont(bytes[k]) { k += 1; }
-        // Allow chained property access (`Date.now`) to be treated as
-        // one identifier-like span by patterns above; for advancement
-        // we still skip just the leading ident.
         i = if k > i { k } else { i + 1 };
     }
     None
+}
+
+fn is_ident_start_byte(b: u8) -> bool {
+    b.is_ascii_alphabetic() || b == b'_' || b == b'$'
 }
 
 /// Match `token` exactly at `i`, with no preceding/following ident
@@ -229,17 +141,12 @@ fn at_token(src: &str, i: usize, token: &str) -> bool {
     if !src[i..].starts_with(token) {
         return false;
     }
-    // Pre: the byte before `i` must not be ident-continue, OR `i` is
-    // at the start.
     if i > 0 && is_ident_cont(bytes[i - 1]) {
         return false;
     }
-    // Post: the byte after the token must not be ident-continue.
     let after = i + token.len();
     if after < bytes.len() && is_ident_cont(bytes[after]) {
         return false;
     }
     true
 }
-
-

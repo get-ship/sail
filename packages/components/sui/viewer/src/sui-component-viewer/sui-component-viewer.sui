@@ -48,8 +48,7 @@ export interface PropRow {
   desc: string
 }
 
-export default controller<Scope>({
-  setup: ({ variants, rows, usage, variantAttr }: Scope) => {
+export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
     const active = signal('')
     const variantList = derived(() => variants() ?? [])
     const hasVariants = derived(() => (variantAttr() ?? '') !== '' && variantList().length > 0)
@@ -60,42 +59,41 @@ export default controller<Scope>({
     const chips = derived(() =>
       variantList().map((v) => ({ v, variant: v === current() ? 'solid' : 'ghost' })),
     )
-    return { active, current, chips, hasVariants, propRows, hasProps, hasUsage }
-  },
+    mount((host) => {
+      // Picking a variant writes the real attribute onto the slotted specimen —
+      // the viewer drives the component, it does not simulate it.
+      const apply = (): void => {
+        const attr = variantAttr()
+        const val = current()
+        if (!attr || !val) return
+        for (const el of host.querySelectorAll('[slot="stage"]')) el.setAttribute(attr, val)
+      }
+      const onClick = (e: Event): void => {
+        const btn = (e.target as HTMLElement).closest('[data-variant]')
+        if (!btn) return
+        const v = btn.getAttribute('data-variant') ?? ''
+        active.set(v)
+        apply()
+        host.dispatchEvent(
+          new CustomEvent('sui-variant-change', {
+            detail: { variant: v },
+            bubbles: true,
+            composed: true,
+          }),
+        )
+      }
+      host.addEventListener('click', onClick)
+      // The specimen tracks the selection: identity props (variants) may land
+      // after mount, and a pick must reach the slotted element either way.
+      const stop = effect(apply)
+      return () => {
+        stop()
+        host.removeEventListener('click', onClick)
+      }
+    })
 
-  mount(state, host) {
-    // Picking a variant writes the real attribute onto the slotted specimen —
-    // the viewer drives the component, it does not simulate it.
-    const apply = (): void => {
-      const attr = (state.$signals.variantAttr as unknown as () => string)()
-      const val = (state.$signals.current as unknown as () => string)()
-      if (!attr || !val) return
-      for (const el of host.querySelectorAll('[slot="stage"]')) el.setAttribute(attr, val)
-    }
-    const onClick = (e: Event): void => {
-      const btn = (e.target as HTMLElement).closest('[data-variant]')
-      if (!btn) return
-      const v = btn.getAttribute('data-variant') ?? ''
-      state.active = v
-      apply()
-      host.dispatchEvent(
-        new CustomEvent('sui-variant-change', {
-          detail: { variant: v },
-          bubbles: true,
-          composed: true,
-        }),
-      )
-    }
-    host.addEventListener('click', onClick)
-    // The specimen tracks the selection: identity props (variants) may land
-    // after mount, and a pick must reach the slotted element either way.
-    const stop = effect(apply)
-    return () => {
-      stop()
-      host.removeEventListener('click', onClick)
-    }
-  },
-})
+    return { active, current, chips, hasVariants, propRows, hasProps, hasUsage }
+  })
 </controller>
 
 <column gap="4" sx="w-full">

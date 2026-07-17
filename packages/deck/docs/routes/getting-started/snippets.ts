@@ -14,11 +14,9 @@ export const pageExample = `<!-- routes/page.sui -->
 export const controllerExample = `// routes/controller.ts
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => {
-    const count = signal(0)
-    return { count }
-  },
+export default controller(() => {
+  const count = signal(0)
+  return { count }
 })`
 
 export const devCmd = `$ deck dev --project .

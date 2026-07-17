@@ -1,29 +1,22 @@
 // controller-resolver.ts — runtime backing for the typed controller contract.
 //
-// Takes a `ControllerDef`, walks its sections, and returns a flat
-// bindings record the existing `hydrate()` setup-merge path can
-// consume. The resolver does no DOM work — it builds the read-only /
-// writable scope proxies and memoizes deriveds.
-// and wraps `on` handlers.
+// Takes a `ControllerDef` (the ONE setup function) and the resolver
+// context, builds the ambient view scope (ship/clients/route/navigate
+// + template-declared signals), and calls it. Whatever the function
+// returns IS the flat bindings record `hydrate()` merges into the
+// template scope — signals, `derived()` values, plain helpers, and
+// event handlers alike. No section-walking, no writable-state proxy:
+// the function closes over its own signals and mutates them directly,
+// the single idiom `controller_state_set_call` (sui-lint) enforces.
 //
-// The resolver constructs no state signals of its own. Writable state
-// is whatever the controller's `setup:` factory returns; `ctx.scope`
-// carries the template-declared signals (`<data>`, `<scope>` props) and
-// the resolver consumes them as-is. The writable proxy allows
-// assignments to fall through to those signals' `.set()`.
-//
+// Lifecycle (`mount(fn)` / `onCleanup(fn)`) is ambient, not resolved
+// here — those calls register on whatever `EffectScope` is current
+// (see `./effect-scope`) while `def` runs; the host (`mount.ts`,
+// `compose.ts`) wraps the call to `setup()` in `withScope(scope, …)`
+// and later calls `scope.runMounts(hostElement)` once the DOM is
+// connected.
 
-// bearing shape — hook resolution lives in `./controller-hook-resolver`.
-
-import type { Signal } from './signal'
-import { isSignal } from './signal'
-import type {
-  ControllerDef,
-  ControllerShape,
-  MutableState,
-  ScopedControllerDef,
-} from './controller'
-import { createMountState } from './state-proxy'
+import type { ControllerDef, ViewScope } from './controller'
 import type {
   ResolverContext,
   ResolvedBindings,
@@ -32,167 +25,35 @@ import type {
 export type { ResolverContext, ResolvedBindings } from './controller-resolver-types'
 
 /**
- * Non-enumerable key on resolved bindings carrying the controller's
- * lifecycle hooks + the writable state proxy `mount`/`unmount` need.
- */
-export const LIFECYCLE_KEY = '__shipSetLifecycle'
-
-/** Lifecycle bundle stored under `LIFECYCLE_KEY`. */
-export interface ControllerLifecycle {
-  /** Writable state mutator the lifecycle hooks receive as their first arg. */
-  state: Record<string, unknown>
-  /** Optional `mount(state, el)` from the controller def. May return a cleanup. */
-  mount?: (state: Record<string, unknown>, el: HTMLElement) => (() => void) | void
-  /** Optional `unmount(state)` from the controller def. */
-  unmount?: (state: Record<string, unknown>) => void
-}
-
-/**
  * Resolve a controller def into the flat bindings shape `hydrate` can
  * merge into the template scope.
  *
- * @param def The controller def — object form (tier 2) or function form (tier 3).
+ * @param def The controller's setup function.
  * @param ctx The setup-time context (`ship`, `route`, `navigate`, `scope`, `stateKeys`).
- * @returns A flat record of bindings keyed by name.
+ * @returns A flat record of bindings keyed by name — the def's return, verbatim.
  */
 export function resolveController(
   def: ControllerDef<object>,
   ctx: ResolverContext,
 ): ResolvedBindings {
-  const shape = normalize(def, ctx)
-  const baseScope: Record<string, unknown> = {
+  const baseScope: ViewScope<object> = {
     ship: ctx.ship,
     clients: ctx.clients ?? {},
     ...(ctx.clients ?? {}),
     route: ctx.route ?? {},
     navigate: ctx.navigate ?? ((_path: string) => {}),
     ...(ctx.scope ?? {}),
-  }
+  } as ViewScope<object>
 
-  // `setup:` factory runs first — its returned entries become part of
-  // the merged scope before any other section. Idiomatic TypeScript
-  // closure: signals, derived, hooks, shared wrappers all live here.
-  // Pass ctx.host as second arg so a controller can reach its own element
-  // (shadow root, focus) from the scope factory.
-  const scopeAdds = shape.setup
-    ? (shape.setup as (s: unknown, h?: Element) => Record<string, unknown>)(baseScope, ctx.host)
-    : {}
-  Object.assign(baseScope, scopeAdds)
-
-  const stateSignals = pickStateSignals(baseScope, ctx.stateKeys, scopeAdds)
-  // The one mount-state builder. Reads return unwrapped values
-  // (state.count++); the raw signal is reached via state.$signals.x.
-  const writableProxy = createMountState(
-    baseScope,
-    stateSignals,
-  ) as MutableState<Record<string, Signal<unknown>>>
-
-  // Hook results used to be merged in here, namespaced under their `use:` key.
-  // Compositions are plain functions now: whatever a controller declares — signals
-  // from `signal()`, or signals a composition handed back — is already in scope.
-  // Nothing to merge, which is the point.
-  const onHandlers = buildOnHandlers(shape, writableProxy)
-
-  const bindings: ResolvedBindings = {
-    ...scopeAdds,
-    ...onHandlers,
-  }
-
-
-  if (shape.mount || shape.unmount) {
-    const lifecycle: Record<string, unknown> = {
-      state: writableProxy as Record<string, unknown>,
-    }
-    if (shape.mount) lifecycle.mount = shape.mount
-    if (shape.unmount) lifecycle.unmount = shape.unmount
-    // Enumerable so the compiled view's `Object.assign($scope, __r)` carries
-    // the lifecycle through to the view module's setup return value, where
-    // attach.ts::extractLifecycle reads it. Non-enumerable swallowed mount
-    // entirely — confirmed by ship-ui-studio's async mount silently dropping
-    // catalog state. No code iterates bindings keys, so safe to expose.
-    Object.defineProperty(bindings, LIFECYCLE_KEY, {
-      value: lifecycle as unknown as ControllerLifecycle,
-      enumerable: true,
-      configurable: true,
-      writable: false,
-    })
-  }
-
-  return bindings
+  return def(baseScope, ctx.host)
 }
 
 // ---------------------------------------------------------------------------
-// Internals
-// ---------------------------------------------------------------------------
-
-function normalize(
-  def: ControllerDef<object>,
-  ctx: ResolverContext,
-): ControllerShape<object> {
-  if (typeof def === 'function') {
-    return def({ ship: ctx.ship, clients: ctx.clients ?? {} })
-  }
-  return def
-}
-
-/**
- * Extract the writable-state subset of an ambient scope. State signals
- * are identified by `stateKeys` (the hydrate path's declared-writable
- * set — legacy feed of the retired `<state>` directive, kept until that
- * path drops it) AND the keys returned by the controller's `setup:`
- * factory. Without `stateKeys` and without `scopeAdds` we fall back to
- * the "any callable value with a `.set` method" heuristic.
- */
-function pickStateSignals(
-  scope: Record<string, unknown>,
-  stateKeys?: ReadonlySet<string>,
-  scopeAdds?: Record<string, unknown>,
-): Record<string, Signal<unknown>> {
-  const out: Record<string, Signal<unknown>> = {}
-  const haveStateKeys = stateKeys !== undefined
-  const scopeAddKeys = scopeAdds ? Object.keys(scopeAdds) : []
-  if (haveStateKeys || scopeAddKeys.length > 0) {
-    if (stateKeys) {
-      for (const k of stateKeys) {
-        const v = scope[k]
-        if (isSignal(v)) out[k] = v
-      }
-    }
-    for (const k of scopeAddKeys) {
-      if (k in out) continue
-      const v = scope[k]
-      if (isSignal(v)) out[k] = v
-    }
-    return out
-  }
-  for (const [k, v] of Object.entries(scope)) {
-    if (isSignal(v)) out[k] = v
-  }
-  return out
-}
-
-
-
-function buildOnHandlers(
-  shape: ControllerShape<object>,
-  writableProxy: MutableState<Record<string, Signal<unknown>>>,
-): Record<string, (...args: unknown[]) => unknown> {
-  const section = shape.on ?? {}
-  const out: Record<string, (...args: unknown[]) => unknown> = {}
-  for (const [k, fn] of Object.entries(section)) {
-    out[k] = (...args: unknown[]) =>
-      (fn as (state: unknown, ...rest: unknown[]) => unknown)(writableProxy, ...args)
-  }
-  return out
-}
-
-
-// ---------------------------------------------------------------------------
-// `controller(def)` — author-facing entry point
+// `controller(setup)` — author-facing entry point
 // ---------------------------------------------------------------------------
 
 /**
- * The shape `controller(def)` returns — a setup-shaped export the
+ * The shape `controller(setup)` returns — a setup-shaped export the
  * daemon's hydrate path consumes verbatim. The daemon extracts `.setup`
  * and calls it with a `ResolverContext` (built from the hydrate flow);
  * `setup` runs the resolver and returns flat bindings the template
@@ -201,77 +62,53 @@ function buildOnHandlers(
 export interface ControllerExport<Scope = object> {
   /** Setup callback — invoked by hydrate with the resolver context. */
   setup: (ctx: ResolverContext) => ResolvedBindings
-  /** Original def; for tooling. */
+  /** Original def (the author's setup function); for tooling — the
+   *  synthetic controller recovers its contributed scope TYPE from
+   *  this function's return type via `typeof __authored.__def`. */
   __def: ControllerDef<Scope>
 }
 
 /**
- * Author-facing helper. Wrap a `ControllerDef` with `controller({...})`
- * to:
- *
- *   1. Get section signatures inferred without writing the generic
- *      parameter explicitly.
- *   2. Get a `{ setup, __def }` export the daemon's hydrate path can
- *      call directly.
+ * Author-facing helper. Wrap a setup function with `controller(fn)` to
+ * get a `{ setup, __def }` export the daemon's hydrate path can call
+ * directly, with `Ctx`/`SC` inferred from `fn` — no explicit type
+ * argument, no currying.
  *
  * @example
  * ```ts
- * // tier 2 — object form
- * export default controller({
- *   setup: () => ({ count: signal(0) }),
- *   on:    { incr: (s) => { s.count++ } },
+ * <controller>
+ * export default controller((ctx) => {
+ *   const items = signal<Item[]>([])
+ *   mount((el) => { ... })
+ *   onCleanup(() => { ... })
+ *   return { items, add: () => items.set([...items(), newItem()]) }
  * })
- * ```
- *
- * @example
- * ```ts
- * // tier 3 — function form
- * export default controller(({ ship }) => ({
- *   on: { refresh: () => ship.agents.refresh() },
- * }))
+ * </controller>
  * ```
  */
-// CANONICAL form: `controller(def)` with no explicit type argument. Both
-// `Ctx` (from the `setup` factory's param annotation) and `SC` (from its
-// return) are inferred → precise, cast-free handler state over `Ctx & SC`,
-// single call, no currying. This overload is listed first and matches calls
-// with no type arguments; the explicit-`<Scope>` overloads below are the
-// deprecated legacy/curried bridges (an explicit single `<Scope>` can't bind
-// this overload's two inferred params, so resolution falls through to them).
-// `__def` is added to the canonical return so the synthetic controller can
-// recover the setup-factory return type via `typeof __authored.__def.setup`
-// (slice 2 G4). Typing `def` DIRECTLY as `ScopedControllerDef<Ctx, SC>` (not a
-// generic `D extends ScopedControllerDef<Ctx, SC>`) is load-bearing: it gives
-// `Ctx`/`SC` real inference positions — the `setup` param annotation drives
-// `Ctx`, its return drives `SC` — so handler state over `Ctx & SC` is precise.
-// A `D`-generic param erased those positions (nothing infers `Ctx`/`SC` from a
-// bare `def: D`), so `Ctx` fell to `unknown`, the contravariant `setup` param
-// check failed, and EVERY call silently resolved to the legacy overload below —
-// the framework-wide "factory signals untyped in handlers, must cast" bug.
+// CANONICAL and ONLY form: `controller(fn)` with no explicit type argument.
+// Both `Ctx` (from `fn`'s param annotation) and `SC` (from its return) are
+// inferred → precise, cast-free handler state over `Ctx & SC`, single call,
+// no currying. `__def` is added to the return so the synthetic controller
+// can recover the setup function's return type via `typeof __authored.__def`
+// (slice 2 G4, updated for the function-form def). Typing `fn` DIRECTLY as
+// `(init: Ctx, host?: Element) => SC` (not a generic `D extends (...) => SC`)
+// is load-bearing: it gives `Ctx`/`SC` real inference positions — `fn`'s
+// param annotation drives `Ctx`, its return drives `SC` — so handler state
+// over `Ctx & SC` is precise. A `D`-generic param erased those positions
+// (nothing infers `Ctx`/`SC` from a bare `def: D`), so `Ctx` fell to
+// `unknown`, the contravariant param check failed, and EVERY call silently
+// widened — the framework-wide "factory signals untyped in handlers, must
+// cast" bug this shape exists to prevent from coming back.
 export function controller<Ctx, SC extends Record<string, unknown>>(
-  def: ScopedControllerDef<Ctx, SC>,
-): ControllerExport<Ctx & SC> & { __def: ScopedControllerDef<Ctx, SC> }
-// Legacy form `controller<Scope>(def)` — for controllers with NO `setup:`
-// factory (only `on`/`mount`). Their scope is entirely template-declared, so
-// the compiler-emitted `Scope` is already precise (no casts). A controller
-export function controller<Scope>(def: ControllerDef<Scope>): ControllerExport<Scope>
-// Implementation signature: `any` so it satisfies both overloads (the
-// overloads are the real public contract). The `__def` field carries
-// the original `def` (its precise literal type) so the synthetic
-// controller can recover the scope-factory return type via
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function controller<D extends ControllerDef<any> = ControllerDef<object>>(
-  def: D,
-): ControllerExport<object> & { __def: D } {
+  fn: (init: ViewScope<Ctx>, host?: Element) => SC,
+): ControllerExport<Ctx & SC> & { __def: (init: ViewScope<Ctx>, host?: Element) => SC } {
   return {
-    setup: (ctx) => resolveController(def as ControllerDef<object>, ctx),
-    // `__def` carries the precise literal type of `def` (via the `D`
-    // generic) so the synthetic controller can recover the
-    // scope-factory return type through
-    // `typeof __authored.__def extends { scope?: infer F }` (slice 2
-    // G4). The `controller<Scope>(def)` legacy overload's
-    // `ControllerDef<Scope>` is still the public type for callers
-    // who read `__def` without the literal-narrowing pattern.
-    __def: def,
+    setup: (ctx) => resolveController(fn as ControllerDef<object>, ctx),
+    // `__def` carries the precise literal type of `fn` (via the generic
+    // params above) so the synthetic controller can recover the setup
+    // function's return type through `typeof __authored.__def extends
+    // (...a: never[]) => infer R` (slice 2 G4).
+    __def: fn,
   }
 }

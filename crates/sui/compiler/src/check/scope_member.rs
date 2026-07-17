@@ -1,19 +1,26 @@
-//! Type-strengthening #1: `scope.X` / `derived.X` / `props.X` member typo
-//! detection.
+//! Type-strengthening #1: `ctx.X` / `props.X` member typo detection.
 //!
-//! `scope_bound` already validates that `scope`, `derived`, `props` etc.
-//! resolve as identifiers — but the byte walker treats `.X` after the
-//! head as unrestricted property access. This pass parses each
+//! `scope_bound` already validates that the controller's ctx-param name and
+//! `props` etc. resolve as identifiers — but the byte walker treats `.X`
+//! after the head as unrestricted property access. This pass parses each
 //! interpolation expression with the grammar parser and flags any
-//! head.member chain whose head is a known controller section but
-//! whose first dotted segment is not a declared key.
+//! head.member chain whose head is a known namespace but whose first
+//! dotted segment is not a declared key.
 //!
 //! Closes a major typo class:
 //! ```text
-//! {scope.fooo()}        // typo — fooo undeclared in scope
-//! {derived.totalz}       // typo — totalz undeclared in derived
+//! {ctx.fooo()}           // typo — fooo not a returned scope member
 //! {props.titlee}         // typo — titlee not a declared <prop>
 //! ```
+//!
+//! The old `setup.X` / `derived.X` namespace heads are retired along with
+//! the object-literal sections they named: the controller's setup function
+//! returns ONE flat scope object now, so `ctx` (the setup function's own
+//! first parameter, whatever the author named it) is the only remaining
+//! head worth checking — it exposes the ambient view scope + template
+//! `<data>`/`<state>` signals, and its declared members are exactly the
+//! returned scope member set (the same names a bare `{count}` reference
+//! resolves against).
 
 use crate::check::controller_parse::ParsedController;
 use crate::check::symbol_table::SymbolTable;
@@ -26,7 +33,8 @@ pub fn check(
     controller: Option<&ParsedController>,
 ) -> Result<(), CompileError> {
     let table = SymbolTable::build(program, controller);
-    super::visit_exprs(program, &mut |expr| check_one(expr, &table))
+    let ctx_head = controller.map(|c| c.ctx_param.as_str()).unwrap_or("");
+    super::visit_exprs(program, &mut |expr| check_one(expr, &table, ctx_head))
 }
 
 /// Collect EVERY invalid member access (one per expression), for the LSP /
@@ -36,10 +44,11 @@ pub fn collect(
     controller: Option<&ParsedController>,
 ) -> Vec<CompileError> {
     let table = SymbolTable::build(program, controller);
+    let ctx_head = controller.map(|c| c.ctx_param.as_str()).unwrap_or("");
     let mut errs = Vec::new();
     // Closure always returns Ok so the walk visits every expression.
     let _ = super::visit_exprs(program, &mut |expr| {
-        if let Err(e) = check_one(expr, &table) {
+        if let Err(e) = check_one(expr, &table, ctx_head) {
             errs.push(e);
         }
         Ok::<(), CompileError>(())
@@ -50,6 +59,7 @@ pub fn collect(
 fn check_one(
     expr: &crate::ir::Expr,
     table: &SymbolTable,
+    ctx_head: &str,
 ) -> Result<(), CompileError> {
     let parsed = if expr.allow_arrow {
         parse_expression_with_arrows(&expr.source, expr.span.start)
@@ -61,13 +71,13 @@ fn check_one(
         // skip; the lenient validators still police it.
         return Ok(());
     };
-    walk(&ast, table)
+    walk(&ast, table, ctx_head)
 }
 
-fn walk(ast: &Ast, table: &SymbolTable) -> Result<(), CompileError> {
+fn walk(ast: &Ast, table: &SymbolTable, ctx_head: &str) -> Result<(), CompileError> {
     if let AstKind::Member { obj, prop, optional } = &ast.kind
         && let AstKind::Ident(head) = &obj.kind
-        && let Some(err) = check_head_member(head, prop, *optional, table, ast) {
+        && let Some(err) = check_head_member(head, prop, *optional, table, ast, ctx_head) {
             return Err(err);
         }
     // Recurse via the AST walker.
@@ -78,7 +88,7 @@ fn walk(ast: &Ast, table: &SymbolTable) -> Result<(), CompileError> {
         }
         if let AstKind::Member { obj, prop, optional } = &n.kind
             && let AstKind::Ident(head) = &obj.kind
-            && let Some(err) = check_head_member(head, prop, *optional, table, n)
+            && let Some(err) = check_head_member(head, prop, *optional, table, n, ctx_head)
         {
             error = Some(err);
             return false;
@@ -97,24 +107,22 @@ fn check_head_member(
     _optional: bool,
     table: &SymbolTable,
     node: &Ast,
+    ctx_head: &str,
 ) -> Option<CompileError> {
-    let (label, exists, available): (&str, bool, Vec<String>) = match head {
-        "setup" => (
-            "setup",
+    let (label, exists, available): (&str, bool, Vec<String>) = if !ctx_head.is_empty() && head == ctx_head {
+        (
+            ctx_head,
             table.scope.contains_key(prop),
             table.scope.keys().cloned().collect(),
-        ),
-        "derived" => (
-            "derived",
-            table.derived.contains_key(prop),
-            table.derived.keys().cloned().collect(),
-        ),
-        "props" => (
+        )
+    } else if head == "props" {
+        (
             "props",
             table.props.contains_key(prop),
             table.props.keys().cloned().collect(),
-        ),
-        _ => return None,
+        )
+    } else {
+        return None;
     };
     if exists {
         return None;
@@ -168,34 +176,30 @@ mod tests {
     }
 
     #[test]
-    fn flags_scope_dot_typo() {
-        let c = ctrl(
-            "export default controller({ setup: () => ({ count: signal(0) }) });",
-        );
+    fn flags_ctx_dot_typo() {
+        let c = ctrl("export default controller((ctx) => ({ count: signal(0) }));");
         let table = SymbolTable::build(&empty_program(), Some(&c));
-        let e = expr("setup.coun");
-        let err = check_one(&e, &table).unwrap_err();
-        assert!(err.message.contains("setup.coun"), "{}", err.message);
+        let e = expr("ctx.coun");
+        let err = check_one(&e, &table, "ctx").unwrap_err();
+        assert!(err.message.contains("ctx.coun"), "{}", err.message);
     }
 
     #[test]
     fn allows_known_scope_member() {
-        let c = ctrl(
-            "export default controller({ setup: () => ({ count: signal(0) }) });",
-        );
+        let c = ctrl("export default controller((ctx) => ({ count: signal(0) }));");
         let table = SymbolTable::build(&empty_program(), Some(&c));
-        let e = expr("setup.count()");
-        check_one(&e, &table).unwrap();
+        let e = expr("ctx.count()");
+        check_one(&e, &table, "ctx").unwrap();
     }
 
     #[test]
     fn flags_derived_dot_typo() {
         let c = ctrl(
-            "export default controller({ derived: { total: () => 1 } });",
+            "export default controller((ctx) => ({ total: derived(() => 1) }));",
         );
         let table = SymbolTable::build(&empty_program(), Some(&c));
-        let e = expr("derived.totl");
-        let err = check_one(&e, &table).unwrap_err();
-        assert!(err.message.contains("derived.totl"), "{}", err.message);
+        let e = expr("ctx.totl");
+        let err = check_one(&e, &table, "ctx").unwrap_err();
+        assert!(err.message.contains("ctx.totl"), "{}", err.message);
     }
 }

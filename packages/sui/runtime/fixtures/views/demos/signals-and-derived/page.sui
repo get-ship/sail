@@ -1,9 +1,7 @@
 <controller>
 import { controller, signal, derived } from '@ship/sui-runtime'
-import type { Scope } from './page.sui'
 
-export default controller<Scope>({
-  setup: () => {
+export default controller(() => {
     const count = signal(0)
     const history = signal<Array<{ k: number; value: number }>>([])
     const double = derived(() => count() * 2)
@@ -25,8 +23,7 @@ export default controller<Scope>({
         history.set([])
       },
     }
-  },
-})
+  })
 </controller>
 
 <div data-demo="true">

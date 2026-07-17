@@ -11,9 +11,7 @@ import { controller, type ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 import { quickstart, layers } from './snippets'
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>) => ({ quickstart, layers }),
-})
+export default controller((_ctx: ViewScope<Scope>) => ({ quickstart, layers }))
 </controller>
 
 <article sx="max-w-breakpoint-tablet mx-auto">

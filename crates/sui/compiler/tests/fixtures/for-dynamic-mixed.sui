@@ -1,8 +1,8 @@
 <controller>
 import { controller } from '@ship/sui-runtime'
-export default controller({
-  setup: () => ({ rows: [{ id: 1, label: "a" }, { id: 2, label: "b" }] }),
-})
+export default controller((ctx) => ({
+  rows: [{ id: 1, label: "a" }, { id: 2, label: "b" }]
+}))
 </controller>
 
 <table>

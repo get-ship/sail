@@ -232,7 +232,7 @@ mod tests {
 
         const CTRL: &str = "<controller>\n\
             import { controller, signal } from '@ship/sui-runtime'\n\
-            export default controller({ setup: () => ({ count: signal(0) }) })\n\
+            export default controller((ctx) => ({ count: signal(0) }))\n\
             </controller>\n";
 
         // VALID: the template reads `count`, which the scope provides.

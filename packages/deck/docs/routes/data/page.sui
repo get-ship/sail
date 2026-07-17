@@ -6,15 +6,13 @@ import { controller, type ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 import { configExample, usageExample } from './snippets'
 
-export default controller({
-  setup: (ctx: ViewScope<Scope>) => ({
+export default controller((ctx: ViewScope<Scope>) => ({
     configExample,
     usageExample,
     visits: ctx.clients.store.visits,
     record: (): void => ctx.clients.store.noteVisit(),
     reset: (): void => ctx.clients.store.reset(),
-  }),
-})
+  }))
 </controller>
 
 <article data-doc="true">

@@ -12,7 +12,6 @@
 
 <controller>
 import { controller, signal } from '@ship/sui-runtime'
-import type { Scope } from './tut-08-release-notes-starter.sui'
 
 interface Note {
   id: number
@@ -22,8 +21,7 @@ interface Note {
 
 // This controller is fine. Every planted defect in this lesson lives in
 // the template — run the compiler on it and let the errors lead you.
-export default controller<Scope>({
-  setup: () => {
+export default controller(() => {
     const publishedAt = signal(new Date('2026-07-01T09:00:00Z'))
     const notes = signal<Note[]>([
       { id: 1, tag: 'feat', text: 'motion:loop — ambient animation as a directive' },
@@ -37,8 +35,7 @@ export default controller<Scope>({
       formatDate: (d: Date): string =>
         d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
     }
-  },
-})
+  })
 </controller>
 
 <column gap="4" sx="p-12px">

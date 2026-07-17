@@ -49,20 +49,20 @@ mod tests {
 
     #[test]
     fn light_component_with_bare_shadow_root_errors() {
-        let c = ctrl("export default controller({ mount(state, host) { host.shadowRoot.addEventListener('click', () => {}) } })");
+        let c = ctrl("export default controller((ctx, host) => { mount((el) => { host.shadowRoot.addEventListener('click', () => {}) }); return {} })");
         let err = check(Some(&c)).unwrap_err();
         assert_eq!(err.category.as_deref(), Some(RULE_ID));
     }
 
     #[test]
     fn optional_chain_is_still_dead_wiring() {
-        let c = ctrl("export default controller({ mount(state, host) { host.shadowRoot?.addEventListener('click', () => {}) } })");
+        let c = ctrl("export default controller((ctx, host) => { mount((el) => { host.shadowRoot?.addEventListener('click', () => {}) }); return {} })");
         assert!(check(Some(&c)).is_err());
     }
 
     #[test]
     fn root_agnostic_fallback_passes() {
-        let c = ctrl("export default controller({ mount(state, host) { const root = host.shadowRoot ?? host; root.addEventListener('click', () => {}) } })");
+        let c = ctrl("export default controller((ctx, host) => { mount((el) => { const root = host.shadowRoot ?? host; root.addEventListener('click', () => {}) }); return {} })");
         check(Some(&c)).unwrap();
     }
 

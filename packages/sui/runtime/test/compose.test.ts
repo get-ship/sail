@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { component } from '../src/index'
 import { mountComponent } from '../src/compose'
-import { createScope, withScope, onCleanup } from '../src/effect-scope'
-import { LIFECYCLE_KEY } from '../src/controller-resolver'
+import { createScope, withScope, onCleanup, mount as ambientMount } from '../src/effect-scope'
 
 describe('mountComponent — child composition (mount-form)', () => {
   it('runs setup + __mount into the host and returns a working disposer', () => {
@@ -61,37 +60,31 @@ describe('mountComponent — child composition (mount-form)', () => {
     expect(cleaned).toBe(1)
   })
 
-  it('wires controller mount()/unmount() from the LIFECYCLE_KEY bundle', () => {
+  it('wires the ambient mount() a controller/component setup registered', () => {
     let mountedHost: HTMLElement | undefined
     let mountCleanup = 0
-    let unmounted = 0
+    let cleaned = 0
     const mod = component(() => {
-      const ret: Record<string, unknown> = { __mount: (_h: HTMLElement) => () => {} }
-      Object.defineProperty(ret, LIFECYCLE_KEY, {
-        value: {
-          state: {},
-          mount: (_state: Record<string, unknown>, el: HTMLElement) => {
-            mountedHost = el
-            return () => {
-              mountCleanup++
-            }
-          },
-          unmount: () => {
-            unmounted++
-          },
-        },
-        enumerable: false,
+      ambientMount((el) => {
+        mountedHost = el
+        return () => {
+          mountCleanup++
+        }
       })
-      return ret
+      onCleanup(() => {
+        cleaned++
+      })
+      return { __mount: (_h: HTMLElement) => () => {} }
     })
 
     const host = document.createElement('div')
     const dispose = mountComponent(mod, host, {})
     expect(mountedHost).toBe(host) // mount() received the live host
-    expect(unmounted).toBe(0)
+    expect(mountCleanup).toBe(0)
+    expect(cleaned).toBe(0)
 
     dispose()
     expect(mountCleanup).toBe(1) // mount()'s returned cleanup ran
-    expect(unmounted).toBe(1) // unmount() ran
+    expect(cleaned).toBe(1) // onCleanup() ran
   })
 })

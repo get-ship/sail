@@ -19,7 +19,7 @@ use crate::check::controller_parse::ParsedController;
 use crate::check::js_scan::{
     is_ident_cont, is_ident_start, next_top_separator, skip_balanced, skip_trivia,
 };
-use crate::diagnostics::{CompileError, Span};
+use crate::diagnostics::CompileError;
 use crate::ir::*;
 
 use super::scope_bound_expr::check_expr;
@@ -30,11 +30,12 @@ const BUILTINS: &[&str] = &[
     // Setup context. `route` is HOST-GRANTED per file (never ambient), and
     // `navigate` is gone with it.
     "ctx",
-    // Namespace heads — the `check::scope_member` pass type-checks
-    // member access through these so typos are flagged with a
-    // useful "did you mean…" message instead of "scope is not
-    // declared".
-    "setup", "derived", "props",
+    // Namespace head — the `check::scope_member` pass type-checks member
+    // access through this so typos are flagged with a useful "did you
+    // mean…" message instead of "scope is not declared". `setup`/`derived`
+    // are retired: the controller's setup function returns ONE flat scope
+    // object now, so there's no section-namespace left to dot into.
+    "props",
     // JS standard objects.
     "Math", "JSON", "Object", "Array", "String", "Number", "Boolean", "Date",
     "Symbol", "Map", "Set", "WeakMap", "WeakSet", "Error", "RegExp",
@@ -136,139 +137,99 @@ fn build_scope(
         names.insert(super::super::emit::util::camel_of(&p.name));
     }
     if let Some(c) = controller {
-        for sec in &c.sections {
-            match sec.name.as_str() {
-                "derived" | "on" => collect_object_keys(&c.source, sec.value_span, &mut names),
-                "setup" => collect_setup_return_keys(&c.source, sec.value_span, &mut names),
-                _ => {}
-            }
+        for member in &c.returned {
+            names.insert(member.name.clone());
+        }
+        names.extend(bound_names_of_param(&c.ctx_param));
+        if let Some(host) = &c.host_param {
+            names.extend(bound_names_of_param(host));
         }
     }
     Scope { names }
 }
 
-/// For `derived: { x: …, y: … }` — collect top-level keys.
-fn collect_object_keys(src: &str, span: Span, into: &mut BTreeSet<String>) {
-    let bytes = src.as_bytes();
-    if span.start >= span.end {
-        return;
+/// Names a setup-function parameter binds into its body. A bare
+/// identifier (`ctx`) binds itself; a destructuring object pattern
+/// (`{ ship, route: r, ...rest }`) binds its LOCAL names (`ship`, `r`,
+/// `rest` — not the source property `route`). Array patterns and nested
+/// destructuring aren't modeled (rare in a setup param) — their outer
+/// bound names are still collected on a best-effort basis.
+fn bound_names_of_param(pattern: &str) -> BTreeSet<String> {
+    let bytes = pattern.as_bytes();
+    let mut out = BTreeSet::new();
+    if pattern.is_empty() {
+        return out;
     }
-    if bytes[span.start] != b'{' {
-        return;
+    let mut i = skip_trivia(bytes, 0);
+    if i < bytes.len() && is_ident_start(bytes[i]) {
+        // Bare identifier param.
+        let s = i;
+        while i < bytes.len() && is_ident_cont(bytes[i]) {
+            i += 1;
+        }
+        out.insert(pattern[s..i].to_string());
+        return out;
     }
-    let inner_start = span.start + 1;
-    let inner_end = span.end.saturating_sub(1).min(bytes.len());
-    let mut i = inner_start;
-    while i < inner_end {
-        i = skip_trivia(bytes, i);
-        if i >= inner_end {
+    if i >= bytes.len() || bytes[i] != b'{' {
+        return out;
+    }
+    let end = skip_balanced(bytes, i, bytes.len()).saturating_sub(1).min(bytes.len());
+    let mut k = i + 1;
+    while k < end {
+        k = skip_trivia(bytes, k);
+        if k >= end {
             break;
         }
-        if bytes[i] == b',' {
-            i += 1;
+        if bytes[k] == b',' {
+            k += 1;
             continue;
         }
-        let key_start = i;
-        if bytes[i] == b'"' || bytes[i] == b'\'' {
-            let q = bytes[i];
-            i += 1;
-            let s = i;
-            while i < inner_end && bytes[i] != q {
-                if bytes[i] == b'\\' { i += 2; continue; }
-                i += 1;
+        if bytes[k..].starts_with(b"...") {
+            k += 3;
+            let s = skip_trivia(bytes, k);
+            let mut e = s;
+            while e < end && is_ident_cont(bytes[e]) {
+                e += 1;
             }
-            into.insert(src[s..i].to_string());
-            if i < inner_end { i += 1; }
-        } else if is_ident_start(bytes[i]) {
-            while i < inner_end && is_ident_cont(bytes[i]) {
-                i += 1;
+            if e > s {
+                out.insert(pattern[s..e].to_string());
             }
-            into.insert(src[key_start..i].to_string());
+            k = e;
+            continue;
+        }
+        let key_start = k;
+        if !is_ident_start(bytes[k]) {
+            k = next_top_separator(bytes, k, end);
+            if k < end && bytes[k] == b',' { k += 1; }
+            continue;
+        }
+        while k < end && is_ident_cont(bytes[k]) {
+            k += 1;
+        }
+        let key = &pattern[key_start..k];
+        let after = skip_trivia(bytes, k);
+        if after < end && bytes[after] == b':' {
+            // Aliased or nested — bind the local name after `:`. A
+            // nested destructure (`route: { id }`) doesn't have a single
+            // local ident here; best-effort: skip it (rare in practice).
+            let s = skip_trivia(bytes, after + 1);
+            let mut e = s;
+            while e < end && is_ident_cont(bytes[e]) {
+                e += 1;
+            }
+            if e > s {
+                out.insert(pattern[s..e].to_string());
+            }
+            k = next_top_separator(bytes, after, end);
         } else {
-            i = next_top_separator(bytes, i, inner_end);
-            if i < inner_end && bytes[i] == b',' { i += 1; }
-            continue;
+            out.insert(key.to_string());
+            k = next_top_separator(bytes, k, end);
         }
-        i = next_top_separator(bytes, i, inner_end);
-        if i < inner_end && bytes[i] == b',' { i += 1; }
-    }
-}
-
-/// `setup:` factory — collect the keys of the object the factory returns.
-///
-/// Handles three author shapes:
-///   - block body:    `setup: (init) => { ... return { x, y } }`
-///   - expression body, parenthesised:  `setup: () => ({ x, y })`
-///   - expression body, bare object:    `setup: () => ({x, y})` (same as above)
-fn collect_setup_return_keys(src: &str, span: Span, into: &mut BTreeSet<String>) {
-    let bytes = src.as_bytes();
-    let start = span.start;
-    let end = span.end.min(bytes.len());
-
-    // Block body: walk for the last `return {…}` and lift its keys.
-    let return_kw = b"return";
-    let mut i = start;
-    let mut last_return_obj: Option<usize> = None;
-    while i + return_kw.len() < end {
-        if bytes[i..].starts_with(return_kw) {
-            let after = skip_trivia(bytes, i + return_kw.len());
-            if after < end && bytes[after] == b'{' {
-                last_return_obj = Some(after);
-            }
+        if k < end && bytes[k] == b',' {
+            k += 1;
         }
-        i += 1;
     }
-    if let Some(obj_start) = last_return_obj {
-        let obj_end = skip_balanced(bytes, obj_start, end);
-        collect_object_keys(src, Span::new(obj_start, obj_end), into);
-        return;
-    }
-
-    // Expression-body arrow: skip past the parameter list + `=>` and lift
-    // keys from the trailing object literal (with or without surrounding
-    // parens).
-    if let Some(obj_start) = expression_body_object(bytes, start, end) {
-        let obj_end = skip_balanced(bytes, obj_start, end);
-        collect_object_keys(src, Span::new(obj_start, obj_end), into);
-    }
-}
-
-/// Locate the `{` that opens an arrow's expression-body object literal.
-///
-/// Walks past the param list (a `(...)` group, or a single bare ident),
-/// the fat arrow `=>`, and any wrapping parens, then returns the offset
-/// of the literal's opening `{`. Returns `None` if the value isn't an
-/// arrow with an object expression body.
-fn expression_body_object(bytes: &[u8], start: usize, end: usize) -> Option<usize> {
-    let mut i = skip_trivia(bytes, start);
-    if i >= end {
-        return None;
-    }
-    // Step over the parameter list. Either `(...)` or a single ident.
-    if bytes[i] == b'(' {
-        i = skip_balanced(bytes, i, end);
-    } else if is_ident_start(bytes[i]) {
-        while i < end && is_ident_cont(bytes[i]) {
-            i += 1;
-        }
-    } else {
-        return None;
-    }
-    i = skip_trivia(bytes, i);
-    // Fat arrow.
-    if i + 1 >= end || bytes[i] != b'=' || bytes[i + 1] != b'>' {
-        return None;
-    }
-    i = skip_trivia(bytes, i + 2);
-    // Strip wrapping parens (`() => ({...})`).
-    while i < end && bytes[i] == b'(' {
-        i = skip_trivia(bytes, i + 1);
-    }
-    if i < end && bytes[i] == b'{' {
-        Some(i)
-    } else {
-        None
-    }
+    out
 }
 
 pub(super) struct Visitor {

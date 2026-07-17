@@ -106,12 +106,13 @@ export function renderMarkdown(src: string): string {
   return out.join('\n')
 }
 
-export default controller<Scope>({
-  mount(state) {
-    const el = state.$signals.contentEl() as HTMLElement | null
+export default controller((ctx: Scope) => {
+  mount(() => {
+    const el = ctx.contentEl() as HTMLElement | null
     if (!el) return () => {}
-    return bindHtml(el, () => renderMarkdown(state.$signals.value() ?? ''))
-  },
+    return bindHtml(el, () => renderMarkdown(ctx.value() ?? ''))
+  })
+  return {}
 })
 
 </controller>

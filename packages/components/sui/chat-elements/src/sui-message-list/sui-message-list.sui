@@ -74,8 +74,7 @@ const BOTTOM_THRESHOLD = 48
 // measures itself. Real heights supersede it the moment `measureElement` runs.
 const ESTIMATED_MESSAGE_HEIGHT = 72
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ViewScope<Scope>) => {
     const items = signal<MessageItem[]>([])
     const scrollEl = ref<HTMLElement>(null)
 
@@ -105,57 +104,56 @@ export default controller({
       return out
     })
 
+    mount((host) => {
+      // `items` JS-property: `el.items = [...]`.
+      const init = (host as unknown as { items?: MessageItem[] }).items
+      if (init != null) items.set(init)
+      Object.defineProperty(host, 'items', {
+        configurable: true,
+        get: () => items(),
+        set: (v: MessageItem[]) => { items.set(v) },
+      })
+
+      // Tracks whether the viewport is pinned to the bottom. A user scroll-up
+      // flips this false so new items don't yank them down; scrolling back to the
+      // bottom re-pins.
+      let pinned = true
+
+      const isAtBottom = (el: HTMLElement): boolean =>
+        el.scrollHeight - el.scrollTop - el.clientHeight <= BOTTOM_THRESHOLD
+
+      const onScroll = () => {
+        const el = scrollEl()
+        if (el) pinned = isAtBottom(el)
+      }
+
+      const stopScrollBind = effect(() => {
+        const el = scrollEl()
+        if (!el) return
+        el.addEventListener('scroll', onScroll, { passive: true })
+        return () => el.removeEventListener('scroll', onScroll)
+      })
+
+      // On every items change, scroll the newest message into view when sticky +
+      // pinned. Goes through the virtualizer (`scrollToIndex`) so the windowing
+      // engine offsets correctly — the rendered window holds only a slice, so the
+      // raw scrollHeight no longer spans the full thread.
+      const stopAutoScroll = effect(() => {
+        const count = items().length // track items
+        if (!scrollEl() || !_ctx.stickyBottom() || !pinned || count === 0) return
+        // Defer to after the keyed window has rendered the new rows.
+        queueMicrotask(() => { virt.scrollToIndex(count - 1, { align: 'end' }) })
+      })
+
+      return () => {
+        stopScrollBind()
+        stopAutoScroll()
+        virt.dispose()
+      }
+    })
+
     return { items, scrollEl, virt, totalSize, windowItems }
-  },
-
-  mount(state, host) {
-    // `items` JS-property: `el.items = [...]`.
-    const init = (host as unknown as { items?: MessageItem[] }).items
-    if (init != null) state.items = init
-    Object.defineProperty(host, 'items', {
-      configurable: true,
-      get: () => state.items,
-      set: (v: MessageItem[]) => { state.items = v },
-    })
-
-    // Tracks whether the viewport is pinned to the bottom. A user scroll-up
-    // flips this false so new items don't yank them down; scrolling back to the
-    // bottom re-pins.
-    let pinned = true
-
-    const isAtBottom = (el: HTMLElement): boolean =>
-      el.scrollHeight - el.scrollTop - el.clientHeight <= BOTTOM_THRESHOLD
-
-    const onScroll = () => {
-      const el = state.scrollEl
-      if (el) pinned = isAtBottom(el)
-    }
-
-    const stopScrollBind = effect(() => {
-      const el = state.scrollEl
-      if (!el) return
-      el.addEventListener('scroll', onScroll, { passive: true })
-      return () => el.removeEventListener('scroll', onScroll)
-    })
-
-    // On every items change, scroll the newest message into view when sticky +
-    // pinned. Goes through the virtualizer (`scrollToIndex`) so the windowing
-    // engine offsets correctly — the rendered window holds only a slice, so the
-    // raw scrollHeight no longer spans the full thread.
-    const stopAutoScroll = effect(() => {
-      const count = state.items.length // track items
-      if (!state.scrollEl || !state.stickyBottom || !pinned || count === 0) return
-      // Defer to after the keyed window has rendered the new rows.
-      queueMicrotask(() => { state.virt.scrollToIndex(count - 1, { align: 'end' }) })
-    })
-
-    return () => {
-      stopScrollBind()
-      stopAutoScroll()
-      state.virt.dispose()
-    }
-  },
-})
+  })
 
 </controller>
 <scroll-area

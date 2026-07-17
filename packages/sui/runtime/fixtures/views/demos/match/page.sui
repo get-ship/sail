@@ -1,12 +1,9 @@
 <controller>
 import { controller, signal } from '@ship/sui-runtime'
-import type { Scope } from './page.sui'
 
 type Tone = 'info' | 'success' | 'warning' | 'destructive'
 
-export default controller<Scope>({
-  setup: () => ({ tone: signal<Tone>('info') }),
-})
+export default controller(() => ({ tone: signal<Tone>('info') }))
 </controller>
 
 <div data-demo="true">

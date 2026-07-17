@@ -1,10 +1,10 @@
-// Type-level + runtime tests for the controller contract.
+// Type-level + runtime tests for the controller(fn) contract.
 //
-// Per the "state is declarative-only" ADR, the controller has five
-// sections — `derived`, `on`, `use`, `mount`, `unmount` — and no
-// `state:` section. State signals come from the template's `<state>`
-// directives and reach the controller via the merged scope. The tests
-// below model that flow by seeding scope signals directly.
+// One idiom: `controller((ctx) => { ...; return {...} })`. State is a
+// plain `signal()` closed over by the setup function; handlers
+// returned from it mutate that signal directly. Lifecycle is ambient
+// (`mount(fn)` / `onCleanup(fn)`, tested in `effect-scope.test.ts` and
+// `mount-leak.test.ts`), not a section.
 
 import { describe, expect, it } from 'vitest'
 import {
@@ -12,9 +12,6 @@ import {
   signal,
   derived,
   type ControllerDef,
-  type ControllerHook,
-  type MutableState,
-  type ReadonlyState,
   type Signal,
   type TemplateHook,
   type ViewScope,
@@ -40,171 +37,86 @@ function withState(state: Record<string, unknown>): {
 }
 
 describe('controller() helper', () => {
-  // P1.x wave 2: deleted two structural-shape tests (was lines 43-52
-  // and 54-59 before this commit): 'wraps a def in {setup, __def} export'
-  // and 'passes function-form defs through (still wrapped)'. They
-  // asserted the wrapper's shape (typeof out.setup, out.__def identity)
-  // and nothing the next 12 behavior tests in this file don't already
-  // prove implicitly. The behavior tests (controller contract, mount +
-  // unmount lifecycle, use-section composition, etc.) are kept.
-
-
-  it('setup() runs the resolver and returns bindings', () => {
+  it('setup() runs the def and returns its bindings verbatim', () => {
     const ctx = withState({ count: 5 })
-    const out = controller({
-      setup: (init) => ({ doubled: derived(() => ((init as { count: () => number }).count()) * 2) }),
-      on: { incr: (s) => { s.count++ } },
+    const out = controller((init: ViewScope<{ count: Signal<number> }>) => {
+      const doubled = derived(() => init.count() * 2)
+      const incr = () => init.count.set(init.count() + 1)
+      return { doubled, incr }
     })
     const bindings = out.setup(ctx)
     expect(typeof (bindings as Record<string, () => unknown>).doubled).toBe('function')
-    expect(typeof (bindings as Record<string, (...a: unknown[]) => unknown>).incr).toBe('function')
+    expect(typeof (bindings as Record<string, () => unknown>).incr).toBe('function')
     expect((bindings as Record<string, () => number>).doubled!()).toBe(10)
-    ;((bindings as Record<string, () => void>).incr)()
+    ;(bindings as Record<string, () => void>).incr!()
     expect((ctx.stateSignals.count as () => number)()).toBe(6)
+  })
+
+  it('__def carries the original setup function', () => {
+    const fn = (_init: ViewScope<object>) => ({})
+    const out = controller(fn)
+    expect(out.__def).toBe(fn)
   })
 })
 
-describe('tier-2 — object form compiles for every section', () => {
-  it('on (no scope needed)', () => {
+describe('the one form — single setup function returns the whole surface', () => {
+  it('signals, derived, and handlers are all plain returned properties', () => {
     type Scope = { count: Signal<number>; open: Signal<boolean> }
-    controller<Scope>({
-      on: {
-        incr:   (s) => { s.count++ },
-        toggle: (s) => { s.open = !s.open },
-      },
-    })
+    controller((s: ViewScope<Scope>) => ({
+      incr: () => s.count.set(s.count() + 1),
+      toggle: () => s.open.set(!s.open()),
+    }))
   })
 
-  it('scope deriveds + on', () => {
+  it('setup can derive from template scope and return handlers that read/write it', () => {
     type Scope = { count: Signal<number> }
-    controller({
-      setup: (s: ViewScope<Scope>) => ({
-        doubled: derived(() => s.count() * 2),
-        over9k: derived(() => s.count() > 9000),
-      }),
-      on: {
-        set:  (s, n: number) => { s.count = n },
-        zero: (s)            => { s.count = 0 },
-      },
-    })
+    controller((s: ViewScope<Scope>) => ({
+      doubled: derived(() => s.count() * 2),
+      over9k: derived(() => s.count() > 9000),
+      set: (n: number) => s.count.set(n),
+      zero: () => s.count.set(0),
+    }))
   })
 
-  it('scope factory pulls template scope', () => {
+  it('setup factory pulls template scope directly (no separate scope: section)', () => {
     type Scope = {
       query: Signal<string>
       agents: Signal<{ items: string[] }>
     }
-    controller({
-      setup: (s: ViewScope<Scope>) => ({
-        filtered: derived(() => s.agents().items.filter((n) => n.includes(s.query()))),
-      }),
-      on: {
-        setQuery: (s, q: string) => { s.query = q },
-      },
-    })
+    controller((s: ViewScope<Scope>) => ({
+      filtered: derived(() => s.agents().items.filter((n) => n.includes(s.query()))),
+      setQuery: (q: string) => s.query.set(q),
+    }))
   })
 
-  it('mount + unmount', () => {
-    type Scope = { tickerId: Signal<number> }
-    controller<Scope>({
-      mount: (s) => {
-        s.tickerId = window.setInterval(() => {}, 1000)
-      },
-      unmount: (s) => {
-        window.clearInterval(s.tickerId)
-      },
-    })
-  })
-})
-
-describe('tier-3 — function form for closure-scoped variables', () => {
-  it('closes over instantiation-time refs', () => {
+  it('closes over instantiation-time locals (the old tier-3 use case, now the only case)', () => {
     type Scope = { open: Signal<boolean> }
-    controller<Scope>(({ ship: _ship }) => {
+    controller((s: ViewScope<Scope>, host?: Element) => {
       const stableId = 'view-' + Math.random().toString(36).slice(2)
-      return {
-        on:    { toggle: (s) => { s.open = !s.open } },
-        mount: (_s, el) => { el.dataset.viewId = stableId },
-      }
+      if (host) (host as HTMLElement).dataset.viewId = stableId
+      return { toggle: () => s.open.set(!s.open()) }
     })
   })
 
-  it('uses ship at section level', () => {
+  it('setup can reach ship directly — no separate section-level access', () => {
     type Scope = { selectedId: Signal<string | null> }
-    controller<Scope>(({ ship: _ship }) => ({
-      on: {
-        select:  (s, id: string) => { s.selectedId = id },
+    controller((s: ViewScope<Scope>) => ({
+      select: (id: string) => {
+        void s.ship
+        s.selectedId.set(id)
       },
     }))
   })
 })
 
-describe('controller hooks — keep their state-bearing shape', () => {
-  // A canonical controller hook: useFilteredList
-  type MockSignal<T> = { (): T; set: (v: T) => void }
-
-  const useFilteredList = <T>(
-    source: MockSignal<T[]>,
-    pred: (item: T, q: string) => boolean,
-  ): ControllerHook<{ query: string }> => ({
-    state: { query: '' },
-    derived: {
-      filtered: ({ query }) =>
-        source().filter((i) => pred(i, (query as () => string)())),
-    },
-    on: {
-      setQuery: (s, q: string) => { s.query = q },
-    },
-  })
-
-  it('compiles as a ControllerHook with internal state', () => {
-    const mockSig: MockSignal<string[]> = (() => ['a', 'b']) as MockSignal<string[]>
-    mockSig.set = () => {}
-    const hook = useFilteredList(mockSig, (s, q) => s.includes(q))
-    expect(hook.state).toEqual({ query: '' })
-    expect(hook.derived).toHaveProperty('filtered')
-    expect(hook.on).toHaveProperty('setQuery')
-  })
-
-  it('composes via the use: section, namespaced by key', () => {
-    const mockSig: MockSignal<string[]> = (() => ['a', 'b']) as MockSignal<string[]>
-    mockSig.set = () => {}
-
-    controller({
-      use: {
-        list: useFilteredList(mockSig, (s, q) => s.includes(q)),
-        nested: useFilteredList(mockSig, (s, q) => s.startsWith(q)),
-      },
-    })
-  })
-})
-
-describe('discipline — types enforce mutation rules', () => {
-  it('handlers get a mutable state proxy', () => {
+describe('discipline — types enforce the single mutation idiom', () => {
+  it('a handler returned from setup mutates a signal directly (no writable-proxy indirection)', () => {
     type Scope = { count: Signal<number> }
 
-    const ok: ControllerDef<Scope> = {
-      on: {
-        incr: (s) => { s.count++ }, // writable
-      },
-    }
-    void ok
-  })
-
-  it('handler signature accepts both mutator and scope forms', () => {
-    type Scope = { selectedId: Signal<string | null> }
-
-    controller<Scope>({
-      on: {
-        select: (s, id: string) => { s.selectedId = id },
-      },
+    const def: ControllerDef<Scope> = (s) => ({
+      incr: () => (s as unknown as Scope).count.set((s as unknown as Scope).count() + 1),
     })
-
-    controller<Scope>({
-      on: {
-        refresh: ({ ship: _ship }) => { /* call ship */ },
-      },
-    })
+    void def
   })
 })
 
@@ -243,18 +155,5 @@ describe('TemplateHook — authoring contract', () => {
       },
     }
     expect(useFocusTrap.attrs?.target).toBe('binding')
-  })
-})
-
-describe('ReadonlyState / MutableState shape distinction', () => {
-  it('readonly view is callable, not assignable', () => {
-    type Scope = { count: Signal<number> }
-    type R = ReadonlyState<Scope>
-    type M = MutableState<Scope>
-
-    const _readonlyCheck: R = { count: () => 0 }
-    const _mutableCheck:  M = { count: 0 }
-    void _readonlyCheck
-    void _mutableCheck
   })
 })

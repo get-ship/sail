@@ -4,8 +4,8 @@
 // flow. Hosts (shell, view-host static, embed surfaces, tests) pass
 // either a fetched ViewPayload or a name string; mount injects the
 // SSR HTML, builds signals from payload.scope, imports the compiled
-// view module, runs setup() + hydrate() + lifecycle.mount, opens any
-// live SSE channel, and returns a typed MountHandle.
+// view module, runs setup() + hydrate() + ambient mount() callbacks,
+// opens any live SSE channel, and returns a typed MountHandle.
 //
 // Spec: .artifacts/design-f1-mount-unification.md
 //
@@ -15,8 +15,8 @@
 //
 // FILE_CAP_OVERRIDE: one cohesive concern — the mount() lifecycle. The private
 // helpers (build scope from payload, resolve/load the view + islands, open the
-// live SSE channel, extract lifecycle) are sequential steps of that one flow;
-// they share the payload/scope context and have no use apart from mount().
+// live SSE channel) are sequential steps of that one flow; they share the
+// payload/scope context and have no use apart from mount().
 
 import { signal, isSignal, type Signal } from './signal'
 import type { RouteSignals } from './route-signals'
@@ -97,13 +97,6 @@ interface SetupContext {
 interface CompiledModule {
   default: { setup: (ctx: SetupContext) => Record<string, unknown> }
 }
-
-interface Lifecycle {
-  state: Record<string, unknown>
-  mount?: (state: Record<string, unknown>, el: HTMLElement) => void
-  unmount?: (state: Record<string, unknown>) => void
-}
-const LIFECYCLE_KEY = '__shipSetLifecycle'
 
 /**
  * Mount a view into a DOM target.
@@ -279,60 +272,16 @@ export async function mount<Scope = Record<string, unknown>>(
     }
   }
 
-  // 8. Lifecycle mount.
-  const lifecycle = extractLifecycle(setupRet)
-  if (lifecycle?.mount) {
-    // Run the controller's mount() INSIDE the same effect scope as setup (line
-    // 206), exactly as compose.ts does for component mount. setup's withScope has
-    // already closed by here, so a live()/data()/hook subscription opened in a
-    // controller's mount() callback hit onCleanup() with CURRENT_SCOPE=null — a
-    // no-op — and leaked one open SSE subscription per navigation (the OOM).
-    const lifecycleMount = lifecycle.mount
-    try {
-      const result = withScope(scope, () => lifecycleMount(lifecycle.state, target)) as unknown
-      // Controller mount may return any of:
-      //   - void                — nothing to clean up
-      //   - () => void          — disposer; idiomatic Solid/Svelte shape
-      //   - Promise<void | () => void> — async mount with optional disposer
-      //
-      // The pre-fix branch only checked for Promise and surfaced
-      // rejections, silently DROPPING the disposer return. 61 of 69
-      // production controllers rely on `return () => …` for cleanup
-      // (every MutationObserver, ResizeObserver, setInterval,
-      // addEventListener tied to a host), so every navigation away
-      // from a mounted view leaked listeners + observers + timers.
-      // Honor the disposer in both sync and async cases.
-      if (typeof result === 'function') {
-        cleanups.push(result as () => void)
-      } else if (
-        result &&
-        typeof result === 'object' &&
-        typeof (result as Promise<unknown>).then === 'function'
-      ) {
-        ;(result as Promise<unknown>).then(
-          (asyncResult) => {
-            if (typeof asyncResult !== 'function') return
-            const disposer = asyncResult as () => void
-            if (disposed) {
-              // The view was already disposed before the async mount
-              // resolved — run the disposer immediately so its
-              // resources are released, rather than letting it leak.
-              try { disposer() } catch (err) {
-                console.error('[sui/mount] async cleanup threw:', err)
-              }
-            } else {
-              cleanups.push(disposer)
-            }
-          },
-          (err) => {
-            console.error('[sui/mount] controller mount() promise rejected:', err)
-          },
-        )
-      }
-    } catch (err) {
-      console.error('[sui/mount] controller mount() threw:', err)
-    }
-  }
+  // 8. Ambient mount() callbacks. A controller/component's setup body may
+  // have called `mount(fn)` any number of times (directly, or from a
+  // composition it called) — each registered on `scope` via
+  // `EffectScope.registerMount`. Run them now, INSIDE the same effect
+  // scope as setup (line 206): a live()/data()/hook subscription opened
+  // in a `mount()` callback needs CURRENT_SCOPE still set to enroll its
+  // own `onCleanup`, or it leaks (the OOM `87cf3223` fixed). Disposers
+  // (sync or resolved from a promise) are enrolled on `scope` itself by
+  // `runMounts`, so they tear down with `scope.dispose()` below.
+  withScope(scope, () => scope.runMounts(target))
 
   // 9. Open live SSE channel if the payload declared one.
   //
@@ -394,13 +343,6 @@ export async function mount<Scope = Record<string, unknown>>(
     dispose() {
       if (disposed) return
       disposed = true
-      if (lifecycle?.unmount) {
-        try {
-          lifecycle.unmount(lifecycle.state)
-        } catch (err) {
-          console.error('[sui/mount] controller unmount() threw:', err)
-        }
-      }
       for (const fn of cleanups) {
         try {
           fn()
@@ -612,13 +554,6 @@ function injectCss(
     target.parentNode?.insertBefore(style, target)
   }
   return style
-}
-
-function extractLifecycle(ret: unknown): Lifecycle | undefined {
-  if (!ret || typeof ret !== 'object') return undefined
-  const lc = (ret as Record<string, unknown>)[LIFECYCLE_KEY]
-  if (lc && typeof lc === 'object') return lc as Lifecycle
-  return undefined
 }
 
 function noop(_p: string): void {

@@ -62,8 +62,7 @@ function productAttr(product: string): string {
   }
 }
 
-export default controller({
-  setup: () => {
+export default controller(() => {
     const root = document.documentElement
     const path = signal<string>(typeof location !== 'undefined' ? location.pathname : '/')
     const product = derived(() => productFor(path()))
@@ -117,7 +116,6 @@ export default controller({
     }
 
     return { path, product, fullscreen, workbench }
-  },
 })
 </controller>
 

@@ -1,9 +1,7 @@
 <controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => ({ count: signal(0) }),
-})
+export default controller((ctx) => ({ count: signal(0) }))
 </controller>
 
 <div>

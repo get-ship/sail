@@ -76,104 +76,94 @@ const TOOL_KEYS: Record<string, DrawTool> = {
 // <sui-draw> controller — an owned SVG-native whiteboard on the canvas
 // substrate. The scene model holds elements (world coords); the view maps to
 // screen through the substrate transform. Pen drafting + shape drag + select
-// + undo/redo run through on:* handlers / mount (Cardinal 3).
-export default controller({
-  setup: ({ value, sketchy }: Scope) => {
-    const seed = parseScene(value())
-    const scene = createDrawScene({
-      elements: seed?.elements ?? [],
-      sketchy: sketchy(),
-    })
-    const canvas = createCanvas({
-      getViewportElement: () => null, // <sui-canvas> owns the viewport thunk
-    })
-    const drawing = signal(false)
-    const movingSelection = signal(false)
-    const lastPointer = signal<{ x: number; y: number } | null>(null)
-    const version = signal(0)
-    const changeSrc = debounce(version, 200)
-    // Derived memos fold into the scope factory — the canonical controller form
-    // replaces the historical `derived:` section; types flow through inference.
-    const rendered = derived(() => scene.rendered())
-    const selectedSet = derived(() => new Set(scene.selection()))
-    const draftPath = derived(() => scene.draft()?.path ?? '')
-    const draftColor = derived(() => scene.draft()?.color ?? 'currentColor')
-    const selectionRect = derived(() => scene.selectionBounds())
-    const statusLabel = derived(() => {
-      const n = scene.selection().length
-      return n > 0 ? `${n} selected` : `${scene.elements().length} elements`
-    })
-    return {
-      scene, canvas, drawing, movingSelection, lastPointer, version, changeSrc,
-      rendered, selectedSet, draftPath, draftColor, selectionRect, statusLabel,
+// + undo/redo run through returned handlers / mount (Cardinal 3).
+export default controller(({ value, sketchy, readonly }: Scope) => {
+  const seed = parseScene(value())
+  const scene = createDrawScene({
+    elements: seed?.elements ?? [],
+    sketchy: sketchy(),
+  })
+  const canvas = createCanvas({
+    getViewportElement: () => null, // <sui-canvas> owns the viewport thunk
+  })
+  const drawing = signal(false)
+  const movingSelection = signal(false)
+  const lastPointer = signal<{ x: number; y: number } | null>(null)
+  const version = signal(0)
+  const changeSrc = debounce(version, 200)
+  // Derived memos are plain statements in the setup body now — no `derived:`
+  // section to fold them into.
+  const rendered = derived(() => scene.rendered())
+  const selectedSet = derived(() => new Set(scene.selection()))
+  const draftPath = derived(() => scene.draft()?.path ?? '')
+  const draftColor = derived(() => scene.draft()?.color ?? 'currentColor')
+  const selectionRect = derived(() => scene.selectionBounds())
+  const statusLabel = derived(() => {
+    const n = scene.selection().length
+    return n > 0 ? `${n} selected` : `${scene.elements().length} elements`
+  })
+
+  // Press on empty surface: begin a draft for the active tool (pen/shape),
+  // or clear selection in select mode.
+  const surfaceDown = (e: PointerEvent): void => {
+    if (readonly()) return
+    if (e.button !== 0) return
+    const tool = scene.tool()
+    const world = canvas.screenToWorld({ x: e.clientX, y: e.clientY })
+    if (tool === 'pen') {
+      scene.beginStroke(world, 'currentColor')
+      drawing.set(true)
+    } else if (SHAPE_TOOLS.has(tool)) {
+      scene.beginShape(tool as ShapeKind, world, 'currentColor')
+      drawing.set(true)
+    } else if (tool === 'select') {
+      scene.clearSelection()
     }
-  },
+  }
+  // Press on an element (select mode): select + begin a move drag.
+  const elementDown = (e: PointerEvent): void => {
+    if (readonly()) return
+    if (scene.tool() !== 'select') return
+    const el = e.currentTarget as SVGElement
+    const id = el.dataset.elId
+    if (!id) return
+    if (e.shiftKey) scene.toggleSelection(id)
+    else if (!scene.selection().includes(id)) scene.setSelection([id])
+    movingSelection.set(true)
+    lastPointer.set({ x: e.clientX, y: e.clientY })
+    e.stopPropagation()
+  }
 
-  on: {
-    // Press on empty surface: begin a draft for the active tool (pen/shape),
-    // or clear selection in select mode.
-    surfaceDown: (s, e: PointerEvent) => {
-      if (s.readonly) return
-      if (e.button !== 0) return
-      const tool = s.scene.tool()
-      const world = s.canvas.screenToWorld({ x: e.clientX, y: e.clientY })
-      if (tool === 'pen') {
-        s.scene.beginStroke(world, 'currentColor')
-        s.drawing = true
-      } else if (SHAPE_TOOLS.has(tool)) {
-        s.scene.beginShape(tool as ShapeKind, world, 'currentColor')
-        s.drawing = true
-      } else if (tool === 'select') {
-        s.scene.clearSelection()
-      }
-    },
-    // Press on an element (select mode): select + begin a move drag.
-    elementDown: (s, e: PointerEvent) => {
-      if (s.readonly) return
-      if (s.scene.tool() !== 'select') return
-      const el = e.currentTarget as SVGElement
-      const id = el.dataset.elId
-      if (!id) return
-      if (e.shiftKey) s.scene.toggleSelection(id)
-      else if (!s.scene.selection().includes(id)) s.scene.setSelection([id])
-      s.movingSelection = true
-      s.lastPointer = { x: e.clientX, y: e.clientY }
-      e.stopPropagation()
-    },
-  },
-
-  mount(state, host) {
-    const scene = state.scene
-    const canvas = state.canvas
-
+  mount((host) => {
     const onMove = (e: PointerEvent): void => {
-      if (state.drawing) {
+      if (drawing()) {
         const world = canvas.screenToWorld({ x: e.clientX, y: e.clientY })
         if (scene.tool() === 'pen') scene.extendStroke({ x: world.x, y: world.y, pressure: 0.5 })
         else scene.extendShape(world)
         return
       }
-      if (state.movingSelection && state.lastPointer) {
+      const last = lastPointer()
+      if (movingSelection() && last) {
         const scale = canvas.transform().scale
-        const dx = (e.clientX - state.lastPointer.x) / scale
-        const dy = (e.clientY - state.lastPointer.y) / scale
+        const dx = (e.clientX - last.x) / scale
+        const dy = (e.clientY - last.y) / scale
         scene.moveSelectionBy(dx, dy)
-        state.lastPointer = { x: e.clientX, y: e.clientY }
+        lastPointer.set({ x: e.clientX, y: e.clientY })
       }
     }
     const onUp = (): void => {
-      if (state.drawing) {
+      if (drawing()) {
         const el = scene.commitDraft()
-        state.drawing = false
+        drawing.set(false)
         if (el) {
-          state.version = state.version + 1
+          version.set(version() + 1)
           host.emit!('sui-draw-select', { ids: scene.selection() })
         }
       }
-      if (state.movingSelection) {
-        state.movingSelection = false
-        state.lastPointer = null
-        state.version = state.version + 1
+      if (movingSelection()) {
+        movingSelection.set(false)
+        lastPointer.set(null)
+        version.set(version() + 1)
       }
     }
     const onKey = (e: KeyboardEvent): void => {
@@ -183,21 +173,21 @@ export default controller({
       if (e.key === 'Escape') {
         scene.clearSelection()
         scene.cancelDraft()
-        state.drawing = false
+        drawing.set(false)
         host.emit!('sui-draw-select', { ids: [] })
         return
       }
       const mod = e.metaKey || e.ctrlKey
-      if (!state.readonly && mod && e.key.toLowerCase() === 'z') {
+      if (!readonly() && mod && e.key.toLowerCase() === 'z') {
         if (e.shiftKey) scene.redo()
         else scene.undo()
-        state.version = state.version + 1
+        version.set(version() + 1)
         e.preventDefault()
         return
       }
-      if (!state.readonly && (e.key === 'Delete' || e.key === 'Backspace') && scene.selection().length > 0) {
+      if (!readonly() && (e.key === 'Delete' || e.key === 'Backspace') && scene.selection().length > 0) {
         scene.removeElements(scene.selection())
-        state.version = state.version + 1
+        version.set(version() + 1)
         host.emit!('sui-draw-select', { ids: [] })
         e.preventDefault()
         return
@@ -225,7 +215,7 @@ export default controller({
 
     // Debounced scene-change event (the KEEP'd contract: value + version).
     const stopChange = effect(() => {
-      const v = state.changeSrc
+      const v = changeSrc()
       if (v === 0) return
       host.emit!('sui-draw-change', { value: scene.serialize(), version: v })
     })
@@ -238,7 +228,13 @@ export default controller({
       stopChange()
       canvas.dispose()
     }
-  },
+  })
+
+  return {
+    scene, canvas, drawing, movingSelection, lastPointer, version, changeSrc,
+    rendered, selectedSet, draftPath, draftColor, selectionRect, statusLabel,
+    surfaceDown, elementDown,
+  }
 })
 
 </controller>

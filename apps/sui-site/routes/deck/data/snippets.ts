@@ -9,7 +9,7 @@ export const configExample = `// deck.jsonc
 }`
 
 export const usageExample = `// any controller
-setup: (ctx) => {
+export default controller((ctx) => {
   const visits = ctx.clients.store.visits
   return { visits }
-}`
+})`

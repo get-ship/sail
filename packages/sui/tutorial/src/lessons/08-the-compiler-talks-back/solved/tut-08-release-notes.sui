@@ -8,7 +8,6 @@
 
 <controller>
 import { controller, signal, derived } from '@ship/sui-runtime'
-import type { Scope } from './tut-08-release-notes.sui'
 
 interface Note {
   id: number
@@ -16,8 +15,7 @@ interface Note {
   text: string
 }
 
-export default controller<Scope>({
-  setup: () => {
+export default controller(() => {
     const publishedAt = signal(new Date('2026-07-01T09:00:00Z'))
     const notes = signal<Note[]>([
       { id: 1, tag: 'feat', text: 'motion:loop — ambient animation as a directive' },
@@ -33,8 +31,7 @@ export default controller<Scope>({
     )
 
     return { notes, published }
-  },
-})
+  })
 </controller>
 
 <column gap="4" sx="p-4">

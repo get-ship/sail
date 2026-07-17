@@ -4,9 +4,7 @@
 import { controller } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 
-export default controller({
-  setup: () => ({}),
-})
+export default controller(() => ({}))
 </controller>
 
 <column sx="p-0 max-w-breakpoint-tablet mx-auto">

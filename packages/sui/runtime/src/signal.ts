@@ -86,6 +86,15 @@ function makeOwnerScope(node: Computation): EffectScope {
     cleanup(fn: () => void) {
       node.cleanups.push(fn)
     },
+    // `mount()` inside an effect/derived body isn't a real setup window —
+    // there's no single "connect" moment for a recomputation. Best-effort
+    // bubble to the lexical owner (so a composition that happens to read a
+    // signal before calling `mount()` still resolves it), else drop: this
+    // adapter never gets `runMounts` called on it by any host.
+    registerMount(fn: (el: HTMLElement) => (() => void) | void) {
+      node.owner?.registerMount(fn)
+    },
+    runMounts() {},
     dispose() {},
     disposed: false,
     // Chain to the computation's lexical owner: the body runs with this

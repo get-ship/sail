@@ -26,8 +26,7 @@ import type { ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './sui-annotation-list.sui'
 import type { AnnotationEvent } from './sui-annotation.internals'
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>, _host?: Element) => {
+export default controller((_ctx: ViewScope<Scope>, _host?: Element) => {
     const staged = signal<AnnotationEvent[]>([])
     // The host element is not present in the scope factory (the post-
     // convergence "SUI names no host" compile stops passing it as the 2nd
@@ -47,33 +46,33 @@ export default controller({
       )
     }
 
-    return { staged, emitRemove, hostEl }
-  },
+    mount((host) => {
+      // The runtime hands the real host element here. The scope's `emitRemove`
+      // closure reads through `hostEl` (the dead-`host` workaround) — publish
+      // the element now that it exists, before the first user click.
+      hostEl.set(host as HTMLElement)
+      // Initial `staged` value: the parent layer sets it as a JS property on
+      // this element before mount (the host→list contract). Narrow the access
+      // with a guard rather than `as any` — the property is the value type
+      // we expect, not an untyped escape hatch.
+      const untypedHost = host as unknown as { staged?: unknown }
+      if ('staged' in untypedHost) {
+        const v = untypedHost.staged
+        if (Array.isArray(v)) staged.set(v as AnnotationEvent[])
+      }
 
-  mount(state, host) {
-    // The runtime hands the real host element here. The scope's `emitRemove`
-    // closure reads through `hostEl` (the dead-`host` workaround) — publish
-    // the element now that it exists, before the first user click.
-    state.hostEl = host as HTMLElement
-    // Initial `staged` value: the parent layer sets it as a JS property on
-    // this element before mount (the host→list contract). Narrow the access
-    // with a guard rather than `as any` — the property is the value type
-    // we expect, not an untyped escape hatch.
-    if ('staged' in host) {
-      const v = host.staged
-      if (Array.isArray(v)) state.staged = v as AnnotationEvent[]
-    }
-
-    // The parent layer mutates `staged` via the host JS property
-    // (`list.staged = [...]`); install the accessor so it routes through
-    // the signal.
-    Object.defineProperty(host, 'staged', {
-      configurable: true,
-      get: () => state.staged,
-      set: (v: AnnotationEvent[]) => { state.staged = Array.isArray(v) ? v : [] },
+      // The parent layer mutates `staged` via the host JS property
+      // (`list.staged = [...]`); install the accessor so it routes through
+      // the signal.
+      Object.defineProperty(host, 'staged', {
+        configurable: true,
+        get: () => staged(),
+        set: (v: AnnotationEvent[]) => { staged.set(Array.isArray(v) ? v : []) },
+      })
     })
-  },
-})
+
+    return { staged, emitRemove, hostEl }
+  })
 
 </controller>
 {#if staged().length === 0}

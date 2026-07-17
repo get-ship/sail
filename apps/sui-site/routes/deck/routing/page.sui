@@ -6,9 +6,7 @@ import { controller, type ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 import { routeTree, colocated } from './snippets'
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>) => ({ routeTree, colocated }),
-})
+export default controller((_ctx: ViewScope<Scope>) => ({ routeTree, colocated }))
 </controller>
 
 <article sx="max-w-breakpoint-tablet mx-auto">

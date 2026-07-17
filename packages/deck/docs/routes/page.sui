@@ -20,9 +20,7 @@ $ deck dev
 const layers = `SUI    :  deck   :  your app
 React  :  Next   :  your app`
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>) => ({ quickstart, layers }),
-})
+export default controller((_ctx: ViewScope<Scope>) => ({ quickstart, layers }))
 </controller>
 
 <article data-doc="true">

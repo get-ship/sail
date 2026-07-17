@@ -202,11 +202,27 @@ export function defineComponent(
       }
 
       private runSetup() {
-        this.scope = createScope()
+        // Captured into a local: `this.scope` can be cleared mid-call if the
+        // element is synchronously disconnected + reconnected while its own
+        // setup is still running (a parent's DOM reconciliation moving this
+        // node re-enters disconnectedCallback -> teardown() -> `this.scope =
+        // undefined`, re-entrant on the SAME call stack as this runSetup —
+        // observed with sui-component-viewer's example-swap re-insertion).
+        // Operate on the local so the ambient-mount wiring below still runs
+        // against the scope THIS call created, not whatever `this.scope`
+        // happens to hold by the time we get there.
+        const scope = createScope()
+        this.scope = scope
         try {
-          this.cleanup = withScope(this.scope, () =>
+          this.cleanup = withScope(scope, () =>
             withHost(this, () => reg.factory(this, this.propSignals, this.internals)),
           )
+          // Ambient mount() callbacks the factory (or a composition it called)
+          // registered on this.scope — the element is already connected by the
+          // time connectedCallback runs, so "after connect" IS now. Run inside
+          // withScope so a mount() callback's own onCleanup()/live()/data()
+          // calls still enroll on this.scope, not a dangling one.
+          withScope(scope, () => scope.runMounts(this))
         } catch (err) {
           const boundary = findNearestBoundary(this.parentNode)
           if (boundary) {
@@ -329,11 +345,27 @@ export function defineComponent(
     private pendingProps: Record<string, unknown> | undefined
 
     private runSetup() {
-      this.scope = createScope()
+      // Captured into a local: `this.scope` can be cleared mid-call if the
+      // element is synchronously disconnected + reconnected while its own
+      // setup is still running (a parent's DOM reconciliation moving this
+      // node re-enters disconnectedCallback -> teardown() -> `this.scope =
+      // undefined`, re-entrant on the SAME call stack as this runSetup —
+      // observed with sui-component-viewer's example-swap re-insertion).
+      // Operate on the local so the ambient-mount wiring below still runs
+      // against the scope THIS call created, not whatever `this.scope`
+      // happens to hold by the time we get there.
+      const scope = createScope()
+      this.scope = scope
       try {
-        this.cleanup = withScope(this.scope, () =>
+        this.cleanup = withScope(scope, () =>
           withHost(this, () => reg.factory(this, this.propSignals)),
         )
+        // Ambient mount() callbacks the factory (or a composition it called)
+        // registered on this.scope — the element is already connected by the
+        // time connectedCallback runs, so "after connect" IS now. Run inside
+        // withScope so a mount() callback's own onCleanup()/live()/data()
+        // calls still enroll on this.scope, not a dangling one.
+        withScope(scope, () => scope.runMounts(this))
         // Apply any prop set via JS property before connection created the
         // signals (the prop accessors buffer pre-connect writes here).
         if (this.pendingProps) {

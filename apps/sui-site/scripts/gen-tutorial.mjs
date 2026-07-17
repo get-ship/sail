@@ -2,8 +2,8 @@
 // data module the docs routes import. We DO NOT rewrite the tutorial — we
 // load `packages/sui/tutorial/src/prose/<slug>.md` (flat files: frontmatter +
 // body) and the paired `lessons/<slug>/{starter,solved}/` sources (one `.sui`
-// per dir, stem = custom-element tag, plus an optional `<stem>.controller.ts`),
-// render the prose body to HTML here, and write `src/tutorial-data.ts`.
+// per dir, stem = custom-element tag, controller block inline when the lesson
+// has state), render the prose body to HTML here, and write `src/tutorial-data.ts`.
 //
 // Run: `node scripts/gen-tutorial.mjs` (from apps/sui-site). The output is
 // committed so the deck build needs no extra step.

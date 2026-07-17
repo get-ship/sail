@@ -4,17 +4,15 @@ export const code = {
   page: `<controller>
 import { controller, signal, filteredList } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => {
-    const people = signal([
-      { id: 1, name: 'Ada Lovelace', status: 'active' },
-      { id: 2, name: 'Grace Hopper', status: 'away' },
-    ])
-    const { query, filtered } = filteredList(() => people())
-    const invite = () =>
-      people.set((l) => [...l, { id: l.length + 1, name: 'New member', status: 'active' }])
-    return { query, filtered, invite }
-  },
+export default controller(() => {
+  const people = signal([
+    { id: 1, name: 'Ada Lovelace', status: 'active' },
+    { id: 2, name: 'Grace Hopper', status: 'away' },
+  ])
+  const { query, filtered } = filteredList(() => people())
+  const invite = () =>
+    people.set((l) => [...l, { id: l.length + 1, name: 'New member', status: 'active' }])
+  return { query, filtered, invite }
 })
 </controller>
 

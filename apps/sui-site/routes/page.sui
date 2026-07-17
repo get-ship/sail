@@ -18,8 +18,7 @@ import type { Scope } from './page.sui'
 
 const WORDS = ['Batteries', 'Components', 'Styling', 'State', 'Motion', 'Themes']
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ViewScope<Scope>) => {
     const i = signal(0)
     effect(() => {
       const t = setInterval(() => i.set((n) => (n + 1) % WORDS.length), 2600)
@@ -78,7 +77,6 @@ export default controller({
       people, query, filtered, invite, users, reload,
       status, buildNo, deploy,
     }
-  },
 })
 </controller>
 

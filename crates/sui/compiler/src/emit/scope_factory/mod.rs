@@ -1,12 +1,12 @@
-//! Extract `(name, ts-type)` pairs from a paired controller's
-//! `setup: () => ({...})` factory so the d.ts emitter can surface them
-//! as additional `Scope` members.
+//! Extract `(name, ts-type)` pairs from a controller's setup function's
+//! returned object so the d.ts emitter can surface them as additional
+//! `Scope` members.
 //!
 //! Two paths are handled:
 //!
-//!  * Expression-body factories — `setup: () => ({ foo: signal(0) })`.
+//!  * Expression-body setup — `(ctx) => ({ foo: signal(0) })`.
 //!    The returned object literal is the entry source.
-//!  * Block-body factories — `setup: () => { const foo = signal(0); return { foo } }`.
+//!  * Block-body setup — `(ctx) => { const foo = signal(0); return { foo } }`.
 //!    The last `return {...}` is the entry source; shorthand entries
 //!    resolve by locating a top-level `const NAME = …` / `let NAME = …`
 //!    / `function NAME …` binding within the body and re-running the
@@ -49,14 +49,11 @@ use scan::{
 };
 
 /// `(name, ts_type)` pairs for every entry surfaced by the controller's
-/// `setup: () => ({...})` factory. Returns an empty vec when no `scope`
-/// section is present or the factory body doesn't model a return object.
+/// setup function's returned object. Returns an empty vec when the setup
+/// function's body doesn't model a return object.
 pub fn extract(controller: &ParsedController) -> Vec<(String, String)> {
-    let Some(section) = controller.section("setup") else {
-        return Vec::new();
-    };
     let bytes = controller.source.as_bytes();
-    let body_span = section.value_span;
+    let body_span = controller.setup_span;
     let Some(obj_span) = locate_return_object(bytes, body_span) else {
         return Vec::new();
     };
@@ -572,10 +569,9 @@ mod tests {
     #[test]
     fn typed_signal_generic_uses_generic_arg() {
         let c = ctrl(
-            "export default controller({\n  \
-             setup: () => ({\n    \
+            "export default controller((ctx) => ({\n    \
                err: signal<Error | null>(null),\n  \
-             }),\n});",
+             }));",
         );
         let v = extract(&c);
         assert_eq!(names_types(&v), vec![("err", "Signal<Error | null>")]);
@@ -584,12 +580,11 @@ mod tests {
     #[test]
     fn untyped_signal_infers_from_literal() {
         let c = ctrl(
-            "export default controller({\n  \
-             setup: () => ({\n    \
+            "export default controller((ctx) => ({\n    \
                open: signal(false),\n    \
                count: signal(0),\n    \
                name: signal(''),\n  \
-             }),\n});",
+             }));",
         );
         let v = extract(&c);
         let map: Vec<(&str, &str)> = names_types(&v);
@@ -601,10 +596,9 @@ mod tests {
     #[test]
     fn ref_with_generic() {
         let c = ctrl(
-            "export default controller({\n  \
-             setup: () => ({\n    \
+            "export default controller((ctx) => ({\n    \
                btn: ref<HTMLButtonElement>(null),\n  \
-             }),\n});",
+             }));",
         );
         let v = extract(&c);
         assert_eq!(names_types(&v), vec![("btn", "Signal<HTMLButtonElement | null>")]);
@@ -613,10 +607,9 @@ mod tests {
     #[test]
     fn arrow_function_returns_void() {
         let c = ctrl(
-            "export default controller({\n  \
-             setup: () => ({\n    \
+            "export default controller((ctx) => ({\n    \
                reset: (): void => {},\n  \
-             }),\n});",
+             }));",
         );
         let v = extract(&c);
         assert_eq!(v.len(), 1);
@@ -627,12 +620,11 @@ mod tests {
     #[test]
     fn block_body_resolves_shorthand_to_const_rhs() {
         let c = ctrl(
-            "export default controller({\n  \
-               setup: (_b: unknown, host?: Element) => {\n    \
+            "export default controller((_b: unknown, host?: Element) => {\n    \
                  const caughtError = signal<Error | null>(null)\n    \
                  const reset = (): void => { caughtError.set(null) }\n    \
                  return { caughtError, reset }\n  \
-               },\n});",
+               });",
         );
         let v = extract(&c);
         let map: Vec<(&str, &str)> = names_types(&v);
@@ -646,15 +638,14 @@ mod tests {
         // Regression: `function NAME(): void { body }` referenced via shorthand
         // leaked its entire body into the .d.ts return type (invalid TS).
         let c = ctrl(
-            "export default controller({\n  \
-               setup: (_, host) => {\n    \
+            "export default controller((_, host) => {\n    \
                  function endSession(id: string): void {\n      \
                    void fetch(`/x/${id}`)\n      \
                    if (true) { return }\n    \
                  }\n    \
                  function reset(): void { state.clear() }\n    \
                  return { endSession, reset }\n  \
-               },\n});",
+               });",
         );
         let v = extract(&c);
         let es = v.iter().find(|(n, _)| n == "endSession").expect("endSession present");
@@ -665,23 +656,22 @@ mod tests {
 
     #[test]
     fn empty_factory_returns_no_entries() {
-        let c = ctrl("export default controller({ setup: () => ({}) });");
+        let c = ctrl("export default controller((ctx) => ({}));");
         assert!(extract(&c).is_empty());
     }
 
     #[test]
-    fn missing_scope_section_returns_no_entries() {
-        let c = ctrl("export default controller({ on: { click: () => {} } });");
+    fn no_scope_object_returns_no_entries() {
+        let c = ctrl("export default controller((ctx) => { doSomething(); });");
         assert!(extract(&c).is_empty());
     }
 
     #[test]
     fn live_without_generic_is_live_signal_unknown() {
         let c = ctrl(
-            "export default controller({\n  \
-             setup: () => ({\n    \
+            "export default controller((ctx) => ({\n    \
                rail: live(() => liveExpr(`ship.skills.summaries()`)),\n  \
-             }),\n});",
+             }));",
         );
         let v = extract(&c);
         assert_eq!(names_types(&v), vec![("rail", "LiveSignal<unknown>")]);
@@ -690,10 +680,9 @@ mod tests {
     #[test]
     fn live_with_explicit_generic_uses_it() {
         let c = ctrl(
-            "export default controller({\n  \
-             setup: () => ({\n    \
+            "export default controller((ctx) => ({\n    \
                agents: live<AgentList>(() => ship.agents.summaries()),\n  \
-             }),\n});",
+             }));",
         );
         let v = extract(&c);
         assert_eq!(names_types(&v), vec![("agents", "LiveSignal<AgentList>")]);
@@ -707,11 +696,10 @@ mod tests {
         // un-declared (imported) names are left untouched.
         let c = ctrl(
             "interface Pin { id: string }\n\
-             export default controller({\n  \
-             setup: () => ({\n    \
+             export default controller((ctx) => ({\n    \
                pins: signal<Pin[]>([]),\n    \
                btn: ref<HTMLButtonElement>(null),\n  \
-             }),\n});",
+             }));",
         );
         let v = extract(&c);
         assert_eq!(
@@ -726,10 +714,9 @@ mod tests {
         // controller-local type the `.d.ts` can't import — must NOT be emitted as
         // the LiveSignal arg (that's a broken ref). Stays `LiveSignal<unknown>`.
         let c = ctrl(
-            "export default controller({\n  \
-             setup: () => ({\n    \
+            "export default controller((ctx) => ({\n    \
                rail: live(() => liveExpr<RailValue>(`ship.skills.summaries()`)),\n  \
-             }),\n});",
+             }));",
         );
         let v = extract(&c);
         assert_eq!(names_types(&v), vec![("rail", "LiveSignal<unknown>")]);
@@ -740,10 +727,9 @@ mod tests {
         // Regression: `match_angle` bailed on the first string literal in the
         // type args, so `signal<'a' | 'b'>(…)` degraded to bare `unknown`.
         let c = ctrl(
-            "export default controller({\n  \
-             setup: () => ({\n    \
+            "export default controller((ctx) => ({\n    \
                tab: signal<'schema' | 'rows' | 'jsonc'>('schema'),\n  \
-             }),\n});",
+             }));",
         );
         let v = extract(&c);
         assert_eq!(
@@ -758,11 +744,10 @@ mod tests {
         // first top-level comma (inside the generic), degrading the whole entry
         // to bare `unknown`. The angle-aware separator keeps the full type.
         let c = ctrl(
-            "export default controller({\n  \
-             setup: () => ({\n    \
+            "export default controller((ctx) => ({\n    \
                open: signal<Record<Section, boolean>>({ a: true }),\n    \
                q: signal(''),\n  \
-             }),\n});",
+             }));",
         );
         let v = extract(&c);
         let map = names_types(&v);
@@ -778,10 +763,9 @@ mod tests {
     #[test]
     fn unknown_call_falls_back_to_unknown() {
         let c = ctrl(
-            "export default controller({\n  \
-             setup: () => ({\n    \
+            "export default controller((ctx) => ({\n    \
                weird: someUnknownThing(1, 2),\n  \
-             }),\n});",
+             }));",
         );
         let v = extract(&c);
         assert_eq!(names_types(&v), vec![("weird", "unknown")]);
@@ -793,12 +777,11 @@ mod tests {
         // finds the snippet's `{ count }` and treats it as the scope
         // keys. (Doc snippets are commonly appended.)
         let c = ctrl(
-            "export default controller({\n  \
-               setup: () => {\n    \
+            "export default controller(() => {\n    \
                  const name = signal('ada')\n    \
                  return { name }\n    \
                  const snippet = \"return { count }\"\n  \
-               },\n});",
+               });",
         );
         let v = extract(&c);
         let names: Vec<&str> = v.iter().map(|(n, _)| n.as_str()).collect();
@@ -819,12 +802,11 @@ mod tests {
         // naïve scanner doesn't even skip template substitutions
         // (`${...}`); a string-aware tokenizer must.
         let c = ctrl(
-            "export default controller({\n  \
-               setup: () => {\n    \
+            "export default controller(() => {\n    \
                  const name = signal('ada')\n    \
                  return { name }\n    \
                  const snippet = `return { count }`\n  \
-               },\n});",
+               });",
         );
         let v = extract(&c);
         let names: Vec<&str> = v.iter().map(|(n, _)| n.as_str()).collect();
@@ -846,12 +828,11 @@ mod tests {
         // `//` comments is already correct because the `prev_ok`
         // boundary check sees the `/`; this test pins it.)
         let c = ctrl(
-            "export default controller({\n  \
-               setup: () => {\n    \
+            "export default controller(() => {\n    \
                  // return { ghost }\n    \
                  const name = signal('ada')\n    \
                  return { name }\n  \
-               },\n});",
+               });",
         );
         let v = extract(&c);
         let names: Vec<&str> = v.iter().map(|(n, _)| n.as_str()).collect();
@@ -873,8 +854,7 @@ mod tests {
         // return object — helpers live in `const` / `function`
         // declarations, not in the return shape.
         let c = ctrl(
-            "export default controller({\n  \
-               setup: (_b: unknown, host?: Element) => {\n    \
+            "export default controller((_b: unknown, host?: Element) => {\n    \
                  // helper\n    \
                  function endSession(id: string): void {\n      \
                    void fetch(`/x/${id}`)\n    \
@@ -882,7 +862,7 @@ mod tests {
                  const caughtError = signal<Error | null>(null)\n    \
                  const reset = (): void => { caughtError.set(null) }\n    \
                  return { caughtError, reset, endSession }\n  \
-               },\n});",
+               });",
         );
         let v = extract(&c);
         let names: Vec<&str> = v.iter().map(|(n, _)| n.as_str()).collect();
@@ -909,12 +889,11 @@ mod tests {
         // Doc snippet inside a string contains `signal(...)` — must
         // not inject anything into the keys.
         let c = ctrl(
-            "export default controller({\n  \
-               setup: () => {\n    \
+            "export default controller(() => {\n    \
                  const name = signal('ada')\n    \
                  const doc = \"use signal(count) to track\" \n    \
                  return { name }\n  \
-               },\n});",
+               });",
         );
         let v = extract(&c);
         let names: Vec<&str> = v.iter().map(|(n, _)| n.as_str()).collect();

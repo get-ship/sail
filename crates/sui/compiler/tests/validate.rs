@@ -1,8 +1,16 @@
-//! End-to-end validation tests for the three new compile-time rules:
-//! closed `controller(def)` sections, scope-bound expressions, and
-//! pure `derived` getters. Each test pairs a `.sui` template with a
-//! `.ts` controller on disk, then asserts `compile()` rejects the
-//! pair with the spec-mandated error message.
+//! End-to-end validation tests for the compile-time rules: scope-bound
+//! expressions and pure `derived` getters. Each test pairs a `.sui`
+//! template with a `.ts` controller on disk, then asserts `compile()`
+//! rejects the pair with the spec-mandated error message.
+//!
+//! The closed-`controller(def)`-sections rule (`unknown_controller_section_rejected`)
+//! is retired along with the object-literal sections it policed: the
+//! controller's setup function returns ONE flat scope object now, so
+//! there's no privileged section-name allowlist to violate. An
+//! unrecognized member on the returned object is either a plain typo
+//! (which `undeclared_identifier_rejected` below already catches when a
+//! template reads it) or just an extra scope member — ordinary
+//! TypeScript, not a compiler-policed section name.
 
 use std::fs;
 use std::path::PathBuf;
@@ -31,25 +39,6 @@ fn read(name: &str) -> (String, PathBuf) {
     let sui = dir.join(format!("{name}.sui"));
     let src = fs::read_to_string(&sui).unwrap_or_else(|e| panic!("read {}: {e}", sui.display()));
     (src, sui)
-}
-
-#[test]
-fn unknown_controller_section_rejected() {
-    let (src, path) = read("unknown-section");
-    let err = compile(&src, opts(path)).expect_err("unknown section must fail");
-    assert!(
-        err.message.contains("Unknown controller section 'effects'"),
-        "msg: {}",
-        err.message
-    );
-    // The living section set: `use` died, `scope` became `setup`. (The
-    // controller-collapse job shrinks this list again — its spec owns that
-    // teaching update.)
-    assert!(
-        err.message.contains("setup, derived, on, mount, unmount"),
-        "msg should list valid sections: {}",
-        err.message
-    );
 }
 
 #[test]

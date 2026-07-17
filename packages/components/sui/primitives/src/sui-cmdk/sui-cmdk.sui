@@ -108,8 +108,7 @@ interface RenderRow {
 
 let _seq = 0
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ViewScope<Scope>) => {
     const seq = ++_seq
     const itemsSig = signal<CmdkItem[]>([])
     const query = signal('')
@@ -193,177 +192,181 @@ export default controller({
       return out
     })
 
+    mount((host) => {
+      // `open` is a declared <prop> — writes below go through its own
+      // compiler-installed accessor (the same signal `_ctx.open()` reads),
+      // never a disconnected local copy, so `el.open = true` set externally
+      // and `sui-cmdk`'s own show()/close()/toggle() stay in sync.
+      const hostEl = host as HTMLElement & { open: boolean }
+      // ── `items` IDENTITY property + JSON-attribute SSR fallback ──────────────
+      // A live CmdkItem[] assigned to the host `items` property (never a string).
+      // Defined on the instance so it shadows nothing — `items` is intentionally
+      // NOT a declared <prop>, so there is no compiler accessor to clash with.
+      Object.defineProperty(host, 'items', {
+        configurable: true,
+        get: () => itemsSig(),
+        set: (v: CmdkItem[] | null) => {
+          itemsSig.set(Array.isArray(v) ? v : [])
+          highlight.set(0)
+        },
+      })
+      if (itemsSig().length === 0) {
+        const raw = host.getAttribute('items') ?? ''
+        const parsed = parseJsonItems(raw)
+        if (parsed.length > 0) itemsSig.set(parsed)
+      }
+
+      const scrollActiveIntoView = () => {
+        const list = listEl() as HTMLUListElement | null
+        const id = activeId() as string
+        if (!list || !id) return
+        // Match by id without a CSS selector — option ids derive from caller
+        // data and `CSS.escape` is absent under jsdom, so a plain scan is the
+        // robust path. scrollIntoView is optional (jsdom stubs it).
+        let target: HTMLElement | null = null
+        for (const li of Array.from(list.querySelectorAll('li.item'))) {
+          if ((li as HTMLElement).id === id) {
+            target = li as HTMLElement
+            break
+          }
+        }
+        target?.scrollIntoView?.({ block: 'nearest' })
+      }
+
+      // Reset query + highlight on each open; emit open/close. The dialog drives
+      // its own native open via prop:open={open()}; here we react to the state.
+      let wasOpen = false
+      const stopOpenSync = effect(() => {
+        const isOpen = _ctx.open() === true
+        if (isOpen === wasOpen) return
+        wasOpen = isOpen
+        if (isOpen) {
+          query.set('')
+          highlight.set(0)
+          host.emit?.('sui-cmdk-open', {})
+          // Focus is grabbed by the dialog's own focus trap (the input is its
+          // first focusable); nudge the highlight into view once rows paint.
+          queueMicrotask(scrollActiveIntoView)
+        } else {
+          host.emit?.('sui-cmdk-close', {})
+        }
+      })
+
+      // `open` prop ⇄ the native modal. The platform owns top layer, focus
+      // trap, ESC and focus-return; the component owns this element, so it
+      // calls showModal()/close() directly and mirrors a native close (ESC,
+      // backdrop, form method=dialog) back into `open`.
+      const stopOpenBridge = effect(() => {
+        const el = dialogEl() as HTMLDialogElement | null
+        if (!el) return
+        const want = _ctx.open() === true
+        if (want && !el.open) el.showModal()
+        else if (!want && el.open) el.close()
+      })
+      const onNativeClose = (): void => {
+        if (_ctx.open()) hostEl.open = false
+      }
+      const stopCloseMirror = (): void => {
+        const el = dialogEl() as HTMLDialogElement | null
+        el?.removeEventListener('close', onNativeClose)
+      }
+      {
+        const el = dialogEl() as HTMLDialogElement | null
+        el?.addEventListener('close', onNativeClose)
+      }
+
+      const input = inputEl() as HTMLInputElement | null
+
+      const selectByItem = (item: VisibleItem | undefined) => {
+        if (!item || item.disabled) return
+        host.emit?.('sui-cmdk-select', { id: item.id, value: item.value })
+        hostEl.open = false
+      }
+
+      const onInput = () => {
+        highlight.set(0)
+        host.emit?.('sui-cmdk-input', { query: (query() as string) ?? '' })
+      }
+
+      const moveHighlight = (delta: number) => {
+        const list = navigable() as VisibleItem[]
+        const n = list.length
+        if (n === 0) return
+        const base = safeHighlight() as number
+        highlight.set((base + delta + n) % n)
+        queueMicrotask(scrollActiveIntoView)
+      }
+
+      const onKeydown = (e: KeyboardEvent) => {
+        const list = navigable() as VisibleItem[]
+        if (e.key === 'ArrowDown') {
+          e.preventDefault()
+          moveHighlight(1)
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault()
+          moveHighlight(-1)
+        } else if (e.key === 'Home') {
+          e.preventDefault()
+          highlight.set(0)
+          queueMicrotask(scrollActiveIntoView)
+        } else if (e.key === 'End') {
+          e.preventDefault()
+          highlight.set(Math.max(0, list.length - 1))
+          queueMicrotask(scrollActiveIntoView)
+        } else if (e.key === 'Enter') {
+          e.preventDefault()
+          selectByItem(list[safeHighlight() as number])
+        }
+        // Escape is intentionally untouched — the dialog's native `cancel`
+        // handler closes the modal and fires `sui-close`.
+      }
+
+      input?.addEventListener('input', onInput)
+      input?.addEventListener('keydown', onKeydown)
+
+      // Pointer commit. mousedown (before any blur/focus shuffle) selects the row.
+      const list = listEl() as HTMLUListElement | null
+      const onListMousedown = (e: MouseEvent) => {
+        const li = (e.target as HTMLElement | null)?.closest?.('li[data-id]') as HTMLElement | null
+        if (!li || li.getAttribute('aria-disabled') === 'true') return
+        e.preventDefault()
+        const id = li.dataset.id ?? ''
+        const match = (visible() as VisibleItem[]).find((v) => v.id === id)
+        selectByItem(match)
+      }
+      list?.addEventListener('mousedown', onListMousedown)
+
+      // `show()` (not `open()`) — `open` is a declared <prop>, so its accessor
+      // owns that name; consumers open imperatively via `el.show()` or set
+      // `el.open = true` directly.
+      host.expose?.({
+        show: () => {
+          hostEl.open = true
+        },
+        close: () => {
+          hostEl.open = false
+        },
+        toggle: () => {
+          hostEl.open = !_ctx.open()
+        },
+      })
+
+      return () => {
+        stopOpenSync()
+        stopOpenBridge()
+        stopCloseMirror()
+        input?.removeEventListener('input', onInput)
+        input?.removeEventListener('keydown', onKeydown)
+        list?.removeEventListener('mousedown', onListMousedown)
+      }
+    })
+
     return {
       itemsSig, query, highlight, listId,
       dialogEl, inputEl, listEl,
       visible, navigable, safeHighlight, highlightId, activeId, rows,
     }
-  },
-
-  mount(state, host) {
-    // ── `items` IDENTITY property + JSON-attribute SSR fallback ──────────────
-    // A live CmdkItem[] assigned to the host `items` property (never a string).
-    // Defined on the instance so it shadows nothing — `items` is intentionally
-    // NOT a declared <prop>, so there is no compiler accessor to clash with.
-    Object.defineProperty(host, 'items', {
-      configurable: true,
-      get: () => state.itemsSig,
-      set: (v: CmdkItem[] | null) => {
-        state.itemsSig = Array.isArray(v) ? v : []
-        state.highlight = 0
-      },
-    })
-    if (state.itemsSig.length === 0) {
-      const raw = host.getAttribute('items') ?? ''
-      const parsed = parseJsonItems(raw)
-      if (parsed.length > 0) state.itemsSig = parsed
-    }
-
-    const scrollActiveIntoView = () => {
-      const list = state.listEl as HTMLUListElement | null
-      const id = state.activeId as string
-      if (!list || !id) return
-      // Match by id without a CSS selector — option ids derive from caller
-      // data and `CSS.escape` is absent under jsdom, so a plain scan is the
-      // robust path. scrollIntoView is optional (jsdom stubs it).
-      let target: HTMLElement | null = null
-      for (const li of Array.from(list.querySelectorAll('li.item'))) {
-        if ((li as HTMLElement).id === id) {
-          target = li as HTMLElement
-          break
-        }
-      }
-      target?.scrollIntoView?.({ block: 'nearest' })
-    }
-
-    // Reset query + highlight on each open; emit open/close. The dialog drives
-    // its own native open via prop:open={open()}; here we react to the state.
-    let wasOpen = false
-    const stopOpenSync = effect(() => {
-      const isOpen = state.open === true
-      if (isOpen === wasOpen) return
-      wasOpen = isOpen
-      if (isOpen) {
-        state.query = ''
-        state.highlight = 0
-        host.emit?.('sui-cmdk-open', {})
-        // Focus is grabbed by the dialog's own focus trap (the input is its
-        // first focusable); nudge the highlight into view once rows paint.
-        queueMicrotask(scrollActiveIntoView)
-      } else {
-        host.emit?.('sui-cmdk-close', {})
-      }
-    })
-
-    // `open` prop ⇄ the native modal. The platform owns top layer, focus
-    // trap, ESC and focus-return; the component owns this element, so it
-    // calls showModal()/close() directly and mirrors a native close (ESC,
-    // backdrop, form method=dialog) back into `open`.
-    const stopOpenBridge = effect(() => {
-      const el = state.$signals.dialogEl() as HTMLDialogElement | null
-      if (!el) return
-      const want = state.open === true
-      if (want && !el.open) el.showModal()
-      else if (!want && el.open) el.close()
-    })
-    const onNativeClose = (): void => {
-      if (state.open) state.open = false
-    }
-    const stopCloseMirror = (): void => {
-      const el = state.$signals.dialogEl() as HTMLDialogElement | null
-      el?.removeEventListener('close', onNativeClose)
-    }
-    {
-      const el = state.$signals.dialogEl() as HTMLDialogElement | null
-      el?.addEventListener('close', onNativeClose)
-    }
-
-    const input = state.inputEl as HTMLInputElement | null
-
-    const selectByItem = (item: VisibleItem | undefined) => {
-      if (!item || item.disabled) return
-      host.emit?.('sui-cmdk-select', { id: item.id, value: item.value })
-      state.open = false
-    }
-
-    const onInput = () => {
-      state.highlight = 0
-      host.emit?.('sui-cmdk-input', { query: (state.query as string) ?? '' })
-    }
-
-    const moveHighlight = (delta: number) => {
-      const list = state.navigable as VisibleItem[]
-      const n = list.length
-      if (n === 0) return
-      const base = state.safeHighlight as number
-      state.highlight = (base + delta + n) % n
-      queueMicrotask(scrollActiveIntoView)
-    }
-
-    const onKeydown = (e: KeyboardEvent) => {
-      const list = state.navigable as VisibleItem[]
-      if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        moveHighlight(1)
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        moveHighlight(-1)
-      } else if (e.key === 'Home') {
-        e.preventDefault()
-        state.highlight = 0
-        queueMicrotask(scrollActiveIntoView)
-      } else if (e.key === 'End') {
-        e.preventDefault()
-        state.highlight = Math.max(0, list.length - 1)
-        queueMicrotask(scrollActiveIntoView)
-      } else if (e.key === 'Enter') {
-        e.preventDefault()
-        selectByItem(list[state.safeHighlight as number])
-      }
-      // Escape is intentionally untouched — the dialog's native `cancel`
-      // handler closes the modal and fires `sui-close`.
-    }
-
-    input?.addEventListener('input', onInput)
-    input?.addEventListener('keydown', onKeydown)
-
-    // Pointer commit. mousedown (before any blur/focus shuffle) selects the row.
-    const list = state.listEl as HTMLUListElement | null
-    const onListMousedown = (e: MouseEvent) => {
-      const li = (e.target as HTMLElement | null)?.closest?.('li[data-id]') as HTMLElement | null
-      if (!li || li.getAttribute('aria-disabled') === 'true') return
-      e.preventDefault()
-      const id = li.dataset.id ?? ''
-      const match = (state.visible as VisibleItem[]).find((v) => v.id === id)
-      selectByItem(match)
-    }
-    list?.addEventListener('mousedown', onListMousedown)
-
-    // `show()` (not `open()`) — `open` is a declared <prop>, so its accessor
-    // owns that name; consumers open imperatively via `el.show()` or set
-    // `el.open = true` directly.
-    host.expose?.({
-      show: () => {
-        state.open = true
-      },
-      close: () => {
-        state.open = false
-      },
-      toggle: () => {
-        state.open = !state.open
-      },
-    })
-
-    return () => {
-      stopOpenSync()
-      stopOpenBridge()
-      stopCloseMirror()
-      input?.removeEventListener('input', onInput)
-      input?.removeEventListener('keydown', onKeydown)
-      list?.removeEventListener('mousedown', onListMousedown)
-    }
-  },
-})
+  })
 
 </controller>
 <dialog bind:this={dialogEl} size={size()} backdrop="blur">

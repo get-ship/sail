@@ -6,11 +6,9 @@ export const usage: Record<string, string> = {
   button: `<controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => {
-    const saved = signal(false)
-    return { saved, save: () => saved.set(true) }
-  },
+export default controller(() => {
+  const saved = signal(false)
+  return { saved, save: () => saved.set(true) }
 })
 </controller>
 
@@ -22,9 +20,7 @@ export default controller({
   input: `<controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => ({ name: signal('') }),
-})
+export default controller(() => ({ name: signal('') }))
 </controller>
 
 <input placeholder="Ada Lovelace" bind:value={name} />
@@ -33,9 +29,7 @@ export default controller({
   textarea: `<controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => ({ bio: signal('') }),
-})
+export default controller(() => ({ bio: signal('') }))
 </controller>
 
 <textarea placeholder="Tell us about yourself" bind:value={bio}></textarea>
@@ -44,9 +38,7 @@ export default controller({
   select: `<controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => ({ team: signal('Design') }),
-})
+export default controller(() => ({ team: signal('Design') }))
 </controller>
 
 <select bind:value={team}>
@@ -59,11 +51,9 @@ export default controller({
   combobox: `<controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => {
-    const fw = signal('')
-    return { fw, pick: (e) => fw.set(e.detail.value) }
-  },
+export default controller(() => {
+  const fw = signal('')
+  return { fw, pick: (e) => fw.set(e.detail.value) }
 })
 </controller>
 
@@ -80,9 +70,7 @@ export default controller({
   checkbox: `<controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => ({ agreed: signal(false) }),
-})
+export default controller(() => ({ agreed: signal(false) }))
 </controller>
 
 <label><input type="checkbox" bind:checked={agreed} /> I agree to the terms</label>
@@ -96,9 +84,7 @@ export default controller({
   switch: `<controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => ({ notify: signal(true) }),
-})
+export default controller(() => ({ notify: signal(true) }))
 </controller>
 
 <row gap="3" align="center">
@@ -109,9 +95,7 @@ export default controller({
   slider: `<controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => ({ load: signal(62) }),
-})
+export default controller(() => ({ load: signal(62) }))
 </controller>
 
 <slider bind:value={load} min="0" max="100" tone="primary"></slider>
@@ -157,11 +141,9 @@ export default controller({
   alert: `<controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => {
-    const visible = signal(true)
-    return { visible, dismiss: () => visible.set(false) }
-  },
+export default controller(() => {
+  const visible = signal(true)
+  return { visible, dismiss: () => visible.set(false) }
 })
 </controller>
 
@@ -175,9 +157,7 @@ export default controller({
   progress: `<controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => ({ done: signal(64) }),
-})
+export default controller(() => ({ done: signal(64) }))
 </controller>
 
 <progress value={done()} max="100"></progress>
@@ -192,9 +172,7 @@ export default controller({
   spinner: `<controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => ({ loading: signal(true) }),
-})
+export default controller(() => ({ loading: signal(true) }))
 </controller>
 
 {#if loading()}
@@ -245,11 +223,9 @@ export default controller({
   chip: `<controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => {
-    const kept = signal(true)
-    return { kept, drop: () => kept.set(false) }
-  },
+export default controller(() => {
+  const kept = signal(true)
+  return { kept, drop: () => kept.set(false) }
 })
 </controller>
 
@@ -365,11 +341,9 @@ export default controller({
   dialog: `<controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => {
-    const gone = signal(false)
-    return { gone, confirm: () => gone.set(true) }
-  },
+export default controller(() => {
+  const gone = signal(false)
+  return { gone, confirm: () => gone.set(true) }
 })
 </controller>
 
@@ -408,11 +382,9 @@ export default controller({
   pagination: `<controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => {
-    const page = signal('2')
-    return { page, go: (e) => page.set(e.detail.value) }
-  },
+export default controller(() => {
+  const page = signal('2')
+  return { page, go: (e) => page.set(e.detail.value) }
 })
 </controller>
 
@@ -433,14 +405,12 @@ export default controller({
   table: `<controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => ({
-    people: signal([
-      { id: 1, name: 'Ada Lovelace', team: 'Engines', status: 'active' },
-      { id: 2, name: 'Grace Hopper', team: 'Compilers', status: 'away' },
-    ]),
-  }),
-})
+export default controller(() => ({
+  people: signal([
+    { id: 1, name: 'Ada Lovelace', team: 'Engines', status: 'active' },
+    { id: 2, name: 'Grace Hopper', team: 'Compilers', status: 'away' },
+  ]),
+}))
 </controller>
 
 <table>

@@ -1066,7 +1066,7 @@ mod tests {
             &r.join("routes/widgets/[id]/page.sui"),
             "<controller>\n\
 import { controller, signal } from '@ship/sui-runtime'\n\
-export default controller({ setup: () => ({ id: signal('demo') }) })\n\
+export default controller(() => ({ id: signal('demo') }))\n\
 </controller>\n\
 <div>{id()}</div>\n",
         );
@@ -1166,7 +1166,7 @@ export default controller({ setup: () => ({ id: signal('demo') }) })\n\
             &r.join("routes/counter/page.sui"),
             "<controller>\n\
              import { controller, signal } from '@ship/sui-runtime'\n\
-             export default controller({ setup: () => ({ n: signal(41) }) })\n\
+             export default controller(() => ({ n: signal(41) }))\n\
              </controller>\n\
              <main>\n  <p>{n()}</p>\n</main>\n",
         );
@@ -1224,7 +1224,7 @@ export default controller({ setup: () => ({ id: signal('demo') }) })\n\
             "<controller>\n\
 import './styles.css';\n\
 import { controller } from '@ship/sui-runtime'\n\
-export default controller({ setup: () => ({}) })\n\
+export default controller(() => ({}))\n\
 </controller>\n\
 <div>css</div>\n",
         );

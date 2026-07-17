@@ -88,8 +88,7 @@ function toGrid(raw: string, rowLabels: string[], colLabels: string[]): ChartSer
   return rows
 }
 
-export default controller({
-  setup: ({ data, rows, cols, tone, cellSize, gap, label, loading }: Scope) => {
+export default controller(({ data, rows, cols, tone, cellSize, gap, label, loading }: Scope) => {
     const grid = derived<ChartSeries[]>(() =>
       toGrid(data(), parseLabels(rows()), parseLabels(cols())),
     )
@@ -121,13 +120,13 @@ export default controller({
     })
     const ariaLabel = derived(() => `${label()}: ${chart.ariaSummary()}`)
 
+    mount((host) => {
+      const err = (host as HeatmapHost).error
+      if (err !== undefined) chart.setOptions({ error: err })
+    })
+
     return { chart, cells, svgW, svgH, ariaLabel }
-  },
-  mount(_state, host) {
-    const err = (host as HeatmapHost).error
-    if (err !== undefined) _state.chart.setOptions({ error: err })
-  },
-})
+  })
 
 </controller>
 {#if loading()}

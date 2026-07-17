@@ -1,6 +1,5 @@
 <controller>
 import { controller, signal } from '@ship/sui-runtime'
-import type { Scope } from './sui-keyed.sui'
 
 interface Row {
   id: number
@@ -33,8 +32,7 @@ function buildData(count: number): Row[] {
   return data
 }
 
-export default controller<Scope>({
-  scope: () => {
+export default controller(() => {
     const rows = signal<Row[]>([])
     // -1 = nothing selected (no row carries id -1, so the `=== selected()`
     // class test is false for every row until one is clicked).
@@ -82,8 +80,7 @@ export default controller<Scope>({
       // 06_remove: drop the clicked row.
       remove: (id: number): void => rows.set(rows().filter((r) => r.id !== id)),
     }
-  },
-})
+  })
 </controller>
 
 <div class="container">

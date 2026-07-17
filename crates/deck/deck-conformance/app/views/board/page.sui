@@ -1,6 +1,6 @@
 <controller>
 // Authored controller for the `board` control-flow proof — a REAL
-// `controller({ scope })` DSL export (not the spike's `() => scope` factory).
+// `controller(setup)` export (not the spike's `() => scope` factory).
 //
 // The synthetic controller composes this by running its `setup(ctx)` — the
 // same `resolveController` the browser hydrate path runs — so the authored
@@ -16,8 +16,7 @@ export interface BoardItem {
   flagged: boolean
 }
 
-export default controller({
-  setup: () => {
+export default controller(() => {
     const items = signal<BoardItem[]>([
       { id: 'a', label: 'Alpha', flagged: false },
       { id: 'b', label: 'Bravo', flagged: true },
@@ -30,8 +29,7 @@ export default controller({
       items.set(items().filter((i) => i.id !== id))
     }
     return { items, add, remove }
-  },
-})
+  })
 </controller>
 
 <column gap="3" sx="p-6 max-w-breakpoint-tablet mx-auto">

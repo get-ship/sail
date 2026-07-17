@@ -32,9 +32,7 @@ describe('<use-kbd>', () => {
     const container = mkContainer()
     const onSearch = vi.fn()
     const onCreate = vi.fn()
-    const def = controller({
-      on: { search: onSearch, create: onCreate },
-    })
+    const def = controller(() => ({ search: onSearch, create: onCreate }))
 
     const template = `
       <use-kbd>
@@ -62,7 +60,7 @@ describe('<use-kbd>', () => {
   it('ignores keys with no matching shortcut', async () => {
     const container = mkContainer()
     const onSearch = vi.fn()
-    const def = controller({ on: { search: onSearch } })
+    const def = controller(() => ({ search: onSearch }))
     const template = `<use-kbd><on key="/" action="search" /></use-kbd><p>x</p>`
     const handle = hydrate(template, def.setup, { container })
     await flush()

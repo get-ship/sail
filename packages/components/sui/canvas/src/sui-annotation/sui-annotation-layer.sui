@@ -65,8 +65,7 @@ interface Drag {
 
 const DEFAULT_ENDPOINT = '/api/feedback'
 
-export default controller({
-  setup: (props: ViewScope<Scope>, _host?: Element) => {
+export default controller((props: ViewScope<Scope>, _host?: Element) => {
     const viewIdProp = props.viewId
     const endpointProp = props.endpoint
     const stagingProp = props.staging
@@ -215,6 +214,113 @@ export default controller({
 
     const overlayEl = ref<HTMLDivElement>(null)
 
+    mount((host) => {
+      // The runtime hands the real host element here. The scope's `sendOne`
+      // and `confirmNote` closures read through `hostEl` (the dead-`host`
+      // workaround) — publish the element now that it exists, before the
+      // first user gesture can fire.
+      hostEl.set(host as HTMLElement)
+
+      let _drag: Drag | null = null
+      let _raf: number | null = null
+
+      const overlayPos = (e: PointerEvent): { x: number; y: number } => {
+        const el = overlayEl() as HTMLElement | null
+        if (!el) return { x: 0, y: 0 }
+        const r = el.getBoundingClientRect()
+        return { x: e.clientX - r.left, y: e.clientY - r.top }
+      }
+
+      const onPointerDown = (e: PointerEvent): void => {
+        const m = props.mode() as Mode
+        if (m === 'off') return
+        const t = e.target as HTMLElement
+        if (t.closest('[data-annotation-popover]') || t.closest('sui-annotation-marker')) return
+        if (pending()) {
+          pending.set(null)
+          noteText.set('')
+          return
+        }
+        e.preventDefault()
+        const p = overlayPos(e)
+        _drag = { startX: p.x, startY: p.y, curX: p.x, curY: p.y }
+        drag.set(_drag)
+        ;(e.target as Element).setPointerCapture?.(e.pointerId)
+      }
+
+      const onPointerMove = (e: PointerEvent): void => {
+        if (!_drag) return
+        const p = overlayPos(e)
+        _drag = { ..._drag, curX: p.x, curY: p.y }
+        if (_raf !== null) return
+        _raf = requestAnimationFrame(() => {
+          _raf = null
+          if (_drag) drag.set({ ..._drag })
+        })
+      }
+
+      const onPointerUp = (e: PointerEvent): void => {
+        if (!_drag) return
+        const p = overlayPos(e)
+        const dx = Math.abs(p.x - _drag.startX)
+        const dy = Math.abs(p.y - _drag.startY)
+        const m = props.mode() as Mode
+        let next: Pending | null = null
+        if (m === 'point' || (m === 'region' && dx < 8 && dy < 8)) {
+          next = { kind: 'point', x: p.x, y: p.y, selector: 'body' }
+        } else if (m === 'region') {
+          const x = Math.min(_drag.startX, p.x)
+          const y = Math.min(_drag.startY, p.y)
+          const rect: [number, number, number, number] = [
+            Math.round(x),
+            Math.round(y),
+            Math.round(dx),
+            Math.round(dy),
+          ]
+          next = { kind: 'region', x: x + dx / 2, y: y + dy / 2, rect }
+        }
+        _drag = null
+        drag.set(null)
+        noteText.set('')
+        if (next) pending.set(next)
+      }
+
+      const overlayNode = overlayEl() as HTMLElement | null
+      if (overlayNode) {
+        overlayNode.addEventListener('pointerdown', onPointerDown)
+        overlayNode.addEventListener('pointermove', onPointerMove)
+        overlayNode.addEventListener('pointerup', onPointerUp)
+      }
+
+      Object.defineProperty(host, 'staged', {
+        configurable: true,
+        get: () => staged(),
+      })
+
+      type LayerHost = HTMLElement & {
+        send: () => Promise<void>
+        clear: () => void
+      }
+      ;(host as LayerHost).send = async () => {
+        for (const ev of [...staged()]) await sendOne(ev)
+      }
+      ;(host as LayerHost).clear = () => {
+        staged.set([])
+      }
+
+      return () => {
+        if (_raf !== null) {
+          cancelAnimationFrame(_raf)
+          _raf = null
+        }
+        if (overlayNode) {
+          overlayNode.removeEventListener('pointerdown', onPointerDown)
+          overlayNode.removeEventListener('pointermove', onPointerMove)
+          overlayNode.removeEventListener('pointerup', onPointerUp)
+        }
+      }
+    })
+
     return {
       staged,
       pending,
@@ -233,115 +339,7 @@ export default controller({
       sendOne,
       hostEl,
     }
-  },
-
-  mount(state, host) {
-    // The runtime hands the real host element here. The scope's `sendOne`
-    // and `confirmNote` closures read through `hostEl` (the dead-`host`
-    // workaround) — publish the element now that it exists, before the
-    // first user gesture can fire.
-    state.hostEl = host as HTMLElement
-
-    let _drag: Drag | null = null
-    let _raf: number | null = null
-
-    const overlayPos = (e: PointerEvent): { x: number; y: number } => {
-      const el = state.$signals.overlayEl() as HTMLElement | null
-      if (!el) return { x: 0, y: 0 }
-      const r = el.getBoundingClientRect()
-      return { x: e.clientX - r.left, y: e.clientY - r.top }
-    }
-
-    const onPointerDown = (e: PointerEvent): void => {
-      const m = state.$signals.mode() as Mode
-      if (m === 'off') return
-      const t = e.target as HTMLElement
-      if (t.closest('[data-annotation-popover]') || t.closest('sui-annotation-marker')) return
-      if (state.$signals.pending()) {
-        state.$signals.pending.set(null)
-        state.$signals.noteText.set('')
-        return
-      }
-      e.preventDefault()
-      const p = overlayPos(e)
-      _drag = { startX: p.x, startY: p.y, curX: p.x, curY: p.y }
-      state.$signals.drag.set(_drag)
-      ;(e.target as Element).setPointerCapture?.(e.pointerId)
-    }
-
-    const onPointerMove = (e: PointerEvent): void => {
-      if (!_drag) return
-      const p = overlayPos(e)
-      _drag = { ..._drag, curX: p.x, curY: p.y }
-      if (_raf !== null) return
-      _raf = requestAnimationFrame(() => {
-        _raf = null
-        if (_drag) state.$signals.drag.set({ ..._drag })
-      })
-    }
-
-    const onPointerUp = (e: PointerEvent): void => {
-      if (!_drag) return
-      const p = overlayPos(e)
-      const dx = Math.abs(p.x - _drag.startX)
-      const dy = Math.abs(p.y - _drag.startY)
-      const m = state.$signals.mode() as Mode
-      let next: Pending | null = null
-      if (m === 'point' || (m === 'region' && dx < 8 && dy < 8)) {
-        next = { kind: 'point', x: p.x, y: p.y, selector: 'body' }
-      } else if (m === 'region') {
-        const x = Math.min(_drag.startX, p.x)
-        const y = Math.min(_drag.startY, p.y)
-        const rect: [number, number, number, number] = [
-          Math.round(x),
-          Math.round(y),
-          Math.round(dx),
-          Math.round(dy),
-        ]
-        next = { kind: 'region', x: x + dx / 2, y: y + dy / 2, rect }
-      }
-      _drag = null
-      state.$signals.drag.set(null)
-      state.$signals.noteText.set('')
-      if (next) state.$signals.pending.set(next)
-    }
-
-    const overlayEl = state.$signals.overlayEl() as HTMLElement | null
-    if (overlayEl) {
-      overlayEl.addEventListener('pointerdown', onPointerDown)
-      overlayEl.addEventListener('pointermove', onPointerMove)
-      overlayEl.addEventListener('pointerup', onPointerUp)
-    }
-
-    Object.defineProperty(host, 'staged', {
-      configurable: true,
-      get: () => state.$signals.staged(),
-    })
-
-    type LayerHost = HTMLElement & {
-      send: () => Promise<void>
-      clear: () => void
-    }
-    ;(host as LayerHost).send = async () => {
-      for (const ev of [...state.$signals.staged()]) await state.sendOne(ev)
-    }
-    ;(host as LayerHost).clear = () => {
-      state.$signals.staged.set([])
-    }
-
-    return () => {
-      if (_raf !== null) {
-        cancelAnimationFrame(_raf)
-        _raf = null
-      }
-      if (overlayEl) {
-        overlayEl.removeEventListener('pointerdown', onPointerDown)
-        overlayEl.removeEventListener('pointermove', onPointerMove)
-        overlayEl.removeEventListener('pointerup', onPointerUp)
-      }
-    }
-  },
-})
+  })
 
 </controller>
 <div sx="relative w-full h-full font-body">

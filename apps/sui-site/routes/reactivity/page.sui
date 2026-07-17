@@ -7,17 +7,15 @@ import { controller, signal, derived, effect, type ViewScope } from '@ship/sui-r
 import type { Scope } from './page.sui'
 import { code } from './snippets'
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>) => {
-    const count = signal(0)
-    const doubled = derived(() => count() * 2)
-    const log = signal<string[]>([])
-    effect(() => {
-      const n = count()
-      log.set((prev) => [...prev.slice(-3), `effect ran: count is ${n}`])
-    })
-    return { code, count, doubled, log }
-  },
+export default controller((_ctx: ViewScope<Scope>) => {
+  const count = signal(0)
+  const doubled = derived(() => count() * 2)
+  const log = signal<string[]>([])
+  effect(() => {
+    const n = count()
+    log.set((prev) => [...prev.slice(-3), `effect ran: count is ${n}`])
+  })
+  return { code, count, doubled, log }
 })
 </controller>
 

@@ -25,7 +25,7 @@ import { compileSui, evalCompiledJs, evalInlineController } from '@ship/sui-dom/
 import { route as makeRoute } from '@ship/sui-runtime/route'
 import type { ControllerExport } from '@ship/sui-runtime'
 
-/** A controller's default export (the `controller({...})` shape, which carries
+/** A controller's default export (the `controller(fn)` shape, which carries
  *  a `.setup`), a `ControllerExport<Scope>` with a typed setup, or a bare
  *  setup function. */
 export type ControllerInput =

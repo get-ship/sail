@@ -9,7 +9,6 @@
 
 <controller>
 import { controller, signal, derived, live } from '@ship/sui-runtime'
-import type { Scope } from './tut-05-team-directory.sui'
 
 interface Member {
   id: number
@@ -35,8 +34,7 @@ function fetchTeam(fail: boolean): Promise<Member[]> {
   })
 }
 
-export default controller<Scope>({
-  setup: () => {
+export default controller(() => {
     const attempt = signal(1)
     const breakApi = signal(false)
     const name = signal('')
@@ -70,8 +68,7 @@ export default controller<Scope>({
         attempt.set((n) => n + 1) // refetch: the list refreshes through the same path
       },
     }
-  },
-})
+  })
 </controller>
 
 <column gap="4">

@@ -56,86 +56,74 @@ function parseBoard(raw: string): { nodes?: Node[]; edges?: Edge[] } | null {
 // <sui-board> controller — SVG-native nodes/edges/ports on the canvas
 // substrate. Geometry lives in the board model (world coords); the view maps
 // to screen through the substrate transform. Node visuals are a per-node slot.
-export default controller({
-  setup: ({ value }: Scope) => {
-    const seed = parseBoard(value())
-    const board = createBoardModel({
-      nodes: seed?.nodes ?? [],
-      edges: seed?.edges ?? [],
-    })
-    const canvas = createCanvas({
-      getViewportElement: () => null, // <sui-canvas> owns the viewport thunk
-    })
-    // Drag bookkeeping — which node is under an active face-drag.
-    const draggingNode = signal<string | null>(null)
-    const lastPointer = signal<{ x: number; y: number } | null>(null)
-    // Outbound debounced change source: a monotonic version bumped on mutation.
-    const version = signal(0)
-    const changeSrc = debounce(version, 200)
-    // Derived memos fold into the scope factory — the canonical form replaces the
-    // historical `derived:` section (ScopedControllerDef merges only
-    // scope/on/use/mount/unmount, so a top-level `derived:` is silently dropped).
-    const nodes = derived(() => board.nodes())
-    const routes = derived(() => board.routes())
-    const selectedSet = derived(() => new Set(board.selectedNodes()))
-    const incidentSet = derived(() => new Set(board.incidentEdges()))
-    const pendingPath = derived(() => {
-      const pe = board.pendingEdge()
-      if (!pe) return ''
-      const a = canvas.worldToScreen(pe.start)
-      const b = canvas.worldToScreen(pe.end)
-      return `M ${a.x} ${a.y} L ${b.x} ${b.y}`
-    })
-    return {
-      board, canvas, draggingNode, lastPointer, version, changeSrc,
-      nodes, routes, selectedSet, incidentSet, pendingPath,
-    }
-  },
+export default controller(({ value, layout }: Scope) => {
+  const seed = parseBoard(value())
+  const board = createBoardModel({
+    nodes: seed?.nodes ?? [],
+    edges: seed?.edges ?? [],
+  })
+  const canvas = createCanvas({
+    getViewportElement: () => null, // <sui-canvas> owns the viewport thunk
+  })
+  // Drag bookkeeping — which node is under an active face-drag.
+  const draggingNode = signal<string | null>(null)
+  const lastPointer = signal<{ x: number; y: number } | null>(null)
+  // Outbound debounced change source: a monotonic version bumped on mutation.
+  const version = signal(0)
+  const changeSrc = debounce(version, 200)
+  // Derived memos are plain statements in the setup body now — no `derived:`
+  // section to fold them into.
+  const nodes = derived(() => board.nodes())
+  const routes = derived(() => board.routes())
+  const selectedSet = derived(() => new Set(board.selectedNodes()))
+  const incidentSet = derived(() => new Set(board.incidentEdges()))
+  const pendingPath = derived(() => {
+    const pe = board.pendingEdge()
+    if (!pe) return ''
+    const a = canvas.worldToScreen(pe.start)
+    const b = canvas.worldToScreen(pe.end)
+    return `M ${a.x} ${a.y} L ${b.x} ${b.y}`
+  })
 
-  on: {
-    nodePointerDown: (s, e: PointerEvent) => {
-      const el = e.currentTarget as HTMLElement
-      const id = el.dataset.nodeId
-      if (!id) return
-      // additive select with shift; otherwise replace selection.
-      if (e.shiftKey) s.board.toggleSelection(id)
-      else if (!s.board.selectedNodes().includes(id)) s.board.setSelection([id])
-      s.draggingNode = id
-      s.lastPointer = { x: e.clientX, y: e.clientY }
-      // Capture on the host — the same element the pointermove/up listeners are
-      // bound to (B3). Capturing on the node while listening on the host meant a
-      // slotted child's stopPropagation could wedge the drag.
-      ;(el.getRootNode() as ShadowRoot).host?.setPointerCapture?.(e.pointerId)
-      e.stopPropagation()
-    },
-    portPointerDown: (s, e: PointerEvent) => {
-      const el = e.currentTarget as HTMLElement
-      const portId = el.dataset.portId
-      const nodeEl = el.closest('[data-node-id]') as HTMLElement | null
-      const nodeId = nodeEl?.dataset.nodeId
-      if (!portId || !nodeId) return
-      s.board.beginEdge({ node: nodeId, port: portId })
-      e.stopPropagation()
-    },
-  },
+  const nodePointerDown = (e: PointerEvent): void => {
+    const el = e.currentTarget as HTMLElement
+    const id = el.dataset.nodeId
+    if (!id) return
+    // additive select with shift; otherwise replace selection.
+    if (e.shiftKey) board.toggleSelection(id)
+    else if (!board.selectedNodes().includes(id)) board.setSelection([id])
+    draggingNode.set(id)
+    lastPointer.set({ x: e.clientX, y: e.clientY })
+    // Capture on the host — the same element the pointermove/up listeners are
+    // bound to (B3). Capturing on the node while listening on the host meant a
+    // slotted child's stopPropagation could wedge the drag.
+    ;(el.getRootNode() as ShadowRoot).host?.setPointerCapture?.(e.pointerId)
+    e.stopPropagation()
+  }
+  const portPointerDown = (e: PointerEvent): void => {
+    const el = e.currentTarget as HTMLElement
+    const portId = el.dataset.portId
+    const nodeEl = el.closest('[data-node-id]') as HTMLElement | null
+    const nodeId = nodeEl?.dataset.nodeId
+    if (!portId || !nodeId) return
+    board.beginEdge({ node: nodeId, port: portId })
+    e.stopPropagation()
+  }
 
-  mount(state, host) {
-    const board = state.board
-    const canvas = state.canvas
-
+  mount((host) => {
     // Node-drag pump: move the dragged (or whole-selection) node by the
     // world-space delta. Listens on the host so capture survives.
     const onMove = (e: PointerEvent): void => {
-      const id = state.draggingNode
-      const last = state.lastPointer
+      const id = draggingNode()
+      const last = lastPointer()
       if (id && last) {
         const scale = canvas.transform().scale
         const dx = (e.clientX - last.x) / scale
         const dy = (e.clientY - last.y) / scale
         if (board.selectedNodes().includes(id)) board.moveSelectionBy(dx, dy)
         else board.moveNodeBy(id, dx, dy)
-        state.lastPointer = { x: e.clientX, y: e.clientY }
-        state.version = state.version + 1
+        lastPointer.set({ x: e.clientX, y: e.clientY })
+        version.set(version() + 1)
         return
       }
       if (board.pendingEdge()) {
@@ -143,9 +131,9 @@ export default controller({
       }
     }
     const onUp = (e: PointerEvent): void => {
-      if (state.draggingNode) {
-        state.draggingNode = null
-        state.lastPointer = null
+      if (draggingNode()) {
+        draggingNode.set(null)
+        lastPointer.set(null)
       }
       const pe = board.pendingEdge()
       if (pe) {
@@ -155,7 +143,7 @@ export default controller({
           tEl && nodeEl ? { node: nodeEl.dataset.nodeId!, port: tEl.dataset.portId! } : null
         const edge = target ? board.commitEdge(target) : (board.cancelEdge(), null)
         if (edge) {
-          state.version = state.version + 1
+          version.set(version() + 1)
           host.emit!('sui-edge-create', { source: edge.source, target: edge.target })
         }
       }
@@ -172,7 +160,7 @@ export default controller({
       const before = board.serialize()
       const acted = applyBoardKey(board, e, focusedId, canvas.transform().scale)
       if (!acted) return
-      if (board.serialize() !== before) state.version = state.version + 1
+      if (board.serialize() !== before) version.set(version() + 1)
       e.preventDefault()
     }
     host.addEventListener('pointermove', onMove as EventListener)
@@ -181,7 +169,7 @@ export default controller({
 
     // Debounced board-change event (the KEEP'd contract: value + version).
     const stopChange = effect(() => {
-      const v = state.changeSrc
+      const v = changeSrc()
       if (v === 0) return
       host.emit!('sui-board-change', { value: board.serialize(), version: v })
     })
@@ -207,12 +195,12 @@ export default controller({
     // new geometry is announced. 'none' is a no-op (manual placement wins).
     let lastLayout: LayoutKind | null = null
     const stopLayout = effect(() => {
-      const kind = (state.layout || 'none') as LayoutKind
+      const kind = (layout() || 'none') as LayoutKind
       if (kind === lastLayout) return
       lastLayout = kind
       if (kind === 'none') return
       board.applyLayout({ layout: kind })
-      state.version = state.version + 1
+      version.set(version() + 1)
     })
 
     return () => {
@@ -224,7 +212,13 @@ export default controller({
       stopLayout()
       canvas.dispose()
     }
-  },
+  })
+
+  return {
+    board, canvas, draggingNode, lastPointer, version, changeSrc,
+    nodes, routes, selectedSet, incidentSet, pendingPath,
+    nodePointerDown, portPointerDown,
+  }
 })
 
 </controller>

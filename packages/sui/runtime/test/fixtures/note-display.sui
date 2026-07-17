@@ -8,8 +8,7 @@
 <controller>
 import { controller, signal, derived } from '@ship/sui-runtime'
 
-export default controller({
-  setup: ({ title, body, tags }: { title: () => string; body: () => string; tags: () => string }) => {
+export default controller(({ title, body, tags }: { title: () => string; body: () => string; tags: () => string }) => {
     const expanded = signal(false)
     const parsedTags = derived(() => {
       try {
@@ -20,8 +19,7 @@ export default controller({
       }
     })
     return { expanded, parsedTags }
-  },
-})
+  })
 </controller>
 
 <div>

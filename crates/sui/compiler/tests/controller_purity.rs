@@ -28,11 +28,12 @@ fn impure_controller_fails_compile() {
     let dir = tempfile::tempdir().expect("tempdir");
     let sui_path = dir.path().join("view.sui");
     let src = r#"<controller>
-export default controller({
-  mount: (_state, host) => {
+export default controller((ctx, host) => {
+  mount((el) => {
     host.innerHTML = '<p>nope</p>'
     return () => {}
-  },
+  })
+  return {}
 })
 </controller>
 <div></div>"#;
@@ -60,11 +61,12 @@ fn clean_controller_compiles() {
     let sui_path = dir.path().join("view.sui");
     let src = r#"<controller>
 import { controller } from '@ship/sui-runtime'
-export default controller({
-  mount: (_state, host) => {
+export default controller((ctx, host) => {
+  mount((el) => {
     host.addEventListener('click', () => {})
     return () => {}
-  },
+  })
+  return {}
 })
 </controller>
 <div></div>"#;
@@ -80,7 +82,7 @@ fn paired_controller_file_is_rejected() {
     let dir = tempfile::tempdir().expect("tempdir");
     fs::write(
         dir.path().join("view.controller.ts"),
-        "export default controller({ setup: () => ({}) })",
+        "export default controller((ctx) => ({}))",
     )
     .unwrap();
     let sui_path = dir.path().join("view.sui");

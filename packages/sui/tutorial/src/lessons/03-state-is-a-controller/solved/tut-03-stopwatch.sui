@@ -2,22 +2,20 @@
   Lesson 03 solved — a stopwatch.
 
   The <controller> block below owns the state; the template binds only
-  what its scope() returns: clock, running, laps, and three handlers.
+  what it returns: clock, running, laps, and three handlers.
 -->
 
 <controller>
 import { controller, signal, derived, effect } from '@ship/sui-runtime'
-import type { Scope } from './tut-03-stopwatch.sui'
 
 interface Lap {
   id: number
   at: string
 }
 
-// The controller owns ALL state. The template can bind only what scope()
-// returns — nothing else exists on the other side of the boundary.
-export default controller<Scope>({
-  setup: () => {
+// The controller owns ALL state. The template can bind only what this
+// function returns — nothing else exists on the other side of the boundary.
+export default controller(() => {
     const elapsed = signal(0) // milliseconds
     const running = signal(false)
     const laps = signal<Lap[]>([])
@@ -54,8 +52,7 @@ export default controller<Scope>({
         laps.set([])
       },
     }
-  },
-})
+  })
 </controller>
 
 <column gap="4">

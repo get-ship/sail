@@ -18,8 +18,6 @@
 import type { MountModule } from './component-mount'
 import { createChildScope, withScope } from './effect-scope'
 import { withHost } from './signal'
-import { LIFECYCLE_KEY, type ControllerLifecycle } from './controller-resolver'
-import { componentMountState } from './state-proxy'
 
 /**
  * Mount a component module into `host`, returning a disposer.
@@ -44,53 +42,28 @@ export function mountComponent(
   // returned disposer is then the only teardown path, which is correct.
   const scope = createChildScope()
   let unmount: (() => void) | void
-  // Controller lifecycle (mount/unmount) cleanups — kept separate from the
-  // template `__mount` disposer so teardown order is: lifecycle unmount →
-  // DOM teardown → scope dispose.
-  const lifecycleCleanups: Array<() => void> = []
   withScope(scope, () =>
     withHost(host, () => {
       const setupRet = module.setup(ctx) as Record<string, unknown> | undefined
-      if (!setupRet) return
-      const m = setupRet['__mount']
+      const m = setupRet?.['__mount']
       if (typeof m === 'function') {
         unmount = (m as (h: HTMLElement) => (() => void) | void)(host)
       }
-      // Wire the controller's mount()/unmount() if its setup attached a
-      // lifecycle bundle under LIFECYCLE_KEY. This is the SAME wiring the
-      // compiled component path did inline (`componentMountState` + `mount(state,
-      // host)`); centralizing it here makes `mountComponent` the one engine both
-      // registration and internal composition call. Read via descriptor since
-      // the bundle key may be non-enumerable.
-      const lc = Object.getOwnPropertyDescriptor(setupRet, LIFECYCLE_KEY)?.value as
-        | ControllerLifecycle
-        | undefined
-      if (lc) {
-        const state = componentMountState(setupRet) as Record<string, unknown>
-        if (lc.mount) {
-          const mc = lc.mount(state, host)
-          if (typeof mc === 'function') lifecycleCleanups.push(mc)
-        }
-        if (lc.unmount) {
-          const unmountFn = lc.unmount
-          lifecycleCleanups.push(() => unmountFn(state))
-        }
-      }
+      // Ambient mount() callbacks the child's setup (or a composition it
+      // called) registered on `scope` — run now that the child's DOM is
+      // built. Disposers enroll on `scope` itself (see `runMounts`), so
+      // they tear down with `scope.dispose()` below.
+      scope.runMounts(host)
     }),
   )
   return () => {
-    for (const c of lifecycleCleanups.splice(0)) {
-      try {
-        c()
-      } catch (e) {
-        console.error('[sui/compose] lifecycle cleanup threw:', e)
-      }
-    }
+    // `scope.dispose()` runs mount()-registered + onCleanup()-registered
+    // teardown before the template's own DOM unmount.
+    scope.dispose()
     try {
       if (typeof unmount === 'function') unmount()
     } catch (e) {
       console.error('[sui/compose] child unmount threw:', e)
     }
-    scope.dispose()
   }
 }

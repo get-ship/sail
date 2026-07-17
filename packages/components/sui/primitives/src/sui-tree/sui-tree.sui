@@ -103,10 +103,7 @@ function emptyTree(): Table<AnyTreeNode> {
   return createTable<AnyTreeNode>(treeTableOptions<AnyTreeNode>({ data: [] }))
 }
 
-export default controller({
-  // `nodes` (string) + `selectable` (enum) are read imperatively from the host
-  // in mount/interactions — they are not part of the compiler-emitted `Scope`.
-  setup: (_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ViewScope<Scope>) => {
     const treeSig = signal<Table<AnyTreeNode> | null>(null)
     const viewportEl = ref<HTMLDivElement>(null)
 
@@ -140,6 +137,53 @@ export default controller({
       () => tree().rows().length === 0 && tree().hasActiveFilters(),
     )
 
+    mount((host) => {
+      // ── prop:tree IDENTITY wiring ────────────────────────────────────────────
+      // The engine is a LIVE JS reference assigned to the host `tree` property
+      // (never a stringified attribute). Route it into the scope signal so the
+      // windowed render reacts.
+      Object.defineProperty(host, 'tree', {
+        configurable: true,
+        get: () => tree(),
+        set: (t: Table<AnyTreeNode> | null) => {
+          treeSig.set(t)
+        },
+      })
+
+      // SSR fallback: build an engine from the `nodes` JSON attribute when no
+      // identity engine was assigned (the sui-combobox pattern).
+      if (treeSig() == null) {
+        const raw = (host as { nodes?: string }).nodes ?? host.getAttribute('nodes') ?? ''
+        const parsed = parseJsonNodes(raw)
+        if (parsed.length > 0) {
+          const selAttr = host.getAttribute('selectable') ?? 'none'
+          treeSig.set(
+            createTable<AnyTreeNode>(
+              treeTableOptions<AnyTreeNode>({
+                data: parsed as AnyTreeNode[],
+                selectable: selAttr !== 'none',
+                multiSelect: selAttr === 'multi',
+              }),
+            ),
+          )
+        }
+      }
+
+      // ── Delegated caret/row interactions + deduped engine-state emission ──────
+      const stop = wireTreeInteractions(host, () => tree(), {
+        expandOnSelect: () => host.hasAttribute('expand-on-select'),
+        selectable: () => (host.getAttribute('selectable') ?? 'none') !== 'none',
+        multi: () => (host.getAttribute('selectable') ?? 'none') === 'multi',
+        navRoleSelector: '[role="tree"]',
+        getWindow: () => windowItems(),
+      })
+
+      return () => {
+        stop()
+        virt.dispose()
+      }
+    })
+
     return {
       treeSig,
       viewportEl,
@@ -152,53 +196,7 @@ export default controller({
       isEmptyInitial,
       isEmptyFiltered,
     }
-  },
-
-  mount(state, host) {
-    // ── prop:tree IDENTITY wiring ────────────────────────────────────────────
-    // The engine is a LIVE JS reference assigned to the host `tree` property
-    // (never a stringified attribute). Route it into the scope signal so the
-    // windowed render reacts.
-    Object.defineProperty(host, 'tree', {
-      configurable: true,
-      get: () => state.tree,
-      set: (t: Table<AnyTreeNode> | null) => {
-        state.treeSig = t
-      },
-    })
-
-    // SSR fallback: build an engine from the `nodes` JSON attribute when no
-    // identity engine was assigned (the sui-combobox pattern).
-    if (state.treeSig == null) {
-      const raw = (host as { nodes?: string }).nodes ?? host.getAttribute('nodes') ?? ''
-      const parsed = parseJsonNodes(raw)
-      if (parsed.length > 0) {
-        const selAttr = host.getAttribute('selectable') ?? 'none'
-        state.treeSig = createTable<AnyTreeNode>(
-          treeTableOptions<AnyTreeNode>({
-            data: parsed as AnyTreeNode[],
-            selectable: selAttr !== 'none',
-            multiSelect: selAttr === 'multi',
-          }),
-        )
-      }
-    }
-
-    // ── Delegated caret/row interactions + deduped engine-state emission ──────
-    const stop = wireTreeInteractions(host, () => state.tree, {
-      expandOnSelect: () => host.hasAttribute('expand-on-select'),
-      selectable: () => (host.getAttribute('selectable') ?? 'none') !== 'none',
-      multi: () => (host.getAttribute('selectable') ?? 'none') === 'multi',
-      navRoleSelector: '[role="tree"]',
-      getWindow: () => state.$signals.windowItems(),
-    })
-
-    return () => {
-      stop()
-      state.virt.dispose()
-    }
-  },
-})
+  })
 
 </controller>
 {#if error() !== ''}

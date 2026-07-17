@@ -9,11 +9,9 @@ export const code = {
 
 <controller>
 import { controller, signal } from '@ship/sui-runtime'
-export default controller({
-  setup: () => {              /* what the template may BIND            */
-    const count = signal(0)
-    return { count }
-  },
+export default controller(() => {              /* what the template may BIND            */
+  const count = signal(0)
+  return { count }
 })
 </controller>
 

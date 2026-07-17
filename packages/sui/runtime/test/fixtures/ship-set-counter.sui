@@ -1,13 +1,11 @@
 <controller>
 import { controller, signal, derived } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => {
+export default controller(() => {
     const count = signal(0)
     const doubled = derived(() => count() * 2)
     return { count, doubled }
-  },
-})
+  })
 </controller>
 
 <div>

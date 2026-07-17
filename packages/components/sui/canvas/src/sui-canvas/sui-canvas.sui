@@ -55,73 +55,59 @@ function parseSnapshot(raw: string): { transform?: Partial<Transform> } | null {
 }
 
 // <sui-canvas> controller — the bare substrate primitive. Builds a
-// createCanvas() in scope, forwards raw pointer/wheel events to the engine
-// in on:*, and emits a debounced sui-canvas-viewport event via host.emit!.
-export default controller({
-  setup: ({ value }: Scope) => {
-    const viewportEl = ref<HTMLDivElement>(null)
-    // Fallback engine — used when no engine is injected via prop:canvas.
-    // exactOptionalPropertyTypes: only set initialTransform when present —
-    // passing `undefined` to the optional field is itself a type error.
-    const seedTransform = parseSnapshot(value())?.transform
-    const fallback = createCanvas({
-      getViewportElement: () => viewportEl(),
-      ...(seedTransform ? { initialTransform: seedTransform } : {}),
-    })
-    // An engine injected by a composing face (sui-board / sui-draw) via
-    // prop:canvas identity. When present it supersedes the fallback so the
-    // board/draw transform and sui-canvas pan/zoom share ONE engine.
-    const injected = signal<Canvas | null>(null)
-    const canvas = derived<Canvas>(() => injected() ?? fallback)
-    // Drives the debounced outbound viewport event off the ACTIVE engine.
-    const transformSig = derived<Transform>(() => canvas().transform())
-    const debounced = debounce(transformSig, 200)
-    // The world-layer transform — pan (x, y) + zoom (scale) off the ACTIVE
-    // engine, in world units. This MUST live in the scope return (not a
-    // top-level `derived:` section): the current ScopedControllerDef merges
-    // only scope/on/use/mount/unmount, so a `derived:` block is silently
-    // dropped and the world would never receive its transform (the rest of the
-    // codebase inlines derived() in scope for exactly this reason).
-    // Named worldTransformCss, NOT worldTransform: the `use:worldTransform`
-    // directive below shares this file's scope with the runtime's imported
-    // `worldTransform` action of the same name. A scope value named identically
-    // to the action it feeds resolves, in the compiled `use:` value callback,
-    // to the ACTION import itself (called with zero args) instead of this
-    // derived signal — `undefined.style` inside the action is the result.
-    const worldTransformCss = derived<string>(() => {
-      const t = canvas().transform()
-      return `translate(${t.x}px, ${t.y}px) scale(${t.scale})`
-    })
-    return { canvas, injected, fallback, viewportEl, debounced, worldTransformCss }
-  },
+// createCanvas() in setup, forwards raw pointer/wheel events to the engine
+// as returned handlers, and emits a debounced sui-canvas-viewport event via
+// host.emit! from mount.
+export default controller(({ value }: Scope) => {
+  const viewportEl = ref<HTMLDivElement>(null)
+  // Fallback engine — used when no engine is injected via prop:canvas.
+  // exactOptionalPropertyTypes: only set initialTransform when present —
+  // passing `undefined` to the optional field is itself a type error.
+  const seedTransform = parseSnapshot(value())?.transform
+  const fallback = createCanvas({
+    getViewportElement: () => viewportEl(),
+    ...(seedTransform ? { initialTransform: seedTransform } : {}),
+  })
+  // An engine injected by a composing face (sui-board / sui-draw) via
+  // prop:canvas identity. When present it supersedes the fallback so the
+  // board/draw transform and sui-canvas pan/zoom share ONE engine.
+  const injected = signal<Canvas | null>(null)
+  const canvas = derived<Canvas>(() => injected() ?? fallback)
+  // Drives the debounced outbound viewport event off the ACTIVE engine.
+  const transformSig = derived<Transform>(() => canvas().transform())
+  const debounced = debounce(transformSig, 200)
+  // The world-layer transform — pan (x, y) + zoom (scale) off the ACTIVE
+  // engine, in world units.
+  const worldTransformCss = derived<string>(() => {
+    const t = canvas().transform()
+    return `translate(${t.x}px, ${t.y}px) scale(${t.scale})`
+  })
 
-  on: {
-    pointerDown: (s, e: PointerEvent) => {
-      s.canvas.onPointerDown(e)
-    },
-    pointerMove: (s, e: PointerEvent) => {
-      s.canvas.onPointerMove(e)
-    },
-    pointerUp: (s, e: PointerEvent) => {
-      s.canvas.onPointerUp(e)
-    },
-    wheel: (s, e: WheelEvent) => {
-      s.canvas.onWheel(e)
-      e.preventDefault()
-    },
-  },
+  const pointerDown = (e: PointerEvent): void => {
+    canvas().onPointerDown(e)
+  }
+  const pointerMove = (e: PointerEvent): void => {
+    canvas().onPointerMove(e)
+  }
+  const pointerUp = (e: PointerEvent): void => {
+    canvas().onPointerUp(e)
+  }
+  const wheel = (e: WheelEvent): void => {
+    canvas().onWheel(e)
+    e.preventDefault()
+  }
 
-  mount(state, host) {
+  mount((host) => {
     // prop:canvas identity — a composing face (sui-board / sui-draw) injects
     // its engine (built with getViewportElement:()=>null) here; we rewire it
     // onto sui-canvas's REAL viewport so screenToWorld/pan/zoom share ONE
     // engine. Mirrors the sui-calendar prop:calendar identity pattern.
     Object.defineProperty(host, 'canvas', {
       configurable: true,
-      get: () => state.$signals.injected(),
+      get: () => injected(),
       set: (c: Canvas | null) => {
-        if (c) c.setOptions({ getViewportElement: () => state.$signals.viewportEl() })
-        state.injected = c
+        if (c) c.setOptions({ getViewportElement: () => viewportEl() })
+        injected.set(c)
       },
     })
 
@@ -130,14 +116,14 @@ export default controller({
     // sui-table.controller.ts:95 precedent), not through the typed scope.
     const minScale = host.getAttribute('min-scale')
     const maxScale = host.getAttribute('max-scale')
-    state.canvas.setOptions({
+    canvas().setOptions({
       ...(minScale != null ? { minScale: Number(minScale) } : {}),
       ...(maxScale != null ? { maxScale: Number(maxScale) } : {}),
     })
 
     // Emit the debounced viewport event off the active engine.
     const stopEmit = effect(() => {
-      const t = state.debounced
+      const t = debounced()
       if (!t) return
       host.emit!('sui-canvas-viewport', { transform: t })
     })
@@ -145,9 +131,11 @@ export default controller({
     return () => {
       stopEmit()
       delete (host as { canvas?: unknown }).canvas
-      state.fallback.dispose()
+      fallback.dispose()
     }
-  },
+  })
+
+  return { canvas, injected, fallback, viewportEl, debounced, worldTransformCss, pointerDown, pointerMove, pointerUp, wheel }
 })
 
 </controller>

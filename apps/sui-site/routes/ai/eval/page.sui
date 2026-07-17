@@ -14,9 +14,7 @@ import { controller, type ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 import { evalExample, hatchExample } from './snippets'
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>) => ({ evalExample, hatchExample }),
-})
+export default controller((_ctx: ViewScope<Scope>) => ({ evalExample, hatchExample }))
 </controller>
 
 <article sx="max-w-breakpoint-tablet mx-auto">
