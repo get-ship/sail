@@ -71,14 +71,14 @@ export default controller(() => {
     // data-theme/.dark; idempotent, so re-running per navigation is free.
     applyTheme(readStoredTheme())
 
-    // The component catalog and the tutorial LESSON pages own the full width
-    // (no sidebar). The /tutorial index is a docs page and keeps the rail; a
-    // lesson is a two-pane workbench and needs the whole viewport. The
-    // umbrella landing is a docs page too (option 2a: top switcher + rail +
-    // content, same chrome as every other page) — it no longer opts out.
+    // The umbrella landing, the component catalog, and the tutorial LESSON
+    // pages own the full width (no sidebar). The /tutorial index is a docs
+    // page and keeps the rail; a lesson is a two-pane workbench and needs
+    // the whole viewport.
     const fullscreen = derived(() => {
       const p = path()
       return (
+        p === '/' ||
         p === '/components' ||
         p.startsWith('/components/') ||
         p.startsWith('/tutorial/')

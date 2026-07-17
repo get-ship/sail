@@ -198,7 +198,7 @@ error). State prefixes: `hover:` `focus:` `focus-within:` `active:`
 - `text-gradient-primary-` 
 - `top-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, auto, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
 - `touch-` auto, manipulation, none, pan-x, pan-y, pinch-zoom
-- `tracking-` normal, tight, tighter, wide, wider
+- `tracking-` normal, tight, wide, wider
 - `transform-` none
 - `transition-` all, colors, none, opacity, shadow, transform
 - `translate-x-` 0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4, 40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, density-icon, density-row-gap, density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px
@@ -225,7 +225,7 @@ colour, or unit.
 - `text`: 2xl, 3xl, 4xl, base, density, density-icon, density-row-gap, density-row-px, density-row-py, density-text, display, lg, md, size-fs, size-h, size-px, sm, xl, xs
 - `weight`: bold, medium, normal, semibold
 - `leading`: loose, none, normal, normal-plus, relaxed, snug, tight
-- `tracking`: normal, tight, tighter, wide, wider
+- `tracking`: normal, tight, wide, wider
 - `shadow`: accent, card-rest, edge-top, hover, inset-soft, lg, md, none, sm, sticky, xl, xs
 - `z`: base, dialog, dropdown, elevated, max, overlay, popover, sticky, toast
 - `duration`: deliberate, fast, instant, medium, slow
