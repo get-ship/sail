@@ -35,7 +35,7 @@ end-to-end by the browser harness (`packages/deck/e2e`):
 | **Dev — SSR** | `deck dev`, `render: "ssr"` in `deck.jsonc` | The matched `routes/<…>/page.sui` is server-rendered (via ship-js) INTO `#root`; the client hydrates it. |
 | **Prod build** | `deck build --bundle-framework` | A self-contained static dir: `index.html` (importmap) + `_deck/{runtime,dom,route}.js` (framework singletons, materialized) + `assets/page-<hash>.js` (one **code-split, lazily-loaded** chunk per route). |
 
-**Routing.** File-routed: `routes/<seg>/page.sui` (+ optional `controller.ts`); a
+**Routing.** File-routed: `routes/<seg>/page.sui` (state in the page's inline `<controller>` block); a
 `[param]` dir segment is a dynamic route (`routes.gen.ts` emits a typed `:param`
 pattern). The bundler generates the entry; you write pages.
 
@@ -148,7 +148,7 @@ deck build-assets          # bake framework + consumer bundles (in-process Rolld
 deck routes --root apps/shell --root apps/spaces
 # walks <root>/routes/ → emits <root>/routes.gen.ts (label = basename).
 # Repeatable; required at least once.
-deck scaffold view <name>  # new view (page.sui + controller.ts + style.css + manifest)
+deck scaffold view <name>  # new view (page.sui + manifest.jsonc)
 deck scaffold component <tag>
 deck scaffold pack <name>
 deck emit --target <name> --out <dir>   # copy baked targets (+ chunk closure) out

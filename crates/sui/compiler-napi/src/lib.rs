@@ -192,7 +192,7 @@ mod tests {
     #[test]
     fn component_name_forces_component_mode() {
         let json = compile_to_result(
-            "<prop name=\"x\"/>\n<div>hi</div>",
+            "<div>hi</div>",
             r#"{"componentName":"sui-x"}"#,
         )
         .unwrap();
@@ -211,7 +211,7 @@ mod tests {
         // on line 2 (1-based) of the source — counted from the start
         // of the file, not the start of the `<style>` block.
         let json = compile_to_result(
-            "<prop name=\"x\"/>\n<style>.a{ color: var(--nope-not-a-token); }</style>\n<div class=\"a\">x</div>",
+            "<!-- component -->\n<style>.a{ color: var(--nope-not-a-token); }</style>\n<div class=\"a\">x</div>",
             r#"{"componentName":"sui-x"}"#,
         )
         .unwrap();

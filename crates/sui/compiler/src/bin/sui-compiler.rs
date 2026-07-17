@@ -504,16 +504,14 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         );
     }
     if effective.variants {
-        // This section used to teach a top-level `variants: { … }` field in the
-        // component block. That field is RETIRED — the compiler rejects it outright
-        // ("unknown `<component>` field `variants`") — so the skill was instructing
-        // agents to write code that cannot compile. It was hardcoded prose rather
-        // than generated from a table, which is exactly how it rotted while the rest
-        // of this file stayed honest.
-        let _ = writeln!(md, "## variants — a prop whose values are sx tables\n");
+        // Hand prose, so state the source it mirrors: `<scope>`'s `variants:`
+        // member as parsed by parse::scope_block (each axis → a reflected union
+        // prop, first key = default, table lowers to attribute-keyed CSS). The
+        // example is the shape real components use (sui-timeline-item et al.).
+        let _ = writeln!(md, "## variants — sx tables keyed by a reflected prop\n");
         let _ = writeln!(
             md,
-            "A variant IS A PROP. Declare it inside `props`, with the value being the\nvariant->sx table; the prop's type is the union of the keys (first = default),\nand it reflects to an attribute so CSS can key on it:\n\n```\n<component>{{\n  props: {{\n    variant: {{ solid: 'bg-tone text-tone-fg', soft: 'bg-tone-bg', outline: 'border-tone' }},\n    tone: 'default' | 'primary' | 'destructive',\n  }},\n}}</component>\n```\n\nValues are sx lists and take the same state prefixes\n(`solid: 'bg-tone hover:bg-tone-bg-hover'`). `compound` (a sibling field of `props`)\nkeys rules on COMBINATIONS of variant values.\n\nThere is no separate `variants:` block. One declaration surface: `props`.\n"
+            "`variants:` is a member of `<scope>`, sibling of `props:`. Each axis becomes\na reflected union prop — first key is the default — and the table lowers to\nattribute-keyed CSS:\n\n```\n<scope>\n  props: {{ label = '' }}\n  variants: {{\n    size: {{\n      md: 'text-sm leading-normal-plus',\n      sm: 'text-xs leading-normal',\n    }}\n    chrome: {{\n      card: 'border-border bg-surface-1 rounded-lg shadow-xs',\n      flush: '',\n    }}\n  }}\n</scope>\n```\n\nValues are sx lists and take the same state prefixes\n(`solid: 'bg-tone hover:bg-tone-bg-hover'`). `compound:` rows ride inside the\ntable, CVA-style, keying rules on COMBINATIONS of axis values.\n"
         );
     }
     if !effective.raw_containers {
@@ -580,18 +578,23 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     let _ = writeln!(md, "## State + imports\n");
     let _ = writeln!(
         md,
-        "State lives in the `<controller>` — a raw `<script>` is banned, and the `<state>`\ndirective is retired. Whatever the controller EXPORTS is the template's scope.\n\n\
+        "State lives in the `<controller>` — a raw `<script>` is banned, and the `<state>`\ndirective is retired. The block default-exports `controller({{ setup }})`; whatever\n`setup` RETURNS is the template's scope.\n\n\
          ```\n\
          <controller>\n  \
-           import {{ signal, derived }} from '@ship/sui-runtime'\n  \
+           import {{ controller, signal }} from '@ship/sui-runtime'\n  \
            import {{ selection }} from '@ship/sui-std'\n\n  \
-           export const rows = signal([])\n  \
-           export const sel = selection(rows, (r) => r.id)\n\
+           export default controller({{\n    \
+             setup: () => {{\n      \
+               const rows = signal([])\n      \
+               const sel = selection(rows, (r) => r.id)\n      \
+               return {{ rows, sel }}\n    \
+             }},\n  \
+           }})\n\
          </controller>\n\
          ```\n\n\
          Import primitives from `@ship/sui-runtime` — the front door. Never from\n`@ship/sui-runtime/internal`: that is the COMPILER's ABI (`bindFor`, `attachRef`,\n`runAction`, …). If you are typing a symbol from there, you are hand-writing something\nthe compiler emits.\n\n\
          Reactivity: `signal` `derived` `effect` `batch` `untrack` `shared`. Reach for\n`effect` rarely — it is the escape hatch, not the pattern. Cleanup is automatic: an\neffect created during setup dies with the component.\n\n\
-         Control flow: `{{#if cond}}…{{/if}}`, `{{#for item of items key={{item.id}}}}…{{/for}}`\n(the `key=` is required — without it the reconciler falls back to positional matching\nand loses DOM identity on reorder).\n"
+         Control flow: `{{#if cond}}…{{/if}}`, `{{#for item of items key={{item.id}}}}…{{/for}}`\n(always write `key=` — the parser accepts its absence, but without it the reconciler\nfalls back to positional matching and loses DOM identity on reorder).\n"
     );
     // L1 ELEMENTS — the language's first-class surface. Listed
     // verbatim from the same manifest the consistency test enforces

@@ -67,8 +67,8 @@ export function createMountState(
       }
       console.warn(
         `[ship-set] s.${String(k)} = … was ignored — ${String(k)} is not a ` +
-          `writable signal. Declare it as <state name="${String(k)}"> in the ` +
-          `template or return it from the scope factory.`,
+          `writable signal. Declare it as a signal in the controller's ` +
+          `setup: factory and return it (\`${String(k)}: signal(…)\`).`,
       )
       // Return true so strict-mode module assignments don't throw — the write
       // is dropped, the warning is the signal.

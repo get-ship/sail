@@ -115,8 +115,8 @@ export type MutableState<Scope> =
  * The shared view scope, as destructured by each controller section.
  *
  * Includes `ship`, the reactive `route` proxy, the `<data>`-declared
- * signals from the template, the `<state>`-declared writable signals
- * (read-only here), and the controller-hook contributions.
+ * signals from the template, the `<scope>`-declared props, and the
+ * controller-hook contributions.
  *
  * `route` is a `RouteSignals` whose `params.<name>` and
  * `query.<name>` are themselves signals — reading them inside a
@@ -209,14 +209,14 @@ export type UnmountSection<Scope> = (state: MutableState<Scope>) => void
 // ---------------------------------------------------------------------------
 
 /**
- * The full shape of a controller: five optional sections, each with a
+ * The full shape of a controller: four optional sections, each with a
  * static or factory form where applicable.
  *
- * State is **not** a controller section — declare it in the template
- * via `<state name="X" value="..." />`. Computed-initial cases move
- * to `mount` (`state.X = crypto.randomUUID()`).
+ * State is declared in `setup:` — signals in its returned object.
+ * (The `<state>` template directive is retired.) Computed-initial
+ * cases assign in `mount` (`state.X = crypto.randomUUID()`).
  *
- * @typeParam Scope Template-declared scope (`<data>`, `<state>`,
+ * @typeParam Scope Template-declared scope (`<data>`, `<scope>` props,
  *   `<use-* as=>`) plus `use:` hook contributions.
  */
 export interface ControllerShape<Scope = object> {
@@ -252,15 +252,15 @@ export interface ControllerShape<Scope = object> {
  * Both type parameters are INFERRED from the `def` object, so authors
  * write `controller({ setup: (ctx: ViewScope<Scope>) => ({…}) })` with no
  * explicit type argument and no currying:
- *   - `Ctx` is inferred from the `scope` factory's PARAMETER annotation
+ *   - `Ctx` is inferred from the `setup` factory's PARAMETER annotation
  *     (the compiler-generated `ViewScope<Scope>` the author imports). This
  *     sidesteps TypeScript's all-or-nothing type-argument rule — nothing is
  *     supplied explicitly, so nothing forces a second call.
- *   - `SC` is inferred from the `scope` factory's RETURN — the controller's
+ *   - `SC` is inferred from the `setup` factory's RETURN — the controller's
  *     own TS is the source of truth for `signal`/`derived`/`ref`/`live`
  *     types, so handler state over `Ctx & SC` is precise.
  *
- * `scope` is required (it's where `Ctx` is declared); a pure-lifecycle
+ * `setup` is required (it's where `Ctx` is declared); a pure-lifecycle
  * controller returns `({})`.
  */
 export interface ScopedControllerDef<Ctx, SC extends Record<string, unknown>> {

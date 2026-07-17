@@ -22,7 +22,7 @@ pub fn emit_dts(program: &Program, controller: Option<&ParsedController>) -> Str
 
     for p in &program.props {
         // Prop names in templates are kebab-case to match HTML attribute
-        // convention (e.g. `<prop name="font-size">`); the runtime
+        // convention (e.g. `'font-size' = ''` in `<scope>`); the runtime
         // camelCases them to JS identifiers (`fontSize`) via
         // ui-runtime/component-factory.ts::camelOf. Scope must agree —
         // emit the camelCased identifier so `state.fontSize` typechecks.

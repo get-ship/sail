@@ -18,18 +18,18 @@ describe('renderCatalog (CLI-visible primitive surface)', () => {
     }
   })
 
-  it('lists ship-input.value as a string-typed prop in the rendered output', () => {
+  it('lists sui-input.value as a string-typed prop in the rendered output', () => {
     const rendered = renderCatalog(mockCatalog)
     // The model sees `props:` followed by `name:type` for each prop.
-    // ship-input has a `value` prop of type 'string' (the bindable
+    // sui-input has a `value` prop of type 'string' (the bindable
     // marker is an internal annotation; the CLI surface shows type).
-    const inputSection = rendered.split('<ship-input>')[1]?.split('<')[0] ?? ''
+    const inputSection = rendered.split('<sui-input>')[1]?.split('<')[0] ?? ''
     expect(inputSection).toMatch(/value\s*:\s*string/)
   })
 
-  it('marks ship-button.disabled as bool-typed (not string-typed) in the rendered output', () => {
+  it('marks sui-button.disabled as bool-typed (not string-typed) in the rendered output', () => {
     const rendered = renderCatalog(mockCatalog)
-    const buttonSection = rendered.split('<ship-button>')[1]?.split('<')[0] ?? ''
+    const buttonSection = rendered.split('<sui-button>')[1]?.split('<')[0] ?? ''
     expect(buttonSection).toMatch(/disabled\s*:\s*bool/)
   })
 })

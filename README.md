@@ -14,8 +14,8 @@ Three layers, dependencies pointing one way (deck → sui, never back):
 
 - **SUI** — the `.sui` language: AOT compiler (Rust, WASM-safe), lint rules,
   LSP, tree-sitter grammar, and the JS runtime/DOM packages compiled output
-  binds to. A template *declares*; a paired `controller.ts` *does* (state,
-  lifecycle, I/O).
+  binds to. A template *declares*; its inline `<controller>` block *does*
+  (state, lifecycle, I/O).
 - **deck** — the host: file-routed pages (`routes/<seg>/page.sui`, `[param]`
   dynamic segments), SSR + hydrate, an in-process Rolldown bundler that
   compiles `.sui` via the linked compiler, HMR with state preservation, static
@@ -54,13 +54,13 @@ the bun workspace / crates.io with no external sibling checkout required.
 | `crates/sui/` | The language: `compiler` (`.sui` → ESM, pure, WASM-safe), `compiler-napi` (Node binding), `lint`, `lsp`. |
 | `crates/deck/` | The host: `deck-core` (transport-agnostic serving), `deck-axum` (axum adapter), `deck-host`, `deck-bundler` (in-process Rolldown), `deck-config` (`deck.jsonc`), `deck-cli` (the `deck` binary), `deck` (facade), `deck-conformance` (harness), `deck-ssr` (TS-SSR through ship-js; members-only). |
 | `crates/build-info` | Per-repo build-time identity (git sha/dirty/timestamp). |
-| `packages/sui/` | `runtime` (signals + custom-element wrapper), `dom` (DOM interpreter + hydration), `tokens`, `compiler-wasm` (browser compiler), `grammar` (tree-sitter), `test-setup`, `tutorial` (25 lessons). |
+| `packages/sui/` | `runtime` (signals + custom-element wrapper), `dom` (DOM interpreter + hydration), `tokens`, `compiler-wasm` (browser compiler), `grammar` (tree-sitter), `test-setup`, `tutorial` (lesson sources). |
 | `packages/deck/` | `router`, `host` (SES-confined controller execution), `hono` (TS sibling of deck-axum), `lsp-browser`, `docs` (deck's own docs site — the canonical standalone example and release gate), `e2e` (Playwright against the real CLI), `eval`, `test-harness`. |
 | `packages/components/sui/` | Component packs: `primitives`, `charts`, `media`, `viewer`, `canvas`, `chat-elements`, `code-editor`. |
-| `apps/sui-site` | The SUI site: docs, the 25-lesson tutorial, component catalog + interactive playground. A deck app dogfooding the framework. |
-| `eval/` | The SUI authoring eval — lane agents build a view from a spec; compile + lint + structural rubric grade the output. |
+| `apps/sui-site` | The SUI site: docs, tutorial, component catalog + interactive playground. A deck app dogfooding the framework. |
+| `packages/deck/eval` | The SUI authoring eval (`@ship/sui-eval`) — lane agents build a view from a spec; compile + lint + structural rubric grade the output. |
 | `tests/` | `integration` (vitest), `parity` (emit parity), `perf` (js-framework-benchmark baselines). |
-| `docs/ship-sui/` | Authoring reference: routing, controllers, SSR/hydration, data subscriptions, cookbook, tutorial sources. |
+| `docs/` | `ARCHITECTURE.md` (the governing language/userland map), `LANG-GAPS.md` (the migration ledger), generated reports. |
 | `scripts/`, `xtask-deck/` | Repo tooling: typecheck orchestration, config lints, lucide icon bake. |
 
 ## Build
@@ -135,9 +135,12 @@ Standalone deck serves routing, assets, SSR and HMR without any daemon; live
 
 ## Docs
 
-- `docs/ship-sui/references/docs/index.md` — the authoring reference.
+- `.claude/skills/sui-authoring/SKILL.md` — the generated authoring surface
+  (regenerate with `cargo run -p sui-compiler -- skill`; drift-gated by
+  `crates/sui/compiler/tests/skill_examples_compile.rs`).
+- `docs/ARCHITECTURE.md` — the governing language / stdlib / userland map.
 - `crates/sui/README.md` — the SUI Rust side and the sui/deck split.
 - `crates/deck/README.md` — deck architecture, modes, `DataPort`, mounting.
 - `crates/deck/FEATURES.md` — the drift-gated feature inventory.
 - `packages/deck/docs/` — deck's docs site, built and served by deck.
-- `eval/README.md` — the authoring eval rig.
+- `packages/deck/eval/` — the authoring eval rig (`@ship/sui-eval`).

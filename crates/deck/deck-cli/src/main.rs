@@ -147,7 +147,7 @@ enum Scaffold {
     Component {
         /// Tag name (must start with `sui-`).
         tag: String,
-        /// Also write a paired `<tag>.controller.ts` stub.
+        /// Also include an inline `<controller>` stub in the `.sui`.
         #[arg(long)]
         controller: bool,
     },

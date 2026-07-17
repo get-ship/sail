@@ -15,7 +15,7 @@ pure, portable leaves of that pipeline.
 | Crate | Workspace member? | Role |
 |---|---|---|
 | `compiler/` | yes | `.sui` → ESM JavaScript transform (`sui-compiler`). Pure — no FS, no env; WASM-safe. Also exposes `check_all` / `analyze` for the LSP + agent tooling. |
-| `lint/` | yes | Lint rules for `.sui` templates + paired `.controller.ts` (oxc-parsed). Findings shared with the compiler's build-time checks. |
+| `lint/` | yes | Lint rules for `.sui` templates + controller TypeScript (oxc-parsed). Findings shared with the compiler's build-time checks. |
 | `signals/` | yes | Signal-graph runtime — the fine-grained reactivity layer the compiled output binds to. |
 | `lsp/` | yes | `sui-lsp` — a thin LSP/stdio server over `compiler`'s analysis facade. One grammar for editors + agents; no TypeScript, no WASM. |
 

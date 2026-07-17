@@ -20,7 +20,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-use sui_compiler::{compile, CompileMode, CompileOpts};
+use sui_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
 
 /// GENERATE the skill rather than reading the checked-in one. The shipped copy lives
 /// under `.claude/`, which is gitignored — so a test that merely READ it would
@@ -94,8 +94,14 @@ fn every_sui_example_in_the_agent_skill_compiles() {
     let mut broken = Vec::new();
     for (i, ex) in examples.iter().enumerate() {
         // A fragment (`<card motion:view={…}>`) is a valid template on its own; a
-        // full example carries its own `<component>` block. Both compile as-is.
-        let opts = CompileOpts { mode: CompileMode::Component, ..Default::default() };
+        // full example carries its own `<scope>` block. Both compile as-is.
+        // `component_meta` is required: `<scope>` props/variants are component
+        // members, and the props check keys on the meta, not the mode.
+        let opts = CompileOpts {
+            mode: CompileMode::Component,
+            component_meta: Some(ComponentMeta { name: "sui-skill-example".into() }),
+            ..Default::default()
+        };
         if let Err(e) = compile(ex, opts) {
             broken.push(format!("example #{i}:\n{ex}\n  -> {}", e.message));
         }

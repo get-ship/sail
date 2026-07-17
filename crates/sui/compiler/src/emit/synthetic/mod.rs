@@ -187,7 +187,7 @@ pub(super) fn emit_controller(
     // through the same path as views.
     if mode == CompileMode::Component && !program.props.is_empty() {
         return Err(CompileError::new(
-            "synthesize: component `<prop>` declarations are not supported yet — \
+            "synthesize: component `<scope>` prop declarations are not supported yet — \
              props flow in at mount, which the standalone synthetic controller \
              can't model. (Phase 2: a props-parameterized scope factory.)",
         )

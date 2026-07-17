@@ -6,11 +6,11 @@
 // writable scope proxies and memoizes deriveds.
 // and wraps `on` handlers.
 //
-// Per the "state is declarative-only" ADR, the resolver no longer
-// constructs state signals from a `def.state` section. State signals
-// arrive in `ctx.scope` (built by hydrate from the template's `<state>`
-// directives) and the resolver consumes them as-is. The writable proxy
-// allows assignments to fall through to those signals' `.set()`.
+// The resolver constructs no state signals of its own. Writable state
+// is whatever the controller's `setup:` factory returns; `ctx.scope`
+// carries the template-declared signals (`<data>`, `<scope>` props) and
+// the resolver consumes them as-is. The writable proxy allows
+// assignments to fall through to those signals' `.set()`.
 //
 
 // bearing shape — hook resolution lives in `./controller-hook-resolver`.
@@ -137,10 +137,11 @@ function normalize(
 
 /**
  * Extract the writable-state subset of an ambient scope. State signals
- * are identified by `stateKeys` (template `<state>` directives) AND the
- * keys returned by the controller's `setup:` factory — both are author-
- * declared writable signals. Without `stateKeys` and without `scopeAdds`
- * we fall back to the "any callable value with a `.set` method" heuristic.
+ * are identified by `stateKeys` (the hydrate path's declared-writable
+ * set — legacy feed of the retired `<state>` directive, kept until that
+ * path drops it) AND the keys returned by the controller's `setup:`
+ * factory. Without `stateKeys` and without `scopeAdds` we fall back to
+ * the "any callable value with a `.set` method" heuristic.
  */
 function pickStateSignals(
   scope: Record<string, unknown>,
@@ -216,10 +217,9 @@ export interface ControllerExport<Scope = object> {
  * @example
  * ```ts
  * // tier 2 — object form
- * // <state name="count" value="0" /> in the template
  * export default controller({
- *   derived: { doubled: ({ count }) => count() * 2 },
- *   on:      { incr: (s) => { s.count++ } },
+ *   setup: () => ({ count: signal(0) }),
+ *   on:    { incr: (s) => { s.count++ } },
  * })
  * ```
  *
@@ -232,7 +232,7 @@ export interface ControllerExport<Scope = object> {
  * ```
  */
 // CANONICAL form: `controller(def)` with no explicit type argument. Both
-// `Ctx` (from the `scope` factory's param annotation) and `SC` (from its
+// `Ctx` (from the `setup` factory's param annotation) and `SC` (from its
 // return) are inferred → precise, cast-free handler state over `Ctx & SC`,
 // single call, no currying. This overload is listed first and matches calls
 // with no type arguments; the explicit-`<Scope>` overloads below are the
@@ -242,10 +242,10 @@ export interface ControllerExport<Scope = object> {
 // recover the setup-factory return type via `typeof __authored.__def.setup`
 // (slice 2 G4). Typing `def` DIRECTLY as `ScopedControllerDef<Ctx, SC>` (not a
 // generic `D extends ScopedControllerDef<Ctx, SC>`) is load-bearing: it gives
-// `Ctx`/`SC` real inference positions — the `scope` param annotation drives
+// `Ctx`/`SC` real inference positions — the `setup` param annotation drives
 // `Ctx`, its return drives `SC` — so handler state over `Ctx & SC` is precise.
 // A `D`-generic param erased those positions (nothing infers `Ctx`/`SC` from a
-// bare `def: D`), so `Ctx` fell to `unknown`, the contravariant `scope` param
+// bare `def: D`), so `Ctx` fell to `unknown`, the contravariant `setup` param
 // check failed, and EVERY call silently resolved to the legacy overload below —
 // the framework-wide "factory signals untyped in handlers, must cast" bug.
 export function controller<Ctx, SC extends Record<string, unknown>>(

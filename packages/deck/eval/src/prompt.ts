@@ -1,11 +1,10 @@
 // Prompt construction for the eval rig. The model receives:
 //   1) a system primer describing .sui syntax + the SDK type sketch
-//   2) the primitive catalog (so it knows which <ship-*> elements exist)
-//   3) two few-shot examples (a static view + a stateful counter)
-//   4) the task feature description and any starter fixtures
+//   2) the component catalog (so it knows which <sui-*> tags exist)
+//   3) few-shot examples (static view, stateful counter, data + controller)
 //
-// The output contract is strict: a fenced ```html.set``` block, optionally
-// followed by a fenced ```ts``` block. The dispatcher parses both back out.
+// The output contract is strict: exactly one fenced ```sui``` block — the
+// complete single-file view, inline <controller> included when needed.
 
 import type { PrimitiveCatalog, PrimitiveDef } from './catalog'
 
@@ -20,12 +19,11 @@ export interface PromptParts {
   user: string
 }
 
-const SYSTEM_PRIMER = `You author Ship .sui views. A view is plain HTML augmented with three top-level directives and a small expression grammar.
+const SYSTEM_PRIMER = `You author SUI views — single .sui files: HTML plus top-level directives, mustache control flow, and an optional inline <controller> block of TypeScript.
 
 Top-level directives:
-  <data name="x" source="ship.foo.bar()" [live] />   — fetches data; live makes it a streaming signal.
-  <state name="x" value="0" />                       — local reactive value, written via x.set(...).
-  <component name="x-tag"> ... </component>          — turns the file into a custom element.
+  <scope> ... </scope>                               — component files only: typed props/variants, literal values.
+  <controller> ... </controller>                     — the view's TypeScript: state, handlers, lifecycle.
 
 Template grammar:
   {expr}                                — text-position expression.
@@ -33,102 +31,94 @@ Template grammar:
   on:event={(e) => ...}                 — event listener.
   bind:value={signalName}               — two-way binding (input-like elements only).
   {#if expr} ... {:else} ... {/if}      — conditional.
-  {#for item of expr key={item.id}} ... {/for} — keyed list.
-  <while-loading bind="name"> ... </while-loading>   — render while a <data> is pending.
-  <while-error bind="name" let:err> ... </while-error> — render when a <data> errors.
+  {#for item of expr key={item.id}} ... {/for} — keyed list; always write key=.
+  {#match expr} {:case 'a'} ... {:default} ... {/match} — enumerated branches.
 
 Reactive values are read by calling them: \`count()\` reads, \`count.set(n)\` writes.
-A \`<data live>\` declaration exposes a Result-shaped signal whose kind is \`'loading' | 'ok' | 'error'\`; check \`x().kind === 'ok'\` then read \`x().value\`.
 
-Controller (optional, paired .ts) — five named sections, no escape hatches:
-  import { controller } from '@ship/sui-runtime'
+State and logic live in the inline <controller> block. It default-exports controller({ setup, on, mount, unmount }); whatever setup RETURNS is the template's scope:
+
+  <controller>
+  import { controller, signal } from '@ship/sui-runtime'
+
   export default controller({
-    derived: { /* memos; ({ x }) => x() * 2 */ },
-    on:      { /* handlers; ONLY section that mutates: (s, ...args) => { s.x = ... } */ },
-    use:     { /* controller hooks composed by namespace key */ },
-    mount:   (s, el) => { /* once after render */ },
-    unmount: (s) => { /* once on dispose */ },
+    setup: () => ({ count: signal(0) }),
+    on:    { incr: (s) => { s.count++ } },  // handlers are the only section that mutates
+    mount: (s, el) => { /* once after render */ },
   })
+  </controller>
 
-  Local state always lives in the template via <state name="X" value="..." />.
-  Controllers read state through scope (the destructured first arg of derived/on
-  receives \`X\` as a callable signal). Computed-initial values move to mount:
-  declare <state name="id" value="''" /> and assign state.id = crypto.randomUUID()
-  inside mount.
+Compositions (@ship/sui-std) are plain functions that return signals — form(), selection(), filteredList(). Call them inside setup and return their signals as scope members.
 
-Available controller hooks (compose via \`use:\`):
-  useFilteredList(source, (item, query) => boolean)  — { state.query, derived.filtered, on.setQuery, on.clear }
-  useSelection(source, (item) => key)                — { state.selectedId, derived.selected, on.select, on.clear, on.toggle }
-  useForm({ initial, validate?, submit? })           — per-field signals + { derived.errors/valid/dirty/values, on.submit, on.reset }
-
-Available template hooks (browser-platform bridges; use as elements):
-  <use-kbd> <on key="..." action="onName" /> ... </use-kbd>   — document keyboard shortcuts → controller on.* names
-  <use-click-outside bind:target={ref} bind:action={onName} /> — fires action on click outside target
+Layout is elements, not CSS: <row>, <column>, <grid>, <center>, <stack> with gap/align/justify attributes. Styling is the static sx attribute with token values (e.g. sx="p-4 text-muted-foreground") — never raw px or hex.
 
 Hard rules — violating any of these fails the eval:
   - No raw <script> tags. No eval. No new Function(). No document.write.
-  - No customElements.define — that's primitive territory, not view territory.
-  - Use <ship-*> primitives from the catalog rather than reinventing buttons or inputs.
-  - Mutation lives only in \`on.*\` handlers. Never \`s.x = v\` in derived or templates.
-  - Subscriptions live in <data> elements, never in controller code. Don't call ship.* outside <data>.
-  - Output exactly one fenced \`\`\`html.set\`\`\` block. If a controller is needed, append one fenced \`\`\`ts\`\`\` block. No prose outside the blocks.`
+  - No <style> blocks and no style= attributes — spend tokens through sx and layout elements.
+  - No customElements.define — that's component territory, not view territory.
+  - Use <sui-*> components from the catalog rather than reinventing buttons or inputs.
+  - Mutation lives only in \`on.*\` handlers and setup-returned functions. Never \`s.x = v\` in templates.
+  - No network calls of any kind — no fetch, no ship.* — views are pure; data arrives through the host.
+  - Output exactly one fenced \`\`\`sui\`\`\` block — the complete file, inline <controller> included when needed. No prose outside the block.`
 
 const FEW_SHOT_STATIC = {
   description: 'A static info card listing the three Ship core values.',
-  template: `<section class="card">
+  template: `<column gap="3">
   <h2>Ship core values</h2>
   <ul>
     <li>Boring infra, novel surface.</li>
     <li>Server-rendered first.</li>
     <li>Agent-writable by construction.</li>
   </ul>
-</section>`,
+</column>`,
 }
 
 const FEW_SHOT_COUNTER = {
   description: 'A counter view: shows a number and two buttons that increment and reset it.',
-  template: `<state name="count" value="0" />
+  template: `<controller>
+import { controller, signal } from '@ship/sui-runtime'
 
-<div class="counter">
+export default controller({
+  setup: () => ({ count: signal(0) }),
+})
+</controller>
+
+<row gap="2" align="center">
   <p>count: <span data-test="value">{count()}</span></p>
-  <ship-button data-test="inc" on:click={() => count.set(count() + 1)}>increment</ship-button>
-  <ship-button data-test="reset" tone="neutral" on:click={() => count.set(0)}>reset</ship-button>
-</div>`,
+  <sui-button data-test="inc" on:click={() => count.set(count() + 1)}>increment</sui-button>
+  <sui-button data-test="reset" tone="muted" on:click={() => count.set(0)}>reset</sui-button>
+</row>`,
 }
 
 const FEW_SHOT_CONTROLLER = {
-  description: 'A select-an-agent view: a controller exposes derived values + a handler; the template wires them. selectedId is template-declared <state>.',
-  template: `<data name="agents" source="ship.agents.summaries()" live />
-<state name="selectedId" value="null" />
-
-<p>{total()} agent{total() === 1 ? '' : 's'}</p>
-<ul>
-  {#if agents().kind === 'ok'}
-    {#for a of items() key={a.id}}
-      <li>
-        <ship-button data-test="row" tone={isSelected(a.id) ? 'primary' : 'default'}
-                     on:click={() => select(a.id)}>{a.name}</ship-button>
-      </li>
-    {/for}
-  {/if}
-</ul>`,
-  setup: `import { controller } from '@ship/sui-runtime'
-import type { LiveSignal } from '@ship/sui-runtime'
+  description: 'A filterable agent list: the inline controller owns the list, a query signal, and a derived filtered view; the template wires them.',
+  template: `<controller>
+import { controller, signal, derived } from '@ship/sui-runtime'
 
 export default controller({
-  derived: {
-    items:      ({ agents }: { agents: LiveSignal<{ items: { id: string; name: string }[] }> }) => {
-      const s = agents()
-      return s.kind === 'ok' ? s.value.items : []
-    },
-    total:      ({ items }: { items: () => unknown[] }) => items().length,
-    isSelected: ({ selectedId }: { selectedId: () => string | null }) =>
-                  (id: string) => selectedId() === id,
+  setup: () => {
+    const query = signal('')
+    const all = signal([
+      { id: 'a1', name: 'triage' },
+      { id: 'a2', name: 'deploy' },
+      { id: 'a3', name: 'review' },
+    ])
+    const filtered = derived(() =>
+      all().filter((a) => a.name.includes(query())))
+    return { query, filtered, total: derived(() => filtered().length) }
   },
-  on: {
-    select: (s: { selectedId: string | null }, id: string) => { s.selectedId = id },
-  },
-})`,
+})
+</controller>
+
+<column gap="2">
+  <input data-test="q" placeholder="filter" bind:value={query} />
+  <p>{total()} agent{total() === 1 ? '' : 's'}</p>
+  <ul>
+    {#for a of filtered() key={a.id}}
+      <li><sui-button data-test="row">{a.name}</sui-button></li>
+    {/for}
+  </ul>
+</column>`,
 }
 
 /** Render a primitive catalog as a compact, model-readable summary. */
@@ -171,7 +161,7 @@ function renderFewShot(ex: {
   setup?: string
 }): string {
   const out = [`Example feature: ${ex.description}`, '', 'Example output:', '']
-  out.push('```html.set', ex.template, '```')
+  out.push('```sui', ex.template, '```')
   if (ex.setup) out.push('', '```ts', ex.setup, '```')
   return out.join('\n')
 }
@@ -189,7 +179,7 @@ export function buildPrompt(input: PromptInputs): PromptParts {
 
   const fixtureBlock =
     input.fixtures.template.trim() || input.fixtures.setup?.trim()
-      ? `\n\nStarter fixture (extend or replace as needed):\n\n\`\`\`html.set\n${input.fixtures.template}\n\`\`\`${
+      ? `\n\nStarter fixture (extend or replace as needed):\n\n\`\`\`sui\n${input.fixtures.template}\n\`\`\`${
           input.fixtures.setup
             ? `\n\n\`\`\`ts\n${input.fixtures.setup}\n\`\`\``
             : ''
@@ -210,19 +200,18 @@ Feature to implement:
 
 ${input.description.trim()}${fixtureBlock}
 
-Reply with one \`\`\`html.set\`\`\` block, optionally followed by one \`\`\`ts\`\`\` block. No prose.`
+Reply with exactly one \`\`\`sui\`\`\` block — the complete file, inline <controller> included when needed. No prose.`
 
   return { system: SYSTEM_PRIMER, user }
 }
 
-/** Pull the .sui + optional .ts block out of a model reply. */
+/** Pull the single .sui block out of a model reply. */
 export function parseModelReply(raw: string): { template: string; setup?: string } {
-  const html = matchFence(raw, 'html.set') ?? matchFence(raw, 'html')
-  if (!html) {
-    throw new Error('model reply did not contain an ```html.set``` block')
+  const sui = matchFence(raw, 'sui')
+  if (!sui) {
+    throw new Error('model reply did not contain a ```sui``` block')
   }
-  const ts = matchFence(raw, 'ts') ?? matchFence(raw, 'typescript')
-  return ts ? { template: html, setup: ts } : { template: html }
+  return { template: sui }
 }
 
 function matchFence(raw: string, tag: string): string | undefined {

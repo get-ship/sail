@@ -24,7 +24,7 @@ export type Ref<T extends Element = HTMLElement> = Signal<T | null>
  * Construct a writable ref slot, seeded with `null`. The runtime
  * fills it from the matching `bind:this={var}` mount; the compiler's
  * `bind_this_target` check requires every `bind:this` target to be
- * declared as `name: ref(null)` in the controller's scope factory.
+ * declared as `name: ref(null)` in the controller's setup factory.
  */
 export function ref<T extends Element = HTMLElement>(_initial: null = null): Ref<T> {
   return signal<T | null>(null)

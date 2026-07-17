@@ -153,7 +153,7 @@ describe('on — handlers receive a writable proxy', () => {
     const b = resolveController(
       {
         on: {
-          // typo — `total` is not declared as <state>
+          // typo — `total` is not a declared writable signal
           bogus: (s: Record<string, unknown>) => {
             s.total = 99
           },
@@ -163,7 +163,7 @@ describe('on — handlers receive a writable proxy', () => {
     ) as Record<string, () => void>
     b.bogus!()
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining(`<state name="total">`),
+      expect.stringContaining(`total is not a writable signal`),
     )
     warnSpy.mockRestore()
   })

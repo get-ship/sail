@@ -33,12 +33,12 @@ suite is green and the build is warning-free.
 - **Where:** `src/emit/template_emit/dom_emit.rs:416`.
 - **Status:** planned (future milestone) — aliases parse but are equivalent.
 
-### Synthetic render (docs playground preview) can't model `<prop>` components
+### Synthetic render (docs playground preview) can't model propful components
 - **What:** The in-browser "synthesize a preview" path can't render a component
-  that declares `<prop>` — it has no controller scope to source prop values.
-  The real compile path handles `<prop>` fine; this is preview-only.
-- **Repro:** a lesson/component with `<prop name="x" />` shown in the playground
-  preview → "component `<prop>` declarations are not supported yet".
+  that declares props in `<scope>` — it has no controller scope to source prop
+  values. The real compile path handles `<scope>` props fine; this is preview-only.
+- **Repro:** a lesson/component with a `<scope>` props block shown in the playground
+  preview → "component `<scope>` prop declarations are not supported yet".
 - **Where:** `src/emit/synthetic/mod.rs:191`.
 - **Status:** planned (Phase 2: a props-parameterized scope factory).
 

@@ -2,7 +2,7 @@
 //! interpolation or `on:` handler must resolve to a name the runtime
 //! actually has. Scope sources, in resolution order:
 //!
-//!  * `<prop name="…">` declarations on the program.
+//!  * `<scope>` prop declarations on the program.
 //!  * `setup` factory return keys, `derived` keys, and `on` keys from
 //!    the paired controller (when one exists).
 //!  * `route` — ONLY when the host GRANTED it (a route file; deck routes

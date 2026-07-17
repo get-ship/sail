@@ -179,11 +179,13 @@ fn emit_places_target_in_out_dir() {
 
 // ── scaffold view ───────────────────────────────────────────────────────────
 
-/// `deck scaffold view <name>` writes the 4 documented files at the
-/// documented paths (`views/<name>/{manifest.jsonc,page.sui,controller.ts,style.css}`)
-/// and the manifest's `path` field starts with `/`.
+/// `deck scaffold view <name>` writes the 2 documented files at the
+/// documented paths (`views/<name>/{manifest.jsonc,page.sui}`) and the
+/// manifest's `path` field starts with `/`. The retired sibling files
+/// (`controller.ts`, `style.css`) must NOT be written — state is an
+/// inline `<controller>` block and userland CSS is banned.
 #[test]
-fn scaffold_view_writes_four_files_and_manifest_path() {
+fn scaffold_view_writes_two_files_and_manifest_path() {
     let mut guard = ScaffoldGuard::new();
     let name = unique_stem("testview");
     let view_dir = repo_root().join("views").join(&name);
@@ -192,11 +194,17 @@ fn scaffold_view_writes_four_files_and_manifest_path() {
     let status = run_deck(&["scaffold", "view", &name]).status;
     assert!(status.success(), "deck scaffold view {name} exited {status:?}");
 
-    for rel in ["manifest.jsonc", "page.sui", "controller.ts", "style.css"] {
+    for rel in ["manifest.jsonc", "page.sui"] {
         let p = view_dir.join(rel);
         assert!(p.exists(), "missing {} after scaffold view", p.display());
         let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
         assert!(len > 0, "empty {} after scaffold view", p.display());
+    }
+    for rel in ["controller.ts", "style.css"] {
+        assert!(
+            !view_dir.join(rel).exists(),
+            "retired sibling {rel} written by scaffold view"
+        );
     }
 
     // Manifest `path` must start with `/` (the daemon resolver expects
@@ -233,12 +241,14 @@ fn scaffold_view_with_component_writes_widget() {
         "deck scaffold view {name} --component {tag} exited {status:?}"
     );
 
-    for rel in [format!("{tag}.sui"), format!("{tag}.controller.ts")] {
-        let p = widget_dir.join(&rel);
-        assert!(p.exists(), "missing {} after scaffold view --component", p.display());
-        let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
-        assert!(len > 0, "empty {} after scaffold view --component", p.display());
-    }
+    let p = widget_dir.join(format!("{tag}.sui"));
+    assert!(p.exists(), "missing {} after scaffold view --component", p.display());
+    let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
+    assert!(len > 0, "empty {} after scaffold view --component", p.display());
+    assert!(
+        !widget_dir.join(format!("{tag}.controller.ts")).exists(),
+        "retired sibling controller written by scaffold view --component"
+    );
 }
 
 // ── scaffold component ──────────────────────────────────────────────────────
@@ -330,15 +340,16 @@ fn scaffold_pack_writes_package_json_tsconfig_and_src() {
         assert!(len > 0, "empty {} after scaffold pack", p.display());
     }
     // Placeholder example primitive under src/<name>-example/.
-    for rel in [
-        format!("{name}-example.sui"),
-        format!("{name}-example.controller.ts"),
-    ] {
-        let p = example_dir.join(&rel);
-        assert!(p.exists(), "missing {} after scaffold pack", p.display());
-        let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
-        assert!(len > 0, "empty {} after scaffold pack", p.display());
-    }
+    let p = example_dir.join(format!("{name}-example.sui"));
+    assert!(p.exists(), "missing {} after scaffold pack", p.display());
+    let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
+    assert!(len > 0, "empty {} after scaffold pack", p.display());
+    assert!(
+        !example_dir
+            .join(format!("{name}-example.controller.ts"))
+            .exists(),
+        "retired sibling controller written by scaffold pack"
+    );
 
     // package.json `name` field must be `@ship/<name>`.
     let pkg = std::fs::read_to_string(base.join("package.json")).expect("read package.json");
