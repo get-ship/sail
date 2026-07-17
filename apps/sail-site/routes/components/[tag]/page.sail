@@ -76,14 +76,14 @@ export default controller((ctx: ViewScope<Scope>) => {
     // point (the pack IS the live component) and some packs have their own
     // interaction model (world layer, code editor, mermaid SVG).
     const slotCopy = (() => {
-      if (!knownPack()) return 'click it · type in it · pick from it — nothing here is a screenshot'
+      if (!knownPack()) return ''
       const t = tag()
       if (t === 'sail-canvas' || t === 'sail-board' || t === 'sail-draw' || t === 'sail-graph-canvas' || t.startsWith('sail-annotation-')) {
-        return 'use the world layer — pan/zoom · drop annotations on click'
+        return 'The world layer — pans, zooms, and drops annotations on click.'
       }
-      if (t === 'sail-code-editor') return 'click into the editor · edit and watch the value'
-      if (t === 'sail-mermaid') return 'mermaid rendered the diagram · pan the SVG to inspect'
-      return 'interact with the live component — type, click, toggle'
+      if (t === 'sail-code-editor') return ''
+      if (t === 'sail-mermaid') return ''
+      return ''
     })()
     const heading = () => entry()?.heading ?? tag()
 
@@ -212,7 +212,7 @@ export default controller((ctx: ViewScope<Scope>) => {
             {#if stage.button()}
               <column gap="3" align="center">
                 <button variant={variant()} tone="primary" size="lg" on:click={press} motion:press={{ scale: 'press' }}>
-                  Press me
+                  Save changes
                 </button>
                 <p sx="text-xs text-muted-foreground font-mono">motion:press fired ×{presses()}</p>
               </column>
@@ -317,7 +317,7 @@ export default controller((ctx: ViewScope<Scope>) => {
             {#if stage.themePicker()}
               <column gap="3" align="center">
                 <theme-picker></theme-picker>
-                <p sx="text-xs text-muted-foreground font-mono">open it — it themes this whole site, live</p>
+                <p sx="text-xs text-muted-foreground font-mono">themes this whole site, no reload</p>
               </column>
             {/if}
 
@@ -331,7 +331,7 @@ export default controller((ctx: ViewScope<Scope>) => {
               <column gap="3" sx="w-full max-w-panel-max-w-sm">
                 <slider bind:value={load} min="0" max="100" tone="primary"></slider>
                 <progress value={load()} max="100"></progress>
-                <p sx="text-xs text-muted-foreground font-mono">drag the slider — same signal, {load()}%</p>
+                <p sx="text-xs text-muted-foreground font-mono">one signal drives both — {load()}%</p>
               </column>
             {/if}
             {#if stage.meter()}
@@ -422,7 +422,7 @@ export default controller((ctx: ViewScope<Scope>) => {
             {#if stage.card()}
               <card variant={variant()} sx="p-5" motion:hover={{ scale: 'spring:gentle' }}>
                 <strong>A surface</strong>
-                <p sx="text-sm text-muted-foreground">hover me — the lift is one attribute</p>
+                <p sx="text-sm text-muted-foreground">the hover lift is one attribute</p>
               </card>
             {/if}
             {#if stage.avatar()}
@@ -500,7 +500,7 @@ export default controller((ctx: ViewScope<Scope>) => {
                     <p sx="text-sm text-muted-foreground">wrote the first program.</p>
                   </card>
                 </hover-card>
-                <p sx="text-xs text-muted-foreground font-mono">hover or focus the trigger</p>
+                <p sx="text-xs text-muted-foreground font-mono">focus-triggerable, not just mouse-only</p>
               </column>
             {/if}
             {#if stage.popover()}
@@ -526,7 +526,7 @@ export default controller((ctx: ViewScope<Scope>) => {
             {#if stage.contextMenu()}
               <column gap="3" align="center" sx="w-full max-w-panel-max-w-sm">
                 <card id="stage-ctx" variant="outline" sx="p-6 w-full">
-                  <center><p sx="text-sm text-muted-foreground">right-click this card</p></center>
+                  <center><p sx="text-sm text-muted-foreground">right-click target</p></center>
                 </card>
                 <context-menu for="stage-ctx">
                   <menu-item value="cut">Cut</menu-item>
@@ -580,7 +580,7 @@ export default controller((ctx: ViewScope<Scope>) => {
                   <page value="3">3</page>
                   <page value="4">4</page>
                 </pagination>
-                <p sx="text-xs text-muted-foreground font-mono">on page {pageNo()} — click one</p>
+                <p sx="text-xs text-muted-foreground font-mono">on page {pageNo()}</p>
               </column>
             {/if}
             {#if stage.navbar()}
@@ -762,7 +762,9 @@ export default controller((ctx: ViewScope<Scope>) => {
             {/if}
 
       </column>
-      <p slot="stage" sx="text-xs text-muted-foreground font-mono">{slotCopy}</p>
+      {#if slotCopy}
+        <p slot="stage" sx="text-xs text-muted-foreground font-mono">{slotCopy}</p>
+      {/if}
     </sail-component-viewer>
 
     <row gap="2">

@@ -116,7 +116,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
 })
 </controller>
   <p sx="text-sm text-muted-foreground">
-    Every tile is the running component — type in it, press it, open it.
+    Every tile is the running component, not a screenshot.
     The language's own elements need no import; the packs read the same tokens.
   </p>
 
@@ -666,8 +666,8 @@ export default controller((_ctx: ViewScope<Scope>) => {
             <column gap="0" sx="h-full">
               <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
                 <card sx="p-3" motion:hover={{ scale: 'spring:gentle' }}>
-                  <strong>Interactive</strong>
-                  <p sx="text-xs text-muted-foreground">hover me — motion is an attribute</p>
+                  <strong>A surface</strong>
+                  <p sx="text-xs text-muted-foreground">the hover lift is one attribute</p>
                 </card>
               </column>
               <column gap="1" sx="px-3 py-2">
@@ -826,8 +826,8 @@ export default controller((_ctx: ViewScope<Scope>) => {
           <card padding="none" data-tile="tooltip" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
-                <tooltip content="The real tooltip — themed like everything else">
-                  <button variant="outline">Hover me</button>
+                <tooltip content="Deletes the branch — cannot be undone">
+                  <button variant="outline" tone="destructive">Delete branch</button>
                 </tooltip>
               </center>
               <column gap="1" sx="px-3 py-2">
@@ -844,9 +844,9 @@ export default controller((_ctx: ViewScope<Scope>) => {
           <card padding="none" data-tile="hover-card" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
-                <button variant="outline" popovertarget="tile-hc">Hover for a card</button>
+                <button variant="outline" popovertarget="tile-hc">@ada</button>
                 <hover-card id="tile-hc">
-                  <card sx="p-3">Richer content, on hover — a native popover.</card>
+                  <card sx="p-3">Richer content on a native popover.</card>
                 </hover-card>
               </center>
               <column gap="1" sx="px-3 py-2">
@@ -904,7 +904,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
             <column gap="0" sx="h-full">
               <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
                 <card id="tile-ctx" variant="outline" sx="p-3">
-                  <p sx="text-xs text-muted-foreground">right-click this card</p>
+                  <p sx="text-xs text-muted-foreground">right-click target</p>
                 </card>
                 <context-menu for="tile-ctx">
                   <menu-item>Cut</menu-item>
@@ -1088,7 +1088,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
             <column gap="0" sx="h-full">
               <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
                 <scroll-area sx="h-9 w-full pr-2">
-                  <p sx="text-xs text-muted-foreground">line one — scroll me</p>
+                  <p sx="text-xs text-muted-foreground">line one</p>
                   <p sx="text-xs text-muted-foreground">line two</p>
                   <p sx="text-xs text-muted-foreground">line three</p>
                   <p sx="text-xs text-muted-foreground">line four</p>

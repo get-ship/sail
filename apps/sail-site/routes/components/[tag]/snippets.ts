@@ -230,7 +230,7 @@ export default controller(() => {
 </controller>
 
 {#if kept()}
-  <chip removable on:sail-remove={drop}>Backspace or × removes me</chip>
+  <chip removable on:sail-remove={drop}>Design</chip>
 {/if}
 {#if !kept()}
   <button variant="ghost" on:click={() => kept.set(true)}>bring it back</button>
@@ -242,9 +242,9 @@ export default controller(() => {
 </row>`,
 
   card: `<card sx="p-5" motion:hover={{ scale: 'spring:gentle' }}>
-  <strong>Interactive</strong>
+  <strong>A surface</strong>
   <p sx="text-sm text-muted-foreground">
-    A surface. Tone, padding and motion are attributes.
+    Tone, padding and motion are attributes.
   </p>
 </card>`,
 
@@ -329,7 +329,7 @@ export default controller(() => {
 </dropdown>`,
 
   'context-menu': `<card id="canvas" sx="p-6" motion:enter={{ opacity: 'fade' }}>
-  right-click me
+  right-click target
 </card>
 
 <context-menu for="canvas">
