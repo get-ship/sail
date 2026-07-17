@@ -16,11 +16,11 @@
 //! The compiler emits its own classes (`sui-root`, layout, sx atoms). Those are
 //! the framework's, not the author's; this rule only sees what the source wrote.
 //!
-//! FLOOR — refuses everywhere. The historical "opt-in via `sui.config.json`
+//! FLOOR — refuses everywhere. The historical "opt-in via `sail.config.json`
 //! presence" was the SAME disease as the dead stylesheet permit: a check
 //! that returned `Vec::new()` because a config file existed somewhere
 //! above the source. With the permit fixed and the floor in place, every
-//! pack's `sui.config.json` declares `stylesheets: []` and ships zero
+//! pack's `sail.config.json` declares `stylesheets: []` and ships zero
 //! `.css` files — the "declared stylesheet" the early-return justified
 //! itself with was invented. `class=` is now `Error` on every path,
 //! pack, route, and app; no config relaxes it.
@@ -36,10 +36,10 @@ use crate::report::{Finding, Severity};
 pub const RULE_ID: &str = "sail-no-class";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
-    // FLOOR — refuses everywhere. The historical "opt-in via `sui.config.json`
+    // FLOOR — refuses everywhere. The historical "opt-in via `sail.config.json`
     // presence" was removed: it walked up to the filesystem root, found a
     // config anywhere, and returned `Vec::new()` — the same dead layer as
-    // the stylesheet permit. The pack's `sui.config.json` declares
+    // the stylesheet permit. The pack's `sail.config.json` declares
     // `stylesheets: []` and ships zero `.css` files; there is no
     // declared sheet for a class to "pair with".
     let bytes = source.as_bytes();
@@ -153,7 +153,7 @@ mod tests {
         assert!(run(r#"<div data-subclass="x"></div>"#).is_empty());
     }
 
-    // The disease this commit cures: a `sui.config.json` ANYWHERE in the
+    // The disease this commit cures: a `sail.config.json` ANYWHERE in the
     // ancestor chain used to short-circuit the rule. The new contract is
     // unconditional — `class=` is banned regardless of which directories
     // happen to have a config. These two tests pin both ends.
@@ -161,7 +161,7 @@ mod tests {
     #[test]
     fn a_class_in_a_sourceless_buffer_is_still_flagged() {
         // Old code walked `path.parent()` up to the filesystem root looking
-        // for any `sui.config.json`; in a unit test, `t.sui` is a bare
+        // for any `sail.config.json`; in a unit test, `t.sui` is a bare
         // path with no ancestors, and the old code returned `Vec::new()`
         // because nothing above it had a config. New behavior: it fires
         // anyway. Same test name as `static_class_is_flagged`, but

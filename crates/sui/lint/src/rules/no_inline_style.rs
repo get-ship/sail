@@ -12,7 +12,7 @@
 //! shows the hint without hard-failing an unrelated tool). The compiler promotes
 //! it to a hard `Error` UNCONDITIONALLY via `check::lint_overrides::enforce_floor`
 //! — this is a floor rule (`check::policy::FLOOR_RULES`), enforced on every
-//! compile regardless of `sui.config.json` or `lint_overrides`. Catches both
+//! compile regardless of `sail.config.json` or `lint_overrides`. Catches both
 //! static `style="…"` and dynamic `style={…}`. Does NOT match the `<style>`
 //! *element* (that's preceded by `<`, not whitespace — `sui-no-style-block`'s
 //! job). Skips comments, char-safe.

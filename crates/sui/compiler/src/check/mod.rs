@@ -253,13 +253,13 @@ pub fn collect(
                 sail_lint::lint_controller_source(&c.path, &c.source),
                 overrides,
             );
-        // `sui-controller-no-ambient-authority` is `sui.config.json`
+        // `sui-controller-no-ambient-authority` is `sail.config.json`
         // "network"-aware, but the generic `CONTROLLER_RULES` table
         // (`lint_controller_source`, above) is config-blind — it always ran
         // the rule's default (empty-allowlist) entry. Drop those findings and
         // re-run the network-aware `check_confined` with the resolved
         // allowlist (`Policy::network_for`), same "specially invoked" pattern
-        // `css_token` uses in `run()`. This is not a second `sui.config.json`
+        // `css_token` uses in `run()`. This is not a second `sail.config.json`
         // reader: `network_for` re-derives from the one resolver
         // (`sail_lint::config::resolve`) via `Policy::resolve_outcome`.
         controller_findings.retain(|f| {

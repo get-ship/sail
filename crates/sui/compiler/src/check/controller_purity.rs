@@ -30,7 +30,7 @@ pub fn check(
         sail_lint::lint_controller_source(&controller_path, &source),
         overrides,
     );
-    // `sui-controller-no-ambient-authority` is `sui.config.json`
+    // `sui-controller-no-ambient-authority` is `sail.config.json`
     // "network"-aware (the fetch/WebSocket/EventSource per-origin allowlist),
     // but `lint_controller_source` (above) dispatches through the generic,
     // config-blind `CONTROLLER_RULES` table — it always ran the rule's

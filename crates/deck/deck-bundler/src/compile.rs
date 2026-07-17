@@ -43,7 +43,7 @@ pub fn compile_sui(
     stem: &str,
     emit_component_imports: bool,
 ) -> Result<String, CompileError> {
-    // Gated, scoped synthetic CLIENT emit (slice 1). When `SUI_CLIENT_EMIT=
+    // Gated, scoped synthetic CLIENT emit (slice 1). When `SAIL_CLIENT_EMIT=
     // synthetic` AND this is a VIEW with an `app.manifest.jsonc` above it, emit
     // the synthetic client contract (`default.setup` → `__mount` + `hydrate`)
     // instead of the production module. Default OFF and scoped to manifested
@@ -59,7 +59,7 @@ pub fn compile_sui(
     // The FLOOR is unconditional — no <style>, no style=, in any SUI file, with
     // or without a config. A deck project does not opt into the language. The
     // capability keys (sx / variants / raw containers) still come from the
-    // nearest `sui.config.json` walking up, which is how a project dials the
+    // nearest `sail.config.json` walking up, which is how a project dials the
     // surface ABOVE the floor.
     let policy_overrides = Policy::overrides_for(sui_file);
     // POSITION GRANT, computed once: deck routes by file location, so deck
@@ -160,12 +160,12 @@ fn paired_controller(sui_file: &Path, stem: &str) -> Option<String> {
 }
 
 /// The gate for the synthetic CLIENT emit. Default OFF — the bundler emits the
-/// production module. ON only when `SUI_CLIENT_EMIT=synthetic`, and even then
+/// production module. ON only when `SAIL_CLIENT_EMIT=synthetic`, and even then
 /// only for views that opt in by having an `app.manifest.jsonc` above them
 /// (see [`try_synthetic_client`]). This is the slice-1 proof seam: additive,
 /// scoped, never a global default flip.
 pub fn synthetic_client_enabled() -> bool {
-    std::env::var("SUI_CLIENT_EMIT").map(|v| v == "synthetic").unwrap_or(false)
+    std::env::var("SAIL_CLIENT_EMIT").map(|v| v == "synthetic").unwrap_or(false)
 }
 
 /// Emit the synthetic CLIENT module for `sui_file` when it opts into the
@@ -228,7 +228,7 @@ mod tests {
     use super::*;
     use tempfile::tempdir;
 
-    /// Serializes the tests that mutate the process-global `SUI_CLIENT_EMIT`
+    /// Serializes the tests that mutate the process-global `SAIL_CLIENT_EMIT`
     /// env var. Cargo runs tests in parallel threads and env is process-wide,
     /// so without this the two env-mutating tests race — one's set/remove
     /// clobbers the other's assertions (latent before; exposed when sibling
@@ -301,8 +301,8 @@ mod tests {
         let sui = dir.join("page.sui");
 
         // Flag OFF (default): production emit regardless of manifest presence.
-        let prev = std::env::var("SUI_CLIENT_EMIT").ok();
-        unsafe { std::env::remove_var("SUI_CLIENT_EMIT") };
+        let prev = std::env::var("SAIL_CLIENT_EMIT").ok();
+        unsafe { std::env::remove_var("SAIL_CLIENT_EMIT") };
         let off = compile_sui(&sui, CompileMode::View, "page", false).expect("compiles");
         assert!(
             off.contains("component((ctx)") && !off.contains("export default component(() =>"),
@@ -310,7 +310,7 @@ mod tests {
         );
 
         // Flag ON but NO manifest above → still production (scoped opt-in).
-        unsafe { std::env::set_var("SUI_CLIENT_EMIT", "synthetic") };
+        unsafe { std::env::set_var("SAIL_CLIENT_EMIT", "synthetic") };
         let on_no_manifest = compile_sui(&sui, CompileMode::View, "page", false).expect("compiles");
         assert!(
             on_no_manifest.contains("component((ctx)"),
@@ -330,8 +330,8 @@ mod tests {
         );
 
         match prev {
-            Some(v) => unsafe { std::env::set_var("SUI_CLIENT_EMIT", v) },
-            None => unsafe { std::env::remove_var("SUI_CLIENT_EMIT") },
+            Some(v) => unsafe { std::env::set_var("SAIL_CLIENT_EMIT", v) },
+            None => unsafe { std::env::remove_var("SAIL_CLIENT_EMIT") },
         }
     }
 
@@ -357,8 +357,8 @@ mod tests {
         // Flag ON, NO manifest above → convention still kicks in and the
         // synthetic client contract is emitted (the manifest here is the
         // "any view that opts in" trigger, not the source of `route`).
-        let prev = std::env::var("SUI_CLIENT_EMIT").ok();
-        unsafe { std::env::set_var("SUI_CLIENT_EMIT", "synthetic") };
+        let prev = std::env::var("SAIL_CLIENT_EMIT").ok();
+        unsafe { std::env::set_var("SAIL_CLIENT_EMIT", "synthetic") };
         std::fs::write(
             dir.join("app.manifest.jsonc"),
             // The manifest is now ONLY used to opt this view in. The
@@ -393,8 +393,8 @@ mod tests {
         );
 
         match prev {
-            Some(v) => unsafe { std::env::set_var("SUI_CLIENT_EMIT", v) },
-            None => unsafe { std::env::remove_var("SUI_CLIENT_EMIT") },
+            Some(v) => unsafe { std::env::set_var("SAIL_CLIENT_EMIT", v) },
+            None => unsafe { std::env::remove_var("SAIL_CLIENT_EMIT") },
         }
     }
 }

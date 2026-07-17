@@ -62,11 +62,11 @@ function findRepoRoot(): string {
 
 const repoRoot = findRepoRoot()
 // The compiler's neutral, sui-owned mirror dir. MUST match the canonical
-// `sui_compiler::out_layout::DEFAULT_SUI_OUT_DIR` (`.sui-out`) — the compiler is
+// `sail_compiler::out_layout::DEFAULT_SAIL_OUT_DIR` (`.sail-out`) — the compiler is
 // framework-neutral and deliberately does NOT bake a `.ship/` path. (This was
 // `.ship/sui-out` and silently fell back to the stale WASM compiler when the
-// native compile landed in `.sui-out` where the harness wasn't looking.)
-const mirrorRoot = resolve(repoRoot, '.sui-out')
+// native compile landed in `.sail-out` where the harness wasn't looking.)
+const mirrorRoot = resolve(repoRoot, '.sail-out')
 const compilerBin = resolve(repoRoot, 'target/debug/sui-compiler')
 // The native/CLI sui-compiler is only reachable in a repo that carries the
 // Rust workspace (a root `Cargo.toml`) or a prebuilt binary. A JS-only
@@ -387,7 +387,7 @@ export interface SuiComponentVitestOptions {
  *
  *  `.compiled.js` is the published-name convention for a sibling `.sui`; the
  *  `.sui` compiles in-process through the linked addon with the source's own
- *  policy (`sui.config.json` walk-up), so the floor applies here exactly as it
+ *  policy (`sail.config.json` walk-up), so the floor applies here exactly as it
  *  does in deck and the CLI, and an unmigrated component fails with the
  *  compiler's own message. A source's `<controller>` block is served as the
  *  virtual `<file>.sui.controller.ts` — the specifier deck and the CLI emit —

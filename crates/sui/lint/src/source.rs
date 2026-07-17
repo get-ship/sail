@@ -47,7 +47,7 @@ fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
 fn is_ignored_dir(p: &Path) -> bool {
     matches!(
         p.file_name().and_then(|n| n.to_str()),
-        Some("node_modules" | "dist" | "target" | ".git" | ".deck" | ".sui-out")
+        Some("node_modules" | "dist" | "target" | ".git" | ".deck" | ".sail-out")
     )
 }
 

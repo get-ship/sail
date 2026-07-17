@@ -74,10 +74,10 @@ just install-dev        # builds + installs `sui-lsp` to ~/.local/bin
 sui-lsp                 # LSP server on stdio (what editors + .lsp.json launch)
 ```
 
-Intelligence is the Rust compiler: `sui_compiler::check_all` (multi-diagnostic),
+Intelligence is the Rust compiler: `sail_compiler::check_all` (multi-diagnostic),
 `SymbolTable` (scope names + kinds + declaration offsets, byte-walked from the
 inline `<controller>` block — no `typescript` package), and an IR walk for the
-tag/event dependency surface (`sui_compiler::analyze`).
+tag/event dependency surface (`sail_compiler::analyze`).
 
 > **Retired:** the former TypeScript LSP (`packages/deck/lsp`, ex-`ship-set-lsp`)
 > — a fork of the `.sui` grammar that also bundled the full `typescript` package

@@ -396,7 +396,7 @@ impl TemplateEmitter {
     /// render.
     pub(super) fn is_static_row_expr(&self, source: &str) -> bool {
         // TEMP-DISABLE for A/B bench measurement; revert before commit.
-        if std::env::var_os("SUI_D5_DISABLE").is_some() {
+        if std::env::var_os("SAIL_D5_DISABLE").is_some() {
             return false;
         }
         self.for_in_scope

@@ -1,4 +1,4 @@
-//! The single reader of `sui.config.json`.
+//! The single reader of `sail.config.json`.
 //!
 //! One walk-up, one parse. Every consumer — the compiler's `Policy` tier and
 //! the floor's undeclared-stylesheet check — derives from this resolved value;
@@ -13,10 +13,10 @@
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-pub const CONFIG_FILE: &str = "sui.config.json";
+pub const CONFIG_FILE: &str = "sail.config.json";
 
 /// Walk up from `from` (inclusive) and return the first directory that contains
-/// a `sui.config.json` — the package root that owns a source. The one place that
+/// a `sail.config.json` — the package root that owns a source. The one place that
 /// knows the config's filename; callers that need the owning dir (not its
 /// contents) use this instead of re-hardcoding the name.
 pub fn owning_dir(from: &Path) -> Option<PathBuf> {
@@ -30,32 +30,32 @@ pub fn owning_dir(from: &Path) -> Option<PathBuf> {
     None
 }
 
-/// The top-level `sui.config.json` keys the parser recognizes. Anything else
+/// The top-level `sail.config.json` keys the parser recognizes. Anything else
 /// present is a typo/unknown key — the compiler must refuse loudly rather
 /// than silently ignore it (config-loud-strict: a `{"polcy":"strict"}` typo
 /// used to fail closed with zero signal).
 pub const RECOGNIZED_KEYS: [&str; 6] =
     ["preset", "sx", "variants", "raw_containers", "stylesheets", "network"];
 
-/// The parsed contents of the nearest `sui.config.json` on the walk up. Holds
+/// The parsed contents of the nearest `sail.config.json` on the walk up. Holds
 /// the raw JSON; typed accessors read individual fields leniently.
 #[derive(Debug, Clone)]
-pub struct SuiConfig {
+pub struct SailConfig {
     raw: serde_json::Value,
     parse_ok: bool,
 }
 
-impl SuiConfig {
+impl SailConfig {
     /// Parse config JSON text. Unparseable text yields an empty config — its
     /// presence on disk is the package's declared intent, and a broken body must
     /// not hard-fail a build (the accessors read fields leniently). `parse_ok`
     /// tracks whether the body actually parsed, so a caller that wants to
     /// REFUSE LOUDLY on an unparseable config (vs. one that parsed but carries
     /// no recognized signal) can tell the two apart.
-    pub fn from_json(text: &str) -> SuiConfig {
+    pub fn from_json(text: &str) -> SailConfig {
         match serde_json::from_str(text) {
-            Ok(raw) => SuiConfig { raw, parse_ok: true },
-            Err(_) => SuiConfig { raw: serde_json::Value::Null, parse_ok: false },
+            Ok(raw) => SailConfig { raw, parse_ok: true },
+            Err(_) => SailConfig { raw: serde_json::Value::Null, parse_ok: false },
         }
     }
 
@@ -136,13 +136,13 @@ impl SuiConfig {
     }
 }
 
-/// A trailing clause naming the `sui.config.json` that could grant capability
+/// A trailing clause naming the `sail.config.json` that could grant capability
 /// `key` for a source at `path` — appended to a strict-tier rule's `suggest`
 /// text so the refusal names WHERE to grant it, not just that it's refused
 /// (config-loud-strict rule #3). Empty string when no config exists on the
 /// walk (a synthetic/unrooted source, or a real gap — either way there is no
 /// path to name). Does not read the file — `owning_dir` only checks
-/// existence, so this is not a second `sui.config.json` reader.
+/// existence, so this is not a second `sail.config.json` reader.
 pub fn grant_hint(path: &Path, key: &str) -> String {
     match path.parent().and_then(owning_dir) {
         Some(dir) => format!(
@@ -154,17 +154,17 @@ pub fn grant_hint(path: &Path, key: &str) -> String {
 }
 
 /// Walk up from `dir` (inclusive) and return the path to the first
-/// `sui.config.json` found plus its parsed contents, or `None` if none exists
+/// `sail.config.json` found plus its parsed contents, or `None` if none exists
 /// on the walk. A present-but-unparseable config resolves to an empty
-/// `SuiConfig` (`parse_ok() == false`) and stops the walk — its presence is
+/// `SailConfig` (`parse_ok() == false`) and stops the walk — its presence is
 /// the package's declared intent, even if its body is broken. The returned
 /// path is what a caller names in a loud refusal/announcement message.
-pub fn resolve(dir: &Path) -> Option<(PathBuf, SuiConfig)> {
+pub fn resolve(dir: &Path) -> Option<(PathBuf, SailConfig)> {
     let mut cur = Some(dir);
     while let Some(d) = cur {
         let candidate = d.join(CONFIG_FILE);
         match std::fs::read_to_string(&candidate) {
-            Ok(text) => return Some((candidate, SuiConfig::from_json(&text))),
+            Ok(text) => return Some((candidate, SailConfig::from_json(&text))),
             Err(_) => cur = d.parent(),
         }
     }

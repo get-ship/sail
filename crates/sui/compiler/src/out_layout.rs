@@ -2,7 +2,7 @@
 //!
 //! Build artifacts (`.compiled.js`, `.custom-elements.json`, `.schema.json`,
 //! `.sui.meta.json`, `.ssr.html`) land under the mirror tree at
-//! `<repo-root>/.sui-out/<source-rel>/` (the neutral default — or `SUI_OUT_DIR`
+//! `<repo-root>/.sail-out/<source-rel>/` (the neutral default — or `SAIL_OUT_DIR`
 //! / the `--out` dir). The
 //! `.sui.d.ts` type companion is the EXCEPTION: it is written ADJACENT to its
 //! `.sui` source (see `compile_one` in the bin), so a controller's
@@ -24,18 +24,18 @@ const WORKSPACE_MARKER: &str = "[workspace]";
 /// framework-neutral and must NOT bake a `.ship/` (Ship) path: `.ship/sui-out`
 /// is the Ship dynamic-views location, it is MOVING, and the host owns it. So
 /// the default is a neutral, sui-owned scratch dir; a host (deck/shipd — "however
-/// Ship compiles deck") points it at the real location via `SUI_OUT_DIR`.
-const DEFAULT_SUI_OUT_DIR: &str = ".sui-out";
+/// Ship compiles deck") points it at the real location via `SAIL_OUT_DIR`.
+const DEFAULT_SAIL_OUT_DIR: &str = ".sail-out";
 
-/// The mirror sub-directory in effect: `SUI_OUT_DIR` env override, else the
+/// The mirror sub-directory in effect: `SAIL_OUT_DIR` env override, else the
 /// neutral default. Relative to the repo root. `pub` so consumers (deck's
 /// catalog) resolve the SAME location the compiler writes to — never a second
 /// hardcoded copy that can drift.
 pub fn sui_out_dir() -> String {
-    std::env::var("SUI_OUT_DIR")
+    std::env::var("SAIL_OUT_DIR")
         .ok()
         .filter(|s| !s.trim().is_empty())
-        .unwrap_or_else(|| DEFAULT_SUI_OUT_DIR.to_string())
+        .unwrap_or_else(|| DEFAULT_SAIL_OUT_DIR.to_string())
 }
 
 /// Walk upward from `start` looking for a workspace `Cargo.toml`.
@@ -66,8 +66,8 @@ pub fn find_repo_root(start: &Path) -> Option<PathBuf> {
 
 /// Resolve the canonical mirror directory for a given `.sui` source path.
 ///
-/// Layout: `<repo-root>/<SUI_OUT_DIR>/<source-dir-relative-to-repo-root>/`,
-/// where `<SUI_OUT_DIR>` defaults to `.sui-out` and is host-configurable.
+/// Layout: `<repo-root>/<SAIL_OUT_DIR>/<source-dir-relative-to-repo-root>/`,
+/// where `<SAIL_OUT_DIR>` defaults to `.sail-out` and is host-configurable.
 ///
 /// Returns `None` when no repo root can be located OR the source path is
 /// outside the repo (e.g. a tempdir test fixture). Callers fall back to a
@@ -121,6 +121,6 @@ mod tests {
         let sui = src_dir.join("bar.sui");
         std::fs::write(&sui, "x").unwrap();
         let out = mirror_dir_for(&sui).unwrap();
-        assert_eq!(out, tmp.path().join(".sui-out/packages/foo/src"));
+        assert_eq!(out, tmp.path().join(".sail-out/packages/foo/src"));
     }
 }

@@ -71,7 +71,7 @@ pub fn write_pack_cem(pack_root: &Path) -> Result<Option<PathBuf>> {
             }),
             emit_dts: false,
             emit_component_imports: false,
-            // Language policy comes from the component's own sui.config.json
+            // Language policy comes from the component's own sail.config.json
             // walk-up — deck never sets or relaxes it.
             lint_overrides: sail_compiler::Policy::overrides_for(sui_file),
         };

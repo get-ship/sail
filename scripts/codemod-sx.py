@@ -199,7 +199,7 @@ def main():
     changed, all_problems = 0, Counter()
     files_with_problems = {}
     for root, dirs, files in os.walk("."):
-        dirs[:] = [d for d in dirs if d not in ("node_modules", "target", ".git", ".sui-out", "dist")]
+        dirs[:] = [d for d in dirs if d not in ("node_modules", "target", ".git", ".sail-out", "dist")]
         for fn in files:
             if not fn.endswith(".sui"):
                 continue

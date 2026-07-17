@@ -73,9 +73,9 @@ Requires:
   synced `frameworks/keyed/sui` dir (esbuild).
 - Playwright Chromium installed at the path in `scripts/dev/bench-lib.mjs`
   (override with `CHROME_BINARY=...`).
-- A sui checkout the vendored `precompile.mjs` can find — it resolves `SUI_REPO`
-  (env), then `SUI_COMPILER`/`SUI_RUNTIME` (env), then probes `~/dev/sui` and
-  `~/dev/Ship/sui`. Set `SUI_REPO` if the checkout lives elsewhere. Build the
+- A sui checkout the vendored `precompile.mjs` can find — it resolves `SAIL_REPO`
+  (env), then `SAIL_COMPILER`/`SAIL_RUNTIME` (env), then probes `~/dev/sui` and
+  `~/dev/Ship/sui`. Set `SAIL_REPO` if the checkout lives elsewhere. Build the
   compiler first: `cargo build -p sui-compiler` under that checkout.
 
 ## Checking against the baseline

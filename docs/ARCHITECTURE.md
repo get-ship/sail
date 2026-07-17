@@ -294,7 +294,7 @@ Ownership stays where it already lives — no new grammar:
   are neither a prop nor a signal of the component that reads them.
 
 **Resolution law for `(--x)` in sx**: global token vars (including the
-action-owned runtime-geometry names, `sui_lint::tokens::CONVENTION_TOKENS`)
+action-owned runtime-geometry names, `sail_lint::tokens::CONVENTION_TOKENS`)
 → declared props → setup-returned signals → refusal, with a did-you-mean
 (`check::sx_vars`). A name never read via `(--x)` gets no CSS wiring at
 all — the compiler only wires names actually referenced.

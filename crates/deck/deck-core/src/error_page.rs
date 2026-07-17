@@ -17,8 +17,8 @@ use crate::response::CachePolicy;
 use crate::{DaemonMode, DeckResponse};
 
 const NOT_FOUND_SHELL: &str = include_str!("../assets/view-not-found.html");
-const NAME_PLACEHOLDER: &str = "<!-- SUI_NF_NAME -->";
-const ROUTES_PLACEHOLDER: &str = "<!-- SUI_NF_ROUTES -->";
+const NAME_PLACEHOLDER: &str = "<!-- SAIL_NF_NAME -->";
+const ROUTES_PLACEHOLDER: &str = "<!-- SAIL_NF_ROUTES -->";
 
 /// Render the `404 view-not-found` HTML page for `name`.
 ///

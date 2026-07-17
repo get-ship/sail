@@ -4,7 +4,7 @@
 // worker ship (`packages/sui/compiler-wasm/pkg`, built by `just sui-wasm`)
 // over a list of fixtures, and prints each fixture's emitted `.js` so the Rust
 // gate (`tests/bundle_parity.rs`) can byte-diff it against the native
-// `sui_compiler::compile` output. This is the #160 native-vs-wasm divergence
+// `sail_compiler::compile` output. This is the #160 native-vs-wasm divergence
 // check: one Rust grammar, two compile targets (x86_64 native + wasm32), one
 // expected emit.
 //

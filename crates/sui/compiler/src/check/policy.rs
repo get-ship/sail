@@ -31,7 +31,7 @@
 //!   drive them with props, use the layout keywords — no styling escape at all.
 //!   Tests whether the primitive vocabulary is rich enough to need zero surface.
 //!
-//! A `sui.config.json` may name a preset (`{ "preset": "strict" }`) and/or set
+//! A `sail.config.json` may name a preset (`{ "preset": "strict" }`) and/or set
 //! individual keys (`{ "preset": "full", "raw_containers": false }`) — keys
 //! override the preset; the floor is never a key. An un-configured package
 //! resolves to `None` (opt-in): the policy applies only where a package has
@@ -54,7 +54,7 @@ use std::sync::{Mutex, OnceLock};
 use super::lint_overrides::{LintOverride, OverrideSeverity};
 
 /// The floor rule IDs — the styling constructs banned in EVERY `.sui` compiled
-/// as a component or view, with or without a `sui.config.json`. This is the
+/// as a component or view, with or without a `sail.config.json`. This is the
 /// single source of truth: [`is_floor_rule`], [`Policy::floor`], and the
 /// compiler's unconditional `enforce_floor` pass
 /// (`check::lint_overrides::enforce_floor`) all read this one list, so a floor
@@ -106,7 +106,7 @@ impl Policy {
     ///
     /// Authored `<style>`, inline `style=`, `class`, and undeclared companion
     /// stylesheets are an error in every SUI file, with or without a
-    /// `sui.config.json`. This is not a policy tier and not opt-in: it is a
+    /// `sail.config.json`. This is not a policy tier and not opt-in: it is a
     /// property of the language. The ONLY exception is the L1 element sources
     /// inside this compiler, which do not take this path — they compile through
     /// `compile_element`, because they ARE the styling layer.
@@ -173,7 +173,7 @@ impl Policy {
     }
 
     /// Resolve the CAPABILITY policy for a source file from the nearest
-    /// `sui.config.json`, or `None` when no config is found on the walk up. This
+    /// `sail.config.json`, or `None` when no config is found on the walk up. This
     /// is the **opt-in** entry the deck bundler and CLI use: capability keys
     /// apply only to packages that declared a config, so they roll out
     /// per-package. The floor is orthogonal — enforced unconditionally by the
@@ -190,7 +190,7 @@ impl Policy {
     }
 
     /// Resolve the full [`PolicyResolution`] (tier + WHY) for a source file,
-    /// alongside the `sui.config.json` path it came from. `None` when no
+    /// alongside the `sail.config.json` path it came from. `None` when no
     /// config exists anywhere on the walk up — the opt-in case, unchanged from
     /// [`Policy::resolve_opt`]. This is the entry [`overrides_for`] uses to
     /// build its announce/refuse message; tests use it directly to pin the
@@ -201,10 +201,10 @@ impl Policy {
     }
 
     /// The resolved `"network"` per-origin allowlist for a source file's
-    /// nearest `sui.config.json` — the fetch/WebSocket/EventSource capability
+    /// nearest `sail.config.json` — the fetch/WebSocket/EventSource capability
     /// grant that drives the network-aware lint pass
     /// (`sail_lint::rules::controller_no_ambient_authority::check_confined`).
-    /// This is NOT a second `sui.config.json` reader: it re-derives from
+    /// This is NOT a second `sail.config.json` reader: it re-derives from
     /// [`Policy::resolve_outcome`], the same walk-up/parse `overrides_for`
     /// uses. Empty when no config exists, the config fails closed
     /// (`Rejected`), or the config simply never declares `"network"` —
@@ -251,9 +251,9 @@ pub enum ResolutionKind {
     Rejected(String),
 }
 
-/// Derive the full tier + reason from a resolved `sui.config.json`. The read +
+/// Derive the full tier + reason from a resolved `sail.config.json`. The read +
 /// parse is owned by `sail_lint::config`; this only classifies the parsed value.
-fn classify(cfg: &sail_lint::config::SuiConfig) -> PolicyResolution {
+fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
     if !cfg.parse_ok() {
         return PolicyResolution {
             tier: Policy::STRICT,
@@ -353,7 +353,7 @@ fn classify(cfg: &sail_lint::config::SuiConfig) -> PolicyResolution {
 }
 
 /// THE LOG SEAM. One line to stderr per `(config file, resulting tier)`, the
-/// first time [`Policy::overrides_for`] resolves a given `sui.config.json` in
+/// first time [`Policy::overrides_for`] resolves a given `sail.config.json` in
 /// this process — dedup so a many-file package doesn't repeat itself once per
 /// compiled `.sui`, while still guaranteeing at least one line per package per
 /// build/dev-server run. Every wording names the file, the tier, and WHY:
@@ -422,11 +422,11 @@ mod tests {
     /// resolves SOME tier (fail-closed to STRICT for the unknown/no-signal
     /// cases); [`ResolutionKind`] is what carries "why", tested separately.
     fn tier(json: &str) -> Policy {
-        classify(&sail_lint::config::SuiConfig::from_json(json)).tier
+        classify(&sail_lint::config::SailConfig::from_json(json)).tier
     }
 
     fn kind(json: &str) -> ResolutionKind {
-        classify(&sail_lint::config::SuiConfig::from_json(json)).kind
+        classify(&sail_lint::config::SailConfig::from_json(json)).kind
     }
 
     #[test]
@@ -526,15 +526,15 @@ mod tests {
     }
 
     // ----------------------------------------------------------------------
-    // Config resolution FAILS CLOSED — a broken/typo'd `sui.config.json`
+    // Config resolution FAILS CLOSED — a broken/typo'd `sail.config.json`
     // resolves to STRICT (capabilities off), never FULL (audit finding #4).
     // ----------------------------------------------------------------------
 
-    /// Write a `sui.config.json` in a tempdir and resolve the policy for a
+    /// Write a `sail.config.json` in a tempdir and resolve the policy for a
     /// source under it — the real on-disk resolution path `overrides_for` uses.
     fn resolve_config(body: &str) -> Option<Policy> {
         let tmp = tempfile::tempdir().unwrap();
-        std::fs::write(tmp.path().join("sui.config.json"), body).unwrap();
+        std::fs::write(tmp.path().join("sail.config.json"), body).unwrap();
         let src = tmp.path().join("src").join("w.sui");
         std::fs::create_dir_all(src.parent().unwrap()).unwrap();
         std::fs::write(&src, "<p>{x}</p>").unwrap();
@@ -566,7 +566,7 @@ mod tests {
 
     #[test]
     fn no_config_resolves_to_none() {
-        // No `sui.config.json` anywhere on the walk → None (opt-in; the floor
+        // No `sail.config.json` anywhere on the walk → None (opt-in; the floor
         // still holds structurally, but no capability tier is imposed).
         let tmp = tempfile::tempdir().unwrap();
         let src = tmp.path().join("w.sui");
@@ -604,22 +604,22 @@ mod tests {
 
     #[test]
     fn rejected_message_refuses_loudly_and_names_file_and_key() {
-        let cfg = sail_lint::config::SuiConfig::from_json(r#"{"polcy":"strict"}"#);
+        let cfg = sail_lint::config::SailConfig::from_json(r#"{"polcy":"strict"}"#);
         let resolution = classify(&cfg);
-        let msg = render_announcement(Path::new("/pkg/sui.config.json"), &resolution);
+        let msg = render_announcement(Path::new("/pkg/sail.config.json"), &resolution);
         assert!(msg.contains("REFUSED"), "{msg}");
-        assert!(msg.contains("/pkg/sui.config.json"), "{msg}");
+        assert!(msg.contains("/pkg/sail.config.json"), "{msg}");
         assert!(msg.contains("polcy"), "{msg}");
         assert!(msg.contains("strict"), "{msg}");
     }
 
     #[test]
     fn no_signal_message_announces_and_names_file_and_signal() {
-        let cfg = sail_lint::config::SuiConfig::from_json(r#"{"stylesheets": []}"#);
+        let cfg = sail_lint::config::SailConfig::from_json(r#"{"stylesheets": []}"#);
         let resolution = classify(&cfg);
-        let msg = render_announcement(Path::new("/pkg/sui.config.json"), &resolution);
+        let msg = render_announcement(Path::new("/pkg/sail.config.json"), &resolution);
         assert!(!msg.contains("REFUSED"), "{msg}");
-        assert!(msg.contains("/pkg/sui.config.json"), "{msg}");
+        assert!(msg.contains("/pkg/sail.config.json"), "{msg}");
         assert!(msg.contains("strict"), "{msg}");
         assert!(msg.contains("stylesheets"), "{msg}");
     }
@@ -632,13 +632,13 @@ mod tests {
 
     #[test]
     fn absent_network_key_resolves_to_an_empty_allowlist() {
-        let r = classify(&sail_lint::config::SuiConfig::from_json(r#"{"preset":"full"}"#));
+        let r = classify(&sail_lint::config::SailConfig::from_json(r#"{"preset":"full"}"#));
         assert!(r.network.is_empty());
     }
 
     #[test]
     fn declared_network_key_resolves_its_origins_and_is_recognized() {
-        let r = classify(&sail_lint::config::SuiConfig::from_json(
+        let r = classify(&sail_lint::config::SailConfig::from_json(
             r#"{"network":["https://api.example.com","self"]}"#,
         ));
         assert_eq!(r.network, vec!["https://api.example.com".to_string(), "self".to_string()]);
@@ -649,7 +649,7 @@ mod tests {
     fn empty_network_array_is_a_well_typed_no_grant_declaration() {
         // Explicit `[]` is not a type error — it's a declared "grant nothing",
         // same bucket as `"sx": false`: Recognized, not Rejected.
-        let r = classify(&sail_lint::config::SuiConfig::from_json(r#"{"network":[]}"#));
+        let r = classify(&sail_lint::config::SailConfig::from_json(r#"{"network":[]}"#));
         assert!(r.network.is_empty());
         assert!(matches!(&r.kind, ResolutionKind::Recognized(_)), "{:?}", r.kind);
     }
@@ -658,7 +658,7 @@ mod tests {
     fn non_array_network_value_is_a_type_error_and_fails_closed() {
         // `{"network": "https://x.com"}` — a string, not an array — must never
         // be silently treated as granting. Rejected, empty allowlist.
-        let r = classify(&sail_lint::config::SuiConfig::from_json(r#"{"network":"https://x.com"}"#));
+        let r = classify(&sail_lint::config::SailConfig::from_json(r#"{"network":"https://x.com"}"#));
         assert!(r.network.is_empty());
         assert!(
             matches!(&r.kind, ResolutionKind::Rejected(reason) if reason.contains("network")),
@@ -669,7 +669,7 @@ mod tests {
 
     #[test]
     fn non_string_element_in_network_array_is_a_type_error() {
-        let r = classify(&sail_lint::config::SuiConfig::from_json(r#"{"network":[1, 2]}"#));
+        let r = classify(&sail_lint::config::SailConfig::from_json(r#"{"network":[1, 2]}"#));
         assert!(r.network.is_empty());
         assert!(matches!(&r.kind, ResolutionKind::Rejected(_)), "{:?}", r.kind);
     }
@@ -678,7 +678,7 @@ mod tests {
     fn network_for_resolves_on_disk_and_defaults_to_empty() {
         let tmp = tempfile::tempdir().unwrap();
         std::fs::write(
-            tmp.path().join("sui.config.json"),
+            tmp.path().join("sail.config.json"),
             r#"{"network":["https://api.example.com"]}"#,
         )
         .unwrap();
@@ -699,34 +699,34 @@ mod tests {
         // THE loud seam: granting network must name the origins, not just
         // say "granted: true" — same shape as the existing preset/capability
         // announcements.
-        let cfg = sail_lint::config::SuiConfig::from_json(
+        let cfg = sail_lint::config::SailConfig::from_json(
             r#"{"network":["https://api.example.com","self"]}"#,
         );
         let resolution = classify(&cfg);
-        let msg = render_announcement(Path::new("/pkg/sui.config.json"), &resolution);
+        let msg = render_announcement(Path::new("/pkg/sail.config.json"), &resolution);
         assert!(!msg.contains("REFUSED"), "{msg}");
-        assert!(msg.contains("/pkg/sui.config.json"), "{msg}");
+        assert!(msg.contains("/pkg/sail.config.json"), "{msg}");
         assert!(msg.contains("https://api.example.com"), "{msg}");
         assert!(msg.contains("self"), "{msg}");
     }
 
     #[test]
     fn non_array_network_announcement_refuses_loudly_and_names_the_key() {
-        let cfg = sail_lint::config::SuiConfig::from_json(r#"{"network":"https://x.com"}"#);
+        let cfg = sail_lint::config::SailConfig::from_json(r#"{"network":"https://x.com"}"#);
         let resolution = classify(&cfg);
-        let msg = render_announcement(Path::new("/pkg/sui.config.json"), &resolution);
+        let msg = render_announcement(Path::new("/pkg/sail.config.json"), &resolution);
         assert!(msg.contains("REFUSED"), "{msg}");
         assert!(msg.contains("network"), "{msg}");
     }
 
     #[test]
     fn recognized_message_names_file_tier_and_signal_with_no_extra_noise() {
-        let cfg = sail_lint::config::SuiConfig::from_json(r#"{"preset":"full"}"#);
+        let cfg = sail_lint::config::SailConfig::from_json(r#"{"preset":"full"}"#);
         let resolution = classify(&cfg);
-        let msg = render_announcement(Path::new("/pkg/sui.config.json"), &resolution);
+        let msg = render_announcement(Path::new("/pkg/sail.config.json"), &resolution);
         assert!(!msg.contains("REFUSED"), "{msg}");
         assert_eq!(msg.lines().count(), 1, "exactly one line: {msg}");
-        assert!(msg.contains("/pkg/sui.config.json"), "{msg}");
+        assert!(msg.contains("/pkg/sail.config.json"), "{msg}");
         assert!(msg.contains("full"), "{msg}");
         assert!(msg.contains("preset: full"), "{msg}");
     }

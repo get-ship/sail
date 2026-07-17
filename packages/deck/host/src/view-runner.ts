@@ -43,7 +43,7 @@ export interface ViewEndowmentInput {
   /** Defaults to the realm's `document`; the view sees only its node factories. */
   doc?: Document
   /**
-   * The package's resolved `sui.config.json` `"network"` per-origin
+   * The package's resolved `sail.config.json` `"network"` per-origin
    * allowlist — the SAME declaration the `sui-controller-no-ambient-
    * authority` lint checks fetch/WebSocket/EventSource targets against
    * (`crates/sui/compiler/src/check/policy.rs`'s `Policy::network_for`).
@@ -56,7 +56,7 @@ export interface ViewEndowmentInput {
    *
    * NOT YET WIRED to a live per-view resolved config: nothing in this repo
    * currently calls `buildViewEndowments` from a real view-serving path with
-   * a resolved `sui.config.json` in hand (only tests construct
+   * a resolved `sail.config.json` in hand (only tests construct
    * `ViewEndowmentInput` today) — the host call site that would resolve a
    * view's package config and pass its `"network"` list here is a follow-up.
    * This field + `createConfinedFetch` are the correctly-shaped pieces.

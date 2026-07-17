@@ -1,7 +1,7 @@
 //! Component catalog aggregation.
 //!
 //! Walk per-component CEMs from published packages (each package's
-//! `customElements` manifest) AND from `.sui-out/**/*.custom-elements.json`
+//! `customElements` manifest) AND from `.sail-out/**/*.custom-elements.json`
 //! (non-packaged: shell-local, view-local), merge into the canonical workspace
 //! catalog document. Filesystem-only, deterministic (sort by tagName).
 //! Pass-through CEM arrays are kept as raw JSON so component metadata isn't
@@ -312,7 +312,7 @@ fn entries_from_sui_out(
         // Owning pack with a resolvable aggregated manifest → served from there;
         // skip. When the manifest path is declared in `package.json` but the
         // file is absent (the pack hasn't been built), fall through to the
-        // `.sui-out/` path — that's what we just compiled.
+        // `.sail-out/` path — that's what we just compiled.
         if let Some((_, p)) = owning {
             if let Some(ce) = &p.custom_elements {
                 if p.root.join(ce).exists() {
@@ -375,7 +375,7 @@ fn find_owning_package<'a>(
 }
 
 /// Repo-relative source `.sui` path for a per-component CEM under
-/// `.sui-out/<mirror>/<stem>.custom-elements.json`.
+/// `.sail-out/<mirror>/<stem>.custom-elements.json`.
 fn source_path_for_cem(repo_root: &Path, cem_abs: &Path) -> String {
     let repo_rel = rel_unix(repo_root, cem_abs);
     let mirrored = repo_rel
@@ -449,7 +449,7 @@ mod tests {
         write(&root.join("packages/charts/dist/custom-elements.json"), &cem("sui-bar"));
         // A shell-local component in the sui-out mirror.
         write(
-            &root.join(".sui-out/apps/shell/src/sui-x/sui-x.custom-elements.json"),
+            &root.join(".sail-out/apps/shell/src/sui-x/sui-x.custom-elements.json"),
             &cem("sui-x"),
         );
 
@@ -478,7 +478,7 @@ mod tests {
         let root = tmp.path();
         write(&root.join("package.json"), r#"{"workspaces":[]}"#);
         write(
-            &root.join(".sui-out/apps/shell/src/sui-x/sui-x.custom-elements.json"),
+            &root.join(".sail-out/apps/shell/src/sui-x/sui-x.custom-elements.json"),
             &cem("sui-x"),
         );
         let workspace = build_catalog(root).unwrap();

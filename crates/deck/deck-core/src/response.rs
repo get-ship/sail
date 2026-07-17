@@ -71,7 +71,7 @@ const CSP_SUFFIX: &str = "frame-ancestors 'self'";
 /// per-origin allowlist — the SAME list the `sui-controller-no-ambient-
 /// authority` lint checks fetch/WebSocket/EventSource targets against
 /// (`sail_compiler::check::policy::Policy::network_for`). Empty list (the
-/// default: no `sui.config.json`, or one that never declares `"network"`)
+/// default: no `sail.config.json`, or one that never declares `"network"`)
 /// yields `connect-src 'self'` — byte-identical to [`HTML_SECURITY_HEADERS`]'s
 /// hardcoded clause, so this is a strict generalization, not a behavior
 /// change for anyone who doesn't opt in. `"self"` in the list contributes the

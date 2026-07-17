@@ -1,6 +1,6 @@
 // Browser-safe diagnostics — backed by the Rust grammar via WASM.
 //
-// Calls `@ship/sui-compiler-wasm`'s `analyze` (the same `sui_compiler::analyze`
+// Calls `@ship/sui-compiler-wasm`'s `analyze` (the same `sail_compiler::analyze`
 // the native LSP + agent tooling use), so the docs playground reports the SAME
 // diagnostics as `cargo build` / `sui-lsp` — one grammar, no TypeScript parser
 // fork. The compiler resolves positions (1-based line/col) already.

@@ -10,7 +10,7 @@
 // stay insulated from it. Run before `typecheck` (wired as each pack's
 // `pretypecheck`).
 //
-// Compiler: SUI_COMPILER env, else the repo's debug build.
+// Compiler: SAIL_COMPILER env, else the repo's debug build.
 
 import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, statSync } from 'node:fs'
@@ -18,10 +18,10 @@ import { dirname, resolve, basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const COMPILER = process.env.SUI_COMPILER
+const COMPILER = process.env.SAIL_COMPILER
   ?? resolve(REPO_ROOT, 'target/debug/sui-compiler')
 if (!existsSync(COMPILER)) {
-  console.error(`sui-compiler not found at ${COMPILER}. Build it (cargo build -p sui-compiler) or set SUI_COMPILER.`)
+  console.error(`sui-compiler not found at ${COMPILER}. Build it (cargo build -p sui-compiler) or set SAIL_COMPILER.`)
   process.exit(1)
 }
 

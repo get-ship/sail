@@ -116,7 +116,7 @@ fn compile_to_result(source: &str, opts_json: &str) -> Result<NapiResult, String
         name: name.clone(),
             });
 
-    // Language policy comes from the source's own sui.config.json walk-up —
+    // Language policy comes from the source's own sail.config.json walk-up —
     // this seam enforces exactly what deck and the CLI enforce.
     let lint_overrides = parsed
         .source_path

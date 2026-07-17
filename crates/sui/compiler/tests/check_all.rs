@@ -71,7 +71,7 @@ fn diagnostics_are_sorted_by_position() {
 // The stylesheet permit — `sui-no-undeclared-stylesheet`.
 //
 // These tests use the **real dispatch path** the compiler uses: a tempdir
-// laid out like `packages/components/sui/<pack>/` (a `sui.config.json` at
+// laid out like `packages/components/sui/<pack>/` (a `sail.config.json` at
 // the pack root, a `.sui` source under `src/`, an undeclared `.css` next
 // to it), then `check_all()` with the overrides the CLI applies. That is
 // the same call shape the daemon and CLI take — `compile()` invokes
@@ -87,7 +87,7 @@ fn diagnostics_are_sorted_by_position() {
 // file, watch the assertion fail; restore it.
 // ----------------------------------------------------------------------------
 
-/// Write a synthetic pack into a tempdir: `<pack>/sui.config.json`,
+/// Write a synthetic pack into a tempdir: `<pack>/sail.config.json`,
 /// `<pack>/src/widget.sui`, plus the css files named in `css_files` as
 /// `<pack>/src/<rel>` (e.g. `"x.css"`, `"widget/widget.css"`). The `.sui`
 /// source is a renderable component (`<p>{name}</p>`) so the structural
@@ -95,7 +95,7 @@ fn diagnostics_are_sorted_by_position() {
 /// the stylesheet-permit one.
 fn write_pack(css_files: &[(&str, &str)], config: &str) -> (tempfile::TempDir, std::path::PathBuf) {
     let tmp = tempfile::tempdir().expect("tmpdir");
-    std::fs::write(tmp.path().join("sui.config.json"), config).unwrap();
+    std::fs::write(tmp.path().join("sail.config.json"), config).unwrap();
     let src_dir = tmp.path().join("src");
     std::fs::create_dir_all(&src_dir).unwrap();
     let sui_path = src_dir.join("widget.sui");
@@ -200,7 +200,7 @@ fn empty_stylesheet_array_still_permits_zero() {
 #[test]
 fn no_class_fails_real_compile_path() {
     // The disease: a `class=` in a pack source that lives under a
-    // `sui.config.json` used to be silently allowed because the rule
+    // `sail.config.json` used to be silently allowed because the rule
     // walked the parent chain looking for ANY config. With the opt-in
     // removed, `class=` refuses everywhere — packs, routes, apps.
     //

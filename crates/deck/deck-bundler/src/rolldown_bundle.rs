@@ -457,7 +457,7 @@ fn side_effects_reason(module_path: &Path) -> String {
 
 
 const MODULE_PRUNE: &[&str] =
-    &["node_modules", ".git", "target", "dist", deck_config::DECK_OUT_DIRNAME, ".sui-out", "sui-out"];
+    &["node_modules", ".git", "target", "dist", deck_config::DECK_OUT_DIRNAME, ".sail-out", "sui-out"];
 
 fn extract_module_paths(output: &rolldown::BundleOutput) -> Vec<PathBuf> {
     use rolldown_common::Output;

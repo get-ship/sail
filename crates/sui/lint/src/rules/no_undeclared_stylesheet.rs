@@ -1,5 +1,5 @@
 //! `sui-no-undeclared-stylesheet` — every `.css` file a pack ships is
-//! declared in `sui.config.json`.
+//! declared in `sail.config.json`.
 //!
 //! Why this matters: a `.css` file under a pack's `src/` is invisible to the
 //! compiler — the framework sheet is keyed on `:host`, and orphan CSS
@@ -7,11 +7,11 @@
 //! either re-define rules the compiler is already emitting (silent
 //! duplication), or they smuggle in styles that authors cannot lint
 //! (the css-token rule never sees them). Either way, the seam is the
-//! `sui.config.json` declaration: every `.css` the pack owns is named
+//! `sail.config.json` declaration: every `.css` the pack owns is named
 //! there, and the lint refuses anything else.
 //!
 //! Detection: walks a pack's `src/` directory, finds every `*.css` file,
-//! reads the nearest `sui.config.json` walking up, and reports any file
+//! reads the nearest `sail.config.json` walking up, and reports any file
 //! not present in the config's `stylesheets` array. Tests pin both
 //! legs of the contract — declared files pass, undeclared ones fail.
 //!
@@ -44,7 +44,7 @@ fn collect_css_files(src_dir: &Path) -> Vec<PathBuf> {
         } else if ft.is_dir() {
             if matches!(
                 p.file_name().and_then(|n| n.to_str()),
-                Some("node_modules" | "dist" | "target" | ".git" | ".deck" | ".sui-out")
+                Some("node_modules" | "dist" | "target" | ".git" | ".deck" | ".sail-out")
             ) {
                 continue;
             }
@@ -79,7 +79,7 @@ pub fn check(path: &Path, _source: &str) -> Vec<Finding> {
     // is_dir() guard meant this rule COULD NOT FIRE. It was written, registered,
     // and dead: a stylesheet could be declared in the config and enforced by
     // nothing. Walk up to the package that owns this source (the nearest
-    // `sui.config.json`) and lint THAT.
+    // `sail.config.json`) and lint THAT.
     match path.parent().and_then(crate::config::owning_dir) {
         Some(dir) => check_dir(&dir),
         None => Vec::new(),
@@ -92,7 +92,7 @@ fn check_dir(src_dir: &Path) -> Vec<Finding> {
         return Vec::new();
     }
     let Some(declared) = crate::config::resolve(src_dir).map(|(_, c)| c.declared_stylesheets()) else {
-        // No sui.config.json anywhere — every css file is undeclared.
+        // No sail.config.json anywhere — every css file is undeclared.
         return css_files
             .into_iter()
             .map(|p| Finding {
@@ -102,16 +102,16 @@ fn check_dir(src_dir: &Path) -> Vec<Finding> {
                 rule: RULE_ID,
                 severity: Severity::Error,
                 message:
-                    "no `sui.config.json` enumerates this `.css` file — every stylesheet a pack ships must be declared".to_string(),
+                    "no `sail.config.json` enumerates this `.css` file — every stylesheet a pack ships must be declared".to_string(),
                 suggest: Some(
-                    "add `sui.config.json` with `{ \"stylesheets\": [\"name.css\"] }` next to src/, OR move the CSS into the component's `<style>` block so the compiler knows about it".to_string()
+                    "add `sail.config.json` with `{ \"stylesheets\": [\"name.css\"] }` next to src/, OR move the CSS into the component's `<style>` block so the compiler knows about it".to_string()
                 ),
             })
             .collect();
     };
     let mut findings = Vec::new();
     for css in css_files {
-        // PACK-RELATIVE rel — `sui.config.json` and its `stylesheets[]` both
+        // PACK-RELATIVE rel — `sail.config.json` and its `stylesheets[]` both
         // live at the package root (the directory we walked up to). A CSS
         // file at `<pack>/src/sui-board/sui-board.css` must strip against
         // `<pack>`, not `<pack>/..`, so the rel is `src/sui-board/sui-board.css`
@@ -141,11 +141,11 @@ fn check_dir(src_dir: &Path) -> Vec<Finding> {
                 rule: RULE_ID,
                 severity: Severity::Error,
                 message: format!(
-                    "`.css` file `{}` is not declared in `sui.config.json`",
+                    "`.css` file `{}` is not declared in `sail.config.json`",
                     rel
                 ),
                 suggest: Some(
-                    "either add it to the `stylesheets` array in sui.config.json, \
+                    "either add it to the `stylesheets` array in sail.config.json, \
                      or inline it into the component's <style> block (the compiler \
                      then knows about it and the css-token rule applies)"
                         .to_string(),
@@ -178,13 +178,13 @@ mod tests {
             std::fs::write(&p, body).unwrap();
         }
         if let Some(c) = config {
-            std::fs::write(tmp.path().join("sui.config.json"), c).unwrap();
+            std::fs::write(tmp.path().join("sail.config.json"), c).unwrap();
         }
         tmp
     }
 
     // The contract this module pins: rel is PACK-RELATIVE — strip_prefix on
-    // the package root (the directory holding `sui.config.json`), which is
+    // the package root (the directory holding `sail.config.json`), which is
     // how the wiring in `check()` hands `check_dir` its `src_dir`. The
     // earlier form stripped against `src_dir.parent()`; that produced
     // `<packs-root>/<pack>/src/...` rels the config never wrote, so any
@@ -226,7 +226,7 @@ mod tests {
         assert_eq!(
             findings.len(),
             1,
-            "no sui.config.json → every css is undeclared"
+            "no sail.config.json → every css is undeclared"
         );
     }
 

@@ -1,4 +1,4 @@
-//! inv-sui-one-policy-resolver: `sui.config.json` is read (walked-up + parsed
+//! inv-sui-one-policy-resolver: `sail.config.json` is read (walked-up + parsed
 //! from disk) in exactly ONE place across the toolchain. A second independent
 //! reader is the drift this test forbids — the effective config for a file must
 //! come from one resolver, not be re-derived per consumer.
@@ -30,14 +30,14 @@ fn walk_ok(p: &Path) -> bool {
     )
 }
 
-/// A file is a `sui.config.json` READER if it reads a file from disk AND names
-/// the config file as a path it constructs — either the `"sui.config.json"`
+/// A file is a `sail.config.json` READER if it reads a file from disk AND names
+/// the config file as a path it constructs — either the `"sail.config.json"`
 /// literal joined onto a dir, or via the `CONFIG_FILE` const. A prose mention
 /// in a comment (deck's `cem.rs` / `compile.rs`) does not construct a path, so
 /// it does not match.
 fn is_config_reader(text: &str) -> bool {
     let reads = text.contains("read_to_string") || text.contains("fs::read(");
-    let constructs = text.contains("join(\"sui.config.json\")")
+    let constructs = text.contains("join(\"sail.config.json\")")
         || text.contains("join(CONFIG_FILE)");
     reads && constructs
 }
@@ -52,7 +52,7 @@ fn sui_config_has_a_single_reader() {
         rs_files(&sui_root.join(sub), &mut files);
         for f in files {
             let text = fs::read_to_string(&f).unwrap_or_default();
-            // Test modules (fixtures write/read sui.config.json) are not readers.
+            // Test modules (fixtures write/read sail.config.json) are not readers.
             let real = text.split("#[cfg(test)]").next().unwrap_or(&text);
             if is_config_reader(real) {
                 readers.push(f.strip_prefix(sui_root).unwrap().to_path_buf());
@@ -62,7 +62,7 @@ fn sui_config_has_a_single_reader() {
     assert_eq!(
         readers.len(),
         1,
-        "sui.config.json must have exactly one reader (inv-sui-one-policy-resolver); found {}: {:#?}",
+        "sail.config.json must have exactly one reader (inv-sui-one-policy-resolver); found {}: {:#?}",
         readers.len(),
         readers
     );

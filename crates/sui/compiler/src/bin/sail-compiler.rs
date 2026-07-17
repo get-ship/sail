@@ -1,6 +1,6 @@
 //! `sail-compiler` CLI. Compiles a single `.sui` file or a directory of
 //! them, writing the emitted JS (and CEM/schema/meta/dts/ssr.html sidecars)
-//! into a project-level mirror tree at `<repo-root>/.sui-out/<source-
+//! into a project-level mirror tree at `<repo-root>/.sail-out/<source-
 //! relative-path>/`. Pass `--out <dir>` to override and emit every file to
 //! a single directory (legacy behaviour). Errors render with file path,
 //! line, and column.
@@ -33,12 +33,12 @@ use sail_compiler::{check_all, compile, CompileMode, ComponentMeta, CompileOpts,
 /// milliseconds with <100MB RSS. A directory of hundreds compiles in
 /// seconds. Hitting either cap is a bug to file, not a knob to tune.
 /// To override (e.g. unusually large project, deliberate stress run),
-/// set `SUI_COMPILER_NO_LIMITS=1`.
+/// set `SAIL_COMPILER_NO_LIMITS=1`.
 const MEM_CAP_BYTES: u64 = 2 * 1024 * 1024 * 1024; // 2 GB virtual memory
 const WALL_CAP_SECS: u64 = 60;
 
 fn install_resource_bounds() {
-    if std::env::var_os("SUI_COMPILER_NO_LIMITS").is_some() {
+    if std::env::var_os("SAIL_COMPILER_NO_LIMITS").is_some() {
         return;
     }
     // SAFETY: setrlimit with valid resource id and rlimit struct is sound.
@@ -70,7 +70,7 @@ enum Command {
         /// Path to a `.sui` file or a directory.
         input: PathBuf,
         /// Output directory. When omitted, each file's outputs land in the
-        /// project mirror tree at `<repo-root>/.sui-out/<source-rel>/`
+        /// project mirror tree at `<repo-root>/.sail-out/<source-rel>/`
         /// and the JS module is named `<stem>.compiled.js`. When supplied,
         /// every file is emitted into this single directory and the JS
         /// module is named `<stem>.js` (legacy behaviour).
@@ -100,7 +100,7 @@ enum Command {
     },
     /// Generate the agent-authoring SKILL.md for a working directory. The
     /// content derives from the SAME sources the compiler enforces — the
-    /// resolved styling policy (`sui.config.json` walk-up), the sx vocabulary
+    /// resolved styling policy (`sail.config.json` walk-up), the sx vocabulary
     /// tables the lint validates against, the layout keywords, and the motion
     /// preset catalog — so the skill can never drift from the compiler. A
     /// strict-policy directory gets a skill that never mentions sx; a
@@ -1202,7 +1202,7 @@ fn compile_one(
         sail_compiler::parse::preprocess::extract_controller_block(&orig_source).1;
     let mode = mode.map(|m| m.into()).unwrap_or(CompileMode::Auto);
     // Resolve the emit dir for this file. Without --out, outputs land in
-    // the project mirror tree at `<repo-root>/.sui-out/<src-rel>/`;
+    // the project mirror tree at `<repo-root>/.sail-out/<src-rel>/`;
     // with --out, all files share that directory (legacy single-dir mode).
     let mirror_mode = out_override.is_none();
     let out_dir: PathBuf = match out_override {
@@ -1228,14 +1228,14 @@ fn compile_one(
             format!("./{file}.controller.ts")
         }
     });
-    // Resolve the CAPABILITY policy from the nearest `sui.config.json` walking up
+    // Resolve the CAPABILITY policy from the nearest `sail.config.json` walking up
     // from this file. The FLOOR (no authored `<style>`/`style=`/`class`/undeclared
     // stylesheet) is NOT resolved here — the compiler enforces it unconditionally
     // for every `.sui` (`check::lint_overrides::enforce_floor`), so `overrides_for`
     // returns only the capability overrides declared above the floor. Capabilities
     // are opt-in per package: a package with no config declares none.
     //
-    // A package configures capabilities with `sui.config.json`. The key the parser
+    // A package configures capabilities with `sail.config.json`. The key the parser
     // reads is `"preset"`, values `full` | `strict` (`{"preset":"strict"}`), plus
     // optional per-key booleans `"sx"` / `"variants"` / `"raw_containers"` that
     // override the preset. `full` unlocks every capability (primitive authoring);

@@ -30,12 +30,12 @@ state, regenerated in the checkout.
 `precompile.mjs` needs the sui compiler + runtime. It resolves a single sui
 checkout root, in order:
 
-1. `SUI_REPO` env — explicit checkout root (the cutover-safe knob).
-2. `SUI_COMPILER` / `SUI_RUNTIME` envs — granular overrides.
+1. `SAIL_REPO` env — explicit checkout root (the cutover-safe knob).
+2. `SAIL_COMPILER` / `SAIL_RUNTIME` envs — granular overrides.
 3. Discovery — probes `~/dev/sui`, then `~/dev/Ship/sui`, for one that contains
    `packages/sui/runtime`.
 
-If the sui checkout moves, set `SUI_REPO=/new/path` (or rely on discovery if it
+If the sui checkout moves, set `SAIL_REPO=/new/path` (or rely on discovery if it
 lands in a probed location). No absolute paths are baked in.
 
 ## First run in a fresh checkout

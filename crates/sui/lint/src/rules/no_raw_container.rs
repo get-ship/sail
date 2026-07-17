@@ -17,7 +17,7 @@
 //! should not) own a primitive for every content element. Only the two generic
 //! "unstyled box" tags are closed.
 //!
-//! Skips HTML comments. A package sets `sui.config.json` `{ "preset": "strict" }`
+//! Skips HTML comments. A package sets `sail.config.json` `{ "preset": "strict" }`
 //! once its files compose primitives and no longer hand-roll raw boxes.
 
 use std::path::Path;

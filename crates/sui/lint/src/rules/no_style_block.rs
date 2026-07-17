@@ -10,7 +10,7 @@
 //! CLI) surfaces the hint without hard-failing an unrelated tool. The compiler,
 //! though, promotes it to a hard `Error` UNCONDITIONALLY: this is a floor rule
 //! (`check::policy::FLOOR_RULES`), and `check::lint_overrides::enforce_floor`
-//! runs on every compile independent of `sui.config.json` or `lint_overrides`.
+//! runs on every compile independent of `sail.config.json` or `lint_overrides`.
 //! Raw `<style>` is banned at the floor, primitives included; there is no
 //! capability key, preset, or host wiring under which it compiles.
 //!

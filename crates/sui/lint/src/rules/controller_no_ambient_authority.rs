@@ -62,7 +62,7 @@ fn is_confined_surface(path: &Path) -> bool {
 /// The `"network"`-config-blind entry — the generic `CONTROLLER_RULES` table
 /// (`rules::RuleFn`'s fixed `(path, source) -> Vec<Finding>` shape) calls this.
 /// Consumers reached through that table (the LSP, `sail_lint` CLI, agent
-/// tooling) don't have a resolved `sui.config.json` in hand, so this defaults
+/// tooling) don't have a resolved `sail.config.json` in hand, so this defaults
 /// to an empty allowlist — today's full refusal, unchanged. The compiler's
 /// `check::mod::collect` is config-aware and calls [`check_confined`] directly
 /// instead (splicing out this rule's table-driven findings first), the same
@@ -184,11 +184,11 @@ impl AmbientVisitor<'_> {
             severity: Severity::Error,
             message: format!(
                 "controllers must not use ambient authority (`{what}` to `{target}`) — \
-                 its origin is not in this package's `sui.config.json` \"network\" allowlist. \
+                 its origin is not in this package's `sail.config.json` \"network\" allowlist. \
                  All I/O goes through the `ship` SDK, or grant the origin explicitly."
             ),
             suggest: Some(
-                "add the origin to \"network\" in sui.config.json, or use a ship.<domain>.<op>() call"
+                "add the origin to \"network\" in sail.config.json, or use a ship.<domain>.<op>() call"
                     .to_string(),
             ),
         });

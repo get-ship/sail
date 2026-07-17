@@ -1,6 +1,6 @@
 //! config-loud-strict: silent capability stripping is a bug, not a feature.
 //!
-//! A `sui.config.json` that fails closed to `strict` — whether from a typo'd
+//! A `sail.config.json` that fails closed to `strict` — whether from a typo'd
 //! key, unparseable JSON, or a well-formed config that just doesn't happen to
 //! carry a capability signal (`{"stylesheets": []}` alone, the incident that
 //! bit the owner for weeks) — must never do so in silence. These tests pin
@@ -21,7 +21,7 @@ use sail_compiler::{compile, CompileMode, CompileOpts};
 
 fn write_pack(config: &str, sui_body: &str) -> (tempfile::TempDir, PathBuf) {
     let tmp = tempfile::tempdir().unwrap();
-    fs::write(tmp.path().join("sui.config.json"), config).unwrap();
+    fs::write(tmp.path().join("sail.config.json"), config).unwrap();
     let src_dir = tmp.path().join("src");
     fs::create_dir_all(&src_dir).unwrap();
     let sui = src_dir.join("w.sui");
@@ -56,7 +56,7 @@ fn unknown_key_fails_closed_and_the_refusal_names_file_key_and_tier() {
         panic!("expected Rejected, got {:?}", resolution.kind);
     };
     assert!(reason.contains("polcy"), "must name the offending key: {reason}");
-    assert!(config_path.ends_with("sui.config.json"), "must name the file: {config_path:?}");
+    assert!(config_path.ends_with("sail.config.json"), "must name the file: {config_path:?}");
 
     // A component that actually uses a stripped capability now fails the
     // build gate — sx is off under the fail-closed strict tier.
@@ -111,7 +111,7 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
         panic!("expected NoSignal (announced), got {:?}", resolution.kind);
     };
     assert!(hint.contains("stylesheets"), "must name which key produced no signal: {hint}");
-    assert!(config_path.ends_with("sui.config.json"));
+    assert!(config_path.ends_with("sail.config.json"));
 
     // The build-time reproduction of the original bug report: a package with
     // only `stylesheets` declared, and an sx-using component. The compile
@@ -123,7 +123,7 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
         .expect_err("sx must be refused — stylesheets-only config still fails closed to strict");
     assert_eq!(err.category.as_deref(), Some("sail-no-sx"));
     assert!(
-        err.message.contains("sui.config.json"),
+        err.message.contains("sail.config.json"),
         "the refusal must name the config file that could grant sx: {}",
         err.message
     );

@@ -70,7 +70,7 @@ export function confineController<T = unknown>(
 // ── network-capability fetch wrapper ────────────────────────────────────────
 //
 // The static lint (`sui-controller-no-ambient-authority`) checks a fetch
-// call's STRING-LITERAL target against a package's resolved `sui.config.json`
+// call's STRING-LITERAL target against a package's resolved `sail.config.json`
 // `"network"` allowlist at author time. A dynamic target (a variable, a
 // template with interpolation) can't be verified statically — this wrapper is
 // the ACTUAL runtime wall for that case, and the one enforcement point full
@@ -109,7 +109,7 @@ function requestTarget(input: RequestInfo | URL): string {
 /**
  * Build a confined `fetch` — a WRAPPER, never the bare global — that checks
  * each call's target origin against `network` (the package's resolved
- * `sui.config.json` `"network"` allowlist) and throws for anything outside
+ * `sail.config.json` `"network"` allowlist) and throws for anything outside
  * it, then delegates to `realFetch`. `network` empty/absent means no grant:
  * the caller should simply not endow `fetch` at all in that case (today's
  * default, unchanged) rather than call this with an empty list — an always-
@@ -126,7 +126,7 @@ export function createConfinedFetch(
     const target = requestTarget(input)
     if (!targetAllowed(target, network)) {
       throw new Error(
-        `confined fetch: "${target}" is not on this package's sui.config.json "network" allowlist`,
+        `confined fetch: "${target}" is not on this package's sail.config.json "network" allowlist`,
       )
     }
     return realFetch(input, init)

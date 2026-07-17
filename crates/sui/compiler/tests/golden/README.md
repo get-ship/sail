@@ -1,7 +1,7 @@
 # sui-compiler golden suite
 
 Each fixture in this directory locks the wire format of the
-`CompileOutput` struct returned by `sui_compiler::compile()`. The
+`CompileOutput` struct returned by `sail_compiler::compile()`. The
 suite ships independent of the future Bun-vs-Node parity check; that
 check will hash these goldens to prove byte-identical output across
 runtimes.
@@ -26,7 +26,7 @@ After an intentional output change (e.g. a renamed runtime symbol or
 a new schema field), regenerate every expected file:
 
 ```
-SUI_GOLDEN_UPDATE=1 cargo test -p sui-compiler --test golden
+SAIL_GOLDEN_UPDATE=1 cargo test -p sui-compiler --test golden
 ```
 
 Inspect the `git diff` and commit only when the change is intended.
@@ -38,7 +38,7 @@ Inspect the `git diff` and commit only when the change is intended.
    want pinned (a single block, a single attribute kind, etc.).
 2. Add a `#[test] fn golden_<name>()` entry in `tests/golden.rs`
    that calls `run_golden("<name>")`.
-3. Run `SUI_GOLDEN_UPDATE=1 cargo test -p sui-compiler --test golden`
+3. Run `SAIL_GOLDEN_UPDATE=1 cargo test -p sui-compiler --test golden`
    once to write `<name>.expected.json`. Re-run without the env var
    to confirm it passes.
 4. Commit both the `.sui` source and the generated `.expected.json`.

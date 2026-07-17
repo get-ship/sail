@@ -6,7 +6,7 @@
 //! compiler's wire format so future drift surfaces as a test failure
 //! with a clear text diff.
 //!
-//! Set `SUI_GOLDEN_UPDATE=1` to rewrite the expected files. See
+//! Set `SAIL_GOLDEN_UPDATE=1` to rewrite the expected files. See
 //! `tests/golden/README.md` for the workflow.
 
 use std::fs;
@@ -62,7 +62,7 @@ fn run_golden(name: &str) {
         strip_version_stamp(&serde_json::to_string_pretty(&actual).unwrap()),
     );
 
-    let updating = std::env::var("SUI_GOLDEN_UPDATE").is_ok();
+    let updating = std::env::var("SAIL_GOLDEN_UPDATE").is_ok();
 
     if updating {
         fs::write(&expected_path, &actual_text)
@@ -96,7 +96,7 @@ fn assert_eq_text(name: &str, expected: &str, actual: &str, expected_path: &Path
     }
     let diff = unified_diff(expected, actual);
     panic!(
-        "golden mismatch for `{name}`\n  expected: {}\n  Set SUI_GOLDEN_UPDATE=1 to refresh.\n\n{}",
+        "golden mismatch for `{name}`\n  expected: {}\n  Set SAIL_GOLDEN_UPDATE=1 to refresh.\n\n{}",
         expected_path.display(),
         diff,
     );

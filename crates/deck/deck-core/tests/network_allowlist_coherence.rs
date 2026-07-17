@@ -1,12 +1,12 @@
 //! THE SEAM-COHERENCE GATE for the `"network"` capability (fetch lever, item
-//! 4). A `sui.config.json` declaring `{"network": [...]}` must drive BOTH the
+//! 4). A `sail.config.json` declaring `{"network": [...]}` must drive BOTH the
 //! compiler's static lint AND deck's served CSP `connect-src` header from the
 //! SAME declaration — drift between the two is a test failure here, not a
 //! discovery in production.
 //!
 //! Both assertions below derive from ONE Rust-level origin list
 //! (`GRANTED_ORIGIN`), used to:
-//!   (a) build the fixture `sui.config.json` body that the real compiler
+//!   (a) build the fixture `sail.config.json` body that the real compiler
 //!       resolver (`sail_compiler::check::policy::Policy`) reads, driving the
 //!       `sui-controller-no-ambient-authority` lint through the real
 //!       `compile()` build gate — same path `config_loud_strict.rs` exercises;
@@ -36,7 +36,7 @@ fn write_fixture(fetch_target: &str) -> (tempfile::TempDir, PathBuf) {
     let views_dir = tmp.path().join("views").join("git");
     fs::create_dir_all(&views_dir).unwrap();
     fs::write(
-        tmp.path().join("views").join("sui.config.json"),
+        tmp.path().join("views").join("sail.config.json"),
         format!(r#"{{"network": ["{GRANTED_ORIGIN}"]}}"#),
     )
     .unwrap();
@@ -99,7 +99,7 @@ fn served_csp_names_exactly_the_same_granted_origin() {
 
 /// Belt-and-suspenders: prove BOTH assertions really do read `GRANTED_ORIGIN`
 /// from the one fixture-building path, by round-tripping the fixture's
-/// `sui.config.json` through the real config resolver
+/// `sail.config.json` through the real config resolver
 /// (`Policy::network_for`) and feeding THAT resolved list into the CSP
 /// builder — no hardcoded origin at all on this path.
 #[test]

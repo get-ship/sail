@@ -11,7 +11,7 @@
 //
 // This app lives OUTSIDE the sui checkout, so in-tree compiler discovery doesn't
 // apply. Rather than hardcode an absolute path (a cutover landmine — the sui
-// checkout moves), resolve a single SUI_REPO root by env or by probing
+// checkout moves), resolve a single SAIL_REPO root by env or by probing
 // conventional locations, then derive the compiler + runtime from it.
 
 import { execFileSync } from 'node:child_process'
@@ -28,34 +28,34 @@ const root = resolve(__dirname, '..')
 const srcDir = resolve(root, 'src')
 
 // --- resolve the sui checkout ------------------------------------------------
-// Precedence: explicit SUI_REPO env → granular SUI_RUNTIME/SUI_COMPILER envs →
+// Precedence: explicit SAIL_REPO env → granular SAIL_RUNTIME/SAIL_COMPILER envs →
 // discovery across conventional locations. Moving the sui checkout then needs
-// only `SUI_REPO=/new/path` (or nothing, if it lands in a probed location).
+// only `SAIL_REPO=/new/path` (or nothing, if it lands in a probed location).
 function firstExisting(paths) {
   for (const p of paths) if (p && existsSync(p)) return p
   return null
 }
 function discoverSuiRepo() {
   const probes = [
-    process.env.SUI_REPO,
+    process.env.SAIL_REPO,
     resolve(homedir(), 'dev/sui'),
     resolve(homedir(), 'dev/Ship/sui'), // post-carve: sui nested under Ship
   ].filter(Boolean)
   return probes.find((p) => existsSync(resolve(p, 'packages/sui/runtime'))) ?? null
 }
 
-const SUI_REPO = discoverSuiRepo()
+const SAIL_REPO = discoverSuiRepo()
 
 // Resolve @ship/sui-runtime to the live sui checkout WITHOUT a package.json
 // `file:` dep — that drags in the runtime's `workspace:*` devDeps, which don't
 // resolve outside the sui monorepo. A direct symlink gives esbuild the current
 // source AND lets the bench runner read the version from its package.json.
-const RUNTIME_SRC = process.env.SUI_RUNTIME
-  ?? (SUI_REPO ? resolve(SUI_REPO, 'packages/sui/runtime') : null)
+const RUNTIME_SRC = process.env.SAIL_RUNTIME
+  ?? (SAIL_REPO ? resolve(SAIL_REPO, 'packages/sui/runtime') : null)
 if (!RUNTIME_SRC || !existsSync(RUNTIME_SRC)) {
   console.error(
-    'sui runtime source not found. Set SUI_REPO to your sui checkout root\n' +
-    '(expects <SUI_REPO>/packages/sui/runtime), or SUI_RUNTIME to the runtime\n' +
+    'sui runtime source not found. Set SAIL_REPO to your sui checkout root\n' +
+    '(expects <SAIL_REPO>/packages/sui/runtime), or SAIL_RUNTIME to the runtime\n' +
     'directory directly.',
   )
   process.exit(1)
@@ -80,15 +80,15 @@ if (!linkOk) {
   console.log(`linked @ship/sui-runtime -> ${RUNTIME_SRC}`)
 }
 
-const compiler = process.env.SUI_COMPILER ?? firstExisting([
-  SUI_REPO && resolve(SUI_REPO, 'target/release/sui-compiler'),
-  SUI_REPO && resolve(SUI_REPO, 'target/debug/sui-compiler'),
+const compiler = process.env.SAIL_COMPILER ?? firstExisting([
+  SAIL_REPO && resolve(SAIL_REPO, 'target/release/sui-compiler'),
+  SAIL_REPO && resolve(SAIL_REPO, 'target/debug/sui-compiler'),
 ])
 if (!compiler || !existsSync(compiler)) {
   console.error(
     'sui-compiler not found. Build it (cargo build -p sui-compiler [--release])\n' +
-    'under your sui checkout, or set SUI_COMPILER to a binary path.' +
-    (SUI_REPO ? `\n(searched ${SUI_REPO}/target/{release,debug}/sui-compiler)` : ''),
+    'under your sui checkout, or set SAIL_COMPILER to a binary path.' +
+    (SAIL_REPO ? `\n(searched ${SAIL_REPO}/target/{release,debug}/sui-compiler)` : ''),
   )
   process.exit(1)
 }

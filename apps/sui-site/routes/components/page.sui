@@ -14,7 +14,7 @@
   the panel is a native [popover] wired by popovertarget, so the tile stays
   honest: what you see closed is what a page shows closed.
 
-  All 25 pack components are un-gated (their `sui.config.json` now grants
+  All 25 pack components are un-gated (their `sail.config.json` now grants
   the design-system capabilities — sx / raw_containers / variants — their
   sources use). Three components are still counted here but not mounted
   anywhere in the compiled app: the 7 canvas-pack tiles (sui-canvas /
@@ -42,7 +42,7 @@
 //
 // Every rendered tile is the REAL component. The 6 packs (charts, media,
 // canvas, chat, mermaid, code-editor) are un-gated (granted the design-
-// system capabilities via their `sui.config.json`); every pack component
+// system capabilities via their `sail.config.json`); every pack component
 // is in the catalog and counts. The canvas tiles are skipped in THIS grid
 // (see the file banner) but still render via their own
 // /components/<slug> route. sui-message-list and sui-media-csv are

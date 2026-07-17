@@ -4,7 +4,7 @@
 //
 // Uses the release sui-compiler from the framework's own target dir,
 // so this example tracks whatever the local checkout is building.
-// Override with SUI_COMPILER=/path/to/sui-compiler if you want to
+// Override with SAIL_COMPILER=/path/to/sui-compiler if you want to
 // point at a different binary.
 
 import { execFileSync } from 'node:child_process'
@@ -19,7 +19,7 @@ const root = resolve(__dirname, '..')
 const repoRoot = resolve(root, '..', '..', '..', '..')
 const srcDir = resolve(root, 'src')
 
-const compilerPath = process.env.SUI_COMPILER ?? (() => {
+const compilerPath = process.env.SAIL_COMPILER ?? (() => {
   const release = resolve(repoRoot, 'target/release/sui-compiler')
   const debug = resolve(repoRoot, 'target/debug/sui-compiler')
   if (existsSync(release)) return release
@@ -27,7 +27,7 @@ const compilerPath = process.env.SUI_COMPILER ?? (() => {
   console.error(
     'sui-compiler not built. Run from the repo root:\n' +
     '  cargo build -p sui-compiler --release\n' +
-    'or set SUI_COMPILER to a binary path.',
+    'or set SAIL_COMPILER to a binary path.',
   )
   process.exit(1)
 })()

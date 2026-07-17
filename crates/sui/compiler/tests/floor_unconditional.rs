@@ -5,7 +5,7 @@
 //!   1. Authored `<style>` / inline `style=` / `class=` REFUSE with
 //!      `lint_overrides: Vec::new()` — the exact wasm/playground host shape.
 //!   2. No `lint_override` (Off or Warn) can turn a floor rule off.
-//!   3. A broken/unknown-key `sui.config.json` fails CLOSED (STRICT), not FULL.
+//!   3. A broken/unknown-key `sail.config.json` fails CLOSED (STRICT), not FULL.
 //!      (Unit-tested next to the resolver in `check::policy`; the whole-config
 //!      path is exercised here via the undeclared-stylesheet floor rule.)
 //!   4. The config key the docs advertise matches the key the parser reads
@@ -94,7 +94,7 @@ fn natural_warn_floor_rules_gate_without_promotion() {
 
 /// Every (floor rule, offending source) pair, for the template-only rules that
 /// don't need an on-disk pack. `sui-no-undeclared-stylesheet` is covered
-/// separately (it needs a `sui.config.json` + a companion `.css`).
+/// separately (it needs a `sail.config.json` + a companion `.css`).
 const FLOOR_CASES: &[(&str, &str)] = &[
     ("sail-no-style-block", "<p>hi</p><style>x</style>"),
     ("sail-no-inline-style", r#"<p style="color:red">hi</p>"#),
@@ -152,12 +152,12 @@ fn non_floor_rules_remain_softenable() {
 
 // ---------------------------------------------------------------------------
 // The 4th floor rule: `sui-no-undeclared-stylesheet` needs a real pack layout
-// (a `sui.config.json` + a companion `.css`). Prove it, too, is non-softenable.
+// (a `sail.config.json` + a companion `.css`). Prove it, too, is non-softenable.
 // ---------------------------------------------------------------------------
 
 fn write_pack(config: &str, css: &[(&str, &str)]) -> (tempfile::TempDir, PathBuf) {
     let tmp = tempfile::tempdir().unwrap();
-    fs::write(tmp.path().join("sui.config.json"), config).unwrap();
+    fs::write(tmp.path().join("sail.config.json"), config).unwrap();
     let src_dir = tmp.path().join("src");
     fs::create_dir_all(&src_dir).unwrap();
     let sui = src_dir.join("w.sui");

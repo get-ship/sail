@@ -1,7 +1,7 @@
 # Fuzzing the .sui parser
 
 `fuzz/` hosts a [cargo-fuzz](https://rust-fuzz.github.io/book/cargo-fuzz.html)
-harness for `sui_compiler::parse::parse`. The bug class to catch is the
+harness for `sail_compiler::parse::parse`. The bug class to catch is the
 infinite-loop / unbounded-allocation family — exactly what the May 2026
 "stray `<` operator inside a template expression" hotfix patched at
 `parse/html/parser.rs:55`. Any AFL-style fuzzer would have surfaced it in

@@ -26,7 +26,7 @@ imports (`@ship/sui-primitives`).
   collecting a single test — `test/setup.ts` imports `../src/sui-icon/registry`,
   deleted when `<icon>` moved to L1. Nothing has depended on these tests
   passing for some time.
-- Several orphan tests only resolve through **stale `.sui-out` mirror
+- Several orphan tests only resolve through **stale `.sail-out` mirror
   artifacts** of deleted `.sui` sources (e.g. `sui-drawer-a11y.test.ts`,
   `sui-app-icon.test.ts`); `sui-sheet.controller.ts` imports
   `./engine/create-sheet` and `./view/geometry`, directories that no longer
@@ -138,7 +138,7 @@ and both helpers die with the pack.
    component's dedicated tests; leave the dead orphan tests behind.
 4. Decide `sui-timeline`: L1 stdlib promotion or sui-prose.
 5. Delete `packages/components/sui/primitives` and the stale
-   `.sui-out/packages/components/sui/primitives` mirror; drop the sui-site
+   `.sail-out/packages/components/sui/primitives` mirror; drop the sui-site
    dep; rewrite tutorial lesson 08; retarget the leak gate.
 
 ### Open questions for the owner
