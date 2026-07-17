@@ -1,6 +1,5 @@
 <controller>
 import { controller, signal, useDialog } from '@ship/sui-runtime'
-import type { Scope } from './page.sui'
 
 function notify(message: string, tone: string, description?: string) {
   window.dispatchEvent(
@@ -11,8 +10,7 @@ function notify(message: string, tone: string, description?: string) {
   )
 }
 
-export default controller<Scope>({
-  setup: () => ({
+export default controller(() => ({
     // Overlays
     dialogDemo: useDialog(),
     alertDialogOpen: signal(false),
@@ -27,8 +25,7 @@ export default controller<Scope>({
     showSuccessToast: () => notify('File saved', 'success'),
     showErrorToast: () => notify('Upload failed', 'destructive', 'Network error — try again'),
     showInfoToast: () => notify('Background job started', 'info'),
-  }),
-})
+  }))
 </controller>
 
 <!-- FILE_CAP_OVERRIDE: gallery instantiates all 50+ sui/primitives — one card each; cannot be split without losing the gallery contract -->

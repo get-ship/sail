@@ -77,8 +77,17 @@ export {
   injectContext,
   contextKey,
   walkScope,
+  SuiMountOutsideSetupError,
 } from './effect-scope'
 export type { EffectScope, ContextKey } from './effect-scope'
+// Ambient controller/component lifecycle `mount(fn)` — aliased on export
+// because `mount` (below) is already the host-facing "mount a view into
+// the DOM" entry point (F1). The compiler's ambient-injection table maps
+// the authored bare identifier `mount` to this export under that alias
+// (`crates/sui/compiler/src/runtime_ambient.rs`), so a controller body
+// can write `mount(fn)` with no import while `@ship/sui-runtime`'s own
+// `mount(target, payload, opts)` keeps its name for hosts.
+export { mount as mountAmbient } from './effect-scope'
 
 // Store API — scope-homed shared state. `defineStore(setup)` is
 // the registration; `useStore(def)` resolves the instance from
@@ -308,7 +317,7 @@ export type { PropDef, ComponentDef, ComponentSetupContext } from './component'
 
 export type {
   ControllerDef,
-  ControllerShape,
+  ControllerSetup,
   TemplateHook,
   TemplateHookAttrKind,
   TemplateHookContext,
@@ -316,16 +325,11 @@ export type {
   ReadonlyState,
   ReadonlyView,
   MutableState,
-  SectionInit,
-  OnSection,
-  MountSection,
-  UnmountSection,
 } from './controller'
 
-export { controller, resolveController, LIFECYCLE_KEY } from './controller-resolver'
+export { controller, resolveController } from './controller-resolver'
 export type {
   ControllerExport,
-  ControllerLifecycle,
   ResolverContext,
   ResolvedBindings,
 } from './controller-resolver'

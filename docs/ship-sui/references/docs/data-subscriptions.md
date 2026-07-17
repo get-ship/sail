@@ -113,50 +113,51 @@ Repetition across views is the right trade. If three views all subscribe to `shi
 
 The hook layer is for **bundling state + derived + handlers**. A hook that *uses* an `agents` signal (filtering, selecting, paginating, sorting) is doing real work and earns its existence. A hook that just wraps a subscription is double-dipping.
 
-## Passing data signals to hooks
+## Passing data signals to compositions
 
-When a controller hook needs a data signal, **pass the signal itself**, not a closure.
+When a composition needs a data signal, **pass the signal itself**, not a closure.
 
 ```ts
-// in a controller (function form)
-export default ({ ship }) => ({
-  use: {
-    list: useFilteredList(agents, (a, q) => a.name.includes(q)),
-    sel:  useSelection(agents, a => a.id),
-  },
+// in a controller
+export default controller((ctx) => {
+  const list = filteredList(ctx.agents, (a, q) => a.name.includes(q))
+  const sel = selection(ctx.agents, a => a.id)
+
+  return { list, sel }
 })
 ```
 
-The hook destructures the envelope internally:
+The composition destructures the envelope internally:
 
 ```ts
-// inside useFilteredList
+// inside filteredList
 const items = () => {
   const s = source()                              // source: LiveSignal<{ items: T[] }>
   return s.kind === 'ok' ? s.value.items : []
 }
 ```
 
-This is why the envelope is contractual — hooks rely on the shape to unwrap consistently.
+This is why the envelope is contractual — compositions rely on the shape to unwrap consistently.
 
 ## Reactive `route` in source thunks
 
-`route.params.<name>` and `route.query.<name>` are themselves signals. Reading one inside a `<data live source="…">` thunk subscribes the live channel to the param: when navigation changes the URL, the prior SSE subscription disposes and a new one opens with the updated arg. No author-side wiring; this is the same `live()` tracking that re-fires on controller `scope:` signal changes.
+`route.params.<name>` and `route.query.<name>` are themselves signals. Reading one inside a `<data live source="…">` thunk subscribes the live channel to the param: when navigation changes the URL, the prior SSE subscription disposes and a new one opens with the updated arg. No author-side wiring; this is the same `live()` tracking that re-fires on any controller-owned signal change.
 
 Concrete pattern — a `/agents/<id>` view:
 
 ```ts
-// controller.ts
-import { controller } from '@ship/sui-runtime'
+<controller>
+// page.sui — inline <controller> block
+import { derived } from '@ship/sui-runtime'
 import { defineRoutes } from '@ship/sui-runtime/route'
 
 defineRoutes([{ pattern: '/agents/:id' }])
 
-export default controller({
-  derived: {
-    name: ({ agent }) => agent().kind === 'ok' ? agent().value.name : '',
-  },
+export default controller(({ agent }) => {
+  const name = derived(() => agent().kind === 'ok' ? agent().value.name : '')
+  return { name }
 })
+</controller>
 ```
 
 ```html

@@ -10,7 +10,7 @@ description: The compile/runtime/host/chrome layering of a SUI view.
 SUI splits cleanly into four layers. Each owns one concern and exposes a narrow contract to the next.
 
 ```
-page.sui + controller.ts     (authoring — what humans write)
+page.sui (with inline <controller>)     (authoring — what humans write)
     ↓ crates/sui/compiler/ (AOT compile — emits ESM + .d.ts + .ssr.html)
 .js + .sui.d.ts + .ssr.html  (compiler output — gitignored under dist/)
     ↓ packages/sui/runtime/  (reactive primitives + DOM bindings + attach())
@@ -27,7 +27,7 @@ Pure transformation. No filesystem walk, no daemon, no network. Library entry: `
 pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, CompileError>
 ```
 
-`CompileOpts` knobs: `setup_url` (paired `.ts` import), `mode` (`Component | Auto`), `source_path` (diagnostic spans), `component_meta` (tag name + shadow flag), `styles` (component-only external CSS), `emit_dts`, `emit_component_imports`.
+`CompileOpts` knobs: `setup_url` (virtual `<file>.sui.controller.ts` import for the source's inline `<controller>` block — nothing on disk; a template with no block gets no setup import), `mode` (`Component | Auto`), `source_path` (diagnostic spans), `component_meta` (tag name + shadow flag), `styles` (component-only external CSS), `emit_dts`, `emit_component_imports`.
 
 `CompileOutput` carries:
 
@@ -37,7 +37,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
 | `css` | Extracted / passed-through CSS (component `<style>` blocks, `styles` opt), present when the source carries styles. |
 | `cem` | Custom Elements Manifest (components only) — fuel for editor tooling. |
 | `schema` | Prop schema JSON — read by `decode.ts` to validate runtime prop values. |
-| `dts` | Typed `Scope` for the paired controller. Includes both `<data>` names and `scope:` factory keys. |
+| `dts` | Typed `Scope` for the inline `<controller>` block. Includes both `<data>` names and the controller function's returned keys. |
 | `meta` | `.sui.meta.json` — binding kinds / exprs / deps / renderKey. Developer-tooling fuel; the runtime never loads it. |
 
 Pipeline (`src/lib.rs:185` `compile()`): `parse::parse` → `check::run` → `bindings::build` → `lower::lower` → `emit::js::emit_module` (+ `emit::cem`, `emit::schema`, `emit::dts`, `emit::meta`). SSR is no longer a compiler concern — the host (ship-js) renders the module server-side. Diagnostics carry byte spans (`src/diagnostics.rs`).
@@ -69,7 +69,7 @@ Public API barrel: `packages/sui/runtime/src/index.ts`. Anything not re-exported
 | Mount | `mount(target, payload, opts) -> MountHandle` |
 | Wire-contract types | `ManifestRail`, `ViewListEntry`, `ViewManifest`, … (daemon ↔ runtime contract; committed at `packages/sui/runtime/src/generated.d.ts` — a hand-maintained mirror of the Rust wire types, no `gen-types` task exists in this repo) |
 
-`CompileOpts` knobs: `setup_url` (paired `.ts` import), `mode` (`Component | Auto`), `source_path` (diagnostic spans), `component_meta` (tag name; shadow is no longer a per-component opt — it's declared in the anatomy manifest and only paid for by components that wrap foreign content), `styles` (component-only external CSS), `emit_dts`, `emit_component_imports`.
+`CompileOpts` knobs: `setup_url` (virtual `<file>.sui.controller.ts` import for the source's inline `<controller>` block — nothing on disk; a template with no block gets no setup import), `mode` (`Component | Auto`), `source_path` (diagnostic spans), `component_meta` (tag name; shadow is no longer a per-component opt — it's declared in the anatomy manifest and only paid for by components that wrap foreign content), `styles` (component-only external CSS), `emit_dts`, `emit_component_imports`.
 
 `CompileOutput` carries:
 
@@ -79,7 +79,7 @@ Public API barrel: `packages/sui/runtime/src/index.ts`. Anything not re-exported
 | `css` | Extracted / passed-through CSS (component `<style>` blocks, `styles` opt), present when the source carries styles. |
 | `cem` | Custom Elements Manifest (components only) — fuel for editor tooling. |
 | `schema` | Prop schema JSON — read by `decode.ts` to validate runtime prop values. |
-| `dts` | Typed `Scope` for the paired controller. Includes both `<data>` names and `scope:` factory keys. |
+| `dts` | Typed `Scope` for the inline `<controller>` block. Includes both `<data>` names and the controller function's returned keys. |
 | `meta` | `.sui.meta.json` — binding kinds / exprs / deps / renderKey. Developer-tooling fuel; the runtime never loads it. |
 
 The dev-only leak detector lives at the subpath `@ship/sui-runtime/dev` so it doesn't ship in production bundles.
@@ -109,7 +109,7 @@ Daemon-side route table (`apps/shipd/src/router.rs`) mounts the surface:
 | `GET /_deck/runtime.js` / `dom.js` / `sdk-client.js` / `components.js` | `crates/deck/deck-core/src/assets.rs` |
 | `GET /_deck/icons/{name}.svg` | `crates/deck/deck-core/src/assets.rs` (per-icon lucide; daemon embeds the set) |
 | `GET /_deck/sui-components/{name}.js` | separate-bundle component |
-| `GET /_deck/views/{name}/view.sui` / `view.js` / `view.css` | `crates/deck/deck-core/src/view.rs` (route segment stems are `view.*` regardless of on-disk `page.sui`/`controller.ts`/`style.css`) |
+| `GET /_deck/views/{name}/view.sui` / `view.js` / `view.css` | `crates/deck/deck-core/src/view.rs` (route segment stems are `view.*` regardless of on-disk `page.sui`/`style.css`) |
 | `GET /_deck/views/{name}` | `crates/ship-views/src/view_payload.rs` (extracted out of deck into the `ship-views` crate) |
 | `GET /_deck/views/{name}/sse` | `apps/shipd/src/views/sui_patch_channel.rs` |
 | `GET /_deck/hmr` / `hmr-client.js` / `dev/hmr` | `apps/shipd/src/views/sui_hmr.rs` |
@@ -126,20 +126,17 @@ Directory shapes:
 
 ```
 views/<name>/                    # first-party views
-  page.sui                       # required
-  controller.ts                  # optional
+  page.sui                       # required — controller, if any, is an inline <controller> block inside
   style.css                      # optional
   manifest.jsonc                 # required
   dist/                          # compiler output (gitignored)
   _components/<view>-<tag>/      # view-private widgets
     <view>-<tag>.sui
-    <view>-<tag>.controller.ts
 
 .ship/views/<name>/              # project-local extension views; same shape
 
 packages/components/ui-components/src/<tag>/   # first-party components
-  <tag>.sui
-  <tag>.controller.ts            # optional
+  <tag>.sui                      # inline <controller> block, if any, lives here
   <tag>.css                      # optional
 
 packages/components/ui-components/src/<tag>/   # separate-bundle (lazy) components also live here;
@@ -149,12 +146,12 @@ packages/components/ui-components/src/<tag>/   # separate-bundle (lazy) componen
 Five rules carried over from the `ship-views` skill:
 
 1. **`page.sui` is the route entry.** Filename stem says what the file IS — a page, not a reusable widget.
-2. **`controller.ts`, no stem prefix.** The directory IS the view; pairing is unambiguous.
+2. **The controller is inline, no sibling file.** A `<controller>` block lives inside `page.sui` itself; a paired `<stem>.controller.ts` sibling file is a compile error.
 3. **`style.css` for page-scoped styles.** Use `<style>` blocks inside `.sui` for component-scoped styles.
 4. **`manifest.jsonc` is required for views.** JSONC, not YAML.
 5. **`_components/` for view-private widgets.** Tag MUST prefix with the view name (`home-hero` for `views/home/`) so two views can each ship their own widget without colliding on `customElements.define`.
 
-Every first-party view is on this shape — `views/agents/`, `views/git/`, `views/home/`, etc. all ship `page.sui` + `controller.ts` + `style.css` + `manifest.jsonc`. The router (`@ship/sui-runtime/route + defineRoutes() in apps/shell/src/main.ts`) walks only manifest-bearing directories.
+Every first-party view is on this shape — `views/agents/`, `views/git/`, `views/home/`, etc. all ship `page.sui` + `style.css` + `manifest.jsonc`. The router (`@ship/sui-runtime/route + defineRoutes() in apps/shell/src/main.ts`) walks only manifest-bearing directories.
 
 ## How the layers compose
 

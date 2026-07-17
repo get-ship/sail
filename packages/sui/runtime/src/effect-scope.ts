@@ -49,6 +49,16 @@ export interface EffectScope {
   /** Register a teardown function. If `dispose` already ran, runs the
    *  cleanup immediately so the resource releases. */
   cleanup(fn: () => void): void
+  /** Register an ambient `mount(fn)` callback (see `mount()` below).
+   *  Internal — authors call the ambient `mount()` export, which
+   *  forwards here for whatever scope is current. */
+  registerMount(fn: (el: HTMLElement) => (() => void) | void): void
+  /** Run every pending `mount()` callback registered on this scope,
+   *  passing the connected host element. A callback's returned
+   *  disposer (sync or resolved from a promise) is enrolled as a
+   *  cleanup on this same scope. Called once by the host (`mount.ts`,
+   *  `compose.ts`) right after the instance's DOM is connected. */
+  runMounts(el: HTMLElement): void
   /** Tear down. Runs every cleanup in reverse insertion order. Errors
    *  in any one cleanup are logged and don't abort the rest. Calling
    *  `dispose` more than once is a no-op. */
@@ -90,6 +100,40 @@ export function onCleanup(fn: () => void): void {
   scope.cleanup(fn)
 }
 
+/** Thrown by `mount()` when called outside a setup window — no scope
+ *  is current. Named so authoring tooling and tests can match on it
+ *  (`error.name === 'SuiMountOutsideSetupError'`), unlike `onCleanup`,
+ *  which silently no-ops outside a scope. */
+export class SuiMountOutsideSetupError extends Error {
+  constructor() {
+    super(
+      'mount() can only be called while a controller/component setup is executing ' +
+        '(including compositions called from setup). Called outside any setup window.',
+    )
+    this.name = 'SuiMountOutsideSetupError'
+  }
+}
+
+/**
+ * Ambient lifecycle: register `fn` to run once the current instance's
+ * DOM is connected. `fn` receives the host element and may return a
+ * cleanup — sync, or a promise resolving to one — that disposes with
+ * the instance (its owning scope).
+ *
+ * EXECUTION-scoped like `onCleanup`: legal anywhere while a setup is
+ * synchronously executing, including inside a composition called from
+ * setup (the composition runs with the same `CURRENT_SCOPE`). Throws
+ * `SuiMountOutsideSetupError` when called with no current scope —
+ * unlike `onCleanup`, which no-ops, because a dropped `mount()` call
+ * silently loses the author's DOM-ready logic instead of just leaking
+ * a resource.
+ */
+export function mount(fn: (el: HTMLElement) => (() => void) | void): void {
+  const scope = CURRENT_SCOPE
+  if (!scope) throw new SuiMountOutsideSetupError()
+  scope.registerMount(fn)
+}
+
 /** The active scope, or `null` if no `withScope` is currently on the
  *  stack. Diagnostic / advanced use only — most callers should use
  *  `onCleanup` directly. */
@@ -103,18 +147,52 @@ export function currentScope(): EffectScope | null {
  *  (`mount.ts` is the canonical example) that owns a scope. */
 export function createScope(): EffectScope {
   const cleanups: Array<() => void> = []
+  const pendingMounts: Array<(el: HTMLElement) => (() => void) | void> = []
   let disposed = false
   const contexts = new Map<symbol, unknown>()
+  const registerCleanup = (fn: () => void): void => {
+    if (disposed) {
+      // Late registration after dispose — run immediately so the
+      // resource isn't leaked. Matches the `mount.ts` async-mount
+      // disposer guard.
+      try { fn() } catch (e) { console.error('[sui/scope] late cleanup threw:', e) }
+      return
+    }
+    cleanups.push(fn)
+  }
   const scope: EffectScope = {
     cleanup(fn) {
-      if (disposed) {
-        // Late registration after dispose — run immediately so the
-        // resource isn't leaked. Matches the `mount.ts` async-mount
-        // disposer guard.
-        try { fn() } catch (e) { console.error('[sui/scope] late cleanup threw:', e) }
-        return
+      registerCleanup(fn)
+    },
+    registerMount(fn) {
+      pendingMounts.push(fn)
+    },
+    runMounts(el) {
+      const pending = pendingMounts.splice(0, pendingMounts.length)
+      for (const fn of pending) {
+        try {
+          const result: unknown = fn(el)
+          if (typeof result === 'function') {
+            registerCleanup(result as () => void)
+          } else if (
+            result !== undefined &&
+            result !== null &&
+            typeof result === 'object' &&
+            typeof (result as Promise<unknown>).then === 'function'
+          ) {
+            ;(result as Promise<unknown>).then(
+              (asyncResult) => {
+                if (typeof asyncResult === 'function') registerCleanup(asyncResult as () => void)
+              },
+              (err) => {
+                console.error('[sui/scope] mount() promise rejected:', err)
+              },
+            )
+          }
+        } catch (e) {
+          console.error('[sui/scope] mount() callback threw:', e)
+        }
       }
-      cleanups.push(fn)
     },
     dispose() {
       if (disposed) return
@@ -127,6 +205,7 @@ export function createScope(): EffectScope {
         }
       }
       cleanups.length = 0
+      pendingMounts.length = 0
       contexts.clear()
     },
     get disposed() {

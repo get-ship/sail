@@ -200,13 +200,15 @@ function nodeBodyHtml(host: HTMLElement | null, n: GraphNode): string {
     .replace(/\$\{id\}/g, esc(n.id))
 }
 
-export default controller({
-  setup: ({ nodes, edges, width, height, layout, selectedId }: Scope, host?: Element) => {
+export default controller(({ nodes, edges, width, height, layout, selectedId }: Scope, host?: Element) => {
     // The per-kind <template>s are the host's own light-DOM children, and a
     // node card's body is fixed at FIRST render (a keyed row re-binds its own
     // attributes, not a nested branch), so the host must be read here — the
-    // resolver passes it as the scope factory's 2nd arg.
+    // resolver passes it as the setup function's 2nd arg. `mount()` re-seeds
+    // it once the instance actually connects, for the same reason `mount:`
+    // used to: `host` can be undefined at setup time.
     const hostEl = signal<HTMLElement | null>((host as HTMLElement) ?? null)
+    mount((el) => { hostEl.set(el) })
 
     const graph = derived(() => {
       const w = width() || 1000
@@ -293,11 +295,6 @@ export default controller({
     }
 
     return { hostEl, nodeViews, edgeViews, nodeBody, select, activate, hover }
-  },
-
-  mount(state, host) {
-    state.hostEl = host as HTMLElement
-  },
 })
 
 </controller>

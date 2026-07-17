@@ -13,11 +13,10 @@ fn parse_src(src: &str) -> ParsedController {
 #[test]
 fn allows_pure_arrow_body() {
     let src = r#"
-export default controller({
-  derived: {
-    items: ({ agents }) => agents.value?.items ?? [],
-    total: (s) => s.items.length,
-  },
+export default controller((ctx) => {
+  const items = derived(({ agents }) => agents.value?.items ?? [])
+  const total = derived((s) => s.items.length)
+  return { items, total }
 })
 "#;
     check(&parse_src(src)).expect("pure derived should pass");
@@ -26,8 +25,9 @@ export default controller({
 #[test]
 fn rejects_date_now() {
     let src = r#"
-export default controller({
-  derived: { now: () => Date.now() },
+export default controller((ctx) => {
+  const now = derived(() => Date.now())
+  return { now }
 })
 "#;
     let err = check(&parse_src(src)).expect_err("Date.now() should fail");
@@ -38,8 +38,9 @@ export default controller({
 #[test]
 fn rejects_math_random() {
     let src = r#"
-export default controller({
-  derived: { r: () => Math.random() },
+export default controller((ctx) => {
+  const r = derived(() => Math.random())
+  return { r }
 })
 "#;
     let err = check(&parse_src(src)).expect_err("Math.random() should fail");
@@ -49,8 +50,9 @@ export default controller({
 #[test]
 fn rejects_await() {
     let src = r#"
-export default controller({
-  derived: { x: async (s) => await s.thing() },
+export default controller((ctx) => {
+  const x = derived(async (s) => await s.thing())
+  return { x }
 })
 "#;
     let err = check(&parse_src(src)).expect_err("await should fail");
@@ -60,8 +62,9 @@ export default controller({
 #[test]
 fn rejects_ship_call() {
     let src = r#"
-export default controller({
-  derived: { x: ({ ship }) => ship.git.overview() },
+export default controller(({ ship }) => {
+  const x = derived(() => ship.git.overview())
+  return { x }
 })
 "#;
     let err = check(&parse_src(src)).expect_err("ship.* should fail");
@@ -71,8 +74,9 @@ export default controller({
 #[test]
 fn ignores_string_with_forbidden_word() {
     let src = r#"
-export default controller({
-  derived: { tag: () => "Date.now is fine inside a string" },
+export default controller((ctx) => {
+  const tag = derived(() => "Date.now is fine inside a string")
+  return { tag }
 })
 "#;
     check(&parse_src(src)).expect("string contents should not match");
@@ -81,19 +85,10 @@ export default controller({
 #[test]
 fn does_not_match_method_named_date_nowish() {
     let src = r#"
-export default controller({
-  derived: { x: (s) => s.dateNow },
+export default controller((ctx) => {
+  const x = derived((s) => s.dateNow)
+  return { x }
 })
 "#;
     check(&parse_src(src)).expect("dateNow != Date.now");
-}
-
-#[test]
-fn rejects_method_shorthand_body() {
-    let src = r#"
-export default controller({
-  derived: { x(s) { return Date.now() } },
-})
-"#;
-    check(&parse_src(src)).expect_err("method-shorthand body should also be scanned");
 }

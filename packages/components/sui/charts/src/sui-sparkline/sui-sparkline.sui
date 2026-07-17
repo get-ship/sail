@@ -53,8 +53,7 @@ interface SparkHost extends Element {
   error?: unknown
 }
 
-export default controller({
-  setup: ({ data, tone, width, height, label, loading }: Scope) => {
+export default controller(({ data, tone, width, height, label, loading }: Scope) => {
     const svgEl = ref<SVGSVGElement>(null) // bind:this target → viewport observe
     const viewport = createChartViewport({
       initialWidth: width(),
@@ -77,15 +76,16 @@ export default controller({
     })
     const ariaLabel = derived(() => `${label()}: ${chart.ariaSummary()}`)
 
+    mount((host) => {
+      const el = svgEl()
+      if (el) viewport.observe(el)
+      const err = (host as SparkHost).error
+      if (err !== undefined) chart.setOptions({ error: err })
+      return () => viewport.dispose()
+    })
+
     return { chart, viewport, svgEl, seriesPaths, ariaLabel }
-  },
-  mount(state, host) {
-    if (state.svgEl) state.viewport.observe(state.svgEl)
-    const err = (host as SparkHost).error
-    if (err !== undefined) state.chart.setOptions({ error: err })
-    return () => state.viewport.dispose()
-  },
-})
+  })
 
 </controller>
 {#if loading()}

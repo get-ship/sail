@@ -6,7 +6,7 @@
 // idiomatic test seam (mirrors how `attach()` tests inject modules).
 
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { live, mount, signal } from '../src/index'
+import { live, mount, mountAmbient, onCleanup, signal } from '../src/index'
 import type { ViewPayload } from '../src/index'
 
 // JSDOM doesn't implement EventSource — stub minimally for live-channel paths.
@@ -205,21 +205,16 @@ describe('mount()', () => {
     handle.dispose()
   })
 
-  it('dispose runs hydrate-disposer + lifecycle.unmount + closes EventSource', async () => {
+  it('dispose runs hydrate-disposer + ambient onCleanup + closes EventSource', async () => {
     const events: string[] = []
-    const lifecycle = {
-      state: {},
-      mount: () => events.push('mount'),
-      unmount: () => events.push('unmount'),
-    }
     const mod: FakeModule = {
       default: {
         setup: (_ctx) => {
           const ret: Record<string, unknown> = {}
           ret.hydrate = () => () => events.push('hydrate-dispose')
-          Object.defineProperty(ret, '__shipSetLifecycle', {
-            value: lifecycle,
-            enumerable: false,
+          mountAmbient(() => {
+            events.push('mount')
+            onCleanup(() => events.push('cleanup'))
           })
           return ret
         },
@@ -239,7 +234,7 @@ describe('mount()', () => {
     expect(events).toContain('mount')
     handle.dispose()
     expect(events).toContain('hydrate-dispose')
-    expect(events).toContain('unmount')
+    expect(events).toContain('cleanup')
     handle.dispose() // idempotent
   })
 

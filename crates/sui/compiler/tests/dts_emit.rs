@@ -180,12 +180,10 @@ fn scope_factory_fields_omitted_from_scope() {
     let sui = r#"<p>{foo()} {label()}</p>"#;
     let controller = r#"
         import { controller, signal } from '@ship/sui-runtime'
-        export default controller({
-          setup: () => ({
+        export default controller((ctx) => ({
             foo: signal<number>(0),
             label: signal(''),
-          }),
-        })
+          }))
     "#;
     let dts = compile_dts_with_controller("page", sui, controller);
     assert!(
@@ -209,13 +207,11 @@ fn scope_factory_shorthand_fields_omitted_from_scope() {
     let sui = r#"<p>x</p>"#;
     let controller = r#"
         import { controller, signal } from '@ship/sui-runtime'
-        export default controller({
-          setup: (_b: unknown, host?: Element) => {
+        export default controller((_b: unknown, host?: Element) => {
             const caughtError = signal<Error | null>(null)
             const reset = (): void => { caughtError.set(null); host?.removeAttribute('x') }
             return { caughtError, reset }
-          },
-        })
+          })
     "#;
     let dts = compile_dts_with_controller("page", sui, controller);
     assert!(dts.contains("export interface Scope {}"), "got: {dts}");
@@ -230,7 +226,7 @@ fn empty_scope_factory_leaves_scope_unchanged() {
     let sui = r#"<p>x</p>"#;
     let controller = r#"
         import { controller } from '@ship/sui-runtime'
-        export default controller({ setup: () => ({}) })
+        export default controller((ctx) => ({}))
     "#;
     let dts = compile_dts_with_controller("page", sui, controller);
     assert!(
@@ -250,8 +246,9 @@ fn no_scope_section_leaves_scope_unchanged() {
     let sui = r#"<p>x</p>"#;
     let controller = r#"
         import { controller } from '@ship/sui-runtime'
-        export default controller({
-          mount: (_state, _host) => {},
+        export default controller((ctx) => {
+          mount((_host) => {})
+          return {}
         })
     "#;
     let dts = compile_dts_with_controller("page", sui, controller);
@@ -270,9 +267,7 @@ fn template_member_clashing_with_factory_is_dropped_from_scope() {
     let sui = r#"<div bind:this={config}>x</div>"#;
     let controller = r#"
         import { controller, ref } from '@ship/sui-runtime'
-        export default controller({
-          setup: () => ({ config: ref<HTMLDivElement>(null) }),
-        })
+        export default controller((ctx) => ({ config: ref<HTMLDivElement>(null) }))
     "#;
     let dts = compile_dts_with_controller("page", sui, controller);
     assert!(

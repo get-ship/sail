@@ -415,8 +415,22 @@ export function suiSourceLoaderPlugin(): Plugin {
   load(id: string) {
     if (id.endsWith('.sui.controller.ts')) {
       const sui = id.slice(0, -'.controller.ts'.length)
+      const suiStem = basename(sui, '.sui')
+      // Same component-vs-route classification the main `.sui` branch below
+      // uses. Without it every hyphenated component whose `<scope>` declares
+      // `props:`/`variants:` alongside an inline `<controller>` block hits
+      // the route/page rejection (`component_meta` is None, so a route's
+      // "props has no parent to fill it" check fires) — the controller-only
+      // compile call never told the compiler this was a component at all.
+      const suiIsComponent = suiStem.includes('-') && suiStem !== 'page' && suiStem !== 'index'
       const out = JSON.parse(
-        nativeCompileJson(readFileSync(sui, 'utf8'), JSON.stringify({ sourcePath: sui })),
+        nativeCompileJson(
+          readFileSync(sui, 'utf8'),
+          JSON.stringify({
+            sourcePath: sui,
+            componentName: suiIsComponent ? suiStem : undefined,
+          }),
+        ),
       ) as { kind: string; controller?: string | null; message?: string }
       if (out.kind !== 'ok') throw new Error(`[sui] ${sui}: ${out.message}`)
       if (!out.controller) throw new Error(`[sui] ${id}: no inline <controller> in ${sui}`)

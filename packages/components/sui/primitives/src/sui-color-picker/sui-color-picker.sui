@@ -30,8 +30,7 @@ import type { Scope } from './sui-color-picker.sui'
 
 let idSeq = 0
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ViewScope<Scope>) => {
     const open = signal(false)
     const hue = signal(0)
     const sat = signal(0)
@@ -50,160 +49,165 @@ export default controller({
     // Theme-derived at mount() from the host's computed tone tokens — never a
     // hardcoded palette. Seeded empty; populated once the host is connected.
     const swatches = signal<Swatch[]>([])
+
+    mount((host) => {
+      let suppress = false
+      // `value` is a declared <prop> — writes below go through its own
+      // compiler-installed accessor (the same signal `_ctx.value()` reads),
+      // never a disconnected local copy, so external `el.value = ...` and
+      // this component's own commits stay in sync.
+      const hostEl = host as HTMLElement & { value: string }
+
+      // Derive the swatch palette from the host's resolved design-system tone
+      // tokens (+ a neutral ramp) now that the element is connected and the
+      // cascade is in effect.
+      swatches.set(deriveSwatches(host))
+
+      const emit = (hex: string) => {
+        host.dispatchEvent(
+          new CustomEvent('sui-change', {
+            detail: { value: hex },
+            bubbles: true,
+            composed: true,
+          }),
+        )
+      }
+
+      const syncFromHex = (hex: string) => {
+        const rgb = hexToRgb(hex)
+        if (!rgb) return
+        const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b)
+        suppress = true
+        hue.set(hsl.h)
+        sat.set(hsl.s)
+        light.set(hsl.l)
+        hueText.set(String(hsl.h))
+        satText.set(String(hsl.s))
+        lightText.set(String(hsl.l))
+        hexDraft.set(hex)
+        suppress = false
+      }
+
+      const commitHex = (raw: string) => {
+        const norm = normHex(raw)
+        if (!norm) return false
+        hostEl.value = norm
+        syncFromHex(norm)
+        emit(norm)
+        return true
+      }
+
+      // External value → internal HSL.
+      const stopValueSync = effect(() => {
+        const v = _ctx.value()
+        if (suppress) return
+        if (isHex(v as string)) syncFromHex(v as string)
+      })
+
+      // Initial seed.
+      if (isHex(_ctx.value() as string)) syncFromHex(_ctx.value() as string)
+
+      // Slider edits → value.
+      const sliderEffect = effect(() => {
+        const h = Number(hueText())
+        const s = Number(satText())
+        const l = Number(lightText())
+        if (suppress) return
+        if (!Number.isFinite(h) || !Number.isFinite(s) || !Number.isFinite(l)) return
+        const hex = hslToHex(h, s, l)
+        hue.set(Math.round(h))
+        sat.set(Math.round(s))
+        light.set(Math.round(l))
+        if (hex !== (_ctx.value() as string).toLowerCase()) {
+          suppress = true
+          hostEl.value = hex
+          hexDraft.set(hex)
+          suppress = false
+          emit(hex)
+        }
+      })
+
+      const inputElement = inputEl() as HTMLInputElement | null
+      if (!inputElement) return
+
+      const openPanel = () => {
+        if (_ctx.disabled() || open()) return
+        open.set(true)
+      }
+      const closePanel = () => {
+        if (!open()) return
+        open.set(false)
+      }
+
+      const onInputClick = () => openPanel()
+      const onInputChange = () => {
+        // User typed a hex in the trigger input.
+        const v = inputElement.value.trim()
+        if (v === '') return
+        if (!commitHex(v)) inputElement.value = _ctx.value() as string
+      }
+      const onInputKeydown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape' && open()) {
+          e.preventDefault()
+          closePanel()
+        } else if (e.key === 'ArrowDown' && !open()) {
+          e.preventDefault()
+          openPanel()
+        }
+      }
+      inputElement.addEventListener('click', onInputClick)
+      inputElement.addEventListener('change', onInputChange)
+      inputElement.addEventListener('keydown', onInputKeydown)
+
+      const onShadowClick = (e: Event) => {
+        const t = e.target as HTMLElement | null
+        const sw = t?.closest?.('button[data-hex]') as HTMLElement | null
+        if (sw) {
+          const hex = (sw.dataset.hex ?? '').toLowerCase()
+          if (isHex(hex)) commitHex(hex)
+        }
+      }
+      const onHexInputChange = (e: Event) => {
+        const t = e.target as HTMLInputElement | null
+        if (!t || !t.matches('input[type="text"]')) return
+        if (!commitHex(t.value)) t.value = _ctx.value() as string
+      }
+
+      const onDocPointer = (e: Event) => {
+        if (!open()) return
+        const path = e.composedPath()
+        if (path.includes(host)) return
+        closePanel()
+      }
+
+      ;(host.shadowRoot ?? host).addEventListener('click', onShadowClick)
+      ;(host.shadowRoot ?? host).addEventListener('change', onHexInputChange)
+      document.addEventListener('pointerdown', onDocPointer)
+
+      host.expose!({
+        focus: () => inputElement.focus(),
+        blur: () => inputElement.blur(),
+        open: openPanel,
+        close: closePanel,
+      })
+
+      return () => {
+        stopValueSync()
+        sliderEffect()
+        inputElement.removeEventListener('click', onInputClick)
+        inputElement.removeEventListener('change', onInputChange)
+        inputElement.removeEventListener('keydown', onInputKeydown)
+        ;(host.shadowRoot ?? host).removeEventListener('click', onShadowClick)
+        ;(host.shadowRoot ?? host).removeEventListener('change', onHexInputChange)
+        document.removeEventListener('pointerdown', onDocPointer)
+      }
+    })
+
     return {
       open, hue, sat, light, hueText, satText, lightText, hexDraft,
       inputEl, panelEl, hexInputEl, hueId, satId, lightId, swatches,
     }
-  },
-
-  mount(state, host) {
-    let suppress = false
-
-    // Derive the swatch palette from the host's resolved design-system tone
-    // tokens (+ a neutral ramp) now that the element is connected and the
-    // cascade is in effect.
-    state.swatches = deriveSwatches(host)
-
-    const emit = (hex: string) => {
-      host.dispatchEvent(
-        new CustomEvent('sui-change', {
-          detail: { value: hex },
-          bubbles: true,
-          composed: true,
-        }),
-      )
-    }
-
-    const syncFromHex = (hex: string) => {
-      const rgb = hexToRgb(hex)
-      if (!rgb) return
-      const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b)
-      suppress = true
-      state.hue = hsl.h
-      state.sat = hsl.s
-      state.light = hsl.l
-      state.hueText = String(hsl.h)
-      state.satText = String(hsl.s)
-      state.lightText = String(hsl.l)
-      state.hexDraft = hex
-      suppress = false
-    }
-
-    const commitHex = (raw: string) => {
-      const norm = normHex(raw)
-      if (!norm) return false
-      state.value = norm
-      syncFromHex(norm)
-      emit(norm)
-      return true
-    }
-
-    // External value → internal HSL.
-    const stopValueSync = effect(() => {
-      const v = state.value
-      if (suppress) return
-      if (isHex(v as string)) syncFromHex(v as string)
-    })
-
-    // Initial seed.
-    if (isHex(state.value as string)) syncFromHex(state.value as string)
-
-    // Slider edits → value.
-    const sliderEffect = effect(() => {
-      const h = Number(state.hueText)
-      const s = Number(state.satText)
-      const l = Number(state.lightText)
-      if (suppress) return
-      if (!Number.isFinite(h) || !Number.isFinite(s) || !Number.isFinite(l)) return
-      const hex = hslToHex(h, s, l)
-      state.hue = Math.round(h)
-      state.sat = Math.round(s)
-      state.light = Math.round(l)
-      if (hex !== (state.value as string).toLowerCase()) {
-        suppress = true
-        state.value = hex
-        state.hexDraft = hex
-        suppress = false
-        emit(hex)
-      }
-    })
-
-    const inputEl = state.inputEl as HTMLInputElement | null
-    if (!inputEl) return
-
-    const openPanel = () => {
-      if (state.disabled || state.open) return
-      state.open = true
-    }
-    const closePanel = () => {
-      if (!state.open) return
-      state.open = false
-    }
-
-    const onInputClick = () => openPanel()
-    const onInputChange = () => {
-      // User typed a hex in the trigger input.
-      const v = inputEl.value.trim()
-      if (v === '') return
-      if (!commitHex(v)) inputEl.value = state.value as string
-    }
-    const onInputKeydown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && state.open) {
-        e.preventDefault()
-        closePanel()
-      } else if (e.key === 'ArrowDown' && !state.open) {
-        e.preventDefault()
-        openPanel()
-      }
-    }
-    inputEl.addEventListener('click', onInputClick)
-    inputEl.addEventListener('change', onInputChange)
-    inputEl.addEventListener('keydown', onInputKeydown)
-
-    const onShadowClick = (e: Event) => {
-      const t = e.target as HTMLElement | null
-      const sw = t?.closest?.('button[data-hex]') as HTMLElement | null
-      if (sw) {
-        const hex = (sw.dataset.hex ?? '').toLowerCase()
-        if (isHex(hex)) commitHex(hex)
-      }
-    }
-    const onHexInputChange = (e: Event) => {
-      const t = e.target as HTMLInputElement | null
-      if (!t || !t.matches('input[type="text"]')) return
-      if (!commitHex(t.value)) t.value = state.value as string
-    }
-
-    const onDocPointer = (e: Event) => {
-      if (!state.open) return
-      const path = e.composedPath()
-      if (path.includes(host)) return
-      closePanel()
-    }
-
-    ;(host.shadowRoot ?? host).addEventListener('click', onShadowClick)
-    ;(host.shadowRoot ?? host).addEventListener('change', onHexInputChange)
-    document.addEventListener('pointerdown', onDocPointer)
-
-    host.expose!({
-      focus: () => inputEl.focus(),
-      blur: () => inputEl.blur(),
-      open: openPanel,
-      close: closePanel,
-    })
-
-    return () => {
-      stopValueSync()
-      sliderEffect()
-      inputEl.removeEventListener('click', onInputClick)
-      inputEl.removeEventListener('change', onInputChange)
-      inputEl.removeEventListener('keydown', onInputKeydown)
-      ;(host.shadowRoot ?? host).removeEventListener('click', onShadowClick)
-      ;(host.shadowRoot ?? host).removeEventListener('change', onHexInputChange)
-      document.removeEventListener('pointerdown', onDocPointer)
-    }
-  },
-})
+  })
 
 </controller>
 <column gap="0" sx="relative w-full">

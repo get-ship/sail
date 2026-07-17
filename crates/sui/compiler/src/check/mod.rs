@@ -5,7 +5,6 @@
 //! renderable-expression subset enforced on every interpolation
 //! expression in the program.
 
-pub mod closed_sections;
 pub mod controller_parse;
 #[cfg(test)]
 mod controller_parse_tests;
@@ -68,7 +67,6 @@ pub fn run(
     // `controller` is resolved by the caller: the inline `<controller>` block
     // (SFC) wins, else the paired `.controller.ts`.
     if let Some(c) = controller {
-        closed_sections::check(c)?;
         pure_derived::check(c)?;
         light_shadow_root::check(Some(c))?;
     }
@@ -198,7 +196,6 @@ pub fn collect(
     push(paired_controller::check(source, source_path), source, &mut diags);
     push(handler_complexity::check(program, controller.is_some()), source, &mut diags);
     if let Some(c) = controller {
-        push(closed_sections::check(c), source, &mut diags);
         push(pure_derived::check(c), source, &mut diags);
         push(light_shadow_root::check(Some(c)), source, &mut diags);
     }

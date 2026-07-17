@@ -2,17 +2,15 @@
   Lesson 03 starter — a stopwatch whose clock never moves.
 
   The <controller> block below owns the state.
-  The template binds only what that controller's scope() returns.
+  The template binds only what that controller function returns.
 -->
 
 <controller>
 import { controller, signal, derived } from '@ship/sui-runtime'
-import type { Scope } from './tut-03-stopwatch-starter.sui'
 
-// The controller owns ALL state. The template can bind only what scope()
-// returns — nothing else exists on the other side of the boundary.
-export default controller<Scope>({
-  setup: () => {
+// The controller owns ALL state. The template can bind only what this
+// function returns — nothing else exists on the other side of the boundary.
+export default controller(() => {
     const elapsed = signal(0) // milliseconds
     const running = signal(false)
 
@@ -42,8 +40,7 @@ export default controller<Scope>({
         elapsed.set(0)
       },
     }
-  },
-})
+  })
 </controller>
 
 <column gap="4">

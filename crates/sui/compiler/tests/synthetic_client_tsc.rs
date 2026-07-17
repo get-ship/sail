@@ -225,15 +225,14 @@ fn client_contract_typechecks_green_across_real_surfaces() {
     //
     // `greet` is CONTROLLER-FREE (its scope is template/route declared). `feed`
     // carries its controller INLINE (`<controller>…</controller>`, composed
-    // automatically — see `synth_client_into`); its `setup: (_ctx) => …` takes
-    // a (`_ctx`) param to steer clear of a pre-existing runtime-typing
-    // regression (ef696e5): a scope factory with NO `ctx` param resolves
-    // `controller()` to the legacy `__def`-less overload, so the synthetic
-    // scope-factory recovery yields `{}`. Surfaces that compose an authored
-    // `controller({ scope })` from a zero-arg factory — board, badge — are
-    // blocked on that regression and tracked by the #[ignore]'d
-    // `controller_recovers_scope_factory_return_type` below; restore them here
-    // once `controller()`'s `__def` contract holds for the zero-ctx case.
+    // automatically — see `synth_client_into`). Pre-`controller-collapse`, a
+    // zero-arg `controller(() => …)` (no `ctx` param) resolved to a legacy
+    // `__def`-less overload, so the synthetic scope-factory recovery yielded
+    // `{}` (`ef696e5`) — `feed`'s controller took a `(_ctx)` param to dodge
+    // it. `controller(fn)` is now the ONE overload (always carries `__def`;
+    // see `controller_recovers_scope_factory_return_type` below), so a
+    // zero-arg setup function recovers correctly too — the `(_ctx)` dodge in
+    // `feed`'s controller is no longer load-bearing, just untouched.
     let surfaces = [
         // feed — {#while-loading}/{#while-error} + controller-side live() over
         // host-dispatch (the real living-async surface).
@@ -301,28 +300,31 @@ fn client_render_typo_is_caught_by_tsgo() {
     );
 }
 
-/// Slice 2 G4 — `board`'s authored controller declares `controller({ scope })`
+/// Slice 2 G4 — `board`'s authored controller declares `controller(() => …)`
 /// while the view declares NO `<state>` (the empty view `Scope`), so the legacy
 /// `ControllerExport<infer S>` recovery would erase the controller-added
 /// `items`/`add`/`remove` from the recovered type — `items()` would be a TS2339.
-/// The slice 2 G4 fix: recover the scope-factory's ACTUAL return type instead of
-/// the `ControllerExport<Scope>` generic. The board render is strict-tsc GREEN.
-/// (board is the in-repo conformance equivalent of the old `apps/hub` surface,
-/// which lived outside the framework boundary.)
+/// The slice 2 G4 fix: recover the setup function's ACTUAL return type instead
+/// of the `ControllerExport<Scope>` generic. The board render is strict-tsc
+/// GREEN. (board is the in-repo conformance equivalent of the old `apps/hub`
+/// surface, which lived outside the framework boundary.)
 ///
-/// IGNORED — blocked on a pre-existing runtime-typing regression in `ef696e5`
-/// ("canonical controller() now actually infers Ctx & SC"). board's scope
-/// factory `setup: () => ({…})` takes NO `ctx` param, so `Ctx` can't be
-/// inferred → the `<Ctx, SC>` overload fails its contravariant check → the call
-/// resolves to the legacy `controller<Scope>(def): ControllerExport<Scope>`
-/// overload, which does NOT carry `__def`. The synthetic recovery
-/// (`typeof __authored.__def extends { scope?: infer F }`) then finds no
-/// `__def` and falls back to `object`, so `scope` recovers to `{}` and every
-/// controller-added member is a TS2339. Fixing this is crown-jewel
-/// `controller()`-typing work (the `__def` contract must hold for the zero-ctx
-/// case); un-ignore + restore board/badge to the green set once it lands.
+/// The `controller-collapse` job (function-form `controller(fn)`, one
+/// overload) removed the two-overload split that caused the original
+/// `ef696e5` regression this test tracked (a zero-`ctx`-param factory
+/// couldn't infer `Ctx`, so the call fell through to a legacy overload with
+/// no `__def`, and recovery found nothing to recover from). There is now
+/// only one overload — it always carries `__def` — and the recovery pattern
+/// (`typeof __authored.__def extends (...a: never[]) => infer R`) matches
+/// any function regardless of arity, zero-arg included, so the __def side
+/// of the original regression is fixed by construction.
+///
+/// STILL IGNORED — for an unrelated reason: `board/controller.ts` (the
+/// `controller_rel` this test points at) does not exist in this repo — only
+/// `board/page.sui` does. Nobody noticed because the test was already
+/// `#[ignore]`d. Un-ignore once a `board/controller.ts` fixture exists.
 #[test]
-#[ignore = "blocked on ef696e5 controller() __def regression (zero-ctx scope factory → __def recovery yields {}, every controller-added member is a TS2339). Unblock: __def contract must hold for the zero-ctx case — see doc comment."]
+#[ignore = "board/controller.ts fixture doesn't exist (pre-existing gap, unrelated to controller-collapse) — the __def/overload regression this test tracked is fixed, see doc comment"]
 fn controller_recovers_scope_factory_return_type() {
     let repo = repo_root();
     let Some(tsc) = tsc_path(&repo) else {

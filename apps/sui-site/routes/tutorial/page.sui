@@ -12,12 +12,10 @@ import { controller, type ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 import { TUTORIAL_GROUPS, TUTORIAL_LESSONS, type TutorialGroup } from '../../src/tutorial-data'
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>) => ({
-    groups: (): TutorialGroup[] => TUTORIAL_GROUPS,
-    total: (): number => TUTORIAL_LESSONS.length,
-  }),
-})
+export default controller((_ctx: ViewScope<Scope>) => ({
+  groups: (): TutorialGroup[] => TUTORIAL_GROUPS,
+  total: (): number => TUTORIAL_LESSONS.length,
+}))
 </controller>
 
 <column sx="max-w-breakpoint-tablet mx-auto" gap="5">

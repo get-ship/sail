@@ -6,15 +6,13 @@
 export const code = {
   demo: `<controller>
 import { controller, live, signal } from '@ship/sui-runtime'
-export default controller({
-  setup: () => {
-    const attempt = signal(1)
-    const users = live(() => {
-      attempt() // tracked: bump it and the source re-runs
-      return fetchUsers()
-    })
-    return { users, reload: () => attempt.set((a) => a + 1) }
-  },
+export default controller(() => {
+  const attempt = signal(1)
+  const users = live(() => {
+    attempt() // tracked: bump it and the source re-runs
+    return fetchUsers()
+  })
+  return { users, reload: () => attempt.set((a) => a + 1) }
 })
 </controller>
 
@@ -32,16 +30,14 @@ export default controller({
   {/for}
 {/if}`,
 
-  source: `// users.controller.ts
+  source: `// the <controller> block body (inline in users.sui)
 import { controller, live } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => {
-    // live() wraps any async source in a reactive state signal:
-    //   { kind: 'loading' } → { kind: 'ok', value } | { kind: 'error', error }
-    const users = live(() => fetch('/api/users').then((r) => r.json()))
-    return { users }
-  },
+export default controller(() => {
+  // live() wraps any async source in a reactive state signal:
+  //   { kind: 'loading' } → { kind: 'ok', value } | { kind: 'error', error }
+  const users = live(() => fetch('/api/users').then((r) => r.json()))
+  return { users }
 })`,
 
   states: `<!-- users.sui — the three states are explicit, never forgotten -->

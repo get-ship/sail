@@ -2,22 +2,18 @@
 group: Views
 order: 3
 title: The controller surface
-description: The optional `.ts` paired with a template. Three tiers, six sections, scope rules, mutation discipline.
+description: The optional inline `<controller>` block. One function, ambient lifecycle, direct signal mutation.
 ---
 
 # The controller surface
 
-A controller is an **optional** TypeScript file paired with a template by directory. `views/agents/page.sui` ↔ `views/agents/controller.ts`. No config, no import statement in the template, no manifest entry — convention is the wiring.
+A controller is an **optional** `<controller>` block inline in the `.sui` file — never a separate file. There is no config, no import statement to wire it up, no directory-pairing convention: the block lives where the template lives.
 
-The controller is the view's view-model: reactive state, derived values, event handlers, lifecycle, and composable hook bundles. Templates declare structure; controllers own everything reactive.
+The controller is the view's view-model: reactive state, derived values, event handlers, and lifecycle. Templates declare structure; the controller owns everything reactive.
 
-## Three tiers
+## No controller at all
 
-Graduated complexity. Use the smallest tier that fits.
-
-### Tier 1 — no controller
-
-Pure declarative views. The template uses `<data>` for subscriptions and inline expressions for anything computed. **No reactive state** — the moment you need a local signal, graduate to tier 2 and add a paired controller.
+Pure declarative views need nothing. The template uses `<data>` for subscriptions and inline expressions for anything computed. **No reactive state, no `<controller>` block.**
 
 ```html
 <!-- views/static/page.sui -->
@@ -26,135 +22,108 @@ Pure declarative views. The template uses `<data>` for subscriptions and inline 
 <p>Branch: {overview().value?.branch}</p>
 ```
 
-No `controller.ts`. Most one-shot read-only views land here.
+Most one-shot read-only views land here.
 
-### Tier 2 — object-literal controller
+## One function, one idiom
 
-For views that need named handlers, derived values, or local reactive state:
+The moment a view needs local state, a derived value, or an event handler, add a `<controller>` block. It contains exactly one call: `controller(fn)`.
+
+```html
+<!-- views/agents/page.sui -->
+<controller>
+export default controller((ctx) => {
+  const items = signal<Item[]>([])
+  const query = signal('')
+
+  const filtered = derived(() =>
+    items().filter((i) => i.name.includes(query()))
+  )
+
+  mount((el) => {
+    const id = setInterval(() => ctx.ship.agents.poll(), 5000)
+    return () => clearInterval(id)
+  })
+
+  onCleanup(() => console.log('agents view disposed'))
+
+  return {
+    items,
+    query,
+    filtered,
+    setQuery: (q: string) => query.set(q),
+    refresh: () => ctx.ship.agents.refresh(),
+  }
+})
+</controller>
+```
+
+`fn` is `(ctx, host?) => Record<string, unknown>`:
+
+- **`ctx`** is the ambient view scope — `ship`, `clients`, `route`, `navigate`, plus every template-declared `<data>`/`<state>` signal, all directly accessible (`ctx.ship`, or destructure `{ ship, count }` in the parameter).
+- **`host`** (optional second parameter) is the custom-element host, for reaching the shadow root or doing direct DOM work.
+- Whatever `fn` **returns** is the entire contributed template scope: state signals (`signal(...)`), computed values (`derived(...)`), plain helper functions, and event handlers — all as ordinary object properties. There is no separate section for handlers; a handler is just a function returned alongside everything else.
+
+No sections. No `setup:`/`derived:`/`on:`/`mount:`/`unmount:` object keys, no `use:` controller-hook mini-DSL, no paired `<stem>.controller.ts` sibling file — a sibling `.controller.ts` next to a `.sui` file is a compile error. `controller()` takes the function directly.
+
+## Mutation is always `.set(...)`
+
+State is a plain `signal()` closed over by the setup function. There is no writable-state proxy, no `state.count = 5` or `state.count++` assignment style — that idiom belonged to the retired `on:`/`mount:`/`unmount:` sections and no longer exists. Every mutation, from a handler or anywhere else, is a direct call on the signal:
 
 ```ts
-// views/settings/controller.ts
-import { controller, signal } from '@ship/sui-runtime'
-import type { Scope } from './page.sui'
+count.set(count() + 1)          // replace
+count.set((n) => n + 1)         // updater form
+items.set([...items(), next])   // replace with a derived-from-previous value
+```
 
-export default controller<Scope>({
-  scope: () => ({
-    theme: signal<'light' | 'dark' | 'system'>('system'),
-    accent: signal('blue'),
-  }),
-  on: {
-    setTheme:  (s, v: 'light' | 'dark' | 'system') => { s.theme = v },
-    setAccent: (s, v: string)                      => { s.accent = v },
-  },
+The lint rule `controller_state_set_call` (sui-lint) enforces this everywhere a controller mutates state.
+
+## Ambient lifecycle: `mount` and `onCleanup`
+
+Lifecycle is not a section — it's two ambient functions a controller calls from anywhere in its setup call graph: the setup body itself, or a plain helper/composition function the setup body calls. Both are auto-injected by the compiler the same way `signal`/`derived`/`controller` are; an author never writes an import for them, just calls the bare identifier.
+
+- **`mount(fn)`** — `fn: (el: HTMLElement) => (() => void) | void`. Fires once after this component/controller instance's DOM connects. If `fn` returns a function, that function is a cleanup that runs when the instance disposes. Calling `mount()` outside any setup window throws `SuiMountOutsideSetupError`.
+
+  ```ts
+  mount((el) => {
+    const observer = new ResizeObserver(() => recompute())
+    observer.observe(el)
+    return () => observer.disconnect()
+  })
+  ```
+
+- **`onCleanup(fn)`** — `fn: () => void`, runs on dispose. Unlike `mount`, it no-ops silently (doesn't throw) if called outside a scope.
+
+  ```ts
+  onCleanup(() => subscription.close())
+  ```
+
+Neither is lexically restricted to a top-level statement in the setup body — call them from inside a plain helper function that setup invokes, and they still register against the running instance's scope. They cannot be called outside a setup/mount execution window (a later timer callback, a detached handler invoked after the fact, etc.) — `mount()` throws in that case, `onCleanup()` silently does nothing.
+
+Computed-initial cases (`crypto.randomUUID()`, an SDK call, a derivation over `route`) work the same way any other imperative setup does — call it directly in the setup body, or defer to `mount` if it needs the connected DOM:
+
+```ts
+export default controller((ctx) => {
+  const id = signal(crypto.randomUUID())
+  return { id }
 })
 ```
 
-Plain object. Static analysis is trivial — every section is data. Sections can also be functions when they need scope:
+## Compositions are still plain functions
+
+`@ship/sui-std` compositions are ordinary TypeScript functions — call one inside the setup function and whatever `Signal<T>`s (or other values) it returns become ordinary scope members, exactly like state declared directly in the controller:
 
 ```ts
-export default controller<Scope>({
-  scope: () => ({ query: signal('') }),
-  derived: {
-    filtered: ({ agents, query }) =>
-      agents().value?.items.filter(a => a.name.includes(query())) ?? [],
-  },
-  on: {
-    setQuery: (s, q: string) => { s.query = q },
-    refresh:  ({ ship })     => ship.agents.refresh(),
-  },
+import { controller, filteredList, selection } from '@ship/sui-runtime'
+
+export default controller((ctx) => {
+  const list = filteredList(ctx.agents, (a, q) => a.name.includes(q))
+  const sel = selection(list.filtered)
+
+  return { ...list, ...sel }
 })
 ```
 
-Per-section functions are how the controller pulls from the [shared view scope](index.md#the-shared-view-scope). The runtime calls each with `{ ship, ...templateScope, ...derivedScope }`; sections destructure what they need.
-
-### Typing the template scope (one declaration, every section gets it)
-
-The cheapest way to avoid annotating every section's destructure: declare the template-side identifiers once and pass them as the `controller<Scope>` generic. Sections inherit the type:
-
-```ts
-import type { LiveSignal, Signal } from '@ship/sui-runtime'
-import type { GitOverview } from '@ship/sdk-client'
-import type { Scope } from './page.sui'   // compiler-emitted .sui.d.ts
-
-export default controller<Scope>({
-  scope: () => ({ tab: signal<'changes' | 'history' | 'branches'>('changes') }),
-  derived: {
-    branch:  ({ overview }) => /* overview is typed automatically */,
-    clean:   ({ overview }) => /* same */,
-    // ...15 more, none with per-section annotations
-  },
-  on: {
-    showHistory: (s) => { s.tab = 'history' },  // s typed as MutableState<Scope>
-  },
-})
-```
-
-`MutableState<Scope>` is computed from `Scope`: it picks every key whose value is a `Signal<T>` and exposes that key as an assignable `T`. The signals returned from the controller's `scope:` factory plus the template's `<data>` / `<prop>` / `<use-* as=>` declarations are the single source of truth.
-
-The compiler emits a `<file>.sui.d.ts` declaration alongside each compiled template, exporting a `Scope` interface derived from the template's `<data>` / `<prop>` / `<use-* as=>` elements. The signals returned from `scope:` are typed by TS itself. Import the generated `Scope` as the controller generic to replace the manual `type Scope = { … }` declaration.
-
-### Tier 3 — function controller
-
-For views that need to close over instantiation-time variables, share computed references across sections, or compose multiple controller hooks:
-
-```ts
-// views/agents/controller.ts
-import { controller, signal, useFilteredList, useSelection } from '@ship/sui-runtime'
-
-export default controller(({ ship }) => ({
-  scope: () => ({ searchOpen: signal(false) }),
-  use: {
-    list: useFilteredList(/* see hooks.md */),
-    sel:  useSelection(/* see hooks.md */),
-  },
-  on: {
-    toggleSearch: (s) => { s.searchOpen = !s.searchOpen },
-    refresh:      ()  => ship.agents.refresh(),
-  },
-}))
-```
-
-The outer function receives `{ ship }` (and any other instantiation-time context) and returns the controller object. Sections still destructure their own scope as in tier 2.
-
-## The six sections
-
-| Section | Type | Purpose |
-|---|---|---|
-| `scope` | `(init, host?) => Record<string, unknown>` | Factory that contributes signals, derived, hooks, and shared providers/consumers to template scope. Runs first. |
-| `derived` | record of `({ scope }) => value` | Pure memos. Auto-tracked dependencies. |
-| `on` | record of `(state, ...args) => void` or `({ scope }, ...args) => void` | Event handlers. The **only** section that mutates state. |
-| `use` | record of hook results, OR `({ scope }) => ({ name: hookResult })` | Composition of controller hooks. Each result is namespaced by key. |
-| `mount` | `(state, el) => void` | Runs once after the DOM is in place. For wiring third-party libs, observers, computed-initial state assignments, or any one-shot imperative setup. |
-| `unmount` | `(state) => void` | Runs on disconnect. Tear down whatever `mount` set up. |
-
-Reactive state is declared inside `scope:` — return signals (and any derived/hooks/shared providers) from the factory and the runtime merges them into template scope.
-
-Computed-initial cases (`crypto.randomUUID()`, an SDK call, a derivation over `route`) seed a placeholder in `scope:` and assign in `mount`:
-
-```ts
-export default controller({
-  scope: () => ({ id: signal('') }),
-  mount: ({ state }) => {
-    state.id = crypto.randomUUID()
-  },
-})
-```
-
-No other sections exist. No `effect`, no `watch`, no `computed`, no `data`, no `live`, no `task`. If your case doesn't fit one of the six, see [the discipline](index.md#the-discipline) — the answer is almost always a combination of the existing sections, not a new section.
-
-## Scope rules
-
-Each section is invoked with the [shared view scope](index.md#the-shared-view-scope) as its argument. The shape of that argument differs slightly by section:
-
-| Section | Argument shape | Mutation |
-|---|---|---|
-| `scope` | `(init, host?)` | **factory** — its return value is merged into scope before any other section runs |
-| `derived` | `{ ship, ...allSignals }` | **read-only** state proxy |
-| `on` (handler) | `(stateMutator, ...args)` OR `({ ship, ...allSignals }, ...args)` | **writable** state proxy in the first arg |
-| `use` | `{ ship, ...allSignals }` | hooks are factories — see [hooks.md](hooks.md) |
-| `mount` / `unmount` | `(stateMutator, el?)` | writable state proxy |
-
-The mutation rule is a static guarantee: in `derived` and templates, every signal key is callable (`count()`); in `on` / `mount` / `unmount`, the same key is assignable (`s.count = …`). **You cannot mutate state from a derived or a template.** Every state change has a name (the `on.*` key, or the lifecycle hook) and a single call site.
+There is no hook registry, no namespacing convention, no `ControllerHook` type — a composition is just a function you call, and you decide how (or whether) to merge, rename, or namespace what it returns before returning it from the controller. The only language type a composition touches is `Signal<T>`.
 
 ## What's NOT in the controller
 
@@ -164,53 +133,47 @@ For clarity — these go in the template, never the controller:
 - Host-side side effects like keybindings, document title, focus traps (use `<use-*>` template hooks).
 - DOM structure (templates own structure, full stop).
 
-If you find yourself wanting to construct DOM in `mount`, you almost certainly want a template hook or a child component instead.
+If you find yourself wanting to construct DOM inside `mount`, you almost certainly want a template hook or a child component instead.
+
+`use:` in a template (`use:actionName`) is unrelated to controller authoring — it's the directive that attaches an Action to a DOM node, not a controller concept.
 
 ## File layout
 
-Most common shape:
+The controller lives inline. Most common shape:
 
 ```
 views/<name>/
-  page.sui              # template (required)
-  controller.ts         # controller (optional)
+  page.sui              # template + inline <controller> block (controller optional)
   style.css             # styles (optional)
-  manifest.jsonc        # route descriptor (required for views)
+  manifest.jsonc         # route descriptor (required for views)
 ```
 
-The compiler emits `<file>.sui.d.ts` into the `.ship/sui-out/` mirror tree (not next to the source). Component files use the same directory-pairing convention. The file IS the component; the directory name IS the tag; `<prop>` directives at the top declare the element's API:
+Components follow the same rule — the file IS the component, and any controller for it is an inline `<controller>` block inside that same `.sui` file:
 
 ```
 packages/components/ui-components/src/sui-button/
-  sui-button.sui            # template + <prop> directives
-  sui-button.controller.ts  # controller(def) (only if needed)
+  sui-button.sui            # template + <prop> directives + inline <controller> (only if needed)
   sui-button.css            # extracted styles (optional)
 ```
 
-The compiler pairs by directory; no manifest, no metadata file for components. Adding a `<tag>.controller.ts` next to a `<tag>.sui` is the only signal the framework requires.
+A `<tag>.controller.ts` (or `<view>.controller.ts`) sibling file is **not** a valid way to author a controller — the compiler rejects it as a compile error. If you see one in older code or docs, it's the retired paired-file convention; port it into an inline `<controller>` block.
 
-## Tier-1 / tier-2 threshold rule
+## Handler complexity has no threshold rule
 
-The compiler enforces condition (1) of the threshold rule statically. A **multi-statement** `on:event` handler body in a tier-1 template (no paired `controller.ts`) is a build-time error:
-
-```html
-<!-- ✗ fails without controller.ts -->
-<button on:click={() => { x.set(1); y.set(2) }}>Save</button>
-```
-
-```
-page.sui: line 1 col 30: [on:click handler]
-multi-statement handler — paired `<view>.ts` controller required for tier-2 work
-```
-
-A single-expression or single-statement block is fine at tier 1:
+Because there's only one authoring surface — the inline `<controller>` block — there's no tier boundary and no compiler-enforced "multi-statement handler needs a paired file" rule. Any handler, of any complexity, is just a function returned from `controller(fn)`:
 
 ```html
-<!-- ✓ OK — single expression -->
-<button on:click={() => count.set(count() + 1)}>+</button>
-
-<!-- ✓ OK — single-statement block -->
-<button on:click={() => { count.set(count() + 1) }}>+</button>
+<button on:click={() => { count.set(count() + 1); logClick() }}>+</button>
 ```
 
-Once you add a paired `controller.ts` the check is skipped entirely — the controller owns complex handler logic. Conditions 2–5 of the threshold rule (multi-signal data thunks, `use:` compositions, lifecycle hooks, multi-statement state mutations) are not yet enforced statically but follow the same architectural boundary.
+```html
+<controller>
+export default controller((ctx) => {
+  const count = signal(0)
+  const logClick = () => ctx.ship.analytics.track('click')
+  return { count, logClick }
+})
+</controller>
+```
+
+Keep template-inline handlers to trivial single expressions by convention; anything with real logic belongs as a named function returned from the controller and referenced by name (`on:click={increment}`), not because the compiler forces it, but because it reads better.

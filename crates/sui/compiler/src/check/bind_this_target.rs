@@ -80,7 +80,7 @@ fn validate(
         // pointing at the runtime contract.
         if !table.scope.is_empty() {
             return Err(CompileError::new(format!(
-                "bind:this={{{var}}} expects `{var}` to be declared as `{var}: ref(...)` in the controller's setup: factory"
+                "bind:this={{{var}}} expects `{var}` to be declared as `{var}: ref(...)` in the controller's setup function"
             ))
             .with_span(span)
             .with_category("bind:this".to_string()));
@@ -89,7 +89,7 @@ fn validate(
     };
     if kind != ScopeKind::Ref {
         return Err(CompileError::new(format!(
-            "bind:this={{{var}}} requires a `ref(...)` scope key, but `{var}` is declared as a {} — change to `{var}: ref(null)` in the controller's setup: factory",
+            "bind:this={{{var}}} requires a `ref(...)` scope key, but `{var}` is declared as a {} — change to `{var}: ref(null)` in the controller's setup function",
             kind.label()
         ))
         .with_span(span)
@@ -133,14 +133,14 @@ mod tests {
 
     #[test]
     fn allows_bind_this_to_ref() {
-        let c = ctrl("export default controller({ setup: () => ({ el: ref(null) }) });");
+        let c = ctrl("export default controller((ctx) => ({ el: ref(null) }));");
         let p = program_with_bind_this("el");
         check(&p, Some(&c)).unwrap();
     }
 
     #[test]
     fn rejects_bind_this_to_signal() {
-        let c = ctrl("export default controller({ setup: () => ({ el: signal(0) }) });");
+        let c = ctrl("export default controller((ctx) => ({ el: signal(0) }));");
         let p = program_with_bind_this("el");
         let err = check(&p, Some(&c)).unwrap_err();
         assert!(err.message.contains("`ref(...)`"), "{}", err.message);
@@ -149,9 +149,9 @@ mod tests {
 
     #[test]
     fn rejects_bind_this_to_unknown() {
-        let c = ctrl("export default controller({ setup: () => ({ el: ref(null) }) });");
+        let c = ctrl("export default controller((ctx) => ({ el: ref(null) }));");
         let p = program_with_bind_this("foo");
         let err = check(&p, Some(&c)).unwrap_err();
-        assert!(err.message.contains("setup: factory"), "{}", err.message);
+        assert!(err.message.contains("setup function"), "{}", err.message);
     }
 }

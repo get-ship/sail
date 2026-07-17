@@ -30,8 +30,8 @@ explains the rules.
 ## 1. Simple list view with live SSE
 
 A typed list, the 3-branch loading/error/ok shape, an empty state.
-Worked exemplar in the repo: `views/agents/page.sui` +
-`views/agents/controller.ts`.
+Worked exemplar in the repo: `views/agents/page.sui` (template plus
+its inline `<controller>` block).
 
 `views/example-list/page.sui`:
 
@@ -73,18 +73,18 @@ Worked exemplar in the repo: `views/agents/page.sui` +
 </div>
 ```
 
-`views/example-list/controller.ts`:
+`views/example-list/page.sui`'s inline `<controller>` block:
 
 ```ts
-import { controller, unwrap } from '@ship/sui-runtime'
-import type { Scope } from './page.sui'
+<controller>
+import { derived, unwrap } from '@ship/sui-runtime'
 
-export default controller<Scope>({
-  derived: {
-    rows:  ({ items }) => unwrap(items)?.items ?? [],
-    total: ({ items }) => unwrap(items)?.items.length ?? 0,
-  },
+export default controller(({ items }) => {
+  const rows  = derived(() => unwrap(items)?.items ?? [])
+  const total = derived(() => unwrap(items)?.items.length ?? 0)
+  return { rows, total }
 })
+</controller>
 ```
 
 `manifest.jsonc`:
@@ -100,7 +100,7 @@ export default controller<Scope>({
 ## 2. Form + mutation flow
 
 User input → POST → optimistic UI → live patch reconciles. Worked
-exemplar: `views/workspaces/page.sui` + `views/workspaces/controller.ts`.
+exemplar: `views/workspaces/page.sui` and its inline `<controller>` block.
 
 `page.sui`:
 
@@ -132,46 +132,45 @@ exemplar: `views/workspaces/page.sui` + `views/workspaces/controller.ts`.
 </div>
 ```
 
-`controller.ts`:
+Its inline `<controller>` block:
 
 ```ts
-import { controller, signal, unwrap } from '@ship/sui-runtime'
-import type { Scope } from './page.sui'
+<controller>
+import { signal, derived, unwrap } from '@ship/sui-runtime'
 
 interface Row { id: string; name: string; label?: string }
 interface State { items: Row[]; active: string | null }
 
-export default controller<Scope>({
-  scope: ({ ship }) => {
-    const activatingId    = signal('')
-    const activationError = signal('')
-    const pendingActiveId = signal('')   // optimistic overlay
+export default controller(({ ship, projects }) => {
+  const activatingId    = signal('')
+  const activationError = signal('')
+  const pendingActiveId = signal('')   // optimistic overlay
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const s = ship as any
-    async function activate(id: string) {
-      activatingId.set(id); activationError.set(''); pendingActiveId.set(id)
-      try {
-        await s.workspaces.activate({ id })
-        // live <data> patch arrives; effectiveActiveId() flips to `id` on its own
-      } catch (e) {
-        pendingActiveId.set('')
-        activationError.set((e as Error).message)
-      } finally {
-        activatingId.set('')
-      }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const s = ship as any
+  async function activate(id: string) {
+    activatingId.set(id); activationError.set(''); pendingActiveId.set(id)
+    try {
+      await s.workspaces.activate({ id })
+      // live <data> patch arrives; effectiveActiveId() flips to `id` on its own
+    } catch (e) {
+      pendingActiveId.set('')
+      activationError.set((e as Error).message)
+    } finally {
+      activatingId.set('')
     }
-    return { activatingId, activationError, pendingActiveId, activate }
-  },
-  derived: {
-    items: ({ projects }): Row[] => (unwrap(projects) as State | undefined)?.items ?? [],
-    effectiveActiveId: ({ projects, pendingActiveId }): string => {
-      const live = (unwrap(projects) as State | undefined)?.active ?? ''
-      const pending = pendingActiveId()
-      return pending && pending !== live ? pending : live
-    },
-  },
+  }
+
+  const items = derived((): Row[] => (unwrap(projects) as State | undefined)?.items ?? [])
+  const effectiveActiveId = derived((): string => {
+    const live = (unwrap(projects) as State | undefined)?.active ?? ''
+    const pending = pendingActiveId()
+    return pending && pending !== live ? pending : live
+  })
+
+  return { activatingId, activationError, pendingActiveId, activate, items, effectiveActiveId }
 })
+</controller>
 ```
 
 Declarative-form alternative (no optimistic overlay):
@@ -194,8 +193,8 @@ Declarative-form alternative (no optimistic overlay):
 
 A list on the left drives a detail panel on the right. The selection
 is a `Signal<string>`; the detail view subscribes to a live source
-parameterized by it. Pattern from `views/skills/controller.ts` adapted
-for the typed-SDK path.
+parameterized by it. Pattern from `views/skills/page.sui`'s inline
+`<controller>` block, adapted for the typed-SDK path.
 
 `page.sui`:
 
@@ -232,16 +231,18 @@ for the typed-SDK path.
 </div>
 ```
 
-`controller.ts`:
+Its inline `<controller>` block:
 
 ```ts
-import { controller, signal, unwrap } from '@ship/sui-runtime'
-import type { Scope } from './page.sui'
+<controller>
+import { signal, derived, unwrap } from '@ship/sui-runtime'
 
-export default controller<Scope>({
-  scope: () => ({ selectedId: signal('') }),
-  derived: { items: ({ rows }) => unwrap(rows)?.items ?? [] },
+export default controller(({ rows }) => {
+  const selectedId = signal('')
+  const items = derived(() => unwrap(rows)?.items ?? [])
+  return { selectedId, items }
 })
+</controller>
 ```
 
 The `<data live source="ship.agents.detail({id: $scope.selectedId()})">`
@@ -258,7 +259,7 @@ Two flavors. **In-page tabs** (no URL change) use a signal. **Sub-routes**
 
 ### 4a. In-page tabs
 
-From `views/git/controller.ts` (`tab: signal<GitTab>('changes')`):
+From `views/git/page.sui`'s inline `<controller>` block (`tab: signal<GitTab>('changes')`):
 
 ```html
 <sui-segmented prop:value={tab()}>
@@ -273,14 +274,16 @@ From `views/git/controller.ts` (`tab: signal<GitTab>('changes')`):
 ```
 
 ```ts
-import { controller, signal } from '@ship/sui-runtime'
-import type { Scope } from './page.sui'
+<controller>
+import { signal } from '@ship/sui-runtime'
 
 type Tab = 'changes' | 'history'
 
-export default controller<Scope>({
-  scope: () => ({ tab: signal<Tab>('changes') }),
+export default controller(() => {
+  const tab = signal<Tab>('changes')
+  return { tab }
 })
+</controller>
 ```
 
 ### 4b. Sub-routes (parameter in URL)
@@ -296,20 +299,20 @@ views/<name>/
     manifest.jsonc          # { path: "/<name>/[id]" }
 ```
 
-`[id]/controller.ts` reads the param (pattern from `views/agents/[id]/controller.ts`):
+`[id]/page.sui`'s inline `<controller>` block reads the param (pattern
+from `views/agents/[id]/page.sui`):
 
 ```ts
-import { controller, derived, live, unwrap } from '@ship/sui-runtime'
-import type { Scope } from './page.sui'
+<controller>
+import { derived, live, unwrap } from '@ship/sui-runtime'
 
-export default controller<Scope>({
-  scope: ({ route, ship }) => {
-    const agentId = derived(() => route.params.id() ?? '')
-    const ctx     = live(() => ship.agents.wire({ id: agentId() }))
-    const data    = derived(() => unwrap(ctx) ?? null)
-    return { agentId, ctx, data }
-  },
+export default controller(({ route, ship }) => {
+  const agentId = derived(() => route.params.id() ?? '')
+  const ctx     = live(() => ship.agents.wire({ id: agentId() }))
+  const data    = derived(() => unwrap(ctx) ?? null)
+  return { agentId, ctx, data }
 })
+</controller>
 ```
 
 If `defineRoutes` is needed (catalog-style detail views):
@@ -320,7 +323,8 @@ import { defineRoutes } from '@ship/sui-runtime/route'
 defineRoutes([{ pattern: '/<name>/:id' }])
 ```
 
-Worked exemplar: `apps/shell/src/studio/components/[name]/controller.ts`.
+Worked exemplar: `apps/shell/src/studio/components/[name]/page.sui`'s
+inline `<controller>` block.
 
 ---
 
@@ -470,9 +474,9 @@ The scaffold lays out:
 
 ```
 packages/components/ui-components/src/my-widget/
-  my-widget.sui            # <prop> directives + body with <slot> wrappers (light-DOM anatomy) + anatomy manifest
-  my-widget.controller.ts  # optional
-  my-widget.css            # optional
+  my-widget.sui   # <prop> directives + body with <slot> wrappers (light-DOM anatomy) + anatomy manifest;
+                  # --controller adds an inline <controller> block to this file
+  my-widget.css   # optional
 ```
 
 Component-side `<prop>` syntax (full table in

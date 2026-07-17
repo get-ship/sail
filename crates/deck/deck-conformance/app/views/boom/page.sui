@@ -1,9 +1,7 @@
 <controller>
 import { controller, live } from '@ship/sui-runtime'
 import { call } from 'ship'
-export default controller({
-  setup: (_ctx) => ({ result: live(() => call('ship.demo.boom', {})) }),
-})
+export default controller((_ctx) => ({ result: live(() => call('ship.demo.boom', {})) }))
 </controller>
 
 <column gap="3" sx="p-6 max-w-breakpoint-tablet mx-auto">

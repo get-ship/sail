@@ -2,13 +2,13 @@
 group: Views
 order: 1.5
 title: The authoring model — pure-expression templates, controller logic
-description: The line between a `.sui` template and its `controller.ts`. Templates carry declarative directives plus pure expressions; capabilities, statements, and declarations belong in the controller, reached through the ship SDK. SUI is the Svelte/Vue/Astro SFC lineage — deliberately not JSX.
+description: The line between a `.sui` template and its inline `<controller>` block. Templates carry declarative directives plus pure expressions; capabilities, statements, and declarations belong in the controller, reached through the ship SDK. SUI is the Svelte/Vue/Astro SFC lineage — deliberately not JSX.
 ---
 
 # The authoring model
 
 Every line you write in a view lands on one side of a single boundary: the
-`.sui` template, or the paired `controller.ts`. Get the boundary right and the
+`.sui` template, or its inline `<controller>` block. Get the boundary right and the
 rest of the framework — SSR, the LSP, route generation, the capability gate —
 works for free. Get it wrong and you fight the renderer.
 
@@ -28,12 +28,12 @@ client.
 - arithmetic, string ops, `toFixed`, comparisons, ternaries
 - member access (`u.name`, `overview().value?.branch`)
 
-**Banned — promote to `controller.ts`, reached through the ship SDK:**
+**Banned — promote to the `<controller>` block, reached through the ship SDK:**
 
 | Category | Examples | Where it goes |
 |---|---|---|
-| I/O & authority | `fetch` · `XHR` · `WebSocket` · `eval` · `Function` · `import()` · `localStorage` | a `<data>` subscription or a controller `live`/`on` handler |
-| Non-determinism | `Date.now()` · `Math.random()` · `new Date()` | seed in the controller (`scope:` + `mount`) or derive from data |
+| I/O & authority | `fetch` · `XHR` · `WebSocket` · `eval` · `Function` · `import()` · `localStorage` | a `<data>` subscription or a controller `live` call / event handler |
+| Non-determinism | `Date.now()` · `Math.random()` · `new Date()` | seed with a signal in the controller, assigned inside `mount` — or derive from data |
 | Mutation of non-owned state | `arr.sort()` · `arr.reverse()` · `arr.splice()` | copy first: `[...arr].sort()`, inside a `derived` |
 
 **Why the line is drawn here:**
@@ -114,21 +114,22 @@ holds only declarative directives and pure expressions:
 ```
 
 ```ts
-// ✅ controller.ts — declarations, logic, and the auth-gated read
-import { controller } from '@ship/sui-runtime'
-import type { Scope } from './page.sui'
+<controller>
+<!-- ✅ page.sui — inline <controller> block: declarations, logic, and the auth-gated read -->
+import { derived } from '@ship/sui-runtime'
 
-export default controller<Scope>({
-  derived: {
-    // The template's local `const` is now a declared, typed scope member.
-    // Copy before sort — never mutate the array the signal owns. The
-    // "joined" label derives from data, not from the wall clock.
-    sortedUsers: ({ users }) =>
-      [...(users().value?.items ?? [])]
-        .map((u) => ({ ...u, joinedLabel: new Date(u.joinedAt).toLocaleDateString() }))
-        .sort((a, b) => a.name.localeCompare(b.name)),
-  },
+export default controller(({ users }) => {
+  // The template's local `const` is now a declared scope member returned
+  // by the controller. Copy before sort — never mutate the array the
+  // signal owns. The "joined" label derives from data, not the wall clock.
+  const sortedUsers = derived(() =>
+    [...(users().value?.items ?? [])]
+      .map((u) => ({ ...u, joinedLabel: new Date(u.joinedAt).toLocaleDateString() }))
+      .sort((a, b) => a.name.localeCompare(b.name)))
+
+  return { sortedUsers }
 })
+</controller>
 ```
 
 The template still does real work — a `{#for}` over a sorted list, member

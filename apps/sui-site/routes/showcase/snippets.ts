@@ -5,20 +5,18 @@ export const code = {
   team: `<controller>
 import { controller, signal, filteredList, selection } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => {
-    const people = signal([
-      { id: 1, name: 'Ada Lovelace', team: 'Engines', status: 'active' },
-      { id: 2, name: 'Grace Hopper', team: 'Compilers', status: 'active' },
-    ])
-    const { query, filtered } = filteredList(() => people())
-    const { selected, toggle, clear } = selection(() => people(), (p) => p.id)
-    const remove = () => {
-      people.set((l) => l.filter((p) => p.id !== selected()?.id))
-      clear()
-    }
-    return { query, filtered, selected, toggle, remove }
-  },
+export default controller(() => {
+  const people = signal([
+    { id: 1, name: 'Ada Lovelace', team: 'Engines', status: 'active' },
+    { id: 2, name: 'Grace Hopper', team: 'Compilers', status: 'active' },
+  ])
+  const { query, filtered } = filteredList(() => people())
+  const { selected, toggle, clear } = selection(() => people(), (p) => p.id)
+  const remove = () => {
+    people.set((l) => l.filter((p) => p.id !== selected()?.id))
+    clear()
+  }
+  return { query, filtered, selected, toggle, remove }
 })
 </controller>
 
@@ -47,19 +45,17 @@ export default controller({
   fleet: `<controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => {
-    const services = signal([
-      { id: 'api', name: 'api-gateway', status: 'live', p99: 41, load: 82 },
-    ])
-    const deploy = (id) => {
-      services.set((l) => l.map((s) => (s.id === id ? { ...s, status: 'rolling' } : s)))
-      setTimeout(() => {
-        services.set((l) => l.map((s) => (s.id === id ? { ...s, status: 'live' } : s)))
-      }, 1500)
-    }
-    return { services, deploy }
-  },
+export default controller(() => {
+  const services = signal([
+    { id: 'api', name: 'api-gateway', status: 'live', p99: 41, load: 82 },
+  ])
+  const deploy = (id) => {
+    services.set((l) => l.map((s) => (s.id === id ? { ...s, status: 'rolling' } : s)))
+    setTimeout(() => {
+      services.set((l) => l.map((s) => (s.id === id ? { ...s, status: 'live' } : s)))
+    }, 1500)
+  }
+  return { services, deploy }
 })
 </controller>
 
@@ -80,19 +76,17 @@ export default controller({
   player: `<controller>
 import { controller, signal, effect } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => {
-    const playing = signal(true)
-    const position = signal(23)
-    // The interval lives in an effect: it tracks playing(), so pausing
-    // re-runs it, and its cleanup stops the timer on pause and unmount.
-    effect(() => {
-      if (!playing()) return
-      const t = setInterval(() => position.set((p) => (p + 1) % 100), 150)
-      return () => clearInterval(t)
-    })
-    return { playing, position, toggle: () => playing.set((p) => !p) }
-  },
+export default controller(() => {
+  const playing = signal(true)
+  const position = signal(23)
+  // The interval lives in an effect: it tracks playing(), so pausing
+  // re-runs it, and its cleanup stops the timer on pause and unmount.
+  effect(() => {
+    if (!playing()) return
+    const t = setInterval(() => position.set((p) => (p + 1) % 100), 150)
+    return () => clearInterval(t)
+  })
+  return { playing, position, toggle: () => playing.set((p) => !p) }
 })
 </controller>
 

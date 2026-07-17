@@ -170,9 +170,9 @@ fn reject_part_selector(source: &str) -> Result<(), CompileError> {
 
 /// Build the parse error returned when an author writes a top-level
 /// `<state>` element. The directive was retired in favour of
-/// declaring reactive state in the paired controller's `setup:`
-/// factory; the message names the migration target so authors can
-/// fix the file without consulting the changelog.
+/// declaring reactive state in the controller's setup function; the
+/// message names the migration target so authors can fix the file
+/// without consulting the changelog.
 fn state_directive_retired(el: &html::Element) -> CompileError {
     let name = el.get_attribute("name").unwrap_or_default();
     let label = if name.is_empty() {
@@ -182,8 +182,8 @@ fn state_directive_retired(el: &html::Element) -> CompileError {
     };
     CompileError::new(format!(
         "{label} directive is no longer supported. Declare reactive state \
-         in the paired controller's `setup:` factory \
-         (e.g. `setup: () => ({{ {} }})`).",
+         in the controller's setup function \
+         (e.g. `controller((ctx) => {{ ...; return {{ {} }} }})`).",
         if name.is_empty() {
             "x: signal(0)".to_string()
         } else {

@@ -15,21 +15,19 @@ import { applyTheme, persistTheme, readStoredTheme, THEMES, type ThemeId } from 
 import type { Scope } from './page.sui'
 import { code } from './snippets'
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>) => {
-    const active = signal<string>(readStoredTheme())
-    const pick = (id: ThemeId): void => {
-      applyTheme(id)
-      persistTheme(id)
-      active.set(id)
-    }
-    return {
-      active,
-      pick,
-      themes: () => THEMES,
-      code,
-    }
-  },
+export default controller((_ctx: ViewScope<Scope>) => {
+  const active = signal<string>(readStoredTheme())
+  const pick = (id: ThemeId): void => {
+    applyTheme(id)
+    persistTheme(id)
+    active.set(id)
+  }
+  return {
+    active,
+    pick,
+    themes: () => THEMES,
+    code,
+  }
 })
 </controller>
 

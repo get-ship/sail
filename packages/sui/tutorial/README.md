@@ -39,11 +39,9 @@ src/lessons/
       tut-01-settings-page.sui
   03-state-is-a-controller/
     starter/
-      tut-03-stopwatch-starter.sui
-      tut-03-stopwatch-starter.controller.ts
+      tut-03-stopwatch-starter.sui   # inline <controller> block, no sibling file
     solved/
-      tut-03-stopwatch.sui
-      tut-03-stopwatch.controller.ts
+      tut-03-stopwatch.sui           # inline <controller> block, no sibling file
   …
 src/prose/
   01-a-page-is-markup.md    # flat files — frontmatter: title/description/order/slug/prev/next/chapter
@@ -55,10 +53,10 @@ Naming is the custom-element tag rule: a component `.sui`'s stem IS its
 tag (`tut-03-stopwatch` → `<tut-03-stopwatch>`), so stems are
 hyphenated, unique across the workspace, and prefixed `tut-`. Starter
 stems carry a `-starter` suffix — two files may not claim one tag. A
-lesson has a `<stem>.controller.ts` sibling only when it has state;
-lessons 01 and 02 are deliberately zero-JS. The compiler pairs the
-sibling automatically (and an inline `<controller>` block in a `.sui`
-is extracted to exactly that sibling — same model, two spellings).
+lesson has an inline `<controller>` block only when it has state;
+lessons 01 and 02 are deliberately zero-JS. There is no sibling
+`.controller.ts` file — a controller is always authored inline in the
+`.sui` file, and a sibling `<stem>.controller.ts` is a compile error.
 
 ## Compile check
 
@@ -92,10 +90,11 @@ cd apps/sui-site && node scripts/gen-tutorial.mjs
 
 Each controller does `import type { Scope } from './<stem>.sui'`,
 resolved by `src/sui-ambient.d.ts` (`Scope = Record<string, unknown>`)
-so `typecheck` needs no compiler run; the lesson controllers
-parameterize `controller<Scope>({…})` explicitly. The canonical no-arg
-`controller({…})` form (with compiler-emitted `.sui.d.ts`) is what the
-prose teaches for real projects.
+so `typecheck` needs no compiler run; the lesson controllers that need
+the type annotate their setup param `(ctx: Scope) => {…}` explicitly.
+The one setup-function idiom — `controller((ctx) => {…})`, with
+`Ctx`/`SC` inferred and a real compiler-emitted `.sui.d.ts` — is what
+the prose teaches for real projects.
 
 ## Scripts
 
@@ -103,6 +102,6 @@ prose teaches for real projects.
 
 ## Editing policy
 
-The lesson `.sui` + `.controller.ts` pairs are the single source of
-truth for the code; `src/prose/*.md` for the words. The site's
-`tutorial-data.ts` is generated — never edit it by hand.
+The lesson `.sui` files (inline `<controller>` block and all) are the
+single source of truth for the code; `src/prose/*.md` for the words.
+The site's `tutorial-data.ts` is generated — never edit it by hand.

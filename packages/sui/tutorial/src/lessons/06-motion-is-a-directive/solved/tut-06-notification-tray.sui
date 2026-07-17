@@ -10,7 +10,6 @@
 
 <controller>
 import { controller, signal, derived } from '@ship/sui-runtime'
-import type { Scope } from './tut-06-notification-tray.sui'
 
 interface Note {
   id: number
@@ -28,8 +27,7 @@ const SEED: Note[] = [
 
 // This lesson's state is deliberately boring — every interesting line in
 // it lives in the TEMPLATE, because motion is a directive, not code.
-export default controller<Scope>({
-  setup: () => {
+export default controller(() => {
     const open = signal(true)
     const notes = signal<Note[]>(SEED)
     const unread = derived(() => notes().length)
@@ -42,8 +40,7 @@ export default controller<Scope>({
       dismiss: (id: number): void => notes.set(notes().filter((n) => n.id !== id)),
       restock: (): void => notes.set(SEED),
     }
-  },
-})
+  })
 </controller>
 
 <column gap="4">

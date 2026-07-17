@@ -17,22 +17,21 @@ crashes during early shell development; commit `87cf3223`.)
 
 ## API
 
-```ts
-import { onCleanup } from '@ship/sui-runtime'
-```
+`onCleanup` is ambient — the compiler auto-injects it inside a
+`<controller>` block, no import statement needed.
 
 `onCleanup(fn)` registers a teardown callback with the *current*
-scope. Inside a controller's `scope:` factory or `mount`, the current
-scope is the mount's scope, so registered cleanups run when the user
-navigates away.
+scope. Called anywhere in the controller function's call graph
+(directly in the controller body, inside `mount`, or inside a plain
+helper it calls), the current scope is the mount's scope, so
+registered cleanups run when the user navigates away. It's ambient —
+no import needed, just call the bare identifier.
 
 ```ts
-export default controller<Scope>({
-  scope: () => {
-    const ws = new WebSocket('wss://server/feed')
-    onCleanup(() => ws.close())
-    return { /* signals … */ }
-  },
+export default controller(() => {
+  const ws = new WebSocket('wss://server/feed')
+  onCleanup(() => ws.close())
+  return { /* signals … */ }
 })
 ```
 
@@ -46,7 +45,7 @@ any allocator.
   goes away. No cleanup required.
 - `effect()` — already returns a stop fn the framework calls on
   dispose.
-- Resources allocated inside a controller's `mount(state, host)` and
+- Resources allocated inside the controller's `mount((el) => …)` and
   released via `return () => …`. The mount lifecycle wires that
   cleanup automatically.
 
@@ -55,8 +54,8 @@ You DO need `onCleanup` for:
   on the caller's behalf
 - Custom hooks that wrap browser APIs (intersection observers, web
   socket clients, broadcast channels)
-- One-off allocations inside the `scope:` factory that don't return a
-  disposer to the framework
+- One-off allocations inside the controller function that don't
+  return a disposer to the framework
 
 ## Custom scopes
 

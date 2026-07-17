@@ -40,36 +40,51 @@ Template grammar:
 Reactive values are read by calling them: \`count()\` reads, \`count.set(n)\` writes.
 A \`<data live>\` declaration exposes a Result-shaped signal whose kind is \`'loading' | 'ok' | 'error'\`; check \`x().kind === 'ok'\` then read \`x().value\`.
 
-Controller (optional, paired .ts) — five named sections, no escape hatches:
-  import { controller } from '@ship/sui-runtime'
-  export default controller({
-    derived: { /* memos; ({ x }) => x() * 2 */ },
-    on:      { /* handlers; ONLY section that mutates: (s, ...args) => { s.x = ... } */ },
-    use:     { /* controller hooks composed by namespace key */ },
-    mount:   (s, el) => { /* once after render */ },
-    unmount: (s) => { /* once on dispose */ },
+Controller (optional) — ONE function, authored inline in the .sui file, no sections:
+  <controller>
+  export default controller((ctx) => {
+    const items = signal<Item[]>([])
+    mount((el) => { /* after connect; disposes with the instance */ })
+    onCleanup(() => { /* runs on dispose */ })
+    return { items, add }
   })
+  </controller>
 
-  Local state always lives in the template via <state name="X" value="..." />.
-  Controllers read state through scope (the destructured first arg of derived/on
-  receives \`X\` as a callable signal). Computed-initial values move to mount:
-  declare <state name="id" value="''" /> and assign state.id = crypto.randomUUID()
-  inside mount.
+  \`controller(fn)\` — \`fn\` is \`(ctx, host?) => Record<string, unknown>\`. \`ctx\` is the
+  ambient view scope: \`ship\`, \`clients\`, \`route\`, \`navigate\`, plus every
+  template-declared \`<data>\`/\`<state>\` signal, all directly accessible (\`ctx.ship\`, or
+  destructure \`{ ship, count }\`). Whatever \`fn\` returns IS the whole contributed
+  template scope — state signals (\`signal(...)\`), computed values (\`derived(...)\`),
+  plain helpers, AND event handlers, all as ordinary object properties. No separate
+  section for handlers.
 
-Available controller hooks (compose via \`use:\`):
-  useFilteredList(source, (item, query) => boolean)  — { state.query, derived.filtered, on.setQuery, on.clear }
-  useSelection(source, (item) => key)                — { state.selectedId, derived.selected, on.select, on.clear, on.toggle }
-  useForm({ initial, validate?, submit? })           — per-field signals + { derived.errors/valid/dirty/values, on.submit, on.reset }
+  Mutation is ALWAYS \`signal.set(newValue)\` (or \`signal.set(prev => next)\` updater
+  form). Never assign to a signal like a plain property.
+
+  Lifecycle is ambient, callable from anywhere in the setup call graph (the setup
+  body, or a plain helper/composition function it calls):
+    mount(fn)      — fn: (el: HTMLElement) => (() => void) | void. Fires once after
+                     the instance's DOM connects; a returned function is cleanup run
+                     on dispose.
+    onCleanup(fn)  — fn: () => void. Runs on dispose.
+  Both are ambient/auto-injected by the compiler — no import statement, just call the
+  bare identifier.
+
+Available compositions (plain functions; call one inside the controller and whatever
+\`Signal<T>\`s it returns become ordinary scope members):
+  filteredList(source, (item, query) => boolean)  — { query, filtered, setQuery, clear }
+  selection(source, (item) => key)                — { selectedId, selected, select, clear, toggle }
+  form({ initial, validate?, submit? })           — per-field signals + { errors, valid, dirty, values, submit, reset }
 
 Available template hooks (browser-platform bridges; use as elements):
-  <use-kbd> <on key="..." action="onName" /> ... </use-kbd>   — document keyboard shortcuts → controller on.* names
+  <use-kbd> <on key="..." action="onName" /> ... </use-kbd>   — document keyboard shortcuts → controller handler names
   <use-click-outside bind:target={ref} bind:action={onName} /> — fires action on click outside target
 
 Hard rules — violating any of these fails the eval:
   - No raw <script> tags. No eval. No new Function(). No document.write.
   - No customElements.define — that's primitive territory, not view territory.
   - Use <ship-*> primitives from the catalog rather than reinventing buttons or inputs.
-  - Mutation lives only in \`on.*\` handlers. Never \`s.x = v\` in derived or templates.
+  - Mutation is always \`signal.set(...)\`. Never assign to a signal like a plain property, anywhere.
   - Subscriptions live in <data> elements, never in controller code. Don't call ship.* outside <data>.
   - Output exactly one fenced \`\`\`html.set\`\`\` block. If a controller is needed, append one fenced \`\`\`ts\`\`\` block. No prose outside the blocks.`
 
@@ -97,9 +112,8 @@ const FEW_SHOT_COUNTER = {
 }
 
 const FEW_SHOT_CONTROLLER = {
-  description: 'A select-an-agent view: a controller exposes derived values + a handler; the template wires them. selectedId is template-declared <state>.',
+  description: 'A select-an-agent view: a controller exposes derived values + a handler; the template wires them. selectedId is a controller-owned signal.',
   template: `<data name="agents" source="ship.agents.summaries()" live />
-<state name="selectedId" value="null" />
 
 <p>{total()} agent{total() === 1 ? '' : 's'}</p>
 <ul>
@@ -112,22 +126,21 @@ const FEW_SHOT_CONTROLLER = {
     {/for}
   {/if}
 </ul>`,
-  setup: `import { controller } from '@ship/sui-runtime'
+  setup: `import { controller, signal, derived } from '@ship/sui-runtime'
 import type { LiveSignal } from '@ship/sui-runtime'
 
-export default controller({
-  derived: {
-    items:      ({ agents }: { agents: LiveSignal<{ items: { id: string; name: string }[] }> }) => {
-      const s = agents()
-      return s.kind === 'ok' ? s.value.items : []
-    },
-    total:      ({ items }: { items: () => unknown[] }) => items().length,
-    isSelected: ({ selectedId }: { selectedId: () => string | null }) =>
-                  (id: string) => selectedId() === id,
-  },
-  on: {
-    select: (s: { selectedId: string | null }, id: string) => { s.selectedId = id },
-  },
+export default controller((ctx: { agents: LiveSignal<{ items: { id: string; name: string }[] }> }) => {
+  const selectedId = signal<string | null>(null)
+
+  const items = derived(() => {
+    const s = ctx.agents()
+    return s.kind === 'ok' ? s.value.items : []
+  })
+  const total = derived(() => items().length)
+  const isSelected = (id: string) => selectedId() === id
+  const select = (id: string) => { selectedId.set(id) }
+
+  return { selectedId, items, total, isSelected, select }
 })`,
 }
 

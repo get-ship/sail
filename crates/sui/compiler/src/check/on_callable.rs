@@ -1,10 +1,12 @@
 //! Type-strengthening #4: `on:event={X}` callable handler.
 //!
+//! This is the TEMPLATE `on:` directive (DOM event binding), unrelated to
+//! the retired controller `on: {...}` section.
+//!
 //! Handlers must be either:
 //!   - An arrow expression (`(e) => …`).
-//!   - An identifier that resolves to a callable scope key — i.e. a
-//!     `controller({ on: { name: ... } })` action OR a scope-factory
-//!     entry of arrow shape (`name: (e) => …`).
+//!   - An identifier that resolves to a callable scope member — i.e. a
+//!     returned scope member of arrow/function shape (`name: (e) => …`).
 //!
 //! Without this, `on:click={count}` typechecks because `count` is a
 //! declared scope name; at runtime the renderer tries to invoke a
@@ -22,44 +24,45 @@ pub fn check(
     controller: Option<&ParsedController>,
 ) -> Result<(), CompileError> {
     let table = SymbolTable::build(program, controller);
-    walk(&program.template, &table)
+    let ctx_head = controller.map(|c| c.ctx_param.as_str()).unwrap_or("");
+    walk(&program.template, &table, ctx_head)
 }
 
-fn walk(instrs: &[Instr], table: &SymbolTable) -> Result<(), CompileError> {
+fn walk(instrs: &[Instr], table: &SymbolTable, ctx_head: &str) -> Result<(), CompileError> {
     for instr in instrs {
         match instr {
             Instr::Element(el) => {
                 for a in &el.attrs {
                     if let AttrInstr::On { event, handler, .. } = a {
-                        validate(event, handler, table)?;
+                        validate(event, handler, table, ctx_head)?;
                     }
                 }
-                walk(&el.children, table)?;
+                walk(&el.children, table, ctx_head)?;
             }
             Instr::If(i) => {
                 for b in &i.branches {
-                    walk(&b.body, table)?;
+                    walk(&b.body, table, ctx_head)?;
                 }
                 if let Some(eb) = &i.else_body {
-                    walk(eb, table)?;
+                    walk(eb, table, ctx_head)?;
                 }
             }
             Instr::For(f) => {
-                walk(&f.body, table)?;
+                walk(&f.body, table, ctx_head)?;
                 if let Some(eb) = &f.else_body {
-                    walk(eb, table)?;
+                    walk(eb, table, ctx_head)?;
                 }
             }
             Instr::Match(m) => {
                 for c in &m.cases {
-                    walk(&c.body, table)?;
+                    walk(&c.body, table, ctx_head)?;
                 }
                 if let Some(d) = &m.default {
-                    walk(d, table)?;
+                    walk(d, table, ctx_head)?;
                 }
             }
-            Instr::WhileLoading(wl) => walk(&wl.body, table)?,
-            Instr::WhileError(we) => walk(&we.body, table)?,
+            Instr::WhileLoading(wl) => walk(&wl.body, table, ctx_head)?,
+            Instr::WhileError(we) => walk(&we.body, table, ctx_head)?,
             _ => {}
         }
     }
@@ -70,6 +73,7 @@ fn validate(
     event: &str,
     handler: &crate::ir::Expr,
     table: &SymbolTable,
+    ctx_head: &str,
 ) -> Result<(), CompileError> {
     let Ok(ast) = parse_expression_with_arrows(&handler.source, handler.span.start) else {
         return Ok(());
@@ -96,15 +100,16 @@ fn validate(
             }
         }
         AstKind::Member { obj, prop, .. } => {
-            // `scope.handlerName` — verify the head segment routes to a
-            // callable scope key.
+            // `ctx.handlerName` — verify the head segment (the setup
+            // function's own ctx param) routes to a callable scope key.
             if let AstKind::Ident(head) = &obj.kind
-                && head == "setup"
+                && !ctx_head.is_empty()
+                && head == ctx_head
             {
                 match table.kind_of_scope(prop) {
                     Some(k) if k.is_callable() => Ok(()),
                     Some(k) => Err(CompileError::new(format!(
-                        "on:{event}={{scope.{prop}}} expects a callable — `{prop}` is a {} (declare it as `{prop}: (e) => ...`).",
+                        "on:{event}={{{ctx_head}.{prop}}} expects a callable — `{prop}` is a {} (declare it as `{prop}: (e) => ...`).",
                         k.label()
                     ))
                     .with_span(handler.span)
@@ -120,9 +125,6 @@ fn validate(
 }
 
 fn is_callable_name(name: &str, table: &SymbolTable) -> bool {
-    if table.on.contains_key(name) {
-        return true;
-    }
     if let Some(k) = table.kind_of_scope(name) {
         return k.is_callable();
     }
@@ -133,9 +135,6 @@ fn is_callable_name(name: &str, table: &SymbolTable) -> bool {
 fn name_kind(name: &str, table: &SymbolTable) -> String {
     if let Some(k) = table.kind_of_scope(name) {
         return format!("a scope {} (not callable)", k.label());
-    }
-    if table.derived.contains_key(name) {
-        return "a derived getter (not callable directly)".into();
     }
     "not declared".into()
 }
@@ -178,14 +177,14 @@ mod tests {
 
     #[test]
     fn allows_arrow_handler() {
-        let c = ctrl("export default controller({ setup: () => ({ n: signal(0) }) });");
+        let c = ctrl("export default controller((ctx) => ({ n: signal(0) }));");
         check(&program_with_on("(e) => n.set(1)"), Some(&c)).unwrap();
     }
 
     #[test]
     fn allows_scope_action_ident() {
         let c = ctrl(
-            "export default controller({ setup: () => ({ inc: (e) => e }) });",
+            "export default controller((ctx) => ({ inc: (e) => e }));",
         );
         check(&program_with_on("inc"), Some(&c)).unwrap();
     }
@@ -193,7 +192,7 @@ mod tests {
     #[test]
     fn rejects_signal_as_handler() {
         let c = ctrl(
-            "export default controller({ setup: () => ({ n: signal(0) }) });",
+            "export default controller((ctx) => ({ n: signal(0) }));",
         );
         let err = check(&program_with_on("n"), Some(&c)).unwrap_err();
         assert!(err.message.contains("signal"), "{}", err.message);
@@ -202,7 +201,7 @@ mod tests {
     #[test]
     fn rejects_call_expression_handler() {
         let c = ctrl(
-            "export default controller({ setup: () => ({ inc: (e) => e }) });",
+            "export default controller((ctx) => ({ inc: (e) => e }));",
         );
         let err = check(&program_with_on("inc()"), Some(&c)).unwrap_err();
         assert!(err.message.contains("call expression"), "{}", err.message);
@@ -211,17 +210,17 @@ mod tests {
     #[test]
     fn allows_scope_dot_action() {
         let c = ctrl(
-            "export default controller({ setup: () => ({ inc: (e) => e }) });",
+            "export default controller((ctx) => ({ inc: (e) => e }));",
         );
-        check(&program_with_on("setup.inc"), Some(&c)).unwrap();
+        check(&program_with_on("ctx.inc"), Some(&c)).unwrap();
     }
 
     #[test]
     fn rejects_scope_dot_signal() {
         let c = ctrl(
-            "export default controller({ setup: () => ({ n: signal(0) }) });",
+            "export default controller((ctx) => ({ n: signal(0) }));",
         );
-        let err = check(&program_with_on("setup.n"), Some(&c)).unwrap_err();
+        let err = check(&program_with_on("ctx.n"), Some(&c)).unwrap_err();
         assert!(err.message.contains("signal"), "{}", err.message);
     }
 }

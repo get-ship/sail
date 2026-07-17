@@ -15,22 +15,20 @@ import { controller, signal, type ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 import { code } from './snippets'
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>) => {
-    const open = signal(true)
-    const dealt = signal(true)
-    const replay = (): void => {
-      dealt.set(false)
-      setTimeout(() => dealt.set(true), 450)
-    }
-    return {
-      code,
-      open,
-      dealt,
-      replay,
-      hand: signal(['A', 'K', 'Q', 'J', '10']),
-    }
-  },
+export default controller((_ctx: ViewScope<Scope>) => {
+  const open = signal(true)
+  const dealt = signal(true)
+  const replay = (): void => {
+    dealt.set(false)
+    setTimeout(() => dealt.set(true), 450)
+  }
+  return {
+    code,
+    open,
+    dealt,
+    replay,
+    hand: signal(['A', 'K', 'Q', 'J', '10']),
+  }
 })
 </controller>
 

@@ -1,10 +1,7 @@
 <controller>
 import { controller, signal } from '@ship/sui-runtime'
-import type { Scope } from './page.sui'
 
-export default controller<Scope>({
-  setup: () => ({ enabled: signal(false) }),
-})
+export default controller(() => ({ enabled: signal(false) }))
 </controller>
 
 <div data-demo="true">

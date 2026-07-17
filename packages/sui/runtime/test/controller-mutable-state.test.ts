@@ -30,37 +30,37 @@ describe('MutableState<Scope> (handler-state arg)', () => {
     expectTypeOf<MutableState<Scope>['label']>().toEqualTypeOf<ReadonlyView<string>>()
   })
 
-  it('canonical form: handlers get PRECISE, cast-free types inferred from scope', () => {
-    // `controller({ setup: (ctx: ViewScope<Tpl>) => ({…}) })` infers both the
-    // template `Ctx` (from the scope param annotation) and `SC` (from the
-    // return) — the controller's own TS is the source of truth (no
-    // `Signal<unknown>` from the compiler). No `<Scope>` type arg, no currying,
-    // no `type S = MutableState<Scope>`, no `s as any`; values are precise.
-    //
-    // `derived()` returns `Derived<T> extends Signal<T>`, so it reads as its
-    // unwrapped VALUE (the proxy unwraps state signals) — `s.label`, not
-    // `s.label()`.
+  it('canonical form: setup gets a PRECISE, cast-free ViewScope inferred from Tpl', () => {
+    // `controller((ctx: ViewScope<Tpl>) => ({…}))` infers the template
+    // `Ctx` from the setup function's param annotation — the compiler-
+    // generated `ViewScope<Tpl>` the author imports. Signals it creates
+    // itself (`signal`/`derived`) are read/written directly through the
+    // `Signal<T>` API — there is no separate writable-proxy type for
+    // handlers; a handler returned from setup closes over the same
+    // signal and calls `.set()` on it, same as setup itself would.
     interface Tpl { /* template-declared <data>/<state> only */ }
-    controller({
-      setup: (_ctx: ViewScope<Tpl>) => ({
-        count: signal(0),
-        flag: signal(false),
-        label: derived(() => 'hello'),
-        ws: derived(() => 'a' as string | null),
-      }),
-      on: {
-        bump: (s) => {
-          s.count = s.count + 1                // writable signal key -> number
-          s.flag = !s.flag
-          const l: string = s.label            // derived value, PRECISE string
-          const w: string | null = s.ws        // derived value, string | null
+    controller((_ctx: ViewScope<Tpl>) => {
+      const count = signal(0)
+      const flag = signal(false)
+      const label = derived(() => 'hello')
+      const ws = derived(() => 'a' as string | null)
+      return {
+        count,
+        flag,
+        label,
+        ws,
+        bump: () => {
+          count.set(count() + 1)
+          flag.set(!flag())
+          const l: string = label()   // derived value, PRECISE string
+          const w: string | null = ws()
           void l; void w
         },
-        bad: (s) => {
+        bad: () => {
           // @ts-expect-error count is a number signal — wrong value type
-          s.count = 'not a number'
+          count.set('not a number')
         },
-      },
+      }
     })
   })
 })

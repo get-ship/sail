@@ -30,21 +30,19 @@ The shape:
 ```
 
 ```ts
-export default controller({
-  scope: () => {
-    const name = signal('')
-    return {
-      name,
-      add: async (label: string): Promise<void> => {
-        if (!label.trim()) return
-        const res = await fetch('/_deck/api/users/add', {
-          method: 'POST',
-          body: JSON.stringify({ name: label }),
-        })
-        if (res.ok) name.set('')
-      },
-    }
-  },
+export default controller((ctx) => {
+  const name = signal('')
+  return {
+    name,
+    add: async (label: string): Promise<void> => {
+      if (!label.trim()) return
+      const res = await fetch('/_deck/api/users/add', {
+        method: 'POST',
+        body: JSON.stringify({ name: label }),
+      })
+      if (res.ok) name.set('')
+    },
+  }
 })
 ```
 

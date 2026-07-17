@@ -78,8 +78,7 @@ function parseUnified(value: string): Array<{ kind: Kind; text: string }> {
 const SIGNS: Record<Kind, string> = { add: '+', del: '-', hunk: '@', ctx: ' ' }
 const LABELS: Record<Kind, string> = { add: 'added', del: 'removed', hunk: 'hunk', ctx: 'context' }
 
-export default controller<Scope>({
-  setup: ({ from, to, value }: Scope) => {
+export default controller(({ from, to, value }: Scope) => {
     const lines = derived((): Line[] => {
       const v = value()
       const f = from()
@@ -94,13 +93,14 @@ export default controller<Scope>({
         label: `${LABELS[l.kind]}: ${l.text}`,
       }))
     })
+
+    mount((host) => {
+      if (!host.hasAttribute('role')) host.setAttribute('role', 'region')
+      if (!host.hasAttribute('aria-label')) host.setAttribute('aria-label', 'diff')
+    })
+
     return { lines }
-  },
-  mount(_state, host) {
-    if (!host.hasAttribute('role')) host.setAttribute('role', 'region')
-    if (!host.hasAttribute('aria-label')) host.setAttribute('aria-label', 'diff')
-  },
-})
+  })
 </controller>
 
 <column role="list" gap="0" sx="bg-muted border border-border rounded-md overflow-hidden font-mono text-sm leading-normal">

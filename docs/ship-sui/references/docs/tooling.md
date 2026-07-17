@@ -76,7 +76,7 @@ sui-lsp                 # LSP server on stdio (what editors + .lsp.json launch)
 
 Intelligence is the Rust compiler: `sui_compiler::check_all` (multi-diagnostic),
 `SymbolTable` (scope names + kinds + declaration offsets, byte-walked from the
-paired `.controller.ts` — no `typescript` package), and an IR walk for the
+inline `<controller>` block — no `typescript` package), and an IR walk for the
 tag/event dependency surface (`sui_compiler::analyze`).
 
 > **Retired:** the former TypeScript LSP (`packages/deck/lsp`, ex-`ship-set-lsp`)
@@ -107,8 +107,8 @@ cargo run -p sui-compiler -- build views/hello/page.sui
 
 | File | Owns |
 |---|---|
-| `page.sui` + `controller.ts` | Catalog index — search, filter (All / Components / Views), grouped nav |
-| `[name]/page.sui` + `controller.ts` | Detail page — exercise prop knobs, slot compositions, deep-link state, render matrix |
+| `page.sui` (with its inline `<controller>` block) | Catalog index — search, filter (All / Components / Views), grouped nav |
+| `[name]/page.sui` (with its inline `<controller>` block) | Detail page — exercise prop knobs, slot compositions, deep-link state, render matrix |
 | `catalog.ts` | The component / view registry the index reads |
 | `[name]/matrix.ts` | Render-matrix configurations (prop × value grid) |
 | `[name]/slot-compositions.ts` | Slot composition presets |
@@ -119,7 +119,7 @@ Use it to find a component, browse its props (including enum values from `<prop 
 
 ## Devtools panes — in-page introspection
 
-`packages/components/ui-components/src/sui-devtools/` ships five panes that share a separate bundle (opted in via `<bundle separate />` in each `.sui` source). Each is a `.sui` + `.controller.ts` pair, lazy-loaded on first mount via the `sui-devtools.js` bundle.
+`packages/components/ui-components/src/sui-devtools/` ships five panes that share a separate bundle (opted in via `<bundle separate />` in each `.sui` source). Each is a `.sui` file with its own inline `<controller>` block, lazy-loaded on first mount via the `sui-devtools.js` bundle.
 
 | Tag | What it shows |
 |---|---|

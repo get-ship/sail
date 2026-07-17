@@ -6,13 +6,11 @@
 export const code = {
   graph: `<controller>
 import { controller, signal, derived, effect } from '@ship/sui-runtime'
-export default controller({
-  setup: () => {
-    const count = signal(0)
-    const doubled = derived(() => count() * 2)
-    effect(() => console.log('count is', count()))
-    return { count, doubled }
-  },
+export default controller(() => {
+  const count = signal(0)
+  const doubled = derived(() => count() * 2)
+  effect(() => console.log('count is', count()))
+  return { count, doubled }
 })
 </controller>
 
@@ -73,20 +71,21 @@ effect(() => {
 <output>{count()}</output>
 <button on:click={() => count.set((n) => n + 1)}>+</button>`,
 
-  lifecycle: `import { controller, signal, onCleanup } from '@ship/sui-runtime'
+  lifecycle: `import { controller, signal, mount } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => ({ size: signal({ w: 0, h: 0 }) }),
+export default controller(() => {
+  const size = signal({ w: 0, h: 0 })
 
-  // mount runs once, after the element is in the DOM. host IS the element.
-  mount(state, host) {
+  // mount runs once, after the element is in the DOM. el IS the element.
+  mount((el) => {
     const ro = new ResizeObserver(([e]) => {
-      // plain assignment — the scope proxy routes it through signal.set
-      state.size = { w: e.contentRect.width, h: e.contentRect.height }
+      size.set({ w: e.contentRect.width, h: e.contentRect.height })
     })
-    ro.observe(host)
-    onCleanup(() => ro.disconnect())
-  },
+    ro.observe(el)
+    return () => ro.disconnect()
+  })
+
+  return { size }
 })`,
 
   composition: `// A COMPOSITION is a plain function over the primitives. No type, no

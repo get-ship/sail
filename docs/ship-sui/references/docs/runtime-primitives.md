@@ -254,22 +254,23 @@ The compiler emits a side-effect import of `@ship/sui-runtime/template-hooks` in
 ## Routes — reactive URL state
 
 ```ts
-import { controller, derived } from '@ship/sui-runtime'
+<controller>
+import { derived } from '@ship/sui-runtime'
 import { defineRoutes, navigate } from '@ship/sui-runtime/route'
-import type { Scope } from './page.sui'
 
 defineRoutes([{ pattern: '/agents/:id' }])
 
-export default controller<Scope>({
-  scope: ({ route }) => ({
-    agentId: derived(() => route.params.id() ?? ''),
-    tab:     derived(() => route.query.tab() ?? ''),
-    goHome:  () => navigate('/'),
-  }),
+export default controller(({ route }) => {
+  const agentId = derived(() => route.params.id() ?? '')
+  const tab     = derived(() => route.query.tab() ?? '')
+  const goHome  = () => navigate('/')
+
+  return { agentId, tab, goHome }
 })
+</controller>
 ```
 
-`route` is injected into every controller section's scope. `route.params.<name>` and `route.query.<name>` are signals — call them (`route.params.id()`) to read and subscribe inside `effect`, `derived`, or a `<data>` source thunk. `popstate` and `navigate` both fire the global updater so every attached view re-evaluates. (`route` is also importable as a `route()` factory from `@ship/sui-runtime/route` for non-controller code; the namespace form `route.params.id()` is the controller exemplar — see `views/agents/[id]/controller.ts`.)
+`route` is part of the ambient `ctx` every controller function receives. `route.params.<name>` and `route.query.<name>` are signals — call them (`route.params.id()`) to read and subscribe inside `effect`, `derived`, or a `<data>` source thunk. `popstate` and `navigate` both fire the global updater so every attached view re-evaluates. (`route` is also importable as a `route()` factory from `@ship/sui-runtime/route` for non-controller code; the namespace form `route.params.id()` is the controller exemplar — see `views/agents/[id]/page.sui`'s `<controller>` block.)
 
 ## Mount API
 

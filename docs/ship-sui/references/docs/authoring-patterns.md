@@ -7,7 +7,7 @@ description: Canonical patterns for .sui view authoring.
 
 # SUI — Authoring Patterns
 
-How to author a SUI view, a SUI component, and the controller that pairs with each.
+How to author a SUI view, a SUI component, and the controller that lives inside each.
 
 ## Component vs view
 
@@ -43,49 +43,42 @@ A view that wants reusable markup pulls a component in (`packages/components/ui-
 > boundary, the manifest's "containment" field is unset and the
 > compiler never emits a shadow root.
 
-## The 2-file bet
+## The controller block
 
-Two files, paired by directory + filename stem. The compiler reads both — the `.sui` template emits the render module, the `.controller.ts` types its `Scope` and contributes signals / lifecycle / handlers.
+One inline `<controller>` block, authored directly in the `.sui` file — no paired sibling file. The template still declares markup and bindings; the controller still does the work, it's just one function now instead of a sectioned object.
 
 ```ts
-// controller.ts
-import { controller, signal, derived, ref, shared, useShared,
-         useFilteredList, unwrap } from '@ship/sui-runtime'
-import type { Scope } from './page.sui'   // compiler-emitted .d.ts
+// inside page.sui
+<controller>
+export default controller((ctx) => {
+  const { agents, navigate } = ctx
+  const filter   = signal('')
+  const total    = derived(() => unwrap(agents)?.items.length ?? 0)
+  const list     = useFilteredList(agents, (a, q) => a.name.includes(q))
+  const dialogEl = ref<HTMLDivElement>(null)
+  const badge    = derived(() => `${total()} agents`)
 
-export default controller<Scope>({
-  scope: ({ agents }) => {
-    const filter   = signal('')
-    const total    = derived(() => unwrap(agents)?.items.length ?? 0)
-    const list     = useFilteredList(agents, (a, q) => a.name.includes(q))
-    const dialogEl = ref<HTMLDivElement>(null)
-    return { filter, total, list, dialogEl }
-  },
-  derived: {                         // optional separate block — same effect as in scope
-    badge: ({ total }) => `${total()} agents`,
-  },
-  on: {
-    newAgent: ({ navigate }) => navigate('/agents/create'),
-  },
-  mount:   ({ state }, el) => { /* runs after first DOM attach */ },
-  unmount: ({ state })     => { /* runs on dispose */ },
+  const newAgent = () => navigate('/agents/create')
+
+  mount((el) => { /* runs after first DOM attach; return a cleanup fn or nothing */ })
+  onCleanup(() => { /* runs on dispose */ })
+
+  return { filter, total, list, dialogEl, badge, newAgent }
 })
+</controller>
 ```
 
-Four sections, each one job:
+One function, one job: `controller(fn)` where `fn` is `(ctx) => Record<string, unknown>`. `ctx` is the ambient view scope — `ship`, `clients`, `route`, `navigate`, plus every template-declared `<data>`/`<state>` signal, directly accessible. Whatever the function returns IS the contributed template scope: state signals, derived values, plain helpers, and event handlers all live together as ordinary object properties — there's no separate section for handlers anymore.
 
-- **`scope:`** — factory that returns the typed bag of signals, derived, refs, hooks, shared providers / consumers. Runs first; entries land in template scope. Replaces the historical `<state>` / `<derived>` / `<use>` split.
-- **`derived:`** — separate block for computed values, same lifetime as scope. Convention; not required.
-- **`on:`** — multi-statement event handlers. The first arg is a writable proxy: `s.count = s.count + 1` mutates state.
-- **`mount:` / `unmount:`** — lifecycle. Runs after first attach / on disconnect.
+`mount(fn)` and `onCleanup(fn)` are ambient — ✅ callable from anywhere in the setup call graph (the controller body itself, or a plain helper function it calls), no import needed. `mount` fires once after the instance's DOM connects; `onCleanup` runs on dispose. Mutation is always `signal.set(newValue)` (or the updater form `signal.set(prev => next)`) — there's no writable-state-proxy assignment style.
 
 A multi-statement `on:event` in a template-only file (no controller) is a compile error — that's the signal you've outgrown tier-1.
 
-Single-expression handlers (`on:click={() => count.set(count() + 1)}`) live in the template; multi-statement handlers move to the controller's `on:`.
+Single-expression handlers (`on:click={() => count.set(count() + 1)}`) live in the template; multi-statement handlers become a plain function returned from the controller and referenced by name (`on:click={newAgent}`).
 
 ## Templates declare. Controllers do.
 
-The `sui-controller-purity` rule rejects markup-producing code in `*.controller.ts`:
+The `sui-controller-purity` rule rejects markup-producing code inside the `<controller>` block:
 
 - `<el>.innerHTML = …` / `outerHTML = …` / `insertAdjacentHTML(…)`
 - A sibling `render.ts` of HTML-string template-literal helpers
@@ -145,7 +138,7 @@ The prop table is otherwise unchanged.
 ## Refs — `bind:this`
 
 ```ts
-// in scope: factory
+// inside the controller function
 const dialogEl = ref<HTMLDivElement>(null)
 ```
 
@@ -176,19 +169,19 @@ const dialogEl = ref<HTMLDivElement>(null)
 
 ## Cross-component reactive context — `shared` / `useShared`
 
-For component packs that split into a public outer host + internal pieces (e.g. `sui-tabs` / `sui-tab`), share signals from parent to descendants without prop drilling. The parent calls `shared(signal(…))` inside `scope:`; descendants call `useShared<ParentScope>('parent-tag')` to resolve the same identity. `useShared` walks DOM ancestry in the light DOM; returns `null` when no provider is found.
+For component packs that split into a public outer host + internal pieces (e.g. `sui-tabs` / `sui-tab`), share signals from parent to descendants without prop drilling. The parent calls `shared(signal(…))` inside the controller function; descendants call `useShared<ParentScope>('parent-tag')` to resolve the same identity. `useShared` walks DOM ancestry in the light DOM; returns `null` when no provider is found.
 
 Worked examples and lookup semantics are in the `ship-views` skill's `references/shared-context.md`.
 
 ## Scope is typed
 
-The compiler emits `Scope` in `<file>.sui.d.ts` covering BOTH template reactive identifiers AND the keys you add via `scope: () => ({...})` factory. `mount(state, host)` sees direct, typed members:
+The compiler emits `Scope` in `<file>.sui.d.ts` covering BOTH template reactive identifiers AND the keys the controller function returns. `mount((el) => { … })` sees direct, typed members via the closure over the controller's returned scope:
 
 ```ts
-mount(state, host) {
-  state.caughtError.set(null)  // Signal<Error | null>
-  state.reset()                 // () => void
-}
+mount((el) => {
+  caughtError.set(null)  // Signal<Error | null>
+  reset()                 // () => void
+})
 ```
 
 No casts. No "scope signals missing" defensive throws. If a key is mistyped or missing, the TypeScript compiler catches it before the runtime does.
@@ -201,7 +194,7 @@ deck scaffold view settings --component settings-toolbar
 deck scaffold component my-widget --controller
 ```
 
-The first generates `views/settings/` with `page.sui` + `controller.ts` + `style.css` + `manifest.jsonc`. The `--component` flag also scaffolds `_components/settings-toolbar/`. The component scaffold drops `packages/components/ui-components/src/my-widget/` with `<tag>.sui`; `--controller` adds the paired controller.
+The first generates `views/settings/` with `page.sui` (including an inline `<controller>` block) + `style.css` + `manifest.jsonc`. The `--component` flag also scaffolds `_components/settings-toolbar/`. The component scaffold drops `packages/components/ui-components/src/my-widget/` with `<tag>.sui`; `--controller` adds the inline `<controller>` block to it.
 
 ## User-app views — authoring outside the Ship repo
 
@@ -213,22 +206,20 @@ Two layouts are honored, both rooted at the workspace `shipd --workspace <path>`
 ~/my-project/
 ├── views/
 │   └── my-view/
-│       ├── page.sui            # required
-│       ├── page.controller.ts  # optional — paired controller (stem must match: page.sui ↔ page.controller.ts)
+│       ├── page.sui            # required (controller, if any, is an inline <controller> block inside)
 │       ├── style.css           # optional — view-scoped CSS
 │       └── manifest.jsonc      # optional — rail label/icon, view type
 └── .ship/
     └── views/
         └── another-view/
             ├── index.sui                 # required (note the stem: index, not page)
-            ├── index.controller.ts       # optional — paired controller
             └── manifest.jsonc            # optional
 ```
 
 - **`<workspace>/views/<name>/page.sui`** — same convention as in-tree views. Use this when the view *is* the app surface (e.g. you're building a Ship-shaped tool).
 - **`<workspace>/.ship/views/<name>/index.sui`** — colocates the view with the rest of your `.ship/` config. Use this for views that are auxiliary to a non-Ship project.
 
-The controller filename stem must match the `.sui` stem: `page.sui` ↔ `page.controller.ts`, `index.sui` ↔ `index.controller.ts`. The compiler infers the controller path from the resolved source.
+A controller is always authored inline as a `<controller>` block inside the `.sui` file — a paired `<stem>.controller.ts` sibling file is a compile error.
 
 When both layouts contain a view with the same name, the top-level `views/` directory wins — that's how a workspace can shadow a built-in by id without renaming.
 
@@ -258,7 +249,7 @@ The daemon persists this workspace into `~/.ship/machine/daemons/<hash>/workspac
 
 ## Hot reload in dev
 
-`.sui` and `.controller.ts` edits trigger an in-place view re-mount without a full page reload. `apps/shell/src/hmr.ts` subscribes to `shipd`'s `/_deck/dev/hmr` SSE channel. When the bundler emits `module-changed` for `views/<name>/view`, shell cache-busts the rebuilt `view.js` and re-mounts through `mount()`. Other bundles (sui-components, islands, sui-runtime, sui-dom, sui-components) trigger a full reload — custom-element re-registration without reload is not yet supported.
+`.sui` edits (including changes inside the inline `<controller>` block) trigger an in-place view re-mount without a full page reload. `apps/shell/src/hmr.ts` subscribes to `shipd`'s `/_deck/dev/hmr` SSE channel. When the bundler emits `module-changed` for `views/<name>/view`, shell cache-busts the rebuilt `view.js` and re-mounts through `mount()`. Other bundles (sui-components, islands, sui-runtime, sui-dom, sui-components) trigger a full reload — custom-element re-registration without reload is not yet supported.
 
 Production builds inline `import.meta.env.DEV` to `false`, so HMR is a no-op and no EventSource opens.
 

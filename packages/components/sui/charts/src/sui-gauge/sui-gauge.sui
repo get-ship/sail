@@ -57,8 +57,7 @@ interface GaugeHost extends Element {
   error?: unknown
 }
 
-export default controller({
-  setup: ({
+export default controller(({
     value,
     min,
     max,
@@ -89,13 +88,13 @@ export default controller({
     )
     const ariaLabel = derived(() => `${label()}: ${chart.ariaSummary()}`)
 
+    mount((host) => {
+      const err = (host as GaugeHost).error
+      if (err !== undefined) chart.setOptions({ error: err })
+    })
+
     return { chart, arc, ariaLabel }
-  },
-  mount(_state, host) {
-    const err = (host as GaugeHost).error
-    if (err !== undefined) _state.chart.setOptions({ error: err })
-  },
-})
+  })
 
 </controller>
 {#if loading()}

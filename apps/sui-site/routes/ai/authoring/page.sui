@@ -13,9 +13,7 @@ import { controller, type ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 import { loopDiagram } from './snippets'
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>) => ({ loopDiagram }),
-})
+export default controller((_ctx: ViewScope<Scope>) => ({ loopDiagram }))
 </controller>
 
 <article sx="max-w-breakpoint-tablet mx-auto">

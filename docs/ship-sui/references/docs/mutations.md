@@ -2,15 +2,16 @@
 group: Views
 order: 12
 title: Mutations
-description: The declarative `<form mutation="…">` path, controller-side mutation via the typed client in on: handlers, the deck mutation route, and error/pending UX.
+description: The declarative `<form mutation="…">` path, controller-side mutation via the typed client in a controller event handler, the deck mutation route, and error/pending UX.
 ---
 
 # Mutations
 
 A mutation is a write to the daemon. There are two ways to express one — a
 declarative `<form mutation="…">` in the template, and an imperative
-`ship.<domain>.<op>(…)` call in a controller `on:` handler. Both go through the
-same typed SDK client; neither writes its own HTTP.
+`ship.<domain>.<op>(…)` call from an event handler returned by the
+controller. Both go through the same typed SDK client; neither writes its own
+HTTP.
 
 ## Declarative — `<form mutation="ship.<domain>.<op>">`
 
@@ -45,26 +46,30 @@ injected `$mutation` signal is available in scope for inline pending/error UX:
 {#if $mutation().kind === 'error'}<sui-error-state>{$mutation().error.message}</sui-error-state>{/if}
 ```
 
-## Imperative — the typed client in `on:` handlers
+## Imperative — the typed client in a controller event handler
 
 For anything past a single form post — building a payload, sequencing calls,
-optimistic UI — call the SDK directly from a controller `on:` handler.
-Mutations are allowed **only** in `on:` / `mount` / `unmount`, never in a
-`derived` body or template expression (controller hard rule #3).
+optimistic UI — call the SDK directly from an event handler returned by the
+controller. Mutations are allowed **only** inside event handlers, `mount`, or
+`onCleanup`, never in a `derived` body or template expression (controller
+hard rule #3).
 
 ```ts
-// apps/shell/src/studio/collections/controller.ts:230
-scope: ({ ship }) => {
+// apps/shell/src/studio/collections/page.sui — inside its <controller> block
+export default controller(({ ship }) => {
+  const newColOpen    = signal(false)
+  const newColDraftId = signal('')
+
   const createCol = (a: { id: string; name?: string; fields?: Record<string, unknown> }) =>
     ship.collections.create(a)
-  return { createCol /* … */ }
-},
-on: {
-  submitNewCol: async (s) => {
-    await s.createCol({ id: s.newColDraftId })
-    s.newColOpen = false
-  },
-}
+
+  const submitNewCol = async () => {
+    await createCol({ id: newColDraftId() })
+    newColOpen.set(false)
+  }
+
+  return { newColOpen, newColDraftId, submitNewCol /* … */ }
+})
 ```
 
 The `ship.<domain>.<op>` methods that return `Promise` are mutations (e.g.
@@ -108,12 +113,10 @@ Both paths surface the same `loading → ok | error` shape.
   `await`, and branch the template with `{#if}` / `{#match}`:
 
 ```ts
-on: {
-  save: async (s) => {
-    s.saving = true
-    try { await s.createCol({ id: s.draftId }); s.error = '' }
-    catch (e) { s.error = String(e) }
-    finally { s.saving = false }
-  },
+const save = async () => {
+  saving.set(true)
+  try { await createCol({ id: draftId() }); error.set('') }
+  catch (e) { error.set(String(e)) }
+  finally { saving.set(false) }
 }
 ```

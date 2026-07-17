@@ -85,8 +85,7 @@ function weekdayLabels(weekStartsOn: number): { key: string; label: string }[] {
 }
 
 
-export default controller({
-  setup: (ctx: ViewScope<Scope>) => {
+export default controller((ctx: ViewScope<Scope>) => {
     const { events, focusDate, weekStartsOn, slotMinutes, dayStartHour, dayEndHour, rangeMode } = ctx
     // The time-grid tracks — a constant per skin, exposed as a derived so
     // sx/use:gridTracks={...} can stay expression-bound. The language's
@@ -191,6 +190,152 @@ export default controller({
     // (focused cell tabindex=0, all others -1) so the grid is reachable + operable.
     const focusedIso = derived(() => cal().focusDate())
 
+    mount((host) => {
+      // prop:calendar identity — a live `Calendar` reference (the engine path),
+      // routed into the scope signal so every derived re-resolves onto it.
+      Object.defineProperty(host, 'calendar', {
+        configurable: true,
+        get: () => engine(),
+        set: (c: Calendar | null) => {
+          engine.set(c)
+        },
+      })
+
+      // Keep the reflected `view` attribute synced to the engine view so the
+      // host CSS layout branches follow programmatic setView() too.
+      const stopView = effect(() => {
+        const v = view()
+        if (host.getAttribute('view') !== v) host.setAttribute('view', v)
+      })
+
+      const active = (): Calendar => cal()
+
+      // Deduped emit (sui-combobox lastEmitted pattern) over host.emit!. When
+      // prop:calendar swaps the engine identity we re-seed from the NEW engine
+      // (no emit) instead of diffing its view/date against the prior engine's —
+      // otherwise the stale closure fires a spurious sui-view/date-change.
+      let lastEngine: Calendar | null = null
+      let lastView: ViewMode | null = null
+      let lastDate: string | null = null
+      const stopEmit = effect(() => {
+        const cal = active()
+        const v = cal.view()
+        const d = cal.focusDate()
+        if (cal === lastEngine) {
+          if (lastView !== null && v !== lastView) host.emit!('sui-view-change', { view: v })
+          if (lastDate !== null && d !== lastDate) host.emit!('sui-date-change', { date: d })
+        }
+        lastEngine = cal
+        lastView = v
+        lastDate = d
+      })
+
+      const onShadowClick = (e: Event) => {
+        const t = e.target as HTMLElement | null
+        if (!t) return
+        const cal = active()
+
+        const viewBtn = t.closest?.('[data-view]') as HTMLElement | null
+        if (viewBtn) {
+          cal.setView(viewBtn.dataset.view as ViewMode)
+          return
+        }
+        const navBtn = t.closest?.('[data-nav]') as HTMLElement | null
+        if (navBtn) {
+          const act = navBtn.dataset.nav
+          if (act === 'next') cal.next()
+          else if (act === 'prev') cal.prev()
+          else if (act === 'today') cal.today()
+          return
+        }
+        const chip = t.closest?.('[data-event-id]') as HTMLElement | null
+        if (chip) {
+          const id = chip.dataset.eventId!
+          cal.selectEvent(id, { additive: (e as MouseEvent).metaKey })
+          host.emit!('sui-event-click', { id })
+          host.emit!('sui-event-select', {
+            id,
+            selected: cal.selectedEventIds().includes(id),
+            selectedIds: cal.selectedEventIds(),
+          })
+          return
+        }
+        const dayCell = t.closest?.('[role=gridcell][data-iso]') as HTMLElement | null
+        if (dayCell) cal.goToDate(dayCell.dataset.iso!)
+      }
+
+      // Month-grid keyboard operability — the grid advertises role=grid/gridcell
+      // with a roving tabindex, so the focused day cell must respond to arrow /
+      // Home / End / PageUp-Down / Enter-Space. All moves route through the engine
+      // (which owns the date math); DOM focus follows the new focus anchor.
+      const onShadowKey = (e: KeyboardEvent) => {
+        const cell = (e.target as HTMLElement | null)?.closest?.(
+          '[role=gridcell][data-iso]',
+        ) as HTMLElement | null
+        if (!cell) return
+        // Shift+Arrow is range extension — owned by the interactions wiring (which
+        // moves focus AND extends the range as one move). Skip it here so focus is
+        // not moved twice.
+        if (e.shiftKey) return
+        const cal = active()
+        switch (e.key) {
+          case 'ArrowRight': cal.moveFocus(1); break
+          case 'ArrowLeft': cal.moveFocus(-1); break
+          case 'ArrowDown': cal.moveFocus(7); break
+          case 'ArrowUp': cal.moveFocus(-7); break
+          case 'Home': cal.focusWeekEdge(false); break
+          case 'End': cal.focusWeekEdge(true); break
+          case 'PageDown': cal.next(); break
+          case 'PageUp': cal.prev(); break
+          case 'Enter':
+          case ' ':
+            cal.goToDate(cell.dataset.iso!)
+            break
+          default:
+            return
+        }
+        e.preventDefault()
+        // Move DOM focus onto the newly-anchored cell after the grid re-renders.
+        const iso = active().focusDate()
+        queueMicrotask(() => {
+          const next = (host.shadowRoot ?? host).querySelector(
+            `[role=gridcell][data-iso="${iso}"]`,
+          ) as HTMLElement | null
+          next?.focus()
+        })
+      }
+
+      ;(host.shadowRoot ?? host).addEventListener('click', onShadowClick)
+      ;(host.shadowRoot ?? host).addEventListener('keydown', onShadowKey as EventListener)
+
+      // Range selection (month drag + Shift+Arrow) + drag-to-create/move (time-
+      // grid slot drag). The DOM↔engine bridge lives in the interactions module;
+      // it reads the engine fresh per event and emits sui-range-change /
+      // sui-event-create-intent / sui-event-move, auto-cleaning against the mount
+      // scope. The slot span is the step between consecutive slots (the engine
+      // builds them by stepping `slotMinutes`, so the gap recovers it).
+      const slotSpan = (): number => {
+        const s = active().timeSlots()
+        return s.length > 1 ? s[1]!.minutes - s[0]!.minutes : 30
+      }
+      wireCalendarInteractions(host, { calOf: active, slotMinutes: slotSpan })
+
+      host.expose!({
+        next: () => active().next(),
+        prev: () => active().prev(),
+        today: () => active().today(),
+        setView: (v: ViewMode) => active().setView(v),
+      })
+
+      return () => {
+        stopView()
+        stopEmit()
+        ;(host.shadowRoot ?? host).removeEventListener('click', onShadowClick)
+        ;(host.shadowRoot ?? host).removeEventListener('keydown', onShadowKey as EventListener)
+        delete (host as { calendar?: unknown }).calendar
+      }
+    })
+
     return {
       engine,
       cal,
@@ -211,154 +356,7 @@ export default controller({
       timeGridTracks,
       eventRect,
     }
-  },
-
-  mount(state, host) {
-    // prop:calendar identity — a live `Calendar` reference (the engine path),
-    // routed into the scope signal so every derived re-resolves onto it.
-    Object.defineProperty(host, 'calendar', {
-      configurable: true,
-      get: () => state.$signals.engine(),
-      set: (c: Calendar | null) => {
-        state.engine = c
-      },
-    })
-
-    // Keep the reflected `view` attribute synced to the engine view so the
-    // host CSS layout branches follow programmatic setView() too.
-    const stopView = effect(() => {
-      const v = state.$signals.view()
-      if (host.getAttribute('view') !== v) host.setAttribute('view', v)
-    })
-
-    const active = (): Calendar => state.$signals.cal()
-
-    // Deduped emit (sui-combobox lastEmitted pattern) over host.emit!. When
-    // prop:calendar swaps the engine identity we re-seed from the NEW engine
-    // (no emit) instead of diffing its view/date against the prior engine's —
-    // otherwise the stale closure fires a spurious sui-view/date-change.
-    let lastEngine: Calendar | null = null
-    let lastView: ViewMode | null = null
-    let lastDate: string | null = null
-    const stopEmit = effect(() => {
-      const cal = active()
-      const v = cal.view()
-      const d = cal.focusDate()
-      if (cal === lastEngine) {
-        if (lastView !== null && v !== lastView) host.emit!('sui-view-change', { view: v })
-        if (lastDate !== null && d !== lastDate) host.emit!('sui-date-change', { date: d })
-      }
-      lastEngine = cal
-      lastView = v
-      lastDate = d
-    })
-
-    const onShadowClick = (e: Event) => {
-      const t = e.target as HTMLElement | null
-      if (!t) return
-      const cal = active()
-
-      const viewBtn = t.closest?.('[data-view]') as HTMLElement | null
-      if (viewBtn) {
-        cal.setView(viewBtn.dataset.view as ViewMode)
-        return
-      }
-      const navBtn = t.closest?.('[data-nav]') as HTMLElement | null
-      if (navBtn) {
-        const act = navBtn.dataset.nav
-        if (act === 'next') cal.next()
-        else if (act === 'prev') cal.prev()
-        else if (act === 'today') cal.today()
-        return
-      }
-      const chip = t.closest?.('[data-event-id]') as HTMLElement | null
-      if (chip) {
-        const id = chip.dataset.eventId!
-        cal.selectEvent(id, { additive: (e as MouseEvent).metaKey })
-        host.emit!('sui-event-click', { id })
-        host.emit!('sui-event-select', {
-          id,
-          selected: cal.selectedEventIds().includes(id),
-          selectedIds: cal.selectedEventIds(),
-        })
-        return
-      }
-      const dayCell = t.closest?.('[role=gridcell][data-iso]') as HTMLElement | null
-      if (dayCell) cal.goToDate(dayCell.dataset.iso!)
-    }
-
-    // Month-grid keyboard operability — the grid advertises role=grid/gridcell
-    // with a roving tabindex, so the focused day cell must respond to arrow /
-    // Home / End / PageUp-Down / Enter-Space. All moves route through the engine
-    // (which owns the date math); DOM focus follows the new focus anchor.
-    const onShadowKey = (e: KeyboardEvent) => {
-      const cell = (e.target as HTMLElement | null)?.closest?.(
-        '[role=gridcell][data-iso]',
-      ) as HTMLElement | null
-      if (!cell) return
-      // Shift+Arrow is range extension — owned by the interactions wiring (which
-      // moves focus AND extends the range as one move). Skip it here so focus is
-      // not moved twice.
-      if (e.shiftKey) return
-      const cal = active()
-      switch (e.key) {
-        case 'ArrowRight': cal.moveFocus(1); break
-        case 'ArrowLeft': cal.moveFocus(-1); break
-        case 'ArrowDown': cal.moveFocus(7); break
-        case 'ArrowUp': cal.moveFocus(-7); break
-        case 'Home': cal.focusWeekEdge(false); break
-        case 'End': cal.focusWeekEdge(true); break
-        case 'PageDown': cal.next(); break
-        case 'PageUp': cal.prev(); break
-        case 'Enter':
-        case ' ':
-          cal.goToDate(cell.dataset.iso!)
-          break
-        default:
-          return
-      }
-      e.preventDefault()
-      // Move DOM focus onto the newly-anchored cell after the grid re-renders.
-      const iso = active().focusDate()
-      queueMicrotask(() => {
-        const next = (host.shadowRoot ?? host).querySelector(
-          `[role=gridcell][data-iso="${iso}"]`,
-        ) as HTMLElement | null
-        next?.focus()
-      })
-    }
-
-    ;(host.shadowRoot ?? host).addEventListener('click', onShadowClick)
-    ;(host.shadowRoot ?? host).addEventListener('keydown', onShadowKey as EventListener)
-
-    // Range selection (month drag + Shift+Arrow) + drag-to-create/move (time-
-    // grid slot drag). The DOM↔engine bridge lives in the interactions module;
-    // it reads the engine fresh per event and emits sui-range-change /
-    // sui-event-create-intent / sui-event-move, auto-cleaning against the mount
-    // scope. The slot span is the step between consecutive slots (the engine
-    // builds them by stepping `slotMinutes`, so the gap recovers it).
-    const slotSpan = (): number => {
-      const s = active().timeSlots()
-      return s.length > 1 ? s[1]!.minutes - s[0]!.minutes : 30
-    }
-    wireCalendarInteractions(host, { calOf: active, slotMinutes: slotSpan })
-
-    host.expose!({
-      next: () => active().next(),
-      prev: () => active().prev(),
-      today: () => active().today(),
-      setView: (v: ViewMode) => active().setView(v),
-    })
-
-    return () => {
-      stopView()
-      stopEmit()
-      ;(host.shadowRoot ?? host).removeEventListener('click', onShadowClick)
-      ;(host.shadowRoot ?? host).removeEventListener('keydown', onShadowKey as EventListener)
-      delete (host as { calendar?: unknown }).calendar
-    }
-  },
-})
+  })
 
 </controller>
 <div sx="block font-body text-density bg-background text-foreground border border-border rounded-lg shadow-xs overflow-hidden">

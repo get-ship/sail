@@ -236,6 +236,16 @@ pub(super) fn emit_controller(
     if let Some(a) = authored {
         w.line(&format!("import __authored from {};", js_string(&a.specifier)));
         w.line("import type { ControllerExport, ResolverContext } from \"@ship/sui-runtime/internal\";");
+        // `createScope`/`withScope` give `__authored.setup(...)` a real setup
+        // window — a controller that calls the ambient `mount(fn)` (see
+        // `packages/sui/runtime/src/effect-scope.ts`) throws
+        // `SuiMountOutsideSetupError` with no current scope, and the browser
+        // hydrate path always runs setup inside one (`mount.ts`, `compose.ts`).
+        // The synthetic render is a one-shot SSR pass with no "connect" event,
+        // so `mount()` callbacks registered here are simply never fired —
+        // scope.dispose() drops them along with anything an authored
+        // controller registered via `onCleanup` — but the CALL must not throw.
+        w.line("import { createScope, withScope } from \"@ship/sui-runtime/internal\";");
     }
     w.nl();
 
@@ -287,27 +297,20 @@ pub(super) fn emit_controller(
 /// value-client block above); only the *shape* is cast across the
 /// app-manifest-naming → platform-`ResolverContext` seam.
 fn emit_authored_compose(w: &mut Writer, used: &[String], manifest: &AppManifest) {
-    w.line("// Authored controller — COMPOSED via its real `controller({...})` DSL:");
-    w.line("// `setup(ctx)` runs `resolveController` (the same resolver the browser");
-    w.line("// hydrate path runs) and returns the flat bindings. The scope's");
-    w.line("// contributed type is recovered from the controller's `__def.setup`");
-    w.line("// factory return (not the legacy `ControllerExport<infer S>` generic");
-    w.line("// — the generic is often pinned to the empty view `Scope` and would");
-    w.line("// erase factory-added members from the recovered type).");
-    // Use `infer ReturnType<...>` so a non-function `setup` (a
-    // `controller<Scope>({...})` with no `setup:` factory) falls back to
-    // `object` — matches the controller's contribution of nothing.
-    w.line(
-        "type __AuthoredScope = typeof __authored.__def extends { setup?: infer F }",
-    );
-    // Match the factory regardless of its parameter list. `ScopedControllerDef`
-    // types `setup` as `(init: Ctx, host?) => SC` — a REQUIRED `init` param — so
-    // the zero-arg pattern `() => infer R` failed to match (a fn requiring args
-    // isn't assignable to `() => R`), collapsing the recovered scope to `object`
-    // and false-erroring EVERY `setup.X` read. `(...a: never[]) => infer R`
-    // (the `ReturnType` idiom) matches any factory and recovers SC precisely.
-    w.line("  ? F extends (...a: never[]) => infer R ? R : object");
-    w.line("  : object;");
+    w.line("// Authored controller — COMPOSED via its real `controller(fn)` DSL:");
+    w.line("// `setup(ctx)` runs the SAME resolver the browser hydrate path runs");
+    w.line("// (calls `fn` with the ambient view scope) and returns fn's result —");
+    w.line("// the flat bindings — verbatim. The scope's contributed type is");
+    w.line("// recovered from the controller's `__def` function return (not the");
+    w.line("// legacy `ControllerExport<infer S>` generic — the generic is often");
+    w.line("// pinned to the empty view `Scope` and would erase setup-added");
+    w.line("// members from the recovered type).");
+    // `__def` IS the setup function (the object-form's `{ setup?: F }` wrapper
+    // is gone with the sections it wrapped) — `ReturnType`-idiom infer over
+    // `(...a: never[]) => infer R` matches any function regardless of its
+    // param list (a fn requiring args isn't assignable to a zero-arg `() => R`,
+    // which is why this isn't a plain `ReturnType<typeof __authored.__def>`).
+    w.line("type __AuthoredScope = typeof __authored.__def extends (...a: never[]) => infer R ? R : object;");
     // Map the constructed manifest clients onto the resolver context: the
     // well-known ambient names become `ResolverContext` fields; the rest go
     // into `clients` (spread into scope by the resolver, as in production).
@@ -336,6 +339,16 @@ fn emit_authored_compose(w: &mut Writer, used: &[String], manifest: &AppManifest
         w.line(&format!("  navigate: {n},"));
     }
     w.line("} as unknown as ResolverContext;");
-    w.line("const __authoredScope = __authored.setup(__ctx) as __AuthoredScope;");
+    // Run inside a scope: the controller's setup may call the ambient
+    // `mount(fn)`/`onCleanup(fn)` (see the import comment above) — without a
+    // current scope `mount()` throws `SuiMountOutsideSetupError`. The scope
+    // is disposed immediately after: this is a one-shot SSR pass, nothing
+    // here ever fires a registered mount() callback or needs its cleanups
+    // to outlive the render.
+    w.line("const __authoredSetupScope = createScope();");
+    w.line(
+        "const __authoredScope = withScope(__authoredSetupScope, () => __authored.setup(__ctx)) as __AuthoredScope;",
+    );
+    w.line("__authoredSetupScope.dispose();");
     w.nl();
 }

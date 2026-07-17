@@ -7,8 +7,7 @@ interface TodoItem {
   done: boolean
 }
 
-export default controller({
-  setup: () => {
+export default controller(() => {
     let nextId = 3
     const items = signal<TodoItem[]>([
       { id: 1, text: 'buy milk', done: false },
@@ -32,8 +31,7 @@ export default controller({
     }
 
     return { items, draft, addItem, toggleItem, removeItem }
-  },
-})
+  })
 </controller>
 
 <div>

@@ -1,15 +1,12 @@
 <controller>
-import { controller, signal } from '@ship/sui-runtime'
+import { controller, signal, derived } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => ({ count: signal(0) }),
-  derived: {
-    doubled: ({ count }) => count() * 2,
-    label: ({ count }) => `count is ${count()}`,
-  },
-  on: {
-    inc: ({ count }) => count.set(count() + 1),
-  },
+export default controller((ctx) => {
+  const count = signal(0)
+  const doubled = derived(() => count() * 2)
+  const label = derived(() => `count is ${count()}`)
+  const inc = () => count.set(count() + 1)
+  return { count, doubled, label, inc }
 })
 </controller>
 

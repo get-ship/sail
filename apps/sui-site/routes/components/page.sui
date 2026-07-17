@@ -52,8 +52,7 @@ import { controller, signal, derived, filteredList, type ViewScope } from '@ship
 import type { Scope } from './page.sui'
 import { CATALOG, PACKS, CATEGORIES, packCount, type CatalogEntry } from './registry'
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ViewScope<Scope>) => {
     const { query, filtered } = filteredList(
       () => CATALOG,
       (c: CatalogEntry, q: string) => (c.tag + ' ' + c.cat + ' ' + c.pack).toLowerCase().includes(q),
@@ -114,7 +113,6 @@ export default controller({
       packs, cats, show, countLabel, none,
       name, agreed, notify, volume,
     }
-  },
 })
 </controller>
   <p sx="text-sm text-muted-foreground">

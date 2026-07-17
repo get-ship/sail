@@ -38,19 +38,19 @@ Output (`views/<name>/`):
 
 | File | Purpose | Required |
 |---|---|---|
-| `page.sui` | Template — declares route body, `<data>`, control flow | Yes |
-| `controller.ts` | State, lifecycle, mutations | If template references anything beyond bare HTML |
+| `page.sui` | Template — declares route body, `<data>`, control flow, and (if needed) an inline `<controller>` block for state, lifecycle, mutations | Yes |
 | `style.css` | Page-scoped CSS, auto-linked by the daemon | Optional |
 | `manifest.jsonc` | `{ name, path, title, layout, auth, rail? }` | **Yes — routes are manifest-driven** |
-| `_components/<view>-<tag>/` | View-private widget pair (`<tag>.sui` + optional `.controller.ts`) | Optional |
+| `_components/<view>-<tag>/` | View-private component (`<tag>.sui`, with its own inline `<controller>` block if needed) | Optional |
 
 **Rules from `references/4-layer-overview.md` § Layer 4 that an agent
 gets wrong most often:**
 
 - Filename stem says what the file IS: `page.sui`, never `view.sui`,
   never `<name>.sui`.
-- Controller filename is `controller.ts` — no stem prefix. The
-  directory IS the view.
+- A controller is always an inline `<controller>` block inside the
+  `.sui` file — a paired `<stem>.controller.ts` sibling file is a
+  compile error. The directory IS the view.
 - View-private components live under `_components/<view>-<tag>/`, and
   the tag MUST start with the view name (so `tasks-row`, not `row`)
   to avoid `customElements.define()` collisions across views.
@@ -91,7 +91,7 @@ cargo run -p sui-lint --example check -- views/<name>/page.sui
     {/if}
   {/if}
 
-  <!-- single-expression handlers stay inline; multi-statement ones move to controller `on:` -->
+  <!-- single-expression handlers stay inline; multi-statement ones become a named function returned from the controller -->
   <sui-button on:click={() => count.set(count() + 1)}>+</sui-button>
 
   <style>/* scoped per-component CSS belongs here for components */</style>
@@ -134,39 +134,39 @@ rules, not view-scoped page CSS.
 
 ---
 
-## 3. Anatomy of a `.controller.ts`
+## 3. Anatomy of an inline `<controller>` block
 
 ```ts
-// views/<name>/controller.ts
-import { controller, signal, derived, unwrap } from '@ship/sui-runtime'
-import type { Scope } from './page.sui'   // compiler-emitted .d.ts
+<!-- inside views/<name>/page.sui -->
+<controller>
+import { signal, derived, unwrap } from '@ship/sui-runtime'
 
-export default controller<Scope>({
-  scope: ({ items /* live signal from <data> */, ship, route, navigate }) => {
-    const q = signal('')
-    return { q }
-  },
-  derived: {
-    rows:  ({ items }) => unwrap(items)?.rows ?? [],
-    total: ({ items }) => unwrap(items)?.rows.length ?? 0,
-  },
-  on: {
-    create: ({ navigate }) => navigate('/<name>/create'),
-  },
-  mount:   ({ state }, host) => { /* runs after first attach */ },
-  unmount: ({ state })       => { /* runs on dispose */ },
+export default controller((ctx) => {
+  const { items /* live signal from <data> */, ship, route, navigate } = ctx
+  const q = signal('')
+  const rows  = derived(() => unwrap(items)?.rows ?? [])
+  const total = derived(() => unwrap(items)?.rows.length ?? 0)
+
+  const create = () => navigate('/<name>/create')
+
+  mount((el) => { /* runs after first attach */ })
+  onCleanup(() => { /* runs on dispose */ })
+
+  return { q, rows, total, create }
 })
+</controller>
 ```
 
-Sections, each one job:
+One function, one job: `controller(fn)` where `fn: (ctx) => Record<string, unknown>`.
 
-| Section | Receives | Returns | Notes |
+| Piece | Receives | Returns | Notes |
 |---|---|---|---|
-| `scope:` | `{ <data-names>, ship, route, navigate, host }` | Bag of `signal` / `derived` / `ref` / hooks | Runs first; entries land in template scope. |
-| `derived:` | Final scope (typed) | Plain computed values | Same lifetime as scope; convention only. |
-| `on:` | `(state, ...args)` where `state` is mutable proxy | void | Use for multi-statement handlers — `state.x = v` mutates state. |
-| `mount` | `(state, host: Element)` | void | Runs after first DOM attach. |
-| `unmount` | `(state)` | void | Runs on dispose. |
+| `ctx` (the `fn` argument) | `{ <data-names>, ship, clients, route, navigate }` and every template-declared `<data>`/`<state>` signal | — | Ambient view scope, directly accessible or destructured. |
+| return value of `fn` | — | Bag of `signal` / `derived` / plain helpers / event handlers | Whatever is returned IS the whole contributed template scope — no separate section for handlers. |
+| `mount(fn)` | `fn: (el: HTMLElement) => (() => void) \| void` | — | Ambient, callable anywhere in the setup call graph. Fires once after the instance's DOM connects; a returned function is a cleanup on dispose. |
+| `onCleanup(fn)` | `fn: () => void` | — | Ambient. Runs on dispose; no-ops (doesn't throw) outside a scope. |
+
+Mutation is always `signal.set(newValue)` (or `signal.set(prev => next)`) — there's no writable-state-proxy assignment style.
 
 **`live()` + `ship` SDK.** Two paths, depending on mount host:
 
@@ -178,8 +178,8 @@ Sections, each one job:
    `/sui/<name>` host does NOT inject `ship` into ctx, so the
    compiler-emitted `<data live>` form sticks on `loading`. Wire
    `live()` directly to `/_deck/data?expr=…` instead. The canonical
-   helper currently lives in `views/git/controller.ts` (`sseSource`,
-   around line 14) — copy verbatim:
+   helper currently lives in `views/git/page.sui`'s inline
+   `<controller>` block (`sseSource`) — copy verbatim:
 
 ```ts
 function sseSource<T>(expr: string): LiveSource<T> {
@@ -205,12 +205,13 @@ Default to the template form (path 1) when authoring inside shell.
 Adopt the `sseSource` helper if the view will also be linked to
 directly via `/sui/<name>`.
 
-**Refs (`bind:this`).** Declare in `scope:` as `ref(null)`; read with
-`refSig()` (returns the element or `null`):
+**Refs (`bind:this`).** Declare in the controller function as
+`ref(null)`; read with `refSig()` (returns the element or `null`):
 
 ```ts
 import { ref } from '@ship/sui-runtime'
-scope: () => ({ dialogEl: ref<HTMLDialogElement>(null) })
+// inside controller((ctx) => { … })
+const dialogEl = ref<HTMLDialogElement>(null)
 ```
 
 ```html
@@ -219,7 +220,7 @@ scope: () => ({ dialogEl: ref<HTMLDialogElement>(null) })
 
 `bind:this` inside `{#if}` / `{#for}` branches is now safe — the
 compiler pre-seeds every `bind:this` slot as `signal(null)` even if the
-controller has no `scope:` factory (fix recorded in
+controller declares no refs (fix recorded in
 `.artifacts/sui-arc/view-render-reliability.md` § Diagnosis 2). The
 slot returns `null` until the branch renders.
 
@@ -332,12 +333,10 @@ explicitly grants `apps/shipd/` scope.
 ```
 
 ```ts
-// controller-driven
-on: {
-  async create({ navigate }) {
-    await ship.sessions.start({ workspace_id, kind: 'shell' })
-    navigate('/sessions')
-  },
+// controller-driven — returned as a plain handler from the controller function
+const create = async () => {
+  await ship.sessions.start({ workspace_id, kind: 'shell' })
+  navigate('/sessions')
 }
 ```
 
@@ -400,8 +399,8 @@ Hard-won. Each one is from a real fix in this repo.
    discriminated union — `.value` doesn't exist on `loading` /
    `error`. Always guard. Pattern: `{#if x().kind === 'ok'}{x().value.field}{/if}`,
    or pull the read through `unwrap(x)?.field ?? fallback` /
-   `unwrapOr(x, EMPTY).field` (see `views/home/controller.ts:36` and
-   `views/git/controller.ts:34-71`). Fix that originated this rule:
+   `unwrapOr(x, EMPTY).field` (see the `<controller>` blocks in
+   `views/home/page.sui` and `views/git/page.sui`). Fix that originated this rule:
    `dba0113f fix(views/skills + probe): null-guard skill().value`.
 
 2. **`(x as any)` cast leftovers.** Every `as any` in a controller is
@@ -409,22 +408,22 @@ Hard-won. Each one is from a real fix in this repo.
    replace with the real generated type from `@ship/sdk-client`
    (`AgentSummary`, `GitOverview`, …) or define a local `interface`
    and parse the live envelope through it explicitly. The remaining
-   `as any` in `views/agents/[id]/controller.ts:9` is a known
-   leftover, not a pattern to copy.
+   `as any` in `views/agents/[id]/page.sui`'s `<controller>` block is a
+   known leftover, not a pattern to copy.
 
-3. **`route` access form.** `route` is injected into every controller
-   section's scope — destructure it (`scope: ({ route, ship }) => …`)
+3. **`route` access form.** `route` is part of the ambient `ctx` every
+   controller function receives — destructure it (`(ctx) => { const { route, ship } = ctx; … }`)
    and read params with the namespace form `route.params.id()` (it
    returns `Signal<string|undefined>`, so the trailing `()` is the
-   read). This is the form `views/agents/[id]/controller.ts` uses. A
+   read). This is the form `views/agents/[id]/page.sui` uses. A
    `route()` factory is also importable from `@ship/sui-runtime/route`
    for non-controller code; don't mix the two within one file.
 
-4. **`bind:this` inside a branch with no controller scope.** Used to
+4. **`bind:this` inside a branch with no ref declared.** Used to
    throw `r.headerEl is not a function` at mount. Now safe — the
    compiler pre-seeds the slot (`view-render-reliability.md` § 2). But
-   if you DO have a `scope:` factory, you must still declare
-   `headerEl: ref(null)` explicitly when you want the typed handle.
+   if you DO declare refs in the controller function, you must still
+   declare `headerEl: ref(null)` explicitly when you want the typed handle.
 
 5. **`{#for}` without `key={EXPR}`.** Lints as `sui-for-key` warning.
    Without a stable key, reorder destroys DOM identity — selection,
@@ -441,18 +440,19 @@ Hard-won. Each one is from a real fix in this repo.
    `SKILL.md` § Hard rules item 8.
 
 7. **`route` is not a function (in chat).** The `defineRoutes` call
-   must run at the top level of `controller.ts` (it side-effect
-   registers patterns). See `apps/shell/src/studio/components/[name]/controller.ts`
-   for the canonical position — BEFORE the `controller<Scope>({…})`
-   default export. Putting it inside `scope:` runs it too late, and
-   the first `route()` call from a `derived` will throw.
+   must run at the top level of the `<controller>` block's module (it
+   side-effect registers patterns). See
+   `apps/shell/src/studio/components/[name]/page.sui`'s `<controller>`
+   block for the canonical position — BEFORE the `controller((ctx) => {…})`
+   default export. Putting it inside the controller function runs it
+   too late, and the first `route()` call from a `derived` will throw.
 
 8. **Compiler-emitted `<data live>` sticks on `loading` under
    `/sui/<name>`.** The daemon's view-host mounts views without
    injecting `ship` into ctx. If the view will be linked to directly
    (not just through shell), hand-wire the live source with
-   `sseSource(...)` (see § 3 above and `views/skills/controller.ts`,
-   `views/git/controller.ts`).
+   `sseSource(...)` (see § 3 above and the `<controller>` blocks in
+   `views/skills/page.sui`, `views/git/page.sui`).
 
 9. **Tag-name collisions across views.** Two views each shipping a
    private `row` widget will fight for `customElements.define('row',

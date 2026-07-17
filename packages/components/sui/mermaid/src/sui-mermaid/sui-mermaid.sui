@@ -53,7 +53,6 @@
 
 import { controller, signal, derived, effect, ref, bindHtml } from "@ship/sui-runtime";
 import mermaid from "mermaid";
-import type { Scope } from "./sui-mermaid.sui";
 
 type RenderResult =
   | { ok: true; svg: string }
@@ -95,81 +94,82 @@ async function renderMermaid(src: string, dark: boolean): Promise<RenderResult> 
   }
 }
 
-export default controller<Scope>({
-  // The template reads `error` and `html`, so they are scope — the error state is
-  // markup the template owns, not a string this controller builds.
-  setup: () => {
+export default controller((ctx) => {
     const error = signal<string>("");
-    return {
-    container: ref<HTMLElement>(null),
+    const container = ref<HTMLElement>(null);
     // The SVG mermaid produced: foreign markup, and the only thing bindHtml paints.
-    html: signal<string>(""),
+    const html = signal<string>("");
     // Reactive theme cell — flips when the app toggles dark/light so the render
     // effect re-fires and the diagram recolors to match.
-    dark: signal<boolean>(isDark()),
-    error,
-    hasError: derived(() => error() !== ""),
-    }
-  },
+    const dark = signal<boolean>(isDark());
+    const hasError = derived(() => error() !== "");
 
-  mount(state, host: HTMLElement) {
-    const container = state.$signals.container();
-    if (!container) return () => {};
+    mount((host: HTMLElement) => {
+      const containerEl = container();
+      if (!containerEl) return () => {};
 
-    // Monotonic guard so a stale async render never overwrites a newer one.
-    let seq = 0;
+      // Monotonic guard so a stale async render never overwrites a newer one.
+      let seq = 0;
 
-    // Watch the app theme: the `.dark`/`data-theme` swap on <html>, plus the
-    // sui-theme-picker's `sui-theme-change` event.
-    const syncTheme = (): void => {
-      state.dark = isDark();
-    };
-    const obs = new MutationObserver(syncTheme);
-    obs.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class", "data-theme"],
-    });
-    document.addEventListener("sui-theme-change", syncTheme);
-
-    // Render effect — tracks `value` + `dark`; runs the async render and writes
-    // the result into `html` (the bindHtml below morphs it into the container).
-    const stopRender = effect(() => {
-      const src = (state.$signals.value() ?? "").trim();
-      const dk = state.$signals.dark();
-      if (!src) {
-        state.html = "";
-        state.error = "";
-        return;
-      }
-      const mine = ++seq;
-      void renderMermaid(src, dk).then((res) => {
-        if (mine !== seq) return; // a newer render started — drop this one
-        if (!res.ok) {
-          host.dispatchEvent(
-            new CustomEvent("sui-mermaid-error", {
-              detail: { message: res.error, source: src },
-              bubbles: true,
-              composed: true,
-            }),
-          );
-        }
-        state.html = res.ok ? res.svg : "";
-        state.error = res.ok ? "" : res.error;
+      // Watch the app theme: the `.dark`/`data-theme` swap on <html>, plus the
+      // sui-theme-picker's `sui-theme-change` event.
+      const syncTheme = (): void => {
+        dark.set(isDark());
+      };
+      const obs = new MutationObserver(syncTheme);
+      obs.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["class", "data-theme"],
       });
+      document.addEventListener("sui-theme-change", syncTheme);
+
+      // Render effect — tracks `value` + `dark`; runs the async render and writes
+      // the result into `html` (the bindHtml below morphs it into the container).
+      const stopRender = effect(() => {
+        const src = (ctx.value() ?? "").trim();
+        const dk = dark();
+        if (!src) {
+          html.set("");
+          error.set("");
+          return;
+        }
+        const mine = ++seq;
+        void renderMermaid(src, dk).then((res) => {
+          if (mine !== seq) return; // a newer render started — drop this one
+          if (!res.ok) {
+            host.dispatchEvent(
+              new CustomEvent("sui-mermaid-error", {
+                detail: { message: res.error, source: src },
+                bubbles: true,
+                composed: true,
+              }),
+            );
+          }
+          html.set(res.ok ? res.svg : "");
+          error.set(res.ok ? "" : res.error);
+        });
+      });
+
+      // The one sanctioned reactive innerHTML write (morph-based, identity-safe).
+      // It carries the diagram and nothing else.
+      const stopBind = bindHtml(containerEl, () => html());
+
+      return () => {
+        stopRender();
+        stopBind();
+        obs.disconnect();
+        document.removeEventListener("sui-theme-change", syncTheme);
+      };
     });
 
-    // The one sanctioned reactive innerHTML write (morph-based, identity-safe).
-    // It carries the diagram and nothing else.
-    const stopBind = bindHtml(container, () => state.$signals.html());
-
-    return () => {
-      stopRender();
-      stopBind();
-      obs.disconnect();
-      document.removeEventListener("sui-theme-change", syncTheme);
-    };
-  },
-});
+    return {
+      container,
+      html,
+      dark,
+      error,
+      hasError,
+    }
+  });
 
 </controller>
 <center bind:this={container} sx="w-full min-h-8" attr:hidden={hasError()}></center>

@@ -3,7 +3,7 @@
 //!
 //! Walks `<prop>` and `<use-* as=>` declarations from the IR and emits a
 //! TypeScript declaration file that authors can import as `Scope`.
-//! Reactive state lives in the controller's `setup:` factory and is
+//! Reactive state lives in the controller's setup function and is
 //! typed by TS itself, so it has no `.d.ts` entry.
 
 use crate::check::controller_parse::ParsedController;
@@ -12,7 +12,7 @@ use crate::ir::{AttrInstr, ElementInstr, Instr, Program, PropDecl, PropKind};
 /// Emit the `.sui.d.ts` text for a compiled `.sui` file.
 ///
 /// When a paired controller is available, the `Scope` interface also
-/// includes every key surfaced by the controller's `setup: () => ({...})`
+/// includes every key surfaced by the controller's setup function's
 /// factory. Each entry is typed by a lightweight heuristic — see
 /// `super::scope_factory` for the supported shapes. Authors who want a
 /// tighter inferred type than the heuristic can always annotate the
@@ -309,11 +309,10 @@ mod tests {
         // `$signals.x` to `unknown`). A factory-only scope over an empty
         // template therefore yields an empty Scope with no spurious imports.
         let c = ctrl(
-            "export default controller({\n  \
-             setup: () => ({\n    \
+            "export default controller((ctx) => ({\n    \
                q: signal(''),\n    \
                rail: live(() => liveExpr(`ship.skills.summaries()`)),\n  \
-             }),\n});",
+             }));",
         );
         let dts = emit_dts(&empty_program(), Some(&c));
         assert!(dts.contains("export interface Scope {}"), "expected empty Scope, got:\n{dts}");

@@ -10,12 +10,10 @@
 // for `typecheck` here, so we resolve the import via a wildcard ambient
 // declaration instead.
 //
-// `Scope` is the per-template binding shape that controllers parameterize
-// their legacy `controller<Scope>(…)` calls on (see README § "Scope
-// type companion" for why the no-arg `controller({…})` form is not
-// used here despite being the framework's canonical controller
-// contract). The
-// structural shape the runtime consumes is `Record<string, unknown>` —
+// `Scope` is the per-template binding shape a controller's setup function
+// parameterizes its `(ctx: Scope) => {…}` param on where one is needed (see
+// README § "Scope type companion"). The structural shape the runtime
+// consumes is `Record<string, unknown>` —
 // `MutableState<Scope>` is built off `StateKeys<Scope>` (a mapped type
 // over signal-valued keys) plus the non-signal scope keys; the tests
 // themselves don't reference `Scope` properties directly, they pass it

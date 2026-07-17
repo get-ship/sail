@@ -1,16 +1,21 @@
 import { describe, expect, it } from 'vitest'
 
 import { mount, type ViewPayload } from '../src/mount'
-import { onCleanup } from '../src/effect-scope'
+import { onCleanup, mount as ambientMount } from '../src/effect-scope'
 
-// Regression for the navigation OOM: a subscription opened inside a controller's
-// mount() callback (the common `live()`/`data()` shape) must be torn down when
-// the view is disposed. Before the fix, lifecycle.mount() ran AFTER setup's
-// withScope closed (CURRENT_SCOPE = null), so onCleanup() was a no-op and the
-// subscription leaked one open handle per navigation — the client-process OOM.
+// Regression for the navigation OOM: a subscription opened inside a
+// controller's ambient mount() callback (the common `live()`/`data()`
+// shape) must be torn down when the view is disposed. Before the fix,
+// the (then section-based) mount callback ran AFTER setup's withScope
+// closed (CURRENT_SCOPE = null), so onCleanup() was a no-op and the
+// subscription leaked one open handle per navigation — the
+// client-process OOM. `runMounts` now runs mount() callbacks INSIDE
+// the same scope setup ran in (see `mount.ts` step 8), so onCleanup
+// calls made from a mount() callback still enroll correctly.
 describe('mount — live-subscription teardown (navigation-OOM regression)', () => {
-  // A minimal payload: empty markup/scope so mount() runs setup → lifecycle.mount
-  // → handle, with no SSE channel. opts.module bypasses the moduleUrl import.
+  // A minimal payload: empty markup/scope so mount() runs setup → ambient
+  // mount() callbacks → handle, with no SSE channel. opts.module bypasses
+  // the moduleUrl import.
   const minimalPayload = () =>
     ({ name: 't', html: '', css: '', scope: {}, moduleUrl: '', params: {} } as unknown as ViewPayload)
 
@@ -18,18 +23,15 @@ describe('mount — live-subscription teardown (navigation-OOM regression)', () 
     let cleaned = 0
     const mod = {
       default: {
-        setup: () => ({
-          // The lifecycle bundle a compiled controller emits (LIFECYCLE_KEY).
-          __shipSetLifecycle: {
-            state: {},
-            mount: () => {
-              // This is exactly what live()/data() do inside a controller mount().
-              onCleanup(() => {
-                cleaned++
-              })
-            },
-          },
-        }),
+        setup: () => {
+          // This is exactly what live()/data() do inside a controller mount().
+          ambientMount(() => {
+            onCleanup(() => {
+              cleaned++
+            })
+          })
+          return {}
+        },
       },
     }
 

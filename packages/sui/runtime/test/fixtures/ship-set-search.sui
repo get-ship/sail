@@ -3,8 +3,7 @@ import { controller, signal, derived } from '@ship/sui-runtime'
 
 const ITEMS = ['apple', 'apricot', 'banana', 'blueberry', 'cherry', 'grape']
 
-export default controller({
-  setup: () => {
+export default controller(() => {
     const query = signal('')
     const caseSensitive = signal(false)
     const filtered = derived(() => {
@@ -16,8 +15,7 @@ export default controller({
       )
     })
     return { query, caseSensitive, filtered }
-  },
-})
+  })
 </controller>
 
 <div>

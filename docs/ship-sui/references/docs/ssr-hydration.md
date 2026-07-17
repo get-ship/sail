@@ -110,7 +110,7 @@ The browser-side runtime is **attach-only**. It does not parse templates, does n
 
 1. Walk the rendered DOM looking for markers.
 2. For each marker, read the binding from the manifest (or inline annotation).
-3. Initialize signals from inlined initial values (`<data>` markers carry `kind: 'ok'` envelopes with values; reactive component state from the controller's `scope:` factory materializes when the controller's `setup` runs at hydrate).
+3. Initialize signals from inlined initial values (`<data>` markers carry `kind: 'ok'` envelopes with values; reactive component state returned by the controller function materializes when the controller runs at hydrate).
 4. Attach event listeners (`on:click`, `bind:`).
 5. Wire reactive bindings (text interp, attribute interp, control-flow boundaries) to track signals and update the DOM on change.
 6. Open SSE channels for each `<data live>` and apply patches as they arrive.

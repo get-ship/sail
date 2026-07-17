@@ -133,19 +133,10 @@ fn symbols_from_table(table: &SymbolTable, controller: Option<&ParsedController>
     for (name, e) in &table.props {
         out.push(Symbol { name: name.clone(), kind: e.kind_label.to_string(), source: "prop".into(), line: 0, col: 0 });
     }
-    // Controller-declared keys carry a byte offset into the controller source.
-    for (name, e) in &table.derived {
-        let (l, c) = pos(ctrl_src, e.offset);
-        out.push(Symbol { name: name.clone(), kind: "derived".into(), source: "derived".into(), line: l, col: c });
-    }
-    for (name, e) in &table.on {
-        let (l, c) = pos(ctrl_src, e.offset);
-        out.push(Symbol { name: name.clone(), kind: "action".into(), source: "on".into(), line: l, col: c });
-    }
-    for (name, e) in &table.use_keys {
-        let (l, c) = pos(ctrl_src, e.offset);
-        out.push(Symbol { name: name.clone(), kind: "use".into(), source: "use".into(), line: l, col: c });
-    }
+    // Controller-declared keys carry a byte offset into the controller
+    // source. There is no more `derived:`/`on:`/`use:` section to
+    // separate — the setup function returns ONE flat scope object,
+    // classified by its value's shape (kind).
     for (name, e) in &table.scope {
         let (l, c) = pos(ctrl_src, e.offset);
         out.push(Symbol { name: name.clone(), kind: e.kind.label().to_string(), source: "setup".into(), line: l, col: c });

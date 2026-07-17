@@ -53,8 +53,7 @@ function parseRect(raw: string): BoxRect {
   return { x, y, w, h }
 }
 
-export default controller({
-  setup: ({ kind, rect, index, active }: Scope) => ({
+export default controller(({ kind, rect, index, active }: Scope) => ({
     isPoint: derived(() => kind() !== 'region'),
     box: derived(() => parseRect(rect())),
     hasBox: derived(() => {
@@ -64,8 +63,7 @@ export default controller({
     // The badge is 1-based: the first annotation reads "1".
     badge: derived(() => String(index() + 1)),
     state: derived(() => (active() ? 'active' : '')),
-  }),
-})
+  }))
 
 </controller>
 {#if isPoint()}

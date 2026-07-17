@@ -39,8 +39,7 @@ interface Row {
   meta: string
 }
 
-export default controller<Scope>({
-  setup: ({ data, expanded, depth }: Scope) => {
+export default controller(({ data, expanded, depth }: Scope) => {
     // Per-path user toggles win over the depth/expanded defaults.
     const overrides = signal<Record<string, boolean>>({})
 
@@ -122,13 +121,13 @@ export default controller<Scope>({
       overrides.set((cur) => ({ ...cur, [path]: !open }))
     }
 
+    mount((host) => {
+      if (!host.hasAttribute('role')) host.setAttribute('role', 'tree')
+      if (!host.hasAttribute('aria-label')) host.setAttribute('aria-label', 'JSON tree')
+    })
+
     return { rows, parseError, toggle }
-  },
-  mount(_state, host) {
-    if (!host.hasAttribute('role')) host.setAttribute('role', 'tree')
-    if (!host.hasAttribute('aria-label')) host.setAttribute('aria-label', 'JSON tree')
-  },
-})
+  })
 </controller>
 
 <column gap="0" sx="font-mono text-sm leading-normal-plus">

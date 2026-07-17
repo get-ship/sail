@@ -59,28 +59,27 @@ patterns registered via `defineRoutes`. A view that reads `route.params.id()`
 (`packages/sui/runtime/src/route/index.ts:98`, `:237`).
 
 ```ts
-// views/agents/[id]/controller.ts
-import { controller, derived, live, unwrap } from '@ship/sui-runtime'
+<controller>
+// views/agents/[id]/page.sui
+import { derived, live, unwrap } from '@ship/sui-runtime'
 import { defineRoutes } from '@ship/sui-runtime/route'
-import type { Scope } from './page.sui'
 
 // TOP-LEVEL — before the controller default export.
 defineRoutes([{ pattern: '/agents/:id' }])
 
-export default controller<Scope>({
-  scope: ({ route, ship }) => {
-    const id   = derived(() => route.params.id() ?? '')
-    const ctx  = live(() => ship.agents.detail({ id: id() }))
-    const data = derived(() => unwrap(ctx) ?? null)
-    return { id, ctx, data }
-  },
+export default controller(({ route, ship }) => {
+  const id   = derived(() => route.params.id() ?? '')
+  const ctx  = live(() => ship.agents.detail({ id: id() }))
+  const data = derived(() => unwrap(ctx) ?? null)
+  return { id, ctx, data }
 })
+</controller>
 ```
 
 The single-source-of-truth example in the shell registers two patterns at once
 — the shell route and the view-host standalone route — so the same controller
 works popped out of the dashboard
-(`apps/shell/src/studio/components/[name]/controller.ts`):
+(`apps/shell/src/studio/components/[name]/page.sui`'s `<controller>` block):
 
 ```ts
 import { DECK_PREFIX } from '@ship/sdk-client'
@@ -120,12 +119,13 @@ global updater, so every attached view re-evaluates from one navigation
 (`route/index.ts:317`). Writing to `route.params` or `route.query` directly
 throws — change the URL through `navigate`.
 
-In a controller, `navigate` is also available on the handler argument:
+In a controller, `navigate` is also available directly on `ctx`:
 
 ```ts
-on: {
-  newAgent: ({ navigate }) => navigate('/agents/create'),
-}
+export default controller(({ navigate }) => {
+  const newAgent = () => navigate('/agents/create')
+  return { newAgent }
+})
 ```
 
 ## Sub-routes vs in-page tabs
@@ -135,8 +135,11 @@ Two patterns, chosen by whether the URL should change.
 **In-page tabs** (no URL change, no back-button history) use a signal:
 
 ```ts
-// views/git/controller.ts
-scope: () => ({ tab: signal<'changes' | 'history'>('changes') })
+// views/git/page.sui — inside its <controller> block
+export default controller(() => {
+  const tab = signal<'changes' | 'history'>('changes')
+  return { tab }
+})
 ```
 
 ```html

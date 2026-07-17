@@ -98,29 +98,26 @@ fn authored_controller_is_composed_via_setup_not_rewritten() {
     );
     assert!(
         out.controller_ts.contains(
-            "type __AuthoredScope = typeof __authored.__def extends { setup?: infer F }",
+            "type __AuthoredScope = typeof __authored.__def extends (...a: never[]) => infer R ? R : object;",
         ),
-        "recovers the setup-factory return type from __def.setup (slice 2 G4):\n{}",
+        "recovers the setup function's return type from __def directly (function-form; slice 2 G4):\n{}",
         out.controller_ts
     );
-    // The recovery must match the factory REGARDLESS of its param list.
-    // `ScopedControllerDef.scope` is `(init, host?) => SC` (a required `init`),
-    // so a zero-arg pattern `() => infer R` fails to match and collapses the
-    // recovered scope to `object` — false-erroring every `scope.X` read under
-    // real runtime types. Pin the param-tolerant `(...a) => infer R` form.
+    // The recovery must match the setup function REGARDLESS of its param
+    // list. `controller(fn)`'s `fn` is `(init, host?) => SC` (a required
+    // `init`), so a zero-arg pattern `() => infer R` fails to match and
+    // collapses the recovered scope to `object` — false-erroring every
+    // `scope.X` read under real runtime types.
     assert!(
-        out.controller_ts.contains("F extends (...a: never[]) => infer R ? R : object"),
-        "recovery must tolerate the factory's `(init, host?)` params:\n{}",
-        out.controller_ts
-    );
-    assert!(
-        !out.controller_ts.contains("F extends () => infer R"),
+        !out.controller_ts.contains("extends () => infer R"),
         "the zero-arg recovery pattern collapses scope to `object`; must not emit it:\n{}",
         out.controller_ts
     );
     assert!(
-        out.controller_ts.contains("const __authoredScope = __authored.setup(__ctx) as __AuthoredScope;"),
-        "runs the real resolveController via setup(ctx):\n{}",
+        out.controller_ts.contains(
+            "const __authoredScope = withScope(__authoredSetupScope, () => __authored.setup(__ctx)) as __AuthoredScope;"
+        ),
+        "runs the real resolveController via setup(ctx), inside a scope so ambient mount()/onCleanup() don't throw:\n{}",
         out.controller_ts
     );
     assert!(
@@ -290,25 +287,21 @@ fn template_literal_outside_interpolation_does_not_trigger_manifest_import() {
 }
 /// `ControllerExport<Scope>` generic) so a controller-declared signal
 /// like `name` is visible in the recovered scope. Uses the canonical
-/// `controller({ setup: () => ({...}) })` form (no explicit generic)
-/// so the `SC` parameter is inferred from the return — proves the
+/// `controller((ctx) => ({...}))` — the one form — so the `SC`
+/// parameter is inferred from the setup function's return — proves the
 /// recovery is doing real work, not just papering over the gap.
 #[test]
 fn authored_scope_factory_return_type_is_recovered() {
     let program = parse("<h1>{name()}</h1>").expect("parse");
     let manifest = AppManifest::parse("{}").expect("manifest");
-    // Canonical form: `controller({ setup: () => ({ name: signal(...) }) })`.
-    // TypeScript infers `SC = { name: Signal<string> }` from the return;
-    // the synthetic controller must recover that exact type from
-    // `__def.setup` (not from the generic `ControllerExport<Scope>`).
+    // TypeScript infers `SC = { name: Signal<string> }` from `fn`'s return;
+    // the synthetic controller must recover that exact type from `__def`
+    // directly (not from the generic `ControllerExport<Scope>`).
     let authored_src = r#"import { controller, signal } from '@ship/sui-runtime'
-export default controller({
-  setup: () => ({ name: signal('Hub') }),
-})
+export default controller(() => ({ name: signal('Hub') }))
 "#;
-    // Canonical form — `controller({ setup: () => ({...}) })` with no
-    // explicit generic. The recovery is structural (text on the
-    // emitted controller module); the specifier never resolves.
+    // The recovery is structural (text on the emitted controller module);
+    // the specifier never resolves for this unit test.
     let authored = AuthoredController { specifier: "./in-memory.ts".to_string() };
     let out = emit_synthetic(
         &program,
@@ -320,10 +313,12 @@ export default controller({
     )
     .expect("emit");
     let ctrl = out.controller_ts;
-    // The recovery uses `__def.setup` factory return:
+    // The recovery uses `__def`'s function return directly:
     assert!(
-        ctrl.contains("type __AuthoredScope = typeof __authored.__def extends { setup?: infer F }"),
-        "G4: recovery must inspect __def.setup, not the ControllerExport<Scope> generic:\n{ctrl}"
+        ctrl.contains(
+            "type __AuthoredScope = typeof __authored.__def extends (...a: never[]) => infer R ? R : object;"
+        ),
+        "G4: recovery must inspect __def directly (function-form), not the ControllerExport<Scope> generic:\n{ctrl}"
     );
     // (The authored module isn't actually imported for this unit test —
     // the G4 tsc proof lives in `synthetic_client_tsc::hub_controller_recovers_scope_factory_return_type`

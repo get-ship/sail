@@ -10,11 +10,9 @@ export const controllerExample = `<!-- routes/page.sui — one file: state + tem
 <controller>
   import { controller, signal } from '@ship/sui-runtime'
 
-  export default controller({
-    setup: () => {
-      const count = signal(0)
-      return { count }
-    },
+  export default controller(() => {
+    const count = signal(0)
+    return { count }
   })
 </controller>
 

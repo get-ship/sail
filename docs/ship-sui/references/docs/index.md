@@ -16,7 +16,7 @@ Every authoring decision lives in exactly one of three roles:
 | Role | File | Job |
 |---|---|---|
 | **Template** | `page.sui` | Structure + declarative wiring |
-| **Controller** | `controller.ts` (optional) | Behavior — state, derived, handlers, lifecycle |
+| **Controller** | inline `<controller>` block in `page.sui` (optional) | Behavior — state, derived, handlers, lifecycle |
 | **Data subscription** | `<data>` element in template | Bridge to the daemon's reactive surface |
 
 The three do not overlap. There is no fourth role, and there will not be a fourth role until a real edge case forces a deliberate widening of the framework. Adding a fourth role to accommodate a one-off case is the easiest way to lose the coherence the three-role split buys.
@@ -27,7 +27,7 @@ The three do not overlap. There is no fourth role, and there will not be a fourt
 |---|---|---|
 | **Model** | The Ship daemon (`shipd`) | Out of band. Not a framework concept. The SDK on the other side of `<data>`. |
 | **View** | The template (`.sui`) | Markup + declarative wiring. Per Vue/Svelte usage, "template" is more honest than "view" because it carries wiring, not pure structure — but it occupies the V slot. |
-| **ViewModel** | The controller (`.ts`) | State, derived, handlers, composable hooks, lifecycle. The classic VM definition. |
+| **ViewModel** | The controller (inline `<controller>` block) | State, derived, handlers, lifecycle. The classic VM definition. |
 
 Two things this mapping makes explicit:
 
@@ -41,35 +41,30 @@ Each view has a single scope. Both the template and the controller contribute id
 **Scope contributors**:
 
 - Template `<data name="agents" src="..." live />` → `agents` as a live signal
-- Controller `scope:` factory → returned signals / derived / hooks / shared providers (the **only** site for reactive component state)
-- Controller `derived` section → declared keys as memos
-- Controller `on` section → declared keys as handlers
-- Controller `use:` section → declared keys as hook namespaces
+- The controller's setup function → everything it returns: state signals, `derived(...)` values, plain helpers, and event handlers, all merged into scope verbatim (the **only** site for reactive component state)
 - Template `<use-* as="X" />` → `X` as a hook-contributed identifier
 
 **Scope consumers**:
 
 - Template expressions (`{count() + 1}`, `{a.name}`, `{shell.theme}`)
-- Controller `derived` sections (each is invoked with the scope as its argument)
-- Controller `use:` sections (each hook factory receives the scope)
-- Controller `on` handlers (each receives a state mutator + the scope)
+- The controller's own setup function (it receives the ambient `ctx` — `ship`, `clients`, `route`, `navigate`, plus every template-declared signal — as its first argument)
 
-The runtime calls each controller section with `{ ship, ...templateDeclaredSignals, ...stateSignals, ...derivedSignals, ...hookContributions }`. Each section destructures what it needs.
+The runtime calls the controller's setup function once, with `ctx` as its first argument and the host element as an optional second argument. Whatever it returns is merged into scope.
 
-The mental model is **"this view has a scope; everything in this view contributes to it."** No imports between template and controller. No sharing rule beyond the scope. If you can see an identifier in the scope, you can read it.
+The mental model is **"this view has a scope; everything in this view contributes to it."** No imports between template and controller. No sharing rule beyond the scope. If you can see an identifier in the scope, you can read it. Mutation is always a direct `signal.set(...)` call — there is no read-only-vs-writable proxy split between contexts; a signal returned from the controller is the same signal everywhere.
 
 ## The discipline
 
 Three rules that hold the architecture together. They are non-negotiable.
 
 1. **Templates declare; controllers do.** Anything declarative (subscriptions, structure, wiring) goes in the template. Anything imperative (computation, async work, third-party libs) goes in the controller.
-2. **Mutation is locked to handlers.** Templates and `derived.*` sections receive read-only views of state. Only `on.*` handlers can write. Statically enforced where possible, lint-enforced where not.
+2. **Mutation goes through `.set()`, and templates never write.** Templates only read state — they never call `.set()` on a signal directly. Mutation is a `signal.set(...)` call inside a handler (or other controller code) returned from the controller. Lint-enforced (`controller_state_set_call`).
 3. **Three roles, no fourth.** When an edge case arises, ask: does it fit one of the three roles, or does it fit a *combination* of two? If neither, it's a deliberate-widening question, not an accommodation question. The default answer is "express it with the three you have."
 
 ## What this is not
 
 - **Not React.** No virtual DOM, no reconciler, no render functions. Templates compile to attach instructions over server-rendered DOM.
-- **Not Vue.** No `<script setup>`, no SFC, no template-and-script-and-style in one file. Three sibling files (template + optional controller + optional CSS), paired by filename.
+- **Not Vue.** No SFC compilation step splitting one authored file into three concerns. The `.sui` file and its inline `<controller>` block *are* one file — closer to Vue's `<script setup>` than to a paired-file convention — plus an optional sibling CSS file.
 - **Not Svelte.** Similar template syntax; different reactivity model (no `$state` rune); different controller convention (no per-component `<script>` block); different SSR shape (Rust IR walker, not Node SSR).
 - **Not Datastar.** Compatible philosophy (server-driven HTML + tiny client runtime + SSE), but SUI has its own template DSL, its own signals primitive, and its own marker shape. We do not ship Datastar's `data-*` attributes verbatim.
 - **Not Hotwire/LiveView.** No server-pushed HTML fragments + idiomorph as the *only* update path. Local state is fully client-side; `data live` is the SSE channel for server-owned state. The two coexist.
@@ -89,7 +84,7 @@ Six edges SUI has over comparable frameworks:
 
 - **[The authoring model](./authoring-model/)** — the pure-expression-vs-capability line and the not-JSX split: what goes in `.sui` vs. `controller.ts`, and why.
 - **[The template surface](./template/)** — directives, control flow, bindings, projection, expressions.
-- **[The controller surface](./controller/)** — three tiers, scope rules, mutation discipline.
+- **[The controller surface](./controller/)** — the inline `<controller>` block, ambient lifecycle, mutation discipline.
 - **[Hooks](./hooks/)** — template vs controller hooks, when to reach for which.
 - **[Data subscriptions](./data-subscriptions/)** — the canonical bridge to the daemon.
 - **[Effect scopes](./effect-scope/)** — cleanup ownership on unmount.

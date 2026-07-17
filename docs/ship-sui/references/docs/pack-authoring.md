@@ -30,8 +30,8 @@ under `packages/components/<name>/`
   imports from the generated `.sui.d.ts` files.
 - `src/index.ts` — the umbrella. Side-effect-imports each component's
   `.compiled.js` so importing the package registers every tag globally.
-- `src/<name>-example/<name>-example.sui` + `.controller.ts` — a starter
-  component to replace.
+- `src/<name>-example/<name>-example.sui` — a starter component to replace,
+  with its inline `<controller>` block (if any) in the same file.
 
 After scaffolding, run `bun install` to wire the new workspace package.
 
@@ -48,9 +48,8 @@ directories:
 ```
 packages/components/sui/primitives/src/
   sui-button/
-    sui-button.sui
-    sui-button.controller.ts   (optional)
-    sui-button.css             (optional)
+    sui-button.sui              (inline <controller> block, if any, lives here)
+    sui-button.css               (optional)
   sui-card/
     sui-card.sui
   index.ts                     (umbrella: side-effect imports each .compiled.js)

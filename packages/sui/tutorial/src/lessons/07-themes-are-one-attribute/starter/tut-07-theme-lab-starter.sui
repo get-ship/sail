@@ -9,10 +9,8 @@
 <controller>
 import { controller, signal } from '@ship/sui-runtime'
 import { THEMES, readStoredTheme, type Theme, type ThemeId } from '@ship/tokens/themes'
-import type { Scope } from './tut-07-theme-lab-starter.sui'
 
-export default controller<Scope>({
-  setup: () => {
+export default controller(() => {
     const active = signal<ThemeId>(readStoredTheme())
 
     return {
@@ -27,8 +25,7 @@ export default controller<Scope>({
         active.set(id)
       },
     }
-  },
-})
+  })
 </controller>
 
 <column gap="4">

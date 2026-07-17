@@ -12,7 +12,7 @@ SUI has **two** categories of hook with different jobs and different syntax. The
 | Category | Job | Where it lives | hooks |
 |---|---|---|---|
 | **Template hook** | Element-scoped lifecycle / side effect, may contribute read-only scope identifiers | Template, as `<use-*>` element | `<use-kbd>`, `<use-click-outside>`, `<use-focus-trap>`, `<use-clipboard>`, `<use-title>`, `<use-scroll-anchor>`, `<use-intersection>` |
-| **Controller hook** | Bundle of state + derived + handlers as a reusable UI pattern slice | Controller, in the `use:` section | `useFilteredList`, `useSelection`, `useForm` |
+| **Controller hook** | Bundle of state + derived + handlers as a reusable UI pattern slice | Controller, called as a plain function inside the controller's setup function | `filteredList`, `selection`, `form` |
 
 ## When to reach for which
 
@@ -20,7 +20,7 @@ Three questions cover almost every "I need something" moment:
 
 1. **Need data from the platform?** → `<data>` element in the template. Not a hook.
 2. **Need a side effect tied to the view's lifecycle?** → Template hook (`<use-*>`).
-3. **Need a reusable bundle of state, derived values, and handlers?** → Controller hook (`use:` section).
+3. **Need a reusable bundle of state, derived values, and handlers?** → Controller hook — call a composition function inside the controller's setup function.
 
 If the answer doesn't fit one of the three, the case is either expressible as a *combination* of these primitives, or it's signaling a gap in the framework that should be filled deliberately — not accommodated with a fourth pattern.
 
@@ -121,9 +121,10 @@ Binds `document.title` to a signal. Reads the `bind:text` binding inside a react
 
 ```ts
 // controller
-derived: {
-  pageTitle: ({ agents }) => `${agents().length} agents — Ship`,
-}
+export default controller((ctx) => {
+  const pageTitle = derived(() => `${ctx.agents().length} agents — Ship`)
+  return { pageTitle }
+})
 ```
 
 ```html
@@ -157,58 +158,67 @@ Fires a callback when the host element enters the visible viewport, powered by `
 
 ```ts
 // controller
-on: {
-  reveal: (state) => { state.visible = true },
-},
+export default controller((ctx) => {
+  const visible = signal(false)
+  const reveal = () => visible.set(true)
+  return { visible, reveal }
+})
 ```
 
 The `bind:on` callback receives the `IntersectionObserverEntry`. In environments without `IntersectionObserver` support (jsdom, very old browsers), the hook silently skips setup.
 
 ## Controller hooks
 
-Bundles of `scope` / `derived` / `on` / `mount` returned from a factory function. Composed in the controller's `use:` section. Each result is namespaced by its key.
+Bundles of state + derived values + handlers as a reusable UI pattern slice. A controller hook is nothing more than a plain function, called directly inside a controller's setup function — there's no separate registration mechanism and no dedicated composition section.
 
 ### Authoring contract
 
-A controller hook is a function that returns the controller shape:
+A controller hook is a function that returns a plain object of signals and helpers:
 
 ```ts
-// packages/sui/runtime/src/hooks/filtered-list.ts
-import { signal } from '@ship/sui-runtime'
-import type { ControllerHook } from '@ship/sui-runtime'
+// packages/sui-std/src/filtered-list.ts
+import { signal, derived, type Signal } from '@ship/sui-runtime'
 
-export const useFilteredList = <T>(
-  source: () => T[],
+export const filteredList = <T>(
+  source: Signal<T[]>,
   predicate: (item: T, query: string) => boolean,
-): ControllerHook<{ query: string }> => ({
-  scope:   () => ({ query: signal('') }),
-  derived: { filtered: ({ query }) => source().filter(i => predicate(i, query)) },
-  on:      { setQuery: (s, q: string) => { s.query = q } },
-})
+) => {
+  const query = signal('')
+  const filtered = derived(() => source().filter(i => predicate(i, query())))
+  const setQuery = (q: string) => query.set(q)
+  return { query, filtered, setQuery }
+}
 ```
 
-The hook's return shape matches the controller's section shape exactly — reactive state lives in the `scope:` factory, never a `state` section. Use sites:
+Nothing distinguishes this from any other helper function — reactive state is created with `signal(...)`, derived values with `derived(...)`, and handlers are just functions that call `.set(...)`. Use sites call it inline, inside the controller's setup function, and merge its return value into the controller's own returned object however they like:
 
 ```ts
-// controller.ts
-import { useFilteredList } from '@ship/sui-runtime'
+// controller
+import { filteredList } from '@ship/sui-std'
 
-export default ({ ship }) => ({
-  use: {
-    list: useFilteredList(
-      () => /* a signal accessor — see "passing signals" below */,
-      (a, q) => a.name.includes(q),
-    ),
-  },
-  // ... rest of the controller
+export default controller((ctx) => {
+  const list = filteredList(ctx.agents, (a, q) => a.name.includes(q))
+
+  return {
+    list, // nested — reference as list.query / list.filtered in the template
+  }
 })
 ```
 
-In the template, the hook's contributions are namespaced by `use:` key:
+Or spread it flat if there's no risk of collision:
+
+```ts
+export default controller((ctx) => {
+  const { query, filtered, setQuery } = filteredList(ctx.agents, (a, q) => a.name.includes(q))
+  return { query, filtered, setQuery }
+})
+```
+
+In the template, access the result however it was merged:
 
 ```html
-<input bind:value={list.query} on:input={list.setQuery} />
-{#for a of list.filtered key={a.id}}
+<input bind:value={list.query} on:input={(e) => list.setQuery(e.target.value)} />
+{#for a of list.filtered() key={a.id}}
   <sui-card>{a.name}</sui-card>
 {/for}
 ```
@@ -219,19 +229,31 @@ In the template, the hook's contributions are namespaced by `use:` key:
 
 ```ts
 // good
-useFilteredList(agents, (a, q) => a.name.includes(q))
+filteredList(agents, (a, q) => a.name.includes(q))
 
 // bad
-useFilteredList(() => agents().value?.items ?? [], pred)
+filteredList(() => agents().value?.items ?? [], pred)
 ```
 
-Signals are first-class reactive references. Inside the hook, `agents()` reads reactively. Closures break that — the hook gets a function that *looks like* a regular getter and authors lose track of what's reactive. Pass the signal; let the hook unwrap.
+Signals are first-class reactive references. Inside the hook, `source()` reads reactively. Closures break that — the hook gets a function that *looks like* a regular getter and authors lose track of what's reactive. Pass the signal; let the hook unwrap.
 
 For live signals with the standard envelope (`{ kind, value: { items } }`), hooks know the shape and unwrap to `.value.items` themselves. See [data-subscriptions.md](data-subscriptions.md#live-envelope).
 
 ### Composition rule
 
-Hooks compose by namespacing in `use:`. There is no automatic flat-merge, no spread operator, no precedence rules. If two hooks both contribute a `state.query`, they live as `list.query` and `search.query` — the namespaces keep them apart. This is the trade for never having a name-collision argument again.
+There is no automatic namespacing anymore — a controller hook's return value is just an object, merged into the controller's own returned object by ordinary JavaScript: spread it flat, destructure and rename individual members, or nest the whole thing under a key. The author decides.
+
+If two hooks both return a `query` signal, spreading both flat is a real name collision — the second assignment silently wins, and the compiler/lint will flag the duplicate key. Nest one (or both) under a key to keep them apart:
+
+```ts
+export default controller((ctx) => {
+  const list = filteredList(ctx.agents, (a, q) => a.name.includes(q))
+  const search = filteredList(ctx.messages, (m, q) => m.text.includes(q))
+  return { list, search } // list.query and search.query, no collision
+})
+```
+
+This is a manual choice, not a framework guarantee — pick namespacing whenever a flat spread would collide.
 
 ## What's NOT a hook
 

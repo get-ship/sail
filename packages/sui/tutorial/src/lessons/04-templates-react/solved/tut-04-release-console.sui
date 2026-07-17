@@ -9,7 +9,6 @@
 
 <controller>
 import { controller, signal, derived } from '@ship/sui-runtime'
-import type { Scope } from './tut-04-release-console.sui'
 
 type Phase = 'idle' | 'building' | 'live' | 'failed'
 
@@ -26,8 +25,7 @@ const SEED: Env[] = [
   { id: 'dev', name: 'dev-sandbox', tier: 'preview', region: 'us-east' },
 ]
 
-export default controller<Scope>({
-  setup: () => {
+export default controller(() => {
     const phase = signal<Phase>('idle')
     const envs = signal<Env[]>(SEED)
     const query = signal('')
@@ -57,8 +55,7 @@ export default controller<Scope>({
       promote: (id: string): void =>
         envs.set([...envs().filter((e) => e.id === id), ...envs().filter((e) => e.id !== id)]),
     }
-  },
-})
+  })
 </controller>
 
 <column gap="4">

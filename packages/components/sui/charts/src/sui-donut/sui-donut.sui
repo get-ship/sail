@@ -50,8 +50,7 @@ interface DonutHost extends Element {
   error?: unknown
 }
 
-export default controller({
-  setup: ({ data, diameter, thickness, label, loading }: Scope) => {
+export default controller(({ data, diameter, thickness, label, loading }: Scope) => {
     const chart = createChartData({
       // normalizeSeries accepts string | ChartSeries[] — ONE scope key handles
       // both the SSR JSON string AND a live prop:series identity, no cast.
@@ -67,13 +66,13 @@ export default controller({
     )
     const ariaLabel = derived(() => `${label()}: ${chart.ariaSummary()}`)
 
+    mount((host) => {
+      const err = (host as DonutHost).error
+      if (err !== undefined) chart.setOptions({ error: err })
+    })
+
     return { chart, segments, ariaLabel }
-  },
-  mount(_state, host) {
-    const err = (host as DonutHost).error
-    if (err !== undefined) _state.chart.setOptions({ error: err })
-  },
-})
+  })
 
 </controller>
 {#if loading()}

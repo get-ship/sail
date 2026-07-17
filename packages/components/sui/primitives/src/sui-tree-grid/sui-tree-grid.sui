@@ -104,10 +104,7 @@ function emptyTree(): Table<AnyTreeNode> {
   return createTable<AnyTreeNode>(treeTableOptions<AnyTreeNode>({ data: [], navMode: 'cell' }))
 }
 
-export default controller({
-  // `nodes`/`columns` (string) + `selectable` (enum) are read imperatively from
-  // the host — they are not part of the compiler-emitted `Scope`.
-  setup: (_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ViewScope<Scope>) => {
     const treeSig = signal<Table<AnyTreeNode> | null>(null)
     const viewportEl = ref<HTMLDivElement>(null)
 
@@ -149,6 +146,56 @@ export default controller({
       () => tree().rows().length === 0 && tree().hasActiveFilters(),
     )
 
+    mount((host) => {
+      Object.defineProperty(host, 'tree', {
+        configurable: true,
+        get: () => tree(),
+        set: (t: Table<AnyTreeNode> | null) => {
+          treeSig.set(t)
+        },
+      })
+
+      // SSR fallback: build an engine from `nodes` + `columns` JSON attributes.
+      if (treeSig() == null) {
+        const rawNodes = (host as { nodes?: string }).nodes ?? host.getAttribute('nodes') ?? ''
+        const rawCols = (host as { columns?: string }).columns ?? host.getAttribute('columns') ?? ''
+        const parsedNodes = parseJsonNodes(rawNodes)
+        const parsedCols = parseJsonColumns(rawCols)
+        if (parsedNodes.length > 0 && parsedCols.length > 0) {
+          const selAttr = host.getAttribute('selectable') ?? 'none'
+          treeSig.set(
+            createTable<AnyTreeNode>(
+              treeTableOptions<AnyTreeNode>({
+                data: parsedNodes as AnyTreeNode[],
+                columns: parsedCols as never,
+                navMode: 'cell',
+                selectable: selAttr !== 'none',
+                multiSelect: selAttr === 'multi',
+              }),
+            ),
+          )
+        }
+      }
+
+      const stop = wireTreeInteractions(host, () => tree(), {
+        expandOnSelect: () => host.hasAttribute('expand-on-select'),
+        selectable: () => (host.getAttribute('selectable') ?? 'none') !== 'none',
+        multi: () => (host.getAttribute('selectable') ?? 'none') === 'multi',
+        navRoleSelector: '[role="treegrid"]',
+        getWindow: () => windowItems(),
+      })
+
+      // The ORTHOGONAL column lane: header sort/hide + a pointer-drag resize route
+      // through the REUSED engine's column mutators (no tree-specific column code).
+      const stopColumns = wireGridColumns(host, () => tree())
+
+      return () => {
+        stop()
+        stopColumns()
+        virt.dispose()
+      }
+    })
+
     return {
       treeSig,
       viewportEl,
@@ -163,56 +210,7 @@ export default controller({
       isEmptyInitial,
       isEmptyFiltered,
     }
-  },
-
-  mount(state, host) {
-    Object.defineProperty(host, 'tree', {
-      configurable: true,
-      get: () => state.tree,
-      set: (t: Table<AnyTreeNode> | null) => {
-        state.treeSig = t
-      },
-    })
-
-    // SSR fallback: build an engine from `nodes` + `columns` JSON attributes.
-    if (state.treeSig == null) {
-      const rawNodes = (host as { nodes?: string }).nodes ?? host.getAttribute('nodes') ?? ''
-      const rawCols = (host as { columns?: string }).columns ?? host.getAttribute('columns') ?? ''
-      const parsedNodes = parseJsonNodes(rawNodes)
-      const parsedCols = parseJsonColumns(rawCols)
-      if (parsedNodes.length > 0 && parsedCols.length > 0) {
-        const selAttr = host.getAttribute('selectable') ?? 'none'
-        state.treeSig = createTable<AnyTreeNode>(
-          treeTableOptions<AnyTreeNode>({
-            data: parsedNodes as AnyTreeNode[],
-            columns: parsedCols as never,
-            navMode: 'cell',
-            selectable: selAttr !== 'none',
-            multiSelect: selAttr === 'multi',
-          }),
-        )
-      }
-    }
-
-    const stop = wireTreeInteractions(host, () => state.tree, {
-      expandOnSelect: () => host.hasAttribute('expand-on-select'),
-      selectable: () => (host.getAttribute('selectable') ?? 'none') !== 'none',
-      multi: () => (host.getAttribute('selectable') ?? 'none') === 'multi',
-      navRoleSelector: '[role="treegrid"]',
-      getWindow: () => state.$signals.windowItems(),
-    })
-
-    // The ORTHOGONAL column lane: header sort/hide + a pointer-drag resize route
-    // through the REUSED engine's column mutators (no tree-specific column code).
-    const stopColumns = wireGridColumns(host, () => state.tree)
-
-    return () => {
-      stop()
-      stopColumns()
-      state.virt.dispose()
-    }
-  },
-})
+  })
 
 </controller>
 {#if error() !== ''}

@@ -1,6 +1,6 @@
 ---
-title: "Controller hooks — use: section"
-description: "Reusable bundles of state + derived + handlers."
+title: "Controller hooks"
+description: "Reusable bundles of state + derived + handlers, called directly inside the controller."
 group: "Tutorial"
 order: 20
 slug: "20-controller-hooks"
@@ -10,11 +10,12 @@ chapter: "composition"
 ---
 
 A **controller hook** is a reusable slice — state + derived + action
-handlers — composed into a controller's `use:` section, namespaced
-by a key.
+handlers — bundled into a plain function. There's no registration, no
+namespace key: call it inside the controller and merge whatever it
+returns into the controller's own returned scope however you choose.
 
 ```ts
-import { controller, signal, useFilteredList, useSelection } from '@ship/sui-runtime'
+import { controller, signal, filteredList, selection } from '@ship/sui-runtime'
 
 const AGENTS = [
   { id: 'planner',  label: 'Planner — long-horizon work breakdown' },
@@ -22,21 +23,23 @@ const AGENTS = [
   { id: 'qa',       label: 'QA — Playwright + screenshot suite' },
 ]
 
-export default controller({
-  scope: () => ({ items: signal(AGENTS) }),
-  use: {
-    list: useFilteredList(
-      () => AGENTS,
-      (a, q) => a.label.toLowerCase().includes(q.toLowerCase()),
-    ),
-    sel:  useSelection(() => AGENTS, (a) => a.id),
-  },
+export default controller((ctx) => {
+  const items = signal(AGENTS)
+
+  const list = filteredList(
+    () => AGENTS,
+    (a, q) => a.label.toLowerCase().includes(q.toLowerCase()),
+  )
+  const sel = selection(() => AGENTS, (a) => a.id)
+
+  return { items, list, sel }
 })
 ```
 
-Reading them in the template. Hooks contribute their `state:` and
-`derived:` keys namespaced under the `use:` key; `on:` handlers
-become event handler refs:
+Reading them in the template. Each hook's return value lands under
+whatever key you gave it in the returned object — `list` contributes
+`list.query` / `list.filtered()`, `sel` contributes `sel.selected()`
+and friends:
 
 ```sui
 <input bind:value={list.query} placeholder="filter…" />
@@ -62,17 +65,20 @@ Hooks ship today:
 
 | Hook | What it bundles |
 |---|---|
-| `useFilteredList(source, predicate)` | `state.query`, `derived.filtered`, `on.setQuery`, `on.clear` |
-| `useSelection(source, getKey)` | `state.selectedId`, `derived.selected`, `on.select`, `on.clear`, `on.toggle` |
-| `useForm(initial, validate)` | `state.values`, `state.errors`, `state.touched`, `on.set`, `on.touch`, `on.submit`, `derived.valid` (covered in step 21) |
+| `filteredList(source, predicate)` | `query`, `filtered`, `setQuery`, `clear` |
+| `selection(source, getKey)` | `selectedId`, `selected`, `select`, `clear`, `toggle`, `isSelected` |
+| `form({ initial, validate, submit })` | `fields`, `values`, `errors`, `valid`, `dirty`, `pending`, `reset`, `submit` (covered in step 21) |
 
-You can author your own — anything matching `ControllerHook<Scope>`
-shape: `{ state?, derived?, on? }`. Each section is merged into the
-scope under the namespace key.
+You can author your own — a controller hook is nothing more than a
+plain function built from `signal(...)` and `derived(...)` that
+returns an object of signals and helpers. There's no type to implement
+and no registration: call it inside the controller, and keep the
+returned object however you like — nested under a key (as `list` and
+`sel` are above), or spread flat if there's no risk of collision.
 
 ## Try it
 
-The example combines `useFilteredList` + `useSelection` over a small
+The example combines `filteredList` + `selection` over a small
 agent catalog. Try:
 
 1. **Filter**: type in the input — the list narrows reactively. The
@@ -80,8 +86,10 @@ agent catalog. Try:
    re-evaluates the predicate.
 2. **Select**: click a row — `sel.selected()` becomes that item, the
    row highlights. Click again — `sel.toggle()` clears the selection.
-3. **Author a hook**: write your own `useToggle()` that bundles
-   `{ state: { on: false }, on: { toggle: (s) => { s.on = !s.on } } }`.
-   Add it to `use:` and read `toggle.on()` in the template. The
-   shape mirrors `useSelection` — three sections, each optional,
-   namespaced under the `use:` key.
+3. **Author a hook**: write your own `toggle(initial = false)` that
+   returns `{ on, toggle }` — an `on` signal and a handler that calls
+   `on.set((v) => !v)`. Call it inside the controller, keep the
+   result under a key (say, `const flag = toggle()`), and read
+   `flag.on()` in the template. The shape mirrors `selection`: a
+   function you call, its return value merged in by hand — no section,
+   no namespace, nothing to register.

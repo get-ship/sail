@@ -35,23 +35,21 @@ const ELEMENTS: ElementRow[] = Object.keys(PROP_REGISTRY)
 const SX_ROWS = SX_ATOMS.map((a) => ({ prop: a.prop, values: a.values.join(' · ') }))
 const LAYOUT_ROWS = LAYOUT_KEYWORDS.map((k) => ({ tag: k.tag, props: k.props.join(', ') }))
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>) => ({
-    elements: () => ELEMENTS,
-    elementCount: () => ELEMENTS.length,
-    sxRows: () => SX_ROWS,
-    sxCount: () => SX_ROWS.length,
-    statePrefixes: () => SX_STATE_PREFIXES,
-    conditionPrefixes: () => SX_CONDITION_PREFIXES,
-    refusals: () => SX_REFUSALS,
-    refusalCount: () => SX_REFUSALS.length,
-    layoutRows: () => LAYOUT_ROWS,
-    motionTriggers: () => MOTION.triggers.join(' · '),
-    motionProperties: () => MOTION.properties.join(' · '),
-    motionStagger: () => MOTION.staggerKey,
-    motionPresets: () => MOTION.presets.join(' · '),
-  }),
-})
+export default controller((_ctx: ViewScope<Scope>) => ({
+  elements: () => ELEMENTS,
+  elementCount: () => ELEMENTS.length,
+  sxRows: () => SX_ROWS,
+  sxCount: () => SX_ROWS.length,
+  statePrefixes: () => SX_STATE_PREFIXES,
+  conditionPrefixes: () => SX_CONDITION_PREFIXES,
+  refusals: () => SX_REFUSALS,
+  refusalCount: () => SX_REFUSALS.length,
+  layoutRows: () => LAYOUT_ROWS,
+  motionTriggers: () => MOTION.triggers.join(' · '),
+  motionProperties: () => MOTION.properties.join(' · '),
+  motionStagger: () => MOTION.staggerKey,
+  motionPresets: () => MOTION.presets.join(' · '),
+}))
 </controller>
 
 <column sx="max-w-44" gap="5">

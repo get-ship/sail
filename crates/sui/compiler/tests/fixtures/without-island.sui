@@ -2,9 +2,7 @@
 import { controller, signal } from '@ship/sui-runtime'
 import type { Scope } from './without-island.sui'
 
-export default controller<Scope>({
-  setup: () => ({ count: signal(0) }),
-})
+export default controller<Scope>((ctx) => ({ count: signal(0) }))
 </controller>
 
 <div>

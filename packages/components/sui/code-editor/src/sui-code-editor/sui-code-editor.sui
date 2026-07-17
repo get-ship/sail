@@ -107,10 +107,10 @@ export interface SuiCompletionSource {
 
 const DEBOUNCE_MS = 150
 
-export default controller<Scope>({
-  mount(state, host) {
+export default controller((ctx: Scope) => {
+  mount((host) => {
 
-    const hostEl = (state.$signals.editorHost as unknown as Signal<HTMLElement | null>)()
+    const hostEl = (ctx.editorHost as unknown as Signal<HTMLElement | null>)()
     if (!hostEl) {
       console.warn('[sui-code-editor] bind:this ref is null — CodeMirror not initialized')
       return
@@ -128,12 +128,12 @@ export default controller<Scope>({
     let pendingDiagnostics: SuiDiagnostic[] | null = null
     let completions: SuiCompletionSource[] = []
 
-    const valSig = state.$signals.value as unknown as Signal<string>
-    const langSig = state.$signals.language as unknown as Signal<string>
-    const roSig = state.$signals.readonly as unknown as Signal<boolean>
-    const lnSig = state.$signals.lineNumbers as unknown as Signal<boolean>
-    const phSig = state.$signals.placeholder as unknown as Signal<string>
-    const wasmUrlSig = state.$signals.wasmUrl as unknown as Signal<string>
+    const valSig = ctx.value as unknown as Signal<string>
+    const langSig = ctx.language as unknown as Signal<string>
+    const roSig = ctx.readonly as unknown as Signal<boolean>
+    const lnSig = ctx.lineNumbers as unknown as Signal<boolean>
+    const phSig = ctx.placeholder as unknown as Signal<string>
+    const wasmUrlSig = ctx.wasmUrl as unknown as Signal<string>
 
     function buildCompletionExt(): Extension {
       if (completions.length === 0) return []
@@ -393,7 +393,8 @@ export default controller<Scope>({
       try { view?.destroy() } catch { /* teardown race */ }
       view = null
     }
-  },
+  })
+  return {}
 })
 
 // CodeMirror's Completion treats absent detail/info as "none"; under

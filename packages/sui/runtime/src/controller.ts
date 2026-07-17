@@ -1,24 +1,24 @@
-// controller.ts — typed contract for the five-section controller shape.
+// controller.ts — typed contract for the controller(fn) shape.
 //
-// A controller has four sections: `derived`, `on`, `mount`, `unmount`. State is
-// declared in the `setup:` factory (`setup: () => ({ n: signal(0) })`). The
-// `<state>` directive this comment used to describe is RETIRED — and the comment
-// outlived it by long enough to start lying, which is how docs rot.
+// One idiom: `controller((ctx) => { ...; return { ...surface } })`. The
+// setup function IS the controller — no sections. State is a plain
+// `signal()` closed over by the function; the ambient `mount(fn)` and
+// `onCleanup(fn)` (see `./effect-scope`) register lifecycle from
+// anywhere in the setup call graph (including a composition called
+// from setup); whatever the function returns becomes the merged
+// template scope, handlers included, verbatim.
 //
-// The fifth section, `use:`, is gone too, with `ControllerHook`/`UseSection`. It
-// was a mini-DSL: a hook declared `{ state, derived, on }` and a resolver inflated
-// it into signals namespaced under a `use:` key. That made COMPOSITIONS a framework
-// feature — with a type, a resolver, and rules to learn.
+// This retired the object form (`controller({ setup, derived, on,
+// mount, unmount })`) and the `use:` hook mini-DSL before it. Both
+// made a framework feature out of what is now just calling a plain
+// TypeScript function and returning an object — the same move,
+// applied twice. Compositions (`@ship/sui-std`) are still plain
+// functions: call one in the controller and the signals it returns
+// are ordinary scope members. The only language type a composition
+// touches is `Signal<T>`.
 //
-// They are plain functions now (`@ship/sui-std`): call one in the controller and the
-// signals it returns are ordinary scope members the template binds to like anything
-// else you declared. No registration, no namespace, no privileged type. The only
-// language type a composition touches is `Signal<T>` — the lingua franca. That is
-// what makes them user-authorable AND unprivileged; a bespoke type is exactly what
-// would turn them back into a framework feature.
-//
-// It also retires the third meaning of "use". `use:` now means one thing: the
-// template directive that attaches an Action to a DOM node.
+// `use:` now means one thing: the template directive that attaches
+// an Action to a DOM node.
 
 import type { Signal } from './signal'
 import type { ShipHost, Clients } from './ship'
@@ -131,155 +131,53 @@ export type ViewScope<Scope = object> = Scope & {
 }
 
 // ---------------------------------------------------------------------------
-// Section types
-// ---------------------------------------------------------------------------
-
-/** A section-init can be a static value or a factory that receives scope. */
-export type SectionInit<V, Scope> = V | ((scope: Scope) => V)
-
-/**
- * `on` section signature. Each handler receives a writable state
- * mutator as its first argument and any handler-specific args after.
- *
- * Handlers may also accept the broader scope (with state attached) as
- * their first argument when they need to read other signals or call
- * `ship.*` directly. The runtime resolver discriminates by the first
- * parameter's shape.
- */
-export type OnSection<Scope> = Record<
-  string,
-  // Single form — `state` is `MutableState<Scope>`, which now exposes
-  // writable state keys, readonly derived/data/scope keys, and ambient
-  // `ship`/`route`/`navigate`. A previous two-member union (state-only OR
-  // full-scope) defeated contextual inference: `(s) =>` fell back to
-  // implicit `any`, so authors annotated `type S = MutableState<Scope>` and
-  // then cast. One signature infers cleanly.
-  //
-  // `any[]` (not `unknown[]`) for the trailing args is deliberate: handlers
-  // declare typed args, and under contravariant param checks those aren't
-  // assignable to a `(...args: unknown[])` constraint, so we widen to `any`
-  // so authors can name argument types without an intermediate cast.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (state: MutableState<Scope>, ...args: any[]) => void | Promise<void>
->
-
-
-/**
- * `mount` lifecycle. Runs once after the rendered DOM is attached and
- * all signals/handlers/hooks are wired. May return a cleanup function
- * that is called on disconnect (equivalent to pushing to cleanups).
- *
- * `state` is the writable proxy — the same shape `on:` handlers see.
- * Two access patterns:
- *
- *   1. **Assignment style** (ergonomic for primitives):
- *      `state.viewportH = el.clientHeight`
- *      `state.count++`
- *      The proxy intercepts the write and forwards to `signal.set()`.
- *      Reads return the unwrapped value (`state.count` is the number,
- *      not the signal), which is what makes `state.count++` work.
- *
- *   2. **Explicit signal access** via `state.$signals`:
- *      `state.$signals.viewportH.set(el.clientHeight)`
- *      `state.$signals.viewportH(prev => prev + 1)`
- *      Use this when a primitive's `.set` would otherwise be tempting
- *      (`state.viewportH.set(...)` throws because the value-side read
- *      returned a number) or when you want to hand a `Signal<T>` to a
- *      callback that closes over it.
- *
- * Non-signal entries from the controller's `setup: () => ({...})`
- * factory (helper functions, plain values) are directly accessible
- * via the proxy fallthrough — `state.reset()` resolves to the
- * factory-returned arrow. The compiler emits both groups into the
- * per-file `Scope` interface in `<file>.sui.d.ts`.
- */
-export type MountSection<Scope> = (
-  state: MutableState<Scope>,
-  el: HTMLElement,
-) => (() => void) | void | Promise<void>
-
-/**
- * `unmount` lifecycle. Runs once on disconnect; tear down whatever
- * `mount` set up. Receives the same `Scope`-typed state view as `mount`.
- */
-export type UnmountSection<Scope> = (state: MutableState<Scope>) => void
-
-// ---------------------------------------------------------------------------
-// The controller surface
+// The controller surface — one function, one idiom
 // ---------------------------------------------------------------------------
 
 /**
- * The full shape of a controller: five optional sections, each with a
- * static or factory form where applicable.
+ * The controller def: ONE setup function. It receives the view scope
+ * (`ship`, `clients`, `route`, `navigate`, plus template-declared
+ * `<data>`/`<state>` signals) and, optionally, the host element; it
+ * returns the surface the template merges into scope — signals,
+ * `derived()` values, plain helpers, and event handlers alike, all as
+ * ordinary object properties.
  *
- * State is **not** a controller section — declare it in the template
- * via `<state name="X" value="..." />`. Computed-initial cases move
- * to `mount` (`state.X = crypto.randomUUID()`).
+ * There is no separate mutation-only section: state is a `signal()`
+ * closed over by this same function, and handlers returned from it
+ * mutate that signal directly (`items.set([...items(), x])`) — the
+ * single idiom `controller_state_set_call` (sui-lint) now enforces
+ * everywhere, replacing the old proxy-vs-raw-signal split between
+ * `setup`/`derived` and `on`/`mount`/`unmount`.
  *
- * @typeParam Scope Template-declared scope (`<data>`, `<state>`,
- *   `<use-* as=>`) plus `use:` hook contributions.
+ * Lifecycle is ambient, not a section: call `mount(fn)` (fires once
+ * after this instance's DOM connects, `fn` gets the host element and
+ * may return a cleanup) and `onCleanup(fn)` (runs on dispose) from
+ * anywhere in the setup call graph — including a composition function
+ * called from setup. See `./effect-scope`.
+ *
+ * Both type parameters are INFERRED, so authors write
+ * `controller((ctx: ViewScope<Scope>) => ({…}))` with no explicit type
+ * argument and no currying:
+ *   - `Ctx` is inferred from `setup`'s PARAMETER annotation (the
+ *     compiler-generated `ViewScope<Scope>` the author imports). This
+ *     sidesteps TypeScript's all-or-nothing type-argument rule —
+ *     nothing is supplied explicitly, so nothing forces a second call.
+ *   - `SC` is inferred from `setup`'s RETURN — the controller's own TS
+ *     is the source of truth for `signal`/`derived`/`ref`/`live`
+ *     types, so the merged scope type is precise.
  */
-export interface ControllerShape<Scope = object> {
-  /**
-   * Factory that produces typed scope contributions: signals,
-   * derived, hooks, shared-harness/consumer wrappers. The returned
-   * object is merged into the template's scope. Runs before any
-   * other section so derived/on/use can reference its entries.
-   *
-   * Replaces the historical `state:` + `derived:` + `use:` split for
-   * tier-2+ controllers. Author writes idiomatic TypeScript inside
-   * the factory; types flow through inference.
-   */
-  setup?: (init: ViewScope<Scope>, host?: Element) => Record<string, unknown>
+export type ControllerSetup<Ctx, SC extends Record<string, unknown>> = (
+  init: Ctx,
+  host?: Element,
+) => SC
 
-  /**
-   * Event handlers. The **only** section in a controller that can
-   * mutate state.
-   */
-  on?: OnSection<Scope>
-
-
-  /** Runs once after mount; receives writable state. */
-  mount?: MountSection<Scope>
-
-  /** Runs once on disconnect; receives writable state. */
-  unmount?: UnmountSection<Scope>
-}
-
-/**
- * The canonical controller shape — single call, precise, cast-free.
- *
- * Both type parameters are INFERRED from the `def` object, so authors
- * write `controller({ setup: (ctx: ViewScope<Scope>) => ({…}) })` with no
- * explicit type argument and no currying:
- *   - `Ctx` is inferred from the `scope` factory's PARAMETER annotation
- *     (the compiler-generated `ViewScope<Scope>` the author imports). This
- *     sidesteps TypeScript's all-or-nothing type-argument rule — nothing is
- *     supplied explicitly, so nothing forces a second call.
- *   - `SC` is inferred from the `scope` factory's RETURN — the controller's
- *     own TS is the source of truth for `signal`/`derived`/`ref`/`live`
- *     types, so handler state over `Ctx & SC` is precise.
- *
- * `scope` is required (it's where `Ctx` is declared); a pure-lifecycle
- * controller returns `({})`.
- */
-export interface ScopedControllerDef<Ctx, SC extends Record<string, unknown>> {
-  setup: (init: Ctx, host?: Element) => SC
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  on?: Record<string, (state: MutableState<Ctx & SC>, ...args: any[]) => void | Promise<void>>
-  mount?: (state: MutableState<Ctx & SC>, el: HTMLElement) => (() => void) | void | Promise<void>
-  unmount?: (state: MutableState<Ctx & SC>) => void
-}
-
-/**
- * The two valid forms of a controller export — an object (tier 2) or
- * a function (tier 3). The function form's argument is `{ ship }`
- * only — template scope is not available at controller-instantiation
- * time, only inside section factories.
- */
-export type ControllerDef<Scope = object> =
-  | ControllerShape<Scope>
-  | ((ctx: { ship: ShipHost; clients: Clients }) => ControllerShape<Scope>)
+/** A controller def as the resolver sees it: the setup function, untyped
+ *  (the precise `Ctx`/`SC` inference lives on the `controller()` overload
+ *  in `controller-resolver.ts`, not here). */
+export type ControllerDef<Scope = object> = (
+  init: ViewScope<Scope>,
+  host?: Element,
+) => Record<string, unknown>
 
 // `controller(def)` runtime helper lives in `controller-resolver.ts`.
 

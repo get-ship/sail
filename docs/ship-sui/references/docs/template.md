@@ -7,41 +7,40 @@ description: Everything you can write in a `.sui` file — directives, control f
 
 # The template surface
 
-A `.sui` file is HTML with a small set of directive elements at the top, mustache control flow inside, and a few binding shorthands on attributes. There is no script block and no style block. Logic lives in a sibling `controller.ts` (paired by directory); styles live in a sibling `style.css` linked by `<link rel="stylesheet">`.
+A `.sui` file is HTML with a small set of directive elements at the top, mustache control flow inside, and a few binding shorthands on attributes. There is no script block and no style block. Logic lives in an inline `<controller>` block in the same file; styles live in a sibling `style.css` linked by `<link rel="stylesheet">`.
 
 ## Directive elements
 
 These appear at the top of the file (before the rendered DOM). They declare reactivity but do not render to HTML.
 
-### Reactive state — declared in the controller's `scope:` factory
+### Reactive state — declared in the inline `<controller>` block
 
-Reactive component state lives in the paired controller — there is no `<state>` directive. Templates declare data subscriptions, projection regions, and props; controllers own the signals templates read.
+Reactive component state lives in the controller — there is no `<state>` directive. Templates declare data subscriptions, projection regions, and props; the controller owns the signals templates read.
 
 ```ts
-// controller.ts
-import { controller, signal } from '@ship/sui-runtime'
-import type { Scope } from './page.sui'
+<controller>
+import { signal } from '@ship/sui-runtime'
 
-export default controller<Scope>({
-  scope: () => ({
-    count: signal(0),
-    open: signal(false),
-  }),
-  on: {
-    increment: (s) => { s.count = s.count + 1 },
-  },
+export default controller(() => {
+  const count = signal(0)
+  const open  = signal(false)
+
+  const increment = () => count.set(count() + 1)
+
+  return { count, open, increment }
 })
+</controller>
 ```
 
-The template reads them by call (`count()`) and mutates them through `on.*` handlers / lifecycle hooks. See [controller.md](controller.md) for the full controller surface.
+The template reads them by call (`count()`) and mutates them through handlers returned from the controller. See [controller.md](controller.md) for the full controller surface.
 
-Computed-initial values (`crypto.randomUUID()`, an SDK call, a derivation over `route`) seed a placeholder in `scope:` and assign in `mount`:
+Computed-initial values (`crypto.randomUUID()`, an SDK call, a derivation over `route`) seed a placeholder signal and assign it in `mount`:
 
 ```ts
-scope: () => ({ id: signal('') }),
-mount: ({ state }) => {
-  state.id = crypto.randomUUID()
-},
+const id = signal('')
+mount(() => {
+  id.set(crypto.randomUUID())
+})
 ```
 
 ### `<data>` — daemon subscription
@@ -51,8 +50,8 @@ mount: ({ state }) => {
 <data name="settings" source="ship.settings.state()" />
 
 <!-- Reactive args via $scope: re-subscribes when selectedId changes.
-     `selectedId` is a signal declared in the controller's `scope:`
-     factory; the template just declares the subscription. -->
+     `selectedId` is a signal returned by the controller function;
+     the template just declares the subscription. -->
 <data name="agent" source="ship.agents.detail({id: $scope.selectedId()})" live />
 ```
 
@@ -144,7 +143,7 @@ The `mutation` attribute is a `ship.*` SDK chain. `<form mutation>` is the write
 
 Progressive enhancement: when JS is absent the SSR walker injects `action="/_deck/mutation/{view}?form=bN"` and `method="post"` on the form. The daemon handles the POST and redirects back to `Referer`. See [data-subscriptions.md](data-subscriptions.md#mutations) for the full envelope shape and PE flow.
 
-**Threshold rule.** A template with no paired `controller.ts` (tier-1) may not have multi-statement `on:event` handler bodies. The compiler enforces this at build time (`crates/sui/compiler/src/check/handler_complexity.rs`):
+**Threshold rule.** A template with no `<controller>` block (tier-1) may not have multi-statement `on:event` handler bodies. The compiler enforces this at build time (`crates/sui/compiler/src/check/handler_complexity.rs`):
 
 ```html
 <!-- fails without controller.ts -->

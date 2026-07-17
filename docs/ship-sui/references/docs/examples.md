@@ -2,7 +2,7 @@
 group: Views
 order: 7
 title: Canonical examples
-description: Three example shapes to anchor the framework's discipline. Home (minimal controller + live data), agents (object controller + a derived bundle), form (controller hook + two-way binding).
+description: Three example shapes to anchor the framework's discipline. Home (minimal controller + live data), agents (controller + a derived bundle), form (composition + two-way binding).
 ---
 
 # Canonical examples
@@ -11,7 +11,7 @@ These three examples cover the discipline boundaries. Each tier has a representa
 
 ## Tier 1 — home (minimal controller + live data)
 
-The smallest reactive shape: a single signal in the controller's `scope:` factory plus an inline arrow handler in the template, alongside one `<data live>` subscription. Worked exemplar in the repo: `views/home/`.
+The smallest reactive shape: a single signal returned from the inline controller plus an inline arrow handler in the template, alongside one `<data live>` subscription. Worked exemplar in the repo: `views/home/`.
 
 ```html
 <!-- views/home/page.sui (excerpt) -->
@@ -24,23 +24,25 @@ The smallest reactive shape: a single signal in the controller's `scope:` factor
 ```
 
 ```ts
-// views/home/controller.ts (excerpt)
-import { controller, signal } from '@ship/sui-runtime'
-import type { Scope } from './page.sui'
+<controller>
+// views/home/page.sui (excerpt)
+import { signal, derived } from '@ship/sui-runtime'
 
-export default controller<Scope>({
-  scope: () => ({ seen: signal(0) }),
-  // derived: { branch, clean, headShort, … } project the `git` envelope
+export default controller(() => {
+  const seen = signal(0)
+  // derived(...) values project the `git` envelope: branch, clean, headShort, …
+  return { seen }
 })
+</controller>
 ```
 
-What this exercises: `scope:` factory, expression interpolation, `on:click` with a call-only arrow body, a `<data live>` subscription.
+What this exercises: the controller function returning a bag of signals, expression interpolation, `on:click` with a call-only arrow body, a `<data live>` subscription.
 
-What this avoids: a full `derived` / `on` stanza for trivial state. Inline handlers cover the simplest mutations.
+What this avoids: a pile of named handlers for trivial state. Inline handlers cover the simplest mutations.
 
-## Tier 2 — agents (object controller + a derived bundle)
+## Tier 2 — agents (controller + a derived bundle)
 
-The actual working view in the repo today (`views/agents/`). Server data via `<data>`, two memos, one navigation handler. No hooks yet — the hook-based version is below.
+The actual working view in the repo today (`views/agents/`). Server data via `<data>`, two memos, one navigation handler. No compositions yet — the composition-based version is below.
 
 ```html
 <!-- views/agents/page.sui (excerpt) -->
@@ -74,39 +76,39 @@ The actual working view in the repo today (`views/agents/`). Server data via `<d
 ```
 
 ```ts
-// views/agents/controller.ts
-import { controller } from '@ship/sui-runtime'
+<controller>
+// views/agents/page.sui
+import { derived } from '@ship/sui-runtime'
 import type { LiveSignal } from '@ship/sui-runtime'
 import type { AgentsSummariesResponse, AgentSummary } from '@ship/sdk-client'
 
-export default controller({
-  derived: {
-    items: ({ agents }: { agents: LiveSignal<AgentsSummariesResponse> }): AgentSummary[] => {
-      const s = agents()
-      return s.kind === 'ok' ? s.value.items : []
-    },
-    total: ({ items }: { items: () => AgentSummary[] }) => items().length,
-  },
-  on: {
-    newAgent: ({ navigate }: { navigate: (path: string) => void }) =>
-      navigate('/agents/create'),
-  },
+export default controller(({ agents, navigate }: { agents: LiveSignal<AgentsSummariesResponse>; navigate: (path: string) => void }) => {
+  const items = derived((): AgentSummary[] => {
+    const s = agents()
+    return s.kind === 'ok' ? s.value.items : []
+  })
+  const total = derived(() => items().length)
+
+  const newAgent = () => navigate('/agents/create')
+
+  return { items, total, newAgent }
 })
+</controller>
 ```
 
 What this exercises:
 
 - `<data live>` subscription — daemon-streamed data, declared in the template
-- Object-form controller (no closure-scoped vars; `controller(def)` enough)
+- The controller function reading its `ctx` argument directly (no closure-scoped vars needed)
 - `derived` reading template-declared scope (`agents`, then `items`)
-- `on` handler reading framework-injected `navigate` via the proxy fallthrough
+- A handler reading framework-injected `navigate` off `ctx`
 - `{#while-loading}` / `{#while-error err}` boundary blocks
 
-What this avoids: a `live:` section in the controller, calling `live()` from JS.
+What this avoids: a separate live-subscription section in the controller, calling `live()` from JS.
 
-## Tier 3 — agents with hooks
+## Tier 3 — agents with compositions
 
-The same view, scaled with the v1 hooks (`useFilteredList`, `useSelection`, `<use-kbd>`) — all shipped, see [status.md](status.md).
+The same view, scaled with the v1 compositions (`useFilteredList`, `useSelection`, `<use-kbd>`) — all shipped, see [status.md](status.md).
 
 ```html
 <!-- views/agents/page.sui -->
@@ -147,37 +149,39 @@ The same view, scaled with the v1 hooks (`useFilteredList`, `useSelection`, `<us
 {/if}
 ```
 
-The search-toggle signal lives in the controller's `scope:` factory:
+The search-toggle signal lives in the inline controller, alongside two compositions called directly:
 
 ```ts
-// views/agents/controller.ts
-import { controller, signal, useFilteredList, useSelection } from '@ship/sui-runtime'
+<controller>
+// views/agents/page.sui
+import { signal, useFilteredList, useSelection } from '@ship/sui-runtime'
 
-export default controller({
-  scope: () => ({ searchOpen: signal(false) }),
-  use: ({ agents }) => ({
-    filter: useFilteredList(agents, (a, q) => a.name.toLowerCase().includes(q.toLowerCase())),
-    sel:    useSelection(agents, (a) => a.id),
-  }),
-  on: {
-    toggleSearch:    (s)              => { s.searchOpen = !s.searchOpen },
-    newAgent:        ({ navigate })   => navigate('/agents/create'),
-    clearSelection:  ({ sel })        => sel.clear(),
-  },
+export default controller(({ agents, navigate }) => {
+  const searchOpen = signal(false)
+
+  const filter = useFilteredList(agents, (a, q) => a.name.toLowerCase().includes(q.toLowerCase()))
+  const sel    = useSelection(agents, (a) => a.id)
+
+  const toggleSearch   = () => searchOpen.set((v) => !v)
+  const newAgent        = () => navigate('/agents/create')
+  const clearSelection  = () => sel.clear()
+
+  return { searchOpen, filter, sel, toggleSearch, newAgent, clearSelection }
 })
+</controller>
 ```
 
 What this exercises beyond tier 2:
 
-- Template hooks (`<use-kbd>` for document keybindings
-- Controller hooks (`useFilteredList`, `useSelection`) for UI pattern bundles
-- Per-section scope destructure (`use: ({ agents }) => ...`)
-- Hook namespacing in templates (`filter.filtered`, `sel.selected`)
-- Action references inside `<use-kbd>` resolving to `on.*`
+- Template hooks (`<use-kbd>` for document keybindings)
+- Compositions (`useFilteredList`, `useSelection`) — plain functions called inside the controller, contributing UI pattern bundles
+- The controller function destructuring `ctx` directly (`({ agents, navigate }) => ...`)
+- Bundle namespacing in templates (`filter.filtered`, `sel.selected`) — whatever shape a composition returns flows straight into the returned scope
+- Action references inside `<use-kbd>` resolving to handlers returned from the controller
 
-## Tier 3 — settings form (object controller + useForm hook)
+## Tier 3 — settings form (controller + useForm composition)
 
-Forms exercise two-way binding, validation, and the `useForm` controller hook — all shipped, see [status.md](status.md).
+Forms exercise two-way binding, validation, and the `useForm` composition — all shipped, see [status.md](status.md).
 
 ```html
 <!-- views/settings/page.sui -->
@@ -211,42 +215,44 @@ Forms exercise two-way binding, validation, and the `useForm` controller hook �
 ```
 
 ```ts
-// views/settings/controller.ts
-import { controller, useForm } from '@ship/sui-runtime'
+<controller>
+// views/settings/page.sui
+import { useForm } from '@ship/sui-runtime'
 
-export default controller({
-  use: ({ ship, settings }) => ({
-    form: useForm({
-      initial:  () => settings(),
-      validate: (v) => ({
-        accent: /^#[0-9a-f]{6}$/i.test(v.accent) ? null : 'must be a hex color',
-      }),
-      submit:   (v) => ship.settings.write(v),
+export default controller(({ ship, settings }) => {
+  const form = useForm({
+    initial:  () => settings(),
+    validate: (v) => ({
+      accent: /^#[0-9a-f]{6}$/i.test(v.accent) ? null : 'must be a hex color',
     }),
-  }),
+    submit:   (v) => ship.settings.write(v),
+  })
+
+  return { form }
 })
+</controller>
 ```
 
 What this exercises:
 
-- Object-form `controller(def)` (no closure-scoped vars needed)
-- `useForm` controller hook bundling `state` (values, errors, pending, dirty), `derived` (errors per field), `on` (change, submit, reset)
+- The controller function returning a single composition's result directly (no extra closure-scoped vars needed)
+- `useForm` composition bundling state (values, errors, pending, dirty), computed values (errors per field), and handlers (change, submit, reset) into one object
 - `bind:value` two-way binding on a `<select>` and an `<input>`
 - `on:submit` on the form element
 
-What this avoids: hand-rolled form state with five state variables and four handlers. The pattern lives in the hook.
+What this avoids: hand-rolled form state with five signals and four handlers. The pattern lives in the composition.
 
 ## What these examples establish
 
 | Decision | Where it lives |
 |---|---|
 | Server data | `<data>` in the template |
-| Local state (any) | `scope:` factory in the controller |
-| Computed-initial state (`crypto.randomUUID()`, etc.) | `scope:` placeholder + assignment in `mount` |
-| Computed values | Controller `derived:` (named) or inline expressions (one-off) |
-| Event handlers | Controller `on:` |
-| UI pattern bundles | Controller hook in `use:` |
+| Local state (any) | `signal(...)` returned from the controller function |
+| Computed-initial state (`crypto.randomUUID()`, etc.) | Placeholder signal + assignment inside `mount` |
+| Computed values | `derived(...)` (named) or inline expressions (one-off) |
+| Event handlers | Plain functions returned from the controller |
+| UI pattern bundles | A composition called inside the controller function |
 | Host primitives | Template hook (`<use-*>`) |
-| Lifecycle | Controller `mount` / `unmount` |
+| Lifecycle | Ambient `mount(...)` / `onCleanup(...)` |
 
-Three examples, three tiers, all five controller sections, both hook categories, every binding form. If a new view doesn't fit one of these shapes, it is *almost certainly* combinable from these primitives. If it isn't, escalate to a discipline conversation — see [the discipline](index.md#the-discipline).
+Three examples, three tiers, one controller function, both composition and template-hook categories, every binding form. If a new view doesn't fit one of these shapes, it is *almost certainly* combinable from these primitives. If it isn't, escalate to a discipline conversation — see [the discipline](index.md#the-discipline).

@@ -1,10 +1,9 @@
 <controller>
-import { controller } from '@ship/sui-runtime'
+import { controller, derived } from '@ship/sui-runtime'
 
-export default controller({
-  derived: {
-    x: () => Date.now(),
-  },
+export default controller((ctx) => {
+  const x = derived(() => Date.now())
+  return { x }
 })
 </controller>
 

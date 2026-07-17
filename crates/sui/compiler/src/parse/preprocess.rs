@@ -1347,70 +1347,48 @@ fn parse_variants_object(body: &str) -> Vec<(String, String)> {
     pairs
 }
 
-/// Desugar a wrapper-less `<controller>` body — bare `export function`/`export
-/// const` — into the canonical `controller({ setup: () => ({...}) })` form
-/// the pipeline reads. The exported names become the template scope, so an
-/// author writes plain functions with no `controller({…})` ceremony. Bodies
-/// that already call `controller(` or have a `export default` pass through
-/// unchanged.
+/// Prepare a `<controller>` body for tsc/emit: inject the ambient runtime
+/// import. Every controller writes the ONE form — `export default
+/// controller((ctx) => {...})` — authored directly; there is no bare-export
+/// sugar to lift anymore (retired with the object-form sections; a bare
+/// scope with no `controller(...)` call is simply not a valid controller
+/// body, and `check::controller_parse`/`check::paired_controller` catch that
+/// upstream of this step). One emit path (inv-sui-one-module-emit): no
+/// emitted controller module ever carries a free `controller`/`signal`/
+/// `mount`/… identifier.
 pub fn wrap_controller_body(body: &str) -> String {
-    // Sugar form (a bare scope, no `controller(...)` / `export default`) is
-    // first lifted into a `controller({ scope: ... })` default export; the full
-    // form is taken as-is. BOTH then flow through the single ambient-import
-    // injection below — there is no verbatim escape, so no emitted controller
-    // module ever carries a free `controller`/`signal`/`derived` (the blank-
-    // render regression). One emit path (inv-sui-one-module-emit).
-    let module = if body.contains("controller(") || body.contains("export default") {
-        body.to_string()
-    } else {
-        let mut names: Vec<String> = Vec::new();
-        let mut lines: Vec<String> = Vec::new();
-        for line in body.lines() {
-            let t = line.trim_start();
-            if let Some(rest) = t.strip_prefix("export function ") {
-                if let Some(name) = rest.split('(').next().map(str::trim) {
-                    if !name.is_empty() {
-                        names.push(name.to_string());
-                    }
-                }
-                lines.push(line.replacen("export ", "", 1));
-            } else if let Some(rest) = t.strip_prefix("export const ") {
-                if let Some(name) = rest.split([' ', '=', ':']).next().map(str::trim) {
-                    if !name.is_empty() {
-                        names.push(name.to_string());
-                    }
-                }
-                lines.push(line.replacen("export ", "", 1));
-            } else {
-                lines.push(line.to_string());
-            }
-        }
-        format!(
-            "{}\nexport default controller({{ setup: () => ({{ {} }}) }});\n",
-            lines.join("\n"),
-            names.join(", ")
-        )
-    };
-    inject_ambient_runtime_imports(&module)
+    inject_ambient_runtime_imports(body)
 }
 
 /// Prepend an import for the ambient runtime idents (`runtime_ambient::RUNTIME_AMBIENT`)
 /// the module references but has not itself imported or declared, so every
 /// emitted controller module is self-contained. The ambient set + specifier are
-/// the table's; nothing here hardcodes a runtime name.
+/// the table's; nothing here hardcodes a runtime name. Each table entry is
+/// `(authored_ident, exported_ident)` — aliased on import when they differ
+/// (`mount` → `import { mountAmbient as mount } from '...'`).
 fn inject_ambient_runtime_imports(module: &str) -> String {
     let bound = module_bound_idents(module);
-    let needed: Vec<&str> = crate::runtime_ambient::RUNTIME_AMBIENT
+    let needed: Vec<(&str, &str)> = crate::runtime_ambient::RUNTIME_AMBIENT
         .iter()
         .copied()
-        .filter(|id| !bound.contains(*id) && references_ident(module, id))
+        .filter(|(authored, _)| !bound.contains(*authored) && references_ident(module, authored))
         .collect();
     if needed.is_empty() {
         return module.to_string();
     }
+    let specifiers: Vec<String> = needed
+        .iter()
+        .map(|(authored, exported)| {
+            if authored == exported {
+                (*authored).to_string()
+            } else {
+                format!("{exported} as {authored}")
+            }
+        })
+        .collect();
     format!(
         "import {{ {} }} from '{}';\n{}",
-        needed.join(", "),
+        specifiers.join(", "),
         crate::runtime_ambient::RUNTIME_SPECIFIER,
         module
     )

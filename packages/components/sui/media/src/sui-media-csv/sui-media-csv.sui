@@ -73,8 +73,7 @@ function textOf(src: ViewerSource | string | null): string {
   return src.text ?? ''
 }
 
-export default controller({
-  setup: (_ctx: Scope) => {
+export default controller((_ctx: Scope) => {
     // prop:src identity — assigned to the host `src` property in mount; the
     // table engine + error message are the reactive render inputs.
     const srcSig = signal<ViewerSource | string | null>(null)
@@ -105,69 +104,68 @@ export default controller({
       }))
     })
 
+    mount((host) => {
+      // prop:src identity setter — a live JS reference, never a stringified
+      // attribute. Routes into the scope signal so the parse reacts.
+      Object.defineProperty(host, 'src', {
+        configurable: true,
+        get: () => srcSig(),
+        set: (s: ViewerSource | string | null) => {
+          srcSig.set(s)
+        },
+      })
+
+      const readDelimiter = (): CsvDelimiter =>
+        (host.getAttribute('delimiter') as CsvDelimiter | null) ?? 'auto'
+      const readHeader = (): boolean => host.getAttribute('header') !== 'false'
+
+      // Re-parse whenever the prop:src signal OR the `text` SSR prop changes.
+      // The effect READS srcSig/text (reactive deps) and WRITES tableEngine/
+      // errorMsg (not read here → no loop). Lifecycle emits are side effects.
+      const stop = effect(() => {
+        // prop:src supersedes the `text` SSR/declarative fallback prop.
+        const fromSrc = textOf(srcSig())
+        const text = fromSrc || (_ctx.text() ?? '')
+        if (!text) {
+          tableEngine.set(null)
+          errorMsg.set('')
+          return
+        }
+        try {
+          const { rows, columns } = parseCsv(text, {
+            header: readHeader(),
+            delimiter: readDelimiter(),
+          })
+          // The renderer is read-only data-display: no filter/sort affordance is
+          // rendered, so the engine carries the row model and nothing else.
+          const engine = createTable<CsvRecord>({
+            data: rows,
+            columns: columns.map((c) => ({
+              id: c.field,
+              accessorKey: c.field,
+              header: c.label,
+              enableColumnFilter: false,
+            })),
+            getRowId: (r) => r.id,
+          })
+          tableEngine.set(engine)
+          errorMsg.set('')
+          emitViewerLoad(host)
+        } catch (e) {
+          const message = e instanceof CsvParseError ? e.message : (e as Error).message
+          tableEngine.set(null)
+          errorMsg.set(message)
+          emitViewerError(host, message)
+        }
+      })
+
+      return () => {
+        stop()
+      }
+    })
+
     return { srcSig, tableEngine, errorMsg, columns, rows }
-  },
-
-  mount(state, host) {
-    // prop:src identity setter — a live JS reference, never a stringified
-    // attribute. Routes into the scope signal so the parse reacts.
-    Object.defineProperty(host, 'src', {
-      configurable: true,
-      get: () => state.srcSig,
-      set: (s: ViewerSource | string | null) => {
-        state.srcSig = s
-      },
-    })
-
-    const readDelimiter = (): CsvDelimiter =>
-      (host.getAttribute('delimiter') as CsvDelimiter | null) ?? 'auto'
-    const readHeader = (): boolean => host.getAttribute('header') !== 'false'
-
-    // Re-parse whenever the prop:src signal OR the `text` SSR prop changes.
-    // The effect READS srcSig/text (reactive deps) and WRITES tableEngine/
-    // errorMsg (not read here → no loop). Lifecycle emits are side effects.
-    const stop = effect(() => {
-      // prop:src supersedes the `text` SSR/declarative fallback prop.
-      const fromSrc = textOf(state.$signals.srcSig())
-      const text = fromSrc || (state.$signals.text() ?? '')
-      if (!text) {
-        state.tableEngine = null
-        state.errorMsg = ''
-        return
-      }
-      try {
-        const { rows, columns } = parseCsv(text, {
-          header: readHeader(),
-          delimiter: readDelimiter(),
-        })
-        // The renderer is read-only data-display: no filter/sort affordance is
-        // rendered, so the engine carries the row model and nothing else.
-        const engine = createTable<CsvRecord>({
-          data: rows,
-          columns: columns.map((c) => ({
-            id: c.field,
-            accessorKey: c.field,
-            header: c.label,
-            enableColumnFilter: false,
-          })),
-          getRowId: (r) => r.id,
-        })
-        state.tableEngine = engine
-        state.errorMsg = ''
-        emitViewerLoad(host)
-      } catch (e) {
-        const message = e instanceof CsvParseError ? e.message : (e as Error).message
-        state.tableEngine = null
-        state.errorMsg = message
-        emitViewerError(host, message)
-      }
-    })
-
-    return () => {
-      stop()
-    }
-  },
-})
+  })
 
 </controller>
 {#if errorMsg()}

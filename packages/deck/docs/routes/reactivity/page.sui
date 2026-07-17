@@ -17,8 +17,7 @@
 import { controller, signal, derived, effect, untrack, type ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ViewScope<Scope>) => {
     const a = signal(1)
     const b = derived(() => a() * 2)
     const c = derived(() => a() + 10)
@@ -52,8 +51,7 @@ export default controller({
       // stays visible as evidence.
       resetValue: (): void => nudge(1 - a()),
     }
-  },
-})
+  })
 </controller>
 
 <section data-rx="true">

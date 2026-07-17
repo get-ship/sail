@@ -31,8 +31,7 @@ interface Service {
   load: number
 }
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ViewScope<Scope>) => {
     const people = signal<Person[]>([
       { id: 1, name: 'Ada Lovelace', team: 'Engines', status: 'active' },
       { id: 2, name: 'Grace Hopper', team: 'Compilers', status: 'active' },
@@ -110,7 +109,6 @@ export default controller({
       services, deploys, deploy,
       playing, position, togglePlay,
     }
-  },
 })
 </controller>
 

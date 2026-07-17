@@ -580,15 +580,19 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     let _ = writeln!(md, "## State + imports\n");
     let _ = writeln!(
         md,
-        "State lives in the `<controller>` — a raw `<script>` is banned, and the `<state>`\ndirective is retired. Whatever the controller EXPORTS is the template's scope.\n\n\
+        "State lives in the `<controller>` — a raw `<script>` is banned, and the `<state>`\ndirective is retired. `controller(fn)` is ONE function, no sections: whatever it\nRETURNS is the template's scope — state signals, derived values, plain helpers, and\nevent handlers alike, all as ordinary object properties.\n\n\
          ```\n\
          <controller>\n  \
-           import {{ signal, derived }} from '@ship/sui-runtime'\n  \
+           import {{ controller, signal, derived }} from '@ship/sui-runtime'\n  \
            import {{ selection }} from '@ship/sui-std'\n\n  \
-           export const rows = signal([])\n  \
-           export const sel = selection(rows, (r) => r.id)\n\
+           export default controller((ctx) => {{\n    \
+             const rows = signal([])\n    \
+             const sel = selection(rows, (r) => r.id)\n    \
+             return {{ rows, sel }}\n  \
+           }})\n\
          </controller>\n\
          ```\n\n\
+         Mutation is ALWAYS `signal.set(newValue)` (or `signal.set(prev => next)`). Lifecycle\nis ambient, not a section — call `mount(fn)` (fires once after this instance's DOM\nconnects; a returned function is cleanup run on dispose) or `onCleanup(fn)` (runs on\ndispose) from anywhere in the setup call graph, including a composition function\ncalled from setup. Both are auto-injected — no import needed.\n\n\
          Import primitives from `@ship/sui-runtime` — the front door. Never from\n`@ship/sui-runtime/internal`: that is the COMPILER's ABI (`bindFor`, `attachRef`,\n`runAction`, …). If you are typing a symbol from there, you are hand-writing something\nthe compiler emits.\n\n\
          Reactivity: `signal` `derived` `effect` `batch` `untrack` `shared`. Reach for\n`effect` rarely — it is the escape hatch, not the pattern. Cleanup is automatic: an\neffect created during setup dies with the component.\n\n\
          Control flow: `{{#if cond}}…{{/if}}`, `{{#for item of items key={{item.id}}}}…{{/for}}`\n(the `key=` is required — without it the reconciler falls back to positional matching\nand loses DOM identity on reorder).\n"

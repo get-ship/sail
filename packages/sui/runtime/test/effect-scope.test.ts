@@ -6,6 +6,8 @@ import {
   withScope,
   onCleanup,
   currentScope,
+  mount,
+  SuiMountOutsideSetupError,
   type EffectScope,
 } from '../src/effect-scope'
 
@@ -221,5 +223,84 @@ describe('effect-scope', () => {
     onCleanup(fn) // no-op
     scope.dispose()
     expect(fn).not.toHaveBeenCalled()
+  })
+})
+
+describe('mount() — ambient lifecycle', () => {
+  it('throws the named error when called outside a setup window', () => {
+    expect(currentScope()).toBeNull()
+    expect(() => mount(() => {})).toThrow(SuiMountOutsideSetupError)
+    expect(() => mount(() => {})).toThrow(/setup/)
+  })
+
+  it('registers on the current scope but does NOT run the callback until runMounts', () => {
+    const scope = createScope()
+    const fn = vi.fn()
+    withScope(scope, () => mount(fn))
+    expect(fn).not.toHaveBeenCalled()
+  })
+
+  it('fires after connect, receiving the host element runMounts was called with', () => {
+    const scope = createScope()
+    const host = { tag: 'the-host-el' } as unknown as HTMLElement
+    let received: HTMLElement | undefined
+    withScope(scope, () => mount((el) => { received = el }))
+    scope.runMounts(host)
+    expect(received).toBe(host)
+  })
+
+  it("a composition called from setup can register mount()/onCleanup() on the SAME scope", () => {
+    // "Composition" = an ordinary function called synchronously from
+    // setup — mount/onCleanup are EXECUTION-scoped (CURRENT_SCOPE), not
+    // lexically restricted to the literal setup body, so a helper the
+    // setup function calls can register lifecycle too.
+    const scope = createScope()
+    const mountFn = vi.fn()
+    const cleanupFn = vi.fn()
+    function useWidget() {
+      mount(mountFn)
+      onCleanup(cleanupFn)
+    }
+    withScope(scope, () => useWidget())
+    scope.runMounts(document.createElement('div'))
+    expect(mountFn).toHaveBeenCalledOnce()
+    scope.dispose()
+    expect(cleanupFn).toHaveBeenCalledOnce()
+  })
+
+  it("the callback's returned disposer is enrolled as a cleanup — disposes with the instance", () => {
+    const scope = createScope()
+    const disposer = vi.fn()
+    withScope(scope, () => mount(() => disposer))
+    scope.runMounts(document.createElement('div'))
+    expect(disposer).not.toHaveBeenCalled()
+    scope.dispose()
+    expect(disposer).toHaveBeenCalledOnce()
+  })
+
+  it('an async callback\'s resolved disposer is also enrolled as a cleanup', async () => {
+    const scope = createScope()
+    const disposer = vi.fn()
+    withScope(scope, () =>
+      mount(async () => {
+        await Promise.resolve()
+        return disposer
+      }),
+    )
+    scope.runMounts(document.createElement('div'))
+    await Promise.resolve()
+    await Promise.resolve()
+    scope.dispose()
+    expect(disposer).toHaveBeenCalledOnce()
+  })
+
+  it('runMounts is idempotent — a second call does not re-run already-fired callbacks', () => {
+    const scope = createScope()
+    const fn = vi.fn()
+    withScope(scope, () => mount(fn))
+    const host = document.createElement('div')
+    scope.runMounts(host)
+    scope.runMounts(host)
+    expect(fn).toHaveBeenCalledOnce()
   })
 })

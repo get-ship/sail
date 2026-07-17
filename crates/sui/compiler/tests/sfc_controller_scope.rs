@@ -14,11 +14,9 @@ use sui_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
 
 const SFC: &str = r#"<controller>
 import { controller, signal } from '@ship/sui-runtime'
-export default controller({
-  setup: () => {
-    const phase = signal('idle')
-    return { phase }
-  },
+export default controller((ctx) => {
+  const phase = signal('idle')
+  return { phase }
 })
 </controller>
 
@@ -58,10 +56,10 @@ fn diagnostic_lines_point_at_the_authored_row() {
     let src = SFC.replace("{phase()}", "{nope()}");
     let err = compile(&src, opts("sfc-c")).unwrap_err();
     let rendered = err.render(&src);
-    // `<span>{nope()}</span>` is line 12 of the source above — under the block,
+    // `<span>{nope()}</span>` is line 10 of the source above — under the block,
     // not shifted up by it.
     assert!(
-        rendered.contains("line 12"),
+        rendered.contains("line 10"),
         "expected the error on the row the author wrote, got: {rendered}"
     );
 }

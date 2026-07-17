@@ -185,15 +185,14 @@ fn surfaces_typecheck_green_and_typo_is_caught() {
 
     // Representative CONTROLLER-FREE surfaces (scope is template/data/route
     // declared) + the manifest seam (route/navigate typed via inject_host_context).
-    // The surfaces that COMPOSE an authored `controller({ scope })` — board
-    // (control-flow + composed controller) and badge (a component) — are blocked
-    // on a pre-existing runtime-typing regression (ef696e5): a scope factory with
-    // no `ctx` param resolves `controller()` to the legacy `__def`-less overload,
-    // so the synthetic scope-factory recovery yields `{}`. Tracked by the
-    // #[ignore]'d `controller_recovers_scope_factory_return_type` in
-    // `synthetic_client_tsc.rs` (same root cause; the server render path here
-    // hits it identically). Restore them here once `controller()`'s `__def`
-    // contract holds for the zero-ctx case.
+    // The surfaces that COMPOSE an authored `controller(fn)` — board
+    // (control-flow + composed controller) and badge (a component) — are NOT
+    // listed here for an unrelated reason: `board/controller.ts` doesn't exist
+    // in this repo (see the `#[ignore]`'d `controller_recovers_scope_factory_
+    // return_type` in `synthetic_client_tsc.rs`). The `ef696e5` zero-ctx `__def`
+    // regression that test tracked is fixed by `controller-collapse`'s single
+    // `controller(fn)` overload (always carries `__def`; the recovery pattern
+    // matches any function arity).
     let surfaces = [
         // 1. route param.
         Surface {

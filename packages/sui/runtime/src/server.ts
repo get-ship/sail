@@ -48,8 +48,10 @@ export {
   injectContext,
   contextKey,
   walkScope,
+  SuiMountOutsideSetupError,
 } from './effect-scope'
 export type { EffectScope, ContextKey } from './effect-scope'
+export { mount as mountAmbient } from './effect-scope'
 export {
   defineStore,
   useStore,
@@ -71,10 +73,9 @@ export type { StoreDef, StoreInstance } from './store'
 // build signal/derived/on bindings, no DOM), so they belong in the server
 // entry too: a synthesized view's authored controller imports `controller`
 // from `@ship/sui-runtime`, which the SSR build aliases here.
-export { controller, resolveController, LIFECYCLE_KEY } from './controller-resolver'
+export { controller, resolveController } from './controller-resolver'
 export type {
   ControllerExport,
-  ControllerLifecycle,
   ResolverContext,
   ResolvedBindings,
 } from './controller-resolver'

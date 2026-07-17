@@ -13,7 +13,6 @@
 </scope>
 <controller>
 import { controller, signal, derived, live } from '@ship/sui-runtime'
-import type { Scope } from './tut-09-inbox-starter.sui'
 
 interface Message {
   id: number
@@ -40,8 +39,7 @@ function fetchInbox(): Promise<Message[]> {
 // This controller is sound. Every flaw in this lesson lives in the
 // TEMPLATE, and every one of them compiles — that is the point: the
 // compiler owns correctness of the surface, the reviewer owns intent.
-export default controller<Scope>({
-  setup: () => {
+export default controller(() => {
     const inbox = live(fetchInbox)
     const filter = signal<'all' | 'unread'>('all')
     const archived = signal<number[]>([])
@@ -61,8 +59,7 @@ export default controller<Scope>({
       setFilter: (f: 'all' | 'unread'): void => filter.set(f),
       archive: (id: number): void => archived.set([...archived(), id]),
     }
-  },
-})
+  })
 </controller>
 
 <column gap="4">

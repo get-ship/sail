@@ -1,6 +1,5 @@
 <controller>
 import { controller, signal, effect } from '@ship/sui-runtime'
-import type { Scope } from './page.sui'
 
 // Dark themes pair with `data-mode="dark"` on <html> so the [data-mode="light"]
 // override in deck-theme.css can layer the light palette on top. This is the
@@ -9,17 +8,20 @@ import type { Scope } from './page.sui'
 // with the surrounding host.
 const DARK_THEMES = new Set(['ship-dark', 'console', 'contrast'])
 
-export default controller<Scope>({
-  setup: () => ({
-    activeTheme: signal<string>('ship-light'),
-  }),
-  mount(state) {
+export default controller(() => {
+  const activeTheme = signal<string>('ship-light')
+
+  mount(() => {
     effect(() => {
-      const theme = state.activeTheme
+      const theme = activeTheme()
       document.documentElement.setAttribute('data-theme', theme)
       document.documentElement.setAttribute('data-mode', DARK_THEMES.has(theme) ? 'dark' : 'light')
     })
-  },
+  })
+
+  return {
+    activeTheme,
+  }
 })
 </controller>
 

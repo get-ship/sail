@@ -9,8 +9,7 @@ import { controller, signal } from '@ship/sui-runtime'
 
 const MODE_KEY = 'deck-mode'
 
-export default controller({
-  setup: () => {
+export default controller(() => {
     const root = document.documentElement
     root.setAttribute('data-theme', 'deck')
 
@@ -42,8 +41,7 @@ export default controller({
     const path = signal<string>(typeof location !== 'undefined' ? location.pathname : '/')
 
     return { dark, toggleTheme, path }
-  },
-})
+  })
 </controller>
 
 <!--

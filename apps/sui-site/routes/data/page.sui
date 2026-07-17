@@ -8,8 +8,7 @@ import { controller, live, signal, type ViewScope } from '@ship/sui-runtime'
 import type { Scope } from './page.sui'
 import { code } from './snippets'
 
-export default controller({
-  setup: (_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ViewScope<Scope>) => {
     const attempt = signal(1)
     const sabotage = signal(false)
     const users = live(() => {
@@ -34,7 +33,6 @@ export default controller({
         attempt.set((a) => a + 1)
       },
     }
-  },
 })
 </controller>
 

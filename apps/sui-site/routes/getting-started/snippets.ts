@@ -42,15 +42,13 @@ Error: routes/page.sui: line 4 col 13: [sui-sx]
   radius, text. Raw px/hex are not expressible.`,
 
   state: `<!-- routes/page.sui — state lives in a <controller> block in the
-     same file. The template binds ONLY what scope() returns. -->
+     same file. The template binds ONLY what the controller function returns. -->
 <controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => {
-    const count = signal(0)
-    return { count }
-  },
+export default controller((ctx) => {
+  const count = signal(0)
+  return { count }
 })
 </controller>
 
@@ -93,11 +91,9 @@ sui-compiler build greeting/greeting.sui`,
   interactive: `<controller>
 import { controller, signal } from '@ship/sui-runtime'
 
-export default controller({
-  setup: () => {
-    const open = signal(false)
-    return { open }
-  },
+export default controller((ctx) => {
+  const open = signal(false)
+  return { open }
 })
 </controller>
 
