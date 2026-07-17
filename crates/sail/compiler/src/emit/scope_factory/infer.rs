@@ -93,6 +93,22 @@ pub(super) fn infer_ts_type(bytes: &[u8], start: usize, end: usize) -> String {
                     Some(t) => format!("LiveSignal<{t}>"),
                     None => "LiveSignal<unknown>".to_string(),
                 },
+                // `query(thunk, opts?)` returns a `LiveSignal<T>` (=
+                // `Signal<LiveState<T>>`), same shape `live()` produces — the
+                // payload type is whatever the thunk's client call resolves
+                // to, which (like `live`) usually lives on an inner SDK
+                // call the `.d.ts` module can't see. Honour an explicit
+                // `query<T>(...)` annotation; otherwise `LiveSignal<unknown>`.
+                "query" => match generic {
+                    Some(t) => format!("LiveSignal<{t}>"),
+                    None => "LiveSignal<unknown>".to_string(),
+                },
+                // `mutation(thunk, opts?)` returns `Mutation<T>` — same
+                // best-effort caveat as `live`/`query`.
+                "mutation" => match generic {
+                    Some(t) => format!("Mutation<{t}>"),
+                    None => "Mutation<unknown>".to_string(),
+                },
                 _ => "unknown".to_string(),
             };
         }
