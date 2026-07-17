@@ -16,8 +16,17 @@
 // after the fact. Fixed with an `entry.disposed` flag checked in the
 // fetch resolve/reject handlers and the push callbacks, set by both
 // `dispose()` and GC eviction.
+//
+// Section 2 previously found `NativeCache` had no public `invalidate()`
+// and exercised the gap via direct `cache.attach()`/`cache.fetch()`
+// calls. `invalidate(prefix)` now exists (query-slice job, see
+// helm/data/missions/m-deck-standalone/scratch/invalidate-design-proposal.md)
+// — section 2 below exercises the real method. Section 9 covers the
+// AbortSignal wiring added alongside it (dispose/GC/invalidate all
+// abort real in-flight network work, not just discard its result).
 
 import { describe, expect, it, vi } from 'vitest'
+import { QueryClient } from '@tanstack/query-core'
 import { createScope, withScope, type EffectScope } from '../src/effect-scope'
 import type { LiveState } from '../src/live'
 import {
@@ -106,38 +115,42 @@ describe('1. RACES', () => {
 })
 
 // ---------------------------------------------------------------------------
-// 2. INVALIDATE-DURING-FLIGHT
-//
-// FINDING: NativeCache has no public `invalidate()` — nothing analogous
-// to query-core's `client.invalidateQueries()`. The only way to force a
-// refetch is to reach into the cache (`useNativeCache()` + `cache.attach()`
-// + `cache.fetch()`) directly; `nativeQueried` itself exposes no such
-// call. The tests below use that internal path since it's the only one
-// that exists, and the gap itself is called out in the report.
+// 2. INVALIDATE
 // ---------------------------------------------------------------------------
 
-describe('2. INVALIDATE-DURING-FLIGHT (via the only mechanism the core exposes)', () => {
-  it('invalidating a currently-fetching entry does not start a second fetch, and does not double-settle', async () => {
+describe('2. INVALIDATE', () => {
+  it('invalidating a currently-fetching entry aborts it, discards its result, and starts exactly one fresh fetch', async () => {
     const scope = createScope()
     const cache = withScope(scope, () => useNativeCache())
     const key = ['invalidate-in-flight']
-    const d = deferred<string>()
-    const fetcher = vi.fn(() => d.promise)
+    const d1 = deferred<string>()
+    const d2 = deferred<string>()
+    let call = 0
+    const fetcher = vi.fn((signal: AbortSignal) => {
+      call++
+      signal.addEventListener('abort', () => {})
+      return call === 1 ? d1.promise : d2.promise
+    })
 
     const s = withScope(scope, () => nativeQueried(key, fetcher))
     expect(s()).toEqual({ kind: 'loading' })
-
-    // "invalidate" attempt while in flight — the status guard absorbs it.
-    const { entry } = cache.attach(key)
-    cache.fetch(entry, fetcher)
     expect(fetcher).toHaveBeenCalledOnce()
+    const firstSignal = fetcher.mock.calls[0]![0]!
+    expect(firstSignal.aborted).toBe(false)
 
-    d.resolve('settled-once')
+    cache.invalidate(key)
+    expect(firstSignal.aborted).toBe(true) // real abort, not just a discarded result
+    expect(fetcher).toHaveBeenCalledTimes(2) // fresh fetch started immediately
+
+    d1.resolve('too-late') // the aborted attempt's eventual resolution must never land
     await tick()
     await tick()
+    expect(s()).toEqual({ kind: 'loading' }) // still waiting on attempt #2
 
-    expect(fetcher).toHaveBeenCalledOnce()
-    expect(s()).toEqual({ kind: 'ok', value: 'settled-once' })
+    d2.resolve('settled')
+    await tick()
+    await tick()
+    expect(s()).toEqual({ kind: 'ok', value: 'settled' })
   })
 
   it('invalidating an already-ok entry forces exactly one background refetch, never flashing ok back to loading', async () => {
@@ -152,15 +165,157 @@ describe('2. INVALIDATE-DURING-FLIGHT (via the only mechanism the core exposes)'
     await tick()
     expect(s()).toEqual({ kind: 'ok', value: 'v1' })
 
-    const { entry } = cache.attach(key)
-    cache.fetch(entry, fetcher)
-    // no ok -> loading flash from the doomed... er, the SUCCESSFUL revalidate
+    cache.invalidate(key)
+    // no ok -> loading flash from the background revalidate
     expect(s()).toEqual({ kind: 'ok', value: 'v1' })
 
     await tick()
     await tick()
     expect(s()).toEqual({ kind: 'ok', value: 'v2' })
     expect(fetcher).toHaveBeenCalledTimes(2)
+  })
+
+  it('invalidating an unobserved-but-resident entry marks it stale but fetches nothing until the next attach', async () => {
+    const root = createScope()
+    const cache = withScope(root, () => useNativeCache())
+    const key = ['invalidate-unobserved']
+    let call = 0
+    const fetcher = vi.fn(() => Promise.resolve(`v${++call}`))
+
+    const child = childOf(root)
+    withScope(child, () => nativeQueried(key, fetcher, { staleTime: 60_000 }))
+    await tick()
+    await tick()
+    child.dispose() // observer released; entry resident (gcTime default), zero observers
+
+    cache.invalidate(key)
+    await tick()
+    await tick()
+    expect(fetcher).toHaveBeenCalledOnce() // invalidate itself fetched nothing
+
+    const second = childOf(root)
+    const s2 = withScope(second, () => nativeQueried(key, fetcher, { staleTime: 60_000 }))
+    await tick()
+    await tick()
+    expect(fetcher).toHaveBeenCalledTimes(2) // the NEXT attach sees isFresh() === false and refetches
+    expect(s2()).toEqual({ kind: 'ok', value: 'v2' })
+  })
+
+  it('invalidating a push-fed entry leaves it untouched — no refetch, stream keeps writing', async () => {
+    const scope = createScope()
+    const cache = withScope(scope, () => useNativeCache())
+    const key = ['invalidate-push']
+    let pushFn: ((v: string) => void) | null = null
+    const source: PushSource<string> = (push) => {
+      pushFn = push
+      push('initial')
+      return () => {}
+    }
+    const s = withScope(scope, () => nativePush(key, source))
+    expect(s()).toEqual({ kind: 'ok', value: 'initial' })
+
+    cache.invalidate(key)
+    expect(s()).toEqual({ kind: 'ok', value: 'initial' }) // untouched
+
+    pushFn!('still-flowing')
+    expect(s()).toEqual({ kind: 'ok', value: 'still-flowing' }) // stream unaffected
+  })
+
+  it('invalidating under a disposed root is a no-op — no timer leak, no thrown error', () => {
+    const scope = createScope()
+    const cache = withScope(scope, () => useNativeCache())
+    withScope(scope, () => nativeQueried(['invalidate-disposed'], () => Promise.resolve('v')))
+    scope.dispose()
+
+    expect(() => cache.invalidate(['invalidate-disposed'])).not.toThrow()
+  })
+
+  it('invalidate(prefix) matches by namespace: a shorter prefix invalidates every deeper key, a sibling namespace is untouched', async () => {
+    const scope = createScope()
+    const cache = withScope(scope, () => useNativeCache())
+    let listCalls = 0
+    let detailCalls = 0
+    const sList = withScope(scope, () =>
+      nativeQueried(['crm', 'deals', 'list'], () => Promise.resolve(`list-${++listCalls}`), {
+        staleTime: 60_000,
+      }),
+    )
+    const sDetail = withScope(scope, () =>
+      nativeQueried(['crm', 'deals', 'detail', 1], () => Promise.resolve(`detail-${++detailCalls}`), {
+        staleTime: 60_000,
+      }),
+    )
+    const sBilling = withScope(scope, () =>
+      nativeQueried(['billing', 'summary'], () => Promise.resolve('billing-untouched'), {
+        staleTime: 60_000,
+      }),
+    )
+    await tick()
+    await tick()
+
+    cache.invalidate(['crm', 'deals']) // namespace prefix — matches both list and detail
+    await tick()
+    await tick()
+
+    expect(listCalls).toBe(2)
+    expect(detailCalls).toBe(2)
+    expect(sBilling()).toEqual({ kind: 'ok', value: 'billing-untouched' }) // sibling namespace, untouched
+    expect(sList()).toEqual({ kind: 'ok', value: 'list-2' })
+    expect(sDetail()).toEqual({ kind: 'ok', value: 'detail-2' })
+  })
+
+  it('differential vs query-core invalidateQueries: identical stale->refetch transition sequence for the pull-only subset', async () => {
+    async function scenario(engine: 'native' | 'querycore') {
+      if (engine === 'native') {
+        const scope = createScope()
+        const cache = withScope(scope, () => useNativeCache())
+        let call = 0
+        const s = withScope(scope, () =>
+          nativeQueried(['diff-invalidate'], () => Promise.resolve(`v${++call}`), { staleTime: 60_000 }),
+        )
+        await tick()
+        await tick()
+        const before = snapshot(s)
+        cache.invalidate(['diff-invalidate'])
+        const duringRevalidate = snapshot(s) // must still read old value, no loading flash
+        await tick()
+        await tick()
+        return [before, duringRevalidate, snapshot(s)]
+      }
+      const client = new QueryClient()
+      let call = 0
+      const observer = new (
+        await import('@tanstack/query-core')
+      ).QueryObserver(client, {
+        queryKey: ['diff-invalidate-qc'],
+        queryFn: () => Promise.resolve(`v${++call}`),
+        staleTime: 60_000,
+      })
+      const toSnap = (r: ReturnType<typeof observer.getCurrentResult>) =>
+        r.status === 'pending' ? { kind: 'loading' } : { kind: 'ok', value: r.data }
+      let current = toSnap(observer.getCurrentResult())
+      observer.subscribe((r) => {
+        current = toSnap(r)
+      })
+      await tick()
+      await tick()
+      const before = current
+      // deliberately NOT awaited — `invalidateQueries` awaits refetch
+      // completion for active queries by default, which would already
+      // observe the settled value by the time we read `current` below.
+      // native's `invalidate()` is fire-and-forget/synchronous-return
+      // the same way; reading `current` immediately after the call is
+      // the comparable mid-flight snapshot for both engines.
+      void client.invalidateQueries({ queryKey: ['diff-invalidate-qc'] })
+      const duringRevalidate = current
+      await tick()
+      await tick()
+      return [before, duringRevalidate, current]
+    }
+
+    const nativeResult = await scenario('native')
+    const qcResult = await scenario('querycore')
+    expect(nativeResult).toEqual(qcResult)
   })
 })
 
@@ -628,5 +783,100 @@ describe('8. TWO-ROOTS + CLOCK SKEW', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 9. ABORTSIGNAL — dispose/GC/supersede abort REAL network work, not just
+// the eventual result. The cache owns one AbortController per fetch
+// attempt (initial or retry) and passes its `.signal` to the fetcher;
+// section 2 above already covers the invalidate-triggered abort.
+// ---------------------------------------------------------------------------
+
+describe('9. ABORTSIGNAL', () => {
+  it('root dispose mid-fetch aborts the signal the fetcher was given', () => {
+    const scope = createScope()
+    let capturedSignal: AbortSignal | null = null
+    const d = deferred<string>()
+    withScope(scope, () =>
+      nativeQueried(['abort-on-dispose'], (signal) => {
+        capturedSignal = signal
+        return d.promise
+      }),
+    )
+    expect(capturedSignal!.aborted).toBe(false)
+
+    scope.dispose()
+    expect(capturedSignal!.aborted).toBe(true)
+  })
+
+  it('GC eviction of an unobserved entry aborts its in-flight fetch signal', () => {
+    vi.useFakeTimers()
+    try {
+      const root = createScope()
+      const child = childOf(root)
+      let capturedSignal: AbortSignal | null = null
+      const d = deferred<string>()
+      withScope(child, () =>
+        nativeQueried(['abort-on-gc'], (signal) => {
+          capturedSignal = signal
+          return d.promise
+        }, { gcTime: 1000 }),
+      )
+      child.dispose() // released, GC scheduled — fetch still in flight
+      expect(capturedSignal!.aborted).toBe(false)
+
+      vi.advanceTimersByTime(1000)
+      expect(capturedSignal!.aborted).toBe(true)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('each retry attempt gets its own fresh AbortSignal — an earlier attempt aborting does not abort a later one', async () => {
+    vi.useFakeTimers()
+    try {
+      const scope = createScope()
+      const signals: AbortSignal[] = []
+      let call = 0
+      const fetcher = vi.fn((signal: AbortSignal) => {
+        signals.push(signal)
+        call++
+        return call < 2 ? Promise.reject(new Error('down')) : Promise.resolve('recovered')
+      })
+      withScope(scope, () => nativeQueried(['abort-per-retry'], fetcher, { retry: 3 }))
+
+      await vi.advanceTimersByTimeAsync(0) // attempt 1 fails
+      await vi.advanceTimersByTimeAsync(1000) // attempt 2 succeeds
+
+      expect(signals).toHaveLength(2)
+      expect(signals[0]).not.toBe(signals[1])
+      expect(signals[1]!.aborted).toBe(false) // the winning attempt's signal is untouched
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('a fetch that resolves after being aborted does not overwrite a later successful value (real cancellation, not just token-discard)', async () => {
+    const scope = createScope()
+    const cache = withScope(scope, () => useNativeCache())
+    const key = ['abort-late-resolve']
+    const d1 = deferred<string>()
+    const d2 = deferred<string>()
+    let call = 0
+    const fetcher = vi.fn(() => (++call === 1 ? d1.promise : d2.promise))
+
+    const s = withScope(scope, () => nativeQueried(key, fetcher))
+    cache.invalidate(key) // aborts attempt #1, starts attempt #2
+
+    d2.resolve('second') // second settles first
+    await tick()
+    await tick()
+    expect(s()).toEqual({ kind: 'ok', value: 'second' })
+
+    d1.resolve('first-late') // aborted attempt resolves anyway (fetcher ignored the signal)
+    await tick()
+    await tick()
+    expect(s()).toEqual({ kind: 'ok', value: 'second' }) // untouched — token-guarded regardless
   })
 })
