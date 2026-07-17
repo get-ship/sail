@@ -18,18 +18,18 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use sui_compiler::emit::synthetic::{
+use sail_compiler::emit::synthetic::{
     emit_synthetic, emit_synthetic_client_module, AppManifest, AuthoredController,
 };
-use sui_compiler::parse::parse;
-use sui_compiler::CompileMode;
+use sail_compiler::parse::parse;
+use sail_compiler::CompileMode;
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..").canonicalize().unwrap()
 }
 
 // The in-repo conformance app is the canonical fixture. App-level targets
-// (apps/hub, views/) live OUTSIDE the framework boundary — sui-compiler's tests
+// (apps/hub, views/) live OUTSIDE the framework boundary — sail-compiler's tests
 // resolve only against in-repo fixtures.
 const CONF_MANIFEST: &str = "crates/deck/deck-conformance/app/app.manifest.jsonc";
 
@@ -53,7 +53,7 @@ fn synth(repo: &Path, work: &Path, t: &Target) {
     // serves it as a virtual sibling; this harness has no bundler, so it
     // materializes it in its own work dir under a name that cannot collide
     // with the SYNTHETIC controller the emit generates below.
-    let (src, inline) = sui_compiler::parse::preprocess::extract_controller_block(&raw);
+    let (src, inline) = sail_compiler::parse::preprocess::extract_controller_block(&raw);
     let manifest_src = fs::read_to_string(repo.join(t.manifest_rel)).expect("read manifest");
     let manifest = AppManifest::parse(&manifest_src).expect("manifest");
     let program = parse(&src).unwrap_or_else(|e| panic!("parse {}: {}", t.name, e.render(&src)));

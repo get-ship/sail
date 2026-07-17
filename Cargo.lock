@@ -765,9 +765,9 @@ dependencies = [
  "rolldown",
  "rolldown_common",
  "rustc-hash",
+ "sail-compiler",
  "serde",
  "serde_json",
- "sui-compiler",
  "tempfile",
  "thiserror 2.0.18",
  "tokio",
@@ -814,9 +814,9 @@ dependencies = [
  "deck-core",
  "form_urlencoded",
  "futures-util",
+ "sail-compiler",
  "serde",
  "serde_json",
- "sui-compiler",
  "tempfile",
  "tokio",
  "tokio-stream",
@@ -836,10 +836,10 @@ dependencies = [
  "filetime",
  "notify",
  "regex",
+ "sail-compiler",
  "serde",
  "serde_json",
  "specta",
- "sui-compiler",
  "tempfile",
  "tokio",
  "tracing",
@@ -851,10 +851,10 @@ name = "deck-host"
 version = "0.1.0"
 dependencies = [
  "filetime",
+ "sail-compiler",
  "serde",
  "serde_json",
  "specta",
- "sui-compiler",
  "tempfile",
 ]
 
@@ -867,10 +867,10 @@ dependencies = [
  "deck-core",
  "rolldown",
  "rolldown_common",
+ "sail-compiler",
  "serde",
  "serde_json",
  "ship-js",
- "sui-compiler",
  "tokio",
 ]
 
@@ -3786,6 +3786,80 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f"
 
 [[package]]
+name = "sail-build-info"
+version = "0.1.0"
+
+[[package]]
+name = "sail-compiler"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "libc",
+ "sail-build-info",
+ "sail-lint",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.18",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "sail-compiler-napi"
+version = "0.1.0"
+dependencies = [
+ "napi",
+ "napi-build",
+ "napi-derive",
+ "sail-compiler",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "sail-layout"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "sail-compiler",
+ "sail-lint",
+ "serde",
+ "serde_json",
+ "taffy",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "sail-lint"
+version = "0.1.0"
+dependencies = [
+ "oxc_allocator 0.128.0",
+ "oxc_ast 0.128.0",
+ "oxc_ast_visit 0.128.0",
+ "oxc_parser 0.128.0",
+ "oxc_span 0.128.0",
+ "serde",
+ "serde_json",
+ "tempfile",
+]
+
+[[package]]
+name = "sail-lsp"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "lsp-server",
+ "lsp-types",
+ "sail-compiler",
+ "sail-lint",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "same-file"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4190,80 +4264,6 @@ checksum = "36fe837e881ad5c3b60fadeb8e9b0bc5c907c4b7d84b4415a7f0bbc3f9073631"
 dependencies = [
  "memchr",
  "smallvec",
-]
-
-[[package]]
-name = "sui-build-info"
-version = "0.1.0"
-
-[[package]]
-name = "sui-compiler"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "libc",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "sui-build-info",
- "sui-lint",
- "tempfile",
- "thiserror 2.0.18",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "sui-compiler-napi"
-version = "0.1.0"
-dependencies = [
- "napi",
- "napi-build",
- "napi-derive",
- "serde",
- "serde_json",
- "sui-compiler",
-]
-
-[[package]]
-name = "sui-layout"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "serde",
- "serde_json",
- "sui-compiler",
- "sui-lint",
- "taffy",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "sui-lint"
-version = "0.1.0"
-dependencies = [
- "oxc_allocator 0.128.0",
- "oxc_ast 0.128.0",
- "oxc_ast_visit 0.128.0",
- "oxc_parser 0.128.0",
- "oxc_span 0.128.0",
- "serde",
- "serde_json",
- "tempfile",
-]
-
-[[package]]
-name = "sui-lsp"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "lsp-server",
- "lsp-types",
- "serde",
- "serde_json",
- "sui-compiler",
- "sui-lint",
 ]
 
 [[package]]
@@ -4707,7 +4707,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "009994f150cc0cd50ff54917d5bc8bffe8cad10ca10d81c34da2ec421ae61782"
 
 [[package]]
-name = "tree-sitter-sui"
+name = "tree-sitter-sail"
 version = "0.1.0"
 dependencies = [
  "cc",
@@ -5594,10 +5594,6 @@ dependencies = [
 ]
 
 [[patch.unused]]
-name = "ship-proto"
-version = "0.1.0"
-
-[[patch.unused]]
 name = "deck"
 version = "0.1.0"
 
@@ -5611,4 +5607,8 @@ version = "0.1.0"
 
 [[patch.unused]]
 name = "sui-compiler"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "ship-proto"
 version = "0.1.0"

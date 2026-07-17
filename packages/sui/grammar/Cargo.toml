@@ -1,5 +1,5 @@
 [package]
-name = "tree-sitter-sui"
+name = "tree-sitter-sail"
 description = "Tree-sitter grammar for the SUI .sui template format"
 version = "0.1.0"
 authors = ["Sail"]

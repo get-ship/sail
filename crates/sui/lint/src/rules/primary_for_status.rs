@@ -37,7 +37,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-primary-for-status";
+pub const RULE_ID: &str = "sail-primary-for-status";
 
 const SEVERITY: Severity = Severity::Warn;
 

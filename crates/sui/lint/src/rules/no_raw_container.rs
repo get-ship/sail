@@ -24,7 +24,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-no-raw-container";
+pub const RULE_ID: &str = "sail-no-raw-container";
 
 fn suggestion(tag: &str) -> &'static str {
     match tag {

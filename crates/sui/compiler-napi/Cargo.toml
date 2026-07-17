@@ -1,9 +1,9 @@
 [package]
-name = "sui-compiler-napi"
+name = "sail-compiler-napi"
 version = "0.1.0"
 edition = "2024"
 publish = false
-description = "Node-API (.node) binding around `sui-compiler`. In-process compile for the SUI test harness — one cargo-current build feeds both the daemon and the harness, so there is no second artifact (wasm pkg) to go stale. The browser playground keeps the wasm surface; this crate is the Node path only."
+description = "Node-API (.node) binding around `sail-compiler`. In-process compile for the SUI test harness — one cargo-current build feeds both the daemon and the harness, so there is no second artifact (wasm pkg) to go stale. The browser playground keeps the wasm surface; this crate is the Node path only."
 
 # napi-rs builds a cdylib that the napi CLI renames to a platform `.node`
 # addon. `lib` stays so the crate type-checks under plain `cargo build` and
@@ -17,7 +17,7 @@ path = "src/lib.rs"
 # `compile(&str, CompileOpts) -> Result<CompileOutput, CompileError>` fn the
 # daemon (deck-core/src/view.rs) compiles through, so the harness and
 # production share one codegen path and one build identity.
-sui-compiler = { path = "../compiler" }
+sail-compiler = { path = "../compiler" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 

@@ -1,4 +1,4 @@
-//! `sui-compiler` — ahead-of-time compiler for `.sui` files.
+//! `sail-compiler` — ahead-of-time compiler for `.sui` files.
 //!
 //! Same semantics as the Phase-2 interpreter
 //! (`packages/sui/dom`); everything that can be resolved at build
@@ -9,7 +9,7 @@
 //! # Public API
 //!
 //! ```ignore
-//! use sui_compiler::{compile, CompileOpts, CompileMode, ComponentMeta};
+//! use sail_compiler::{compile, CompileOpts, CompileMode, ComponentMeta};
 //!
 //! let out = compile(source, CompileOpts {
 //!     setup_url: Some("./view.ts".into()),
@@ -162,7 +162,7 @@ impl CompileOpts {
     ///
     /// ```ignore
     /// let opts = CompileOpts::default()
-    ///     .with_lint_override("sui-css-token", OverrideSeverity::Off);
+    ///     .with_lint_override("sail-css-token", OverrideSeverity::Off);
     /// ```
     pub fn with_lint_override(
         mut self,
@@ -209,7 +209,7 @@ pub struct CompileOutput {
 /// Check a `.sui` source string and return **every** diagnostic, not just
 /// the first. This is the entry point for the LSP + agent tooling — it
 /// parses, runs all check passes collecting (rather than short-circuiting
-/// like [`compile`]), and merges the full `sui-lint` findings.
+/// like [`compile`]), and merges the full `sail-lint` findings.
 ///
 /// A fatal parse error returns a single diagnostic (nothing else can run
 /// without an AST). `source_path` locates the paired `.controller.ts` for

@@ -17,7 +17,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-use sui_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
+use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
 
 fn fixtures_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")

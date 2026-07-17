@@ -23,7 +23,7 @@ use std::path::{Path, PathBuf};
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-no-undeclared-stylesheet";
+pub const RULE_ID: &str = "sail-no-undeclared-stylesheet";
 
 /// Walk a pack's src directory for `.css` files.
 fn collect_css_files(src_dir: &Path) -> Vec<PathBuf> {

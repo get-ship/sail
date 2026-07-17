@@ -28,7 +28,7 @@ use oxc_ast_visit::Visit;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 
-pub const RULE_ID: &str = "sui-controller-state-cast";
+pub const RULE_ID: &str = "sail-controller-state-cast";
 
 /// Lint a controller `.ts` source for `Scope` casts. Parse errors are
 /// swallowed — the compiler + tsc own parse-error reporting.

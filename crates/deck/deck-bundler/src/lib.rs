@@ -2,7 +2,7 @@
 //!
 // FILE_CAP_OVERRIDE: accessor methods for graph-driven HMR watcher (#deck-hmr-graph-watch); extracting them would require pub-leaking Bundler internals.
 //! Replaces the bun worker: no child process, no JSON-line protocol. `Bundler`
-//! locates sui-compiler once, then `build`/`build_all` drive Rolldown
+//! locates sail-compiler once, then `build`/`build_all` drive Rolldown
 //! (`rolldown_bundle`) directly, and `start_watching` re-bundles affected
 //! targets on filesystem change (via `notify`), emitting `BundlerEvent`s on a
 //! broadcast channel for HMR. Output lands in `assets_dir_for` (sui-out/dist).
@@ -23,7 +23,7 @@ pub mod proto;
 pub mod rolldown_bundle;
 pub mod ship_asset_css;
 pub mod stamp;
-pub mod sui_plugin;
+pub mod sail_plugin;
 pub mod targets;
 pub mod views_bundle;
 mod watch;
@@ -53,7 +53,7 @@ pub enum BundlerEvent {
 
 #[derive(Debug, thiserror::Error)]
 pub enum BundlerError {
-    #[error("sui-compiler not found (runtime dir or target/)")]
+    #[error("sail-compiler not found (runtime dir or target/)")]
     NoCompiler,
     #[error("unknown target: {0}")]
     UnknownTarget(String),
@@ -93,7 +93,7 @@ impl Bundler {
     /// Start the in-process bundler. `repo_root` is the monorepo/source root;
     /// `workspace` the user-project (if distinct); `cfg` is the parsed
     /// `deck.jsonc` (caller calls `DeckConfig::defaults()` first).
-    /// The compiler is the linked `sui-compiler` crate, compiled in-process
+    /// The compiler is the linked `sail-compiler` crate, compiled in-process
     /// (#255) — no binary to locate, no installed-vs-local drift.
     pub fn start(repo_root: PathBuf, workspace: Option<PathBuf>, cfg: DeckConfig) -> Self {
         let (event_tx, _) = broadcast::channel(128);
@@ -426,7 +426,7 @@ impl Bundler {
         // component; the tag→source CEM index is memoized process-globally, so
         // clear it too — otherwise a component authored mid-session resolves to a
         // virtual no-op until restart (the `component_index` staleness hazard).
-        crate::sui_plugin::invalidate_component_index();
+        crate::sail_plugin::invalidate_component_index();
     }
     /// Rebuild one target from the watcher, COALESCED through the same
     /// single-flight gate the on-demand `build` path uses. A watcher rebuild of

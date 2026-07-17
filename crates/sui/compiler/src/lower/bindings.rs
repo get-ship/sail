@@ -22,7 +22,7 @@ use crate::lower::Lowered;
 /// `crate::action_manifest::BUILTIN_ACTION_NAMES` — the table is the
 /// single source. The const appears under this path for downstream
 /// code that historically reached for
-/// `sui_compiler::lower::bindings::BUILTIN_ACTIONS`.
+/// `sail_compiler::lower::bindings::BUILTIN_ACTIONS`.
 pub const BUILTIN_ACTIONS: &[&str] = crate::action_manifest::BUILTIN_ACTION_NAMES;
 
 pub fn collect_attr_imports(

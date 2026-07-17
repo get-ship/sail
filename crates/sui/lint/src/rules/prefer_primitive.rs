@@ -14,8 +14,8 @@
 //!   `packages/components/sui/primitives/**` are the layout primitives (and
 //!   their peers); they legitimately implement flex/grid internally — there is
 //!   no lower-level primitive to compose. Warning there would be circular.
-//! - This is a **sibling** to `sui-layout-primitive`, not a replacement.
-//!   `sui-layout-primitive` recognizes two *specific* clean-swap flex shapes
+//! - This is a **sibling** to `sail-layout-primitive`, not a replacement.
+//!   `sail-layout-primitive` recognizes two *specific* clean-swap flex shapes
 //!   (vertical stack, wrapping cluster) and teaches the exact primitive +
 //!   attrs. This rule is the broad net: *any* `display: grid` / `display:
 //!   flex` in a consumer component is ad-hoc layout worth a second look.
@@ -28,7 +28,7 @@ use std::path::{Component, Path};
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-prefer-primitive";
+pub const RULE_ID: &str = "sail-prefer-primitive";
 
 /// The ad-hoc-layout message. Points at all three primitives and the skill.
 const MESSAGE: &str =

@@ -1,6 +1,6 @@
 //! Minimal HTML parser for **preprocessed** `.sui` source.
 //!
-//! `sui_compiler::parse::preprocess` has already done the heavy lifting:
+//! `sail_compiler::parse::preprocess` has already done the heavy lifting:
 //! `<column>` is `<div class="sui-col …">`, `sx="…"` is `class="sx-…"`. We
 //! just need a stream-friendly scanner that produces a flat element tree with
 //! raw `class=` / `style=` / `style:--foo=` attributes — enough for style

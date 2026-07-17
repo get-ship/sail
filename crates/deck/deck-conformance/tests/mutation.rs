@@ -6,7 +6,7 @@
 //!
 //! 1. The wire vocabulary contract — `views/todos/page.sui` carries exactly
 //!    one mutation binding pointing at `ship.demo.addTodo`, parsed via
-//!    `sui_compiler::{parse, bindings}` (the same path a host uses).
+//!    `sail_compiler::{parse, bindings}` (the same path a host uses).
 //! 2. Resolver semantics — `demo.addTodo` then `demo.todos` against the store.
 //! 3. The tombstone itself — a form POST receives 410 Gone, not a 404 (deck
 //!    still composes this URL as the no-JS `<form>` action).
@@ -18,7 +18,7 @@ use axum::http::{Request, StatusCode, header};
 use deck_conformance::data_port::{DemoStore, resolve_demo};
 use deck_conformance::{deck_app, default_app_dir};
 use serde_json::json;
-use sui_compiler::{bindings, keys::BindingKind, parse};
+use sail_compiler::{bindings, keys::BindingKind, parse};
 use tower::ServiceExt;
 
 /// The PE form endpoint is a deliberate 410 tombstone in deck's router —
@@ -78,7 +78,7 @@ fn todos_view_has_mutation_binding_for_add_todo() {
     // — strip it before the template-only parser sees it (mirrors deck-ssr's
     // build path).
     let (stripped, _inline_controller) =
-        sui_compiler::parse::preprocess::extract_controller_block(&source);
+        sail_compiler::parse::preprocess::extract_controller_block(&source);
     let program = parse::parse(&stripped).expect("parse");
     let reg = bindings::build(&program);
     let mutations: Vec<_> = reg

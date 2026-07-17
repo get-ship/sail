@@ -19,6 +19,6 @@ fuzz_target!(|data: &[u8]| {
     if src.len() > 64 * 1024 {
         return;
     }
-    let Ok(program) = sui_compiler::parse::parse(src) else { return };
-    let _ = sui_compiler::bindings::build(&program);
+    let Ok(program) = sail_compiler::parse::parse(src) else { return };
+    let _ = sail_compiler::bindings::build(&program);
 });

@@ -100,7 +100,7 @@ pub fn run(
 /// Gate compilation on the **full Error-severity diagnostic stream**, not just
 /// the structural passes [`run`] invokes. `run` covers the expr-subset /
 /// scope-bound / type-strengthening passes; it does NOT invoke the
-/// Error-severity `sui-lint` rules (`sui-prop-value`, `sui-attr-bool-prop`,
+/// Error-severity `sail-lint` rules (`sui-prop-value`, `sui-attr-bool-prop`,
 /// `sui-css-content-text`, `controller-*`). Before #255 those rules rejected in
 /// the CLI bin's `fatal_diagnostics_gate` but passed silently through library
 /// `compile()` — which the daemon (`deck-core/src/view.rs`) and the napi test
@@ -164,8 +164,8 @@ fn offset_for_line_col(source: &str, line: usize, col: usize) -> usize {
 ///
 /// Coverage today: every `expr-subset` violation (the common class) plus the
 /// first error from each remaining structural/semantic pass, merged with the
-/// full multi-finding `sui-lint` stream. `css_token` / `controller_purity`
-/// are not run here — they delegate to `sui-lint`, collected below, so
+/// full multi-finding `sail-lint` stream. `css_token` / `controller_purity`
+/// are not run here — they delegate to `sail-lint`, collected below, so
 /// running them too would double-report. Per-pass full collection (e.g. all
 /// unbound identifiers, not just the first) is a future refinement; the
 /// structure here makes it additive.
@@ -219,7 +219,7 @@ pub fn collect(
         push(on_callable::check(program, controller), source, &mut diags);
     }
 
-    // Full `sui-lint` pass — the multi-finding source of truth for
+    // Full `sail-lint` pass — the multi-finding source of truth for
     // css_token / css_literal / for_key / event_name / prop_value (template)
     // and controller_purity (the paired `.ts`).
     //
@@ -240,7 +240,7 @@ pub fn collect(
     let template_findings =
         crate::check::lint_overrides::enforce_floor(
             crate::check::lint_overrides::apply_overrides(
-                sui_lint::lint_sui_template_source(lint_path, source),
+                sail_lint::lint_sui_template_source(lint_path, source),
                 overrides,
             ),
         );
@@ -250,7 +250,7 @@ pub fn collect(
     if let Some(c) = controller {
         let mut controller_findings =
             crate::check::lint_overrides::apply_overrides(
-                sui_lint::lint_controller_source(&c.path, &c.source),
+                sail_lint::lint_controller_source(&c.path, &c.source),
                 overrides,
             );
         // `sui-controller-no-ambient-authority` is `sui.config.json`
@@ -261,13 +261,13 @@ pub fn collect(
         // allowlist (`Policy::network_for`), same "specially invoked" pattern
         // `css_token` uses in `run()`. This is not a second `sui.config.json`
         // reader: `network_for` re-derives from the one resolver
-        // (`sui_lint::config::resolve`) via `Policy::resolve_outcome`.
+        // (`sail_lint::config::resolve`) via `Policy::resolve_outcome`.
         controller_findings.retain(|f| {
-            f.rule != sui_lint::rules::controller_no_ambient_authority::RULE_ID
+            f.rule != sail_lint::rules::controller_no_ambient_authority::RULE_ID
         });
         let network = crate::check::policy::Policy::network_for(&c.path);
         let ambient_findings = crate::check::lint_overrides::apply_overrides(
-            sui_lint::rules::controller_no_ambient_authority::check_confined(
+            sail_lint::rules::controller_no_ambient_authority::check_confined(
                 &c.path, &c.source, &network,
             ),
             overrides,
@@ -297,9 +297,9 @@ fn push(r: Result<(), CompileError>, source: &str, diags: &mut Vec<Diagnostic>) 
     }
 }
 
-/// Convert a `sui-lint` finding to a [`Diagnostic`], folding any `suggest`
+/// Convert a `sail-lint` finding to a [`Diagnostic`], folding any `suggest`
 /// hint into the message (same rendering the CLI/MCP used).
-fn finding_to_diag(f: &sui_lint::Finding) -> Diagnostic {
+fn finding_to_diag(f: &sail_lint::Finding) -> Diagnostic {
     let mut message = f.message.clone();
     if let Some(s) = &f.suggest {
         message.push_str("\n  suggest: ");
@@ -311,8 +311,8 @@ fn finding_to_diag(f: &sui_lint::Finding) -> Diagnostic {
         end_line: f.line,
         end_col: f.col,
         severity: match f.severity {
-            sui_lint::Severity::Error => DiagSeverity::Error,
-            sui_lint::Severity::Warn => DiagSeverity::Warning,
+            sail_lint::Severity::Error => DiagSeverity::Error,
+            sail_lint::Severity::Warn => DiagSeverity::Warning,
         },
         message,
         rule: Some(f.rule.to_string()),
@@ -493,7 +493,7 @@ mod gate_tests {
         let src = r#"<badge size="huge">x</badge>"#;
         let program = parse::parse(src).unwrap();
         let err = super::gate(&program, src, None, None, &[], None).unwrap_err();
-        assert_eq!(err.category.as_deref(), Some("sui-prop-value"), "{err:?}");
+        assert_eq!(err.category.as_deref(), Some("sail-prop-value"), "{err:?}");
     }
 
     #[test]

@@ -4,7 +4,7 @@
 //! the floor's undeclared-stylesheet check — derives from this resolved value;
 //! none re-walks the tree or re-parses the file. That is `inv-sui-one-policy-resolver`:
 //! the effective config for a source is computed in exactly one place, enforced
-//! by a uniqueness test (`sui-compiler/tests/config_single_reader.rs`).
+//! by a uniqueness test (`sail-compiler/tests/config_single_reader.rs`).
 //!
 //! Extraction is lenient (field-by-field off a parsed `Value`), matching the
 //! historical behavior: a wrong-typed or missing key is ignored, never a hard

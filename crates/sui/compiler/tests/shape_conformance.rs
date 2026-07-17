@@ -18,7 +18,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use sui_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
 
 fn repo_root() -> PathBuf {
     // crates/sui/compiler -> repo root is three levels up.

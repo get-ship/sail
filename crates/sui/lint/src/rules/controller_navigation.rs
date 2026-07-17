@@ -24,7 +24,7 @@ use oxc_ast_visit::Visit;
 use oxc_parser::Parser;
 use oxc_span::{SourceType, Span};
 
-pub const RULE_ID: &str = "sui-controller-navigation";
+pub const RULE_ID: &str = "sail-controller-navigation";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let allocator = Allocator::default();
@@ -112,7 +112,7 @@ mod tests {
         let src = "function go(p: string) { history.pushState({}, '', p) }";
         let f = check(Path::new("x.controller.ts"), src);
         assert_eq!(f.len(), 1);
-        assert_eq!(f[0].rule, "sui-controller-navigation");
+        assert_eq!(f[0].rule, "sail-controller-navigation");
     }
 
     #[test]

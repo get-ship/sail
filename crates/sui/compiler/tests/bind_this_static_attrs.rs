@@ -13,7 +13,7 @@
 //! at the floor — the same regression shape is what matters, and any
 //! static attribute pins it. The test now exercises `data-static`.)
 
-use sui_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
+use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
 
 // `part=` was RETIRED with shadow parts (light DOM has none — anatomy is
 // classes + attributes, and `class` is the published styling hook — and

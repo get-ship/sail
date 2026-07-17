@@ -1,5 +1,5 @@
 [package]
-name = "sui-compiler"
+name = "sail-compiler"
 version = "0.1.0"
 edition = "2024"
 license.workspace = true
@@ -8,19 +8,19 @@ build = "build.rs"
 description = "Ahead-of-time compiler for `.sui` source files. Emits ESM JS that hydrates against `@ship/sui-runtime` without re-parsing at load time."
 
 [lib]
-name = "sui_compiler"
+name = "sail_compiler"
 crate-type = ["lib", "cdylib"]
 path = "src/lib.rs"
 
 [build-dependencies]
-# Per-repo build-time identity. sui owns its copy (package `sui-build-info`,
+# Per-repo build-time identity. sui owns its copy (package `sail-build-info`,
 # referenced in code as `build_info`) so there is no absolute back-edge to the
 # Ship repo and no build-info package collision in Ship's lockfile.
-build-info = { package = "sui-build-info", path = "../../build-info" }
+build-info = { package = "sail-build-info", path = "../../build-info" }
 
 [[bin]]
-name = "sui-compiler"
-path = "src/bin/sui-compiler.rs"
+name = "sail-compiler"
+path = "src/bin/sail-compiler.rs"
 
 [features]
 default = []
@@ -54,14 +54,14 @@ optional = true
 # authoring-discipline rules. Compile-time hard wall: any finding
 # becomes a CompileError. Same rule definition consumed by crates/lsp
 # at edit-time.
-[dependencies.sui-lint]
+[dependencies.sail-lint]
 path = "../lint"
 
 [dependencies.build-info]
-# Per-repo build-time identity. sui owns its copy (package `sui-build-info`,
+# Per-repo build-time identity. sui owns its copy (package `sail-build-info`,
 # referenced in code as `build_info`) so there is no absolute back-edge to the
 # Ship repo and no build-info package collision in Ship's lockfile.
-package = "sui-build-info"
+package = "sail-build-info"
 path = "../../build-info"
 
 [dev-dependencies]

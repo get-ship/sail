@@ -1,4 +1,4 @@
-//! `sui-layout-primitive` — a `<style>` rule that hand-rolls a flex layout the
+//! `sail-layout-primitive` — a `<style>` rule that hand-rolls a flex layout the
 //! design system already provides as a primitive should use that primitive.
 //!
 //! The every-layout keywords exist (`<column>`, `<row>`,
@@ -21,7 +21,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-layout-primitive";
+pub const RULE_ID: &str = "sail-layout-primitive";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();

@@ -3,7 +3,7 @@
 //!     externalize the framework singletons, re-anchor `@ship/<pkg>` to
 //!     workspace `src/`, resolve `@sui-tag/<tag>` to the component source.
 //!   - `load`: compile `.sui` (and `.compiled.js`→sibling `.sui`) via
-//!     sui-compiler, returning JS.
+//!     sail-compiler, returning JS.
 
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -33,7 +33,7 @@ const SINGLETONS: [&str; 2] = ["@ship/sui-runtime", "@ship/sui-dom"];
 /// Virtual id for an unresolved `@sui-tag/<tag>` import — a shared empty module
 /// so the import is a harmless no-op. `\0` marks it virtual (Rollup/Rolldown
 /// convention: never read/written on disk).
-const SUI_TAG_NOOP: &str = "\0sui-tag-noop";
+const SAIL_TAG_NOOP: &str = "\0sui-tag-noop";
 
 /// Detect compile mode for a `.sui` file using the HTML custom-element tag-name
 /// rule: a valid custom element tag MUST contain a hyphen (HTML spec §4.13.3).
@@ -75,11 +75,11 @@ pub(crate) fn normalize(p: &Path) -> PathBuf {
 
 /// SUI compile plugin — `resolve_id` redirects `*.compiled.js` siblings to a
 /// virtual id and re-anchors `@ship/<pkg>` to workspace `src/`; `load` compiles
-/// the sibling `.sui` via sui-compiler. Reused by the app build (`app.rs`) so
+/// the sibling `.sui` via sail-compiler. Reused by the app build (`app.rs`) so
 /// the SPA graph compiles its own `.sui` in-process — one compile path, no
 /// on-disk `.compiled.js` pre-step.
 #[derive(Debug)]
-pub struct SuiPlugin {
+pub struct SailPlugin {
     pub repo_root: PathBuf,
     /// View builds opt in: each `.sui` compiled in this build emits
     /// `@sui-tag/<tag>` registration imports (the per-view resolver). Off for
@@ -119,8 +119,8 @@ impl ResolverIndex {
     }
 }
 
-impl SuiPlugin {
-    /// Compile a `.sui` to JS via `sui_compiler::compile` IN-PROCESS (#255):
+impl SailPlugin {
+    /// Compile a `.sui` to JS via `sail_compiler::compile` IN-PROCESS (#255):
     /// the compiler is the linked crate, not a spawned binary — no temp dir, no
     /// file roundtrip, no version drift, no flag that a stale binary can reject.
     fn compile(&self, sui: &Path) -> Result<String> {
@@ -136,7 +136,7 @@ impl SuiPlugin {
     }
 }
 
-impl Plugin for SuiPlugin {
+impl Plugin for SailPlugin {
     fn name(&self) -> Cow<'static, str> {
         "ship-sui".into()
     }
@@ -190,7 +190,7 @@ impl Plugin for SuiPlugin {
                     // Resolve to a shared empty module — a harmless no-op. NOT
                     // external, which would leave an unresolvable
                     // `@sui-tag/<tag>` specifier in the served view.
-                    HookResolveIdOutput::from_id(SUI_TAG_NOOP.to_string())
+                    HookResolveIdOutput::from_id(SAIL_TAG_NOOP.to_string())
                 }
             }));
         }
@@ -301,7 +301,7 @@ impl Plugin for SuiPlugin {
 
     async fn load(&self, _ctx: SharedLoadPluginContext, args: &HookLoadArgs<'_>) -> HookLoadReturn {
         let id = args.id;
-        if id == SUI_TAG_NOOP {
+        if id == SAIL_TAG_NOOP {
             // Empty no-op for an unresolved component tag. Tree-shaken away
             // if nothing keeps it.
             return Ok(Some(HookLoadOutput {
@@ -321,7 +321,7 @@ impl Plugin for SuiPlugin {
             let source = std::fs::read_to_string(sui).map_err(|e| {
                 anyhow!("read {} for its inline <controller>: {e}", sui.display())
             })?;
-            let body = sui_compiler::parse::preprocess::extract_controller_block(&source)
+            let body = sail_compiler::parse::preprocess::extract_controller_block(&source)
                 .1
                 .ok_or_else(|| {
                     anyhow!(

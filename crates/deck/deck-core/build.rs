@@ -123,7 +123,7 @@ fn main() {
         panic!(
             "build.rs: SUI bundle assets are missing or empty.\n{lines}\n\n\
              Framework bundles are baked to .deck/framework/ by:\n\n  \
-             cargo build -p sui-compiler   # the compiler the bundler uses\n  \
+             cargo build -p sail-compiler   # the compiler the bundler uses\n  \
              cargo run -p deck-cli -- build-assets   # framework bundles via in-process Rolldown\n\n\
              build.rs then copies them from .deck/framework/ into crates/deck/deck-core/assets/\n\
              (the include_str! staging path). On fresh worktrees, dispatch.sh bootstraps\n\

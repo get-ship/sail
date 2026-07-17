@@ -33,7 +33,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-surface-not-card";
+pub const RULE_ID: &str = "sail-surface-not-card";
 
 const SEVERITY: Severity = Severity::Warn;
 

@@ -55,7 +55,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-css-token";
+pub const RULE_ID: &str = "sail-css-token";
 
 /// Lint a `.sui` source. Walks every `<style>...</style>` block: each
 /// `var(--xyz)` reference must be in the theme registry or defined

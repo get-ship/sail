@@ -8,7 +8,7 @@
 //! surface, so it is a floor rule — the floor's core opinion is "one way to do
 //! CSS," and `style=` is a second way.
 //!
-//! Natural severity `Warn` (so the rule read directly by the LSP / `sui_lint`
+//! Natural severity `Warn` (so the rule read directly by the LSP / `sail_lint`
 //! shows the hint without hard-failing an unrelated tool). The compiler promotes
 //! it to a hard `Error` UNCONDITIONALLY via `check::lint_overrides::enforce_floor`
 //! — this is a floor rule (`check::policy::FLOOR_RULES`), enforced on every
@@ -21,7 +21,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-no-inline-style";
+pub const RULE_ID: &str = "sail-no-inline-style";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let bytes = source.as_bytes();

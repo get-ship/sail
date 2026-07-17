@@ -2,7 +2,7 @@
 //! The directive must fail compile with a message that names the replacement,
 //! so an author (or agent) migrating old sources gets steered, not stranded.
 
-use sui_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{compile, CompileMode, CompileOpts};
 
 fn opts() -> CompileOpts {
     CompileOpts {

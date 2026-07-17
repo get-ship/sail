@@ -29,8 +29,8 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::PathBuf;
 
-use sui_compiler::l1_manifest::{l1_by_kind, l1_entries, l1_kind, reskin_selectors, L1Kind};
-use sui_compiler::stdlib;
+use sail_compiler::l1_manifest::{l1_by_kind, l1_entries, l1_kind, reskin_selectors, L1Kind};
+use sail_compiler::stdlib;
 
 fn repo_root() -> PathBuf {
     // crates/sui/compiler -> crates/sui -> crates -> repo root.
@@ -223,7 +223,7 @@ fn l1_surface_count_is_documented() {
         stdlib.len(),
         42,
         "stdlib L1 count drifted from 42 — update the spec's count claim \
-         and run `cargo run -p sui-compiler -- skill` to refresh the agent surface"
+         and run `cargo run -p sail-compiler -- skill` to refresh the agent surface"
     );
     assert_eq!(
         reskins.len(),

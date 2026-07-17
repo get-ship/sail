@@ -630,9 +630,9 @@ fn compile_motion(
     })
 }
 
-// The property vocabulary lives in sui-lint — ONE list, two readers. The compiler
+// The property vocabulary lives in sail-lint — ONE list, two readers. The compiler
 // kept its own copy, and the copies drifted the first time a key was added.
-use sui_lint::rules::animate_token_only::{MOTION_PROPERTIES, MOTION_STAGGER_KEY, MOTION_TRIGGERS};
+use sail_lint::rules::animate_token_only::{MOTION_PROPERTIES, MOTION_STAGGER_KEY, MOTION_TRIGGERS};
 
 /// Parse the static object body of a `motion:trigger="…"` directive.
 /// Accepted shape: `{ <bare-identifier>: '<string-literal>' (, …) }`.

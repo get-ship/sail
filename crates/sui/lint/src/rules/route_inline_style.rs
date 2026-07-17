@@ -21,7 +21,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-route-inline-style";
+pub const RULE_ID: &str = "sail-route-inline-style";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     // Only route templates (`page.sui`) — component .sui files legitimately

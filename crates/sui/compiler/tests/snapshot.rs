@@ -5,7 +5,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use sui_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
+use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
 
 mod common;
 use common::strip_version_stamp;
@@ -117,7 +117,7 @@ fn bind_this_button_snapshot() {
 
 #[test]
 fn bind_this_button_direct_emits_hydrate_ref() {
-    use sui_compiler::compile;
+    use sail_compiler::compile;
     let path = fixtures_dir().join("bind-this-button.sui");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
@@ -193,7 +193,7 @@ fn for_static_body_omits_v_sentinel() {
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
-    let out = sui_compiler::compile(&source, opts).expect("compile");
+    let out = sail_compiler::compile(&source, opts).expect("compile");
     assert!(
         !out.js.contains("signal(0)"),
         "static row body must not allocate __v: \n{}",
@@ -234,7 +234,7 @@ fn for_body_referencing_index_refreshes_on_row_reuse() {
     // which makes partition_inline_updates fall back to the unguarded
     // join — so the inline stmt always runs on update, no per-field
     // diff needed.
-    use sui_compiler::compile;
+    use sail_compiler::compile;
     let src = r#"<ul>
   {#for (row, i) of [{id: 1}, {id: 2}] key={row.id}}
     <li>{i}</li>
@@ -318,7 +318,7 @@ fn for_static_text_inlines_text_content() {
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
-    let out = sui_compiler::compile(&source, opts).expect("compile");
+    let out = sail_compiler::compile(&source, opts).expect("compile");
     assert!(
         out.js.contains(".textContent = ($scope.row.label)"),
         "expected inlined textContent assignment, got:\n{}",
@@ -348,7 +348,7 @@ fn for_static_attr_inlines_set_attribute() {
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
-    let out = sui_compiler::compile(&source, opts).expect("compile");
+    let out = sail_compiler::compile(&source, opts).expect("compile");
     assert!(
         out.js.contains("setAttribute(\"id\""),
         "expected inlined setAttribute, got:\n{}",
@@ -378,7 +378,7 @@ fn for_dynamic_mixed_inlines_only_static() {
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
-    let out = sui_compiler::compile(&source, opts).expect("compile");
+    let out = sail_compiler::compile(&source, opts).expect("compile");
     assert!(
         out.js.contains(".textContent = ($scope.row.label)"),
         "expected inlined textContent for row.label, got:\n{}",
@@ -405,7 +405,7 @@ fn for_render_closure_emits_update_field() {
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
-    let out = sui_compiler::compile(&source, opts).expect("compile");
+    let out = sail_compiler::compile(&source, opts).expect("compile");
     assert!(
         out.js.contains("update:"),
         "expected `update:` field in render closure return, got:\n{}",
@@ -452,7 +452,7 @@ fn route_view_reads_route_from_ctx() {
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
-    let out = sui_compiler::compile(&source, opts).expect("compile");
+    let out = sail_compiler::compile(&source, opts).expect("compile");
     assert!(
         !out.js.contains("@ship/sui-runtime/route") && !out.js.contains("__routeFactory"),
         "routing is deck: no SUI route-factory import or fallback, got:\n{}",
@@ -479,7 +479,7 @@ fn routeless_view_omits_route_import() {
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
-    let out = sui_compiler::compile(&source, opts).expect("compile");
+    let out = sail_compiler::compile(&source, opts).expect("compile");
     assert!(
         !out.js.contains("@ship/sui-runtime/route"),
         "routeless view must not import @ship/sui-runtime/route, got:\n{}",
@@ -507,7 +507,7 @@ fn comment_nodes_not_emitted() {
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
-    let out = sui_compiler::compile(&source, opts).expect("compile");
+    let out = sail_compiler::compile(&source, opts).expect("compile");
     assert!(
         !out.js.contains("createComment(\"Developer comment"),
         "source HTML comment must not appear in compiled output:\n{}",
@@ -531,7 +531,7 @@ fn whitespace_text_nodes_dropped_between_elements() {
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
-    let out = sui_compiler::compile(&source, opts).expect("compile");
+    let out = sail_compiler::compile(&source, opts).expect("compile");
     // Inter-element indentation whitespace must be gone.
     assert!(
         !out.js.contains("createTextNode(\"\\n"),
@@ -550,7 +550,7 @@ fn whitespace_text_nodes_dropped_between_elements() {
 
 #[test]
 fn reflect_empty_slot_emits_bind_slot_empty_call() {
-    use sui_compiler::compile;
+    use sail_compiler::compile;
     let path = fixtures_dir().join("reflect-empty-slot.sui");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
@@ -589,7 +589,7 @@ fn reflect_empty_slot_in_conditional_threads_container() {
     // mounting the conditional branch throws `ReferenceError: container is not
     // defined` (the bug behind every `<sui-*>` with a conditional reflect-empty
     // slot, e.g. sui-input's `<slot name="trailing">`).
-    use sui_compiler::compile;
+    use sail_compiler::compile;
     let path = fixtures_dir().join("reflect-empty-slot-conditional.sui");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {

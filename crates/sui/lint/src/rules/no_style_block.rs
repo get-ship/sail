@@ -6,7 +6,7 @@
 //! first-class *language elements* rather than hand-authored CSS. A raw
 //! `<style>` block is the escape hatch the floor exists to remove.
 //!
-//! Severity is **Warn** by nature so the rule read directly (the LSP, `sui_lint`
+//! Severity is **Warn** by nature so the rule read directly (the LSP, `sail_lint`
 //! CLI) surfaces the hint without hard-failing an unrelated tool. The compiler,
 //! though, promotes it to a hard `Error` UNCONDITIONALLY: this is a floor rule
 //! (`check::policy::FLOOR_RULES`), and `check::lint_overrides::enforce_floor`
@@ -25,7 +25,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-no-style-block";
+pub const RULE_ID: &str = "sail-no-style-block";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let bytes = source.as_bytes();

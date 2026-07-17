@@ -4,7 +4,7 @@
 //! check fires after parse / lower and before emit, with diagnostics
 //! that carry a span.
 
-use sui_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{compile, CompileMode, CompileOpts};
 
 fn opts() -> CompileOpts {
     CompileOpts {
@@ -19,7 +19,7 @@ fn opts() -> CompileOpts {
     }
 }
 
-fn compile_view(src: &str) -> sui_compiler::CompileError {
+fn compile_view(src: &str) -> sail_compiler::CompileError {
     compile(src, opts()).expect_err("expected error")
 }
 

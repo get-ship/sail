@@ -6,11 +6,11 @@
 //! lives alongside the deck-conformance app; these lock the *shape* the
 //! TS proof depends on, and run in plain `cargo test` (no node toolchain).
 
-use sui_compiler::emit::synthetic::{
+use sail_compiler::emit::synthetic::{
     emit_synthetic, emit_synthetic_client_module, AppManifest, AuthoredController,
 };
-use sui_compiler::parse::parse;
-use sui_compiler::CompileMode;
+use sail_compiler::parse::parse;
+use sail_compiler::CompileMode;
 
 const ROUTE_MANIFEST: &str = r#"{
   "clients": {

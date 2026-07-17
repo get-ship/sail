@@ -37,7 +37,7 @@
 //! ## Part 2 — CROSS-PRODUCER parity (native vs wasm, #160)
 //!
 //! For each compiler fixture (`crates/sui/compiler/tests/fixtures/*.sui`),
-//! compile via the native `sui_compiler::compile` (in-process, x86_64) AND via
+//! compile via the native `sail_compiler::compile` (in-process, x86_64) AND via
 //! the wasm `compile` export (the artifact `just sui-wasm` builds into
 //! `packages/sui/compiler-wasm/pkg`, the exact surface the docs playground +
 //! browser LSP ship). Assert the emitted `.js` is byte-identical (modulo the
@@ -90,9 +90,9 @@
 //!
 //! Prerequisites (the gate skips with a loud message, never silently passes, if
 //! a tool is absent so a misconfigured CI cannot masquerade as green):
-//!   * `sui-compiler` built under `target/` (the bundler's Rolldown `load` hook
-//!     spawns it) — `cargo build -p sui-compiler`.
-//!   * `packages/sui/compiler-wasm/pkg/sui_compiler_bg.wasm` present —
+//!   * `sail-compiler` built under `target/` (the bundler's Rolldown `load` hook
+//!     spawns it) — `cargo build -p sail-compiler`.
+//!   * `packages/sui/compiler-wasm/pkg/sail_compiler_bg.wasm` present —
 //!     `just sui-wasm`.
 //!   * `node` on PATH (drives the wasm side).
 
@@ -113,7 +113,7 @@ use deck_bundler::rolldown_bundle::bundle_target;
 use deck_bundler::targets::BundleLayout;
 use deck_config::DeckConfig;
 use serde_json::json;
-use sui_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
 
 // ── Safety constants (the founder OOM'd this box twice; a runaway here is
 // unacceptable — see #256) ───────────────────────────────────────────────────
@@ -423,7 +423,7 @@ struct WasmRunnerOut {
 /// opts to `native_compile` — the wasm `WasmOpts` JSON-in shape mirrors them.
 fn wasm_compile_all(repo: &Path, fixtures: &[Fixture]) -> Vec<WasmRow> {
     let pkg = wasm_pkg_dir(repo);
-    if !pkg.join("sui_compiler_bg.wasm").exists() {
+    if !pkg.join("sail_compiler_bg.wasm").exists() {
         panic!(
             "G3 PREREQ MISSING: wasm artifact not built at {}. Run `just sui-wasm`.",
             pkg.display()

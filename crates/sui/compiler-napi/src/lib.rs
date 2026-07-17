@@ -9,7 +9,7 @@
 //! playground + LSP worker); this is the Node path the vitest harness loads
 //! once per worker.
 //!
-//! Why a separate crate, not a `napi` feature on `sui-compiler`: the
+//! Why a separate crate, not a `napi` feature on `sail-compiler`: the
 //! compiler crate must keep building for wasm + the CLI without dragging in
 //! the node-API host. This is a thin dependent, exactly like `wasm.rs` is a
 //! feature-gated surface.
@@ -22,7 +22,7 @@
 
 use napi_derive::napi;
 use serde::{Deserialize, Serialize};
-use sui_compiler::{compile as native_compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{compile as native_compile, CompileMode, CompileOpts, ComponentMeta};
 
 /// JS-facing opts — identical field set + camelCase mapping to
 /// `wasm.rs::WasmOpts`. The harness passes
@@ -121,7 +121,7 @@ fn compile_to_result(source: &str, opts_json: &str) -> Result<NapiResult, String
     let lint_overrides = parsed
         .source_path
         .as_deref()
-        .map(|p| sui_compiler::Policy::overrides_for(std::path::Path::new(p)))
+        .map(|p| sail_compiler::Policy::overrides_for(std::path::Path::new(p)))
         .unwrap_or_default();
     let opts = CompileOpts {
         route_params: parsed.route_params.clone(),
@@ -135,7 +135,7 @@ fn compile_to_result(source: &str, opts_json: &str) -> Result<NapiResult, String
     };
 
     let inline_controller =
-        sui_compiler::parse::preprocess::extract_controller_block(source).1;
+        sail_compiler::parse::preprocess::extract_controller_block(source).1;
     Ok(match native_compile(source, opts) {
         Ok(out) => NapiResult::Ok {
             js: out.js,
@@ -232,6 +232,6 @@ mod tests {
             compile_to_result(r#"<sui-button variant="primary">x</sui-button>"#, "{}").unwrap();
         let v = serde_json::to_value(&json).unwrap();
         assert_eq!(v["kind"], "err", "{v}");
-        assert_eq!(v["category"], "sui-prop-value");
+        assert_eq!(v["category"], "sail-prop-value");
     }
 }

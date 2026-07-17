@@ -5,13 +5,13 @@
 //! This is the deck-owned replacement for the retired `shell-app.ts`
 //! (`Bun.build`) — one bundler engine (Rolldown) for framework + views +
 //! projects. Driven by `deck build` (`crates/deck/deck-cli`). The project
-//! graph compiles its own `.sui` in-process via the shared `SuiPlugin`
+//! graph compiles its own `.sui` in-process via the shared `SailPlugin`
 //! (`rolldown_bundle.rs`) — the exact resolve/load hooks the view/component
 //! build uses — so no on-disk `.compiled.js` pre-step is needed.
 //! `AppPlugin` runs alongside it to externalize the framework singletons
 //! (which resolve to `/_deck/*` via the document's importmap); it runs FIRST so
 //! importmap specifiers (incl. `@ship/sui-runtime/*` subpaths) stay external
-//! rather than being re-anchored to source by `SuiPlugin`.
+//! rather than being re-anchored to source by `SailPlugin`.
 //!
 //! The dev's authored source is THREE files only: `package.json` (the
 //! manifest: name → page <title>), `routes/` (file-routed chrome), and
@@ -378,8 +378,8 @@ pub struct AppBuild {
 /// FRAMEWORK_ASSETS. The bundler generates the importmap at build time
 /// (from the same FRAMEWORK_ASSETS list); the AppPlugin runs FIRST so
 /// the importmap specifiers win as externals rather than being re-anchored
-/// to source by `SuiPlugin`. `.sui` compilation is handled by the sibling
-/// `SuiPlugin` in the same bundle pass.
+/// to source by `SailPlugin`. `.sui` compilation is handled by the sibling
+/// `SailPlugin` in the same bundle pass.
 #[derive(Debug)]
 struct AppPlugin {
     externals: HashSet<String>,
@@ -477,7 +477,7 @@ pub(crate) fn discover_deck_frameworks(
     let pkg: serde_json::Value = serde_json::from_str(&raw)
         .with_context(|| format!("parse {}", pkg_path.display()))?;
     // Build the workspace name → root map once. The same map the
-    // SuiPlugin uses to resolve `@ship/<name>` to workspace source;
+    // SailPlugin uses to resolve `@ship/<name>` to workspace source;
     // we reuse it so the discovery walker is anchored against the
     // same source of truth. A bare `@ship/sdk-client` declared by a
     // dep that resolves via node_modules (not a workspace member)
@@ -781,7 +781,7 @@ pub async fn bundle_app_with_base(
     // host-owned `entry.gen.ts` (client wiring + mountRouter call).
     // AppPlugin runs FIRST so importmap specifiers (incl. `@ship/sui-runtime/*`
     // subpaths and every host-registered client alias) win as externals;
-    // SuiPlugin then compiles `.sui` siblings and re-anchors the remaining
+    // SailPlugin then compiles `.sui` siblings and re-anchors the remaining
     // `@ship/<pkg>` (e.g. sui-charts, pipelines) to workspace source so the
     // app graph compiles them in-process.
     let routes_gen = project.join(entry_module);
@@ -789,7 +789,7 @@ pub async fn bundle_app_with_base(
         bail!("app build: expected generated entry at {}", routes_gen.display());
     }
     // CSS ships as a hashed asset via Rolldown's native `ModuleType::Asset`
-    // path (`rolldown_plugin_asset_module`). The `SuiPlugin::load` hook only
+    // path (`rolldown_plugin_asset_module`). The `SailPlugin::load` hook only
     // handles `.sui` / `.compiled.js` and returns `Ok(None)` for everything
     // else, so the built-in `AssetModulePlugin` runs and emits a hashed
     // `assets/<name>-<hash>.css` file. The chunk references it via a
@@ -819,8 +819,8 @@ pub async fn bundle_app_with_base(
         ..Default::default()
     };
     let app_plugin = AppPlugin { externals };
-    let resolver = crate::sui_plugin::component_index(repo_root, packs);
-    let sui_plugin = crate::sui_plugin::SuiPlugin {
+    let resolver = crate::sail_plugin::component_index(repo_root, packs);
+    let sail_plugin = crate::sail_plugin::SailPlugin {
         repo_root: repo_root.to_path_buf(),
         emit_component_imports: true,
         component_index: resolver.index,
@@ -831,7 +831,7 @@ pub async fn bundle_app_with_base(
         .with_options(options)
         .with_plugins(vec![
             Arc::new(app_plugin),
-            Arc::new(sui_plugin),
+            Arc::new(sail_plugin),
             Arc::new(crate::ship_asset_css::ShipAssetCssPlugin),
         ])
         .build()
@@ -864,7 +864,7 @@ pub async fn bundle_app_with_base(
     // (content-hashed; default `asset_filenames = "assets/[name]-[hash][extname]"`).
     // We link them directly from `index.html` — Vite-style: the SPA entry is JS,
     // but global / token / shared CSS is a stylesheet the browser fetches in
-    // parallel, before the JS runs. The SuiPlugin's `load` hook returns `Ok(None)`
+    // parallel, before the JS runs. The SailPlugin's `load` hook returns `Ok(None)`
     // for `.css`, so the builtin `AssetModulePlugin` handles it (it runs AFTER
     // user plugins via `PluginHookMeta.order = Post`).
     let mut css_names: Vec<String> = std::fs::read_dir(&assets_dir)?
@@ -1378,7 +1378,7 @@ export default controller(() => ({}))\n\
         // Minimal workspace: the app project + the `@ship/tokens` package
         // that exports `./tokens.css`. `component_package_roots` walks the
         // workspace to build the `@ship/<name>` → source-dir map that
-        // `SuiPlugin::resolve_id` uses to re-anchor the bare specifier.
+        // `SailPlugin::resolve_id` uses to re-anchor the bare specifier.
         // Without this map the bundler cannot find the CSS, and the gate
         write(
             &r.join("package.json"),

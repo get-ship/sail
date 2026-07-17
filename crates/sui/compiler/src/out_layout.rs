@@ -1,4 +1,4 @@
-//! Canonical output-tree layout for sui-compiler emit artifacts.
+//! Canonical output-tree layout for sail-compiler emit artifacts.
 //!
 //! Build artifacts (`.compiled.js`, `.custom-elements.json`, `.schema.json`,
 //! `.sui.meta.json`, `.ssr.html`) land under the mirror tree at

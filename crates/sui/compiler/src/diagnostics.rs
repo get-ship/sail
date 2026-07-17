@@ -107,7 +107,7 @@ pub enum DiagSeverity {
 
 /// One diagnostic with a resolved **1-based** line/col range. This is the
 /// shared currency of [`crate::check_all`] — it merges compiler check-pass
-/// errors ([`CompileError`]) and `sui-lint` findings into one stream so an
+/// errors ([`CompileError`]) and `sail-lint` findings into one stream so an
 /// LSP server or MCP tool reports every issue at once, not just the first.
 ///
 /// Positions are 1-based (matching the rest of the compiler + CLI output).

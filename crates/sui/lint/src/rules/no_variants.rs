@@ -15,7 +15,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-no-variants";
+pub const RULE_ID: &str = "sail-no-variants";
 
 const TAG: &str = "variants";
 

@@ -1,4 +1,4 @@
-use sui_compiler::{CompileOpts, compile};
+use sail_compiler::{CompileOpts, compile};
 use deck_host::resolver::ResolvedView;
 
 use crate::{DaemonMode, DeckResponse};

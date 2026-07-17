@@ -300,7 +300,7 @@ fn sui_workspace_root() -> Option<&'static Path> {
 /// npm package name → absolute package root, for resolving `@ship/<name>`
 /// component imports to workspace source. This is the bun/npm workspace package
 /// map — `@ship/<name>` already resolves to its package dir via `workspaces` —
-/// surfaced for the bundler's resolver (`SuiPlugin::component_roots`). It
+/// surfaced for the bundler's resolver (`SailPlugin::component_roots`). It
 /// REPLACES the hand-maintained `componentSourceRoots` search order: in dev the
 /// map is the source of truth; in prod, standard package resolution
 /// (node_modules) applies and this map is simply empty.
@@ -343,7 +343,7 @@ pub fn component_package_roots(repo_root: &Path) -> Arc<HashMap<String, PathBuf>
     // the APP subdir (`ship-apps/apps/helm`) — not the workspace root — so the
     // project-only walk above sees only the app's own declared deps and MISSES
     // its SIBLING workspace packs (`@ship/agents`, …). Without those in the map,
-    // `SuiPlugin` can't re-anchor a bare `import "@ship/agents"` to source, it
+    // `SailPlugin` can't re-anchor a bare `import "@ship/agents"` to source, it
     // falls through to a bare external the importmap never covers, and the app
     // renders blank. Resolve the enclosing workspace root and union its packages
     // (skip when it IS the project root — the sui monorepo, where they coincide).

@@ -1,7 +1,7 @@
 //! Rolldown bundler — drives Rolldown with the SUI plugin to bundle each target.
 //! Output goes to `assets_dir_for` (sui-out/dist) — no source-tree writes.
 //!
-//! The SUI resolve/load plugin lives in `sui_plugin.rs`; this module owns the
+//! The SUI resolve/load plugin lives in `sail_plugin.rs`; this module owns the
 //! target-to-bundle driver and its integration tests.
 
 use std::path::{Path, PathBuf};
@@ -13,7 +13,7 @@ use rolldown_common::{ManualCodeSplittingOptions, PreserveEntrySignatures};
 
 use super::proto::BundleManifest;
 use super::targets::{BundleLayout, BundleTarget, TargetEntry};
-use crate::sui_plugin::{ResolverIndex, SuiPlugin, component_index};
+use crate::sail_plugin::{ResolverIndex, SailPlugin, component_index};
 
 /// Build one target with Rolldown. Output written under `assets_dir_for`;
 /// returns the manifest. `staging` holds generated virtual-aggregate entries.
@@ -91,7 +91,7 @@ pub async fn bundle_target(
     } else {
         ResolverIndex::empty()
     };
-    let plugin = SuiPlugin {
+    let plugin = SailPlugin {
         repo_root: layout.repo_root.clone(),
         emit_component_imports,
         component_index: resolver.index,
@@ -347,7 +347,7 @@ fn is_asset_extension(path: &Path) -> bool {
 }
 
 /// Supports relative paths (`.`, `..`, absolute) and the
-/// `@ship/<name>` workspace map (the `SuiPlugin` resolves bare
+/// `@ship/<name>` workspace map (the `SailPlugin` resolves bare
 /// specifiers through this map). Anything else is left to the caller.
 fn resolve_import(importer: &Path, spec: &str) -> Option<PathBuf> {
     use std::path::PathBuf;
@@ -356,7 +356,7 @@ fn resolve_import(importer: &Path, spec: &str) -> Option<PathBuf> {
     } else if spec.starts_with('/') {
         PathBuf::from(spec)
     } else if let Some(rest) = spec.strip_prefix("@ship/") {
-        // The SuiPlugin re-anchors `@ship/<name>` to the workspace
+        // The SailPlugin re-anchors `@ship/<name>` to the workspace
         // package's `src/index.ts`. The detector uses the same map
         // (via `discover_workspace_packages`) so the warning names
         // the exact file the plugin resolved.
@@ -391,7 +391,7 @@ fn resolve_import(importer: &Path, spec: &str) -> Option<PathBuf> {
 /// importer looking for a `package.json` that declares a `workspaces`
 /// field (the repo root), then asking the catalog for the package
 /// map (`@ship/<name>` → dir) and reading `src/index.ts`. This is the
-/// same map `SuiPlugin::resolve_id` uses to re-anchor bare specifiers,
+/// same map `SailPlugin::resolve_id` uses to re-anchor bare specifiers,
 /// so the drop detector stays in lockstep with the live resolver.
 fn resolve_ship_package(importer: &Path, name: &str) -> Option<PathBuf> {
     let repo_root = find_workspace_root(importer)?;
@@ -411,7 +411,7 @@ fn resolve_ship_package(importer: &Path, name: &str) -> Option<PathBuf> {
 
 /// Walk up from `start` looking for a directory whose `package.json`
 /// declares a `workspaces` field. That directory is the workspace root
-/// `SuiPlugin` reads via `component_package_roots`. Returns the first
+/// `SailPlugin` reads via `component_package_roots`. Returns the first
 /// such ancestor; the test fixture's own package.json sets
 /// `workspaces: [...]` so this resolves to the temp root.
 fn find_workspace_root(start: &Path) -> Option<PathBuf> {
@@ -1100,7 +1100,7 @@ mod tests {
         );
     }
 
-    /// Direct unit test for `SuiPlugin::load`'s read-error
+    /// Direct unit test for `SailPlugin::load`'s read-error
     /// path. A failed read must fail-loud (the "no silent
     /// errors" rule) — silently emitting an empty `code`
     /// would surface downstream as a confusing
@@ -1117,13 +1117,13 @@ mod tests {
     /// the read-error propagation specifically.
     #[tokio::test(flavor = "multi_thread")]
     async fn load_hook_propagates_read_error_for_missing_module() {
-        use crate::sui_plugin::SuiPlugin;
+        use crate::sail_plugin::SailPlugin;
         use rolldown::plugin::{
             HookLoadArgs, LoadPluginContext, Plugin, PluginContext,
             SharedLoadPluginContext,
         };
         use rolldown_common::ModuleIdx;
-        // The SuiPlugin's `load` hook doesn't read the
+        // The SailPlugin's `load` hook doesn't read the
         // context (it only uses `args.id`), so a
         // `PluginContext::new_napi_context()` is a valid
         // stand-in for the test — it's the only
@@ -1133,7 +1133,7 @@ mod tests {
                 PluginContext::new_napi_context(),
                 ModuleIdx::new(0),
             ));
-        let plugin = SuiPlugin {
+        let plugin = SailPlugin {
             repo_root: PathBuf::from("/nonexistent"),
             emit_component_imports: false,
             component_index: Default::default(),

@@ -7,7 +7,7 @@
 //! `<style>`), and author `:host` (element mode keys the skin on `.sui-<name>`
 //! directly; `:host` is a shadow idiom and light DOM has no host to select).
 
-use sui_compiler::compile_element;
+use sail_compiler::compile_element;
 
 const SPINNER: &str = r#"
 <scope>
@@ -95,7 +95,7 @@ fn element_rejects_the_sui_component_namespace() {
 #[test]
 fn element_skins_css_matches_registry() {
     // The materialized framework stylesheet half must equal the registry's
-    // live derivation — regenerate with `cargo run -p sui-compiler --
+    // live derivation — regenerate with `cargo run -p sail-compiler --
     // framework-css` when this fails (the stdlib registry is the SSOT).
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -111,14 +111,14 @@ fn element_skins_css_matches_registry() {
         .expect("element-skins.css is wrapped in @layer sui");
     assert_eq!(
         inner,
-        sui_compiler::stdlib::skins_css(),
-        "element-skins.css is stale — run: cargo run -p sui-compiler -- framework-css"
+        sail_compiler::stdlib::skins_css(),
+        "element-skins.css is stale — run: cargo run -p sail-compiler -- framework-css"
     );
 }
 
 #[test]
 fn ticker_loops_via_two_slots_and_pauses_under_reduced_motion() {
-    let src = sui_compiler::stdlib::sources()
+    let src = sail_compiler::stdlib::sources()
         .iter()
         .find(|(tag, _)| *tag == "ticker")
         .map(|(_, src)| *src)
@@ -171,7 +171,7 @@ fn stdlib_elements_can_self_nest() {
     // the first </card>. Regression — after card was promoted to L1 the old
     // `find("</card>")` paired the inner close with the outer card and broke
     // the /components showcase (a card of cards is an essential pattern).
-    use sui_compiler::{compile, CompileMode, CompileOpts};
+    use sail_compiler::{compile, CompileMode, CompileOpts};
     let opts = CompileOpts {
         route_params: None,
         setup_url: None,

@@ -18,7 +18,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use sui_compiler::{
+use sail_compiler::{
     check_all, compile, CompileOpts, DiagSeverity, LintOverride, OverrideSeverity,
 };
 
@@ -48,7 +48,7 @@ fn style_block_refuses_with_empty_overrides() {
     );
     // The analysis surface (LSP/agent) flags it as an Error too.
     assert!(
-        reports_floor_error(src, "sui-no-style-block", &[]),
+        reports_floor_error(src, "sail-no-style-block", &[]),
         "sui-no-style-block must be an Error with empty overrides"
     );
 }
@@ -61,7 +61,7 @@ fn inline_style_refuses_with_empty_overrides() {
         "inline style= must refuse the build with no host overrides"
     );
     assert!(
-        reports_floor_error(src, "sui-no-inline-style", &[]),
+        reports_floor_error(src, "sail-no-inline-style", &[]),
         "sui-no-inline-style must be an Error with empty overrides"
     );
 }
@@ -74,7 +74,7 @@ fn class_refuses_with_empty_overrides() {
         "class= must refuse the build with no host overrides"
     );
     assert!(
-        reports_floor_error(src, "sui-no-class", &[]),
+        reports_floor_error(src, "sail-no-class", &[]),
         "sui-no-class must be an Error with empty overrides"
     );
 }
@@ -96,9 +96,9 @@ fn natural_warn_floor_rules_gate_without_promotion() {
 /// don't need an on-disk pack. `sui-no-undeclared-stylesheet` is covered
 /// separately (it needs a `sui.config.json` + a companion `.css`).
 const FLOOR_CASES: &[(&str, &str)] = &[
-    ("sui-no-style-block", "<p>hi</p><style>x</style>"),
-    ("sui-no-inline-style", r#"<p style="color:red">hi</p>"#),
-    ("sui-no-class", r#"<p class="x">hi</p>"#),
+    ("sail-no-style-block", "<p>hi</p><style>x</style>"),
+    ("sail-no-inline-style", r#"<p style="color:red">hi</p>"#),
+    ("sail-no-class", r#"<p class="x">hi</p>"#),
 ];
 
 #[test]
@@ -131,22 +131,22 @@ fn non_floor_rules_remain_softenable() {
     let token_src = r#"<badge size="huge">x</badge>"#;
     // With no override, it errors.
     assert!(
-        reports_floor_error(token_src, "sui-prop-value", &[]),
+        reports_floor_error(token_src, "sail-prop-value", &[]),
         "sanity: sui-prop-value fires with no override"
     );
     // With an Off override, the finding is dropped.
     let off = [LintOverride {
-        rule: "sui-prop-value".to_string(),
+        rule: "sail-prop-value".to_string(),
         severity: OverrideSeverity::Off,
     }];
     let with_off = check_all(token_src, None, &off, None);
     assert!(
-        !with_off.iter().any(|d| d.rule.as_deref() == Some("sui-prop-value")),
+        !with_off.iter().any(|d| d.rule.as_deref() == Some("sail-prop-value")),
         "a NON-floor rule (sui-prop-value) must be softenable via override: {with_off:?}"
     );
     // But turning off a FLOOR rule the same way changes nothing (proven above).
     let floor_off = CompileOpts::default()
-        .with_lint_override("sui-no-class", OverrideSeverity::Off);
+        .with_lint_override("sail-no-class", OverrideSeverity::Off);
     assert!(compile(r#"<p class="x">hi</p>"#, floor_off).is_err());
 }
 
@@ -176,12 +176,12 @@ fn undeclared_stylesheet_cannot_be_softened() {
     );
     let src = fs::read_to_string(&sui).unwrap();
     let off = [LintOverride {
-        rule: "sui-no-undeclared-stylesheet".to_string(),
+        rule: "sail-no-undeclared-stylesheet".to_string(),
         severity: OverrideSeverity::Off,
     }];
     let diags = check_all(&src, Some(&sui), &off, None);
     assert!(
-        diags.iter().any(|d| d.rule.as_deref() == Some("sui-no-undeclared-stylesheet")
+        diags.iter().any(|d| d.rule.as_deref() == Some("sail-no-undeclared-stylesheet")
             && d.severity == DiagSeverity::Error),
         "an Off override must not soften the undeclared-stylesheet floor rule: {diags:?}"
     );

@@ -30,7 +30,7 @@ use oxc_ast_visit::Visit;
 use oxc_parser::Parser;
 use oxc_span::{SourceType, Span};
 
-pub const RULE_ID: &str = "sui-controller-no-load-state";
+pub const RULE_ID: &str = "sail-controller-no-load-state";
 
 const KIND_LITERALS: &[&str] = &["loading", "error", "ok"];
 

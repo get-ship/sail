@@ -16,7 +16,7 @@ use anyhow::{anyhow, Result};
 use rolldown::{BundlerBuilder, BundlerOptions, InputItem, OutputFormat};
 use rolldown_common::ManualCodeSplittingOptions;
 
-use crate::sui_plugin::{SuiPlugin, component_index};
+use crate::sail_plugin::{SailPlugin, component_index};
 use crate::targets::{BundleLayout, BundleTarget, TargetEntry};
 
 /// Bundle every view in `views` together so a component shared by ≥2 views
@@ -89,7 +89,7 @@ pub async fn bundle_views(
         &layout.repo_root,
         &layout.cfg.packs,
     );
-    let plugin = SuiPlugin {
+    let plugin = SailPlugin {
         repo_root: layout.repo_root.clone(),
         emit_component_imports: true,
         component_index: resolver.index,

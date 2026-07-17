@@ -24,7 +24,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-space-literal";
+pub const RULE_ID: &str = "sail-space-literal";
 
 const SPACING_PROPERTIES: &[&str] = &[
     "padding",

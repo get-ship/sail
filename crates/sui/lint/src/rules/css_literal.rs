@@ -33,7 +33,7 @@
 //! - Typography literals (`font-size: 13px`, etc.).
 //! - linear-gradient(...) color stops.
 //!
-//! Severity is `Error`: `sui-compiler::check::css_token` promotes
+//! Severity is `Error`: `sail-compiler::check::css_token` promotes
 //! every error-severity finding to a build failure. The rule was
 //! introduced alongside a one-shot migration that cleared the prior
 //! drift (80 violations across 14 primitives — `var(--card, #fff)`
@@ -46,7 +46,7 @@ use std::sync::OnceLock;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-css-literal";
+pub const RULE_ID: &str = "sail-css-literal";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();

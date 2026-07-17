@@ -7,7 +7,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use sui_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{compile, CompileMode, CompileOpts};
 
 fn site_routes() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../apps/sui-site/routes")
@@ -150,7 +150,7 @@ fn every_sui_snippet_on_the_site_compiles() {
             // rightly refuses props in a tagless route/page compile.
             let component_meta = snip
                 .contains("<scope>")
-                .then(|| sui_compiler::ComponentMeta { name: "snippet-demo".into() });
+                .then(|| sail_compiler::ComponentMeta { name: "snippet-demo".into() });
             let opts =
                 CompileOpts { mode: CompileMode::Component, component_meta, ..Default::default() };
             if let Err(e) = compile(&snip, opts) {

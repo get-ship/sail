@@ -25,7 +25,7 @@ use oxc_ast_visit::Visit;
 use oxc_parser::Parser;
 use oxc_span::{SourceType, Span};
 
-pub const RULE_ID: &str = "sui-controller-context";
+pub const RULE_ID: &str = "sail-controller-context";
 
 const BANNED: &[&str] = &["__shipProjectId", "__shipSessionId", "__shipMode"];
 
@@ -117,7 +117,7 @@ mod tests {
     fn flags_window_ship_project_id() {
         let f = check(Path::new("x.controller.ts"), "const p = window.__shipProjectId");
         assert_eq!(f.len(), 1);
-        assert_eq!(f[0].rule, "sui-controller-context");
+        assert_eq!(f[0].rule, "sail-controller-context");
     }
 
     #[test]

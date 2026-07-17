@@ -234,8 +234,8 @@ async fn serve_sse_inner(
     // strip it before the template-only parser sees it (the view is only
     // parsed here to validate it exists / is well-formed; see below).
     let (stripped, _inline_controller) =
-        sui_compiler::parse::preprocess::extract_controller_block(&source);
-    if let Err(e) = sui_compiler::parse::parse(&stripped) {
+        sail_compiler::parse::preprocess::extract_controller_block(&source);
+    if let Err(e) = sail_compiler::parse::parse(&stripped) {
         let msg = e.render(&stripped);
         tracing::warn!(view = %name, error = %msg, "data_port: parse error");
         return sse_error(StatusCode::INTERNAL_SERVER_ERROR, "view parse error");

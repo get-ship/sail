@@ -1,6 +1,6 @@
 #[test]
 fn sui_button_with_motion_compiles() {
-    use sui_compiler::{compile, CompileMode, CompileOpts};
+    use sail_compiler::{compile, CompileMode, CompileOpts};
     // sui-button dissolved to the bare L1 <button> — motion is a LANGUAGE
     // feature on any element, so this integration check uses an inline
     // component with a motion directive (the old file-read target is gone).

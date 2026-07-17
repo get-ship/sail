@@ -27,7 +27,7 @@
 //! selector the rest of the suite uses). The assertions are about what the
 //! compiler emits, not about class=.
 
-use sui_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
+use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
 
 fn js(src: &str) -> String {
     compile(src, CompileOpts { mode: CompileMode::Component, ..Default::default() })

@@ -1,4 +1,4 @@
-//! `sui-layout` — compile-time box-tree computation for `.sui` templates.
+//! `sail-layout` — compile-time box-tree computation for `.sui` templates.
 //!
 //! SPIKE for **Job H — taffy: the compiler computes the box tree, with no
 //! browser**. The thesis is that the closed vocabulary pays for static layout:
@@ -13,15 +13,15 @@
 //! ```text
 //!   .sui source
 //!        │
-//!        ├── sui_compiler::parse::preprocess::preprocess  (sx→class, layout→div+class)
+//!        ├── sail_compiler::parse::preprocess::preprocess  (sx→class, layout→div+class)
 //!        ▼
-//!   lowered HTML ──► sui_layout::html::parse  ──►  Vec<Element>
+//!   lowered HTML ──► sail_layout::html::parse  ──►  Vec<Element>
 //!        │
-//!        ├── sui_layout::style::resolve  (class → taffy Style)
+//!        ├── sail_layout::style::resolve  (class → taffy Style)
 //!        ▼
 //!   taffy::TaffyTree ──► compute_layout at viewport
 //!        │
-//!        ├── sui_layout::diagnostics::scan
+//!        ├── sail_layout::diagnostics::scan
 //!        ▼
 //!   Vec<Diagnostic>
 //! ```
@@ -53,7 +53,7 @@ pub use taffy;
 /// diagnostics. The single entry API: every other surface lowers into this.
 pub fn check(source: &str, viewport: (f32, f32)) -> anyhow::Result<ScanResult> {
     // 1. Lower sx + layout keywords to atomic CSS the same way the compiler
-    let preprocessed = sui_compiler::parse::preprocess::preprocess(source);
+    let preprocessed = sail_compiler::parse::preprocess::preprocess(source);
 
     // 2. Parse the lowered HTML (controller-style block already extracted).
     let elements = parse_source(&preprocessed);

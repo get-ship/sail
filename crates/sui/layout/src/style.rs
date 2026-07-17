@@ -1,20 +1,20 @@
 //! Resolve a parsed element's `class=` + `style:` to a `taffy::Style`.
 //!
 //! The closed vocabulary is the *whole reason this works without a browser*.
-//! We read two vocabularies — both owned by `sui-lint` so the spike cannot
+//! We read two vocabularies — both owned by `sail-lint` so the spike cannot
 //! drift from the language:
 //!
-//! - `sui-lint::rules::layout` — the L1 layout primitives (`row`, `column`,
+//! - `sail-lint::rules::layout` — the L1 layout primitives (`row`, `column`,
 //!   `grid`, `stack`, `center`). Their classes encode `display`,
 //!   `flex-direction`, `flex-wrap`, `align-items`, `justify-content`, `gap`,
 //!   and grid tracks.
-//! - `sui-lint::scales` — value resolution for scale-valued atoms
+//! - `sail-lint::scales` — value resolution for scale-valued atoms
 //!   (`p-4` → `16px`, `max-w-panel-max-w-md` → `480px`).
 
 use crate::html::Element;
 use std::collections::HashMap;
-use sui_lint::rules::layout;
-use sui_lint::scales;
+use sail_lint::rules::layout;
+use sail_lint::scales;
 use taffy::prelude::*;
 use taffy::style::Overflow;
 #[derive(Debug, Default)]

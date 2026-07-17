@@ -12,7 +12,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-legacy-layout";
+pub const RULE_ID: &str = "sail-legacy-layout";
 
 /// Legacy element → the keyword that replaces it, with a note on any prop shift.
 const MAP: &[(&str, &str, &str)] = &[

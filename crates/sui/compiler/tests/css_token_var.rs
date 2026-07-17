@@ -36,7 +36,7 @@
 //!
 //! Confined to `crates/sui/compiler/tests/**` per the job spec.
 
-use sui_compiler::{
+use sail_compiler::{
     analyze, compile, CompileMode, CompileOpts, ComponentMeta, DiagSeverity, LintOverride,
     OverrideSeverity,
 };
@@ -62,7 +62,7 @@ fn css_token_findings(source: &str, overrides: &[LintOverride]) -> Vec<(DiagSeve
     analyze(source, None, overrides)
         .diagnostics
         .into_iter()
-        .filter(|d| d.rule.as_deref() == Some("sui-css-token"))
+        .filter(|d| d.rule.as_deref() == Some("sail-css-token"))
         .map(|d| (d.severity, d.message))
         .collect()
 }
@@ -112,7 +112,7 @@ fn font_sans_convention_token_is_silent() {
     // convention used in `var(--font-sans, system-ui, sans-serif)`
     // fallback chains across every theme-preview block in
     // `packages/sui/tokens/src/themes.css`. It is listed in
-    // `sui_lint::tokens::CONVENTION_TOKENS` so the lint recognizes it
+    // `sail_lint::tokens::CONVENTION_TOKENS` so the lint recognizes it
     // without an Error.
     let src = r#"<scope>
   props: {
@@ -208,7 +208,7 @@ fn truly_unknown_token_warn_override_downgrades_to_warning() {
 </style>
 <div>{title()}</div>"#;
     let overrides = vec![LintOverride {
-        rule: "sui-css-token".into(),
+        rule: "sail-css-token".into(),
         severity: OverrideSeverity::Warn,
     }];
     let findings = css_token_findings(src, &overrides);
@@ -230,7 +230,7 @@ fn truly_unknown_token_warn_override_downgrades_to_warning() {
 fn truly_unknown_token_off_override_silences() {
     // The off switch: the build host passes `OverrideSeverity::Off` for
     // `sui-css-token`. The build proceeds; the finding is dropped at
-    // the build gate. (The lint still emits it; `sui_lint::lint_path`
+    // the build gate. (The lint still emits it; `sail_lint::lint_path`
     // consumers like the LSP still see the raw Error finding — the
     // override only affects this build's gate.)
     let src = r#"<scope>
@@ -243,7 +243,7 @@ fn truly_unknown_token_off_override_silences() {
 </style>
 <div>{title()}</div>"#;
     let overrides = vec![LintOverride {
-        rule: "sui-css-token".into(),
+        rule: "sail-css-token".into(),
         severity: OverrideSeverity::Off,
     }];
     // An Off override drops the css-token finding from the gate stream. (The

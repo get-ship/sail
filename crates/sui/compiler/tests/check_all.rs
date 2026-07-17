@@ -5,7 +5,7 @@
 //! first error (a failed build needs one reason); `check_all` collects every
 //! issue so an author/agent fixes them in one pass.
 
-use sui_compiler::{check_all, compile, CompileMode, CompileOpts, DiagSeverity, Policy};
+use sail_compiler::{check_all, compile, CompileMode, CompileOpts, DiagSeverity, Policy};
 
 fn opts() -> CompileOpts {
     CompileOpts {
@@ -75,7 +75,7 @@ fn diagnostics_are_sorted_by_position() {
 // the pack root, a `.sui` source under `src/`, an undeclared `.css` next
 // to it), then `check_all()` with the overrides the CLI applies. That is
 // the same call shape the daemon and CLI take — `compile()` invokes
-// `check::gate` → `check::collect` → `sui_lint::lint_sui_template_source`
+// `check::gate` → `check::collect` → `sail_lint::lint_sui_template_source`
 // → `no_undeclared_stylesheet::check`; `check_all` skips the structural
 // passes and goes straight to `collect`, which is the path that matters
 // for the lint rules.
@@ -130,7 +130,7 @@ fn undeclared_stylesheet_fails_real_compile_path() {
         .iter()
         .filter(|d| {
             d.severity == DiagSeverity::Error
-                && d.rule.as_deref() == Some("sui-no-undeclared-stylesheet")
+                && d.rule.as_deref() == Some("sail-no-undeclared-stylesheet")
         })
         .collect();
     assert_eq!(
@@ -160,7 +160,7 @@ fn declared_stylesheet_passes_real_compile_path() {
         .iter()
         .filter(|d| {
             d.severity == DiagSeverity::Error
-                && d.rule.as_deref() == Some("sui-no-undeclared-stylesheet")
+                && d.rule.as_deref() == Some("sail-no-undeclared-stylesheet")
         })
         .collect();
     assert!(
@@ -186,7 +186,7 @@ fn empty_stylesheet_array_still_permits_zero() {
         .iter()
         .filter(|d| {
             d.severity == DiagSeverity::Error
-                && d.rule.as_deref() == Some("sui-no-undeclared-stylesheet")
+                && d.rule.as_deref() == Some("sail-no-undeclared-stylesheet")
         })
         .collect();
     assert_eq!(
@@ -222,7 +222,7 @@ fn no_class_fails_real_compile_path() {
         .iter()
         .filter(|d| {
             d.severity == DiagSeverity::Error
-                && d.rule.as_deref() == Some("sui-no-class")
+                && d.rule.as_deref() == Some("sail-no-class")
         })
         .collect();
     assert_eq!(
@@ -255,7 +255,7 @@ fn sx_only_source_passes_real_compile_path() {
         .iter()
         .filter(|d| {
             d.severity == DiagSeverity::Error
-                && d.rule.as_deref() == Some("sui-no-class")
+                && d.rule.as_deref() == Some("sail-no-class")
         })
         .collect();
     assert!(
@@ -282,7 +282,7 @@ fn class_directive_fails_real_compile_path() {
         .iter()
         .filter(|d| {
             d.severity == DiagSeverity::Error
-                && d.rule.as_deref() == Some("sui-no-class")
+                && d.rule.as_deref() == Some("sail-no-class")
         })
         .collect();
     assert_eq!(

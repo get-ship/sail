@@ -20,7 +20,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-dimension-literal";
+pub const RULE_ID: &str = "sail-dimension-literal";
 
 struct Dim {
     /// Properties whose value is a single scalar in this dimension.

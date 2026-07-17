@@ -1,6 +1,6 @@
-//! `sui-lsp` — Language Server for `.sui` templates.
+//! `sail-lsp` — Language Server for `.sui` templates.
 //!
-//! A thin LSP/stdio shell over the `sui-compiler` analysis facade. All
+//! A thin LSP/stdio shell over the `sail-compiler` analysis facade. All
 //! intelligence (diagnostics, hover, completion, definition) comes from the
 //! one Rust grammar — no TypeScript, no WASM. This single binary serves every
 //! LSP client: Claude Code (`.lsp.json`), VS Code (`sui.serverPath`), and any
@@ -107,7 +107,7 @@ fn handle_notification(
 
 fn publish_diagnostics(conn: &Connection, uri: &Url, text: &str) -> anyhow::Result<()> {
     let path = uri.to_file_path().ok();
-    let analysis = sui_compiler::analyze(text, path.as_deref(), &[]);
+    let analysis = sail_compiler::analyze(text, path.as_deref(), &[]);
     let diagnostics: Vec<Diagnostic> = analysis.diagnostics.iter().map(diag_to_lsp).collect();
     let params = PublishDiagnosticsParams { uri: uri.clone(), diagnostics, version: None };
     conn.sender.send(Message::Notification(lsp_server::Notification {
@@ -166,7 +166,7 @@ fn on_hover(docs: &Docs, _id: RequestId, params: HoverParams) -> Option<Hover> {
     let tdp = params.text_document_position_params;
     let (text, path) = doc(docs, &tdp.text_document.uri)?;
     let (line, col) = from_lsp_pos(tdp.position);
-    let h = sui_compiler::hover_at(&text, path.as_deref(), line, col)?;
+    let h = sail_compiler::hover_at(&text, path.as_deref(), line, col)?;
     let loc = if h.line > 0 {
         format!("\n\nDeclared at controller {}:{}", h.line, h.col)
     } else {
@@ -198,7 +198,7 @@ fn on_completion(docs: &Docs, _id: RequestId, params: CompletionParams) -> Optio
     if let Some(prefix) = tag_open_prefix(&text, pos.line as usize, col) {
         return Some(l1_completion_items(&prefix));
     }
-    let items = sui_compiler::completions_at(&text, path.as_deref())
+    let items = sail_compiler::completions_at(&text, path.as_deref())
         .into_iter()
         .map(|s| CompletionItem {
             label: s.name,
@@ -250,13 +250,13 @@ fn tag_open_prefix(text: &str, line_idx: usize, col: usize) -> Option<String> {
 fn l1_completion_items(prefix: &str) -> Vec<CompletionItem> {
     let lower = prefix.to_ascii_lowercase();
     let mut out: Vec<CompletionItem> = Vec::new();
-    for entry in sui_compiler::l1_entries() {
+    for entry in sail_compiler::l1_entries() {
         if !entry.tag.to_ascii_lowercase().starts_with(&lower) {
             continue;
         }
         let kind = match entry.kind {
-            sui_compiler::L1Kind::StdlibElement => "L1 stdlib",
-            sui_compiler::L1Kind::NativeReskin => "L1 reskin",
+            sail_compiler::L1Kind::StdlibElement => "L1 stdlib",
+            sail_compiler::L1Kind::NativeReskin => "L1 reskin",
         };
         out.push(CompletionItem {
             label: entry.tag.clone(),
@@ -276,12 +276,12 @@ fn on_definition(
     let tdp = params.text_document_position_params;
     let (text, path) = doc(docs, &tdp.text_document.uri)?;
     let (line, col) = from_lsp_pos(tdp.position);
-    let h = sui_compiler::hover_at(&text, path.as_deref(), line, col)?;
+    let h = sail_compiler::hover_at(&text, path.as_deref(), line, col)?;
     // Only controller-declared symbols carry a jump target (line > 0).
     if h.line == 0 {
         return None;
     }
-    let analysis = sui_compiler::analyze(&text, path.as_deref(), &[]);
+    let analysis = sail_compiler::analyze(&text, path.as_deref(), &[]);
     let ctrl = analysis.controller_path?;
     let uri = Url::from_file_path(&ctrl).ok()?;
     let pos = to_lsp_pos(h.line, h.col);
@@ -305,12 +305,12 @@ fn from_lsp_pos(p: Position) -> (usize, usize) {
     (p.line as usize + 1, p.character as usize + 1)
 }
 
-fn diag_to_lsp(d: &sui_compiler::Diagnostic) -> Diagnostic {
+fn diag_to_lsp(d: &sail_compiler::Diagnostic) -> Diagnostic {
     Diagnostic {
         range: Range::new(to_lsp_pos(d.line, d.col), to_lsp_pos(d.end_line, d.end_col)),
         severity: Some(match d.severity {
-            sui_compiler::DiagSeverity::Error => DiagnosticSeverity::ERROR,
-            sui_compiler::DiagSeverity::Warning => DiagnosticSeverity::WARNING,
+            sail_compiler::DiagSeverity::Error => DiagnosticSeverity::ERROR,
+            sail_compiler::DiagSeverity::Warning => DiagnosticSeverity::WARNING,
         }),
         code: d.rule.clone().map(NumberOrString::String),
         source: Some("sui".to_string()),
@@ -335,7 +335,7 @@ fn completion_kind(kind: &str) -> CompletionItemKind {
 /// `packages/sui/tokens/src/tokens.css`. Embedded at build time so the LSP
 /// has zero runtime IO and a missing token file is a compile error, not a
 /// silent empty completion. This is the single source; the css-token lint
-/// parses the same file (see `sui_lint::tokens`).
+/// parses the same file (see `sail_lint::tokens`).
 const TOKENS_CSS: &str = include_str!("../../../../packages/sui/tokens/src/tokens.css");
 
 /// `(name, value)` pairs with leading `--` stripped. Sorted by name so
@@ -347,7 +347,7 @@ static TOKENS: LazyLock<TokenTable> = LazyLock::new(|| {
     // Contextual tokens with no `:root` value (tone channel, floating-primitive
     // anchors, app-shell) — completable, but valued at runtime. Shared verbatim
     // with the css-token lint so the two registries can never diverge.
-    for &name in sui_lint::tokens::CONVENTION_TOKENS {
+    for &name in sail_lint::tokens::CONVENTION_TOKENS {
         if !by_name.iter().any(|(n, _)| n == name) {
             by_name.push((name.to_string(), String::new()));
         }
@@ -566,7 +566,7 @@ fn sx_attr_prefix(text: &str, line_idx: usize, col: usize) -> Option<String> {
     None
 }
 
-/// sx completion items, sourced from `sui_lint::sx_vocab` — the same
+/// sx completion items, sourced from `sail_lint::sx_vocab` — the same
 /// tables the lint validates and the docs teach. So what an agent is
 /// offered is what the lint will accept, by construction.
 ///
@@ -580,7 +580,7 @@ fn sx_completion_items(prefix: String) -> Vec<CompletionItem> {
 
     // Bare atoms: the atom itself is the value. Surfaced as `hidden`,
     // `truncate`, `italic`, etc. so the user can see the keyword shape.
-    for name in sui_lint::sx_vocab::names() {
+    for name in sail_lint::sx_vocab::names() {
         if name.starts_with(&lower) && !name.contains('-') {
             out.push(CompletionItem {
                 label: name.clone(),
@@ -594,7 +594,7 @@ fn sx_completion_items(prefix: String) -> Vec<CompletionItem> {
     // (name, values) — one completion per legal (name-value) pair. The
     // label is the full atom (`p-4`, `bg-surface-1`); the detail is the
     // CSS shape it lowers to.
-    for (name, values) in sui_lint::sx_vocab::vocabulary() {
+    for (name, values) in sail_lint::sx_vocab::vocabulary() {
         let hyphen = format!("{name}-");
         if !lower.is_empty() && !name.starts_with(&lower) && !hyphen.starts_with(&lower) {
             continue;
@@ -612,7 +612,7 @@ fn sx_completion_items(prefix: String) -> Vec<CompletionItem> {
 
     // Refusals — atoms the lint rejects, with the thing to use instead.
     // Surfaced so the agent sees WHY a Tailwind-prior favourite fails.
-    for (atom, instead) in sui_lint::sx_vocab::refusals() {
+    for (atom, instead) in sail_lint::sx_vocab::refusals() {
         if !lower.is_empty() && !atom.starts_with(&lower) {
             continue;
         }
@@ -744,20 +744,20 @@ mod tests {
 
     #[test]
     fn diagnostic_maps_severity_and_range() {
-        let d = sui_compiler::Diagnostic {
+        let d = sail_compiler::Diagnostic {
             line: 2,
             col: 3,
             end_line: 2,
             end_col: 6,
-            severity: sui_compiler::DiagSeverity::Error,
+            severity: sail_compiler::DiagSeverity::Error,
             message: "boom".into(),
-            rule: Some("sui-for-key".into()),
+            rule: Some("sail-for-key".into()),
         };
         let l = diag_to_lsp(&d);
         assert_eq!(l.range.start, Position::new(1, 2));
         assert_eq!(l.range.end, Position::new(1, 5));
         assert_eq!(l.severity, Some(DiagnosticSeverity::ERROR));
-        assert_eq!(l.code, Some(NumberOrString::String("sui-for-key".into())));
+        assert_eq!(l.code, Some(NumberOrString::String("sail-for-key".into())));
         assert_eq!(l.source.as_deref(), Some("sui"));
     }
 

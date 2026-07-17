@@ -3,7 +3,7 @@
 //! handler_complexity test's filesystem shape.
 
 use std::fs;
-use sui_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{compile, CompileMode, CompileOpts};
 
 fn view_opts(source_path: Option<std::path::PathBuf>) -> CompileOpts {
     CompileOpts {
@@ -43,7 +43,7 @@ export default controller((ctx, host) => {
         .expect_err("a controller writing .innerHTML must fail the compile");
     assert_eq!(
         err.category.as_deref(),
-        Some("sui-controller-purity"),
+        Some("sail-controller-purity"),
         "expected the rule id as the error category, got: {:?}",
         err.category
     );

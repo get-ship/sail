@@ -1,7 +1,7 @@
 //! Filesystem walk + classification for SUI authoring sources.
 //!
 //! Two file shapes are recognised:
-//! - `*.sui` — template (parsed by `sui-compiler`)
+//! - `*.sui` — template (parsed by `sail-compiler`)
 //! - `*.controller.ts` — paired controller (parsed by `oxc_parser`)
 //!
 //! Plain `*.ts` files next to a `.sui` are not controllers — they're

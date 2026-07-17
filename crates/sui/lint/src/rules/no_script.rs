@@ -12,7 +12,7 @@
 use crate::report::{Finding, Severity};
 use std::path::Path;
 
-pub const RULE_ID: &str = "sui-no-script";
+pub const RULE_ID: &str = "sail-no-script";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let bytes = source.as_bytes();

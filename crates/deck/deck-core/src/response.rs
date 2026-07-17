@@ -60,7 +60,7 @@ pub const HTML_SECURITY_HEADERS: &[(&str, &str)] = &[
 /// The CSP body shared by every `connect-src` variant — everything except the
 /// `connect-src` clause itself, which [`connect_src_directive`] derives from
 /// a package's resolved `"network"` allowlist
-/// (`sui_compiler::check::policy::Policy::network_for` /
+/// (`sail_compiler::check::policy::Policy::network_for` /
 /// `PolicyResolution::network`). Split out so [`html_security_headers_for`]
 /// cannot drift from [`HTML_SECURITY_HEADERS`]'s hand-written string on any
 /// clause OTHER than `connect-src`.
@@ -70,7 +70,7 @@ const CSP_SUFFIX: &str = "frame-ancestors 'self'";
 /// Derive the `connect-src` CSP clause from a package's resolved `"network"`
 /// per-origin allowlist — the SAME list the `sui-controller-no-ambient-
 /// authority` lint checks fetch/WebSocket/EventSource targets against
-/// (`sui_compiler::check::policy::Policy::network_for`). Empty list (the
+/// (`sail_compiler::check::policy::Policy::network_for`). Empty list (the
 /// default: no `sui.config.json`, or one that never declares `"network"`)
 /// yields `connect-src 'self'` — byte-identical to [`HTML_SECURITY_HEADERS`]'s
 /// hardcoded clause, so this is a strict generalization, not a behavior

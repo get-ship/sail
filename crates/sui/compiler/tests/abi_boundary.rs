@@ -10,7 +10,7 @@
 //! Nothing enforced the split, so these pin it. Without them the boundary is a
 //! convention, and a convention that no test asserts is a comment.
 
-use sui_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
+use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
 
 const ABI: &str = "@ship/sui-runtime/internal";
 const AUTHOR: &str = "@ship/sui-runtime";
@@ -88,7 +88,7 @@ fn sibling_subpaths_are_not_rewritten_into_the_abi_path() {
 /// never have been separate.
 ///
 /// The compiler now has ONE source of truth
-/// (`sui_compiler::action_manifest::ACTIONS`); the runtime barrel
+/// (`sail_compiler::action_manifest::ACTIONS`); the runtime barrel
 /// is checked against it here. A new action means one entry in the
 /// table — this test fails the build until the runtime barrel is
 /// updated to match.
@@ -98,7 +98,7 @@ fn action_table_is_exported_by_the_runtime() {
     let index = root.join("packages/sui/runtime/src/index.ts");
     let Ok(src) = std::fs::read_to_string(&index) else { return };
 
-    let missing: Vec<&str> = sui_compiler::action_manifest::ACTIONS
+    let missing: Vec<&str> = sail_compiler::action_manifest::ACTIONS
         .iter()
         .map(|a| a.name)
         .filter(|a| {
@@ -134,7 +134,7 @@ fn action_table_is_exported_by_the_runtime() {
 /// invariant is visible next to the test that detects it.
 #[test]
 fn action_table_has_no_phantom_consumers() {
-    use sui_compiler::action_manifest::ACTIONS;
+    use sail_compiler::action_manifest::ACTIONS;
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
     let runtime_actions_barrel = root.join("packages/sui/runtime/src/actions/index.ts");
     let runtime_top_barrel = root.join("packages/sui/runtime/src/index.ts");
@@ -180,12 +180,12 @@ fn action_table_has_no_phantom_consumers() {
 #[test]
 fn builtin_actions_emit_bare_not_scope_qualified() {
     let mut broken = Vec::new();
-    for a in sui_compiler::lower::bindings::BUILTIN_ACTIONS {
+    for a in sail_compiler::lower::bindings::BUILTIN_ACTIONS {
         let src = format!(r#"<div use:{a}></div>"#);
-        let out = sui_compiler::compile(
+        let out = sail_compiler::compile(
             &src,
-            sui_compiler::CompileOpts {
-                mode: sui_compiler::CompileMode::Component,
+            sail_compiler::CompileOpts {
+                mode: sail_compiler::CompileMode::Component,
                 ..Default::default()
             },
         )

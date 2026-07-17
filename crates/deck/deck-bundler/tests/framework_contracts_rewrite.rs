@@ -24,7 +24,7 @@ use std::sync::Arc;
 
 use deck_bundler::catalog::component_package_roots;
 use deck_bundler::ship_asset_css::ShipAssetCssPlugin;
-use deck_bundler::sui_plugin::{component_index, SuiPlugin};
+use deck_bundler::sail_plugin::{component_index, SailPlugin};
 
 fn write(path: &Path, body: &str) {
     std::fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -47,7 +47,7 @@ async fn framework_contracts_css_emits_hashed_woff2_assets() {
         d
     };
     // The minimal app entry is written UNDER THE REPO ROOT because
-    // the SuiPlugin's `resolve_id` re-anchors `@ship/...` imports
+    // the SailPlugin's `resolve_id` re-anchors `@ship/...` imports
     // relative to the workspace `repo_root` (the framework's
     // `@ship/tokens` map points at the workspace source). The entry
     // file uses a unique tag suffix so concurrent test runs don't
@@ -97,7 +97,7 @@ export default () => ({})
         ..Default::default()
     };
     let component_idx = component_index(&repo_root, &[]);
-    let sui_plugin = SuiPlugin {
+    let sail_plugin = SailPlugin {
         repo_root: repo_root.clone(),
         emit_component_imports: false,
         component_index: component_idx.index,
@@ -106,7 +106,7 @@ export default () => ({})
     };
     let mut bundler = BundlerBuilder::default()
         .with_options(options)
-        .with_plugins(vec![Arc::new(sui_plugin), Arc::new(ShipAssetCssPlugin)])
+        .with_plugins(vec![Arc::new(sail_plugin), Arc::new(ShipAssetCssPlugin)])
         .build()
         .expect("bundler build");
     bundler

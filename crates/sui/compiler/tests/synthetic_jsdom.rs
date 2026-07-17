@@ -16,9 +16,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use sui_compiler::emit::synthetic::{emit_synthetic, AppManifest, AuthoredController};
-use sui_compiler::parse::parse;
-use sui_compiler::CompileMode;
+use sail_compiler::emit::synthetic::{emit_synthetic, AppManifest, AuthoredController};
+use sail_compiler::parse::parse;
+use sail_compiler::CompileMode;
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..").canonicalize().unwrap()
@@ -44,7 +44,7 @@ fn synthesized_board_client_mounts_and_stays_reactive() {
     // SFC: strip the `<controller>` block before parsing and materialize its
     // body here (deck serves it as a virtual sibling; this harness has no
     // bundler). The name must not collide with the SYNTHETIC controller below.
-    let (board_src, inline) = sui_compiler::parse::preprocess::extract_controller_block(&raw);
+    let (board_src, inline) = sail_compiler::parse::preprocess::extract_controller_block(&raw);
     let program = parse(&board_src).unwrap();
 
     let work = repo.join("target/synthetic-jsdom-proof");

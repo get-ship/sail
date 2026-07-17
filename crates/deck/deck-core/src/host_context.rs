@@ -8,7 +8,7 @@
 //! entries win on conflict). Adding a new well-known handle is a single-line,
 //! single-file change.
 
-use sui_compiler::emit::synthetic::ManifestClient;
+use sail_compiler::emit::synthetic::ManifestClient;
 
 /// The names deck injects into every app manifest: `route` (constructed from the
 /// `route()` factory) and `navigate` (a plain function reference), both from

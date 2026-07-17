@@ -27,7 +27,7 @@
 
 use std::path::PathBuf;
 
-use sui_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
 
 fn opts(name: &str) -> CompileOpts {
     CompileOpts {

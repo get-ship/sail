@@ -4,7 +4,7 @@
 # is heavy; ship excludes ship-host for the same reason).
 members = [
     # Per-repo build-time identity (git sha/dirty/timestamp). A copy of Ship's
-    # build-info under a distinct package name (sui-build-info) so there is no
+    # build-info under a distinct package name (sail-build-info) so there is no
     # build-info package collision when sui crates are pulled into Ship's lockfile.
     "crates/build-info",
     "crates/sui/compiler",

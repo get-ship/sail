@@ -1,4 +1,4 @@
-//! `sui-layout` — the language-level layout elements.
+//! `sail-layout` — the language-level layout elements.
 //!
 //! `row`, `column`, `grid`, `center`, `stack` are compile-time keywords, not
 //! web components. The preprocess pass lowers each to a plain `<div>` + atomic
@@ -26,7 +26,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-layout";
+pub const RULE_ID: &str = "sail-layout";
 
 /// The layout keywords the preprocess lowers to `<div>`.
 pub const TAGS: &[&str] = &["row", "column", "grid", "center", "stack"];

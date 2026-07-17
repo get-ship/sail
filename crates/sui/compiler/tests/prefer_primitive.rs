@@ -23,9 +23,9 @@
 
 use std::path::PathBuf;
 
-use sui_compiler::{analyze, compile, CompileMode, CompileOpts, ComponentMeta, DiagSeverity};
+use sail_compiler::{analyze, compile, CompileMode, CompileOpts, ComponentMeta, DiagSeverity};
 
-const RULE: &str = "sui-prefer-primitive";
+const RULE: &str = "sail-prefer-primitive";
 
 fn opts(name: &str, path: &str) -> CompileOpts {
     CompileOpts {
@@ -91,7 +91,7 @@ fn prefer_primitive_is_advisory_but_floor_refuses_the_style_block() {
         .expect_err("authored <style> must be refused by the floor");
     assert_eq!(
         err.category.as_deref(),
-        Some("sui-no-style-block"),
+        Some("sail-no-style-block"),
         "the floor rule (not prefer-primitive) refuses the build: {err:?}"
     );
 }

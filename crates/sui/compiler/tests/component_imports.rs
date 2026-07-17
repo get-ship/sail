@@ -4,7 +4,7 @@
 //! and the bundler tree-shakes exactly what a view needs. Off by default: the
 //! umbrella/islands registry path is untouched until the bundler opts in.
 
-use sui_compiler::{compile, CompileOpts};
+use sail_compiler::{compile, CompileOpts};
 
 #[test]
 fn off_by_default_emits_no_component_imports() {

@@ -16,7 +16,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use sui_compiler::{CompileMode, CompileOpts, compile};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fuzz_target!(|data: &[u8]| {
     let Ok(src) = std::str::from_utf8(data) else { return };
@@ -39,7 +39,7 @@ fuzz_target!(|data: &[u8]| {
         src,
         CompileOpts {
             mode: CompileMode::Component,
-            component_meta: Some(sui_compiler::ComponentMeta {
+            component_meta: Some(sail_compiler::ComponentMeta {
                 name: "fuzz-component".into(),
                 shadow: false,
             }),

@@ -317,5 +317,5 @@ fn pack_source_lints_imperative_style() {
         "el.style.opacity = '0.5'",
     );
     assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].rule, "sui-no-imperative-style");
+    assert_eq!(findings[0].rule, "sail-no-imperative-style");
 }

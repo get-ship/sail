@@ -38,7 +38,7 @@ use oxc_parser::Parser;
 use oxc_span::{SourceType, Span};
 use std::collections::HashSet;
 
-pub const RULE_ID: &str = "sui-state-set-call";
+pub const RULE_ID: &str = "sail-state-set-call";
 
 /// Lint a controller `.ts` source. Returns findings ordered by source
 /// position. Parse errors are silently swallowed — the SUI compiler

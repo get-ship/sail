@@ -21,7 +21,7 @@
 //! property (`--row-y`, `--evt-top`, …) that is neither a prop nor a
 //! setup-returned signal of the COMPONENT that reads it via `(--name)` — the
 //! action owns that name the same way a design token owns its name. They're
-//! listed in `sui_lint::tokens::CONVENTION_TOKENS` (the pre-existing
+//! listed in `sail_lint::tokens::CONVENTION_TOKENS` (the pre-existing
 //! allowlist for "legitimate `var(--x)`, not a global-value token") rather
 //! than given a fourth bucket here, so they resolve exactly like a token:
 //! accepted, no component-local `@property`/host-reflection wiring.
@@ -72,7 +72,7 @@ pub fn resolve(
             if !seen.insert(name.to_string()) {
                 continue;
             }
-            if sui_lint::tokens::registry().contains(name) {
+            if sail_lint::tokens::registry().contains(name) {
                 continue;
             }
 
@@ -195,7 +195,7 @@ fn refusal(
                 .map(|m| kebab_of(&m.name)),
         );
     }
-    candidates.extend(sui_lint::tokens::registry().iter().map(|s| s.to_string()));
+    candidates.extend(sail_lint::tokens::registry().iter().map(|s| s.to_string()));
 
     let mut msg = format!(
         "`(--{css_name})` does not match a global token, a declared prop, or a setup-returned \

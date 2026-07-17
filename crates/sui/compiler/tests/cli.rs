@@ -16,9 +16,9 @@ fn binary_path() -> PathBuf {
         p = parent.to_path_buf();
     }
     let exe = if cfg!(windows) {
-        "sui-compiler.exe"
+        "sail-compiler.exe"
     } else {
-        "sui-compiler"
+        "sail-compiler"
     };
     p.join("target").join("debug").join(exe)
 }
@@ -27,7 +27,7 @@ fn binary_path() -> PathBuf {
 fn cli_builds_a_single_fixture() {
     let bin = binary_path();
     if !bin.exists() {
-        eprintln!("binary not built; run `cargo build -p sui-compiler`");
+        eprintln!("binary not built; run `cargo build -p sail-compiler`");
         return;
     }
     let tmp = tempfile::tempdir().unwrap();
@@ -40,7 +40,7 @@ fn cli_builds_a_single_fixture() {
         .args(["--out"])
         .arg(&out)
         .status()
-        .expect("invoke sui-compiler");
+        .expect("invoke sail-compiler");
     assert!(status.success(), "CLI failed");
     let js = out.join("hello.js");
     assert!(js.exists(), "expected {} to exist", js.display());

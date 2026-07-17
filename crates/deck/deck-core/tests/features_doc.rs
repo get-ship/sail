@@ -304,9 +304,9 @@ mod extractor_tests {
         // surface, so crate-only symbols must fail the gate.
         let contents = "\
             pub(crate) fn serve_thing() {}\n\
-            pub(crate) struct SuiPlugin {}\n";
+            pub(crate) struct SailPlugin {}\n";
         assert!(!is_exported_rust_item(contents, "serve_thing"));
-        assert!(!is_exported_rust_item(contents, "SuiPlugin"));
+        assert!(!is_exported_rust_item(contents, "SailPlugin"));
     }
 
     #[test]

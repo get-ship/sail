@@ -1,4 +1,4 @@
-//! Golden-fixture parity suite for `sui-compiler`.
+//! Golden-fixture parity suite for `sail-compiler`.
 //!
 //! Each fixture under `tests/golden/<name>.sui` is compiled with
 //! `CompileOpts::default()` and the full `CompileOutput` is captured
@@ -12,7 +12,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use sui_compiler::{compile, CompileOpts, CompileOutput};
+use sail_compiler::{compile, CompileOpts, CompileOutput};
 
 mod common;
 use common::strip_version_stamp;

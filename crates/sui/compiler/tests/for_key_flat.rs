@@ -10,7 +10,7 @@
 //! Keys that read outer scope (`$scope.…` after rewriting) keep the
 //! child-scope fallback so shadowing semantics are untouched.
 
-use sui_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{compile, CompileMode, CompileOpts};
 
 fn view_opts() -> CompileOpts {
     CompileOpts {

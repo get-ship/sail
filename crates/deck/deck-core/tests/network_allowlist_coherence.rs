@@ -7,7 +7,7 @@
 //! Both assertions below derive from ONE Rust-level origin list
 //! (`GRANTED_ORIGIN`), used to:
 //!   (a) build the fixture `sui.config.json` body that the real compiler
-//!       resolver (`sui_compiler::check::policy::Policy`) reads, driving the
+//!       resolver (`sail_compiler::check::policy::Policy`) reads, driving the
 //!       `sui-controller-no-ambient-authority` lint through the real
 //!       `compile()` build gate — same path `config_loud_strict.rs` exercises;
 //!   (b) build the `connect-src` header via `deck_core::connect_src_directive`
@@ -21,8 +21,8 @@
 use std::fs;
 use std::path::PathBuf;
 
-use sui_compiler::check::policy::Policy;
-use sui_compiler::{CompileMode, CompileOpts, compile};
+use sail_compiler::check::policy::Policy;
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 /// The ONE declaration both halves of this test derive from.
 const GRANTED_ORIGIN: &str = "https://api.example.com";
@@ -73,7 +73,7 @@ fn granted_origin_passes_lint_evil_origin_is_refused_same_config() {
     let src2 = fs::read_to_string(&sui2).unwrap();
     let err = compile(&src2, opts_for(&sui2))
         .expect_err("a fetch to an origin outside the allowlist must be refused");
-    assert_eq!(err.category.as_deref(), Some("sui-controller-no-ambient-authority"));
+    assert_eq!(err.category.as_deref(), Some("sail-controller-no-ambient-authority"));
 }
 
 #[test]

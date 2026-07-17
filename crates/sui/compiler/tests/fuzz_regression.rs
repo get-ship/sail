@@ -1,7 +1,7 @@
 //! Regression tests for inputs found by `cargo +nightly fuzz` runs.
 //! These ensure previously-discovered crash inputs do not regress.
 
-use sui_compiler::{CompileMode, CompileOpts, compile};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 /// Issue: `){&&deg;\x129\n}` crashed the compiler.
 /// Found by `compile_full` fuzz on 2026-05-11.
@@ -49,8 +49,8 @@ fn fuzz_2026_05_12_for_with_harr_entity() {
     let Ok(bytes) = src_bytes else { return };
     let Ok(src) = std::str::from_utf8(&bytes) else { return };
     // Test the bindings path specifically (not the full compile).
-    let Ok(program) = sui_compiler::parse::parse(src) else { return };
-    let _ = sui_compiler::bindings::build(&program);
+    let Ok(program) = sail_compiler::parse::parse(src) else { return };
+    let _ = sail_compiler::bindings::build(&program);
 }
 
 /// Issue: nested template literals with `&sect;` entity crashed

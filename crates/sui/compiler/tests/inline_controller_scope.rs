@@ -9,7 +9,7 @@
 //! the fix, an out-of-scope template reference in an in-memory SFC compiled
 //! clean and only surfaced at runtime as `$scope.X is not a function`.
 
-use sui_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{compile, CompileMode, CompileOpts};
 
 fn opts() -> CompileOpts {
     CompileOpts {

@@ -4,7 +4,7 @@
 //! locks the contract per output kind (JS leading comment, CEM, schema,
 //! meta sidecar, dts comment).
 
-use sui_compiler::{compile, compiler_version, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{compile, compiler_version, CompileMode, CompileOpts, ComponentMeta};
 
 const VIEW_SRC: &str = r#"<ul bind:this={listEl}>{#for (row, _i) of [{id: 1, label: "a"}] key={row.id}}<li>{row.label}</li>{/for}</ul>
 "#;

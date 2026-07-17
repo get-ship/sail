@@ -20,7 +20,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-use sui_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
 
 /// GENERATE the skill rather than reading the checked-in one. The shipped copy lives
 /// under `.claude/`, which is gitignored — so a test that merely READ it would
@@ -30,7 +30,7 @@ use sui_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
 fn generate_skill() -> Option<String> {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
     let out = std::env::temp_dir().join("sui-skill-guard.md");
-    let bin = root.join("target/debug/sui-compiler");
+    let bin = root.join("target/debug/sail-compiler");
     if !bin.exists() {
         // Nothing to guard if the binary was not built (e.g. `cargo test --lib`).
         return None;

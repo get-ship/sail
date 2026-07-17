@@ -60,10 +60,10 @@ use super::lint_overrides::{LintOverride, OverrideSeverity};
 /// (`check::lint_overrides::enforce_floor`) all read this one list, so a floor
 /// rule added here is enforced everywhere with no second place to update.
 pub const FLOOR_RULES: [&str; 4] = [
-    "sui-no-style-block",
-    "sui-no-inline-style",
-    "sui-no-class",
-    "sui-no-undeclared-stylesheet",
+    "sail-no-style-block",
+    "sail-no-inline-style",
+    "sail-no-class",
+    "sail-no-undeclared-stylesheet",
 ];
 
 /// True iff `rule` is a floor rule — one the compiler promotes to `Error`
@@ -154,9 +154,9 @@ impl Policy {
         use OverrideSeverity::{Error, Off};
         let cap = |on: bool| if on { Off } else { Error };
         vec![
-            LintOverride { rule: "sui-no-sx".to_string(), severity: cap(self.sx) },
-            LintOverride { rule: "sui-no-variants".to_string(), severity: cap(self.variants) },
-            LintOverride { rule: "sui-no-raw-container".to_string(), severity: cap(self.raw_containers) },
+            LintOverride { rule: "sail-no-sx".to_string(), severity: cap(self.sx) },
+            LintOverride { rule: "sail-no-variants".to_string(), severity: cap(self.variants) },
+            LintOverride { rule: "sail-no-raw-container".to_string(), severity: cap(self.raw_containers) },
         ]
     }
 
@@ -196,14 +196,14 @@ impl Policy {
     /// build its announce/refuse message; tests use it directly to pin the
     /// exact wording without depending on the log seam's stderr output.
     pub fn resolve_outcome(source_file: &Path) -> Option<(PathBuf, PolicyResolution)> {
-        let (config_path, cfg) = sui_lint::config::resolve(source_file.parent()?)?;
+        let (config_path, cfg) = sail_lint::config::resolve(source_file.parent()?)?;
         Some((config_path, classify(&cfg)))
     }
 
     /// The resolved `"network"` per-origin allowlist for a source file's
     /// nearest `sui.config.json` — the fetch/WebSocket/EventSource capability
     /// grant that drives the network-aware lint pass
-    /// (`sui_lint::rules::controller_no_ambient_authority::check_confined`).
+    /// (`sail_lint::rules::controller_no_ambient_authority::check_confined`).
     /// This is NOT a second `sui.config.json` reader: it re-derives from
     /// [`Policy::resolve_outcome`], the same walk-up/parse `overrides_for`
     /// uses. Empty when no config exists, the config fails closed
@@ -252,8 +252,8 @@ pub enum ResolutionKind {
 }
 
 /// Derive the full tier + reason from a resolved `sui.config.json`. The read +
-/// parse is owned by `sui_lint::config`; this only classifies the parsed value.
-fn classify(cfg: &sui_lint::config::SuiConfig) -> PolicyResolution {
+/// parse is owned by `sail_lint::config`; this only classifies the parsed value.
+fn classify(cfg: &sail_lint::config::SuiConfig) -> PolicyResolution {
     if !cfg.parse_ok() {
         return PolicyResolution {
             tier: Policy::STRICT,
@@ -336,7 +336,7 @@ fn classify(cfg: &sui_lint::config::SuiConfig) -> PolicyResolution {
     }
 
     if signal.is_empty() {
-        let recognized_present: Vec<&str> = sui_lint::config::RECOGNIZED_KEYS
+        let recognized_present: Vec<&str> = sail_lint::config::RECOGNIZED_KEYS
             .iter()
             .copied()
             .filter(|k| cfg.has_key(k))
@@ -384,16 +384,16 @@ fn render_announcement(config_path: &Path, resolution: &PolicyResolution) -> Str
     let tier_name = tier_name(resolution.tier);
     match &resolution.kind {
         ResolutionKind::Rejected(reason) => format!(
-            "sui-compiler: REFUSED {} — {reason}; capability tier falls back to strict (no capabilities granted)",
+            "sail-compiler: REFUSED {} — {reason}; capability tier falls back to strict (no capabilities granted)",
             config_path.display()
         ),
         ResolutionKind::NoSignal(hint) => format!(
-            "sui-compiler: {} — policy: strict (config declares {hint}, which carries no capability \
+            "sail-compiler: {} — policy: strict (config declares {hint}, which carries no capability \
              signal; add \"preset\" or a capability key to grant more)",
             config_path.display()
         ),
         ResolutionKind::Recognized(signal) => format!(
-            "sui-compiler: {} — policy: {tier_name} ({signal})",
+            "sail-compiler: {} — policy: {tier_name} ({signal})",
             config_path.display()
         ),
     }
@@ -418,40 +418,40 @@ mod tests {
     }
 
     /// Derive a tier from config JSON text — the tier half of the resolution,
-    /// with the read/parse owned by `sui_lint::config`. `classify` always
+    /// with the read/parse owned by `sail_lint::config`. `classify` always
     /// resolves SOME tier (fail-closed to STRICT for the unknown/no-signal
     /// cases); [`ResolutionKind`] is what carries "why", tested separately.
     fn tier(json: &str) -> Policy {
-        classify(&sui_lint::config::SuiConfig::from_json(json)).tier
+        classify(&sail_lint::config::SuiConfig::from_json(json)).tier
     }
 
     fn kind(json: &str) -> ResolutionKind {
-        classify(&sui_lint::config::SuiConfig::from_json(json)).kind
+        classify(&sail_lint::config::SuiConfig::from_json(json)).kind
     }
 
     #[test]
     fn floor_is_error_under_every_preset_and_is_not_a_key() {
         for p in [Policy::FULL, Policy::STRICT] {
-            assert_eq!(sev(p, "sui-no-style-block"), OverrideSeverity::Error);
-            assert_eq!(sev(p, "sui-no-inline-style"), OverrideSeverity::Error);
+            assert_eq!(sev(p, "sail-no-style-block"), OverrideSeverity::Error);
+            assert_eq!(sev(p, "sail-no-inline-style"), OverrideSeverity::Error);
         }
         // No config key can turn the floor off — only capability keys exist.
         let p = tier(r#"{"preset":"full","sx":false}"#);
-        assert_eq!(sev(p, "sui-no-style-block"), OverrideSeverity::Error);
+        assert_eq!(sev(p, "sail-no-style-block"), OverrideSeverity::Error);
     }
 
     #[test]
     fn full_unlocks_every_capability() {
-        assert_eq!(sev(Policy::FULL, "sui-no-sx"), OverrideSeverity::Off);
-        assert_eq!(sev(Policy::FULL, "sui-no-variants"), OverrideSeverity::Off);
-        assert_eq!(sev(Policy::FULL, "sui-no-raw-container"), OverrideSeverity::Off);
+        assert_eq!(sev(Policy::FULL, "sail-no-sx"), OverrideSeverity::Off);
+        assert_eq!(sev(Policy::FULL, "sail-no-variants"), OverrideSeverity::Off);
+        assert_eq!(sev(Policy::FULL, "sail-no-raw-container"), OverrideSeverity::Off);
     }
 
     #[test]
     fn strict_forbids_every_capability() {
-        assert_eq!(sev(Policy::STRICT, "sui-no-sx"), OverrideSeverity::Error);
-        assert_eq!(sev(Policy::STRICT, "sui-no-variants"), OverrideSeverity::Error);
-        assert_eq!(sev(Policy::STRICT, "sui-no-raw-container"), OverrideSeverity::Error);
+        assert_eq!(sev(Policy::STRICT, "sail-no-sx"), OverrideSeverity::Error);
+        assert_eq!(sev(Policy::STRICT, "sail-no-variants"), OverrideSeverity::Error);
+        assert_eq!(sev(Policy::STRICT, "sail-no-raw-container"), OverrideSeverity::Error);
     }
 
     #[test]
@@ -604,7 +604,7 @@ mod tests {
 
     #[test]
     fn rejected_message_refuses_loudly_and_names_file_and_key() {
-        let cfg = sui_lint::config::SuiConfig::from_json(r#"{"polcy":"strict"}"#);
+        let cfg = sail_lint::config::SuiConfig::from_json(r#"{"polcy":"strict"}"#);
         let resolution = classify(&cfg);
         let msg = render_announcement(Path::new("/pkg/sui.config.json"), &resolution);
         assert!(msg.contains("REFUSED"), "{msg}");
@@ -615,7 +615,7 @@ mod tests {
 
     #[test]
     fn no_signal_message_announces_and_names_file_and_signal() {
-        let cfg = sui_lint::config::SuiConfig::from_json(r#"{"stylesheets": []}"#);
+        let cfg = sail_lint::config::SuiConfig::from_json(r#"{"stylesheets": []}"#);
         let resolution = classify(&cfg);
         let msg = render_announcement(Path::new("/pkg/sui.config.json"), &resolution);
         assert!(!msg.contains("REFUSED"), "{msg}");
@@ -632,13 +632,13 @@ mod tests {
 
     #[test]
     fn absent_network_key_resolves_to_an_empty_allowlist() {
-        let r = classify(&sui_lint::config::SuiConfig::from_json(r#"{"preset":"full"}"#));
+        let r = classify(&sail_lint::config::SuiConfig::from_json(r#"{"preset":"full"}"#));
         assert!(r.network.is_empty());
     }
 
     #[test]
     fn declared_network_key_resolves_its_origins_and_is_recognized() {
-        let r = classify(&sui_lint::config::SuiConfig::from_json(
+        let r = classify(&sail_lint::config::SuiConfig::from_json(
             r#"{"network":["https://api.example.com","self"]}"#,
         ));
         assert_eq!(r.network, vec!["https://api.example.com".to_string(), "self".to_string()]);
@@ -649,7 +649,7 @@ mod tests {
     fn empty_network_array_is_a_well_typed_no_grant_declaration() {
         // Explicit `[]` is not a type error — it's a declared "grant nothing",
         // same bucket as `"sx": false`: Recognized, not Rejected.
-        let r = classify(&sui_lint::config::SuiConfig::from_json(r#"{"network":[]}"#));
+        let r = classify(&sail_lint::config::SuiConfig::from_json(r#"{"network":[]}"#));
         assert!(r.network.is_empty());
         assert!(matches!(&r.kind, ResolutionKind::Recognized(_)), "{:?}", r.kind);
     }
@@ -658,7 +658,7 @@ mod tests {
     fn non_array_network_value_is_a_type_error_and_fails_closed() {
         // `{"network": "https://x.com"}` — a string, not an array — must never
         // be silently treated as granting. Rejected, empty allowlist.
-        let r = classify(&sui_lint::config::SuiConfig::from_json(r#"{"network":"https://x.com"}"#));
+        let r = classify(&sail_lint::config::SuiConfig::from_json(r#"{"network":"https://x.com"}"#));
         assert!(r.network.is_empty());
         assert!(
             matches!(&r.kind, ResolutionKind::Rejected(reason) if reason.contains("network")),
@@ -669,7 +669,7 @@ mod tests {
 
     #[test]
     fn non_string_element_in_network_array_is_a_type_error() {
-        let r = classify(&sui_lint::config::SuiConfig::from_json(r#"{"network":[1, 2]}"#));
+        let r = classify(&sail_lint::config::SuiConfig::from_json(r#"{"network":[1, 2]}"#));
         assert!(r.network.is_empty());
         assert!(matches!(&r.kind, ResolutionKind::Rejected(_)), "{:?}", r.kind);
     }
@@ -699,7 +699,7 @@ mod tests {
         // THE loud seam: granting network must name the origins, not just
         // say "granted: true" — same shape as the existing preset/capability
         // announcements.
-        let cfg = sui_lint::config::SuiConfig::from_json(
+        let cfg = sail_lint::config::SuiConfig::from_json(
             r#"{"network":["https://api.example.com","self"]}"#,
         );
         let resolution = classify(&cfg);
@@ -712,7 +712,7 @@ mod tests {
 
     #[test]
     fn non_array_network_announcement_refuses_loudly_and_names_the_key() {
-        let cfg = sui_lint::config::SuiConfig::from_json(r#"{"network":"https://x.com"}"#);
+        let cfg = sail_lint::config::SuiConfig::from_json(r#"{"network":"https://x.com"}"#);
         let resolution = classify(&cfg);
         let msg = render_announcement(Path::new("/pkg/sui.config.json"), &resolution);
         assert!(msg.contains("REFUSED"), "{msg}");
@@ -721,7 +721,7 @@ mod tests {
 
     #[test]
     fn recognized_message_names_file_tier_and_signal_with_no_extra_noise() {
-        let cfg = sui_lint::config::SuiConfig::from_json(r#"{"preset":"full"}"#);
+        let cfg = sail_lint::config::SuiConfig::from_json(r#"{"preset":"full"}"#);
         let resolution = classify(&cfg);
         let msg = render_announcement(Path::new("/pkg/sui.config.json"), &resolution);
         assert!(!msg.contains("REFUSED"), "{msg}");

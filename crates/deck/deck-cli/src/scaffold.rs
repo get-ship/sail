@@ -174,7 +174,7 @@ pub fn run_component(tag: String, want_controller: bool) -> Result<()> {
     println!("[scaffold] next steps:");
     println!("  1. Edit {tag}.sui — scope props, template body");
     println!("  2. Run: cargo run -p deck-cli -- build-assets");
-    println!("     (deck compiles the .sui in-process via the shared SuiPlugin)");
+    println!("     (deck compiles the .sui in-process via the shared SailPlugin)");
     Ok(())
 }
 

@@ -19,14 +19,14 @@
 //! (`'●'`, `'→'`, `'·'`, `'✓'`), single letters, numeric/escape codepoints
 //! (`'\2014'`, icon-font PUA), `attr(...)`, `counter(...)`, `none`, `var(...)`.
 //!
-//! Severity is `Error`: `sui-compiler` promotes error-severity findings to
+//! Severity is `Error`: `sail-compiler` promotes error-severity findings to
 //! a build failure, the same path `sui-css-literal` uses.
 
 use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-css-content-text";
+pub const RULE_ID: &str = "sail-css-content-text";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();

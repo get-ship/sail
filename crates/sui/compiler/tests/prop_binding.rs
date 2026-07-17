@@ -1,6 +1,6 @@
 //! `prop:foo={expr}` parses and emits `bindProp` + `hydrateProp`.
 
-use sui_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{compile, CompileMode, CompileOpts};
 
 fn view_opts() -> CompileOpts {
     CompileOpts {

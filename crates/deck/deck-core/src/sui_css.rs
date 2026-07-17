@@ -7,8 +7,8 @@
 //!     baseline, focus/disabled, button skin. Generated from the runtime's
 //!     `LIGHT_CONTRACTS_CSS` (`packages/sui/runtime/scripts/emit-contracts-css.ts`).
 //!   - `element-skins.css` — the L1 element skins (spinner/separator/icon/
-//!     label/…). Generated from the sui-compiler stdlib registry
-//!     (`cargo run -p sui-compiler -- framework-css`).
+//!     label/…). Generated from the sail-compiler stdlib registry
+//!     (`cargo run -p sail-compiler -- framework-css`).
 //!
 //! Both are drift-locked by tests in their source crates, so this concat can
 //! never serve stale framework CSS. The shell links it with

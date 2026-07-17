@@ -22,16 +22,16 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use sui_compiler::emit::synthetic::{emit_synthetic, AppManifest, AuthoredController, ManifestClient};
-use sui_compiler::parse::parse;
-use sui_compiler::CompileMode;
+use sail_compiler::emit::synthetic::{emit_synthetic, AppManifest, AuthoredController, ManifestClient};
+use sail_compiler::parse::parse;
+use sail_compiler::CompileMode;
 
 /// Mirror deck's host context — the `route`/`navigate` handles deck injects into
 /// every app manifest at build (`deck_core::host_context_clients`). SUI's
 /// compiler names no host, so post-seam route/navigate must be DECLARED in the
 /// manifest; the real pipeline merges them in. This stands in for that merge so
 /// the route-bearing surface + the route-typo gate type-check against
-/// `RouteSignals`. (sui-compiler can't depend on deck-core — that's a cycle.)
+/// `RouteSignals`. (sail-compiler can't depend on deck-core — that's a cycle.)
 fn inject_host_context(manifest: &mut AppManifest) {
     manifest.clients.entry("route".to_string()).or_insert(ManifestClient {
         from: "@ship/deck/router".to_string(),
@@ -72,7 +72,7 @@ fn synth_into(repo: &Path, manifest: &AppManifest, gendir: &Path, s: &Surface) {
     // rather than as a sibling module — strip it before the template-only
     // parser sees it (mirrors `deck_ssr::build`).
     let (stripped, inline_controller) =
-        sui_compiler::parse::preprocess::extract_controller_block(&src);
+        sail_compiler::parse::preprocess::extract_controller_block(&src);
     let program = parse(&stripped).unwrap_or_else(|e| panic!("parse {}: {}", s.name, e.render(&stripped)));
     let dir = gendir.join(s.name);
     fs::create_dir_all(&dir).unwrap();

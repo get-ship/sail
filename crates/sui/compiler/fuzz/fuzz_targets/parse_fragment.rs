@@ -24,6 +24,6 @@ fuzz_target!(|data: &[u8]| {
     if let Ok(src) = std::str::from_utf8(data) {
         // Errors are fine — we're hunting panics, infinite loops, and
         // unbounded allocation. A returned `Err` is a clean death.
-        let _ = sui_compiler::parse::parse(src);
+        let _ = sail_compiler::parse::parse(src);
     }
 });

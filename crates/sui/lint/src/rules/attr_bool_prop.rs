@@ -20,7 +20,7 @@ use std::path::Path;
 use crate::prop_registry::registry;
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-attr-bool-prop";
+pub const RULE_ID: &str = "sail-attr-bool-prop";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let reg = registry();

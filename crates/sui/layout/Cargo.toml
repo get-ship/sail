@@ -1,5 +1,5 @@
 [package]
-name = "sui-layout"
+name = "sail-layout"
 version = "0.1.0"
 edition = "2024"
 license.workspace = true
@@ -7,12 +7,12 @@ publish = false
 description = "Static box-tree computation for .sui templates via taffy — compile-time layout diagnostics (no browser). SPIKE."
 
 [lib]
-name = "sui_layout"
+name = "sail_layout"
 path = "src/lib.rs"
 
 [[bin]]
-name = "sui-layout"
-path = "src/bin/sui-layout.rs"
+name = "sail-layout"
+path = "src/bin/sail-layout.rs"
 
 [dependencies]
 # The flexbox/grid/block engine. Wasm-clean (Zed and Dioxus ship it). We keep
@@ -23,8 +23,8 @@ taffy = { version = "0.12", default-features = false, features = ["std", "grid",
 # SUI's own substrate for token resolution — the same registry the lint reads.
 # Adding a token name to `tokens.css` lights it up in the static layout
 # without a code change here.
-sui-lint = { path = "../lint" }
-sui-compiler = { path = "../compiler" }
+sail-lint = { path = "../lint" }
+sail-compiler = { path = "../compiler" }
 
 anyhow = { workspace = true }
 thiserror = { workspace = true }

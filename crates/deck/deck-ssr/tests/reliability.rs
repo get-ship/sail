@@ -25,14 +25,14 @@ use deck_ssr::host::SsrDispatch;
 use deck_ssr::run::render;
 use deck_core::DataPort;
 use serde_json::{json, Value};
-use sui_compiler::emit::synthetic::{emit_synthetic, AppManifest};
-use sui_compiler::parse::parse;
-use sui_compiler::CompileMode;
+use sail_compiler::emit::synthetic::{emit_synthetic, AppManifest};
+use sail_compiler::parse::parse;
+use sail_compiler::CompileMode;
 
 const CONF: &str = "crates/deck/deck-conformance/app";
 // `job/cut-app-manifest` deleted the per-app `app.manifest.jsonc` files for
 // the `hub /` and `views/showcase` targets — `route` / `navigate` now resolve
-// by convention (`sui_compiler::emit::synthetic::convention_client`) so
+// by convention (`sail_compiler::emit::synthetic::convention_client`) so
 // product apps no longer need one. The conformance manifest is the one
 // remaining checked-in manifest; it covers the `hub /` and `views/showcase`
 // cases (its `ship` / `api` declarations are tree-shaken when unused, and

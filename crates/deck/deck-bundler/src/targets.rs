@@ -18,7 +18,7 @@ use deck_config::DeckConfig;
 /// target list, the `assets_dir_for` routing, and `is_framework_singleton` all
 /// read it. Chrome components are NOT here — the per-tag tree-shaking resolver
 /// (`sui-components/<name>` in `assets_dir_for` + the `@sui-tag/<tag>` virtual
-/// import in `sui_plugin.rs`) is the canonical way chrome loads.
+/// import in `sail_plugin.rs`) is the canonical way chrome loads.
 pub(crate) struct FrameworkSingleton {
     pub name: &'static str,
     pub spec: &'static str,

@@ -1,17 +1,17 @@
 [package]
-name = "sui-lsp"
+name = "sail-lsp"
 version = "0.1.0"
 edition = "2024"
 license.workspace = true
-description = "Language Server for SUI `.sui` templates — thin LSP shell over sui-compiler."
+description = "Language Server for SUI `.sui` templates — thin LSP shell over sail-compiler."
 
 [[bin]]
-name = "sui-lsp"
+name = "sail-lsp"
 path = "src/main.rs"
 
 [dependencies]
-sui-compiler = { path = "../compiler" }
-sui-lint = { path = "../lint" }
+sail-compiler = { path = "../compiler" }
+sail-lint = { path = "../lint" }
 lsp-server = "0.7"
 lsp-types = "0.95"
 serde = { workspace = true }

@@ -1,7 +1,7 @@
 //! The language owns the bare-name namespace: unknown bare tags are errors,
 //! valid HTML/SVG and hyphenated components pass.
 
-use sui_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{compile, CompileMode, CompileOpts};
 
 fn opts() -> CompileOpts {
     CompileOpts {

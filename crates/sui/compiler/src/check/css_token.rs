@@ -1,12 +1,12 @@
 //! CSS-token check — compile-time hard wall.
 //!
-//! Defers the rule definition to `sui-lint::rules::css_token`. The
+//! Defers the rule definition to `sail-lint::rules::css_token`. The
 //! same walker that drives editor diagnostics drives this build-time
 //! check, so an unknown `var(--xyz)` looks identical in LSP and in
 //! `cargo build` output.
 //!
 //! Mirrors `controller_purity.rs` (this directory) — same plumbing
-//! (`sui_lint` finding → `CompileError`), only the source it lints is
+//! (`sail_lint` finding → `CompileError`), only the source it lints is
 //! the `.sui` itself rather than a paired `.controller.ts`.
 //!
 //! Skipped when `source` is empty, which only happens via internal
@@ -38,12 +38,12 @@ pub fn check(
 
     // Apply the build host's lint overrides before the Error filter.
     // The rule's natural severity is preserved for everyone who
-    // consumes the lint directly (the LSP, `sui_lint` CLI, the agent
+    // consumes the lint directly (the LSP, `sail_lint` CLI, the agent
     // tooling); the override only affects this build-time gate. An
     // external SUI app that wants the softer behavior sets
     // `CompileOpts::lint_overrides` and threads it through here.
     let findings = crate::check::lint_overrides::apply_overrides(
-        sui_lint::lint_sui_template_source(path, source),
+        sail_lint::lint_sui_template_source(path, source),
         overrides,
     );
     // Only Severity::Error findings become compile errors. Warnings
@@ -53,7 +53,7 @@ pub fn check(
     // migration.
     let Some(first) = findings
         .iter()
-        .find(|f| matches!(f.severity, sui_lint::Severity::Error))
+        .find(|f| matches!(f.severity, sail_lint::Severity::Error))
     else {
         return Ok(());
     };

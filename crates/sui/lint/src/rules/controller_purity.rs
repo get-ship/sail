@@ -19,7 +19,7 @@ use oxc_ast_visit::Visit;
 use oxc_parser::Parser;
 use oxc_span::{SourceType, Span};
 
-pub const RULE_ID: &str = "sui-controller-purity";
+pub const RULE_ID: &str = "sail-controller-purity";
 
 /// Lint a controller `.ts` source. Returns findings ordered by source
 /// position. Parse errors are silently swallowed — the SUI compiler

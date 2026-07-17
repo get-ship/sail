@@ -13,10 +13,10 @@ use std::path::{Component, Path, PathBuf};
 use anyhow::{anyhow, Context, Result};
 use rolldown::BundlerBuilder;
 use rolldown_common::{BundlerOptions, InputItem, Output, OutputFormat, ResolveOptions};
-use sui_compiler::emit::synthetic::{emit_synthetic, AppManifest};
-use sui_compiler::parse::parse;
-use sui_compiler::parse::preprocess::extract_controller_block;
-use sui_compiler::CompileMode;
+use sail_compiler::emit::synthetic::{emit_synthetic, AppManifest};
+use sail_compiler::parse::parse;
+use sail_compiler::parse::preprocess::extract_controller_block;
+use sail_compiler::CompileMode;
 
 /// Walk up from this crate to the repo root (the dir holding `package.json`
 /// and `packages/`). Anchors the view / manifest / server-entry paths.
@@ -69,7 +69,7 @@ pub async fn synthesize_and_bundle_with(
     client_aliases: &[ClientAlias],
     build_dir: &Path,
 ) -> Result<String> {
-    use sui_compiler::emit::synthetic::AuthoredController;
+    use sail_compiler::emit::synthetic::AuthoredController;
 
     let source = std::fs::read_to_string(repo.join(view_rel))
         .with_context(|| format!("read view {view_rel}"))?;

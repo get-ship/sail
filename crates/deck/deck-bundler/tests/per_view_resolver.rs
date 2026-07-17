@@ -2,7 +2,7 @@
 //! with `DECK_PER_VIEW_RESOLVER` on, a view that uses `<sui-widget>` has the
 //! component's code tree-shaken INTO its bundle (resolved from source via the
 //! CEM index); with it off, the component is absent (the umbrella registers it
-//! at runtime). Uses the LOCAL sui-compiler — which carries
+//! at runtime). Uses the LOCAL sail-compiler — which carries
 //! `--emit-component-imports` — so it does not depend on the installed compiler
 //! being current (#155). This is the invariant that makes islands+catalogs
 //! subsumable: the bundle carries exactly what the view uses.

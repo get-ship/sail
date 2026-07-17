@@ -1,18 +1,18 @@
-//! sui-compiler integration for the Rust bundler — IN-PROCESS (#255).
+//! sail-compiler integration for the Rust bundler — IN-PROCESS (#255).
 //!
-//! The bundler calls `sui_compiler::compile()` directly from its Rolldown
+//! The bundler calls `sail_compiler::compile()` directly from its Rolldown
 //! `load` hook. One toolchain: the compiler is the crate the bundler links, so
-//! there is no separate `sui-compiler` binary to locate, no installed-vs-debug-
+//! there is no separate `sail-compiler` binary to locate, no installed-vs-debug-
 //! vs-release drift, and a flag the bundler passes can never be rejected by a
 //! stale binary. `just build` produces a bundler carrying *the* current
 //! compiler — build = works, no gate, no version dance.
 
 use std::path::{Path, PathBuf};
 
-use sui_compiler::emit::synthetic::{emit_synthetic_client_module, AppManifest, AuthoredController};
-use sui_compiler::parse::parse;
-use sui_compiler::parse::preprocess::extract_controller_block;
-use sui_compiler::{compile, CompileMode as SuiMode, CompileOpts, ComponentMeta, Policy};
+use sail_compiler::emit::synthetic::{emit_synthetic_client_module, AppManifest, AuthoredController};
+use sail_compiler::parse::parse;
+use sail_compiler::parse::preprocess::extract_controller_block;
+use sail_compiler::{compile, CompileMode as SuiMode, CompileOpts, ComponentMeta, Policy};
 
 /// A `.sui` compiles as a custom-element (`component`) or a view. Component mode
 /// passes a tag name so the element is registered; view mode emits a route module.
@@ -32,7 +32,7 @@ pub enum CompileError {
     Compile(String),
 }
 
-/// Compile one `.sui` to JS via `sui_compiler::compile` (in-process). Auto-wires
+/// Compile one `.sui` to JS via `sail_compiler::compile` (in-process). Auto-wires
 /// a sibling controller (`page.sui`→`controller.ts`, `<stem>.sui`→
 /// `<stem>.controller.ts`) as `import setup from "./<controller>"`.
 /// `emit_component_imports` opts the view into the per-view resolver — it emits
@@ -91,7 +91,7 @@ pub fn compile_sui(
         Ok(out) => {
             // deck build only BLOCKS on Error severity (`compile()` runs
             // `check::gate` over the full Error stream). The Warning-level
-            // `sui-lint` findings (`check::collect`) are advisory — surface
+            // `sail-lint` findings (`check::collect`) are advisory — surface
             // them to stderr during the build so authors see them, without
             // failing. A compile that reached here already passed the Error
             // gate, so only Warnings remain. Re-runs the collect() pass (a
@@ -111,14 +111,14 @@ pub fn compile_sui(
 fn emit_build_warnings(
     sui_file: &Path,
     source: &str,
-    overrides: &[sui_compiler::LintOverride],
+    overrides: &[sail_compiler::LintOverride],
     route_params: Option<&[String]>,
 ) {
-    for d in sui_compiler::check_all(source, Some(sui_file), overrides, route_params) {
-        if d.severity != sui_compiler::DiagSeverity::Warning {
+    for d in sail_compiler::check_all(source, Some(sui_file), overrides, route_params) {
+        if d.severity != sail_compiler::DiagSeverity::Warning {
             continue;
         }
-        let rule = d.rule.as_deref().unwrap_or("sui-lint");
+        let rule = d.rule.as_deref().unwrap_or("sail-lint");
         eprintln!(
             "deck warn {}:{}:{} [{}] {}",
             sui_file.display(),
@@ -262,7 +262,7 @@ mod tests {
         let err = compile_sui(&sui, CompileMode::View, "page", false)
             .expect_err("raw <style> in a view must not compile");
         assert!(
-            format!("{err}").contains("sui-no-style-block"),
+            format!("{err}").contains("sail-no-style-block"),
             "the floor rule names itself: {err}"
         );
     }

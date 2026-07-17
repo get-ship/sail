@@ -14,7 +14,7 @@
 use std::fs;
 use std::path::Path;
 
-use sui_compiler::analyze;
+use sail_compiler::analyze;
 
 fn load_template(step: &str, variant: &str) -> Option<String> {
     // Tests run from the compiler crate's CWD (crates/sui/compiler/);
@@ -46,7 +46,7 @@ fn assert_clean(step: &str, variant: &str) {
     let errors: Vec<_> = analysis
         .diagnostics
         .iter()
-        .filter(|d| matches!(d.severity, sui_compiler::DiagSeverity::Error))
+        .filter(|d| matches!(d.severity, sail_compiler::DiagSeverity::Error))
         .collect();
     assert!(
         errors.is_empty(),

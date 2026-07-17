@@ -17,7 +17,7 @@
 //! author writes `on:click` either way and never sees the seam. What cannot be
 //! delegated falls back to a real listener, and this file pins exactly what that is.
 
-use sui_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{compile, CompileMode, CompileOpts};
 
 fn js(src: &str) -> String {
     compile(src, CompileOpts { mode: CompileMode::Component, ..Default::default() })

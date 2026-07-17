@@ -2,7 +2,7 @@
 // The vitest test harness does NOT use this; it loads the native compiler as a
 // Node-API `.node` addon (crates/sui/compiler-napi) so one `cargo build` feeds
 // both the daemon and the harness, with no second artifact to go stale (#255).
-// Keep this surface + `just sui-wasm` + @ship/sui-compiler-wasm for the only
+// Keep this surface + `just sui-wasm` + @ship/sail-compiler-wasm for the only
 // legit browser consumer: apps/site / docs (and the browser LSP worker).
 //
 // WASM-bindgen surface for the docs-site playground.
@@ -134,7 +134,7 @@ pub fn compile(source: &str, opts_json: &str) -> Result<JsValue, JsValue> {
 /// `.sui` source, off the same Rust grammar the compiler + native LSP use.
 /// `source_path` is `None` (the browser has no paired `.controller.ts` on
 /// disk), so controller-aware passes are skipped — template parse/semantic
-/// checks + lint still run. Mirrors `sui_compiler::analyze`.
+/// checks + lint still run. Mirrors `sail_compiler::analyze`.
 #[wasm_bindgen]
 pub fn analyze(source: &str) -> Result<JsValue, JsValue> {
     let analysis = crate::analyze(source, None, &[]);

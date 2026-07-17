@@ -3,9 +3,9 @@
 //! arrows where not allowed) with a message and span pointing at
 //! the user's source.
 
-use sui_compiler::{compile, compile_element, CompileMode, CompileOpts, Diagnostic};
+use sail_compiler::{compile, compile_element, CompileMode, CompileOpts, Diagnostic};
 
-fn compile_view(source: &str) -> sui_compiler::CompileError {
+fn compile_view(source: &str) -> sail_compiler::CompileError {
     compile(
         source,
         CompileOpts {

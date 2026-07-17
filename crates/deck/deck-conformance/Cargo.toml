@@ -12,7 +12,7 @@ path = "src/main.rs"
 [dependencies]
 deck = { path = "../deck" }
 deck-core = { path = "../deck-core" }
-sui-compiler = { path = "../../sui/compiler" }
+sail-compiler = { path = "../../sui/compiler" }
 axum = { workspace = true, features = ["http1", "tokio"] }
 tokio = { workspace = true, features = ["full"] }
 tokio-util = { workspace = true, features = ["full"] }

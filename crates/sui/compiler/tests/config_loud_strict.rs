@@ -16,8 +16,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use sui_compiler::check::policy::{Policy, ResolutionKind};
-use sui_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::check::policy::{Policy, ResolutionKind};
+use sail_compiler::{compile, CompileMode, CompileOpts};
 
 fn write_pack(config: &str, sui_body: &str) -> (tempfile::TempDir, PathBuf) {
     let tmp = tempfile::tempdir().unwrap();
@@ -63,7 +63,7 @@ fn unknown_key_fails_closed_and_the_refusal_names_file_key_and_tier() {
     let (_tmp2, sui_sx) = write_pack(r#"{"polcy":"strict"}"#, r#"<sui-card sx="p-4">x</sui-card>"#);
     let err = compile(&fs::read_to_string(&sui_sx).unwrap(), opts_for(&sui_sx))
         .expect_err("sx must be refused under the fail-closed strict tier");
-    assert_eq!(err.category.as_deref(), Some("sui-no-sx"));
+    assert_eq!(err.category.as_deref(), Some("sail-no-sx"));
 }
 
 #[test]
@@ -121,7 +121,7 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
         write_pack(r#"{"stylesheets": []}"#, r#"<sui-card sx="p-4">hi</sui-card>"#);
     let err = compile(&fs::read_to_string(&sui_sx).unwrap(), opts_for(&sui_sx))
         .expect_err("sx must be refused — stylesheets-only config still fails closed to strict");
-    assert_eq!(err.category.as_deref(), Some("sui-no-sx"));
+    assert_eq!(err.category.as_deref(), Some("sail-no-sx"));
     assert!(
         err.message.contains("sui.config.json"),
         "the refusal must name the config file that could grant sx: {}",

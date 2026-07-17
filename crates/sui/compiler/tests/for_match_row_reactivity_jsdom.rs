@@ -20,9 +20,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use sui_compiler::emit::synthetic::{emit_synthetic, AppManifest, AuthoredController};
-use sui_compiler::parse::parse;
-use sui_compiler::CompileMode;
+use sail_compiler::emit::synthetic::{emit_synthetic, AppManifest, AuthoredController};
+use sail_compiler::parse::parse;
+use sail_compiler::CompileMode;
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..").canonicalize().unwrap()
@@ -45,7 +45,7 @@ fn keyed_for_row_reuse_reselects_nested_match_branch() {
         repo.join("crates/sui/compiler/tests/fixtures/for-match-row-reactivity.sui"),
     )
     .unwrap();
-    let (src, inline) = sui_compiler::parse::preprocess::extract_controller_block(&raw);
+    let (src, inline) = sail_compiler::parse::preprocess::extract_controller_block(&raw);
     let program = parse(&src).unwrap();
 
     let work = repo.join("target/for-match-row-reactivity-jsdom-proof");

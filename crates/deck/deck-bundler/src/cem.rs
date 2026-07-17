@@ -22,9 +22,9 @@ use crate::catalog::discover_workspace_packages;
 /// - Reads `<pack_root>/package.json` for `customElements` field; returns
 ///   `Ok(None)` if absent.
 /// - Walks `src/` for `<stem>/<stem>.sui` files (component convention).
-/// - Compiles each in-process via `sui_compiler::compile` with
+/// - Compiles each in-process via `sail_compiler::compile` with
 ///   `CompileMode::Component` and extracts the CEM from `CompileOutput::cem`.
-/// - Calls `sui_compiler::emit::cem::merge_cem` to produce the standard
+/// - Calls `sail_compiler::emit::cem::merge_cem` to produce the standard
 ///   manifest.
 /// - Writes to `<pack_root>/<customElements_field_value>` (creates `dist/` if
 ///   needed).
@@ -61,29 +61,29 @@ pub fn write_pack_cem(pack_root: &Path) -> Result<Option<PathBuf>> {
             .to_string();
         let source = std::fs::read_to_string(sui_file)
             .with_context(|| format!("read {}", sui_file.display()))?;
-        let opts = sui_compiler::CompileOpts {
+        let opts = sail_compiler::CompileOpts {
         route_params: None,
             setup_url: None,
-            mode: sui_compiler::CompileMode::Component,
+            mode: sail_compiler::CompileMode::Component,
             source_path: Some(sui_file.to_path_buf()),
-            component_meta: Some(sui_compiler::ComponentMeta {
+            component_meta: Some(sail_compiler::ComponentMeta {
                 name: stem.clone(),
             }),
             emit_dts: false,
             emit_component_imports: false,
             // Language policy comes from the component's own sui.config.json
             // walk-up — deck never sets or relaxes it.
-            lint_overrides: sui_compiler::Policy::overrides_for(sui_file),
+            lint_overrides: sail_compiler::Policy::overrides_for(sui_file),
         };
-        let out = sui_compiler::compile(&source, opts)
+        let out = sail_compiler::compile(&source, opts)
             .map_err(|e| anyhow::anyhow!("compile {}: {}", sui_file.display(), e.render(&source)))?;
         if let Some(cem) = out.cem {
             cems.push(cem);
         }
     }
 
-    // 4. Merge into one standard manifest via the sui-compiler library.
-    let merged = sui_compiler::emit::cem::merge_cem(&cems);
+    // 4. Merge into one standard manifest via the sail-compiler library.
+    let merged = sail_compiler::emit::cem::merge_cem(&cems);
 
     // 5. Write to pack_root/<customElements_field>, creating dist/ if needed.
     let out_path = pack_root.join(&ce_field);

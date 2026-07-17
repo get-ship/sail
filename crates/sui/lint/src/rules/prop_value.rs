@@ -8,7 +8,7 @@
 //! falls back to the default — exactly the slop the design system was
 //! supposed to prevent.
 //!
-//! Severity is `Error`: `sui-compiler::check::css_token` promotes
+//! Severity is `Error`: `sail-compiler::check::css_token` promotes
 //! every error-severity finding to a build failure. The rule was
 //! introduced alongside a one-shot migration that cleared the prior
 //! drift (~100 violations dominated by `sui-icon#size`); afterward
@@ -37,7 +37,7 @@ use std::path::Path;
 use crate::prop_registry::registry;
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-prop-value";
+pub const RULE_ID: &str = "sail-prop-value";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let reg = registry();
@@ -84,7 +84,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                     "Replace with one of: {}. If a real new variant is \
                      required, add it to the prop's union in the stdlib \
                      `<scope>` declaration, then regenerate the registry \
-                     with `cargo run -p sui-compiler -- prop-registry`.",
+                     with `cargo run -p sail-compiler -- prop-registry`.",
                     allowed.join(", ")
                 )),
             });

@@ -33,7 +33,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-font-literal";
+pub const RULE_ID: &str = "sail-font-literal";
 
 const SEVERITY: Severity = Severity::Warn;
 

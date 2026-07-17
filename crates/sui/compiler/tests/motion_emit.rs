@@ -8,7 +8,7 @@
 //! the preset is a name resolved against `animation-presets.json`
 //! (e.g. `spring:snappy`, `spring:gentle`, `fade`, `press`).
 
-use sui_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{compile, CompileMode, CompileOpts};
 
 fn compile_motion(source: &str) -> Result<String, String> {
     let opts = CompileOpts {

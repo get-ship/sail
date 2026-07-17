@@ -579,7 +579,7 @@ fn build(
     let cfg = deck_bundler::DeckConfig::defaults();
 
     // The app graph compiles its own `.sui` in-process via the linked
-    // sui-compiler crate (#255) — no binary to locate.
+    // sail-compiler crate (#255) — no binary to locate.
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()

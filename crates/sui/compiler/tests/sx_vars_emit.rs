@@ -5,7 +5,7 @@
 //! with a did-you-mean; a signal not returned from `setup()` is not
 //! reachable; a global token is unaffected (no component-local wiring).
 
-use sui_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
 
 fn compile_component(source: &str, controller: Option<&str>) -> Result<String, String> {
     let mut src = String::new();
@@ -50,7 +50,7 @@ fn a_prop_bound_var_ref_emits_property_and_host_reflection() {
 fn an_action_owned_var_ref_is_unaffected_like_a_token() {
     // `--row-y` is written by `use:virtualRow`, not declared by this
     // component as a prop or signal — the resolution law's token bucket
-    // (via `sui_lint::tokens::CONVENTION_TOKENS`) covers action-owned
+    // (via `sail_lint::tokens::CONVENTION_TOKENS`) covers action-owned
     // custom properties for exactly this reason: the ACTION owns the
     // name, so it gets no component-local `@property`/host-reflection
     // wiring and is never refused as unmatched.

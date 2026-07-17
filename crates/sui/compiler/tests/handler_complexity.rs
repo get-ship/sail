@@ -8,7 +8,7 @@
 
 use std::path::PathBuf;
 
-use sui_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{compile, CompileMode, CompileOpts};
 
 fn view_opts(source_path: Option<PathBuf>) -> CompileOpts {
     CompileOpts {

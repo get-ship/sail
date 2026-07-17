@@ -30,7 +30,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-sx";
+pub const RULE_ID: &str = "sail-sx";
 
 /// A condition prefix (`motion-reduce:`/`forced-colors:`/…) → its `@media` query.
 /// A CLOSED set of the standard user-preference / environment queries — never an

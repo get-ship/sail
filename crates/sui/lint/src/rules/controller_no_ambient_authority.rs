@@ -37,7 +37,7 @@ use oxc_ast_visit::Visit;
 use oxc_parser::Parser;
 use oxc_span::{SourceType, Span};
 
-pub const RULE_ID: &str = "sui-controller-no-ambient-authority";
+pub const RULE_ID: &str = "sail-controller-no-ambient-authority";
 
 /// Banned regardless of the `"network"` allowlist — not part of the network
 /// capability.
@@ -61,7 +61,7 @@ fn is_confined_surface(path: &Path) -> bool {
 
 /// The `"network"`-config-blind entry — the generic `CONTROLLER_RULES` table
 /// (`rules::RuleFn`'s fixed `(path, source) -> Vec<Finding>` shape) calls this.
-/// Consumers reached through that table (the LSP, `sui_lint` CLI, agent
+/// Consumers reached through that table (the LSP, `sail_lint` CLI, agent
 /// tooling) don't have a resolved `sui.config.json` in hand, so this defaults
 /// to an empty allowlist — today's full refusal, unchanged. The compiler's
 /// `check::mod::collect` is config-aware and calls [`check_confined`] directly

@@ -9,7 +9,7 @@ use deck_ssr::host::SsrDispatch;
 use deck_ssr::run::render;
 use deck_core::DataPort;
 use serde_json::{json, Value};
-use sui_compiler::CompileMode;
+use sail_compiler::CompileMode;
 
 const GREET: &str = "crates/deck/deck-conformance/app/views/greet/[id]/page.sui";
 const GLYPH: &str = "crates/deck/deck-conformance/app/views/glyph/page.sui";

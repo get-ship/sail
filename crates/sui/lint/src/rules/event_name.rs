@@ -29,7 +29,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-event-name";
+pub const RULE_ID: &str = "sail-event-name";
 
 const KNOWN_EVENTS: &[&str] = &[
     // Mouse / pointer

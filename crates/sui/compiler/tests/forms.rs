@@ -2,11 +2,11 @@
 //! manifest, and validation error paths. (SSR-output tests moved out with
 //! render-eval; the host owns first-paint HTML now.)
 
-use sui_compiler::bindings;
-use sui_compiler::parse::parse;
-use sui_compiler::{CompileMode, CompileOpts, compile};
+use sail_compiler::bindings;
+use sail_compiler::parse::parse;
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
-fn compile_view(source: &str) -> sui_compiler::CompileError {
+fn compile_view(source: &str) -> sail_compiler::CompileError {
     compile(
         source,
         CompileOpts {

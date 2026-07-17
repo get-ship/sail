@@ -287,7 +287,7 @@ fn entries_from_sui_out(
     repo_root: &Path,
     packages: &[WorkspacePackage],
 ) -> Vec<CatalogEntry> {
-    let root = repo_root.join(sui_compiler::out_layout::sui_out_dir());
+    let root = repo_root.join(sail_compiler::out_layout::sui_out_dir());
     if !root.exists() {
         return vec![];
     }
@@ -379,7 +379,7 @@ fn find_owning_package<'a>(
 fn source_path_for_cem(repo_root: &Path, cem_abs: &Path) -> String {
     let repo_rel = rel_unix(repo_root, cem_abs);
     let mirrored = repo_rel
-        .strip_prefix(&format!("{}/", sui_compiler::out_layout::sui_out_dir()))
+        .strip_prefix(&format!("{}/", sail_compiler::out_layout::sui_out_dir()))
         .unwrap_or(&repo_rel);
     let file = mirrored.rsplit('/').next().unwrap_or(mirrored);
     let stem = file.strip_suffix(CEM_SUFFIX).unwrap_or(file);

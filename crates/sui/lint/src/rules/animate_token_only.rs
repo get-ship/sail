@@ -10,7 +10,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-animate-token-only";
+pub const RULE_ID: &str = "sail-animate-token-only";
 
 /// THE property vocabulary — one list, two readers. The compiler's parser imports
 /// this rather than keeping its own copy, because it kept its own copy and the two

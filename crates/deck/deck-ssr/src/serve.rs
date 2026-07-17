@@ -23,8 +23,8 @@ use anyhow::{anyhow, Result};
 use deck_core::synthetic_ssr::{SsrRequest, SyntheticSsr};
 use deck_core::DataPort;
 use ship_js::Dispatch;
-use sui_compiler::emit::synthetic::AppManifest;
-use sui_compiler::CompileMode;
+use sail_compiler::emit::synthetic::AppManifest;
+use sail_compiler::CompileMode;
 
 use crate::build::{repo_root, synthesize_and_bundle_with, ClientAlias};
 use crate::host::SsrDispatch;

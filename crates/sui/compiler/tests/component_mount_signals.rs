@@ -10,7 +10,7 @@
 //! mount-form). The engine collapse moved all of that to `mountComponent`, so
 //! the proxy/lifecycle contract lives in exactly one place (the runtime).
 
-use sui_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
+use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
 
 fn component_opts(setup: Option<&str>) -> CompileOpts {
     CompileOpts {

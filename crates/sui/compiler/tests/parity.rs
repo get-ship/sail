@@ -13,7 +13,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-use sui_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
+use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
 
 fn fixtures_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")
@@ -50,7 +50,7 @@ fn compile_fixture(name: &str, mode: CompileMode, setup: Option<&str>) -> String
 
 fn write_mjs(name: &str, js: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!(
-        "sui-compiler-parity-{}",
+        "sail-compiler-parity-{}",
         std::process::id()
     ));
     fs::create_dir_all(&dir).unwrap();

@@ -57,7 +57,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-css-literals";
+pub const RULE_ID: &str = "sail-css-literals";
 
 /// Severity for every finding this rule emits. `Warn` during the
 /// migration window; flip to `Error` once Tier B clears the ~28

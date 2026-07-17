@@ -16,7 +16,7 @@
 //! `text-sm` is a font size, `text-foreground` is a colour, `text-center`
 //! is an alignment.
 
-use sui_compiler::parse::preprocess::preprocess as preprocess_src;
+use sail_compiler::parse::preprocess::preprocess as preprocess_src;
 
 fn pp(src: &str) -> String {
     preprocess_src(src)
@@ -70,7 +70,7 @@ fn fg_muted_foreground_lowers_to_fg_var() {
 fn m4_lowers_to_margin_var() {
     // The spec called out "a gap" as a common-case sx utility. sx
     // deliberately does NOT own `gap` (sibling spacing is the layout
-    // keywords' job — see sui_lint::rules::sx), so the analogous
+    // keywords' job — see sail_lint::rules::sx), so the analogous
     // space-scale test exercises `m-4` (margin) — the surface-nudge
     // counterpart to padding. Same --space-4 var, same shape.
     let out = pp(r#"<div sx="m-4">x</div>"#);

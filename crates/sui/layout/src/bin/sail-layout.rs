@@ -1,12 +1,12 @@
-//! `sui-layout` — compile-time box-tree diagnostics for a `.sui` template.
+//! `sail-layout` — compile-time box-tree diagnostics for a `.sui` template.
 //!
 //! SPIKE. Usage:
 //!
-//!     sui-layout <FILE> [--viewport WxH]
+//!     sail-layout <FILE> [--viewport WxH]
 //!
 //! Example:
 //!
-//!     sui-layout apps/sui-site/routes/tutorial/\[slug\]/page.sui \
+//!     sail-layout apps/sui-site/routes/tutorial/\[slug\]/page.sui \
 //!         --viewport 1440x900
 //!
 //! Emits each diagnostic on its own line in the rough shape the compiler
@@ -17,7 +17,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use sui_layout as layout;
+use sail_layout as layout;
 
 #[derive(Parser, Debug)]
 #[command(about = "Compile-time box-tree diagnostics for .sui templates (spike)")]

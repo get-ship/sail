@@ -1,4 +1,4 @@
-//! Shared test helpers for `sui-compiler` integration tests.
+//! Shared test helpers for `sail-compiler` integration tests.
 //!
 //! Rust treats `tests/common/mod.rs` as a non-test submodule (not its
 //! own test binary), so consuming test files declare `mod common;` and

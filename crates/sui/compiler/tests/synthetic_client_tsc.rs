@@ -19,9 +19,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use sui_compiler::emit::synthetic::{emit_synthetic, AppManifest, AuthoredController, ManifestClient};
-use sui_compiler::parse::parse;
-use sui_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::emit::synthetic::{emit_synthetic, AppManifest, AuthoredController, ManifestClient};
+use sail_compiler::parse::parse;
+use sail_compiler::{compile, CompileMode, CompileOpts};
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..").canonicalize().unwrap()
@@ -49,7 +49,7 @@ const CONF_MANIFEST: &str = "crates/deck/deck-conformance/app/app.manifest.jsonc
 /// they must be DECLARED in the manifest, and the real pipeline merges them in.
 /// This stands in for that merge so the route-bearing surfaces (and the
 /// route-typo gate) type-check against `RouteSignals` exactly as they ship.
-/// (sui-compiler can't depend on deck-core — that's a cycle — so we mirror the
+/// (sail-compiler can't depend on deck-core — that's a cycle — so we mirror the
 /// two entries rather than call into it.)
 fn inject_host_context(manifest: &mut AppManifest) {
     manifest.clients.entry("route".to_string()).or_insert(ManifestClient {
@@ -77,7 +77,7 @@ fn synth_client_into(repo: &Path, gendir: &Path, s: &Surface) {
     // A source may carry its controller INLINE (`<controller>…</controller>`)
     // rather than as a sibling `.controller.ts` — strip it before the
     // template-only parser sees it (mirrors `deck_ssr::build`).
-    let (stripped, inline_controller) = sui_compiler::parse::preprocess::extract_controller_block(&src);
+    let (stripped, inline_controller) = sail_compiler::parse::preprocess::extract_controller_block(&src);
     let program = parse(&stripped).unwrap_or_else(|e| panic!("parse {}: {}", s.name, e.render(&stripped)));
 
     let dir = gendir.join(s.name);

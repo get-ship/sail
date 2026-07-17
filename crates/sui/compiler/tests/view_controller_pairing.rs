@@ -4,7 +4,7 @@
 //! via `Object.assign`. Components have always done this; this test
 //! locks in the parity for views.
 
-use sui_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{compile, CompileMode, CompileOpts};
 
 fn view_opts(setup: Option<&str>) -> CompileOpts {
     CompileOpts {

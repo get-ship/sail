@@ -12,7 +12,7 @@
 //! These gates run on representative compiled output (view + component) so a
 //! regression fails the build rather than slipping to web-QA.
 
-use sui_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
+use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
 
 fn view_opts(setup: Option<&str>) -> CompileOpts {
     CompileOpts {

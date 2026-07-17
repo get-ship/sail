@@ -14,7 +14,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-no-sx";
+pub const RULE_ID: &str = "sail-no-sx";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let bytes = source.as_bytes();

@@ -17,7 +17,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-attr-empty-presence";
+pub const RULE_ID: &str = "sail-attr-empty-presence";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();

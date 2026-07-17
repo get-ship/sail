@@ -1,6 +1,6 @@
 //! The controller lint gate — a compile-time hard wall.
 //!
-//! Defers the rules to `sui-lint` (the same walker that drives the LSP), so a
+//! Defers the rules to `sail-lint` (the same walker that drives the LSP), so a
 //! violation looks identical in the editor and in `cargo build`.
 //!
 //! The source is the `<controller>` BLOCK. It used to hunt for a sibling
@@ -24,10 +24,10 @@ pub fn check(
 
     // Apply the build host's lint overrides before the Error filter. The
     // rule's natural severity is preserved for everyone who consumes
-    // the lint directly (the LSP, `sui_lint` CLI); the override only
+    // the lint directly (the LSP, `sail_lint` CLI); the override only
     // affects this build-time gate.
     let mut findings = crate::check::lint_overrides::apply_overrides(
-        sui_lint::lint_controller_source(&controller_path, &source),
+        sail_lint::lint_controller_source(&controller_path, &source),
         overrides,
     );
     // `sui-controller-no-ambient-authority` is `sui.config.json`
@@ -39,10 +39,10 @@ pub fn check(
     // (`Policy::network_for`), same fix as `check::collect`'s identical
     // splice — this gate and `collect` are two independent call sites into
     // the same generic table, so both need it.
-    findings.retain(|f| f.rule != sui_lint::rules::controller_no_ambient_authority::RULE_ID);
+    findings.retain(|f| f.rule != sail_lint::rules::controller_no_ambient_authority::RULE_ID);
     let network = crate::check::policy::Policy::network_for(&controller_path);
     let ambient_findings = crate::check::lint_overrides::apply_overrides(
-        sui_lint::rules::controller_no_ambient_authority::check_confined(
+        sail_lint::rules::controller_no_ambient_authority::check_confined(
             &controller_path,
             &source,
             &network,
@@ -51,10 +51,10 @@ pub fn check(
     );
     findings.extend(ambient_findings);
     // The build gate fails only on Error-severity findings. Warnings surface
-    // through the LSP / `sui-lint` CLI (which call `lint_controller_source`
+    // through the LSP / `sail-lint` CLI (which call `lint_controller_source`
     // directly) but don't break compilation — so a rule can ship as a
     // surfaced-but-non-blocking warning before being promoted to a hard wall.
-    let Some(first) = findings.iter().find(|f| f.severity == sui_lint::Severity::Error) else {
+    let Some(first) = findings.iter().find(|f| f.severity == sail_lint::Severity::Error) else {
         return Ok(());
     };
 

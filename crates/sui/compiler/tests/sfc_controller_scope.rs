@@ -10,7 +10,7 @@
 
 use std::path::PathBuf;
 
-use sui_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
 
 const SFC: &str = r#"<controller>
 import { controller, signal } from '@ship/sui-runtime'
@@ -66,7 +66,7 @@ fn diagnostic_lines_point_at_the_authored_row() {
 
 #[test]
 fn blanking_preserves_every_offset() {
-    let (template, body) = sui_compiler::parse::preprocess::extract_controller_block(SFC);
+    let (template, body) = sail_compiler::parse::preprocess::extract_controller_block(SFC);
     assert!(body.is_some());
     assert_eq!(template.len(), SFC.len(), "the template must not shift the source's bytes");
     assert_eq!(

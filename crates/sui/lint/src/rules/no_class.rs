@@ -33,7 +33,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sui-no-class";
+pub const RULE_ID: &str = "sail-no-class";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     // FLOOR — refuses everywhere. The historical "opt-in via `sui.config.json`

@@ -1,6 +1,6 @@
 //! Per-rule severity overrides for the compiler's build gate.
 //!
-//! The lint engine (`sui-lint`) emits findings at their natural severity
+//! The lint engine (`sail-lint`) emits findings at their natural severity
 //! (Error for the typo-catching rules like `sui-css-token`; Warn for
 //! surfaced-but-non-blocking rules like `sui-for-key`). The compiler's
 //! build gate (`check::run` + `check::gate`) only promotes Error-severity
@@ -12,7 +12,7 @@
 //! wall without modifying the rule itself. The override is applied
 //! after the lint emits its findings; the rule's natural severity is
 //! preserved for everyone who consumes the lint directly (the LSP,
-//! `sui_lint` CLI, `ship_view_lint`). The compiler just downgrades the
+//! `sail_lint` CLI, `ship_view_lint`). The compiler just downgrades the
 //! rule's gate impact.
 //!
 //! Overrides mostly *soften* (Error → Warn or Off) so an external consumer can
@@ -70,7 +70,7 @@ pub enum OverrideSeverity {
     Warn,
     /// Drop the rule's findings entirely at the build gate. The build
     /// proceeds; no diagnostic is emitted (the LSP still surfaces the
-    /// finding if the consumer wants — `sui-lint`'s `lint_path` is
+    /// finding if the consumer wants — `sail-lint`'s `lint_path` is
     /// unaffected). The opt-out.
     Off,
     /// PROMOTE the rule's findings to Error at the build gate. Unlike
@@ -84,15 +84,15 @@ pub enum OverrideSeverity {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LintOverride {
-    /// Rule ID — e.g. `"sui-css-token"`. The set of valid IDs is
-    /// `sui_lint::all_rule_ids()`. The compiler does NOT validate
+    /// Rule ID — e.g. `"sail-css-token"`. The set of valid IDs is
+    /// `sail_lint::all_rule_ids()`. The compiler does NOT validate
     /// (forward-compat — a typo simply has no effect, which is the
     /// safe failure mode).
     pub rule: String,
     pub severity: OverrideSeverity,
 }
 
-/// Apply a list of overrides to a finding stream from `sui-lint`.
+/// Apply a list of overrides to a finding stream from `sail-lint`.
 /// Returns the same findings, with severity adjusted (Warn downgrade)
 /// or removed (Off). Order preserved; positions unchanged.
 ///
@@ -101,9 +101,9 @@ pub struct LintOverride {
 /// list is small (typically 0–3 entries) so a HashMap would be more
 /// code than it saves.
 pub fn apply_overrides(
-    findings: Vec<sui_lint::Finding>,
+    findings: Vec<sail_lint::Finding>,
     overrides: &[LintOverride],
-) -> Vec<sui_lint::Finding> {
+) -> Vec<sail_lint::Finding> {
     if overrides.is_empty() {
         return findings;
     }
@@ -123,11 +123,11 @@ pub fn apply_overrides(
                     return match o.severity {
                         OverrideSeverity::Off => None,
                         OverrideSeverity::Warn => {
-                            f.severity = sui_lint::Severity::Warn;
+                            f.severity = sail_lint::Severity::Warn;
                             Some(f)
                         }
                         OverrideSeverity::Error => {
-                            f.severity = sui_lint::Severity::Error;
+                            f.severity = sail_lint::Severity::Error;
                             Some(f)
                         }
                     };
@@ -154,12 +154,12 @@ pub fn apply_overrides(
 /// `compile_element`, which does not run the lint gate, because they ARE the
 /// styling layer (the compiler's own generated `sx` block is likewise not
 /// authored source).
-pub fn enforce_floor(findings: Vec<sui_lint::Finding>) -> Vec<sui_lint::Finding> {
+pub fn enforce_floor(findings: Vec<sail_lint::Finding>) -> Vec<sail_lint::Finding> {
     findings
         .into_iter()
         .map(|mut f| {
             if crate::check::policy::is_floor_rule(f.rule) {
-                f.severity = sui_lint::Severity::Error;
+                f.severity = sail_lint::Severity::Error;
             }
             f
         })

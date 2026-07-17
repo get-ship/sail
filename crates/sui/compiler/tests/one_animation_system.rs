@@ -13,7 +13,7 @@
 //! untouched — it is simply backed by `motion:` now. So the fold is: same mechanism,
 //! one catalog, one directive.
 
-use sui_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{compile, CompileMode, CompileOpts};
 
 fn opts() -> CompileOpts {
     CompileOpts { mode: CompileMode::Component, ..Default::default() }
@@ -123,11 +123,11 @@ fn a_bad_stagger_duration_fails_the_build() {
 /// parser and the `sui-animate-token-only` lint — each with its own hand-copied
 /// array, and a comment in the lint asserting they were the same set. They were not:
 /// adding `stagger` to the parser compiled fine and then failed the lint, because a
-/// comment is not a mechanism. They are one list in sui-lint now, and the preset
+/// comment is not a mechanism. They are one list in sail-lint now, and the preset
 /// catalog is one JSON that both read. This test fails if anyone re-copies either.
 #[test]
 fn the_animation_vocabulary_has_exactly_one_source() {
-    for prop in sui_lint::rules::animate_token_only::MOTION_PROPERTIES {
+    for prop in sail_lint::rules::animate_token_only::MOTION_PROPERTIES {
         let src = format!(r#"<card motion:hover={{{{ {prop}: 'spring:snappy' }}}}>x</card>"#);
         assert!(
             compile(&src, opts()).is_ok(),
@@ -178,7 +178,7 @@ fn parallax_is_one_directive() {
 #[test]
 fn every_advertised_trigger_can_actually_be_written() {
     let mut unwritable = Vec::new();
-    for trigger in sui_lint::rules::animate_token_only::MOTION_TRIGGERS {
+    for trigger in sail_lint::rules::animate_token_only::MOTION_TRIGGERS {
         let src = format!(r#"<card motion:{trigger}={{{{ opacity: 'fade' }}}}>x</card>"#);
         match compile(&src, opts()) {
             Ok(out) => assert!(
