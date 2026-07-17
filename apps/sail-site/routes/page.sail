@@ -1,164 +1,179 @@
 <!--
-  SAIL landing — design 2a, "One program, both sides." A docs-shaped
-  introduction that lives inside the site's own chrome (top product switcher +
-  rail, provided by <sail-site-shell>). The hero states the pitch and proves it
-  ships today; the centerpiece is ONE synced panel — the exact filterable Team
-  program printed on the left, running for real on the right (type filters,
-  Invite appends, buttons press). A narrated step strip + dot rail say what
-  "synced" means for a reader who never touches the keyboard. A 3-up feature
-  strip closes it. Everything below the hero is genuinely interactive.
+  SAIL landing — design 1c, the kinetic "Ship UI home". A full-bleed dark
+  marketing hero (NOT a docs page): a two-line display headline behind a soft
+  radial glow, two CTAs, then the signature TWO CROSSING DIAGONAL TICKER BANDS
+  (a bright teal band angled one way over a darker mono band angled the other,
+  both running continuously and full-width). Below, an asymmetric bento of live
+  micro-demos — an animating bar chart, pulsing deploy dots, a real toggle, a
+  blinking-cursor terminal — and a closing giant SHIP wordmark in a teal→void
+  gradient, cropped at the very bottom.
+
+  Everything here is tokens + L1 primitives + motion. The tickers are the
+  stdlib <ticker> (its own seamless loop); the rotation, glow, gradient
+  wordmark, bars and cursor are ordinary sx atoms (rotate-*, bg-glow-accent,
+  text-gradient-primary) and motion:loop — no <style>, no style=, no raw px/hex.
+  The shell renders `/` full-bleed (fullscreen, no rail, no reading gutter).
 -->
 
 <controller>
-// Landing — the "code ⇆ live" centerpiece. `filteredList` drives the real
-// filter; `invite` appends a real signal. An auto-cycling step (label + dot
-// rail) narrates the sync loop so the panel reads as a demo even at rest.
-
-import { controller, signal, effect, filteredList, type ViewScope } from '@ship/sail-runtime'
+// The page is almost entirely CSS/motion — the one piece of real state is the
+// bento's "it works" switch, a genuine interactive toggle the reader can flip.
+import { controller, signal, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { code } from './snippets'
-
-const STEPS = [
-  'Filtering — type to narrow filtered().',
-  'Reactive — the list recomputes on every keystroke.',
-  'Inviting — one click appends with signal.set().',
-  'Synced — the code on the left is the exact program running.',
-]
-const BENCH = ['Katherine Johnson', 'Annie Easley', 'Margaret Hamilton', 'Radia Perlman']
 
 export default controller((_ctx: ViewScope<Scope>) => {
-    // Narration — a slow cycle so the panel is alive before you touch it.
-    const step = signal(0)
-    effect(() => {
-      const t = setInterval(() => step.set((n) => (n + 1) % STEPS.length), 2600)
-      return () => clearInterval(t)
-    })
-
-    // The real program, printed on the left and running on the right.
-    const people = signal([
-      { id: 1, name: 'Ada Lovelace', team: 'Engineering', status: 'active' },
-      { id: 2, name: 'Grace Hopper', team: 'Engineering', status: 'away' },
-      { id: 3, name: 'Alan Turing', team: 'Research', status: 'active' },
-    ])
-    const { query, filtered } = filteredList(() => people(), (p, q) =>
-      (p.name + ' ' + p.team).toLowerCase().includes(q),
-    )
-    const invite = (): void => {
-      people.set((l) => [
-        ...l,
-        { id: l.length + 1, name: BENCH[(l.length - 3) % BENCH.length] ?? `Member ${l.length + 1}`, team: 'Engineering', status: 'active' },
-      ])
-    }
-
-    // The install line copies itself — a small working detail.
-    const copied = signal(false)
-    const copyInstall = (): void => {
-      // Clipboard can be blocked (no permission / insecure origin); swallow the
-      // rejection so a copy attempt never surfaces an uncaught error.
-      try {
-        void navigator.clipboard?.writeText('npm install @ship/sail-runtime').catch(() => {})
-      } catch {
-        /* clipboard unavailable — the label still confirms the intent */
-      }
-      copied.set(true)
-      setTimeout(() => copied.set(false), 1400)
-    }
-
-    return {
-      code,
-      step, stepLabel: () => STEPS[step()],
-      people, query, filtered, invite,
-      copied, copyInstall,
-    }
+    const on = signal(true)
+    const toggle = (): void => on.set((v) => !v)
+    return { on, toggle }
 })
 </controller>
 
-<column gap="8" sx="max-w-full min-w-0">
+<column gap="0" sx="w-full min-w-0 overflow-x-hidden bg-surface-0">
+
   <!-- ══ HERO ═══════════════════════════════════════════════════════════ -->
-  <column gap="5" sx="max-w-breakpoint-tablet relative">
-    <div sx="absolute top-0 right-0 w-64 h-64 bg-glow-accent pointer-events-none z-base"></div>
-    <p sx="font-mono text-xs uppercase tracking-wider text-accent">Introduction</p>
-    <h1 sx="text-display font-bold tracking-tighter leading-none">SAIL</h1>
-    <p sx="text-lg text-muted-foreground leading-relaxed max-w-breakpoint-mobile">
-      A batteries-included language for web pages. Components, layout, styling,
-      theming, animation and state ship in the syntax — a page is markup, and
-      nothing has to be assembled first.
-    </p>
-    <button variant="outline" on:click={copyInstall} sx="w-fit font-mono text-sm" motion:press={{ scale: 'press' }}>
-      <row gap="3" align="center">
-        <span sx="text-muted-foreground select-none">$</span>
-        <span>npm install @ship/sail-runtime</span>
-        <span sx="text-muted-foreground">{copied() ? '✓ copied' : '⧉'}</span>
-      </row>
-    </button>
-  </column>
+  <section sx="relative px-8 pt-20 pb-16">
+    <!-- soft radial glow behind the headline -->
+    <div sx="absolute inset-x-0 top-0 h-64 bg-glow-accent pointer-events-none z-base"></div>
 
-  <!-- ══ ONE PROGRAM, BOTH SIDES — the centerpiece ═════════════════════ -->
-  <column gap="0" sx="border border-border rounded-xl bg-surface-1 overflow-hidden min-w-0 shadow-lg">
-    <row justify="between" align="center" sx="px-6 py-4 border-b border-border">
-      <p sx="text-md"><strong>One program, both sides.</strong> <span sx="text-muted-foreground">Watch the highlight — or just use the app.</span></p>
-      <row gap="1" align="center">
-        <span dot tone={step() === 0 ? 'accent' : 'muted'} size="sm"></span>
-        <span dot tone={step() === 1 ? 'accent' : 'muted'} size="sm"></span>
-        <span dot tone={step() === 2 ? 'accent' : 'muted'} size="sm"></span>
-        <span dot tone={step() === 3 ? 'accent' : 'muted'} size="sm"></span>
-      </row>
-    </row>
-
-    <row align="stretch" sx="min-w-0">
-      <!-- left: the source -->
-      <column sx="grow-1 min-w-0 basis-0 border-r border-border p-5 overflow-x-auto bg-surface-0">
-        <code-block code={code.team}></code-block>
+    <column gap="8" align="center" sx="relative w-full max-w-breakpoint-desktop mx-auto">
+      <!-- two-line kinetic headline: "Agents" then "You review." offset right -->
+      <column gap="0" align="center" sx="w-full">
+        <p sx="w-full text-display font-display font-bold tracking-tighter leading-none text-foreground text-left pl-6">Agents</p>
+        <p sx="w-full text-display font-display font-bold tracking-tighter leading-none text-foreground text-right pr-6">You review.</p>
       </column>
 
-      <!-- right: the same program, running -->
-      <column gap="4" sx="grow-1 min-w-0 basis-0 p-5">
-        <row justify="between" align="baseline">
-          <strong sx="text-md">Team</strong>
-          <p sx="font-mono text-xs text-muted-foreground">{filtered().length} of {people().length}</p>
-        </row>
-        <input placeholder="Filter people — try 'eng'" bind:value={query} />
-        <column gap="2" sx="min-h-32">
-          {#for p of filtered() key={p.id}}
-            <row gap="3" align="center" sx="p-3 border border-border rounded-lg bg-surface-2 hover:border-accent transition-colors" motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }} motion:hover={{ scale: 'spring:gentle' }}>
-              <avatar name={p.name} tone="accent" size="sm"></avatar>
-              <column gap="0" sx="grow-1 min-w-0">
-                <strong sx="text-sm truncate">{p.name}</strong>
-                <p sx="text-xs text-muted-foreground">{p.team}</p>
-              </column>
-              <badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge>
+      <p sx="text-lg text-muted-foreground leading-relaxed text-center max-w-breakpoint-mobile">
+        One confined language for the whole interface — so agent-written UI
+        compiles into guarantees, not surprises.
+      </p>
+
+      <row gap="4" justify="center" align="center" sx="w-full">
+        <a variant="solid" tone="primary" href="/getting-started" sx="rounded-full px-8" motion:press={{ scale: 'press' }}>Get started</a>
+        <a variant="outline" href="/getting-started" sx="rounded-full px-8 font-mono" motion:press={{ scale: 'press' }}>npx create-ship</a>
+      </row>
+    </column>
+  </section>
+
+  <!-- ══ TWO CROSSING DIAGONAL TICKER BANDS ════════════════════════════ -->
+  <!-- Full-bleed: each band is wider than the viewport (-inset-x-10) and
+       tilted opposite ways so they cross; the section clips the overhang. The
+       <ticker> owns the seamless infinite scroll (both bands move, always). -->
+  <section sx="relative w-full h-44 overflow-hidden my-8 z-elevated">
+    <!-- darker mono band — angled down-right, runs in reverse, sits lower -->
+    <div sx="absolute -inset-x-10 top-24 rotate-2">
+      <ticker duration="slow" reverse sx="border-t border-b border-border bg-surface-2 py-3">
+        <p sx="font-mono text-sm text-muted-foreground whitespace-nowrap">hot reload&nbsp;&nbsp;·&nbsp;&nbsp;forms + validation&nbsp;&nbsp;·&nbsp;&nbsp;swr data&nbsp;&nbsp;·&nbsp;&nbsp;server functions&nbsp;&nbsp;·&nbsp;&nbsp;ssr&nbsp;&nbsp;·&nbsp;&nbsp;animations&nbsp;&nbsp;·&nbsp;&nbsp;</p>
+      </ticker>
+    </div>
+    <!-- bright teal band — angled up-right, on top where they cross -->
+    <div sx="absolute -inset-x-10 top-10 -rotate-2 z-popover">
+      <ticker sx="bg-primary py-3">
+        <p sx="font-bold uppercase tracking-wide text-md text-primary-foreground whitespace-nowrap">9 themes&nbsp;&nbsp;◆&nbsp;&nbsp;a11y by construction&nbsp;&nbsp;◆&nbsp;&nbsp;no raw css&nbsp;&nbsp;◆&nbsp;&nbsp;signals built in&nbsp;&nbsp;◆&nbsp;&nbsp;tokens&nbsp;&nbsp;◆&nbsp;&nbsp;</p>
+      </ticker>
+    </div>
+  </section>
+
+  <!-- ══ BENTO — asymmetric grid of live micro-demos ═══════════════════ -->
+  <section sx="px-8 pt-8 pb-12">
+    <row gap="4" align="start" sx="w-full max-w-breakpoint-desktop mx-auto">
+
+      <!-- LEFT column: the tall SAIL card + the AI terminal beneath it -->
+      <column gap="4" sx="basis-half grow-1 min-w-0">
+        <!-- SAIL reactive language — animated bar chart + signals link -->
+        <card sx="grow-1 min-w-0 min-h-64 overflow-hidden">
+          <column gap="6" sx="h-full">
+            <column gap="2">
+              <p><strong sx="text-2xl text-primary">SAIL</strong> <span sx="font-mono text-xs text-muted-foreground">reactive language</span></p>
+              <p sx="text-sm text-muted-foreground leading-relaxed max-w-64">Markup that already knows how to style, animate and react. The framework has the rest.</p>
+            </column>
+            <row gap="2" align="end" sx="h-20 mt-auto">
+              <div sx="w-5 h-9 rounded-sm bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+              <div sx="w-5 h-14 rounded-sm bg-primary opacity-60" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+              <div sx="w-5 h-11 rounded-sm bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+              <div sx="w-5 h-16 rounded-sm bg-primary opacity-60" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+              <div sx="w-5 h-8 rounded-sm bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+              <div sx="w-5 h-12 rounded-sm bg-primary opacity-60" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+              <span sx="ml-auto self-end font-mono text-xs text-muted-foreground">signals →</span>
             </row>
-          {/for}
-          {#if filtered().length === 0}
-            <center sx="p-5 border border-dashed border-border rounded-lg text-sm text-muted-foreground" motion:enter={{ opacity: 'fade' }}>no matches — filtered() is empty</center>
-          {/if}
-        </column>
-        <row gap="2">
-          <button on:click={invite} variant="solid" tone="accent" motion:press={{ scale: 'press' }}>Invite</button>
-          <button variant="outline">Export</button>
+          </column>
+        </card>
+
+        <!-- AI agent tooling — accent-tinted card with a live terminal -->
+        <card sx="grow-1 min-w-0 bg-tone-primary-bg border border-primary">
+          <row gap="4" justify="between" align="center">
+            <column gap="2" sx="min-w-0 basis-56 grow-1">
+              <p><strong sx="text-xl text-primary">AI</strong> <span sx="font-mono text-xs text-muted-foreground">agent tooling</span></p>
+              <p sx="text-sm text-muted-foreground leading-relaxed">MCP server, scored authoring eval, and a compiler that rejects what it can't guarantee.</p>
+            </column>
+            <column gap="1" sx="shrink-0 font-mono text-sm bg-surface-0 border border-border rounded-lg px-4 py-3">
+              <row gap="2" align="center"><span sx="text-muted-foreground">$</span><span sx="text-foreground">agent → ship compile</span></row>
+              <row gap="1" align="center">
+                <span sx="text-primary">✓ 0 errors · themed · a11y</span>
+                <span sx="inline-block w-1 h-4 bg-primary" motion:loop={{ opacity: 'pulse' }}></span>
+              </row>
+            </column>
+          </row>
+        </card>
+      </column>
+
+      <!-- RIGHT column: Deck card, then Components + toggle side by side -->
+      <column gap="4" sx="basis-half grow-1 min-w-0">
+        <!-- Deck app framework — pulsing status readout -->
+        <card sx="min-w-0">
+          <row gap="4" justify="between" align="center">
+            <column gap="2" sx="min-w-0 basis-56 grow-1">
+              <p><strong sx="text-xl text-primary">Deck</strong> <span sx="font-mono text-xs text-muted-foreground">app framework</span></p>
+              <p sx="text-sm text-muted-foreground leading-relaxed">SSR, routing, bundling, server functions, live data.</p>
+            </column>
+            <column gap="1" sx="shrink-0 font-mono text-xs text-primary">
+              <row gap="2" align="center"><span dot tone="primary" size="sm" pulse></span><span>build 214</span></row>
+              <row gap="2" align="center"><span dot tone="primary" size="sm" pulse></span><span>deployed</span></row>
+              <row gap="2" align="center"><span dot tone="primary" size="sm" pulse></span><span>p99 41ms</span></row>
+            </column>
+          </row>
+        </card>
+
+        <row gap="4" align="stretch">
+          <!-- Components — catalog readout -->
+          <card sx="grow-1 basis-0 min-w-0 relative overflow-hidden">
+            <column gap="3">
+              <strong sx="text-lg text-primary">Components</strong>
+              <column gap="1" sx="font-mono text-sm text-muted-foreground">
+                <span>toast · queued</span>
+                <span>tabs · animated</span>
+              </column>
+            </column>
+            <span sx="absolute bottom-4 right-4 font-mono text-xs text-muted-foreground">48 + packs</span>
+          </card>
+
+          <!-- the small interactive card: a real toggle -->
+          <card sx="shrink-0 basis-28">
+            <center sx="h-full">
+              <column gap="3" align="center">
+                <switch bind:checked={on} tone="primary"></switch>
+                <span sx="font-mono text-xs text-muted-foreground">it works</span>
+              </column>
+            </center>
+          </card>
         </row>
       </column>
     </row>
+  </section>
 
-    <row gap="3" align="center" sx="px-6 py-3 border-t border-border font-mono text-sm text-accent">
-      <span dot tone="accent" size="sm" pulse></span>
-      {stepLabel()}
+  <!-- ══ FOOTER + giant SHIP wordmark ══════════════════════════════════ -->
+  <section sx="px-8 pt-12">
+    <row justify="between" align="center" sx="w-full max-w-breakpoint-desktop mx-auto pb-6 border-b border-border font-mono text-sm text-muted-foreground">
+      <row gap="6" align="center">
+        <a href="/overview" sx="text-muted-foreground hover:text-primary">Docs</a>
+        <a href="https://github.com" sx="text-muted-foreground hover:text-primary">GitHub</a>
+        <a href="https://discord.com" sx="text-muted-foreground hover:text-primary">Discord</a>
+      </row>
+      <span>v0.2.0</span>
     </row>
-  </column>
+  </section>
 
-  <!-- ══ WHAT COMES WITH IT ════════════════════════════════════════════ -->
-  <row gap="3" align="stretch" sx="max-w-full">
-    <card interactive sx="p-5 grow-1 min-w-0 basis-0">
-      <strong sx="text-accent text-md">48 components</strong>
-      <p sx="text-sm text-muted-foreground mt-2 leading-relaxed">Accessible, keyboard-complete, themed.</p>
-    </card>
-    <card interactive sx="p-5 grow-1 min-w-0 basis-0">
-      <strong sx="text-accent text-md">Layout &amp; styling</strong>
-      <p sx="text-sm text-muted-foreground mt-2 leading-relaxed"><code>&lt;row&gt;</code> <code>&lt;column&gt;</code> <code>&lt;grid&gt;</code>, sx tokens — no CSS to write.</p>
-    </card>
-    <card interactive sx="p-5 grow-1 min-w-0 basis-0">
-      <strong sx="text-accent text-md">No virtual DOM</strong>
-      <p sx="text-sm text-muted-foreground mt-2 leading-relaxed">Fine-grained signals — Solid-class updates, no diff.</p>
-    </card>
-  </row>
+  <!-- teal→void gradient wordmark, full-bleed and cropped at the bottom edge -->
+  <div sx="w-full overflow-hidden">
+    <p sx="text-display font-display font-bold tracking-tighter leading-none text-center text-gradient-primary select-none -mb-8">SHIP</p>
+  </div>
 </column>

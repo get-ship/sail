@@ -4792,6 +4792,7 @@ export const SX_ATOMS: SxAtom[] = [
     "values": [
       "normal",
       "tight",
+      "tighter",
       "wide",
       "wider"
     ]
