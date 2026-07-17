@@ -1,8 +1,47 @@
 // query() / mutation() — the public read/write primitives that replace
 // `live()` (see helm/data/missions/m-deck-standalone/scratch/data-arch-seed.md,
-// "the five client primitives", ruling 3). `query()` is the ONLY public
-// door to the cache engine — see native-cache.ts's CONTRACT header for
-// the swap boundary this file sits on top of.
+// "the five client primitives", ruling 3).
+//
+// ---------------------------------------------------------------
+// CONTRACT — query() is the ONLY public door to the cache engine.
+//
+// This header used to live on `queried.ts` (query-core-backed) and
+// was reproduced on `native-cache.ts` for the spike. Now that
+// `query()` is the public primitive `live()` used to be, THIS is
+// where the swap boundary's contract is documented — `queried.ts` and
+// `native-cache.ts` are implementation detail underneath it. Swapping
+// the engine again means rewriting `queried.ts`/`native-cache.ts`
+// alone; everything in this file, and everything above it (components,
+// templates, the compiler's emitted code), is written against the
+// five clauses below and must not need to change.
+//
+// 1. SUBSCRIBE. `query()`/`queryKeyed()` return a `Signal<LiveState<T>>`
+//    live for the calling scope's lifetime: every transition lands via
+//    `.set()` synchronously with the engine's own notification. A
+//    derived-key change (see DERIVED IDENTITY below) attaches to a
+//    DIFFERENT cache entry rather than refetching the old one, but
+//    still forwards through the SAME outer signal object — callers
+//    never see the reference change.
+//
+// 2. READ. Exactly the frozen `LiveState<T>` union — `loading`, `ok`,
+//    `error`, never a fourth shape. A background revalidate of
+//    already-`ok` data (an invalidate, a stale-while-revalidate
+//    remount) never flips the signal back to `loading`.
+//
+// 3. INVALIDATE. `staleTime`/`gcTime`/`retry` are the only knobs
+//    (`QueryOpts`, forwarded unmodified). `invalidate(prefix)` — the
+//    same mechanism serving mutation auto-invalidation and the public
+//    `invalidate()` grammar — is the one way to force a refetch; see
+//    invalidate-design-proposal.md. Every fetch attempt owns a real
+//    `AbortController`; dispose/GC/invalidate all abort it for real.
+//
+// 4. OWNER-TREE HOMING. One cache per owner-tree chain root
+//    (`useNativeCache()`, walking `.parent` to `parent === null`),
+//    never a module singleton. Two roots never share entries.
+//
+// 5. UNSUBSCRIBE. Registered via `onCleanup` on the CALLING scope —
+//    no signal update after the owning scope is gone.
+// ---------------------------------------------------------------
 //
 // ---------------------------------------------------------------------
 // DERIVED IDENTITY — keys are never handwritten.

@@ -14,27 +14,18 @@
 // `interleaved pull+push` test) instead of needing a second primitive
 // query-core has no room for.
 //
-// Reproduces the FIVE-CLAUSE CONTRACT from queried.ts:
-//   1. SUBSCRIBE — the returned Signal IS the entry's signal; every
-//      transition lands via `.set()` synchronously, no microtask hop
-//      added by this file. A remount that finds a live entry reflects
-//      its current value synchronously (nothing to do — same signal).
-//   2. READ — exactly the frozen `LiveState<T>` union; a background
-//      revalidate (§ stale-while-revalidate) never flips ok→loading.
-//   3. INVALIDATE — staleTime/gcTime/retry are the only knobs; forwarded
-//      unmodified from `NativeCacheOpts`, interpreted only by this file.
-//      `invalidate(prefix)` (see method below) is the one mechanism
-//      behind both mutation auto-invalidation and the public
-//      `invalidate()` grammar — see
-//      helm/data/missions/m-deck-standalone/scratch/invalidate-design-proposal.md.
-//      Every in-flight fetch attempt (initial or retry) is real
-//      network work owned by an `AbortController`; dispose, GC
-//      eviction, and an invalidate-forced refetch all call `.abort()`
-//      on it, not just discard the eventual settled value.
-//   4. OWNER-TREE HOMING — one `NativeCache` per chain root, resolved by
-//      walking `.parent` to `parent === null` (mirrors `query-client.ts`
-//      exactly), never a module singleton. Disposed with the root.
-//   5. UNSUBSCRIBE — registered via `onCleanup` on the CALLING scope.
+// Implements the FIVE-CLAUSE CONTRACT — see `query.ts`'s module
+// header for the canonical, numbered text (moved there now that
+// `query()` is the public door; this file is implementation detail
+// underneath it). One-line-per-clause recap: (1) SUBSCRIBE — the
+// returned Signal IS the entry's signal, synchronous `.set()`; (2)
+// READ — exactly `LiveState<T>`, never flips ok→loading on a
+// background revalidate; (3) INVALIDATE — staleTime/gcTime/retry are
+// the only knobs, `invalidate(prefix)` (method below) is the shared
+// mechanism, every fetch attempt owns a real `AbortController`; (4)
+// OWNER-TREE HOMING — one `NativeCache` per chain root via
+// `useNativeCache()`, never a module singleton; (5) UNSUBSCRIBE —
+// `onCleanup` on the CALLING scope.
 
 import { signal, type Signal } from './signal'
 import { onCleanup, currentScope, createScope, type EffectScope } from './effect-scope'
