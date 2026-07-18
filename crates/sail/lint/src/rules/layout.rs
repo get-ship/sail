@@ -641,7 +641,7 @@ fn unknown_attr_hint(tag: &str) -> String {
         format!("<{tag}> takes no axis props; only pass-through attrs are allowed.")
     } else {
         format!(
-            "<{tag}> takes these axis props: {} — or any HTML/global pass-through (id, class, sx, data-*, aria-*, on:*, bind:*, class:*, style:*, attr:*, prop:*, transition:*, in:*, out:*, motion:*).",
+            "<{tag}> takes these axis props: {} — or any HTML/global pass-through (id, sx, data-*, aria-*, on:*, bind:*, attr:*, prop:*, motion:*).",
             axes.join(", ")
         )
     }

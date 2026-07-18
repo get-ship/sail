@@ -47,11 +47,12 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                          untranslatable). Reserve `content` for decorative symbols."
                     ),
                     suggest: Some(
-                        "Render the text as real markup driven by a controller derived value: \
-                         `derived: { label: ({ prop }) => … }` in the paired controller.ts, then \
-                         `<span class=\"label\">{label()}</span>` in the template — or accept it \
-                         via a <slot>. Keep `content` only for empty strings or single decorative \
-                         glyphs (and mark purely ornamental hosts aria-hidden)."
+                        "Render the text as real markup driven by a controller value: declare \
+                         `const label = derived(() => …)` in the `<controller>` block, \
+                         `return { label }`, and write `{label()}` where the text belongs in the \
+                         template — or accept it via a <slot>. Keep `content` only for empty \
+                         strings or single decorative glyphs (and mark purely ornamental hosts \
+                         aria-hidden)."
                             .to_string(),
                     ),
                 });

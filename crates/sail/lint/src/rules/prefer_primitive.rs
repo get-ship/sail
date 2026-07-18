@@ -2,8 +2,8 @@
 //! bespoke `display: grid` / `display: flex` should compose a layout
 //! primitive instead.
 //!
-//! The design system ships the layout primitives (`<sail-grid>`,
-//! `<sail-stack>`, `<sail-cluster>`) precisely so that layout is declared once,
+//! The language ships the layout keywords (`<grid>`, `<column>`, `<row>`)
+//! precisely so that layout is declared once,
 //! consistently, in one place — not re-derived by hand in every component's
 //! `<style>`. Hand-rolled `display: grid` / `display: flex` is where layout
 //! drift lives. This rule flags those two declarations and points at the
@@ -30,9 +30,9 @@ use crate::report::{Finding, Severity};
 
 pub const RULE_ID: &str = "sail-prefer-primitive";
 
-/// The ad-hoc-layout message. Points at all three primitives and the skill.
+/// The ad-hoc-layout message. Points at all three layout keywords and the skill.
 const MESSAGE: &str =
-    "ad-hoc layout — prefer <sail-grid>/<sail-stack>/<sail-cluster> (see the sail skill)";
+    "ad-hoc layout — prefer the layout keywords <grid>/<column>/<row> (see the sail skill)";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     // The primitives pack IS the layout substrate — flex/grid is legitimate
@@ -66,10 +66,10 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                     severity: Severity::Warn,
                     message: MESSAGE.to_string(),
                     suggest: Some(
-                        "Compose a layout primitive instead of hand-rolling the container: \
-                         `<sail-grid>` for two-dimensional / content-aware grids, `<sail-stack>` \
-                         for a vertical column, `<sail-cluster>` for a wrapping row. Drop the \
-                         `display: grid|flex` rule."
+                        "Compose a layout keyword instead of hand-rolling the container: \
+                         `<grid>` for two-dimensional / content-aware grids, `<column>` \
+                         for a vertical stack, `<row>` for a horizontal row (it wraps by \
+                         default). Drop the `display: grid|flex` rule."
                             .to_string(),
                     ),
                 });
@@ -311,7 +311,7 @@ mod tests {
         assert_eq!(f[0].severity, Severity::Warn);
         assert_eq!(
             f[0].message,
-            "ad-hoc layout — prefer <sail-grid>/<sail-stack>/<sail-cluster> (see the sail skill)"
+            "ad-hoc layout — prefer the layout keywords <grid>/<column>/<row> (see the sail skill)"
         );
     }
 

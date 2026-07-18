@@ -72,7 +72,7 @@ fn compile_attr(
         return Err(CompileError::new(
             "`style:` has been removed — runtime geometry is owned by a named, typed \
              action (`use:virtualRow`, `use:eventSpan`, `use:rect`, `use:pin`, \
-             `use:zoomPan`, `use:worldTransform`, `use:maxWidth`, `use:indent`, \
+             `use:zoomPan`, `use:worldTransform`, `use:maxWidth`, `use:cellPad`, \
              `use:virtualSpacer`, `use:swatch`). The action writes to a custom \
              property; sx reads it via the matching `(--name)` atom \
              (`translate-y-(--row-y)`, `top-(--evt-top)`, …)."

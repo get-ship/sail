@@ -109,6 +109,12 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
+        name: "chromeOffset",
+        param: "void",
+        summary: "Publish the attached element's measured height as --chrome-offset on :root (pairs with the h:fill scale).",
+        auto_import: true,
+    },
+    ActionEntry {
         name: "clickOutside",
         param: "(() => void) | undefined",
         summary: "Fire a callback when a click lands outside the element.",
@@ -321,7 +327,7 @@ pub const ACTIONS: &[ActionEntry] = &[
 /// view.
 pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "alert", "anchor", "autosize", "avatar", "cellPad", "chip",
-    "clickOutside", "codeBlock", "collapsible", "combobox",
+    "chromeOffset", "clickOutside", "codeBlock", "collapsible", "combobox",
     "contextMenu", "dropzone", "emptyState", "errorBoundary",
     "errorState", "eventSpan", "field", "gridTracks", "hoverCard",
     "icon", "maxWidth", "menu", "pagination", "pin", "portEdge",
