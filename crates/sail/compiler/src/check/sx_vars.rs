@@ -33,6 +33,17 @@ use crate::diagnostics::{CompileError, Span};
 use crate::emit::util::camel_of;
 use crate::ir::{PropKind, Program};
 
+/// Which returned-scope shapes an `sx` `(--x)` read may resolve to.
+///
+/// `signal(...)` and the stock progress drivers (`clock`, `scrollProgress`,
+/// `springValue`) are plain signals. A `timeline(...)` track is a read-only
+/// getter, which is all the emitted reflection effect needs — it only ever
+/// CALLS the member. `derived(...)` is deliberately still refused: that is a
+/// pre-existing gap, not one this seam should silently widen.
+fn is_sx_readable(kind: ScopeKind) -> bool {
+    matches!(kind, ScopeKind::Signal | ScopeKind::Timeline)
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SxVarSource {
     Prop,
@@ -92,7 +103,7 @@ pub fn resolve(
                 if let Some(m) = c
                     .returned
                     .iter()
-                    .find(|m| m.name == scope_name && m.kind == ScopeKind::Signal)
+                    .find(|m| m.name == scope_name && is_sx_readable(m.kind))
                 {
                     let init = c
                         .source
@@ -102,7 +113,12 @@ pub fn resolve(
                         css_name: name.to_string(),
                         scope_name,
                         source: SxVarSource::Signal,
-                        numeric: signal_is_numeric(init),
+                        // A timeline track's values live in the track
+                        // DATA, not in a literal initializer, and a track
+                        // may legitimately carry units ('120px'). Register
+                        // it untyped — `timeline()` drives the value every
+                        // frame itself, so it never wants CSS to tween it.
+                        numeric: m.kind == ScopeKind::Signal && signal_is_numeric(init),
                     });
                     continue;
                 }
@@ -191,7 +207,7 @@ fn refusal(
         candidates.extend(
             c.returned
                 .iter()
-                .filter(|m| m.kind == ScopeKind::Signal)
+                .filter(|m| is_sx_readable(m.kind))
                 .map(|m| kebab_of(&m.name)),
         );
     }
@@ -200,7 +216,8 @@ fn refusal(
     let mut msg = format!(
         "`(--{css_name})` does not match a global token, a declared prop, or a setup-returned \
          signal. sx reads runtime state through `(--name)` — the name must be a design token, \
-         a `<scope>` prop, or a value `setup()` returns via `signal(...)`."
+         a `<scope>` prop, or a value `setup()` returns via `signal(...)` or a \
+         `timeline(...)` track."
     );
     if let Some(s) = closest(css_name, &candidates) {
         msg.push_str(&format!(" Did you mean `(--{s})`?"));

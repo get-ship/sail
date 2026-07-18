@@ -46,6 +46,12 @@ pub enum ScopeKind {
     Signal,
     /// `key: derived(() => ...)` — read-only computed getter.
     Derived,
+    /// A channel destructured out of `timeline(progress, tracks)` — one
+    /// read-only getter per keyframe track. Kept distinct from
+    /// [`ScopeKind::Signal`] because it is NOT writable, and distinct from
+    /// [`ScopeKind::Derived`] because `pure_derived` has nothing to check
+    /// here: the body is the timeline's own interpolator, not author code.
+    Timeline,
     /// `key: () => ...` or `key: (e) => ...` — bound action / handler.
     Action,
     /// Anything else (plain values, expressions we can't classify).
@@ -58,6 +64,7 @@ impl ScopeKind {
             ScopeKind::Ref => "ref",
             ScopeKind::Signal => "signal",
             ScopeKind::Derived => "derived",
+            ScopeKind::Timeline => "timeline track",
             ScopeKind::Action => "action",
             ScopeKind::Other => "value",
         }
@@ -465,6 +472,27 @@ fn resolve_local_binding_span(bytes: &[u8], name: &str, start: usize, end: usize
             let post_ok = after_kw < end && !is_ident_cont(bytes[after_kw]);
             if prev_ok && post_ok {
                 let j = skip_trivia(bytes, after_kw);
+                // `const { a, b } = <expr>` — an object-destructuring
+                // binding. Every name in the pattern shares ONE initializer,
+                // so each resolves to the same right-hand-side span. This is
+                // how a multi-channel producer like `timeline(...)` reaches
+                // the returned scope; without it every destructured name
+                // falls through to `Other` and an sx `(--a)` read is refused.
+                if j < end && bytes[j] == b'{' {
+                    let pat_end = skip_balanced(bytes, j, end);
+                    if destructures_name(bytes, j + 1, pat_end.saturating_sub(1), nb) {
+                        let mut k = skip_trivia(bytes, pat_end);
+                        if k < end && bytes[k] == b':' {
+                            k = skip_type_annotation(bytes, k + 1, end);
+                            k = skip_trivia(bytes, k);
+                        }
+                        if k < end && bytes[k] == b'=' {
+                            let rhs_start = skip_trivia(bytes, k + 1);
+                            let bound = bound_expr_end(bytes, rhs_start, end);
+                            return Some(Span::new(rhs_start, bound));
+                        }
+                    }
+                }
                 if j + nb.len() <= end
                     && &bytes[j..j + nb.len()] == nb
                     && (j + nb.len() >= end || !is_ident_cont(bytes[j + nb.len()]))
@@ -587,6 +615,75 @@ fn statement_boundary(bytes: &[u8], start: usize, end: usize) -> usize {
     end
 }
 
+/// Does the object-destructuring pattern spanning `start..end` (the INSIDE
+/// of the braces) bind the local name `nb`?
+///
+/// Only depth-0 entries count, and only the name the entry actually BINDS:
+/// `{ a }` binds `a`, `{ a: b }` binds `b` (not `a`), `{ a = 1 }` binds `a`,
+/// `{ ...rest }` binds `rest`. Nested patterns (`{ a: { b } }`) are skipped
+/// rather than mis-bound — the outer `a` is not a binding and `b` lives at
+/// depth 1, so neither is claimed.
+fn destructures_name(bytes: &[u8], start: usize, end: usize, nb: &[u8]) -> bool {
+    let mut i = start;
+    while i < end {
+        i = skip_trivia(bytes, i);
+        if i >= end {
+            break;
+        }
+        // `...rest`
+        while i + 2 < end && &bytes[i..i + 3] == b"..." {
+            i = skip_trivia(bytes, i + 3);
+        }
+        if i >= end || !is_ident_start(bytes[i]) {
+            // Not an entry we model (a nested `[` pattern, a computed
+            // `[key]`, a stray token) — skip to the next depth-0 comma.
+            i = skip_to_depth0_comma(bytes, i, end);
+            continue;
+        }
+        let key_start = i;
+        while i < end && is_ident_cont(bytes[i]) {
+            i += 1;
+        }
+        let mut bound = (key_start, i);
+        let after_key = skip_trivia(bytes, i);
+        if after_key < end && bytes[after_key] == b':' {
+            // Renamed: the binding is the identifier AFTER the colon.
+            let v = skip_trivia(bytes, after_key + 1);
+            if v < end && is_ident_start(bytes[v]) {
+                let mut w = v;
+                while w < end && is_ident_cont(bytes[w]) {
+                    w += 1;
+                }
+                bound = (v, w);
+            } else {
+                // Nested pattern — binds nothing at this level.
+                bound = (0, 0);
+            }
+        }
+        if bound.1 > bound.0 && &bytes[bound.0..bound.1] == nb {
+            return true;
+        }
+        i = skip_to_depth0_comma(bytes, i, end);
+    }
+    false
+}
+
+/// Advance past the next depth-0 `,` within `start..end` (or to `end`).
+fn skip_to_depth0_comma(bytes: &[u8], start: usize, end: usize) -> usize {
+    let mut i = start;
+    let mut depth = 0i32;
+    while i < end {
+        match bytes[i] {
+            b'{' | b'[' | b'(' => depth += 1,
+            b'}' | b']' | b')' => depth -= 1,
+            b',' if depth == 0 => return i + 1,
+            _ => {}
+        }
+        i += 1;
+    }
+    end
+}
+
 fn classify_scope_value(bytes: &[u8], start: usize, end: usize) -> ScopeKind {
     let mut i = skip_trivia(bytes, start);
     if i >= end {
@@ -646,8 +743,12 @@ fn classify_scope_value(bytes: &[u8], start: usize, end: usize) -> ScopeKind {
         if after < end && bytes[after] == b'(' {
             return match word {
                 "ref" => ScopeKind::Ref,
-                "signal" => ScopeKind::Signal,
+                // The stock progress drivers each hand back a plain signal,
+                // so a `const p = clock(3600)` reads exactly like a
+                // `signal(0)` a slider writes — same `(--p)` reflection.
+                "signal" | "clock" | "scrollProgress" | "springValue" => ScopeKind::Signal,
                 "derived" | "computed" => ScopeKind::Derived,
+                "timeline" => ScopeKind::Timeline,
                 _ => ScopeKind::Other,
             };
         }
