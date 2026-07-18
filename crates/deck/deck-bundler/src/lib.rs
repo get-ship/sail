@@ -21,6 +21,7 @@ pub mod node_resolve;
 pub mod routes;
 pub mod compile;
 pub mod proto;
+pub mod publish;
 pub mod rolldown_bundle;
 pub mod ship_asset_css;
 pub mod stamp;

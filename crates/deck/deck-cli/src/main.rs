@@ -791,6 +791,18 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                 if all_generated {
                     return;
                 }
+                // dev-loop-atomic (defect 2): a STRUCTURAL change — a new
+                // `src/<tag>/` component dir, a created/removed/renamed
+                // `.sail` — must clear the process-global tag→source memo
+                // (`COMPONENT_INDEX_CACHE`) BEFORE the rebuild below runs.
+                // The bundler's internal watcher does this for TARGET builds,
+                // but the app rebuild is driven by THIS watcher; without the
+                // invalidation a component authored mid-session resolves to a
+                // virtual no-op (its element never upgrades, slotted children
+                // render bare) until full server restart.
+                if is_structural_change(&ev.kind) {
+                    deck_bundler::sail_plugin::invalidate_component_index();
+                }
                 // Coalesce a save's event burst into one rebuild via the debounce
                 // below; dropping on a full channel is fine (the next tick rebuilds).
                 let _ = tx.try_send(());
@@ -920,5 +932,43 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         }
         Ok(())
     })
+}
+
+/// Does this watch event change the COMPONENT STRUCTURE of the project —
+/// i.e. may a `src/<tag>/` dir or a `.sail` component have appeared,
+/// vanished, or moved? Create/Remove/Rename events qualify; content edits
+/// (`Modify(Data)`) don't (the tag→source map is unchanged), and
+/// Access/Metadata never reach here (filtered upstream). Structural events
+/// clear the memoized component index so the NEXT rebuild re-walks the
+/// workspace and registers the new tag — event-driven, no polling
+/// (dev-loop-atomic, defect 2).
+fn is_structural_change(kind: &notify::EventKind) -> bool {
+    use notify::event::ModifyKind;
+    matches!(
+        kind,
+        notify::EventKind::Create(_)
+            | notify::EventKind::Remove(_)
+            | notify::EventKind::Modify(ModifyKind::Name(_))
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use notify::EventKind;
+    use notify::event::{CreateKind, DataChange, ModifyKind, RemoveKind, RenameMode};
+
+    /// A new component dir (Create), a removed one (Remove), and a rename all
+    /// invalidate the component-index memo; a plain content edit does not —
+    /// that's the exact split that keeps invalidation event-driven without
+    /// re-walking the workspace on every keystroke.
+    #[test]
+    fn structural_events_invalidate_content_edits_do_not() {
+        assert!(is_structural_change(&EventKind::Create(CreateKind::Folder)));
+        assert!(is_structural_change(&EventKind::Create(CreateKind::File)));
+        assert!(is_structural_change(&EventKind::Remove(RemoveKind::Folder)));
+        assert!(is_structural_change(&EventKind::Modify(ModifyKind::Name(RenameMode::Any))));
+        assert!(!is_structural_change(&EventKind::Modify(ModifyKind::Data(DataChange::Any))));
+    }
 }
 

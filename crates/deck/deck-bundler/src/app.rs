@@ -829,10 +829,24 @@ pub async fn bundle_app_with_base(
         &importmap_json,
         entry_module,
     );
+    // Atomic publication (dev-loop-atomic): the old flow deleted the LIVE out
+    // dir here and wrote `index.html` last, so every request during a watch
+    // rebuild saw `scaffold '<app>' not built (missing .deck/index.html)` for
+    // the whole rebuild window. Build into a sibling staging dir instead and
+    // promote it file-by-file via atomic rename at the end (`publish_build`,
+    // index.html last) — the served tree always carries a complete scaffold.
+    // Pruning stale files (the job `remove_dir_all` used to do, for the
+    // build-owned `dist`/`.deck` leaves only) happens AFTER the swap.
     let out_leaf = out_dir.file_name().and_then(|s| s.to_str()).unwrap_or("");
-    if out_dir.exists() && (out_leaf == "dist" || out_leaf == deck_config::DECK_OUT_DIRNAME) {
-        std::fs::remove_dir_all(out_dir).ok();
+    let prune_stale = out_leaf == "dist" || out_leaf == deck_config::DECK_OUT_DIRNAME;
+    let dest_dir = out_dir;
+    let stage = crate::publish::stage_path_for(dest_dir);
+    if stage.exists() {
+        std::fs::remove_dir_all(&stage)
+            .with_context(|| format!("clear stale staging dir {}", stage.display()))?;
     }
+    // Everything below writes into the STAGE; `publish_build` promotes it.
+    let out_dir: &Path = &stage;
     let assets_dir = out_dir.join("assets");
     std::fs::create_dir_all(&assets_dir)?;
 
@@ -1046,8 +1060,12 @@ pub async fn bundle_app_with_base(
     // want to compute the catalog in-memory for their own devtools; it
     // just does not get written to disk by the framework.
 
+    // Promote the staged build into the live out dir: per-file atomic rename,
+    // index.html LAST, stale files pruned after the swap (dev-loop-atomic).
+    crate::publish::publish_build(&stage, dest_dir, prune_stale)?;
+
     Ok(AppBuild {
-        out_dir: out_dir.to_path_buf(),
+        out_dir: dest_dir.to_path_buf(),
         js_href,
         css_hrefs,
         framework_assets,
@@ -1103,6 +1121,75 @@ mod tests {
             out_base.join(based.js_href.trim_start_matches('/')).exists(),
             "emitted URL {} must resolve to a real file in the output",
             based.js_href,
+        );
+    }
+
+    /// dev-loop-atomic end-to-end: a component DIR added between two builds is
+    /// registered by the next rebuild once the structural-change hook clears
+    /// the component-index memo — no restart. The same rebuild also gates the
+    /// atomic-publish contract: `index.html` present after the rebuild, the
+    /// previous build's stale asset pruned, and a foreign `routes/` bundle
+    /// sharing the out dir left untouched (the old `remove_dir_all` nuked it).
+    #[tokio::test(flavor = "multi_thread")]
+    async fn rebuild_registers_new_component_dir_and_publishes_atomically() {
+        let root = tempfile::tempdir().unwrap();
+        let r = root.path();
+        write(
+            &r.join("package.json"),
+            r#"{"name":"@scope/dev-loop-app","private":true,"type":"module"}"#,
+        );
+        write(&r.join("routes/page.sail"), "<main><late-probe>hi</late-probe></main>\n");
+        let out = r.join(deck_config::DECK_OUT_DIRNAME);
+
+        let assets_js = |out: &Path| -> String {
+            let mut all = String::new();
+            for e in std::fs::read_dir(out.join("assets")).unwrap().flatten() {
+                let name = e.file_name().to_string_lossy().into_owned();
+                if name.ends_with(".js") {
+                    all.push_str(&std::fs::read_to_string(e.path()).unwrap());
+                }
+            }
+            all
+        };
+
+        // Build 1: the tag has no source yet — it compiles as a no-op.
+        bundle_app(r, &[], r, &out, false, false).await.expect("first build");
+        assert!(
+            !assets_js(&out).contains("late-probe-upgraded"),
+            "component doesn't exist yet — nothing to compile in"
+        );
+
+        // Mid-session: the author creates a NEW component dir, and other
+        // writers' state accumulates in the out dir.
+        write(
+            &r.join("src/late-probe/late-probe.sail"),
+            "<template>\n  <span>late-probe-upgraded <slot></slot></span>\n</template>\n",
+        );
+        write(&out.join("assets/entry-STALE.js"), "from a previous build");
+        write(&out.join("routes/keep/route.js"), "bundler-owned view bundle");
+
+        // The watcher's structural-change hook (deck dev calls this on a
+        // Create event) clears the memo; the rebuild then registers the tag.
+        crate::sail_plugin::invalidate_component_index();
+        bundle_app(r, &[], r, &out, false, false).await.expect("rebuild");
+
+        assert!(
+            assets_js(&out).contains("late-probe-upgraded"),
+            "the mid-session component dir must compile into the rebuild — no restart"
+        );
+        assert!(out.join("index.html").exists(), "scaffold present after rebuild");
+        assert!(
+            !out.join("assets/entry-STALE.js").exists(),
+            "stale hashed asset from the previous build is pruned"
+        );
+        assert_eq!(
+            std::fs::read_to_string(out.join("routes/keep/route.js")).unwrap(),
+            "bundler-owned view bundle",
+            "foreign routes/ tree survives the rebuild (remove_dir_all used to nuke it)"
+        );
+        assert!(
+            !crate::publish::stage_path_for(&out).exists(),
+            "staging dir cleaned up after publish"
         );
     }
 
