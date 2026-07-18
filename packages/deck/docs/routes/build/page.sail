@@ -1,11 +1,11 @@
 <controller>
 // Build & deploy controller. Snippets live in ./snippets (a plain data module)
 // so example code containing `{ ... }` is never scope-scanned by the compiler.
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { buildCmd, buildOut, baseCmd } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => ({ buildCmd, buildOut, baseCmd }))
+export default controller((_ctx: ControllerScope<Scope>) => ({ buildCmd, buildOut, baseCmd }))
 </controller>
 
 <article data-doc="true">

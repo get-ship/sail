@@ -16,7 +16,7 @@
 </scope>
 <controller>
 import { controller, effect, ref, signal } from '@ship/sail-runtime'
-import type { ViewScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import {
   type Swatch,
   deriveSwatches,
@@ -30,7 +30,7 @@ import type { Scope } from './sail-color-picker.sail'
 
 let idSeq = 0
 
-export default controller((_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ControllerScope<Scope>) => {
     const open = signal(false)
     const hue = signal(0)
     const sat = signal(0)

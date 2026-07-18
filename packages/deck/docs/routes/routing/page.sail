@@ -1,11 +1,11 @@
 <controller>
 // File-routing controller. Snippets live in ./snippets (a plain data module) so
 // example code is never scope-scanned by the compiler.
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { routeTree, colocated } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => ({ routeTree, colocated }))
+export default controller((_ctx: ControllerScope<Scope>) => ({ routeTree, colocated }))
 </controller>
 
 <article data-doc="true">

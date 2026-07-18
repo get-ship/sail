@@ -88,7 +88,7 @@
 </scope>
 <controller>
 import { controller, derived, ref, signal } from '@ship/sail-runtime'
-import type { ViewScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-date-picker.sail'
 
 interface DayCell {
@@ -148,7 +148,7 @@ const clampIso = (iso: string, min: string, max: string): string => {
   return iso
 }
 
-export default controller(({ value, min, max, disabled }: ViewScope<Scope>) => {
+export default controller(({ value, min, max, disabled }: ControllerScope<Scope>) => {
     const open = signal(false)
     const today = signal(todayIso())
     const focused = signal(todayIso())

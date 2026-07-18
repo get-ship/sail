@@ -14,10 +14,10 @@
 // briefly holds an inconsistent value. SAIL's colored push-pull scheduler
 // recomputes d exactly ONCE per `a` change. We prove it live: an effect counts
 // d's recomputes; it should climb by exactly 1 each time you nudge `a`.
-import { controller, signal, derived, effect, untrack, type ViewScope } from '@ship/sail-runtime'
+import { controller, signal, derived, effect, untrack, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 
-export default controller((_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ControllerScope<Scope>) => {
     const a = signal(1)
     const b = derived(() => a() * 2)
     const c = derived(() => a() + 10)

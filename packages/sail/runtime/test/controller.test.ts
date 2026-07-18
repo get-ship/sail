@@ -14,7 +14,7 @@ import {
   type ControllerDef,
   type Signal,
   type TemplateHook,
-  type ViewScope,
+  type ControllerScope,
 } from '../src/index'
 
 /** Build a `ResolverContext`-shaped harness with template state seeded. */
@@ -39,7 +39,7 @@ function withState(state: Record<string, unknown>): {
 describe('controller() helper', () => {
   it('setup() runs the def and returns its bindings verbatim', () => {
     const ctx = withState({ count: 5 })
-    const out = controller((init: ViewScope<{ count: Signal<number> }>) => {
+    const out = controller((init: ControllerScope<{ count: Signal<number> }>) => {
       const doubled = derived(() => init.count() * 2)
       const incr = () => init.count.set(init.count() + 1)
       return { doubled, incr }
@@ -53,7 +53,7 @@ describe('controller() helper', () => {
   })
 
   it('__def carries the original setup function', () => {
-    const fn = (_init: ViewScope<object>) => ({})
+    const fn = (_init: ControllerScope<object>) => ({})
     const out = controller(fn)
     expect(out.__def).toBe(fn)
   })
@@ -62,7 +62,7 @@ describe('controller() helper', () => {
 describe('the one form — single setup function returns the whole surface', () => {
   it('signals, derived, and handlers are all plain returned properties', () => {
     type Scope = { count: Signal<number>; open: Signal<boolean> }
-    controller((s: ViewScope<Scope>) => ({
+    controller((s: ControllerScope<Scope>) => ({
       incr: () => s.count.set(s.count() + 1),
       toggle: () => s.open.set(!s.open()),
     }))
@@ -70,7 +70,7 @@ describe('the one form — single setup function returns the whole surface', () 
 
   it('setup can derive from template scope and return handlers that read/write it', () => {
     type Scope = { count: Signal<number> }
-    controller((s: ViewScope<Scope>) => ({
+    controller((s: ControllerScope<Scope>) => ({
       doubled: derived(() => s.count() * 2),
       over9k: derived(() => s.count() > 9000),
       set: (n: number) => s.count.set(n),
@@ -83,7 +83,7 @@ describe('the one form — single setup function returns the whole surface', () 
       query: Signal<string>
       agents: Signal<{ items: string[] }>
     }
-    controller((s: ViewScope<Scope>) => ({
+    controller((s: ControllerScope<Scope>) => ({
       filtered: derived(() => s.agents().items.filter((n) => n.includes(s.query()))),
       setQuery: (q: string) => s.query.set(q),
     }))
@@ -91,7 +91,7 @@ describe('the one form — single setup function returns the whole surface', () 
 
   it('closes over instantiation-time locals (the old tier-3 use case, now the only case)', () => {
     type Scope = { open: Signal<boolean> }
-    controller((s: ViewScope<Scope>, host?: Element) => {
+    controller((s: ControllerScope<Scope>, host?: Element) => {
       const stableId = 'view-' + Math.random().toString(36).slice(2)
       if (host) (host as HTMLElement).dataset.viewId = stableId
       return { toggle: () => s.open.set(!s.open()) }
@@ -100,7 +100,7 @@ describe('the one form — single setup function returns the whole surface', () 
 
   it('setup can reach ship directly — no separate section-level access', () => {
     type Scope = { selectedId: Signal<string | null> }
-    controller((s: ViewScope<Scope>) => ({
+    controller((s: ControllerScope<Scope>) => ({
       select: (id: string) => {
         void s.ship
         s.selectedId.set(id)

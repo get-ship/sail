@@ -1,11 +1,11 @@
 <controller>
 // Rendering controller. Snippets live in ./snippets (a plain data module) so
 // example code containing `{ ... }` is never scope-scanned by the compiler.
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { ssrConfig, buildCmd } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => ({ ssrConfig, buildCmd }))
+export default controller((_ctx: ControllerScope<Scope>) => ({ ssrConfig, buildCmd }))
 </controller>
 
 <article data-doc="true">

@@ -1,11 +1,11 @@
 <controller>
 // Layouts controller. Snippets live in ./snippets (a plain data module) so
 // example code is never scope-scanned by the compiler.
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { layoutFile, layoutChain } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => ({ layoutFile, layoutChain }))
+export default controller((_ctx: ControllerScope<Scope>) => ({ layoutFile, layoutChain }))
 </controller>
 
 <article data-doc="true">

@@ -1,7 +1,7 @@
 import { describe, expectTypeOf, it } from 'vitest'
 import { signal, derived } from '../src/signal'
 import { controller } from '../src/index'
-import type { MutableState, StateKeys, ReadonlyView, ViewScope } from '../src/controller'
+import type { MutableState, StateKeys, ReadonlyView, ControllerScope } from '../src/controller'
 
 // Type-level spec for the handler-state arg (#114). The bug: `StateKeys`
 // filtered on `Scope[K] extends Signal<unknown>`, which is FALSE for every
@@ -30,16 +30,16 @@ describe('MutableState<Scope> (handler-state arg)', () => {
     expectTypeOf<MutableState<Scope>['label']>().toEqualTypeOf<ReadonlyView<string>>()
   })
 
-  it('canonical form: setup gets a PRECISE, cast-free ViewScope inferred from Tpl', () => {
-    // `controller((ctx: ViewScope<Tpl>) => ({…}))` infers the template
+  it('canonical form: setup gets a PRECISE, cast-free ControllerScope inferred from Tpl', () => {
+    // `controller((ctx: ControllerScope<Tpl>) => ({…}))` infers the template
     // `Ctx` from the setup function's param annotation — the compiler-
-    // generated `ViewScope<Tpl>` the author imports. Signals it creates
+    // generated `ControllerScope<Tpl>` the author imports. Signals it creates
     // itself (`signal`/`derived`) are read/written directly through the
     // `Signal<T>` API — there is no separate writable-proxy type for
     // handlers; a handler returned from setup closes over the same
     // signal and calls `.set()` on it, same as setup itself would.
     interface Tpl { /* template-declared <data>/<state> only */ }
-    controller((_ctx: ViewScope<Tpl>) => {
+    controller((_ctx: ControllerScope<Tpl>) => {
       const count = signal(0)
       const flag = signal(false)
       const label = derived(() => 'hello')

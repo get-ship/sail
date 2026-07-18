@@ -81,7 +81,7 @@
 // Authority: build-spec §"Controller shape", §"Backbone reuse", Slices 2-4.
 
 import { controller, signal, derived, ref } from '@ship/sail-runtime'
-import type { ViewScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import { createVirtualizer, type Virtual } from '@ship/sail-runtime/virtual'
 import { createTable, type Table } from '../sail-table/engine/create-table'
 import type { TreeNode } from '../sail-tree-view/sail-tree-view.controller'
@@ -103,7 +103,7 @@ function emptyTree(): Table<AnyTreeNode> {
   return createTable<AnyTreeNode>(treeTableOptions<AnyTreeNode>({ data: [] }))
 }
 
-export default controller((_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ControllerScope<Scope>) => {
     const treeSig = signal<Table<AnyTreeNode> | null>(null)
     const viewportEl = ref<HTMLDivElement>(null)
 

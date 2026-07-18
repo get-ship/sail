@@ -36,7 +36,7 @@
 </scope>
 <controller>
 import { controller, derived, ref, signal } from '@ship/sail-runtime'
-import type { ViewScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-file-upload.sail'
 
 function fmtSize(bytes: number): string {
@@ -53,7 +53,7 @@ interface DisplayFile {
   sizeStr: string
 }
 
-export default controller((_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ControllerScope<Scope>) => {
     const files = signal<File[]>([])
     const over = signal(false)
     const errorMsg = signal('')

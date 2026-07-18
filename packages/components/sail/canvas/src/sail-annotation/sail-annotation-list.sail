@@ -22,11 +22,11 @@
 
 <controller>
 import { controller, signal } from '@ship/sail-runtime'
-import type { ViewScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-annotation-list.sail'
 import type { AnnotationEvent } from './sail-annotation.internals'
 
-export default controller((_ctx: ViewScope<Scope>, _host?: Element) => {
+export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
     const staged = signal<AnnotationEvent[]>([])
     // The host element is not present in the scope factory (the post-
     // convergence "SAIL names no host" compile stops passing it as the 2nd

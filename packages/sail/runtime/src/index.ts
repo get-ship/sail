@@ -338,7 +338,7 @@ export type {
   TemplateHook,
   TemplateHookAttrKind,
   TemplateHookContext,
-  ViewScope,
+  ControllerScope,
   ReadonlyState,
   ReadonlyView,
   MutableState,

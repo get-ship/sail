@@ -58,14 +58,14 @@
 
 <controller>
 import { controller, signal, attachBoundary, detachBoundary } from '@ship/sail-runtime'
-import type { BoundarySource, ViewScope } from '@ship/sail-runtime'
+import type { BoundarySource, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-error-boundary.sail'
 
 interface HostWithReset extends HTMLElement {
   reset?: () => void
 }
 
-export default controller((_ctx: ViewScope<Scope>, _host?: Element) => {
+export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
     const caughtError = signal<Error | null>(null)
     const hasFallbackSlot = signal<boolean>(false)
     // The host element is not present in the scope factory (the post-

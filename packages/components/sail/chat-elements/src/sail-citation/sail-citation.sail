@@ -28,10 +28,10 @@
 
 <controller>
 import { controller, ref } from '@ship/sail-runtime'
-import type { ViewScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-citation.sail'
 
-export default controller((_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ControllerScope<Scope>) => {
     const pillEl = ref<HTMLButtonElement>(null)
 
     mount((host) => {

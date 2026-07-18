@@ -37,7 +37,7 @@ import {
   ref,
   signal,
 } from '@ship/sail-runtime'
-import type { Derived, ViewScope } from '@ship/sail-runtime'
+import type { Derived, ControllerScope } from '@ship/sail-runtime'
 import {
   createVirtualizer,
   type Virtual,
@@ -74,7 +74,7 @@ const BOTTOM_THRESHOLD = 48
 // measures itself. Real heights supersede it the moment `measureElement` runs.
 const ESTIMATED_MESSAGE_HEIGHT = 72
 
-export default controller((_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ControllerScope<Scope>) => {
     const items = signal<MessageItem[]>([])
     const scrollEl = ref<HTMLElement>(null)
 

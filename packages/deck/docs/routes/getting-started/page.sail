@@ -1,11 +1,11 @@
 <controller>
 // Getting-started controller. Snippets live in ./snippets (a plain data module)
 // so example code containing `signal(...)` never leaks into the inferred scope.
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { pageExample, controllerExample, devCmd } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => ({ pageExample, controllerExample, devCmd }))
+export default controller((_ctx: ControllerScope<Scope>) => ({ pageExample, controllerExample, devCmd }))
 </controller>
 
 <article data-doc="true">

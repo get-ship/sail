@@ -1,9 +1,9 @@
 <controller>
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { routeExample, readExample } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => ({ routeExample, readExample }))
+export default controller((_ctx: ControllerScope<Scope>) => ({ routeExample, readExample }))
 </controller>
 
 <article data-doc="true">

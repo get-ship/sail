@@ -2,11 +2,11 @@
 // Data-seam controller. Reads the persisted `store` client off the clients seam
 // (ctx.clients.store) and exposes its `visits` signal + actions for the live
 // demo. No `signal(` in this file's source, so scope inference stays clean.
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { configExample, usageExample } from './snippets'
 
-export default controller((ctx: ViewScope<Scope>) => ({
+export default controller((ctx: ControllerScope<Scope>) => ({
     configExample,
     usageExample,
     visits: ctx.clients.store.visits,
