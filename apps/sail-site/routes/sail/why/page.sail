@@ -135,7 +135,7 @@
   </p>
 
   <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
-    <a variant="default" href="/overview">← Introduction</a>
+    <a variant="default" href="/sail/overview">← Introduction</a>
     <a variant="solid" tone="primary" href="/components">Component library →</a>
   </row>
 </column>

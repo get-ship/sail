@@ -412,6 +412,12 @@ async function buildMountTarget(
       chrome.appendChild(parent)
       parent = chrome
     }
+    // `parent` becomes a light-DOM child of the next (outer) chrome in the
+    // chain — it must carry slot="route" to land in that chrome's named
+    // slot, same as the innermost `routeSlot`. Single-layout chains were the
+    // only case exercised before nested (root + segment) layouts existed, so
+    // this propagation was never needed until now.
+    parent.setAttribute('slot', 'route')
   }
 
   root.replaceChildren(parent)

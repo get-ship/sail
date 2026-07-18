@@ -67,7 +67,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     Signals are the whole model: <code>signal()</code> holds a value,
     <code>derived()</code> computes from others, <code>effect()</code> runs
-    side effects and cleans up on unmount. <a href="/reactivity">State →</a>
+    side effects and cleans up on unmount. <a href="/sail/reactivity">State →</a>
   </p>
 
   <h2>5 · Add routes</h2>
@@ -98,7 +98,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.interactive}></code-block>
 
   <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
-    <a variant="default" href="/overview">← Introduction</a>
-    <a variant="solid" tone="primary" href="/reactivity">State →</a>
+    <a variant="default" href="/sail/overview">← Introduction</a>
+    <a variant="solid" tone="primary" href="/sail/reactivity">State →</a>
   </row>
 </column>

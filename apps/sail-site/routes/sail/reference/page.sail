@@ -303,7 +303,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   </column>
 
   <row role="navigation">
-    <a variant="default" href="/templates">← Templates</a>
+    <a variant="default" href="/sail/templates">← Templates</a>
     <a variant="solid" href="/components">Component catalog →</a>
   </row>
 </column>

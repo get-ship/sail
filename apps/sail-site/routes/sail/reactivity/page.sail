@@ -120,7 +120,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     A <strong>composition</strong> is a plain function over these primitives.
     There is no type to implement, nothing to register, no base class. The rule is
     one line: <strong>if it touches the DOM it is an
-    <a href="/behavior">action</a>; if it returns state it is a
+    <a href="/sail/behavior">action</a>; if it returns state it is a
     composition.</strong>
   </p>
   <p>
@@ -132,7 +132,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.composition}></code-block>
 
   <row sx="mt-8 pt-4 border-t border-t-border">
-    <a variant="default" href="/getting-started">← Getting started</a>
-    <a variant="solid" tone="primary" href="/templates">Templates →</a>
+    <a variant="default" href="/sail/getting-started">← Getting started</a>
+    <a variant="solid" tone="primary" href="/sail/templates">Templates →</a>
   </row>
 </column>

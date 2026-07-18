@@ -93,11 +93,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     lowers them to native markup with the behavior attached, which is why the
     library adds almost nothing to a page. A dialog ships as a real
     <code>&lt;dialog&gt;</code>. If that interests you, the
-    <a href="/reference">reference</a> covers the mechanics.
+    <a href="/sail/reference">reference</a> covers the mechanics.
   </p>
 
   <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
     <a variant="default" href="/components">← Component library</a>
-    <a variant="solid" tone="primary" href="/layout">Layout →</a>
+    <a variant="solid" tone="primary" href="/sail/layout">Layout →</a>
   </row>
 </column>

@@ -104,7 +104,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </alert>
 
   <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
-    <a variant="default" href="/elements">← Elements</a>
-    <a variant="solid" tone="primary" href="/theming">Theming →</a>
+    <a variant="default" href="/sail/elements">← Elements</a>
+    <a variant="solid" tone="primary" href="/sail/theming">Theming →</a>
   </row>
 </column>

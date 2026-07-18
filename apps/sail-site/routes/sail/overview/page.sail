@@ -74,7 +74,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>justify</code> — there is no flexbox incantation to remember. A raw
     <code>&lt;div&gt;</code> is legal but mute: it can only speak
     <code>sx</code> tokens, so it is a shape, not an escape.
-    <a href="/layout">Layout →</a>
+    <a href="/sail/layout">Layout →</a>
   </p>
   <code-block code={code.layout}></code-block>
 
@@ -91,7 +91,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <strong>Styling is a closed vocabulary.</strong> <code>sx</code> speaks
     design-system atoms — spacing, colour, radius, shadow, with states as
     prefixes. A value off the system is a build error, not a review comment.
-    <a href="/styling">Styling →</a>
+    <a href="/sail/styling">Styling →</a>
   </p>
   <code-block code={code.styling}></code-block>
 
@@ -99,7 +99,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <strong>State is signals.</strong> Read by calling, write with
     <code>.set()</code>; <code>derived</code> computes, <code>effect</code>
     reacts and cleans up on unmount. The template binds them directly — no
-    virtual DOM in between. <a href="/reactivity">State →</a>
+    virtual DOM in between. <a href="/sail/reactivity">State →</a>
   </p>
   <code-block code={code.state}></code-block>
 
@@ -107,14 +107,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <strong>Async data is three explicit states.</strong> <code>query()</code>
     turns a client call into a state signal; the template physically cannot render
     the value without having handled loading and error.
-    <a href="/data">Data →</a>
+    <a href="/sail/data">Data →</a>
   </p>
   <code-block code={code.data}></code-block>
 
   <p>
     <strong>Animation is one directive.</strong> Eight triggers, nine presets,
     reduced-motion respected everywhere. The framework holds exiting elements
-    in the DOM until their animation finishes. <a href="/motion">Animation →</a>
+    in the DOM until their animation finishes. <a href="/sail/motion">Animation →</a>
   </p>
   <code-block code={code.motion}></code-block>
 
@@ -122,7 +122,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <strong>Themes are complete aesthetics.</strong> Nine ship with the
     framework; one attribute swaps everything, because components read tokens
     and never name colours. Try the picker in the top right of this page.
-    <a href="/theming">Theming →</a>
+    <a href="/sail/theming">Theming →</a>
   </p>
   <code-block code={code.theming}></code-block>
 
@@ -134,7 +134,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
 
   <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
-    <a variant="solid" tone="primary" href="/getting-started">Installation →</a>
-    <a variant="default" href="/why">Why SAIL</a>
+    <a variant="solid" tone="primary" href="/sail/getting-started">Installation →</a>
+    <a variant="default" href="/sail/why">Why SAIL</a>
   </row>
 </column>

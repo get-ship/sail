@@ -179,23 +179,6 @@
         "@playwright/test": "^1.58.2",
       },
     },
-    "packages/deck/eval": {
-      "name": "@ship/sail-eval",
-      "version": "0.2.0",
-      "bin": {
-        "sail-eval": "bin/sail-eval.mjs",
-      },
-      "dependencies": {
-        "@ship/sail-dom": "workspace:*",
-        "@ship/sail-runtime": "workspace:*",
-      },
-      "devDependencies": {
-        "@types/node": "^24.0.0",
-        "jsdom": "^25.0.0",
-        "typescript": "^5.5.0",
-        "vitest": "^4.1.5",
-      },
-    },
     "packages/deck/hono": {
       "name": "@ship/deck-hono",
       "version": "0.2.0",
@@ -276,6 +259,7 @@
         "motion-dom": "^12.42.2",
       },
       "devDependencies": {
+        "@playwright/test": "^1.58.2",
         "@ship/test-setup": "workspace:*",
         "@tanstack/virtual-core": "^3.16.1",
         "@vitest/browser": "^4.1.5",
@@ -487,8 +471,6 @@
     "@ship/sail-compiler-wasm": ["@ship/sail-compiler-wasm@workspace:packages/sail/compiler-wasm"],
 
     "@ship/sail-dom": ["@ship/sail-dom@workspace:packages/sail/dom"],
-
-    "@ship/sail-eval": ["@ship/sail-eval@workspace:packages/deck/eval"],
 
     "@ship/sail-lsp-browser": ["@ship/sail-lsp-browser@workspace:packages/deck/lsp-browser"],
 

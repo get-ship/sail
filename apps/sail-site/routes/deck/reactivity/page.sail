@@ -28,7 +28,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ code }))
     <strong>The signal model lives in SAIL.</strong> Signals, <code>derived</code>,
     <code>effect</code>, batching, and the glitch-free update pass are all the SAIL
     runtime — deck adds no reactive primitive of its own. For how the graph
-    recomputes, see <a href="/reactivity">SAIL · Reactivity</a>.
+    recomputes, see <a href="/sail/reactivity">SAIL · Reactivity</a>.
   </alert>
 
   <h2>The URL is reactive</h2>

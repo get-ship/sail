@@ -96,7 +96,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.matchBlock}></code-block>
 
   <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
-    <a variant="default" href="/reactivity">← State</a>
-    <a variant="solid" tone="primary" href="/data">Data →</a>
+    <a variant="default" href="/sail/reactivity">← State</a>
+    <a variant="solid" tone="primary" href="/sail/data">Data →</a>
   </row>
 </column>

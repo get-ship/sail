@@ -7,8 +7,9 @@
   Playground state — active tab, status badge, console lines, editor values —
   is signals in the <controller>; the template is a pure read. tutorial-boot
   owns the FFI seams only (wasm compile, iframe postMessage, theme observer);
-  the editor's imperative API is reached through bind:this refs. The shell
-  renders /tutorial/* lessons full-bleed (sail-site-shell `fullscreen`).
+  the editor's imperative API is reached through bind:this refs. The SAIL
+  docs segment layout renders /sail/tutorial/* lessons full-bleed
+  (sail-docs-rail `workbench`).
 
   LANG-GAP (renders without these until the vocabulary grows):
   - column clamp: the lesson pane wants exactly minmax(0, 30rem); it uses
@@ -313,7 +314,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     </column>
 
     <row align="center" justify="between" gap="3" sx="p-3 px-6 border-t border-t-border bg-surface-1">
-      <a href="/tutorial" sx="p-2 px-4 rounded-md text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-surface-2">← All lessons</a>
+      <a href="/sail/tutorial" sx="p-2 px-4 rounded-md text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-surface-2">← All lessons</a>
       {#if hasNext()}
         <a href={nextHref()} sx="p-2 px-4 rounded-md text-sm font-semibold bg-primary text-primary-foreground overflow-hidden">{nextTitle()}</a>
       {/if}
