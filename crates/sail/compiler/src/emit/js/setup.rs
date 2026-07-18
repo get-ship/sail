@@ -15,7 +15,7 @@ pub(super) fn emit_setup_body(
     program: &Program,
     bindings: &BindingRegistry,
     opts: &CompileOpts,
-    _lowered: &Lowered,
+    lowered: &Lowered,
     sx_var_bindings: &[crate::check::sx_vars::SxVarBinding],
 ) -> Writer {
     // A source is a COMPONENT (custom element) iff it carries a tag
@@ -43,6 +43,36 @@ pub(super) fn emit_setup_body(
         for p in &program.props {
             let ident = js_ident(&camel_of(&p.name));
             w.line(&format!("$scope.{ident} = __props.{ident};"));
+        }
+    }
+    // `<data name=… source=… live? />` — seed one `$scope.<name>` signal per
+    // declaration, in source order, before the controller's `setup:` factory
+    // (and the template walk) run so both see the same live signal object.
+    // `live`: a `queryKeyed` cache entry, envelope-shaped (`LiveState<T>`).
+    // Non-`live`: a plain signal carrying the resolved value directly
+    // (`undefined` pre-resolution), per docs/ship-sail/references/docs/
+    // data-subscriptions.md.
+    for decl in &lowered.data_decls {
+        let ident = js_ident(&camel_of(&decl.name));
+        if decl.live {
+            let key_js = decl.key_js.as_deref().unwrap_or("[]");
+            // `retry: false` — a `<data>` rejection is meant to surface in
+            // the template's `{#while-error}`/`kind === 'error'` branch
+            // right away. The author-facing primitive (`query()`) defaults
+            // to 3 retries for direct SDK use, but `<data>` exposes no
+            // retry knob (see data-subscriptions.md), so silently retrying
+            // for up to ~30s before the UI shows the failure would be a
+            // surprise no attribute lets the author opt out of.
+            w.line(&format!(
+                "$scope.{ident} = queryKeyed(() => {key_js}, () => {source}, {{ retry: false }});",
+                source = decl.source,
+            ));
+        } else {
+            w.line(&format!("$scope.{ident} = signal(undefined);"));
+            w.line(&format!(
+                "Promise.resolve({source}).then((__v) => $scope.{ident}.set(__v));",
+                source = decl.source,
+            ));
         }
     }
     // Pre-seed `$scope.<var> = signal(null)` for every `bind:this={var}`
