@@ -53,7 +53,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <code-block code={code.template}></code-block>
   <p sx="text-sm text-muted-foreground">
-    Blocks, keying, and expression rules in depth: <a href="/sail/templates">Templates</a>.
+    Blocks, keying, and expression rules in depth: <a href="/sail/language/templates">Templates</a>.
     The <code>sx</code> attributes are the styling system — one line here,
     a whole chapter at <a href="/sail/styling">Styling</a>.
   </p>
@@ -120,7 +120,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
     <a variant="solid" tone="primary" href="/sail/language/state">State →</a>
-    <a variant="default" href="/sail/templates">Templates</a>
+    <a variant="default" href="/sail/language/templates">Templates</a>
     <a variant="default" href="/sail/styling">Styling</a>
   </row>
 </column>

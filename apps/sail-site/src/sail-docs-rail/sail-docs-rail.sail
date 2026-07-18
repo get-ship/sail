@@ -35,9 +35,9 @@ export default controller(() => {
       <label>The language</label>
       <a href="/sail/language/sail-file" aria-current={path() === '/sail/language/sail-file' ? 'page' : null}>The .sail file</a>
       <a href="/sail/language/state" aria-current={path() === '/sail/language/state' ? 'page' : null}>State</a>
+      <a href="/sail/language/templates" aria-current={path() === '/sail/language/templates' ? 'page' : null}>Templates</a>
 
       <label>Building</label>
-      <a href="/sail/templates" aria-current={path() === '/sail/templates' ? 'page' : null}>Templates</a>
       <a href="/sail/data" aria-current={path() === '/sail/data' ? 'page' : null}>Data &amp; forms</a>
 
       <label>Reference</label>
