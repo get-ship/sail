@@ -100,6 +100,51 @@ function retryDelay(attempt: number): number {
   return Math.min(1000 * 2 ** (attempt - 1), 30_000)
 }
 
+// ---------------------------------------------------------------------------
+// Deterministic settle signal — for SSR's flush, not a browser concern.
+//
+// A module-scoped in-flight counter for PULL fetches (`fetch()`'s `run()`
+// below), bracketing exactly "fetch started" → "the entry's signal reflects
+// the outcome" (see the `beginFetch`/`endFetch` calls in `run()`). Module-
+// scoped is safe here: each SSR render gets a fresh V8 module instantiation
+// (deck-ssr's `run_module` — see ssr-entry.ts), so this never straddles two
+// requests. `endFetch()` runs AFTER `entry.sig.set(...)`, so if that write
+// synchronously triggers a NEW fetch (e.g. a derived query key changing in
+// response, or a dependent `query()`), the new fetch's `beginFetch()` lands
+// before the settling one's `endFetch()` — `whenCacheSettled()` never
+// reports "done" with a just-started dependent fetch invisible to it.
+let inFlight = 0
+let settleWaiters: Array<() => void> = []
+
+function beginFetch(): void {
+  inFlight++
+}
+
+function endFetch(): void {
+  inFlight--
+  if (inFlight === 0) {
+    const waiters = settleWaiters
+    settleWaiters = []
+    for (const w of waiters) w()
+  }
+}
+
+/**
+ * Resolves once every `query()`/`nativeQuery` PULL fetch currently in
+ * flight — and anything a settling fetch synchronously chains — has
+ * written its result into the cache. This is the event-driven replacement
+ * for macrotask-yield-and-hope: SSR awaits this directly instead of
+ * polling `globalThis.__shipPending()` for a few "quiet" turns and guessing
+ * the settle chain (cache entry `.set` → forwarding effect → template
+ * effect → server-DOM write) has caught up. Resolves immediately if
+ * nothing is in flight (the common case — most fetches settle well within
+ * a single microtask/macrotask turn of the SSR entry reaching this call).
+ */
+export function whenCacheSettled(): Promise<void> {
+  if (inFlight === 0) return Promise.resolve()
+  return new Promise<void>((resolve) => settleWaiters.push(resolve))
+}
+
 /** Whether `key` starts with every segment of `prefix`, value-compared
  *  (not reference-compared, since args are often fresh objects/arrays
  *  per call). `invalidate(crm)` → `['crm']`, `invalidate(crm.deals)` →
@@ -255,14 +300,32 @@ export class NativeCache {
         return
       }
 
-      result.then((value) => {
-        if (entry.disposed || myToken !== entry.fetchToken) return
-        entry.status = 'idle'
-        entry.abortController = null
-        entry.dataUpdatedAt = Date.now()
-        entry.retryCount = 0
-        entry.sig.set({ kind: 'ok', value })
-      }, onError)
+      // Tracked for `whenCacheSettled()` (SSR's deterministic flush — see
+      // below): begin/end bracket exactly the span from "fetch started" to
+      // "the entry's signal reflects the outcome", so a caller awaiting
+      // settlement never observes a fetch that's still in flight.
+      beginFetch()
+      result.then(
+        (value) => {
+          try {
+            if (entry.disposed || myToken !== entry.fetchToken) return
+            entry.status = 'idle'
+            entry.abortController = null
+            entry.dataUpdatedAt = Date.now()
+            entry.retryCount = 0
+            entry.sig.set({ kind: 'ok', value })
+          } finally {
+            endFetch()
+          }
+        },
+        (err) => {
+          try {
+            onError(err)
+          } finally {
+            endFetch()
+          }
+        },
+      )
     }
     run()
   }

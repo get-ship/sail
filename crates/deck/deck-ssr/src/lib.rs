@@ -28,18 +28,13 @@ pub mod serve;
 /// a value out of the headless run. The host decides what `call` is allowed
 /// to reach; this is just the wire.
 ///
-/// `call` also maintains an in-flight counter exposed as
-/// `globalThis.__shipPending()`, so the SSR entry can flush async `live()`
-/// sources DETERMINISTICALLY — drain while host work is pending instead of
-/// spinning a fixed number of microtask ticks (see `ssr/ssr-entry.ts`).
+/// The SSR entry's data-flush no longer polls a raw in-flight-call counter
+/// off this SDK: it awaits `@ship/sail-runtime`'s `whenCacheSettled()`,
+/// which brackets a `query()` PULL fetch from start to the moment its
+/// outcome lands in the cache (see `native-cache.ts`) — a signal scoped to
+/// what SSR actually needs to wait for, not every raw host call.
 pub const SHIP_SDK: &str = "\
-let __pending = 0;
-globalThis.__shipPending = () => __pending;
-export const call = (op, args) => {
-  __pending++;
-  return Promise.resolve(Deno.core.ops.op_ship_call(op, args ?? {}))
-    .finally(() => { __pending--; });
-};
+export const call = (op, args) => Promise.resolve(Deno.core.ops.op_ship_call(op, args ?? {}));
 export const emit = (v) => Deno.core.ops.op_emit(v);";
 
 /// What one SSR run produces.
