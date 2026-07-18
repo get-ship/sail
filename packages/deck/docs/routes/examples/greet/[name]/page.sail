@@ -1,6 +1,6 @@
 <!--
   A live [param] route — routes/examples/greet/[name]/page.sail matches
-  /examples/greet/:name. `route` is ambient in every view; route.params.name()
+  /examples/greet/:name. `route` is ambient in every route; route.params.name()
   reads the segment as a signal, so the heading tracks the URL.
 -->
 <article data-doc="true">

@@ -124,7 +124,7 @@ export type MutableState<Scope> =
  * surrounding scope, so URL changes re-fire the dependent
  * computation.
  */
-export type ViewScope<Scope = object> = Scope & {
+export type ControllerScope<Scope = object> = Scope & {
   ship: ShipHost
   clients: Clients
   route: RouteSignals
@@ -156,10 +156,10 @@ export type ViewScope<Scope = object> = Scope & {
  * called from setup. See `./effect-scope`.
  *
  * Both type parameters are INFERRED, so authors write
- * `controller((ctx: ViewScope<Scope>) => ({…}))` with no explicit type
+ * `controller((ctx: ControllerScope<Scope>) => ({…}))` with no explicit type
  * argument and no currying:
  *   - `Ctx` is inferred from `setup`'s PARAMETER annotation (the
- *     compiler-generated `ViewScope<Scope>` the author imports). This
+ *     compiler-generated `ControllerScope<Scope>` the author imports). This
  *     sidesteps TypeScript's all-or-nothing type-argument rule —
  *     nothing is supplied explicitly, so nothing forces a second call.
  *   - `SC` is inferred from `setup`'s RETURN — the controller's own TS
@@ -175,7 +175,7 @@ export type ControllerSetup<Ctx, SC extends Record<string, unknown>> = (
  *  (the precise `Ctx`/`SC` inference lives on the `controller()` overload
  *  in `controller-resolver.ts`, not here). */
 export type ControllerDef<Scope = object> = (
-  init: ViewScope<Scope>,
+  init: ControllerScope<Scope>,
   host?: Element,
 ) => Record<string, unknown>
 

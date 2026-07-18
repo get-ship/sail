@@ -39,7 +39,7 @@
 // `sail-controller-purity` scope). No `innerHTML`/`outerHTML`/`insertAdjacentHTML`.
 
 import { controller, signal, effect, untrack, ref } from '@ship/sail-runtime'
-import type { ViewScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-render.sail'
 import { attachEngineShadow, mountBySource, type ViewMount } from './engine/mount-source'
 import { mountByTag, type TagMount } from './engine/mount-tag'
@@ -59,7 +59,7 @@ function diagFromError(e: unknown): CompileDiagnostic {
   return { message, line: m ? Number(m[1]) : null, col: m ? Number(m[2]) : null, category: 'compile' }
 }
 
-export default controller((ctx: ViewScope<Scope>) => {
+export default controller((ctx: ControllerScope<Scope>) => {
     const stageEl = ref<HTMLElement>(null)
     // Stage framing: the reflected viewport-width prop picks a breakpoint
     // token; full means unconstrained.

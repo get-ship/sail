@@ -26,7 +26,7 @@ pub mod ship_asset_css;
 pub mod stamp;
 pub mod sail_plugin;
 pub mod targets;
-pub mod views_bundle;
+pub mod routes_bundle;
 mod watch;
 
 use std::collections::HashMap;
@@ -144,7 +144,7 @@ impl Bundler {
     /// second `BundlerBuilder`. The first caller registers a `Notify`, runs the
     /// build, then removes the entry and wakes every waiter. Waiters re-resolve
     /// the on-disk artifact themselves (this returns `Ok(None)` for them) — the
-    /// build wrote `view.js`, which is what they actually need.
+    /// build wrote `route.js`, which is what they actually need.
     ///
     /// Returns `Some(manifest)` for the task that performed the build, `None`
     /// for a coalesced waiter (the artifact is on disk either way).
@@ -209,7 +209,7 @@ impl Bundler {
 
     /// Build one named target.
     ///
-    /// Cold-misses from `serve_sui_view_setup` funnel through here; concurrent
+    /// Cold-misses from `serve_sui_route_setup` funnel through here; concurrent
     /// requests for the same target coalesce onto one build via
     /// `build_single_flight` (#256). A coalesced waiter doesn't get the
     /// leader's manifest, so we synthesize one pointing at the on-disk artifact
@@ -284,26 +284,6 @@ impl Bundler {
         let layout = self.layout();
         let mut failed: Vec<String> = Vec::new();
         let mut built: Vec<BundleTarget> = Vec::new();
-        // Step 0: regenerate the view route/meta tables
-        // (`<bucket>/routes.gen.ts` + `<bucket>/meta.gen.ts`) for every
-        // discovered view bucket. This is the framework-owned home for the
-        // view tables — folded out of the dev-only Justfile `gen-routes`
-        // recipe so a fresh clone + `build-assets` produces them with no
-        // manual `deck routes --views` step. `view_bucket_dirs()` is the SAME
-        // bucket list the view-target scan walks (`discover_view_bundles`) —
-        // one source of truth for "where views live", no second hardcoded path.
-        // The watch path ignores `.gen.ts`, so these writes can't self-trigger
-        // a rebuild loop. Failures are collected (honest exit), not aborted.
-        for views_dir in layout.view_bucket_dirs() {
-            let label = views_dir
-                .file_name()
-                .map(|n| n.to_string_lossy().into_owned())
-                .unwrap_or_else(|| "views".to_string());
-            if let Err(e) = crate::routes::generate_view_artifacts(&views_dir, &label) {
-                error!(bucket = %views_dir.display(), error = %e, "bundler: view route/meta gen failed");
-                failed.push(format!("view-tables {} ({e})", views_dir.display()));
-            }
-        }
         // Per-view resolver (#255/#267): bundle the view targets TOGETHER
         // (multi-entry) so components shared across views dedup into shared
         // chunks — the dedup that replaces the umbrella. Everything else stays
@@ -315,7 +295,7 @@ impl Bundler {
             .unwrap_or(false);
         // Reuse the cached snapshot instead of re-walking every `.sail` (#256).
         for t in self.targets_snapshot().iter() {
-            if t.name.starts_with("views/") {
+            if t.name.starts_with("routes/") {
                 views.push(t.clone());
                 continue;
             }
@@ -351,7 +331,7 @@ impl Bundler {
         // View targets together (shared-chunk dedup). Atomic: one bad view fails
         // the whole view bundle — the bake must not ship a broken view.
         if !views.is_empty() {
-            match crate::views_bundle::bundle_views(&layout, &views, &self.staging, true).await {
+            match crate::routes_bundle::bundle_routes(&layout, &views, &self.staging, true).await {
                 Ok(()) => built.extend(views),
                 Err(e) => {
                     error!(error = %e, "bundler: multi-entry view bundle failed");
@@ -431,7 +411,7 @@ impl Bundler {
     }
     /// Rebuild one target from the watcher, COALESCED through the same
     /// single-flight gate the on-demand `build` path uses. A watcher rebuild of
-    /// `views/git/view` must not run a second `BundlerBuilder` concurrently with
+    /// `routes/git/view` must not run a second `BundlerBuilder` concurrently with
     /// an on-demand build of the same target — that's the cross-build collision
     /// class. Route through `build_single_flight`; a coalesced waiter gets the
     /// on-disk manifest the leader wrote (same fallback as `build`).
@@ -474,8 +454,8 @@ impl Bundler {
             .collect()
     }
 
-    pub(crate) fn view_bucket_dirs_for_watch(&self) -> Vec<PathBuf> {
-        self.layout().view_bucket_dirs()
+    pub(crate) fn route_bucket_dirs_for_watch(&self) -> Vec<PathBuf> {
+        self.layout().route_bucket_dirs()
     }
 
     pub(crate) fn target_for_entry_path_for_watch(&self, path: &Path) -> Option<targets::BundleTarget> {

@@ -22,14 +22,14 @@ pub use handlers::{
     serve_sui_runtime,
     serve_sui_sdk_client,
 };
-// The named-view handlers (serve_sui_view_setup / serve_view_host /
-// serve_view_payload[_subpath]) moved to the `ship-views` crate. deck-axum's
+// The named-view handlers (serve_sui_route_setup / serve_route_host /
+// serve_route_payload[_subpath]) moved to the `ship-views` crate. deck-axum's
 // router serves ONLY deck's own framework + routes/ SPA surface.
 
 // Re-export the contract types so `deck`'s facade (and shipd through it)
 // can name them without depending on deck-core directly.
 pub use deck_core::{
-    CachePolicy, DaemonBuildInfo, DaemonMode, DeckResponse, ViewSetupQuery,
+    CachePolicy, DaemonBuildInfo, DaemonMode, DeckResponse, RouteSetupQuery,
     inject_mode_meta, mode_str,
 };
 
@@ -118,7 +118,7 @@ mod route_ssot {
 }
 
 pub fn router() -> Router {
-    use pages::{serve_sail_css, serve_theme_css, serve_themes_list, serve_view_tokens};
+    use pages::{serve_sail_css, serve_theme_css, serve_themes_list, serve_route_tokens};
     // The root `/` and the `/{file}` SPA/public catch-all are HOST
     // concerns. The host mounts `serve_index` at `/` and the per-app
     // `serve_apps` for the app's routes + per-app `/{file}` catch-all.
@@ -129,7 +129,7 @@ pub fn router() -> Router {
     Router::new()
         // Shared CSS / theme assets (unauthenticated) — paths are the
         // canonical `Route` enum values (routes.rs is ground truth).
-        .route(ROUTE_VIEW_TOKENS_CSS, get(serve_view_tokens))
+        .route(ROUTE_VIEW_TOKENS_CSS, get(serve_route_tokens))
         .route(ROUTE_SAIL_CSS, get(serve_sail_css))
         .route(ROUTE_THEME_CSS, get(serve_theme_css))
         .route(ROUTE_THEMES_LIST, get(serve_themes_list))
@@ -216,7 +216,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn into_axum_preserves_extra_headers() {
-        let dr = DeckResponse::js_view("v", DaemonMode::Development)
+        let dr = DeckResponse::js_route("v", DaemonMode::Development)
             .with_header("X-Deck-Test", "counter");
         let resp = into_axum(dr);
         assert_eq!(

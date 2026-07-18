@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 #[derive(Debug, serde::Serialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
-pub struct ResolvedView {
+pub struct ResolvedRoute {
     pub source: String,
     pub params: HashMap<String, String>,
     #[cfg_attr(feature = "specta", specta(type = Option<String>))]
@@ -22,49 +22,49 @@ pub struct ResolveError {
 /// pin a worker on a large parse. 4 MiB is comfortably above any real view yet
 /// rejects pathological inputs. Exposed so deck-core's CSS reads share one
 /// ceiling (one source of truth).
-pub const MAX_VIEW_SOURCE_BYTES: u64 = 4 * 1024 * 1024;
+pub const MAX_ROUTE_SOURCE_BYTES: u64 = 4 * 1024 * 1024;
 /// Config-driven view resolution layout (#273 — deck hardcodes no path).
 ///
-/// `view_dirs` are the bucket names appended to the project root
-/// (e.g. `["views"]`). For each `view_dirs[i]`, the
-/// resolver looks for `<root>/<view_dirs[i]>/<name>/<view_leaf>`. All
-/// buckets share one `view_leaf` (defaults to `page.sail`), which fixes
+/// `route_dirs` are the bucket names appended to the project root
+/// (e.g. `["views"]`). For each `route_dirs[i]`, the
+/// resolver looks for `<root>/<route_dirs[i]>/<name>/<route_leaf>`. All
+/// buckets share one `route_leaf` (defaults to `page.sail`), which fixes
 /// the #254 `index.sail` vs `page.sail` divergence between
 /// buckets. A host that serves additional buckets (Ship's `.ship/views`)
 /// supplies them as an OVERRIDE — deck names no host-private path.
 /// `first_party_root`, when set, takes precedence over the
-/// `view_dirs` buckets — the host declares its own first-party app
+/// `route_dirs` buckets — the host declares its own first-party app
 /// source root (e.g. `apps/shell/src`) and that bucket wins for any
 /// matching view name.
 #[derive(Debug, Clone)]
-pub struct ViewLayout {
-    pub view_dirs: Vec<String>,
-    pub view_leaf: String,
+pub struct RouteLayout {
+    pub route_dirs: Vec<String>,
+    pub route_leaf: String,
     pub first_party_root: Option<PathBuf>,
 }
-impl ViewLayout {
+impl RouteLayout {
     /// Conventional defaults — the deck-native `views/` bucket and the
     /// `page.sail` leaf. A host that serves additional buckets (Ship's
     /// `.ship/views`) supplies them as an override; deck names no
     /// host-private path in its zero-config default.
     pub fn conventional() -> Self {
         Self {
-            view_dirs: vec!["views".into()],
-            view_leaf: "page.sail".into(),
+            route_dirs: vec!["routes".into()],
+            route_leaf: "page.sail".into(),
             first_party_root: None,
         }
     }
 }
 
-/// Read a view artifact to a string, capped at [`MAX_VIEW_SOURCE_BYTES`].
+/// Read a view artifact to a string, capped at [`MAX_ROUTE_SOURCE_BYTES`].
 ///
 /// Returns `None` when the file is absent, unreadable, or larger than the cap —
 /// the size is checked via a cheap `stat` before any bytes are read, so an
 /// oversized file is never slurped into memory. Callers treat `None` as "no
 /// such artifact" (the co-located CSS reads already chain on `Option`/`Result`).
-pub fn read_view_artifact(path: &Path) -> Option<String> {
+pub fn read_route_artifact(path: &Path) -> Option<String> {
     let meta = std::fs::metadata(path).ok()?;
-    if meta.len() > MAX_VIEW_SOURCE_BYTES {
+    if meta.len() > MAX_ROUTE_SOURCE_BYTES {
         return None;
     }
     std::fs::read_to_string(path).ok()
@@ -72,10 +72,10 @@ pub fn read_view_artifact(path: &Path) -> Option<String> {
 
 pub fn resolve(
     project_root: &Path,
-    layout: &ViewLayout,
+    layout: &RouteLayout,
     name: &str,
     sub_path: Option<&str>,
-) -> Result<ResolvedView, ResolveError> {
+) -> Result<ResolvedRoute, ResolveError> {
     let segments: Vec<&str> = sub_path
         .unwrap_or("")
         .split('/')
@@ -84,7 +84,7 @@ pub fn resolve(
     let mut attempts: Vec<String> = Vec::new();
     // First-party views: the HOST supplies their root (deck is app-agnostic
     // and knows no app layout — see .artifacts/asset-architecture.md). When
-    // set, it takes precedence over the configured `view_dirs` buckets.
+    // set, it takes precedence over the configured `route_dirs` buckets.
     // When unset (a non-ship host), there is no first-party bucket.
     if let Some(fp_base) = layout.first_party_root.as_deref() {
         let fp_root = fp_base.join(name);
@@ -93,7 +93,7 @@ pub fn resolve(
         if let Some(found) = walk_disk_with_leaf(
             &fp_root,
             &segments,
-            &layout.view_leaf,
+            &layout.route_leaf,
             &mut fp_params,
             &mut fp_tried,
         ) {
@@ -102,18 +102,18 @@ pub fn resolve(
     }
     // Walk every configured view-dir bucket in order. First hit wins; the
     // rest are reported as "tried" so a 404 names every bucket consulted.
-    // A single leaf convention (`layout.view_leaf`) replaces the old
+    // A single leaf convention (`layout.route_leaf`) replaces the old
     // `page.sail`/`index.sail` per-bucket divergence (#254): every configured
-    // bucket looks up the same `<name>/<view_leaf>`.
-    for bucket in &layout.view_dirs {
+    // bucket looks up the same `<name>/<route_leaf>`.
+    for bucket in &layout.route_dirs {
         let bucket_root = project_root.join(bucket);
-        let view_root = bucket_root.join(name);
+        let route_root = bucket_root.join(name);
         let mut params: HashMap<String, String> = HashMap::new();
         let mut tried: Vec<PathBuf> = Vec::new();
         if let Some(found) = walk_disk_with_leaf(
-            &view_root,
+            &route_root,
             &segments,
-            &layout.view_leaf,
+            &layout.route_leaf,
             &mut params,
             &mut tried,
         ) {
@@ -140,7 +140,7 @@ fn read_resolved(
     leaf: PathBuf,
     allowed_root: &Path,
     params: HashMap<String, String>,
-) -> Result<ResolvedView, ResolveError> {
+) -> Result<ResolvedRoute, ResolveError> {
     // Containment guard against symlink escape: the leaf NAME is validated
     // upstream, but a symlink *inside* the views bucket can still point its
     // target outside the project. Canonicalize both the leaf and its bucket
@@ -166,14 +166,14 @@ fn read_resolved(
     // with no other bound. Reject an oversized file up front (cheap stat) rather
     // than slurping multiple MB into memory and parsing it.
     if let Ok(meta) = std::fs::metadata(&canonical)
-        && meta.len() > MAX_VIEW_SOURCE_BYTES
+        && meta.len() > MAX_ROUTE_SOURCE_BYTES
     {
         return Err(ResolveError {
             message: format!(
                 "view source too large: {} is {} bytes (max {})",
                 canonical.display(),
                 meta.len(),
-                MAX_VIEW_SOURCE_BYTES,
+                MAX_ROUTE_SOURCE_BYTES,
             ),
         });
     }
@@ -185,7 +185,7 @@ fn read_resolved(
             });
         }
     };
-    Ok(ResolvedView {
+    Ok(ResolvedRoute {
         source,
         params,
         source_path: Some(canonical),

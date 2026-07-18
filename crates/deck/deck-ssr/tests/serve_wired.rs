@@ -12,7 +12,7 @@
 //! SHAPE is covered; deck-ssr can't depend on ship-views — deck ⊥ ship-views —
 //! and links V8, so it tests the engine at the deck-core seam directly. The
 //! resolve→SsrRequest→first_paint→inject_form_actions chain below mirrors
-//! exactly what `ship_views::view_payload::serve_view_payload` does internally.)
+//! exactly what `ship_views::route_payload::serve_route_payload` does internally.)
 
 use std::sync::Arc;
 
@@ -44,7 +44,7 @@ fn setup() -> (
 }
 
 /// First-paint HTML through the deck-core SSR seam for a (sub-folded) view.
-/// Mirrors `serve_view_payload`'s internal SSR call: resolve → build the
+/// Mirrors `serve_route_payload`'s internal SSR call: resolve → build the
 /// `SsrRequest` from the resolved source path + captured params → run the
 /// registered ship-js renderer → host-inject `<form mutation>` actions.
 fn payload_html(
@@ -56,13 +56,13 @@ fn payload_html(
     let resolved = deck_core::resolver::resolve(root, name, sub).expect("resolve view");
     let source_path = resolved.source_path.as_deref().expect("resolved view has a source path");
     let params = serde_json::to_value(&resolved.params).unwrap_or(Value::Null);
-    let view_name = match sub {
+    let route_name = match sub {
         Some(s) => format!("{name}/{s}"),
         None => name.to_string(),
     };
-    let pathname = format!("/{view_name}");
+    let pathname = format!("/{route_name}");
     let req = deck_core::synthetic_ssr::SsrRequest {
-        view_name: &view_name,
+        route_name: &route_name,
         sub_path: sub,
         source_path,
         pathname: &pathname,
@@ -70,7 +70,7 @@ fn payload_html(
         query: serde_json::json!({}),
     };
     let raw = deck_core::synthetic_ssr::first_paint(engine, &req).expect("ship-js produced first paint");
-    deck_core::inject_form_actions(&raw, &view_name)
+    deck_core::inject_form_actions(&raw, &route_name)
 }
 
 /// Slice 2 — strip the ship-js SSR hydration markers

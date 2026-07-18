@@ -13,7 +13,7 @@
 //!   (b) build the `connect-src` header via `deck_core::connect_src_directive`
 //!       — the same list, not two independently hardcoded origin strings.
 //!
-//! If a follow-up threads `connect_src_directive` into `DeckResponse::html_view`
+//! If a follow-up threads `connect_src_directive` into `DeckResponse::html_route`
 //! (currently NOT wired — see `response.rs`'s `connect_src_directive` doc
 //! comment for the exact missing seam), this test's part (b) already proves
 //! the function itself is correct; only the plumbing remains.
@@ -34,14 +34,14 @@ fn write_fixture(fetch_target: &str) -> (tempfile::TempDir, PathBuf) {
     // governs every inline controller regardless of directory. `views/` here
     // is just fixture layout; the config sits at its root so the walk-up
     // from any file under it finds it.
-    let views_dir = tmp.path().join("views").join("git");
-    fs::create_dir_all(&views_dir).unwrap();
+    let routes_dir = tmp.path().join("views").join("git");
+    fs::create_dir_all(&routes_dir).unwrap();
     fs::write(
         tmp.path().join("views").join("sail.config.json"),
         format!(r#"{{"network": ["{GRANTED_ORIGIN}"]}}"#),
     )
     .unwrap();
-    let sail = views_dir.join("w.sail");
+    let sail = routes_dir.join("w.sail");
     let body = format!(
         "<controller>\nexport default controller((ctx) => {{\n  fetch('{fetch_target}')\n  return {{}}\n}})\n</controller>\n<p>hi</p>"
     );

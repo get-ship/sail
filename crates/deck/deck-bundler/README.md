@@ -48,7 +48,7 @@ The `Bundler` is in-process:
   `@ship/<pkg>` to workspace `src/`. `load` spawns `sail-compiler` to compile
   `.sail` → JS. Rolldown handles TS transpile + node resolution natively.
 - **Output:** `assets_dir_for` — `crates/deck/deck-core/assets` for the baked
-  framework bundles, `.deck/` for views/components/spaces. No source-tree writes.
+  framework bundles, `.deck/` for routes/components/spaces. No source-tree writes.
 - **API** (`lib.rs`): `Bundler::start` → `build(target)` / `build_all`
   (+ catalog aggregation) / `start_watching` / `subscribe_events` / `shutdown`,
   all async, in-process.
@@ -63,7 +63,7 @@ The `Bundler` is in-process:
 | `src/lib.rs` | `Bundler::start`, `build`, `build_all`, `start_watching`, `subscribe_events`, `shutdown` |
 | `src/sui_plugin.rs` | `SuiPlugin` — the Rolldown plugin; `resolve_id` + `load` hooks |
 | `src/rolldown_bundle.rs` | `bundle_target` — drives a Rolldown build with `SuiPlugin` installed |
-| `src/targets.rs` | Bundle-target definitions (views, packs, framework assets, apps) |
+| `src/targets.rs` | Bundle-target definitions (routes, packs, framework assets, apps) |
 | `src/routes.rs` | Route-tree walk → `routes.gen.ts` codegen (typed route builders for the shell) |
 | `src/watch.rs` | `notify` file watcher; emits `BundlerEvent::ModuleChanged` / `CompileError` on the broadcast channel |
 
@@ -74,7 +74,7 @@ The `Bundler` is in-process:
 `start_watching` runs a `notify` watcher over the source dirs; on a `.sail` /
 `.ts` / `.js` change it re-bundles the affected targets and emits a
 `BundlerEvent` (`ModuleChanged` / `CompileError`) on a broadcast channel. The
-daemon (`apps/shipd/src/lib.rs`) forwards these to `views::sui_hmr` →
+daemon (`apps/shipd/src/lib.rs`) forwards these to `routes::sui_hmr` →
 `/_deck/dev/hmr` SSE → the `live-reload.js` client baked into
 `crates/deck/deck-core/assets`. All Rust, no bun, no vite.
 
@@ -119,7 +119,7 @@ bun is **dev/build-time tooling only**, never in the deploy bundle:
 
 The `apps/shell` / `apps/spaces` SPA prod build is **not** bun: `deck build`
 (`crates/deck/deck-cli`, #170) bundles the app via Rolldown, compiling each `.sail`
-in-process — no separate pre-compile step. One engine for framework + views + apps.
+in-process — no separate pre-compile step. One engine for framework + routes + apps.
 
 The framework-asset bake is **not** bun: `cargo run -p deck-cli -- build-assets` drives the
 same in-process Rolldown `Bundler::build_all`, writing the framework bundles to

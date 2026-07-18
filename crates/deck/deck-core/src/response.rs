@@ -20,7 +20,7 @@ pub enum CachePolicy {
 
 // ── HTML security headers ─────────────────────────────────────────────────────
 //
-// Every HTML response emitted by deck (`html_view`) carries a fixed set of
+// Every HTML response emitted by deck (`html_route`) carries a fixed set of
 // security headers. The set is the SINGLE mint point for these headers; the
 // `html_view_carries_security_headers` behavior test pins them so a half-edit
 // (dropping a header, weakening the CSP, renaming X-Frame-Options) is caught
@@ -78,8 +78,8 @@ const CSP_SUFFIX: &str = "frame-ancestors 'self'";
 /// CSP `'self'` keyword; any other entry (`"https://api.example.com"`) is
 /// already an origin and is emitted verbatim.
 ///
-/// NOT YET WIRED to `html_view`/`DeckResponse` — deck-core's request path
-/// (`assets.rs`'s `serve_shell`/`html_view` call, deck-core/src/assets.rs:316)
+/// NOT YET WIRED to `html_route`/`DeckResponse` — deck-core's request path
+/// (`assets.rs`'s `serve_shell`/`html_route` call, deck-core/src/assets.rs:316)
 /// has no per-package resolved `"network"` list in hand today; the SPA shell
 /// HTML deck-core serves isn't scoped to one `.sail` package, so the seam that
 /// would supply this list does not exist yet. This function is the
@@ -167,10 +167,10 @@ impl DeckResponse {
     pub fn js_asset(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
         Self::new(200, "application/javascript; charset=utf-8", CachePolicy::Asset, mode, body)
     }
-    pub fn js_view(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
+    pub fn js_route(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
         Self::new(200, "application/javascript; charset=utf-8", CachePolicy::View, mode, body)
     }
-    pub fn css_view(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
+    pub fn css_route(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
         Self::new(200, "text/css; charset=utf-8", CachePolicy::View, mode, body)
     }
     /// A binary font asset (the bundler-emitted hashed woff2). Immutable by
@@ -179,7 +179,7 @@ impl DeckResponse {
     pub fn font_asset(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
         Self::new(200, "font/woff2", CachePolicy::Asset, mode, body)
     }
-    pub fn html_view(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
+    pub fn html_route(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
         // All HTML responses carry the deck-defined security header set. The
         // values live in `HTML_SECURITY_HEADERS` (top of file) — the single
         // mint point, with a behavior test pinning the bytes so a half-edit
@@ -191,7 +191,7 @@ impl DeckResponse {
     pub fn json_asset(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
         Self::new(200, "application/json; charset=utf-8", CachePolicy::Asset, mode, body)
     }
-    pub fn json_view(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
+    pub fn json_route(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
         Self::new(200, "application/json; charset=utf-8", CachePolicy::View, mode, body)
     }
 
@@ -234,7 +234,7 @@ impl DeckResponse {
     }
 
     /// Apply deck's security header set (`HTML_SECURITY_HEADERS`, the single mint
-    /// point) to this response. Used by `html_view` AND the error responses
+    /// point) to this response. Used by `html_route` AND the error responses
     /// (`not_found`/`render_error`): a text/plain error body reflects request-
     /// derived detail in Development, so it MUST send `X-Content-Type-Options:
     /// nosniff` to stop a browser MIME-sniffing it as HTML and executing
@@ -272,7 +272,7 @@ mod tests {
 
     #[test]
     fn html_view_carries_security_headers() {
-        let resp = DeckResponse::html_view("<html></html>", DaemonMode::Development);
+        let resp = DeckResponse::html_route("<html></html>", DaemonMode::Development);
         assert_eq!(
             header_value(&resp, "X-Frame-Options"),
             Some("SAMEORIGIN"),
@@ -303,20 +303,20 @@ mod tests {
         );
     }
 
-    /// Behavior pin: the `extra_headers` carried by an `html_view` response
+    /// Behavior pin: the `extra_headers` carried by an `html_route` response
     /// must equal `HTML_SECURITY_HEADERS` exactly, in order, byte-for-byte.
     /// This is the transport-agnostic assertion — it catches a header added
-    /// to the const but not emitted by `html_view`, or a header emitted by
-    /// `html_view` but missing from the const. The wire-level mirror in
+    /// to the const but not emitted by `html_route`, or a header emitted by
+    /// `html_route` but missing from the const. The wire-level mirror in
     /// `deck-axum` (`html_view_security_headers_reach_the_wire`) confirms
     /// the adapter preserves them, completing the chain.
     #[test]
     fn html_view_emits_exactly_the_security_header_set() {
-        let resp = DeckResponse::html_view("<html></html>", DaemonMode::Development);
+        let resp = DeckResponse::html_route("<html></html>", DaemonMode::Development);
         assert_eq!(
             resp.extra_headers.len(),
             HTML_SECURITY_HEADERS.len(),
-            "html_view must emit exactly the HTML_SECURITY_HEADERS set; \
+            "html_route must emit exactly the HTML_SECURITY_HEADERS set; \
              got {} extra headers but the const declares {}",
             resp.extra_headers.len(),
             HTML_SECURITY_HEADERS.len(),
@@ -347,7 +347,7 @@ mod tests {
         // also fail. Belt-and-suspenders: a third, exact-set equality
         // assertion (`html_view_emits_exactly_the_security_header_set`)
         // catches partial overlaps a single substring check would miss.
-        let resp = DeckResponse::html_view("<html></html>", DaemonMode::Development);
+        let resp = DeckResponse::html_route("<html></html>", DaemonMode::Development);
         let names: Vec<&str> = resp
             .extra_headers
             .iter()
@@ -371,7 +371,7 @@ mod tests {
             resp.extra_headers.len(),
             expected_count,
             "extra_headers count drifted from HTML_SECURITY_HEADERS.len() — \
-             either `html_view` added an extra header or the const shrank",
+             either `html_route` added an extra header or the const shrank",
         );
     }
 

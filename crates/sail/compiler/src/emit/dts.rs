@@ -37,7 +37,7 @@ pub fn emit_dts(program: &Program, controller: Option<&ParsedController>) -> Str
 
     // Controller scope-factory fields are OMITTED from the generated Scope
     // entirely — they are typed solely by the controller's inferred SC.
-    // Emitting them here put the same key in BOTH Ctx (= ViewScope<Scope>) and
+    // Emitting them here put the same key in BOTH Ctx (= ControllerScope<Scope>) and
     // SC, so `MutableState<Ctx & SC>.$signals.x` became `Signal<unknown> &
     // Signal<T>` and calling that intersection returned `unknown` (first call
     // signature wins) — the root cause of the `as unknown as` state casts.

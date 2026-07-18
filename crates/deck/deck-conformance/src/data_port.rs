@@ -39,7 +39,7 @@ use tokio_stream::wrappers::ReceiverStream;
 use tokio_util::sync::CancellationToken;
 
 use deck_core::live_wire::{format_keepalive, format_patch_set, format_patch_signals};
-use deck_core::render_helpers::is_valid_view_name;
+use deck_core::render_helpers::is_valid_route_name;
 use futures_util::StreamExt as _;
 
 // ── store ─────────────────────────────────────────────────────────────────────
@@ -237,13 +237,13 @@ async fn serve_sse_inner(
     store: Arc<DemoStore>,
     root: Option<std::path::PathBuf>,
 ) -> Response {
-    if !is_valid_view_name(&name) {
+    if !is_valid_route_name(&name) {
         return sse_error(StatusCode::BAD_REQUEST, "invalid view name");
     }
     let Some(root) = root else {
         return sse_error(StatusCode::NOT_FOUND, "no project root");
     };
-    let source = match deck_core::render_helpers::render_view_source(&root, &name) {
+    let source = match deck_core::render_helpers::render_route_source(&root, &name) {
         Some(s) => s,
         None => return sse_error(StatusCode::NOT_FOUND, "view not found"),
     };

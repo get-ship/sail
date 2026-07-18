@@ -7,7 +7,7 @@
 <controller>
 // Overview controller — supplies the page's code snippets as strings (literal
 // braces in a .sail template parse as interpolation, so code lives here).
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 
 const quickstart = `my-app/
@@ -20,14 +20,14 @@ $ deck dev
 const layers = `SAIL    :  deck   :  your app
 React  :  Next   :  your app`
 
-export default controller((_ctx: ViewScope<Scope>) => ({ quickstart, layers }))
+export default controller((_ctx: ControllerScope<Scope>) => ({ quickstart, layers }))
 </controller>
 
 <article data-doc="true">
   <p role="doc-eyebrow">deck · 0.2.0</p>
   <h1>The standalone web framework for SAIL.</h1>
   <p role="doc-lead">
-    deck mounts SAIL views, routes them from the filesystem, server-renders or
+    deck mounts SAIL routes, routes them from the filesystem, server-renders or
     statically builds them, and serves every asset — with a dev server and
     state-preserving HMR. It is to SAIL what Next is to React.
   </p>

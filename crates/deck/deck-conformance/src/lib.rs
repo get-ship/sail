@@ -45,7 +45,7 @@ pub fn demo_mode() -> DaemonMode {
     }
 }
 
-/// This crate's example app: `app/views/<name>/page.sail`.
+/// This crate's example app: `app/routes/<name>/page.sail`.
 pub fn default_app_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("app")
 }

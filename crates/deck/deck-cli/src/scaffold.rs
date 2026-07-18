@@ -1,10 +1,12 @@
-//! `deck scaffold view|component` — generate boilerplate for a new SAIL view
-//! or primitive. Ported verbatim from the retired
+//! `deck scaffold route|component` — generate boilerplate for a new SAIL route
+//! or primitive. Ported from the retired
 //! `scripts/scaffold-view.mjs` + `scripts/scaffold-sail-component.mjs`.
 //!
 //! Scaffolding is a deck capability because deck owns the app/component
-//! shape (manifest fields, the single-file `.sail` convention — state lives
-//! in an inline `<controller>` block). The retired .mjs called into `node` and
+//! shape (the single-file `.sail` convention — state lives in an inline
+//! `<controller>` block). A route is just a directory with a `page.sail`;
+//! deck derives the URL from the tree (no manifest, no host metadata). The
+//! retired .mjs called into `node` and
 //! pointed at since-renamed paths (`packages/ui-components/src/`); the
 //! port writes to the current layout (`packages/components/sail/primitives/`)
 //! and the next-steps text reflects today's toolchain.
@@ -16,7 +18,7 @@ use anyhow::{Context, Result, anyhow, bail};
 
 /// Validate `name` against `/^[a-z][a-z0-9-]*$/` — the route-segment shape
 /// the daemon resolver expects and the file-system shape we write.
-fn validate_view_name(name: &str) -> Result<()> {
+fn validate_route_name(name: &str) -> Result<()> {
     if name.is_empty() {
         bail!("view name is required");
     }
@@ -30,7 +32,7 @@ fn validate_view_name(name: &str) -> Result<()> {
     Ok(())
 }
 
-/// Same shape as `validate_view_name` plus the `sail-` prefix the runtime
+/// Same shape as `validate_route_name` plus the `sail-` prefix the runtime
 /// custom-element registry expects for primitives.
 fn validate_component_tag(tag: &str) -> Result<()> {
     let Some(rest) = deck_core::strip_sail_tag_prefix(tag) else {
@@ -67,8 +69,8 @@ fn find_repo_root(start: &Path) -> Result<PathBuf> {
     })
 }
 
-pub fn run_view(name: String, route_path: Option<String>, component_tag: Option<String>) -> Result<()> {
-    validate_view_name(&name)?;
+pub fn run_route(name: String, route_path: Option<String>, component_tag: Option<String>) -> Result<()> {
+    validate_route_name(&name)?;
     let route = route_path.unwrap_or_else(|| format!("/{name}"));
     if !route.starts_with('/') {
         bail!("--path must start with `/` — got {route:?}");
@@ -82,32 +84,27 @@ pub fn run_view(name: String, route_path: Option<String>, component_tag: Option<
         }
     }
 
+    // `route` is validated (`/`-prefixed) above; deck derives the URL from the
+    // directory tree, so the scaffold no longer records it in a manifest.
+    let _ = &route;
     let repo_root = find_repo_root(&std::env::current_dir().context("cwd")?)?;
-    let base = repo_root.join("views").join(&name);
+    let base = repo_root.join("routes").join(&name);
     if base.exists() {
         bail!("directory already exists: {}", base.display());
     }
     fs::create_dir_all(&base).with_context(|| format!("mkdir {}", base.display()))?;
 
     let title = title_case(&name);
-    let manifest = format!(
-        "// Route metadata for views/{name}/. See\n\
-         // docs/ship-adrs/references/docs/view-directory-convention.md.\n\
-         {{\n  \
-         \"name\": \"{name}\",\n  \
-         \"path\": \"{route}\",\n  \
-         \"title\": \"{title}\",\n  \
-         \"layout\": \"default\",\n  \
-         \"auth\": \"public\"\n\
-         }}\n"
-    );
     // Tier-1 stub: layout element + typography, no sx, no CSS — legal under
     // every styling policy. State arrives later as an inline `<controller>`.
+    // A route is simply a directory with a `page.sail` — deck discovers the URL
+    // from the tree (a `[param]` dir is a dynamic). No manifest, no host
+    // metadata: `auth`/`rail`/`layout`/`title` are a Ship-shell concern, not
+    // deck's (see the ship-ui handoff).
     let page = format!(
         "<column gap=\"4\">\n  \
-         <h1>{title}</h1>\n  <p>New view — replace this body.</p>\n</column>\n"
+         <h1>{title}</h1>\n  <p>New route — replace this body.</p>\n</column>\n"
     );
-    fs::write(base.join("manifest.jsonc"), manifest)?;
     fs::write(base.join("page.sail"), page)?;
 
     if let Some(tag) = component_tag {
@@ -115,9 +112,9 @@ pub fn run_view(name: String, route_path: Option<String>, component_tag: Option<
         fs::create_dir_all(&tag_dir)?;
         let comp_sui = format!(
             "<!--\n  \
-             {tag} — view-private widget for views/{name}/.\n\n  \
-             Tag prefix matches the parent view name so the runtime can register it\n  \
-             without colliding with any other view's _components/ tree.\n\
+             {tag} — route-private widget for routes/{name}/.\n\n  \
+             Tag prefix matches the parent route name so the runtime can register it\n  \
+             without colliding with any other route's _components/ tree.\n\
              -->\n\n\
              <scope>\n  props: {{ tone = 'default' }}\n</scope>\n\n\
              <card tone={{tone()}}>\n  <slot></slot>\n</card>\n"
@@ -125,13 +122,12 @@ pub fn run_view(name: String, route_path: Option<String>, component_tag: Option<
         fs::write(tag_dir.join(format!("{tag}.sail")), comp_sui)?;
     }
 
-    println!("[scaffold] created views/{name}/");
-    println!("[scaffold]   page.sail  manifest.jsonc");
+    println!("[scaffold] created routes/{name}/");
+    println!("[scaffold]   page.sail");
     println!("[scaffold] next steps:");
     println!("  1. Edit page.sail — replace placeholder body");
-    println!("  2. Edit manifest.jsonc — set rail/preload/events as needed");
-    println!("  3. Add an inline <controller> block when the view needs state");
-    println!("  4. Reload the shell — views auto-mount via the daemon");
+    println!("  2. Add an inline <controller> block when the route needs state");
+    println!("  3. Reload the app — deck discovers the route from the tree");
     Ok(())
 }
 
@@ -159,10 +155,10 @@ pub fn run_component(tag: String, want_controller: bool) -> Result<()> {
          <scope>\n  props: {{ tone = 'default' }}\n</scope>\n\n"
     );
     if want_controller {
-        sail.push_str("<controller>\nimport { controller, type ViewScope } from '@ship/sail-runtime'\n");
+        sail.push_str("<controller>\nimport { controller, type ControllerScope } from '@ship/sail-runtime'\n");
         sail.push_str(&format!("import type {{ Scope }} from './{tag}.sail'\n\n"));
         sail.push_str(
-            "export default controller((_ctx: ViewScope<Scope>) => ({}))\n</controller>\n\n",
+            "export default controller((_ctx: ControllerScope<Scope>) => ({}))\n</controller>\n\n",
         );
     }
     sail.push_str("<row align=\"center\" gap=\"1\" sx=\"text-tone-fg\">\n  <slot></slot>\n</row>\n");

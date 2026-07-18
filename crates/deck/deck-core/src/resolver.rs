@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 #[derive(Debug, Clone, Default)]
 pub struct Resolution {
     roots: Vec<PathBuf>,
-    view_outputs: BTreeMap<String, PathBuf>,
+    route_outputs: BTreeMap<String, PathBuf>,
 }
 
 impl Resolution {
@@ -48,9 +48,9 @@ impl Resolution {
     /// Register a per-app view-output dir. Hosts call this for each app whose
     /// built view bundles live outside the conventional `<root>/.deck/views`
     /// (e.g. `apps/hub/.deck/views/<name>/view.js`). Probed BEFORE the
-    /// project-root `.deck` fallback by [`view_bundle_roots`](Self::view_bundle_roots).
-    pub fn register_view_output(&mut self, app: impl Into<String>, dir: impl Into<PathBuf>) {
-        self.view_outputs.insert(app.into(), dir.into());
+    /// project-root `.deck` fallback by [`route_bundle_roots`](Self::route_bundle_roots).
+    pub fn register_route_output(&mut self, app: impl Into<String>, dir: impl Into<PathBuf>) {
+        self.route_outputs.insert(app.into(), dir.into());
     }
 
     /// The host's declared roots, in precedence order.
@@ -65,8 +65,8 @@ impl Resolution {
     }
 
     /// The view-output dir for `app`, if registered.
-    pub fn view_output(&self, app: &str) -> Option<&Path> {
-        self.view_outputs.get(app).map(|p| p.as_path())
+    pub fn route_output(&self, app: &str) -> Option<&Path> {
+        self.route_outputs.get(app).map(|p| p.as_path())
     }
 
     /// View-bundle roots to probe for `<root>/views/<name>/view.js`, in
@@ -75,8 +75,8 @@ impl Resolution {
     /// The `.deck` join is the SAME single constant the bundler writes through
     /// (`deck_config::deck_out_path`), so this reader can never drift from the
     /// writer (`inv-deck-output-location-single`).
-    pub(crate) fn view_bundle_roots(&self) -> Vec<PathBuf> {
-        let mut roots: Vec<PathBuf> = self.view_outputs.values().cloned().collect();
+    pub(crate) fn route_bundle_roots(&self) -> Vec<PathBuf> {
+        let mut roots: Vec<PathBuf> = self.route_outputs.values().cloned().collect();
         if let Some(pr) = self.project_root() {
             roots.push(deck_config::deck_out_path(pr));
         }
@@ -119,17 +119,17 @@ pub(crate) fn detect_project_root_from(cwd: &Path) -> Option<PathBuf> {
     None
 }
 
-use deck_host::resolver::ViewLayout;
-pub use deck_host::resolver::{ResolveError, ResolvedView};
-/// Build a [`ViewLayout`] from the conventional `["views"]` bucket with a
+use deck_host::resolver::RouteLayout;
+pub use deck_host::resolver::{ResolveError, ResolvedRoute};
+/// Build a [`RouteLayout`] from the conventional `["views"]` bucket with a
 /// single `page.sail` leaf. The leaf is unified across all buckets (fixes the
 /// #254 `index.sail` vs `page.sail` divergence). The framework loads no config
 /// file — a host that needs a different layout constructs a `DeckConfig` and
 /// threads it into `Bundler::start`; the bundler's view-discovery walks
-/// `cfg.view_dirs` directly. The runtime resolver here reports the conventional
+/// `cfg.route_dirs` directly. The runtime resolver here reports the conventional
 /// defaults.
-fn view_layout() -> ViewLayout {
-    ViewLayout::conventional()
+fn route_layout() -> RouteLayout {
+    RouteLayout::conventional()
 }
 
 /// Resolve a view by name under an EXPLICIT project `root` (mount-scoped — the
@@ -139,8 +139,8 @@ pub fn resolve(
     root: &Path,
     name: &str,
     sub_path: Option<&str>,
-) -> Result<ResolvedView, ResolveError> {
-    let layout = view_layout();
+) -> Result<ResolvedRoute, ResolveError> {
+    let layout = route_layout();
     deck_host::resolver::resolve(root, &layout, name, sub_path)
 }
 
@@ -149,21 +149,21 @@ pub fn resolve(
 /// `["views"]`) under the given root. Cheap (one shallow `read_dir` per bucket,
 /// no compilation) and graceful: a missing bucket contributes nothing. Names
 /// are deduped and sorted so the page renders deterministically.
-pub fn list_view_names(root: &Path) -> Vec<String> {
+pub fn list_route_names(root: &Path) -> Vec<String> {
     let mut names: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
-    let layout = view_layout();
+    let layout = route_layout();
     if let Some(fp) = layout.first_party_root.as_deref() {
-        collect_view_dirs(fp, &mut names);
+        collect_route_dirs(fp, &mut names);
     }
-    for bucket in &layout.view_dirs {
-        collect_view_dirs(&root.join(bucket), &mut names);
+    for bucket in &layout.route_dirs {
+        collect_route_dirs(&root.join(bucket), &mut names);
     }
     names.into_iter().collect()
 }
 
 /// Add each immediate child directory of `dir` whose name is a valid view name
 /// to `out`. A non-directory or unreadable `dir` contributes nothing.
-fn collect_view_dirs(dir: &Path, out: &mut std::collections::BTreeSet<String>) {
+fn collect_route_dirs(dir: &Path, out: &mut std::collections::BTreeSet<String>) {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return;
     };
@@ -172,7 +172,7 @@ fn collect_view_dirs(dir: &Path, out: &mut std::collections::BTreeSet<String>) {
             continue;
         }
         if let Some(name) = entry.file_name().to_str()
-            && crate::view::is_valid_view_name(name)
+            && crate::route::is_valid_route_name(name)
         {
             out.insert(name.to_string());
         }
@@ -311,7 +311,7 @@ mod project_root_tests {
     }
 
     /// `inv-deck-output-location-single`, cross-crate: the runtime READER
-    /// (`Resolution::view_bundle_roots`) and the bundler WRITER
+    /// (`Resolution::route_bundle_roots`) and the bundler WRITER
     /// (`deck_bundler::targets::BundleLayout::deck_out`) resolve the SAME `.deck`
     /// path for the same project root — because both go through the one
     /// `deck_config::deck_out_path` join. This is the invariant in its strongest
@@ -325,7 +325,7 @@ mod project_root_tests {
             BundleLayout::with_config(root.clone(), None, DeckConfig::defaults()).deck_out();
         let reader_deck = Resolution::new()
             .with_root(root.clone())
-            .view_bundle_roots()
+            .route_bundle_roots()
             .pop()
             .expect("project-root .deck fallback present");
         assert_eq!(
@@ -340,8 +340,8 @@ mod project_root_tests {
     #[test]
     fn view_bundle_roots_precedence_and_single_output_join() {
         let mut r = Resolution::new().with_root("/proj");
-        r.register_view_output("hub", "/apps/hub/.deck/views");
-        let roots = r.view_bundle_roots();
+        r.register_route_output("hub", "/apps/hub/.deck/views");
+        let roots = r.route_bundle_roots();
         assert_eq!(roots[0], PathBuf::from("/apps/hub/.deck/views"), "per-app output first");
         assert_eq!(
             *roots.last().unwrap(),

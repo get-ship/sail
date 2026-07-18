@@ -25,7 +25,7 @@ use deck::bundler::{Bundler, BundlerEvent};
 async fn editing_a_view_fires_bounded_rebuilds_then_settles() {
     let tmp = tempfile::tempdir().expect("tempdir");
     let root = tmp.path();
-    let view = root.join("views/probe/page.sail");
+    let view = root.join("routes/probe/page.sail");
     std::fs::create_dir_all(view.parent().unwrap()).unwrap();
     std::fs::write(&view, "<div>probe {1 + 1}</div>\n").unwrap();
 
@@ -55,7 +55,7 @@ async fn editing_a_view_fires_bounded_rebuilds_then_settles() {
                 total += 1;
                 first = false;
                 if let BundlerEvent::ModuleChanged { target, .. } = &ev
-                    && target.as_str() == "views/probe/view"
+                    && target.as_str() == "routes/probe/route"
                 {
                     rebuilds += 1;
                 }
@@ -70,7 +70,7 @@ async fn editing_a_view_fires_bounded_rebuilds_then_settles() {
 
     assert!(
         rebuilds >= 1,
-        "one edit should rebuild views/probe/view at least once (got 0 in {total} events)"
+        "one edit should rebuild routes/probe/view at least once (got 0 in {total} events)"
     );
     assert!(
         rebuilds <= 4,

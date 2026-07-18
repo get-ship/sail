@@ -313,8 +313,8 @@ fn deck_crates_name_no_ship_app() {
     );
 }
 
-/// Positive zero-config test: `DeckConfig::defaults()` + a temp `views/foo/page.sail`
-/// yields exactly one views/foo target and zero consumer targets.
+/// Positive zero-config test: `DeckConfig::defaults()` + a temp `routes/foo/page.sail`
+/// yields exactly one routes/foo target and zero consumer targets.
 #[test]
 fn zero_config_discovers_views_only() {
     use deck_bundler::targets::{BundleLayout, BundleTarget};
@@ -323,7 +323,7 @@ fn zero_config_discovers_views_only() {
     let root = tmp.path().to_path_buf();
 
     // Write a single view.
-    let page_sui = root.join("views/foo/page.sail");
+    let page_sui = root.join("routes/foo/page.sail");
     std::fs::create_dir_all(page_sui.parent().unwrap()).unwrap();
     std::fs::write(&page_sui, "<div>foo</div>\n").unwrap();
 
@@ -355,7 +355,7 @@ fn zero_config_discovers_views_only() {
     }
 
     // Discovered view.
-    assert!(names.contains(&"views/foo/view"), "views/foo/view discovered");
+    assert!(names.contains(&"routes/foo/route"), "routes/foo/view discovered");
 
     // Zero consumer targets from defaults (no deck.jsonc declares any).
     assert!(

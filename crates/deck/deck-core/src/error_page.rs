@@ -2,7 +2,7 @@
 //!
 //! The browser-facing view route (`/_deck/view/<name>`) serves an HTML shell.
 //! When the requested view can't be resolved, the daemon must return a
-//! *rendered* page — not the raw `{"error":{"view_not_found":…}}` JSON that
+//! *rendered* page — not the raw `{"error":{"route_not_found":…}}` JSON that
 //! the programmatic `/_deck/views/<name>` payload endpoint emits for API
 //! callers. This module owns that page: it fills the baked
 //! `view-not-found.html` shell with the requested name and the views the
@@ -12,7 +12,7 @@
 //! linked by the shell) so the page tracks the active theme — the same
 //! convention `view-host.html` uses. No color/hex literals live here.
 
-use crate::resolver::list_view_names;
+use crate::resolver::list_route_names;
 use crate::response::CachePolicy;
 use crate::{DaemonMode, DeckResponse};
 
@@ -23,11 +23,11 @@ const ROUTES_PLACEHOLDER: &str = "<!-- SAIL_NF_ROUTES -->";
 /// Render the `404 view-not-found` HTML page for `name`.
 ///
 /// `text/html`, status 404, never cached. The available-view list is a
-/// best-effort scan of the mount's project `root` (`list_view_names`) — empty
+/// best-effort scan of the mount's project `root` (`list_route_names`) — empty
 /// when the caller has no root (`None`), in which case the routes block is
 /// omitted gracefully rather than rendering an empty list.
-pub fn view_not_found(mode: DaemonMode, name: &str, root: Option<&std::path::Path>) -> DeckResponse {
-    let routes = root.map(list_view_names).unwrap_or_default();
+pub fn route_not_found(mode: DaemonMode, name: &str, root: Option<&std::path::Path>) -> DeckResponse {
+    let routes = root.map(list_route_names).unwrap_or_default();
     let body = NOT_FOUND_SHELL
         .replace(NAME_PLACEHOLDER, &escape_html(name))
         .replace(ROUTES_PLACEHOLDER, &routes_block(&routes));
@@ -62,7 +62,7 @@ fn routes_block(routes: &[String]) -> String {
 }
 
 /// Minimal HTML-text/attribute escape. The host path only reaches this with a
-/// name `is_valid_view_name` already accepted (alphanumeric, `_`, `-`, `/`),
+/// name `is_valid_route_name` already accepted (alphanumeric, `_`, `-`, `/`),
 /// but the page is also served for *invalid* names, so escape defensively —
 /// the name lands in both element text and an `href` attribute.
 fn escape_html(s: &str) -> String {

@@ -42,7 +42,7 @@
 </scope>
 <controller>
 import { controller, signal, derived, ref } from '@ship/sail-runtime'
-import type { ViewScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-annotation-layer.sail'
 import { type AnnotationEvent, buildAnnotationEvent } from './sail-annotation.internals'
 
@@ -65,7 +65,7 @@ interface Drag {
 
 const DEFAULT_ENDPOINT = '/api/feedback'
 
-export default controller((props: ViewScope<Scope>, _host?: Element) => {
+export default controller((props: ControllerScope<Scope>, _host?: Element) => {
     const viewIdProp = props.viewId
     const endpointProp = props.endpoint
     const stagingProp = props.staging

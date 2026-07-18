@@ -39,10 +39,10 @@
 
 <controller>
 import { controller, effect, ref, signal } from '@ship/sail-runtime'
-import type { ViewScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-composer.sail'
 
-export default controller((_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ControllerScope<Scope>) => {
     const text = signal('')
     // Consumer-owned attachment payloads. The composer never fabricates
     // these — it echoes whatever the host assigned in the submit event.

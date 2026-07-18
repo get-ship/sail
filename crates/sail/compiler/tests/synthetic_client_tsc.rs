@@ -138,10 +138,10 @@ fn write_runtime_shim(repo: &Path, work: &Path) {
          // Types the @ship/sail-dom hydrate helpers import from the runtime but\n\
          // that the SSR server entry does not surface.\n\
          export type {{ Modifier, OnOptions }} from \"{r}/packages/sail/runtime/src/on.ts\";\n\
-         // `ViewScope` lives on controller.ts (the legacy export authors still\n\
+         // `ControllerScope` lives on controller.ts (the legacy export authors still\n\
          // reach for). Re-export so a controller declaring\n\
-         // `controller<ViewScope>(...)` doesn't break under the shim.\n\
-         export type {{ ViewScope }} from \"{r}/packages/sail/runtime/src/controller.ts\";\n"
+         // `controller<ControllerScope>(...)` doesn't break under the shim.\n\
+         export type {{ ControllerScope }} from \"{r}/packages/sail/runtime/src/controller.ts\";\n"
     );
     fs::write(work.join("runtime-shim.ts"), shim).unwrap();
     // Ambient type shim for the `ship` host-dispatch module — the ONE

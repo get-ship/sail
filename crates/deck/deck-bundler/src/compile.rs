@@ -293,9 +293,9 @@ mod tests {
     fn synthetic_gate_is_scoped_and_additive() {
         let _env = EMIT_ENV_LOCK.lock().unwrap_or_else(|p| p.into_inner());
         let src = tempdir().unwrap();
-        // Route-ness is POSITION: the page must live under a `views/` (or
+        // Route-ness is POSITION: the page must live under a `routes/` (or
         // `routes/`) ancestor for deck to grant `route` at compile time.
-        let dir = src.path().join("views/greet/[id]");
+        let dir = src.path().join("routes/greet/[id]");
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(dir.join("page.sail"), "<h1>{route.params.id()}</h1>\n").unwrap();
         let sail = dir.join("page.sail");

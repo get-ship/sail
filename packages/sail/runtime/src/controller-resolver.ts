@@ -16,7 +16,7 @@
 // and later calls `scope.runMounts(hostElement)` once the DOM is
 // connected.
 
-import type { ControllerDef, ViewScope } from './controller'
+import type { ControllerDef, ControllerScope } from './controller'
 import type {
   ResolverContext,
   ResolvedBindings,
@@ -36,14 +36,14 @@ export function resolveController(
   def: ControllerDef<object>,
   ctx: ResolverContext,
 ): ResolvedBindings {
-  const baseScope: ViewScope<object> = {
+  const baseScope: ControllerScope<object> = {
     ship: ctx.ship,
     clients: ctx.clients ?? {},
     ...(ctx.clients ?? {}),
     route: ctx.route ?? {},
     navigate: ctx.navigate ?? ((_path: string) => {}),
     ...(ctx.scope ?? {}),
-  } as ViewScope<object>
+  } as ControllerScope<object>
 
   return def(baseScope, ctx.host)
 }
@@ -101,8 +101,8 @@ export interface ControllerExport<Scope = object> {
 // widened — the framework-wide "factory signals untyped in handlers, must
 // cast" bug this shape exists to prevent from coming back.
 export function controller<Ctx, SC extends Record<string, unknown>>(
-  fn: (init: ViewScope<Ctx>, host?: Element) => SC,
-): ControllerExport<Ctx & SC> & { __def: (init: ViewScope<Ctx>, host?: Element) => SC } {
+  fn: (init: ControllerScope<Ctx>, host?: Element) => SC,
+): ControllerExport<Ctx & SC> & { __def: (init: ControllerScope<Ctx>, host?: Element) => SC } {
   return {
     setup: (ctx) => resolveController(fn as ControllerDef<object>, ctx),
     // `__def` carries the precise literal type of `fn` (via the generic

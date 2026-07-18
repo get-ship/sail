@@ -52,7 +52,7 @@
 // (pointer drag + Shift+Arrow → engine + sail-* emits) lives in `./sail-calendar.interactions`.
 
 import { controller, derived, effect, signal } from '@ship/sail-runtime'
-import type { ViewScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import { createCalendar } from './engine'
 import type { Calendar, CalendarEvent, DateRange, MonthCell, ViewMode } from './engine'
 import { wireCalendarInteractions } from './sail-calendar.interactions'
@@ -85,7 +85,7 @@ function weekdayLabels(weekStartsOn: number): { key: string; label: string }[] {
 }
 
 
-export default controller((ctx: ViewScope<Scope>) => {
+export default controller((ctx: ControllerScope<Scope>) => {
     const { events, focusDate, weekStartsOn, slotMinutes, dayStartHour, dayEndHour, rangeMode } = ctx
     // The time-grid tracks — a constant per skin, exposed as a derived so
     // sx/use:gridTracks={...} can stay expression-bound. The language's

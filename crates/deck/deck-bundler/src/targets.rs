@@ -1,6 +1,6 @@
 //! Bundle target resolution for the Rust bundler (#163).
 //!
-//! `TARGETS` + `discoverViewBundles` + `assetsDirFor` for the bundler. A
+//! `TARGETS` + `discoverRouteBundles` + `assetsDirFor` for the bundler. A
 //! `BundleTarget` names what to build, where its entry is, what stays external,
 //! and where the output lands. The Rolldown build (`rolldown_bundle.rs`)
 //! iterates these; nothing here touches the filesystem beyond discovery reads.
@@ -145,7 +145,7 @@ pub enum TargetEntry {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BundleTarget {
-    /// Logical name, e.g. `sail-runtime`, `sail-components/sail-rail`, `views/git/view`.
+    /// Logical name, e.g. `sail-runtime`, `sail-components/sail-rail`, `routes/git/view`.
     pub name: String,
     pub entry: TargetEntry,
     /// Externals the author declared. The build phase additionally forces
@@ -172,7 +172,7 @@ pub struct BundleLayout {
     /// redirect for tests / out-of-tree builds so output never clobbers
     /// committed assets.
     pub out_root: PathBuf,
-    /// View-discovery + watch config (`view_dirs`, `view_leaf`, `packs`,
+    /// View-discovery + watch config (`route_dirs`, `route_leaf`, `packs`,
     /// `watch`). Consumer bundle targets are NO LONGER here — they are
     /// discovered from per-package `deck.bundles` (see `consumer_targets`).
     /// Defaults to `DeckConfig::defaults()` for zero-config hosts.
@@ -225,7 +225,7 @@ impl BundleLayout {
     /// root is never a bake target. Deck-own framework singletons go
     /// under `.deck/framework/` (the build-script staging path that
     /// `build.rs` copies into `crates/deck/deck-core/assets/` for
-    /// `include_str!`); everything else — `views/*`, `sail-components/*`,
+    /// `include_str!`); everything else — `routes/*`, `sail-components/*`,
     /// and discovered consumer packs (`sail-marketing`, `sail-arcade`,
     /// `sail-pdf`, `ship-code-editor`, …) — goes directly under `.deck/`.
     pub fn assets_dir_for(&self, name: &str) -> PathBuf {
@@ -239,7 +239,7 @@ impl BundleLayout {
     pub fn all_targets(&self) -> Vec<BundleTarget> {
         let mut out = self.framework_singletons();
         out.extend(self.consumer_targets());
-        out.extend(self.discover_view_bundles());
+        out.extend(self.discover_route_bundles());
         out
     }
 
@@ -276,7 +276,7 @@ impl BundleLayout {
     /// (`package.json` `deck.bundles[]`) — the dissolved central `deck.jsonc
     /// targets`. The package that owns the entry declares the bundle; the
     /// bundler walks the workspace to find them, the same way it discovers
-    /// `views/*`. Each declaration's `entry` is package-relative, joined onto
+    /// `routes/*`. Each declaration's `entry` is package-relative, joined onto
     /// the declaring package's root. The logical name drives `assets_dir_for`
     /// routing — every discovered consumer target lands in `.deck/` (the
     /// bake's staging area, sibling to the framework singletons).
@@ -293,18 +293,18 @@ impl BundleLayout {
             .collect()
     }
 
-    /// The `views/` bucket dirs the framework walks for view discovery —
-    /// every `source_root` × `cfg.view_dirs` (defaults `["views"]`; a host
+    /// The `routes/` bucket dirs the framework walks for view discovery —
+    /// every `source_root` × `cfg.route_dirs` (defaults `["views"]`; a host
     /// serving more buckets overrides it). One definition, two consumers:
-    /// `discover_view_bundles`
+    /// `discover_route_bundles`
     /// scans these for view *bundles*, and the view-table codegen
     /// (`<bucket>/routes.gen.ts` + `<bucket>/meta.gen.ts`, run from
     /// `build_all`) walks the same dirs. SSOT for "where views live" — no
     /// second hardcoded path.
-    pub fn view_bucket_dirs(&self) -> Vec<PathBuf> {
+    pub fn route_bucket_dirs(&self) -> Vec<PathBuf> {
         let mut out = Vec::new();
         for root in &self.source_roots {
-            for bucket in &self.cfg.view_dirs {
+            for bucket in &self.cfg.route_dirs {
                 out.push(root.join(bucket));
             }
         }
@@ -314,24 +314,24 @@ impl BundleLayout {
     /// One bundle per discovered view. The scan is fully config-driven
     /// (#273 — deck hardcodes no path):
     ///
-    /// - For each `source_root`, walk each `cfg.view_dirs` bucket
+    /// - For each `source_root`, walk each `cfg.route_dirs` bucket
     ///   (defaults to `["views"]`; a host serving more buckets overrides
     ///   it) and look for a
-    ///   `<bucket>/<name>/<view_leaf>` artifact. The leaf is
-    ///   `cfg.view_leaf` (defaults to `page.sail`) — one convention for
+    ///   `<bucket>/<name>/<route_leaf>` artifact. The leaf is
+    ///   `cfg.route_leaf` (defaults to `page.sail`) — one convention for
     ///   all buckets, fixing the #254 `index.sail` vs `page.sail` divergence.
     /// - If `cfg.` is set, its `root` is treated as a
-    ///   first-party view root too: `<root>/<name>/<view_leaf>`. The
+    ///   first-party view root too: `<root>/<name>/<route_leaf>`. The
     ///   host (e.g. ship) declares its own first-party app layout in
     ///   `deck.jsonc`; deck does not name the app.
     ///
-    /// First-seen wins: earlier `view_dirs` entries (and earlier
+    /// First-seen wins: earlier `route_dirs` entries (and earlier
     /// `source_roots`) shadow later matches.
-    fn discover_view_bundles(&self) -> Vec<BundleTarget> {
+    fn discover_route_bundles(&self) -> Vec<BundleTarget> {
         let mut out = Vec::new();
         let mut seen = HashSet::new();
-        let leaf = self.cfg.view_leaf.as_deref().unwrap_or("page.sail");
-        for dir in self.view_bucket_dirs() {
+        let leaf = self.cfg.route_leaf.as_deref().unwrap_or("page.sail");
+        for dir in self.route_bucket_dirs() {
             let Ok(entries) = std::fs::read_dir(&dir) else { continue };
             for e in entries.flatten() {
                 let name = e.file_name().to_string_lossy().into_owned();
@@ -344,7 +344,7 @@ impl BundleLayout {
                 }
                 seen.insert(name.clone());
                 out.push(BundleTarget {
-                    name: format!("views/{name}/view"),
+                    name: format!("routes/{name}/route"),
                     entry: TargetEntry::Real(entry),
                     externals: vec![
                         "@ship/sail-runtime".into(),
@@ -353,7 +353,7 @@ impl BundleLayout {
                         "@ship/sail-dom".into(),
                         "@ship/sdk-client".into(),
                     ],
-                    out_file: format!("views/{name}/view.js"),
+                    out_file: format!("routes/{name}/route.js"),
                     lazy: false,
                 });
             }
@@ -422,7 +422,7 @@ mod tests {
         // (The umbrella `sail-components` target no longer exists — chrome
         // is per-tag tree-shaking only.)
         assert_eq!(l.assets_dir_for("sail-components/sail-rail"), PathBuf::from("/repo/.deck"));
-        assert_eq!(l.assets_dir_for("views/git/view"), PathBuf::from("/repo/.deck"));
+        assert_eq!(l.assets_dir_for("routes/git/route"), PathBuf::from("/repo/.deck"));
         // Consumer targets (e.g. sail-marketing, sail-arcade, sail-pdf,
         // ship-code-editor) ALSO land in `.deck/` — the bake's staging
         // area, sibling to the framework singletons. No target is a host
@@ -438,7 +438,7 @@ mod tests {
         let tmp = tempdir().unwrap();
         let root = tmp.path().to_path_buf();
         // A view.
-        write(&root.join("views/git/page.sail"), "<div>git</div>\n");
+        write(&root.join("routes/git/page.sail"), "<div>git</div>\n");
         // The framework singleton must be node-resolvable from the repo root for
         // its target to appear — install a stub `@ship/sail-runtime`.
         write(
@@ -452,7 +452,7 @@ mod tests {
         let names: Vec<&str> = targets.iter().map(|t| t.name.as_str()).collect();
 
         assert!(names.contains(&"sail-runtime"), "node-resolved framework target present");
-        assert!(names.contains(&"views/git/view"), "discovered view");
+        assert!(names.contains(&"routes/git/route"), "discovered view");
     }
 
     /// A framework singleton that doesn't resolve from this repo (not installed)
@@ -472,8 +472,8 @@ mod tests {
         );
     }
 
-    /// `view_bucket_dirs()` is the single definition of "where views live" —
-    /// every `source_root` × `cfg.view_dirs`. The view-bundle scan AND the
+    /// `route_bucket_dirs()` is the single definition of "where views live" —
+    /// every `source_root` × `cfg.route_dirs`. The view-bundle scan AND the
     /// view-table codegen (`build_all`) both walk exactly these dirs, so a
     /// regression here would desync the bundle scan from the table gen.
     #[test]
@@ -481,20 +481,20 @@ mod tests {
         // Contributor mode: one source root.
         let l = BundleLayout::with_config(PathBuf::from("/repo"), None, DeckConfig::defaults());
         assert_eq!(
-            l.view_bucket_dirs(),
-            vec![PathBuf::from("/repo/views")],
+            l.route_bucket_dirs(),
+            vec![PathBuf::from("/repo/routes")],
         );
-        // External-project mode: repo_root + workspace_root, each × view_dirs.
+        // External-project mode: repo_root + workspace_root, each × route_dirs.
         let l2 = BundleLayout::with_config(
             PathBuf::from("/repo"),
             Some(PathBuf::from("/ws")),
             DeckConfig::defaults(),
         );
         assert_eq!(
-            l2.view_bucket_dirs(),
+            l2.route_bucket_dirs(),
             vec![
-                PathBuf::from("/repo/views"),
-                PathBuf::from("/ws/views"),
+                PathBuf::from("/repo/routes"),
+                PathBuf::from("/ws/routes"),
             ],
         );
     }

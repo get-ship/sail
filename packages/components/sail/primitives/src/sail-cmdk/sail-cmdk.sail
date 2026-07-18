@@ -73,7 +73,7 @@
 // in mount's listeners.
 
 import { controller, signal, derived, effect, ref } from '@ship/sail-runtime'
-import type { ViewScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-cmdk.sail'
 import { type CmdkItem, str, parseJsonItems } from './decode'
 
@@ -108,7 +108,7 @@ interface RenderRow {
 
 let _seq = 0
 
-export default controller((_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ControllerScope<Scope>) => {
     const seq = ++_seq
     const itemsSig = signal<CmdkItem[]>([])
     const query = signal('')

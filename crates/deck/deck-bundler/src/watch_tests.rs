@@ -74,7 +74,7 @@ async fn wait_nonempty_returns_true_when_signal_present() {
 #[test]
 fn classify_sui_create_invalidates_snapshot() {
     let tmp = tempfile::tempdir().unwrap();
-    let sail = tmp.path().join("views/bar/page.sail");
+    let sail = tmp.path().join("routes/bar/page.sail");
     std::fs::create_dir_all(sail.parent().unwrap()).unwrap();
     std::fs::write(&sail, "<div/>").unwrap();
     let create = classify(&WatchSignal { path: sail.clone(), is_create: true });
@@ -87,7 +87,7 @@ fn classify_sui_create_invalidates_snapshot() {
 #[test]
 fn classify_new_dir_is_newdir() {
     let tmp = tempfile::tempdir().unwrap();
-    let dir = tmp.path().join("views/baz");
+    let dir = tmp.path().join("routes/baz");
     std::fs::create_dir_all(&dir).unwrap();
     assert_eq!(classify(&WatchSignal { path: dir, is_create: true }), SignalAction::NewDir);
 }
@@ -148,9 +148,9 @@ fn no_hardcoded_packages_or_ship_views_in_watch_seeds() {
 fn new_view_discovery_via_entry_match() {
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path().to_path_buf();
-    let view_dir = root.join("views/newview");
-    std::fs::create_dir_all(&view_dir).unwrap();
-    let leaf = view_dir.join("page.sail");
+    let route_dir = root.join("routes/newview");
+    std::fs::create_dir_all(&route_dir).unwrap();
+    let leaf = route_dir.join("page.sail");
     std::fs::write(&leaf, "<div>new</div>").unwrap();
 
     use crate::targets::{BundleLayout, TargetEntry};
@@ -161,5 +161,5 @@ fn new_view_discovery_via_entry_match() {
         matches!(&t.entry, TargetEntry::Real(p) if *p == leaf)
     });
     assert!(found.is_some(), "new view leaf is discoverable via all_targets() after invalidation");
-    assert_eq!(found.unwrap().name, "views/newview/view");
+    assert_eq!(found.unwrap().name, "routes/newview/route");
 }

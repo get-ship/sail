@@ -99,16 +99,16 @@ impl ShipJsSsr {
             .parent()
             .ok_or_else(|| anyhow!("manifest has no parent dir"))?
             .to_path_buf();
-        let view_rel = rel(&self.repo, source)?;
+        let route_rel = rel(&self.repo, source)?;
         let manifest_rel = rel(&self.repo, &manifest_path)?;
         let authored = sibling_controller(source);
         let aliases = client_aliases(&app_dir)?;
-        let build_dir = self.repo.join("target/deck-ssr-serve").join(sanitize(&view_rel));
+        let build_dir = self.repo.join("target/deck-ssr-serve").join(sanitize(&route_rel));
         let repo = self.repo.clone();
         on_worker(true, move || async move {
             synthesize_and_bundle_with(
                 &repo,
-                &view_rel,
+                &route_rel,
                 &manifest_rel,
                 CompileMode::Component,
                 authored.as_deref(),

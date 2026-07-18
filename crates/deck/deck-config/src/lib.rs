@@ -233,7 +233,7 @@ impl AppServeConfig {
 /// missing — `deck.jsonc` degrades gracefully. Fields must NOT carry their
 /// own `#[serde(default)]`: a field-level default takes precedence over the
 /// container default and silently replaces the documented fallback with the
-/// type's empty value (an empty `view_dirs` once disabled view discovery for
+/// type's empty value (an empty `route_dirs` once disabled view discovery for
 /// every host with a partial deck.jsonc).
 ///
 /// ## What this is NOT
@@ -263,17 +263,17 @@ pub struct DeckConfig {
     /// change for existing projects).
     pub packs: Vec<String>,
     /// Per-source-root view bucket names. The resolver and bundler scan
-    /// `<source_root>/<view_dir>/<name>/<view_leaf>` for each `view_dir` in
-    /// this list. Defaults to the deck-native `["views"]`, so a zero-config
+    /// `<source_root>/<route_dir>/<name>/<route_leaf>` for each `route_dir` in
+    /// this list. Defaults to the deck-native `["routes"]`, so a zero-config
     /// host resolves from the top-level view bucket. A host that serves
     /// additional buckets (Ship's `.ship/views`) overrides this list — deck
     /// no longer bakes a host-private path into its default.
-    pub view_dirs: Vec<String>,
-    /// The leaf filename for view artifacts under each `view_dir/<name>/`.
+    pub route_dirs: Vec<String>,
+    /// The leaf filename for view artifacts under each `route_dir/<name>/`.
     /// Defaults to `"page.sail"`. A single leaf convention across all
-    /// `view_dirs` fixes the #254 leaf-name divergence (`page.sail` vs
+    /// `route_dirs` fixes the #254 leaf-name divergence (`page.sail` vs
     /// `index.sail`) that broke `.ship/views/<name>/index.sail` resolution.
-    pub view_leaf: Option<String>,
+    pub route_leaf: Option<String>,
 }
 
 impl Default for DeckConfig {
@@ -283,7 +283,7 @@ impl Default for DeckConfig {
 }
 impl DeckConfig {
     /// Built-in defaults — a zero-config host (e.g. deck-conformance) gets these
-    /// when the host passes no override. The deck-native `["views"]` bucket and
+    /// when the host passes no override. The deck-native `["routes"]` bucket and
     /// the unified `page.sail` leaf (#254). Deck names no host-private path: a
     /// host serving Ship's `.ship/views` supplies it as an override.
     pub fn defaults() -> Self {
@@ -295,10 +295,10 @@ impl DeckConfig {
             // (or additional buckets like Ship's `.ship/views`) construct a
             // `DeckConfig` (clone `defaults()` + override) and pass it in — no
             // file load, no baked host path.
-            view_dirs: vec!["views".into()],
+            route_dirs: vec!["routes".into()],
             // Single leaf convention — fixes the #254 `index.sail`/`page.sail`
-            // divergence. Both buckets look up `<name>/<view_leaf>`.
-            view_leaf: Some("page.sail".into()),
+            // divergence. Both buckets look up `<name>/<route_leaf>`.
+            route_leaf: Some("page.sail".into()),
         }
     }
 }
@@ -319,8 +319,8 @@ mod tests {
     const EXAMPLE_JSONC: &str = r#"{
   "sourceRoots": ["."],
   "watch": ["packages", "apps/site/src"],
-  "viewDirs": ["views", ".ship/views"],
-  "viewLeaf": "page.sail"
+  "routeDirs": ["routes", ".ship/views"],
+  "routeLeaf": "page.sail"
 }"#;
     #[test]
     fn parse_example_jsonc() {
@@ -329,8 +329,8 @@ mod tests {
                 .expect("example deck.jsonc must parse");
         assert_eq!(cfg.source_roots, vec![PathBuf::from(".")]);
         assert_eq!(cfg.watch, vec![PathBuf::from("packages"), PathBuf::from("apps/site/src")]);
-        assert_eq!(cfg.view_dirs, vec!["views".to_string(), ".ship/views".to_string()]);
-        assert_eq!(cfg.view_leaf.as_deref(), Some("page.sail"));
+        assert_eq!(cfg.route_dirs, vec!["routes".to_string(), ".ship/views".to_string()]);
+        assert_eq!(cfg.route_leaf.as_deref(), Some("page.sail"));
     }
     #[test]
     fn defaults_round_trip() {
@@ -365,7 +365,7 @@ mod tests {
 
     /// A PARTIAL deck.jsonc (deck-conformance's shape: scaffolds only) must keep the
     /// built-in view-layout defaults. Field-level `#[serde(default)]` attrs
-    /// used to shadow the container default here: `view_dirs` parsed to `[]`
+    /// used to shadow the container default here: `route_dirs` parsed to `[]`
     /// and view discovery found zero targets (`unknown target: views/*/view`).
     #[test]
     fn partial_file_keeps_view_layout_defaults() {
@@ -375,11 +375,11 @@ mod tests {
         let cfg: DeckConfig =
             serde_json::from_str(&strip_jsonc_comments(json)).expect("partial deck.jsonc parses");
         assert_eq!(
-            cfg.view_dirs,
-            vec!["views".to_string()],
-            "partial config must inherit the deck-native view bucket default"
+            cfg.route_dirs,
+            vec!["routes".to_string()],
+            "partial config must inherit the deck-native route bucket default"
         );
-        assert_eq!(cfg.view_leaf.as_deref(), Some("page.sail"));
+        assert_eq!(cfg.route_leaf.as_deref(), Some("page.sail"));
     }
 
     // ── per-app deck.jsonc (AppServeConfig) ───────────────────────────────────
@@ -540,18 +540,18 @@ mod tests {
         // it (host-supplied config still works), but the framework does
         // not load it on its own.
         let jsonc = r#"{
-  "viewDirs": ["apps/shell/src/views"],
-  "viewLeaf": "page.sail"
+  "routeDirs": ["apps/shell/src/routes"],
+  "routeLeaf": "page.sail"
 }"#;
         let from_str: DeckConfig =
             serde_json::from_str(&strip_jsonc_comments(jsonc)).expect("host-parsed config");
         assert_eq!(
-            from_str.view_dirs,
-            vec!["apps/shell/src/views".to_string()],
+            from_str.route_dirs,
+            vec!["apps/shell/src/routes".to_string()],
             "host parsing of deck.jsonc-shaped content still works"
         );
         assert_ne!(
-            d.view_dirs, from_str.view_dirs,
+            d.route_dirs, from_str.route_dirs,
             "the override is real when parsed — it's just not auto-loaded"
         );
         // The framework sees defaults() — the stray file is inert.

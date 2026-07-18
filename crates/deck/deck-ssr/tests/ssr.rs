@@ -11,11 +11,11 @@ use deck_core::DataPort;
 use serde_json::{json, Value};
 use sail_compiler::CompileMode;
 
-const GREET: &str = "crates/deck/deck-conformance/app/views/greet/[id]/page.sail";
-const GLYPH: &str = "crates/deck/deck-conformance/app/views/glyph/page.sail";
-const BOARD: &str = "crates/deck/deck-conformance/app/views/board/page.sail";
-const FEED: &str = "crates/deck/deck-conformance/app/views/feed/page.sail";
-const STYLED: &str = "crates/deck/deck-conformance/app/views/styled.view/page.sail";
+const GREET: &str = "crates/deck/deck-conformance/app/routes/greet/[id]/page.sail";
+const GLYPH: &str = "crates/deck/deck-conformance/app/routes/glyph/page.sail";
+const BOARD: &str = "crates/deck/deck-conformance/app/routes/board/page.sail";
+const FEED: &str = "crates/deck/deck-conformance/app/routes/feed/page.sail";
+const STYLED: &str = "crates/deck/deck-conformance/app/routes/styled.view/page.sail";
 const MANIFEST: &str = "crates/deck/deck-conformance/app/app.manifest.jsonc";
 
 /// A test data port: answers the demo ops the host-dispatch wire forwards.

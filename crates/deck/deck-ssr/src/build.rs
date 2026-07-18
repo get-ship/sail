@@ -42,17 +42,17 @@ pub struct ClientAlias {
     pub server_entry: PathBuf,
 }
 
-/// Synthesize `view_rel` with `manifest_rel`, lay the artifacts + the SSR
+/// Synthesize `route_rel` with `manifest_rel`, lay the artifacts + the SSR
 /// entry out in `build_dir`, then Rolldown-bundle into one ES module string.
 pub async fn synthesize_and_bundle(
     repo: &Path,
-    view_rel: &str,
+    route_rel: &str,
     manifest_rel: &str,
     mode: CompileMode,
     client_aliases: &[ClientAlias],
     build_dir: &Path,
 ) -> Result<String> {
-    synthesize_and_bundle_with(repo, view_rel, manifest_rel, mode, None, client_aliases, build_dir)
+    synthesize_and_bundle_with(repo, route_rel, manifest_rel, mode, None, client_aliases, build_dir)
         .await
 }
 
@@ -62,7 +62,7 @@ pub async fn synthesize_and_bundle(
 #[allow(clippy::too_many_arguments)]
 pub async fn synthesize_and_bundle_with(
     repo: &Path,
-    view_rel: &str,
+    route_rel: &str,
     manifest_rel: &str,
     mode: CompileMode,
     authored: Option<&Path>,
@@ -71,8 +71,8 @@ pub async fn synthesize_and_bundle_with(
 ) -> Result<String> {
     use sail_compiler::emit::synthetic::AuthoredController;
 
-    let source = std::fs::read_to_string(repo.join(view_rel))
-        .with_context(|| format!("read view {view_rel}"))?;
+    let source = std::fs::read_to_string(repo.join(route_rel))
+        .with_context(|| format!("read view {route_rel}"))?;
     let manifest_src = std::fs::read_to_string(repo.join(manifest_rel))
         .with_context(|| format!("read manifest {manifest_rel}"))?;
     // SAIL sources may declare a `<controller>…</controller>` block alongside

@@ -36,7 +36,7 @@ use serde_json::Value;
 /// this from what the serve path already resolved — no new IO, no new config.
 pub struct SsrRequest<'a> {
     /// The view name as routed (e.g. `greet`, or `studio/agents` folded).
-    pub view_name: &'a str,
+    pub route_name: &'a str,
     /// Nested sub-path, when the view was served at `/_deck/view/<name>/<sub>`.
     pub sub_path: Option<&'a str>,
     /// Absolute path to the source `.sail` (the synth input). The renderer
@@ -70,7 +70,7 @@ pub fn first_paint(renderer: &dyn SyntheticSsr, req: &SsrRequest) -> Option<Stri
         Ok(html) => Some(html),
         Err(e) => {
             tracing::error!(
-                view = req.view_name,
+                view = req.route_name,
                 "ship-js SSR failed; serving an empty #sail-root (client mounts via CSR): {e:#}"
             );
             None

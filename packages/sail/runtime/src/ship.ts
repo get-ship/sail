@@ -8,7 +8,7 @@
 //     interface ShipHost extends ShipSDK {}
 //   }
 //
-// `ViewScope.ship` / `ResolverContext.ship` are typed as `ShipHost`, so
+// `ControllerScope.ship` / `ResolverContext.ship` are typed as `ShipHost`, so
 // authoring stays fully typed while the runtime stays free of any host shape.
 // The concrete `ShipSDK` + its data types live in `@ship/sdk-client`
 // (`ship-sdk.ts`) — the framework deliberately knows nothing about them.

@@ -24,7 +24,7 @@ pub const DECK_PREFIX: &str = "/_deck";
 /// URL of a view's compiled ESM module. `sub` is the optional sub-route segment
 /// for nested/parameterized views (`/x/:id`), carried as a `?sub=` query so the
 /// host resolves the right leaf.
-pub fn view_module_url(name: &str, sub: Option<&str>) -> String {
+pub fn route_module_url(name: &str, sub: Option<&str>) -> String {
     match sub.filter(|s| !s.is_empty()) {
         Some(s) => format!("{DECK_PREFIX}/views/{name}/view.js?sub={s}"),
         None => format!("{DECK_PREFIX}/views/{name}/view.js"),
@@ -54,13 +54,13 @@ mod tests {
 
     #[test]
     fn view_module_url_with_and_without_sub() {
-        assert_eq!(view_module_url("demo", None), "/_deck/views/demo/view.js");
+        assert_eq!(route_module_url("demo", None), "/_deck/views/demo/view.js");
         assert_eq!(
-            view_module_url("demo", Some("anything")),
+            route_module_url("demo", Some("anything")),
             "/_deck/views/demo/view.js?sub=anything",
         );
         // Empty sub is treated as no sub.
-        assert_eq!(view_module_url("demo", Some("")), "/_deck/views/demo/view.js");
+        assert_eq!(route_module_url("demo", Some("")), "/_deck/views/demo/view.js");
     }
 
     #[test]
@@ -93,12 +93,12 @@ mod tests {
 /// This is deck's convention in deck's crate: the sail compiler receives the
 /// result as a structured GRANT (`CompileOpts::route_params`) and never
 /// sniffs the filesystem for a routing scheme it does not own.
-pub fn route_params_for(view_path: &std::path::Path) -> Option<Vec<String>> {
-    let file = view_path.file_name()?.to_str()?;
+pub fn route_params_for(route_path: &std::path::Path) -> Option<Vec<String>> {
+    let file = route_path.file_name()?.to_str()?;
     if file != "page.sail" {
         return None;
     }
-    let comps: Vec<&str> = view_path
+    let comps: Vec<&str> = route_path
         .parent()?
         .components()
         .filter_map(|c| c.as_os_str().to_str())

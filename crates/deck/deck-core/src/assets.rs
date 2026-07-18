@@ -73,26 +73,26 @@ fn alias_for(name: &str) -> Option<&'static str> {
     ICON_ALIASES.iter().find_map(|(k, v)| (*k == name).then_some(*v))
 }
 /// Public helper (used by view.rs). The in-process bundler writes view bundles
-/// to `<root>/.deck/views/<name>/view.js` (the per-view output dir the bundler
+/// to `<root>/.deck/routes/<name>/route.js` (the per-view output dir the bundler
 /// owns). This reads that bundle when it exists so a controller view is served
 /// from its compiled, inlined-controller form — the on-demand build path in
-/// `view.rs::compile_view_js` only kicks in when no bundle is on disk yet.
+/// `view.rs::compile_route_js` only kicks in when no bundle is on disk yet.
 ///
 /// Mount-scoped: the roots come from the per-request [`Resolution`] (per-app
 /// view outputs first, then `<project_root>/.deck`), never a process global —
 /// so one process serving many apps reads each app's bundles from ITS own root.
-pub fn resolve_view_js(resolution: Option<&crate::resolver::Resolution>, name: &str) -> Option<String> {
+pub fn resolve_route_js(resolution: Option<&crate::resolver::Resolution>, name: &str) -> Option<String> {
     let resolution = resolution?;
-    for view_root in resolution.view_bundle_roots() {
-        if let Some(js) = read_view_bundle(&view_root, name) {
+    for route_root in resolution.route_bundle_roots() {
+        if let Some(js) = read_route_bundle(&route_root, name) {
             return Some(js);
         }
     }
     None
 }
 
-fn read_view_bundle(root: &std::path::Path, name: &str) -> Option<String> {
-    let bundle = root.join(format!("views/{name}/view.js"));
+fn read_route_bundle(root: &std::path::Path, name: &str) -> Option<String> {
+    let bundle = root.join(format!("routes/{name}/route.js"));
     std::fs::read(&bundle).ok().and_then(|b| String::from_utf8(b).ok())
 }
 
@@ -118,7 +118,7 @@ fn read_view_bundle(root: &std::path::Path, name: &str) -> Option<String> {
 /// falls back to the authored source `<source>/index.html`. Returns a styled
 /// 404 only when neither exists.
 /// First-paint HTML for the `routes/` page matching `request_path`, via the
-/// ship-js SSR seam. Mirrors the named-`view` path (`view_payload`) but with the
+/// ship-js SSR seam. Mirrors the named-`view` path (`route_payload`) but with the
 /// file-routed layout: split the URL into name + sub-path, resolve the matching
 /// `routes/<…>/page.sail` (+ captured `[param]` params), and render through the
 /// CARRIED `renderer`. Returns `None` (→ empty `#root`, client mounts CSR) when
@@ -150,7 +150,7 @@ fn routes_first_paint(
             return None;
         }
         let req = crate::synthetic_ssr::SsrRequest {
-            view_name: "",
+            route_name: "",
             sub_path: None,
             source_path: &source,
             pathname: request_path,
@@ -159,16 +159,16 @@ fn routes_first_paint(
         };
         return crate::synthetic_ssr::first_paint(renderer, &req);
     }
-    let layout = deck_host::resolver::ViewLayout {
-        view_dirs: vec!["routes".to_string()],
-        view_leaf: "page.sail".to_string(),
+    let layout = deck_host::resolver::RouteLayout {
+        route_dirs: vec!["routes".to_string()],
+        route_leaf: "page.sail".to_string(),
         first_party_root: None,
     };
     let resolved = deck_host::resolver::resolve(&project_root, &layout, name, sub).ok()?;
     let source_path = resolved.source_path.as_deref()?;
     let params = serde_json::to_value(&resolved.params).unwrap_or(serde_json::Value::Null);
     let req = crate::synthetic_ssr::SsrRequest {
-        view_name: name,
+        route_name: name,
         sub_path: sub,
         source_path,
         pathname: request_path,
@@ -313,7 +313,7 @@ pub fn serve_scaffold(
     } else {
         html
     };
-    DeckResponse::html_view(html, mode)
+    DeckResponse::html_route(html, mode)
 }
 
 /// Serve a static asset from `<deck_out>/<source>/assets/<file>`.
@@ -350,7 +350,7 @@ pub fn serve_scaffold_asset(
     // `scaffold.source`.
     let path = format!("{}/assets/{file}", scaffold.source);
     match read_source_asset(&root, &path) {
-        Some(body) if file.ends_with(".css") => DeckResponse::css_view(body, mode),
+        Some(body) if file.ends_with(".css") => DeckResponse::css_route(body, mode),
         Some(body) if file.ends_with(".woff2") => DeckResponse::font_asset(body, mode),
         Some(body) => DeckResponse::js_asset(body, mode),
         None => DeckResponse::not_found(

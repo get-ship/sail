@@ -18,7 +18,7 @@ use crate::routes::mutation_action;
 /// computed `action` + `method` attributes immediately before the closing `>`.
 ///
 /// Idempotent: forms that already have `action=` are left untouched.
-pub fn inject_form_actions(html: &str, view_name: &str) -> String {
+pub fn inject_form_actions(html: &str, route_name: &str) -> String {
     let mut out = String::with_capacity(html.len() + 64);
     let mut rest = html;
 
@@ -56,7 +56,7 @@ pub fn inject_form_actions(html: &str, view_name: &str) -> String {
         }
 
         // Emit the open-tag with injected action + method before the ">".
-        let action = mutation_action(view_name, &key);
+        let action = mutation_action(route_name, &key);
         out.push_str(&rest[..tag_start]); // text before "<form"
         out.push_str("<form");
         out.push_str(tag_inner);
