@@ -82,8 +82,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           right is what these docs pages compile under. Grants reach beyond
           styling — our code-editor declares <code>"unconfined": true</code>
           to embed CodeMirror; the canvas component may fetch from
-          <code>"network": ["self"]</code> and nowhere else. What isn't
-          granted doesn't compile.
+          <code>"network": ["self"]</code> and nowhere else. The full
+          surface today is seven keys — <code>preset</code>,
+          <code>sx</code>, <code>variants</code>,
+          <code>raw_containers</code>, <code>stylesheets</code>,
+          <code>network</code>, <code>unconfined</code> — each a
+          per-directory grant, and an unrecognized key refuses loudly. What
+          isn't granted doesn't compile.
         </p>
       </column>
       <column gap="2" sx="grow-1 basis-breakpoint-mobile min-w-0">
