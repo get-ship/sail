@@ -62,8 +62,30 @@
     grid-template-columns: 1fr 1fr;
     gap: var(--space-1_5);
   }
-  /* The `inline` variant's rules live with the rest of this element's skin in
-     @ship/tokens element-skins.css (the skin supersedes this style block). */
+  /* inline variant: a handful of the same swatch cards, in flow — no trigger,
+     no popover. Selection still routes through use:themePicker → applyTheme,
+     so a click re-themes the whole document, exactly like the chrome picker. */
+  .sail-theme-picker[inline] .sail-theme-trigger { display: none; }
+  .sail-theme-picker[inline] .sail-theme-panel {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-1_5);
+    position: static;
+    width: 100%;
+    max-width: none;
+    box-shadow: none;
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+  /* Inline shows four representative themes; the full set stays in the popover. */
+  .sail-theme-picker[inline] .sail-theme-option { display: none; }
+  .sail-theme-picker[inline] .sail-theme-option[value='ship-light'],
+  .sail-theme-picker[inline] .sail-theme-option[value='ship-dark'],
+  .sail-theme-picker[inline] .sail-theme-option[value='paper'],
+  .sail-theme-picker[inline] .sail-theme-option[value='console'] {
+    display: flex;
+  }
 
   .sail-theme-option {
     display: flex;

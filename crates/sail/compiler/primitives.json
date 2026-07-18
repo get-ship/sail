@@ -668,6 +668,10 @@
       }
     },
     "theme-picker": {
+      "inline": {
+        "type": "bool",
+        "default": "false"
+      },
       "value": {
         "type": "string",
         "default": ""

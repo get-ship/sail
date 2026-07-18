@@ -1585,7 +1585,6 @@ label { display: inline-block; }
     grid-template-columns: 1fr 1fr;
     gap: var(--space-1_5);
   }
-
   /* inline variant: a handful of the same swatch cards, in flow — no trigger,
      no popover. Selection still routes through use:themePicker → applyTheme,
      so a click re-themes the whole document, exactly like the chrome picker. */
