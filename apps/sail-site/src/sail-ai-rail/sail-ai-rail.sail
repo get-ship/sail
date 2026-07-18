@@ -10,7 +10,7 @@ export default controller(() => {
 })
 </controller>
 
-<row align="stretch">
+<row nowrap align="stretch">
   <navbar placement="rail" bordered sticky offset="14">
     <label>AI</label>
     <a href="/ai" aria-current={path() === '/ai' ? 'page' : null}>Overview</a>

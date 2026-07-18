@@ -569,6 +569,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "value",
       "type": "string",
       "default": ""
+    },
+    {
+      "name": "inline",
+      "type": "bool",
+      "default": "false"
     }
   ],
   "ticker": [
