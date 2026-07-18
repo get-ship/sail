@@ -20,13 +20,24 @@
 //! 1. Copy `.deck/framework/sail-*.js` → `assets/sail-*.js` (the staging path
 //!    `include_str!` requires). This keeps the canonical bake target in
 //!    `.deck/framework/` while the Rust compiler still reads a fixed path.
-//! 2. Verify the staged assets are populated (panic with actionable message
-//!    when they are not).
+//! 2. Ensure every staged framework bundle EXISTS so `include_str!` can compile.
+//!    When `.deck/framework/*.js` is absent or empty (a from-zero checkout, or
+//!    the very build that produces those bundles: `deck-cli` depends on
+//!    `deck-core`), write a bootstrap STUB in its place and emit a
+//!    `cargo:warning` rather than panicking. The stub lets the deck stack
+//!    compile so `build-assets` can run and regenerate the real bundles; the
+//!    `rerun-if-changed` hooks below then re-stage the real bytes on the next
+//!    `cargo build`. This breaks the chicken/egg: from-zero `build-assets` no
+//!    longer needs the bundles it is itself producing.
 //!
-//! Bootstrap contract: run `cargo run -p deck-cli -- build-assets` before
-//! `cargo build`. On fresh worktrees, `dispatch.sh` copies `.deck/framework/`
-//! from the launching repo. `lucide-icons.json` and `live-reload.js` are
-//! committed source — already present in a fresh clone.
+//! Bootstrap contract (now self-healing): run
+//! `cargo run -p deck-cli -- build-assets` to produce `.deck/framework/*.js`,
+//! then `cargo build` to bake them in. The first `build-assets` compiles
+//! `deck-core` against stubs (see above), so no pre-seeded `.deck/framework/`
+//! or sibling-worktree copy is required. `lucide-icons.json`, `live-reload.js`,
+//! and `error-overlay.js` are committed source — already present in a fresh
+//! clone, so those remain hard requirements (a missing one is a broken
+//! checkout, not the bootstrap race).
 
 use std::fs;
 use std::path::PathBuf;
@@ -44,14 +55,21 @@ const FRAMEWORK_BUNDLES: &[&str] = &[
     "deck-route.js",
 ];
 
-/// All assets that must be non-empty before the build proceeds.
-const ASSETS: &[&str] = &[
-    "sail-runtime.js",
-    "sail-dom.js",
-    "sail-sdk-client.js",
-    "deck-route.js",
-    "lucide-icons.json",
-];
+/// Committed source assets that must be non-empty before the build proceeds.
+/// Unlike the framework bundles, these ship in a fresh clone — a missing one
+/// is a broken checkout, not the build-assets chicken/egg, so they stay a hard
+/// requirement (no stub, no graceful degrade).
+const COMMITTED_ASSETS: &[&str] = &["lucide-icons.json"];
+
+/// Content written to a framework bundle's staging path when the real bake
+/// output is not yet available (from-zero checkout, or the very build that
+/// produces the bundles). It only has to let `include_str!` compile; the
+/// runtime freshness tests (`baked_runtime_is_the_current_engine_not_a_stale_bake`)
+/// intentionally reject a stub bake, and `build-assets` overwrites
+/// `.deck/framework/` with the real bytes, which the `rerun-if-changed` hooks
+/// re-stage on the next `cargo build`.
+const BOOTSTRAP_STUB: &str =
+    "/* deck bootstrap stub — regenerate with `cargo run -p deck-cli -- build-assets`. */\n";
 
 // Deck's OWN source roots — the JS/TS that deck's framework singletons are
 // built from. Host-app source roots (e.g. apps/shell/src) are NOT listed
@@ -101,10 +119,40 @@ fn main() {
         }
     }
 
-    // ── Guard: verify every required asset exists and is non-empty ────────────
+    // ── Bootstrap: stub any framework bundle that isn't staged yet ────────────
+    //
+    // `include_str!("../assets/<name>")` (src/assets.rs) needs the file to
+    // exist at compile time. On a from-zero checkout — and during the very
+    // `build-assets` run that produces these bundles, since `deck-cli` depends
+    // on `deck-core` — `.deck/framework/*.js` is absent, so nothing was staged
+    // above. Write a stub so the deck stack compiles; `build-assets` then bakes
+    // the real bundles and `rerun-if-changed` re-stages them next build. This
+    // is the fix for the build-assets chicken/egg (from-zero cannot borrow a
+    // sibling worktree's `.deck/framework/`).
+    let mut stubbed: Vec<&str> = Vec::new();
+    for name in FRAMEWORK_BUNDLES {
+        let dst = assets.join(name);
+        if !dst.exists() || file_is_empty(&dst) {
+            fs::write(&dst, BOOTSTRAP_STUB)
+                .unwrap_or_else(|e| panic!("build.rs: writing bootstrap stub for {name}: {e}"));
+            stubbed.push(name);
+        }
+    }
+    if !stubbed.is_empty() {
+        println!(
+            "cargo:warning=deck-core: framework bundles not yet baked ({}) — staged bootstrap \
+             stubs so the deck stack can compile. Run `cargo run -p deck-cli -- build-assets` to \
+             produce .deck/framework/*.js, then rebuild to bake the real bundles.",
+            stubbed.join(", ")
+        );
+    }
+
+    // ── Guard: committed source assets are a hard requirement ─────────────────
+    // These ship in a fresh clone; a missing/empty one is a broken checkout,
+    // not the bootstrap race, so keep the actionable panic.
     let mut missing: Vec<&str> = Vec::new();
     let mut empty: Vec<&str> = Vec::new();
-    for rel in ASSETS {
+    for rel in COMMITTED_ASSETS {
         let p = assets.join(rel);
         if !p.exists() {
             missing.push(rel);
@@ -112,7 +160,6 @@ fn main() {
             empty.push(rel);
         }
     }
-
     if !missing.is_empty() || !empty.is_empty() {
         let lines = missing
             .iter()
@@ -121,14 +168,10 @@ fn main() {
             .collect::<Vec<_>>()
             .join("\n");
         panic!(
-            "build.rs: SAIL bundle assets are missing or empty.\n{lines}\n\n\
-             Framework bundles are baked to .deck/framework/ by:\n\n  \
-             cargo build -p sail-compiler   # the compiler the bundler uses\n  \
-             cargo run -p deck-cli -- build-assets   # framework bundles via in-process Rolldown\n\n\
-             build.rs then copies them from .deck/framework/ into crates/deck/deck-core/assets/\n\
-             (the include_str! staging path). On fresh worktrees, dispatch.sh bootstraps\n\
-             .deck/framework/ from the launching repo. lucide-icons.json and live-reload.js\n\
-             are committed source — already present in a fresh clone."
+            "build.rs: committed source assets are missing or empty.\n{lines}\n\n\
+             These ship in a fresh clone (unlike the framework bundles, which build.rs\n\
+             now stubs and `build-assets` bakes). A missing one means a broken checkout.\n\
+             lucide-icons.json regenerates via `cargo run -p xtask-deck -- gen-icons`."
         );
     }
 
@@ -140,8 +183,9 @@ fn main() {
         let fw_path = framework_src.join(name);
         println!("cargo:rerun-if-changed={}", fw_path.display());
     }
-    // Also watch the staged copies so a manual edit to assets/ triggers a rebuild.
-    for rel in ASSETS {
+    // Also watch the staged copies so a manual edit to assets/ (or a stub being
+    // overwritten with real bytes) triggers a rebuild.
+    for rel in FRAMEWORK_BUNDLES.iter().chain(COMMITTED_ASSETS.iter()) {
         println!("cargo:rerun-if-changed=assets/{rel}");
     }
 
