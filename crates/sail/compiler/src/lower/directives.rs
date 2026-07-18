@@ -32,9 +32,12 @@ pub fn prop_default_literal(p: &PropDecl) -> Option<String> {
         }
         PropKind::Number => raw.to_string(),
         PropKind::String | PropKind::Union(_) => format!("\"{}\"", escape_string(raw)),
-        // Identity props carry no scalar default (`default` is None), so this
-        // arm is unreachable via the `?` above — kept for exhaustiveness.
-        PropKind::Identity(_) => return None,
+        // Identity props: the scope grammar only admits literal defaults, so
+        // the raw source text IS a valid JS literal (`[]`, `{ a: 1 }`) —
+        // emit it verbatim. Dropping it here left `prop.property()` with no
+        // default, so `ctx.<prop>()` returned undefined instead of the
+        // declared literal.
+        PropKind::Identity(_) => raw.to_string(),
     })
 }
 
