@@ -634,7 +634,14 @@ pub fn component_index(
 /// no-op) until restart. [`Bundler::invalidate_targets_for_watch`] calls this on
 /// a structural change so the next build re-walks the CEM and sees the new or
 /// removed component. A no-op before the cache is first populated.
-pub(crate) fn invalidate_component_index() {
+///
+/// Public (dev-loop-atomic): `deck dev`'s OWN HMR watcher — the one that
+/// actually drives `bundle_app` rebuilds — must also call this on a
+/// structural change (a new `src/<tag>/` component dir, a created/removed
+/// `.sail`). The bundler-internal watcher only covers TARGET builds, so
+/// without this hook a component dir added mid-session never registers its
+/// tag until full restart.
+pub fn invalidate_component_index() {
     if let Some(cache) = COMPONENT_INDEX_CACHE.get() {
         cache.lock().unwrap_or_else(|e| e.into_inner()).clear();
     }
