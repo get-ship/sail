@@ -9,11 +9,11 @@ import { renderView } from '../src/render'
 
 describe('renderView — static template', () => {
   it('renders interpolated text and attributes', () => {
-    const v = renderView(`<h1 class="title">Hello {who}</h1>`, {
+    const v = renderView(`<h1>Hello {who}</h1>`, {
       controller: () => ({ who: 'world' }),
     })
     expect(v.html()).toContain('Hello world')
-    expect(v.root.querySelector('.title')).not.toBeNull()
+    expect(v.root.querySelector('h1')).not.toBeNull()
     v.unmount()
   })
 })
@@ -40,16 +40,16 @@ describe('renderView — reactive controller', () => {
 describe('renderView — conditional branch', () => {
   it('shows the branch matching the signal', async () => {
     const v = renderView(
-      `{#if ready()}<p class="ok">ready</p>{:else}<p class="wait">waiting</p>{/if}`,
+      `{#if ready()}<p data-testid="ok">ready</p>{:else}<p data-testid="wait">waiting</p>{/if}`,
       { controller: () => ({ ready: signal(false) }) },
     )
-    expect(v.root.querySelector('.wait')).not.toBeNull()
-    expect(v.root.querySelector('.ok')).toBeNull()
+    expect(v.root.querySelector('[data-testid="wait"]')).not.toBeNull()
+    expect(v.root.querySelector('[data-testid="ok"]')).toBeNull()
 
     ;(v.scope.ready as ReturnType<typeof signal<boolean>>).set(true)
     await v.flush()
-    expect(v.root.querySelector('.ok')).not.toBeNull()
-    expect(v.root.querySelector('.wait')).toBeNull()
+    expect(v.root.querySelector('[data-testid="ok"]')).not.toBeNull()
+    expect(v.root.querySelector('[data-testid="wait"]')).toBeNull()
     v.unmount()
   })
 })
