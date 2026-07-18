@@ -274,14 +274,14 @@ fn client_contract_csr_and_hydration_in_jsdom() {
         },
         Target {
             name: "board",
-            source_rel: "crates/deck/deck-conformance/app/views/board/page.sail",
+            source_rel: "crates/deck/deck-conformance/app/routes/board/page.sail",
             manifest_rel: CONF_MANIFEST,
             mode: CompileMode::Component,
             component_tag: None,
         },
         Target {
             name: "greet",
-            source_rel: "crates/deck/deck-conformance/app/views/greet/[id]/page.sail",
+            source_rel: "crates/deck/deck-conformance/app/routes/greet/[id]/page.sail",
             manifest_rel: CONF_MANIFEST,
             mode: CompileMode::Component,
             component_tag: None,

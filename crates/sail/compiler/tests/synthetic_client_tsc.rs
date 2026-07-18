@@ -238,7 +238,7 @@ fn client_contract_typechecks_green_across_real_surfaces() {
         // host-dispatch (the real living-async surface).
         Surface {
             name: "feed",
-            source_rel: "crates/deck/deck-conformance/app/views/feed/page.sail",
+            source_rel: "crates/deck/deck-conformance/app/routes/feed/page.sail",
             manifest_rel: CONF_MANIFEST,
             mode: CompileMode::Component,
             controller_rel: None,
@@ -246,7 +246,7 @@ fn client_contract_typechecks_green_across_real_surfaces() {
         // greet/[id] — dynamic route params (the typed-scope typo-catch surface).
         Surface {
             name: "greet",
-            source_rel: "crates/deck/deck-conformance/app/views/greet/[id]/page.sail",
+            source_rel: "crates/deck/deck-conformance/app/routes/greet/[id]/page.sail",
             manifest_rel: CONF_MANIFEST,
             mode: CompileMode::Component,
             controller_rel: None,
@@ -341,10 +341,10 @@ fn controller_recovers_scope_factory_return_type() {
         &gendir,
         &Surface {
             name: "board",
-            source_rel: "crates/deck/deck-conformance/app/views/board/page.sail",
+            source_rel: "crates/deck/deck-conformance/app/routes/board/page.sail",
             manifest_rel: CONF_MANIFEST,
             mode: CompileMode::Component,
-            controller_rel: Some("crates/deck/deck-conformance/app/views/board/controller.ts"),
+            controller_rel: Some("crates/deck/deck-conformance/app/routes/board/controller.ts"),
         },
     );
     write_tsconfig(&repo, &work, &["generated/board/**/*.ts".to_string()], "tsconfig.json");

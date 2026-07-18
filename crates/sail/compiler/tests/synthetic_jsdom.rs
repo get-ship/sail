@@ -40,7 +40,7 @@ fn synthesized_board_client_mounts_and_stays_reactive() {
         fs::read_to_string(repo.join("crates/deck/deck-conformance/app/app.manifest.jsonc")).unwrap();
     let manifest = AppManifest::parse(&manifest_src).unwrap();
     let raw =
-        fs::read_to_string(repo.join("crates/deck/deck-conformance/app/views/board/page.sail")).unwrap();
+        fs::read_to_string(repo.join("crates/deck/deck-conformance/app/routes/board/page.sail")).unwrap();
     // SFC: strip the `<controller>` block before parsing and materialize its
     // body here (deck serves it as a virtual sibling; this harness has no
     // bundler). The name must not collide with the SYNTHETIC controller below.

@@ -124,7 +124,7 @@ mod route_params_tests {
             Some(vec!["slug".to_string()])
         );
         assert_eq!(
-            route_params_for(Path::new("/x/app/views/greet/[id]/page.sail")),
+            route_params_for(Path::new("/x/app/routes/greet/[id]/page.sail")),
             Some(vec!["id".to_string()])
         );
         // Static routes are still routes — an empty grant legalizes `route`
