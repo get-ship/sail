@@ -80,7 +80,7 @@ pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, Co
             "" => {
                 return Err(CompileError::new(format!(
                     "unexpected `{}` in `<scope>` — {ALLOWED_HINT}.",
-                    &body[i..(i + 1).min(body.len())]
+                    char_at(body, i)
                 ))
                 .with_span(span));
             }
@@ -105,6 +105,13 @@ pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, Co
 }
 
 // ── statement pieces ─────────────────────────────────────────────────────────
+
+/// The char starting at byte `i`, for diagnostics. Char-boundary-safe: a
+/// multibyte char (`…`) must land in the message whole, never as a
+/// `i..i+1` slice that panics mid-char.
+fn char_at(s: &str, i: usize) -> char {
+    s[i..].chars().next().unwrap_or('\u{FFFD}')
+}
 
 fn read_word(s: &str, i: usize) -> (&str, usize) {
     let bytes = s.as_bytes();
@@ -213,7 +220,7 @@ fn parse_props_fields(body: &str, span: Span) -> Result<Vec<PropDecl>, CompileEr
             return Err(CompileError::new(format!(
                 "unexpected `{}` in `props:` — fields are `name: Type = literal` \
                  (annotation and default each optional, one of the two required).",
-                &body[i..(i + 1).min(body.len())]
+                char_at(body, i)
             ))
             .with_span(span));
         }
@@ -484,7 +491,7 @@ fn parse_variants_table(
         if axis.is_empty() {
             return Err(CompileError::new(format!(
                 "unexpected `{}` in `variants:` — axes are `name: {{ value: 'sx…', … }}`.",
-                &table_inner[i..(i + 1).min(table_inner.len())]
+                char_at(table_inner, i)
             ))
             .with_span(span));
         }

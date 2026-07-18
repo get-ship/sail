@@ -183,7 +183,7 @@ fn on_completion(docs: &Docs, _id: RequestId, params: CompletionParams) -> Optio
     let tdp = params.text_document_position;
     let (text, path) = doc(docs, &tdp.text_document.uri)?;
     let pos = tdp.position;
-    let col = pos.character as usize;
+    let col = utf16_col_to_byte(&text, pos.line as usize, pos.character as usize);
     if is_css_token_context(&text, pos.line as usize, col) {
         return Some(token_completion_items(&text, pos.line as usize, col));
     }
@@ -293,6 +293,22 @@ fn on_definition(
 fn doc(docs: &Docs, uri: &Url) -> Option<(String, Option<std::path::PathBuf>)> {
     let text = docs.get(uri)?.clone();
     Some((text, uri.to_file_path().ok()))
+}
+
+/// LSP `character` (UTF-16 code units — the protocol default; we negotiate
+/// no other `position_encoding`) → byte offset within the line, clamped to
+/// the line length. Always a char boundary: using the raw UTF-16 count as a
+/// byte index slices mid-char on any line with non-ASCII before the cursor.
+fn utf16_col_to_byte(text: &str, line_idx: usize, utf16_col: usize) -> usize {
+    let Some(line) = text.lines().nth(line_idx) else { return 0 };
+    let mut units = 0usize;
+    for (i, ch) in line.char_indices() {
+        if units >= utf16_col {
+            return i;
+        }
+        units += ch.len_utf16();
+    }
+    line.len()
 }
 
 /// Compiler 1-based `(line, col)` → LSP 0-based `Position`.
@@ -974,6 +990,20 @@ mod tests {
             .expect("trigger_characters");
         assert!(triggers.contains(&"-".to_string()), "missing '-' trigger");
         assert!(triggers.contains(&"(".to_string()), "missing '(' trigger");
+    }
+
+    #[test]
+    fn utf16_col_lands_on_char_boundaries() {
+        // `°` is 1 UTF-16 unit but 2 UTF-8 bytes — a raw `character` used as
+        // a byte index lands on the continuation byte and panics any slice.
+        let src = "content: \"°°\";";
+        assert_eq!(utf16_col_to_byte(src, 0, 10), 10); // ASCII prefix: 1:1
+        assert_eq!(utf16_col_to_byte(src, 0, 11), 12); // between the two °
+        assert_eq!(utf16_col_to_byte(src, 0, 12), 14); // after both
+        assert_eq!(utf16_col_to_byte(src, 0, 99), src.len()); // clamped
+        assert_eq!(utf16_col_to_byte(src, 5, 0), 0); // line out of range
+        // The completion helpers must not panic mid-char anymore.
+        assert!(!line_prefix_ends_with_dd(src, 0, utf16_col_to_byte(src, 0, 11)));
     }
 
     #[test]
