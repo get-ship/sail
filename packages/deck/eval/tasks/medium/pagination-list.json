@@ -1,8 +1,0 @@
-{
-  "id": "pagination-list",
-  "difficulty": "medium",
-  "description": "Build a paginated list view backed entirely by <state>.\n\nState:\n  - <state name=\"items\" value=\"['alpha','bravo','charlie','delta','echo','foxtrot','golf','hotel','india']\" />\n  - <state name=\"page\" value=\"0\" />\n  - page size is 3 (hard-coded).\n\nLayout:\n  - A <ul data-test=\"page\"> containing the three items for the current page; each item is an <li data-test=\"item\">.\n  - A <ship-button data-test=\"prev\"> labelled \"prev\". When clicked, decrements page (clamped at 0).\n  - A <ship-button data-test=\"next\"> labelled \"next\". When clicked, increments page (clamped so the last page is the final full slice).\n\nNo <data>, no SDK calls. Pure state.",
-  "fixtures": { "template": "" },
-  "expectedBindings": ["items", "page"],
-  "behavioralTests": "const itemsOf = () => Array.from(container.querySelectorAll('[data-test=\"item\"]')).map(n => n.textContent.trim());\nlet items = itemsOf();\nexpect(items.length === 3, 'page 0 should have 3 items, got ' + items.length);\nexpect(items[0] === 'alpha' && items[2] === 'charlie', 'page 0 items: ' + JSON.stringify(items));\ncontainer.querySelector('[data-test=\"next\"]').click();\nawait tick();\nitems = itemsOf();\nexpect(items[0] === 'delta' && items[2] === 'foxtrot', 'page 1 items: ' + JSON.stringify(items));\ncontainer.querySelector('[data-test=\"prev\"]').click();\nawait tick();\nitems = itemsOf();\nexpect(items[0] === 'alpha', 'back to page 0: ' + JSON.stringify(items));\ncontainer.querySelector('[data-test=\"prev\"]').click();\nawait tick();\nitems = itemsOf();\nexpect(items[0] === 'alpha', 'prev clamps at 0: ' + JSON.stringify(items));"
-}
