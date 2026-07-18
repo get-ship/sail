@@ -230,8 +230,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </slot>
 </div>
 {:else}
-<column role="treegrid" gap="0" aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null} sx="w-full overflow-hidden bg-surface-1 border border-border rounded-lg font-body text-density">
-  <grid use:gridTracks={gridTemplate()} tracks="--sail-grid-template" gap="0" role="row" sx="sticky top-0 z-sticky bg-surface-2 border-b border-b-border">
+<column role="treegrid" gap="0" use:gridTracks={gridTemplate()} aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null} sx="w-full overflow-hidden bg-surface-1 border border-border rounded-lg font-body text-density">
+  <grid tracks="--sail-grid-template" gap="0" role="row" sx="sticky top-0 z-sticky bg-surface-2 border-b border-b-border">
     {#for h of headers() key={h.id}}
       <row gap="1" align="center" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null} sx="relative py-density-row-py px-density-row-px font-semibold text-xs uppercase tracking-wide text-foreground border-b border-b-border-subtle whitespace-nowrap sortable:cursor-pointer">
         <span sx="grow-1 min-w-0 truncate">{h.label}</span>
@@ -257,7 +257,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <span aria-hidden="true" sx="absolute left-0 top-1 bottom-1 w-half rounded-full bg-primary invisible group-selected:visible"></span>
           {#for c of w.cells key={c.columnId}}
             {#if c.first}
-              <row use:cellPad={w.indent} sx="py-density-row-py px-density-row-px border-b border-b-border-subtle text-foreground min-w-0 ps-(--cell-ps)">
+              <row role="gridcell" use:cellPad={w.indent} sx="py-density-row-py px-density-row-px border-b border-b-border-subtle text-foreground min-w-0 ps-(--cell-ps)">
                 {#if w.canExpand}
                   <span data-action="toggle" aria-hidden="true" sx="w-density-icon h-density-icon min-w-density-icon text-muted-foreground group-expanded:rotate-90">
                     <icon name="chevron-right" size="xs"></icon>
@@ -266,7 +266,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 <span sx="grow-1 min-w-0 truncate">{c.value}</span>
               </row>
             {:else}
-              <row sx="py-density-row-py px-density-row-px border-b border-b-border-subtle text-foreground min-w-0">
+              <row role="gridcell" sx="py-density-row-py px-density-row-px border-b border-b-border-subtle text-foreground min-w-0">
                 <span sx="grow-1 min-w-0 truncate">{c.value}</span>
               </row>
             {/if}

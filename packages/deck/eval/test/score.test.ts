@@ -33,8 +33,15 @@ describe('sniffEscapeHatches', () => {
 
 describe('scoreOutput — compile path', () => {
   it('compiled=false on a malformed template', async () => {
+    // A bare, non-hyphenated, non-HTML tag is a genuine compile error (the
+    // language reserves the bare-name namespace — see
+    // crates/sail/compiler/src/check/reserved_names.rs). The previous
+    // fixture here, two sibling root elements, is NOT actually rejected —
+    // multi-root views compile fine — so this assertion failed on every
+    // run, not just under load: the fixture never exercised a real
+    // compile error in the first place.
     const report = await scoreOutput({
-      template: '<div>one</div><span>two roots</span>',
+      template: '<div><bogus>typo\'d element</bogus></div>',
       behavioralTests: 'expect(true)',
     })
     expect(report.compiled).toBe(false)

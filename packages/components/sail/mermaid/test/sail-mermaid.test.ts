@@ -75,6 +75,24 @@ async function settle(m: LiveMount, turns: number = 8): Promise<void> {
   }
 }
 
+/** Poll for the render effect's terminal state (svg or error tile) up to a
+ *  wall-clock budget, rather than a fixed turn count. `settle`'s fixed 8
+ *  turns is a guess at how many event-loop hops mermaid.render()'s promise
+ *  chain needs — correct in isolation, but under full-suite CPU contention
+ *  each hop can take long enough that 8 turns elapse before the chain
+ *  advances, so the assertion sees neither an SVG nor an error tile yet
+ *  (flaky, not a real "nothing renders" defect). Polling on real time
+ *  removes the turn-count guess entirely: it waits exactly until the
+ *  condition holds, or the generous budget (well under the suite's 15s
+ *  per-test timeout) is spent. */
+async function waitForRenderSettled(m: LiveMount, maxMs: number = 10_000): Promise<void> {
+  const start = Date.now()
+  while (Date.now() - start < maxMs) {
+    if (renderedSvg(m) || errorTile(m)) return
+    await new Promise((r) => setTimeout(r, 20))
+  }
+}
+
 describe('<sail-mermaid> — register + render', () => {
   it('registers the custom element and renders its container into the light DOM', () => {
     const m = mount()
@@ -85,7 +103,7 @@ describe('<sail-mermaid> — register + render', () => {
 
   it('renders the `graph TD; A-->B` source as either an SVG or the documented error tile (no throw)', async () => {
     const m = mount('graph TD\n  A --> B')
-    await settle(m)
+    await waitForRenderSettled(m)
     const svg = renderedSvg(m)
     const err = errorTile(m)
     // The controller's contract: a render either paints an SVG or

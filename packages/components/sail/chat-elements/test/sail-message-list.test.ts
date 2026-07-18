@@ -137,8 +137,13 @@ describe('<sail-message-list>', () => {
     expect(msgs.length).toBeGreaterThan(0)
     expect(msgs.length).toBeLessThan(500)
     // The spacer encodes the FULL thread height so the scrollbar is honest.
+    // `use:virtualSpacer` (packages/sail/runtime/src/actions/virtual-row.ts)
+    // writes the height as the `--rows-h` custom property — sx's
+    // `h-(--rows-h)` atom is what turns it into layout — never a direct
+    // `.style.height` write (the floor: no inline style outside a `use:`
+    // action's own custom-property seam).
     const spacer = spacerOf(el)
-    expect(parseFloat(spacer.style.height || '0')).toBeGreaterThan(5000)
+    expect(parseFloat(spacer.style.getPropertyValue('--rows-h') || '0')).toBeGreaterThan(5000)
   })
 
   it('positions windowed rows at distinct, increasing virtual offsets', async () => {
@@ -147,10 +152,13 @@ describe('<sail-message-list>', () => {
     await flush()
     const rows = rowsOf(el)
     expect(rows.length).toBeGreaterThan(1)
-    const offsets = rows.map((r) => r.style.transform)
+    // `use:virtualRow` writes the offset as the `--row-y` custom property
+    // (sx's `translate-y-(--row-y)` atom does the actual `translate:`), not
+    // a direct `.style.transform` write.
+    const offsets = rows.map((r) => r.style.getPropertyValue('--row-y'))
     // First row anchors at the top; every row sits at a unique offset (not
     // stacked at 0).
-    expect(offsets[0]).toContain('translateY(0px)')
+    expect(offsets[0]).toBe('0px')
     expect(new Set(offsets).size).toBe(offsets.length)
   })
 

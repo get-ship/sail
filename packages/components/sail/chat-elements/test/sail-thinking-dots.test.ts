@@ -8,12 +8,7 @@
 // runtime-dispatched test below stubs `__sui_motion_attach` and asserts
 // the bounce preset reaches the runtime, so a regression that swaps back
 // to `pulse` (or to a fixed scale) fails the suite.
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { createRequire } from 'node:module'
-
-import '../src/sail-thinking-dots/sail-thinking-dots.compiled.js'
-
-const require = createRequire(import.meta.url)
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 interface MotionCall {
   target: Element
@@ -25,13 +20,35 @@ interface MotionCall {
 
 let motionCalls: MotionCall[] = []
 
+// The compiled component imports `__sui_motion_attach` from
+// `@ship/sail-runtime/internal` as a named ESM import — a live binding the
+// module namespace object exposes read-only, so `require(...).x = fn`
+// (the old approach) throws `Attempted to assign to readonly property`.
+// `vi.mock` replaces the module at resolution time instead, which is the
+// seam ESM actually offers; the real exports pass through untouched except
+// for the one function under test, redirected through a mutable ref so each
+// test can swap its behavior via `installMotionStub()`.
+let motionAttachImpl: ((el: Element, config: MotionAttachStubConfig) => () => void) | null = null
+
+interface MotionAttachStubConfig {
+  trigger: string
+  motions: Array<{ preset: string; property: string }>
+  stagger?: number
+}
+
+vi.mock('@ship/sail-runtime/internal', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>()
+  return {
+    ...actual,
+    __sui_motion_attach: (el: Element, config: MotionAttachStubConfig) => motionAttachImpl!(el, config),
+  }
+})
+
+import '../src/sail-thinking-dots/sail-thinking-dots.compiled.js'
+
 function installMotionStub(): void {
   motionCalls = []
-  const runtime = require('@ship/sail-runtime') as Record<string, unknown>
-  ;(runtime as Record<string, unknown>).__sui_motion_attach = (
-    el: Element,
-    config: { trigger: string; motions: Array<{ preset: string; property: string }>; stagger?: number },
-  ): (() => void) => {
+  motionAttachImpl = (el, config) => {
     for (const m of config.motions) {
       motionCalls.push({
         target: el,

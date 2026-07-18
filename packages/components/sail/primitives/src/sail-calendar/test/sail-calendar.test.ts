@@ -169,9 +169,12 @@ describe('<sail-calendar> — week/day grid', () => {
     await v.flush()
     const chip = shadow(v.el).querySelector('[data-event-id="a"]') as HTMLElement
     expect(chip).not.toBeNull()
-    // lane geometry from PositionedEvent → inline top/height.
-    expect(chip.style.top).not.toBe('')
-    expect(chip.style.height).not.toBe('')
+    // lane geometry from PositionedEvent → `use:eventSpan` writes the
+    // --evt-top/--evt-h custom properties (sx's top-(--evt-top)/h-(--evt-h)
+    // atoms do the actual layout), never a direct .style.top/.style.height
+    // write.
+    expect(chip.style.getPropertyValue('--evt-top')).not.toBe('')
+    expect(chip.style.getPropertyValue('--evt-h')).not.toBe('')
   })
 })
 

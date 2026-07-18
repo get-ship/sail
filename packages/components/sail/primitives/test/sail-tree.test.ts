@@ -322,7 +322,10 @@ describe('<sail-tree> — virtualized over tree.rows() (behavioral spec #6)', ()
     await flush()
     const spacer = shadow!.querySelector('[role="tree"] > div > div') as HTMLElement
     expect(spacer).not.toBeNull()
-    const h = parseFloat(spacer.style.height || '0')
+    // `use:virtualSpacer` writes the height as the `--rows-h` custom
+    // property (sx's `h-(--rows-h)` atom turns it into layout) — never a
+    // direct `.style.height` write.
+    const h = parseFloat(spacer.style.getPropertyValue('--rows-h') || '0')
     // 5000 rows × any non-trivial estimate → a tall spacer the window never matches.
     expect(h).toBeGreaterThan(10_000)
   })
