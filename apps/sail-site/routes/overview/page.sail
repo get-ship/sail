@@ -30,10 +30,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       ])
     }
 
-    const themes = ['ship-light', 'ship-dark', 'paper', 'console', 'contrast']
-    const theme = signal('ship-light')
-
-    return { query, filtered, invite, themes, theme }
+    return { query, filtered, invite }
 })
 </controller>
 
@@ -85,42 +82,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </column>
   </grid>
 
-  <grid cols="2" gap="6">
-    <column gap="3">
-      <h2>Design is data</h2>
-      <p>
-        Styling draws from a token system the compiler enforces — colors,
-        spacing, and type resolve through the active theme, and components
-        never name a colour. Which means a theme is data, and swapping it
-        re-skins everything written in the language.
-      </p>
-      <p sx="text-sm text-muted-foreground">
-        The card on the right is one attribute away from a different brand.
-      </p>
-    </column>
-    <column gap="3" sx="p-5 bg-muted border border-border rounded-lg">
-      <row gap="2">
-        {#for t of themes key={t}}
-          <button on:click={() => theme.set(t)} size="sm"
-                  variant={theme() === t ? 'solid' : 'outline'} tone="primary">{t}</button>
-        {/for}
-      </row>
-      <column data-theme-preview={theme()} gap="3" sx="p-5 bg-background text-foreground border border-border rounded-lg">
-        <row gap="3" align="center">
-          <avatar></avatar>
-          <column gap="0">
-            <strong>Ada Lovelace</strong>
-            <span sx="text-sm text-muted-foreground">Wrote the first one</span>
-          </column>
-          <badge tone="success" sx="ml-auto">active</badge>
-        </row>
-        <row gap="2">
-          <button variant="solid" tone="primary" size="sm">Message</button>
-          <button variant="outline" size="sm">Profile</button>
-        </row>
-      </column>
-    </column>
-  </grid>
+  <column gap="3">
+    <h2>Design is data</h2>
+    <p>
+      Styling draws from a token system the compiler enforces — colors,
+      spacing, and type resolve through the active theme, and components never
+      name a colour. Which means a theme is data, and swapping it re-skins
+      everything written in the language. Pick one — this entire site is
+      written in SAIL:
+    </p>
+    <theme-picker inline></theme-picker>
+  </column>
 
   <column sx="max-w-breakpoint-tablet" gap="3">
     <h2>The compiler is a contract you tune</h2>

@@ -16,6 +16,7 @@
 <scope>
   props: {
     value = ''
+    inline = false
   }
 </scope>
 
@@ -61,6 +62,8 @@
     grid-template-columns: 1fr 1fr;
     gap: var(--space-1_5);
   }
+  /* The `inline` variant's rules live with the rest of this element's skin in
+     @ship/tokens element-skins.css (the skin supersedes this style block). */
 
   .sail-theme-option {
     display: flex;
