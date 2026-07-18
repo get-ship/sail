@@ -12,6 +12,15 @@ Ruling key: OPEN (needs a decision) · SHIPPED (atom exists) · REJECTED.
 - `font:` — typography roles (`mono`/`body`/`heading` → `var(--*-font)`).
 - `fill` size value — viewport remainder: `calc(100dvh - var(--chrome-offset))`;
   chrome publishes its own offset (`style:--chrome-offset` on the shell).
+- `<row nowrap>` — the single-line row (was "Nowrap row / split element"
+  below). Boolean axis; layers `flex-wrap:nowrap` on the base, composes with
+  `inline`. (job/layout-pass)
+- `<grid rows="N">` — explicit grid-template-rows count (1..12), the row-axis
+  mirror of `cols`; composes with `cols` into a fixed N×M matrix.
+  (job/layout-pass)
+- `<column justify>` + `justify="evenly"` — the column's main (vertical) axis
+  distribution, plus `space-evenly` completing the justify enum on
+  row/column/stack. (job/layout-pass)
 
 ## Open — systemic (block multiple components)
 
@@ -45,9 +54,6 @@ Ruling key: OPEN (needs a decision) · SHIPPED (atom exists) · REJECTED.
 - **Stage width tokens**: sail-render's viewport framing (desktop 1280 /
   tablet 768 / mobile 390). No device-width tokens exist; `w`/`max-w` only
   speak tokens. Blocks sail-render.
-- **Nowrap row / split element**: `<row>` wraps by default, so a full-height
-  split cannot rely on stretch (the tutorial workbench bug). Either a nowrap
-  word on `<row>` or a dedicated panes element.
 - **Column clamp**: exact `minmax(0, 30rem)` pane (tutorial lesson column);
   nearest today is `grow:1 + max-w:panel-max-w-md`.
 - **Hairline insets**: sail-diff's deliberate 1px line padding; smallest space

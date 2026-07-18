@@ -5156,7 +5156,8 @@ export const LAYOUT_KEYWORDS: Array<{ tag: string; props: string[] }> = [
       "align",
       "justify",
       "direction",
-      "inline"
+      "inline",
+      "nowrap"
     ]
   },
   {
@@ -5164,6 +5165,7 @@ export const LAYOUT_KEYWORDS: Array<{ tag: string; props: string[] }> = [
     "props": [
       "gap",
       "align",
+      "justify",
       "direction",
       "inline"
     ]
@@ -5175,6 +5177,7 @@ export const LAYOUT_KEYWORDS: Array<{ tag: string; props: string[] }> = [
       "min",
       "flow",
       "cols",
+      "rows",
       "tracks",
       "inline"
     ]
@@ -5211,7 +5214,7 @@ export const SX_REFUSALS: Array<{ atom: string; instead: string }> = [
   },
   {
     "atom": "flex-nowrap",
-    "instead": "<row nowrap>"
+    "instead": "<row nowrap> — the single-line row"
   },
   {
     "atom": "flex-row",
@@ -5219,7 +5222,7 @@ export const SX_REFUSALS: Array<{ atom: string; instead: string }> = [
   },
   {
     "atom": "flex-wrap",
-    "instead": "<row wrap>"
+    "instead": "<row> — a row wraps by default"
   },
   {
     "atom": "gap",
@@ -5243,7 +5246,7 @@ export const SX_REFUSALS: Array<{ atom: string; instead: string }> = [
   },
   {
     "atom": "grid-rows",
-    "instead": "<grid rows=\"3\">"
+    "instead": "<grid rows=\"3\"> — an explicit row count"
   },
   {
     "atom": "inline-flex",
@@ -5718,6 +5721,11 @@ export const ACTIONS: ActionDoc[] = [
     "name": "chip",
     "param": "void",
     "summary": "Dismissible chip behavior; click-to-remove wired to the element."
+  },
+  {
+    "name": "chromeOffset",
+    "param": "void",
+    "summary": "Publish the attached element's measured height as --chrome-offset on :root (pairs with the h:fill scale)."
   },
   {
     "name": "clickOutside",
