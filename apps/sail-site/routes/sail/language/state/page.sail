@@ -1,8 +1,13 @@
-<controller>
-// /reactivity — the live graph the page describes. One signal, one derived,
-// one effect writing a visible log: the reader clicks and watches all three
-// layers respond.
+<!--
+  /sail/language/state — chapter 2. The live graph the page describes: one
+  signal, one derived, one effect writing a VISIBLE log (the snippet shows
+  the same code — no console.log needles). Written for a reader we respect,
+  not for a React developer: no dependency-array talk, no useEffect
+  comparisons, concepts before examples. Stores lead with the problem and
+  demonstrate with two different components sharing one store, live.
+-->
 
+<controller>
 import { controller, signal, derived, effect, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { code } from './snippets'
@@ -13,7 +18,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   const log = signal<string[]>([])
   effect(() => {
     const n = count()
-    log.set((prev) => [...prev.slice(-3), `effect ran: count is ${n}`])
+    log.set((prev) => [...prev.slice(-2), `effect ran — count is now ${n}`])
   })
   return { code, count, doubled, log }
 })
@@ -23,27 +28,34 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">The language</p>
   <h1>State</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    State is three small primitives: a <strong>signal</strong> holds a
-    value, a <strong>derived</strong> computes one from others, and an
-    <strong>effect</strong> runs a side-effect when its inputs change. No
-    proxies, no dependency arrays — you read the graph. The whole model in
-    one sentence: the template reads state, handlers write it, effects react
-    to it.
+    State is three primitives. A <strong>signal</strong> holds a value. A
+    <strong>derived</strong> computes a value from other state. An
+    <strong>effect</strong> runs code when the state it reads changes.
+    Everything else in this chapter is those three, composed — and the
+    direction never varies: the template reads state, handlers write it,
+    effects react to it.
   </p>
 
   <h2>The graph, live</h2>
   <row gap="4" align="start">
     <column sx="grow-1 basis-breakpoint-mobile min-w-0">
       <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Live</p>
-      <column sx="p-6 border border-border rounded-lg min-h-8 bg-surface-1" gap="3">
-        <row gap="3" align="center">
-          <button on:click={() => count.set(count() + 1)}>count.set({count() + 1})</button>
-          <p><strong>{count()}</strong> <small sx="text-muted-foreground">signal</small></p>
-          <p><strong>{doubled()}</strong> <small sx="text-muted-foreground">derived</small></p>
+      <column sx="p-6 border border-border rounded-lg min-h-8 bg-surface-1" gap="4">
+        <row gap="5" align="center">
+          <button on:click={() => count.set(count() + 1)}>+1</button>
+          <column gap="1" align="center">
+            <small sx="text-xs uppercase tracking-wide text-muted-foreground">signal</small>
+            <strong sx="text-lg">{count()}</strong>
+          </column>
+          <column gap="1" align="center">
+            <small sx="text-xs uppercase tracking-wide text-muted-foreground">derived ×2</small>
+            <strong sx="text-lg">{doubled()}</strong>
+          </column>
         </row>
         <column gap="1">
+          <small sx="text-xs uppercase tracking-wide text-muted-foreground">effect output</small>
           {#for line of log() key={line}}
-            <p sx="text-sm text-muted-foreground">{line}</p>
+            <p sx="text-sm text-muted-foreground font-mono">{line}</p>
           {/for}
         </column>
       </column>
@@ -53,106 +65,157 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <code-block code={code.graph}></code-block>
     </column>
   </row>
+  <p>
+    One click moves all three layers: the write lands in the signal, the
+    derived recomputes because its input changed, and the effect runs and
+    appends a line you can see. Nothing subscribed to anything by hand.
+  </p>
 
   <h2>Signals</h2>
   <p>
     A signal is a readable, writable value. Call it to read; call
-    <code>.set()</code> to write. Reading a signal inside a derived or effect
-    subscribes to it automatically.
+    <code>.set()</code> to write. Reading a signal inside a derived, an
+    effect, or a template binding subscribes automatically — that is the
+    entire wiring model.
   </p>
   <code-block code={code.signal}></code-block>
 
   <h2>Derived</h2>
   <p>
-    A derived value recomputes from the signals it reads. It's lazy and cached —
-    it only recomputes when you read it <em>and</em> an input actually changed.
+    A derived value recomputes from the signals it reads. It is lazy and
+    cached — it only recomputes when you read it <em>and</em> an input
+    actually changed.
   </p>
   <code-block code={code.derived}></code-block>
 
   <h2>Effects</h2>
   <p>
-    An effect runs immediately, then re-runs whenever a signal it read changes.
-    Use it for the edges of your app — logging, the DOM, network, storage. Return
-    a function and the effect cleans up after itself: that cleanup runs before the
-    next run and when the effect is disposed, so a timer, socket, or listener is
-    never left dangling. <code>effect()</code> returns a disposer to stop it
-    entirely.
+    An effect runs immediately, then re-runs whenever a signal it reads
+    changes. Effects are for the edges — the places state has to touch the
+    world outside the graph: the document, a network call, storage. If the
+    effect returns a function, that function is the undo: it runs before the
+    next run and when the effect is disposed, so a timer or listener the
+    effect started is never left running after it's gone.
   </p>
   <code-block code={code.effect}></code-block>
   <p sx="border border-border border-l-3 border-l-primary rounded-md p-3 px-4 text-sm text-muted-foreground">
-    An effect subscribes to what it <em>actually reads on this run</em>. If a
-    read sits behind an early return or a short-circuit
-    (<code>maybe()?.thing(other())</code>), it may never be reached — and the
-    effect won't re-run when it changes. Read your dependencies first, then
-    branch.
+    An effect subscribes to what it <em>actually read on this run</em> — so
+    a read the code never reached is a read the effect never subscribed to.
+    If an early <code>return</code> or an <code>if</code> skips past a
+    signal, the effect will not re-run when that signal changes. The habit
+    that avoids the surprise: read your inputs at the top of the effect,
+    then branch on the values.
   </p>
 
-  <h2>batch and untrack</h2>
+  <h2>The template is a subscriber</h2>
   <p>
-    Two precision tools for when the default tracking isn't what you want.
-    <code>batch()</code> coalesces several writes into a single update pass, so
-    effects run once instead of once per write. <code>untrack()</code> reads a
-    signal without subscribing to it — useful when an effect should react to one
-    input but only sample another.
-  </p>
-  <code-block code={code.escape}></code-block>
-
-  <h2>In a component</h2>
-  <p>
-    Templates bind to signals directly. When the signal changes, only the exact
-    DOM that read it updates — no virtual DOM, no re-render of the component.
+    Everything above also describes the template — a binding like
+    <code>&#123;count()&#125;</code> is a compiled effect whose job is to
+    update one text node. The live demo at the top of this page is exactly
+    this; here is its markup:
   </p>
   <code-block code={code.template}></code-block>
-  <p sx="border border-border border-l-3 border-l-primary rounded-md p-3 px-4 text-sm text-muted-foreground">
-    A text binding <code>&#123;count()&#125;</code> is a compiled effect. When the
-    signal changes, the compiler updates only the one text node that read it
-    — nothing else in the tree re-runs. That is the whole runtime.
+  <p>
+    When <code>count</code> changes, the two bindings that read it update,
+    the derived's binding updates, and nothing else runs. There is no
+    re-render to think about, because there is no re-render.
   </p>
 
   <h2>Lifecycle: <code>mount</code> and cleanup</h2>
   <p>
-    Some state has to reach outside the component — a
-    <code>ResizeObserver</code>, a socket, a timer. That is what
-    <code>mount</code> is for: it runs once, after the element is in the DOM, and
-    receives the scope plus the element itself. Register the undo with
-    <code>onCleanup</code>, and the runtime calls it when the component goes away.
+    A component appears, does work in the world, and eventually goes away —
+    and anything it started has to stop when it does. That is the whole
+    lifecycle story, and it has two words: <code>mount</code> runs once,
+    after the element is on the page, and hands you the element; the
+    function you return from it is the undo, called when the component
+    leaves.
+  </p>
+  <p>
+    Here that pattern watches the component's own size, using
+    <code>ResizeObserver</code> — a browser API that calls you whenever an
+    element's measured size changes:
   </p>
   <code-block code={code.lifecycle}></code-block>
-  <p sx="border border-border border-l-3 border-l-primary rounded-md p-3 px-4 text-sm text-muted-foreground">
-    <strong>There is no dependency array.</strong> An effect subscribes to
-    whatever it reads, and <code>onCleanup</code> is the only teardown there is —
-    so a listener cannot be left dangling because someone forgot to list it.
-  </p>
 
-  <h2>Stores — shared state on the scope tree</h2>
+  <h2><code>batch</code> and <code>untrack</code></h2>
   <p>
-    When state outlives one component, it becomes a <strong>store</strong>: a
-    named unit of signals, deriveds, and plain functions.
-    <code>defineStore(id, setup)</code> declares it;
-    <code>useStore(def)</code> resolves the nearest instance up the scope
-    tree, creating one at the root if none exists; and
-    <code>provideStore(def)</code> installs a scoped instance so a subtree
-    gets its own copy while siblings keep the shared one. Instances live on
-    the scope tree — not as module singletons — which is what keeps two
-    server requests from sharing state and lets a subtree override cleanly.
+    Two tools that adjust <em>when</em> the graph reacts. You will not need
+    them on day one, but you will meet them in real code, so they get real
+    explanations.
   </p>
-  <code-block code={code.store}></code-block>
+  <p>
+    <strong><code>batch</code> makes several writes count as one.</strong>
+    Setting two signals normally means dependents update twice — usually
+    invisible, but if an effect saves to disk or an animation keys off the
+    change, twice is wrong. Wrap the writes and the graph settles once,
+    after the last one:
+  </p>
+  <code-block code={code.batch}></code-block>
+  <p>
+    <strong><code>untrack</code> reads without subscribing.</strong>
+    Sometimes an effect should <em>react</em> to one thing but merely
+    <em>use</em> another — an autosave that fires when the draft changes,
+    and includes the current user, but should not re-fire on user switch:
+  </p>
+  <code-block code={code.untrack}></code-block>
+
+  <h2>Stores — when state belongs to no one component</h2>
+  <p>
+    Sooner or later two components on opposite ends of a page need the same
+    value: the cart total in the header and in the checkout pane, the
+    signed-in user everywhere. Threading it through props means every
+    component between them carries state it doesn't care about. A store is
+    the way out: state declared <em>outside</em> any component, that any
+    component can reach by name.
+  </p>
+  <row gap="4" align="start">
+    <column sx="grow-1 basis-breakpoint-mobile min-w-0">
+      <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Live — click either card</p>
+      <column sx="p-6 border border-border rounded-lg bg-surface-1" gap="3">
+        <grid cols="2" gap="3">
+          <store-counter label="one component"></store-counter>
+          <store-counter label="a different instance"></store-counter>
+        </grid>
+        <store-total></store-total>
+      </column>
+    </column>
+    <column sx="grow-1 basis-breakpoint-mobile min-w-0">
+      <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">The store</p>
+      <code-block code={code.storeDef}></code-block>
+    </column>
+  </row>
+  <p>
+    Three components share that store and none of them knows the others
+    exist — no props carry the count, no events bubble it. Using one is one
+    line:
+  </p>
+  <code-block code={code.storeUse}></code-block>
+  <p>
+    <code>useStore</code> resolves the nearest instance up the component
+    tree, creating one at the root the first time anyone asks. That
+    tree-scoping matters more than it looks: because instances live on the
+    tree rather than in the module, two server-rendered requests can never
+    bleed state into each other, and a subtree can be handed its own private
+    copy with <code>provideStore</code> while its siblings keep the shared
+    one.
+  </p>
 
   <h2>Compositions</h2>
   <p>
-    A <strong>composition</strong> is a plain function over these primitives.
-    There is no type to implement, nothing to register, no base class. The rule is
-    one line: <strong>if it touches the DOM it is an
-    <a href="/sail/behavior">action</a>; if it returns state it is a
-    composition.</strong>
-  </p>
-  <p>
-    They ship with the language — <code>form()</code>, <code>selection()</code>,
-    <code>filteredList()</code> — because you no more install <code>form()</code>
-    than you install <code>signal()</code>. And yours look exactly like ours,
-    because there is nothing privileged about ours.
+    When the same few signals and effects keep appearing together, you fold
+    them into a <strong>composition</strong> — a function that builds a
+    piece of the graph for whoever calls it. There is nothing to register
+    and no type to implement:
   </p>
   <code-block code={code.composition}></code-block>
+  <p>
+    The contract is worth saying precisely: a composition has access to
+    <em>exactly what you pass it</em> — its arguments, and the primitives.
+    It cannot see the caller's template, its props, or its element. That
+    boundary is what makes one reusable anywhere. Logic that needs the DOM
+    is the other kind of reuse — an <a href="/sail/behavior">action</a>,
+    which is handed the element explicitly.
+  </p>
 
   <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
     <a variant="default" href="/sail/language/sail-file">← Components</a>

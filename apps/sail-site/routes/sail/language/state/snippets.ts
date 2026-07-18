@@ -1,32 +1,21 @@
-// Code snippets for the reactivity page. Kept OUT of the controller so the
+// Snippets for /sail/language/state. Kept OUT of the controller so the
 // compiler's scope scan isn't fooled by `return {…}` / `signal(…)` patterns
-// inside these strings. Each snippet matches the real @ship/sail-runtime API
-// (signal/derived/effect/batch/untrack); the .sail template compiles paired
-// with a controller declaring `count`.
+// inside these strings. The graph snippet IS the page's own controller — the
+// source beside the live demo matches what the demo runs.
 export const code = {
-  store: `import { defineStore, useStore, signal, derived } from '@ship/sail-runtime'
-
-export const cart = defineStore('shop.cart', () => {
-  const items = signal<Item[]>([])
-  const total = derived(() => items().reduce((s, i) => s + i.price, 0))
-  const add = (item: Item) => items.set((l) => [...l, item])
-  return { items, total, add }
-})
-
-// in any controller:
-const { items, total, add } = useStore(cart)`,
   graph: `<controller>
 import { controller, signal, derived, effect } from '@ship/sail-runtime'
 export default controller(() => {
   const count = signal(0)
   const doubled = derived(() => count() * 2)
-  effect(() => console.log('count is', count()))
-  return { count, doubled }
+  const log = signal<string[]>([])
+  effect(() => {
+    const n = count()
+    log.set((prev) => [...prev.slice(-2), \`effect ran — count is now \${n}\`])
+  })
+  return { count, doubled, log }
 })
-</controller>
-
-<button on:click={() => count.set(count() + 1)}>+1</button>
-<p>{count()} · doubled: {doubled()}</p>`,
+</controller>`,
 
   signal: `import { signal } from '@ship/sail-runtime'
 
@@ -49,63 +38,87 @@ doubled()      // 20 — recomputed lazily, only when read`,
 
 const count = signal(0)
 
-// Runs now, re-runs whenever a signal it read changes.
-// Return a cleanup — it runs before the next run and on dispose,
-// so the effect owns its resources (timers, sockets, listeners).
+// Runs now; re-runs whenever a signal it reads changes.
+// The returned function is the undo — it runs before each
+// re-run and on dispose, so the timer is never left behind.
 const dispose = effect(() => {
-  const label = 'count=' + count()
-  const id = setTimeout(() => console.log(label), 200)
+  const n = count()
+  const id = setTimeout(() => { document.title = \`count: \${n}\` }, 200)
   return () => clearTimeout(id)
 })
 
-count.set(1)   // clears the pending log, schedules a fresh one
+count.set(1)   // cancels the pending update, schedules a fresh one
 // dispose()   // stop the effect entirely`,
 
-  escape: `import { signal, effect, batch, untrack } from '@ship/sail-runtime'
+  batch: `import { batch } from '@ship/sail-runtime'
 
-const first = signal('Ada')
-const last = signal('Lovelace')
-
-// batch: coalesce writes into ONE update pass
 batch(() => {
   first.set('Grace')
   last.set('Hopper')
-})   // dependent effects run once, not twice
+})
+// fullName recomputes once; effects that read it run once`,
 
-// untrack: read a signal without subscribing to it
+  untrack: `import { effect, untrack } from '@ship/sail-runtime'
+
 effect(() => {
-  console.log(first(), untrack(() => last()))
-})   // re-runs when first changes — never when last does`,
+  const text = draft()                    // tracked — re-runs on edits
+  const who = untrack(() => user().name)  // sampled — no subscription
+  save(text, who)
+})`,
 
-  template: `<!-- counter.sail -->
-<button on:click={() => count.set((n) => n - 1)}>−</button>
-<output>{count()}</output>
-<button on:click={() => count.set((n) => n + 1)}>+</button>`,
+  template: `<button on:click={() => count.set(count() + 1)}>+1</button>
+<strong>{count()}</strong>
+<strong>{doubled()}</strong>
+{#for line of log() key={line}}
+  <p>{line}</p>
+{/for}`,
 
   lifecycle: `import { controller, signal, mount } from '@ship/sail-runtime'
 
 export default controller(() => {
   const size = signal({ w: 0, h: 0 })
 
-  // mount runs once, after the element is in the DOM. el IS the element.
+  // mount runs once, after the element is on the page. el IS the element.
   mount((el) => {
-    const ro = new ResizeObserver(([e]) => {
-      size.set({ w: e.contentRect.width, h: e.contentRect.height })
+    const ro = new ResizeObserver(([entry]) => {
+      size.set({ w: entry.contentRect.width, h: entry.contentRect.height })
     })
     ro.observe(el)
-    return () => ro.disconnect()
+    return () => ro.disconnect()   // the undo, when the component leaves
   })
 
   return { size }
 })`,
 
-  composition: `// A COMPOSITION is a plain function over the primitives. No type, no
-// registration, no base class. If it touches the DOM it is an ACTION; if it
-// returns state it is a composition — that is the whole rule.
-import { selection } from '@ship/sail-runtime'
+  storeDef: `// counter-store.ts — outside any component
+import { defineStore, signal } from '@ship/sail-runtime'
 
-export function useSelection(rows) {
-  const { selected, isSelected, toggle } = selection(rows)
-  return { selected, isSelected, toggle }
-}`,
+export const tally = defineStore('docs.tally', () => {
+  const clicks = signal(0)
+  const add = () => clicks.set((n) => n + 1)
+  return { clicks, add }
+})`,
+
+  storeUse: `import { controller, useStore } from '@ship/sail-runtime'
+import { tally } from './counter-store'
+
+export default controller(() => {
+  const { clicks, add } = useStore(tally)
+  return { clicks, add }
+})`,
+
+  composition: `import { signal, effect } from '@ship/sail-runtime'
+
+// A composition: state + the effect that maintains it, as one function.
+export function ticker(ms: number) {
+  const now = signal(Date.now())
+  effect(() => {
+    const id = setInterval(() => now.set(Date.now()), ms)
+    return () => clearInterval(id)
+  })
+  return now
+}
+
+// in any controller:
+const now = ticker(1000)`,
 }
