@@ -93,6 +93,26 @@ fn multiple_props_share_one_attach_call() {
 }
 
 #[test]
+fn loop_rotate_spin_emits_infinite_one_direction() {
+    let js = compile_motion(
+        r#"<img motion:loop={{ rotate: 'spin' }}>x</img>"#,
+    )
+    .expect("compile");
+    assert!(js.contains("__sui_motion_attach("), "expected runtime attach call:\n{js}");
+    assert!(js.contains("\"loop\""), "expected trigger string:\n{js}");
+    assert!(js.contains("property: \"rotate\""), "expected property field:\n{js}");
+    assert!(js.contains("preset: \"spin\""), "expected preset field:\n{js}");
+    assert!(js.contains("kind: \"tween\""), "expected kind field:\n{js}");
+    assert!(js.contains("from: 0"), "expected from field:\n{js}");
+    assert!(js.contains("to: 360"), "expected to field:\n{js}");
+    assert!(js.contains("duration: 14"), "expected a 14s duration baked from the glacial token:\n{js}");
+    assert!(js.contains("easing: \"linear\""), "expected linear easing:\n{js}");
+    assert!(js.contains("iterations: Infinity"), "expected infinite iterations:\n{js}");
+    // NOT alternate — a spin goes one way, it does not ping-pong.
+    assert!(js.contains("direction: \"normal\""), "expected one-direction spin:\n{js}");
+}
+
+#[test]
 fn unknown_property_alias_is_rejected() {
     let err = compile_motion(
         r#"<button motion:hover={{ foo: 'spring:snappy' }}>x</button>"#,
