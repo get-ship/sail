@@ -82,32 +82,27 @@ pub fn run_view(name: String, route_path: Option<String>, component_tag: Option<
         }
     }
 
+    // `route` is validated (`/`-prefixed) above; deck derives the URL from the
+    // directory tree, so the scaffold no longer records it in a manifest.
+    let _ = &route;
     let repo_root = find_repo_root(&std::env::current_dir().context("cwd")?)?;
-    let base = repo_root.join("views").join(&name);
+    let base = repo_root.join("routes").join(&name);
     if base.exists() {
         bail!("directory already exists: {}", base.display());
     }
     fs::create_dir_all(&base).with_context(|| format!("mkdir {}", base.display()))?;
 
     let title = title_case(&name);
-    let manifest = format!(
-        "// Route metadata for views/{name}/. See\n\
-         // docs/ship-adrs/references/docs/view-directory-convention.md.\n\
-         {{\n  \
-         \"name\": \"{name}\",\n  \
-         \"path\": \"{route}\",\n  \
-         \"title\": \"{title}\",\n  \
-         \"layout\": \"default\",\n  \
-         \"auth\": \"public\"\n\
-         }}\n"
-    );
     // Tier-1 stub: layout element + typography, no sx, no CSS — legal under
     // every styling policy. State arrives later as an inline `<controller>`.
+    // A route is simply a directory with a `page.sail` — deck discovers the URL
+    // from the tree (a `[param]` dir is a dynamic). No manifest, no host
+    // metadata: `auth`/`rail`/`layout`/`title` are a Ship-shell concern, not
+    // deck's (see the ship-ui handoff).
     let page = format!(
         "<column gap=\"4\">\n  \
-         <h1>{title}</h1>\n  <p>New view — replace this body.</p>\n</column>\n"
+         <h1>{title}</h1>\n  <p>New route — replace this body.</p>\n</column>\n"
     );
-    fs::write(base.join("manifest.jsonc"), manifest)?;
     fs::write(base.join("page.sail"), page)?;
 
     if let Some(tag) = component_tag {
@@ -115,9 +110,9 @@ pub fn run_view(name: String, route_path: Option<String>, component_tag: Option<
         fs::create_dir_all(&tag_dir)?;
         let comp_sui = format!(
             "<!--\n  \
-             {tag} — view-private widget for views/{name}/.\n\n  \
-             Tag prefix matches the parent view name so the runtime can register it\n  \
-             without colliding with any other view's _components/ tree.\n\
+             {tag} — route-private widget for routes/{name}/.\n\n  \
+             Tag prefix matches the parent route name so the runtime can register it\n  \
+             without colliding with any other route's _components/ tree.\n\
              -->\n\n\
              <scope>\n  props: {{ tone = 'default' }}\n</scope>\n\n\
              <card tone={{tone()}}>\n  <slot></slot>\n</card>\n"
@@ -125,13 +120,12 @@ pub fn run_view(name: String, route_path: Option<String>, component_tag: Option<
         fs::write(tag_dir.join(format!("{tag}.sail")), comp_sui)?;
     }
 
-    println!("[scaffold] created views/{name}/");
-    println!("[scaffold]   page.sail  manifest.jsonc");
+    println!("[scaffold] created routes/{name}/");
+    println!("[scaffold]   page.sail");
     println!("[scaffold] next steps:");
     println!("  1. Edit page.sail — replace placeholder body");
-    println!("  2. Edit manifest.jsonc — set rail/preload/events as needed");
-    println!("  3. Add an inline <controller> block when the view needs state");
-    println!("  4. Reload the shell — views auto-mount via the daemon");
+    println!("  2. Add an inline <controller> block when the route needs state");
+    println!("  3. Reload the app — deck discovers the route from the tree");
     Ok(())
 }
 

@@ -284,26 +284,6 @@ impl Bundler {
         let layout = self.layout();
         let mut failed: Vec<String> = Vec::new();
         let mut built: Vec<BundleTarget> = Vec::new();
-        // Step 0: regenerate the view route/meta tables
-        // (`<bucket>/routes.gen.ts` + `<bucket>/meta.gen.ts`) for every
-        // discovered view bucket. This is the framework-owned home for the
-        // view tables — folded out of the dev-only Justfile `gen-routes`
-        // recipe so a fresh clone + `build-assets` produces them with no
-        // manual `deck routes --views` step. `view_bucket_dirs()` is the SAME
-        // bucket list the view-target scan walks (`discover_view_bundles`) —
-        // one source of truth for "where views live", no second hardcoded path.
-        // The watch path ignores `.gen.ts`, so these writes can't self-trigger
-        // a rebuild loop. Failures are collected (honest exit), not aborted.
-        for views_dir in layout.view_bucket_dirs() {
-            let label = views_dir
-                .file_name()
-                .map(|n| n.to_string_lossy().into_owned())
-                .unwrap_or_else(|| "views".to_string());
-            if let Err(e) = crate::routes::generate_view_artifacts(&views_dir, &label) {
-                error!(bucket = %views_dir.display(), error = %e, "bundler: view route/meta gen failed");
-                failed.push(format!("view-tables {} ({e})", views_dir.display()));
-            }
-        }
         // Per-view resolver (#255/#267): bundle the view targets TOGETHER
         // (multi-entry) so components shared across views dedup into shared
         // chunks — the dedup that replaces the umbrella. Everything else stays

@@ -26,31 +26,19 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
-    /// Regenerate the typed route tables for one or more apps. Two surfaces
-    /// per invocation:
+    /// Regenerate the typed route tables for one or more apps.
     ///
-    ///   --root <path>  walks <path>/routes/ for file-routed views, writes
+    ///   --root <path>  walks <path>/routes/ for file-routed pages, writes
     ///                  <path>/routes.gen.ts. Repeatable; the label is the
     ///                  path's basename. First-party app routes.
-    ///   --views <path> walks <path>/<name>/manifest.jsonc, writes
-    ///                  <path>/routes.gen.ts (router fields) AND
-    ///                  <path>/meta.gen.ts (host fields). The split is
-    ///                  the contract: the router is host-agnostic, the
-    ///                  host reads the meta. Repeatable.
     ///
-    /// At least one of --root or --views is required.
+    /// At least one --root is required.
     Routes {
         /// App root holding a `routes/` dir. Walks `<root>/routes/` and
         /// writes `<root>/routes.gen.ts`. The label is the path's basename.
         /// Repeatable. e.g. `deck routes --root apps/shell --root apps/spaces`.
         #[arg(long = "root")]
         root: Vec<PathBuf>,
-        /// Views dir holding `<name>/manifest.jsonc` entries. Walks the
-        /// dir, writes `<views>/routes.gen.ts` (router) and
-        /// `<views>/meta.gen.ts` (host). Repeatable. e.g.
-        /// `deck routes --views views`.
-        #[arg(long = "views")]
-        views: Vec<PathBuf>,
     },
 
     /// Generate boilerplate for a new view or primitive component.
@@ -180,16 +168,16 @@ fn main() {
 
 fn run() -> Result<()> {
     match Cli::parse().command {
-        Command::Routes { root, views } => {
+        Command::Routes { root } => {
             let cwd = std::env::current_dir().context("cwd")?;
             let resolve = |p: PathBuf| {
                 if p.is_absolute() { p } else { cwd.join(p) }
             };
-            if root.is_empty() && views.is_empty() {
-                anyhow::bail!("specify --root=<path> and/or --views=<path> at least once");
+            if root.is_empty() {
+                anyhow::bail!("specify --root=<path> at least once");
             }
             // First-party app routes: walk <root>/routes/ for mountable
-            // views (each is a dir with a page.sail). One routes.gen.ts per
+            // pages (each is a dir with a page.sail). One routes.gen.ts per
             // --root; the label is the path's basename. The codegen has
             // no app-name coupling — generic over the workspace.
             let mut routes_specs = Vec::new();
@@ -212,29 +200,7 @@ fn run() -> Result<()> {
                 });
             }
             let n_routes = deck_bundler::routes::generate_routes(&routes_specs)?;
-            // View discovery: walk <views>/<name>/manifest.jsonc, emit
-            // TWO files per --views: routes.gen.ts (router) and
-            // meta.gen.ts (host). Same RouteGenSpec shape — the codegen
-            // writes meta.gen.ts as a side-effect when the spec's dir is
-            // a views tree (the discover_views() walker kicks in).
-            let mut views_specs = Vec::new();
-            for s in &views {
-                let r = resolve(s.clone());
-                let label = r
-                    .file_name()
-                    .map(|n| n.to_string_lossy().into_owned())
-                    .unwrap_or_else(|| r.display().to_string());
-                views_specs.push(deck_bundler::routes::RouteGenSpec {
-                    dir: r.clone(),
-                    out: r.join("routes.gen.ts"),
-                    label,
-                    entry_bootstrap: None,
-                });
-            }
-            let n_views = deck_bundler::routes::generate_routes(&views_specs)?;
-            println!(
-                "deck routes → {n_routes} first-party route(s), {n_views} view route(s)"
-            );
+            println!("deck routes → {n_routes} first-party route(s)");
             Ok(())
         }
         Command::Scaffold(Scaffold::View { name, path, component }) => {
