@@ -3,11 +3,11 @@
   Snippets live in ./snippets so literal braces in example code never get scope-scanned.
 -->
 <controller>
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { pageExample, controllerExample, devCmd } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => ({ pageExample, controllerExample, devCmd }))
+export default controller((_ctx: ControllerScope<Scope>) => ({ pageExample, controllerExample, devCmd }))
 </controller>
 
 <article sx="max-w-breakpoint-tablet mx-auto">

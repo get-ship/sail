@@ -25,12 +25,12 @@
 // cycler (i → which WORD is showing) and the reactivity card's live counter
 // (ticks → a signal you can literally watch increment). Both are the previous
 // landing's mechanisms, reused verbatim.
-import { controller, signal, effect, type ViewScope } from '@ship/sail-runtime'
+import { controller, signal, effect, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 
 const WORDS = ['Batteries', 'Components', 'Styling', 'State', 'Motion', 'Themes']
 
-export default controller((_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ControllerScope<Scope>) => {
     const i = signal(0)
     effect(() => {
       const t = setInterval(() => i.set((n) => (n + 1) % WORDS.length), 2600)

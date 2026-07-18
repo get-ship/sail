@@ -9,13 +9,13 @@
 // filterable team list where Invite actually adds a row. The snippet above
 // it is this exact program in its single-file form.
 
-import { controller, signal, filteredList, type ViewScope } from '@ship/sail-runtime'
+import { controller, signal, filteredList, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { code } from './snippets'
 
 const BENCH = ['Katherine Johnson', 'Annie Easley', 'Margaret Hamilton', 'Radia Perlman']
 
-export default controller((_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ControllerScope<Scope>) => {
     const people = signal([
       { id: 1, name: 'Ada Lovelace', status: 'active' },
       { id: 2, name: 'Grace Hopper', status: 'away' },

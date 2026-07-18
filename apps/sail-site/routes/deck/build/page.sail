@@ -4,11 +4,11 @@
 
 <controller>
 // /deck/build — adapted from packages/deck/docs/routes/build.
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { buildCmd, buildOut, baseCmd } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => ({ buildCmd, buildOut, baseCmd }))
+export default controller((_ctx: ControllerScope<Scope>) => ({ buildCmd, buildOut, baseCmd }))
 </controller>
 
 <article sx="max-w-breakpoint-tablet mx-auto">

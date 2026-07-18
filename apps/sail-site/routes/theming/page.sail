@@ -10,12 +10,12 @@
 // class) and persistTheme (survives reload). The page IS the preview — every
 // component on it reads tokens, so the pick repaints the reader's world.
 
-import { controller, signal, type ViewScope } from '@ship/sail-runtime'
+import { controller, signal, type ControllerScope } from '@ship/sail-runtime'
 import { applyTheme, persistTheme, readStoredTheme, THEMES, type ThemeId } from '@ship/tokens/themes'
 import type { Scope } from './page.sail'
 import { code } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ControllerScope<Scope>) => {
   const active = signal<string>(readStoredTheme())
   const pick = (id: ThemeId): void => {
     applyTheme(id)

@@ -48,11 +48,11 @@
 // /components/<slug> route. sail-message-list and sail-media-csv are
 // skipped everywhere (see the file banner) — no live route yet.
 
-import { controller, signal, derived, filteredList, type ViewScope } from '@ship/sail-runtime'
+import { controller, signal, derived, filteredList, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { CATALOG, PACKS, CATEGORIES, packCount, type CatalogEntry } from './registry'
 
-export default controller((_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ControllerScope<Scope>) => {
     const { query, filtered } = filteredList(
       () => CATALOG,
       (c: CatalogEntry, q: string) => (c.tag + ' ' + c.cat + ' ' + c.pack).toLowerCase().includes(q),

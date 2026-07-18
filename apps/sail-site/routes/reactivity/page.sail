@@ -3,11 +3,11 @@
 // one effect writing a visible log: the reader clicks and watches all three
 // layers respond.
 
-import { controller, signal, derived, effect, type ViewScope } from '@ship/sail-runtime'
+import { controller, signal, derived, effect, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { code } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ControllerScope<Scope>) => {
   const count = signal(0)
   const doubled = derived(() => count() * 2)
   const log = signal<string[]>([])

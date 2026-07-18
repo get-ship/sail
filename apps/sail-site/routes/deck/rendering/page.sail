@@ -4,11 +4,11 @@
 
 <controller>
 // /deck/rendering — adapted from packages/deck/docs/routes/rendering.
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { ssrConfig, buildCmd } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => ({ ssrConfig, buildCmd }))
+export default controller((_ctx: ControllerScope<Scope>) => ({ ssrConfig, buildCmd }))
 </controller>
 
 <article sx="max-w-breakpoint-tablet mx-auto">

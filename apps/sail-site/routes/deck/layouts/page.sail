@@ -4,11 +4,11 @@
 
 <controller>
 // /deck/layouts — adapted from packages/deck/docs/routes/layouts.
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { layoutFile, layoutChain } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => ({ layoutFile, layoutChain }))
+export default controller((_ctx: ControllerScope<Scope>) => ({ layoutFile, layoutChain }))
 </controller>
 
 <article sx="max-w-breakpoint-tablet mx-auto">

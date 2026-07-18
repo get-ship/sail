@@ -4,11 +4,11 @@
 
 <controller>
 // /deck/hmr — adapted from packages/deck/docs/routes/hmr.
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { devCmd } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => ({ devCmd }))
+export default controller((_ctx: ControllerScope<Scope>) => ({ devCmd }))
 </controller>
 
 <article sx="max-w-breakpoint-tablet mx-auto">

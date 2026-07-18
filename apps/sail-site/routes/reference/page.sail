@@ -7,7 +7,7 @@
   render from generated data.
 -->
 <controller>
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { PROP_REGISTRY } from '../../src/prop-registry.gen'
 import {
@@ -71,7 +71,7 @@ const BLOCK_ROWS = BLOCKS.map((b) => ({
 // vocabulary a controller body is taught to write.
 const CONTROLLER_ROWS = CONTROLLER_AMBIENT.filter((a) => a.name !== '__invalidate')
 
-export default controller((_ctx: ViewScope<Scope>) => ({
+export default controller((_ctx: ControllerScope<Scope>) => ({
   stdlibElements: () => STDLIB_ELEMENTS,
   stdlibCount: () => STDLIB_ELEMENTS.length,
   reskinElements: () => RESKIN_ELEMENTS,

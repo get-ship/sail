@@ -12,11 +12,11 @@
 // demo is omitted here because the sail-site doesn't expose a `store` client
 // (its clients seam is intentionally empty). The config + usage snippets
 // still document the seam.
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { configExample, usageExample } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => ({ configExample, usageExample }))
+export default controller((_ctx: ControllerScope<Scope>) => ({ configExample, usageExample }))
 </controller>
 
 <article sx="max-w-breakpoint-tablet mx-auto">

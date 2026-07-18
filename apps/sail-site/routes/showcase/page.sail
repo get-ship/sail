@@ -13,7 +13,7 @@
 // screen walks a deploy through its states and jitters latency on a
 // mount-owned interval so the dashboard reads as live.
 
-import { controller, signal, effect, filteredList, selection, type ViewScope } from '@ship/sail-runtime'
+import { controller, signal, effect, filteredList, selection, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { code } from './snippets'
 
@@ -31,7 +31,7 @@ interface Service {
   load: number
 }
 
-export default controller((_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ControllerScope<Scope>) => {
     const people = signal<Person[]>([
       { id: 1, name: 'Ada Lovelace', team: 'Engines', status: 'active' },
       { id: 2, name: 'Grace Hopper', team: 'Compilers', status: 'active' },

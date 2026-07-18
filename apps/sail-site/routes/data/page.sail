@@ -5,12 +5,12 @@
 // signals read in the call ARGS are tracked deps — bumping either mints a
 // fresh key, so the state walks through loading again (that is the refetch).
 
-import { controller, query, signal, type ViewScope } from '@ship/sail-runtime'
+import { controller, query, signal, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { usersDemo } from './users-demo'
 import { code } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => {
+export default controller((_ctx: ControllerScope<Scope>) => {
     const attempt = signal(1)
     const sabotage = signal(false)
     const users = query(() => usersDemo.users.list({ attempt: attempt(), fail: sabotage() }))

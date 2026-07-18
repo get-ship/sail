@@ -9,11 +9,11 @@
 // /ai/authoring — the agent authoring loop, adapted from the
 // 09-agent-loop tutorial lesson. Snippets live in ./snippets so the literal
 // loop-diagram ASCII never leaks into the inferred scope.
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { loopDiagram } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => ({ loopDiagram }))
+export default controller((_ctx: ControllerScope<Scope>) => ({ loopDiagram }))
 </controller>
 
 <article sx="max-w-breakpoint-tablet mx-auto">

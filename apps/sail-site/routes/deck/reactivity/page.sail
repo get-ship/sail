@@ -7,11 +7,11 @@
   <code-block> (strings from ./snippets).
 -->
 <controller>
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { code } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => ({ code }))
+export default controller((_ctx: ControllerScope<Scope>) => ({ code }))
 </controller>
 
 <article sx="max-w-breakpoint-tablet mx-auto">

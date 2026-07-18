@@ -2,11 +2,11 @@
   /deck/routing — adapted from packages/deck/docs/routes/routing/page.sail.
 -->
 <controller>
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { routeTree, colocated } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => ({ routeTree, colocated }))
+export default controller((_ctx: ControllerScope<Scope>) => ({ routeTree, colocated }))
 </controller>
 
 <article sx="max-w-breakpoint-tablet mx-auto">

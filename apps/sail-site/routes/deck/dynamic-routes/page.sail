@@ -2,11 +2,11 @@
   /deck/dynamic-routes — adapted from packages/deck/docs/routes/dynamic-routes/page.sail.
 -->
 <controller>
-import { controller, type ViewScope } from '@ship/sail-runtime'
+import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { routeExample, readExample } from './snippets'
 
-export default controller((_ctx: ViewScope<Scope>) => ({ routeExample, readExample }))
+export default controller((_ctx: ControllerScope<Scope>) => ({ routeExample, readExample }))
 </controller>
 
 <article sx="max-w-breakpoint-tablet mx-auto">

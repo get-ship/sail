@@ -25,7 +25,7 @@ import {
   signal,
   bindHtml,
   type Action,
-  type ViewScope,
+  type ControllerScope,
 } from '@ship/sail-runtime'
 import { ensureWasm, makeCompile } from '@ship/sail-viewer/wasm-bootstrap'
 import type { Scope } from './page.sail'
@@ -72,7 +72,7 @@ const prose: Action<string> = (node, html) => {
   }
 }
 
-export default controller((ctx: ViewScope<Scope>) => {
+export default controller((ctx: ControllerScope<Scope>) => {
     const lesson = derived(() => BY_SLUG[ctx.route.params.slug() ?? ''])
     const nextSlug = derived(() => lesson()?.next ?? '')
 
