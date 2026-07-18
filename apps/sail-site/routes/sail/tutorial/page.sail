@@ -48,7 +48,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   {/for}
 
   <row sx="mt-8 pt-4 border-t border-t-border">
-    <a variant="default" href="/sail/reactivity">← State</a>
+    <a variant="default" href="/sail/language/state">← State</a>
     <a variant="solid" tone="primary" href="/sail/tutorial/01-a-page-is-markup">Start lesson 1 →</a>
   </row>
 </column>

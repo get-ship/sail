@@ -108,7 +108,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
 
   <row sx="mt-8 pt-4 border-t border-t-border">
-    <a variant="default" href="/sail/reactivity">← Reactivity</a>
+    <a variant="default" href="/sail/language/state">← Reactivity</a>
     <a variant="default" href="/components">Component library →</a>
   </row>
 </column>

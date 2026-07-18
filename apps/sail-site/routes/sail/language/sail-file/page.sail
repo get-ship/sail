@@ -83,7 +83,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     Read the effect closely and you have the whole reactive model: it tracks
     <code>ctx.playing()</code>, so pausing re-runs it, and its cleanup stops
-    the clock. Signals in depth: <a href="/sail/reactivity">State</a>.
+    the clock. Signals in depth: <a href="/sail/language/state">State</a>.
   </p>
 
   <h2>The flow</h2>
@@ -119,7 +119,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
 
   <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
-    <a variant="solid" tone="primary" href="/sail/reactivity">State →</a>
+    <a variant="solid" tone="primary" href="/sail/language/state">State →</a>
     <a variant="default" href="/sail/templates">Templates</a>
     <a variant="default" href="/sail/styling">Styling</a>
   </row>

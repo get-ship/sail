@@ -4,6 +4,17 @@
 // (signal/derived/effect/batch/untrack); the .sail template compiles paired
 // with a controller declaring `count`.
 export const code = {
+  store: `import { defineStore, useStore, signal, derived } from '@ship/sail-runtime'
+
+export const cart = defineStore('shop.cart', () => {
+  const items = signal<Item[]>([])
+  const total = derived(() => items().reduce((s, i) => s + i.price, 0))
+  const add = (item: Item) => items.set((l) => [...l, item])
+  return { items, total, add }
+})
+
+// in any controller:
+const { items, total, add } = useStore(cart)`,
   graph: `<controller>
 import { controller, signal, derived, effect } from '@ship/sail-runtime'
 export default controller(() => {

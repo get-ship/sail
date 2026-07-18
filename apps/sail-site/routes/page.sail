@@ -146,8 +146,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         </card>
       </a>
 
-      <!-- REACTIVITY → /sail/reactivity : a live signal counter -->
-      <a href="/sail/reactivity" sx="block no-underline min-w-0">
+      <!-- REACTIVITY → /sail/language/state : a live signal counter -->
+      <a href="/sail/language/state" sx="block no-underline min-w-0">
         <card interactive sx="h-full overflow-hidden">
           <column gap="4" sx="h-full">
             <column gap="1">

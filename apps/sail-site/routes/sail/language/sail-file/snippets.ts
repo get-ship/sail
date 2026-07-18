@@ -2,10 +2,21 @@
 // (apps/sail-site/src/demo-player/demo-player.sail, the intro's player),
 // walked part by part. Never the whole file at once (ruling: no code dumps).
 export const code = {
-  shape: `<scope>       …the contract: props, variants, types… </scope>
-<controller>  …behavior: TypeScript, signals…          </controller>
+  shape: `<!-- the contract: props, variants, types -->
+<scope>
+  props: {
+    playing = true
+  }
+</scope>
 
-…the template: markup…`,
+<!-- behavior: TypeScript, signals -->
+<controller>
+import { controller } from '@ship/sail-runtime'
+export default controller(() => ({}))
+</controller>
+
+<!-- the template: markup -->
+<card>Signals in the Rain</card>`,
 
   template: `<card sx="p-3 w-full">
   <row gap="3" align="center" nowrap>
