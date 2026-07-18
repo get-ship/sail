@@ -30,6 +30,18 @@ function persist(): void {
   }
 }
 
+// The provider declares its OWN key on the SAIL-local `Clients` port — the
+// framework names no host shape. This is what makes `ctx.clients.store` (and
+// the bare `store` the runtime spreads into scope) PRECISELY typed rather than
+// an ambient any: since #109 the generated `Scope` types each declared client
+// through this port, so an app that exposes a name at the clients seam and
+// never augments here gets a type error at the read, not silence.
+declare module '@ship/sail-runtime' {
+  interface Clients {
+    store: typeof store
+  }
+}
+
 export const store = {
   /** Survives client-side navigation + reload (lives above the router). */
   visits,
