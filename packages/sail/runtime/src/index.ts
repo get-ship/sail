@@ -116,6 +116,15 @@ export type { StoreDef, StoreInstance } from './store'
 export { setHostContext, hostContext } from './host-context'
 export type { HostContext } from './host-context'
 
+// The sanctioned runtime theme-write hatch — `theme.preview/commit/reset/
+// current`. A plain ambient API (NOT ctx-scoped): a theme write is a GLOBAL
+// `:root` write of DECLARED tokens, the `:root`-targeting sibling of the
+// compiler's signal→`(--x)` reflection. `setThemePersist` is the host
+// persistence seam (dev file-write / live backend); `hydrateTheme` is the
+// optional live-persistence boot step. See theme.ts.
+export { theme, setThemePersist, hydrateTheme, clearThemeOverrides } from './theme'
+export type { Theme, ThemePatch, ThemeTokenName, ThemeState, ThemePersist } from './theme'
+
 export { ref, attachRef } from './ref'
 export type { Ref } from './ref'
 
