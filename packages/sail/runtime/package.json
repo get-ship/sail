@@ -26,7 +26,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "bench": "vitest bench --run"
+    "bench": "vitest bench --run",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@ship/tokens": "workspace:*",
@@ -34,6 +35,7 @@
     "motion-dom": "^12.42.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@ship/test-setup": "workspace:*",
     "@tanstack/virtual-core": "^3.16.1",
     "@vitest/browser": "^4.1.5",
