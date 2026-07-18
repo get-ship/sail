@@ -30,13 +30,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <column sx="max-w-breakpoint-tablet mx-auto" gap="5">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Building</p>
-  <h1>Live data</h1>
+  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Concepts</p>
+  <h1>Data</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    Asynchronous data has three states — loading, error, and loaded — and
-    forgetting one is where interfaces rot. Sail makes all three explicit.
-    <code>query()</code> turns a client call into a reactive state signal, and
-    the template renders each state on its own terms.
+    Data that arrives over the network is in one of three states at any
+    moment: still loading, failed, or loaded. <code>query()</code> turns an
+    async call into a signal that carries which state it is in, and the
+    template renders each state explicitly — including the two that are easy
+    to forget.
   </p>
 
   <h2>The three states, live</h2>
@@ -101,14 +102,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.server}></code-block>
 
   <p sx="border border-border border-l-3 border-l-primary rounded-md p-3 px-4 text-sm text-muted-foreground">
-    <strong>The state is the contract.</strong> Because the loaded value is only
-    reachable through <code>kind === 'ok'</code>, a template physically can't
-    render data it hasn't confirmed has arrived. The loading spinner and the
-    error message aren't good manners — they're the only way through.
+    The loaded value is only reachable through <code>kind === 'ok'</code>,
+    so a template cannot render data it hasn't confirmed has arrived —
+    handling loading and error is built into the shape, not left to
+    discipline.
   </p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border">
-    <a variant="default" href="/sail/language/state">← Reactivity</a>
-    <a variant="default" href="/components">Component library →</a>
+  <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
+    <a variant="default" href="/sail/language/actions">← Actions</a>
+    <a variant="solid" tone="primary" href="/sail/language/theming">Theming →</a>
   </row>
 </column>

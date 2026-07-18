@@ -213,7 +213,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <em>exactly what you pass it</em> — its arguments, and the primitives.
     It cannot see the caller's template, its props, or its element. That
     boundary is what makes one reusable anywhere. Logic that needs the DOM
-    is the other kind of reuse — an <a href="/sail/behavior">action</a>,
+    is the other kind of reuse — an <a href="/sail/language/actions">action</a>,
     which is handed the element explicitly.
   </p>
 

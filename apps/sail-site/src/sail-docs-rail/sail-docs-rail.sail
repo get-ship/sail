@@ -17,28 +17,26 @@ export default controller(() => {
 <row nowrap align="stretch">
   {#if !workbench()}
     <navbar placement="rail" bordered sticky offset="14">
-      <label>Start here</label>
+      <label>Getting started</label>
       <a href="/sail/overview" aria-current={path() === '/sail/overview' ? 'page' : null}>Introduction</a>
       <a href="/sail/getting-started" aria-current={path() === '/sail/getting-started' ? 'page' : null}>Installation</a>
       <a href="/sail/why" aria-current={path() === '/sail/why' ? 'page' : null}>Why Sail</a>
       <a href="/sail/tutorial" aria-current={path().startsWith('/sail/tutorial') ? 'page' : null}>Tutorial</a>
       <a href="/sail/showcase" aria-current={path() === '/sail/showcase' ? 'page' : null}>Showcase</a>
 
-      <label>Components</label>
-      <a href="/sail/elements" aria-current={path() === '/sail/elements' ? 'page' : null}>Using components</a>
-      <a href="/sail/theming" aria-current={path() === '/sail/theming' ? 'page' : null}>Theming</a>
-      <a href="/sail/behavior" aria-current={path() === '/sail/behavior' ? 'page' : null}>Actions</a>
-
-      <label>The language</label>
+      <label>Concepts</label>
       <a href="/sail/language/sail-file" aria-current={path() === '/sail/language/sail-file' ? 'page' : null}>Components</a>
       <a href="/sail/language/state" aria-current={path() === '/sail/language/state' ? 'page' : null}>State</a>
       <a href="/sail/language/templates" aria-current={path() === '/sail/language/templates' ? 'page' : null}>Templates</a>
       <a href="/sail/language/styling" aria-current={path() === '/sail/language/styling' ? 'page' : null}>Styling</a>
       <a href="/sail/language/layout" aria-current={path() === '/sail/language/layout' ? 'page' : null}>Layout</a>
       <a href="/sail/language/motion" aria-current={path() === '/sail/language/motion' ? 'page' : null}>Motion</a>
+      <a href="/sail/language/actions" aria-current={path() === '/sail/language/actions' ? 'page' : null}>Actions</a>
+      <a href="/sail/language/data" aria-current={path() === '/sail/language/data' ? 'page' : null}>Data</a>
+      <a href="/sail/language/theming" aria-current={path() === '/sail/language/theming' ? 'page' : null}>Theming</a>
 
-      <label>Building</label>
-      <a href="/sail/data" aria-current={path() === '/sail/data' ? 'page' : null}>Data &amp; forms</a>
+      <label>Guide</label>
+      <a href="/sail/elements" aria-current={path() === '/sail/elements' ? 'page' : null}>Using components</a>
 
       <label>Reference</label>
       <a href="/sail/reference" aria-current={path() === '/sail/reference' ? 'page' : null}>API reference</a>

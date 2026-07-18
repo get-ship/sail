@@ -268,6 +268,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
     <a variant="default" href="/sail/language/layout">← Layout</a>
-    <a variant="solid" tone="primary" href="/sail/behavior">Behavior →</a>
+    <a variant="solid" tone="primary" href="/sail/language/actions">Actions →</a>
   </row>
 </column>

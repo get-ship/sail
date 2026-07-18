@@ -15,7 +15,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <column sx="max-w-breakpoint-tablet mx-auto" gap="5">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Components</p>
+  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Guide</p>
   <h1>Using components</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
     The component library is part of the language: buttons, dialogs, tables,
@@ -96,8 +96,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <a href="/sail/reference">reference</a> covers the mechanics.
   </p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
-    <a variant="default" href="/components">← Component library</a>
-    <a variant="solid" tone="primary" href="/sail/language/layout">Layout →</a>
+  <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
+    <a variant="default" href="/sail/language/theming">← Theming</a>
+    <a variant="solid" tone="primary" href="/components">Component browser →</a>
   </row>
 </column>

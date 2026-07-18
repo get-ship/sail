@@ -32,7 +32,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <column sx="max-w-breakpoint-tablet mx-auto">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Components</p>
+  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Concepts</p>
   <h1>Theming</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
     A theme is a complete aesthetic — palette, surfaces, radii, shadows,
@@ -68,11 +68,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     No component in the framework names a color. A card reads
     <code>--surface-1</code>; a primary button reads <code>--primary</code>;
-    a destructive alert reads the tone contract. The theme defines those
-    tokens, so applying one repaints every component at once — including
-    components written long before the theme existed. That is the deal:
-    components read tokens, themes write them, and neither knows the
-    other's name.
+    a destructive alert reads its tone tokens. A theme is the set of values
+    behind those names, so applying one restyles every component at once —
+    including components written long before the theme existed. Components
+    read tokens, themes define them, and neither knows the other's name.
   </p>
 
   <h2>The token ladder</h2>
@@ -108,24 +107,22 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <h2>Where themes come from</h2>
   <p>
-    A theme is a <strong>token file</strong> — the nine built-ins are exactly
-    that, checked into <code>@ship/tokens</code>. You author one with the
-    theme editor, which generates the file: pick a palette, a radius scale, a
-    shadow voice, preview every component live, export. You never hand-write
-    global CSS — that is precisely the escape hatch this system closes, and a
-    theme written as loose CSS is a theme the tooling can't check, preview,
-    or migrate.
+    A theme is a <strong>token file</strong> — a data file that assigns a
+    value to each token name. The nine built-ins are exactly that, checked
+    into <code>@ship/tokens</code>. To make your own, start from the
+    built-in closest to what you want, copy its file, and change the values;
+    because a theme is data rather than CSS rules, the tooling can check it,
+    and nothing in it can conflict with a component's own styles.
   </p>
   <p>
-    The same discipline is why themes compose: the product accents on this
-    site (the switch to violet on Deck pages) are a second, smaller token
-    slice riding alongside the theme — tokens layering on tokens, with the
-    theme owning surfaces and the accent owning brand. No rule ever fights
-    another rule.
+    Token files also layer. The product accents on this site — the shift to
+    violet on the Deck pages — are a second, smaller token file applied on
+    top of the theme: the theme defines the surfaces, the accent redefines a
+    few brand tokens, and every component keeps reading the same names.
   </p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
-    <a variant="default" href="/sail/language/styling">← Styling</a>
-    <a variant="solid" tone="primary" href="/sail/language/motion">Animation →</a>
+  <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
+    <a variant="default" href="/sail/language/data">← Data</a>
+    <a variant="solid" tone="primary" href="/sail/reference">Reference →</a>
   </row>
 </column>

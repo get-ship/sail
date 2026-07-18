@@ -128,8 +128,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         </card>
       </a>
 
-      <!-- THEMING → /sail/theming : pulsing repaint swatches -->
-      <a href="/sail/theming" sx="block no-underline min-w-0">
+      <!-- THEMING → /sail/language/theming : pulsing repaint swatches -->
+      <a href="/sail/language/theming" sx="block no-underline min-w-0">
         <card interactive sx="h-full overflow-hidden">
           <column gap="4" sx="h-full">
             <column gap="1">

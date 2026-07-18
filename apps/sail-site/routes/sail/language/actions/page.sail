@@ -1,0 +1,85 @@
+<!--
+  /sail/language/actions — Concepts chapter. What an action is, how to attach
+  one, feel one work, how to write one, and the fact that the standard
+  library is built on the same mechanism. Voice: explain, don't perform.
+-->
+
+<controller>
+import { controller, type ControllerScope } from '@ship/sail-runtime'
+import type { Scope } from './page.sail'
+import { code } from './snippets'
+
+export default controller((_ctx: ControllerScope<Scope>) => {
+  return { code }
+})
+</controller>
+
+<column sx="max-w-breakpoint-tablet mx-auto" gap="5">
+  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Concepts</p>
+  <h1>Actions</h1>
+  <p sx="text-lg text-muted-foreground leading-relaxed">
+    An action is a function that receives a DOM element, does something to
+    it — attach a listener, start an observer, wire a third-party widget —
+    and returns the cleanup that undoes it. <code>use:</code> attaches one
+    to an element. This is how Sail code touches the DOM directly.
+  </p>
+  <code-block code={code.attach}></code-block>
+
+  <h2>One working</h2>
+  <p>
+    <code>use:autosize</code> is a built-in. Type a few lines and the box
+    grows to fit — the action measures the content and sets the height, and
+    when the element leaves the page, the action's cleanup runs with it:
+  </p>
+  <textarea use:autosize placeholder="Type a few lines here…" sx="max-w-panel-max-w-sm"></textarea>
+
+  <h2>Why there is no ref</h2>
+  <p>
+    Many frameworks give you a <em>ref</em>: an object you attach to an
+    element, store somewhere, and read later when you want to touch the DOM.
+    That splits one job across three places — the attachment, the storage,
+    and the code that finally uses it — and the cleanup is yours to
+    remember.
+  </p>
+  <p>
+    An action keeps the job in one place. The element arrives as the
+    function's argument, the work happens right there, and the cleanup is
+    the return value. There is nothing to store and nothing to forget to
+    release.
+  </p>
+
+  <h2>Writing one</h2>
+  <p>
+    An action is a plain function — there is no registry to add it to and
+    no interface to implement:
+  </p>
+  <code-block code={code.author}></code-block>
+  <p>
+    An action can also take a parameter. When the parameter is reactive,
+    the action's <code>update</code> runs each time the value changes —
+    this is how a positioning action follows its anchor:
+  </p>
+  <code-block code={code.param}></code-block>
+
+  <h2>The standard library uses the same mechanism</h2>
+  <p>
+    Built-in components get their behavior the same way. A
+    <code>&lt;combobox&gt;</code> is markup plus <code>use:combobox</code>;
+    tabs, menus, and dialogs follow the same pattern. There is no private
+    API underneath the standard library — what it uses is what you can
+    write.
+  </p>
+  <code-block code={code.stdlib}></code-block>
+
+  <p>
+    The boundary with <a href="/sail/language/state">compositions</a> is
+    worth restating: a composition builds state and has no access to the
+    DOM; an action receives an element and works on it. If the reusable
+    thing you are writing needs an element, it is an action.
+  </p>
+
+  <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
+    <a variant="default" href="/sail/language/motion">← Motion</a>
+    <a variant="solid" tone="primary" href="/sail/language/data">Data →</a>
+  </row>
+</column>

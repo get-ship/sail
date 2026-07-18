@@ -104,7 +104,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     Two more blocks — <code>&#123;#while-loading&#125;</code> and
     <code>&#123;#while-error&#125;</code> — exist for async state and belong
-    to the <a href="/sail/data">data story</a>.
+    to the <a href="/sail/language/data">data story</a>.
   </p>
 
   <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
