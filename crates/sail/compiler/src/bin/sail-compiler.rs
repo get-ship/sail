@@ -626,12 +626,44 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         md,
         "```\n<card motion:view={{{{ opacity: 'fade', translate-y: 'spring:gentle' }}}}>reveal on scroll</card>\n<row motion:enter={{{{ opacity: 'fade', stagger: '40ms' }}}}>cascades in</row>\n<button motion:press={{{{ scale: 'press' }}}}>tactile</button>\n```\n"
     );
-    let _ = writeln!(md, "PRESETS (closed set — an unknown one fails the build):\n");
+    let _ = writeln!(
+        md,
+        "PRESETS are NAMED DEFAULTS — the teachable starting point, not a cage.\nAn unknown preset NAME still fails the build, but you are never stuck waiting\nfor one to be minted:\n"
+    );
     if let Ok(db) = sail_compiler::lower::presets::load() {
         let mut names = db.known_preset_names();
         names.sort_unstable();
         let _ = writeln!(md, "{}\n", names.join(", "));
     }
+    // The calibration, stated where an author will actually read it. sx is closed
+    // because colour and spacing are theming integrity. `motion:` is the animation
+    // library's surface and numbers are native there — the alternative (a global
+    // `--duration-cinematic` token minted so ONE hero loop could say 3600ms) is
+    // the mistake this paragraph exists to prevent recurring.
+    let _ = writeln!(
+        md,
+        "INLINE VALUES — full control on any config. Unlike sx (closed: colour and\nspacing are theming integrity), `motion:` takes real values, because a duration\nis a number of milliseconds and an easing is a curve.\n\n\
+         ONE RULE: **quoted is a literal, unquoted is code.**\n\n\
+         - `duration: 3600` / `delay: 200` — a bare number is MILLISECONDS.\n\
+         - `easing: [0.6, 0, 0.2, 1]` — an inline cubic-bezier. Or a keyword:\n  \
+           `easing: 'in-out'` / `'out'` / `'in'` / `'linear'`.\n\
+         - `translate-x: {{ from: 0, to: '120px' }}` — inline magnitudes per channel. A\n  \
+           bare number is the channel's native unit (px translate, deg rotate,\n  \
+           unitless scale/opacity); a quoted string carries its own (`'-12%'`).\n\
+         - `scale: {{ preset: 'pulse', to: 1.9 }}` — start from a preset, override a field.\n\
+         - Timing sits at the config level or on one channel; the channel wins.\n\
+         - SIGNALS: any field may be an expression — `duration: speed()`,\n  \
+           `translate-x: {{ to: dist() }}`. A change re-creates the animation with the\n  \
+           new values, and it is cleaned up on dispose.\n"
+    );
+    let _ = writeln!(
+        md,
+        "```\n<card motion:loop={{{{ translate-x: {{ from: 0, to: '120px' }}, rotate: {{ to: '15deg' }},\n                     duration: 3600, easing: [0.6, 0, 0.2, 1] }}}}>the whole hero, inline</card>\n```\n"
+    );
+    let _ = writeln!(
+        md,
+        "TWO LANES, one story. `motion:` is reactive CONFIG — a signal says what the\nanimation IS, and changing it makes a new animation (WAAPI, compositor-driven;\nuse it for ambient loops and lifecycle). A signal driving a CONTINUOUS per-frame\nvalue is the other lane: derive it in the `<controller>` and reflect it through\nsx with `(--name)`. Do not scrub a value frame-by-frame through `motion:` — each\nchange there costs an animation teardown.\n"
+    );
     // The three things an author reaches for that the skill never mentioned: how
     // behavior attaches, where state comes from, and which door to import through.
     let _ = writeln!(md, "## Behavior — `use:` attaches, functions compose\n");
