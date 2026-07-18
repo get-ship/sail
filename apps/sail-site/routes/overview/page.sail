@@ -37,7 +37,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column sx="max-w-breakpoint-desktop mx-auto" gap="6">
+<column sx="max-w-breakpoint-tablet mx-auto" gap="6">
   <column sx="max-w-breakpoint-tablet" gap="3">
     <p sx="font-mono text-xs uppercase tracking-wide text-accent">Introduction</p>
     <h1>SAIL</h1>
