@@ -48,6 +48,7 @@ fn compile_fixture(f: &Fixture) -> String {
         source_path: Some(path),
         component_meta: f.component_meta.clone(),
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         ..CompileOpts::default()
     };
     let out = compile(&source, opts).expect("compile");
@@ -127,6 +128,7 @@ fn bind_this_button_direct_emits_hydrate_ref() {
         source_path: Some(path),
         component_meta: None,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
@@ -190,6 +192,7 @@ fn for_static_body_omits_v_sentinel() {
         source_path: Some(path),
         component_meta: None,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
@@ -248,6 +251,7 @@ fn for_body_referencing_index_refreshes_on_row_reuse() {
         source_path: None,
         component_meta: None,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
@@ -315,6 +319,7 @@ fn for_static_text_inlines_text_content() {
         source_path: Some(path),
         component_meta: None,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
@@ -345,6 +350,7 @@ fn for_static_attr_inlines_set_attribute() {
         source_path: Some(path),
         component_meta: None,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
@@ -375,6 +381,7 @@ fn for_dynamic_mixed_inlines_only_static() {
         source_path: Some(path),
         component_meta: None,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
@@ -402,6 +409,7 @@ fn for_render_closure_emits_update_field() {
         source_path: Some(path),
         component_meta: None,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
@@ -449,6 +457,7 @@ fn route_view_reads_route_from_ctx() {
         source_path: Some(path),
         component_meta: None,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
@@ -476,6 +485,7 @@ fn routeless_view_omits_route_import() {
         source_path: Some(path),
         component_meta: None,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
@@ -504,6 +514,7 @@ fn comment_nodes_not_emitted() {
         source_path: Some(path),
         component_meta: None,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
@@ -528,6 +539,7 @@ fn whitespace_text_nodes_dropped_between_elements() {
         source_path: Some(path),
         component_meta: None,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
@@ -563,6 +575,7 @@ fn reflect_empty_slot_emits_bind_slot_empty_call() {
 
         }),
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
@@ -602,6 +615,7 @@ fn reflect_empty_slot_in_conditional_threads_container() {
 
         }),
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
@@ -638,6 +652,7 @@ fn ship_button_emits_cem() {
         source_path: Some(path),
         component_meta: Some(ComponentMeta { name: "ship-button-test".into() }),
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
@@ -660,6 +675,7 @@ fn schema_emitted_for_each_fixture() {
             source_path: Some(path),
             component_meta: fx.component_meta.clone(),
             emit_dts: false,
+            scope_capabilities: Vec::new(),
             emit_component_imports: false,
         lint_overrides: Vec::new(),
         };
@@ -685,6 +701,7 @@ fn meta_sidecar_emitted_for_each_fixture() {
             source_path: Some(path),
             component_meta: fx.component_meta.clone(),
             emit_dts: false,
+            scope_capabilities: Vec::new(),
             emit_component_imports: false,
         lint_overrides: Vec::new(),
         };

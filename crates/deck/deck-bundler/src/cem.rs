@@ -70,6 +70,7 @@ pub fn write_pack_cem(pack_root: &Path) -> Result<Option<PathBuf>> {
                 name: stem.clone(),
             }),
             emit_dts: false,
+            scope_capabilities: Vec::new(),
             emit_component_imports: false,
             // Language policy comes from the component's own sail.config.json
             // walk-up — deck never sets or relaxes it.

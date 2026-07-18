@@ -37,6 +37,7 @@ fn opts(name: &str) -> CompileOpts {
         source_path: Some(PathBuf::from(format!("/x/{name}.sail"))),
         component_meta: Some(ComponentMeta { name: name.to_string() }),
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     }

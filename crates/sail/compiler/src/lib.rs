@@ -134,6 +134,14 @@ pub struct CompileOpts {
     /// params, passed IN — the sail compiler never sniffs the filesystem
     /// for a routing convention it does not own.
     pub route_params: Option<Vec<String>>,
+    /// HOST GRANT: the capabilities the host puts on this file's view scope —
+    /// the app manifest's declared clients plus whatever context the host
+    /// injects (deck merges its own `route`/`navigate` in). Emitted as typed
+    /// members of the generated `Scope` (see `emit::dts::ScopeCapability`), so
+    /// a controller reads `ctx.route` / `ctx.api` precisely and a name the app
+    /// never declared is a type error. Empty by default: a file compiled with
+    /// no host context gets no ambient members.
+    pub scope_capabilities: Vec<emit::dts::ScopeCapability>,
     /// Emit a `.sail.d.ts` declaration file alongside the JS module.
     /// Defaults to `true`. Pass `false` (via `--no-dts`) to suppress.
     pub emit_dts: bool,
@@ -187,6 +195,7 @@ impl Default for CompileOpts {
             component_meta: None,
             route_params: None,
             emit_dts: true,
+            scope_capabilities: Vec::new(),
             emit_component_imports: false,
             lint_overrides: Vec::new(),
         }
@@ -405,7 +414,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     let dts = if opts.emit_dts {
         // Reuse the inline controller resolved above — one source, no re-read,
         // no paired-file fallback.
-        Some(emit::dts::emit_dts(&program, controller.as_ref()))
+        Some(emit::dts::emit_dts(&program, controller.as_ref(), &opts.scope_capabilities))
     } else {
         None
     };

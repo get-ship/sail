@@ -147,6 +147,16 @@ pub(crate) fn used_clients(program: &Program, manifest: &AppManifest) -> Vec<Str
     used
 }
 
+/// The manifest's clients as SCOPE CAPABILITIES — the typed members
+/// `emit_dts` writes into the generated `Scope`. Every declared client is typed
+/// through the SAIL-local `Clients` port (`Clients['api']`), which is the only
+/// type SAIL owns here; a host whose injected context carries a different type
+/// (deck's `route`, say) overrides its own entries after this call. The
+/// compiler still names no provider.
+pub fn scope_capabilities(manifest: &AppManifest) -> Vec<crate::emit::dts::ScopeCapability> {
+    manifest.clients.keys().map(crate::emit::dts::ScopeCapability::client).collect()
+}
+
 /// Emit the synthetic controller + render for `program`. Pure
 /// transformation. `controller_specifier` is the render's import path back
 /// to the emitted controller (e.g. `"./page.synthetic.controller.ts"`).

@@ -114,6 +114,24 @@ pub async fn synthesize_and_bundle_with(
     let out =
         emit_synthetic(&program, &manifest, authored.as_ref(), "./page.synthetic.controller.ts", mode, None)
             .map_err(|e| anyhow!("synthesize: {}", e.render(&source)))?;
+    // The typed `Scope` companion, beside the synthesized pair. An authored
+    // controller annotates itself `(ctx: Scope)` off `import type { Scope } from
+    // './page.sail'`, and TS resolves that to `page.sail.d.ts` — so the members
+    // deck grants (`route`, `navigate`) and the app's declared clients are typed
+    // where the controller reads them, instead of being bolted on by a
+    // hand-maintained runtime wrapper. Capabilities come from the SAME merged
+    // manifest the synthetic controller imports from, so the two cannot drift.
+    // (No `ParsedController` here: controller scope-factory fields are omitted
+    // from `Scope` by design — they are typed solely by the controller's own
+    // inferred return.)
+    std::fs::write(
+        build_dir.join("page.sail.d.ts"),
+        sail_compiler::emit::dts::emit_dts(
+            &program,
+            None,
+            &deck_core::host_context::host_context_capabilities(&manifest),
+        ),
+    )?;
     std::fs::write(build_dir.join("page.synthetic.controller.ts"), &out.controller_ts)?;
     std::fs::write(build_dir.join("page.render.ts"), &out.render_ts)?;
     // The SSR entry (server-DOM + host-dispatch + serialize), from the crate.

@@ -37,6 +37,7 @@ fn jsdoc_above_prop_emits_description_in_cem() {
 
         }),
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };

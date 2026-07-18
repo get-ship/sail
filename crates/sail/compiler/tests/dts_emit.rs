@@ -13,6 +13,7 @@ fn compile_dts(source: &str) -> String {
         source_path: None,
         component_meta: None,
         emit_dts: true,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
@@ -34,6 +35,7 @@ fn compile_dts_with_controller(_stem: &str, sui_src: &str, controller_ts: &str) 
         source_path: None,
         component_meta: None,
         emit_dts: true,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
 
         lint_overrides: Vec::new(),
@@ -53,6 +55,7 @@ fn compile_component_dts(source: &str) -> String {
         source_path: None,
         component_meta: Some(ComponentMeta { name: "test-el".into() }),
         emit_dts: true,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
     
             lint_overrides: Vec::new(),};
@@ -109,6 +112,7 @@ fn emit_dts_false_returns_none() {
         source_path: None,
         component_meta: None,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
     
             lint_overrides: Vec::new(),};

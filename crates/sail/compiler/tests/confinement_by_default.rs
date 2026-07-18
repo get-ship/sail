@@ -19,6 +19,7 @@ fn opts_for(path: &PathBuf) -> CompileOpts {
         source_path: Some(path.clone()),
         component_meta: Some(ComponentMeta { name: "sail-widget".to_string() }),
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Policy::overrides_for(path),
     }

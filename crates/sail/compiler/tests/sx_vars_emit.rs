@@ -22,6 +22,7 @@ fn compile_component(source: &str, controller: Option<&str>) -> Result<String, S
         source_path: None,
         component_meta: Some(ComponentMeta { name: "x-widget".to_string() }),
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };

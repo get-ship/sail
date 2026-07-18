@@ -163,6 +163,7 @@ pub fn check_synthetic_controller(
                         }),
                         route_params: None,
                         emit_dts: true,
+                        scope_capabilities: Vec::new(),
                         emit_component_imports: false,
                         lint_overrides: Vec::new(),
                     };

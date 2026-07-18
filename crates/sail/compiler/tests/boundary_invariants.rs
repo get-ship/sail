@@ -22,6 +22,7 @@ fn view_opts(setup: Option<&str>) -> CompileOpts {
         source_path: None,
         component_meta: None,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     }
@@ -35,6 +36,7 @@ fn component_opts(setup: Option<&str>) -> CompileOpts {
         source_path: None,
         component_meta: Some(ComponentMeta { name: "sail-x".into() }),
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     }

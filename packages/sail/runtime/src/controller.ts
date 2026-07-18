@@ -116,29 +116,25 @@ export type MutableState<Scope> =
   }
 
 /**
- * The shared view scope, as destructured by each controller section.
+ * The controller's scope — now IDENTICAL to the generated `Scope`.
  *
- * `Scope` — the template's own `<scope>`/`<state>`/`<data>` members —
- * plus the two HOST-PROVIDED members the mount seam injects: the
- * `clients` data port and the reactive `route` proxy. Both are typed by
- * SAIL-local ports (`./clients`, `./route-signals`); this type names no
- * host product.
+ * @deprecated Write `Scope` directly. This is an identity alias kept so the
+ * existing corpus (`controller((ctx: ControllerScope<Scope>) => …)`) keeps
+ * compiling verbatim while call sites are swept; it will be deleted.
  *
- * `route` is a `RouteSignals` whose `params.<name>` and
- * `query.<name>` are themselves signals — reading them inside a
- * `derived` body or a `<data live>` source thunk subscribes the
- * surrounding scope, so URL changes re-fire the dependent
- * computation.
+ * It used to bolt `clients` + `route` onto the generated `Scope` by hand,
+ * because `emit_dts` built `Scope` from `<prop>` / `<use-* as=>` / `<ref>`
+ * declarations only and never saw the app manifest. That hand-maintenance was
+ * visible as drift: `navigate` rode the runtime `baseScope` and `MutableState`
+ * but was missing here, and a view that declared no clients still got `clients`
+ * typed.
  *
- * NOTE (#105): there is no `ship` member. The runtime's controller scope
- * is host-agnostic; a Ship host provides its SDK as a `clients` key
- * (`declare module '@ship/sail-runtime' { interface Clients { ship: ShipSDK } }`),
- * which the mount path spreads into scope alongside `clients` itself.
+ * The compiler now emits the resolved capability list into `Scope` itself
+ * (`clients`, `route`, `navigate`, and one member per declared client — see
+ * `emit::dts::emit_dts`), so the wrapper has nothing left to add. A name a view
+ * never declared is a type error, which is the point.
  */
-export type ControllerScope<Scope = object> = Scope & {
-  clients: Clients
-  route: RouteSignals
-}
+export type ControllerScope<Scope = object> = Scope
 
 // ---------------------------------------------------------------------------
 // The controller surface — one function, one idiom

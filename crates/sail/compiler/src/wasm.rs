@@ -107,6 +107,7 @@ pub fn compile(source: &str, opts_json: &str) -> Result<JsValue, JsValue> {
         // compatible — ignored on this side).
         component_meta,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };

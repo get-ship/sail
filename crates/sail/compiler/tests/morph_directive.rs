@@ -24,6 +24,7 @@ fn compile_sui(name: &str) -> String {
         source_path: Some(path),
         component_meta: None,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
