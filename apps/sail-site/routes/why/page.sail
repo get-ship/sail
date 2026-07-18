@@ -9,10 +9,11 @@
 -->
 <column sx="max-w-breakpoint-tablet mx-auto" gap="4">
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Why Sail</p>
-  <h1>The author changed</h1>
+  <h1>Why build another framework?</h1>
 
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    Every mainstream web framework is an ergonomics project — built to fit a
+    Because the author changed. Every mainstream web framework is an
+    ergonomics project — built to fit a
     professional's hands. Hooks, hot reload, clever DX: all of it optimizes
     for a person who already knows the territory. Two things happened to that
     assumption at once. Agents started writing a large share of the code. And
