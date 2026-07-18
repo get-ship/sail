@@ -109,6 +109,16 @@
       "iterations": "infinite",
       "direction": "normal",
       "$doc": "translateX 0→+50% — the <sail-band direction=\"reverse\"> one-direction loop. Same px/s derivation as `marquee`."
+    },
+    "spin": {
+      "kind": "tween",
+      "from": 0.0,
+      "to": 360.0,
+      "duration_token": "duration-glacial",
+      "easing": "linear",
+      "iterations": "infinite",
+      "direction": "normal",
+      "$doc": "rotate 0deg→360deg, one direction, infinite — a slow-spinning logo/mark. NOT alternate: a spin goes one way, it does not ping-pong. Distinct from the spinner ring's fixed 0.7s spin, which is a component-owned CSS animation, not this preset."
     }
   },
 
@@ -117,7 +127,8 @@
     "fast": "duration-fast",
     "medium": "duration-medium",
     "slow": "duration-slow",
-    "deliberate": "duration-deliberate"
+    "deliberate": "duration-deliberate",
+    "glacial": "duration-glacial"
   },
 
   "easing_tokens": {

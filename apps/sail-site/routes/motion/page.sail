@@ -196,6 +196,12 @@ export default controller((_ctx: ViewScope<Scope>) => {
   </row>
   <code-block code={code.loop}></code-block>
 
+  <p sx="text-sm text-muted-foreground">continuous rotate — one direction, never ping-pongs</p>
+  <row gap="3" align="center" sx="min-h-9">
+    <div data-testid="spin-demo" sx="w-8 h-8 rounded-md bg-primary" motion:loop={{ rotate: 'spin' }}></div>
+  </row>
+  <code-block code={code.spin}></code-block>
+
   <h2>The vocabulary</h2>
   <p>
     Small on purpose, and enforced: an unknown trigger or preset is a compile

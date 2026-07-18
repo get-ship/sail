@@ -23,6 +23,15 @@ async function readTranslate(locator: Locator): Promise<string> {
   return locator.evaluate((el) => getComputedStyle(el).translate)
 }
 
+/** Parse the computed `rotate` shorthand (`"none"` or `"Ndeg"`) into a
+ *  plain degree number, normalized to `[0, 360)`. */
+async function readRotateDeg(locator: Locator): Promise<number> {
+  const raw = await locator.evaluate((el) => getComputedStyle(el).rotate)
+  if (raw === 'none') return 0
+  const deg = parseFloat(raw)
+  return ((deg % 360) + 360) % 360
+}
+
 /** Sample an element's computed `translate` once, wait 600ms, sample
  *  again. The caller is expected to have already let ambient `loop`
  *  motions run past their initial mount/enter settle (~3s) before
@@ -60,6 +69,42 @@ test('motion page: remove-panel demo holds the card through its exit animation, 
 
   const invalidKeyframeWarnings = consoleMessages.filter((m) => m.includes('Invalid keyframe'))
   expect(invalidKeyframeWarnings).toEqual([])
+})
+
+test('/motion page: spin preset rotates continuously, one direction, never ping-pongs', async ({ page }) => {
+  const motionWarnings: string[] = []
+  page.on('console', (msg) => {
+    if (msg.text().includes('[sail/motion]')) motionWarnings.push(msg.text())
+  })
+
+  await page.goto('/motion', { waitUntil: 'domcontentloaded' })
+
+  const spinner = page.getByTestId('spin-demo')
+  await expect(spinner).toBeVisible()
+
+  // Sample every 500ms across 2.5s. `motion:loop={{ rotate: 'spin' }}`
+  // is a 14s-ish linear spin, so within this window the raw degree
+  // readings never wrap past 360 — no need to unwrap the samples.
+  const samples: number[] = []
+  for (let i = 0; i < 6; i++) {
+    samples.push(await readRotateDeg(spinner))
+    if (i < 5) await page.waitForTimeout(500)
+  }
+
+  // Advanced: the rotation at t+2s differs from t (RED/GREEN — a dead
+  // loop would report the same value at every sample, exactly like the
+  // translate-x/y-loop-dead bug this file's header describes).
+  expect(samples[5]).not.toBe(samples[0])
+
+  // One direction: each consecutive sample is >= the last (monotonic,
+  // modulo the 14s period this window doesn't reach) — a ping-pong
+  // (direction: 'alternate') would show the sequence reverse partway
+  // through instead of climbing the whole way.
+  for (let i = 1; i < samples.length; i++) {
+    expect(samples[i]).toBeGreaterThanOrEqual(samples[i - 1]!)
+  }
+
+  expect(motionWarnings).toEqual([])
 })
 
 test('showcase page: animates with zero console errors', async ({ page }) => {

@@ -698,6 +698,7 @@ fn duration_token_to_ms(token: &str) -> f64 {
         "medium" => 180.0,
         "slow" => 280.0,
         "deliberate" => 420.0,
+        "glacial" => 14000.0,
         _ => 180.0,
     }
 }
