@@ -13,7 +13,7 @@ const WIZARD = `
   <button on:click={() => step.set(1)}>Start</button>
 {:else}
   <h2>Details</h2>
-  <p class="preview">{name()}</p>
+  <p>{name()}</p>
   <label for="nm">Name</label>
   <input id="nm" on:input={(e) => name.set(e.target.value)} />
   <h3>Theme</h3>
@@ -21,7 +21,7 @@ const WIZARD = `
     <button on:click={() => theme.set('Light')}>Light</button>
     <button on:click={() => theme.set('Dark')}>Dark</button>
   </div>
-  <p class="chosen">{theme()}</p>
+  <p>{theme()}</p>
   <button on:click={() => step.set(0)}>Back</button>
 {/if}
 `
