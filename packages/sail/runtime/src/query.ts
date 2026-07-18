@@ -79,9 +79,20 @@
 import { signal, effect, untrack, type Signal } from './signal'
 import { onCleanup, createChildScope, withScope } from './effect-scope'
 import { makeAbortController, type LiveState, type LiveSignal, type LiveSource } from './live-state'
-import { nativeQuery, useNativeCache, type QueryKey, type NativeCacheOpts } from './native-cache'
+import {
+  nativeQuery,
+  useNativeCache,
+  whenCacheSettled,
+  type QueryKey,
+  type NativeCacheOpts,
+} from './native-cache'
 
 export type { QueryKey } from './native-cache'
+/** SSR-only: resolves once every in-flight `query()` PULL has settled into
+ *  the cache — see `native-cache.ts`'s `whenCacheSettled` for the contract.
+ *  Re-exported here since `query()` is the public door this cache sits
+ *  under. */
+export { whenCacheSettled }
 
 // query() OWNS the loading/ok/error + push-source public face. These
 // shapes live in the leaf `live-state` module only to keep the

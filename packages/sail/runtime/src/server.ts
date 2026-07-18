@@ -32,7 +32,15 @@ export {
   debounce,
   type Signal,
 } from './signal'
-export { query, queryKeyed, mutation, __invalidate, unwrap, unwrapOr } from './query'
+export {
+  query,
+  queryKeyed,
+  mutation,
+  __invalidate,
+  unwrap,
+  unwrapOr,
+  whenCacheSettled,
+} from './query'
 export type {
   QueryOpts,
   QueryKey,

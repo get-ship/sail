@@ -32,26 +32,27 @@ impl DataPort for DemoData {
 /// Slice 2 — strip the ship-js SSR hydration text markers
 /// (`<!--sail:text:bN-->...<!--/sail-->`) so the rendered-content assertions
 /// check the visible payload, not the SSR-only hydration hint the markers
-/// carry. Char-by-char scan avoids pulling `regex` in for what is fixed-
-/// string stripping.
+/// carry.
 fn strip_markers(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
-    let bytes = s.as_bytes();
-    let mut i = 0;
-    while i < bytes.len() {
-        if s[i..].starts_with("<!--/sail-->") {
-            i += "<!--/sail-->".len();
+    // Char-safe: advance by whole UTF-8 chars so rendered content carrying
+    // multibyte glyphs (e.g. the "…" in a "Loading…" state) doesn't slice a
+    // code point mid-byte.
+    let mut rest = s;
+    while !rest.is_empty() {
+        if let Some(r) = rest.strip_prefix("<!--/sail-->") {
+            rest = r;
             continue;
         }
-        let prefix = "<!--sail:text:b";
-        if s[i..].starts_with(prefix)
-            && let Some(end_rel) = s[i + prefix.len()..].find("-->")
+        if let Some(after) = rest.strip_prefix("<!--sail:text:b")
+            && let Some(end_rel) = after.find("-->")
         {
-            i += prefix.len() + end_rel + "-->".len();
+            rest = &after[end_rel + "-->".len()..];
             continue;
         }
-        out.push(bytes[i] as char);
-        i += 1;
+        let ch = rest.chars().next().unwrap();
+        out.push(ch);
+        rest = &rest[ch.len_utf8()..];
     }
     out
 }
