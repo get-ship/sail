@@ -178,7 +178,7 @@ describe('integration: real compile → run', () => {
     document.body.appendChild(el)
 
     // open=false (default) → data-open="false".
-    const root = q(el, '.modal-root')!
+    const root = q(el, '[data-testid="modal-root"]')!
     expect(root.getAttribute('data-open')).toBe('false')
 
     // Open: attribute flows through prop signal → bindAttr re-evaluates.
