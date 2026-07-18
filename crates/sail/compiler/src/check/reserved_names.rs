@@ -19,51 +19,58 @@ use crate::diagnostics::CompileError;
 use crate::ir::*;
 
 pub fn check(program: &Program) -> Result<(), CompileError> {
-    walk(&program.template)
+    walk(&program.template, None)
 }
 
-fn walk(instrs: &[Instr]) -> Result<(), CompileError> {
+fn walk(instrs: &[Instr], parent_tag: Option<&str>) -> Result<(), CompileError> {
     for instr in instrs {
         if let Instr::Element(el) = instr {
-            check_tag(el)?;
-            walk(&el.children)?;
+            check_tag(el, parent_tag)?;
+            walk(&el.children, Some(el.tag.as_str()))?;
         }
         match instr {
             Instr::If(i) => {
                 for b in &i.branches {
-                    walk(&b.body)?;
+                    walk(&b.body, parent_tag)?;
                 }
                 if let Some(e) = &i.else_body {
-                    walk(e)?;
+                    walk(e, parent_tag)?;
                 }
             }
             Instr::For(f) => {
-                walk(&f.body)?;
+                walk(&f.body, parent_tag)?;
                 if let Some(e) = &f.else_body {
-                    walk(e)?;
+                    walk(e, parent_tag)?;
                 }
             }
             Instr::Match(m) => {
                 for c in &m.cases {
-                    walk(&c.body)?;
+                    walk(&c.body, parent_tag)?;
                 }
                 if let Some(d) = &m.default {
-                    walk(d)?;
+                    walk(d, parent_tag)?;
                 }
             }
-            Instr::WhileLoading(wl) => walk(&wl.body)?,
-            Instr::WhileError(we) => walk(&we.body)?,
+            Instr::WhileLoading(wl) => walk(&wl.body, parent_tag)?,
+            Instr::WhileError(we) => walk(&we.body, parent_tag)?,
             _ => {}
         }
     }
     Ok(())
 }
 
-fn check_tag(el: &ElementInstr) -> Result<(), CompileError> {
+fn check_tag(el: &ElementInstr, parent_tag: Option<&str>) -> Result<(), CompileError> {
     let tag = el.tag.as_str();
     // Hyphenated = a custom element (component). The language does not police
     // the hyphenated namespace — that belongs to the author.
     if tag.contains('-') {
+        return Ok(());
+    }
+    // `<on key=… action=…>` is the `<use-kbd>` template hook's declarative
+    // shortcut record (see `dom_emit::collect_kbd_shortcuts`) — a bare tag
+    // that is neither HTML nor hyphenated, but only valid as a direct child
+    // of `<use-kbd>`.
+    if tag.eq_ignore_ascii_case("on") && parent_tag.is_some_and(|p| p.eq_ignore_ascii_case("use-kbd")) {
         return Ok(());
     }
     // `<slot>` variants and the framework's own bare tags are HTML.
